@@ -12,12 +12,18 @@ export interface ReflectiveEnvironmentRigProps {
   animated?: boolean;
   /** Show in-scene color cards for refraction and edge context. */
   showReflectionCards?: boolean;
+  /** Warm side/rim accent reflected by the object. Default is terminal red. */
+  accentColor?: string;
+  /** Secondary hot reflection. Default is Thoughtform gold. */
+  secondaryColor?: string;
 }
 
 export function ReflectiveEnvironmentRig({
   intensity = 1.35,
   animated = true,
   showReflectionCards = true,
+  accentColor = "#c84e2f",
+  secondaryColor = "#caa554",
 }: ReflectiveEnvironmentRigProps) {
   return (
     <>
@@ -27,7 +33,12 @@ export function ReflectiveEnvironmentRig({
         environmentIntensity={intensity}
         background={false}
       >
-        <AnimatedLightformers animated={animated} intensity={intensity} />
+        <AnimatedLightformers
+          animated={animated}
+          intensity={intensity}
+          accentColor={accentColor}
+          secondaryColor={secondaryColor}
+        />
       </Environment>
       <ambientLight intensity={0.18 * intensity} color="#ebe3d6" />
       <spotLight
@@ -37,8 +48,14 @@ export function ReflectiveEnvironmentRig({
         intensity={3.4 * intensity}
         color="#ebe3d6"
       />
-      <pointLight position={[-2.2, -0.5, 1.6]} intensity={1.2 * intensity} color="#58dac7" />
-      <ReflectionCards visible={showReflectionCards} animated={animated} intensity={intensity} />
+      <pointLight position={[-2.2, -0.5, 1.6]} intensity={1.2 * intensity} color={accentColor} />
+      <ReflectionCards
+        visible={showReflectionCards}
+        animated={animated}
+        intensity={intensity}
+        accentColor={accentColor}
+        secondaryColor={secondaryColor}
+      />
     </>
   );
 }
@@ -46,9 +63,16 @@ export function ReflectiveEnvironmentRig({
 interface AnimatedLightformersProps {
   animated: boolean;
   intensity: number;
+  accentColor: string;
+  secondaryColor: string;
 }
 
-function AnimatedLightformers({ animated, intensity }: AnimatedLightformersProps) {
+function AnimatedLightformers({
+  animated,
+  intensity,
+  accentColor,
+  secondaryColor,
+}: AnimatedLightformersProps) {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(({ clock }) => {
@@ -71,7 +95,7 @@ function AnimatedLightformers({ animated, intensity }: AnimatedLightformersProps
       />
       <Lightformer
         form="rect"
-        color="#caa554"
+        color={secondaryColor}
         intensity={3.6 * intensity}
         scale={[1.1, 4.8, 1]}
         position={[-3.2, 0.2, 1.2]}
@@ -79,7 +103,7 @@ function AnimatedLightformers({ animated, intensity }: AnimatedLightformersProps
       />
       <Lightformer
         form="rect"
-        color="#58dac7"
+        color={accentColor}
         intensity={2.4 * intensity}
         scale={[1.8, 3.6, 1]}
         position={[3.1, -0.4, 0.3]}
@@ -87,7 +111,7 @@ function AnimatedLightformers({ animated, intensity }: AnimatedLightformersProps
       />
       <Lightformer
         form="ring"
-        color="#e7f7ff"
+        color="#f1c46b"
         intensity={2.2 * intensity}
         scale={[2.8, 2.8, 1]}
         position={[0.2, -2.2, 2.4]}
@@ -101,9 +125,17 @@ interface ReflectionCardsProps {
   visible: boolean;
   animated: boolean;
   intensity: number;
+  accentColor: string;
+  secondaryColor: string;
 }
 
-function ReflectionCards({ visible, animated, intensity }: ReflectionCardsProps) {
+function ReflectionCards({
+  visible,
+  animated,
+  intensity,
+  accentColor,
+  secondaryColor,
+}: ReflectionCardsProps) {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(({ clock }) => {
@@ -121,7 +153,7 @@ function ReflectionCards({ visible, animated, intensity }: ReflectionCardsProps)
       <mesh position={[-1.42, 0.04, 0]} rotation={[0, 0.32, 0]} scale={[0.08, 2.45, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
-          color="#caa554"
+          color={secondaryColor}
           transparent
           opacity={0.16 * intensity}
           depthWrite={false}
@@ -132,7 +164,7 @@ function ReflectionCards({ visible, animated, intensity }: ReflectionCardsProps)
       <mesh position={[1.42, -0.03, -0.04]} rotation={[0, -0.34, 0]} scale={[0.08, 2.25, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
-          color="#58dac7"
+          color={accentColor}
           transparent
           opacity={0.12 * intensity}
           depthWrite={false}

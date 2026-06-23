@@ -30,9 +30,13 @@ Create a lab-only reflective 3D brandmark artifact using the existing SVG extrus
 - Add route-local signal accents for motes, scanlines, contour traces, orbit rings, dither fragments, and wire-depth traces. These are companion atmosphere layers around the reflective mesh, not new production brandmark painters.
 - Add restrained postprocessing in the lab: bloom, optional chromatic aberration, noise, and vignette. Disable animated highlights and effects under `prefers-reduced-motion`.
 - Keep the artifact out of production landing and corridor renderers until a later ADR explicitly promotes it.
+- Consolidate `/test/brandmark-reflective` into the unified internal brandmark lab. The route now treats `Mode + Preset` as the primary interaction and composes the existing solid `Brandmark3D` renderer with the existing ADR-023 `BrandmarkPhysicsCore` particle renderer. The older specialized routes remain useful for deep debugging, but new visual browsing should happen through the unified lab first.
+- Keep the unified lab palette in the terminal/umber/gold/red family by default. Atreides/provenance green is intentionally excluded from the browsing presets after user review; if it returns, it must be a narrow semantic accent, not a dominant material color.
+- Include scene-level presets, beginning with a Services rails composition that frames the brandmark between left/right HUD rails. These scene presets are preview compositions only; they do not mount the reflective mesh or particle core into production Services.
 
 This is a separate material study and reusable renderer surface. It does not change `BrandmarkVectorActor`, `BrandmarkParticleCanvas`, `BrandmarkPhysicsCore`, the v7 journey store, or the corridor handoff contract.
 The route-local signal accents do not count against the global v7 particle painter cap because they are mounted only inside the internal lab scene.
+The unified lab's particle modes also do not count against the global painter cap: they instantiate `BrandmarkPhysicsCore` only inside `/test/brandmark-reflective`, and the production corridor actor remains the owner of any live Services promotion.
 
 ---
 
@@ -83,6 +87,8 @@ Rejected. The first pass stays inside an internal lab.
 - The `matcap` material mode remains available as a manual fallback/comparison mode, but it is no longer a primary visible preset in the reflective lab.
 - The generated surface maps and cap/side split improve distinction between presets but are still procedural approximations. Blender/GLB remains the path for authored UV islands, baked wear, hand-painted normals, sculpted bevels, and non-repeating texture layout.
 - Contact-sheet screenshots are now the acceptance test for this lab: each preset should be distinguishable without reading the selected UI label.
+- The acceptance threshold for the lab UI changed from "many knobs are available" to "presets are fast to browse." The primary control is a native preset dropdown with previous/next arrows; low-level material, particle, scene, lighting, and save/load controls live in collapsible sections.
+- Saved presets use the existing `brandmark_presets` JSON snapshot table when Supabase is configured, with a localStorage fallback for offline lab use. The blob schema is lab-specific and must not be consumed by production without a follow-up ADR.
 
 ---
 

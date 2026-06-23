@@ -1,6 +1,14 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
+/**
+ * /test/brandmark-reflective
+ *
+ * Unified internal brandmark lab. This route intentionally composes the
+ * existing solid SVG-extrusion renderer and the corridor particle core rather
+ * than introducing a third brandmark renderer.
+ */
+
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Bloom,
   ChromaticAberration,
@@ -8,9 +16,9 @@ import {
   Noise,
   Vignette,
 } from "@react-three/postprocessing";
-import { Gem, Pause, RotateCcw, Sparkles } from "lucide-react";
-import type { CSSProperties, ReactNode } from "react";
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { ChevronLeft, ChevronRight, Pause, RotateCcw, Save, Sparkles, Upload } from "lucide-react";
+import type { ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import * as THREE from "three";
 import {
   Brandmark3D,
@@ -19,61 +27,46 @@ import {
   type Brandmark3DDebugMode,
   type Brandmark3DMaterialFamily,
   type Brandmark3DMaterialMode,
+  type Brandmark3DPhysicalParams,
   type Brandmark3DSurfaceKind,
+  type Brandmark3DSurfaceParams,
+  type Brandmark3DTransmissionParams,
 } from "@/components/brand/Brandmark3D";
+import {
+  BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
+  BrandmarkPhysicsCore,
+  type BrandmarkBasis,
+  type BrandmarkCoreBlending,
+  type BrandmarkCoreGlyph,
+  type BrandmarkCoreShape,
+} from "@/components/brand/BrandmarkPhysicsCore";
 import { CanvasErrorBoundary } from "@/components/hud";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
+import { supabase } from "@/lib/supabase";
 
-type PresetName =
-  | "tensorGlass"
-  | "surveyorBrass"
-  | "holographicCeramic"
-  | "archiveAmber"
-  | "blueprintPrism"
-  | "epsilonDither"
-  | "celestialLacquer"
-  | "vectorRelic"
-  | "frostedIvory"
-  | "provenanceGlass";
-
-type SignalMode = "none" | "motes" | "scanlines" | "contours" | "orbits" | "dither" | "wireDepth";
-
-const SIGNAL_OPTIONS: Array<{ label: string; value: SignalMode }> = [
-  { label: "None", value: "none" },
-  { label: "Motes", value: "motes" },
-  { label: "Scan", value: "scanlines" },
-  { label: "Contours", value: "contours" },
-  { label: "Orbits", value: "orbits" },
-  { label: "Dither", value: "dither" },
-  { label: "Wire", value: "wireDepth" },
-];
-
-const SURFACE_OPTIONS: Array<{ label: string; value: Brandmark3DSurfaceKind }> = [
-  { label: "None", value: "none" },
-  { label: "Tensor", value: "tensor-bands" },
-  { label: "Brass", value: "brushed-brass" },
-  { label: "Ceramic", value: "ceramic-speckle" },
-  { label: "Amber", value: "amber-contours" },
-  { label: "Blueprint", value: "blueprint-slices" },
-  { label: "Dither", value: "epsilon-dither" },
-  { label: "Lacquer", value: "celestial-lacquer" },
-  { label: "Etch", value: "vector-etch" },
-  { label: "Frost", value: "frosted-grain" },
-  { label: "Provenance", value: "provenance-grain" },
-];
-
-const DEBUG_VIEW_OPTIONS: Array<{ label: string; value: Brandmark3DDebugMode }> = [
-  { label: "Lit", value: "none" },
-  { label: "UV", value: "uv" },
-  { label: "Albedo", value: "albedo" },
-  { label: "Rough", value: "roughness" },
-  { label: "Normal", value: "normal" },
-];
-
-const PREVIEW_ROTATION: [number, number, number] = [0.16, -0.42, 0];
-const CENTERED_ROTATION: [number, number, number] = [0, 0, 0];
+type LabMode = "solid" | "particle" | "scene";
+type SceneFrame = "object" | "services-rails" | "terminal-plot" | "active-chamber";
+type SignalMode = "none" | "motes" | "scan" | "contours" | "orbits" | "dither" | "wire";
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+const PREVIEW_ROTATION: [number, number, number] = [0.16, -0.42, 0];
+const CENTERED_ROTATION: [number, number, number] = [0, 0, 0];
+const LOCAL_PRESET_KEY = "thoughtform.brandmarkLab.presets.v1";
+
+const PALETTE = {
+  void: "#050403",
+  ink: "#0a0908",
+  panel: "#100d0a",
+  dawn: "#ebe3d6",
+  gold: "#caa554",
+  hotGold: "#f0c36a",
+  amber: "#d98232",
+  umber: "#5b341d",
+  red: "#c84e2f",
+  redHot: "#ff5b2e",
+  ivory: "#f0e8d8",
+  lacquer: "#15110d",
+};
 
 interface GeometrySettings {
   depth: number;
@@ -84,45 +77,60 @@ interface GeometrySettings {
   includeSlivers: boolean;
 }
 
-interface PhysicalSettings {
-  color: string;
-  metalness: number;
-  roughness: number;
-  clearcoat: number;
-  clearcoatRoughness: number;
-  iridescence: number;
-  envMapIntensity: number;
+interface SolidSettings {
+  materialMode: Brandmark3DMaterialMode;
+  debugMode: Brandmark3DDebugMode;
+  geometry: GeometrySettings;
+  physical: Brandmark3DPhysicalParams;
+  transmission: Brandmark3DTransmissionParams;
+  surface: Brandmark3DSurfaceParams & {
+    family: Brandmark3DMaterialFamily;
+    kind: Brandmark3DSurfaceKind;
+  };
+  wireframe: boolean;
 }
 
-interface TransmissionSettings {
+interface ParticleSettings {
+  count: number;
+  basis: BrandmarkBasis;
+  gridSnap: number;
+  shape: BrandmarkCoreShape;
+  glyph: BrandmarkCoreGlyph;
+  blending: BrandmarkCoreBlending;
   color: string;
-  roughness: number;
-  transmission: number;
+  accentColor: string;
+  pointSize: number;
+  opacity: number;
+  ignite: number;
+  cleanField: number;
+  corridorKeep: number;
+  cleanFieldKeep: number;
+  cleanFieldDotScale: number;
+  cleanFieldEdge: number;
+  depth: number;
+  scatterRadius: number;
+  bulge: number;
   thickness: number;
-  ior: number;
-  attenuationColor: string;
-  attenuationDistance: number;
-  clearcoat: number;
-  clearcoatRoughness: number;
-  iridescence: number;
-  envMapIntensity: number;
-  chromaticAberration: number;
-  anisotropy: number;
-  distortion: number;
-  distortionScale: number;
-  temporalDistortion: number;
-  samples: number;
-  resolution: number;
-  backside: boolean;
-  backsideThickness: number;
-  backsideEnvMapIntensity: number;
-  backgroundColor: string;
+  shapeStroke: number;
+  primitiveAspect: number;
+  lineJitter: number;
+  freezeMotion: boolean;
+  seedAtHome: boolean;
+  worldScale: number;
+  driftAmpX: number;
+  driftAmpY: number;
+  driftPeriodX: number;
+  driftPeriodY: number;
+  showSphere: boolean;
 }
 
-interface EnvironmentSettings {
+interface LightingSettings {
   intensity: number;
   animated: boolean;
   cards: boolean;
+  accentColor: string;
+  secondaryColor: string;
+  exposure: number;
 }
 
 interface PostSettings {
@@ -137,819 +145,1083 @@ interface PostSettings {
 interface MotionSettings {
   autoRotate: number;
   pointerParallax: boolean;
-  pointerTilt: number;
 }
 
 interface SignalSettings {
   mode: SignalMode;
-  color: string;
-  accentColor: string;
+  primary: string;
+  accent: string;
   intensity: number;
   density: number;
-  animation: number;
+  drift: number;
 }
 
-interface SurfaceSettings {
-  family: Brandmark3DMaterialFamily;
-  kind: Brandmark3DSurfaceKind;
-  primary: string;
-  secondary: string;
-  strength: number;
-  scale: number;
-  bump: number;
-  inlay: number;
-  sideColor: string;
-  sideRoughness: number;
-  sideMetalness: number;
-  sideEnvMapIntensity: number;
-  sideEmissive: string;
-  sideEmissiveIntensity: number;
-  capEmissive: string;
-  capEmissiveIntensity: number;
-}
-
-interface LabSettings {
-  materialMode: Brandmark3DMaterialMode;
-  debugMode: Brandmark3DDebugMode;
-  geometry: GeometrySettings;
-  physical: PhysicalSettings;
-  transmission: TransmissionSettings;
-  surface: SurfaceSettings;
-  environment: EnvironmentSettings;
-  post: PostSettings;
-  motion: MotionSettings;
-  signal: SignalSettings;
-  wireframe: boolean;
-  flatCompare: boolean;
-}
-
-interface PresetDefinition {
+interface UnifiedPreset {
+  id: string;
   label: string;
-  settings: LabSettings;
+  mode: LabMode;
+  scene: SceneFrame;
+  description: string;
+  solid: SolidSettings;
+  particle: ParticleSettings;
+  lighting: LightingSettings;
+  post: PostSettings;
+  signal: SignalSettings;
+  motion: MotionSettings;
+  saved?: boolean;
 }
+
+interface SavedSnapshot {
+  v: 3;
+  lab: "brandmark-unified";
+  label: string;
+  mode: LabMode;
+  scene: SceneFrame;
+  solid: SolidSettings;
+  particle: ParticleSettings;
+  lighting: LightingSettings;
+  post: PostSettings;
+  signal: SignalSettings;
+  motion: MotionSettings;
+}
+
+type SolidSettingsPatch = Omit<
+  Partial<SolidSettings>,
+  "geometry" | "physical" | "transmission" | "surface"
+> & {
+  geometry?: Partial<GeometrySettings>;
+  physical?: Partial<Brandmark3DPhysicalParams>;
+  transmission?: Partial<Brandmark3DTransmissionParams>;
+  surface?: Partial<SolidSettings["surface"]>;
+};
 
 const BASE_GEOMETRY: GeometrySettings = {
-  depth: 28,
-  bevelThickness: 4,
-  bevelSize: 3.2,
+  depth: 32,
+  bevelThickness: 4.4,
+  bevelSize: 3.4,
   bevelSegments: 8,
   curveSegments: 28,
   includeSlivers: false,
 };
 
-const BASE_PHYSICAL: PhysicalSettings = {
-  color: "#caa554",
-  metalness: 1,
-  roughness: 0.12,
-  clearcoat: 0.7,
-  clearcoatRoughness: 0.04,
-  iridescence: 0.08,
-  envMapIntensity: 1.5,
+const BASE_PHYSICAL: Brandmark3DPhysicalParams = {
+  color: PALETTE.gold,
+  metalness: 0.9,
+  roughness: 0.18,
+  clearcoat: 0.82,
+  clearcoatRoughness: 0.06,
+  iridescence: 0.04,
+  envMapIntensity: 1.8,
 };
 
-const BASE_TRANSMISSION: TransmissionSettings = {
-  color: "#e7f7ff",
-  roughness: 0.06,
+const BASE_TRANSMISSION: Brandmark3DTransmissionParams = {
+  color: "#f1dfbd",
+  roughness: 0.08,
   transmission: 1,
-  thickness: 0.52,
+  thickness: 0.72,
   ior: 1.45,
-  attenuationColor: "#caa554",
-  attenuationDistance: 1.55,
-  clearcoat: 0.72,
-  clearcoatRoughness: 0.035,
-  iridescence: 0.22,
-  envMapIntensity: 1.65,
-  chromaticAberration: 0.045,
-  anisotropy: 0.24,
-  distortion: 0.08,
-  distortionScale: 0.36,
-  temporalDistortion: 0.035,
+  attenuationColor: PALETTE.amber,
+  attenuationDistance: 1.2,
+  clearcoat: 0.82,
+  clearcoatRoughness: 0.04,
+  iridescence: 0.14,
+  envMapIntensity: 1.9,
+  chromaticAberration: 0.024,
+  anisotropy: 0.26,
+  distortion: 0.05,
+  distortionScale: 0.24,
+  temporalDistortion: 0.018,
   samples: 6,
   resolution: 512,
   backside: true,
-  backsideThickness: 0.3,
+  backsideThickness: 0.32,
   backsideEnvMapIntensity: 0.9,
-  backgroundColor: "#050403",
+  backgroundColor: PALETTE.void,
 };
 
-const BASE_ENVIRONMENT: EnvironmentSettings = {
-  intensity: 1.35,
+const BASE_SURFACE: SolidSettings["surface"] = {
+  family: "archive-amber",
+  kind: "amber-contours",
+  primary: PALETTE.amber,
+  secondary: PALETTE.red,
+  strength: 0.92,
+  scale: 1.25,
+  bump: 0.08,
+  inlay: 0.48,
+  sideColor: PALETTE.umber,
+  sideRoughness: 0.24,
+  sideMetalness: 0.5,
+  sideEnvMapIntensity: 1.6,
+  sideEmissive: PALETTE.red,
+  sideEmissiveIntensity: 0.1,
+  capEmissive: PALETTE.red,
+  capEmissiveIntensity: 0.03,
+};
+
+const BASE_SOLID: SolidSettings = {
+  materialMode: "physical",
+  debugMode: "none",
+  geometry: BASE_GEOMETRY,
+  physical: BASE_PHYSICAL,
+  transmission: BASE_TRANSMISSION,
+  surface: BASE_SURFACE,
+  wireframe: false,
+};
+
+const BASE_PARTICLE: ParticleSettings = {
+  count: BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
+  basis: "dome-fill",
+  gridSnap: 1 / 32,
+  shape: "dither",
+  glyph: "plus",
+  blending: "additive",
+  color: PALETTE.gold,
+  accentColor: PALETTE.hotGold,
+  pointSize: 3.2,
+  opacity: 0.85,
+  ignite: 1,
+  cleanField: 0.2,
+  corridorKeep: 1,
+  cleanFieldKeep: 0.7,
+  cleanFieldDotScale: 0.56,
+  cleanFieldEdge: 0.42,
+  depth: 1,
+  scatterRadius: 0.55,
+  bulge: 0.18,
+  thickness: 0.06,
+  shapeStroke: 0.12,
+  primitiveAspect: 2.4,
+  lineJitter: 0.08,
+  freezeMotion: false,
+  seedAtHome: true,
+  worldScale: 0.76,
+  driftAmpX: 0.12,
+  driftAmpY: 0.18,
+  driftPeriodX: 17,
+  driftPeriodY: 23,
+  showSphere: false,
+};
+
+const SERVICES_PARTICLE: ParticleSettings = {
+  ...BASE_PARTICLE,
+  count: 5600,
+  basis: "dome-fill",
+  shape: "dither",
+  blending: "additive",
+  pointSize: 5.2,
+  opacity: 0.96,
+  cleanField: 0.72,
+  corridorKeep: 0.27,
+  cleanFieldKeep: 1,
+  cleanFieldDotScale: 0.78,
+  cleanFieldEdge: 0.4,
+  bulge: 0.18,
+  thickness: 0.04,
+  freezeMotion: true,
+  color: PALETTE.gold,
+  accentColor: PALETTE.red,
+  worldScale: 0.78,
+  showSphere: false,
+};
+
+const BASE_LIGHTING: LightingSettings = {
+  intensity: 1.65,
   animated: true,
   cards: true,
+  accentColor: PALETTE.red,
+  secondaryColor: PALETTE.gold,
+  exposure: 1.22,
 };
 
 const BASE_POST: PostSettings = {
   enabled: true,
-  bloomIntensity: 0.62,
-  bloomThreshold: 0.42,
-  chromatic: 0.0008,
-  noise: 0.035,
-  vignette: 0.46,
-};
-
-const BASE_MOTION: MotionSettings = {
-  autoRotate: 0.08,
-  pointerParallax: true,
-  pointerTilt: 0.2,
+  bloomIntensity: 1.05,
+  bloomThreshold: 0.32,
+  chromatic: 0.00055,
+  noise: 0.055,
+  vignette: 0.62,
 };
 
 const BASE_SIGNAL: SignalSettings = {
   mode: "motes",
-  color: "#caa554",
-  accentColor: "#58dac7",
+  primary: PALETTE.gold,
+  accent: PALETTE.red,
   intensity: 0.42,
   density: 0.36,
-  animation: 0.22,
+  drift: 0.22,
 };
 
-const BASE_SURFACE: SurfaceSettings = {
-  family: "default",
-  kind: "tensor-bands",
-  primary: "#f1e7d2",
-  secondary: "#caa554",
-  strength: 0.72,
-  scale: 1.18,
-  bump: 0.075,
-  inlay: 0.28,
-  sideColor: "#caa554",
-  sideRoughness: 0.32,
-  sideMetalness: 0.8,
-  sideEnvMapIntensity: 1.3,
-  sideEmissive: "#000000",
-  sideEmissiveIntensity: 0,
-  capEmissive: "#000000",
-  capEmissiveIntensity: 0,
+const BASE_MOTION: MotionSettings = {
+  autoRotate: 0.08,
+  pointerParallax: false,
 };
 
-const PRESETS: Record<PresetName, PresetDefinition> = {
-  tensorGlass: {
-    label: "Tensor Glass",
-    settings: {
+function solid(overrides: SolidSettingsPatch): SolidSettings {
+  return {
+    ...BASE_SOLID,
+    ...overrides,
+    geometry: { ...BASE_SOLID.geometry, ...overrides.geometry },
+    physical: { ...BASE_SOLID.physical, ...overrides.physical },
+    transmission: { ...BASE_SOLID.transmission, ...overrides.transmission },
+    surface: { ...BASE_SOLID.surface, ...overrides.surface },
+  };
+}
+
+function particle(overrides: Partial<ParticleSettings>): ParticleSettings {
+  return { ...BASE_PARTICLE, ...overrides };
+}
+
+function lighting(overrides: Partial<LightingSettings>): LightingSettings {
+  return { ...BASE_LIGHTING, ...overrides };
+}
+
+function post(overrides: Partial<PostSettings>): PostSettings {
+  return { ...BASE_POST, ...overrides };
+}
+
+function signal(overrides: Partial<SignalSettings>): SignalSettings {
+  return { ...BASE_SIGNAL, ...overrides };
+}
+
+function preset(config: {
+  id: string;
+  label: string;
+  mode: LabMode;
+  scene?: SceneFrame;
+  description: string;
+  solid?: SolidSettingsPatch;
+  particle?: Partial<ParticleSettings>;
+  lighting?: Partial<LightingSettings>;
+  post?: Partial<PostSettings>;
+  signal?: Partial<SignalSettings>;
+  motion?: Partial<MotionSettings>;
+}): UnifiedPreset {
+  return {
+    id: config.id,
+    label: config.label,
+    mode: config.mode,
+    scene: config.scene ?? "object",
+    description: config.description,
+    solid: solid(config.solid ?? {}),
+    particle: particle(config.particle ?? {}),
+    lighting: lighting(config.lighting ?? {}),
+    post: post(config.post ?? {}),
+    signal: signal(config.signal ?? {}),
+    motion: { ...BASE_MOTION, ...config.motion },
+  };
+}
+
+const BUILT_IN_PRESETS: ReadonlyArray<UnifiedPreset> = [
+  preset({
+    id: "solid-umber-glass",
+    label: "Umber Glass",
+    mode: "solid",
+    description: "Thick amber transmission glass with red-gold edge refraction.",
+    solid: {
       materialMode: "transmission",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 34, bevelThickness: 5.2, bevelSize: 4.1 },
-      physical: BASE_PHYSICAL,
+      geometry: { depth: 38, bevelThickness: 5.2, bevelSize: 4.2 },
       transmission: {
-        ...BASE_TRANSMISSION,
-        color: "#f1e7d2",
-        roughness: 0.08,
-        thickness: 0.86,
-        attenuationColor: "#caa554",
-        attenuationDistance: 1.35,
-        iridescence: 0.16,
-        chromaticAberration: 0.028,
-        anisotropy: 0.32,
-        distortion: 0.05,
-        distortionScale: 0.22,
-        temporalDistortion: 0.018,
+        color: "#f2c07a",
+        roughness: 0.1,
+        thickness: 0.92,
+        attenuationColor: PALETTE.umber,
+        attenuationDistance: 0.92,
+        iridescence: 0.11,
+        chromaticAberration: 0.026,
+        distortion: 0.06,
       },
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.2 },
-      post: { ...BASE_POST, bloomIntensity: 0.48, bloomThreshold: 0.48, chromatic: 0.00035 },
-      motion: BASE_MOTION,
       surface: {
-        ...BASE_SURFACE,
-        family: "tensor-glass",
-        kind: "tensor-bands",
-        primary: "#f1e7d2",
-        secondary: "#58dac7",
-        strength: 0.62,
-        scale: 1.08,
-        bump: 0.045,
-        inlay: 0.42,
-        sideColor: "#58dac7",
-        sideRoughness: 0.16,
-        sideMetalness: 0.08,
+        family: "archive-amber",
+        kind: "amber-contours",
+        primary: "#e4a55c",
+        secondary: PALETTE.red,
+        strength: 1.02,
+        scale: 1.12,
+        bump: 0.07,
+        inlay: 0.5,
+        sideColor: PALETTE.red,
+        sideEmissive: PALETTE.red,
+        sideEmissiveIntensity: 0.16,
+        sideRoughness: 0.18,
+        sideMetalness: 0.05,
         sideEnvMapIntensity: 2.2,
-        sideEmissive: "#58dac7",
-        sideEmissiveIntensity: 0.18,
-        capEmissive: "#caa554",
-        capEmissiveIntensity: 0.04,
       },
-      signal: { ...BASE_SIGNAL, mode: "motes", intensity: 0.28, density: 0.24 },
-      wireframe: false,
-      flatCompare: false,
     },
-  },
-  surveyorBrass: {
+    lighting: { intensity: 1.9, accentColor: PALETTE.redHot, secondaryColor: PALETTE.hotGold },
+    post: { bloomIntensity: 1.28, bloomThreshold: 0.28, noise: 0.05 },
+    signal: { mode: "contours", intensity: 0.38, density: 0.46 },
+  }),
+  preset({
+    id: "solid-surveyor-brass",
     label: "Surveyor Brass",
-    settings: {
+    mode: "solid",
+    description: "Brushed brass caps, oxidized umber sides, restrained tactical bands.",
+    solid: {
       materialMode: "physical",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 30, bevelThickness: 3.4, bevelSize: 2.6 },
+      geometry: { depth: 32, bevelThickness: 3.4, bevelSize: 2.6 },
       physical: {
         color: "#d0a34d",
         metalness: 1,
-        roughness: 0.28,
-        clearcoat: 1,
-        clearcoatRoughness: 0.12,
-        iridescence: 0.02,
-        envMapIntensity: 2.15,
+        roughness: 0.3,
+        clearcoat: 0.9,
+        clearcoatRoughness: 0.14,
+        iridescence: 0.01,
+        envMapIntensity: 2.1,
       },
-      transmission: BASE_TRANSMISSION,
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.15 },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.32,
-        bloomThreshold: 0.58,
-        chromatic: 0.0002,
-        noise: 0.026,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.06 },
       surface: {
-        ...BASE_SURFACE,
         family: "surveyor-brass",
         kind: "brushed-brass",
-        primary: "#c3a15c",
-        secondary: "#ebe3d6",
-        strength: 0.94,
-        scale: 1.8,
-        bump: 0.12,
-        inlay: 0.6,
-        sideColor: "#6c4a1f",
-        sideRoughness: 0.48,
+        primary: "#caa554",
+        secondary: PALETTE.ivory,
+        strength: 1.08,
+        scale: 1.9,
+        bump: 0.13,
+        inlay: 0.44,
+        sideColor: PALETTE.umber,
+        sideRoughness: 0.52,
         sideMetalness: 1,
-        sideEnvMapIntensity: 1.4,
+        sideEnvMapIntensity: 1.35,
         sideEmissive: "#000000",
         sideEmissiveIntensity: 0,
-        capEmissive: "#caa554",
-        capEmissiveIntensity: 0.02,
       },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "scanlines",
-        color: "#caa554",
-        accentColor: "#ebe3d6",
-        intensity: 0.34,
-        density: 0.42,
-        animation: 0.14,
-      },
-      wireframe: false,
-      flatCompare: false,
     },
-  },
-  holographicCeramic: {
-    label: "Holographic Ceramic",
-    settings: {
+    lighting: { intensity: 1.55 },
+    post: { bloomIntensity: 0.72, bloomThreshold: 0.46, noise: 0.04 },
+    signal: { mode: "scan", intensity: 0.3, density: 0.42 },
+  }),
+  preset({
+    id: "solid-ivory-phosphor",
+    label: "Ivory Phosphor",
+    mode: "solid",
+    description: "Calm ceramic face with warm phosphor rim and low color split.",
+    solid: {
       materialMode: "physical",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 28, bevelThickness: 4.4, bevelSize: 3.3 },
+      geometry: { depth: 30, bevelThickness: 4.4, bevelSize: 3.2 },
       physical: {
-        color: "#ebe3d6",
-        metalness: 0.08,
-        roughness: 0.28,
-        clearcoat: 0.9,
-        clearcoatRoughness: 0.05,
-        iridescence: 0.34,
-        envMapIntensity: 1.28,
+        color: PALETTE.ivory,
+        metalness: 0.04,
+        roughness: 0.34,
+        clearcoat: 0.78,
+        clearcoatRoughness: 0.08,
+        iridescence: 0.2,
+        envMapIntensity: 1.24,
       },
-      transmission: BASE_TRANSMISSION,
-      environment: { ...BASE_ENVIRONMENT, intensity: 0.96, animated: false },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.28,
-        bloomThreshold: 0.62,
-        chromatic: 0.00015,
-        noise: 0.018,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.035, pointerTilt: 0.14 },
       surface: {
-        ...BASE_SURFACE,
         family: "holographic-ceramic",
         kind: "ceramic-speckle",
-        primary: "#ebe3d6",
-        secondary: "#58dac7",
-        strength: 0.88,
-        scale: 1.1,
-        bump: 0.055,
-        inlay: 0.28,
-        sideColor: "#58dac7",
-        sideRoughness: 0.34,
-        sideMetalness: 0.05,
-        sideEnvMapIntensity: 1.15,
-        sideEmissive: "#58dac7",
-        sideEmissiveIntensity: 0.08,
-        capEmissive: "#ebe3d6",
-        capEmissiveIntensity: 0.025,
+        primary: PALETTE.ivory,
+        secondary: PALETTE.hotGold,
+        strength: 0.92,
+        scale: 1.18,
+        bump: 0.052,
+        inlay: 0.24,
+        sideColor: PALETTE.hotGold,
+        sideRoughness: 0.38,
+        sideMetalness: 0.08,
+        sideEnvMapIntensity: 1.35,
+        sideEmissive: PALETTE.amber,
+        sideEmissiveIntensity: 0.06,
       },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "motes",
-        color: "#ebe3d6",
-        accentColor: "#58dac7",
-        intensity: 0.16,
-        density: 0.16,
-        animation: 0.1,
-      },
-      wireframe: false,
-      flatCompare: false,
     },
-  },
-  archiveAmber: {
-    label: "Archive Amber",
-    settings: {
-      materialMode: "transmission",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 36, bevelThickness: 4.8, bevelSize: 3.9 },
-      physical: BASE_PHYSICAL,
-      transmission: {
-        ...BASE_TRANSMISSION,
-        color: "#e5b066",
-        roughness: 0.14,
-        thickness: 0.78,
-        attenuationColor: "#c47635",
-        attenuationDistance: 1.05,
-        clearcoat: 0.82,
-        iridescence: 0.1,
-        chromaticAberration: 0.025,
-        anisotropy: 0.38,
-        distortion: 0.06,
-        distortionScale: 0.24,
-        temporalDistortion: 0.02,
-      },
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.08 },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.42,
-        bloomThreshold: 0.5,
-        chromatic: 0.0003,
-        noise: 0.045,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.055 },
-      surface: {
-        ...BASE_SURFACE,
-        family: "archive-amber",
-        kind: "amber-contours",
-        primary: "#e5b066",
-        secondary: "#c86a3a",
-        strength: 1,
-        scale: 1.16,
-        bump: 0.08,
-        inlay: 0.54,
-        sideColor: "#c86a3a",
-        sideRoughness: 0.2,
-        sideMetalness: 0,
-        sideEnvMapIntensity: 1.7,
-        sideEmissive: "#c86a3a",
-        sideEmissiveIntensity: 0.14,
-        capEmissive: "#c86a3a",
-        capEmissiveIntensity: 0.035,
-      },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "contours",
-        color: "#caa554",
-        accentColor: "#c86a3a",
-        intensity: 0.44,
-        density: 0.52,
-        animation: 0.18,
-      },
-      wireframe: false,
-      flatCompare: false,
-    },
-  },
-  blueprintPrism: {
-    label: "Blueprint Prism",
-    settings: {
-      materialMode: "transmission",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 30, bevelThickness: 3.8, bevelSize: 3.1 },
-      physical: BASE_PHYSICAL,
-      transmission: {
-        ...BASE_TRANSMISSION,
-        color: "#dcefff",
-        roughness: 0.05,
-        thickness: 0.62,
-        attenuationColor: "#8fb7cf",
-        attenuationDistance: 1.6,
-        iridescence: 0.28,
-        chromaticAberration: 0.04,
-        anisotropy: 0.52,
-        distortion: 0.04,
-        distortionScale: 0.18,
-        temporalDistortion: 0.012,
-      },
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.1 },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.36,
-        bloomThreshold: 0.54,
-        chromatic: 0.00045,
-        noise: 0.026,
-      },
-      motion: BASE_MOTION,
-      surface: {
-        ...BASE_SURFACE,
-        family: "blueprint-prism",
-        kind: "blueprint-slices",
-        primary: "#dcefff",
-        secondary: "#58dac7",
-        strength: 1.05,
-        scale: 1.35,
-        bump: 0.07,
-        inlay: 0.58,
-        sideColor: "#58dac7",
-        sideRoughness: 0.12,
-        sideMetalness: 0,
-        sideEnvMapIntensity: 1.8,
-        sideEmissive: "#58dac7",
-        sideEmissiveIntensity: 0.2,
-        capEmissive: "#58dac7",
-        capEmissiveIntensity: 0.04,
-      },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "scanlines",
-        color: "#d7ecff",
-        accentColor: "#58dac7",
-        intensity: 0.38,
-        density: 0.66,
-        animation: 0.16,
-      },
-      wireframe: true,
-      flatCompare: false,
-    },
-  },
-  epsilonDither: {
-    label: "Epsilon Dither",
-    settings: {
+    lighting: { intensity: 1.25, animated: false },
+    post: { bloomIntensity: 0.5, bloomThreshold: 0.56, noise: 0.025 },
+    signal: { mode: "motes", intensity: 0.18, density: 0.18 },
+  }),
+  preset({
+    id: "solid-black-lacquer",
+    label: "Black Lacquer",
+    mode: "solid",
+    description: "Deep lacquer body with gold inlay and hot reflection lines.",
+    solid: {
       materialMode: "physical",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 26, bevelThickness: 3.2, bevelSize: 2.7 },
+      geometry: { depth: 34, bevelThickness: 4.2, bevelSize: 3.4 },
       physical: {
-        color: "#5a4528",
-        metalness: 0.82,
-        roughness: 0.18,
-        clearcoat: 0.88,
-        clearcoatRoughness: 0.05,
-        iridescence: 0.04,
-        envMapIntensity: 1.6,
-      },
-      transmission: BASE_TRANSMISSION,
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.18 },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.56,
-        bloomThreshold: 0.43,
-        chromatic: 0.00055,
-        noise: 0.065,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.065 },
-      surface: {
-        ...BASE_SURFACE,
-        family: "epsilon-dither",
-        kind: "epsilon-dither",
-        primary: "#5a4528",
-        secondary: "#c84e2f",
-        strength: 1.08,
-        scale: 1.55,
-        bump: 0.09,
-        inlay: 0.62,
-        sideColor: "#c84e2f",
-        sideRoughness: 0.28,
-        sideMetalness: 0.7,
-        sideEnvMapIntensity: 1.5,
-        sideEmissive: "#c84e2f",
-        sideEmissiveIntensity: 0.22,
-        capEmissive: "#c84e2f",
-        capEmissiveIntensity: 0.06,
-      },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "dither",
-        color: "#caa554",
-        accentColor: "#c84e2f",
-        intensity: 0.58,
-        density: 0.7,
-        animation: 0.18,
-      },
-      wireframe: false,
-      flatCompare: false,
-    },
-  },
-  celestialLacquer: {
-    label: "Celestial Lacquer",
-    settings: {
-      materialMode: "physical",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 32, bevelThickness: 4.1, bevelSize: 3.5 },
-      physical: {
-        color: "#1f1910",
+        color: PALETTE.lacquer,
         metalness: 0.42,
-        roughness: 0.16,
+        roughness: 0.12,
         clearcoat: 1,
-        clearcoatRoughness: 0.025,
+        clearcoatRoughness: 0.02,
         iridescence: 0.02,
-        envMapIntensity: 2.65,
+        envMapIntensity: 2.9,
       },
-      transmission: BASE_TRANSMISSION,
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.45 },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.38,
-        bloomThreshold: 0.55,
-        chromatic: 0.00022,
-        noise: 0.034,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.045 },
       surface: {
-        ...BASE_SURFACE,
         family: "celestial-lacquer",
         kind: "celestial-lacquer",
-        primary: "#12100d",
-        secondary: "#caa554",
-        strength: 0.9,
-        scale: 1.05,
-        bump: 0.055,
-        inlay: 0.76,
-        sideColor: "#caa554",
-        sideRoughness: 0.12,
+        primary: PALETTE.lacquer,
+        secondary: PALETTE.gold,
+        strength: 1,
+        scale: 1.02,
+        bump: 0.05,
+        inlay: 0.82,
+        sideColor: PALETTE.gold,
+        sideRoughness: 0.15,
         sideMetalness: 0.85,
-        sideEnvMapIntensity: 2.4,
-        sideEmissive: "#caa554",
-        sideEmissiveIntensity: 0.16,
-        capEmissive: "#caa554",
+        sideEnvMapIntensity: 2.5,
+        sideEmissive: PALETTE.gold,
+        sideEmissiveIntensity: 0.18,
+        capEmissive: PALETTE.gold,
         capEmissiveIntensity: 0.05,
       },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "orbits",
-        color: "#caa554",
-        accentColor: "#ebe3d6",
-        intensity: 0.46,
-        density: 0.48,
-        animation: 0.2,
-      },
-      wireframe: false,
-      flatCompare: false,
     },
-  },
-  vectorRelic: {
-    label: "Vector Relic",
-    settings: {
+    lighting: { intensity: 2.0, accentColor: PALETTE.red, secondaryColor: PALETTE.hotGold },
+    post: { bloomIntensity: 1.18, bloomThreshold: 0.34, noise: 0.045 },
+    signal: { mode: "orbits", intensity: 0.44, density: 0.42 },
+  }),
+  preset({
+    id: "solid-epsilon-enamel",
+    label: "Epsilon Enamel",
+    mode: "solid",
+    description: "Dark enamel with red-orange emissive dither embedded in the caps.",
+    solid: {
       materialMode: "physical",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 38, bevelThickness: 2.8, bevelSize: 2.2 },
+      geometry: { depth: 28, bevelThickness: 3.2, bevelSize: 2.7 },
       physical: {
-        color: "#c0a25a",
-        metalness: 0.86,
-        roughness: 0.3,
-        clearcoat: 0.72,
-        clearcoatRoughness: 0.09,
+        color: "#3d2718",
+        metalness: 0.7,
+        roughness: 0.18,
+        clearcoat: 0.9,
+        clearcoatRoughness: 0.05,
         iridescence: 0.03,
-        envMapIntensity: 1.9,
+        envMapIntensity: 1.8,
       },
-      transmission: BASE_TRANSMISSION,
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.05 },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.34,
-        bloomThreshold: 0.58,
-        chromatic: 0.00018,
-        noise: 0.04,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.04, pointerTilt: 0.16 },
       surface: {
-        ...BASE_SURFACE,
+        family: "epsilon-dither",
+        kind: "epsilon-dither",
+        primary: "#3d2718",
+        secondary: PALETTE.redHot,
+        strength: 1.12,
+        scale: 1.7,
+        bump: 0.08,
+        inlay: 0.76,
+        sideColor: PALETTE.red,
+        sideRoughness: 0.25,
+        sideMetalness: 0.75,
+        sideEnvMapIntensity: 1.7,
+        sideEmissive: PALETTE.redHot,
+        sideEmissiveIntensity: 0.24,
+        capEmissive: PALETTE.red,
+        capEmissiveIntensity: 0.08,
+      },
+    },
+    lighting: { intensity: 1.75, accentColor: PALETTE.redHot },
+    post: { bloomIntensity: 1.35, bloomThreshold: 0.3, noise: 0.08 },
+    signal: { mode: "dither", intensity: 0.66, density: 0.72 },
+  }),
+  preset({
+    id: "solid-vector-relic",
+    label: "Vector Relic",
+    mode: "solid",
+    description: "Aged gold object with etched drafting traces and no green provenance tint.",
+    solid: {
+      materialMode: "physical",
+      geometry: { depth: 40, bevelThickness: 2.8, bevelSize: 2.2 },
+      physical: {
+        color: "#b58a43",
+        metalness: 0.88,
+        roughness: 0.36,
+        clearcoat: 0.65,
+        clearcoatRoughness: 0.1,
+        iridescence: 0.02,
+        envMapIntensity: 1.85,
+      },
+      surface: {
         family: "vector-relic",
         kind: "vector-etch",
-        primary: "#a98b4a",
-        secondary: "#5b7a4e",
+        primary: "#a9782c",
+        secondary: PALETTE.red,
         strength: 1,
-        scale: 1.24,
-        bump: 0.13,
-        inlay: 0.76,
-        sideColor: "#5b7a4e",
-        sideRoughness: 0.52,
-        sideMetalness: 0.8,
-        sideEnvMapIntensity: 1.4,
-        sideEmissive: "#5b7a4e",
-        sideEmissiveIntensity: 0.08,
-        capEmissive: "#caa554",
-        capEmissiveIntensity: 0.03,
-      },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "wireDepth",
-        color: "#caa554",
-        accentColor: "#5b7a4e",
-        intensity: 0.52,
-        density: 0.58,
-        animation: 0.12,
+        scale: 1.35,
+        bump: 0.12,
+        inlay: 0.54,
+        sideColor: PALETTE.umber,
+        sideRoughness: 0.46,
+        sideMetalness: 0.9,
+        sideEnvMapIntensity: 1.2,
+        sideEmissive: PALETTE.red,
+        sideEmissiveIntensity: 0.09,
       },
       wireframe: true,
-      flatCompare: false,
     },
-  },
-  frostedIvory: {
-    label: "Frosted Ivory",
-    settings: {
+    lighting: { intensity: 1.45 },
+    post: { bloomIntensity: 0.82, bloomThreshold: 0.42, noise: 0.06 },
+    signal: { mode: "wire", intensity: 0.52, density: 0.58 },
+  }),
+  preset({
+    id: "solid-frosted-dawn",
+    label: "Frosted Dawn",
+    mode: "solid",
+    description: "Matte translucent resin with grainy roughness and a soft gold edge.",
+    solid: {
       materialMode: "transmission",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 34, bevelThickness: 5.4, bevelSize: 4.5 },
-      physical: BASE_PHYSICAL,
+      geometry: { depth: 34, bevelThickness: 5.4, bevelSize: 4.5 },
       transmission: {
-        ...BASE_TRANSMISSION,
-        color: "#f4eadb",
-        roughness: 0.38,
-        thickness: 0.98,
-        attenuationColor: "#ebe3d6",
-        attenuationDistance: 2.5,
+        color: PALETTE.ivory,
+        roughness: 0.33,
+        thickness: 1.0,
+        attenuationColor: PALETTE.gold,
+        attenuationDistance: 1.55,
         iridescence: 0.04,
-        chromaticAberration: 0.014,
-        anisotropy: 0.56,
+        chromaticAberration: 0.012,
         distortion: 0.035,
-        distortionScale: 0.14,
-        temporalDistortion: 0.01,
       },
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.14, animated: false },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.34,
-        bloomThreshold: 0.58,
-        chromatic: 0.00012,
-        noise: 0.022,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.03, pointerTilt: 0.12 },
       surface: {
-        ...BASE_SURFACE,
         family: "frosted-ivory",
         kind: "frosted-grain",
-        primary: "#ebe3d6",
-        secondary: "#caa554",
+        primary: PALETTE.ivory,
+        secondary: PALETTE.gold,
         strength: 1.05,
-        scale: 2.1,
-        bump: 0.13,
-        inlay: 0.34,
-        sideColor: "#ebe3d6",
-        sideRoughness: 0.58,
-        sideMetalness: 0,
-        sideEnvMapIntensity: 1,
-        sideEmissive: "#ebe3d6",
-        sideEmissiveIntensity: 0.05,
-        capEmissive: "#ebe3d6",
-        capEmissiveIntensity: 0.02,
+        scale: 2.0,
+        bump: 0.14,
+        inlay: 0.22,
+        sideColor: PALETTE.gold,
+        sideRoughness: 0.45,
+        sideMetalness: 0.08,
+        sideEnvMapIntensity: 1.2,
+        sideEmissive: PALETTE.gold,
+        sideEmissiveIntensity: 0.08,
       },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "motes",
-        color: "#ebe3d6",
-        accentColor: "#caa554",
-        intensity: 0.14,
-        density: 0.12,
-        animation: 0.08,
-      },
-      wireframe: false,
-      flatCompare: false,
     },
-  },
-  provenanceGlass: {
-    label: "Provenance Glass",
-    settings: {
+    lighting: { intensity: 1.32, animated: false },
+    post: { bloomIntensity: 0.64, bloomThreshold: 0.5, noise: 0.04 },
+    signal: { mode: "none", intensity: 0 },
+  }),
+  preset({
+    id: "particle-services-dither",
+    label: "Services Dither Core",
+    mode: "particle",
+    description: "Production-adjacent Services particle mark, converted to red-gold dither.",
+    particle: SERVICES_PARTICLE,
+    lighting: { intensity: 1.4 },
+    post: { bloomIntensity: 1.18, bloomThreshold: 0.28, noise: 0.06 },
+    signal: { mode: "scan", intensity: 0.16, density: 0.32 },
+  }),
+  preset({
+    id: "particle-terminal-scan",
+    label: "Terminal Scan",
+    mode: "particle",
+    description: "Horizontal scan primitives with hot amber/red phosphor bloom.",
+    particle: {
+      ...SERVICES_PARTICLE,
+      basis: "svg-outline",
+      shape: "scan",
+      blending: "additive",
+      pointSize: 4.8,
+      primitiveAspect: 4.2,
+      shapeStroke: 0.07,
+      lineJitter: 0.2,
+      color: PALETTE.hotGold,
+      accentColor: PALETTE.redHot,
+      cleanField: 0.4,
+      showSphere: false,
+    },
+    lighting: { intensity: 1.7, accentColor: PALETTE.redHot },
+    post: { bloomIntensity: 1.45, bloomThreshold: 0.24, chromatic: 0.001, noise: 0.075 },
+    signal: { mode: "scan", primary: PALETTE.redHot, intensity: 0.56, density: 0.72 },
+  }),
+  preset({
+    id: "particle-vector-wire",
+    label: "Vector Wire Artifact",
+    mode: "particle",
+    description: "Contour particles fan into depth like a layered drafting object.",
+    particle: {
+      ...SERVICES_PARTICLE,
+      basis: "model-wire",
+      shape: "dash",
+      blending: "additive",
+      pointSize: 3.8,
+      primitiveAspect: 3.4,
+      shapeStroke: 0.065,
+      lineJitter: 0.1,
+      bulge: 0.28,
+      thickness: 0,
+      color: PALETTE.gold,
+      accentColor: PALETTE.red,
+      showSphere: true,
+    },
+    lighting: { intensity: 1.6 },
+    post: { bloomIntensity: 1.08, bloomThreshold: 0.34, noise: 0.05 },
+    signal: { mode: "wire", intensity: 0.58, density: 0.62 },
+  }),
+  preset({
+    id: "particle-raster-heat",
+    label: "Raster Heat Field",
+    mode: "particle",
+    description: "Filled silhouette on a coarse terminal lattice with hot dither edges.",
+    particle: {
+      ...SERVICES_PARTICLE,
+      basis: "edge-lattice",
+      gridSnap: 1 / 24,
+      shape: "cell",
+      blending: "normal",
+      pointSize: 6.2,
+      shapeStroke: 0.17,
+      color: PALETTE.amber,
+      accentColor: PALETTE.redHot,
+      showSphere: false,
+    },
+    lighting: { intensity: 1.5, accentColor: PALETTE.redHot },
+    post: { bloomIntensity: 1.25, bloomThreshold: 0.26, noise: 0.085 },
+    signal: { mode: "dither", primary: PALETTE.redHot, intensity: 0.5, density: 0.72 },
+  }),
+  preset({
+    id: "particle-hud-glyph",
+    label: "HUD Glyph",
+    mode: "particle",
+    description: "Symbol particles in the canonical silhouette, useful for diagram scenes.",
+    particle: {
+      ...BASE_PARTICLE,
+      basis: "dome-fill",
+      shape: "glyph",
+      glyph: "plus",
+      blending: "additive",
+      pointSize: 5.2,
+      shapeStroke: 0.075,
+      cleanField: 0.7,
+      freezeMotion: true,
+      color: PALETTE.gold,
+      accentColor: PALETTE.ivory,
+    },
+    lighting: { intensity: 1.25 },
+    post: { bloomIntensity: 0.95, bloomThreshold: 0.34, noise: 0.04 },
+    signal: { mode: "orbits", intensity: 0.45, density: 0.5 },
+  }),
+  preset({
+    id: "particle-luminous-dust",
+    label: "Luminous Gold Dust",
+    mode: "particle",
+    description: "Soft additive particle halo, kept for comparison with production defaults.",
+    particle: {
+      ...BASE_PARTICLE,
+      basis: "dome-fill",
+      shape: "dot",
+      blending: "additive",
+      pointSize: 2.8,
+      opacity: 0.9,
+      cleanField: 0,
+      freezeMotion: false,
+      color: PALETTE.gold,
+      accentColor: PALETTE.hotGold,
+    },
+    post: { bloomIntensity: 0.9, bloomThreshold: 0.36, noise: 0.04 },
+    signal: { mode: "motes", intensity: 0.24, density: 0.32 },
+  }),
+  preset({
+    id: "scene-services-rails",
+    label: "Services Rails Dither",
+    mode: "scene",
+    scene: "services-rails",
+    description: "Services-section composition: centered mark, left/right rails, terminal dither.",
+    particle: SERVICES_PARTICLE,
+    lighting: { intensity: 1.45, accentColor: PALETTE.red, secondaryColor: PALETTE.gold },
+    post: { bloomIntensity: 1.28, bloomThreshold: 0.25, noise: 0.075, vignette: 0.68 },
+    signal: { mode: "orbits", intensity: 0.48, density: 0.5 },
+    motion: { autoRotate: 0.035 },
+  }),
+  preset({
+    id: "scene-services-glass",
+    label: "Services Rails Glass",
+    mode: "scene",
+    scene: "services-rails",
+    description: "Same Services frame, but with a solid umber glass brandmark.",
+    solid: {
       materialMode: "transmission",
-      debugMode: "none",
-      geometry: { ...BASE_GEOMETRY, depth: 32, bevelThickness: 4.7, bevelSize: 3.7 },
-      physical: BASE_PHYSICAL,
+      geometry: { depth: 38, bevelThickness: 5.2, bevelSize: 4.2 },
       transmission: {
-        ...BASE_TRANSMISSION,
-        color: "#a8bc91",
-        roughness: 0.1,
-        thickness: 0.74,
-        attenuationColor: "#5b7a4e",
-        attenuationDistance: 1.28,
-        iridescence: 0.12,
-        chromaticAberration: 0.022,
-        anisotropy: 0.36,
-        distortion: 0.045,
-        distortionScale: 0.2,
-        temporalDistortion: 0.014,
+        color: "#f2c07a",
+        thickness: 0.9,
+        attenuationColor: PALETTE.umber,
+        attenuationDistance: 0.95,
       },
-      environment: { ...BASE_ENVIRONMENT, intensity: 1.05 },
-      post: {
-        ...BASE_POST,
-        bloomIntensity: 0.3,
-        bloomThreshold: 0.58,
-        chromatic: 0.0002,
-        noise: 0.032,
-      },
-      motion: { ...BASE_MOTION, autoRotate: 0.045 },
       surface: {
-        ...BASE_SURFACE,
-        family: "provenance-glass",
-        kind: "provenance-grain",
-        primary: "#9fb08a",
-        secondary: "#5b7a4e",
+        family: "archive-amber",
+        kind: "amber-contours",
+        primary: "#e0a25d",
+        secondary: PALETTE.red,
         strength: 1,
-        scale: 1.42,
-        bump: 0.1,
-        inlay: 0.56,
-        sideColor: "#5b7a4e",
-        sideRoughness: 0.2,
-        sideMetalness: 0.12,
-        sideEnvMapIntensity: 1.5,
-        sideEmissive: "#5b7a4e",
-        sideEmissiveIntensity: 0.14,
-        capEmissive: "#caa554",
-        capEmissiveIntensity: 0.03,
+        sideColor: PALETTE.red,
+        sideEmissive: PALETTE.red,
+        sideEmissiveIntensity: 0.18,
       },
-      signal: {
-        ...BASE_SIGNAL,
-        mode: "motes",
-        color: "#caa554",
-        accentColor: "#5b7a4e",
-        intensity: 0.28,
-        density: 0.22,
-        animation: 0.14,
-      },
-      wireframe: false,
-      flatCompare: false,
     },
-  },
+    lighting: { intensity: 2.1, accentColor: PALETTE.redHot, secondaryColor: PALETTE.hotGold },
+    post: { bloomIntensity: 1.35, bloomThreshold: 0.25, noise: 0.06 },
+    signal: { mode: "contours", intensity: 0.38, density: 0.46 },
+    motion: { autoRotate: 0.035 },
+  }),
+  preset({
+    id: "scene-terminal-plot",
+    label: "Terminal Plot",
+    mode: "scene",
+    scene: "terminal-plot",
+    description: "Red-gold plotter diagram around the mark for fast aesthetic scanning.",
+    particle: {
+      ...SERVICES_PARTICLE,
+      basis: "model-wire",
+      shape: "dash",
+      pointSize: 3.6,
+      primitiveAspect: 3.5,
+      color: PALETTE.hotGold,
+      accentColor: PALETTE.redHot,
+      showSphere: true,
+    },
+    lighting: { intensity: 1.6, accentColor: PALETTE.redHot },
+    post: { bloomIntensity: 1.42, bloomThreshold: 0.25, chromatic: 0.0008, noise: 0.08 },
+    signal: { mode: "wire", primary: PALETTE.red, accent: PALETTE.hotGold, intensity: 0.62 },
+  }),
+  preset({
+    id: "scene-active-chamber",
+    label: "Active Chamber",
+    mode: "scene",
+    scene: "active-chamber",
+    description: "Cinematic dark chamber lighting without importing the Active Theory asset style.",
+    solid: {
+      materialMode: "physical",
+      geometry: { depth: 36, bevelThickness: 4.4, bevelSize: 3.5 },
+      physical: {
+        color: PALETTE.lacquer,
+        metalness: 0.65,
+        roughness: 0.11,
+        clearcoat: 1,
+        clearcoatRoughness: 0.025,
+        envMapIntensity: 3,
+      },
+      surface: {
+        family: "celestial-lacquer",
+        kind: "celestial-lacquer",
+        primary: PALETTE.lacquer,
+        secondary: PALETTE.gold,
+        inlay: 0.8,
+        sideColor: PALETTE.gold,
+        sideEmissive: PALETTE.gold,
+        sideEmissiveIntensity: 0.14,
+      },
+    },
+    lighting: { intensity: 2.4, accentColor: PALETTE.red, secondaryColor: PALETTE.hotGold },
+    post: { bloomIntensity: 1.55, bloomThreshold: 0.22, chromatic: 0.0007, noise: 0.06 },
+    signal: { mode: "motes", intensity: 0.28, density: 0.3 },
+    motion: { autoRotate: 0.045 },
+  }),
+];
+
+const MODE_LABELS: Record<LabMode, string> = {
+  solid: "Solid",
+  particle: "Particle",
+  scene: "Scene",
 };
 
-export default function BrandmarkReflectiveLabPage() {
-  const [presetName, setPresetName] = useState<PresetName>("tensorGlass");
-  const [settings, setSettings] = useState<LabSettings>(PRESETS.tensorGlass.settings);
+const SHAPE_OPTIONS: ReadonlyArray<BrandmarkCoreShape> = [
+  "dot",
+  "dither",
+  "voxel",
+  "glyph",
+  "dash",
+  "cell",
+  "bracket",
+  "scan",
+];
+const BASIS_OPTIONS: ReadonlyArray<BrandmarkBasis> = [
+  "dome-fill",
+  "svg-outline",
+  "edge-lattice",
+  "model-wire",
+];
+const SURFACE_OPTIONS: ReadonlyArray<Brandmark3DSurfaceKind> = [
+  "none",
+  "tensor-bands",
+  "brushed-brass",
+  "ceramic-speckle",
+  "amber-contours",
+  "blueprint-slices",
+  "epsilon-dither",
+  "celestial-lacquer",
+  "vector-etch",
+  "frosted-grain",
+  "provenance-grain",
+];
+const SIGNAL_OPTIONS: ReadonlyArray<SignalMode> = [
+  "none",
+  "motes",
+  "scan",
+  "contours",
+  "orbits",
+  "dither",
+  "wire",
+];
+
+export default function BrandmarkUnifiedLabPage() {
+  const reducedMotion = usePrefersReducedMotion();
+  const [savedPresets, setSavedPresets] = useState<UnifiedPreset[]>(() => readLocalPresets());
+  const presets = useMemo(() => [...BUILT_IN_PRESETS, ...savedPresets], [savedPresets]);
+  const [activePresetId, setActivePresetId] = useState(BUILT_IN_PRESETS[0].id);
+  const activePreset = presets.find((p) => p.id === activePresetId) ?? BUILT_IN_PRESETS[0];
+  const [mode, setMode] = useState<LabMode>(activePreset.mode);
+  const [sceneFrame, setSceneFrame] = useState<SceneFrame>(activePreset.scene);
+  const [solidSettings, setSolidSettings] = useState<SolidSettings>(() =>
+    cloneSolid(activePreset.solid)
+  );
+  const [particleSettings, setParticleSettings] = useState<ParticleSettings>(() =>
+    cloneParticle(activePreset.particle)
+  );
+  const [lightingSettings, setLightingSettings] = useState<LightingSettings>(() => ({
+    ...activePreset.lighting,
+  }));
+  const [postSettings, setPostSettings] = useState<PostSettings>(() => ({ ...activePreset.post }));
+  const [signalSettings, setSignalSettings] = useState<SignalSettings>(() => ({
+    ...activePreset.signal,
+  }));
+  const [motionSettings, setMotionSettings] = useState<MotionSettings>(() => ({
+    ...activePreset.motion,
+  }));
   const [presentationRotation, setPresentationRotation] =
     useState<[number, number, number]>(PREVIEW_ROTATION);
   const [rotationResetKey, setRotationResetKey] = useState(0);
-  const reducedMotion = usePrefersReducedMotion();
+  const [presetLabel, setPresetLabel] = useState("");
+  const [loadSlug, setLoadSlug] = useState("");
+  const [presetSlug, setPresetSlug] = useState("");
+  const [presetStatus, setPresetStatus] = useState("");
+  const [presetBusy, setPresetBusy] = useState(false);
 
-  const applyPreset = useCallback((name: PresetName) => {
-    setPresetName(name);
-    setSettings(cloneSettings(PRESETS[name].settings));
-    setPresentationRotation(PREVIEW_ROTATION);
-    setRotationResetKey((key) => key + 1);
-  }, []);
+  const applyUnifiedPreset = useCallback(
+    (presetId: string, resetRotation = true) => {
+      const next = presets.find((p) => p.id === presetId) ?? BUILT_IN_PRESETS[0];
+      setActivePresetId(next.id);
+      setMode(next.mode);
+      setSceneFrame(next.scene);
+      setSolidSettings(cloneSolid(next.solid));
+      setParticleSettings(cloneParticle(next.particle));
+      setLightingSettings({ ...next.lighting });
+      setPostSettings({ ...next.post });
+      setSignalSettings({ ...next.signal });
+      setMotionSettings({ ...next.motion });
+      if (resetRotation) {
+        setPresentationRotation(PREVIEW_ROTATION);
+        setRotationResetKey((key) => key + 1);
+      }
+    },
+    [presets]
+  );
+
+  const modePresets = useMemo(
+    () => presets.filter((presetItem) => presetItem.mode === mode),
+    [mode, presets]
+  );
+
+  const selectMode = useCallback(
+    (nextMode: LabMode) => {
+      setMode(nextMode);
+      const first = presets.find((presetItem) => presetItem.mode === nextMode);
+      if (first) applyUnifiedPreset(first.id);
+    },
+    [applyUnifiedPreset, presets]
+  );
+
+  const stepPreset = useCallback(
+    (direction: -1 | 1) => {
+      if (!modePresets.length) return;
+      const currentIndex = Math.max(
+        0,
+        modePresets.findIndex((presetItem) => presetItem.id === activePresetId)
+      );
+      const nextIndex = (currentIndex + direction + modePresets.length) % modePresets.length;
+      applyUnifiedPreset(modePresets[nextIndex].id);
+    },
+    [activePresetId, applyUnifiedPreset, modePresets]
+  );
 
   const resetCurrentPreset = useCallback(() => {
-    setSettings(cloneSettings(PRESETS[presetName].settings));
-    setPresentationRotation(PREVIEW_ROTATION);
-    setRotationResetKey((key) => key + 1);
-  }, [presetName]);
-
-  const updateGeometry = useCallback((patch: Partial<GeometrySettings>) => {
-    setSettings((current) => ({ ...current, geometry: { ...current.geometry, ...patch } }));
-  }, []);
-
-  const updatePhysical = useCallback((patch: Partial<PhysicalSettings>) => {
-    setSettings((current) => ({ ...current, physical: { ...current.physical, ...patch } }));
-  }, []);
-
-  const updateTransmission = useCallback((patch: Partial<TransmissionSettings>) => {
-    setSettings((current) => ({
-      ...current,
-      transmission: { ...current.transmission, ...patch },
-    }));
-  }, []);
-
-  const updateSurface = useCallback((patch: Partial<SurfaceSettings>) => {
-    setSettings((current) => ({
-      ...current,
-      surface: { ...current.surface, ...patch },
-    }));
-  }, []);
-
-  const updateEnvironment = useCallback((patch: Partial<EnvironmentSettings>) => {
-    setSettings((current) => ({
-      ...current,
-      environment: { ...current.environment, ...patch },
-    }));
-  }, []);
-
-  const updatePost = useCallback((patch: Partial<PostSettings>) => {
-    setSettings((current) => ({ ...current, post: { ...current.post, ...patch } }));
-  }, []);
-
-  const updateMotion = useCallback((patch: Partial<MotionSettings>) => {
-    setSettings((current) => ({ ...current, motion: { ...current.motion, ...patch } }));
-  }, []);
-
-  const updateSignal = useCallback((patch: Partial<SignalSettings>) => {
-    setSettings((current) => ({ ...current, signal: { ...current.signal, ...patch } }));
-  }, []);
+    applyUnifiedPreset(activePresetId);
+  }, [activePresetId, applyUnifiedPreset]);
 
   const stopRotation = useCallback(() => {
     setPresentationRotation(CENTERED_ROTATION);
     setRotationResetKey((key) => key + 1);
-    updateMotion({ autoRotate: 0, pointerParallax: false });
-  }, [updateMotion]);
-
-  const setMaterialMode = useCallback((materialMode: Brandmark3DMaterialMode) => {
-    setSettings((current) => ({ ...current, materialMode }));
+    setMotionSettings((current) => ({ ...current, autoRotate: 0, pointerParallax: false }));
   }, []);
 
-  const setDebugMode = useCallback((debugMode: Brandmark3DDebugMode) => {
-    setSettings((current) => ({ ...current, debugMode }));
+  const updateSolid = useCallback((patch: Partial<SolidSettings>) => {
+    setSolidSettings((current) => ({
+      ...current,
+      ...patch,
+      geometry: { ...current.geometry, ...patch.geometry },
+      physical: { ...current.physical, ...patch.physical },
+      transmission: { ...current.transmission, ...patch.transmission },
+      surface: { ...current.surface, ...patch.surface },
+    }));
   }, []);
 
-  const matcap = settings.materialMode === "matcap" ? MATCAP_PRESETS.iridescent : undefined;
-  const debugMode = settings.debugMode ?? "none";
-  const effectsEnabled = settings.post.enabled && !reducedMotion && debugMode === "none";
-  const animatedEnvironment = settings.environment.animated && !reducedMotion;
-  const showSignal = debugMode === "none";
+  const updateParticle = useCallback((patch: Partial<ParticleSettings>) => {
+    setParticleSettings((current) => ({ ...current, ...patch }));
+  }, []);
+
+  const buildSnapshot = useCallback((): SavedSnapshot => {
+    const label = presetLabel.trim() || `${activePreset.label} copy`;
+    return {
+      v: 3,
+      lab: "brandmark-unified",
+      label,
+      mode,
+      scene: sceneFrame,
+      solid: cloneSolid(solidSettings),
+      particle: cloneParticle(particleSettings),
+      lighting: { ...lightingSettings },
+      post: { ...postSettings },
+      signal: { ...signalSettings },
+      motion: { ...motionSettings },
+    };
+  }, [
+    activePreset.label,
+    lightingSettings,
+    mode,
+    motionSettings,
+    particleSettings,
+    postSettings,
+    presetLabel,
+    sceneFrame,
+    signalSettings,
+    solidSettings,
+  ]);
+
+  const applySnapshot = useCallback((snapshot: unknown, fallbackId = "loaded-preset") => {
+    if (!isUnifiedSnapshot(snapshot)) {
+      const oldParticle = coerceLegacyParticleSnapshot(snapshot);
+      if (!oldParticle) {
+        setPresetStatus("Loaded data was not a brandmark lab preset");
+        return;
+      }
+      setMode("particle");
+      setSceneFrame("object");
+      setParticleSettings(oldParticle);
+      setSolidSettings(cloneSolid(BASE_SOLID));
+      setLightingSettings({ ...BASE_LIGHTING });
+      setPostSettings({ ...BASE_POST });
+      setSignalSettings({ ...BASE_SIGNAL, mode: "scan" });
+      setMotionSettings({ ...BASE_MOTION });
+      setActivePresetId(fallbackId);
+      return;
+    }
+
+    const savedPreset: UnifiedPreset = {
+      id: fallbackId,
+      label: snapshot.label || "Loaded preset",
+      mode: snapshot.mode,
+      scene: snapshot.scene,
+      description: "Saved snapshot loaded from the brandmark preset store.",
+      solid: cloneSolid(snapshot.solid),
+      particle: cloneParticle(snapshot.particle),
+      lighting: { ...snapshot.lighting },
+      post: { ...snapshot.post },
+      signal: { ...snapshot.signal },
+      motion: { ...snapshot.motion },
+      saved: true,
+    };
+    setSavedPresets((current) => upsertPreset(current, savedPreset));
+    setMode(savedPreset.mode);
+    setSceneFrame(savedPreset.scene);
+    setSolidSettings(cloneSolid(savedPreset.solid));
+    setParticleSettings(cloneParticle(savedPreset.particle));
+    setLightingSettings({ ...savedPreset.lighting });
+    setPostSettings({ ...savedPreset.post });
+    setSignalSettings({ ...savedPreset.signal });
+    setMotionSettings({ ...savedPreset.motion });
+    setActivePresetId(savedPreset.id);
+    setPresentationRotation(PREVIEW_ROTATION);
+    setRotationResetKey((key) => key + 1);
+  }, []);
+
+  const savePreset = useCallback(async () => {
+    const snapshot = buildSnapshot();
+    setPresetBusy(true);
+    setPresetStatus("Saving preset...");
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const slug = makeSlug();
+      if (supabase) {
+        const { error } = await supabase
+          .from("brandmark_presets")
+          .insert({ slug, label: snapshot.label, settings: snapshot });
+        if (error) {
+          if (error.code === "23505") continue;
+          setPresetStatus(`Save failed: ${error.message}`);
+          setPresetBusy(false);
+          return;
+        }
+      } else {
+        writeLocalPreset(slug, snapshot);
+      }
+
+      const savedPreset = snapshotToPreset(slug, snapshot);
+      setSavedPresets((current) => upsertPreset(current, savedPreset));
+      setPresetSlug(slug);
+      setLoadSlug(slug);
+      setActivePresetId(savedPreset.id);
+      setPresetStatus(`Saved preset ${slug}`);
+      setPresetBusy(false);
+      return;
+    }
+
+    setPresetStatus("Save failed: slug collision");
+    setPresetBusy(false);
+  }, [buildSnapshot]);
+
+  const loadPreset = useCallback(
+    async (rawSlug: string) => {
+      const slug = rawSlug.trim().toLowerCase();
+      if (!slug) {
+        setPresetStatus("Enter a preset id");
+        return;
+      }
+      setPresetBusy(true);
+      setPresetStatus(`Loading ${slug}...`);
+
+      if (supabase) {
+        const { data, error } = await supabase
+          .from("brandmark_presets")
+          .select("settings,label")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (error) {
+          setPresetStatus(`Load failed: ${error.message}`);
+          setPresetBusy(false);
+          return;
+        }
+        if (!data) {
+          setPresetStatus(`No preset found for ${slug}`);
+          setPresetBusy(false);
+          return;
+        }
+        applySnapshot(data.settings, `saved-${slug}`);
+        setPresetLabel(typeof data.label === "string" ? data.label : "");
+      } else {
+        const local = readLocalPreset(slug);
+        if (!local) {
+          setPresetStatus(`No local preset found for ${slug}`);
+          setPresetBusy(false);
+          return;
+        }
+        applySnapshot(local, `saved-${slug}`);
+        setPresetLabel(local.label);
+      }
+
+      setPresetSlug(slug);
+      setLoadSlug(slug);
+      setPresetStatus(`Loaded preset ${slug}`);
+      setPresetBusy(false);
+    },
+    [applySnapshot]
+  );
+
+  const renderedAsSolid =
+    mode === "solid" ||
+    (mode === "scene" &&
+      (activePresetId === "scene-services-glass" || activePresetId === "scene-active-chamber"));
+  const debugMode = renderedAsSolid ? solidSettings.debugMode : "none";
+  const effectsEnabled = postSettings.enabled && !reducedMotion && debugMode === "none";
+  const animatedEnvironment = lightingSettings.animated && !reducedMotion;
+  const matcap = solidSettings.materialMode === "matcap" ? MATCAP_PRESETS.iridescent : undefined;
 
   return (
-    <main style={pageStyle}>
+    <main className="brandmark-lab">
+      <style>{responsiveStyles}</style>
       <CanvasErrorBoundary fallback={<CanvasFallback />}>
         <Canvas
           camera={{ position: [0, 0, 3.15], fov: 34, near: 0.1, far: 100 }}
@@ -960,486 +1232,674 @@ export default function BrandmarkReflectiveLabPage() {
             premultipliedAlpha: false,
             powerPreference: "high-performance",
           }}
-          style={canvasStyle}
+          className="brandmark-lab__canvas"
           onCreated={({ gl, scene, camera }) => {
             gl.toneMapping = THREE.ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.12;
+            gl.toneMappingExposure = lightingSettings.exposure;
             if (typeof window !== "undefined") {
               const debug = window as unknown as Record<string, unknown>;
-              debug.__BRANDMARK_REFLECTIVE_SCENE = scene;
-              debug.__BRANDMARK_REFLECTIVE_GL = gl;
-              debug.__BRANDMARK_REFLECTIVE_CAMERA = camera;
+              debug.__BRANDMARK_LAB_SCENE = scene;
+              debug.__BRANDMARK_LAB_GL = gl;
+              debug.__BRANDMARK_LAB_CAMERA = camera;
             }
           }}
         >
-          <color attach="background" args={["#050403"]} />
-          <fog attach="fog" args={["#050403", 4.8, 8]} />
+          <color attach="background" args={[PALETTE.void]} />
+          <fog attach="fog" args={[PALETTE.void, 4.2, 8.2]} />
+          <ExposureSync exposure={lightingSettings.exposure} />
           <ReflectiveEnvironmentRig
-            intensity={settings.environment.intensity}
+            intensity={lightingSettings.intensity}
             animated={animatedEnvironment}
-            showReflectionCards={settings.environment.cards}
+            showReflectionCards={lightingSettings.cards}
+            accentColor={lightingSettings.accentColor}
+            secondaryColor={lightingSettings.secondaryColor}
           />
-          <Brandmark3D
-            geometry={settings.geometry}
-            materialMode={settings.materialMode}
-            matcap={matcap}
-            physical={settings.physical}
-            transmission={settings.transmission}
-            surface={settings.surface}
-            debugMode={debugMode}
-            wireframe={{
-              enabled: settings.wireframe,
-              style: "edges",
-              color: "#ebe3d6",
-              opacity: 0.42,
-            }}
-            autoRotateSpeed={reducedMotion ? 0 : settings.motion.autoRotate}
-            rotationResetKey={rotationResetKey}
-            pointerParallax={settings.motion.pointerParallax && !reducedMotion}
-            pointerTiltAmount={settings.motion.pointerTilt}
-            middleMouseDrag
+          <TurntableRig
             rotation={presentationRotation}
-            scale={1.04}
-          />
-          {showSignal ? (
-            <ReflectiveSignalLayer settings={settings.signal} reducedMotion={reducedMotion} />
+            resetKey={rotationResetKey}
+            autoRotate={reducedMotion ? 0 : motionSettings.autoRotate}
+            middleMouseDrag
+          >
+            {renderedAsSolid ? (
+              <Brandmark3D
+                geometry={solidSettings.geometry}
+                materialMode={solidSettings.materialMode}
+                matcap={matcap}
+                physical={solidSettings.physical}
+                transmission={solidSettings.transmission}
+                surface={solidSettings.surface}
+                debugMode={solidSettings.debugMode}
+                wireframe={{
+                  enabled: solidSettings.wireframe,
+                  style: "edges",
+                  color: PALETTE.ivory,
+                  opacity: 0.38,
+                }}
+                autoRotateSpeed={0}
+                rotationResetKey={rotationResetKey}
+                pointerParallax={false}
+                middleMouseDrag={false}
+                rotation={[0, 0, 0]}
+                scale={mode === "scene" ? 1.08 : 1.04}
+              />
+            ) : (
+              <ParticleBrandmark settings={particleSettings} reducedMotion={reducedMotion} />
+            )}
+          </TurntableRig>
+          {debugMode === "none" ? (
+            <SignalLayer
+              settings={signalSettings}
+              reducedMotion={reducedMotion}
+              scene={sceneFrame}
+            />
           ) : null}
-          <SceneReticle />
-          <ReflectivePostProcessing settings={settings.post} enabled={effectsEnabled} />
+          <SceneReticle scene={sceneFrame} />
+          <ReflectivePostProcessing settings={postSettings} enabled={effectsEnabled} />
         </Canvas>
       </CanvasErrorBoundary>
 
-      <ViewportOverlay />
+      <SceneOverlay scene={sceneFrame} mode={mode} />
 
-      {settings.flatCompare ? (
-        <div aria-hidden style={flatCompareStyle}>
-          <BrandmarkGlyph outline={false} decorative />
-          <span style={flatCompareLabelStyle}>Flat SVG</span>
-        </div>
-      ) : null}
-
-      <aside style={panelStyle}>
-        <div style={panelHeaderStyle}>
+      <aside className="brandmark-lab__panel">
+        <div className="brandmark-lab__header">
           <div>
-            <p style={eyebrowStyle}>ADR-024 / INTERNAL</p>
-            <h1 style={titleStyle}>Reflective Brandmark</h1>
+            <p className="brandmark-lab__eyebrow">ADR-024 / INTERNAL</p>
+            <h1>Brandmark Lab</h1>
           </div>
           <button
             type="button"
             onClick={resetCurrentPreset}
-            style={iconButtonStyle}
+            className="icon-button"
             title="Reset preset"
           >
             <RotateCcw size={15} />
           </button>
         </div>
 
-        <SectionLabel icon={<Sparkles size={12} />}>Preset</SectionLabel>
-        <div style={presetGridStyle}>
-          {(Object.keys(PRESETS) as PresetName[]).map((name) => (
+        <SectionLabel icon={<Sparkles size={12} />}>Mode</SectionLabel>
+        <div className="segmented segmented--three">
+          {(["solid", "particle", "scene"] as const).map((value) => (
             <button
-              key={name}
+              key={value}
               type="button"
-              onClick={() => applyPreset(name)}
-              style={{
-                ...presetButtonStyle,
-                ...(presetName === name ? presetButtonActiveStyle : null),
-              }}
+              onClick={() => selectMode(value)}
+              className={mode === value ? "is-active" : ""}
             >
-              {PRESETS[name].label}
+              {MODE_LABELS[value]}
             </button>
           ))}
         </div>
 
-        <SectionLabel icon={<Gem size={12} />}>Material</SectionLabel>
-        <SegmentedControl
-          options={[
-            { label: "Matcap", value: "matcap" },
-            { label: "Chrome", value: "physical" },
-            { label: "Glass", value: "transmission" },
-          ]}
-          value={settings.materialMode}
-          onChange={(value) => setMaterialMode(value as Brandmark3DMaterialMode)}
-        />
+        <SectionLabel>Preset Browser</SectionLabel>
+        <div className="preset-browser">
+          <button type="button" onClick={() => stepPreset(-1)} title="Previous preset">
+            <ChevronLeft size={14} />
+          </button>
+          <select
+            value={activePresetId}
+            onChange={(event) => applyUnifiedPreset(event.target.value)}
+            aria-label="Brandmark preset"
+          >
+            {modePresets.map((presetItem) => (
+              <option key={presetItem.id} value={presetItem.id}>
+                {presetItem.saved ? "Saved: " : ""}
+                {presetItem.label}
+              </option>
+            ))}
+          </select>
+          <button type="button" onClick={() => stepPreset(1)} title="Next preset">
+            <ChevronRight size={14} />
+          </button>
+        </div>
+        <p className="preset-description">{activePreset.description}</p>
 
-        <SectionLabel>Material View</SectionLabel>
-        <SegmentedControl
-          options={DEBUG_VIEW_OPTIONS}
-          value={debugMode}
-          onChange={(value) => setDebugMode(value as Brandmark3DDebugMode)}
-        />
+        <div className="motion-row">
+          <button type="button" onClick={stopRotation} className="primary-action">
+            <Pause size={12} />
+            <span>Stop + center</span>
+          </button>
+          <ControlSlider
+            label="Turntable"
+            value={motionSettings.autoRotate}
+            min={-0.35}
+            max={0.35}
+            step={0.005}
+            onChange={(autoRotate) => setMotionSettings((current) => ({ ...current, autoRotate }))}
+          />
+        </div>
 
-        {settings.materialMode === "transmission" ? (
-          <>
-            <ColorRow
-              label="Tint"
-              value={settings.transmission.color}
-              onChange={(color) => updateTransmission({ color })}
+        {mode === "solid" || renderedAsSolid ? (
+          <details open className="control-group">
+            <summary>Solid Material</summary>
+            <SegmentedControl
+              options={[
+                { label: "Matcap", value: "matcap" },
+                { label: "Metal", value: "physical" },
+                { label: "Glass", value: "transmission" },
+              ]}
+              value={solidSettings.materialMode}
+              onChange={(materialMode) =>
+                updateSolid({ materialMode: materialMode as Brandmark3DMaterialMode })
+              }
+            />
+            <SegmentedControl
+              options={[
+                { label: "Lit", value: "none" },
+                { label: "Albedo", value: "albedo" },
+                { label: "Rough", value: "roughness" },
+                { label: "Normal", value: "normal" },
+              ]}
+              value={solidSettings.debugMode}
+              onChange={(debugMode) =>
+                updateSolid({ debugMode: debugMode as Brandmark3DDebugMode })
+              }
+            />
+            {solidSettings.materialMode === "transmission" ? (
+              <>
+                <ColorRow
+                  label="Glass"
+                  value={solidSettings.transmission.color ?? PALETTE.ivory}
+                  onChange={(color) =>
+                    updateSolid({ transmission: { ...solidSettings.transmission, color } })
+                  }
+                />
+                <ColorRow
+                  label="Attenuation"
+                  value={solidSettings.transmission.attenuationColor ?? PALETTE.amber}
+                  onChange={(attenuationColor) =>
+                    updateSolid({
+                      transmission: { ...solidSettings.transmission, attenuationColor },
+                    })
+                  }
+                />
+                <ControlSlider
+                  label="Thickness"
+                  value={solidSettings.transmission.thickness ?? 0.7}
+                  min={0.05}
+                  max={1.2}
+                  step={0.01}
+                  onChange={(thickness) =>
+                    updateSolid({ transmission: { ...solidSettings.transmission, thickness } })
+                  }
+                />
+                <ControlSlider
+                  label="Roughness"
+                  value={solidSettings.transmission.roughness ?? 0.1}
+                  min={0}
+                  max={0.5}
+                  step={0.005}
+                  onChange={(roughness) =>
+                    updateSolid({ transmission: { ...solidSettings.transmission, roughness } })
+                  }
+                />
+              </>
+            ) : (
+              <>
+                <ColorRow
+                  label="Body"
+                  value={solidSettings.physical.color ?? PALETTE.gold}
+                  onChange={(color) =>
+                    updateSolid({ physical: { ...solidSettings.physical, color } })
+                  }
+                />
+                <ControlSlider
+                  label="Metal"
+                  value={solidSettings.physical.metalness ?? 0}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  onChange={(metalness) =>
+                    updateSolid({ physical: { ...solidSettings.physical, metalness } })
+                  }
+                />
+                <ControlSlider
+                  label="Rough"
+                  value={solidSettings.physical.roughness ?? 0.2}
+                  min={0}
+                  max={0.7}
+                  step={0.005}
+                  onChange={(roughness) =>
+                    updateSolid({ physical: { ...solidSettings.physical, roughness } })
+                  }
+                />
+              </>
+            )}
+            <NativeSelect
+              label="Surface"
+              value={solidSettings.surface.kind}
+              options={SURFACE_OPTIONS}
+              onChange={(kind) =>
+                updateSolid({
+                  surface: { ...solidSettings.surface, kind: kind as Brandmark3DSurfaceKind },
+                })
+              }
             />
             <ColorRow
-              label="Attenuation"
-              value={settings.transmission.attenuationColor}
-              onChange={(attenuationColor) => updateTransmission({ attenuationColor })}
-            />
-            <ControlSlider
-              label="Roughness"
-              value={settings.transmission.roughness}
-              min={0}
-              max={0.5}
-              step={0.005}
-              onChange={(roughness) => updateTransmission({ roughness })}
-            />
-            <ControlSlider
-              label="Thickness"
-              value={settings.transmission.thickness}
-              min={0.05}
-              max={1.2}
-              step={0.01}
-              onChange={(thickness) => updateTransmission({ thickness })}
-            />
-            <ControlSlider
-              label="Iridescence"
-              value={settings.transmission.iridescence}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={(iridescence) => updateTransmission({ iridescence })}
-            />
-            <ControlSlider
-              label="Chromatic"
-              value={settings.transmission.chromaticAberration}
-              min={0}
-              max={0.12}
-              step={0.001}
-              onChange={(chromaticAberration) => updateTransmission({ chromaticAberration })}
-            />
-            <ControlSlider
-              label="Distortion"
-              value={settings.transmission.distortion}
-              min={0}
-              max={0.24}
-              step={0.005}
-              onChange={(distortion) => updateTransmission({ distortion })}
-            />
-          </>
-        ) : (
-          <>
-            <ColorRow
-              label="Tint"
-              value={settings.physical.color}
-              onChange={(color) => updatePhysical({ color })}
-            />
-            <ControlSlider
-              label="Metalness"
-              value={settings.physical.metalness}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={(metalness) => updatePhysical({ metalness })}
-            />
-            <ControlSlider
-              label="Roughness"
-              value={settings.physical.roughness}
-              min={0}
-              max={0.6}
-              step={0.005}
-              onChange={(roughness) => updatePhysical({ roughness })}
-            />
-            <ControlSlider
-              label="Clearcoat"
-              value={settings.physical.clearcoat}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={(clearcoat) => updatePhysical({ clearcoat })}
-            />
-            <ControlSlider
-              label="Iridescence"
-              value={settings.physical.iridescence}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={(iridescence) => updatePhysical({ iridescence })}
-            />
-          </>
-        )}
-
-        <SectionLabel>Surface</SectionLabel>
-        <SegmentedControl
-          options={SURFACE_OPTIONS}
-          value={settings.surface.kind}
-          onChange={(kind) => updateSurface({ kind: kind as Brandmark3DSurfaceKind })}
-        />
-        {settings.surface.kind !== "none" ? (
-          <>
-            <ColorRow
-              label="Base map"
-              value={settings.surface.primary}
-              onChange={(primary) => updateSurface({ primary })}
-            />
-            <ColorRow
-              label="Inlay"
-              value={settings.surface.secondary}
-              onChange={(secondary) => updateSurface({ secondary })}
+              label="Side edge"
+              value={solidSettings.surface.sideColor ?? PALETTE.gold}
+              onChange={(sideColor) =>
+                updateSolid({ surface: { ...solidSettings.surface, sideColor } })
+              }
             />
             <ControlSlider
               label="Texture"
-              value={settings.surface.strength}
+              value={solidSettings.surface.strength ?? 0}
               min={0}
-              max={1.2}
+              max={1.25}
               step={0.01}
-              onChange={(strength) => updateSurface({ strength })}
+              onChange={(strength) =>
+                updateSolid({ surface: { ...solidSettings.surface, strength } })
+              }
             />
             <ControlSlider
-              label="Pattern scale"
-              value={settings.surface.scale}
-              min={0.35}
-              max={3.5}
-              step={0.05}
-              onChange={(scale) => updateSurface({ scale })}
+              label="Depth"
+              value={solidSettings.geometry.depth}
+              min={8}
+              max={60}
+              step={1}
+              onChange={(depth) => updateSolid({ geometry: { ...solidSettings.geometry, depth } })}
             />
-            <ControlSlider
-              label="Bump"
-              value={settings.surface.bump}
-              min={0}
-              max={0.25}
-              step={0.005}
-              onChange={(bump) => updateSurface({ bump })}
+            <Checkbox
+              label="Wire edges"
+              checked={solidSettings.wireframe}
+              onChange={(wireframe) => updateSolid({ wireframe })}
             />
-            <ControlSlider
-              label="Inlay glow"
-              value={settings.surface.inlay}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={(inlay) => updateSurface({ inlay })}
-            />
-          </>
+          </details>
         ) : null}
-        <ColorRow
-          label="Side edge"
-          value={settings.surface.sideColor}
-          onChange={(sideColor) => updateSurface({ sideColor })}
-        />
-        <ColorRow
-          label="Side glow"
-          value={settings.surface.sideEmissive}
-          onChange={(sideEmissive) => updateSurface({ sideEmissive })}
-        />
-        <ControlSlider
-          label="Side rough"
-          value={settings.surface.sideRoughness}
-          min={0}
-          max={1}
-          step={0.01}
-          onChange={(sideRoughness) => updateSurface({ sideRoughness })}
-        />
-        <ControlSlider
-          label="Side metal"
-          value={settings.surface.sideMetalness}
-          min={0}
-          max={1}
-          step={0.01}
-          onChange={(sideMetalness) => updateSurface({ sideMetalness })}
-        />
-        <ControlSlider
-          label="Side env"
-          value={settings.surface.sideEnvMapIntensity}
-          min={0}
-          max={3}
-          step={0.05}
-          onChange={(sideEnvMapIntensity) => updateSurface({ sideEnvMapIntensity })}
-        />
-        <ControlSlider
-          label="Side emit"
-          value={settings.surface.sideEmissiveIntensity}
-          min={0}
-          max={0.8}
-          step={0.01}
-          onChange={(sideEmissiveIntensity) => updateSurface({ sideEmissiveIntensity })}
-        />
 
-        <SectionLabel>Geometry</SectionLabel>
-        <ControlSlider
-          label="Depth"
-          value={settings.geometry.depth}
-          min={8}
-          max={60}
-          step={1}
-          onChange={(depth) => updateGeometry({ depth })}
-        />
-        <ControlSlider
-          label="Bevel"
-          value={settings.geometry.bevelSize}
-          min={0}
-          max={8}
-          step={0.1}
-          onChange={(bevelSize) => updateGeometry({ bevelSize })}
-        />
-        <ControlSlider
-          label="Bevel steps"
-          value={settings.geometry.bevelSegments}
-          min={1}
-          max={14}
-          step={1}
-          onChange={(bevelSegments) => updateGeometry({ bevelSegments })}
-        />
-        <Checkbox
-          label="Hairline ticks"
-          checked={settings.geometry.includeSlivers}
-          onChange={(includeSlivers) => updateGeometry({ includeSlivers })}
-        />
-
-        <SectionLabel>Environment</SectionLabel>
-        <ControlSlider
-          label="Env intensity"
-          value={settings.environment.intensity}
-          min={0}
-          max={3}
-          step={0.05}
-          onChange={(intensity) => updateEnvironment({ intensity })}
-        />
-        <Checkbox
-          label="Animated highlights"
-          checked={settings.environment.animated}
-          onChange={(animated) => updateEnvironment({ animated })}
-        />
-        <Checkbox
-          label="Reflection cards"
-          checked={settings.environment.cards}
-          onChange={(cards) => updateEnvironment({ cards })}
-        />
-
-        <SectionLabel>Signal</SectionLabel>
-        <SegmentedControl
-          options={SIGNAL_OPTIONS}
-          value={settings.signal.mode}
-          onChange={(mode) => updateSignal({ mode: mode as SignalMode })}
-        />
-        {settings.signal.mode !== "none" ? (
-          <>
+        {mode === "particle" || !renderedAsSolid ? (
+          <details open className="control-group">
+            <summary>Particle Material</summary>
+            <NativeSelect
+              label="Basis"
+              value={particleSettings.basis}
+              options={BASIS_OPTIONS}
+              onChange={(basis) => updateParticle({ basis: basis as BrandmarkBasis })}
+            />
+            <NativeSelect
+              label="Shape"
+              value={particleSettings.shape}
+              options={SHAPE_OPTIONS}
+              onChange={(shape) => updateParticle({ shape: shape as BrandmarkCoreShape })}
+            />
+            <SegmentedControl
+              options={[
+                { label: "Glow", value: "additive" },
+                { label: "Flat", value: "normal" },
+              ]}
+              value={particleSettings.blending}
+              onChange={(blending) =>
+                updateParticle({ blending: blending as BrandmarkCoreBlending })
+              }
+            />
             <ColorRow
-              label="Primary"
-              value={settings.signal.color}
-              onChange={(color) => updateSignal({ color })}
+              label="Body"
+              value={particleSettings.color}
+              onChange={(color) => updateParticle({ color })}
             />
             <ColorRow
               label="Accent"
-              value={settings.signal.accentColor}
-              onChange={(accentColor) => updateSignal({ accentColor })}
+              value={particleSettings.accentColor}
+              onChange={(accentColor) => updateParticle({ accentColor })}
             />
             <ControlSlider
-              label="Intensity"
-              value={settings.signal.intensity}
-              min={0}
-              max={1.2}
-              step={0.01}
-              onChange={(intensity) => updateSignal({ intensity })}
+              label="Point size"
+              value={particleSettings.pointSize}
+              min={1}
+              max={8}
+              step={0.1}
+              onChange={(pointSize) => updateParticle({ pointSize })}
             />
             <ControlSlider
-              label="Density"
-              value={settings.signal.density}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={(density) => updateSignal({ density })}
-            />
-            <ControlSlider
-              label="Drift"
-              value={settings.signal.animation}
+              label="Clean field"
+              value={particleSettings.cleanField}
               min={0}
               max={1}
               step={0.01}
-              onChange={(animation) => updateSignal({ animation })}
+              onChange={(cleanField) => updateParticle({ cleanField })}
             />
-          </>
+            <ControlSlider
+              label="Depth"
+              value={particleSettings.depth}
+              min={0}
+              max={1}
+              step={0.01}
+              onChange={(depth) => updateParticle({ depth })}
+            />
+            <ControlSlider
+              label="Stroke"
+              value={particleSettings.shapeStroke}
+              min={0.02}
+              max={0.26}
+              step={0.005}
+              onChange={(shapeStroke) => updateParticle({ shapeStroke })}
+            />
+            <Checkbox
+              label="Freeze motion"
+              checked={particleSettings.freezeMotion}
+              onChange={(freezeMotion) => updateParticle({ freezeMotion })}
+            />
+          </details>
         ) : null}
 
-        <SectionLabel>Post</SectionLabel>
-        <Checkbox
-          label="Effects"
-          checked={settings.post.enabled}
-          onChange={(enabled) => updatePost({ enabled })}
-        />
-        <ControlSlider
-          label="Bloom"
-          value={settings.post.bloomIntensity}
-          min={0}
-          max={1.6}
-          step={0.01}
-          onChange={(bloomIntensity) => updatePost({ bloomIntensity })}
-        />
-        <ControlSlider
-          label="Bloom threshold"
-          value={settings.post.bloomThreshold}
-          min={0}
-          max={1}
-          step={0.01}
-          onChange={(bloomThreshold) => updatePost({ bloomThreshold })}
-        />
-        <ControlSlider
-          label="RGB offset"
-          value={settings.post.chromatic}
-          min={0}
-          max={0.003}
-          step={0.0001}
-          onChange={(chromatic) => updatePost({ chromatic })}
-        />
-        <ControlSlider
-          label="Grain"
-          value={settings.post.noise}
-          min={0}
-          max={0.12}
-          step={0.005}
-          onChange={(noise) => updatePost({ noise })}
-        />
+        <details className="control-group">
+          <summary>Scene + Lighting</summary>
+          <NativeSelect
+            label="Scene"
+            value={sceneFrame}
+            options={["object", "services-rails", "terminal-plot", "active-chamber"]}
+            onChange={(scene) => setSceneFrame(scene as SceneFrame)}
+          />
+          <ControlSlider
+            label="Light"
+            value={lightingSettings.intensity}
+            min={0}
+            max={3}
+            step={0.05}
+            onChange={(intensity) => setLightingSettings((current) => ({ ...current, intensity }))}
+          />
+          <ColorRow
+            label="Light accent"
+            value={lightingSettings.accentColor}
+            onChange={(accentColor) =>
+              setLightingSettings((current) => ({ ...current, accentColor }))
+            }
+          />
+          <ControlSlider
+            label="Bloom"
+            value={postSettings.bloomIntensity}
+            min={0}
+            max={2}
+            step={0.01}
+            onChange={(bloomIntensity) =>
+              setPostSettings((current) => ({ ...current, bloomIntensity }))
+            }
+          />
+          <ControlSlider
+            label="Bloom cut"
+            value={postSettings.bloomThreshold}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(bloomThreshold) =>
+              setPostSettings((current) => ({ ...current, bloomThreshold }))
+            }
+          />
+          <NativeSelect
+            label="Signal"
+            value={signalSettings.mode}
+            options={SIGNAL_OPTIONS}
+            onChange={(signalMode) =>
+              setSignalSettings((current) => ({ ...current, mode: signalMode as SignalMode }))
+            }
+          />
+          <ControlSlider
+            label="Signal power"
+            value={signalSettings.intensity}
+            min={0}
+            max={1.2}
+            step={0.01}
+            onChange={(intensity) => setSignalSettings((current) => ({ ...current, intensity }))}
+          />
+          <Checkbox
+            label="Animated lights"
+            checked={lightingSettings.animated}
+            onChange={(animated) => setLightingSettings((current) => ({ ...current, animated }))}
+          />
+        </details>
 
-        <SectionLabel>Motion</SectionLabel>
-        <button
-          type="button"
-          onClick={stopRotation}
-          style={motionActionButtonStyle}
-          title="Stop automatic rotation and center the brandmark"
-          aria-label="Stop automatic rotation and center the brandmark"
-        >
-          <Pause size={12} />
-          <span>Stop + center</span>
-        </button>
-        <ControlSlider
-          label="Auto rotate"
-          value={settings.motion.autoRotate}
-          min={-0.4}
-          max={0.4}
-          step={0.005}
-          onChange={(autoRotate) => updateMotion({ autoRotate })}
-        />
-        <ControlSlider
-          label="Pointer tilt"
-          value={settings.motion.pointerTilt}
-          min={0}
-          max={0.45}
-          step={0.01}
-          onChange={(pointerTilt) => updateMotion({ pointerTilt })}
-        />
-        <Checkbox
-          label="Pointer parallax"
-          checked={settings.motion.pointerParallax}
-          onChange={(pointerParallax) => updateMotion({ pointerParallax })}
-        />
-        <Checkbox
-          label="Wire edges"
-          checked={settings.wireframe}
-          onChange={(wireframe) => setSettings((current) => ({ ...current, wireframe }))}
-        />
-        <Checkbox
-          label="Flat compare"
-          checked={settings.flatCompare}
-          onChange={(flatCompare) => setSettings((current) => ({ ...current, flatCompare }))}
-        />
+        <details className="control-group">
+          <summary>Save / Load</summary>
+          <input
+            type="text"
+            value={presetLabel}
+            onChange={(event) => setPresetLabel(event.target.value)}
+            placeholder="Preset label"
+            maxLength={120}
+            className="text-input"
+          />
+          <button
+            type="button"
+            className="primary-action"
+            onClick={savePreset}
+            disabled={presetBusy}
+          >
+            <Save size={12} />
+            <span>Save preset</span>
+          </button>
+          {presetSlug ? <p className="preset-id">Saved id: {presetSlug}</p> : null}
+          <div className="load-row">
+            <input
+              type="text"
+              value={loadSlug}
+              onChange={(event) => setLoadSlug(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  if (!presetBusy) void loadPreset(loadSlug);
+                }
+              }}
+              placeholder="Paste id..."
+              className="text-input"
+            />
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => void loadPreset(loadSlug)}
+              disabled={presetBusy}
+              title="Load preset"
+            >
+              <Upload size={14} />
+            </button>
+          </div>
+          {presetStatus ? <p className="status-line">{presetStatus}</p> : null}
+        </details>
 
-        {reducedMotion ? <p style={statusStyle}>Reduced motion active</p> : null}
+        {reducedMotion ? <p className="status-line">Reduced motion active</p> : null}
       </aside>
     </main>
+  );
+}
+
+function ExposureSync({ exposure }: { exposure: number }) {
+  useFrame(({ gl }) => {
+    gl.toneMappingExposure = exposure;
+  });
+  return null;
+}
+
+function TurntableRig({
+  rotation,
+  resetKey,
+  autoRotate,
+  middleMouseDrag,
+  children,
+}: {
+  rotation: [number, number, number];
+  resetKey: number;
+  autoRotate: number;
+  middleMouseDrag: boolean;
+  children: ReactNode;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    rx: number;
+    ry: number;
+  } | null>(null);
+  const gl = useThree((state) => state.gl);
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+    group.rotation.set(rotation[0], rotation[1], rotation[2]);
+  }, [resetKey, rotation]);
+
+  useEffect(() => {
+    if (!middleMouseDrag) return;
+    const canvas = gl.domElement;
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 1) return;
+      event.preventDefault();
+      const group = groupRef.current;
+      if (!group) return;
+      dragRef.current = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        rx: group.rotation.x,
+        ry: group.rotation.y,
+      };
+      canvas.setPointerCapture?.(event.pointerId);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      const group = groupRef.current;
+      if (!drag || !group || drag.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      const sensitivity = Math.PI / 420;
+      group.rotation.y = drag.ry + (event.clientX - drag.x) * sensitivity;
+      group.rotation.x = clamp(drag.rx + (event.clientY - drag.y) * sensitivity, -1.1, 1.1);
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      if (dragRef.current?.pointerId === event.pointerId) {
+        dragRef.current = null;
+        canvas.releasePointerCapture?.(event.pointerId);
+      }
+    };
+    const onAuxClick = (event: MouseEvent) => {
+      if (event.button === 1) event.preventDefault();
+    };
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp);
+    canvas.addEventListener("auxclick", onAuxClick);
+    return () => {
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerUp);
+      canvas.removeEventListener("auxclick", onAuxClick);
+    };
+  }, [gl, middleMouseDrag]);
+
+  useFrame((_, delta) => {
+    const group = groupRef.current;
+    if (!group || !autoRotate || dragRef.current) return;
+    group.rotation.y += autoRotate * delta;
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+}
+
+function ParticleBrandmark({
+  settings,
+  reducedMotion,
+}: {
+  settings: ParticleSettings;
+  reducedMotion: boolean;
+}) {
+  return (
+    <CenterpieceDriftRig
+      scale={settings.worldScale}
+      cleanField={settings.cleanField}
+      ampX={settings.driftAmpX}
+      ampY={settings.driftAmpY}
+      periodX={settings.driftPeriodX}
+      periodY={settings.driftPeriodY}
+      reducedMotion={reducedMotion || settings.freezeMotion}
+    >
+      {settings.showSphere ? <WireframeSphere radius={0.7} detail={2} /> : null}
+      <BrandmarkPhysicsCore
+        count={settings.count}
+        ignite={settings.ignite}
+        pointSize={settings.pointSize}
+        color={settings.color}
+        accentColor={settings.accentColor}
+        opacity={settings.opacity}
+        basis={settings.basis}
+        gridSnap={settings.gridSnap}
+        shape={settings.shape}
+        glyph={settings.glyph}
+        shapeStroke={settings.shapeStroke}
+        primitiveAspect={settings.primitiveAspect}
+        lineJitter={settings.lineJitter}
+        freezeMotion={settings.freezeMotion}
+        seedAtHome={settings.seedAtHome}
+        blending={settings.blending}
+        cleanField={settings.cleanField}
+        corridorKeep={settings.corridorKeep}
+        cleanFieldKeep={settings.cleanFieldKeep}
+        cleanFieldDotScale={settings.cleanFieldDotScale}
+        cleanFieldEdge={settings.cleanFieldEdge}
+        depth={settings.depth}
+        scatterRadius={settings.scatterRadius}
+        bulge={settings.bulge}
+        thickness={settings.thickness}
+        reducedMotion={reducedMotion}
+      />
+    </CenterpieceDriftRig>
+  );
+}
+
+function CenterpieceDriftRig({
+  scale,
+  cleanField,
+  ampX,
+  ampY,
+  periodX,
+  periodY,
+  reducedMotion,
+  children,
+}: {
+  scale: number;
+  cleanField: number;
+  ampX: number;
+  ampY: number;
+  periodX: number;
+  periodY: number;
+  reducedMotion: boolean;
+  children: ReactNode;
+}) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    const group = ref.current;
+    if (!group || reducedMotion) return;
+    const t = state.clock.elapsedTime;
+    const k = clamp01(cleanField);
+    group.rotation.x = Math.sin((t / Math.max(1, periodX)) * Math.PI * 2) * ampX * k;
+    group.rotation.y = Math.sin((t / Math.max(1, periodY)) * Math.PI * 2) * ampY * k;
+  });
+  return (
+    <group ref={ref} scale={scale}>
+      {children}
+    </group>
+  );
+}
+
+function WireframeSphere({ radius, detail }: { radius: number; detail: number }) {
+  const geometry = useMemo(() => {
+    const ico = new THREE.IcosahedronGeometry(radius, detail);
+    const edges = new THREE.EdgesGeometry(ico);
+    ico.dispose();
+    return edges;
+  }, [detail, radius]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  return (
+    <lineSegments geometry={geometry}>
+      <lineBasicMaterial
+        color={PALETTE.gold}
+        transparent
+        opacity={0.18}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </lineSegments>
   );
 }
 
@@ -1462,7 +1922,7 @@ function ReflectivePostProcessing({
       <Bloom
         intensity={settings.bloomIntensity}
         luminanceThreshold={settings.bloomThreshold}
-        luminanceSmoothing={0.24}
+        luminanceSmoothing={0.2}
         mipmapBlur
       />
       {settings.chromatic > 0 ? <ChromaticAberration offset={chromaOffset} /> : <></>}
@@ -1472,458 +1932,203 @@ function ReflectivePostProcessing({
   );
 }
 
-function SceneReticle() {
-  return (
-    <group position={[0, 0, -0.72]}>
-      <lineSegments>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[
-              new Float32Array([
-                -1.35, 0, 0, -0.72, 0, 0, 0.72, 0, 0, 1.35, 0, 0, 0, -1.2, 0, 0, -0.62, 0, 0, 0.62,
-                0, 0, 1.2, 0,
-              ]),
-              3,
-            ]}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="#caa554" transparent opacity={0.24} toneMapped={false} />
-      </lineSegments>
-    </group>
-  );
-}
-
-function ReflectiveSignalLayer({
+function SignalLayer({
   settings,
   reducedMotion,
+  scene,
 }: {
   settings: SignalSettings;
   reducedMotion: boolean;
+  scene: SceneFrame;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const buffers = useMemo(
-    () => buildSignalGeometry(settings.mode, settings.density),
-    [settings.mode, settings.density]
+    () => buildSignalBuffers(settings.mode, settings.density, scene),
+    [scene, settings.density, settings.mode]
   );
 
   useFrame(({ clock }) => {
     const group = groupRef.current;
-    if (!group || settings.mode === "none") return;
-    const t = reducedMotion ? 0 : clock.elapsedTime * settings.animation;
+    if (!group || reducedMotion || settings.mode === "none") return;
+    const t = clock.elapsedTime * settings.drift;
     group.rotation.z = Math.sin(t * 0.22) * 0.024;
     group.rotation.y = Math.sin(t * 0.18) * 0.035;
-    group.position.y = Math.sin(t * 0.3) * 0.018;
   });
 
   if (settings.mode === "none" || settings.intensity <= 0) return null;
 
-  const intensity = clamp(settings.intensity, 0, 1.2);
-  const lineOpacity = clamp(intensity * 0.36, 0, 0.5);
-  const accentLineOpacity = clamp(intensity * 0.24, 0, 0.36);
-  const pointOpacity = clamp(intensity * 0.58, 0, 0.76);
-  const accentPointOpacity = clamp(intensity * 0.42, 0, 0.62);
-
   return (
-    <group ref={groupRef} position={[0, 0, -0.26]} renderOrder={1}>
-      {buffers.lines ? (
-        <lineSegments>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[buffers.lines, 3]} />
-          </bufferGeometry>
-          <lineBasicMaterial
-            color={settings.color}
-            transparent
-            opacity={lineOpacity}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-            toneMapped={false}
-          />
-        </lineSegments>
-      ) : null}
-      {buffers.accentLines ? (
-        <lineSegments>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[buffers.accentLines, 3]} />
-          </bufferGeometry>
-          <lineBasicMaterial
-            color={settings.accentColor}
-            transparent
-            opacity={accentLineOpacity}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-            toneMapped={false}
-          />
-        </lineSegments>
-      ) : null}
+    <group ref={groupRef} position={[0, 0, -0.18]}>
       {buffers.points ? (
         <points>
           <bufferGeometry>
             <bufferAttribute attach="attributes-position" args={[buffers.points, 3]} />
           </bufferGeometry>
           <pointsMaterial
-            color={settings.color}
-            size={buffers.pointSize}
-            sizeAttenuation
+            color={settings.primary}
+            size={0.012}
             transparent
-            opacity={pointOpacity}
+            opacity={0.65 * settings.intensity}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
             toneMapped={false}
           />
         </points>
       ) : null}
-      {buffers.accentPoints ? (
-        <points>
+      {buffers.lines ? (
+        <lineSegments>
           <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[buffers.accentPoints, 3]} />
+            <bufferAttribute attach="attributes-position" args={[buffers.lines, 3]} />
           </bufferGeometry>
-          <pointsMaterial
-            color={settings.accentColor}
-            size={buffers.pointSize * 0.78}
-            sizeAttenuation
+          <lineBasicMaterial
+            color={settings.accent}
             transparent
-            opacity={accentPointOpacity}
+            opacity={0.5 * settings.intensity}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
             toneMapped={false}
           />
-        </points>
+        </lineSegments>
       ) : null}
     </group>
   );
 }
 
-interface SignalGeometryBuffers {
-  lines?: Float32Array;
-  accentLines?: Float32Array;
-  points?: Float32Array;
-  accentPoints?: Float32Array;
-  pointSize: number;
-}
+function buildSignalBuffers(
+  mode: SignalMode,
+  density: number,
+  scene: SceneFrame
+): { points?: Float32Array; lines?: Float32Array } {
+  if (mode === "none") return {};
+  const count = Math.max(24, Math.round(240 * clamp01(density)));
+  const random = seededRandom(`${mode}-${scene}-${count}`);
 
-function buildSignalGeometry(mode: SignalMode, density: number): SignalGeometryBuffers {
-  const d = clamp(density, 0, 1);
-  switch (mode) {
-    case "motes":
-      return buildMoteSignal(d);
-    case "scanlines":
-      return buildScanlineSignal(d);
-    case "contours":
-      return buildContourSignal(d);
-    case "orbits":
-      return buildOrbitSignal(d);
-    case "dither":
-      return buildDitherSignal(d);
-    case "wireDepth":
-      return buildWireDepthSignal(d);
-    default:
-      return { pointSize: 0.012 };
-  }
-}
-
-function buildMoteSignal(density: number): SignalGeometryBuffers {
-  const primaryCount = Math.round(70 + density * 260);
-  const accentCount = Math.round(16 + density * 64);
-  return {
-    points: makeRadialPoints(primaryCount, 1.24, 0.72, 0.32, 19),
-    accentPoints: makeRadialPoints(accentCount, 0.96, 0.54, 0.22, 113),
-    pointSize: 0.013 + density * 0.01,
-  };
-}
-
-function buildDitherSignal(density: number): SignalGeometryBuffers {
-  const columns = Math.round(38 + density * 52);
-  const rows = Math.round(28 + density * 42);
-  const primary: number[] = [];
-  const accent: number[] = [];
-
-  for (let y = 0; y < rows; y += 1) {
-    for (let x = 0; x < columns; x += 1) {
-      const h = hash01(x * 37.1 + y * 71.7);
-      const threshold = 0.12 + density * 0.12;
-      if (h > threshold) continue;
-      const px = -1.02 + (x / Math.max(1, columns - 1)) * 2.04;
-      const py = -0.68 + (y / Math.max(1, rows - 1)) * 1.36;
-      const edgeBias = Math.abs(px) * 0.12 + Math.abs(py) * 0.08;
-      const target = h < threshold * 0.24 ? accent : primary;
-      target.push(px + (hash01(h * 41) - 0.5) * 0.012, py, -0.34 - edgeBias);
+  if (mode === "scan") {
+    const lines: number[] = [];
+    const rows = Math.max(10, Math.round(28 * clamp01(density)));
+    for (let i = 0; i < rows; i++) {
+      const y = -0.8 + (i / Math.max(1, rows - 1)) * 1.6;
+      const width = 0.35 + random() * 1.35;
+      const x = (random() - 0.5) * 0.55;
+      lines.push(x - width / 2, y, -0.02, x + width / 2, y, -0.02);
     }
+    return { lines: new Float32Array(lines) };
   }
 
-  return {
-    points: new Float32Array(primary),
-    accentPoints: new Float32Array(accent),
-    pointSize: 0.017 + density * 0.012,
-  };
-}
-
-function buildScanlineSignal(density: number): SignalGeometryBuffers {
-  const rows = Math.round(14 + density * 36);
-  const primary: number[] = [];
-  const accent: number[] = [];
-
-  for (let i = 0; i < rows; i += 1) {
-    const y = -0.74 + (i / Math.max(1, rows - 1)) * 1.48;
-    const fragments = 2 + Math.floor(hash01(i * 17.3) * 4);
-    for (let f = 0; f < fragments; f += 1) {
-      const start = -1.08 + (f / fragments) * 2.16 + hash01(i * 31 + f) * 0.08;
-      const span = 0.16 + hash01(i * 47 + f * 2) * (0.36 + density * 0.24);
-      const x1 = clamp(start, -1.12, 1.06);
-      const x2 = clamp(start + span, -1.08, 1.12);
-      const z = -0.42 + (hash01(i * 11 + f) - 0.5) * 0.08;
-      (hash01(i * 13 + f * 7) > 0.82 ? accent : primary).push(x1, y, z, x2, y, z);
+  if (mode === "orbits" || mode === "contours" || mode === "wire") {
+    const lines: number[] = [];
+    const rings = mode === "wire" ? 8 : mode === "contours" ? 6 : 4;
+    for (let r = 0; r < rings; r++) {
+      const radiusX = 0.68 + r * 0.08;
+      const radiusY = 0.48 + r * 0.055;
+      const segments = 96;
+      for (let i = 0; i < segments; i++) {
+        const a = (i / segments) * Math.PI * 2;
+        const b = ((i + 1) / segments) * Math.PI * 2;
+        const skew = mode === "orbits" ? 0.34 : mode === "wire" ? -0.18 : 0;
+        lines.push(
+          Math.cos(a) * radiusX,
+          Math.sin(a) * radiusY,
+          Math.sin(a + r) * skew,
+          Math.cos(b) * radiusX,
+          Math.sin(b) * radiusY,
+          Math.sin(b + r) * skew
+        );
+      }
     }
+    return { lines: new Float32Array(lines) };
   }
 
-  return {
-    lines: new Float32Array(primary),
-    accentLines: new Float32Array(accent),
-    pointSize: 0.014,
-  };
-}
-
-function buildContourSignal(density: number): SignalGeometryBuffers {
-  const bands = Math.round(7 + density * 13);
-  const steps = 56;
-  const primary: number[] = [];
-  const accent: number[] = [];
-
-  for (let band = 0; band < bands; band += 1) {
-    const baseY = -0.58 + (band / Math.max(1, bands - 1)) * 1.16;
-    const target = band % 4 === 1 ? accent : primary;
-    for (let step = 0; step < steps; step += 1) {
-      const x1 = -0.92 + (step / steps) * 1.84;
-      const x2 = -0.92 + ((step + 1) / steps) * 1.84;
-      const y1 = contourY(x1, baseY, band, density);
-      const y2 = contourY(x2, baseY, band, density);
-      const z = -0.44 + band * 0.006;
-      target.push(x1, y1, z, x2, y2, z);
-    }
+  const points: number[] = [];
+  for (let i = 0; i < count; i++) {
+    const angle = random() * Math.PI * 2;
+    const radius = mode === "dither" ? 0.35 + random() * 0.75 : 0.75 + random() * 0.7;
+    points.push(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.72, (random() - 0.5) * 0.5);
   }
-
-  return {
-    lines: new Float32Array(primary),
-    accentLines: new Float32Array(accent),
-    pointSize: 0.014,
-  };
+  return { points: new Float32Array(points) };
 }
 
-function buildOrbitSignal(density: number): SignalGeometryBuffers {
-  const rings = Math.round(3 + density * 5);
-  const steps = 96;
-  const primary: number[] = [];
-  const accent: number[] = [];
-
-  for (let ring = 0; ring < rings; ring += 1) {
-    const rx = 0.72 + ring * 0.085;
-    const ry = 0.38 + ring * 0.038;
-    const tilt = -0.54 + ring * 0.18;
-    const target = ring === 1 || ring === rings - 1 ? accent : primary;
-    for (let step = 0; step < steps; step += 1) {
-      const a1 = (step / steps) * Math.PI * 2;
-      const a2 = ((step + 1) / steps) * Math.PI * 2;
-      appendOrbitSegment(target, a1, a2, rx, ry, tilt, ring);
-    }
-  }
-
-  return {
-    lines: new Float32Array(primary),
-    accentLines: new Float32Array(accent),
-    points: makeRadialPoints(Math.round(24 + density * 90), 1.16, 0.7, 0.25, 271),
-    pointSize: 0.012 + density * 0.006,
-  };
-}
-
-function buildWireDepthSignal(density: number): SignalGeometryBuffers {
-  const layers = Math.round(5 + density * 7);
-  const primary: number[] = [];
-  const accent: number[] = [];
-  const layerPoints: Array<Array<[number, number, number]>> = [];
-
-  for (let layer = 0; layer < layers; layer += 1) {
-    const scale = 0.56 + layer * 0.07;
-    const z = -0.14 - layer * 0.055;
-    const skew = (layer - layers / 2) * 0.018;
-    const pts: Array<[number, number, number]> = [
-      [-scale * 0.78 + skew, -scale * 0.42, z],
-      [-scale * 0.24 + skew, -scale * 0.62, z],
-      [scale * 0.7 + skew, -scale * 0.36, z],
-      [scale * 0.48 + skew, scale * 0.46, z],
-      [scale * 0.06 + skew, scale * 0.66, z],
-      [-scale * 0.66 + skew, scale * 0.34, z],
-    ];
-    appendPolyline(layer % 3 === 1 ? accent : primary, pts, true);
-    layerPoints.push(pts);
-  }
-
-  for (let layer = 0; layer < layerPoints.length - 1; layer += 1) {
-    const current = layerPoints[layer];
-    const next = layerPoints[layer + 1];
-    for (let i = 0; i < current.length; i += 2) {
-      appendSegment(layer % 2 === 0 ? accent : primary, current[i], next[i]);
-    }
-  }
-
-  return {
-    lines: new Float32Array(primary),
-    accentLines: new Float32Array(accent),
-    pointSize: 0.014,
-  };
-}
-
-function makeRadialPoints(
-  count: number,
-  radiusX: number,
-  radiusY: number,
-  zSpread: number,
-  seed: number
-): Float32Array {
-  const points = new Float32Array(count * 3);
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < count; i += 1) {
-    const h1 = hash01(seed + i * 19.19);
-    const h2 = hash01(seed + i * 43.43);
-    const r = Math.sqrt(h1);
-    const a = i * goldenAngle + h2 * 0.2;
-    points[i * 3] = Math.cos(a) * r * radiusX;
-    points[i * 3 + 1] = Math.sin(a) * r * radiusY;
-    points[i * 3 + 2] = -0.3 + (hash01(seed + i * 97.97) - 0.5) * zSpread;
-  }
-  return points;
-}
-
-function contourY(x: number, baseY: number, band: number, density: number): number {
-  const ridge = Math.exp(-Math.pow(x * 1.5 - 0.2, 2)) * (0.12 + density * 0.08);
-  const trough = Math.exp(-Math.pow(x * 2.2 + 0.62, 2)) * (0.04 + density * 0.04);
-  return baseY + Math.sin(x * 6.2 + band * 0.72) * 0.025 + ridge - trough;
-}
-
-function appendOrbitSegment(
-  target: number[],
-  a1: number,
-  a2: number,
-  rx: number,
-  ry: number,
-  tilt: number,
-  ring: number
-) {
-  const p1 = orbitPoint(a1, rx, ry, tilt, ring);
-  const p2 = orbitPoint(a2, rx, ry, tilt, ring);
-  appendSegment(target, p1, p2);
-}
-
-function orbitPoint(
-  a: number,
-  rx: number,
-  ry: number,
-  tilt: number,
-  ring: number
-): [number, number, number] {
-  const x = Math.cos(a) * rx;
-  const y = Math.sin(a) * ry * Math.cos(tilt) + Math.sin(a + ring) * 0.035;
-  const z = -0.32 + Math.sin(a) * ry * Math.sin(tilt);
-  return [x, y, z];
-}
-
-function appendPolyline(
-  target: number[],
-  points: Array<[number, number, number]>,
-  closed: boolean
-) {
-  for (let i = 0; i < points.length - 1; i += 1) appendSegment(target, points[i], points[i + 1]);
-  if (closed) appendSegment(target, points[points.length - 1], points[0]);
-}
-
-function appendSegment(target: number[], a: [number, number, number], b: [number, number, number]) {
-  target.push(a[0], a[1], a[2], b[0], b[1], b[2]);
-}
-
-function hash01(value: number): number {
-  const x = Math.sin(value * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function ViewportOverlay() {
+function SceneReticle({ scene }: { scene: SceneFrame }) {
+  const opacity = scene === "object" ? 0.18 : 0.28;
   return (
-    <div aria-hidden style={overlayStyle}>
-      <div style={overlayCenterLineXStyle} />
-      <div style={overlayCenterLineYStyle} />
-      <div style={cornerTlStyle} />
-      <div style={cornerBlStyle} />
-      <div style={cornerBrStyle} />
+    <group position={[0, 0, -0.78]}>
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[
+              new Float32Array([
+                -1.45, 0, 0, -0.82, 0, 0, 0.82, 0, 0, 1.45, 0, 0, 0, -1.24, 0, 0, -0.64, 0, 0, 0.64,
+                0, 0, 1.24, 0,
+              ]),
+              3,
+            ]}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={PALETTE.gold} transparent opacity={opacity} toneMapped={false} />
+      </lineSegments>
+    </group>
+  );
+}
+
+function SceneOverlay({ scene, mode }: { scene: SceneFrame; mode: LabMode }) {
+  return (
+    <div className={`scene-overlay scene-overlay--${scene}`} aria-hidden>
+      <div className="corner corner--tl" />
+      <div className="corner corner--bl" />
+      <div className="corner corner--br" />
+      {scene !== "object" || mode === "scene" ? (
+        <>
+          <div className="scene-rail scene-rail--left" />
+          <div className="scene-rail scene-rail--right" />
+          <div className="scene-title">
+            <span>03</span>
+            <strong>Services</strong>
+          </div>
+          <div className="scene-caption">Navigate / Encode / Build</div>
+        </>
+      ) : null}
     </div>
   );
 }
 
 function CanvasFallback() {
   return (
-    <div style={fallbackStyle}>
-      <div style={{ width: 220, height: 220, color: "var(--gold, #caa554)" }}>
-        <BrandmarkGlyph outline={false} decorative />
-      </div>
+    <div className="canvas-fallback">
+      <BrandmarkGlyph outline={false} decorative />
     </div>
   );
 }
 
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribeReducedMotion,
-    getReducedMotionSnapshot,
-    getReducedMotionServerSnapshot
+function SectionLabel({ children, icon }: { children: ReactNode; icon?: ReactNode }) {
+  return (
+    <div className="section-label">
+      {icon}
+      <span>{children}</span>
+    </div>
   );
 }
 
-function subscribeReducedMotion(onStoreChange: () => void): () => void {
-  if (typeof window === "undefined" || !window.matchMedia) return () => {};
-  const media = window.matchMedia(REDUCED_MOTION_QUERY);
-  media.addEventListener("change", onStoreChange);
-  return () => media.removeEventListener("change", onStoreChange);
-}
-
-function getReducedMotionSnapshot(): boolean {
-  return typeof window !== "undefined" && window.matchMedia
-    ? window.matchMedia(REDUCED_MOTION_QUERY).matches
-    : false;
-}
-
-function getReducedMotionServerSnapshot(): boolean {
-  return false;
-}
-
-function cloneSettings(settings: LabSettings): LabSettings {
-  return {
-    ...settings,
-    geometry: { ...settings.geometry },
-    physical: { ...settings.physical },
-    transmission: { ...settings.transmission },
-    surface: { ...settings.surface },
-    environment: { ...settings.environment },
-    post: { ...settings.post },
-    motion: { ...settings.motion },
-    signal: { ...settings.signal },
-  };
-}
-
-interface ControlSliderProps {
+function ControlSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: {
   label: string;
   value: number;
   min: number;
   max: number;
   step: number;
   onChange: (value: number) => void;
-}
-
-function ControlSlider({ label, value, min, max, step, onChange }: ControlSliderProps) {
+}) {
   return (
-    <label style={controlStyle}>
-      <span style={controlLabelStyle}>
+    <label className="control">
+      <span>
         <span>{label}</span>
-        <span style={controlValueStyle}>{formatValue(value, step)}</span>
+        <b>{formatValue(value, step)}</b>
       </span>
       <input
         type="range"
@@ -1931,72 +2136,93 @@ function ControlSlider({ label, value, min, max, step, onChange }: ControlSlider
         max={max}
         step={step}
         value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        style={rangeStyle}
+        onChange={(event) => onChange(parseFloat(event.target.value))}
       />
     </label>
   );
 }
 
-interface ColorRowProps {
+function NativeSelect<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: ReadonlyArray<T>;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <label className="select-row">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value as T)}>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ColorRow({
+  label,
+  value,
+  onChange,
+}: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-}
-
-function ColorRow({ label, value, onChange }: ColorRowProps) {
+}) {
   return (
-    <label style={colorRowStyle}>
-      <span style={colorLabelStyle}>{label}</span>
-      <span style={colorValueStyle}>{value}</span>
-      <input
-        type="color"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        style={colorInputStyle}
-      />
+    <label className="color-row">
+      <span>{label}</span>
+      <b>{value}</b>
+      <input type="color" value={value} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
 }
 
-interface CheckboxProps {
+function Checkbox({
+  label,
+  checked,
+  onChange,
+}: {
   label: string;
   checked: boolean;
   onChange: (value: boolean) => void;
-}
-
-function Checkbox({ label, checked, onChange }: CheckboxProps) {
+}) {
   return (
-    <label style={checkboxStyle}>
+    <label className="checkbox-row">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        style={checkboxInputStyle}
       />
       <span>{label}</span>
     </label>
   );
 }
 
-interface SegmentedControlProps {
-  options: Array<{ label: string; value: string }>;
+function SegmentedControl({
+  options,
+  value,
+  onChange,
+}: {
+  options: ReadonlyArray<{ label: string; value: string }>;
   value: string;
   onChange: (value: string) => void;
-}
-
-function SegmentedControl({ options, value, onChange }: SegmentedControlProps) {
+}) {
   return (
-    <div style={segmentedStyle}>
+    <div className="segmented">
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
+          className={value === option.value ? "is-active" : ""}
           onClick={() => onChange(option.value)}
-          style={{
-            ...segmentButtonStyle,
-            ...(value === option.value ? segmentButtonActiveStyle : null),
-          }}
         >
           {option.label}
         </button>
@@ -2005,337 +2231,523 @@ function SegmentedControl({ options, value, onChange }: SegmentedControlProps) {
   );
 }
 
-function SectionLabel({ children, icon }: { children: ReactNode; icon?: ReactNode }) {
-  return (
-    <div style={sectionLabelStyle}>
-      {icon}
-      <span>{children}</span>
-    </div>
-  );
+function usePrefersReducedMotion(): boolean {
+  return useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false);
+}
+
+function subscribeReducedMotion(onStoreChange: () => void): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  const media = window.matchMedia(REDUCED_MOTION_QUERY);
+  media.addEventListener?.("change", onStoreChange);
+  return () => media.removeEventListener?.("change", onStoreChange);
+}
+
+function getReducedMotionSnapshot(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}
+
+function cloneSolid(value: SolidSettings): SolidSettings {
+  return {
+    ...value,
+    geometry: { ...value.geometry },
+    physical: { ...value.physical },
+    transmission: { ...value.transmission },
+    surface: { ...value.surface },
+  };
+}
+
+function cloneParticle(value: ParticleSettings): ParticleSettings {
+  return { ...BASE_PARTICLE, ...value };
+}
+
+function isUnifiedSnapshot(value: unknown): value is SavedSnapshot {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return record.v === 3 && record.lab === "brandmark-unified";
+}
+
+function coerceLegacyParticleSnapshot(value: unknown): ParticleSettings | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.shape !== "string" && typeof record.basis !== "string") return null;
+  return {
+    ...SERVICES_PARTICLE,
+    count: numberValue(record.count, SERVICES_PARTICLE.count),
+    basis: stringValue(record.basis, SERVICES_PARTICLE.basis) as BrandmarkBasis,
+    gridSnap: numberValue(record.gridSnap, SERVICES_PARTICLE.gridSnap),
+    shape: stringValue(record.shape, SERVICES_PARTICLE.shape) as BrandmarkCoreShape,
+    glyph: stringValue(record.glyph, SERVICES_PARTICLE.glyph) as BrandmarkCoreGlyph,
+    blending: stringValue(record.blending, SERVICES_PARTICLE.blending) as BrandmarkCoreBlending,
+    color: stringValue(record.color, SERVICES_PARTICLE.color),
+    accentColor: stringValue(record.accentColor, SERVICES_PARTICLE.accentColor),
+    pointSize: numberValue(record.pointSize, SERVICES_PARTICLE.pointSize),
+    opacity: numberValue(record.opacity, SERVICES_PARTICLE.opacity),
+    cleanField: numberValue(record.cleanField, SERVICES_PARTICLE.cleanField),
+    corridorKeep: numberValue(record.corridorKeep, SERVICES_PARTICLE.corridorKeep),
+    cleanFieldKeep: numberValue(record.cleanFieldKeep, SERVICES_PARTICLE.cleanFieldKeep),
+    cleanFieldDotScale: numberValue(
+      record.cleanFieldDotScale,
+      SERVICES_PARTICLE.cleanFieldDotScale
+    ),
+    cleanFieldEdge: numberValue(record.cleanFieldEdge, SERVICES_PARTICLE.cleanFieldEdge),
+    depth: numberValue(record.depth, SERVICES_PARTICLE.depth),
+    scatterRadius: numberValue(record.scatterRadius, SERVICES_PARTICLE.scatterRadius),
+    bulge: numberValue(record.bulge, SERVICES_PARTICLE.bulge),
+    thickness: numberValue(record.thickness, SERVICES_PARTICLE.thickness),
+    shapeStroke: numberValue(record.shapeStroke, SERVICES_PARTICLE.shapeStroke),
+    primitiveAspect: numberValue(record.primitiveAspect, SERVICES_PARTICLE.primitiveAspect),
+    lineJitter: numberValue(record.lineJitter, SERVICES_PARTICLE.lineJitter),
+    freezeMotion:
+      typeof record.freezeMotion === "boolean"
+        ? record.freezeMotion
+        : SERVICES_PARTICLE.freezeMotion,
+    seedAtHome: true,
+  };
+}
+
+function snapshotToPreset(slug: string, snapshot: SavedSnapshot): UnifiedPreset {
+  return {
+    id: `saved-${slug}`,
+    label: snapshot.label || slug,
+    mode: snapshot.mode,
+    scene: snapshot.scene,
+    description: "Saved snapshot from this unified brandmark lab.",
+    solid: cloneSolid(snapshot.solid),
+    particle: cloneParticle(snapshot.particle),
+    lighting: { ...snapshot.lighting },
+    post: { ...snapshot.post },
+    signal: { ...snapshot.signal },
+    motion: { ...snapshot.motion },
+    saved: true,
+  };
+}
+
+function readLocalPresets(): UnifiedPreset[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_PRESET_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, SavedSnapshot>) : {};
+    return Object.entries(parsed)
+      .filter(([, snapshot]) => isUnifiedSnapshot(snapshot))
+      .map(([slug, snapshot]) => snapshotToPreset(slug, snapshot));
+  } catch {
+    return [];
+  }
+}
+
+function readLocalPreset(slug: string): SavedSnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LOCAL_PRESET_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, SavedSnapshot>) : {};
+    const snapshot = parsed[slug];
+    return isUnifiedSnapshot(snapshot) ? snapshot : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalPreset(slug: string, snapshot: SavedSnapshot): void {
+  if (typeof window === "undefined") return;
+  const raw = window.localStorage.getItem(LOCAL_PRESET_KEY);
+  const parsed = raw ? (JSON.parse(raw) as Record<string, SavedSnapshot>) : {};
+  parsed[slug] = snapshot;
+  window.localStorage.setItem(LOCAL_PRESET_KEY, JSON.stringify(parsed));
+}
+
+function upsertPreset(current: UnifiedPreset[], next: UnifiedPreset): UnifiedPreset[] {
+  const rest = current.filter((presetItem) => presetItem.id !== next.id);
+  return [...rest, next];
+}
+
+function makeSlug(): string {
+  let slug = "";
+  for (let i = 0; i < 6; i++) slug += ((Math.random() * 36) | 0).toString(36);
+  return slug;
+}
+
+function seededRandom(seed: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return () => {
+    h += 0x6d2b79f5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function clamp01(value: number): number {
+  return clamp(value, 0, 1);
+}
+
+function numberValue(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function stringValue<T extends string>(value: unknown, fallback: T): string {
+  return typeof value === "string" ? value : fallback;
 }
 
 function formatValue(value: number, step: number): string {
   if (step >= 1) return value.toFixed(0);
+  if (step >= 0.1) return value.toFixed(1);
   if (step >= 0.01) return value.toFixed(2);
-  return value.toFixed(4);
+  return value.toFixed(3);
 }
 
-const pageStyle: CSSProperties = {
-  minHeight: "100vh",
-  background: "radial-gradient(circle at 52% 42%, rgba(202,165,84,0.12), transparent 32%), #050403",
-  color: "var(--dawn, #ebe3d6)",
-  fontFamily: "var(--font-pp-neue-montreal, ui-sans-serif), sans-serif",
-  position: "relative",
-  overflow: "hidden",
-};
-
-const canvasStyle: CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  pointerEvents: "auto",
-};
-
-const panelStyle: CSSProperties = {
-  position: "fixed",
-  top: 18,
-  right: 18,
-  width: "min(372px, calc(100vw - 36px))",
-  maxHeight: "calc(100vh - 36px)",
-  overflowY: "auto",
-  padding: 18,
-  background: "rgba(10, 9, 8, 0.86)",
-  border: "1px solid rgba(235, 227, 214, 0.16)",
-  boxShadow: "0 24px 70px rgba(0, 0, 0, 0.52)",
-  zIndex: 20,
-  fontFamily: "var(--font-pt-mono, ui-monospace), monospace",
-  fontSize: 11,
-};
-
-const panelHeaderStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "flex-start",
-  justifyContent: "space-between",
-  gap: 12,
-  marginBottom: 14,
-};
-
-const eyebrowStyle: CSSProperties = {
-  margin: 0,
-  marginBottom: 4,
-  color: "rgba(202, 165, 84, 0.72)",
-  fontSize: 9,
-  textTransform: "uppercase",
-  letterSpacing: "0.16em",
-};
-
-const titleStyle: CSSProperties = {
-  margin: 0,
-  color: "var(--dawn, #ebe3d6)",
-  fontSize: 15,
-  fontWeight: 500,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-};
-
-const iconButtonStyle: CSSProperties = {
-  width: 34,
-  height: 34,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "rgba(202, 165, 84, 0.1)",
-  color: "var(--gold, #caa554)",
-  border: "1px solid rgba(202, 165, 84, 0.38)",
-  cursor: "pointer",
-};
-
-const presetGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: 6,
-  marginBottom: 12,
-};
-
-const presetButtonStyle: CSSProperties = {
-  minHeight: 34,
-  padding: "7px 8px",
-  background: "rgba(235, 227, 214, 0.03)",
-  color: "rgba(235, 227, 214, 0.72)",
-  border: "1px solid rgba(235, 227, 214, 0.12)",
-  cursor: "pointer",
-  font: "inherit",
-  fontSize: 10,
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-};
-
-const presetButtonActiveStyle: CSSProperties = {
-  color: "var(--gold, #caa554)",
-  border: "1px solid rgba(202, 165, 84, 0.55)",
-  background: "rgba(202, 165, 84, 0.12)",
-};
-
-const sectionLabelStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 7,
-  marginTop: 14,
-  marginBottom: 8,
-  paddingTop: 10,
-  borderTop: "1px solid rgba(235, 227, 214, 0.1)",
-  color: "rgba(202, 165, 84, 0.76)",
-  fontSize: 9,
-  textTransform: "uppercase",
-  letterSpacing: "0.18em",
-};
-
-const segmentedStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  border: "1px solid rgba(235, 227, 214, 0.12)",
-  marginBottom: 12,
-};
-
-const motionActionButtonStyle: CSSProperties = {
-  width: "100%",
-  minHeight: 36,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 8,
-  marginBottom: 10,
-  background: "rgba(202, 165, 84, 0.1)",
-  color: "var(--gold, #caa554)",
-  border: "1px solid rgba(202, 165, 84, 0.38)",
-  cursor: "pointer",
-  font: "inherit",
-  fontSize: 10,
-  textTransform: "uppercase",
-  letterSpacing: "0.12em",
-};
-
-const segmentButtonStyle: CSSProperties = {
-  minHeight: 32,
-  background: "transparent",
-  color: "rgba(235, 227, 214, 0.62)",
-  border: 0,
-  borderRight: "1px solid rgba(235, 227, 214, 0.12)",
-  cursor: "pointer",
-  font: "inherit",
-  fontSize: 10,
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-};
-
-const segmentButtonActiveStyle: CSSProperties = {
-  color: "var(--gold, #caa554)",
-  background: "rgba(202, 165, 84, 0.12)",
-};
-
-const controlStyle: CSSProperties = {
-  display: "block",
-  marginBottom: 10,
-};
-
-const controlLabelStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 10,
-  marginBottom: 5,
-  color: "rgba(235, 227, 214, 0.68)",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: 10,
-};
-
-const controlValueStyle: CSSProperties = {
-  color: "var(--gold, #caa554)",
-};
-
-const rangeStyle: CSSProperties = {
-  width: "100%",
-  accentColor: "var(--gold, #caa554)",
-};
-
-const colorRowStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "1fr auto 34px",
-  alignItems: "center",
-  gap: 8,
-  marginBottom: 10,
-};
-
-const colorLabelStyle: CSSProperties = {
-  color: "rgba(235, 227, 214, 0.68)",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: 10,
-};
-
-const colorValueStyle: CSSProperties = {
-  color: "var(--gold, #caa554)",
-  fontSize: 10,
-  textTransform: "uppercase",
-};
-
-const colorInputStyle: CSSProperties = {
-  width: 32,
-  height: 24,
-  padding: 0,
-  background: "transparent",
-  border: "1px solid rgba(202,165,84,0.4)",
-  cursor: "pointer",
-};
-
-const checkboxStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  marginBottom: 9,
-  color: "rgba(235, 227, 214, 0.68)",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: 10,
-  cursor: "pointer",
-};
-
-const checkboxInputStyle: CSSProperties = {
-  accentColor: "var(--gold, #caa554)",
-};
-
-const statusStyle: CSSProperties = {
-  margin: "14px 0 0",
-  color: "rgba(235, 227, 214, 0.48)",
-  fontSize: 10,
-  textTransform: "uppercase",
-  letterSpacing: "0.12em",
-};
-
-const overlayStyle: CSSProperties = {
-  position: "absolute",
-  inset: "5vmin",
-  pointerEvents: "none",
-  zIndex: 4,
-};
-
-const overlayCenterLineXStyle: CSSProperties = {
-  position: "absolute",
-  left: "50%",
-  top: "7%",
-  bottom: "7%",
-  width: 1,
-  background: "linear-gradient(to bottom, transparent, rgba(202,165,84,0.18), transparent)",
-};
-
-const overlayCenterLineYStyle: CSSProperties = {
-  position: "absolute",
-  left: "7%",
-  right: "7%",
-  top: "50%",
-  height: 1,
-  background: "linear-gradient(to right, transparent, rgba(202,165,84,0.16), transparent)",
-};
-
-const cornerBaseStyle: CSSProperties = {
-  position: "absolute",
-  width: 42,
-  height: 42,
-};
-
-const cornerTlStyle: CSSProperties = {
-  ...cornerBaseStyle,
-  top: 0,
-  left: 0,
-  borderTop: "1px solid rgba(235, 227, 214, 0.28)",
-  borderLeft: "1px solid rgba(235, 227, 214, 0.28)",
-};
-
-const cornerBlStyle: CSSProperties = {
-  ...cornerBaseStyle,
-  bottom: 0,
-  left: 0,
-  borderBottom: "1px solid rgba(235, 227, 214, 0.28)",
-  borderLeft: "1px solid rgba(235, 227, 214, 0.28)",
-};
-
-const cornerBrStyle: CSSProperties = {
-  ...cornerBaseStyle,
-  bottom: 0,
-  right: 0,
-  borderBottom: "1px solid rgba(235, 227, 214, 0.28)",
-  borderRight: "1px solid rgba(235, 227, 214, 0.28)",
-};
-
-const flatCompareStyle: CSSProperties = {
-  position: "fixed",
-  left: 22,
-  bottom: 22,
-  width: 150,
-  height: 150,
-  padding: 12,
-  color: "var(--gold, #caa554)",
-  background: "rgba(10, 9, 8, 0.78)",
-  border: "1px dashed rgba(202, 165, 84, 0.35)",
-  zIndex: 18,
-  pointerEvents: "none",
-};
-
-const flatCompareLabelStyle: CSSProperties = {
-  position: "absolute",
-  left: 9,
-  top: 7,
-  color: "rgba(235, 227, 214, 0.58)",
-  fontFamily: "var(--font-pt-mono, ui-monospace), monospace",
-  fontSize: 9,
-  textTransform: "uppercase",
-  letterSpacing: "0.14em",
-};
-
-const fallbackStyle: CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "var(--void, #0a0908)",
-};
+const responsiveStyles = `
+.brandmark-lab {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(202, 165, 84, 0.1), transparent 34%),
+    linear-gradient(180deg, #050403 0%, #080604 100%);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pt-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+.brandmark-lab__canvas {
+  position: absolute !important;
+  inset: 0;
+  pointer-events: auto;
+}
+.brandmark-lab__panel {
+  position: fixed;
+  top: 26px;
+  right: 26px;
+  width: min(390px, calc(100vw - 52px));
+  max-height: calc(100vh - 52px);
+  overflow: auto;
+  z-index: 20;
+  padding: 18px;
+  border: 1px solid rgba(202, 165, 84, 0.34);
+  background: linear-gradient(90deg, rgba(7, 6, 5, 0.93), rgba(15, 12, 9, 0.9));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+.brandmark-lab__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.1);
+}
+.brandmark-lab__header h1 {
+  margin: 0;
+  color: #ebe3d6;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+.brandmark-lab__eyebrow {
+  margin: 0 0 6px;
+  color: rgba(202, 165, 84, 0.86);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  color: rgba(202, 165, 84, 0.82);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid rgba(235, 227, 214, 0.13);
+  margin-bottom: 10px;
+}
+.segmented--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.segmented button,
+.preset-browser button,
+.icon-button,
+.primary-action {
+  min-height: 34px;
+  border: 0;
+  border-right: 1px solid rgba(235, 227, 214, 0.13);
+  background: transparent;
+  color: rgba(235, 227, 214, 0.62);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.segmented button:last-child {
+  border-right: 0;
+}
+.segmented button.is-active,
+.preset-browser button:hover,
+.icon-button:hover,
+.primary-action:hover {
+  color: #caa554;
+  background: rgba(202, 165, 84, 0.12);
+}
+.preset-browser {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  border: 1px solid rgba(202, 165, 84, 0.28);
+}
+.preset-browser button {
+  border-right: 1px solid rgba(202, 165, 84, 0.22);
+}
+.preset-browser button:last-child {
+  border-right: 0;
+  border-left: 1px solid rgba(202, 165, 84, 0.22);
+}
+.preset-browser select,
+.select-row select,
+.text-input {
+  min-height: 36px;
+  width: 100%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.24);
+  color: #ebe3d6;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.preset-browser select {
+  padding: 0 10px;
+}
+.preset-description,
+.status-line,
+.preset-id {
+  margin: 9px 0 0;
+  color: rgba(235, 227, 214, 0.52);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.motion-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(235, 227, 214, 0.1);
+}
+.primary-action {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(202, 165, 84, 0.34);
+  background: rgba(202, 165, 84, 0.1);
+  color: #caa554;
+}
+.icon-button {
+  width: 36px;
+  border: 1px solid rgba(202, 165, 84, 0.34);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.control-group {
+  margin-top: 12px;
+  border-top: 1px solid rgba(235, 227, 214, 0.1);
+  padding-top: 10px;
+}
+.control-group summary {
+  cursor: pointer;
+  color: rgba(202, 165, 84, 0.86);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.control,
+.select-row,
+.color-row,
+.checkbox-row {
+  display: block;
+  margin-bottom: 10px;
+  color: rgba(235, 227, 214, 0.68);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.control > span,
+.select-row,
+.color-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.color-row {
+  grid-template-columns: minmax(0, 1fr) auto 34px;
+}
+.control b,
+.color-row b,
+.preset-id {
+  color: #caa554;
+  font-weight: 400;
+}
+.control input[type="range"] {
+  width: 100%;
+  accent-color: #caa554;
+}
+.select-row select {
+  border: 1px solid rgba(235, 227, 214, 0.13);
+  min-width: 150px;
+  padding: 0 8px;
+}
+.color-row input {
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid rgba(202, 165, 84, 0.38);
+  background: transparent;
+}
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.checkbox-row input {
+  accent-color: #caa554;
+}
+.text-input {
+  box-sizing: border-box;
+  border: 1px solid rgba(235, 227, 214, 0.13);
+  padding: 0 10px;
+  margin-bottom: 10px;
+}
+.load-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  gap: 8px;
+}
+.scene-overlay {
+  position: absolute;
+  inset: 5vmin;
+  z-index: 4;
+  pointer-events: none;
+}
+.corner {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+}
+.corner--tl {
+  top: 0;
+  left: 0;
+  border-top: 1px solid rgba(235, 227, 214, 0.28);
+  border-left: 1px solid rgba(235, 227, 214, 0.28);
+}
+.corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.28);
+  border-left: 1px solid rgba(235, 227, 214, 0.28);
+}
+.corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.28);
+  border-right: 1px solid rgba(235, 227, 214, 0.28);
+}
+.scene-rail {
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(202, 165, 84, 0.54), transparent);
+}
+.scene-rail::before,
+.scene-rail::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  width: 17px;
+  height: 1px;
+  background: rgba(235, 227, 214, 0.38);
+}
+.scene-rail::before {
+  top: 22%;
+}
+.scene-rail::after {
+  bottom: 22%;
+}
+.scene-rail--left {
+  left: 3.4vw;
+}
+.scene-rail--right {
+  right: 3.4vw;
+}
+.scene-title {
+  position: absolute;
+  top: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  color: rgba(235, 227, 214, 0.78);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+}
+.scene-title span,
+.scene-caption {
+  color: rgba(202, 165, 84, 0.84);
+}
+.scene-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.canvas-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050403;
+  color: #caa554;
+}
+.canvas-fallback svg {
+  width: min(42vw, 360px);
+  height: auto;
+}
+@media (max-width: 820px) {
+  .brandmark-lab__panel {
+    top: auto;
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 45vh;
+  }
+  .scene-overlay {
+    inset: 18px;
+  }
+  .scene-title {
+    top: 4%;
+  }
+}
+`;
