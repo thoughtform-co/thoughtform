@@ -109,28 +109,33 @@ export async function buildBrandmarkGeometry(
     steps: 1,
   };
 
-  const partials: THREE.BufferGeometry[] = [];
+  const capPartials: THREE.BufferGeometry[] = [];
+  const sidePartials: THREE.BufferGeometry[] = [];
   data.paths.forEach((path, pathIdx) => {
     if (!includeSlivers && SLIVER_PATH_INDICES.has(pathIdx)) return;
     const shapes = SVGLoader.createShapes(path);
     for (const shape of shapes) {
-      partials.push(new THREE.ExtrudeGeometry(shape, extrudeOpts));
+      const extruded = new THREE.ExtrudeGeometry(shape, extrudeOpts);
+      splitExtrudeGeometryByMaterialGroup(extruded, capPartials, sidePartials);
+      extruded.dispose();
     }
   });
 
-  if (!partials.length) {
+  if (!capPartials.length || !sidePartials.length) {
     throw new Error("buildBrandmarkGeometry: no shapes extruded (all paths filtered or empty)");
   }
 
-  // mergeGeometries requires every input to share the same attribute
-  // layout. ExtrudeGeometry with identical options satisfies this; we
-  // pass `useGroups = false` because we want one material slot.
-  let merged = mergeGeometries(partials, false);
+  const capMerged = mergeGeometryList(capPartials, "caps");
+  const sideMerged = mergeGeometryList(sidePartials, "sides");
+  for (const g of capPartials) g.dispose();
+  for (const g of sidePartials) g.dispose();
+
+  const merged = mergeGeometries([capMerged, sideMerged], true);
+  capMerged.dispose();
+  sideMerged.dispose();
   if (!merged) {
-    merged = partials[0];
-    partials.shift();
+    throw new Error("buildBrandmarkGeometry: failed to merge cap and side geometry");
   }
-  for (const g of partials) g.dispose();
 
   merged.computeBoundingBox();
   const box = merged.boundingBox;
@@ -173,6 +178,7 @@ export async function buildBrandmarkGeometry(
   // the rotation propagates correctly through `computeVertexNormals`.
   merged.computeVertexNormals();
   merged.computeBoundingBox();
+  applyObjectSpaceUvs(merged);
   merged.computeBoundingSphere();
 
   const finalSize = new THREE.Vector3();
@@ -181,7 +187,99 @@ export async function buildBrandmarkGeometry(
   return { geometry: merged, size: finalSize };
 }
 
-/** Default URL for the canonical brandmark — served statically from
- *  `public/logos/`. `middleware.ts` already excludes `/logos` from
- *  the internal-route rewrite, so this URL works in dev and prod. */
+// Preserve ExtrudeGeometry's original cap/side split so the renderer
+// can assign different materials to faces and extrusion walls.
+function splitExtrudeGeometryByMaterialGroup(
+  geometry: THREE.BufferGeometry,
+  capPartials: THREE.BufferGeometry[],
+  sidePartials: THREE.BufferGeometry[]
+) {
+  const groups = geometry.groups.length
+    ? geometry.groups
+    : [{ start: 0, count: geometry.getAttribute("position").count, materialIndex: 0 }];
+
+  for (const group of groups) {
+    const slice = sliceGeometryGroup(geometry, group);
+    if (group.materialIndex === 1) {
+      sidePartials.push(slice);
+    } else {
+      capPartials.push(slice);
+    }
+  }
+}
+
+function sliceGeometryGroup(
+  geometry: THREE.BufferGeometry,
+  group: { start: number; count: number; materialIndex?: number }
+): THREE.BufferGeometry {
+  if (geometry.index) {
+    throw new Error("buildBrandmarkGeometry: expected non-indexed extrude geometry");
+  }
+
+  const slice = new THREE.BufferGeometry();
+  const start = group.start;
+  const end = group.start + group.count;
+
+  for (const name of Object.keys(geometry.attributes)) {
+    const attribute = geometry.getAttribute(name) as THREE.BufferAttribute;
+    const from = start * attribute.itemSize;
+    const to = end * attribute.itemSize;
+    const array = attribute.array.slice(from, to) as THREE.TypedArray;
+    slice.setAttribute(
+      name,
+      new THREE.BufferAttribute(array, attribute.itemSize, attribute.normalized)
+    );
+  }
+
+  return slice;
+}
+
+function mergeGeometryList(partials: THREE.BufferGeometry[], label: string): THREE.BufferGeometry {
+  if (partials.length === 1) return partials[0].clone();
+  const merged = mergeGeometries(partials, false);
+  if (!merged) throw new Error(`buildBrandmarkGeometry: failed to merge ${label}`);
+  return merged;
+}
+
+function applyObjectSpaceUvs(geometry: THREE.BufferGeometry) {
+  const position = geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
+  const normal = geometry.getAttribute("normal") as THREE.BufferAttribute | undefined;
+  if (!position || !normal) return;
+
+  geometry.computeBoundingBox();
+  const box = geometry.boundingBox;
+  if (!box) return;
+
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const sx = Math.max(size.x, 0.0001);
+  const sy = Math.max(size.y, 0.0001);
+  const sz = Math.max(size.z, 0.0001);
+  const uv = new Float32Array(position.count * 2);
+
+  for (let i = 0; i < position.count; i += 1) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+    const nx = normal.getX(i);
+    const ny = normal.getY(i);
+    const nz = normal.getZ(i);
+
+    const capFace = Math.abs(nz) > 0.58;
+    const sideRunsMostlyVertical = Math.abs(nx) > Math.abs(ny);
+    const u = capFace
+      ? (x - box.min.x) / sx
+      : sideRunsMostlyVertical
+        ? (y - box.min.y) / sy
+        : (x - box.min.x) / sx;
+    const v = capFace ? (y - box.min.y) / sy : (z - box.min.z) / sz;
+
+    uv[i * 2] = u;
+    uv[i * 2 + 1] = v;
+  }
+
+  geometry.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+}
+
+/** Default URL for the canonical brandmark, served statically from `public/logos/`. */
 export const DEFAULT_BRANDMARK_SVG_URL = "/logos/Thoughtform_Brandmark.svg";

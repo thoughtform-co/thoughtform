@@ -31,6 +31,7 @@ import { MeshTransmissionMaterial } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {
   buildBrandmarkGeometry,
   DEFAULT_BRANDMARK_SVG_URL,
@@ -44,6 +45,21 @@ import {
 } from "./makeGoldMatcap";
 
 export type Brandmark3DMaterialMode = "matcap" | "physical" | "transmission";
+
+export type Brandmark3DMaterialFamily =
+  | "default"
+  | "tensor-glass"
+  | "surveyor-brass"
+  | "holographic-ceramic"
+  | "archive-amber"
+  | "blueprint-prism"
+  | "epsilon-dither"
+  | "celestial-lacquer"
+  | "vector-relic"
+  | "frosted-ivory"
+  | "provenance-glass";
+
+export type Brandmark3DDebugMode = "none" | "uv" | "albedo" | "roughness" | "normal";
 
 export type Brandmark3DSurfaceKind =
   | "none"
@@ -59,6 +75,8 @@ export type Brandmark3DSurfaceKind =
   | "provenance-grain";
 
 export interface Brandmark3DSurfaceParams {
+  /** Lab-only material-family recipe identifier. Default `default`. */
+  family?: Brandmark3DMaterialFamily;
   /** Procedural material map family. Default `none`. */
   kind?: Brandmark3DSurfaceKind;
   /** Base map tint. Keep close to the material colour. */
@@ -73,6 +91,22 @@ export interface Brandmark3DSurfaceParams {
   bump?: number;
   /** Additive surface inlay opacity. Default 0.25. */
   inlay?: number;
+  /** Extrusion side tint. Uses the secondary colour by default. */
+  sideColor?: string;
+  /** Extrusion side roughness override. */
+  sideRoughness?: number;
+  /** Extrusion side metalness override. */
+  sideMetalness?: number;
+  /** Extrusion side environment reflection strength. */
+  sideEnvMapIntensity?: number;
+  /** Extrusion side emissive colour. */
+  sideEmissive?: string;
+  /** Extrusion side emissive intensity. */
+  sideEmissiveIntensity?: number;
+  /** Cap emissive colour for inlay/emissive-family presets. */
+  capEmissive?: string;
+  /** Cap emissive intensity. */
+  capEmissiveIntensity?: number;
   /** Texture resolution. Default 512. */
   resolution?: number;
 }
@@ -184,6 +218,8 @@ export interface Brandmark3DProps {
   transmission?: Brandmark3DTransmissionParams;
   /** Procedural surface maps applied to PBR / glass modes. */
   surface?: Brandmark3DSurfaceParams;
+  /** Lab-only material-map verification view. Default `none`. */
+  debugMode?: Brandmark3DDebugMode;
   /** Wireframe overlay config. */
   wireframe?: Brandmark3DWireframeParams;
   /** Half/half clipping cutaway config. */
@@ -222,6 +258,7 @@ export function Brandmark3D({
   physical,
   transmission,
   surface,
+  debugMode = "none",
   wireframe,
   cutaway,
   autoRotateSpeed = 0.18,
@@ -296,6 +333,15 @@ export function Brandmark3D({
   const surfaceBump = surface?.bump ?? 0.08;
   const surfaceInlay = surface?.inlay ?? 0.25;
   const surfaceResolution = surface?.resolution ?? 512;
+  const surfaceFamily = surface?.family ?? "default";
+  const surfaceSideColor = surface?.sideColor ?? surfaceSecondary;
+  const surfaceSideRoughness = surface?.sideRoughness ?? Math.min(0.82, physRoughness + 0.18);
+  const surfaceSideMetalness = surface?.sideMetalness ?? physMetalness;
+  const surfaceSideEnvIntensity = surface?.sideEnvMapIntensity ?? physEnvIntensity;
+  const surfaceSideEmissive = surface?.sideEmissive ?? "#000000";
+  const surfaceSideEmissiveIntensity = surface?.sideEmissiveIntensity ?? 0;
+  const surfaceCapEmissive = surface?.capEmissive ?? "#000000";
+  const surfaceCapEmissiveIntensity = surface?.capEmissiveIntensity ?? 0;
 
   const wireEnabled = wireframe?.enabled ?? false;
   const wireStyle = wireframe?.style ?? "edges";
@@ -378,6 +424,28 @@ export function Brandmark3D({
       wireGeometry?.dispose();
     };
   }, [wireGeometry]);
+
+  const capGeometry = useMemo(() => {
+    if (!geometry) return null;
+    return extractMaterialGroupGeometry(geometry, 0);
+  }, [geometry]);
+
+  const sideGeometry = useMemo(() => {
+    if (!geometry) return null;
+    return extractMaterialGroupGeometry(geometry, 1);
+  }, [geometry]);
+
+  useEffect(() => {
+    return () => {
+      capGeometry?.dispose();
+    };
+  }, [capGeometry]);
+
+  useEffect(() => {
+    return () => {
+      sideGeometry?.dispose();
+    };
+  }, [sideGeometry]);
 
   // ── Clipping planes ────────────────────────────────────────────
   const { solidPlane, wirePlane } = useMemo(() => {
@@ -484,13 +552,13 @@ export function Brandmark3D({
   }, [surfaceMaps]);
 
   // ── Solid material ────────────────────────────────────────────
-  const solidMaterial = useMemo<THREE.Material | null>(() => {
+  const solidMaterial = useMemo<THREE.Material | THREE.Material[] | null>(() => {
     const clippingProps = cutawayEnabled
       ? { clippingPlanes: [solidPlane], clipShadows: false }
       : {};
     if (materialMode === "transmission") return null;
     if (materialMode === "physical") {
-      return new THREE.MeshPhysicalMaterial({
+      const capMaterial = new THREE.MeshPhysicalMaterial({
         color: new THREE.Color(physColor),
         metalness: physMetalness,
         roughness: physRoughness,
@@ -498,19 +566,49 @@ export function Brandmark3D({
         clearcoatRoughness: physClearcoatRoughness,
         iridescence: physIridescence,
         envMapIntensity: physEnvIntensity,
+        emissive: new THREE.Color(surfaceCapEmissive),
+        emissiveIntensity: surfaceCapEmissiveIntensity,
         ...surfaceMaterialProps,
         ...clippingProps,
         side: THREE.DoubleSide,
       });
+      capMaterial.name = `brandmark-cap-${surfaceFamily}`;
+      const sideMaterial = new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(surfaceSideColor),
+        metalness: surfaceSideMetalness,
+        roughness: surfaceSideRoughness,
+        clearcoat: physClearcoat,
+        clearcoatRoughness: Math.max(physClearcoatRoughness, surfaceSideRoughness * 0.35),
+        iridescence: physIridescence,
+        envMapIntensity: surfaceSideEnvIntensity,
+        emissive: new THREE.Color(surfaceSideEmissive),
+        emissiveIntensity: surfaceSideEmissiveIntensity,
+        ...clippingProps,
+        side: THREE.DoubleSide,
+      });
+      sideMaterial.name = `brandmark-side-${surfaceFamily}`;
+      return [capMaterial, sideMaterial];
     }
     const tex = matcapTexture ?? proceduralMatcap ?? null;
-    return new THREE.MeshMatcapMaterial({
+    const capMaterial = new THREE.MeshMatcapMaterial({
       matcap: tex,
+      color: new THREE.Color(physColor),
       flatShading: false,
       toneMapped: false,
       transparent: false,
       ...clippingProps,
     });
+    capMaterial.name = `brandmark-cap-matcap-${surfaceFamily}`;
+    const sideMaterial = new THREE.MeshMatcapMaterial({
+      matcap: tex,
+      color: new THREE.Color(surfaceSideColor),
+      flatShading: false,
+      toneMapped: false,
+      transparent: false,
+      ...clippingProps,
+    });
+    sideMaterial.name = `brandmark-side-matcap-${surfaceFamily}`;
+    return [capMaterial, sideMaterial];
   }, [
     materialMode,
     matcapTexture,
@@ -522,6 +620,15 @@ export function Brandmark3D({
     physClearcoatRoughness,
     physIridescence,
     physEnvIntensity,
+    surfaceFamily,
+    surfaceSideColor,
+    surfaceSideRoughness,
+    surfaceSideMetalness,
+    surfaceSideEnvIntensity,
+    surfaceSideEmissive,
+    surfaceSideEmissiveIntensity,
+    surfaceCapEmissive,
+    surfaceCapEmissiveIntensity,
     surfaceMaterialProps,
     cutawayEnabled,
     solidPlane,
@@ -529,7 +636,7 @@ export function Brandmark3D({
 
   useEffect(() => {
     return () => {
-      solidMaterial?.dispose();
+      disposeMaterial(solidMaterial);
     };
   }, [solidMaterial]);
 
@@ -557,6 +664,149 @@ export function Brandmark3D({
   }, [surfaceInlayMaterial]);
 
   // ── Wireframe material ────────────────────────────────────────
+  const transmissionSideMaterial = useMemo(() => {
+    if (materialMode !== "transmission") return null;
+    const material = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(surfaceSideColor),
+      metalness: surfaceSideMetalness,
+      roughness: surfaceSideRoughness,
+      clearcoat: transClearcoat,
+      clearcoatRoughness: Math.max(transClearcoatRoughness, surfaceSideRoughness * 0.28),
+      iridescence: transIridescence,
+      envMapIntensity: surfaceSideEnvIntensity,
+      emissive: new THREE.Color(surfaceSideEmissive),
+      emissiveIntensity: surfaceSideEmissiveIntensity,
+      transparent: true,
+      opacity: 0.78,
+      depthWrite: false,
+      blending: surfaceSideEmissiveIntensity > 0 ? THREE.AdditiveBlending : THREE.NormalBlending,
+      ...(cutawayEnabled ? { clippingPlanes: [solidPlane], clipShadows: false } : {}),
+      side: THREE.DoubleSide,
+    });
+    material.name = `brandmark-transmission-side-${surfaceFamily}`;
+    return material;
+  }, [
+    materialMode,
+    surfaceFamily,
+    surfaceSideColor,
+    surfaceSideMetalness,
+    surfaceSideRoughness,
+    surfaceSideEnvIntensity,
+    surfaceSideEmissive,
+    surfaceSideEmissiveIntensity,
+    transClearcoat,
+    transClearcoatRoughness,
+    transIridescence,
+    cutawayEnabled,
+    solidPlane,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      transmissionSideMaterial?.dispose();
+    };
+  }, [transmissionSideMaterial]);
+
+  const debugUvTexture = useMemo(() => {
+    if (debugMode !== "uv") return null;
+    if (typeof document === "undefined") return null;
+    return makeUvDebugTexture(512);
+  }, [debugMode]);
+
+  useEffect(() => {
+    return () => {
+      debugUvTexture?.dispose();
+    };
+  }, [debugUvTexture]);
+
+  const debugMaterial = useMemo<THREE.Material | THREE.Material[] | null>(() => {
+    if (debugMode === "none") return null;
+    const clippingProps = cutawayEnabled
+      ? { clippingPlanes: [solidPlane], clipShadows: false }
+      : {};
+
+    if (debugMode === "normal") {
+      return [
+        new THREE.MeshNormalMaterial({ ...clippingProps, side: THREE.DoubleSide }),
+        new THREE.MeshNormalMaterial({ ...clippingProps, side: THREE.DoubleSide }),
+      ];
+    }
+
+    if (debugMode === "uv") {
+      return [
+        new THREE.MeshBasicMaterial({
+          map: debugUvTexture,
+          toneMapped: false,
+          ...clippingProps,
+          side: THREE.DoubleSide,
+        }),
+        new THREE.MeshBasicMaterial({
+          map: debugUvTexture,
+          toneMapped: false,
+          ...clippingProps,
+          side: THREE.DoubleSide,
+        }),
+      ];
+    }
+
+    if (debugMode === "roughness") {
+      return [
+        new THREE.MeshBasicMaterial({
+          map: surfaceMaps?.roughnessMap,
+          color: surfaceMaps
+            ? "#ffffff"
+            : grayscaleColor(currentCapRoughness(materialMode, physRoughness, transRoughness)),
+          toneMapped: false,
+          ...clippingProps,
+          side: THREE.DoubleSide,
+        }),
+        new THREE.MeshBasicMaterial({
+          color: grayscaleColor(surfaceSideRoughness),
+          toneMapped: false,
+          ...clippingProps,
+          side: THREE.DoubleSide,
+        }),
+      ];
+    }
+
+    return [
+      new THREE.MeshBasicMaterial({
+        map: surfaceMaps?.colorMap,
+        color: surfaceMaps
+          ? "#ffffff"
+          : new THREE.Color(materialMode === "transmission" ? transColor : physColor),
+        toneMapped: false,
+        ...clippingProps,
+        side: THREE.DoubleSide,
+      }),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(surfaceSideColor),
+        toneMapped: false,
+        ...clippingProps,
+        side: THREE.DoubleSide,
+      }),
+    ];
+  }, [
+    debugMode,
+    debugUvTexture,
+    materialMode,
+    physColor,
+    transColor,
+    physRoughness,
+    transRoughness,
+    surfaceMaps,
+    surfaceSideColor,
+    surfaceSideRoughness,
+    cutawayEnabled,
+    solidPlane,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      disposeMaterial(debugMaterial);
+    };
+  }, [debugMaterial]);
+
   const wireMaterial = useMemo(() => {
     return new THREE.LineBasicMaterial({
       color: new THREE.Color(wireColor),
@@ -688,7 +938,9 @@ export function Brandmark3D({
 
   return (
     <group ref={groupRef} position={position} scale={scale} rotation={rotation}>
-      {materialMode === "transmission" ? (
+      {debugMaterial ? (
+        <mesh geometry={geometry} material={debugMaterial} />
+      ) : materialMode === "transmission" ? (
         <mesh geometry={geometry}>
           <MeshTransmissionMaterial
             color={transColor}
@@ -722,10 +974,16 @@ export function Brandmark3D({
       ) : solidMaterial ? (
         <mesh geometry={geometry} material={solidMaterial} />
       ) : null}
-      {surfaceInlayMaterial ? (
-        <mesh geometry={geometry} material={surfaceInlayMaterial} scale={1.003} />
+      {!debugMaterial &&
+      materialMode === "transmission" &&
+      sideGeometry &&
+      transmissionSideMaterial ? (
+        <mesh geometry={sideGeometry} material={transmissionSideMaterial} scale={1.004} />
       ) : null}
-      {showWire && wireGeometry ? (
+      {!debugMaterial && surfaceInlayMaterial ? (
+        <mesh geometry={capGeometry ?? geometry} material={surfaceInlayMaterial} scale={1.003} />
+      ) : null}
+      {!debugMaterial && showWire && wireGeometry ? (
         <lineSegments geometry={wireGeometry} material={wireMaterial} />
       ) : null}
     </group>
@@ -737,6 +995,111 @@ function clamp01(v: number): number {
   if (v < 0) return 0;
   if (v > 1) return 1;
   return v;
+}
+
+function disposeMaterial(material: THREE.Material | THREE.Material[] | null) {
+  if (!material) return;
+  if (Array.isArray(material)) {
+    for (const entry of material) entry.dispose();
+    return;
+  }
+  material.dispose();
+}
+
+function extractMaterialGroupGeometry(
+  source: THREE.BufferGeometry,
+  materialIndex: number
+): THREE.BufferGeometry | null {
+  if (source.index) return null;
+  const groups = source.groups.filter((group) => group.materialIndex === materialIndex);
+  if (!groups.length) return null;
+
+  const slices = groups.map((group) => sliceRenderableGeometryGroup(source, group));
+  if (slices.length === 1) return slices[0];
+
+  const merged = mergeGeometries(slices, false);
+  for (const slice of slices) slice.dispose();
+  return merged;
+}
+
+function sliceRenderableGeometryGroup(
+  source: THREE.BufferGeometry,
+  group: { start: number; count: number; materialIndex?: number }
+): THREE.BufferGeometry {
+  const slice = new THREE.BufferGeometry();
+  const start = group.start;
+  const end = group.start + group.count;
+
+  for (const name of Object.keys(source.attributes)) {
+    const attribute = source.getAttribute(name) as THREE.BufferAttribute;
+    const from = start * attribute.itemSize;
+    const to = end * attribute.itemSize;
+    const array = attribute.array.slice(from, to) as THREE.TypedArray;
+    slice.setAttribute(
+      name,
+      new THREE.BufferAttribute(array, attribute.itemSize, attribute.normalized)
+    );
+  }
+
+  slice.computeBoundingBox();
+  slice.computeBoundingSphere();
+  return slice;
+}
+
+function makeUvDebugTexture(size: number): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Brandmark3D: failed to create UV debug texture");
+
+  const cell = size / 8;
+  for (let y = 0; y < 8; y += 1) {
+    for (let x = 0; x < 8; x += 1) {
+      ctx.fillStyle = (x + y) % 2 === 0 ? "#ebe3d6" : "#14100b";
+      ctx.fillRect(x * cell, y * cell, cell, cell);
+    }
+  }
+
+  ctx.strokeStyle = "#caa554";
+  ctx.lineWidth = 2;
+  for (let i = 0; i <= 8; i += 1) {
+    const p = i * cell;
+    ctx.beginPath();
+    ctx.moveTo(p, 0);
+    ctx.lineTo(p, size);
+    ctx.moveTo(0, p);
+    ctx.lineTo(size, p);
+    ctx.stroke();
+  }
+
+  const gradient = ctx.createLinearGradient(0, 0, size, size);
+  gradient.addColorStop(0, "rgba(88, 218, 199, 0.68)");
+  gradient.addColorStop(0.5, "rgba(202, 165, 84, 0.2)");
+  gradient.addColorStop(1, "rgba(200, 78, 47, 0.58)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(1, 1);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function currentCapRoughness(
+  materialMode: Brandmark3DMaterialMode,
+  physicalRoughness: number,
+  transmissionRoughness: number
+): number {
+  return materialMode === "transmission" ? transmissionRoughness : physicalRoughness;
+}
+
+function grayscaleColor(value: number): THREE.Color {
+  const v = clamp01(value);
+  return new THREE.Color(v, v, v);
 }
 
 interface BrandmarkSurfaceMapOptions {

@@ -26,6 +26,7 @@ Create a lab-only reflective 3D brandmark artifact using the existing SVG extrus
 - Add a generated reflective environment rig made from local lightformers and visible color cards. No external HDR or Blender asset is required for the first pass.
 - Add a focused internal lab route at `/test/brandmark-reflective` with ten retro-futuristic solid-object presets: Tensor Glass, Surveyor Brass, Holographic Ceramic, Archive Amber, Blueprint Prism, Epsilon Dither, Celestial Lacquer, Vector Relic, Frosted Ivory, and Provenance Glass.
 - Add a small `Brandmark3D.surface` API for generated surface maps: colour, roughness, bump, and inlay/etch alpha maps. The maps are code-native canvas textures so the material can read as brushed brass, ceramic, amber contour resin, blueprint slices, dither, lacquer inlay, vector etch, frost, or provenance grain without introducing a GLB asset pipeline.
+- Upgrade the lab threshold from subtle parameter presets to distinct material families. The first code-native surface-map pass kept one shared material slot and read too similar in front-on screenshots, so `Brandmark3D` now preserves the extrusion's cap/side material groups, generates object-space UVs, and supports lab-only UV/albedo/roughness/normal debug views.
 - Add route-local signal accents for motes, scanlines, contour traces, orbit rings, dither fragments, and wire-depth traces. These are companion atmosphere layers around the reflective mesh, not new production brandmark painters.
 - Add restrained postprocessing in the lab: bloom, optional chromatic aberration, noise, and vignette. Disable animated highlights and effects under `prefers-reduced-motion`.
 - Keep the artifact out of production landing and corridor renderers until a later ADR explicitly promotes it.
@@ -68,6 +69,7 @@ Rejected. The first pass stays inside an internal lab.
 - The reusable mesh component gains a material path that can later be mounted in v7 or home-v2 if approved.
 - The lab establishes lighting, postprocessing, surface-map, and fallback defaults before production integration.
 - The preset suite moves the study away from broad cyberpunk color and toward Thoughtform's void/dawn/gold, holographic, and retro-futuristic HUD language.
+- Cap/side material separation makes depth visible: faces can read as resin, ceramic, lacquer, or metal while extrusion walls carry edge tint, oxidized sides, or narrow emissive rim treatment.
 
 ### Negative
 
@@ -79,7 +81,8 @@ Rejected. The first pass stays inside an internal lab.
 - A future GLB route may still be needed for Lore-level authored textures and surface imperfections.
 - This artifact is not counted against the v7 global brandmark particle painter cap because it is not mounted in the v7 journey.
 - The `matcap` material mode remains available as a manual fallback/comparison mode, but it is no longer a primary visible preset in the reflective lab.
-- The generated surface maps improve distinction between presets but are still procedural approximations. Blender/GLB remains the path for authored UV wear, hand-painted normals, and non-repeating texture layout.
+- The generated surface maps and cap/side split improve distinction between presets but are still procedural approximations. Blender/GLB remains the path for authored UV islands, baked wear, hand-painted normals, sculpted bevels, and non-repeating texture layout.
+- Contact-sheet screenshots are now the acceptance test for this lab: each preset should be distinguishable without reading the selected UI label.
 
 ---
 

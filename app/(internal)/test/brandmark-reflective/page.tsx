@@ -16,6 +16,8 @@ import {
   Brandmark3D,
   MATCAP_PRESETS,
   ReflectiveEnvironmentRig,
+  type Brandmark3DDebugMode,
+  type Brandmark3DMaterialFamily,
   type Brandmark3DMaterialMode,
   type Brandmark3DSurfaceKind,
 } from "@/components/brand/Brandmark3D";
@@ -59,6 +61,17 @@ const SURFACE_OPTIONS: Array<{ label: string; value: Brandmark3DSurfaceKind }> =
   { label: "Frost", value: "frosted-grain" },
   { label: "Provenance", value: "provenance-grain" },
 ];
+
+const DEBUG_VIEW_OPTIONS: Array<{ label: string; value: Brandmark3DDebugMode }> = [
+  { label: "Lit", value: "none" },
+  { label: "UV", value: "uv" },
+  { label: "Albedo", value: "albedo" },
+  { label: "Rough", value: "roughness" },
+  { label: "Normal", value: "normal" },
+];
+
+const PREVIEW_ROTATION: [number, number, number] = [0.16, -0.42, 0];
+const CENTERED_ROTATION: [number, number, number] = [0, 0, 0];
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
@@ -137,6 +150,7 @@ interface SignalSettings {
 }
 
 interface SurfaceSettings {
+  family: Brandmark3DMaterialFamily;
   kind: Brandmark3DSurfaceKind;
   primary: string;
   secondary: string;
@@ -144,10 +158,19 @@ interface SurfaceSettings {
   scale: number;
   bump: number;
   inlay: number;
+  sideColor: string;
+  sideRoughness: number;
+  sideMetalness: number;
+  sideEnvMapIntensity: number;
+  sideEmissive: string;
+  sideEmissiveIntensity: number;
+  capEmissive: string;
+  capEmissiveIntensity: number;
 }
 
 interface LabSettings {
   materialMode: Brandmark3DMaterialMode;
+  debugMode: Brandmark3DDebugMode;
   geometry: GeometrySettings;
   physical: PhysicalSettings;
   transmission: TransmissionSettings;
@@ -240,6 +263,7 @@ const BASE_SIGNAL: SignalSettings = {
 };
 
 const BASE_SURFACE: SurfaceSettings = {
+  family: "default",
   kind: "tensor-bands",
   primary: "#f1e7d2",
   secondary: "#caa554",
@@ -247,6 +271,14 @@ const BASE_SURFACE: SurfaceSettings = {
   scale: 1.18,
   bump: 0.075,
   inlay: 0.28,
+  sideColor: "#caa554",
+  sideRoughness: 0.32,
+  sideMetalness: 0.8,
+  sideEnvMapIntensity: 1.3,
+  sideEmissive: "#000000",
+  sideEmissiveIntensity: 0,
+  capEmissive: "#000000",
+  capEmissiveIntensity: 0,
 };
 
 const PRESETS: Record<PresetName, PresetDefinition> = {
@@ -254,6 +286,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Tensor Glass",
     settings: {
       materialMode: "transmission",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 34, bevelThickness: 5.2, bevelSize: 4.1 },
       physical: BASE_PHYSICAL,
       transmission: {
@@ -275,6 +308,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: BASE_MOTION,
       surface: {
         ...BASE_SURFACE,
+        family: "tensor-glass",
         kind: "tensor-bands",
         primary: "#f1e7d2",
         secondary: "#58dac7",
@@ -282,6 +316,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.08,
         bump: 0.045,
         inlay: 0.42,
+        sideColor: "#58dac7",
+        sideRoughness: 0.16,
+        sideMetalness: 0.08,
+        sideEnvMapIntensity: 2.2,
+        sideEmissive: "#58dac7",
+        sideEmissiveIntensity: 0.18,
+        capEmissive: "#caa554",
+        capEmissiveIntensity: 0.04,
       },
       signal: { ...BASE_SIGNAL, mode: "motes", intensity: 0.28, density: 0.24 },
       wireframe: false,
@@ -292,6 +334,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Surveyor Brass",
     settings: {
       materialMode: "physical",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 30, bevelThickness: 3.4, bevelSize: 2.6 },
       physical: {
         color: "#d0a34d",
@@ -314,6 +357,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.06 },
       surface: {
         ...BASE_SURFACE,
+        family: "surveyor-brass",
         kind: "brushed-brass",
         primary: "#c3a15c",
         secondary: "#ebe3d6",
@@ -321,6 +365,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.8,
         bump: 0.12,
         inlay: 0.6,
+        sideColor: "#6c4a1f",
+        sideRoughness: 0.48,
+        sideMetalness: 1,
+        sideEnvMapIntensity: 1.4,
+        sideEmissive: "#000000",
+        sideEmissiveIntensity: 0,
+        capEmissive: "#caa554",
+        capEmissiveIntensity: 0.02,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -339,6 +391,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Holographic Ceramic",
     settings: {
       materialMode: "physical",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 28, bevelThickness: 4.4, bevelSize: 3.3 },
       physical: {
         color: "#ebe3d6",
@@ -361,6 +414,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.035, pointerTilt: 0.14 },
       surface: {
         ...BASE_SURFACE,
+        family: "holographic-ceramic",
         kind: "ceramic-speckle",
         primary: "#ebe3d6",
         secondary: "#58dac7",
@@ -368,6 +422,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.1,
         bump: 0.055,
         inlay: 0.28,
+        sideColor: "#58dac7",
+        sideRoughness: 0.34,
+        sideMetalness: 0.05,
+        sideEnvMapIntensity: 1.15,
+        sideEmissive: "#58dac7",
+        sideEmissiveIntensity: 0.08,
+        capEmissive: "#ebe3d6",
+        capEmissiveIntensity: 0.025,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -386,6 +448,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Archive Amber",
     settings: {
       materialMode: "transmission",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 36, bevelThickness: 4.8, bevelSize: 3.9 },
       physical: BASE_PHYSICAL,
       transmission: {
@@ -414,6 +477,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.055 },
       surface: {
         ...BASE_SURFACE,
+        family: "archive-amber",
         kind: "amber-contours",
         primary: "#e5b066",
         secondary: "#c86a3a",
@@ -421,6 +485,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.16,
         bump: 0.08,
         inlay: 0.54,
+        sideColor: "#c86a3a",
+        sideRoughness: 0.2,
+        sideMetalness: 0,
+        sideEnvMapIntensity: 1.7,
+        sideEmissive: "#c86a3a",
+        sideEmissiveIntensity: 0.14,
+        capEmissive: "#c86a3a",
+        capEmissiveIntensity: 0.035,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -439,6 +511,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Blueprint Prism",
     settings: {
       materialMode: "transmission",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 30, bevelThickness: 3.8, bevelSize: 3.1 },
       physical: BASE_PHYSICAL,
       transmission: {
@@ -466,6 +539,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: BASE_MOTION,
       surface: {
         ...BASE_SURFACE,
+        family: "blueprint-prism",
         kind: "blueprint-slices",
         primary: "#dcefff",
         secondary: "#58dac7",
@@ -473,6 +547,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.35,
         bump: 0.07,
         inlay: 0.58,
+        sideColor: "#58dac7",
+        sideRoughness: 0.12,
+        sideMetalness: 0,
+        sideEnvMapIntensity: 1.8,
+        sideEmissive: "#58dac7",
+        sideEmissiveIntensity: 0.2,
+        capEmissive: "#58dac7",
+        capEmissiveIntensity: 0.04,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -491,6 +573,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Epsilon Dither",
     settings: {
       materialMode: "physical",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 26, bevelThickness: 3.2, bevelSize: 2.7 },
       physical: {
         color: "#5a4528",
@@ -513,6 +596,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.065 },
       surface: {
         ...BASE_SURFACE,
+        family: "epsilon-dither",
         kind: "epsilon-dither",
         primary: "#5a4528",
         secondary: "#c84e2f",
@@ -520,6 +604,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.55,
         bump: 0.09,
         inlay: 0.62,
+        sideColor: "#c84e2f",
+        sideRoughness: 0.28,
+        sideMetalness: 0.7,
+        sideEnvMapIntensity: 1.5,
+        sideEmissive: "#c84e2f",
+        sideEmissiveIntensity: 0.22,
+        capEmissive: "#c84e2f",
+        capEmissiveIntensity: 0.06,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -538,6 +630,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Celestial Lacquer",
     settings: {
       materialMode: "physical",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 32, bevelThickness: 4.1, bevelSize: 3.5 },
       physical: {
         color: "#1f1910",
@@ -560,6 +653,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.045 },
       surface: {
         ...BASE_SURFACE,
+        family: "celestial-lacquer",
         kind: "celestial-lacquer",
         primary: "#12100d",
         secondary: "#caa554",
@@ -567,6 +661,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.05,
         bump: 0.055,
         inlay: 0.76,
+        sideColor: "#caa554",
+        sideRoughness: 0.12,
+        sideMetalness: 0.85,
+        sideEnvMapIntensity: 2.4,
+        sideEmissive: "#caa554",
+        sideEmissiveIntensity: 0.16,
+        capEmissive: "#caa554",
+        capEmissiveIntensity: 0.05,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -585,6 +687,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Vector Relic",
     settings: {
       materialMode: "physical",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 38, bevelThickness: 2.8, bevelSize: 2.2 },
       physical: {
         color: "#c0a25a",
@@ -607,6 +710,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.04, pointerTilt: 0.16 },
       surface: {
         ...BASE_SURFACE,
+        family: "vector-relic",
         kind: "vector-etch",
         primary: "#a98b4a",
         secondary: "#5b7a4e",
@@ -614,6 +718,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.24,
         bump: 0.13,
         inlay: 0.76,
+        sideColor: "#5b7a4e",
+        sideRoughness: 0.52,
+        sideMetalness: 0.8,
+        sideEnvMapIntensity: 1.4,
+        sideEmissive: "#5b7a4e",
+        sideEmissiveIntensity: 0.08,
+        capEmissive: "#caa554",
+        capEmissiveIntensity: 0.03,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -632,6 +744,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Frosted Ivory",
     settings: {
       materialMode: "transmission",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 34, bevelThickness: 5.4, bevelSize: 4.5 },
       physical: BASE_PHYSICAL,
       transmission: {
@@ -659,6 +772,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.03, pointerTilt: 0.12 },
       surface: {
         ...BASE_SURFACE,
+        family: "frosted-ivory",
         kind: "frosted-grain",
         primary: "#ebe3d6",
         secondary: "#caa554",
@@ -666,6 +780,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 2.1,
         bump: 0.13,
         inlay: 0.34,
+        sideColor: "#ebe3d6",
+        sideRoughness: 0.58,
+        sideMetalness: 0,
+        sideEnvMapIntensity: 1,
+        sideEmissive: "#ebe3d6",
+        sideEmissiveIntensity: 0.05,
+        capEmissive: "#ebe3d6",
+        capEmissiveIntensity: 0.02,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -684,6 +806,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
     label: "Provenance Glass",
     settings: {
       materialMode: "transmission",
+      debugMode: "none",
       geometry: { ...BASE_GEOMETRY, depth: 32, bevelThickness: 4.7, bevelSize: 3.7 },
       physical: BASE_PHYSICAL,
       transmission: {
@@ -711,6 +834,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       motion: { ...BASE_MOTION, autoRotate: 0.045 },
       surface: {
         ...BASE_SURFACE,
+        family: "provenance-glass",
         kind: "provenance-grain",
         primary: "#9fb08a",
         secondary: "#5b7a4e",
@@ -718,6 +842,14 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         scale: 1.42,
         bump: 0.1,
         inlay: 0.56,
+        sideColor: "#5b7a4e",
+        sideRoughness: 0.2,
+        sideMetalness: 0.12,
+        sideEnvMapIntensity: 1.5,
+        sideEmissive: "#5b7a4e",
+        sideEmissiveIntensity: 0.14,
+        capEmissive: "#caa554",
+        capEmissiveIntensity: 0.03,
       },
       signal: {
         ...BASE_SIGNAL,
@@ -737,16 +869,22 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
 export default function BrandmarkReflectiveLabPage() {
   const [presetName, setPresetName] = useState<PresetName>("tensorGlass");
   const [settings, setSettings] = useState<LabSettings>(PRESETS.tensorGlass.settings);
+  const [presentationRotation, setPresentationRotation] =
+    useState<[number, number, number]>(PREVIEW_ROTATION);
   const [rotationResetKey, setRotationResetKey] = useState(0);
   const reducedMotion = usePrefersReducedMotion();
 
   const applyPreset = useCallback((name: PresetName) => {
     setPresetName(name);
     setSettings(cloneSettings(PRESETS[name].settings));
+    setPresentationRotation(PREVIEW_ROTATION);
+    setRotationResetKey((key) => key + 1);
   }, []);
 
   const resetCurrentPreset = useCallback(() => {
     setSettings(cloneSettings(PRESETS[presetName].settings));
+    setPresentationRotation(PREVIEW_ROTATION);
+    setRotationResetKey((key) => key + 1);
   }, [presetName]);
 
   const updateGeometry = useCallback((patch: Partial<GeometrySettings>) => {
@@ -791,6 +929,7 @@ export default function BrandmarkReflectiveLabPage() {
   }, []);
 
   const stopRotation = useCallback(() => {
+    setPresentationRotation(CENTERED_ROTATION);
     setRotationResetKey((key) => key + 1);
     updateMotion({ autoRotate: 0, pointerParallax: false });
   }, [updateMotion]);
@@ -799,9 +938,15 @@ export default function BrandmarkReflectiveLabPage() {
     setSettings((current) => ({ ...current, materialMode }));
   }, []);
 
+  const setDebugMode = useCallback((debugMode: Brandmark3DDebugMode) => {
+    setSettings((current) => ({ ...current, debugMode }));
+  }, []);
+
   const matcap = settings.materialMode === "matcap" ? MATCAP_PRESETS.iridescent : undefined;
-  const effectsEnabled = settings.post.enabled && !reducedMotion;
+  const debugMode = settings.debugMode ?? "none";
+  const effectsEnabled = settings.post.enabled && !reducedMotion && debugMode === "none";
   const animatedEnvironment = settings.environment.animated && !reducedMotion;
+  const showSignal = debugMode === "none";
 
   return (
     <main style={pageStyle}>
@@ -841,6 +986,7 @@ export default function BrandmarkReflectiveLabPage() {
             physical={settings.physical}
             transmission={settings.transmission}
             surface={settings.surface}
+            debugMode={debugMode}
             wireframe={{
               enabled: settings.wireframe,
               style: "edges",
@@ -852,9 +998,12 @@ export default function BrandmarkReflectiveLabPage() {
             pointerParallax={settings.motion.pointerParallax && !reducedMotion}
             pointerTiltAmount={settings.motion.pointerTilt}
             middleMouseDrag
+            rotation={presentationRotation}
             scale={1.04}
           />
-          <ReflectiveSignalLayer settings={settings.signal} reducedMotion={reducedMotion} />
+          {showSignal ? (
+            <ReflectiveSignalLayer settings={settings.signal} reducedMotion={reducedMotion} />
+          ) : null}
           <SceneReticle />
           <ReflectivePostProcessing settings={settings.post} enabled={effectsEnabled} />
         </Canvas>
@@ -911,6 +1060,13 @@ export default function BrandmarkReflectiveLabPage() {
           ]}
           value={settings.materialMode}
           onChange={(value) => setMaterialMode(value as Brandmark3DMaterialMode)}
+        />
+
+        <SectionLabel>Material View</SectionLabel>
+        <SegmentedControl
+          options={DEBUG_VIEW_OPTIONS}
+          value={debugMode}
+          onChange={(value) => setDebugMode(value as Brandmark3DDebugMode)}
         />
 
         {settings.materialMode === "transmission" ? (
@@ -1060,6 +1216,48 @@ export default function BrandmarkReflectiveLabPage() {
             />
           </>
         ) : null}
+        <ColorRow
+          label="Side edge"
+          value={settings.surface.sideColor}
+          onChange={(sideColor) => updateSurface({ sideColor })}
+        />
+        <ColorRow
+          label="Side glow"
+          value={settings.surface.sideEmissive}
+          onChange={(sideEmissive) => updateSurface({ sideEmissive })}
+        />
+        <ControlSlider
+          label="Side rough"
+          value={settings.surface.sideRoughness}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={(sideRoughness) => updateSurface({ sideRoughness })}
+        />
+        <ControlSlider
+          label="Side metal"
+          value={settings.surface.sideMetalness}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={(sideMetalness) => updateSurface({ sideMetalness })}
+        />
+        <ControlSlider
+          label="Side env"
+          value={settings.surface.sideEnvMapIntensity}
+          min={0}
+          max={3}
+          step={0.05}
+          onChange={(sideEnvMapIntensity) => updateSurface({ sideEnvMapIntensity })}
+        />
+        <ControlSlider
+          label="Side emit"
+          value={settings.surface.sideEmissiveIntensity}
+          min={0}
+          max={0.8}
+          step={0.01}
+          onChange={(sideEmissiveIntensity) => updateSurface({ sideEmissiveIntensity })}
+        />
 
         <SectionLabel>Geometry</SectionLabel>
         <ControlSlider
