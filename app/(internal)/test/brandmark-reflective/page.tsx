@@ -17,6 +17,7 @@ import {
   MATCAP_PRESETS,
   ReflectiveEnvironmentRig,
   type Brandmark3DMaterialMode,
+  type Brandmark3DSurfaceKind,
 } from "@/components/brand/Brandmark3D";
 import { CanvasErrorBoundary } from "@/components/hud";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
@@ -43,6 +44,20 @@ const SIGNAL_OPTIONS: Array<{ label: string; value: SignalMode }> = [
   { label: "Orbits", value: "orbits" },
   { label: "Dither", value: "dither" },
   { label: "Wire", value: "wireDepth" },
+];
+
+const SURFACE_OPTIONS: Array<{ label: string; value: Brandmark3DSurfaceKind }> = [
+  { label: "None", value: "none" },
+  { label: "Tensor", value: "tensor-bands" },
+  { label: "Brass", value: "brushed-brass" },
+  { label: "Ceramic", value: "ceramic-speckle" },
+  { label: "Amber", value: "amber-contours" },
+  { label: "Blueprint", value: "blueprint-slices" },
+  { label: "Dither", value: "epsilon-dither" },
+  { label: "Lacquer", value: "celestial-lacquer" },
+  { label: "Etch", value: "vector-etch" },
+  { label: "Frost", value: "frosted-grain" },
+  { label: "Provenance", value: "provenance-grain" },
 ];
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
@@ -121,11 +136,22 @@ interface SignalSettings {
   animation: number;
 }
 
+interface SurfaceSettings {
+  kind: Brandmark3DSurfaceKind;
+  primary: string;
+  secondary: string;
+  strength: number;
+  scale: number;
+  bump: number;
+  inlay: number;
+}
+
 interface LabSettings {
   materialMode: Brandmark3DMaterialMode;
   geometry: GeometrySettings;
   physical: PhysicalSettings;
   transmission: TransmissionSettings;
+  surface: SurfaceSettings;
   environment: EnvironmentSettings;
   post: PostSettings;
   motion: MotionSettings;
@@ -213,6 +239,16 @@ const BASE_SIGNAL: SignalSettings = {
   animation: 0.22,
 };
 
+const BASE_SURFACE: SurfaceSettings = {
+  kind: "tensor-bands",
+  primary: "#f1e7d2",
+  secondary: "#caa554",
+  strength: 0.72,
+  scale: 1.18,
+  bump: 0.075,
+  inlay: 0.28,
+};
+
 const PRESETS: Record<PresetName, PresetDefinition> = {
   tensorGlass: {
     label: "Tensor Glass",
@@ -237,6 +273,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       environment: { ...BASE_ENVIRONMENT, intensity: 1.2 },
       post: { ...BASE_POST, bloomIntensity: 0.48, bloomThreshold: 0.48, chromatic: 0.00035 },
       motion: BASE_MOTION,
+      surface: {
+        ...BASE_SURFACE,
+        kind: "tensor-bands",
+        primary: "#f1e7d2",
+        secondary: "#58dac7",
+        strength: 0.62,
+        scale: 1.08,
+        bump: 0.045,
+        inlay: 0.42,
+      },
       signal: { ...BASE_SIGNAL, mode: "motes", intensity: 0.28, density: 0.24 },
       wireframe: false,
       flatCompare: false,
@@ -248,13 +294,13 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       materialMode: "physical",
       geometry: { ...BASE_GEOMETRY, depth: 30, bevelThickness: 3.4, bevelSize: 2.6 },
       physical: {
-        color: "#c3a15c",
+        color: "#d0a34d",
         metalness: 1,
-        roughness: 0.2,
+        roughness: 0.28,
         clearcoat: 1,
-        clearcoatRoughness: 0.08,
+        clearcoatRoughness: 0.12,
         iridescence: 0.02,
-        envMapIntensity: 1.75,
+        envMapIntensity: 2.15,
       },
       transmission: BASE_TRANSMISSION,
       environment: { ...BASE_ENVIRONMENT, intensity: 1.15 },
@@ -266,6 +312,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.026,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.06 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "brushed-brass",
+        primary: "#c3a15c",
+        secondary: "#ebe3d6",
+        strength: 0.94,
+        scale: 1.8,
+        bump: 0.12,
+        inlay: 0.6,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "scanlines",
@@ -303,6 +359,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.018,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.035, pointerTilt: 0.14 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "ceramic-speckle",
+        primary: "#ebe3d6",
+        secondary: "#58dac7",
+        strength: 0.88,
+        scale: 1.1,
+        bump: 0.055,
+        inlay: 0.28,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "motes",
@@ -346,6 +412,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.045,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.055 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "amber-contours",
+        primary: "#e5b066",
+        secondary: "#c86a3a",
+        strength: 1,
+        scale: 1.16,
+        bump: 0.08,
+        inlay: 0.54,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "contours",
@@ -388,6 +464,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.026,
       },
       motion: BASE_MOTION,
+      surface: {
+        ...BASE_SURFACE,
+        kind: "blueprint-slices",
+        primary: "#dcefff",
+        secondary: "#58dac7",
+        strength: 1.05,
+        scale: 1.35,
+        bump: 0.07,
+        inlay: 0.58,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "scanlines",
@@ -425,6 +511,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.065,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.065 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "epsilon-dither",
+        primary: "#5a4528",
+        secondary: "#c84e2f",
+        strength: 1.08,
+        scale: 1.55,
+        bump: 0.09,
+        inlay: 0.62,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "dither",
@@ -444,13 +540,13 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       materialMode: "physical",
       geometry: { ...BASE_GEOMETRY, depth: 32, bevelThickness: 4.1, bevelSize: 3.5 },
       physical: {
-        color: "#12100d",
-        metalness: 0.36,
+        color: "#1f1910",
+        metalness: 0.42,
         roughness: 0.16,
         clearcoat: 1,
         clearcoatRoughness: 0.025,
         iridescence: 0.02,
-        envMapIntensity: 2.2,
+        envMapIntensity: 2.65,
       },
       transmission: BASE_TRANSMISSION,
       environment: { ...BASE_ENVIRONMENT, intensity: 1.45 },
@@ -462,6 +558,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.034,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.045 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "celestial-lacquer",
+        primary: "#12100d",
+        secondary: "#caa554",
+        strength: 0.9,
+        scale: 1.05,
+        bump: 0.055,
+        inlay: 0.76,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "orbits",
@@ -481,13 +587,13 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       materialMode: "physical",
       geometry: { ...BASE_GEOMETRY, depth: 38, bevelThickness: 2.8, bevelSize: 2.2 },
       physical: {
-        color: "#a98b4a",
-        metalness: 0.9,
-        roughness: 0.24,
+        color: "#c0a25a",
+        metalness: 0.86,
+        roughness: 0.3,
         clearcoat: 0.72,
         clearcoatRoughness: 0.09,
         iridescence: 0.03,
-        envMapIntensity: 1.5,
+        envMapIntensity: 1.9,
       },
       transmission: BASE_TRANSMISSION,
       environment: { ...BASE_ENVIRONMENT, intensity: 1.05 },
@@ -499,6 +605,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.04,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.04, pointerTilt: 0.16 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "vector-etch",
+        primary: "#a98b4a",
+        secondary: "#5b7a4e",
+        strength: 1,
+        scale: 1.24,
+        bump: 0.13,
+        inlay: 0.76,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "wireDepth",
@@ -520,9 +636,9 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       physical: BASE_PHYSICAL,
       transmission: {
         ...BASE_TRANSMISSION,
-        color: "#ebe3d6",
-        roughness: 0.32,
-        thickness: 0.92,
+        color: "#f4eadb",
+        roughness: 0.38,
+        thickness: 0.98,
         attenuationColor: "#ebe3d6",
         attenuationDistance: 2.5,
         iridescence: 0.04,
@@ -532,15 +648,25 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         distortionScale: 0.14,
         temporalDistortion: 0.01,
       },
-      environment: { ...BASE_ENVIRONMENT, intensity: 0.9, animated: false },
+      environment: { ...BASE_ENVIRONMENT, intensity: 1.14, animated: false },
       post: {
         ...BASE_POST,
-        bloomIntensity: 0.24,
-        bloomThreshold: 0.66,
+        bloomIntensity: 0.34,
+        bloomThreshold: 0.58,
         chromatic: 0.00012,
         noise: 0.022,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.03, pointerTilt: 0.12 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "frosted-grain",
+        primary: "#ebe3d6",
+        secondary: "#caa554",
+        strength: 1.05,
+        scale: 2.1,
+        bump: 0.13,
+        inlay: 0.34,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "motes",
@@ -562,7 +688,7 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
       physical: BASE_PHYSICAL,
       transmission: {
         ...BASE_TRANSMISSION,
-        color: "#9fb08a",
+        color: "#a8bc91",
         roughness: 0.1,
         thickness: 0.74,
         attenuationColor: "#5b7a4e",
@@ -583,6 +709,16 @@ const PRESETS: Record<PresetName, PresetDefinition> = {
         noise: 0.032,
       },
       motion: { ...BASE_MOTION, autoRotate: 0.045 },
+      surface: {
+        ...BASE_SURFACE,
+        kind: "provenance-grain",
+        primary: "#9fb08a",
+        secondary: "#5b7a4e",
+        strength: 1,
+        scale: 1.42,
+        bump: 0.1,
+        inlay: 0.56,
+      },
       signal: {
         ...BASE_SIGNAL,
         mode: "motes",
@@ -625,6 +761,13 @@ export default function BrandmarkReflectiveLabPage() {
     setSettings((current) => ({
       ...current,
       transmission: { ...current.transmission, ...patch },
+    }));
+  }, []);
+
+  const updateSurface = useCallback((patch: Partial<SurfaceSettings>) => {
+    setSettings((current) => ({
+      ...current,
+      surface: { ...current.surface, ...patch },
     }));
   }, []);
 
@@ -697,6 +840,7 @@ export default function BrandmarkReflectiveLabPage() {
             matcap={matcap}
             physical={settings.physical}
             transmission={settings.transmission}
+            surface={settings.surface}
             wireframe={{
               enabled: settings.wireframe,
               style: "edges",
@@ -863,6 +1007,59 @@ export default function BrandmarkReflectiveLabPage() {
             />
           </>
         )}
+
+        <SectionLabel>Surface</SectionLabel>
+        <SegmentedControl
+          options={SURFACE_OPTIONS}
+          value={settings.surface.kind}
+          onChange={(kind) => updateSurface({ kind: kind as Brandmark3DSurfaceKind })}
+        />
+        {settings.surface.kind !== "none" ? (
+          <>
+            <ColorRow
+              label="Base map"
+              value={settings.surface.primary}
+              onChange={(primary) => updateSurface({ primary })}
+            />
+            <ColorRow
+              label="Inlay"
+              value={settings.surface.secondary}
+              onChange={(secondary) => updateSurface({ secondary })}
+            />
+            <ControlSlider
+              label="Texture"
+              value={settings.surface.strength}
+              min={0}
+              max={1.2}
+              step={0.01}
+              onChange={(strength) => updateSurface({ strength })}
+            />
+            <ControlSlider
+              label="Pattern scale"
+              value={settings.surface.scale}
+              min={0.35}
+              max={3.5}
+              step={0.05}
+              onChange={(scale) => updateSurface({ scale })}
+            />
+            <ControlSlider
+              label="Bump"
+              value={settings.surface.bump}
+              min={0}
+              max={0.25}
+              step={0.005}
+              onChange={(bump) => updateSurface({ bump })}
+            />
+            <ControlSlider
+              label="Inlay glow"
+              value={settings.surface.inlay}
+              min={0}
+              max={1}
+              step={0.01}
+              onChange={(inlay) => updateSurface({ inlay })}
+            />
+          </>
+        ) : null}
 
         <SectionLabel>Geometry</SectionLabel>
         <ControlSlider
@@ -1506,6 +1703,7 @@ function cloneSettings(settings: LabSettings): LabSettings {
     geometry: { ...settings.geometry },
     physical: { ...settings.physical },
     transmission: { ...settings.transmission },
+    surface: { ...settings.surface },
     environment: { ...settings.environment },
     post: { ...settings.post },
     motion: { ...settings.motion },

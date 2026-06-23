@@ -12,6 +12,8 @@ export { Brandmark3D } from "./Brandmark3D";
 export type {
   Brandmark3DProps,
   Brandmark3DMaterialMode,
+  Brandmark3DSurfaceKind,
+  Brandmark3DSurfaceParams,
   Brandmark3DPhysicalParams,
   Brandmark3DTransmissionParams,
   Brandmark3DWireframeParams,

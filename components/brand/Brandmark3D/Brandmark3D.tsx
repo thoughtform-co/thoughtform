@@ -45,6 +45,38 @@ import {
 
 export type Brandmark3DMaterialMode = "matcap" | "physical" | "transmission";
 
+export type Brandmark3DSurfaceKind =
+  | "none"
+  | "tensor-bands"
+  | "brushed-brass"
+  | "ceramic-speckle"
+  | "amber-contours"
+  | "blueprint-slices"
+  | "epsilon-dither"
+  | "celestial-lacquer"
+  | "vector-etch"
+  | "frosted-grain"
+  | "provenance-grain";
+
+export interface Brandmark3DSurfaceParams {
+  /** Procedural material map family. Default `none`. */
+  kind?: Brandmark3DSurfaceKind;
+  /** Base map tint. Keep close to the material colour. */
+  primary?: string;
+  /** Inlay / grain / line tint. */
+  secondary?: string;
+  /** Visibility of the colour and roughness map. Default 0.65. */
+  strength?: number;
+  /** Pattern scale multiplier. Default 1. */
+  scale?: number;
+  /** Raised / etched bump depth. Default 0.08. */
+  bump?: number;
+  /** Additive surface inlay opacity. Default 0.25. */
+  inlay?: number;
+  /** Texture resolution. Default 512. */
+  resolution?: number;
+}
+
 export interface Brandmark3DPhysicalParams {
   /** Base colour / metal tint. Default `#caa554` (brand gold). */
   color?: string;
@@ -150,6 +182,8 @@ export interface Brandmark3DProps {
   physical?: Brandmark3DPhysicalParams;
   /** Glass/refraction params — used when `materialMode === "transmission"`. */
   transmission?: Brandmark3DTransmissionParams;
+  /** Procedural surface maps applied to PBR / glass modes. */
+  surface?: Brandmark3DSurfaceParams;
   /** Wireframe overlay config. */
   wireframe?: Brandmark3DWireframeParams;
   /** Half/half clipping cutaway config. */
@@ -187,6 +221,7 @@ export function Brandmark3D({
   matcapTexture,
   physical,
   transmission,
+  surface,
   wireframe,
   cutaway,
   autoRotateSpeed = 0.18,
@@ -252,6 +287,15 @@ export function Brandmark3D({
   const transBacksideEnvMapIntensity = transmission?.backsideEnvMapIntensity ?? 0.9;
   const transTransmissionSampler = transmission?.transmissionSampler ?? false;
   const transBackgroundColor = transmission?.backgroundColor;
+
+  const surfaceKind = surface?.kind ?? "none";
+  const surfacePrimary = surface?.primary ?? physColor;
+  const surfaceSecondary = surface?.secondary ?? "#caa554";
+  const surfaceStrength = surface?.strength ?? 0.65;
+  const surfaceScale = surface?.scale ?? 1;
+  const surfaceBump = surface?.bump ?? 0.08;
+  const surfaceInlay = surface?.inlay ?? 0.25;
+  const surfaceResolution = surface?.resolution ?? 512;
 
   const wireEnabled = wireframe?.enabled ?? false;
   const wireStyle = wireframe?.style ?? "edges";
@@ -395,6 +439,50 @@ export function Brandmark3D({
     return transBackgroundColor ? new THREE.Color(transBackgroundColor) : undefined;
   }, [transBackgroundColor]);
 
+  const surfaceMaps = useMemo(() => {
+    if (surfaceKind === "none") return null;
+    if (typeof document === "undefined") return null;
+    return makeBrandmarkSurfaceMaps({
+      kind: surfaceKind,
+      primary: surfacePrimary,
+      secondary: surfaceSecondary,
+      strength: surfaceStrength,
+      scale: surfaceScale,
+      bump: surfaceBump,
+      inlay: surfaceInlay,
+      resolution: surfaceResolution,
+    });
+  }, [
+    surfaceKind,
+    surfacePrimary,
+    surfaceSecondary,
+    surfaceStrength,
+    surfaceScale,
+    surfaceBump,
+    surfaceInlay,
+    surfaceResolution,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      surfaceMaps?.colorMap.dispose();
+      surfaceMaps?.roughnessMap.dispose();
+      surfaceMaps?.bumpMap.dispose();
+      surfaceMaps?.inlayMap.dispose();
+    };
+  }, [surfaceMaps]);
+
+  const surfaceMaterialProps = useMemo(() => {
+    return surfaceMaps
+      ? {
+          map: surfaceMaps.colorMap,
+          roughnessMap: surfaceMaps.roughnessMap,
+          bumpMap: surfaceMaps.bumpMap,
+          bumpScale: surfaceMaps.bumpScale,
+        }
+      : {};
+  }, [surfaceMaps]);
+
   // ── Solid material ────────────────────────────────────────────
   const solidMaterial = useMemo<THREE.Material | null>(() => {
     const clippingProps = cutawayEnabled
@@ -410,6 +498,7 @@ export function Brandmark3D({
         clearcoatRoughness: physClearcoatRoughness,
         iridescence: physIridescence,
         envMapIntensity: physEnvIntensity,
+        ...surfaceMaterialProps,
         ...clippingProps,
         side: THREE.DoubleSide,
       });
@@ -433,6 +522,7 @@ export function Brandmark3D({
     physClearcoatRoughness,
     physIridescence,
     physEnvIntensity,
+    surfaceMaterialProps,
     cutawayEnabled,
     solidPlane,
   ]);
@@ -442,6 +532,29 @@ export function Brandmark3D({
       solidMaterial?.dispose();
     };
   }, [solidMaterial]);
+
+  const surfaceInlayMaterial = useMemo(() => {
+    if (!surfaceMaps || surfaceMaps.inlayOpacity <= 0) return null;
+    return new THREE.MeshBasicMaterial({
+      color: surfaceMaps.inlayColor,
+      alphaMap: surfaceMaps.inlayMap,
+      transparent: true,
+      opacity: surfaceMaps.inlayOpacity,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+      side: THREE.DoubleSide,
+    });
+  }, [surfaceMaps]);
+
+  useEffect(() => {
+    return () => {
+      surfaceInlayMaterial?.dispose();
+    };
+  }, [surfaceInlayMaterial]);
 
   // ── Wireframe material ────────────────────────────────────────
   const wireMaterial = useMemo(() => {
@@ -601,12 +714,16 @@ export function Brandmark3D({
             backsideEnvMapIntensity={transBacksideEnvMapIntensity}
             transmissionSampler={transTransmissionSampler}
             background={transmissionBackground}
+            {...surfaceMaterialProps}
             {...(cutawayEnabled ? { clippingPlanes: [solidPlane], clipShadows: false } : {})}
             side={THREE.DoubleSide}
           />
         </mesh>
       ) : solidMaterial ? (
         <mesh geometry={geometry} material={solidMaterial} />
+      ) : null}
+      {surfaceInlayMaterial ? (
+        <mesh geometry={geometry} material={surfaceInlayMaterial} scale={1.003} />
       ) : null}
       {showWire && wireGeometry ? (
         <lineSegments geometry={wireGeometry} material={wireMaterial} />
@@ -620,6 +737,475 @@ function clamp01(v: number): number {
   if (v < 0) return 0;
   if (v > 1) return 1;
   return v;
+}
+
+interface BrandmarkSurfaceMapOptions {
+  kind: Brandmark3DSurfaceKind;
+  primary: string;
+  secondary: string;
+  strength: number;
+  scale: number;
+  bump: number;
+  inlay: number;
+  resolution: number;
+}
+
+interface BrandmarkSurfaceMapBundle {
+  colorMap: THREE.CanvasTexture;
+  roughnessMap: THREE.CanvasTexture;
+  bumpMap: THREE.CanvasTexture;
+  inlayMap: THREE.CanvasTexture;
+  bumpScale: number;
+  inlayOpacity: number;
+  inlayColor: THREE.Color;
+}
+
+function makeBrandmarkSurfaceMaps(opts: BrandmarkSurfaceMapOptions): BrandmarkSurfaceMapBundle {
+  const size = Math.round(clamp(opts.resolution, 128, 1024));
+  const colorCanvas = makeCanvas(size);
+  const roughnessCanvas = makeCanvas(size);
+  const bumpCanvas = makeCanvas(size);
+  const inlayCanvas = makeCanvas(size);
+  const colorCtx = mustGetContext(colorCanvas);
+  const roughCtx = mustGetContext(roughnessCanvas);
+  const bumpCtx = mustGetContext(bumpCanvas);
+  const inlayCtx = mustGetContext(inlayCanvas);
+  const strength = clamp(opts.strength, 0, 1.2);
+
+  fill(colorCtx, opts.primary);
+  fill(roughCtx, "#9a9a9a");
+  fill(bumpCtx, "#808080");
+  fill(inlayCtx, "#000000");
+
+  switch (opts.kind) {
+    case "tensor-bands":
+      drawTensorBands(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "brushed-brass":
+      drawBrushedBrass(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "ceramic-speckle":
+      drawCeramicSpeckle(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "amber-contours":
+      drawAmberContours(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "blueprint-slices":
+      drawBlueprintSlices(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "epsilon-dither":
+      drawEpsilonDither(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "celestial-lacquer":
+      drawCelestialLacquer(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "vector-etch":
+      drawVectorEtch(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "frosted-grain":
+      drawFrostedGrain(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+    case "provenance-grain":
+      drawProvenanceGrain(colorCtx, roughCtx, bumpCtx, inlayCtx, opts, size, strength);
+      break;
+  }
+
+  const repeat = clamp(opts.scale, 0.35, 3.5);
+  const colorMap = makeCanvasTexture(colorCanvas, repeat, true);
+  const roughnessMap = makeCanvasTexture(roughnessCanvas, repeat, false);
+  const bumpMap = makeCanvasTexture(bumpCanvas, repeat, false);
+  const inlayMap = makeCanvasTexture(inlayCanvas, repeat, false);
+
+  return {
+    colorMap,
+    roughnessMap,
+    bumpMap,
+    inlayMap,
+    bumpScale: clamp(opts.bump, 0, 0.25),
+    inlayOpacity: clamp(opts.inlay, 0, 1),
+    inlayColor: new THREE.Color(opts.secondary),
+  };
+}
+
+function makeCanvas(size: number): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  return canvas;
+}
+
+function mustGetContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D context unavailable for brandmark surface map");
+  return ctx;
+}
+
+function makeCanvasTexture(
+  canvas: HTMLCanvasElement,
+  repeat: number,
+  srgb: boolean
+): THREE.CanvasTexture {
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(repeat, repeat);
+  texture.anisotropy = 4;
+  texture.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function fill(ctx: CanvasRenderingContext2D, color: string) {
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+}
+
+function drawTensorBands(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  for (let i = 0; i < 12; i += 1) {
+    const x = (i / 12) * size + hash01(i * 13.7) * size * 0.08;
+    const width = size * (0.018 + hash01(i * 23.2) * 0.055);
+    color.fillStyle = rgba(opts.secondary, 0.08 * strength);
+    color.fillRect(x, 0, width, size);
+    rough.fillStyle = `rgba(240,240,240,${0.12 * strength})`;
+    rough.fillRect(x, 0, width, size);
+    bump.fillStyle = `rgba(210,210,210,${0.16 * strength})`;
+    bump.fillRect(x, 0, width * 0.5, size);
+  }
+  drawDiagonal(color, opts.secondary, size, 0.16 * strength, 8);
+  drawDiagonal(inlay, "#ffffff", size, 0.7, 5);
+}
+
+function drawBrushedBrass(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  for (let y = 0; y < size; y += 3) {
+    const alpha = 0.04 + hash01(y * 2.7) * 0.13 * strength;
+    const jitter = (hash01(y * 7.3) - 0.5) * 18;
+    line(color, -20, y, size + 20, y + jitter * 0.08, opts.secondary, alpha, 1);
+    line(rough, 0, y, size, y, "#f2f2f2", alpha * 0.7, 1);
+    line(bump, 0, y, size, y, "#d8d8d8", alpha, 1);
+    if (y % 27 === 0) line(inlay, 0, y, size, y, "#ffffff", 0.45, 1.5);
+  }
+}
+
+function drawCeramicSpeckle(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  const count = Math.round(1200 * strength);
+  for (let i = 0; i < count; i += 1) {
+    const x = hash01(i * 11.13) * size;
+    const y = hash01(i * 41.71) * size;
+    const r = 0.6 + hash01(i * 89.4) * 2.2;
+    dot(color, x, y, r, hash01(i * 5.4) > 0.82 ? opts.secondary : "#ffffff", 0.07);
+    dot(rough, x, y, r * 1.3, "#ffffff", 0.16);
+    dot(bump, x, y, r, hash01(i) > 0.5 ? "#bdbdbd" : "#ececec", 0.18);
+    if (i % 37 === 0) dot(inlay, x, y, r * 0.9, "#ffffff", 0.35);
+  }
+}
+
+function drawAmberContours(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  for (let band = 0; band < 16; band += 1) {
+    const y = size * (0.08 + band * 0.055);
+    drawWave(color, y, size, opts.secondary, 0.12 * strength, 2);
+    drawWave(rough, y, size, "#eeeeee", 0.14 * strength, 2);
+    drawWave(bump, y, size, "#eeeeee", 0.2 * strength, 2);
+    if (band % 3 === 1) drawWave(inlay, y, size, "#ffffff", 0.62, 2.4);
+  }
+}
+
+function drawBlueprintSlices(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  for (let y = 14; y < size; y += 14) {
+    const alpha = y % 42 === 0 ? 0.2 : 0.1;
+    line(color, 0, y, size, y, opts.secondary, alpha * strength, 1);
+    line(rough, 0, y, size, y, "#f0f0f0", alpha * strength, 1);
+    line(bump, 0, y, size, y, "#efefef", alpha * strength, 1);
+    if (y % 28 === 0) line(inlay, 0, y, size, y, "#ffffff", 0.52, 1);
+  }
+  for (let i = 0; i < 34; i += 1) {
+    const y = hash01(i * 9.2) * size;
+    const x = hash01(i * 19.4) * size * 0.72;
+    line(inlay, x, y, x + size * (0.08 + hash01(i) * 0.22), y, "#ffffff", 0.45, 2);
+  }
+}
+
+function drawEpsilonDither(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  const cell = Math.max(4, Math.round(size / 58));
+  for (let y = 0; y < size; y += cell) {
+    for (let x = 0; x < size; x += cell) {
+      const h = hash01(x * 3.7 + y * 5.1);
+      if (h > 0.22 + strength * 0.16) continue;
+      const w = cell * (1 + Math.floor(hash01(h * 19) * 4));
+      color.fillStyle = rgba(opts.secondary, 0.18 * strength);
+      color.fillRect(x, y, w, cell * 0.74);
+      rough.fillStyle = `rgba(240,240,240,${0.16 * strength})`;
+      rough.fillRect(x, y, w, cell);
+      bump.fillStyle = `rgba(230,230,230,${0.18 * strength})`;
+      bump.fillRect(x, y, w, cell);
+      if (h < 0.08) {
+        inlay.fillStyle = "rgba(255,255,255,0.68)";
+        inlay.fillRect(x, y, w, cell);
+      }
+    }
+  }
+}
+
+function drawCelestialLacquer(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  color.fillStyle = rgba(opts.secondary, 0.06 * strength);
+  color.fillRect(0, 0, size, size);
+  for (let r = 0; r < 5; r += 1) {
+    const radius = size * (0.18 + r * 0.085);
+    arc(color, size * 0.5, size * 0.52, radius, opts.secondary, 0.18 * strength, 2);
+    arc(rough, size * 0.5, size * 0.52, radius, "#efefef", 0.12 * strength, 2);
+    arc(bump, size * 0.5, size * 0.52, radius, "#eeeeee", 0.16 * strength, 2);
+    arc(inlay, size * 0.5, size * 0.52, radius, "#ffffff", 0.5, 2.6);
+  }
+  for (let i = 0; i < 70; i += 1) {
+    const x = hash01(i * 17.3) * size;
+    const y = hash01(i * 31.9) * size;
+    dot(inlay, x, y, 0.8 + hash01(i) * 1.5, "#ffffff", 0.35);
+  }
+}
+
+function drawVectorEtch(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  for (let layer = 0; layer < 8; layer += 1) {
+    const inset = size * (0.08 + layer * 0.045);
+    const pts: Array<[number, number]> = [
+      [inset, size * 0.34 + layer * 5],
+      [size * 0.42, inset],
+      [size - inset * 0.8, size * 0.38],
+      [size * 0.66, size - inset],
+      [inset * 1.2, size * 0.72],
+    ];
+    polyline(color, pts, true, opts.secondary, 0.12 * strength, 1.4);
+    polyline(rough, pts, true, "#ededed", 0.13 * strength, 1.4);
+    polyline(bump, pts, true, "#efefef", 0.2 * strength, 1.4);
+    if (layer % 2 === 0) polyline(inlay, pts, true, "#ffffff", 0.46, 1.8);
+  }
+}
+
+function drawFrostedGrain(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  for (let i = 0; i < 900; i += 1) {
+    const x = hash01(i * 8.13) * size;
+    const y = hash01(i * 12.91) * size;
+    const r = 1 + hash01(i * 51.6) * 6;
+    dot(color, x, y, r, hash01(i) > 0.52 ? "#ffffff" : opts.secondary, 0.045 * strength);
+    dot(rough, x, y, r * 1.4, "#ffffff", 0.18 * strength);
+    dot(bump, x, y, r, hash01(i) > 0.5 ? "#bbbbbb" : "#eeeeee", 0.12 * strength);
+    if (i % 89 === 0) dot(inlay, x, y, r * 0.45, "#ffffff", 0.18);
+  }
+}
+
+function drawProvenanceGrain(
+  color: CanvasRenderingContext2D,
+  rough: CanvasRenderingContext2D,
+  bump: CanvasRenderingContext2D,
+  inlay: CanvasRenderingContext2D,
+  opts: BrandmarkSurfaceMapOptions,
+  size: number,
+  strength: number
+) {
+  for (let i = 0; i < 36; i += 1) {
+    const x = hash01(i * 19.7) * size;
+    const y = hash01(i * 23.1) * size;
+    const radius = size * (0.025 + hash01(i * 5.5) * 0.08);
+    arc(color, x, y, radius, opts.secondary, 0.09 * strength, 4);
+    arc(rough, x, y, radius, "#e8e8e8", 0.16 * strength, 4);
+    arc(bump, x, y, radius, "#dfdfdf", 0.18 * strength, 4);
+    if (i % 3 === 0) arc(inlay, x, y, radius, "#ffffff", 0.28, 3);
+  }
+  for (let y = 0; y < size; y += 9) {
+    line(color, 0, y, size, y + Math.sin(y * 0.03) * 6, opts.secondary, 0.035 * strength, 1);
+  }
+}
+
+function drawDiagonal(
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  size: number,
+  alpha: number,
+  width: number
+) {
+  line(ctx, -size * 0.1, size * 0.9, size * 1.1, size * 0.1, color, alpha, width);
+}
+
+function drawWave(
+  ctx: CanvasRenderingContext2D,
+  y: number,
+  size: number,
+  color: string,
+  alpha: number,
+  width: number
+) {
+  ctx.save();
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  for (let x = 0; x <= size; x += 8) {
+    const yy = y + Math.sin(x * 0.025 + y * 0.04) * size * 0.035;
+    if (x === 0) ctx.moveTo(x, yy);
+    else ctx.lineTo(x, yy);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function line(
+  ctx: CanvasRenderingContext2D,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  alpha: number,
+  width: number
+) {
+  ctx.save();
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function arc(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string,
+  alpha: number,
+  width: number
+) {
+  ctx.save();
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.ellipse(x, y, radius, radius * 0.58, -0.24, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function polyline(
+  ctx: CanvasRenderingContext2D,
+  points: Array<[number, number]>,
+  closed: boolean,
+  color: string,
+  alpha: number,
+  width: number
+) {
+  ctx.save();
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  points.forEach(([x, y], index) => {
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  if (closed) ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function dot(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string,
+  alpha: number
+) {
+  ctx.save();
+  ctx.fillStyle = rgba(color, alpha);
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function rgba(color: string, alpha: number): string {
+  const parsed = new THREE.Color(color);
+  return `rgba(${Math.round(parsed.r * 255)}, ${Math.round(parsed.g * 255)}, ${Math.round(
+    parsed.b * 255
+  )}, ${clamp(alpha, 0, 1)})`;
+}
+
+function hash01(value: number): number {
+  const x = Math.sin(value * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 function subscribeReducedMotion(onStoreChange: () => void): () => void {
