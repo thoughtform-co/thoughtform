@@ -27,8 +27,9 @@
  * `BRANDMARK_ANCHOR_INTELLIGENCE`) is a clean port.
  */
 
+import { MeshTransmissionMaterial } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import * as THREE from "three";
 import {
   buildBrandmarkGeometry,
@@ -42,7 +43,7 @@ import {
   type MatcapStyle,
 } from "./makeGoldMatcap";
 
-export type Brandmark3DMaterialMode = "matcap" | "physical";
+export type Brandmark3DMaterialMode = "matcap" | "physical" | "transmission";
 
 export interface Brandmark3DPhysicalParams {
   /** Base colour / metal tint. Default `#caa554` (brand gold). */
@@ -59,6 +60,55 @@ export interface Brandmark3DPhysicalParams {
   iridescence?: number;
   /** Reflection strength from the env map. Default 1. */
   envMapIntensity?: number;
+}
+
+export interface Brandmark3DTransmissionParams {
+  /** Main glass tint. Default `#e7f7ff`. */
+  color?: string;
+  /** 0 = mirror-clear, 1 = frosted. Default 0.08. */
+  roughness?: number;
+  /** Transmission strength 0..1. Default 1. */
+  transmission?: number;
+  /** Volume thickness for refraction. Default 0.45. */
+  thickness?: number;
+  /** Index of refraction. Default 1.45. */
+  ior?: number;
+  /** Internal attenuation tint. Default `#caa554`. */
+  attenuationColor?: string;
+  /** Internal attenuation distance. Default 1.6. */
+  attenuationDistance?: number;
+  /** Clearcoat layer strength 0..1. Default 0.6. */
+  clearcoat?: number;
+  /** Clearcoat roughness 0..1. Default 0.04. */
+  clearcoatRoughness?: number;
+  /** Thin-film iridescence strength 0..1. Default 0.18. */
+  iridescence?: number;
+  /** Reflection strength from the env map. Default 1.5. */
+  envMapIntensity?: number;
+  /** RGB edge split used by Drei's transmission shader. Default 0.04. */
+  chromaticAberration?: number;
+  /** Directional blur/refraction strength. Default 0.2. */
+  anisotropy?: number;
+  /** Static distortion. Default 0.08. */
+  distortion?: number;
+  /** Multiplier for distortion. Default 0.35. */
+  distortionScale?: number;
+  /** Time-varying distortion. Default 0.04. */
+  temporalDistortion?: number;
+  /** Internal render target samples. Default 6. */
+  samples?: number;
+  /** Internal render target resolution. Default 512. */
+  resolution?: number;
+  /** Render the backside pass for thicker glass. Default true. */
+  backside?: boolean;
+  /** Backside volume thickness. Default 0.28. */
+  backsideThickness?: number;
+  /** Backside env contribution. Default 0.9. */
+  backsideEnvMapIntensity?: number;
+  /** Use the transmission sampler path. Default false. */
+  transmissionSampler?: boolean;
+  /** Background color sampled by the transmission material. */
+  backgroundColor?: string;
 }
 
 export interface Brandmark3DWireframeParams {
@@ -98,12 +148,16 @@ export interface Brandmark3DProps {
   matcapTexture?: THREE.Texture | null;
   /** PBR params — used when `materialMode === "physical"`. */
   physical?: Brandmark3DPhysicalParams;
+  /** Glass/refraction params — used when `materialMode === "transmission"`. */
+  transmission?: Brandmark3DTransmissionParams;
   /** Wireframe overlay config. */
   wireframe?: Brandmark3DWireframeParams;
   /** Half/half clipping cutaway config. */
   cutaway?: Brandmark3DCutawayParams;
   /** Auto-rotation rate around Y in radians/sec. Default 0.18. */
   autoRotateSpeed?: number;
+  /** Increment to reset the group back to its supplied base rotation. */
+  rotationResetKey?: number;
   /** Whether to enable pointer-driven parallax tilt. Default true. */
   pointerParallax?: boolean;
   /** Peak pointer-driven tilt in radians. Default 0.22. */
@@ -132,9 +186,11 @@ export function Brandmark3D({
   matcap: matcapStops,
   matcapTexture,
   physical,
+  transmission,
   wireframe,
   cutaway,
   autoRotateSpeed = 0.18,
+  rotationResetKey = 0,
   pointerParallax = true,
   pointerTiltAmount = 0.22,
   pointerLerp = 0.08,
@@ -172,6 +228,30 @@ export function Brandmark3D({
   const physClearcoatRoughness = physical?.clearcoatRoughness ?? 0.1;
   const physIridescence = physical?.iridescence ?? 0;
   const physEnvIntensity = physical?.envMapIntensity ?? 1;
+
+  const transColor = transmission?.color ?? "#e7f7ff";
+  const transRoughness = transmission?.roughness ?? 0.08;
+  const transTransmission = transmission?.transmission ?? 1;
+  const transThickness = transmission?.thickness ?? 0.45;
+  const transIor = transmission?.ior ?? 1.45;
+  const transAttenuationColor = transmission?.attenuationColor ?? "#caa554";
+  const transAttenuationDistance = transmission?.attenuationDistance ?? 1.6;
+  const transClearcoat = transmission?.clearcoat ?? 0.6;
+  const transClearcoatRoughness = transmission?.clearcoatRoughness ?? 0.04;
+  const transIridescence = transmission?.iridescence ?? 0.18;
+  const transEnvIntensity = transmission?.envMapIntensity ?? 1.5;
+  const transChromaticAberration = transmission?.chromaticAberration ?? 0.04;
+  const transAnisotropy = transmission?.anisotropy ?? 0.2;
+  const transDistortion = transmission?.distortion ?? 0.08;
+  const transDistortionScale = transmission?.distortionScale ?? 0.35;
+  const transTemporalDistortion = transmission?.temporalDistortion ?? 0.04;
+  const transSamples = transmission?.samples ?? 6;
+  const transResolution = transmission?.resolution ?? 512;
+  const transBackside = transmission?.backside ?? true;
+  const transBacksideThickness = transmission?.backsideThickness ?? 0.28;
+  const transBacksideEnvMapIntensity = transmission?.backsideEnvMapIntensity ?? 0.9;
+  const transTransmissionSampler = transmission?.transmissionSampler ?? false;
+  const transBackgroundColor = transmission?.backgroundColor;
 
   const wireEnabled = wireframe?.enabled ?? false;
   const wireStyle = wireframe?.style ?? "edges";
@@ -255,24 +335,26 @@ export function Brandmark3D({
     };
   }, [wireGeometry]);
 
-  // ── Clipping planes (stable objects; params updated each frame) ─
-  const solidPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(1, 0, 0), 0), []);
-  const wirePlane = useMemo(() => new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0), []);
-
-  useEffect(() => {
+  // ── Clipping planes ────────────────────────────────────────────
+  const { solidPlane, wirePlane } = useMemo(() => {
     const sign = cutawayFlip ? -1 : 1;
     const n = cutawayAxis === "y" ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-    // Solid visible where axis·p ≥ offset; wire on the opposite side.
-    solidPlane.normal.copy(n).multiplyScalar(sign);
-    solidPlane.constant = -cutawayOffset * sign;
-    wirePlane.normal.copy(n).multiplyScalar(-sign);
-    wirePlane.constant = cutawayOffset * sign;
-  }, [cutawayAxis, cutawayOffset, cutawayFlip, solidPlane, wirePlane]);
+    return {
+      // Solid visible where axis·p ≥ offset; wire on the opposite side.
+      solidPlane: new THREE.Plane(n.clone().multiplyScalar(sign), -cutawayOffset * sign),
+      wirePlane: new THREE.Plane(n.clone().multiplyScalar(-sign), cutawayOffset * sign),
+    };
+  }, [cutawayAxis, cutawayOffset, cutawayFlip]);
 
   // Local clipping must be enabled on the renderer for material
   // `clippingPlanes` to take effect.
   useEffect(() => {
-    if (cutawayEnabled) gl.localClippingEnabled = true;
+    if (!cutawayEnabled) return;
+    const previous = gl.localClippingEnabled;
+    Object.assign(gl, { localClippingEnabled: true });
+    return () => {
+      Object.assign(gl, { localClippingEnabled: previous });
+    };
   }, [gl, cutawayEnabled]);
 
   // ── Matcap texture (matcap mode only) ─────────────────────────
@@ -309,9 +391,14 @@ export function Brandmark3D({
     };
   }, [proceduralMatcap]);
 
+  const transmissionBackground = useMemo(() => {
+    return transBackgroundColor ? new THREE.Color(transBackgroundColor) : undefined;
+  }, [transBackgroundColor]);
+
   // ── Solid material ────────────────────────────────────────────
-  const solidMaterial = useMemo<THREE.Material>(() => {
+  const solidMaterial = useMemo<THREE.Material | null>(() => {
     const clippingPlanes = cutawayEnabled ? [solidPlane] : undefined;
+    if (materialMode === "transmission") return null;
     if (materialMode === "physical") {
       return new THREE.MeshPhysicalMaterial({
         color: new THREE.Color(physColor),
@@ -351,7 +438,7 @@ export function Brandmark3D({
 
   useEffect(() => {
     return () => {
-      solidMaterial.dispose();
+      solidMaterial?.dispose();
     };
   }, [solidMaterial]);
 
@@ -374,22 +461,30 @@ export function Brandmark3D({
   }, [wireMaterial]);
 
   // ── Reduced-motion gate ───────────────────────────────────────
-  const [reducedMotion, setReducedMotion] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia(REDUCED_MOTION_QUERY);
-    setReducedMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot
+  );
 
   // ── Motion: auto-rotate + parallax + middle-mouse drag ────────
   const pointer = useThree((s) => s.pointer);
+  const baseRotationX = rotation?.[0] ?? 0;
+  const baseRotationY = rotation?.[1] ?? 0;
+  const baseRotationZ = rotation?.[2] ?? 0;
   const tiltState = useRef({ x: 0, y: 0 });
   const draggingRef = useRef(false);
   const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const manualBaseRef = useRef({ x: rotation?.[0] ?? 0 });
+  const manualBaseRef = useRef({ x: baseRotationX });
+
+  useEffect(() => {
+    const group = groupRef.current;
+    draggingRef.current = false;
+    tiltState.current = { x: 0, y: 0 };
+    manualBaseRef.current.x = baseRotationX;
+    if (!group) return;
+    group.rotation.set(baseRotationX, baseRotationY, baseRotationZ);
+  }, [rotationResetKey, baseRotationX, baseRotationY, baseRotationZ]);
 
   useEffect(() => {
     if (!middleMouseDrag) return;
@@ -468,10 +563,10 @@ export function Brandmark3D({
       tiltState.current.x += (targetX - tiltState.current.x) * a;
       tiltState.current.y += (targetY - tiltState.current.y) * a;
       group.rotation.x = manualBaseRef.current.x + tiltState.current.x;
-      group.rotation.z = (rotation?.[2] ?? 0) + tiltState.current.y * 0.25;
+      group.rotation.z = baseRotationZ + tiltState.current.y * 0.25;
     } else if (!dragging) {
       group.rotation.x = manualBaseRef.current.x;
-      group.rotation.z = rotation?.[2] ?? 0;
+      group.rotation.z = baseRotationZ;
     }
   });
 
@@ -479,7 +574,40 @@ export function Brandmark3D({
 
   return (
     <group ref={groupRef} position={position} scale={scale} rotation={rotation}>
-      <mesh geometry={geometry} material={solidMaterial} />
+      {materialMode === "transmission" ? (
+        <mesh geometry={geometry}>
+          <MeshTransmissionMaterial
+            color={transColor}
+            roughness={transRoughness}
+            transmission={transTransmission}
+            thickness={transThickness}
+            ior={transIor}
+            attenuationColor={transAttenuationColor}
+            attenuationDistance={transAttenuationDistance}
+            clearcoat={transClearcoat}
+            clearcoatRoughness={transClearcoatRoughness}
+            iridescence={transIridescence}
+            envMapIntensity={transEnvIntensity}
+            chromaticAberration={transChromaticAberration}
+            anisotropy={transAnisotropy}
+            distortion={transDistortion}
+            distortionScale={transDistortionScale}
+            temporalDistortion={transTemporalDistortion}
+            samples={transSamples}
+            resolution={transResolution}
+            backside={transBackside}
+            backsideThickness={transBacksideThickness}
+            backsideEnvMapIntensity={transBacksideEnvMapIntensity}
+            transmissionSampler={transTransmissionSampler}
+            background={transmissionBackground}
+            clippingPlanes={cutawayEnabled ? [solidPlane] : undefined}
+            clipShadows={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ) : solidMaterial ? (
+        <mesh geometry={geometry} material={solidMaterial} />
+      ) : null}
       {showWire && wireGeometry ? (
         <lineSegments geometry={wireGeometry} material={wireMaterial} />
       ) : null}
@@ -492,4 +620,21 @@ function clamp01(v: number): number {
   if (v < 0) return 0;
   if (v > 1) return 1;
   return v;
+}
+
+function subscribeReducedMotion(onStoreChange: () => void): () => void {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {};
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+
+function getReducedMotionSnapshot(): boolean {
+  return typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia(REDUCED_MOTION_QUERY).matches
+    : false;
+}
+
+function getReducedMotionServerSnapshot(): boolean {
+  return false;
 }

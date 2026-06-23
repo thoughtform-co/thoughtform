@@ -13,12 +13,16 @@ export type {
   Brandmark3DProps,
   Brandmark3DMaterialMode,
   Brandmark3DPhysicalParams,
+  Brandmark3DTransmissionParams,
   Brandmark3DWireframeParams,
   Brandmark3DCutawayParams,
 } from "./Brandmark3D";
 
 export { RoomEnvironmentRig } from "./EnvironmentRig";
 export type { RoomEnvironmentRigProps } from "./EnvironmentRig";
+
+export { ReflectiveEnvironmentRig } from "./ReflectiveEnvironmentRig";
+export type { ReflectiveEnvironmentRigProps } from "./ReflectiveEnvironmentRig";
 
 export { buildBrandmarkGeometry, DEFAULT_BRANDMARK_SVG_URL } from "./buildBrandmarkGeometry";
 export type {
