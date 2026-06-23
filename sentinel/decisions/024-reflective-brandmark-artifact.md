@@ -1,7 +1,7 @@
 # ADR-024: Reflective Brandmark Artifact
 
 **Date:** 2026-06-23
-**Status:** Proposed
+**Status:** Accepted
 
 ---
 
@@ -24,11 +24,13 @@ Create a lab-only reflective 3D brandmark artifact using the existing SVG extrus
 
 - Extend `Brandmark3D` with a third material mode, `transmission`, backed by Drei `MeshTransmissionMaterial`.
 - Add a generated reflective environment rig made from local lightformers and visible color cards. No external HDR or Blender asset is required for the first pass.
-- Add a focused internal lab route at `/test/brandmark-reflective` with presets for gold glass, mercury, dark chrome, oil-slick, and frosted glass.
+- Add a focused internal lab route at `/test/brandmark-reflective` with ten retro-futuristic solid-object presets: Tensor Glass, Surveyor Brass, Holographic Ceramic, Archive Amber, Blueprint Prism, Epsilon Dither, Celestial Lacquer, Vector Relic, Frosted Ivory, and Provenance Glass.
+- Add route-local signal accents for motes, scanlines, contour traces, orbit rings, dither fragments, and wire-depth traces. These are companion atmosphere layers around the reflective mesh, not new production brandmark painters.
 - Add restrained postprocessing in the lab: bloom, optional chromatic aberration, noise, and vignette. Disable animated highlights and effects under `prefers-reduced-motion`.
 - Keep the artifact out of production landing and corridor renderers until a later ADR explicitly promotes it.
 
 This is a separate material study and reusable renderer surface. It does not change `BrandmarkVectorActor`, `BrandmarkParticleCanvas`, `BrandmarkPhysicsCore`, the v7 journey store, or the corridor handoff contract.
+The route-local signal accents do not count against the global v7 particle painter cap because they are mounted only inside the internal lab scene.
 
 ---
 
@@ -64,6 +66,7 @@ Rejected. The first pass stays inside an internal lab.
 - The brandmark can be evaluated as a glass/chrome object without leaving the browser.
 - The reusable mesh component gains a material path that can later be mounted in v7 or home-v2 if approved.
 - The lab establishes lighting, postprocessing, and fallback defaults before production integration.
+- The preset suite moves the study away from broad cyberpunk color and toward Thoughtform's void/dawn/gold, holographic, and retro-futuristic HUD language.
 
 ### Negative
 
@@ -74,6 +77,7 @@ Rejected. The first pass stays inside an internal lab.
 
 - A future GLB route may still be needed for Lore-level authored textures and surface imperfections.
 - This artifact is not counted against the v7 global brandmark particle painter cap because it is not mounted in the v7 journey.
+- The `matcap` material mode remains available as a manual fallback/comparison mode, but it is no longer a primary visible preset in the reflective lab.
 
 ---
 

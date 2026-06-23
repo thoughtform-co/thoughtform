@@ -397,7 +397,9 @@ export function Brandmark3D({
 
   // ── Solid material ────────────────────────────────────────────
   const solidMaterial = useMemo<THREE.Material | null>(() => {
-    const clippingPlanes = cutawayEnabled ? [solidPlane] : undefined;
+    const clippingProps = cutawayEnabled
+      ? { clippingPlanes: [solidPlane], clipShadows: false }
+      : {};
     if (materialMode === "transmission") return null;
     if (materialMode === "physical") {
       return new THREE.MeshPhysicalMaterial({
@@ -408,8 +410,7 @@ export function Brandmark3D({
         clearcoatRoughness: physClearcoatRoughness,
         iridescence: physIridescence,
         envMapIntensity: physEnvIntensity,
-        clippingPlanes,
-        clipShadows: false,
+        ...clippingProps,
         side: THREE.DoubleSide,
       });
     }
@@ -419,7 +420,7 @@ export function Brandmark3D({
       flatShading: false,
       toneMapped: false,
       transparent: false,
-      clippingPlanes,
+      ...clippingProps,
     });
   }, [
     materialMode,
@@ -450,7 +451,7 @@ export function Brandmark3D({
       opacity: clamp01(wireOpacity),
       toneMapped: false,
       depthWrite: false,
-      clippingPlanes: cutawayEnabled ? [wirePlane] : undefined,
+      ...(cutawayEnabled ? { clippingPlanes: [wirePlane] } : {}),
     });
   }, [wireColor, wireOpacity, cutawayEnabled, wirePlane]);
 
@@ -600,8 +601,7 @@ export function Brandmark3D({
             backsideEnvMapIntensity={transBacksideEnvMapIntensity}
             transmissionSampler={transTransmissionSampler}
             background={transmissionBackground}
-            clippingPlanes={cutawayEnabled ? [solidPlane] : undefined}
-            clipShadows={false}
+            {...(cutawayEnabled ? { clippingPlanes: [solidPlane], clipShadows: false } : {})}
             side={THREE.DoubleSide}
           />
         </mesh>
