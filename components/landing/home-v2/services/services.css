@@ -135,16 +135,12 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   width: clamp(560px, 66vw, 1040px);
   max-width: 96vw;
   aspect-ratio: 1;
   pointer-events: none;
   z-index: 1;
-  /* Assemble the orrery AFTER the sun parks — `--svc-content-in` (0..1) is
-   * the delayed entrance envelope useServicesStageScroll publishes from the
-   * corridor dissipate (1 = parked; defaults to 1 when absent / inert). */
-  opacity: var(--svc-content-in, 1);
+  transform: translate(-50%, -50%);
 }
 .services-orbit-map__svg {
   display: block;
@@ -153,48 +149,36 @@
   overflow: visible;
 }
 
-/* Orbit path — base (inactive) state is faint; active brightens. The
- * per-orbit stroke/dash identity is set inline from `celestialData`. */
-.svc-orbit {
-  opacity: 0.26;
-  transition: opacity 720ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1));
+/* Orbits + bodies are AMBIENT — decoupled from the cards (cards point at
+ * the brandmark via a leader, not at these bodies, so the bodies drift
+ * freely). Line variety is per-orbit weight/tint (celestialData) plus the
+ * dotted/dashed cartography rings.
+ *
+ * DRAW-ON wrap: each orbit's stroke is revealed AROUND the mark as the
+ * section arrives — `--svc-content-in` (0..1, the corridor-dissipate clock
+ * useServicesStageScroll publishes) scrubs the dashoffset from full
+ * circumference (hidden) to 0 (fully drawn), so the orbits visibly wrap the
+ * brandmark on entry, echoing the corridor sphere envelop. `pathLength=100`
+ * (set in the SVG) normalizes every ellipse. Defaults to 1 (fully drawn)
+ * when the var is absent / inert (mobile / reduced-motion). */
+.svc-orbit__path:not(.svc-orbit__path--dotted) {
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 * (1 - var(--svc-content-in, 1)));
 }
+/* The dotted orbit can't draw-on (its dash IS the dot pattern); reveal it
+ * by fading in with arrival instead. */
+.svc-orbit__path--dotted {
+  opacity: var(--svc-content-in, 1);
+}
+/* Bodies + cartography fade in with arrival; the orbit LINES draw on
+ * crisply (no opacity fade) so the wrap reads clearly. */
 .svc-orbit__node {
   fill: var(--gold);
+  fill-opacity: 0.85;
+  opacity: var(--svc-content-in, 1);
 }
-.svc-orbit__halo,
-.svc-orbit__tick {
-  opacity: 0; /* active-only emphasis */
-  transition: opacity 480ms var(--m-ease, ease);
-}
-.svc-orbit__label {
-  fill: var(--dawn-30, rgba(235, 227, 214, 0.3));
-  font-family: var(--font-pt-mono, "PT Mono", monospace);
-  font-size: 6px; /* SVG user units — scales with the map */
-  letter-spacing: 0.14em;
-  transition: fill 600ms var(--m-ease, ease);
-}
-
-/* Active orbit/node — keyed off the stage's data-active-step (same model
- * the old list highlight used). All orbits stay present; only the active
- * one is full-strength + shows its node halo/tick and a gold label. */
-.services-stage[data-active-step="0"] .svc-orbit[data-i="0"],
-.services-stage[data-active-step="1"] .svc-orbit[data-i="1"],
-.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] {
-  opacity: 1;
-}
-.services-stage[data-active-step="0"] .svc-orbit[data-i="0"] .svc-orbit__halo,
-.services-stage[data-active-step="0"] .svc-orbit[data-i="0"] .svc-orbit__tick,
-.services-stage[data-active-step="1"] .svc-orbit[data-i="1"] .svc-orbit__halo,
-.services-stage[data-active-step="1"] .svc-orbit[data-i="1"] .svc-orbit__tick,
-.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] .svc-orbit__halo,
-.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] .svc-orbit__tick {
-  opacity: 1;
-}
-.services-stage[data-active-step="0"] .svc-orbit[data-i="0"] .svc-orbit__label,
-.services-stage[data-active-step="1"] .svc-orbit[data-i="1"] .svc-orbit__label,
-.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] .svc-orbit__label {
-  fill: var(--gold);
+.svc-cartography {
+  opacity: var(--svc-content-in, 1);
 }
 
 /* ── Service cards (HUD readouts, one revealed per step) ──────────── */
@@ -243,6 +227,30 @@
 }
 .service-celestial-card--lead {
   border-color: var(--gold-30, rgba(202, 165, 84, 0.3));
+}
+
+/* Leader — a thin pointer that sits just left of the card and overflows
+ * toward the brandmark, ending in a pip on the mark. Per-card vertical
+ * offset aims each readout at a slightly different region of the mark. It
+ * rides the card's own reveal (opacity inherited), so it shows/hides with
+ * the active card. */
+.service-celestial-card__leader {
+  position: absolute;
+  right: calc(100% - 6px);
+  top: 22px;
+  width: 120px;
+  height: 64px;
+  overflow: visible;
+  pointer-events: none;
+}
+.service-celestial-card[data-i="0"] .service-celestial-card__leader {
+  top: 16px;
+}
+.service-celestial-card[data-i="1"] .service-celestial-card__leader {
+  top: 30px;
+}
+.service-celestial-card[data-i="2"] .service-celestial-card__leader {
+  top: 46px;
 }
 
 .services-stage[data-active-step="0"] .service-celestial-card[data-i="0"],
@@ -410,13 +418,14 @@
     max-width: none;
     z-index: 1;
   }
-  /* Simplify the orrery on mobile: static decorative rings only. */
+  /* Simplify on mobile: static orbits + faint guide rings only — drop the
+   * stars and the card leaders (cards stack full-width, so a left-pointing
+   * leader would dangle into the margin). */
   .svc-orbit {
-    opacity: 0.42;
+    opacity: 0.55;
   }
-  .svc-orbit__halo,
-  .svc-orbit__tick,
-  .svc-orbit__label {
+  .svc-cartography__stars,
+  .service-celestial-card__leader {
     display: none;
   }
 

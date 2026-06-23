@@ -33,6 +33,41 @@ export function ServiceCelestialCard({ service, index }: ServiceCelestialCardPro
       className={`service-celestial-card${service.lead ? " service-celestial-card--lead" : ""}`}
       data-i={index}
     >
+      {/* Leader — a thin pointer from the card toward a region on the
+          brandmark (NOT to an orbit body), so the orbits can drift freely.
+          Positioned/angled in services.css; the pip end lands on the mark. */}
+      <span className="service-celestial-card__leader" aria-hidden="true">
+        <svg viewBox="0 0 120 64" width="120" height="64" fill="none">
+          <line
+            className="service-celestial-card__leader-line"
+            x1="116"
+            y1="56"
+            x2="8"
+            y2="9"
+            stroke="var(--gold)"
+            strokeWidth={1}
+            strokeDasharray="2 3"
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle
+            className="service-celestial-card__leader-pip"
+            cx="8"
+            cy="9"
+            r="2.6"
+            stroke="var(--gold)"
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            d="M2 9 L5.4 9 M8 3 L8 6"
+            stroke="var(--gold)"
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle cx="116" cy="56" r="1.4" fill="var(--gold)" stroke="none" />
+        </svg>
+      </span>
+
       <CornerBracket mode="four" armLength={14} thickness={1.5} color="var(--gold)" />
 
       <header className="service-celestial-card__head">

@@ -37,12 +37,12 @@ export interface OrbitGeometry {
   rotateDeg: number;
 }
 
-/** Stroke identity for an orbit path — the SVG-ready subset of
- *  `OrbitLineStyle` (adapted from `ORBIT_STYLES`). */
+/** Stroke identity for an orbit path. */
 export interface OrbitLineRecipe {
   /** Stroke color, CSS rgba() with baked alpha (group opacity layers on top). */
   stroke: string;
-  /** Stroke width in SVG units (rendered with `vector-effect: non-scaling-stroke`). */
+  /** Stroke width in SVG units (scales with the orbit — no non-scaling-stroke,
+   *  so the `pathLength` draw-on works; see ServicesOrbitMap). */
   strokeWidth: number;
   /** Dash mark length; a large value (9999) with gap 0 reads as solid. */
   dashMark: number;
@@ -50,6 +50,10 @@ export interface OrbitLineRecipe {
   dashGap: number;
   /** SVG line cap — `round` turns tiny dashes into true dots. */
   lineCap: "round" | "butt";
+  /** When true the orbit is rendered DOTTED (dashMark/dashGap as the dot
+   *  pattern) and revealed by fade instead of the stroke draw-on (a dotted
+   *  line can't draw-on cleanly). */
+  dotted?: boolean;
 }
 
 /** Full celestial config for one service orbit. */
@@ -73,50 +77,54 @@ const SOLID_MARK = 9999;
 
 /** Per-service geometry + motion + line, keyed by id. Merged with the
  *  live `SERVICES` order/index below so `i` and `label` never drift. */
+// A 3D-reading armillary set: each orbit sits in a DIFFERENT plane so the
+// three cross and wrap the mark in depth (not three near-parallel rings in
+// the screen plane). Wide flat "equatorial" · tall edge-on "meridian"
+// (the z-axis ring) · inclined diagonal. Solid orbits DRAW ON (stroke
+// draw-on wrap, services.css); the dotted one fades in. All thin.
 const ORBIT_BY_ID: Record<ServiceId, Omit<ServiceOrbit, "id" | "i" | "label">> = {
-  // Inner, roundish, gentle right tilt — tight gold dot cadence
-  // (adapted from ORBIT_STYLES["04"].sigil).
+  // Wide, near-horizontal — the equatorial ring (seen slightly from above).
   keynote: {
-    orbit: { rx: 88, ry: 64, rotateDeg: 14 },
-    psi0Deg: 205,
+    orbit: { rx: 100, ry: 44, rotateDeg: 8 },
+    psi0Deg: 200,
     driftDir: 1,
     omegaDegPerSec: 3.0, // ≈ 120s/lap
     line: {
-      stroke: "rgba(202, 165, 84, 0.55)",
-      strokeWidth: 0.55,
-      dashMark: 1,
-      dashGap: 3,
+      stroke: "rgba(202, 165, 84, 0.6)",
+      strokeWidth: 0.5,
+      dashMark: SOLID_MARK,
+      dashGap: 0,
       lineCap: "round",
     },
   },
-  // Mid, flatter long-horizon path — the lead service, solid gold baseline
-  // (adapted from ORBIT_STYLES["02"].sigil, recoloured warm).
+  // TALL, edge-on — the meridian ring standing in the z-plane (over the top
+  // and behind the mark). The lead service; slightly the brightest/boldest.
   workshop: {
-    orbit: { rx: 112, ry: 70, rotateDeg: -8 },
-    psi0Deg: 325,
+    orbit: { rx: 60, ry: 118, rotateDeg: -10 },
+    psi0Deg: 285,
     driftDir: -1,
     omegaDegPerSec: 2.2, // ≈ 164s/lap
     line: {
-      stroke: "rgba(202, 165, 84, 0.5)",
+      stroke: "rgba(202, 165, 84, 0.85)",
       strokeWidth: 0.7,
       dashMark: SOLID_MARK,
       dashGap: 0,
-      lineCap: "butt",
+      lineCap: "round",
     },
   },
-  // Outer, stronger left tilt — airy spaced-dotted dawn ring, slowest
-  // (adapted from ORBIT_STYLES["01"].sigil).
+  // Inclined diagonal — DOTTED cool dawn ring crossing the other two.
   embedded: {
-    orbit: { rx: 124, ry: 88, rotateDeg: -24 },
-    psi0Deg: 110,
+    orbit: { rx: 108, ry: 62, rotateDeg: 52 },
+    psi0Deg: 40,
     driftDir: 1,
     omegaDegPerSec: 1.6, // ≈ 225s/lap
     line: {
-      stroke: "rgba(235, 227, 214, 0.45)",
-      strokeWidth: 0.5,
-      dashMark: 1,
-      dashGap: 5,
+      stroke: "rgba(235, 227, 214, 0.6)",
+      strokeWidth: 0.6,
+      dashMark: 0.6,
+      dashGap: 4.5,
       lineCap: "round",
+      dotted: true,
     },
   },
 };
