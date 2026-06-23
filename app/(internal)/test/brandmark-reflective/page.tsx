@@ -904,7 +904,7 @@ const BUILT_IN_PRESETS: ReadonlyArray<UnifiedPreset> = [
       primitiveAspect: 3.5,
       color: PALETTE.hotGold,
       accentColor: PALETTE.redHot,
-      showSphere: true,
+      showSphere: false,
     },
     lighting: { intensity: 1.6, accentColor: PALETTE.redHot },
     post: { bloomIntensity: 1.42, bloomThreshold: 0.25, chromatic: 0.0008, noise: 0.08 },
@@ -1036,11 +1036,11 @@ export default function BrandmarkUnifiedLabPage() {
   const [presetBusy, setPresetBusy] = useState(false);
 
   const applyUnifiedPreset = useCallback(
-    (presetId: string, resetRotation = true) => {
+    (presetId: string, resetRotation = true, applyScene = false) => {
       const next = presets.find((p) => p.id === presetId) ?? defaultPreset;
       setActivePresetId(next.id);
       setMode(next.mode);
-      setSceneFrame(next.scene);
+      if (applyScene) setSceneFrame(next.scene);
       setSolidSettings(cloneSolid(next.solid));
       setParticleSettings(cloneParticle(next.particle));
       setLightingSettings({ ...next.lighting });
@@ -1064,13 +1064,9 @@ export default function BrandmarkUnifiedLabPage() {
     (nextMode: LabMode) => {
       setMode(nextMode);
       const first = presets.find((presetItem) => presetItem.mode === nextMode);
-      if (first) {
-        const currentSceneFrame = sceneFrame;
-        applyUnifiedPreset(first.id);
-        setSceneFrame(currentSceneFrame);
-      }
+      if (first) applyUnifiedPreset(first.id);
     },
-    [applyUnifiedPreset, presets, sceneFrame]
+    [applyUnifiedPreset, presets]
   );
 
   const stepPreset = useCallback(
@@ -1276,6 +1272,13 @@ export default function BrandmarkUnifiedLabPage() {
   const effectsEnabled = postSettings.enabled && !reducedMotion && debugMode === "none";
   const animatedEnvironment = lightingSettings.animated && !reducedMotion;
   const matcap = solidSettings.materialMode === "matcap" ? MATCAP_PRESETS.iridescent : undefined;
+  const visibleParticleSettings = useMemo(
+    () =>
+      activePresetId === "scene-terminal-plot" && particleSettings.showSphere
+        ? { ...particleSettings, showSphere: false }
+        : particleSettings,
+    [activePresetId, particleSettings]
+  );
 
   return (
     <main
@@ -1347,7 +1350,7 @@ export default function BrandmarkUnifiedLabPage() {
                 scale={isServicesSectionScene ? 0.9 : 1.04}
               />
             ) : (
-              <ParticleBrandmark settings={particleSettings} reducedMotion={reducedMotion} />
+              <ParticleBrandmark settings={visibleParticleSettings} reducedMotion={reducedMotion} />
             )}
           </TurntableRig>
           {debugMode === "none" && !isServicesSectionScene ? (
@@ -1647,9 +1650,9 @@ export default function BrandmarkUnifiedLabPage() {
         ) : null}
 
         <details className="control-group">
-          <summary>Scene + Lighting</summary>
+          <summary>Stage + Lighting</summary>
           <NativeSelect
-            label="Scene"
+            label="Stage"
             value={sceneFrame}
             options={["services-rails", "terminal-plot", "active-chamber"]}
             onChange={(scene) => setSceneFrame(scene as SceneFrame)}
