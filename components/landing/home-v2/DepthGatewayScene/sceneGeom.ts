@@ -329,6 +329,14 @@ export const BRANDMARK_CORE_SIZE_MERGE_START = CORRIDOR_TIMELINE.brandmark.thoug
  *  transition reads as part of the sphere unfolding instead of a cut. */
 export const BRANDMARK_CORE_BLEND_END = BRANDMARK_CORE_SIZE_MERGE_END;
 
+/** Shared renderer-ownership timings inside `getBrandmarkCoreBlend`.
+ *  The particle core first rises above the SVG in the stack, then reaches
+ *  a flat cover, then the SVG is cut out. Depth only starts after that cut. */
+export const BRANDMARK_CORE_PARTICLE_LAYER_BLEND = 0.08;
+export const BRANDMARK_CORE_PARTICLE_COVER_BLEND = 0.24;
+export const BRANDMARK_CORE_SVG_CUT_BLEND = 0.32;
+export const BRANDMARK_CORE_DEPTH_START_BLEND = BRANDMARK_CORE_SVG_CUT_BLEND;
+
 /** Single handoff clock shared by the DOM SVG and in-canvas particle
  *  core. 0 = crisp SVG owns the mark, 1 = particle/dither core owns it. */
 export function getBrandmarkCoreBlend(progress: number): number {

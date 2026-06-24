@@ -5,6 +5,8 @@ import * as THREE from "three";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import {
   BRANDMARK_ANCHOR_INTELLIGENCE,
+  BRANDMARK_CORE_PARTICLE_LAYER_BLEND,
+  BRANDMARK_CORE_SVG_CUT_BLEND,
   getBrandmarkCoreBlend,
   getBrandmarkWrapHalfExtent,
   getBrandmarkWorldPosition,
@@ -50,20 +52,20 @@ import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
  * gate group makes dock mode unnecessary.
  *
  * SVG → particle core handoff (2026-06-16, morph rev. 2026-06-17,
- * elegance pass 2026-06-24, ADR-023): the DOM glyph is THE brandmark
+ * renderer-ownership pass 2026-06-24, ADR-023): the DOM glyph is THE brandmark
  * only at the section-2 Thoughtform rest and the early fly-in before
  * the substrate wrap. Starting at `BRANDMARK_CORE_HANDOFF_PROGRESS`,
- * the SVG gradually fades through `getBrandmarkCoreBlend(progress)`
- * while `BrandmarkPhysicsCoreActor` reveals and extrudes the in-canvas
- * particle core on that same sphere-unfold blend. The core stays
- * assembled and starts flat, so the visible mark dissolves from crisp
- * vector into dithered 3D without a hard cut. The core then stays the
- * visible mark through Navigate / Encode / Build as the bright centre
- * of the accreting intelligence-layer artifact.
+ * the particle core covers early from `getBrandmarkCoreBlend(progress)`.
+ * During that cover window this DOM layer drops below the R3F canvas,
+ * then cuts out once the flat particle silhouette owns the mark.
+ * `BrandmarkPhysicsCoreActor` stays assembled and starts flat, so the
+ * visible mark changes medium from crisp vector into particle geometry
+ * without a transparent SVG ghost. The core then stays the visible mark
+ * through Navigate / Encode / Build as the bright centre of the
+ * accreting intelligence-layer artifact.
  * (This reverses the earlier 2026-06-06 "stay 2D SVG" decision; see
- * ADR-023 for the rationale.) The DOM glyph re-takes the role at
- * the epilogue / dock / `#services` handoff — the welded projection
- * branch below restores the SVG's opacity to 1.
+ * ADR-023 for the rationale.) The particle core keeps ownership through
+ * the epilogue / dock / `#services` handoff.
  *
  * Ride-out + re-centre (2026-06-16, ADR-021 follow-up): the epilogue
  * APPROACH-band opacity fade is GONE. Instead, the mark is WELDED
@@ -115,11 +117,14 @@ const BRANDMARK_ASPECT = 436 / 430.99;
  *  size-continuous. */
 const EPILOGUE_WELDED_HALF_EXTENT = 0.34;
 
+const PROJECTED_BRANDMARK_TOP_Z_INDEX = 24;
+const PROJECTED_BRANDMARK_UNDER_CANVAS_Z_INDEX = 4;
+
 /** Core-shrink handoff (2026-06-20): across the epilogue / dock /
  *  Services seam the in-canvas particle core (`BrandmarkPhysicsCoreActor`)
  *  owns the mark — it shrinks from sphere-fill down to the centred
  *  Services centerpiece. This SVG actor therefore stays HIDDEN through
- *  the whole epilogue + dock (`corridorFade = 0` on `useEpilogueOverride`);
+ *  the whole epilogue + dock (`corridorVisibility = 0` on `useEpilogueOverride`);
  *  it only paints the crisp glyph at the section-2 Thoughtform rest. The
  *  welded ride-out / re-centre + dissipate-fade band are retired. */
 
@@ -361,13 +366,9 @@ export function ProjectedBrandmarkActor() {
           // stage finishes pinning.
           const progress = paintProgress;
 
-          // The DOM mark stays the brandmark across ALL three phases
-          // (Navigate / Encode / Build). No substrate-morph cross-
-          // fade — the previous hand-off to an in-canvas particle
-          // sphere / particle logo at Build was removed so the same
-          // 2D SVG mark reads consistently through the whole
-          // corridor.
-          if (element.style.display === "none") element.style.display = "";
+          // Display is resolved after the renderer-ownership check below.
+          // Once the particle core owns the silhouette, this DOM layer is
+          // cut from rendering instead of opacity-fading above the canvas.
 
           // ── Decide which projection path owns this frame ─────
           // Corridor path (tracker camera) owns Navigate → Build.
@@ -444,11 +445,10 @@ export function ProjectedBrandmarkActor() {
           // the brandmark; it becomes invisible only when the sphere
           // moves it out of view.
           //
-          // ADR-023 ignite handoff: across the substrate-wrap band
-          // the SVG yields to the in-canvas particle core. The fade
-          // ONLY applies to the corridor path — the welded
-          // epilogue / dock branch keeps its full-strength glyph so
-          // the sphere ride-out + Services re-centre read correctly.
+          // ADR-023 handoff: across the substrate-wrap band the
+          // in-canvas particle core takes renderer ownership. This
+          // ownership check only applies to the corridor path; the
+          // epilogue / dock branch is always particle-owned.
           //
           // Slightly brighter at parked beats than during transits.
           // The Navigate park is intentionally NOT included: the mark
@@ -463,18 +463,30 @@ export function ProjectedBrandmarkActor() {
           // desktop and 1 once raw progress passes the dwell, so it's a
           // no-op everywhere except the mobile copy moment.
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
-          // Corridor-fade: 1 at section-2 Thoughtform rest, 0 once
-          // the camera has flown into the corridor (ADR-023 ignite
-          // band).
+          // Renderer ownership: the SVG stays fully visible at the
+          // Thoughtform rest. As soon as the particle cover begins, this
+          // DOM layer drops BELOW the R3F canvas so the particles visibly
+          // take over the same silhouette. Once the particle cover has
+          // completed, the SVG is removed with display:none. No opacity
+          // ramp is used for the medium swap.
           //
           // Corridor → epilogue handoff (2026-06-16): the welded SVG
           // must NOT appear while we are still exiting Build / flying
           // through the substrate sphere. That phase remains owned by
-          // the in-canvas particle core. The SVG returns only once the
-          // later dock / Services handoff owns the mark, where the solid
-          // glyph is needed for re-centre + seam pixelization.
-          let corridorFade: number;
-          if (useEpilogueOverride) {
+          // the in-canvas particle core. The SVG stays hidden across the
+          // later dock / Services handoff as well.
+          const coreBlend = useEpilogueOverride ? 1 : getBrandmarkCoreBlend(paintProgress);
+          const particleLayerOwns =
+            !useEpilogueOverride && coreBlend >= BRANDMARK_CORE_PARTICLE_LAYER_BLEND;
+          const particleCut = useEpilogueOverride || coreBlend >= BRANDMARK_CORE_SVG_CUT_BLEND;
+
+          element.style.zIndex = `${
+            particleLayerOwns || particleCut
+              ? PROJECTED_BRANDMARK_UNDER_CANVAS_Z_INDEX
+              : PROJECTED_BRANDMARK_TOP_Z_INDEX
+          }`;
+
+          if (particleCut) {
             // Core-shrink handoff (2026-06-20): the in-canvas particle
             // core (`BrandmarkPhysicsCoreActor`) owns the mark through
             // the ENTIRE epilogue + dock + Services — it shrinks from
@@ -482,11 +494,13 @@ export function ProjectedBrandmarkActor() {
             // welded SVG no longer re-appears at the seam, so it stays
             // hidden across the whole epilogue / dock. (Replaces the
             // ADR-021 welded ride-out / re-centre.)
-            corridorFade = 0;
-          } else {
-            corridorFade = 1 - getBrandmarkCoreBlend(paintProgress);
+            element.style.opacity = "0";
+            element.style.display = "none";
+            return;
           }
-          element.style.opacity = `${(intensity * diagramFactor * corridorFade).toFixed(3)}`;
+
+          if (element.style.display === "none") element.style.display = "";
+          element.style.opacity = `${(intensity * diagramFactor).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate
@@ -501,6 +515,7 @@ export function ProjectedBrandmarkActor() {
             gyroBankY = gyroTilt.y * (180 / Math.PI);
             gyroBankZ = gyroTilt.z * (180 / Math.PI);
           }
+          inner.style.transformOrigin = "50% 50%";
           inner.style.transform = `rotateX(${gyroBankX.toFixed(2)}deg) rotateY(${(dollyTilt + gyroBankY).toFixed(2)}deg) rotateZ(${gyroBankZ.toFixed(2)}deg)`;
         },
       },
@@ -583,7 +598,7 @@ export function ProjectedBrandmarkActor() {
         height: 0,
         opacity: 0,
         pointerEvents: "none",
-        zIndex: 24,
+        zIndex: PROJECTED_BRANDMARK_TOP_Z_INDEX,
         display: "none",
         perspective: `${PERSPECTIVE_PX}px`,
         filter: "drop-shadow(0 0 18px rgba(202, 165, 84, 0.42))",

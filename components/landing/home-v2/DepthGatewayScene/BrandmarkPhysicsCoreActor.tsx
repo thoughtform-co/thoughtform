@@ -7,10 +7,11 @@
  * the substrate-wrap gate, and bails out when the stage is
  * off-screen so the GPGPU sim doesn't burn cycles.
  *
- * The morph (rev. 2026-06-17, elegance pass 2026-06-24): the flat DOM
+ * The morph (rev. 2026-06-17, renderer-ownership pass 2026-06-24): the flat DOM
  * SVG brandmark and the particle core are the SAME mark. At the
- * substrate wrap start, the SVG gradually fades while this core reveals
- * and ramps `uDepth` from 0 → 1 on the same sphere-unfold blend. The
+ * substrate wrap start, this core covers early while the SVG drops below
+ * the R3F canvas, then cuts out once the flat particle cover is established.
+ * Only after that cut does this actor ramp `uDepth` from 0 → 1. The
  * particles never swirl — ignite is pinned to assembled and the sim is
  * `seedAtHome`, so the cloud is the brandmark from frame one.
  *
@@ -49,7 +50,9 @@ import {
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   BRANDMARK_CORE_BLEND_END,
+  BRANDMARK_CORE_DEPTH_START_BLEND,
   BRANDMARK_CORE_HANDOFF_PROGRESS,
+  BRANDMARK_CORE_PARTICLE_COVER_BLEND,
   BRANDMARK_CORE_SIZE_MERGE_END,
   getBrandmarkCoreBlend,
   getBrandmarkWrapHalfExtent,
@@ -73,6 +76,12 @@ const SIZE_MERGE_END = BRANDMARK_CORE_SIZE_MERGE_END;
  *  dithered particles a small resolving texture without reading as a
  *  hard digital break between the SVG and the 3D core. */
 const HANDOFF_GLITCH_INTENSITY = 0.35;
+
+/** SVG to particle renderer-ownership curve (2026-06-24).
+ *  The handoff timing still comes from getBrandmarkCoreBlend(progress),
+ *  but the media no longer use an opacity dissolve. The flat particle
+ *  silhouette reaches full cover early, the DOM SVG cuts out under that
+ *  cover, and only then does the core extrude into depth. */
 
 /** The 3D particle core's brightness + speck size. `CORE_OPACITY` is
  *  held bright/solid so the flat silhouette reads densely as it blends
@@ -334,15 +343,16 @@ export function BrandmarkPhysicsCoreActor({
     const dissipate = t.docked || t.servicesAmbient ? getSmoothedDissipate() : 0;
     const recT = smootherstep(SHRINK_START, SHRINK_END, dissipate);
 
-    // ── SVG → particle morph (ADR-023, 2026-06-24 elegance pass) ──
-    // The same wrap-length blend fades the crisp SVG out while this
-    // particle core fades in and extrudes from flat to domed. The
+    // ── SVG → particle morph (ADR-023, 2026-06-24 renderer ownership) ──
+    // The same wrap-length blend drives both media: this particle core
+    // covers early as a flat mark. The SVG actor drops below the canvas,
+    // then cuts out; only after that cut does this core extrude. The
     // particles never swirl: ignite is pinned to assembled and the sim
     // is seeded at home, so the cloud is the brandmark from frame one.
     const handoffProgress = BRANDMARK_CORE_HANDOFF_PROGRESS;
     const handoffBlend = getBrandmarkCoreBlend(progress);
-    const reveal = handoffBlend;
-    const depth = handoffBlend;
+    const reveal = smootherstep(0, BRANDMARK_CORE_PARTICLE_COVER_BLEND, handoffBlend);
+    const depth = smootherstep(BRANDMARK_CORE_DEPTH_START_BLEND, 1, handoffBlend);
 
     // Subtle matrix-glitch bell. It now spans the full sphere-wrap
     // blend and is capped so it reads as the dither resolving, not a

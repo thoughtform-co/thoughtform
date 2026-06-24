@@ -427,7 +427,7 @@ export function DepthGatewayScene() {
           (ADR-023). Sits inside the accretion shell as the bright
           centre of the intelligence-layer artifact. The DOM SVG
           (`ProjectedBrandmarkActor`) holds at the section-2
-          Thoughtform rest, fades across the ignite band, and the
+          Thoughtform rest, then cuts out under particle cover; the
           core takes over for the rest of the corridor. */}
       <BrandmarkPhysicsCoreActor />
     </Canvas>
