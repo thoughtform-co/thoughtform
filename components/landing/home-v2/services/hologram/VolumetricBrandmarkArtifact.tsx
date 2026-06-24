@@ -31,13 +31,12 @@ import { volumetricFragmentShader, volumetricVertexShader } from "./volumetricSh
 
 const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
 
-const DEFAULT_COLOR = "#caa554"; // --gold
-const DEFAULT_ACCENT = "#ebe3d6"; // --dawn
+const DEFAULT_COLOR = "#caa554"; // --gold — unified with the gold orbit armillary
+const DEFAULT_ACCENT = "#e9c97a"; // brighter warm gold — luminous Fresnel limb
 
-/** Blender-render resting pose: top of the ring leans back, turned a touch to
- *  the right, so it reads as a dimensional object the instant it appears. */
-const REST_TILT_X = -0.3;
-const REST_TILT_Y = 0.5;
+// Rest pose + pointer-look now live on the shared RIG group
+// (ServicesHologramScene) so the mark and its orbits move as ONE anchored
+// object. The mark itself only optionally self-spins (`spin`, default 0).
 
 /**
  * Scroll-entrance envelopes, in `--corridor-dissipate` units (0..1) — the
@@ -89,15 +88,18 @@ export interface VolumetricBrandmarkArtifactProps {
   wireCount?: number;
   /** Sparse Fresnel-dimmed surface fill. Default 850. */
   surfaceCount?: number;
-  /** Continuous turntable spin in rad/s. Default 0 (off — static + pointer parallax). */
+  /** Optional continuous self-spin in rad/s. Default 0 (off). The rig group owns
+   *  rest pose + pointer-look; this is only the mark's own turntable. */
   spin?: number;
-  /** Pointer-parallax amplitude in radians — the mark nudges toward the mouse
-   *  and is otherwise STATIC (no time-based wobble). Default 0.09 (~5°). 0 = fixed. */
-  pointerParallax?: number;
   /** Scroll-driven entrance. "scroll" = transform from the corridor dome into
    *  the wireframe across `--corridor-dissipate` (the production seam); "off" =
    *  parked wireframe (lab / static hosts). Default "off". */
   entrance?: "scroll" | "off";
+  /** Entrance form across the scroll seam: "dome" morphs the corridor dome blob
+   *  into the wireframe (reads amorphous/2D mid-morph); "wire" flies the 3D
+   *  wireframe in directly (scale + fade + scan + haze settle, no dome, no
+   *  glitch) so the mark is ALWAYS 3D. Default "dome". */
+  entranceForm?: "dome" | "wire";
 }
 
 function BrandmarkPoints({
@@ -113,8 +115,8 @@ function BrandmarkPoints({
   surfaceCount = 850,
   shellCount = 700,
   spin = 0,
-  pointerParallax = 0.09,
   entrance = "off",
+  entranceForm = "dome",
 }: VolumetricBrandmarkArtifactProps) {
   const groupRef = useRef<THREE.Group>(null);
   const gl = useThree((s) => s.gl);
@@ -189,11 +191,6 @@ function BrandmarkPoints({
   const materialRef = useRef(material);
   // Locally-damped dissipate value (−1 sentinel = snap on first frame).
   const entranceDampRef = useRef(-1);
-  // Pointer parallax: the mark only nudges toward the mouse; otherwise STATIC.
-  // Tracked at window level — the canvas is pointer-events:none, so R3F's own
-  // pointer never updates here.
-  const pointerTargetRef = useRef({ pitch: 0, yaw: 0 });
-  const pointerDampRef = useRef({ pitch: 0, yaw: 0 });
 
   useEffect(() => {
     return () => {
@@ -201,17 +198,6 @@ function BrandmarkPoints({
       material.dispose();
     };
   }, [geometry, material]);
-
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
-      const ny = (e.clientY / window.innerHeight) * 2 - 1; // -1..1
-      pointerTargetRef.current.pitch = -ny * pointerParallax * 0.6; // mouse Y → gentle pitch
-      pointerTargetRef.current.yaw = nx * pointerParallax; // mouse X → yaw
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
-  }, [pointerParallax]);
 
   useFrame((state, delta) => {
     const u = materialRef.current.uniforms;
@@ -247,10 +233,18 @@ function BrandmarkPoints({
 
     // Inflate from the dome's apparent size at the seam, settling to parked.
     const effScale = scale * lerp(ENTRANCE_SCALE_FROM, 1, settleT);
-    u.uTransform.value = formT; // dome (0) → wireframe (1)
+    // "wire" entrance: skip the dome→wireframe morph (and its glitch) so the
+    // mark is ALWAYS the 3D wireframe — it still flies in via scale + opacity +
+    // haze settle + scan below. "dome" keeps the corridor-sphere morph.
+    if (entranceForm === "wire") {
+      u.uTransform.value = 1; // always wireframe (3D)
+      u.uGlitch.value = 0;
+    } else {
+      u.uTransform.value = formT; // dome (0) → wireframe (1)
+      // Glitch peaks mid-morph (bell) and is 0 at the dome + parked ends.
+      u.uGlitch.value = scrollEntrance ? ENTRANCE_GLITCH_PEAK * formT * (1 - formT) * 4 : 0;
+    }
     u.uEntropy.value = (1 - settleT) * ENTRANCE_ENTROPY; // dusty haze → 0
-    // Glitch peaks mid-morph (bell) and is 0 at the dome + parked ends.
-    u.uGlitch.value = scrollEntrance ? ENTRANCE_GLITCH_PEAK * formT * (1 - formT) * 4 : 0;
     u.uScale.value = effScale;
     u.uOpacity.value = opacity * opT;
     u.uDensity.value = lerp(1, density, settleT); // dense dome → parked density
@@ -276,22 +270,11 @@ function BrandmarkPoints({
       u.uScan.value = yTop - (tMod / sweepT) * yTop * 2.0;
     }
 
-    // POSE — STATIC rest at the Blender 3/4 tilt (eased in with formT so at the
-    // seam the mark is head-on, matching the corridor dome, then turns to its
-    // 3/4 rest as it forms). No time-based wobble: the mark only nudges toward
-    // the pointer (damped → settles to still when the mouse stops). `spin`
-    // (default 0) can opt into a slow turntable.
+    // The rig group (ServicesHologramScene) owns the rest pose + pointer-look so
+    // the mark and its orbits move as ONE anchored object. Here the mark only
+    // applies its optional self-spin (default 0 = still).
     if (groupRef.current) {
-      const damp = pointerDampRef.current;
-      const tgt = pointerTargetRef.current;
-      const k = Math.min(1, delta * 4);
-      damp.pitch += (tgt.pitch - damp.pitch) * k;
-      damp.yaw += (tgt.yaw - damp.yaw) * k;
-      groupRef.current.rotation.set(
-        REST_TILT_X * formT + damp.pitch,
-        REST_TILT_Y * formT + spin * t + damp.yaw,
-        0
-      );
+      groupRef.current.rotation.set(0, spin * t, 0);
     }
   });
 

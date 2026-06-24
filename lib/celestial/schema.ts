@@ -16,6 +16,8 @@ export const PRESETS = [
   "astrolabe",
   "crystallize",
   "armature",
+  "astralEmblem",
+  "orrerySigil",
 ] as const;
 export type Preset = (typeof PRESETS)[number];
 

@@ -43,6 +43,8 @@ Write an ADR when you:
 | 021 | [Corridor Exit Zoom-Dissipate](021-corridor-exit-zoom-dissipate.md)       | Proposed | 2026-06 |
 | 022 | [Hero → Corridor Flip Transition](022-hero-corridor-flip-transition.md)   | Proposed | 2026-06 |
 | 023 | [Corridor Brandmark Physics Core](023-corridor-brandmark-physics-core.md) | Active   | 2026-06 |
+| 025 | [Services Hologram Stage](025-services-hologram-stage.md)                 | Accepted | 2026-06 |
+| 026 | [Symbolic Astral Emblems](026-symbolic-astral-emblems.md)                 | Accepted | 2026-06 |
 
 ---
 

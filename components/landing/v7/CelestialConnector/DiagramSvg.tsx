@@ -28,6 +28,9 @@ import {
   GlyphRing,
   CrystalFacet,
   Armature,
+  RadialSpokes,
+  OrbitalNodes,
+  PlanetBody,
 } from "./shapes";
 
 interface DiagramSvgProps {
@@ -268,6 +271,48 @@ function renderPreset(preset: string, parts: PresetParts) {
           <RegisterMarks />
           <BearingTicks density={parts.tickDensity || 4} />
           <Reticle config={{ ...parts.reticleConfig, centerShape: "diamond" }} />
+        </>
+      );
+
+    // ── Symbolic astral emblems ──
+
+    // Symmetric talisman (ref: gold astral emblem): concentric rings, an 8-spoke
+    // sunburst, a nodes shell, a scatter of stars, diamond centre.
+    case "astralEmblem":
+      return (
+        <>
+          {parts.rings && <Rings config={{ ...parts.rings, count: 3 }} />}
+          <RadialSpokes count={8} inner={16} length={92} opacity={0.4} />
+          <RadialSpokes count={4} inner={14} length={104} strokeWidth={0.7} opacity={0.55} />
+          <BearingTicks density={48} />
+          <OrbitalNodes
+            orbits={[
+              { rx: 74, ry: 74, nodes: 8, nodeR: 2, dash: "1 6", opacity: 0.6 },
+              { rx: 100, ry: 100, nodes: 4, nodeR: 2.6, hollow: true, dash: "1 8" },
+            ]}
+          />
+          <Constellation config={{ ...parts.constellationConfig, density: "sparse" }} />
+          <Reticle config={{ ...parts.reticleConfig, crosshair: false, centerShape: "diamond" }} />
+          <DiagramLabels topLeft="ASTRA" bottomRight="fig · A" />
+        </>
+      );
+
+    // Radial field chart (ref: "fig. E" ringed planet): a central ringed planet,
+    // dashed radial arrows, tilted moon orbits, a few stars.
+    case "orrerySigil":
+      return (
+        <>
+          <RadialSpokes count={16} inner={26} length={78} dash="3 5" arrow opacity={0.4} />
+          <OrbitalNodes
+            orbits={[
+              { rx: 96, ry: 40, tilt: -12, nodes: 3, nodeR: 3, dash: "4 4", opacity: 0.8 },
+              { rx: 70, ry: 30, tilt: -12, nodes: 2, nodeR: 2.2, hollow: true, dash: "3 5" },
+              { rx: 116, ry: 50, tilt: -12, nodes: 1, nodeR: 2.4, dash: "2 7", opacity: 0.5 },
+            ]}
+          />
+          <Constellation config={{ ...parts.constellationConfig, points: 5, density: "sparse" }} />
+          <PlanetBody radius={16} ringTilt={-12} />
+          <DiagramLabels topLeft="القوة" bottomRight="fig · E" />
         </>
       );
 

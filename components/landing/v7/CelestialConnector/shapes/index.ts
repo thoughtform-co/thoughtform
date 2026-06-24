@@ -13,3 +13,6 @@ export { PhaseDisk } from "./PhaseDisk";
 export { GlyphRing } from "./GlyphRing";
 export { CrystalFacet } from "./CrystalFacet";
 export { Armature } from "./Armature";
+export { RadialSpokes } from "./RadialSpokes";
+export { OrbitalNodes, type OrbitDef } from "./OrbitalNodes";
+export { PlanetBody } from "./PlanetBody";

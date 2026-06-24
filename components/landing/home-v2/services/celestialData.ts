@@ -77,15 +77,15 @@ const SOLID_MARK = 9999;
 
 /** Per-service geometry + motion + line, keyed by id. Merged with the
  *  live `SERVICES` order/index below so `i` and `label` never drift. */
-// A 3D-reading armillary set: each orbit sits in a DIFFERENT plane so the
-// three cross and wrap the mark in depth (not three near-parallel rings in
-// the screen plane). Wide flat "equatorial" · tall edge-on "meridian"
-// (the z-axis ring) · inclined diagonal. Solid orbits DRAW ON (stroke
-// draw-on wrap, services.css); the dotted one fades in. All thin.
+// A 3D-reading ARMILLARY (mirrors the desktop hologram): three orbits on
+// DISTINCT planes — wide near-horizontal · tall vertical meridian · inclined
+// diagonal — so they cross and wrap the mark in depth, NOT nested flat circles.
+// All gold (one system with the mark); the diagonal is dotted. Solid orbits
+// DRAW ON (stroke draw-on wrap, services.css); the dotted one fades in. All thin.
 const ORBIT_BY_ID: Record<ServiceId, Omit<ServiceOrbit, "id" | "i" | "label">> = {
-  // Wide, near-horizontal — the equatorial ring (seen slightly from above).
+  // Wide, near-horizontal — the equatorial orbit (seen slightly from above).
   keynote: {
-    orbit: { rx: 100, ry: 44, rotateDeg: 8 },
+    orbit: { rx: 104, ry: 46, rotateDeg: 8 },
     psi0Deg: 200,
     driftDir: 1,
     omegaDegPerSec: 3.0, // ≈ 120s/lap
@@ -97,29 +97,28 @@ const ORBIT_BY_ID: Record<ServiceId, Omit<ServiceOrbit, "id" | "i" | "label">> =
       lineCap: "round",
     },
   },
-  // TALL, edge-on — the meridian ring standing in the z-plane (over the top
-  // and behind the mark). The lead service; slightly the brightest/boldest.
+  // TALL, vertical meridian — standing edge-on across the mark. The lead service.
   workshop: {
-    orbit: { rx: 60, ry: 118, rotateDeg: -10 },
+    orbit: { rx: 58, ry: 116, rotateDeg: -10 },
     psi0Deg: 285,
     driftDir: -1,
     omegaDegPerSec: 2.2, // ≈ 164s/lap
     line: {
-      stroke: "rgba(202, 165, 84, 0.85)",
+      stroke: "rgba(202, 165, 84, 0.72)",
       strokeWidth: 0.7,
       dashMark: SOLID_MARK,
       dashGap: 0,
       lineCap: "round",
     },
   },
-  // Inclined diagonal — DOTTED cool dawn ring crossing the other two.
+  // Inclined diagonal — DOTTED gold ring crossing the other two.
   embedded: {
-    orbit: { rx: 108, ry: 62, rotateDeg: 52 },
+    orbit: { rx: 110, ry: 64, rotateDeg: 52 },
     psi0Deg: 40,
     driftDir: 1,
     omegaDegPerSec: 1.6, // ≈ 225s/lap
     line: {
-      stroke: "rgba(235, 227, 214, 0.6)",
+      stroke: "rgba(202, 165, 84, 0.5)",
       strokeWidth: 0.6,
       dashMark: 0.6,
       dashGap: 4.5,

@@ -64,9 +64,9 @@ export function ServicesStage() {
                 activeServiceId={activeServiceId}
                 density={0.96}
                 entrance="scroll"
+                entranceForm="wire"
                 flyIn={1}
                 opacity={0.92}
-                orbitsRotate={0.08}
                 pointSize={4.7}
                 publishAnchors
                 scale={0.72}

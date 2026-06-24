@@ -73,7 +73,6 @@ export default function ServicesDemoPage() {
           density={0.98}
           flyIn={1}
           opacity={0.94}
-          orbitsRotate={0.08}
           pointSize={4.9}
           publishAnchors
           scale={0.72}

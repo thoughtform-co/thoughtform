@@ -34,10 +34,13 @@ interface Settings {
   flyIn: number;
   autoMorph: boolean;
   density: number;
-  autoRotate: number;
+  pointerLook: number;
+  bodySpeed: number;
   pointSize: number;
   opacity: number;
   scale: number;
+  restTiltX: number;
+  restTiltY: number;
   showOrbits: boolean;
   showShell: boolean;
   color: string;
@@ -51,14 +54,17 @@ const DEFAULTS: Settings = {
   flyIn: 1,
   autoMorph: false,
   density: 1,
-  autoRotate: 0.12,
+  pointerLook: 0.12,
+  bodySpeed: 1,
   pointSize: 4.5,
   opacity: 0.92,
   scale: 1,
+  restTiltX: -0.13,
+  restTiltY: 0.24,
   showOrbits: true,
   showShell: true,
   color: "#caa554",
-  accentColor: "#ebe3d6",
+  accentColor: "#e9c97a",
   bloom: true,
   bloomIntensity: 0.85,
   scanGain: 0.6,
@@ -179,10 +185,13 @@ export default function ServicesHologramLabPage() {
         <ServicesHologramScene
           flyIn={s.flyIn}
           density={s.density}
-          orbitsRotate={s.autoRotate}
+          pointerParallax={s.pointerLook}
+          bodySpeed={s.bodySpeed}
           pointSize={s.pointSize}
           opacity={s.opacity}
           scale={s.scale}
+          restTiltX={s.restTiltX}
+          restTiltY={s.restTiltY}
           color={s.color}
           accentColor={s.accentColor}
           scanGain={s.scanGain}
@@ -262,12 +271,20 @@ export default function ServicesHologramLabPage() {
           onChange={(v) => set("density", v)}
         />
         <Slider
-          label="Orbit spin"
-          value={s.autoRotate}
+          label="Pointer-look"
+          value={s.pointerLook}
           min={0}
           max={0.4}
           step={0.01}
-          onChange={(v) => set("autoRotate", v)}
+          onChange={(v) => set("pointerLook", v)}
+        />
+        <Slider
+          label="Body speed"
+          value={s.bodySpeed}
+          min={0}
+          max={3}
+          step={0.05}
+          onChange={(v) => set("bodySpeed", v)}
         />
         <Slider
           label="Point size"
@@ -292,6 +309,22 @@ export default function ServicesHologramLabPage() {
           max={1.8}
           step={0.01}
           onChange={(v) => set("scale", v)}
+        />
+        <Slider
+          label="Pose tilt X (lean)"
+          value={s.restTiltX}
+          min={-0.6}
+          max={0.6}
+          step={0.01}
+          onChange={(v) => set("restTiltX", v)}
+        />
+        <Slider
+          label="Pose tilt Y (turn)"
+          value={s.restTiltY}
+          min={-0.6}
+          max={0.6}
+          step={0.01}
+          onChange={(v) => set("restTiltY", v)}
         />
 
         <div style={{ height: 1, background: PALETTE.border, margin: "12px 0" }} />
