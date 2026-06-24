@@ -63,12 +63,13 @@ export function ServicesStage() {
               <ServicesHologramScene
                 activeServiceId={activeServiceId}
                 density={0.96}
+                entrance="scroll"
                 flyIn={1}
                 opacity={0.92}
                 orbitsRotate={0.08}
                 pointSize={4.7}
                 publishAnchors
-                scale={0.92}
+                scale={0.72}
                 scanGain={0.62}
                 showShell
               />

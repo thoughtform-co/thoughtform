@@ -37,7 +37,9 @@ const FADE_END = 0.65;
  * the late start (`CONTENT_IN_START`) is the "delay". `--svc-content-in`
  * (0..1) is mapped to opacity + a small upward translate in `services.css`.
  */
-const CONTENT_IN_START = 0.62;
+// Delayed so the hologram has finished its dome→wireframe transform before the
+// DOM overlays (cards, orbits, scan notes) arrive over it.
+const CONTENT_IN_START = 0.7;
 const CONTENT_IN_END = 1.0;
 
 function clamp01(v: number): number {

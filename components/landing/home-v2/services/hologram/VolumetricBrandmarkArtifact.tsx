@@ -11,11 +11,11 @@
  *      edges (`sampleBrandmark3D`, wireframe-first) instead of flat SVG paths
  *      staggered in Z. The ring and cross have real thickness and a near/far
  *      side.
- *   2. IT HOLDS A 3D POSE. Instead of billboarding flat to the camera, the
- *      mark rests at a Blender-style 3/4 tilt and drifts with a slow, BOUNDED
- *      wobble (never edge-on, never a full tumble) so parallax reveals the
- *      depth. A genuinely 3D ring+cross reads as the mark from these angles —
- *      the legibility concern that forced billboarding only applied to a FLAT
+ *   2. IT HOLDS A STATIC 3D POSE. Instead of billboarding flat to the camera,
+ *      the mark rests at a fixed Blender-style 3/4 tilt and only nudges toward
+ *      the pointer (subtle, damped) — no time-based wobble or spin by default.
+ *      A genuinely 3D ring+cross reads as the mark from this angle; the
+ *      legibility concern that forced billboarding only applied to a FLAT
  *      glyph. `spin` can opt into a slow continuous turntable.
  *
  * Shape-only: the host owns the <Canvas>, camera, and post FX.
@@ -38,6 +38,33 @@ const DEFAULT_ACCENT = "#ebe3d6"; // --dawn
  *  the right, so it reads as a dimensional object the instant it appears. */
 const REST_TILT_X = -0.3;
 const REST_TILT_Y = 0.5;
+
+/**
+ * Scroll-entrance envelopes, in `--corridor-dissipate` units (0..1) — the
+ * corridor-exit dissipate clock. Across the seam the cloud TRANSFORMS from the
+ * corridor dome blob into the parked wireframe: particles migrate onto the
+ * edges (`uTransform`), the holographic haze settles (`uEntropy`/density/point
+ * size), the mark inflates from the dome's apparent size to parked (`uScale`),
+ * and the radar scan comes online last. All tunable.
+ */
+const ENTRANCE_TRANSFORM = { start: 0.4, end: 0.92 }; // dome → wireframe migration
+const ENTRANCE_OPACITY = { start: 0.36, end: 0.66 }; // fade up (overlaps the dome)
+const ENTRANCE_SETTLE = { start: 0.42, end: 0.97 }; // haze/density/size/scale settle
+const ENTRANCE_SCAN = { start: 0.8, end: 1.0 }; // scan sweep online last
+const ENTRANCE_SCALE_FROM = 1.7; // ×parked scale at the seam (match dome apparent size)
+const ENTRANCE_POINTSIZE_MUL = 1.3; // softer/larger specks mid-morph
+const ENTRANCE_ENTROPY = 1.0; // dispersion amount at the seam
+const ENTRANCE_GLITCH_PEAK = 1.0; // glitch/latent-resolve intensity at mid-morph (bell)
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+/** Ken Perlin smootherstep (C2-continuous). */
+function smootherstep(edge0: number, edge1: number, x: number): number {
+  if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
 
 export interface VolumetricBrandmarkArtifactProps {
   /** 0 = flat silhouette, 1 = full 3D mesh. */
@@ -62,10 +89,15 @@ export interface VolumetricBrandmarkArtifactProps {
   wireCount?: number;
   /** Sparse Fresnel-dimmed surface fill. Default 850. */
   surfaceCount?: number;
-  /** Continuous turntable spin in rad/s. Default 0 (off — wobble only). */
+  /** Continuous turntable spin in rad/s. Default 0 (off — static + pointer parallax). */
   spin?: number;
-  /** Parallax wobble amplitude in radians. Default 0.16 (~9°). 0 = static pose. */
-  wobble?: number;
+  /** Pointer-parallax amplitude in radians — the mark nudges toward the mouse
+   *  and is otherwise STATIC (no time-based wobble). Default 0.09 (~5°). 0 = fixed. */
+  pointerParallax?: number;
+  /** Scroll-driven entrance. "scroll" = transform from the corridor dome into
+   *  the wireframe across `--corridor-dissipate` (the production seam); "off" =
+   *  parked wireframe (lab / static hosts). Default "off". */
+  entrance?: "scroll" | "off";
 }
 
 function BrandmarkPoints({
@@ -81,7 +113,8 @@ function BrandmarkPoints({
   surfaceCount = 850,
   shellCount = 700,
   spin = 0,
-  wobble = 0.16,
+  pointerParallax = 0.09,
+  entrance = "off",
 }: VolumetricBrandmarkArtifactProps) {
   const groupRef = useRef<THREE.Group>(null);
   const gl = useThree((s) => s.gl);
@@ -111,6 +144,7 @@ function BrandmarkPoints({
     geom.setAttribute("position", armAttr); // draw-count only; real pos comes from attrs
     geom.setAttribute("aArmHome", armAttr);
     geom.setAttribute("aFlatHome", new THREE.BufferAttribute(sample.flatHomes, 3));
+    geom.setAttribute("aDomeHome", new THREE.BufferAttribute(sample.domeHomes, 3));
     geom.setAttribute("aNormal", new THREE.BufferAttribute(sample.normals, 3));
     geom.setAttribute("aSeed", new THREE.BufferAttribute(sample.seeds, 1));
     geom.setAttribute("aPart", new THREE.BufferAttribute(sample.parts, 1));
@@ -139,6 +173,9 @@ function BrandmarkPoints({
         uScanWidth: { value: 0.14 },
         uScanGain: { value: 0.6 },
         uPrimitiveAspect: { value: 2.8 },
+        uTransform: { value: 1 },
+        uEntropy: { value: 0 },
+        uGlitch: { value: 0 },
       },
       vertexShader: volumetricVertexShader,
       fragmentShader: volumetricFragmentShader,
@@ -150,6 +187,13 @@ function BrandmarkPoints({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const materialRef = useRef(material);
+  // Locally-damped dissipate value (−1 sentinel = snap on first frame).
+  const entranceDampRef = useRef(-1);
+  // Pointer parallax: the mark only nudges toward the mouse; otherwise STATIC.
+  // Tracked at window level — the canvas is pointer-events:none, so R3F's own
+  // pointer never updates here.
+  const pointerTargetRef = useRef({ pitch: 0, yaw: 0 });
+  const pointerDampRef = useRef({ pitch: 0, yaw: 0 });
 
   useEffect(() => {
     return () => {
@@ -158,46 +202,96 @@ function BrandmarkPoints({
     };
   }, [geometry, material]);
 
-  useFrame((state) => {
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
+      const ny = (e.clientY / window.innerHeight) * 2 - 1; // -1..1
+      pointerTargetRef.current.pitch = -ny * pointerParallax * 0.6; // mouse Y → gentle pitch
+      pointerTargetRef.current.yaw = nx * pointerParallax; // mouse X → yaw
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [pointerParallax]);
+
+  useFrame((state, delta) => {
     const u = materialRef.current.uniforms;
     const t = state.clock.elapsedTime;
     u.uTime.value = t;
     u.uFlyIn.value = flyIn;
-    u.uDensity.value = density;
-    u.uPointSize.value = pointSize;
-    u.uScale.value = scale;
-    u.uOpacity.value = opacity;
     u.uPixelRatio.value = gl.getPixelRatio();
     (u.uColor.value as THREE.Color).set(color);
     (u.uAccent.value as THREE.Color).set(accentColor);
 
-    // Depth dim mapped to the live camera distance so the far side recedes
-    // consistently regardless of zoom. Widened vs. the flat artifact because
-    // the volume genuinely occupies Z now.
+    // ── Scroll entrance: transform the corridor dome into the wireframe ──
+    // Read the corridor-exit dissipate clock (`--corridor-dissipate` on <html>,
+    // an inline-style read) and damp it locally for buttery motion. "off" /
+    // absent (lab, /test/services-demo, deep-link into #services, mobile) →
+    // parked wireframe, so the mark is never stuck mid-morph or invisible.
+    const scrollEntrance = entrance === "scroll";
+    let target = 1;
+    if (scrollEntrance) {
+      const raw = parseFloat(
+        document.documentElement.style.getPropertyValue("--corridor-dissipate")
+      );
+      target = Number.isFinite(raw) ? raw : 1;
+    }
+    if (entranceDampRef.current < 0)
+      entranceDampRef.current = target; // snap on first frame
+    else entranceDampRef.current += (target - entranceDampRef.current) * Math.min(1, delta * 8);
+    const d = scrollEntrance ? entranceDampRef.current : 1;
+
+    const formT = smootherstep(ENTRANCE_TRANSFORM.start, ENTRANCE_TRANSFORM.end, d);
+    const opT = smootherstep(ENTRANCE_OPACITY.start, ENTRANCE_OPACITY.end, d);
+    const settleT = smootherstep(ENTRANCE_SETTLE.start, ENTRANCE_SETTLE.end, d);
+    const scanT = smootherstep(ENTRANCE_SCAN.start, ENTRANCE_SCAN.end, d);
+
+    // Inflate from the dome's apparent size at the seam, settling to parked.
+    const effScale = scale * lerp(ENTRANCE_SCALE_FROM, 1, settleT);
+    u.uTransform.value = formT; // dome (0) → wireframe (1)
+    u.uEntropy.value = (1 - settleT) * ENTRANCE_ENTROPY; // dusty haze → 0
+    // Glitch peaks mid-morph (bell) and is 0 at the dome + parked ends.
+    u.uGlitch.value = scrollEntrance ? ENTRANCE_GLITCH_PEAK * formT * (1 - formT) * 4 : 0;
+    u.uScale.value = effScale;
+    u.uOpacity.value = opacity * opT;
+    u.uDensity.value = lerp(1, density, settleT); // dense dome → parked density
+    u.uPointSize.value = pointSize * lerp(ENTRANCE_POINTSIZE_MUL, 1, settleT);
+
+    // Depth dim mapped to the live camera distance (uses the effective scale so
+    // the envelope tracks the mark as it inflates and settles).
     const dist = state.camera.position.length();
     u.uFocal.value = dist;
-    u.uNear.value = dist - scale * 1.35;
-    u.uFar.value = dist + scale * 1.35;
+    u.uNear.value = dist - effScale * 1.35;
+    u.uFar.value = dist + effScale * 1.35;
 
-    // Radar scan sweep (top → bottom, then a pause off-artifact).
-    u.uScanGain.value = scanGain;
-    u.uScanWidth.value = scale * 0.13;
+    // Radar scan sweep — gated by scanT so it only fires once the mark settles.
+    u.uScanGain.value = scanGain * scanT;
+    u.uScanWidth.value = effScale * 0.13;
     const period = 5.2;
     const sweepT = 3.4;
     const tMod = t % period;
     if (tMod > sweepT) {
       u.uScan.value = 9999;
     } else {
-      const yTop = scale * 1.4;
+      const yTop = effScale * 1.4;
       u.uScan.value = yTop - (tMod / sweepT) * yTop * 2.0;
     }
 
-    // POSE — NOT a billboard. Rest at the Blender 3/4 tilt, then a slow bounded
-    // wobble (and optional continuous spin) so depth reads through parallax.
+    // POSE — STATIC rest at the Blender 3/4 tilt (eased in with formT so at the
+    // seam the mark is head-on, matching the corridor dome, then turns to its
+    // 3/4 rest as it forms). No time-based wobble: the mark only nudges toward
+    // the pointer (damped → settles to still when the mouse stops). `spin`
+    // (default 0) can opt into a slow turntable.
     if (groupRef.current) {
-      const wobbleY = Math.sin(t * 0.34) * wobble;
-      const wobbleX = Math.cos(t * 0.23) * wobble * 0.45;
-      groupRef.current.rotation.set(REST_TILT_X + wobbleX, REST_TILT_Y + spin * t + wobbleY, 0);
+      const damp = pointerDampRef.current;
+      const tgt = pointerTargetRef.current;
+      const k = Math.min(1, delta * 4);
+      damp.pitch += (tgt.pitch - damp.pitch) * k;
+      damp.yaw += (tgt.yaw - damp.yaw) * k;
+      groupRef.current.rotation.set(
+        REST_TILT_X * formT + damp.pitch,
+        REST_TILT_Y * formT + spin * t + damp.yaw,
+        0
+      );
     }
   });
 
