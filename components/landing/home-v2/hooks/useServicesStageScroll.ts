@@ -92,7 +92,10 @@ function smootherstep(edge0: number, edge1: number, x: number): number {
  * @param stageRef ref to the sticky `.services-stage` element. Its parent
  *   is the `.services-stage-root` runway the step progress is read from.
  */
-export function useServicesStageScroll(stageRef: RefObject<HTMLElement | null>): void {
+export function useServicesStageScroll(
+  stageRef: RefObject<HTMLElement | null>,
+  onStepChange?: (step: number) => void
+): void {
   useEffect(() => {
     let frame = 0;
     let disposed = false;
@@ -106,9 +109,11 @@ export function useServicesStageScroll(stageRef: RefObject<HTMLElement | null>):
       (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
 
     const setStep = (stage: HTMLElement, step: number) => {
-      if (step === currentStep) return;
-      stage.setAttribute("data-active-step", String(step));
+      const stepValue = String(step);
+      if (step === currentStep && stage.getAttribute("data-active-step") === stepValue) return;
+      stage.setAttribute("data-active-step", stepValue);
       currentStep = step;
+      onStepChange?.(step);
     };
 
     const setArrive = (stage: HTMLElement, shrink: number, fade: number) => {
@@ -186,5 +191,5 @@ export function useServicesStageScroll(stageRef: RefObject<HTMLElement | null>):
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", requestWrite);
     };
-  }, [stageRef]);
+  }, [onStepChange, stageRef]);
 }

@@ -21,8 +21,8 @@ async function scrollToPercentage(page: Page, percentage: number) {
 
 test.describe("Homepage corridor smoke", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
     await page.waitForTimeout(800);
   });
 
@@ -187,5 +187,49 @@ test.describe("Homepage corridor smoke", () => {
     }
     expect(attrs.pixelate).toBeNull();
     expect(attrs.brandmark).toBeNull();
+  });
+
+  test("Services hologram: production section renders scan notes and one expanded card", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const services = document.getElementById("services");
+      if (!services) return;
+      window.scrollTo({
+        top: services.offsetTop + window.innerHeight * 0.2,
+        behavior: "instant",
+      });
+    });
+    await page.waitForTimeout(900);
+
+    const viewport = page.viewportSize();
+    const expectsHologramCanvas = (viewport?.width ?? 0) >= 961;
+
+    await expect(page.locator("#services .services-hologram canvas")).toHaveCount(
+      expectsHologramCanvas ? 1 : 0
+    );
+    await expect(page.locator("#services .services-scan-note")).toHaveCount(3);
+    await expect(page.locator("#services .services-expanded-card")).toHaveCount(1);
+
+    const attrs = await page.evaluate(() => ({
+      pixelate: document.documentElement.getAttribute("data-services-pixelate"),
+      brandmark: document.documentElement.getAttribute("data-services-brandmark"),
+    }));
+    expect(attrs.pixelate).toBeNull();
+    expect(attrs.brandmark).toBeNull();
+  });
+
+  test("Services hologram: demo route has clickable scan notes", async ({ page }) => {
+    await page.goto("/test/services-demo", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-scan-note");
+    await page.waitForTimeout(900);
+
+    await expect(page.locator("canvas")).toHaveCount(1);
+    await expect(page.locator(".services-scan-note")).toHaveCount(3);
+    await expect(page.locator(".services-expanded-card")).toHaveCount(1);
+    await expect(page.locator(".services-expanded-card__verb")).toContainText("KEYNOTE");
+
+    await page.getByRole("button", { name: /Substrate capture/i }).click();
+    await expect(page.locator(".services-expanded-card__verb")).toContainText("WORKSHOP");
   });
 });

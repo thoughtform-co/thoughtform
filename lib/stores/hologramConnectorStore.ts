@@ -10,12 +10,16 @@
  */
 
 import { create } from "zustand";
+import type { ServiceId } from "@/components/landing/home-v2/services/serviceData";
 
 export interface ConnectorAnchor {
+  serviceId: ServiceId;
   /** Screen-space pixel X. */
   x: number;
   /** Screen-space pixel Y. */
   y: number;
+  /** Projected clip-space depth. Lower values are closer to the camera. */
+  depth: number;
   /** False when the anchor is behind the camera / off-clip. */
   visible: boolean;
 }
