@@ -2,7 +2,7 @@
 
 import { Environment, Lightformer } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { Suspense, useRef } from "react";
 import * as THREE from "three";
 
 export interface ReflectiveEnvironmentRigProps {
@@ -16,6 +16,8 @@ export interface ReflectiveEnvironmentRigProps {
   accentColor?: string;
   /** Secondary hot reflection. Default is Thoughtform gold. */
   secondaryColor?: string;
+  /** Path to an equirectangular `.hdr`. When set, it becomes the real environment map (replacing the procedural Lightformer rig) for premium reflections. */
+  hdri?: string | null;
 }
 
 export function ReflectiveEnvironmentRig({
@@ -24,22 +26,34 @@ export function ReflectiveEnvironmentRig({
   showReflectionCards = true,
   accentColor = "#c84e2f",
   secondaryColor = "#caa554",
+  hdri = null,
 }: ReflectiveEnvironmentRigProps) {
   return (
     <>
-      <Environment
-        frames={animated ? Infinity : 1}
-        resolution={512}
-        environmentIntensity={intensity}
-        background={false}
-      >
-        <AnimatedLightformers
-          animated={animated}
-          intensity={intensity}
-          accentColor={accentColor}
-          secondaryColor={secondaryColor}
-        />
-      </Environment>
+      {hdri ? (
+        <Suspense fallback={null}>
+          <Environment
+            files={hdri}
+            resolution={1024}
+            environmentIntensity={intensity}
+            background={false}
+          />
+        </Suspense>
+      ) : (
+        <Environment
+          frames={animated ? Infinity : 1}
+          resolution={512}
+          environmentIntensity={intensity}
+          background={false}
+        >
+          <AnimatedLightformers
+            animated={animated}
+            intensity={intensity}
+            accentColor={accentColor}
+            secondaryColor={secondaryColor}
+          />
+        </Environment>
+      )}
       <ambientLight intensity={0.18 * intensity} color="#ebe3d6" />
       <spotLight
         position={[1.8, 2.6, 3.6]}
@@ -50,7 +64,7 @@ export function ReflectiveEnvironmentRig({
       />
       <pointLight position={[-2.2, -0.5, 1.6]} intensity={1.2 * intensity} color={accentColor} />
       <ReflectionCards
-        visible={showReflectionCards}
+        visible={showReflectionCards && !hdri}
         animated={animated}
         intensity={intensity}
         accentColor={accentColor}
