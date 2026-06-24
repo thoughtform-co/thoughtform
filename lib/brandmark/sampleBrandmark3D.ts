@@ -41,8 +41,12 @@ const MARK_SCALE = 1.74;
 export interface VolumetricBrandmarkSample {
   /** Flat silhouette home positions (Z collapsed to 0). count * 3. */
   flatHomes: Float32Array;
-  /** Volumetric 3D home positions. count * 3. */
+  /** Volumetric 3D home positions (the assembled wireframe). count * 3. */
   armHomes: Float32Array;
+  /** Dome home positions — a dense 3D blob the particles START from before
+   *  migrating onto the wireframe, sized to read like the corridor sphere at
+   *  the scroll hand-off. count * 3. */
+  domeHomes: Float32Array;
   /** Per-particle deterministic seed in [0, 1). count. */
   seeds: Float32Array;
   /** Part id: 0 = wire, 1 = scan accent, 2 = shell, 3 = surface. count. */
@@ -94,8 +98,25 @@ function makeShellPoint(rand: () => number, radius: number): [number, number, nu
   return [Math.cos(a) * ring * r, Math.sin(a) * ring * r, u * r];
 }
 
+/** Radius of the assembled-dome start state, in shell units (`radius`). A
+ *  touch larger than the wireframe footprint so particles condense INWARD
+ *  onto the structure as they organise. Tune against the corridor sphere. */
+const DOME_RADIUS_MUL = 1.05;
+
+/** A point inside a surface-biased ball — a particle's "dome" home: the dense
+ *  glowing 3D blob the cloud starts as before it migrates onto the wireframe,
+ *  matching the corridor planet at the scroll hand-off. */
+function makeDomePoint(rand: () => number, radius: number): [number, number, number] {
+  const u = rand() * 2 - 1;
+  const a = rand() * TAU;
+  const ring = Math.sqrt(Math.max(0, 1 - u * u));
+  const r = radius * (0.5 + 0.5 * Math.cbrt(rand()));
+  return [Math.cos(a) * ring * r, Math.sin(a) * ring * r, u * r];
+}
+
 interface Scratch {
   arm: number[];
+  dome: number[];
   flat: number[];
   nrm: number[];
   seed: number[];
@@ -107,6 +128,7 @@ interface Scratch {
 function push(
   s: Scratch,
   arm: [number, number, number],
+  dome: [number, number, number],
   flat: [number, number, number],
   nrm: [number, number, number],
   seed: number,
@@ -115,6 +137,7 @@ function push(
   angle: number
 ): void {
   s.arm.push(arm[0], arm[1], arm[2]);
+  s.dome.push(dome[0], dome[1], dome[2]);
   s.flat.push(flat[0], flat[1], flat[2]);
   s.nrm.push(nrm[0], nrm[1], nrm[2]);
   s.seed.push(seed);
@@ -166,7 +189,17 @@ export function sampleBrandmark3D(
   ];
 
   const rand = mulberry32(seed * 0x85ebca6b);
-  const out: Scratch = { arm: [], flat: [], nrm: [], seed: [], part: [], edge: [], angle: [] };
+  const domeR = radius * DOME_RADIUS_MUL;
+  const out: Scratch = {
+    arm: [],
+    dome: [],
+    flat: [],
+    nrm: [],
+    seed: [],
+    part: [],
+    edge: [],
+    angle: [],
+  };
 
   // ── WIRE: distribute points along hard edges, weighted by edge length ──
   const edges = new THREE.EdgesGeometry(g, edgeThresholdDeg);
@@ -208,6 +241,7 @@ export function sampleBrandmark3D(
         push(
           out,
           [x, y, z],
+          makeDomePoint(rand, domeR),
           [x, y, 0],
           [x * inv, y * inv, z * inv], // outward radial normal (in-plane → always reads as structure)
           rand(),
@@ -236,7 +270,17 @@ export function sampleBrandmark3D(
     for (let i = 0; i < surfaceCount; i++) {
       sampler.sample(p, nv);
       const np = normPoint(p.x, p.y, p.z);
-      push(out, np, [np[0], np[1], 0], [nv.x, nv.y, nv.z], rand(), 3, 0.3, 0);
+      push(
+        out,
+        np,
+        makeDomePoint(rand, domeR),
+        [np[0], np[1], 0],
+        [nv.x, nv.y, nv.z],
+        rand(),
+        3,
+        0.3,
+        0
+      );
     }
   }
 
@@ -249,6 +293,7 @@ export function sampleBrandmark3D(
     push(
       out,
       shell,
+      makeDomePoint(rand, domeR),
       [Math.cos(a) * rr, Math.sin(a) * rr, 0],
       [shell[0] * inv, shell[1] * inv, shell[2] * inv],
       rand(),
@@ -264,6 +309,7 @@ export function sampleBrandmark3D(
   return {
     flatHomes: new Float32Array(out.flat),
     armHomes: new Float32Array(out.arm),
+    domeHomes: new Float32Array(out.dome),
     normals: new Float32Array(out.nrm),
     seeds: new Float32Array(out.seed),
     parts: new Float32Array(out.part),

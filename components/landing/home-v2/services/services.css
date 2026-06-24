@@ -378,7 +378,10 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  opacity: var(--svc-content-in, 1);
+  /* The hologram's own shader governs its fade + dome→wireframe transform off
+   * the dissipate clock (VolumetricBrandmarkArtifact `entrance="scroll"`), so
+   * the canvas stays fully opaque — no `--svc-content-in` here. */
+  opacity: 1;
 }
 .services-hologram canvas {
   display: block;

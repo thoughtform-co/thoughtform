@@ -21,15 +21,19 @@
 
 export const volumetricVertexShader = /* glsl */ `
   uniform float uFlyIn;       // 0 = flat silhouette, 1 = full 3D mesh
-  uniform float uTime;
+  uniform mediump float uTime; // mediump: MUST match the fragment (shared uniform → link error otherwise)
   uniform float uPointSize;   // base size in CSS px
   uniform float uPixelRatio;
   uniform float uDensity;     // 0..1 rank-clip threshold (shell thins first)
   uniform float uFocal;       // perspective size factor (camera distance)
   uniform float uScale;       // world scale of the artifact
+  uniform float uTransform;   // 0 = dome blob, 1 = assembled wireframe (scroll morph)
+  uniform float uEntropy;     // 0 = settled, >0 = dusty dispersion along normals
+  uniform mediump float uGlitch; // 0 = clean, >0 = jitter + tears; mediump to match the fragment
 
   attribute vec3 aFlatHome;
   attribute vec3 aArmHome;
+  attribute vec3 aDomeHome;
   attribute vec3 aNormal;
   attribute float aSeed;
   attribute float aPart;      // 0 wire, 1 scan accent, 2 shell, 3 surface
@@ -44,17 +48,43 @@ export const volumetricVertexShader = /* glsl */ `
   varying float vAngle;
   varying float vFacing;      // |n · viewDir| : 1 = facing camera, 0 = edge-on
 
+  float hash(float n) { return fract(sin(n) * 43758.5453123); }
+
   void main() {
     vEdge = aEdge;
     vSeed = aSeed;
     vPart = aPart;
     vAngle = aAngle;
 
+    // Per-particle stagger so morphs read as a reorganising swarm, not a rigid
+    // lerp (particles arrive at their targets at slightly different times).
     float stagger = aSeed * 0.22;
-    float local = clamp((uFlyIn - stagger) / (1.0 - 0.22), 0.0, 1.0);
-    float t = local * local * local * (local * (local * 6.0 - 15.0) + 10.0);
+    float localFly = clamp((uFlyIn - stagger) / (1.0 - 0.22), 0.0, 1.0);
+    float tFly = localFly * localFly * localFly * (localFly * (localFly * 6.0 - 15.0) + 10.0);
+    vec3 wirePos = mix(aFlatHome, aArmHome, tFly);
 
-    vec3 pos = mix(aFlatHome, aArmHome, t) * uScale;
+    // Scroll transformation: migrate from the dome blob onto the wireframe.
+    float localTr = clamp((uTransform - stagger) / (1.0 - 0.22), 0.0, 1.0);
+    float tTr = localTr * localTr * localTr * (localTr * (localTr * 6.0 - 15.0) + 10.0);
+    vec3 pos = mix(aDomeHome, wirePos, tTr);
+
+    // Dusty dispersion that settles to 0 (holographic haze → crisp wireframe).
+    pos += aNormal * (uEntropy * 0.35 * (0.5 + 0.5 * aSeed));
+
+    // Glitch / latent-space resolve: stepped (quantised-in-time) digital jitter
+    // + horizontal "datamosh" band tears. Peaks mid-morph (uGlitch), 0 parked.
+    if (uGlitch > 0.001) {
+      float tq = floor(uTime * 11.0); // stepped clock → jumps, not smooth drift
+      vec3 j = vec3(
+        hash(aSeed * 1.7 + tq),
+        hash(aSeed * 2.3 + tq * 1.31),
+        hash(aSeed * 3.1 + tq * 0.77)
+      ) - 0.5;
+      pos += j * uGlitch * 0.45;
+      float band = step(0.55, fract(pos.y * 2.5 + tq * 0.27));
+      pos.x += band * (hash(tq + aPart) - 0.5) * uGlitch * 0.6; // band tear / shear
+    }
+    pos *= uScale;
 
     // Shell thins first as density drops; structure (wire/surface) holds.
     float keep = (aPart > 1.5 && aPart < 2.5) ? uDensity : mix(uDensity, 1.0, 0.72);
@@ -87,13 +117,14 @@ export const volumetricFragmentShader = /* glsl */ `
   uniform vec3 uColor;
   uniform vec3 uAccent;
   uniform float uOpacity;
-  uniform float uTime;
+  uniform mediump float uTime; // mediump: MUST match the vertex (shared uniform → link error otherwise)
   uniform float uNear;
   uniform float uFar;
   uniform float uScan;
   uniform float uScanWidth;
   uniform float uScanGain;
   uniform float uPrimitiveAspect;
+  uniform mediump float uGlitch;
 
   varying float vEdge;
   varying float vSeed;
@@ -102,6 +133,8 @@ export const volumetricFragmentShader = /* glsl */ `
   varying float vViewY;
   varying float vAngle;
   varying float vFacing;
+
+  float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
   float strokeMask(vec2 p, float halfWidth) {
     float body = 1.0 - smoothstep(halfWidth, halfWidth + 0.035, abs(p.y));
@@ -165,6 +198,14 @@ export const volumetricFragmentShader = /* glsl */ `
     float scan = smoothstep(uScanWidth, 0.0, abs(vViewY - uScan));
     col += uAccent * scan * uScanGain;
     a += scan * uScanGain * 0.12 * mask;
+
+    // Data-stream flicker during the morph: some specks drop/strobe on a
+    // stepped clock, with occasional bright accent pops. 0 = parked (no-op).
+    if (uGlitch > 0.001) {
+      float fl = hash(vSeed * 5.0 + floor(uTime * 14.0));
+      a *= mix(1.0, 0.25 + 0.75 * fl, uGlitch);
+      col += uAccent * step(0.88, fl) * uGlitch * 0.6;
+    }
 
     gl_FragColor = vec4(col, a);
   }

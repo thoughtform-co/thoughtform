@@ -76,7 +76,7 @@ export default function ServicesDemoPage() {
           orbitsRotate={0.08}
           pointSize={4.9}
           publishAnchors
-          scale={0.92}
+          scale={0.72}
           scanGain={0.66}
           showShell
         />

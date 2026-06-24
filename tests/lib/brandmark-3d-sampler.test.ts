@@ -25,6 +25,7 @@ describe("sampleBrandmark3D", () => {
 
     expect(s.count).toBeGreaterThan(0);
     expect(s.armHomes).toHaveLength(s.count * 3);
+    expect(s.domeHomes).toHaveLength(s.count * 3);
     expect(s.flatHomes).toHaveLength(s.count * 3);
     expect(s.normals).toHaveLength(s.count * 3);
     expect(s.seeds).toHaveLength(s.count);
@@ -65,11 +66,32 @@ describe("sampleBrandmark3D", () => {
     const b = sampleBrandmark3D(geometry, opts);
     expect(a.count).toBe(b.count);
     expect(Array.from(a.armHomes)).toEqual(Array.from(b.armHomes));
+    expect(Array.from(a.domeHomes)).toEqual(Array.from(b.domeHomes));
     expect(Array.from(a.normals)).toEqual(Array.from(b.normals));
   });
 
   it("omits shell dust when shellCount is 0", () => {
     const s = sampleBrandmark3D(geometry, { wireCount: 120, surfaceCount: 20, shellCount: 0 });
     expect(Array.from(s.parts).some((p) => p === 2)).toBe(false);
+  });
+
+  it("emits a dome buffer that is a bounded blob distinct from the wireframe", () => {
+    const s = sampleBrandmark3D(geometry, {
+      wireCount: 150,
+      surfaceCount: 40,
+      shellCount: 20,
+      radius: 1,
+    });
+    let maxR = 0;
+    let differs = false;
+    for (let i = 0; i < s.count; i++) {
+      const r = Math.hypot(s.domeHomes[i * 3], s.domeHomes[i * 3 + 1], s.domeHomes[i * 3 + 2]);
+      maxR = Math.max(maxR, r);
+      if (Math.abs(s.domeHomes[i * 3] - s.armHomes[i * 3]) > 1e-3) differs = true;
+    }
+    // makeDomePoint magnitude is radius * DOME_RADIUS_MUL(1.05) * [0.5..1].
+    expect(maxR).toBeLessThanOrEqual(1.1);
+    expect(maxR).toBeGreaterThan(0.5);
+    expect(differs).toBe(true);
   });
 });

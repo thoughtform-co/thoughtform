@@ -7,8 +7,9 @@
  * so the rings genuinely weave around the artifact in depth).
  *
  * The centerpiece is `VolumetricBrandmarkArtifact` — particles sampled from
- * the real 3D Blender brandmark mesh, holding a 3/4 pose with parallax wobble
- * (NOT a flat billboard). It loads a GLB, so it's wrapped in <Suspense>.
+ * the real 3D Blender brandmark mesh, holding a static 3/4 pose with subtle
+ * pointer parallax (NOT a flat billboard). It loads a GLB, so it's wrapped in
+ * <Suspense>.
  *
  * This component renders scene CONTENTS only (no <Canvas>). The host — the
  * lab page now, the production Services stage later — owns the Canvas,
@@ -77,6 +78,7 @@ export function ServicesHologramScene({
           scale={scale}
           rotateSpeed={orbitsRotate}
           publishAnchors={publishAnchors ? setAnchors : undefined}
+          entrance={artifactRest.entrance}
         />
       )}
     </group>

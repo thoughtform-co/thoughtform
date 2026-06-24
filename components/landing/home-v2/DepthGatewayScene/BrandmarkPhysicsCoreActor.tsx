@@ -200,6 +200,13 @@ const CENTER_DRIFT_PERIOD_Y_S = 13;
  *  sits softer than the 4px corridor stations (≈⅓ their per-dot ink). */
 const CENTER_OPACITY = 0.9;
 
+/** Corridor → services baton-pass (2026-06-24): the centerpiece dome fades OUT
+ *  across this short, late dissipate window as the `#services` wireframe forms
+ *  in over the same screen region. Gated so `dissipate = 0` in the corridor
+ *  proper keeps `handoffFade = 1` (byte-identical; ADR-023 Invariant 11). */
+const HANDOFF_FADE_START = 0.45;
+const HANDOFF_FADE_END = 0.7;
+
 /** Z-stream momentum (2026-06-17). As the mark flies into the corridor
  *  toward the substrate sphere, particles stream toward the background
  *  (local −Z) so the brandmark reads as flying backward into the sphere
@@ -393,13 +400,16 @@ export function BrandmarkPhysicsCoreActor({
     // ambient interior cloud — both read as a single soft volume rather
     // than as two layers on different clocks.
     //
-    // Core-shrink handoff (2026-06-20): the core IS the brandmark through
-    // the dock + Services ambient — it shrinks to the centred centerpiece
-    // and stays the one visible mark (the welded SVG + separate 2D field
-    // are retired). So keep it at full brightness the whole way instead of
-    // dimming to a floor / forcing 0. The ambient shell haze still comes
+    // Core-shrink handoff (2026-06-20): the core IS the brandmark through the
+    // dock — it shrinks to the centred centerpiece. Baton-pass (2026-06-24): the
+    // `#services` WIREFRAME hologram now forms over the SAME screen region and
+    // takes the foreground, so the dome hands off by fading OUT across a short
+    // late window of the dissipate. `dissipate = 0` in the corridor proper →
+    // `handoffFade = 1` (byte-identical; ADR-023 Invariant 11). An invisible
+    // matched hand-off — the services dome-state is already present at the same
+    // size + gold — NOT a cross-dissolve. The ambient shell haze still comes
     // from `mats.particle` in `ShellSubstrateGyro`.
-    const handoffFade = 1;
+    const handoffFade = 1 - smootherstep(HANDOFF_FADE_START, HANDOFF_FADE_END, dissipate);
 
     // Centerpiece opacity is DECOUPLED from the corridor CORE_OPACITY: it lerps
     // from the corridor brightness to an ABSOLUTE target (CENTER_OPACITY) as the
