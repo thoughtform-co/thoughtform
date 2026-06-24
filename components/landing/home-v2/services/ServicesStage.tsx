@@ -30,13 +30,21 @@ import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 export function ServicesStage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
+  const expandedServiceRef = useRef<ServiceId | null>(null);
   const [activeServiceId, setActiveServiceId] = useState<ServiceId>(SERVICES[0].id);
+  const [expandedServiceId, setExpandedServiceId] = useState<ServiceId | null>(null);
   const useHologramCanvas = useMediaQuery(
     "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
   );
 
   const setActiveByStep = useCallback((step: number) => {
+    if (expandedServiceRef.current) return;
     setActiveServiceId(SERVICES[step]?.id ?? SERVICES[0].id);
+  }, []);
+
+  const updateExpandedService = useCallback((serviceId: ServiceId | null) => {
+    expandedServiceRef.current = serviceId;
+    setExpandedServiceId(serviceId);
   }, []);
 
   const selectService = useCallback((serviceId: ServiceId) => {
@@ -97,7 +105,12 @@ export function ServicesStage() {
         <ServicesBrandmarkField />
         <ServicesOrbitMap />
 
-        <ServiceScanInterface activeServiceId={activeServiceId} onSelectService={selectService} />
+        <ServiceScanInterface
+          activeServiceId={activeServiceId}
+          expandedServiceId={expandedServiceId}
+          onExpandedServiceChange={updateExpandedService}
+          onSelectService={selectService}
+        />
       </div>
     </div>
   );

@@ -1,15 +1,18 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from "react";
 
 import { CornerBracket } from "@/components/ui/CornerBracket";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES, type Service, type ServiceId } from "./serviceData";
-import {
-  getScanNoteForService,
-  SERVICE_SCAN_NOTES,
-  type ServiceScanNote,
-} from "./serviceScanNotes";
+import { SERVICE_SCAN_NOTES, type ServiceScanNote } from "./serviceScanNotes";
 
 const PHASE_LABELS: Record<Service["phase"], string> = {
   navigate: "Navigate",
@@ -40,25 +43,86 @@ function parseViewportSnapshot(snapshot: string): ViewportSize {
 }
 
 function clampPx(min: number, value: number, max: number): number {
+  if (max <= min) return min;
   return Math.min(max, Math.max(min, value));
 }
 
-function getScanNoteTarget(serviceId: ServiceId, viewport: ViewportSize) {
-  const index = SERVICE_SCAN_NOTES.findIndex((note) => note.serviceId === serviceId);
-  if (index < 0 || viewport.width < 961) return null;
+type LabelSide = "left" | "right";
 
-  const top = clampPx(86, viewport.height * 0.15, 144);
-  const left = clampPx(24, viewport.width * 0.06, 56);
-  const width = clampPx(236, viewport.width * 0.21, 310);
-  const noteHeight = clampPx(126, viewport.height * 0.175, 158);
+interface OrbitLabelLayout {
+  left: number;
+  top: number;
+  width: number;
+  side: LabelSide;
+  targetX: number;
+  targetY: number;
+}
 
+function getOrbitLabelLayout(
+  serviceId: ServiceId,
+  viewport: ViewportSize,
+  expanded: boolean
+): OrbitLabelLayout | null {
+  if (viewport.width < 961) return null;
+
+  const collapsedWidth = clampPx(190, viewport.width * 0.14, 236);
+  const expandedWidth = clampPx(292, viewport.width * 0.22, 360);
+  const width = expanded ? expandedWidth : collapsedWidth;
+  let left = 0;
+  let top = 0;
+  let side: LabelSide = "right";
+
+  switch (serviceId) {
+    case "keynote": {
+      left = clampPx(160, viewport.width * 0.2, 380);
+      top = clampPx(112, viewport.height * 0.17, 184);
+      side = "right";
+      break;
+    }
+    case "workshop": {
+      const rightInset = clampPx(260, viewport.width * 0.16, 360);
+      left = viewport.width - rightInset - width;
+      top = clampPx(176, viewport.height * 0.25, 300);
+      side = "left";
+      break;
+    }
+    case "embedded": {
+      const maxTop = Math.max(500, viewport.height - (expanded ? 340 : 210));
+      left = clampPx(150, viewport.width * 0.15, 300);
+      top = clampPx(500, viewport.height * 0.66, maxTop);
+      side = "right";
+      break;
+    }
+  }
+
+  const targetX = side === "right" ? left + width : left;
+  const targetY = top + 31;
   return {
-    x: left + width,
-    y: top + index * (noteHeight + 10) + noteHeight * 0.5,
+    left,
+    top,
+    width,
+    side,
+    targetX,
+    targetY,
   };
 }
 
-function ServiceConnectorOverlay() {
+function getLabelStyle(layout: OrbitLabelLayout | null): CSSProperties | undefined {
+  if (!layout) return undefined;
+  return {
+    "--orbit-label-left": `${layout.left.toFixed(1)}px`,
+    "--orbit-label-top": `${layout.top.toFixed(1)}px`,
+    "--orbit-label-width": `${layout.width.toFixed(1)}px`,
+  } as CSSProperties;
+}
+
+function ServiceConnectorOverlay({
+  activeServiceId,
+  expandedServiceId,
+}: {
+  activeServiceId: ServiceId;
+  expandedServiceId: ServiceId | null;
+}) {
   const anchors = useHologramConnectors((s) => s.anchors);
   const viewport = parseViewportSnapshot(
     useSyncExternalStore(viewportStore.subscribe, viewportStore.snapshot, viewportStore.snapshot)
@@ -69,20 +133,31 @@ function ServiceConnectorOverlay() {
   return (
     <svg className="services-scan-connectors" aria-hidden="true">
       {anchors.map((anchor) => {
-        const target = getScanNoteTarget(anchor.serviceId, viewport);
+        const expanded = expandedServiceId === anchor.serviceId;
+        const active = activeServiceId === anchor.serviceId;
+        const target = getOrbitLabelLayout(anchor.serviceId, viewport, expanded);
         if (!target || !anchor.visible) return null;
 
         const x1 = anchor.x;
         const y1 = anchor.y;
-        const x3 = target.x;
-        const y3 = target.y;
-        const x2 = x3 + 34;
+        const x3 = target.targetX;
+        const y3 = target.targetY;
+        const bend = target.side === "right" ? 36 : -36;
+        const x2 = x3 + bend;
         const points = `${x1.toFixed(1)},${y1.toFixed(1)} ${x2.toFixed(1)},${y3.toFixed(
           1
         )} ${x3.toFixed(1)},${y3.toFixed(1)}`;
+        const className = [
+          "services-scan-connector",
+          active ? "services-scan-connector--active" : "",
+          expanded ? "services-scan-connector--expanded" : "",
+          `services-scan-connector--${anchor.serviceId}`,
+        ]
+          .filter(Boolean)
+          .join(" ");
 
         return (
-          <g key={anchor.serviceId} className="services-scan-connector">
+          <g key={anchor.serviceId} className={className}>
             <polyline className="services-scan-connector__glow" points={points} />
             <polyline className="services-scan-connector__line" points={points} />
             <circle className="services-scan-connector__reticle" cx={x1} cy={y1} r={5.5} />
@@ -95,75 +170,93 @@ function ServiceConnectorOverlay() {
   );
 }
 
-function ScanNoteButton({
-  active,
+function ServiceOrbitLabel({
+  expanded,
+  focused,
+  layout,
   note,
-  onSelect,
+  onToggle,
+  service,
 }: {
-  active: boolean;
+  expanded: boolean;
+  focused: boolean;
+  layout: OrbitLabelLayout | null;
   note: ServiceScanNote;
-  onSelect: (serviceId: ServiceId) => void;
+  onToggle: (serviceId: ServiceId) => void;
+  service: Service;
 }) {
+  const detailId = `services-orbit-label-${service.id}-detail`;
+  const confidence = `${Math.round(note.confidence * 100)}%`;
+  const className = [
+    "services-orbit-label",
+    `services-orbit-label--${service.id}`,
+    layout ? `services-orbit-label--target-${layout.side}` : "",
+    focused ? "services-orbit-label--focused" : "",
+    expanded ? "services-orbit-label--expanded" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <button
-      className={`services-scan-note${active ? " services-scan-note--active" : ""}`}
-      type="button"
-      aria-pressed={active}
-      onClick={() => onSelect(note.serviceId)}
-    >
-      <span className="services-scan-note__top">
-        <span>{note.label}</span>
-        <span>{Math.round(note.confidence * 100)}%</span>
-      </span>
-      <span className="services-scan-note__coord">{note.coordinate}</span>
-      <span className="services-scan-note__summary">{note.summary}</span>
-      <span className="services-scan-note__signals">
-        {note.signals.map((signal) => (
-          <span key={signal}>{signal}</span>
-        ))}
-      </span>
-    </button>
-  );
-}
+    <article className={className} data-service={service.id} style={getLabelStyle(layout)}>
+      {expanded ? (
+        <CornerBracket
+          mode="diagonal-primary"
+          armLength={12}
+          thickness={1}
+          color="rgba(202, 165, 84, 0.58)"
+        />
+      ) : null}
 
-function ServiceExpandedCard({ note, service }: { note: ServiceScanNote; service: Service }) {
-  return (
-    <article
-      className={`services-expanded-card${service.lead ? " services-expanded-card--lead" : ""}`}
-    >
-      <CornerBracket mode="four" armLength={14} thickness={1.5} color="var(--gold)" />
+      <button
+        className="services-orbit-label__button"
+        type="button"
+        aria-expanded={expanded}
+        aria-controls={expanded ? detailId : undefined}
+        onClick={() => onToggle(service.id)}
+      >
+        <span className="services-orbit-label__reticle" aria-hidden="true">
+          <span />
+        </span>
+        <span className="services-orbit-label__readout">
+          <span className="services-orbit-label__eyebrow">
+            <span>
+              {service.index} / {service.verb}
+            </span>
+            <span>{confidence}</span>
+          </span>
+          <span className="services-orbit-label__signal">{note.signals[0]}</span>
+        </span>
+      </button>
 
-      <header className="services-expanded-card__head">
-        <span className="services-expanded-card__index">{service.index}</span>
-        <span className="services-expanded-card__dot" aria-hidden="true" />
-        <span className="services-expanded-card__kicker">{service.kicker}</span>
-      </header>
-
-      <h3 className="services-expanded-card__verb">{service.verb}</h3>
-      <p className="services-expanded-card__tagline">{service.tagline}</p>
-      <p className="services-expanded-card__body">{service.body}</p>
-
-      <div className="services-expanded-card__scan">
-        <span>{note.coordinate}</span>
-        <span>{note.label}</span>
-      </div>
-
-      <dl className="services-expanded-card__meta">
-        {service.meta.map((row) => (
-          <div className="services-expanded-card__meta-row" key={row.label}>
-            <dt>{row.label}</dt>
-            <dd>{row.value}</dd>
+      {expanded ? (
+        <div className="services-orbit-label__detail" id={detailId}>
+          <div className="services-orbit-label__scan">
+            <span>{note.coordinate}</span>
+            <span>{note.label}</span>
           </div>
-        ))}
-      </dl>
 
-      <footer className="services-expanded-card__foot">
-        <span>{PHASE_LABELS[service.phase]}</span>
-        <a href={service.ctaHref}>
-          {service.ctaLabel}
-          <span aria-hidden="true"> -&gt;</span>
-        </a>
-      </footer>
+          <h3>{service.tagline}</h3>
+          <p>{service.body}</p>
+
+          <dl className="services-orbit-label__meta">
+            {service.meta.map((row) => (
+              <div className="services-orbit-label__meta-row" key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <footer className="services-orbit-label__foot">
+            <span>{PHASE_LABELS[service.phase]}</span>
+            <a href={service.ctaHref}>
+              {service.ctaLabel}
+              <span aria-hidden="true"> -&gt;</span>
+            </a>
+          </footer>
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -171,6 +264,8 @@ function ServiceExpandedCard({ note, service }: { note: ServiceScanNote; service
 export interface ServiceScanInterfaceProps {
   activeServiceId: ServiceId;
   onSelectService: (serviceId: ServiceId) => void;
+  expandedServiceId?: ServiceId | null;
+  onExpandedServiceChange?: (serviceId: ServiceId | null) => void;
   className?: string;
   showConnectors?: boolean;
 }
@@ -178,35 +273,83 @@ export interface ServiceScanInterfaceProps {
 export function ServiceScanInterface({
   activeServiceId,
   className,
+  expandedServiceId: controlledExpandedServiceId,
+  onExpandedServiceChange,
   onSelectService,
   showConnectors = true,
 }: ServiceScanInterfaceProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [internalExpandedServiceId, setInternalExpandedServiceId] = useState<ServiceId | null>(
+    null
+  );
+  const expandedServiceId =
+    controlledExpandedServiceId === undefined
+      ? internalExpandedServiceId
+      : controlledExpandedServiceId;
+  const setExpandedServiceId = onExpandedServiceChange ?? setInternalExpandedServiceId;
+  const viewport = parseViewportSnapshot(
+    useSyncExternalStore(viewportStore.subscribe, viewportStore.snapshot, viewportStore.snapshot)
+  );
   const activeService = useMemo(
     () => SERVICES.find((service) => service.id === activeServiceId) ?? SERVICES[0],
     [activeServiceId]
   );
-  const activeNote = getScanNoteForService(activeService.id);
+
+  useEffect(() => {
+    if (!expandedServiceId) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const root = rootRef.current;
+      if (!root || root.contains(event.target as Node)) return;
+      setExpandedServiceId(null);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpandedServiceId(null);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [expandedServiceId, setExpandedServiceId]);
+
+  const toggleService = (serviceId: ServiceId) => {
+    onSelectService(serviceId);
+    setExpandedServiceId(expandedServiceId === serviceId ? null : serviceId);
+  };
 
   return (
     <div
+      ref={rootRef}
       className={`services-scan-interface${className ? ` ${className}` : ""}`}
       data-active-service={activeService.id}
+      data-expanded-service={expandedServiceId ?? "none"}
     >
-      {showConnectors && <ServiceConnectorOverlay />}
+      {showConnectors && (
+        <ServiceConnectorOverlay
+          activeServiceId={activeService.id}
+          expandedServiceId={expandedServiceId}
+        />
+      )}
 
-      <div className="services-scan-notes" aria-label="Service scan notes">
-        {SERVICE_SCAN_NOTES.map((note) => (
-          <ScanNoteButton
-            key={note.id}
-            active={note.serviceId === activeService.id}
-            note={note}
-            onSelect={onSelectService}
-          />
-        ))}
-      </div>
-
-      <div className="services-expanded-card-slot">
-        <ServiceExpandedCard note={activeNote} service={activeService} />
+      <div className="services-orbit-labels" aria-label="Service orbit labels">
+        {SERVICE_SCAN_NOTES.map((note) => {
+          const service = SERVICES.find((item) => item.id === note.serviceId) ?? SERVICES[0];
+          const expanded = expandedServiceId === service.id;
+          return (
+            <ServiceOrbitLabel
+              key={note.id}
+              expanded={expanded}
+              focused={service.id === activeService.id}
+              layout={getOrbitLabelLayout(service.id, viewport, expanded)}
+              note={note}
+              onToggle={toggleService}
+              service={service}
+            />
+          );
+        })}
       </div>
     </div>
   );

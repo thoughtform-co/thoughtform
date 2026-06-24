@@ -38,6 +38,9 @@ export interface OrbitConfig {
   /** false = decorative shell — drawn for depth, but carries no drifting node and
    *  publishes no HUD anchor. Default true (a service ring). */
   node?: boolean;
+  /** Optional dash tuning for decorative latitude / cartography rings. */
+  dashSize?: number;
+  gapSize?: number;
   /** Node drift speed in rad/s (sign = direction). Service rings only. */
   speed?: number;
   /** Resting parametric angle in radians. */
@@ -62,56 +65,84 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     radius: 1.06,
     tilt: [1.48, 0.0, 0.05],
     color: "#e9c97a",
-    opacity: 0.6,
-    lineWidth: 1.4,
+    opacity: 0.5,
+    lineWidth: 1.75,
     eccentricity: 0.96,
     node: false,
   },
   // Service A — keynote: wide, low-inclination orbit.
   {
-    id: "keynote",
-    radius: 1.46,
-    tilt: [1.15, 0.0, 0.08],
+    id: "latitude-inner",
+    radius: 1.28,
+    tilt: [1.32, 0.18, -0.18],
     color: "#caa554",
-    opacity: 0.6,
-    lineWidth: 1.3,
-    eccentricity: 0.85,
-    speed: 0.16,
+    opacity: 0.18,
+    lineWidth: 0.75,
+    dashed: true,
+    dashSize: 0.03,
+    gapSize: 0.115,
+    eccentricity: 0.9,
+    node: false,
+  },
+  {
+    id: "keynote",
+    radius: 1.52,
+    tilt: [1.05, -0.18, 0.22],
+    color: "#caa554",
+    opacity: 0.52,
+    lineWidth: 1.45,
+    eccentricity: 0.78,
+    speed: 0.12,
     phase0: 3.5,
   },
   // Service B — workshop: vertical meridian orbit (the lead — brightest/boldest).
   {
     id: "workshop",
-    radius: 1.72,
-    tilt: [0.0, 1.3, 0.0],
+    radius: 1.78,
+    tilt: [0.12, 1.42, -0.18],
     color: "#caa554",
-    opacity: 0.72,
-    lineWidth: 1.5,
-    eccentricity: 0.8,
-    speed: -0.12,
+    opacity: 0.64,
+    lineWidth: 1.9,
+    eccentricity: 0.72,
+    speed: -0.09,
     phase0: 5.0,
   },
   // Service C — embedded: inclined diagonal orbit crossing the other two.
   {
     id: "embedded",
-    radius: 1.9,
-    tilt: [0.85, 0.45, 0.55],
+    radius: 2.02,
+    tilt: [0.72, 0.68, 0.72],
     color: "#caa554",
-    opacity: 0.6,
-    lineWidth: 1.3,
-    eccentricity: 0.9,
-    speed: 0.1,
+    opacity: 0.48,
+    lineWidth: 1.25,
+    eccentricity: 0.86,
+    speed: 0.075,
     phase0: 0.7,
+  },
+  {
+    id: "latitude-outer",
+    radius: 2.12,
+    tilt: [1.18, -0.24, 0.34],
+    color: "#e9c97a",
+    opacity: 0.14,
+    lineWidth: 0.65,
+    dashed: true,
+    dashSize: 0.022,
+    gapSize: 0.16,
+    eccentricity: 0.82,
+    node: false,
   },
   // Faint outer decorative ring for depth.
   {
     id: "shell-outer",
-    radius: 2.18,
-    tilt: [1.25, 0.0, 0.2],
+    radius: 2.36,
+    tilt: [1.08, 0.28, -0.1],
     color: "#caa554",
-    opacity: 0.22,
-    lineWidth: 1.0,
+    opacity: 0.17,
+    lineWidth: 0.82,
     dashed: true,
+    dashSize: 0.06,
+    gapSize: 0.2,
     eccentricity: 0.78,
     node: false,
   },
@@ -124,10 +155,12 @@ const SEGMENTS = 180;
  *  corridor sphere envelop). Indexed by orbit order; extra orbits reuse the last. */
 const REVEAL_WINDOWS: ReadonlyArray<readonly [number, number]> = [
   [0.42, 0.78],
-  [0.47, 0.83],
-  [0.52, 0.88],
-  [0.57, 0.93],
-  [0.62, 0.98],
+  [0.45, 0.8],
+  [0.48, 0.84],
+  [0.52, 0.9],
+  [0.56, 0.95],
+  [0.6, 0.98],
+  [0.64, 1.0],
 ];
 
 function clamp01(v: number): number {
@@ -197,8 +230,8 @@ function OrbitRing({
   );
   const angle = useRef(config.phase0 ?? 0);
 
-  const baseOpacity = Math.min(1, config.opacity * (active ? 1.2 : 1));
-  const nodeBaseOpacity = active ? 0.95 : Math.min(0.78, config.opacity + 0.05);
+  const baseOpacity = Math.min(1, config.opacity * (active ? 1.28 : 1));
+  const nodeBaseOpacity = active ? 0.86 : Math.min(0.56, config.opacity + 0.04);
 
   useFrame((_, delta) => {
     angle.current += (config.speed ?? 0) * bodySpeed * delta;
@@ -238,21 +271,21 @@ function OrbitRing({
         ref={lineRef}
         points={points}
         vertexColors={colors}
-        lineWidth={config.lineWidth * (active ? 1.12 : 1)}
+        lineWidth={config.lineWidth * (active ? 1.22 : 1)}
         transparent
         opacity={baseOpacity}
         dashed={config.dashed ?? false}
-        dashSize={config.dashed ? 0.055 : undefined}
-        gapSize={config.dashed ? 0.16 : undefined}
+        dashSize={config.dashed ? (config.dashSize ?? 0.055) : undefined}
+        gapSize={config.dashed ? (config.gapSize ?? 0.16) : undefined}
         depthWrite={false}
         depthTest
-        blending={THREE.AdditiveBlending}
+        blending={THREE.NormalBlending}
         toneMapped={false}
       />
       {hasNode && (
         <group ref={nodeRef}>
           <mesh>
-            <sphereGeometry args={[active ? 0.026 : 0.019, 12, 12]} />
+            <sphereGeometry args={[active ? 0.03 : 0.02, 12, 12]} />
             <meshBasicMaterial
               ref={nodeMatRef}
               color={config.color}

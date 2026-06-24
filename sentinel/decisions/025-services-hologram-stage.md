@@ -187,3 +187,22 @@ Production and lab defaults were also thickened: higher wire count, larger point
 sprites, wider `wireStroke`, restrained normal blending, and lower bloom
 threshold/intensity balance. The aim is a technical illustrated line object, not
 a brighter additive glow.
+
+## Update 6 (2026-06-24): distributed orbit labels + quieter relief
+
+The stacked scan-note column plus always-visible lower-right expanded card made
+the Services stage read like two UI systems over the hologram. The desktop
+interaction is now three distributed orbit labels, each connected to its
+projected 3D orbit node. Labels are compact and translucent by default; clicking
+one expands the full service detail inline at that label, while scroll remains
+only a soft focus signal and does not open text automatically.
+
+The orbit recipe was also retuned for calmer depth: service rings now use more
+distinct fixed planes, varied line weights, normal-blended strokes, lower
+inactive node opacity, and two faint dashed latitude shells. The goal is a
+technical armillary with relief, not a brighter or denser HUD overlay.
+
+Guardrail: do not restore the desktop default bottom-right service card or the
+stacked scan-note column. Full service copy should remain click-revealed from
+the distributed orbit labels; mobile/reduced-motion may stack the same labels as
+a simple accordion.
