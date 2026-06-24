@@ -419,33 +419,6 @@ export const SECTOR_LABELS: Record<Beat, string> = (() => {
  *  setup window edge even as the topology grows — never hardcode. */
 export const DOLLY_HOLD_END = BEAT_WINDOWS[0].end;
 
-/** Shared SVG → particle-core handoff CUT width (ADR-023, rev. 2026-06-17).
- *  The crisp DOM brandmark and the GPGPU particle core are the SAME mark
- *  — so the handoff is NOT a crossfade between two different-looking
- *  things. It is a near-instant cross-cut across
- *  `[DOLLY_HOLD_END, DOLLY_HOLD_END + CORRIDOR_HANDOFF_CUT_WIDTH]`: the
- *  SVG fades out while the particle core (held FLAT, `uDepth ≈ 0`, so it
- *  paints the EXACT same 2D silhouette at the same screen position)
- *  fades in. Because the two silhouettes match, the cut is invisible —
- *  then the core extrudes flat → 3D over the wider `DEPTH_MORPH_WIDTH`
- *  band (owned by `BrandmarkPhysicsCoreActor`). Both
- *  `ProjectedBrandmarkActor` (SVG fade) and `BrandmarkPhysicsCoreActor`
- *  (core reveal) import this so the cut can never drift apart. Kept
- *  small (a few scroll frames) so it reads as a clean medium-swap, not a
- *  lingering dissolve. */
-export const CORRIDOR_HANDOFF_CUT_WIDTH = 0.012;
-
-/** Subtle matrix-glitch band width (ADR-023, 2026-06-17). The corridor
- *  brandmark core drives a `uGlitch` BELL (`sin(t·π)`) across
- *  `[DOLLY_HOLD_END, DOLLY_HOLD_END + GLITCH_BAND_WIDTH]`. The bell is 0
- *  at both ends and peaks at 1 in the middle, so the soft-halo cloud is
- *  byte-stable outside the handoff. Aligned with `DEPTH_MORPH_WIDTH`
- *  (the flat → 3D extrude in `BrandmarkPhysicsCoreActor`) so the gentle
- *  scanline tear + in-palette hue warble accompany the moment the mark
- *  gains depth — a subtle "reconstituting into 3D" beat rather than a
- *  separate harsh effect. Owned by `BrandmarkPhysicsCoreActor`. */
-export const GLITCH_BAND_WIDTH = 0.05;
-
 /** Camera Z dolly easing — held at 0 across the setup window, then
  *  smoothstep'd 0 -> 1 across the remaining scroll. Shared by the
  *  runtime camera-position function (`sceneGeom.getCameraPosition`)

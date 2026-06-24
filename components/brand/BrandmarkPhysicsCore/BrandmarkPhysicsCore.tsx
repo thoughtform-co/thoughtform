@@ -21,7 +21,7 @@
  * per-frame world scale are owned by the consumer, who wraps the
  * mesh in a `<group>` and sets `position` / `scale` from the
  * corridor's `getBrandmarkWorldPosition()` +
- * `getBrandmarkWorldHalfExtent()`.
+ * `getBrandmarkWrapHalfExtent()`.
  *
  * Sampling note: an earlier draft sampled the beveled `ExtrudeGeometry`
  * mesh with `MeshSurfaceSampler`. That gave true 3D depth but

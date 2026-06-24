@@ -5,7 +5,8 @@ import * as THREE from "three";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import {
   BRANDMARK_ANCHOR_INTELLIGENCE,
-  getBrandmarkWorldHalfExtent,
+  getBrandmarkCoreBlend,
+  getBrandmarkWrapHalfExtent,
   getBrandmarkWorldPosition,
   getCameraFov,
   getCorridorExitCameraPose,
@@ -13,12 +14,7 @@ import {
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
-import {
-  BEAT_ORDER,
-  CORRIDOR_HANDOFF_CUT_WIDTH,
-  DOLLY_HOLD_END,
-  smootherstep,
-} from "@/lib/home-v2/corridorMap";
+import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import {
   getSmoothedDissipate,
@@ -42,8 +38,9 @@ import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
  *     "brandmark inside the diamond" composition is structural,
  *     not calibrated.
  *   - Size: perspective-projected from
- *     `getBrandmarkWorldHalfExtent(progress)` so it dollies + scales
- *     with the camera as a real 3D plate.
+ *     `getBrandmarkWrapHalfExtent(progress)` so it dollies + scales
+ *     with the camera and grows toward the wrapping sphere before
+ *     the particle blend.
  *   - Forward tilt: a small Y rotation scaled by camera dolly so the
  *     mark reads as a 3D plate in motion (the camera path itself is
  *     axial, so no banking roll is applied).
@@ -53,17 +50,16 @@ import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
  * gate group makes dock mode unnecessary.
  *
  * SVG → particle core handoff (2026-06-16, morph rev. 2026-06-17,
- * ADR-023): the DOM glyph is THE brandmark only at the section-2
- * Thoughtform rest (parked `paintProgress <= DOLLY_HOLD_END`). The
- * instant the camera begins flying through the corridor, the SVG is
- * CUT to 0 across the shared `CORRIDOR_HANDOFF_CUT_WIDTH` band while
- * `BrandmarkPhysicsCoreActor` reveals an in-canvas GPGPU particle core
- * held FLAT (its `uDepth ≈ 0` paints the EXACT same 2D silhouette at
- * the same screen position) across the SAME band — so the swap is a
- * MORPH, not a crossfade between two different-looking things. The core
- * then extrudes flat → 3D and stays the visible mark through Navigate /
- * Encode / Build as the bright centre of the accreting
- * intelligence-layer artifact.
+ * elegance pass 2026-06-24, ADR-023): the DOM glyph is THE brandmark
+ * only at the section-2 Thoughtform rest and the early fly-in before
+ * the substrate wrap. Starting at `BRANDMARK_CORE_HANDOFF_PROGRESS`,
+ * the SVG gradually fades through `getBrandmarkCoreBlend(progress)`
+ * while `BrandmarkPhysicsCoreActor` reveals and extrudes the in-canvas
+ * particle core on that same sphere-unfold blend. The core stays
+ * assembled and starts flat, so the visible mark dissolves from crisp
+ * vector into dithered 3D without a hard cut. The core then stays the
+ * visible mark through Navigate / Encode / Build as the bright centre
+ * of the accreting intelligence-layer artifact.
  * (This reverses the earlier 2026-06-06 "stay 2D SVG" decision; see
  * ADR-023 for the rationale.) The DOM glyph re-takes the role at
  * the epilogue / dock / `#services` handoff — the welded projection
@@ -132,18 +128,6 @@ const EPILOGUE_WELDED_HALF_EXTENT = 0.34;
  *  arrive at / depart from the docked instrument pose on the same
  *  curve. */
 const DOCK_BLEND_TAU_S = 0.28;
-
-/** Width of the SVG cut-out band (ADR-023, rev. 2026-06-17). The DOM
- *  glyph holds at full opacity through the section-2 Thoughtform rest
- *  (`paintProgress <= DOLLY_HOLD_END`), then cuts to 0 across the shared
- *  `CORRIDOR_HANDOFF_CUT_WIDTH` band — the SAME band the in-canvas
- *  `BrandmarkPhysicsCoreActor` uses to reveal its particle core. Because
- *  the core is held FLAT (its `uDepth ≈ 0` paints the exact same 2D
- *  silhouette at the same screen position) during this band, the swap is
- *  invisible: the mark simply becomes particles, then extrudes into 3D.
- *  This is a MORPH, not a crossfade between two different-looking
- *  things. Imported from `corridorMap` so the two channels can't drift. */
-const SVG_CUT_WIDTH = CORRIDOR_HANDOFF_CUT_WIDTH;
 
 function clamp01(x: number): number {
   return Math.max(0, Math.min(1, x));
@@ -407,7 +391,7 @@ export function ProjectedBrandmarkActor() {
             // and measure the screen-space distance from the centre.
             // This picks up camera dolly + camera roll + the beat-
             // to-beat half-extent ramp automatically.
-            const halfExtent = getBrandmarkWorldHalfExtent(progress);
+            const halfExtent = getBrandmarkWrapHalfExtent(progress);
             scratch.current.right.setFromMatrixColumn(camera.matrixWorld, 0);
             scratch.current.target.set(worldPos[0], worldPos[1], worldPos[2]);
             scratch.current.edge
@@ -460,7 +444,7 @@ export function ProjectedBrandmarkActor() {
           // the brandmark; it becomes invisible only when the sphere
           // moves it out of view.
           //
-          // ADR-023 ignite handoff: across the dolly-release band
+          // ADR-023 ignite handoff: across the substrate-wrap band
           // the SVG yields to the in-canvas particle core. The fade
           // ONLY applies to the corridor path — the welded
           // epilogue / dock branch keeps its full-strength glyph so
@@ -500,8 +484,7 @@ export function ProjectedBrandmarkActor() {
             // ADR-021 welded ride-out / re-centre.)
             corridorFade = 0;
           } else {
-            corridorFade =
-              1 - smootherstep(DOLLY_HOLD_END, DOLLY_HOLD_END + SVG_CUT_WIDTH, paintProgress);
+            corridorFade = 1 - getBrandmarkCoreBlend(paintProgress);
           }
           element.style.opacity = `${(intensity * diagramFactor * corridorFade).toFixed(3)}`;
 

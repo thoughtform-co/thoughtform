@@ -41,6 +41,7 @@ import {
   clamp01,
   lerp,
   smoothstep,
+  smootherstep,
   stationById,
 } from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
@@ -303,6 +304,36 @@ export const CORRIDOR_TIMELINE = {
     stack: { start: 0.875, peakAt: 0.95 }, // Build park centre ~0.92
   },
 } as const;
+
+/** Shared 2D SVG -> 3D particle-core handoff anchor (ADR-023,
+ *  2026-06-24 wrap-anchor revision). The brandmark stays as the
+ *  projected SVG through the early fly-in and begins blending to the
+ *  dither / particle core when the Navigate substrate sphere begins
+ *  wrapping around it. This follows the substrate accretion window,
+ *  not the camera dolly release. */
+export const BRANDMARK_CORE_HANDOFF_PROGRESS = CORRIDOR_TIMELINE.accretion.substrate.start;
+
+/** Size merge completes when the substrate wrap reaches its peak, so
+ *  the mark reaches sphere scale as the wrapping shell settles. */
+export const BRANDMARK_CORE_SIZE_MERGE_END = CORRIDOR_TIMELINE.accretion.substrate.peakAt;
+
+/** Size merge starts when the Thoughtform rest releases into fly-in.
+ *  The medium swap waits for the substrate wrap, but the visible 2D
+ *  mark must already be growing toward sphere scale before that blend
+ *  so the particle core does not appear as a tiny catch-up mark. */
+export const BRANDMARK_CORE_SIZE_MERGE_START = CORRIDOR_TIMELINE.brandmark.thoughtformHold;
+
+/** Shared 2D SVG -> particle-core blend end. The visual handoff starts
+ *  when the substrate sphere begins wrapping around the mark and
+ *  completes only once that wrap reaches its peak, so the medium
+ *  transition reads as part of the sphere unfolding instead of a cut. */
+export const BRANDMARK_CORE_BLEND_END = BRANDMARK_CORE_SIZE_MERGE_END;
+
+/** Single handoff clock shared by the DOM SVG and in-canvas particle
+ *  core. 0 = crisp SVG owns the mark, 1 = particle/dither core owns it. */
+export function getBrandmarkCoreBlend(progress: number): number {
+  return smootherstep(BRANDMARK_CORE_HANDOFF_PROGRESS, BRANDMARK_CORE_BLEND_END, progress);
+}
 
 /** Camera position at the given GLOBAL progress. Pure Z dolly: the
  *  camera holds at `CAMERA_START.z` across the Thoughtform pan
@@ -1375,11 +1406,9 @@ export const BRANDMARK_SPHERE_FILL = 1.0;
  *  at every beat — including the Navigate park where both grow ~30%
  *  together via `getNavigateApparentSizeBoost`.
  *
- *  `BrandmarkPhysicsCoreActor` ramps from `getBrandmarkWorldHalfExtent`
- *  (the DOM-SVG handoff size) to THIS across the ignite band, so the
- *  mark grows to fill the sphere as the camera flies into the corridor,
- *  stays sphere-sized through Build, then keeps matching the sphere's
- *  planet-grow speed across non-docked epilogue. */
+ *  `getBrandmarkWrapHalfExtent` ramps from `getBrandmarkWorldHalfExtent`
+ *  to THIS across the wrap-size band, so the visible SVG grows before
+ *  the blend and the particle core inherits the same apparent size. */
 export function getBrandmarkSphereMatchHalfExtent(progress: number): number {
   return (
     SUBSTRATE_GYRO_GLOBE_RADIUS *
@@ -1388,6 +1417,18 @@ export function getBrandmarkSphereMatchHalfExtent(progress: number): number {
     getNavigateApparentSizeBoost(progress) *
     BRANDMARK_SPHERE_FILL
   );
+}
+
+/** Half-extent shared by the projected SVG and the particle core
+ *  across the Navigate wrap. The SVG begins growing after the
+ *  Thoughtform rest releases, the renderer blend still waits for
+ *  `BRANDMARK_CORE_HANDOFF_PROGRESS`, and the merged size lands at
+ *  sphere scale by the wrap peak. */
+export function getBrandmarkWrapHalfExtent(progress: number): number {
+  const svgHalf = getBrandmarkWorldHalfExtent(progress);
+  const sphereHalf = getBrandmarkSphereMatchHalfExtent(progress);
+  const t = smoothstep(BRANDMARK_CORE_SIZE_MERGE_START, BRANDMARK_CORE_SIZE_MERGE_END, progress);
+  return lerp(svgHalf, sphereHalf, t);
 }
 
 // ── Copy + label world anchors ───────────────────────────────────
