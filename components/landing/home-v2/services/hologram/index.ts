@@ -5,7 +5,10 @@
  * into the Services stage once the look is locked.
  */
 
-export { HologramArtifact, type HologramArtifactProps } from "./HologramArtifact";
+export {
+  VolumetricBrandmarkArtifact,
+  type VolumetricBrandmarkArtifactProps,
+} from "./VolumetricBrandmarkArtifact";
 export {
   HologramOrbits,
   DEFAULT_ORBITS,

@@ -1,62 +1,93 @@
 "use client";
 
-import { useRef } from "react";
-import { SERVICES } from "./serviceData";
+import { Canvas } from "@react-three/fiber";
+import { Bloom, EffectComposer } from "@react-three/postprocessing";
+import { useCallback, useRef, useState } from "react";
+
 import { SERVICE_ORBITS } from "./celestialData";
+import { ServiceScanInterface } from "./ServiceScanInterface";
 import { ServicesBrandmarkField } from "./ServicesBrandmarkField";
+import { ServicesHologramScene } from "./hologram";
 import { ServicesOrbitMap } from "./ServicesOrbitMap";
-import { ServiceCelestialCard } from "./ServiceCelestialCard";
-import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
+import { SERVICES, type ServiceId } from "./serviceData";
 import { useOrbitDrift } from "../hooks/useOrbitDrift";
+import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 
 /**
- * ServicesStage — the `#services` interaction as a retrofuturistic
- * celestial map. The brandmark particle core (the corridor "sun") parks
- * at center; a minimal SVG orrery (`ServicesOrbitMap`) draws one tilted
- * orbit per service around it, with a slowly drifting node on each
- * (`useOrbitDrift`). One HUD/terminal card (`ServiceCelestialCard`) is
- * revealed at a time, anchored at a fixed corner of the map.
+ * ServicesStage - the `#services` interaction as a section-owned holographic
+ * instrument.
  *
- * A `position: sticky` stage pins across a tall runway
- * (`.services-stage-root`, ~3×100vh — owned by `services.css`). As the
- * user scrolls, `useServicesStageScroll` flips `data-active-step` (0..2);
- * CSS reveals the matching card and lights up the matching orbit/node.
- * The centered particle sun is constant (gently breathing).
+ * Desktop renders the real Thoughtform brandmark hologram and service orbits
+ * in one R3F scene. The scan notes and the expanded card are DOM overlays that
+ * receive projected anchors from that scene. Mobile/reduced-motion keeps the
+ * existing static brandmark + SVG orbit fallback and the same scan-card UI.
  *
- * Compositing (ADR-008 / ADR-021): the stage stays `background:
- * transparent` so the corridor-exit ambient interior-sphere particles
- * read behind the orbits — a sanctioned Rule 1 exception for `#services`.
- * All new layers live inside `.services-stage` (no fixed/sticky, no opaque
- * full-bleed background, no opacity animation on the stage wrapper).
- *
- * Mobile / reduced-motion (no corridor dock → no R3F sun): the 2D
- * `ServicesBrandmarkField` is the center, orbits are static/simplified,
- * and all cards stack (see `services.css`).
- *
- * Mounted via `ServicesPortal` into the `[data-services-root]` slot in
- * the v7 prototype HTML.
+ * This is intentionally NOT the retired fixed in-Services brandmark/pixel
+ * choreography from ADR-021. No `data-services-brandmark`, no seam pixel field,
+ * and no fixed viewport actor are reintroduced.
  */
 export function ServicesStage() {
   const stageRef = useRef<HTMLDivElement>(null);
-  useServicesStageScroll(stageRef);
+  const itemsRef = useRef<HTMLDivElement>(null);
+  const [activeServiceId, setActiveServiceId] = useState<ServiceId>(SERVICES[0].id);
+  const useHologramCanvas = useMediaQuery(
+    "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
+  );
+
+  const setActiveByStep = useCallback((step: number) => {
+    setActiveServiceId(SERVICES[step]?.id ?? SERVICES[0].id);
+  }, []);
+
+  const selectService = useCallback((serviceId: ServiceId) => {
+    setActiveServiceId(serviceId);
+    const index = SERVICES.findIndex((service) => service.id === serviceId);
+    if (index >= 0) {
+      stageRef.current?.setAttribute("data-active-step", String(index));
+    }
+  }, []);
+
+  useServicesStageScroll(stageRef, setActiveByStep);
   useOrbitDrift(stageRef, SERVICE_ORBITS);
 
   return (
     <div className="services-stage" ref={stageRef} data-active-step="0">
-      <div className="services-stage__items">
-        {/* Center — 2D fallback footprint. Hidden on the dock-capable
-            desktop path (CSS), where the R3F particle core projects here. */}
-        <ServicesBrandmarkField />
+      <div className="services-stage__items" ref={itemsRef}>
+        {useHologramCanvas ? (
+          <div className="services-hologram" aria-hidden="true">
+            <Canvas
+              camera={{ position: [0, 0, 3.65], fov: 38, near: 0.1, far: 100 }}
+              dpr={[1, 2]}
+              gl={{ antialias: true, alpha: true }}
+            >
+              <ServicesHologramScene
+                activeServiceId={activeServiceId}
+                density={0.96}
+                flyIn={1}
+                opacity={0.92}
+                orbitsRotate={0.08}
+                pointSize={4.7}
+                publishAnchors
+                scale={0.92}
+                scanGain={0.62}
+                showShell
+              />
+              <EffectComposer>
+                <Bloom
+                  intensity={0.72}
+                  luminanceThreshold={0.2}
+                  luminanceSmoothing={0.9}
+                  mipmapBlur
+                />
+              </EffectComposer>
+            </Canvas>
+          </div>
+        ) : null}
 
-        {/* The celestial orrery around the parked sun. */}
+        <ServicesBrandmarkField />
         <ServicesOrbitMap />
 
-        {/* Service readouts — one revealed per active step (stacked on mobile). */}
-        <div className="services-cards">
-          {SERVICES.map((service, i) => (
-            <ServiceCelestialCard key={service.id} service={service} index={i} />
-          ))}
-        </div>
+        <ServiceScanInterface activeServiceId={activeServiceId} onSelectService={selectService} />
       </div>
     </div>
   );

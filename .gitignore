@@ -25,6 +25,7 @@ yarn-debug.log*
 yarn-error.log*
 .cursor/debug.log
 .cursor/debug-*.log
+/dev-server.log
 
 # Local agent scratch (logs, audits, draft commit/PR messages, verify scripts)
 .cursor/*.log
