@@ -232,6 +232,23 @@ export interface BrandmarkPhysicsCoreProps {
    *  corridor actor can drive the flat → 3D morph imperatively without
    *  re-rendering. Wins over the static `depth` prop when provided. */
   depthRef?: ReadonlyRef<number>;
+  /** 2D cover-in morph dial (ADR-023 morph rev.). `0` collapses every
+   *  particle to the model origin (which IS the rect centre, because
+   *  the brandmark home positions are sampled in `[-0.5, 0.5]` and the
+   *  group sits at the live world brandmark anchor); `1` is the full
+   *  brandmark silhouette. Drives the SVG → particle handoff as a true
+   *  geometric MORPH (radial inflation from the rect centre) rather than
+   *  an opacity cross-fade. Eased internally with smoothstep over
+   *  `[0, 0.6]` so the start is gentle and the silhouette has settled
+   *  before the depth extrude begins. Also gates alpha (via the same
+   *  internal coverIn) so the cover-in owns visibility — the actor can
+   *  hold `opacity` at full corridor brightness across the wrap window.
+   *  Default `1` (full cover) for lab / simple consumers. */
+  coverMorph?: number;
+  /** Live ref for `coverMorph`. Read every frame inside `useFrame` so the
+   *  corridor actor can drive the cover-in imperatively without
+   *  re-rendering. Wins over the static `coverMorph` prop when provided. */
+  coverMorphRef?: ReadonlyRef<number>;
   /** Subtle matrix-glitch amplitude (0..1). Drives a gentle scanline-band
    *  displacement + in-palette hue warble in the shader. Default 0 (no
    *  glitch). The corridor actor ramps this as a bell across the 2D → 3D
@@ -472,6 +489,8 @@ export function BrandmarkPhysicsCore({
   igniteRef,
   depth = 1,
   depthRef,
+  coverMorph = 1,
+  coverMorphRef,
   glitch = 0,
   glitchRef,
   stream = 0,
@@ -654,6 +673,7 @@ export function BrandmarkPhysicsCore({
         uAccentColor: { value: new THREE.Color(accentColor) },
         uOpacity: { value: opacity },
         uDepth: { value: depth },
+        uCoverMorph: { value: coverMorph },
         uGlitch: { value: glitch },
         uStream: { value: stream },
         uCleanField: { value: cleanField },
@@ -737,6 +757,7 @@ export function BrandmarkPhysicsCore({
     const resolvedPointSize = pointSizeRef ? pointSizeRef.current : pointSize;
     const resolvedOpacity = opacityRef ? opacityRef.current : opacity;
     const resolvedDepth = depthRef ? depthRef.current : depth;
+    const resolvedCoverMorph = coverMorphRef ? coverMorphRef.current : coverMorph;
     const resolvedGlitch = glitchRef ? glitchRef.current : glitch;
     const resolvedStream = streamRef ? streamRef.current : stream;
     const resolvedCleanField = cleanFieldRef ? cleanFieldRef.current : cleanField;
@@ -756,6 +777,7 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uPointSize.value = resolvedPointSize;
       mat.uniforms.uOpacity.value = resolvedOpacity;
       mat.uniforms.uDepth.value = resolvedDepth;
+      mat.uniforms.uCoverMorph.value = resolvedCoverMorph;
       mat.uniforms.uGlitch.value = resolvedGlitch;
       mat.uniforms.uStream.value = resolvedStream;
       mat.uniforms.uCleanField.value = resolvedCleanField;
@@ -817,6 +839,7 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uPointSize.value = resolvedPointSize;
     mat.uniforms.uOpacity.value = resolvedOpacity;
     mat.uniforms.uDepth.value = resolvedDepth;
+    mat.uniforms.uCoverMorph.value = resolvedCoverMorph;
     mat.uniforms.uGlitch.value = resolvedGlitch;
     mat.uniforms.uStream.value = resolvedStream;
     mat.uniforms.uCleanField.value = resolvedCleanField;

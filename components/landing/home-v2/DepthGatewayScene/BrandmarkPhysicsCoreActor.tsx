@@ -53,7 +53,8 @@ import {
   BRANDMARK_CORE_DEPTH_END_BLEND,
   BRANDMARK_CORE_DEPTH_START_BLEND,
   BRANDMARK_CORE_HANDOFF_PROGRESS,
-  BRANDMARK_CORE_PARTICLE_COVER_BLEND,
+  BRANDMARK_CORE_POST_COVER_GATE_END,
+  BRANDMARK_CORE_POST_COVER_GATE_START,
   BRANDMARK_CORE_SIZE_MERGE_END,
   getBrandmarkCoreBlend,
   getBrandmarkWrapHalfExtent,
@@ -92,13 +93,23 @@ const HANDOFF_GLITCH_INTENSITY = 0.35;
  *  sphere (where it must read against the gimbal shell's dots).
  *
  *  Corridor calm-down (2026-06-22b): lowered 0.95 → 0.72 because the corridor
- *  read TOO BRIGHT (additive bloom). Paired with the count dial-back to 1600.
+ *  read TOO BRIGHT (additive bloom). 2026-06-24 async-flow follow-up raises it
+ *  slightly again: once the SVG is gone and the mark is particle-native, the
+ *  in-sphere core needs more presence so the depth-flow doesn't visually drop
+ *  out right as the armillary wraps around it.
  *  This is the CORRIDOR brightness only — the Services centerpiece has its own
  *  absolute `CENTER_OPACITY` (decoupled), so lowering this never drags the
  *  centerpiece with it. Lower further to dim the corridor. */
-const CORE_OPACITY = 0.72;
-const CORE_POINT_SIZE_FLAT = 3.0;
-const CORE_POINT_SIZE_3D = 4.0;
+const CORE_OPACITY = 0.84;
+// Single-painter morph (2026-06-24): the FLAT resting mark must read as a
+// SOLID, near-pixel-perfect silhouette (it replaces the crisp SVG), so the
+// flat dots are LARGER to close the inter-particle gaps (lab-verified ~5px +
+// full count reads solid; 2-3px reads as sparse dust). As the mark gains depth
+// and disperses into the sphere the dots relax to the established luminous-body
+// size. So size now goes flat(big/solid) → 3D(smaller/dust), the inverse of the
+// prior 3→4 ramp. Paired with the shader's depth-tied `depthKeep` density.
+const CORE_POINT_SIZE_FLAT = 5.0;
+const CORE_POINT_SIZE_3D = 4.45;
 
 /** Target number of particles DRAWN in the corridor (Navigate / Encode /
  *  sphere). The global count is large (6000) to feed a dense parked centerpiece;
@@ -303,6 +314,12 @@ export function BrandmarkPhysicsCoreActor({
   const driftEulerScratch = useRef(new THREE.Euler());
   const igniteRef = useRef(ASSEMBLED_IGNITE);
   const depthRef = useRef(0);
+  // Cover-in morph (ADR-023 morph rev.): 0 = particles collapsed at the rect
+  // centre, 1 = particles at full home positions. Drives the SVG → particle
+  // handoff as a geometric inflation rather than an opacity dissolve. The
+  // shader applies a second smoothstep over [0, 0.6] internally, so this
+  // ref carries the pre-easing JS clock from `getBrandmarkCoverMorph`.
+  const coverMorphRef = useRef(0);
   const glitchRef = useRef(0);
   const streamRef = useRef(0);
   // Clean-field dial: 0 = luminous dust (corridor/sphere), 1 = uniform crisp
@@ -359,53 +376,70 @@ export function BrandmarkPhysicsCoreActor({
     const dissipate = t.docked || t.servicesAmbient ? getSmoothedDissipate() : 0;
     const recT = smootherstep(SHRINK_START, SHRINK_END, dissipate);
 
-    // ── SVG → particle morph (ADR-023, 2026-06-24 "crosshair unfurls") ──
-    // The bold DOM SVG crosshair stays the front, legible mark for most
-    // of the wrap window while the substrate armillary unfurls from its
-    // plane. This particle core gains its depth dome HIDDEN behind that
-    // SVG (depth ramps early, well before the cut), so it is already 3D
-    // the instant the SVG drops away (LAYER_BLEND ≈ 0.82) and reveals it
-    // inside the ~formed sphere — the medium swap is masked, not exposed
-    // in open space. The particles never swirl: ignite is pinned to
-    // assembled and the sim is seeded at home, so the cloud is the
-    // brandmark from frame one.
+    // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
+    // Three coupled clocks, all derived from `getBrandmarkCoreBlend(progress)`
+    // (the shared 0..1 wrap clock anchored at substrate.start → substrate.peakAt):
+    //
+    //   1. coverMorph — particles inflate from the rect centre to full home
+    //      positions. The shader's `uCoverMorph` reads this; alpha is gated
+    //      on the SAME inflation factor (no separate opacity reveal). The
+    //      DOM SVG (`ProjectedBrandmarkActor`) fades to 0 over coverMorph
+    //      ∈ [0, COVER_HANDOFF_END=0.55] and is `display:none`-cut at
+    //      cover completion, so the visible mark at every frame equals the
+    //      sum of (fading SVG + inflating particles) — a geometric morph,
+    //      not a cross-dissolve.
+    //   2. depth — flat 2D silhouette → 3D dome via `uDepth`. Starts AT
+    //      the SVG cut (DEPTH_START_BLEND === SVG_CUT_BLEND) and completes
+    //      at the wrap peak. Decoupled from the cover-in so the SEQUENCE
+    //      reads as: inflate XY → cut SVG → extrude Z. The mark never
+    //      simultaneously inflates AND extrudes (which would muddle the
+    //      morph into a generic "3D thing growing" read).
+    //   3. post-cover gate — stream + glitch dust effects gate ON only
+    //      after coverMorph crosses the post-cover threshold, so the
+    //      "comet tail" + "scanline tear" never play while the SVG is
+    //      still partly visible (those effects would otherwise read as
+    //      the SVG mark breaking apart instead of the particles resolving).
+    //
+    // Ignite is pinned assembled and the sim is `seedAtHome`, so the cloud
+    // is the brandmark from frame one — particles never swirl or scatter.
     const handoffProgress = BRANDMARK_CORE_HANDOFF_PROGRESS;
     const handoffBlend = getBrandmarkCoreBlend(progress);
-    const reveal = smootherstep(0, BRANDMARK_CORE_PARTICLE_COVER_BLEND, handoffBlend);
-    // Depth ramps EARLY and completes by the layer drop (DEPTH_END_BLEND ≈
-    // LAYER_BLEND ≈ 0.82) — while the core is still HIDDEN behind the bold
-    // front SVG. So the core is already a full 3D dome the instant the SVG
-    // drops away and reveals it inside the formed sphere; there is no
-    // flat-then-inflate pop on the revealed core. (Decoupled from the SVG
-    // cut on purpose — the occlusion by the front SVG is what makes an
-    // early depth ramp safe; see ADR-023 Invariant 3.)
     const depth = smootherstep(
       BRANDMARK_CORE_DEPTH_START_BLEND,
       BRANDMARK_CORE_DEPTH_END_BLEND,
       handoffBlend
     );
 
-    // Subtle matrix-glitch bell. It now spans the full sphere-wrap
-    // blend and is capped so it reads as the dither resolving, not a
-    // separate hard digital break.
+    // Stream + glitch are eased in with the asynchronous particle flow so the
+    // extra depth motion joins after the flat mark starts peeling apart.
+    const postCoverGate = smoothstep(
+      BRANDMARK_CORE_POST_COVER_GATE_START,
+      BRANDMARK_CORE_POST_COVER_GATE_END,
+      depth
+    );
+
+    // Subtle matrix-glitch bell. Bounded inside the wrap blend AND gated by
+    // the post-cover ramp so the scanline tear only plays once the particle
+    // silhouette has taken over from the SVG. Keeps the bell's sin() shape
+    // so the effect still rises and falls inside the gated window.
     let glitch = 0;
     if (progress > handoffProgress && progress < BRANDMARK_CORE_BLEND_END) {
       const t =
         (progress - handoffProgress) / Math.max(1e-6, BRANDMARK_CORE_BLEND_END - handoffProgress);
-      glitch = HANDOFF_GLITCH_INTENSITY * Math.sin(t * Math.PI);
+      glitch = HANDOFF_GLITCH_INTENSITY * Math.sin(t * Math.PI) * postCoverGate;
     }
 
-    // ── Z-STREAM momentum envelope (2026-06-17) ──────────────────
-    // Active across the substrate-wrap "fly into the sphere" leg.
-    // Velocity-modulated so a faster scroll trails the particles
-    // further back (momentum), with a baseline so the stream still
-    // reads on a slow scroll. Fades to 0 by SIZE_MERGE_END so the
-    // silhouette is clean once parked inside the sphere. Eased on
-    // wall-clock time so the velocity term doesn't jitter frame-to-frame.
-    const streamBandIn = smoothstep(handoffProgress, handoffProgress + 0.02, progress);
+    // ── Z-STREAM momentum envelope (2026-06-17, post-cover gated) ─────
+    // Active across the substrate-wrap "fly into the sphere" leg, but ONLY
+    // after the cover-in completes (gated by postCoverGate). Velocity-
+    // modulated so a faster scroll trails the particles further back
+    // (momentum), with a baseline so the stream still reads on a slow
+    // scroll. Fades to 0 by SIZE_MERGE_END so the silhouette is clean once
+    // parked inside the sphere. Eased on wall-clock time so the velocity
+    // term doesn't jitter frame-to-frame.
     const streamBandOut =
       1 - smoothstep(SIZE_MERGE_END - STREAM_FADE_BAND, SIZE_MERGE_END, progress);
-    const streamBand = streamBandIn * streamBandOut;
+    const streamBand = postCoverGate * streamBandOut;
     const velNorm = Math.min(1, Math.abs(t.velocity) * STREAM_VEL_SCALE);
     const streamTarget =
       streamBand * STREAM_MAX * (STREAM_VEL_BASE + (1 - STREAM_VEL_BASE) * velNorm);
@@ -420,6 +454,15 @@ export function BrandmarkPhysicsCoreActor({
     // that volume. (Was `depth * (1 - recT)`, which collapsed it to a flat
     // billboard at the centerpiece.) Z-only, so the XY silhouette is preserved.
     depthRef.current = depth;
+    // Cover-morph clock: 0 = particles collapsed at rect centre, 1 = full
+    // home positions. Saturates at 1 well before the depth ramp begins, so
+    // the parked corridor / sphere / centerpiece states see coverMorph = 1
+    // (byte-identical to the pre-change render at those frames).
+    // Single-painter morph (debug-confirmed 2026-06-24): the particle core IS
+    // the corridor mark end-to-end, so it ALWAYS paints the full silhouette
+    // (coverMorph = 1). The transition lives entirely in `depth`: each particle
+    // peels asynchronously/asymmetrically into its domed in-sphere position.
+    coverMorphRef.current = 1;
     // Clean up the particle style (uniform size/brightness, crisp dot, no
     // flicker) in lock-step with the shrink — corridor/sphere stays dust.
     cleanFieldRef.current = recT;
@@ -459,11 +502,16 @@ export function BrandmarkPhysicsCoreActor({
     // corridor is byte-identical).
     const parkedOpacity = CORE_OPACITY + (CENTER_OPACITY - CORE_OPACITY) * recT;
 
-    // Hidden at the section-2 rest (the SVG owns the crisp 2D mark); the blend
-    // brings the core to full brightness as the SVG vanishes; it stays
-    // bright/solid through the corridor → epilogue → Services shrink, then
-    // settles to its own absolute centerpiece opacity at the parked mark.
-    opacityRef.current = parkedOpacity * reveal * handoffFade;
+    // Single-painter visibility (2026-06-24): the dense flat particle mark is
+    // the Thoughtform rest mark itself, so it is visible the moment the stage
+    // pins (active). It is hidden ONLY during the ARMED pre-pin rise (stage
+    // rising into the viewport behind the hero curtain) so it never flashes
+    // over the hero — mirrors the DOM tracker's "furnished on arrival" armed
+    // opacity-0. Epilogue / dock keep their own handoffFade-driven visibility
+    // (t.active is false there, but the core must stay visible), so the gate
+    // is armed-only, never a blanket !active.
+    const armedOnly = t.armed && !t.active;
+    opacityRef.current = armedOnly ? 0 : parkedOpacity * handoffFade;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude.
     pointSizeRef.current =
@@ -533,6 +581,7 @@ export function BrandmarkPhysicsCoreActor({
         corridorKeep={corridorKeep}
         igniteRef={igniteRef}
         depthRef={depthRef}
+        coverMorphRef={coverMorphRef}
         glitchRef={glitchRef}
         streamRef={streamRef}
         cleanFieldRef={cleanFieldRef}

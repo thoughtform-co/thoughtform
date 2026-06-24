@@ -69,6 +69,7 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   uniform float uPointSize;     // CSS pixels
   uniform float uPixelRatio;
   uniform float uDepth;         // 0 = flat 2D silhouette, 1 = full 3D dome
+  uniform float uCoverMorph;    // 0 = particles collapsed at rect centre, 1 = full home positions
   uniform float uStream;        // backward-Z momentum (vertex-only)
   // uGlitch / uTime are shared with the fragment shader; they MUST carry
   // a matching precision qualifier or the program silently fails to link
@@ -99,6 +100,7 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   varying float vEdgeWeight;
   varying float vDepth;         // local Z, drives atmospheric dim
   varying float vAngle;         // forwarded to fragment so dash / scan / bracket can rotate
+  varying float vCoverMorph;    // [0, 1] cover-in factor — fragment alpha gate
 
   // Cheap deterministic hash for the per-band scanline displacement.
   float hash11(float n) {
@@ -116,15 +118,58 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     vec4 posData = texture2D(uPositionTexture, aUV);
     vec3 pos = posData.xyz;
     
-    // 2D → 3D MORPH (ADR-023). The brandmark silhouette lives entirely
-    // in XY (the dome + jitter only ever displace Z — see
-    // sampleBrandmarkParticles). Scaling Z by uDepth therefore morphs
-    // the cloud continuously between the FLAT 2D silhouette (uDepth = 0,
-    // pixel-identical to the SVG brandmark it hands off from) and the
-    // full 3D domed mark (uDepth = 1). The XY silhouette is preserved at
-    // every value, so the mark reads as the SAME brandmark gaining depth
-    // — not a different object fading in.
-    pos.z *= uDepth;
+    // ── 2D COVER-IN MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
+    // Particles start collapsed at the model origin (which IS the rect
+    // centre, because the brandmark is sampled in [-0.5, 0.5] and the
+    // group is positioned at the live world brandmark anchor) and inflate
+    // radially to their home positions as uCoverMorph rises 0 → 1. This is
+    // what turns the SVG → particle transition from a renderer cross-fade
+    // (the bug the user described: "PowerPoint dissolve") into a true
+    // geometric MORPH: the mark visibly GROWS from the centre of the
+    // crisp SVG it is replacing, rather than dust appearing as a parallel
+    // cloud while the SVG fades. Eased with smoothstep over [0, COVER_FULL]
+    // so the start is gentle. Mirrors the v7 silhouette painter
+    // (brandmarkSilhouetteVertexShader → coverIn pattern) so both
+    // brandmark systems share the same handoff grammar.
+    //
+    // At coverIn = 1 the XY silhouette is identical to the SVG paint
+    // (dome-fill basis samples the same filled paths), so the SVG cut
+    // under matched cover is invisible. The Z-axis is unaffected here —
+    // uDepth below owns the flat → 3D extrude on a later, decoupled
+    // clock so the morph sequences as: cover XY 0 → 1, then extrude Z
+    // 0 → 1, both inside the substrate-wrap window.
+    const float COVER_FULL = 0.6;
+    float coverIn = smoothstep(0.0, COVER_FULL, uCoverMorph);
+    pos.xy *= coverIn;
+    vCoverMorph = coverIn;
+    
+    // ── ASYMMETRIC 2D → 3D FLOW (ADR-023 async-flow revision) ─────
+    // The mark should not change as one uniform slab. Every particle gets
+    // a deterministic stagger based on its seed + polar position, then
+    // peels backward on Z while tracing a small tangent/asymmetric XY arc
+    // before settling back to its sampled brandmark home inside the dome.
+    // At uDepth = 0 this is a dense flat 2D particle mark; at uDepth = 1
+    // every particle is back on its 3D home. Midway, particles flow in
+    // at different times and directions, so the transition reads as a
+    // living particle field entering the sphere instead of a uniform
+    // depth extrusion.
+    float homeZ = pos.z;
+    float radial = length(pos.xy);
+    float angle = atan(pos.y, pos.x);
+    float staggerSeed = fract(aLuma * 0.73 + sin(angle * 2.0) * 0.17 + radial * 0.31);
+    float flowStart = mix(0.02, 0.42, staggerSeed);
+    float flowEnd = min(1.0, flowStart + 0.42);
+    float flowT = smoothstep(flowStart, flowEnd, uDepth);
+    float flowBell = sin(flowT * 3.14159265);
+    vec2 tangent = normalize(vec2(-pos.y, pos.x) + vec2(0.0001, 0.0001));
+    float orbitDir = sign(sin(angle * 3.0 + aLuma * 6.28318));
+    vec2 asym = vec2(
+      sin(aLuma * 14.7 + angle * 1.5),
+      cos(aLuma * 11.3 - angle * 1.1)
+    );
+    pos.xy += (tangent * orbitDir * 0.045 + asym * 0.018) * flowBell * (1.0 - uCleanField);
+    pos.z = homeZ * flowT;
+    pos.z -= flowBell * (0.10 + 0.08 * staggerSeed) * (1.0 - uCleanField);
     
     // ── SUBTLE MATRIX GLITCH (uGlitch > 0) ───────────────────────
     // A gentle scanline tear that ONLY runs across the 2D → 3D handoff
@@ -172,6 +217,13 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // hotter; the variance keeps the cloud from looking like a
     // uniform texture.
     float sizeMul = 0.78 + aEdgeWeight * 0.32 + aLuma * 0.18;
+    // Cover-in size ramp so particles condense into focus rather than
+    // appearing as full-size dots from frame one when they're clustered
+    // at the rect centre. Identity at coverIn = 1, so the parked corridor
+    // / sphere / centerpiece look is byte-identical. Mirrors the v7
+    // silhouette painter's sizeRamp.
+    float sizeRamp = 0.4 + 0.6 * coverIn;
+    sizeMul *= sizeRamp;
     // Clean-field: collapse the per-particle size variance to a uniform,
     // FINE speck. With the denser count (3600, see BrandmarkPhysicsCore) the
     // Services centerpiece has enough points to read as a continuous,
@@ -193,7 +245,20 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // uCorridorKeep defaults to 1.0 (no corridor thinning) for the lab + other
     // consumers. gl_Position is already written above, so the early return is
     // safe (same pattern as the v7 silhouette rank-clip).
-    float keepFrac = mix(uCorridorKeep, uCleanFieldKeep, uCleanField);
+    //
+    // Corridor density tied to DEPTH (single-painter morph, 2026-06-24
+    // debug-confirmed). The brandmark is the particle core END-TO-END — there
+    // is no SVG to cover, so the FLAT resting mark (uDepth → 0) must read as a
+    // SOLID, near-pixel-perfect silhouette: draw the FULL count. As the mark
+    // gains depth and disperses into the substrate sphere (uDepth → 1) it
+    // relaxes to the calm corridor budget (uCorridorKeep ≈ 0.27) so the
+    // in-sphere core reads as luminous dust, not a solid plate. The runtime
+    // logs proved the prior failure: a thinned (~1600) dim particle cloud
+    // could never match the crisp SVG, so the SVG opacity-fade against it read
+    // as a cross-dissolve. Full density at the flat mark is what lets the
+    // particles BE the mark. Centerpiece end (uCleanField = 1) is unchanged.
+    float depthKeep = mix(1.0, uCorridorKeep, smoothstep(0.0, 0.6, uDepth));
+    float keepFrac = mix(depthKeep, uCleanFieldKeep, uCleanField);
     if (aLuma >= keepFrac) {
       gl_PointSize = 0.0;
       return;
@@ -235,6 +300,7 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   varying float vEdgeWeight;
   varying float vDepth;
   varying float vAngle;
+  varying float vCoverMorph;    // [0, 1] cover-in factor — alpha gate during SVG → particle handoff
   
   float hashF(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
@@ -455,6 +521,14 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
       color *= 1.0 + (cellSeed - 0.5) * 0.45 * uGlitch;
     }
     
-    gl_FragColor = vec4(color, alpha * uOpacity);
+    // Cover-in alpha gate (ADR-023 morph rev.). vCoverMorph is the
+    // vertex-stage smoothstep over uCoverMorph, identical to v7's
+    // silhouette painter. Replaces the actor's previous separate
+    // opacity-reveal envelope: the actor now writes uOpacity at full
+    // corridor brightness across the entire wrap window and the cover-in
+    // owns the visibility ramp. At coverIn = 1 (post-cut and beyond) the
+    // multiplier is identity, so the parked corridor / sphere /
+    // centerpiece look is byte-identical.
+    gl_FragColor = vec4(color, alpha * uOpacity * vCoverMorph);
   }
 `;

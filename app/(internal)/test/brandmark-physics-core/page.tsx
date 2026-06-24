@@ -70,6 +70,13 @@ const DEFAULTS = {
   // Centerpiece (Services parked state — cleanField 0 = corridor, 1 = parked)
   cleanField: 0,
   depth: 1,
+  // Cover-in morph (ADR-023 morph rev.). 0 = particles collapsed at the model
+  // origin (rect centre), 1 = particles at full home positions. The corridor
+  // actor ramps this 0 → 1 across the substrate-wrap band to drive the SVG →
+  // particle handoff as a geometric inflation. Lab default 1 (full silhouette)
+  // so the parked centerpiece + the byte-identical "Luminous Dust" preset are
+  // unchanged. Drag the slider down to scrub through the inflation.
+  coverMorph: 1,
   corridorKeep: 1, // surviving particle fraction at clean=0 (corridor thinning)
   cleanFieldKeep: 0.65, // surviving particle fraction at clean=1 (spacing)
   cleanFieldDotScale: 0.5, // dot-size mult at clean=1 (fineness)
@@ -354,6 +361,7 @@ export default function BrandmarkPhysicsCorePage() {
   const [activePreset, setActivePreset] = useState<string>("luminous-dust");
   const [cleanField, setCleanField] = useState(DEFAULTS.cleanField);
   const [depth, setDepth] = useState(DEFAULTS.depth);
+  const [coverMorph, setCoverMorph] = useState(DEFAULTS.coverMorph);
   const [corridorKeep, setCorridorKeep] = useState(DEFAULTS.corridorKeep);
   const [cleanFieldKeep, setCleanFieldKeep] = useState(DEFAULTS.cleanFieldKeep);
   const [cleanFieldDotScale, setCleanFieldDotScale] = useState(DEFAULTS.cleanFieldDotScale);
@@ -426,6 +434,7 @@ export default function BrandmarkPhysicsCorePage() {
     setActivePreset("luminous-dust");
     setCleanField(DEFAULTS.cleanField);
     setDepth(DEFAULTS.depth);
+    setCoverMorph(DEFAULTS.coverMorph);
     setCorridorKeep(DEFAULTS.corridorKeep);
     setCleanFieldKeep(DEFAULTS.cleanFieldKeep);
     setCleanFieldDotScale(DEFAULTS.cleanFieldDotScale);
@@ -812,6 +821,7 @@ export default function BrandmarkPhysicsCorePage() {
             cleanFieldDotScale={cleanFieldDotScale}
             cleanFieldEdge={cleanFieldEdge}
             depth={depth}
+            coverMorph={coverMorph}
             scatterRadius={scatterRadius}
             bulge={bulge}
             thickness={thickness}
@@ -1352,6 +1362,14 @@ export default function BrandmarkPhysicsCorePage() {
           max={1}
           step={0.01}
           onChange={setCleanField}
+        />
+        <ControlSlider
+          label="Cover morph (0 collapsed · 1 full)"
+          value={coverMorph}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={setCoverMorph}
         />
         <ControlSlider
           label="Depth (0 flat · 1 dome)"

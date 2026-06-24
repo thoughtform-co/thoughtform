@@ -5,9 +5,6 @@ import * as THREE from "three";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import {
   BRANDMARK_ANCHOR_INTELLIGENCE,
-  BRANDMARK_CORE_PARTICLE_LAYER_BLEND,
-  BRANDMARK_CORE_SVG_CUT_BLEND,
-  getBrandmarkCoreBlend,
   getBrandmarkWrapHalfExtent,
   getBrandmarkWorldPosition,
   getCameraFov,
@@ -463,44 +460,27 @@ export function ProjectedBrandmarkActor() {
           // desktop and 1 once raw progress passes the dwell, so it's a
           // no-op everywhere except the mobile copy moment.
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
-          // Renderer ownership: the SVG stays fully visible at the
-          // Thoughtform rest. As soon as the particle cover begins, this
-          // DOM layer drops BELOW the R3F canvas so the particles visibly
-          // take over the same silhouette. Once the particle cover has
-          // completed, the SVG is removed with display:none. No opacity
-          // ramp is used for the medium swap.
+          // ── SINGLE-PAINTER MORPH (ADR-023 rev., 2026-06-24 debug-confirmed) ──
+          // Runtime logs proved the "dissolve": a SEPARATE solid DOM SVG was
+          // opacity-fading (svgFade 1→0) while a DIM additive particle cloud
+          // faded in underneath — a literal two-layer crossfade. No timing of
+          // that crossfade reads as a morph. So the corridor brandmark is now
+          // the in-canvas particle core END-TO-END: a DENSE flat silhouette at
+          // the Thoughtform rest that gradually gains depth and disperses into
+          // the substrate sphere (see BrandmarkPhysicsCoreActor + the shader's
+          // depth-tied density). This DOM SVG is therefore NEVER the visible
+          // corridor mark — it stays hidden whenever the particle core is
+          // mounted, which is exactly whenever this actor is mounted (see
+          // HomeCorridor: both mount together, or neither does on the no-canvas
+          // fallback). Kept in the tree only as the structural anchor.
           //
-          // Corridor → epilogue handoff (2026-06-16): the welded SVG
-          // must NOT appear while we are still exiting Build / flying
-          // through the substrate sphere. That phase remains owned by
-          // the in-canvas particle core. The SVG stays hidden across the
-          // later dock / Services handoff as well.
-          const coreBlend = useEpilogueOverride ? 1 : getBrandmarkCoreBlend(paintProgress);
-          const particleLayerOwns =
-            !useEpilogueOverride && coreBlend >= BRANDMARK_CORE_PARTICLE_LAYER_BLEND;
-          const particleCut = useEpilogueOverride || coreBlend >= BRANDMARK_CORE_SVG_CUT_BLEND;
-
-          element.style.zIndex = `${
-            particleLayerOwns || particleCut
-              ? PROJECTED_BRANDMARK_UNDER_CANVAS_Z_INDEX
-              : PROJECTED_BRANDMARK_TOP_Z_INDEX
-          }`;
-
-          if (particleCut) {
-            // Core-shrink handoff (2026-06-20): the in-canvas particle
-            // core (`BrandmarkPhysicsCoreActor`) owns the mark through
-            // the ENTIRE epilogue + dock + Services — it shrinks from
-            // sphere-fill down to the centred Services centerpiece. The
-            // welded SVG no longer re-appears at the seam, so it stays
-            // hidden across the whole epilogue / dock. (Replaces the
-            // ADR-021 welded ride-out / re-centre.)
-            element.style.opacity = "0";
-            element.style.display = "none";
-            return;
-          }
-
-          if (element.style.display === "none") element.style.display = "";
-          element.style.opacity = `${(intensity * diagramFactor).toFixed(3)}`;
+          // Particle core owns the mark — keep this DOM layer below the canvas
+          // and hidden. No opacity fade (that was the dissolve), no cut timing.
+          void intensity;
+          void diagramFactor;
+          element.style.zIndex = `${PROJECTED_BRANDMARK_UNDER_CANVAS_Z_INDEX}`;
+          element.style.opacity = "0";
+          element.style.display = "none";
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate

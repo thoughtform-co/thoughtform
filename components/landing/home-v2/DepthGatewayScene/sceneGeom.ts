@@ -331,39 +331,102 @@ export const BRANDMARK_CORE_BLEND_END = BRANDMARK_CORE_SIZE_MERGE_END;
 
 /** Shared renderer-ownership timings inside `getBrandmarkCoreBlend`.
  *
- *  2026-06-24 "crosshair unfurls into the armillary" pass. The earlier
- *  handoff cut the bold, legible SVG crosshair to the in-canvas particle
- *  core EARLY (cover 0.24 / cut 0.32). But the particle core is a DIM,
- *  wispy, sphere-merged element — not a standalone legible mark — so that
- *  early cut read as the crisp mark dissolving into dust before the
- *  substrate sphere arrived to give it structure: a slide swap.
+ *  2026-06-24 cover-in morph pass. The previous "crosshair unfurls into the
+ *  armillary" model held the SVG at full opacity until a LATE z-index drop
+ *  (`LAYER_BLEND = 0.82`) + `display:none` cut (`SVG_CUT_BLEND = 0.90`), and
+ *  ramped the particle core's opacity (`reveal`) underneath. That fixed the
+ *  EARLY-cut "dissolving into dust" failure mode, but the visible transition
+ *  still read as a cross-fade: the SVG stayed crisp + 100% bright through most
+ *  of the wrap, then abruptly cut while a different-looking particle cloud
+ *  faded in beneath it. The particles were always at their FULL home positions,
+ *  just ramping in opacity — there was no GEOMETRIC morph.
  *
- *  New model: the bold SVG crosshair STAYS the front, legible mark for
- *  most of the wrap window while the substrate armillary unfurls FROM its
- *  plane (the gimbal rings start coplanar with the crosshair and rotate
- *  open — see `gyroRingUnfold`). The DOM SVG only drops below the canvas
- *  (`LAYER_BLEND`) and is cut (`SVG_CUT_BLEND`) LATE, once the sphere is
- *  essentially formed — so the medium swap to the core is hidden inside
- *  the finished 3D armillary instead of happening in open space. Cover
- *  (core opacity) completes just before the layer drop so the core is
- *  already at full strength the instant it becomes the front mark.
+ *  New model (mirrors v7 ADR-019 silhouette painter): the SVG → particle
+ *  transition is now a true RADIAL COVER-IN driven by `uCoverMorph` in the
+ *  physics-core shader. Particles start collapsed at the rect centre and
+ *  inflate to their home positions as the cover-in clock rises 0 → 1. The
+ *  SVG fades geometrically in proportion to the SAME clock. Both painters
+ *  read the cover-in via `getBrandmarkCoverMorph(progress)`, so the visible
+ *  mark at every frame equals (SVG fade contribution) + (particle inflation
+ *  contribution) — no parallel cloud, no PowerPoint dissolve.
+ *
+ *  Sequence inside the wrap band [0.30, 0.42] corridor progress
+ *  (handoffBlend 0 → 1):
+ *
+ *    1. coverMorph ramps 0 → 1 over handoffBlend [0, COVER_BLEND].
+ *       Particles inflate from rect centre; SVG fades proportionally.
+ *    2. SVG cuts (`display:none`) at handoffBlend = SVG_CUT_BLEND, just
+ *       past full particle cover so the cut is invisible.
+ *    3. uDepth ramps 0 → 1 over handoffBlend [DEPTH_START, DEPTH_END].
+ *       Flat silhouette extrudes into 3D dome on a decoupled clock that
+ *       starts AT the cut — so the geometric flat → 3D motion is the
+ *       only thing changing once the SVG is gone.
+ *    4. Stream + glitch dust effects gate ON only after cover completes
+ *       (driven by `coverMorph >= POST_COVER_GATE` inside the actor),
+ *       so they never run while the SVG is still partly visible — those
+ *       effects would otherwise read as the SVG mark breaking apart.
+ *
  *  See ADR-023 + the brandmark-choreography skill. */
-export const BRANDMARK_CORE_PARTICLE_LAYER_BLEND = 0.82;
-export const BRANDMARK_CORE_PARTICLE_COVER_BLEND = 0.8;
-export const BRANDMARK_CORE_SVG_CUT_BLEND = 0.9;
+export const BRANDMARK_CORE_PARTICLE_COVER_BLEND = 0.65;
+export const BRANDMARK_CORE_SVG_CUT_BLEND = 0.7;
 
-/** Depth extrude window. Decoupled from the SVG cut (it no longer has to
- *  wait for it): the core is HIDDEN behind the bold front SVG for most of
- *  the wrap, so it can gain its 3D dome there and already be dimensional
- *  the instant the SVG drops away and reveals it inside the formed sphere.
- *  Completes by the layer drop so the revealed core is fully 3D. */
-export const BRANDMARK_CORE_DEPTH_START_BLEND = 0.3;
-export const BRANDMARK_CORE_DEPTH_END_BLEND = 0.82;
+/** Deprecated — retained for source-compatibility. The previous "SVG drops
+ *  below canvas, then cuts later" two-stage model is retired by the
+ *  cover-in morph: the SVG now fades GEOMETRICALLY over coverMorph
+ *  [0, COVER_HANDOFF_END=0.55] and cuts via `display:none` at
+ *  SVG_CUT_BLEND. Aliased to SVG_CUT_BLEND so any call site treating it as
+ *  a z-index hand-off threshold collapses to the same frame as the cut.
+ *  New code should NOT reference this — read `BRANDMARK_CORE_SVG_CUT_BLEND`
+ *  directly. */
+export const BRANDMARK_CORE_PARTICLE_LAYER_BLEND = BRANDMARK_CORE_SVG_CUT_BLEND;
+
+/** Depth extrude window (single-painter morph, 2026-06-24 debug-confirmed).
+ *  The brandmark is the particle core END-TO-END (no SVG cut anymore), so the
+ *  depth ramp is the actual GRADUAL TRANSITION the user asked for: the dense
+ *  FLAT silhouette at the Thoughtform rest (uDepth = 0) gradually gains its 3D
+ *  dome AND disperses (the density relaxes with depth — see the shader's
+ *  `depthKeep`) across the substrate wrap, settling as the luminous core inside
+ *  the sphere. Spans most of the wrap blend so the morph reads continuous
+ *  rather than snapping at the end. Units are `getBrandmarkCoreBlend(progress)`
+ *  (0 at substrate.start, 1 at substrate.peakAt). */
+export const BRANDMARK_CORE_DEPTH_START_BLEND = 0.15;
+export const BRANDMARK_CORE_DEPTH_END_BLEND = 0.9;
+
+/** Coverage threshold (in coverMorph units, 0..1) past which the SVG
+ *  brandmark is fully faded out. Mirrors v7's `SILHOUETTE_HANDOFF_END`
+ *  in `BrandmarkVectorActor`: by 0.55 the inflating particle silhouette
+ *  is at ~92% cover (after the shader's internal smoothstep over
+ *  [0, 0.6]), so the visible silhouette = (vector + particles) is full at
+ *  every frame. Shared between the DOM SVG fade in
+ *  `ProjectedBrandmarkActor` and any consumer that needs to keep
+ *  visibility budgets in lockstep. */
+export const BRANDMARK_CORE_COVER_HANDOFF_END = 0.55;
+
+/** Depth threshold past which stream + glitch dust effects gate ON.
+ *  In the single-painter model this is driven from `depth` (not coverMorph):
+ *  effects join once the dense flat particle mark starts peeling into the
+ *  sphere, so the transition reads as asynchronous particle flow rather than
+ *  a late after-effect. */
+export const BRANDMARK_CORE_POST_COVER_GATE_START = 0.15;
+export const BRANDMARK_CORE_POST_COVER_GATE_END = 0.75;
 
 /** Single handoff clock shared by the DOM SVG and in-canvas particle
  *  core. 0 = crisp SVG owns the mark, 1 = particle/dither core owns it. */
 export function getBrandmarkCoreBlend(progress: number): number {
   return smootherstep(BRANDMARK_CORE_HANDOFF_PROGRESS, BRANDMARK_CORE_BLEND_END, progress);
+}
+
+/** Single cover-in clock derived from `getBrandmarkCoreBlend`. 0 =
+ *  particles collapsed at the rect centre (SVG owns the visible mark),
+ *  1 = particles at full home positions (silhouette complete). The SVG
+ *  fade and the physics-core `uCoverMorph` uniform both read this value,
+ *  so the geometric inflation and the SVG fade are mechanically locked
+ *  to the same frame. The double-ease (`smootherstep` here +
+ *  `smoothstep(0, 0.6, ·)` inside the vertex shader) gives a gentle
+ *  ramp at both ends without making the inflation feel abrupt at the
+ *  midpoint. Mirrors the v7 ADR-019 silhouette pattern. */
+export function getBrandmarkCoverMorph(progress: number): number {
+  return smootherstep(0, BRANDMARK_CORE_PARTICLE_COVER_BLEND, getBrandmarkCoreBlend(progress));
 }
 
 /** Camera position at the given GLOBAL progress. Pure Z dolly: the
