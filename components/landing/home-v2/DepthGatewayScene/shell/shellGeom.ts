@@ -828,6 +828,19 @@ export const SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR = 0.5;
 // back. The per-ring stagger uses `petalStagger` so the three rings
 // open in cascade rather than together.
 
+/** Gimbal-sphere reveal lag against the shared `layers.substrate`
+ *  accretion envelope (2026-06-24). `ShellSubstrateGyro` remaps its reveal
+ *  as `clamp01((substrate - LAG) / (1 - LAG))`. Held at 0 in the current
+ *  "crosshair unfurls into the armillary" model: the bold SVG crosshair is
+ *  the front mark while the armillary unfurls FROM its plane behind it, so
+ *  the sphere SHOULD unfold on its normal clock (no lag) and the late SVG →
+ *  core handoff (see `BRANDMARK_CORE_PARTICLE_LAYER_BLEND`) is what hides
+ *  the medium swap inside the formed sphere. Kept as a tunable knob: a
+ *  small positive value delays the unfurl start if the sphere ever needs to
+ *  trail the crosshair more. Settles to 1 at `substrate = 1`, so Encode/
+ *  Build + the parked Navigate composition are byte-identical at any value. */
+export const SUBSTRATE_GYRO_REVEAL_LAG = 0;
+
 /** Subtle outer-shell scale at `reveal = 0`. Replaces the dramatic
  *  `SHELL_WRAP_START_SCALE = 1.85` contract; here the root barely
  *  scales so the instrument doesn't read as approaching — only its

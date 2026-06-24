@@ -330,12 +330,35 @@ export const BRANDMARK_CORE_SIZE_MERGE_START = CORRIDOR_TIMELINE.brandmark.thoug
 export const BRANDMARK_CORE_BLEND_END = BRANDMARK_CORE_SIZE_MERGE_END;
 
 /** Shared renderer-ownership timings inside `getBrandmarkCoreBlend`.
- *  The particle core first rises above the SVG in the stack, then reaches
- *  a flat cover, then the SVG is cut out. Depth only starts after that cut. */
-export const BRANDMARK_CORE_PARTICLE_LAYER_BLEND = 0.08;
-export const BRANDMARK_CORE_PARTICLE_COVER_BLEND = 0.24;
-export const BRANDMARK_CORE_SVG_CUT_BLEND = 0.32;
-export const BRANDMARK_CORE_DEPTH_START_BLEND = BRANDMARK_CORE_SVG_CUT_BLEND;
+ *
+ *  2026-06-24 "crosshair unfurls into the armillary" pass. The earlier
+ *  handoff cut the bold, legible SVG crosshair to the in-canvas particle
+ *  core EARLY (cover 0.24 / cut 0.32). But the particle core is a DIM,
+ *  wispy, sphere-merged element — not a standalone legible mark — so that
+ *  early cut read as the crisp mark dissolving into dust before the
+ *  substrate sphere arrived to give it structure: a slide swap.
+ *
+ *  New model: the bold SVG crosshair STAYS the front, legible mark for
+ *  most of the wrap window while the substrate armillary unfurls FROM its
+ *  plane (the gimbal rings start coplanar with the crosshair and rotate
+ *  open — see `gyroRingUnfold`). The DOM SVG only drops below the canvas
+ *  (`LAYER_BLEND`) and is cut (`SVG_CUT_BLEND`) LATE, once the sphere is
+ *  essentially formed — so the medium swap to the core is hidden inside
+ *  the finished 3D armillary instead of happening in open space. Cover
+ *  (core opacity) completes just before the layer drop so the core is
+ *  already at full strength the instant it becomes the front mark.
+ *  See ADR-023 + the brandmark-choreography skill. */
+export const BRANDMARK_CORE_PARTICLE_LAYER_BLEND = 0.82;
+export const BRANDMARK_CORE_PARTICLE_COVER_BLEND = 0.8;
+export const BRANDMARK_CORE_SVG_CUT_BLEND = 0.9;
+
+/** Depth extrude window. Decoupled from the SVG cut (it no longer has to
+ *  wait for it): the core is HIDDEN behind the bold front SVG for most of
+ *  the wrap, so it can gain its 3D dome there and already be dimensional
+ *  the instant the SVG drops away and reveals it inside the formed sphere.
+ *  Completes by the layer drop so the revealed core is fully 3D. */
+export const BRANDMARK_CORE_DEPTH_START_BLEND = 0.3;
+export const BRANDMARK_CORE_DEPTH_END_BLEND = 0.82;
 
 /** Single handoff clock shared by the DOM SVG and in-canvas particle
  *  core. 0 = crisp SVG owns the mark, 1 = particle/dither core owns it. */

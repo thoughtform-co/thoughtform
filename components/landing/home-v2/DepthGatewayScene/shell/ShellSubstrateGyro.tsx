@@ -65,6 +65,7 @@ import {
   gyroAssemblyUnfold,
   gyroRingUnfold,
   petalStagger,
+  SUBSTRATE_GYRO_REVEAL_LAG,
   SUBSTRATE_GYRO_CARDINAL_RING_OPACITY,
   SUBSTRATE_GYRO_CARDINAL_RING_RADIUS,
   SUBSTRATE_GYRO_CORE_DENSITY,
@@ -1074,7 +1075,21 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // unfurl over wall-clock time instead of compressing into a few
     // frames under a fast scroll.
     const layers = getSmoothedAccretionLayers();
-    const reveal = layers.substrate;
+    // Gimbal-sphere reveal, optionally lagged against the shared
+    // `layers.substrate` accretion envelope (`SUBSTRATE_GYRO_REVEAL_LAG`,
+    // currently 0 → identity). In the "crosshair unfurls into the armillary"
+    // model the bold DOM SVG crosshair is the front mark while these rings
+    // unfurl FROM its plane behind it, so the sphere unfolds on its normal
+    // clock (no lag) and the LATE SVG → core handoff is what hides the medium
+    // swap. The lag stays a tunable knob: a positive value delays the unfurl
+    // start if the sphere ever needs to trail the crosshair more. Remap
+    // settles to 1 at substrate = 1, so Encode/Build + the parked Navigate
+    // composition are byte-identical at any lag value. (The shared envelope
+    // itself is untouched — title gate, apparent-size boost, and the mark
+    // handoff all read `layers.substrate` directly.)
+    const reveal = clamp01(
+      (layers.substrate - SUBSTRATE_GYRO_REVEAL_LAG) / (1 - SUBSTRATE_GYRO_REVEAL_LAG)
+    );
     if (reveal <= EMERGE_EPSILON) {
       root.visible = false;
       return;

@@ -50,6 +50,7 @@ import {
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   BRANDMARK_CORE_BLEND_END,
+  BRANDMARK_CORE_DEPTH_END_BLEND,
   BRANDMARK_CORE_DEPTH_START_BLEND,
   BRANDMARK_CORE_HANDOFF_PROGRESS,
   BRANDMARK_CORE_PARTICLE_COVER_BLEND,
@@ -130,19 +131,25 @@ const CORRIDOR_DRAW_TARGET = 1600;
  *  reads as a fill→outline transition or revise the SVG handoff to
  *  paint the brandmark outline instead of the filled paths.
  *
- *  Current look (2026-06-22, preset `y95do0` "Dither 3"): `edge-lattice`
- *  basis + `voxel` shape + additive blending. The dome-fill silhouette is
- *  quantised to a ~1/60 grid (`PRODUCTION_GRID_SNAP`) and each surviving
- *  cell is painted as a hard gold square (`voxel`, gap `PRODUCTION_SHAPE_STROKE`).
- *  Consequence (accepted by the brief): the SVG → core blend now reads as the
- *  crisp vector mark "pixelating" into a voxel grid (fill → raster), not the
- *  byte-identical fill → fill of the legacy dome-fill/dot look. The lattice
- *  is already a sparse set of cells, so the corridor is NOT additionally
- *  thinned — `PRODUCTION_CORRIDOR_KEEP` overrides the count-based keep to 1.0
- *  (see below). `freezeMotion` stays false (the preset kept the slight
- *  corridor breathing; the centerpiece still calms via `cleanField` → 1). */
-const PRODUCTION_BASIS: BrandmarkBasis = "edge-lattice";
-const PRODUCTION_SHAPE: BrandmarkCoreShape = "voxel";
+ *  Current look (2026-06-24, "mark leads" pass): `dome-fill` basis +
+ *  `dot` shape + additive blending — the legacy luminous-dust look,
+ *  RESTORED from the 2026-06-22 `edge-lattice` + `voxel` "Dither 3" preset.
+ *  Rationale: the SVG → core handoff is a MORPH that must keep the mark
+ *  legible (ADR-023 Invariant 3 + 12). `dome-fill` samples the FILLED
+ *  brandmark paths, so the flat particle silhouette matches the SVG paint
+ *  (fill → fill) and the cut is invisible. The `edge-lattice`/`voxel`
+ *  preset collapsed the mark to a sparse grid of cells: on its own (once
+ *  the SVG cuts) the bare core read as a faint radial dust-burst, NOT the
+ *  crosshair — so the medium swap looked like the mark dissolving into a
+ *  different object instead of gaining depth. (The voxel look only ever
+ *  held together because the SVG covered the core until the substrate
+ *  sphere arrived to supply structure; the "mark leads" re-timing exposed
+ *  it.) The Services centerpiece therefore returns to luminous dust too —
+ *  if a dithered/raster centerpiece is wanted again, drive it via the
+ *  per-frame `uShape` mask at the centerpiece (recT) rather than the
+ *  mount-time `basis`, so the corridor morph stays fill → fill. */
+const PRODUCTION_BASIS: BrandmarkBasis = "dome-fill";
+const PRODUCTION_SHAPE: BrandmarkCoreShape = "dot";
 const PRODUCTION_GLYPH: BrandmarkCoreGlyph = "plus";
 const PRODUCTION_BLENDING: BrandmarkCoreBlending = "additive";
 const PRODUCTION_SHAPE_STROKE = 0.12;
@@ -162,7 +169,7 @@ const PRODUCTION_GRID_SNAP = 0.0165;
  *  voxel grid into a broken scatter. The preset `y95do0` draws the full lattice
  *  (keep 1.0). The centerpiece still thins via `cleanFieldKeep` as `cleanField`
  *  ramps to 1. */
-const PRODUCTION_CORRIDOR_KEEP: number | null = 1;
+const PRODUCTION_CORRIDOR_KEEP: number | null = null;
 
 /** Core-shrink handoff into Services (2026-06-20). The in-sphere
  *  particle core IS the brandmark end-to-end — at the Services dive it
@@ -228,10 +235,19 @@ const HANDOFF_FADE_END = 0.7;
  *    velocity-modulated: a faster scroll trails further (momentum),
  *    with `STREAM_VEL_BASE` keeping the stream readable on a slow
  *    scroll. It fades to 0 by `SIZE_MERGE_END` so the silhouette is
- *    clean once parked inside the sphere. */
-const STREAM_MAX = 0.5;
+ *    clean once parked inside the sphere.
+ *
+ *  Calm-down (2026-06-24 "crosshair unfurls" pass): the comet-tail
+ *  dispersion previously only ever read while masked by other motion.
+ *  Now the bold crosshair is on-screen and coherent through the whole
+ *  Navigate wrap, and a settled / slow-scroll view sat on the dispersing
+ *  cloud — the baseline (`STREAM_VEL_BASE`) is dropped hard so the mark
+ *  stays LEGIBLE as it gains depth instead of smearing into a radial
+ *  burst. A fast scroll still trails (velocity term intact) for the
+ *  fly-into-depth momentum. */
+const STREAM_MAX = 0.3;
 const STREAM_VEL_SCALE = 3.2;
-const STREAM_VEL_BASE = 0.45;
+const STREAM_VEL_BASE = 0.1;
 const STREAM_TAU_S = 0.12;
 const STREAM_FADE_BAND = 0.08;
 
@@ -343,16 +359,31 @@ export function BrandmarkPhysicsCoreActor({
     const dissipate = t.docked || t.servicesAmbient ? getSmoothedDissipate() : 0;
     const recT = smootherstep(SHRINK_START, SHRINK_END, dissipate);
 
-    // ── SVG → particle morph (ADR-023, 2026-06-24 renderer ownership) ──
-    // The same wrap-length blend drives both media: this particle core
-    // covers early as a flat mark. The SVG actor drops below the canvas,
-    // then cuts out; only after that cut does this core extrude. The
-    // particles never swirl: ignite is pinned to assembled and the sim
-    // is seeded at home, so the cloud is the brandmark from frame one.
+    // ── SVG → particle morph (ADR-023, 2026-06-24 "crosshair unfurls") ──
+    // The bold DOM SVG crosshair stays the front, legible mark for most
+    // of the wrap window while the substrate armillary unfurls from its
+    // plane. This particle core gains its depth dome HIDDEN behind that
+    // SVG (depth ramps early, well before the cut), so it is already 3D
+    // the instant the SVG drops away (LAYER_BLEND ≈ 0.82) and reveals it
+    // inside the ~formed sphere — the medium swap is masked, not exposed
+    // in open space. The particles never swirl: ignite is pinned to
+    // assembled and the sim is seeded at home, so the cloud is the
+    // brandmark from frame one.
     const handoffProgress = BRANDMARK_CORE_HANDOFF_PROGRESS;
     const handoffBlend = getBrandmarkCoreBlend(progress);
     const reveal = smootherstep(0, BRANDMARK_CORE_PARTICLE_COVER_BLEND, handoffBlend);
-    const depth = smootherstep(BRANDMARK_CORE_DEPTH_START_BLEND, 1, handoffBlend);
+    // Depth ramps EARLY and completes by the layer drop (DEPTH_END_BLEND ≈
+    // LAYER_BLEND ≈ 0.82) — while the core is still HIDDEN behind the bold
+    // front SVG. So the core is already a full 3D dome the instant the SVG
+    // drops away and reveals it inside the formed sphere; there is no
+    // flat-then-inflate pop on the revealed core. (Decoupled from the SVG
+    // cut on purpose — the occlusion by the front SVG is what makes an
+    // early depth ramp safe; see ADR-023 Invariant 3.)
+    const depth = smootherstep(
+      BRANDMARK_CORE_DEPTH_START_BLEND,
+      BRANDMARK_CORE_DEPTH_END_BLEND,
+      handoffBlend
+    );
 
     // Subtle matrix-glitch bell. It now spans the full sphere-wrap
     // blend and is capped so it reads as the dither resolving, not a
