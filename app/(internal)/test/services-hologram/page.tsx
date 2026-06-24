@@ -19,7 +19,10 @@ import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { ServicesHologramScene } from "@/components/landing/home-v2/services/hologram";
+import {
+  ServicesHologramScene,
+  type VolumetricBrandmarkBlending,
+} from "@/components/landing/home-v2/services/hologram";
 
 const PALETTE = {
   void: "#050403",
@@ -48,26 +51,34 @@ interface Settings {
   bloom: boolean;
   bloomIntensity: number;
   scanGain: number;
+  edgeThresholdDeg: number;
+  depthStrutCount: number;
+  blending: VolumetricBrandmarkBlending;
+  wireStroke: number;
 }
 
 const DEFAULTS: Settings = {
   flyIn: 1,
   autoMorph: false,
-  density: 1,
+  density: 0.9,
   pointerLook: 0.12,
   bodySpeed: 1,
-  pointSize: 4.5,
-  opacity: 0.92,
+  pointSize: 4.3,
+  opacity: 0.74,
   scale: 1,
   restTiltX: -0.13,
   restTiltY: 0.24,
   showOrbits: true,
   showShell: true,
-  color: "#caa554",
-  accentColor: "#e9c97a",
+  color: "#b08b42",
+  accentColor: "#dcc176",
   bloom: true,
-  bloomIntensity: 0.85,
-  scanGain: 0.6,
+  bloomIntensity: 0.3,
+  scanGain: 0.24,
+  edgeThresholdDeg: 5,
+  depthStrutCount: 2200,
+  blending: "normal",
+  wireStroke: 0.084,
 };
 
 function Slider({
@@ -195,7 +206,13 @@ export default function ServicesHologramLabPage() {
           color={s.color}
           accentColor={s.accentColor}
           scanGain={s.scanGain}
-          shellCount={s.showShell ? 900 : 0}
+          edgeThresholdDeg={s.edgeThresholdDeg}
+          depthStrutCount={s.depthStrutCount}
+          blending={s.blending}
+          wireStroke={s.wireStroke}
+          wireCount={6800}
+          surfaceCount={160}
+          shellCount={s.showShell ? 120 : 0}
           showOrbits={s.showOrbits}
         />
         <OrbitControls
@@ -213,7 +230,7 @@ export default function ServicesHologramLabPage() {
           <EffectComposer>
             <Bloom
               intensity={s.bloomIntensity}
-              luminanceThreshold={0.18}
+              luminanceThreshold={0.42}
               luminanceSmoothing={0.9}
               mipmapBlur
             />
@@ -354,6 +371,35 @@ export default function ServicesHologramLabPage() {
           max={1.5}
           step={0.05}
           onChange={(v) => set("scanGain", v)}
+        />
+        <Slider
+          label="Edge threshold"
+          value={s.edgeThresholdDeg}
+          min={1}
+          max={30}
+          step={1}
+          onChange={(v) => set("edgeThresholdDeg", v)}
+        />
+        <Slider
+          label="Depth struts"
+          value={s.depthStrutCount}
+          min={0}
+          max={4000}
+          step={100}
+          onChange={(v) => set("depthStrutCount", v)}
+        />
+        <Slider
+          label="Wire stroke"
+          value={s.wireStroke}
+          min={0.02}
+          max={0.14}
+          step={0.002}
+          onChange={(v) => set("wireStroke", v)}
+        />
+        <Toggle
+          label="Normal blending"
+          checked={s.blending === "normal"}
+          onChange={(v) => set("blending", v ? "normal" : "additive")}
         />
 
         <button

@@ -62,21 +62,30 @@ export function ServicesStage() {
             >
               <ServicesHologramScene
                 activeServiceId={activeServiceId}
-                density={0.96}
+                accentColor="#dcc176"
+                blending="normal"
+                color="#b08b42"
+                density={0.9}
+                depthStrutCount={2200}
+                edgeThresholdDeg={5}
                 entrance="scroll"
                 entranceForm="wire"
                 flyIn={1}
-                opacity={0.92}
-                pointSize={4.7}
+                opacity={0.74}
+                pointSize={4.3}
                 publishAnchors
                 scale={0.72}
-                scanGain={0.62}
+                scanGain={0.24}
                 showShell
+                shellCount={120}
+                surfaceCount={160}
+                wireCount={6800}
+                wireStroke={0.084}
               />
               <EffectComposer>
                 <Bloom
-                  intensity={0.72}
-                  luminanceThreshold={0.2}
+                  intensity={0.3}
+                  luminanceThreshold={0.42}
                   luminanceSmoothing={0.9}
                   mipmapBlur
                 />

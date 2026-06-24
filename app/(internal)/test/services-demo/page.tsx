@@ -70,17 +70,26 @@ export default function ServicesDemoPage() {
       >
         <ServicesHologramScene
           activeServiceId={activeServiceId}
-          density={0.98}
+          accentColor="#dcc176"
+          blending="normal"
+          color="#b08b42"
+          density={0.9}
+          depthStrutCount={2200}
+          edgeThresholdDeg={5}
           flyIn={1}
-          opacity={0.94}
-          pointSize={4.9}
+          opacity={0.74}
+          pointSize={4.3}
           publishAnchors
           scale={0.72}
-          scanGain={0.66}
+          scanGain={0.24}
           showShell
+          shellCount={120}
+          surfaceCount={160}
+          wireCount={6800}
+          wireStroke={0.084}
         />
         <EffectComposer>
-          <Bloom intensity={0.78} luminanceThreshold={0.2} luminanceSmoothing={0.9} mipmapBlur />
+          <Bloom intensity={0.3} luminanceThreshold={0.42} luminanceSmoothing={0.9} mipmapBlur />
         </EffectComposer>
       </Canvas>
 

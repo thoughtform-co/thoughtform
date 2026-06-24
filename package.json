@@ -25,6 +25,7 @@
     "verify": "npm run lint && npm run typecheck && npm run test:run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "asset:brandmark-wire": "blender --background --python scripts/blender/build-brandmark-wireframe.py -- --source \"C:/Users/buyss/Dropbox/03_Thoughtform/01_Thoughtform Branding/02_Logo/3D/Thoughtform Brandmark 3D.blend\" --output \"public/models/brandmark/brandmark-wire.glb\"",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

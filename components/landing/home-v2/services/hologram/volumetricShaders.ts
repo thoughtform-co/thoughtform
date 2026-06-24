@@ -124,6 +124,7 @@ export const volumetricFragmentShader = /* glsl */ `
   uniform float uScanWidth;
   uniform float uScanGain;
   uniform float uPrimitiveAspect;
+  uniform float uWireStroke;
   uniform mediump float uGlitch;
 
   varying float vEdge;
@@ -154,8 +155,8 @@ export const volumetricFragmentShader = /* glsl */ `
 
     float dotMask = 1.0 - smoothstep(0.16, 0.5, d);
     float softDot = 1.0 - smoothstep(0.0, 0.5, d);
-    float dash = strokeMask(r, 0.095);
-    float hairline = strokeMask(r, 0.035);
+    float dash = strokeMask(r, uWireStroke);
+    float hairline = strokeMask(r, uWireStroke * 0.42);
 
     bool isShell = (vPart > 1.5 && vPart < 2.5);
     bool isSurface = (vPart > 2.5);

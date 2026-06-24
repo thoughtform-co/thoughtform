@@ -6,7 +6,10 @@
  */
 
 export {
+  BRANDMARK_GLB,
+  BRANDMARK_WIRE_GLB,
   VolumetricBrandmarkArtifact,
+  type VolumetricBrandmarkBlending,
   type VolumetricBrandmarkArtifactProps,
 } from "./VolumetricBrandmarkArtifact";
 export {

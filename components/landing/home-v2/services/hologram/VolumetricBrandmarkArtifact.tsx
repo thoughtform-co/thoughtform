@@ -29,7 +29,9 @@ import * as THREE from "three";
 import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
 import { volumetricFragmentShader, volumetricVertexShader } from "./volumetricShaders";
 
-const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
+export const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
+export const BRANDMARK_WIRE_GLB = "/models/brandmark/brandmark-wire.glb";
+export type VolumetricBrandmarkBlending = "additive" | "normal";
 
 const DEFAULT_COLOR = "#caa554"; // --gold — unified with the gold orbit armillary
 const DEFAULT_ACCENT = "#e9c97a"; // brighter warm gold — luminous Fresnel limb
@@ -66,6 +68,8 @@ function smootherstep(edge0: number, edge1: number, x: number): number {
 }
 
 export interface VolumetricBrandmarkArtifactProps {
+  /** GLB to sample. Defaults to the original extruded brandmark. */
+  modelUrl?: string;
   /** 0 = flat silhouette, 1 = full 3D mesh. */
   flyIn: number;
   /** 0..1 particle density (rank-clip). */
@@ -86,8 +90,16 @@ export interface VolumetricBrandmarkArtifactProps {
   shellCount?: number;
   /** Points along the mesh edges (the wireframe). Default 2600. */
   wireCount?: number;
+  /** Points connecting front/back extrusion contours. Default 0. */
+  depthStrutCount?: number;
   /** Sparse Fresnel-dimmed surface fill. Default 850. */
   surfaceCount?: number;
+  /** Lower values keep more facet seams for a richer technical wireframe. */
+  edgeThresholdDeg?: number;
+  /** Additive = bright hologram; normal = calmer metallic line work. */
+  blending?: VolumetricBrandmarkBlending;
+  /** Stroke half-width inside each particle sprite. */
+  wireStroke?: number;
   /** Optional continuous self-spin in rad/s. Default 0 (off). The rig group owns
    *  rest pose + pointer-look; this is only the mark's own turntable. */
   spin?: number;
@@ -103,6 +115,7 @@ export interface VolumetricBrandmarkArtifactProps {
 }
 
 function BrandmarkPoints({
+  modelUrl = BRANDMARK_GLB,
   flyIn,
   density = 1,
   scale = 1,
@@ -112,34 +125,48 @@ function BrandmarkPoints({
   accentColor = DEFAULT_ACCENT,
   scanGain = 0.6,
   wireCount = 2600,
+  depthStrutCount = 0,
   surfaceCount = 850,
   shellCount = 700,
+  edgeThresholdDeg = 18,
+  blending = "additive",
+  wireStroke = 0.095,
   spin = 0,
   entrance = "off",
   entranceForm = "dome",
 }: VolumetricBrandmarkArtifactProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const pointsRef = useRef<THREE.Points>(null);
   const gl = useThree((s) => s.gl);
-  const { scene } = useGLTF(BRANDMARK_GLB);
+  const { scene } = useGLTF(modelUrl);
 
-  // Pull the first mesh geometry out of the loaded GLB scene.
-  const sourceGeometry = useMemo(() => {
-    let geo: THREE.BufferGeometry | null = null;
+  // Pull every mesh geometry out of the loaded GLB scene. Blender wire exports
+  // can contain several converted curve/mesh objects, so each clone is baked
+  // through matrixWorld before the sampler centers the combined bounds.
+  const sourceGeometries = useMemo(() => {
+    const geometries: THREE.BufferGeometry[] = [];
+    scene.updateMatrixWorld(true);
     scene.traverse((obj) => {
-      if (!geo && (obj as THREE.Mesh).isMesh) geo = (obj as THREE.Mesh).geometry;
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry) return;
+      const clone = mesh.geometry.clone();
+      clone.applyMatrix4(mesh.matrixWorld);
+      geometries.push(clone);
     });
-    return geo;
+    return geometries;
   }, [scene]);
 
   const geometry = useMemo(() => {
     const geom = new THREE.BufferGeometry();
-    // `useGLTF` suspends until the mesh is loaded, so `sourceGeometry` is
+    // `useGLTF` suspends until the mesh is loaded, so geometry is normally
     // present whenever this renders; the empty fallback is belt-and-braces.
-    if (!sourceGeometry) return geom;
-    const sample = sampleBrandmark3D(sourceGeometry, {
+    if (sourceGeometries.length === 0) return geom;
+    const sample = sampleBrandmark3D(sourceGeometries, {
       wireCount,
+      depthStrutCount,
       surfaceCount,
       shellCount,
+      edgeThresholdDeg,
       radius: 1,
     });
     const armAttr = new THREE.BufferAttribute(sample.armHomes, 3);
@@ -154,7 +181,7 @@ function BrandmarkPoints({
     geom.setAttribute("aAngle", new THREE.BufferAttribute(sample.angles, 1));
     geom.computeBoundingSphere();
     return geom;
-  }, [sourceGeometry, wireCount, surfaceCount, shellCount]);
+  }, [sourceGeometries, wireCount, depthStrutCount, surfaceCount, shellCount, edgeThresholdDeg]);
 
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({
@@ -175,6 +202,7 @@ function BrandmarkPoints({
         uScanWidth: { value: 0.14 },
         uScanGain: { value: 0.6 },
         uPrimitiveAspect: { value: 2.8 },
+        uWireStroke: { value: wireStroke },
         uTransform: { value: 1 },
         uEntropy: { value: 0 },
         uGlitch: { value: 0 },
@@ -184,13 +212,17 @@ function BrandmarkPoints({
       transparent: true,
       depthWrite: false,
       depthTest: true,
-      blending: THREE.AdditiveBlending,
+      blending: blending === "normal" ? THREE.NormalBlending : THREE.AdditiveBlending,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const materialRef = useRef(material);
+  }, [accentColor, blending, color, density, opacity, pointSize, scale, wireStroke]);
   // Locally-damped dissipate value (−1 sentinel = snap on first frame).
   const entranceDampRef = useRef(-1);
+
+  useEffect(() => {
+    return () => {
+      sourceGeometries.forEach((sourceGeometry) => sourceGeometry.dispose());
+    };
+  }, [sourceGeometries]);
 
   useEffect(() => {
     return () => {
@@ -200,11 +232,14 @@ function BrandmarkPoints({
   }, [geometry, material]);
 
   useFrame((state, delta) => {
-    const u = materialRef.current.uniforms;
+    const points = pointsRef.current;
+    if (!points) return;
+    const u = (points.material as THREE.ShaderMaterial).uniforms;
     const t = state.clock.elapsedTime;
     u.uTime.value = t;
     u.uFlyIn.value = flyIn;
     u.uPixelRatio.value = gl.getPixelRatio();
+    u.uWireStroke.value = wireStroke;
     (u.uColor.value as THREE.Color).set(color);
     (u.uAccent.value as THREE.Color).set(accentColor);
 
@@ -280,7 +315,7 @@ function BrandmarkPoints({
 
   return (
     <group ref={groupRef}>
-      <points geometry={geometry} material={material} frustumCulled={false} />
+      <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
     </group>
   );
 }

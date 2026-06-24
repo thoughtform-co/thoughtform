@@ -75,6 +75,51 @@ describe("sampleBrandmark3D", () => {
     expect(Array.from(s.parts).some((p) => p === 2)).toBe(false);
   });
 
+  it("samples multiple geometries as one centered model", () => {
+    const left = new THREE.BoxGeometry(1, 1, 1);
+    const right = new THREE.BoxGeometry(1, 1, 1);
+    right.applyMatrix4(new THREE.Matrix4().makeTranslation(4, 0, 0));
+
+    const s = sampleBrandmark3D([left, right], {
+      wireCount: 240,
+      surfaceCount: 80,
+      shellCount: 0,
+      seed: 11,
+    });
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    for (let i = 0; i < s.count; i++) {
+      const x = s.armHomes[i * 3];
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+    }
+    expect(s.count).toBe(320);
+    expect(minX).toBeLessThan(-0.6);
+    expect(maxX).toBeGreaterThan(0.6);
+
+    left.dispose();
+    right.dispose();
+  });
+
+  it("can add depth struts that connect front and back extrusion faces", () => {
+    const s = sampleBrandmark3D(geometry, {
+      wireCount: 0,
+      depthStrutCount: 60,
+      surfaceCount: 0,
+      shellCount: 0,
+      seed: 13,
+    });
+
+    let zRange = 0;
+    for (let i = 0; i < s.count; i++) {
+      zRange = Math.max(zRange, Math.abs(s.armHomes[i * 3 + 2]));
+    }
+    expect(s.count).toBe(60);
+    expect(zRange).toBeGreaterThan(0.2);
+    expect(Array.from(s.parts).every((part) => part === 0 || part === 1)).toBe(true);
+  });
+
   it("emits a dome buffer that is a bounded blob distinct from the wireframe", () => {
     const s = sampleBrandmark3D(geometry, {
       wireCount: 150,

@@ -144,3 +144,46 @@ should always be 3D"); the crossfade reads fine. **Verify the live corridor→
 services seam by scrolling** (the corridor hijacks/pins scroll, so it can't be
 driven by injected `scrollTo`/synthetic wheel — only real input or a manual
 `--corridor-dissipate` scrub).
+
+## Update 4 (2026-06-24): Blender-authored technical wire
+
+The shipped brandmark read too flat and too bright compared with technical
+wireframe references. The new direction keeps the all-gold armillary, but makes
+the center mark less flashy and gives it a denser constructed-line read.
+
+- Added `scripts/blender/build-brandmark-wireframe.py` and
+  `npm run asset:brandmark-wire` to convert the provided Blender source
+  (`Thoughtform Brandmark 3D.blend`) into
+  `public/models/brandmark/brandmark-wire.glb`. The export duplicates visible
+  curve/font/mesh objects, converts them to mesh, triangulates, applies a thin
+  Wireframe modifier, adds a micro bevel, and exports a GLB.
+- `sampleBrandmark3D` now accepts one geometry or an array of geometries, fits
+  their combined bounds, and distributes wire/surface counts by edge length and
+  surface area. This supports Blender exports that arrive as multiple mesh
+  objects instead of a single merged mesh.
+- `VolumetricBrandmarkArtifact` accepts `modelUrl`, `edgeThresholdDeg`,
+  `blending`, and `wireStroke`. Production currently keeps the existing GLB as
+  the safe fallback until the generated wire GLB exists, but uses a lower edge
+  threshold for richer seams.
+- Production and lab defaults now use normal blending, lower bloom, a dimmer
+  metallic gold palette, thinner wire strokes, more wire points, and much less
+  shell/surface haze.
+
+Guardrail: do not point production at `BRANDMARK_WIRE_GLB` until the asset is
+actually generated and checked into `public/models/brandmark/`; otherwise the
+desktop Services canvas will suspend on a missing model.
+
+## Update 5 (2026-06-24): extrusion struts + thicker engineering lines
+
+The Update-4 runtime wire still read like two unconnected extrusion outlines:
+the ring showed front/back circles, but not enough visible ribs between them.
+The Services artifact now adds a dedicated `depthStrutCount` sampler pass that
+buckets matching XY vertices and draws near-to-far connector particles through
+the mesh's Z depth. These struts share the same morph, depth dimming, scan, and
+wire shader as the main hard-edge points, so the brandmark reads as one
+constructed 3D object rather than separate outline layers.
+
+Production and lab defaults were also thickened: higher wire count, larger point
+sprites, wider `wireStroke`, restrained normal blending, and lower bloom
+threshold/intensity balance. The aim is a technical illustrated line object, not
+a brighter additive glow.
