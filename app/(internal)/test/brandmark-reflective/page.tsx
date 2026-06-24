@@ -139,6 +139,8 @@ interface LightingSettings {
   accentColor: string;
   secondaryColor: string;
   exposure: number;
+  /** Optional equirectangular `.hdr` used as the real environment map. `null` keeps the procedural Lightformer rig. */
+  hdri: string | null;
 }
 
 interface PostSettings {
@@ -365,6 +367,7 @@ const BASE_LIGHTING: LightingSettings = {
   accentColor: PALETTE.red,
   secondaryColor: PALETTE.gold,
   exposure: 1.22,
+  hdri: null,
 };
 
 const BASE_POST: PostSettings = {
@@ -943,6 +946,46 @@ const BUILT_IN_PRESETS: ReadonlyArray<UnifiedPreset> = [
     signal: { mode: "motes", intensity: 0.28, density: 0.3 },
     motion: { autoRotate: 0.045 },
   }),
+  preset({
+    id: "scene-forge-gold",
+    label: "Forge Gold",
+    mode: "solid",
+    scene: "active-chamber",
+    description:
+      "Blender-developed shiny gold under a real studio HDRI (brown_photostudio_02) — premium reflections instead of the procedural rig.",
+    solid: {
+      materialMode: "physical",
+      geometry: { depth: 36, bevelThickness: 4.4, bevelSize: 3.5 },
+      physical: {
+        color: PALETTE.gold,
+        metalness: 1,
+        roughness: 0.16,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.1,
+        envMapIntensity: 1.6,
+      },
+      surface: {
+        family: "celestial-lacquer",
+        kind: "celestial-lacquer",
+        primary: PALETTE.gold,
+        secondary: PALETTE.hotGold,
+        inlay: 0.35,
+        sideColor: PALETTE.gold,
+        sideEmissive: PALETTE.gold,
+        sideEmissiveIntensity: 0.08,
+      },
+    },
+    lighting: {
+      intensity: 1.4,
+      hdri: "/env/studio.hdr",
+      exposure: 1.35,
+      accentColor: PALETTE.red,
+      secondaryColor: PALETTE.hotGold,
+    },
+    post: { bloomIntensity: 1.2, bloomThreshold: 0.3, noise: 0.04 },
+    signal: { mode: "motes", intensity: 0.2, density: 0.25 },
+    motion: { autoRotate: 0.05 },
+  }),
 ];
 
 const MODE_LABELS: Record<LabMode, string> = {
@@ -1319,6 +1362,7 @@ export default function BrandmarkUnifiedLabPage() {
               showReflectionCards={lightingSettings.cards}
               accentColor={lightingSettings.accentColor}
               secondaryColor={lightingSettings.secondaryColor}
+              hdri={lightingSettings.hdri}
             />
           )}
           <TurntableRig
@@ -3064,10 +3108,21 @@ const responsiveStyles = `
   border: 0;
   background: rgba(0, 0, 0, 0.24);
   color: #ebe3d6;
+  color-scheme: dark;
   font: inherit;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+.preset-browser select option,
+.select-row select option {
+  background: #15110d;
+  color: #ebe3d6;
+  text-transform: uppercase;
+}
+.preset-browser select option:checked {
+  background: rgba(202, 165, 84, 0.32);
+  color: #f4ecd9;
 }
 .preset-browser select {
   padding: 0 10px;
