@@ -449,6 +449,62 @@ export class GPGPUParticleSimulation {
   }
 
   /**
+   * Overwrite the CURRENT particle positions with a fresh buffer. Writes
+   * a one-shot DataTexture into BOTH ping-pong position render targets,
+   * so whichever buffer the next compute pass reads from sees the new
+   * state — and the next render call sees it too. Use this when the
+   * consumer wants to "teleport" the cloud to a new seed (the corridor
+   * brandmark's matched-pixel handoff: at the SVG → particles swap
+   * frame, the sim is reseeded with world positions that reproject to
+   * the SVG's exact CSS pixel rect, so the swap is invisible to the
+   * eye).
+   *
+   * Positions are interpreted in WORLD space (the same coordinate space
+   * `initialPositions` was specified in at construction). Length should
+   * be `particleCount * 3`; tail particles default to zero.
+   */
+  reseed(positions: Float32Array): void {
+    // Build a transient DataTexture in the sim's texel layout. The
+    // existing `fillPositionTexture` helper handles padding + the w-pack
+    // for the legacy two-channel-origin path, so we reuse it verbatim
+    // by constructing a vanilla DataTexture and letting the helper write
+    // its image buffer.
+    const tex = this.gpuCompute.createTexture();
+    this.fillPositionTexture(tex, positions);
+    // Write into BOTH ping-pong buffers so the next compute pass — which
+    // reads from `currentTextureIndex` and renders into the other — sees
+    // the new state on EITHER side of the swap. Without overwriting both,
+    // a single reseed would persist for one frame and then the compute
+    // pass would integrate from the stale buffer on the next tick.
+    this.gpuCompute.renderTexture(tex, this.positionVariable.renderTargets[0]);
+    this.gpuCompute.renderTexture(tex, this.positionVariable.renderTargets[1]);
+    tex.dispose();
+  }
+
+  /**
+   * Replace the return-to-origin home positions with a fresh buffer. The
+   * sim's `uHomeTexture` is repacked and the old texture is disposed.
+   * Use this together with `reseed` when you want the cloud to seed at
+   * one set of positions AND have its physics hold it there (rather than
+   * pulling it back toward an earlier set of homes). The corridor
+   * brandmark uses this so the sim's IGNITE_ON return force pins the
+   * particles at the matched-pixel positions while the render shader
+   * does the actual flat → wireframe morph.
+   *
+   * Only effective when the sim was constructed with `homePositions` (the
+   * 3D-origin path is active). On the legacy two-channel path this is a
+   * no-op so the calibrated key-visual portal flow stays untouched.
+   */
+  setHomePositions(positions: Float32Array): void {
+    const posUniforms = this.positionVariable.material.uniforms;
+    if (posUniforms.uUseHomeTexture?.value !== 1.0) return;
+    const next = this.buildHomeTexture(positions);
+    if (this.homeTexture) this.homeTexture.dispose();
+    this.homeTexture = next;
+    posUniforms.uHomeTexture.value = next;
+  }
+
+  /**
    * Dispose of GPU resources
    */
   dispose(): void {

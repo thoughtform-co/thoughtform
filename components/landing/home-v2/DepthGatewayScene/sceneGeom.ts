@@ -306,12 +306,14 @@ export const CORRIDOR_TIMELINE = {
 } as const;
 
 /** Shared 2D SVG -> 3D particle-core handoff anchor (ADR-023,
- *  2026-06-24 wrap-anchor revision). The brandmark stays as the
- *  projected SVG through the early fly-in and begins blending to the
- *  dither / particle core when the Navigate substrate sphere begins
- *  wrapping around it. This follows the substrate accretion window,
- *  not the camera dolly release. */
-export const BRANDMARK_CORE_HANDOFF_PROGRESS = CORRIDOR_TIMELINE.accretion.substrate.start;
+ *  2026-06-25 hybrid revision). Pulled earlier from substrate.start
+ *  (0.30) to brandmark.thoughtformHold (0.14, end of Thoughtform rest =
+ *  start of corridor fly-in) so the matched-pixel handoff + wind-blown
+ *  morph gets more runway (0.28 vs the prior 0.12), letting the
+ *  transition breathe instead of completing in a third-of-a-screen of
+ *  scroll. The substrate-wrap timing is unchanged; the morph just
+ *  starts earlier and arrives at the wireframe by substrate peak. */
+export const BRANDMARK_CORE_HANDOFF_PROGRESS = CORRIDOR_TIMELINE.brandmark.thoughtformHold;
 
 /** Size merge completes when the substrate wrap reaches its peak, so
  *  the mark reaches sphere scale as the wrapping shell settles. */
@@ -390,7 +392,12 @@ export const BRANDMARK_CORE_PARTICLE_LAYER_BLEND = BRANDMARK_CORE_SVG_CUT_BLEND;
  *  rather than snapping at the end. Units are `getBrandmarkCoreBlend(progress)`
  *  (0 at substrate.start, 1 at substrate.peakAt). */
 export const BRANDMARK_CORE_DEPTH_START_BLEND = 0.15;
-export const BRANDMARK_CORE_DEPTH_END_BLEND = 0.9;
+// 2026-06-25 hybrid revision: extended 0.9 → 1.0 so the wind-blown morph
+// fully completes at the substrate wrap peak. Previously the final 10%
+// of the wrap left the particles still mid-flow; with the new mix-to-
+// wireframe target we want them SETTLED inside the substrate sphere by
+// the time the Navigate park reads, not still drifting in.
+export const BRANDMARK_CORE_DEPTH_END_BLEND = 1.0;
 
 /** Coverage threshold (in coverMorph units, 0..1) past which the SVG
  *  brandmark is fully faded out. Mirrors v7's `SILHOUETTE_HANDOFF_END`

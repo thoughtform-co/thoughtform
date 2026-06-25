@@ -300,6 +300,28 @@ export interface BrandmarkPhysicsCoreProps {
    *  from the first visible frame — never assemble from a swirl. The
    *  scattered seed is the lab default (false). */
   seedAtHome?: boolean;
+  /** ADR-023 2026-06-25 hybrid revision — matched-pixel handoff.
+   *  When supplied (and the LOCAL identity changes), the GPGPU sim is
+   *  RESEEDED with these positions AND its home positions are repointed
+   *  at them, so the sim's return-to-origin force pins the cloud at
+   *  these coordinates while the render shader's flat→wire interpolation
+   *  carries each particle to its `aTarget3D` home. Positions must be in
+   *  the SAME coordinate space the sim was constructed in (the brandmark
+   *  group's LOCAL space — the shader transforms via
+   *  `modelViewMatrix * pos`). Length = `count * 3`. Use the
+   *  `rasterizeBrandmarkToWorldPositions` util + `worldPositionsToLocal`
+   *  helper to populate. */
+  seedFromPositions?: Float32Array | null;
+  /** ADR-023 2026-06-25 hybrid revision — volumetric wireframe target.
+   *  Per-particle 3D destination in LOCAL space. When supplied, the
+   *  render shader interpolates each particle from its sim position
+   *  (the matched-pixel seed at uDepth=0) to this target as uDepth
+   *  rises — producing the "wind-blown into the 3D brandmark" landing.
+   *  Length = `count * 3`. Pair with `sampleBrandmark3D(.glb).armHomes`.
+   *  When omitted, the shader falls back to the sampled silhouette home
+   *  Z (the pre-2026-06-25 dome-fill behaviour) so the lab + other
+   *  consumers stay byte-identical. */
+  targetHomes?: Float32Array | null;
   /** Per-particle CSS pixel size. Default `DEFAULT_POINT_SIZE_PX`. */
   pointSize?: number;
   /** Live ref for `pointSize`. Read every frame inside `useFrame` so
@@ -502,6 +524,8 @@ export function BrandmarkPhysicsCore({
   cleanFieldDotScale = 0.5,
   cleanFieldEdge = 0.4,
   seedAtHome = false,
+  seedFromPositions = null,
+  targetHomes = null,
   pointSize = DEFAULT_POINT_SIZE_PX,
   pointSizeRef,
   color = "#caa554",
@@ -629,7 +653,7 @@ export function BrandmarkPhysicsCore({
   // ── Build the render geometry from the sample ───────────────
   const geometry = useMemo(() => {
     if (!resources) return null;
-    const { uvs, edgeWeights, seeds, angles, count: cnt } = resources;
+    const { uvs, edgeWeights, seeds, angles, homes, count: cnt } = resources;
 
     const geo = new THREE.BufferGeometry();
     // `position` is required by three.js to size the draw call; it is
@@ -640,6 +664,17 @@ export function BrandmarkPhysicsCore({
     const aLuma = new Float32Array(cnt);
     const aEdgeWeight = new Float32Array(cnt);
     const aAngle = new Float32Array(cnt);
+    // ADR-023 2026-06-25 hybrid revision: per-particle 3D wireframe
+    // target (LOCAL space). When `targetHomes` is supplied (corridor
+    // path via the GLB wireframe sample), the shader interpolates from
+    // the sim position to this attribute as uDepth ramps. When omitted
+    // (lab / non-corridor consumers) we fall back to the sampled home
+    // — so the morph collapses to a no-op and the cloud renders its
+    // sim position as before. Pair length is enforced: if the supplied
+    // buffer doesn't cover `cnt`, the tail particles get their sampled
+    // home, preventing a "fly to (0,0,0)" pop on a count mismatch.
+    const aTarget3D = new Float32Array(cnt * 3);
+    const hasTarget = targetHomes && targetHomes.length >= cnt * 3;
     for (let i = 0; i < cnt; i++) {
       aLuma[i] = seeds[i];
       aEdgeWeight[i] = edgeWeights[i];
@@ -650,6 +685,16 @@ export function BrandmarkPhysicsCore({
       // attribute array.
       perParticleUVs[i * 2] = uvs[i * 2];
       perParticleUVs[i * 2 + 1] = uvs[i * 2 + 1];
+
+      if (hasTarget && targetHomes) {
+        aTarget3D[i * 3] = targetHomes[i * 3];
+        aTarget3D[i * 3 + 1] = targetHomes[i * 3 + 1];
+        aTarget3D[i * 3 + 2] = targetHomes[i * 3 + 2];
+      } else {
+        aTarget3D[i * 3] = homes[i * 3];
+        aTarget3D[i * 3 + 1] = homes[i * 3 + 1];
+        aTarget3D[i * 3 + 2] = homes[i * 3 + 2];
+      }
     }
 
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -657,9 +702,10 @@ export function BrandmarkPhysicsCore({
     geo.setAttribute("aLuma", new THREE.BufferAttribute(aLuma, 1));
     geo.setAttribute("aEdgeWeight", new THREE.BufferAttribute(aEdgeWeight, 1));
     geo.setAttribute("aAngle", new THREE.BufferAttribute(aAngle, 1));
+    geo.setAttribute("aTarget3D", new THREE.BufferAttribute(aTarget3D, 3));
 
     return geo;
-  }, [resources]);
+  }, [resources, targetHomes]);
 
   // ── Material ───────────────────────────────────────────────
   const material = useMemo(() => {
@@ -731,6 +777,22 @@ export function BrandmarkPhysicsCore({
       geometry.dispose();
     };
   }, [geometry]);
+
+  // ADR-023 2026-06-25 hybrid revision — matched-pixel reseed.
+  // When `seedFromPositions` changes (a fresh swap-frame rasterise from
+  // the corridor actor), overwrite the GPGPU sim's current positions
+  // AND its return-to-origin homes with the new buffer. The sim then
+  // pins the cloud at the matched-pixel positions while the render
+  // shader's per-particle stagger carries each particle to its
+  // `aTarget3D` wireframe home as `uDepth` rises. Reference identity
+  // is the trigger (the actor allocates a fresh Float32Array per
+  // rasterise), so this fires exactly once per swap.
+  useEffect(() => {
+    if (!resources?.sim || !seedFromPositions) return;
+    if (seedFromPositions.length === 0) return;
+    resources.sim.reseed(seedFromPositions);
+    resources.sim.setHomePositions(seedFromPositions);
+  }, [resources, seedFromPositions]);
 
   // Keep the pixel ratio uniform in step with viewport changes.
   useEffect(() => {

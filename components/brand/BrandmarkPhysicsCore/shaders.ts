@@ -95,7 +95,8 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   attribute float aLuma;        // per-particle phase [0, 1)
   attribute float aEdgeWeight;  // edge proximity [0, 1]
   attribute float aAngle;       // per-particle orientation (radians, vertex-only varying-to-fragment)
-  
+  attribute vec3 aTarget3D;     // ADR-023 2026-06-25 hybrid: volumetric wireframe home (LOCAL space)
+
   varying float vLuma;
   varying float vEdgeWeight;
   varying float vDepth;         // local Z, drives atmospheric dim
@@ -143,33 +144,68 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     pos.xy *= coverIn;
     vCoverMorph = coverIn;
     
-    // ── ASYMMETRIC 2D → 3D FLOW (ADR-023 async-flow revision) ─────
-    // The mark should not change as one uniform slab. Every particle gets
-    // a deterministic stagger based on its seed + polar position, then
-    // peels backward on Z while tracing a small tangent/asymmetric XY arc
-    // before settling back to its sampled brandmark home inside the dome.
-    // At uDepth = 0 this is a dense flat 2D particle mark; at uDepth = 1
-    // every particle is back on its 3D home. Midway, particles flow in
-    // at different times and directions, so the transition reads as a
-    // living particle field entering the sphere instead of a uniform
-    // depth extrusion.
-    float homeZ = pos.z;
-    float radial = length(pos.xy);
-    float angle = atan(pos.y, pos.x);
+    // ── WIND-BLOWN FLAT → WIREFRAME MORPH (ADR-023 2026-06-25 hybrid) ─────
+    // The sim position pos is the matched-pixel seed at uDepth = 0 — a
+    // crisp particle copy of the SVG silhouette at the exact screen rect
+    // the SVG occupied the previous frame (matched-pixel handoff: the
+    // SVG cuts to display:none in the same frame, so the eye sees no
+    // swap). aTarget3D is each particle's destination on the volumetric
+    // wireframe brandmark (sampled from /models/brandmark/brandmark.glb
+    // via sampleBrandmark3D).
+    //
+    // Each particle has a deterministic stagger from seed + polar
+    // position so they don't all leave at once. As uDepth rises, each
+    // particle interpolates from its matched-pixel seed to its wireframe
+    // home along a windswept arc: backward on local Z (camera-back, the
+    // "blown into the distance" axis) with low-amplitude tangent + asym
+    // XY drift peaking mid-flow. By uDepth = 1 every particle has
+    // settled exactly on its wireframe home.
+    //
+    // The drift amplitudes are intentionally larger than the prior
+    // async-flow revision (Z dip 0.30 + 0.20·staggerSeed vs prior 0.10
+    // + 0.08·staggerSeed; flow window 0.55 vs prior 0.42) so the
+    // recession actually reads as "blown deeper into the corridor"
+    // rather than a small wobble. See ADR-023 Invariants 13–14.
+    vec3 seedPos = pos;
+    float radial = length(seedPos.xy);
+    float angle = atan(seedPos.y, seedPos.x);
     float staggerSeed = fract(aLuma * 0.73 + sin(angle * 2.0) * 0.17 + radial * 0.31);
-    float flowStart = mix(0.02, 0.42, staggerSeed);
-    float flowEnd = min(1.0, flowStart + 0.42);
+    float flowStart = mix(0.02, 0.45, staggerSeed);
+    float flowEnd = min(1.0, flowStart + 0.55);
     float flowT = smoothstep(flowStart, flowEnd, uDepth);
     float flowBell = sin(flowT * 3.14159265);
-    vec2 tangent = normalize(vec2(-pos.y, pos.x) + vec2(0.0001, 0.0001));
+
+    // Smoothstep T (eased) so the start holds at the matched-pixel seed
+    // and the landing settles cleanly on aTarget3D — a linear mix here
+    // would arrive abruptly at uDepth = 1.
+    //
+    // Flat-Z source: in the corridor (with targetHomes set) the sim is
+    // seeded at matched-pixel positions whose Z is already 0, so this
+    // is identity. In the lab fallback (no targetHomes set; aTarget3D
+    // resolves to the sampled dome home), forcing Z=0 here recovers
+    // the historical depth-ramp behaviour: pos.z = 0 at uDepth=0,
+    // pos.z = homeZ at uDepth=1, so the depth slider still flattens
+    // and extrudes the silhouette as it always did.
+    vec3 flatSeed = vec3(seedPos.xy, 0.0);
+    float landedT = flowT * flowT * (3.0 - 2.0 * flowT);
+    pos = mix(flatSeed, aTarget3D, landedT);
+
+    // Wind drift: low-frequency tangent orbit + asymmetric jitter peaking
+    // at the flow midpoint and returning to 0 at both endpoints. Keeps
+    // the matched-pixel rest pristine and the wireframe landing clean
+    // while the morph midpoint feels organic.
+    vec2 tangent = normalize(vec2(-seedPos.y, seedPos.x) + vec2(0.0001, 0.0001));
     float orbitDir = sign(sin(angle * 3.0 + aLuma * 6.28318));
     vec2 asym = vec2(
       sin(aLuma * 14.7 + angle * 1.5),
       cos(aLuma * 11.3 - angle * 1.1)
     );
     pos.xy += (tangent * orbitDir * 0.045 + asym * 0.018) * flowBell * (1.0 - uCleanField);
-    pos.z = homeZ * flowT;
-    pos.z -= flowBell * (0.10 + 0.08 * staggerSeed) * (1.0 - uCleanField);
+    // Wind blow — recede along local Z mid-flow, then settle. The
+    // sign here drives toward LOCAL -Z (the brandmark group's "back",
+    // which is away from the camera in the corridor's forward-facing
+    // pose) so the user reads "blown into the distance".
+    pos.z -= flowBell * (0.30 + 0.20 * staggerSeed) * (1.0 - uCleanField);
     
     // ── SUBTLE MATRIX GLITCH (uGlitch > 0) ───────────────────────
     // A gentle scanline tear that ONLY runs across the 2D → 3D handoff

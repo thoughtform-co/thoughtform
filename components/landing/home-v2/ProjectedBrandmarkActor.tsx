@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import {
   BRANDMARK_ANCHOR_INTELLIGENCE,
+  BRANDMARK_CORE_HANDOFF_PROGRESS,
   getBrandmarkWrapHalfExtent,
   getBrandmarkWorldPosition,
   getCameraFov,
@@ -12,6 +13,7 @@ import {
   getEpilogueCameraPose,
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
+import { writeBrandmarkScreenRect } from "./brandmarkScreenRectRef";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
@@ -460,27 +462,41 @@ export function ProjectedBrandmarkActor() {
           // desktop and 1 once raw progress passes the dwell, so it's a
           // no-op everywhere except the mobile copy moment.
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
-          // ── SINGLE-PAINTER MORPH (ADR-023 rev., 2026-06-24 debug-confirmed) ──
-          // Runtime logs proved the "dissolve": a SEPARATE solid DOM SVG was
-          // opacity-fading (svgFade 1→0) while a DIM additive particle cloud
-          // faded in underneath — a literal two-layer crossfade. No timing of
-          // that crossfade reads as a morph. So the corridor brandmark is now
-          // the in-canvas particle core END-TO-END: a DENSE flat silhouette at
-          // the Thoughtform rest that gradually gains depth and disperses into
-          // the substrate sphere (see BrandmarkPhysicsCoreActor + the shader's
-          // depth-tied density). This DOM SVG is therefore NEVER the visible
-          // corridor mark — it stays hidden whenever the particle core is
-          // mounted, which is exactly whenever this actor is mounted (see
-          // HomeCorridor: both mount together, or neither does on the no-canvas
-          // fallback). Kept in the tree only as the structural anchor.
-          //
-          // Particle core owns the mark — keep this DOM layer below the canvas
-          // and hidden. No opacity fade (that was the dissolve), no cut timing.
+          // ── HYBRID SVG-REST + MATCHED-PIXEL HANDOFF (ADR-023, 2026-06-25) ──
+          // The corridor brandmark is two painters with an INVISIBLE seam.
+          // The DOM SVG owns the rest state at full opacity until corridor
+          // progress crosses BRANDMARK_CORE_HANDOFF_PROGRESS (the substrate
+          // wrap start, currently 0.30); at the swap frame the SVG cuts to
+          // display:none in the SAME frame BrandmarkPhysicsCoreActor seeds
+          // the GPGPU sim with world positions that reproject to this rect.
+          // The eye sees no swap because the particles ARE the SVG at frame
+          // N+1. No opacity ramp — opacity is binary, gated on the
+          // pre-handoff band. The epilogue / dock branch is still
+          // particle-owned (untouched).
           void intensity;
           void diagramFactor;
-          element.style.zIndex = `${PROJECTED_BRANDMARK_UNDER_CANVAS_Z_INDEX}`;
-          element.style.opacity = "0";
-          element.style.display = "none";
+          // Publish the current rect every paint frame so the physics-core
+          // actor can rasterise against fresh coordinates the instant the
+          // swap fires. Cheap — just a ref write — and lets the rasterise
+          // run against camera state that matches what the user just saw.
+          writeBrandmarkScreenRect(left, top, width, height, performance.now());
+
+          // Visibility:
+          //   - Epilogue / dock branch: legacy particle-owned — keep hidden.
+          //   - Corridor rest (progress < HANDOFF): SVG is the visible mark.
+          //   - Corridor morph onward (progress >= HANDOFF): instant cut to
+          //     display:none. The cut is a single style write per frame —
+          //     it stays cut as long as progress >= HANDOFF.
+          const ownsRestState = !useEpilogueOverride && progress < BRANDMARK_CORE_HANDOFF_PROGRESS;
+          if (ownsRestState) {
+            element.style.zIndex = `${PROJECTED_BRANDMARK_TOP_Z_INDEX}`;
+            element.style.opacity = "1";
+            element.style.display = "block";
+          } else {
+            element.style.zIndex = `${PROJECTED_BRANDMARK_UNDER_CANVAS_Z_INDEX}`;
+            element.style.opacity = "0";
+            element.style.display = "none";
+          }
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate

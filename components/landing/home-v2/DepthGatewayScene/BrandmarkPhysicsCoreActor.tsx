@@ -31,8 +31,9 @@
  *     size-continuous while the mark grows into the wrapping sphere.
  */
 
+import { useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { smoothstep, smootherstep } from "@/lib/home-v2/corridorMap";
@@ -47,6 +48,12 @@ import {
   type BrandmarkCoreGlyph,
   type BrandmarkCoreShape,
 } from "@/components/brand/BrandmarkPhysicsCore";
+import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
+import {
+  rasterizeBrandmarkToWorldPositions,
+  worldPositionsToLocal,
+} from "@/lib/brandmark/sampleBrandmarkPixels";
+import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   BRANDMARK_CORE_BLEND_END,
@@ -55,11 +62,15 @@ import {
   BRANDMARK_CORE_HANDOFF_PROGRESS,
   BRANDMARK_CORE_POST_COVER_GATE_END,
   BRANDMARK_CORE_POST_COVER_GATE_START,
-  BRANDMARK_CORE_SIZE_MERGE_END,
   getBrandmarkCoreBlend,
   getBrandmarkWrapHalfExtent,
   getBrandmarkWorldPosition,
 } from "./sceneGeom";
+
+/** Shared GLB path — the same volumetric brandmark the #services hologram
+ *  renders (VolumetricBrandmarkArtifact). `useGLTF.preload(BRANDMARK_GLB)`
+ *  is invoked there, so the corridor consumer hits the loader's cache. */
+const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
 
 /** Ignite is pinned to "assembled" for the corridor. The mark is the
  *  SAME brandmark end-to-end — it must never assemble from a visible
@@ -67,12 +78,6 @@ import {
  *  Combined with `seedAtHome` on `BrandmarkPhysicsCore`, the cloud IS
  *  the brandmark silhouette from the first visible frame. */
 const ASSEMBLED_IGNITE = 1;
-
-/** Size merge completes at the substrate wrap peak. It starts earlier
- *  in `getBrandmarkWrapHalfExtent`, while the mark is still SVG, so
- *  the particle reveal inherits an already-growing size instead of
- *  snapping in as a tiny core and catching up after the blend. */
-const SIZE_MERGE_END = BRANDMARK_CORE_SIZE_MERGE_END;
 
 /** Keep the handoff glitch subordinate to the wrap blend. It gives the
  *  dithered particles a small resolving texture without reading as a
@@ -234,33 +239,11 @@ const CENTER_OPACITY = 0.9;
 const HANDOFF_FADE_START = 0.45;
 const HANDOFF_FADE_END = 0.7;
 
-/** Z-stream momentum (2026-06-17). As the mark flies into the corridor
- *  toward the substrate sphere, particles stream toward the background
- *  (local −Z) so the brandmark reads as flying backward into the sphere
- *  with a comet-tail sense of motion (vs. a rigid block that just
- *  translates). The shader splits this into a base shift (whole
- *  silhouette) + a seed-varied tail (individual particles).
- *
- *  - `STREAM_MAX` — peak backward-Z in normalised local units.
- *  - The envelope is gated to the handoff → substrate-wrap-peak band and
- *    velocity-modulated: a faster scroll trails further (momentum),
- *    with `STREAM_VEL_BASE` keeping the stream readable on a slow
- *    scroll. It fades to 0 by `SIZE_MERGE_END` so the silhouette is
- *    clean once parked inside the sphere.
- *
- *  Calm-down (2026-06-24 "crosshair unfurls" pass): the comet-tail
- *  dispersion previously only ever read while masked by other motion.
- *  Now the bold crosshair is on-screen and coherent through the whole
- *  Navigate wrap, and a settled / slow-scroll view sat on the dispersing
- *  cloud — the baseline (`STREAM_VEL_BASE`) is dropped hard so the mark
- *  stays LEGIBLE as it gains depth instead of smearing into a radial
- *  burst. A fast scroll still trails (velocity term intact) for the
- *  fly-into-depth momentum. */
-const STREAM_MAX = 0.3;
-const STREAM_VEL_SCALE = 3.2;
-const STREAM_VEL_BASE = 0.1;
-const STREAM_TAU_S = 0.12;
-const STREAM_FADE_BAND = 0.08;
+/** Z-stream momentum (retired 2026-06-25 hybrid revision). The wind-blown
+ *  morph in the vertex shader subsumes the legacy uStream momentum — the
+ *  actor pins streamRef to 0 so the in-shader uStream block is a no-op
+ *  while the wind-flow drives the recede. Kept here for legacy reference;
+ *  see ADR-023 § 2026-06-25 hybrid revision. */
 
 interface BrandmarkPhysicsCoreActorProps {
   /** Pass-through tints. The actor doesn't bake in palette decisions
@@ -312,6 +295,15 @@ export function BrandmarkPhysicsCoreActor({
   // Scratch for the centerpiece gentle-drift tilt (avoid per-frame allocs).
   const driftQuatScratch = useRef(new THREE.Quaternion());
   const driftEulerScratch = useRef(new THREE.Euler());
+  // ADR-023 2026-06-25 hybrid — matched-pixel handoff state.
+  // `seedFromPositions` is React state so changing it re-renders
+  // `BrandmarkPhysicsCore`, which then fires its reseed effect against
+  // the new buffer. `lastBelowHandoff` tracks edge-crossing of
+  // `BRANDMARK_CORE_HANDOFF_PROGRESS` so the rasterise + setState fires
+  // EXACTLY ONCE per swap (forward only — reverse-scroll re-entry
+  // re-rasterises against the camera state at re-entry).
+  const [seedFromPositions, setSeedFromPositions] = useState<Float32Array | null>(null);
+  const lastBelowHandoff = useRef(true);
   const igniteRef = useRef(ASSEMBLED_IGNITE);
   const depthRef = useRef(0);
   // Cover-in morph (ADR-023 morph rev.): 0 = particles collapsed at the rect
@@ -334,7 +326,7 @@ export function BrandmarkPhysicsCoreActor({
   // the in-component refs that read into `BrandmarkPhysicsCore` props
   // on the next render. Position + scale don't need React; they're
   // imperative writes on the group.
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const group = groupRef.current;
     if (!group) return;
 
@@ -365,6 +357,73 @@ export function BrandmarkPhysicsCoreActor({
     // (dispersed cloud, but invisible — see opacity gate below).
     const progress = t.paintProgress;
     const [bx, by, bz] = getBrandmarkWorldPosition(progress);
+
+    // ── ADR-023 2026-06-25 hybrid: matched-pixel swap detection ─────
+    // The SVG owns the visible mark while progress < HANDOFF_PROGRESS.
+    // The instant progress crosses the threshold from below, rasterise
+    // the SVG's live screen rect into world positions that reproject
+    // back to those exact pixels, convert to the brandmark group's
+    // local space, and hand off to the GPGPU sim via setState (which
+    // triggers BrandmarkPhysicsCore's reseed effect). The eye sees no
+    // swap because the particles ARE the SVG at the next frame.
+    //
+    // Reverse-scroll: when progress falls below HANDOFF again, reset
+    // `lastBelowHandoff` so a later forward pass re-rasterises against
+    // the camera state at re-entry.
+    const aboveHandoff = progress >= BRANDMARK_CORE_HANDOFF_PROGRESS;
+    if (aboveHandoff && lastBelowHandoff.current) {
+      const rectRef = brandmarkScreenRectRef.current;
+      if (rectRef.valid && group) {
+        // Group must be at its swap-frame world position BEFORE we
+        // worldToLocal — otherwise the local positions are wrong.
+        // Position/scale below this block in the same frame will move
+        // the group, but we read the group's CURRENT (last-frame's)
+        // transform here. The SVG actor's tracker runs ahead of this
+        // useFrame on the same tick, so `screenRectRef` was just
+        // written for THIS frame at THIS camera; placing the group at
+        // the swap-frame world pos here keeps everything coherent.
+        group.position.set(bx, by, bz);
+        const half = getBrandmarkWrapHalfExtent(progress);
+        const sphereScale = half * 2 * getEpiloguePlanetScale(getSmoothedEpilogueProgress());
+        group.scale.setScalar(sphereScale);
+        group.updateMatrixWorld(true);
+        const world = rasterizeBrandmarkToWorldPositions({
+          rect: rectRef,
+          camera: state.camera,
+          worldZ: bz,
+          viewport: { width: state.size.width, height: state.size.height },
+          maxCount: count,
+        });
+        if (world.count > 0) {
+          const local = worldPositionsToLocal(world.positions, world.count, group);
+          // Fill all `count` slots. Earlier draft padded the tail with
+          // zeros — those orphaned particles seed at the brandmark group
+          // origin and read as bright "photons stuck in the middle" of
+          // the landed wireframe inside the substrate sphere (user
+          // report, 2026-06-25). Wrap the available matched-pixel
+          // positions so every particle starts on the SVG silhouette
+          // and migrates to its `aTarget3D` wireframe home — no orphans
+          // at the centre, just a slightly denser duplicate-stipple of
+          // the silhouette (visually indistinguishable, count-honest).
+          let padded: Float32Array;
+          if (world.count >= count) {
+            padded = local;
+          } else {
+            padded = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+              const j = (i % world.count) * 3;
+              padded[i * 3] = local[j];
+              padded[i * 3 + 1] = local[j + 1];
+              padded[i * 3 + 2] = local[j + 2];
+            }
+          }
+          setSeedFromPositions(padded);
+        }
+      }
+      lastBelowHandoff.current = false;
+    } else if (!aboveHandoff && !lastBelowHandoff.current) {
+      lastBelowHandoff.current = true;
+    }
 
     // ── Services core-shrink (2026-06-20) ────────────────────────────
     // As the user scrolls into #services the dissipate clock ramps 0→1.
@@ -429,22 +488,10 @@ export function BrandmarkPhysicsCoreActor({
       glitch = HANDOFF_GLITCH_INTENSITY * Math.sin(t * Math.PI) * postCoverGate;
     }
 
-    // ── Z-STREAM momentum envelope (2026-06-17, post-cover gated) ─────
-    // Active across the substrate-wrap "fly into the sphere" leg, but ONLY
-    // after the cover-in completes (gated by postCoverGate). Velocity-
-    // modulated so a faster scroll trails the particles further back
-    // (momentum), with a baseline so the stream still reads on a slow
-    // scroll. Fades to 0 by SIZE_MERGE_END so the silhouette is clean once
-    // parked inside the sphere. Eased on wall-clock time so the velocity
-    // term doesn't jitter frame-to-frame.
-    const streamBandOut =
-      1 - smoothstep(SIZE_MERGE_END - STREAM_FADE_BAND, SIZE_MERGE_END, progress);
-    const streamBand = postCoverGate * streamBandOut;
-    const velNorm = Math.min(1, Math.abs(t.velocity) * STREAM_VEL_SCALE);
-    const streamTarget =
-      streamBand * STREAM_MAX * (STREAM_VEL_BASE + (1 - STREAM_VEL_BASE) * velNorm);
-    const kStream = 1 - Math.exp(-Math.max(0, delta) / STREAM_TAU_S);
-    streamRef.current += (streamTarget - streamRef.current) * kStream;
+    // ── Z-stream retired (2026-06-25 hybrid revision) ──────────────
+    // The wind-blown morph in the vertex shader handles recession now.
+    // Pin streamRef to 0 so the in-shader uStream block stays a no-op.
+    streamRef.current = 0;
 
     igniteRef.current = ASSEMBLED_IGNITE;
     // Keep the forward 3D dome at the parked Services centerpiece (do NOT
@@ -502,16 +549,19 @@ export function BrandmarkPhysicsCoreActor({
     // corridor is byte-identical).
     const parkedOpacity = CORE_OPACITY + (CENTER_OPACITY - CORE_OPACITY) * recT;
 
-    // Single-painter visibility (2026-06-24): the dense flat particle mark is
-    // the Thoughtform rest mark itself, so it is visible the moment the stage
-    // pins (active). It is hidden ONLY during the ARMED pre-pin rise (stage
-    // rising into the viewport behind the hero curtain) so it never flashes
-    // over the hero — mirrors the DOM tracker's "furnished on arrival" armed
-    // opacity-0. Epilogue / dock keep their own handoffFade-driven visibility
-    // (t.active is false there, but the core must stay visible), so the gate
-    // is armed-only, never a blanket !active.
+    // Hybrid SVG-rest + matched-pixel handoff visibility (ADR-023, 2026-06-25):
+    //   - ARMED pre-pin OR corridor before handoff (`progress < HANDOFF`):
+    //     particles invisible. The DOM SVG owns the visible mark there.
+    //   - Corridor at or past handoff: particles full opacity. The SVG just
+    //     cut to display:none in the same frame the swap seeded the sim
+    //     with matched-pixel positions, so the visible mark IS the particle
+    //     field from this frame onward.
+    //   - Epilogue / dock: particle-owned (unchanged) — handoffFade drives
+    //     the centerpiece taper to the Services wireframe.
     const armedOnly = t.armed && !t.active;
-    opacityRef.current = armedOnly ? 0 : parkedOpacity * handoffFade;
+    const inEpilogueOrDock = t.docked || t.servicesAmbient || t.epilogueProgress > 1e-3;
+    const inSvgRest = !inEpilogueOrDock && progress < BRANDMARK_CORE_HANDOFF_PROGRESS;
+    opacityRef.current = armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude.
     pointSizeRef.current =
@@ -576,38 +626,184 @@ export function BrandmarkPhysicsCoreActor({
 
   return (
     <group ref={groupRef} visible={false}>
-      <BrandmarkPhysicsCore
-        count={count}
-        corridorKeep={corridorKeep}
-        igniteRef={igniteRef}
-        depthRef={depthRef}
-        coverMorphRef={coverMorphRef}
-        glitchRef={glitchRef}
-        streamRef={streamRef}
-        cleanFieldRef={cleanFieldRef}
-        seedAtHome
-        opacityRef={opacityRef}
-        pointSizeRef={pointSizeRef}
-        color={color}
-        accentColor={accentColor}
-        pausedRef={pausedRef}
-        reducedMotion={reducedMotion}
-        // ── Production appearance (PRODUCTION_* constants above). These
-        // are passed EXPLICITLY rather than relying on the component's
-        // default props so the live corridor look can't drift if the lab
-        // changes its own defaults. The default values reproduce today's
-        // luminous-dust look (dome-fill + additive dot), so the corridor
-        // and parked centerpiece are byte-identical until a preset is
-        // deliberately promoted into PRODUCTION_*.
-        basis={PRODUCTION_BASIS}
-        gridSnap={PRODUCTION_GRID_SNAP}
-        shape={PRODUCTION_SHAPE}
-        glyph={PRODUCTION_GLYPH}
-        blending={PRODUCTION_BLENDING}
-        shapeStroke={PRODUCTION_SHAPE_STROKE}
-        primitiveAspect={PRODUCTION_PRIMITIVE_ASPECT}
-        lineJitter={PRODUCTION_LINE_JITTER}
-      />
+      {/* ADR-023 2026-06-25 hybrid: the GLB-loading inner component
+          suspends until brandmark.glb resolves. The fallback is `null`
+          so the rest of the scene keeps painting; the DOM SVG owns the
+          visible mark until the GLB lands and the particles take over
+          at the swap frame. The GLB is preloaded by
+          VolumetricBrandmarkArtifact (services hologram), so this is
+          usually a synchronous cache hit. */}
+      <Suspense fallback={null}>
+        <BrandmarkPhysicsCoreWithGLB
+          count={count}
+          corridorKeep={corridorKeep}
+          igniteRef={igniteRef}
+          depthRef={depthRef}
+          coverMorphRef={coverMorphRef}
+          glitchRef={glitchRef}
+          streamRef={streamRef}
+          cleanFieldRef={cleanFieldRef}
+          opacityRef={opacityRef}
+          pointSizeRef={pointSizeRef}
+          color={color}
+          accentColor={accentColor}
+          pausedRef={pausedRef}
+          reducedMotion={reducedMotion}
+          seedFromPositions={seedFromPositions}
+        />
+      </Suspense>
     </group>
   );
 }
+
+/** GLB-loading inner: loads `brandmark.glb` (suspends until ready),
+ *  samples the volumetric wireframe via `sampleBrandmark3D`, and forwards
+ *  the `armHomes` as `targetHomes` to `BrandmarkPhysicsCore`. Split out
+ *  so the outer actor's `useFrame` (which writes refs every tick) doesn't
+ *  re-mount under suspense — only this leaf does. ADR-023 2026-06-25
+ *  hybrid revision. */
+interface BrandmarkPhysicsCoreWithGLBProps {
+  count: number;
+  corridorKeep: number;
+  igniteRef: { readonly current: number };
+  depthRef: { readonly current: number };
+  coverMorphRef: { readonly current: number };
+  glitchRef: { readonly current: number };
+  streamRef: { readonly current: number };
+  cleanFieldRef: { readonly current: number };
+  opacityRef: { readonly current: number };
+  pointSizeRef: { readonly current: number };
+  color: string;
+  accentColor: string;
+  pausedRef: { readonly current: boolean };
+  reducedMotion: boolean;
+  seedFromPositions: Float32Array | null;
+}
+
+function BrandmarkPhysicsCoreWithGLB({
+  count,
+  corridorKeep,
+  igniteRef,
+  depthRef,
+  coverMorphRef,
+  glitchRef,
+  streamRef,
+  cleanFieldRef,
+  opacityRef,
+  pointSizeRef,
+  color,
+  accentColor,
+  pausedRef,
+  reducedMotion,
+  seedFromPositions,
+}: BrandmarkPhysicsCoreWithGLBProps) {
+  // useGLTF suspends until the asset is ready. Shared cache with
+  // VolumetricBrandmarkArtifact (services hologram), which preloads the
+  // GLB — so the corridor consumer is almost always a cache hit.
+  const { scene } = useGLTF(BRANDMARK_GLB);
+
+  // Sample the GLB into wire-only home positions. wireCount = `count`
+  // (the sim's particle count) so the pairing is 1:1 — every sim
+  // particle has a wireframe destination. surfaceCount / shellCount = 0:
+  // the corridor's destination is the wireframe edges ONLY (the user's
+  // brief: "land inside the position of our 3D brandmark" — the
+  // volumetric wireframe is THE 3D brandmark, not a surrounding shell).
+  const targetHomes = useMemo(() => {
+    const geos: THREE.BufferGeometry[] = [];
+    scene.updateMatrixWorld(true);
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry) return;
+      const clone = mesh.geometry.clone();
+      clone.applyMatrix4(mesh.matrixWorld);
+      geos.push(clone);
+    });
+    if (geos.length === 0) return null;
+    const sample = sampleBrandmark3D(geos, {
+      wireCount: count,
+      surfaceCount: 0,
+      shellCount: 0,
+      depthStrutCount: 0,
+      edgeThresholdDeg: 18,
+    });
+    geos.forEach((g) => g.dispose());
+    if (sample.count === 0) return null;
+    const arm = sample.armHomes;
+
+    // ── Normalise the wireframe to the flat silhouette's footprint ──
+    // sampleBrandmark3D bakes MARK_SCALE = 1.74 (sized for the #services
+    // ORBIT footprint), so its armHomes span a half-extent of ~0.87 —
+    // 1.74× the [-0.5, 0.5] cube the flat matched-pixel silhouette lives
+    // in. Left unscaled the landed 3D mark renders BIGGER than the
+    // substrate sphere (user report, 2026-06-25). Measure the wireframe's
+    // own XY half-extent and rescale uniformly so the furthest point maps
+    // to TARGET_HALF — matching the silhouette, so the morph is in-place
+    // (the 2D mark becomes the 3D version of ITSELF at the same size) and
+    // the result nests inside the sphere exactly as the old dome-fill did.
+    let maxAbs = 1e-6;
+    for (let i = 0; i < sample.count; i++) {
+      const ax = Math.abs(arm[i * 3]);
+      const ay = Math.abs(arm[i * 3 + 1]);
+      if (ax > maxAbs) maxAbs = ax;
+      if (ay > maxAbs) maxAbs = ay;
+    }
+    // 0.46, not 0.5: leave a touch of margin so the wireframe sits clearly
+    // INSIDE the substrate sphere rather than grazing its cage.
+    const TARGET_HALF = 0.46;
+    const k = TARGET_HALF / maxAbs;
+
+    // Fill all `count` slots, WRAPPING the wireframe samples rather than
+    // zero-padding the tail. Zero-padding sent surplus particles to the
+    // group origin, where they piled up as bright "photons stuck in the
+    // middle" of the landed mark (user report, 2026-06-25). Wrapping
+    // gives every particle a real wireframe target — a slightly denser
+    // duplicate-stipple of the edges, visually indistinguishable.
+    const result = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const j = (i % sample.count) * 3;
+      result[i * 3] = arm[j] * k;
+      result[i * 3 + 1] = arm[j + 1] * k;
+      result[i * 3 + 2] = arm[j + 2] * k;
+    }
+    return result;
+  }, [scene, count]);
+
+  return (
+    <BrandmarkPhysicsCore
+      count={count}
+      corridorKeep={corridorKeep}
+      igniteRef={igniteRef}
+      depthRef={depthRef}
+      coverMorphRef={coverMorphRef}
+      glitchRef={glitchRef}
+      streamRef={streamRef}
+      cleanFieldRef={cleanFieldRef}
+      seedAtHome
+      seedFromPositions={seedFromPositions}
+      targetHomes={targetHomes}
+      opacityRef={opacityRef}
+      pointSizeRef={pointSizeRef}
+      color={color}
+      accentColor={accentColor}
+      pausedRef={pausedRef}
+      reducedMotion={reducedMotion}
+      // ── Production appearance (PRODUCTION_* constants above). These
+      // are passed EXPLICITLY rather than relying on the component's
+      // default props so the live corridor look can't drift if the lab
+      // changes its own defaults. The default values reproduce today's
+      // luminous-dust look (dome-fill + additive dot), so the corridor
+      // and parked centerpiece are byte-identical until a preset is
+      // deliberately promoted into PRODUCTION_*.
+      basis={PRODUCTION_BASIS}
+      gridSnap={PRODUCTION_GRID_SNAP}
+      shape={PRODUCTION_SHAPE}
+      glyph={PRODUCTION_GLYPH}
+      blending={PRODUCTION_BLENDING}
+      shapeStroke={PRODUCTION_SHAPE_STROKE}
+      primitiveAspect={PRODUCTION_PRIMITIVE_ASPECT}
+      lineJitter={PRODUCTION_LINE_JITTER}
+    />
+  );
+}
+
+useGLTF.preload(BRANDMARK_GLB);
