@@ -541,11 +541,24 @@ export function BrandmarkPhysicsCoreActor({
     // is the brandmark from frame one — particles never swirl or scatter.
     const handoffProgress = BRANDMARK_CORE_HANDOFF_PROGRESS;
     const handoffBlend = getBrandmarkCoreBlend(progress);
-    const depth = smootherstep(
-      BRANDMARK_CORE_DEPTH_START_BLEND,
-      BRANDMARK_CORE_DEPTH_END_BLEND,
-      handoffBlend
-    );
+    // Depth ramp = FRONT-LOADED ease-out (2026-06-25 "elegant transition" pass,
+    // replacing smootherstep). smootherstep was flat at BOTH ends, so just after
+    // the SVG cut the mark dwelled as a flat, grainy 2D crosshair (the "orange-y
+    // 2D stage" that killed the flow) before any depth appeared. Ease-out
+    // (1-(1-t)^2) has a moderate slope at t=0 — depth is still 0 at the exact
+    // cut frame (seamless matched-pixel handoff) but rises promptly after, so
+    // the mark peels into the luminous 3D fly-in right away instead of lingering
+    // flat. It still reaches depth=1 with zero slope exactly at the wrap peak
+    // (t=1), so the wireframe settles smoothly, in sync with the substrate sphere.
+    const depthSpan =
+      BRANDMARK_CORE_DEPTH_END_BLEND - BRANDMARK_CORE_DEPTH_START_BLEND;
+    const depthT =
+      depthSpan > 1e-6
+        ? Math.min(1, Math.max(0, (handoffBlend - BRANDMARK_CORE_DEPTH_START_BLEND) / depthSpan))
+        : handoffBlend >= BRANDMARK_CORE_DEPTH_END_BLEND
+          ? 1
+          : 0;
+    const depth = 1 - (1 - depthT) * (1 - depthT);
 
     // Stream + glitch are eased in with the asynchronous particle flow so the
     // extra depth motion joins after the flat mark starts peeling apart.

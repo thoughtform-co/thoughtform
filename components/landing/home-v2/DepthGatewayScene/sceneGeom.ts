@@ -390,8 +390,17 @@ export const BRANDMARK_CORE_PARTICLE_LAYER_BLEND = BRANDMARK_CORE_SVG_CUT_BLEND;
  *  `depthKeep`) across the substrate wrap, settling as the luminous core inside
  *  the sphere. Spans most of the wrap blend so the morph reads continuous
  *  rather than snapping at the end. Units are `getBrandmarkCoreBlend(progress)`
- *  (0 at substrate.start, 1 at substrate.peakAt). */
-export const BRANDMARK_CORE_DEPTH_START_BLEND = 0.15;
+ *  (0 at substrate.start, 1 at substrate.peakAt).
+ *
+ *  `0.0` (was `0.15`, 2026-06-25 "elegant transition" pass): the SVG cuts to
+ *  the particle core at the swap frame (blend ≈ 0), but uDepth waited until
+ *  blend > 0.15 to start extruding — so for that window the particles sat as a
+ *  FLAT, grainy 2D crosshair (the "orange-y 2D stage" that killed the flow).
+ *  Starting the extrude at blend 0 means uDepth is still 0 at the exact swap
+ *  frame (smoothstep(0,end,0) = 0, so the matched-pixel handoff stays seamless)
+ *  but rises immediately after — the mark flows straight from the crisp SVG
+ *  into the 3D morph with no flat dwell. */
+export const BRANDMARK_CORE_DEPTH_START_BLEND = 0.0;
 // 2026-06-25 hybrid revision: extended 0.9 → 1.0 so the wind-blown morph
 // fully completes at the substrate wrap peak. Previously the final 10%
 // of the wrap left the particles still mid-flow; with the new mix-to-

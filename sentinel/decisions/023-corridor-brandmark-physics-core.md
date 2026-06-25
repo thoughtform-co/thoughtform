@@ -333,14 +333,43 @@ follow-up; CURRENT).** Two follow-ups landed after the harmonization above.
    Pitfall: raising `BRANDMARK_SPHERE_FILL` toward 1.0 reintroduces the protrusion;
    dropping it well below 0.9 reads as too small inside the sphere.
 
-4. **De-pixelate the landed wireframe.** At `uDepth → 1` the draw thinned to
-   `depthKeep ≈ 0.27` (~1620 of 6000) at 82% dot size — sparse/gappy/pixelated.
-   Fixed by `CORRIDOR_DRAW_TARGET` `1600 → 2600` (landed keep ≈ 0.43, ~2600 drawn)
-   and the landed dot-size shrink `mix(1.0, 0.82, wireCrisp) → mix(1.0, 0.90,
-   wireCrisp)` so adjacent dots close their gaps. The airy #services centerpiece
-   is gated by a SEPARATE `uCleanFieldKeep` (Invariant 11), so it is unchanged.
-   Pitfall: raising the global particle count past 6000 to densify jumps the sim
-   texture 64×64→128×128 (4× compute) — use `CORRIDOR_DRAW_TARGET` instead.
+4. **Landed wireframe crispness — match the #services centerpiece (supersedes the
+   first de-pixelate attempt).** The landed wireframe read as CHUNKY fat beads
+   while the #services centerpiece + the sphere's own dotted shell read FINE and
+   crisp. Both run the same shader; they diverged on exactly two state-gated
+   knobs — dot SIZE and DENSITY. The centerpiece (uCleanField=1) collapses dots to
+   `uCleanFieldDotScale` (~0.5, ~2px) at ~`uCleanFieldKeep` 0.65 (~3900 dots); the
+   landed state (uCleanField=0) only had the line-310 `mix(1.0, 0.90, wireCrisp)`
+   (~4px) at `uCorridorKeep` ~0.43 (~2600) — fat + sparse = chunky. (The FIRST
+   de-pixelate attempt — bigger dots `0.82→0.90` + `CORRIDOR_DRAW_TARGET 1600→2600`
+   — went the wrong way; bigger dots are chunkier.) Correct fix, two `wireCrisp`-
+   gated shader edits so the LANDED state adopts the centerpiece recipe: SIZE
+   `sizeMul *= mix(1.0, uCleanFieldDotScale, wireCrisp * (1.0 - uCleanField))` (the
+   `(1 - uCleanField)` is REQUIRED — line 302 already applied `uCleanFieldDotScale`
+   at the centerpiece, so this must be a no-op there or it double-shrinks to 0.25);
+   DENSITY `depthKeep = mix(depthKeep, uCleanFieldKeep, wireCrisp)` so the finer
+   dots stay continuous. Both are no-ops mid-flight (wireCrisp ≈ 0) and at the
+   centerpiece, so FLIGHT + CENTERPIECE are byte-identical (Invariant 11).
+   `CORRIDOR_DRAW_TARGET` (2600) now only tunes the flight; landed density derives
+   from the wireCrisp keep-lift. Pitfall: dropping the `(1 - uCleanField)` factor
+   (centerpiece double-shrinks); raising the global count past 6000 (sim texture
+   64×64→128×128, 4× compute).
+
+5. **Elegant SVG→3D transition — kill the flat-grainy 2D dwell.** Between the SVG
+   `display:none` cut and the start of the `uDepth` extrude, the particles sat as a
+   flat, grainy 2D crosshair (the "orange-y 2D stage"). Root cause: `uDepth` used
+   `smootherstep(DEPTH_START_BLEND=0.15, 1.0, handoffBlend)` — flat at BOTH ends, so
+   it stayed ~0 through the early wrap. Fix: `BRANDMARK_CORE_DEPTH_START_BLEND`
+   `0.15 → 0.0` AND replace the `smootherstep` in `BrandmarkPhysicsCoreActor`'s
+   `depth` with a FRONT-LOADED ease-out `1-(1-t)^2`. `uDepth` is still exactly 0 at
+   the swap frame (matched-pixel handoff stays seamless, Invariant 13) but rises
+   promptly after, so the mark peels into the luminous 3D fly-in immediately
+   instead of dwelling flat; it still reaches `uDepth=1` with zero slope at the
+   wrap peak (t=1), so the wireframe settles smoothly in sync with the sphere.
+   Note: finer dots can't help the flat stage — a solid SVG silhouette needs BIG
+   dots to read solid, so the only lever is minimizing dwell time, not crispness.
+   Pitfall: reverting to `smootherstep` / raising `DEPTH_START_BLEND` reintroduces
+   the dwell.
 
 ---
 

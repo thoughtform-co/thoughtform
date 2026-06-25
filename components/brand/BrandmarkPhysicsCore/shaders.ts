@@ -300,14 +300,16 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // the sparse fat-bead ("Christmas lights") read into a fine, spread-out
     // particle field (vos9x.com centerpiece reference).
     sizeMul = mix(sizeMul, uCleanFieldDotScale, uCleanField);
-    // Settled-wireframe: shrink the dots a touch once landed so the
-    // in-sphere mark reads as a FINE dotted wireframe rather than fat
-    // luminous beads. Identity until uDepth crosses 0.7 (flat rest +
-    // flight unchanged); keeps the airy density (depthKeep untouched).
-    // 0.90 (was 0.82, 2026-06-25 de-pixelate): the harder shrink left
-    // visible gaps between landed dots; 0.90 lets adjacent dots close up
-    // so the denser wireframe (CORRIDOR_DRAW_TARGET 2600) reads continuous.
-    sizeMul *= mix(1.0, 0.90, wireCrisp);
+    // Settled-wireframe: shrink the landed dots all the way to the SAME fine
+    // speck the #services centerpiece uses (uCleanFieldDotScale, ~0.5) so the
+    // in-sphere wireframe reads as fine crisp lines, NOT fat luminous beads —
+    // matching the centerpiece + the sphere's own dotted shell (2026-06-25
+    // "match the centerpiece" pass; a prior de-pixelate left it at 0.90 = fat).
+    // Gated by wireCrisp so flat rest + flight are identity (untouched). The
+    // (1.0 - uCleanField) factor keeps the CENTERPIECE byte-identical: line 302
+    // already set sizeMul = uCleanFieldDotScale there, so this must be a no-op
+    // (factor 0) when uCleanField = 1 or the centerpiece would double-shrink.
+    sizeMul *= mix(1.0, uCleanFieldDotScale, wireCrisp * (1.0 - uCleanField));
 
     // ── Density rank-clip — both ends tunable (decoupled) ────────
     // keepFrac ramps uCorridorKeep (clean = 0, corridor) → uCleanFieldKeep
@@ -334,6 +336,13 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // as a cross-dissolve. Full density at the flat mark is what lets the
     // particles BE the mark. Centerpiece end (uCleanField = 1) is unchanged.
     float depthKeep = mix(1.0, uCorridorKeep, smoothstep(0.0, 0.6, uDepth));
+    // Settled-wireframe density: now that the landed dots are FINE (above),
+    // lift the landed draw to the centerpiece's keep (uCleanFieldKeep ~0.65,
+    // ~3900 dots) so the fine dots read as continuous crisp lines, not sparse
+    // gaps. Gated by wireCrisp so the corridor FLIGHT (mid uDepth, wireCrisp≈0)
+    // keeps its calmer uCorridorKeep density — only the parked wireframe
+    // densifies. uCleanField path below still owns the centerpiece end.
+    depthKeep = mix(depthKeep, uCleanFieldKeep, wireCrisp);
     float keepFrac = mix(depthKeep, uCleanFieldKeep, uCleanField);
     if (aLuma >= keepFrac) {
       gl_PointSize = 0.0;
