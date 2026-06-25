@@ -241,6 +241,62 @@ Rejected — this is the decision being reversed in spirit but with a different 
 
 ---
 
+## 2026-06-25 — Corridor↔#services unification (one object, no crossfade)
+
+The corridor core no longer hands off to a SECOND brandmark in a separate
+`#services` canvas. It **is** the #services centerpiece — one continuous object
+from corridor → sphere → #services. Gated by `UNIFIED_SERVICES_ARMILLARY`
+([`components/landing/home-v2/unifiedServicesInstrument.ts`](../../components/landing/home-v2/unifiedServicesInstrument.ts));
+flip to `false` to restore the legacy two-canvas crossfade.
+
+What changed in `BrandmarkPhysicsCoreActor`:
+
+- **`handoffFade` retired (flag-gated).** The core no longer fades OUT across the
+  dive (`HANDOFF_FADE_START/END`). It holds full through the dock + the services
+  ambient hold, then fades only as `#continuum` approaches, via the
+  `servicesAmbientLevel` envelope from `useCorridorExitScroll`. With the flag off,
+  the legacy `1 - smootherstep(0.45, 0.7, dissipate)` fade is restored.
+  `dissipate = 0` in the corridor proper → fade = 1 either way (Invariant 11 holds).
+- **Armillary in the SAME canvas.** A new
+  [`CorridorArmillary`](../../components/landing/home-v2/DepthGatewayScene/CorridorArmillary.tsx)
+  renders the `#services` orbit armillary (`HologramOrbits` + `DEFAULT_ORBITS`,
+  `entrance="scroll"`) as a CHILD of the core's group, so orbits inherit the
+  camera-front placement + billboard + drift + scale and depth-interleave with the
+  core's points. Reveal rides the shared `--corridor-dissipate`; scan anchors
+  publish to `hologramConnectorStore` only once parked (gated on
+  `getSmoothedDissipate() >= 0.88`), so the KEYNOTE/WORKSHOP/EMBEDDED DOM
+  connectors stay hidden during the dive and clear on reverse-scroll.
+- **Pointer-look wrapper.** A `pointerLookRef` group wraps the mark + armillary so
+  the whole instrument nudges toward the cursor (ported from
+  `ServicesHologramScene`), engaged only when parked (`recT > 0.9`), easing to 0
+  during the dive / reverse-scroll. `recT = 0` in the corridor ⇒ identity.
+- **Active-service bridge.** `hologramConnectorStore` gained
+  `activeServiceId`/`setActiveServiceId`; `ServicesStage` writes it (its scan UI
+  is still the DOM overlay), `CorridorArmillary` reads it to highlight the active
+  ring across the two render trees.
+- **Edge threshold 18 → 5** in `BrandmarkPhysicsCoreWithGLB.targetHomes` so the
+  parked mark reads as the richer wireframe the user liked (matching the retired
+  #services centerpiece's finer seams). NOTE: this also enriches the in-flight
+  corridor wireframe — a deliberate, reviewed look change vs Invariant 11.
+
+`ServicesStage` no longer mounts its own R3F canvas on the capable desktop path
+(`showServicesCanvas = useHologramCanvas && !UNIFIED_SERVICES_ARMILLARY`); the
+standalone `ServicesHologramScene` / `VolumetricBrandmarkArtifact` remain the lab
+harness (`/test/services-demo`). See ADR-021 (core is the visible foreground
+during `servicesAmbient`) and ADR-025 (production #services no longer self-renders).
+
+**Gold harmonization (same date).** A single source of truth lives in
+[`lib/home-v2/goldPalette.ts`](../../lib/home-v2/goldPalette.ts): `HANDOFF_GOLD`/
+`HANDOFF_ACCENT` (`#caa554`/`#e9c97a`, LOCKED for the matched-pixel handoff),
+`TENSOR_GOLD`/`TENSOR_ACCENT` (the landed / #services gold, nudged a touch more
+yellow — the corridor `LANDED_WIRE_*`, the orbit rings, and `ServicesStage`
+color/accent all read these), and `SPHERE_GOLD` (a more-yellow `#caa554` for the
+substrate-sphere shells' additive bed, aliased over `COLOR_GOLD` in the four
+home-v2 shell files without touching the broadly-shared `artifactGeom` constant).
+Pitfall: do not shift `HANDOFF_*` off `#caa554` — the SVG→particle handoff pops.
+
+---
+
 ## Files
 
 - New: [`lib/brandmark/sampleBrandmarkParticles.ts`](../../lib/brandmark/sampleBrandmarkParticles.ts) — silhouette sample + dome depth + per-particle jitter.

@@ -27,14 +27,15 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
+import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 import { volumetricFragmentShader, volumetricVertexShader } from "./volumetricShaders";
 
 export const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
 export const BRANDMARK_WIRE_GLB = "/models/brandmark/brandmark-wire.glb";
 export type VolumetricBrandmarkBlending = "additive" | "normal";
 
-const DEFAULT_COLOR = "#caa554"; // --gold — unified with the gold orbit armillary
-const DEFAULT_ACCENT = "#e9c97a"; // brighter warm gold — luminous Fresnel limb
+const DEFAULT_COLOR = TENSOR_GOLD; // harmonized Tensor Gold — unified with the orbit armillary
+const DEFAULT_ACCENT = TENSOR_ACCENT; // brighter Tensor Gold — luminous Fresnel limb
 
 // Rest pose + pointer-look now live on the shared RIG group
 // (ServicesHologramScene) so the mark and its orbits move as ONE anchored

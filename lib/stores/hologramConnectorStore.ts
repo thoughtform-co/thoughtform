@@ -27,9 +27,19 @@ export interface ConnectorAnchor {
 interface HologramConnectorState {
   anchors: ConnectorAnchor[];
   setAnchors: (anchors: ConnectorAnchor[]) => void;
+  /** The service the visitor is currently scanning. Bridges the DOM scan UI
+   *  (in `#services`) to the brandmark instrument that now lives in the corridor
+   *  canvas (the unified `CorridorArmillary`), so the active orbit ring still
+   *  highlights even though the mark + orbits and the scan cards are in different
+   *  render trees. `null` until the section sets it (consumer defaults to the
+   *  first service). */
+  activeServiceId: ServiceId | null;
+  setActiveServiceId: (serviceId: ServiceId | null) => void;
 }
 
 export const useHologramConnectors = create<HologramConnectorState>((set) => ({
   anchors: [],
   setAnchors: (anchors) => set({ anchors }),
+  activeServiceId: null,
+  setActiveServiceId: (activeServiceId) => set({ activeServiceId }),
 }));

@@ -2,7 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { SERVICE_ORBITS } from "./celestialData";
 import { ServiceScanInterface } from "./ServiceScanInterface";
@@ -13,6 +13,9 @@ import { SERVICES, type ServiceId } from "./serviceData";
 import { useOrbitDrift } from "../hooks/useOrbitDrift";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
+import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
+import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 
 /**
  * ServicesStage - the `#services` interaction as a section-owned holographic
@@ -36,6 +39,22 @@ export function ServicesStage() {
   const useHologramCanvas = useMediaQuery(
     "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
   );
+
+  // Bridge the active service to the unified corridor instrument (the armillary
+  // now lives in the corridor canvas) so the active orbit ring still highlights
+  // from the DOM scan UI. Harmless when the flag is off. Clear on unmount.
+  const setActiveServiceIdStore = useHologramConnectors((s) => s.setActiveServiceId);
+  useEffect(() => {
+    setActiveServiceIdStore(activeServiceId);
+  }, [activeServiceId, setActiveServiceIdStore]);
+  useEffect(() => () => setActiveServiceIdStore(null), [setActiveServiceIdStore]);
+
+  // When the corridor supplies the unified instrument (desktop, flag on), the
+  // section does NOT mount its own hologram canvas — the persistent corridor
+  // brandmark + CorridorArmillary ARE the centerpiece (one object, no crossfade).
+  // Mobile / reduced-motion (useHologramCanvas false) and flag-off keep the
+  // standalone canvas + DOM/SVG fallback.
+  const showServicesCanvas = useHologramCanvas && !UNIFIED_SERVICES_ARMILLARY;
 
   const setActiveByStep = useCallback((step: number) => {
     if (expandedServiceRef.current) return;
@@ -61,7 +80,7 @@ export function ServicesStage() {
   return (
     <div className="services-stage" ref={stageRef} data-active-step="0">
       <div className="services-stage__items" ref={itemsRef}>
-        {useHologramCanvas ? (
+        {showServicesCanvas ? (
           <div className="services-hologram" aria-hidden="true">
             <Canvas
               camera={{ position: [0, 0, 3.65], fov: 38, near: 0.1, far: 100 }}
@@ -70,9 +89,9 @@ export function ServicesStage() {
             >
               <ServicesHologramScene
                 activeServiceId={activeServiceId}
-                accentColor="#dcc176"
+                accentColor={TENSOR_ACCENT}
                 blending="normal"
-                color="#b08b42"
+                color={TENSOR_GOLD}
                 density={0.9}
                 depthStrutCount={2200}
                 edgeThresholdDeg={5}

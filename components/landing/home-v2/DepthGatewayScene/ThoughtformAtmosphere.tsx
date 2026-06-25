@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { SPHERE_GOLD } from "@/lib/home-v2/goldPalette";
 import { getSmoothedThoughtformOffsetX } from "./motionFollower";
 import {
   STATION_THOUGHTFORM,
@@ -139,7 +140,7 @@ const SHOCKWAVE_RADIUS_START = 0.4;
 const SHOCKWAVE_RADIUS_END = 4.6;
 const SHOCKWAVE_MAX_OPACITY = 0.4;
 
-const SHOCKWAVE_COLOR = new THREE.Color("#caa554");
+const SHOCKWAVE_COLOR = new THREE.Color(SPHERE_GOLD);
 
 /** Returns the shockwave's instantaneous scale (world units) and
  *  opacity for the given progress. Outside the [START, END]

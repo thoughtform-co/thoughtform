@@ -230,3 +230,20 @@ wireframe converges to this stage's `#b08b42`/`#dcc176` palette as it settles �
 follow-up). Guardrail: keep production frontal (`restTilt 0/0`) while the corridor
 in-sphere mark is frontal; if a future change re-tilts one, re-tilt the other (and
 re-check the sphere's sword↔vertical-orbit alignment).
+
+### 2026-06-25 — production #services no longer self-renders (unification)
+
+On the capable desktop path, `#services` no longer mounts its own R3F canvas.
+The corridor's persistent brandmark core IS the centerpiece and a co-located
+`CorridorArmillary` supplies the orbits in the SAME corridor canvas — one
+continuous object, no crossfade (see [ADR-023](023-corridor-brandmark-physics-core.md)
+2026-06-25 unification). `ServicesStage` gates its canvas on
+`showServicesCanvas = useHologramCanvas && !UNIFIED_SERVICES_ARMILLARY`, keeps the
+DOM scan UI (`ServiceScanInterface`) always, and keeps the mobile / reduced-motion
+DOM+SVG fallback (`ServicesBrandmarkField` + `ServicesOrbitMap`) untouched. **This
+stage's `ServicesHologramScene` / `VolumetricBrandmarkArtifact` remain the lab
+harness** (`/test/services-demo`, `/test/services-hologram`) for tuning the look,
+and the live armillary still imports `DEFAULT_ORBITS` + `HologramOrbits` from here.
+The palette now flows from [`lib/home-v2/goldPalette.ts`](../../lib/home-v2/goldPalette.ts)
+(`TENSOR_GOLD`/`TENSOR_ACCENT`, a touch more yellow than the former
+`#b08b42`/`#dcc176`), shared by the mark, the orbits, and this stage.

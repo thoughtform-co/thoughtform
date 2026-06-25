@@ -32,7 +32,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { COLOR_DAWN, COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactGeom";
+import { COLOR_DAWN } from "@/components/landing/intelligence-artifact/artifactGeom";
+// Substrate-sphere gold — more-yellow `#caa554` (2026-06-25 harmonization).
+import { SPHERE_GOLD as COLOR_GOLD } from "@/lib/home-v2/goldPalette";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedAccretionLayers } from "../motionFollower";
 import {

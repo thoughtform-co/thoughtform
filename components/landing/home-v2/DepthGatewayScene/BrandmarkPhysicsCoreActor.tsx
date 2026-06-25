@@ -33,10 +33,16 @@
 
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { smoothstep, smootherstep } from "@/lib/home-v2/corridorMap";
+import {
+  HANDOFF_GOLD,
+  HANDOFF_ACCENT,
+  TENSOR_GOLD,
+  TENSOR_ACCENT,
+} from "@/lib/home-v2/goldPalette";
 import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
@@ -54,6 +60,8 @@ import {
   worldPositionsToLocal,
 } from "@/lib/brandmark/sampleBrandmarkPixels";
 import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
+import { CorridorArmillary } from "./CorridorArmillary";
+import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   BRANDMARK_CORE_BLEND_END,
@@ -127,10 +135,10 @@ const CORE_POINT_SIZE_3D = 4.45;
  *  settles on the wireframe (`vWireCrisp` from uDepth), so the in-sphere
  *  wireframe matches the Services wireframe and the corridor → Services
  *  transition reads as continuation, not a swap. */
-const FLAT_WIRE_COLOR = "#caa554";
-const FLAT_WIRE_ACCENT = "#e9c97a";
-const LANDED_WIRE_COLOR = "#b08b42";
-const LANDED_WIRE_ACCENT = "#dcc176";
+const FLAT_WIRE_COLOR = HANDOFF_GOLD;
+const FLAT_WIRE_ACCENT = HANDOFF_ACCENT;
+const LANDED_WIRE_COLOR = TENSOR_GOLD;
+const LANDED_WIRE_ACCENT = TENSOR_ACCENT;
 
 /** PIN the GPGPU sim for the corridor brandmark (2026-06-25 "never warp" fix).
  *  The matched-pixel mark + wireframe target must hold their EXACT shape — the
@@ -258,6 +266,13 @@ const CENTER_DRIFT_AMP_Y_RAD = 0.21; // ~12° yaw
 const CENTER_DRIFT_PERIOD_X_S = 17;
 const CENTER_DRIFT_PERIOD_Y_S = 13;
 
+/** Pointer-look amplitude (radians) for the parked UNIFIED instrument — the whole
+ *  mark + armillary nudge toward the cursor (ported from ServicesHologramScene so
+ *  the in-corridor #services instrument is explorable like the old hologram).
+ *  Composes on top of the billboard + gentle drift. Engaged only when parked
+ *  (recT high); eases to 0 during the fly-in / dive and on reverse-scroll. */
+const POINTER_LOOK_AMP = 0.12;
+
 /** ABSOLUTE opacity of the parked Services centerpiece, DECOUPLED from the
  *  corridor `CORE_OPACITY`: the mark lerps from the corridor brightness to this
  *  as `recT` → 1, so dialing the corridor brightness up/down never drags the
@@ -268,7 +283,7 @@ const CENTER_DRIFT_PERIOD_Y_S = 13;
  *  + the lower 1600 count). Raise for more presence, lower for more recede.
  *  At 0.90 the mark reads clearly but, with its small crisp 2px dots, still
  *  sits softer than the 4px corridor stations (≈⅓ their per-dot ink). */
-const CENTER_OPACITY = 0.9;
+const CENTER_OPACITY = 1.0;
 
 /** Corridor → services baton-pass (2026-06-24): the centerpiece dome fades OUT
  *  across this short, late dissipate window as the `#services` wireframe forms
@@ -325,6 +340,11 @@ export function BrandmarkPhysicsCoreActor({
   const corridorKeep = PRODUCTION_CORRIDOR_KEEP ?? Math.min(1, CORRIDOR_DRAW_TARGET / count);
 
   const groupRef = useRef<THREE.Group>(null);
+  // Pointer-look group: wraps the mark + the (unified) armillary so the whole
+  // instrument tilts toward the cursor as ONE object when parked in #services.
+  const pointerLookRef = useRef<THREE.Group>(null);
+  const pointerTargetRef = useRef({ pitch: 0, yaw: 0 });
+  const pointerDampRef = useRef({ pitch: 0, yaw: 0 });
   // Scratch for the Services core-shrink (camera-front re-centre) so we
   // don't allocate per frame.
   const fwdScratch = useRef(new THREE.Vector3());
@@ -360,11 +380,25 @@ export function BrandmarkPhysicsCoreActor({
   const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
   const pausedRef = useRef(true);
 
+  // Pointer-look listener for the parked unified instrument (window-level: the
+  // canvas is pointer-events:none, so R3F's own pointer never fires here).
+  useEffect(() => {
+    if (!UNIFIED_SERVICES_ARMILLARY) return;
+    const onMove = (e: PointerEvent) => {
+      const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
+      const ny = (e.clientY / window.innerHeight) * 2 - 1; // -1..1
+      pointerTargetRef.current.pitch = -ny * POINTER_LOOK_AMP * 0.6;
+      pointerTargetRef.current.yaw = nx * POINTER_LOOK_AMP;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
+
   // Drive the per-frame transform (position, scale, visibility) AND
   // the in-component refs that read into `BrandmarkPhysicsCore` props
   // on the next render. Position + scale don't need React; they're
   // imperative writes on the group.
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
@@ -578,7 +612,20 @@ export function BrandmarkPhysicsCoreActor({
     // matched hand-off — the services dome-state is already present at the same
     // size + gold — NOT a cross-dissolve. The ambient shell haze still comes
     // from `mats.particle` in `ShellSubstrateGyro`.
-    const handoffFade = 1 - smootherstep(HANDOFF_FADE_START, HANDOFF_FADE_END, dissipate);
+    // Unified instrument (2026-06-25): the core IS the #services centerpiece, so
+    // it does NOT fade out at the dive. It holds full through the dock + the
+    // services ambient hold, then fades only as #continuum approaches (the
+    // `servicesAmbientLevel` envelope from useCorridorExitScroll). With the flag
+    // OFF, the legacy baton-pass fade (corridor core out → #services canvas in)
+    // is restored. Either way `dissipate = 0` in the corridor proper → fade = 1
+    // (byte-identical; ADR-023 Invariant 11).
+    const handoffFade = UNIFIED_SERVICES_ARMILLARY
+      ? t.docked
+        ? 1
+        : t.servicesAmbient
+          ? t.servicesAmbientLevel
+          : 1
+      : 1 - smootherstep(HANDOFF_FADE_START, HANDOFF_FADE_END, dissipate);
 
     // Centerpiece opacity is DECOUPLED from the corridor CORE_OPACITY: it lerps
     // from the corridor brightness to an ABSOLUTE target (CENTER_OPACITY) as the
@@ -656,6 +703,22 @@ export function BrandmarkPhysicsCoreActor({
     group.position.copy(posScratch.current);
     group.scale.setScalar(scale);
 
+    // Pointer-look (unified instrument): nudge the whole mark + armillary toward
+    // the cursor, engaged only when parked (recT high) so the fly-in / dive plays
+    // clean and reverse-scroll eases it home. Composes under the group's billboard
+    // + drift. recT ≈ 0 in the corridor ⇒ damps to identity (byte-identical).
+    const pl = pointerLookRef.current;
+    if (pl) {
+      const engaged = UNIFIED_SERVICES_ARMILLARY && recT > 0.9;
+      const tgtPitch = engaged ? pointerTargetRef.current.pitch : 0;
+      const tgtYaw = engaged ? pointerTargetRef.current.yaw : 0;
+      const k = Math.min(1, delta * 4);
+      const damp = pointerDampRef.current;
+      damp.pitch += (tgtPitch - damp.pitch) * k;
+      damp.yaw += (tgtYaw - damp.yaw) * k;
+      pl.rotation.set(damp.pitch, damp.yaw, 0);
+    }
+
     // Keep the sim alive while the corridor is painting so the
     // pre-gateway low-ignite state actually swirls. We still pause
     // immediately when the stage disengages in the early return above.
@@ -664,34 +727,43 @@ export function BrandmarkPhysicsCoreActor({
 
   return (
     <group ref={groupRef} visible={false}>
-      {/* ADR-023 2026-06-25 hybrid: the GLB-loading inner component
+      {/* Pointer-look wrapper: the mark + the (unified) armillary tilt toward the
+          cursor as ONE anchored object when parked in #services. */}
+      <group ref={pointerLookRef}>
+        {/* ADR-023 2026-06-25 hybrid: the GLB-loading inner component
           suspends until brandmark.glb resolves. The fallback is `null`
           so the rest of the scene keeps painting; the DOM SVG owns the
           visible mark until the GLB lands and the particles take over
           at the swap frame. The GLB is preloaded by
           VolumetricBrandmarkArtifact (services hologram), so this is
           usually a synchronous cache hit. */}
-      <Suspense fallback={null}>
-        <BrandmarkPhysicsCoreWithGLB
-          count={count}
-          corridorKeep={corridorKeep}
-          igniteRef={igniteRef}
-          depthRef={depthRef}
-          coverMorphRef={coverMorphRef}
-          glitchRef={glitchRef}
-          streamRef={streamRef}
-          cleanFieldRef={cleanFieldRef}
-          opacityRef={opacityRef}
-          pointSizeRef={pointSizeRef}
-          color={color}
-          accentColor={accentColor}
-          landedColor={LANDED_WIRE_COLOR}
-          landedAccent={LANDED_WIRE_ACCENT}
-          pausedRef={pausedRef}
-          reducedMotion={reducedMotion}
-          seedFromPositions={seedFromPositions}
-        />
-      </Suspense>
+        <Suspense fallback={null}>
+          <BrandmarkPhysicsCoreWithGLB
+            count={count}
+            corridorKeep={corridorKeep}
+            igniteRef={igniteRef}
+            depthRef={depthRef}
+            coverMorphRef={coverMorphRef}
+            glitchRef={glitchRef}
+            streamRef={streamRef}
+            cleanFieldRef={cleanFieldRef}
+            opacityRef={opacityRef}
+            pointSizeRef={pointSizeRef}
+            color={color}
+            accentColor={accentColor}
+            landedColor={LANDED_WIRE_COLOR}
+            landedAccent={LANDED_WIRE_ACCENT}
+            pausedRef={pausedRef}
+            reducedMotion={reducedMotion}
+            seedFromPositions={seedFromPositions}
+          />
+        </Suspense>
+        {/* Unified #services armillary — the orbit rings wrap the parked core in
+          the SAME canvas so they depth-interleave (near arcs in front, far arcs
+          behind) and move as one instrument. Gated by the flag; the standalone
+          ServicesHologramScene remains the lab harness. */}
+        {UNIFIED_SERVICES_ARMILLARY ? <CorridorArmillary /> : null}
+      </group>
     </group>
   );
 }
@@ -768,7 +840,11 @@ function BrandmarkPhysicsCoreWithGLB({
       surfaceCount: 0,
       shellCount: 0,
       depthStrutCount: 0,
-      edgeThresholdDeg: 18,
+      // 2026-06-25 unification: lowered 18 → 5 to match the (now-retired)
+      // #services centerpiece's finer seams, so the parked mark reads as the
+      // richer wireframe the user liked. This also enriches the in-flight
+      // corridor wireframe (a deliberate, reviewed look change vs Invariant 11).
+      edgeThresholdDeg: 5,
     });
     geos.forEach((g) => g.dispose());
     if (sample.count === 0) return null;

@@ -1117,6 +1117,18 @@ recipe ever re-engages an ambient state the guard is still correct.
 The `data-services-ambient` attribute + `--services-ambient` var
 removal lines in that branch are now dead but harmless.
 
+### 2026-06-25 — core is the visible foreground during `servicesAmbient`
+
+The corridor↔#services unification ([ADR-023](023-corridor-brandmark-physics-core.md)
+2026-06-25) inverts this seam's foreground rule on the capable desktop path. The
+ambient hold is now re-enabled as a true background+foreground: the in-canvas
+brandmark core is held VISIBLE (not the previous `handoffFade = 0` invisible) and
+parked as the #services centerpiece, with the orbit armillary (`CorridorArmillary`)
+co-mounted in the same canvas. It fades only as `#continuum` approaches, via
+`servicesAmbientLevel`. The retired DOM SVG / seam-pixel foreground is NOT
+reintroduced — the particle core itself is the foreground mark now. Gated by
+`UNIFIED_SERVICES_ARMILLARY`; flag-off restores the crossfade described above.
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)

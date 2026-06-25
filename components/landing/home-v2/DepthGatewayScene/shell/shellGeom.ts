@@ -13,10 +13,9 @@
  *   - Stack funnel lanes + fan dock sources left / surfaces right (Build).
  */
 
-import {
-  COLOR_GOLD,
-  COLOR_SURFACES,
-} from "@/components/landing/intelligence-artifact/artifactGeom";
+import { COLOR_SURFACES } from "@/components/landing/intelligence-artifact/artifactGeom";
+// Substrate-sphere gold — more-yellow `#caa554` (2026-06-25 harmonization).
+import { SPHERE_GOLD as COLOR_GOLD } from "@/lib/home-v2/goldPalette";
 
 // ── Substrate core (inside-out layer 1) ──────────────────────────────
 

@@ -31,11 +31,10 @@ import * as THREE from "three";
 // first time the gimbal sphere reveals. Register the alias once at
 // module load so the trim-path rings render. (2026-06-10 fix.)
 extend({ ThreeLine: THREE.Line });
-import {
-  COLOR_DAWN,
-  COLOR_GOLD,
-  COLOR_VOID,
-} from "@/components/landing/intelligence-artifact/artifactGeom";
+import { COLOR_DAWN, COLOR_VOID } from "@/components/landing/intelligence-artifact/artifactGeom";
+// Substrate-sphere gold — a more-yellow `#caa554` (2026-06-25 harmonization) so
+// the additive bloom reads gold, not orange. Matches the corridor → #services seam.
+import { SPHERE_GOLD as COLOR_GOLD } from "@/lib/home-v2/goldPalette";
 import {
   buildDiamondGeometry,
   makeMeshMaterial,

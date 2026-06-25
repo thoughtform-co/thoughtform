@@ -27,11 +27,11 @@ const DOCK_PRELOAD_VH = 0.25;
 /** Cap on the body veil so the canvas remains visible underneath
  *  through the dock window. The veil ramps from 0 to this cap with
  *  the dissipate clock and never goes higher. */
-const VEIL_DOCK_CAP = 0.55;
+const VEIL_DOCK_CAP = 0.38;
 /** Lower veil cap for the ambient-only Services background. Kept well
  *  below the dock cap so the inside-sphere particle bed stays clearly
  *  visible behind the Services content for the whole section. */
-const VEIL_AMBIENT_CAP = 0.3;
+const VEIL_AMBIENT_CAP = 0.12;
 /** Start the ambient hold once the surface dissipate is complete. */
 const AMBIENT_ENGAGE_RAW = 0.999;
 /** Fade the ambient particles as the next station approaches. */

@@ -18,6 +18,7 @@ import "@/components/landing/home-v2/services/services.css";
 import { ServiceScanInterface } from "@/components/landing/home-v2/services";
 import { ServicesHologramScene } from "@/components/landing/home-v2/services/hologram";
 import { SERVICES, type ServiceId } from "@/components/landing/home-v2/services/serviceData";
+import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 
 const PALETTE = {
   void: "#050403",
@@ -70,9 +71,9 @@ export default function ServicesDemoPage() {
       >
         <ServicesHologramScene
           activeServiceId={activeServiceId}
-          accentColor="#dcc176"
+          accentColor={TENSOR_ACCENT}
           blending="normal"
-          color="#b08b42"
+          color={TENSOR_GOLD}
           density={0.9}
           depthStrutCount={2200}
           edgeThresholdDeg={5}
