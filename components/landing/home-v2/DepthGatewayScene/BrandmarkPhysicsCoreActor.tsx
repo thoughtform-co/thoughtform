@@ -116,6 +116,34 @@ const CORE_OPACITY = 0.84;
 const CORE_POINT_SIZE_FLAT = 5.0;
 const CORE_POINT_SIZE_3D = 4.45;
 
+/** Corridor brandmark palette (ADR-023 2026-06-25 harmonization).
+ *
+ *  FLAT-rest palette (`#caa554` / `#e9c97a`) is the brand gold = the SVG fill,
+ *  so the matched-pixel SVG → particle handoff is color-seamless.
+ *
+ *  LANDED palette (`#b08b42` / `#dcc176`) mirrors the production #services
+ *  hologram (`ServicesStage.tsx` color / accentColor — keep in sync). The
+ *  shader lerps body+accent from the flat palette toward this as the mark
+ *  settles on the wireframe (`vWireCrisp` from uDepth), so the in-sphere
+ *  wireframe matches the Services wireframe and the corridor → Services
+ *  transition reads as continuation, not a swap. */
+const FLAT_WIRE_COLOR = "#caa554";
+const FLAT_WIRE_ACCENT = "#e9c97a";
+const LANDED_WIRE_COLOR = "#b08b42";
+const LANDED_WIRE_ACCENT = "#dcc176";
+
+/** PIN the GPGPU sim for the corridor brandmark (2026-06-25 "never warp" fix).
+ *  The matched-pixel mark + wireframe target must hold their EXACT shape — the
+ *  brandmark may never warp/wobble. The sim's curl-flow + turbulence (even at
+ *  the small IGNITE_ON values) animate a coherent swirl that visibly distorts
+ *  the matched-pixel grid over time. Zeroing them — while `returnStrength`
+ *  stays full (from IGNITE_ON_FORCES) — pins every particle dead-still at its
+ *  home, so the SHAPE is pristine. The wind-blown 2D→3D transition is driven
+ *  by the VERTEX shader (off the pinned home), not the sim, so the morph is
+ *  unaffected. Per-particle brightness "life" (twinkle/pulse) is fragment-only
+ *  and never moves a particle, so it stays without warping the shape. */
+const PINNED_CORRIDOR_FORCES = { on: { flowStrength: 0, turbulence: 0 } } as const;
+
 /** Target number of particles DRAWN in the corridor (Navigate / Encode /
  *  sphere). The global count is large (6000) to feed a dense parked centerpiece;
  *  the corridor thins back to this via `corridorKeep` so it stays calm — ≈ the
@@ -167,7 +195,17 @@ const CORRIDOR_DRAW_TARGET = 1600;
 const PRODUCTION_BASIS: BrandmarkBasis = "dome-fill";
 const PRODUCTION_SHAPE: BrandmarkCoreShape = "dot";
 const PRODUCTION_GLYPH: BrandmarkCoreGlyph = "plus";
-const PRODUCTION_BLENDING: BrandmarkCoreBlending = "additive";
+// NORMAL blending (2026-06-25 "too saturated" fix). The dense matched-pixel
+// flat mark draws all ~6000 dots at once; under ADDITIVE they ACCUMULATE and
+// clip toward a vivid yellow-orange no matter how the alpha is trimmed — the
+// mark read over-saturated and hotter than the SVG it replaces. NORMAL
+// blending does not accumulate, so overlapping opaque dots settle at the
+// TRUE #caa554 (matching the SVG paint exactly → a perfect handoff) and the
+// landed wireframe sits at the muted Services gold. Bonus: it matches the
+// #services hologram, which is also normal-blend, so the corridor → Services
+// read is consistent end-to-end. (Was `additive` for the legacy luminous-dust
+// look — superseded; the clean faithful shape + on-brand gold wins.)
+const PRODUCTION_BLENDING: BrandmarkCoreBlending = "normal";
 const PRODUCTION_SHAPE_STROKE = 0.12;
 const PRODUCTION_PRIMITIVE_ASPECT = 2.4;
 const PRODUCTION_LINE_JITTER = 0;
@@ -258,8 +296,8 @@ interface BrandmarkPhysicsCoreActorProps {
 }
 
 export function BrandmarkPhysicsCoreActor({
-  color = "#caa554",
-  accentColor = "#e9c97a",
+  color = FLAT_WIRE_COLOR,
+  accentColor = FLAT_WIRE_ACCENT,
   forceStatic,
 }: BrandmarkPhysicsCoreActorProps) {
   const tier = useDeviceTier();
@@ -647,6 +685,8 @@ export function BrandmarkPhysicsCoreActor({
           pointSizeRef={pointSizeRef}
           color={color}
           accentColor={accentColor}
+          landedColor={LANDED_WIRE_COLOR}
+          landedAccent={LANDED_WIRE_ACCENT}
           pausedRef={pausedRef}
           reducedMotion={reducedMotion}
           seedFromPositions={seedFromPositions}
@@ -675,6 +715,8 @@ interface BrandmarkPhysicsCoreWithGLBProps {
   pointSizeRef: { readonly current: number };
   color: string;
   accentColor: string;
+  landedColor: string;
+  landedAccent: string;
   pausedRef: { readonly current: boolean };
   reducedMotion: boolean;
   seedFromPositions: Float32Array | null;
@@ -693,6 +735,8 @@ function BrandmarkPhysicsCoreWithGLB({
   pointSizeRef,
   color,
   accentColor,
+  landedColor,
+  landedAccent,
   pausedRef,
   reducedMotion,
   seedFromPositions,
@@ -747,9 +791,13 @@ function BrandmarkPhysicsCoreWithGLB({
       if (ax > maxAbs) maxAbs = ax;
       if (ay > maxAbs) maxAbs = ay;
     }
-    // 0.46, not 0.5: leave a touch of margin so the wireframe sits clearly
-    // INSIDE the substrate sphere rather than grazing its cage.
-    const TARGET_HALF = 0.46;
+    // 0.5 = the group's full half-extent, which by design equals the
+    // substrate sphere's apparent radius (`getBrandmarkSphereMatchHalfExtent`
+    // → local 0.5 == sphere dotted-shell radius). So the wireframe's furthest
+    // points reach the sphere edge — the brandmark's edges ALIGN with the
+    // sphere's edges (user request, 2026-06-25) rather than nesting small
+    // inside it. Tunable: lower for margin, raise to overshoot the cage.
+    const TARGET_HALF = 0.5;
     const k = TARGET_HALF / maxAbs;
 
     // Fill all `count` slots, WRAPPING the wireframe samples rather than
@@ -781,10 +829,13 @@ function BrandmarkPhysicsCoreWithGLB({
       seedAtHome
       seedFromPositions={seedFromPositions}
       targetHomes={targetHomes}
+      forces={PINNED_CORRIDOR_FORCES}
       opacityRef={opacityRef}
       pointSizeRef={pointSizeRef}
       color={color}
       accentColor={accentColor}
+      landedColor={landedColor}
+      landedAccent={landedAccent}
       pausedRef={pausedRef}
       reducedMotion={reducedMotion}
       // ── Production appearance (PRODUCTION_* constants above). These

@@ -82,6 +82,15 @@ export function ServicesStage() {
                 opacity={0.74}
                 pointSize={4.3}
                 publishAnchors
+                // Frontal rest pose (ADR-023/025 2026-06-25 harmonization):
+                // the corridor in-sphere brandmark is head-on (its sword is
+                // aligned to the substrate sphere's vertical gimbal orbit), so
+                // the production Services wireframe drops its 3/4 rest tilt to
+                // match — the corridor → Services handoff has no rotation pop.
+                // Pointer-look (default 0.12) stays, so the mark is still
+                // explorable head-on. The lab keeps the 3/4 default pose.
+                restTiltX={0}
+                restTiltY={0}
                 scale={0.72}
                 scanGain={0.24}
                 showShell

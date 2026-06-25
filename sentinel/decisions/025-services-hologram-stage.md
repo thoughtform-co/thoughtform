@@ -206,3 +206,27 @@ Guardrail: do not restore the desktop default bottom-right service card or the
 stacked scan-note column. Full service copy should remain click-revealed from
 the distributed orbit labels; mobile/reduced-motion may stack the same labels as
 a simple accordion.
+
+## Update 7 (2026-06-25): frontal production pose (corridor harmonization)
+
+The corridor in-sphere brandmark (ADR-023) now lands on — and renders as — a
+crisp wireframe of the SAME `brandmark.glb` mesh, head-on (its sword is locked to
+the substrate sphere's vertical gimbal orbit). Against that, the Services
+wireframe's 3/4 rest tilt (Update 1: `restTiltX −0.13`, `restTiltY 0.24`) made the
+mark visibly rotate across the corridor→Services seam.
+
+**PRODUCTION now uses a frontal rest pose** — `restTiltX={0} restTiltY={0}` on the
+`<ServicesHologramScene>` in `ServicesStage.tsx` — so the Services wireframe faces
+head-on like the in-sphere mark and the seam has no rotation pop. Depth still
+reads via the wireframe's own Z-extrusion + the orbit armillary + the (still
+active) damped pointer-look, so frontal does not flatten the mark into a decal.
+
+**This supersedes the 3/4 parked pose FOR PRODUCTION ONLY.** The
+`ServicesHologramScene` component defaults (`REST_TILT_X=-0.13`, `REST_TILT_Y=0.24`)
+are unchanged, so `/test/services-*` labs keep the 3/4 look for by-eye tuning. The
+corridor↔Services color is also harmonized in the same pass (the in-sphere
+wireframe converges to this stage's `#b08b42`/`#dcc176` palette as it settles — see
+[ADR-023](023-corridor-brandmark-physics-core.md) 2026-06-25 harmonization
+follow-up). Guardrail: keep production frontal (`restTilt 0/0`) while the corridor
+in-sphere mark is frontal; if a future change re-tilts one, re-tilt the other (and
+re-check the sphere's sword↔vertical-orbit alignment).

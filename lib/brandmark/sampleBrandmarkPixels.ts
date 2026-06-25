@@ -121,39 +121,50 @@ export function rasterizeBrandmarkToWorldPositions(
     ctx.fill(new Path2D(d));
   }
 
-  // Sample inside-pixels. Decide a stride so the candidate-pixel count
-  // tracks `maxCount` (with headroom for partial coverage).
-  const stride =
-    opts.pixelStride === undefined || opts.pixelStride === "auto"
-      ? Math.max(1, Math.floor(Math.sqrt((drawW * drawH) / Math.max(1, opts.maxCount * 1.4))))
-      : Math.max(1, Math.floor(opts.pixelStride));
-
   const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = image.data;
 
-  // First pass: find filled raster pixels and convert them to CSS pixel
-  // coordinates on the SVG's screen rect. We store the raw NDC X/Y here
-  // so the unproject pass only needs to compute world Z.
-  const cssX: number[] = [];
-  const cssY: number[] = [];
   // Raster → SVG screen rect: raster coords map back to viewBox via the
   // inverse of (translate + scale + translate) above, then map viewBox
   // to the screen rect.
   const rastToCssX = opts.rect.width / drawW;
   const rastToCssY = opts.rect.height / drawH;
-  for (let y = 0; y < canvas.height; y += stride) {
-    for (let x = 0; x < canvas.width; x += stride) {
-      const idx = (y * canvas.width + x) * 4 + 3; // alpha channel
-      if (data[idx] < alphaThreshold) continue;
-      // Map raster pixel → SVG screen rect CSS pixel. (Raster (drawX, drawY)
-      // is the top-left of the brandmark; raster (drawX+drawW, drawY+drawH)
-      // is the bottom-right.)
-      const sx = opts.rect.left + (x - drawX) * rastToCssX;
-      const sy = opts.rect.top + (y - drawY) * rastToCssY;
-      cssX.push(sx);
-      cssY.push(sy);
+
+  // Collect filled raster pixels at a given stride → CSS-pixel coords on
+  // the SVG's screen rect. Returns parallel arrays.
+  const collectAt = (s: number): { cssX: number[]; cssY: number[] } => {
+    const cssX: number[] = [];
+    const cssY: number[] = [];
+    for (let y = 0; y < canvas.height; y += s) {
+      for (let x = 0; x < canvas.width; x += s) {
+        const idx = (y * canvas.width + x) * 4 + 3; // alpha channel
+        if (data[idx] < alphaThreshold) continue;
+        cssX.push(opts.rect.left + (x - drawX) * rastToCssX);
+        cssY.push(opts.rect.top + (y - drawY) * rastToCssY);
+      }
     }
+    return { cssX, cssY };
+  };
+
+  // Decide a stride so the candidate count tracks `maxCount`. Then — the
+  // critical part for a CLEAN matched-pixel mark — guarantee we collect AT
+  // LEAST `maxCount` candidates: if the chosen stride under-fills, drop to a
+  // finer stride and re-collect. Otherwise the consumer wrap-duplicates the
+  // shortfall, drawing some particles twice at the same pixel → brighter
+  // doubled dots = an uneven, "warped/brushy" mark (user report 2026-06-25).
+  // With ≥ maxCount unique candidates we sub-sample down to exactly maxCount,
+  // so every particle lands on a DISTINCT silhouette pixel — an even fill.
+  let stride =
+    opts.pixelStride === undefined || opts.pixelStride === "auto"
+      ? Math.max(1, Math.floor(Math.sqrt((drawW * drawH) / Math.max(1, opts.maxCount * 1.4))))
+      : Math.max(1, Math.floor(opts.pixelStride));
+  let collected = collectAt(stride);
+  while (collected.cssX.length < opts.maxCount && stride > 1) {
+    stride = Math.max(1, stride - 1);
+    collected = collectAt(stride);
   }
+  const cssX = collected.cssX;
+  const cssY = collected.cssY;
 
   // Cap to maxCount (uniform sub-sample). With auto stride we usually land
   // close to maxCount already; if we're over, drop every Nth.

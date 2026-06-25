@@ -334,6 +334,15 @@ export interface BrandmarkPhysicsCoreProps {
   /** Accent tint — rim particles (high `edgeWeight`) blend toward
    *  this. Pick brighter than `color` for a "hot rim". */
   accentColor?: string;
+  /** ADR-023 2026-06-25 harmonization — the SETTLED-wireframe body tint.
+   *  As the mark lands on the 3D wireframe (uDepth → 1) the body lerps
+   *  from `color` toward this. Default = `color` (no shift; lab + other
+   *  consumers byte-identical). The corridor passes the #services palette
+   *  so the in-sphere wireframe matches the hologram. */
+  landedColor?: string;
+  /** Settled-wireframe accent tint. Lerps from `accentColor` toward this
+   *  as uDepth → 1. Default = `accentColor`. */
+  landedAccent?: string;
   /** Additional alpha multiplier (0..1). */
   opacity?: number;
   /** Live ref for `opacity`. Read every frame inside `useFrame` so the
@@ -530,6 +539,8 @@ export function BrandmarkPhysicsCore({
   pointSizeRef,
   color = "#caa554",
   accentColor = "#e9c97a",
+  landedColor,
+  landedAccent,
   opacity = DEFAULT_OPACITY,
   opacityRef,
   scatterRadius = 0.55,
@@ -717,6 +728,10 @@ export function BrandmarkPhysicsCore({
         uPixelRatio: { value: dpr },
         uColor: { value: new THREE.Color(color) },
         uAccentColor: { value: new THREE.Color(accentColor) },
+        // Settled-wireframe palette (ADR-023 2026-06-25). Default to the
+        // flat-rest palette so consumers that don't opt in are unchanged.
+        uLandedColor: { value: new THREE.Color(landedColor ?? color) },
+        uLandedAccent: { value: new THREE.Color(landedAccent ?? accentColor) },
         uOpacity: { value: opacity },
         uDepth: { value: depth },
         uCoverMorph: { value: coverMorph },
@@ -836,6 +851,8 @@ export function BrandmarkPhysicsCore({
       }
       mat.uniforms.uColor.value.set(color);
       mat.uniforms.uAccentColor.value.set(accentColor);
+      mat.uniforms.uLandedColor.value.set(landedColor ?? color);
+      mat.uniforms.uLandedAccent.value.set(landedAccent ?? accentColor);
       mat.uniforms.uPointSize.value = resolvedPointSize;
       mat.uniforms.uOpacity.value = resolvedOpacity;
       mat.uniforms.uDepth.value = resolvedDepth;
@@ -898,6 +915,8 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uPositionTexture.value = sim.getPositionTexture();
     mat.uniforms.uColor.value.set(color);
     mat.uniforms.uAccentColor.value.set(accentColor);
+    mat.uniforms.uLandedColor.value.set(landedColor ?? color);
+    mat.uniforms.uLandedAccent.value.set(landedAccent ?? accentColor);
     mat.uniforms.uPointSize.value = resolvedPointSize;
     mat.uniforms.uOpacity.value = resolvedOpacity;
     mat.uniforms.uDepth.value = resolvedDepth;

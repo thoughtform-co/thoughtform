@@ -102,12 +102,22 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   varying float vDepth;         // local Z, drives atmospheric dim
   varying float vAngle;         // forwarded to fragment so dash / scan / bracket can rotate
   varying float vCoverMorph;    // [0, 1] cover-in factor — fragment alpha gate
+  // ADR-023 2026-06-25 harmonization varyings (declared contiguously so the
+  // GLSL3 varying->out conversion handles them cleanly):
+  //   vWireCrisp: 0 mid-flight, 1 once SETTLED on the wireframe. Drives the
+  //     Services-palette color shift + landed size-shrink + airy alpha trim.
+  //   vCrisp: high at BOTH the flat rest AND the landed wireframe, low only
+  //     mid-flight. Drives the dot-tighten + still + size-flatten so the
+  //     PRESENTED shape reads clean/uniform (never brushy), without
+  //     flattening the wind-blown flight.
+  varying float vWireCrisp;
+  varying float vCrisp;
 
   // Cheap deterministic hash for the per-band scanline displacement.
   float hash11(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
   }
-  
+
   void main() {
     vLuma = aLuma;
     vEdgeWeight = aEdgeWeight;
@@ -244,7 +254,25 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // 0..1 brightness factor — streamed particles read dimmer as they
     // recede into the background, reinforcing the depth momentum.
     vDepth = pos.z;
-    
+
+    // ADR-023 2026-06-25 harmonization: SETTLED-wireframe factor. 0 until
+    // the last 30% of the morph, then 1 once the mark has landed on the
+    // 3D wireframe inside the sphere. Drives the Services-palette color
+    // shift + landed size-shrink + airy alpha trim (landed-ONLY).
+    float wireCrisp = smoothstep(0.7, 1.0, uDepth);
+    vWireCrisp = wireCrisp;
+
+    // PRESENTED-shape crispness (2026-06-25 "never warp" pass): high at the
+    // FLAT rest (uDepth → 0, the matched-pixel SVG mark) AND at the landed
+    // wireframe (uDepth → 1), low only during the wind-blown flight. When
+    // the brandmark SHAPE is presented it must read clean + uniform — never
+    // brushy/clumpy — so this drives the fragment's dot-tighten + twinkle/
+    // pulse still + the size-variance flatten below. The flight (mid-uDepth)
+    // keeps its living dust character (vCrisp → 0 there).
+    float flatCrisp = 1.0 - smoothstep(0.0, 0.2, uDepth);
+    float crisp = max(flatCrisp, wireCrisp);
+    vCrisp = crisp;
+
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
     
@@ -253,6 +281,10 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // hotter; the variance keeps the cloud from looking like a
     // uniform texture.
     float sizeMul = 0.78 + aEdgeWeight * 0.32 + aLuma * 0.18;
+    // PRESENTED-shape: flatten the per-particle size variance toward a
+    // uniform dot so the matched-pixel mark + landed wireframe read CLEAN,
+    // not clumpy/brushy. Mid-flight (vCrisp → 0) keeps the lively variance.
+    sizeMul = mix(sizeMul, 1.0, vCrisp * 0.85);
     // Cover-in size ramp so particles condense into focus rather than
     // appearing as full-size dots from frame one when they're clustered
     // at the rect centre. Identity at coverIn = 1, so the parked corridor
@@ -268,6 +300,11 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // the sparse fat-bead ("Christmas lights") read into a fine, spread-out
     // particle field (vos9x.com centerpiece reference).
     sizeMul = mix(sizeMul, uCleanFieldDotScale, uCleanField);
+    // Settled-wireframe: shrink the dots a touch once landed so the
+    // in-sphere mark reads as a FINE dotted wireframe rather than fat
+    // luminous beads. Identity until uDepth crosses 0.7 (flat rest +
+    // flight unchanged); keeps the airy density (depthKeep untouched).
+    sizeMul *= mix(1.0, 0.82, wireCrisp);
 
     // ── Density rank-clip — both ends tunable (decoupled) ────────
     // keepFrac ramps uCorridorKeep (clean = 0, corridor) → uCleanFieldKeep
@@ -308,6 +345,16 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   
   uniform vec3 uColor;
   uniform vec3 uAccentColor;
+  // ADR-023 2026-06-25 harmonization: the SETTLED-wireframe palette. As the
+  // mark lands on the 3D wireframe inside the sphere (vWireCrisp → 1) the body
+  // + accent lerp from the flat-rest gold (uColor/uAccentColor, = SVG gold so
+  // the matched-pixel handoff is color-seamless) toward this Services-section
+  // palette, so the in-sphere wireframe matches the #services hologram and the
+  // later corridor→Services transition reads as continuation, not a swap.
+  // Defaults equal uColor/uAccentColor, so the lab + other consumers are
+  // byte-identical (fragment-only — no Invariant 8 precision constraint).
+  uniform vec3 uLandedColor;
+  uniform vec3 uLandedAccent;
   uniform float uOpacity;
   uniform float uTime;
   uniform float uGlitch;   // mediump via the precision stmt — matches vertex
@@ -337,7 +384,9 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   varying float vDepth;
   varying float vAngle;
   varying float vCoverMorph;    // [0, 1] cover-in factor — alpha gate during SVG → particle handoff
-  
+  varying float vWireCrisp;     // 0 mid-flight → 1 settled wireframe (crisp + still + Services palette)
+  varying float vCrisp;         // 1 at flat rest AND landed (presented), 0 mid-flight — clean shape
+
   float hashF(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
   }
@@ -479,9 +528,12 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
       float head = smoothstep(0.0, halfLen, q.x) * step(slit, 0.0);
       mask = clamp(body + head * 0.5, 0.0, 1.4);
     } else {
-      // DOT (default) — original soft radial speck. Tighter at the parked
-      // centerpiece via uCleanFieldEdge so the dense field stays crisp.
-      float dotEdge0 = mix(0.30, uCleanFieldEdge, uCleanField);
+      // DOT (default) — original soft radial speck. Tighter whenever the
+      // brandmark SHAPE is PRESENTED (vCrisp: flat rest + landed wireframe)
+      // and at the parked centerpiece (uCleanField), so the mark reads as
+      // crisp dots instead of soft brushy dust. Soft (0.30) only mid-flight,
+      // where the wind-blown dust character is wanted.
+      float dotEdge0 = mix(0.30, uCleanFieldEdge, max(uCleanField, vCrisp));
       mask = 1.0 - smoothstep(dotEdge0, 0.50, d);
     }
 
@@ -499,7 +551,11 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // the twinkle without dragging the rest of the centerpiece treatment with
     // it (so a dither / raster look stays animated in colour but static in
     // brightness). max() means EITHER channel can request stillness.
-    float stillness = max(uCleanField, uFreezeMotion);
+    // vCrisp joins the stillness chain so the PRESENTED shape (flat rest +
+    // landed wireframe) reads as a calm, uniform mark — no firefly twinkle /
+    // pulse mottling the clean silhouette. Only the wind-blown flight keeps
+    // its living dust character (vCrisp = 0 there).
+    float stillness = max(max(uCleanField, uFreezeMotion), vCrisp);
     float twinkle = mix(0.55 + 0.45 * vLuma, 1.0, stillness);
     alpha *= twinkle;
     
@@ -515,15 +571,26 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // is flat at the centerpiece, so there is no depth to convey there).
     depthFactor = mix(depthFactor, 1.0, uCleanField);
 
+    // Settled-wireframe palette convergence (ADR-023 2026-06-25). As the
+    // mark lands on the wireframe (vWireCrisp → 1) the body + accent lerp
+    // from the flat-rest SVG gold toward the Services palette so the
+    // in-sphere wireframe matches the #services hologram (corridor →
+    // Services reads as continuation). vWireCrisp = 0 at the flat rest +
+    // flight keeps uColor (= SVG gold) so the matched-pixel handoff is
+    // color-seamless. Defaults make uLandedColor == uColor (lab no-op).
+    vec3 bodyTone = mix(uColor, uLandedColor, vWireCrisp);
+    vec3 accentTone = mix(uAccentColor, uLandedAccent, vWireCrisp);
     // Tint blend. Edge particles (high \`vEdgeWeight\`, near the
     // silhouette extremes) trend toward the rim accent. Mix amount
     // is conservative so the body stays anchored in the gold body
     // tone — only the limb hints toward dawn.
-    vec3 color = mix(uColor, uAccentColor, vEdgeWeight * 0.55);
+    vec3 color = mix(bodyTone, accentTone, vEdgeWeight * 0.55);
     // Clean-field pulls the rim-accent variance back toward the uniform
-    // body gold so the field reads as one even tone (stays on-brand —
+    // body tone so the field reads as one even tone (stays on-brand —
     // blends with the gold sphere rather than going monochrome/cool).
-    color = mix(color, uColor, uCleanField * 0.7);
+    // Uses bodyTone (not raw uColor) so the Services-palette convergence
+    // is respected at the parked centerpiece too.
+    color = mix(color, bodyTone, uCleanField * 0.7);
     color *= depthFactor;
     color *= shade; // voxel bevel (1.0 in every other mode)
     
@@ -557,6 +624,15 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
       color *= 1.0 + (cellSeed - 0.5) * 0.45 * uGlitch;
     }
     
+    // Landed-wireframe recessive trim (ADR-023 2026-06-25). Production now
+    // uses NORMAL blending (see BrandmarkPhysicsCoreActor PRODUCTION_BLENDING),
+    // so there is no additive over-saturation to fight — the flat rest stays
+    // FULL (solid #caa554, matching the SVG). Keep only a gentle trim on the
+    // SETTLED wireframe so the in-sphere mark reads as a calm, recessive
+    // background element. 0 at the flat rest + flight (vWireCrisp = 0); the
+    // Services centerpiece (uCleanField) keeps its own CENTER_OPACITY.
+    float wireAlpha = mix(1.0, 0.85, vWireCrisp * (1.0 - uCleanField));
+
     // Cover-in alpha gate (ADR-023 morph rev.). vCoverMorph is the
     // vertex-stage smoothstep over uCoverMorph, identical to v7's
     // silhouette painter. Replaces the actor's previous separate
@@ -565,6 +641,6 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // owns the visibility ramp. At coverIn = 1 (post-cut and beyond) the
     // multiplier is identity, so the parked corridor / sphere /
     // centerpiece look is byte-identical.
-    gl_FragColor = vec4(color, alpha * uOpacity * vCoverMorph);
+    gl_FragColor = vec4(color, alpha * uOpacity * vCoverMorph * wireAlpha);
   }
 `;
