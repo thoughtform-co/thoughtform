@@ -23,6 +23,7 @@ import {
 } from "./DepthGatewayScene/motionFollower";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
+import { TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
 
 /**
  * ProjectedBrandmarkActor — the primary brandmark painter for the
@@ -597,7 +598,10 @@ export function ProjectedBrandmarkActor() {
         zIndex: PROJECTED_BRANDMARK_TOP_Z_INDEX,
         display: "none",
         perspective: `${PERSPECTIVE_PX}px`,
-        filter: "drop-shadow(0 0 18px rgba(202, 165, 84, 0.42))",
+        // Unified-gold glow (176,139,66 == TENSOR_GOLD #b08b42) so the rest
+        // mark's halo matches its fill + the particle flight + landed wireframe
+        // — one continuous darker-orange across the corridor journey (ADR-023).
+        filter: "drop-shadow(0 0 18px rgba(176, 139, 66, 0.42))",
         willChange: "transform, width, height, opacity",
       }}
     >
@@ -610,7 +614,7 @@ export function ProjectedBrandmarkActor() {
           willChange: "transform",
         }}
       >
-        <BrandmarkGlyph outline={false} decorative />
+        <BrandmarkGlyph outline={false} decorative fill={TENSOR_GOLD} />
       </div>
     </div>
   );

@@ -75,6 +75,13 @@ export type BrandmarkGlyphProps = {
   /** Optional class applied to the outline `<image>` so a parent can
    *  crossfade it independently of the filled paths. */
   outlineClassName?: string;
+  /** Optional fill for the filled paths. Defaults to the brand gold
+   *  `var(--gold, #caa554)` so every existing dock consumer is unchanged.
+   *  The home-v2 corridor brandmark overrides this to the harmonized Tensor
+   *  gold so its 2D rest → particle flight → 3D wireframe → #services journey
+   *  is one continuous yellow (no orange interlude) — see ADR-023 §
+   *  harmonization (2026-06-25). */
+  fill?: string;
 };
 
 /** Inline SVG brandmark. Paints `--gold` for the filled paths and
@@ -88,6 +95,7 @@ export function BrandmarkGlyph({
   decorative = true,
   filledClassName,
   outlineClassName,
+  fill = "var(--gold, #caa554)",
 }: BrandmarkGlyphProps) {
   const ariaProps = decorative
     ? { "aria-hidden": true as const }
@@ -106,7 +114,7 @@ export function BrandmarkGlyph({
     >
       <g className={filledClassName}>
         {BRANDMARK_FILLED_PATHS.map((d, i) => (
-          <path key={i} d={d} fill="var(--gold, #caa554)" />
+          <path key={i} d={d} fill={fill} />
         ))}
       </g>
       {outline ? (

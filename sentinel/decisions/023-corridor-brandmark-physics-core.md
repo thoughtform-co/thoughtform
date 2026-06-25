@@ -285,15 +285,62 @@ standalone `ServicesHologramScene` / `VolumetricBrandmarkArtifact` remain the la
 harness (`/test/services-demo`). See ADR-021 (core is the visible foreground
 during `servicesAmbient`) and ADR-025 (production #services no longer self-renders).
 
-**Gold harmonization (same date).** A single source of truth lives in
-[`lib/home-v2/goldPalette.ts`](../../lib/home-v2/goldPalette.ts): `HANDOFF_GOLD`/
-`HANDOFF_ACCENT` (`#caa554`/`#e9c97a`, LOCKED for the matched-pixel handoff),
-`TENSOR_GOLD`/`TENSOR_ACCENT` (the landed / #services gold, nudged a touch more
-yellow — the corridor `LANDED_WIRE_*`, the orbit rings, and `ServicesStage`
-color/accent all read these), and `SPHERE_GOLD` (a more-yellow `#caa554` for the
-substrate-sphere shells' additive bed, aliased over `COLOR_GOLD` in the four
-home-v2 shell files without touching the broadly-shared `artifactGeom` constant).
-Pitfall: do not shift `HANDOFF_*` off `#caa554` — the SVG→particle handoff pops.
+**Gold harmonization (same date) — SUPERSEDED by the unify-on-orange update below.**
+A single source of truth lives in
+[`lib/home-v2/goldPalette.ts`](../../lib/home-v2/goldPalette.ts). It originally had
+two families — a `HANDOFF_*` flat-rest/flight gold (`#caa554`/`#e9c97a`) and a
+`TENSOR_*` landed/#services gold — with the corridor shader lerping between them.
+That two-family split is RETIRED; see the update below for the current single-gold
+contract.
+
+**Update — unify on one gold → darker orange + contain + de-pixelate (2026-06-25
+follow-up; CURRENT).** Two follow-ups landed after the harmonization above.
+
+1. **One continuous gold (no color lerp).** The orange→landed split read as the
+   mark "turning orange then yellow" mid-dive. Fixed by unifying the ENTIRE
+   corridor brandmark journey — 2D rest SVG, matched-pixel flight, landed
+   wireframe, orbits, #services — on a SINGLE gold. The `wireCrisp` body/accent
+   color lerp (`uColor → uLandedColor`) is now an identity no-op (production
+   passes the same gold to `color` and `landedColor`); its crisp/still/shrink
+   effects remain. `HANDOFF_GOLD`/`HANDOFF_ACCENT` are deleted. `TENSOR_GOLD`/
+   `TENSOR_ACCENT` are kept as stable semantic labels (not hue names) so the ~30
+   import sites don't churn.
+
+2. **Value reverted yellow → darker orange.** The unified gold was briefly a
+   too-yellow `#c2af4c`/`#e6d27c` ("Tensor"); at the user's request it is now the
+   **darker yellow-orange retrofuturistic glow**: `TENSOR_GOLD = #b08b42`
+   (rgb 176,139,66), `TENSOR_ACCENT = #dcc176`, `SPHERE_GOLD = 0xcaa554`
+   (substrate-sphere gimbal + interior bed, a touch lighter than the mark). The
+   2D rest SVG fill is set via a new `BrandmarkGlyph` `fill` prop
+   (`ProjectedBrandmarkActor` passes `TENSOR_GOLD`); the drop-shadow glow + the
+   mobile fallbacks (`ServicesBrandmarkField`, `CorridorSeamPixelField`
+   `GOLD_RGB`) carry the hardcoded `176, 139, 66`. The global site brand gold
+   `--gold` (`#caa554`, `app/styles/variables.css`) is unchanged — this is scoped
+   to the corridor brandmark + sphere. **New pitfall:** the corridor flat color
+   and the SVG fill must stay EQUAL (both `TENSOR_GOLD`) or the matched-pixel
+   handoff pops; change them together.
+
+3. **Size to fill the sphere — `BRANDMARK_SPHERE_FILL` 1.0 → 0.95** (`sceneGeom.ts`).
+   Superseding Invariant/decision 4 above (`TARGET_HALF` "edges align with the
+   sphere"): at fill `1.0` the mark's furthest point (the vertical sword tip) sat
+   ON the dotted-shell radius, so the bright sword read as PROTRUDING past the
+   visible sphere body. A first pass to `0.85` over-corrected — the mark read as
+   TOO SMALL (a big gap to the sphere). `0.95` FILLS the sphere — the mark's outer
+   extent reaches the visible edge — while the sword tip stays just inside.
+   `TARGET_HALF` stays `0.5` (the group-local normalization target); the WORLD
+   size is now `0.95 × sphere radius`. The sword↔vertical-gimbal-orbit alignment is
+   angular (`BRANDMARK_SWORD_TILT_RAD`), unaffected by the fill fraction.
+   Pitfall: raising `BRANDMARK_SPHERE_FILL` toward 1.0 reintroduces the protrusion;
+   dropping it well below 0.9 reads as too small inside the sphere.
+
+4. **De-pixelate the landed wireframe.** At `uDepth → 1` the draw thinned to
+   `depthKeep ≈ 0.27` (~1620 of 6000) at 82% dot size — sparse/gappy/pixelated.
+   Fixed by `CORRIDOR_DRAW_TARGET` `1600 → 2600` (landed keep ≈ 0.43, ~2600 drawn)
+   and the landed dot-size shrink `mix(1.0, 0.82, wireCrisp) → mix(1.0, 0.90,
+   wireCrisp)` so adjacent dots close their gaps. The airy #services centerpiece
+   is gated by a SEPARATE `uCleanFieldKeep` (Invariant 11), so it is unchanged.
+   Pitfall: raising the global particle count past 6000 to densify jumps the sim
+   texture 64×64→128×128 (4× compute) — use `CORRIDOR_DRAW_TARGET` instead.
 
 ---
 

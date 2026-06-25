@@ -104,9 +104,10 @@ export function ServicesBrandmarkField() {
     const draw = (timeMs: number) => {
       ctx.clearRect(0, 0, width, height);
       const t = timeMs * 0.001;
-      // Warm gold mark — the brand colour, reading cleanly in front of
-      // the dim ambient sphere haze behind the section.
-      ctx.fillStyle = "rgba(202, 165, 84, 0.82)";
+      // Unified gold mark (176,139,66 == TENSOR_GOLD #b08b42) — the unified
+      // corridor + #services darker-orange, so this mobile / reduced-motion
+      // fallback matches the desktop WebGL centerpiece.
+      ctx.fillStyle = "rgba(176, 139, 66, 0.82)";
       const dot = Math.max(1.5, 1.7 * dpr);
       const halfDot = dot * 0.5;
       const home = sample.home;

@@ -304,7 +304,10 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // in-sphere mark reads as a FINE dotted wireframe rather than fat
     // luminous beads. Identity until uDepth crosses 0.7 (flat rest +
     // flight unchanged); keeps the airy density (depthKeep untouched).
-    sizeMul *= mix(1.0, 0.82, wireCrisp);
+    // 0.90 (was 0.82, 2026-06-25 de-pixelate): the harder shrink left
+    // visible gaps between landed dots; 0.90 lets adjacent dots close up
+    // so the denser wireframe (CORRIDOR_DRAW_TARGET 2600) reads continuous.
+    sizeMul *= mix(1.0, 0.90, wireCrisp);
 
     // ── Density rank-clip — both ends tunable (decoupled) ────────
     // keepFrac ramps uCorridorKeep (clean = 0, corridor) → uCleanFieldKeep

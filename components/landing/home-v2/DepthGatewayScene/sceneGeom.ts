@@ -1488,8 +1488,16 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
  *  dotted sphere shell it sits inside, so the brandmark arc blends
  *  into the gimbal globe instead
  *  of reading as a smaller centre core. Single tuning knob — see
- *  `getBrandmarkSphereMatchHalfExtent`. */
-export const BRANDMARK_SPHERE_FILL = 1.0;
+ *  `getBrandmarkSphereMatchHalfExtent`.
+ *
+ *  `0.95` (2026-06-25): `1.0` put the mark's furthest points (the vertical
+ *  "sword" tip) on the dotted-shell radius so the sword read as PROTRUDING past
+ *  the visible sphere body; an over-correction to `0.85` then read as TOO SMALL
+ *  (a big gap between the mark and the sphere). `0.95` fills the sphere — the
+ *  mark's outer extent reaches the visible edge — while keeping the sword tips
+ *  just inside. The sword↔vertical-gimbal-orbit alignment is angular
+ *  (`BRANDMARK_SWORD_TILT_RAD`), unaffected by the fill fraction. */
+export const BRANDMARK_SPHERE_FILL = 0.95;
 
 /** World half-extent that makes the brandmark match the substrate gyro
  *  SPHERE's apparent size at the current corridor progress.

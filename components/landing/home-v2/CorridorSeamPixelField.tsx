@@ -72,9 +72,11 @@ const SEAM_PARTICLE_COUNT_MOBILE = 700;
  *  gate so density tiers stay in lockstep. */
 const SEAM_MOBILE_MAX_WIDTH = 768;
 
-/** Theme RGB triples — the gateway hero's palette. Most particles
- *  paint gold, a small fraction paint dawn for cool-side accents. */
-const GOLD_RGB = "202, 165, 84";
+/** Theme RGB triples. Most particles paint the unified gold
+ *  (176,139,66 == TENSOR_GOLD #b08b42) so this brandmark dissolve matches the
+ *  corridor mark + #services centerpiece; a small fraction paint dawn for
+ *  cool-side accents. */
+const GOLD_RGB = "176, 139, 66";
 const DAWN_RGB = "236, 227, 214";
 
 /** Particles whose `colorMix` exceeds this threshold render in

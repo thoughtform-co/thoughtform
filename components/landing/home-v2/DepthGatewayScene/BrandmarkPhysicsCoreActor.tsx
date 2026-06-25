@@ -37,12 +37,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { smoothstep, smootherstep } from "@/lib/home-v2/corridorMap";
-import {
-  HANDOFF_GOLD,
-  HANDOFF_ACCENT,
-  TENSOR_GOLD,
-  TENSOR_ACCENT,
-} from "@/lib/home-v2/goldPalette";
+import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
@@ -124,19 +119,22 @@ const CORE_OPACITY = 0.84;
 const CORE_POINT_SIZE_FLAT = 5.0;
 const CORE_POINT_SIZE_3D = 4.45;
 
-/** Corridor brandmark palette (ADR-023 2026-06-25 harmonization).
+/** Corridor brandmark palette (ADR-023 — unified Tensor gold, 2026-06-25
+ *  harmonization follow-up).
  *
- *  FLAT-rest palette (`#caa554` / `#e9c97a`) is the brand gold = the SVG fill,
- *  so the matched-pixel SVG → particle handoff is color-seamless.
- *
- *  LANDED palette (`#b08b42` / `#dcc176`) mirrors the production #services
- *  hologram (`ServicesStage.tsx` color / accentColor — keep in sync). The
- *  shader lerps body+accent from the flat palette toward this as the mark
- *  settles on the wireframe (`vWireCrisp` from uDepth), so the in-sphere
- *  wireframe matches the Services wireframe and the corridor → Services
- *  transition reads as continuation, not a swap. */
-const FLAT_WIRE_COLOR = HANDOFF_GOLD;
-const FLAT_WIRE_ACCENT = HANDOFF_ACCENT;
+ *  The ENTIRE corridor journey now reads in one continuous Tensor gold:
+ *  the 2D rest SVG (`ProjectedBrandmarkActor` paints `BrandmarkGlyph` with
+ *  `TENSOR_GOLD`), the matched-pixel particle flight (FLAT palette below),
+ *  and the landed in-sphere wireframe + #services hologram + orbits (LANDED
+ *  palette) are all `TENSOR_*`. The matched-pixel SVG → particle handoff
+ *  stays color-seamless because the SVG fill and the particle FLAT color are
+ *  the same Tensor gold; the `vWireCrisp` body/accent lerp (`uColor →
+ *  uLandedColor` as uDepth → 1) is now an identity no-op on color (its
+ *  crisp / size / stillness effects still apply). This removes the earlier
+ *  orange interlude where the rest mark + flight sat on the brand gold
+ *  `#caa554` and only shifted to yellow at the very end of the dive. */
+const FLAT_WIRE_COLOR = TENSOR_GOLD;
+const FLAT_WIRE_ACCENT = TENSOR_ACCENT;
 const LANDED_WIRE_COLOR = TENSOR_GOLD;
 const LANDED_WIRE_ACCENT = TENSOR_ACCENT;
 
@@ -154,10 +152,17 @@ const PINNED_CORRIDOR_FORCES = { on: { flowStrength: 0, turbulence: 0 } } as con
 
 /** Target number of particles DRAWN in the corridor (Navigate / Encode /
  *  sphere). The global count is large (6000) to feed a dense parked centerpiece;
- *  the corridor thins back to this via `corridorKeep` so it stays calm — ≈ the
- *  prior corridor density. Raising the global count adds centerpiece density
- *  without touching the corridor (the keep auto-recomputes). */
-const CORRIDOR_DRAW_TARGET = 1600;
+ *  the corridor thins back to this via `corridorKeep` so it stays calm.
+ *  Raising the global count adds centerpiece density without touching the
+ *  corridor (the keep auto-recomputes).
+ *
+ *  `2600` (was `1600`, 2026-06-25 de-pixelate): at 1600 the landed in-sphere
+ *  wireframe (uDepth → 1, keep ≈ 0.27) drew only ~1620 of 6000 particles —
+ *  too sparse, so the strokes read as gappy/pixelated dots. 2600 (keep ≈ 0.43,
+ *  ~2600 drawn) closes the gaps so the wireframe reads continuous. The airy
+ *  #services centerpiece is gated by a SEPARATE `uCleanFieldKeep`, so it is
+ *  unchanged. */
+const CORRIDOR_DRAW_TARGET = 2600;
 
 /** ── Production appearance (basis · primitive · blending) ─────────────
  *  These constants pick a particular visual preset for the live corridor
@@ -208,11 +213,12 @@ const PRODUCTION_GLYPH: BrandmarkCoreGlyph = "plus";
 // clip toward a vivid yellow-orange no matter how the alpha is trimmed — the
 // mark read over-saturated and hotter than the SVG it replaces. NORMAL
 // blending does not accumulate, so overlapping opaque dots settle at the
-// TRUE #caa554 (matching the SVG paint exactly → a perfect handoff) and the
-// landed wireframe sits at the muted Services gold. Bonus: it matches the
-// #services hologram, which is also normal-blend, so the corridor → Services
-// read is consistent end-to-end. (Was `additive` for the legacy luminous-dust
-// look — superseded; the clean faithful shape + on-brand gold wins.)
+// TRUE Tensor gold (`#c2af4c`, matching the SVG paint exactly → a perfect
+// handoff) and the landed wireframe sits at that same muted Services gold.
+// Bonus: it matches the #services hologram, which is also normal-blend, so the
+// corridor → Services read is consistent end-to-end. (Was `additive` for the
+// legacy luminous-dust look — superseded; the clean faithful shape + on-brand
+// gold wins.)
 const PRODUCTION_BLENDING: BrandmarkCoreBlending = "normal";
 const PRODUCTION_SHAPE_STROKE = 0.12;
 const PRODUCTION_PRIMITIVE_ASPECT = 2.4;
