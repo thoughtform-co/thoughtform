@@ -5,7 +5,7 @@ import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { SERVICE_ORBITS } from "./celestialData";
-import { ServiceScanInterface } from "./ServiceScanInterface";
+import { ServicesCardStack } from "./ServicesCardStack";
 import { ServicesBrandmarkField } from "./ServicesBrandmarkField";
 import { ServicesHologramScene } from "./hologram";
 import { ServicesOrbitMap } from "./ServicesOrbitMap";
@@ -33,9 +33,7 @@ import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 export function ServicesStage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
-  const expandedServiceRef = useRef<ServiceId | null>(null);
   const [activeServiceId, setActiveServiceId] = useState<ServiceId>(SERVICES[0].id);
-  const [expandedServiceId, setExpandedServiceId] = useState<ServiceId | null>(null);
   const useHologramCanvas = useMediaQuery(
     "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
   );
@@ -57,13 +55,7 @@ export function ServicesStage() {
   const showServicesCanvas = useHologramCanvas && !UNIFIED_SERVICES_ARMILLARY;
 
   const setActiveByStep = useCallback((step: number) => {
-    if (expandedServiceRef.current) return;
     setActiveServiceId(SERVICES[step]?.id ?? SERVICES[0].id);
-  }, []);
-
-  const updateExpandedService = useCallback((serviceId: ServiceId | null) => {
-    expandedServiceRef.current = serviceId;
-    setExpandedServiceId(serviceId);
   }, []);
 
   const selectService = useCallback((serviceId: ServiceId) => {
@@ -133,12 +125,7 @@ export function ServicesStage() {
         <ServicesBrandmarkField />
         <ServicesOrbitMap />
 
-        <ServiceScanInterface
-          activeServiceId={activeServiceId}
-          expandedServiceId={expandedServiceId}
-          onExpandedServiceChange={updateExpandedService}
-          onSelectService={selectService}
-        />
+        <ServicesCardStack activeServiceId={activeServiceId} onSelectService={selectService} />
       </div>
     </div>
   );

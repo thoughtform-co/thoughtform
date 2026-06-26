@@ -671,12 +671,200 @@
   white-space: nowrap;
 }
 
+/* ── Top-left service card stack (animejs-style scrollytelling) ───── */
+/* All three services live as a vertical stack anchored top-left. The card
+ * whose index matches `.services-stage[data-active-step]` EXPANDS into a big
+ * title (`name`) + tagline + paragraph + meta + CTA; the rest COLLAPSE to a
+ * slim index+name bar. The active service also drives the brandmark's
+ * per-service rotation (same active id via `hologramConnectorStore`). Desktop
+ * expansion lives in the desktop media query below; mobile / reduced-motion
+ * renders every card expanded (bottom block). */
+.svc-stack {
+  position: absolute;
+  top: clamp(92px, 15vh, 184px);
+  left: var(--hud-content-inset, 64px);
+  width: clamp(300px, 30vw, 440px);
+  max-width: calc(100vw - var(--hud-content-inset, 64px) - 24px);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  /* Delayed copy entrance — shared corridor-dissipate clock. */
+  opacity: var(--svc-content-in, 1);
+  transform: translateY(calc((1 - var(--svc-content-in, 1)) * 18px));
+  will-change: opacity, transform;
+}
+.svc-stack__card {
+  pointer-events: auto;
+  padding-left: clamp(14px, 1.1vw, 20px);
+  border-left: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+  transition: border-color 360ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1));
+}
+.svc-stack__head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 0;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.svc-stack__head:focus-visible {
+  outline: 1px solid rgba(202, 165, 84, 0.6);
+  outline-offset: 4px;
+}
+.svc-stack__index {
+  flex: none;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+  transition: color 360ms var(--m-ease, ease);
+}
+.svc-stack__name {
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  transition:
+    font-size 520ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1)),
+    color 360ms var(--m-ease, ease);
+}
+.svc-stack__detail {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    max-height 560ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1)),
+    opacity 340ms var(--m-ease, ease),
+    transform 560ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1));
+}
+.svc-stack__kicker {
+  margin: 10px 0 0;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.svc-stack__tagline {
+  margin: 12px 0 0;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 300;
+  font-size: clamp(15px, 1.2vw, 19px);
+  line-height: 1.3;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+.svc-stack__body {
+  margin: 14px 0 0;
+  max-width: 38ch;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 300;
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.55;
+  color: var(--dawn-60, rgba(235, 227, 214, 0.6));
+}
+.svc-stack__meta {
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.svc-stack__meta-row {
+  display: grid;
+  grid-template-columns: minmax(86px, auto) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.svc-stack__meta-label {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+.svc-stack__meta-value {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+.svc-stack__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.svc-stack__phase {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--dawn-60, rgba(235, 227, 214, 0.6));
+  padding: 4px 9px;
+  border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+}
+.svc-stack__cta {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 200ms var(--m-ease, ease);
+}
+.svc-stack__cta:hover {
+  color: var(--dawn);
+}
+/* Hover affordance on the collapsed bars (desktop). */
+.svc-stack__card:hover .svc-stack__name {
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
   .services-orbit-map {
     display: none;
   }
   .services-stage__brandmark {
     opacity: 0;
+  }
+
+  /* Active card — expand into the big title + paragraph; the others stay
+   * collapsed (base rules above). Keyed off the scroll-driven step so the
+   * stack collapses/expands in lock-step with the brandmark rotation. */
+  .services-stage[data-active-step="0"] .svc-stack__card[data-i="0"],
+  .services-stage[data-active-step="1"] .svc-stack__card[data-i="1"],
+  .services-stage[data-active-step="2"] .svc-stack__card[data-i="2"] {
+    border-left-color: var(--gold-30, rgba(202, 165, 84, 0.3));
+  }
+  .services-stage[data-active-step="0"] .svc-stack__card[data-i="0"] .svc-stack__index,
+  .services-stage[data-active-step="1"] .svc-stack__card[data-i="1"] .svc-stack__index,
+  .services-stage[data-active-step="2"] .svc-stack__card[data-i="2"] .svc-stack__index {
+    color: var(--gold);
+  }
+  .services-stage[data-active-step="0"] .svc-stack__card[data-i="0"] .svc-stack__name,
+  .services-stage[data-active-step="1"] .svc-stack__card[data-i="1"] .svc-stack__name,
+  .services-stage[data-active-step="2"] .svc-stack__card[data-i="2"] .svc-stack__name {
+    font-size: clamp(34px, 3.6vw, 54px);
+    line-height: 1;
+    color: var(--dawn);
+  }
+  .services-stage[data-active-step="0"] .svc-stack__card[data-i="0"] .svc-stack__detail,
+  .services-stage[data-active-step="1"] .svc-stack__card[data-i="1"] .svc-stack__detail,
+  .services-stage[data-active-step="2"] .svc-stack__card[data-i="2"] .svc-stack__detail {
+    max-height: 480px;
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -790,5 +978,35 @@
     visibility: visible;
     transform: none;
     transition: none;
+  }
+
+  /* Service card stack — static, full-width, every card rendered expanded
+   * (no scroll stepping here, so there is no single "active" card). */
+  .svc-stack {
+    position: static;
+    top: auto;
+    left: auto;
+    width: 100%;
+    max-width: none;
+    margin-top: clamp(28px, 6vh, 48px);
+    gap: clamp(18px, 4vh, 30px);
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .svc-stack__card {
+    border-left-color: var(--gold-30, rgba(202, 165, 84, 0.3));
+  }
+  .svc-stack__index {
+    color: var(--gold);
+  }
+  .svc-stack__name {
+    font-size: clamp(28px, 7vw, 40px);
+    color: var(--dawn);
+  }
+  .svc-stack__detail {
+    max-height: none;
+    opacity: 1;
+    transform: none;
   }
 }

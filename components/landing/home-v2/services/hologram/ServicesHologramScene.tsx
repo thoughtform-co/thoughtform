@@ -23,7 +23,8 @@ import { Suspense, useEffect, useRef } from "react";
 import * as THREE from "three";
 
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
-import type { ServiceId } from "../serviceData";
+import { getServicePose } from "@/lib/home-v2/servicePose";
+import { SERVICES, type ServiceId } from "../serviceData";
 import { HologramOrbits, type OrbitConfig } from "./HologramOrbits";
 import {
   VolumetricBrandmarkArtifact,
@@ -81,6 +82,17 @@ export function ServicesHologramScene({
   // so R3F's own pointer never fires here. Damped → settles to still on rest.
   const targetRef = useRef({ pitch: 0, yaw: 0 });
   const dampRef = useRef({ pitch: 0, yaw: 0 });
+  // Per-service settle (parity with the production rig in BrandmarkPhysicsCoreActor):
+  // the rig damps to a distinct bounded pose per active service so each reveal
+  // reads as a turn. Shared amplitude/source via getServicePose.
+  const servicePoseDampRef = useRef({ pitch: 0, yaw: 0 });
+  const servicePose = getServicePose(
+    Math.max(
+      0,
+      SERVICES.findIndex((s) => s.id === activeServiceId)
+    ),
+    SERVICES.length
+  );
   // Gate pointer-look until the scroll entrance has fully settled (so the fly-in
   // plays cleanly). Damped read of the corridor-exit dissipate clock; 1 when
   // parked (lab / demo) so pointer-look is immediately live there.
@@ -119,14 +131,24 @@ export function ServicesHologramScene({
       settled = settleRef.current >= 0.985;
     }
 
+    const k = Math.min(1, delta * 4);
+
+    // Pointer-look channel.
     const damp = dampRef.current;
     const tgt = targetRef.current;
     const tgtPitch = settled ? tgt.pitch : 0;
     const tgtYaw = settled ? tgt.yaw : 0;
-    const k = Math.min(1, delta * 4);
     damp.pitch += (tgtPitch - damp.pitch) * k;
     damp.yaw += (tgtYaw - damp.yaw) * k;
-    rig.rotation.set(restTiltX + damp.pitch, restTiltY + damp.yaw, 0);
+
+    // Per-service settle channel — bounded pose for the active service.
+    const pose = servicePoseDampRef.current;
+    const poseTgtPitch = settled ? servicePose.pitch : 0;
+    const poseTgtYaw = settled ? servicePose.yaw : 0;
+    pose.pitch += (poseTgtPitch - pose.pitch) * k;
+    pose.yaw += (poseTgtYaw - pose.yaw) * k;
+
+    rig.rotation.set(restTiltX + damp.pitch + pose.pitch, restTiltY + damp.yaw + pose.yaw, 0);
   });
 
   return (

@@ -57,6 +57,9 @@ import {
 import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
 import { CorridorArmillary } from "./CorridorArmillary";
 import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
+import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
+import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import { getServicePose } from "@/lib/home-v2/servicePose";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   BRANDMARK_CORE_BLEND_END,
@@ -351,6 +354,20 @@ export function BrandmarkPhysicsCoreActor({
   const pointerLookRef = useRef<THREE.Group>(null);
   const pointerTargetRef = useRef({ pitch: 0, yaw: 0 });
   const pointerDampRef = useRef({ pitch: 0, yaw: 0 });
+  // Per-service settle: as the scan UI advances the active service, the whole
+  // rig (mark + armillary) damps to a distinct BOUNDED pose so each reveal
+  // reads as a turn. Target is set from the store-bridged active service; the
+  // damp eases to 0 when not parked so the corridor proper stays byte-identical
+  // (ADR-023 Invariant 11). See lib/home-v2/servicePose.ts.
+  const servicePoseTargetRef = useRef({ pitch: 0, yaw: 0 });
+  const servicePoseDampRef = useRef({ pitch: 0, yaw: 0 });
+  const activeServiceId = useHologramConnectors((s) => s.activeServiceId);
+  useEffect(() => {
+    const idx = SERVICES.findIndex((s) => s.id === activeServiceId);
+    const pose = getServicePose(Math.max(0, idx), SERVICES.length);
+    servicePoseTargetRef.current.pitch = pose.pitch;
+    servicePoseTargetRef.current.yaw = pose.yaw;
+  }, [activeServiceId]);
   // Scratch for the Services core-shrink (camera-front re-centre) so we
   // don't allocate per frame.
   const fwdScratch = useRef(new THREE.Vector3());
@@ -550,8 +567,7 @@ export function BrandmarkPhysicsCoreActor({
     // the mark peels into the luminous 3D fly-in right away instead of lingering
     // flat. It still reaches depth=1 with zero slope exactly at the wrap peak
     // (t=1), so the wireframe settles smoothly, in sync with the substrate sphere.
-    const depthSpan =
-      BRANDMARK_CORE_DEPTH_END_BLEND - BRANDMARK_CORE_DEPTH_START_BLEND;
+    const depthSpan = BRANDMARK_CORE_DEPTH_END_BLEND - BRANDMARK_CORE_DEPTH_START_BLEND;
     const depthT =
       depthSpan > 1e-6
         ? Math.min(1, Math.max(0, (handoffBlend - BRANDMARK_CORE_DEPTH_START_BLEND) / depthSpan))
@@ -729,13 +745,25 @@ export function BrandmarkPhysicsCoreActor({
     const pl = pointerLookRef.current;
     if (pl) {
       const engaged = UNIFIED_SERVICES_ARMILLARY && recT > 0.9;
+      const k = Math.min(1, delta * 4);
+
+      // Pointer-look channel — nudge toward the cursor when parked.
       const tgtPitch = engaged ? pointerTargetRef.current.pitch : 0;
       const tgtYaw = engaged ? pointerTargetRef.current.yaw : 0;
-      const k = Math.min(1, delta * 4);
       const damp = pointerDampRef.current;
       damp.pitch += (tgtPitch - damp.pitch) * k;
       damp.yaw += (tgtYaw - damp.yaw) * k;
-      pl.rotation.set(damp.pitch, damp.yaw, 0);
+
+      // Per-service settle channel — hold a distinct bounded pose per active
+      // service; eases to frontal when not parked so the dive/corridor are
+      // unaffected. Composes additively under the billboard + gentle drift.
+      const poseTgtPitch = engaged ? servicePoseTargetRef.current.pitch : 0;
+      const poseTgtYaw = engaged ? servicePoseTargetRef.current.yaw : 0;
+      const pose = servicePoseDampRef.current;
+      pose.pitch += (poseTgtPitch - pose.pitch) * k;
+      pose.yaw += (poseTgtYaw - pose.yaw) * k;
+
+      pl.rotation.set(damp.pitch + pose.pitch, damp.yaw + pose.yaw, 0);
     }
 
     // Keep the sim alive while the corridor is painting so the

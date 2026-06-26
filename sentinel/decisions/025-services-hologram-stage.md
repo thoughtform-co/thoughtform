@@ -247,3 +247,31 @@ and the live armillary still imports `DEFAULT_ORBITS` + `HologramOrbits` from he
 The palette now flows from [`lib/home-v2/goldPalette.ts`](../../lib/home-v2/goldPalette.ts)
 (`TENSOR_GOLD`/`TENSOR_ACCENT`, a touch more yellow than the former
 `#b08b42`/`#dcc176`), shared by the mark, the orbits, and this stage.
+
+### 2026-06-26 — animejs-style card stack + per-service rig rotation
+
+The DOM overlay for `#services` moved from the scattered, click-to-expand
+`ServiceScanInterface` orbit-labels to a **top-left collapsing card stack**
+([`ServicesCardStack`](../../components/landing/home-v2/services/ServicesCardStack.tsx)),
+inspired by animejs.com. The card whose index matches the scroll-driven
+`.services-stage[data-active-step]` EXPANDS into a big title (service `name`) +
+tagline + paragraph + meta + CTA; the others COLLAPSE to a slim index+name bar.
+Expand/collapse is CSS-only (`.svc-stack` rules in `services.css`, keyed off
+`data-active-step`); mobile / reduced-motion renders every card expanded.
+`ServiceScanInterface` + `ServiceCelestialCard` are retained ONLY as the lab
+harness (`/test/services-demo`, `/test/brandmark-reflective`).
+
+The brandmark + armillary rig now **rotates to a distinct bounded pose per
+service** so each reveal reads as a turn. The pose is a single source of truth in
+[`lib/home-v2/servicePose.ts`](../../lib/home-v2/servicePose.ts) (`getServicePose`,
+a symmetric ±yaw sweep through frontal with a small opposed pitch — `SERVICE_POSE_YAW_RAD`
+0.34 ≈ 19.5°, deliberately bounded so the shallow-Z mark never tumbles edge-on,
+per [`.claude/rules/brandmark.md`](../../.claude/rules/brandmark.md)). It is applied
+in BOTH rigs to keep them in parity: the production corridor rig
+([`BrandmarkPhysicsCoreActor`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx),
+composed into the `pointerLookRef` channel, **engaged only when parked** `recT > 0.9`
+and damped to identity otherwise so the corridor stays byte-identical — ADR-023
+Invariant 11) and the lab rig ([`ServicesHologramScene`](../../components/landing/home-v2/services/hologram/ServicesHologramScene.tsx)).
+The active service is read from `hologramConnectorStore` (`activeServiceId`), the
+existing cross-tree bridge `ServicesStage` already writes. Guardrail: keep the pose
+amplitude bounded; raising it toward edge-on collapses the silhouette to a sliver.
