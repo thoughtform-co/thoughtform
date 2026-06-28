@@ -155,8 +155,23 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       root.querySelector<HTMLElement>("[data-home-corridor-mount]");
     let heroCover = 0;
     if (heroEl && defEl) {
-      const defTop = defEl.getBoundingClientRect().top;
-      heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
+      // Progress of the hero scrolling off its own 100vh. Measured from
+      // scrollY (not the corridor mount's rect — that mount is
+      // `position: fixed` during the entry band, so its top reads ~0 even
+      // at scrollY 0 and can't drive the hero's own exit).
+      const raw = Math.max(0, Math.min(1, scrollY / vh));
+      // smootherstep so the hero eases away rather than tracking the
+      // wheel 1:1 — this is the "soft dissolve" exit feel.
+      heroCover = raw * raw * raw * (raw * (raw * 6 - 15) + 10);
+      // Hero-only exit channel (ADR-022 v8): CSS reads `--hero-cover` to
+      // drift the card up + fade the copy. Background image stays opaque
+      // (gateway shield) and the corridor channels are untouched. Skipped
+      // under reduced motion (the CSS is gated the same way).
+      if (reduceMotion) {
+        heroEl.style.removeProperty("--hero-cover");
+      } else {
+        heroEl.style.setProperty("--hero-cover", heroCover.toFixed(4));
+      }
       // Entry layer state (`data-corridor-entry`) is written synchronously
       // in `syncCorridorEntryState` on every scroll event so the fixed
       // hold clears exactly when native sticky takes over. The hero rides

@@ -510,25 +510,37 @@
 .hud__nav--inline .hud__nav__inline {
   display: flex;
   align-items: center;
-  gap: clamp(18px, 2vw, 38px);
+  gap: clamp(24px, 2.6vw, 56px);
   opacity: 1;
   transform: translateY(0);
   transition:
     opacity 260ms var(--ease-out),
     transform 260ms var(--ease-out);
 }
-.hud__nav__inline__link {
+/* Scoped under `.hud__nav--inline` to outrank the base `.hud__nav a`
+   rule (which sets 11px for the hamburger list). */
+.hud__nav--inline .hud__nav__inline__link {
+  display: inline-block;
   font-family: var(--font-pt-mono);
-  font-size: clamp(12px, 0.62rem + 0.3vw, 16px);
-  letter-spacing: var(--track-wider);
+  /* Match the Brand Codex "Hero Omega" nav scale (~30px on wide
+     desktops); steps down on smaller viewports. */
+  font-size: clamp(16px, 0.85rem + 0.78vw, 30px);
+  letter-spacing: var(--track-wide, 0.04em);
   text-transform: uppercase;
   color: var(--dawn);
   text-decoration: none;
   white-space: nowrap;
+  padding: 0;
+  background: none;
   transition: color 180ms var(--ease-out);
 }
-.hud__nav__inline__link:hover {
+.hud__nav--inline .hud__nav__inline__link::before {
+  content: none;
+}
+.hud__nav--inline .hud__nav__inline__link:hover {
   color: var(--gold);
+  background: none;
+  padding: 0;
 }
 
 /* Hamburger trigger — hidden while expanded, fades in once collapsed.
@@ -1657,6 +1669,31 @@
   transform-origin: center center;
   transition: none;
   will-change: transform;
+}
+
+/* Eased hero exit (ADR-022 v8 sanctions a small capped hero-only
+   transform for ToyFight-like smoothness). The hero card lifts away a
+   touch faster than scroll while its copy fades, so the handoff to the
+   corridor reads as a soft dissolve instead of a rigid 1:1 scroll-off.
+   `--hero-cover` (0..1, smootherstep-eased) is written on `#hero` every
+   scroll frame by `useLandingScroll`.
+
+   Constraints kept: the background image (`.hero__bg`) stays fully
+   opaque and unscaled — only the card POSITION and the COPY opacity
+   move — so the fixed `.gateway` radial is never exposed (ADR-008
+   Rule 3); the corridor below (z:3) is what the drift uncovers. Gated
+   off under reduced motion (the hook also stops writing the var then). */
+@media (prefers-reduced-motion: no-preference) {
+  .hero {
+    transform: translate3d(0, calc(var(--hero-cover, 0) * -8vh), 0);
+  }
+  .hero__content {
+    opacity: calc(1 - var(--hero-cover, 0) * 1.5);
+    will-change: opacity;
+  }
+  .hero__flywheel {
+    opacity: calc(1 - var(--hero-cover, 0) * 1.8);
+  }
 }
 
 /* Post-hero stations sit above the pinned hero and must be full-bleed
