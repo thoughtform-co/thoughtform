@@ -7,6 +7,7 @@ import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
 import { useCorridorMount } from "./hooks/useCorridorMount";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
+import { HudNav } from "./HudNav";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
@@ -337,8 +338,7 @@ export function LandingPage({
     const heroContent = root.querySelector<HTMLElement>(".hero__content");
     if (heroContent) {
       heroContent.setAttribute("data-m-group", "");
-      tagIfEmpty(heroContent.querySelector(".hero__wordmark"), "title");
-      tagIfEmpty(heroContent.querySelector(".hero__tagline"), "body");
+      tagIfEmpty(heroContent.querySelector(".hero__headline"), "title");
       tagIfEmpty(heroContent.querySelector(".hero__desc"), "body");
       tagIfEmpty(heroContent.querySelector(".hero__cta"), "body");
     }
@@ -480,6 +480,9 @@ export function LandingPage({
           choreography hook can drive its imperative API
           (morphRects / pinToRect / hide) unchanged. */}
       <BrandmarkSystem ref={brandmarkActorRef} rootRef={rootRef} />
+      {/* Top-right HUD nav: inline links in the hero that collapse into
+          a right-rail-aligned hamburger once the hero scrolls away. */}
+      <HudNav />
       <CelestialEditorOverlay />
     </>
   );

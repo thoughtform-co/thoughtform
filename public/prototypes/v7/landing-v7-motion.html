@@ -4195,13 +4195,22 @@ html { scroll-behavior: smooth; }
 
 <!-- ═══ HUD CHROME ═══ -->
 <div class="hud" aria-hidden="false">
-  <div class="hud__corner hud__corner--tl"></div>
+  <!-- Top-left corner bracket is intentionally omitted: the brandmark
+       lockup below occupies that corner instead. -->
   <div class="hud__corner hud__corner--bl"></div>
   <div class="hud__corner hud__corner--br"></div>
 
-  <!-- Hamburger nav trigger removed per Brand Codex hero contract —
-       the hero now reads as wordmark + tagline + gateway analysis
-       marks, with no top-right HUD nav. -->
+  <!-- Top-left brandmark lockup (compass + wordmark, dual gold/dawn),
+       aligned to the left rail (Brand Codex "Hero Omega"). Distinct from
+       the traveling brandmark sigil anchored bottom-left. -->
+  <a class="hud__brand" href="#hero" aria-label="Thoughtform — home">
+    <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />
+  </a>
+
+  <!-- Top-right nav + scroll-collapsing hamburger is rendered by the
+       React `HudNav` overlay (components/landing/v7/HudNav.tsx), mounted
+       by LandingPage — it needs scroll state, so it does not ship as
+       static body markup. -->
 
   <!-- Left rail: depth gauge -->
   <aside class="hud__rail hud__rail--l">
@@ -4234,29 +4243,28 @@ html { scroll-behavior: smooth; }
 
   <!-- ═══════════ 01 HERO (pinned stage) ═══════════ -->
   <section class="station hero" id="hero" data-station="hero" data-screen-label="01 Hero">
-    <div class="hero__video" aria-hidden="true">
-      <video
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="metadata"
-        poster="/videos/thoughtform-key-visual-2-poster.jpg"
-        disablepictureinpicture
-        disableremoteplayback
-      >
-        <source src="/videos/thoughtform-key-visual-2-web.mp4" type="video/mp4" />
-      </video>
+    <div class="hero__bg" aria-hidden="true" data-parallax="0.03">
+      <img src="/images/Gateway_v1b.png" alt="" />
       <div class="hero__video__overlay"></div>
     </div>
 
     <div class="hero__content">
-      <div class="hero__wordmark">
-        <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />
-      </div>
-      <p class="hero__tagline">
-        AI capability, built <em>inside the work.</em>
+      <h1 class="hero__headline">AI capability<br />your team owns</h1>
+      <p class="hero__desc">
+        We navigate with your team, encode how they work, and empower them to build their own tools
       </p>
+      <div class="hero__cta">
+        <a class="hero__cta__btn hero__cta__btn--primary" href="#continuum">
+          Begin navigation <span class="hero__cta__arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="hero__cta__btn hero__cta__btn--ghost" href="#services">See services</a>
+      </div>
+    </div>
+
+    <div class="hero__flywheel" aria-hidden="true">
+      <span class="hero__flywheel__label">Adoption</span>
+      <span class="hero__flywheel__line"></span>
+      <span class="hero__flywheel__label">Automation</span>
     </div>
   </section>
 
