@@ -511,11 +511,6 @@
   display: flex;
   align-items: center;
   gap: clamp(24px, 2.6vw, 56px);
-  opacity: 1;
-  transform: translateY(0);
-  transition:
-    opacity 260ms var(--ease-out),
-    transform 260ms var(--ease-out);
 }
 /* Scoped under `.hud__nav--inline` to outrank the base `.hud__nav a`
    rule (which sets 11px for the hamburger list). */
@@ -532,7 +527,11 @@
   white-space: nowrap;
   padding: 0;
   background: none;
-  transition: color 180ms var(--ease-out);
+  opacity: 1;
+  transition:
+    opacity 280ms var(--ease-out),
+    transform 360ms var(--ease-out),
+    color 180ms var(--ease-out);
 }
 .hud__nav--inline .hud__nav__inline__link::before {
   content: none;
@@ -543,38 +542,82 @@
   padding: 0;
 }
 
-/* Hamburger trigger — hidden while expanded, fades in once collapsed.
-   Absolutely positioned so it occupies the same right-rail anchor the
-   inline row vacates. */
+/* Hamburger trigger — always parked at the right-rail anchor; only its
+   three bars animate (they draw in on collapse, retract on expand), so
+   the nav reads as the items MORPHING into the hamburger rather than a
+   crossfade. */
 .hud__nav--inline .hud__nav__btn {
   position: absolute;
   top: 0;
   right: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity 220ms var(--ease-out),
-    color 180ms var(--ease-out);
-}
-
-/* Collapsed: swap inline row for the hamburger. */
-.hud__nav--inline.is-collapsed .hud__nav__inline {
-  opacity: 0;
-  transform: translateY(-6px);
   pointer-events: none;
 }
 .hud__nav--inline.is-collapsed .hud__nav__btn {
-  opacity: 1;
   pointer-events: auto;
 }
 
-/* Mobile: hamburger only, at every scroll position. */
+/* ── Nav → hamburger morph (desktop) ───────────────────────────────
+   Triggered by `.is-collapsed`. Two coordinated, overlapping stages:
+   (1) the inline links peel off toward the top-right, staggered
+   TOOLS→VISION; (2) the three bars draw in to their rest widths,
+   staggered top→bottom, starting after the links have begun leaving —
+   so it reads as a continuous transform, not a fade. Reverses on
+   scroll-up. Gated to ≥641px; on mobile the bars rest via their base
+   rules (hamburger-only, no morph). The `.is-open` X-morph keeps full
+   ownership of the bars via `:not(.is-open)` below. */
+@media (min-width: 641px) {
+  /* Bars hidden while the inline row is showing. */
+  .hud__nav--inline:not(.is-collapsed) .hud__nav__btn .bars span {
+    width: 0;
+    opacity: 0;
+  }
+
+  /* Links peel away (plain opacity is the reduced-motion-safe base). */
+  .hud__nav--inline.is-collapsed .hud__nav__inline {
+    pointer-events: none;
+  }
+  .hud__nav--inline.is-collapsed .hud__nav__inline__link {
+    opacity: 0;
+  }
+
+  /* Bars draw in (menu closed only — `.is-open` owns the X). */
+  .hud__nav--inline.is-collapsed:not(.is-open) .hud__nav__btn .bars span {
+    opacity: 1;
+  }
+  .hud__nav--inline.is-collapsed:not(.is-open) .hud__nav__btn .bars span:nth-child(1) {
+    width: 100%;
+    transition-delay: 170ms;
+  }
+  .hud__nav--inline.is-collapsed:not(.is-open) .hud__nav__btn .bars span:nth-child(2) {
+    width: 70%;
+    transition-delay: 240ms;
+  }
+  .hud__nav--inline.is-collapsed:not(.is-open) .hud__nav__btn .bars span:nth-child(3) {
+    width: 100%;
+    transition-delay: 310ms;
+  }
+}
+
+/* Directional drift + per-item stagger — the motion garnish, skipped
+   under reduced motion (links still fade via the rule above). */
+@media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
+  /* reverse-stagger so scroll-up restock is also sequenced */
+  .hud__nav--inline .hud__nav__inline__link {
+    transition-delay: calc((3 - var(--i, 0)) * 45ms);
+  }
+  /* funnel up + toward the hamburger, TOOLS (i=0) first → VISION last */
+  .hud__nav--inline.is-collapsed .hud__nav__inline__link {
+    transform: translateX(16px) translateY(-4px) scale(0.92);
+    transition-delay: calc(var(--i, 0) * 55ms);
+  }
+}
+
+/* Mobile: hamburger only, at every scroll position (no morph). */
 @media (max-width: 640px) {
   .hud__nav--inline .hud__nav__inline {
     display: none;
   }
   .hud__nav--inline .hud__nav__btn {
-    opacity: 1;
     pointer-events: auto;
   }
 }

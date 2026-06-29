@@ -45,7 +45,7 @@ export function HudNav() {
     let raf = 0;
     const evaluate = () => {
       raf = 0;
-      const past = window.scrollY > window.innerHeight * 0.6;
+      const past = window.scrollY > window.innerHeight * 0.5;
       setCollapsed((prev) => (prev === past ? prev : past));
     };
     const schedule = () => {
@@ -103,13 +103,16 @@ export function HudNav() {
         className={`hud__nav hud__nav--inline${collapsed ? " is-collapsed" : ""}${open ? " is-open" : ""}`}
         aria-label="Primary"
       >
-        {/* Inline row — visible while the hero is on screen */}
+        {/* Inline row — visible while the hero is on screen. Each link
+            carries its index (`--i`) so the morph can stagger them as they
+            peel off toward the hamburger. */}
         <div className="hud__nav__inline">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((item, i) => (
             <a
               key={item.href}
               href={item.href}
               className="hud__nav__inline__link"
+              style={{ "--i": i } as React.CSSProperties}
               onClick={(e) => handleNavigate(e, item.href)}
             >
               {item.label}
