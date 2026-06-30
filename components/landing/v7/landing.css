@@ -273,7 +273,26 @@
   display: block;
   pointer-events: auto;
   z-index: 52;
-  transition: opacity 0.4s var(--ease-out);
+  /* Anchor the shrink to the top-left rail so the lockup stays pinned
+     in its corner as it scales down. The explicit `scale(1)` base means
+     the collapse transition interpolates matrix→matrix (transitions
+     FROM the `none` keyword don't animate reliably). No `will-change`:
+     the corridor's R3F canvases already pressure the GPU (context loss
+     under load), so a permanent extra compositor layer for the wordmark
+     isn't worth it — the brief transition promotes/demotes on its own. */
+  transform-origin: top left;
+  transform: scale(1);
+  transition:
+    opacity 0.4s var(--ease-out),
+    transform 0.4s var(--ease-out);
+}
+/* Shrink the wordmark in sync with the inline-nav → hamburger morph.
+   `HudNav` toggles `.is-collapsed` on this element off the same 50vh
+   scroll trigger, so the two motions stay locked — scoped to the
+   element (not a root attribute) to avoid a document-wide recalc at
+   the seam. */
+.hud__brand.is-collapsed {
+  transform: scale(0.82);
 }
 .hud__brand img {
   width: 100%;

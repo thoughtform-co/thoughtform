@@ -62,6 +62,32 @@ export function HudNav() {
     };
   }, []);
 
+  // Mirror the collapse state onto <html> as `data-nav-collapsed` so the
+  // top-left wordmark (`.hud__brand`, static markup in a separate DOM
+  // subtree) can shrink in lockstep with the inline-links → hamburger
+  // morph via CSS, off the identical trigger. Driven by the `collapsed`
+  // STATE (not the raw scroll frame), so the root-element attribute is
+  // written only on the two threshold crossings — never per scroll
+  // frame.
+  //
+  // The class is toggled on the `.hud__brand` element ITSELF (queried
+  // out of the separate static-markup subtree), NOT as an attribute on
+  // <html>. A root-element attribute would invalidate style for the
+  // whole document at the exact moment the corridor's heavy R3F frame
+  // renders — a visible hitch at the hero→corridor seam. Scoping the
+  // class to the single wordmark keeps the recalc local to that element.
+  useEffect(() => {
+    const brand = document.querySelector(".hud__brand");
+    brand?.classList.toggle("is-collapsed", collapsed);
+  }, [collapsed]);
+
+  useEffect(
+    () => () => {
+      document.querySelector(".hud__brand")?.classList.remove("is-collapsed");
+    },
+    [],
+  );
+
   // The slide-in list only exists in the collapsed state; force it
   // shut whenever we expand back to the inline row.
   useEffect(() => {
