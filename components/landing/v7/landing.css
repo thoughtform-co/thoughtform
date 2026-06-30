@@ -1714,28 +1714,30 @@
   will-change: transform;
 }
 
-/* Eased hero exit (ADR-022 v8 sanctions a small capped hero-only
-   transform for ToyFight-like smoothness). The hero card lifts away a
-   touch faster than scroll while its copy fades, so the handoff to the
+/* Eased hero exit. The hero COPY (headline / subhead / CTAs / flywheel)
+   drifts up + fades as the hero scrolls off, so the handoff to the
    corridor reads as a soft dissolve instead of a rigid 1:1 scroll-off.
    `--hero-cover` (0..1, smootherstep-eased) is written on `#hero` every
    scroll frame by `useLandingScroll`.
 
-   Constraints kept: the background image (`.hero__bg`) stays fully
-   opaque and unscaled — only the card POSITION and the COPY opacity
-   move — so the fixed `.gateway` radial is never exposed (ADR-008
-   Rule 3); the corridor below (z:3) is what the drift uncovers. Gated
-   off under reduced motion (the hook also stops writing the var then). */
+   CRITICAL (ADR-008 Rule 3 / ADR-022 v8 rigid-card shield): the `.hero`
+   CARD itself must NOT transform/scale/fade — it is the opaque curtain
+   that shields the fixed `.gateway` gold radial (z:0). Lifting the card
+   uncovers a strip at the seam where the gateway gold bleeds through the
+   corridor's transparent regions (the "soft yellow border" bug). So the
+   drift lives ONLY on the content layers, which sit over the opaque
+   `.hero__bg` image and never expose the gateway. Gated off under
+   reduced motion (the hook also stops writing the var then). */
 @media (prefers-reduced-motion: no-preference) {
-  .hero {
-    transform: translate3d(0, calc(var(--hero-cover, 0) * -8vh), 0);
-  }
   .hero__content {
+    transform: translateY(calc(var(--hero-cover, 0) * -6vh));
     opacity: calc(1 - var(--hero-cover, 0) * 1.5);
-    will-change: opacity;
+    will-change: transform, opacity;
   }
   .hero__flywheel {
+    transform: translateY(calc(var(--hero-cover, 0) * -4vh));
     opacity: calc(1 - var(--hero-cover, 0) * 1.8);
+    will-change: transform, opacity;
   }
 }
 
