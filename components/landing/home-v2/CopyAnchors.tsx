@@ -45,8 +45,8 @@ const PRIMITIVE_ANCHOR_META: Record<
   string,
   { origin: string; layout: "north" | "east" | "south" | "west" }
 > = {
-  judgment: { origin: "center", layout: "north" },
-  taste: { origin: "center", layout: "east" },
+  taste: { origin: "center", layout: "north" },
+  expertise: { origin: "center", layout: "east" },
   craft: { origin: "center", layout: "south" },
   voice: { origin: "center", layout: "west" },
 };
@@ -193,7 +193,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
 
       {/* Encode primitive labels — diamond marker + thin leader +
           hairline-bordered caption on the four compass cardinals
-          (Judgment / Taste / Way of working / Voice). The marker
+          (Taste / Expertise / Craft / Voice). The marker
           sits at the cardinal node so the label visibly belongs to
           the gimbal, with a depth cue (`gateEncodePrimitive`)
           dimming the back-side cardinals as the sphere banks.

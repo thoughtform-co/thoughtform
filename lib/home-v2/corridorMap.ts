@@ -301,11 +301,11 @@ export const CORRIDOR_MAP = [
     parkDistance: 6.2,
     content: {
       kicker: "02 · ENCODE",
-      titleHtml: "ENCODE THE <em>EXPERTISE.</em>",
+      titleHtml: "ENCODE THE <em>JUDGMENT.</em>",
       supportHtml:
-        "Expertise sits in heads. The model can't reach it there.<br>Encode it once. It <em>inherits</em> instead of guessing.",
+        "Judgment sits in heads. The model can't reach it there.<br>Encode it once. It <em>inherits</em> instead of guessing.",
       floorHtml:
-        "Expertise sits in heads. The model can't reach it.<br><em>Encode</em> it once. Guessing ends.",
+        "Judgment sits in heads. The model can't reach it.<br><em>Encode</em> it once. Guessing ends.",
       telemetry: {
         sector: "02 · ENCODE",
         callsign: "ENC-02",

@@ -1860,7 +1860,7 @@ const ENCODE_CARTRIDGE_OVERLAP = 0.62;
 
 /** Order in which the cardinals fly in. Picked so the read circles
  *  the dial (north → east → south → west) — feels intentional, not
- *  arbitrary. SHELL_PRIMITIVES order is judgment(N)/taste(E)/craft(S)/voice(W),
+ *  arbitrary. SHELL_PRIMITIVES order is taste(N)/expertise(E)/craft(S)/voice(W),
  *  so the natural index order already matches. */
 const ENCODE_CARTRIDGE_ORDER = [0, 1, 2, 3] as const;
 
