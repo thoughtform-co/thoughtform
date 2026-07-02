@@ -9,6 +9,7 @@ import { ServicesCardStack } from "./ServicesCardStack";
 import { ServicesBrandmarkField } from "./ServicesBrandmarkField";
 import { ServicesHologramScene } from "./hologram";
 import { ServicesOrbitMap } from "./ServicesOrbitMap";
+import { ServiceScanInterface } from "./ServiceScanInterface";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useOrbitDrift } from "../hooks/useOrbitDrift";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
@@ -58,12 +59,27 @@ export function ServicesStage() {
     setActiveServiceId(SERVICES[step]?.id ?? SERVICES[0].id);
   }, []);
 
+  // Click-to-scroll: scroll owns the active step (the scroll hook maps runway
+  // progress → step), so a chip click navigates the PAGE to the middle of that
+  // service's scroll segment instead of forcing local state that the next
+  // scroll tick would overwrite.
   const selectService = useCallback((serviceId: ServiceId) => {
-    setActiveServiceId(serviceId);
     const index = SERVICES.findIndex((service) => service.id === serviceId);
-    if (index >= 0) {
-      stageRef.current?.setAttribute("data-active-step", String(index));
+    if (index < 0) return;
+    const runway = stageRef.current?.parentElement; // .services-stage-root
+    if (!runway) {
+      setActiveServiceId(serviceId);
+      return;
     }
+    const vh = window.innerHeight || 1;
+    const rect = runway.getBoundingClientRect();
+    const travel = rect.height - vh;
+    if (travel <= 0) {
+      setActiveServiceId(serviceId);
+      return;
+    }
+    const targetY = window.scrollY + rect.top + ((index + 0.5) / SERVICES.length) * travel;
+    window.scrollTo({ top: targetY, behavior: "smooth" });
   }, []);
 
   useServicesStageScroll(stageRef, setActiveByStep);
@@ -125,7 +141,19 @@ export function ServicesStage() {
         <ServicesBrandmarkField />
         <ServicesOrbitMap />
 
-        <ServicesCardStack activeServiceId={activeServiceId} onSelectService={selectService} />
+        {useHologramCanvas ? (
+          // Desktop: spread CV-scan callouts around the parked brandmark.
+          // Expansion is scroll-owned — the active step's card is the expanded
+          // one; chip clicks scroll the page to that step (selectService).
+          <ServiceScanInterface
+            activeServiceId={activeServiceId}
+            expandedServiceId={activeServiceId}
+            onSelectService={selectService}
+          />
+        ) : (
+          // Mobile / reduced-motion: static stack, every card expanded.
+          <ServicesCardStack activeServiceId={activeServiceId} onSelectService={selectService} />
+        )}
       </div>
     </div>
   );

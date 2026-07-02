@@ -55,6 +55,7 @@ import {
   worldPositionsToLocal,
 } from "@/lib/brandmark/sampleBrandmarkPixels";
 import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
+import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
 import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
@@ -938,6 +939,49 @@ function BrandmarkPhysicsCoreWithGLB({
     }
     return result;
   }, [scene, count]);
+
+  // ── Per-service scan anchors ON the wireframe ──
+  // The #services CV-scan leader lines target regions of the MARK itself
+  // (not the orbit nodes). Pick each service's anchor as the sampled
+  // wireframe point furthest along a screen-corner direction (matching the
+  // card layout: Keynote top-left, Workshop bottom-left, Embedded
+  // top-right), with a small +z bias so ties resolve to the camera-facing
+  // edge. Derived from the REAL normalised samples, so the reticle always
+  // sits on a wireframe edge whatever the GLB looks like. Published via a
+  // module ref for `CorridorArmillary` to project each parked frame.
+  useEffect(() => {
+    if (!targetHomes) {
+      brandmarkScanAnchorPointsRef.current = null;
+      return;
+    }
+    const pick = (dirX: number, dirY: number): [number, number, number] => {
+      let best = -Infinity;
+      let bx = 0;
+      let by = 0;
+      let bz = 0;
+      for (let i = 0; i < targetHomes.length; i += 3) {
+        const x = targetHomes[i];
+        const y = targetHomes[i + 1];
+        const z = targetHomes[i + 2];
+        const score = dirX * x + dirY * y + 0.15 * z;
+        if (score > best) {
+          best = score;
+          bx = x;
+          by = y;
+          bz = z;
+        }
+      }
+      return [bx, by, bz];
+    };
+    brandmarkScanAnchorPointsRef.current = {
+      keynote: pick(-1, 1), // upper-left feature
+      workshop: pick(-1, -1), // lower-left feature
+      embedded: pick(1, 1), // upper-right feature
+    };
+    return () => {
+      brandmarkScanAnchorPointsRef.current = null;
+    };
+  }, [targetHomes]);
 
   return (
     <BrandmarkPhysicsCore

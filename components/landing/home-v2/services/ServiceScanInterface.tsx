@@ -51,13 +51,24 @@ type LabelSide = "left" | "right";
 
 interface OrbitLabelLayout {
   left: number;
-  top: number;
+  /** Pixel offset from the viewport top, or null when bottom-anchored. */
+  top: number | null;
+  /** Pixel offset from the viewport bottom, or null when top-anchored. */
+  bottom: number | null;
   width: number;
   side: LabelSide;
   targetX: number;
   targetY: number;
 }
 
+/**
+ * Corner layout for the three scan callouts around the parked brandmark:
+ * Keynote top-left, Workshop bottom-left, Embedded top-right. Workshop is
+ * BOTTOM-anchored so its card grows upward on expansion and its connector
+ * exit point (near the bottom edge) stays fixed; the top-anchored cards keep
+ * their chip header fixed, so all three connector targets are stable while
+ * the expand animation runs.
+ */
 function getOrbitLabelLayout(
   serviceId: ServiceId,
   viewport: ViewportSize,
@@ -66,40 +77,47 @@ function getOrbitLabelLayout(
   if (viewport.width < 961) return null;
 
   const collapsedWidth = clampPx(190, viewport.width * 0.14, 236);
-  const expandedWidth = clampPx(292, viewport.width * 0.22, 360);
+  const expandedWidth = clampPx(300, viewport.width * 0.23, 380);
   const width = expanded ? expandedWidth : collapsedWidth;
+  // Mirrors `--hud-content-inset` (margin + rail + pad) so the cards sit just
+  // inside the HUD rails.
+  const railInset = clampPx(88, viewport.width * 0.1, 192);
+  const topBand = clampPx(112, viewport.height * 0.16, 190);
+
   let left = 0;
-  let top = 0;
+  let top: number | null = null;
+  let bottom: number | null = null;
   let side: LabelSide = "right";
 
   switch (serviceId) {
     case "keynote": {
-      left = clampPx(160, viewport.width * 0.2, 380);
-      top = clampPx(112, viewport.height * 0.17, 184);
+      left = railInset;
+      top = topBand;
       side = "right";
       break;
     }
     case "workshop": {
-      const rightInset = clampPx(260, viewport.width * 0.16, 360);
-      left = viewport.width - rightInset - width;
-      top = clampPx(176, viewport.height * 0.25, 300);
-      side = "left";
+      left = railInset;
+      bottom = clampPx(96, viewport.height * 0.15, 180);
+      side = "right";
       break;
     }
     case "embedded": {
-      const maxTop = Math.max(500, viewport.height - (expanded ? 340 : 210));
-      left = clampPx(150, viewport.width * 0.15, 300);
-      top = clampPx(500, viewport.height * 0.66, maxTop);
-      side = "right";
+      left = viewport.width - railInset - width;
+      top = topBand;
+      side = "left";
       break;
     }
   }
 
   const targetX = side === "right" ? left + width : left;
-  const targetY = top + 31;
+  // 31px = chip-header centre (top-anchored) / mirrored above the bottom edge
+  // (bottom-anchored) — a point that does not move while the card expands.
+  const targetY = top !== null ? top + 31 : viewport.height - (bottom ?? 0) - 31;
   return {
     left,
     top,
+    bottom,
     width,
     side,
     targetX,
@@ -111,7 +129,8 @@ function getLabelStyle(layout: OrbitLabelLayout | null): CSSProperties | undefin
   if (!layout) return undefined;
   return {
     "--orbit-label-left": `${layout.left.toFixed(1)}px`,
-    "--orbit-label-top": `${layout.top.toFixed(1)}px`,
+    "--orbit-label-top": layout.top !== null ? `${layout.top.toFixed(1)}px` : "auto",
+    "--orbit-label-bottom": layout.bottom !== null ? `${layout.bottom.toFixed(1)}px` : "auto",
     "--orbit-label-width": `${layout.width.toFixed(1)}px`,
   } as CSSProperties;
 }
@@ -212,7 +231,7 @@ function ServiceOrbitLabel({
         className="services-orbit-label__button"
         type="button"
         aria-expanded={expanded}
-        aria-controls={expanded ? detailId : undefined}
+        aria-controls={detailId}
         onClick={() => onToggle(service.id)}
       >
         <span className="services-orbit-label__reticle" aria-hidden="true">
@@ -229,15 +248,19 @@ function ServiceOrbitLabel({
         </span>
       </button>
 
-      {expanded ? (
-        <div className="services-orbit-label__detail" id={detailId}>
+      {/* Always rendered so the grid-rows 0fr→1fr expand animation can run
+          (a conditional mount would pop instead of grow). */}
+      <div className="services-orbit-label__detail" id={detailId} aria-hidden={!expanded}>
+        <div className="services-orbit-label__detail-inner">
           <div className="services-orbit-label__scan">
             <span>{note.coordinate}</span>
             <span>{note.label}</span>
           </div>
 
-          <h3>{service.tagline}</h3>
-          <p>{service.body}</p>
+          <h3 className="services-orbit-label__name">{service.name}</h3>
+          <p className="services-orbit-label__kicker">{service.kicker}</p>
+          <p className="services-orbit-label__tagline">{service.tagline}</p>
+          <p className="services-orbit-label__body">{service.body}</p>
 
           <dl className="services-orbit-label__meta">
             {service.meta.map((row) => (
@@ -250,13 +273,13 @@ function ServiceOrbitLabel({
 
           <footer className="services-orbit-label__foot">
             <span>{PHASE_LABELS[service.phase]}</span>
-            <a href={service.ctaHref}>
+            <a href={service.ctaHref} tabIndex={expanded ? undefined : -1}>
               {service.ctaLabel}
-              <span aria-hidden="true"> -&gt;</span>
+              <span aria-hidden="true"> →</span>
             </a>
           </footer>
         </div>
-      ) : null}
+      </div>
     </article>
   );
 }
@@ -296,6 +319,9 @@ export function ServiceScanInterface({
   );
 
   useEffect(() => {
+    // Controlled mode (production: scroll owns expansion) — no dismiss-on-
+    // outside-click/Escape; the scroll position is the single source of truth.
+    if (controlledExpandedServiceId !== undefined) return;
     if (!expandedServiceId) return;
 
     const handlePointerDown = (event: PointerEvent) => {
@@ -313,11 +339,15 @@ export function ServiceScanInterface({
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [expandedServiceId, setExpandedServiceId]);
+  }, [controlledExpandedServiceId, expandedServiceId, setExpandedServiceId]);
 
   const toggleService = (serviceId: ServiceId) => {
     onSelectService(serviceId);
-    setExpandedServiceId(expandedServiceId === serviceId ? null : serviceId);
+    // Uncontrolled (lab/demo) keeps click-toggle; controlled mode leaves
+    // expansion to the owner (scroll step → expandedServiceId).
+    if (controlledExpandedServiceId === undefined) {
+      setExpandedServiceId(expandedServiceId === serviceId ? null : serviceId);
+    }
   };
 
   return (

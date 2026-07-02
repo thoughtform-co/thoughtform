@@ -14,16 +14,25 @@
  *
  * Reveal rides the shared corridor-exit dissipate clock (the orbits' own
  * `entrance="scroll"` reads `--corridor-dissipate`), so the rings wrap on as the
- * mark settles, identical to the old #services entrance. Scan anchors publish to
- * `hologramConnectorStore` only once parked, so the KEYNOTE/WORKSHOP/EMBEDDED
- * DOM connectors stay hidden during the fly-in / dive and land on the orbit
- * nodes once the instrument is settled.
+ * mark settles, identical to the old #services entrance.
+ *
+ * Scan anchors (2026-07-02): the CV-scan leader lines target points ON the
+ * brandmark wireframe itself — per-service group-local points derived from the
+ * sampled GLB homes (`brandmarkScanAnchorPointsRef`, written by
+ * `BrandmarkPhysicsCoreWithGLB`). This component projects them to screen pixels
+ * each frame via a probe group that shares the mark's `pointerLookRef` space,
+ * so the reticles ride the mark through its per-service pose + pointer-look.
+ * Publishing is still gated on "parked" (dissipate ≥ threshold) so the
+ * KEYNOTE/WORKSHOP/EMBEDDED DOM connectors stay hidden during the fly-in /
+ * dive and land on the mark once the instrument is settled.
  */
 
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
+import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
+import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import {
   HologramOrbits,
   DEFAULT_ORBITS,
@@ -38,40 +47,61 @@ import { useHologramConnectors, type ConnectorAnchor } from "@/lib/stores/hologr
 const ARMILLARY_SCALE = 0.62;
 
 /** Publish scan anchors only once the instrument is essentially parked, so the
- *  DOM connectors don't chase the nodes during the fly-in / shrink. */
+ *  DOM connectors don't chase the mark during the fly-in / shrink. */
 const ANCHOR_PUBLISH_DISSIPATE = 0.88;
 
 export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number }) {
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId) ?? SERVICES[0].id;
   const setAnchors = useHologramConnectors((s) => s.setAnchors);
-  // Gate anchor publishing on "parked". `clearedRef` makes the un-park clear the
-  // HUD anchors exactly once (so connectors vanish on reverse-scroll) without
-  // spamming the store every frame.
-  const parkedRef = useRef(false);
+  const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+  // Probe group at identity — its matrixWorld IS the pointer-look space the
+  // mark (and this armillary) live in, so local anchor points projected
+  // through it track the mark's pose exactly.
+  const probeRef = useRef<THREE.Group>(null);
+  const worldRef = useRef(new THREE.Vector3());
+  // `clearedRef` makes the un-park clear the HUD anchors exactly once (so
+  // connectors vanish on reverse-scroll) without spamming the store.
   const clearedRef = useRef(true);
 
   useFrame(() => {
     const parked = getSmoothedDissipate() >= ANCHOR_PUBLISH_DISSIPATE;
-    parkedRef.current = parked;
-    if (!parked && !clearedRef.current) {
-      setAnchors([]);
-      clearedRef.current = true;
+    const points = brandmarkScanAnchorPointsRef.current;
+    const probe = probeRef.current;
+    if (!parked || !points || !probe) {
+      if (!clearedRef.current) {
+        setAnchors([]);
+        clearedRef.current = true;
+      }
+      return;
     }
-  });
 
-  const publishAnchors = (anchors: ConnectorAnchor[]) => {
-    if (!parkedRef.current) return;
+    const world = worldRef.current;
+    const anchors: ConnectorAnchor[] = SERVICES.map((service) => {
+      const [x, y, z] = points[service.id];
+      world.set(x, y, z).applyMatrix4(probe.matrixWorld);
+      const projected = world.project(camera);
+      return {
+        serviceId: service.id,
+        x: (projected.x * 0.5 + 0.5) * size.width,
+        y: (-projected.y * 0.5 + 0.5) * size.height,
+        depth: projected.z,
+        visible: projected.z < 1 && projected.z > -1,
+      };
+    });
     clearedRef.current = false;
     setAnchors(anchors);
-  };
+  });
 
   return (
-    <HologramOrbits
-      orbits={DEFAULT_ORBITS}
-      entrance="scroll"
-      scale={scale}
-      activeServiceId={activeServiceId}
-      publishAnchors={publishAnchors}
-    />
+    <>
+      <group ref={probeRef} />
+      <HologramOrbits
+        orbits={DEFAULT_ORBITS}
+        entrance="scroll"
+        scale={scale}
+        activeServiceId={activeServiceId}
+      />
+    </>
   );
 }

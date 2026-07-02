@@ -275,3 +275,43 @@ Invariant 11) and the lab rig ([`ServicesHologramScene`](../../components/landin
 The active service is read from `hologramConnectorStore` (`activeServiceId`), the
 existing cross-tree bridge `ServicesStage` already writes. Guardrail: keep the pose
 amplitude bounded; raising it toward edge-on collapses the silhouette to a sliver.
+
+### 2026-07-02 — scan interface promoted to production (spread CV-scan cards)
+
+The desktop DOM overlay swapped BACK from the top-left card stack to
+[`ServiceScanInterface`](../../components/landing/home-v2/services/ServiceScanInterface.tsx),
+now scroll-driven: `ServicesStage` passes `expandedServiceId={activeServiceId}`
+(controlled), so the card whose step matches the runway scroll EXPANDS and the
+others sit as compact chips — Keynote top-left, Workshop bottom-left
+(bottom-anchored so it grows upward and its connector exit stays fixed),
+Embedded top-right. Leader lines land on points ON the brandmark wireframe
+itself: `BrandmarkPhysicsCoreWithGLB` derives per-service group-local anchor
+points from the sampled GLB homes (corner-direction extremes, so each anchor
+sits on a real wireframe edge — `brandmarkScanAnchorsRef`), and
+`CorridorArmillary` projects them to screen pixels each parked frame through a
+probe group in the mark's `pointerLookRef` space (they ride the per-service
+pose + pointer-look) and publishes to `hologramConnectorStore` (the Sutera
+CV-scan look this interface was built for; the orbit-node anchor publishing in
+`HologramOrbits` remains for the lab). Chip clicks smooth-scroll the page
+to that service's runway segment (`selectService` in `ServicesStage`) — scroll
+owns the state; in controlled mode the outside-click/Escape dismissal and
+click-toggle are disabled (they remain for the uncontrolled lab harness at
+`/test/services-demo`).
+
+Card design upgraded to the dark-glass panel language (ADR-006 shadow stack,
+12px blur at `rgba(10,9,8,0.85)`, gold corner bracket, PP Mondwest `__name`
+headline via `--font-display`, IBM Plex Mono data via `--font-mono` — the dead
+`--font-pt-mono`/`--font-pp-neue-montreal` vars are gone from the orbit-label
+block). Expansion animates via `grid-template-rows: 0fr→1fr` (detail is always
+in the DOM; no mount pop).
+
+`ServicesCardStack` (`.svc-stack`) is DEMOTED to the mobile / reduced-motion
+surface only — `ServicesStage` renders it when `useHologramCanvas` is false;
+its desktop `data-active-step` expand rules were removed from `services.css`.
+
+**Guardrail — scroll anchoring:** the step-flip expand/collapse changes element
+heights inside the pinned stage, which Chrome's scroll anchoring "compensates"
+by yanking `scrollTop` back across the step boundary (the section becomes
+un-scrollable past step 1). `services.css` excludes the whole runway subtree
+(`.services-stage-root, .services-stage-root *`) with `overflow-anchor: none`;
+keep that rule when touching the runway DOM.
