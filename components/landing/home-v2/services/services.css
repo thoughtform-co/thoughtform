@@ -476,6 +476,10 @@
  * void + 12px blur + gold-washed edge + deep shadow, so the card reads as an
  * instrument panel floating over the scene instead of blending into it.
  * Workshop is bottom-anchored (`--orbit-label-bottom`) so it grows upward. */
+/* Variant D "chip + table" (promoted from /test/services-cards, 2026-07-02):
+ * solid void panel + hairline border, inverted dawn title chip, caps
+ * statement, hairline table rows, CTA row. No blur, no gradient, no
+ * ornament — the card stands out through the inverted chip and solid fill. */
 .services-orbit-label {
   position: absolute;
   left: var(--orbit-label-left);
@@ -484,20 +488,15 @@
   width: var(--orbit-label-width);
   box-sizing: border-box;
   color: var(--dawn-70, rgba(235, 227, 214, 0.7));
-  background:
-    linear-gradient(90deg, rgba(202, 165, 84, 0.06), transparent 55%), rgba(10, 9, 8, 0.55);
-  border: 1px solid rgba(235, 227, 214, 0.08);
+  background: #0a0908;
+  border: 1px solid rgba(235, 227, 214, 0.12);
   border-radius: 0;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   opacity: 0.62;
   pointer-events: auto;
   transition:
     width 380ms var(--m-ease, ease),
     opacity 240ms var(--m-ease, ease),
     border-color 240ms var(--m-ease, ease),
-    background-color 240ms var(--m-ease, ease),
-    box-shadow 380ms var(--m-ease, ease),
     transform 240ms var(--m-ease, ease);
 }
 .services-orbit-label--focused {
@@ -508,21 +507,7 @@
   z-index: 4;
   color: var(--dawn);
   opacity: 1;
-  background:
-    radial-gradient(rgba(202, 165, 84, 0.05) 0.5px, transparent 0.6px),
-    linear-gradient(90deg, rgba(202, 165, 84, 0.07), transparent 60%), rgba(10, 9, 8, 0.85);
-  background-size:
-    4px 4px,
-    auto,
-    auto;
   border-color: rgba(235, 227, 214, 0.14);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  /* Focus-overlay shadow stack (ADR-006). */
-  box-shadow:
-    0 0 0 1px rgba(235, 227, 214, 0.05),
-    0 0 60px rgba(202, 165, 84, 0.1),
-    0 30px 80px rgba(0, 0, 0, 0.6);
 }
 .services-orbit-label:hover,
 .services-orbit-label:focus-within {
@@ -534,99 +519,42 @@
 .services-orbit-label--expanded:focus-within {
   transform: none;
 }
-.services-orbit-label__button {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: 10px;
+/* Inverted title chip — the card's header IS the collapsed chip. */
+.services-orbit-label__chipbar {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
-  min-height: 58px;
-  padding: 10px 16px;
-  color: inherit;
+  padding: 9px 13px;
+  font-family: var(--font-mono, "IBM Plex Mono", monospace);
+  font-size: 12px;
+  letter-spacing: 0.12em;
   text-align: left;
-  background: transparent;
+  color: var(--void, #0a0908);
+  background: var(--dawn, #ebe3d6);
   border: 0;
   border-radius: 0;
   cursor: pointer;
 }
-.services-orbit-label--target-right .services-orbit-label__button {
-  grid-template-columns: minmax(0, 1fr) 18px;
-}
-.services-orbit-label__button:focus-visible {
-  outline: 1px solid rgba(202, 165, 84, 0.68);
+.services-orbit-label__chipbar:focus-visible {
+  outline: 1px solid rgba(202, 165, 84, 0.9);
   outline-offset: -3px;
 }
-.services-orbit-label__reticle {
-  position: relative;
-  width: 16px;
-  height: 16px;
-  border: 1px solid rgba(202, 165, 84, 0.48);
-}
-.services-orbit-label__reticle::before,
-.services-orbit-label__reticle::after {
-  content: "";
-  position: absolute;
-  background: rgba(202, 165, 84, 0.52);
-}
-.services-orbit-label__reticle::before {
-  left: 50%;
-  top: -5px;
-  width: 1px;
-  height: 24px;
-  transform: translateX(-50%);
-}
-.services-orbit-label__reticle::after {
-  left: -5px;
-  top: 50%;
-  width: 24px;
-  height: 1px;
-  transform: translateY(-50%);
-}
-.services-orbit-label__reticle span {
-  position: absolute;
-  inset: 5px;
-  background: var(--gold);
-  opacity: 0.75;
-}
-.services-orbit-label--target-right .services-orbit-label__reticle {
-  grid-column: 2;
-  grid-row: 1;
-}
-.services-orbit-label--target-right .services-orbit-label__readout {
-  grid-column: 1;
-  grid-row: 1;
-}
-.services-orbit-label__readout {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-.services-orbit-label__eyebrow,
-.services-orbit-label__signal,
-.services-orbit-label__scan,
-.services-orbit-label__kicker,
-.services-orbit-label__body,
-.services-orbit-label__meta,
-.services-orbit-label__foot {
-  font-family: var(--font-mono, "IBM Plex Mono", monospace);
-}
-.services-orbit-label__eyebrow {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.services-orbit-label__signal {
-  overflow: hidden;
-  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
+.services-orbit-label__chip-id {
   white-space: nowrap;
+}
+.services-orbit-label__chip-runs {
+  overflow: hidden;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 240ms var(--m-ease, ease);
+}
+.services-orbit-label--expanded .services-orbit-label__chip-runs {
+  opacity: 0.55;
 }
 /* Expand animation: the detail is ALWAYS in the DOM; the grid-rows 0fr→1fr
  * transition grows the chip into the full card in place (no mount pop). The
@@ -641,108 +569,89 @@
 }
 .services-orbit-label__detail-inner {
   display: grid;
-  gap: 12px;
   min-height: 0;
   overflow: hidden;
-  padding: 0 16px;
   opacity: 0;
   transform: translateY(6px);
   visibility: hidden;
   transition:
-    padding 420ms var(--m-ease, ease),
     opacity 260ms var(--m-ease, ease),
     transform 420ms var(--m-ease, ease),
     visibility 0s linear 420ms;
 }
 .services-orbit-label--expanded .services-orbit-label__detail-inner {
-  padding: 0 16px 18px;
   opacity: 1;
   transform: translateY(0);
   visibility: visible;
   transition:
-    padding 420ms var(--m-ease, ease),
     opacity 360ms var(--m-ease, ease) 120ms,
     transform 420ms var(--m-ease, ease) 80ms,
     visibility 0s;
 }
-.services-orbit-label__scan {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 0;
-  border-top: 1px solid rgba(202, 165, 84, 0.12);
-  border-bottom: 1px solid rgba(202, 165, 84, 0.08);
-  color: var(--gold);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-/* Service name — display voice (PP Mondwest), the headline of the card. */
-.services-orbit-label__name {
-  margin: 2px 0 0;
+/* Statement — the card's headline. ALL CAPS mono (user spec); the size is
+ * moderated so uppercase mono wraps cleanly at the card width. */
+.services-orbit-label__statement {
+  margin: 0;
+  padding: 16px 13px 6px;
   color: var(--dawn);
-  font-family: var(--font-display, "PP Mondwest", serif);
-  font-size: clamp(26px, 2.4vw, 36px);
+  font-family: var(--font-mono, "IBM Plex Mono", monospace);
+  font-size: clamp(15px, 1.15vw, 18px);
   font-weight: 400;
-  line-height: 1.02;
-}
-.services-orbit-label__kicker {
-  margin: 0;
-  color: var(--gold);
-  font-size: 9px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
   text-transform: uppercase;
 }
-.services-orbit-label__tagline {
+.services-orbit-label__support {
   margin: 0;
-  color: var(--dawn-90, rgba(235, 227, 214, 0.9));
+  padding: 0 13px 16px;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
   font-family: var(--font-mono, "IBM Plex Mono", monospace);
-  font-size: 13px;
+  font-size: 10.5px;
   font-weight: 400;
+  line-height: 1.6;
+}
+/* Hairline table — label cell | value cell per row. */
+.services-orbit-label__table {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid rgba(235, 227, 214, 0.12);
+  font-family: var(--font-mono, "IBM Plex Mono", monospace);
+}
+.services-orbit-label__trow {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.09);
+}
+.services-orbit-label__trow dt {
+  padding: 8px 12px;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-right: 1px solid rgba(235, 227, 214, 0.09);
+}
+.services-orbit-label__trow dd {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--dawn-80, rgba(235, 227, 214, 0.8));
+  font-size: 10.5px;
   line-height: 1.4;
 }
-.services-orbit-label__body {
-  margin: 0;
-  color: var(--dawn-60, rgba(235, 227, 214, 0.6));
-  font-size: 11.5px;
-  font-weight: 400;
-  line-height: 1.55;
-}
-.services-orbit-label__meta {
-  display: grid;
-  gap: 7px;
-}
-.services-orbit-label__meta-row {
-  display: grid;
-  grid-template-columns: minmax(78px, auto) 1fr;
-  gap: 10px;
-}
-.services-orbit-label__meta-row dt {
-  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
-  font-size: 8px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-.services-orbit-label__meta-row dd {
-  margin: 0;
-  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
-  font-size: 10px;
-  line-height: 1.35;
-}
-.services-orbit-label__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding-top: 2px;
-  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
-  font-size: 9px;
-  letter-spacing: 0.05em;
-}
-.services-orbit-label__foot a {
+/* CTA — the table's action row. */
+.services-orbit-label__cta {
+  display: block;
+  padding: 11px 13px;
   color: var(--gold);
+  font-family: var(--font-mono, "IBM Plex Mono", monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
   text-decoration: none;
-  white-space: nowrap;
+  text-transform: uppercase;
+  background: rgba(202, 165, 84, 0.06);
+  transition: background-color 160ms var(--m-ease, ease);
+}
+.services-orbit-label__cta:hover {
+  background: rgba(202, 165, 84, 0.14);
 }
 
 /* ── Top-left service card stack (animejs-style scrollytelling) ───── */
@@ -1007,7 +916,6 @@
     grid-template-rows: 1fr;
   }
   .services-orbit-label__detail-inner {
-    padding: 0 16px 18px;
     opacity: 1;
     transform: none;
     visibility: visible;

@@ -56,6 +56,11 @@ export interface Service {
   shapeKey: "loop-forming" | "loop-encoding" | "loop-crystallized";
 }
 
+/* Copy rebuilt 2026-07-02 (variant D promotion from /test/services-cards):
+ * 5-layer IA — header (index + name, once), one spoken statement (`tagline`,
+ * rendered all-caps by the card), one literal support line (`body`), three
+ * ≤5-word data rows (Runs / Format / Leaves — the phase pill folds into
+ * Runs), one CTA. `kicker` is retained for the mobile card stack only. */
 export const SERVICES: readonly Service[] = [
   {
     id: "keynote",
@@ -64,11 +69,11 @@ export const SERVICES: readonly Service[] = [
     name: "Keynote",
     kicker: "THE LOOP AS ARGUMENT",
     tagline: "Install the frame in a room.",
-    body: "The frame, installed in a room. Your team leaves seeing AI as intelligence to navigate, not software to command.",
+    body: "Your team leaves seeing AI as intelligence to navigate, not software to command.",
     meta: [
-      { label: "Runs", value: "Navigate, as story." },
-      { label: "Shape", value: "30–90 minutes. NL or EN." },
-      { label: "Leaves behind", value: "A shared language and a reason to start." },
+      { label: "Runs", value: "Navigate" },
+      { label: "Format", value: "30–90 min · NL/EN" },
+      { label: "Leaves", value: "A shared language" },
     ],
     phase: "navigate",
     ctaLabel: "Book a keynote",
@@ -82,11 +87,11 @@ export const SERVICES: readonly Service[] = [
     name: "Workshop",
     kicker: "THE LOOP ON YOUR WORK",
     tagline: "Encode what works.",
-    body: "We take your real briefs, navigate them together, and encode what works into substrate the team keeps. From a half-day sprint to a multi-week track.",
+    body: "We navigate your real briefs together and encode what works into substrate the team keeps.",
     meta: [
-      { label: "Runs", value: "Navigate and Encode. A first Build on the longer tracks." },
-      { label: "Shape", value: "Half-day to multi-week." },
-      { label: "Leaves behind", value: "Working substrate, and a team that can steer without me." },
+      { label: "Runs", value: "Navigate · Encode" },
+      { label: "Format", value: "Half-day to multi-week" },
+      { label: "Leaves", value: "Working substrate" },
     ],
     phase: "navigate-encode",
     ctaLabel: "Plan a workshop",
@@ -99,16 +104,13 @@ export const SERVICES: readonly Service[] = [
     index: "03",
     verb: "EMBEDDED",
     name: "Embedded",
-    kicker: "THE LOOP UNTIL IT RUNS ITSELF",
-    tagline: "Compound the layer.",
-    body: "I work alongside the team, loop after loop, until the layer compounds on its own. Navigate, encode, and build thin tools on top of what's encoded.",
+    kicker: "COMPOUND THE LAYER",
+    tagline: "The loop until it runs itself.",
+    body: "I work alongside the team until the intelligence layer compounds on its own.",
     meta: [
-      { label: "Runs", value: "The full flywheel." },
-      { label: "Shape", value: "Ongoing, scoped to a defined end." },
-      {
-        label: "Leaves behind",
-        value: "An owned intelligence layer, and the habit of extending it.",
-      },
+      { label: "Runs", value: "The full flywheel" },
+      { label: "Format", value: "Ongoing, defined end" },
+      { label: "Leaves", value: "An owned intelligence layer" },
     ],
     phase: "all",
     ctaLabel: "Embed the practice",

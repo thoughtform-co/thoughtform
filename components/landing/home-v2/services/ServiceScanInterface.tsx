@@ -9,16 +9,8 @@ import {
   type CSSProperties,
 } from "react";
 
-import { CornerBracket } from "@/components/ui/CornerBracket";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES, type Service, type ServiceId } from "./serviceData";
-import { SERVICE_SCAN_NOTES, type ServiceScanNote } from "./serviceScanNotes";
-
-const PHASE_LABELS: Record<Service["phase"], string> = {
-  navigate: "Navigate",
-  "navigate-encode": "Navigate / Encode",
-  all: "Navigate / Encode / Build",
-};
 
 interface ViewportSize {
   width: number;
@@ -111,9 +103,9 @@ function getOrbitLabelLayout(
   }
 
   const targetX = side === "right" ? left + width : left;
-  // 31px = chip-header centre (top-anchored) / mirrored above the bottom edge
+  // 19px = chipbar centre (top-anchored) / mirrored above the bottom edge
   // (bottom-anchored) — a point that does not move while the card expands.
-  const targetY = top !== null ? top + 31 : viewport.height - (bottom ?? 0) - 31;
+  const targetY = top !== null ? top + 19 : viewport.height - (bottom ?? 0) - 19;
   return {
     left,
     top,
@@ -193,19 +185,16 @@ function ServiceOrbitLabel({
   expanded,
   focused,
   layout,
-  note,
   onToggle,
   service,
 }: {
   expanded: boolean;
   focused: boolean;
   layout: OrbitLabelLayout | null;
-  note: ServiceScanNote;
   onToggle: (serviceId: ServiceId) => void;
   service: Service;
 }) {
   const detailId = `services-orbit-label-${service.id}-detail`;
-  const confidence = `${Math.round(note.confidence * 100)}%`;
   const className = [
     "services-orbit-label",
     `services-orbit-label--${service.id}`,
@@ -216,68 +205,48 @@ function ServiceOrbitLabel({
     .filter(Boolean)
     .join(" ");
 
+  /* Variant D "chip + table" (promoted from /test/services-cards,
+   * 2026-07-02): inverted title chip → caps statement → support line →
+   * hairline table rows → CTA row. One 5-layer IA, mono only. */
   return (
     <article className={className} data-service={service.id} style={getLabelStyle(layout)}>
-      {expanded ? (
-        <CornerBracket
-          mode="diagonal-primary"
-          armLength={12}
-          thickness={1}
-          color="rgba(202, 165, 84, 0.58)"
-        />
-      ) : null}
-
       <button
-        className="services-orbit-label__button"
+        className="services-orbit-label__chipbar"
         type="button"
         aria-expanded={expanded}
         aria-controls={detailId}
         onClick={() => onToggle(service.id)}
       >
-        <span className="services-orbit-label__reticle" aria-hidden="true">
-          <span />
+        <span className="services-orbit-label__chip-id">
+          {service.index} — {service.verb}
         </span>
-        <span className="services-orbit-label__readout">
-          <span className="services-orbit-label__eyebrow">
-            <span>
-              {service.index} / {service.verb}
-            </span>
-            <span>{confidence}</span>
-          </span>
-          <span className="services-orbit-label__signal">{note.signals[0]}</span>
-        </span>
+        <span className="services-orbit-label__chip-runs">{service.meta[0].value}</span>
       </button>
 
       {/* Always rendered so the grid-rows 0fr→1fr expand animation can run
           (a conditional mount would pop instead of grow). */}
       <div className="services-orbit-label__detail" id={detailId} aria-hidden={!expanded}>
         <div className="services-orbit-label__detail-inner">
-          <div className="services-orbit-label__scan">
-            <span>{note.coordinate}</span>
-            <span>{note.label}</span>
-          </div>
+          <h3 className="services-orbit-label__statement">{service.tagline}</h3>
+          <p className="services-orbit-label__support">{service.body}</p>
 
-          <h3 className="services-orbit-label__name">{service.name}</h3>
-          <p className="services-orbit-label__kicker">{service.kicker}</p>
-          <p className="services-orbit-label__tagline">{service.tagline}</p>
-          <p className="services-orbit-label__body">{service.body}</p>
-
-          <dl className="services-orbit-label__meta">
+          <dl className="services-orbit-label__table">
             {service.meta.map((row) => (
-              <div className="services-orbit-label__meta-row" key={row.label}>
+              <div className="services-orbit-label__trow" key={row.label}>
                 <dt>{row.label}</dt>
                 <dd>{row.value}</dd>
               </div>
             ))}
           </dl>
 
-          <footer className="services-orbit-label__foot">
-            <span>{PHASE_LABELS[service.phase]}</span>
-            <a href={service.ctaHref} tabIndex={expanded ? undefined : -1}>
-              {service.ctaLabel}
-              <span aria-hidden="true"> →</span>
-            </a>
-          </footer>
+          <a
+            className="services-orbit-label__cta"
+            href={service.ctaHref}
+            tabIndex={expanded ? undefined : -1}
+          >
+            {service.ctaLabel}
+            <span aria-hidden="true"> →</span>
+          </a>
         </div>
       </div>
     </article>
@@ -365,16 +334,14 @@ export function ServiceScanInterface({
       )}
 
       <div className="services-orbit-labels" aria-label="Service orbit labels">
-        {SERVICE_SCAN_NOTES.map((note) => {
-          const service = SERVICES.find((item) => item.id === note.serviceId) ?? SERVICES[0];
+        {SERVICES.map((service) => {
           const expanded = expandedServiceId === service.id;
           return (
             <ServiceOrbitLabel
-              key={note.id}
+              key={service.id}
               expanded={expanded}
               focused={service.id === activeService.id}
               layout={getOrbitLabelLayout(service.id, viewport, expanded)}
-              note={note}
               onToggle={toggleService}
               service={service}
             />

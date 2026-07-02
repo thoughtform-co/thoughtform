@@ -1,0 +1,499 @@
+/* /test/services-cards — design lab for the #services callout cards.
+ * Four variants, all IBM Plex Mono only (font consistency is the brief);
+ * they differ in STRUCTURE: Ledger (Starfield travel-data), Lab sheet
+ * (Atlas), Slab (brasshands), Chip + table (Pixelated + Orbit).
+ * Each cell stages its card against a faint gold brandmark + dashed leader
+ * line so contrast is judged against realistic scene noise. */
+
+.svc-lab {
+  --lab-mono: var(--font-mono, "IBM Plex Mono", monospace);
+  --lab-void: var(--void, #0a0908);
+  --lab-dawn: var(--dawn, #ebe3d6);
+  --lab-gold: var(--gold, #caa554);
+  min-height: 100vh;
+  padding: 28px clamp(20px, 3vw, 48px) 64px;
+  background: var(--lab-void);
+  color: var(--lab-dawn);
+  font-family: var(--lab-mono);
+}
+
+/* ── Page chrome ── */
+.svc-lab__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.svc-lab__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lab-gold);
+}
+.svc-lab__title span {
+  color: rgba(235, 227, 214, 0.4);
+}
+.svc-lab__switch {
+  display: flex;
+  gap: 8px;
+}
+.svc-lab__switch button {
+  padding: 7px 14px;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+  background: transparent;
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.svc-lab__switch button:hover {
+  color: var(--lab-dawn);
+  border-color: rgba(202, 165, 84, 0.4);
+}
+.svc-lab__switch button[data-active="true"] {
+  color: var(--lab-void);
+  background: var(--lab-gold);
+  border-color: var(--lab-gold);
+}
+
+/* ── Comparison grid ── */
+.svc-lab__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+  gap: 20px;
+}
+
+/* ── Stage cell: mini #services scene ── */
+.svc-lab__cell {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 30% 45%, rgba(202, 165, 84, 0.05), transparent 60%), #070605;
+  border: 1px solid rgba(235, 227, 214, 0.07);
+}
+.svc-lab__cell-tag {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  z-index: 3;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.38);
+}
+.svc-lab__cell-tag strong {
+  color: var(--lab-gold);
+  font-weight: 400;
+}
+/* Faint brandmark behind the card — the "scene noise" contrast test. */
+.svc-lab__mark {
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  width: min(46%, 340px);
+  transform: translate(-50%, -50%);
+  color: var(--lab-gold);
+  opacity: 0.16;
+  pointer-events: none;
+}
+.svc-lab__wire {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.svc-lab__wire line {
+  fill: none;
+  stroke: var(--lab-gold);
+  stroke-width: 0.9;
+  stroke-opacity: 0.55;
+  stroke-dasharray: 3 7;
+}
+.svc-lab__wire circle {
+  fill: none;
+  stroke: var(--lab-gold);
+  stroke-width: 1;
+  stroke-opacity: 0.9;
+}
+.svc-lab__wire .svc-lab__wire-dot {
+  fill: var(--lab-gold);
+  stroke: none;
+}
+/* Card anchor inside the cell */
+.svc-lab__card-slot {
+  position: absolute;
+  top: 50%;
+  right: clamp(18px, 3vw, 40px);
+  transform: translateY(-50%);
+  z-index: 2;
+}
+.svc-lab__chip-slot {
+  position: absolute;
+  top: 42px;
+  left: 16px;
+  z-index: 2;
+}
+
+/* ═══════════════ Variant A — LEDGER (Starfield travel data) ═══════════════ */
+.svc-card-a {
+  width: 344px;
+  background: #0a0908;
+  border: 1px solid rgba(235, 227, 214, 0.15);
+}
+.svc-card-a__bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.12);
+}
+.svc-card-a__id {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--lab-gold);
+}
+.svc-card-a__status {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.38);
+}
+.svc-card-a__statement {
+  margin: 0;
+  padding: 18px 14px 10px;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--lab-dawn);
+}
+.svc-card-a__support {
+  margin: 0;
+  padding: 0 14px 16px;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: rgba(235, 227, 214, 0.52);
+}
+.svc-card-a__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 14px;
+  border-top: 1px solid rgba(235, 227, 214, 0.08);
+}
+.svc-card-a__row dt {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.38);
+}
+.svc-card-a__row dd {
+  margin: 0;
+  font-size: 11px;
+  text-align: right;
+  color: rgba(235, 227, 214, 0.82);
+}
+.svc-card-a__cta {
+  display: block;
+  padding: 12px 14px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--lab-gold);
+  border-top: 1px solid rgba(202, 165, 84, 0.3);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.svc-card-a__cta:hover {
+  color: var(--lab-void);
+  background: var(--lab-gold);
+}
+/* chip */
+.svc-chip-a {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 9px 12px;
+  background: #0a0908;
+  border: 1px solid rgba(235, 227, 214, 0.13);
+}
+.svc-chip-a__id {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.72);
+}
+.svc-chip-a__status {
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.32);
+}
+
+/* ═══════════════ Variant B — LAB SHEET (Atlas) ═══════════════ */
+.svc-card-b {
+  width: 372px;
+  background: rgba(10, 9, 8, 0.94);
+  border: 1px solid rgba(235, 227, 214, 0.12);
+}
+.svc-card-b__band {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 14px;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.36);
+}
+.svc-card-b__band--top {
+  border-bottom: 1px solid rgba(235, 227, 214, 0.1);
+}
+.svc-card-b__band--bottom {
+  border-top: 1px solid rgba(235, 227, 214, 0.1);
+}
+.svc-card-b__band strong {
+  font-weight: 400;
+  color: rgba(202, 165, 84, 0.8);
+}
+.svc-card-b__inner {
+  padding: 24px 20px;
+}
+.svc-card-b__statement {
+  margin: 0 0 12px;
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--lab-dawn);
+}
+.svc-card-b__support {
+  margin: 0 0 22px;
+  font-size: 11px;
+  line-height: 1.65;
+  color: rgba(235, 227, 214, 0.52);
+}
+.svc-card-b__rows {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+.svc-card-b__row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.svc-card-b__row dt {
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.34);
+}
+.svc-card-b__row dd {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(235, 227, 214, 0.76);
+}
+.svc-card-b__cta {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lab-gold);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(202, 165, 84, 0.45);
+}
+.svc-card-b__cta:hover {
+  text-decoration-color: var(--lab-gold);
+}
+/* chip */
+.svc-chip-b {
+  padding: 0;
+  background: rgba(10, 9, 8, 0.94);
+  border: 1px solid rgba(235, 227, 214, 0.12);
+}
+.svc-chip-b__band {
+  padding: 4px 10px;
+  font-size: 7.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.34);
+  border-bottom: 1px solid rgba(235, 227, 214, 0.1);
+}
+.svc-chip-b__name {
+  padding: 8px 10px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.78);
+}
+
+/* ═══════════════ Variant C — SLAB (brasshands) ═══════════════ */
+.svc-card-c {
+  width: 312px;
+  padding: 20px 18px;
+  background: #050504;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+.svc-card-c__id {
+  margin: 0 0 14px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--lab-gold);
+}
+.svc-card-c__statement {
+  margin: 0 0 18px;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--lab-dawn);
+}
+.svc-card-c__rows {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+.svc-card-c__row {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.svc-card-c__row dt {
+  display: inline;
+  color: rgba(235, 227, 214, 0.38);
+}
+.svc-card-c__row dt::after {
+  content: ": ";
+}
+.svc-card-c__row dd {
+  display: inline;
+  margin: 0;
+  color: rgba(235, 227, 214, 0.75);
+}
+.svc-card-c__cta {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--lab-gold);
+}
+.svc-card-c__cta:hover {
+  color: var(--lab-dawn);
+}
+/* chip */
+.svc-chip-c {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #050504;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+}
+.svc-chip-c__reticle {
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(202, 165, 84, 0.7);
+}
+.svc-chip-c__id {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.72);
+}
+
+/* ═══════════════ Variant D — CHIP + TABLE (Pixelated + Orbit) ═══════════════ */
+.svc-card-d {
+  width: 352px;
+  background: #0a0908;
+  border: 1px solid rgba(235, 227, 214, 0.12);
+}
+.svc-card-d__chipbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 13px;
+  background: var(--lab-dawn);
+  color: var(--lab-void);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+.svc-card-d__chipbar span:last-child {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+}
+.svc-card-d__statement {
+  margin: 0;
+  padding: 18px 14px 8px;
+  font-size: 16.5px;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--lab-dawn);
+}
+.svc-card-d__support {
+  margin: 0;
+  padding: 0 14px 16px;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: rgba(235, 227, 214, 0.5);
+}
+.svc-card-d__table {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid rgba(235, 227, 214, 0.12);
+}
+.svc-card-d__trow {
+  display: grid;
+  grid-template-columns: 104px 1fr;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.09);
+}
+.svc-card-d__trow dt {
+  padding: 8px 12px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.38);
+  border-right: 1px solid rgba(235, 227, 214, 0.09);
+}
+.svc-card-d__trow dd {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 10.5px;
+  color: rgba(235, 227, 214, 0.8);
+}
+.svc-card-d__cta {
+  display: block;
+  padding: 11px 13px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--lab-gold);
+  background: rgba(202, 165, 84, 0.06);
+}
+.svc-card-d__cta:hover {
+  background: rgba(202, 165, 84, 0.14);
+}
+/* chip */
+.svc-chip-d {
+  display: inline-flex;
+  padding: 7px 11px;
+  background: var(--lab-dawn);
+  color: var(--lab-void);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
