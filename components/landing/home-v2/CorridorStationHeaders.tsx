@@ -256,6 +256,33 @@ function TitleConsole({ children }: { children: ReactNode }) {
 
 type CaptionStationKey = "nav" | "enc" | "bld";
 
+/** Decorative survey-fix tag floating above the reticle's top-left
+ *  corner ("REF 122.4 / T+0042"). Set-dressing derived per station,
+ *  NOT content — which is why it lives here and not in corridorMap. */
+interface CaptionCoord {
+  ref: string;
+  t: string;
+}
+
+/** Everything the caption card's chrome shows for one station: the
+ *  kicker + telemetry feed the meta row, the coord tag the top-left
+ *  artifact. All of it swaps (not types) on station change. */
+interface CaptionStationMeta {
+  kicker?: string;
+  telemetry?: StationTelemetry;
+  coord: CaptionCoord;
+}
+
+/** Live text elements inside the card chrome the RAF loop retitles
+ *  when the dominant station changes. */
+interface CaptionMetaEls {
+  kicker: HTMLSpanElement | null;
+  callsign: HTMLSpanElement | null;
+  status: HTMLSpanElement | null;
+  coordRef: HTMLSpanElement | null;
+  coordT: HTMLElement | null;
+}
+
 /** One station's support paragraph inside the persistent caption card.
  *  Mirrors StationBlock's support rendering (per-char spans + trailing
  *  cursor in typewriter mode, raw HTML otherwise) and registers its
@@ -358,23 +385,26 @@ function CaptionSupport({
   );
 }
 
-/** The persistent caption card itself — D5-H chrome mounted once.
- *  `barCallsignRef` / `barStatusRef` are written by the RAF loop when
- *  the dominant station changes; the initial render seeds Navigate's
- *  telemetry so the first frame never shows an empty bar. */
+/** The persistent caption card itself — X1-B "dotted reticle" chrome
+ *  mounted once. The reticle is set-dressing around the copy: a dashed
+ *  hairline frame with gold corner crosses, a mono coord tag floating
+ *  above the top-left, a tick rail hanging off the lower-right, a meta
+ *  row (kicker · callsign · status) between dashed leaders, and a
+ *  three-diamond pips row under the copy. The RAF loop retitles the
+ *  meta row + coord tag through `metaEls` when the dominant station
+ *  changes; the initial render seeds Navigate's meta so the first
+ *  frame never shows an empty row. */
 function CaptionCard({
   refSetter,
-  barCallsignRef,
-  barStatusRef,
-  initialTelemetry,
+  metaEls,
+  initialMeta,
   stations,
   typewriter,
   register,
 }: {
   refSetter: (el: HTMLDivElement | null) => void;
-  barCallsignRef: React.RefObject<HTMLSpanElement | null>;
-  barStatusRef: React.RefObject<HTMLSpanElement | null>;
-  initialTelemetry?: StationTelemetry;
+  metaEls: React.MutableRefObject<CaptionMetaEls>;
+  initialMeta?: CaptionStationMeta;
   stations: { key: CaptionStationKey; content?: StationContent }[];
   typewriter: boolean;
   register: (
@@ -386,39 +416,79 @@ function CaptionCard({
 }) {
   return (
     <div ref={refSetter} className="home-v2-caption-card" style={{ opacity: 0 }}>
-      <div className="home-v2-caption-shell">
-        <div className="home-v2-caption-inner">
-          <div className="home-v2-caption-bar" aria-hidden="true">
-            <span className="home-v2-caption-bar__id">
-              <span className="home-v2-caption-diamond" />
-              <span ref={barCallsignRef}>{initialTelemetry?.callsign ?? ""}</span>
-              <span className="home-v2-caption-sep" />
-              <span className="home-v2-caption-bar__status" ref={barStatusRef}>
-                {initialTelemetry?.status ?? ""}
-              </span>
+      <div className="home-v2-reticle">
+        <i className="home-v2-reticle__frame" aria-hidden="true" />
+        <i className="home-v2-reticle__cross is-tl" aria-hidden="true" />
+        <i className="home-v2-reticle__cross is-tr" aria-hidden="true" />
+        <i className="home-v2-reticle__cross is-bl" aria-hidden="true" />
+        <i className="home-v2-reticle__cross is-br" aria-hidden="true" />
+        <span className="home-v2-reticle__coord" aria-hidden="true">
+          <span
+            ref={(el) => {
+              metaEls.current.coordRef = el;
+            }}
+          >
+            {initialMeta?.coord.ref ?? ""}
+          </span>{" "}
+          <b
+            ref={(el) => {
+              metaEls.current.coordT = el;
+            }}
+          >
+            / {initialMeta?.coord.t ?? ""}
+          </b>
+        </span>
+        <i className="home-v2-reticle__rail" aria-hidden="true" />
+        <div className="home-v2-reticle__meta" aria-hidden="true">
+          <span className="home-v2-reticle__lead" />
+          <span className="home-v2-reticle__mi">
+            <span className="home-v2-caption-diamond" />
+            <span
+              ref={(el) => {
+                metaEls.current.kicker = el;
+              }}
+            >
+              {initialMeta?.kicker ?? ""}
             </span>
-            <span className="home-v2-caption-bar__sq">
-              <i />
-              <i />
-              <i />
+            <span className="home-v2-caption-sep" />
+            <span
+              ref={(el) => {
+                metaEls.current.callsign = el;
+              }}
+            >
+              {initialMeta?.telemetry?.callsign ?? ""}
             </span>
+            <span className="home-v2-caption-sep" />
+            <span
+              className="home-v2-reticle__status"
+              ref={(el) => {
+                metaEls.current.status = el;
+              }}
+            >
+              {initialMeta?.telemetry?.status ?? ""}
+            </span>
+          </span>
+          <span className="home-v2-reticle__lead" />
+        </div>
+        <div className="home-v2-reticle__body">
+          <div className="home-v2-caption-copy">
+            {stations.map((s) =>
+              s.content ? (
+                <CaptionSupport
+                  key={s.key}
+                  stationKey={s.key}
+                  content={s.content}
+                  typewriter={typewriter}
+                  register={register}
+                />
+              ) : null
+            )}
           </div>
-          <div className="home-v2-caption-body">
-            <div className="home-v2-caption-copy">
-              {stations.map((s) =>
-                s.content ? (
-                  <CaptionSupport
-                    key={s.key}
-                    stationKey={s.key}
-                    content={s.content}
-                    typewriter={typewriter}
-                    register={register}
-                  />
-                ) : null
-              )}
-            </div>
-            <div className="home-v2-caption-ticks" aria-hidden="true" />
-          </div>
+        </div>
+        <div className="home-v2-reticle__pips" aria-hidden="true">
+          <span className="home-v2-caption-diamond is-dim" />
+          <span className="home-v2-caption-diamond" />
+          <span className="home-v2-caption-diamond is-dim" />
         </div>
       </div>
     </div>
@@ -997,13 +1067,26 @@ export function CorridorStationHeaders() {
   }, []);
   const typewriter = !reducedMotion;
 
-  // Telemetry per corridor station for the persistent caption card's
-  // title bar (callsign + status). Module-stable content from
-  // corridorMap; captured by the RAF closure below.
-  const captionTelemetry: Record<CaptionStationKey, StationTelemetry | undefined> = {
-    nav: nav?.telemetry,
-    enc: enc?.telemetry,
-    bld: bld?.telemetry,
+  // Meta readouts per corridor station for the persistent caption
+  // card: kicker + telemetry feed the reticle meta row (from
+  // corridorMap content), the coord tag is decorative survey-fix
+  // set-dressing per station. Captured by the RAF closure below.
+  const captionMeta: Record<CaptionStationKey, CaptionStationMeta> = {
+    nav: {
+      kicker: nav?.kicker,
+      telemetry: nav?.telemetry,
+      coord: { ref: "REF 112.4", t: "T+0018" },
+    },
+    enc: {
+      kicker: enc?.kicker,
+      telemetry: enc?.telemetry,
+      coord: { ref: "REF 122.4", t: "T+0042" },
+    },
+    bld: {
+      kicker: bld?.kicker,
+      telemetry: bld?.telemetry,
+      coord: { ref: "REF 132.4", t: "T+0077" },
+    },
   };
 
   // Container + per-char ref state per station.
@@ -1054,13 +1137,18 @@ export function CorridorStationHeaders() {
   } | null>(null);
 
   // Persistent caption card refs + runtime state (one artifact,
-  // 2026-07-03). The card element, its title-bar text spans, and the
-  // three stacked support paragraphs are all driven from the RAF loop:
-  // card opacity on its own band, paragraph opacity per station band,
-  // bar text following the dominant station.
+  // 2026-07-03). The card element, its meta-row / coord-tag text
+  // spans, and the three stacked support paragraphs are all driven
+  // from the RAF loop: card opacity on its own band, paragraph opacity
+  // per station band, meta text following the dominant station.
   const captionCardRef = useRef<HTMLDivElement | null>(null);
-  const captionBarCallsignRef = useRef<HTMLSpanElement | null>(null);
-  const captionBarStatusRef = useRef<HTMLSpanElement | null>(null);
+  const captionMetaEls = useRef<CaptionMetaEls>({
+    kicker: null,
+    callsign: null,
+    status: null,
+    coordRef: null,
+    coordT: null,
+  });
   const captionParas = useRef<Record<CaptionStationKey, HTMLParagraphElement | null>>({
     nav: null,
     enc: null,
@@ -1235,10 +1323,11 @@ export function CorridorStationHeaders() {
           cs.framed = false;
           cardEl.classList.remove("is-armed");
         }
-        // Title-bar telemetry follows the DOMINANT station — swap (not
-        // type) the callsign + status the moment a new station's band
-        // outweighs the rest. Holds the last station's readout through
-        // the between-station travel so the bar never blanks.
+        // Meta row + coord tag follow the DOMINANT station — swap (not
+        // type) the kicker / callsign / status / coord the moment a new
+        // station's band outweighs the rest. Holds the last station's
+        // readout through the between-station travel so the chrome
+        // never blanks.
         let activeKey = cs.activeKey;
         let best = 0.15;
         for (const key of ["nav", "enc", "bld"] as const) {
@@ -1249,15 +1338,15 @@ export function CorridorStationHeaders() {
         }
         if (activeKey && activeKey !== cs.activeKey) {
           cs.activeKey = activeKey;
-          const tele = captionTelemetry[activeKey];
-          if (tele) {
-            if (captionBarCallsignRef.current) {
-              captionBarCallsignRef.current.textContent = tele.callsign;
-            }
-            if (captionBarStatusRef.current) {
-              captionBarStatusRef.current.textContent = tele.status;
-            }
+          const meta = captionMeta[activeKey];
+          const els = captionMetaEls.current;
+          if (els.kicker && meta.kicker) els.kicker.textContent = meta.kicker;
+          if (meta.telemetry) {
+            if (els.callsign) els.callsign.textContent = meta.telemetry.callsign;
+            if (els.status) els.status.textContent = meta.telemetry.status;
           }
+          if (els.coordRef) els.coordRef.textContent = meta.coord.ref;
+          if (els.coordT) els.coordT.textContent = `/ ${meta.coord.t}`;
         }
       }
       // Signal block: centred (translateX -50%) + scroll-coupled upward
@@ -1541,9 +1630,8 @@ export function CorridorStationHeaders() {
           corridor stations; only its text + bar telemetry change. */}
       <CaptionCard
         refSetter={setCaptionCardRef}
-        barCallsignRef={captionBarCallsignRef}
-        barStatusRef={captionBarStatusRef}
-        initialTelemetry={nav?.telemetry}
+        metaEls={captionMetaEls}
+        initialMeta={captionMeta.nav}
         typewriter={typewriter}
         register={registerCaptionSupport}
         stations={[

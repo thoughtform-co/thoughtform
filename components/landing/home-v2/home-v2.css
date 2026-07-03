@@ -663,73 +663,174 @@ html[data-corridor-exit="true"] #services > * {
    corners and the support console's top corners competed with the
    instrument; the frames now end open toward the sphere. */
 
-/* ── Station caption card (D5-H, 2026-07-03) ─────────────────────────
-   A terminal-style title bar + tick rail over barely-there frosted
-   glass, with a single 22px notch cutting the bottom-right corner.
-
-   Surface (contrast pass round 3): the original two-layer clip-path
-   sandwich (shell bg as the rim, translucent inner over it) could not
-   go subtle — ANY translucent fill let the shell's rim wash bleed
-   through the whole plate and read gray/milky. So the surface is now a
-   SINGLE plate carrying the pre-D5-H frosted-glass recipe (faint void
-   fill + blur + gold hairline border, the "very subtle frame" look):
-   the clip-path cuts the notch out of plate AND border, and the
-   chamfer's missing hairline is drawn back as a rotated 1px segment on
-   the shell's ::after (the shell itself is just an unclipped anchor). */
-.home-v2-caption-shell {
+/* ── Station caption card (X1-B "dotted reticle", 2026-07-03) ────────
+   Dotted-hairline reticle over void glass — the card RECEDES into the
+   scene instead of lifting off it, so the sphere stays primary. Chrome
+   inventory: dashed edge frame (background-image layers — `border`
+   can't dash), four gold corner crosses centred on the frame corners,
+   a decorative mono coord tag floating above the top-left, a tick rail
+   hanging off the lower-right edge, a meta row (kicker · callsign ·
+   status) between dashed leaders, and a three-diamond pips row under
+   the copy. Supersedes the D5-H terminal plate (title bar + notch +
+   bottom tick rail — recipe in git history if it's ever wanted back).
+   All chrome fades with the card's `is-armed` state; the off-frame
+   artifacts (coord tag, rail) trail the frame by 80ms. */
+.home-v2-reticle {
   position: relative;
+  text-align: center;
+  padding: 17px 44px 16px;
+  background: rgba(5, 4, 3, 0.38);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
-.home-v2-caption-shell::after {
-  /* Hairline along the 22px chamfer: diagonal from (W-22, H) to
-     (W, H-22) → length 22√2 ≈ 31.1px, centred at (W-11, H-11). */
-  content: "";
+@supports not (backdrop-filter: blur(1px)) {
+  /* No blur available to haze the sphere — darken the fill instead so
+     the copy stays legible. */
+  .home-v2-reticle {
+    background: rgba(5, 4, 3, 0.72);
+  }
+}
+
+/* Dashed hairline frame — four edge gradients pinned to the box. */
+.home-v2-reticle__frame {
   position: absolute;
-  width: 31.2px;
-  height: 1px;
-  right: -4.6px;
-  bottom: 10.5px;
-  background: rgba(202, 165, 84, 0.2);
-  transform: rotate(-45deg);
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
+      100% 1px no-repeat,
+    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0
+      100% / 100% 1px no-repeat,
+    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
+      1px 100% no-repeat,
+    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 100%
+      0 / 1px 100% no-repeat;
+}
+
+/* Gold dashed crosses, centred exactly on each frame corner. */
+.home-v2-reticle__cross {
+  position: absolute;
+  width: 19px;
+  height: 19px;
   pointer-events: none;
 }
-.home-v2-caption-inner {
-  background: rgba(10, 9, 8, 0.3);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(202, 165, 84, 0.2);
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+.home-v2-reticle__cross::before,
+.home-v2-reticle__cross::after {
+  content: "";
+  position: absolute;
+}
+.home-v2-reticle__cross::before {
+  left: 0;
+  right: 0;
+  top: 9px;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.8) 0 1.5px,
+    transparent 1.5px 5px
+  );
+}
+.home-v2-reticle__cross::after {
+  top: 0;
+  bottom: 0;
+  left: 9px;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(202, 165, 84, 0.8) 0 1.5px,
+    transparent 1.5px 5px
+  );
+}
+.home-v2-reticle__cross.is-tl {
+  left: -10px;
+  top: -10px;
+}
+.home-v2-reticle__cross.is-tr {
+  right: -10px;
+  top: -10px;
+}
+.home-v2-reticle__cross.is-bl {
+  left: -10px;
+  bottom: -10px;
+}
+.home-v2-reticle__cross.is-br {
+  right: -10px;
+  bottom: -10px;
 }
 
-/* Terminal title bar — callsign + status word on the left, three window
-   squares on the right. Chrome, not content: fades in with `is-armed`
-   (like the old meta row) rather than typing out. */
-.home-v2-caption-bar {
+/* Coord tag — mono survey fix floating above the top-left corner.
+   Decorative set-dressing (values swap per station via the RAF). */
+.home-v2-reticle__coord {
+  position: absolute;
+  left: -1px;
+  top: -24px;
+  pointer-events: none;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.28);
+  white-space: nowrap;
+}
+.home-v2-reticle__coord b {
+  font-weight: 400;
+  color: rgba(202, 165, 84, 0.55);
+}
+
+/* Tick rail hanging off the lower-right edge; one solid gold tick. */
+.home-v2-reticle__rail {
+  position: absolute;
+  right: -16px;
+  top: 52%;
+  bottom: -8px;
+  width: 5px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(236, 227, 214, 0.3) 0 1px,
+    transparent 1px 8px
+  );
+}
+.home-v2-reticle__rail::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 38%;
+  width: 8px;
+  height: 1px;
+  background: var(--gold, #caa554);
+}
+
+/* Meta row — dashed leaders flanking kicker · callsign · status. */
+.home-v2-reticle__meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 6px 14px;
-  /* No fill of its own (2026-07-03 consistency pass) — the bar reads on
-     the same solid void plate as the body, delineated only by the
-     hairline rule below it. */
-  background: transparent;
-  border-bottom: 1px solid var(--dawn-08);
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--dawn-50);
-  opacity: 0;
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.home-v2-caption-card.is-armed .home-v2-caption-bar {
-  opacity: 1;
+.home-v2-reticle__lead {
+  flex: 1;
+  max-width: 150px;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(236, 227, 214, 0.2) 0 1px,
+    transparent 1px 6px
+  );
 }
-.home-v2-caption-bar__id {
+.home-v2-reticle__mi {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: rgba(202, 165, 84, 0.7);
+  white-space: nowrap;
 }
-.home-v2-caption-bar__status {
+.home-v2-reticle__status {
   color: var(--gold, #caa554);
 }
 .home-v2-caption-diamond {
@@ -747,50 +848,53 @@ html[data-corridor-exit="true"] #services > * {
   transform: rotate(45deg);
   flex: none;
 }
-.home-v2-caption-bar__sq {
-  display: flex;
-  gap: 5px;
-}
-.home-v2-caption-bar__sq i {
-  width: 5px;
-  height: 5px;
-  border: 1px solid var(--dawn-30);
-}
-.home-v2-caption-bar__sq i:last-child {
-  background: var(--gold-40);
-  border-color: var(--gold-40);
+/* Dimmed diamond — the flanking pips (and any inactive marker). */
+.home-v2-caption-diamond.is-dim {
+  background: var(--dawn-30);
+  box-shadow: none;
 }
 
-/* Copy plate + the tick rail beneath the paragraph. The rail's centered
-   42px overlay lights the middle ticks gold; it fades in with `is-armed`
-   while the paragraph itself types out through the existing machinery. */
-.home-v2-caption-body {
-  padding: 18px 48px 16px;
+/* Pips row under the copy — dim · live · dim. */
+.home-v2-reticle__pips {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 13px;
 }
-.home-v2-caption-ticks {
-  position: relative;
-  margin-top: 16px;
-  height: 4px;
-  background: repeating-linear-gradient(to right, var(--dawn-15) 0 1px, transparent 1px 14px);
+
+/* Arm choreography — frame, crosses, meta and pips resolve with the
+   card's arrival; the off-frame artifacts (coord tag, rail) trail by
+   80ms so the reticle reads as locking on, not popping in. */
+.home-v2-reticle__frame,
+.home-v2-reticle__cross,
+.home-v2-reticle__meta,
+.home-v2-reticle__pips {
   opacity: 0;
   transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.home-v2-caption-card.is-armed .home-v2-caption-ticks {
+.home-v2-reticle__coord,
+.home-v2-reticle__rail {
+  opacity: 0;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1) 0.08s;
+}
+.home-v2-caption-card.is-armed .home-v2-reticle__frame,
+.home-v2-caption-card.is-armed .home-v2-reticle__cross,
+.home-v2-caption-card.is-armed .home-v2-reticle__meta,
+.home-v2-caption-card.is-armed .home-v2-reticle__pips,
+.home-v2-caption-card.is-armed .home-v2-reticle__coord,
+.home-v2-caption-card.is-armed .home-v2-reticle__rail {
   opacity: 1;
 }
-.home-v2-caption-ticks::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  bottom: -1px;
-  left: calc(50% - 21px);
-  width: 42px;
-  background: repeating-linear-gradient(to right, var(--gold, #caa554) 0 1px, transparent 1px 14px);
-}
+
 @media (max-width: 700px) {
-  /* Mobile (floorHtml path uses the same card) — tighten the body. */
-  .home-v2-caption-body {
+  /* Mobile (floorHtml path uses the same card) — tighten the plate and
+     drop the off-frame artifacts (set-dressing, not content). */
+  .home-v2-reticle {
     padding: 14px 22px 12px;
+  }
+  .home-v2-reticle__coord,
+  .home-v2-reticle__rail {
+    display: none;
   }
 }
 
@@ -822,10 +926,14 @@ html[data-corridor-exit="true"] #services > * {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Title-bar chrome + tick rail appear instantly when armed — no fade. */
+  /* Reticle chrome appears instantly when armed — no fade, no stagger. */
   .home-v2-station-header__frame,
-  .home-v2-caption-bar,
-  .home-v2-caption-ticks {
+  .home-v2-reticle__frame,
+  .home-v2-reticle__cross,
+  .home-v2-reticle__meta,
+  .home-v2-reticle__pips,
+  .home-v2-reticle__coord,
+  .home-v2-reticle__rail {
     transition: none;
   }
 }
