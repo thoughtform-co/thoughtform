@@ -273,9 +273,9 @@ export const CORRIDOR_MAP = [
       kicker: "01 · NAVIGATE",
       titleHtml: "NAVIGATE THE <em>INTELLIGENCE.</em>",
       supportHtml:
-        "Trained on us, but it doesn't think like us.<br>So commands give you everyone's answer. <em>Navigation</em> gives you yours.",
+        "Trained on us, but it doesn't think like us.<br>We start inside your real work: your team learns to <em>steer</em> it past the average answer.",
       floorHtml:
-        "Trained on us. Thinks nothing like us.<br>Commands give you everyone's answer. <em>Navigation</em> gives you yours.",
+        "Trained on us, but it doesn't think like us.<br>We start inside your real work: your team learns to <em>steer</em> it past the average answer.",
       telemetry: {
         sector: "01 · NAVIGATE",
         callsign: "NAV-01",
@@ -303,9 +303,9 @@ export const CORRIDOR_MAP = [
       kicker: "02 · ENCODE",
       titleHtml: "ENCODE THE <em>JUDGMENT.</em>",
       supportHtml:
-        "Judgment sits in heads. The model can't reach it there.<br>Encode it once. It <em>inherits</em> instead of guessing.",
+        "Your best people set the standard.<br>We write it down together, into <em>Skills</em> every colleague and agent starts from.",
       floorHtml:
-        "Judgment sits in heads. The model can't reach it.<br><em>Encode</em> it once. Guessing ends.",
+        "Your best people set the standard.<br>We write it down together, into <em>Skills</em> every colleague and agent starts from.",
       telemetry: {
         sector: "02 · ENCODE",
         callsign: "ENC-02",
@@ -341,9 +341,9 @@ export const CORRIDOR_MAP = [
       kicker: "03 · BUILD",
       titleHtml: "BUILD ON THE <em>LAYER.</em>",
       supportHtml:
-        "One layer under every surface: chat, agents, your own tools.<br>You <em>own</em> it. Models change. It holds.",
+        "One layer under every surface: chat, agents, your own tools.<br>We build the first ones together, and your team <em>ships</em> the rest without us.",
       floorHtml:
-        "One layer under everything. Chat, agents, your own tools.<br><em>Yours.</em> Models change. It holds.",
+        "One layer under every surface: chat, agents, your own tools.<br>We build the first ones together, and your team <em>ships</em> the rest without us.",
       telemetry: {
         sector: "03 · BUILD",
         callsign: "BLD-03",

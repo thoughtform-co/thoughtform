@@ -5,8 +5,7 @@
       "name": "thoughtform-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3003,
-      "autoPort": false
+      "autoPort": true
     },
     {
       "name": "Storybook",

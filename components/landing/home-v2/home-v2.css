@@ -567,14 +567,8 @@ html[data-corridor-exit="true"] #services > * {
   gap: clamp(8px, 1vw, 14px);
 }
 
-.home-v2-station-header__foot {
-  position: absolute;
-  bottom: clamp(28px, 5svh, 64px);
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-}
+/* (The per-station `__foot` band is gone — the bottom caption is the
+   persistent `.home-v2-caption-card` below, 2026-07-03.) */
 
 /* ── V8 console chrome (2026-06-11, ported from navigate-copy-lab) ──
    Both station text bands render inside a low-profile HUD console:
@@ -602,20 +596,21 @@ html[data-corridor-exit="true"] #services > * {
   padding: 9px clamp(18px, 2.2vw, 30px) 11px;
 }
 
-.home-v2-station-header__console--support {
-  /* Frame wraps the caption block (widest of the paragraph lines and
-     the telemetry rows), centered by the flex `__foot`. Capped so the
-     authored `<br>` lines never exceed the sphere band. Subtle frosted
-     glass: a faint dark fill + backdrop blur haze the sphere behind the
-     caption without reading as a solid panel (2026-07-03). */
-  width: fit-content;
+/* ── Persistent caption card container (one artifact, 2026-07-03) ──
+   Fixed at the bottom-centre band the per-station `__foot` used to own.
+   The RAF loop writes its opacity (own band: in with Navigate, holds
+   through Build, out with the epilogue), its `is-armed` chrome class,
+   and the same gyro-parallax transform the station cartouches get. */
+.home-v2-caption-card {
+  position: fixed;
+  bottom: clamp(28px, 5svh, 64px);
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
   max-width: min(88vw, 920px);
-  padding: 13px clamp(20px, 2.6vw, 38px) 13px;
-  gap: 10px;
-  border: 1px solid rgba(202, 165, 84, 0.2);
-  background: rgba(10, 9, 8, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 15;
+  text-align: center;
 }
 
 /* Dotted particle frame runs — folded (scaleX 0) until the container
@@ -651,10 +646,6 @@ html[data-corridor-exit="true"] #services > * {
     transparent 1.5px 7px
   );
 }
-.home-v2-station-header__console--support .home-v2-station-header__frame {
-  left: clamp(18px, 4vw, 56px);
-  right: clamp(18px, 4vw, 56px);
-}
 .home-v2-station-header__frame--top {
   top: 0;
 }
@@ -667,61 +658,140 @@ html[data-corridor-exit="true"] #services > * {
 .home-v2-station-header__console--title .home-v2-station-header__frame--top {
   opacity: 0.32;
 }
-.home-v2-station-header__console--support .home-v2-station-header__frame--bottom {
-  opacity: 0.42;
-}
 
 /* Corner brackets removed (2026-06-11) — the title console's bottom
    corners and the support console's top corners competed with the
    instrument; the frames now end open toward the sphere. */
 
-/* Telemetry rows — PT Mono micro-readouts above and below the support
-   paragraph. Chrome, not content: they fade with the frames rather
-   than typing out. */
-.home-v2-station-header__meta,
-.home-v2-station-header__readouts {
-  display: inline-flex;
+/* ── Station caption card (D5-H, 2026-07-03) ─────────────────────────
+   A terminal-style title bar + tick rail over barely-there frosted
+   glass, with a single 22px notch cutting the bottom-right corner.
+
+   Surface (contrast pass round 3): the original two-layer clip-path
+   sandwich (shell bg as the rim, translucent inner over it) could not
+   go subtle — ANY translucent fill let the shell's rim wash bleed
+   through the whole plate and read gray/milky. So the surface is now a
+   SINGLE plate carrying the pre-D5-H frosted-glass recipe (faint void
+   fill + blur + gold hairline border, the "very subtle frame" look):
+   the clip-path cuts the notch out of plate AND border, and the
+   chamfer's missing hairline is drawn back as a rotated 1px segment on
+   the shell's ::after (the shell itself is just an unclipped anchor). */
+.home-v2-caption-shell {
+  position: relative;
+}
+.home-v2-caption-shell::after {
+  /* Hairline along the 22px chamfer: diagonal from (W-22, H) to
+     (W, H-22) → length 22√2 ≈ 31.1px, centred at (W-11, H-11). */
+  content: "";
+  position: absolute;
+  width: 31.2px;
+  height: 1px;
+  right: -4.6px;
+  bottom: 10.5px;
+  background: rgba(202, 165, 84, 0.2);
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
+.home-v2-caption-inner {
+  background: rgba(10, 9, 8, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(202, 165, 84, 0.2);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+}
+
+/* Terminal title bar — callsign + status word on the left, three window
+   squares on the right. Chrome, not content: fades in with `is-armed`
+   (like the old meta row) rather than typing out. */
+.home-v2-caption-bar {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  justify-content: space-between;
+  padding: 6px 14px;
+  /* No fill of its own (2026-07-03 consistency pass) — the bar reads on
+     the same solid void plate as the body, delineated only by the
+     hairline rule below it. */
+  background: transparent;
+  border-bottom: 1px solid var(--dawn-08);
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(202, 165, 84, 0.76);
-  white-space: nowrap;
+  color: var(--dawn-50);
   opacity: 0;
   transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.home-v2-station-header.is-armed .home-v2-station-header__meta,
-.home-v2-station-header.is-armed .home-v2-station-header__readouts {
+.home-v2-caption-card.is-armed .home-v2-caption-bar {
   opacity: 1;
 }
-.home-v2-station-header__readouts {
-  gap: clamp(12px, 2.6vw, 32px);
-  color: rgba(235, 227, 214, 0.42);
-  font-size: 8px;
-  letter-spacing: 0.16em;
+.home-v2-caption-bar__id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
-.home-v2-station-header__meta-diamond,
-.home-v2-station-header__meta-sep {
-  display: inline-block;
+.home-v2-caption-bar__status {
+  color: var(--gold, #caa554);
+}
+.home-v2-caption-diamond {
   width: 4px;
   height: 4px;
+  background: var(--gold, #caa554);
   transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.7);
   flex: none;
 }
-.home-v2-station-header__meta-diamond {
-  background: var(--gold, #caa554);
-  box-shadow: 0 0 10px rgba(202, 165, 84, 0.7);
-}
-.home-v2-station-header__meta-sep {
+.home-v2-caption-sep {
   width: 3px;
   height: 3px;
   background: rgba(235, 227, 214, 0.32);
+  transform: rotate(45deg);
+  flex: none;
 }
-.home-v2-station-header__meta-status {
-  color: var(--gold, #caa554);
+.home-v2-caption-bar__sq {
+  display: flex;
+  gap: 5px;
+}
+.home-v2-caption-bar__sq i {
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--dawn-30);
+}
+.home-v2-caption-bar__sq i:last-child {
+  background: var(--gold-40);
+  border-color: var(--gold-40);
+}
+
+/* Copy plate + the tick rail beneath the paragraph. The rail's centered
+   42px overlay lights the middle ticks gold; it fades in with `is-armed`
+   while the paragraph itself types out through the existing machinery. */
+.home-v2-caption-body {
+  padding: 18px 48px 16px;
+}
+.home-v2-caption-ticks {
+  position: relative;
+  margin-top: 16px;
+  height: 4px;
+  background: repeating-linear-gradient(to right, var(--dawn-15) 0 1px, transparent 1px 14px);
+  opacity: 0;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-v2-caption-card.is-armed .home-v2-caption-ticks {
+  opacity: 1;
+}
+.home-v2-caption-ticks::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: calc(50% - 21px);
+  width: 42px;
+  background: repeating-linear-gradient(to right, var(--gold, #caa554) 0 1px, transparent 1px 14px);
+}
+@media (max-width: 700px) {
+  /* Mobile (floorHtml path uses the same card) — tighten the body. */
+  .home-v2-caption-body {
+    padding: 14px 22px 12px;
+  }
 }
 
 /* Inside the consoles the text measures against the console box, and
@@ -730,7 +800,19 @@ html[data-corridor-exit="true"] #services > * {
 .home-v2-station-header__console .home-v2-station-header__title {
   max-width: 100%;
 }
-.home-v2-station-header__console--support .home-v2-station-header__support {
+/* Caption copy stack — the three station paragraphs occupy the SAME
+   grid cell, so the card's width/height stay constant (sized by the
+   widest/tallest caption) while the RAF crossfades paragraph opacity
+   per station band. Type ramp migrated from the retired per-station
+   support console (V8 band sizing). */
+.home-v2-caption-copy {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+}
+.home-v2-caption-copy > .home-v2-station-header__support {
+  grid-area: 1 / 1;
+  opacity: 0;
   max-width: 100%;
   font-size: clamp(16px, 1.3vw, 20px);
   line-height: 1.45;
@@ -740,10 +822,10 @@ html[data-corridor-exit="true"] #services > * {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Frames appear instantly when armed — no unfold motion. */
+  /* Title-bar chrome + tick rail appear instantly when armed — no fade. */
   .home-v2-station-header__frame,
-  .home-v2-station-header__meta,
-  .home-v2-station-header__readouts {
+  .home-v2-caption-bar,
+  .home-v2-caption-ticks {
     transition: none;
   }
 }

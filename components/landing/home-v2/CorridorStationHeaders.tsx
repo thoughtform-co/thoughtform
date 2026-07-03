@@ -233,43 +233,194 @@ function TitleConsole({ children }: { children: ReactNode }) {
   );
 }
 
-function SupportConsole({
-  telemetry,
-  kicker,
-  children,
+// ── Persistent caption card (one artifact, 2026-07-03) ────────────
+//
+// The bottom caption is ONE persistent instrument, not three cards
+// blinking in and out per station. The D5-H chrome (faint-hairline
+// shell over a solid void plate, terminal title bar, tick rail, 22px
+// bottom-right notch via the two-layer clip-path sandwich in CSS)
+// mounts once and holds through the whole Navigate → Encode → Build
+// run; only its CONTENT changes:
+//
+//   - The three support paragraphs render stacked in the same grid
+//     cell (`__caption-copy`), so the card keeps ONE constant width
+//     (the widest caption) while each paragraph types in / fades out
+//     on its own station band via the existing typewriter machinery.
+//   - The title-bar callsign + status retitle to the active station
+//     (NAV-01 TRACKING → ENC-02 ENCODING → BLD-03 LIVE) from the RAF
+//     loop — chrome, not content, so it swaps rather than types.
+//
+// The card's own opacity band opens with Navigate's arrival and stays
+// up through Build (ignoring the per-station fade-outs), yielding only
+// to the epilogue on the same BUILD_OUT clock as the Build title.
+
+type CaptionStationKey = "nav" | "enc" | "bld";
+
+/** One station's support paragraph inside the persistent caption card.
+ *  Mirrors StationBlock's support rendering (per-char spans + trailing
+ *  cursor in typewriter mode, raw HTML otherwise) and registers its
+ *  spans/cursor into the SAME per-station refs the RAF typewriter
+ *  drives — the typing machinery is untouched, only the mount point
+ *  moved. The paragraph element itself registers too: the RAF writes
+ *  each paragraph's opacity from its station band, so captions hand
+ *  off inside the card while the chrome persists. */
+function CaptionSupport({
+  stationKey,
+  content,
+  typewriter,
+  register,
 }: {
-  telemetry?: StationTelemetry;
-  kicker?: string;
-  children: ReactNode;
+  stationKey: CaptionStationKey;
+  content: StationContent;
+  typewriter: boolean;
+  register: (
+    key: CaptionStationKey,
+    spans: HTMLSpanElement[],
+    cursor: HTMLSpanElement | null,
+    para: HTMLParagraphElement | null
+  ) => void;
+}) {
+  const supportHtml = !typewriter && content.floorHtml ? content.floorHtml : content.supportHtml;
+  const lineTokens = useMemo(() => {
+    if (!supportHtml) return [] as CharToken[][];
+    return supportHtml.split(/<br\s*\/?>/i).map((line) => tokenize(line.trim()));
+  }, [supportHtml]);
+
+  const spanRefs = useRef<HTMLSpanElement[]>([]);
+  const cursorRef = useRef<HTMLSpanElement | null>(null);
+  const paraRef = useRef<HTMLParagraphElement | null>(null);
+  spanRefs.current = [];
+
+  useEffect(() => {
+    register(stationKey, spanRefs.current, cursorRef.current, paraRef.current);
+  }, [register, stationKey, lineTokens]);
+
+  if (!supportHtml) return null;
+
+  if (!typewriter) {
+    return (
+      <p
+        ref={paraRef}
+        className="home-v2-station-header__support"
+        style={{ opacity: 0 }}
+        dangerouslySetInnerHTML={{ __html: supportHtml }}
+      />
+    );
+  }
+
+  const plain = lineTokens.map((line) => line.map((t) => t.ch).join("")).join(" ");
+  let charCursor = 0;
+  return (
+    <p
+      ref={paraRef}
+      className="home-v2-station-header__support"
+      style={{ opacity: 0 }}
+      aria-label={plain}
+    >
+      <span aria-hidden="true">
+        {lineTokens.map((tokens, li) => {
+          const isLast = li === lineTokens.length - 1;
+          return (
+            <span key={`cl-${li}`} className="home-v2-station-header__line">
+              {tokens.map((tok, idx) => {
+                const globalIdx = charCursor++;
+                return (
+                  <span
+                    key={`c-${li}-${idx}`}
+                    ref={(el) => {
+                      if (el) spanRefs.current[globalIdx] = el;
+                    }}
+                    className={
+                      tok.em
+                        ? "home-v2-station-header__char home-v2-station-header__char--em"
+                        : "home-v2-station-header__char"
+                    }
+                    style={{ opacity: 0 }}
+                  >
+                    {tok.ch}
+                  </span>
+                );
+              })}
+              {isLast && (
+                <span
+                  ref={cursorRef}
+                  className="home-v2-station-header__cursor"
+                  style={{ opacity: 0 }}
+                >
+                  {"█"}
+                </span>
+              )}
+            </span>
+          );
+        })}
+      </span>
+    </p>
+  );
+}
+
+/** The persistent caption card itself — D5-H chrome mounted once.
+ *  `barCallsignRef` / `barStatusRef` are written by the RAF loop when
+ *  the dominant station changes; the initial render seeds Navigate's
+ *  telemetry so the first frame never shows an empty bar. */
+function CaptionCard({
+  refSetter,
+  barCallsignRef,
+  barStatusRef,
+  initialTelemetry,
+  stations,
+  typewriter,
+  register,
+}: {
+  refSetter: (el: HTMLDivElement | null) => void;
+  barCallsignRef: React.RefObject<HTMLSpanElement | null>;
+  barStatusRef: React.RefObject<HTMLSpanElement | null>;
+  initialTelemetry?: StationTelemetry;
+  stations: { key: CaptionStationKey; content?: StationContent }[];
+  typewriter: boolean;
+  register: (
+    key: CaptionStationKey,
+    spans: HTMLSpanElement[],
+    cursor: HTMLSpanElement | null,
+    para: HTMLParagraphElement | null
+  ) => void;
 }) {
   return (
-    <div className="home-v2-station-header__console home-v2-station-header__console--support">
-      <span
-        className="home-v2-station-header__frame home-v2-station-header__frame--top"
-        aria-hidden="true"
-      />
-      <span
-        className="home-v2-station-header__frame home-v2-station-header__frame--bottom"
-        aria-hidden="true"
-      />
-      {telemetry && (
-        <div className="home-v2-station-header__meta" aria-hidden="true">
-          <span className="home-v2-station-header__meta-diamond" />
-          {kicker && <span>{kicker}</span>}
-          {kicker && <span className="home-v2-station-header__meta-sep" />}
-          <span>{telemetry.callsign}</span>
-          <span className="home-v2-station-header__meta-sep" />
-          <span className="home-v2-station-header__meta-status">{telemetry.status}</span>
+    <div ref={refSetter} className="home-v2-caption-card" style={{ opacity: 0 }}>
+      <div className="home-v2-caption-shell">
+        <div className="home-v2-caption-inner">
+          <div className="home-v2-caption-bar" aria-hidden="true">
+            <span className="home-v2-caption-bar__id">
+              <span className="home-v2-caption-diamond" />
+              <span ref={barCallsignRef}>{initialTelemetry?.callsign ?? ""}</span>
+              <span className="home-v2-caption-sep" />
+              <span className="home-v2-caption-bar__status" ref={barStatusRef}>
+                {initialTelemetry?.status ?? ""}
+              </span>
+            </span>
+            <span className="home-v2-caption-bar__sq">
+              <i />
+              <i />
+              <i />
+            </span>
+          </div>
+          <div className="home-v2-caption-body">
+            <div className="home-v2-caption-copy">
+              {stations.map((s) =>
+                s.content ? (
+                  <CaptionSupport
+                    key={s.key}
+                    stationKey={s.key}
+                    content={s.content}
+                    typewriter={typewriter}
+                    register={register}
+                  />
+                ) : null
+              )}
+            </div>
+            <div className="home-v2-caption-ticks" aria-hidden="true" />
+          </div>
         </div>
-      )}
-      {children}
-      {telemetry && (
-        <div className="home-v2-station-header__readouts" aria-hidden="true">
-          <span>{telemetry.sector}</span>
-          <span>{telemetry.code}</span>
-          <span>{telemetry.metric}</span>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -370,18 +521,11 @@ function StationBlock({
     return (
       <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
         {split ? (
-          <>
-            <div className="home-v2-station-header__head">
-              <TitleConsole>{head}</TitleConsole>
-            </div>
-            {support && (
-              <div className="home-v2-station-header__foot">
-                <SupportConsole telemetry={content.telemetry} kicker={content.kicker}>
-                  {support}
-                </SupportConsole>
-              </div>
-            )}
-          </>
+          /* Split blocks render the title band only — the support caption
+             lives in the persistent CaptionCard (2026-07-03). */
+          <div className="home-v2-station-header__head">
+            <TitleConsole>{head}</TitleConsole>
+          </div>
         ) : (
           <>
             {beforeContent}
@@ -499,18 +643,11 @@ function StationBlock({
   return (
     <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
       {split ? (
-        <>
-          <div className="home-v2-station-header__head">
-            <TitleConsole>{titleEl}</TitleConsole>
-          </div>
-          {supportEl && (
-            <div className="home-v2-station-header__foot">
-              <SupportConsole telemetry={content.telemetry} kicker={content.kicker}>
-                {supportEl}
-              </SupportConsole>
-            </div>
-          )}
-        </>
+        /* Split blocks render the title band only — the support caption
+           lives in the persistent CaptionCard (2026-07-03). */
+        <div className="home-v2-station-header__head">
+          <TitleConsole>{titleEl}</TitleConsole>
+        </div>
       ) : (
         <>
           {beforeContent}
@@ -860,6 +997,15 @@ export function CorridorStationHeaders() {
   }, []);
   const typewriter = !reducedMotion;
 
+  // Telemetry per corridor station for the persistent caption card's
+  // title bar (callsign + status). Module-stable content from
+  // corridorMap; captured by the RAF closure below.
+  const captionTelemetry: Record<CaptionStationKey, StationTelemetry | undefined> = {
+    nav: nav?.telemetry,
+    enc: enc?.telemetry,
+    bld: bld?.telemetry,
+  };
+
   // Container + per-char ref state per station.
   const stationRefs = useRef<Record<"nav" | "enc" | "bld" | "sig", StationRefs>>({
     nav: {
@@ -906,6 +1052,25 @@ export function CorridorStationHeaders() {
     bld: number;
     sig: number;
   } | null>(null);
+
+  // Persistent caption card refs + runtime state (one artifact,
+  // 2026-07-03). The card element, its title-bar text spans, and the
+  // three stacked support paragraphs are all driven from the RAF loop:
+  // card opacity on its own band, paragraph opacity per station band,
+  // bar text following the dominant station.
+  const captionCardRef = useRef<HTMLDivElement | null>(null);
+  const captionBarCallsignRef = useRef<HTMLSpanElement | null>(null);
+  const captionBarStatusRef = useRef<HTMLSpanElement | null>(null);
+  const captionParas = useRef<Record<CaptionStationKey, HTMLParagraphElement | null>>({
+    nav: null,
+    enc: null,
+    bld: null,
+  });
+  const captionState = useRef<{
+    lastOp: number;
+    framed: boolean;
+    activeKey: CaptionStationKey | null;
+  }>({ lastOp: -1, framed: false, activeKey: null });
 
   useEffect(() => {
     let raf = 0;
@@ -1014,6 +1179,13 @@ export function CorridorStationHeaders() {
           const el = stationRefs.current[key].container;
           if (el) el.style.opacity = containerOps[key].toFixed(3);
         }
+        // Caption paragraphs ride the SAME per-station bands as the
+        // titles — each types in / fades out on its own station clock
+        // while the card chrome around them persists.
+        for (const key of ["nav", "enc", "bld"] as const) {
+          const para = captionParas.current[key];
+          if (para) para.style.opacity = containerOps[key].toFixed(3);
+        }
       }
       const signalEl = stationRefs.current.sig.container;
       if (signalEl) {
@@ -1037,6 +1209,56 @@ export function CorridorStationHeaders() {
       for (const key of ["nav", "enc", "bld"] as const) {
         const el = stationRefs.current[key].container;
         if (el) el.style.transform = cartoucheTransform;
+      }
+
+      // ── Persistent caption card (one artifact, 2026-07-03) ────────
+      // The card's own band opens with Navigate's arrival, IGNORES the
+      // per-station fade-outs (so it holds through the whole corridor
+      // run), and yields to the epilogue on the same BUILD_OUT clock as
+      // the Build title. It banks with the same cartouche parallax so
+      // it still reads as part of the instrument.
+      const cardEl = captionCardRef.current;
+      if (cardEl) {
+        const cs = captionState.current;
+        const cardOp = bandOpacity(p, NAVIGATE_FADE_IN) * buildOut;
+        if (Math.abs(cardOp - cs.lastOp) > 0.002) {
+          cs.lastOp = cardOp;
+          cardEl.style.opacity = cardOp.toFixed(3);
+        }
+        cardEl.style.transform = cartoucheTransform;
+        // Chrome arm/rearm — bar + tick rail fade with the card's own
+        // arrival, mirroring the stations' is-armed thresholds.
+        if (!cs.framed && cardOp >= TYPER_ARRIVE_OPACITY) {
+          cs.framed = true;
+          cardEl.classList.add("is-armed");
+        } else if (cs.framed && cardOp < TYPER_REARM_OPACITY) {
+          cs.framed = false;
+          cardEl.classList.remove("is-armed");
+        }
+        // Title-bar telemetry follows the DOMINANT station — swap (not
+        // type) the callsign + status the moment a new station's band
+        // outweighs the rest. Holds the last station's readout through
+        // the between-station travel so the bar never blanks.
+        let activeKey = cs.activeKey;
+        let best = 0.15;
+        for (const key of ["nav", "enc", "bld"] as const) {
+          if (containerOps[key] > best) {
+            best = containerOps[key];
+            activeKey = key;
+          }
+        }
+        if (activeKey && activeKey !== cs.activeKey) {
+          cs.activeKey = activeKey;
+          const tele = captionTelemetry[activeKey];
+          if (tele) {
+            if (captionBarCallsignRef.current) {
+              captionBarCallsignRef.current.textContent = tele.callsign;
+            }
+            if (captionBarStatusRef.current) {
+              captionBarStatusRef.current.textContent = tele.status;
+            }
+          }
+        }
       }
       // Signal block: centred (translateX -50%) + scroll-coupled upward
       // lift so it is pushed out of the top of the viewport with scroll.
@@ -1236,38 +1458,51 @@ export function CorridorStationHeaders() {
     stationRefs.current.sig.container = el;
   };
 
-  const navRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
+  // Corridor stations register TITLE spans only — their support spans
+  // live in the persistent CaptionCard, which registers them (plus the
+  // paragraph element) through `registerCaptionSupport` below. The
+  // signal block keeps the combined registration (its support renders
+  // inline in the non-split branch).
+  const navRegisterChars = (title: HTMLSpanElement[]) => {
     stationRefs.current.nav.titleChars = title;
-    stationRefs.current.nav.supportChars = support;
   };
-  const encRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
+  const encRegisterChars = (title: HTMLSpanElement[]) => {
     stationRefs.current.enc.titleChars = title;
-    stationRefs.current.enc.supportChars = support;
   };
-  const bldRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
+  const bldRegisterChars = (title: HTMLSpanElement[]) => {
     stationRefs.current.bld.titleChars = title;
-    stationRefs.current.bld.supportChars = support;
   };
   const sigRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
     stationRefs.current.sig.titleChars = title;
     stationRefs.current.sig.supportChars = support;
   };
 
-  const navRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
+  const navRegisterCursors = (title: HTMLSpanElement | null) => {
     stationRefs.current.nav.titleCursor = title;
-    stationRefs.current.nav.supportCursor = support;
   };
-  const encRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
+  const encRegisterCursors = (title: HTMLSpanElement | null) => {
     stationRefs.current.enc.titleCursor = title;
-    stationRefs.current.enc.supportCursor = support;
   };
-  const bldRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
+  const bldRegisterCursors = (title: HTMLSpanElement | null) => {
     stationRefs.current.bld.titleCursor = title;
-    stationRefs.current.bld.supportCursor = support;
   };
   const sigRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
     stationRefs.current.sig.titleCursor = title;
     stationRefs.current.sig.supportCursor = support;
+  };
+
+  const setCaptionCardRef = (el: HTMLDivElement | null) => {
+    captionCardRef.current = el;
+  };
+  const registerCaptionSupport = (
+    key: CaptionStationKey,
+    spans: HTMLSpanElement[],
+    cursor: HTMLSpanElement | null,
+    para: HTMLParagraphElement | null
+  ) => {
+    stationRefs.current[key].supportChars = spans;
+    stationRefs.current[key].supportCursor = cursor;
+    captionParas.current[key] = para;
   };
 
   return (
@@ -1302,6 +1537,21 @@ export function CorridorStationHeaders() {
           split
         />
       )}
+      {/* Persistent caption card — ONE bottom instrument for all three
+          corridor stations; only its text + bar telemetry change. */}
+      <CaptionCard
+        refSetter={setCaptionCardRef}
+        barCallsignRef={captionBarCallsignRef}
+        barStatusRef={captionBarStatusRef}
+        initialTelemetry={nav?.telemetry}
+        typewriter={typewriter}
+        register={registerCaptionSupport}
+        stations={[
+          { key: "nav", content: nav },
+          { key: "enc", content: enc },
+          { key: "bld", content: bld },
+        ]}
+      />
       {/* Ticker is its OWN fixed full-viewport layer (NOT inside the
           signal block, whose per-frame `translate3d` transform would
           make the fixed SVG a containing block and break viewport-space
