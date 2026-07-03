@@ -595,29 +595,27 @@ html[data-corridor-exit="true"] #services > * {
 }
 
 .home-v2-station-header__console--title {
-  /* Matches the support console (88vw / 920px) so the two consoles
-     bracket the sphere with the same horizontal extent and the long
-     Navigate title ("NAVIGATE THE INTELLIGENCE.") stays on one line
-     at the desktop type scale. */
-  width: min(88vw, 920px);
-  min-height: 70px;
-  padding: 12px clamp(22px, 3vw, 42px) 14px;
-  background:
-    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.48) 20% 80%, rgba(10, 9, 8, 0)),
-    radial-gradient(ellipse 65% 120% at 50% 0%, rgba(202, 165, 84, 0.08), transparent 64%);
+  /* Title reads bare — no frame (2026-07-03). Only the support caption
+     below the sphere carries the box rule. */
+  width: fit-content;
+  max-width: min(88vw, 920px);
+  padding: 9px clamp(18px, 2.2vw, 30px) 11px;
 }
 
 .home-v2-station-header__console--support {
-  /* Wide enough that the authored `<br>` sentence-per-line breaks in
-     the corridor support copy never re-wrap inside the console
-     (longest line ≈ 78 chars at the 20px cap ≈ 780px). */
-  width: min(88vw, 920px);
-  min-height: 104px;
-  padding: 18px clamp(22px, 3vw, 44px) 16px;
+  /* Frame wraps the caption block (widest of the paragraph lines and
+     the telemetry rows), centered by the flex `__foot`. Capped so the
+     authored `<br>` lines never exceed the sphere band. Subtle frosted
+     glass: a faint dark fill + backdrop blur haze the sphere behind the
+     caption without reading as a solid panel (2026-07-03). */
+  width: fit-content;
+  max-width: min(88vw, 920px);
+  padding: 13px clamp(20px, 2.6vw, 38px) 13px;
   gap: 10px;
-  background:
-    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.68) 18% 82%, rgba(10, 9, 8, 0)),
-    radial-gradient(ellipse 75% 120% at 50% 100%, rgba(202, 165, 84, 0.1), transparent 62%);
+  border: 1px solid rgba(202, 165, 84, 0.2);
+  background: rgba(10, 9, 8, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* Dotted particle frame runs — folded (scaleX 0) until the container
@@ -625,6 +623,10 @@ html[data-corridor-exit="true"] #services > * {
    the unfold resolves in ~0.26s with the brand deceleration curve,
    in step with the title type-out (~0.15s). */
 .home-v2-station-header__frame {
+  /* Dotted rule removed (2026-07-03) — hidden so the corridor captions
+     read without the console framing. Remove this `display: none` (and
+     restore the console backgrounds above) to bring the frame back. */
+  display: none;
   position: absolute;
   height: 1px;
   background-image: repeating-linear-gradient(
@@ -824,9 +826,18 @@ html[data-corridor-exit="true"] #services > * {
   text-align: center;
 }
 
+/* Corridor caption emphasis — soft gold-wash marker (2026-07-03, no
+   italics anywhere on the site). The accent word reads as a highlighted
+   term rather than a slanted one: gold text on a ~16% gold background,
+   sharp HUD corners. This is the plain-<em> (reduced-motion / fallback)
+   path; the typewriter path markers the per-char `--em` spans below. */
 .home-v2-station-header__support em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.16);
+  padding: 0.14em 0.16em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* Typewriter — per-character spans with a block cursor sitting at the
@@ -844,9 +855,16 @@ html[data-corridor-exit="true"] #services > * {
   color: var(--gold, #caa554);
   font-weight: 500;
 }
+/* Typewriter path: each `<em>` character is its own span (the accent
+   word is split for the type-on). A per-char background renders as one
+   continuous marker across the word — vertical padding only, so the
+   char backgrounds stay contiguous (horizontal padding would gap them).
+   The marker fades in char-by-char with the type-on, same as the text. */
 .home-v2-station-header__support .home-v2-station-header__char--em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.16);
+  padding: 0.14em 0;
 }
 
 /* Block cursor at the typing head — sits inline at the line's end,
@@ -1589,7 +1607,7 @@ html[data-corridor-exit="true"] #services > * {
 }
 
 .home-v2-copy-body em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold, #caa554);
   font-weight: 500;
 }

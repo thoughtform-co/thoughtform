@@ -2160,7 +2160,7 @@
 }
 .def__dict .pos {
   color: var(--dawn-30);
-  font-style: italic;
+  font-style: normal;
   text-transform: lowercase;
   margin-right: 8px;
 }
@@ -3182,7 +3182,7 @@
   max-width: 32ch;
 }
 .tri__title--secondary em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
   font-weight: 500;
 }
@@ -3847,7 +3847,7 @@
   max-width: 22ch;
 }
 .miss__title em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
   font-weight: 400;
 }
@@ -4781,7 +4781,7 @@
   flex: 0 1 auto;
 }
 .ilayer__title em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
   font-weight: 400;
   /* inline-block + 100% width so the em always wraps to its own
@@ -4817,7 +4817,7 @@
   flex: 0 1 auto;
 }
 .ilayer__lede em {
-  font-style: italic;
+  font-style: normal;
   color: var(--dawn);
 }
 
@@ -5679,7 +5679,7 @@
   text-wrap: balance;
 }
 .continuum__title em {
-  font-style: italic;
+  font-style: normal;
   font-weight: 400;
   color: var(--gold);
 }
@@ -5784,7 +5784,7 @@
 }
 .station__title--practice em {
   font-weight: 500;
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
 }
 .station__lede--centered {
@@ -6648,7 +6648,7 @@ body.density-dense .station {
 
 /* ── Section titles: more consistent tracking ────────────────────── */
 .station__title em {
-  font-style: italic;
+  font-style: normal;
   font-family: "PP Neue Montreal", system-ui, serif;
   font-weight: 300;
   letter-spacing: -0.01em;
@@ -7692,7 +7692,7 @@ html {
   margin: 0 0 clamp(14px, 1.8vw, 22px);
 }
 .approach__phase__intro__title em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
   font-weight: 500;
 }
@@ -8544,7 +8544,7 @@ html {
 }
 .exec__lede em {
   font-weight: 500;
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
 }
 
@@ -9839,7 +9839,7 @@ html {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
-  font-style: italic;
+  font-style: normal;
   font-size: clamp(26px, 3vw, 46px);
   line-height: 1.18;
   letter-spacing: -0.02em;
@@ -9855,14 +9855,11 @@ html {
   display: block;
   white-space: nowrap;
 }
-/* Accent word inside a quote line — gold, italic (the parent quote
-   is already italic so explicit `font-style: italic` keeps the
-   accent from reverting upright per CSS's `em-in-italic` rule).
-   Used by the Evans axiom's accented "ask" word; matches the gold-
-   italic treatment used on the `.ilayer__title em` ("intelligence
-   layer.") and `.ilayer__lede em` ("Encoded once.") accents. */
+/* Accent word inside a quote line — gold, upright (no italics on the
+   site, 2026-07-03). Used by the Evans axiom's accented "ask" word;
+   matches the gold accent on `.ilayer__title em` / `.ilayer__lede em`. */
 .build-quote__line em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
   font-weight: 400;
 }
@@ -9930,7 +9927,7 @@ html {
   font-weight: 400;
 }
 .build-quote__sub em {
-  font-style: italic;
+  font-style: normal;
   font-weight: 400;
 }
 .build-quote__caret {
@@ -10202,7 +10199,7 @@ html {
   max-width: 22ch;
 }
 .build-case__subline em {
-  font-style: italic;
+  font-style: normal;
   color: var(--dawn);
 }
 
