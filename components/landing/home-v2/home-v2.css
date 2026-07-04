@@ -673,12 +673,39 @@ html[data-corridor-exit="true"] #services > * {
    status) between dashed leaders, and a three-diamond pips row under
    the copy. Supersedes the D5-H terminal plate (title bar + notch +
    bottom tick rail — recipe in git history if it's ever wanted back).
-   All chrome fades with the card's `is-armed` state; the off-frame
-   artifacts (coord tag, rail) trail the frame by 80ms. */
+   The chrome ARMS as a centre-out unfold (see the arm-choreography
+   block below): glass + horizontal hairlines sweep open from the
+   middle in both directions at once, the vertical edges + crosses
+   land as the sweep reaches them, then the off-frame artifacts
+   (coord tag, rail) resolve last. */
 .home-v2-reticle {
   position: relative;
   text-align: center;
   padding: 17px 44px 16px;
+  /* Aperture reveal — the WHOLE card (glass, hairlines, copy, meta) is
+     clipped to a zero-width slit at the centre until the card arms,
+     then the inset animates open toward both edges at once. Clipping
+     the container (not scaling children) is what makes the unfold
+     unmistakable: the text itself is revealed by the sweep instead of
+     fading in. Negative insets on the armed state keep the off-frame
+     artifacts (coord tag at top -24px, crosses at ±10px, rail at
+     right -16px / bottom -8px) inside the final aperture. */
+  clip-path: inset(-26px 50% -12px 50%);
+  transition: clip-path 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-v2-caption-card.is-armed .home-v2-reticle {
+  clip-path: inset(-26px -20px -12px -20px);
+}
+
+/* Void-glass plate — its own layer so it can SCALE OPEN with the
+   horizontal hairlines (a padding-box background can't transform).
+   z-index -1 keeps it under the in-flow meta/copy/pips while staying
+   inside the card's stacking context (the card animates opacity). */
+.home-v2-reticle__glass {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background: rgba(5, 4, 3, 0.38);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -686,13 +713,16 @@ html[data-corridor-exit="true"] #services > * {
 @supports not (backdrop-filter: blur(1px)) {
   /* No blur available to haze the sphere — darken the fill instead so
      the copy stays legible. */
-  .home-v2-reticle {
+  .home-v2-reticle__glass {
     background: rgba(5, 4, 3, 0.72);
   }
 }
 
-/* Dashed hairline frame — four edge gradients pinned to the box. */
-.home-v2-reticle__frame {
+/* Dashed hairline frame, split by axis so the unfold can drive them
+   separately: `-x` carries the top + bottom runs (they sweep open
+   centre-out), `-y` the left + right edge runs (they rise once the
+   sweep arrives). */
+.home-v2-reticle__frame-x {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -700,19 +730,32 @@ html[data-corridor-exit="true"] #services > * {
     repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
       100% 1px no-repeat,
     repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0
-      100% / 100% 1px no-repeat,
+      100% / 100% 1px no-repeat;
+}
+.home-v2-reticle__frame-y {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
     repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
       1px 100% no-repeat,
     repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 100%
       0 / 1px 100% no-repeat;
 }
 
-/* Gold dashed crosses, centred exactly on each frame corner. */
+/* Gold dashed crosses. At rest they sit at the horizontal centre
+   (hidden inside the collapsed aperture); on arm they RIDE the opening
+   edges out to the corners — same duration + curve as the clip inset,
+   so left crosses travel left and right crosses travel right in sync
+   with the sweep, always just inside the aperture edge. */
 .home-v2-reticle__cross {
   position: absolute;
   width: 19px;
   height: 19px;
   pointer-events: none;
+  transition:
+    left 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    right 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .home-v2-reticle__cross::before,
 .home-v2-reticle__cross::after {
@@ -742,20 +785,28 @@ html[data-corridor-exit="true"] #services > * {
   );
 }
 .home-v2-reticle__cross.is-tl {
-  left: -10px;
+  left: 50%;
   top: -10px;
 }
 .home-v2-reticle__cross.is-tr {
-  right: -10px;
+  right: 50%;
   top: -10px;
 }
 .home-v2-reticle__cross.is-bl {
-  left: -10px;
+  left: 50%;
   bottom: -10px;
 }
 .home-v2-reticle__cross.is-br {
-  right: -10px;
+  right: 50%;
   bottom: -10px;
+}
+.home-v2-caption-card.is-armed .home-v2-reticle__cross.is-tl,
+.home-v2-caption-card.is-armed .home-v2-reticle__cross.is-bl {
+  left: -10px;
+}
+.home-v2-caption-card.is-armed .home-v2-reticle__cross.is-tr,
+.home-v2-caption-card.is-armed .home-v2-reticle__cross.is-br {
+  right: -10px;
 }
 
 /* Coord tag — mono survey fix floating above the top-left corner.
@@ -862,29 +913,15 @@ html[data-corridor-exit="true"] #services > * {
   margin-top: 13px;
 }
 
-/* Arm choreography — frame, crosses, meta and pips resolve with the
-   card's arrival; the off-frame artifacts (coord tag, rail) trail by
-   80ms so the reticle reads as locking on, not popping in. */
-.home-v2-reticle__frame,
-.home-v2-reticle__cross,
-.home-v2-reticle__meta,
-.home-v2-reticle__pips {
-  opacity: 0;
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.home-v2-reticle__coord,
-.home-v2-reticle__rail {
-  opacity: 0;
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1) 0.08s;
-}
-.home-v2-caption-card.is-armed .home-v2-reticle__frame,
-.home-v2-caption-card.is-armed .home-v2-reticle__cross,
-.home-v2-caption-card.is-armed .home-v2-reticle__meta,
-.home-v2-caption-card.is-armed .home-v2-reticle__pips,
-.home-v2-caption-card.is-armed .home-v2-reticle__coord,
-.home-v2-caption-card.is-armed .home-v2-reticle__rail {
-  opacity: 1;
-}
+/* Arm choreography — the unfold is PURE MOTION, zero fades: the clip
+   aperture on `.home-v2-reticle` sweeps open from a centre slit toward
+   both edges at once (0.55s) and everything inside (glass, hairlines,
+   copy, meta, pips, coord tag, rail) is revealed spatially by the
+   sweep, while the corner crosses ride the opening edges out to the
+   corners on the same clock (rules above). Disarm plays the exact
+   reverse — the card irises shut and the crosses ride back to centre.
+   The container holds opacity 1 through the corridor, so no fade ever
+   competes with the sweep. */
 
 @media (max-width: 700px) {
   /* Mobile (floorHtml path uses the same card) — tighten the plate and
@@ -926,14 +963,11 @@ html[data-corridor-exit="true"] #services > * {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Reticle chrome appears instantly when armed — no fade, no stagger. */
+  /* Reticle appears instantly when armed — no aperture sweep, no
+     cross travel (they jump straight to the corners). */
   .home-v2-station-header__frame,
-  .home-v2-reticle__frame,
-  .home-v2-reticle__cross,
-  .home-v2-reticle__meta,
-  .home-v2-reticle__pips,
-  .home-v2-reticle__coord,
-  .home-v2-reticle__rail {
+  .home-v2-reticle,
+  .home-v2-reticle__cross {
     transition: none;
   }
 }

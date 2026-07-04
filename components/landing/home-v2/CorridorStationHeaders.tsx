@@ -417,7 +417,9 @@ function CaptionCard({
   return (
     <div ref={refSetter} className="home-v2-caption-card" style={{ opacity: 0 }}>
       <div className="home-v2-reticle">
-        <i className="home-v2-reticle__frame" aria-hidden="true" />
+        <i className="home-v2-reticle__glass" aria-hidden="true" />
+        <i className="home-v2-reticle__frame-x" aria-hidden="true" />
+        <i className="home-v2-reticle__frame-y" aria-hidden="true" />
         <i className="home-v2-reticle__cross is-tl" aria-hidden="true" />
         <i className="home-v2-reticle__cross is-tr" aria-hidden="true" />
         <i className="home-v2-reticle__cross is-bl" aria-hidden="true" />
@@ -1300,26 +1302,34 @@ export function CorridorStationHeaders() {
       }
 
       // ── Persistent caption card (one artifact, 2026-07-03) ────────
-      // The card's own band opens with Navigate's arrival, IGNORES the
-      // per-station fade-outs (so it holds through the whole corridor
-      // run), and yields to the epilogue on the same BUILD_OUT clock as
-      // the Build title. It banks with the same cartouche parallax so
-      // it still reads as part of the instrument.
+      // The UNFOLD is the reveal (2026-07-04): the container does NOT
+      // fade in on the scroll band — un-armed chrome is collapsed
+      // (scaleX/scaleY 0, opacities 0), so the card is invisible until
+      // the arm threshold fires and the CSS centre-out unfold plays
+      // time-based at full container opacity. Scrubbing the container
+      // opacity on the band (the previous scheme) played the unfold
+      // under a half-transparent card and read as a plain fade.
+      // The band now only ARMS/DISARMS the chrome; the container
+      // opacity carries just the epilogue yield (BUILD_OUT — same
+      // clock as the Build title) and the corridor-engaged gate. It
+      // banks with the same cartouche parallax as the titles.
       const cardEl = captionCardRef.current;
       if (cardEl) {
         const cs = captionState.current;
-        const cardOp = bandOpacity(p, NAVIGATE_FADE_IN) * buildOut;
+        const cardBand = bandOpacity(p, NAVIGATE_FADE_IN) * buildOut;
+        const cardOp = corridorEngaged ? buildOut : 0;
         if (Math.abs(cardOp - cs.lastOp) > 0.002) {
           cs.lastOp = cardOp;
           cardEl.style.opacity = cardOp.toFixed(3);
         }
         cardEl.style.transform = cartoucheTransform;
-        // Chrome arm/rearm — bar + tick rail fade with the card's own
-        // arrival, mirroring the stations' is-armed thresholds.
-        if (!cs.framed && cardOp >= TYPER_ARRIVE_OPACITY) {
+        // Chrome arm/rearm — the unfold plays on arm, the collapse (its
+        // exact reverse) on disarm, so scroll-back irises the card shut
+        // instead of popping it off.
+        if (!cs.framed && cardBand >= TYPER_ARRIVE_OPACITY) {
           cs.framed = true;
           cardEl.classList.add("is-armed");
-        } else if (cs.framed && cardOp < TYPER_REARM_OPACITY) {
+        } else if (cs.framed && cardBand < TYPER_REARM_OPACITY) {
           cs.framed = false;
           cardEl.classList.remove("is-armed");
         }
