@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
+import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
 import {
   DOCKED_INSTRUMENT_EPILOGUE_POSE,
@@ -282,6 +283,13 @@ interface CaptionMetaEls {
   coordRef: HTMLSpanElement | null;
   coordT: HTMLElement | null;
 }
+
+// Caption chrome scramble-decode: on station change the meta row +
+// coord tag TRANSFORM into the next station's readout (chars shuffle
+// through HUD glyphs, resolving left-to-right) instead of
+// hard-swapping. The kernel is pure and unit-tested in
+// `lib/home-v2/captionScramble.ts`; this component only queues jobs on
+// station change and advances them from its RAF tick (single writer).
 
 /** One station's support paragraph inside the persistent caption card.
  *  Mirrors StationBlock's support rendering (per-char spans + trailing
@@ -1161,6 +1169,9 @@ export function CorridorStationHeaders() {
     framed: boolean;
     activeKey: CaptionStationKey | null;
   }>({ lastOp: -1, framed: false, activeKey: null });
+  // In-flight scramble-decode jobs for the meta row + coord tag,
+  // advanced by the RAF tick below.
+  const captionScrambles = useRef<ScrambleJob[]>([]);
 
   useEffect(() => {
     let raf = 0;
@@ -1333,11 +1344,13 @@ export function CorridorStationHeaders() {
           cs.framed = false;
           cardEl.classList.remove("is-armed");
         }
-        // Meta row + coord tag follow the DOMINANT station — swap (not
-        // type) the kicker / callsign / status / coord the moment a new
-        // station's band outweighs the rest. Holds the last station's
-        // readout through the between-station travel so the chrome
-        // never blanks.
+        // Meta row + coord tag follow the DOMINANT station — the moment
+        // a new station's band outweighs the rest, each readout
+        // SCRAMBLE-DECODES into the next station's text (chars shuffle
+        // through HUD glyphs and resolve left-to-right) instead of
+        // hard-swapping. Holds the last station's readout through the
+        // between-station travel so the chrome never blanks. Reduced
+        // motion swaps instantly.
         let activeKey = cs.activeKey;
         let best = 0.15;
         for (const key of ["nav", "enc", "bld"] as const) {
@@ -1350,14 +1363,20 @@ export function CorridorStationHeaders() {
           cs.activeKey = activeKey;
           const meta = captionMeta[activeKey];
           const els = captionMetaEls.current;
-          if (els.kicker && meta.kicker) els.kicker.textContent = meta.kicker;
-          if (meta.telemetry) {
-            if (els.callsign) els.callsign.textContent = meta.telemetry.callsign;
-            if (els.status) els.status.textContent = meta.telemetry.status;
-          }
-          if (els.coordRef) els.coordRef.textContent = meta.coord.ref;
-          if (els.coordT) els.coordT.textContent = `/ ${meta.coord.t}`;
+          const retitle = (el: HTMLElement | null, text: string | undefined) => {
+            if (!el || text == null) return;
+            if (typewriter) queueScramble(captionScrambles.current, el, text, nowSec);
+            else el.textContent = text;
+          };
+          retitle(els.kicker, meta.kicker);
+          retitle(els.callsign, meta.telemetry?.callsign);
+          retitle(els.status, meta.telemetry?.status);
+          retitle(els.coordRef, meta.coord.ref);
+          retitle(els.coordT, `/ ${meta.coord.t}`);
         }
+        // Advance any in-flight scrambles on the same tick that owns
+        // every other caption write (single-writer rule).
+        advanceScrambles(captionScrambles.current, nowSec);
       }
       // Signal block: centred (translateX -50%) + scroll-coupled upward
       // lift so it is pushed out of the top of the viewport with scroll.
