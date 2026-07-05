@@ -184,10 +184,16 @@ export function BrandmarkAccretionShell() {
       roll = driftRoll;
     }
 
-    const dockSpin = docked && !motionFrozen ? t * 0.045 : 0;
-    gyroAssembly.rotation.set(pitch, yaw + dockSpin, roll);
+    // No yaw while docked (2026-07-05): the sphere is a STATIC backdrop
+    // behind the Services content — same contract as the ambient-hold spin
+    // freeze in ShellSubstrateGyro. The former `t * 0.045` dock spin kept
+    // the whole assembly rotating behind readable copy for the entire
+    // dissipate runway (a reported motion-sickness trigger) and, being
+    // absolute-clock-based, snapped the yaw by an arbitrary angle at both
+    // dock boundaries.
+    gyroAssembly.rotation.set(pitch, yaw, roll);
     gyroTilt.x = pitch;
-    gyroTilt.y = yaw + dockSpin;
+    gyroTilt.y = yaw;
     gyroTilt.z = roll;
   });
 

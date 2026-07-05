@@ -1036,7 +1036,8 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     //     to the hold level across PARTICLE_FADE. The floor is raised
     //     from the old 0.18 to SERVICES_AMBIENT_HOLD_LEVEL so the inside
     //     of the sphere stays clearly visible (the user must still read
-    //     "rotating particles" as the surface scatters away).
+    //     a particle bed as the surface scatters away; since 2026-07-05
+    //     that bed is deliberately STATIC — see the spin freeze below).
     //   - Ambient: `servicesAmbientOpacityMultiplier(level)` holds at the
     //     SAME hold level (level 1) then fades to 0 across the continuum
     //     approach.
@@ -1247,15 +1248,17 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // on top so the meridians/parallels appear to swirl around the
     // mark during the unfold, then settle once reveal saturates.
     //
-    // ADR-021 follow-up (2026-06-19): during the services ambient hold
-    // the sphere is a STATIC backdrop behind the scrolling Services
-    // content — freeze the idle spin so the inside-sphere particle bed
-    // does not rotate while the user scrolls the section. The spin is
-    // simply not advanced (rotation.y holds wherever the dock fly-in
-    // left it), so there is no pop — the slow idle drift just stops.
+    // ADR-021 follow-up (2026-06-19; extended to the dock 2026-07-05):
+    // from the moment the dock engages — through the dissipate AND the
+    // services ambient hold — the sphere is a STATIC backdrop behind the
+    // scrolling Services content. Freeze the idle spin for BOTH regimes:
+    // the globe dot-rings and inside-sphere particle bed rotating behind
+    // readable copy was a reported motion-sickness trigger. The spin is
+    // simply not advanced (rotation.y holds wherever the corridor left
+    // it), so there is no pop — the slow idle drift just stops.
     if (motionFrozen) {
       globeSpin.rotation.y = 0.4;
-    } else if (!servicesAmbient) {
+    } else if (!servicesAmbient && !docked) {
       const extra = unfold.wrapSpinExtra * idleSpeed * dt;
       globeSpin.rotation.y += SUBSTRATE_GYRO_GLOBE_SPIN * idleSpeed * dt + extra;
     }
@@ -1287,9 +1290,10 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
         );
       }
       if (scaleNode) scaleNode.scale.setScalar(ring.scale);
-      // Frozen during the services ambient hold so the gimbal bed is a
-      // static backdrop while the Services content scrolls over it.
-      if (spinNode && !motionFrozen && !servicesAmbient) {
+      // Frozen from dock engage through the services ambient hold so the
+      // gimbal bed is a static backdrop while Services content scrolls
+      // over it (see the globe-spin freeze above).
+      if (spinNode && !motionFrozen && !servicesAmbient && !docked) {
         spinNode.rotation.y += axis.spin * idleSpeed * dt;
       }
       // Trim-path draw-on: the gimbal ring is a `<line>` over a

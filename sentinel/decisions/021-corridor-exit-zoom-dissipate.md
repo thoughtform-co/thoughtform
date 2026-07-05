@@ -1129,6 +1129,32 @@ co-mounted in the same canvas. It fades only as `#continuum` approaches, via
 reintroduced — the particle core itself is the foreground mark now. Gated by
 `UNIFIED_SERVICES_ARMILLARY`; flag-off restores the crossfade described above.
 
+### 2026-07-05 — static-backdrop contract extended to the DOCK (motion sickness)
+
+The 2026-06-19 ambient addendum froze the substrate gyro's idle spin during
+`servicesAmbient` ("static backdrop behind the scrolling Services content"),
+but the DOCK phase — the entire `DISSIPATE_SCROLL_SPAN_VH` (1.6-viewport)
+runway, i.e. the first service card(s) the user actually reads — still had
+THREE continuous rotations running: the whole-assembly `dockSpin` yaw
+(`BrandmarkAccretionShell`, `t * 0.045`, added 2026-06-13, which also SNAPPED
+the yaw by an arbitrary angle at both dock boundaries because it was
+absolute-clock-based), the globe's polar idle spin (meridian/parallel dot
+rings + the interior particle cloud, 0.08 rad/s), and the gimbal ring
+counter-spins. A user reported motion sickness from the rotating
+sphere/particle bed behind the Services copy.
+
+**Contract now:** from the moment `docked` engages through the ambient hold,
+NO element of the sphere assembly rotates on a time clock. `dockSpin` is
+removed; the gyro's globe + ring spin advances are gated on
+`!docked && !servicesAmbient` (freeze-in-place, same no-pop mechanism as the
+ambient freeze — rotation holds wherever the corridor left it). Pointer-look
+and the scroll-driven dissipate choreography (radial shell scatter, camera
+fly-in) are unaffected. Reverse-scrolling back out of the seam un-freezes
+(`docked` drops when `sectionNearDock` clears). Do not reintroduce "life"
+via continuous background rotation in this window — slow rotation behind
+readable copy is a motion-sickness trigger; if the docked sphere ever needs
+more presence, use bounded, decaying, or scroll-driven motion instead.
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)
