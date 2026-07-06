@@ -315,3 +315,68 @@ by yanking `scrollTop` back across the step boundary (the section becomes
 un-scrollable past step 1). `services.css` excludes the whole runway subtree
 (`.services-stage-root, .services-stage-root *`) with `overflow-anchor: none`;
 keep that rule when touching the runway DOM.
+
+## Update 8 (2026-07-06): wireframe seeds + structural armillary
+
+The collapsed signal-plate seeds read as dark glass dimmed to 55% — they faded
+away instead of belonging to the scene, and Vince asked for a wireframe version
+aligned with the mark ("blend in better with the background") while questioning
+whether the orbit rings were needed at all. The redesign moves the seeds into
+the **diagram layer** (gold hairlines — mark, rings, connectors) and keeps the
+open plate as the only **matter** (glass, photo, dawn text): "one instrument;
+the open card is the only matter."
+
+- **Seeds = schematics** (`data-variant="wireframe"`, default in production
+  via `ServicesStage`; `glass` retained as the regression reference —
+  switcher at `/test/services-prime`): whole-plate `opacity .55/.85` dim
+  deleted (recession by material, not alpha); body = whisper void
+  `rgba(8,7,6,.18)` + `backdrop-filter: blur(0px)` (NOT `none` — `none`
+  doesn't interpolate to the open `blur(16px)`); shell gradient at whisper
+  alphas (same 4-stop/168° structure so the open interpolation is unchanged);
+  scanlines off; seed title `--dawn-60`; halftone band re-graded to gold
+  specimen (`sepia(1) hue-rotate(-8deg) saturate(2.2)…` at 0.2, hover 0.4,
+  scrim off) — the 4px photo dots read as the mark's particle ink.
+- **Dotted chamfer outline** = `PlateWireOutline` SVG (a CSS border would be
+  shaved by the `__sh` clip-path — the ADR-007 polygon-border class of bug),
+  sibling AFTER `__sh`, `stroke-dasharray: 3 7` (scan-connector grammar) at
+  gold 0.35 (hover 0.6), two 3px diamond ticks at the chamfer midpoints.
+  **ResizeObserver gotcha:** RO never delivers a usable contentRect for an
+  `<svg>` element — observe the HOST PLATE and read `offsetWidth/Height`
+  (transform-free) in the callback.
+- **Materialization = crossfade handoff**: on open the outline fades out in
+  0.14s and the existing rectangular echo frame (`::before`, inset −7px)
+  fades in at its existing 0.22s delay; close reverses with the outline
+  returning only after the chamfer lands back at 16px (0.26s delay). The SVG
+  never animates with `--ch`. A single morphing outline was rejected: CSS
+  can't transition polygon points, and chamfer↔rect would need a per-frame
+  JS writer against three concurrent CSS transitions.
+- **Title scramble-decode on open** (wireframe-scoped): the open C3
+  `.svc-plate__title` decodes via the corridor caption kernel
+  (`lib/home-v2/captionScramble.ts`, untouched) driven by a self-terminating
+  rAF loop in `ServicePlateCard` (~1s per open; no services-side ticker
+  exists to reuse). Start +0.18s lands the first resolved chars with the
+  `__fx--d2` rise; close/reduced-motion cancels and restores the title.
+- **Armillary → `STRUCTURAL_ORBITS`** (production, `CorridorArmillary`):
+  waist ring + workshop's meridian plane re-id'd `shell-meridian`
+  (`node:false`, 0.5/1.8). The three service rings + three echo shells are
+  retired from production: their anchor role moved to the mark's own
+  wireframe points on 2026-07-02, and the active-ring highlight duplicated
+  the per-service rig pose. `OrbitConfig` gained an optional `reveal` window
+  (the index-based `REVEAL_WINDOWS` stagger is coupled to the seven-ring
+  order); unset = index fallback, so `DEFAULT_ORBITS` stays byte-identical
+  as the LAB set (`/test/services-demo`, `/test/services-hologram` keep the
+  full armillary + orbit-node `publishAnchors`). `activeServiceId` stays
+  wired (inert against structural rings; future-proof).
+- **SVG mobile fallback recorded lab-only**: production mobile (<961px) is
+  the stacked plate accordion — `ServicesOrbitMap`/`ServicesBrandmarkField`
+  render on no production path (only `/test/brandmark-reflective`), so the
+  Update-2 "SVG fallback parity" clause is N/A until a mobile orbit surface
+  returns. `celestialData.ts` unchanged.
+
+Guardrails: scroll contract (`--svc-arrive*`, `--svc-content-in`,
+`data-active-step`) and the grid-rows collapse mechanics untouched; the open
+plate gets NO variant overrides (it must stay the C3 glass); keep the glass
+variant rendering pixel-identical while it remains the regression reference.
+Known pre-existing issue (both variants, flagged separately): on viewports
+under ~1000px tall the open keynote plate overlaps the bottom-anchored
+workshop seed.
