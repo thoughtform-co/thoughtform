@@ -44,3 +44,11 @@ jobs:
 
       - name: Unit tests
         run: npm run test:run
+
+      # Catches route-table regressions (e.g. / accidentally turning
+      # dynamic), broken imports that only surface at build time, and
+      # prerender crashes. No env vars on purpose: the landing page's
+      # seed fallbacks must keep a cold build green — if this step
+      # fails without env, a fallback path broke.
+      - name: Production build
+        run: npm run build
