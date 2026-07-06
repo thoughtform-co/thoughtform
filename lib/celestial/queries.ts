@@ -28,6 +28,24 @@ export const getCelestialSlotsCached = unstable_cache(
   { revalidate: 300, tags: [CELESTIAL_SLOTS_TAG] }
 );
 
+/** Reasons the landing render served seed data instead of DB rows.
+ *  Logged in a stable, greppable shape so a localhost-vs-production
+ *  content divergence can be diagnosed from one terminal line. */
+type SeedFallbackReason = "env-missing" | "db-error" | "empty" | "timeout" | "exception";
+
+function warnSeedFallback(reason: SeedFallbackReason, detail?: string): void {
+  console.warn(
+    `[getCelestialSlots] fallback reason=${reason}${detail ? ` detail=${detail}` : ""} — rendering SEED celestial data`
+  );
+}
+
+/** Hard ceiling on the slots query. The landing SSR awaits this call;
+ *  without a timeout a black-holed Supabase connection (stale URL,
+ *  VPN, captive network) hangs the entire local render forever —
+ *  "localhost never loads" while production is fine. Timing out into
+ *  the seed fallback matches what an outright failure already does. */
+const SLOTS_QUERY_TIMEOUT_MS = 3500;
+
 /**
  * Server-side: fetch all active celestial slot assignments with their configs.
  * Falls back to hardcoded seed data when Supabase is unavailable.
@@ -36,11 +54,14 @@ export async function getCelestialSlots(): Promise<SlotsMap> {
   try {
     const supabase = createServerClient();
     if (!supabase) {
-      console.warn("[getCelestialSlots] Supabase not configured, using seed fallback");
+      warnSeedFallback(
+        "env-missing",
+        "createServerClient returned null (SUPABASE_SERVICE_ROLE_KEY?)"
+      );
       return buildSeedFallback();
     }
 
-    const { data, error } = await supabase
+    const query = supabase
       .from("celestial_slots")
       .select(
         `
@@ -53,11 +74,27 @@ export async function getCelestialSlots(): Promise<SlotsMap> {
       )
       .eq("enabled", true);
 
-    if (error || !data || data.length === 0) {
-      console.warn(
-        "[getCelestialSlots] DB query failed or empty, using seed fallback",
-        error?.message
-      );
+    const TIMEOUT = Symbol("slots-timeout");
+    const raced = await Promise.race([
+      query,
+      new Promise<typeof TIMEOUT>((resolve) =>
+        setTimeout(() => resolve(TIMEOUT), SLOTS_QUERY_TIMEOUT_MS)
+      ),
+    ]);
+
+    if (raced === TIMEOUT) {
+      warnSeedFallback("timeout", `${SLOTS_QUERY_TIMEOUT_MS}ms`);
+      return buildSeedFallback();
+    }
+
+    const { data, error } = raced;
+
+    if (error) {
+      warnSeedFallback("db-error", error.message);
+      return buildSeedFallback();
+    }
+    if (!data || data.length === 0) {
+      warnSeedFallback("empty");
       return buildSeedFallback();
     }
 
@@ -78,7 +115,7 @@ export async function getCelestialSlots(): Promise<SlotsMap> {
     }
     return slots;
   } catch (err) {
-    console.error("[getCelestialSlots] Failed:", err);
+    warnSeedFallback("exception", err instanceof Error ? err.message : String(err));
     return buildSeedFallback();
   }
 }

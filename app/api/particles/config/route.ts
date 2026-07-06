@@ -26,6 +26,12 @@ interface ConfigPreset {
  * Only admin can modify it via POST
  */
 export async function GET() {
+  // Every non-primary response carries `x-thoughtform-fallback` so the
+  // Network panel can distinguish "config loaded from the DB" from
+  // "load degraded, serving KV/defaults" — the 200 body shape is
+  // identical on purpose (clients keep working), which previously made
+  // the two cases indistinguishable.
+  let fallbackCause = "env-missing";
   try {
     // 1. Try Supabase first - always load GLOBAL config
     const supabase = createServerClient();
@@ -53,6 +59,7 @@ export async function GET() {
           activePresetId: data.active_preset_id || null,
         });
       }
+      fallbackCause = `db-error${error ? `: ${error.message}` : ""}`;
     }
 
     // 2. Fall back to Vercel KV
@@ -60,11 +67,15 @@ export async function GET() {
       const storedConfig = await kv.get<ParticleSystemConfig>(CONFIG_KEY);
       if (storedConfig) {
         const config = mergeWithDefaults(storedConfig);
-        return NextResponse.json({
-          config,
-          presets: [],
-          activePresetId: null,
-        });
+        logger.warn(`[particles/config] serving KV fallback (cause: ${fallbackCause})`);
+        return NextResponse.json(
+          {
+            config,
+            presets: [],
+            activePresetId: null,
+          },
+          { headers: { "x-thoughtform-fallback": "kv" } }
+        );
       }
     } catch (kvError) {
       // KV not configured, continue to defaults
@@ -72,18 +83,25 @@ export async function GET() {
     }
 
     // 3. Return defaults
-    return NextResponse.json({
-      config: DEFAULT_CONFIG,
-      presets: [],
-      activePresetId: null,
-    });
+    logger.warn(`[particles/config] serving DEFAULT_CONFIG (cause: ${fallbackCause})`);
+    return NextResponse.json(
+      {
+        config: DEFAULT_CONFIG,
+        presets: [],
+        activePresetId: null,
+      },
+      { headers: { "x-thoughtform-fallback": "defaults" } }
+    );
   } catch (error) {
     console.error("Failed to load particle config:", error);
-    return NextResponse.json({
-      config: DEFAULT_CONFIG,
-      presets: [],
-      activePresetId: null,
-    });
+    return NextResponse.json(
+      {
+        config: DEFAULT_CONFIG,
+        presets: [],
+        activePresetId: null,
+      },
+      { headers: { "x-thoughtform-fallback": "defaults-after-exception" } }
+    );
   }
 }
 

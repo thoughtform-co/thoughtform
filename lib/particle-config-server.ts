@@ -16,7 +16,9 @@ export async function getParticleConfig(): Promise<ParticleSystemConfig> {
     const supabase = createServerClient();
 
     if (!supabase) {
-      console.warn("[getParticleConfig] Supabase not configured, using defaults");
+      console.warn(
+        "[getParticleConfig] fallback reason=env-missing — serving DEFAULT_CONFIG (localhost will not match production)"
+      );
       return DEFAULT_CONFIG;
     }
 
@@ -27,7 +29,9 @@ export async function getParticleConfig(): Promise<ParticleSystemConfig> {
       .single();
 
     if (error) {
-      console.warn("[getParticleConfig] Supabase error:", error.message);
+      console.warn(
+        `[getParticleConfig] fallback reason=db-error detail=${error.message} — serving DEFAULT_CONFIG`
+      );
       return DEFAULT_CONFIG;
     }
 
