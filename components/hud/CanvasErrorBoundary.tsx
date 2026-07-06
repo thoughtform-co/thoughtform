@@ -41,7 +41,10 @@ export class CanvasErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // Log the error to console in development
+    // Always log the message — production WebGL crashes were
+    // previously silent, invisible even in Vercel logs. The verbose
+    // component stack stays dev-only.
+    console.error("[canvas-boundary]", error.message);
     if (process.env.NODE_ENV === "development") {
       console.error("CanvasErrorBoundary caught an error:", error);
       console.error("Component stack:", errorInfo.componentStack);

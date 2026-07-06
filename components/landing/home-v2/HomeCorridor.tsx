@@ -15,6 +15,7 @@ import { CorridorProgressRail } from "./CorridorProgressRail";
 // into a pixel field inside the section. The component file remains in
 // the tree as a reusable reference for any future "particle dissolve at
 // a section seam" composition.
+import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -146,7 +147,15 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
       <div className="home-v2-stage__sticky">
         {!fallback && (
           <div className="home-v2-stage__canvas">
-            <DepthGatewayScene />
+            {/* Boundary fallback = the boundary's built-in dark void
+                plane (absolute inset-0), NOT the static-text corridor:
+                swapping composition mid-scroll would violate the
+                layered-composite rules (ADR-008). A crashed scene
+                degrades to a dark backdrop behind the DOM copy overlay,
+                which keeps reading. */}
+            <CanvasErrorBoundary>
+              <DepthGatewayScene />
+            </CanvasErrorBoundary>
           </div>
         )}
 

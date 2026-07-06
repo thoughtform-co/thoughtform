@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";
 import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleField";
+import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { BrandmarkVectorActor, BrandmarkRingGlyph } from "@/components/brand/BrandmarkVectorActor";
 
 /**
@@ -138,8 +139,13 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
             during inter-keyframe lerps). The single
             `BrandmarkParticleStation` (renamed `BrandmarkAtmosphere`
             in subsequent phases) reads the same journey transform
-            but consumes it as atmosphere, not as the mark itself. */}
-        <BrandmarkParticleCanvas />
+            but consumes it as atmosphere, not as the mark itself.
+            Boundary fallback is null on purpose: if the painter
+            crashes, the vector actor + dock glyphs above keep the
+            brand visible — losing atmosphere grain is invisible. */}
+        <CanvasErrorBoundary fallback={null}>
+          <BrandmarkParticleCanvas />
+        </CanvasErrorBoundary>
       </>
     );
   }
