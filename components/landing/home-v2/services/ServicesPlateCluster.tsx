@@ -204,9 +204,15 @@ function PlateConnectorOverlay({
         // Mark end (the reticle sits here — the only circle).
         const mx = anchor.x;
         const my = anchor.y;
-        // Card end: midpoint of the top-right chamfer diagonal.
-        const nx = rect.right - ch / 2;
-        const ny = rect.top + ch / 2;
+        // Card end: the notch that FACES the mark. Cards are laid out around
+        // the viewport-centred mark, so a card in the left half plugs in at
+        // its top-right chamfer, a card in the right half at its bottom-left
+        // chamfer (both are real notches — the departure stays corner-
+        // consistent, just the corner that points at the instrument, so the
+        // wire never crosses the card).
+        const cardInLeftHalf = (rect.left + rect.right) / 2 < viewport.width / 2;
+        const nx = cardInLeftHalf ? rect.right - ch / 2 : rect.left + ch / 2;
+        const ny = cardInLeftHalf ? rect.top + ch / 2 : rect.bottom - ch / 2;
         const points = `${mx.toFixed(1)},${my.toFixed(1)} ${nx.toFixed(1)},${ny.toFixed(1)}`;
         const className = [
           "services-scan-connector",
