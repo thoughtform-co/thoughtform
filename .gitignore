@@ -76,3 +76,7 @@ services/sam-segmenter/checkpoints/
 storybook-static
 
 .vercel
+
+# Local asset staging (raw photography/masters — never deploy via public/)
+assets-staging/
+public/images/navigator/
