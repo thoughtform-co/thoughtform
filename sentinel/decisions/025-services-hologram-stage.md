@@ -380,3 +380,15 @@ variant rendering pixel-identical while it remains the regression reference.
 Known pre-existing issue (both variants, flagged separately): on viewports
 under ~1000px tall the open keynote plate overlaps the bottom-anchored
 workshop seed.
+
+**Connector refinement (2026-07-06 follow-up, Vince live review):** the CV-scan
+leader lines now depart from each card's **mark-facing chamfer notch** (measured
+live off the card rect, so it's correct at any open height): left-half cards
+plug in at their top-right notch, right-half cards at their bottom-left notch —
+corner-consistent, but always the corner pointing at the centred mark, so no
+wire crosses its own card. The reticle circle is now the SOLE marker and sits
+only where the wire meets the brandmark (`__target` card-end circle removed).
+Connector weights lifted (line 0.72 opacity / 1px, base 0.72). **On-gold ink =
+`--latent-night` (#110f09), not `--void`** — applied to the open chip + its
+diamond and the solid CTA + arrow, matching `.hero__cta__btn--primary`; this is
+the canonical text/mark colour on any tensor-gold fill.
