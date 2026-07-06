@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 import { probeWebGL } from "@/lib/webgl/probe";
+import { BrandmarkFrameDriver } from "./BrandmarkFrameDriver";
 import { BrandmarkParticleStation } from "./BrandmarkParticleStation";
 import { BrandmarkSilhouettePoints } from "./BrandmarkSilhouettePoints";
 
@@ -42,13 +43,14 @@ export function BrandmarkParticleCanvas({
 }: BrandmarkParticleCanvasProps = {}) {
   const mode = useBrandmarkJourneyStore((s) => s.mode);
   const [webglOK, setWebglOK] = useState<boolean | null>(null);
-  // WebGL context-loss recovery (mirrors DepthGatewayScene). This canvas
-  // runs `frameloop="always"`; without a handler a transient context loss
-  // (GPU reset, tab backgrounding, memory pressure) would leave it
-  // permanently black. On restore we bump `glEpoch` to remount the Canvas
-  // so the `useMemo` geometry rebuilds against the fresh context. The
-  // painters dispose cleanly and read the journey transform from the store
-  // every frame, so the remount re-syncs with no state to migrate.
+  // WebGL context-loss recovery (mirrors DepthGatewayScene). Without a
+  // handler a transient context loss (GPU reset, tab backgrounding,
+  // memory pressure) would leave the canvas permanently black. On
+  // restore we bump `glEpoch` to remount the Canvas so the `useMemo`
+  // geometry rebuilds against the fresh context. The painters dispose
+  // cleanly and read the journey transform from the store every frame,
+  // and BrandmarkFrameDriver kicks a settle frame on remount, so the
+  // remount re-syncs with no state to migrate.
   const [glEpoch, setGlEpoch] = useState(0);
   // W4 (plan 03adb0dd) — corridor handoff hardening. The home-v2
   // depth corridor sets `data-brandmark-mode="off"` on `<html>`
@@ -150,7 +152,10 @@ export function BrandmarkParticleCanvas({
           far: 100,
           zoom: 1,
         }}
-        dpr={[1, 2]}
+        // Capped at the corridor's desktop budget (DepthGatewayScene
+        // ships [1, 1.75]) — this full-viewport canvas previously ran
+        // uncapped to dpr 2, the highest fill cost on the page.
+        dpr={[1, 1.75]}
         gl={{
           alpha: true,
           antialias: false,
@@ -158,9 +163,16 @@ export function BrandmarkParticleCanvas({
           powerPreference: "low-power",
           preserveDrawingBuffer: false,
         }}
-        frameloop="always"
+        // Constant demand mode (never toggled — a frameloop prop flip
+        // resets clock.elapsedTime, see BEST-PRACTICES). Repaints are
+        // driven by BrandmarkFrameDriver: one frame per journey-store
+        // write, plus a self-sustaining pump while a time-animated
+        // term (transit exhaust, silhouette breathing) is visible.
+        // During hero dwell / post-orbit fade the GPU is fully idle.
+        frameloop="demand"
         style={{ background: "transparent", pointerEvents: "none" }}
       >
+        <BrandmarkFrameDriver />
         <BrandmarkParticleStation />
         {/* ADR-019: silhouette point cloud that paints the brandmark
             from Diagnostic onward. Reads the SAME journey transform
