@@ -310,6 +310,49 @@ Short scrub values feel responsive but **may not complete** a timeline before th
 
 ---
 
+## 🧩 Nested-root portals (dangerouslySetInnerHTML)
+
+### A parent re-render can orphan a `createRoot` portal mounted into its innerHTML
+
+`LandingPage` renders the parsed v7 prototype via
+`dangerouslySetInnerHTML`, then several portals (`ServicesPortal`,
+`BuildCasesPortal`) mount their OWN nested React roots
+(`createRoot(slot)`) into placeholder nodes **inside** that markup
+(`[data-services-root]`, `[data-build-cases-root]`). Those nested roots
+are invisible to the parent's reconciler.
+
+If the parent component **re-renders in a way that re-applies the
+innerHTML** (the div re-mounts, or React otherwise replaces its
+children), the placeholder nodes are swapped for fresh ones. The nested
+root keeps rendering into the now-**detached** original node, so its
+content silently vanishes from the page — no error, no warning.
+
+This shipped as "the #services cards disappeared" (2026-07-06): a perf
+change added `useAuth()` **directly in LandingPage** to gate a lazy
+admin overlay. `useAuth` updates async when the Supabase session
+resolves → LandingPage re-rendered → the innerHTML nodes were replaced
+→ `ServicesStage` (and the build cases) rendered into orphaned nodes.
+LandingPage had never re-rendered before (all state lived in refs and
+zustand stores), so the latent fragility had never fired.
+
+**Rule:** the component that owns a `dangerouslySetInnerHTML` body with
+nested-root portals mounted into it must stay **render-stable**. Never
+subscribe it to context/state that updates after mount (`useAuth`, a
+frequently-changing store selector). Push such subscriptions DOWN into
+leaf components (see `CelestialEditorGate`) so only the leaf re-renders.
+
+**Tell / debug recipe:** a nested-root portal's content is missing but
+the mount effect ran (log it). Check the live placeholder node's
+internals: `Object.keys(document.querySelector('[data-services-root]'))
+.some(k => k.startsWith('__reactContainer'))` — if **false**, the node
+in the document is NOT the one `createRoot` attached to; it was
+replaced. Then find what re-renders the innerHTML owner. The component
+function may log "rendered" while committing into the detached node —
+render-invoked-but-no-DOM with no throw and no Suspense fallback is the
+signature.
+
+---
+
 ## 🎨 Canvas & Three.js
 
 ### An always-frameloop canvas burns GPU even when its painters draw nothing
