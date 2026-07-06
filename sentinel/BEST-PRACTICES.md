@@ -312,6 +312,79 @@ Short scrub values feel responsive but **may not complete** a timeline before th
 
 ## 🎨 Canvas & Three.js
 
+### An always-frameloop canvas burns GPU even when its painters draw nothing
+
+A full-viewport R3F canvas with `frameloop="always"` pays a clear +
+composite every frame at its DPR **even if every mesh inside is
+`visible = false`**. The global brandmark canvas shipped this way: WebGL
+draw-call probes showed its painters issued **zero draw calls anywhere
+on the live route** (the corridor actors own every visible beat), yet it
+cleared ~45 fps for the whole session.
+
+The fix pattern (2026-07-06, `BrandmarkFrameDriver`): a **constant**
+`frameloop="demand"` plus a store-driven pump —
+
+- every store write (scroll/resize/visibility recompute) → one
+  `invalidate()`;
+- a self-sustaining rAF pump runs **only while a time-animated term is
+  visibly non-zero** (mirror the painters' own `VISIBILITY_EPSILON`
+  gates — e.g. `dispersion > ε`, silhouette painting outside the
+  substrate handoff);
+- never toggle the `frameloop` prop itself (see the clock-reset trap
+  above); the corridor's `FrameInvalidator` and the brandmark's
+  `BrandmarkFrameDriver` are the two house instances of this pattern.
+
+**Runtime check:** patch `WebGL(2)RenderingContext.prototype.clear` +
+`drawArrays/drawElements` in a headless page, attribute calls to a
+canvas via `ctx.canvas.closest(...)`, and sample parked/idle states A/B
+against the pre-change build. Idle frames should be ~0 wherever nothing
+time-animated is visible; draw calls must be identical pre/post (a draw
+delta means the change was NOT perceptually invisible).
+
+**Why it matters:** "the painters are cheap" is not the question — the
+frameloop itself is the cost. Demand mode with a correct wake contract
+is byte-identical on screen and free when idle.
+
+---
+
+### SSR data fetches need a timeout and a greppable fallback reason
+
+Any `await` in a server component's render path is a page-load
+hostage: `getCelestialSlots()` had no timeout, so a black-holed
+Supabase connection (stale project URL, VPN, captive portal) hung the
+entire localhost render forever — while production, with working
+networking, was fine. Silent `catch → fallback` made the opposite
+failure invisible: localhost rendered seed content with only a buried
+`console.warn`, reading as "localhost shows different content than
+Vercel."
+
+Pattern (2026-07-06):
+
+```ts
+const raced = await Promise.race([query, timeout(3500, TIMEOUT)]);
+if (raced === TIMEOUT) {
+  warnFallback("timeout");
+  return seed();
+}
+// every fallback path logs one stable line:
+// [getCelestialSlots] fallback reason=env-missing|db-error|empty|timeout|exception
+```
+
+- API routes that serve fallback bodies with a 200 add an
+  `x-thoughtform-fallback: <source>` response header so the Network
+  panel can tell degraded from healthy without a client change.
+- Dev boots get the env doctor (`reportDevEnvHealth`,
+  `instrumentation.ts`): missing keys become a `console.error` + an
+  on-page chip instead of silently different content.
+- Production behavior stays graceful — the fix is observability, not
+  strictness.
+
+**Why it matters:** the "works on Vercel, not on localhost" bug class
+is almost always a silent fallback firing on one side only. Make the
+fallback loud where a human is watching and bounded where it can hang.
+
+---
+
 ### Error Boundaries for Canvas
 
 Canvas/WebGL can throw for many reasons (context lost, memory, etc.):
@@ -671,4 +744,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-06-15_
+_Last updated: 2026-07-06_

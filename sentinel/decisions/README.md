@@ -45,6 +45,8 @@ Write an ADR when you:
 | 023 | [Corridor Brandmark Physics Core](023-corridor-brandmark-physics-core.md) | Active   | 2026-06 |
 | 025 | [Services Hologram Stage](025-services-hologram-stage.md)                 | Accepted | 2026-06 |
 | 026 | [Symbolic Astral Emblems](026-symbolic-astral-emblems.md)                 | Accepted | 2026-06 |
+| 027 | [Gateway Motion Lab](027-gateway-motion-lab.md)                           | Accepted | 2026-07 |
+| 028 | [Landing Data Caching](028-landing-data-caching.md)                       | Accepted | 2026-07 |
 
 ---
 
