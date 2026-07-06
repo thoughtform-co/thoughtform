@@ -20,7 +20,7 @@ import * as THREE from "three";
 
 import type { ServiceId } from "../serviceData";
 import type { ConnectorAnchor } from "@/lib/stores/hologramConnectorStore";
-import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
+import { SERVICES_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 
 export interface OrbitConfig {
   /** ServiceId for a service ring; any unique key for a decorative shell. */
@@ -59,6 +59,9 @@ const DEFAULT_ECC = 0.9;
 // planes never gyrate (the rig owns orientation); only the nodes travel. Three
 // rings carry a drifting service node + HUD anchor; the waist + outer rings are
 // decorative (no node). All gold — one system with the mark.
+// Weights lifted 2026-07-06 ("one holographic instrument" pass): opacities
+// ≈ +40% decorative / +20% service, line widths one step up, so the armillary
+// reads as deliberate line-work next to the denser parked mark + glass plates.
 export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
   // Saturn waist-ring — thin near-horizontal ellipse hugging the mark's waist.
   {
@@ -66,8 +69,8 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     radius: 1.06,
     tilt: [1.48, 0.0, 0.05],
     color: TENSOR_ACCENT,
-    opacity: 0.5,
-    lineWidth: 1.75,
+    opacity: 0.68,
+    lineWidth: 2.0,
     eccentricity: 0.96,
     node: false,
   },
@@ -76,9 +79,9 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     id: "latitude-inner",
     radius: 1.28,
     tilt: [1.32, 0.18, -0.18],
-    color: TENSOR_GOLD,
-    opacity: 0.18,
-    lineWidth: 0.75,
+    color: SERVICES_GOLD,
+    opacity: 0.28,
+    lineWidth: 0.95,
     dashed: true,
     dashSize: 0.03,
     gapSize: 0.115,
@@ -89,9 +92,9 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     id: "keynote",
     radius: 1.52,
     tilt: [1.05, -0.18, 0.22],
-    color: TENSOR_GOLD,
-    opacity: 0.52,
-    lineWidth: 1.45,
+    color: SERVICES_GOLD,
+    opacity: 0.62,
+    lineWidth: 1.7,
     eccentricity: 0.78,
     speed: 0.12,
     phase0: 3.5,
@@ -101,9 +104,9 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     id: "workshop",
     radius: 1.78,
     tilt: [0.12, 1.42, -0.18],
-    color: TENSOR_GOLD,
-    opacity: 0.64,
-    lineWidth: 1.9,
+    color: SERVICES_GOLD,
+    opacity: 0.74,
+    lineWidth: 2.2,
     eccentricity: 0.72,
     speed: -0.09,
     phase0: 5.0,
@@ -113,9 +116,9 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     id: "embedded",
     radius: 2.02,
     tilt: [0.72, 0.68, 0.72],
-    color: TENSOR_GOLD,
-    opacity: 0.48,
-    lineWidth: 1.25,
+    color: SERVICES_GOLD,
+    opacity: 0.58,
+    lineWidth: 1.5,
     eccentricity: 0.86,
     speed: 0.075,
     phase0: 0.7,
@@ -125,8 +128,8 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     radius: 2.12,
     tilt: [1.18, -0.24, 0.34],
     color: TENSOR_ACCENT,
-    opacity: 0.14,
-    lineWidth: 0.65,
+    opacity: 0.22,
+    lineWidth: 0.85,
     dashed: true,
     dashSize: 0.022,
     gapSize: 0.16,
@@ -138,9 +141,9 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     id: "shell-outer",
     radius: 2.36,
     tilt: [1.08, 0.28, -0.1],
-    color: TENSOR_GOLD,
-    opacity: 0.17,
-    lineWidth: 0.82,
+    color: SERVICES_GOLD,
+    opacity: 0.26,
+    lineWidth: 1.0,
     dashed: true,
     dashSize: 0.06,
     gapSize: 0.2,

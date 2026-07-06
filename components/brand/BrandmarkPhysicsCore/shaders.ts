@@ -583,15 +583,18 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // is flat at the centerpiece, so there is no depth to convey there).
     depthFactor = mix(depthFactor, 1.0, uCleanField);
 
-    // Settled-wireframe palette convergence (ADR-023 2026-06-25). As the
-    // mark lands on the wireframe (vWireCrisp → 1) the body + accent lerp
-    // from the flat-rest SVG gold toward the Services palette so the
-    // in-sphere wireframe matches the #services hologram (corridor →
-    // Services reads as continuation). vWireCrisp = 0 at the flat rest +
-    // flight keeps uColor (= SVG gold) so the matched-pixel handoff is
-    // color-seamless. Defaults make uLandedColor == uColor (lab no-op).
-    vec3 bodyTone = mix(uColor, uLandedColor, vWireCrisp);
-    vec3 accentTone = mix(uAccentColor, uLandedAccent, vWireCrisp);
+    // Parked-centerpiece palette convergence (2026-07-06 "one holographic
+    // instrument" pass; supersedes the ADR-023 vWireCrisp gate, which had
+    // been a no-op since the unify-on-one-gold pass). The body + accent lerp
+    // toward the landed palette on the CLEAN-FIELD clock (the actor drives
+    // uCleanField = recT, the shrink-into-#services ramp), so the flat rest,
+    // the matched-pixel flight AND the in-sphere wireframe all stay pure
+    // uColor (TENSOR_GOLD — the handoff remains color-seamless), and the
+    // mark gradients subtly to the site gold (SERVICES_GOLD) only as it
+    // docks as the #services centerpiece — matching the plates, connectors
+    // and chips. Defaults make uLandedColor == uColor (lab no-op).
+    vec3 bodyTone = mix(uColor, uLandedColor, uCleanField);
+    vec3 accentTone = mix(uAccentColor, uLandedAccent, uCleanField);
     // Tint blend. Edge particles (high \`vEdgeWeight\`, near the
     // silhouette extremes) trend toward the rim accent. Mix amount
     // is conservative so the body stays anchored in the gold body

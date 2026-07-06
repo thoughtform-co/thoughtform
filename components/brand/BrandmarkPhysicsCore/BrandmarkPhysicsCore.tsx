@@ -288,9 +288,17 @@ export interface BrandmarkPhysicsCoreProps {
    *  1 = no thinning. Production default 0.65. Tunable so the lab can dial the
    *  centerpiece spacing without touching the corridor (gated by cleanField). */
   cleanFieldKeep?: number;
+  /** Live ref for `cleanFieldKeep`. Read every frame inside `useFrame`. Wins
+   *  over the static prop when provided — the corridor actor ramps this with
+   *  the services shrink-in (parked-boost, 2026-07-06) so the wireframe
+   *  visibly densifies as it docks without touching the in-sphere epilogue. */
+  cleanFieldKeepRef?: ReadonlyRef<number>;
   /** Dot-size multiplier at the parked centerpiece (`cleanField` = 1).
    *  Production default 0.50 (fine dots). */
   cleanFieldDotScale?: number;
+  /** Live ref for `cleanFieldDotScale` (same parked-boost contract as
+   *  `cleanFieldKeepRef`). */
+  cleanFieldDotScaleRef?: ReadonlyRef<number>;
   /** Dot-falloff inner edge at the parked centerpiece (`cleanField` = 1) —
    *  higher = crisper / tighter dots. Production default 0.40. */
   cleanFieldEdge?: number;
@@ -530,7 +538,9 @@ export function BrandmarkPhysicsCore({
   cleanFieldRef,
   corridorKeep = 1,
   cleanFieldKeep = 0.65,
+  cleanFieldKeepRef,
   cleanFieldDotScale = 0.5,
+  cleanFieldDotScaleRef,
   cleanFieldEdge = 0.4,
   seedAtHome = false,
   seedFromPositions = null,
@@ -838,6 +848,10 @@ export function BrandmarkPhysicsCore({
     const resolvedGlitch = glitchRef ? glitchRef.current : glitch;
     const resolvedStream = streamRef ? streamRef.current : stream;
     const resolvedCleanField = cleanFieldRef ? cleanFieldRef.current : cleanField;
+    const resolvedCleanFieldKeep = cleanFieldKeepRef ? cleanFieldKeepRef.current : cleanFieldKeep;
+    const resolvedCleanFieldDotScale = cleanFieldDotScaleRef
+      ? cleanFieldDotScaleRef.current
+      : cleanFieldDotScale;
     const resolvedFreezeMotion = freezeMotionRef ? freezeMotionRef.current : freezeMotion;
 
     // Reduced-motion / static path. The home texture was bound once
@@ -861,8 +875,8 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uStream.value = resolvedStream;
       mat.uniforms.uCleanField.value = resolvedCleanField;
       mat.uniforms.uCorridorKeep.value = corridorKeep;
-      mat.uniforms.uCleanFieldKeep.value = cleanFieldKeep;
-      mat.uniforms.uCleanFieldDotScale.value = cleanFieldDotScale;
+      mat.uniforms.uCleanFieldKeep.value = resolvedCleanFieldKeep;
+      mat.uniforms.uCleanFieldDotScale.value = resolvedCleanFieldDotScale;
       mat.uniforms.uCleanFieldEdge.value = cleanFieldEdge;
       mat.uniforms.uShape.value = SHAPE_TO_INT[shape];
       mat.uniforms.uGlyph.value = GLYPH_TO_INT[glyph];
@@ -925,8 +939,8 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uStream.value = resolvedStream;
     mat.uniforms.uCleanField.value = resolvedCleanField;
     mat.uniforms.uCorridorKeep.value = corridorKeep;
-    mat.uniforms.uCleanFieldKeep.value = cleanFieldKeep;
-    mat.uniforms.uCleanFieldDotScale.value = cleanFieldDotScale;
+    mat.uniforms.uCleanFieldKeep.value = resolvedCleanFieldKeep;
+    mat.uniforms.uCleanFieldDotScale.value = resolvedCleanFieldDotScale;
     mat.uniforms.uCleanFieldEdge.value = cleanFieldEdge;
     mat.uniforms.uShape.value = SHAPE_TO_INT[shape];
     mat.uniforms.uGlyph.value = GLYPH_TO_INT[glyph];

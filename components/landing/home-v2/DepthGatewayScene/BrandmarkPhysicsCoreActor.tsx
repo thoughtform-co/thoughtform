@@ -37,7 +37,12 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { smoothstep, smootherstep } from "@/lib/home-v2/corridorMap";
-import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
+import {
+  SERVICES_MARK_ACCENT,
+  SERVICES_MARK_GOLD,
+  TENSOR_GOLD,
+  TENSOR_ACCENT,
+} from "@/lib/home-v2/goldPalette";
 import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
@@ -123,24 +128,31 @@ const CORE_OPACITY = 0.84;
 const CORE_POINT_SIZE_FLAT = 5.0;
 const CORE_POINT_SIZE_3D = 4.45;
 
-/** Corridor brandmark palette (ADR-023 — unified Tensor gold, 2026-06-25
- *  harmonization follow-up).
+/** Corridor brandmark palette (ADR-023 unified Tensor gold, 2026-06-25 +
+ *  2026-07-06 "one holographic instrument" convergence).
  *
- *  The ENTIRE corridor journey now reads in one continuous Tensor gold:
- *  the 2D rest SVG (`ProjectedBrandmarkActor` paints `BrandmarkGlyph` with
- *  `TENSOR_GOLD`), the matched-pixel particle flight (FLAT palette below),
- *  and the landed in-sphere wireframe + #services hologram + orbits (LANDED
- *  palette) are all `TENSOR_*`. The matched-pixel SVG → particle handoff
- *  stays color-seamless because the SVG fill and the particle FLAT color are
- *  the same Tensor gold; the `vWireCrisp` body/accent lerp (`uColor →
- *  uLandedColor` as uDepth → 1) is now an identity no-op on color (its
- *  crisp / size / stillness effects still apply). This removes the earlier
- *  orange interlude where the rest mark + flight sat on the brand gold
- *  `#caa554` and only shifted to yellow at the very end of the dive. */
+ *  The corridor journey reads in one continuous Tensor gold: the 2D rest SVG
+ *  (`ProjectedBrandmarkActor` paints `BrandmarkGlyph` with `TENSOR_GOLD`),
+ *  the matched-pixel particle flight (FLAT palette below) and the landed
+ *  in-sphere wireframe are all `TENSOR_*` — the matched-pixel SVG → particle
+ *  handoff stays color-seamless because the SVG fill and the particle FLAT
+ *  color are the same Tensor gold.
+ *
+ *  2026-07-06: the LANDED palette is the PARKED #services target — the
+ *  fragment shader lerps `uColor → uLandedColor` on the CLEAN-FIELD clock
+ *  (`uCleanField = recT`, the shrink-into-#services ramp), so the mark
+ *  gradients subtly from the darker Tensor orange to the instrument gold as
+ *  it docks — matching the plates, connectors, chips and armillary. The fed
+ *  value is `SERVICES_MARK_GOLD` (the ALPHA-COMPENSATED lift of the site
+ *  `--gold`): feeding the literal `#caa554` still READ as the old orange,
+ *  because the mark is soft-falloff dots alpha-composited over the void
+ *  (perceived ≈ one shade darker than fed). recT = 0 everywhere before the
+ *  dive keeps the flight and in-sphere wireframe pure Tensor gold
+ *  (byte-identical). */
 const FLAT_WIRE_COLOR = TENSOR_GOLD;
 const FLAT_WIRE_ACCENT = TENSOR_ACCENT;
-const LANDED_WIRE_COLOR = TENSOR_GOLD;
-const LANDED_WIRE_ACCENT = TENSOR_ACCENT;
+const LANDED_WIRE_COLOR = SERVICES_MARK_GOLD;
+const LANDED_WIRE_ACCENT = SERVICES_MARK_ACCENT;
 
 /** PIN the GPGPU sim for the corridor brandmark (2026-06-25 "never warp" fix).
  *  The matched-pixel mark + wireframe target must hold their EXACT shape — the
@@ -295,6 +307,21 @@ const POINTER_LOOK_AMP = 0.12;
  *  sits softer than the 4px corridor stations (≈⅓ their per-dot ink). */
 const CENTER_OPACITY = 1.0;
 
+/** Parked-boost ramp (2026-07-06 "one holographic instrument" pass): the
+ *  centerpiece read "too subtle / too light / too thin" next to the signal
+ *  plates, so the clean-field DENSITY (surviving-particle keep) and DOT WEIGHT
+ *  ramp UP with `recT` as the mark shrinks into its parked #services position —
+ *  the wireframe visibly densifies/boldens as you scroll into the section.
+ *  BASE values equal the BrandmarkPhysicsCore prop defaults, so at recT = 0
+ *  (corridor + in-sphere epilogue) every frame is byte-identical to the
+ *  pre-boost render; only the docked centerpiece changes. Keep stays well
+ *  inside the fixed 6000-particle budget (0.82 ≈ 4900 drawn — no count / sim
+ *  texture change, ADR-023 pitfall respected). */
+const CENTER_FIELD_KEEP_BASE = 0.65;
+const CENTER_FIELD_KEEP_PARKED = 0.82;
+const CENTER_DOT_SCALE_BASE = 0.5;
+const CENTER_DOT_SCALE_PARKED = 0.68;
+
 /** Corridor → services baton-pass (2026-06-24): the centerpiece dome fades OUT
  *  across this short, late dissipate window as the `#services` wireframe forms
  *  in over the same screen region. Gated so `dissipate = 0` in the corridor
@@ -400,6 +427,10 @@ export function BrandmarkPhysicsCoreActor({
   // field (Services centerpiece). Driven from the shrink progress so the
   // mark cleans up exactly as it settles into #services (see shaders).
   const cleanFieldRef = useRef(0);
+  // Parked-boost channels (2026-07-06): keep + dot weight ramp with recT so
+  // the docked centerpiece reads denser/bolder than the in-sphere epilogue.
+  const cleanFieldKeepRef = useRef(CENTER_FIELD_KEEP_BASE);
+  const cleanFieldDotScaleRef = useRef(CENTER_DOT_SCALE_BASE);
   const opacityRef = useRef(0);
   const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
   const pausedRef = useRef(true);
@@ -621,6 +652,13 @@ export function BrandmarkPhysicsCoreActor({
     // Clean up the particle style (uniform size/brightness, crisp dot, no
     // flicker) in lock-step with the shrink — corridor/sphere stays dust.
     cleanFieldRef.current = recT;
+    // Parked boost: densify + bolden the clean field in lock-step with the
+    // shrink-in (recT 0 = corridor/sphere base values, byte-identical; recT 1 =
+    // the docked #services wireframe at its heavier "one instrument" weight).
+    cleanFieldKeepRef.current =
+      CENTER_FIELD_KEEP_BASE + (CENTER_FIELD_KEEP_PARKED - CENTER_FIELD_KEEP_BASE) * recT;
+    cleanFieldDotScaleRef.current =
+      CENTER_DOT_SCALE_BASE + (CENTER_DOT_SCALE_PARKED - CENTER_DOT_SCALE_BASE) * recT;
     glitchRef.current = glitch;
 
     // Corridor → epilogue handoff: the in-canvas core owns the mark
@@ -795,6 +833,8 @@ export function BrandmarkPhysicsCoreActor({
             glitchRef={glitchRef}
             streamRef={streamRef}
             cleanFieldRef={cleanFieldRef}
+            cleanFieldKeepRef={cleanFieldKeepRef}
+            cleanFieldDotScaleRef={cleanFieldDotScaleRef}
             opacityRef={opacityRef}
             pointSizeRef={pointSizeRef}
             color={color}
@@ -831,6 +871,8 @@ interface BrandmarkPhysicsCoreWithGLBProps {
   glitchRef: { readonly current: number };
   streamRef: { readonly current: number };
   cleanFieldRef: { readonly current: number };
+  cleanFieldKeepRef: { readonly current: number };
+  cleanFieldDotScaleRef: { readonly current: number };
   opacityRef: { readonly current: number };
   pointSizeRef: { readonly current: number };
   color: string;
@@ -851,6 +893,8 @@ function BrandmarkPhysicsCoreWithGLB({
   glitchRef,
   streamRef,
   cleanFieldRef,
+  cleanFieldKeepRef,
+  cleanFieldDotScaleRef,
   opacityRef,
   pointSizeRef,
   color,
@@ -993,6 +1037,8 @@ function BrandmarkPhysicsCoreWithGLB({
       glitchRef={glitchRef}
       streamRef={streamRef}
       cleanFieldRef={cleanFieldRef}
+      cleanFieldKeepRef={cleanFieldKeepRef}
+      cleanFieldDotScaleRef={cleanFieldDotScaleRef}
       seedAtHome
       seedFromPositions={seedFromPositions}
       targetHomes={targetHomes}
