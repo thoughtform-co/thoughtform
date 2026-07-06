@@ -29,13 +29,9 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Italic.otf") format("opentype");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
+/* No italic face on purpose: /fonts/PPNeueMontreal-Italic.otf never
+   shipped (the old declaration 404'd whenever italic text fell through)
+   and the brand rule is no italics anywhere — emphasis is upright gold. */
 @font-face {
   font-family: "PT Mono";
   src: url("/fonts/PTMono-Regular.ttf") format("truetype");
