@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { extractV7Text, getV7Content } from "@/lib/v7-parse";
 import { LandingPage } from "@/components/landing/v7";
-import { getCelestialSlots } from "@/lib/celestial/queries";
+import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/services/services.css";
@@ -60,7 +60,7 @@ export default async function Home() {
     corridorMountId: CORRIDOR_MOUNT_ID,
   });
   const corridorText = extractV7Text();
-  const celestialSlots = await getCelestialSlots();
+  const celestialSlots = await getCelestialSlotsCached();
 
   return (
     <LandingPage

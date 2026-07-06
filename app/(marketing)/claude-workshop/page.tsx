@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getClaudeWorkshopContent } from "@/lib/v7-parse";
 import { LandingPage } from "@/components/landing/v7";
-import { getCelestialSlots } from "@/lib/celestial/queries";
+import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import "@/components/landing/v7/landing.css";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function ClaudeWorkshopPage() {
   const { bodyHtml, bodyClass } = getClaudeWorkshopContent();
-  const celestialSlots = await getCelestialSlots();
+  const celestialSlots = await getCelestialSlotsCached();
 
   return <LandingPage bodyHtml={bodyHtml} bodyClass={bodyClass} celestialSlots={celestialSlots} />;
 }

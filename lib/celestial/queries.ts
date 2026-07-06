@@ -1,6 +1,32 @@
+import { unstable_cache } from "next/cache";
+
 import { createServerClient } from "../supabase";
 import type { CelestialConfig, SlotsMap } from "./schema";
 import { SEED_CONFIGS, SEED_SLOT_ASSIGNMENTS } from "./seed-data";
+
+/**
+ * Cache tag for everything that renders from celestial_slots /
+ * celestial_designs. The mutation routes (`/api/celestial/slots`,
+ * `/api/celestial/designs`) call `revalidateTag(CELESTIAL_SLOTS_TAG)`
+ * after a successful write so the prerendered marketing pages pick up
+ * admin edits without a redeploy.
+ */
+export const CELESTIAL_SLOTS_TAG = "celestial-slots";
+
+/**
+ * Cached variant for the marketing pages. Keeps Supabase out of the
+ * visitor request path: the query result lives in the data cache for
+ * up to 5 minutes and is invalidated instantly by the admin mutation
+ * routes via `revalidateTag`. Deliberately NOT segment-level
+ * `export const revalidate` — that would break the
+ * `NEXT_OUTPUT_EXPORT=1` static-export packaging build; in export
+ * mode this simply runs once at build time.
+ */
+export const getCelestialSlotsCached = unstable_cache(
+  () => getCelestialSlots(),
+  ["celestial-slots"],
+  { revalidate: 300, tags: [CELESTIAL_SLOTS_TAG] }
+);
 
 /**
  * Server-side: fetch all active celestial slot assignments with their configs.

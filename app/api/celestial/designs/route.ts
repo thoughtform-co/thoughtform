@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
+import { CELESTIAL_SLOTS_TAG } from "@/lib/celestial/queries";
 import { validateConfig } from "@/lib/celestial/schema";
 
 export async function GET() {
@@ -62,6 +64,8 @@ export async function POST(request: Request) {
         .single();
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      // A design edit changes what any slot pointing at it renders.
+      revalidateTag(CELESTIAL_SLOTS_TAG, "max");
       return NextResponse.json({ design: data });
     }
 
@@ -72,6 +76,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(CELESTIAL_SLOTS_TAG, "max");
     return NextResponse.json({ design: data }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/celestial/designs]", err);
@@ -100,6 +105,7 @@ export async function DELETE(request: Request) {
     const { error } = await supabase.from("celestial_designs").delete().eq("id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(CELESTIAL_SLOTS_TAG, "max");
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[DELETE /api/celestial/designs]", err);

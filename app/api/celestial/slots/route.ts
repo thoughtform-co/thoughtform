@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
+import { CELESTIAL_SLOTS_TAG } from "@/lib/celestial/queries";
 
 export async function GET() {
   try {
@@ -60,6 +62,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(CELESTIAL_SLOTS_TAG, "max");
     return NextResponse.json({ slot: data });
   } catch (err) {
     console.error("[POST /api/celestial/slots]", err);
