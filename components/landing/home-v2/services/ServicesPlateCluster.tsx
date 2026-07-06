@@ -3,7 +3,7 @@
 import { useMemo, useState, useSyncExternalStore, type CSSProperties } from "react";
 
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
-import { ServicePlateCard } from "./ServicePlateCard";
+import { ServicePlateCard, type PlateVariant } from "./ServicePlateCard";
 import { SERVICE_PLATES, type ServicePlateId } from "./servicePlateData";
 
 /**
@@ -224,6 +224,8 @@ export interface ServicesPlateClusterProps {
   onSelectService: (serviceId: ServicePlateId) => void;
   /** Hide the brandmark leader lines (lab scenes without a live mark). */
   showConnectors?: boolean;
+  /** Plate render treatment (ADR-025 Update 8); defaults to glass. */
+  plateVariant?: PlateVariant;
 }
 
 export function ServicesPlateCluster({
@@ -231,6 +233,7 @@ export function ServicesPlateCluster({
   expandedServiceId: controlledExpandedServiceId,
   onSelectService,
   showConnectors = true,
+  plateVariant = "glass",
 }: ServicesPlateClusterProps) {
   const [internalExpandedServiceId, setInternalExpandedServiceId] = useState<ServicePlateId>(
     SERVICE_PLATES[0].id
@@ -275,6 +278,7 @@ export function ServicesPlateCluster({
             state={open ? "open" : "collapsed"}
             onOpen={openService}
             style={getPlateStyle(getPlateLayout(service.id, viewport, open))}
+            variant={plateVariant}
           />
         );
       })}

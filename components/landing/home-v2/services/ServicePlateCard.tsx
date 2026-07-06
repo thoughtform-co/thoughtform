@@ -1,6 +1,18 @@
-import { Fragment, type CSSProperties } from "react";
+"use client";
 
+import { Fragment, useEffect, useRef, type CSSProperties } from "react";
+
+import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
+import { PlateWireOutline } from "./PlateWireOutline";
 import type { ServicePlate } from "./servicePlateData";
+
+/** Plate render treatments (ADR-025 Update 8):
+ *  `glass` — the original C3/S4 look (dark glass seeds, dimmed siblings).
+ *  `wireframe` — seeds re-cut as gold-ink schematics that materialize into
+ *  the same open C3 plate (dotted chamfer outline, whisper-void body, gold
+ *  halftone band, title scramble-decode on open). Styling is keyed off
+ *  `data-variant` in services.css; look-dev switcher at /test/services-prime. */
+export type PlateVariant = "glass" | "wireframe";
 
 /**
  * ServicePlateCard — one "Thoughtform Prime" signal plate with two states
@@ -33,11 +45,61 @@ export interface ServicePlateCardProps {
   onOpen: (id: ServicePlate["id"]) => void;
   /** Inline position vars from the cluster layout (desktop spread). */
   style?: CSSProperties;
+  /** Render treatment; defaults to the original glass look. */
+  variant?: PlateVariant;
 }
 
-export function ServicePlateCard({ service, state, onOpen, style }: ServicePlateCardProps) {
+export function ServicePlateCard({
+  service,
+  state,
+  onOpen,
+  style,
+  variant = "glass",
+}: ServicePlateCardProps) {
   const open = state === "open";
   const revealId = `svc-plate-${service.id}-reveal`;
+
+  // Wireframe materialization: the open C3 title scramble-decodes into place
+  // (the corridor caption grammar, same kernel). A self-terminating rAF loop
+  // lives here because no services-side ticker exists to reuse —
+  // useServicesStageScroll rAFs only on scroll events and the connector
+  // overlay re-renders off store pushes; piggybacking either would blur their
+  // single-writer contracts. The loop is alive only while a job is in flight
+  // (~1s per open). React never clobbers the textContent mutation: the vDOM
+  // text ({service.title}) is constant, so re-renders skip the text node.
+  // SSR/no-JS keeps the real title in markup.
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const scrambleJobsRef = useRef<ScrambleJob[]>([]);
+  const scrambleRafRef = useRef(0);
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el || variant !== "wireframe") return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const stop = () => {
+      if (scrambleRafRef.current) cancelAnimationFrame(scrambleRafRef.current);
+      scrambleRafRef.current = 0;
+      scrambleJobsRef.current.length = 0;
+    };
+    if (!open || reducedMotion) {
+      stop();
+      el.textContent = service.title;
+      return;
+    }
+    // Decode in from blank; +0.18s start lands the first resolved characters
+    // with the __fx--d2 rise so the decode reads as the title coming online.
+    el.textContent = "";
+    queueScramble(scrambleJobsRef.current, el, service.title, performance.now() / 1000 + 0.18);
+    const tick = () => {
+      advanceScrambles(scrambleJobsRef.current, performance.now() / 1000);
+      scrambleRafRef.current = scrambleJobsRef.current.length ? requestAnimationFrame(tick) : 0;
+    };
+    scrambleRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      // Never leave a half-decoded title behind (close / unmount / variant flip).
+      stop();
+      el.textContent = service.title;
+    };
+  }, [open, service.title, variant]);
   // The full-bleed layers center on the pre-centered portrait crop; the seed
   // band is a thin landscape strip, so it picks the face band via the
   // per-photo position (both via CSS vars, WebP with JPG fallback).
@@ -48,7 +110,13 @@ export function ServicePlateCard({ service, state, onOpen, style }: ServicePlate
   } as CSSProperties;
 
   return (
-    <article className="svc-plate" data-state={state} data-service={service.id} style={style}>
+    <article
+      className="svc-plate"
+      data-state={state}
+      data-service={service.id}
+      data-variant={variant}
+      style={style}
+    >
       <div className="svc-plate__sh">
         <div className="svc-plate__bd" style={photoStyle}>
           {/* ── Full-bleed hologram photo (open state) ── */}
@@ -109,7 +177,9 @@ export function ServicePlateCard({ service, state, onOpen, style }: ServicePlate
                 <span className="svc-plate__cap-g">{service.feedStatus}</span>
               </div>
 
-              <h3 className="svc-plate__title svc-plate__fx svc-plate__fx--d2">{service.title}</h3>
+              <h3 ref={titleRef} className="svc-plate__title svc-plate__fx svc-plate__fx--d2">
+                {service.title}
+              </h3>
 
               <p className="svc-plate__lede svc-plate__fx svc-plate__fx--d3">
                 {service.lede.map((seg, i) =>
@@ -144,6 +214,12 @@ export function ServicePlateCard({ service, state, onOpen, style }: ServicePlate
           </div>
         </div>
       </div>
+      {/* Wireframe seed outline — SVG sibling AFTER __sh so the dotted
+          stroke paints above the shell, outside its clip-path (a CSS border
+          would be shaved at the chamfer, ADR-007). Visibility is CSS-owned:
+          seeds show it, the open state fades it out fast and hands off to
+          the rectangular echo frame (::before). */}
+      {variant === "wireframe" && <PlateWireOutline />}
     </article>
   );
 }

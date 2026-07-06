@@ -107,6 +107,7 @@ export function ServicesStage() {
           activeServiceId={activeServiceId}
           expandedServiceId={activeServiceId}
           onSelectService={selectService}
+          plateVariant="wireframe"
         />
       </div>
     </div>

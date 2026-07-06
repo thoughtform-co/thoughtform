@@ -1177,7 +1177,9 @@
   -webkit-backdrop-filter: blur(16px) brightness(1.08);
   backdrop-filter: blur(16px) brightness(1.08);
 }
-/* Scanline overlay — above the photo, below the content (C3 plate). */
+/* Scanline overlay — above the photo, below the content (C3 plate).
+ * Opacity transitions so the wireframe variant's schematic seeds (scanlines
+ * off) fade them back in with the open materialization. */
 .svc-plate__bd::after {
   content: "";
   position: absolute;
@@ -1189,6 +1191,7 @@
     rgba(202, 165, 84, 0.025) 0 1px,
     transparent 1px 3px
   );
+  transition: opacity var(--plate-open) var(--plate-ease);
 }
 /* Content sits above the full-bleed photo layers. */
 .svc-plate__crow,
@@ -1595,6 +1598,132 @@
 }
 .svc-plate__cta--solid .svc-plate__aro {
   color: var(--void);
+}
+
+/* ── Wireframe seeds (data-variant="wireframe", ADR-025 Update 8) ────────
+ * Collapsed seeds re-cut as schematics in the armillary's own ink: no
+ * whole-plate dim, whisper-void body (scene shows through), dotted gold
+ * chamfer outline (SVG — a CSS border would be shaved by the __sh
+ * clip-path, ADR-007), gold-specimen halftone band. The OPEN state gets NO
+ * variant overrides — it materializes into the same C3 glass plate, and the
+ * outline crossfades to the existing rectangular echo frame (::before).
+ * Look-dev switcher: /test/services-prime. */
+
+/* Recession comes from material, not alpha — delete the .55/.85 dim. */
+.svc-plate[data-variant="wireframe"][data-state="collapsed"],
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover,
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within {
+  opacity: 1;
+}
+
+/* Shell ring → near-nothing; SAME 4-stop 168deg structure as the glass
+ * seed so the collapsed→open background interpolation behaves identically. */
+.svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__sh {
+  background: linear-gradient(
+    168deg,
+    rgba(202, 165, 84, 0.1) 0%,
+    rgba(236, 227, 214, 0.03) 45%,
+    rgba(202, 165, 84, 0.03) 70%,
+    rgba(202, 165, 84, 0.09) 100%
+  );
+}
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__sh,
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__sh {
+  background: linear-gradient(
+    168deg,
+    rgba(202, 165, 84, 0.18) 0%,
+    rgba(236, 227, 214, 0.06) 45%,
+    rgba(202, 165, 84, 0.06) 70%,
+    rgba(202, 165, 84, 0.16) 100%
+  );
+}
+
+/* Body → transparent-void whisper. blur(0px), NOT none: `none` doesn't
+ * interpolate to the open state's blur(16px). Hover = pre-materialize
+ * (a whisper of glass returns before the click). */
+.svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__bd {
+  background:
+    linear-gradient(172deg, rgba(236, 227, 214, 0.02) 0%, rgba(236, 227, 214, 0) 50%),
+    rgba(8, 7, 6, 0.18);
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+}
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__bd,
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__bd {
+  background:
+    linear-gradient(172deg, rgba(236, 227, 214, 0.03) 0%, rgba(236, 227, 214, 0) 50%),
+    rgba(8, 7, 6, 0.34);
+}
+
+/* Scanlines are a glass artifact — off while the seed is schematic. */
+.svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__bd::after {
+  opacity: 0;
+}
+
+/* Seed title recedes into the diagram layer. */
+.svc-plate[data-variant="wireframe"] .svc-plate__seed-title {
+  color: var(--dawn-60, rgba(236, 227, 214, 0.6));
+}
+
+/* Halftone band → gold specimen: the 4px photo dots re-grade toward the
+ * mark's particle ink; the strip stops reading as "photo behind glass". */
+.svc-plate[data-variant="wireframe"] .svc-plate__band {
+  background: transparent;
+}
+.svc-plate[data-variant="wireframe"] .svc-plate__band-im {
+  opacity: 0.2;
+  filter: grayscale(1) sepia(1) hue-rotate(-8deg) saturate(2.2) brightness(0.66) contrast(1.2);
+}
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__band-im,
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__band-im {
+  opacity: 0.4;
+}
+.svc-plate[data-variant="wireframe"] .svc-plate__band-scrim {
+  background: none;
+}
+
+/* ── Wire outline (PlateWireOutline SVG) ── */
+/* Timing contract (crossfade handoff): open fades the outline out FAST
+ * (0.14s, within the state-change grammar) and the existing rectangular
+ * echo frame fades in at its existing 0.22s delay — the gap is the breath
+ * while the shell/photo materialize. Close reverses: the echo drops over
+ * --plate-close and the outline returns only AFTER the chamfer has landed
+ * back at 16px (0.26s delay ≈ --plate-close), so the SVG never has to
+ * track the 16→26px chamfer morph. */
+.svc-plate__wire {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.16s var(--plate-ease) 0.26s;
+}
+.svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__wire {
+  opacity: 1;
+}
+.svc-plate[data-state="open"] .svc-plate__wire {
+  opacity: 0;
+  transition: opacity 0.14s var(--plate-ease);
+}
+.svc-plate__wire-line {
+  fill: none;
+  stroke: var(--gold);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+  stroke-dasharray: 3 7; /* scan-connector grammar */
+  vector-effect: non-scaling-stroke;
+  transition: stroke-opacity 0.12s var(--plate-ease);
+}
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__wire-line,
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__wire-line {
+  stroke-opacity: 0.6;
+}
+.svc-plate__wire-tick {
+  fill: var(--gold);
+  fill-opacity: 0.5;
 }
 
 /* ── Reduced motion: states switch instantly, still correct (SPEC §4) ── */

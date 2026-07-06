@@ -75,6 +75,35 @@
   color: rgba(236, 227, 214, 0.4);
 }
 
+/* Variant switcher — wireframe (schematic seeds) vs glass (regression ref). */
+.svc-prime-lab__variant {
+  display: inline-flex;
+  gap: 0;
+  margin-top: 10px;
+  border: 1px solid rgba(236, 227, 214, 0.2);
+}
+.svc-prime-lab__variant button {
+  padding: 5px 14px;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.45);
+  cursor: pointer;
+  transition:
+    color 0.12s ease-out,
+    background 0.12s ease-out;
+}
+.svc-prime-lab__variant button + button {
+  border-left: 1px solid rgba(236, 227, 214, 0.2);
+}
+.svc-prime-lab__variant button[data-on] {
+  color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.08);
+}
+
 /* On narrow viewports the cluster restacks in flow — give it room. */
 @media (max-width: 960px) {
   .svc-prime-lab {

@@ -16,14 +16,20 @@
 
 import { useState } from "react";
 
+import type { PlateVariant } from "@/components/landing/home-v2/services/ServicePlateCard";
 import { ServicesPlateCluster } from "@/components/landing/home-v2/services/ServicesPlateCluster";
 import type { ServicePlateId } from "@/components/landing/home-v2/services/servicePlateData";
 
 import "@/components/landing/home-v2/services/services.css";
 import "./services-prime.css";
 
+const VARIANTS: readonly PlateVariant[] = ["wireframe", "glass"];
+
 export default function ServicesPrimeLabPage() {
   const [activeServiceId, setActiveServiceId] = useState<ServicePlateId>("keynote");
+  // Look-dev toggle (ADR-025 Update 8): wireframe = the schematic seeds;
+  // glass = the original look, kept as the pixel-regression reference.
+  const [variant, setVariant] = useState<PlateVariant>("wireframe");
 
   return (
     <main className="svc-prime-lab">
@@ -113,12 +119,25 @@ export default function ServicesPrimeLabPage() {
         <p className="svc-prime-lab__title">
           Services · Signal plates <span>· collapse cluster · click a seed to open</span>
         </p>
+        <div className="svc-prime-lab__variant" role="group" aria-label="Plate variant">
+          {VARIANTS.map((v) => (
+            <button
+              key={v}
+              type="button"
+              data-on={variant === v || undefined}
+              onClick={() => setVariant(v)}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
       </header>
 
       <ServicesPlateCluster
         activeServiceId={activeServiceId}
         onSelectService={setActiveServiceId}
         showConnectors={false}
+        plateVariant={variant}
       />
     </main>
   );
