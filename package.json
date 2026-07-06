@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "predev": "node scripts/kill-port.mjs 3003",
-    "dev": "next dev --webpack -p 3003",
+    "dev": "next dev -p 3003",
     "build": "next build --webpack",
     "prestart": "node scripts/kill-port.mjs 3003",
     "start": "next start -p 3003",
