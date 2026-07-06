@@ -1,0 +1,85 @@
+/* ═══════════════════════════════════════════════════════════════════
+   /test/services-prime — scene chrome for the signal-plate collapse lab.
+   The plate/cluster styles come from services.css (single source of
+   truth); this file only paints the faux environment the glass needs
+   (void + stars + gold atmosphere + stand-in mark).
+   ═══════════════════════════════════════════════════════════════════ */
+
+.svc-prime-lab {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 760px;
+  background: #050403;
+  overflow: hidden;
+}
+
+.svc-prime-lab__stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(236, 227, 214, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 34% 68%, rgba(236, 227, 214, 0.32) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 58% 14%, rgba(236, 227, 214, 0.38) 50%, transparent 51%),
+    radial-gradient(1px 1px at 79% 45%, rgba(236, 227, 214, 0.46) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 45% 88%, rgba(202, 165, 84, 0.32) 50%, transparent 51%),
+    radial-gradient(1px 1px at 68% 33%, rgba(236, 227, 214, 0.24) 50%, transparent 51%);
+  background-size:
+    520px 420px,
+    460px 380px,
+    610px 500px,
+    550px 470px,
+    700px 560px,
+    640px 520px;
+}
+
+.svc-prime-lab__aur {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 920px;
+  height: 820px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(202, 165, 84, 0.1), transparent 70%);
+}
+
+.svc-prime-lab__mark {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 820px;
+  height: 820px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.svc-prime-lab__head {
+  position: absolute;
+  left: 50%;
+  top: 28px;
+  transform: translateX(-50%);
+  z-index: 5;
+  text-align: center;
+}
+.svc-prime-lab__title {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ece3d6;
+}
+.svc-prime-lab__title span {
+  color: rgba(236, 227, 214, 0.4);
+}
+
+/* On narrow viewports the cluster restacks in flow — give it room. */
+@media (max-width: 960px) {
+  .svc-prime-lab {
+    height: auto;
+    min-height: 100vh;
+    padding: 84px 22px 48px;
+  }
+}

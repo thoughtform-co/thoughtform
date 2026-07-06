@@ -1,20 +1,27 @@
 /* ═══════════════════════════════════════════════════════════════════════
- * services.css — Services station (#services) celestial-map stage
+ * services.css — Services station (#services) signal-plate cluster
  * ═══════════════════════════════════════════════════════════════════════
  *
- * Scope (2026-06-22 redesign — replaces the Jasmina-style
- * list · brandmark · paragraph stage with a retrofuturistic orrery):
+ * Scope (2026-07-06 collapse redesign — "Thoughtform Prime" signal plates
+ * SPREAD around the parked brandmark, one open at a time):
  *
- *   A `position: sticky` stage pins across a tall runway
- *   (`.services-stage-root`, ~3×100vh). The brandmark particle core parks
- *   at center as the "sun"; `ServicesOrbitMap` draws one tilted orbit per
- *   service around it (nodes drifted by `useOrbitDrift`); one
- *   `ServiceCelestialCard` is revealed at a time, anchored lower-right.
+ *   A `position: sticky` stage pins across a 3×100vh runway
+ *   (`.services-stage-root`) and holds `.services-plate-cluster`: three
+ *   signal plates anchored at fixed corners around the centered brandmark
+ *   (Keynote top-left, Workshop bottom-left, Embedded top-right). The scroll
+ *   step owns which plate is OPEN; the others are collapsed SEEDS. Dotted
+ *   connector leaders link the live mark's scan anchors to each plate
+ *   (`.services-scan-connector*`, reused). The collapse mechanic + plate
+ *   styles live in the scoped block at the BOTTOM of this file; copy +
+ *   assets come from `servicePlateData.ts`. Entrance rides
+ *   `--svc-content-in`.
  *
- *   `useServicesStageScroll` maps runway scroll to a discrete
- *   `data-active-step` (0..2) on `.services-stage`; CSS below reveals the
- *   matching card and lights up the matching orbit/node. The particle sun
- *   itself stays constant.
+ *   The docked corridor 3D brandmark stays as the AMBIENT centerpiece the
+ *   plates target (unchanged — the corridor-exit dissipate dock is
+ *   independent of this runway height). The old orrery layers
+ *   (`.services-orbit-map`, `.services-stage__brandmark`, the
+ *   `ServiceScanInterface` / `ServiceCelestialCard` / `ServicesCardStack`
+ *   readouts) are no longer rendered; their rules below are inert history.
  *
  * Mount points (in `public/prototypes/v7/landing-v7-motion.html`):
  *   #services  (section shell + .station__idx corner chrome only)
@@ -22,9 +29,7 @@
  *       — React portal: ServicesStage
  *           .services-stage (sticky)
  *             .services-stage__items (relative, full-size layer host)
- *               .services-stage__brandmark   (center sun footprint / 2D fallback)
- *               .services-orbit-map           (SVG orrery overlay)
- *               .services-cards               (HUD readouts, one per step)
+ *               .services-plate-cluster (three plates, spread / stacked)
  *
  * Compositing (ADR-008 / ADR-021): the stage is intentionally
  * `background: transparent` so the corridor-exit ambient interior-sphere
@@ -60,6 +65,11 @@
 .services-stage-root {
   position: relative;
   z-index: 2;
+  /* Runway the sticky stage pins within — one viewport-tall scroll segment per
+   * service (3 steps): the scroll position owns which signal plate is OPEN
+   * (useServicesStageScroll step → expanded card in ServicesPlateCluster).
+   * The corridor-exit dissipate clock keys off #services's TOP + a fixed span
+   * (useCorridorExitScroll), NOT this height. */
   min-height: 300svh;
 }
 
@@ -976,5 +986,637 @@
     max-height: none;
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * Signal plates — collapse cluster (2026-07-06, collapse handoff §1–6 +
+ * the Collapse States canvas).
+ * Three "Thoughtform Prime" plates spread around the parked brandmark
+ * (ServicesPlateCluster): exactly one OPEN, the others collapsed SEEDS.
+ *   · SEED = S4 "signal chit" (canvas metrics): 16px chamfer, ghost chip +
+ *     dim status, seed title, 46px dot-matrix feed band ("Standby").
+ *   · OPEN = the ORIGINAL full-bleed C3 signal plate: photo covers the whole
+ *     card (dots + soft hologram + C3 scrim, resolves on hover), gold chip,
+ *     status appends "· Open", photo window → feed caption → title → lede →
+ *     includes → CTA.
+ *   · Morph: two grid regions trade heights (seed 1fr→0fr, reveal 0fr→1fr)
+ *     while width, chamfer (--ch), padding, shell/body light, and the
+ *     full-bleed photo transition with them. Ghost → gold: gold belongs to
+ *     the open card only. Open .52s, close .30s, ease-out, no overshoot.
+ * Positions come from ServicesPlateCluster as inline `--plate-*` vars
+ * (desktop ≥961px); below that the cluster restacks single-column (bottom
+ * media block). Entrance rides `--svc-content-in`.
+ * ═══════════════════════════════════════════════════════════════════════ */
+.services-plate-cluster {
+  /* Self-contained plate palette (matches the handoff; --gold/--dawn also
+   * match the site tokens, redeclared locally so the plates need no external
+   * steps). */
+  --void: #050403;
+  --dawn: #ece3d6;
+  --gold: #caa554;
+  --dawn-80: rgba(236, 227, 214, 0.8);
+  --dawn-70: rgba(236, 227, 214, 0.7);
+  --dawn-50: rgba(236, 227, 214, 0.5);
+  --dawn-40: rgba(236, 227, 214, 0.4);
+  --dawn-30: rgba(236, 227, 214, 0.3);
+  --dawn-04: rgba(236, 227, 214, 0.04);
+  --gold-40: rgba(202, 165, 84, 0.4);
+  --gold-05: rgba(202, 165, 84, 0.05);
+  --mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --sans: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  /* Collapse timing (SPEC §4): open is the feature, close gets out of the way. */
+  --plate-open: 0.52s;
+  --plate-close: 0.3s;
+  --plate-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: var(--svc-content-in, 1);
+}
+.services-plate-cluster *,
+.services-plate-cluster *::before,
+.services-plate-cluster *::after {
+  box-sizing: border-box;
+  border-radius: 0;
+}
+.services-plate-cluster a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Plate root — anchored corner position, width morphs on open ────── */
+.svc-plate {
+  position: absolute;
+  left: var(--plate-left, auto);
+  right: var(--plate-right, auto);
+  top: var(--plate-top, auto);
+  bottom: var(--plate-bottom, auto);
+  width: var(--plate-width, 100%);
+  /* Seed chamfer; the open state lifts it to the C3 plate's 26px. */
+  --ch: 16px;
+  pointer-events: auto;
+  transition:
+    width var(--plate-close) var(--plate-ease),
+    opacity var(--plate-close) var(--plate-ease);
+}
+.svc-plate[data-state="open"] {
+  z-index: 4;
+  --ch: 26px;
+  transition:
+    width var(--plate-open) var(--plate-ease),
+    opacity var(--plate-open) var(--plate-ease);
+}
+/* Siblings dim while one is open (there is always exactly one open). */
+.svc-plate[data-state="collapsed"] {
+  opacity: 0.55;
+  cursor: pointer;
+}
+.svc-plate[data-state="collapsed"]:hover,
+.svc-plate[data-state="collapsed"]:focus-within {
+  opacity: 0.85;
+}
+
+/* ── Chamfered gradient shell + glass body ──────────────────────────── */
+.svc-plate__sh {
+  padding: 1px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ch)) 0,
+    100% var(--ch),
+    100% 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch))
+  );
+  /* Seed shell — quiet ghost gradient (canvas S4). */
+  background: linear-gradient(
+    168deg,
+    rgba(236, 227, 214, 0.32) 0%,
+    rgba(236, 227, 214, 0.1) 50%,
+    rgba(202, 165, 84, 0.18) 100%
+  );
+  transition:
+    background var(--plate-open) var(--plate-ease),
+    clip-path var(--plate-open) var(--plate-ease);
+}
+.svc-plate[data-state="collapsed"]:hover .svc-plate__sh {
+  background: linear-gradient(
+    168deg,
+    rgba(236, 227, 214, 0.5) 0%,
+    rgba(236, 227, 214, 0.16) 50%,
+    rgba(202, 165, 84, 0.34) 100%
+  );
+}
+.svc-plate[data-state="open"] .svc-plate__sh {
+  background: linear-gradient(
+    168deg,
+    rgba(236, 227, 214, 0.44) 0%,
+    rgba(236, 227, 214, 0.14) 36%,
+    rgba(236, 227, 214, 0.08) 64%,
+    rgba(202, 165, 84, 0.3) 100%
+  );
+}
+.svc-plate__bd {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 14px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - (var(--ch) - 0.6px)) 0,
+    100% calc(var(--ch) - 0.6px),
+    100% 100%,
+    calc(var(--ch) - 0.6px) 100%,
+    0 calc(100% - (var(--ch) - 0.6px))
+  );
+  /* Seed body (canvas .seed .bd). */
+  background:
+    linear-gradient(172deg, rgba(236, 227, 214, 0.05) 0%, rgba(236, 227, 214, 0) 50%),
+    rgba(8, 7, 6, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition:
+    padding var(--plate-open) var(--plate-ease),
+    background var(--plate-open) var(--plate-ease),
+    clip-path var(--plate-open) var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__bd {
+  padding: 22px 26px 20px;
+  /* The original C3 glass body. */
+  background:
+    linear-gradient(
+      174deg,
+      rgba(236, 227, 214, 0.09) 0%,
+      rgba(236, 227, 214, 0.03) 26%,
+      rgba(236, 227, 214, 0) 60%
+    ),
+    radial-gradient(130% 70% at 84% -8%, rgba(202, 165, 84, 0.11), transparent 56%),
+    rgba(8, 7, 6, 0.78);
+  -webkit-backdrop-filter: blur(14px) brightness(1.08);
+  backdrop-filter: blur(14px) brightness(1.08);
+}
+/* Scanline overlay — above the photo, below the content (C3 plate). */
+.svc-plate__bd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(236, 227, 214, 0.02) 0 1px,
+    transparent 1px 3px
+  );
+}
+/* Content sits above the full-bleed photo layers. */
+.svc-plate__crow,
+.svc-plate__seed,
+.svc-plate__reveal {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Full-bleed hologram photo (the open card IS the photo) ─────────── */
+.svc-plate__pbg,
+.svc-plate__pgrade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.svc-plate__pbg {
+  background-image: var(--photo-jpg);
+  background-image: -webkit-image-set(
+    var(--photo-webp) type("image/webp"),
+    var(--photo-jpg) type("image/jpeg")
+  );
+  background-image: image-set(
+    var(--photo-webp) type("image/webp"),
+    var(--photo-jpg) type("image/jpeg")
+  );
+  background-size: cover;
+  /* The asset is the subject-centered portrait card crop — center IS the
+   * subject for the full-bleed plate (the seed band picks its own slice). */
+  background-position: center;
+  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
+  opacity: 0;
+  transition: opacity 0.5s var(--plate-ease);
+}
+/* Feed resolves shortly after the shell starts growing (canvas SEQ step 2). */
+.svc-plate[data-state="open"] .svc-plate__pbg--dots {
+  opacity: 0.34;
+  transition-delay: 0.12s;
+}
+.svc-plate[data-state="open"] .svc-plate__pbg--soft {
+  opacity: 0.08;
+  transition-delay: 0.12s;
+}
+.svc-plate__pbg--dots {
+  -webkit-mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  -webkit-mask-size: 4px 4px;
+  mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  mask-size: 4px 4px;
+}
+/* Hologram resolves on hover of the OPEN card (original C3 values). */
+.svc-plate[data-state="open"]:hover .svc-plate__pbg--dots {
+  opacity: 0.16;
+  transition-delay: 0s;
+}
+.svc-plate[data-state="open"]:hover .svc-plate__pbg--soft {
+  opacity: 0.48;
+  transition-delay: 0s;
+}
+/* C3 scrim — photo leads at top, darkens to solid ground for the copy. */
+.svc-plate__pgrade {
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 7, 6, 0.78) 0%,
+    rgba(8, 7, 6, 0.3) 14%,
+    rgba(8, 7, 6, 0.14) 36%,
+    rgba(8, 7, 6, 0.62) 52%,
+    rgba(9, 8, 7, 0.97) 66%
+  );
+  opacity: 0;
+  transition: opacity 0.4s var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__pgrade {
+  opacity: 1;
+}
+
+/* ── Invariant anchor: the chip row ─────────────────────────────────── */
+.svc-plate__crow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* The seed's whole plate is one hit area: a stretched button (SPEC §5
+ * accessibility) whose ::after covers the body. It stands down when open so
+ * the CTA and feed hover behave normally. */
+.svc-plate__hit {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.svc-plate__hit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.svc-plate__hit:focus-visible {
+  outline: 1px solid rgba(202, 165, 84, 0.9);
+  outline-offset: 3px;
+}
+.svc-plate[data-state="open"] .svc-plate__hit {
+  pointer-events: none;
+  cursor: default;
+}
+.svc-plate[data-state="open"] .svc-plate__hit::after {
+  display: none;
+}
+/* Ghost chip (canvas .chip-g) → gold on open. */
+.svc-plate__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 22px;
+  padding: 0 12px;
+  border: 1px solid rgba(236, 227, 214, 0.25);
+  background: rgba(236, 227, 214, 0.05);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--dawn-80);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    background var(--plate-open) var(--plate-ease),
+    color var(--plate-open) var(--plate-ease),
+    border-color var(--plate-open) var(--plate-ease);
+}
+.svc-plate__dia {
+  width: 3px;
+  height: 3px;
+  background: var(--gold-40);
+  transform: rotate(45deg);
+  flex: none;
+  transition:
+    background var(--plate-open) var(--plate-ease),
+    width var(--plate-open) var(--plate-ease),
+    height var(--plate-open) var(--plate-ease);
+}
+.svc-plate[data-state="collapsed"]:hover .svc-plate__chip {
+  border-color: rgba(236, 227, 214, 0.45);
+  color: var(--dawn);
+}
+.svc-plate[data-state="collapsed"]:hover .svc-plate__dia {
+  background: var(--gold);
+}
+.svc-plate[data-state="open"] .svc-plate__chip {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--void);
+}
+.svc-plate[data-state="open"] .svc-plate__dia {
+  width: 4px;
+  height: 4px;
+  background: var(--void);
+}
+/* Status code — dim on the seed (canvas .cd), full C3 voice when open. */
+.svc-plate__st {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: rgba(202, 165, 84, 0.55);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color var(--plate-open) var(--plate-ease),
+    font-size var(--plate-open) var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__st {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  color: rgba(202, 165, 84, 0.8);
+}
+
+/* ── Seed body (S4) — title + feed band, collapses on open ──────────── */
+.svc-plate__seed {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--plate-close) var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__seed {
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--plate-open) var(--plate-ease);
+}
+.svc-plate__seed-inner {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 1;
+  transition: opacity var(--plate-close) var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__seed-inner {
+  opacity: 0;
+  transition: opacity 0.18s linear;
+}
+.svc-plate__seed-title {
+  margin-top: 11px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  line-height: 1.4;
+}
+.svc-plate__band {
+  position: relative;
+  height: 46px;
+  margin-top: 12px;
+  background: #060504;
+  overflow: hidden;
+}
+.svc-plate__band-im {
+  position: absolute;
+  inset: 0;
+  background-image: var(--photo-jpg);
+  background-image: -webkit-image-set(
+    var(--photo-webp) type("image/webp"),
+    var(--photo-jpg) type("image/jpeg")
+  );
+  background-image: image-set(
+    var(--photo-webp) type("image/webp"),
+    var(--photo-jpg) type("image/jpeg")
+  );
+  background-size: cover;
+  background-position: var(--photo-pos, center);
+  opacity: 0.3;
+  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
+  -webkit-mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  -webkit-mask-size: 4px 4px;
+  mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  mask-size: 4px 4px;
+  transition: opacity 0.4s var(--plate-ease);
+}
+.svc-plate[data-state="collapsed"]:hover .svc-plate__band-im {
+  opacity: 0.58;
+}
+.svc-plate__band-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(6, 5, 4, 0.72), transparent 62%);
+}
+/* Band caption (canvas .cp — 7px, tucked into the strip). */
+.svc-plate__cap {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+.svc-plate__cap-g {
+  color: rgba(202, 165, 84, 0.7);
+}
+
+/* ── Open body (C3) — grid-rows 0fr→1fr reveals, never scales ───────── */
+.svc-plate__reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--plate-close) var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__reveal {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--plate-open) var(--plate-ease);
+}
+.svc-plate__reveal-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+/* Content inside the reveal fades + rises, staggered top-to-bottom
+ * (canvas SEQ: text stacks rise in small steps, CTA lands last). */
+.svc-plate__fx {
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--plate-close) var(--plate-ease),
+    transform var(--plate-close) var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__fx {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.34s var(--plate-ease),
+    transform 0.34s var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__fx--d1 {
+  transition-delay: 0.14s;
+}
+.svc-plate[data-state="open"] .svc-plate__fx--d2 {
+  transition-delay: 0.18s;
+}
+.svc-plate[data-state="open"] .svc-plate__fx--d3 {
+  transition-delay: 0.22s;
+}
+.svc-plate[data-state="open"] .svc-plate__fx--d4 {
+  transition-delay: 0.26s;
+}
+.svc-plate[data-state="open"] .svc-plate__fx--d5 {
+  transition-delay: 0.3s;
+}
+
+/* The open window onto the full-bleed photo. Sized so the open plate lands
+ * near the C3 original's 680px on tall viewports and shrinks with the
+ * viewport so the top-anchored card never runs off the stage. */
+.svc-plate__pspace {
+  height: clamp(200px, calc(100svh - 500px), 360px);
+}
+/* Feed caption under the photo window (C3 .pcap voice). */
+.svc-plate__pcap {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+.svc-plate__pcap .svc-plate__cap-g {
+  color: rgba(202, 165, 84, 0.85);
+}
+.svc-plate__title {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  line-height: 1.3;
+}
+.svc-plate__lede {
+  margin-top: 10px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--dawn-70);
+  letter-spacing: 0.01em;
+}
+/* No-italics brand rule: emphasis = UPRIGHT gold, not italic. */
+.svc-plate__lede em {
+  font-style: normal;
+  color: var(--gold);
+}
+.svc-plate__inc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  line-height: 1.7;
+}
+.svc-plate__inc b {
+  color: var(--gold);
+  font-weight: 400;
+}
+.svc-plate__cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  margin-top: 18px;
+  padding: 0 14px;
+  border: 1px solid var(--dawn-30);
+  background: var(--dawn-04);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  color: var(--dawn);
+  text-transform: uppercase;
+  transition:
+    background 0.3s var(--plate-ease),
+    border-color 0.3s var(--plate-ease),
+    color 0.3s var(--plate-ease);
+}
+.svc-plate__aro {
+  color: var(--gold);
+  font-weight: 400;
+}
+.svc-plate[data-state="open"]:hover .svc-plate__cta:not(.svc-plate__cta--solid) {
+  border-color: var(--gold-40);
+  color: var(--gold);
+  background: var(--gold-05);
+}
+.svc-plate__cta--solid {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--void);
+}
+.svc-plate__cta--solid .svc-plate__aro {
+  color: var(--void);
+}
+
+/* ── Reduced motion: states switch instantly, still correct (SPEC §4) ── */
+@media (prefers-reduced-motion: reduce) {
+  .services-plate-cluster *,
+  .services-plate-cluster *::before,
+  .services-plate-cluster *::after {
+    transition-duration: 0.001s !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* ── Mobile / reduced motion — single-column stacked accordion ──────── */
+/* The cluster layout returns no `--plate-*` vars below 961px, so the plates
+ * fall back to width:100% here and restack in flow (SPEC §6: open card
+ * full-width, seeds as band-less bars, same open/close mechanic — a tap
+ * opens via the same seed button; ServicesStage sets the state directly on
+ * the inert path). */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .services-plate-cluster {
+    position: relative;
+    inset: auto;
+    display: grid;
+    gap: 14px;
+    pointer-events: auto;
+  }
+  .svc-plate {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: 100%;
+  }
+  .svc-plate__band {
+    display: none;
+  }
+  /* Keep the open plate's photo window in reach of small screens. */
+  .svc-plate__pspace {
+    height: clamp(160px, 38vh, 300px);
+  }
+  .services-plate-cluster .services-scan-connectors {
+    display: none;
   }
 }

@@ -4,14 +4,9 @@ import { Canvas } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { SERVICE_ORBITS } from "./celestialData";
-import { ServicesCardStack } from "./ServicesCardStack";
-import { ServicesBrandmarkField } from "./ServicesBrandmarkField";
 import { ServicesHologramScene } from "./hologram";
-import { ServicesOrbitMap } from "./ServicesOrbitMap";
-import { ServiceScanInterface } from "./ServiceScanInterface";
+import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { SERVICES, type ServiceId } from "./serviceData";
-import { useOrbitDrift } from "../hooks/useOrbitDrift";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
@@ -33,15 +28,14 @@ import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
  */
 export function ServicesStage() {
   const stageRef = useRef<HTMLDivElement>(null);
-  const itemsRef = useRef<HTMLDivElement>(null);
   const [activeServiceId, setActiveServiceId] = useState<ServiceId>(SERVICES[0].id);
   const useHologramCanvas = useMediaQuery(
     "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
   );
 
   // Bridge the active service to the unified corridor instrument (the armillary
-  // now lives in the corridor canvas) so the active orbit ring still highlights
-  // from the DOM scan UI. Harmless when the flag is off. Clear on unmount.
+  // lives in the corridor canvas) so the active orbit ring still highlights in
+  // the ambient backdrop behind the plates. Harmless when the flag is off.
   const setActiveServiceIdStore = useHologramConnectors((s) => s.setActiveServiceId);
   useEffect(() => {
     setActiveServiceIdStore(activeServiceId);
@@ -50,24 +44,33 @@ export function ServicesStage() {
 
   // When the corridor supplies the unified instrument (desktop, flag on), the
   // section does NOT mount its own hologram canvas — the persistent corridor
-  // brandmark + CorridorArmillary ARE the centerpiece (one object, no crossfade).
-  // Mobile / reduced-motion (useHologramCanvas false) and flag-off keep the
-  // standalone canvas + DOM/SVG fallback.
+  // brandmark + CorridorArmillary ARE the ambient backdrop the signal plates
+  // sit on. Only the flag-off / lab path mounts the standalone canvas.
   const showServicesCanvas = useHologramCanvas && !UNIFIED_SERVICES_ARMILLARY;
 
   const setActiveByStep = useCallback((step: number) => {
     setActiveServiceId(SERVICES[step]?.id ?? SERVICES[0].id);
   }, []);
 
-  // Click-to-scroll: scroll owns the active step (the scroll hook maps runway
-  // progress → step), so a chip click navigates the PAGE to the middle of that
-  // service's scroll segment instead of forcing local state that the next
-  // scroll tick would overwrite.
+  // Click-to-scroll (proven ServiceScanInterface behavior): scroll owns the
+  // open plate (the scroll hook maps runway progress → step), so a seed click
+  // navigates the PAGE to the middle of that service's scroll segment instead
+  // of forcing local state that the next scroll tick would overwrite. When the
+  // runway has no travel (mobile / reduced-motion — the CSS drops the pin),
+  // fall back to setting the state directly so taps still open seeds.
   const selectService = useCallback((serviceId: ServiceId) => {
     const index = SERVICES.findIndex((service) => service.id === serviceId);
     if (index < 0) return;
+    // Inert layouts (mobile / reduced motion): the stage is a static stacked
+    // accordion and the scroll hook parks the step, so a tap must set the open
+    // plate directly — scrolling would do nothing (and the stacked content can
+    // still give the runway rect > 100vh, so the travel check alone is not a
+    // reliable gate; mirror useServicesStageScroll's isInert()).
+    const inert =
+      (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
+      (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
     const runway = stageRef.current?.parentElement; // .services-stage-root
-    if (!runway) {
+    if (inert || !runway) {
       setActiveServiceId(serviceId);
       return;
     }
@@ -82,12 +85,14 @@ export function ServicesStage() {
     window.scrollTo({ top: targetY, behavior: "smooth" });
   }, []);
 
+  // Reads the corridor-exit dissipate → publishes `--svc-content-in` (cluster
+  // entrance) + `--svc-arrive` on the stage, and maps the runway scroll to
+  // `data-active-step` — the step that owns which plate is open.
   useServicesStageScroll(stageRef, setActiveByStep);
-  useOrbitDrift(stageRef, SERVICE_ORBITS);
 
   return (
     <div className="services-stage" ref={stageRef} data-active-step="0">
-      <div className="services-stage__items" ref={itemsRef}>
+      <div className="services-stage__items">
         {showServicesCanvas ? (
           <div className="services-hologram" aria-hidden="true">
             <Canvas
@@ -109,13 +114,6 @@ export function ServicesStage() {
                 opacity={0.74}
                 pointSize={4.3}
                 publishAnchors
-                // Frontal rest pose (ADR-023/025 2026-06-25 harmonization):
-                // the corridor in-sphere brandmark is head-on (its sword is
-                // aligned to the substrate sphere's vertical gimbal orbit), so
-                // the production Services wireframe drops its 3/4 rest tilt to
-                // match — the corridor → Services handoff has no rotation pop.
-                // Pointer-look (default 0.12) stays, so the mark is still
-                // explorable head-on. The lab keeps the 3/4 default pose.
                 restTiltX={0}
                 restTiltY={0}
                 scale={0.72}
@@ -138,22 +136,11 @@ export function ServicesStage() {
           </div>
         ) : null}
 
-        <ServicesBrandmarkField />
-        <ServicesOrbitMap />
-
-        {useHologramCanvas ? (
-          // Desktop: spread CV-scan callouts around the parked brandmark.
-          // Expansion is scroll-owned — the active step's card is the expanded
-          // one; chip clicks scroll the page to that step (selectService).
-          <ServiceScanInterface
-            activeServiceId={activeServiceId}
-            expandedServiceId={activeServiceId}
-            onSelectService={selectService}
-          />
-        ) : (
-          // Mobile / reduced-motion: static stack, every card expanded.
-          <ServicesCardStack activeServiceId={activeServiceId} onSelectService={selectService} />
-        )}
+        <ServicesPlateCluster
+          activeServiceId={activeServiceId}
+          expandedServiceId={activeServiceId}
+          onSelectService={selectService}
+        />
       </div>
     </div>
   );
