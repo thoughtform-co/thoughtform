@@ -166,3 +166,41 @@ export function reportMissingProductionEnv(): void {
 export function isPublicEnvKey(key: string): boolean {
   return key.startsWith(PUBLIC_KEY_PREFIX);
 }
+
+/**
+ * Dev-boot env doctor — the loud counterpart to the silent runtime
+ * fallbacks. Production keeps degrading gracefully (seed celestial
+ * slots, DEFAULT_CONFIG particles); in dev that same grace made a
+ * broken `.env.local` look like "the site renders different content
+ * on localhost than on Vercel" with only a buried console.warn as
+ * evidence. This prints an unmissable console.error once per server
+ * boot instead.
+ *
+ * Called from `instrumentation.ts` alongside
+ * `reportMissingProductionEnv()`.
+ */
+export function reportDevEnvHealth(): void {
+  if (process.env.NODE_ENV !== "development") return;
+
+  const critical: EnvKey[] = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
+  const missing = critical.filter((key) => !optionalServerEnv(key));
+  if (missing.length > 0) {
+    console.error(
+      `\n[env-doctor] Missing in .env.local: ${missing.join(", ")}\n` +
+        `  Supabase is DISABLED — celestial connectors render SEED data and\n` +
+        `  particle config falls back to DEFAULT_CONFIG, so localhost will NOT\n` +
+        `  match production. Copy .env.example -> .env.local and fill values.\n`
+    );
+  }
+
+  // The landing SSR reads celestial slots through the service-role
+  // client (`createServerClient`); without this key it silently
+  // returns null and the page renders seed connectors even when the
+  // anon key works. Surface that as its own line.
+  if (!optionalServerEnv("SUPABASE_SERVICE_ROLE_KEY")) {
+    console.error(
+      `[env-doctor] SUPABASE_SERVICE_ROLE_KEY is not set — landing celestial\n` +
+        `  content renders SEED data locally (Vercel renders live rows).\n`
+    );
+  }
+}
