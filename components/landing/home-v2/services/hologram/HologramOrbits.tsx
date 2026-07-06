@@ -46,6 +46,12 @@ export interface OrbitConfig {
   speed?: number;
   /** Resting parametric angle in radians. */
   phase0?: number;
+  /** Draw-on window in `--corridor-dissipate` units. When set it overrides the
+   *  index-based `REVEAL_WINDOWS` stagger — required for ring sets shorter than
+   *  the default (the windows are otherwise position-coupled to DEFAULT_ORBITS'
+   *  seven-ring order). Unset = the original index fallback, so DEFAULT_ORBITS
+   *  and the labs stay byte-identical. */
+  reveal?: readonly [number, number];
 }
 
 /** Default ellipse squash — the cascading shells are gently elliptical, not
@@ -149,6 +155,53 @@ export const DEFAULT_ORBITS: readonly OrbitConfig[] = [
     gapSize: 0.2,
     eccentricity: 0.78,
     node: false,
+  },
+];
+
+/**
+ * STRUCTURAL_ORBITS — the production armillary thinned to its bones
+ * (ADR-025 Update 8, "wireframe seeds + structural armillary").
+ *
+ * With the seed plates re-cut as gold-ink schematics, three service rings
+ * re-representing the same three services became redundant diagram ink —
+ * and the rings lost their production anchor role on 2026-07-02 (leader
+ * lines land on points ON the mark's wireframe; `CorridorArmillary`
+ * projects `brandmarkScanAnchorPointsRef`, not orbit nodes). What remains
+ * is the minimum for the armillary read: the Saturn waist-ring that mounts
+ * the mark as a body, plus ONE crossing meridian (workshop's plane,
+ * re-purposed as structure — no node, no service id) so a ring still
+ * weaves through the mark's volume (near arc in front, far arc behind).
+ *
+ * `reveal` windows are explicit — the index-based REVEAL_WINDOWS stagger
+ * is coupled to the seven-ring DEFAULT_ORBITS order. The wrap keeps its
+ * inner→outer sequence and completes before `--svc-content-in` finishes.
+ *
+ * DEFAULT_ORBITS stays as the LAB set (/test/services-demo,
+ * /test/services-hologram): full armillary, three drifting nodes, the
+ * orbit-node `publishAnchors` path.
+ */
+export const STRUCTURAL_ORBITS: readonly OrbitConfig[] = [
+  {
+    id: "shell-waist",
+    radius: 1.06,
+    tilt: [1.48, 0.0, 0.05],
+    color: TENSOR_ACCENT,
+    opacity: 0.68,
+    lineWidth: 2.0,
+    eccentricity: 0.96,
+    node: false,
+    reveal: [0.45, 0.82],
+  },
+  {
+    id: "shell-meridian",
+    radius: 1.78,
+    tilt: [0.12, 1.42, -0.18],
+    color: SERVICES_GOLD,
+    opacity: 0.5,
+    lineWidth: 1.8,
+    eccentricity: 0.72,
+    node: false,
+    reveal: [0.55, 0.95],
   },
 ];
 
@@ -388,7 +441,7 @@ export function HologramOrbits({
   return (
     <group ref={groupRef}>
       {orbits.map((o, i) => {
-        const win = REVEAL_WINDOWS[Math.min(i, REVEAL_WINDOWS.length - 1)];
+        const win = o.reveal ?? REVEAL_WINDOWS[Math.min(i, REVEAL_WINDOWS.length - 1)];
         return (
           <OrbitRing
             key={o.id}

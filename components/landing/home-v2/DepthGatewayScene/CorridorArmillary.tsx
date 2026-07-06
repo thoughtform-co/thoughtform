@@ -35,7 +35,7 @@ import { getSmoothedDissipate } from "./motionFollower";
 import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import {
   HologramOrbits,
-  DEFAULT_ORBITS,
+  STRUCTURAL_ORBITS,
 } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { useHologramConnectors, type ConnectorAnchor } from "@/lib/stores/hologramConnectorStore";
@@ -96,8 +96,16 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
   return (
     <>
       <group ref={probeRef} />
+      {/* STRUCTURAL_ORBITS (ADR-025 Update 8): the production armillary is
+          waist + meridian only — the service rings retired with the
+          wireframe-seed pass (their anchor role moved to the mark's own
+          wireframe points in 2026-07-02; see the scan-anchor block above).
+          `activeServiceId` stays wired: inert against structural rings
+          (no ServiceId ids), harmless, and future-proof if a service ring
+          ever returns. The active-service signal lives in the DOM
+          connectors, the open plate, and the mark's per-service pose. */}
       <HologramOrbits
-        orbits={DEFAULT_ORBITS}
+        orbits={STRUCTURAL_ORBITS}
         entrance="scroll"
         scale={scale}
         activeServiceId={activeServiceId}
