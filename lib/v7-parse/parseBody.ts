@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, statSync } from "fs";
 
 import { injectStaticHudChildren } from "./hudTicks";
 import { scopeV7Css } from "./scopeCss";
@@ -10,6 +10,21 @@ import {
 } from "./stationOps";
 import type { ParseOptions, V7Content } from "./types";
 
+// Memo cache for the parse pipeline, keyed on (paths, options) and
+// validated against file mtimes. The landing route runs this pipeline
+// more than once per render (`getV7Content` + `extractV7Text`), and in
+// dev every request re-renders the page — without the cache each of
+// those re-reads a ~234 KB prototype file and re-runs the full regex
+// surgery + CSS scoping. The mtime check keeps the dev loop honest:
+// editing the prototype HTML or tokens.css still re-parses.
+//
+// V7Content is a bag of immutable strings that callers never mutate,
+// so sharing one object between callers is safe.
+const parseCache = new Map<
+  string,
+  { htmlMtimeMs: number; tokensMtimeMs: number; content: V7Content }
+>();
+
 /**
  * Shared parse pipeline. Reads a V7-prototype-shaped HTML file plus the
  * canonical tokens.css, extracts/cleans the body markup, scopes the
@@ -19,8 +34,30 @@ import type { ParseOptions, V7Content } from "./types";
  * Forked routes (e.g. the Claude-workshop page) reuse this by pointing
  * at a different HTML file with the same structural contract
  * (sections, brandmark anchors, data-celestial-slot markers, etc.).
+ *
+ * Results are memoized per (htmlPath, tokensPath, options) and
+ * invalidated when either source file's mtime changes. Options come
+ * from module-level const literals at every call site, so their JSON
+ * serialization is a stable cache key.
  */
 export function parseV7Html(
+  htmlPath: string,
+  tokensPath: string,
+  options?: ParseOptions
+): V7Content {
+  const htmlMtimeMs = statSync(htmlPath).mtimeMs;
+  const tokensMtimeMs = statSync(tokensPath).mtimeMs;
+  const cacheKey = `${htmlPath}|${tokensPath}|${JSON.stringify(options ?? null)}`;
+  const cached = parseCache.get(cacheKey);
+  if (cached && cached.htmlMtimeMs === htmlMtimeMs && cached.tokensMtimeMs === tokensMtimeMs) {
+    return cached.content;
+  }
+  const content = parseV7HtmlUncached(htmlPath, tokensPath, options);
+  parseCache.set(cacheKey, { htmlMtimeMs, tokensMtimeMs, content });
+  return content;
+}
+
+function parseV7HtmlUncached(
   htmlPath: string,
   tokensPath: string,
   options?: ParseOptions
