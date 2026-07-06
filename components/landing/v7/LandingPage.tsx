@@ -14,24 +14,8 @@ import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
-import dynamic from "next/dynamic";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
+import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
-
-// Admin-only editor, split out of the marketing bundle. Imported
-// straight from the component file (not the CelestialEditor barrel,
-// which would drag CelestialEditorModal back into this chunk) and
-// mounted only for dev / allowlisted users, so anonymous visitors
-// never fetch the editor chunk. `useCelestialDrafts` above stays a
-// static import — the drafts merge must run on first render.
-const CelestialEditorOverlay = dynamic(
-  () =>
-    import("@/components/admin/CelestialEditor/CelestialEditorOverlay").then(
-      (m) => m.CelestialEditorOverlay
-    ),
-  { ssr: false }
-);
 import type { SlotsMap } from "@/lib/celestial/schema";
 import type { V7CorridorText } from "@/lib/v7-parse";
 
@@ -413,13 +397,6 @@ export function LandingPage({
     });
   }, []);
 
-  // Gate for the lazy admin editor chunk. Mirrors the overlay's own
-  // internal isAdmin check (defense in depth — real security is the
-  // server-side isAuthorized per ADR-003); this outer gate only
-  // decides whether the chunk is fetched at all.
-  const { user } = useAuth();
-  const editorEnabled = process.env.NODE_ENV === "development" || isAllowedUserEmail(user?.email);
-
   // Merge admin drafts over the persisted slot configs so the page
   // live-previews editor changes before they are saved.
   const drafts = useCelestialDrafts((s) => s.drafts);
@@ -506,7 +483,13 @@ export function LandingPage({
       {/* Top-right HUD nav: inline links in the hero that collapse into
           a right-rail-aligned hamburger once the hero scrolls away. */}
       <HudNav />
-      {editorEnabled && <CelestialEditorOverlay />}
+      {/* Auth-gated admin editor. Its `useAuth` subscription lives
+          inside this leaf (NOT in LandingPage) so an auth-resolve
+          re-render can't replace the dangerouslySetInnerHTML markup
+          and orphan the nested-root portals above (ServicesPortal /
+          BuildCasesPortal). See CelestialEditorGate for the full
+          rationale. */}
+      <CelestialEditorGate />
     </>
   );
 }
