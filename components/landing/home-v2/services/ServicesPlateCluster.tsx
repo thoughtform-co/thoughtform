@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { ServicePlateCard, type PlateVariant } from "./ServicePlateCard";
@@ -160,37 +160,54 @@ function getPlateStyle(layout: PlateLayout | null): CSSProperties | undefined {
   } as CSSProperties;
 }
 
+/** Seed / open chamfer sizes (`--ch` in services.css). The connector plugs
+ *  into the middle of the top-right chamfer cut — the same "notch" on every
+ *  card — so its departure point is consistent regardless of the card's
+ *  position or size. */
+const NOTCH_CH_SEED = 16;
+const NOTCH_CH_OPEN = 26;
+
 function PlateConnectorOverlay({
   activeServiceId,
   expandedServiceId,
+  clusterRef,
 }: {
   activeServiceId: ServicePlateId;
   expandedServiceId: ServicePlateId | null;
+  clusterRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const anchors = useHologramConnectors((s) => s.anchors);
   const viewport = parseViewportSnapshot(
     useSyncExternalStore(viewportStore.subscribe, viewportStore.snapshot, viewportStore.snapshot)
   );
 
-  if (anchors.length === 0 || viewport.width < 961) return null;
+  const cluster = clusterRef.current;
+  if (anchors.length === 0 || viewport.width < 961 || !cluster) return null;
 
   return (
     <svg className="services-scan-connectors" aria-hidden="true">
       {anchors.map((anchor) => {
+        if (!anchor.visible) return null;
+        // Depart from the card's top-right notch (measured live so the point
+        // is right regardless of open height / bottom-anchoring). The SVG
+        // shares the viewport coordinate system the store anchors are already
+        // published in, so client rects map straight through.
+        const cardEl = cluster.querySelector<HTMLElement>(
+          `.svc-plate[data-service="${anchor.serviceId}"]`
+        );
+        if (!cardEl) return null;
+        const rect = cardEl.getBoundingClientRect();
         const expanded = expandedServiceId === anchor.serviceId;
         const active = activeServiceId === anchor.serviceId;
-        const target = getPlateLayout(anchor.serviceId, viewport, expanded);
-        if (!target || !anchor.visible) return null;
+        const ch = expanded ? NOTCH_CH_OPEN : NOTCH_CH_SEED;
 
-        const x1 = anchor.x;
-        const y1 = anchor.y;
-        const x3 = target.targetX;
-        const y3 = target.targetY;
-        const bend = target.side === "right" ? 36 : -36;
-        const x2 = x3 + bend;
-        const points = `${x1.toFixed(1)},${y1.toFixed(1)} ${x2.toFixed(1)},${y3.toFixed(
-          1
-        )} ${x3.toFixed(1)},${y3.toFixed(1)}`;
+        // Mark end (the reticle sits here — the only circle).
+        const mx = anchor.x;
+        const my = anchor.y;
+        // Card end: midpoint of the top-right chamfer diagonal.
+        const nx = rect.right - ch / 2;
+        const ny = rect.top + ch / 2;
+        const points = `${mx.toFixed(1)},${my.toFixed(1)} ${nx.toFixed(1)},${ny.toFixed(1)}`;
         const className = [
           "services-scan-connector",
           active ? "services-scan-connector--active" : "",
@@ -204,9 +221,9 @@ function PlateConnectorOverlay({
           <g key={anchor.serviceId} className={className}>
             <polyline className="services-scan-connector__glow" points={points} />
             <polyline className="services-scan-connector__line" points={points} />
-            <circle className="services-scan-connector__reticle" cx={x1} cy={y1} r={5.5} />
-            <circle className="services-scan-connector__dot" cx={x1} cy={y1} r={1.4} />
-            <circle className="services-scan-connector__target" cx={x3} cy={y3} r={2.8} />
+            {/* Circle only where the wire meets the brandmark — not on the card. */}
+            <circle className="services-scan-connector__reticle" cx={mx} cy={my} r={5.5} />
+            <circle className="services-scan-connector__dot" cx={mx} cy={my} r={1.4} />
           </g>
         );
       })}
@@ -239,6 +256,7 @@ export function ServicesPlateCluster({
     SERVICE_PLATES[0].id
   );
   const expandedServiceId = controlledExpandedServiceId ?? internalExpandedServiceId;
+  const clusterRef = useRef<HTMLDivElement>(null);
   const viewport = parseViewportSnapshot(
     useSyncExternalStore(viewportStore.subscribe, viewportStore.snapshot, viewportStore.snapshot)
   );
@@ -258,6 +276,7 @@ export function ServicesPlateCluster({
 
   return (
     <div
+      ref={clusterRef}
       className="services-plate-cluster"
       data-active-service={activeService.id}
       data-expanded-service={expandedServiceId}
@@ -266,6 +285,7 @@ export function ServicesPlateCluster({
         <PlateConnectorOverlay
           activeServiceId={activeService.id}
           expandedServiceId={expandedServiceId}
+          clusterRef={clusterRef}
         />
       )}
 
