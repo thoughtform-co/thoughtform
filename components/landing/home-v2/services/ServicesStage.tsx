@@ -1,17 +1,25 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
-import { Bloom, EffectComposer } from "@react-three/postprocessing";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ServicesHologramScene } from "./hologram";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
-import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
+
+// Flag-off / lab path only (see showServicesCanvas below). Lazy so the
+// postprocessing stack never enters the marketing route's initial JS —
+// with UNIFIED_SERVICES_ARMILLARY on, production never fetches this
+// chunk at all. The hologram/ barrel itself must stay statically
+// importable elsewhere (CorridorArmillary uses HologramOrbits inside
+// the corridor canvas) — only this canvas subtree is split.
+const ServicesHologramCanvas = dynamic(
+  () => import("./ServicesHologramCanvas").then((m) => m.ServicesHologramCanvas),
+  { ssr: false }
+);
 
 /**
  * ServicesStage - the `#services` interaction as a section-owned holographic
@@ -93,48 +101,7 @@ export function ServicesStage() {
   return (
     <div className="services-stage" ref={stageRef} data-active-step="0">
       <div className="services-stage__items">
-        {showServicesCanvas ? (
-          <div className="services-hologram" aria-hidden="true">
-            <Canvas
-              camera={{ position: [0, 0, 3.65], fov: 38, near: 0.1, far: 100 }}
-              dpr={[1, 2]}
-              gl={{ antialias: true, alpha: true }}
-            >
-              <ServicesHologramScene
-                activeServiceId={activeServiceId}
-                accentColor={TENSOR_ACCENT}
-                blending="normal"
-                color={TENSOR_GOLD}
-                density={0.9}
-                depthStrutCount={2200}
-                edgeThresholdDeg={5}
-                entrance="scroll"
-                entranceForm="wire"
-                flyIn={1}
-                opacity={0.74}
-                pointSize={4.3}
-                publishAnchors
-                restTiltX={0}
-                restTiltY={0}
-                scale={0.72}
-                scanGain={0.24}
-                showShell
-                shellCount={120}
-                surfaceCount={160}
-                wireCount={6800}
-                wireStroke={0.084}
-              />
-              <EffectComposer>
-                <Bloom
-                  intensity={0.3}
-                  luminanceThreshold={0.42}
-                  luminanceSmoothing={0.9}
-                  mipmapBlur
-                />
-              </EffectComposer>
-            </Canvas>
-          </div>
-        ) : null}
+        {showServicesCanvas ? <ServicesHologramCanvas activeServiceId={activeServiceId} /> : null}
 
         <ServicesPlateCluster
           activeServiceId={activeServiceId}
