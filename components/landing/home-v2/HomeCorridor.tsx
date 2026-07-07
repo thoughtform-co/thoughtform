@@ -228,7 +228,6 @@ function FallbackCorridor({ text }: { text: V7CorridorText }) {
   return (
     <div className="home-v2-fallback-text">
       <section>
-        <p className="home-v2-fallback-text__bridge">{text.thoughtform.bridge}</p>
         <h2 dangerouslySetInnerHTML={{ __html: text.thoughtform.titleHtml }} />
         <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body1Html }} />
         <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body2Html }} />

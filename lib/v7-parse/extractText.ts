@@ -41,10 +41,10 @@ export function extractV7Text(): V7CorridorText {
     "AI collapsed the distance between <em>thought</em> and <em>form</em>.";
   const tfBody1 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 0) ??
-    "The new frontier is <em>context</em>. The question is who owns it.";
+    "<em>Context</em> is now the new frontier, and everyone wants to own yours.";
   const tfBody2 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 1) ??
-    "We navigate with your team, encode their context, and build it into tools they own.";
+    "We navigate with your team, encode what matters and build it into the tools they own.";
   const tfCtaMatch = /<a\b[^>]*\bclass="[^"]*\bbtn--solid\b[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(
     tfHtml
   );

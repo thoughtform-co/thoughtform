@@ -1534,6 +1534,12 @@
   height: 1px;
   background: var(--gold);
 }
+/* IPA transcription variant of the flywheel slot: reuses the bottom-left
+   position, gold mono treatment, hero-cover fade and mobile lift rules,
+   but drops the uppercasing so the phonetic characters render intact. */
+.hero__flywheel--ipa {
+  text-transform: none;
+}
 .hero__flywheel__line::after {
   content: "";
   position: absolute;

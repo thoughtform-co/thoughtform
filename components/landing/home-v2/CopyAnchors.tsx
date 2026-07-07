@@ -128,7 +128,6 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           data-world-anchor="thoughtform.leftCopy"
           data-anchor-origin="center"
         >
-          <div className="home-v2-copy-bridge">{tf.bridge}</div>
           <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
@@ -140,7 +139,6 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           data-world-anchor="thoughtform.leftCopy"
           data-anchor-origin="left-center"
         >
-          <div className="home-v2-copy-bridge">{tf.bridge}</div>
           <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
