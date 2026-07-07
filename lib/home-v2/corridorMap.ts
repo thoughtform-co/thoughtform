@@ -273,9 +273,9 @@ export const CORRIDOR_MAP = [
       kicker: "01 · NAVIGATE",
       titleHtml: "NAVIGATE THE <em>INTELLIGENCE.</em>",
       supportHtml:
-        "Trained on us, but it doesn't think like us.<br>We start inside your real work: your team learns to <em>steer</em> it past the average answer.",
+        "AI is not software to command. It is an intelligence to navigate.<br>Your team learns to brief it, <em>steer</em> it, and judge what comes back inside live work.",
       floorHtml:
-        "Trained on us, but it doesn't think like us.<br>We start inside your real work: your team learns to <em>steer</em> it past the average answer.",
+        "AI is not software to command. It is an intelligence to navigate.<br>Your team learns to brief it, <em>steer</em> it, and judge what comes back inside live work.",
       telemetry: {
         sector: "01 · NAVIGATE",
         callsign: "NAV-01",
@@ -303,9 +303,9 @@ export const CORRIDOR_MAP = [
       kicker: "02 · ENCODE",
       titleHtml: "ENCODE THE <em>JUDGMENT.</em>",
       supportHtml:
-        "Your best people set the standard.<br>We write it down together, into <em>Skills</em> every colleague and agent starts from.",
+        "AI can read your data, but it still needs to know how your team decides.<br>We capture the examples, standards, and <em>rules of thumb</em> every colleague and agent should start from.",
       floorHtml:
-        "Your best people set the standard.<br>We write it down together, into <em>Skills</em> every colleague and agent starts from.",
+        "AI can read your data, but it still needs to know how your team decides.<br>We capture the examples, standards, and <em>rules of thumb</em> every colleague and agent should start from.",
       telemetry: {
         sector: "02 · ENCODE",
         callsign: "ENC-02",
@@ -341,9 +341,9 @@ export const CORRIDOR_MAP = [
       kicker: "03 · BUILD",
       titleHtml: "BUILD ON THE <em>LAYER.</em>",
       supportHtml:
-        "One layer under every surface: chat, agents, your own tools.<br>We build the first ones together, and your team <em>ships</em> the rest without us.",
+        "Once context is encoded, it becomes a layer to build on.<br>We turn it into tools, workflows, and agents your team can <em>run and extend</em>.",
       floorHtml:
-        "One layer under every surface: chat, agents, your own tools.<br>We build the first ones together, and your team <em>ships</em> the rest without us.",
+        "Once context is encoded, it becomes a layer to build on.<br>We turn it into tools, workflows, and agents your team can <em>run and extend</em>.",
       telemetry: {
         sector: "03 · BUILD",
         callsign: "BLD-03",
