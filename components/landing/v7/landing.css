@@ -1487,6 +1487,15 @@
     color 180ms var(--ease-out),
     border-color 180ms var(--ease-out),
     transform 180ms var(--ease-out);
+  /* Pre-promote to a GPU compositing layer at rest. Without this, the
+     hover-only `transform: translateY(-2px)` below is the FIRST
+     transform on the element, so Chromium promotes it to a new layer
+     at the exact moment of hover — a known trigger for the top
+     hairline border to visually drop out for a frame while the
+     rasterization tile boundary recomputes. Pre-promoting means hover
+     only updates an already-existing layer's matrix (no repaint of
+     the border), eliminating the artifact. */
+  will-change: transform;
 }
 .hero__cta__btn--primary {
   background: var(--gold);
