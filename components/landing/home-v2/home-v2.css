@@ -1843,14 +1843,19 @@ html[data-corridor-exit="true"] #services > * {
 .home-v2-copy-cta {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  /* Label sits left, the directional chevrons ride the right edge —
+     the min-width widens the plate so the chevrons read as pointing
+     OUT toward the portal (jet-bridge / docking-guide signage). */
+  justify-content: space-between;
+  gap: 20px;
+  min-width: clamp(210px, 17vw, 250px);
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 12px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold, #caa554);
   text-decoration: none;
-  padding: 12px 20px;
+  padding: 12px 22px;
   border: 1px solid rgba(202, 165, 84, 0.4);
   background: rgba(202, 165, 84, 0.06);
   transition:
@@ -1865,9 +1870,75 @@ html[data-corridor-exit="true"] #services > * {
   transform: translateY(-1px);
 }
 
-.home-v2-copy-cta__arrow {
-  font-size: 14px;
-  letter-spacing: 0;
+/* ── CTA directional chevrons (›››) ───────────────────────────────
+   Three right-pointing chevrons with a soft sequential glow that
+   sweeps left→right toward the brandmark portal — the same runway
+   cadence as the mobile `.home-v2-scroll-chevrons` cue, rotated to
+   the horizontal. Decorative (aria-hidden); base opacity keeps them
+   legible as a static `›››` when the pulse is at rest. */
+.home-v2-copy-cta__chevrons {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.home-v2-copy-cta__chev {
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid var(--gold, #caa554);
+  border-right: 2px solid var(--gold, #caa554);
+  transform: rotate(45deg);
+  opacity: 0.3;
+  animation: home-v2-cta-chevron-glow 1.6s ease-in-out infinite;
+}
+.home-v2-copy-cta__chev:nth-child(1) {
+  animation-delay: 0s;
+}
+.home-v2-copy-cta__chev:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.home-v2-copy-cta__chev:nth-child(3) {
+  animation-delay: 0.36s;
+}
+@keyframes home-v2-cta-chevron-glow {
+  0%,
+  55%,
+  100% {
+    opacity: 0.3;
+    filter: none;
+  }
+  20% {
+    opacity: 1;
+    filter: drop-shadow(0 0 5px rgba(202, 165, 84, 0.7));
+  }
+}
+/* On hover the whole runway lifts to full so the button reads as
+   "armed" while the sweep keeps cycling. */
+.home-v2-copy-cta:hover .home-v2-copy-cta__chev {
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-copy-cta__chev {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Interaction opt-in. The blanket rule
+   `.home-v2-copy-layer [data-world-anchor] { pointer-events: none }`
+   mutes every world-tracked element so the decorative phase labels +
+   readouts never intercept canvas or scroll events. But the left
+   copy block is also world-tracked, and its reading copy must be
+   selectable and its CTA clickable. `pointer-events` inherits, so
+   re-asserting it on these content elements overrides the inherited
+   `none` without re-enabling the decorative labels. */
+.home-v2-copy-title,
+.home-v2-copy-body,
+.home-v2-copy-cta {
+  pointer-events: auto;
+}
+.home-v2-copy-title,
+.home-v2-copy-body {
+  user-select: text;
 }
 
 /* ── Phase labels (NAVIGATE / ENCODE / BUILD) ─────────────── */

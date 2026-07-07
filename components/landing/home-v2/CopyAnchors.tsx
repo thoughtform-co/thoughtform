@@ -77,13 +77,23 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   const stackSourcesLabel = ARTIFACT_LABELS.find((l) => l.id === "sources");
   const stackSurfacesLabel = ARTIFACT_LABELS.find((l) => l.id === "surfaces");
 
-  // Desktop CTA: the "See the thesis →" link to the intelligence layer.
+  // Desktop CTA: links into #services — the corridor's actual exit
+  // destination on production. `#intelligence-layer` was the v7
+  // prototype's original target; that station was replaced by this
+  // corridor (see CORRIDOR_REPLACED_STATIONS in app/(marketing)/page.tsx)
+  // and no longer exists on the page, so the old href pointed nowhere.
   const cta = (
     <div className="home-v2-copy-cta-row">
-      <a className="home-v2-copy-cta" href="#intelligence-layer">
-        {tf.cta}{" "}
-        <span className="home-v2-copy-cta__arrow" aria-hidden="true">
-          →
+      <a className="home-v2-copy-cta" href="#services">
+        {tf.cta}
+        {/* Three right-pointing chevrons with a sequential launch-pad
+            glow (same runway cadence as the mobile scroll cue) — the
+            glow sweeps left→right toward the brandmark portal on the
+            right, reading as a docking-guide "this way in". */}
+        <span className="home-v2-copy-cta__chevrons" aria-hidden="true">
+          <span className="home-v2-copy-cta__chev" />
+          <span className="home-v2-copy-cta__chev" />
+          <span className="home-v2-copy-cta__chev" />
         </span>
       </a>
     </div>
