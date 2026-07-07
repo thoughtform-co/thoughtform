@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBuildApproachFade, getThoughtformBootEnvelope } from "./sceneGeom";
+import { LEG_1_REVEAL_END, LEG_1_REVEAL_START } from "./LatentWormholeWalls";
 
 /**
  * CelestialMotes — small sphere-shaped particle clusters that drift
@@ -392,9 +393,18 @@ export function CelestialMotes() {
       getBuildApproachFade(transform.paintProgress),
       1 - smoothstep(0.76, 0.84, transform.paintProgress)
     );
+    // Corridor-entry reveal gate (see ScrollStreaks for the full
+    // rationale). Motes are corridor ambient — planetoids drifting
+    // through the latent corridor — so they must not populate the
+    // pre-portal Thoughtform approach. Gate on the same leg-1 reveal
+    // window the wormhole walls use so the motes fade in with the
+    // corridor structure as the camera crosses the brandmark portal,
+    // rather than appearing during the section-2 approach scroll.
+    const revealGate = smoothstep(LEG_1_REVEAL_START, LEG_1_REVEAL_END, transform.paintProgress);
     const target =
       (AMBIENT_OPACITY + velocityT * (PEAK_OPACITY - AMBIENT_OPACITY) + bootEnv * BOOT_LIFT) *
-      buildFade;
+      buildFade *
+      revealGate;
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     smoothedAlpha.current += (target - smoothedAlpha.current) * k;
     material.uniforms.uOpacity.value = Math.min(1, smoothedAlpha.current);

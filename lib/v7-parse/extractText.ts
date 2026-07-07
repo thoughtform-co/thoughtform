@@ -41,14 +41,14 @@ export function extractV7Text(): V7CorridorText {
     "AI collapsed the distance between <em>thought</em> and <em>form</em>.";
   const tfBody1 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 0) ??
-    "<em>Context</em> is now the new frontier, and everyone wants to own yours.";
+    "<em>Context</em> is the new frontier, and every platform wants to capture it.";
   const tfBody2 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 1) ??
-    "We navigate with your team, encode what matters and build it into the tools they own.";
+    "We help your team own yours,<br />and then build from it.";
   const tfCtaMatch = /<a\b[^>]*\bclass="[^"]*\bbtn--solid\b[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(
     tfHtml
   );
-  const tfCta = tfCtaMatch ? stripTags(tfCtaMatch[1]) : "See the thesis";
+  const tfCta = tfCtaMatch ? stripTags(tfCtaMatch[1]) : "Enter the arc";
 
   // North star caption.
   const tfNorthMatch = /<div\b[^>]*\bclass="[^"]*\bsigil__cap\b[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec(

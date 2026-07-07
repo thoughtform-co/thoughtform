@@ -3,7 +3,8 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { LEG_1_REVEAL_END, LEG_1_REVEAL_START } from "./LatentWormholeWalls";
 
 /**
  * ScrollStreaks — near-camera particle streaks whose flow is
@@ -198,6 +199,18 @@ export function ScrollStreaks({ count }: ScrollStreaksProps = {}) {
     const camPos = material.uniforms.uCameraPos.value as THREE.Vector3;
     camPos.copy(camera.position);
 
+    // Corridor-entry reveal gate. The streaks are latent-space TRAVEL
+    // punctuation — narratively they belong past the brandmark portal,
+    // not in the pre-portal Thoughtform approach. Without this gate a
+    // scroll during the section-2 approach (where the corridor is
+    // already `armed`) lights the velocity-driven streaks before the
+    // camera has crossed the mark, reading as the background suddenly
+    // switching to streaming star travel. Gate on the SAME leg-1
+    // reveal window the wormhole walls + photons use so the streaks
+    // fade in exactly as the corridor structure does — masked by the
+    // portal crossing rather than popping during the approach.
+    const revealGate = smoothstep(LEG_1_REVEAL_START, LEG_1_REVEAL_END, transform.paintProgress);
+
     // Visible alpha ramps with |velocity|, capped at 1, smoothed
     // toward target. When idle (velocity ~= 0) the field decays to
     // invisible.
@@ -209,7 +222,7 @@ export function ScrollStreaks({ count }: ScrollStreaksProps = {}) {
     // the corridor density grew. Streaks still cap below 1.0 so
     // they remain a punctuation layer on top of the
     // LatentFieldTunnel, not a competing foreground.
-    material.uniforms.uOpacity.value = visibleAlpha.current * 0.65;
+    material.uniforms.uOpacity.value = visibleAlpha.current * 0.65 * revealGate;
 
     if (!active) {
       return;
