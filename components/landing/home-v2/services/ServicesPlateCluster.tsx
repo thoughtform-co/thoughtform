@@ -184,14 +184,24 @@ function PlateConnectorOverlay({
   const cluster = clusterRef.current;
   if (anchors.length === 0 || viewport.width < 961 || !cluster) return null;
 
+  // Rebase everything into the SVG's LOCAL box. The connector SVG is inset:0
+  // within `.services-plate-cluster`, which sits INSIDE the HUD content rails —
+  // so its top-left is NOT the viewport origin (offset ~189px right on a
+  // full-width desktop). The mark anchors (published in viewport pixels by the
+  // corridor armillary) and the card getBoundingClientRect()s are both
+  // viewport-space, so without this subtraction every point renders shifted by
+  // the rail inset: reticles float off the mark and the leaders never reach the
+  // cards (the SVG worked un-shifted only in the full-bleed /test lab).
+  const originRect = cluster.getBoundingClientRect();
+  const ox = originRect.left;
+  const oy = originRect.top;
+
   return (
     <svg className="services-scan-connectors" aria-hidden="true">
       {anchors.map((anchor) => {
         if (!anchor.visible) return null;
         // Depart from the card's top-right notch (measured live so the point
-        // is right regardless of open height / bottom-anchoring). The SVG
-        // shares the viewport coordinate system the store anchors are already
-        // published in, so client rects map straight through.
+        // is right regardless of open height / bottom-anchoring).
         const cardEl = cluster.querySelector<HTMLElement>(
           `.svc-plate[data-service="${anchor.serviceId}"]`
         );
@@ -201,18 +211,19 @@ function PlateConnectorOverlay({
         const active = activeServiceId === anchor.serviceId;
         const ch = expanded ? NOTCH_CH_OPEN : NOTCH_CH_SEED;
 
-        // Mark end (the reticle sits here — the only circle).
-        const mx = anchor.x;
-        const my = anchor.y;
+        // Mark end (the reticle sits here — the only circle). Rebased to local.
+        const mx = anchor.x - ox;
+        const my = anchor.y - oy;
         // Card end: the notch that FACES the mark. Cards are laid out around
         // the viewport-centred mark, so a card in the left half plugs in at
         // its top-right chamfer, a card in the right half at its bottom-left
         // chamfer (both are real notches — the departure stays corner-
         // consistent, just the corner that points at the instrument, so the
-        // wire never crosses the card).
+        // wire never crosses the card). The left/right decision stays in
+        // viewport space; only the emitted point is rebased to local.
         const cardInLeftHalf = (rect.left + rect.right) / 2 < viewport.width / 2;
-        const nx = cardInLeftHalf ? rect.right - ch / 2 : rect.left + ch / 2;
-        const ny = cardInLeftHalf ? rect.top + ch / 2 : rect.bottom - ch / 2;
+        const nx = (cardInLeftHalf ? rect.right - ch / 2 : rect.left + ch / 2) - ox;
+        const ny = (cardInLeftHalf ? rect.top + ch / 2 : rect.bottom - ch / 2) - oy;
         const points = `${mx.toFixed(1)},${my.toFixed(1)} ${nx.toFixed(1)},${ny.toFixed(1)}`;
         const className = [
           "services-scan-connector",

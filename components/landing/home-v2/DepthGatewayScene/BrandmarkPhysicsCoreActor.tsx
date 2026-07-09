@@ -986,36 +986,69 @@ function BrandmarkPhysicsCoreWithGLB({
 
   // ── Per-service scan anchors ON the wireframe ──
   // The #services CV-scan leader lines target regions of the MARK itself
-  // (not the orbit nodes). Pick each service's anchor as the sampled
-  // wireframe point furthest along a screen-corner direction (matching the
-  // card layout: Keynote top-left, Workshop bottom-left, Embedded
-  // top-right), with a small +z bias so ties resolve to the camera-facing
-  // edge. Derived from the REAL normalised samples, so the reticle always
-  // sits on a wireframe edge whatever the GLB looks like. Published via a
+  // (not the orbit nodes), matching the card layout: Keynote top-left,
+  // Workshop bottom-left, Embedded top-right.
+  //
+  // BIAS-INWARD selection (2026-07-09): the earlier rule picked the single
+  // vertex FURTHEST toward each corner — the extreme silhouette tip, which
+  // often sat in a sparse gap of the wireframe (or, once the mark tilts,
+  // projected to a spot that no longer read as a deliberate feature), so the
+  // reticles looked like they floated near the mark rather than latching onto
+  // it. Now each anchor is: (1) find that extreme corner vertex, (2) pull it a
+  // fixed fraction toward the mark centre so it targets INTERIOR structure, then
+  // (3) SNAP to the nearest REAL sampled vertex so it always lands on an actual
+  // wireframe edge/intersection — never in a gap. Derived from the REAL
+  // normalised samples, so it holds whatever the GLB looks like. Published via a
   // module ref for `CorridorArmillary` to project each parked frame.
   useEffect(() => {
     if (!targetHomes) {
       brandmarkScanAnchorPointsRef.current = null;
       return;
     }
+    // How far to pull the extreme corner vertex toward the mark centre before
+    // snapping. 0 = the old silhouette-tip behaviour; higher = deeper into the
+    // mark's body. 0.42 lands the reticle on interior struts while staying
+    // clearly in the correct corner.
+    const INWARD = 0.42;
     const pick = (dirX: number, dirY: number): [number, number, number] => {
+      // 1. Extreme vertex toward this corner (+z tie-break → camera-facing edge).
       let best = -Infinity;
-      let bx = 0;
-      let by = 0;
-      let bz = 0;
+      let ex = 0;
+      let ey = 0;
+      let ez = 0;
       for (let i = 0; i < targetHomes.length; i += 3) {
-        const x = targetHomes[i];
-        const y = targetHomes[i + 1];
-        const z = targetHomes[i + 2];
-        const score = dirX * x + dirY * y + 0.15 * z;
+        const score = dirX * targetHomes[i] + dirY * targetHomes[i + 1] + 0.15 * targetHomes[i + 2];
         if (score > best) {
           best = score;
-          bx = x;
-          by = y;
-          bz = z;
+          ex = targetHomes[i];
+          ey = targetHomes[i + 1];
+          ez = targetHomes[i + 2];
         }
       }
-      return [bx, by, bz];
+      // 2. Pull it toward the mark centre (origin) so the anchor targets
+      //    interior structure rather than the sparse silhouette tip.
+      const tx = ex * (1 - INWARD);
+      const ty = ey * (1 - INWARD);
+      const tz = ez * (1 - INWARD);
+      // 3. Snap to the nearest REAL wireframe vertex so the reticle always sits
+      //    on an actual edge/intersection, never in a gap between struts.
+      let nearest = Infinity;
+      let nx = ex;
+      let ny = ey;
+      let nz = ez;
+      for (let i = 0; i < targetHomes.length; i += 3) {
+        const dx = targetHomes[i] - tx;
+        const dy = targetHomes[i + 1] - ty;
+        const dz = targetHomes[i + 2] - tz;
+        const d = dx * dx + dy * dy + dz * dz;
+        if (d < nearest) {
+          nearest = d;
+          nx = targetHomes[i];
+          ny = targetHomes[i + 1];
+          nz = targetHomes[i + 2];
+        }
+      }
+      return [nx, ny, nz];
     };
     brandmarkScanAnchorPointsRef.current = {
       keynote: pick(-1, 1), // upper-left feature

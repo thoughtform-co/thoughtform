@@ -1712,8 +1712,12 @@
   fill: none;
   stroke: var(--gold);
   stroke-opacity: 0.35;
-  stroke-width: 1;
-  stroke-dasharray: 3 7; /* scan-connector grammar */
+  stroke-width: 1.1;
+  /* Tight round dots (matches the open plate's `1px dotted` echo frame) —
+     was `3 7` dashes, which read as too gappy on the seed outline. A ~0-length
+     dash + round linecap renders each dash as a dot; period 3 keeps them close. */
+  stroke-dasharray: 0.01 3;
+  stroke-linecap: round;
   vector-effect: non-scaling-stroke;
   transition: stroke-opacity 0.12s var(--plate-ease);
 }
