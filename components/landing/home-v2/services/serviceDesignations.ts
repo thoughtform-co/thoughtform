@@ -74,29 +74,41 @@ const D = (
  *  clears the crossbar (±~46px) — with LEFT-pocket text growing rightward
  *  (`side: "right"`) and RIGHT-pocket text growing leftward
  *  (`side: "left"`), so the type stays off the dense center sword. */
+/* Keyed by the fixed spatial-slot ids (see servicePlateData). The service in
+ * each slot changed 2026-07-09, so the LABELS are re-authored per slot while
+ * the spatial params (featureId / side / dx / dy) stay tuned to the rack
+ * position they were placed for:
+ *   keynote  slot → 01 Strategic Advisory
+ *   workshop slot → 02 Embedded AI Partner
+ *   embedded slot → 03 Keynote
+ *   guided   slot → 04 Workshop */
 export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation[]> = {
+  // 01 Strategic Advisory
   keynote: [
-    D("crown", "AI STRATEGY", "the shared frame", "right", 36, -26),
-    D("upper-left-arm", "LIVE DEMOS", "on the room's work", "right", 24, -60),
-    D("lower-right-arm", "SHARED LANGUAGE", "afterward", "left", 24, 60),
+    D("crown", "AI STRATEGY", "the standing read", "right", 36, -26),
+    D("upper-left-arm", "WHERE TO INVEST", "and what to ignore", "right", 24, -60),
+    D("lower-right-arm", "TESTED LIVE", "against real work", "left", 24, 60),
     D("base", "NAVIGATE", "the operating posture", "left", 36, 36),
   ],
+  // 02 Embedded AI Partner
   workshop: [
-    D("crown", "REAL BACKLOG", "the team's own briefs", "left", 36, -26),
-    D("upper-right-arm", "JUDGMENT POINTS", "where humans decide", "left", 24, -60),
-    D("lower-left-arm", "ENCODED SKILLS", "kept after we leave", "right", 24, 60),
-    D("base", "ENCODE", "capture what works", "right", 36, 36),
+    D("crown", "OWNED LAYER", "stays with you", "left", 36, -26),
+    D("upper-right-arm", "SHIPPED TOOLS", "inside your teams", "left", 24, -60),
+    D("lower-left-arm", "TRAINED PEOPLE", "who can run it", "right", 24, 60),
+    D("base", "BUILD", "on a fixed term", "right", 36, 36),
   ],
+  // 03 Keynote
   embedded: [
-    D("crown", "GOVERNANCE", "leadership altitude", "left", 36, -26),
-    D("upper-right-arm", "TOKEN BUDGETS", "metered spend", "left", 24, -60),
-    D("lower-left-arm", "CHAMPION NETWORK", "trained + named", "right", 24, 60),
-    D("base", "BUILD", "on the encoded layer", "right", 36, 36),
+    D("crown", "AI STRATEGY", "the shared frame", "left", 36, -26),
+    D("upper-right-arm", "LIVE DEMOS", "on the room's work", "left", 24, -60),
+    D("lower-left-arm", "SHARED LANGUAGE", "afterward", "right", 24, 60),
+    D("base", "NAVIGATE", "the operating posture", "right", 36, 36),
   ],
+  // 04 Workshop
   "guided-build": [
-    D("crown", "ARCHITECTURE", "reviews with your team", "right", 36, -26),
-    D("upper-left-arm", "EVAL DESIGN", "gates before ship", "right", 24, -60),
-    D("lower-right-arm", "SUBSTRATE OWNED", "your tenancy", "left", 24, 60),
-    D("base", "HANDOVER DATED", "set in week one", "left", 36, 36),
+    D("crown", "REAL BACKLOG", "the team's own briefs", "right", 36, -26),
+    D("upper-left-arm", "JUDGMENT POINTS", "where humans decide", "right", 24, -60),
+    D("lower-right-arm", "ENCODED SKILLS", "kept after we leave", "left", 24, 60),
+    D("base", "ENCODE", "capture what works", "left", 36, 36),
   ],
 };

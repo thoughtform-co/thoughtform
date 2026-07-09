@@ -1294,8 +1294,9 @@ html[data-corridor-exit="true"] #services > * {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
-  padding: 0 clamp(18px, 2.8vw, 34px);
+  gap: clamp(14px, 1.6vw, 20px);
+  min-height: 44px;
+  padding: 0 clamp(22px, 3.2vw, 38px);
   border: 1px solid rgba(202, 165, 84, 0.62);
   background:
     linear-gradient(
@@ -1321,24 +1322,63 @@ html[data-corridor-exit="true"] #services > * {
     background 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.home-v2-signal-cta::before,
-.home-v2-signal-cta::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  background: var(--gold, #caa554);
-  transform: translateY(-50%) rotate(45deg);
-  box-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+.home-v2-signal-cta__label {
+  white-space: nowrap;
 }
 
-.home-v2-signal-cta::before {
-  left: -3px;
+/* ── Inward-pointing chevron clusters (docking/focus cue) ──────────
+   Three chevrons per side, same glow-sweep as the hero CTA's runway,
+   but pointing IN toward the label rather than out toward a portal —
+   this button reads as a target to converge on, not a "go here"
+   arrow. Left cluster points right (›››), right cluster is the same
+   shape rotated to point left («««); each side's OUTER chevron (the
+   one farthest from the label) lights first and the sweep converges
+   inward, so both sides visually complete on the label at once. */
+.home-v2-signal-cta__chevrons {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
-
-.home-v2-signal-cta::after {
-  right: -3px;
+.home-v2-signal-cta__chev {
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid var(--gold, #caa554);
+  border-right: 2px solid var(--gold, #caa554);
+  opacity: 0.3;
+  animation: home-v2-cta-chevron-glow 1.6s ease-in-out infinite;
+}
+.home-v2-signal-cta__chevrons--left .home-v2-signal-cta__chev {
+  transform: rotate(45deg);
+}
+.home-v2-signal-cta__chevrons--left .home-v2-signal-cta__chev:nth-child(1) {
+  animation-delay: 0s;
+}
+.home-v2-signal-cta__chevrons--left .home-v2-signal-cta__chev:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.home-v2-signal-cta__chevrons--left .home-v2-signal-cta__chev:nth-child(3) {
+  animation-delay: 0.36s;
+}
+.home-v2-signal-cta__chevrons--right .home-v2-signal-cta__chev {
+  transform: rotate(225deg);
+}
+.home-v2-signal-cta__chevrons--right .home-v2-signal-cta__chev:nth-child(1) {
+  animation-delay: 0.36s;
+}
+.home-v2-signal-cta__chevrons--right .home-v2-signal-cta__chev:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.home-v2-signal-cta__chevrons--right .home-v2-signal-cta__chev:nth-child(3) {
+  animation-delay: 0s;
+}
+.home-v2-signal-cta:hover .home-v2-signal-cta__chev {
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-signal-cta__chev {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .home-v2-signal-cta:hover,

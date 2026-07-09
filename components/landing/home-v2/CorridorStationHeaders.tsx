@@ -1051,11 +1051,34 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
   );
 }
 
+/** Three-chevron cluster, reused mirrored on both sides of the signal
+ *  CTA — pointing INWARD (converging on the label) rather than the
+ *  hero CTA's outward-pointing runway, so the button reads as a
+ *  docking/focus target rather than a "go this way" arrow. */
+function ChevronCluster({ flipped }: { flipped?: boolean }) {
+  return (
+    <span
+      className={
+        flipped
+          ? "home-v2-signal-cta__chevrons home-v2-signal-cta__chevrons--right"
+          : "home-v2-signal-cta__chevrons home-v2-signal-cta__chevrons--left"
+      }
+      aria-hidden="true"
+    >
+      <span className="home-v2-signal-cta__chev" />
+      <span className="home-v2-signal-cta__chev" />
+      <span className="home-v2-signal-cta__chev" />
+    </span>
+  );
+}
+
 function SignalActions() {
   return (
     <div className="home-v2-signal-actions">
       <a className="home-v2-signal-cta" href="#contact">
-        WE HELP YOU BUILD YOURS <span aria-hidden="true">→</span>
+        <ChevronCluster />
+        <span className="home-v2-signal-cta__label">WE HELP YOU BUILD THE LAYER YOU OWN</span>
+        <ChevronCluster flipped />
       </a>
       <p className="home-v2-signal-note">Before they sell it back to you.</p>
     </div>

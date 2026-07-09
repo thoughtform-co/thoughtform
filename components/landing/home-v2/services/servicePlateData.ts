@@ -64,17 +64,53 @@ const photo = (id: ServicePlateId, alt: string, position: string) => ({
   position,
 });
 
+/* Copy + order rewritten 2026-07-09 (Vince review). The four ServicePlateId
+ * keys are FIXED SPATIAL SLOTS (not service names) — each id is wired to a
+ * rack position, a brandmark anchor pick, a designation set, and a scan note.
+ * The visible service that occupies each slot changed, so the id → service
+ * mapping is now:
+ *   keynote  slot (left rack, top)    → 01 Strategic Advisory  (no photo)
+ *   workshop slot (left rack, bottom) → 02 Embedded AI Partner (embedded photo)
+ *   embedded slot (right rack, top)   → 03 Keynote             (keynote photo)
+ *   guided   slot (right rack, bottom)→ 04 Workshop            (workshop photo)
+ * Keeping the ids as slot keys avoids re-tuning every spatial map; the photo
+ * for each slot is pointed at the correct asset by hand. */
 export const SERVICE_PLATES: readonly ServicePlate[] = [
   {
     id: "keynote",
-    chip: "01 — Keynote",
-    statusCode: "NAV-01",
-    title: "Install the frame in a room.",
+    chip: "01 — Strategic Advisory",
+    statusCode: "ADV-01",
+    title: "Steer the whole bet.",
     lede: [
-      "One talk that resets how a room sees AI — from software to command to ",
-      { em: "intelligence to navigate" },
-      ". Tuned to your industry, run on live demos, honest about what works today and what doesn't.",
+      "A standing read for the people making the AI calls. Where to invest, what to ignore, what to build — always tested against real work.",
     ],
+    feedLabel: "Feed 03 · At the table",
+    feedStatus: "Standby",
+    includes: ["Monthly cadence", "Strategic memos", "On-call reads", "NL / EN"],
+    ctaLabel: "Open an advisory",
+    ctaHref: "#contact",
+  },
+  {
+    id: "workshop",
+    chip: "02 — Embedded AI Partner",
+    statusCode: "BLD-02",
+    title: "The practice moves in.",
+    lede: [
+      "We run strategy and build inside your teams on a fixed term. You keep the layer, the tools, and the people who can run it.",
+    ],
+    feedLabel: "Feed 04 · On site",
+    feedStatus: "Standby",
+    includes: ["Fixed term", "Dated handover", "Owned layer", "NL / EN"],
+    ctaLabel: "Scope an engagement",
+    ctaHref: "#contact",
+    photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 12%"),
+  },
+  {
+    id: "embedded",
+    chip: "03 — Keynote",
+    statusCode: "NAV-02",
+    title: "Install the frame in a room.",
+    lede: ["One talk that resets how a room sees AI. Tuned to your industry, run on live demos."],
     feedLabel: "Feed 01 · On stage",
     feedStatus: "Live",
     includes: ["Live demos", "Custom cases", "Take-home deck", "NL / EN"],
@@ -83,58 +119,18 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     photo: photo("keynote", "Vince Buyssens delivering a keynote on stage", "50% 12%"),
   },
   {
-    id: "workshop",
-    chip: "02 — Workshop",
-    statusCode: "ENC-02",
+    id: "guided-build",
+    chip: "04 — Workshop",
+    statusCode: "ENC-04",
     title: "Build the skill by hand.",
     lede: [
-      "One to three days building with your team's real work — no slideware. Everyone ships something: working prototypes, automated workflows, and encoded Skills the team keeps using after we leave.",
+      "A working session on your team's real workflows. They leave with the first patterns encoded and a build list.",
     ],
-    feedLabel: "Feed 02 · In studio",
-    // The open plate's feed is live (Collapse canvas: seeds read "Standby",
-    // opening flips the feed to "Live" — the old C4 "Locked" fiction retired).
-    feedStatus: "Live",
-    includes: ["Real backlog", "Working prototypes", "Encoded Skills", "NL / EN"],
-    ctaLabel: "Plan a workshop",
+    feedLabel: "Feed 02 · On the floor",
+    feedStatus: "Standby",
+    includes: ["Workflow mapping", "First skills", "Build list", "NL / EN"],
+    ctaLabel: "Book a workshop",
     ctaHref: "#contact",
-    focus: true,
-    photo: photo("workshop", "Vince Buyssens working at a laptop in a studio session", "50% 24%"),
-  },
-  {
-    id: "embedded",
-    chip: "03 — Embedded",
-    statusCode: "BLD-03",
-    title: "The practice moves in.",
-    lede: [
-      "For teams that want AI in the bloodstream, not on a roadmap. We move in — shipping tools, wiring systems, training people — until the practice runs without us. ",
-      { em: "Self-sufficiency is the exit." },
-    ],
-    feedLabel: "Feed 03 · In residence",
-    feedStatus: "Live",
-    includes: ["Weekly cadence", "Shipped tools", "Exit by design", "NL / EN"],
-    ctaLabel: "Start a residency",
-    ctaHref: "#contact",
-    photo: photo("embedded", "Vince Buyssens on stage during a residency performance", "50% 12%"),
-  },
-  {
-    // Guided Build (2026-07-09) — the Build-heavy engagement that sits
-    // between Workshop and Embedded: the client's engineers ship, we steer.
-    // Photo is unshipped for now; the plate renders the schematic dot-grid
-    // placeholder in the feed window until `scripts/services-photos/prepare.mjs`
-    // is run on a captured session (drop the `photo` field back in to promote).
-    id: "guided-build",
-    chip: "04 — Guided Build",
-    statusCode: "BLD-04",
-    title: "Your team ships it.",
-    lede: [
-      "Your engineers ship the surface; we steer the architecture, evals, and handoff. Substrate stays in your tenancy from day one, and the ",
-      { em: "internal capacity to extend it" },
-      " is what we leave behind.",
-    ],
-    feedLabel: "Feed 04 · In build",
-    feedStatus: "Live",
-    includes: ["Your engineers", "Architecture reviews", "Eval design", "NL / EN"],
-    ctaLabel: "Scope a build",
-    ctaHref: "#contact",
+    photo: photo("workshop", "Vince Buyssens working with a team in a studio session", "50% 24%"),
   },
 ];

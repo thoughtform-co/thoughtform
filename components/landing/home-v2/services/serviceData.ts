@@ -61,15 +61,62 @@ export interface Service {
  * rendered all-caps by the card), one literal support line (`body`), three
  * ≤5-word data rows (Runs / Format / Leaves — the phase pill folds into
  * Runs), one CTA. `kicker` is retained for the mobile card stack only. */
+/* Copy + order rewritten 2026-07-09 (Vince review). The four ServiceId keys
+ * are FIXED SPATIAL SLOTS shared with `servicePlateData` (each id is wired to
+ * a rack position, a brandmark anchor, a designation set, and a scan note).
+ * The service occupying each slot changed; the id → service mapping is:
+ *   keynote  → 01 Strategic Advisory
+ *   workshop → 02 Embedded AI Partner
+ *   embedded → 03 Keynote
+ *   guided   → 04 Workshop
+ * `verb` feeds the bottom readout strip; `name`/`tagline`/`body`/`meta` feed
+ * the mobile card stack. Ids/index/order/phase are unchanged so every spatial
+ * map stays valid. */
 export const SERVICES: readonly Service[] = [
   {
     id: "keynote",
     index: "01",
+    verb: "ADVISORY",
+    name: "Strategic Advisory",
+    kicker: "STEER THE WHOLE BET",
+    tagline: "Steer the whole bet.",
+    body: "A standing read for the people making the AI calls — where to invest, what to ignore, what to build, tested against real work.",
+    meta: [
+      { label: "Runs", value: "Monthly cadence" },
+      { label: "Format", value: "Strategic memos · NL/EN" },
+      { label: "Leaves", value: "Sharper AI calls" },
+    ],
+    phase: "navigate",
+    ctaLabel: "Open an advisory",
+    ctaHref: "#contact",
+    shapeKey: "loop-forming",
+  },
+  {
+    id: "workshop",
+    index: "02",
+    verb: "EMBEDDED",
+    name: "Embedded AI Partner",
+    kicker: "THE PRACTICE MOVES IN",
+    tagline: "The practice moves in.",
+    body: "We run strategy and build inside your teams on a fixed term. You keep the layer, the tools, and the people who can run it.",
+    meta: [
+      { label: "Runs", value: "Fixed term" },
+      { label: "Format", value: "Dated handover" },
+      { label: "Leaves", value: "An owned layer" },
+    ],
+    phase: "all",
+    ctaLabel: "Scope an engagement",
+    ctaHref: "#contact",
+    shapeKey: "loop-crystallized",
+  },
+  {
+    id: "embedded",
+    index: "03",
     verb: "KEYNOTE",
     name: "Keynote",
-    kicker: "THE LOOP AS ARGUMENT",
+    kicker: "INSTALL THE FRAME",
     tagline: "Install the frame in a room.",
-    body: "Your team leaves seeing AI as intelligence to navigate, not software to command.",
+    body: "One talk that resets how a room sees AI. Tuned to your industry, run on live demos.",
     meta: [
       { label: "Runs", value: "Navigate" },
       { label: "Format", value: "30–90 min · NL/EN" },
@@ -81,61 +128,22 @@ export const SERVICES: readonly Service[] = [
     shapeKey: "loop-forming",
   },
   {
-    id: "workshop",
-    index: "02",
+    id: "guided-build",
+    index: "04",
     verb: "WORKSHOP",
     name: "Workshop",
-    kicker: "THE LOOP ON YOUR WORK",
-    tagline: "Encode what works.",
-    body: "We navigate your real briefs together and encode what works into substrate the team keeps.",
+    kicker: "BUILD THE SKILL BY HAND",
+    tagline: "Build the skill by hand.",
+    body: "A working session on your team's real workflows. They leave with the first patterns encoded and a build list.",
     meta: [
       { label: "Runs", value: "Navigate · Encode" },
-      { label: "Format", value: "Half-day to multi-week" },
-      { label: "Leaves", value: "Working substrate" },
+      { label: "Format", value: "Half-day to multi-day" },
+      { label: "Leaves", value: "First skills + build list" },
     ],
     phase: "navigate-encode",
-    ctaLabel: "Plan a workshop",
+    ctaLabel: "Book a workshop",
     ctaHref: "#contact",
     lead: true,
     shapeKey: "loop-encoding",
-  },
-  {
-    id: "embedded",
-    index: "03",
-    verb: "EMBEDDED",
-    name: "Embedded",
-    kicker: "COMPOUND THE LAYER",
-    tagline: "The loop until it runs itself.",
-    body: "I work alongside the team until the intelligence layer compounds on its own.",
-    meta: [
-      { label: "Runs", value: "The full flywheel" },
-      { label: "Format", value: "Ongoing, defined end" },
-      { label: "Leaves", value: "An owned intelligence layer" },
-    ],
-    phase: "all",
-    ctaLabel: "Embed the practice",
-    ctaHref: "#contact",
-    shapeKey: "loop-crystallized",
-  },
-  {
-    // Guided Build (2026-07-09) — the client's engineers ship the surface,
-    // we steer architecture, evals, and handoff. Sits between Workshop and
-    // Embedded on the build-heavy end of the arc.
-    id: "guided-build",
-    index: "04",
-    verb: "GUIDED BUILD",
-    name: "Guided Build",
-    kicker: "SHIP THE SURFACE",
-    tagline: "Your team ships it.",
-    body: "Your engineers own the surface; I steer the architecture, evaluation, and handover until the internal capacity holds.",
-    meta: [
-      { label: "Runs", value: "Encode · Build" },
-      { label: "Format", value: "Sprints with review gates" },
-      { label: "Leaves", value: "A team-built surface" },
-    ],
-    phase: "encode-build",
-    ctaLabel: "Scope a build",
-    ctaHref: "#contact",
-    shapeKey: "loop-crystallized",
   },
 ];

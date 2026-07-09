@@ -1695,14 +1695,16 @@
 .svc-plate__chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 22px;
-  padding: 0 12px;
+  gap: 9px;
+  /* Enlarged (2026-07-09 Vince review) — the card's identity chip reads a
+   * touch bolder in the top-left corner. */
+  height: 27px;
+  padding: 0 15px;
   border: 1px solid rgba(236, 227, 214, 0.25);
   background: rgba(236, 227, 214, 0.05);
   font-family: var(--mono);
   font-weight: 700;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.2em;
   color: var(--dawn-80);
   text-transform: uppercase;
@@ -1965,7 +1967,10 @@
   margin-top: 18px;
   padding: 0 14px;
   border: 1px solid var(--gold);
-  background: var(--gold);
+  /* Outline at rest (2026-07-09 Vince review, reverting the all-filled
+   * pass): tensor-gold border + gold ink over a transparent body, filling
+   * to solid gold with black ink only on hover. */
+  background: transparent;
   font-family: var(--mono);
   font-weight: 700;
   font-size: 10.5px;
@@ -1979,22 +1984,27 @@
 /* The CTA is an <a>, and `.services-plate-cluster a { color: inherit }`
  * (specificity 0,1,1) outranks a bare `.svc-plate__cta` (0,1,0) — so the
  * anchor text has to be set through a selector that wins, or it inherits
- * the dawn body ink instead of the on-gold latent-night. (This is why the
- * pre-2026-07-09 `--solid` card's LABEL was never actually black, only its
- * arrow span was.) `a.svc-plate__cta` (0,2,1) beats the inherit rule. */
+ * the dawn body ink. `a.svc-plate__cta` (0,2,1) beats the inherit rule.
+ * At rest the label reads tensor-gold; the hover rule below flips it to
+ * latent-night to match the fill. */
 .services-plate-cluster a.svc-plate__cta {
-  color: var(--latent-night, #110f09);
+  color: var(--gold);
 }
 .svc-plate__aro {
-  color: var(--latent-night, #110f09);
+  color: var(--gold);
   font-weight: 400;
+  transition: color 0.3s var(--plate-ease);
 }
-/* Uniform hover for every filled CTA — brighter gold, matching
- * .hero__cta__btn--primary:hover (the fallback keeps it correct inside the
- * plate cluster scope, which doesn't redeclare --gold-bright). */
-.svc-plate[data-state="open"]:hover .svc-plate__cta {
-  background: var(--gold-bright, #e0bd6a);
-  border-color: var(--gold-bright, #e0bd6a);
+/* Hover — fill to solid gold, flip the label + arrow to latent-night
+ * (matches the open chip + .hero__cta__btn--primary on-gold ink). */
+.svc-plate[data-state="open"]:hover .svc-plate__cta,
+.services-plate-cluster .svc-plate[data-state="open"]:hover a.svc-plate__cta {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--latent-night, #110f09);
+}
+.svc-plate[data-state="open"]:hover .svc-plate__aro {
+  color: var(--latent-night, #110f09);
 }
 
 /* ── Wireframe seeds (data-variant="wireframe", ADR-025 Update 8) ────────
