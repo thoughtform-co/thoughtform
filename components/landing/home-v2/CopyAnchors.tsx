@@ -45,8 +45,8 @@ const PRIMITIVE_ANCHOR_META: Record<
   string,
   { origin: string; layout: "north" | "east" | "south" | "west" }
 > = {
-  taste: { origin: "center", layout: "north" },
-  expertise: { origin: "center", layout: "east" },
+  judgment: { origin: "center", layout: "north" },
+  taste: { origin: "center", layout: "east" },
   craft: { origin: "center", layout: "south" },
   voice: { origin: "center", layout: "west" },
 };

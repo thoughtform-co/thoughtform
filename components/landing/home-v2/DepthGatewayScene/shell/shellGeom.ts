@@ -205,21 +205,21 @@ export const PLUG_SEAT_BLIP_PEAK = 0.85;
 /** Fraction of the seat phase spent rising (rest fades out). */
 export const PLUG_SEAT_BLIP_RISE_FRAC = 0.2;
 
-/** Four compass cardinals — N=Taste, E=Expertise, S=Craft, W=Voice. */
+/** Four compass cardinals — N=Judgment, E=Taste, S=Craft, W=Voice. */
 export const SHELL_PRIMITIVES: readonly ShellPrimitive[] = [
   {
-    id: "taste",
-    label: "TASTE",
-    sub: "what you prefer",
+    id: "judgment",
+    label: "JUDGMENT",
+    sub: "what you decide",
     angleRad: Math.PI / 2,
     nodeRadius: 0.036,
     color: COLOR_GOLD,
     baseAlpha: 0.75,
   },
   {
-    id: "expertise",
-    label: "EXPERTISE",
-    sub: "what you know",
+    id: "taste",
+    label: "TASTE",
+    sub: "what you prefer",
     angleRad: 0,
     nodeRadius: 0.032,
     color: COLOR_SURFACES,

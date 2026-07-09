@@ -1361,6 +1361,10 @@ export function CorridorStationHeaders() {
         }
         if (activeKey && activeKey !== cs.activeKey) {
           cs.activeKey = activeKey;
+          // Reflect the dominant station on the card so CSS can tune the
+          // glass plate per station — Build reads slightly darker / less
+          // transparent (subtle weight as the arc lands its last beat).
+          cardEl.setAttribute("data-station", activeKey);
           const meta = captionMeta[activeKey];
           const els = captionMetaEls.current;
           const retitle = (el: HTMLElement | null, text: string | undefined) => {

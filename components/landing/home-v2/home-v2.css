@@ -709,6 +709,19 @@ html[data-corridor-exit="true"] #services > * {
   background: rgba(5, 4, 3, 0.38);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  /* Glass weight tunes per dominant station (see the `data-station`
+     variant below) — ease so the Build darken isn't an abrupt swap. */
+  transition:
+    background 0.6s ease,
+    backdrop-filter 0.6s ease,
+    -webkit-backdrop-filter 0.6s ease;
+}
+/* Build station — the arc's last beat reads with a touch more weight:
+   slightly darker / less transparent plate than Navigate + Encode. */
+.home-v2-caption-card[data-station="bld"] .home-v2-reticle__glass {
+  background: rgba(5, 4, 3, 0.54);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 @supports not (backdrop-filter: blur(1px)) {
   /* No blur available to haze the sphere — darken the fill instead so

@@ -273,9 +273,9 @@ export const CORRIDOR_MAP = [
       kicker: "01 · NAVIGATE",
       titleHtml: "NAVIGATE THE <em>INTELLIGENCE.</em>",
       supportHtml:
-        "AI is not software to command. It is an intelligence to navigate.<br>Your team learns to brief it, <em>steer</em> it, and judge what comes back inside live work.",
+        "AI is not software to command. It is an <em>intelligence to navigate</em>.<br>Your team learns to brief it, steer it, and judge what comes back inside live work.",
       floorHtml:
-        "AI is not software to command. It is an intelligence to navigate.<br>Your team learns to brief it, <em>steer</em> it, and judge what comes back inside live work.",
+        "AI is not software to command. It is an <em>intelligence to navigate</em>.<br>Your team learns to brief it, steer it, and judge what comes back inside live work.",
       telemetry: {
         sector: "01 · NAVIGATE",
         callsign: "NAV-01",
@@ -301,11 +301,11 @@ export const CORRIDOR_MAP = [
     parkDistance: 6.2,
     content: {
       kicker: "02 · ENCODE",
-      titleHtml: "ENCODE THE <em>JUDGMENT.</em>",
+      titleHtml: "ENCODE THE <em>CONTEXT.</em>",
       supportHtml:
-        "AI can read your data, but it still needs to know how your team decides.<br>We capture the examples, standards, and <em>rules of thumb</em> every colleague and agent should start from.",
+        "The most <em>valuable context</em> lives in your team's heads.<br>We encode it into a reusable layer any colleague and agent can use.",
       floorHtml:
-        "AI can read your data, but it still needs to know how your team decides.<br>We capture the examples, standards, and <em>rules of thumb</em> every colleague and agent should start from.",
+        "The most <em>valuable context</em> lives in your team's heads.<br>We encode it into a reusable layer any colleague and agent can use.",
       telemetry: {
         sector: "02 · ENCODE",
         callsign: "ENC-02",
@@ -341,9 +341,9 @@ export const CORRIDOR_MAP = [
       kicker: "03 · BUILD",
       titleHtml: "BUILD ON THE <em>LAYER.</em>",
       supportHtml:
-        "Once context is encoded, it becomes a layer to build on.<br>We turn it into tools, workflows, and agents your team can <em>run and extend</em>.",
+        "Once context is encoded, it becomes a <em>layer to build on</em>.<br>We turn it into tools, workflows, and agents your team can run and extend.",
       floorHtml:
-        "Once context is encoded, it becomes a layer to build on.<br>We turn it into tools, workflows, and agents your team can <em>run and extend</em>.",
+        "Once context is encoded, it becomes a <em>layer to build on</em>.<br>We turn it into tools, workflows, and agents your team can run and extend.",
       telemetry: {
         sector: "03 · BUILD",
         callsign: "BLD-03",
