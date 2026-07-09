@@ -41,7 +41,7 @@ export function extractV7Text(): V7CorridorText {
     "AI collapsed the distance between <em>thought</em> and <em>form</em>.";
   const tfBody1 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 0) ??
-    "<em>Context</em> is the new frontier, and every platform wants to capture it.";
+    "Context is the new frontier, and every platform wants to capture it.";
   const tfBody2 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 1) ??
     "We help your team own yours,<br />and then build from it.";
