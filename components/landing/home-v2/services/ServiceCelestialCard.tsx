@@ -7,6 +7,7 @@ import type { Service } from "./serviceData";
 const PHASE_LABELS: Record<Service["phase"], string> = {
   navigate: "Navigate",
   "navigate-encode": "Navigate · Encode",
+  "encode-build": "Encode · Build",
   all: "Navigate · Encode · Build",
 };
 

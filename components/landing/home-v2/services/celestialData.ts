@@ -126,6 +126,23 @@ const ORBIT_BY_ID: Record<ServiceId, Omit<ServiceOrbit, "id" | "i" | "label">> =
       dotted: true,
     },
   },
+  // Opposite-tilt inclined diagonal — the fourth armillary plane (Guided
+  // Build, 2026-07-09). Mirrors the embedded diagonal across the vertical
+  // so the two cross the meridian symmetrically; thin solid so it reads as
+  // structure rather than a second dotted echo.
+  "guided-build": {
+    orbit: { rx: 108, ry: 60, rotateDeg: -46 },
+    psi0Deg: 140,
+    driftDir: -1,
+    omegaDegPerSec: 1.9, // ≈ 190s/lap
+    line: {
+      stroke: "rgba(202, 165, 84, 0.55)",
+      strokeWidth: 0.55,
+      dashMark: SOLID_MARK,
+      dashGap: 0,
+      lineCap: "round",
+    },
+  },
 };
 
 /**
