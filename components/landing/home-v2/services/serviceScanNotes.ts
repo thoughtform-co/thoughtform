@@ -39,6 +39,16 @@ export const SERVICE_SCAN_NOTES: readonly ServiceScanNote[] = [
     summary:
       "A longer embed where the encoded layer compounds until the team can extend it itself.",
   },
+  {
+    id: "scan-guided-build-transfer",
+    serviceId: "guided-build",
+    label: "Build capacity transfer",
+    coordinate: "CV:11.30 / B-LINK",
+    confidence: 0.86,
+    signals: ["architecture reviews", "eval gates", "internal ownership"],
+    summary:
+      "A guided build where the client's engineers ship the surface and inherit the ability to extend it.",
+  },
 ];
 
 export function getScanNoteForService(serviceId: ServiceId): ServiceScanNote {

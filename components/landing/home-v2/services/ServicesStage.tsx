@@ -3,7 +3,9 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { ServicesDesignationLayer } from "./ServicesDesignationLayer";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
+import { ServicesStationReadout } from "./ServicesStationReadout";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
@@ -103,12 +105,22 @@ export function ServicesStage() {
       <div className="services-stage__items">
         {showServicesCanvas ? <ServicesHologramCanvas activeServiceId={activeServiceId} /> : null}
 
+        {/* Designation layer sits under the plate cluster so an open plate
+            always paints on top of a stray callout that lands near a
+            rack edge (rare, but possible on narrow desktops). Hidden on
+            mobile / reduced motion via CSS + a JS gate in the layer. */}
+        <ServicesDesignationLayer fallbackActiveServiceId={activeServiceId} />
+
         <ServicesPlateCluster
           activeServiceId={activeServiceId}
           expandedServiceId={activeServiceId}
           onSelectService={selectService}
           plateVariant="wireframe"
         />
+
+        {/* Station readout — the mono row along the bottom of the stage
+            that ties the racks + designation layer into one instrument. */}
+        <ServicesStationReadout activeServiceId={activeServiceId} />
       </div>
     </div>
   );

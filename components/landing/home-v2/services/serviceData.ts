@@ -17,9 +17,9 @@
  * Services portal can follow the same content-then-card pattern.
  */
 
-export type ServiceId = "keynote" | "workshop" | "embedded";
+export type ServiceId = "keynote" | "workshop" | "embedded" | "guided-build";
 
-export type ServicePhase = "navigate" | "navigate-encode" | "all";
+export type ServicePhase = "navigate" | "navigate-encode" | "encode-build" | "all";
 
 export interface ServiceMetaRow {
   /** Mono label rendered on the left ("Runs", "Shape", "Leaves behind"). */
@@ -114,6 +114,27 @@ export const SERVICES: readonly Service[] = [
     ],
     phase: "all",
     ctaLabel: "Embed the practice",
+    ctaHref: "#contact",
+    shapeKey: "loop-crystallized",
+  },
+  {
+    // Guided Build (2026-07-09) — the client's engineers ship the surface,
+    // we steer architecture, evals, and handoff. Sits between Workshop and
+    // Embedded on the build-heavy end of the arc.
+    id: "guided-build",
+    index: "04",
+    verb: "GUIDED BUILD",
+    name: "Guided Build",
+    kicker: "SHIP THE SURFACE",
+    tagline: "Your team ships it.",
+    body: "Your engineers own the surface; I steer the architecture, evaluation, and handover until the internal capacity holds.",
+    meta: [
+      { label: "Runs", value: "Encode · Build" },
+      { label: "Format", value: "Sprints with review gates" },
+      { label: "Leaves", value: "A team-built surface" },
+    ],
+    phase: "encode-build",
+    ctaLabel: "Scope a build",
     ctaHref: "#contact",
     shapeKey: "loop-crystallized",
   },

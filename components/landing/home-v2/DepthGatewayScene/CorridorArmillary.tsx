@@ -32,13 +32,17 @@ import { useRef } from "react";
 import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
-import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
+import { brandmarkScanAnchorPointsRef, type BrandmarkFeatureId } from "../brandmarkScanAnchorsRef";
 import {
   HologramOrbits,
   STRUCTURAL_ORBITS,
 } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
-import { useHologramConnectors, type ConnectorAnchor } from "@/lib/stores/hologramConnectorStore";
+import {
+  useHologramConnectors,
+  type ConnectorAnchor,
+  type FeatureAnchor,
+} from "@/lib/stores/hologramConnectorStore";
 
 /** Orbit scale relative to the core's group. The core geometry is normalised to
  *  TARGET_HALF = 0.5 half-extent; this lifts the orbit radii (1.06–2.36) so the
@@ -53,6 +57,7 @@ const ANCHOR_PUBLISH_DISSIPATE = 0.88;
 export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number }) {
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId) ?? SERVICES[0].id;
   const setAnchors = useHologramConnectors((s) => s.setAnchors);
+  const setFeatureAnchors = useHologramConnectors((s) => s.setFeatureAnchors);
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   // Probe group at identity — its matrixWorld IS the pointer-look space the
@@ -66,19 +71,21 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
 
   useFrame(() => {
     const parked = getSmoothedDissipate() >= ANCHOR_PUBLISH_DISSIPATE;
-    const points = brandmarkScanAnchorPointsRef.current;
+    const anchorsRef = brandmarkScanAnchorPointsRef.current;
     const probe = probeRef.current;
-    if (!parked || !points || !probe) {
+    if (!parked || !anchorsRef || !probe) {
       if (!clearedRef.current) {
         setAnchors([]);
+        setFeatureAnchors([]);
         clearedRef.current = true;
       }
       return;
     }
 
     const world = worldRef.current;
+    // Service corner anchors — plate connectors terminate here.
     const anchors: ConnectorAnchor[] = SERVICES.map((service) => {
-      const [x, y, z] = points[service.id];
+      const [x, y, z] = anchorsRef.points[service.id];
       world.set(x, y, z).applyMatrix4(probe.matrixWorld);
       const projected = world.project(camera);
       return {
@@ -89,8 +96,27 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
         visible: projected.z < 1 && projected.z > -1,
       };
     });
+    // Named designation features — ServicesDesignationLayer subscribes.
+    // Object.entries preserves insertion order (BrandmarkFeatureId keys),
+    // which the designation set relies on for stable stagger indices.
+    const featureAnchors: FeatureAnchor[] = (
+      Object.entries(anchorsRef.features) as Array<
+        [BrandmarkFeatureId, readonly [number, number, number]]
+      >
+    ).map(([featureId, [x, y, z]]) => {
+      world.set(x, y, z).applyMatrix4(probe.matrixWorld);
+      const projected = world.project(camera);
+      return {
+        featureId,
+        x: (projected.x * 0.5 + 0.5) * size.width,
+        y: (-projected.y * 0.5 + 0.5) * size.height,
+        depth: projected.z,
+        visible: projected.z < 1 && projected.z > -1,
+      };
+    });
     clearedRef.current = false;
     setAnchors(anchors);
+    setFeatureAnchors(featureAnchors);
   });
 
   return (

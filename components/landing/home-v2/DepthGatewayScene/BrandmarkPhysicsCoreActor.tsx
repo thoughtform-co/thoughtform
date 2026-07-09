@@ -1050,10 +1050,72 @@ function BrandmarkPhysicsCoreWithGLB({
       }
       return [nx, ny, nz];
     };
+    // Named designation features (ADR-025 Update 9). The designation layer
+    // (spacecraft-cutaway callouts pinned to the wireframe) references these
+    // by semantic id; picks use different bias amplitudes so they land on
+    // distinct interior structure rather than clustering at the corners.
+    // Lower INWARD (=less pull) keeps them close to their extreme; higher
+    // INWARD lands them deeper on the interior struts.
+    const pickFeature = (
+      dirX: number,
+      dirY: number,
+      dirZ: number,
+      pullIn: number
+    ): [number, number, number] => {
+      let best = -Infinity;
+      let ex = 0;
+      let ey = 0;
+      let ez = 0;
+      for (let i = 0; i < targetHomes.length; i += 3) {
+        const score = dirX * targetHomes[i] + dirY * targetHomes[i + 1] + dirZ * targetHomes[i + 2];
+        if (score > best) {
+          best = score;
+          ex = targetHomes[i];
+          ey = targetHomes[i + 1];
+          ez = targetHomes[i + 2];
+        }
+      }
+      const tx = ex * (1 - pullIn);
+      const ty = ey * (1 - pullIn);
+      const tz = ez * (1 - pullIn);
+      let nearest = Infinity;
+      let nx = ex;
+      let ny = ey;
+      let nz = ez;
+      for (let i = 0; i < targetHomes.length; i += 3) {
+        const dx = targetHomes[i] - tx;
+        const dy = targetHomes[i + 1] - ty;
+        const dz = targetHomes[i + 2] - tz;
+        const d = dx * dx + dy * dy + dz * dz;
+        if (d < nearest) {
+          nearest = d;
+          nx = targetHomes[i];
+          ny = targetHomes[i + 1];
+          nz = targetHomes[i + 2];
+        }
+      }
+      return [nx, ny, nz];
+    };
     brandmarkScanAnchorPointsRef.current = {
-      keynote: pick(-1, 1), // upper-left feature
-      workshop: pick(-1, -1), // lower-left feature
-      embedded: pick(1, 1), // upper-right feature
+      points: {
+        keynote: pick(-1, 1), // upper-left feature (left rack, top)
+        workshop: pick(-1, -1), // lower-left feature (left rack, bottom)
+        embedded: pick(1, 1), // upper-right feature (right rack, top)
+        "guided-build": pick(1, -1), // lower-right feature (right rack, bottom)
+      },
+      features: {
+        // Six semantic regions spread across the mark. Pulled deeper toward
+        // centre than the corner picks so the two anchor sets don't
+        // collide visually — features sit ON the interior struts, corners
+        // sit ON the outer silhouette structure.
+        crown: pickFeature(0, 1, 0.2, 0.28), // top-centre
+        "upper-left-arm": pickFeature(-0.85, 0.55, 0, 0.55),
+        "upper-right-arm": pickFeature(0.85, 0.55, 0, 0.55),
+        core: pickFeature(0, 0, 1, 0.72), // near-centre, camera-facing
+        "lower-left-arm": pickFeature(-0.85, -0.55, 0, 0.55),
+        "lower-right-arm": pickFeature(0.85, -0.55, 0, 0.55),
+        base: pickFeature(0, -1, 0.2, 0.28), // bottom-centre
+      },
     };
     return () => {
       brandmarkScanAnchorPointsRef.current = null;

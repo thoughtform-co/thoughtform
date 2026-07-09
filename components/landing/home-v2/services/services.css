@@ -66,11 +66,14 @@
   position: relative;
   z-index: 2;
   /* Runway the sticky stage pins within — one viewport-tall scroll segment per
-   * service (3 steps): the scroll position owns which signal plate is OPEN
-   * (useServicesStageScroll step → expanded card in ServicesPlateCluster).
-   * The corridor-exit dissipate clock keys off #services's TOP + a fixed span
+   * service (4 steps since ADR-025 Update 9, 2026-07-09: Keynote / Workshop /
+   * Embedded / Guided Build): the scroll position owns which signal plate is
+   * OPEN (useServicesStageScroll STEP_COUNT → expanded card in
+   * ServicesPlateCluster; must stay in lockstep with STEP_COUNT × 100svh so
+   * each service still owns one viewport of scroll travel). The corridor-exit
+   * dissipate clock keys off #services's TOP + a fixed span
    * (useCorridorExitScroll), NOT this height. */
-  min-height: 300svh;
+  min-height: 400svh;
 }
 
 /* ── Pinned stage ────────────────────────────────────────────────── */
@@ -382,6 +385,243 @@
   color: var(--dawn);
 }
 
+/* ── Services readout strip (ADR-025 Update 9, 2026-07-09) ───────────────
+ * Bottom-of-stage mono row that ties the racks + designation layer to the
+ * HUD frame. Same PT Mono grammar as `.hud__rail__label` and the corridor
+ * caption chrome; the three data cells scramble-decode on service change
+ * via the caption kernel. Fades in with `--svc-content-in` like the rest
+ * of the section content, and hides on mobile / reduced motion. */
+.services-readout {
+  position: absolute;
+  left: clamp(64px, 8vw, 168px);
+  right: clamp(64px, 8vw, 168px);
+  bottom: clamp(28px, 4vh, 52px);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1vw, 16px);
+  pointer-events: none;
+  opacity: var(--svc-content-in, 1);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn-60, rgba(236, 227, 214, 0.6));
+}
+.services-readout__leader {
+  flex: 1;
+  min-width: 24px;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(236, 227, 214, 0.22) 0 1px,
+    transparent 1px 6px
+  );
+}
+.services-readout__sep {
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  opacity: 0.5;
+  transform: rotate(45deg);
+  flex: none;
+}
+.services-readout__cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+.services-readout__key {
+  color: rgba(236, 227, 214, 0.36);
+}
+.services-readout__val {
+  color: var(--dawn-70, rgba(236, 227, 214, 0.7));
+}
+.services-readout__val--name {
+  color: var(--gold, #caa554);
+  letter-spacing: 0.22em;
+}
+.services-readout__val--live {
+  color: var(--gold, #caa554);
+}
+.services-readout__diamond {
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  align-self: center;
+}
+.services-readout__pip {
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.6);
+  align-self: center;
+  animation: servicesReadoutPip 1.6s ease-in-out infinite;
+}
+@keyframes servicesReadoutPip {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .services-readout {
+    display: none;
+  }
+}
+
+/* ── Services designations (ADR-025 Update 9, 2026-07-09) ────────────────
+ * Spacecraft-cutaway callouts pinned to named wireframe features, in the
+ * NASA technical-diagram grammar (Vince review, 2026-07-09): BARE mono
+ * text — no box, no background, no border — and everything in ONE ink,
+ * the parked instrument gold the wireframe itself converges to
+ * (`SERVICES_GOLD` = `--gold` #caa554, per lib/home-v2/goldPalette.ts:
+ * "use for LINE/DOM elements that render at full coverage"). Leader lines
+ * are thin SOLID hairlines (no dash, no glow) with one elbow running
+ * straight into the text stack; the only ornament is a 3px diamond where
+ * the leader lands on the wireframe. Text aligns toward the leader
+ * (right-side labels left-aligned, left-side right-aligned), like the
+ * reference cutaways. Driven by `hologramConnectorStore.featureAnchors`
+ * + the active service; rides `--svc-content-in`; hidden below 961px /
+ * reduced motion.
+ */
+.services-designations {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: var(--svc-content-in, 1);
+  /* One ink. Hierarchy comes from opacity steps of the SAME gold, never
+   * from a second color (the reference diagrams are single-ink). */
+  --svc-des-ink: var(--gold, #caa554);
+  --svc-des-stagger: 0.06s;
+  --svc-des-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.services-designations__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.svc-designation-line__stroke {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke: var(--svc-des-ink);
+  stroke-width: 1;
+  stroke-opacity: 0.42;
+  stroke-linecap: square;
+}
+.svc-designation-line__tick {
+  fill: var(--svc-des-ink);
+  fill-opacity: 0.75;
+}
+.svc-designation-line {
+  animation: svcDesignationDrawIn 0.62s var(--svc-des-ease) both;
+  animation-delay: calc(var(--svc-des-order, 0) * var(--svc-des-stagger));
+}
+
+@keyframes svcDesignationDrawIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Text stack — bare type positioned at the leader's landing point.
+ * Right-side callouts start at the landing point and grow away from the
+ * mark; left-side callouts end at it. A whisper of void text-shadow keeps
+ * the small caps legible where a wire crosses behind them (subtler than
+ * any plate; invisible on empty space). */
+.svc-designation {
+  position: absolute;
+  left: var(--svc-des-x);
+  top: var(--svc-des-y);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 176px;
+  transform: translateY(-50%);
+  /* Labels sit INSIDE the wireframe (interior-callout pass) — a doubled
+   * void shadow carves them out of the wire strokes passing behind,
+   * without reading as a box on empty space. */
+  text-shadow:
+    0 0 3px rgba(5, 4, 3, 0.95),
+    0 0 10px rgba(5, 4, 3, 0.85);
+  animation: svcDesignationRiseIn 0.42s var(--svc-des-ease) both;
+  animation-delay: calc(var(--svc-des-order, 0) * var(--svc-des-stagger) + 0.15s);
+}
+.svc-designation[data-side="right"] {
+  padding-left: 8px;
+  align-items: flex-start;
+  text-align: left;
+}
+.svc-designation[data-side="left"] {
+  padding-right: 8px;
+  align-items: flex-end;
+  text-align: right;
+  transform: translate(-100%, -50%);
+}
+
+@keyframes svcDesignationRiseIn {
+  from {
+    opacity: 0;
+    transform: translate(0, calc(-50% + 4px));
+  }
+  to {
+    opacity: 1;
+  }
+}
+.svc-designation[data-side="left"] {
+  animation-name: svcDesignationRiseInLeft;
+}
+@keyframes svcDesignationRiseInLeft {
+  from {
+    opacity: 0;
+    transform: translate(-100%, calc(-50% + 4px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-100%, -50%);
+  }
+}
+
+.svc-designation__label {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--svc-des-ink);
+  opacity: 0.92;
+  white-space: nowrap;
+}
+.svc-designation__detail {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--svc-des-ink);
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .services-designations {
+    display: none;
+  }
+}
+
 /* --- R3F Services hologram + scan-card interface ------------------------ */
 .services-hologram {
   position: absolute;
@@ -457,6 +697,22 @@
   stroke-width: 1.4;
   stroke-opacity: 0.92;
   stroke-dasharray: 2 5;
+}
+/* Stub connectors — seeds get a short leader from the mark reticle toward
+ * their notch (fades out at ~STUB_LENGTH_PX). Quieter than the expanded
+ * leader so the four wires don't compete with the designation layer, but
+ * still visible enough that the plate's connection to the mark reads.
+ * The reticle itself stays at full weight (kept below). */
+.services-scan-connector--stub {
+  opacity: 0.55;
+}
+.services-scan-connector--stub .services-scan-connector__line {
+  stroke-opacity: 0.5;
+  stroke-dasharray: 2 6;
+  animation: none;
+}
+.services-scan-connector--stub .services-scan-connector__glow {
+  stroke-opacity: 0.03;
 }
 @keyframes servicesScanFlow {
   to {
@@ -1032,6 +1288,12 @@
   z-index: 3;
   pointer-events: none;
   opacity: var(--svc-content-in, 1);
+  /* Perspective for the rack tilt (ADR-025 Update 9). Applied at the
+   * cluster level so both racks share one vanishing point; child transforms
+   * (rotateY on `.svc-rack--*`) then read as one instrument, not two
+   * independently-tilted panels. */
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
 }
 .services-plate-cluster *,
 .services-plate-cluster *::before,
@@ -1044,13 +1306,105 @@
   color: inherit;
 }
 
-/* ── Plate root — anchored corner position, width morphs on open ────── */
-.svc-plate {
+/* ── Console racks (ADR-025 Update 9) ───────────────────────────────
+ * Two vertically-centred flex columns dock the plates on either side of
+ * the mark: left rack = Keynote (top) + Workshop (bottom), right rack =
+ * Embedded (top) + Guided Build (bottom). The whole rack tilts inward via
+ * `rotateY` — this reads as a Cyberpunk / cockpit console angled toward
+ * the operator, and it makes the plate the tilted surface rather than
+ * every card independently (so `backdrop-filter` on the plate body still
+ * composites cleanly, and text stays crisp inside its own untransformed
+ * frame). Hover / focus eases the rack back to 0° so the active panel
+ * reads head-on.
+ *
+ * The rack rig also fixes the pre-existing Update-8 issue where an open
+ * keynote plate could overlap the bottom-anchored workshop seed on short
+ * viewports: cards now flow in a single column with an explicit gap, so
+ * an open card grows in-flow and pushes its sibling instead of colliding.
+ */
+.svc-rack {
+  --rack-tilt: 6deg;
+  --rack-inset: clamp(72px, 8vw, 168px);
   position: absolute;
-  left: var(--plate-left, auto);
-  right: var(--plate-right, auto);
-  top: var(--plate-top, auto);
-  bottom: var(--plate-bottom, auto);
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(14px, 1.6vw, 24px);
+  pointer-events: none;
+  /* transform-origin at the mark-facing edge so the rack hinges toward the
+   * centered brandmark instead of pivoting around its outer edge. */
+  transform-style: preserve-3d;
+  transition: transform 0.42s var(--plate-ease);
+}
+.svc-rack--left {
+  left: var(--rack-inset);
+  transform-origin: 100% 50%;
+  transform: translateY(-50%) rotateY(var(--rack-tilt));
+}
+.svc-rack--right {
+  right: var(--rack-inset);
+  align-items: flex-end;
+  transform-origin: 0% 50%;
+  transform: translateY(-50%) rotateY(calc(-1 * var(--rack-tilt)));
+}
+/* Ease back to head-on when a card in the rack is being read. */
+.svc-rack:hover,
+.svc-rack:focus-within {
+  --rack-tilt: 0deg;
+}
+/* Spine — vertical tick rail hanging off the mark-facing edge of each rack.
+ * Same repeating-linear-gradient grammar as `.home-v2-reticle__rail` so the
+ * cluster reads as the same instrument family. A solid gold pip sits at
+ * mid-height as the "anchor mark" tying the rack to the HUD. */
+.svc-rack__spine {
+  position: absolute;
+  top: -18px;
+  bottom: -18px;
+  width: 5px;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, var(--dawn-30) 0 1px, transparent 1px 8px);
+}
+.svc-rack--left .svc-rack__spine {
+  right: -22px;
+}
+.svc-rack--right .svc-rack__spine {
+  left: -22px;
+}
+.svc-rack__spine::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.8;
+}
+.svc-rack--left .svc-rack__spine::before {
+  right: -3px;
+}
+.svc-rack--right .svc-rack__spine::before {
+  left: -3px;
+}
+/* Small diamond ticks at rack top/bottom — echoes the `PlateWireOutline`
+ * chamfer diamonds so the ornament vocabulary reads consistently. */
+.svc-rack__spine::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  opacity: 0.7;
+  box-shadow: 0 calc(100% + 5px) 0 rgba(202, 165, 84, 0.7);
+}
+
+/* ── Plate root — rack-relative flow, width morphs on open ──────────── */
+.svc-plate {
+  position: relative;
   width: var(--plate-width, 100%);
   /* Seed chamfer; the open state lifts it to the C3 plate's 26px. */
   --ch: 16px;
@@ -1238,6 +1592,41 @@
   -webkit-mask-size: 4px 4px;
   mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
   mask-size: 4px 4px;
+}
+/* Schematic dot-grid placeholder for services without a shipped photo
+ * (Guided Build, 2026-07-09). The `--pbg--dots` uses the photo as its
+ * background; this variant paints a static gold dot-grid so the open plate
+ * still reads as an instrument feed. Same 4px dot pitch — reads as the
+ * mark's particle ink, matching the wireframe-seed vocabulary. Fades in on
+ * open like the photo layers. */
+.svc-plate__pbg--schematic {
+  background:
+    radial-gradient(rgba(202, 165, 84, 0.24) 0.85px, transparent 1.1px) 0 0 / 4px 4px,
+    radial-gradient(rgba(236, 227, 214, 0.06) 0.6px, transparent 0.8px) 2px 2px / 6px 6px,
+    linear-gradient(180deg, rgba(8, 7, 6, 0.72), rgba(8, 7, 6, 0.94));
+  opacity: 0;
+  transition: opacity 0.5s var(--plate-ease);
+}
+.svc-plate[data-state="open"] .svc-plate__pbg--schematic {
+  opacity: 0.9;
+  transition-delay: 0.12s;
+}
+.svc-plate[data-state="open"]:hover .svc-plate__pbg--schematic {
+  opacity: 1;
+  transition-delay: 0s;
+}
+/* Photo-less seeds hide the halftone band (no photo to sample from —
+ * `svc-plate__band-im` has no image, so the fallback ink would look
+ * arbitrary). The rest of the seed reads as intended. */
+.svc-plate[data-photo="off"] .svc-plate__band-im {
+  display: none;
+}
+.svc-plate[data-photo="off"] .svc-plate__band {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(202, 165, 84, 0.09) 0 6px,
+    transparent 6px 12px
+  );
 }
 /* Hologram resolves on hover of the OPEN card (original C3 values). */
 .svc-plate[data-state="open"]:hover .svc-plate__pbg--dots {
@@ -1561,6 +1950,13 @@
   color: var(--gold);
   font-weight: 400;
 }
+/* All four service CTAs share one style: FILLED gold with the canonical
+ * on-gold ink (--latent-night #110f09, near-black — the same treatment as
+ * .hero__cta__btn--primary and the open chip). No outline variant; the
+ * former per-card `--solid` (focus-only) fill is now the base, so Keynote /
+ * Workshop / Embedded / Guided Build read identically (2026-07-09 Vince
+ * review: "they all need to have the fill, and the font color should be
+ * black"). */
 .svc-plate__cta {
   display: flex;
   align-items: center;
@@ -1568,36 +1964,37 @@
   height: 42px;
   margin-top: 18px;
   padding: 0 14px;
-  border: 1px solid rgba(202, 165, 84, 0.35);
-  background: var(--dawn-04);
+  border: 1px solid var(--gold);
+  background: var(--gold);
   font-family: var(--mono);
   font-weight: 700;
   font-size: 10.5px;
   letter-spacing: 0.22em;
-  color: var(--dawn);
   text-transform: uppercase;
   transition:
     background 0.3s var(--plate-ease),
     border-color 0.3s var(--plate-ease),
     color 0.3s var(--plate-ease);
 }
+/* The CTA is an <a>, and `.services-plate-cluster a { color: inherit }`
+ * (specificity 0,1,1) outranks a bare `.svc-plate__cta` (0,1,0) — so the
+ * anchor text has to be set through a selector that wins, or it inherits
+ * the dawn body ink instead of the on-gold latent-night. (This is why the
+ * pre-2026-07-09 `--solid` card's LABEL was never actually black, only its
+ * arrow span was.) `a.svc-plate__cta` (0,2,1) beats the inherit rule. */
+.services-plate-cluster a.svc-plate__cta {
+  color: var(--latent-night, #110f09);
+}
 .svc-plate__aro {
-  color: var(--gold);
+  color: var(--latent-night, #110f09);
   font-weight: 400;
 }
-.svc-plate[data-state="open"]:hover .svc-plate__cta:not(.svc-plate__cta--solid) {
-  border-color: var(--gold-40);
-  color: var(--gold);
-  background: var(--gold-05);
-}
-.svc-plate__cta--solid {
-  background: var(--gold);
-  border-color: var(--gold);
-  /* On-gold text = latent-night (shared with .hero__cta__btn--primary). */
-  color: var(--latent-night, #110f09);
-}
-.svc-plate__cta--solid .svc-plate__aro {
-  color: var(--latent-night, #110f09);
+/* Uniform hover for every filled CTA — brighter gold, matching
+ * .hero__cta__btn--primary:hover (the fallback keeps it correct inside the
+ * plate cluster scope, which doesn't redeclare --gold-bright). */
+.svc-plate[data-state="open"]:hover .svc-plate__cta {
+  background: var(--gold-bright, #e0bd6a);
+  border-color: var(--gold-bright, #e0bd6a);
 }
 
 /* ── Wireframe seeds (data-variant="wireframe", ADR-025 Update 8) ────────
@@ -1640,11 +2037,13 @@
 
 /* Body → transparent-void whisper. blur(0px), NOT none: `none` doesn't
  * interpolate to the open state's blur(16px). Hover = pre-materialize
- * (a whisper of glass returns before the click). */
+ * (a whisper of glass returns before the click). Wash lowered 0.18 →
+ * 0.10 in the 2026-07-09 seed-ink pass so the resting seed is outline +
+ * type over the scene, not a tinted panel. */
 .svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__bd {
   background:
     linear-gradient(172deg, rgba(236, 227, 214, 0.02) 0%, rgba(236, 227, 214, 0) 50%),
-    rgba(8, 7, 6, 0.18);
+    rgba(8, 7, 6, 0.1);
   -webkit-backdrop-filter: blur(0px);
   backdrop-filter: blur(0px);
 }
@@ -1660,9 +2059,40 @@
   opacity: 0;
 }
 
-/* Seed title recedes into the diagram layer. */
+/* ── Seed ink → the mark's gold (2026-07-09, "same wireframe outlines
+ * until they come into view"). At rest the collapsed seed reads as part
+ * of the DIAGRAM layer: gold mono type, ghost-gold chip, near-zero body —
+ * the same ink as the wireframe mark and the designation labels. "Coming
+ * into view" = hover/focus (pre-materialization: dawn type + a whisper of
+ * glass returns) or open (the full C3 materialization). Every property
+ * re-inked here already transitions with the plate morph, so the
+ * seed→card handoff stays the same graduated 0.52s sequence — no new
+ * abrupt step. */
 .svc-plate[data-variant="wireframe"] .svc-plate__seed-title {
-  color: var(--dawn-60, rgba(236, 227, 214, 0.6));
+  color: rgba(202, 165, 84, 0.72);
+  transition: color var(--plate-close) var(--plate-ease);
+}
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__seed-title,
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__seed-title {
+  color: var(--dawn);
+}
+/* Ghost-gold chip at rest — border + text in the wire's ink, no fill.
+ * Hover restores the dawn ghost chip (the glass grammar returning);
+ * the open state's solid gold flip is untouched. */
+.svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__chip {
+  border-color: rgba(202, 165, 84, 0.32);
+  background: transparent;
+  color: rgba(202, 165, 84, 0.8);
+}
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__chip,
+.svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__chip {
+  border-color: rgba(236, 227, 214, 0.45);
+  background: rgba(236, 227, 214, 0.05);
+  color: var(--dawn);
+}
+/* Band caption follows the ink. */
+.svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__cap {
+  color: rgba(202, 165, 84, 0.45);
 }
 
 /* Halftone band → gold specimen: the 4px photo dots re-grade toward the
@@ -1671,7 +2101,9 @@
   background: transparent;
 }
 .svc-plate[data-variant="wireframe"] .svc-plate__band-im {
-  opacity: 0.2;
+  /* 0.2 → 0.14 (2026-07-09 seed-ink pass): the halftone specimen recedes
+   * with the rest of the seed material; hover still lifts it to 0.4. */
+  opacity: 0.14;
   filter: grayscale(1) sepia(1) hue-rotate(-8deg) saturate(2.2) brightness(0.66) contrast(1.2);
 }
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__band-im,
@@ -1745,7 +2177,9 @@
  * fall back to width:100% here and restack in flow (SPEC §6: open card
  * full-width, seeds as band-less bars, same open/close mechanic — a tap
  * opens via the same seed button; ServicesStage sets the state directly on
- * the inert path). */
+ * the inert path). The rack wrappers dissolve via `display: contents` so
+ * the four plates flow as direct grid children in service-arc order
+ * (Keynote → Workshop → Embedded → Guided Build). */
 @media (max-width: 960px), (prefers-reduced-motion: reduce) {
   .services-plate-cluster {
     position: relative;
@@ -1753,13 +2187,16 @@
     display: grid;
     gap: 14px;
     pointer-events: auto;
+    perspective: none;
+  }
+  .svc-rack {
+    display: contents;
+  }
+  .svc-rack__spine {
+    display: none;
   }
   .svc-plate {
     position: relative;
-    left: auto;
-    right: auto;
-    top: auto;
-    bottom: auto;
     width: 100%;
   }
   .svc-plate__band {

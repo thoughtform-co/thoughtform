@@ -392,3 +392,193 @@ Connector weights lifted (line 0.72 opacity / 1px, base 0.72). **On-gold ink =
 `--latent-night` (#110f09), not `--void`** — applied to the open chip + its
 diamond and the solid CTA + arrow, matching `.hero__cta__btn--primary`; this is
 the canonical text/mark colour on any tensor-gold fill.
+
+## Update 9 (2026-07-09): console racks + designation layer + fourth service
+
+The Update-8 spread-corner plates read as "high-fidelity cards floating over
+a wireframe brandmark" — the CV-scan leader lines pinned them to the mark
+mechanically, but the plates never felt like they belonged to the same
+instrument. Vince's live review named the reference (sutera.ch computer-vision
+callouts on the wireframe; spacecraft cutaway leader lines; Cyberpunk 2077
+inward-tilted body-scan console panels) and asked for a fourth engagement
+card, one integrated instrument.
+
+Three moves in one pass, all layered on the pipeline the previous updates
+already built (unified `CorridorArmillary` anchor projection, `hologramConnectorStore`
+bridge, wireframe-seed / C3-glass plate morph, single-writer scroll hook):
+
+- **Console racks — the plates dock.** `ServicesPlateCluster` retires
+  `getPlateLayout()`'s per-plate absolute pixel offsets. Two rack containers
+  (`.svc-rack--left` / `.svc-rack--right`, `services.css`) sit vertically
+  centred on the mark's flanks: **left rack = Keynote (top) + Workshop (bottom)**,
+  **right rack = Embedded (top) + Guided Build (bottom)** — 2+2 balance around
+  the wireframe. Each rack is a flex column with a fixed gap, so opening a
+  card grows it in-flow and pushes its sibling rather than colliding. Fixes
+  the known Update-8 issue (open keynote overlapping the bottom-anchored
+  workshop seed on ≤ ~1000px viewports) by construction. The whole rack
+  receives an inward `rotateY(±6deg)` transform from a `perspective: 1600px`
+  parent, hinged at its mark-facing edge — the plate becomes the tilted
+  surface, not the card, so `backdrop-filter: blur(16px)` still composites
+  cleanly and body text stays crisp inside its own untransformed frame.
+  Hover / focus eases the tilt back to 0° so the panel being read reads
+  head-on. Each rack ships a hairline **spine** (`.svc-rack__spine`, same
+  repeating-linear-gradient grammar as `.home-v2-reticle__rail`) with a
+  gold pip at mid-height and a diamond tick at each end, so the racks
+  visibly plug into the HUD frame Vince liked.
+- **Designation layer — CV callouts on the mark.** New
+  `ServicesDesignationLayer` (mounted inside `.services-stage__items`,
+  below the plate cluster) renders four small mono callouts pinned to
+  **named wireframe features** (`BrandmarkFeatureId`: `crown`,
+  `upper-left-arm`, `upper-right-arm`, `core`, `lower-left-arm`,
+  `lower-right-arm`, `base`). **NASA-cutaway grammar (Vince review,
+  2026-07-09, against the Gemini/IMU reference diagrams):** the callouts
+  are BARE mono text — no box, no background, no border, no shadow stack —
+  and the whole layer is ONE ink, the parked instrument gold
+  (`SERVICES_GOLD` = `--gold` #caa554); hierarchy comes from opacity
+  steps of that same gold (label 0.92 / detail 0.5 / leader 0.42), never
+  a second color. Leaders are thin SOLID hairlines (no dash, no glow):
+  one straight diagonal from the part to the label, then a short
+  horizontal dash running into the text; the only ornament is a 3px
+  diamond where the leader lands on the wireframe. A doubled void
+  `text-shadow` carves the small caps out of wires passing behind them.
+  **Interior placement (second review pass, same day — "they don't need
+  to live outside"):** labels sit INSIDE the mark's footprint, each a
+  short hook off its own anchor (`offset.dx/dy` are anchor-relative
+  again — see `serviceDesignations.ts`), tucked into the four quadrant
+  pockets between the crossbar and the sword: arm labels grow INWARD
+  (a left-arm anchor takes `side: "right"`), crown labels tuck just
+  above their anchor, base labels just below. An earlier same-day
+  iteration placed labels in clearance bands above/below the mark
+  (`SILHOUETTE_INFLATE` extent math) — superseded by the interior rule;
+  wires crossing behind the caps are the intended IMU-reference look.
+  `core` hosts no label (the centre is the densest ink). Copy pairs a
+  mono `LABEL` + short `detail` line
+  (AI STRATEGY / the shared frame, GOVERNANCE / leadership altitude,
+  ARCHITECTURE / reviews with your team, ...); the set swaps with the
+  active service, each swap animated as a scramble-decode through the
+  corridor's caption grammar (`captionScramble.ts` — shared kernel with
+  the wireframe seed's title decode and the corridor caption chrome). The
+  spacecraft-cutaway CV richness now lives here; the plate connectors
+  calm down to complement (see below).
+- **Fourth service — Guided Build.** `SERVICE_PLATES`, `SERVICES`, and
+  `SERVICE_SCAN_NOTES` add `guided-build` (`04 — Guided Build`, `BLD-04`,
+  status `CV:11.30 / B-LINK`). Copy from the strategy skill's engagement
+  catalog (`references/07-engagements.md`, "Build-heavy · Guided build"):
+  the client's engineers ship the surface, the operator steers architecture,
+  evals, and handover. `photo` on `ServicePlate` is now optional, and
+  `ServicePlateCard` renders a schematic gold dot-grid placeholder
+  (`.svc-plate__pbg--schematic`) in the feed window until a captured
+  session ships and `scripts/services-photos/prepare.mjs` promotes it.
+  The runway `min-height` bumps to `400svh` (STEP_COUNT × 100svh) and
+  `useServicesStageScroll.STEP_COUNT` bumps to 4 so each service still
+  owns one viewport of scroll travel. `getServicePose` was already
+  `total`-parametric so the 4-stop bounded yaw sweep lands automatically
+  (the middle sits near-frontal by design; amplitude stays bounded per
+  `.claude/rules/brandmark.md`).
+
+Supporting pipeline changes:
+
+- `brandmarkScanAnchorsRef` now exports `{ points, features }` (two anchor
+  sets instead of one map). `BrandmarkPhysicsCoreActor` writes both: the
+  four service corner anchors (Keynote/Workshop/Embedded/**Guided Build**
+  → lower-right, `pick(1, -1)`) and seven named feature anchors, each
+  picked with a `pickFeature` helper that varies the interior-pull amplitude
+  so features land on distinct interior structure (crown/base use a low
+  pull to sit near the silhouette top/bottom; arms use a higher pull to
+  land on inner struts; core sits deeper still with a +Z bias so it reads
+  as the camera-facing centre). `CorridorArmillary` projects both anchor
+  sets in the same parked-frame loop through the shared probe group and
+  publishes each to its own `hologramConnectorStore` slice
+  (`anchors` / `featureAnchors`), same gate (`getSmoothedDissipate() >= 0.88`).
+- Connector overlay dual-tier (`ServicesPlateCluster.PlateConnectorOverlay`):
+  the **expanded** card renders the full dotted-gold leader from its
+  chamfer notch to the mark reticle; **seeds** render a short 42-px stub
+  from the mark reticle toward their notch, dimmer (`stroke-opacity 0.5`)
+  and without the dashflow animation. Reticle stays at full weight in
+  both states. The four wires stop competing with the designation layer
+  for attention.
+- **Station readout strip.** `ServicesStationReadout` sits along the
+  bottom of the stage between the two racks: a mono row carrying
+  `SVC 04/04 · GUIDED BUILD · CV:11.30 / B-LINK · CONF 86% · FEED LIVE`,
+  data-driven from `SERVICES` + `serviceScanNotes`. Three cells
+  scramble-decode on service change via the caption kernel. Same PT Mono
+  grammar as `.hud__rail__label`, framed by dashed-leader tails on either
+  end — the section reads as one instrument that plugs into the HUD frame,
+  not four floating cards next to a mark.
+
+**Mobile / reduced motion:** unchanged accordion. The `.svc-rack` wrappers
+dissolve via `display: contents` so the four plates flow as direct grid
+children in service-arc order (Keynote → Workshop → Embedded → Guided
+Build). Designation layer, readout, and connector stubs are hidden by
+media queries and JS gates (the layer never mounts below 961px). Corridor
+canvas doesn't dock on this path (no feature anchors publish), so nothing
+projects to zeros.
+
+**Guardrails (supersede Update 8's spread-corner geometry):**
+
+- Rack layout on desktop; do not revive `getPlateLayout()`'s per-plate
+  absolute pixel offsets. If a fifth service arrives, add it to a rack
+  (left rack becomes 3, or split evenly across a third rack — do NOT
+  bring back the corner scatter).
+- Rack tilt is CSS-only via `--rack-tilt`; no per-frame JS. Keep the
+  perspective on `.services-plate-cluster`, not on the stage host — the
+  stage's sticky pin sits in transform-flat territory (`will-change` and
+  `position: sticky` interact badly with 3D transforms on the same
+  element).
+- Designation set copy stays accessible business terms (AI STRATEGY,
+  GOVERNANCE, ARCHITECTURE, ...) — no internal codenames per the
+  external-evidence rule (`vince-tov` / strategy skill
+  `references/08-communication-kit.md`).
+- Designation callouts stay BARE single-ink type (NASA-cutaway grammar):
+  never reintroduce boxes, backgrounds, borders, glows, dashed leaders,
+  or a dawn/gold color split on this layer. If a callout needs more
+  presence, adjust the opacity steps of the one gold — do not add chrome.
+
+**Uniform CTA follow-up (2026-07-09, same review):** every service plate's
+CTA now renders as the same FILLED gold button with the canonical on-gold
+ink (`--latent-night` #110f09), matching `.hero__cta__btn--primary`. The
+former per-card split — Workshop's `focus: true` added `.svc-plate__cta--solid`
+(gold fill) while the other three used an outlined `--dawn-04` base — is
+retired; the filled look is the base and `--solid` / the JSX `focus`
+conditional are gone. Two gotchas fixed in the same pass: (1) the CTA is an
+`<a>`, and `.services-plate-cluster a { color: inherit }` (0,1,1) outranks a
+bare `.svc-plate__cta` (0,1,0), so the label ink is set through
+`.services-plate-cluster a.svc-plate__cta` (0,2,1) — without it the anchor
+text inherited the dawn body ink (this is why the old `--solid` card's LABEL
+was never actually black, only its arrow span was); (2) hover is now one rule
+for every open CTA (`--gold-bright` fill), not a `:not(.svc-plate__cta--solid)`
+carve-out. `focus` stays as a reserved (currently unused) flag on
+`ServicePlate`. Guardrail: on-gold text stays `--latent-night`, never `--void`
+or a dawn tone; if a future design re-emphasises one card, do it with
+something other than the CTA fill (they must stay uniform).
+
+**Seed-ink follow-up (2026-07-09, same review):** the collapsed wireframe
+seeds moved one step deeper into the diagram layer so they read as "the
+same wireframe outlines until they come into view": seed title + chip +
+band caption re-inked to the mark's gold (ghost-gold chip: gold border +
+gold text, no fill), body wash lowered `0.18 → 0.10`, halftone band
+`0.2 → 0.14`. "Coming into view" = hover/focus (pre-materialization: dawn
+type + dawn ghost chip + the existing whisper-of-glass hover) or open
+(the unchanged C3 materialization). Every re-inked property already rides
+the plate morph transitions, so the seed → card handoff keeps the same
+graduated 0.52s sequence — the wireframe-to-actual-card transition gets
+LONGER perceptually (more distance to travel through the same easing),
+not more abrupt. Guardrail: resting wireframe seeds stay in the gold
+diagram ink; dawn type on a seed is a hover/focus/open state, never the
+rest state.
+
+- Feature anchor set is fixed at seven ids (`BrandmarkFeatureId`). If a
+  new designation needs a location that isn't in the set, add the id to
+  `brandmarkScanAnchorsRef.ts` AND wire a `pickFeature(...)` case in
+  `BrandmarkPhysicsCoreActor` — never route a designation through the
+  four service corner anchors (they carry the plate connector's
+  meaning; sharing would blur both signals).
+- Optional-photo services (Guided Build today, any future addition) MUST
+  ship the schematic dot-grid placeholder rather than an empty photo
+  frame; the C3 plate's compositing assumes the layer exists.
+
+**Known pre-existing issue kept flagged from Update 8** (both variants):
+on viewports under ~1000px tall the open keynote plate can overlap the
+bottom-anchored workshop seed. **Fixed** by this update — cards flow in a
+rack column with an explicit gap, so an open card grows in-flow and
+pushes its sibling instead of colliding.

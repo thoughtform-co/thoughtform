@@ -103,11 +103,17 @@ export function ServicePlateCard({
   // The full-bleed layers center on the pre-centered portrait crop; the seed
   // band is a thin landscape strip, so it picks the face band via the
   // per-photo position (both via CSS vars, WebP with JPG fallback).
-  const photoStyle = {
-    "--photo-webp": `url(${service.photo.webp})`,
-    "--photo-jpg": `url(${service.photo.jpg})`,
-    "--photo-pos": service.photo.position,
-  } as CSSProperties;
+  // Services without a shipped photo (Guided Build, 2026-07-09) render the
+  // schematic dot-grid placeholder below instead — the vars stay unset so
+  // the CSS never resolves an `image-set()` and the halftone stays blank.
+  const hasPhoto = Boolean(service.photo);
+  const photoStyle = service.photo
+    ? ({
+        "--photo-webp": `url(${service.photo.webp})`,
+        "--photo-jpg": `url(${service.photo.jpg})`,
+        "--photo-pos": service.photo.position,
+      } as CSSProperties)
+    : undefined;
 
   return (
     <article
@@ -115,18 +121,25 @@ export function ServicePlateCard({
       data-state={state}
       data-service={service.id}
       data-variant={variant}
+      data-photo={hasPhoto ? "on" : "off"}
       style={style}
     >
       <div className="svc-plate__sh">
         <div className="svc-plate__bd" style={photoStyle}>
           {/* ── Full-bleed hologram photo (open state) ── */}
-          <i
-            className="svc-plate__pbg svc-plate__pbg--dots"
-            role="img"
-            aria-label={open ? service.photo.alt : undefined}
-            aria-hidden={!open}
-          />
-          <i className="svc-plate__pbg svc-plate__pbg--soft" aria-hidden="true" />
+          {hasPhoto ? (
+            <>
+              <i
+                className="svc-plate__pbg svc-plate__pbg--dots"
+                role="img"
+                aria-label={open ? service.photo?.alt : undefined}
+                aria-hidden={!open}
+              />
+              <i className="svc-plate__pbg svc-plate__pbg--soft" aria-hidden="true" />
+            </>
+          ) : (
+            <i className="svc-plate__pbg svc-plate__pbg--schematic" aria-hidden="true" />
+          )}
           <i className="svc-plate__pgrade" aria-hidden="true" />
 
           {/* ── Invariant anchor: the chip row ── */}
@@ -201,7 +214,7 @@ export function ServicePlateCard({
               </div>
 
               <a
-                className={`svc-plate__cta${service.focus ? " svc-plate__cta--solid" : ""} svc-plate__fx svc-plate__fx--d5`}
+                className="svc-plate__cta svc-plate__fx svc-plate__fx--d5"
                 href={service.ctaHref}
                 tabIndex={open ? undefined : -1}
               >

@@ -12,7 +12,7 @@
  * `scripts/services-photos/prepare.mjs` (public/images/services/{id}.{webp,jpg}).
  */
 
-export type ServicePlateId = "keynote" | "workshop" | "embedded";
+export type ServicePlateId = "keynote" | "workshop" | "embedded" | "guided-build";
 
 /** A run of lede text; `{ em }` marks a gold-emphasis span (upright, not italic). */
 export type LedeSegment = string | { em: string };
@@ -36,9 +36,16 @@ export interface ServicePlate {
   includes: string[];
   ctaLabel: string;
   ctaHref: string;
-  /** The one visually emphasised "focus" card (Workshop): solid CTA. */
+  /** Reserved emphasis flag. As of 2026-07-09 all four CTAs render as the
+   * same filled gold button, so this no longer drives the CTA fill (it did
+   * pre-2026-07-09, adding `.svc-plate__cta--solid`). Kept for possible
+   * future per-card emphasis; wire a new consumer before relying on it. */
   focus?: boolean;
-  photo: {
+  /** Optional — services without a shipped hologram photo render a schematic
+   * dot-grid placeholder in both the seed feed band and the open photo
+   * window (`ServicePlateCard` handles the fallback). Drop the photo in and
+   * ship the shape below to promote a service to full C3 hologram plate. */
+  photo?: {
     webp: string;
     jpg: string;
     alt: string;
@@ -108,5 +115,26 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     ctaLabel: "Start a residency",
     ctaHref: "#contact",
     photo: photo("embedded", "Vince Buyssens on stage during a residency performance", "50% 12%"),
+  },
+  {
+    // Guided Build (2026-07-09) — the Build-heavy engagement that sits
+    // between Workshop and Embedded: the client's engineers ship, we steer.
+    // Photo is unshipped for now; the plate renders the schematic dot-grid
+    // placeholder in the feed window until `scripts/services-photos/prepare.mjs`
+    // is run on a captured session (drop the `photo` field back in to promote).
+    id: "guided-build",
+    chip: "04 — Guided Build",
+    statusCode: "BLD-04",
+    title: "Your team ships it.",
+    lede: [
+      "Your engineers ship the surface; we steer the architecture, evals, and handoff. Substrate stays in your tenancy from day one, and the ",
+      { em: "internal capacity to extend it" },
+      " is what we leave behind.",
+    ],
+    feedLabel: "Feed 04 · In build",
+    feedStatus: "Live",
+    includes: ["Your engineers", "Architecture reviews", "Eval design", "NL / EN"],
+    ctaLabel: "Scope a build",
+    ctaHref: "#contact",
   },
 ];
