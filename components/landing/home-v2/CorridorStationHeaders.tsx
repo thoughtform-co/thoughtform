@@ -1077,10 +1077,10 @@ function SignalActions() {
     <div className="home-v2-signal-actions">
       <a className="home-v2-signal-cta" href="#contact">
         <ChevronCluster />
-        <span className="home-v2-signal-cta__label">WE HELP YOU BUILD THE LAYER YOU OWN</span>
+        <span className="home-v2-signal-cta__label">WE HELP YOU BUILD YOURS</span>
         <ChevronCluster flipped />
       </a>
-      <p className="home-v2-signal-note">Before they sell it back to you.</p>
+      <p className="home-v2-signal-note">Before the lab sells it back to you.</p>
     </div>
   );
 }

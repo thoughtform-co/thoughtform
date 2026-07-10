@@ -66,14 +66,14 @@
   position: relative;
   z-index: 2;
   /* Runway the sticky stage pins within — one viewport-tall scroll segment per
-   * service (4 steps since ADR-025 Update 9, 2026-07-09: Keynote / Workshop /
-   * Embedded / Guided Build): the scroll position owns which signal plate is
-   * OPEN (useServicesStageScroll STEP_COUNT → expanded card in
+   * beat (5 steps since 2026-07-10: a collapsed lead-in, then one per service
+   * — Advisory / Embedded / Keynote / Workshop): the scroll position owns which
+   * signal plate is OPEN (useServicesStageScroll STEP_COUNT → expanded card in
    * ServicesPlateCluster; must stay in lockstep with STEP_COUNT × 100svh so
-   * each service still owns one viewport of scroll travel). The corridor-exit
+   * each beat still owns one viewport of scroll travel). The corridor-exit
    * dissipate clock keys off #services's TOP + a fixed span
    * (useCorridorExitScroll), NOT this height. */
-  min-height: 400svh;
+  min-height: 500svh;
 }
 
 /* ── Pinned stage ────────────────────────────────────────────────── */
@@ -1330,7 +1330,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(14px, 1.6vw, 24px);
+  /* Wider vertical breathing room between the two plates in a rack
+   * (2026-07-10 Vince review — there is real estate to spread them). */
+  gap: clamp(40px, 5.5vw, 120px);
   pointer-events: none;
   /* transform-origin at the mark-facing edge so the rack hinges toward the
    * centered brandmark instead of pivoting around its outer edge. */

@@ -1073,6 +1073,7 @@ html[data-corridor-exit="true"] #services > * {
   color: var(--gold, #caa554);
   background: rgba(202, 165, 84, 0.16);
   padding: 0.14em 0.16em;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.45);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -1102,6 +1103,7 @@ html[data-corridor-exit="true"] #services > * {
   color: var(--gold, #caa554);
   background: rgba(202, 165, 84, 0.16);
   padding: 0.14em 0;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.45);
 }
 
 /* Block cursor at the typing head — sits inline at the line's end,
@@ -1406,7 +1408,7 @@ html[data-corridor-exit="true"] #services > * {
 .home-v2-signal-note {
   margin: 0;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: clamp(10px, 0.78vw, 12px);
+  font-size: clamp(12px, 0.95vw, 14px);
   line-height: 1.45;
   letter-spacing: 0.16em;
   text-transform: uppercase;

@@ -78,7 +78,7 @@ const photo = (id: ServicePlateId, alt: string, position: string) => ({
 export const SERVICE_PLATES: readonly ServicePlate[] = [
   {
     id: "keynote",
-    chip: "01 — Strategic Advisory",
+    chip: "Strategic Advisory",
     statusCode: "ADV-01",
     title: "Steer the whole bet.",
     lede: [
@@ -92,7 +92,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
   },
   {
     id: "workshop",
-    chip: "02 — Embedded AI Partner",
+    chip: "Embedded AI Partner",
     statusCode: "BLD-02",
     title: "The practice moves in.",
     lede: [
@@ -107,7 +107,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
   },
   {
     id: "embedded",
-    chip: "03 — Keynote",
+    chip: "Keynote",
     statusCode: "NAV-02",
     title: "Install the frame in a room.",
     lede: ["One talk that resets how a room sees AI. Tuned to your industry, run on live demos."],
@@ -120,7 +120,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
   },
   {
     id: "guided-build",
-    chip: "04 — Workshop",
+    chip: "Workshop",
     statusCode: "ENC-04",
     title: "Build the skill by hand.",
     lede: [

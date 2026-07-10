@@ -271,7 +271,7 @@ export const CORRIDOR_MAP = [
     parkDistance: 6.2,
     content: {
       kicker: "01 · NAVIGATE",
-      titleHtml: "NAVIGATE THE <em>INTELLIGENCE.</em>",
+      titleHtml: "<em>NAVIGATE</em> THE INTELLIGENCE.",
       supportHtml:
         "AI is not software to command. It is an <em>intelligence to navigate</em>.<br>Your team learns to brief it, steer it, and judge what comes back inside live work.",
       floorHtml:
@@ -301,7 +301,7 @@ export const CORRIDOR_MAP = [
     parkDistance: 6.2,
     content: {
       kicker: "02 · ENCODE",
-      titleHtml: "ENCODE THE <em>CONTEXT.</em>",
+      titleHtml: "<em>ENCODE</em> THE CONTEXT.",
       supportHtml:
         "The most <em>valuable context</em> lives in your team's heads.<br>We encode it into a reusable layer any colleague and agent can use.",
       floorHtml:
@@ -339,7 +339,7 @@ export const CORRIDOR_MAP = [
     parkDistance: 6.2,
     content: {
       kicker: "03 · BUILD",
-      titleHtml: "BUILD ON THE <em>LAYER.</em>",
+      titleHtml: "<em>BUILD</em> ON THE LAYER.",
       supportHtml:
         "Once context is encoded, it becomes a <em>layer to build on</em>.<br>We turn it into tools, workflows, and agents your team can run and extend.",
       floorHtml:

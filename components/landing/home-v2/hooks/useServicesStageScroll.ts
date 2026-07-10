@@ -2,12 +2,14 @@
 
 import { useEffect, type RefObject } from "react";
 
-/** Number of services / scroll segments in the pinned stage. Bumped to 4
- *  on 2026-07-09 when Guided Build joined the service catalog (ADR-025
- *  Update 9); the runway `min-height` in services.css is kept in lockstep
- *  at `STEP_COUNT × 100svh` so each service still owns one viewport of
- *  scroll travel. */
-const STEP_COUNT = 4;
+/** Scroll segments in the pinned stage: ONE lead-in segment where every
+ *  plate is collapsed (step 0), then one segment per service (steps 1..4)
+ *  that opens that service's plate. So the section enters fully collapsed
+ *  and each scroll beat opens the next card (2026-07-10 Vince review).
+ *  `STEP_COUNT = services + 1`; the runway `min-height` in services.css is
+ *  kept in lockstep at `STEP_COUNT × 100svh` so each beat still owns one
+ *  viewport of scroll travel. */
+const STEP_COUNT = 5;
 
 /**
  * Brandmark "arrive" envelopes, in `--corridor-dissipate` units (0..1 —

@@ -205,9 +205,10 @@ function PlateConnectorOverlay({
 export interface ServicesPlateClusterProps {
   /** The service the runway scroll is currently on (highlights its connector). */
   activeServiceId: ServicePlateId;
-  /** Controlled open card (production: scroll owns it). Omit for the lab —
+  /** Controlled open card (production: scroll owns it). `null` = every plate
+   * collapsed (the section's scroll lead-in). Omit entirely for the lab —
    * clicks then own a local accordion (always exactly one open). */
-  expandedServiceId?: ServicePlateId;
+  expandedServiceId?: ServicePlateId | null;
   /** Seed click / Enter. Production scrolls the page to that segment. */
   onSelectService: (serviceId: ServicePlateId) => void;
   /** Hide the brandmark leader lines (lab scenes without a live mark). */
@@ -226,7 +227,13 @@ export function ServicesPlateCluster({
   const [internalExpandedServiceId, setInternalExpandedServiceId] = useState<ServicePlateId>(
     SERVICE_PLATES[0].id
   );
-  const expandedServiceId = controlledExpandedServiceId ?? internalExpandedServiceId;
+  // Controlled mode is authoritative even when `null` (every plate collapsed),
+  // so distinguish "controlled = null" from "uncontrolled = undefined" rather
+  // than `??`-coalescing a null open card back to the internal accordion.
+  const expandedServiceId =
+    controlledExpandedServiceId !== undefined
+      ? controlledExpandedServiceId
+      : internalExpandedServiceId;
   const clusterRef = useRef<HTMLDivElement>(null);
   const viewport = parseViewportSnapshot(
     useSyncExternalStore(viewportStore.subscribe, viewportStore.snapshot, viewportStore.snapshot)

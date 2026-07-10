@@ -38,7 +38,12 @@ const ServicesHologramCanvas = dynamic(
  */
 export function ServicesStage() {
   const stageRef = useRef<HTMLDivElement>(null);
+  // `activeServiceId` drives the backdrop wireframe designations, the bottom
+  // readout, and the ambient orbit highlight — always a real service. The
+  // OPEN plate is tracked separately so the section can enter with every card
+  // collapsed (`expandedServiceId = null`) and open one per scroll beat.
   const [activeServiceId, setActiveServiceId] = useState<ServiceId>(SERVICES[0].id);
+  const [expandedServiceId, setExpandedServiceId] = useState<ServiceId | null>(null);
   const useHologramCanvas = useMediaQuery(
     "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
   );
@@ -58,8 +63,13 @@ export function ServicesStage() {
   // sit on. Only the flag-off / lab path mounts the standalone canvas.
   const showServicesCanvas = useHologramCanvas && !UNIFIED_SERVICES_ARMILLARY;
 
+  // Step 0 is the collapsed lead-in (no plate open); steps 1..N open service
+  // 0..N-1 in turn (see useServicesStageScroll STEP_COUNT = services + 1). The
+  // backdrop/readout follow the plate that is (or is about to be) open.
   const setActiveByStep = useCallback((step: number) => {
-    setActiveServiceId(SERVICES[step]?.id ?? SERVICES[0].id);
+    const serviceIndex = Math.max(0, step - 1);
+    setActiveServiceId(SERVICES[serviceIndex]?.id ?? SERVICES[0].id);
+    setExpandedServiceId(step <= 0 ? null : (SERVICES[serviceIndex]?.id ?? null));
   }, []);
 
   // Click-to-scroll (proven ServiceScanInterface behavior): scroll owns the
@@ -82,6 +92,7 @@ export function ServicesStage() {
     const runway = stageRef.current?.parentElement; // .services-stage-root
     if (inert || !runway) {
       setActiveServiceId(serviceId);
+      setExpandedServiceId(serviceId);
       return;
     }
     const vh = window.innerHeight || 1;
@@ -89,9 +100,13 @@ export function ServicesStage() {
     const travel = rect.height - vh;
     if (travel <= 0) {
       setActiveServiceId(serviceId);
+      setExpandedServiceId(serviceId);
       return;
     }
-    const targetY = window.scrollY + rect.top + ((index + 0.5) / SERVICES.length) * travel;
+    // Service i opens on step i+1 of `services + 1` scroll beats (step 0 is the
+    // collapsed lead-in); aim for the middle of that beat.
+    const stepCount = SERVICES.length + 1;
+    const targetY = window.scrollY + rect.top + ((index + 1.5) / stepCount) * travel;
     window.scrollTo({ top: targetY, behavior: "smooth" });
   }, []);
 
@@ -113,7 +128,7 @@ export function ServicesStage() {
 
         <ServicesPlateCluster
           activeServiceId={activeServiceId}
-          expandedServiceId={activeServiceId}
+          expandedServiceId={expandedServiceId}
           onSelectService={selectService}
           plateVariant="wireframe"
         />
