@@ -33,11 +33,15 @@ import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
 import { brandmarkScanAnchorPointsRef, type BrandmarkFeatureId } from "../brandmarkScanAnchorsRef";
+import { SERVICES_CARD_RING } from "../unifiedServicesInstrument";
 import {
   HologramOrbits,
   STRUCTURAL_ORBITS,
 } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
+import { ServicesCardRing } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import {
   useHologramConnectors,
   type ConnectorAnchor,
@@ -58,6 +62,13 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId) ?? SERVICES[0].id;
   const setAnchors = useHologramConnectors((s) => s.setAnchors);
   const setFeatureAnchors = useHologramConnectors((s) => s.setFeatureAnchors);
+  // ADR-029 card ring — mount gate MUST match the services DOM gate
+  // (`useHologramCanvas` in ServicesStage): below 961px / reduced motion the
+  // plate accordion carries the cards, so the ring must not mount (and must
+  // not fetch its photo textures) there.
+  const ringCapable = useMediaQuery(
+    "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
+  );
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   // Probe group at identity — its matrixWorld IS the pointer-look space the
@@ -136,6 +147,19 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
         scale={scale}
         activeServiceId={activeServiceId}
       />
+      {/* ADR-029: the four service cards orbit the mark in this same rig —
+          scroll-owned rotation (runway progress via servicesRingProgressRef),
+          entrance staggered off the same dissipate clock as the orbit
+          wrap-on, card rects published for the DOM hit-areas. */}
+      {SERVICES_CARD_RING && ringCapable && (
+        <ServicesCardRing
+          scale={scale}
+          progressRef={servicesRingProgressRef}
+          dissipateGetter={getSmoothedDissipate}
+          entrance="scroll"
+          publishAnchors
+        />
+      )}
     </>
   );
 }

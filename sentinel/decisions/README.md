@@ -47,6 +47,7 @@ Write an ADR when you:
 | 026 | [Symbolic Astral Emblems](026-symbolic-astral-emblems.md)                 | Accepted | 2026-06 |
 | 027 | [Gateway Motion Lab](027-gateway-motion-lab.md)                           | Accepted | 2026-07 |
 | 028 | [Landing Data Caching](028-landing-data-caching.md)                       | Accepted | 2026-07 |
+| 029 | [Services Card Ring](029-services-card-ring.md)                           | Accepted | 2026-07 |
 
 ---
 

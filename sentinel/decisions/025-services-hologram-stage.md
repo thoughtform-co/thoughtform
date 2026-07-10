@@ -582,3 +582,16 @@ on viewports under ~1000px tall the open keynote plate can overlap the
 bottom-anchored workshop seed. **Fixed** by this update — cards flow in a
 rack column with an explicit gap, so an open card grows in-flow and
 pushes its sibling instead of colliding.
+
+## Update 10 (2026-07-10): superseded on desktop by the card ring (ADR-029)
+
+The console-rack presentation this ADR documents is now the
+**flag-off / mobile surface**. With `SERVICES_CARD_RING` on (desktop
+≥ 961px, no reduced motion), the four cards render as WebGL planes
+orbiting the brandmark inside the corridor canvas — each plane baked as
+the COMPLETE open C3 plate (photo + chip + copy + CTA, one object) — and
+the racks + plate leader lines hide (`data-card-ring="on"`). The **mobile / reduced-motion plate
+accordion is untouched** and remains governed by this ADR, as do the
+plates themselves (`ServicePlateCard`, `servicePlateData`) and the rack
+guardrails for the rollback path. Full decision record, motion contract
+(ADR-021 compliance), and new guardrails: ADR-029.

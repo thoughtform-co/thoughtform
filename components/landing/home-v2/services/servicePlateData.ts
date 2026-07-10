@@ -57,7 +57,13 @@ export interface ServicePlate {
   };
 }
 
-const photo = (id: ServicePlateId, alt: string, position: string) => ({
+/** Photo ASSET ids — decoupled from the slot ids because the asset is named
+ * after the displayed service ("strategic" has no slot; the Strategic
+ * Advisory service occupies the `keynote` slot). Assets are produced by
+ * scripts/services-photos/prepare.mjs from the 2026-07-10 `-2` sources. */
+type ServicePhotoAssetId = ServicePlateId | "strategic";
+
+const photo = (id: ServicePhotoAssetId, alt: string, position: string) => ({
   webp: `/images/services/${id}.webp`,
   jpg: `/images/services/${id}.jpg`,
   alt,
@@ -69,12 +75,14 @@ const photo = (id: ServicePlateId, alt: string, position: string) => ({
  * rack position, a brandmark anchor pick, a designation set, and a scan note.
  * The visible service that occupies each slot changed, so the id → service
  * mapping is now:
- *   keynote  slot (left rack, top)    → 01 Strategic Advisory  (no photo)
+ *   keynote  slot (left rack, top)    → 01 Strategic Advisory  (strategic photo)
  *   workshop slot (left rack, bottom) → 02 Embedded AI Partner (embedded photo)
  *   embedded slot (right rack, top)   → 03 Keynote             (keynote photo)
  *   guided   slot (right rack, bottom)→ 04 Workshop            (workshop photo)
  * Keeping the ids as slot keys avoids re-tuning every spatial map; the photo
- * for each slot is pointed at the correct asset by hand. */
+ * for each slot is pointed at the correct asset by hand. All four slots carry
+ * photos since the 2026-07-10 `-2` reshoot (ADR-029 card ring); the schematic
+ * dot-grid fallback stays wired for any future photo-less service. */
 export const SERVICE_PLATES: readonly ServicePlate[] = [
   {
     id: "keynote",
@@ -89,6 +97,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     includes: ["Monthly cadence", "Strategic memos", "On-call reads", "NL / EN"],
     ctaLabel: "Open an advisory",
     ctaHref: "#contact",
+    photo: photo("strategic", "Vince Buyssens at the table during an advisory session", "50% 32%"),
   },
   {
     id: "workshop",
@@ -103,7 +112,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     includes: ["Fixed term", "Dated handover", "Owned layer", "NL / EN"],
     ctaLabel: "Scope an engagement",
     ctaHref: "#contact",
-    photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 12%"),
+    photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 45%"),
   },
   {
     id: "embedded",
@@ -116,7 +125,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     includes: ["Live demos", "Custom cases", "Take-home deck", "NL / EN"],
     ctaLabel: "Book a keynote",
     ctaHref: "#contact",
-    photo: photo("keynote", "Vince Buyssens delivering a keynote on stage", "50% 12%"),
+    photo: photo("keynote", "Vince Buyssens delivering a keynote on stage", "50% 22%"),
   },
   {
     id: "guided-build",
@@ -131,6 +140,6 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     includes: ["Workflow mapping", "First skills", "Build list", "NL / EN"],
     ctaLabel: "Book a workshop",
     ctaHref: "#contact",
-    photo: photo("workshop", "Vince Buyssens working with a team in a studio session", "50% 24%"),
+    photo: photo("workshop", "Vince Buyssens working with a team in a studio session", "50% 18%"),
   },
 ];

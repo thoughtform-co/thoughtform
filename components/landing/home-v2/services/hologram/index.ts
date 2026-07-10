@@ -19,3 +19,4 @@ export {
   type OrbitConfig,
 } from "./HologramOrbits";
 export { ServicesHologramScene, type ServicesHologramSceneProps } from "./ServicesHologramScene";
+export { ServicesCardRing, type ServicesCardRingProps } from "./ServicesCardRing";

@@ -118,6 +118,11 @@ export function ServicesDesignationLayer({
 }: ServicesDesignationLayerProps) {
   const layerRef = useRef<HTMLDivElement>(null);
   const featureAnchors = useHologramConnectors((s) => s.featureAnchors);
+  // ADR-029 ring mode: the front orbiting card partially overlaps the mark,
+  // so callouts whose anchor/label would land ON the photo are suppressed
+  // (they'd read as annotating the photograph, not the wireframe). Empty
+  // when the ring is off/unparked — the filter is then a no-op.
+  const ringAnchors = useHologramConnectors((s) => s.ringAnchors);
   const activeServiceId =
     useHologramConnectors((s) => s.activeServiceId) ?? fallbackActiveServiceId;
   const viewport = parseViewportSnapshot(
@@ -206,6 +211,8 @@ export function ServicesDesignationLayer({
   const ox = originRect?.left ?? 0;
   const oy = originRect?.top ?? 0;
 
+  const frontCard = ringAnchors.find((a) => a.front && a.visible) ?? null;
+
   const visibleDesignations = useMemo(
     () =>
       // Interior placement (2026-07-09 second pass): each label sits a
@@ -232,8 +239,27 @@ export function ServicesDesignationLayer({
             landY: anchorY + designation.offset.dy,
           };
         })
-        .filter((v): v is NonNullable<typeof v> => v !== null),
-    [designations, featureAnchors, ox, oy]
+        .filter((v): v is NonNullable<typeof v> => v !== null)
+        // Ring-mode occlusion (ADR-029): drop callouts whose survey point,
+        // landing point, or text run would sit on the front card's photo.
+        .filter(({ designation, anchorX, anchorY, landX, landY }) => {
+          if (!frontCard) return true;
+          const pad = 12;
+          const left = frontCard.x - ox - pad;
+          const right = frontCard.x + frontCard.w - ox + pad;
+          const top = frontCard.y - oy - pad;
+          const bottom = frontCard.y + frontCard.h - oy + pad;
+          const inside = (x: number, y: number) => x > left && x < right && y > top && y < bottom;
+          const sideSign = designation.side === "right" ? 1 : -1;
+          // Sample the text run ~90px from the landing point (labels grow
+          // away from the leader on their side).
+          return !(
+            inside(anchorX, anchorY) ||
+            inside(landX, landY) ||
+            inside(landX + sideSign * 90, landY)
+          );
+        }),
+    [designations, featureAnchors, frontCard, ox, oy]
   );
 
   // Hide entirely below 961px or when no anchors are published (no live

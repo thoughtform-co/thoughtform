@@ -62,7 +62,7 @@ import {
 import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
 import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
-import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
+import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { getServicePose } from "@/lib/home-v2/servicePose";
@@ -391,6 +391,15 @@ export function BrandmarkPhysicsCoreActor({
   const servicePoseDampRef = useRef({ pitch: 0, yaw: 0 });
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId);
   useEffect(() => {
+    // ADR-029: with the card ring on, the ring's quarter-turns ARE the
+    // per-service turn — a rig yaw on top would double-rotate the cards and
+    // push the front card off-center. The pose channel parks at frontal
+    // (still eases to 0 off-park, so ADR-023 Invariant 11 is untouched).
+    if (SERVICES_CARD_RING) {
+      servicePoseTargetRef.current.pitch = 0;
+      servicePoseTargetRef.current.yaw = 0;
+      return;
+    }
     const idx = SERVICES.findIndex((s) => s.id === activeServiceId);
     const pose = getServicePose(Math.max(0, idx), SERVICES.length);
     servicePoseTargetRef.current.pitch = pose.pitch;

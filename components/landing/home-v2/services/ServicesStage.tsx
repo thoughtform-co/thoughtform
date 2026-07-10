@@ -5,12 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ServicesDesignationLayer } from "./ServicesDesignationLayer";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
+import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
 import { ServicesStationReadout } from "./ServicesStationReadout";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
-import { UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
+import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 
 // Flag-off / lab path only (see showServicesCanvas below). Lazy so the
 // postprocessing stack never enters the marketing route's initial JS —
@@ -62,6 +63,14 @@ export function ServicesStage() {
   // brandmark + CorridorArmillary ARE the ambient backdrop the signal plates
   // sit on. Only the flag-off / lab path mounts the standalone canvas.
   const showServicesCanvas = useHologramCanvas && !UNIFIED_SERVICES_ARMILLARY;
+
+  // ADR-029 card-ring mode (desktop): the corridor instrument carries the
+  // four cards as orbiting WebGL planes (`ServicesCardRing`, mounted by
+  // `CorridorArmillary` behind the same media gate) and the racks hide via
+  // CSS (`data-card-ring`). Each card bakes its FULL C3 copy onto the
+  // plane. Mobile / reduced motion never enters ring mode — the plate
+  // accordion stays exactly as before regardless of the flag.
+  const cardRingActive = SERVICES_CARD_RING && useHologramCanvas;
 
   // Step 0 is the collapsed lead-in (no plate open); steps 1..N open service
   // 0..N-1 in turn (see useServicesStageScroll STEP_COUNT = services + 1). The
@@ -116,7 +125,12 @@ export function ServicesStage() {
   useServicesStageScroll(stageRef, setActiveByStep);
 
   return (
-    <div className="services-stage" ref={stageRef} data-active-step="0">
+    <div
+      className="services-stage"
+      ref={stageRef}
+      data-active-step="0"
+      data-card-ring={SERVICES_CARD_RING ? "on" : "off"}
+    >
       <div className="services-stage__items">
         {showServicesCanvas ? <ServicesHologramCanvas activeServiceId={activeServiceId} /> : null}
 
@@ -126,12 +140,24 @@ export function ServicesStage() {
             mobile / reduced motion via CSS + a JS gate in the layer. */}
         <ServicesDesignationLayer fallbackActiveServiceId={activeServiceId} />
 
+        {/* Kept mounted in ring mode: below 961px the accordion IS the
+            services UI (CSS owns visibility via data-card-ring). Leader
+            lines retire with the racks when the ring carries the cards. */}
         <ServicesPlateCluster
           activeServiceId={activeServiceId}
           expandedServiceId={expandedServiceId}
           onSelectService={selectService}
           plateVariant="wireframe"
+          showConnectors={!SERVICES_CARD_RING}
         />
+
+        {/* Click targets over the orbiting cards (rects published by
+            ServicesCardRing): side/back cards scroll the runway to their
+            beat, the front card exposes its baked CTA as a real link.
+            The cards carry ALL their copy on the baked face — one plate,
+            exactly like the open C3 card (2026-07-10 Vince red-alert:
+            never split the card into a photo plane + a text console). */}
+        {cardRingActive && <ServicesRingHitAreas onSelectService={selectService} />}
 
         {/* Station readout — the mono row along the bottom of the stage
             that ties the racks + designation layer into one instrument. */}

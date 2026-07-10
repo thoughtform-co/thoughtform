@@ -48,6 +48,27 @@ export interface FeatureAnchor {
   visible: boolean;
 }
 
+/** Screen-space bounding rect of one orbiting service card (ADR-029 ring).
+ *  Published by `ServicesCardRing` when the instrument is parked; consumed
+ *  by the DOM hit-area layer so the side/back cards stay clickable while the
+ *  canvas itself remains `pointer-events: none`. */
+export interface RingCardAnchor {
+  serviceId: ServiceId;
+  /** Bounding-rect left, in viewport px. */
+  x: number;
+  /** Bounding-rect top, in viewport px. */
+  y: number;
+  /** Bounding-rect size, in viewport px. */
+  w: number;
+  h: number;
+  /** Projected clip-space depth of the card centre. */
+  depth: number;
+  /** False when off-clip or faded out (back-of-ring cards). */
+  visible: boolean;
+  /** True for the card currently facing the camera. */
+  front: boolean;
+}
+
 interface HologramConnectorState {
   anchors: ConnectorAnchor[];
   setAnchors: (anchors: ConnectorAnchor[]) => void;
@@ -57,6 +78,10 @@ interface HologramConnectorState {
    *  vice versa. */
   featureAnchors: FeatureAnchor[];
   setFeatureAnchors: (anchors: FeatureAnchor[]) => void;
+  /** Card rects from the orbiting ring (ADR-029). Separate slice for the
+   *  same reason as `featureAnchors`. Publisher: `ServicesCardRing` only. */
+  ringAnchors: RingCardAnchor[];
+  setRingAnchors: (anchors: RingCardAnchor[]) => void;
   /** The service the visitor is currently scanning. Bridges the DOM scan UI
    *  (in `#services`) to the brandmark instrument that now lives in the corridor
    *  canvas (the unified `CorridorArmillary`), so the active orbit ring still
@@ -72,6 +97,8 @@ export const useHologramConnectors = create<HologramConnectorState>((set) => ({
   setAnchors: (anchors) => set({ anchors }),
   featureAnchors: [],
   setFeatureAnchors: (featureAnchors) => set({ featureAnchors }),
+  ringAnchors: [],
+  setRingAnchors: (ringAnchors) => set({ ringAnchors }),
   activeServiceId: null,
   setActiveServiceId: (activeServiceId) => set({ activeServiceId }),
 }));

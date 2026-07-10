@@ -19,7 +19,7 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
@@ -58,6 +58,16 @@ export interface ServicesHologramSceneProps extends Omit<
   pointerParallax?: number;
   /** Node travel-speed multiplier (bodies move across their orbits). Default 1. */
   bodySpeed?: number;
+  /** Scale on the per-service pose channel. 1 = full pose turns (plate
+   *  layout); 0 = pose retired — the ADR-029 card-ring mode, where the
+   *  RING's rotation is the per-service turn and a rig yaw on top would
+   *  double-rotate it (mirrors the production flag in
+   *  BrandmarkPhysicsCoreActor). Default 1. */
+  servicePoseAmp?: number;
+  /** Extra rig passengers (e.g. `ServicesCardRing` in the orbit lab) —
+   *  rendered INSIDE the rig group so they inherit rest pose + pointer-look
+   *  exactly like the mark and orbits. */
+  children?: ReactNode;
 }
 
 export function ServicesHologramScene({
@@ -71,6 +81,8 @@ export function ServicesHologramScene({
   restTiltY = REST_TILT_Y,
   pointerParallax = 0.12,
   bodySpeed = 1,
+  servicePoseAmp = 1,
+  children,
   ...artifact
 }: ServicesHologramSceneProps) {
   const setAnchors = useHologramConnectors((s) => s.setAnchors);
@@ -143,8 +155,8 @@ export function ServicesHologramScene({
 
     // Per-service settle channel — bounded pose for the active service.
     const pose = servicePoseDampRef.current;
-    const poseTgtPitch = settled ? servicePose.pitch : 0;
-    const poseTgtYaw = settled ? servicePose.yaw : 0;
+    const poseTgtPitch = settled ? servicePose.pitch * servicePoseAmp : 0;
+    const poseTgtYaw = settled ? servicePose.yaw * servicePoseAmp : 0;
     pose.pitch += (poseTgtPitch - pose.pitch) * k;
     pose.yaw += (poseTgtYaw - pose.yaw) * k;
 
@@ -170,6 +182,7 @@ export function ServicesHologramScene({
           entrance={artifactRest.entrance}
         />
       )}
+      {children}
     </group>
   );
 }

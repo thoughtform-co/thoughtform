@@ -2,6 +2,8 @@
 
 import { useEffect, type RefObject } from "react";
 
+import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+
 /** Scroll segments in the pinned stage: ONE lead-in segment where every
  *  plate is collapsed (step 0), then one segment per service (steps 1..4)
  *  that opens that service's plate. So the section enters fully collapsed
@@ -154,6 +156,7 @@ export function useServicesStageScroll(
         setStep(stage, 0);
         setArrive(stage, 1, 1);
         setContentIn(stage, 1);
+        servicesRingProgressRef.current.progress = 0;
         return;
       }
 
@@ -180,6 +183,11 @@ export function useServicesStageScroll(
       const r = runway.getBoundingClientRect();
       const travel = r.height - vh;
       const p = travel > 0 ? clamp01(-r.top / travel) : 0;
+      // Continuous runway progress for the card ring (ADR-029) — same read,
+      // same writer, bridged across React roots via the module ref. The step
+      // below stays the floor() of this value, so ring rotation and the
+      // active-service clock can never desync.
+      servicesRingProgressRef.current.progress = p;
       const step = Math.max(0, Math.min(STEP_COUNT - 1, Math.floor(p * STEP_COUNT)));
       setStep(stage, step);
     };

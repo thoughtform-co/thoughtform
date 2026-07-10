@@ -54,24 +54,39 @@ const JPG_Q = 82;
  *   fx — horizontal fraction (0..1) the SUBJECT sits at; the crop centers here.
  *   fy — vertical fraction of the face; only used when a source is TALLER than
  *        the card aspect (none currently are, but kept for robustness).
+ *
+ * 2026-07-10: sources repointed at the new `-2` drops (staged directly in
+ * public/images/services/) for the card-ring pass, and `strategic` added so
+ * Strategic Advisory gets a photo for the first time (ADR-029). The old
+ * navigator sources are superseded.
  */
 const CARDS = [
   {
+    // Vince at the advisory table (laptop, smiling) — face sits left of center.
+    id: "strategic",
+    src: pub("images", "services", "strategic-2.webp"),
+    fx: 0.48,
+    fy: 0.28,
+  },
+  {
+    // On stage with the mic, pointing up-right — bias left so the gesture keeps air.
     id: "keynote",
-    src: pub("images", "navigator", "2025-10-16 _ AI for Marketers' Day-66.jpg"),
-    fx: 0.5,
+    src: pub("images", "services", "keynote-2.webp"),
+    fx: 0.45,
     fy: 0.2,
   },
   {
+    // Over-the-shoulder pairing at the monitor — both subjects left of center.
     id: "workshop",
-    src: pub("images", "navigator", "DSC07295.jpg"),
-    fx: 0.5,
-    fy: 0.42,
+    src: pub("images", "services", "workshop-2.jpg"),
+    fx: 0.47,
+    fy: 0.3,
   },
   {
+    // Wide session room (landscape) — center the portrait crop on Vince at the screen.
     id: "embedded",
-    src: pub("images", "navigator", "photo-embedded-hires.jpg"),
-    fx: 0.59,
+    src: pub("images", "services", "embedded-2.jpeg"),
+    fx: 0.42,
     fy: 0.28,
   },
 ];

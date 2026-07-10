@@ -2222,3 +2222,67 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * ADR-029 — CARD RING MODE (`.services-stage[data-card-ring="on"]`)
+ *
+ * Desktop (≥961px, no reduced motion): the four service cards render as
+ * WebGL planes orbiting the brandmark inside the corridor canvas
+ * (`ServicesCardRing`), each baked as the COMPLETE open C3 plate (photo +
+ * chip + copy + CTA — one object); the DOM console racks + leader lines
+ * retire. `ServicesRingHitAreas` overlays invisible targets on the cards
+ * (rects projected from the 3D scene via `hologramConnectorStore`).
+ *
+ * The <961px / reduced-motion accordion above is UNTOUCHED by ring mode —
+ * `ServicesStage` only mounts the rack/hit layers behind the desktop media
+ * gate, and the rules below are scoped to the same query. Flipping
+ * `SERVICES_CARD_RING` off restores the ADR-025 Update-9 racks
+ * byte-identically.
+ * ══════════════════════════════════════════════════════════════════════ */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  /* The orbiting WebGL cards replace the racks; the connectors' role
+   * (tying plates to the mark) is carried by the orbit geometry itself. */
+  .services-stage[data-card-ring="on"] .svc-rack,
+  .services-stage[data-card-ring="on"] .services-scan-connectors {
+    display: none;
+  }
+
+  /* ── Ring hit areas — invisible click/CTA targets over the cards ──
+   * (The cards carry their FULL C3 copy on the baked texture — one plate,
+   * never a separate text console; 2026-07-10 red-alert revision.) */
+  .svc-ring-hits {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .svc-ring-hits__hit {
+    position: absolute;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  .svc-ring-hits__hit:hover,
+  .svc-ring-hits__hit:focus-visible {
+    outline: 1px dashed rgba(202, 165, 84, 0.55);
+    outline-offset: -4px;
+  }
+  /* The front card's CTA link — the baked outline is the visual; the DOM
+   * anchor only needs the hover/focus affordance to sit ON the box. */
+  .svc-ring-hits__hit--cta:hover,
+  .svc-ring-hits__hit--cta:focus-visible {
+    outline-offset: 2px;
+  }
+}
+
+/* Ring-mode overlays never exist below 961px / reduced motion (JS gate in
+ * ServicesStage), but keep the accordion path bulletproof if that ever
+ * regresses. */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .svc-ring-hits {
+    display: none;
+  }
+}
