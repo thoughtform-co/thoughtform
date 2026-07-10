@@ -27,8 +27,10 @@ export const RING_RADIUS = 1.55;
 /** Card plane height (orbit units). Width follows the plate aspect. Sized
  *  so the FULL C3 plate face (photo + copy + CTA, baked) stays readable
  *  when parked front-center — the card carries its own text now, so it
- *  runs larger than the photo-only pass did. */
-export const RING_CARD_HEIGHT = 1.3;
+ *  runs larger than the photo-only pass did. Bumped 1.3 → 1.42 with the
+ *  Update-1 tighter orbit base (the front card parks ~0.27 world farther
+ *  from the camera, so the plane grows to hold its apparent size). */
+export const RING_CARD_HEIGHT = 1.42;
 
 /** Portrait plate aspect from the design handoff (420 × 680 card body). */
 export const RING_CARD_ASPECT = 420 / 680;
@@ -43,8 +45,10 @@ export const RING_Y_OFFSET = -0.04;
  *  A partial blend keeps the orbit read while the photos stay visible in
  *  transit (the activetheory gallery look). Applied via `cardFacingYaw` —
  *  NOT a naive `phi × (1 − blend)`, which scales the absolute azimuth and
- *  flips one side card onto its mirrored back face (found 2026-07-10). */
-export const RING_FACING_BLEND = 0.32;
+ *  flips one side card onto its mirrored back face (found 2026-07-10).
+ *  Lifted 0.32 → 0.45 in Update 1 so the neighbouring cards read as
+ *  cards (Vince: "make it clearer that there are other cards"). */
+export const RING_FACING_BLEND = 0.45;
 
 /** Orbit direction: −1 → the next service's card arrives from screen-right. */
 export const RING_DIRECTION = -1;
@@ -70,12 +74,20 @@ export const RING_SPRING_ZETA = 0.82;
  *  readable services copy). */
 export const RING_SWAY_CAP_RAD = 0.12;
 
-/** Card scale from depth: back → front. */
-export const RING_SCALE_RANGE: readonly [number, number] = [0.62, 1.06];
+/** Card scale from depth: back → front. Floor lifted 0.62 → 0.72 in
+ *  Update 1 — side cards sit closer and read as reachable cards. */
+export const RING_SCALE_RANGE: readonly [number, number] = [0.72, 1.06];
 
 /** Card opacity from depth: back cards dim toward the void — this stands in
- *  for real occlusion behind the particle mark (which writes no depth). */
-export const RING_OPACITY_RANGE: readonly [number, number] = [0.08, 1.0];
+ *  for real occlusion behind the particle mark (which writes no depth).
+ *  Floor lifted 0.08 → 0.16 in Update 1 (see also RING_OPACITY_WINDOW). */
+export const RING_OPACITY_RANGE: readonly [number, number] = [0.16, 1.0];
+
+/** Smootherstep window (in nz) for `depthOpacity`. The high edge pulled in
+ *  from 0.85 → 0.6 (Update 1) lifts the SIDE cards (nz ≈ 0) toward
+ *  presence without brightening the card hidden behind the mark
+ *  (nz = −1 stays pinned at the range floor). */
+export const RING_OPACITY_WINDOW: readonly [number, number] = [-0.55, 0.6];
 
 /** Per-card entrance windows in `--corridor-dissipate` units — staggered
  *  after the orbit draw-on begins (~0.45), matching the armillary reveal. */
@@ -88,6 +100,62 @@ export const RING_ENTRANCE_WINDOWS: ReadonlyArray<readonly [number, number]> = [
 
 /** Cards fly IN from a slightly wider radius while fading in. */
 export const RING_ENTRANCE_RADIUS_FROM = 1.18;
+
+/* ── Per-card orbits (ADR-029 Update 1) ─────────────────────────────────
+ * Each card rides its OWN orbital track around the mark — four nearly
+ * coplanar ellipses with staggered radii, small tilt deviations, and
+ * distinct stroke styles (see cardTrackOrbits.ts), so the cards read as
+ * nodes of the armillary rather than a detached carousel. The base sits
+ * TIGHTER than the retired flat ring (1.55) so the side cards stay in
+ * frame ("bring them a bit closer"). */
+
+/** Mean orbit radius (orbit-config units — same space as OrbitConfig). */
+export const RING_ORBIT_BASE_RADIUS = 1.3;
+
+/** Radius stagger: card radii span base ± spread. */
+export const RING_ORBIT_RADIUS_SPREAD = 0.12;
+
+/** Tilt deviation amplitude (rad) — how far each orbit leans away from the
+ *  ring plane. Kept small so the carousel read survives and the facing
+ *  yaw (a pure Y rotation) stays a faithful billboard. */
+export const RING_ORBIT_TILT_AMP = 0.06;
+
+/* ── Device slab (ADR-029 Update 1) ─────────────────────────────────────
+ * The card is a thin transparent SLAB (the Atlas constellation "tablet" /
+ * Expanse hand-terminal read): content plane floated over an extruded
+ * chamfered glass body with a clear bezel margin, gold-lipped side walls,
+ * a hairline edge glint, and a soft halo behind the front card. All in
+ * orbit-config units unless noted; Atlas proportion reference: slab depth
+ * ≈ 3–4% of card width. */
+
+/** Slab thickness (extrude depth). */
+export const RING_SLAB_DEPTH = 0.03;
+
+/** Clear bezel margin around the content plane, each side. */
+export const RING_SLAB_BEZEL = 0.05;
+
+/** Chamfer cut as a fraction of slab width — matches the bake's 52/840. */
+export const RING_SLAB_CHAMFER_FRAC = 52 / 840;
+
+/** Content plane float above the slab's front cap. */
+export const RING_CONTENT_LIFT = 0.006;
+
+/** Glass body (front/back caps) opacity at full card presence. */
+export const RING_GLASS_OPACITY = 0.13;
+
+/** Extruded side-wall opacity — the gold lip of the slab edge. */
+export const RING_GLASS_EDGE_OPACITY = 0.34;
+
+/** Hairline EdgesGeometry glint opacity. */
+export const RING_EDGE_GLINT_OPACITY = 0.42;
+
+/** Behind-card halo opacity (front-weighted; ~0 on side/back cards). */
+export const RING_GLOW_OPACITY = 0.16;
+
+/** Track draw-on windows lead the card entrance windows by this much
+ *  (dissipate units) so each orbit line is on screen just before its
+ *  card flies in along it. */
+export const RING_TRACK_REVEAL_LEAD = 0.06;
 
 /** depthWrite hysteresis thresholds on nz (see ServicesCardRing): the front
  *  card writes depth (so the mark's points occlude behind it); side/back
@@ -273,6 +341,89 @@ export function placeCard(
   };
 }
 
+/** One card's orbital track (ADR-029 Update 1). `tiltX ≈ π/2` is the flat
+ *  ring plane (a near-horizontal orbit, the waist-ring family); `tiltZ`
+ *  is a small roll. `ecc` squashes the ellipse's minor axis. */
+export interface CardOrbitGeometry {
+  /** Orbit radius (orbit-config units). */
+  radius: number;
+  /** Rotation about X (rad), ≈ π/2. */
+  tiltX: number;
+  /** Rotation about Z (rad), small. */
+  tiltZ: number;
+  /** Minor-axis squash: ry = radius · ecc. */
+  ecc: number;
+}
+
+/* Deterministic per-card variation tables — fixed signs/factors so no two
+ * tracks are parallel and the set is stable across sessions (no runtime
+ * randomness; resumability + tests depend on it). */
+const ORBIT_RADIUS_STEPS = [-1, -1 / 3, 1 / 3, 1] as const;
+const ORBIT_TILT_X_STEPS = [-0.75, 0.55, -0.4, 1.0] as const;
+const ORBIT_TILT_Z_STEPS = [0.7, -1.0, -0.5, 0.9] as const;
+const ORBIT_ECCS = [0.985, 1.0, 0.965, 0.95] as const;
+
+/** The four card-orbit geometries for a given base/spread/tilt amplitude.
+ *  `spread = 0` collapses radii onto the base; `tiltAmp = 0` flattens all
+ *  four tracks into the ring plane (the pre-Update-1 carousel). */
+export function buildCardOrbitGeometries(
+  base: number = RING_ORBIT_BASE_RADIUS,
+  spread: number = RING_ORBIT_RADIUS_SPREAD,
+  tiltAmp: number = RING_ORBIT_TILT_AMP
+): CardOrbitGeometry[] {
+  return ORBIT_RADIUS_STEPS.map((step, i) => ({
+    radius: base + step * spread,
+    tiltX: Math.PI / 2 + ORBIT_TILT_X_STEPS[i] * tiltAmp,
+    tiltZ: ORBIT_TILT_Z_STEPS[i] * tiltAmp,
+    ecc: ORBIT_ECCS[i],
+  }));
+}
+
+/** Production card-orbit set (the ringMath defaults). */
+export const RING_CARD_ORBIT_GEOMETRY: readonly CardOrbitGeometry[] = buildCardOrbitGeometries();
+
+/**
+ * Position + facing for card `index` riding ITS OWN orbital track.
+ *
+ * The track shares `HologramOrbits`' ellipse parametrization — point(a) =
+ * Euler(tilt)·(cos a·r, sin a·r·ecc, 0) — so the drawn line and the card
+ * agree exactly. The ring azimuth φ maps onto the parametric angle as
+ * **a = π/2 − φ** (at neutral geometry this reduces bit-exactly to
+ * `placeCard`). THREE's `'XYZ'` Euler applies Rz FIRST to the vector
+ * (R = Rx·Ry·Rz); tiltY is always 0 here so it drops out.
+ *
+ * `nz` stays PARAMETRIC (`cos φ`), not the physical `z/r`: with tilt/ecc
+ * deviations the physical front-z dips below r, which would shave the
+ * front card's scale/opacity and make the depth-write gate + beat
+ * semantics orbit-dependent. Parametric nz keeps every depth curve and
+ * the ring↔step lockstep exactly as the flat ring had them; the tilts
+ * live only in the visible position wobble.
+ */
+export function placeCardOnOrbit(
+  index: number,
+  rotation: number,
+  geom: CardOrbitGeometry,
+  options: RingPlacementOptions = {}
+): RingCardPlacement {
+  const { yOffset = RING_Y_OFFSET, radiusMul = 1 } = options;
+  const phi = basePhi(index) + rotation;
+  const a = Math.PI / 2 - phi;
+  const r = geom.radius * radiusMul;
+  const vx = Math.cos(a) * r;
+  const vy = Math.sin(a) * r * geom.ecc;
+  // Rz(tiltZ) first (z component stays 0)…
+  const x1 = vx * Math.cos(geom.tiltZ) - vy * Math.sin(geom.tiltZ);
+  const y1 = vx * Math.sin(geom.tiltZ) + vy * Math.cos(geom.tiltZ);
+  // …then Rx(tiltX); the z1 = 0 terms vanish.
+  return {
+    x: x1,
+    y: y1 * Math.cos(geom.tiltX) + yOffset,
+    z: y1 * Math.sin(geom.tiltX),
+    rotY: phi,
+    nz: Math.cos(phi),
+  };
+}
+
 /**
  * Billboard yaw for a card at azimuth `phi`, blended toward camera-facing.
  *
@@ -299,12 +450,14 @@ export function depthScale(
 }
 
 /** Card opacity from normalized depth — back cards sink toward the void
- *  well before they'd overlap the mark from behind. */
+ *  well before they'd overlap the mark from behind. The `window` shapes
+ *  where the ramp lives in nz (Update 1; see RING_OPACITY_WINDOW). */
 export function depthOpacity(
   nz: number,
-  range: readonly [number, number] = RING_OPACITY_RANGE
+  range: readonly [number, number] = RING_OPACITY_RANGE,
+  window: readonly [number, number] = RING_OPACITY_WINDOW
 ): number {
-  return lerp(range[0], range[1], smootherstep(-0.55, 0.85, nz));
+  return lerp(range[0], range[1], smootherstep(window[0], window[1], nz));
 }
 
 /** depthWrite hysteresis gate (see RING_DEPTH_WRITE_* rationale). */

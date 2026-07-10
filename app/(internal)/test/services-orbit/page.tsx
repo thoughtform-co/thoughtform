@@ -25,10 +25,19 @@ import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { TENSOR_ACCENT, TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
 import {
   RING_CARD_HEIGHT,
+  RING_EDGE_GLINT_OPACITY,
   RING_FACING_BLEND,
+  RING_GLASS_EDGE_OPACITY,
+  RING_GLASS_OPACITY,
+  RING_GLOW_OPACITY,
   RING_OPACITY_RANGE,
-  RING_RADIUS,
+  RING_OPACITY_WINDOW,
+  RING_ORBIT_BASE_RADIUS,
+  RING_ORBIT_RADIUS_SPREAD,
+  RING_ORBIT_TILT_AMP,
   RING_SCALE_RANGE,
+  RING_SLAB_BEZEL,
+  RING_SLAB_DEPTH,
   RING_SPRING_OMEGA,
   RING_SPRING_ZETA,
   RING_SWAY_CAP_RAD,
@@ -54,17 +63,27 @@ interface OrbitLabConfig {
   progress: number;
   entrance: "off" | "scroll";
   dissipate: number;
-  radius: number;
+  orbitBase: number;
+  orbitSpread: number;
+  orbitTiltAmp: number;
   cardHeight: number;
   yOffset: number;
   scaleMin: number;
   opacityMin: number;
+  opacityWinHi: number;
   travelFrac: number;
   springOmega: number;
   springZeta: number;
   swayCap: number;
   facingBlend: number;
   masterOpacity: number;
+  slabDepth: number;
+  bezel: number;
+  glassOp: number;
+  glassEdgeOp: number;
+  glintOp: number;
+  glowOp: number;
+  trackOp: number;
   poseAmp: number;
   pointerParallax: number;
   camDist: number;
@@ -75,17 +94,27 @@ const DEFAULTS: OrbitLabConfig = {
   progress: 0.3, // beat-1 midpoint: service 01 front, settled
   entrance: "off",
   dissipate: 1,
-  radius: RING_RADIUS,
+  orbitBase: RING_ORBIT_BASE_RADIUS,
+  orbitSpread: RING_ORBIT_RADIUS_SPREAD,
+  orbitTiltAmp: RING_ORBIT_TILT_AMP,
   cardHeight: RING_CARD_HEIGHT,
   yOffset: RING_Y_OFFSET,
   scaleMin: RING_SCALE_RANGE[0],
   opacityMin: RING_OPACITY_RANGE[0],
+  opacityWinHi: RING_OPACITY_WINDOW[1],
   travelFrac: RING_TRAVEL_FRAC,
   springOmega: RING_SPRING_OMEGA,
   springZeta: RING_SPRING_ZETA,
   swayCap: RING_SWAY_CAP_RAD,
   facingBlend: RING_FACING_BLEND,
   masterOpacity: 1,
+  slabDepth: RING_SLAB_DEPTH,
+  bezel: RING_SLAB_BEZEL,
+  glassOp: RING_GLASS_OPACITY,
+  glassEdgeOp: RING_GLASS_EDGE_OPACITY,
+  glintOp: RING_EDGE_GLINT_OPACITY,
+  glowOp: RING_GLOW_OPACITY,
+  trackOp: 1,
   poseAmp: 0, // ring mode: per-service rig pose retired (ADR-029)
   pointerParallax: 0.12,
   camDist: 3.2,
@@ -240,7 +269,9 @@ export default function ServicesOrbitLabPage() {
   const activeIndex = activeServiceForProgress(cfg.progress);
   const activeServiceId = SERVICES[activeIndex].id;
 
-  const promoted = `RING_RADIUS = ${cfg.radius.toFixed(2)}
+  const promoted = `RING_ORBIT_BASE_RADIUS = ${cfg.orbitBase.toFixed(2)}
+RING_ORBIT_RADIUS_SPREAD = ${cfg.orbitSpread.toFixed(3)}
+RING_ORBIT_TILT_AMP = ${cfg.orbitTiltAmp.toFixed(3)}
 RING_CARD_HEIGHT = ${cfg.cardHeight.toFixed(2)}
 RING_Y_OFFSET = ${cfg.yOffset.toFixed(2)}
 RING_TRAVEL_FRAC = ${cfg.travelFrac.toFixed(2)}
@@ -249,7 +280,14 @@ RING_SPRING_ZETA = ${cfg.springZeta.toFixed(2)}
 RING_SWAY_CAP_RAD = ${cfg.swayCap.toFixed(2)}
 RING_FACING_BLEND = ${cfg.facingBlend.toFixed(2)}
 RING_SCALE_RANGE = [${cfg.scaleMin.toFixed(2)}, ${RING_SCALE_RANGE[1]}]
-RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]`;
+RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]
+RING_OPACITY_WINDOW = [${RING_OPACITY_WINDOW[0]}, ${cfg.opacityWinHi.toFixed(2)}]
+RING_SLAB_DEPTH = ${cfg.slabDepth.toFixed(3)}
+RING_SLAB_BEZEL = ${cfg.bezel.toFixed(3)}
+RING_GLASS_OPACITY = ${cfg.glassOp.toFixed(3)}
+RING_GLASS_EDGE_OPACITY = ${cfg.glassEdgeOp.toFixed(2)}
+RING_EDGE_GLINT_OPACITY = ${cfg.glintOp.toFixed(2)}
+RING_GLOW_OPACITY = ${cfg.glowOp.toFixed(3)}`;
 
   return (
     <div
@@ -310,7 +348,9 @@ RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]`;
               entrance={cfg.entrance}
               facingBlend={cfg.facingBlend}
               masterOpacity={cfg.masterOpacity}
-              radius={cfg.radius}
+              orbitBase={cfg.orbitBase}
+              orbitSpread={cfg.orbitSpread}
+              orbitTiltAmp={cfg.orbitTiltAmp}
               cardHeight={cfg.cardHeight}
               yOffset={cfg.yOffset}
               travelFrac={cfg.travelFrac}
@@ -319,6 +359,14 @@ RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]`;
               swayCap={cfg.swayCap}
               opacityRange={[cfg.opacityMin, RING_OPACITY_RANGE[1]]}
               scaleRange={[cfg.scaleMin, RING_SCALE_RANGE[1]]}
+              opacityWindow={[RING_OPACITY_WINDOW[0], cfg.opacityWinHi]}
+              slabDepth={cfg.slabDepth}
+              bezelMargin={cfg.bezel}
+              glassOpacity={cfg.glassOp}
+              glassEdgeOpacity={cfg.glassEdgeOp}
+              glintOpacity={cfg.glintOp}
+              glowOpacity={cfg.glowOp}
+              trackOpacityMul={cfg.trackOp}
             />
           </ServicesHologramScene>
         </group>
@@ -396,12 +444,28 @@ RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]`;
 
         <Section title="RING">
           <Slider
-            label="radius"
-            value={cfg.radius}
+            label="orbit base"
+            value={cfg.orbitBase}
             min={1.0}
-            max={2.4}
+            max={1.8}
             step={0.01}
-            onChange={(v) => set({ radius: v })}
+            onChange={(v) => set({ orbitBase: v })}
+          />
+          <Slider
+            label="radius spread"
+            value={cfg.orbitSpread}
+            min={0}
+            max={0.3}
+            step={0.005}
+            onChange={(v) => set({ orbitSpread: v })}
+          />
+          <Slider
+            label="tilt spread"
+            value={cfg.orbitTiltAmp}
+            min={0}
+            max={0.15}
+            step={0.005}
+            onChange={(v) => set({ orbitTiltAmp: v })}
           />
           <Slider
             label="card height"
@@ -436,6 +500,14 @@ RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]`;
             onChange={(v) => set({ opacityMin: v })}
           />
           <Slider
+            label="opacity win"
+            value={cfg.opacityWinHi}
+            min={0}
+            max={0.85}
+            step={0.01}
+            onChange={(v) => set({ opacityWinHi: v })}
+          />
+          <Slider
             label="master op"
             value={cfg.masterOpacity}
             min={0}
@@ -450,6 +522,68 @@ RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]`;
             max={1}
             step={0.01}
             onChange={(v) => set({ facingBlend: v })}
+          />
+        </Section>
+
+        <Section title="DEVICE">
+          <Slider
+            label="slab depth"
+            value={cfg.slabDepth}
+            min={0}
+            max={0.08}
+            step={0.002}
+            onChange={(v) => set({ slabDepth: v })}
+          />
+          <Slider
+            label="bezel"
+            value={cfg.bezel}
+            min={0}
+            max={0.12}
+            step={0.002}
+            onChange={(v) => set({ bezel: v })}
+          />
+          <Slider
+            label="glass op"
+            value={cfg.glassOp}
+            min={0}
+            max={0.4}
+            step={0.005}
+            onChange={(v) => set({ glassOp: v })}
+          />
+          <Slider
+            label="edge glass"
+            value={cfg.glassEdgeOp}
+            min={0}
+            max={0.8}
+            step={0.01}
+            onChange={(v) => set({ glassEdgeOp: v })}
+          />
+          <Slider
+            label="glint op"
+            value={cfg.glintOp}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => set({ glintOp: v })}
+          />
+          <Slider
+            label="glow op"
+            value={cfg.glowOp}
+            min={0}
+            max={0.5}
+            step={0.005}
+            onChange={(v) => set({ glowOp: v })}
+          />
+        </Section>
+
+        <Section title="TRACKS">
+          <Slider
+            label="track op"
+            value={cfg.trackOp}
+            min={0}
+            max={1.5}
+            step={0.01}
+            onChange={(v) => set({ trackOp: v })}
           />
         </Section>
 

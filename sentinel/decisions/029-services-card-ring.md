@@ -182,3 +182,81 @@ test-ergonomics hazard, not a user-facing bug. Tests must ride the smooth
 two-arg `scrollTo(0, y)` — see the smoke helper's comment. The engagement
 latch itself is corridor infrastructure (predates the ring) and is
 tracked separately.
+
+## Update 1 (2026-07-10 evening): still instrument, device slabs, per-card orbits
+
+Same-day review (Vince): "cards kind of float — should only move when the
+mouse moves"; "depth like we have on Atlas… a futuristic, a bit transparent,
+portable display" (refs: engraved acrylic terminal, Expanse hand terminal);
+"other cards too far away… an orbit around the brandmark for each card, each
+a bit different (dotted / thick), really have them connected." Locked calls:
+device-bezel transparency (content stays readable), each card RIDES its own
+orbit, navigation affordance = composition only.
+
+**Drift retired (SUPERSEDES §3's "Pointer-look and the Lissajous drift
+stay").** The parked instrument's wall-clock Lissajous nod
+(`CENTER_DRIFT_*`, applied to the outer group in `BrandmarkPhysicsCoreActor`)
+is now gated `if (!SERVICES_CARD_RING)` at the drift multiply — with the ring
+on, the parked instrument is FULLY STILL; pointer-look and the scroll-owned
+spring sway are the only motion (stronger ADR-021 posture). recT ≈ 0 made the
+corridor identical either way; flag-off restores the nod byte-identically.
+Verified: projected card rects pixel-identical across 4 s at park.
+
+**Device slab anatomy.** Each card is a per-card group with EXPLICIT
+intra-card renderOrder (distance-sorting near-coplanar transparents
+flickers):
+
+| child   | renderOrder | what                                                                                                                                                                                                                                                                         |
+| ------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| glow    | −0.1        | soft gold radial halo plane behind the slab, front-weighted (`smootherstep(0.35, 0.95, nz)`)                                                                                                                                                                                 |
+| slab    | 0           | shared chamfered `ExtrudeGeometry` (depth `RING_SLAB_DEPTH`, bezel `RING_SLAB_BEZEL` beyond the content, chamfer `RING_SLAB_CHAMFER_FRAC`); material array = smoked caps `#14110c` @ `RING_GLASS_OPACITY` + gold side walls @ `RING_GLASS_EDGE_OPACITY` (the Atlas gold lip) |
+| glint   | 0.05        | shared `EdgesGeometry` hairline @ `RING_EDGE_GLINT_OPACITY`                                                                                                                                                                                                                  |
+| content | 0.1         | the baked plate face, floated `slabDepth/2 + RING_CONTENT_LIFT`; keeps the depthWrite hysteresis                                                                                                                                                                             |
+
+All card sub-objects stay **renderOrder < 1** (the mark's point pass) so the
+"cards draw before points, front card writes depth" contract is untouched;
+glass/glint/glow NEVER write depth (§5 trap). Bake unchanged — opaque void
+chamfer corners read as the device's dark display corners on glass. Anchors
+still project the CONTENT plane corners → `RING_CARD_CTA_BOX` and the DOM
+hit layer unchanged. One geometry of each is shared across the four cards.
+
+**Per-card orbits.** `placeCardOnOrbit` (ringMath, pure, unit-pinned) rides
+each card on its own ellipse using HologramOrbits' parametrization —
+**a = π/2 − φ**, point(a) = Rx(tiltX)·Rz(tiltZ)·(cos a·r, sin a·r·ecc, 0)
+(THREE `'XYZ'` = Rx·Ry·Rz, Rz applied first) — so the drawn track and the
+riding card agree exactly. Geometries from `buildCardOrbitGeometries(base
+1.30, spread 0.12, tiltAmp 0.06)`: radii 1.18/1.26/1.34/1.42, tiltX π/2 ∓
+deviations, ecc 0.985/1.0/0.965/0.95. **nz stays PARAMETRIC (`cos φ`)** —
+physical z/r would shave the front card's scale/opacity and make the
+depth-write gate orbit-dependent; the tilts live only in the visible wobble.
+Tracks are drawn by a nested `<HologramOrbits orbits={buildCardTrackOrbits(…)}>`
+(new `cardTrackOrbits.ts`): dotted 1.0 / thin 0.85 / thick 2.2 / solid 1.4,
+SERVICES_GOLD / TENSOR_ACCENT alternating, opacities 0.22–0.38, `node:false`,
+`phase0 π/2` (draw-on emanates from the front), reveal windows leading the
+card entrance windows by `RING_TRACK_REVEAL_LEAD 0.06`. Track ids are NOT
+ServiceIds (activeServiceId highlight stays inert).
+
+**Composition defaults** (side cards closer/clearer): orbit base 1.30
+(vs flat 1.55), `RING_FACING_BLEND 0.32 → 0.45`, `RING_SCALE_RANGE` floor
+0.62 → 0.72, `RING_OPACITY_RANGE` floor 0.08 → 0.16, new
+`RING_OPACITY_WINDOW [−0.55, 0.6]` (depthOpacity's third param — lifts the
+sides, back card pinned at the floor), `RING_CARD_HEIGHT 1.3 → 1.42`
+(front card parks farther at the tighter base). Accepted character: ±~4%
+front-card size variance per beat from the staggered radii (spread slider
+→ 0 kills it).
+
+**Hit-rect fix found by the stillness probe:** the card directly OPPOSITE
+the front one projects a rect entirely INSIDE the front card's face; with
+the lifted opacity floor it passed the `> 0.1` visibility gate, so clicking
+the front card's photo would surprise-rotate to the hidden card. The
+publisher now marks the opposite-of-front anchor `visible: false`.
+
+**New guardrails**
+
+- The glass slab, glint, and glow NEVER write depth; only the front card's
+  CONTENT material does (hysteresis).
+- Card sub-objects keep renderOrder < 1 (the mark's point pass) and keep
+  their explicit intra-card order.
+- Never publish a hit anchor for the opposite-of-front card.
+- The drift gate stays at the multiply (flag-off byte-identical); do not
+  zero the `CENTER_DRIFT_*` constants instead.

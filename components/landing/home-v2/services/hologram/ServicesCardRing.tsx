@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * ServicesCardRing — the four service cards as textured planes ORBITING the
- * brandmark instrument (ADR-029). Canvas-agnostic: mounts inside the corridor
- * canvas (production, via `CorridorArmillary`) or a standalone lab canvas
+ * ServicesCardRing — the four service cards as transparent DEVICE SLABS
+ * riding their own orbital tracks around the brandmark instrument (ADR-029
+ * + Update 1). Canvas-agnostic: mounts inside the corridor canvas
+ * (production, via `CorridorArmillary`) or a standalone lab canvas
  * (`/test/services-orbit`), always as a child of the instrument rig so it
  * inherits the mark's billboard, pointer-look, and scale.
  *
@@ -12,28 +13,43 @@
  * scroll progress (`servicesRingProgressRef`, written by
  * useServicesStageScroll). A hard-bounded underdamped spring follows that
  * target — its decaying settle is the only idle motion, and the cap keeps the
- * ring within ~7° of the scroll-owned pose at all times.
+ * ring within ~7° of the scroll-owned pose at all times. (The instrument's
+ * own Lissajous drift is GATED OFF under the flag — Update 1: cards move
+ * only from pointer-look and scroll.)
+ *
+ * DEVICE ANATOMY (Update 1 — the Atlas constellation-tablet read): each card
+ * is a per-card group carrying, in EXPLICIT renderOrder,
+ *   glow  (−0.1)  soft gold halo plane behind the slab, front-card weighted;
+ *   slab  ( 0  )  extruded chamfered glass body — dark smoked caps + gold
+ *                 side walls (the lip), clear bezel margin around the content;
+ *   glint (0.05)  hairline EdgesGeometry wireframe on the slab silhouette;
+ *   content(0.1)  the baked plate face, floated above the front cap.
+ * Everything stays BELOW the mark's point pass (renderOrder 1) so the
+ * "cards draw before points, front card writes depth" contract holds; the
+ * glass/glint/glow NEVER write depth (a translucent veil writing depth
+ * would punch particle holes — the §5 trap). Explicit intra-card order
+ * exists because distance-sorting near-coplanar transparents flickers.
  *
  * Card faces are baked ONCE into CanvasTextures as the COMPLETE open C3
  * plate — photo with the plate's gold-tone treatment, chamfered gold shell,
  * filled gold chip, feed caption, title, lede, includes, and the outlined
  * CTA (2026-07-10 Vince red-alert: one plate, never a photo plane plus a
  * separate text console; the DOM only overlays hit targets). Chamfer
- * corners are painted OPAQUE VOID, not transparent: a translucent texel
- * would multiply with `material.opacity` and re-open the alphaTest-vs-fade
- * trap.
+ * corners stay OPAQUE VOID — on the glass slab they read as the device's
+ * dark display corners, and a translucent texel would multiply with
+ * `material.opacity` and re-open the alphaTest-vs-fade trap.
  *
- * Depth strategy vs the GPGPU mark (points: depthWrite=false, renderOrder=1;
- * orbit lines: depthWrite=false, renderOrder=0): cards stay at renderOrder 0
- * and only the near-front card WRITES depth (hysteresis gate) — so the mark's
- * point pass is genuinely occluded behind the front card, while translucent
- * side/back cards never punch card-shaped holes into the particle ink.
+ * Anchors project the CONTENT plane's corners (not the slab), so the DOM
+ * hit rects and `RING_CARD_CTA_BOX` mapping are unchanged by the bezel.
  * Blending is NORMAL everywhere (ADR-023: additive saturates into a blob).
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+
+import { buildCardTrackOrbits } from "./cardTrackOrbits";
+import { HologramOrbits } from "./HologramOrbits";
 
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
@@ -46,24 +62,37 @@ import {
 import {
   RING_CARD_ASPECT,
   RING_CARD_HEIGHT,
+  RING_CONTENT_LIFT,
   RING_COUNT,
+  RING_EDGE_GLINT_OPACITY,
   RING_FACING_BLEND,
+  RING_GLASS_EDGE_OPACITY,
+  RING_GLASS_OPACITY,
+  RING_GLOW_OPACITY,
   RING_OPACITY_RANGE,
-  RING_RADIUS,
+  RING_OPACITY_WINDOW,
+  RING_ORBIT_BASE_RADIUS,
+  RING_ORBIT_RADIUS_SPREAD,
+  RING_ORBIT_TILT_AMP,
   RING_SCALE_RANGE,
+  RING_SLAB_BEZEL,
+  RING_SLAB_CHAMFER_FRAC,
+  RING_SLAB_DEPTH,
   RING_SPRING_OMEGA,
   RING_SPRING_ZETA,
   RING_SWAY_CAP_RAD,
   RING_TRAVEL_FRAC,
   RING_Y_OFFSET,
+  buildCardOrbitGeometries,
   cardFacingYaw,
   depthOpacity,
   depthScale,
   depthWriteGate,
   entranceEnvelope,
   frontCardIndex,
-  placeCard,
+  placeCardOnOrbit,
   ringRotationForProgress,
+  smootherstep,
   stepRingSpring,
   type RingSpringState,
 } from "@/lib/services-ring/ringMath";
@@ -502,7 +531,6 @@ export interface ServicesCardRingProps {
   facingBlend?: number;
   masterOpacity?: number;
   /* Look-dev tunables — defaults are the ringMath constants. */
-  radius?: number;
   cardHeight?: number;
   yOffset?: number;
   travelFrac?: number;
@@ -511,6 +539,20 @@ export interface ServicesCardRingProps {
   swayCap?: number;
   opacityRange?: readonly [number, number];
   scaleRange?: readonly [number, number];
+  opacityWindow?: readonly [number, number];
+  /* Per-card orbits (Update 1). */
+  orbitBase?: number;
+  orbitSpread?: number;
+  orbitTiltAmp?: number;
+  /** Track line opacity multiplier (0 hides the orbit lines). */
+  trackOpacityMul?: number;
+  /* Device slab (Update 1). */
+  slabDepth?: number;
+  bezelMargin?: number;
+  glassOpacity?: number;
+  glassEdgeOpacity?: number;
+  glintOpacity?: number;
+  glowOpacity?: number;
 }
 
 export function ServicesCardRing({
@@ -521,7 +563,6 @@ export function ServicesCardRing({
   publishAnchors = false,
   facingBlend = RING_FACING_BLEND,
   masterOpacity = 1,
-  radius = RING_RADIUS,
   cardHeight = RING_CARD_HEIGHT,
   yOffset = RING_Y_OFFSET,
   travelFrac = RING_TRAVEL_FRAC,
@@ -530,6 +571,17 @@ export function ServicesCardRing({
   swayCap = RING_SWAY_CAP_RAD,
   opacityRange = RING_OPACITY_RANGE,
   scaleRange = RING_SCALE_RANGE,
+  opacityWindow = RING_OPACITY_WINDOW,
+  orbitBase = RING_ORBIT_BASE_RADIUS,
+  orbitSpread = RING_ORBIT_RADIUS_SPREAD,
+  orbitTiltAmp = RING_ORBIT_TILT_AMP,
+  trackOpacityMul = 1,
+  slabDepth = RING_SLAB_DEPTH,
+  bezelMargin = RING_SLAB_BEZEL,
+  glassOpacity = RING_GLASS_OPACITY,
+  glassEdgeOpacity = RING_GLASS_EDGE_OPACITY,
+  glintOpacity = RING_EDGE_GLINT_OPACITY,
+  glowOpacity = RING_GLOW_OPACITY,
 }: ServicesCardRingProps) {
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
@@ -537,8 +589,9 @@ export function ServicesCardRing({
   const setRingAnchors = useHologramConnectors((s) => s.setRingAnchors);
 
   const [textures, setTextures] = useState<THREE.CanvasTexture[] | null>(null);
-  const meshRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const matRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
+  const cardGroupRefs = useRef<Array<THREE.Group | null>>([]);
+  const meshRefs = useRef<Array<THREE.Mesh | null>>([]); // content planes (anchor projection)
+  const matRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]); // content materials
   const depthWriteRef = useRef<boolean[]>(new Array(RING_COUNT).fill(false));
   const springRef = useRef<RingSpringState>({ pos: 0, vel: 0 });
   const lastWallRef = useRef(-1);
@@ -547,6 +600,136 @@ export function ServicesCardRing({
   const anchorsClearedRef = useRef(true);
   const cornerLocal = useRef(new THREE.Vector3());
   const cornerWorld = useRef(new THREE.Vector3());
+
+  const cardW = cardHeight * RING_CARD_ASPECT;
+  const slabW = cardW + bezelMargin * 2;
+  const slabH = cardHeight + bezelMargin * 2;
+
+  /* ── Per-card orbital tracks (Update 1) ── */
+  const cardOrbitGeoms = useMemo(
+    () => buildCardOrbitGeometries(orbitBase, orbitSpread, orbitTiltAmp),
+    [orbitBase, orbitSpread, orbitTiltAmp]
+  );
+  const cardTracks = useMemo(
+    () => buildCardTrackOrbits(cardOrbitGeoms, { opacityMul: trackOpacityMul }),
+    [cardOrbitGeoms, trackOpacityMul]
+  );
+
+  /* ── Shared device geometry (one of each across the four cards) ── */
+  const slabGeometry = useMemo(() => {
+    const ch = slabW * RING_SLAB_CHAMFER_FRAC;
+    const hw = slabW / 2;
+    const hh = slabH / 2;
+    // Chamfers at top-right (+x,+y) and bottom-left (−x,−y) — the bake's
+    // `.svc-plate__sh` polygon (CanvasTexture top row = plane +y).
+    const shape = new THREE.Shape();
+    shape.moveTo(-hw, hh);
+    shape.lineTo(hw - ch, hh);
+    shape.lineTo(hw, hh - ch);
+    shape.lineTo(hw, -hh);
+    shape.lineTo(-hw + ch, -hh);
+    shape.lineTo(-hw, -hh + ch);
+    shape.closePath();
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: slabDepth,
+      bevelEnabled: false,
+    });
+    geometry.translate(0, 0, -slabDepth / 2);
+    return geometry;
+  }, [slabW, slabH, slabDepth]);
+  const glintGeometry = useMemo(() => new THREE.EdgesGeometry(slabGeometry), [slabGeometry]);
+  useEffect(() => {
+    return () => {
+      slabGeometry.dispose();
+      glintGeometry.dispose();
+    };
+  }, [slabGeometry, glintGeometry]);
+
+  // Soft gold halo — the Atlas two-layer radial glow collapsed into one
+  // gradient texture, shared by all four glow planes.
+  const glowTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gradient.addColorStop(0, "rgba(202, 165, 84, 0.9)");
+      gradient.addColorStop(0.35, "rgba(202, 165, 84, 0.32)");
+      gradient.addColorStop(1, "rgba(202, 165, 84, 0)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 128, 128);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, []);
+  useEffect(() => {
+    return () => glowTexture.dispose();
+  }, [glowTexture]);
+
+  /* ── Per-card device materials (opacities driven per frame) ── */
+  const slabMaterials = useMemo(
+    () =>
+      SERVICE_PLATES.map(() => {
+        const shared = {
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          depthTest: true,
+          blending: THREE.NormalBlending,
+          toneMapped: false,
+          side: THREE.FrontSide,
+        } as const;
+        // ExtrudeGeometry groups: material 0 = front/back caps (the smoked
+        // glass body), material 1 = the side walls (the gold lip).
+        return [
+          new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color("#14110c") }),
+          new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(SERVICES_GOLD) }),
+        ] as [THREE.MeshBasicMaterial, THREE.MeshBasicMaterial];
+      }),
+    []
+  );
+  const glintMaterials = useMemo(
+    () =>
+      SERVICE_PLATES.map(
+        () =>
+          new THREE.LineBasicMaterial({
+            color: new THREE.Color(SERVICES_GOLD),
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            toneMapped: false,
+          })
+      ),
+    []
+  );
+  const glowMaterials = useMemo(
+    () =>
+      SERVICE_PLATES.map(
+        () =>
+          new THREE.MeshBasicMaterial({
+            map: glowTexture,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            depthTest: true,
+            blending: THREE.NormalBlending,
+            toneMapped: false,
+          })
+      ),
+    [glowTexture]
+  );
+  useEffect(() => {
+    return () => {
+      for (const [caps, walls] of slabMaterials) {
+        caps.dispose();
+        walls.dispose();
+      }
+      for (const material of glintMaterials) material.dispose();
+      for (const material of glowMaterials) material.dispose();
+    };
+  }, [slabMaterials, glintMaterials, glowMaterials]);
 
   // Bake the four card faces once (fonts + photos are awaited; a glEpoch
   // canvas remount re-runs this effect and re-bakes).
@@ -636,36 +819,43 @@ export function ServicesCardRing({
 
     const parked = dissipate >= ANCHOR_PUBLISH_DISSIPATE;
     const anchors: RingCardAnchor[] = [];
-    const cardW = cardHeight * RING_CARD_ASPECT;
 
     for (let i = 0; i < RING_COUNT; i++) {
+      const cardGroup = cardGroupRefs.current[i];
       const mesh = meshRefs.current[i];
       const material = matRefs.current[i];
-      if (!mesh || !material) continue;
+      if (!cardGroup || !mesh || !material) continue;
 
       const env = entrance === "scroll" ? entranceEnvelope(dissipate, i) : null;
-      const placed = placeCard(i, spring.pos, {
-        radius,
+      const placed = placeCardOnOrbit(i, spring.pos, cardOrbitGeoms[i], {
         yOffset,
         radiusMul: env ? env.radiusMul : 1,
       });
 
-      mesh.position.set(placed.x, placed.y, placed.z);
-      mesh.rotation.set(0, cardFacingYaw(placed.rotY, facingBlend), 0);
-      const s = depthScale(placed.nz, scaleRange);
-      mesh.scale.setScalar(s);
+      // The GROUP carries the ring transform — glow, slab, glint, and
+      // content ride together as one device.
+      cardGroup.position.set(placed.x, placed.y, placed.z);
+      cardGroup.rotation.set(0, cardFacingYaw(placed.rotY, facingBlend), 0);
+      cardGroup.scale.setScalar(depthScale(placed.nz, scaleRange));
 
-      const opacity =
-        depthOpacity(placed.nz, opacityRange) * (env ? env.opacity : 1) * masterOpacity;
+      const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
+      const master = (env ? env.opacity : 1) * masterOpacity;
+      const opacity = depthO * master;
       material.opacity = opacity;
-      mesh.visible = opacity > 0.004;
+      slabMaterials[i][0].opacity = glassOpacity * depthO * master;
+      slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
+      glintMaterials[i].opacity = glintOpacity * depthO * master;
+      // Halo is front-weighted: swells as the card parks, gone on the sides.
+      glowMaterials[i].opacity = glowOpacity * smootherstep(0.35, 0.95, placed.nz) * master;
+      cardGroup.visible = opacity > 0.004;
 
-      // depthWrite hysteresis — only the near-front card writes depth.
+      // depthWrite hysteresis — only the near-front card's CONTENT writes
+      // depth (the glass never does).
       const write = depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity > 0.55;
       if (write !== material.depthWrite) material.depthWrite = write;
       depthWriteRef.current[i] = write;
 
-      if (publishAnchors && parked && mesh.visible) {
+      if (publishAnchors && parked && cardGroup.visible) {
         mesh.updateWorldMatrix(true, false);
         let minX = Infinity;
         let minY = Infinity;
@@ -690,6 +880,11 @@ export function ServicesCardRing({
             centreDepth += cornerWorld.current.z / 4;
           }
         }
+        // The card directly OPPOSITE the front one projects a rect that sits
+        // entirely inside the front card's face — a click there must never
+        // surprise-rotate to the hidden card (found when the Update-1 opacity
+        // floor 0.16 stopped the old `> 0.1` gate from filtering it).
+        const occludedByFront = i === (front + 2) % RING_COUNT;
         anchors.push({
           serviceId: SERVICES[i].id,
           x: minX,
@@ -697,7 +892,7 @@ export function ServicesCardRing({
           w: maxX - minX,
           h: maxY - minY,
           depth: centreDepth,
-          visible: !clipped && opacity > 0.1,
+          visible: !clipped && !occludedByFront && opacity > 0.1,
           front: i === front,
         });
       }
@@ -716,33 +911,70 @@ export function ServicesCardRing({
 
   if (!textures) return null;
 
-  const cardW = cardHeight * RING_CARD_ASPECT;
   return (
     <group scale={scale}>
+      {/* Each card's own orbital track — drawn from the SAME ellipse
+          parametrization the card rides (cardTrackOrbits.ts), offset to
+          the ring plane like the cards themselves. */}
+      <group position={[0, yOffset, 0]}>
+        <HologramOrbits orbits={cardTracks} entrance={entrance} scale={1} />
+      </group>
       {SERVICE_PLATES.map((plate, i) => (
-        <mesh
+        <group
           key={plate.id}
           ref={(el) => {
-            meshRefs.current[i] = el;
+            cardGroupRefs.current[i] = el;
           }}
-          frustumCulled={false}
           visible={false}
         >
-          <planeGeometry args={[cardW, cardHeight]} />
-          <meshBasicMaterial
-            ref={(el) => {
-              matRefs.current[i] = el;
-            }}
-            map={textures[i]}
-            transparent
-            opacity={0}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-            depthTest
-            blending={THREE.NormalBlending}
-            toneMapped={false}
+          {/* Halo behind the slab — front-card weighted. */}
+          <mesh
+            renderOrder={-0.1}
+            position={[0, 0, -(slabDepth / 2 + 0.01)]}
+            material={glowMaterials[i]}
+            frustumCulled={false}
+          >
+            <planeGeometry args={[slabW * 1.7, slabH * 1.35]} />
+          </mesh>
+          {/* Glass slab — smoked caps + gold-lipped side walls. */}
+          <mesh
+            renderOrder={0}
+            geometry={slabGeometry}
+            material={slabMaterials[i]}
+            frustumCulled={false}
           />
-        </mesh>
+          {/* Hairline edge glint on the slab silhouette. */}
+          <lineSegments
+            renderOrder={0.05}
+            geometry={glintGeometry}
+            material={glintMaterials[i]}
+            frustumCulled={false}
+          />
+          {/* The baked plate face, floated above the front cap. */}
+          <mesh
+            renderOrder={0.1}
+            position={[0, 0, slabDepth / 2 + RING_CONTENT_LIFT]}
+            ref={(el) => {
+              meshRefs.current[i] = el;
+            }}
+            frustumCulled={false}
+          >
+            <planeGeometry args={[cardW, cardHeight]} />
+            <meshBasicMaterial
+              ref={(el) => {
+                matRefs.current[i] = el;
+              }}
+              map={textures[i]}
+              transparent
+              opacity={0}
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest
+              blending={THREE.NormalBlending}
+              toneMapped={false}
+            />
+          </mesh>
+        </group>
       ))}
     </group>
   );

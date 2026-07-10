@@ -8,11 +8,17 @@ import {
   RING_SWAY_CAP_RAD,
   RING_SCALE_RANGE,
   RING_OPACITY_RANGE,
+  RING_OPACITY_WINDOW,
+  RING_Y_OFFSET,
   RING_ENTRANCE_RADIUS_FROM,
   RING_DEPTH_WRITE_ON_NZ,
   RING_DEPTH_WRITE_OFF_NZ,
+  RING_CARD_ORBIT_GEOMETRY,
   basePhi,
+  buildCardOrbitGeometries,
   cardFacingYaw,
+  placeCardOnOrbit,
+  type CardOrbitGeometry,
   ringIndexForProgress,
   ringRotationForProgress,
   activeServiceForProgress,
@@ -237,6 +243,109 @@ describe("cardFacingYaw — symmetric camera-facing blend", () => {
       cardFacingYaw(0.7, 0.32) + Math.PI * 2,
       12
     );
+  });
+});
+
+describe("placeCardOnOrbit — cards riding their own tracks (Update 1)", () => {
+  const NEUTRAL: CardOrbitGeometry = { radius: 1.55, tiltX: Math.PI / 2, tiltZ: 0, ecc: 1 };
+
+  it("reduces bit-exactly to placeCard at neutral geometry", () => {
+    for (let i = 0; i < RING_COUNT; i++) {
+      for (let s = 0; s <= 80; s++) {
+        const rot = -Math.PI * 3 + (s / 80) * Math.PI * 6;
+        const flat = placeCard(i, rot, { radius: NEUTRAL.radius });
+        const orbit = placeCardOnOrbit(i, rot, NEUTRAL);
+        expect(orbit.x).toBeCloseTo(flat.x, 12);
+        expect(orbit.y).toBeCloseTo(flat.y, 12);
+        expect(orbit.z).toBeCloseTo(flat.z, 12);
+        expect(orbit.rotY).toBeCloseTo(flat.rotY, 12);
+        expect(orbit.nz).toBeCloseTo(flat.nz, 12);
+      }
+    }
+  });
+
+  it("lands each front card near dead-center within tilt bounds", () => {
+    RING_CARD_ORBIT_GEOMETRY.forEach((geom, k) => {
+      const placed = placeCardOnOrbit(k, -k * RING_QUARTER, geom);
+      // Parametric depth is EXACT at the beat — the depth-write gate and
+      // the ring↔step lockstep stay orbit-independent.
+      expect(placed.nz).toBeCloseTo(1, 12);
+      expect(Math.abs(placed.x)).toBeLessThanOrEqual(
+        geom.radius * Math.abs(geom.tiltZ) * 1.05 + 1e-9
+      );
+      expect(Math.abs(placed.y - RING_Y_OFFSET)).toBeLessThanOrEqual(
+        geom.radius * (Math.abs(geom.tiltX - Math.PI / 2) + Math.abs(geom.tiltZ)) * 1.05 + 1e-9
+      );
+    });
+  });
+
+  it("keeps every sample exactly on its tilted ellipse (pins the Euler order)", () => {
+    const geom = RING_CARD_ORBIT_GEOMETRY[3];
+    for (let s = 0; s <= 200; s++) {
+      const rot = (s / 200) * Math.PI * 4 - Math.PI * 2;
+      const placed = placeCardOnOrbit(3, rot, geom);
+      const y0 = placed.y - RING_Y_OFFSET;
+      // Invert the forward rotation: Rx(−tiltX) first, then Rz(−tiltZ).
+      const y1 = y0 * Math.cos(geom.tiltX) + placed.z * Math.sin(geom.tiltX);
+      const z1 = -y0 * Math.sin(geom.tiltX) + placed.z * Math.cos(geom.tiltX);
+      const ex = placed.x * Math.cos(geom.tiltZ) + y1 * Math.sin(geom.tiltZ);
+      const ey = -placed.x * Math.sin(geom.tiltZ) + y1 * Math.cos(geom.tiltZ);
+      expect(z1).toBeCloseTo(0, 10);
+      expect((ex / geom.radius) ** 2 + (ey / (geom.radius * geom.ecc)) ** 2).toBeCloseTo(1, 10);
+    }
+  });
+
+  it("moves continuously with rotation and keeps nz in [−1, 1]", () => {
+    const geom = RING_CARD_ORBIT_GEOMETRY[0];
+    let prev = placeCardOnOrbit(0, -Math.PI * 2, geom);
+    for (let s = 1; s <= 800; s++) {
+      const rot = -Math.PI * 2 + (s / 800) * Math.PI * 4;
+      const placed = placeCardOnOrbit(0, rot, geom);
+      const step = Math.hypot(placed.x - prev.x, placed.y - prev.y, placed.z - prev.z);
+      expect(step).toBeLessThan(0.05);
+      expect(placed.nz).toBeGreaterThanOrEqual(-1);
+      expect(placed.nz).toBeLessThanOrEqual(1);
+      prev = placed;
+    }
+  });
+
+  it("radiusMul scales the orbit position exactly (entrance fly-in)", () => {
+    const geom = RING_CARD_ORBIT_GEOMETRY[1];
+    const base = placeCardOnOrbit(1, 0.4, geom, { yOffset: 0 });
+    const flown = placeCardOnOrbit(1, 0.4, geom, {
+      yOffset: 0,
+      radiusMul: RING_ENTRANCE_RADIUS_FROM,
+    });
+    expect(flown.x).toBeCloseTo(base.x * RING_ENTRANCE_RADIUS_FROM, 12);
+    expect(flown.y).toBeCloseTo(base.y * RING_ENTRANCE_RADIUS_FROM, 12);
+    expect(flown.z).toBeCloseTo(base.z * RING_ENTRANCE_RADIUS_FROM, 12);
+  });
+});
+
+describe("buildCardOrbitGeometries", () => {
+  it("returns four tracks; spread 0 collapses radii; tiltAmp 0 flattens", () => {
+    expect(RING_CARD_ORBIT_GEOMETRY).toHaveLength(RING_COUNT);
+    for (const geom of buildCardOrbitGeometries(1.3, 0, 0)) {
+      expect(geom.radius).toBeCloseTo(1.3, 12);
+      expect(geom.tiltX).toBeCloseTo(Math.PI / 2, 12);
+      expect(geom.tiltZ).toBeCloseTo(0, 12);
+    }
+    const radii = buildCardOrbitGeometries(1.3, 0.12, 0.06).map((geom) => geom.radius);
+    for (let i = 1; i < radii.length; i++) {
+      expect(radii[i]).toBeGreaterThan(radii[i - 1]);
+    }
+    expect(Math.min(...radii)).toBeCloseTo(1.18, 12);
+    expect(Math.max(...radii)).toBeCloseTo(1.42, 12);
+  });
+});
+
+describe("depthOpacity window (Update 1)", () => {
+  it("lifts the side cards while the back card stays pinned at the floor", () => {
+    const oldWindow: readonly [number, number] = [-0.55, 0.85];
+    expect(depthOpacity(0)).toBeGreaterThan(depthOpacity(0, RING_OPACITY_RANGE, oldWindow));
+    expect(depthOpacity(-1)).toBeCloseTo(RING_OPACITY_RANGE[0], 12);
+    expect(depthOpacity(RING_OPACITY_WINDOW[1])).toBeCloseTo(RING_OPACITY_RANGE[1], 12);
+    expect(depthOpacity(1)).toBeCloseTo(RING_OPACITY_RANGE[1], 12);
   });
 });
 

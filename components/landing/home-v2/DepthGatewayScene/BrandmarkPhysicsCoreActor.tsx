@@ -282,7 +282,12 @@ const CENTER_TARGET_SCALE = 1.15;
  *  (the brandmark silhouette is shallow-Z; a full spin would collapse it to a
  *  sliver). Different X / Y periods give a slow Lissajous nod, not a metronome.
  *  Set both amplitudes to 0 for a fully still centerpiece. Eased in by `recT`,
- *  so the corridor / sphere are untouched. */
+ *  so the corridor / sphere are untouched.
+ *
+ *  RETIRED under `SERVICES_CARD_RING` (ADR-029 Update 1): the parked ring
+ *  instrument is fully still — cards must move only from pointer-look and
+ *  scroll. The drift survives solely on the flag-off legacy path (see the
+ *  gate at the drift multiply below). */
 const CENTER_DRIFT_AMP_X_RAD = 0.16; // ~9° pitch
 const CENTER_DRIFT_AMP_Y_RAD = 0.21; // ~12° yaw
 const CENTER_DRIFT_PERIOD_X_S = 17;
@@ -770,14 +775,24 @@ export function BrandmarkPhysicsCoreActor({
       // collapse it to a sliver). Wall-clock phase → continuous on reverse.
       // Amplitudes 0 ⇒ a clean "fully still" centerpiece. recT = 0 in the
       // corridor ⇒ no tilt and the slerp is identity (unchanged).
-      const tSec = state.clock.elapsedTime;
-      const ax =
-        Math.sin((tSec / CENTER_DRIFT_PERIOD_X_S) * Math.PI * 2) * CENTER_DRIFT_AMP_X_RAD * recT;
-      const ay =
-        Math.sin((tSec / CENTER_DRIFT_PERIOD_Y_S) * Math.PI * 2) * CENTER_DRIFT_AMP_Y_RAD * recT;
-      driftEulerScratch.current.set(ax, ay, 0, "XYZ");
-      driftQuatScratch.current.setFromEuler(driftEulerScratch.current);
-      group.quaternion.multiply(driftQuatScratch.current);
+      //
+      // ADR-029 Update 1: with the card ring on, the parked instrument is
+      // FULLY STILL — pointer-look + the scroll-owned ring sway are the only
+      // motion (Vince: "they should only move when the mouse moves"; ADR-021:
+      // no wall-clock motion behind readable services copy). Mirrors the
+      // pose-gate precedent in the SERVICES_CARD_RING effect above. recT ≈ 0
+      // pre-park made this branch a no-op in the corridor either way;
+      // flag-off restores the Lissajous nod byte-identically.
+      if (!SERVICES_CARD_RING) {
+        const tSec = state.clock.elapsedTime;
+        const ax =
+          Math.sin((tSec / CENTER_DRIFT_PERIOD_X_S) * Math.PI * 2) * CENTER_DRIFT_AMP_X_RAD * recT;
+        const ay =
+          Math.sin((tSec / CENTER_DRIFT_PERIOD_Y_S) * Math.PI * 2) * CENTER_DRIFT_AMP_Y_RAD * recT;
+        driftEulerScratch.current.set(ax, ay, 0, "XYZ");
+        driftQuatScratch.current.setFromEuler(driftEulerScratch.current);
+        group.quaternion.multiply(driftQuatScratch.current);
+      }
     } else {
       group.quaternion.identity();
     }
