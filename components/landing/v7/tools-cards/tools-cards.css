@@ -281,7 +281,7 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 .tools-rail-register {
   z-index: 4;
   font-family: var(--font-pt-mono, "PT Mono", monospace);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--dawn-50);
@@ -289,25 +289,15 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 
 .tools-rail-register__heading {
   position: absolute;
-  top: calc(33.333% - 32px);
+  top: calc(33.333% - 36px);
   right: calc(var(--hud-rail-guide-inset) + 12px);
   width: max-content;
   color: var(--dawn-40);
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 0.2em;
   line-height: 1;
   white-space: nowrap;
   transition: opacity 180ms linear;
-}
-
-.tools-rail-register__heading::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 5px);
-  width: 7px;
-  height: 1px;
-  background: currentColor;
 }
 
 .tools-rail-register__heading--tools {
@@ -336,23 +326,12 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   box-sizing: border-box;
   width: 8px;
   height: 8px;
-  margin-left: 18px;
+  margin-left: 10px;
   flex: none;
 }
 
-/* The leader occupies the complete gap between readout and rail marker,
-   keeping every label visibly wired to the perimeter bus. */
-.tools-rail-register__marker::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: calc(100% + 1px);
-  width: 24px;
-  height: 1px;
-  background: currentColor;
-  transform: translateY(-50%);
-}
-
+/* No leader lines (ADR-030 Update 3): the readout floats free of the
+   rail; only the diamond marker sits on the guide. */
 .tools-rail-register__marker::after {
   content: "";
   position: absolute;
@@ -364,11 +343,11 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 
 .tools-rail-register__index {
   color: var(--gold-60);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .tools-rail-register__name {
-  min-width: 8.5ch;
+  min-width: 9.5ch;
   text-align: right;
 }
 
@@ -380,11 +359,13 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   color: var(--dawn-45);
 }
 
-.tools-rail-register__row--tool[data-active] {
+.tools-rail-register__row--tool[data-active],
+.tools-rail-register__row--service[data-active] {
   color: var(--gold);
 }
 
-.tools-rail-register__row--tool[data-active] .tools-rail-register__marker::after {
+.tools-rail-register__row--tool[data-active] .tools-rail-register__marker::after,
+.tools-rail-register__row--service[data-active] .tools-rail-register__marker::after {
   background: var(--gold);
   border-color: var(--gold);
 }

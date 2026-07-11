@@ -16,6 +16,9 @@ import {
   RING_CARD_ORBIT_GEOMETRY,
   RING_EXIT_WINDOWS,
   RING_EXIT_RADIUS_TO,
+  RING_FRONT_BIAS_PITCH,
+  RING_FRONT_BIAS_WINDOW,
+  RING_FRONT_BIAS_YAW,
   basePhi,
   buildCardOrbitGeometries,
   cardFacingYaw,
@@ -33,6 +36,7 @@ import {
   depthOpacity,
   depthWriteGate,
   entranceEnvelope,
+  frontPoseBias,
   type RingSpringState,
 } from "@/lib/services-ring/ringMath";
 
@@ -348,6 +352,42 @@ describe("cardFacingYaw — symmetric camera-facing blend", () => {
       cardFacingYaw(0.7, 0.32) + Math.PI * 2,
       12
     );
+  });
+});
+
+describe("frontPoseBias — parked front card holds a 3/4 pose (ADR-029 addendum)", () => {
+  it("is zero outside the front window (side/back cards keep their pose)", () => {
+    for (const nz of [-1, 0, RING_FRONT_BIAS_WINDOW[0]]) {
+      const bias = frontPoseBias(nz);
+      expect(bias.pitch).toBeCloseTo(0, 12);
+      expect(bias.yaw).toBeCloseTo(0, 12);
+    }
+  });
+
+  it("reaches the full constant bias at the parked front", () => {
+    expect(frontPoseBias(RING_FRONT_BIAS_WINDOW[1]).yaw).toBeCloseTo(RING_FRONT_BIAS_YAW, 12);
+    expect(frontPoseBias(RING_FRONT_BIAS_WINDOW[1]).pitch).toBeCloseTo(RING_FRONT_BIAS_PITCH, 12);
+    expect(frontPoseBias(1).yaw).toBeCloseTo(RING_FRONT_BIAS_YAW, 12);
+    expect(frontPoseBias(1).pitch).toBeCloseTo(RING_FRONT_BIAS_PITCH, 12);
+  });
+
+  it("ramps monotonically inside the window (scroll-owned, no snap)", () => {
+    let prev = 0;
+    for (let s = 0; s <= 40; s++) {
+      const nz =
+        RING_FRONT_BIAS_WINDOW[0] +
+        (s / 40) * (RING_FRONT_BIAS_WINDOW[1] - RING_FRONT_BIAS_WINDOW[0]);
+      const { yaw } = frontPoseBias(nz);
+      expect(yaw).toBeGreaterThanOrEqual(prev);
+      prev = yaw;
+    }
+    expect(prev).toBeCloseTo(RING_FRONT_BIAS_YAW, 12);
+  });
+
+  it("keeps the biased pose bounded well clear of edge-on", () => {
+    // Held pose + max hover tilt must stay far from ±π/2 (legibility rule).
+    const maxYaw = Math.abs(RING_FRONT_BIAS_YAW) + 0.2; // hover yaw amplitude
+    expect(maxYaw).toBeLessThan(Math.PI / 6);
   });
 });
 

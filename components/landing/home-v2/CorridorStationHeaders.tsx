@@ -80,6 +80,21 @@ const ENCODE_FADE_IN: [number, number] = [0.54, 0.62];
 const ENCODE_FADE_OUT: [number, number] = [0.76, 0.83];
 const BUILD_FADE_IN: [number, number] = [0.84, 0.91];
 
+// ── Arc stage → left-rail station label (ADR-030 Update 3) ───────
+// While the corridor owns the HUD (`data-corridor-engaged`), the
+// site-wide RailStationLabel shows the current Arc stage instead of
+// closing. This rAF is the corridor's single text writer, so it also
+// publishes the stage as a delta-gated `data-arc-stage` attribute on
+// <html>; the label component observes the attribute (staying fully
+// event-driven). Stage boundaries are DERIVED from the fade bands
+// above so the rail label can never drift from the headline beats:
+// the armed pre-pin stretch and everything before Encode's arrival
+// reads "navigate"; the epilogue holds paintProgress at 1 → "build"
+// persists until disengagement hands over to `data-screen-label`s.
+const ARC_ENCODE_AT = ENCODE_FADE_IN[0];
+const ARC_BUILD_AT = BUILD_FADE_IN[0];
+type ArcStage = "navigate" | "encode" | "build";
+
 // ── Typewriter tuning ─────────────────────────────────────────────
 /** Container opacity above which a header is considered "arrived"
  *  and the type-out is armed to start (one-shot). High enough to
@@ -1198,6 +1213,7 @@ export function CorridorStationHeaders() {
 
   useEffect(() => {
     let raf = 0;
+    let lastArcStage: ArcStage | null = null;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const t = useDepthGatewayStore.getState().transform;
@@ -1207,6 +1223,22 @@ export function CorridorStationHeaders() {
       const inEpilogue = t.epilogueProgress > 0.001;
       const docked = t.docked;
       const nowSec = performance.now() / 1000;
+
+      // Publish the Arc stage for the left-rail station label (see the
+      // ARC_* constants). Delta-gated: one attribute write per stage
+      // change, none per frame. Reverse scroll reverses by construction.
+      const arcStage: ArcStage | null = !painting
+        ? null
+        : p < ARC_ENCODE_AT
+          ? "navigate"
+          : p < ARC_BUILD_AT
+            ? "encode"
+            : "build";
+      if (arcStage !== lastArcStage) {
+        lastArcStage = arcStage;
+        if (arcStage) document.documentElement.setAttribute("data-arc-stage", arcStage);
+        else document.documentElement.removeAttribute("data-arc-stage");
+      }
 
       // Epilogue v3 (planet landing, restored 2026-06-11) — Build
       // header fades out on BUILD_OUT and the billions title fades
@@ -1586,7 +1618,12 @@ export function CorridorStationHeaders() {
       }
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      // WebGL-fallback / unmount: no Arc writer → the rail label simply
+      // stays closed during the corridor (pre-Update-3 behavior).
+      document.documentElement.removeAttribute("data-arc-stage");
+    };
   }, [typewriter]);
 
   const setNavRef = (el: HTMLDivElement | null) => {

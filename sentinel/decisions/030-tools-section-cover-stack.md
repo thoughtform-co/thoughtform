@@ -333,3 +333,61 @@ The following Update 1 details are historical, not current: floating
 the exported `STACK` constant, the 40px production chamfer, and the local
 `.pcl-rail`. The decommission/ambient compositing contracts listed above
 remain current.
+
+## Update 3 (2026-07-11, same day): continuous rail identity + whole-section register
+
+Owner request: the rails' identity channels must be CONTINUOUS — the left
+station label present across every stretch of the page (including the Arc
+corridor), and the services register present for the WHOLE `#services`
+section, not just the exit beat. Two Update-1/2 details are superseded.
+
+### Left rail — the label rides the Arc
+
+- `RailStationLabel` no longer closes while `data-corridor-engaged`; it
+  REDIRECTS. `CorridorStationHeaders`' rAF (the corridor's single text
+  writer) publishes a delta-gated `data-arc-stage="navigate|encode|build"`
+  on `<html>`; boundaries are DERIVED from its own fade bands
+  (`ARC_ENCODE_AT = ENCODE_FADE_IN[0]` 0.54, `ARC_BUILD_AT =
+BUILD_FADE_IN[0]` 0.84) so the rail can never drift from the headline
+  beats. The armed pre-pin stretch reads "navigate"; the epilogue holds
+  "build" until disengagement hands back to the authored
+  `data-screen-label`s. The label maps stages to "02 Navigate" /
+  "03 Encode" / "04 Build" (owner-picked numbering; the visible sequence
+  is 01 → 02–04 → 08 → 08A → 09 → 10 — renumbering the authored labels is
+  an optional follow-up). WebGL fallback: no Arc writer → label closed
+  during the corridor (pre-Update-3 behavior, acceptable fail-safe).
+- The enhanced-desktop Tools suppression of `.hud__rail__station` is
+  REMOVED (supersedes Update 2's "the generic left-rail station label
+  closes during this richer mode"): the Tools eyebrow was retired the same
+  day, so the rail label is now the section-identity channel on `#tools`
+  too ("08A Tools").
+
+### Right rail — register seated for the whole section
+
+- `serviceAlive` is now `(data-active-station === "services" ||
+data-services-ambient) && arriveClock > 0.001`, where `arriveClock` =
+  `--svc-content-in` read from `.services-stage` (fail-open to 1 under the
+  ambient hold). The register resolves WITH the services copy on arrival —
+  never during the corridor dissipate — and stays seated through the
+  runway, exit beat, and the unchanged `--tools-bg-in` handover.
+- The exit-beat FLIP is RETIRED (supersedes Update 2's FLIP + latched
+  source rects): rows are already home, so each wipes in right-guide-inward
+  (JS-owned `clip-path`, scroll-scrubbed/reversible) on a staggered window
+  over the arrival clock. `SERVICE_WINDOWS`, the `SRC_*` constants, and the
+  `useHologramConnectors` latch are deleted.
+- The "continuous inward leaders" and heading tick are RETIRED (supersedes
+  Update 2): `.tools-rail-register__marker::before` and
+  `__heading::after` are gone; only the outline diamond marks the guide.
+- Type scale lifted for legibility: root 9→11px, heading 8→9.5px, index
+  8→9px, `__name` min-width 8.5→9.5ch.
+- ACTIVE service row: the row whose service is open carries `data-active`
+  (gold + filled diamond, mirroring the tool rows). Selection is
+  ARRAY-INDEX-based via `activeServiceForProgress` — never id/verb-based:
+  the verb remap (id `keynote` → verb ADVISORY, etc.) makes id lookups a
+  trap. The ringMath clamp keeps WORKSHOP active through the exit beat.
+- Test deltas (`tools-cards-smoke.spec.ts`): leader assertions inverted
+  (`::before` content must be "none"); mid-runway probe added (p≈0.45 →
+  all four rows visible, exactly one `data-active`, row id "workshop").
+
+The ring-side companion (parked front card holds a bounded 3/4 pose so the
+slab reads 3D in view) is documented in ADR-029's addendum.

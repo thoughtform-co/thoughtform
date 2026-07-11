@@ -95,6 +95,7 @@ import {
   depthWriteGate,
   entranceEnvelope,
   frontCardIndex,
+  frontPoseBias,
   placeCardOnOrbit,
   ringRotationForProgress,
   smootherstep,
@@ -159,9 +160,11 @@ const VEIL_DAMP_RATE = 7;
  *  (yaw toward the pointer's side, pitch away from its height) so the
  *  slab's extruded edges and gold lip catch the eye: the "see the 3D
  *  shape" affordance. Bounded well clear of edge-on; pointer-driven and
- *  damped to zero off-hover, so ADR-021 stays intact. */
-const RING_HOVER_TILT_PITCH = 0.09;
-const RING_HOVER_TILT_YAW = 0.16;
+ *  damped to zero off-hover, so ADR-021 stays intact. Raised 0.09/0.16 →
+ *  0.11/0.20 with the parked front-pose bias (ADR-029 addendum) so the
+ *  pointer response reads over the held 3/4 angle. */
+const RING_HOVER_TILT_PITCH = 0.11;
+const RING_HOVER_TILT_YAW = 0.2;
 
 /**
  * The shared veil strip: an 8px-wide, card-height column of void tint with
@@ -1015,9 +1018,17 @@ export function ServicesCardRing({
       tilt.yaw += (tiltTargetYaw - tilt.yaw) * tiltK;
 
       // The GROUP carries the ring transform — glow, slab, glint, and
-      // content ride together as one device.
+      // content ride together as one device. The parked front card holds
+      // a small residual 3/4 pose (frontPoseBias — ADR-029 addendum) so
+      // the slab's depth reads while it is THE in-view card; the bias is
+      // a constant term after cardFacingYaw, scroll-owned via nz.
+      const bias = frontPoseBias(placed.nz);
       cardGroup.position.set(placed.x, placed.y, placed.z);
-      cardGroup.rotation.set(tilt.pitch, cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw, 0);
+      cardGroup.rotation.set(
+        tilt.pitch + bias.pitch,
+        cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw,
+        0
+      );
       cardGroup.scale.setScalar(depthScale(placed.nz, scaleRange));
 
       const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);

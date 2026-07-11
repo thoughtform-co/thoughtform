@@ -52,6 +52,27 @@ export const RING_Y_OFFSET = -0.04;
  *  cards (Vince: "make it clearer that there are other cards"). */
 export const RING_FACING_BLEND = 0.45;
 
+/** Parked front-card pose bias (ADR-029 addendum, 2026-07-11): the front
+ *  card holds a small residual 3/4 pose instead of parking dead-flat, so
+ *  the slab's extruded depth + gold lip stay visible while it is THE
+ *  in-view card (the Atlas "tablet" read — before this, only the side
+ *  cards showed their 3D). Constant angles scaled by a front-window ramp
+ *  over parametric depth `nz` (the same 0.35→0.95 window the halo uses),
+ *  so side cards — already 3/4 via RING_FACING_BLEND — take none.
+ *  Scroll/pointer-owned only: nz moves with the ring, never a time clock.
+ *  NOT a revival of the getServicePose yaw (ADR-029 pitfall — that
+ *  double-rotated cards per service; this is a constant term applied
+ *  after cardFacingYaw). */
+export const RING_FRONT_BIAS_YAW = 0.13;
+export const RING_FRONT_BIAS_PITCH = -0.04;
+export const RING_FRONT_BIAS_WINDOW: readonly [number, number] = [0.35, 0.95];
+
+/** Pose bias for a card at parametric depth `nz` (−1 back … 1 front). */
+export function frontPoseBias(nz: number): { pitch: number; yaw: number } {
+  const w = smootherstep(RING_FRONT_BIAS_WINDOW[0], RING_FRONT_BIAS_WINDOW[1], nz);
+  return { pitch: RING_FRONT_BIAS_PITCH * w, yaw: RING_FRONT_BIAS_YAW * w };
+}
+
 /** Orbit direction: −1 → the next service's card arrives from screen-right. */
 export const RING_DIRECTION = -1;
 
@@ -168,8 +189,10 @@ export const RING_ORBIT_TILT_AMP = 0.06;
  * orbit-config units unless noted; Atlas proportion reference: slab depth
  * ≈ 3–4% of card width. */
 
-/** Slab thickness (extrude depth). */
-export const RING_SLAB_DEPTH = 0.03;
+/** Slab thickness (extrude depth). Lifted 0.03 → 0.045 with the parked
+ *  front-pose bias (ADR-029 addendum) so the held 3/4 angle shows a
+ *  legible gold side wall (~2–3px at park scale, vs ~1.5px before). */
+export const RING_SLAB_DEPTH = 0.045;
 
 /** Clear bezel margin around the content plane, each side. */
 export const RING_SLAB_BEZEL = 0.05;
@@ -183,8 +206,10 @@ export const RING_CONTENT_LIFT = 0.006;
 /** Glass body (front/back caps) opacity at full card presence. */
 export const RING_GLASS_OPACITY = 0.13;
 
-/** Extruded side-wall opacity — the gold lip of the slab edge. */
-export const RING_GLASS_EDGE_OPACITY = 0.34;
+/** Extruded side-wall opacity — the gold lip of the slab edge. Lifted
+ *  0.34 → 0.44 with the parked front-pose bias so the lip reads at the
+ *  held 3/4 angle. */
+export const RING_GLASS_EDGE_OPACITY = 0.44;
 
 /** Hairline EdgesGeometry glint opacity. */
 export const RING_EDGE_GLINT_OPACITY = 0.42;

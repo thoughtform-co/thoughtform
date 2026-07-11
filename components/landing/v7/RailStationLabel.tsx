@@ -21,14 +21,27 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  *    (delta-gated, alongside its nav toggles);
  *  - the station's authored-but-previously-unused `data-screen-label`
  *    ("08A Tools") supplies the copy;
- *  - `data-corridor-engaged` gates the label CLOSED while the corridor
- *    owns the HUD (same gate as the depth/coord readouts).
+ *  - while `data-corridor-engaged` is true the label REDIRECTS to the
+ *    Arc stage (ADR-030 Update 3): `CorridorStationHeaders`' rAF
+ *    publishes a delta-gated `data-arc-stage` on <html> and this
+ *    component maps it to "02 Navigate" / "03 Encode" / "04 Build" —
+ *    the label is continuous across the whole page. (On the WebGL
+ *    fallback no Arc writer exists, so the corridor stretch simply
+ *    keeps the label closed — the pre-Update-3 behavior.)
  * Event-driven via one MutationObserver — zero per-frame work.
  *
  * Site-wide by design (Vince), desktop HUD only (the rails' own media
  * rules hide it below the HUD breakpoint). Reduced motion: text snaps,
  * wipe collapses (CSS).
  */
+/** Arc-stage → rail-label copy. Numbering slots the corridor between
+ *  "01 Hero" and "08 Services" (owner-picked, 2026-07-11). */
+const ARC_LABELS: Record<string, string> = {
+  navigate: "02 Navigate",
+  encode: "03 Encode",
+  build: "04 Build",
+};
+
 function RailStationLabel() {
   const noRef = useRef<HTMLSpanElement | null>(null);
   const nameRef = useRef<HTMLSpanElement | null>(null);
@@ -54,14 +67,22 @@ function RailStationLabel() {
       if (!host || !noEl || !nameEl) return;
 
       const engaged = html.getAttribute("data-corridor-engaged") === "true";
-      const key = html.getAttribute("data-active-station");
-      const label = key
-        ? document
-            .querySelector<HTMLElement>(`.station[data-station="${key}"]`)
-            ?.getAttribute("data-screen-label")
-        : null;
+      let label: string | null | undefined;
+      if (engaged) {
+        // Corridor: the Arc stage owns the label (null hides — e.g. the
+        // WebGL fallback where no Arc writer runs).
+        const stage = html.getAttribute("data-arc-stage");
+        label = stage ? ARC_LABELS[stage] : null;
+      } else {
+        const key = html.getAttribute("data-active-station");
+        label = key
+          ? document
+              .querySelector<HTMLElement>(`.station[data-station="${key}"]`)
+              ?.getAttribute("data-screen-label")
+          : null;
+      }
 
-      if (engaged || !label) {
+      if (!label) {
         host.classList.remove("is-on");
         lastShown = "";
         return;
@@ -92,7 +113,7 @@ function RailStationLabel() {
     const observer = new MutationObserver(update);
     observer.observe(html, {
       attributes: true,
-      attributeFilter: ["data-active-station", "data-corridor-engaged"],
+      attributeFilter: ["data-active-station", "data-corridor-engaged", "data-arc-stage"],
     });
     update();
 

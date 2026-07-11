@@ -317,7 +317,29 @@ test.describe("Tools section smoke (ADR-030 edge-bus rebuild)", () => {
     );
     test.skip(fallback, "corridor WebGL fallback — no reversible Services bus to probe");
 
-    // Finish the Services exit clock: all four service rows are seated on
+    // Whole-section presence (ADR-030 Update 3): mid-runway the register is
+    // already seated — all four rows visible with exactly one active row
+    // tracking the open service (p≈0.45 → step 2 → row index 1, whose
+    // authored id is "workshop" under the verb remap).
+    expect(await scrollServicesRunway(page, 0.45)).toBe(true);
+    await expect
+      .poll(() => page.locator(".tools-rail-register").getAttribute("data-register-mode"))
+      .toBe("services");
+    const midRunway = await page.evaluate(() => {
+      const rows = Array.from(
+        document.querySelectorAll<HTMLElement>(".tools-rail-register__row--service")
+      );
+      return {
+        visible: rows.map((row) => getComputedStyle(row).visibility),
+        activeIds: rows
+          .filter((row) => row.hasAttribute("data-active"))
+          .map((row) => row.dataset.serviceId),
+      };
+    });
+    expect(midRunway.visible).toEqual(["visible", "visible", "visible", "visible"]);
+    expect(midRunway.activeIds).toEqual(["workshop"]);
+
+    // Finish the Services runway: all four service rows remain seated on
     // the canonical right guide before the viewscreen changes mode.
     expect(await scrollServicesRunway(page, 1)).toBe(true);
     await expect
@@ -352,9 +374,6 @@ test.describe("Tools section smoke (ADR-030 edge-bus rebuild)", () => {
               markerRect.left + markerRect.width / 2 - (trackRect.left + trackRect.width / 2)
             ),
             leaderContent: leader.content,
-            leaderWidth: Number.parseFloat(leader.width),
-            leaderHeight: Number.parseFloat(leader.height),
-            leaderColor: leader.backgroundColor,
             borderWidth: rowStyle.borderWidth,
             background: rowStyle.backgroundColor,
           };
@@ -368,10 +387,9 @@ test.describe("Tools section smoke (ADR-030 edge-bus rebuild)", () => {
       expect(row.visible).toBe(true);
       expect(row.opacity).toBeGreaterThan(0.99);
       expect(row.markerDelta).toBeLessThanOrEqual(1);
-      expect(row.leaderContent).not.toBe("none");
-      expect(row.leaderWidth).toBeGreaterThanOrEqual(20);
-      expect(row.leaderHeight).toBeGreaterThanOrEqual(1);
-      expect(row.leaderColor).not.toMatch(/rgba\([^)]*,\s*0\)/);
+      // No leader lines (ADR-030 Update 3): the readout floats free of the
+      // rail — the marker must carry no ::before bar.
+      expect(row.leaderContent).toBe("none");
       expect(row.borderWidth).toBe("0px");
       expect(row.background).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)/);
     }

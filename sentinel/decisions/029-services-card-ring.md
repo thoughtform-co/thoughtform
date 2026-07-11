@@ -399,3 +399,33 @@ tween writes stay `behavior: "instant"` (the CSS smooth trap above); the
 unconsumed-wheel cancel check stays deferred; never restore an
 unconditional resume snap — the conditional form is what keeps frame
 hitches from teleporting the ring.
+
+## Update 6 (2026-07-11): parked front card holds a 3/4 pose
+
+The front card parked DEAD-FLAT to the camera, so the Update-1 device slab
+(extruded depth, gold-lipped side walls, edge glint) was invisible exactly
+when a card was THE in-view card — only the side cards read 3D. The owner's
+reference is the Atlas constellation tablet: a card that never sits
+perfectly flat.
+
+**Pose bias** (`lib/services-ring/ringMath.ts`): `frontPoseBias(nz)` —
+constant angles `RING_FRONT_BIAS_YAW 0.13` (≈7.4°) / `RING_FRONT_BIAS_PITCH
+−0.04`, scaled by a `smootherstep` ramp over the halo's own front window
+`RING_FRONT_BIAS_WINDOW [0.35, 0.95]` of parametric depth `nz`, so side
+cards (already 3/4 via `RING_FACING_BLEND`) take none. Applied in
+`ServicesCardRing` at the single pose write, as a constant term AFTER
+`cardFacingYaw` + hover tilt. This is NOT a revival of the `getServicePose`
+yaw (the Update-1 pitfall — that double-rotated cards per service); it is
+scroll-owned (nz) + pointer-damped only — no time clock, ADR-021 intact.
+
+**Edge legibility retune:** `RING_SLAB_DEPTH 0.03 → 0.045` and
+`RING_GLASS_EDGE_OPACITY 0.34 → 0.44` so the held angle shows a legible
+gold side wall (~2–3px at park scale). **Hover tilt raised**
+`RING_HOVER_TILT_PITCH 0.09 → 0.11`, `RING_HOVER_TILT_YAW 0.16 → 0.20` so
+the pointer response reads over the held pose.
+
+Safe by construction: hit-areas/designation anchors project from the posed
+`matrixWorld` (they follow the bias); occlusion is index-based; the
+exit/entrance envelopes touch only radius+opacity. Unit-pinned in
+`tests/lib/services-ring-math.test.ts` (zero outside the window, full
+constants at the front, monotone ramp, bounded well clear of edge-on).
