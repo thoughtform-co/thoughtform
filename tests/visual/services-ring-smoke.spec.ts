@@ -111,6 +111,35 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
   });
 
+  test("desktop: wheel over the instrument snaps beats; below the band it scrolls on", async ({
+    page,
+  }) => {
+    test.skip(!isDesktopViewport(page), "ring wheel is desktop-only (≥961px)");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 15_000 });
+    expect(await scrollServicesRunway(page, 0.3)).toBe(true);
+    // Park + texture bakes settle before the wheel hook engages.
+    await page.waitForTimeout(4000);
+
+    // Wheel with the pointer ON the instrument → one beat per gesture.
+    await page.mouse.move(720, 400);
+    await page.mouse.wheel(0, 140);
+    await expect(page.locator(".services-readout")).toContainText("EMBEDDED", {
+      timeout: 10_000,
+    });
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
+
+    // Pointer BELOW the instrument band → wheel stays native page scroll.
+    await page.waitForTimeout(900); // let the snap scroll settle
+    const heldY = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(720, 830);
+    await page.mouse.wheel(0, 500);
+    await page.waitForTimeout(800);
+    const movedY = await page.evaluate(() => window.scrollY);
+    expect(movedY).toBeGreaterThan(heldY);
+  });
+
   test("regenerated service photos resolve (embedded/workshop.webp 404 regression)", async ({
     page,
   }) => {

@@ -117,6 +117,16 @@ const BAKE_CH = 52;
 const VOID = "#050403";
 const DAWN = "236, 227, 214";
 
+/* The plate's hologram photo layering (`.svc-plate__pbg--dots` + `--soft`),
+ * restored in Update 2. Pitch/radius are the plate's 4px / 1.05px mask at
+ * the 2× bake scale; the alphas sit between the plate's rest (.34 dots /
+ * .08 soft) and hover-resolved (.16 / .48) states — the ring card IS the
+ * open showcase, so the feed reads holographic yet legible. */
+const PHOTO_DOT_PITCH = 8;
+const PHOTO_DOT_RADIUS = 2.15;
+const PHOTO_DOTS_ALPHA = 0.62;
+const PHOTO_SOFT_ALPHA = 0.3;
+
 /**
  * Gold-tone LUT reproducing the plate photo treatment
  * (`.svc-plate__pbg` filter: grayscale(1) sepia(0.5) hue-rotate(-9deg)
@@ -280,26 +290,74 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
   if (img) {
-    // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is 1:1).
-    const scale = Math.max(BAKE_W / img.naturalWidth, BAKE_H / img.naturalHeight);
-    const dw = img.naturalWidth * scale;
-    const dh = img.naturalHeight * scale;
-    ctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
+    // ── The plate's hologram photo effect (ADR-029 Update 2 restoration) ──
+    // The C3 plate never showed the photo as a clean print: it resolved
+    // through a 4px DOT MATRIX (`.svc-plate__pbg--dots`, the feed read)
+    // over a faint full-photo ghost (`--soft`). Rebuild exactly that
+    // layering: gold-toned photo → ghost pass at PHOTO_SOFT_ALPHA, then
+    // the same photo punched through the dot mask at PHOTO_DOTS_ALPHA.
+    // (Plate rest state was dots .34 / soft .08, hover-resolved .16 / .48;
+    // the ring cards ARE the showcase, so they sit between — holographic
+    // but legible.)
+    const photoLayer = document.createElement("canvas");
+    photoLayer.width = BAKE_W;
+    photoLayer.height = BAKE_H;
+    const pctx = photoLayer.getContext("2d");
+    if (pctx) {
+      // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is 1:1).
+      const scale = Math.max(BAKE_W / img.naturalWidth, BAKE_H / img.naturalHeight);
+      const dw = img.naturalWidth * scale;
+      const dh = img.naturalHeight * scale;
+      pctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
 
-    // Plate gold-tone treatment (LUT pass — see buildGoldToneLut).
-    const lut = buildGoldToneLut();
-    const data = ctx.getImageData(0, 0, BAKE_W, BAKE_H);
-    const px = data.data;
-    for (let i = 0; i < px.length; i += 4) {
-      const lum = Math.min(
-        255,
-        Math.round(0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2])
-      );
-      px[i] = lut.r[lum];
-      px[i + 1] = lut.g[lum];
-      px[i + 2] = lut.b[lum];
+      // Plate gold-tone treatment (LUT pass — see buildGoldToneLut).
+      const lut = buildGoldToneLut();
+      const data = pctx.getImageData(0, 0, BAKE_W, BAKE_H);
+      const px = data.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const lum = Math.min(
+          255,
+          Math.round(0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2])
+        );
+        px[i] = lut.r[lum];
+        px[i + 1] = lut.g[lum];
+        px[i + 2] = lut.b[lum];
+      }
+      pctx.putImageData(data, 0, 0);
+
+      // Dot-matrix layer: the photo kept ONLY inside the dot mask (the
+      // plate's `mask-image: radial-gradient(circle, #000 1.05px, …)` at
+      // 4px pitch → 2× bake: r ≈ 2.15 on an 8px tile).
+      const dotsLayer = document.createElement("canvas");
+      dotsLayer.width = BAKE_W;
+      dotsLayer.height = BAKE_H;
+      const dlctx = dotsLayer.getContext("2d");
+      const maskTile = document.createElement("canvas");
+      maskTile.width = PHOTO_DOT_PITCH;
+      maskTile.height = PHOTO_DOT_PITCH;
+      const mctx = maskTile.getContext("2d");
+      if (dlctx && mctx) {
+        mctx.fillStyle = "#fff";
+        mctx.beginPath();
+        mctx.arc(PHOTO_DOT_PITCH / 2, PHOTO_DOT_PITCH / 2, PHOTO_DOT_RADIUS, 0, Math.PI * 2);
+        mctx.fill();
+        dlctx.drawImage(photoLayer, 0, 0);
+        dlctx.globalCompositeOperation = "destination-in";
+        const mask = dlctx.createPattern(maskTile, "repeat");
+        if (mask) {
+          dlctx.fillStyle = mask;
+          dlctx.fillRect(0, 0, BAKE_W, BAKE_H);
+        }
+        dlctx.globalCompositeOperation = "source-over";
+      }
+
+      // Composite over the void ground: ghost first, feed dots on top.
+      ctx.globalAlpha = PHOTO_SOFT_ALPHA;
+      ctx.drawImage(photoLayer, 0, 0);
+      ctx.globalAlpha = PHOTO_DOTS_ALPHA;
+      ctx.drawImage(dotsLayer, 0, 0);
+      ctx.globalAlpha = 1;
     }
-    ctx.putImageData(data, 0, 0);
   } else {
     // Schematic dot-grid stand-in (the `.svc-plate__pbg--schematic` read) for
     // any future photo-less service — the ring never shows a raw void card.
@@ -317,24 +375,6 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
         ctx.fillStyle = pattern;
         ctx.fillRect(0, 0, BAKE_W, BAKE_H);
       }
-    }
-  }
-
-  // Hologram dot pitch — a whisper of the plate's 4px dot mask so the photo
-  // reads as instrument feed, not a print. Dark dots, low alpha.
-  const dotTile = document.createElement("canvas");
-  dotTile.width = 8;
-  dotTile.height = 8;
-  const dctx = dotTile.getContext("2d");
-  if (dctx) {
-    dctx.fillStyle = "rgba(5, 4, 3, 0.16)";
-    dctx.beginPath();
-    dctx.arc(2, 2, 1.4, 0, Math.PI * 2);
-    dctx.fill();
-    const pattern = ctx.createPattern(dotTile, "repeat");
-    if (pattern) {
-      ctx.fillStyle = pattern;
-      ctx.fillRect(0, 0, BAKE_W, BAKE_H);
     }
   }
 

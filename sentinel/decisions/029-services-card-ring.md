@@ -260,3 +260,36 @@ publisher now marks the opposite-of-front anchor `visible: false`.
 - Never publish a hit anchor for the opposite-of-front card.
 - The drift gate stays at the multiply (flag-off byte-identical); do not
   zero the `CENTER_DRIFT_*` constants instead.
+
+## Update 2 (2026-07-10, same evening): hologram feed photos + wheel-owned ring
+
+**Dot-matrix photo treatment restored.** The clean baked photos lost the
+plate's signature feed read (Vince: "we had this cool effect on the
+photos"). `bakeCardFace` now rebuilds the C3 layering exactly: the
+gold-toned photo composites as a faint full ghost (`PHOTO_SOFT_ALPHA 0.3`,
+the `--soft` layer) under the same photo punched through the 4px dot mask
+(`PHOTO_DOTS_ALPHA 0.62`, pitch 8 / r 2.15 at bake scale — the `--dots`
+mask). Values sit between the plate's rest (.34/.08) and hover-resolved
+(.16/.48) states: the ring card IS the open showcase. The old "dark dots
+over a clean photo" whisper overlay is gone (it was the inverse of the
+real effect).
+
+**Wheel over the instrument rotates the ring** (`useServicesRingWheel`,
+mounted by `ServicesStage` in ring mode only). While the stage is pinned
+AND the instrument parked (dissipate ≥ 0.9): pointer above
+`INSTRUMENT_BAND_BOTTOM` (0.78 vh) + wheel = one beat per gesture
+(threshold 80, cooldown 650 ms), implemented THROUGH the existing
+`selectService` smooth scroll — the runway scroll position remains the
+single rotation owner; no second writer. Wheel DOWN at the last card is
+consumed and HELD (moving the pointer below the band is the way onward);
+wheel UP at the first card / lead-in passes through (natural exit up);
+pointer below the band = untouched native scroll. The landing route has no
+Lenis, so a non-passive window listener owns the gesture cleanly. Probe-
+verified: snap chain 1→4, hold at 4, below-band exit, reverse snap.
+Keyboard scrolling (PgDn/space) is never intercepted.
+
+Guardrails: the wheel hook must never write rotation directly (only
+`selectService`); the band constant and the hold-at-end are the designed
+affordance — do not "fix" the hold by auto-advancing; the photo effect's
+dot layer multiplies the photo THROUGH the mask (destination-in), never
+dark dots OVER the photo.
