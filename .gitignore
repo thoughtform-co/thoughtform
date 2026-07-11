@@ -77,6 +77,10 @@ storybook-static
 
 .vercel
 
+# Gateway Motion prep (models + analysis masters are regenerable)
+scripts/gateway-prep/models/
+scripts/gateway-prep/out/
+
 # Local asset staging (raw photography/masters — never deploy via public/)
 assets-staging/
 public/images/navigator/

@@ -1,0 +1,454 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-05T06:24:33.113Z",
+  "visuals": [
+    {
+      "id": "gateway-v1",
+      "name": "Gateway I",
+      "source": {
+        "file": "Gateway_v1.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v1/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v1/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v1/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v1/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACwAwCdASoYAA4APu1oqk6ppiQiMAgBMB2JaQABHwX8XIAgkhPIAAD+/VNIX6x8gCcYuPj2+2ShRmEy6crAxv2i6ZvqHgBTgAAAAA=="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v1/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v1/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v1/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v1/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v1/background-1600.webp"
+      },
+      "sequence": {
+        "fps": 24,
+        "frameCount": 145,
+        "urlPattern": "/gateway-motion/gateway-v1/frames/f_{index4}.webp",
+        "width": 1280,
+        "height": 716,
+        "poster": "/gateway-motion/gateway-v1/sequence-poster.webp",
+        "format": "webp"
+      }
+    },
+    {
+      "id": "gateway-v1b",
+      "name": "Gateway I·b",
+      "source": {
+        "file": "Gateway_v1b.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v1b/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v1b/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v1b/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v1b/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAACwAwCdASoYAA4APu1mqk2ppaQiMAgBMB2JaQABHwYX5BrRqclgAAD+/drzIPABYOgGDBVShNsICJHcA9A+BVngRPKOVWAAAAA="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v1b/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v1b/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v1b/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v1b/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v1b/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v2",
+      "name": "Gateway II",
+      "source": {
+        "file": "Gateway_v2.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v2/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v2/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v2/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v2/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAADwAwCdASoYAA4APu1iqU2ppaOiMAgBMB2JaQDE2CHf4JQ+kxwScNNAAP7udIsNAxOmzQiZL551vBUMramBDwpUDGQxppiSmDEHOK0/MGv9oUMMzVXFihqo/H1Gyp+Tnl3jffjxEImXMT3cjHQo/N6dj1NLElD2v06Y8AAA"
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v2/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v2/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v2/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v2/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v2/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v3a",
+      "name": "Gateway III·a",
+      "source": {
+        "file": "Gateway_v3a.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v3a/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v3a/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v3a/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v3a/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAACwAwCdASoYAA4APu1kqU2ppaQiMAgBMB2JaQABHuuTilFSSdGQAAD++9nFZHARcv6iensdjGTLnuc/5JSoZ1bDZBJmznGfr08IPjVgAAA="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v3a/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v3a/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v3a/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v3a/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v3a/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v4",
+      "name": "Gateway IV",
+      "source": {
+        "file": "Gateway_v4.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v4/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v4/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v4/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v4/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAACQAwCdASoYAA4APu1kqU4ppaOiMAgBMB2JaQABHusnso7dPysAAP78RrTekdwus/SikJ2HG9HzRZBnnXRSA0QgVp30vRtwwwbFC/n2uQLid/eAAAA="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v4/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v4/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v4/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v4/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v4/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v5",
+      "name": "Gateway V",
+      "source": {
+        "file": "Gateway_v5.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v5/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v5/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v5/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v5/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAADQAwCdASoYAA4APu1iqk2ppaQiMAgBMB2JaQABHuuL446zGT/JQAAA/vxGmQdl3dz+515PYa3OZAKQv8/adniMfZ2dhgIxkwELst6Z+3DG+HXxtGe6MqaqywwAYPZ0AAA="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v5/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v5/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v5/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v5/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v5/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v6a",
+      "name": "Gateway VI·a",
+      "source": {
+        "file": "Gateway_v6a.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v6a/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v6a/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v6a/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v6a/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAAAwAwCdASoYAA4APu1iqU2ppaOiMAgBMB2JaQABNIvuVOAAAP74vpMurkrbjALqZTwvgBF4dVfv6QR60ciP71P62D/O+dqjy/qg1ul3c0TMxj2x3ZpvSAAA"
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v6a/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v6a/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v6a/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v6a/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v6a/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v7",
+      "name": "Gateway VII",
+      "source": {
+        "file": "Gateway_v7.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v7/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v7/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v7/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v7/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAABQAwCdASoYAA4APu1kqk4ppaQiMAgBMB2JaQABHusvyB6utAD++9nFLlTHVDTo/dKqJtBM8O+8KnjHraJjbPFDuHe9T5YzSHpwEpbCMAAAAA=="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v7/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v7/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v7/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v7/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v7/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v8",
+      "name": "Gateway VIII",
+      "source": {
+        "file": "Gateway_v8.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v8/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v8/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v8/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v8/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAACQAwCdASoYAA4APu1iqk2ppaQiMAgBMB2JaQAAYf75KxQ9UogAAP7lImqksWkxP8qa2N2bqIwSV68hEJLL7dUX7CuAhcjEV4LO/OjWnXLD/ZdUfPeQexBwAAA="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v8/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v8/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v8/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v8/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v8/background-1600.webp"
+      },
+      "sequence": null
+    },
+    {
+      "id": "gateway-v9",
+      "name": "Gateway IX",
+      "source": {
+        "file": "Gateway_v9.webp",
+        "width": 3840,
+        "height": 2160
+      },
+      "plate": {
+        "avif": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v9/plate-2560.avif"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v9/plate-1600.avif"
+          }
+        ],
+        "webp": [
+          {
+            "w": 2560,
+            "src": "/gateway-motion/gateway-v9/plate-2560.webp"
+          },
+          {
+            "w": 1600,
+            "src": "/gateway-motion/gateway-v9/plate-1600.webp"
+          }
+        ],
+        "lqip": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAACwAwCdASoYAA4APu1iqU2ppaOiMAgBMB2JaQABHuPS/wUShJl4AAD++ede1wS5ZqgaEGURPs3Z1j2pTsBnRfEjdXnQJXd1LlcIOvgfxZ4zaCD0OzK98+GdnQszTJEDAAA="
+      },
+      "depth": {
+        "src8": "/gateway-motion/gateway-v9/depth-8.webp",
+        "srcPacked": "/gateway-motion/gateway-v9/depth-packed.webp",
+        "width": 1024,
+        "height": 576
+      },
+      "masks": {
+        "artifact": "/gateway-motion/gateway-v9/mask-artifact.webp",
+        "stars": "/gateway-motion/gateway-v9/mask-stars.webp",
+        "background": "/gateway-motion/gateway-v9/background-1600.webp"
+      },
+      "sequence": null
+    }
+  ]
+}

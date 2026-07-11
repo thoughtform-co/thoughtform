@@ -15,6 +15,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "video:optimize": "node scripts/optimize-video.mjs",
+    "gateway:prep": "node scripts/gateway-prep/prep.mjs",
+    "gateway:frames": "node scripts/gateway-prep/frames.mjs",
     "registry:build": "npx shadcn build",
     "analyze": "cross-env ANALYZE=true next build --webpack",
     "test": "vitest",

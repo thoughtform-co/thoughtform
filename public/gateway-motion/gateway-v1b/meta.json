@@ -1,0 +1,44 @@
+{
+  "id": "gateway-v1b",
+  "name": "Gateway I·b",
+  "source": {
+    "file": "Gateway_v1b.webp",
+    "width": 3840,
+    "height": 2160
+  },
+  "plate": {
+    "avif": [
+      {
+        "w": 2560,
+        "src": "/gateway-motion/gateway-v1b/plate-2560.avif"
+      },
+      {
+        "w": 1600,
+        "src": "/gateway-motion/gateway-v1b/plate-1600.avif"
+      }
+    ],
+    "webp": [
+      {
+        "w": 2560,
+        "src": "/gateway-motion/gateway-v1b/plate-2560.webp"
+      },
+      {
+        "w": 1600,
+        "src": "/gateway-motion/gateway-v1b/plate-1600.webp"
+      }
+    ],
+    "lqip": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAACwAwCdASoYAA4APu1mqk2ppaQiMAgBMB2JaQABHwYX5BrRqclgAAD+/drzIPABYOgGDBVShNsICJHcA9A+BVngRPKOVWAAAAA="
+  },
+  "depth": {
+    "src8": "/gateway-motion/gateway-v1b/depth-8.webp",
+    "srcPacked": "/gateway-motion/gateway-v1b/depth-packed.webp",
+    "width": 1024,
+    "height": 576
+  },
+  "masks": {
+    "artifact": "/gateway-motion/gateway-v1b/mask-artifact.webp",
+    "stars": "/gateway-motion/gateway-v1b/mask-stars.webp",
+    "background": "/gateway-motion/gateway-v1b/background-1600.webp"
+  },
+  "sequence": null
+}
