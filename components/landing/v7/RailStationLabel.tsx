@@ -22,24 +22,29 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  *  - the station's authored-but-previously-unused `data-screen-label`
  *    ("08A Tools") supplies the copy;
  *  - while `data-corridor-engaged` is true the label REDIRECTS to the
- *    Arc stage (ADR-030 Update 3): `CorridorStationHeaders`' rAF
- *    publishes a delta-gated `data-arc-stage` on <html> and this
- *    component maps it to "02 Navigate" / "03 Encode" / "04 Build" —
- *    the label is continuous across the whole page. (On the WebGL
- *    fallback no Arc writer exists, so the corridor stretch simply
+ *    corridor's section identity (ADR-030 Update 3):
+ *    `CorridorStationHeaders`' rAF publishes a delta-gated
+ *    `data-corridor-phase` on <html> and this component maps it to
+ *    "02 Thesis" (the opening beat) / "03 Arc" (the whole
+ *    Navigate→Encode→Build fly-through — one section). (On the WebGL
+ *    fallback no corridor writer exists, so the corridor stretch simply
  *    keeps the label closed — the pre-Update-3 behavior.)
+ *  - the hero shows NO rail title (the mark + wordmark own the first
+ *    viewport); every later authored station keeps its
+ *    `data-screen-label`.
  * Event-driven via one MutationObserver — zero per-frame work.
  *
  * Site-wide by design (Vince), desktop HUD only (the rails' own media
  * rules hide it below the HUD breakpoint). Reduced motion: text snaps,
  * wipe collapses (CSS).
  */
-/** Arc-stage → rail-label copy. Numbering slots the corridor between
- *  "01 Hero" and "08 Services" (owner-picked, 2026-07-11). */
-const ARC_LABELS: Record<string, string> = {
-  navigate: "02 Navigate",
-  encode: "03 Encode",
-  build: "04 Build",
+/** Corridor-phase → rail-label copy. The opening beat is the thesis; the
+ *  whole Navigate→Encode→Build fly-through is ONE section, the Arc (owner,
+ *  2026-07-11 — was per-stage navigate/encode/build). Numbers slot the
+ *  corridor between "01 Hero" and "08 Services". */
+const CORRIDOR_LABELS: Record<string, string> = {
+  thesis: "02 Thesis",
+  arc: "03 Arc",
 };
 
 function RailStationLabel() {
@@ -69,17 +74,20 @@ function RailStationLabel() {
       const engaged = html.getAttribute("data-corridor-engaged") === "true";
       let label: string | null | undefined;
       if (engaged) {
-        // Corridor: the Arc stage owns the label (null hides — e.g. the
-        // WebGL fallback where no Arc writer runs).
-        const stage = html.getAttribute("data-arc-stage");
-        label = stage ? ARC_LABELS[stage] : null;
+        // Corridor: the phase owns the label (null hides — e.g. the WebGL
+        // fallback where no corridor writer runs).
+        const phase = html.getAttribute("data-corridor-phase");
+        label = phase ? CORRIDOR_LABELS[phase] : null;
       } else {
         const key = html.getAttribute("data-active-station");
-        label = key
-          ? document
-              .querySelector<HTMLElement>(`.station[data-station="${key}"]`)
-              ?.getAttribute("data-screen-label")
-          : null;
+        // Hero shows no rail title — the first viewport is owned by the
+        // mark + wordmark, not a station datum.
+        label =
+          key && key !== "hero"
+            ? document
+                .querySelector<HTMLElement>(`.station[data-station="${key}"]`)
+                ?.getAttribute("data-screen-label")
+            : null;
       }
 
       if (!label) {
@@ -113,7 +121,7 @@ function RailStationLabel() {
     const observer = new MutationObserver(update);
     observer.observe(html, {
       attributes: true,
-      attributeFilter: ["data-active-station", "data-corridor-engaged", "data-arc-stage"],
+      attributeFilter: ["data-active-station", "data-corridor-engaged", "data-corridor-phase"],
     });
     update();
 

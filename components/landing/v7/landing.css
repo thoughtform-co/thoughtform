@@ -745,10 +745,11 @@
    the "2"/"5" majors; the 8.33% compass slot stays reserved). The
    clip-path wipe opens left-to-right from the hairline — the data-m
    eyebrow direction — and the text scramble-decodes on section change
-   (RailStationLabel). Continuous across the whole page: while the
-   corridor owns the HUD the label shows the Arc stage (data-arc-stage)
-   instead of closing, and Tools keeps it too (its own suppression was
-   retired with the Tools eyebrow, 2026-07-11). */
+   (RailStationLabel). Continuous across the whole page EXCEPT the hero
+   (which shows no rail title): while the corridor owns the HUD the label
+   shows the corridor phase (data-corridor-phase → "02 Thesis" / "03
+   Arc") instead of closing, and Tools keeps it too (its own suppression
+   was retired with the Tools eyebrow, 2026-07-11). */
 .hud__rail__station {
   position: absolute;
   top: 50%;

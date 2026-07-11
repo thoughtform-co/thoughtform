@@ -337,25 +337,30 @@ remain current.
 ## Update 3 (2026-07-11, same day): continuous rail identity + whole-section register
 
 Owner request: the rails' identity channels must be CONTINUOUS — the left
-station label present across every stretch of the page (including the Arc
-corridor), and the services register present for the WHOLE `#services`
-section, not just the exit beat. Two Update-1/2 details are superseded.
+station label present across every stretch of the page (except the hero),
+and the services register present for the WHOLE `#services` section, not
+just the exit beat. Two Update-1/2 details are superseded.
 
-### Left rail — the label rides the Arc
+### Left rail — the label names the corridor as two sections
 
 - `RailStationLabel` no longer closes while `data-corridor-engaged`; it
   REDIRECTS. `CorridorStationHeaders`' rAF (the corridor's single text
-  writer) publishes a delta-gated `data-arc-stage="navigate|encode|build"`
-  on `<html>`; boundaries are DERIVED from its own fade bands
-  (`ARC_ENCODE_AT = ENCODE_FADE_IN[0]` 0.54, `ARC_BUILD_AT =
-BUILD_FADE_IN[0]` 0.84) so the rail can never drift from the headline
-  beats. The armed pre-pin stretch reads "navigate"; the epilogue holds
-  "build" until disengagement hands back to the authored
-  `data-screen-label`s. The label maps stages to "02 Navigate" /
-  "03 Encode" / "04 Build" (owner-picked numbering; the visible sequence
-  is 01 → 02–04 → 08 → 08A → 09 → 10 — renumbering the authored labels is
-  an optional follow-up). WebGL fallback: no Arc writer → label closed
-  during the corridor (pre-Update-3 behavior, acceptable fail-safe).
+  writer) publishes a delta-gated `data-corridor-phase="thesis|arc"` on
+  `<html>`; the boundary is DERIVED from the Navigate fade-in
+  (`ARC_ENTER_AT = NAVIGATE_FADE_IN[0]` 0.3) so it can't drift from where
+  the fly-through content begins. The corridor reads as TWO sections, not
+  three changing stage names (owner refinement, 2026-07-11 evening —
+  superseded the first pass's per-stage navigate/encode/build): the
+  armed pre-pin stretch + the opening beat are the **"02 Thesis"**; from
+  Navigate through the epilogue (paintProgress pinned at 1) it holds
+  **"03 Arc"** — the whole Navigate→Encode→Build fly-through is one named
+  section, the Arc. At disengagement the authored `data-screen-label`s
+  take over. WebGL fallback: no corridor writer → label closed during the
+  corridor (pre-Update-3 behavior, acceptable fail-safe).
+- **The hero shows no rail title** — `RailStationLabel` hides when the
+  disengaged active station is `hero` (the mark + wordmark own the first
+  viewport). Visible sequence: (hero blank) → 02 Thesis → 03 Arc → 08
+  Services → 08A Tools → 09 About → 10 Contact.
 - The enhanced-desktop Tools suppression of `.hud__rail__station` is
   REMOVED (supersedes Update 2's "the generic left-rail station label
   closes during this richer mode"): the Tools eyebrow was retired the same
