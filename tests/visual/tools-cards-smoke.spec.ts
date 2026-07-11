@@ -597,13 +597,13 @@ test.describe("Tools section smoke (ADR-030 edge-bus rebuild)", () => {
           document.querySelector<HTMLElement>("#tools .tools__head")!
         ).position,
         registerCount: document.querySelectorAll(".tools-rail-register").length,
-        eyebrow: document.querySelector("#tools [data-tools-decode]")?.textContent?.trim(),
+        title: document.querySelector("#tools .tools__title")?.textContent?.trim(),
       }));
       expect(state.marginTop).toBe("0px");
       expect(state.slotPosition).toBe("static");
       expect(state.headerPosition).toBe("static");
       expect(state.registerCount).toBe(0);
-      expect(state.eyebrow).toContain("Tools");
+      expect(state.title).toContain("one tool at a time");
     } finally {
       await context.close();
     }

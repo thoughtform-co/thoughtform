@@ -5,7 +5,7 @@ import { PROJECT_CASES } from "./toolCardData";
 import { useStackedCardsScroll } from "./useStackedCardsScroll";
 import { NotchOutline } from "./NotchOutline";
 import { ToolCardConsole, toolCardTitleId } from "./ToolCardConsole";
-import { ToolsHeaderDecode } from "./ToolsHeaderDecode";
+import { ToolsTitleTypewriter } from "./ToolsTitleTypewriter";
 import "./tools-cards.css";
 
 /**
@@ -40,9 +40,9 @@ export function ToolsCardStack() {
       aria-label="Tools in production"
       style={{ "--pc-n": PROJECT_CASES.length } as CSSProperties}
     >
-      {/* Null leaf — decodes the station-shell eyebrow on first view
-          (the eyebrow lives in the parsed HTML, outside this root). */}
-      <ToolsHeaderDecode />
+      {/* Null leaf — types the station-shell headline in on first view
+          (the header lives in the parsed HTML, outside this root). */}
+      <ToolsTitleTypewriter />
 
       {PROJECT_CASES.map((data, i) => (
         <div

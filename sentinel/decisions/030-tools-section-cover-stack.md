@@ -229,12 +229,19 @@ mark persists through the tools lead-in only.
    card passes through to native scroll (mirror of the first-card
    reverse), because the decommission is real scroll content. The 2vh
    release gate survives re-derived (≙ p > 0.8 under normal flow).
-8. **Header + rail identity:** #tools header is a Linear split (eyebrow
-   full-width · title left · lede right, min-height 78svh — the header
-   owns the lead-in viewport). TERMINAL TEXT CANON: mono eyebrows/meta
-   scramble-decode (captionScramble — ToolsHeaderDecode, decode-from-
-   blank on first view); display titles keep the data-m clip-wipe; no
-   typewriter on display faces. NEW site-wide `RailStationLabel`
+8. **Header + rail identity:** #tools header is a Linear split (title
+   left · lede right, min-height 78svh — the header owns the lead-in
+   viewport). TERMINAL TEXT CANON (revised 2026-07-11, owner request):
+   the mono eyebrow ("08A · Tools", scramble-decoded by the now-deleted
+   ToolsHeaderDecode) was REMOVED — the header opens straight on the
+   display title. #tools is now the ONE typewriter exception: the display
+   title runs a terminal type-on (ToolsTitleTypewriter — per-char opacity
+   reveal + a block caret riding the head; capable-desktop-gated, reduced-
+   motion/mobile keep the authored copy + clip-wipe), SUPERSEDING the
+   prior "display titles keep the data-m clip-wipe / no typewriter on
+   display faces" rule for this header. The lede keeps the clip-wipe;
+   elsewhere the canon still stands (mono meta scramble-decode, display
+   faces clip-wipe). NEW site-wide `RailStationLabel`
    (portal into the authored `#railStation` shell in `.hud__rail--l`):
    the active station's `data-screen-label` (previously unused) emerges
    from the left rail at 50% (the 8.33% compass slot stays reserved),
