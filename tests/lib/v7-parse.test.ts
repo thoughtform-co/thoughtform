@@ -27,7 +27,11 @@ const CORRIDOR_REPLACED_STATIONS = [
   "buildQuote",
 ] as const;
 
+// Mirrors app/(marketing)/page.tsx: specs run in array order, each
+// inserting immediately after the mount, so the LAST lands closest —
+// tools first + services second ⇒ mount → #services → #tools (ADR-030).
 const CORRIDOR_RELOCATED_STATIONS = [
+  { stationId: "tools" },
   { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
 ] as const;
 
@@ -108,10 +112,13 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
       expect(navRe.test(bodyHtml), `nav entry for #${id} should be stripped`).toBe(false);
     }
 
-    // Surviving nav entries must still be reachable.
+    // Surviving nav entries must still be reachable. (#contact was
+    // asserted here historically, but the prototype no longer carries a
+    // contact anchor — stale since the markup nav retired in favour of
+    // the React HudNav; found 2026-07-11 while adding #tools.)
     expect(bodyHtml).toMatch(/<a\s[^>]*href="#hero"/);
     expect(bodyHtml).toMatch(/<a\s[^>]*href="#services"/);
-    expect(bodyHtml).toMatch(/<a\s[^>]*href="#contact"/);
+    expect(bodyHtml).toMatch(/<a\s[^>]*href="#continuum"/);
   });
 
   it("redirects leftover cross-links to the corridor mount instead of dead anchors", () => {
@@ -143,11 +150,18 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
 
     const mountIdx = bodyHtml.indexOf('id="home-corridor-mount"');
     const servicesIdx = bodyHtml.search(/<section\b[^>]*\bid="services"/);
+    const toolsIdx = bodyHtml.search(/<section\b[^>]*\bid="tools"/);
     const continuumIdx = bodyHtml.search(/<section\b[^>]*\bid="continuum"/);
 
     expect(mountIdx).toBeGreaterThan(0);
     expect(servicesIdx).toBeGreaterThan(mountIdx);
-    expect(continuumIdx).toBeGreaterThan(servicesIdx);
+    // #tools rides between services and continuum (ADR-030 cover order).
+    expect(toolsIdx).toBeGreaterThan(servicesIdx);
+    expect(continuumIdx).toBeGreaterThan(toolsIdx);
+
+    // The tools card-stack portal slot must survive the relocation.
+    const toolsBlock = bodyHtml.slice(toolsIdx, bodyHtml.indexOf("</section>", toolsIdx));
+    expect(toolsBlock).toContain("data-tools-cards-root");
 
     // The orphaned connector slot must NOT appear right after #services.
     const between = bodyHtml.slice(servicesIdx);
@@ -163,7 +177,16 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
       corridorMountId: CORRIDOR_MOUNT_ID,
     });
 
-    const order = ["hero", "services", "continuum", "practice", "build", "about", "contact"];
+    const order = [
+      "hero",
+      "services",
+      "tools",
+      "continuum",
+      "practice",
+      "build",
+      "about",
+      "contact",
+    ];
     let cursor = 0;
     for (const id of order) {
       const idx = bodyHtml.indexOf(`id="${id}"`, cursor);

@@ -66,14 +66,17 @@
   position: relative;
   z-index: 2;
   /* Runway the sticky stage pins within — one viewport-tall scroll segment per
-   * beat (5 steps since 2026-07-10: a collapsed lead-in, then one per service
-   * — Advisory / Embedded / Keynote / Workshop): the scroll position owns which
-   * signal plate is OPEN (useServicesStageScroll STEP_COUNT → expanded card in
+   * beat (6 steps since ADR-030: a collapsed lead-in, one per service
+   * — Advisory / Embedded / Keynote / Workshop — and a final EXIT-HOLD beat
+   * during which the #tools station sweeps up over the still-pinned stage
+   * via its -100svh margin; the cover completes exactly when this runway
+   * would unpin the stage): the scroll position owns which signal plate is
+   * OPEN (useServicesStageScroll STEP_COUNT → expanded card in
    * ServicesPlateCluster; must stay in lockstep with STEP_COUNT × 100svh so
    * each beat still owns one viewport of scroll travel). The corridor-exit
    * dissipate clock keys off #services's TOP + a fixed span
    * (useCorridorExitScroll), NOT this height. */
-  min-height: 500svh;
+  min-height: 600svh;
 }
 
 /* ── Pinned stage ────────────────────────────────────────────────── */

@@ -1,0 +1,806 @@
+/* ═══════════════════════════════════════════════════════════════
+   tools-cards — landing #tools section: sticky-sibling card stack
+   in the CONSOLE PLATE skin (ADR-030), promoted from the
+   /test/project-cards lab (which imports this file back as its
+   shared base — the lab's other skins + switcher stay in
+   project-cards.css). Prefix: pcl- (travels with the shared
+   components; renaming would churn all five lab skins).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── #tools station (the parallax cover, ADR-030) ──────────────── */
+
+/* The Tools station scrolls OVER the parked services instrument: the
+   services runway carries one exit-hold beat (600svh, beat 5) and this
+   opaque station overlaps exactly that beat via -100svh margin — the
+   cover completes precisely when the services stage would unpin
+   (`.station--services` has padding-bottom: 0 and the runway is its
+   last child, so runway.bottom == vh ⇔ tools.top == 0). Desktop-only:
+   mobile / reduced motion keep plain document flow.
+
+   ID selector on purpose: `.station:not(.hero)` (landing.css) is
+   (0,2,0) and would beat a lone `.station--tools` on content-visibility
+   and z-index — the ID wins deterministically regardless of stylesheet
+   order (the `html[data-corridor-exit] #services` precedent). */
+#tools.station--tools {
+  /* content-visibility: auto's 100vh placeholder misreports this
+     ~6-viewport section (breaking every scroll target below it) AND its
+     paint containment would clip the sticky slots' compositing — same
+     trap as exit-state #services (home-v2.css). */
+  content-visibility: visible;
+}
+
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  #tools.station--tools {
+    margin-top: -100svh;
+    /* Above the services station's exit-state layers (#services z6,
+       children z7, body veil z5, fixed corridor canvas z2). */
+    position: relative;
+    z-index: 8;
+    isolation: isolate;
+  }
+}
+
+/* ─── Station header (the cover's first-read surface) ───────────── */
+
+/* Same width formula as .pcl-card, so the header's edges align with the
+   card stack below it. Typography mirrors the continuum head grammar
+   (landing.css); em is upright gold via the station's global rule. */
+.tools__head {
+  width: min(1560px, calc(100vw - 2 * clamp(20px, 4.5vw, 88px)));
+  margin: 0 auto clamp(48px, 6vh, 96px);
+}
+
+.tools__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 400;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.tools__title em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--gold);
+}
+
+.tools__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.55;
+  color: var(--dawn-70);
+  margin: clamp(16px, 2vh, 28px) 0 0;
+  max-width: 44ch;
+  letter-spacing: -0.005em;
+}
+
+/* ─── Stack scope (self-contained typography + locals) ──────────── */
+
+.pcl-stack {
+  /* Locals the lab shell (.pcl) used to provide — re-declared on the
+     stack so the landing needs no wrapper. --pcl-mint stays lab-only
+     (V3's reticle ink; the console skin never uses it). */
+  --pcl-ink-night: var(--latent-night, #110f09); /* ink on gold fills */
+  --pcl-card-bg: #0f0e0c;
+
+  color: var(--dawn);
+  font-family: var(--font-mono);
+}
+
+/* Brand rule: emphasis is upright gold, never italic. */
+.pcl-stack em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+/* ─── Stack geometry (the mechanic) ─────────────────────────────── */
+
+.pcl-stack {
+  position: relative;
+  /* Card height sized for the LAST slot (most constrained) so the end
+     state shows all four cascading peek strips. */
+  --pc-card-h: calc(100svh - var(--pc-top-base) - (var(--pc-n) - 1) * var(--pc-peek) - 24px);
+}
+
+/* Chrome scroll-anchoring insurance — reveals translate content inside
+   pinned slots and anchoring has bitten this repo (services.css:728). */
+.pcl-stack,
+.pcl-stack * {
+  overflow-anchor: none;
+}
+
+.pcl-slot {
+  /* POSITIONING ONLY — no transform/filter/overflow may ever land here
+     or sticky breaks. Effects live on .pcl-card inside. */
+  position: sticky;
+  top: calc(var(--pc-top-base) + var(--i) * var(--pc-peek));
+  height: var(--pc-card-h);
+  margin-bottom: 24svh;
+  /* Effect channels written by useStackedCardsScroll; defaults = settled
+     end-state so SSR/pre-hydration paints without a flash. */
+  --pc-enter: 1;
+  --pc-cover: 0;
+}
+
+.pcl-slot:last-of-type {
+  margin-bottom: 0;
+}
+
+.pcl-stack__tail {
+  height: 60svh;
+}
+
+/* ─── Card base ─────────────────────────────────────────────────── */
+
+.pcl-card {
+  position: relative;
+  height: 100%;
+  width: min(1560px, calc(100vw - 2 * clamp(20px, 4.5vw, 88px)));
+  margin: 0 auto;
+  /* Recession: covered card recedes under the incoming plate. Transform
+     origin at the top edge so the permanent peek strip never drifts. */
+  transform: scale(calc(1 - 0.02 * var(--pc-cover)));
+  transform-origin: 50% 0;
+}
+
+/* Notch silhouette — one chamfered corner, parameterized by --ch.
+   Fill + dim clip to it; the border is SVG (NotchOutline) because
+   clip-path would shave a CSS border at the cut (ADR-007). */
+.pcl-card[data-corner="tr"] {
+  --pc-clip: polygon(0 0, calc(100% - var(--ch)) 0, 100% var(--ch), 100% 100%, 0 100%);
+}
+.pcl-card[data-corner="tl"] {
+  --pc-clip: polygon(var(--ch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--ch));
+}
+.pcl-card[data-corner="br"] {
+  --pc-clip: polygon(0 0, 100% 0, 100% calc(100% - var(--ch)), calc(100% - var(--ch)) 100%, 0 100%);
+}
+.pcl-card[data-corner="bl"] {
+  --pc-clip: polygon(0 0, 100% 0, 100% 100%, var(--ch) 100%, 0 calc(100% - var(--ch)));
+}
+
+/* Opaque fill — cover-swipe rule: the incoming card physically replaces
+   what it covers, no ghosting through. */
+.pcl-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--pcl-card-bg);
+  clip-path: var(--pc-clip);
+}
+
+.pcl-card__head,
+.pcl-card__body {
+  position: relative;
+  z-index: 1;
+}
+
+.pcl-card__head {
+  height: var(--pc-peek);
+  display: flex;
+  align-items: center;
+}
+
+.pcl-card__body {
+  height: calc(100% - var(--pc-peek));
+}
+
+/* Chamfer outline (SVG sibling, paints above the clipped fill). */
+.pcl-notch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.pcl-notch__line {
+  fill: none;
+  stroke: var(--dawn-30);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.pcl-card[data-stroke="dashed"] .pcl-notch__line {
+  stroke-dasharray: 3 7; /* scan-connector grammar */
+}
+
+.pcl-notch__tick {
+  fill: var(--gold);
+}
+
+/* Paint relief: a fully covered card's body is 100% occluded by the
+   opaque covering plate — skip painting it. The peek strip (head) stays,
+   and the state flips back in the same rAF write on reverse scroll, so
+   this is visually invisible. (Measured: stacking 4 image plates stalls
+   capture/paint; with bodies skipped the composite is 1 plate + strips.) */
+[data-pc-state="covered"] .pcl-card__body {
+  visibility: hidden;
+}
+
+/* Dim overlay — covered card darkens via overlay OPACITY (never a fade
+   of the card itself, never filter). Clips to the same silhouette. */
+.pcl-card__dim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--void-deep);
+  opacity: calc(0.55 * var(--pc-cover));
+  clip-path: var(--pc-clip);
+}
+
+/* ─── Entrance micro-reveals ────────────────────────────────────── */
+
+/* Elements tagged data-r window off the eased --pc-enter; --d staggers
+   (0 / 0.1 / 0.2 …). Pure CSS math — zero per-frame React. */
+.pcl-card [data-r] {
+  --p: clamp(0, calc((var(--pc-enter) - var(--d, 0)) / 0.35), 1);
+  opacity: var(--p);
+  transform: translateY(calc((1 - var(--p)) * 12px));
+}
+
+/* ─── Pagination rail (diamonds, not dots) ──────────────────────── */
+
+.pcl-rail {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 40;
+}
+
+.pcl-rail__inner {
+  position: absolute;
+  top: 50svh;
+  translate: 0 -50%;
+  left: clamp(14px, 2.6vw, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pcl-rail__dia {
+  width: 7px;
+  height: 7px;
+  rotate: 45deg;
+  border: 1px solid var(--dawn-25);
+  transition:
+    background 150ms var(--ease-out),
+    border-color 150ms var(--ease-out);
+}
+
+.pcl-stack[data-pc-active="0"] .pcl-rail__dia:nth-child(1),
+.pcl-stack[data-pc-active="1"] .pcl-rail__dia:nth-child(-n + 2),
+.pcl-stack[data-pc-active="2"] .pcl-rail__dia:nth-child(-n + 3),
+.pcl-stack[data-pc-active="3"] .pcl-rail__dia:nth-child(-n + 4) {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+/* ─── Shared card interior ──────────────────────────────────────── */
+
+.pcl-card__head {
+  padding-inline: clamp(20px, 2.4vw, 44px);
+  gap: 16px;
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+/* Keep header/footer content clear of the cut corner. */
+.pcl-card[data-corner="tr"] .pcl-card__head {
+  padding-right: calc(var(--ch) + 20px);
+}
+.pcl-card[data-corner="tl"] .pcl-card__head {
+  padding-left: calc(var(--ch) + 20px);
+}
+.pcl-card[data-corner="br"] .pcl-foot {
+  padding-right: calc(var(--ch) + 20px);
+}
+.pcl-card[data-corner="bl"] .pcl-foot {
+  padding-left: calc(var(--ch) + 20px);
+}
+
+.pcl-card__body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pcl-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(20px, 2.8vw, 56px);
+  padding: clamp(16px, 2.4vh, 34px) clamp(20px, 2.4vw, 44px) clamp(14px, 1.8vh, 26px);
+}
+
+.pcl-left {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8vh, 24px);
+  overflow: hidden;
+}
+
+.pcl-right {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: clamp(14px, 1.8vh, 24px);
+}
+
+.pcl-media {
+  position: relative;
+  min-height: 0;
+  /* No overflow:hidden — object-fit crops the img itself, and V4's
+     dimension callouts hang OUTSIDE the figure box (lab skin). */
+}
+
+.pcl-media__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+}
+
+.pcl-caps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pcl-cap {
+  font-size: var(--type-xs);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pcl-body-copy {
+  font-size: clamp(11px, 0.68rem + 0.18vw, 14px);
+  line-height: 1.65;
+  color: var(--dawn-70);
+  max-width: 54ch;
+  margin-top: 6px;
+}
+
+.pcl-cap-title {
+  font-size: clamp(11px, 0.7rem + 0.1vw, 12.5px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--dawn-90);
+}
+
+.pcl-cap-desc {
+  font-size: clamp(10px, 0.62rem + 0.1vw, 11px);
+  line-height: 1.5;
+  color: var(--dawn-50);
+  margin-top: 4px;
+}
+
+.pcl-foot {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 9px clamp(20px, 2.4vw, 44px);
+  border-top: 1px solid var(--dawn-08);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+  white-space: nowrap;
+}
+
+.pcl-foot__spacer {
+  flex: 1;
+}
+
+.pcl-foot__serial {
+  color: var(--dawn-50);
+}
+
+/* ─── Chrome primitives ─────────────────────────────────────────── */
+
+.pcl-chip {
+  display: inline-block;
+  border: 1px solid var(--dawn-20);
+  color: var(--dawn-60);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.pcl-chip--gold {
+  border-color: var(--gold-40);
+  color: var(--gold);
+}
+
+.pcl-chip--inverted {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--pcl-ink-night);
+}
+
+.pcl-chip--mint {
+  border-color: var(--pcl-mint-40);
+  color: var(--pcl-mint);
+}
+
+.pcl-chip--rust {
+  border-color: rgba(255, 107, 53, 0.4);
+  color: var(--alert);
+}
+
+.pcl-chiprow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pcl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.pcl-field__label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+
+.pcl-field__value {
+  border: 1px solid var(--gold-30);
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 7px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pcl-ruler {
+  height: 12px;
+  flex: 1;
+}
+
+.pcl-ruler__minor {
+  stroke: var(--dawn-25);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.pcl-ruler__major {
+  stroke: var(--gold-50);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.pcl-reticle {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.pcl-reticle__c {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0 solid var(--pcl-mint);
+}
+
+.pcl-reticle__c--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+.pcl-reticle__c--tr {
+  top: 0;
+  right: 0;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+.pcl-reticle__c--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+.pcl-reticle__c--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+.pcl-barcode {
+  height: 12px;
+  width: 110px;
+  fill: var(--dawn-30);
+}
+
+.pcl-index {
+  color: var(--gold);
+  letter-spacing: 0.18em;
+  font-size: 11px;
+}
+
+.pcl-index__sep,
+.pcl-index__total {
+  color: var(--dawn-40);
+}
+
+.pcl-index__sep {
+  margin: 0 4px;
+}
+
+.pcl-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--gold-30);
+  color: var(--gold);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  padding: 2px 8px;
+}
+
+.pcl-mode__dia {
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+  rotate: 45deg;
+}
+
+/* ─── CONSOLE PLATE skin (the lab's V2, shipped) ────────────────── */
+
+.pcl-stack--v2 .pcl-card {
+  --pcl-card-bg: #100d07;
+}
+
+.pcl-stack--v2 .pcl-notch__line {
+  stroke: var(--gold-30);
+}
+
+.pcl-v2__plate {
+  background: var(--gold);
+  color: var(--pcl-ink-night);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 4px 10px;
+}
+
+.pcl-v2__title {
+  font-size: clamp(14px, 0.9rem + 0.3vw, 18px);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcl-v2__unit {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold-70);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.pcl-v2__certmark {
+  font-style: normal;
+  border: 1px solid var(--gold-40);
+  padding: 2px 6px;
+  font-size: 9px;
+  color: var(--gold);
+}
+
+.pcl-v2__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pcl-v2__notes .pcl-body-copy + .pcl-body-copy {
+  margin-top: 10px;
+}
+
+.pcl-v2__shift {
+  color: var(--dawn-90);
+  border-left: 2px solid var(--gold-40);
+  padding-left: 12px;
+}
+
+.pcl-v2__tchips {
+  margin-top: auto;
+}
+
+.pcl-v2__tgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  margin-top: 8px;
+}
+
+.pcl-v2__tchip {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--dawn-70);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcl-v2__tchip i {
+  font-style: normal;
+  border: 1px solid var(--gold-40);
+  color: var(--gold);
+  font-size: 8px;
+  padding: 1px 4px;
+  margin-right: 7px;
+}
+
+.pcl-v2__media {
+  border: 1px solid var(--gold-20);
+}
+
+.pcl-v2__caps li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.pcl-v2__caps li:last-child {
+  border-bottom: 0;
+}
+
+.pcl-v2__check {
+  align-self: center;
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--gold-50);
+  background: linear-gradient(var(--gold), var(--gold)) center / 5px 5px no-repeat;
+  flex: none;
+}
+
+.pcl-v2__proc {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--gold-60);
+  width: 86px;
+  flex: none;
+}
+
+.pcl-v2__capbody {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pcl-v2__capbody .pcl-cap-desc {
+  margin-top: 0;
+}
+
+.pcl-v2__model {
+  color: var(--gold-60);
+}
+
+.pcl-v2__foot .pcl-barcode {
+  fill: var(--gold-40);
+}
+
+/* ─── Fallbacks ─────────────────────────────────────────────────── */
+
+/* ≤960px: plain stacked flow — horizontal cards don't fit. Breakpoint
+   MUST stay in lockstep with isInert() in useStackedCardsScroll.ts
+   (aligned with the services 961px desktop gate, ADR-030). */
+@media (max-width: 960px) {
+  .pcl-slot {
+    position: static;
+    height: auto;
+    margin-bottom: 24px;
+  }
+
+  .pcl-card {
+    height: auto;
+    transform: none;
+  }
+
+  .pcl-card__head {
+    height: auto;
+    min-height: 44px;
+  }
+
+  .pcl-card__body {
+    height: auto;
+  }
+
+  .pcl-card__dim,
+  .pcl-rail {
+    display: none;
+  }
+
+  .pcl-stack__tail {
+    height: 0;
+  }
+
+  /* Interior: single column, natural heights, image above features. */
+  .pcl-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .pcl-left {
+    overflow: visible;
+  }
+
+  .pcl-v2__tchips {
+    margin-top: 0;
+  }
+
+  .pcl-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .pcl-card__head {
+    flex-wrap: wrap;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    gap: 8px 14px;
+  }
+
+  .pcl-foot {
+    flex-wrap: wrap;
+    white-space: normal;
+    gap: 8px 14px;
+  }
+}
+
+/* PRM: sticky stays (native scroll, not synthetic motion) but every
+   effect parks. The hook parks the vars too — this is belt-and-braces. */
+@media (prefers-reduced-motion: reduce) {
+  .pcl-card {
+    transform: none;
+  }
+
+  .pcl-card [data-r] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pcl-card__dim {
+    opacity: 0;
+  }
+
+  .pcl-rail__dia {
+    transition: none;
+  }
+}

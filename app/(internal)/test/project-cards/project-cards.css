@@ -1,0 +1,824 @@
+/* ═══════════════════════════════════════════════════════════════
+   /test/project-cards — scroll-stacked project cards lab
+   vorszk-style sticky-sibling stack × five retrofuturistic skins.
+   Prefix: pcl-
+
+   LAB-ONLY remainder since ADR-030: the stack mechanic, shared card
+   interior, chrome primitives, and the shipped V2 CONSOLE skin moved
+   to components/landing/v7/tools-cards/tools-cards.css (imported by
+   page.tsx BEFORE this file). This file keeps the lab shell, the
+   variant switcher, and the unshipped V1/V3/V4/V5 skins.
+   ═══════════════════════════════════════════════════════════════ */
+
+.pcl {
+  /* Lab-scoped accents: mint = the nav-terminal "lock" ink (no green
+     exists in the global tokens; keep it local to the lab). */
+  --pcl-mint: #8fc2a0;
+  --pcl-mint-40: rgba(143, 194, 160, 0.4);
+  --pcl-ink-night: var(--latent-night, #110f09); /* ink on gold fills */
+  --pcl-card-bg: #0f0e0c;
+
+  background: var(--void);
+  color: var(--dawn);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  /* NO overflow-x:hidden here — it would break position:sticky below. */
+}
+
+/* Brand rule: emphasis is upright gold, never italic. */
+.pcl em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+/* ─── Variant switcher (fixed chip row) ─────────────────────────── */
+
+.pcl-switch {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 60;
+  display: flex;
+  gap: 6px;
+}
+
+.pcl-switch button {
+  appearance: none;
+  border: 1px solid var(--dawn-25);
+  background: rgba(10, 9, 8, 0.85);
+  color: var(--dawn-60);
+  font-family: var(--font-mono);
+  font-size: var(--type-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition:
+    color 120ms var(--ease-out),
+    background 120ms var(--ease-out),
+    border-color 120ms var(--ease-out);
+}
+
+.pcl-switch button:hover {
+  color: var(--dawn);
+  border-color: var(--dawn-50);
+}
+
+.pcl-switch button[data-active] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--pcl-ink-night);
+}
+
+/* ─── Intro / exit framing ──────────────────────────────────────── */
+
+.pcl-head {
+  min-height: 56svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 0 clamp(24px, 6vw, 120px);
+}
+
+.pcl-head__eyebrow {
+  font-size: var(--type-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.pcl-head__title {
+  font-size: var(--type-display);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  max-width: 21ch;
+  text-wrap: balance;
+}
+
+.pcl-head__hint {
+  margin-top: 16px;
+  font-size: var(--type-xs);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+
+.pcl-out {
+  min-height: 70svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pcl-out__line {
+  font-size: var(--type-sm);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+
+/* ─── V1 DOSSIER — case file (folder-tab notch tr) ──────────────── */
+
+.pcl-stack--v1 .pcl-card {
+  --pcl-card-bg: #0d0c0a;
+}
+
+.pcl-v1__file {
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+
+.pcl-v1__title {
+  font-size: clamp(14px, 0.9rem + 0.3vw, 18px);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcl-v1__code {
+  margin-left: auto;
+  color: var(--dawn-40);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.pcl-v1__tagline {
+  font-size: clamp(12px, 0.78rem + 0.2vw, 14px);
+  color: var(--dawn-80);
+}
+
+.pcl-v1__section .pcl-body-copy {
+  border-left: 1px solid var(--dawn-10);
+  padding-left: 14px;
+}
+
+.pcl-v1__stack {
+  margin-top: auto;
+}
+
+.pcl-v1__media {
+  border: 1px solid var(--dawn-15);
+}
+
+.pcl-v1__tick {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 0 solid var(--dawn-40);
+  z-index: 2;
+}
+
+.pcl-v1__tick--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.pcl-v1__tick--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.pcl-v1__tick--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.pcl-v1__tick--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+.pcl-v1__exhibit {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 2;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(5, 5, 4, 0.72);
+  padding: 3px 8px;
+}
+
+.pcl-v1__wl {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  z-index: 2;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--dawn-50);
+  background: rgba(5, 5, 4, 0.72);
+  padding: 3px 8px;
+}
+
+.pcl-v1__caps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 28px;
+}
+
+.pcl-v1__capindex {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ─── V3 NAV TERMINAL — mission target locked (notch tr) ────────── */
+
+.pcl-stack--v3 .pcl-card {
+  --pcl-card-bg: #0c0b08;
+}
+
+.pcl-stack--v3 .pcl-notch__line {
+  stroke: var(--gold-40);
+}
+
+.pcl-v3__head {
+  position: relative;
+  align-items: flex-end;
+  padding-bottom: 8px;
+}
+
+.pcl-v3__rule {
+  position: absolute;
+  top: 7px;
+  left: clamp(20px, 2.4vw, 44px);
+  width: calc(100% - clamp(20px, 2.4vw, 44px) * 2 - var(--ch));
+  height: 3px;
+  background: var(--gold);
+}
+
+.pcl-v3__proj {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+}
+
+.pcl-v3__team {
+  flex: 1;
+  text-align: center;
+  color: var(--gold-60);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcl-v3__page {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.pcl-v3__page i {
+  font-style: normal;
+  margin-left: 4px;
+}
+
+.pcl-v3__title {
+  font-size: clamp(20px, 1.3rem + 0.8vw, 30px);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+}
+
+.pcl-v3__callsign {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--dawn-50);
+}
+
+.pcl-v3__status {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: 26px;
+  margin: 0;
+}
+
+.pcl-v3__status dt {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--dawn-40);
+  margin-bottom: 4px;
+}
+
+.pcl-v3__status dd {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin: 0;
+}
+
+.pcl-v3__rust {
+  color: var(--alert) !important;
+}
+
+.pcl-v3__vectors {
+  margin-top: auto;
+}
+
+.pcl-v3__vectorline {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--gold-60);
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.pcl-v3__media {
+  border: 1px solid var(--gold-30);
+}
+
+.pcl-v3__ann {
+  position: absolute;
+  z-index: 2;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-70);
+  background: rgba(5, 5, 4, 0.66);
+  padding: 3px 7px;
+}
+
+.pcl-v3__ann--tl {
+  top: 10px;
+  left: 10px;
+  color: var(--pcl-mint);
+}
+.pcl-v3__ann--tr {
+  top: 10px;
+  right: 10px;
+}
+.pcl-v3__ann--bl {
+  bottom: 10px;
+  left: 10px;
+}
+.pcl-v3__ann--br {
+  bottom: 10px;
+  right: 10px;
+}
+
+.pcl-v3__lock {
+  position: absolute;
+  z-index: 2;
+  top: 26%;
+  left: 26%;
+  width: clamp(80px, 9vw, 130px);
+  aspect-ratio: 1;
+  background: rgba(5, 5, 4, 0.22); /* targeting scrim so the mint lock reads on light screenshots */
+}
+
+.pcl-v3__course {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+
+.pcl-v3__course line {
+  stroke: var(--gold-50);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.pcl-v3__waypoint {
+  position: absolute;
+  z-index: 2;
+  top: 70%;
+  left: 76%;
+  translate: 0 -50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  background: rgba(5, 5, 4, 0.66);
+  padding: 3px 7px;
+}
+
+.pcl-v3__waydia {
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+  rotate: 45deg;
+  flex: none;
+}
+
+.pcl-v3__caps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.pcl-v3__channel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--dawn-20);
+  padding: 4px 8px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--gold-70);
+  margin-bottom: 8px;
+}
+
+.pcl-v3__chips {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.pcl-v3__chips i {
+  width: 6px;
+  height: 6px;
+}
+
+.pcl-v3__chips i:nth-child(1) {
+  background: var(--gold);
+}
+.pcl-v3__chips i:nth-child(2) {
+  background: var(--pcl-mint);
+}
+.pcl-v3__chips i:nth-child(3) {
+  background: var(--alert);
+}
+
+.pcl-v3__foot {
+  color: var(--gold-60);
+  gap: 24px;
+}
+
+/* ─── V4 SPEC SHEET — technical drawing (notch br, dashed) ──────── */
+
+.pcl-stack--v4 .pcl-card {
+  --pcl-card-bg: #0d0c0a;
+}
+
+/* Faint drafting grid over the plate fill. */
+.pcl-stack--v4 .pcl-card::before {
+  background:
+    repeating-linear-gradient(0deg, var(--dawn-04) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, var(--dawn-04) 0 1px, transparent 1px 44px), var(--pcl-card-bg);
+}
+
+.pcl-stack--v4 .pcl-notch__line {
+  stroke: var(--gold-40);
+}
+
+.pcl-v4__head {
+  gap: 20px;
+}
+
+.pcl-v4__doc {
+  color: var(--gold-70);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.pcl-v4__title {
+  flex: 1;
+  text-align: center;
+  font-size: clamp(11px, 0.72rem + 0.2vw, 14px);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcl-v4__rev {
+  color: var(--dawn-50);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.pcl-v4__surfaces {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--dawn-70);
+}
+
+.pcl-v4__surfaces span {
+  color: var(--gold-60);
+  display: inline-block;
+  width: 34px;
+}
+
+.pcl-v4__tolerance {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pcl-v4__media {
+  border: 1px solid var(--dawn-15);
+  margin: 22px 26px 0 0;
+}
+
+.pcl-v4__dim {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--gold-60);
+}
+
+.pcl-v4__dim i {
+  flex: 1;
+  border-top: 1px solid var(--dawn-25);
+  position: relative;
+}
+
+.pcl-v4__dim i::before,
+.pcl-v4__dim i::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 6px;
+  background: var(--dawn-25);
+}
+
+.pcl-v4__dim i::before {
+  left: 0;
+}
+.pcl-v4__dim i::after {
+  right: 0;
+}
+
+.pcl-v4__dim--w {
+  top: -16px;
+  left: 0;
+  right: 0;
+}
+
+.pcl-v4__dim--h {
+  top: 0;
+  bottom: 0;
+  right: -20px;
+  writing-mode: vertical-rl;
+}
+
+.pcl-v4__dim--h i {
+  border-top: 0;
+  border-left: 1px solid var(--dawn-25);
+}
+
+.pcl-v4__dim--h i::before,
+.pcl-v4__dim--h i::after {
+  top: auto;
+  left: -3px;
+  width: 6px;
+  height: 1px;
+}
+
+.pcl-v4__dim--h i::before {
+  top: 0;
+}
+.pcl-v4__dim--h i::after {
+  top: auto;
+  bottom: 0;
+}
+
+.pcl-v4__bom {
+  width: calc(100% - 26px);
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+
+.pcl-v4__bom th {
+  text-align: left;
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-60);
+  border-bottom: 1px solid var(--dawn-20);
+  padding: 0 12px 6px 0;
+}
+
+.pcl-v4__bom td {
+  vertical-align: top;
+  border-bottom: 1px solid var(--dawn-08);
+  padding: 7px 12px 7px 0;
+  color: var(--dawn-50);
+  line-height: 1.5;
+}
+
+.pcl-v4__bom td:first-child {
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  width: 34px;
+}
+
+.pcl-v4__bom td:nth-child(2) {
+  color: var(--dawn-90);
+  white-space: nowrap;
+  padding-right: 20px;
+}
+
+.pcl-v4__bom tr:last-child td {
+  border-bottom: 0;
+}
+
+.pcl-v4__foot {
+  padding: 0;
+  gap: 0;
+  border-top: 1px solid var(--dawn-25);
+}
+
+.pcl-v4__block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 14px;
+  border-left: 1px solid var(--dawn-15);
+  min-width: 0;
+}
+
+.pcl-v4__block:first-child {
+  border-left: 0;
+  flex: 1;
+}
+
+.pcl-v4__blocklabel {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--dawn-40);
+}
+
+.pcl-v4__blockvalue {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--dawn-80);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── V5 SIGNAL LEDGER — calm editorial pole (small notch tr) ───── */
+
+.pcl-stack--v5 .pcl-card {
+  --pcl-card-bg: #0b0a09;
+}
+
+.pcl-stack--v5 .pcl-notch__line {
+  stroke: var(--dawn-15);
+}
+
+.pcl-stack--v5 .pcl-card__head {
+  border-bottom-color: var(--dawn-04);
+}
+
+.pcl-v5__tagline {
+  color: var(--gold);
+}
+
+.pcl-v5__title {
+  font-size: clamp(26px, 1.6rem + 1.4vw, 44px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0;
+  max-width: 14ch;
+  text-wrap: balance;
+}
+
+.pcl-v5__codename {
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+
+.pcl-v5__lede {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", sans-serif);
+  font-size: clamp(14px, 0.9rem + 0.2vw, 16px);
+  color: var(--dawn-80);
+  max-width: 34ch;
+}
+
+.pcl-v5__copy {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", sans-serif);
+  font-size: clamp(12px, 0.76rem + 0.15vw, 13.5px);
+  line-height: 1.7;
+  color: var(--dawn-60);
+  max-width: 44ch;
+}
+
+.pcl-v5__cta {
+  margin-top: auto;
+}
+
+.pcl-v5__cta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: gap 120ms var(--ease-out);
+}
+
+.pcl-v5__cta a:hover {
+  gap: 14px;
+}
+
+.pcl-v5__cta i {
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--gold);
+  border-right: 1px solid var(--gold);
+  rotate: 45deg;
+}
+
+.pcl-v5__media {
+  border: 1px solid var(--dawn-10);
+}
+
+.pcl-v5__caps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 32px;
+}
+
+.pcl-v5__caps li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.pcl-v5__dia {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+  rotate: 45deg;
+}
+
+.pcl-v5__foot {
+  border-top-color: var(--dawn-04);
+  color: var(--dawn-30);
+}
+
+/* ─── Lab fallbacks (variant-specific rows only) ────────────────── */
+
+/* The shared static-flow + PRM fallbacks live in tools-cards.css
+   (breakpoint 960, lockstep with the shared hook's isInert — ADR-030).
+   Only the unshipped skins' rows remain here. */
+@media (max-width: 960px) {
+  .pcl-v1__stack,
+  .pcl-v3__vectors,
+  .pcl-v4__tolerance,
+  .pcl-v5__cta {
+    margin-top: 0;
+  }
+
+  .pcl-v3__caps {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pcl-v4__media {
+    margin-right: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcl-switch button {
+    transition: none;
+  }
+}

@@ -100,7 +100,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       timeout: 20_000,
     });
 
-    expect(await scrollServicesRunway(page, 0.7)).toBe(true);
+    // 6-beat runway since ADR-030: p=0.6 → floor(3.6) = step 3 (Keynote).
+    // (0.7 would land in step 4 / Workshop now.)
+    expect(await scrollServicesRunway(page, 0.6)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.locator(".services-readout")).toContainText("KEYNOTE");
     // The ring rotated with the clock: the front card (and so its CTA
@@ -109,6 +111,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       timeout: 20_000,
     });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
+
+    // Exit-hold beat (ADR-030): deep in the runway the step clock reads 5
+    // while the LAST service stays active — an unclamped step would wrap
+    // the readout back to Advisory (the bug the clamps kill).
+    expect(await scrollServicesRunway(page, 0.95)).toBe(true);
+    await page.waitForTimeout(1200);
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "5");
+    await expect(page.locator(".services-readout")).toContainText("WORKSHOP");
   });
 
   test("desktop: wheel over the instrument snaps beats; below the band it scrolls on", async ({

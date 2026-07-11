@@ -42,6 +42,10 @@ test.describe("Homepage corridor smoke", () => {
         "hero",
         "home-corridor-mount",
         "services",
+        // ADR-030: the Tools station rides between services and continuum
+        // (offsetTop stays ordered despite its -100svh cover margin — the
+        // services runway is ~6 viewports tall).
+        "tools",
         "continuum",
         "practice",
         "build",

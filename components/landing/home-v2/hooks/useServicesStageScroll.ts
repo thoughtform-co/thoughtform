@@ -2,16 +2,19 @@
 
 import { useEffect, type RefObject } from "react";
 
+import { RING_STEP_COUNT } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
 /** Scroll segments in the pinned stage: ONE lead-in segment where every
- *  plate is collapsed (step 0), then one segment per service (steps 1..4)
- *  that opens that service's plate. So the section enters fully collapsed
- *  and each scroll beat opens the next card (2026-07-10 Vince review).
- *  `STEP_COUNT = services + 1`; the runway `min-height` in services.css is
- *  kept in lockstep at `STEP_COUNT × 100svh` so each beat still owns one
- *  viewport of scroll travel. */
-const STEP_COUNT = 5;
+ *  plate is collapsed (step 0), one segment per service (steps 1..4)
+ *  that opens that service's plate, and one EXIT-HOLD segment (step 5,
+ *  ADR-030) during which the last card dwells while the #tools station
+ *  sweeps up over the still-pinned stage. `STEP_COUNT = services + 2`;
+ *  the runway `min-height` in services.css is kept in lockstep at
+ *  `STEP_COUNT × 100svh` so each beat still owns one viewport of scroll
+ *  travel. Aliased from RING_STEP_COUNT so the ring staircase and the
+ *  step clock can never drift (ADR-029 guardrail). */
+const STEP_COUNT = RING_STEP_COUNT;
 
 /**
  * Brandmark "arrive" envelopes, in `--corridor-dissipate` units (0..1 —

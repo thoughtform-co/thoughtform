@@ -11,6 +11,7 @@ import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesRingWheel } from "../hooks/useServicesRingWheel";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { startRingScrollTween } from "@/lib/services-ring/ringScrollTween";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 
@@ -74,12 +75,15 @@ export function ServicesStage() {
   const cardRingActive = SERVICES_CARD_RING && useHologramCanvas;
 
   // Step 0 is the collapsed lead-in (no plate open); steps 1..N open service
-  // 0..N-1 in turn (see useServicesStageScroll STEP_COUNT = services + 1). The
-  // backdrop/readout follow the plate that is (or is about to be) open.
+  // 0..N-1 in turn; the final step is the ADR-030 exit-hold beat (the #tools
+  // cover rises over the pinned stage) — the UPPER clamp keeps the LAST
+  // service active there instead of wrapping `SERVICES[N]` → undefined →
+  // first service (see useServicesStageScroll STEP_COUNT = services + 2).
+  // The backdrop/readout follow the plate that is (or is about to be) open.
   const setActiveByStep = useCallback((step: number) => {
-    const serviceIndex = Math.max(0, step - 1);
-    setActiveServiceId(SERVICES[serviceIndex]?.id ?? SERVICES[0].id);
-    setExpandedServiceId(step <= 0 ? null : (SERVICES[serviceIndex]?.id ?? null));
+    const serviceIndex = Math.min(SERVICES.length - 1, Math.max(0, step - 1));
+    setActiveServiceId(SERVICES[serviceIndex].id);
+    setExpandedServiceId(step <= 0 ? null : SERVICES[serviceIndex].id);
   }, []);
 
   // Click-to-scroll (proven ServiceScanInterface behavior): scroll owns the
@@ -113,11 +117,20 @@ export function ServicesStage() {
       setExpandedServiceId(serviceId);
       return;
     }
-    // Service i opens on step i+1 of `services + 1` scroll beats (step 0 is the
-    // collapsed lead-in); aim for the middle of that beat.
-    const stepCount = SERVICES.length + 1;
+    // Service i opens on step i+1 of `services + 2` scroll beats (step 0 is
+    // the collapsed lead-in; the last beat is the ADR-030 exit hold); aim
+    // for the middle of service i's beat.
+    const stepCount = SERVICES.length + 2;
     const targetY = window.scrollY + rect.top + ((index + 1.5) / stepCount) * travel;
-    window.scrollTo({ top: targetY, behavior: "smooth" });
+    if (SERVICES_CARD_RING) {
+      // Ring mode: the runway scroll owns the ring rotation, so the snap
+      // rides an explicit smootherstep tween — the ring's speed ramp IS
+      // this tween. The browser's native smooth scroll was both abrupt and
+      // occasionally dropped mid-gesture (ADR-029 Update 5).
+      startRingScrollTween(targetY);
+    } else {
+      window.scrollTo({ top: targetY, behavior: "smooth" });
+    }
   }, []);
 
   // Reads the corridor-exit dissipate → publishes `--svc-content-in` (cluster

@@ -52,7 +52,14 @@ const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 // be left orphaned at the seam if it stayed put, so it travels with
 // the move and is dropped at the same time (the new corridor-exit
 // seam owns the visual bridge, no celestial connector required).
+//
+// Specs run in ARRAY ORDER and each inserts immediately after the
+// mount, so the LAST spec lands closest to the mount. tools first,
+// services second ⇒ mount → #services → #tools → #continuum: the
+// Tools station scrolls parallax over the parked services instrument
+// (ADR-030 cover), then hands to the continuum.
 const CORRIDOR_RELOCATED_STATIONS = [
+  { stationId: "tools" },
   { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
 ] as const;
 

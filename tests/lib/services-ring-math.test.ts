@@ -55,7 +55,9 @@ describe("ringIndexForProgress — the smooth staircase", () => {
   });
 
   it("travels during the first RING_TRAVEL_FRAC of each later beat, then dwells", () => {
-    for (let k = 2; k < RING_STEP_COUNT; k++) {
+    // The FINAL beat is the ADR-030 exit hold (no travel) — see the
+    // dedicated pin below; only beats 2..stepCount−2 travel.
+    for (let k = 2; k < RING_STEP_COUNT - 1; k++) {
       const from = k - 2;
       // Start of the beat: still on the previous card (continuity).
       expect(ringIndexForProgress(beatProgress(k, 0))).toBeCloseTo(from, 12);
@@ -69,6 +71,15 @@ describe("ringIndexForProgress — the smooth staircase", () => {
       for (const u of [RING_TRAVEL_FRAC + 0.01, 0.6, 0.75, 0.9, 0.999]) {
         expect(ringIndexForProgress(beatProgress(k, u))).toBe(from + 1);
       }
+    }
+  });
+
+  it("pins the LAST card through the whole exit-hold beat (ADR-030)", () => {
+    // Beat stepCount−1 exists so the #tools cover can sweep over the
+    // pinned stage while the ring stands perfectly still on card 3.
+    const k = RING_STEP_COUNT - 1;
+    for (const u of [0, 0.001, 0.25, RING_TRAVEL_FRAC, 0.75, 0.999]) {
+      expect(ringIndexForProgress(beatProgress(k, u))).toBe(RING_COUNT - 1);
     }
   });
 
@@ -103,6 +114,15 @@ describe("ring rotation ↔ step clock agreement", () => {
         expect(frontCardIndex(ringRotationForProgress(p))).toBe(activeServiceForProgress(p));
       }
     }
+  });
+
+  it("clamps the active service to the roster through the exit-hold beat", () => {
+    // Step 5 (the ADR-030 exit hold) must keep the LAST service active —
+    // an unclamped step−1 would index past the roster and the stage
+    // would wrap the readout back to the first service.
+    expect(activeServiceForProgress(1)).toBe(RING_COUNT - 1);
+    expect(activeServiceForProgress(beatProgress(RING_STEP_COUNT - 1, 0.5))).toBe(RING_COUNT - 1);
+    expect(activeServiceForProgress(1.5)).toBe(RING_COUNT - 1);
   });
 
   it("maps whole quarter turns back to card indices with negative-safe modulo", () => {

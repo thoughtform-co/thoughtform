@@ -34,9 +34,13 @@ const VEIL_DOCK_CAP = 0.38;
 const VEIL_AMBIENT_CAP = 0.12;
 /** Start the ambient hold once the surface dissipate is complete. */
 const AMBIENT_ENGAGE_RAW = 0.999;
-/** Fade the ambient particles as the next station approaches. */
-const CONTINUUM_FADE_START_VH = 0.5;
-const CONTINUUM_FADE_END_VH = 0.1;
+/** Fade the ambient particles as the NEXT station approaches. Since
+ *  ADR-030 the station after #services is #tools (which sweeps up OVER
+ *  the parked instrument — this envelope is what dims the interior bed
+ *  + brandmark under the rising cover); #continuum remains the fallback
+ *  target so the fade still resolves if the tools station is absent. */
+const NEXT_STATION_FADE_START_VH = 0.5;
+const NEXT_STATION_FADE_END_VH = 0.1;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -130,8 +134,10 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dissipate = corridorExitSpeedRamp(rawDissipate);
       const sectionNearDock =
         servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) && servicesRect.bottom > 0;
-      const continuum = root.querySelector<HTMLElement>("#continuum");
-      const continuumTopVh = (continuum?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
+      const nextStation =
+        root.querySelector<HTMLElement>("#tools") ?? root.querySelector<HTMLElement>("#continuum");
+      const nextStationTopVh =
+        (nextStation?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
 
       // Dock OFF the corridor epilogue (sphere landed + BILLIONS title
       // up), not off this section's scroll position. See ADR-021.
@@ -152,8 +158,8 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // is deliberately NOT the retired brandmark runway: no centred
       // SVG, no seam pixel field, and no brandmark opacity gate.
       const ambientFadeRaw = clamp01(
-        (CONTINUUM_FADE_START_VH - continuumTopVh) /
-          (CONTINUUM_FADE_START_VH - CONTINUUM_FADE_END_VH)
+        (NEXT_STATION_FADE_START_VH - nextStationTopVh) /
+          (NEXT_STATION_FADE_START_VH - NEXT_STATION_FADE_END_VH)
       );
       const ambientLevelRaw = 1 - corridorExitSpeedRamp(ambientFadeRaw);
       const servicesAmbient =

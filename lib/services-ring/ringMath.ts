@@ -15,10 +15,12 @@
 /** Number of cards — one per service, quarter spacing. */
 export const RING_COUNT = 4;
 
-/** Runway beats — ONE collapsed lead-in + one beat per service. MUST stay in
- *  lockstep with `STEP_COUNT` in useServicesStageScroll.ts (and the 500svh
- *  runway in services.css). */
-export const RING_STEP_COUNT = 5;
+/** Runway beats — ONE collapsed lead-in + one beat per service + ONE
+ *  exit-hold beat (ADR-030: the last card dwells while the #tools station
+ *  sweeps up over the still-pinned stage). MUST stay in lockstep with
+ *  `STEP_COUNT` in useServicesStageScroll.ts (which aliases this constant)
+ *  and the 600svh runway in services.css. */
+export const RING_STEP_COUNT = 6;
 
 /** Card orbit radius — between the keynote shell (1.52, labs) and the
  *  meridian (1.78) so cards clear the mark but stay inside the outer frame. */
@@ -63,24 +65,28 @@ export const RING_QUARTER = (Math.PI * 2) / RING_COUNT;
 export const RING_TRAVEL_FRAC = 0.55;
 
 /** Spring frequency (rad/s) for the rotation follower. Slowed 6.0 → 4.2 in
- *  Update 3 — with the wider cap below, the spring genuinely GLIDES the
- *  ring instead of being dragged at the clamp by the scroll easing. */
-export const RING_SPRING_OMEGA = 4.2;
+ *  Update 3, 4.2 → 3.4 in Update 5 — with the snap path now riding the
+ *  eased ringScrollTween, the spring's remaining job is smoothing NATIVE
+ *  scroll (scrollbar drags, stepped mouse-wheel ticks below the band),
+ *  and the softer follow turns that staircase into a glide. */
+export const RING_SPRING_OMEGA = 3.4;
 
 /** Damping ratio < 1 → a small underdamped overshoot that decays to rest.
  *  This IS the "bounded decaying sway": the only motion after scroll stops
  *  is this spring settling — there is no wall-clock term anywhere.
- *  0.82 → 0.9 in Update 3: more glide, less wobble at the settle. */
-export const RING_SPRING_ZETA = 0.9;
+ *  0.82 → 0.9 in Update 3, → 0.93 in Update 5: glide over wobble. */
+export const RING_SPRING_ZETA = 0.93;
 
-/** Hard cap (rad ≈ 22°) on |rotation − target|. Bounds both the tracking
+/** Hard cap (rad ≈ 32°) on |rotation − target|. Bounds both the tracking
  *  lag during fast scroll AND the post-scroll sway, so the ring can never
  *  revolve on its own (ADR-021 addendum: no time-clock rotation behind
- *  readable services copy). Widened 0.12 → 0.38 in Update 3: at 0.12 the
+ *  readable services copy). Widened 0.12 → 0.38 in Update 3 (at 0.12 the
  *  spring rode the clamp through every quarter-turn and the motion was
- *  effectively the browser's scroll easing — the wider bound lets the
- *  spring smooth the turn while staying firmly scroll-owned. */
-export const RING_SWAY_CAP_RAD = 0.38;
+ *  effectively the browser's scroll easing), → 0.55 in Update 5 so the
+ *  slower spring has room to shape a native-scroll quarter-turn without
+ *  being dragged at the clamp. Still well under the quarter (π/2), still
+ *  hard-bounded + decaying — firmly scroll-owned. */
+export const RING_SWAY_CAP_RAD = 0.55;
 
 /** Card scale from depth: back → front. Floor lifted 0.62 → 0.72 in
  *  Update 1 — side cards sit closer and read as reachable cards. */
@@ -199,15 +205,19 @@ export function basePhi(index: number): number {
 
 /**
  * Continuous ring index for runway progress p ∈ [0,1] — a SMOOTH STAIRCASE
- * over the 5-beat runway:
+ * over the 6-beat runway:
  *
  *   beat 0 (lead-in) and beat 1 (service 0's beat): index 0 — the first
  *     card is already front when the section settles;
  *   beat k ≥ 2: index travels (k−2) → (k−1) with smootherstep over the
- *     first RING_TRAVEL_FRAC of the beat, then dwells.
+ *     first RING_TRAVEL_FRAC of the beat, then dwells;
+ *   the final beat (k = stepCount−1, the ADR-030 exit hold): the
+ *     RING_COUNT−1 cap pins the index on the LAST card for the whole
+ *     beat — the ring stands still while the #tools cover rises.
  *
  * Monotonic, continuous, and exactly integral during every dwell — the
- * front card is settled whenever the step clock (floor(p·5)) is mid-beat.
+ * front card is settled whenever the step clock (floor(p·stepCount)) is
+ * mid-beat.
  */
 export function ringIndexForProgress(
   progress: number,
@@ -234,15 +244,18 @@ export function ringRotationForProgress(
 }
 
 /** Step-derived ACTIVE service index (0..3) for the same runway progress —
- *  mirrors useServicesStageScroll: step = floor(p·5) clamped, service =
- *  max(0, step − 1). Exported so tests can pin ring/step agreement. */
+ *  mirrors useServicesStageScroll: step = floor(p·stepCount) clamped,
+ *  service = step − 1 clamped into [0, RING_COUNT−1]. The upper clamp is
+ *  load-bearing since the exit-hold beat (ADR-030): step 5 must keep the
+ *  LAST service active, not wrap past the roster. Exported so tests can
+ *  pin ring/step agreement. */
 export function activeServiceForProgress(
   progress: number,
   stepCount: number = RING_STEP_COUNT
 ): number {
   const p = clamp01(progress);
   const step = Math.max(0, Math.min(stepCount - 1, Math.floor(p * stepCount)));
-  return Math.max(0, step - 1);
+  return Math.min(RING_COUNT - 1, Math.max(0, step - 1));
 }
 
 /** Which card index is nearest the front for a given rotation. */

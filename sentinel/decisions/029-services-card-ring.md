@@ -340,3 +340,62 @@ slab's extruded walls and gold lip present themselves — the "see the 3D
 shape" affordance. Pointer-driven, bounded, decaying: ADR-021 intact. The
 tilt offsets compose onto `cardFacingYaw`; keep amplitudes well clear of
 edge-on.
+
+## Update 5 (2026-07-11): the snap rides its own tween — real speed ramp
+
+Vince: rotation "very abrupt, very harsh… I want a smooth speed ramp", plus
+intermittent dead gestures ("often have to refresh for it to work"). Root
+causes, in order of weight:
+
+1. The wheel-snap and card-click paths rode the browser's native
+   `window.scrollTo({ behavior: "smooth" })` — engine-owned easing: short,
+   front-loaded, platform-dependent, and occasionally DROPPED by Chrome
+   when a previous smooth scroll was still in flight (the dead-gesture
+   read). Since scroll owns the rotation, that easing WAS the ring's
+   perceived motion.
+2. `RESUME_IDLE_GAP_MS 200` snapped the spring on ANY >200 ms frame gap —
+   an ordinary hitch (GC, texture upload, dev overhead) mid-quarter-turn
+   teleported the ring.
+
+**The fix — `lib/services-ring/ringScrollTween.ts`:** `selectService` in
+ring mode drives an explicit rAF scroll tween — `smootherstep` easing (C2,
+zero velocity at both ends) over a distance-scaled duration
+(`ringSnapDurationMs`: 620–1500 ms, ~950 ms for a one-beat hop). The tween
+is a SCROLL DRIVER, not a second rotation writer: it writes only the
+window scroll position, so ADR-029 §2's single-owner contract holds.
+Writes use explicit `behavior: "instant"` — the landing page sets
+`html { scroll-behavior: smooth }`, and an "auto" write per frame would
+spawn a browser animation per frame (mush). Any genuine user scroll intent
+cancels the tween instantly: an unconsumed wheel event (checked DEFERRED
+via setTimeout(0) — listener order vs the wheel hook is unstable), a
+scrollbar grab, touch, or a scroll key. Flag-off keeps the old browser
+smooth scroll byte-identically.
+
+**Wheel hook:** the fixed 650 ms cooldown (tuned to the browser's opaque
+duration) is replaced by the tween's own progress — deltas are discarded
+until the glide is 60% home (`CHAIN_AT_TWEEN_PROGRESS`), then a fresh
+gesture chains the next beat from the current position (the spring bridges
+the small velocity dip). `SNAP_REARM_MS 250` guards the degenerate
+zero-travel case.
+
+**Spring retune** (the spring's remaining job is smoothing NATIVE scroll —
+scrollbar drags and stepped wheel ticks below the band): `RING_SPRING_OMEGA
+4.2 → 3.4`, `RING_SPRING_ZETA 0.9 → 0.93`, `RING_SWAY_CAP_RAD 0.38 → 0.55`
+(≈32°, still well under the quarter turn, still hard-bounded + decaying —
+ADR-021 intact).
+
+**Conditional resume-snap:** `RESUME_IDLE_GAP_MS 200 → 500`, and the hard
+snap now fires only when the pose is genuinely stale (`|target − pos| >
+swayCap` — the user scrolled far while the frameloop slept); a resume with
+the target nearby just zeroes the stale velocity and glides in.
+
+Verified: ring-math suite (31), ring smoke suite (15 passed), plus a
+wheel-gesture probe measuring the ramp — 720 px beat in ~740 ms with
+per-quarter velocity 66/217/289/147 px (ease-in/out), step advancing 1→2→3
+across chained gestures.
+
+Guardrails: the tween must never write rotation (scroll position only);
+tween writes stay `behavior: "instant"` (the CSS smooth trap above); the
+unconsumed-wheel cancel check stays deferred; never restore an
+unconditional resume snap — the conditional form is what keeps frame
+hitches from teleporting the ring.

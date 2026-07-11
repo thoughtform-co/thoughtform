@@ -27,7 +27,9 @@ import { useEffect, useRef, useState } from "react";
  * VISION → #continuum, TOOLS → #build.
  */
 const NAV_ITEMS = [
-  { num: "01", label: "Tools", href: "#build" },
+  // #tools is the real Tools station since ADR-030 (previously a
+  // best-guess relabel pointing at #build).
+  { num: "01", label: "Tools", href: "#tools" },
   { num: "02", label: "About", href: "#about" },
   { num: "03", label: "Services", href: "#services" },
   { num: "04", label: "Vision", href: "#continuum" },
@@ -85,7 +87,7 @@ export function HudNav() {
     () => () => {
       document.querySelector(".hud__brand")?.classList.remove("is-collapsed");
     },
-    [],
+    []
   );
 
   // The slide-in list only exists in the collapsed state; force it

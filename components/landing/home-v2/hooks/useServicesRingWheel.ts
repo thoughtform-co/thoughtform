@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 
+import { ringScrollTweenProgress } from "@/lib/services-ring/ringScrollTween";
+
 /**
  * useServicesRingWheel — direct wheel control of the ADR-029 card ring
  * (Update 2, Vince: "if you hover over the cards in the brandmark, if you
@@ -11,9 +13,10 @@ import { useEffect, useRef, type RefObject } from "react";
  * While the services stage is PINNED and the instrument is PARKED, a wheel
  * gesture with the pointer in the INSTRUMENT BAND (the upper portion of the
  * viewport where the mark + cards live) snaps the ring one beat per gesture
- * — implemented through the existing `selectService` smooth-scroll, so the
- * runway scroll position stays the single owner of rotation (no second
- * rotation writer; the spring/dwell choreography plays unchanged).
+ * — implemented through the existing `selectService` scroll glide (the
+ * ringScrollTween since Update 5), so the runway scroll position stays the
+ * single owner of rotation (no second rotation writer; the spring/dwell
+ * choreography plays unchanged).
  *
  * Zones and edges:
  *   - pointer BELOW the band (the readout strip and under): untouched —
@@ -38,9 +41,17 @@ const INSTRUMENT_BAND_BOTTOM = 0.78;
  *  trackpads accumulate across a few events). */
 const WHEEL_STEP_THRESHOLD = 80;
 
-/** One snap per gesture — ignore further deltas while the smooth scroll to
- *  the next beat is still travelling. */
-const SNAP_COOLDOWN_MS = 650;
+/** A new gesture may CHAIN the next beat once the current snap tween has
+ *  travelled this far (ADR-029 Update 5) — the tween's own progress
+ *  replaces the old fixed 650 ms cooldown, which was tuned to the
+ *  browser's opaque smooth-scroll duration. Deltas before this point are
+ *  discarded (one deliberate notch = one beat), after it they start a new
+ *  glide from the current position, so eager scrolling stays fluid. */
+const CHAIN_AT_TWEEN_PROGRESS = 0.6;
+
+/** Safety debounce between snaps — guards the degenerate no-tween case
+ *  (near-zero travel) from double-firing on one physical notch. */
+const SNAP_REARM_MS = 250;
 
 /** The instrument owns the wheel only once essentially parked (same clock
  *  the anchors publish on). */
@@ -86,6 +97,17 @@ export function useServicesRingWheel(
       const rect = runway.getBoundingClientRect();
       if (rect.top > 1 || rect.bottom < vh - 1) return;
 
+      // Release ownership once the #tools cover is on screen (ADR-030):
+      // the Tools station overlaps the runway's final 100svh via its
+      // -100svh margin, so `runway.bottom < 2·vh` ⇔ tools.top < vh. From
+      // here the wheel is native in BOTH directions — down rides the
+      // cover up over the instrument, up slides it back off. Without
+      // this, the last-card HOLD below would freeze the page for a
+      // pointer-over-instrument wheel mid-cover. The designed hold still
+      // owns beats 1–4 (a snap to the last card parks at runway.bottom ≈
+      // 2.25·vh).
+      if (rect.bottom < vh * 2) return;
+
       // Only once the instrument is parked (entrance/dive stay scroll-owned).
       const raw = parseFloat(
         document.documentElement.style.getPropertyValue("--corridor-dissipate")
@@ -104,8 +126,12 @@ export function useServicesRingWheel(
       event.preventDefault();
       event.stopPropagation();
 
+      // The snap tween itself is the cooldown: mid-flight deltas are
+      // discarded until the glide is nearly home, then a fresh gesture
+      // chains the next beat.
+      if (ringScrollTweenProgress() < CHAIN_AT_TWEEN_PROGRESS) return;
       const now = performance.now();
-      if (now - lastSnapRef.current < SNAP_COOLDOWN_MS) return;
+      if (now - lastSnapRef.current < SNAP_REARM_MS) return;
 
       // Direction flip clears the accumulator so opposing residue never
       // cancels a deliberate gesture.

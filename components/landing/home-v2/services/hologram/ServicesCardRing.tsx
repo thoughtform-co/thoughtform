@@ -104,9 +104,12 @@ import {
  *  threshold + clear-once semantics as `CorridorArmillary`'s scan anchors. */
 const ANCHOR_PUBLISH_DISSIPATE = 0.88;
 
-/** Wall-clock gap treated as an idle resume (frameloop was paused) — snap the
- *  spring instead of integrating a stale glide (mirrors motionFollower). */
-const RESUME_IDLE_GAP_MS = 200;
+/** Wall-clock gap treated as an idle resume (frameloop was paused). Raised
+ *  200 → 500 ms in ADR-029 Update 5: at 200 ms an ordinary frame hitch
+ *  (GC, texture upload, dev-mode overhead) mid-quarter-turn tripped the
+ *  gate and the ring visibly TELEPORTED. The snap itself is also now
+ *  conditional — see the useFrame comment. */
+const RESUME_IDLE_GAP_MS = 500;
 
 /* ── Card-face bake ─────────────────────────────────────────────────────── */
 
@@ -897,11 +900,11 @@ export function ServicesCardRing({
 
   useFrame((_, delta) => {
     // Idle-resume detection on the WALL clock — `delta` is already clamped by
-    // the spring, but a long frameloop pause must snap, not glide.
+    // the spring, but a long frameloop pause must not integrate a stale glide.
     const now = performance.now();
     const gap = lastWallRef.current < 0 ? Infinity : now - lastWallRef.current;
     lastWallRef.current = now;
-    const snap = gap > RESUME_IDLE_GAP_MS;
+    const resumed = gap > RESUME_IDLE_GAP_MS;
 
     // Dissipate clock for the entrance envelope.
     let dissipate = 1;
@@ -919,8 +922,16 @@ export function ServicesCardRing({
       }
     }
 
-    // Scroll-owned rotation through the bounded spring.
+    // Scroll-owned rotation through the bounded spring. On an idle resume,
+    // hard-snap ONLY when the pose is genuinely stale (the user scrolled
+    // more than the sway cap while the frameloop slept — springing in from
+    // there would read as the ring settling on its own); a resume with the
+    // target still nearby just zeroes the stale velocity and glides in.
+    // Unconditional snapping made every >gap frame hitch a visible
+    // teleport mid-turn (ADR-029 Update 5).
     const target = ringRotationForProgress(progressRef.current.progress, undefined, travelFrac);
+    const snap = resumed && Math.abs(target - springRef.current.pos) > swayCap;
+    if (resumed && !snap) springRef.current.vel = 0;
     const spring = stepRingSpring(springRef.current, target, delta, {
       omega: springOmega,
       zeta: springZeta,

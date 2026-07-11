@@ -12,6 +12,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
+import { ToolsPortal } from "./tools-cards";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
@@ -455,6 +456,11 @@ export function LandingPage({
       <PhaseGlyphPortals containerRef={rootRef} />
       <BuildCasesPortal containerRef={rootRef} />
       <ServicesPortal containerRef={rootRef} />
+      {/* #tools card stack (ADR-030): the console-plate sticky stack
+          mounted into the relocated Tools station's placeholder. The
+          station itself covers the parked services instrument via the
+          exit-hold beat + negative margin (tools-cards.css). */}
+      <ToolsPortal containerRef={rootRef} />
       {/* Hero → Corridor seam (ADR-022 v7, direct parallax reveal):
           NO proxy plane. The sticky `#hero` (z:1) drifts up + gently
           fades as the live corridor mount (`.home-corridor-host` z:3)

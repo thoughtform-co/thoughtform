@@ -5293,6 +5293,40 @@ html { scroll-behavior: smooth; }
        station into About. ====================================== -->
   <div data-celestial-slot="practice-to-about"></div>
 
+  <!-- ═══════════ 08A TOOLS · THE INSTRUMENTS ═══════════
+       Landing tools station (ADR-030). Relocated by getV7Content
+       relocateStationsToMount to sit immediately after the services
+       station, where it scrolls parallax OVER the parked services
+       instrument: the services runway carries one exit-hold beat and
+       this opaque station overlaps exactly that beat via a desktop-only
+       negative top margin, so the cover completes precisely when the
+       services stage would unpin. The card stack is a React portal
+       mounted into the data-tools-cards-root slot below (ToolsCardStack,
+       console-plate skin, components/landing/v7/tools-cards); the parsed
+       shell keeps the station chrome + header copy so HUD nav and the
+       corridor-exit fade target resolve. Header copy is placeholder —
+       vince-tov pass pending.
+       NOTE: this comment must contain NO angle-bracket tag syntax —
+       the v7-parse relocate/remove walkers regex-scan the raw HTML
+       (comments included), so a literal tag here would be counted as a
+       real element and break the balanced-tag walk.
+       ============================ -->
+  <section class="station station--tools" id="tools" data-station="tools" data-screen-label="08A Tools">
+    <div class="station__idx">Tools<span class="landmark">Landmark · what we build</span></div>
+
+    <header class="tools__head" data-m-group>
+      <h2 class="tools__title" data-m="title">
+        Bottlenecks removed,<br><em>one tool at a time.</em>
+      </h2>
+      <p class="tools__lede" data-m="body">
+        Four instruments in production — built inside the practice,
+        run by the teams they serve.
+      </p>
+    </header>
+
+    <div class="tools-cards" data-tools-cards-root></div>
+  </section>
+
   <!-- ═══════════ 05 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
   <section class="station" id="about" data-station="about" data-screen-label="09 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
