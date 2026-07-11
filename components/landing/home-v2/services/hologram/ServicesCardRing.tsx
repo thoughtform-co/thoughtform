@@ -150,6 +150,14 @@ const RING_VEIL_HOVER_LEVEL = 0.18;
 /** Damp rate (per second) for the hover resolve/restore transition. */
 const VEIL_DAMP_RATE = 7;
 
+/** Hover tilt amplitudes (rad) — the hovered card leans with the pointer
+ *  (yaw toward the pointer's side, pitch away from its height) so the
+ *  slab's extruded edges and gold lip catch the eye: the "see the 3D
+ *  shape" affordance. Bounded well clear of edge-on; pointer-driven and
+ *  damped to zero off-hover, so ADR-021 stays intact. */
+const RING_HOVER_TILT_PITCH = 0.09;
+const RING_HOVER_TILT_YAW = 0.16;
+
 /**
  * The shared veil strip: an 8px-wide, card-height column of void tint with
  * the dot matrix punched out, tiled horizontally across the card. Alpha
@@ -823,6 +831,9 @@ export function ServicesCardRing({
     Array<{ x: number; y: number; w: number; h: number; nz: number } | null>
   >(new Array(RING_COUNT).fill(null));
   const veilLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(1));
+  const hoverTiltRef = useRef<Array<{ pitch: number; yaw: number }>>(
+    Array.from({ length: RING_COUNT }, () => ({ pitch: 0, yaw: 0 }))
+  );
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
       pointerPxRef.current.x = event.clientX;
@@ -956,10 +967,34 @@ export function ServicesCardRing({
         radiusMul: env ? env.radiusMul : 1,
       });
 
+      // Hover tilt — the hovered card leans with the pointer so its slab
+      // edges show (damped, zero off-hover). Pointer offset is measured
+      // inside last frame's projected rect.
+      const tilt = hoverTiltRef.current[i];
+      let tiltTargetPitch = 0;
+      let tiltTargetYaw = 0;
+      const hoverRect = hoverRectsRef.current[i];
+      if (i === hovered && hoverRect) {
+        const pointer = pointerPxRef.current;
+        const nx = Math.max(
+          -1,
+          Math.min(1, (pointer.x - (hoverRect.x + hoverRect.w / 2)) / (hoverRect.w / 2))
+        );
+        const ny = Math.max(
+          -1,
+          Math.min(1, (pointer.y - (hoverRect.y + hoverRect.h / 2)) / (hoverRect.h / 2))
+        );
+        tiltTargetYaw = nx * RING_HOVER_TILT_YAW;
+        tiltTargetPitch = -ny * RING_HOVER_TILT_PITCH;
+      }
+      const tiltK = Math.min(1, delta * VEIL_DAMP_RATE);
+      tilt.pitch += (tiltTargetPitch - tilt.pitch) * tiltK;
+      tilt.yaw += (tiltTargetYaw - tilt.yaw) * tiltK;
+
       // The GROUP carries the ring transform — glow, slab, glint, and
       // content ride together as one device.
       cardGroup.position.set(placed.x, placed.y, placed.z);
-      cardGroup.rotation.set(0, cardFacingYaw(placed.rotY, facingBlend), 0);
+      cardGroup.rotation.set(tilt.pitch, cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw, 0);
       cardGroup.scale.setScalar(depthScale(placed.nz, scaleRange));
 
       const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);

@@ -332,3 +332,11 @@ transparent") — the front face reads as a translucent device pane with the
 tracks, halo, and starfield ghosting through it. The ceiling must stay
 above the 0.55 depth-write gate, or the front card stops occluding the
 mark's point pass. Lab gains an `opacity max` slider.
+
+**Hover tilt (same session):** the hovered card leans with the pointer
+(`RING_HOVER_TILT_YAW 0.16` toward the pointer's side, `RING_HOVER_TILT_PITCH
+0.09` away from its height, damped at the veil rate, zero off-hover) so the
+slab's extruded walls and gold lip present themselves — the "see the 3D
+shape" affordance. Pointer-driven, bounded, decaying: ADR-021 intact. The
+tilt offsets compose onto `cardFacingYaw`; keep amplitudes well clear of
+edge-on.
