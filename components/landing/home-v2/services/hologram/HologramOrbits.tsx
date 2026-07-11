@@ -267,6 +267,7 @@ function OrbitRing({
   dissipateRef,
   revealStart,
   revealEnd,
+  masterOpacityGetter,
 }: {
   active: boolean;
   config: OrbitConfig;
@@ -275,6 +276,7 @@ function OrbitRing({
   dissipateRef: RefObject<number>;
   revealStart: number;
   revealEnd: number;
+  masterOpacityGetter?: () => number;
 }) {
   const nodeRef = useRef<THREE.Group>(null);
   const nodeMatRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -302,23 +304,28 @@ function OrbitRing({
 
     const d = dissipateRef.current < 0 ? 1 : dissipateRef.current;
     const reveal = smootherstep(revealStart, revealEnd, d);
+    // Decommission dim (ADR-030 Update 1) — 1 when no getter is wired
+    // (labs / flag-off byte-identical). Applied to OPACITY only; the
+    // solid rings' draw-on instanceCount stays reveal-owned.
+    const master = masterOpacityGetter ? masterOpacityGetter() : 1;
 
     const line = lineRef.current;
     if (line) {
       if (config.dashed) {
         // Dashed ring can't stroke-draw-on; reveal by fading in (matches the
         // SVG orbit-map's dotted ring).
-        line.material.opacity = baseOpacity * reveal;
+        line.material.opacity = baseOpacity * reveal * master;
       } else {
         // Solid ring: stroke draw-on around the mark via the instanced
         // segment count (fat lines render one instance per segment).
         line.geometry.instanceCount = Math.max(0, Math.ceil(reveal * SEGMENTS));
-        line.material.opacity = baseOpacity;
+        line.material.opacity = baseOpacity * master;
       }
     }
     if (nodeMatRef.current) {
       // The node body appears once its ring has nearly finished wrapping.
-      nodeMatRef.current.opacity = nodeBaseOpacity * smootherstep(revealEnd - 0.18, revealEnd, d);
+      nodeMatRef.current.opacity =
+        nodeBaseOpacity * smootherstep(revealEnd - 0.18, revealEnd, d) * master;
     }
   });
 
@@ -371,6 +378,10 @@ export interface HologramOrbitsProps {
   /** "scroll" = draw the rings on around the mark off `--corridor-dissipate`
    *  (production seam); "off" = fully drawn (lab / static). Default "off". */
   entrance?: "scroll" | "off";
+  /** Per-frame master opacity multiplier over every line/node (ADR-030
+   *  Update 1: the decommission dims the armillary on the exit clock).
+   *  Absent → 1 — labs and flag-off stay byte-identical. */
+  masterOpacityGetter?: () => number;
 }
 
 export function HologramOrbits({
@@ -380,6 +391,7 @@ export function HologramOrbits({
   bodySpeed = 1,
   scale = 1,
   entrance = "off",
+  masterOpacityGetter,
 }: HologramOrbitsProps) {
   const groupRef = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera);
@@ -452,6 +464,7 @@ export function HologramOrbits({
             dissipateRef={dissipateRef}
             revealStart={win[0]}
             revealEnd={win[1]}
+            masterOpacityGetter={masterOpacityGetter}
           />
         );
       })}

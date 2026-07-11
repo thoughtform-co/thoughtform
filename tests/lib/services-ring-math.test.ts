@@ -14,6 +14,8 @@ import {
   RING_DEPTH_WRITE_ON_NZ,
   RING_DEPTH_WRITE_OFF_NZ,
   RING_CARD_ORBIT_GEOMETRY,
+  RING_EXIT_WINDOWS,
+  RING_EXIT_RADIUS_TO,
   basePhi,
   buildCardOrbitGeometries,
   cardFacingYaw,
@@ -22,6 +24,8 @@ import {
   ringIndexForProgress,
   ringRotationForProgress,
   activeServiceForProgress,
+  exitEnvelope,
+  exitProgressForRunway,
   frontCardIndex,
   stepRingSpring,
   placeCard,
@@ -192,6 +196,87 @@ describe("stepRingSpring — bounded decaying sway (ADR-021)", () => {
     stepRingSpring(state, -1.2, 1 / 60, { snap: true });
     expect(state.pos).toBe(-1.2);
     expect(state.vel).toBe(0);
+  });
+});
+
+describe("exitProgressForRunway — the decommission clock (ADR-030 Update 1)", () => {
+  it("is 0 through every reading beat and 1 at the runway end", () => {
+    expect(exitProgressForRunway(0)).toBe(0);
+    expect(exitProgressForRunway((RING_STEP_COUNT - 1) / RING_STEP_COUNT)).toBe(0);
+    expect(exitProgressForRunway(beatProgress(RING_STEP_COUNT - 2, 0.999))).toBe(0);
+    expect(exitProgressForRunway(1)).toBe(1);
+    expect(exitProgressForRunway(1.5)).toBe(1);
+    expect(exitProgressForRunway(-0.5)).toBe(0);
+  });
+
+  it("rises linearly across the final beat", () => {
+    const k = RING_STEP_COUNT - 1;
+    expect(exitProgressForRunway(beatProgress(k, 0.25))).toBeCloseTo(0.25, 9);
+    expect(exitProgressForRunway(beatProgress(k, 0.5))).toBeCloseTo(0.5, 9);
+    expect(exitProgressForRunway(beatProgress(k, 0.75))).toBeCloseTo(0.75, 9);
+  });
+
+  it("is monotone and stepCount-parametrized (7-beat future-proof)", () => {
+    let prev = -Infinity;
+    for (let i = 0; i <= 1000; i++) {
+      const v = exitProgressForRunway(i / 1000);
+      expect(v).toBeGreaterThanOrEqual(prev);
+      prev = v;
+    }
+    expect(exitProgressForRunway(6.5 / 7, 7)).toBeCloseTo(0.5, 9);
+    expect(exitProgressForRunway(5.9 / 7, 7)).toBe(0);
+  });
+});
+
+describe("exitEnvelope — staggered decommission (ADR-030 Update 1)", () => {
+  it("is EXACT identity at exit = 0 for every card (pre-exit frames byte-identical)", () => {
+    for (let i = 0; i < RING_COUNT; i++) {
+      const env = exitEnvelope(0, i);
+      expect(env.opacity).toBe(1);
+      expect(env.radiusMul).toBe(1);
+    }
+  });
+
+  it("lands every card at opacity 0 / RING_EXIT_RADIUS_TO at exit = 1", () => {
+    for (let i = 0; i < RING_COUNT; i++) {
+      const env = exitEnvelope(1, i);
+      expect(env.opacity).toBeCloseTo(0, 12);
+      expect(env.radiusMul).toBeCloseTo(RING_EXIT_RADIUS_TO, 12);
+    }
+  });
+
+  it("fades monotonically out while the radius monotonically widens", () => {
+    for (let i = 0; i < RING_COUNT; i++) {
+      let prevOpacity = Infinity;
+      let prevRadius = -Infinity;
+      for (let s = 0; s <= 100; s++) {
+        const env = exitEnvelope(s / 100, i);
+        expect(env.opacity).toBeLessThanOrEqual(prevOpacity);
+        expect(env.radiusMul).toBeGreaterThanOrEqual(prevRadius);
+        prevOpacity = env.opacity;
+        prevRadius = env.radiusMul;
+      }
+    }
+  });
+
+  it("staggers index-ascending: the front (last) card leaves last", () => {
+    const mid = 0.4;
+    expect(exitEnvelope(mid, 0).opacity).toBeLessThan(exitEnvelope(mid, 3).opacity);
+    // The last card's window closes at 0.9 — the tail stays clear for
+    // the pill flight + the receding mark.
+    expect(RING_EXIT_WINDOWS[RING_COUNT - 1][1]).toBeLessThanOrEqual(0.9);
+    for (let i = 1; i < RING_COUNT; i++) {
+      expect(RING_EXIT_WINDOWS[i][0]).toBeGreaterThan(RING_EXIT_WINDOWS[i - 1][0]);
+    }
+  });
+
+  it("composes with the entrance as identity outside both windows", () => {
+    for (let i = 0; i < RING_COUNT; i++) {
+      const entrance = entranceEnvelope(1, i);
+      const exit = exitEnvelope(0, i);
+      expect(entrance.opacity * exit.opacity).toBeCloseTo(entrance.opacity, 12);
+      expect(entrance.radiusMul * exit.radiusMul).toBeCloseTo(entrance.radiusMul, 12);
+    }
   });
 });
 

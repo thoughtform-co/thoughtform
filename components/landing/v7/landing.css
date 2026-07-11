@@ -735,6 +735,47 @@
   right: calc(var(--hud-rail-guide-inset) + 10px);
 }
 
+/* Rail station label (ADR-030 Update 1) — the active section's identity
+   emerging FROM the left rail: gold number + dawn name in the bearing-
+   label mono grammar, docked mid-rail (between the "2"/"5" majors; the
+   8.33% compass slot stays reserved). The clip-path wipe opens
+   left-to-right from the hairline — the data-m eyebrow direction — and
+   the text scramble-decodes on section change (RailStationLabel).
+   Gated closed while the corridor owns the HUD readouts. */
+.hud__rail__station {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  left: calc(var(--hud-rail-guide-inset) + 10px);
+  z-index: 2;
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-wider);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--dawn-50);
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  transition:
+    clip-path 420ms var(--m-ease-instr),
+    opacity 320ms var(--m-ease);
+}
+.hud__rail__station.is-on {
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
+}
+.hud__rail__station__no {
+  color: var(--gold);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud__rail__station {
+    transition: none;
+  }
+}
+
 /* Scroll-depth diamond (left rail). Centered on the guide so it
    tracks scroll position along the canonical Brand Codex hairline.
    `top` is rewritten per scroll frame by `useLandingScroll`. */

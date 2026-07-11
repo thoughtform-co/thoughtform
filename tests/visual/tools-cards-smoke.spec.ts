@@ -1,24 +1,27 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * #tools section smoke (ADR-030).
+ * #tools section smoke (ADR-030 + Update 1, "the viewscreen changes
+ * modes").
  *
  * Structural contracts only — no screenshot baselines (mirrors
  * services-ring-smoke.spec.ts). Covers:
- *   - the Tools station rides between #services and #continuum and
- *     scrolls parallax OVER the still-pinned services stage (the
- *     sticky-overlap cover: -100svh margin against the runway's
- *     exit-hold beat);
- *   - the cover completes exactly where the services stage would unpin;
- *   - the wheel HOLD over the instrument releases once the cover is on
- *     screen (native scroll in both directions mid-cover);
- *   - the console-plate card stack mounts via the portal: 4 sticky
- *     slots, enter/cover state flips, reverse-scroll reset;
- *   - mobile + reduced-motion keep plain document flow (no overlap, no
- *     sticky mechanics).
+ *   - #tools follows the services runway in NORMAL FLOW (the rejected
+ *     -100svh cover is gone);
+ *   - the transparent lead-in: while the exit band is live the station
+ *     is transparent over the fixed canvas (dimmed receded mark behind),
+ *     then the ::before backdrop fades it opaque BEFORE the ambient
+ *     canvas dies (WebGL-fallback-guarded);
+ *   - wheel semantics at the seam: wheel-down at the LAST card passes
+ *     through to native scroll (the decommission is scroll content —
+ *     the old HOLD is retired), and wheel-up mid-exit reverses natively;
+ *   - the decommission pills: 4 verb chips dock at the right rail during
+ *     the exit beat, gone on reverse scroll (pure function of the exit
+ *     clock);
+ *   - the console-plate card stack + mobile/PRM plain flow (unchanged).
  *
- * All assertions are DOM/geometry — nothing here depends on the WebGL
- * corridor painting, so the suite is robust headless.
+ * DOM/geometry assertions only — nothing here requires the WebGL
+ * corridor to paint except the explicitly guarded lead-in test.
  */
 
 test.describe.configure({ mode: "serial" });
@@ -27,11 +30,10 @@ function isDesktopViewport(page: Page): boolean {
   return (page.viewportSize()?.width ?? 0) >= 961;
 }
 
-/** Scroll so `#tools`'s top lands at `topVhFraction` of the viewport.
- *  Rides the page's CSS smooth scroll (two-arg scrollTo — see the
- *  services-ring smoke helper for why instant teleports are banned),
- *  then POLLS until the scroll position settles: the runway sits several
- *  thousand px deep and Chrome's smooth scroll outlives a fixed wait. */
+/** Scroll so `#tools`'s top lands at `topVhFraction` of the viewport
+ *  (negative = past the top). Rides the page's CSS smooth scroll (two-arg
+ *  scrollTo — instant teleports skip the corridor engagement band), then
+ *  POLLS until the position settles. */
 async function scrollToolsTopTo(page: Page, topVhFraction: number): Promise<boolean> {
   const target = await page.evaluate((f) => {
     const tools = document.querySelector("#tools");
@@ -51,53 +53,99 @@ async function scrollToolsTopTo(page: Page, topVhFraction: number): Promise<bool
   return true;
 }
 
-test.describe("Tools section smoke (ADR-030)", () => {
-  test("desktop: the Tools cover sweeps over the still-pinned services stage", async ({ page }) => {
-    test.skip(!isDesktopViewport(page), "the cover overlap is desktop-only (≥961px)");
+/** Scroll the services runway to progress p (0..1) — the ring smoke's
+ *  helper, duplicated for the decommission-beat probes. */
+async function scrollServicesRunway(page: Page, progress: number): Promise<boolean> {
+  const target = await page.evaluate((p) => {
+    const runway = document.querySelector(".services-stage-root");
+    if (!runway) return null;
+    const rect = runway.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const travel = Math.max(0, rect.height - window.innerHeight);
+    return Math.round(top + travel * p);
+  }, progress);
+  if (target == null) return false;
+  await page.evaluate((y) => window.scrollTo(0, y), target);
+  let last = -1;
+  for (let i = 0; i < 30; i++) {
+    await page.waitForTimeout(200);
+    const y = await page.evaluate(() => window.scrollY);
+    if (y === last) break;
+    last = y;
+  }
+  return true;
+}
+
+test.describe("Tools section smoke (ADR-030 Update 1)", () => {
+  test("desktop: #tools follows the runway in normal flow — no cover overlap", async ({ page }) => {
+    test.skip(!isDesktopViewport(page), "the seam choreography is desktop-only (≥961px)");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    // The mounted stack gives the station its real ~6-viewport height —
-    // scroll targets computed before hydration would land short.
     await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
 
-    // Mid-cover: tools' top at 0.5vh — the services stage must STILL be
-    // pinned (top ≈ 0) while the opaque tools station is on screen: that
-    // simultaneity IS the parallax cover.
-    expect(await scrollToolsTopTo(page, 0.5)).toBe(true);
-    const midCover = await page.evaluate(() => {
-      const stage = document.querySelector(".services-stage")!.getBoundingClientRect();
-      const tools = document.querySelector("#tools")!.getBoundingClientRect();
-      const runway = document.querySelector(".services-stage-root")!.getBoundingClientRect();
+    const layout = await page.evaluate(() => {
+      const tools = document.querySelector("#tools")!;
+      const services = document.querySelector("#services")!;
+      const toolsRect = tools.getBoundingClientRect();
+      const servicesRect = services.getBoundingClientRect();
       return {
-        stageTop: stage.top,
-        toolsTopVh: tools.top / window.innerHeight,
-        runwayBottomVh: runway.bottom / window.innerHeight,
+        marginTop: getComputedStyle(tools).marginTop,
+        seamGap: toolsRect.top - servicesRect.bottom,
       };
     });
-    expect(Math.abs(midCover.stageTop)).toBeLessThanOrEqual(2);
-    expect(midCover.toolsTopVh).toBeGreaterThan(0.3);
-    expect(midCover.toolsTopVh).toBeLessThan(0.7);
-
-    // The tools station paints ABOVE the services station's content.
-    const zIndex = await page.evaluate(() =>
-      Number(getComputedStyle(document.querySelector("#tools")!).zIndex)
-    );
-    expect(zIndex).toBeGreaterThanOrEqual(8);
-
-    // Cover-complete geometry: when tools' top reaches the viewport top,
-    // the services runway's bottom is at the viewport bottom (±2px) —
-    // the stage unpins exactly as it finishes being covered.
-    expect(await scrollToolsTopTo(page, 0)).toBe(true);
-    const closed = await page.evaluate(() => {
-      const tools = document.querySelector("#tools")!.getBoundingClientRect();
-      const runway = document.querySelector(".services-stage-root")!.getBoundingClientRect();
-      return { toolsTop: tools.top, runwayBottomGap: runway.bottom - window.innerHeight };
-    });
-    // The smooth scroll may settle within a pixel or two.
-    expect(Math.abs(closed.runwayBottomGap - closed.toolsTop)).toBeLessThanOrEqual(2);
+    expect(layout.marginTop).toBe("0px");
+    expect(Math.abs(layout.seamGap)).toBeLessThanOrEqual(2);
   });
 
-  test("desktop: the instrument wheel hold releases while the cover is on screen", async ({
+  test("desktop: transparent lead-in over the ambient canvas, opaque before it dies", async ({
+    page,
+  }) => {
+    test.skip(!isDesktopViewport(page), "the transparent lead-in is desktop-only (≥961px)");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
+
+    // The ambient band needs the real corridor pipeline — skip on the
+    // WebGL fallback so CI stays honest headless.
+    const fallback = await page.evaluate(
+      () => document.querySelector<HTMLElement>(".home-v2-stage")?.dataset.fallback === "true"
+    );
+    test.skip(fallback, "corridor WebGL fallback — no ambient band to probe");
+
+    // Mid-lead-in: tools' top at 0.4vh — the station must be TRANSPARENT
+    // with the ambient canvas alive behind it.
+    expect(await scrollToolsTopTo(page, 0.4)).toBe(true);
+    await page.waitForTimeout(600);
+    const midLeadIn = await page.evaluate(() => {
+      const tools = document.querySelector("#tools")!;
+      const before = getComputedStyle(tools, "::before");
+      return {
+        ambient: document.documentElement.getAttribute("data-services-ambient"),
+        exit: document.documentElement.getAttribute("data-corridor-exit"),
+        background: getComputedStyle(tools).backgroundColor,
+        beforeOpacity: parseFloat(before.opacity),
+      };
+    });
+    expect(midLeadIn.ambient).toBe("true");
+    expect(midLeadIn.exit).toBe("true");
+    expect(midLeadIn.background).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
+    expect(midLeadIn.beforeOpacity).toBeLessThan(1);
+
+    // Deep in the lead-in (tools' top 0.9 viewports past the top): the
+    // station is opaque again and the ambient band has released.
+    expect(await scrollToolsTopTo(page, -0.9)).toBe(true);
+    await page.waitForTimeout(600);
+    const settled = await page.evaluate(() => ({
+      ambient: document.documentElement.getAttribute("data-services-ambient"),
+      background: getComputedStyle(document.querySelector("#tools")!).backgroundColor,
+    }));
+    expect(settled.ambient).toBeNull();
+    // --void = #0a0908 (the .station ground; the darker #050403 is the
+    // card bake's opaque-void, a different constant).
+    expect(settled.background).toBe("rgb(10, 9, 8)");
+  });
+
+  test("desktop: wheel-down at the last card passes through; wheel-up mid-exit reverses", async ({
     page,
   }) => {
     test.skip(!isDesktopViewport(page), "the ring wheel is desktop-only (≥961px)");
@@ -105,24 +153,72 @@ test.describe("Tools section smoke (ADR-030)", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
 
-    expect(await scrollToolsTopTo(page, 0.5)).toBe(true);
-    await page.waitForTimeout(600);
-
-    // Pointer OVER the instrument band mid-cover: wheel-down must scroll
-    // natively (ride the cover up) instead of being consumed by the
-    // last-card HOLD — the ADR-030 release gate.
+    // Park on the LAST card (beat 4 dwell, p ≈ 0.75) with the pointer
+    // over the instrument. The retired HOLD would have swallowed this
+    // wheel-down; the pass-through must scroll natively into the
+    // decommission beat.
+    expect(await scrollServicesRunway(page, 0.75)).toBe(true);
+    await page.waitForTimeout(3000); // park + bakes + step clock settle
     const before = await page.evaluate(() => window.scrollY);
     await page.mouse.move(720, 300);
     await page.mouse.wheel(0, 400);
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(700);
     const afterDown = await page.evaluate(() => window.scrollY);
     expect(afterDown).toBeGreaterThan(before);
 
-    // And wheel-up mid-cover slides the cover back off natively.
+    // Mid-exit (release-gate region): wheel-up reverses natively.
+    expect(await scrollServicesRunway(page, 0.92)).toBe(true);
+    await page.waitForTimeout(500);
+    const midExit = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(720, 300);
     await page.mouse.wheel(0, -400);
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(700);
     const afterUp = await page.evaluate(() => window.scrollY);
-    expect(afterUp).toBeLessThan(afterDown);
+    expect(afterUp).toBeLessThan(midExit);
+  });
+
+  test("desktop: decommission pills dock at the right rail, reverse-scroll retires them", async ({
+    page,
+  }) => {
+    test.skip(!isDesktopViewport(page), "the pill layer is desktop-only (≥961px)");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
+
+    // At the very end of the exit beat every pill window (last closes at
+    // 0.96) has fully resolved — the cluster is DOCKED.
+    expect(await scrollServicesRunway(page, 0.99)).toBe(true);
+    await page.waitForTimeout(800);
+    const pills = await page.evaluate(() => {
+      const nodes = Array.from(document.querySelectorAll<HTMLElement>(".svc-exit-pill"));
+      return nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          opacity: parseFloat(getComputedStyle(node).opacity),
+          visible: getComputedStyle(node).visibility === "visible",
+          xFrac: rect.left / window.innerWidth,
+          text: node.textContent?.trim(),
+        };
+      });
+    });
+    expect(pills).toHaveLength(4);
+    for (const pill of pills) {
+      expect(pill.visible).toBe(true);
+      expect(pill.opacity).toBeGreaterThan(0.5);
+      // Docked in the right-rail band.
+      expect(pill.xFrac).toBeGreaterThan(0.8);
+    }
+    expect(pills.map((p) => p.text)).toEqual(["ADVISORY", "EMBEDDED", "KEYNOTE", "WORKSHOP"]);
+
+    // Reverse out of the exit beat — the pills retire (pure function of
+    // the exit clock; reset-on-reverse by construction).
+    expect(await scrollServicesRunway(page, 0.7)).toBe(true);
+    await page.waitForTimeout(800);
+    const retired = await page.evaluate(() => {
+      const root = document.querySelector<HTMLElement>(".svc-exit-pills");
+      return root ? getComputedStyle(root).visibility : "absent";
+    });
+    expect(retired).toBe("hidden");
   });
 
   test("desktop: the console card stack pins, covers, and resets on reverse scroll", async ({
@@ -141,8 +237,6 @@ test.describe("Tools section smoke (ADR-030)", () => {
     const slot2Target = await page.evaluate(() => {
       const slot = document.querySelectorAll("#tools [data-pc-slot]")[1]!;
       const rect = slot.getBoundingClientRect();
-      // Put slot 2 at its pin position (top cascade ≈ 64px) — card 1 is
-      // then fully covered.
       return Math.round(window.scrollY + rect.top - 64);
     });
     await page.evaluate((y) => window.scrollTo(0, y), slot2Target);
@@ -151,14 +245,15 @@ test.describe("Tools section smoke (ADR-030)", () => {
     const firstSlot = page.locator("#tools [data-pc-slot]").first();
     await expect(firstSlot).toHaveAttribute("data-pc-state", "covered");
 
-    // Reverse scroll well above the stack — state resets by construction
-    // (pure function of live rects).
+    // Reverse scroll well above the stack — state resets by construction.
     expect(await scrollToolsTopTo(page, 0.9)).toBe(true);
     await page.waitForTimeout(900);
     await expect(firstSlot).not.toHaveAttribute("data-pc-state", "covered");
   });
 
-  test("mobile/tablet: plain flow — no cover overlap, no sticky mechanics", async ({ page }) => {
+  test("mobile/tablet: plain flow — no lead-in choreography, no pills, static slots", async ({
+    page,
+  }) => {
     test.skip(isDesktopViewport(page), "static-flow path is <961px");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -173,14 +268,16 @@ test.describe("Tools section smoke (ADR-030)", () => {
         marginTop: getComputedStyle(tools).marginTop,
         slotPosition: slot ? getComputedStyle(slot).position : null,
         slotCount: document.querySelectorAll("#tools [data-pc-slot]").length,
+        pillCount: document.querySelectorAll(".svc-exit-pill").length,
       };
     });
     expect(layout.marginTop).toBe("0px");
     expect(layout.slotCount).toBe(4);
     expect(layout.slotPosition).toBe("static");
+    expect(layout.pillCount).toBe(0);
   });
 
-  test("reduced motion: no cover overlap on desktop either", async ({ browser }) => {
+  test("reduced motion: no pills, plain flow on desktop", async ({ browser }) => {
     const context = await browser.newContext({
       reducedMotion: "reduce",
       viewport: { width: 1440, height: 900 },
@@ -189,10 +286,15 @@ test.describe("Tools section smoke (ADR-030)", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector("#tools", { timeout: 15_000 });
 
-    const marginTop = await page.evaluate(
-      () => getComputedStyle(document.querySelector("#tools")!).marginTop
-    );
-    expect(marginTop).toBe("0px");
+    const state = await page.evaluate(() => ({
+      marginTop: getComputedStyle(document.querySelector("#tools")!).marginTop,
+      pillCount: document.querySelectorAll(".svc-exit-pill").length,
+      // PRM never blanks the eyebrow — the authored text must be intact.
+      eyebrow: document.querySelector("#tools [data-tools-decode]")?.textContent?.trim(),
+    }));
+    expect(state.marginTop).toBe("0px");
+    expect(state.pillCount).toBe(0);
+    expect(state.eyebrow).toContain("Tools");
     await context.close();
   });
 });

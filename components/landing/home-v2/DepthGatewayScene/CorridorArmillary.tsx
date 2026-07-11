@@ -41,6 +41,7 @@ import {
 import { ServicesCardRing } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import {
   useHologramConnectors,
@@ -57,6 +58,14 @@ const ARMILLARY_SCALE = 0.62;
 /** Publish scan anchors only once the instrument is essentially parked, so the
  *  DOM connectors don't chase the mark during the fly-in / shrink. */
 const ANCHOR_PUBLISH_DISSIPATE = 0.88;
+
+/** Decommission dim on the structural armillary lines (ADR-030 Update 1):
+ *  as the exit clock runs, the gold orbit lines sink most of the way out so
+ *  the receding mark reads alone behind the incoming #tools readout. The
+ *  ambient envelope + canvas release finish the kill. */
+const ORBIT_EXIT_DIM = 0.85;
+const orbitExitGetter = () =>
+  1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress);
 
 export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number }) {
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId) ?? SERVICES[0].id;
@@ -146,6 +155,7 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
         entrance="scroll"
         scale={scale}
         activeServiceId={activeServiceId}
+        masterOpacityGetter={SERVICES_CARD_RING ? orbitExitGetter : undefined}
       />
       {/* ADR-029: the four service cards orbit the mark in this same rig —
           scroll-owned rotation (runway progress via servicesRingProgressRef),

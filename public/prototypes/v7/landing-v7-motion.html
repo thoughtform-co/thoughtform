@@ -4217,6 +4217,11 @@ html { scroll-behavior: smooth; }
     <div class="hud__rail__track"></div>
     <div id="leftTicks"></div>
     <div class="hud__depth" id="depthIndicator" style="top: 4%"></div>
+    <!-- Rail station label mount (ADR-030 Update 1): the active section's
+         number + name emerges FROM this rail, scramble-decoding on
+         change. Populated by RailStationPortal (React nested root);
+         empty shell here so the preview runtime stays inert. -->
+    <div id="railStation" data-rail-label-root></div>
   </aside>
 
   <!-- Right rail -->
@@ -5314,7 +5319,8 @@ html { scroll-behavior: smooth; }
   <section class="station station--tools" id="tools" data-station="tools" data-screen-label="08A Tools">
     <div class="station__idx">Tools<span class="landmark">Landmark · what we build</span></div>
 
-    <header class="tools__head" data-m-group>
+    <header class="tools__head tools__head--split" data-m-group>
+      <p class="tools__eyebrow" data-tools-decode>08A · Tools — the instruments</p>
       <h2 class="tools__title" data-m="title">
         Bottlenecks removed,<br><em>one tool at a time.</em>
       </h2>

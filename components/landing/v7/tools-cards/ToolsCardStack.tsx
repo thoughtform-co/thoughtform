@@ -5,6 +5,7 @@ import { PROJECT_CASES } from "./toolCardData";
 import { STACK, useStackedCardsScroll } from "./useStackedCardsScroll";
 import { NotchOutline } from "./NotchOutline";
 import { ToolCardConsole } from "./ToolCardConsole";
+import { ToolsHeaderDecode } from "./ToolsHeaderDecode";
 import "./tools-cards.css";
 
 /**
@@ -44,6 +45,10 @@ export function ToolsCardStack() {
         } as CSSProperties
       }
     >
+      {/* Null leaf — decodes the station-shell eyebrow on first view
+          (the eyebrow lives in the parsed HTML, outside this root). */}
+      <ToolsHeaderDecode />
+
       <div className="pcl-rail" aria-hidden="true">
         <ol className="pcl-rail__inner">
           {PROJECT_CASES.map((c) => (

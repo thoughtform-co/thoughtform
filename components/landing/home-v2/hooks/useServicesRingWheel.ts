@@ -21,8 +21,11 @@ import { ringScrollTweenProgress } from "@/lib/services-ring/ringScrollTween";
  * Zones and edges:
  *   - pointer BELOW the band (the readout strip and under): untouched —
  *     native scrolling walks the remaining beats and exits the section;
- *   - wheel DOWN at the last card: consumed and HELD (the instrument keeps
- *     the pin; moving the pointer below is the way onward);
+ *   - wheel DOWN at the last card: passes through to native scroll — the
+ *     way onward is the DECOMMISSION beat (ADR-030 Update 1: cards fly
+ *     out, pills dock on the rail, the mark recedes), and the user drives
+ *     it from anywhere on the instrument. (The pre-Update-1 HOLD is
+ *     retired; this mirrors the first-card reverse pass-through.)
  *   - wheel UP at the first card / during the lead-in: passes through, so
  *     scrolling back out of the section stays natural.
  *
@@ -97,15 +100,14 @@ export function useServicesRingWheel(
       const rect = runway.getBoundingClientRect();
       if (rect.top > 1 || rect.bottom < vh - 1) return;
 
-      // Release ownership once the #tools cover is on screen (ADR-030):
-      // the Tools station overlaps the runway's final 100svh via its
-      // -100svh margin, so `runway.bottom < 2·vh` ⇔ tools.top < vh. From
-      // here the wheel is native in BOTH directions — down rides the
-      // cover up over the instrument, up slides it back off. Without
-      // this, the last-card HOLD below would freeze the page for a
-      // pointer-over-instrument wheel mid-cover. The designed hold still
-      // owns beats 1–4 (a snap to the last card parks at runway.bottom ≈
-      // 2.25·vh).
+      // Release ownership once the decommission region is at hand
+      // (ADR-030 Update 1): runway.bottom < 2·vh ⇔ runway p > 0.8 — the
+      // last card is parked and the exit beat is next. From here the
+      // wheel is native in BOTH directions: down scrolls INTO the
+      // viewscreen mode change (cards fly out, pills dock, the mark
+      // recedes), up reverses the decommission rather than snapping back
+      // a beat. The snap choreography still owns beats 1–4 (a snap to
+      // the last card parks at runway.bottom ≈ 2.25·vh).
       if (rect.bottom < vh * 2) return;
 
       // Only once the instrument is parked (entrance/dive stay scroll-owned).
@@ -121,8 +123,16 @@ export function useServicesRingWheel(
       // Reverse at the first card / lead-in exits upward naturally.
       if (direction < 0 && (leadIn || activeIndex <= 0)) return;
 
-      // From here the instrument owns the gesture — including the HOLD at
-      // the last card (preventDefault with no snap).
+      // Wheel-down at the LAST card passes through to native scroll —
+      // the mirror of the first-card reverse above. The old ADR-029/030
+      // HOLD is retired (ADR-030 Update 1): the exit beat is real scroll
+      // choreography now, and the user must be able to drive it with the
+      // pointer anywhere on the instrument. Not an auto-advance — the
+      // gesture is simply un-owned (and an unconsumed wheel cancels any
+      // in-flight snap tween, handing scroll cleanly to the user).
+      if (direction > 0 && !leadIn && activeIndex >= serviceCount - 1) return;
+
+      // From here the instrument owns the gesture.
       event.preventDefault();
       event.stopPropagation();
 
@@ -141,7 +151,9 @@ export function useServicesRingWheel(
       accRef.current = 0;
 
       const next = leadIn && direction > 0 ? 0 : activeIndex + direction;
-      if (next < 0 || next >= serviceCount) return; // held at the down-end
+      // Safety net only — the last-card pass-through above returns before
+      // preventDefault, so down-gestures can't reach here out of range.
+      if (next < 0 || next >= serviceCount) return;
       lastSnapRef.current = now;
       onStep(next);
     };

@@ -65,6 +65,8 @@ import { CorridorArmillary } from "./CorridorArmillary";
 import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
+import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { getServicePose } from "@/lib/home-v2/servicePose";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
@@ -275,6 +277,20 @@ const SHRINK_START = 0.04;
 const SHRINK_END = 0.9;
 const CENTER_DISTANCE = 3.2;
 const CENTER_TARGET_SCALE = 1.15;
+
+/** Decommission recede (ADR-030 Update 1, "the viewscreen changes modes"):
+ *  across the services runway's final beat the parked centerpiece pulls
+ *  AWAY — scale eases toward EXIT_RECEDE_SCALE, the group pushes
+ *  EXIT_RECEDE_DIST world units along camera-forward, and the ink dims by
+ *  EXIT_DIM (the servicesAmbientLevel envelope then finishes the kill
+ *  during the #tools transparent lead-in). Driven by the scroll-owned
+ *  exit clock (exitProgressForRunway of the runway progress ref) — zero
+ *  through every reading beat and the whole corridor, gated on
+ *  SERVICES_CARD_RING like the drift gate, so flag-off and pre-exit
+ *  frames stay byte-identical (Invariant 11 discipline). */
+const EXIT_RECEDE_SCALE = 0.9;
+const EXIT_RECEDE_DIST = 0.55;
+const EXIT_DIM = 0.45;
 
 /** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
  *  reveals the kept dome's depth, so the mark reads as a living 3D object
@@ -576,6 +592,13 @@ export function BrandmarkPhysicsCoreActor({
     const dissipate = t.docked || t.servicesAmbient ? getSmoothedDissipate() : 0;
     const recT = smootherstep(SHRINK_START, SHRINK_END, dissipate);
 
+    // Decommission clock (ADR-030 Update 1): 0 through every reading beat
+    // (and everywhere recT < 1 — the eased runway product keeps the
+    // corridor byte-identical), 0..1 across the runway's final beat.
+    const exitT = SERVICES_CARD_RING
+      ? smootherstep(0, 1, exitProgressForRunway(servicesRingProgressRef.current.progress)) * recT
+      : 0;
+
     // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
     // Three coupled clocks, all derived from `getBrandmarkCoreBlend(progress)`
     // (the shared 0..1 wrap clock anchored at substrate.start → substrate.peakAt):
@@ -734,7 +757,11 @@ export function BrandmarkPhysicsCoreActor({
     const armedOnly = t.armed && !t.active;
     const inEpilogueOrDock = t.docked || t.servicesAmbient || t.epilogueProgress > 1e-3;
     const inSvgRest = !inEpilogueOrDock && progress < BRANDMARK_CORE_HANDOFF_PROGRESS;
-    opacityRef.current = armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade;
+    // The exit dim is PARTIAL (the mark stays a background presence
+    // through the #tools lead-in); handoffFade (servicesAmbientLevel)
+    // completes the death as the first tool card arrives.
+    opacityRef.current =
+      (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * (1 - EXIT_DIM * exitT);
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude.
     pointSizeRef.current =
@@ -755,7 +782,10 @@ export function BrandmarkPhysicsCoreActor({
     // Sphere-fill scale (today's behaviour) → small centerpiece scale as
     // the core shrinks. At recT 0 this is byte-identical to before.
     const sphereScale = half * 2 * planetScale;
-    const scale = sphereScale + (CENTER_TARGET_SCALE - sphereScale) * recT;
+    let scale = sphereScale + (CENTER_TARGET_SCALE - sphereScale) * recT;
+    // Decommission recede: the parked mark eases toward the smaller exit
+    // scale as the viewscreen changes modes (exitT 0 pre-exit → no-op).
+    scale += (EXIT_RECEDE_SCALE - scale) * exitT;
 
     // Position: sphere centre (world) → a point dead-centre in front of
     // the LIVE camera, so the camera fly-in can't carry the shrinking mark
@@ -766,6 +796,11 @@ export function BrandmarkPhysicsCoreActor({
       fwdScratch.current.set(0, 0, -1).applyQuaternion(cam.quaternion);
       frontScratch.current.copy(cam.position).addScaledVector(fwdScratch.current, CENTER_DISTANCE);
       posScratch.current.lerp(frontScratch.current, recT);
+      // Decommission recede: push the parked mark AWAY along camera-forward
+      // — the "space view" withdrawing behind the incoming data readout.
+      if (exitT > 1e-4) {
+        posScratch.current.addScaledVector(fwdScratch.current, EXIT_RECEDE_DIST * exitT);
+      }
       // Head-on billboard base so the mark faces the viewer at the centerpiece.
       group.quaternion.identity().slerp(cam.quaternion, recT);
       // Gentle 3D drift: a slow, small-amplitude sinusoidal tilt on X / Y (a

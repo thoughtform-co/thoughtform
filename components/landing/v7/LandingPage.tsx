@@ -12,8 +12,9 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
+import { RailStationPortal } from "./RailStationLabel";
 import { ToolsPortal } from "./tools-cards";
-import { ServicesPortal } from "@/components/landing/home-v2/services";
+import { ServicesExitPills, ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -458,9 +459,20 @@ export function LandingPage({
       <ServicesPortal containerRef={rootRef} />
       {/* #tools card stack (ADR-030): the console-plate sticky stack
           mounted into the relocated Tools station's placeholder. The
-          station itself covers the parked services instrument via the
-          exit-hold beat + negative margin (tools-cards.css). */}
+          services→tools seam is the ADR-030 Update 1 "viewscreen mode
+          switch": decommission beat + transparent lead-in, no cover. */}
       <ToolsPortal containerRef={rootRef} />
+      {/* Decommission pills (ADR-030 Update 1): fixed overlay — the
+          service verb chips FLIP from the fading orbit cards to a dock
+          on the right HUD rail during the exit beat. Lives at page level
+          (never inside a station: content-visibility containment would
+          rebase a fixed layer). Null on mobile / reduced motion. */}
+      <ServicesExitPills />
+      {/* Rail station label (ADR-030 Update 1): the active section's
+          number + name emerging from the left rail, site-wide. Nested
+          root into the rail's authored shell so it inherits the rail's
+          positioning context. */}
+      <RailStationPortal containerRef={rootRef} />
       {/* Hero → Corridor seam (ADR-022 v7, direct parallax reveal):
           NO proxy plane. The sticky `#hero` (z:1) drifts up + gently
           fades as the live corridor mount (`.home-corridor-host` z:3)

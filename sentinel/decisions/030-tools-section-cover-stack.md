@@ -166,3 +166,100 @@ repoints `#build → #tools` (it was a best-guess relabel).
 - The card is the lab's console plate verbatim — skin changes happen in
   `ToolCardConsole`/`tools-cards.css` and flow back to the lab's V2
   chip, never as a forked copy.
+
+## Update 1 (2026-07-11, same day): "the viewscreen changes modes" —
+
+## the cover is REJECTED; the seam becomes an in-place mode switch
+
+Vince, reviewing the shipped cover: the site is a navigational
+interface — the visitor dives into the Ark's sphere at #services and
+sits inside a 3D world. A flat panel sliding over that world is "two
+abrupt, completely different types of UX." Governing metaphor: the Star
+Trek bridge viewscreen — one screen that shows SPACE and can transform
+into a DATA READOUT. The transition must happen IN PLACE. Confirmed
+calls: pills regional; rail label site-wide; text reveals restrained;
+mark persists through the tools lead-in only.
+
+### What replaced the cover
+
+1. **The exit-hold beat becomes the DECOMMISSION beat.** A canonical
+   scroll-owned EXIT CLOCK — `exitProgressForRunway(p)` (ringMath, pure,
+   unit-pinned): 0 through every reading beat, 0..1 across the runway's
+   final beat. Every consumer derives it from the SAME runway progress
+   ref — no new scroll writers, reversible by construction.
+   `useServicesStageScroll` mirrors it as `--svc-exit` (CSS/tests only).
+2. **Cards fly OUT + fade** (`exitEnvelope`, `RING_EXIT_WINDOWS`
+   [[0,.5],[.12,.62],[.24,.74],[.36,.9]], `RING_EXIT_RADIUS_TO 1.15`) —
+   the entrance reversed, staggered index-ascending so the front card
+   leaves last; EXACT identity at exit = 0 (pre-exit frames
+   byte-identical, unit-pinned). Composes into ServicesCardRing's
+   per-card radiusMul + master; fading cards self-retire their
+   hover/hit anchors.
+3. **Verb pills FLIP to the right rail** (`ServicesExitPills`, mounted
+   by LandingPage as a fixed overlay at z48 — NEVER inside a station:
+   content-visibility containment would rebase fixed descendants). On
+   the exit clock's rising edge the card screen rects are LATCHED from
+   `ringAnchors` (they stop updating below opacity 0.1); pills lay out
+   AT the mid-rail dock and transform-interpolate from the captured
+   chip corner (windows [[.1,.72],[.2,.8],[.3,.88],[.4,.96]], spawn
+   scale 1.5). No capture → fade-in at dock. Dock fades out on
+   `--tools-bg-in` (regional per Vince; persistence later = one
+   constant). aria-hidden, pointer-events none.
+4. **The mark RECEDES** (BrandmarkPhysicsCoreActor: EXIT_RECEDE_SCALE
+   0.9, EXIT_RECEDE_DIST 0.55 along camera-forward, EXIT_DIM 0.45 —
+   gated by recT × SERVICES_CARD_RING, Invariant-11 discipline) and the
+   armillary dims with it (HologramOrbits gains `masterOpacityGetter`,
+   default 1 = labs byte-identical; CorridorArmillary + the card tracks
+   pass `1 − 0.85·exitP`).
+5. **#tools transparent lead-in** replaces the -100svh overlap (REMOVED:
+   margin/z8/isolation). Under `html[data-corridor-exit]`: #tools z6,
+   background transparent, children z7, and a `::before` void+stars
+   backdrop at `opacity: var(--tools-bg-in, 1)` (default = fail-opaque;
+   the canvas element itself is never opacity-faded). The dimmed receded
+   mark stays alive behind the header viewport and dies as the first
+   stack card arrives.
+6. **useCorridorExitScroll retunes:** `NEXT_STATION_FADE_END_VH 0.1 →
+−0.7` (formula monotone through negative tops) and — the trap — the
+   ambient gate SPLITS: `servicesAmbient` now uses `sectionNearAmbient`
+   (`services.bottom > vh·FADE_END`) because in normal flow
+   services.bottom == tools.top and the old `bottom > 0` gate HARD-CUT
+   the canvas at exactly tools.top = 0. `docked` keeps the old gate.
+   New `--tools-bg-in` writer (START 0.15vh → END −0.55vh).
+7. **Wheel:** the last-card HOLD is retired — wheel-down at the last
+   card passes through to native scroll (mirror of the first-card
+   reverse), because the decommission is real scroll content. The 2vh
+   release gate survives re-derived (≙ p > 0.8 under normal flow).
+8. **Header + rail identity:** #tools header is a Linear split (eyebrow
+   full-width · title left · lede right, min-height 78svh — the header
+   owns the lead-in viewport). TERMINAL TEXT CANON: mono eyebrows/meta
+   scramble-decode (captionScramble — ToolsHeaderDecode, decode-from-
+   blank on first view); display titles keep the data-m clip-wipe; no
+   typewriter on display faces. NEW site-wide `RailStationLabel`
+   (portal into the authored `#railStation` shell in `.hud__rail--l`):
+   the active station's `data-screen-label` (previously unused) emerges
+   from the left rail at 50% (the 8.33% compass slot stays reserved),
+   scramble-decoding on change, driven by `data-active-station` on
+   <html> (written delta-gated by useLandingScroll — single writer) and
+   gated closed by `data-corridor-engaged`.
+
+### Revised lockstep set
+
+- KEPT: STEP_COUNT == RING_STEP_COUNT == 6 == runway/100svh; both
+  active-service clamps; stack breakpoint 960; Lenis-free; mobile/PRM
+  plain flow (pills + lead-in + label choreography all desktop-gated).
+- DEAD: the -100svh margin leg and the "2vh ⇔ tools.top < vh" reading
+  of the wheel gate (the constant survives as "p > 0.8").
+- NEW: `exitEnvelope(0, i)` is EXACT identity (unit-pinned);
+  `TOOLS_BG_IN_END_VH (−0.55) > NEXT_STATION_FADE_END_VH (−0.7)` — the
+  station must be opaque BEFORE the ambient canvas dies; the
+  `servicesAmbient` bottom gate expires WITH the fade envelope
+  (`vh·FADE_END`), never at 0; pill windows close ≤ 0.96 (flight done
+  before unpin); RING_EXIT_WINDOWS tail [0.9, 1] stays clear.
+
+### Verification
+
+services-ring-math 41 (exit clock + envelope pins); tools smoke
+rewritten (normal-flow seam, transparent lead-in w/ WebGL-fallback
+guard, wheel pass-through both directions, pill dock + reverse retire,
+stack, mobile/PRM); headed screenshots at decommission mid-flight /
+transparent lead-in / opaque arrival / rail label on two stations.

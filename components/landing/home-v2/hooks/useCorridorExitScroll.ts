@@ -34,13 +34,25 @@ const VEIL_DOCK_CAP = 0.38;
 const VEIL_AMBIENT_CAP = 0.12;
 /** Start the ambient hold once the surface dissipate is complete. */
 const AMBIENT_ENGAGE_RAW = 0.999;
-/** Fade the ambient particles as the NEXT station approaches. Since
- *  ADR-030 the station after #services is #tools (which sweeps up OVER
- *  the parked instrument — this envelope is what dims the interior bed
- *  + brandmark under the rising cover); #continuum remains the fallback
- *  target so the fade still resolves if the tools station is absent. */
+/** Fade the ambient particles as the NEXT station (#tools; #continuum
+ *  fallback) travels through its transparent lead-in (ADR-030 Update 1,
+ *  "the viewscreen changes modes"): the dimmed receded brandmark stays
+ *  alive BEHIND the #tools header viewport and finishes dying as the
+ *  first stack card arrives. END is NEGATIVE — the station's top is
+ *  0.7 viewports PAST the viewport top when the fade completes (the
+ *  formula is monotone through negative tops; START must stay > END).
+ *  LOCKSTEP: TOOLS_BG_IN_END_VH > NEXT_STATION_FADE_END_VH — the
+ *  station must be opaque BEFORE the ambient canvas dies. */
 const NEXT_STATION_FADE_START_VH = 0.5;
-const NEXT_STATION_FADE_END_VH = 0.1;
+const NEXT_STATION_FADE_END_VH = -0.7;
+
+/** #tools background fade clock (`--tools-bg-in`, read by the station's
+ *  ::before backdrop + the exit pills' dock fade): 0 = fully transparent
+ *  lead-in, 1 = opaque station. Runs from the same next-station
+ *  measurement as the ambient fade, slightly ahead of it (see LOCKSTEP
+ *  note above). */
+const TOOLS_BG_IN_START_VH = 0.15;
+const TOOLS_BG_IN_END_VH = -0.55;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -134,6 +146,14 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dissipate = corridorExitSpeedRamp(rawDissipate);
       const sectionNearDock =
         servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) && servicesRect.bottom > 0;
+      // The AMBIENT hold outlives the dock gate (ADR-030 Update 1): in
+      // normal flow services.bottom == tools.top, so the old `bottom > 0`
+      // conjunction would HARD-CUT the canvas (and the receding mark) at
+      // exactly tools.top = 0 — before the extended fade completes. The
+      // ambient's bottom gate must expire WITH the fade envelope.
+      const sectionNearAmbient =
+        servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) &&
+        servicesRect.bottom > vh * NEXT_STATION_FADE_END_VH;
       const nextStation =
         root.querySelector<HTMLElement>("#tools") ?? root.querySelector<HTMLElement>("#continuum");
       const nextStationTopVh =
@@ -165,7 +185,7 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const servicesAmbient =
         dockCapable &&
         ep >= DOCK_ENGAGE_EP &&
-        sectionNearDock &&
+        sectionNearAmbient &&
         rawDissipate >= AMBIENT_ENGAGE_RAW &&
         ambientLevelRaw > 0.001;
       const servicesAmbientLevel = servicesAmbient ? ambientLevelRaw : 0;
@@ -180,6 +200,14 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         document.documentElement.removeAttribute("data-services-ambient");
         document.documentElement.style.removeProperty("--services-ambient");
       }
+
+      // ── #tools background fade (`--tools-bg-in`) ────────────────
+      // The transparent lead-in's opacity clock: written only while the
+      // exit band is live (the ::before defaults to 1 = opaque when the
+      // var is absent, so removal is always safe).
+      const toolsBgIn = clamp01(
+        (TOOLS_BG_IN_START_VH - nextStationTopVh) / (TOOLS_BG_IN_START_VH - TOOLS_BG_IN_END_VH)
+      );
 
       // ── Body veil ──────────────────────────────────────────────
       // While docked the veil ramps from 0 → VEIL_DOCK_CAP with the
@@ -196,9 +224,11 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       if (corridorExit) {
         document.documentElement.setAttribute("data-corridor-exit", "true");
         document.documentElement.style.setProperty("--corridor-exit-veil", veilAlpha.toFixed(4));
+        document.documentElement.style.setProperty("--tools-bg-in", toolsBgIn.toFixed(4));
       } else {
         document.documentElement.removeAttribute("data-corridor-exit");
         document.documentElement.style.removeProperty("--corridor-exit-veil");
+        document.documentElement.style.removeProperty("--tools-bg-in");
       }
 
       // Single-writer rule: only own dock / dissipate / inert seam +
@@ -249,6 +279,7 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       document.documentElement.style.removeProperty("--corridor-dissipate");
       document.documentElement.style.removeProperty("--corridor-exit-veil");
       document.documentElement.style.removeProperty("--services-ambient");
+      document.documentElement.style.removeProperty("--tools-bg-in");
       const store = useDepthGatewayStore.getState();
       store.setTransform({
         ...store.transform,

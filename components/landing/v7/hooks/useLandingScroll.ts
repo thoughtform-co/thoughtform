@@ -195,6 +195,15 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     }
     const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
 
+    // Rail station label bridge (ADR-030 Update 1): publish the active
+    // station on <html> so the RailStationLabel's MutationObserver can
+    // react (it gates itself on data-corridor-engaged separately).
+    // Delta-gated — single writer, same cadence as the nav toggles.
+    const docEl = document.documentElement;
+    if (docEl.getAttribute("data-active-station") !== activeKey) {
+      docEl.setAttribute("data-active-station", activeKey);
+    }
+
     // Update nav active states
     const navLinks = root.querySelectorAll<HTMLAnchorElement>("#hudNav a");
     navLinks.forEach((link) => {

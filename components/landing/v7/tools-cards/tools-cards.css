@@ -7,50 +7,110 @@
    components; renaming would churn all five lab skins).
    ═══════════════════════════════════════════════════════════════ */
 
-/* ─── #tools station (the parallax cover, ADR-030) ──────────────── */
+/* ─── #tools station (the transparent lead-in, ADR-030 Update 1) ─── */
 
-/* The Tools station scrolls OVER the parked services instrument: the
-   services runway carries one exit-hold beat (600svh, beat 5) and this
-   opaque station overlaps exactly that beat via -100svh margin — the
-   cover completes precisely when the services stage would unpin
-   (`.station--services` has padding-bottom: 0 and the runway is its
-   last child, so runway.bottom == vh ⇔ tools.top == 0). Desktop-only:
-   mobile / reduced motion keep plain document flow.
+/* "The viewscreen changes modes": #tools follows the services runway in
+   NORMAL FLOW (the ADR-030 -100svh cover is retired — Vince rejected a
+   panel sliding over the 3D world). Instead, while the corridor-exit
+   band is live, the station's FIRST viewport is transparent — the fixed
+   corridor canvas behind it still shows the dimmed, receded brandmark
+   (the canvas wrapper paints its own opaque void backing, so nothing
+   else can leak) — and the header decodes in over it. The `::before`
+   backdrop then fades the station to opaque (`--tools-bg-in`, written
+   by useCorridorExitScroll) as the card stack arrives, strictly BEFORE
+   the ambient canvas dies (lockstep: TOOLS_BG_IN_END_VH >
+   NEXT_STATION_FADE_END_VH). This is the ADR-008
+   transparent-leading-viewport exception, #tools edition — precedent:
+   html[data-corridor-exit] #services (home-v2.css).
 
-   ID selector on purpose: `.station:not(.hero)` (landing.css) is
+   ID selectors on purpose: `.station:not(.hero)` (landing.css) is
    (0,2,0) and would beat a lone `.station--tools` on content-visibility
-   and z-index — the ID wins deterministically regardless of stylesheet
-   order (the `html[data-corridor-exit] #services` precedent). */
+   / background / z-index — the ID wins deterministically regardless of
+   stylesheet order. */
 #tools.station--tools {
   /* content-visibility: auto's 100vh placeholder misreports this
      ~6-viewport section (breaking every scroll target below it) AND its
      paint containment would clip the sticky slots' compositing — same
      trap as exit-state #services (home-v2.css). */
   content-visibility: visible;
+  /* Hosts the ::before fade backdrop. */
+  position: relative;
 }
 
-@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  #tools.station--tools {
-    margin-top: -100svh;
-    /* Above the services station's exit-state layers (#services z6,
-       children z7, body veil z5, fixed corridor canvas z2). */
-    position: relative;
-    z-index: 8;
-    isolation: isolate;
-  }
+html[data-corridor-exit="true"] #tools.station--tools {
+  /* Above the body veil (z5) like exit-state #services; the veil dims
+     only the canvas behind, never the header copy. */
+  z-index: 6;
+  background-color: transparent;
+  background-image: none;
 }
 
-/* ─── Station header (the cover's first-read surface) ───────────── */
+html[data-corridor-exit="true"] #tools.station--tools > * {
+  position: relative;
+  z-index: 7;
+}
 
-/* Same width formula as .pcl-card, so the header's edges align with the
-   card stack below it. Typography mirrors the continuum head grammar
-   (landing.css); em is upright gold via the station's global rule. */
+html[data-corridor-exit="true"] #tools.station--tools::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* The .station:not(.hero) ground, reproduced as a fadeable layer (an
+     element background can't partially fade, and the canvas is never
+     opacity-faded — painters fade themselves; this fades a DOM backdrop
+     OVER it, the sanctioned direction). Default 1 = fail-opaque. */
+  background-color: var(--void);
+  background-image: url("/v7-stars.svg");
+  background-size: 1600px 900px;
+  background-position: center top;
+  background-repeat: repeat;
+  opacity: var(--tools-bg-in, 1);
+}
+
+/* ─── Station header (the readout materializing on the viewscreen) ── */
+
+/* Linear-style split (ADR-030 Update 1): eyebrow full-width, TITLE in
+   the left column, LEDE in the right — over the transparent lead-in
+   viewport with the dimmed receded brandmark behind it. The header OWNS
+   that viewport (min-height), so the mode-switch beat gets read before
+   the stack arrives. Same width formula as .pcl-card, so the header's
+   edges align with the cards below. Typography mirrors the continuum
+   head grammar (landing.css); em is upright gold.
+
+   Terminal text canon (documented in ADR-030 Update 1): the mono
+   EYEBROW scramble-decodes in (captionScramble via ToolsHeaderDecode —
+   it carries NO data-m so it never double-animates); display TITLE
+   keeps the data-m clip-wipe; body fades. No typewriter on display
+   faces. */
 .tools__head {
   width: min(1560px, calc(100vw - 2 * clamp(20px, 4.5vw, 88px)));
-  margin: 0 auto clamp(48px, 6vh, 96px);
+  margin: 0 auto clamp(32px, 8vh, 88px);
+}
+
+.tools__head--split {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  column-gap: clamp(24px, 4vw, 96px);
+  align-content: center;
+  align-items: end;
+  min-height: 78svh;
+}
+
+.tools__eyebrow {
+  grid-column: 1 / -1;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 clamp(20px, 3vh, 40px);
+  /* Reserve the line box so the pre-decode blank never reflows. */
+  min-height: 1em;
 }
 
 .tools__title {
+  grid-column: 1;
   font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
   font-size: clamp(28px, 3vw, 44px);
@@ -68,13 +128,28 @@
 }
 
 .tools__lede {
+  grid-column: 2;
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(14px, 1.05vw, 17px);
   line-height: 1.55;
   color: var(--dawn-70);
-  margin: clamp(16px, 2vh, 28px) 0 0;
+  margin: 0;
   max-width: 44ch;
   letter-spacing: -0.005em;
+}
+
+@media (max-width: 960px) {
+  .tools__head--split {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    align-content: start;
+    row-gap: clamp(16px, 3vh, 28px);
+  }
+
+  .tools__title,
+  .tools__lede {
+    grid-column: 1;
+  }
 }
 
 /* ─── Stack scope (self-contained typography + locals) ──────────── */

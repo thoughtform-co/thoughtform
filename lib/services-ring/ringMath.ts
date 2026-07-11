@@ -119,6 +119,28 @@ export const RING_ENTRANCE_WINDOWS: ReadonlyArray<readonly [number, number]> = [
 /** Cards fly IN from a slightly wider radius while fading in. */
 export const RING_ENTRANCE_RADIUS_FROM = 1.18;
 
+/* ── Decommission exit (ADR-030 Update 1: "the viewscreen changes modes")
+ * The runway's final beat is the DECOMMISSION beat: the cards fly OUT and
+ * fade (staggered) while DOM pills FLIP from their screen rects to the
+ * right HUD rail and the brandmark recedes. Everything below is a pure
+ * function of the EXIT CLOCK — 0 before the final beat, 0..1 across it —
+ * so the whole sequence is scroll-owned and reversible (ADR-021). */
+
+/** Per-card exit windows in EXIT-CLOCK units. Index-ascending stagger:
+ *  card 3 is FRONT at exit (the staircase parks the ring on the last
+ *  card), so the card being read leaves LAST. The tail [0.9, 1.0] stays
+ *  clear so the pill flight finishes and the receding mark reads alone. */
+export const RING_EXIT_WINDOWS: ReadonlyArray<readonly [number, number]> = [
+  [0.0, 0.5],
+  [0.12, 0.62],
+  [0.24, 0.74],
+  [0.36, 0.9],
+];
+
+/** Cards fly OUT to a slightly wider radius while fading (reverse of the
+ *  RING_ENTRANCE_RADIUS_FROM fly-in). */
+export const RING_EXIT_RADIUS_TO = 1.15;
+
 /* ── Per-card orbits (ADR-029 Update 1) ─────────────────────────────────
  * Each card rides its OWN orbital track around the mark — four nearly
  * coplanar ellipses with staggered radii, small tilt deviations, and
@@ -256,6 +278,20 @@ export function activeServiceForProgress(
   const p = clamp01(progress);
   const step = Math.max(0, Math.min(stepCount - 1, Math.floor(p * stepCount)));
   return Math.min(RING_COUNT - 1, Math.max(0, step - 1));
+}
+
+/**
+ * EXIT CLOCK — 0 before the runway's final (decommission) beat, rising
+ * linearly to 1 across it. Pure function of the same runway progress the
+ * staircase reads, so every consumer (ring, brandmark recede, orbit dim,
+ * DOM pills) derives the identical clock without a new writer, and the
+ * whole decommission is reversible by construction.
+ */
+export function exitProgressForRunway(
+  progress: number,
+  stepCount: number = RING_STEP_COUNT
+): number {
+  return clamp01(clamp01(progress) * stepCount - (stepCount - 1));
 }
 
 /** Which card index is nearest the front for a given rotation. */
@@ -503,4 +539,15 @@ export function entranceEnvelope(dissipate: number, index: number): RingEntrance
     RING_ENTRANCE_WINDOWS[Math.max(0, Math.min(RING_ENTRANCE_WINDOWS.length - 1, index))];
   const t = smootherstep(window[0], window[1], dissipate);
   return { opacity: t, radiusMul: lerp(RING_ENTRANCE_RADIUS_FROM, 1, t) };
+}
+
+/** Staggered DECOMMISSION for card `index` off the exit clock — fade out
+ *  while flying out to a slightly wider radius (the entrance, reversed).
+ *  EXACT identity ({opacity: 1, radiusMul: 1}) at exit = 0, so every
+ *  pre-exit frame is byte-identical with the shipped ring (guardrail:
+ *  the decommission must never leak into the reading beats). */
+export function exitEnvelope(exit: number, index: number): RingEntrance {
+  const window = RING_EXIT_WINDOWS[Math.max(0, Math.min(RING_EXIT_WINDOWS.length - 1, index))];
+  const t = smootherstep(window[0], window[1], exit);
+  return { opacity: 1 - t, radiusMul: lerp(1, RING_EXIT_RADIUS_TO, t) };
 }

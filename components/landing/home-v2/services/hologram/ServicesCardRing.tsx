@@ -67,6 +67,8 @@ import {
   RING_CARD_HEIGHT,
   RING_CONTENT_LIFT,
   RING_COUNT,
+  exitEnvelope,
+  exitProgressForRunway,
   RING_EDGE_GLINT_OPACITY,
   RING_FACING_BLEND,
   RING_GLASS_EDGE_OPACITY,
@@ -940,6 +942,11 @@ export function ServicesCardRing({
     });
     const front = frontCardIndex(spring.pos);
 
+    // Decommission clock (ADR-030 Update 1) — 0 through every reading
+    // beat, 0..1 across the runway's final beat. Identity below keeps all
+    // pre-exit frames byte-identical; entrance "off" (labs) never exits.
+    const exitP = entrance === "scroll" ? exitProgressForRunway(progressRef.current.progress) : 0;
+
     const parked = dissipate >= ANCHOR_PUBLISH_DISSIPATE;
     const anchors: RingCardAnchor[] = [];
 
@@ -973,9 +980,14 @@ export function ServicesCardRing({
       if (!cardGroup || !mesh || !material) continue;
 
       const env = entrance === "scroll" ? entranceEnvelope(dissipate, i) : null;
+      // Exit composes onto the entrance: identity while exitP = 0, then
+      // the card flies OUT (radius widens) while fading — the reverse of
+      // the fly-in. Its DOM pill lifts off on the same clock
+      // (ServicesExitPills reads the identical windows' progress).
+      const exit = exitEnvelope(exitP, i);
       const placed = placeCardOnOrbit(i, spring.pos, cardOrbitGeoms[i], {
         yOffset,
-        radiusMul: env ? env.radiusMul : 1,
+        radiusMul: (env ? env.radiusMul : 1) * exit.radiusMul,
       });
 
       // Hover tilt — the hovered card leans with the pointer so its slab
@@ -1009,7 +1021,7 @@ export function ServicesCardRing({
       cardGroup.scale.setScalar(depthScale(placed.nz, scaleRange));
 
       const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
-      const master = (env ? env.opacity : 1) * masterOpacity;
+      const master = (env ? env.opacity : 1) * exit.opacity * masterOpacity;
       const opacity = depthO * master;
       material.opacity = opacity;
       slabMaterials[i][0].opacity = glassOpacity * depthO * master;
@@ -1099,13 +1111,26 @@ export function ServicesCardRing({
 
   if (!textures) return null;
 
+  // Decommission dim for the drawn card tracks — same clock and magnitude
+  // as the structural armillary (CorridorArmillary), derived from THIS
+  // ring's progress source so labs with a simulate-scroll ref exit too.
+  const trackExitGetter =
+    entrance === "scroll"
+      ? () => 1 - 0.85 * exitProgressForRunway(progressRef.current.progress)
+      : undefined;
+
   return (
     <group scale={scale}>
       {/* Each card's own orbital track — drawn from the SAME ellipse
           parametrization the card rides (cardTrackOrbits.ts), offset to
           the ring plane like the cards themselves. */}
       <group position={[0, yOffset, 0]}>
-        <HologramOrbits orbits={cardTracks} entrance={entrance} scale={1} />
+        <HologramOrbits
+          orbits={cardTracks}
+          entrance={entrance}
+          scale={1}
+          masterOpacityGetter={trackExitGetter}
+        />
       </group>
       {SERVICE_PLATES.map((plate, i) => (
         <group

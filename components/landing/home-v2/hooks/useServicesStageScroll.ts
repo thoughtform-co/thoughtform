@@ -2,7 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 
-import { RING_STEP_COUNT } from "@/lib/services-ring/ringMath";
+import { RING_STEP_COUNT, exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
 /** Scroll segments in the pinned stage: ONE lead-in segment where every
@@ -116,6 +116,7 @@ export function useServicesStageScroll(
     let currentShrink = -1;
     let currentFade = -1;
     let currentContentIn = -1;
+    let currentExit = -1;
 
     const isInert = () =>
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
@@ -147,6 +148,17 @@ export function useServicesStageScroll(
       }
     };
 
+    // Decommission clock mirror (ADR-030 Update 1) — CSS-readable copy of
+    // exitProgressForRunway(p). Not load-bearing for the 3D consumers
+    // (they derive the same pure function from the ref), but it gives CSS
+    // and the smoke tests a channel.
+    const setExit = (stage: HTMLElement, v: number) => {
+      if (Math.abs(v - currentExit) >= 0.001) {
+        stage.style.setProperty("--svc-exit", v.toFixed(4));
+        currentExit = v;
+      }
+    };
+
     const write = () => {
       frame = 0;
       if (disposed) return;
@@ -159,6 +171,7 @@ export function useServicesStageScroll(
         setStep(stage, 0);
         setArrive(stage, 1, 1);
         setContentIn(stage, 1);
+        setExit(stage, 0);
         servicesRingProgressRef.current.progress = 0;
         return;
       }
@@ -191,6 +204,7 @@ export function useServicesStageScroll(
       // below stays the floor() of this value, so ring rotation and the
       // active-service clock can never desync.
       servicesRingProgressRef.current.progress = p;
+      setExit(stage, exitProgressForRunway(p));
       const step = Math.max(0, Math.min(STEP_COUNT - 1, Math.floor(p * STEP_COUNT)));
       setStep(stage, step);
     };
