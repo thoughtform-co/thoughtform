@@ -1,60 +1,75 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 
 /**
- * #tools section smoke (ADR-030 + Update 1, "the viewscreen changes
- * modes").
+ * #tools structural smoke (ADR-030, calibrated edge-bus rebuild).
  *
- * Structural contracts only — no screenshot baselines (mirrors
- * services-ring-smoke.spec.ts). Covers:
- *   - #tools follows the services runway in NORMAL FLOW (the rejected
- *     -100svh cover is gone);
- *   - the transparent lead-in: while the exit band is live the station
- *     is transparent over the fixed canvas (dimmed receded mark behind),
- *     then the ::before backdrop fades it opaque BEFORE the ambient
- *     canvas dies (WebGL-fallback-guarded);
- *   - wheel semantics at the seam: wheel-down at the LAST card passes
- *     through to native scroll (the decommission is scroll content —
- *     the old HOLD is retired), and wheel-up mid-exit reverses natively;
- *   - the decommission pills: 4 verb chips dock at the right rail during
- *     the exit beat, gone on reverse scroll (pure function of the exit
- *     clock);
- *   - the console-plate card stack + mobile/PRM plain flow (unchanged).
- *
- * DOM/geometry assertions only — nothing here requires the WebGL
- * corridor to paint except the explicitly guarded lead-in test.
+ * Geometry and state contracts only — deliberately no screenshot baselines.
+ * The suite protects the reversible Services handoff, the rail-owned mode
+ * register, the fixed Tools datum, and the compact sticky deck while keeping
+ * the base-capability path ordinary document flow.
  */
 
 test.describe.configure({ mode: "serial" });
 
-function isDesktopViewport(page: Page): boolean {
+const BASE_URL = process.env.BASE_URL || "http://localhost:3003";
+
+function isCorridorDesktop(page: Page): boolean {
   return (page.viewportSize()?.width ?? 0) >= 961;
 }
 
-/** Scroll so `#tools`'s top lands at `topVhFraction` of the viewport
- *  (negative = past the top). Rides the page's CSS smooth scroll (two-arg
- *  scrollTo — instant teleports skip the corridor engagement band), then
- *  POLLS until the position settles. */
+function isEnhancedViewport(page: Page): boolean {
+  const viewport = page.viewportSize();
+  return (viewport?.width ?? 0) >= 1101 && (viewport?.height ?? 0) >= 760;
+}
+
+async function openViewport(
+  browser: Browser,
+  viewport: { width: number; height: number },
+  reducedMotion: "reduce" | "no-preference" = "no-preference"
+) {
+  const context = await browser.newContext({ baseURL: BASE_URL, viewport, reducedMotion });
+  const page = await context.newPage();
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("#tools [data-pc-slot]", {
+    state: "attached",
+    timeout: 15_000,
+  });
+  return { context, page };
+}
+
+async function waitForScrollSettle(page: Page): Promise<void> {
+  let previous = -1;
+  let stableFrames = 0;
+  for (let i = 0; i < 40; i++) {
+    await page.waitForTimeout(100);
+    const current = await page.evaluate(() => window.scrollY);
+    if (Math.abs(current - previous) < 0.5) {
+      stableFrames += 1;
+      if (stableFrames >= 2) return;
+    } else {
+      stableFrames = 0;
+    }
+    previous = current;
+  }
+}
+
+/** Scroll so `#tools`'s top lands at `topVhFraction` of the viewport.
+ * This intentionally rides the authored smooth-scroll path: instant jumps
+ * can skip the corridor engagement band used by the compositing probes. */
 async function scrollToolsTopTo(page: Page, topVhFraction: number): Promise<boolean> {
-  const target = await page.evaluate((f) => {
+  const target = await page.evaluate((fraction) => {
     const tools = document.querySelector("#tools");
     if (!tools) return null;
     const rect = tools.getBoundingClientRect();
-    return Math.round(window.scrollY + rect.top - window.innerHeight * f);
+    return Math.round(window.scrollY + rect.top - window.innerHeight * fraction);
   }, topVhFraction);
   if (target == null) return false;
   await page.evaluate((y) => window.scrollTo(0, y), target);
-  let last = -1;
-  for (let i = 0; i < 30; i++) {
-    await page.waitForTimeout(200);
-    const y = await page.evaluate(() => window.scrollY);
-    if (y === last) break;
-    last = y;
-  }
+  await waitForScrollSettle(page);
   return true;
 }
 
-/** Scroll the services runway to progress p (0..1) — the ring smoke's
- *  helper, duplicated for the decommission-beat probes. */
+/** Scroll the Services runway to normalized progress p (0..1). */
 async function scrollServicesRunway(page: Page, progress: number): Promise<boolean> {
   const target = await page.evaluate((p) => {
     const runway = document.querySelector(".services-stage-root");
@@ -66,22 +81,132 @@ async function scrollServicesRunway(page: Page, progress: number): Promise<boole
   }, progress);
   if (target == null) return false;
   await page.evaluate((y) => window.scrollTo(0, y), target);
-  let last = -1;
-  for (let i = 0; i < 30; i++) {
-    await page.waitForTimeout(200);
-    const y = await page.evaluate(() => window.scrollY);
-    if (y === last) break;
-    last = y;
-  }
+  await waitForScrollSettle(page);
   return true;
 }
 
-test.describe("Tools section smoke (ADR-030 Update 1)", () => {
+/** Land one card on the sticky top resolved by CSS. The tiny overshoot
+ * makes the hook's pure rect math settle at enter=1 without duplicating a
+ * pixel constant in the test. */
+async function dockToolSlot(page: Page, index: number): Promise<void> {
+  const target = await page.evaluate((slotIndex) => {
+    const slot = document.querySelectorAll<HTMLElement>("#tools [data-pc-slot]")[slotIndex];
+    if (!slot) return null;
+    const stickyTop = Number.parseFloat(getComputedStyle(slot).top);
+    if (!Number.isFinite(stickyTop)) return null;
+    const rect = slot.getBoundingClientRect();
+    return Math.round(window.scrollY + rect.top - stickyTop + 2);
+  }, index);
+  expect(target).not.toBeNull();
+
+  // The deck watcher is a pure scroll/rect reader, so an instant test move
+  // is safe here and keeps the multi-viewport geometry matrix fast.
+  await page.evaluate((y) => {
+    const html = document.documentElement;
+    const previous = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+    window.scrollTo(0, y ?? 0);
+    html.style.scrollBehavior = previous;
+  }, target);
+
+  await expect
+    .poll(() => page.locator("#tools .pcl-stack").getAttribute("data-pc-active"), {
+      timeout: 5_000,
+    })
+    .toBe(String(index));
+  await page.waitForTimeout(300);
+}
+
+async function assertEnhancedDeckGeometry(page: Page, viewportLabel: string): Promise<void> {
+  let fixedHeaderTop: number | null = null;
+
+  for (let activeIndex = 0; activeIndex < 4; activeIndex++) {
+    await dockToolSlot(page, activeIndex);
+
+    const geometry = await page.evaluate((index) => {
+      const header = document.querySelector<HTMLElement>("#tools .tools__head")!;
+      const slots = Array.from(document.querySelectorAll<HTMLElement>("#tools [data-pc-slot]"));
+      const cards = Array.from(document.querySelectorAll<HTMLElement>("#tools .pcl-card"));
+      const corner = document.querySelector<HTMLElement>(".hud__corner--br")!;
+      const headerRect = header.getBoundingClientRect();
+      const slotRects = slots.map((slot) => slot.getBoundingClientRect());
+      const cardRects = cards.map((card) => card.getBoundingClientRect());
+      const hudMargin = window.innerHeight - corner.getBoundingClientRect().bottom;
+
+      return {
+        activeStation: document.documentElement.getAttribute("data-active-station"),
+        headerPosition: getComputedStyle(header).position,
+        headerOpacity: Number.parseFloat(getComputedStyle(header).opacity),
+        headerTop: headerRect.top,
+        headerBottom: headerRect.bottom,
+        activeTop: slotRects[index].top,
+        activeBottom: cardRects[index].bottom,
+        bottomLimit: window.innerHeight - Math.max(24, hudMargin),
+        states: slots.map((slot) => slot.getAttribute("data-pc-state")),
+        current: slots
+          .map((slot, slotIndex) => (slot.hasAttribute("data-pc-current") ? slotIndex : -1))
+          .filter((slotIndex) => slotIndex >= 0),
+        coveredPeeks: slotRects.slice(0, index).map((rect, slotIndex) => ({
+          delta: slotRects[slotIndex + 1].top - rect.top,
+          headerHeight: slots[slotIndex]
+            .querySelector<HTMLElement>(".pcl-card__head")!
+            .getBoundingClientRect().height,
+        })),
+      };
+    }, activeIndex);
+
+    expect(geometry.activeStation, `${viewportLabel}: Tools owns the viewscreen`).toBe("tools");
+    expect(geometry.headerPosition, `${viewportLabel}: fixed mode header`).toBe("fixed");
+    expect(geometry.headerOpacity, `${viewportLabel}: header materialized`).toBeGreaterThan(0.9);
+
+    if (fixedHeaderTop == null) fixedHeaderTop = geometry.headerTop;
+    expect(
+      Math.abs(geometry.headerTop - fixedHeaderTop),
+      `${viewportLabel}: header does not ride the card runway`
+    ).toBeLessThanOrEqual(1);
+
+    expect(
+      geometry.activeTop - geometry.headerBottom,
+      `${viewportLabel}: active card remains below the header datum`
+    ).toBeGreaterThanOrEqual(15);
+    expect(
+      geometry.activeBottom,
+      `${viewportLabel}: active card clears the bottom HUD margin`
+    ).toBeLessThanOrEqual(geometry.bottomLimit + 1.5);
+    expect(geometry.current, `${viewportLabel}: one filled identifier`).toEqual([activeIndex]);
+
+    for (let covered = 0; covered < activeIndex; covered++) {
+      expect(
+        geometry.states[covered],
+        `${viewportLabel}: prior unit ${covered + 1} is covered`
+      ).toBe("covered");
+      expect(
+        geometry.coveredPeeks[covered].delta,
+        `${viewportLabel}: covered unit exposes only its header strip`
+      ).toBeGreaterThanOrEqual(31.5);
+      expect(geometry.coveredPeeks[covered].delta).toBeLessThanOrEqual(36.5);
+      expect(
+        geometry.coveredPeeks[covered].headerHeight,
+        `${viewportLabel}: card header tape stays compact`
+      ).toBeGreaterThanOrEqual(35.5);
+      expect(geometry.coveredPeeks[covered].headerHeight).toBeLessThanOrEqual(40.5);
+      expect(
+        geometry.coveredPeeks[covered].delta,
+        `${viewportLabel}: the next plate covers the remainder of the tape`
+      ).toBeLessThanOrEqual(geometry.coveredPeeks[covered].headerHeight + 0.5);
+    }
+  }
+}
+
+test.describe("Tools section smoke (ADR-030 edge-bus rebuild)", () => {
   test("desktop: #tools follows the runway in normal flow — no cover overlap", async ({ page }) => {
-    test.skip(!isDesktopViewport(page), "the seam choreography is desktop-only (≥961px)");
+    test.skip(!isCorridorDesktop(page), "the seam choreography is desktop-only (>=961px)");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
+    await page.waitForSelector("#tools [data-pc-slot]", {
+      state: "attached",
+      timeout: 15_000,
+    });
 
     const layout = await page.evaluate(() => {
       const tools = document.querySelector("#tools")!;
@@ -100,10 +225,13 @@ test.describe("Tools section smoke (ADR-030 Update 1)", () => {
   test("desktop: transparent lead-in over the ambient canvas, opaque before it dies", async ({
     page,
   }) => {
-    test.skip(!isDesktopViewport(page), "the transparent lead-in is desktop-only (≥961px)");
+    test.skip(!isCorridorDesktop(page), "the transparent lead-in is desktop-only (>=961px)");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
+    await page.waitForSelector("#tools [data-pc-slot]", {
+      state: "attached",
+      timeout: 15_000,
+    });
 
     // The ambient band needs the real corridor pipeline — skip on the
     // WebGL fallback so CI stays honest headless.
@@ -112,8 +240,6 @@ test.describe("Tools section smoke (ADR-030 Update 1)", () => {
     );
     test.skip(fallback, "corridor WebGL fallback — no ambient band to probe");
 
-    // Mid-lead-in: tools' top at 0.4vh — the station must be TRANSPARENT
-    // with the ambient canvas alive behind it.
     expect(await scrollToolsTopTo(page, 0.4)).toBe(true);
     await page.waitForTimeout(600);
     const midLeadIn = await page.evaluate(() => {
@@ -123,7 +249,7 @@ test.describe("Tools section smoke (ADR-030 Update 1)", () => {
         ambient: document.documentElement.getAttribute("data-services-ambient"),
         exit: document.documentElement.getAttribute("data-corridor-exit"),
         background: getComputedStyle(tools).backgroundColor,
-        beforeOpacity: parseFloat(before.opacity),
+        beforeOpacity: Number.parseFloat(before.opacity),
       };
     });
     expect(midLeadIn.ambient).toBe("true");
@@ -131,8 +257,6 @@ test.describe("Tools section smoke (ADR-030 Update 1)", () => {
     expect(midLeadIn.background).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
     expect(midLeadIn.beforeOpacity).toBeLessThan(1);
 
-    // Deep in the lead-in (tools' top 0.9 viewports past the top): the
-    // station is opaque again and the ambient band has released.
     expect(await scrollToolsTopTo(page, -0.9)).toBe(true);
     await page.waitForTimeout(600);
     const settled = await page.evaluate(() => ({
@@ -140,25 +264,23 @@ test.describe("Tools section smoke (ADR-030 Update 1)", () => {
       background: getComputedStyle(document.querySelector("#tools")!).backgroundColor,
     }));
     expect(settled.ambient).toBeNull();
-    // --void = #0a0908 (the .station ground; the darker #050403 is the
-    // card bake's opaque-void, a different constant).
     expect(settled.background).toBe("rgb(10, 9, 8)");
   });
 
-  test("desktop: wheel-down at the last card passes through; wheel-up mid-exit reverses", async ({
+  test("desktop: wheel-down at the last service passes through; wheel-up mid-exit reverses", async ({
     page,
   }) => {
-    test.skip(!isDesktopViewport(page), "the ring wheel is desktop-only (≥961px)");
+    test.setTimeout(60_000);
+    test.skip(!isCorridorDesktop(page), "the services wheel is desktop-only (>=961px)");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
+    await page.waitForSelector("#tools [data-pc-slot]", {
+      state: "attached",
+      timeout: 15_000,
+    });
 
-    // Park on the LAST card (beat 4 dwell, p ≈ 0.75) with the pointer
-    // over the instrument. The retired HOLD would have swallowed this
-    // wheel-down; the pass-through must scroll natively into the
-    // decommission beat.
     expect(await scrollServicesRunway(page, 0.75)).toBe(true);
-    await page.waitForTimeout(3000); // park + bakes + step clock settle
+    await page.waitForTimeout(3000);
     const before = await page.evaluate(() => window.scrollY);
     await page.mouse.move(720, 300);
     await page.mouse.wheel(0, 400);
@@ -166,7 +288,6 @@ test.describe("Tools section smoke (ADR-030 Update 1)", () => {
     const afterDown = await page.evaluate(() => window.scrollY);
     expect(afterDown).toBeGreaterThan(before);
 
-    // Mid-exit (release-gate region): wheel-up reverses natively.
     expect(await scrollServicesRunway(page, 0.92)).toBe(true);
     await page.waitForTimeout(500);
     const midExit = await page.evaluate(() => window.scrollY);
@@ -177,124 +298,314 @@ test.describe("Tools section smoke (ADR-030 Update 1)", () => {
     expect(afterUp).toBeLessThan(midExit);
   });
 
-  test("desktop: decommission pills dock at the right rail, reverse-scroll retires them", async ({
+  test("enhanced desktop: right rail restores service bus, tool units, and reverse state", async ({
     page,
   }) => {
-    test.skip(!isDesktopViewport(page), "the pill layer is desktop-only (≥961px)");
+    test.setTimeout(60_000);
+    test.skip(!isEnhancedViewport(page), "the edge-bus register needs the enhanced capability");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
-
-    // At the very end of the exit beat every pill window (last closes at
-    // 0.96) has fully resolved — the cluster is DOCKED.
-    expect(await scrollServicesRunway(page, 0.99)).toBe(true);
-    await page.waitForTimeout(800);
-    const pills = await page.evaluate(() => {
-      const nodes = Array.from(document.querySelectorAll<HTMLElement>(".svc-exit-pill"));
-      return nodes.map((node) => {
-        const rect = node.getBoundingClientRect();
-        return {
-          opacity: parseFloat(getComputedStyle(node).opacity),
-          visible: getComputedStyle(node).visibility === "visible",
-          xFrac: rect.left / window.innerWidth,
-          text: node.textContent?.trim(),
-        };
-      });
+    await page.waitForSelector("#tools [data-pc-slot]", {
+      state: "attached",
+      timeout: 15_000,
     });
-    expect(pills).toHaveLength(4);
-    for (const pill of pills) {
-      expect(pill.visible).toBe(true);
-      expect(pill.opacity).toBeGreaterThan(0.5);
-      // Docked in the right-rail band.
-      expect(pill.xFrac).toBeGreaterThan(0.8);
+    await page.waitForSelector(".tools-rail-register", { state: "attached", timeout: 15_000 });
+    await expect(page.locator(".pcl-rail")).toHaveCount(0);
+
+    const fallback = await page.evaluate(
+      () => document.querySelector<HTMLElement>(".home-v2-stage")?.dataset.fallback === "true"
+    );
+    test.skip(fallback, "corridor WebGL fallback — no reversible Services bus to probe");
+
+    // Finish the Services exit clock: all four service rows are seated on
+    // the canonical right guide before the viewscreen changes mode.
+    expect(await scrollServicesRunway(page, 1)).toBe(true);
+    await expect
+      .poll(() => page.locator(".tools-rail-register").getAttribute("data-register-mode"))
+      .toBe("services");
+
+    const serviceBus = await page.evaluate(() => {
+      const track = document.querySelector<HTMLElement>(".hud__rail--r .hud__rail__track")!;
+      const trackRect = track.getBoundingClientRect();
+      const rows = Array.from(
+        document.querySelectorAll<HTMLElement>(".tools-rail-register__row--service")
+      );
+      return {
+        heading: document
+          .querySelector<HTMLElement>(".tools-rail-register__heading--services")
+          ?.textContent?.trim(),
+        labels: rows.map((row) => row.querySelector(".tools-rail-register__name")?.textContent),
+        markerTops: rows.map(
+          (row) =>
+            row.querySelector<HTMLElement>(".tools-rail-register__marker")!.getBoundingClientRect()
+              .top
+        ),
+        rows: rows.map((row) => {
+          const marker = row.querySelector<HTMLElement>(".tools-rail-register__marker")!;
+          const markerRect = marker.getBoundingClientRect();
+          const leader = getComputedStyle(marker, "::before");
+          const rowStyle = getComputedStyle(row);
+          return {
+            visible: rowStyle.visibility === "visible",
+            opacity: Number.parseFloat(rowStyle.opacity),
+            markerDelta: Math.abs(
+              markerRect.left + markerRect.width / 2 - (trackRect.left + trackRect.width / 2)
+            ),
+            leaderContent: leader.content,
+            leaderWidth: Number.parseFloat(leader.width),
+            leaderHeight: Number.parseFloat(leader.height),
+            leaderColor: leader.backgroundColor,
+            borderWidth: rowStyle.borderWidth,
+            background: rowStyle.backgroundColor,
+          };
+        }),
+      };
+    });
+
+    expect(serviceBus.heading).toBe("SOURCE BUS · 04");
+    expect(serviceBus.labels).toEqual(["ADVISORY", "EMBEDDED", "KEYNOTE", "WORKSHOP"]);
+    for (const row of serviceBus.rows) {
+      expect(row.visible).toBe(true);
+      expect(row.opacity).toBeGreaterThan(0.99);
+      expect(row.markerDelta).toBeLessThanOrEqual(1);
+      expect(row.leaderContent).not.toBe("none");
+      expect(row.leaderWidth).toBeGreaterThanOrEqual(20);
+      expect(row.leaderHeight).toBeGreaterThanOrEqual(1);
+      expect(row.leaderColor).not.toMatch(/rgba\([^)]*,\s*0\)/);
+      expect(row.borderWidth).toBe("0px");
+      expect(row.background).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)/);
     }
-    expect(pills.map((p) => p.text)).toEqual(["ADVISORY", "EMBEDDED", "KEYNOTE", "WORKSHOP"]);
 
-    // Reverse out of the exit beat — the pills retire (pure function of
-    // the exit clock; reset-on-reverse by construction).
-    expect(await scrollServicesRunway(page, 0.7)).toBe(true);
-    await page.waitForTimeout(800);
-    const retired = await page.evaluate(() => {
-      const root = document.querySelector<HTMLElement>(".svc-exit-pills");
-      return root ? getComputedStyle(root).visibility : "absent";
+    // Dock the second unit. This guarantees the Tools shield is settled,
+    // and proves the active fill comes from the stack's live current slot.
+    await dockToolSlot(page, 1);
+    await expect
+      .poll(() => page.locator(".tools-rail-register").getAttribute("data-register-mode"))
+      .toBe("tools");
+
+    const toolBus = await page.evaluate(() => {
+      const toolRows = Array.from(
+        document.querySelectorAll<HTMLElement>(".tools-rail-register__row--tool")
+      );
+      return {
+        heading: document
+          .querySelector<HTMLElement>(".tools-rail-register__heading--tools")
+          ?.textContent?.trim(),
+        labels: toolRows.map((row) => row.querySelector(".tools-rail-register__name")?.textContent),
+        activeIds: toolRows
+          .filter((row) => row.hasAttribute("data-active"))
+          .map((row) => row.dataset.toolId),
+        fills: toolRows.map(
+          (row) =>
+            getComputedStyle(
+              row.querySelector<HTMLElement>(".tools-rail-register__marker")!,
+              "::after"
+            ).backgroundColor
+        ),
+      };
     });
-    expect(retired).toBe("hidden");
+    expect(toolBus.heading).toBe("TOOL UNITS · 04");
+    expect(toolBus.labels).toEqual(["Mímir", "Vesper", "Babylon", "Heimdall"]);
+    expect(toolBus.activeIds).toEqual(["vesper"]);
+    expect(toolBus.fills[1]).not.toMatch(/rgba\(0,\s*0,\s*0,\s*0\)/);
+    for (const fill of toolBus.fills.filter((_, index) => index !== 1)) {
+      expect(fill).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)/);
+    }
+
+    await dockToolSlot(page, 2);
+    await expect(page.locator(".tools-rail-register__row--tool[data-active]")).toHaveAttribute(
+      "data-tool-id",
+      "babylon"
+    );
+    await expect(
+      page.locator('.tools-rail-register__row--tool[data-tool-id="vesper"]')
+    ).not.toHaveAttribute("data-active", "");
+
+    // Exact reverse-scroll restoration: the same four labels return to the
+    // same physical rail slots, rather than remounting in a floating layer.
+    expect(await scrollServicesRunway(page, 1)).toBe(true);
+    await expect
+      .poll(() => page.locator(".tools-rail-register").getAttribute("data-register-mode"))
+      .toBe("services");
+    const restored = await page.evaluate(() => {
+      const rows = Array.from(
+        document.querySelectorAll<HTMLElement>(".tools-rail-register__row--service")
+      );
+      return {
+        labels: rows.map((row) => row.querySelector(".tools-rail-register__name")?.textContent),
+        markerTops: rows.map(
+          (row) =>
+            row.querySelector<HTMLElement>(".tools-rail-register__marker")!.getBoundingClientRect()
+              .top
+        ),
+        visible: rows.map((row) => getComputedStyle(row).visibility),
+      };
+    });
+    expect(restored.labels).toEqual(serviceBus.labels);
+    expect(restored.visible).toEqual(["visible", "visible", "visible", "visible"]);
+    restored.markerTops.forEach((top, index) => {
+      expect(Math.abs(top - serviceBus.markerTops[index])).toBeLessThanOrEqual(1);
+    });
   });
 
-  test("desktop: the console card stack pins, covers, and resets on reverse scroll", async ({
-    page,
-  }) => {
-    test.skip(!isDesktopViewport(page), "the sticky stack is desktop-only (≥961px)");
+  test("enhanced deck: fixed header and compact peeks fit 1440x900, 1920x1080, 1366x768", async ({
+    browser,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    test.skip(testInfo.project.name !== "desktop", "run the explicit desktop matrix once");
+
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 1920, height: 1080 },
+      { width: 1366, height: 768 },
+    ]) {
+      const { context, page } = await openViewport(browser, viewport);
+      try {
+        await assertEnhancedDeckGeometry(page, `${viewport.width}x${viewport.height}`);
+      } finally {
+        await context.close();
+      }
+    }
+  });
+
+  test("enhanced deck: sticky cover state resets on reverse scroll", async ({ page }) => {
+    test.skip(!isEnhancedViewport(page), "the sticky deck needs the enhanced capability");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#tools .pcl-stack", { timeout: 15_000 });
-
-    // Portal mounted the console skin: 4 slots, each a console plate.
+    await page.waitForSelector("#tools .pcl-stack", { state: "attached", timeout: 15_000 });
     await expect(page.locator("#tools [data-pc-slot]")).toHaveCount(4);
     await expect(page.locator("#tools .pcl-v2__plate").first()).toHaveText("TF·MÍMIR");
 
-    // Scroll until card 2 covers card 1.
-    const slot2Target = await page.evaluate(() => {
-      const slot = document.querySelectorAll("#tools [data-pc-slot]")[1]!;
-      const rect = slot.getBoundingClientRect();
-      return Math.round(window.scrollY + rect.top - 64);
-    });
-    await page.evaluate((y) => window.scrollTo(0, y), slot2Target);
-    await page.waitForTimeout(900);
-
+    await dockToolSlot(page, 1);
     const firstSlot = page.locator("#tools [data-pc-slot]").first();
     await expect(firstSlot).toHaveAttribute("data-pc-state", "covered");
 
-    // Reverse scroll well above the stack — state resets by construction.
     expect(await scrollToolsTopTo(page, 0.9)).toBe(true);
-    await page.waitForTimeout(900);
     await expect(firstSlot).not.toHaveAttribute("data-pc-state", "covered");
   });
 
-  test("mobile/tablet: plain flow — no lead-in choreography, no pills, static slots", async ({
-    page,
-  }) => {
-    test.skip(isDesktopViewport(page), "static-flow path is <961px");
+  test("capability boundaries: sticky only at 1101px x 760px with motion allowed", async ({
+    browser,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    test.skip(testInfo.project.name !== "desktop", "run the explicit capability matrix once");
 
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    // Wait for the PORTAL-mounted stack, not just the parsed shell —
-    // hydration + the nested root land a beat after #tools exists.
-    await page.waitForSelector("#tools [data-pc-slot]", { timeout: 15_000 });
+    const cases = [
+      { viewport: { width: 1100, height: 900 }, enhanced: false },
+      { viewport: { width: 1101, height: 900 }, enhanced: true },
+      { viewport: { width: 1440, height: 759 }, enhanced: false },
+      { viewport: { width: 1440, height: 760 }, enhanced: true },
+      { viewport: { width: 1366, height: 700 }, enhanced: false },
+    ];
 
-    const layout = await page.evaluate(() => {
-      const tools = document.querySelector("#tools")!;
-      const slot = document.querySelector("#tools [data-pc-slot]");
-      return {
-        marginTop: getComputedStyle(tools).marginTop,
-        slotPosition: slot ? getComputedStyle(slot).position : null,
-        slotCount: document.querySelectorAll("#tools [data-pc-slot]").length,
-        pillCount: document.querySelectorAll(".svc-exit-pill").length,
-      };
-    });
-    expect(layout.marginTop).toBe("0px");
-    expect(layout.slotCount).toBe(4);
-    expect(layout.slotPosition).toBe("static");
-    expect(layout.pillCount).toBe(0);
+    for (const capability of cases) {
+      const { context, page } = await openViewport(browser, capability.viewport);
+      try {
+        if (capability.enhanced) {
+          await page.waitForSelector(".tools-rail-register", {
+            state: "attached",
+            timeout: 5_000,
+          });
+        }
+        const state = await page.evaluate(() => ({
+          slotPosition: getComputedStyle(
+            document.querySelector<HTMLElement>("#tools [data-pc-slot]")!
+          ).position,
+          headerPosition: getComputedStyle(
+            document.querySelector<HTMLElement>("#tools .tools__head")!
+          ).position,
+          registerCount: document.querySelectorAll(".tools-rail-register").length,
+        }));
+
+        expect(state.slotPosition).toBe(capability.enhanced ? "sticky" : "static");
+        expect(state.headerPosition).toBe(capability.enhanced ? "fixed" : "static");
+        expect(state.registerCount).toBe(capability.enhanced ? 1 : 0);
+      } finally {
+        await context.close();
+      }
+    }
   });
 
-  test("reduced motion: no pills, plain flow on desktop", async ({ browser }) => {
-    const context = await browser.newContext({
-      reducedMotion: "reduce",
-      viewport: { width: 1440, height: 900 },
-    });
-    const page = await context.newPage();
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#tools", { timeout: 15_000 });
+  test("base capability: natural flow, no register, no horizontal overflow, four named articles", async ({
+    page,
+  }) => {
+    test.skip(isEnhancedViewport(page), "this assertion targets tablet and phone projects");
 
-    const state = await page.evaluate(() => ({
-      marginTop: getComputedStyle(document.querySelector("#tools")!).marginTop,
-      pillCount: document.querySelectorAll(".svc-exit-pill").length,
-      // PRM never blanks the eyebrow — the authored text must be intact.
-      eyebrow: document.querySelector("#tools [data-tools-decode]")?.textContent?.trim(),
-    }));
-    expect(state.marginTop).toBe("0px");
-    expect(state.pillCount).toBe(0);
-    expect(state.eyebrow).toContain("Tools");
-    await context.close();
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#tools [data-pc-slot]", {
+      state: "attached",
+      timeout: 15_000,
+    });
+
+    const layout = await page.evaluate(() => {
+      const tools = document.querySelector<HTMLElement>("#tools")!;
+      const slots = Array.from(document.querySelectorAll<HTMLElement>("#tools [data-pc-slot]"));
+      const articles = Array.from(document.querySelectorAll<HTMLElement>("#tools article"));
+      const toolsRect = tools.getBoundingClientRect();
+      return {
+        marginTop: getComputedStyle(tools).marginTop,
+        slotPositions: slots.map((slot) => getComputedStyle(slot).position),
+        slotCount: slots.length,
+        registerCount: document.querySelectorAll(".tools-rail-register").length,
+        localRailCount: document.querySelectorAll(".pcl-rail").length,
+        scrollWidth: document.documentElement.scrollWidth,
+        innerWidth: window.innerWidth,
+        articleNames: articles.map((article) => {
+          const labelledBy = article.getAttribute("aria-labelledby");
+          return labelledBy ? document.getElementById(labelledBy)?.textContent?.trim() : null;
+        }),
+        articleLabelIds: articles.map((article) => article.getAttribute("aria-labelledby")),
+        headingTags: articles.map((article) => {
+          const labelledBy = article.getAttribute("aria-labelledby");
+          return labelledBy ? document.getElementById(labelledBy)?.tagName : null;
+        }),
+        articleAriaHidden: articles.map((article) => article.getAttribute("aria-hidden")),
+        cardsInsideStation: articles.every((article) => {
+          const rect = article.getBoundingClientRect();
+          return rect.left >= toolsRect.left - 1 && rect.right <= toolsRect.right + 1;
+        }),
+      };
+    });
+
+    expect(layout.marginTop).toBe("0px");
+    expect(layout.slotCount).toBe(4);
+    expect(layout.slotPositions).toEqual(["static", "static", "static", "static"]);
+    expect(layout.registerCount).toBe(0);
+    expect(layout.localRailCount).toBe(0);
+    expect(layout.scrollWidth).toBe(layout.innerWidth);
+    expect(layout.cardsInsideStation).toBe(true);
+    expect(layout.articleNames).toHaveLength(4);
+    layout.articleNames.forEach((name) => expect(name?.length ?? 0).toBeGreaterThan(0));
+    expect(new Set(layout.articleLabelIds).size).toBe(4);
+    expect(layout.headingTags).toEqual(["H3", "H3", "H3", "H3"]);
+    expect(layout.articleAriaHidden).toEqual([null, null, null, null]);
+  });
+
+  test("reduced motion: static deck, authored header, and no rail register", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "run the reduced-motion context once");
+
+    const { context, page } = await openViewport(browser, { width: 1440, height: 900 }, "reduce");
+    try {
+      const state = await page.evaluate(() => ({
+        marginTop: getComputedStyle(document.querySelector("#tools")!).marginTop,
+        slotPosition: getComputedStyle(
+          document.querySelector<HTMLElement>("#tools [data-pc-slot]")!
+        ).position,
+        headerPosition: getComputedStyle(
+          document.querySelector<HTMLElement>("#tools .tools__head")!
+        ).position,
+        registerCount: document.querySelectorAll(".tools-rail-register").length,
+        eyebrow: document.querySelector("#tools [data-tools-decode]")?.textContent?.trim(),
+      }));
+      expect(state.marginTop).toBe("0px");
+      expect(state.slotPosition).toBe("static");
+      expect(state.headerPosition).toBe("static");
+      expect(state.registerCount).toBe(0);
+      expect(state.eyebrow).toContain("Tools");
+    } finally {
+      await context.close();
+    }
   });
 });

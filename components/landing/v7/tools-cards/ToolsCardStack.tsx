@@ -2,9 +2,9 @@
 
 import { useRef, type CSSProperties } from "react";
 import { PROJECT_CASES } from "./toolCardData";
-import { STACK, useStackedCardsScroll } from "./useStackedCardsScroll";
+import { useStackedCardsScroll } from "./useStackedCardsScroll";
 import { NotchOutline } from "./NotchOutline";
-import { ToolCardConsole } from "./ToolCardConsole";
+import { ToolCardConsole, toolCardTitleId } from "./ToolCardConsole";
 import { ToolsHeaderDecode } from "./ToolsHeaderDecode";
 import "./tools-cards.css";
 
@@ -26,7 +26,7 @@ import "./tools-cards.css";
  */
 
 /** The shipped chrome — the lab registry's "V2 Console" entry, frozen. */
-const CONSOLE_CHROME = { corner: "bl", notch: 40, stroke: "solid" } as const;
+const CONSOLE_CHROME = { corner: "bl", notch: 24, stroke: "solid" } as const;
 
 export function ToolsCardStack() {
   const runwayRef = useRef<HTMLElement | null>(null);
@@ -37,37 +37,26 @@ export function ToolsCardStack() {
       ref={runwayRef}
       className="pcl-stack pcl-stack--v2"
       data-pc-active="0"
-      style={
-        {
-          "--pc-top-base": `${STACK.topBase}px`,
-          "--pc-peek": `${STACK.peek}px`,
-          "--pc-n": STACK.count,
-        } as CSSProperties
-      }
+      aria-label="Tools in production"
+      style={{ "--pc-n": PROJECT_CASES.length } as CSSProperties}
     >
       {/* Null leaf — decodes the station-shell eyebrow on first view
           (the eyebrow lives in the parsed HTML, outside this root). */}
       <ToolsHeaderDecode />
-
-      <div className="pcl-rail" aria-hidden="true">
-        <ol className="pcl-rail__inner">
-          {PROJECT_CASES.map((c) => (
-            <li key={c.id} className="pcl-rail__dia" />
-          ))}
-        </ol>
-      </div>
 
       {PROJECT_CASES.map((data, i) => (
         <div
           key={data.id}
           className="pcl-slot"
           data-pc-slot
+          data-pc-index={i}
           style={{ "--i": i, zIndex: i + 1 } as CSSProperties}
         >
           <article
             className="pcl-card"
             data-corner={CONSOLE_CHROME.corner}
             data-stroke={CONSOLE_CHROME.stroke}
+            aria-labelledby={toolCardTitleId(data.id)}
             style={{ "--ch": `${CONSOLE_CHROME.notch}px` } as CSSProperties}
           >
             <ToolCardConsole data={data} index={i} />

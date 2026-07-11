@@ -14,7 +14,8 @@ export {
 } from "./chrome";
 export { NotchOutline } from "./NotchOutline";
 export type { Corner } from "./NotchOutline";
-export { STACK, useStackedCardsScroll } from "./useStackedCardsScroll";
+export { useStackedCardsScroll } from "./useStackedCardsScroll";
 export { ToolCardConsole } from "./ToolCardConsole";
 export { ToolsCardStack } from "./ToolsCardStack";
 export { ToolsPortal } from "./ToolsPortal";
+export { ToolsRailRegisterPortal } from "./ToolsRailRegister";

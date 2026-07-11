@@ -23,6 +23,9 @@ html
         │                                 background: warm gold radial + green radial + --void
         │   ├── div.gateway__stage        transform/opacity driven by --depth
         │   └── div.gateway__grain        radial dither, mix-blend-mode: overlay
+        ├── div.hud                       position: fixed; inset: 0; z-index: 50
+        │   └── aside.hud__rail--r
+        │       └── [data-tools-rail-root]  source/tool register; internal z-index: 4
         └── main.stations                 position: relative; z-index: 10  (stacking context)
             ├── section.hero              position: sticky; top: 0; z-index: 1
             │   └── div.hero__video       absolute; inset: 0; holds the video element
@@ -30,6 +33,10 @@ html
             ├── div.celestial-connector   position: relative; z-index: 2; background: var(--void)
             ├── section#missing-layer     position: relative; z-index: 2; bg: var(--void); 100svh
             ├── section#intelligence-layer position: relative; z-index: 2; bg: var(--void); 100svh
+            ├── section#tools             relative; z-index: 2 (z:6 during corridor exit)
+            │   ├── ::before              absolute; z-index: 0; --tools-bg-in shield
+            │   ├── header.tools__head    fixed; z-index: 12; text/datum, no background
+            │   └── .pcl-slot             sticky only on the enhanced capability
             ├── section.station           …
             └── …
 ```
@@ -65,6 +72,13 @@ z:3   .home-corridor-host   (the revealed second section)
 - **Superseded artifacts not to reintroduce:** the v7 held-hero `--hero-cover` parallax (`translateY -10vh` + `.hero__content` fade); the v6 cover-plane sweep + gate-matched proxy (`HeroHandoffCover`, `.hero-handoff-*`, `data-hero-handoff`, `--deck-clear`, `<html>` `--hero-cover` mirror); the flip / depth-window / beveled-window stacks (v2-v5); the `.home-corridor-host::before/::after` "edge chrome".
 
 Every section/divider/connector that sits inside `.stations` and is intended to read as dark void **must** paint an opaque `var(--void)` fill on top of those two layers. That is the only thing making the rest of the page look like a solid dark page.
+
+`#tools` is the documented exception during the Services handover. Its
+station is intentionally transparent while `#tools::before` fades to opaque
+on `--tools-bg-in`; that shield must finish before the ambient canvas retires.
+The fixed `.tools__head` is safe to opacity/clip because it carries no
+structural fill. The Tools rail register is nested inside the existing
+`.hud` stacking context rather than mounted as another fixed page overlay.
 
 ---
 

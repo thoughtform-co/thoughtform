@@ -2,18 +2,6 @@
 
 import { useEffect, type RefObject } from "react";
 
-/**
- * Stack geometry — single JS/CSS source of truth. The stack component
- * mirrors these onto the runway as inline CSS vars (`--pc-top-base`,
- * `--pc-peek`) so the hook math and the sticky offsets can never drift
- * apart.
- *
- *   topBase — sticky top of card 0 (px)
- *   peek    — additional top offset per card = the visible strip of every
- *             covered card's header (vorszk cascade)
- */
-export const STACK = { count: 4, topBase: 16, peek: 48 } as const;
-
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
@@ -36,17 +24,18 @@ type SlotState = "incoming" | "pinned" | "covered";
  *                     bottom, 1 = pinned at its cascade offset)
  *   --pc-cover  0..1  how covered slot i is (= enter of slot i+1)
  *   data-pc-state     incoming | pinned | covered
+ *   data-pc-current   present on the highest-index slot with enter >= 0.5
  * and on the runway:
- *   data-pc-active    highest index with enter >= 0.5 (pagination rail)
+ *   data-pc-active    the same active index for the fixed HUD rail register
  *
  * All values are pure functions of live rects, so reverse scroll resets
  * state by construction (BEST-PRACTICES "reset when scrolling back").
  *
- * Mobile / reduced-motion (`isInert`): parks every slot at enter=1 /
- * cover=0 / pinned so the stack reads as a plain document. The 960px
- * breakpoint aligns with the landing services desktop gate (961px, ADR-030)
- * and MUST stay in lockstep with the `@media (max-width: 960px)`
- * static-flow rules in tools-cards.css (and the lab's project-cards.css).
+ * CSS owns the enhancement query and all geometry. The hook detects whether
+ * the slots resolved to `position: sticky`, caches their computed `top`
+ * values on resize, and uses those exact pixels for its progress math. In
+ * static/mobile/reduced-motion flow it parks every slot at enter=1, cover=0,
+ * and pinned without naming a duplicate JS breakpoint.
  */
 export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>): void {
   useEffect(() => {
@@ -61,11 +50,19 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
     const currentEnter = new Array<number>(slots.length).fill(-1);
     const currentCover = new Array<number>(slots.length).fill(-1);
     const currentState = new Array<SlotState | null>(slots.length).fill(null);
+    let currentSlot = -1;
     let currentActive = -1;
+    let stickyMode = false;
+    let pinTops = new Array<number>(slots.length).fill(0);
 
-    const isInert = () =>
-      (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
-      (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
+    const readGeometry = () => {
+      const styles = slots.map((slot) => getComputedStyle(slot));
+      stickyMode = styles.every((style) => style.position === "sticky");
+      pinTops = styles.map((style) => {
+        const top = Number.parseFloat(style.top);
+        return Number.isFinite(top) ? top : 0;
+      });
+    };
 
     const setEnter = (i: number, v: number) => {
       if (Math.abs(v - currentEnter[i]) < 0.001) return;
@@ -85,23 +82,31 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
       currentState[i] = s;
     };
 
-    const setActive = (step: number) => {
-      if (step === currentActive) return;
-      runway.setAttribute("data-pc-active", String(step));
-      currentActive = step;
+    const setCurrent = (index: number) => {
+      if (index === currentSlot) return;
+      if (currentSlot >= 0) slots[currentSlot]?.removeAttribute("data-pc-current");
+      if (index >= 0) slots[index]?.setAttribute("data-pc-current", "true");
+      currentSlot = index;
+    };
+
+    const setActive = (index: number) => {
+      if (index === currentActive) return;
+      runway.setAttribute("data-pc-active", String(index));
+      currentActive = index;
     };
 
     const write = () => {
       frame = 0;
       if (disposed) return;
 
-      if (isInert()) {
+      if (!stickyMode) {
         for (let i = 0; i < slots.length; i++) {
           setEnter(i, 1);
           setCover(i, 0);
           setState(i, "pinned");
         }
-        setActive(slots.length - 1);
+        setCurrent(-1);
+        setActive(0);
         return;
       }
 
@@ -109,7 +114,7 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
 
       // Reads first (batched), then writes — never interleaved.
       const enters = slots.map((slot, i) => {
-        const pinTop = STACK.topBase + i * STACK.peek;
+        const pinTop = pinTops[i] ?? 0;
         const top = slot.getBoundingClientRect().top;
         const travel = Math.max(1, vh - pinTop);
         return smoothstep01((vh - top) / travel);
@@ -124,6 +129,7 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
         setState(i, cover >= 0.999 ? "covered" : enter >= 0.999 ? "pinned" : "incoming");
         if (enter >= 0.5) active = i;
       }
+      setCurrent(active);
       setActive(active);
     };
 
@@ -140,17 +146,26 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
       frame = window.requestAnimationFrame(write);
     };
 
-    requestWrite();
+    const refreshGeometry = () => {
+      readGeometry();
+      requestWrite();
+    };
+
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+
+    refreshGeometry();
     window.addEventListener("scroll", requestWrite, { passive: true });
-    window.addEventListener("resize", requestWrite);
-    document.addEventListener("visibilitychange", requestWrite);
+    window.addEventListener("resize", refreshGeometry);
+    document.addEventListener("visibilitychange", refreshGeometry);
+    reducedMotion?.addEventListener?.("change", refreshGeometry);
 
     return () => {
       disposed = true;
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener("scroll", requestWrite);
-      window.removeEventListener("resize", requestWrite);
-      document.removeEventListener("visibilitychange", requestWrite);
+      window.removeEventListener("resize", refreshGeometry);
+      document.removeEventListener("visibilitychange", refreshGeometry);
+      reducedMotion?.removeEventListener?.("change", refreshGeometry);
     };
   }, [runwayRef]);
 }

@@ -13,8 +13,8 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
 import { RailStationPortal } from "./RailStationLabel";
-import { ToolsPortal } from "./tools-cards";
-import { ServicesExitPills, ServicesPortal } from "@/components/landing/home-v2/services";
+import { ToolsPortal, ToolsRailRegisterPortal } from "./tools-cards";
+import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -462,12 +462,11 @@ export function LandingPage({
           services→tools seam is the ADR-030 Update 1 "viewscreen mode
           switch": decommission beat + transparent lead-in, no cover. */}
       <ToolsPortal containerRef={rootRef} />
-      {/* Decommission pills (ADR-030 Update 1): fixed overlay — the
-          service verb chips FLIP from the fading orbit cards to a dock
-          on the right HUD rail during the exit beat. Lives at page level
-          (never inside a station: content-visibility containment would
-          rebase a fixed layer). Null on mobile / reduced motion. */}
-      <ServicesExitPills />
+      {/* Services -> tools rail register: the retiring service verbs FLIP
+          into four stable slots in the authored RIGHT HUD rail, then those
+          same slots become the tool-unit index as the viewscreen changes
+          mode. Nested-root lifecycle matches ToolsPortal/RailStationPortal. */}
+      <ToolsRailRegisterPortal containerRef={rootRef} />
       {/* Rail station label (ADR-030 Update 1): the active section's
           number + name emerging from the left rail, site-wide. Nested
           root into the rail's authored shell so it inherits the rail's

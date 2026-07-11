@@ -4,7 +4,6 @@ import { useRef, type ComponentType, type CSSProperties } from "react";
 import {
   NotchOutline,
   PROJECT_CASES,
-  STACK,
   ToolCardConsole,
   useStackedCardsScroll,
   type Corner,
@@ -42,7 +41,7 @@ export const VARIANT_CHROME: Record<VariantId, VariantChrome> = {
     id: "v2",
     label: "V2 Console",
     corner: "bl",
-    notch: 40,
+    notch: 24,
     stroke: "solid",
     Card: ToolCardConsole,
   },
@@ -52,6 +51,9 @@ export const VARIANT_CHROME: Record<VariantId, VariantChrome> = {
 };
 
 export const VARIANT_IDS = Object.keys(VARIANT_CHROME) as VariantId[];
+
+/** Lab-only geometry. Production geometry is CSS-owned (ADR-030 Update 2). */
+const LAB_STACK = { count: PROJECT_CASES.length, topBase: 16, peek: 48 } as const;
 
 /**
  * CardStack — the vorszk-style sticky-sibling stack.
@@ -74,33 +76,28 @@ export function CardStack({ variant }: { variant: VariantId }) {
       ref={runwayRef}
       className={`pcl-stack pcl-stack--${variant}`}
       data-pc-active="0"
+      aria-label={`${chrome.label} card stack`}
       style={
         {
-          "--pc-top-base": `${STACK.topBase}px`,
-          "--pc-peek": `${STACK.peek}px`,
-          "--pc-n": STACK.count,
+          "--pc-top-base": `${LAB_STACK.topBase}px`,
+          "--pc-peek": `${LAB_STACK.peek}px`,
+          "--pc-n": LAB_STACK.count,
         } as CSSProperties
       }
     >
-      <div className="pcl-rail" aria-hidden="true">
-        <ol className="pcl-rail__inner">
-          {PROJECT_CASES.map((c) => (
-            <li key={c.id} className="pcl-rail__dia" />
-          ))}
-        </ol>
-      </div>
-
       {PROJECT_CASES.map((data, i) => (
         <div
           key={data.id}
           className="pcl-slot"
           data-pc-slot
+          data-pc-index={i}
           style={{ "--i": i, zIndex: i + 1 } as CSSProperties}
         >
           <article
             className="pcl-card"
             data-corner={chrome.corner}
             data-stroke={chrome.stroke}
+            aria-label={`${data.codename}: ${data.tagline}`}
             style={{ "--ch": `${chrome.notch}px` } as CSSProperties}
           >
             <Card data={data} index={i} />

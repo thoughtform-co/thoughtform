@@ -35,6 +35,12 @@
   content-visibility: visible;
   /* Hosts the ::before fade backdrop. */
   position: relative;
+  --tools-head-h: clamp(88px, 9.5svh, 104px);
+  --tools-head-gap: clamp(16px, 2svh, 24px);
+  --tools-stack-top: calc(var(--hud-rail-y-start) + var(--tools-head-h) + var(--tools-head-gap));
+  --tools-peek: clamp(32px, 3.4svh, 36px);
+  --tools-bottom-safe: max(24px, var(--hud-margin));
+  --tools-frame-w: min(1560px, calc(100vw - 2 * var(--hud-content-inset)));
 }
 
 html[data-corridor-exit="true"] #tools.station--tools {
@@ -68,45 +74,52 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   opacity: var(--tools-bg-in, 1);
 }
 
-/* ─── Station header (the readout materializing on the viewscreen) ── */
+/* ─── Station header — calibrated edge-bus context readout ───────── */
 
-/* Linear-style split (ADR-030 Update 1): eyebrow full-width, TITLE in
-   the left column, LEDE in the right — over the transparent lead-in
-   viewport with the dimmed receded brandmark behind it. The header OWNS
-   that viewport (min-height), so the mode-switch beat gets read before
-   the stack arrives. Same width formula as .pcl-card, so the header's
-   edges align with the cards below. Typography mirrors the continuum
-   head grammar (landing.css); em is upright gold.
-
-   Terminal text canon (documented in ADR-030 Update 1): the mono
-   EYEBROW scramble-decodes in (captionScramble via ToolsHeaderDecode —
-   it carries NO data-m so it never double-animates); display TITLE
-   keeps the data-m clip-wipe; body fades. No typewriter on display
-   faces. */
+/* Static/mobile is ordinary semantic document flow. Enhanced desktop
+   promotes this SAME authored header to a fixed readout; no duplicate
+   title enters the accessibility tree. The wrapper carries no structural
+   background, so revealing it never fades the station's opaque shield. */
 .tools__head {
-  width: min(1560px, calc(100vw - 2 * clamp(20px, 4.5vw, 88px)));
-  margin: 0 auto clamp(32px, 8vh, 88px);
+  width: 100%;
+  margin: 0 auto clamp(40px, 7vh, 72px);
 }
 
 .tools__head--split {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   column-gap: clamp(24px, 4vw, 96px);
-  align-content: center;
+  align-content: start;
   align-items: end;
-  min-height: 78svh;
+  row-gap: clamp(16px, 3vh, 28px);
 }
 
 .tools__eyebrow {
   grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr max-content 1fr;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-pt-mono, "PT Mono", monospace);
   font-size: 10px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gold);
-  margin: 0 0 clamp(20px, 3vh, 40px);
+  margin: 0;
   /* Reserve the line box so the pre-decode blank never reflows. */
   min-height: 1em;
+}
+
+.tools__eyebrow::before,
+.tools__eyebrow::after {
+  content: "";
+  height: 1px;
+  background: var(--hud-rail-line-soft);
+}
+
+.tools__eyebrow > span {
+  display: inline-block;
+  min-width: 1ch;
 }
 
 .tools__title {
@@ -138,10 +151,9 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   letter-spacing: -0.005em;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
   .tools__head--split {
     grid-template-columns: 1fr;
-    min-height: 0;
     align-content: start;
     row-gap: clamp(16px, 3vh, 28px);
   }
@@ -149,6 +161,223 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   .tools__title,
   .tools__lede {
     grid-column: 1;
+  }
+}
+
+/* Desktop mode: the header is part of the fixed bridge instrumentation.
+   Its datum starts/ends on the exact rail guides; title and lede reveal
+   in place, never riding document scroll. #tools reserves the identical
+   top coordinate for the first card, so the two surfaces cannot overlap. */
+@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
+  #tools.station--tools {
+    justify-content: flex-start;
+    padding-top: var(--tools-stack-top);
+    padding-bottom: clamp(96px, 12svh, 160px);
+  }
+
+  .tools__head {
+    --tools-head-inset: calc(var(--hud-content-inset) - var(--hud-margin));
+    position: fixed !important;
+    top: var(--hud-rail-y-start);
+    left: calc(var(--hud-margin) + var(--hud-rail-guide-inset));
+    right: calc(var(--hud-margin) + var(--hud-rail-guide-inset));
+    width: auto;
+    height: var(--tools-head-h);
+    margin: 0;
+    padding-inline: var(--tools-head-inset);
+    z-index: 12 !important;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 220ms var(--m-ease);
+  }
+
+  .tools__head--split {
+    align-content: start;
+    row-gap: clamp(14px, 1.8svh, 20px);
+  }
+
+  .tools__title {
+    font-size: clamp(26px, 2.2vw, 34px);
+    line-height: 1.02;
+  }
+
+  .tools__lede {
+    font-size: clamp(13px, 0.9vw, 16px);
+    line-height: 1.45;
+  }
+
+  .tools__eyebrow {
+    width: calc(100% + 2 * var(--tools-head-inset));
+    margin-left: calc(-1 * var(--tools-head-inset));
+  }
+
+  .tools__eyebrow::before,
+  .tools__eyebrow::after {
+    transform: scaleX(0);
+    transition: transform 420ms var(--m-ease-instr);
+  }
+
+  .tools__eyebrow::before {
+    transform-origin: right center;
+  }
+
+  .tools__eyebrow::after {
+    transform-origin: left center;
+  }
+
+  .tools__title,
+  .tools__lede {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transition:
+      clip-path 420ms var(--m-ease-instr),
+      opacity 260ms var(--m-ease);
+  }
+
+  html[data-active-station="tools"] .tools__head {
+    opacity: 1;
+  }
+
+  html[data-active-station="tools"] .tools__eyebrow::before,
+  html[data-active-station="tools"] .tools__eyebrow::after {
+    transform: scaleX(1);
+  }
+
+  html[data-active-station="tools"] .tools__title,
+  html[data-active-station="tools"] .tools__lede {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* ─── Right-rail source / tool register ─────────────────────────── */
+
+/* The mount shell and nested root inherit the authored HUD rail's exact
+   containing block. Rows extend inward from the guide; nothing forms a
+   detached pill or panel. The marker centre sits on the 2px rail line. */
+[data-tools-rail-root],
+[data-tools-rail-root] > div,
+.tools-rail-register {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tools-rail-register {
+  z-index: 4;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+}
+
+.tools-rail-register__heading {
+  position: absolute;
+  top: calc(33.333% - 32px);
+  right: calc(var(--hud-rail-guide-inset) + 12px);
+  width: max-content;
+  color: var(--dawn-40);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity 180ms linear;
+}
+
+.tools-rail-register__heading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 5px);
+  width: 7px;
+  height: 1px;
+  background: currentColor;
+}
+
+.tools-rail-register__heading--tools {
+  color: var(--gold-70);
+}
+
+.tools-rail-register__row {
+  position: absolute;
+  /* 2px rail track: right -3px places this 8px marker's centre on the
+     track centre, including when the shared guide inset changes. */
+  right: calc(var(--hud-rail-guide-inset) - 3px);
+  translate: 0 -50%;
+  transform-origin: right center;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 7px;
+  height: 18px;
+  width: max-content;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.tools-rail-register__marker {
+  position: relative;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  margin-left: 18px;
+  flex: none;
+}
+
+/* The leader occupies the complete gap between readout and rail marker,
+   keeping every label visibly wired to the perimeter bus. */
+.tools-rail-register__marker::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 1px);
+  width: 24px;
+  height: 1px;
+  background: currentColor;
+  transform: translateY(-50%);
+}
+
+.tools-rail-register__marker::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  rotate: 45deg;
+}
+
+.tools-rail-register__index {
+  color: var(--gold-60);
+  font-size: 8px;
+}
+
+.tools-rail-register__name {
+  min-width: 8.5ch;
+  text-align: right;
+}
+
+.tools-rail-register__row--service {
+  color: var(--gold-70);
+}
+
+.tools-rail-register__row--tool {
+  color: var(--dawn-45);
+}
+
+.tools-rail-register__row--tool[data-active] {
+  color: var(--gold);
+}
+
+.tools-rail-register__row--tool[data-active] .tools-rail-register__marker::after {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+@media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
+  [data-tools-rail-root] {
+    display: none;
   }
 }
 
@@ -160,6 +389,12 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
      (V3's reticle ink; the console skin never uses it). */
   --pcl-ink-night: var(--latent-night, #110f09); /* ink on gold fills */
   --pcl-card-bg: #0f0e0c;
+  /* Lab/default geometry. The production #tools deck overrides these
+     from the shared rail/header tokens inside the enhanced query. */
+  --pc-top-base: 16px;
+  --pc-peek: 48px;
+  --pc-head-h: var(--pc-peek);
+  --pc-bottom-safe: 24px;
 
   color: var(--dawn);
   font-family: var(--font-mono);
@@ -177,7 +412,22 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   position: relative;
   /* Card height sized for the LAST slot (most constrained) so the end
      state shows all four cascading peek strips. */
-  --pc-card-h: calc(100svh - var(--pc-top-base) - (var(--pc-n) - 1) * var(--pc-peek) - 24px);
+  --pc-card-h: calc(
+    100svh - var(--pc-top-base) - (var(--pc-n) - 1) * var(--pc-peek) - var(--pc-bottom-safe)
+  );
+}
+
+@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
+  #tools .pcl-stack {
+    --pc-top-base: var(--tools-stack-top);
+    --pc-peek: var(--tools-peek);
+    --pc-head-h: clamp(36px, 3.7svh, 40px);
+    --pc-bottom-safe: var(--tools-bottom-safe);
+    --pc-card-h: min(
+      680px,
+      calc(100svh - var(--pc-top-base) - (var(--pc-n) - 1) * var(--pc-peek) - var(--pc-bottom-safe))
+    );
+  }
 }
 
 /* Chrome scroll-anchoring insurance — reveals translate content inside
@@ -193,7 +443,7 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   position: sticky;
   top: calc(var(--pc-top-base) + var(--i) * var(--pc-peek));
   height: var(--pc-card-h);
-  margin-bottom: 24svh;
+  margin-bottom: clamp(96px, 14svh, 144px);
   /* Effect channels written by useStackedCardsScroll; defaults = settled
      end-state so SSR/pre-hydration paints without a flash. */
   --pc-enter: 1;
@@ -205,7 +455,7 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 }
 
 .pcl-stack__tail {
-  height: 60svh;
+  height: clamp(240px, 35svh, 380px);
 }
 
 /* ─── Card base ─────────────────────────────────────────────────── */
@@ -213,12 +463,18 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 .pcl-card {
   position: relative;
   height: 100%;
-  width: min(1560px, calc(100vw - 2 * clamp(20px, 4.5vw, 88px)));
+  width: 100%;
   margin: 0 auto;
   /* Recession: covered card recedes under the incoming plate. Transform
      origin at the top edge so the permanent peek strip never drifts. */
   transform: scale(calc(1 - 0.02 * var(--pc-cover)));
   transform-origin: 50% 0;
+}
+
+@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
+  #tools .pcl-card {
+    width: var(--tools-frame-w);
+  }
 }
 
 /* Notch silhouette — one chamfered corner, parameterized by --ch.
@@ -255,13 +511,13 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 }
 
 .pcl-card__head {
-  height: var(--pc-peek);
+  height: var(--pc-head-h);
   display: flex;
   align-items: center;
 }
 
 .pcl-card__body {
-  height: calc(100% - var(--pc-peek));
+  height: calc(100% - var(--pc-head-h));
 }
 
 /* Chamfer outline (SVG sibling, paints above the clipped fill). */
@@ -290,12 +546,10 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   fill: var(--gold);
 }
 
-/* Paint relief: a fully covered card's body is 100% occluded by the
-   opaque covering plate — skip painting it. The peek strip (head) stays,
-   and the state flips back in the same rAF write on reverse scroll, so
-   this is visually invisible. (Measured: stacking 4 image plates stalls
-   capture/paint; with bodies skipped the composite is 1 plate + strips.) */
-[data-pc-state="covered"] .pcl-card__body {
+/* Paint relief stays scoped to the expensive screenshot. Keeping the
+   semantic body rendered means covered tools remain available to the
+   accessibility tree while the opaque incoming plate handles visibility. */
+[data-pc-state="covered"] .pcl-media {
   visibility: hidden;
 }
 
@@ -319,46 +573,6 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   --p: clamp(0, calc((var(--pc-enter) - var(--d, 0)) / 0.35), 1);
   opacity: var(--p);
   transform: translateY(calc((1 - var(--p)) * 12px));
-}
-
-/* ─── Pagination rail (diamonds, not dots) ──────────────────────── */
-
-.pcl-rail {
-  position: sticky;
-  top: 0;
-  height: 0;
-  z-index: 40;
-}
-
-.pcl-rail__inner {
-  position: absolute;
-  top: 50svh;
-  translate: 0 -50%;
-  left: clamp(14px, 2.6vw, 36px);
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.pcl-rail__dia {
-  width: 7px;
-  height: 7px;
-  rotate: 45deg;
-  border: 1px solid var(--dawn-25);
-  transition:
-    background 150ms var(--ease-out),
-    border-color 150ms var(--ease-out);
-}
-
-.pcl-stack[data-pc-active="0"] .pcl-rail__dia:nth-child(1),
-.pcl-stack[data-pc-active="1"] .pcl-rail__dia:nth-child(-n + 2),
-.pcl-stack[data-pc-active="2"] .pcl-rail__dia:nth-child(-n + 3),
-.pcl-stack[data-pc-active="3"] .pcl-rail__dia:nth-child(-n + 4) {
-  background: var(--gold);
-  border-color: var(--gold);
 }
 
 /* ─── Shared card interior ──────────────────────────────────────── */
@@ -658,13 +872,30 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   stroke: var(--gold-30);
 }
 
+/* The production plate uses one silhouette outline only. The shared lab
+   primitive keeps its chamfer calibration tick for skin exploration. */
+#tools .pcl-notch__tick {
+  display: none;
+}
+
 .pcl-v2__plate {
-  background: var(--gold);
-  color: var(--pcl-ink-night);
-  font-size: 11px;
+  border: 1px solid var(--gold-40);
+  background: transparent;
+  color: var(--gold);
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  padding: 4px 10px;
+  padding: 3px 8px;
+  transition:
+    color 160ms var(--ease-out),
+    background 160ms var(--ease-out),
+    border-color 160ms var(--ease-out);
+}
+
+[data-pc-current="true"] .pcl-v2__plate {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--pcl-ink-night);
 }
 
 .pcl-v2__title {
@@ -687,68 +918,85 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   letter-spacing: 0.18em;
 }
 
-.pcl-v2__certmark {
-  font-style: normal;
-  border: 1px solid var(--gold-40);
-  padding: 2px 6px;
-  font-size: 9px;
-  color: var(--gold);
-}
-
-.pcl-v2__fields {
+.pcl-v2__meta {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0 clamp(16px, 1.8vw, 28px);
+  border-bottom: 1px solid var(--dawn-08);
 }
 
-.pcl-v2__notes .pcl-body-copy + .pcl-body-copy {
-  margin-top: 10px;
+.pcl-v2__meta-item {
+  min-width: 0;
+  padding: 8px 12px;
+  border-right: 1px solid var(--dawn-08);
+}
+
+.pcl-v2__meta-item:first-child {
+  padding-left: 0;
+}
+
+.pcl-v2__meta-item:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.pcl-v2__meta dt {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+
+.pcl-v2__meta dd {
+  margin: 3px 0 0;
+  overflow: hidden;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dawn-70);
+}
+
+.pcl-v2__readout {
+  grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
+  gap: clamp(16px, 2vw, 32px);
+  padding: clamp(12px, 1.6svh, 20px) clamp(16px, 1.8vw, 28px);
+}
+
+.pcl-v2__readout .pcl-left {
+  gap: clamp(10px, 1.3svh, 16px);
+}
+
+.pcl-v2__readout .pcl-right {
+  display: block;
+}
+
+.pcl-v2__outcome {
+  min-height: 0;
 }
 
 .pcl-v2__shift {
   color: var(--dawn-90);
-  border-left: 2px solid var(--gold-40);
-  padding-left: 12px;
-}
-
-.pcl-v2__tchips {
-  margin-top: auto;
-}
-
-.pcl-v2__tgrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px 16px;
-  margin-top: 8px;
-}
-
-.pcl-v2__tchip {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--dawn-70);
-  white-space: nowrap;
+  border-left: 1px solid var(--gold-40);
+  padding-left: 10px;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pcl-v2__tchip i {
-  font-style: normal;
-  border: 1px solid var(--gold-40);
-  color: var(--gold);
-  font-size: 8px;
-  padding: 1px 4px;
-  margin-right: 7px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .pcl-v2__media {
+  height: 100%;
   border: 1px solid var(--gold-20);
 }
 
 .pcl-v2__caps li {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 9px 0;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 5px 0;
   border-bottom: 1px solid var(--dawn-08);
 }
 
@@ -758,46 +1006,76 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 
 .pcl-v2__check {
   align-self: center;
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   border: 1px solid var(--gold-50);
   background: linear-gradient(var(--gold), var(--gold)) center / 5px 5px no-repeat;
   flex: none;
 }
 
 .pcl-v2__proc {
-  font-size: 9px;
+  font-size: 8px;
   letter-spacing: 0.18em;
   color: var(--gold-60);
-  width: 86px;
+  width: 48px;
   flex: none;
 }
 
 .pcl-v2__capbody {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(88px, auto) minmax(0, 1fr);
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
 .pcl-v2__capbody .pcl-cap-desc {
   margin-top: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pcl-v2__model {
   color: var(--gold-60);
 }
 
-.pcl-v2__foot .pcl-barcode {
-  fill: var(--gold-40);
+.pcl-v2__tech {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pcl-v2__tech-label {
+  margin-right: 8px;
+  color: var(--gold-60);
+}
+
+@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
+  #tools .pcl-card__head {
+    padding-inline: clamp(16px, 1.8vw, 28px);
+    gap: 12px;
+  }
+
+  #tools .pcl-v2__title {
+    font-size: clamp(12px, 0.75rem + 0.18vw, 15px);
+  }
+
+  #tools .pcl-foot {
+    gap: 12px;
+    padding: 6px clamp(16px, 1.8vw, 28px);
+    font-size: 8px;
+  }
 }
 
 /* ─── Fallbacks ─────────────────────────────────────────────────── */
 
-/* ≤960px: plain stacked flow — horizontal cards don't fit. Breakpoint
-   MUST stay in lockstep with isInert() in useStackedCardsScroll.ts
-   (aligned with the services 961px desktop gate, ADR-030). */
-@media (max-width: 960px) {
+/* Static/base-capability path. The hook reads the computed slot position,
+   so CSS is the single capability decision: no duplicated JS breakpoint.
+   Width uses the station content box, fixing the phone overflow that the
+   global overflow-x clip used to conceal. */
+@media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
   .pcl-slot {
     position: static;
     height: auto;
@@ -806,6 +1084,7 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 
   .pcl-card {
     height: auto;
+    width: 100%;
     transform: none;
   }
 
@@ -818,8 +1097,7 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
     height: auto;
   }
 
-  .pcl-card__dim,
-  .pcl-rail {
+  .pcl-card__dim {
     display: none;
   }
 
@@ -833,16 +1111,37 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
     gap: 20px;
   }
 
+  .pcl-v2__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-inline: 16px;
+  }
+
+  .pcl-v2__meta-item:nth-child(2) {
+    border-right: 0;
+  }
+
+  .pcl-v2__meta-item:nth-child(n + 3) {
+    border-top: 1px solid var(--dawn-08);
+  }
+
+  .pcl-v2__readout .pcl-right {
+    order: -1;
+  }
+
   .pcl-left {
     overflow: visible;
   }
 
-  .pcl-v2__tchips {
-    margin-top: 0;
-  }
-
   .pcl-media {
     aspect-ratio: 16 / 9;
+  }
+
+  .pcl-v2__capbody {
+    grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
+  }
+
+  .pcl-v2__capbody .pcl-cap-desc {
+    white-space: normal;
   }
 
   .pcl-card__head {
@@ -859,8 +1158,8 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   }
 }
 
-/* PRM: sticky stays (native scroll, not synthetic motion) but every
-   effect parks. The hook parks the vars too — this is belt-and-braces. */
+/* PRM also takes the static-flow branch above; these are defensive
+   motion-channel resets if the capability query is ever refactored. */
 @media (prefers-reduced-motion: reduce) {
   .pcl-card {
     transform: none;
@@ -873,9 +1172,5 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 
   .pcl-card__dim {
     opacity: 0;
-  }
-
-  .pcl-rail__dia {
-    transition: none;
   }
 }

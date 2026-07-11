@@ -983,7 +983,7 @@ export function ServicesCardRing({
       // Exit composes onto the entrance: identity while exitP = 0, then
       // the card flies OUT (radius widens) while fading — the reverse of
       // the fly-in. Its DOM pill lifts off on the same clock
-      // (ServicesExitPills reads the identical windows' progress).
+      // (ToolsRailRegister reads the identical windows' progress).
       const exit = exitEnvelope(exitP, i);
       const placed = placeCardOnOrbit(i, spring.pos, cardOrbitGeoms[i], {
         yOffset,

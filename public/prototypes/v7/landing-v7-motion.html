@@ -4228,6 +4228,10 @@ html { scroll-behavior: smooth; }
   <aside class="hud__rail hud__rail--r">
     <div class="hud__rail__track"></div>
     <div id="rightTicks"></div>
+    <!-- Services -> tools register mount. Populated by a React nested root;
+         the shell stays inside the canonical right rail so the handoff and
+         tool index share its exact gauge coordinates. -->
+    <div data-tools-rail-root></div>
   </aside>
 
   <!-- Bottom-left brandmark anchor (dormant until sigil handoff).
@@ -5316,15 +5320,15 @@ html { scroll-behavior: smooth; }
        (comments included), so a literal tag here would be counted as a
        real element and break the balanced-tag walk.
        ============================ -->
-  <section class="station station--tools" id="tools" data-station="tools" data-screen-label="08A Tools">
+  <section class="station station--tools" id="tools" data-station="tools" data-screen-label="08A Tools" aria-labelledby="tools-title">
     <div class="station__idx">Tools<span class="landmark">Landmark · what we build</span></div>
 
-    <header class="tools__head tools__head--split" data-m-group>
-      <p class="tools__eyebrow" data-tools-decode>08A · Tools — the instruments</p>
-      <h2 class="tools__title" data-m="title">
+    <header class="tools__head tools__head--split">
+      <p class="tools__eyebrow" data-tools-decode><span>08A · Tools — the instruments</span></p>
+      <h2 class="tools__title" id="tools-title">
         Bottlenecks removed,<br><em>one tool at a time.</em>
       </h2>
-      <p class="tools__lede" data-m="body">
+      <p class="tools__lede">
         Four instruments in production — built inside the practice,
         run by the teams they serve.
       </p>

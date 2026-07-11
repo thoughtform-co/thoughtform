@@ -1,4 +1,4 @@
-# ADR-030: Tools section — sticky-overlap cover + console-plate card stack
+# ADR-030: Tools section — viewscreen handover + calibrated edge-bus deck
 
 **Date:** 2026-07-11
 **Status:** Accepted
@@ -263,3 +263,66 @@ rewritten (normal-flow seam, transparent lead-in w/ WebGL-fallback
 guard, wheel pass-through both directions, pill dock + reverse retire,
 stack, mobile/PRM); headed screenshots at decommission mid-flight /
 transparent lead-in / opaque arrival / rail label on two stations.
+
+## Update 2 (2026-07-11, same day): calibrated edge-bus rebuild
+
+The in-place viewscreen transition remains the governing seam. The
+floating-pill and 78svh scrolling-header presentation did not make the HUD
+feel load-bearing: context entered as ordinary page content, and the card
+stack introduced a second progress rail inside the viewscreen. This update
+retains the reversible R3F decommission, `exitProgressForRunway`, the FLIP
+windows, the transparent Tools lead-in, `--tools-bg-in`, and the
+opaque-before-canvas-dies ordering. It changes only the DOM instrumentation
+and the Tools deck downstream of those clocks.
+
+### Edge-bus ownership
+
+- The enhanced capability is one exact contract:
+  `(min-width: 1101px) and (min-height: 760px) and
+(prefers-reduced-motion: no-preference)`. Every other viewport uses
+  ordinary document flow.
+- The authored Tools header becomes a fixed, rail-to-rail mode datum while
+  `data-active-station="tools"`. Its eyebrow interrupts the datum; title and
+  lede hang from the left and right content fields. It reveals in place by
+  line draw, scramble, clip, and opacity only. The generic left-rail station
+  label closes during this richer mode. The header has no structural
+  background; `#tools::before` remains the only fadeable opaque shield.
+- `ServicesExitPills` is retired. `ToolsRailRegisterPortal` mounts a nested
+  React root into `[data-tools-rail-root]` inside the authored right HUD rail.
+  The four service verbs FLIP into canonical rail slots under
+  `SOURCE BUS · 04`, using outline diamonds centred on the real guide and
+  continuous inward leaders. As the first tool reaches its CSS-owned sticky
+  dock, those same slots reset to `TOOL UNITS · 04`; only the current tool's
+  identifier receives a filled selection state. Reverse scroll reconstructs
+  the service register from the same scroll clocks and latched source rects.
+- The stack-local `.pcl-rail` is deleted. The fixed right rail is the sole
+  progress/state bus. `LandingPage` remains render-stable: neither stack nor
+  register state is subscribed at page level.
+
+### CSS-owned compact deck
+
+Desktop geometry lives exclusively in `tools-cards.css`: shared rail start,
+`clamp(88px, 9.5svh, 104px)` header, `clamp(16px, 2svh, 24px)` gap,
+`clamp(32px, 3.4svh, 36px)` peek, HUD-aware bottom clearance, and a card
+height capped at 680px after subtracting header, all peeks, and clearance.
+The first slot reaches its sticky top exactly when the station reaches the
+viewport top. `useStackedCardsScroll` no longer exports pixel geometry; it
+reads each slot's resolved `position` and `top`, so CSS is the single
+capability and geometry source.
+
+Cards use a 24px chamfer, opaque fill, and one silhouette outline. Their
+36–40px tape carries codename, function, and unit index. The body is a 35/65
+outcome-to-screenshot partition with one rule-separated metadata line, four
+terse capability rows, and micro footer telemetry. The challenge copy stays
+in the data model but is not painted. Covered-card optimization hides only
+the heavy screenshot; each labelled article and its unique `h3` remain in the
+accessibility tree. Mobile and reduced motion retain all four articles in
+natural flow without horizontal overflow.
+
+### Superseded Update 1 contracts
+
+The following Update 1 details are historical, not current: floating
+`ServicesExitPills`, the header's 78svh lead viewport, the 960px stack gate,
+the exported `STACK` constant, the 40px production chamfer, and the local
+`.pcl-rail`. The decommission/ambient compositing contracts listed above
+remain current.

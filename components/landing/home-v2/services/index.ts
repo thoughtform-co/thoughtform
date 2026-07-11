@@ -1,5 +1,4 @@
 export { ServicesPortal } from "./ServicesPortal";
-export { ServicesExitPills } from "./ServicesExitPills";
 export { ServicesStage } from "./ServicesStage";
 export { ServicesBrandmarkField } from "./ServicesBrandmarkField";
 export { ServicesOrbitMap } from "./ServicesOrbitMap";

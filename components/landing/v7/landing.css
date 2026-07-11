@@ -56,6 +56,10 @@
   --hud-corner-zone: clamp(28px, 4.17vmin, 45px);
   --hud-rail-top: clamp(32px, min(2.604vw, 4.63vmin), 50px);
   --hud-rail-bottom: clamp(32px, min(2.604vw, 4.63vmin), 50px);
+  /* Shared viewport Y for the rail guides and any readout that is
+     physically welded to them. Tools uses this for its fixed mode datum;
+     keeping the expression here prevents a second, drifting rail origin. */
+  --hud-rail-y-start: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px));
   /* Guide hairline offset from the rail-aside outer edge. Held at 0
      so the line lands flush with the corner brackets per the Brand
      Codex Figma reference (file XO8yGN90SfxiG1hmYPGYXn, node 1767:2327).
@@ -650,7 +654,7 @@
 /* Rails — clear the corner brackets above and the brandmark below */
 .hud__rail {
   position: absolute;
-  top: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px));
+  top: var(--hud-rail-y-start);
   bottom: calc(var(--hud-margin) + clamp(24px, 2.5vw, 40px) + clamp(16px, 1.8vw, 32px));
   width: var(--hud-rail-width);
   display: flex;
@@ -769,6 +773,15 @@
 }
 .hud__rail__station__no {
   color: var(--gold);
+}
+/* Tools owns a richer rail-to-rail context readout on enhanced desktop.
+   Retire the generic mid-rail label while that mode is active so the HUD
+   presents one context channel, not two competing labels. */
+@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
+  html[data-active-station="tools"] .hud__rail__station {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .hud__rail__station {

@@ -47,7 +47,7 @@ const NEXT_STATION_FADE_START_VH = 0.5;
 const NEXT_STATION_FADE_END_VH = -0.7;
 
 /** #tools background fade clock (`--tools-bg-in`, read by the station's
- *  ::before backdrop + the exit pills' dock fade): 0 = fully transparent
+ *  ::before backdrop + the right-rail register handover): 0 = fully transparent
  *  lead-in, 1 = opaque station. Runs from the same next-station
  *  measurement as the ambient fade, slightly ahead of it (see LOCKSTEP
  *  note above). */

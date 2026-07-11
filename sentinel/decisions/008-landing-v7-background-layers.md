@@ -32,19 +32,29 @@ After Regression 1 was reverted, connectors still flashed gold → black for ~88
 
 The following ordering is load-bearing and must not be changed without an ADR update:
 
-| Layer | Element                                                                        | Position | z-index                | Paints                                                                                                        |
-| ----- | ------------------------------------------------------------------------------ | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 0     | `body`                                                                         | static   | —                      | `rgb(10, 9, 8)` (`--void`)                                                                                    |
-| 1     | `.gateway`                                                                     | fixed    | 0                      | gold + green radials + `--void`                                                                               |
-| 1a    | `.gateway__grain`                                                              | absolute | auto                   | radial dither, `mix-blend-mode: overlay`                                                                      |
-| 2     | `.stations`                                                                    | relative | 10                     | (transparent; creates stacking context)                                                                       |
-| 3     | `.hero`                                                                        | sticky   | 1                      | video + overlay; goes `visibility: hidden` at `heroCover ≥ 1`                                                 |
-| 4     | `.station:not(.hero)`                                                          | relative | 2                      | `var(--void)` — opaque shield                                                                                 |
-| 4     | `.celestial-connector`                                                         | relative | 2                      | `var(--void)` — opaque shield                                                                                 |
-| 4a    | `.home-v2-stage__canvas` during `data-corridor-docked`                         | fixed    | 2 inside corridor host | live R3F sphere backdrop for the one-viewport swipe handoff; releases once the cover reaches 1                |
-| 5     | `#buildQuote.build-quote--handoff` / `.handoff-lab--embedded` opening viewport | relative | 3+                     | intentionally feathered cover over docked canvas; `.handoff-lab__services` becomes opaque before service copy |
+| Layer | Element                                                 | Position | z-index                | Paints                                                                                                      |
+| ----- | ------------------------------------------------------- | -------- | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 0     | `body`                                                  | static   | —                      | `rgb(10, 9, 8)` (`--void`)                                                                                  |
+| 1     | `.gateway`                                              | fixed    | 0                      | gold + green radials + `--void`                                                                             |
+| 1a    | `.gateway__grain`                                       | absolute | auto                   | radial dither, `mix-blend-mode: overlay`                                                                    |
+| 2     | `.stations`                                             | relative | 10                     | (transparent; creates stacking context)                                                                     |
+| 3     | `.hero`                                                 | sticky   | 1                      | video + overlay; goes `visibility: hidden` at `heroCover ≥ 1`                                               |
+| 4     | `.station:not(.hero)`                                   | relative | 2                      | `var(--void)` — opaque shield                                                                               |
+| 4     | `.celestial-connector`                                  | relative | 2                      | `var(--void)` — opaque shield                                                                               |
+| 4a    | `.home-v2-stage__canvas` during `data-corridor-docked`  | fixed    | 2 inside corridor host | live R3F sphere/ambient backdrop; its painters retire on their own opacity channels                         |
+| 4b    | `#tools` during `data-corridor-exit` + `#tools::before` | relative | 6; internal 0          | intentional transparent lead-in; the pseudo shield reaches opaque before the ambient canvas retires         |
+| 5     | `#tools .tools__head` on the enhanced capability        | fixed    | 12 inside `.stations`  | rail-to-rail text/datum only; no structural background, so its opacity/clip reveal cannot unshield the page |
+| 6     | `.hud` including `[data-tools-rail-root]`               | fixed    | 50                     | persistent rails/nav; right-rail register paints inside this existing HUD stacking context                  |
 
 Any new `position: fixed` or `position: sticky` layer on the landing page must be added to this table in the same PR.
+
+`#tools` is the explicit intentional-see-through exception. During the
+Services handover its station background is transparent while its absolute
+`::before` shield fades from transparent to opaque via `--tools-bg-in`. The
+fixed `.tools__head` carries no fill and may reveal with opacity/clip safely;
+never move that reveal to `#tools` itself or fade the pseudo shield. The
+right-rail register is not a new page overlay: it is nested inside the
+existing fixed `.hud` at z50.
 
 ### 2. Rule: full-bleed elements inside `.stations` at `z ≥ 2` must be opaque
 
