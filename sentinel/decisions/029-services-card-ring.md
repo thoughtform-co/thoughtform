@@ -324,3 +324,11 @@ Guardrails: the veil is the ONLY dynamic photo treatment — never re-bake
 dots into the face (kills the resolve) and never veil the chip row or the
 copy stack; hover must key off the same projected rects the hit layer
 uses (one geometry truth).
+
+## Update 4 (2026-07-10): translucent panes
+
+`RING_OPACITY_RANGE` ceiling 1.0 → 0.9 (Vince: "make the cards slightly
+transparent") — the front face reads as a translucent device pane with the
+tracks, halo, and starfield ghosting through it. The ceiling must stay
+above the 0.55 depth-write gate, or the front card stops occluding the
+mark's point pass. Lab gains an `opacity max` slider.

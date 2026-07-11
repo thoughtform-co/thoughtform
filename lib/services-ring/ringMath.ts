@@ -88,8 +88,12 @@ export const RING_SCALE_RANGE: readonly [number, number] = [0.72, 1.06];
 
 /** Card opacity from depth: back cards dim toward the void — this stands in
  *  for real occlusion behind the particle mark (which writes no depth).
- *  Floor lifted 0.08 → 0.16 in Update 1 (see also RING_OPACITY_WINDOW). */
-export const RING_OPACITY_RANGE: readonly [number, number] = [0.16, 1.0];
+ *  Floor lifted 0.08 → 0.16 in Update 1 (see also RING_OPACITY_WINDOW).
+ *  Ceiling dropped 1.0 → 0.9 in Update 4 (Vince: "make the cards slightly
+ *  transparent") — the front face stays a translucent device pane, letting
+ *  the tracks, halo, and starfield ghost through it. Must stay > 0.55 so
+ *  the front card's depthWrite gate keeps engaging. */
+export const RING_OPACITY_RANGE: readonly [number, number] = [0.16, 0.9];
 
 /** Smootherstep window (in nz) for `depthOpacity`. The high edge pulled in
  *  from 0.85 → 0.6 (Update 1) lifts the SIDE cards (nz ≈ 0) toward

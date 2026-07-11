@@ -70,6 +70,7 @@ interface OrbitLabConfig {
   yOffset: number;
   scaleMin: number;
   opacityMin: number;
+  opacityMax: number;
   opacityWinHi: number;
   travelFrac: number;
   springOmega: number;
@@ -101,6 +102,7 @@ const DEFAULTS: OrbitLabConfig = {
   yOffset: RING_Y_OFFSET,
   scaleMin: RING_SCALE_RANGE[0],
   opacityMin: RING_OPACITY_RANGE[0],
+  opacityMax: RING_OPACITY_RANGE[1],
   opacityWinHi: RING_OPACITY_WINDOW[1],
   travelFrac: RING_TRAVEL_FRAC,
   springOmega: RING_SPRING_OMEGA,
@@ -280,7 +282,7 @@ RING_SPRING_ZETA = ${cfg.springZeta.toFixed(2)}
 RING_SWAY_CAP_RAD = ${cfg.swayCap.toFixed(2)}
 RING_FACING_BLEND = ${cfg.facingBlend.toFixed(2)}
 RING_SCALE_RANGE = [${cfg.scaleMin.toFixed(2)}, ${RING_SCALE_RANGE[1]}]
-RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${RING_OPACITY_RANGE[1]}]
+RING_OPACITY_RANGE = [${cfg.opacityMin.toFixed(2)}, ${cfg.opacityMax.toFixed(2)}]
 RING_OPACITY_WINDOW = [${RING_OPACITY_WINDOW[0]}, ${cfg.opacityWinHi.toFixed(2)}]
 RING_SLAB_DEPTH = ${cfg.slabDepth.toFixed(3)}
 RING_SLAB_BEZEL = ${cfg.bezel.toFixed(3)}
@@ -357,7 +359,7 @@ RING_GLOW_OPACITY = ${cfg.glowOp.toFixed(3)}`;
               springOmega={cfg.springOmega}
               springZeta={cfg.springZeta}
               swayCap={cfg.swayCap}
-              opacityRange={[cfg.opacityMin, RING_OPACITY_RANGE[1]]}
+              opacityRange={[cfg.opacityMin, cfg.opacityMax]}
               scaleRange={[cfg.scaleMin, RING_SCALE_RANGE[1]]}
               opacityWindow={[RING_OPACITY_WINDOW[0], cfg.opacityWinHi]}
               slabDepth={cfg.slabDepth}
@@ -498,6 +500,14 @@ RING_GLOW_OPACITY = ${cfg.glowOp.toFixed(3)}`;
             max={0.6}
             step={0.01}
             onChange={(v) => set({ opacityMin: v })}
+          />
+          <Slider
+            label="opacity max"
+            value={cfg.opacityMax}
+            min={0.5}
+            max={1}
+            step={0.01}
+            onChange={(v) => set({ opacityMax: v })}
           />
           <Slider
             label="opacity win"
