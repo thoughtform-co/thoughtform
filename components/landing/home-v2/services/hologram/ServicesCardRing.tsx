@@ -23,7 +23,10 @@
  *   slab  ( 0  )  extruded chamfered glass body — dark smoked caps + gold
  *                 side walls (the lip), clear bezel margin around the content;
  *   glint (0.05)  hairline EdgesGeometry wireframe on the slab silhouette;
- *   content(0.1)  the baked plate face, floated above the front cap.
+ *   content(0.1)  the baked plate face, floated above the front cap;
+ *   veil  (0.12)  the dot-matrix feed read over the photo zone — fades on
+ *                 hover so the photo RESOLVES (Update 3, the plate's
+ *                 `:hover` behavior; shared tiled strip texture).
  * Everything stays BELOW the mark's point pass (renderOrder 1) so the
  * "cards draw before points, front card writes depth" contract holds; the
  * glass/glint/glow NEVER write depth (a translucent veil writing depth
@@ -118,14 +121,67 @@ const VOID = "#050403";
 const DAWN = "236, 227, 214";
 
 /* The plate's hologram photo layering (`.svc-plate__pbg--dots` + `--soft`),
- * restored in Update 2. Pitch/radius are the plate's 4px / 1.05px mask at
- * the 2× bake scale; the alphas sit between the plate's rest (.34 dots /
- * .08 soft) and hover-resolved (.16 / .48) states — the ring card IS the
- * open showcase, so the feed reads holographic yet legible. */
+ * restored in Update 2 and made HOVER-RESOLVABLE in Update 3: the face is
+ * baked CLEAN and the dot-matrix lives on a separate VEIL plane whose
+ * occlusion is the exact composite equivalent — between dots the photo
+ * shows at PHOTO_SOFT_ALPHA, inside dots at SOFT+DOTS — so fading the veil
+ * resolves the feed precisely like the plate's `:hover` (rest .34/.08 →
+ * resolved .16/.48). Pitch/radius are the plate's 4px / 1.05px mask at the
+ * 2× bake scale. */
 const PHOTO_DOT_PITCH = 8;
 const PHOTO_DOT_RADIUS = 2.15;
 const PHOTO_DOTS_ALPHA = 0.62;
 const PHOTO_SOFT_ALPHA = 0.3;
+
+/** Veil vertical profile (bake px): clear over the CHIP ROW (the DOM plate
+ *  drew chip/status above the dot mask — they must stay crisp at rest),
+ *  full over the photo-led zone, faded out above the copy stack — the
+ *  ground scrim owns the read down there, and the copy must never sit
+ *  under the veil. */
+const VEIL_TOP_START = 150;
+const VEIL_TOP_END = 230;
+const VEIL_FADE_START = 640;
+const VEIL_FADE_END = 820;
+
+/** Hover-resolved veil level — the plate kept a whisper of dots on hover
+ *  (dots .34 → .16), so the veil dims to a residue rather than to zero. */
+const RING_VEIL_HOVER_LEVEL = 0.18;
+
+/** Damp rate (per second) for the hover resolve/restore transition. */
+const VEIL_DAMP_RATE = 7;
+
+/**
+ * The shared veil strip: an 8px-wide, card-height column of void tint with
+ * the dot matrix punched out, tiled horizontally across the card. Alpha
+ * math (see PHOTO_* doc): between dots occlusion = 1 − SOFT; inside dots
+ * the punch removes DOTS/(1 − SOFT) of it, leaving 1 − SOFT − DOTS.
+ */
+function buildVeilCanvas(): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = PHOTO_DOT_PITCH;
+  canvas.height = BAKE_H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  const between = 1 - PHOTO_SOFT_ALPHA;
+  const gradient = ctx.createLinearGradient(0, 0, 0, BAKE_H);
+  gradient.addColorStop(0, "rgba(5, 4, 3, 0)");
+  gradient.addColorStop(VEIL_TOP_START / BAKE_H, "rgba(5, 4, 3, 0)");
+  gradient.addColorStop(VEIL_TOP_END / BAKE_H, `rgba(5, 4, 3, ${between})`);
+  gradient.addColorStop(VEIL_FADE_START / BAKE_H, `rgba(5, 4, 3, ${between})`);
+  gradient.addColorStop(VEIL_FADE_END / BAKE_H, "rgba(5, 4, 3, 0)");
+  gradient.addColorStop(1, "rgba(5, 4, 3, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, PHOTO_DOT_PITCH, BAKE_H);
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = `rgba(0, 0, 0, ${PHOTO_DOTS_ALPHA / (1 - PHOTO_SOFT_ALPHA)})`;
+  for (let y = 0; y < BAKE_H; y += PHOTO_DOT_PITCH) {
+    ctx.beginPath();
+    ctx.arc(PHOTO_DOT_PITCH / 2, y + PHOTO_DOT_PITCH / 2, PHOTO_DOT_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = "source-over";
+  return canvas;
+}
 
 /**
  * Gold-tone LUT reproducing the plate photo treatment
@@ -290,74 +346,30 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
   if (img) {
-    // ── The plate's hologram photo effect (ADR-029 Update 2 restoration) ──
-    // The C3 plate never showed the photo as a clean print: it resolved
-    // through a 4px DOT MATRIX (`.svc-plate__pbg--dots`, the feed read)
-    // over a faint full-photo ghost (`--soft`). Rebuild exactly that
-    // layering: gold-toned photo → ghost pass at PHOTO_SOFT_ALPHA, then
-    // the same photo punched through the dot mask at PHOTO_DOTS_ALPHA.
-    // (Plate rest state was dots .34 / soft .08, hover-resolved .16 / .48;
-    // the ring cards ARE the showcase, so they sit between — holographic
-    // but legible.)
-    const photoLayer = document.createElement("canvas");
-    photoLayer.width = BAKE_W;
-    photoLayer.height = BAKE_H;
-    const pctx = photoLayer.getContext("2d");
-    if (pctx) {
-      // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is 1:1).
-      const scale = Math.max(BAKE_W / img.naturalWidth, BAKE_H / img.naturalHeight);
-      const dw = img.naturalWidth * scale;
-      const dh = img.naturalHeight * scale;
-      pctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
+    // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is
+    // 1:1), baked CLEAN — the plate's dot-matrix hologram effect lives on
+    // the animatable VEIL plane above this face (Update 3), so hovering a
+    // card can resolve the feed exactly like the DOM plate's
+    // `[data-state="open"]:hover` did. See buildVeilTexture.
+    const scale = Math.max(BAKE_W / img.naturalWidth, BAKE_H / img.naturalHeight);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    ctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
 
-      // Plate gold-tone treatment (LUT pass — see buildGoldToneLut).
-      const lut = buildGoldToneLut();
-      const data = pctx.getImageData(0, 0, BAKE_W, BAKE_H);
-      const px = data.data;
-      for (let i = 0; i < px.length; i += 4) {
-        const lum = Math.min(
-          255,
-          Math.round(0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2])
-        );
-        px[i] = lut.r[lum];
-        px[i + 1] = lut.g[lum];
-        px[i + 2] = lut.b[lum];
-      }
-      pctx.putImageData(data, 0, 0);
-
-      // Dot-matrix layer: the photo kept ONLY inside the dot mask (the
-      // plate's `mask-image: radial-gradient(circle, #000 1.05px, …)` at
-      // 4px pitch → 2× bake: r ≈ 2.15 on an 8px tile).
-      const dotsLayer = document.createElement("canvas");
-      dotsLayer.width = BAKE_W;
-      dotsLayer.height = BAKE_H;
-      const dlctx = dotsLayer.getContext("2d");
-      const maskTile = document.createElement("canvas");
-      maskTile.width = PHOTO_DOT_PITCH;
-      maskTile.height = PHOTO_DOT_PITCH;
-      const mctx = maskTile.getContext("2d");
-      if (dlctx && mctx) {
-        mctx.fillStyle = "#fff";
-        mctx.beginPath();
-        mctx.arc(PHOTO_DOT_PITCH / 2, PHOTO_DOT_PITCH / 2, PHOTO_DOT_RADIUS, 0, Math.PI * 2);
-        mctx.fill();
-        dlctx.drawImage(photoLayer, 0, 0);
-        dlctx.globalCompositeOperation = "destination-in";
-        const mask = dlctx.createPattern(maskTile, "repeat");
-        if (mask) {
-          dlctx.fillStyle = mask;
-          dlctx.fillRect(0, 0, BAKE_W, BAKE_H);
-        }
-        dlctx.globalCompositeOperation = "source-over";
-      }
-
-      // Composite over the void ground: ghost first, feed dots on top.
-      ctx.globalAlpha = PHOTO_SOFT_ALPHA;
-      ctx.drawImage(photoLayer, 0, 0);
-      ctx.globalAlpha = PHOTO_DOTS_ALPHA;
-      ctx.drawImage(dotsLayer, 0, 0);
-      ctx.globalAlpha = 1;
+    // Plate gold-tone treatment (LUT pass — see buildGoldToneLut).
+    const lut = buildGoldToneLut();
+    const data = ctx.getImageData(0, 0, BAKE_W, BAKE_H);
+    const px = data.data;
+    for (let i = 0; i < px.length; i += 4) {
+      const lum = Math.min(
+        255,
+        Math.round(0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2])
+      );
+      px[i] = lut.r[lum];
+      px[i + 1] = lut.g[lum];
+      px[i + 2] = lut.b[lum];
     }
+    ctx.putImageData(data, 0, 0);
   } else {
     // Schematic dot-grid stand-in (the `.svc-plate__pbg--schematic` read) for
     // any future photo-less service — the ring never shows a raw void card.
@@ -685,6 +697,20 @@ export function ServicesCardRing({
     };
   }, [slabGeometry, glintGeometry]);
 
+  // The hologram veil — one tiny tiled strip shared by all four cards
+  // (see buildVeilCanvas); per-card materials fade it on hover.
+  const veilTexture = useMemo(() => {
+    const texture = new THREE.CanvasTexture(buildVeilCanvas());
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.repeat.set(BAKE_W / PHOTO_DOT_PITCH, 1);
+    return texture;
+  }, []);
+  useEffect(() => {
+    return () => veilTexture.dispose();
+  }, [veilTexture]);
+
   // Soft gold halo — the Atlas two-layer radial glow collapsed into one
   // gradient texture, shared by all four glow planes.
   const glowTexture = useMemo(() => {
@@ -760,6 +786,22 @@ export function ServicesCardRing({
       ),
     [glowTexture]
   );
+  const veilMaterials = useMemo(
+    () =>
+      SERVICE_PLATES.map(
+        () =>
+          new THREE.MeshBasicMaterial({
+            map: veilTexture,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            depthTest: true,
+            blending: THREE.NormalBlending,
+            toneMapped: false,
+          })
+      ),
+    [veilTexture]
+  );
   useEffect(() => {
     return () => {
       for (const [caps, walls] of slabMaterials) {
@@ -768,8 +810,27 @@ export function ServicesCardRing({
       }
       for (const material of glintMaterials) material.dispose();
       for (const material of glowMaterials) material.dispose();
+      for (const material of veilMaterials) material.dispose();
     };
-  }, [slabMaterials, glintMaterials, glowMaterials]);
+  }, [slabMaterials, glintMaterials, glowMaterials, veilMaterials]);
+
+  // Hover-resolve (Update 3): track the pointer window-level (the canvas is
+  // pointer-events:none — the pointer-look precedent) and test it against
+  // the card rects projected in the frame loop; the hovered card's veil
+  // damps toward its resolved level.
+  const pointerPxRef = useRef({ x: -1, y: -1 });
+  const hoverRectsRef = useRef<
+    Array<{ x: number; y: number; w: number; h: number; nz: number } | null>
+  >(new Array(RING_COUNT).fill(null));
+  const veilLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(1));
+  useEffect(() => {
+    const onMove = (event: PointerEvent) => {
+      pointerPxRef.current.x = event.clientX;
+      pointerPxRef.current.y = event.clientY;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
 
   // Bake the four card faces once (fonts + photos are awaited; a glEpoch
   // canvas remount re-runs this effect and re-bakes).
@@ -860,6 +921,29 @@ export function ServicesCardRing({
     const parked = dissipate >= ANCHOR_PUBLISH_DISSIPATE;
     const anchors: RingCardAnchor[] = [];
 
+    // Hovered card from LAST frame's projected rects (one frame of lag is
+    // imperceptible at the veil's damp rate). Front-most containing rect
+    // wins; nothing hovers until parked.
+    let hovered = -1;
+    if (parked) {
+      const pointer = pointerPxRef.current;
+      let bestNz = -Infinity;
+      for (let i = 0; i < RING_COUNT; i++) {
+        const rect = hoverRectsRef.current[i];
+        if (!rect) continue;
+        if (
+          pointer.x >= rect.x &&
+          pointer.x <= rect.x + rect.w &&
+          pointer.y >= rect.y &&
+          pointer.y <= rect.y + rect.h &&
+          rect.nz > bestNz
+        ) {
+          bestNz = rect.nz;
+          hovered = i;
+        }
+      }
+    }
+
     for (let i = 0; i < RING_COUNT; i++) {
       const cardGroup = cardGroupRefs.current[i];
       const mesh = meshRefs.current[i];
@@ -887,6 +971,12 @@ export function ServicesCardRing({
       glintMaterials[i].opacity = glintOpacity * depthO * master;
       // Halo is front-weighted: swells as the card parks, gone on the sides.
       glowMaterials[i].opacity = glowOpacity * smootherstep(0.35, 0.95, placed.nz) * master;
+      // Hover-resolve: the hovered card's veil damps toward its resolved
+      // residue; everyone else restores to the full feed read.
+      const veilTarget = i === hovered ? RING_VEIL_HOVER_LEVEL : 1;
+      veilLevelRef.current[i] +=
+        (veilTarget - veilLevelRef.current[i]) * Math.min(1, delta * VEIL_DAMP_RATE);
+      veilMaterials[i].opacity = veilLevelRef.current[i] * depthO * master;
       cardGroup.visible = opacity > 0.004;
 
       // depthWrite hysteresis — only the near-front card's CONTENT writes
@@ -895,7 +985,10 @@ export function ServicesCardRing({
       if (write !== material.depthWrite) material.depthWrite = write;
       depthWriteRef.current[i] = write;
 
-      if (publishAnchors && parked && cardGroup.visible) {
+      // Project the content plane's corners whenever parked — the store
+      // publish is gated on `publishAnchors`, but the HOVER-resolve needs
+      // the rects everywhere (lab included).
+      if (parked && cardGroup.visible) {
         mesh.updateWorldMatrix(true, false);
         let minX = Infinity;
         let minY = Infinity;
@@ -923,18 +1016,27 @@ export function ServicesCardRing({
         // The card directly OPPOSITE the front one projects a rect that sits
         // entirely inside the front card's face — a click there must never
         // surprise-rotate to the hidden card (found when the Update-1 opacity
-        // floor 0.16 stopped the old `> 0.1` gate from filtering it).
+        // floor 0.16 stopped the old `> 0.1` gate from filtering it). The
+        // same shadowed rect must not steal HOVER either.
         const occludedByFront = i === (front + 2) % RING_COUNT;
-        anchors.push({
-          serviceId: SERVICES[i].id,
-          x: minX,
-          y: minY,
-          w: maxX - minX,
-          h: maxY - minY,
-          depth: centreDepth,
-          visible: !clipped && !occludedByFront && opacity > 0.1,
-          front: i === front,
-        });
+        hoverRectsRef.current[i] =
+          !clipped && !occludedByFront && opacity > 0.1
+            ? { x: minX, y: minY, w: maxX - minX, h: maxY - minY, nz: placed.nz }
+            : null;
+        if (publishAnchors) {
+          anchors.push({
+            serviceId: SERVICES[i].id,
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxY - minY,
+            depth: centreDepth,
+            visible: !clipped && !occludedByFront && opacity > 0.1,
+            front: i === front,
+          });
+        }
+      } else {
+        hoverRectsRef.current[i] = null;
       }
     }
 
@@ -1013,6 +1115,17 @@ export function ServicesCardRing({
               blending={THREE.NormalBlending}
               toneMapped={false}
             />
+          </mesh>
+          {/* Hologram veil — the plate's dot-matrix feed read over the
+              photo zone; fades on hover so the photo resolves (the
+              `.svc-plate:hover` behavior, Update 3). */}
+          <mesh
+            renderOrder={0.12}
+            position={[0, 0, slabDepth / 2 + RING_CONTENT_LIFT + 0.002]}
+            material={veilMaterials[i]}
+            frustumCulled={false}
+          >
+            <planeGeometry args={[cardW, cardHeight]} />
           </mesh>
         </group>
       ))}

@@ -57,22 +57,30 @@ export const RING_DIRECTION = -1;
 export const RING_QUARTER = (Math.PI * 2) / RING_COUNT;
 
 /** Fraction of each scroll beat spent TRAVELLING to the incoming card; the
- *  remainder is dwell (the card holds front while its copy is read). */
-export const RING_TRAVEL_FRAC = 0.45;
+ *  remainder is dwell (the card holds front while its copy is read).
+ *  Widened 0.45 → 0.55 in Update 3 so a snapped beat spreads its turn over
+ *  more of the scroll animation (smoother read, still ample dwell). */
+export const RING_TRAVEL_FRAC = 0.55;
 
-/** Spring frequency (rad/s) for the rotation follower. */
-export const RING_SPRING_OMEGA = 6.0;
+/** Spring frequency (rad/s) for the rotation follower. Slowed 6.0 → 4.2 in
+ *  Update 3 — with the wider cap below, the spring genuinely GLIDES the
+ *  ring instead of being dragged at the clamp by the scroll easing. */
+export const RING_SPRING_OMEGA = 4.2;
 
 /** Damping ratio < 1 → a small underdamped overshoot that decays to rest.
  *  This IS the "bounded decaying sway": the only motion after scroll stops
- *  is this spring settling — there is no wall-clock term anywhere. */
-export const RING_SPRING_ZETA = 0.82;
+ *  is this spring settling — there is no wall-clock term anywhere.
+ *  0.82 → 0.9 in Update 3: more glide, less wobble at the settle. */
+export const RING_SPRING_ZETA = 0.9;
 
-/** Hard cap (rad ≈ 6.9°) on |rotation − target|. Bounds both the tracking
+/** Hard cap (rad ≈ 22°) on |rotation − target|. Bounds both the tracking
  *  lag during fast scroll AND the post-scroll sway, so the ring can never
  *  revolve on its own (ADR-021 addendum: no time-clock rotation behind
- *  readable services copy). */
-export const RING_SWAY_CAP_RAD = 0.12;
+ *  readable services copy). Widened 0.12 → 0.38 in Update 3: at 0.12 the
+ *  spring rode the clamp through every quarter-turn and the motion was
+ *  effectively the browser's scroll easing — the wider bound lets the
+ *  spring smooth the turn while staying firmly scroll-owned. */
+export const RING_SWAY_CAP_RAD = 0.38;
 
 /** Card scale from depth: back → front. Floor lifted 0.62 → 0.72 in
  *  Update 1 — side cards sit closer and read as reachable cards. */

@@ -293,3 +293,34 @@ Guardrails: the wheel hook must never write rotation directly (only
 affordance — do not "fix" the hold by auto-advancing; the photo effect's
 dot layer multiplies the photo THROUGH the mask (destination-in), never
 dark dots OVER the photo.
+
+## Update 3 (2026-07-10, late): glide the turn, resolve on hover
+
+**Smoother rotation.** At `RING_SWAY_CAP_RAD 0.12` the spring rode its
+clamp through every quarter-turn — the perceived motion was the browser's
+scroll easing, not the spring. Update: `RING_SWAY_CAP_RAD 0.12 → 0.38`
+(≈22°, still hard-bounded + decaying, ADR-021 intact), `RING_SPRING_OMEGA
+6.0 → 4.2`, `RING_SPRING_ZETA 0.82 → 0.9` (glide over wobble),
+`RING_TRAVEL_FRAC 0.45 → 0.55` (a snapped beat spreads its turn wider).
+The ring now visibly eases into each beat instead of snapping.
+
+**Hover-resolve (the plate's `:hover` behavior).** The dot-matrix moved
+OFF the baked face onto a per-card VEIL plane (renderOrder 0.12, above the
+content): the face bakes CLEAN again, and the veil — one shared 8px-wide
+tiled strip texture — carries the void tint punched with the dot mask.
+Alpha math makes rest-state pixel-equivalent to Update 2's baked
+composite (between dots 1−SOFT, in dots 1−SOFT−DOTS). Hovering a card
+(window pointermove tested against the frame loop's projected rects; the
+occluded-by-front rect can't steal hover) damps its veil to
+`RING_VEIL_HOVER_LEVEL 0.18` — the photo resolves with a whisper of dots
+left, exactly the plate's dots .34→.16 / soft .08→.48 read. The veil's
+vertical profile is CLEAR over the chip row (the DOM plate drew chip and
+status above the mask) and fades out above the copy stack, so chrome and
+copy never sit under it. Corner projection now runs whenever parked (the
+store publish stays gated on `publishAnchors`), so the lab gets hover for
+free. Texture memory returns to the 4 clean bakes + one tiny strip.
+
+Guardrails: the veil is the ONLY dynamic photo treatment — never re-bake
+dots into the face (kills the resolve) and never veil the chip row or the
+copy stack; hover must key off the same projected rects the hit layer
+uses (one geometry truth).
