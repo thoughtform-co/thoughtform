@@ -397,26 +397,42 @@ data-services-ambient) && arriveClock > 0.001`, where `arriveClock` =
 The ring-side companion (parked front card holds a bounded 3/4 pose so the
 slab reads 3D in view) is documented in ADR-029's addendum.
 
-### Tools header — centred stack
+### Tools header — Linear split under a reticle frame
 
-The fixed header is now a **centred column** — title over paragraph, both
-`text-align: center` — uniform with the epilogue "everyone is racing to
-build this layer" signal block (owner, 2026-07-11 evening). Supersedes
-Update 2's "title and lede hang from the left and right content fields"
-7fr/5fr split. `.tools__head--split` is `display: flex; flex-direction:
-column; align-items: center`; `.tools__title` / `.tools__lede` dropped
-their `grid-column`s, the lede is `margin: 0 auto; max-width: 46ch;
-text-wrap: balance` (even two-line wrap, no orphan). The **title now
-matches the corridor / epilogue section titles** exactly
-(`.home-v2-station-header__title`): uppercase, `font-size: clamp(26px, 3vw,
-44px)`, `letter-spacing: 0.04em`, gold text-shadow — no compact-header
-shrink (the desktop `clamp(26px, 2.2vw, 34px)` override was removed), so
-`#tools` reads as a peer section title. The full-size stack is tall, so
-**`--tools-head-h` grew `clamp(88px, 9.5svh, 104px)` →
-`clamp(148px, 19svh, 176px)`**; because `--tools-stack-top` derives from it
-(and the card-height `min()` subtracts stack-top), the deck follows down
-1:1 and the card BOTTOM is unchanged (`100svh − (n−1)·peek − bottom-safe`)
-— only the card top drops, so the bottom-clearance contract is preserved
-(verified: active card 471px@1440×900, 367px@1366×768 with zero body
-overflow). The `[data-tw]` typewriter, `--tools-bg-in` shield, and reveal
-ordering are untouched.
+(The same-day centred-stack pass is superseded — it resolved the wordmark
+collision but broke the terminal grammar. History: title/lede were briefly
+`text-align: center` in a flex column at `--tools-head-h`
+`clamp(148px, 19svh, 176px)`.)
+
+The fixed header is a **Linear split**: title LEFT / lede RIGHT
+(`minmax(0, 1.3fr) minmax(0, 1fr)`, `align-items: end` — the shards
+substrate-map grammar), with the lede `justify-self: end; max-width: 42ch;
+text-wrap: balance`. The split is **aligned to the CARD FRAME, not the
+rails** ("the cases are the boundaries" — owner): `--tools-head-inset` is
+`0` and `.tools__head--split` is `width: min(var(--tools-frame-w), 100%);
+margin-inline: auto`, so the title's left edge and the lede's right edge
+sit exactly on the deck's edges. The wordmark collision is resolved by
+**corner symbols**: two 9px gold reticle crosses (`+`, the Arc caption
+card's corner grammar) at the block's top-left and top-right corners,
+floated `clamp(12px, 1.6svh, 18px)` above it — NO line touches the rails
+(a first pass drew a rail-to-rail dashed datum; the owner rejected the
+rail connection as ugly). `.tools__head` base is `position: relative` +
+`padding-top` (pseudo context + air); the capability / reduced-motion
+smoke assertions were updated `static` → `relative`. Title spec unchanged
+(corridor-matched uppercase display). Explored in `/test/tools-header-lab`
+(7 wordmark/header placements).
+
+**`--tools-head-h`: `clamp(108px, 13.5svh, 132px)`** — the split
+BOTTOM-aligns to `rail-y-start + head-h`, so this height doubles as the
+"how far down the header text sits" lever (trimmed 2026-07-11 to lift the
+title + lede higher, tighter to the wordmark). stack-top derives from it,
+card bottom unchanged (the standing head-h contract) — the first card's
+top follows up and it grows into the freed space.
+
+### Left rail tick ladder — 8.33% restored
+
+`lib/v7-parse/hudTicks.ts`: the left rail's 8.33% slot ("reserved for the
+compass waypoint" per the Brand Codex note) never hosted anything — the
+travelling depth diamond doesn't park there — so the double-width gap read
+as a missing tick. The left ladder now carries all 13 positions, matching
+the right rail.

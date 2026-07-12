@@ -35,10 +35,12 @@
   content-visibility: visible;
   /* Hosts the ::before fade backdrop. */
   position: relative;
-  /* Holds the centred, full-size (corridor-matched) title-over-paragraph
-     stack. --tools-stack-top derives from this, so the card deck follows
-     down 1:1 (card BOTTOM stays put — only its top drops). */
-  --tools-head-h: clamp(148px, 19svh, 176px);
+  /* Holds the Linear split (title left / lede right, corridor-matched
+     title size). The split BOTTOM-aligns to rail-y-start + this height,
+     so trimming it lifts the header text up (owner, 2026-07-11); the
+     first card's top follows up 1:1 and it grows into the freed space
+     (card BOTTOM is fixed). */
+  --tools-head-h: clamp(108px, 13.5svh, 132px);
   --tools-head-gap: clamp(16px, 2svh, 24px);
   --tools-stack-top: calc(var(--hud-rail-y-start) + var(--tools-head-h) + var(--tools-head-gap));
   --tools-peek: clamp(32px, 3.4svh, 36px);
@@ -88,21 +90,53 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   margin: 0 auto clamp(40px, 7vh, 72px);
 }
 
-/* Centered stack (2026-07-11): title over paragraph, both centred —
-   uniform with the epilogue "everyone is racing to build this layer"
-   signal block. Was a 7fr/5fr title-left / lede-right split. */
+/* Linear split (2026-07-11 evening, owner): title LEFT, lede RIGHT —
+   the linear.app / shards section grammar (1.3fr/1fr, bottom-aligned),
+   aligned to the CARD FRAME below (the cases are the boundaries), not
+   the rails. Two small gold reticle crosses mark the block's top-left
+   and top-right corners — the Arc caption card's corner-cross grammar
+   without any line touching the rails — giving the visual separation
+   between the fixed wordmark above and the title below (supersedes the
+   same-day centred stack AND the first rail-to-rail dashed-datum pass). */
+.tools__head {
+  position: relative;
+  padding-top: clamp(22px, 3svh, 32px);
+}
+
 .tools__head--split {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  column-gap: clamp(32px, 4.5vw, 64px);
+  align-items: end;
   row-gap: clamp(14px, 2.4vh, 24px);
+}
+
+/* Corner symbols — reticle `+` at the block's top-left and top-right. */
+.tools__head--split::before,
+.tools__head--split::after {
+  content: "";
+  position: absolute;
+  top: calc(-1 * clamp(12px, 1.6svh, 18px));
+  width: 9px;
+  height: 9px;
+  background:
+    linear-gradient(var(--gold) 0 0) center / 9px 1px no-repeat,
+    linear-gradient(var(--gold) 0 0) center / 1px 9px no-repeat;
+}
+
+.tools__head--split::before {
+  left: 0;
+}
+
+.tools__head--split::after {
+  right: 0;
 }
 
 /* Matches the corridor / epilogue section titles
    (.home-v2-station-header__title): uppercase display face at the same
    clamp, tracking, and gold-glow, so #tools reads as a peer section
-   title (owner, 2026-07-11). */
+   title (owner, 2026-07-11). Left-aligned in the split's title column. */
 .tools__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
@@ -112,8 +146,7 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   text-transform: uppercase;
   color: var(--dawn);
   margin: 0;
-  text-align: center;
-  text-wrap: balance;
+  text-align: left;
   text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
 }
 
@@ -184,14 +217,27 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   font-size: clamp(14px, 1.05vw, 17px);
   line-height: 1.55;
   color: var(--dawn-70);
-  margin: 0 auto;
-  /* Balance the wrap so the two centred lines are even rather than a
-     full line + a short "they serve." orphan. Narrower cap keeps balance
-     from resolving to one very wide line at large viewports. */
-  max-width: 46ch;
-  text-align: center;
+  margin: 0;
+  /* Hug the right rail: the block rides the right column's end edge,
+     text stays left-aligned (linear.app grammar). Balance keeps the
+     two lines even rather than a full line + orphan. */
+  justify-self: end;
+  max-width: 42ch;
+  text-align: left;
   text-wrap: balance;
   letter-spacing: -0.005em;
+}
+
+/* Narrow / short / reduced-motion: single column, natural flow. */
+@media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
+  .tools__head--split {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .tools__lede {
+    justify-self: start;
+  }
 }
 
 /* Desktop mode: the header is part of the fixed bridge instrumentation.
@@ -206,7 +252,10 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   }
 
   .tools__head {
-    --tools-head-inset: calc(var(--hud-content-inset) - var(--hud-margin));
+    /* No box inset — the split below centres itself to the card frame
+       width, so the header's text edges align with the deck's edges
+       (the cases are the boundaries — owner, 2026-07-11). */
+    --tools-head-inset: 0px;
     position: fixed !important;
     top: var(--hud-rail-y-start);
     left: calc(var(--hud-margin) + var(--hud-rail-guide-inset));
@@ -222,7 +271,9 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   }
 
   .tools__head--split {
-    justify-content: flex-start;
+    /* Match the deck's frame width exactly (same var the cards use). */
+    width: min(var(--tools-frame-w), 100%);
+    margin-inline: auto;
     row-gap: clamp(10px, 1.4svh, 16px);
   }
 

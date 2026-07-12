@@ -9,13 +9,12 @@
  * Each rail carries 13 equal-spacing tick positions (0%, 8.33%, …,
  * 100%) over the rail-aside height:
  *
- *   - LEFT rail: 12 ticks (skips 8.33% — that slot is reserved for
- *     the compass waypoint / depth marker that lives outside the
- *     tick ladder on the left rail). Majors at 33.33% and 66.67%,
- *     labelled "2" and "5".
- *   - RIGHT rail: 13 ticks (includes 8.33% as a regular minor —
- *     there is no compass on the right rail). Majors at 33.33% and
- *     66.67%, no labels.
+ *   - LEFT rail: 13 ticks. The 8.33% slot was originally skipped
+ *     ("reserved for the compass waypoint"), but the travelling depth
+ *     diamond never parks there and the double-width gap read as a
+ *     MISSING tick (owner, 2026-07-11) — the ladder now matches the
+ *     right rail. Majors at 33.33% and 66.67%, labelled "2" and "5".
+ *   - RIGHT rail: 13 ticks. Majors at 33.33% and 66.67%, no labels.
  *
  * Widths: 7px minor, 21px major. CSS handles the outward extension
  * from the guide (left rail extends LEFT, right rail extends RIGHT).
@@ -35,7 +34,7 @@ interface TickMark {
 
 const LEFT_TICKS: readonly TickMark[] = [
   { yPct: 0, major: false },
-  // 8.33% skipped — compass waypoint slot on the left rail.
+  { yPct: 8.33, major: false },
   { yPct: 16.67, major: false },
   { yPct: 25, major: false },
   { yPct: 33.33, major: true, label: "2" },

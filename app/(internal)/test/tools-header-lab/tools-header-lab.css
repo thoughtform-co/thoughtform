@@ -1,0 +1,491 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Tools Header Lab — lab-scoped styles (thl-*).
+
+   Rebuilds a static mock of the #tools top region from landing.css
+   tokens only (fonts, --gold/--dawn*, --hud-* geometry). Deliberately
+   does NOT import tools-cards.css: the production header's fixed-mode
+   media queries would fight the lab's per-variant compositions.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.thl {
+  min-height: 100svh;
+  background: #0a0908;
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+}
+
+.thl-stage {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* ─── HUD frame: corners ─────────────────────────────────────────── */
+
+.thl-corner {
+  position: absolute;
+  width: var(--hud-corner-zone, 40px);
+  height: var(--hud-corner-zone, 40px);
+  border: 0 solid rgba(235, 227, 214, 0.28);
+}
+.thl-corner--tl {
+  top: var(--hud-margin, 40px);
+  left: var(--hud-margin, 40px);
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.thl-corner--tr {
+  top: var(--hud-margin, 40px);
+  right: var(--hud-margin, 40px);
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.thl-corner--bl {
+  bottom: var(--hud-margin, 40px);
+  left: var(--hud-margin, 40px);
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.thl-corner--br {
+  bottom: var(--hud-margin, 40px);
+  right: var(--hud-margin, 40px);
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* ─── HUD frame: rails ───────────────────────────────────────────── */
+
+.thl-rail {
+  position: absolute;
+  top: var(--hud-rail-y-start, 112px);
+  bottom: calc(var(--hud-margin, 40px) + 64px);
+  width: var(--hud-rail-width, 64px);
+  pointer-events: none;
+}
+.thl-rail--l {
+  left: var(--hud-margin, 40px);
+}
+.thl-rail--r {
+  right: var(--hud-margin, 40px);
+}
+
+.thl-rail__track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(235, 227, 214, 0.25) 8%,
+    rgba(235, 227, 214, 0.25) 92%,
+    transparent
+  );
+}
+.thl-rail--l .thl-rail__track {
+  left: 0;
+}
+.thl-rail--r .thl-rail__track {
+  right: 0;
+}
+
+.thl-rail__tick {
+  position: absolute;
+  left: 0;
+  width: 8px;
+  height: 1px;
+  background: rgba(235, 227, 214, 0.3);
+}
+.thl-rail__tick--major {
+  width: 16px;
+  background: rgba(202, 165, 84, 0.55);
+}
+
+.thl-rail__station {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  left: 10px;
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+}
+.thl-rail__station b {
+  font-weight: 400;
+  color: var(--gold, #caa554);
+}
+
+/* V6 — the wordmark as rail chrome, reading bottom-up on the guide. */
+.thl-rail__brand {
+  position: absolute;
+  top: 60%;
+  left: 6px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.55));
+}
+
+/* ─── Right-rail register hint ───────────────────────────────────── */
+
+.thl-register__heading {
+  position: absolute;
+  top: calc(33.333% - 36px);
+  right: 12px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+
+.thl-register__row {
+  position: absolute;
+  right: -4px;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.thl-register__index {
+  font-size: 9px;
+  color: var(--gold-60, rgba(202, 165, 84, 0.6));
+}
+.thl-register__marker {
+  position: relative;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  flex: none;
+}
+.thl-register__marker::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  rotate: 45deg;
+}
+.thl-register__row[data-active] {
+  color: var(--gold, #caa554);
+}
+.thl-register__row[data-active] .thl-register__marker::after {
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+
+/* ─── Brand chrome: shipped lockup / recede / monogram ───────────── */
+
+.thl-brand {
+  position: absolute;
+  top: var(--hud-margin, 40px);
+  left: var(--hud-margin, 40px);
+  width: clamp(104px, 8.5vw, 150px);
+  z-index: 5;
+  transform-origin: top left;
+}
+.thl-brand img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.thl[data-wm="recede"] .thl-brand {
+  opacity: 0.32;
+  transform: scale(0.72);
+  filter: saturate(0.5);
+}
+
+.thl-brand--monogram {
+  width: 30px;
+}
+
+/* ─── Brand chrome: bezel band (V1 / V2) ─────────────────────────── */
+
+.thl-band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--hud-margin, 40px) + 34px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--hud-margin, 40px);
+  border-bottom: 1px solid rgba(235, 227, 214, 0.14);
+  z-index: 5;
+}
+.thl-band__lockup {
+  display: block;
+  height: 15px;
+  width: auto;
+  opacity: 0.92;
+}
+.thl-band__mono {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+}
+.thl-diamond {
+  width: 8px;
+  height: 8px;
+  background: var(--gold, #caa554);
+  rotate: 45deg;
+  flex: none;
+}
+.thl-band__sub {
+  border-left: 1px solid rgba(235, 227, 214, 0.25);
+  padding-left: 12px;
+  margin-left: 2px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+}
+
+/* ─── Hamburger placeholder ──────────────────────────────────────── */
+
+.thl-burger {
+  position: absolute;
+  top: var(--hud-margin, 40px);
+  right: var(--hud-margin, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-end;
+  z-index: 5;
+}
+.thl-burger i {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--dawn, #ebe3d6);
+}
+.thl-burger i:nth-child(2) {
+  width: 14px;
+}
+.thl-burger--band {
+  position: static;
+}
+
+/* ─── Datum hairline (V5) ────────────────────────────────────────── */
+
+.thl-datum {
+  position: absolute;
+  left: var(--hud-margin, 40px);
+  right: var(--hud-margin, 40px);
+  top: var(--hud-rail-y-start, 112px);
+  height: 1px;
+  background: rgba(235, 227, 214, 0.14);
+}
+
+/* ─── Section header ─────────────────────────────────────────────── */
+
+.thl-head {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--hud-rail-y-start, 112px);
+  padding-inline: var(--hud-content-inset, 144px);
+  display: grid;
+}
+
+/* Legacy 7/5 split — the baseline conflict. */
+.thl[data-head="legacy"] .thl-head {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  column-gap: clamp(24px, 4vw, 96px);
+  align-items: end;
+}
+
+/* Linear / shards split — the substrate-map grammar the owner pointed
+   at: title column wider (1.3fr), lede bottom-aligned to the title. */
+.thl[data-head="linear"] .thl-head {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  column-gap: clamp(32px, 4.5vw, 64px);
+  align-items: end;
+}
+
+/* V5 — content drops below the datum, clear of the brand zone. */
+.thl[data-wm="lockup"][data-head="linear"] .thl-head {
+  top: calc(var(--hud-rail-y-start, 112px) + 48px);
+}
+
+.thl-title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 3vw, 44px);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  /* No ch cap — the grid column governs; the authored <br> sets the
+     two-line shape (a cap tighter than the column re-wraps to 3 lines
+     at 1440 with the uppercase tracking). */
+}
+.thl-title em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--gold, #caa554);
+}
+
+.thl-caret {
+  display: inline-block;
+  width: 0.52ch;
+  height: 0.72em;
+  margin-left: 0.08em;
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  transform: translateY(0.08em);
+  animation: thl-caret 1.05s steps(2, start) infinite;
+}
+@keyframes thl-caret {
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.thl-lede {
+  margin: 0;
+  font-size: clamp(13px, 0.95vw, 16px);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+  max-width: 42ch;
+}
+
+/* ─── First-card stub ────────────────────────────────────────────── */
+
+.thl-card {
+  position: absolute;
+  left: calc(var(--hud-margin, 40px) + var(--hud-rail-width, 64px) + 24px);
+  right: calc(var(--hud-margin, 40px) + var(--hud-rail-width, 64px) + 24px);
+  top: calc(var(--hud-rail-y-start, 112px) + clamp(148px, 19svh, 176px) + clamp(16px, 2svh, 24px));
+}
+.thl-card__tape {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 38px;
+  padding-inline: 16px;
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  background: rgba(20, 18, 15, 0.72);
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+}
+.thl-card__plate {
+  padding: 2px 8px;
+  background: var(--gold, #caa554);
+  color: #0a0908;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+.thl-card__title {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+}
+.thl-card__title em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+}
+.thl-card__unit {
+  margin-left: auto;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-60, rgba(202, 165, 84, 0.6));
+}
+.thl-card__body {
+  height: 140px;
+  border: 1px solid rgba(235, 227, 214, 0.1);
+  border-top: 0;
+  background: rgba(20, 18, 15, 0.5);
+  mask-image: linear-gradient(to bottom, black 20%, transparent 95%);
+  -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 95%);
+}
+
+/* ─── Lab chrome: caption + variant chips ────────────────────────── */
+
+.thl-caption {
+  position: fixed;
+  left: var(--hud-margin, 40px);
+  bottom: calc(var(--hud-margin, 40px) * 0.5);
+  margin: 0;
+  z-index: 20;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  max-width: 58ch;
+}
+.thl-caption b {
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+}
+.thl-caption__prov {
+  display: block;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+
+.thl-chips {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--hud-margin, 40px) * 0.5);
+  translate: -50% 0;
+  display: flex;
+  gap: 6px;
+  z-index: 20;
+}
+.thl-chips button {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  background: rgba(10, 9, 8, 0.85);
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  cursor: pointer;
+}
+.thl-chips button:hover {
+  color: var(--dawn, #ebe3d6);
+}
+.thl-chips button[data-active] {
+  border-color: var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thl-caret {
+    animation: none;
+  }
+}
