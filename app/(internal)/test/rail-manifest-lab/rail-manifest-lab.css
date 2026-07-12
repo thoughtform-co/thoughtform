@@ -1,0 +1,582 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Rail Manifest Lab — lab-scoped styles (rml-*). ADR-031 look-dev.
+
+   Rebuilds a static mock of the HUD rails from landing.css tokens only
+   (fonts, --gold/--dawn*, --hud-* geometry, fallbacks throughout).
+   Three densities of the same manifest anatomy, switched by
+   [data-variant] on the root — production CSS never loads here.
+
+   Motion canon: QUANTIZED TERMINAL SNAP. Every animation is steps() —
+   a machine seating a cartridge, not a tween. Seat duration 260ms
+   mirrors the right register's HANDOVER_FADE_S (0.26s) so the moment
+   reads as one clock.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.rml {
+  min-height: 100svh;
+  background: #0a0908;
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+}
+
+.rml-stage {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* ─── HUD frame: corners ─────────────────────────────────────────── */
+
+.rml-corner {
+  position: absolute;
+  width: var(--hud-corner-zone, 40px);
+  height: var(--hud-corner-zone, 40px);
+  border: 0 solid rgba(235, 227, 214, 0.28);
+}
+.rml-corner--tl {
+  top: var(--hud-margin, 40px);
+  left: var(--hud-margin, 40px);
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.rml-corner--tr {
+  top: var(--hud-margin, 40px);
+  right: var(--hud-margin, 40px);
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.rml-corner--bl {
+  bottom: var(--hud-margin, 40px);
+  left: var(--hud-margin, 40px);
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.rml-corner--br {
+  bottom: var(--hud-margin, 40px);
+  right: var(--hud-margin, 40px);
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* ─── HUD frame: rails ───────────────────────────────────────────── */
+
+.rml-rail {
+  position: absolute;
+  top: var(--hud-rail-y-start, 112px);
+  bottom: calc(var(--hud-margin, 40px) + 64px);
+  width: var(--hud-rail-width, 64px);
+}
+.rml-rail--l {
+  left: var(--hud-margin, 40px);
+}
+.rml-rail--r {
+  right: var(--hud-margin, 40px);
+  pointer-events: none;
+}
+
+/* Production guide: 2px solid instrument hairline (landing.css). */
+.rml-rail__track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--hud-rail-line, rgba(235, 227, 214, 0.22));
+  pointer-events: none;
+}
+.rml-rail--l .rml-rail__track {
+  left: 0;
+}
+.rml-rail--r .rml-rail__track {
+  right: 0;
+}
+
+/* V3's unoccupied ladder positions (0%, 91.67%, 100%). */
+.rml-extra-tick {
+  display: none;
+  position: absolute;
+  left: -7px;
+  width: 7px;
+  height: 2px;
+  translate: 0 -50%;
+  background: var(--hud-rail-line, rgba(235, 227, 214, 0.22));
+  pointer-events: none;
+}
+.rml[data-variant="ticks"] .rml-extra-tick {
+  display: block;
+}
+
+/* ─── The manifest ───────────────────────────────────────────────── */
+
+.rml-manifest {
+  position: absolute;
+  inset: 0;
+}
+
+/* Entry anatomy — marker ON the hairline, text extending inward
+   (rhymes with .tools-rail-register__row mirrored left). Only the
+   powered slot carries text; sockets and modules are ink-minimal. */
+.rml-entry {
+  position: absolute;
+  /* 8px marker centre on the 2px track centre. */
+  left: -3px;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 18px;
+  width: max-content;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: var(--track-wider, 0.22em);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+}
+
+.rml-entry[data-state="upcoming"] {
+  opacity: 0.25;
+}
+.rml-entry[data-state="seated"] {
+  opacity: 0.55;
+}
+.rml-entry[data-state="active"] {
+  opacity: 1;
+  color: var(--gold, #caa554);
+}
+
+/* Hover lifts a socket/module toward legibility (+ ghost name). */
+.rml-entry[data-ghost] {
+  opacity: 0.75;
+}
+
+.rml-entry:focus-visible {
+  outline: 1px solid var(--gold, #caa554);
+  outline-offset: 3px;
+}
+
+/* ── Marker: V1 diamond sockets (default) ── */
+
+.rml-entry__marker {
+  position: relative;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.rml-entry__marker::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  rotate: 45deg;
+}
+.rml-entry[data-state="seated"] .rml-entry__marker::after {
+  background: currentColor;
+}
+.rml-entry[data-state="active"] .rml-entry__marker::after {
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+
+/* The services module glyph replaces the diamond once seated. */
+.rml-glyph {
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  flex: none;
+  overflow: visible;
+}
+.rml-glyph rect {
+  fill: #0a0908;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+.rml-glyph .rml-glyph__front {
+  fill: rgba(202, 165, 84, 0.28);
+  stroke: var(--gold, #caa554);
+}
+.rml-entry__marker:has(.rml-glyph)::after {
+  display: none;
+}
+
+/* ── Marker: V2 register brackets ── */
+
+.rml[data-variant="brackets"] .rml-entry__marker {
+  width: 22px;
+  height: 12px;
+}
+.rml[data-variant="brackets"] .rml-entry__marker::before {
+  content: "[";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  translate: 0 -54%;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  line-height: 1;
+  color: currentColor;
+}
+.rml[data-variant="brackets"] .rml-entry__marker::after {
+  /* The closing bracket replaces the diamond. */
+  content: "]";
+  inset: auto;
+  right: 0;
+  top: 50%;
+  translate: 0 -54%;
+  border: 0;
+  rotate: none;
+  background: none !important;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  line-height: 1;
+  color: currentColor;
+}
+/* …and the module chip is a centred dot, present only once seated. */
+.rml[data-variant="brackets"] .rml-entry[data-state="seated"] .rml-entry__marker,
+.rml[data-variant="brackets"] .rml-entry[data-state="active"] .rml-entry__marker {
+  background: radial-gradient(circle at center, currentColor 0 1.8px, transparent 2.2px);
+}
+.rml[data-variant="brackets"] .rml-entry__marker:has(.rml-glyph) {
+  background: none !important;
+}
+.rml[data-variant="brackets"] .rml-glyph {
+  width: 11px;
+  height: 11px;
+}
+
+/* ── Marker: V3 tick-integrated ── */
+
+/* Upcoming = the ladder's plain tick, unchanged from hudTicks. */
+.rml[data-variant="ticks"] .rml-entry[data-state="upcoming"] .rml-entry__marker {
+  width: 7px;
+  height: 2px;
+  margin-left: -4px; /* tick extends OUTWARD from the guide (left rail extends left) */
+}
+.rml[data-variant="ticks"] .rml-entry[data-state="upcoming"] .rml-entry__marker::after {
+  inset: 0;
+  border: 0;
+  rotate: none;
+  background: currentColor;
+}
+/* V3 upcoming reads as pure ladder — same ink as today. */
+.rml[data-variant="ticks"] .rml-entry[data-state="upcoming"] {
+  opacity: 0.45;
+}
+
+/* ── Text: number + name (active only; ghost name on hover) ── */
+
+.rml-entry__label {
+  color: var(--gold, #caa554);
+  opacity: 0;
+}
+.rml-entry__name {
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  opacity: 0;
+}
+.rml-entry[data-state="active"] .rml-entry__label,
+.rml-entry[data-state="active"] .rml-entry__name {
+  opacity: 1;
+}
+.rml-entry[data-ghost] .rml-entry__name {
+  opacity: 0.55;
+}
+
+/* ─── Seat garnish: quantized snap + flash + confirm ─────────────── */
+
+/* 260ms = HANDOVER_FADE_S in ToolsRailRegister.tsx — one clock. */
+.rml-entry[data-just-seated] .rml-entry__marker {
+  animation: rml-seat 260ms steps(3, end);
+}
+@keyframes rml-seat {
+  0% {
+    scale: 2.1;
+    opacity: 0.2;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+/* Gold flash — one discrete blink as the module makes contact. */
+.rml-entry[data-just-seated] .rml-entry__marker::after {
+  animation: rml-flash 320ms steps(2, start) 260ms;
+}
+.rml-entry[data-just-seated] .rml-glyph {
+  animation: rml-flash 320ms steps(2, start) 260ms;
+}
+@keyframes rml-flash {
+  0%,
+  49.99% {
+    color: var(--gold, #caa554);
+    filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.9));
+  }
+  50%,
+  100% {
+    filter: none;
+  }
+}
+
+/* Confirm treatment A: the marker double-blinks (bracket blink). */
+.rml[data-confirm="blink"] .rml-entry[data-just-seated] .rml-entry__marker {
+  animation:
+    rml-seat 260ms steps(3, end),
+    rml-blink 380ms steps(2, start) 300ms;
+}
+@keyframes rml-blink {
+  0%,
+  24.99%,
+  50%,
+  74.99% {
+    opacity: 1;
+  }
+  25%,
+  49.99%,
+  75%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+/* Confirm treatment B: a +SEATED microline types in, holds, collapses. */
+.rml-entry__confirm {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--gold-60, rgba(202, 165, 84, 0.6));
+  opacity: 0;
+  pointer-events: none;
+}
+.rml[data-confirm="line"] .rml-entry[data-just-seated] .rml-entry__confirm {
+  animation: rml-confirm 900ms steps(5, end);
+}
+@keyframes rml-confirm {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  22% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  78% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* ─── Right rail: register hint (context only) ───────────────────── */
+
+.rml-register__heading {
+  position: absolute;
+  top: calc(33.333% - 36px);
+  right: 12px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.rml-register__row {
+  position: absolute;
+  right: -3px;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--dawn-45, rgba(235, 227, 214, 0.45));
+}
+.rml-register__index {
+  font-size: 9px;
+  color: var(--gold-60, rgba(202, 165, 84, 0.6));
+}
+.rml-register__marker {
+  position: relative;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  flex: none;
+}
+.rml-register__marker::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  rotate: 45deg;
+}
+.rml-register__row[data-active] {
+  color: var(--gold, #caa554);
+}
+.rml-register__row[data-active] .rml-register__marker::after {
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+
+/* ─── Spec sheet: states at 2× ───────────────────────────────────── */
+
+.rml-spec {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 26px 30px;
+  border: 1px solid rgba(235, 227, 214, 0.12);
+  background: rgba(20, 18, 15, 0.55);
+}
+.rml-spec__title {
+  margin: 0 0 2px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+.rml-spec__row {
+  /* Fixed specimen column: scale(2) doubles the VISUAL size without
+     affecting layout, so the column must reserve the doubled width. */
+  display: grid;
+  grid-template-columns: 250px max-content;
+  align-items: center;
+  column-gap: 26px;
+}
+/* Specimen entries reuse the live anatomy, statically placed at 2×. */
+.rml-entry--spec {
+  position: static;
+  translate: none;
+  transform: scale(2);
+  transform-origin: left center;
+  cursor: default;
+}
+.rml-spec__note {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+
+/* ─── Controls ───────────────────────────────────────────────────── */
+
+.rml-controls {
+  /* One tier above the variant chips — the two rows collide otherwise. */
+  position: fixed;
+  right: var(--hud-margin, 40px);
+  bottom: calc(var(--hud-margin, 40px) * 0.5 + 46px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 20;
+}
+.rml-controls__group {
+  display: flex;
+  gap: 6px;
+}
+.rml-controls button {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  background: rgba(10, 9, 8, 0.85);
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  cursor: pointer;
+}
+.rml-controls button:hover:not(:disabled) {
+  color: var(--dawn, #ebe3d6);
+}
+.rml-controls button[data-active] {
+  border-color: var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+.rml-controls button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ─── Lab chrome: caption + variant chips ────────────────────────── */
+
+.rml-caption {
+  position: fixed;
+  left: var(--hud-margin, 40px);
+  bottom: calc(var(--hud-margin, 40px) * 0.5);
+  margin: 0;
+  z-index: 20;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  max-width: 40ch;
+}
+.rml-caption b {
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+}
+.rml-caption__prov,
+.rml-caption__hint {
+  display: block;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+
+.rml-chips {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--hud-margin, 40px) * 0.5);
+  translate: -50% 0;
+  display: flex;
+  gap: 6px;
+  z-index: 20;
+}
+.rml-chips button {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  background: rgba(10, 9, 8, 0.85);
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  cursor: pointer;
+}
+.rml-chips button:hover {
+  color: var(--dawn, #ebe3d6);
+}
+.rml-chips button[data-active] {
+  border-color: var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+
+/* ─── Reduced motion: instant states, zero garnish ───────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .rml-entry__marker,
+  .rml-entry__marker::after,
+  .rml-glyph,
+  .rml-entry__confirm {
+    animation: none !important;
+  }
+}

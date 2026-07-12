@@ -484,3 +484,15 @@ mode switch is now time-based (consistent with the type-on it accompanies).
 Smoke `data-register-mode` assertions are unchanged — the end states
 (`services` on the runway, `tools` at the dock) still hold; they poll, so
 they absorb the fade.
+
+## Update 5 (2026-07-12): rail station label superseded by ADR-031
+
+The Update 1 rail station label (`RailStationLabel.tsx`) and its
+Update 3 corridor mapping are **superseded by the Rail Manifest**
+([ADR-031](031-rail-manifest.md)): the left rail now carries one slot
+per journey entry (sockets / seated modules / one powered slot), whose
+active entry absorbs the label's number + name + scramble behavior.
+The component and the `[data-rail-label-root]` shell are deleted. The
+right-rail register and everything else in this ADR are unchanged; the
+manifest's services-module seat keys off the same
+`data-active-station → "tools"` flip as the Update 4 handover.

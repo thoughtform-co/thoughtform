@@ -25,6 +25,8 @@
  * first paint without a client-side reflow.
  */
 
+import { buildRailManifestHtml } from "./railManifest";
+
 interface TickMark {
   yPct: number;
   major: boolean;
@@ -97,12 +99,19 @@ export function buildDepthTicksHtml(): string {
 }
 
 /** Inject the per-side ladders into `#leftTicks` and `#rightTicks`
- *  if they are present in the body markup. */
+ *  if they are present in the body markup, and the station manifest
+ *  into `#railManifest` (ADR-031 — the home prototype's left rail
+ *  ships the manifest shell INSTEAD of `#leftTicks`; the workshop
+ *  prototype keeps its tick ladder, so both replaces stay). */
 export function injectStaticHudChildren(html: string): string {
   return html
     .replace(/<div id="leftTicks"><\/div>/, `<div id="leftTicks">${buildLeftRailTicksHtml()}</div>`)
     .replace(
       /<div id="rightTicks"><\/div>/,
       `<div id="rightTicks">${buildRightRailTicksHtml()}</div>`
+    )
+    .replace(
+      /<nav id="railManifest" data-rail-manifest-root aria-label="Page manifest"><\/nav>/,
+      `<nav id="railManifest" data-rail-manifest-root aria-label="Page manifest">${buildRailManifestHtml()}</nav>`
     );
 }

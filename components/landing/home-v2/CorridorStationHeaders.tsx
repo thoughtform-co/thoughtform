@@ -80,10 +80,11 @@ const ENCODE_FADE_IN: [number, number] = [0.54, 0.62];
 const ENCODE_FADE_OUT: [number, number] = [0.76, 0.83];
 const BUILD_FADE_IN: [number, number] = [0.84, 0.91];
 
-// ── Corridor phase → left-rail station label (ADR-030 Update 3) ──
+// ── Corridor phase → left-rail manifest (ADR-030 Update 3; consumer
+// is now the ADR-031 RailManifestController) ──
 // While the corridor owns the HUD (`data-corridor-engaged`), the
-// site-wide RailStationLabel shows the corridor's section identity
-// instead of closing. The corridor reads as TWO sections on the rail:
+// left-rail manifest resolves its active slot from the corridor's
+// section identity. The corridor reads as TWO sections on the rail:
 // the opening "thesis" beat (the compass-gate / definition statement
 // before the fly-through), then "the Arc" — the whole
 // Navigate→Encode→Build fly-through is ONE section called the Arc, not

@@ -11,11 +11,18 @@ alwaysApply: false
 
 When editing these paths, you are in a **layered composite** (fixed `.gateway`, sticky hero, opaque stations) — not a flat page.
 
-**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/030-tools-section-cover-stack.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
+**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/030-tools-section-cover-stack.md`, `sentinel/decisions/031-rail-manifest.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
 
 **Tools lockstep:** the fixed header, sticky deck, and right-rail register
 share the exact 1101×760 + motion-allowed capability. CSS owns geometry;
 do not restore floating pills, exported pixel tables, or a local card rail.
 Keep the `--tools-bg-in` shield opaque before the ambient canvas retires.
+
+**Rail manifest (ADR-031):** the left-rail manifest skeleton is
+parse-injected (`lib/v7-parse/railManifest.ts`) and mutated in place by
+`RailManifestController` — never `createRoot` into
+`[data-rail-manifest-root]`, keep the prototype shell byte-exact, and
+change journey order only in `lib/rail-manifest/entries.ts` (drift-guard
+tested). Quantized `steps()` seat motion only — no FLIP flights.
 
 **Process:** `sentinel/MAINTENANCE.md` — Cycle B before large section work; Cycle A after non-trivial fixes.

@@ -739,48 +739,205 @@
   right: calc(var(--hud-rail-guide-inset) + 10px);
 }
 
-/* Rail station label (ADR-030 Update 1; Update 3 continuity) — the
-   active section's identity emerging FROM the left rail: gold number +
-   dawn name in the bearing-label mono grammar, docked mid-rail (between
-   the "2"/"5" majors; the 8.33% compass slot stays reserved). The
-   clip-path wipe opens left-to-right from the hairline — the data-m
-   eyebrow direction — and the text scramble-decodes on section change
-   (RailStationLabel). Continuous across the whole page EXCEPT the hero
-   (which shows no rail title): while the corridor owns the HUD the label
-   shows the corridor phase (data-corridor-phase → "02 Thesis" / "03
-   Arc") instead of closing, and Tools keeps it too (its own suppression
-   was retired with the Tools eyebrow, 2026-07-11). */
-.hud__rail__station {
+/* Rail manifest (ADR-031) — the left rail as a module backplane. One
+   bracketed slot per journey entry, seated ON the canonical 8.33%
+   Brand Codex tick grid: the 13-tick ladder STAYS (Update 2 — it is
+   load-bearing rail identity; never remove it) and the manifest
+   replaces only the ADR-030 single station label. States are attribute-
+   driven by RailManifestController (parse-injected skeleton, client
+   mutation): `upcoming` = empty socket, `seated` = chip in its bay,
+   `active` = the one powered slot that materializes its number + name
+   (scramble-decoded — the absorbed station-label behavior). The
+   services bay carries the layered-stack glyph while seated (the
+   docked card ring). Seat garnish is quantized steps() only — never a
+   tween (ADR-031; 260ms mirrors ToolsRailRegister HANDOVER_FADE_S so
+   the services→tools seat shares the register's clock). */
+.hud__rail--l [data-rail-manifest-root] {
   position: absolute;
-  top: 50%;
-  translate: 0 -50%;
-  left: calc(var(--hud-rail-guide-inset) + 10px);
+  inset: 0;
   z-index: 2;
+  pointer-events: none;
+}
+/* The Brand Codex 13-tick ladder stays (ADR-031 Update 2) — manifest
+   slots seat ON its grid, marker over the tick's inner end (the right
+   rail's register-diamond-on-tick precedent). Only the two "2"/"5"
+   depth-gauge bearing numerals yield: they sit at exactly the
+   services/build slot rows (33.33% / 66.67%) and the gauge they
+   belonged to (the depth diamond) is already retired. The workshop
+   rail (no manifest) keeps them. */
+.hud__rail--l:has([data-rail-manifest-root]) .hud__rail__label {
+  display: none;
+}
+.rail-manifest__entry {
+  position: absolute;
+  /* 22px bracket cluster centred on the 2px guide hairline. */
+  left: calc(var(--hud-rail-guide-inset) - 10px);
+  translate: 0 -50%;
   display: flex;
+  align-items: center;
   gap: 7px;
-  align-items: baseline;
+  height: 18px;
+  width: max-content;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
   font-family: var(--font-pt-mono);
   font-size: 9px;
   letter-spacing: var(--track-wider);
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--dawn-50);
-  clip-path: inset(0 100% 0 0);
-  opacity: 0;
-  transition:
-    clip-path 420ms var(--m-ease-instr),
-    opacity 320ms var(--m-ease);
 }
-.hud__rail__station.is-on {
-  clip-path: inset(0 0 0 0);
+.rail-manifest__entry[data-state="upcoming"] {
+  opacity: 0.25;
+}
+.rail-manifest__entry[data-state="seated"] {
+  opacity: 0.55;
+}
+.rail-manifest__entry[data-state="active"] {
   opacity: 1;
-}
-.hud__rail__station__no {
+  z-index: 3;
   color: var(--gold);
 }
+.rail-manifest__entry[data-ghost] {
+  opacity: 0.75;
+}
+.rail-manifest__entry:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* Marker: register brackets [ · ] — bays in the backplane. The chip
+   dot appears once seated; the services glyph replaces it. */
+.rail-manifest__marker {
+  position: relative;
+  width: 22px;
+  height: 12px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.rail-manifest__marker::before,
+.rail-manifest__marker::after {
+  position: absolute;
+  top: 50%;
+  translate: 0 -54%;
+  font-size: 11px;
+  line-height: 1;
+  color: currentColor;
+}
+.rail-manifest__marker::before {
+  content: "[";
+  left: 0;
+}
+.rail-manifest__marker::after {
+  content: "]";
+  right: 0;
+}
+.rail-manifest__entry[data-state="seated"] .rail-manifest__marker,
+.rail-manifest__entry[data-state="active"] .rail-manifest__marker {
+  background: radial-gradient(circle at center, currentColor 0 1.8px, transparent 2.2px);
+}
+
+/* The services module glyph — the folded card ring, present in its
+   bay only while SEATED (in #services the cards are deployed as the
+   ring; the module docks when you cross into #tools). */
+.rail-manifest__glyph {
+  display: none;
+  position: relative;
+  z-index: 1;
+  width: 11px;
+  height: 11px;
+  overflow: visible;
+}
+.rail-manifest__glyph rect {
+  fill: var(--void, #0a0908);
+  stroke: currentColor;
+  stroke-width: 1;
+}
+.rail-manifest__glyph-front {
+  fill: rgba(202, 165, 84, 0.28);
+  stroke: var(--gold);
+}
+.rail-manifest__entry[data-state="seated"] .rail-manifest__glyph {
+  display: block;
+}
+.rail-manifest__entry[data-state="seated"] .rail-manifest__marker:has(.rail-manifest__glyph) {
+  background: none;
+}
+
+/* Text: number + name — the active entry only (markers-only canon);
+   hover ghosts a name in at low opacity. Spans are filled/cleared
+   imperatively by the controller, so hidden states also hold no text. */
+.rail-manifest__label {
+  color: var(--gold);
+  opacity: 0;
+}
+.rail-manifest__name {
+  color: var(--dawn-50);
+  opacity: 0;
+}
+.rail-manifest__entry[data-state="active"] .rail-manifest__label,
+.rail-manifest__entry[data-state="active"] .rail-manifest__name {
+  opacity: 1;
+}
+.rail-manifest__entry[data-ghost] .rail-manifest__name {
+  opacity: 0.55;
+}
+
+/* Seat garnish: quantized snap (260ms = HANDOVER_FADE_S in
+   ToolsRailRegister.tsx — one clock) + a discrete double-blink
+   confirm. Forward-only via data-just-seated; reverse travel flips
+   attributes with no garnish. */
+.rail-manifest__entry[data-just-seated] .rail-manifest__marker {
+  animation:
+    rail-manifest-seat 260ms steps(3, end),
+    rail-manifest-blink 380ms steps(2, start) 300ms;
+}
+.rail-manifest__entry[data-just-seated] .rail-manifest__glyph {
+  animation: rail-manifest-flash 320ms steps(2, start) 260ms;
+}
+@keyframes rail-manifest-seat {
+  0% {
+    scale: 2.1;
+    opacity: 0.2;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+@keyframes rail-manifest-blink {
+  0%,
+  24.99%,
+  50%,
+  74.99% {
+    opacity: 1;
+  }
+  25%,
+  49.99%,
+  75%,
+  100% {
+    opacity: 0.25;
+  }
+}
+@keyframes rail-manifest-flash {
+  0%,
+  49.99% {
+    color: var(--gold);
+    filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.9));
+  }
+  50%,
+  100% {
+    filter: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .hud__rail__station {
-    transition: none;
+  .rail-manifest__entry .rail-manifest__marker,
+  .rail-manifest__entry .rail-manifest__glyph {
+    animation: none !important;
   }
 }
 
@@ -6640,6 +6797,11 @@ body.density-dense .station {
 /* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width: 1100px) {
   .hud__rail__label {
+    display: none;
+  }
+  /* Manifest degrades to markers-only (its default posture anyway). */
+  .rail-manifest__label,
+  .rail-manifest__name {
     display: none;
   }
 }

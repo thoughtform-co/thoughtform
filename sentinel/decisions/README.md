@@ -48,6 +48,8 @@ Write an ADR when you:
 | 027 | [Gateway Motion Lab](027-gateway-motion-lab.md)                           | Accepted | 2026-07 |
 | 028 | [Landing Data Caching](028-landing-data-caching.md)                       | Accepted | 2026-07 |
 | 029 | [Services Card Ring](029-services-card-ring.md)                           | Accepted | 2026-07 |
+| 030 | [Tools Section Cover Stack](030-tools-section-cover-stack.md)             | Accepted | 2026-07 |
+| 031 | [Rail Manifest](031-rail-manifest.md)                                     | Accepted | 2026-07 |
 
 ---
 

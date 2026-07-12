@@ -12,7 +12,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
-import { RailStationPortal } from "./RailStationLabel";
+import { RailManifestController } from "./RailManifest";
 import { ToolsPortal, ToolsRailRegisterPortal } from "./tools-cards";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
@@ -465,13 +465,14 @@ export function LandingPage({
       {/* Services -> tools rail register: the retiring service verbs FLIP
           into four stable slots in the authored RIGHT HUD rail, then those
           same slots become the tool-unit index as the viewscreen changes
-          mode. Nested-root lifecycle matches ToolsPortal/RailStationPortal. */}
+          mode. Nested-root lifecycle matches ToolsPortal. */}
       <ToolsRailRegisterPortal containerRef={rootRef} />
-      {/* Rail station label (ADR-030 Update 1): the active section's
-          number + name emerging from the left rail, site-wide. Nested
-          root into the rail's authored shell so it inherits the rail's
-          positioning context. */}
-      <RailStationPortal containerRef={rootRef} />
+      {/* Rail manifest (ADR-031): the left rail's station backplane —
+          sockets ahead, seated modules behind, one powered slot
+          (absorbing the ADR-030 station label). NOT a nested root: the
+          skeleton is parse-injected and this controller mutates it in
+          place. */}
+      <RailManifestController containerRef={rootRef} />
       {/* Hero → Corridor seam (ADR-022 v7, direct parallax reveal):
           NO proxy plane. The sticky `#hero` (z:1) drifts up + gently
           fades as the live corridor mount (`.home-corridor-host` z:3)

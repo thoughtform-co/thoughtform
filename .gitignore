@@ -84,3 +84,4 @@ scripts/gateway-prep/out/
 # Local asset staging (raw photography/masters — never deploy via public/)
 assets-staging/
 public/images/navigator/
+.env*.local

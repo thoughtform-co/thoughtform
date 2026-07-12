@@ -4212,16 +4212,22 @@ html { scroll-behavior: smooth; }
        by LandingPage — it needs scroll state, so it does not ship as
        static body markup. -->
 
-  <!-- Left rail: depth gauge -->
+  <!-- Left rail: Brand Codex tick ladder + station manifest (ADR-031
+       Update 2). The 13-position ladder stays exactly as authored
+       (owner, 2026-07-12 — the ladder is load-bearing rail identity);
+       the manifest seats its ten slots ON that grid, replacing only
+       the ADR-030 single station label. Both are injected at parse
+       time (lib/v7-parse/hudTicks.ts + railManifest.ts) into these
+       empty shells so the standalone preview stays inert; the client
+       RailManifestController MUTATES the manifest markup in place
+       (never createRoot into it — that would clobber the server
+       skeleton). Shell markup must stay byte-exact for the parse
+       regexes (pinned by tests/lib/rail-manifest.test.ts). -->
   <aside class="hud__rail hud__rail--l">
     <div class="hud__rail__track"></div>
     <div id="leftTicks"></div>
     <div class="hud__depth" id="depthIndicator" style="top: 4%"></div>
-    <!-- Rail station label mount (ADR-030 Update 1): the active section's
-         number + name emerges FROM this rail, scramble-decoding on
-         change. Populated by RailStationPortal (React nested root);
-         empty shell here so the preview runtime stays inert. -->
-    <div id="railStation" data-rail-label-root></div>
+    <nav id="railManifest" data-rail-manifest-root aria-label="Page manifest"></nav>
   </aside>
 
   <!-- Right rail -->

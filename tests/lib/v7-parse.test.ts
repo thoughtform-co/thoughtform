@@ -65,10 +65,15 @@ describe("v7-parse — pristine prototype shape", () => {
     expect(anchorWithImg.test(bodyHtml)).toBe(false);
   });
 
-  it("injects the static HUD depth gauge ticks once the leftTicks/rightTicks shells are seen", () => {
+  it("injects the static HUD rail children (both tick ladders + left manifest, ADR-031 U2)", () => {
     const { bodyHtml } = getV7Content();
+    // Both rails keep the Brand Codex tick ladder (ADR-031 Update 2:
+    // the ladder is load-bearing rail identity, never removed).
     expect(bodyHtml).toMatch(/<div id="leftTicks"><div class="hud__rail__tick/);
     expect(bodyHtml).toMatch(/<div id="rightTicks"><div class="hud__rail__tick/);
+    // The left rail ALSO carries the station manifest, seated on the
+    // same grid, filled at parse time.
+    expect(bodyHtml).toMatch(/data-rail-manifest-root[^>]*><button[^>]*rail-manifest__entry/);
   });
 });
 
