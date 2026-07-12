@@ -35,10 +35,10 @@
   content-visibility: visible;
   /* Hosts the ::before fade backdrop. */
   position: relative;
-  /* Taller than the old split header (was clamp(88px,9.5svh,104px)) to
-     hold the centred title-over-paragraph stack. --tools-stack-top
-     derives from this, so the card deck follows down 1:1. */
-  --tools-head-h: clamp(116px, 15svh, 146px);
+  /* Holds the centred, full-size (corridor-matched) title-over-paragraph
+     stack. --tools-stack-top derives from this, so the card deck follows
+     down 1:1 (card BOTTOM stays put — only its top drops). */
+  --tools-head-h: clamp(148px, 19svh, 176px);
   --tools-head-gap: clamp(16px, 2svh, 24px);
   --tools-stack-top: calc(var(--hud-rail-y-start) + var(--tools-head-h) + var(--tools-head-gap));
   --tools-peek: clamp(32px, 3.4svh, 36px);
@@ -99,16 +99,22 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   row-gap: clamp(14px, 2.4vh, 24px);
 }
 
+/* Matches the corridor / epilogue section titles
+   (.home-v2-station-header__title): uppercase display face at the same
+   clamp, tracking, and gold-glow, so #tools reads as a peer section
+   title (owner, 2026-07-11). */
 .tools__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
-  font-size: clamp(28px, 3vw, 44px);
+  font-size: clamp(26px, 3vw, 44px);
   line-height: 1.1;
-  letter-spacing: -0.022em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--dawn);
   margin: 0;
   text-align: center;
   text-wrap: balance;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
 }
 
 .tools__title em {
@@ -220,10 +226,8 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
     row-gap: clamp(10px, 1.4svh, 16px);
   }
 
-  .tools__title {
-    font-size: clamp(26px, 2.2vw, 34px);
-    line-height: 1.02;
-  }
+  /* Title keeps the full base display size here (matches the corridor
+     section titles) — no compact-header shrink. */
 
   .tools__lede {
     font-size: clamp(13px, 0.9vw, 16px);
