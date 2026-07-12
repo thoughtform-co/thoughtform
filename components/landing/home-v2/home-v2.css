@@ -1073,7 +1073,6 @@ html[data-corridor-exit="true"] #services > * {
   color: var(--gold, #caa554);
   background: rgba(202, 165, 84, 0.16);
   padding: 0.14em 0.16em;
-  border-bottom: 1px solid rgba(202, 165, 84, 0.45);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -1103,7 +1102,6 @@ html[data-corridor-exit="true"] #services > * {
   color: var(--gold, #caa554);
   background: rgba(202, 165, 84, 0.16);
   padding: 0.14em 0;
-  border-bottom: 1px solid rgba(202, 165, 84, 0.45);
 }
 
 /* Block cursor at the typing head — sits inline at the line's end,
