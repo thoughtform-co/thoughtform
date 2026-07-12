@@ -35,7 +35,10 @@
   content-visibility: visible;
   /* Hosts the ::before fade backdrop. */
   position: relative;
-  --tools-head-h: clamp(88px, 9.5svh, 104px);
+  /* Taller than the old split header (was clamp(88px,9.5svh,104px)) to
+     hold the centred title-over-paragraph stack. --tools-stack-top
+     derives from this, so the card deck follows down 1:1. */
+  --tools-head-h: clamp(116px, 15svh, 146px);
   --tools-head-gap: clamp(16px, 2svh, 24px);
   --tools-stack-top: calc(var(--hud-rail-y-start) + var(--tools-head-h) + var(--tools-head-gap));
   --tools-peek: clamp(32px, 3.4svh, 36px);
@@ -85,17 +88,18 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   margin: 0 auto clamp(40px, 7vh, 72px);
 }
 
+/* Centered stack (2026-07-11): title over paragraph, both centred —
+   uniform with the epilogue "everyone is racing to build this layer"
+   signal block. Was a 7fr/5fr title-left / lede-right split. */
 .tools__head--split {
-  display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  column-gap: clamp(24px, 4vw, 96px);
-  align-content: start;
-  align-items: end;
-  row-gap: clamp(16px, 3vh, 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  row-gap: clamp(14px, 2.4vh, 24px);
 }
 
 .tools__title {
-  grid-column: 1;
   font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
   font-size: clamp(28px, 3vw, 44px);
@@ -103,6 +107,7 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   letter-spacing: -0.022em;
   color: var(--dawn);
   margin: 0;
+  text-align: center;
   text-wrap: balance;
 }
 
@@ -169,27 +174,14 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 }
 
 .tools__lede {
-  grid-column: 2;
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(14px, 1.05vw, 17px);
   line-height: 1.55;
   color: var(--dawn-70);
-  margin: 0;
-  max-width: 44ch;
+  margin: 0 auto;
+  max-width: 52ch;
+  text-align: center;
   letter-spacing: -0.005em;
-}
-
-@media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
-  .tools__head--split {
-    grid-template-columns: 1fr;
-    align-content: start;
-    row-gap: clamp(16px, 3vh, 28px);
-  }
-
-  .tools__title,
-  .tools__lede {
-    grid-column: 1;
-  }
 }
 
 /* Desktop mode: the header is part of the fixed bridge instrumentation.
@@ -220,8 +212,8 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   }
 
   .tools__head--split {
-    align-content: start;
-    row-gap: clamp(14px, 1.8svh, 20px);
+    justify-content: flex-start;
+    row-gap: clamp(10px, 1.4svh, 16px);
   }
 
   .tools__title {

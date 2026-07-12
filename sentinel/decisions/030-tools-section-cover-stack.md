@@ -396,3 +396,20 @@ data-services-ambient) && arriveClock > 0.001`, where `arriveClock` =
 
 The ring-side companion (parked front card holds a bounded 3/4 pose so the
 slab reads 3D in view) is documented in ADR-029's addendum.
+
+### Tools header — centred stack
+
+The fixed header is now a **centred column** — title over paragraph, both
+`text-align: center` — uniform with the epilogue "everyone is racing to
+build this layer" signal block (owner, 2026-07-11 evening). Supersedes
+Update 2's "title and lede hang from the left and right content fields"
+7fr/5fr split. `.tools__head--split` is `display: flex; flex-direction:
+column; align-items: center`; `.tools__title` / `.tools__lede` dropped
+their `grid-column`s, the lede is `margin: 0 auto; max-width: 52ch`. The
+stacked layout is taller than the old side-by-side, so **`--tools-head-h`
+grew `clamp(88px, 9.5svh, 104px)` → `clamp(116px, 15svh, 146px)`**; because
+`--tools-stack-top` derives from it (and the card-height `min()` subtracts
+stack-top), the deck follows down 1:1 and the card BOTTOM is unchanged
+(`100svh − (n−1)·peek − bottom-safe`) — only the card top drops, so the
+bottom-clearance contract is preserved. The `[data-tw]` typewriter,
+`--tools-bg-in` shield, and reveal ordering are untouched.
