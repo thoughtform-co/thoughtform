@@ -179,8 +179,12 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   line-height: 1.55;
   color: var(--dawn-70);
   margin: 0 auto;
-  max-width: 52ch;
+  /* Balance the wrap so the two centred lines are even rather than a
+     full line + a short "they serve." orphan. Narrower cap keeps balance
+     from resolving to one very wide line at large viewports. */
+  max-width: 46ch;
   text-align: center;
+  text-wrap: balance;
   letter-spacing: -0.005em;
 }
 
