@@ -536,9 +536,7 @@ test.describe("Tools section smoke (ADR-030 edge-bus rebuild)", () => {
         }));
 
         expect(state.slotPosition).toBe(capability.enhanced ? "sticky" : "static");
-        // Base header is `relative` (positioning context for the reticle
-        // frame pseudos), never fixed below the capability.
-        expect(state.headerPosition).toBe(capability.enhanced ? "fixed" : "relative");
+        expect(state.headerPosition).toBe(capability.enhanced ? "fixed" : "static");
         expect(state.registerCount).toBe(capability.enhanced ? 1 : 0);
       } finally {
         await context.close();
@@ -621,9 +619,7 @@ test.describe("Tools section smoke (ADR-030 edge-bus rebuild)", () => {
       }));
       expect(state.marginTop).toBe("0px");
       expect(state.slotPosition).toBe("static");
-      // `relative` = in natural flow (the frame pseudos' positioning
-      // context); the assertion guards against fixed-mode leaking here.
-      expect(state.headerPosition).toBe("relative");
+      expect(state.headerPosition).toBe("static");
       expect(state.registerCount).toBe(0);
       expect(state.title).toContain("one tool at a time");
     } finally {

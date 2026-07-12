@@ -25,12 +25,13 @@ const ROW_TOPS = ["33.333%", "41.667%", "50%", "58.333%"] as const;
 const STAGGER_STEP = 0.16;
 const STAGGER_SPAN = 0.45;
 
-/** Reset the source bus as the first card reaches its CSS-owned sticky
- * dock. With the existing `--tools-bg-in` clock, 0.20 resolves when the
- * station top is ~0.01vh above the viewport top: the tool register is
- * therefore seated by the first-card dock without adding a scroll owner. */
-const TOOL_MODE_START = 0.08;
-const TOOL_MODE_END = 0.2;
+/** Services -> tools label handover duration (seconds). The crossfade is
+ * keyed to `data-active-station="tools"` — the SAME signal the header
+ * type-on rides (ToolsTitleTypewriter) — so the rail flips the instant the
+ * Tools header appears, not when the background shield later reaches the
+ * first-card dock. Time-based like the type-on; the services *arrival* wipe
+ * below stays scroll-owned. (Was gated on `--tools-bg-in` — ADR-030 Update 4.) */
+const HANDOVER_FADE_S = 0.26;
 
 type RegisterMode = "services" | "handover" | "tools";
 
@@ -46,13 +47,14 @@ function clampIndex(value: number, count: number): number {
  * The service verbs are seated in their four stable rail slots for the
  * WHOLE services section: each row wipes in (right-guide inward) on a
  * staggered window over the `--svc-content-in` arrival clock, and the row
- * whose service is open gets the filled `data-active` diamond. As
- * `--tools-bg-in` rises while `data-active-station="tools"`, the same
- * slots crossfade to the tool-unit index. All values are derived from
- * existing scroll-owned clocks, so reversing scroll reverses both the
- * reveal and the mode switch without a release flag or a second scroll
- * owner. (The former exit-beat FLIP from orbit-card rects is retired —
- * ADR-030 Update 3; rows no longer fly, they are already home.)
+ * whose service is open gets the filled `data-active` diamond. The moment
+ * `data-active-station` flips to `tools` (the same signal the header type-on
+ * rides), the same slots crossfade to the tool-unit index over a short
+ * time-based ease — so the rail switches WITH the header, not later. The
+ * services arrival wipe stays scroll-owned (reversing scroll reverses the
+ * reveal); the mode switch reverses on the active-station flip. (The former
+ * exit-beat FLIP from orbit-card rects is retired — ADR-030 Update 3; the
+ * `--tools-bg-in`-gated handover is retired — Update 4.)
  */
 function ToolsRailRegister() {
   const enhanced = useMediaQuery(ENHANCED_MEDIA);
@@ -79,6 +81,11 @@ function ToolsRailRegister() {
     // `.services-stage` lives in the ServicesPortal's own nested root and
     // mounts asynchronously — resolve it lazily and re-resolve if replaced.
     let stage: HTMLElement | null = null;
+    // Services -> tools handover: a time-based mix (0 = services, 1 = tools)
+    // eased toward the active station. Time-based (like the header type-on),
+    // so the writer self-schedules frames until it settles (see write()).
+    let toolFade = 0;
+    let lastFadeTs = 0;
 
     const syncActiveTool = () => {
       const stack = toolsStation.querySelector<HTMLElement>(".pcl-stack[data-pc-active]");
@@ -115,15 +122,26 @@ function ToolsRailRegister() {
       const contentIn = Number.isFinite(rawContentIn) ? Math.max(0, Math.min(1, rawContentIn)) : 0;
       const arriveClock = Math.max(contentIn, ambientAlive ? 1 : 0);
 
-      const rawBackgroundIn = Number.parseFloat(html.style.getPropertyValue("--tools-bg-in"));
-      // The writer removes --tools-bg-in after the seam. In the Tools
-      // station, absence therefore means the opaque end state, not zero.
-      const backgroundIn = Number.isFinite(rawBackgroundIn)
-        ? Math.max(0, Math.min(1, rawBackgroundIn))
-        : toolsActive
-          ? 1
-          : 0;
-      const toolMix = toolsActive ? smootherstep(TOOL_MODE_START, TOOL_MODE_END, backgroundIn) : 0;
+      // Services -> tools handover: ease a time-based mix toward 1 while
+      // #tools is the active station, toward 0 otherwise — keyed to the same
+      // active-station flip as the header type-on, so the rail switches the
+      // moment the Tools header appears (was gated on `--tools-bg-in` climbing
+      // to the first-card dock, a visible lag; ADR-030 Update 4). dt is capped
+      // so a backgrounded tab resumes smoothly rather than jumping.
+      const now = performance.now();
+      const dt = lastFadeTs ? Math.min(0.05, (now - lastFadeTs) / 1000) : 0;
+      lastFadeTs = now;
+      const toolTarget = toolsActive ? 1 : 0;
+      if (document.hidden) {
+        toolFade = toolTarget; // no animation off-screen
+      } else if (toolFade !== toolTarget) {
+        const step = dt / HANDOVER_FADE_S;
+        toolFade =
+          toolTarget > toolFade
+            ? Math.min(toolTarget, toolFade + step)
+            : Math.max(toolTarget, toolFade - step);
+      }
+      const toolMix = smootherstep(0, 1, toolFade);
       const serviceMix = 1 - toolMix;
       // Alive for the WHOLE services section (station active or the ambient
       // hold), from the moment the arrival clock opens (ADR-030 Update 3 —
@@ -181,6 +199,13 @@ function ToolsRailRegister() {
       }
 
       syncActiveTool();
+
+      // The handover mix is time-based, so keep animating to completion even
+      // if the scroll (the usual wake source) has stopped. requestWrite()
+      // guards against double-scheduling if a scroll/mutation also fires.
+      if (!document.hidden && toolFade !== toolTarget) {
+        frame = window.requestAnimationFrame(write);
+      }
     };
 
     const requestWrite = () => {

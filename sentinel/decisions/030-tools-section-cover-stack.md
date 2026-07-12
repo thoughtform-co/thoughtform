@@ -436,3 +436,51 @@ compass waypoint" per the Brand Codex note) never hosted anything — the
 travelling depth diamond doesn't park there — so the double-width gap read
 as a missing tick. The left ladder now carries all 13 positions, matching
 the right rail.
+
+## Update 4 (2026-07-12): header reverted to the centred stack
+
+The Update 3 **Linear split** (title LEFT / lede RIGHT under two gold
+reticle crosses) is superseded — the owner preferred the title and lede
+stacked and centred under the wordmark, with no reticle crosses. Reverted
+`components/landing/v7/tools-cards/tools-cards.css` (and the matching
+capability / reduced-motion smoke assertions) to the pre-split `9fd5dcb`
+state:
+
+- `.tools__head--split` is a **centred flex column** again (`align-items:
+center; text-align: center`); title and lede both `text-align: center`,
+  lede `margin: 0 auto; max-width: 46ch; text-wrap: balance`. `grid` +
+  `justify-self: end` split removed.
+- **Reticle crosses removed** — the `.tools__head--split::before/::after`
+  `+` pseudo-elements are gone. `.tools__head` base is `static` again (no
+  pseudo positioning context needed); smoke assertions back to
+  `enhanced ? "fixed" : "static"`.
+- **`--tools-head-h`: `clamp(148px, 19svh, 176px)`** restored — the card
+  deck (`--tools-stack-top`) follows it back down, first-card top/bottom
+  as before the split trim.
+
+The `tools__head--split` class stays in the markup (styles it as the
+centred stack); the rail-tick fix and `/test/tools-header-lab` from
+Update 3 are untouched.
+
+### Right-rail handover re-keyed to the active-station flip
+
+The services → tools label crossfade in `ToolsRailRegister` was gated on
+`--tools-bg-in` climbing through `smootherstep(0.08, 0.2, bg-in)`, which
+only completes when the station top is ~0.01vh above the viewport top (the
+first-card dock). But `data-active-station` flips to `tools` — and the
+header type-on (`ToolsTitleTypewriter`) fires — much earlier, at the
+mid-viewport crossing (`useLandingScroll`, top ≤ 0.5vh). So the header
+appeared while the rail still read ADVISORY / EMBEDDED / KEYNOTE / WORKSHOP
+for the ~0.4vh of scroll it took `--tools-bg-in` to catch up — a visible
+lag the owner flagged.
+
+The handover now keys off the SAME signal as the type-on: a time-based
+ease (`HANDOVER_FADE_S = 0.26`) toward 1 while `data-active-station ===
+"tools"`, toward 0 otherwise. `--tools-bg-in` is no longer read by the
+register. The writer self-schedules a frame while the mix is mid-fade (it
+usually only wakes on scroll), and snaps to target when `document.hidden`.
+The services **arrival** wipe stays scroll-owned and unchanged; only the
+mode switch is now time-based (consistent with the type-on it accompanies).
+Smoke `data-register-mode` assertions are unchanged — the end states
+(`services` on the runway, `tools` at the dock) still hold; they poll, so
+they absorb the fade.
