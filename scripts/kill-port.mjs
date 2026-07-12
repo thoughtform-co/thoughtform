@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Frees a TCP port by terminating any process currently listening on it.
 // Cross-platform (Windows / macOS / Linux). Silent no-op when port is free.
-// Usage:  node scripts/kill-port.mjs [port]   (default: 3003)
+// Usage:  node scripts/kill-port.mjs [port]   (default: $PORT or 3003)
 
 import { execSync } from 'node:child_process';
 
-const port = Number(process.argv[2] ?? 3003);
+const port = Number(process.argv[2] ?? process.env.PORT ?? 3003);
 if (!Number.isInteger(port) || port <= 0 || port > 65535) {
   console.error(`[kill-port] invalid port: ${process.argv[2]}`);
   process.exit(1);
