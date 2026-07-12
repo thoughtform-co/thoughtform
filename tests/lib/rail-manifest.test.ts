@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MANIFEST_ENTRIES, SLOT_TOP_PCT } from "@/lib/rail-manifest/entries";
+import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
 import { getV7Content } from "@/lib/v7-parse";
 import { injectStaticHudChildren } from "@/lib/v7-parse/hudTicks";
 import { buildRailManifestHtml } from "@/lib/v7-parse/railManifest";
@@ -69,47 +69,47 @@ describe("MANIFEST_ENTRIES data model", () => {
     ]);
     expect(MANIFEST_ENTRIES.filter((e) => e.hideActiveName).map((e) => e.id)).toEqual(["hero"]);
   });
-
-  it("SLOT_TOP_PCT is strictly monotonic on the 8.33% gauge, inside (0, 100)", () => {
-    let prev = 0;
-    MANIFEST_ENTRIES.forEach((_, i) => {
-      const top = SLOT_TOP_PCT(i);
-      expect(top).toBeGreaterThan(prev);
-      expect(top).toBeLessThan(100);
-      prev = top;
-    });
-    // Canonical grid: position 1 and 10 of the 13-position ladder.
-    expect(SLOT_TOP_PCT(0)).toBeCloseTo(8.3333, 3);
-    expect(SLOT_TOP_PCT(9)).toBeCloseTo(83.3333, 3);
-  });
 });
 
 describe("buildRailManifestHtml — parse-time skeleton", () => {
   const html = buildRailManifestHtml();
 
-  it("emits one button per entry with id, target, and slot position", () => {
+  it("emits one rolodex (window → reel) with one button row per entry", () => {
+    expect(html.match(/rail-manifest__window/g)).toHaveLength(1);
+    expect(html.match(/rail-manifest__reel/g)).toHaveLength(1);
     expect(html.match(/<button /g)).toHaveLength(MANIFEST_ENTRIES.length);
     for (const entry of MANIFEST_ENTRIES) {
       expect(html).toContain(`data-entry-id="${entry.id}"`);
       expect(html).toContain(`data-target="#${entry.targetId}"`);
     }
+    // The reel is flow-stacked — no per-slot inline positioning, no
+    // bracket bays, no separate label span (Update 3 retired them).
+    expect(html).not.toContain('style="top:');
+    expect(html).not.toContain("rail-manifest__marker");
+    expect(html).not.toContain("rail-manifest__label");
   });
 
-  it("first paint state: hero active, everything else an upcoming socket", () => {
+  it("first paint state: hero active at dist 0, everything else upcoming", () => {
     expect(html.match(/data-state="active"/g)).toHaveLength(1);
     expect(html.match(/data-state="upcoming"/g)).toHaveLength(MANIFEST_ENTRIES.length - 1);
     expect(html.indexOf('data-state="active"')).toBeLessThan(html.indexOf('data-state="upcoming"'));
+    expect(html.match(/data-dist="0"/g)).toHaveLength(1);
+    expect(html.indexOf('data-dist="0"')).toBeLessThan(html.indexOf('data-dist="1"'));
   });
 
-  it("markers-only canon: no visible label text, positional aria-labels instead", () => {
-    // Label/name spans ship empty (the controller fills the active one).
-    expect(html).toContain('<span class="rail-manifest__label"></span>');
-    expect(html).not.toContain(">08<");
+  it("bakes names for first paint; authored numbers never ship in the skeleton", () => {
+    expect(html).toContain('<span class="rail-manifest__name">Hero</span>');
+    expect(html).toContain('<span class="rail-manifest__name">Services</span>');
+    expect(html).toContain('<span class="rail-manifest__name">Contact</span>');
+    // The non-monotonic authored numbers (…08, 08A, 05…) ride only the
+    // ACTIVE row, applied by the controller — never baked.
+    expect(html).not.toContain("08");
+    // Positional aria-labels stay monotonic for assistive tech.
     expect(html).toContain('aria-label="Services — section 4 of 10"');
     expect(html).toContain('aria-label="Contact — section 10 of 10"');
   });
 
-  it("only the services bay carries the stack glyph, and markup is balanced", () => {
+  it("only the services row carries the stack glyph, and markup is balanced", () => {
     expect(html.match(/rail-manifest__glyph"/g)).toHaveLength(1);
     expect(html.match(/<button /g)).toHaveLength(html.match(/<\/button>/g)?.length ?? -1);
     expect(html.match(/<svg /g)).toHaveLength(html.match(/<\/svg>/g)?.length ?? -1);

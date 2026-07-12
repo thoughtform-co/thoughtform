@@ -10,8 +10,9 @@
  * DOM-derived; `tests/lib/rail-manifest.test.ts` carries a drift guard
  * asserting the station-kind entries match the parsed production DOM.
  *
- * `label` is the authored station number, displayed ONLY while the
- * entry is active (markers-only canon): the production sequence is
+ * `label` is the authored station number, displayed ONLY on the
+ * ACTIVE rolodex row (Update 3 canon — every row shows its name, the
+ * number rides the active row alone): the production sequence is
  * non-monotonic (…03, 08, 08A, 05…) because services + tools relocate
  * ahead of continuum, and showing one number at a time keeps that
  * invisible while staying consistent with the station corner chrome
@@ -36,9 +37,10 @@ export type ManifestEntryId =
 
 export interface ManifestEntry {
   id: ManifestEntryId;
-  /** Authored station number — shown ONLY while active. */
+  /** Authored station number — rides ONLY the active rolodex row. */
   label: string;
-  /** Station name — shown while active (scramble-decoded) or hover-ghosted. */
+  /** Station name — always visible in the reel (the active row
+   *  prefixes the authored number, scramble-decoded). */
   name: string;
   kind: "station" | "corridor";
   /**
@@ -101,11 +103,3 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
   { id: "about", label: "09", name: "About", kind: "station", targetId: "about" },
   { id: "contact", label: "10", name: "Contact", kind: "station", targetId: "contact" },
 ] as const;
-
-/**
- * Slot positions sit on the canonical Brand Codex 13-position tick
- * grid (`lib/v7-parse/hudTicks.ts` — 0%, 8.33%, …, 100%): the ten
- * entries occupy positions 1–10, leaving 0% and the bottom two
- * positions clear for breathing room.
- */
-export const SLOT_TOP_PCT = (index: number): number => ((index + 1) * 100) / 12;

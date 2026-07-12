@@ -739,46 +739,92 @@
   right: calc(var(--hud-rail-guide-inset) + 10px);
 }
 
-/* Rail manifest (ADR-031) — the left rail as a module backplane. One
-   bracketed slot per journey entry, seated ON the canonical 8.33%
-   Brand Codex tick grid: the 13-tick ladder STAYS (Update 2 — it is
-   load-bearing rail identity; never remove it) and the manifest
-   replaces only the ADR-030 single station label. States are attribute-
-   driven by RailManifestController (parse-injected skeleton, client
-   mutation): `upcoming` = empty socket, `seated` = chip in its bay,
-   `active` = the one powered slot that materializes its number + name
-   (scramble-decoded — the absorbed station-label behavior). The
-   services bay carries the layered-stack glyph while seated (the
-   docked card ring). Seat garnish is quantized steps() only — never a
-   tween (ADR-031; 260ms mirrors ToolsRailRegister HANDOVER_FADE_S so
-   the services→tools seat shares the register's clock). */
+/* Rail manifest (ADR-031, Update 3) — the left rail's rolodex. A
+   masked window anchored at mid-rail holds a flow-stacked reel of
+   every journey entry; the active row always sits at the window's
+   center line and section changes slide the WHOLE reel via
+   --rail-manifest-idx — one 350ms detent glide (the owner-approved
+   narrowing of the "never smooth tweening" canon; the glyph confirm
+   stays quantized steps()). The 13-tick ladder STAYS (Update 2 — it
+   is load-bearing rail identity; never remove it), and with the reel
+   off the tick rows the "2"/"5" bearing numerals return. States are
+   attribute-driven by RailManifestController (parse-injected
+   skeleton, client mutation): data-dist dims rows by distance from
+   active, data-dormant hides the window while hero is active (hero
+   canon: no rail title), data-ready gates every transition so a
+   mid-page reload paints at its detent instead of sliding up from
+   hero. */
 .hud__rail--l [data-rail-manifest-root] {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  --rail-manifest-row-h: 22px;
 }
-/* The Brand Codex 13-tick ladder stays (ADR-031 Update 2) — manifest
-   slots seat ON its grid, marker over the tick's inner end (the right
-   rail's register-diamond-on-tick precedent). Only the two "2"/"5"
-   depth-gauge bearing numerals yield: they sit at exactly the
-   services/build slot rows (33.33% / 66.67%) and the gauge they
-   belonged to (the depth diamond) is already retired. The workshop
-   rail (no manifest) keeps them. */
-.hud__rail--l:has([data-rail-manifest-root]) .hud__rail__label {
-  display: none;
-}
-.rail-manifest__entry {
+
+/* Window: seven rows on the mid-rail anchor, edge-faded by the mask
+   so distant rows dissolve instead of clipping. overflow: clip (not
+   hidden) — no scroll container, focus can never shift the window. */
+.rail-manifest__window {
   position: absolute;
-  /* 22px bracket cluster centred on the 2px guide hairline. */
-  left: calc(var(--hud-rail-guide-inset) - 10px);
+  top: 50%;
+  left: 0;
+  width: 180px;
+  height: calc(var(--rail-manifest-row-h) * 7);
   translate: 0 -50%;
+  overflow: clip;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+}
+[data-rail-manifest-root]:not([data-ready]) .rail-manifest__window,
+[data-rail-manifest-root][data-dormant] .rail-manifest__window {
+  opacity: 0;
+  visibility: hidden;
+}
+[data-rail-manifest-root][data-ready] .rail-manifest__window {
+  transition:
+    opacity 350ms var(--ease-out),
+    visibility 0s 350ms;
+}
+[data-rail-manifest-root][data-ready]:not([data-dormant]) .rail-manifest__window {
+  transition:
+    opacity 350ms var(--ease-out),
+    visibility 0s;
+}
+
+/* Reel: position is a pure function of the active index — row idx's
+   center lands exactly on the window's center line. Retargets
+   mid-glide on every detent write (fast travel = one redirected
+   slide, never a queued chain). */
+.rail-manifest__reel {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(
+    calc((var(--rail-manifest-idx, 0) + 0.5) * var(--rail-manifest-row-h) * -1)
+  );
+}
+[data-rail-manifest-root][data-ready] .rail-manifest__reel {
+  transition: transform 350ms var(--ease-out);
+}
+
+/* Rows: fixed height keeps the detent math exact. Text sits on the
+   bearing-label column (guide + 10px) so the reel reads with the page
+   rhythm rather than floating in the gutter. */
+.rail-manifest__entry {
   display: flex;
   align-items: center;
   gap: 7px;
-  height: 18px;
+  height: var(--rail-manifest-row-h);
   width: max-content;
-  padding: 0;
+  padding: 0 0 0 calc(var(--hud-rail-guide-inset) + 10px);
   border: 0;
   background: none;
   cursor: pointer;
@@ -790,66 +836,49 @@
   white-space: nowrap;
   color: var(--dawn-50);
 }
-.rail-manifest__entry[data-state="upcoming"] {
-  opacity: 0.25;
+[data-rail-manifest-root][data-ready] .rail-manifest__entry {
+  transition:
+    opacity 350ms var(--ease-out),
+    color 350ms var(--ease-out);
 }
-.rail-manifest__entry[data-state="seated"] {
+/* Distance dimming — the rolodex falloff (the mask's edge fade takes
+   dist-3 rows lower still; dist-4 rows are off-window, hidden so they
+   can never take focus or hover). */
+.rail-manifest__entry[data-dist="1"] {
   opacity: 0.55;
+}
+.rail-manifest__entry[data-dist="2"] {
+  opacity: 0.32;
+}
+.rail-manifest__entry[data-dist="3"] {
+  opacity: 0.22;
+}
+.rail-manifest__entry[data-dist="4"] {
+  opacity: 0;
+  visibility: hidden;
 }
 .rail-manifest__entry[data-state="active"] {
   opacity: 1;
-  z-index: 3;
   color: var(--gold);
 }
-.rail-manifest__entry[data-ghost] {
-  opacity: 0.75;
+.rail-manifest__entry:not([data-state="active"]):hover,
+.rail-manifest__entry:focus-visible {
+  opacity: 0.85;
 }
 .rail-manifest__entry:focus-visible {
   outline: 1px solid var(--gold);
   outline-offset: 3px;
 }
 
-/* Marker: register brackets [ · ] — bays in the backplane. The chip
-   dot appears once seated; the services glyph replaces it. */
-.rail-manifest__marker {
-  position: relative;
-  width: 22px;
-  height: 12px;
-  flex: none;
-  display: grid;
-  place-items: center;
-}
-.rail-manifest__marker::before,
-.rail-manifest__marker::after {
-  position: absolute;
-  top: 50%;
-  translate: 0 -54%;
-  font-size: 11px;
-  line-height: 1;
-  color: currentColor;
-}
-.rail-manifest__marker::before {
-  content: "[";
-  left: 0;
-}
-.rail-manifest__marker::after {
-  content: "]";
-  right: 0;
-}
-.rail-manifest__entry[data-state="seated"] .rail-manifest__marker,
-.rail-manifest__entry[data-state="active"] .rail-manifest__marker {
-  background: radial-gradient(circle at center, currentColor 0 1.8px, transparent 2.2px);
-}
-
-/* The services module glyph — the folded card ring, present in its
-   bay only while SEATED (in #services the cards are deployed as the
-   ring; the module docks when you cross into #tools). */
+/* The services module glyph — the folded card ring, inline after the
+   name only while SEATED (in #services the cards are deployed as the
+   ring; the module docks when you cross into #tools). The display
+   flip retriggers the flash — no JS timers. */
 .rail-manifest__glyph {
   display: none;
-  position: relative;
-  z-index: 1;
   width: 11px;
   height: 11px;
+  flex: none;
   overflow: visible;
 }
 .rail-manifest__glyph rect {
@@ -863,66 +892,11 @@
 }
 .rail-manifest__entry[data-state="seated"] .rail-manifest__glyph {
   display: block;
-}
-.rail-manifest__entry[data-state="seated"] .rail-manifest__marker:has(.rail-manifest__glyph) {
-  background: none;
+  animation: rail-manifest-flash 320ms steps(2, start);
 }
 
-/* Text: number + name — the active entry only (markers-only canon);
-   hover ghosts a name in at low opacity. Spans are filled/cleared
-   imperatively by the controller, so hidden states also hold no text. */
-.rail-manifest__label {
-  color: var(--gold);
-  opacity: 0;
-}
-.rail-manifest__name {
-  color: var(--dawn-50);
-  opacity: 0;
-}
-.rail-manifest__entry[data-state="active"] .rail-manifest__label,
-.rail-manifest__entry[data-state="active"] .rail-manifest__name {
-  opacity: 1;
-}
-.rail-manifest__entry[data-ghost] .rail-manifest__name {
-  opacity: 0.55;
-}
-
-/* Seat garnish: quantized snap (260ms = HANDOVER_FADE_S in
-   ToolsRailRegister.tsx — one clock) + a discrete double-blink
-   confirm. Forward-only via data-just-seated; reverse travel flips
-   attributes with no garnish. */
-.rail-manifest__entry[data-just-seated] .rail-manifest__marker {
-  animation:
-    rail-manifest-seat 260ms steps(3, end),
-    rail-manifest-blink 380ms steps(2, start) 300ms;
-}
-.rail-manifest__entry[data-just-seated] .rail-manifest__glyph {
-  animation: rail-manifest-flash 320ms steps(2, start) 260ms;
-}
-@keyframes rail-manifest-seat {
-  0% {
-    scale: 2.1;
-    opacity: 0.2;
-  }
-  100% {
-    scale: 1;
-    opacity: 1;
-  }
-}
-@keyframes rail-manifest-blink {
-  0%,
-  24.99%,
-  50%,
-  74.99% {
-    opacity: 1;
-  }
-  25%,
-  49.99%,
-  75%,
-  100% {
-    opacity: 0.25;
-  }
-}
+/* Glyph confirm: the seated flash stays quantized steps() (ADR-031
+   canon for confirm garnish; the reel glide is the only tween). */
 @keyframes rail-manifest-flash {
   0%,
   49.99% {
@@ -935,9 +909,13 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rail-manifest__entry .rail-manifest__marker,
   .rail-manifest__entry .rail-manifest__glyph {
     animation: none !important;
+  }
+  [data-rail-manifest-root] .rail-manifest__window,
+  [data-rail-manifest-root] .rail-manifest__reel,
+  [data-rail-manifest-root] .rail-manifest__entry {
+    transition: none !important;
   }
 }
 
@@ -6799,9 +6777,10 @@ body.density-dense .station {
   .hud__rail__label {
     display: none;
   }
-  /* Manifest degrades to markers-only (its default posture anyway). */
-  .rail-manifest__label,
-  .rail-manifest__name {
+  /* The rolodex is a text instrument — below 1100px it stands down
+     entirely; the tick ladder keeps the rail identity and HudNav
+     carries navigation. */
+  [data-rail-manifest-root] {
     display: none;
   }
 }

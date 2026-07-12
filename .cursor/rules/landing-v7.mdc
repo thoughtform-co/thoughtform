@@ -23,6 +23,9 @@ parse-injected (`lib/v7-parse/railManifest.ts`) and mutated in place by
 `RailManifestController` — never `createRoot` into
 `[data-rail-manifest-root]`, keep the prototype shell byte-exact, and
 change journey order only in `lib/rail-manifest/entries.ts` (drift-guard
-tested). Quantized `steps()` seat motion only — no FLIP flights.
+tested). The rolodex reel detent (Update 3) is a 350ms transform
+transition gated behind `data-ready`, a pure function of `activeIdx` —
+never scroll-scrubbed; glyph confirm stays quantized `steps()`; no FLIP
+flights; the 13-tick ladder always stays.
 
 **Process:** `sentinel/MAINTENANCE.md` — Cycle B before large section work; Cycle A after non-trivial fixes.

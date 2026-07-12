@@ -41,9 +41,12 @@ it in place. Never `createRoot` into `[data-rail-manifest-root]` (it
 clobbers the server skeleton); keep the shell markup in the prototype
 HTML byte-exact (the parse regex + `tests/lib/rail-manifest.test.ts`
 pin it); journey order lives in `lib/rail-manifest/entries.ts` under a
-drift-guard test. Seat motion is quantized `steps()` keyed to the same
-`data-active-station` flip as the header type-on and register handover
-— no FLIP flights (retired, ADR-030 Updates 1–3).
+drift-guard test. The reel detent (Update 3 rolodex) is a 350ms
+transform transition gated behind `data-ready`, and its position is a
+pure function of `activeIdx` — never scroll-scrubbed, no new scroll
+writers; the glyph confirm stays quantized `steps()`; still no FLIP
+flights (retired, ADR-030 Updates 1–3). The 13-tick ladder always
+stays (ADR-031 Update 2).
 
 **Process**
 

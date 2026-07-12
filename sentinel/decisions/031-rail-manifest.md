@@ -202,3 +202,74 @@ navigation, not by replacing anything.
 
 **Guardrail for future passes: "replace the ladder" is a rejected
 alternative.** Any redesign of the left rail keeps all 13 ticks.
+
+### Update 3 — rolodex reel replaces the bracket bays (2026-07-12, same day)
+
+The owner rejected the shipped bracket-bay visual on sight ("super
+ugly"): ten slots pinned to fixed tick rows meant the active text
+**teleported down the ladder** on every section change — powered off
+one row, scramble-decoded onto another. The redirect: "a minimalistic
+overview of the different sections … like a rolodex … the text section
+overview should have a fixed position."
+
+**What survives untouched:** the manifest's architecture — decisions 1
+(states as a pure function of `activeIdx`), 5 (parse skeleton +
+null-rendering controller, byte-exact shell), 6 (real nav semantics +
+click-to-scroll), 7 (`entries.ts` under drift-guard) — plus the
+resolver (corridor phases, seam-gap rule), the wake model, and the
+13-tick ladder (Update 2 reaffirmed: all 13 ticks stay).
+
+**The visual model is replaced** by a fixed-anchor rolodex:
+
+- A masked **7-row window** (`7 × 22px`, gradient mask fading both
+  edges) anchors at 50% of the rail. Inside it a **flow-stacked reel**
+  holds all ten rows; the controller writes one unitless custom
+  property (`--rail-manifest-idx`) and CSS derives
+  `translateY(-(idx + 0.5) · rowH)` — the active row's center always
+  lands on the window's center line.
+- **Every row shows its name** (baked at parse time for first paint),
+  dimmed by distance from active (`data-dist` 1→0.55, 2→0.32, 3→0.22;
+  dist 4 is off-window and `visibility: hidden`, so it can't take
+  focus). The active row is gold at full opacity.
+- **The tween exception (decision 4 narrowed):** the reel transform is
+  a continuous **350ms `--ease-out` detent glide** — an owner-approved
+  exception to "never smooth tweening." Position remains a pure
+  function of `activeIdx` (never scroll-scrubbed), motion stays inside
+  the rail (the FLIP rejection stands), and CSS transition retargeting
+  makes fast travel read as one redirected glide instead of a queued
+  chain. Quantized `steps()` remains the canon for confirm garnish
+  (the glyph flash).
+- **Numbering canon preserved via the active-prefix morph:** each row
+  is a single name span; the controller morphs `SERVICES` ↔
+  `08 SERVICES` through the scramble kernel (which restarts from the
+  currently displayed text), so the authored number rides only the
+  active row and the non-monotonic …03/08/08A/05… sequence is still
+  never visible as a column. The separate label span is gone.
+- **Hero dormancy:** `data-dormant` (activeIdx 0) hides the window —
+  the hero canon of "no rail title" now hides the whole instrument
+  until the journey starts; it fades in entering Thesis.
+- **`data-ready` gate:** the controller syncs the first detent, flushes
+  layout (`void nav.offsetWidth`), THEN enables transitions — a
+  mid-page reload fades in already positioned, never sliding up from
+  hero. First paint / reload also skips the scramble (silent
+  reconstruction, the shipped garnish philosophy).
+- **Update 2's numeral yield reversed:** rows no longer sit on tick
+  positions, so the `:has()` suppression is deleted and the "2"/"5"
+  bearing numerals return to the home rail. Clearance is verified down
+  to 720-class viewport heights (~90px from rail-center vs a 77px
+  window half-extent, with the mask transparent at the edge) — if the
+  window ever grows past 7 rows, re-suppress instead.
+- **Retired:** bracket marker bays, the seat-cascade garnish
+  (`data-just-seated` timers, 950ms/90ms stagger, seat/blink
+  keyframes), and the hover ghost machinery (names are always visible;
+  hover is a pure-CSS opacity bump). The services stack glyph moves
+  **inline after the name**, still seated-only — its 320ms `steps(2)`
+  gold flash now retriggers on the `display` flip with zero JS timers.
+- **Responsive:** below 1100px the manifest hides entirely (there is
+  no markers-only tier without marker bays); the tick ladder keeps the
+  rail identity and HudNav carries navigation. The ≤960px rail hide is
+  unchanged.
+
+The look-dev lab (`rail-manifest-lab`) still shows the three marker
+variants from Update 1 — kept as history; it does not model the
+rolodex.

@@ -6,23 +6,34 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
 import { CORRIDOR_MOUNT_ID, MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
 
 /**
- * RailManifestController — the left rail's station manifest (ADR-031).
+ * RailManifestController — the left rail's section rolodex (ADR-031,
+ * Update 3).
  *
- * The manifest markup (one bracketed slot per journey entry) is
- * injected at PARSE time by `lib/v7-parse/railManifest.ts`, so the
- * rail paints its sockets on first load with no client reflow. This
- * controller is a null-rendering component that MUTATES that injected
- * DOM — never `createRoot` into `[data-rail-manifest-root]` (it would
- * clobber the server skeleton). Precedent: `useLandingScroll` writing
+ * The manifest markup (a masked window holding a flow-stacked reel of
+ * every journey entry) is injected at PARSE time by
+ * `lib/v7-parse/railManifest.ts`, so the rail paints its section list
+ * on first load with no client reflow. This controller is a
+ * null-rendering component that MUTATES that injected DOM — never
+ * `createRoot` into `[data-rail-manifest-root]` (it would clobber the
+ * server skeleton). Precedent: `useLandingScroll` writing
  * `#depthIndicator`.
  *
- * Entry states are a pure function of scroll position — one integer
- * `activeIdx`: entries before it are `seated` (module in its bay),
- * after it `upcoming` (empty socket), at it `active` (the only entry
- * that materializes its number + name, scramble-decoded — absorbing
- * the retired RailStationLabel). Reverse scroll reconstructs by
- * construction; the seat garnish (quantized snap + gold blink) is
- * forward-only, time-boxed via `data-just-seated`.
+ * The reel is a rolodex: the active row always sits at the fixed
+ * mid-rail anchor, and section changes slide the WHOLE reel through
+ * one custom property (`--rail-manifest-idx`) — a 350ms detent glide,
+ * the owner-approved narrowing of the "never smooth tweening" canon
+ * (position stays a pure function of `activeIdx`; it is never
+ * scroll-scrubbed). Everything derives from that one integer:
+ *   - per entry: `data-state` (seated / active / upcoming) and
+ *     `data-dist` (clamped |i − active| → distance dimming);
+ *   - on the nav: `data-dormant` while hero is active (hero canon: no
+ *     rail title) and the detent property itself;
+ *   - the active row's text morphs "SERVICES" ↔ "08 SERVICES"
+ *     (scramble-decoded) — authored numbers stay off every other row
+ *     because the production sequence is non-monotonic.
+ * `data-ready` is set only after the first sync + a reflow flush, so
+ * a mid-page reload fades in at the correct detent instead of sliding
+ * up from hero.
  *
  * activeIdx resolution (all existing single-writer attributes):
  *   1. `data-corridor-engaged` → the entry matching
@@ -38,17 +49,7 @@ import { CORRIDOR_MOUNT_ID, MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries
  * listener that only works while in the hero/corridor regime (rule 3
  * is geometric) + resize. rAF alive only while a scramble runs — the
  * ToolsRailRegister discipline.
- *
- * The services→tools crossing is the hero moment: the same
- * `data-active-station` flip that drives the tools header type-on and
- * the right register's handover (HANDOVER_FADE_S) seats the services
- * module — the layered-stack glyph (the folded card ring) snaps into
- * its bay. One clock, three consumers.
  */
-
-const SEAT_GARNISH_MS = 950;
-/** Forward fast-travel: crossed entries seat in a cascade. */
-const GARNISH_STAGGER_MS = 90;
 
 const THESIS_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "thesis");
 const ARC_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "arc");
@@ -67,16 +68,13 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
     if (!nav) return;
     const entries = Array.from(nav.querySelectorAll<HTMLButtonElement>(".rail-manifest__entry"));
     if (entries.length !== MANIFEST_ENTRIES.length) return;
-    const labels = entries.map((el) => el.querySelector<HTMLElement>(".rail-manifest__label"));
     const names = entries.map((el) => el.querySelector<HTMLElement>(".rail-manifest__name"));
 
     const html = document.documentElement;
     const jobs: ScrambleJob[] = [];
     let raf = 0;
     let scrollRaf = 0;
-    const garnishTimers = new Map<number, number>();
     let activeIdx = -1; // forces the first update() to paint
-    let hoverIdx: number | null = null;
     let seamWatch = true; // scroll listener works only in the hero/corridor regime
 
     const prm = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -89,50 +87,23 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
       if (!raf && jobs.length) raf = requestAnimationFrame(tick);
     };
 
-    const clearText = (i: number) => {
-      const label = labels[i];
+    /** A row's text: the authored number rides only the ACTIVE row
+     *  ("08 SERVICES"); every other row shows the bare name. The
+     *  prefix shift re-decodes the whole row through the scramble
+     *  kernel (it restarts from the currently displayed text, so fast
+     *  back-and-forth chains naturally). */
+    const setRowText = (i: number, active: boolean, instant = false) => {
       const name = names[i];
-      if (label) label.textContent = "";
-      if (name) name.textContent = "";
-    };
-
-    const decodeActive = (i: number) => {
+      if (!name) return;
       const entry = MANIFEST_ENTRIES[i];
-      const label = labels[i];
-      const name = names[i];
-      if (!label || !name) return;
-      // Hero canon: the first viewport shows no rail title at all.
-      const no = entry.hideActiveName ? "" : entry.label;
-      const nm = entry.hideActiveName ? "" : entry.name;
-      if (prm()) {
-        label.textContent = no;
-        name.textContent = nm;
+      // Hero canon: no number even if the (dormant) row were shown.
+      const text = active && !entry.hideActiveName ? `${entry.label} ${entry.name}` : entry.name;
+      if (instant || prm()) {
+        name.textContent = text;
         return;
       }
-      const now = performance.now() / 1000;
-      queueScramble(jobs, label, no, now + 0.05);
-      queueScramble(jobs, name, nm, now + 0.12);
+      queueScramble(jobs, name, text, performance.now() / 1000 + (active ? 0.05 : 0.02));
       kick();
-    };
-
-    const garnish = (i: number, delayMs: number) => {
-      const existing = garnishTimers.get(i);
-      if (existing !== undefined) window.clearTimeout(existing);
-      const start = window.setTimeout(() => {
-        entries[i].setAttribute("data-just-seated", "");
-        const off = window.setTimeout(() => {
-          entries[i].removeAttribute("data-just-seated");
-          garnishTimers.delete(i);
-        }, SEAT_GARNISH_MS);
-        garnishTimers.set(i, off);
-      }, delayMs);
-      garnishTimers.set(i, start);
-    };
-
-    const clearGarnish = () => {
-      garnishTimers.forEach((t) => window.clearTimeout(t));
-      garnishTimers.clear();
-      entries.forEach((el) => el.removeAttribute("data-just-seated"));
     };
 
     const resolveActiveIdx = (): number => {
@@ -162,72 +133,34 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
       const prev = activeIdx;
       activeIdx = next;
 
-      // Reverse travel: instant state flips, garnish killed (the end
-      // states are the attributes' static styles — interruption-safe).
-      if (prev >= 0 && next < prev) clearGarnish();
+      // The reel detent + hero dormancy — both pure functions of next.
+      // CSS transitions retarget mid-glide on every write, so fast
+      // travel reads as one redirected slide, never a queued chain.
+      nav.style.setProperty("--rail-manifest-idx", String(next));
+      if (next === 0) nav.setAttribute("data-dormant", "");
+      else nav.removeAttribute("data-dormant");
 
       entries.forEach((el, i) => {
         const state = i < next ? "seated" : i === next ? "active" : "upcoming";
         if (el.getAttribute("data-state") !== state) el.setAttribute("data-state", state);
+        const dist = String(Math.min(Math.abs(i - next), 4));
+        if (el.getAttribute("data-dist") !== dist) el.setAttribute("data-dist", dist);
         if (i === next) el.setAttribute("aria-current", "true");
         else el.removeAttribute("aria-current");
       });
 
-      // Forward travel: every entry crossed seats with the quantized
-      // snap, cascade-staggered (fast-scroll-past reads as the rack
-      // populating). prev < 0 is the first paint / mid-page reload —
-      // states reconstruct silently, no garnish replay.
-      if (prev >= 0 && next > prev && !prm()) {
-        for (let i = prev; i < next; i++) garnish(i, (i - prev) * GARNISH_STAGGER_MS);
-      }
-
-      if (hoverIdx === next) hoverIdx = null;
-      entries.forEach((el, i) => {
-        if (el.hasAttribute("data-ghost") && i !== hoverIdx) el.removeAttribute("data-ghost");
-      });
-      if (prev >= 0 && prev !== hoverIdx) clearText(prev);
-      decodeActive(next);
-    };
-
-    // Hover ghost — the diegetic tooltip for marker-only slots: the
-    // name scrambles in at low opacity (CSS [data-ghost]).
-    const entryFromEvent = (ev: Event): number => {
-      const btn = (ev.target as HTMLElement).closest?.(".rail-manifest__entry");
-      return btn ? entries.indexOf(btn as HTMLButtonElement) : -1;
-    };
-    const onPointerOver = (ev: PointerEvent) => {
-      const i = entryFromEvent(ev);
-      if (i < 0 || i === activeIdx || i === hoverIdx) return;
-      if (hoverIdx != null) {
-        entries[hoverIdx].removeAttribute("data-ghost");
-        if (hoverIdx !== activeIdx) clearText(hoverIdx);
-      }
-      hoverIdx = i;
-      entries[i].setAttribute("data-ghost", "");
-      const name = names[i];
-      if (!name) return;
-      if (prm()) {
-        name.textContent = MANIFEST_ENTRIES[i].name;
-      } else {
-        queueScramble(jobs, name, MANIFEST_ENTRIES[i].name, performance.now() / 1000 + 0.03);
-        kick();
-      }
-    };
-    const onPointerOut = (ev: PointerEvent) => {
-      const i = entryFromEvent(ev);
-      if (i < 0 || i !== hoverIdx) return;
-      const related = ev.relatedTarget as Node | null;
-      if (related && entries[i].contains(related)) return;
-      hoverIdx = null;
-      entries[i].removeAttribute("data-ghost");
-      if (i !== activeIdx) clearText(i);
+      // prev < 0 is the first paint / mid-page reload: the reel
+      // reconstructs silently (no scramble) behind the data-ready gate.
+      if (prev >= 0) setRowText(prev, false);
+      setRowText(next, true, prev < 0);
     };
 
     // Click → scroll: the manifest is diegetic navigation. Stations
     // use the HudNav canon; corridor entries land a tuned fraction
     // into the mount runway. PRM jumps.
     const onClick = (ev: MouseEvent) => {
-      const i = entryFromEvent(ev);
+      const btn = (ev.target as HTMLElement).closest?.(".rail-manifest__entry");
+      const i = btn ? entries.indexOf(btn as HTMLButtonElement) : -1;
       if (i < 0) return;
       const entry = MANIFEST_ENTRIES[i];
       const behavior: ScrollBehavior = prm() ? "auto" : "smooth";
@@ -260,22 +193,22 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
-    nav.addEventListener("pointerover", onPointerOver);
-    nav.addEventListener("pointerout", onPointerOut);
     nav.addEventListener("click", onClick);
     update();
+    // Enable transitions only after the first sync has been flushed —
+    // a mid-page reload fades in at its detent, never slides from hero.
+    void nav.offsetWidth;
+    nav.setAttribute("data-ready", "");
 
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
-      nav.removeEventListener("pointerover", onPointerOver);
-      nav.removeEventListener("pointerout", onPointerOut);
       nav.removeEventListener("click", onClick);
       if (raf) cancelAnimationFrame(raf);
       if (scrollRaf) cancelAnimationFrame(scrollRaf);
       jobs.length = 0;
-      clearGarnish();
+      nav.removeAttribute("data-ready");
     };
   }, [containerRef]);
 
