@@ -33,10 +33,7 @@ html
             ├── div.celestial-connector   position: relative; z-index: 2; background: var(--void)
             ├── section#missing-layer     position: relative; z-index: 2; bg: var(--void); 100svh
             ├── section#intelligence-layer position: relative; z-index: 2; bg: var(--void); 100svh
-            ├── section#tools             relative; z-index: 2 (z:6 during corridor exit)
-            │   ├── ::before              absolute; z-index: 0; --tools-bg-in shield
-            │   ├── header.tools__head    fixed; z-index: 12; text/datum, no background
-            │   └── .pcl-slot             sticky only on the enhanced capability
+            ├── section#about             relative; z-index: 2 (z:6 during corridor exit — ADR-033)
             ├── section.station           …
             └── …
 ```
@@ -73,11 +70,13 @@ z:3   .home-corridor-host   (the revealed second section)
 
 Every section/divider/connector that sits inside `.stations` and is intended to read as dark void **must** paint an opaque `var(--void)` fill on top of those two layers. That is the only thing making the rest of the page look like a solid dark page.
 
-`#tools` is the documented exception during the Services handover. Its
-station is intentionally transparent while `#tools::before` fades to opaque
-on `--tools-bg-in`; that shield must finish before the ambient canvas retires.
-The fixed `.tools__head` is safe to opacity/clip because it carries no
-structural fill. The Tools rail register is nested inside the existing
+There is NO transparent-station exception anymore (ADR-033): the retired
+`#tools` lead-in (`--tools-bg-in` shield) went with its station. `#about`
+now follows `#services` as an ordinary OPAQUE station — during the
+corridor-exit band it takes `z-index: 6` + a `content-visibility: visible`
+escape (home-v2.css) so it stacks above the body veil while the ambient
+bed dies underneath it (fade END = about.top at viewport top). The
+services rail register (`SOURCE BUS · 04`) is nested inside the existing
 `.hud` stacking context rather than mounted as another fixed page overlay.
 
 ---
