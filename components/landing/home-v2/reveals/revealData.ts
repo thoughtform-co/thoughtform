@@ -1,9 +1,12 @@
 /**
- * revealData — content for the Arc's per-stage reveal consoles (ADR-032).
+ * revealData — content for the Arc's diegetic detail overlays (ADR-032 +
+ * Update 1).
  *
- * Navigate = a native "signal" card (a LinkedIn-post-shaped artifact in the
- * site's HUD grammar; copy is swappable here so a real post is a data-only
- * change). Encode = a curated handful of skill examples.
+ * Encode = a curated handful of skill examples, grouped by cardinal
+ * (`SKILLS_BY_CARDINAL`) and bloomed as world-anchored chip clusters
+ * around JUDGMENT / TASTE / CRAFT / VOICE. Navigate's signal card
+ * (`SIGNAL_PLACEHOLDER`) is PARKED since Update 1 — kept for a later pass
+ * with the real post; not mounted today.
  *
  * CONFIDENTIALITY: the Encode entries are GENERICIZED skill SHAPES — no
  * client names, no owner names, no team/engagement attribution. They read
@@ -93,6 +96,16 @@ export const REVEAL_SKILLS: RevealSkill[] = [
     cardinal: "taste",
   },
 ];
+
+/** `REVEAL_SKILLS` grouped by cardinal, order preserved — the shape the
+ *  Encode skill clusters bloom from (one cluster per cardinal). */
+export const SKILLS_BY_CARDINAL: Record<SkillCardinal, RevealSkill[]> = REVEAL_SKILLS.reduce(
+  (acc, skill) => {
+    acc[skill.cardinal].push(skill);
+    return acc;
+  },
+  { judgment: [], taste: [], craft: [], voice: [] } as Record<SkillCardinal, RevealSkill[]>
+);
 
 export interface SignalMetric {
   label: string;

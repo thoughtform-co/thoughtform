@@ -7,16 +7,16 @@ import {
   ENCODE_FADE_OUT,
   NAVIGATE_FADE_IN,
   NAVIGATE_FADE_OUT,
-  REVEAL_REARM,
+  overlayToggleOpacity,
+  resolveOverlayAuto,
   resolveRevealStage,
-  shouldForceClose,
   stageBandOpacity,
 } from "@/lib/home-v2/corridorReveals";
 
 /**
- * Arc reveal consoles (ADR-032) — the pure band/force-close kernel that
- * the `CorridorRevealLayer` rAF reads. Everything here is a function of
- * paintProgress + epilogueProgress; no DOM.
+ * Arc detail overlays (ADR-032 + Update 1) — the pure band + toggle +
+ * auto-collapse kernel `CorridorProgressRail`'s rAF reads. Everything here
+ * is a function of paintProgress + epilogueProgress; no DOM.
  */
 
 describe("stage fade bands", () => {
@@ -82,25 +82,67 @@ describe("resolveRevealStage", () => {
   });
 });
 
-describe("shouldForceClose", () => {
-  const build = "build" as const;
+describe("overlayToggleOpacity", () => {
+  const navPark = BEAT_PARK_CENTRES.navigate ?? 0.4;
+  const encPark = BEAT_PARK_CENTRES.diagnostic ?? 0.636;
+  const bldPark = BEAT_PARK_CENTRES.intelligence ?? 0.923;
 
-  it("keeps an open panel while its stage is parked", () => {
-    expect(shouldForceClose(build, BEAT_PARK_CENTRES.intelligence ?? 0.923, 0, true)).toBe(false);
+  it("is hidden through Navigate, present at Encode + Build parks", () => {
+    expect(overlayToggleOpacity(navPark, 0, true)).toBe(0);
+    expect(overlayToggleOpacity(encPark, 0, true)).toBeGreaterThan(0.9);
+    expect(overlayToggleOpacity(bldPark, 0, true)).toBeGreaterThan(0.9);
   });
 
-  it("closes when the open stage has faded below the re-arm floor", () => {
-    // Well outside the Build band → opacity 0 < REVEAL_REARM.
-    expect(shouldForceClose(build, 0.2, 0, true)).toBe(true);
-    expect(stageBandOpacity(build, 0.2, 0)).toBeLessThan(REVEAL_REARM);
+  it("stays present across the Encode→Build travel gap (no blink)", () => {
+    // Between Encode fade-out and Build fade-in the argmax chip dips; the
+    // toggle rides Encode-fade-in only, so it holds.
+    expect(overlayToggleOpacity(0.835, 0, true)).toBeGreaterThan(0.9);
   });
 
-  it("closes as soon as the epilogue begins", () => {
-    expect(shouldForceClose(build, BEAT_PARK_CENTRES.intelligence ?? 0.923, 0.02, true)).toBe(true);
+  it("leaves with the Build chapter and is 0 while disengaged", () => {
+    expect(overlayToggleOpacity(1, 0.3, true)).toBe(0);
+    expect(overlayToggleOpacity(bldPark, 0, false)).toBe(0);
+  });
+});
+
+describe("resolveOverlayAuto", () => {
+  const encPark = BEAT_PARK_CENTRES.diagnostic ?? 0.636;
+  const bldPark = BEAT_PARK_CENTRES.intelligence ?? 0.923;
+
+  it("keeps expanded detail while its stage is parked", () => {
+    expect(resolveOverlayAuto(true, false, encPark, 0, true)).toEqual({
+      collapseCardinal: false,
+      collapseSurface: false,
+      reset: false,
+    });
+    expect(resolveOverlayAuto(false, true, bldPark, 0, true).collapseSurface).toBe(false);
   });
 
-  it("closes when the corridor disengages, and is a no-op when nothing is open", () => {
-    expect(shouldForceClose(build, 0.923, 0, false)).toBe(true);
-    expect(shouldForceClose(null, 0.923, 0, true)).toBe(false);
+  it("collapses a cardinal once the Encode band falls below the re-arm floor", () => {
+    // Deep in Build, the Encode band is 0 → an open cardinal collapses,
+    // but an open Build cascade does not.
+    const auto = resolveOverlayAuto(true, false, bldPark, 0, true);
+    expect(auto.collapseCardinal).toBe(true);
+    expect(auto.collapseSurface).toBe(false);
+  });
+
+  it("collapses everything on epilogue start", () => {
+    const auto = resolveOverlayAuto(true, true, bldPark, 0.02, true);
+    expect(auto.collapseCardinal).toBe(true);
+    expect(auto.collapseSurface).toBe(true);
+    expect(auto.reset).toBe(false);
+  });
+
+  it("requests a full reset on disengage, and no-ops when nothing is open", () => {
+    expect(resolveOverlayAuto(true, true, 0.4, 0, false)).toEqual({
+      collapseCardinal: true,
+      collapseSurface: true,
+      reset: true,
+    });
+    expect(resolveOverlayAuto(false, false, encPark, 0, true)).toEqual({
+      collapseCardinal: false,
+      collapseSurface: false,
+      reset: false,
+    });
   });
 });

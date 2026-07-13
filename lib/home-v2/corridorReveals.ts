@@ -1,17 +1,16 @@
 /**
- * corridorReveals — pure kernel for the Arc's per-stage reveal consoles
- * (ADR-032). No DOM, no React: just the band math the `CorridorRevealLayer`
- * rAF loop reads, so it is unit-testable in isolation.
+ * corridorReveals — pure kernel for the Arc's diegetic detail overlays
+ * (ADR-032 + Update 1). No DOM, no React: just the band math the rail
+ * toggle rAF (`CorridorProgressRail`) reads, so it is unit-testable.
  *
- * The reveal chip for each Arc stage (Navigate / Encode / Build) rides the
- * EXACT SAME opacity bands as that stage's station header, so the chip
- * arrives and leaves in lockstep with the copy. Those fade bands are
- * defined HERE and imported back by `CorridorStationHeaders` (single source
- * of truth) — do not fork the values.
+ * The stage fade bands ride the EXACT SAME windows as each stage's station
+ * header — defined HERE and imported back by `CorridorStationHeaders`
+ * (single source of truth) — do not fork the values. The overlay toggle
+ * arrives/leaves in lockstep via `overlayToggleOpacity`; the armed
+ * overlays auto-collapse via `resolveOverlayAuto`.
  *
  * Everything is a pure read of `paintProgress` + `epilogueProgress`; there
- * are no scroll writers here (corridor canon — the reveal layer never
- * drives scroll).
+ * are no scroll writers here (corridor canon — overlays never drive scroll).
  */
 
 import { epilogueBand } from "./epilogueTimeline";
@@ -104,18 +103,51 @@ export function resolveRevealStage(
   return { stage, opacity };
 }
 
-/** Whether an open panel should be force-closed this frame. Fires when the
- *  corridor disengages, the epilogue begins, or the open stage's band has
- *  dropped below the re-arm floor (the user has scrolled out of the
- *  stage). This IS the scroll-away dismissal — there is no scroll lock. */
-export function shouldForceClose(
-  openStage: RevealStageKey | null,
+/** Opacity of the rail "DETAIL" toggle. Visible continuously from the
+ *  Encode band's arrival through the Build chapter (Encode fade-in ×
+ *  (1 − BUILD_OUT)) — no blink in the Encode→Build travel gap the argmax
+ *  chip would dip through — and hidden through Navigate (parked stage). */
+export function overlayToggleOpacity(
   paintProgress: number,
   epilogueProgress: number,
   engaged: boolean
-): boolean {
-  if (!openStage) return false;
-  if (!engaged) return true;
-  if (epilogueProgress > 0.001) return true;
-  return stageBandOpacity(openStage, paintProgress, epilogueProgress) < REVEAL_REARM;
+): number {
+  if (!engaged) return 0;
+  const inOp = smoothstep(ENCODE_FADE_IN[0], ENCODE_FADE_IN[1], paintProgress);
+  const buildOut = epilogueBand(epilogueProgress, "BUILD_OUT");
+  return inOp * Math.max(0, 1 - buildOut);
+}
+
+export interface OverlayAutoAction {
+  collapseCardinal: boolean;
+  collapseSurface: boolean;
+  reset: boolean;
+}
+
+/** Auto-collapse decision for the armed overlays, evaluated each frame.
+ *  An expanded Encode cluster collapses once the Encode band drops below
+ *  the re-arm floor (scrolled out of the stage); the Build cascade
+ *  collapses once the Build band drops; both collapse (and everything
+ *  resets) on epilogue start or corridor disengage. Same hysteresis the
+ *  v1 `shouldForceClose` used — the semantics live on here. */
+export function resolveOverlayAuto(
+  hasCardinal: boolean,
+  hasSurface: boolean,
+  paintProgress: number,
+  epilogueProgress: number,
+  engaged: boolean
+): OverlayAutoAction {
+  if (!engaged) {
+    return { collapseCardinal: hasCardinal, collapseSurface: hasSurface, reset: true };
+  }
+  const epi = epilogueProgress > 0.001;
+  return {
+    collapseCardinal:
+      hasCardinal &&
+      (epi || stageBandOpacity("encode", paintProgress, epilogueProgress) < REVEAL_REARM),
+    collapseSurface:
+      hasSurface &&
+      (epi || stageBandOpacity("build", paintProgress, epilogueProgress) < REVEAL_REARM),
+    reset: false,
+  };
 }

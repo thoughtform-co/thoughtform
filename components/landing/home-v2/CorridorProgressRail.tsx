@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import { overlayToggleOpacity, resolveOverlayAuto } from "@/lib/home-v2/corridorReveals";
+import { useCorridorOverlayStore } from "@/lib/stores/corridorOverlayStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 
 /**
@@ -62,15 +64,22 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
 
 export function CorridorProgressRail() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const rowsRef = useRef<Record<Stage["key"], HTMLDivElement | null>>({
     navigate: null,
     encode: null,
     build: null,
   });
 
+  // Armed drives `aria-pressed` — a re-render here is fine (the rAF effect
+  // has stable [] deps and never restarts).
+  const armed = useCorridorOverlayStore((s) => s.armed);
+
   // Last-written values, to suppress redundant DOM writes on frames where
   // the scrub didn't move enough to change anything.
-  const last = useRef<{ opacity: number; active: Stage["key"] | null } | null>(null);
+  const last = useRef<{ opacity: number; active: Stage["key"] | null; toggleOp: number } | null>(
+    null
+  );
 
   useEffect(() => {
     let raf = 0;
@@ -92,16 +101,42 @@ export function CorridorProgressRail() {
       else if (p >= STAGES[1].band[0]) active = "encode";
       else if (p >= STAGES[0].band[0]) active = "navigate";
 
+      // Overlay toggle — visible Encode→Build (ADR-032 U1), read-only.
+      const toggleOp = overlayToggleOpacity(t.paintProgress, t.epilogueProgress, engaged);
+
+      // Auto-collapse the armed overlays on stage-band exit / epilogue /
+      // disengage (write-on-change only — the action booleans + a current-
+      // state guard keep this from firing every frame).
+      const ov = useCorridorOverlayStore.getState();
+      const auto = resolveOverlayAuto(
+        ov.expandedCardinal !== null,
+        ov.expandedSurface,
+        t.paintProgress,
+        t.epilogueProgress,
+        engaged
+      );
+      if (auto.reset) {
+        if (ov.armed || ov.expandedCardinal !== null || ov.expandedSurface) ov.reset();
+      } else if (auto.collapseCardinal || auto.collapseSurface) {
+        ov.collapseExpanded();
+      }
+
       const prev = last.current;
       if (!prev || Math.abs(prev.opacity - opacity) > 0.002) {
         if (containerRef.current) containerRef.current.style.opacity = opacity.toFixed(3);
+      }
+      if (!prev || Math.abs(prev.toggleOp - toggleOp) > 0.002) {
+        if (toggleRef.current) {
+          toggleRef.current.style.opacity = toggleOp.toFixed(3);
+          toggleRef.current.toggleAttribute("data-live", toggleOp > 0.35);
+        }
       }
       if (!prev || prev.active !== active) {
         for (const stage of STAGES) {
           rowsRef.current[stage.key]?.toggleAttribute("data-active", stage.key === active);
         }
       }
-      last.current = { opacity, active };
+      last.current = { opacity, active, toggleOp };
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -112,20 +147,38 @@ export function CorridorProgressRail() {
   };
 
   return (
-    <div ref={containerRef} className="home-v2-progress-rail" aria-hidden="true">
-      <span className="home-v2-progress-rail__heading">THE ARC · 03</span>
-      {STAGES.map((stage, i) => (
-        <div
-          key={stage.key}
-          ref={setRow(stage.key)}
-          className="home-v2-progress-rail__row"
-          style={{ top: ROW_TOPS[i] }}
-        >
-          <i className="home-v2-progress-rail__marker" aria-hidden="true" />
-          <span className="home-v2-progress-rail__index">{String(i + 1).padStart(2, "0")}</span>
-          <span className="home-v2-progress-rail__name">{stage.label}</span>
-        </div>
-      ))}
-    </div>
+    <>
+      <div ref={containerRef} className="home-v2-progress-rail" aria-hidden="true">
+        <span className="home-v2-progress-rail__heading">THE ARC · 03</span>
+        {STAGES.map((stage, i) => (
+          <div
+            key={stage.key}
+            ref={setRow(stage.key)}
+            className="home-v2-progress-rail__row"
+            style={{ top: ROW_TOPS[i] }}
+          >
+            <i className="home-v2-progress-rail__marker" aria-hidden="true" />
+            <span className="home-v2-progress-rail__index">{String(i + 1).padStart(2, "0")}</span>
+            <span className="home-v2-progress-rail__name">{stage.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Detail overlay toggle (ADR-032 U1) — new rail surface below the
+          Build row (the register block above is pinned by ADR-031 U8).
+          Arms the Encode / Build diegetic overlays. */}
+      <button
+        ref={toggleRef}
+        type="button"
+        className="home-v2-overlay-toggle"
+        aria-pressed={armed}
+        aria-label="Toggle detail overlays for Encode and Build"
+        style={{ opacity: 0 }}
+        onClick={() => useCorridorOverlayStore.getState().toggleArmed()}
+      >
+        <i className="home-v2-overlay-toggle__tick" aria-hidden="true" />
+        <span className="home-v2-overlay-toggle__name">Detail</span>
+      </button>
+    </>
   );
 }

@@ -82,3 +82,70 @@ One new fixed layer inside `.home-v2-stage__sticky`,
 - Keep the fade bands in `corridorReveals.ts` as the single source of truth
   for both the chips and `CorridorStationHeaders`.
 - Encode content stays genericized (no client specifics).
+
+---
+
+## Update 1 — diegetic pivot: label-cluster overlays (2026-07-13, same day)
+
+The owner rejected the v1 bottom chip + right-side drawer on sight ("ugly,
+breaks the flow, not integrated"). v1's fixed-panel model is retired. The
+reveals are now **diegetic overlays that ride the sphere scene** via the
+existing world-anchor machinery (`CopyAnchors` + `useWorldDomTracker`),
+emerging from the labels that are already part of the artifact.
+
+**Model.** A single **DETAIL toggle** on the right rail (seated one gap
+below the Build register row — new surface below the ADR-031 U8 register
+block) ARMS overlay mode. While armed:
+
+- **Encode** — the four cardinal labels (JUDGMENT/TASTE/CRAFT/VOICE) are
+  more prominent (marker 7→9px, label 10→11px + a rendered `sub` line, a
+  brighter frame) and become clickable; clicking one blooms ITS cluster of
+  genericized skill chips in a RADIAL FAN around that cardinal node (one
+  cluster at a time). Chips ride the cardinal's own fly-in local so they
+  never detach; the bloom is a per-cardinal exponential follower.
+- **Build** — the "Web app" surface chip gains the same "+" affordance;
+  clicking it CASCADES the four production tool chips inward-left off the
+  column (a pipeline branch, deliberately a different grammar from the
+  Encode constellation). Only ~0.4 world-units of headroom sit right of
+  the column, so the cascade grows inward (`right-center` origin).
+- **Navigate** — PARKED (no reveal this pass; `NavigateSignalCard` +
+  `SIGNAL_PLACEHOLDER` + `.reveal-signal*` kept for a later real-post pass).
+
+**Clickability** reuses the proven `.home-v2-copy-cta` opt-in: the world-
+anchored container stays `pointer-events:none`; only the armed frame /
+chip opts back into `auto`, so the unarmed corridor is byte-identical
+inert. Back-side (banked-away) cardinals and un-locked (mid-fly-in)
+cardinals are not clickable (`data-backside` / `data-locked`, written by
+`gateEncodePrimitive`).
+
+**State + kernel.** New `lib/stores/corridorOverlayStore.ts`
+(`armed` / `expandedCardinal` / `expandedSurface`), read imperatively in
+the sceneGeom onPaint hooks (the `gyroLabStore` precedent) and via React
+selectors in `CopyAnchors` + `CorridorProgressRail`. The bands kernel
+(`lib/home-v2/corridorReveals.ts`) survives: bands + `stageBandOpacity` +
+`resolveRevealStage` stay; `shouldForceClose` → `resolveOverlayAuto`
+(collapse on stage-band exit / epilogue / disengage) and a new
+`overlayToggleOpacity` (toggle visible Encode→Build). Cluster geometry is
+a pure module `lib/home-v2/overlayClusters.ts` (`skillFanOffset` /
+`buildToolOffset`), unit-tested. `armed` persists across Encode↔Build; the
+auto-collapse watcher lives in `CorridorProgressRail`'s existing rAF (no
+new corridor rAF; the overlay bloom follower self-steps in the DOM-tracker
+frame).
+
+**Retired.** `reveals/CorridorRevealLayer.tsx`,
+`reveals/EncodeSkillsList.tsx`, `reveals/BuildToolTiles.tsx`, and the
+`.home-v2-reveal-*` / `.reveal-skills*` / `.reveal-tools*` CSS
+(`.reveal-signal*` kept). The `BUILD_PANEL_TOOLS_LINK` `#tools` link died
+with the drawer; a link off the cascade can return later.
+
+**Guardrails (updated).** Read-only `paintProgress` (no scroll writer, no
+scroll lock). One cardinal expanded at a time. Encode bloom (radial
+constellation) must stay visually distinct from the Build cascade
+(pipeline branch). Encode content stays genericized. Do NOT reintroduce a
+fixed panel/drawer — the overlays live on the sphere.
+
+**Verification note (unchanged risk).** Unit-tested (cluster fan math,
+overlay toggle opacity, auto-collapse). The preview pane throttles the
+corridor rAF and turbopack-dev can split the overlay store between the lab
+page and the scene chunk — the lab carries an ARM fallback button;
+production is one graph. View on a fresh `npm run dev` hard-load.

@@ -8,7 +8,6 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
 import { CorridorProgressRail } from "./CorridorProgressRail";
-import { CorridorRevealLayer } from "./reveals/CorridorRevealLayer";
 // ADR-021 amendment (2026-06-19): CorridorSeamPixelField is RETIRED on
 // the production path. `#services` is now a content section (Keynote /
 // Workshop / Embedded terminal cards), not a brandmark runway, and the
@@ -177,12 +176,6 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             rails); reads the depth store directly. Desktop-only via
             CSS, matching the 2D station headers. */}
         {!fallback && <CorridorProgressRail />}
-
-        {/* Per-stage reveal consoles (ADR-032) — one labeled chip beneath
-            the caption card opens a side drawer of concrete proof
-            (signal / skills / tools) for the on-screen Arc stage. Reads
-            paintProgress only; never mounts on the fallback corridor. */}
-        {!fallback && <CorridorRevealLayer />}
 
         {/* Projected brandmark — lives inside the sticky stage so
             armed prepaint is clipped to the incoming Thoughtform
