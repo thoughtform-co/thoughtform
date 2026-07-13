@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
+import {
+  BUILD_FADE_IN,
+  ENCODE_FADE_IN,
+  ENCODE_FADE_OUT,
+  NAVIGATE_FADE_IN,
+  NAVIGATE_FADE_OUT,
+} from "@/lib/home-v2/corridorReveals";
 import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
 import {
   DOCKED_INSTRUMENT_EPILOGUE_POSE,
@@ -74,11 +81,10 @@ import { gyroTilt } from "@/lib/stores/gyroLabStore";
 //   - substrate.start → Navigate text fades in WITH the gimbal
 //   - orbits.start    → Encode text fades in WITH the orbits
 //   - stack.start     → Build text fades in WITH the funnel
-const NAVIGATE_FADE_IN: [number, number] = [0.3, 0.42];
-const NAVIGATE_FADE_OUT: [number, number] = [0.47, 0.54];
-const ENCODE_FADE_IN: [number, number] = [0.54, 0.62];
-const ENCODE_FADE_OUT: [number, number] = [0.76, 0.83];
-const BUILD_FADE_IN: [number, number] = [0.84, 0.91];
+// The five stage fade bands are the SINGLE SOURCE OF TRUTH shared with the
+// Arc reveal chips — they now live in `lib/home-v2/corridorReveals.ts` and
+// are imported above so the reveal console arrives/leaves in exact lockstep
+// with each station header (ADR-032). Do not re-inline them here.
 
 // ── Corridor phase → left-rail manifest (ADR-030 Update 3; consumer
 // is now the ADR-031 RailManifestController) ──

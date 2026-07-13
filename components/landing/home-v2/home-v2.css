@@ -2724,3 +2724,431 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
   margin-right: 10px;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Corridor reveal consoles (ADR-032)
+   One labeled chip per Arc stage, docked beneath the caption card, that
+   opens a right-side console drawer of concrete proof (signal / skills /
+   tools). Fixed viewport layer driven by CorridorRevealLayer's rAF
+   (paintProgress read-only — no scroll writer). The drawer keeps the
+   sphere visible (no backdrop) and sits inside the rail guide so the Arc
+   register stays readable. Desktop-capable only; never mounts on the
+   fallback corridor.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.home-v2-reveal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 17; /* above station headers (15) + progress rail (16) */
+  pointer-events: none;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+}
+
+/* ── Chip slot — bottom-centre, beneath the caption card ───────────── */
+.home-v2-reveal-slot {
+  position: fixed;
+  bottom: clamp(8px, 1.6svh, 28px);
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  will-change: opacity;
+}
+
+.home-v2-reveal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 14px;
+  border: 1px solid var(--gold-30);
+  background: rgba(5, 4, 3, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--gold);
+  font-family: inherit;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    border-color 200ms var(--ease-out, ease),
+    background 200ms var(--ease-out, ease),
+    color 200ms var(--ease-out, ease);
+}
+.home-v2-reveal-chip[hidden] {
+  display: none;
+}
+.home-v2-reveal-chip:hover,
+.home-v2-reveal-chip:focus-visible {
+  border-color: var(--gold);
+  background: rgba(20, 14, 6, 0.7);
+  outline: none;
+}
+.home-v2-reveal-chip[aria-expanded="true"] {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--void);
+}
+.home-v2-reveal-chip__tick {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  background: currentColor;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+/* First-arrival pulse — draws the eye once, then rests. */
+.home-v2-reveal-chip.is-fresh {
+  animation: reveal-chip-pulse 1.5s var(--ease-out, ease) 2;
+}
+@keyframes reveal-chip-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(202, 165, 84, 0);
+    border-color: var(--gold-30);
+  }
+  50% {
+    box-shadow: 0 0 14px 1px rgba(202, 165, 84, 0.45);
+    border-color: var(--gold);
+  }
+}
+
+/* ── Panel — right-side console drawer ─────────────────────────────── */
+.home-v2-reveal-panel {
+  position: fixed;
+  top: clamp(120px, 16svh, 170px);
+  bottom: clamp(110px, 15svh, 160px);
+  /* Right edge on the standard HUD margin. The drawer is an opt-in
+     overlay: while OPEN it sits above the Arc register (z17 > z16) — the
+     stage is restated in the title bar, so nothing is lost — and the
+     register returns the moment it closes (its default state). Left edge
+     stays right of viewport centre so the sphere keeps primacy. */
+  right: var(--hud-margin, 32px);
+  width: clamp(340px, 27vw, 420px);
+  display: flex;
+  flex-direction: column;
+  color: var(--dawn);
+  background: rgba(5, 4, 3, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  pointer-events: none;
+  /* Aperture sweep — the drawer wipes open from its right edge, the
+     caption card's sanctioned clip-path unfold mirrored horizontally. */
+  clip-path: inset(0 0 0 100%);
+  transition: clip-path 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-v2-reveal-panel.is-open {
+  pointer-events: auto;
+  clip-path: inset(0 0 0 0);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .home-v2-reveal-panel {
+    background: rgba(5, 4, 3, 0.86);
+  }
+}
+.home-v2-reveal-panel__frame {
+  position: absolute;
+  inset: 0;
+  border: 1px dashed var(--gold-20);
+  pointer-events: none;
+}
+.home-v2-reveal-panel__frame::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--gold-50);
+}
+.home-v2-reveal-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px dashed var(--gold-15);
+}
+.home-v2-reveal-panel__title {
+  color: var(--gold-70);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.home-v2-reveal-panel__close {
+  border: 1px solid var(--gold-30);
+  background: none;
+  color: var(--gold-70);
+  font-family: inherit;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  padding: 2px 7px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    border-color 200ms var(--ease-out, ease),
+    color 200ms var(--ease-out, ease);
+}
+.home-v2-reveal-panel__close:hover,
+.home-v2-reveal-panel__close:focus-visible {
+  border-color: var(--gold);
+  color: var(--gold);
+  outline: none;
+}
+.home-v2-reveal-panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 18px;
+}
+
+/* ── Navigate signal card ──────────────────────────────────────────── */
+.reveal-signal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.reveal-signal__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reveal-signal__avatar {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid var(--gold-30);
+  background: rgba(202, 165, 84, 0.08);
+}
+.reveal-signal__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+}
+.reveal-signal__handle {
+  color: var(--dawn);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.reveal-signal__role {
+  color: var(--dawn-45);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.reveal-signal__stamp {
+  color: var(--gold-60);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.reveal-signal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.reveal-signal__line {
+  margin: 0;
+  color: var(--dawn-80);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.reveal-signal__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--gold-15);
+}
+.reveal-signal__metrics {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.reveal-signal__metric {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.reveal-signal__metric-value {
+  color: var(--gold);
+  font-size: 12px;
+}
+.reveal-signal__metric-label {
+  color: var(--dawn-40);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.reveal-signal__status {
+  color: var(--gold-70);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Encode skills list ────────────────────────────────────────────── */
+.reveal-skills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.reveal-skills__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--gold-10);
+}
+.reveal-skills__row:last-child {
+  border-bottom: 0;
+}
+.reveal-skills__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.reveal-skills__title {
+  color: var(--dawn);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  margin-right: auto;
+}
+.reveal-skills__status {
+  color: var(--gold-60);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+.reveal-skills__tag {
+  color: var(--gold-60);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  border: 1px solid var(--gold-20);
+  padding: 1px 5px;
+  flex: none;
+}
+.reveal-skills__body {
+  margin: 0;
+  color: var(--dawn-45);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+/* ── Build tool tiles ──────────────────────────────────────────────── */
+.reveal-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.reveal-tools__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.reveal-tools__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.reveal-tools__thumb {
+  width: 96px;
+  height: 54px;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--gold-20);
+  background: rgba(202, 165, 84, 0.05);
+}
+.reveal-tools__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.reveal-tools__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-right: auto;
+  min-width: 0;
+}
+.reveal-tools__name {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.reveal-tools__tagline {
+  color: var(--dawn-50);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.reveal-tools__status {
+  color: var(--gold-60);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex: none;
+}
+.reveal-tools__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 7px 12px;
+  border: 1px solid var(--gold-30);
+  color: var(--gold);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  pointer-events: auto;
+  transition:
+    border-color 200ms var(--ease-out, ease),
+    background 200ms var(--ease-out, ease);
+}
+.reveal-tools__more:hover,
+.reveal-tools__more:focus-visible {
+  border-color: var(--gold);
+  background: rgba(20, 14, 6, 0.6);
+  outline: none;
+}
+
+/* ── Gates ─────────────────────────────────────────────────────────── */
+/* Desktop-capable only — same gate as the right-rail register. Mobile
+   composition is untouched by this PR. */
+@media (max-width: 1100px), (max-height: 759px) {
+  .home-v2-reveal-layer {
+    display: none;
+  }
+}
+/* Reduced motion — the layer never mounts on the fallback corridor, but
+   kill transitions defensively for a mid-session PRM toggle. */
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-reveal-panel,
+  .home-v2-reveal-chip,
+  .home-v2-reveal-panel__close,
+  .reveal-tools__more {
+    transition: none;
+  }
+  .home-v2-reveal-chip.is-fresh {
+    animation: none;
+  }
+}
