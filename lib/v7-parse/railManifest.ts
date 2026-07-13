@@ -22,14 +22,25 @@
 
 import { MANIFEST_ENTRIES } from "../rail-manifest/entries";
 
-/** The services module glyph — four layered planes (the collapsed card ring). */
-const STACK_GLYPH_SVG =
-  '<svg class="rail-manifest__glyph" viewBox="0 0 14 14" aria-hidden="true">' +
-  '<rect x="0.5" y="5.5" width="8" height="8"></rect>' +
-  '<rect x="2.17" y="3.83" width="8" height="8"></rect>' +
-  '<rect x="3.83" y="2.17" width="8" height="8"></rect>' +
-  '<rect x="5.5" y="0.5" width="8" height="8" class="rail-manifest__glyph-front"></rect>' +
-  "</svg>";
+/**
+ * The module glyph — four layered planes (the collapsed card ring).
+ * Parameterised by BEM prefix so the rolodex (`rail-manifest`) and the
+ * resource loadout (`rail-loadout`) share one shape with independent
+ * styling. `buildStackGlyphSvg("rail-manifest")` is byte-identical to
+ * the original inline SVG (pinned by tests/lib/rail-manifest.test.ts).
+ */
+export function buildStackGlyphSvg(prefix: string): string {
+  return (
+    `<svg class="${prefix}__glyph" viewBox="0 0 14 14" aria-hidden="true">` +
+    '<rect x="0.5" y="5.5" width="8" height="8"></rect>' +
+    '<rect x="2.17" y="3.83" width="8" height="8"></rect>' +
+    '<rect x="3.83" y="2.17" width="8" height="8"></rect>' +
+    `<rect x="5.5" y="0.5" width="8" height="8" class="${prefix}__glyph-front"></rect>` +
+    "</svg>"
+  );
+}
+
+const STACK_GLYPH_SVG = buildStackGlyphSvg("rail-manifest");
 
 /** Build the manifest rolodex (window → reel → entry rows) as a single HTML string. */
 export function buildRailManifestHtml(): string {

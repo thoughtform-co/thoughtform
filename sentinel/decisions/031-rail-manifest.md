@@ -273,3 +273,70 @@ resolver (corridor phases, seam-gap rule), the wake model, and the
 The look-dev lab (`rail-manifest-lab`) still shows the three marker
 variants from Update 1 — kept as history; it does not model the
 rolodex.
+
+### Update 4 — the resource loadout (2026-07-13)
+
+The Context noted the owner wanted the Arcs "plugged in" too, not just
+Services; the shipped rolodex only ever seated the Services stack glyph
+inline, seated-only, and it scrolls out of the 7-row window. The owner
+reopened this: a **persistent, decorative "loadout"** of the three core
+resources — **Arc, Services, Tools** — visible from the hero (faded,
+empty sockets), each module **seating** as its section is reached, over
+a **charge gauge that fills like a fuel meter**, click-to-navigate,
+"subtle, must not clutter." The owner's own tension — left rail =
+journey rolodex, right rail = section register, so neither is the home
+for an accumulating loadout — is resolved by a **third micro-instrument
+at the FOOT of the left rail** (owner-chosen placement, this session;
+the bottom-right corner panel was the considered alternative). This
+honours the original "modules belong on the left rail" ruling and the
+right-rail-docking rejection.
+
+**What it is:** a parse-injected `<nav id="railLoadout"
+data-rail-loadout-root>` shell (twin of the manifest — byte-exact,
+pinned by `tests/lib/rail-loadout.test.ts`) holding three
+`.rail-loadout__socket` buttons + a `.rail-loadout__gauge`. The client
+`RailLoadoutController` (`components/landing/v7/RailLoadout.tsx`) is a
+**null-render component that mutates the injected DOM** — never
+`createRoot`. It is a **fourth consumer of the single resolved active
+index**, so it introduces no new scroll writer and no store.
+
+**Architecture reuse (the load-bearing part):** the seam-gap resolver
+was extracted verbatim from `RailManifestController` into
+`lib/rail-manifest/resolveActiveIdx.ts` (+ `ACTIVE_IDX_ATTRIBUTES`,
+`ARC_IDX`) and the click-to-scroll into
+`lib/rail-manifest/clickToNavigate.ts` — both the rolodex and the
+loadout now import them, so the subtle corridor/seam resolution can't
+drift between two copies. The stack glyph became
+`buildStackGlyphSvg(prefix)` in `lib/v7-parse/railManifest.ts` (the
+`"rail-manifest"` output is byte-identical; the loadout uses
+`"rail-loadout"` for independent styling). Shared state math lives in
+`lib/rail-manifest/loadout.ts` (`LOADOUT_RESOURCES`, `loadoutState`,
+`chargeForActiveIdx`) — the three resource ids are read directly there,
+**NOT** via a `glyph` flag on `entries.ts`, so the manifest drift-guard
+(`glyph === "stack"` pinned to `["services"]`) stays green.
+
+**Behaviour (pure function of the resolved index `a`):** resource at
+manifest index `e` → `upcoming` (`a<e`) / `active` (`a===e`) / `seated`
+(`a>e`); charge = count of resources with `a>=e` (0..3), written as one
+`--loadout-charge` property the CSS gauge derives its width from
+(quantized to thirds). `data-dormant` (hero) fades the instrument;
+`data-ready` gates the transitions after a first-sync reflow flush.
+Confirm garnish is the ADR-031 `steps()` flash scoped to `active`
+(power-on beat, retriggers on reverse re-arrival); the gauge's 350ms
+detent glide is the same owner-approved tween narrowing as the reel. No
+FLIP. All 13 ticks stay (Update 2 guardrail honoured — the loadout adds
+ink on the rail grid, removes nothing; footprint ~180×39px at the rail
+foot, clear of the rolodex window and the 66.67% bearing numeral).
+
+**Responsive:** persists **glyphs-only** in the 960–1100 band (the
+rolodex hides there, but the loadout is iconographic); stands down with
+`.hud__rail` at ≤960. PRM snaps states, no gauge glide, no flash.
+
+Verified live (dev server): parse-time skeleton faded on hero (charge
+0, three upcoming sockets); Services → charge 2, Arc seated / Services
+active / Tools upcoming, gauge fill exactly 2/3; Tools → charge 3, gauge
+full, Tools active; Contact → all seated, charge 3; click-nav both
+branches (Services `scrollIntoView`, Arc corridor-fraction scroll to
+~`mount.offsetTop + 0.35·runway`); the 960–1100 glyphs-only + ≤960
+stand-down tiers; full unit suite green (219 tests), incl. the manifest
+drift-guard and `v7-parse` body parse.

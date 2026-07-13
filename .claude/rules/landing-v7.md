@@ -48,6 +48,19 @@ writers; the glyph confirm stays quantized `steps()`; still no FLIP
 flights (retired, ADR-030 Updates 1–3). The 13-tick ladder always
 stays (ADR-031 Update 2).
 
+**The resource loadout shares the manifest's contract (ADR-031 Update
+4).** The Arc/Services/Tools module bay at the foot of the left rail
+(`<nav data-rail-loadout-root>`, `lib/v7-parse/railLoadout.ts`,
+`RailLoadoutController`) follows the SAME rules: parse-injected +
+byte-exact shell (`tests/lib/rail-loadout.test.ts`), mutate-in-place
+(never `createRoot`), state + `--loadout-charge` a pure function of the
+active index (no new scroll writer). It shares the resolver
+(`lib/rail-manifest/resolveActiveIdx.ts`) and click-nav
+(`clickToNavigate.ts`) with the rolodex — edit those in one place. The
+three resource ids live in `lib/rail-manifest/loadout.ts`, NOT as a
+`glyph` flag on `entries.ts` (that flag stays services-only for the
+manifest drift-guard).
+
 **Process**
 
 - Before non-trivial changes: [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) (Cycle B if adding a section; Cycle A after fixes).

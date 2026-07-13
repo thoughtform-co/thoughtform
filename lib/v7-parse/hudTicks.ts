@@ -25,6 +25,7 @@
  * first paint without a client-side reflow.
  */
 
+import { buildRailLoadoutHtml } from "./railLoadout";
 import { buildRailManifestHtml } from "./railManifest";
 
 interface TickMark {
@@ -100,9 +101,10 @@ export function buildDepthTicksHtml(): string {
 
 /** Inject the per-side ladders into `#leftTicks` and `#rightTicks`
  *  if they are present in the body markup, and the station manifest
- *  into `#railManifest` (ADR-031 — the home prototype's left rail
- *  ships the manifest shell INSTEAD of `#leftTicks`; the workshop
- *  prototype keeps its tick ladder, so both replaces stay). */
+ *  into `#railManifest`, and the resource loadout into `#railLoadout`
+ *  (ADR-031 — the home prototype's left rail ships the manifest +
+ *  loadout shells; the workshop prototype keeps its tick ladder and has
+ *  neither nav, so every replace is independent and no-ops when absent). */
 export function injectStaticHudChildren(html: string): string {
   return html
     .replace(/<div id="leftTicks"><\/div>/, `<div id="leftTicks">${buildLeftRailTicksHtml()}</div>`)
@@ -113,5 +115,9 @@ export function injectStaticHudChildren(html: string): string {
     .replace(
       /<nav id="railManifest" data-rail-manifest-root aria-label="Page manifest"><\/nav>/,
       `<nav id="railManifest" data-rail-manifest-root aria-label="Page manifest">${buildRailManifestHtml()}</nav>`
+    )
+    .replace(
+      /<nav id="railLoadout" data-rail-loadout-root aria-label="Resource loadout"><\/nav>/,
+      `<nav id="railLoadout" data-rail-loadout-root aria-label="Resource loadout">${buildRailLoadoutHtml()}</nav>`
     );
 }

@@ -4228,6 +4228,12 @@ html { scroll-behavior: smooth; }
     <div id="leftTicks"></div>
     <div class="hud__depth" id="depthIndicator" style="top: 4%"></div>
     <nav id="railManifest" data-rail-manifest-root aria-label="Page manifest"></nav>
+    <!-- Resource loadout (Arc / Services / Tools) — a persistent module
+         bay at the foot of the left rail. Parse-injected skeleton
+         (lib/v7-parse/railLoadout.ts); the client RailLoadoutController
+         MUTATES it in place (never createRoot). Shell must stay
+         byte-exact for the parse regex + tests/lib/rail-loadout.test.ts. -->
+    <nav id="railLoadout" data-rail-loadout-root aria-label="Resource loadout"></nav>
   </aside>
 
   <!-- Right rail -->

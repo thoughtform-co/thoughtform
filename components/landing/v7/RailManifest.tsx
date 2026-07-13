@@ -3,7 +3,13 @@
 import { useEffect } from "react";
 
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
-import { CORRIDOR_MOUNT_ID, MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
+import { scrollToManifestEntry } from "@/lib/rail-manifest/clickToNavigate";
+import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
+import {
+  ACTIVE_IDX_ATTRIBUTES,
+  ARC_IDX,
+  resolveActiveIdx,
+} from "@/lib/rail-manifest/resolveActiveIdx";
 
 /**
  * RailManifestController — the left rail's section rolodex (ADR-031,
@@ -50,9 +56,6 @@ import { CORRIDOR_MOUNT_ID, MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries
  * is geometric) + resize. rAF alive only while a scramble runs — the
  * ToolsRailRegister discipline.
  */
-
-const THESIS_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "thesis");
-const ARC_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "arc");
 
 interface RailManifestControllerProps {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -106,26 +109,8 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
       kick();
     };
 
-    const resolveActiveIdx = (): number => {
-      if (html.getAttribute("data-corridor-engaged") === "true") {
-        const phase = html.getAttribute("data-corridor-phase");
-        const idx = phase ? MANIFEST_ENTRIES.findIndex((e) => e.corridorPhase === phase) : -1;
-        return idx >= 0 ? idx : THESIS_IDX;
-      }
-      const key = html.getAttribute("data-active-station") || "hero";
-      let idx = MANIFEST_ENTRIES.findIndex((e) => e.kind === "station" && e.targetId === key);
-      if (idx < 0) idx = 0;
-      if (idx === 0) {
-        // Rule 3 — seam gap (see docblock). Single batched rect read,
-        // active only in the hero/corridor regime.
-        const mount = document.getElementById(CORRIDOR_MOUNT_ID);
-        if (mount && mount.getBoundingClientRect().top < window.innerHeight / 2) return ARC_IDX;
-      }
-      return idx;
-    };
-
     const update = () => {
-      const next = resolveActiveIdx();
+      const next = resolveActiveIdx(html);
       // The geometric rule needs scroll wake-ups only until services
       // takes over the attribute clock.
       seamWatch = next <= ARC_IDX;
@@ -162,22 +147,13 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
       const btn = (ev.target as HTMLElement).closest?.(".rail-manifest__entry");
       const i = btn ? entries.indexOf(btn as HTMLButtonElement) : -1;
       if (i < 0) return;
-      const entry = MANIFEST_ENTRIES[i];
-      const behavior: ScrollBehavior = prm() ? "auto" : "smooth";
-      if (entry.kind === "corridor") {
-        const mount = document.getElementById(CORRIDOR_MOUNT_ID);
-        if (!mount) return;
-        const runway = Math.max(0, mount.offsetHeight - window.innerHeight);
-        window.scrollTo({ top: mount.offsetTop + (entry.scrollFraction ?? 0) * runway, behavior });
-      } else {
-        document.getElementById(entry.targetId)?.scrollIntoView({ behavior, block: "start" });
-      }
+      scrollToManifestEntry(MANIFEST_ENTRIES[i], prm());
     };
 
     const observer = new MutationObserver(update);
     observer.observe(html, {
       attributes: true,
-      attributeFilter: ["data-active-station", "data-corridor-engaged", "data-corridor-phase"],
+      attributeFilter: [...ACTIVE_IDX_ATTRIBUTES],
     });
 
     // Rule 3 is geometric — attribute mutations alone can't see the
