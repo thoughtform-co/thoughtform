@@ -16,7 +16,6 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-010: Brandmark choreography](../sentinel/decisions/010-brandmark-choreography.md)
 - [ADR-030: Tools viewscreen + edge bus](../sentinel/decisions/030-tools-section-cover-stack.md)
 - [ADR-031: Rail Manifest](../sentinel/decisions/031-rail-manifest.md)
-- [ADR-032: Arc reveal consoles](../sentinel/decisions/032-corridor-reveal-consoles.md)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
@@ -95,23 +94,6 @@ signature = underline** (Update 8): the active row is marked by a gold
 diamond markers stay passive outline ticks. This is the right-rail
 counterpart to the left rolodex's full-frame fill; keep the pair (left
 fill / right underline) distinct.
-
-**Arc reveals are diegetic world-anchored overlays (ADR-032 + Update 1).**
-The v1 bottom chip + fixed drawer (`CorridorRevealLayer`) was REJECTED and
-removed; do not reintroduce a fixed panel/drawer. The reveals now ride the
-sphere: a rail **DETAIL toggle** (`CorridorProgressRail`, below the Build
-register row) arms overlay mode; armed Encode cardinals bloom skill-chip
-constellations, and the armed "Web app" surface chip cascades tool chips —
-all world-anchored via `CopyAnchors` + `sceneGeom` anchors/onPaint hooks.
-Everything READS `paintProgress` + the `corridorOverlayStore` only — never
-add a scroll writer or scroll lock. Stage fade bands stay the SINGLE SOURCE
-OF TRUTH in `lib/home-v2/corridorReveals.ts` (shared with
-`CorridorStationHeaders`); cluster geometry is `lib/home-v2/overlayClusters.ts`.
-Guardrails: one cardinal expanded at a time; Encode radial bloom must read
-DIFFERENTLY from the Build pipeline cascade; clickability is the
-`pointer-events:auto`-on-armed opt-in (unarmed corridor stays inert);
-back-side / mid-fly-in cardinals aren't clickable; Encode content stays
-genericized; Navigate is parked (`NavigateSignalCard` unmounted).
 
 **Process**
 

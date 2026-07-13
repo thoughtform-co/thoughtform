@@ -13,9 +13,6 @@ import {
 import { SHELL_PRIMITIVES } from "./DepthGatewayScene/shell/shellGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { StationTitle } from "./StationTitle";
-import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
-import { useCorridorOverlayStore } from "@/lib/stores/corridorOverlayStore";
-import { REVEAL_SKILLS, SKILLS_BY_CARDINAL, type SkillCardinal } from "./reveals/revealData";
 
 /**
  * CopyAnchors — DOM text overlay for the home-v2 depth corridor
@@ -68,14 +65,6 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   // reads as one cohesive paragraph. Desktop keeps the two-column block
   // with the text CTA. (ADR-018 mobile two-moment revision.)
   const isMobile = useDeviceTier() === "mobile";
-
-  // Overlay armed state (ADR-032 U1) — drives the cardinal / Web-app
-  // affordances + `aria-expanded`. Read via selectors so a re-render here
-  // never re-subscribes the tracker (its effect deps are stable); the
-  // tracker keeps writing position/opacity every frame regardless.
-  const armed = useCorridorOverlayStore((s) => s.armed);
-  const expandedCardinal = useCorridorOverlayStore((s) => s.expandedCardinal);
-  const expandedSurface = useCorridorOverlayStore((s) => s.expandedSurface);
 
   const tf = text.thoughtform;
   // Navigate / Encode / Build section copy now lives on the corridor
@@ -229,52 +218,14 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
             data-anchor-origin={meta.origin}
             // `gateEncodePrimitive` reads this attribute to apply the
             // per-cardinal cartridge stagger (each cardinal opacity-
-            // locks as its fly-in arrives, not all four together). It
-            // also writes `data-locked` / `data-backside` gating clicks.
+            // locks as its fly-in arrives, not all four together).
             data-encode-cardinal-idx={idx}
           >
             <span className="home-v2-encode-primitive__marker" aria-hidden="true" />
             <span className="home-v2-encode-primitive__leader" aria-hidden="true" />
-            {/* Frame is a button only while armed — the CSS opts pointer-
-                events in on `.is-armed`, so the unarmed corridor is inert
-                and looks byte-identical to the pre-overlay cardinal (single
-                label, hairline frame — no sub line, no prominence bump).
-                One cardinal's cluster expands at a time. */}
-            <button
-              type="button"
-              className={`home-v2-encode-primitive__frame${armed ? " is-armed" : ""}`}
-              disabled={!armed}
-              aria-expanded={expandedCardinal === prim.id}
-              aria-label={`${prim.label} — show skills`}
-              onClick={() =>
-                useCorridorOverlayStore.getState().toggleCardinal(prim.id as SkillCardinal)
-              }
-            >
+            <div className="home-v2-encode-primitive__frame">
               <span className="home-v2-encode-primitive__label">{prim.label}</span>
-            </button>
-          </div>
-        );
-      })}
-
-      {/* Encode skill chips (ADR-032 U1) — one per skill, world-anchored in a
-          fan around its cardinal (positions + bloom in sceneGeom). Non-
-          interactive proof; opacity 0 unless the cardinal is expanded. */}
-      {REVEAL_SKILLS.map((skill) => {
-        const cluster = SKILLS_BY_CARDINAL[skill.cardinal];
-        const slot = cluster.findIndex((s) => s.id === skill.id);
-        return (
-          <div
-            key={`encode-skill-${skill.id}`}
-            className="home-v2-encode-skill"
-            data-world-anchor={`encode.skill.${skill.id}`}
-            data-anchor-origin="center"
-            data-skill-cardinal={skill.cardinal}
-            data-skill-slot={slot}
-            data-skill-cluster={cluster.length}
-          >
-            <span className="home-v2-encode-skill__tick" aria-hidden="true" />
-            <span className="home-v2-encode-skill__title">{skill.title}</span>
-            <span className="home-v2-encode-skill__status">{skill.statusLabel}</span>
+            </div>
           </div>
         );
       })}
@@ -357,66 +308,20 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           <span className="home-v2-stack-item__leader" aria-hidden="true" />
         </div>
       ))}
-      {STACK_SURFACE_ITEMS.map((item, idx) => {
-        // The Web-app surface chip becomes the Build cascade's toggle when
-        // armed (ADR-032 U1); the other five stay plain labels.
-        const isWebApp = item.id === "web-app";
-        const index = String(idx + 1).padStart(2, "0");
-        return (
-          <div
-            key={`stack-surface-${item.id}`}
-            className="home-v2-stack-item home-v2-stack-item--surface"
-            data-world-anchor={`intelligence.surface.${item.id}`}
-            data-anchor-origin="left-center"
-            data-stack-side="surfaces"
-            data-stack-idx={idx}
-          >
-            <span className="home-v2-stack-item__leader" aria-hidden="true" />
-            {isWebApp ? (
-              <button
-                type="button"
-                className={`home-v2-stack-item__chip home-v2-stack-item__chip--expandable${
-                  armed ? " is-armed" : ""
-                }`}
-                disabled={!armed}
-                aria-expanded={expandedSurface}
-                aria-label={`${item.label} — show tools`}
-                onClick={() => useCorridorOverlayStore.getState().toggleSurface()}
-              >
-                <span className="home-v2-stack-item__index">{index}</span>
-                <span className="home-v2-stack-item__label">{item.label}</span>
-                <span className="home-v2-stack-item__expand" aria-hidden="true">
-                  +
-                </span>
-              </button>
-            ) : (
-              <span className="home-v2-stack-item__chip">
-                <span className="home-v2-stack-item__index">{index}</span>
-                <span className="home-v2-stack-item__label">{item.label}</span>
-              </span>
-            )}
-          </div>
-        );
-      })}
-
-      {/* Build tool cascade (ADR-032 U1) — one chip per production tool,
-          world-anchored branching off the Web-app chip (positions + stagger
-          in sceneGeom). `right-center` origin grows each chip inward so it
-          can never reach the HUD rail. Opacity 0 unless expanded. */}
-      {PROJECT_CASES.map((tool, idx) => (
+      {STACK_SURFACE_ITEMS.map((item, idx) => (
         <div
-          key={`build-tool-${tool.id}`}
-          className="home-v2-build-tool"
-          data-world-anchor={`build.tool.${tool.id}`}
-          data-anchor-origin="right-center"
-          data-tool-idx={idx}
+          key={`stack-surface-${item.id}`}
+          className="home-v2-stack-item home-v2-stack-item--surface"
+          data-world-anchor={`intelligence.surface.${item.id}`}
+          data-anchor-origin="left-center"
+          data-stack-side="surfaces"
+          data-stack-idx={idx}
         >
-          <span className="home-v2-build-tool__chip">
-            <span className="home-v2-build-tool__index">{tool.index}</span>
-            <span className="home-v2-build-tool__name">{tool.codename}</span>
-            <span className="home-v2-build-tool__tagline">{tool.tagline}</span>
+          <span className="home-v2-stack-item__leader" aria-hidden="true" />
+          <span className="home-v2-stack-item__chip">
+            <span className="home-v2-stack-item__index">{String(idx + 1).padStart(2, "0")}</span>
+            <span className="home-v2-stack-item__label">{item.label}</span>
           </span>
-          <span className="home-v2-build-tool__elbow" aria-hidden="true" />
         </div>
       ))}
     </div>

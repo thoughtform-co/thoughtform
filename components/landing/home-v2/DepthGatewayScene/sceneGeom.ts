@@ -1556,14 +1556,6 @@ import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getSmoothedEpilogueProgress } from "./motionFollower";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
-import { useCorridorOverlayStore } from "@/lib/stores/corridorOverlayStore";
-import {
-  REVEAL_SKILLS,
-  SKILLS_BY_CARDINAL,
-  type SkillCardinal,
-} from "@/components/landing/home-v2/reveals/revealData";
-import { buildToolOffset, skillFanOffset } from "@/lib/home-v2/overlayClusters";
-import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import {
   GYRO_ASSEMBLY_SCALE,
   STACK_FAN_COUNT,
@@ -1909,27 +1901,6 @@ function encodeCartridgeCurve(t: number): number {
  *  coords; camera looks toward -Z) dim their opacity and shrink
  *  slightly. The label visibly belongs to the rotating 3D assembly
  *  instead of reading as a flat sticker latched on a 3D object. */
-/** Back-side depth cue for a cardinal (shared by the cardinal label AND
- *  its skill cluster). As a cardinal banks to the far side of the sphere
- *  it dims + shrinks so it reads as receding. Gated on the gyro
- *  (flat-compass has no bank). `backT` = 0 front … 1 fully back. */
-function getCardinalDepthOp(idx: number): { depthOp: number; depthScale: number; backT: number } {
-  if (idx < 0 || !useGyroLabStore.getState().enabled) {
-    return { depthOp: 1, depthScale: 1, backT: 0 };
-  }
-  const local = getGyroPrimitiveLabelLocal(idx);
-  const rotated = rotateGyroLocalOffset(local);
-  // Normalise rotated Z by the cardinal's planar radius so the back/front
-  // classification is invariant of the per-stagger radius animation.
-  const r = Math.sqrt(local[0] * local[0] + local[1] * local[1]);
-  if (r <= 0) return { depthOp: 1, depthScale: 1, backT: 0 };
-  const zNorm = Math.max(-1, Math.min(1, rotated[2] / r));
-  const backT = Math.max(0, zNorm);
-  // Back (zNorm > 0): dim to ~0.45, scale to ~0.88 — still present, but
-  // visibly receded.
-  return { depthOp: 1 - backT * 0.55, depthScale: 1 - backT * 0.12, backT };
-}
-
 const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   const idxAttr = el.getAttribute("data-encode-cardinal-idx");
   const idx = idxAttr == null ? -1 : Number(idxAttr);
@@ -1940,95 +1911,31 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   // so it "lights up" as it locks in, rather than ghosting during the
   // fly-in. Multiplied by the parent visibility envelope.
   const op = smoother(stagger);
-  const { depthOp, depthScale, backT } = getCardinalDepthOp(idx);
+  // Depth cue (polish round 2). Compute the cardinal's rotated Z
+  // and dim/shrink as it swings to the back of the sphere.
+  let depthOp = 1;
+  let depthScale = 1;
+  if (idx >= 0 && useGyroLabStore.getState().enabled) {
+    const local = getGyroPrimitiveLabelLocal(idx);
+    const rotated = rotateGyroLocalOffset(local);
+    // Normalise rotated Z by the cardinal's planar radius so the
+    // back/front classification is invariant of the per-stagger
+    // radius animation.
+    const r = Math.sqrt(local[0] * local[0] + local[1] * local[1]);
+    if (r > 0) {
+      const zNorm = Math.max(-1, Math.min(1, rotated[2] / r));
+      // Front (zNorm <= 0): full read. Back (zNorm > 0): dim to
+      // ~0.45 opacity, scale to ~0.88, so the label still reads as
+      // present (you don't fully lose it) but visibly recedes.
+      const backT = Math.max(0, zNorm);
+      depthOp = 1 - backT * 0.55;
+      depthScale = 1 - backT * 0.12;
+    }
+  }
   el.style.opacity = (ctx.visibilityOpacity * op * depthOp * buildOut).toFixed(3);
   applyGyroDomBank(el, 0.8);
   if (depthScale !== 1) {
     el.style.transform = `${el.style.transform} scale(${depthScale.toFixed(3)})`;
-  }
-  // Overlay affordance gates (ADR-032 U1): the cardinal is clickable ONLY
-  // once its cartridge has locked (no clicks during the fly-in) and only
-  // while it faces front (a back-side bloom would read as a bug). The CSS
-  // opts pointer-events in on `.is-armed`; these attributes narrow it.
-  el.toggleAttribute("data-locked", stagger >= 0.999);
-  el.toggleAttribute("data-backside", backT > 0.5);
-};
-
-// ── Overlay bloom follower (ADR-032 U1) ──────────────────────────────
-// The Encode skill clusters + Build tool cascade animate from the rail
-// toggle (discrete on/off), not a scroll scrub, so they ride a
-// self-contained exponential follower stepped lazily on the first read
-// per DOM-tracker frame. The tracker rAF is independent of the R3F
-// `MotionFollowerDriver`, and these blooms are read ONLY by DOM anchors,
-// so a local follower keeps the coupling out of the scroll-follower
-// contract. Reads the overlay store imperatively (the `gyroLabStore`
-// precedent).
-const OVERLAY_BLOOM_TAU_S = 0.14;
-const overlayBloom = { judgment: 0, taste: 0, craft: 0, voice: 0, cascade: 0 };
-let overlayBloomLastMs = 0;
-
-function stepOverlayBloom(): void {
-  const now = typeof performance !== "undefined" ? performance.now() : 0;
-  const gap = overlayBloomLastMs ? now - overlayBloomLastMs : 0;
-  // Dedupe intra-frame reads: a new tracker frame is ~16ms; the many
-  // reads within one frame (7 skill + 4 tool anchors, position + paint)
-  // are sub-ms apart. Advance only when the gap clears a few ms.
-  if (overlayBloomLastMs && gap < 4) return;
-  overlayBloomLastMs = now;
-  if (gap <= 0) return;
-  const dt = Math.min(0.1, gap / 1000);
-  const k = 1 - Math.exp(-dt / OVERLAY_BLOOM_TAU_S);
-  const ov = useCorridorOverlayStore.getState();
-  const card = ov.armed ? ov.expandedCardinal : null;
-  overlayBloom.judgment += ((card === "judgment" ? 1 : 0) - overlayBloom.judgment) * k;
-  overlayBloom.taste += ((card === "taste" ? 1 : 0) - overlayBloom.taste) * k;
-  overlayBloom.craft += ((card === "craft" ? 1 : 0) - overlayBloom.craft) * k;
-  overlayBloom.voice += ((card === "voice" ? 1 : 0) - overlayBloom.voice) * k;
-  const cascadeTarget = ov.armed && ov.expandedSurface ? 1 : 0;
-  overlayBloom.cascade += (cascadeTarget - overlayBloom.cascade) * k;
-}
-
-function getSkillBloom(cardinal: SkillCardinal): number {
-  stepOverlayBloom();
-  return overlayBloom[cardinal];
-}
-function getBuildCascade(): number {
-  stepOverlayBloom();
-  return overlayBloom.cascade;
-}
-
-/** Encode skill chip — opacity ramps + scales in as its cardinal's cluster
- *  blooms; inherits the cardinal's back-side dim so a banked cluster
- *  recedes with its node. */
-const gateEncodeSkillChip: WorldAnchor["onPaint"] = (ctx, el) => {
-  const cardinal = el.getAttribute("data-skill-cardinal") as SkillCardinal | null;
-  const slot = Number(el.getAttribute("data-skill-slot"));
-  const size = Number(el.getAttribute("data-skill-cluster"));
-  if (!cardinal) {
-    el.style.opacity = "0";
-    return;
-  }
-  const cardIdx = SHELL_PRIMITIVES.findIndex((p) => p.id === cardinal);
-  const chipT = smoother(petalStagger(getSkillBloom(cardinal), slot, size, 0.55));
-  const buildOut = 1 - epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
-  const { depthOp } = getCardinalDepthOp(cardIdx);
-  el.style.opacity = (ctx.visibilityOpacity * chipT * depthOp * buildOut).toFixed(3);
-  applyGyroDomBank(el, 0.8);
-  if (chipT < 1) {
-    el.style.transform = `${el.style.transform} scale(${(0.86 + 0.14 * chipT).toFixed(3)})`;
-  }
-};
-
-/** Build tool chip — opacity ramps + scales in as the Web-app cascade
- *  opens (per-chip stagger, top-to-bottom). */
-const gateBuildToolChip: WorldAnchor["onPaint"] = (ctx, el) => {
-  const idx = Number(el.getAttribute("data-tool-idx"));
-  const chipT = smoother(petalStagger(getBuildCascade(), idx, PROJECT_CASES.length, 0.5));
-  const buildOut = 1 - epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
-  el.style.opacity = (ctx.visibilityOpacity * chipT * buildOut).toFixed(3);
-  applyGyroDomBank(el);
-  if (chipT < 1) {
-    el.style.transform = `${el.style.transform} scale(${(0.9 + 0.1 * chipT).toFixed(3)})`;
   }
 };
 
@@ -2242,71 +2149,6 @@ const ENCODE_PRIMITIVE_ANCHORS: WorldAnchor[] = SHELL_PRIMITIVES.map((prim, idx)
   },
   onPaint: gateEncodePrimitive,
 }));
-
-/** Encode skill clusters (ADR-032 U1) — one chip per genericized skill,
- *  fanned around its cardinal node. The chip's base rides the SAME fly-in
- *  local as the cardinal (`getGyroPrimitiveLabelLocal`), so the cluster can
- *  never detach during the cartridge arc; the fan offset scales in with the
- *  per-cardinal bloom follower (`getSkillBloom`). Rendered/legible only
- *  while its cardinal is expanded — opacity 0 otherwise. */
-const ENCODE_SKILL_ANCHORS: WorldAnchor[] = REVEAL_SKILLS.map((skill) => {
-  const cardIdx = SHELL_PRIMITIVES.findIndex((p) => p.id === skill.cardinal);
-  const cluster = SKILLS_BY_CARDINAL[skill.cardinal];
-  const slotIdx = cluster.findIndex((s) => s.id === skill.id);
-  const size = cluster.length;
-  const angle = SHELL_PRIMITIVES[cardIdx]?.angleRad ?? 0;
-  const [fx, fy] = skillFanOffset(angle, skill.cardinal, slotIdx, size);
-  return {
-    id: `encode.skill.${skill.id}`,
-    position: (transform) => {
-      const base = getGyroPrimitiveLabelLocal(cardIdx);
-      const chipT = smoother(petalStagger(getSkillBloom(skill.cardinal), slotIdx, size, 0.55));
-      return gyroAssemblyWorldPosition(transform, [
-        base[0] + fx * chipT,
-        base[1] + fy * chipT,
-        base[2] + 0.02,
-      ]);
-    },
-    visibilityBeats: ["diagnostic", "passthrough-02", "intelligence"],
-    fadeFrac: 0.45,
-    perspectiveScale: { referenceDistance: STATION_DIAGNOSTIC.parkDistance, min: 0.2, max: 1.05 },
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.2,
-      far: STATION_DIAGNOSTIC.parkDistance + 2.4,
-      farFade: 2.2,
-    },
-    onPaint: gateEncodeSkillChip,
-  };
-});
-
-/** Build tool cascade (ADR-032 U1) — four tool chips branch INWARD-LEFT
- *  off the Web-app surface chip (idx 2). The cascade scales in with the
- *  `getBuildCascade` follower; `right-center` origin (set in the DOM) means
- *  each chip grows leftward/inward so it can never reach the HUD rail (the
- *  0.4-unit headroom is to the RIGHT of the column). Column X rides the live
- *  aspect so the cascade stays welded to the column on resize. */
-const WEB_APP_SURFACE_Y = STACK_SURFACE_ITEMS[2]?.y ?? 0;
-
-const BUILD_TOOL_ANCHORS: WorldAnchor[] = PROJECT_CASES.map((tool, idx) => {
-  const [dx, dy] = buildToolOffset(idx);
-  return {
-    id: `build.tool.${tool.id}`,
-    position: (transform) => {
-      const colX = getStackColumnLocalX(getLiveAspectForStack());
-      const cascadeT = smoother(petalStagger(getBuildCascade(), idx, PROJECT_CASES.length, 0.5));
-      return gyroAssemblyWorldPosition(transform, [
-        colX + dx * cascadeT,
-        WEB_APP_SURFACE_Y + dy * cascadeT,
-        0.02,
-      ]);
-    },
-    visibilityBeats: ["intelligence"],
-    fadeFrac: 0.14,
-    perspectiveScale: { referenceDistance: STATION_INTELLIGENCE.parkDistance, min: 0.3, max: 1.1 },
-    onPaint: gateBuildToolChip,
-  };
-});
 
 export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // ── Thoughtform ─────────────────────────────────────────────────
@@ -2529,9 +2371,6 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // Encode primitive labels — framed tags on the four compass cardinals.
   ...ENCODE_PRIMITIVE_ANCHORS,
 
-  // Encode skill clusters — bloom around a cardinal when it's expanded.
-  ...ENCODE_SKILL_ANCHORS,
-
   // ── Intelligence ────────────────────────────────────────────────
   // Heading block above the substrate sphere. Mirrors the Diagnostic
   // approach pattern, and as of 2026-06-04 is tuned to match Encode's
@@ -2681,9 +2520,6 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     },
     onPaint: gateStackLabel,
   })),
-
-  // Build tool cascade — branches off the Web-app surface chip when expanded.
-  ...BUILD_TOOL_ANCHORS,
 ];
 
 // ── Substrate-cut envelope (ADR-017, unchanged) ──────────────────

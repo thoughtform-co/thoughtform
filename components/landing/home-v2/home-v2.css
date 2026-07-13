@@ -549,75 +549,6 @@ html[data-corridor-exit="true"] #services > * {
   }
 }
 
-/* ── Detail overlay toggle (ADR-032 U1) ─────────────────────────────
-   New rail surface seated one gap BELOW the Build register row (the
-   register block above is pinned by ADR-031 U8). Arms the Encode / Build
-   diegetic overlays. Echoes the register marker grammar: an outline
-   diamond that FILLS when armed. Opacity + `data-live` (pointer-events
-   gate) written by CorridorProgressRail's rAF. */
-.home-v2-overlay-toggle {
-  position: fixed;
-  top: calc(50% + var(--rail-register-pitch, 30px) + 34px);
-  right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) - 3px);
-  translate: 0 -50%;
-  z-index: 16;
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: 7px;
-  height: 18px;
-  width: max-content;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  pointer-events: none;
-  opacity: 0;
-  will-change: opacity;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 9.5px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--dawn-45, rgba(235, 227, 214, 0.45));
-  transition: color 200ms var(--ease-out, ease);
-}
-.home-v2-overlay-toggle[data-live] {
-  pointer-events: auto;
-}
-.home-v2-overlay-toggle__tick {
-  position: relative;
-  box-sizing: border-box;
-  width: 8px;
-  height: 8px;
-  margin-left: 10px;
-  flex: none;
-}
-.home-v2-overlay-toggle__tick::after {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  box-sizing: border-box;
-  border: 1px solid currentColor;
-  rotate: 45deg;
-}
-.home-v2-overlay-toggle:hover,
-.home-v2-overlay-toggle:focus-visible {
-  color: var(--gold);
-  outline: none;
-}
-.home-v2-overlay-toggle[aria-pressed="true"] {
-  color: var(--gold);
-}
-.home-v2-overlay-toggle[aria-pressed="true"] .home-v2-overlay-toggle__tick::after {
-  background: currentColor;
-}
-@media (max-width: 1100px), (max-height: 759px) {
-  .home-v2-overlay-toggle {
-    display: none;
-  }
-}
-
 .home-v2-station-header {
   position: fixed;
   /* Base anchor = bottom-centre stack (used by the epilogue signal
@@ -2407,22 +2338,15 @@ html[data-corridor-exit="true"] #services > * {
   height: 14px;
 }
 
-/* Frame is now a <button> (armed → clickable), but it must LOOK exactly
-   like the pre-overlay cardinal — a light hairline callout chip, single
-   label, no sub line, no prominence (owner rejected the boxed two-line
-   treatment). Native button chrome reset; the frame styling below is the
-   original. */
 .home-v2-encode-primitive__frame {
   display: flex;
   flex-direction: column;
-  margin: 0;
   padding: 4px 9px;
+  /* Hairline frame — much lighter than the old solid-gold box so the
+     label reads as a callout chip integrated with the instrument,
+     not a sticker latched on. */
   border: 1px solid rgba(202, 165, 84, 0.4);
   background: rgba(10, 9, 8, 0.62);
-  font: inherit;
-  color: inherit;
-  cursor: default;
-  transition: border-color 200ms var(--ease-out, ease);
 }
 
 .home-v2-encode-primitive__label {
@@ -2432,140 +2356,6 @@ html[data-corridor-exit="true"] #services > * {
   text-transform: uppercase;
   color: var(--gold, #caa554);
   white-space: nowrap;
-}
-
-/* Armed — the frame becomes an interactive target (the container stays
-   pointer-events:none; only the armed frame opts in, so the unarmed
-   corridor is byte-identical inert — same look as before). Affordance is
-   minimal: a pointer cursor + a gentle border brighten on hover; the
-   resting look is unchanged. Back-side cardinals are not clickable (a
-   bloom behind the sphere would read as a bug). */
-.home-v2-encode-primitive__frame.is-armed {
-  cursor: pointer;
-  pointer-events: auto;
-}
-.home-v2-encode-primitive[data-backside] .home-v2-encode-primitive__frame.is-armed {
-  pointer-events: none;
-  cursor: default;
-}
-.home-v2-encode-primitive__frame.is-armed:hover,
-.home-v2-encode-primitive__frame.is-armed:focus-visible {
-  border-color: var(--gold, #caa554);
-  outline: none;
-}
-/* Expanded — a solid gold border only (subtle; no fill, no underline). */
-.home-v2-encode-primitive__frame[aria-expanded="true"] {
-  border-color: var(--gold, #caa554);
-}
-
-/* ── Encode skill chips (constellation bloom around a cardinal) ─────── */
-.home-v2-encode-skill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  background: rgba(10, 9, 8, 0.72);
-  pointer-events: none;
-  white-space: nowrap;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-}
-.home-v2-encode-skill__tick {
-  width: 4px;
-  height: 4px;
-  flex: none;
-  background: var(--gold, #caa554);
-  transform: rotate(45deg);
-}
-.home-v2-encode-skill__title {
-  font-size: 9.5px;
-  letter-spacing: 0.04em;
-  color: var(--dawn-85, rgba(235, 227, 214, 0.85));
-}
-.home-v2-encode-skill__status {
-  font-size: 8px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold-60, rgba(202, 165, 84, 0.6));
-}
-
-/* ── Build tool cascade (pipeline branch off the Web-app chip) ──────── */
-/* Deliberately a DIFFERENT grammar from the Encode constellation: an
-   indexed horizontal row + an elbow hairline pointing back at the
-   column, so it reads as a branch off the pipeline, not a bloom. */
-.home-v2-build-tool {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: 0;
-  pointer-events: none;
-  white-space: nowrap;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-}
-.home-v2-build-tool__chip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
-  padding: 3px 9px;
-  border: 1px solid var(--gold-50, rgba(202, 165, 84, 0.5));
-  background: rgba(10, 9, 8, 0.72);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.home-v2-build-tool__index {
-  font-size: 9px;
-  color: var(--gold-60, rgba(202, 165, 84, 0.6));
-}
-.home-v2-build-tool__name {
-  font-weight: 700;
-  color: var(--gold, #caa554);
-}
-.home-v2-build-tool__tagline {
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
-}
-.home-v2-build-tool__elbow {
-  width: 16px;
-  height: 1px;
-  flex: none;
-  background: var(--gold-40, rgba(202, 165, 84, 0.4));
-}
-
-/* ── Web-app surface chip — Build cascade toggle ───────────────────── */
-.home-v2-stack-item__chip--expandable {
-  margin: 0;
-  font: inherit;
-  color: inherit;
-  cursor: default;
-  transition: border-color 200ms var(--ease-out, ease);
-}
-.home-v2-stack-item__expand {
-  display: none;
-  margin-left: 2px;
-  color: var(--gold-60, rgba(202, 165, 84, 0.6));
-}
-.home-v2-stack-item__chip--expandable.is-armed {
-  cursor: pointer;
-  pointer-events: auto;
-}
-.home-v2-stack-item__chip--expandable.is-armed .home-v2-stack-item__expand {
-  display: inline;
-}
-.home-v2-stack-item__chip--expandable.is-armed:hover,
-.home-v2-stack-item__chip--expandable.is-armed:focus-visible {
-  border-color: var(--gold, #caa554);
-  outline: none;
-}
-.home-v2-stack-item__chip--expandable[aria-expanded="true"] {
-  border-color: var(--gold, #caa554);
-}
-.home-v2-stack-item__chip--expandable[aria-expanded="true"] .home-v2-stack-item__label {
-  text-decoration: underline;
-  text-decoration-color: var(--gold, #caa554);
-  text-underline-offset: 4px;
 }
 
 /* ── Section-2 (Thoughtform beat) mobile composition ──────────
@@ -2933,98 +2723,4 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
   color: var(--gold, #caa554);
   margin-right: 10px;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-}
-
-/* ── Navigate signal card (PARKED, ADR-032 U1) ──────────────────────
-   The v1 drawer + chip CSS was removed with the diegetic pivot; these
-   `.reveal-signal*` rules style `NavigateSignalCard`, kept for a later
-   Navigate pass with the real post. Not mounted today. */
-.reveal-signal {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.reveal-signal__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.reveal-signal__avatar {
-  width: 34px;
-  height: 34px;
-  flex: none;
-  border: 1px solid var(--gold-30);
-  background: rgba(202, 165, 84, 0.08);
-}
-.reveal-signal__ident {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-right: auto;
-}
-.reveal-signal__handle {
-  color: var(--dawn);
-  font-size: 12px;
-  letter-spacing: 0.02em;
-}
-.reveal-signal__role {
-  color: var(--dawn-45);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.reveal-signal__stamp {
-  color: var(--gold-60);
-  font-size: 8.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.reveal-signal__body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.reveal-signal__line {
-  margin: 0;
-  color: var(--dawn-80);
-  font-size: 12.5px;
-  line-height: 1.5;
-}
-.reveal-signal__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--gold-15);
-}
-.reveal-signal__metrics {
-  display: flex;
-  gap: 16px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.reveal-signal__metric {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-}
-.reveal-signal__metric-value {
-  color: var(--gold);
-  font-size: 12px;
-}
-.reveal-signal__metric-label {
-  color: var(--dawn-40);
-  font-size: 8px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.reveal-signal__status {
-  color: var(--gold-70);
-  font-size: 8.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
