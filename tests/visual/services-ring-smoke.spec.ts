@@ -85,6 +85,62 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     });
     // The readout tracks the same active-service clock (service 01).
     await expect(page.locator(".services-readout")).toContainText("ADVISORY");
+
+    // SOURCE BUS register (ADR-033 split — the services half of the
+    // retired ToolsRailRegister) renders its four verb rows in the
+    // authored right-rail slot, with the active row tracking service 01.
+    await expect(page.locator(".tools-rail-register__heading--services")).toHaveText(
+      "SOURCE BUS · 04"
+    );
+    await expect(page.locator(".tools-rail-register__row--service")).toHaveCount(4);
+    await expect(page.locator(".tools-rail-register__row--service[data-active]")).toHaveCount(1);
+  });
+
+  test("desktop: the services → about seam ends the ambient hold under the bio cover", async ({
+    page,
+  }) => {
+    test.skip(!isDesktopViewport(page), "the exit seam is desktop-only (dock gate)");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 15_000 });
+
+    // #about directly follows #services (ADR-033 funnel).
+    const followsServices = await page.evaluate(() => {
+      const services = document.getElementById("services");
+      const about = document.getElementById("about");
+      if (!services || !about) return false;
+      return about.offsetTop > services.offsetTop;
+    });
+    expect(followsServices).toBe(true);
+
+    // Ride the runway to its end, then walk into #about: the ambient
+    // hold (and its body-veil exit band) must clear as the opaque bio
+    // covers the viewport — no receded-mark ghost behind About.
+    expect(await scrollServicesRunway(page, 0.98)).toBe(true);
+    await page.waitForTimeout(900);
+    const aboutTop = await page.evaluate(() => {
+      const about = document.getElementById("about");
+      if (!about) return null;
+      const rect = about.getBoundingClientRect();
+      return Math.round(rect.top + window.scrollY + window.innerHeight * 0.25);
+    });
+    expect(aboutTop).not.toBeNull();
+    await page.evaluate((y) => window.scrollTo(0, y as number), aboutTop);
+    await page.waitForTimeout(900);
+
+    const seam = await page.evaluate(() => ({
+      ambient: document.documentElement.hasAttribute("data-services-ambient"),
+      exit: document.documentElement.hasAttribute("data-corridor-exit"),
+      aboutVisible: (() => {
+        const about = document.getElementById("about");
+        if (!about) return false;
+        const rect = about.getBoundingClientRect();
+        return rect.top <= 0 && rect.bottom > window.innerHeight * 0.5;
+      })(),
+    }));
+    expect(seam.aboutVisible).toBe(true);
+    expect(seam.ambient).toBe(false);
+    expect(seam.exit).toBe(false);
   });
 
   test("desktop: the scroll clock advances the active service", async ({ page }) => {

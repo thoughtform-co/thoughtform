@@ -21,18 +21,16 @@ import { useEffect, useRef, useState } from "react";
  * already in landing.css; only the `.hud__nav--inline` modifier + the
  * inline row are new.
  *
- * Link targets use a best-guess mapping onto the surviving sections
- * (the corridor surgery removes #definition / #intelligence-layer /
- * #buildQuote etc.): SERVICES → #services, ABOUT → #about,
- * VISION → #continuum, TOOLS → #build.
+ * Link targets map onto the surviving sections (the corridor surgery
+ * removes #definition / #intelligence-layer / #buildQuote etc.; #tools
+ * and #build retired with ADR-033 — the cases live in the Arc's
+ * Build-park orbit): SERVICES → #services, ABOUT → #about,
+ * VISION → #continuum.
  */
 const NAV_ITEMS = [
-  // #tools is the real Tools station since ADR-030 (previously a
-  // best-guess relabel pointing at #build).
-  { num: "01", label: "Tools", href: "#tools" },
+  { num: "01", label: "Services", href: "#services" },
   { num: "02", label: "About", href: "#about" },
-  { num: "03", label: "Services", href: "#services" },
-  { num: "04", label: "Vision", href: "#continuum" },
+  { num: "03", label: "Vision", href: "#continuum" },
 ] as const;
 
 export function HudNav() {

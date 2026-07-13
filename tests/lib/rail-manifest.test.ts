@@ -22,17 +22,21 @@ const PRODUCTION_PARSE_OPTIONS = {
     "intelligence-layer",
     "approach",
     "buildQuote",
+    // ADR-033: the cases live in the Arc's Build-park orbit; both
+    // standalone case surfaces retired.
+    "build",
+    "tools",
   ] as unknown as readonly string[],
   relocateStationsToMount: [
-    { stationId: "tools" },
+    { stationId: "about" },
     { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
   ],
   corridorMountId: "home-corridor-mount",
 };
 
 describe("MANIFEST_ENTRIES data model", () => {
-  it("has 10 entries with unique ids in the expected journey order", () => {
-    expect(MANIFEST_ENTRIES).toHaveLength(10);
+  it("has 8 entries with unique ids in the expected journey order", () => {
+    expect(MANIFEST_ENTRIES).toHaveLength(8);
     const ids = MANIFEST_ENTRIES.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual([
@@ -40,11 +44,9 @@ describe("MANIFEST_ENTRIES data model", () => {
       "thesis",
       "arc",
       "services",
-      "tools",
+      "about",
       "continuum",
       "practice",
-      "build",
-      "about",
       "contact",
     ]);
   });
@@ -67,18 +69,17 @@ describe("MANIFEST_ENTRIES data model", () => {
     expect(MANIFEST_ENTRIES.filter((e) => e.glyph === "stack").map((e) => e.id)).toEqual([
       "arc",
       "services",
-      "tools",
+      "about",
     ]);
     expect(MANIFEST_ENTRIES.filter((e) => e.hideActiveName).map((e) => e.id)).toEqual(["hero"]);
   });
 });
 
 describe("RAIL_ROWS — the curated rolodex display set", () => {
-  it("is exactly the three brand pillars (Arc / Services / Products) in journey order", () => {
-    expect(RAIL_ROWS.map((e) => e.id)).toEqual(["arc", "services", "tools"]);
-    // The #tools section displays as "Products" in the rolodex; its id
-    // and scroll target stay "tools".
-    expect(RAIL_ROWS.map((e) => e.name)).toEqual(["Arc", "Services", "Products"]);
+  it("is exactly the three brand pillars (Arc / Services / About) in journey order", () => {
+    expect(RAIL_ROWS.map((e) => e.id)).toEqual(["arc", "services", "about"]);
+    // About replaced the retired Products/#tools pillar (ADR-033).
+    expect(RAIL_ROWS.map((e) => e.name)).toEqual(["Arc", "Services", "About"]);
     expect(RAIL_ROWS.every((e) => e.glyph === "stack")).toBe(true);
   });
 });
@@ -114,12 +115,12 @@ describe("buildRailManifestHtml — parse-time skeleton", () => {
   it("bakes pillar names for first paint; authored numbers never ship in the skeleton", () => {
     expect(html).toContain('<span class="rail-manifest__name">Arc</span>');
     expect(html).toContain('<span class="rail-manifest__name">Services</span>');
-    expect(html).toContain('<span class="rail-manifest__name">Products</span>');
+    expect(html).toContain('<span class="rail-manifest__name">About</span>');
     // No authored numbers are baked (the reduced rolodex shows names only).
     expect(html).not.toContain("08");
     // Positional aria-labels for assistive tech.
     expect(html).toContain('aria-label="Arc — pillar 1 of 3"');
-    expect(html).toContain('aria-label="Products — pillar 3 of 3"');
+    expect(html).toContain('aria-label="About — pillar 3 of 3"');
   });
 
   it("rows are bare name buttons — no glyph or svg (terminal list, 2026-07-13)", () => {
@@ -168,6 +169,20 @@ describe("drift guard — manifest order matches the parsed production DOM", () 
     expect(mountAt).toBeGreaterThan(-1);
     expect(servicesAt).toBeGreaterThan(-1);
     expect(mountAt).toBeLessThan(servicesAt);
+  });
+
+  it("#about directly follows #services; #tools/#build are gone (ADR-033)", () => {
+    const servicesAt = bodyHtml.search(/<section[^>]*\bdata-station="services"/);
+    const aboutAt = bodyHtml.search(/<section[^>]*\bdata-station="about"/);
+    const continuumAt = bodyHtml.search(/<section[^>]*\bdata-station="continuum"/);
+    expect(servicesAt).toBeGreaterThan(-1);
+    expect(aboutAt).toBeGreaterThan(servicesAt);
+    expect(continuumAt).toBeGreaterThan(aboutAt);
+    expect(bodyHtml).not.toMatch(/<section[^>]*\bid="tools"/);
+    expect(bodyHtml).not.toMatch(/<section[^>]*\bid="build"/);
+    // Element-form (prototype comments mention the slot names in prose).
+    expect(bodyHtml).not.toMatch(/<div\b[^>]*\bdata-tools-cards-root/);
+    expect(bodyHtml).not.toMatch(/<div\b[^>]*\bdata-build-cases-root/);
   });
 
   it("the parsed body carries the injected manifest skeleton", () => {

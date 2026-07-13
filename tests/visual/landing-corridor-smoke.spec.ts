@@ -42,14 +42,12 @@ test.describe("Homepage corridor smoke", () => {
         "hero",
         "home-corridor-mount",
         "services",
-        // ADR-030: the Tools station rides between services and continuum
-        // (offsetTop stays ordered despite its -100svh cover margin — the
-        // services runway is ~6 viewports tall).
-        "tools",
+        // ADR-033 funnel: the bio follows services as the opaque cover,
+        // then the philosophy beat and the Loop practice proof. #tools
+        // and #build retired (the cases orbit the Arc's Build park).
+        "about",
         "continuum",
         "practice",
-        "build",
-        "about",
         "contact",
       ];
       return ids.map((id) => ({ id, top: document.getElementById(id)?.offsetTop ?? -1 }));
@@ -67,7 +65,16 @@ test.describe("Homepage corridor smoke", () => {
   });
 
   test("ADR-018 retired stations are no longer in the DOM", async ({ page }) => {
-    const removed = ["definition", "missing-layer", "intelligence-layer", "approach", "buildQuote"];
+    const removed = [
+      "definition",
+      "missing-layer",
+      "intelligence-layer",
+      "approach",
+      "buildQuote",
+      // ADR-033: both standalone case surfaces retired.
+      "build",
+      "tools",
+    ];
     const present = await page.evaluate(
       (ids) => ids.map((id) => Boolean(document.getElementById(id))),
       removed

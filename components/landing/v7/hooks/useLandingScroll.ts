@@ -16,10 +16,8 @@ const SECTORS: Record<string, string> = {
   buildQuote: "Axiom",
   continuum: "Continuum",
   practice: "Field",
-  build: "Build",
   services: "Roadmap",
   about: "Story",
-  products: "Fleet",
   contact: "Horizon",
 };
 

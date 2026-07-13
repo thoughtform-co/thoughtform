@@ -364,6 +364,19 @@ html[data-corridor-exit="true"] #services > * {
   z-index: 7;
 }
 
+/* #about follows #services since ADR-033 (the #tools transparent
+   lead-in retired with its station). About is an ordinary OPAQUE
+   station — it IS the cover that ends the ambient hold — so it keeps
+   its authored background; it only needs to STACK above the body veil
+   (z5) + fixed canvas while the exit band is live, and to escape
+   `.station:not(.hero)`'s content-visibility paint containment (the
+   same clipping trap as exit-state #services above). */
+html[data-corridor-exit="true"] #about {
+  position: relative;
+  z-index: 6;
+  content-visibility: visible;
+}
+
 /* Services section length — taller than a single viewport so the
  * brandmark coming off the corridor-exit dissipate has runway to
  * re-centre, hold a beat, and fade out before #continuum enters.

@@ -13,10 +13,12 @@ import { extractV7Text, getV7Content, sliceV7Sections } from "@/lib/v7-parse";
  * silently breaks the homepage.
  *
  * Production caller — `app/(marketing)/page.tsx`:
- *   - Removes: definition · missing-layer · intelligence-layer · approach · buildQuote
+ *   - Removes: definition · missing-layer · intelligence-layer · approach ·
+ *     buildQuote · build · tools (the last two retired with ADR-033 —
+ *     the cases live in the Arc's Build-park orbit)
  *   - Inserts: <div id="home-corridor-mount" data-home-corridor-mount></div>
- *   - Relocates: services (and drops trailing connector slot
- *     `practice-to-about`).
+ *   - Relocates: about + services (services drops its trailing connector
+ *     slot `practice-to-about`).
  */
 
 const CORRIDOR_REPLACED_STATIONS = [
@@ -25,13 +27,15 @@ const CORRIDOR_REPLACED_STATIONS = [
   "intelligence-layer",
   "approach",
   "buildQuote",
+  "build",
+  "tools",
 ] as const;
 
 // Mirrors app/(marketing)/page.tsx: specs run in array order, each
 // inserting immediately after the mount, so the LAST lands closest —
-// tools first + services second ⇒ mount → #services → #tools (ADR-030).
+// about first + services second ⇒ mount → #services → #about (ADR-033).
 const CORRIDOR_RELOCATED_STATIONS = [
-  { stationId: "tools" },
+  { stationId: "about" },
   { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
 ] as const;
 
@@ -148,7 +152,7 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     expect(bodyHtml).not.toMatch(/<div\s+class="build-quote-runway"\s*>\s*<\/div>/);
   });
 
-  it("relocates #services to immediately after the corridor mount and drops the trailing connector slot", () => {
+  it("relocates #services then #about after the mount and drops the trailing connector slot", () => {
     const { bodyHtml } = getV7Content({
       removeStations: CORRIDOR_REPLACED_STATIONS,
       relocateStationsToMount: CORRIDOR_RELOCATED_STATIONS,
@@ -157,18 +161,26 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
 
     const mountIdx = bodyHtml.indexOf('id="home-corridor-mount"');
     const servicesIdx = bodyHtml.search(/<section\b[^>]*\bid="services"/);
-    const toolsIdx = bodyHtml.search(/<section\b[^>]*\bid="tools"/);
+    const aboutIdx = bodyHtml.search(/<section\b[^>]*\bid="about"/);
     const continuumIdx = bodyHtml.search(/<section\b[^>]*\bid="continuum"/);
 
     expect(mountIdx).toBeGreaterThan(0);
     expect(servicesIdx).toBeGreaterThan(mountIdx);
-    // #tools rides between services and continuum (ADR-030 cover order).
-    expect(toolsIdx).toBeGreaterThan(servicesIdx);
-    expect(continuumIdx).toBeGreaterThan(toolsIdx);
+    // #about (the bio) directly follows services — the ADR-033 funnel;
+    // continuum (the philosophy beat) comes after.
+    expect(aboutIdx).toBeGreaterThan(servicesIdx);
+    expect(continuumIdx).toBeGreaterThan(aboutIdx);
 
-    // The tools card-stack portal slot must survive the relocation.
-    const toolsBlock = bodyHtml.slice(toolsIdx, bodyHtml.indexOf("</section>", toolsIdx));
-    expect(toolsBlock).toContain("data-tools-cards-root");
+    // Both retired case surfaces are gone, portal slots included.
+    // (Element-form assertions: the authored prototype's explanatory
+    // comments legitimately mention the slot names in prose.)
+    expect(bodyHtml).not.toMatch(/<section\b[^>]*\bid="tools"/);
+    expect(bodyHtml).not.toMatch(/<section\b[^>]*\bid="build"/);
+    expect(bodyHtml).not.toMatch(/<div\b[^>]*\bdata-tools-cards-root/);
+    expect(bodyHtml).not.toMatch(/<div\b[^>]*\bdata-build-cases-root/);
+    // The right-rail register slot survives (it hosts the services
+    // SOURCE BUS register; legacy attr name kept — ADR-033).
+    expect(bodyHtml).toContain("data-tools-rail-root");
 
     // The orphaned connector slot must NOT appear right after #services.
     const between = bodyHtml.slice(servicesIdx);
@@ -177,23 +189,14 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     expect(trailingConnector.test(between)).toBe(false);
   });
 
-  it("preserves the surviving stations in their authored relative order", () => {
+  it("preserves the surviving stations in the ADR-033 funnel order", () => {
     const { bodyHtml } = getV7Content({
       removeStations: CORRIDOR_REPLACED_STATIONS,
       relocateStationsToMount: CORRIDOR_RELOCATED_STATIONS,
       corridorMountId: CORRIDOR_MOUNT_ID,
     });
 
-    const order = [
-      "hero",
-      "services",
-      "tools",
-      "continuum",
-      "practice",
-      "build",
-      "about",
-      "contact",
-    ];
+    const order = ["hero", "services", "about", "continuum", "practice", "contact"];
     let cursor = 0;
     for (const id of order) {
       const idx = bodyHtml.indexOf(`id="${id}"`, cursor);

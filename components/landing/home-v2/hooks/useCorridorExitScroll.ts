@@ -34,25 +34,14 @@ const VEIL_DOCK_CAP = 0.38;
 const VEIL_AMBIENT_CAP = 0.12;
 /** Start the ambient hold once the surface dissipate is complete. */
 const AMBIENT_ENGAGE_RAW = 0.999;
-/** Fade the ambient particles as the NEXT station (#tools; #continuum
- *  fallback) travels through its transparent lead-in (ADR-030 Update 1,
- *  "the viewscreen changes modes"): the dimmed receded brandmark stays
- *  alive BEHIND the #tools header viewport and finishes dying as the
- *  first stack card arrives. END is NEGATIVE — the station's top is
- *  0.7 viewports PAST the viewport top when the fade completes (the
- *  formula is monotone through negative tops; START must stay > END).
- *  LOCKSTEP: TOOLS_BG_IN_END_VH > NEXT_STATION_FADE_END_VH — the
- *  station must be opaque BEFORE the ambient canvas dies. */
-const NEXT_STATION_FADE_START_VH = 0.5;
-const NEXT_STATION_FADE_END_VH = -0.7;
-
-/** #tools background fade clock (`--tools-bg-in`, read by the station's
- *  ::before backdrop + the right-rail register handover): 0 = fully transparent
- *  lead-in, 1 = opaque station. Runs from the same next-station
- *  measurement as the ambient fade, slightly ahead of it (see LOCKSTEP
- *  note above). */
-const TOOLS_BG_IN_START_VH = 0.15;
-const TOOLS_BG_IN_END_VH = -0.55;
+/** Fade the ambient particles as the NEXT station (#about; #continuum
+ *  fallback) approaches. ADR-033 retune: #about is an ordinary OPAQUE
+ *  station (the #tools transparent lead-in retired with its station),
+ *  so the receded mark + ambient bed finish dying exactly as the
+ *  station's opaque top reaches the viewport top — nothing survives
+ *  underneath a cover that no longer lets it show through. */
+const NEXT_STATION_FADE_START_VH = 0.6;
+const NEXT_STATION_FADE_END_VH = 0.0;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -146,16 +135,18 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dissipate = corridorExitSpeedRamp(rawDissipate);
       const sectionNearDock =
         servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) && servicesRect.bottom > 0;
-      // The AMBIENT hold outlives the dock gate (ADR-030 Update 1): in
-      // normal flow services.bottom == tools.top, so the old `bottom > 0`
-      // conjunction would HARD-CUT the canvas (and the receding mark) at
-      // exactly tools.top = 0 — before the extended fade completes. The
-      // ambient's bottom gate must expire WITH the fade envelope.
+      // The AMBIENT hold outlives the dock gate (ADR-030 Update 1; the
+      // next station is #about since ADR-033): in normal flow
+      // services.bottom == about.top, so a plain `bottom > 0` conjunction
+      // would HARD-CUT the canvas (and the receding mark) at exactly
+      // about.top = 0. The ambient's bottom gate must expire WITH the
+      // fade envelope (END_VH = 0 now makes these coincide by design —
+      // the opaque cover and the canvas death land on the same edge).
       const sectionNearAmbient =
         servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) &&
         servicesRect.bottom > vh * NEXT_STATION_FADE_END_VH;
       const nextStation =
-        root.querySelector<HTMLElement>("#tools") ?? root.querySelector<HTMLElement>("#continuum");
+        root.querySelector<HTMLElement>("#about") ?? root.querySelector<HTMLElement>("#continuum");
       const nextStationTopVh =
         (nextStation?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
 
@@ -201,14 +192,6 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         document.documentElement.style.removeProperty("--services-ambient");
       }
 
-      // ── #tools background fade (`--tools-bg-in`) ────────────────
-      // The transparent lead-in's opacity clock: written only while the
-      // exit band is live (the ::before defaults to 1 = opaque when the
-      // var is absent, so removal is always safe).
-      const toolsBgIn = clamp01(
-        (TOOLS_BG_IN_START_VH - nextStationTopVh) / (TOOLS_BG_IN_START_VH - TOOLS_BG_IN_END_VH)
-      );
-
       // ── Body veil ──────────────────────────────────────────────
       // While docked the veil ramps from 0 → VEIL_DOCK_CAP with the
       // dissipate so the canvas stays visible underneath during the
@@ -224,11 +207,9 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       if (corridorExit) {
         document.documentElement.setAttribute("data-corridor-exit", "true");
         document.documentElement.style.setProperty("--corridor-exit-veil", veilAlpha.toFixed(4));
-        document.documentElement.style.setProperty("--tools-bg-in", toolsBgIn.toFixed(4));
       } else {
         document.documentElement.removeAttribute("data-corridor-exit");
         document.documentElement.style.removeProperty("--corridor-exit-veil");
-        document.documentElement.style.removeProperty("--tools-bg-in");
       }
 
       // Single-writer rule: only own dock / dissipate / inert seam +
@@ -279,7 +260,6 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       document.documentElement.style.removeProperty("--corridor-dissipate");
       document.documentElement.style.removeProperty("--corridor-exit-veil");
       document.documentElement.style.removeProperty("--services-ambient");
-      document.documentElement.style.removeProperty("--tools-bg-in");
       const store = useDepthGatewayStore.getState();
       store.setTransform({
         ...store.transform,

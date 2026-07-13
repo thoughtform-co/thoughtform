@@ -2,21 +2,25 @@
  * Rail Manifest — canonical journey data (ADR-031).
  *
  * The left HUD rail's station manifest: one slot per journey entry, in
- * PRODUCTION order (ADR-021 corridor reorder — hero → corridor
- * [Thesis/Arc] → services → tools → continuum → practice → build →
- * about → contact), NOT the authored prototype order. The corridor
- * phases are first-class entries even though they share one mount
- * element, which is why this list is explicitly curated instead of
- * DOM-derived; `tests/lib/rail-manifest.test.ts` carries a drift guard
- * asserting the station-kind entries match the parsed production DOM.
+ * PRODUCTION order (ADR-033 funnel — hero → corridor [Thesis/Arc] →
+ * services → about → continuum → practice → contact), NOT the authored
+ * prototype order. The corridor phases are first-class entries even
+ * though they share one mount element, which is why this list is
+ * explicitly curated instead of DOM-derived;
+ * `tests/lib/rail-manifest.test.ts` carries a drift guard asserting the
+ * station-kind entries match the parsed production DOM.
  *
  * `label` is the authored station number, displayed ONLY on the
  * ACTIVE rolodex row (Update 3 canon — every row shows its name, the
  * number rides the active row alone): the production sequence is
- * non-monotonic (…03, 08, 08A, 05…) because services + tools relocate
+ * non-monotonic (…03, 08, 09, 05…) because services + about relocate
  * ahead of continuum, and showing one number at a time keeps that
  * invisible while staying consistent with the station corner chrome
  * ("08 SERVICES").
+ *
+ * The `tools` ("Products") + `build` entries retired with their
+ * stations (ADR-033) — the four production cases live in the Arc's
+ * Build-park orbit now, and About is the third brand pillar.
  *
  * Pure data — imported by the server-side parse builder
  * (`lib/v7-parse/railManifest.ts`) and the client controller
@@ -28,11 +32,9 @@ export type ManifestEntryId =
   | "thesis"
   | "arc"
   | "services"
-  | "tools"
+  | "about"
   | "continuum"
   | "practice"
-  | "build"
-  | "about"
   | "contact";
 
 export interface ManifestEntry {
@@ -100,34 +102,31 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     glyph: "stack",
   },
   {
-    id: "tools",
-    label: "08A",
-    // Shown as "Products" in the rolodex (owner, 2026-07-13). The id /
-    // targetId stay "tools" (scroll target, data-station, tests); only
-    // the display name changes. The top-nav + section header still read
-    // "Tools" — align them separately if a full relabel is wanted.
-    name: "Products",
+    // The navigator is the third brand pillar (ADR-033; replaced the
+    // retired "Products"/#tools entry — the cases live in the Arc's
+    // Build-park orbit now).
+    id: "about",
+    label: "09",
+    name: "About",
     kind: "station",
-    targetId: "tools",
+    targetId: "about",
     glyph: "stack",
   },
   { id: "continuum", label: "05", name: "Continuum", kind: "station", targetId: "continuum" },
   { id: "practice", label: "06", name: "Practice", kind: "station", targetId: "practice" },
-  { id: "build", label: "07", name: "Build", kind: "station", targetId: "build" },
-  { id: "about", label: "09", name: "About", kind: "station", targetId: "about" },
   { id: "contact", label: "10", name: "Contact", kind: "station", targetId: "contact" },
 ] as const;
 
 /**
  * The rows the rolodex actually RENDERS — the three brand pillars
- * (Arc / Services / Products), curated down from the full journey
- * (owner, 2026-07-13: "the rolodex only needs to show ARC SERVICES
- * PRODUCTS"). They are exactly the `glyph: "stack"` entries — the same
- * "most important elements" set the module icon marks. The full
- * `MANIFEST_ENTRIES` is untouched: it still drives active-index
- * resolution, corridor phases, and click targets; only what the rail
- * DISPLAYS is reduced. `RAIL_ROW_INDICES` are each pillar's index back
- * in the full journey, so the controller can derive per-row state.
+ * (Arc / Services / About), curated down from the full journey
+ * (owner, 2026-07-13: pillars are the "most important elements" set;
+ * About replaced Products with ADR-033). They are exactly the
+ * `glyph: "stack"` entries. The full `MANIFEST_ENTRIES` is untouched:
+ * it still drives active-index resolution, corridor phases, and click
+ * targets; only what the rail DISPLAYS is reduced. `RAIL_ROW_INDICES`
+ * are each pillar's index back in the full journey, so the controller
+ * can derive per-row state.
  */
 export const RAIL_ROWS: readonly ManifestEntry[] = MANIFEST_ENTRIES.filter(
   (e) => e.glyph === "stack"

@@ -11,10 +11,8 @@ import { HudNav } from "./HudNav";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
-import { BuildCasesPortal } from "./build-cases";
 import { RailManifestController } from "./RailManifest";
-import { ToolsPortal, ToolsRailRegisterPortal } from "./tools-cards";
-import { ServicesPortal } from "@/components/landing/home-v2/services";
+import { ServicesPortal, ServicesRailRegisterPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -455,18 +453,16 @@ export function LandingPage({
       />
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
-      <BuildCasesPortal containerRef={rootRef} />
+      {/* #tools + #build retired (ADR-033): the four production cases
+          live in the Arc's Build-park orbit now (ArcCasesRing, mounted
+          inside the corridor canvas). BuildCasesPortal + ToolsPortal are
+          gone with their stations. */}
       <ServicesPortal containerRef={rootRef} />
-      {/* #tools card stack (ADR-030): the console-plate sticky stack
-          mounted into the relocated Tools station's placeholder. The
-          services→tools seam is the ADR-030 Update 1 "viewscreen mode
-          switch": decommission beat + transparent lead-in, no cover. */}
-      <ToolsPortal containerRef={rootRef} />
-      {/* Services -> tools rail register: the retiring service verbs FLIP
-          into four stable slots in the authored RIGHT HUD rail, then those
-          same slots become the tool-unit index as the viewscreen changes
-          mode. Nested-root lifecycle matches ToolsPortal. */}
-      <ToolsRailRegisterPortal containerRef={rootRef} />
+      {/* Services rail register ("SOURCE BUS · 04"): the service verbs in
+          four stable slots in the authored RIGHT HUD rail — the services
+          half of the retired ToolsRailRegister (ADR-033). Nested-root
+          lifecycle matches ServicesPortal. */}
+      <ServicesRailRegisterPortal containerRef={rootRef} />
       {/* Rail manifest (ADR-031): the left rail's station backplane —
           sockets ahead, seated modules behind, one powered slot
           (absorbing the ADR-030 station label). NOT a nested root: the

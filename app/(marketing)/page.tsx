@@ -42,6 +42,13 @@ const CORRIDOR_REPLACED_STATIONS = [
   // the practical answer ("Three ways to bring the practice in")
   // lives in #services — which moves up via the relocate spec below.
   "buildQuote",
+  // ADR-033: the four production cases live in the Arc's Build-park
+  // orbit now (click-armed via the corridor CTA). Their two standalone
+  // surfaces retire: the #build editorial slides and the #tools V2
+  // console stack were the same four cases twice, and the tools stack
+  // broke the services → bio funnel.
+  "build",
+  "tools",
 ] as const;
 const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 
@@ -54,12 +61,14 @@ const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 // seam owns the visual bridge, no celestial connector required).
 //
 // Specs run in ARRAY ORDER and each inserts immediately after the
-// mount, so the LAST spec lands closest to the mount. tools first,
-// services second ⇒ mount → #services → #tools → #continuum: the
-// Tools station scrolls parallax over the parked services instrument
-// (ADR-030 cover), then hands to the continuum.
+// mount, so the LAST spec lands closest to the mount. about first,
+// services second ⇒ mount → #services → #about → #continuum →
+// #practice → #contact — the ADR-033 funnel: the corridor exits into
+// services (the navigator's engagements), the bio follows as the
+// opaque cover that ends the ambient hold, then the philosophy beat
+// (continuum) and the Loop practice proof.
 const CORRIDOR_RELOCATED_STATIONS = [
-  { stationId: "tools" },
+  { stationId: "about" },
   { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
 ] as const;
 
