@@ -21,6 +21,14 @@ export interface CaseCapability {
   desc: string;
 }
 
+/** One headline metric per case (ADR-033) — folded in from the retired
+ *  `build-cases/buildCaseData.ts` triplets so PROJECT_CASES is the single
+ *  canonical case module. Rendered on the arc orbit card's caption row. */
+export interface CaseMetric {
+  value: string;
+  label: string;
+}
+
 export interface ProjectCase {
   id: "mimir" | "vesper" | "babylon" | "heimdall";
   /** Rendered as `01 / 04` etc. */
@@ -36,6 +44,9 @@ export interface ProjectCase {
   challenge: string;
   shift: string;
   capabilities: [CaseCapability, CaseCapability, CaseCapability, CaseCapability];
+  /** Headline metric for the arc orbit card (optional — cards without one
+   *  simply omit the caption row's right slot). */
+  metric?: CaseMetric;
   stack: string[];
   surfaces: string[];
   image: { src: string; alt: string; width: number; height: number };
@@ -77,6 +88,7 @@ export const PROJECT_CASES: ProjectCase[] = [
         desc: "Expanded from Creative Strategy into Insights and Product Marketing use cases.",
       },
     ],
+    metric: { value: "4+", label: "Intelligence sources" },
     stack: ["Next.js", "Supabase", "Gemini", "Claude Skills", "MCP", "Slack"],
     surfaces: ["Web app", "MCP server", "Claude", "Cursor", "Slack", "ChatGPT"],
     image: {
@@ -119,6 +131,7 @@ export const PROJECT_CASES: ProjectCase[] = [
         desc: "Same Skill behind Claude.ai and the in-product enhance button.",
       },
     ],
+    metric: { value: "0%", label: "Margin vs. Krea" },
     stack: [
       "Next.js",
       "TanStack Query",
@@ -170,6 +183,7 @@ export const PROJECT_CASES: ProjectCase[] = [
         desc: "Share-link review, no Figma seat needed.",
       },
     ],
+    metric: { value: "30+", label: "Languages supported" },
     stack: ["Next.js", "Supabase", "Anthropic", "Gemini"],
     surfaces: ["Web app", "Share-link review"],
     image: {
@@ -212,6 +226,7 @@ export const PROJECT_CASES: ProjectCase[] = [
         desc: "Turns revenue projections and use-case splits into clear briefing assignments.",
       },
     ],
+    metric: { value: "8+", label: "Integrations" },
     stack: ["Next.js", "Supabase", "Vercel KV", "Monday", "Figma", "Frontify", "Meta", "Anthropic"],
     surfaces: ["Web app", "Figma plugin", "Iterator plugin", "GPT Actions API"],
     image: {
