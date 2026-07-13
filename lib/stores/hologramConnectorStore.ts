@@ -69,26 +69,6 @@ export interface RingCardAnchor {
   front: boolean;
 }
 
-/** Screen-space bounding rect of one orbiting CASE card (ADR-033 arc
- *  cases ring). The services `RingCardAnchor` shape with a case identity:
- *  `slot` is the ring position (what the hit layer steps to), `caseId`
- *  the PROJECT_CASES id — kept as a plain string so the store stays
- *  decoupled from the tools-cards data module. Publisher: `ArcCasesRing`
- *  only, while the orbit is armed at the Build park. */
-export interface ArcRingCardAnchor {
-  caseId: string;
-  /** Ring slot 0..3 — `arcCasesStore.stepToCase` target. */
-  slot: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  /** Projected clip-space depth of the card centre. */
-  depth: number;
-  visible: boolean;
-  front: boolean;
-}
-
 interface HologramConnectorState {
   anchors: ConnectorAnchor[];
   setAnchors: (anchors: ConnectorAnchor[]) => void;
@@ -102,12 +82,6 @@ interface HologramConnectorState {
    *  same reason as `featureAnchors`. Publisher: `ServicesCardRing` only. */
   ringAnchors: RingCardAnchor[];
   setRingAnchors: (anchors: RingCardAnchor[]) => void;
-  /** Card rects from the Build-park cases orbit (ADR-033). Separate slice
-   *  so the two rings' hit layers never wake each other (their visibility
-   *  windows are disjoint by contract, but the slices stay independent).
-   *  Publisher: `ArcCasesRing` only. */
-  arcRingAnchors: ArcRingCardAnchor[];
-  setArcRingAnchors: (anchors: ArcRingCardAnchor[]) => void;
   /** The service the visitor is currently scanning. Bridges the DOM scan UI
    *  (in `#services`) to the brandmark instrument that now lives in the corridor
    *  canvas (the unified `CorridorArmillary`), so the active orbit ring still
@@ -125,8 +99,6 @@ export const useHologramConnectors = create<HologramConnectorState>((set) => ({
   setFeatureAnchors: (featureAnchors) => set({ featureAnchors }),
   ringAnchors: [],
   setRingAnchors: (ringAnchors) => set({ ringAnchors }),
-  arcRingAnchors: [],
-  setArcRingAnchors: (arcRingAnchors) => set({ arcRingAnchors }),
   activeServiceId: null,
   setActiveServiceId: (activeServiceId) => set({ activeServiceId }),
 }));

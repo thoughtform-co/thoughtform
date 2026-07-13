@@ -1,7 +1,9 @@
 # ADR-033: Arc Cases Orbit — the four cases orbit the Build sphere on demand; #tools/#build retire
 
 **Date:** 2026-07-13
-**Status:** Accepted
+**Status:** Superseded (orbit) — see [ADR-034](034-arc-cases-terrace.md).
+Sections 1–4 (the ring, CTA dock, armed dims, hit layer) are retired;
+**Section 5 (funnel restructure) and the mobile/PRM story remain live.**
 **Scope:** `lib/arc-cases/**`, `lib/stores/arcCasesStore.ts`,
 `components/landing/home-v2/arc-cases/**`,
 `components/landing/home-v2/arcCasesOrbit.ts` (flag),
@@ -202,4 +204,13 @@ ADR-032 code: v1 `6a6bd98`, v2 `c346586`, revert `1100200`.
 
 ## Updates
 
-(none)
+- **2026-07-13 — Superseded by ADR-034 (Arc Cases Terrace).** The owner
+  rejected the orbit interaction the day it shipped: a second ring on
+  the same rig read as a near-clone of the Services card ring. The
+  replacement keeps the click-owned/opt-in model, the band +
+  exclusivity gates, the deferred bake, and this ADR's §5 funnel
+  restructure + mobile/PRM story, and replaces the reveal with a
+  lateral camera shift + ONE landscape screen rising from the substrate
+  topography. The orbit code (ring, hit layer, CTA dock, armed dims,
+  `orbitMath`, `arcRingAnchors`) is deleted; the bake grammar was
+  extracted to `arc-cases/caseScreenBake.ts` first.

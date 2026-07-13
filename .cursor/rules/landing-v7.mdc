@@ -11,12 +11,13 @@ alwaysApply: false
 
 When editing these paths, you are in a **layered composite** (fixed `.gateway`, sticky hero, opaque stations) — not a flat page.
 
-**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/031-rail-manifest.md`, `sentinel/decisions/033-arc-cases-orbit.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
+**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/031-rail-manifest.md`, `sentinel/decisions/033-arc-cases-orbit.md` (orbit superseded; funnel live), `sentinel/decisions/034-arc-cases-terrace.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
 
 **Funnel (ADR-033):** hero → corridor (thesis + Arc) → services → about →
 continuum → practice → contact. `#tools`/`#build` retired — the four
-production cases live ONLY in the Arc's Build-park orbit (click-armed
-CTA). Order is owned by the parse arrays in `app/(marketing)/page.tsx`,
+production cases live ONLY on the Arc's Build-park terrace screen
+(click-armed rail CTA; camera shifts right, the screen rises from the
+topography — ADR-034). Order is owned by the parse arrays in `app/(marketing)/page.tsx`,
 in lockstep with `lib/rail-manifest/entries.ts` + the drift-guard tests;
 never reorder via prototype-HTML edits. `PROJECT_CASES` is the single
 canonical case module; the rest of `tools-cards/` is the

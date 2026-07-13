@@ -4,6 +4,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
+import { arcCameraShiftX } from "@/lib/arc-cases/terraceMath";
+import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   CAMERA_START,
@@ -82,6 +85,22 @@ export function FlyingCameraRig() {
     const { paintProgress, docked, servicesAmbient } = useDepthGatewayStore.getState().transform;
     const dockHeld = docked || servicesAmbient;
 
+    // Arc cases terrace lateral shift (ADR-034): while the terrace is
+    // armed at the Build park the whole frame translates RIGHT — position
+    // AND lookAt shift by the SAME amount, so the forward axis stays −Z
+    // and every camera-space depth/focus helper in `sceneGeom` remains
+    // exactly correct WITHOUT knowing about the shift (deliberate
+    // non-edit — do not "fix" getCameraPosition to include this).
+    // Applied additively in ALL THREE branches below: the branch switch
+    // can happen while the level is still draining, and an offset applied
+    // to only one branch would pop at the boundary. The level is already
+    // band-gated (arcBandFactor kills it across epilogue [0, 0.1]), so
+    // the planet flyover/dock never sees a lateral residue. The DOM
+    // mirror camera in `useWorldDomTracker.syncMirrorCamera` applies the
+    // SAME channel — the two cameras MUST stay in lockstep or projected
+    // DOM copy desyncs from the canvas. Flag off ⇒ literal 0.
+    const shiftX = ARC_CASES_TERRACE ? arcCameraShiftX(arcCasesLevelRef.current.level) : 0;
+
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`
     // takes over. At epilogueProgress = 0 the pose returns the parked
@@ -152,26 +171,26 @@ export function FlyingCameraRig() {
         const exitPose = getCorridorExitCameraPose(dissipate);
         const t = dissipate;
         camera.position.set(
-          pose.position[0] * (1 - t) + exitPose.position[0] * t,
+          pose.position[0] * (1 - t) + exitPose.position[0] * t + shiftX,
           pose.position[1] * (1 - t) + exitPose.position[1] * t,
           pose.position[2] * (1 - t) + exitPose.position[2] * t
         );
         camera.lookAt(
-          pose.lookAt[0] * (1 - t) + exitPose.lookAt[0] * t,
+          pose.lookAt[0] * (1 - t) + exitPose.lookAt[0] * t + shiftX,
           pose.lookAt[1] * (1 - t) + exitPose.lookAt[1] * t,
           pose.lookAt[2] * (1 - t) + exitPose.lookAt[2] * t
         );
         return;
       }
-      camera.position.set(...pose.position);
-      camera.lookAt(...pose.lookAt);
+      camera.position.set(pose.position[0] + shiftX, pose.position[1], pose.position[2]);
+      camera.lookAt(pose.lookAt[0] + shiftX, pose.lookAt[1], pose.lookAt[2]);
       return;
     }
 
     const [x, y, z] = getCameraPosition(paintProgress);
-    camera.position.set(x, y, z);
+    camera.position.set(x + shiftX, y, z);
     const [lx, ly, lz] = getCameraLookAt(paintProgress);
-    camera.lookAt(lx, ly, lz);
+    camera.lookAt(lx + shiftX, ly, lz);
   });
 
   return null;

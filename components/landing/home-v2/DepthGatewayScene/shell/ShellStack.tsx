@@ -68,9 +68,6 @@ import {
   makePointsMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { band, epilogueBand } from "@/lib/home-v2/epilogueTimeline";
-import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { ARC_SOURCE_DIM, ARC_SURFACE_DIM } from "@/lib/arc-cases/orbitMath";
-import { ARC_CASES_ORBIT } from "../../arcCasesOrbit";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "../motionFollower";
 import { getStackColumnLocalX } from "../sceneGeom";
@@ -563,23 +560,13 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     // Stream + mote opacities track the cluster stagger so the field
     // lines fade up as their side arrives (build-in); the drain exit
     // stays geometric apart from the tail sweep.
-    //
-    // Arc cases armed dim (ADR-033): while the orbit is armed the
-    // SURFACES fan sinks hard (the cases replace the promise of outputs
-    // with the outputs themselves) and the SOURCES lanes sink softly.
-    // Rides the ring's own damped level via `arcCasesLevelRef` (already
-    // band-gated). Flag off ⇒ level is the literal 0 ⇒ byte-identical.
-    const casesLevel = ARC_CASES_ORBIT ? arcCasesLevelRef.current.level : 0;
-    const srcCasesDim = 1 - ARC_SOURCE_DIM * casesLevel;
-    const srfCasesDim = 1 - ARC_SURFACE_DIM * casesLevel;
-    mats.sourceStream.opacity = sourcesSlideT * SOURCE_STREAM_OPACITY * srcTailFade * srcCasesDim;
-    mats.surfaceStream.opacity =
-      surfacesSlideT * SURFACE_STREAM_OPACITY * srfTailFade * srfCasesDim;
-    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * srcTailFade * srcCasesDim;
-    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY * srfTailFade * srfCasesDim;
-    mats.sourcePip.opacity = SOURCE_PIP_OPACITY * srcTailFade * srcCasesDim;
-    mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * srfTailFade * srfCasesDim;
-    mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * srfTailFade * srfCasesDim;
+    mats.sourceStream.opacity = sourcesSlideT * SOURCE_STREAM_OPACITY * srcTailFade;
+    mats.surfaceStream.opacity = surfacesSlideT * SURFACE_STREAM_OPACITY * srfTailFade;
+    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * srcTailFade;
+    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY * srfTailFade;
+    mats.sourcePip.opacity = SOURCE_PIP_OPACITY * srcTailFade;
+    mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * srfTailFade;
+    mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * srfTailFade;
 
     // Line drain — trim each polyline from its FLOW-ORIGIN end so the
     // field line is consumed in its own travel direction: source lines

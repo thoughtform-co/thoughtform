@@ -4,8 +4,21 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
+import { terraceRealmTarget } from "@/lib/arc-cases/terraceMath";
+import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import { getSmoothedEpilogueProgress } from "./motionFollower";
-import { STATION_INTELLIGENCE, getSubstrateRealmEnvelope } from "./sceneGeom";
+import { getSubstrateRealmEnvelope } from "./sceneGeom";
+import {
+  HFOV_TAN,
+  INT_Z,
+  PARK_CAM_Z,
+  REALM_ROW_BIAS,
+  REALM_WIDTH_MARGIN,
+  REALM_Z_FAR,
+  REALM_Z_NEAR,
+  terrainHeight,
+} from "./substrateTerrain";
 
 /**
  * SubstrateTopography — the realm OUTSIDE the wormhole, and the
@@ -66,64 +79,18 @@ const DAWN_HEX = "#ebe3d6";
 const DAWN_SOFT_HEX = "#d6cdb5";
 const GOLD_HEX = "#caa554";
 
-// ── Camera-frame constants (desktop tuning view) ────────────────
-
-const INT_Z = STATION_INTELLIGENCE.position[2];
-/** Camera Z when parked at Build — terrain composition + unfurl
- *  depth normalization are computed against this viewpoint. */
-const PARK_CAM_Z = INT_Z + STATION_INTELLIGENCE.parkDistance;
-
-/** tan(horizontal half-FOV) at the desktop tuning frame: 38°
- *  vertical FOV, ~16:9 aspect. Used for frustum-width row sizing
- *  and the unfurl's lateral-fan screen-x term. */
-const HFOV_TAN = 0.612;
-
-// ── Terrain layout ───────────────────────────────────────────────
-
-/** Terrain Z span. The near edge starts where ground first enters
- *  the parked camera's lower frame edge (≈ 8 units ahead at the
- *  valley depth below) — nearer rows would never be visible from
- *  the park and would only waste points. */
-const REALM_Z_NEAR = INT_Z - 1.5;
-const REALM_Z_FAR = INT_Z - 52;
+// ── Camera-frame + terrain-layout constants ─────────────────────
+// Moved to `substrateTerrain.ts` (ADR-034 extraction — the terrace
+// screen grounds itself on the same heightfield): INT_Z, PARK_CAM_Z,
+// HFOV_TAN, REALM_Z_NEAR/FAR, REALM_ROW_BIAS, REALM_WIDTH_MARGIN and
+// the terrainHeight() relief. Imported above; the values are
+// unchanged and the built realm buffer is bit-identical.
 
 /** Terrain rows (Z slices) and samples per row. Anisotropic on
  *  purpose: dense along X, discrete in Z — from high above, the
  *  rows read as topographic contour lines crossing the valley. */
 const REALM_ROWS = 38;
 const REALM_SAMPLES_PER_ROW = 164;
-
-/** Row Z distribution bias (> 1 packs rows toward the near edge —
- *  perspective compresses the far rows on screen anyway). */
-const REALM_ROW_BIAS = 1.18;
-
-/** Row width margin past the frustum so the valley always bleeds
- *  past the frame edges. */
-const REALM_WIDTH_MARGIN = 1.14;
-
-/** Valley placement (v3.13 landscape-legibility revision). The
- *  camera stays exactly where the corridor parks it — the TERRAIN
- *  owns the read. Base floor is high enough to register as a
- *  landscape inside Build while still clearing the sphere/copy band;
- *  the stronger far lift keeps the horizon line present. */
-const REALM_BASE_Y = -2.75;
-const REALM_HORIZON_LIFT = 0.72;
-
-/** Valley cross-profile: the floor stays deep under the optical
- *  axis and BOWLS upward toward the frame edges — distant ridge
- *  flanks rising at the periphery. */
-const REALM_BOWL_RISE = 1.12;
-const REALM_BOWL_POWER = 1.8;
-
-/** Relief amplitude: calm basin floor, stronger ridges at the
- *  flanks. */
-const REALM_BASIN_AMP = 0.26;
-const REALM_EDGE_AMP = 1.25;
-const REALM_EDGE_POWER = 1.65;
-
-/** Hard ceiling so no crest ever climbs toward the sphere/copy
- *  band even where the sine stack aligns with the bowl rise. */
-const REALM_Y_CEILING = -1.05;
 
 /** Visibility + material. */
 const REALM_VISIBLE_FAR = 74;
@@ -364,18 +331,6 @@ void main() {
 function hash(n: number): number {
   const s = Math.sin(n) * 43758.5453;
   return s - Math.floor(s);
-}
-
-/** Layered-sine relief over the valley bowl. */
-function terrainHeight(x: number, z: number, edgeT: number, rowT: number): number {
-  const rolling =
-    0.42 * Math.sin(x * 0.19 + z * 0.115 + 1.7) +
-    0.27 * Math.sin(x * 0.45 - z * 0.085 + 4.2) +
-    0.6 * Math.sin(x * 0.065 + z * 0.05 + 2.4);
-  const amp = REALM_BASIN_AMP + REALM_EDGE_AMP * Math.pow(edgeT, REALM_EDGE_POWER);
-  const bowl = REALM_BOWL_RISE * Math.pow(edgeT, REALM_BOWL_POWER);
-  const base = REALM_BASE_Y + rowT * REALM_HORIZON_LIFT + bowl;
-  return Math.min(REALM_Y_CEILING, base + rolling * amp);
 }
 
 function buildRealm(): {
@@ -768,7 +723,15 @@ export function SubstrateTopography() {
       return;
     }
 
-    const waveTarget = getSubstrateRealmEnvelope(paintProgress);
+    // Arc cases terrace boost (ADR-034): while the terrace is armed the
+    // realm resolves FULLY under the rising screen (the scroll envelope
+    // is only ~0.72 at the park); disarm returns to scroll ownership.
+    // `max` semantics — the boost can only add, never suppress, so the
+    // scroll-symmetric retract on walking out of the band is untouched.
+    // The level is written at useFrame priority −5 (before this painter)
+    // and is already band-gated. Flag off ⇒ literal 0 ⇒ byte-identical.
+    const terraceLevel = ARC_CASES_TERRACE ? arcCasesLevelRef.current.level : 0;
+    const waveTarget = terraceRealmTarget(getSubstrateRealmEnvelope(paintProgress), terraceLevel);
 
     // FRONT: cascaded chase — the visible diagram rings get zero
     // initial velocity instead of the single-exponential kick.

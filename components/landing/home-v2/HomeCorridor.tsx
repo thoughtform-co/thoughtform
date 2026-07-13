@@ -16,8 +16,8 @@ import { CorridorProgressRail } from "./CorridorProgressRail";
 // the tree as a reusable reference for any future "particle dissolve at
 // a section seam" composition.
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
-import { ArcCasesHitAreas } from "./arc-cases";
-import { ARC_CASES_ORBIT } from "./arcCasesOrbit";
+import { ArcCasesTerraceCta } from "./arc-cases";
+import { ARC_CASES_TERRACE } from "./arcCasesTerrace";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
@@ -173,19 +173,19 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             straddle inside `CopyAnchors`. (2026-06-08 2D pivot.) */}
         {!fallback && <CorridorStationHeaders />}
 
-        {/* Arc cases orbit hit layer (ADR-033) — invisible DOM buttons
-            over the orbiting case cards while armed at the Build park;
-            the canvas itself stays pointer-events: none (the
-            ServicesRingHitAreas pattern). Empty until the ring
-            publishes anchors. */}
-        {!fallback && ARC_CASES_ORBIT && <ArcCasesHitAreas />}
-
         {/* Persistent HUD breadcrumb — Navigate → Encode → Build,
             appending each stage as the camera arrives. Sits on the top
             HUD frame line (sibling in spirit to the left/right depth
             rails); reads the depth store directly. Desktop-only via
             CSS, matching the 2D station headers. */}
         {!fallback && <CorridorProgressRail />}
+
+        {/* Arc cases terrace CTA + stepper (ADR-034) — the bottom-right
+            rail-column cluster that arms the terrace screen at the Build
+            park. Drives its own opacity (its own rAF) and owns the
+            auto-disarm watcher; hidden off-desktop by the same media the
+            R3F gate uses (gate parity). */}
+        {!fallback && ARC_CASES_TERRACE && <ArcCasesTerraceCta />}
 
         {/* Projected brandmark — lives inside the sticky stage so
             armed prepaint is clipped to the incoming Thoughtform

@@ -15,7 +15,8 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md)
 - [ADR-010: Brandmark choreography](../sentinel/decisions/010-brandmark-choreography.md)
 - [ADR-031: Rail Manifest](../sentinel/decisions/031-rail-manifest.md)
-- [ADR-033: Arc Cases Orbit + funnel](../sentinel/decisions/033-arc-cases-orbit.md)
+- [ADR-033: Arc Cases Orbit + funnel](../sentinel/decisions/033-arc-cases-orbit.md) (orbit superseded; funnel live)
+- [ADR-034: Arc Cases Terrace](../sentinel/decisions/034-arc-cases-terrace.md)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
@@ -30,9 +31,10 @@ Ref: BEST-PRACTICES "Nested-root portals".
 
 **The funnel is the ADR-033 order:** hero → corridor (thesis + the Arc)
 → services → about (bio) → continuum (philosophy) → practice → contact.
-`#tools` and `#build` retired — the four production cases live ONLY in
-the Arc's Build-park orbit (click-armed via the corridor CTA; see the
-brandmark rule + ADR-033). The order is owned by the parse arrays in
+`#tools` and `#build` retired — the four production cases live ONLY on
+the Arc's Build-park terrace screen (click-armed via the bottom-right
+rail CTA; camera shifts right, the screen rises from the topography —
+see the brandmark rule + ADR-034). The order is owned by the parse arrays in
 `app/(marketing)/page.tsx` (`CORRIDOR_REPLACED_STATIONS` /
 `CORRIDOR_RELOCATED_STATIONS`) — never by prototype-HTML edits — in
 lockstep with `MANIFEST_ENTRIES` and the drift-guard tests
