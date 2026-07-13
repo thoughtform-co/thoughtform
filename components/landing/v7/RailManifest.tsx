@@ -29,8 +29,9 @@ import {
  * The reel slides so the active / last-reached pillar sits at the
  * mid-rail anchor via one custom property (`--rail-manifest-idx`, a
  * 350ms detent glide; position stays a pure function of the active
- * index, never scroll-scrubbed). `data-dormant` hides the window on the
- * hero (rail canon: no title on the first screen). `data-ready` is set
+ * index, never scroll-scrubbed). `data-dormant` hides the window until
+ * the Arc — through the hero AND the thesis; the rolodex appears only
+ * once the journey reaches the first pillar. `data-ready` is set
  * only after the first sync + a reflow flush so a mid-page reload paints
  * at the correct detent instead of sliding up from hero.
  *
@@ -84,8 +85,10 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
       if (next === activeIdx) return;
       activeIdx = next;
 
-      // Hero dormancy — the window hides on the first screen.
-      if (next === 0) nav.setAttribute("data-dormant", "");
+      // Dormant until the Arc — the window stays hidden through the hero
+      // AND the thesis; the rolodex appears only once you enter the Arc
+      // (owner, 2026-07-13).
+      if (next < ARC_IDX) nav.setAttribute("data-dormant", "");
       else nav.removeAttribute("data-dormant");
 
       // Reel focus — center the active pillar, or the last one reached

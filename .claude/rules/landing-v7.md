@@ -63,7 +63,16 @@ A separate loadout bay was tried and retired (Update 5) — do NOT
 reintroduce `RailLoadout`/`data-rail-loadout-root` or a charge gauge.
 Keep the shared `resolveActiveIdx.ts` + `clickToNavigate.ts`; rolodex
 type is 11px to match the right-rail register (don't shrink it below
-the right).
+the right). The rolodex is **dormant until the Arc** (`activeIdx <
+ARC_IDX` — hidden through hero AND thesis; Update 7).
+
+**Rail uniformity — each pillar: name on the left, sub-items on the
+right (ADR-031 Update 7).** During the Arc the right rail carries
+Navigate/Encode/Build via `CorridorProgressRail` (now a right-rail
+register styled like `.tools-rail-register`, header `THE ARC · 03`),
+just as Services shows `SOURCE BUS` and Products shows `TOOL UNITS`. Do
+NOT move it back to a top-centre breadcrumb. It's a pure read of the
+corridor `paintProgress` — no new scroll writer.
 
 **Process**
 

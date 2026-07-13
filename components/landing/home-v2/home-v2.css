@@ -450,61 +450,93 @@ html[data-corridor-exit="true"] #services > * {
    `paintProgress`, so it stays in lock-step with the wheel — hence NO
    CSS transitions here. Units start clipped at `max-width: 0` so the
    first paint is empty (no full-width flash before the rAF engages). */
+/* The Arc's right-rail register — vertical rows on the right HUD rail,
+   uniform with the Services (SOURCE BUS) and Products (TOOL UNITS)
+   registers (`.tools-rail-register`). Fixed to the viewport so it rides
+   the rail guide regardless of the corridor stage transform; the rAF
+   loop only writes container opacity + a per-row `data-active`. */
 .home-v2-progress-rail {
   position: fixed;
-  /* Sit on the top HUD frame line, centred between the corner brackets;
-     the left/right rails own the vertical edges, this owns the top. */
-  top: var(--hud-margin, 32px);
-  left: 50%;
-  transform: translate3d(-50%, 0, 0);
+  inset: 0;
   z-index: 16;
-  display: flex;
-  align-items: center;
   pointer-events: none;
   opacity: 0;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 11px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  white-space: nowrap;
+  color: var(--dawn-50);
   will-change: opacity;
 }
 
-.home-v2-progress-rail__unit {
-  display: inline-flex;
-  align-items: center;
-  overflow: hidden;
+/* Register heading, mirroring `SOURCE BUS · 04` / `TOOL UNITS · 04`. */
+.home-v2-progress-rail__heading {
+  position: absolute;
+  top: calc(33.333% - 36px);
+  right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) + 12px);
+  width: max-content;
+  color: var(--gold-70);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  line-height: 1;
   white-space: nowrap;
-  /* Clipped shut until its stage appends; the rAF loop grows max-width
-     0 → natural so the unit extends the trail left-to-right. */
-  max-width: 0;
-  opacity: 0;
-  /* `color` is lerped visited-grey → gold per frame; the label and the
-     diamond divider both read it via `inherit` / `currentColor`. */
-  color: rgb(150, 143, 128);
 }
 
-.home-v2-progress-rail__div {
+/* Rows seat on the rail guide at the register datums (top set inline).
+   row-reverse → marker on the rail, name reading inward. */
+.home-v2-progress-rail__row {
+  position: absolute;
+  right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) - 3px);
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 7px;
+  height: 18px;
+  width: max-content;
+  white-space: nowrap;
+  color: var(--dawn-45);
+}
+
+.home-v2-progress-rail__marker {
+  position: relative;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  margin-left: 10px;
   flex: none;
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  /* Leading separation lives on the divider so the diamond reads as the
-     seam between two stages. */
-  margin: 0 13px;
-  background: currentColor;
-  transform: rotate(45deg);
+}
+.home-v2-progress-rail__marker::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  rotate: 45deg;
 }
 
-.home-v2-progress-rail__label {
-  flex: none;
-  color: inherit;
-  font-weight: 500;
+.home-v2-progress-rail__index {
+  color: var(--gold-60);
+  font-size: 9px;
 }
 
-@media (max-width: 760px) {
-  /* Desktop-only, like the 2D station headers — the mobile composition
-     uses the world-anchored straddle in CopyAnchors. */
+.home-v2-progress-rail__name {
+  min-width: 7ch;
+  text-align: right;
+}
+
+/* Active stage — lit gold with a filled marker (matching the register). */
+.home-v2-progress-rail__row[data-active] {
+  color: var(--gold);
+}
+.home-v2-progress-rail__row[data-active] .home-v2-progress-rail__marker::after {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+/* Match the right-rail register's capability gate so the three pillars
+   hide/show together. */
+@media (max-width: 1100px), (max-height: 759px) {
   .home-v2-progress-rail {
     display: none;
   }

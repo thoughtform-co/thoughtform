@@ -433,3 +433,40 @@ ladder still always stays (Update 2). Verified live: rolodex renders
 exactly arc/services/products; states + reel focus correct at
 services (idx 1), tools (idx 2), and past-pillars (parked idx 2);
 11px; full suite green.
+
+### Update 7 — rail uniformity: rolodex from the Arc, Nav/Encode/Build to the right rail (2026-07-13, same day)
+
+Two owner tweaks to make all three pillars read the same way — **left
+rolodex = pillar name, right rail = that pillar's sub-items**:
+
+1. **Rolodex appears only from the Arc.** The dormancy gate widened from
+   `activeIdx === 0` (hero) to `activeIdx < ARC_IDX` (`RailManifest.tsx`)
+   — the window stays hidden through the hero AND the thesis, and the
+   three-pillar rolodex fades in only once the journey reaches the first
+   pillar (the Arc). Nothing else changed; still a pure function of the
+   resolved index.
+
+2. **The Arc's phases move to the right rail.** `CorridorProgressRail`
+   (`components/landing/home-v2/`) — the Navigate → Encode → Build
+   flywheel — was a fixed **top-centre** breadcrumb that grew a
+   horizontal trail. It is now a **right-rail register** styled to match
+   the Services (`SOURCE BUS · 04`) and Products (`TOOL UNITS · 04`)
+   registers: three vertical rows seated on the rail guide at the
+   register's row datums (33.3 / 41.7 / 50%), right-aligned with diamond
+   markers, header **`THE ARC · 03`**. The current stage is gold with a
+   filled marker; it is a pure read of the corridor's `paintProgress`
+   (unchanged clock — no new scroll writer), fades in as Navigate lands
+   (so it does not show during the thesis) and leaves on the epilogue
+   `BUILD_OUT` band as before. It now matches the register's capability
+   gate (hidden ≤1100px / ≤759px height). So during the Arc the right
+   rail carries Nav/Encode/Build exactly as it carries the service/tool
+   sub-items during Services/Products.
+
+**Guardrail:** the top-centre flywheel breadcrumb is retired — do not
+reinstate it; the Arc's sub-items live on the right rail like the other
+two pillars. Verified: right-rail geometry (rows' marker edge aligns
+with the right rail track), hidden-on-hero, and active-stage gold +
+filled marker (forced-state check). The live corridor-scroll fade/track
+could not be driven in the preview pane (GSAP scroll-driver + WebGL
+resist synthetic scroll); the paintProgress read is a direct port of the
+prior working breadcrumb.
