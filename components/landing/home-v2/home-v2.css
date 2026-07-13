@@ -742,6 +742,35 @@ html[data-corridor-exit="true"] #about {
   }
 }
 
+/* ── Mobile Build-park case index (ADR-033) ───────────────────────
+   The four production cases as a static mono chip row under the Build
+   stage's mobile support copy (capable phones run the corridor but get
+   no orbit — gate parity). Rides the support cluster's world anchor +
+   fade; non-interactive. */
+.home-v2-case-chips {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.home-v2-case-chips__chip {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  border: 1px solid rgba(202, 165, 84, 0.24);
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+.home-v2-case-chips__index {
+  color: var(--gold-60, rgba(202, 165, 84, 0.6));
+  margin-right: 7px;
+  font-size: 9px;
+}
+
 /* Dotted particle frame runs — folded (scaleX 0) until the container
    is armed, then unfold outward from the centre. Fast + no delay:
    the unfold resolves in ~0.26s with the brand deceleration curve,
@@ -2798,6 +2827,16 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gold, #caa554);
+}
+
+/* The four production cases as one plain mono line (ADR-033 — the
+   orbit never mounts on the fallback path). */
+.home-v2-fallback-text__cases {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
 }
 
 .home-v2-fallback-text ul {

@@ -18,6 +18,7 @@ import { CorridorProgressRail } from "./CorridorProgressRail";
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { ArcCasesHitAreas } from "./arc-cases";
 import { ARC_CASES_ORBIT } from "./arcCasesOrbit";
+import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -253,6 +254,11 @@ function FallbackCorridor({ text }: { text: V7CorridorText }) {
           <p className="home-v2-fallback-text__bridge">{stripStationIndex(bld.kicker)}</p>
           <h2 dangerouslySetInnerHTML={{ __html: bld.titleHtml }} />
           {bld.supportHtml && <p dangerouslySetInnerHTML={{ __html: bld.supportHtml }} />}
+          {/* ADR-033: the cases orbit never mounts on the fallback path —
+              the four production cases surface as one plain text line. */}
+          <p className="home-v2-fallback-text__cases">
+            {PROJECT_CASES.map((projectCase) => projectCase.codename).join(" · ")}
+          </p>
         </section>
       )}
     </div>

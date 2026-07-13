@@ -2,6 +2,7 @@
 
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import type { NodeContent } from "@/lib/home-v2/corridorMap";
+import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 
 /**
  * StationTitle — celestial-navigation instrument readout for each
@@ -130,6 +131,21 @@ export function StationTitle({ content, base }: StationTitleProps) {
             className="home-v2-readout__support home-v2-copy-body home-v2-station-support"
             dangerouslySetInnerHTML={{ __html: supportHtml }}
           />
+          {/* Mobile Build-park case index (ADR-033): capable phones run
+              the real corridor but get no cases orbit (gate parity with
+              the CTA layer), so the four production cases surface here
+              as a static mono chip row riding the same world anchor +
+              fade as the support copy. Non-interactive by design. */}
+          {isMobile && base === "intelligence" && (
+            <ul className="home-v2-case-chips" aria-label="Production cases">
+              {PROJECT_CASES.map((projectCase) => (
+                <li key={projectCase.id} className="home-v2-case-chips__chip">
+                  <span className="home-v2-case-chips__index">{projectCase.index}</span>
+                  {projectCase.codename.toUpperCase()}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </>

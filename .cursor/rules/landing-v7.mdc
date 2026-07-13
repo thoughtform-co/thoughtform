@@ -11,21 +11,30 @@ alwaysApply: false
 
 When editing these paths, you are in a **layered composite** (fixed `.gateway`, sticky hero, opaque stations) — not a flat page.
 
-**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/030-tools-section-cover-stack.md`, `sentinel/decisions/031-rail-manifest.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
+**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/031-rail-manifest.md`, `sentinel/decisions/033-arc-cases-orbit.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
 
-**Tools lockstep:** the fixed header, sticky deck, and right-rail register
-share the exact 1101×760 + motion-allowed capability. CSS owns geometry;
-do not restore floating pills, exported pixel tables, or a local card rail.
-Keep the `--tools-bg-in` shield opaque before the ambient canvas retires.
+**Funnel (ADR-033):** hero → corridor (thesis + Arc) → services → about →
+continuum → practice → contact. `#tools`/`#build` retired — the four
+production cases live ONLY in the Arc's Build-park orbit (click-armed
+CTA). Order is owned by the parse arrays in `app/(marketing)/page.tsx`,
+in lockstep with `lib/rail-manifest/entries.ts` + the drift-guard tests;
+never reorder via prototype-HTML edits. `PROJECT_CASES` is the single
+canonical case module; the rest of `tools-cards/` is the
+`/test/project-cards` lab's shared core — do not remount it on the
+landing.
 
-**Rail manifest (ADR-031):** the left-rail manifest skeleton is
-parse-injected (`lib/v7-parse/railManifest.ts`) and mutated in place by
-`RailManifestController` — never `createRoot` into
+**Rail manifest (ADR-031; roster ADR-033):** the left-rail manifest
+skeleton is parse-injected (`lib/v7-parse/railManifest.ts`) and mutated
+in place by `RailManifestController` — never `createRoot` into
 `[data-rail-manifest-root]`, keep the prototype shell byte-exact, and
 change journey order only in `lib/rail-manifest/entries.ts` (drift-guard
-tested). The rolodex reel detent (Update 3) is a 350ms transform
-transition gated behind `data-ready`, a pure function of `activeIdx` —
-never scroll-scrubbed; glyph confirm stays quantized `steps()`; no FLIP
-flights; the 13-tick ladder always stays.
+tested). The rolodex renders ONLY the pillars **Arc / Services / About**.
+The reel detent (Update 3) is a 350ms transform transition gated behind
+`data-ready`, a pure function of `activeIdx` — never scroll-scrubbed;
+glyph confirm stays quantized `steps()`; no FLIP flights; the 13-tick
+ladder always stays. The right rail: `THE ARC · 03` register during the
+corridor, `SOURCE BUS · 04` (`ServicesRailRegister`, services.css) during
+services — both on the shared `--rail-register-pitch` grid, active row =
+gold underline.
 
 **Process:** `sentinel/MAINTENANCE.md` — Cycle B before large section work; Cycle A after non-trivial fixes.

@@ -21,11 +21,12 @@ const CelestialEditorOverlay = dynamic(
  * updates asynchronously when the Supabase session resolves, which
  * triggers a re-render of whatever component reads it. `LandingPage`
  * renders the parsed prototype markup via `dangerouslySetInnerHTML`
- * and then mounts nested React roots (ServicesPortal, BuildCasesPortal)
- * into placeholder nodes INSIDE that markup. If `LandingPage` itself
- * subscribes to `useAuth`, the auth-resolve re-render replaces the
- * innerHTML nodes and orphans those nested roots — the Services cards
- * and build cases silently vanish (regression fixed 2026-07-06).
+ * and then mounts nested React roots (ServicesPortal,
+ * ServicesRailRegisterPortal; BuildCasesPortal until ADR-033 retired
+ * it) into placeholder nodes INSIDE that markup. If `LandingPage`
+ * itself subscribes to `useAuth`, the auth-resolve re-render replaces
+ * the innerHTML nodes and orphans those nested roots — their content
+ * silently vanishes (regression fixed 2026-07-06).
  *
  * Keeping the subscription in this leaf means only THIS component
  * re-renders on auth changes; `LandingPage` stays render-stable and

@@ -14,25 +14,33 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md)
 - [ADR-010: Brandmark choreography](../sentinel/decisions/010-brandmark-choreography.md)
-- [ADR-030: Tools viewscreen + edge bus](../sentinel/decisions/030-tools-section-cover-stack.md)
 - [ADR-031: Rail Manifest](../sentinel/decisions/031-rail-manifest.md)
+- [ADR-033: Arc Cases Orbit + funnel](../sentinel/decisions/033-arc-cases-orbit.md)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
 **LandingPage must stay render-stable.** It owns the
 `dangerouslySetInnerHTML` prototype body, and `ServicesPortal` /
-`BuildCasesPortal` mount nested `createRoot`s into placeholder nodes
-inside that markup. A LandingPage re-render that re-applies the
+`ServicesRailRegisterPortal` mount nested `createRoot`s into placeholder
+nodes inside that markup. A LandingPage re-render that re-applies the
 innerHTML orphans those nested roots (cards silently vanish, no error).
 Do NOT add `useAuth` or other post-mount-updating subscriptions to
 LandingPage — push them into leaf components (see `CelestialEditorGate`).
 Ref: BEST-PRACTICES "Nested-root portals".
 
-**Tools geometry is one CSS-owned contract.** The fixed header, sticky
-deck, and right-rail register share the exact 1101×760 + motion-allowed
-capability. Do not reintroduce a JS pixel table, floating service pills,
-or a stack-local progress rail. Preserve the `--tools-bg-in` shield and
-opaque-before-ambient-retirement ordering from ADR-030.
+**The funnel is the ADR-033 order:** hero → corridor (thesis + the Arc)
+→ services → about (bio) → continuum (philosophy) → practice → contact.
+`#tools` and `#build` retired — the four production cases live ONLY in
+the Arc's Build-park orbit (click-armed via the corridor CTA; see the
+brandmark rule + ADR-033). The order is owned by the parse arrays in
+`app/(marketing)/page.tsx` (`CORRIDOR_REPLACED_STATIONS` /
+`CORRIDOR_RELOCATED_STATIONS`) — never by prototype-HTML edits — in
+lockstep with `MANIFEST_ENTRIES` and the drift-guard tests
+(`tests/lib/rail-manifest.test.ts`, `tests/lib/v7-parse.test.ts`).
+`PROJECT_CASES` (`tools-cards/toolCardData.ts`) is the single canonical
+case module; `tools-cards/` otherwise survives only as the
+`/test/project-cards` lab's shared core (console skin, chrome, stack
+hook) — do not remount it on the landing.
 
 **The left-rail manifest is parse-injected (ADR-031).** Its skeleton is
 built at parse time (`lib/v7-parse/railManifest.ts`) into the authored
@@ -48,17 +56,17 @@ writers; the glyph confirm stays quantized `steps()`; still no FLIP
 flights (retired, ADR-030 Updates 1–3). The 13-tick ladder always
 stays (ADR-031 Update 2).
 
-**The rolodex is the three brand pillars (ADR-031 Update 6).** The rail
-renders ONLY Arc / Services / Products — `RAIL_ROWS =
-MANIFEST_ENTRIES.filter(glyph === "stack")` — not the full journey; do
-NOT re-expand it to all ten rows (that's a deliberate reversal now).
-`MANIFEST_ENTRIES` stays the full ten-entry journey and still drives
+**The rolodex is the three brand pillars (ADR-031 Update 6; roster
+ADR-033).** The rail renders ONLY **Arc / Services / About** —
+`RAIL_ROWS = MANIFEST_ENTRIES.filter(glyph === "stack")` — not the full
+journey; do NOT re-expand it to every row (that's a deliberate reversal
+now). `MANIFEST_ENTRIES` stays the full 8-entry journey and still drives
 `resolveActiveIdx` + click targets — only what the rail DISPLAYS is
 curated. Each pillar's state (`upcoming`/`active`/`seated`) is a pure
 function of its journey index vs the resolved active index; the reel
 slides to the active/last-reached pillar; dimming is state-based (all
-three stay readable). `#tools` shows as **"Products"** in the rolodex
-(`tools.name`), but its id/`targetId`/`data-station` stay `tools`.
+three stay readable). The retired "Products"/`#tools` pillar is gone
+with its station (ADR-033) — do not re-add a tools entry.
 A separate loadout bay was tried and retired (Update 5) — do NOT
 reintroduce `RailLoadout`/`data-rail-loadout-root` or a charge gauge.
 Keep the shared `resolveActiveIdx.ts` + `clickToNavigate.ts`. The
@@ -80,15 +88,19 @@ match the register.
 **Rail uniformity — each pillar: name on the left, sub-items on the
 right (ADR-031 Updates 7–8).** During the Arc the right rail carries
 Navigate/Encode/Build via `CorridorProgressRail` (a right-rail register
-styled like `.tools-rail-register`, header `THE ARC · 03`), just as
-Services shows `SOURCE BUS` and Products shows `TOOL UNITS`. Do NOT move
-it back to a top-centre breadcrumb; pure read of `paintProgress`, no new
-scroll writer. **Both registers share one grid (Update 8):** they hang
-off mid-rail via `calc(50% ± n·var(--rail-register-pitch))` (NOT the old
+styled like `.tools-rail-register`, header `THE ARC · 03`), and
+Services shows `SOURCE BUS · 04` via `ServicesRailRegister` (the
+services half of the retired ToolsRailRegister — ADR-033; it mounts
+into the legacy-named `[data-tools-rail-root]` slot, CSS in
+`services.css`). About carries no register yet (follow-up candidate).
+Do NOT move the Arc register back to a top-centre breadcrumb; pure read
+of `paintProgress`, no new scroll writer. **Both registers share one
+grid (Update 8):** they hang off mid-rail via
+`calc(50% ± n·var(--rail-register-pitch))` (NOT the old
 33.3/41.7/50/58.3%vh gauge), centred on the same midline the rolodex
 centres its active pillar on (`--rail-row-pitch` / `--rail-register-pitch`
-in `variables.css`). Keep the Arc and Services/Products registers on the
-SAME token — tighten/space them together, never one alone. **Active
+in `variables.css`). Keep the Arc and Services registers on the SAME
+token — tighten/space them together, never one alone. **Active
 signature = underline** (Update 8): the active row is marked by a gold
 `text-decoration` underline (both registers), NOT a filled diamond — the
 diamond markers stay passive outline ticks. This is the right-rail

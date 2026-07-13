@@ -1,19 +1,6 @@
 export { LandingPage } from "./LandingPage";
 export { CelestialConnector } from "./CelestialConnector";
 export { CelestialPortals } from "./CelestialConnector/CelestialPortals";
-export {
-  BuildCases,
-  BuildCaseSlide,
-  BuildCaseFrame,
-  BuildCasesPortal,
-  BUILD_CASES,
-  workflowLabel,
-} from "./build-cases";
-export type {
-  BuildCase,
-  BuildCaseCapability,
-  BuildCaseMetric,
-  BuildCaseScreenshot,
-  BuildCaseStatus,
-  BuildCaseWorkflow,
-} from "./build-cases";
+// build-cases/ retired with its #build station (ADR-033) — the four
+// production cases live in PROJECT_CASES (tools-cards/toolCardData.ts,
+// headline metrics folded in) and render in the Arc's Build-park orbit.

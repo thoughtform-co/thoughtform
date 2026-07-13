@@ -501,8 +501,8 @@ export function LandingPage({
           inside this leaf (NOT in LandingPage) so an auth-resolve
           re-render can't replace the dangerouslySetInnerHTML markup
           and orphan the nested-root portals above (ServicesPortal /
-          BuildCasesPortal). See CelestialEditorGate for the full
-          rationale. */}
+          ServicesRailRegisterPortal). See CelestialEditorGate for the
+          full rationale. */}
       <CelestialEditorGate />
     </>
   );

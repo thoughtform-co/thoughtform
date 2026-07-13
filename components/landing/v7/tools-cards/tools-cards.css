@@ -1,268 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════
-   tools-cards — landing #tools section: sticky-sibling card stack
-   in the CONSOLE PLATE skin (ADR-030), promoted from the
-   /test/project-cards lab (which imports this file back as its
-   shared base — the lab's other skins + switcher stay in
-   project-cards.css). Prefix: pcl- (travels with the shared
+   tools-cards — the CONSOLE PLATE card skin (ex-landing #tools,
+   ADR-030; the station retired with ADR-033 and its lead-in/header/
+   register rules went with it — the rail register lives in
+   services.css now). This file survives as the /test/project-cards
+   lab's shared base (the lab imports it directly; its other skins +
+   switcher stay in project-cards.css) and the visual reference for
+   the Arc cases orbit bake. Prefix: pcl- (travels with the shared
    components; renaming would churn all five lab skins).
    ═══════════════════════════════════════════════════════════════ */
-
-/* ─── #tools station (the transparent lead-in, ADR-030 Update 1) ─── */
-
-/* "The viewscreen changes modes": #tools follows the services runway in
-   NORMAL FLOW (the ADR-030 -100svh cover is retired — Vince rejected a
-   panel sliding over the 3D world). Instead, while the corridor-exit
-   band is live, the station's FIRST viewport is transparent — the fixed
-   corridor canvas behind it still shows the dimmed, receded brandmark
-   (the canvas wrapper paints its own opaque void backing, so nothing
-   else can leak) — and the header decodes in over it. The `::before`
-   backdrop then fades the station to opaque (`--tools-bg-in`, written
-   by useCorridorExitScroll) as the card stack arrives, strictly BEFORE
-   the ambient canvas dies (lockstep: TOOLS_BG_IN_END_VH >
-   NEXT_STATION_FADE_END_VH). This is the ADR-008
-   transparent-leading-viewport exception, #tools edition — precedent:
-   html[data-corridor-exit] #services (home-v2.css).
-
-   ID selectors on purpose: `.station:not(.hero)` (landing.css) is
-   (0,2,0) and would beat a lone `.station--tools` on content-visibility
-   / background / z-index — the ID wins deterministically regardless of
-   stylesheet order. */
-#tools.station--tools {
-  /* content-visibility: auto's 100vh placeholder misreports this
-     ~6-viewport section (breaking every scroll target below it) AND its
-     paint containment would clip the sticky slots' compositing — same
-     trap as exit-state #services (home-v2.css). */
-  content-visibility: visible;
-  /* Hosts the ::before fade backdrop. */
-  position: relative;
-  /* Holds the centred, full-size (corridor-matched) title-over-paragraph
-     stack. --tools-stack-top derives from this, so the card deck follows
-     down 1:1 (card BOTTOM stays put — only its top drops). */
-  --tools-head-h: clamp(148px, 19svh, 176px);
-  --tools-head-gap: clamp(16px, 2svh, 24px);
-  --tools-stack-top: calc(var(--hud-rail-y-start) + var(--tools-head-h) + var(--tools-head-gap));
-  --tools-peek: clamp(32px, 3.4svh, 36px);
-  --tools-bottom-safe: max(24px, var(--hud-margin));
-  --tools-frame-w: min(1560px, calc(100vw - 2 * var(--hud-content-inset)));
-}
-
-html[data-corridor-exit="true"] #tools.station--tools {
-  /* Above the body veil (z5) like exit-state #services; the veil dims
-     only the canvas behind, never the header copy. */
-  z-index: 6;
-  background-color: transparent;
-  background-image: none;
-}
-
-html[data-corridor-exit="true"] #tools.station--tools > * {
-  position: relative;
-  z-index: 7;
-}
-
-html[data-corridor-exit="true"] #tools.station--tools::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* The .station:not(.hero) ground, reproduced as a fadeable layer (an
-     element background can't partially fade, and the canvas is never
-     opacity-faded — painters fade themselves; this fades a DOM backdrop
-     OVER it, the sanctioned direction). Default 1 = fail-opaque. */
-  background-color: var(--void);
-  background-image: url("/v7-stars.svg");
-  background-size: 1600px 900px;
-  background-position: center top;
-  background-repeat: repeat;
-  opacity: var(--tools-bg-in, 1);
-}
-
-/* ─── Station header — calibrated edge-bus context readout ───────── */
-
-/* Static/mobile is ordinary semantic document flow. Enhanced desktop
-   promotes this SAME authored header to a fixed readout; no duplicate
-   title enters the accessibility tree. The wrapper carries no structural
-   background, so revealing it never fades the station's opaque shield. */
-.tools__head {
-  width: 100%;
-  margin: 0 auto clamp(40px, 7vh, 72px);
-}
-
-/* Centered stack (2026-07-11): title over paragraph, both centred —
-   uniform with the epilogue "everyone is racing to build this layer"
-   signal block. Was a 7fr/5fr title-left / lede-right split. */
-.tools__head--split {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  row-gap: clamp(14px, 2.4vh, 24px);
-}
-
-/* Matches the corridor / epilogue section titles
-   (.home-v2-station-header__title): uppercase display face at the same
-   clamp, tracking, and gold-glow, so #tools reads as a peer section
-   title (owner, 2026-07-11). */
-.tools__title {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 400;
-  font-size: clamp(26px, 3vw, 44px);
-  line-height: 1.1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--dawn);
-  margin: 0;
-  text-align: center;
-  text-wrap: balance;
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
-}
-
-.tools__title em {
-  font-style: normal;
-  font-weight: 400;
-  color: var(--gold);
-}
-
-/* ─── Title terminal type-on (desktop capable path) ──────────────────
-   ToolsTitleTypewriter takes the headline over on the capable path (see
-   the component + the [data-tw] visibility override in the desktop media
-   query below): it splits the copy into per-char spans that fade in
-   left-to-right with a block caret riding the typing head. Chars keep
-   their box from the first frame (opacity-only reveal, no reflow); the
-   caret is an absolutely positioned ::after on the head char, so it adds
-   no layout of its own. */
-.tools__title[data-tw] .tools__tw-line {
-  display: block;
-}
-
-.tools__title[data-tw] .tools__tw-char {
-  position: relative;
-  opacity: 0;
-}
-
-.tools__title[data-tw] .tools__tw-char--em {
-  color: var(--gold);
-}
-
-.tools__title[data-tw] .tools__tw-char--head::after {
-  content: "";
-  position: absolute;
-  left: 100%;
-  top: 0.1em;
-  bottom: 0.14em;
-  width: 0.52ch;
-  margin-left: 0.05em;
-  background: var(--gold);
-  box-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
-  pointer-events: none;
-  /* Hard on/off blink — a CRT terminal caret, not a CSS fade. */
-  animation: tools-tw-caret 1.05s steps(2, start) infinite;
-}
-
-@keyframes tools-tw-caret {
-  0%,
-  49.999% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0.25;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tools__title[data-tw] .tools__tw-char {
-    opacity: 1 !important;
-  }
-  .tools__title[data-tw] .tools__tw-char--head::after {
-    animation: none;
-  }
-}
-
-.tools__lede {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(14px, 1.05vw, 17px);
-  line-height: 1.55;
-  color: var(--dawn-70);
-  margin: 0 auto;
-  /* Balance the wrap so the two centred lines are even rather than a
-     full line + a short "they serve." orphan. Narrower cap keeps balance
-     from resolving to one very wide line at large viewports. */
-  max-width: 46ch;
-  text-align: center;
-  text-wrap: balance;
-  letter-spacing: -0.005em;
-}
-
-/* Desktop mode: the header is part of the fixed bridge instrumentation.
-   Its datum starts/ends on the exact rail guides; title and lede reveal
-   in place, never riding document scroll. #tools reserves the identical
-   top coordinate for the first card, so the two surfaces cannot overlap. */
-@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
-  #tools.station--tools {
-    justify-content: flex-start;
-    padding-top: var(--tools-stack-top);
-    padding-bottom: clamp(96px, 12svh, 160px);
-  }
-
-  .tools__head {
-    --tools-head-inset: calc(var(--hud-content-inset) - var(--hud-margin));
-    position: fixed !important;
-    top: var(--hud-rail-y-start);
-    left: calc(var(--hud-margin) + var(--hud-rail-guide-inset));
-    right: calc(var(--hud-margin) + var(--hud-rail-guide-inset));
-    width: auto;
-    height: var(--tools-head-h);
-    margin: 0;
-    padding-inline: var(--tools-head-inset);
-    z-index: 12 !important;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 220ms var(--m-ease);
-  }
-
-  .tools__head--split {
-    justify-content: flex-start;
-    row-gap: clamp(10px, 1.4svh, 16px);
-  }
-
-  /* Title keeps the full base display size here (matches the corridor
-     section titles) — no compact-header shrink. */
-
-  .tools__lede {
-    font-size: clamp(13px, 0.9vw, 16px);
-    line-height: 1.45;
-  }
-
-  .tools__title,
-  .tools__lede {
-    opacity: 0;
-    clip-path: inset(0 100% 0 0);
-    transition:
-      clip-path 420ms var(--m-ease-instr),
-      opacity 260ms var(--m-ease);
-  }
-
-  /* When the type-on has taken the headline over, the per-char spans own
-     the reveal — release the clip-path wipe so the container is fully open
-     and the characters fade in on their own clock. The lede keeps the
-     wipe. */
-  .tools__title[data-tw] {
-    opacity: 1;
-    clip-path: none;
-    transition: none;
-  }
-
-  html[data-active-station="tools"] .tools__head {
-    opacity: 1;
-  }
-
-  html[data-active-station="tools"] .tools__title,
-  html[data-active-station="tools"] .tools__lede {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-  }
-}
 
 /* ─── Stack scope (self-contained typography + locals) ──────────── */
 
@@ -272,8 +17,8 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
      (V3's reticle ink; the console skin never uses it). */
   --pcl-ink-night: var(--latent-night, #110f09); /* ink on gold fills */
   --pcl-card-bg: #0f0e0c;
-  /* Lab/default geometry. The production #tools deck overrides these
-     from the shared rail/header tokens inside the enhanced query. */
+  /* Lab geometry (the retired #tools deck used to override these from
+     the shared rail/header tokens; ADR-033). */
   --pc-top-base: 16px;
   --pc-peek: 48px;
   --pc-head-h: var(--pc-peek);
@@ -298,19 +43,6 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   --pc-card-h: calc(
     100svh - var(--pc-top-base) - (var(--pc-n) - 1) * var(--pc-peek) - var(--pc-bottom-safe)
   );
-}
-
-@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
-  #tools .pcl-stack {
-    --pc-top-base: var(--tools-stack-top);
-    --pc-peek: var(--tools-peek);
-    --pc-head-h: clamp(36px, 3.7svh, 40px);
-    --pc-bottom-safe: var(--tools-bottom-safe);
-    --pc-card-h: min(
-      680px,
-      calc(100svh - var(--pc-top-base) - (var(--pc-n) - 1) * var(--pc-peek) - var(--pc-bottom-safe))
-    );
-  }
 }
 
 /* Chrome scroll-anchoring insurance — reveals translate content inside
@@ -352,12 +84,6 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
      origin at the top edge so the permanent peek strip never drifts. */
   transform: scale(calc(1 - 0.02 * var(--pc-cover)));
   transform-origin: 50% 0;
-}
-
-@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
-  #tools .pcl-card {
-    width: var(--tools-frame-w);
-  }
 }
 
 /* Notch silhouette — one chamfered corner, parameterized by --ch.
@@ -755,12 +481,6 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
   stroke: var(--gold-30);
 }
 
-/* The production plate uses one silhouette outline only. The shared lab
-   primitive keeps its chamfer calibration tick for skin exploration. */
-#tools .pcl-notch__tick {
-  display: none;
-}
-
 .pcl-v2__plate {
   border: 1px solid var(--gold-40);
   background: transparent;
@@ -933,23 +653,6 @@ html[data-corridor-exit="true"] #tools.station--tools::before {
 .pcl-v2__tech-label {
   margin-right: 8px;
   color: var(--gold-60);
-}
-
-@media (min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
-  #tools .pcl-card__head {
-    padding-inline: clamp(16px, 1.8vw, 28px);
-    gap: 12px;
-  }
-
-  #tools .pcl-v2__title {
-    font-size: clamp(12px, 0.75rem + 0.18vw, 15px);
-  }
-
-  #tools .pcl-foot {
-    gap: 12px;
-    padding: 6px clamp(16px, 1.8vw, 28px);
-    font-size: 8px;
-  }
 }
 
 /* ─── Fallbacks ─────────────────────────────────────────────────── */

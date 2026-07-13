@@ -16,6 +16,9 @@ export { NotchOutline } from "./NotchOutline";
 export type { Corner } from "./NotchOutline";
 export { useStackedCardsScroll } from "./useStackedCardsScroll";
 export { ToolCardConsole } from "./ToolCardConsole";
-export { ToolsCardStack } from "./ToolsCardStack";
-export { ToolsPortal } from "./ToolsPortal";
-export { ToolsRailRegisterPortal } from "./ToolsRailRegister";
+// ToolsCardStack / ToolsPortal / ToolsRailRegisterPortal /
+// ToolsTitleTypewriter retired with the #tools station (ADR-033).
+// What survives here is the case DATA (PROJECT_CASES — now the single
+// canonical case module, consumed by the Arc cases orbit bake) and the
+// V2 console skin + chrome + stack hook the /test/project-cards
+// look-dev lab still mounts.
