@@ -3,10 +3,9 @@
  *
  * The manifest is diegetic navigation: clicking a journey entry scrolls
  * to its station (`scrollIntoView`) or, for the two corridor phases,
- * lands a tuned fraction into the shared corridor mount runway. Shared
- * by the rolodex (RailManifest.tsx) and the resource loadout
- * (RailLoadout.tsx) so both scroll identically. Under
- * `prefers-reduced-motion` the scroll jumps.
+ * lands a tuned fraction into the shared corridor mount runway.
+ * Extracted from `RailManifestController` as the single home for this
+ * scroll behavior. Under `prefers-reduced-motion` the scroll jumps.
  */
 
 import { CORRIDOR_MOUNT_ID, type ManifestEntry } from "./entries";

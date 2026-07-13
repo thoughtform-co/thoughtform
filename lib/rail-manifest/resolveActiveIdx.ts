@@ -3,9 +3,8 @@
  *
  * The single source of truth for "where is the reader in the journey",
  * resolved from the existing single-writer `<html>` attributes. Lifted
- * out of `RailManifestController` so the rolodex (RailManifest.tsx) and
- * the resource loadout (RailLoadout.tsx) resolve identically — the
- * seam-gap geometric rule is subtle and two copies would drift.
+ * out of `RailManifestController` into a pure, testable helper so the
+ * subtle seam-gap geometric rule lives in exactly one place.
  *
  * activeIdx resolution priority:
  *   1. `data-corridor-engaged` → the entry matching `data-corridor-phase`
@@ -16,9 +15,9 @@
  *      mount is not a `.station`, so `data-active-station` lags at
  *      "hero" between corridor disengage and the services crossing.)
  *
- * Pure read — never mutates. Both controllers key their wake sources
- * (MutationObserver on the three attributes below + a hero/corridor-gated
- * scroll listener for rule 3) off this.
+ * Pure read — never mutates. The rolodex controller keys its wake
+ * sources (MutationObserver on the three attributes below + a
+ * hero/corridor-gated scroll listener for rule 3) off this.
  */
 
 import { CORRIDOR_MOUNT_ID, MANIFEST_ENTRIES } from "./entries";

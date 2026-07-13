@@ -15,19 +15,20 @@
  * entry; the controller slides the reel so the ACTIVE row always sits
  * at the fixed anchor. Names are baked here for a real first paint;
  * the authored station number rides only the active row (the
- * controller morphs "SERVICES" ↔ "08 SERVICES"). The services row
- * carries the layered-stack glyph (the docked card ring), painted
- * only while seated (CSS-gated).
+ * controller morphs "SERVICES" ↔ "08 SERVICES"). The three brand-pillar
+ * rows (Arc / Services / Tools) carry the layered-stack module glyph
+ * (the folded card ring) as a "most important elements" marker — always
+ * shown, filled by row state (CSS-driven; ADR-031 Update 5).
  */
 
 import { MANIFEST_ENTRIES } from "../rail-manifest/entries";
 
 /**
- * The module glyph — four layered planes (the collapsed card ring).
- * Parameterised by BEM prefix so the rolodex (`rail-manifest`) and the
- * resource loadout (`rail-loadout`) share one shape with independent
- * styling. `buildStackGlyphSvg("rail-manifest")` is byte-identical to
- * the original inline SVG (pinned by tests/lib/rail-manifest.test.ts).
+ * The module glyph — four layered planes (the folded card ring) — that
+ * marks the three brand-pillar rows (Arc / Services / Tools) in the
+ * rolodex. Kept as a prefix-parameterised builder;
+ * `buildStackGlyphSvg("rail-manifest")` produces the folded-card-ring
+ * markup the `.rail-manifest__glyph` CSS styles by row state.
  */
 export function buildStackGlyphSvg(prefix: string): string {
   return (

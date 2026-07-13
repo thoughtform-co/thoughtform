@@ -63,9 +63,11 @@ describe("MANIFEST_ENTRIES data model", () => {
     }
   });
 
-  it("only services carries the stack glyph; only hero hides its active name", () => {
+  it("the three brand pillars carry the stack glyph; only hero hides its active name", () => {
     expect(MANIFEST_ENTRIES.filter((e) => e.glyph === "stack").map((e) => e.id)).toEqual([
+      "arc",
       "services",
+      "tools",
     ]);
     expect(MANIFEST_ENTRIES.filter((e) => e.hideActiveName).map((e) => e.id)).toEqual(["hero"]);
   });
@@ -109,8 +111,8 @@ describe("buildRailManifestHtml — parse-time skeleton", () => {
     expect(html).toContain('aria-label="Contact — section 10 of 10"');
   });
 
-  it("only the services row carries the stack glyph, and markup is balanced", () => {
-    expect(html.match(/rail-manifest__glyph"/g)).toHaveLength(1);
+  it("the three brand-pillar rows carry the stack glyph, and markup is balanced", () => {
+    expect(html.match(/rail-manifest__glyph"/g)).toHaveLength(3);
     expect(html.match(/<button /g)).toHaveLength(html.match(/<\/button>/g)?.length ?? -1);
     expect(html.match(/<svg /g)).toHaveLength(html.match(/<\/svg>/g)?.length ?? -1);
   });

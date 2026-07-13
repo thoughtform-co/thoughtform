@@ -830,7 +830,9 @@
   cursor: pointer;
   pointer-events: auto;
   font-family: var(--font-pt-mono);
-  font-size: 9px;
+  /* Matches the right-rail register (11px) so the left rail no longer
+     reads smaller than the right (owner, 2026-07-13). */
+  font-size: 11px;
   letter-spacing: var(--track-wider);
   text-transform: uppercase;
   white-space: nowrap;
@@ -870,14 +872,16 @@
   outline-offset: 3px;
 }
 
-/* The services module glyph — the folded card ring, inline after the
-   name only while SEATED (in #services the cards are deployed as the
-   ring; the module docks when you cross into #tools). The display
-   flip retriggers the flash — no JS timers. */
+/* The module glyph — the folded card ring — rides the three brand
+   pillar rows (Arc / Services / Tools) as a "most important elements"
+   marker: ALWAYS shown (the glyph only exists on those rows), its fill
+   driven by row state. Back planes inherit the row color (currentColor)
+   so the mark dims/golds WITH the row; the front plane lights gold once
+   the pillar is reached (active now, or seated behind). */
 .rail-manifest__glyph {
-  display: none;
-  width: 11px;
-  height: 11px;
+  display: block;
+  width: 12px;
+  height: 12px;
   flex: none;
   overflow: visible;
 }
@@ -886,12 +890,19 @@
   stroke: currentColor;
   stroke-width: 1;
 }
-.rail-manifest__glyph-front {
-  fill: rgba(202, 165, 84, 0.28);
+/* upcoming — hollow front plane (an empty module socket) */
+.rail-manifest__glyph rect.rail-manifest__glyph-front {
+  fill: transparent;
+}
+/* reached — the module is loaded: the front plane lights gold */
+.rail-manifest__entry[data-state="active"] .rail-manifest__glyph rect.rail-manifest__glyph-front,
+.rail-manifest__entry[data-state="seated"] .rail-manifest__glyph rect.rail-manifest__glyph-front {
+  fill: rgba(202, 165, 84, 0.3);
   stroke: var(--gold);
 }
-.rail-manifest__entry[data-state="seated"] .rail-manifest__glyph {
-  display: block;
+/* power-on flash as a pillar becomes the active row (retriggers on
+   reverse re-arrival; quantized steps() — ADR-031 confirm canon). */
+.rail-manifest__entry[data-state="active"] .rail-manifest__glyph {
   animation: rail-manifest-flash 320ms steps(2, start);
 }
 
@@ -916,178 +927,6 @@
   [data-rail-manifest-root] .rail-manifest__reel,
   [data-rail-manifest-root] .rail-manifest__entry {
     transition: none !important;
-  }
-}
-
-/* ─────────────────────────────────────────────────────────────────
-   Resource loadout (ADR-031 follow-up) — the Arc / Services / Tools
-   module bay at the FOOT of the left rail. Three pluggable modules
-   that seat as each resource is reached, over a charge gauge that
-   fills like an avionics fuel meter. Persistent + faded on the hero
-   (empty sockets from the start). A fourth consumer of the resolved
-   active index; RailLoadoutController mutates this parse-injected DOM
-   in place. It adds ink to the rail grid, never removes the 13 ticks
-   (ADR-031 Update 2 guardrail).
-   ───────────────────────────────────────────────────────────────── */
-.hud__rail--l [data-rail-loadout-root] {
-  position: absolute;
-  left: 0;
-  bottom: clamp(6px, 1.5vh, 20px);
-  width: 180px;
-  padding-left: calc(var(--hud-rail-guide-inset) + 10px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 2;
-  pointer-events: none;
-  /* Dormant / first paint: present but faded — the hero canon of a
-     dormant instrument (empty sockets visible from the start). */
-  opacity: 0.5;
-}
-.hud__rail--l [data-rail-loadout-root] > * {
-  pointer-events: auto;
-}
-[data-rail-loadout-root][data-dormant] {
-  opacity: 0.32;
-}
-[data-rail-loadout-root][data-ready] {
-  transition: opacity 350ms var(--ease-out);
-}
-
-/* Socket row — three module bays across the rolodex text column. */
-.rail-loadout__sockets {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-}
-.rail-loadout__socket {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  pointer-events: auto;
-  font-family: var(--font-pt-mono);
-  font-size: 8px;
-  letter-spacing: var(--track-wider);
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--dawn-50);
-}
-.rail-loadout__socket:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 3px;
-}
-.rail-loadout__name {
-  opacity: 0.7;
-}
-
-/* The module glyph — the folded card ring (shared shape with the
-   manifest); fill driven by socket state. */
-.rail-loadout__glyph {
-  width: 13px;
-  height: 13px;
-  flex: none;
-  overflow: visible;
-}
-.rail-loadout__glyph rect {
-  fill: var(--void, #0a0908);
-  stroke: var(--dawn-30);
-  stroke-width: 1;
-  transition: stroke 350ms var(--ease-out);
-}
-.rail-loadout__glyph-front {
-  fill: transparent;
-}
-
-/* upcoming — hollow socket, faint */
-.rail-loadout__socket[data-state="upcoming"] {
-  opacity: 0.55;
-}
-/* seated — loaded module, quiet gold */
-.rail-loadout__socket[data-state="seated"] .rail-loadout__glyph rect {
-  stroke: var(--dawn-70);
-}
-.rail-loadout__socket[data-state="seated"] .rail-loadout__glyph-front {
-  fill: rgba(202, 165, 84, 0.18);
-  stroke: rgba(202, 165, 84, 0.4);
-}
-/* active — powered slot, gold */
-.rail-loadout__socket[data-state="active"] {
-  color: var(--gold);
-}
-.rail-loadout__socket[data-state="active"] .rail-loadout__glyph rect {
-  stroke: var(--gold);
-}
-.rail-loadout__socket[data-state="active"] .rail-loadout__glyph-front {
-  fill: rgba(202, 165, 84, 0.28);
-}
-.rail-loadout__socket[data-state="active"] .rail-loadout__name {
-  opacity: 1;
-}
-
-/* Seat confirm garnish — a quantized steps() flash on power-on
-   (ADR-031 canon; no tween). Scoped to `active` so it retriggers each
-   time a module powers up (forward arrival AND reverse re-arrival);
-   moving on to `seated` clears it silently. Reuses the manifest's
-   keyframes (drop-shadow glow on the glyph). */
-.rail-loadout__socket[data-state="active"] .rail-loadout__glyph {
-  animation: rail-manifest-flash 320ms steps(2, start);
-}
-
-/* Charge gauge — one hairline segmented bar, quantized to thirds so it
-   reads as discrete module cells (avionics fuel meter), not a smooth
-   meter. Driven by --loadout-charge (0..3). */
-.rail-loadout__gauge {
-  position: relative;
-  height: 2px;
-  width: 100%;
-  background: var(--dawn-08);
-  overflow: hidden;
-}
-.rail-loadout__gauge::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--loadout-charge, 0) / 3 * 100%);
-  background: var(--gold);
-}
-[data-rail-loadout-root][data-ready] .rail-loadout__gauge::before {
-  /* The one allowed detent glide (mirrors the reel), owner-approved. */
-  transition: width 350ms var(--ease-out);
-}
-.rail-loadout__gauge::after {
-  /* Two dividers → the three-cell read. */
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to right,
-    transparent 0 calc(33.333% - 1px),
-    var(--void) calc(33.333% - 1px) 33.333%
-  );
-}
-
-/* Below 1100px the text rolodex stands down; the loadout is
-   iconographic, so it PERSISTS glyphs-only (drop the labels). The whole
-   rail (and this shell) hides ≤960px via the existing `.hud__rail` rule. */
-@media (max-width: 1100px) {
-  .rail-loadout__name {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-rail-loadout-root],
-  [data-rail-loadout-root] .rail-loadout__glyph rect,
-  [data-rail-loadout-root][data-ready] .rail-loadout__gauge::before {
-    transition: none !important;
-  }
-  .rail-loadout__socket .rail-loadout__glyph {
-    animation: none !important;
   }
 }
 

@@ -48,18 +48,17 @@ writers; the glyph confirm stays quantized `steps()`; still no FLIP
 flights (retired, ADR-030 Updates 1–3). The 13-tick ladder always
 stays (ADR-031 Update 2).
 
-**The resource loadout shares the manifest's contract (ADR-031 Update
-4).** The Arc/Services/Tools module bay at the foot of the left rail
-(`<nav data-rail-loadout-root>`, `lib/v7-parse/railLoadout.ts`,
-`RailLoadoutController`) follows the SAME rules: parse-injected +
-byte-exact shell (`tests/lib/rail-loadout.test.ts`), mutate-in-place
-(never `createRoot`), state + `--loadout-charge` a pure function of the
-active index (no new scroll writer). It shares the resolver
-(`lib/rail-manifest/resolveActiveIdx.ts`) and click-nav
-(`clickToNavigate.ts`) with the rolodex — edit those in one place. The
-three resource ids live in `lib/rail-manifest/loadout.ts`, NOT as a
-`glyph` flag on `entries.ts` (that flag stays services-only for the
-manifest drift-guard).
+**Brand-pillar glyphs live ON the rolodex, not beside it (ADR-031
+Update 5).** A separate loadout bay next to the rolodex was tried and
+retired as double work — do NOT reintroduce a `RailLoadout`/
+`data-rail-loadout-root` instrument or a charge gauge. Instead the
+module glyph rides the three brand-pillar rows (Arc / Services / Tools),
+marked by `glyph: "stack"` on those three `entries.ts` entries; the
+glyph is always shown with its front plane filled by row state (hollow
+`upcoming` → gold once reached). Keep the shared
+`lib/rail-manifest/resolveActiveIdx.ts` + `clickToNavigate.ts` (the
+rolodex controller uses them). The rolodex type is 11px to match the
+right-rail register — don't shrink the left rail below the right.
 
 **Process**
 

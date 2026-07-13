@@ -51,7 +51,9 @@ export interface ManifestEntry {
   corridorPhase?: "thesis" | "arc";
   /** Corridor only: fraction into the mount runway the click lands at. */
   scrollFraction?: number;
-  /** Services: the layered-stack module glyph (the docked card ring). */
+  /** Brand pillars (Arc / Services / Tools): the layered-stack module
+   *  glyph (the folded card ring) rides these three rolodex rows as a
+   *  "most important elements" marker — always shown, fill by state. */
   glyph?: "stack";
   /** Hero canon: the first viewport shows no rail title. */
   hideActiveName?: boolean;
@@ -87,6 +89,7 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     // Provisional — tuned against where data-corridor-phase actually
     // flips to "arc" (ADR-031; verify live).
     scrollFraction: 0.35,
+    glyph: "stack",
   },
   {
     id: "services",
@@ -96,7 +99,7 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     targetId: "services",
     glyph: "stack",
   },
-  { id: "tools", label: "08A", name: "Tools", kind: "station", targetId: "tools" },
+  { id: "tools", label: "08A", name: "Tools", kind: "station", targetId: "tools", glyph: "stack" },
   { id: "continuum", label: "05", name: "Continuum", kind: "station", targetId: "continuum" },
   { id: "practice", label: "06", name: "Practice", kind: "station", targetId: "practice" },
   { id: "build", label: "07", name: "Build", kind: "station", targetId: "build" },

@@ -340,3 +340,53 @@ branches (Services `scrollIntoView`, Arc corridor-fraction scroll to
 ~`mount.offsetTop + 0.35·runway`); the 960–1100 glyphs-only + ≤960
 stand-down tiers; full unit suite green (219 tests), incl. the manifest
 drift-guard and `v7-parse` body parse.
+
+### Update 5 — the loadout bay is retired; the glyph moves onto the rolodex pillars (2026-07-13, same day)
+
+The owner rejected the foot-of-rail loadout bay on sight: seen next to
+the rolodex it read as **double work** — a second instrument restating
+what the rolodex already says. The redirect: keep the rolodex, drop the
+separate bay, but **use the module icons** to mark the "most important
+elements of the brand" — **Arc, Services, Tools** — inline on their
+rolodex rows; and **enlarge the rolodex type**, since the left rail
+should not read smaller than the right-rail register.
+
+**Retired (Update 4 reversed):** the entire `RailLoadout` instrument —
+`components/landing/v7/RailLoadout.tsx`, `lib/v7-parse/railLoadout.ts`,
+`lib/rail-manifest/loadout.ts`, `tests/lib/rail-loadout.test.ts`, the
+`#railLoadout` prototype shell + its `injectStaticHudChildren` replace,
+the `LandingPage` mount, the `.rail-loadout` CSS block, and the charge
+gauge. No separate bay, no `--loadout-charge`, no fuel meter.
+
+**What ships instead:** the layered-stack module glyph now rides the
+**three brand-pillar rows** of the rolodex. `glyph: "stack"` is set on
+the `arc`, `services`, AND `tools` entries in `lib/rail-manifest/entries.ts`
+(was services-only); the parse builder already renders the glyph for any
+`glyph:"stack"` row, so all three now carry it. The `.rail-manifest__glyph`
+is **always shown** (it only exists on those three rows) — a departure
+from Update 3's seated-only Services glyph — with the fill a pure
+function of row state: back planes take the row's `currentColor` (so the
+mark dims/golds WITH the row), the front plane is **hollow (transparent)
+while `upcoming`** and **lights gold once reached** (`active` or
+`seated`). The `steps()` power-on flash re-scopes to `[data-state="active"]`
+(fires as a pillar becomes the active row, retriggers on reverse
+re-arrival). The drift-guard `glyph === "stack"` list is updated to
+`["arc","services","tools"]`.
+
+**Type:** `.rail-manifest__entry` font-size 9px → **11px**, matching the
+right-rail register so the two rails read at one weight (owner). Row
+height stays 22px (11px clears it; the 7×22 window geometry and its
+720-class clearance are unchanged).
+
+**Kept from Update 4 (the clean part):** the shared
+`lib/rail-manifest/resolveActiveIdx.ts` and `clickToNavigate.ts`
+extractions and `buildStackGlyphSvg(prefix)` — still used by
+`RailManifestController`, so the refactor stands even though the second
+consumer is gone.
+
+**This makes "a separate loadout instrument next to the rolodex" a
+rejected alternative** (double work); the brand-pillar markers live ON
+the rolodex, not beside it. Verified live: loadout DOM gone, rolodex at
+11px, glyphs on arc/services/tools only, front-plane fill tracking state
+(Arc seated + Services active → gold front; Tools upcoming → hollow);
+full suite green (209 tests).

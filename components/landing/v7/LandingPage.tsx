@@ -12,7 +12,6 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
-import { RailLoadoutController } from "./RailLoadout";
 import { RailManifestController } from "./RailManifest";
 import { ToolsPortal, ToolsRailRegisterPortal } from "./tools-cards";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
@@ -474,12 +473,6 @@ export function LandingPage({
           skeleton is parse-injected and this controller mutates it in
           place. */}
       <RailManifestController containerRef={rootRef} />
-      {/* Resource loadout (ADR-031 follow-up): a persistent Arc/Services/
-          Tools module bay at the foot of the left rail — sockets seat as
-          each resource is reached, over a charge gauge. Same parse-
-          injected + mutate-in-place contract as the manifest; a fourth
-          consumer of the shared active-index (no new scroll writer). */}
-      <RailLoadoutController containerRef={rootRef} />
       {/* Hero → Corridor seam (ADR-022 v7, direct parallax reveal):
           NO proxy plane. The sticky `#hero` (z:1) drifts up + gently
           fades as the live corridor mount (`.home-corridor-host` z:3)
