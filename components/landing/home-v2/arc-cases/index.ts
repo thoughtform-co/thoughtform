@@ -4,3 +4,5 @@
  */
 export { ArcCasesRing, type ArcCasesRingProps } from "./ArcCasesRing";
 export { ArcCasesHitAreas } from "./ArcCasesHitAreas";
+export { ArcCasesGate } from "./ArcCasesGate";
+export { ArcCasesCta } from "./ArcCasesCta";

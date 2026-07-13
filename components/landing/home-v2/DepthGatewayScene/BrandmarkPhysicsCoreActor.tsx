@@ -62,6 +62,8 @@ import {
 import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
 import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
+import { ArcCasesGate } from "../arc-cases";
+import { ARC_CASES_ORBIT } from "../arcCasesOrbit";
 import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
@@ -910,6 +912,11 @@ export function BrandmarkPhysicsCoreActor({
           behind) and move as one instrument. Gated by the flag; the standalone
           ServicesHologramScene remains the lab harness. */}
         {UNIFIED_SERVICES_ARMILLARY ? <CorridorArmillary /> : null}
+        {/* ADR-033: the four production cases orbit the Build-park sphere in
+          this same rig — CLICK-armed via the caption-card CTA, gated to the
+          Build band, provably disjoint from the services ring's dissipate
+          window (see ArcCasesGate). Flag-off ⇒ nothing mounts. */}
+        {ARC_CASES_ORBIT ? <ArcCasesGate /> : null}
       </group>
     </group>
   );

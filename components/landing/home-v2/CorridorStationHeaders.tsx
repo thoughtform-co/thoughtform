@@ -27,6 +27,9 @@ import {
 } from "./DepthGatewayScene/shell/shellGeom";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
+import { ArcCasesCta } from "./arc-cases";
+import { ARC_CASES_ORBIT } from "./arcCasesOrbit";
+import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 
 /**
  * CorridorStationHeaders — flat 2D screen-space layer for the three
@@ -1211,6 +1214,11 @@ export function CorridorStationHeaders() {
     framed: boolean;
     activeKey: CaptionStationKey | null;
   }>({ lastOp: -1, framed: false, activeKey: null });
+  // Arc cases CTA row (ADR-033) — docked under the caption card, driven
+  // by THIS rAF (the single caption writer): opacity rides the Build
+  // caption band exactly, inert toggles at the arrive threshold.
+  const casesCtaRef = useRef<HTMLDivElement | null>(null);
+  const casesCtaState = useRef<{ lastOp: number }>({ lastOp: -1 });
   // In-flight scramble-decode jobs for the meta row + coord tag,
   // advanced by the RAF tick below.
   const captionScrambles = useRef<ScrambleJob[]>([]);
@@ -1383,10 +1391,15 @@ export function CorridorStationHeaders() {
       // clock as the Build title) and the corridor-engaged gate. It
       // banks with the same cartouche parallax as the titles.
       const cardEl = captionCardRef.current;
+      // While the cases orbit is armed (ADR-033) the sphere + cards take
+      // the frame: the caption irises back on the same damped level the
+      // ring rides, and restores on disarm. Flag off ⇒ literal 1 ⇒ the
+      // caption path is byte-identical.
+      const casesDim = ARC_CASES_ORBIT ? 1 - 0.8 * arcCasesLevelRef.current.level : 1;
       if (cardEl) {
         const cs = captionState.current;
         const cardBand = bandOpacity(p, NAVIGATE_FADE_IN) * buildOut;
-        const cardOp = corridorEngaged ? buildOut : 0;
+        const cardOp = corridorEngaged ? buildOut * casesDim : 0;
         if (Math.abs(cardOp - cs.lastOp) > 0.002) {
           cs.lastOp = cardOp;
           cardEl.style.opacity = cardOp.toFixed(3);
@@ -1439,6 +1452,22 @@ export function CorridorStationHeaders() {
         // Advance any in-flight scrambles on the same tick that owns
         // every other caption write (single-writer rule).
         advanceScrambles(captionScrambles.current, nowSec);
+      }
+      // Arc cases CTA row (ADR-033) — arrives/leaves exactly with the
+      // Build caption band (BUILD_FADE_IN in, BUILD_OUT epilogue out),
+      // gone during the dock. Deliberately NOT dimmed by `casesDim` —
+      // the armed chip is the close affordance and must stay readable.
+      const casesEl = casesCtaRef.current;
+      if (casesEl) {
+        const casesOp = corridorEngaged && !docked ? bandOpacity(p, BUILD_FADE_IN) * buildOut : 0;
+        const ccs = casesCtaState.current;
+        if (Math.abs(casesOp - ccs.lastOp) > 0.002) {
+          ccs.lastOp = casesOp;
+          casesEl.style.opacity = casesOp.toFixed(3);
+          if (casesOp >= TYPER_ARRIVE_OPACITY) casesEl.removeAttribute("inert");
+          else casesEl.setAttribute("inert", "");
+        }
+        casesEl.style.transform = cartoucheTransform;
       }
       // Signal block: centred (translateX -50%) + scroll-coupled upward
       // lift so it is pushed out of the top of the viewport with scroll.
@@ -1679,6 +1708,10 @@ export function CorridorStationHeaders() {
   const setCaptionCardRef = (el: HTMLDivElement | null) => {
     captionCardRef.current = el;
   };
+  const setCasesCtaRef = (el: HTMLDivElement | null) => {
+    if (el) el.setAttribute("inert", "");
+    casesCtaRef.current = el;
+  };
   const registerCaptionSupport = (
     key: CaptionStationKey,
     spans: HTMLSpanElement[],
@@ -1736,6 +1769,10 @@ export function CorridorStationHeaders() {
           { key: "bld", content: bld },
         ]}
       />
+      {/* Arc cases CTA (ADR-033) — the Build-park chip that arms the
+          cases orbit, docked under the caption card. Its opacity/inert
+          ride the rAF above; the label + click live in the component. */}
+      {ARC_CASES_ORBIT && bld && <ArcCasesCta rowRefSetter={setCasesCtaRef} />}
       {/* Ticker is its OWN fixed full-viewport layer (NOT inside the
           signal block, whose per-frame `translate3d` transform would
           make the fixed SVG a containing block and break viewport-space

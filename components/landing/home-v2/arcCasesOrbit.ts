@@ -25,7 +25,7 @@
  * headers (CTA host), and the corridor shell can read it without circular
  * imports (the `unifiedServicesInstrument` precedent).
  */
-export const ARC_CASES_ORBIT = false;
+export const ARC_CASES_ORBIT = true;
 
 /**
  * Mount gate for the ring AND the CTA host. Deliberately matches the

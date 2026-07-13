@@ -652,6 +652,83 @@ html[data-corridor-exit="true"] #services > * {
   text-align: center;
 }
 
+/* ── Arc cases CTA row (ADR-033) ──────────────────────────────────
+   Docked in the slim band UNDER the persistent caption card (the
+   ADR-032 v1 chip position — the drawer was the objection, not the
+   chip). Same fixed layer + cartouche parallax as the card; opacity +
+   inert are driven by the CorridorStationHeaders rAF on the Build
+   caption band. The row itself is a pointer-events pass-through; only
+   the chip opts in (the .home-v2-copy-cta overlay convention). */
+.home-v2-cases-cta-row {
+  position: fixed;
+  bottom: clamp(6px, 1.2svh, 20px);
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 15;
+  text-align: center;
+}
+.home-v2-cases-cta-row[inert] {
+  visibility: hidden;
+}
+/* Compact chip variant of the copy CTA — the full plate (12px/22px pad,
+   210px min) would crowd the caption card's under-band. */
+.home-v2-copy-cta.home-v2-cases-cta {
+  pointer-events: auto;
+  cursor: pointer;
+  min-width: 0;
+  gap: 12px;
+  padding: 6px 14px;
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  background: rgba(10, 9, 8, 0.55);
+}
+/* Armed = terminal inverse video (the rail rolodex active convention):
+   gold fill, void ink — the chip reads as the live CLOSE control. */
+.home-v2-copy-cta.home-v2-cases-cta[data-armed="true"] {
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+  color: #110f09;
+}
+.home-v2-copy-cta.home-v2-cases-cta[data-armed="true"] .home-v2-copy-cta__chev {
+  border-color: #110f09;
+}
+
+/* ── Arc cases orbit hit layer (ADR-033) ──────────────────────────
+   Invisible DOM buttons over the orbiting case cards while armed —
+   the svc-ring-hits pattern in the corridor's fixed layer. Below the
+   station headers (z15) so the CTA/caption always win hover. */
+.arc-cases-hits {
+  position: fixed;
+  inset: 0;
+  z-index: 14;
+  pointer-events: none;
+}
+.arc-cases-hits__hit {
+  position: absolute;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.arc-cases-hits__hit:hover,
+.arc-cases-hits__hit:focus-visible {
+  outline: 1px dashed rgba(202, 165, 84, 0.55);
+  outline-offset: -4px;
+}
+/* The orbit never exists below the CTA-layer gate (ARC_CASES_MEDIA JS
+   gate in ArcCasesGate) — keep the DOM path bulletproof if that ever
+   regresses. Mirrors the station-headers hide media. */
+@media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
+  .home-v2-cases-cta-row,
+  .arc-cases-hits {
+    display: none;
+  }
+}
+
 /* Dotted particle frame runs — folded (scaleX 0) until the container
    is armed, then unfold outward from the centre. Fast + no delay:
    the unfold resolves in ~0.26s with the brand deceleration curve,

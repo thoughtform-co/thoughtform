@@ -16,6 +16,8 @@ import { CorridorProgressRail } from "./CorridorProgressRail";
 // the tree as a reusable reference for any future "particle dissolve at
 // a section seam" composition.
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
+import { ArcCasesHitAreas } from "./arc-cases";
+import { ARC_CASES_ORBIT } from "./arcCasesOrbit";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -169,6 +171,13 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             aspect ratio. Mobile keeps the legacy world-anchored
             straddle inside `CopyAnchors`. (2026-06-08 2D pivot.) */}
         {!fallback && <CorridorStationHeaders />}
+
+        {/* Arc cases orbit hit layer (ADR-033) — invisible DOM buttons
+            over the orbiting case cards while armed at the Build park;
+            the canvas itself stays pointer-events: none (the
+            ServicesRingHitAreas pattern). Empty until the ring
+            publishes anchors. */}
+        {!fallback && ARC_CASES_ORBIT && <ArcCasesHitAreas />}
 
         {/* Persistent HUD breadcrumb — Navigate → Encode → Build,
             appending each stage as the camera arrives. Sits on the top
