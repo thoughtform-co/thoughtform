@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
+import { MANIFEST_ENTRIES, RAIL_ROWS } from "@/lib/rail-manifest/entries";
 import { getV7Content } from "@/lib/v7-parse";
 import { injectStaticHudChildren } from "@/lib/v7-parse/hudTicks";
 import { buildRailManifestHtml } from "@/lib/v7-parse/railManifest";
@@ -73,42 +73,53 @@ describe("MANIFEST_ENTRIES data model", () => {
   });
 });
 
+describe("RAIL_ROWS — the curated rolodex display set", () => {
+  it("is exactly the three brand pillars (Arc / Services / Products) in journey order", () => {
+    expect(RAIL_ROWS.map((e) => e.id)).toEqual(["arc", "services", "tools"]);
+    // The #tools section displays as "Products" in the rolodex; its id
+    // and scroll target stay "tools".
+    expect(RAIL_ROWS.map((e) => e.name)).toEqual(["Arc", "Services", "Products"]);
+    expect(RAIL_ROWS.every((e) => e.glyph === "stack")).toBe(true);
+  });
+});
+
 describe("buildRailManifestHtml — parse-time skeleton", () => {
   const html = buildRailManifestHtml();
 
-  it("emits one rolodex (window → reel) with one button row per entry", () => {
+  it("emits one rolodex (window → reel) with one button row per pillar", () => {
     expect(html.match(/rail-manifest__window/g)).toHaveLength(1);
     expect(html.match(/rail-manifest__reel/g)).toHaveLength(1);
-    expect(html.match(/<button /g)).toHaveLength(MANIFEST_ENTRIES.length);
-    for (const entry of MANIFEST_ENTRIES) {
+    expect(html.match(/<button /g)).toHaveLength(RAIL_ROWS.length);
+    for (const entry of RAIL_ROWS) {
       expect(html).toContain(`data-entry-id="${entry.id}"`);
       expect(html).toContain(`data-target="#${entry.targetId}"`);
     }
+    // Only the pillars render — no hero/thesis/continuum/etc. rows.
+    expect(html).not.toContain('data-entry-id="hero"');
+    expect(html).not.toContain('data-entry-id="continuum"');
     // The reel is flow-stacked — no per-slot inline positioning, no
-    // bracket bays, no separate label span (Update 3 retired them).
+    // bracket bays, no separate label span, no distance attribute.
     expect(html).not.toContain('style="top:');
     expect(html).not.toContain("rail-manifest__marker");
     expect(html).not.toContain("rail-manifest__label");
+    expect(html).not.toContain("data-dist=");
   });
 
-  it("first paint state: hero active at dist 0, everything else upcoming", () => {
-    expect(html.match(/data-state="active"/g)).toHaveLength(1);
-    expect(html.match(/data-state="upcoming"/g)).toHaveLength(MANIFEST_ENTRIES.length - 1);
-    expect(html.indexOf('data-state="active"')).toBeLessThan(html.indexOf('data-state="upcoming"'));
-    expect(html.match(/data-dist="0"/g)).toHaveLength(1);
-    expect(html.indexOf('data-dist="0"')).toBeLessThan(html.indexOf('data-dist="1"'));
+  it("first paint state: every pillar upcoming (no pillar is active on the hero)", () => {
+    expect(html).not.toContain('data-state="active"');
+    expect(html).not.toContain('data-state="seated"');
+    expect(html.match(/data-state="upcoming"/g)).toHaveLength(RAIL_ROWS.length);
   });
 
-  it("bakes names for first paint; authored numbers never ship in the skeleton", () => {
-    expect(html).toContain('<span class="rail-manifest__name">Hero</span>');
+  it("bakes pillar names for first paint; authored numbers never ship in the skeleton", () => {
+    expect(html).toContain('<span class="rail-manifest__name">Arc</span>');
     expect(html).toContain('<span class="rail-manifest__name">Services</span>');
-    expect(html).toContain('<span class="rail-manifest__name">Contact</span>');
-    // The non-monotonic authored numbers (…08, 08A, 05…) ride only the
-    // ACTIVE row, applied by the controller — never baked.
+    expect(html).toContain('<span class="rail-manifest__name">Products</span>');
+    // No authored numbers are baked (the reduced rolodex shows names only).
     expect(html).not.toContain("08");
-    // Positional aria-labels stay monotonic for assistive tech.
-    expect(html).toContain('aria-label="Services — section 4 of 10"');
-    expect(html).toContain('aria-label="Contact — section 10 of 10"');
+    // Positional aria-labels for assistive tech.
+    expect(html).toContain('aria-label="Arc — pillar 1 of 3"');
+    expect(html).toContain('aria-label="Products — pillar 3 of 3"');
   });
 
   it("the three brand-pillar rows carry the stack glyph, and markup is balanced", () => {
@@ -124,7 +135,7 @@ describe("injectStaticHudChildren — manifest shell", () => {
       '<aside><nav id="railManifest" data-rail-manifest-root aria-label="Page manifest"></nav></aside>';
     const out = injectStaticHudChildren(shell);
     expect(out).toContain("rail-manifest__entry");
-    expect(out.match(/<button /g)).toHaveLength(MANIFEST_ENTRIES.length);
+    expect(out.match(/<button /g)).toHaveLength(RAIL_ROWS.length);
   });
 
   it("leaves workshop-style markup (tick shells, no manifest nav) working unchanged", () => {
@@ -158,7 +169,7 @@ describe("drift guard — manifest order matches the parsed production DOM", () 
 
   it("the parsed body carries the injected manifest skeleton", () => {
     expect(bodyHtml).toContain('data-rail-manifest-root aria-label="Page manifest">');
-    expect(bodyHtml.match(/rail-manifest__entry/g)?.length).toBe(MANIFEST_ENTRIES.length);
+    expect(bodyHtml.match(/rail-manifest__entry/g)?.length).toBe(RAIL_ROWS.length);
     // The Brand Codex left ladder COEXISTS with the manifest (ADR-031
     // Update 2 — the ladder is never removed); only the old single
     // station label is gone.

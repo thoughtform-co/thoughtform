@@ -48,17 +48,22 @@ writers; the glyph confirm stays quantized `steps()`; still no FLIP
 flights (retired, ADR-030 Updates 1–3). The 13-tick ladder always
 stays (ADR-031 Update 2).
 
-**Brand-pillar glyphs live ON the rolodex, not beside it (ADR-031
-Update 5).** A separate loadout bay next to the rolodex was tried and
-retired as double work — do NOT reintroduce a `RailLoadout`/
-`data-rail-loadout-root` instrument or a charge gauge. Instead the
-module glyph rides the three brand-pillar rows (Arc / Services / Tools),
-marked by `glyph: "stack"` on those three `entries.ts` entries; the
-glyph is always shown with its front plane filled by row state (hollow
-`upcoming` → gold once reached). Keep the shared
-`lib/rail-manifest/resolveActiveIdx.ts` + `clickToNavigate.ts` (the
-rolodex controller uses them). The rolodex type is 11px to match the
-right-rail register — don't shrink the left rail below the right.
+**The rolodex is the three brand pillars (ADR-031 Update 6).** The rail
+renders ONLY Arc / Services / Products — `RAIL_ROWS =
+MANIFEST_ENTRIES.filter(glyph === "stack")` — not the full journey; do
+NOT re-expand it to all ten rows (that's a deliberate reversal now).
+`MANIFEST_ENTRIES` stays the full ten-entry journey and still drives
+`resolveActiveIdx` + click targets — only what the rail DISPLAYS is
+curated. Each pillar's state (`upcoming`/`active`/`seated`) is a pure
+function of its journey index vs the resolved active index; the reel
+slides to the active/last-reached pillar; dimming is state-based (all
+three stay readable). `#tools` shows as **"Products"** in the rolodex
+(`tools.name`), but its id/`targetId`/`data-station` stay `tools`.
+A separate loadout bay was tried and retired (Update 5) — do NOT
+reintroduce `RailLoadout`/`data-rail-loadout-root` or a charge gauge.
+Keep the shared `resolveActiveIdx.ts` + `clickToNavigate.ts`; rolodex
+type is 11px to match the right-rail register (don't shrink it below
+the right).
 
 **Process**
 

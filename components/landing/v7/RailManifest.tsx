@@ -2,9 +2,8 @@
 
 import { useEffect } from "react";
 
-import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { scrollToManifestEntry } from "@/lib/rail-manifest/clickToNavigate";
-import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
+import { MANIFEST_ENTRIES, RAIL_ROWS } from "@/lib/rail-manifest/entries";
 import {
   ACTIVE_IDX_ATTRIBUTES,
   ARC_IDX,
@@ -12,34 +11,28 @@ import {
 } from "@/lib/rail-manifest/resolveActiveIdx";
 
 /**
- * RailManifestController — the left rail's section rolodex (ADR-031,
- * Update 3).
+ * RailManifestController — the left rail's brand-pillar rolodex
+ * (ADR-031; curated to three rows in Update 6).
  *
- * The manifest markup (a masked window holding a flow-stacked reel of
- * every journey entry) is injected at PARSE time by
- * `lib/v7-parse/railManifest.ts`, so the rail paints its section list
- * on first load with no client reflow. This controller is a
- * null-rendering component that MUTATES that injected DOM — never
- * `createRoot` into `[data-rail-manifest-root]` (it would clobber the
- * server skeleton). Precedent: `useLandingScroll` writing
- * `#depthIndicator`.
+ * The markup (a masked window holding a flow-stacked reel of the three
+ * pillar rows — Arc / Services / Products) is injected at PARSE time by
+ * `lib/v7-parse/railManifest.ts`, so the rail paints on first load with
+ * no client reflow. This controller is a null-rendering component that
+ * MUTATES that injected DOM — never `createRoot` into
+ * `[data-rail-manifest-root]` (it would clobber the server skeleton).
+ * Precedent: `useLandingScroll` writing `#depthIndicator`.
  *
- * The reel is a rolodex: the active row always sits at the fixed
- * mid-rail anchor, and section changes slide the WHOLE reel through
- * one custom property (`--rail-manifest-idx`) — a 350ms detent glide,
- * the owner-approved narrowing of the "never smooth tweening" canon
- * (position stays a pure function of `activeIdx`; it is never
- * scroll-scrubbed). Everything derives from that one integer:
- *   - per entry: `data-state` (seated / active / upcoming) and
- *     `data-dist` (clamped |i − active| → distance dimming);
- *   - on the nav: `data-dormant` while hero is active (hero canon: no
- *     rail title) and the detent property itself;
- *   - the active row's text morphs "SERVICES" ↔ "08 SERVICES"
- *     (scramble-decoded) — authored numbers stay off every other row
- *     because the production sequence is non-monotonic.
- * `data-ready` is set only after the first sync + a reflow flush, so
- * a mid-page reload fades in at the correct detent instead of sliding
- * up from hero.
+ * The rolodex still tracks the FULL journey: `resolveActiveIdx` returns
+ * an index into `MANIFEST_ENTRIES` (all ten sections), and each pillar
+ * row derives its state from its own journey index vs that active index
+ * — `upcoming` (ahead) / `active` (you're in it) / `seated` (passed).
+ * The reel slides so the active / last-reached pillar sits at the
+ * mid-rail anchor via one custom property (`--rail-manifest-idx`, a
+ * 350ms detent glide; position stays a pure function of the active
+ * index, never scroll-scrubbed). `data-dormant` hides the window on the
+ * hero (rail canon: no title on the first screen). `data-ready` is set
+ * only after the first sync + a reflow flush so a mid-page reload paints
+ * at the correct detent instead of sliding up from hero.
  *
  * activeIdx resolution (all existing single-writer attributes):
  *   1. `data-corridor-engaged` → the entry matching
@@ -47,14 +40,12 @@ import {
  *      no corridor writer);
  *   2. else `data-active-station` → its station entry;
  *   3. seam-gap fix: if that yields hero but the corridor mount sits
- *      above viewport-mid, the corridor has been PASSED → Arc. (The
- *      mount is not a `.station`, so `data-active-station` lags at
- *      "hero" between corridor disengage and the services crossing.)
+ *      above viewport-mid, the corridor has been PASSED → Arc.
  *
  * Wake sources: one MutationObserver on <html> + a passive scroll
  * listener that only works while in the hero/corridor regime (rule 3
- * is geometric) + resize. rAF alive only while a scramble runs — the
- * ToolsRailRegister discipline.
+ * is geometric) + resize. No rAF — states are attribute flips, motion
+ * is CSS.
  */
 
 interface RailManifestControllerProps {
@@ -70,44 +61,20 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
     const nav = container.querySelector<HTMLElement>("[data-rail-manifest-root]");
     if (!nav) return;
     const entries = Array.from(nav.querySelectorAll<HTMLButtonElement>(".rail-manifest__entry"));
-    if (entries.length !== MANIFEST_ENTRIES.length) return;
-    const names = entries.map((el) => el.querySelector<HTMLElement>(".rail-manifest__name"));
+    if (entries.length !== RAIL_ROWS.length) return;
+    // Each rendered row's index back in the full journey — the basis for
+    // its state (order-robust: resolve by id, not DOM position).
+    const rowManifestIdx = entries.map((el) =>
+      MANIFEST_ENTRIES.findIndex((e) => e.id === el.getAttribute("data-entry-id"))
+    );
+    if (rowManifestIdx.some((i) => i < 0)) return;
 
     const html = document.documentElement;
-    const jobs: ScrambleJob[] = [];
-    let raf = 0;
     let scrollRaf = 0;
     let activeIdx = -1; // forces the first update() to paint
     let seamWatch = true; // scroll listener works only in the hero/corridor regime
 
     const prm = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-
-    const tick = () => {
-      advanceScrambles(jobs, performance.now() / 1000);
-      raf = jobs.length ? requestAnimationFrame(tick) : 0;
-    };
-    const kick = () => {
-      if (!raf && jobs.length) raf = requestAnimationFrame(tick);
-    };
-
-    /** A row's text: the authored number rides only the ACTIVE row
-     *  ("08 SERVICES"); every other row shows the bare name. The
-     *  prefix shift re-decodes the whole row through the scramble
-     *  kernel (it restarts from the currently displayed text, so fast
-     *  back-and-forth chains naturally). */
-    const setRowText = (i: number, active: boolean, instant = false) => {
-      const name = names[i];
-      if (!name) return;
-      const entry = MANIFEST_ENTRIES[i];
-      // Hero canon: no number even if the (dormant) row were shown.
-      const text = active && !entry.hideActiveName ? `${entry.label} ${entry.name}` : entry.name;
-      if (instant || prm()) {
-        name.textContent = text;
-        return;
-      }
-      queueScramble(jobs, name, text, performance.now() / 1000 + (active ? 0.05 : 0.02));
-      kick();
-    };
 
     const update = () => {
       const next = resolveActiveIdx(html);
@@ -115,39 +82,37 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
       // takes over the attribute clock.
       seamWatch = next <= ARC_IDX;
       if (next === activeIdx) return;
-      const prev = activeIdx;
       activeIdx = next;
 
-      // The reel detent + hero dormancy — both pure functions of next.
-      // CSS transitions retarget mid-glide on every write, so fast
-      // travel reads as one redirected slide, never a queued chain.
-      nav.style.setProperty("--rail-manifest-idx", String(next));
+      // Hero dormancy — the window hides on the first screen.
       if (next === 0) nav.setAttribute("data-dormant", "");
       else nav.removeAttribute("data-dormant");
 
-      entries.forEach((el, i) => {
-        const state = i < next ? "seated" : i === next ? "active" : "upcoming";
+      // Reel focus — center the active pillar, or the last one reached
+      // (clamped to the three rows), so travel past the pillars parks on
+      // the final one. A pure function of the active index.
+      const reached = rowManifestIdx.filter((e) => next >= e).length;
+      const focus = Math.max(0, Math.min(entries.length - 1, reached - 1));
+      nav.style.setProperty("--rail-manifest-idx", String(focus));
+
+      entries.forEach((el, j) => {
+        const e = rowManifestIdx[j];
+        const state = next > e ? "seated" : next === e ? "active" : "upcoming";
         if (el.getAttribute("data-state") !== state) el.setAttribute("data-state", state);
-        const dist = String(Math.min(Math.abs(i - next), 4));
-        if (el.getAttribute("data-dist") !== dist) el.setAttribute("data-dist", dist);
-        if (i === next) el.setAttribute("aria-current", "true");
+        if (state === "active") el.setAttribute("aria-current", "true");
         else el.removeAttribute("aria-current");
       });
-
-      // prev < 0 is the first paint / mid-page reload: the reel
-      // reconstructs silently (no scramble) behind the data-ready gate.
-      if (prev >= 0) setRowText(prev, false);
-      setRowText(next, true, prev < 0);
     };
 
-    // Click → scroll: the manifest is diegetic navigation. Stations
-    // use the HudNav canon; corridor entries land a tuned fraction
-    // into the mount runway. PRM jumps.
+    // Click → scroll: the rolodex is diegetic navigation. Stations use
+    // the HudNav canon; the Arc corridor phase lands a tuned fraction
+    // into the mount runway. PRM jumps. Resolve the entry by id.
     const onClick = (ev: MouseEvent) => {
       const btn = (ev.target as HTMLElement).closest?.(".rail-manifest__entry");
-      const i = btn ? entries.indexOf(btn as HTMLButtonElement) : -1;
-      if (i < 0) return;
-      scrollToManifestEntry(MANIFEST_ENTRIES[i], prm());
+      const id = btn?.getAttribute("data-entry-id");
+      const entry = id ? MANIFEST_ENTRIES.find((e) => e.id === id) : undefined;
+      if (!entry) return;
+      scrollToManifestEntry(entry, prm());
     };
 
     const observer = new MutationObserver(update);
@@ -181,9 +146,7 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       nav.removeEventListener("click", onClick);
-      if (raf) cancelAnimationFrame(raf);
       if (scrollRaf) cancelAnimationFrame(scrollRaf);
-      jobs.length = 0;
       nav.removeAttribute("data-ready");
     };
   }, [containerRef]);

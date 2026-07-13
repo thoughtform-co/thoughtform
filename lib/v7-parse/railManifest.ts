@@ -10,18 +10,17 @@
  * re-renders it. Never `createRoot` into `[data-rail-manifest-root]`:
  * that would clobber this server skeleton (ADR-031 guardrail).
  *
- * Rolodex treatment (owner redirect, 2026-07-12): a masked window
- * anchored at mid-rail holds a flow-stacked reel of every journey
- * entry; the controller slides the reel so the ACTIVE row always sits
- * at the fixed anchor. Names are baked here for a real first paint;
- * the authored station number rides only the active row (the
- * controller morphs "SERVICES" ↔ "08 SERVICES"). The three brand-pillar
- * rows (Arc / Services / Tools) carry the layered-stack module glyph
- * (the folded card ring) as a "most important elements" marker — always
- * shown, filled by row state (CSS-driven; ADR-031 Update 5).
+ * Rolodex treatment (owner redirect, 2026-07-12; curated 2026-07-13): a
+ * masked window anchored at mid-rail holds a flow-stacked reel of the
+ * three brand-pillar rows — Arc / Services / Products (`RAIL_ROWS`, the
+ * `glyph:"stack"` entries) — NOT the full journey; the controller slides
+ * the reel so the active/last-reached pillar sits at the anchor. Names
+ * are baked here for a real first paint. Each row carries the
+ * layered-stack module glyph (the folded card ring), always shown and
+ * filled by row state (CSS-driven; ADR-031 Updates 5–6).
  */
 
-import { MANIFEST_ENTRIES } from "../rail-manifest/entries";
+import { RAIL_ROWS } from "../rail-manifest/entries";
 
 /**
  * The module glyph — four layered planes (the folded card ring) — that
@@ -43,22 +42,19 @@ export function buildStackGlyphSvg(prefix: string): string {
 
 const STACK_GLYPH_SVG = buildStackGlyphSvg("rail-manifest");
 
-/** Build the manifest rolodex (window → reel → entry rows) as a single HTML string. */
+/** Build the rolodex (window → reel → the three brand-pillar rows) as a
+ *  single HTML string. Only `RAIL_ROWS` (Arc / Services / Products) are
+ *  rendered — the full journey still drives resolution, but the rail
+ *  displays just the pillars (owner, 2026-07-13). */
 export function buildRailManifestHtml(): string {
   let rows = "";
-  MANIFEST_ENTRIES.forEach((entry, i) => {
-    // Scroll-0 first paint: hero active (the window is dormant there —
-    // hero canon shows no rail title), everything else upcoming,
-    // distances measured from hero.
-    const state = i === 0 ? "active" : "upcoming";
-    const dist = Math.min(i, 4);
-    // Positional count for assistive tech — deliberately NOT the
-    // authored label (the sequence read aloud should stay monotonic
-    // even though the authored numbers are not).
-    const aria = `${entry.name} — section ${i + 1} of ${MANIFEST_ENTRIES.length}`;
+  RAIL_ROWS.forEach((entry, i) => {
+    // First paint = hero (activeIdx 0): no pillar is active yet, so every
+    // row starts `upcoming` (the window is dormant on hero anyway).
+    const aria = `${entry.name} — pillar ${i + 1} of ${RAIL_ROWS.length}`;
     rows +=
       `<button type="button" class="rail-manifest__entry" data-entry-id="${entry.id}"` +
-      ` data-state="${state}" data-dist="${dist}" data-target="#${entry.targetId}"` +
+      ` data-state="upcoming" data-target="#${entry.targetId}"` +
       ` aria-label="${aria}">` +
       `<span class="rail-manifest__name">${entry.name}</span>` +
       (entry.glyph === "stack" ? STACK_GLYPH_SVG : "") +

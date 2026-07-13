@@ -99,10 +99,40 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     targetId: "services",
     glyph: "stack",
   },
-  { id: "tools", label: "08A", name: "Tools", kind: "station", targetId: "tools", glyph: "stack" },
+  {
+    id: "tools",
+    label: "08A",
+    // Shown as "Products" in the rolodex (owner, 2026-07-13). The id /
+    // targetId stay "tools" (scroll target, data-station, tests); only
+    // the display name changes. The top-nav + section header still read
+    // "Tools" — align them separately if a full relabel is wanted.
+    name: "Products",
+    kind: "station",
+    targetId: "tools",
+    glyph: "stack",
+  },
   { id: "continuum", label: "05", name: "Continuum", kind: "station", targetId: "continuum" },
   { id: "practice", label: "06", name: "Practice", kind: "station", targetId: "practice" },
   { id: "build", label: "07", name: "Build", kind: "station", targetId: "build" },
   { id: "about", label: "09", name: "About", kind: "station", targetId: "about" },
   { id: "contact", label: "10", name: "Contact", kind: "station", targetId: "contact" },
 ] as const;
+
+/**
+ * The rows the rolodex actually RENDERS — the three brand pillars
+ * (Arc / Services / Products), curated down from the full journey
+ * (owner, 2026-07-13: "the rolodex only needs to show ARC SERVICES
+ * PRODUCTS"). They are exactly the `glyph: "stack"` entries — the same
+ * "most important elements" set the module icon marks. The full
+ * `MANIFEST_ENTRIES` is untouched: it still drives active-index
+ * resolution, corridor phases, and click targets; only what the rail
+ * DISPLAYS is reduced. `RAIL_ROW_INDICES` are each pillar's index back
+ * in the full journey, so the controller can derive per-row state.
+ */
+export const RAIL_ROWS: readonly ManifestEntry[] = MANIFEST_ENTRIES.filter(
+  (e) => e.glyph === "stack"
+);
+
+export const RAIL_ROW_INDICES: readonly number[] = RAIL_ROWS.map((e) =>
+  MANIFEST_ENTRIES.indexOf(e)
+);

@@ -843,21 +843,14 @@
     opacity 350ms var(--ease-out),
     color 350ms var(--ease-out);
 }
-/* Distance dimming — the rolodex falloff (the mask's edge fade takes
-   dist-3 rows lower still; dist-4 rows are off-window, hidden so they
-   can never take focus or hover). */
-.rail-manifest__entry[data-dist="1"] {
-  opacity: 0.55;
+/* State dimming — with only the three pillars shown, all stay readable
+   (no distance falloff): a pillar ahead is dim, one already reached is
+   brighter, the one you're in is full gold. */
+.rail-manifest__entry[data-state="upcoming"] {
+  opacity: 0.5;
 }
-.rail-manifest__entry[data-dist="2"] {
-  opacity: 0.32;
-}
-.rail-manifest__entry[data-dist="3"] {
-  opacity: 0.22;
-}
-.rail-manifest__entry[data-dist="4"] {
-  opacity: 0;
-  visibility: hidden;
+.rail-manifest__entry[data-state="seated"] {
+  opacity: 0.8;
 }
 .rail-manifest__entry[data-state="active"] {
   opacity: 1;
@@ -865,7 +858,7 @@
 }
 .rail-manifest__entry:not([data-state="active"]):hover,
 .rail-manifest__entry:focus-visible {
-  opacity: 0.85;
+  opacity: 0.95;
 }
 .rail-manifest__entry:focus-visible {
   outline: 1px solid var(--gold);

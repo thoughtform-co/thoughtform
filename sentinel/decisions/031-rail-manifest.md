@@ -390,3 +390,46 @@ the rolodex, not beside it. Verified live: loadout DOM gone, rolodex at
 11px, glyphs on arc/services/tools only, front-plane fill tracking state
 (Arc seated + Services active → gold front; Tools upcoming → hollow);
 full suite green (209 tests).
+
+### Update 6 — the rolodex is curated to the three brand pillars (2026-07-13, same day)
+
+Update 5 marked the three pillars in a full ten-row rolodex; the owner
+went further: **"the rolodex only needs to show ARC SERVICES PRODUCTS —
+hide hero, thesis, continuum."** The rail becomes a fixed three-item
+brand-pillar instrument, not a journey list — a quick read of the most
+important elements (it deliberately overlaps the hamburger nav, which
+still carries full navigation).
+
+**Curated, not gutted.** `MANIFEST_ENTRIES` is UNCHANGED — the full
+ten-entry journey still drives `resolveActiveIdx` (corridor phases,
+seam-gap rule) and click targets. Only what the rail _renders_ is
+reduced, via `RAIL_ROWS = MANIFEST_ENTRIES.filter(e => e.glyph ===
+"stack")` (Arc / Services / Products) in `lib/rail-manifest/entries.ts`.
+`buildRailManifestHtml` iterates `RAIL_ROWS`; the drift-guard for the
+journey order stays green because the journey model didn't move.
+
+**Per-pillar state (still a pure function of the full active index).**
+Each row derives its state from its OWN journey index vs the resolved
+active index: `upcoming` (ahead) / `active` (you're in it) / `seated`
+(passed) — the ADR-030 loadout math, now on the rolodex rows. The reel
+slides so the active / last-reached pillar sits at the anchor
+(`--rail-manifest-idx = clamp(#reached − 1, 0, 2)`), parking on the last
+pillar once you're past them. Numbers and the scramble morph are dropped
+(names only); the glyph flash + gold-on-active carry the activation
+beat. Distance dimming is replaced by **state dimming** (upcoming 0.5 /
+seated 0.8 / active 1 + gold) so all three stay readable — there is no
+7-row falloff with only three rows. Still hidden on the hero
+(`data-dormant`), still parse-injected + mutate-in-place.
+
+**Label:** the `#tools` section displays as **"Products"** in the rolodex
+(owner wording) — `MANIFEST_ENTRIES` `tools.name = "Products"`; the id /
+`targetId` / `data-station` stay `tools` (scroll target + tests
+untouched). The top-nav and section header still read "Tools"; aligning
+them site-wide is a separate call, flagged to the owner.
+
+**Guardrail:** "restore the full-journey rolodex" is now a deliberate
+reversal, not a default — the rail is the three pillars. The 13-tick
+ladder still always stays (Update 2). Verified live: rolodex renders
+exactly arc/services/products; states + reel focus correct at
+services (idx 1), tools (idx 2), and past-pillars (parked idx 2);
+11px; full suite green.
