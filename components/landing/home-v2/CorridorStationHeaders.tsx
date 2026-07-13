@@ -27,6 +27,9 @@ import {
 } from "./DepthGatewayScene/shell/shellGeom";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
+import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
+import { ARC_CASES_TERMINAL } from "./arcCasesTerminal";
+import { ArcCasesTerminalCta } from "./arc-cases";
 
 /**
  * CorridorStationHeaders — flat 2D screen-space layer for the three
@@ -621,9 +624,12 @@ function StationBlock({
       <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
         {split ? (
           /* Split blocks render the title band only — the support caption
-             lives in the persistent CaptionCard (2026-07-03). */
+             lives in the persistent CaptionCard (2026-07-03). The Build
+             block passes its Arc Cases CTA as `afterContent` so the chip
+             docks centered UNDER the title (ADR-035). */
           <div className="home-v2-station-header__head">
             <TitleConsole>{head}</TitleConsole>
+            {afterContent}
           </div>
         ) : (
           <>
@@ -743,9 +749,12 @@ function StationBlock({
     <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
       {split ? (
         /* Split blocks render the title band only — the support caption
-           lives in the persistent CaptionCard (2026-07-03). */
+           lives in the persistent CaptionCard (2026-07-03). The Build
+           block passes its Arc Cases CTA as `afterContent` so the chip
+           docks centered UNDER the title (ADR-035). */
         <div className="home-v2-station-header__head">
           <TitleConsole>{titleEl}</TitleConsole>
+          {afterContent}
         </div>
       ) : (
         <>
@@ -1386,7 +1395,11 @@ export function CorridorStationHeaders() {
       if (cardEl) {
         const cs = captionState.current;
         const cardBand = bandOpacity(p, NAVIGATE_FADE_IN) * buildOut;
-        const cardOp = corridorEngaged ? buildOut : 0;
+        // Arc Cases terminal fade (ADR-035): while armed the caption
+        // card fully fades out (single multiplier — trivially flipped to
+        // a dim), so the converging panel lands on a clean field.
+        const casesCaptionFade = ARC_CASES_TERMINAL ? 1 - arcCasesLevelRef.current.level : 1;
+        const cardOp = corridorEngaged ? buildOut * casesCaptionFade : 0;
         if (Math.abs(cardOp - cs.lastOp) > 0.002) {
           cs.lastOp = cardOp;
           cardEl.style.opacity = cardOp.toFixed(3);
@@ -1719,6 +1732,7 @@ export function CorridorStationHeaders() {
           registerCursors={bldRegisterCursors}
           content={bld}
           typewriter={typewriter}
+          afterContent={ARC_CASES_TERMINAL ? <ArcCasesTerminalCta /> : undefined}
           split
         />
       )}

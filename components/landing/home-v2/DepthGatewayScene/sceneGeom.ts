@@ -47,6 +47,9 @@ import {
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
+import { arcLabelFade } from "@/lib/arc-cases/arcCasesMath";
+import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
+import { ARC_CASES_TERMINAL } from "../arcCasesTerminal";
 
 // Re-exported for back-compat: external modules (FlyingCameraRig,
 // index, gate components, contour/intergate painters) import these
@@ -1840,7 +1843,13 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
       slidePx += STACK_CHIP_DRAIN_SLIDE_PX * drain;
     }
   }
-  el.style.opacity = (ctx.visibilityOpacity * lock * epFade).toFixed(3);
+  // Arc Cases terminal (ADR-035): while the reveal is armed the stack
+  // labels DISAPPEAR (the canvas pips/streams stay lit to frame the
+  // panel). Applies to EVERY element this painter draws — per-row chips
+  // AND the SOURCES/SURFACES group headers — so "the labels disappear"
+  // wholesale. Flag-off / unarmed = literal 1 (no-op).
+  const casesFade = ARC_CASES_TERMINAL ? arcLabelFade(arcCasesLevelRef.current.level) : 1;
+  el.style.opacity = (ctx.visibilityOpacity * lock * epFade * casesFade).toFixed(3);
   if (Math.abs(slidePx) > 0.01) {
     // Appended AFTER the tracker's translate/origin/scale segments and
     // BEFORE the gyro bank rotations — the tracker rewrites the base

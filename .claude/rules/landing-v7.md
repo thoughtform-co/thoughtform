@@ -16,7 +16,8 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-010: Brandmark choreography](../sentinel/decisions/010-brandmark-choreography.md)
 - [ADR-031: Rail Manifest](../sentinel/decisions/031-rail-manifest.md)
 - [ADR-033: Arc Cases Orbit + funnel](../sentinel/decisions/033-arc-cases-orbit.md) (orbit superseded; funnel live)
-- [ADR-034: Arc Cases Terrace](../sentinel/decisions/034-arc-cases-terrace.md)
+- [ADR-034: Arc Cases Terrace](../sentinel/decisions/034-arc-cases-terrace.md) (superseded by ADR-035)
+- [ADR-035: Arc Cases Terminal](../sentinel/decisions/035-arc-cases-terminal.md) (the live cases reveal)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
@@ -32,9 +33,9 @@ Ref: BEST-PRACTICES "Nested-root portals".
 **The funnel is the ADR-033 order:** hero → corridor (thesis + the Arc)
 → services → about (bio) → continuum (philosophy) → practice → contact.
 `#tools` and `#build` retired — the four production cases live ONLY on
-the Arc's Build-park terrace screen (click-armed via the bottom-right
-rail CTA; camera shifts right, the screen rises from the topography —
-see the brandmark rule + ADR-034). The order is owned by the parse arrays in
+the Arc's Build-park cases reveal (click-armed via the "VIEW THE CASES"
+chip under the Build title; a fixed DOM overlay unfurls edges-to-centre,
+NO camera move, NO in-canvas object — see ADR-035). The order is owned by the parse arrays in
 `app/(marketing)/page.tsx` (`CORRIDOR_REPLACED_STATIONS` /
 `CORRIDOR_RELOCATED_STATIONS`) — never by prototype-HTML edits — in
 lockstep with `MANIFEST_ENTRIES` and the drift-guard tests
@@ -44,14 +45,19 @@ case module; `tools-cards/` otherwise survives only as the
 `/test/project-cards` lab's shared core (console skin, chrome, stack
 hook) — do not remount it on the landing.
 
-**Arc Cases framing is one shared viewport-space layout (ADR-034 Update 1).**
-`getTerraceViewportLayout(aspect)` owns the SURFACES/display targets, camera
-translation, display world placement, and expanded terrain extent. Both the
-R3F rig and `useWorldDomTracker` must call `arcCameraShiftX(level, aspect)`
-and apply the identical offset to `position.x` and `lookAt.x`; no fixed
-world-unit shift, mirror-only correction, extra camera clock, or pointer-look
-rotation is allowed. The panel is an inset aperture in the one-draw terrain
-shroud, not a floating transparent slab.
+**Arc Cases is a fixed DOM overlay — no camera channel (ADR-035, supersedes
+ADR-034).** The cases reveal is `ArcCasesTerminal`, a fixed DOM overlay
+mounted in `HomeCorridor` (chip `ArcCasesTerminalCta` mounted under the Build
+title by `CorridorStationHeaders`). On arm the two halves converge to a
+centre seam via a pure CSS clip-path transition and the sources/surfaces DOM
+labels fade out on `arcCasesLevelRef` (single writer = the overlay's DOM rAF;
+readers = `gateStackLabel` label fade + the caption-card fade). The corridor
+camera is a pure Z dolly through arm/disarm — the ADR-034 lateral shift,
+`getTerraceViewportLayout`, and the terrain-shroud screen are RETIRED. Gate
+parity: the JS `ARC_CASES_MEDIA` gate == the CSS hide of BOTH the chip dock
+and the overlay. No scroll writer, no scroll lock, no backdrop; inert is
+reconciled every frame; DOM order = focus order. Do NOT re-introduce a
+camera channel or an in-canvas cases object.
 
 **The left-rail manifest is parse-injected (ADR-031).** Its skeleton is
 built at parse time (`lib/v7-parse/railManifest.ts`) into the authored

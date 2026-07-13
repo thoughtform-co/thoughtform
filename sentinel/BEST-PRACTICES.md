@@ -365,12 +365,17 @@ its subject on a wide editorial frame. Define normalized viewport targets
 derive camera shift/object placement/terrain coverage from the active FOV and
 aspect, and make both the R3F camera and DOM mirror consume it.
 
-For the Arc Cases Terrace this is `getTerraceViewportLayout(aspect)`:
-`FlyingCameraRig`, `useWorldDomTracker`, the inset aperture, and
-`SubstrateTopography` share it. The camera offset is applied identically to
-`position.x` and `lookAt.x`, preserving a pure lateral translation. Test the
-layout at every supported desktop aspect, including the design reference frame,
-and include terrain/frustum coverage in those assertions.
+Historical example: the Arc Cases Terrace (ADR-034, retired by ADR-035)
+derived a lateral camera translation and an inset aperture from one
+`getTerraceViewportLayout(aspect)` module shared by `FlyingCameraRig`,
+`useWorldDomTracker`, and `SubstrateTopography` — the camera offset applied
+identically to `position.x` and `lookAt.x` so the R3F camera and the DOM
+mirror never disagreed. That reveal was replaced by a fixed DOM overlay with
+NO camera channel (ADR-035), so the corridor camera is a pure Z dolly again;
+the principle still stands for any future responsive world composition — when
+a camera or object placement DOES depend on aspect, put the layout in one pure
+module both cameras consume, and test it at every supported desktop aspect
+(terrain/frustum coverage included).
 
 **Why it matters:** the visual composition and projected DOM are one contract;
 two locally plausible offsets are still a bug if they disagree.

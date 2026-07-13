@@ -17,6 +17,8 @@ import { CorridorProgressRail } from "./CorridorProgressRail";
 // a section seam" composition.
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
+import { ARC_CASES_TERMINAL } from "./arcCasesTerminal";
+import { ArcCasesTerminal } from "./arc-cases";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -171,6 +173,14 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             straddle inside `CopyAnchors`. (2026-06-08 2D pivot.) */}
         {!fallback && <CorridorStationHeaders />}
 
+        {/* Arc Cases Terminal (ADR-035) — the fixed DOM overlay that
+            unfurls (edges converging to centre) when the visitor arms
+            the "VIEW THE CASES" chip under the Build title. Sits right
+            after the station headers so DOM order = focus order (the
+            progress rail below has no focusables). Self-gates on
+            ARC_CASES_MEDIA and renders null off-desktop. */}
+        {!fallback && ARC_CASES_TERMINAL && <ArcCasesTerminal />}
+
         {/* Persistent HUD breadcrumb — Navigate → Encode → Build,
             appending each stage as the camera arrives. Sits on the top
             HUD frame line (sibling in spirit to the left/right depth
@@ -245,8 +255,9 @@ function FallbackCorridor({ text }: { text: V7CorridorText }) {
           <p className="home-v2-fallback-text__bridge">{stripStationIndex(bld.kicker)}</p>
           <h2 dangerouslySetInnerHTML={{ __html: bld.titleHtml }} />
           {bld.supportHtml && <p dangerouslySetInnerHTML={{ __html: bld.supportHtml }} />}
-          {/* ADR-033: the cases orbit never mounts on the fallback path —
-              the four production cases surface as one plain text line. */}
+          {/* ADR-033 §5 / ADR-035: the interactive cases reveal never
+              mounts on the fallback path — the four production cases
+              surface as one plain text line. */}
           <p className="home-v2-fallback-text__cases">
             {PROJECT_CASES.map((projectCase) => projectCase.codename).join(" · ")}
           </p>

@@ -1,15 +1,19 @@
 /**
- * arcCasesStore — UI state for the Arc Cases Terrace (ADR-034).
+ * arcCasesStore — UI state for the Arc Cases Terminal (ADR-035).
  *
  * LOW-FREQUENCY state only (button clicks): `armed` + the front `slot`.
- * Per-frame scalars (the damped arm level) cross the R3F/DOM seam
- * through `lib/arc-cases/arcCasesLevelRef.ts` instead — zustand
- * subscriber churn is wrong for once-per-WebGL-frame values (the
+ * Per-frame scalars (the damped arm level) cross the DOM render-tree
+ * seam through `lib/arc-cases/arcCasesLevelRef.ts` instead — zustand
+ * subscriber churn is wrong for once-per-frame values (the
  * `ringProgressRef` precedent).
  *
- * Writers: `ArcCasesTerraceCta` (toggle + auto-disarm watcher, stepper
- * step/select). Readers: `ArcCasesTerraceScreen` (inside useFrame via
- * getState — no subscription), the CTA label + stepper chips.
+ * Writers: `ArcCasesTerminalCta` (toggle + auto-disarm watcher),
+ * `ArcCasesTerminal` (stepper step/select, Escape disarm). Readers:
+ * `ArcCasesTerminal`'s rAF (armed, via getState — no subscription), the
+ * CTA label, the panel's stepper chips + `is-open` class.
+ *
+ * `arm()` is UI-unused (toggle covers the chip) — kept for the lab and
+ * API symmetry with `disarm()`.
  */
 
 import { create } from "zustand";

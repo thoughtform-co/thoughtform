@@ -11,26 +11,30 @@ alwaysApply: false
 
 When editing these paths, you are in a **layered composite** (fixed `.gateway`, sticky hero, opaque stations) — not a flat page.
 
-**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/031-rail-manifest.md`, `sentinel/decisions/033-arc-cases-orbit.md` (orbit superseded; funnel live), `sentinel/decisions/034-arc-cases-terrace.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
+**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/031-rail-manifest.md`, `sentinel/decisions/033-arc-cases-orbit.md` (orbit superseded; funnel live), `sentinel/decisions/034-arc-cases-terrace.md` (superseded by ADR-035), `sentinel/decisions/035-arc-cases-terminal.md` (the live cases reveal), `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
 
 **Funnel (ADR-033):** hero → corridor (thesis + Arc) → services → about →
 continuum → practice → contact. `#tools`/`#build` retired — the four
-production cases live ONLY on the Arc's Build-park terrace screen
-(click-armed rail CTA; camera shifts right, the screen rises from the
-topography — ADR-034). Order is owned by the parse arrays in `app/(marketing)/page.tsx`,
+production cases live ONLY on the Arc's Build-park cases reveal
+(click-armed "VIEW THE CASES" chip under the Build title; a fixed DOM
+overlay unfurls edges-to-centre, no camera move — ADR-035). Order is owned by the parse arrays in `app/(marketing)/page.tsx`,
 in lockstep with `lib/rail-manifest/entries.ts` + the drift-guard tests;
 never reorder via prototype-HTML edits. `PROJECT_CASES` is the single
 canonical case module; the rest of `tools-cards/` is the
 `/test/project-cards` lab's shared core — do not remount it on the
 landing.
 
-**Arc Cases framing (ADR-034 Update 1):**
-`getTerraceViewportLayout(aspect)` is the shared viewport-space contract for
-the SURFACES/display targets, R3F camera, DOM mirror, aperture, and terrain
-extent. Both cameras use `arcCameraShiftX(level, aspect)` as an identical
-`position.x` + `lookAt.x` translation. Do not restore a fixed world-unit
-shift, a second camera clock, pointer-look rotation, or a floating transparent
-slab; the panel is an inset aperture in the one-draw terrain shroud.
+**Arc Cases is a fixed DOM overlay — no camera channel (ADR-035, supersedes
+ADR-034):** the cases reveal is `ArcCasesTerminal`, a fixed DOM overlay
+(chip `ArcCasesTerminalCta` docked under the Build title). On arm the two
+halves converge to a centre seam via a CSS clip-path transition and the
+sources/surfaces DOM labels fade on `arcCasesLevelRef` (single writer = the
+overlay's DOM rAF; readers = `gateStackLabel` + the caption fade). The
+corridor camera is a pure Z dolly again — the ADR-034 lateral shift,
+`getTerraceViewportLayout`, and the terrain-shroud screen are RETIRED. Gate
+parity (`ARC_CASES_MEDIA` == the CSS hide of dock + overlay); no scroll
+writer/lock/backdrop; inert reconciled every frame; DOM order = focus order.
+Do not restore a camera channel or an in-canvas cases object.
 
 **Rail manifest (ADR-031; roster ADR-033):** the left-rail manifest
 skeleton is parse-injected (`lib/v7-parse/railManifest.ts`) and mutated

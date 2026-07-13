@@ -454,9 +454,10 @@ export function LandingPage({
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
       {/* #tools + #build retired (ADR-033): the four production cases
-          live at the Arc's Build park now (the ADR-034 terrace screen,
-          mounted inside the corridor canvas). BuildCasesPortal +
-          ToolsPortal are gone with their stations. */}
+          live at the Arc's Build park now (the ADR-035 Arc Cases
+          Terminal — a fixed DOM overlay armed by the "VIEW THE CASES"
+          chip under the Build title; no in-canvas cases object).
+          BuildCasesPortal + ToolsPortal are gone with their stations. */}
       <ServicesPortal containerRef={rootRef} />
       {/* Services rail register ("SOURCE BUS · 04"): the service verbs in
           four stable slots in the authored RIGHT HUD rail — the services

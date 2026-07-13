@@ -70,3 +70,24 @@ export function arcBandFactor(paintProgress: number, epilogueProgress: number): 
     1 - smootherstep(ARC_EPILOGUE_KILL[0], ARC_EPILOGUE_KILL[1], epilogueProgress);
   return bandIn * epilogueKill;
 }
+
+/* ── Label fade (ADR-035) ─────────────────────────────────────────
+   The terminal reveal's signature move: on arm the sources/surfaces
+   DOM labels DISAPPEAR while the canvas pips/streams stay lit to frame
+   the panel. The fade is driven by the same damped arm level the
+   overlay writes — read by `gateStackLabel` (sceneGeom) for every
+   stack-label element. */
+
+/** Level window across which the stack labels fade to nothing. The
+ *  labels are fully gone by `level = 0.55` — i.e. by mid-arm, BEFORE
+ *  the two converging halves meet at the centre seam (the panel lands
+ *  on a clean field, never over half-lit chips). */
+export const ARC_LABEL_FADE_OUT: readonly [number, number] = [0, 0.55];
+
+/** Stack-label opacity multiplier as a function of the arm level:
+ *  1 at rest (labels fully present), 0 by `ARC_LABEL_FADE_OUT[1]`
+ *  (labels gone). Smootherstep down so the fade eases in and out with
+ *  the arm/disarm envelope rather than stepping. */
+export function arcLabelFade(level: number): number {
+  return 1 - smootherstep(ARC_LABEL_FADE_OUT[0], ARC_LABEL_FADE_OUT[1], level);
+}

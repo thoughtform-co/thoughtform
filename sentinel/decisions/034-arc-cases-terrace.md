@@ -1,8 +1,14 @@
 # ADR-034: Arc Cases Terrace — camera shifts right, one landscape screen rises from the topography; the orbit ring retires
 
 **Date:** 2026-07-13
-**Status:** Accepted (supersedes the ADR-033 orbit — its funnel
-restructure and mobile/PRM story remain live)
+**Status:** Superseded by [ADR-035](035-arc-cases-terminal.md) — the
+terrace REVEAL (lateral camera pan + rising terrain-shroud screen) is
+retired; the corridor camera is a pure Z dolly again and the four cases
+render in a fixed DOM overlay. The click-owned / band-gated /
+exclusivity contract, the `ARC_CASES_MEDIA` gate parity, the auto-disarm
+watcher, ADR-033's §5 funnel restructure + mobile/PRM story all remain
+live under ADR-035. (This ADR itself superseded the ADR-033 orbit — its
+funnel restructure and mobile/PRM story remain live.)
 **Scope:** `lib/arc-cases/terraceMath.ts` (+ `arcCasesLevelRef.ts`),
 `lib/stores/arcCasesStore.ts` (simplified),
 `components/landing/home-v2/arc-cases/**` (terrace components + bake),

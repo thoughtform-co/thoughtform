@@ -21,14 +21,20 @@ These paths feed **scroll progress**, **section indices**, **cockpit** behavior,
 
 **Process:** [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) - if you change shared progress contracts, document in an ADR or extend the relevant decision.
 
-**Arc Cases two-camera invariant (ADR-034 Update 1):** the click-owned
-terrace adds no scroll writer. `getTerraceViewportLayout(aspect)` is its
-single viewport-space layout contract; BOTH `FlyingCameraRig` and
-`useWorldDomTracker` call `arcCameraShiftX(level, aspect)` and apply the
-same offset to `position.x` and `lookAt.x`. Never use a fixed world-unit
-shift, a mirror-only correction, or a second camera clock.
+**Arc Cases: no camera channel (ADR-035, supersedes ADR-034).** The
+click-owned cases reveal adds NO scroll writer AND NO camera channel.
+The corridor camera is a pure Z dolly again (X = 0 end-to-end) — the
+ADR-034 lateral shift (`arcCameraShiftX` / `getTerraceViewportLayout`)
+and the terrain-shroud screen are RETIRED; neither `FlyingCameraRig` nor
+`useWorldDomTracker` reads any lateral channel. The reveal is a fixed
+DOM overlay (`ArcCasesTerminal`) that unfurls (edges converging to
+centre, CSS clip-path) and fades the sources/surfaces DOM labels via a
+DOM-only `arcCasesLevelRef`; the R3F tree is untouched except that
+`gateStackLabel` reads that level for the label opacity. Do NOT
+re-introduce a lateral/vertical camera channel or an in-canvas cases
+object for this feature.
 
-**Corridor-exit next station is `#about` (ADR-033).** `useCorridorExitScroll` resolves `nextStation = #about ?? #continuum` — the bio is an ordinary OPAQUE station that IS the cover ending the services ambient hold. The `--tools-bg-in` channel (the retired `#tools` transparent lead-in) is DELETED — do not reintroduce a transparent lead-in without re-adding a fade channel + the LOCKSTEP ordering it needs. `NEXT_STATION_FADE_START_VH = 0.6 / END_VH = 0.0`: the ambient bed + receded mark finish dying exactly as `#about`'s top reaches the viewport top (the opaque cover and the canvas death land on the same edge by design). `#about` carries the veil z-lift (`z-index: 6`) + `content-visibility: visible` escape while `data-corridor-exit` is live (home-v2.css). The Build-park cases terrace adds NO scroll writer — it is click-owned and only GATES on `paintProgress`/`epilogueProgress`; its one camera effect is the ADR-034 lateral shift, applied in BOTH `FlyingCameraRig` and the DOM mirror camera (ADR-034).
+**Corridor-exit next station is `#about` (ADR-033).** `useCorridorExitScroll` resolves `nextStation = #about ?? #continuum` — the bio is an ordinary OPAQUE station that IS the cover ending the services ambient hold. The `--tools-bg-in` channel (the retired `#tools` transparent lead-in) is DELETED — do not reintroduce a transparent lead-in without re-adding a fade channel + the LOCKSTEP ordering it needs. `NEXT_STATION_FADE_START_VH = 0.6 / END_VH = 0.0`: the ambient bed + receded mark finish dying exactly as `#about`'s top reaches the viewport top (the opaque cover and the canvas death land on the same edge by design). `#about` carries the veil z-lift (`z-index: 6`) + `content-visibility: visible` escape while `data-corridor-exit` is live (home-v2.css). The Build-park cases reveal (ADR-035) adds NO scroll writer and NO camera effect — it is click-owned and only GATES on `paintProgress`/`epilogueProgress`; it is a fixed DOM overlay, and the corridor camera stays a pure Z dolly through arm/disarm.
 
 **Home-v2 corridor-exit invariant (ADR-021):** the production seam after the corridor epilogue is a **zoom-dissipate** — the docked R3F canvas plays a fly-into-sphere arc + particle scatter while the brandmark RIDES the sphere off-screen and then re-centres into the (now empty) Services section. `useCorridorExitScroll` owns the dissipate clock: raw progress is stretched over ~2 viewports (post 2026-06-16, ADR-021 follow-up; was 1.58), then eased into `--corridor-dissipate` / `dockProgress`. The hook ALSO writes a `data-services-brandmark` gate (`"hold"` then `"fade"`) + `--services-brandmark` (0..1) opacity var once the dock releases — `ProjectedBrandmarkActor` reads the gate to release the brandmark to CSS, which holds it fixed-centred in `#services` then fades it as `#continuum.top` crosses the `0.5 → 0.1 vh` band. The per-element reveal channels (`--services-header-in`, `--services-grid-in`, `--services-cta-in`) are GONE — `#services` was stripped of its header/cards/CTA in the same revision; restore those channels only if those elements come back. Keep the dock channel (`docked` / `dockProgress`) writes scoped to one hook; do not write `epilogueProgress` / `paintProgress` from the exit hook. The retired cover-plane sweep recipe (lower opaque plane covers a held canvas, first-read copy lives inside the cover) is preserved in `components/landing/home-v2/handoff-lab/` + `/test/handoff-a|b|c` and documented in ADR-021 — reuse that recipe verbatim if a later section needs an Active Theory / Hashgraph-class cover sweep; do not rebuild it.
 

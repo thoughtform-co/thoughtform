@@ -6,8 +6,10 @@ import { describe, expect, it } from "vitest";
 import {
   ARC_BAND_IN,
   ARC_EPILOGUE_KILL,
+  ARC_LABEL_FADE_OUT,
   CASE_COUNT,
   arcBandFactor,
+  arcLabelFade,
   dampLevel,
   stepSlot,
 } from "@/lib/arc-cases/arcCasesMath";
@@ -58,6 +60,29 @@ describe("arcBandFactor (the ADR-033 gate, carried over)", () => {
     // The services ring's entrance needs dissipate ≥ 0.6, which needs
     // epilogueProgress ≥ 0.72. The cases reveal must be gone well before.
     expect(ARC_EPILOGUE_KILL[1]).toBeLessThan(0.72);
+  });
+});
+
+describe("arcLabelFade (ADR-035 label fade)", () => {
+  it("is fully present at rest (level 0) and fully gone by the window end", () => {
+    expect(arcLabelFade(0)).toBe(1);
+    expect(arcLabelFade(ARC_LABEL_FADE_OUT[1])).toBe(0);
+    expect(arcLabelFade(1)).toBe(0);
+  });
+
+  it("is monotonically non-increasing in the arm level", () => {
+    let prev = arcLabelFade(0);
+    for (let level = 0; level <= 1.0001; level += 0.05) {
+      const fade = arcLabelFade(level);
+      expect(fade).toBeLessThanOrEqual(prev + 1e-9);
+      expect(fade).toBeGreaterThanOrEqual(0);
+      expect(fade).toBeLessThanOrEqual(1);
+      prev = fade;
+    }
+  });
+
+  it("labels are gone by mid-arm — before the halves meet (fade end < 0.6)", () => {
+    expect(ARC_LABEL_FADE_OUT[1]).toBeLessThan(0.6);
   });
 });
 
