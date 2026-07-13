@@ -759,7 +759,9 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  --rail-manifest-row-h: 22px;
+  /* The rolodex row unit is the shared rail grid step (variables.css) so
+     the left list and the right registers keep one vertical rhythm. */
+  --rail-manifest-row-h: var(--rail-row-pitch, 24px);
 }
 
 /* Window: seven rows on the mid-rail anchor, edge-faded by the mask
@@ -821,18 +823,22 @@
 .rail-manifest__entry {
   display: flex;
   align-items: center;
-  gap: 7px;
   height: var(--rail-manifest-row-h);
   width: max-content;
-  padding: 0 0 0 calc(var(--hud-rail-guide-inset) + 10px);
+  /* Gap between the rail guide hairline and the selection bar's left
+     edge, so the filled terminal bar floats clear of the rail rather
+     than butting onto it (owner, 2026-07-13). */
+  padding: 0 0 0 calc(var(--hud-rail-guide-inset) + 16px);
   border: 0;
   background: none;
   cursor: pointer;
   pointer-events: auto;
   font-family: var(--font-pt-mono);
-  /* Matches the right-rail register (11px) so the left rail no longer
-     reads smaller than the right (owner, 2026-07-13). */
-  font-size: 11px;
+  /* Runs a touch larger than the right-rail register (11px): the left
+     list is the primary brand-pillar index and the terminal bar wants
+     the extra weight; the two rails read as a deliberate pair, not twins
+     (owner, 2026-07-13). Size follows the grid, not an ad-hoc nudge. */
+  font-size: 13px;
   letter-spacing: var(--track-wider);
   text-transform: uppercase;
   white-space: nowrap;
@@ -865,47 +871,40 @@
   outline-offset: 3px;
 }
 
-/* The module glyph — the folded card ring — rides the three brand
-   pillar rows (Arc / Services / Tools) as a "most important elements"
-   marker: ALWAYS shown (the glyph only exists on those rows), its fill
-   driven by row state. Back planes inherit the row color (currentColor)
-   so the mark dims/golds WITH the row; the front plane lights gold once
-   the pillar is reached (active now, or seated behind). */
-.rail-manifest__glyph {
-  display: block;
-  width: 12px;
-  height: 12px;
-  flex: none;
-  overflow: visible;
+/* Terminal selection bar (owner, 2026-07-13 — replaces the folded-card
+   glyph; caret gutter removed 2026-07-13 for a clean titles-only list).
+   The name sits in its own inline block with fixed padding on EVERY row,
+   so activation only recolours the block — the text never shifts. The
+   active pillar reads as an inverse-video terminal selection (void ink
+   on a gold fill), like a highlighted track in a retro console. Nothing
+   sits left of the names but the fill; the rail carries no per-row
+   marker on this side (the fill IS the mark — its counterpart on the
+   right rail is an underline). */
+.rail-manifest__name {
+  display: inline-block;
+  padding: 3px 9px;
 }
-.rail-manifest__glyph rect {
-  fill: var(--void, #0a0908);
-  stroke: currentColor;
-  stroke-width: 1;
+
+/* Active pillar — the filled terminal bar: void ink on a solid gold
+   block with a soft bloom. */
+.rail-manifest__entry[data-state="active"] .rail-manifest__name {
+  color: var(--void, #0a0908);
+  background: var(--gold);
+  box-shadow: 0 0 16px rgba(202, 165, 84, 0.4);
 }
-/* upcoming — hollow front plane (an empty module socket) */
-.rail-manifest__glyph rect.rail-manifest__glyph-front {
-  fill: transparent;
-}
-/* reached — the module is loaded: the front plane lights gold */
-.rail-manifest__entry[data-state="active"] .rail-manifest__glyph rect.rail-manifest__glyph-front,
-.rail-manifest__entry[data-state="seated"] .rail-manifest__glyph rect.rail-manifest__glyph-front {
-  fill: rgba(202, 165, 84, 0.3);
-  stroke: var(--gold);
-}
-/* power-on flash as a pillar becomes the active row (retriggers on
-   reverse re-arrival; quantized steps() — ADR-031 confirm canon). */
-.rail-manifest__entry[data-state="active"] .rail-manifest__glyph {
+[data-rail-manifest-root][data-ready]
+  .rail-manifest__entry[data-state="active"]
+  .rail-manifest__name {
   animation: rail-manifest-flash 320ms steps(2, start);
 }
 
-/* Glyph confirm: the seated flash stays quantized steps() (ADR-031
-   canon for confirm garnish; the reel glide is the only tween). */
+/* Power-on flash as a pillar becomes the active row — quantized steps()
+   (retriggers on reverse re-arrival; ADR-031 confirm canon: the reel
+   glide is the only tween, garnish stays stepped). */
 @keyframes rail-manifest-flash {
   0%,
   49.99% {
-    color: var(--gold);
-    filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.9));
+    filter: brightness(1.5) drop-shadow(0 0 10px rgba(202, 165, 84, 0.95));
   }
   50%,
   100% {
@@ -913,7 +912,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rail-manifest__entry .rail-manifest__glyph {
+  .rail-manifest__entry[data-state="active"] .rail-manifest__name {
     animation: none !important;
   }
   [data-rail-manifest-root] .rail-manifest__window,

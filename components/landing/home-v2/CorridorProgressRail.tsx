@@ -42,10 +42,17 @@ const STAGES: readonly Stage[] = [
   { key: "build", label: "Build", band: [0.78, 0.9] },
 ];
 
-/** Row datums on the rail guide — the first three of the register's
- *  four-slot gauge (33.333 / 41.667 / 50 / 58.333%), so the Arc rows
- *  line up exactly with where the Services/Products rows sit. */
-const ROW_TOPS = ["33.333%", "41.667%", "50%"] as const;
+/** Row datums on the rail guide. The register now hangs off mid-rail
+ *  (50%) at the shared `--rail-register-pitch` step — the middle stage
+ *  (Encode) sits on the same centre line as the left rolodex's centred
+ *  active pillar, so the two rails read as a matched pair, and the three
+ *  stages form one tight block instead of the old airy 8.334%vh gauge.
+ *  Kept uniform with the Services/Products register (same token). */
+const ROW_TOPS = [
+  "calc(50% - var(--rail-register-pitch, 30px))",
+  "50%",
+  "calc(50% + var(--rail-register-pitch, 30px))",
+] as const;
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   if (edge1 === edge0) return x >= edge1 ? 1 : 0;

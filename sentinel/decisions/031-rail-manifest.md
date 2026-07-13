@@ -470,3 +470,68 @@ filled marker (forced-state check). The live corridor-scroll fade/track
 could not be driven in the preview pane (GSAP scroll-driver + WebGL
 resist synthetic scroll); the paintProgress read is a direct port of the
 prior working breadcrumb.
+
+### Update 8 — terminal rolodex + one rail grid (2026-07-13, same day)
+
+Owner redirect: the two rails felt asymmetrical (different vertical
+bands, wildly different row pitch) and the left rolodex read as an icon
+menu rather than a terminal. Three coordinated moves:
+
+1. **Left rolodex → terminal list.** The folded-card-ring glyph is
+   **retired** (removed from `buildRailManifestHtml` — rows are now bare
+   name buttons; `buildStackGlyphSvg` deleted). The active pillar is
+   marked by a **filled terminal selection bar**: `.rail-manifest__name`
+   gets an inverse-video block (`background: var(--gold)`, `color:
+var(--void)`) with a 2px caret tick (`::before`, void on the fill)
+   and a gold bloom — the retro-console "highlighted track" read. Every
+   row's name carries the same fixed padding so activation only
+   recolours the block (no layout shift). The stepped `steps()` confirm
+   flash moved from the glyph to the bar; `MANIFEST_ENTRIES[].glyph`
+   stays in the data model (it still tags the three pillars) but no
+   longer renders. Font bumped **11px → 13px** (the left list is the
+   primary index and the bar wants weight; the two rails are now a
+   deliberate pair, not twins — left larger is intentional).
+
+2. **One shared rail grid.** New tokens in `variables.css`:
+   `--rail-row-pitch: 24px` (the rolodex row unit, `--rail-manifest-row-h`
+   now references it) and `--rail-register-pitch: 30px` (the right-rail
+   register row spacing). The registers no longer use the airy
+   33.3/41.7/50(/58.3)% viewport gauge.
+
+3. **Both registers centre on mid-rail (50%).** `CorridorProgressRail`
+   (3 rows) and `ToolsRailRegister` (4 rows) now position via
+   `calc(50% ± n·var(--rail-register-pitch))`, so each register is a
+   tight block centred on the viewport midline — the same line the
+   rolodex centres its active pillar on. Verified live on the Arc: the
+   rolodex active row (Services, idx 1) sits at cy 637 and the Arc
+   register's middle row (Encode) at cy 635 — a 2px delta, i.e. the two
+   rails share one centre line; Navigate/Encode/Build span a 30px-pitch
+   block (was ~60–90px). Headings track the new top row.
+
+**Guardrails:** the glyph is retired — do not reinstate a per-row icon;
+the active mark is the CSS terminal bar. The registers are centred on
+50% at `--rail-register-pitch`, NOT the old percentage gauge — keep the
+Arc and Services/Products registers on the SAME token (uniformity). The
+rolodex is 13px (larger than the 11px register on purpose). The
+Services/Products register (`ToolsRailRegister`) could not be driven
+live in the preview pane (GSAP scroll-driver + WebGL resist synthetic
+scroll, rAF-throttled) — its geometry is the analogous centred-pitch
+port of the Arc register and shares the token; glance at the
+Services/Products section to confirm the readout still sits well beside
+its copy.
+
+**Update 8 follow-up (same day).** Two owner refinements after first
+look: (a) the left bar's caret tick (`.rail-manifest__name::before`) is
+**removed** — the owner wanted no vertical line beside the titles, so the
+left rail is now purely section titles + the fill (the fill alone is the
+mark; the rolodex carries no per-row marker). The bar also gains a 16px
+inset from the rail guide (`padding-left: calc(guide + 16px)`) so it
+floats clear of the hairline. (b) The right-rail registers' active
+signature changes from a **filled diamond** to an **underline** under the
+name (`text-decoration` gold, 5px offset), across BOTH the Arc register
+and the Services/Products `ToolsRailRegister` — uniform. The diamond
+markers stay as passive outline ticks (they gold with the row via
+`currentColor` but are never filled). So the two rails now read as a
+deliberate pair with distinct active signatures: **left = full-frame
+fill, right = underline**. The far-left 13-tick rail ladder is unchanged
+(still load-bearing; Update 2).

@@ -469,10 +469,12 @@ html[data-corridor-exit="true"] #services > * {
   will-change: opacity;
 }
 
-/* Register heading, mirroring `SOURCE BUS · 04` / `TOOL UNITS · 04`. */
+/* Register heading, mirroring `SOURCE BUS · 04` / `TOOL UNITS · 04`.
+   Sits a fixed gap above the first (Navigate) row, which now hangs off
+   mid-rail at `--rail-register-pitch`. */
 .home-v2-progress-rail__heading {
   position: absolute;
-  top: calc(33.333% - 36px);
+  top: calc(50% - var(--rail-register-pitch, 30px) - 26px);
   right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) + 12px);
   width: max-content;
   color: var(--gold-70);
@@ -525,13 +527,18 @@ html[data-corridor-exit="true"] #services > * {
   text-align: right;
 }
 
-/* Active stage — lit gold with a filled marker (matching the register). */
+/* Active stage — lit gold with an UNDERLINE (the right rail's active
+   signature; the left rolodex uses a full fill, this side uses a rule).
+   The diamond marker stays a passive outline tick — it just golds with
+   the row via currentColor, it is not filled. */
 .home-v2-progress-rail__row[data-active] {
   color: var(--gold);
 }
-.home-v2-progress-rail__row[data-active] .home-v2-progress-rail__marker::after {
-  background: var(--gold);
-  border-color: var(--gold);
+.home-v2-progress-rail__row[data-active] .home-v2-progress-rail__name {
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
 }
 
 /* Match the right-rail register's capability gate so the three pillars

@@ -61,18 +61,39 @@ three stay readable). `#tools` shows as **"Products"** in the rolodex
 (`tools.name`), but its id/`targetId`/`data-station` stay `tools`.
 A separate loadout bay was tried and retired (Update 5) — do NOT
 reintroduce `RailLoadout`/`data-rail-loadout-root` or a charge gauge.
-Keep the shared `resolveActiveIdx.ts` + `clickToNavigate.ts`; rolodex
-type is 11px to match the right-rail register (don't shrink it below
-the right). The rolodex is **dormant until the Arc** (`activeIdx <
-ARC_IDX` — hidden through hero AND thesis; Update 7).
+Keep the shared `resolveActiveIdx.ts` + `clickToNavigate.ts`. The
+rolodex is **dormant until the Arc** (`activeIdx < ARC_IDX` — hidden
+through hero AND thesis; Update 7).
+
+**The rolodex is a terminal list, not an icon menu (ADR-031 Update 8).**
+The per-row folded-card glyph is RETIRED — rows are bare name buttons;
+the active pillar is marked by a CSS **terminal selection bar**
+(`.rail-manifest__name` inverse-video: gold fill, void ink, gold bloom).
+No per-row marker or caret sits beside the titles — the fill IS the mark
+(Update 8: the caret tick was tried then removed). Do NOT reinstate a
+per-row glyph, marker, or caret.
+`MANIFEST_ENTRIES[].glyph` stays as the pillar tag but does not render.
+Rolodex type is **13px** — deliberately LARGER than the 11px right-rail
+register (the two rails are a pair, not twins); do not shrink it to
+match the register.
 
 **Rail uniformity — each pillar: name on the left, sub-items on the
-right (ADR-031 Update 7).** During the Arc the right rail carries
-Navigate/Encode/Build via `CorridorProgressRail` (now a right-rail
-register styled like `.tools-rail-register`, header `THE ARC · 03`),
-just as Services shows `SOURCE BUS` and Products shows `TOOL UNITS`. Do
-NOT move it back to a top-centre breadcrumb. It's a pure read of the
-corridor `paintProgress` — no new scroll writer.
+right (ADR-031 Updates 7–8).** During the Arc the right rail carries
+Navigate/Encode/Build via `CorridorProgressRail` (a right-rail register
+styled like `.tools-rail-register`, header `THE ARC · 03`), just as
+Services shows `SOURCE BUS` and Products shows `TOOL UNITS`. Do NOT move
+it back to a top-centre breadcrumb; pure read of `paintProgress`, no new
+scroll writer. **Both registers share one grid (Update 8):** they hang
+off mid-rail via `calc(50% ± n·var(--rail-register-pitch))` (NOT the old
+33.3/41.7/50/58.3%vh gauge), centred on the same midline the rolodex
+centres its active pillar on (`--rail-row-pitch` / `--rail-register-pitch`
+in `variables.css`). Keep the Arc and Services/Products registers on the
+SAME token — tighten/space them together, never one alone. **Active
+signature = underline** (Update 8): the active row is marked by a gold
+`text-decoration` underline (both registers), NOT a filled diamond — the
+diamond markers stay passive outline ticks. This is the right-rail
+counterpart to the left rolodex's full-frame fill; keep the pair (left
+fill / right underline) distinct.
 
 **Process**
 

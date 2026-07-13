@@ -122,10 +122,13 @@ describe("buildRailManifestHtml — parse-time skeleton", () => {
     expect(html).toContain('aria-label="Products — pillar 3 of 3"');
   });
 
-  it("the three brand-pillar rows carry the stack glyph, and markup is balanced", () => {
-    expect(html.match(/rail-manifest__glyph"/g)).toHaveLength(3);
+  it("rows are bare name buttons — no glyph or svg (terminal list, 2026-07-13)", () => {
+    // The folded-card-ring glyph was retired; the active pillar is now
+    // marked by a CSS terminal selection bar, so the skeleton ships no
+    // per-row icon markup.
+    expect(html).not.toContain("rail-manifest__glyph");
+    expect(html).not.toContain("<svg");
     expect(html.match(/<button /g)).toHaveLength(html.match(/<\/button>/g)?.length ?? -1);
-    expect(html.match(/<svg /g)).toHaveLength(html.match(/<\/svg>/g)?.length ?? -1);
   });
 });
 

@@ -15,9 +15,18 @@ import { PROJECT_CASES } from "./toolCardData";
 const ENHANCED_MEDIA =
   "(min-width: 1101px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)";
 
-/** Stable right-rail slots shared by the retiring services and incoming
- * tool-unit index. They align to the canonical 12-position HUD gauge. */
-const ROW_TOPS = ["33.333%", "41.667%", "50%", "58.333%"] as const;
+/** Right-rail slots shared by the retiring services and incoming
+ * tool-unit index. The register hangs off mid-rail (50%) at the shared
+ * `--rail-register-pitch` step so all three pillar registers (Arc /
+ * Services / Products) read at one tight, centred rhythm — the same
+ * band the left rolodex centres on (ADR-031, terminal pass 2026-07-13).
+ * Four rows straddle the centre line (±0.5 and ±1.5 pitch). */
+const ROW_TOPS = [
+  "calc(50% - 1.5 * var(--rail-register-pitch, 30px))",
+  "calc(50% - 0.5 * var(--rail-register-pitch, 30px))",
+  "calc(50% + 0.5 * var(--rail-register-pitch, 30px))",
+  "calc(50% + 1.5 * var(--rail-register-pitch, 30px))",
+] as const;
 
 /** Per-row stagger over the services arrival clock (`--svc-content-in`):
  * row i wipes in across [i·STAGGER_STEP, i·STAGGER_STEP + STAGGER_SPAN],

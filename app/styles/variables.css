@@ -63,6 +63,17 @@
   --space-3xl: 64px;
   --space-4xl: 96px;
 
+  /* ─── RAIL GRID (ADR-031) ───
+     One vertical rhythm shared by the two HUD rails so they read as a
+     matched pair straddling the sphere. `--rail-row-pitch` is the left
+     rolodex row unit; `--rail-register-pitch` is the tighter row spacing
+     for the three right-rail registers (Arc / Services / Products),
+     replacing the old airy 8.334%vh gauge. Both register blocks now
+     hang off mid-rail (50%) so their centre row lines up with the
+     rolodex's centred active pillar. */
+  --rail-row-pitch: 24px;
+  --rail-register-pitch: 30px;
+
   /* ─── SAFE AREA INSETS (iOS notch/home indicator) ───
      Requires viewport-fit=cover in <meta name="viewport">
   */
