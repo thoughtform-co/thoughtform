@@ -6,17 +6,35 @@
 import { describe, expect, it } from "vitest";
 import {
   ARC_BAND_IN,
-  ARC_CAM_SHIFT_X,
   ARC_EPILOGUE_KILL,
   CASE_COUNT,
   TERRACE_RISE_DEPTH,
   arcBandFactor,
-  arcCameraShiftX,
   dampLevel,
   stepSlot,
   terraceRealmTarget,
   terraceRiseEnvelope,
 } from "@/lib/arc-cases/terraceMath";
+import {
+  arcCameraShiftX,
+  getTerraceViewportLayout,
+  TERRACE_DISPLAY_RIGHT_LIMIT,
+  TERRACE_DISPLAY_VIEWPORT_X,
+  TERRACE_SURFACES_VIEWPORT_X,
+  terraceViewportHalfWidth,
+} from "@/components/landing/home-v2/arc-cases/terraceLayout";
+import {
+  buildTerraceContourField,
+  isInsideTerraceAperture,
+  TERRACE_CONTOUR_BANDS,
+  TERRACE_CONTOUR_POINT_COUNT,
+  TERRACE_CONTOUR_SAMPLES,
+} from "@/components/landing/home-v2/arc-cases/terraceContourField";
+import {
+  PARK_CAM_Z,
+  REALM_Z_FAR,
+  terrainGroundY,
+} from "@/components/landing/home-v2/DepthGatewayScene/substrateTerrain";
 
 describe("dampLevel", () => {
   it("converges monotonically toward the target", () => {
@@ -69,21 +87,95 @@ describe("arcBandFactor (the ADR-033 gate, carried over)", () => {
 
 describe("arcCameraShiftX", () => {
   it("is EXACTLY 0 at level 0 (no flag-off / disarmed residue)", () => {
-    expect(arcCameraShiftX(0)).toBe(0);
+    expect(arcCameraShiftX(0, 16 / 9)).toBe(0);
   });
 
-  it("reaches the full shift at level 1", () => {
-    expect(arcCameraShiftX(1)).toBe(ARC_CAM_SHIFT_X);
+  it("reaches the aspect-aware full shift at level 1", () => {
+    const layout = getTerraceViewportLayout(16 / 9);
+    expect(arcCameraShiftX(1, 16 / 9)).toBe(layout.cameraShiftX);
   });
 
-  it("is linear and monotonic", () => {
-    expect(arcCameraShiftX(0.5)).toBeCloseTo(ARC_CAM_SHIFT_X / 2, 12);
+  it("uses the leading camera envelope and stays monotonic", () => {
+    const full = arcCameraShiftX(1, 16 / 9);
+    expect(arcCameraShiftX(0.5, 16 / 9)).toBeGreaterThan(full * 0.5);
     let prev = -Infinity;
     for (let l = 0; l <= 1.0001; l += 0.1) {
-      const v = arcCameraShiftX(l);
+      const v = arcCameraShiftX(l, 16 / 9);
       expect(v).toBeGreaterThanOrEqual(prev);
       prev = v;
     }
+  });
+});
+
+describe("getTerraceViewportLayout", () => {
+  const desktopAspects = [1.45, 1.6, 16 / 9, 2048 / 920];
+
+  it.each(desktopAspects)("keeps the framed targets at aspect %f", (aspect) => {
+    const layout = getTerraceViewportLayout(aspect);
+    expect(layout.surfacesViewportX).toBeCloseTo(TERRACE_SURFACES_VIEWPORT_X, 8);
+    expect(layout.displayViewportX).toBeCloseTo(TERRACE_DISPLAY_VIEWPORT_X, 8);
+    expect(layout.displayRightViewportX).toBeLessThanOrEqual(TERRACE_DISPLAY_RIGHT_LIMIT);
+    // A 0.72-radius substrate sphere is a narrow left-edge sliver here.
+    expect(layout.sphereCentreViewportX).toBeLessThan(0.08);
+  });
+
+  it.each(desktopAspects)("covers the fully shifted right frustum at aspect %f", (aspect) => {
+    const layout = getTerraceViewportLayout(aspect);
+    expect(layout.terrainRightExtent).toBeGreaterThan(layout.screenX + layout.screenWidth / 2);
+    expect(layout.terrainLeftExtent).toBeLessThan(layout.cameraShiftX);
+    const farRight =
+      layout.cameraShiftX + terraceViewportHalfWidth(aspect, PARK_CAM_Z - REALM_Z_FAR) + 1;
+    expect(layout.terrainRightExtent).toBeGreaterThanOrEqual(farRight);
+  });
+});
+
+describe("terrace contour field", () => {
+  const layout = getTerraceViewportLayout(2048 / 920);
+
+  it("is deterministic and stays under the combined terrain point budget", () => {
+    const a = buildTerraceContourField(layout);
+    const b = buildTerraceContourField(layout);
+    expect(a.count).toBe(TERRACE_CONTOUR_POINT_COUNT);
+    expect(a.count).toBe(TERRACE_CONTOUR_BANDS * TERRACE_CONTOUR_SAMPLES);
+    // 38 rows, capped at 246 samples each, plus the 18 contour bands.
+    expect(a.count + 38 * 246).toBeLessThan(16_000);
+    expect(Array.from(a.targetPositions.slice(0, 120))).toEqual(
+      Array.from(b.targetPositions.slice(0, 120))
+    );
+  });
+
+  it("keeps every target on or above terrain and grounds the outer fold exactly", () => {
+    const field = buildTerraceContourField(layout);
+    for (let i = 0; i < field.count; i++) {
+      const offset = i * 3;
+      const x = field.targetPositions[offset];
+      const y = field.targetPositions[offset + 1];
+      const z = field.targetPositions[offset + 2];
+      expect(y).toBeGreaterThanOrEqual(terrainGroundY(x, z) - 1e-6);
+    }
+    const outerStart = (TERRACE_CONTOUR_BANDS - 1) * TERRACE_CONTOUR_SAMPLES;
+    for (let i = outerStart; i < field.count; i++) {
+      const offset = i * 3;
+      expect(field.targetPositions[offset + 1]).toBeCloseTo(field.basePositions[offset + 1], 6);
+    }
+  });
+
+  it("has no particles inside the display aperture", () => {
+    const field = buildTerraceContourField(layout);
+    const inside: Array<[number, number, number]> = [];
+    for (let i = 0; i < field.count; i++) {
+      const offset = i * 2;
+      if (
+        isInsideTerraceAperture(
+          field.localPositions[offset],
+          field.localPositions[offset + 1],
+          layout
+        )
+      ) {
+        inside.push([i, field.localPositions[offset], field.localPositions[offset + 1]]);
+      }
+    }
+    expect(inside).toEqual([]);
   });
 });
 

@@ -44,6 +44,15 @@ case module; `tools-cards/` otherwise survives only as the
 `/test/project-cards` lab's shared core (console skin, chrome, stack
 hook) — do not remount it on the landing.
 
+**Arc Cases framing is one shared viewport-space layout (ADR-034 Update 1).**
+`getTerraceViewportLayout(aspect)` owns the SURFACES/display targets, camera
+translation, display world placement, and expanded terrain extent. Both the
+R3F rig and `useWorldDomTracker` must call `arcCameraShiftX(level, aspect)`
+and apply the identical offset to `position.x` and `lookAt.x`; no fixed
+world-unit shift, mirror-only correction, extra camera clock, or pointer-look
+rotation is allowed. The panel is an inset aperture in the one-draw terrain
+shroud, not a floating transparent slab.
+
 **The left-rail manifest is parse-injected (ADR-031).** Its skeleton is
 built at parse time (`lib/v7-parse/railManifest.ts`) into the authored
 `<nav data-rail-manifest-root>` shell; `RailManifestController` mutates

@@ -75,7 +75,8 @@ export function arcBandFactor(paintProgress: number, epilogueProgress: number): 
  *  the camera sits ~6.2 from the sphere; half a frame width there is
  *  ≈ 3.8 units, so 2.1 puts the sphere ~22% from the left edge with the
  *  SURFACES fan just left of centre. Lab-tunable 0–3. */
-export const ARC_CAM_SHIFT_X = 2.1;
+export const TERRACE_CAMERA_WINDOW: readonly [number, number] = [0, 0.72];
+export const TERRACE_CLOAK_WINDOW: readonly [number, number] = [0.08, 0.86];
 
 /** Camera X offset for an arm level — linear, EXACT 0 at level 0 (the
  *  flag-off / disarmed frames carry no residue; the epilogue kill in
@@ -83,8 +84,13 @@ export const ARC_CAM_SHIFT_X = 2.1;
  *  additively to BOTH camera position.x and lookAt.x (pure translation,
  *  forward stays −Z) in FlyingCameraRig AND useWorldDomTracker's mirror
  *  camera — the two MUST read the same channel or DOM copy desyncs. */
-export function arcCameraShiftX(level: number): number {
-  return ARC_CAM_SHIFT_X * level;
+export function terraceCameraEnvelope(level: number): number {
+  return smootherstep(TERRACE_CAMERA_WINDOW[0], TERRACE_CAMERA_WINDOW[1], level);
+}
+
+/** Terrain-contour lift window (consumed by the shared terrain shader). */
+export function terraceCloakEnvelope(level: number): number {
+  return smootherstep(TERRACE_CLOAK_WINDOW[0], TERRACE_CLOAK_WINDOW[1], level);
 }
 
 /* ── Screen rise ─────────────────────────────────────────────────── */
@@ -94,11 +100,11 @@ export function arcCameraShiftX(level: number): number {
 export const TERRACE_RISE_DEPTH = 1.4;
 
 /** Arm-level window across which the rise plays (smootherstep). */
-export const TERRACE_RISE_WINDOW: readonly [number, number] = [0.05, 0.9];
+export const TERRACE_RISE_WINDOW: readonly [number, number] = [0.2, 0.9];
 
 /** Arm-level window across which the screen fades in — front-loaded so
  *  the slab is visible while still emerging from the ground. */
-export const TERRACE_FADE_WINDOW: readonly [number, number] = [0.0, 0.55];
+export const TERRACE_FADE_WINDOW: readonly [number, number] = [0.3, 0.68];
 
 export interface TerraceEnvelope {
   /** 0 = fully buried, 1 = parked. */

@@ -24,6 +24,14 @@ canonical case module; the rest of `tools-cards/` is the
 `/test/project-cards` lab's shared core — do not remount it on the
 landing.
 
+**Arc Cases framing (ADR-034 Update 1):**
+`getTerraceViewportLayout(aspect)` is the shared viewport-space contract for
+the SURFACES/display targets, R3F camera, DOM mirror, aperture, and terrain
+extent. Both cameras use `arcCameraShiftX(level, aspect)` as an identical
+`position.x` + `lookAt.x` translation. Do not restore a fixed world-unit
+shift, a second camera clock, pointer-look rotation, or a floating transparent
+slab; the panel is an inset aperture in the one-draw terrain shroud.
+
 **Rail manifest (ADR-031; roster ADR-033):** the left-rail manifest
 skeleton is parse-injected (`lib/v7-parse/railManifest.ts`) and mutated
 in place by `RailManifestController` — never `createRoot` into

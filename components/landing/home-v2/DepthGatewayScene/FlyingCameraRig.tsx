@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { arcCameraShiftX } from "@/lib/arc-cases/terraceMath";
+import { arcCameraShiftX } from "../arc-cases/terraceLayout";
 import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
@@ -68,7 +68,7 @@ export function FlyingCameraRig() {
     };
   }, [camera]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     // Drive the rig from `paintProgress` so the camera sits at the
     // parked Thoughtform layout (progress 0) during the `armed` pre-
     // arm pass — mirrors the DOM tracker so DOM + R3F project from
@@ -99,7 +99,8 @@ export function FlyingCameraRig() {
     // mirror camera in `useWorldDomTracker.syncMirrorCamera` applies the
     // SAME channel — the two cameras MUST stay in lockstep or projected
     // DOM copy desyncs from the canvas. Flag off ⇒ literal 0.
-    const shiftX = ARC_CASES_TERRACE ? arcCameraShiftX(arcCasesLevelRef.current.level) : 0;
+    const aspect = state.size.width / Math.max(1, state.size.height);
+    const shiftX = ARC_CASES_TERRACE ? arcCameraShiftX(arcCasesLevelRef.current.level, aspect) : 0;
 
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`

@@ -211,4 +211,40 @@ failures predate ADR-033 — see its Verification note).
 
 ## Updates
 
-(none)
+### Update 1 (2026-07-13) — aspect-aware terrain shroud
+
+The initial implementation deliberately proved the interaction with a fixed
+`2.1`-world-unit camera offset and a translucent device slab. It was rejected
+after review: the composition only held at its tuning width, the sphere still
+occupied too much of the armed frame, and the transparent slab read as an
+object laid over the landscape instead of a viewport excavated from it.
+
+**Accepted replacement:** `getTerraceViewportLayout(aspect)` is the sole
+world-layout contract. It derives a full-arm pure lateral translation from the
+SURFACES fan's 24%-from-left target, then places the unchanged `4.35 × 2.72`
+aperture at 65% viewport width (right edge ≤91%). Both `FlyingCameraRig` and
+`useWorldDomTracker` call the same `arcCameraShiftX(level, aspect)` and apply
+it equally to position.x and lookAt.x. The leading camera envelope is
+`[0, 0.72]`; it remains a translation, never a look rotation or another clock.
+
+`SubstrateTopography` now resolves the full shifted frustum plus a one-unit
+safety margin and increases samples with the span. Its one terrain painter
+also owns 18 deterministic chamfered contour bands around the display opening:
+the inner bands trace the top/sides, a 1.35-unit apron and 0.4-unit top
+overshoot shape the rim, and a 3.8-unit rear fold returns the outer band
+exactly to `terrainGroundY`. Ground and raised positions are static attributes;
+the existing shader morphs them only during the reversible cloak window
+`[0.08, 0.86]`. Terrain plus cloak is bounded below 16k points and remains one
+terrain draw call.
+
+The outer device body is retired. The baked crossfading content remains behind
+a minimal 0.035-unit chamfered glass rim in a particle-free aperture. Rise,
+fade, and depth-write now use `[0.20, 0.90]`, `[0.30, 0.68]`, and hysteresis
+`on ≥0.82 / off ≤0.68` respectively. Close follows the same envelopes in
+reverse; click ownership, deferred bake, case stepping, media/reduced-motion
+gates, and the Build-band kill are unchanged.
+
+**Rejected:** re-tuning a fixed shift per screenshot; extending a separate
+transparent slab/ground bleed beneath the panel; a simulated or idle-moving
+cloth layer; any independent scroll/camera writer. All allow a composition or
+motion path to diverge from the two-camera, one-level contract.

@@ -3,8 +3,8 @@
 /**
  * /test/arc-cases-terrace — look-dev lab for the Arc Cases Terrace
  * (ADR-034). Renders the REAL `ArcCasesTerraceScreen` (real store, real
- * crossfade) over a dotted ground-grid stand-in at the actual
- * `terrainGroundY` height, with:
+ * crossfade) over the production `SubstrateTopography` painter and its
+ * deterministic contour shroud, with:
  *
  *   - a level slider (drives `levelOverride` — the rise/fade envelope
  *     and the published `arcCasesLevelRef` the lab camera also reads);
@@ -20,7 +20,6 @@
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
 
 import {
   ArcCasesTerraceScreen,
@@ -30,6 +29,7 @@ import {
   TERRACE_PITCH,
   TERRACE_Z,
 } from "@/components/landing/home-v2/arc-cases/ArcCasesTerraceScreen";
+import { arcCameraShiftX } from "@/components/landing/home-v2/arc-cases/terraceLayout";
 import {
   TERRACE_BAKE_H,
   TERRACE_BAKE_W,
@@ -37,13 +37,10 @@ import {
   loadImage,
   waitForCardFonts,
 } from "@/components/landing/home-v2/arc-cases/caseScreenBake";
-import {
-  INT_Z,
-  PARK_CAM_Z,
-  terrainGroundY,
-} from "@/components/landing/home-v2/DepthGatewayScene/substrateTerrain";
+import { INT_Z, PARK_CAM_Z } from "@/components/landing/home-v2/DepthGatewayScene/substrateTerrain";
+import { SubstrateTopography } from "@/components/landing/home-v2/DepthGatewayScene/SubstrateTopography";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
-import { arcCameraShiftX, TERRACE_RISE_DEPTH } from "@/lib/arc-cases/terraceMath";
+import { TERRACE_RISE_DEPTH } from "@/lib/arc-cases/terraceMath";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { useArcCasesStore } from "@/lib/stores/arcCasesStore";
 
@@ -51,40 +48,14 @@ import { useArcCasesStore } from "@/lib/stores/arcCasesStore";
  *  (with the real store on) riding the published `arcCasesLevelRef`
  *  exactly like the production rig. */
 function LabCameraRig({ shift, fromRef }: { shift: number; fromRef: boolean }) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   useFrame(() => {
     const level = fromRef ? arcCasesLevelRef.current.level : shift;
-    const shiftX = arcCameraShiftX(level);
+    const shiftX = arcCameraShiftX(level, size.width / Math.max(1, size.height));
     camera.position.set(shiftX, 0, PARK_CAM_Z);
     camera.lookAt(shiftX, 0, INT_Z);
   });
   return null;
-}
-
-/** Dotted ground-grid stand-in at the real heightfield's height. */
-function GroundGrid() {
-  const points = useRef<THREE.Points | null>(null);
-  const geometry = useRef<THREE.BufferGeometry | null>(null);
-  if (!geometry.current) {
-    const positions: number[] = [];
-    for (let zi = 0; zi < 40; zi++) {
-      const z = INT_Z + 2 - zi * 0.9;
-      for (let xi = 0; xi < 80; xi++) {
-        const x = -9 + xi * 0.24;
-        positions.push(x, terrainGroundY(x, z), z);
-      }
-    }
-    geometry.current = new THREE.BufferGeometry();
-    geometry.current.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(new Float32Array(positions), 3)
-    );
-  }
-  return (
-    <points ref={points} geometry={geometry.current}>
-      <pointsMaterial size={0.02} color="#8b8474" transparent opacity={0.5} />
-    </points>
-  );
 }
 
 function BakePreview() {
@@ -152,7 +123,7 @@ export default function ArcCasesTerraceLab() {
           style={{ position: "absolute", inset: 0 }}
         >
           <LabCameraRig shift={shift} fromRef={useStore} />
-          <GroundGrid />
+          <SubstrateTopography forceVisible terraceLevelOverride={useStore ? null : level} />
           <ArcCasesTerraceScreen
             preload
             levelOverride={useStore ? null : level}

@@ -355,6 +355,26 @@ signature.
 
 ## 🎨 Canvas & Three.js
 
+### Compose responsive 3D scenes in viewport space, then derive world space
+
+Do not preserve a desktop composition with a fixed world-unit camera offset.
+At a different aspect ratio the same offset changes where every landmark lands
+on screen, so a layout that looks intentional at 16:9 can cover a rail or lose
+its subject on a wide editorial frame. Define normalized viewport targets
+(for example, the left-quarter and right-two-thirds) in one pure layout module,
+derive camera shift/object placement/terrain coverage from the active FOV and
+aspect, and make both the R3F camera and DOM mirror consume it.
+
+For the Arc Cases Terrace this is `getTerraceViewportLayout(aspect)`:
+`FlyingCameraRig`, `useWorldDomTracker`, the inset aperture, and
+`SubstrateTopography` share it. The camera offset is applied identically to
+`position.x` and `lookAt.x`, preserving a pure lateral translation. Test the
+layout at every supported desktop aspect, including the design reference frame,
+and include terrain/frustum coverage in those assertions.
+
+**Why it matters:** the visual composition and projected DOM are one contract;
+two locally plausible offsets are still a bug if they disagree.
+
 ### An always-frameloop canvas burns GPU even when its painters draw nothing
 
 A full-viewport R3F canvas with `frameloop="always"` pays a clear +

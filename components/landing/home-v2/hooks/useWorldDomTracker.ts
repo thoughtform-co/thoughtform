@@ -5,7 +5,7 @@ import * as THREE from "three";
 import type { DepthGatewayTransform, Beat } from "@/lib/stores/depthGatewayStore";
 import { BEAT_WINDOWS, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { arcCameraShiftX } from "@/lib/arc-cases/terraceMath";
+import { arcCameraShiftX } from "../arc-cases/terraceLayout";
 import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import {
   getCameraFov,
@@ -260,11 +260,12 @@ export function useWorldDomTracker(
       // arrival" rather than filling in as the user scrolls.
       const painting = transform.active || transform.armed;
       const paintProgress = transform.paintProgress;
-      const terraceShiftX = ARC_CASES_TERRACE ? arcCameraShiftX(arcCasesLevelRef.current.level) : 0;
-      syncMirrorCamera(cam, paintProgress, terraceShiftX);
-
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      const terraceShiftX = ARC_CASES_TERRACE
+        ? arcCameraShiftX(arcCasesLevelRef.current.level, vw / Math.max(1, vh))
+        : 0;
+      syncMirrorCamera(cam, paintProgress, terraceShiftX);
 
       // Camera-forward (used for behind-camera culling). The terrace
       // shift translates position and lookAt equally, so the forward

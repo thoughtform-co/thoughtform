@@ -37,12 +37,11 @@
  * the slab while it is translucent.
  */
 
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
-import { SERVICES_GOLD } from "@/lib/home-v2/goldPalette";
 import { useArcCasesStore } from "@/lib/stores/arcCasesStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import {
@@ -52,12 +51,8 @@ import {
   dampLevel,
   terraceRiseEnvelope,
 } from "@/lib/arc-cases/terraceMath";
-import {
-  RING_EDGE_GLINT_OPACITY,
-  RING_GLASS_EDGE_OPACITY,
-  RING_GLASS_OPACITY,
-} from "@/lib/services-ring/ringMath";
-import { INT_Z, terrainGroundY } from "../DepthGatewayScene/substrateTerrain";
+import { RING_EDGE_GLINT_OPACITY } from "@/lib/services-ring/ringMath";
+import { terrainGroundY } from "../DepthGatewayScene/substrateTerrain";
 import {
   TERRACE_BAKE_H,
   TERRACE_BAKE_W,
@@ -68,6 +63,12 @@ import {
   loadImage,
   waitForCardFonts,
 } from "./caseScreenBake";
+import {
+  TERRACE_CHAMFER,
+  TERRACE_GROUND_CLEAR,
+  TERRACE_W,
+  getTerraceViewportLayout,
+} from "./terraceLayout";
 
 /** Wall-clock gap treated as an idle resume (the ADR-029 Update-5
  *  conditional snap — never on ordinary frame hitches). */
@@ -77,31 +78,28 @@ const RESUME_IDLE_GAP_MS = 500;
 
 /** Screen centre X — right of the shifted camera axis (camera parks at
  *  x ≈ ARC_CAM_SHIFT_X = 2.1 while armed). */
-export const TERRACE_X = 3.05;
+export const TERRACE_X = getTerraceViewportLayout(16 / 9).screenX;
 /** Screen centre Z — over the terrain's near rows, ~8.8 in front of
  *  the park camera. */
-export const TERRACE_Z = INT_Z - 2.6;
+export { TERRACE_Z } from "./terraceLayout";
 /** Slab content width (world units); 16:10 like the bake. */
-export const TERRACE_W = 4.35;
-export const TERRACE_H = TERRACE_W * (TERRACE_BAKE_H / TERRACE_BAKE_W);
+export { TERRACE_W, TERRACE_H } from "./terraceLayout";
 /** Parked bottom edge floats a hair above the terrain dots. */
-export const TERRACE_GROUND_CLEAR = 0.12;
+export { TERRACE_GROUND_CLEAR } from "./terraceLayout";
 /** Faces the shifted camera axis (screen sits slightly right of it). */
-export const TERRACE_YAW = -0.1;
+export { TERRACE_YAW } from "./terraceLayout";
 /** Leans back a touch — planted in the landscape, not billboarded. */
-export const TERRACE_PITCH = -0.05;
+export { TERRACE_PITCH } from "./terraceLayout";
 
 /* ── Device-slab proportions — the ring's anatomy re-scaled to the
    terrace's world size (the ring's constants live in its own
    orbit-config space; fractions carry, absolute sizes re-derive). ── */
 
-const TERRACE_SLAB_DEPTH = 0.085;
-const TERRACE_BEZEL = 0.09;
 const TERRACE_CONTENT_LIFT = 0.012;
 /** Chamfer cut in world units — the bake's 52px cut carried through
  *  the content-plane scale so the slab cut aligns with the baked
  *  face's chamfered corners. */
-const TERRACE_CHAMFER = (52 / TERRACE_BAKE_W) * TERRACE_W;
+const TERRACE_RIM_DEPTH = 0.035;
 
 /** Under-screen ground glow (optional polish; masterOpacity-scaled). */
 const TERRACE_GROUND_GLOW_OPACITY = 0.12;
@@ -134,18 +132,29 @@ export function ArcCasesTerraceScreen({
   bandGetter,
   preload = false,
   levelOverride = null,
-  x = TERRACE_X,
-  z = TERRACE_Z,
-  width = TERRACE_W,
-  yaw = TERRACE_YAW,
-  pitch = TERRACE_PITCH,
-  groundClear = TERRACE_GROUND_CLEAR,
+  x,
+  z,
+  width,
+  yaw,
+  pitch,
+  groundClear,
   riseDepth = TERRACE_RISE_DEPTH,
   armRate = ARC_ARM_RATE,
   crossfadeRate = TERRACE_CROSSFADE_RATE,
   groundGlow = false,
 }: ArcCasesTerraceScreenProps) {
-  const height = width * (TERRACE_BAKE_H / TERRACE_BAKE_W);
+  const { size } = useThree();
+  const layout = useMemo(
+    () => getTerraceViewportLayout(size.width / Math.max(1, size.height)),
+    [size.width, size.height]
+  );
+  const resolvedX = x ?? layout.screenX;
+  const resolvedZ = z ?? layout.screenZ;
+  const resolvedWidth = width ?? layout.screenWidth;
+  const resolvedYaw = yaw ?? layout.screenYaw;
+  const resolvedPitch = pitch ?? layout.screenPitch;
+  const resolvedGroundClear = groundClear ?? TERRACE_GROUND_CLEAR;
+  const height = resolvedWidth * (TERRACE_BAKE_H / TERRACE_BAKE_W);
 
   const [bakeRequested, setBakeRequested] = useState(preload);
   const [textures, setTextures] = useState<THREE.CanvasTexture[] | null>(null);
@@ -161,17 +170,15 @@ export function ArcCasesTerraceScreen({
 
   /** Grounded ONCE from the actual heightfield — no per-frame cost. */
   const parkedY = useMemo(
-    () => terrainGroundY(x, z) + height / 2 + groundClear,
-    [x, z, height, groundClear]
+    () => terrainGroundY(resolvedX, resolvedZ) + height / 2 + resolvedGroundClear,
+    [resolvedX, resolvedZ, height, resolvedGroundClear]
   );
 
   /* ── Geometry ── */
-  const slabW = width + TERRACE_BEZEL * 2;
-  const slabH = height + TERRACE_BEZEL * 2;
-  const slabGeometry = useMemo(() => {
-    const ch = TERRACE_CHAMFER;
-    const hw = slabW / 2;
-    const hh = slabH / 2;
+  const rimGeometry = useMemo(() => {
+    const ch = TERRACE_CHAMFER * (resolvedWidth / TERRACE_W);
+    const hw = resolvedWidth / 2;
+    const hh = height / 2;
     const shape = new THREE.Shape();
     shape.moveTo(-hw, hh);
     shape.lineTo(hw - ch, hh);
@@ -181,19 +188,19 @@ export function ArcCasesTerraceScreen({
     shape.lineTo(-hw, -hh + ch);
     shape.closePath();
     const geometry = new THREE.ExtrudeGeometry(shape, {
-      depth: TERRACE_SLAB_DEPTH,
+      depth: TERRACE_RIM_DEPTH,
       bevelEnabled: false,
     });
-    geometry.translate(0, 0, -TERRACE_SLAB_DEPTH / 2);
+    geometry.translate(0, 0, -TERRACE_RIM_DEPTH / 2);
     return geometry;
-  }, [slabW, slabH]);
-  const glintGeometry = useMemo(() => new THREE.EdgesGeometry(slabGeometry), [slabGeometry]);
+  }, [resolvedWidth, height]);
+  const glintGeometry = useMemo(() => new THREE.EdgesGeometry(rimGeometry), [rimGeometry]);
   useEffect(() => {
     return () => {
-      slabGeometry.dispose();
+      rimGeometry.dispose();
       glintGeometry.dispose();
     };
-  }, [slabGeometry, glintGeometry]);
+  }, [rimGeometry, glintGeometry]);
 
   /* ── Textures ── */
   const veilTexture = useMemo(() => {
@@ -227,18 +234,8 @@ export function ArcCasesTerraceScreen({
       toneMapped: false,
     } as const;
     return {
-      slabCaps: new THREE.MeshBasicMaterial({
-        ...shared,
-        color: new THREE.Color("#14110c"),
-        side: THREE.FrontSide,
-      }),
-      slabWalls: new THREE.MeshBasicMaterial({
-        ...shared,
-        color: new THREE.Color(SERVICES_GOLD),
-        side: THREE.FrontSide,
-      }),
       glint: new THREE.LineBasicMaterial({
-        color: new THREE.Color(SERVICES_GOLD),
+        color: new THREE.Color("#caa554"),
         transparent: true,
         opacity: 0,
         depthWrite: false,
@@ -400,9 +397,7 @@ export function ArcCasesTerraceScreen({
       }
     }
 
-    materials.slabCaps.opacity = RING_GLASS_OPACITY * master;
-    materials.slabWalls.opacity = RING_GLASS_EDGE_OPACITY * master;
-    materials.glint.opacity = RING_EDGE_GLINT_OPACITY * master;
+    materials.glint.opacity = RING_EDGE_GLINT_OPACITY * 0.7 * master;
     materials.contentBack.opacity = master;
     materials.contentFront.opacity =
       incomingSlotRef.current !== null ? master * fadeRef.current : 0;
@@ -412,10 +407,12 @@ export function ArcCasesTerraceScreen({
     // Depth-write hysteresis on the SETTLED content plane only: while
     // rising/translucent the terrain dots show through (the emerge
     // read); once settled the opaque face occludes cleanly.
-    const write = master > 0.55;
-    if (write !== depthWriteRef.current) {
-      materials.contentBack.depthWrite = write;
-      depthWriteRef.current = write;
+    if (!depthWriteRef.current && master >= 0.82) {
+      materials.contentBack.depthWrite = true;
+      depthWriteRef.current = true;
+    } else if (depthWriteRef.current && master <= 0.68) {
+      materials.contentBack.depthWrite = false;
+      depthWriteRef.current = false;
     }
   }, -5);
 
@@ -424,19 +421,12 @@ export function ArcCasesTerraceScreen({
   return (
     <group
       ref={groupRef}
-      position={[x, parkedY - riseDepth, z]}
-      rotation={[pitch, yaw, 0]}
+      position={[resolvedX, parkedY - riseDepth, resolvedZ]}
+      rotation={[resolvedPitch, resolvedYaw, 0]}
       visible={false}
     >
-      {/* Whole slab renders BELOW 0 so later-drawn terrain rows still
-          paint over it while translucent; the settled content plane's
-          depth write handles occlusion once solid. */}
-      <mesh
-        renderOrder={-0.24}
-        geometry={slabGeometry}
-        material={[materials.slabCaps, materials.slabWalls]}
-        frustumCulled={false}
-      />
+      {/* The topology is the body. This is only a thin glass registration
+          rim around the clear aperture; no opaque outer slab remains. */}
       <lineSegments
         renderOrder={-0.22}
         geometry={glintGeometry}
@@ -445,39 +435,39 @@ export function ArcCasesTerraceScreen({
       />
       <mesh
         renderOrder={-0.2}
-        position={[0, 0, TERRACE_SLAB_DEPTH / 2 + TERRACE_CONTENT_LIFT]}
+        position={[0, 0, TERRACE_RIM_DEPTH / 2 + TERRACE_CONTENT_LIFT]}
         material={materials.contentBack}
         frustumCulled={false}
       >
-        <planeGeometry args={[width, height]} />
+        <planeGeometry args={[resolvedWidth, height]} />
       </mesh>
       <mesh
         renderOrder={-0.196}
-        position={[0, 0, TERRACE_SLAB_DEPTH / 2 + TERRACE_CONTENT_LIFT + 0.004]}
+        position={[0, 0, TERRACE_RIM_DEPTH / 2 + TERRACE_CONTENT_LIFT + 0.004]}
         material={materials.contentFront}
         frustumCulled={false}
       >
-        <planeGeometry args={[width, height]} />
+        <planeGeometry args={[resolvedWidth, height]} />
       </mesh>
       <mesh
         renderOrder={-0.18}
-        position={[0, 0, TERRACE_SLAB_DEPTH / 2 + TERRACE_CONTENT_LIFT + 0.008]}
+        position={[0, 0, TERRACE_RIM_DEPTH / 2 + TERRACE_CONTENT_LIFT + 0.008]}
         material={materials.veil}
         frustumCulled={false}
       >
-        <planeGeometry args={[width, height]} />
+        <planeGeometry args={[resolvedWidth, height]} />
       </mesh>
       {/* Ground glow — flat on the terrain under the screen footprint
           (local space: undo the group pitch so it lies on the ground). */}
       {groundGlow && (
         <mesh
           renderOrder={-0.26}
-          position={[0, -height / 2 - TERRACE_GROUND_CLEAR + 0.02, 0.1]}
-          rotation={[-Math.PI / 2 - TERRACE_PITCH, 0, 0]}
+          position={[0, -height / 2 - resolvedGroundClear + 0.02, 0.1]}
+          rotation={[-Math.PI / 2 - resolvedPitch, 0, 0]}
           material={materials.groundGlow}
           frustumCulled={false}
         >
-          <planeGeometry args={[width * 1.4, width * 0.5]} />
+          <planeGeometry args={[resolvedWidth * 1.4, resolvedWidth * 0.5]} />
         </mesh>
       )}
     </group>
