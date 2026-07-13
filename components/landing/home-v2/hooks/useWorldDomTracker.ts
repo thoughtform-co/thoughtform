@@ -4,9 +4,6 @@ import { useEffect, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import type { DepthGatewayTransform, Beat } from "@/lib/stores/depthGatewayStore";
 import { BEAT_WINDOWS, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { arcCameraShiftX } from "../arc-cases/terraceLayout";
-import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import {
   getCameraFov,
   type DepthFocusWindow,
@@ -162,16 +159,13 @@ function makeMirrorCamera(): THREE.PerspectiveCamera {
 }
 
 /** Sync the mirror camera to the corridor camera path for the
- *  given progress. `shiftX` is the Arc cases terrace lateral offset
- *  (ADR-034) — the SAME additive channel `FlyingCameraRig` applies to
- *  the R3F camera (position AND lookAt, a pure translation), so the
- *  DOM projection stays welded to the canvas while the frame glides. */
-function syncMirrorCamera(camera: THREE.PerspectiveCamera, progress: number, shiftX: number) {
+ *  given progress. */
+function syncMirrorCamera(camera: THREE.PerspectiveCamera, progress: number) {
   const [cx, cy, cz] = getCameraPosition(progress);
   const [lx, ly, lz] = getCameraLookAt(progress);
-  camera.position.set(cx + shiftX, cy, cz);
+  camera.position.set(cx, cy, cz);
   camera.up.set(0, 1, 0);
-  camera.lookAt(lx + shiftX, ly, lz);
+  camera.lookAt(lx, ly, lz);
   camera.updateMatrixWorld();
 }
 
@@ -260,22 +254,14 @@ export function useWorldDomTracker(
       // arrival" rather than filling in as the user scrolls.
       const painting = transform.active || transform.armed;
       const paintProgress = transform.paintProgress;
+      syncMirrorCamera(cam, paintProgress);
+
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const terraceShiftX = ARC_CASES_TERRACE
-        ? arcCameraShiftX(arcCasesLevelRef.current.level, vw / Math.max(1, vh))
-        : 0;
-      syncMirrorCamera(cam, paintProgress, terraceShiftX);
 
-      // Camera-forward (used for behind-camera culling). The terrace
-      // shift translates position and lookAt equally, so the forward
-      // axis itself is unchanged — but `cam.position` above carries the
-      // shift, so the lookAt must carry it too or this subtraction skews.
+      // Camera-forward (used for behind-camera culling).
       const [lx, ly, lz] = getCameraLookAt(paintProgress);
-      fwd
-        .set(lx + terraceShiftX, ly, lz)
-        .sub(cam.position)
-        .normalize();
+      fwd.set(lx, ly, lz).sub(cam.position).normalize();
 
       for (const anchor of anchors) {
         const elementCache = elementCacheRef.current;

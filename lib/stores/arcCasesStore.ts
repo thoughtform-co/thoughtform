@@ -13,7 +13,7 @@
  */
 
 import { create } from "zustand";
-import { stepSlot } from "@/lib/arc-cases/terraceMath";
+import { stepSlot } from "@/lib/arc-cases/arcCasesMath";
 
 interface ArcCasesState {
   /** True while the visitor has the terrace open at the Build park. */

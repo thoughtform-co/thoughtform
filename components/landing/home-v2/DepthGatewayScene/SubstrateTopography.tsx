@@ -1,18 +1,9 @@
 "use client";
 
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { terraceCloakEnvelope, terraceRealmTarget } from "@/lib/arc-cases/terraceMath";
-import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
-import { buildTerraceContourField } from "../arc-cases/terraceContourField";
-import {
-  getTerraceViewportLayout,
-  terraceViewportHalfWidth,
-  type TerraceViewportLayout,
-} from "../arc-cases/terraceLayout";
 import { getSmoothedEpilogueProgress } from "./motionFollower";
 import { getSubstrateRealmEnvelope } from "./sceneGeom";
 import {
@@ -86,11 +77,11 @@ const DAWN_SOFT_HEX = "#d6cdb5";
 const GOLD_HEX = "#caa554";
 
 // ── Camera-frame + terrain-layout constants ─────────────────────
-// Moved to `substrateTerrain.ts` (ADR-034 extraction — the terrace
-// screen grounds itself on the same heightfield): INT_Z, PARK_CAM_Z,
-// HFOV_TAN, REALM_Z_NEAR/FAR, REALM_ROW_BIAS, REALM_WIDTH_MARGIN and
-// the terrainHeight() relief. Imported above; the values are
-// unchanged and the built realm buffer is bit-identical.
+// Extracted to `substrateTerrain.ts` (single source of the relief
+// math): INT_Z, PARK_CAM_Z, HFOV_TAN, REALM_Z_NEAR/FAR,
+// REALM_ROW_BIAS, REALM_WIDTH_MARGIN and the terrainHeight() relief.
+// Imported above; the values are unchanged and the built realm
+// buffer is bit-identical.
 
 /** Terrain rows (Z slices) and samples per row. Anisotropic on
  *  purpose: dense along X, discrete in Z — from high above, the
@@ -182,13 +173,10 @@ uniform float uPointSize;
 uniform float uPixelRatio;
 uniform vec3 uCameraPos;
 uniform float uWave;
-uniform float uTerrace;
 
 attribute vec3 aColor;
 attribute float aSize;
 attribute float aDelay;
-attribute vec3 aTerraceTarget;
-attribute float aTerraceMask;
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -206,8 +194,7 @@ void main() {
   // The ground swells as the front crosses it — the gravitational-
   // wave displacement. Static buffers; the motion lives entirely in
   // this uniform-driven term.
-  float cloakT = smoothstep(0.08, 0.86, uTerrace) * aTerraceMask;
-  vec3 pos = mix(position, aTerraceTarget, cloakT);
+  vec3 pos = position;
   pos.y += flash * ${WAVE_SWELL.toFixed(2)};
 
   vec4 mv = modelViewMatrix * vec4(pos, 1.0);
@@ -224,8 +211,7 @@ void main() {
 
   // Gold-lifted flash at the front; resting palette in the wake.
   vColor = mix(aColor, GOLD, flash * 0.6);
-  float cloakReveal = mix(1.0, smoothstep(0.08, 0.22, uTerrace), aTerraceMask);
-  vAlpha = on * farFade * nearFade * (1.0 + 2.8 * flash) * cloakReveal;
+  vAlpha = on * farFade * nearFade * (1.0 + 2.8 * flash);
 
   float sizeFactor = clamp(11.0 / max(0.5, dist), 0.42, 1.6);
   gl_PointSize = uPointSize * uPixelRatio * sizeFactor * aSize * (1.0 + 0.8 * flash);
@@ -344,17 +330,13 @@ function hash(n: number): number {
   return s - Math.floor(s);
 }
 
-function buildRealm(layout: TerraceViewportLayout | null): {
+function buildRealm(): {
   positions: Float32Array;
-  terraceTargets: Float32Array;
-  terraceMasks: Float32Array;
   colors: Float32Array;
   sizes: Float32Array;
   delays: Float32Array;
 } {
   const positions: number[] = [];
-  const terraceTargets: number[] = [];
-  const terraceMasks: number[] = [];
   const colors: number[] = [];
   const sizes: number[] = [];
   const delays: number[] = [];
@@ -369,41 +351,21 @@ function buildRealm(layout: TerraceViewportLayout | null): {
 
     const camDist = Math.max(1, PARK_CAM_Z - zRow);
     const xHalf = HFOV_TAN * camDist * REALM_WIDTH_MARGIN + 0.6;
-    const armedHalf = layout ? terraceViewportHalfWidth(layout.aspect, camDist) : 0;
-    const xMin = layout
-      ? Math.min(
-          -xHalf,
-          layout.cameraShiftX - armedHalf - 1,
-          layout.screenX - layout.screenWidth / 2 - layout.sideApron - 1
-        )
-      : -xHalf;
-    const xMax = layout
-      ? Math.max(
-          xHalf,
-          layout.cameraShiftX + armedHalf + 1,
-          layout.screenX + layout.screenWidth / 2 + layout.sideApron + 1
-        )
-      : xHalf;
-    const sampleCount = layout
-      ? Math.min(246, Math.ceil(((xMax - xMin) / (xHalf * 2)) * REALM_SAMPLES_PER_ROW))
-      : REALM_SAMPLES_PER_ROW;
-    const spacing = (xMax - xMin) / sampleCount;
+    const spacing = (xHalf * 2) / REALM_SAMPLES_PER_ROW;
 
-    for (let i = 0; i < sampleCount; i++) {
+    for (let i = 0; i < REALM_SAMPLES_PER_ROW; i++) {
       const seed = r * 977.13 + i * 13.7;
       const h1 = hash(seed + 0.731);
       const h2 = hash(seed + 4.547);
       const h3 = hash(seed + 9.193);
 
-      const u = sampleCount > 1 ? i / (sampleCount - 1) : 0;
-      const x = xMin + u * (xMax - xMin) + (h1 - 0.5) * spacing * 0.4;
+      const u = REALM_SAMPLES_PER_ROW > 1 ? i / (REALM_SAMPLES_PER_ROW - 1) : 0;
+      const x = -xHalf + u * 2 * xHalf + (h1 - 0.5) * spacing * 0.4;
       const z = zRow + (h2 - 0.5) * 0.35;
       const edgeT = Math.min(1, Math.abs(x) / xHalf);
       const y = terrainHeight(x, z, edgeT, rowT) + (h3 - 0.5) * 0.05;
 
       positions.push(x, y, z);
-      terraceTargets.push(x, y, z);
-      terraceMasks.push(0);
 
       let c: THREE.Color;
       if (h3 > 0.96 && edgeT > 0.4) c = gold;
@@ -432,20 +394,8 @@ function buildRealm(layout: TerraceViewportLayout | null): {
     }
   }
 
-  if (layout) {
-    const contour = buildTerraceContourField(layout);
-    positions.push(...contour.basePositions);
-    terraceTargets.push(...contour.targetPositions);
-    terraceMasks.push(...contour.masks);
-    colors.push(...contour.colors);
-    sizes.push(...contour.sizes);
-    delays.push(...contour.delays);
-  }
-
   return {
     positions: new Float32Array(positions),
-    terraceTargets: new Float32Array(terraceTargets),
-    terraceMasks: new Float32Array(terraceMasks),
     colors: new Float32Array(colors),
     sizes: new Float32Array(sizes),
     delays: new Float32Array(delays),
@@ -659,19 +609,7 @@ function quintic(t: number): number {
 
 // ── Component ────────────────────────────────────────────────────
 
-export interface SubstrateTopographyProps {
-  /** Internal look-dev path: renders the production terrain without the
-   * corridor store being armed. Never used by the landing composition. */
-  forceVisible?: boolean;
-  /** Internal look-dev override for inspecting the real cloak morph. */
-  terraceLevelOverride?: number | null;
-}
-
-export function SubstrateTopography({
-  forceVisible = false,
-  terraceLevelOverride = null,
-}: SubstrateTopographyProps) {
-  const { size } = useThree();
+export function SubstrateTopography() {
   const pointsRef = useRef<THREE.Points>(null);
   const wavePointsRef = useRef<THREE.Points>(null);
   /** Front chase (cascaded two-stage — smooth ring speed graph). */
@@ -687,28 +625,16 @@ export function SubstrateTopography({
     return window.innerWidth >= 760;
   }, []);
 
-  // Geometry is rebuilt only on a viewport-aspect change. The full-arm
-  // extent is baked once so the terrain never thins or ends at the shifted
-  // frustum edge while the level itself remains a uniform-only morph.
-  const terraceLayout = useMemo(
-    () =>
-      ARC_CASES_TERRACE ? getTerraceViewportLayout(size.width / Math.max(1, size.height)) : null,
-    [size.width, size.height]
-  );
-
   const geometry = useMemo(() => {
     if (!enabled) return null;
-    const { positions, terraceTargets, terraceMasks, colors, sizes, delays } =
-      buildRealm(terraceLayout);
+    const { positions, colors, sizes, delays } = buildRealm();
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geom.setAttribute("aTerraceTarget", new THREE.BufferAttribute(terraceTargets, 3));
-    geom.setAttribute("aTerraceMask", new THREE.BufferAttribute(terraceMasks, 1));
     geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
     geom.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
     geom.setAttribute("aDelay", new THREE.BufferAttribute(delays, 1));
     return geom;
-  }, [enabled, terraceLayout]);
+  }, [enabled]);
 
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({
@@ -719,7 +645,6 @@ export function SubstrateTopography({
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
         uCameraPos: { value: new THREE.Vector3() },
         uWave: { value: 0 },
-        uTerrace: { value: 0 },
         uOpacity: { value: 0 },
       },
       transparent: true,
@@ -775,7 +700,7 @@ export function SubstrateTopography({
     const dt = Math.min(0.1, Math.max(0, delta));
 
     const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
-    const painting = forceVisible || active || armed;
+    const painting = active || armed;
 
     material.uniforms.uPixelRatio.value = viewport.dpr;
     waveMaterial.uniforms.uPixelRatio.value = viewport.dpr;
@@ -787,7 +712,6 @@ export function SubstrateTopography({
       terrainMidRef.current = 0;
       terrainRef.current = 0;
       material.uniforms.uWave.value = 0;
-      material.uniforms.uTerrace.value = 0;
       material.uniforms.uOpacity.value = 0;
       waveMaterial.uniforms.uFrontPhase.value = 0;
       waveMaterial.uniforms.uOpacity.value = 0;
@@ -796,18 +720,7 @@ export function SubstrateTopography({
       return;
     }
 
-    // Arc cases terrace boost (ADR-034): while the terrace is armed the
-    // realm resolves FULLY under the rising screen (the scroll envelope
-    // is only ~0.72 at the park); disarm returns to scroll ownership.
-    // `max` semantics — the boost can only add, never suppress, so the
-    // scroll-symmetric retract on walking out of the band is untouched.
-    // The level is written at useFrame priority −5 (before this painter)
-    // and is already band-gated. Flag off ⇒ literal 0 ⇒ byte-identical.
-    const terraceLevel = ARC_CASES_TERRACE
-      ? (terraceLevelOverride ?? arcCasesLevelRef.current.level)
-      : 0;
-    const scrollEnvelope = forceVisible ? 1 : getSubstrateRealmEnvelope(paintProgress);
-    const waveTarget = terraceRealmTarget(scrollEnvelope, terraceLevel);
+    const waveTarget = getSubstrateRealmEnvelope(paintProgress);
 
     // FRONT: cascaded chase — the visible diagram rings get zero
     // initial velocity instead of the single-exponential kick.
@@ -822,7 +735,6 @@ export function SubstrateTopography({
     terrainMidRef.current += (waveTarget - terrainMidRef.current) * kTerrain;
     terrainRef.current += (terrainMidRef.current - terrainRef.current) * kTerrain;
     material.uniforms.uWave.value = quintic(terrainRef.current);
-    material.uniforms.uTerrace.value = terraceCloakEnvelope(terraceLevel);
 
     // Epilogue recession.
     const ep = getSmoothedEpilogueProgress();

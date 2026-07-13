@@ -2,11 +2,9 @@
  * substrateTerrain — the pure heightfield math of the substrate realm
  * (the latent-topography valley below the Build station flight line).
  *
- * Extracted BEHAVIOR-IDENTICAL from `SubstrateTopography.tsx` (ADR-034)
- * so the terrace screen can stand on the ACTUAL terrain: `terrainGroundY`
- * inverts the row mapping `buildRealm()` uses, so a world (x, z) resolves
- * to the same layered-sine relief the point field samples. No three, no
- * DOM — unit-testable and importable from anywhere in the corridor.
+ * The relief math extracted from `SubstrateTopography.tsx` so the
+ * constants + `terrainHeight()` live in one testable module with no
+ * three and no DOM — importable from anywhere in the corridor.
  *
  * The constants here are the single source of truth; `SubstrateTopography`
  * imports them back. Do NOT retune them here without re-checking the
@@ -81,19 +79,4 @@ export function terrainHeight(x: number, z: number, edgeT: number, rowT: number)
   const bowl = REALM_BOWL_RISE * Math.pow(edgeT, REALM_BOWL_POWER);
   const base = REALM_BASE_Y + rowT * REALM_HORIZON_LIFT + bowl;
   return Math.min(REALM_Y_CEILING, base + rolling * amp);
-}
-
-/** Deterministic ground height at world (x, z) — the same relief
- *  `buildRealm()` samples, with the row mapping inverted: `rowT`
- *  undoes the row-bias pow over the Z span, `edgeT` is |x| over the
- *  frustum half-width at that depth (identical formula to the row
- *  builder, jitter excluded). The terrace screen computes its ground
- *  Y ONCE at mount from this — no per-frame cost. */
-export function terrainGroundY(x: number, z: number): number {
-  const zT = Math.min(1, Math.max(0, (z - REALM_Z_NEAR) / (REALM_Z_FAR - REALM_Z_NEAR)));
-  const rowT = Math.pow(zT, 1 / REALM_ROW_BIAS);
-  const camDist = Math.max(1, PARK_CAM_Z - z);
-  const xHalf = HFOV_TAN * camDist * REALM_WIDTH_MARGIN + 0.6;
-  const edgeT = Math.min(1, Math.abs(x) / xHalf);
-  return terrainHeight(x, z, edgeT, rowT);
 }

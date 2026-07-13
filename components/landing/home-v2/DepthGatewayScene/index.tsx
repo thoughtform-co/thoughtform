@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { ArcCasesTerraceGate } from "../arc-cases/ArcCasesTerraceGate";
-import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { BrandmarkPhysicsCoreActor } from "./BrandmarkPhysicsCoreActor";
 import { CelestialMotes } from "./CelestialMotes";
@@ -396,12 +394,6 @@ export function DepthGatewayScene() {
           [0.848, 0.93] as the mouth rings yield and the exit glow
           peaks (v3.12 realm-transition pass). */}
       <SubstrateTopography />
-      {/* Arc cases terrace (ADR-034) — ONE landscape screen that rises
-          out of the topography at the Build park when the visitor arms
-          it from the rail CTA. A world-fixed sibling of the terrain
-          (deliberately NOT inside the pointer-look instrument). Flag
-          off ⇒ nothing mounts. */}
-      {ARC_CASES_TERRACE ? <ArcCasesTerraceGate /> : null}
       <ThoughtformAtmosphere />
       {/* GatewayThroat — receding dotted echoes of the portal frame
           behind the Thoughtform gate at the parked beat, so the

@@ -27,9 +27,6 @@ import {
 } from "./DepthGatewayScene/shell/shellGeom";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
-import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { TERRACE_CAPTION_DIM } from "@/lib/arc-cases/terraceMath";
-import { ARC_CASES_TERRACE } from "./arcCasesTerrace";
 
 /**
  * CorridorStationHeaders — flat 2D screen-space layer for the three
@@ -1386,17 +1383,10 @@ export function CorridorStationHeaders() {
       // clock as the Build title) and the corridor-engaged gate. It
       // banks with the same cartouche parallax as the titles.
       const cardEl = captionCardRef.current;
-      // While the cases terrace is armed (ADR-034) the screen takes the
-      // frame: the caption irises back on the same damped level the
-      // terrace rides (its footer band otherwise overlaps the screen),
-      // and restores on disarm. Flag off ⇒ literal 1 ⇒ byte-identical.
-      const terraceDim = ARC_CASES_TERRACE
-        ? 1 - TERRACE_CAPTION_DIM * arcCasesLevelRef.current.level
-        : 1;
       if (cardEl) {
         const cs = captionState.current;
         const cardBand = bandOpacity(p, NAVIGATE_FADE_IN) * buildOut;
-        const cardOp = corridorEngaged ? buildOut * terraceDim : 0;
+        const cardOp = corridorEngaged ? buildOut : 0;
         if (Math.abs(cardOp - cs.lastOp) > 0.002) {
           cs.lastOp = cardOp;
           cardEl.style.opacity = cardOp.toFixed(3);

@@ -1552,9 +1552,6 @@ export function getBrandmarkWrapHalfExtent(progress: number): number {
 // ── Copy + label world anchors ───────────────────────────────────
 
 import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
-import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { TERRACE_SOURCE_LABEL_DIM, TERRACE_SURFACE_LABEL_DIM } from "@/lib/arc-cases/terraceMath";
-import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getSmoothedEpilogueProgress } from "./motionFollower";
@@ -1843,19 +1840,7 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
       slidePx += STACK_CHIP_DRAIN_SLIDE_PX * drain;
     }
   }
-  // Arc cases terrace armed dim (ADR-034): while the terrace screen is
-  // up, the stack-label DOM chips recede — the surfaces labels project
-  // onto the middle of the shifted frame, straight over the screen. The
-  // CANVAS streams/pips stay fully lit (only the text recedes). Rides
-  // the terrace's damped level; flag off ⇒ literal 0 ⇒ byte-identical.
-  const terraceLevel = ARC_CASES_TERRACE ? arcCasesLevelRef.current.level : 0;
-  const terraceDim =
-    side === "surfaces"
-      ? 1 - TERRACE_SURFACE_LABEL_DIM * terraceLevel
-      : side === "sources"
-        ? 1 - TERRACE_SOURCE_LABEL_DIM * terraceLevel
-        : 1;
-  el.style.opacity = (ctx.visibilityOpacity * lock * epFade * terraceDim).toFixed(3);
+  el.style.opacity = (ctx.visibilityOpacity * lock * epFade).toFixed(3);
   if (Math.abs(slidePx) > 0.01) {
     // Appended AFTER the tracker's translate/origin/scale segments and
     // BEFORE the gyro bank rotations — the tracker rewrites the base

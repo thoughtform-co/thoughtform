@@ -4,9 +4,6 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { arcCameraShiftX } from "../arc-cases/terraceLayout";
-import { ARC_CASES_TERRACE } from "../arcCasesTerrace";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   CAMERA_START,
@@ -68,7 +65,7 @@ export function FlyingCameraRig() {
     };
   }, [camera]);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     // Drive the rig from `paintProgress` so the camera sits at the
     // parked Thoughtform layout (progress 0) during the `armed` pre-
     // arm pass — mirrors the DOM tracker so DOM + R3F project from
@@ -84,23 +81,6 @@ export function FlyingCameraRig() {
     // `docked` for the dock-blend + epilogue-branch decisions.
     const { paintProgress, docked, servicesAmbient } = useDepthGatewayStore.getState().transform;
     const dockHeld = docked || servicesAmbient;
-
-    // Arc cases terrace lateral shift (ADR-034): while the terrace is
-    // armed at the Build park the whole frame translates RIGHT — position
-    // AND lookAt shift by the SAME amount, so the forward axis stays −Z
-    // and every camera-space depth/focus helper in `sceneGeom` remains
-    // exactly correct WITHOUT knowing about the shift (deliberate
-    // non-edit — do not "fix" getCameraPosition to include this).
-    // Applied additively in ALL THREE branches below: the branch switch
-    // can happen while the level is still draining, and an offset applied
-    // to only one branch would pop at the boundary. The level is already
-    // band-gated (arcBandFactor kills it across epilogue [0, 0.1]), so
-    // the planet flyover/dock never sees a lateral residue. The DOM
-    // mirror camera in `useWorldDomTracker.syncMirrorCamera` applies the
-    // SAME channel — the two cameras MUST stay in lockstep or projected
-    // DOM copy desyncs from the canvas. Flag off ⇒ literal 0.
-    const aspect = state.size.width / Math.max(1, state.size.height);
-    const shiftX = ARC_CASES_TERRACE ? arcCameraShiftX(arcCasesLevelRef.current.level, aspect) : 0;
 
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`
@@ -172,26 +152,26 @@ export function FlyingCameraRig() {
         const exitPose = getCorridorExitCameraPose(dissipate);
         const t = dissipate;
         camera.position.set(
-          pose.position[0] * (1 - t) + exitPose.position[0] * t + shiftX,
+          pose.position[0] * (1 - t) + exitPose.position[0] * t,
           pose.position[1] * (1 - t) + exitPose.position[1] * t,
           pose.position[2] * (1 - t) + exitPose.position[2] * t
         );
         camera.lookAt(
-          pose.lookAt[0] * (1 - t) + exitPose.lookAt[0] * t + shiftX,
+          pose.lookAt[0] * (1 - t) + exitPose.lookAt[0] * t,
           pose.lookAt[1] * (1 - t) + exitPose.lookAt[1] * t,
           pose.lookAt[2] * (1 - t) + exitPose.lookAt[2] * t
         );
         return;
       }
-      camera.position.set(pose.position[0] + shiftX, pose.position[1], pose.position[2]);
-      camera.lookAt(pose.lookAt[0] + shiftX, pose.lookAt[1], pose.lookAt[2]);
+      camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+      camera.lookAt(pose.lookAt[0], pose.lookAt[1], pose.lookAt[2]);
       return;
     }
 
     const [x, y, z] = getCameraPosition(paintProgress);
-    camera.position.set(x + shiftX, y, z);
+    camera.position.set(x, y, z);
     const [lx, ly, lz] = getCameraLookAt(paintProgress);
-    camera.lookAt(lx + shiftX, ly, lz);
+    camera.lookAt(lx, ly, lz);
   });
 
   return null;
