@@ -32,6 +32,15 @@ mobile absence-check on desktop.
 
 ## Red — known-red baseline (do NOT fix here)
 
+> **RESOLVED (2026-07-14, later the same day).** The known-red baseline below
+> is now historical: commit `c06fef1` retired the three stale Services tests
+> (their coverage lives in `services-ring-smoke.spec.ts`), reformulated the
+> `:102` engagement contract (ON + OFF legs; the hero-at-0 assumption was
+> viewport-wrong — on 390×844 the armed band legitimately reaches scroll 0),
+> and serialized the file against WebGL context starvation. The corridor
+> suite is **fully green: 36/36 on all four viewports**. The sections below
+> are kept as the record of what was red at baseline time and why.
+
 > **Warm-server verification (2026-07-14).** The corridor suite was run twice:
 > once against a long-running dev server and once against a **freshly started,
 > pre-warmed** dev server (`/` and `/test/services-demo` curled to 200 before
