@@ -52,3 +52,66 @@ jobs:
       # fails without env, a fallback path broke.
       - name: Production build
         run: npm run build
+
+  # Corridor DOM-contract smokes (Phase 5 CI hardening). The corridor's
+  # attribute writers live inside the WebGL frameloop; these assert the
+  # ADR-018/021/022 contracts across all four viewport projects. CI
+  # WebGL is SwiftShader — the corridorCapable() automation carve-out
+  # (ADR-038) keeps the 3D corridor mounted under navigator.webdriver,
+  # and playwright.config forces workers=1 in CI (no GPU starvation).
+  # Playwright's webServer starts the dev server itself.
+  corridor-smokes:
+    name: Corridor smokes (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --ignore-scripts
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Corridor + device-matrix smokes
+        run: npx playwright test tests/visual/landing-corridor-smoke.spec.ts tests/visual/corridor-device-matrix-smoke.spec.ts --reporter=list
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failures
+          path: test-results/
+          retention-days: 7
+
+  # react-doctor scoped to NEW issues only (--scope changed diffs
+  # against the PR base) — safe on a legacy-heavy repo: pre-existing
+  # findings never fail the build, newly introduced ones do.
+  react-doctor:
+    name: react-doctor (new issues only)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Full history so --scope changed can diff against the base.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --ignore-scripts
+
+      - name: react-doctor (changed scope)
+        run: npx react-doctor@0.7.7 . --scope changed --no-supply-chain --yes
