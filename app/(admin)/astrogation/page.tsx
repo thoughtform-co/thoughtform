@@ -1042,8 +1042,10 @@ function AstrogationContent() {
 // ═══════════════════════════════════════════════════════════════
 
 export default function Astrogation() {
-  // TODO: Re-enable authentication after testing
-  const BYPASS_AUTH = true; // TEMPORARY - remove after testing
+  // Auth bypass is a DEV-ONLY convenience. NODE_ENV is inlined at compile
+  // time in Next client bundles, so production builds hard-code this to
+  // false and the auth wall below cannot be toggled at runtime.
+  const BYPASS_AUTH = process.env.NODE_ENV === "development";
 
   const { user, isLoading } = useAuth();
 
