@@ -126,6 +126,15 @@ function parseV7HtmlUncached(
     }
   }
 
+  // Ship-weight trim (2026-07-14 perf pass): the prototype's design
+  // annotation comments (~26 kB raw in the source file) are inert in the
+  // rendered tree but ship TWICE — once in the SSR HTML and once in the
+  // RSC flight payload (~22 kB of the served document). Strip them at
+  // the END of the pipeline: the station surgery above tolerates but
+  // never requires them, and inline <script> blocks were already removed
+  // by sanitizeBodyMarkup, so the pattern cannot eat script text.
+  bodyHtml = bodyHtml.replace(/<!--[\s\S]*?-->/g, "");
+
   const scopedCss = scopeV7Css(tokensCss, inlineStyles);
 
   return { bodyHtml, bodyClass, scopedCss };
