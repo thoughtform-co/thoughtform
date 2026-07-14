@@ -330,18 +330,22 @@ export const ORBIT_ENVELOPE = {
   retract: { in: 0.85, out: 1.0 },
 };
 
-export function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-export function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
+// Journey-handoff scalars live in the three-free `journeyScalars.ts`
+// (2026-07-14 perf pass): `lib/brandmark/journey.ts` imports them from
+// there so the landing's initial bundle doesn't pull this module's
+// `three` import. Re-exported here so scene-side consumers keep their
+// existing import path.
+export {
+  smoothstep,
+  lerp,
+  clamp01,
+  SUBSTRATE_PHASE,
+  splitEnvelope,
+  vectorRingOpacity,
+  splitRotation,
+} from "./journeyScalars";
+export type { SubstratePhases } from "./journeyScalars";
+import { smoothstep, clamp01 } from "./journeyScalars";
 
 export function orbitEmerge(progress: number): number {
   if (progress <= ORBIT_ENVELOPE.emerge.in) return 0;
@@ -349,34 +353,6 @@ export function orbitEmerge(progress: number): number {
   const emergeIn = smoothstep(ORBIT_ENVELOPE.emerge.in, ORBIT_ENVELOPE.emerge.out, progress);
   const retractOut = smoothstep(ORBIT_ENVELOPE.retract.in, ORBIT_ENVELOPE.retract.out, progress);
   return emergeIn * (1 - retractOut);
-}
-
-export const SUBSTRATE_PHASE = {
-  arriveOut: 0.04,
-  handoffOut: 0.12,
-  splitOut: 0.28,
-  resolveIn: 0.22,
-  resolveOut: 0.42,
-} as const;
-
-export interface SubstratePhases {
-  handoff: number;
-  split: number;
-  resolve: number;
-}
-
-export function splitEnvelope(progress: number): SubstratePhases {
-  return {
-    handoff: smoothstep(SUBSTRATE_PHASE.arriveOut, SUBSTRATE_PHASE.handoffOut, progress),
-    split: smoothstep(SUBSTRATE_PHASE.handoffOut, SUBSTRATE_PHASE.splitOut, progress),
-    resolve: smoothstep(SUBSTRATE_PHASE.resolveIn, SUBSTRATE_PHASE.resolveOut, progress),
-  };
-}
-
-export function vectorRingOpacity(progress: number): number {
-  if (progress <= SUBSTRATE_PHASE.arriveOut) return 1;
-  if (progress >= SUBSTRATE_PHASE.handoffOut) return 0;
-  return 1 - smoothstep(SUBSTRATE_PHASE.arriveOut, SUBSTRATE_PHASE.handoffOut, progress);
 }
 
 export function clusterRingResolve(
@@ -387,11 +363,6 @@ export function clusterRingResolve(
   const ringStagger = ringIndex * 0.08;
   const phase = clamp01(resolveProgress - clusterStagger - ringStagger);
   return smoothstep(0, 0.55, phase);
-}
-
-/** ADR-014 rotation channel — no-op; triad is front-on (ADR-016). */
-export function splitRotation(_progress: number): number {
-  return 0;
 }
 
 export interface ScreenRect {

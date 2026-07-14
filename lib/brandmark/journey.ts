@@ -39,10 +39,13 @@
  *      from / into.
  */
 
+// Import from the three-free scalar module, NOT intelligenceLayerGeom —
+// the geom module imports `three` at module scope and this file sits in
+// the landing route's initial bundle (2026-07-14 perf pass).
 import {
   splitRotation,
   vectorRingOpacity,
-} from "@/components/landing/v7/intelligence-layer/intelligenceLayerGeom";
+} from "@/components/landing/v7/intelligence-layer/journeyScalars";
 import type { BrandmarkShapeKey } from "@/lib/brandmark/shapes";
 
 // ────────────────────────────────────────────────────────────────────
@@ -854,9 +857,7 @@ function transitTransform(
   //   else         : 1 — from miss onward the brandmark IS particles;
   //                  transits only lerp the rect.
   const silhouetteMorph =
-    from.id === "sigil" && to.id === "miss"
-      ? TRAVEL_EASE(clamp01(t / SILHOUETTE_RAMP_FRAC))
-      : 1;
+    from.id === "sigil" && to.id === "miss" ? TRAVEL_EASE(clamp01(t / SILHOUETTE_RAMP_FRAC)) : 1;
 
   return {
     rect,
