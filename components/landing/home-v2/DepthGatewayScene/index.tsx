@@ -238,22 +238,6 @@ function viewportAspect(): number {
  *                             (`celestialGatewayGeometry.ts`),
  *                             scaled to subtle so it never reads
  *                             as a literal grid tube.
- *   - LatentTopographyContours : world-fixed contour shards + ridge
- *                             arcs + gradient arrows distributed
- *                             along BOTH passthrough legs. Reads
- *                             as the level sets of a loss surface
- *                             the camera is flying past. Paints
- *                             ABOVE the wormhole walls so contours
- *                             register on top of the rail lattice
- *                             rather than competing with it. Unlike
- *                             LatentFieldTunnel (camera-relative
- *                             ambient particles), every shard
- *                             lives at a fixed world Z — the
- *                             camera literally flies past each
- *                             one. Reinforces the "real depth
- *                             corridor" read with abstract latent-
- *                             space content instead of literal
- *                             equation glyphs.
  *   - CelestialMotes        : a small set of sphere-shaped particle
  *                             clusters that fly past the camera like
  *                             planetoids — the celestial-navigation
@@ -414,7 +398,8 @@ export function DepthGatewayScene() {
       {/* LatentTopographyContours (latent-space contour "mandalas" on the
           Navigate -> Encode leg) removed 2026-06-19 per design request —
           they read as busy hand-drawn orbit decoration between stations.
-          Re-add `<LatentTopographyContours />` here to restore them. */}
+          Source deleted in the 2026-07 cleanup; recover it from git
+          history if the contours ever need to come back. */}
       <CelestialMotes />
       <ScrollStreaks />
       <GatewayWorld />

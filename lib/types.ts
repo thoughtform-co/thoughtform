@@ -45,12 +45,3 @@ export type {
   EditorState,
   SectionTemplate,
 } from "@/types";
-
-// Re-export all constants
-export {
-  GRID_SIZES,
-  SECTION_TEMPLATES,
-  DEFAULT_ELEMENT_DIMENSIONS,
-  DEFAULT_ELEMENT_CONTENT,
-  DEFAULT_SECTION_CONTENT,
-} from "@/constants";
