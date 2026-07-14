@@ -49,6 +49,32 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 
 ---
 
+## Ledger
+
+Chronological record of repo-wide maintenance passes (distinct from the Cycle
+A/B capture rules above). Newest first.
+
+### 2026-07-14 — Phase 0 (cleanup plan kickoff)
+
+- **Worktrees pruned:** 6 in-repo + 1 external git worktree removed (~2.6 GB
+  freed); 3 merged branches deleted.
+- **Guardrail added:** env-gated `NEXT_DIST_DIR` in `next.config.mjs` so
+  verification/analyze builds can target `.next-verify` without clobbering a
+  running dev server's `.next`. `.next-verify` / `.next-build` added to
+  `.gitignore`; matching generated-type globs added to `tsconfig.json` so an
+  alternate-distDir build does not auto-rewrite tsconfig. Default behavior is
+  byte-identical when the env var is unset; nothing product-visible changed.
+- **Baselines captured** in [`baselines/2026-07-14-phase0/`](baselines/2026-07-14-phase0/):
+  bundle (landing First Load JS 449.8 kB gzip; three.js core 166.5 kB gzip),
+  ESLint (0 errors / 470 warnings), react-doctor 0.7.7 (true post-prune score
+  **30/100**, up from the worktree-polluted 13), Playwright smokes (87 pass /
+  13 fail / 32 skip — the 2 documented scan-notes tests red as expected, plus a
+  flagged Services-ambient red), Lighthouse (desktop 99 / mobile 73; mobile
+  LCP 8.2 s).
+- Commits: `cca26d7` (guardrail), `489a842` (baselines), and this ledger entry.
+
+---
+
 ## Quick links
 
 - Patterns: [BEST-PRACTICES.md](BEST-PRACTICES.md)
