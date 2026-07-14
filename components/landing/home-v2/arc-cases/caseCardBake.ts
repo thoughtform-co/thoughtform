@@ -1,10 +1,12 @@
-// caseCardBake — the portrait case-card FACE bake (ADR-036). Restored
-// from the ADR-033 orbit ring's inline `bakeCaseCardFace`
-// (`ArcCasesRing.tsx` @ 55afc8a, lines ~104–531) into a standalone module,
-// unchanged in layout: an 840×1360 portrait canvas with the ServicesCardRing
+// caseCardBake — the portrait case-card FACE bake (ADR-036, capability band
+// added ADR-041). Restored from the ADR-033 orbit ring's inline
+// `bakeCaseCardFace` (`ArcCasesRing.tsx` @ 55afc8a, lines ~104–531) into a
+// standalone module: an 840×1360 portrait canvas with the ServicesCardRing
 // plate grammar — opaque void ground, a contain-fit gold-LUT screenshot band
 // with a hairline frame, top + ground scrims, the chamfered shell stroke +
 // two bright ticks, a FILLED gold codename chip + `NN/04 · STATUS` top row,
+// the four CAPABILITY rows (gold `CAP 0N` index + title + wrapped desc,
+// transposed from the retired horizontal console card to fill the mid-band),
 // and a bottom-anchored copy stack (stack chips → subline lede → title runs
 // em→gold → caption row mode·tagline / metric gold). NO CTA box — the repos
 // are private; the card is a showcase, not a link.
@@ -46,6 +48,32 @@ const VEIL_FADE_END = SHOT_Y0 + SHOT_H;
 const CARD_FONT = '"PT Mono", "IBM Plex Mono", ui-monospace, monospace';
 const CARD_SANS = '"PP Neue Montreal", "Helvetica Neue", Arial, sans-serif';
 const PAD_X = 52;
+
+/* ── Capability band (ADR-041) ──
+ * The four `capabilities` fill the gap between the screenshot window and
+ * the bottom copy stack — the information the retired horizontal console
+ * card (`ToolCardConsole`, ADR-030) painted as CAP rows, transposed into
+ * this portrait bake. The band is a MEASURED fit: the copy stack is
+ * bottom-anchored and wraps differently per case (Heimdall's title/subline
+ * run longest), so the available height varies. Rows degrade full → title-
+ * only → skipped and never overflow into the copy stack. */
+/** Left gutter reserved for the gold `CAP 0N` index; the title + desc hang
+ *  to its right. */
+const CAP_GUTTER = 104;
+/** Air below the screenshot frame before the first cap row. */
+const CAP_BAND_TOP_GAP = 34;
+/** Air above the caption row (which sits ~16px tall on the `capY` baseline). */
+const CAP_BAND_BOTTOM_GAP = 28;
+/** Title line box height + baseline ascent within it. */
+const CAP_TITLE_LH = 30;
+const CAP_TITLE_ASCENT = 21;
+/** Desc line height; desc wraps to at most this many lines. */
+const CAP_DESC_LH = 24;
+const CAP_DESC_MAX_LINES = 2;
+/** Gap between one cap's box and the next. */
+const CAP_ROW_GAP = 15;
+/** Row height when only the title is drawn (degraded tier). */
+const CAP_TITLE_ONLY_LH = 34;
 
 /** Dot-matrix veil tile (one column, repeated horizontally by the texture). */
 export function buildVeilCanvas(): HTMLCanvasElement {
@@ -458,6 +486,56 @@ export function bakeCaseCardFace(
     ctx.textAlign = "left";
   }
   label.letterSpacing = "0px";
+
+  /* ── Capability rows (ADR-041) — fill the band between the screenshot and
+     the copy stack with the four capabilities (from the retired console
+     card). MEASURED fit: full rows if the band affords them, title-only if
+     tight, skipped if there's no room — never overflowing the copy stack. ── */
+  const capBandTop = SHOT_Y0 + SHOT_H + CAP_BAND_TOP_GAP;
+  const capBandBottom = capY - 16 - CAP_BAND_BOTTOM_GAP;
+  const capBandH = capBandBottom - capBandTop;
+  const capBodyX = PAD_X + CAP_GUTTER;
+  const capBodyW = maxW - CAP_GUTTER;
+
+  // Wrap each capability's desc at the body width (desc font), capped.
+  ctx.font = `400 16px ${CARD_SANS}`;
+  const capDescLines = projectCase.capabilities.map((cap) =>
+    wrapRuns(ctx, [{ text: cap.desc }], capBodyW).slice(0, CAP_DESC_MAX_LINES)
+  );
+  const fullTotal =
+    capDescLines.reduce((sum, lines) => sum + CAP_TITLE_LH + lines.length * CAP_DESC_LH, 0) +
+    (projectCase.capabilities.length - 1) * CAP_ROW_GAP;
+  const titleOnlyTotal = projectCase.capabilities.length * CAP_TITLE_ONLY_LH;
+  const capTier: "full" | "title" | "none" =
+    fullTotal <= capBandH ? "full" : titleOnlyTotal <= capBandH ? "title" : "none";
+
+  if (capTier !== "none" && capBandH > 0) {
+    let boxTop = capBandTop;
+    projectCase.capabilities.forEach((cap, i) => {
+      const baseline = boxTop + CAP_TITLE_ASCENT;
+      // Index — gold mono.
+      label.letterSpacing = "2px";
+      ctx.font = `700 15px ${CARD_FONT}`;
+      ctx.fillStyle = SERVICES_GOLD;
+      ctx.fillText(`CAP 0${i + 1}`, PAD_X, baseline);
+      // Title — mono bold, bright dawn.
+      label.letterSpacing = "0.5px";
+      ctx.font = `700 18px ${CARD_FONT}`;
+      ctx.fillStyle = `rgb(${DAWN})`;
+      ctx.fillText(cap.title, capBodyX, baseline);
+      if (capTier === "full") {
+        label.letterSpacing = "0px";
+        ctx.font = `400 16px ${CARD_SANS}`;
+        capDescLines[i].forEach((line, k) => {
+          drawRunLine(ctx, line, capBodyX, baseline + (k + 1) * CAP_DESC_LH, `rgba(${DAWN}, 0.5)`);
+        });
+        boxTop += CAP_TITLE_LH + capDescLines[i].length * CAP_DESC_LH + CAP_ROW_GAP;
+      } else {
+        boxTop += CAP_TITLE_ONLY_LH;
+      }
+    });
+    label.letterSpacing = "0px";
+  }
 
   return canvas;
 }
