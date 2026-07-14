@@ -54,6 +54,51 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-14 — Arc Cases: phased reveal + front-pole sigil (ADR-041)
+
+Owner-driven feature pass on the Build-park cases reveal (Cycle B — new
+surface + two superseded ADR-036 sections). Three changes:
+
+- **Phased reveal.** The single damped arm level now drives TWO ordered
+  phases: the node fold on `arcFoldInput(level)` (done at `ARC_FOLD_DONE`
+  0.62) and the card on `arcCardPresence(level)` (`smootherstep(0.62, 1)`,
+  published as `cardPresence` on `arcCasesLevelRef` by the same single
+  writer). The card previously read the level LINEARLY while the fold rode a
+  smootherstep, so the screen visibly led the nodes it hangs from. Now:
+  labels fade → nodes fold and latch → card materializes into the frame they
+  made. Strict ordering invariant (`arcCardPresence === 0` while
+  `arcFoldInput < 1`) is unit-pinned; the live arm trace shows cardPresence
+  exactly 0 for the first ~384 ms while the labels fade 0.66 → 0.
+- **The trigger is a sigil, not a chip.** `ArcCasesTerminalCta` deleted;
+  `ArcCasesSigil` is a world-anchored DOM marker at the sphere's FRONT POLE
+  (`SIGIL_Z` 0.98 — where the two EDGE-ON gimbal rings cross, since their
+  planes meet on the Z axis; derivation in the ADR so it can't be
+  re-litigated). CSS-keyframe pulse (no JS clock). It arms only once the
+  notes have SETTLED (`sigilSettle`, window **measured live**, not guessed —
+  a first pass at [0.72, 0.96] left the trigger unreachable). CLOSE moved to
+  the stepper. Chose world-anchored DOM over an in-canvas sigil after finding
+  the corridor canvas is `pointer-events: none` with **zero R3F click
+  handlers** — in-canvas would still need a DOM hit area.
+- **Card face** gains the four capability rows from the retired horizontal
+  console card, as a MEASURED fit (full → title-only → skipped) into the
+  ~320 px dead band; Heimdall (longest copy) verified collision-free.
+- **Deliberately NOT done:** retuning `ARC_BAND_IN` (its "tracks the stack"
+  comment is stale drift — the stack moved 0.81/0.93 → 0.875/0.95 and the
+  band didn't follow), because the Build park (0.9225) sits BELOW the
+  accretion peak (0.95): raising the band would gate the card off entirely.
+  Sequencing is enforced on the trigger instead. Recorded in ADR-041.
+- **New gotcha (in the ADR + rules):** Playwright `locator.click()` can never
+  pass actionability on the sigil — it is re-projected every frame and the
+  gyro carries an idle drift, so its box never repeats ("element is not
+  stable"). Use `page.mouse.click` at the projected centre (still hit-tested).
+- Gate: typecheck clean, ESLint **0 errors / 300 warnings** (baseline
+  unchanged), **256 unit tests**, prod build clean, `arc-cases-card-smoke`
+  rewritten against the sigil (10 pass), `landing-corridor` + `services-ring`
+  52 pass. Driven live at the Build park at 1600×1000.
+- **Left for the owner's eye:** sigil size + pulse cadence, the exact
+  `ARC_FOLD_DONE` split (how long the nodes hang on an empty frame), and the
+  CAP-row type scale.
+
 ### 2026-07-14 — Phase 5, round 1 (structural: deletions, CI, math)
 
 - **Deletions** (`fd9abb9`, `21cb068`): the repo's single react-doctor P0
