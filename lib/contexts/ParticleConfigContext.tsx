@@ -206,125 +206,119 @@ export function ParticleConfigProvider({ children, initialConfig }: ParticleConf
     };
   }, [loadConfig, initialConfig]);
 
+  // AUTOSAVE SCHEDULING — the update* callbacks below used to call
+  // autoSaveToServer(newConfig) INSIDE their setConfig updaters. React may
+  // re-run updater functions (StrictMode, concurrent re-basing), which can
+  // repeat the side effect with a stale snapshot. Instead the updaters stay
+  // pure and set a pending flag; this effect fires once per COMMITTED config
+  // change and hands the committed value to the (already debounced) saver.
+  const pendingAutoSaveRef = useRef(false);
+  const scheduleAutoSave = useCallback(() => {
+    pendingAutoSaveRef.current = true;
+  }, []);
+  useEffect(() => {
+    if (!pendingAutoSaveRef.current) return;
+    pendingAutoSaveRef.current = false;
+    autoSaveToServer(config);
+  }, [config, autoSaveToServer]);
+
   // Update entire config (admin only - auto-saves to server)
   const updateConfig = useCallback(
     (updates: Partial<ParticleSystemConfig>) => {
-      setConfig((prev) => {
-        const newConfig = { ...prev, ...updates };
-        // Auto-save to server (admin only)
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({ ...prev, ...updates }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Update manifold settings
   const updateManifold = useCallback(
     (updates: Partial<ManifoldConfig>) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          manifold: {
-            ...prev.manifold,
-            ...updates,
-          },
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        manifold: {
+          ...prev.manifold,
+          ...updates,
+        },
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Update gateway settings
   const updateGateway = useCallback(
     (updates: Partial<GatewayConfig>) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          gateway: {
-            ...prev.gateway,
-            ...updates,
-          },
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        gateway: {
+          ...prev.gateway,
+          ...updates,
+        },
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Update camera settings
   const updateCamera = useCallback(
     (updates: Partial<CameraConfig>) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          camera: {
-            ...prev.camera,
-            ...updates,
-          },
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        camera: {
+          ...prev.camera,
+          ...updates,
+        },
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Update sigil settings
   const updateSigil = useCallback(
     (updates: Partial<SigilConfig>) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          sigil: {
-            ...prev.sigil,
-            ...updates,
-          },
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        sigil: {
+          ...prev.sigil,
+          ...updates,
+        },
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Update mobile-specific gateway settings
   const updateMobileGateway = useCallback(
     (updates: Partial<GatewayConfig>) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          mobileGateway: {
-            ...(prev.mobileGateway || {}),
-            ...updates,
-          },
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        mobileGateway: {
+          ...(prev.mobileGateway || {}),
+          ...updates,
+        },
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Update mobile-specific manifold settings
   const updateMobileManifold = useCallback(
     (updates: Partial<ManifoldConfig>) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          mobileManifold: {
-            ...(prev.mobileManifold || {}),
-            ...updates,
-          },
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        mobileManifold: {
+          ...(prev.mobileManifold || {}),
+          ...updates,
+        },
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Get effective config for mobile (merges mobile overrides with base config)
@@ -335,46 +329,37 @@ export function ParticleConfigProvider({ children, initialConfig }: ParticleConf
   // Update a specific landmark
   const updateLandmark = useCallback(
     (id: string, updates: Partial<LandmarkConfig>) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          landmarks: prev.landmarks.map((l) => (l.id === id ? { ...l, ...updates } : l)),
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        landmarks: prev.landmarks.map((l) => (l.id === id ? { ...l, ...updates } : l)),
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Add a new landmark
   const addLandmark = useCallback(
     (landmark: LandmarkConfig) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          landmarks: [...prev.landmarks, landmark],
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        landmarks: [...prev.landmarks, landmark],
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Remove a landmark
   const removeLandmark = useCallback(
     (id: string) => {
-      setConfig((prev) => {
-        const newConfig = {
-          ...prev,
-          landmarks: prev.landmarks.filter((l) => l.id !== id),
-        };
-        autoSaveToServer(newConfig);
-        return newConfig;
-      });
+      setConfig((prev) => ({
+        ...prev,
+        landmarks: prev.landmarks.filter((l) => l.id !== id),
+      }));
+      scheduleAutoSave();
     },
-    [autoSaveToServer]
+    [scheduleAutoSave]
   );
 
   // Save config to server (admin only - pushes to all visitors)
