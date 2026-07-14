@@ -46,13 +46,14 @@ reveals instantly (no animation, no motion).
 1. _Full-choreography CSS reveal_ (animating the role's clip-wipe/filter):
    clip-path/filter animations are **main-thread**, and hydration jams the main
    thread exactly when the paint is needed. LCP stayed ~9.6 s.
-2. _Composited fade_ (opacity+transform, from opacity 0): visually perfect —
+2. _Composited fade_ (opacity+transform, from opacity 0): visually equivalent —
    screenshots show the headline fully painted at 700 ms under 4× CPU throttle
-   vs MISSING without the flag — but LCP **still** ~9.6 s, because Chrome
-   **excludes opacity-0 paints from LCP** and a compositor-driven fade produces
-   no new main-thread paint records; the h1's next recorded paint is the
-   hydration re-render. Any fade-from-zero on the LCP element structurally pins
-   the metric to hydration.
+   vs MISSING without the flag — and the lab numbers don't distinguish it from
+   opaque-first-paint (see the measurement table: no lab method credits either).
+   Opaque-first-paint is preferred on **robustness**: engines' treatment of
+   invisible/opacity-0 paints in LCP has shifted across versions and differs
+   between tools, while genuinely visible text at first paint depends on no
+   engine's accounting. It is also strictly earlier for the eye — no fade ramp.
 
 Hence: opaque first paint + rise. On first load the hero trades its fade /
 clip-wipe entrance for a pure rise — below-the-fold choreography unchanged.

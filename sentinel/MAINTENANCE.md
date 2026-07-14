@@ -54,6 +54,62 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-14 — Phase 4 (WebGL/device hardening + the mobile-LCP lever)
+
+- **Quality governor** (`6796253`, ADR-038): the corridor's missing adaptive
+  layer. One-shot `WEBGL_debug_renderer_info` probe
+  (`lib/webgl/rendererClass.ts`) — software rasterizers route to the static
+  fallback via `corridorCapable()`; weak-but-real GPUs open two rungs down.
+  Runtime frame governor (`lib/hooks/useQualityTier.ts`): monotonic ladder,
+  DPR 1.75→1.25→1.0 then count multiplier 1.0→0.6→0.35, stepping only on
+  sustained >24 ms over 1200 ms (1500 ms cooldowns), sampled in
+  MotionFollowerDriver's priority −10 useFrame. Heavy painters read counts via
+  `useCorridorCount` — byte-identical at multiplier 1. Under automation
+  (`navigator.webdriver`) the mount gate keeps 3D and the governor is a no-op,
+  so headless SwiftShader smokes stay deterministic. +4 ladder unit tests.
+- **Tablet band** (`aad7ed0`): 760–1280 px COARSE-POINTER devices (iPads) now
+  get the mobile GPU profile (antialias off, DPR ≤1.4) instead of the desktop
+  one; a tablet-width desktop window keeps the desktop profile.
+- **Fixed counts tier-gated** (`2d8c50d`): ThoughtformAtmosphere STAR_COUNT
+  420 and LatentWormholeWalls STREAK_COUNT 520 were full-count on every tier;
+  now per-tier + governor-scaled (desktop unchanged).
+- **Per-frame hygiene** (`90c105a`): ThoughtformAtmosphere / GatewayThroat /
+  ThoughtformCompassGate drove twinkle/breath/spins off absolute
+  `clock.elapsedTime`, which jumps on demand→always re-engage (visible pop on
+  scroll re-entry) — each now accumulates a clamped-dt phase advanced only
+  while painting. HologramOrbits' per-orbit per-frame `Vector3.clone()`
+  replaced with a reused projection scratch.
+- **Device-matrix probe** (`5894e73`,
+  `tests/visual/corridor-device-matrix-smoke.spec.ts`): report-only FPS + the
+  GPU profile actually granted to the canvas across all four viewport
+  projects, plus hard assertions that no-WebGL and reduced-motion resolve to
+  the static fallback. Confirms the tablet fix live (iPad project: antialias
+  false, effective DPR 1.4). 12/12.
+- **Mobile-LCP lever** (`8c9aaab`, `ef7e0ad`, ADR-039 — PROTOTYPE, flag OFF):
+  CSS first-paint hero reveal behind `html[data-hero-css-reveal]`
+  (`?heroReveal=css` / `NEXT_PUBLIC_HERO_CSS_REVEAL`). Opaque first paint +
+  transform-only rise (measured: clip/filter can't beat hydration; fades add
+  nothing the lab credits). **Premise correction:** real Chrome records the
+  H1's LCP entry at first paint even at opacity:0 (292 ms flag-off), so
+  "mobile LCP 7.9 s pinned by the [data-m] reveal" was a lantern attribution
+  artifact — lantern chains the JS bundle into text-LCP and reports ~9.5 s in
+  BOTH flag states. The USER-VISIBLE gate is real (headline missing at 700 ms
+  under 4× throttle without the flag, painted with it) — A/B screenshots in
+  `assets-staging/hero-reveal-ab/` await Vince's brand-motion call.
+- **Deferred with cause:** rAF-loop consolidation (the DOM loops carry
+  one-writer ordering contracts — e.g. `brandmarkScreenRectRef` write/read
+  ordering between the SVG actor and the physics core — a dedicated pass);
+  services wheel listener (verified already correctly scoped — preventDefault
+  unreachable unless the ring is captured); anchor-array hoists (a fresh array
+  per frame IS the Zustand change-detection signal; reuse would freeze
+  connectors); `generateMipmaps=false` on card faces (orbiting cards minify at
+  depth — shimmer risk wants an owner eyeball first).
+- Gate per commit: typecheck, ESLint 0 errors / 327 warnings, 246 unit tests,
+  `NEXT_DIST_DIR` prod build (First Load JS unchanged at 72.8 kB gzip),
+  corridor 36/36 + services-ring 16/16 + arc-cases 8/8 + device-matrix 12/12
+  (workers=2). Desktop full-quality path byte-identical throughout; the
+  re-entry-pop removal and the flagged hero entrance want owner eyeballs.
+
 ### 2026-07-14 — Phase 3b (performance: assets, auth path, payloads)
 
 - **Case screenshots** (`22f5e60`): the four Build-park PNGs
