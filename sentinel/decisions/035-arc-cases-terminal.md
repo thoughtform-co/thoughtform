@@ -222,3 +222,84 @@ as the seam; caption fades; close reverses everything; rapid stepping
 never queues; arm → scroll to epilogue → auto-disarm within 2%, services
 ring only post-dissipate. Safari: `backdrop-filter` + `clip-path`
 transition on the same element (ships on the caption card already).
+
+## Updates
+
+### Update 1 (2026-07-14) — the node streams latch onto the panel borders
+
+v1 left the canvas pips/streams in their rest pose to FRAME the panel. The
+owner asked for more: "I want the nodes (the green and white lines with the
+little squares) to fold and really latch on to the borders of the screen. As
+if the screen is mounted on those nodes." So while the terminal is armed each
+SOURCE stream now folds from its pip and terminates EXACTLY on the panel's
+LEFT border; each SURFACE stream terminates on its RIGHT border. The pips stay
+put in their fan positions — they are the anchors the screen hangs from — and
+only the wrap-tail end of each stream travels to a border attach point. Close
+reverses the fold back to rest.
+
+**The rect bridge.** `arcCasesLevelRef` gains a sibling field:
+`{ level, panelRect: { x, y, width, height } | null }`. The overlay's DOM rAF
+stays the SINGLE writer — it now also measures the panel's
+`getBoundingClientRect` on arm + on window resize (NOT per frame; the panel is
+`position: fixed` + CSS-sized), keeps the rect while draining so the fold
+unwinds from the spot it latched onto, and nulls it on unmount. The DOM rect is
+the SINGLE source of truth for the mount geometry — the canvas never hard-codes
+the panel's CSS size. This retires the "DOM-only channel, no R3F reader" note in
+the ref header and the two rules twins: `ShellStack` is now a THIRD reader of
+the ref (alongside `gateStackLabel` + the caption fade), the first that lives in
+the R3F tree.
+
+**Mount geometry (`ShellStack`, in its existing `useFrame` — no new loop).**
+When `ARC_CASES_TERMINAL` is on, the level > 0, and a `panelRect` is present,
+each row's attach point is distributed along its border at vertical fraction
+`(rowCount − 0.5 − i) / rowCount` (top-to-bottom matching the rows' ascending
+world-Y order, so no two folded lines cross). The attach point is re-solved
+against the LIVE camera every frame: viewport-px → NDC → a ray from
+`state.camera` → intersect the vertical plane at the stack-pip plane's world z
+→ `worldToLocal` on the stream group. Solving in-plane with the pips keeps the
+fold co-planar with the fan and inherits its occlusion; solving against the live
+camera every frame keeps the latch welded to the border UNDER the pointer bank
+(the whole assembly banks with the cursor, so a precomputed local attach point
+would drift off the edge). A per-row cubic bézier (`buildDockedPath` /
+`latchControlPoints` / `cubicBezierPoint` in `lib/arc-cases/streamLatchMath.ts`)
+leaves the pip along the rest stream's initial tangent and arrives at the border
+perpendicular to the (vertical) edge — a clean fold/latch, no wrap segment. The
+rest→docked lerp runs per-point by an eased, per-row-staggered envelope
+(`arcLatchEnvelope` × `petalStagger`, mirroring the build-in `stackItemLock`
+grammar), written into the existing position + color buffers (the color lerps
+toward a SOLID profile so the docked line reads solid to the terminus, where the
+rest stream fades into its absorbed/emitted wrap tail); stream opacity brightens
+toward a docked value on the same envelope. Motes ride the LIVE morphed polyline
+(the fold writes a parallel `morph` curve the motes sample) so the particle flow
+stays welded to the folding line. Nothing allocates per frame (module scratch +
+pre-allocated morph/dock arrays); on release the rest buffers are restored
+EXACTLY once so the drain / flag-off path stay byte-identical.
+
+**Why it doesn't fight the epilogue drain.** Arm can only happen parked — the
+`arcBandFactor` epilogue kill drives the level to 0 by epilogue 0.1, so when the
+fold envelope is up the drain fronts are 0 (full draw), and by the time the
+BUILD_OUT drain trims the draw range the level (hence the envelope) has already
+collapsed and the rest buffers are restored. The two writers never overlap on
+the same geometry.
+
+**Rejected:** hard-coding the panel's `min(58vw, 880px)` / `min(54vh, 520px)`
+size in the canvas (the DOM rect is the single source of truth — a canvas copy
+would drift from the CSS on any retune or aspect); precomputing the docked
+polylines once and holding them in local space (they drift off the border the
+moment the assembly banks — the attach points MUST re-solve against the live
+camera); moving the pips onto the borders (they are the anchors — the screen
+hangs FROM them, so they stay in the fan); a second frame loop (the fold rides
+the existing `useFrame` and the same damped level — no wall-clock motion).
+
+**Verification.** `tests/lib/arc-cases-latch-math.test.ts` pins the pure math
+(attach fractions in-panel + strictly descending with the index + symmetric;
+monotonic clamped envelope; bézier endpoints exact; docked-path endpoints
+welded, sample-count parity, tangent departure, NaN-safe on a degenerate rect).
+`npm run lint` (0 errors), `npx vitest run` (all pass), `npm run build` (clean),
+`arc-cases-terminal-smoke` (unchanged, green — the fold is canvas-only).
+Playwright screenshots vs the running dev server at 1440×900 and 1101×760
+(media-gate floor): every green line lands on the panel's left border, every
+dawn line on the right, no line crosses another or pierces the panel face, alpha
+solid to the terminus; mid-fold reads as a fold, and close unwinds symmetrically
+back to the rest pose (labels recover). The exact bézier arm length / arrival
+tangent are left as tuning knobs for the owner's aesthetic pass.

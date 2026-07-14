@@ -14,6 +14,11 @@
  *      arm level toward `armed ? 1 : 0`, multiplies by the scroll-owned
  *      Build-band factor (`bandGetter`), writes `level`, reconciles the
  *      panel's `inert` every frame, and resets `level` to 0 on unmount.
+ *      It ALSO publishes `panelRect` (the panel's screen box) on arm +
+ *      on resize (NOT per frame — the panel is `position: fixed` +
+ *      CSS-sized), so ShellStack can fold the source/surface node
+ *      streams onto the exact panel borders (ADR-035 Update 1). The
+ *      rect is kept while draining and nulled on unmount.
  *   3. Unfurl — a `is-open` class toggled off the store `armed` (React
  *      subscription). Content stays mounted; the closed panel is hidden
  *      by a zero-JS delayed `visibility` transition + `inert`. No JS
@@ -122,6 +127,41 @@ function ArcCasesTerminalOverlay({ bandGetter }: { bandGetter: () => number }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Panel rect bridge (ADR-035 Update 1). ShellStack folds the node
+  // streams onto the panel's exact borders, so it needs the panel's
+  // screen box. The panel is `position: fixed` + CSS-sized, so the box
+  // only changes on resize — measure there + on arm, never per frame.
+  const measurePanelRect = useCallback(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    arcCasesLevelRef.current.panelRect = {
+      x: r.x,
+      y: r.y,
+      width: r.width,
+      height: r.height,
+    };
+  }, []);
+
+  // Measure on mount + resize; null the rect on unmount so a torn-down
+  // overlay never leaves ShellStack folding onto a stale box.
+  useEffect(() => {
+    measurePanelRect();
+    window.addEventListener("resize", measurePanelRect);
+    return () => {
+      window.removeEventListener("resize", measurePanelRect);
+      arcCasesLevelRef.current.panelRect = null;
+    };
+  }, [measurePanelRect]);
+
+  // Re-measure the instant the reveal arms — belt-and-suspenders against
+  // a late font/layout settle before the first arm (the box is otherwise
+  // CSS-fixed). Keeps the last rect while draining (no null on disarm) so
+  // the fold unwinds from the spot it latched onto.
+  useEffect(() => {
+    if (armed) measurePanelRect();
+  }, [armed, measurePanelRect]);
 
   // Stable callback ref — seed inert on attach so the panel starts
   // closed even before the first rAF tick reconciles it.

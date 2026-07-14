@@ -29,7 +29,13 @@ ADR-034):** the cases reveal is `ArcCasesTerminal`, a fixed DOM overlay
 (chip `ArcCasesTerminalCta` docked under the Build title). On arm the two
 halves converge to a centre seam via a CSS clip-path transition and the
 sources/surfaces DOM labels fade on `arcCasesLevelRef` (single writer = the
-overlay's DOM rAF; readers = `gateStackLabel` + the caption fade). The
+overlay's DOM rAF; readers = `gateStackLabel` + the caption fade + — since
+ADR-035 Update 1 — `ShellStack`, which folds the source/surface node streams
+onto the panel's exact left/right borders so the screen reads as mounted on the
+nodes. The ref now also carries the panel's screen `panelRect` as the single
+source of truth for that mount geometry; the fold re-solves its attach points
+against the live camera each frame and is a per-frame morph of the existing
+stream geometry, flag-off / unarmed = rest pose byte-identical). The
 corridor camera is a pure Z dolly again — the ADR-034 lateral shift,
 `getTerraceViewportLayout`, and the terrain-shroud screen are RETIRED. Gate
 parity (`ARC_CASES_MEDIA` == the CSS hide of dock + overlay); no scroll

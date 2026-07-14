@@ -51,7 +51,13 @@ mounted in `HomeCorridor` (chip `ArcCasesTerminalCta` mounted under the Build
 title by `CorridorStationHeaders`). On arm the two halves converge to a
 centre seam via a pure CSS clip-path transition and the sources/surfaces DOM
 labels fade out on `arcCasesLevelRef` (single writer = the overlay's DOM rAF;
-readers = `gateStackLabel` label fade + the caption-card fade). The corridor
+readers = `gateStackLabel` label fade + the caption-card fade + — since ADR-035
+Update 1 — `ShellStack`, which folds the source/surface node streams onto the
+panel's exact left/right borders so the screen reads as mounted on the nodes.
+The ref now also carries the panel's screen `panelRect`, the single source of
+truth for that mount geometry; the fold re-solves its attach points against the
+live camera each frame and is a per-frame morph of the existing stream geometry,
+flag-off / unarmed = rest pose byte-identical). The corridor
 camera is a pure Z dolly through arm/disarm — the ADR-034 lateral shift,
 `getTerraceViewportLayout`, and the terrain-shroud screen are RETIRED. Gate
 parity: the JS `ARC_CASES_MEDIA` gate == the CSS hide of BOTH the chip dock

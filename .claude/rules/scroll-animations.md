@@ -28,11 +28,16 @@ ADR-034 lateral shift (`arcCameraShiftX` / `getTerraceViewportLayout`)
 and the terrain-shroud screen are RETIRED; neither `FlyingCameraRig` nor
 `useWorldDomTracker` reads any lateral channel. The reveal is a fixed
 DOM overlay (`ArcCasesTerminal`) that unfurls (edges converging to
-centre, CSS clip-path) and fades the sources/surfaces DOM labels via a
-DOM-only `arcCasesLevelRef`; the R3F tree is untouched except that
-`gateStackLabel` reads that level for the label opacity. Do NOT
-re-introduce a lateral/vertical camera channel or an in-canvas cases
-object for this feature.
+centre, CSS clip-path) and fades the sources/surfaces DOM labels via
+`arcCasesLevelRef` (which, since ADR-035 Update 1, also carries the panel's
+screen `panelRect`; single writer = the overlay's DOM rAF). Readers:
+`gateStackLabel` (label opacity) AND `ShellStack` in the R3F tree — Update 1
+folds the source/surface node streams onto the panel's exact left/right
+borders on the same level (re-solving the attach points against the live
+camera each frame; flag-off / unarmed / no-rect = rest pose, byte-identical).
+That fold is a per-frame morph of the EXISTING stream geometry, not a new
+object. Do NOT re-introduce a lateral/vertical camera channel or an in-canvas
+cases object for this feature.
 
 **Corridor-exit next station is `#about` (ADR-033).** `useCorridorExitScroll` resolves `nextStation = #about ?? #continuum` — the bio is an ordinary OPAQUE station that IS the cover ending the services ambient hold. The `--tools-bg-in` channel (the retired `#tools` transparent lead-in) is DELETED — do not reintroduce a transparent lead-in without re-adding a fade channel + the LOCKSTEP ordering it needs. `NEXT_STATION_FADE_START_VH = 0.6 / END_VH = 0.0`: the ambient bed + receded mark finish dying exactly as `#about`'s top reaches the viewport top (the opaque cover and the canvas death land on the same edge by design). `#about` carries the veil z-lift (`z-index: 6`) + `content-visibility: visible` escape while `data-corridor-exit` is live (home-v2.css). The Build-park cases reveal (ADR-035) adds NO scroll writer and NO camera effect — it is click-owned and only GATES on `paintProgress`/`epilogueProgress`; it is a fixed DOM overlay, and the corridor camera stays a pure Z dolly through arm/disarm.
 

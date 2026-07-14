@@ -40,6 +40,20 @@
  * Motes flow along the same curves (sampled polylines), so the
  * particle flow and the field lines agree exactly.
  *
+ * Arc Cases latch (ADR-035 Update 1): while the cases terminal is armed
+ * at the Build park, ShellStack becomes an R3F READER of
+ * `arcCasesLevelRef` — each source stream folds from its pip onto the
+ * panel's LEFT border, each surface stream onto its RIGHT border, so the
+ * DOM screen reads as mounted on the node lines. The pips stay in their
+ * fan positions (they are the anchors); only the wrap-tail end travels.
+ * The attach points are re-solved against the live camera every frame
+ * (viewport-px → NDC → ray → the pip-plane world z → the stream group's
+ * local space), so the latch stays welded under the pointer bank. The
+ * fold is gated on `ARC_CASES_TERMINAL` + a present `panelRect` + a
+ * non-zero level, so flag-off / unarmed / reduced-motion is the rest
+ * pose, byte-identical (the buffers are restored exactly once on
+ * release). See `lib/arc-cases/streamLatchMath.ts` for the pure math.
+ *
  * Epilogue exit (2026-06-11): on BUILD_OUT the stack does NOT fade —
  * it DRAINS in flow order (one final cycle through the layer).
  * Source lines reel INTO the sphere via `setDrawRange` trim, each
@@ -69,8 +83,16 @@ import {
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { band, epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { arcCasesLevelRef, type ArcCasesPanelRect } from "@/lib/arc-cases/arcCasesLevelRef";
+import {
+  arcLatchEnvelope,
+  attachFractionForRow,
+  cubicBezierPoint,
+  latchControlPoints,
+} from "@/lib/arc-cases/streamLatchMath";
 import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "../motionFollower";
 import { getStackColumnLocalX } from "../sceneGeom";
+import { ARC_CASES_TERMINAL } from "../../arcCasesTerminal";
 import {
   EMERGE_EPSILON,
   petalStagger,
@@ -104,6 +126,17 @@ const SOURCE_STREAM_OPACITY = 0.7;
 const SOURCE_PIP_OPACITY = 0.95;
 const SURFACE_STREAM_OPACITY = 0.62;
 const SURFACE_PIP_OPACITY = 0.9;
+
+// ── Arc Cases latch (ADR-035 Update 1) ────────────────────────────
+/** Per-row stagger overlap for the fold — mirrors the build-in
+ *  `STACK_ITEM_OVERLAP` (0.55) grammar so the rows latch in a cascade,
+ *  a touch tighter so the whole fan reads as one settling move. */
+const STACK_LATCH_ROW_OVERLAP = 0.5;
+/** Stream opacity the fold lerps TOWARD as it lands — the docked line
+ *  must read solid all the way to the border (the latch), where the rest
+ *  stream fades out toward its absorbed/emitted wrap tail. */
+const DOCKED_STREAM_OPACITY_SOURCE = 0.95;
+const DOCKED_STREAM_OPACITY_SURFACE = 0.9;
 
 /** Cluster-level stagger overlap. 0.30 gives a clear sources →
  *  surfaces handoff while still feeling like one motion. */
@@ -377,6 +410,165 @@ function advanceCurveMotes(
   posAttr.needsUpdate = true;
 }
 
+// ── Arc Cases latch geometry (ADR-035 Update 1) ───────────────────
+// Module-scoped scratch so the per-frame fold allocates nothing.
+// ShellStack is a home-page singleton, so a single shared set is safe.
+const LATCH_COLOR_SOURCE = new THREE.Color(COLOR_SOURCES);
+const LATCH_COLOR_SURFACE = new THREE.Color(COLOR_SURFACES);
+const LATCH_UNPROJ = new THREE.Vector3();
+const LATCH_RAY_DIR = new THREE.Vector3();
+const LATCH_WORLD = new THREE.Vector3();
+const LATCH_GROUP_ORIGIN = new THREE.Vector3();
+const LATCH_PIP = new THREE.Vector3();
+const LATCH_TAN = new THREE.Vector3();
+const LATCH_ATTACH = new THREE.Vector3();
+const LATCH_ARRIVAL = new THREE.Vector3();
+const LATCH_P1 = new THREE.Vector3();
+const LATCH_P2 = new THREE.Vector3();
+
+/**
+ * Fold one side's streams onto a panel edge (ADR-035 Update 1). Writes
+ * directly into the line geometry position/colour buffers AND the
+ * `morph` curves (which feed the motes), lerping rest → docked by an
+ * eased, per-row-staggered envelope. Allocation-free — every vector is
+ * module scratch. Called once per side per frame while the fold is live.
+ *
+ *   `arrivalDirX` — +1 latches onto a LEFT edge (source), −1 a RIGHT
+ *     edge (surface): the local-x direction the line travels as it
+ *     arrives square onto the vertical border.
+ *   `pipAtStart` — true when the pip is at flow index 0 (source), false
+ *     when it is the last index (surface). The docked path always runs
+ *     pip → attach; the caller maps geometry index k → path index so the
+ *     pip end stays welded and the wrap-tail end reaches the border.
+ *   `edgeX` — the border's viewport-px X (`rect.x` for the left edge,
+ *     `rect.x + rect.width` for the right).
+ */
+function foldSide(
+  curves: StreamCurve[],
+  geoms: THREE.BufferGeometry[],
+  morph: StreamCurve[],
+  group: THREE.Group,
+  camera: THREE.Camera,
+  rect: ArcCasesPanelRect,
+  planeZ: number,
+  rowCount: number,
+  baseColor: THREE.Color,
+  arrivalDirX: number,
+  pipAtStart: boolean,
+  edgeX: number,
+  envelope: number,
+  dock: THREE.Vector3[],
+  viewW: number,
+  viewH: number
+): void {
+  const camX = camera.position.x;
+  const camY = camera.position.y;
+  const camZ = camera.position.z;
+  for (let i = 0; i < curves.length; i++) {
+    const rest = curves[i].points;
+    const n = rest.length;
+    const last = n - 1;
+    if (last <= 0) continue;
+
+    // Pip + the rest stream's initial tangent, in the stream group's
+    // local space (that is what `rest` is already stored in).
+    const pipIdx = pipAtStart ? 0 : last;
+    const tanIdx = pipAtStart ? 1 : last - 1;
+    LATCH_PIP.copy(rest[pipIdx]);
+    LATCH_TAN.set(
+      rest[tanIdx].x - rest[pipIdx].x,
+      rest[tanIdx].y - rest[pipIdx].y,
+      rest[tanIdx].z - rest[pipIdx].z
+    );
+    if (LATCH_TAN.lengthSq() > 1e-12) LATCH_TAN.normalize();
+
+    // Attach point: viewport px → NDC → ray from the live camera →
+    // intersect the pip-plane world z → world → this group's local
+    // space. Screen-exact regardless of the chosen plane depth; the
+    // pip-plane depth keeps the fold co-planar with the fan.
+    const frac = attachFractionForRow(i, rowCount);
+    const px = edgeX;
+    const py = rect.y + frac * rect.height;
+    const ndcX = (px / viewW) * 2 - 1;
+    const ndcY = -(py / viewH) * 2 + 1;
+    LATCH_UNPROJ.set(ndcX, ndcY, 0.5).unproject(camera);
+    LATCH_RAY_DIR.set(LATCH_UNPROJ.x - camX, LATCH_UNPROJ.y - camY, LATCH_UNPROJ.z - camZ);
+    const t = Math.abs(LATCH_RAY_DIR.z) < 1e-6 ? 0 : (planeZ - camZ) / LATCH_RAY_DIR.z;
+    LATCH_WORLD.set(camX + LATCH_RAY_DIR.x * t, camY + LATCH_RAY_DIR.y * t, planeZ);
+    group.worldToLocal(LATCH_WORLD);
+    LATCH_ATTACH.copy(LATCH_WORLD);
+
+    // Arrival perpendicular to the (vertical) panel edge — local ±x is a
+    // close read for the near-frontal camera; the endpoints stay exact
+    // regardless, so any residual bank only tilts the soft mid-curve.
+    LATCH_ARRIVAL.set(arrivalDirX, 0, 0);
+    latchControlPoints(LATCH_PIP, LATCH_TAN, LATCH_ATTACH, LATCH_ARRIVAL, LATCH_P1, LATCH_P2);
+    for (let k = 0; k <= last; k++) {
+      cubicBezierPoint(LATCH_PIP, LATCH_P1, LATCH_P2, LATCH_ATTACH, k / last, dock[k]);
+    }
+    dock[0].copy(LATCH_PIP);
+    dock[last].copy(LATCH_ATTACH);
+
+    const rowEnv = smootherStack(petalStagger(envelope, i, rowCount, STACK_LATCH_ROW_OVERLAP));
+
+    const g = geoms[i];
+    const posAttr = g.getAttribute("position") as THREE.BufferAttribute;
+    const posArr = posAttr.array as Float32Array;
+    const colAttr = g.getAttribute("color") as THREE.BufferAttribute;
+    const colArr = colAttr.array as Float32Array;
+    const restColors = curves[i].colors;
+    const mPts = morph[i].points;
+    for (let k = 0; k <= last; k++) {
+      // Source: pip at index 0, so geometry index k reads dock[k].
+      // Surface: pip at index `last`, so the docked path (pip → attach)
+      // is laid on in reverse — geometry index k reads dock[last - k].
+      const d = pipAtStart ? dock[k] : dock[last - k];
+      const r = rest[k];
+      const x = r.x + (d.x - r.x) * rowEnv;
+      const y = r.y + (d.y - r.y) * rowEnv;
+      const z = r.z + (d.z - r.z) * rowEnv;
+      posArr[k * 3] = x;
+      posArr[k * 3 + 1] = y;
+      posArr[k * 3 + 2] = z;
+      mPts[k].set(x, y, z);
+      // Rest colour fades toward the absorbed wrap tail; the docked line
+      // reads solid, so lerp each point toward the full base colour.
+      const rr = restColors[k * 3];
+      const rg = restColors[k * 3 + 1];
+      const rb = restColors[k * 3 + 2];
+      colArr[k * 3] = rr + (baseColor.r - rr) * rowEnv;
+      colArr[k * 3 + 1] = rg + (baseColor.g - rg) * rowEnv;
+      colArr[k * 3 + 2] = rb + (baseColor.b - rb) * rowEnv;
+    }
+    posAttr.needsUpdate = true;
+    colAttr.needsUpdate = true;
+  }
+}
+
+/** Restore the static rest polyline + colours into the line buffers —
+ *  called exactly once when the fold releases so the drain / rest pose
+ *  operate on clean geometry (and the flag-off path stays byte-identical
+ *  after any prior fold). */
+function restoreRestStream(curves: StreamCurve[], geoms: THREE.BufferGeometry[]): void {
+  for (let i = 0; i < geoms.length; i++) {
+    const g = geoms[i];
+    const posAttr = g.getAttribute("position") as THREE.BufferAttribute;
+    const posArr = posAttr.array as Float32Array;
+    const colAttr = g.getAttribute("color") as THREE.BufferAttribute;
+    const colArr = colAttr.array as Float32Array;
+    const pts = curves[i].points;
+    const cols = curves[i].colors;
+    for (let k = 0; k < pts.length; k++) {
+      posArr[k * 3] = pts[k].x;
+      posArr[k * 3 + 1] = pts[k].y;
+      posArr[k * 3 + 2] = pts[k].z;
+    }
+    for (let k = 0; k < cols.length; k++) colArr[k] = cols[k];
+    posAttr.needsUpdate = true;
+    colAttr.needsUpdate = true;
+  }
+}
+
 export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
@@ -438,6 +630,34 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     []
   );
 
+  // Arc Cases latch scratch (ADR-035 Update 1) — pre-allocated so the
+  // per-frame fold never allocates. `morphSource`/`morphSurface` are the
+  // live folded polylines the motes ride; `dock` is one row's docked
+  // bézier samples, reused across rows. Rebuilt only when the streams
+  // rebuild (column-X / aspect change), never per frame.
+  const latch = useMemo(() => {
+    const cloneCurves = (curves: StreamCurve[]): StreamCurve[] =>
+      curves.map((c) => ({
+        points: c.points.map((p) => p.clone()),
+        colors: c.colors.slice(),
+      }));
+    const maxLen = Math.max(
+      1,
+      ...streams.sourceCurves.map((c) => c.points.length),
+      ...streams.surfaceCurves.map((c) => c.points.length)
+    );
+    const dock: THREE.Vector3[] = [];
+    for (let i = 0; i < maxLen; i++) dock.push(new THREE.Vector3());
+    return {
+      morphSource: cloneCurves(streams.sourceCurves),
+      morphSurface: cloneCurves(streams.surfaceCurves),
+      dock,
+    };
+  }, [streams]);
+  /** True while the fold is actively writing the line buffers — flips
+   *  false one frame after release so the rest pose is restored once. */
+  const latchWritingRef = useRef(false);
+
   // Per-lane drain fronts (0 = intact, 1 = fully consumed) — per-frame
   // mutable scratch shared by the line drawRanges, pip rides, and mote
   // window remaps.
@@ -494,7 +714,7 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     };
   }, [streams, motes, geoms, mats]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
@@ -583,6 +803,100 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       g.setDrawRange(start, n - start);
     });
 
+    // ── Arc Cases node-stream latch (ADR-035 Update 1) ────────────
+    // While the cases terminal is armed at the Build park, fold each
+    // source stream onto the panel's LEFT border and each surface
+    // stream onto its RIGHT border. The attach points are re-solved
+    // against the LIVE camera every frame (so the latch stays welded
+    // under the pointer bank); the fold writes rest → docked into the
+    // line buffers + the motes' morph curves by an eased, per-row
+    // envelope. Gated so flag-off / unarmed / no-rect / reduced-motion
+    // is the rest pose — and, once released, the rest buffers are
+    // restored exactly once (the drain below and the flag-off path both
+    // need clean geometry). Arm can only happen parked (the band kills
+    // the level by epilogue 0.1), so the fold and the drain never fight:
+    // when the level is up the drain fronts are 0, and when the drain
+    // engages the level (hence the envelope) has already collapsed.
+    const latchLevel = ARC_CASES_TERMINAL ? arcCasesLevelRef.current.level : 0;
+    const latchEnv = arcLatchEnvelope(latchLevel);
+    const panelRect = arcCasesLevelRef.current.panelRect;
+    const srcGroup = sourcesGroupRef.current;
+    const srfGroup = surfacesGroupRef.current;
+    let latchedThisFrame = false;
+    if (
+      !reducedMotion &&
+      latchEnv > EMERGE_EPSILON &&
+      panelRect &&
+      panelRect.width > 0 &&
+      panelRect.height > 0 &&
+      srcGroup &&
+      srfGroup
+    ) {
+      const camera = state.camera;
+      camera.updateMatrixWorld();
+      // Refresh the whole stack chain (parents carry the live pointer
+      // bank; children are the stream groups we `worldToLocal` against).
+      group.updateWorldMatrix(true, true);
+      srcGroup.getWorldPosition(LATCH_GROUP_ORIGIN);
+      const planeZ = LATCH_GROUP_ORIGIN.z;
+      const viewW = state.size.width || 1;
+      const viewH = state.size.height || 1;
+      foldSide(
+        streams.sourceCurves,
+        streams.sourceGeoms,
+        latch.morphSource,
+        srcGroup,
+        camera,
+        panelRect,
+        planeZ,
+        STACK_LANE_COUNT,
+        LATCH_COLOR_SOURCE,
+        1,
+        true,
+        panelRect.x,
+        latchEnv,
+        latch.dock,
+        viewW,
+        viewH
+      );
+      foldSide(
+        streams.surfaceCurves,
+        streams.surfaceGeoms,
+        latch.morphSurface,
+        srfGroup,
+        camera,
+        panelRect,
+        planeZ,
+        STACK_FAN_COUNT,
+        LATCH_COLOR_SURFACE,
+        -1,
+        false,
+        panelRect.x + panelRect.width,
+        latchEnv,
+        latch.dock,
+        viewW,
+        viewH
+      );
+      // Brighten the whole stream toward a solid latch as the fold lands
+      // (byte-identical at envelope 0). The drain never co-occurs here.
+      mats.sourceStream.opacity = lerp(
+        mats.sourceStream.opacity,
+        DOCKED_STREAM_OPACITY_SOURCE,
+        latchEnv
+      );
+      mats.surfaceStream.opacity = lerp(
+        mats.surfaceStream.opacity,
+        DOCKED_STREAM_OPACITY_SURFACE,
+        latchEnv
+      );
+      latchWritingRef.current = true;
+      latchedThisFrame = true;
+    } else if (latchWritingRef.current) {
+      restoreRestStream(streams.sourceCurves, streams.sourceGeoms);
+      restoreRestStream(streams.surfaceCurves, streams.surfaceGeoms);
+      latchWritingRef.current = false;
+    }
+
     // Per-row dock — directional flow semantics (2026-06-10 flow
     // pass): SOURCES are inputs, so their pips ARRIVE from outside-
     // left and slide right into the column (captured by the sphere).
@@ -649,10 +963,13 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
         (flowPhase.current.source + (delta / 5.2) * (1 + 2.5 * srcCluster)) % 1;
       flowPhase.current.surface =
         (flowPhase.current.surface + (delta / 6.4) * (1 + 2.5 * srfCluster)) % 1;
+      // Motes ride the LIVE polyline — the folded (morphed) curves while
+      // the latch is active, the rest curves otherwise — so the particle
+      // flow stays welded to the field line as it folds onto the border.
       if (sourceMotesRef.current && sourcesSlideT > EMERGE_EPSILON) {
         advanceCurveMotes(
           motes.source,
-          streams.sourceCurves,
+          latchedThisFrame ? latch.morphSource : streams.sourceCurves,
           flowPhase.current.source,
           laneFronts.source
         );
@@ -660,7 +977,7 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       if (surfaceMotesRef.current && surfacesSlideT > EMERGE_EPSILON) {
         advanceCurveMotes(
           motes.surface,
-          streams.surfaceCurves,
+          latchedThisFrame ? latch.morphSurface : streams.surfaceCurves,
           flowPhase.current.surface,
           laneFronts.surface
         );
