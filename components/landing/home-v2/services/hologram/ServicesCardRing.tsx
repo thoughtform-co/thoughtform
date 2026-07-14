@@ -716,6 +716,9 @@ export function ServicesCardRing({
   // The hologram veil — one tiny tiled strip shared by all four cards
   // (see buildVeilCanvas); per-card materials fade it on hover.
   const veilTexture = useMemo(() => {
+    // SSR guard: this memo runs during render. R3F children never render
+    // on the server today, but the document access must not assume it.
+    if (typeof document === "undefined") return null;
     const texture = new THREE.CanvasTexture(buildVeilCanvas());
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
@@ -724,12 +727,14 @@ export function ServicesCardRing({
     return texture;
   }, []);
   useEffect(() => {
-    return () => veilTexture.dispose();
+    return () => veilTexture?.dispose();
   }, [veilTexture]);
 
   // Soft gold halo — the Atlas two-layer radial glow collapsed into one
   // gradient texture, shared by all four glow planes.
   const glowTexture = useMemo(() => {
+    // SSR guard — same contract as veilTexture above.
+    if (typeof document === "undefined") return null;
     const canvas = document.createElement("canvas");
     canvas.width = 128;
     canvas.height = 128;
@@ -747,7 +752,7 @@ export function ServicesCardRing({
     return texture;
   }, []);
   useEffect(() => {
-    return () => glowTexture.dispose();
+    return () => glowTexture?.dispose();
   }, [glowTexture]);
 
   /* ── Per-card device materials (opacities driven per frame) ── */
