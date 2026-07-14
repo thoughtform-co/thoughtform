@@ -40,18 +40,21 @@
  * Motes flow along the same curves (sampled polylines), so the
  * particle flow and the field lines agree exactly.
  *
- * Arc Cases latch (ADR-035 Update 1): while the cases terminal is armed
- * at the Build park, ShellStack becomes an R3F READER of
- * `arcCasesLevelRef` — each source stream folds from its pip onto the
- * panel's LEFT border, each surface stream onto its RIGHT border, so the
- * DOM screen reads as mounted on the node lines. The pips stay in their
- * fan positions (they are the anchors); only the wrap-tail end travels.
- * The attach points are re-solved against the live camera every frame
- * (viewport-px → NDC → ray → the pip-plane world z → the stream group's
- * local space), so the latch stays welded under the pointer bank. The
- * fold is gated on `ARC_CASES_TERMINAL` + a present `panelRect` + a
- * non-zero level, so flag-off / unarmed / reduced-motion is the rest
- * pose, byte-identical (the buffers are restored exactly once on
+ * Arc Cases latch (ADR-036, supersedes the ADR-035 DOM-overlay latch):
+ * while the cases card is armed at the Build park, ShellStack becomes an
+ * R3F READER of `arcCasesLevelRef` — each source stream folds from its pip
+ * onto the CARD's LEFT slab side wall, each surface stream onto its RIGHT
+ * side wall, so the in-canvas screen reads as physically mounted on the
+ * node lines. The pips stay in their fan positions (they are the anchors);
+ * only the wrap-tail end travels. The card is a rigid child of the SAME
+ * gyro-assembly group these stream groups live in, so the attach points
+ * are computed by DIRECT shell-local math from the card's published slab
+ * edges (`arcCasesLevelRef.cardEdges`) — no viewport unprojection, no
+ * panelRect, no per-frame camera re-solve (all retired with the overlay);
+ * the whole assembly banks the card and the fold together, so the latch
+ * stays welded for free. The fold is gated on `ARC_CASES_CARD` + present
+ * `cardEdges` + a non-zero level, so flag-off / unarmed / reduced-motion is
+ * the rest pose, byte-identical (the buffers are restored exactly once on
  * release). See `lib/arc-cases/streamLatchMath.ts` for the pure math.
  *
  * Epilogue exit (2026-06-11): on BUILD_OUT the stack does NOT fade —
@@ -83,7 +86,8 @@ import {
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { band, epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { arcCasesLevelRef, type ArcCasesPanelRect } from "@/lib/arc-cases/arcCasesLevelRef";
+import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
+import { CARD_EDGE_INSET } from "@/lib/arc-cases/cardLayout";
 import {
   arcLatchEnvelope,
   attachFractionForRow,
@@ -92,7 +96,7 @@ import {
 } from "@/lib/arc-cases/streamLatchMath";
 import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "../motionFollower";
 import { getStackColumnLocalX } from "../sceneGeom";
-import { ARC_CASES_TERMINAL } from "../../arcCasesTerminal";
+import { ARC_CASES_CARD } from "../../arcCasesCard";
 import {
   EMERGE_EPSILON,
   petalStagger,
@@ -415,10 +419,6 @@ function advanceCurveMotes(
 // ShellStack is a home-page singleton, so a single shared set is safe.
 const LATCH_COLOR_SOURCE = new THREE.Color(COLOR_SOURCES);
 const LATCH_COLOR_SURFACE = new THREE.Color(COLOR_SURFACES);
-const LATCH_UNPROJ = new THREE.Vector3();
-const LATCH_RAY_DIR = new THREE.Vector3();
-const LATCH_WORLD = new THREE.Vector3();
-const LATCH_GROUP_ORIGIN = new THREE.Vector3();
 const LATCH_PIP = new THREE.Vector3();
 const LATCH_TAN = new THREE.Vector3();
 const LATCH_ATTACH = new THREE.Vector3();
@@ -427,43 +427,46 @@ const LATCH_P1 = new THREE.Vector3();
 const LATCH_P2 = new THREE.Vector3();
 
 /**
- * Fold one side's streams onto a panel edge (ADR-035 Update 1). Writes
- * directly into the line geometry position/colour buffers AND the
- * `morph` curves (which feed the motes), lerping rest → docked by an
- * eased, per-row-staggered envelope. Allocation-free — every vector is
- * module scratch. Called once per side per frame while the fold is live.
+ * Fold one side's streams onto a card slab side wall (ADR-036). Writes
+ * directly into the line geometry position/colour buffers AND the `morph`
+ * curves (which feed the motes), lerping rest → docked by an eased,
+ * per-row-staggered envelope. Allocation-free — every vector is module
+ * scratch. Called once per side per frame while the fold is live.
  *
- *   `arrivalDirX` — +1 latches onto a LEFT edge (source), −1 a RIGHT
- *     edge (surface): the local-x direction the line travels as it
- *     arrives square onto the vertical border.
- *   `pipAtStart` — true when the pip is at flow index 0 (source), false
- *     when it is the last index (surface). The docked path always runs
- *     pip → attach; the caller maps geometry index k → path index so the
- *     pip end stays welded and the wrap-tail end reaches the border.
- *   `edgeX` — the border's viewport-px X (`rect.x` for the left edge,
- *     `rect.x + rect.width` for the right).
+ * The card is a rigid child of the SAME group these streams live in, so its
+ * slab edges are already in this local space — the attach point is DIRECT
+ * math (no unprojection, no camera): the edge X + a per-row Y distributed
+ * over the card height + the card face Z (the line reaches forward out of
+ * the pip plane onto the side wall).
+ *
+ *   `edgeX` — the slab side-wall X in shell-local coords (left for source,
+ *     right for surface), a hair inboard so the tip meets the gold lip.
+ *   `attachZ` — the card face Z (the side-wall depth centre the line lands on).
+ *   `cardCenterY` / `cardHalfHeight` — the attach Y span; row `i` lands at
+ *     `cardCenterY + cardHalfHeight − 2·cardHalfHeight·attachFractionForRow`.
+ *   `arrivalDirX` — +1 latches onto a LEFT edge (source), −1 a RIGHT edge
+ *     (surface): the local-x direction the line travels as it arrives square
+ *     onto the vertical side wall.
+ *   `pipAtStart` — true when the pip is at flow index 0 (source), false when
+ *     it is the last index (surface). The docked path always runs
+ *     pip → attach; the caller maps geometry index k → path index so the pip
+ *     end stays welded and the wrap-tail end reaches the edge.
  */
 function foldSide(
   curves: StreamCurve[],
   geoms: THREE.BufferGeometry[],
   morph: StreamCurve[],
-  group: THREE.Group,
-  camera: THREE.Camera,
-  rect: ArcCasesPanelRect,
-  planeZ: number,
+  edgeX: number,
+  attachZ: number,
+  cardCenterY: number,
+  cardHalfHeight: number,
   rowCount: number,
   baseColor: THREE.Color,
   arrivalDirX: number,
   pipAtStart: boolean,
-  edgeX: number,
   envelope: number,
-  dock: THREE.Vector3[],
-  viewW: number,
-  viewH: number
+  dock: THREE.Vector3[]
 ): void {
-  const camX = camera.position.x;
-  const camY = camera.position.y;
-  const camZ = camera.position.z;
   for (let i = 0; i < curves.length; i++) {
     const rest = curves[i].points;
     const n = rest.length;
@@ -482,25 +485,14 @@ function foldSide(
     );
     if (LATCH_TAN.lengthSq() > 1e-12) LATCH_TAN.normalize();
 
-    // Attach point: viewport px → NDC → ray from the live camera →
-    // intersect the pip-plane world z → world → this group's local
-    // space. Screen-exact regardless of the chosen plane depth; the
-    // pip-plane depth keeps the fold co-planar with the fan.
+    // Attach point in the shared shell-local space — direct math. The
+    // fraction descends with the index (top row nearest the top edge) so
+    // no two folded lines cross; the Y spans the card's content height and
+    // the Z reaches forward onto the slab side wall.
     const frac = attachFractionForRow(i, rowCount);
-    const px = edgeX;
-    const py = rect.y + frac * rect.height;
-    const ndcX = (px / viewW) * 2 - 1;
-    const ndcY = -(py / viewH) * 2 + 1;
-    LATCH_UNPROJ.set(ndcX, ndcY, 0.5).unproject(camera);
-    LATCH_RAY_DIR.set(LATCH_UNPROJ.x - camX, LATCH_UNPROJ.y - camY, LATCH_UNPROJ.z - camZ);
-    const t = Math.abs(LATCH_RAY_DIR.z) < 1e-6 ? 0 : (planeZ - camZ) / LATCH_RAY_DIR.z;
-    LATCH_WORLD.set(camX + LATCH_RAY_DIR.x * t, camY + LATCH_RAY_DIR.y * t, planeZ);
-    group.worldToLocal(LATCH_WORLD);
-    LATCH_ATTACH.copy(LATCH_WORLD);
+    LATCH_ATTACH.set(edgeX, cardCenterY + cardHalfHeight - 2 * cardHalfHeight * frac, attachZ);
 
-    // Arrival perpendicular to the (vertical) panel edge — local ±x is a
-    // close read for the near-frontal camera; the endpoints stay exact
-    // regardless, so any residual bank only tilts the soft mid-curve.
+    // Arrival perpendicular to the (vertical) slab side wall — local ±x.
     LATCH_ARRIVAL.set(arrivalDirX, 0, 0);
     latchControlPoints(LATCH_PIP, LATCH_TAN, LATCH_ATTACH, LATCH_ARRIVAL, LATCH_P1, LATCH_P2);
     for (let k = 0; k <= last; k++) {
@@ -714,7 +706,7 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     };
   }, [streams, motes, geoms, mats]);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
@@ -803,79 +795,57 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       g.setDrawRange(start, n - start);
     });
 
-    // ── Arc Cases node-stream latch (ADR-035 Update 1) ────────────
-    // While the cases terminal is armed at the Build park, fold each
-    // source stream onto the panel's LEFT border and each surface
-    // stream onto its RIGHT border. The attach points are re-solved
-    // against the LIVE camera every frame (so the latch stays welded
-    // under the pointer bank); the fold writes rest → docked into the
-    // line buffers + the motes' morph curves by an eased, per-row
-    // envelope. Gated so flag-off / unarmed / no-rect / reduced-motion
-    // is the rest pose — and, once released, the rest buffers are
-    // restored exactly once (the drain below and the flag-off path both
-    // need clean geometry). Arm can only happen parked (the band kills
-    // the level by epilogue 0.1), so the fold and the drain never fight:
-    // when the level is up the drain fronts are 0, and when the drain
-    // engages the level (hence the envelope) has already collapsed.
-    const latchLevel = ARC_CASES_TERMINAL ? arcCasesLevelRef.current.level : 0;
+    // ── Arc Cases node-stream latch (ADR-036) ─────────────────────
+    // While the cases card is armed at the Build park, fold each source
+    // stream onto the card's LEFT slab side wall and each surface stream
+    // onto its RIGHT side wall. The card is a rigid child of the SAME
+    // group these streams live in, so the attach points come STRAIGHT
+    // from the card's published slab edges (`cardEdges`) by direct
+    // shell-local math — no camera, no unprojection, no per-frame
+    // re-solve; the assembly banks the card and the fold together. The
+    // fold writes rest → docked into the line buffers + the motes' morph
+    // curves by an eased, per-row envelope. Gated so flag-off / unarmed /
+    // no-edges / reduced-motion is the rest pose — and, once released, the
+    // rest buffers are restored exactly once (the drain below and the
+    // flag-off path both need clean geometry). Arm can only happen parked
+    // (the band kills the level by epilogue 0.1), so the fold and the
+    // drain never fight: when the level is up the drain fronts are 0, and
+    // when the drain engages the level (hence the envelope) has already
+    // collapsed.
+    const latchLevel = ARC_CASES_CARD ? arcCasesLevelRef.current.level : 0;
     const latchEnv = arcLatchEnvelope(latchLevel);
-    const panelRect = arcCasesLevelRef.current.panelRect;
-    const srcGroup = sourcesGroupRef.current;
-    const srfGroup = surfacesGroupRef.current;
+    const cardEdges = arcCasesLevelRef.current.cardEdges;
     let latchedThisFrame = false;
-    if (
-      !reducedMotion &&
-      latchEnv > EMERGE_EPSILON &&
-      panelRect &&
-      panelRect.width > 0 &&
-      panelRect.height > 0 &&
-      srcGroup &&
-      srfGroup
-    ) {
-      const camera = state.camera;
-      camera.updateMatrixWorld();
-      // Refresh the whole stack chain (parents carry the live pointer
-      // bank; children are the stream groups we `worldToLocal` against).
-      group.updateWorldMatrix(true, true);
-      srcGroup.getWorldPosition(LATCH_GROUP_ORIGIN);
-      const planeZ = LATCH_GROUP_ORIGIN.z;
-      const viewW = state.size.width || 1;
-      const viewH = state.size.height || 1;
+    if (!reducedMotion && latchEnv > EMERGE_EPSILON && cardEdges) {
       foldSide(
         streams.sourceCurves,
         streams.sourceGeoms,
         latch.morphSource,
-        srcGroup,
-        camera,
-        panelRect,
-        planeZ,
+        cardEdges.leftX + CARD_EDGE_INSET,
+        cardEdges.z,
+        cardEdges.centerY,
+        cardEdges.halfHeight,
         STACK_LANE_COUNT,
         LATCH_COLOR_SOURCE,
         1,
         true,
-        panelRect.x,
         latchEnv,
-        latch.dock,
-        viewW,
-        viewH
+        latch.dock
       );
       foldSide(
         streams.surfaceCurves,
         streams.surfaceGeoms,
         latch.morphSurface,
-        srfGroup,
-        camera,
-        panelRect,
-        planeZ,
+        cardEdges.rightX - CARD_EDGE_INSET,
+        cardEdges.z,
+        cardEdges.centerY,
+        cardEdges.halfHeight,
         STACK_FAN_COUNT,
         LATCH_COLOR_SURFACE,
         -1,
         false,
-        panelRect.x + panelRect.width,
         latchEnv,
-        latch.dock,
-        viewW,
-        viewH
+        latch.dock
       );
       // Brighten the whole stream toward a solid latch as the fold lands
       // (byte-identical at envelope 0). The drain never co-occurs here.

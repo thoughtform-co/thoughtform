@@ -14,6 +14,8 @@ import { ShellEncode } from "./shell/ShellEncode";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
 import { ShellSubstrateGyro } from "./shell/ShellSubstrateGyro";
+import { ArcCasesCardGate } from "../arc-cases";
+import { ARC_CASES_CARD } from "../arcCasesCard";
 import {
   GYRO_ASSEMBLY_SCALE,
   SUBSTRATE_GYRO_DRIFT_AMP,
@@ -210,12 +212,18 @@ export function BrandmarkAccretionShell() {
           <ShellSubstrateGyro layerKey="substrate" reducedMotion={isMobile} />
           <ShellEncode layerKey="orbits" reducedMotion={isMobile} />
           <ShellStack layerKey="stack" reducedMotion={isMobile} />
+          {/* Arc Cases Card (ADR-036) — the in-canvas tools card mounts as
+              a SIBLING of ShellStack inside the gyro assembly, so it shares
+              the streams' shell-local space and banks with them. It
+              self-gates on ARC_CASES_MEDIA + the arm level. */}
+          {ARC_CASES_CARD && !isMobile ? <ArcCasesCardGate /> : null}
         </group>
       ) : (
         <>
           <ShellSubstrate layerKey="substrate" reducedMotion={isMobile} />
           <ShellEncode layerKey="orbits" reducedMotion={isMobile} />
           <ShellStack layerKey="stack" reducedMotion={isMobile} />
+          {ARC_CASES_CARD && !isMobile ? <ArcCasesCardGate /> : null}
         </>
       )}
     </group>

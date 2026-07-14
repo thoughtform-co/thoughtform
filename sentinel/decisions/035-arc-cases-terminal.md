@@ -1,9 +1,22 @@
 # ADR-035: Arc Cases Terminal — a fixed DOM overlay unfurls (edges converging to centre) under the Build title; the terrace reveal retires
 
 **Date:** 2026-07-13
-**Status:** Accepted (supersedes the ADR-034 terrace REVEAL — ADR-033's
-§5 funnel restructure + mobile/PRM story remain live, as does the
-click-owned / band-gated / exclusivity contract)
+**Status:** Superseded (REVEAL SURFACE) by
+[ADR-036](036-arc-cases-card.md) — the fixed DOM overlay panel + its
+`panelRect` viewport-unprojection latch (§3, §4's `panelRect` bridge,
+Update 1) are RETIRED: the owner rejected the panel as "floating" and the
+reveal is now ONE in-canvas 3D tools card mounted in the instrument, with
+the node streams folding onto its actual slab edges by direct shared-space
+math. **What survives under ADR-036:** the CTA chip (§2), `arcCasesStore`,
+the `ARC_CASES_MEDIA` gate, the `arcBandFactor` Build-band × epilogue-kill
+exclusivity + dissipate guard (§5), the single-writer damped-level model
+(§4 — the writer moved back into an R3F `useFrame`), the `gateStackLabel`
+label fade + the caption fade (§4), and the pure fold math
+(`streamLatchMath.ts`). The 034→035 supersession pattern applies: read this
+ADR for the contracts that carried, ADR-036 for the live reveal.
+(Originally: supersedes the ADR-034 terrace REVEAL — ADR-033's §5 funnel
+restructure + mobile/PRM story remain live, as does the click-owned /
+band-gated / exclusivity contract.)
 **Scope:** `lib/arc-cases/arcCasesMath.ts` (+ `arcCasesLevelRef.ts`,
 `lib/stores/arcCasesStore.ts`),
 `components/landing/home-v2/arcCasesTerminal.ts` (flag, replaces

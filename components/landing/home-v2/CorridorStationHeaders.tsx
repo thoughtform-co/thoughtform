@@ -28,7 +28,7 @@ import {
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { ARC_CASES_TERMINAL } from "./arcCasesTerminal";
+import { ARC_CASES_CARD } from "./arcCasesCard";
 import { ArcCasesTerminalCta } from "./arc-cases";
 
 /**
@@ -1395,10 +1395,10 @@ export function CorridorStationHeaders() {
       if (cardEl) {
         const cs = captionState.current;
         const cardBand = bandOpacity(p, NAVIGATE_FADE_IN) * buildOut;
-        // Arc Cases terminal fade (ADR-035): while armed the caption
-        // card fully fades out (single multiplier — trivially flipped to
-        // a dim), so the converging panel lands on a clean field.
-        const casesCaptionFade = ARC_CASES_TERMINAL ? 1 - arcCasesLevelRef.current.level : 1;
+        // Arc Cases card fade (ADR-036): while armed the caption card
+        // fully fades out (single multiplier — trivially flipped to a
+        // dim), so the in-canvas card lands on a clean field.
+        const casesCaptionFade = ARC_CASES_CARD ? 1 - arcCasesLevelRef.current.level : 1;
         const cardOp = corridorEngaged ? buildOut * casesCaptionFade : 0;
         if (Math.abs(cardOp - cs.lastOp) > 0.002) {
           cs.lastOp = cardOp;
@@ -1732,7 +1732,7 @@ export function CorridorStationHeaders() {
           registerCursors={bldRegisterCursors}
           content={bld}
           typewriter={typewriter}
-          afterContent={ARC_CASES_TERMINAL ? <ArcCasesTerminalCta /> : undefined}
+          afterContent={ARC_CASES_CARD ? <ArcCasesTerminalCta /> : undefined}
           split
         />
       )}

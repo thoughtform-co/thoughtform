@@ -1,19 +1,23 @@
-// Pure geometry for the Arc Cases node-stream latch (ADR-035 Update 1).
+// Pure geometry for the Arc Cases node-stream latch (ADR-036 — the fold
+// math survives the ADR-035 → ADR-036 rebuild unchanged; only the caller's
+// attach-point source changed).
 //
-// While the terminal is armed, each source stream folds from its pip and
-// terminates EXACTLY on the panel's LEFT border and each surface stream
-// on the RIGHT border — the screen reads as mounted on the node lines.
-// The pips stay in their fan positions (they are the anchors); only the
-// wrap-tail end of each stream travels to a border attach point.
+// While the cases card is armed, each source stream folds from its pip and
+// terminates EXACTLY on the card's LEFT slab side wall and each surface
+// stream on the RIGHT side wall — the screen reads as mounted on the node
+// lines. The pips stay in their fan positions (they are the anchors); only
+// the wrap-tail end of each stream travels to an edge attach point.
 //
 // This module owns the reusable, three-free, unit-testable pieces:
 //   - the per-row attach fraction (top-to-bottom, no crossings),
 //   - the eased fold envelope (monotonic in the arm level),
 //   - the cubic-bézier docked-path builder (endpoints exact, sample-count
 //     parity with whatever the caller passes).
-// The caller (ShellStack) owns the viewport-px → NDC → world → local
-// unprojection and the per-frame rest↔docked lerp; those need the live
-// camera + three, so they stay in the R3F component.
+// The caller (ShellStack) supplies the attach point + the per-frame
+// rest↔docked lerp. Under ADR-036 that attach point is DIRECT shell-local
+// math from the card's published slab edges (the card shares the streams'
+// space) — no viewport unprojection, no live camera (both retired with the
+// ADR-035 DOM overlay).
 
 /** Minimal 3-vector shape — `THREE.Vector3` satisfies it, so the hot
  *  path can hand scratch vectors straight in with no adaptation. */

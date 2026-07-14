@@ -49,7 +49,7 @@ import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
 import { arcLabelFade } from "@/lib/arc-cases/arcCasesMath";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { ARC_CASES_TERMINAL } from "../arcCasesTerminal";
+import { ARC_CASES_CARD } from "../arcCasesCard";
 
 // Re-exported for back-compat: external modules (FlyingCameraRig,
 // index, gate components, contour/intergate painters) import these
@@ -1848,7 +1848,7 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   // panel). Applies to EVERY element this painter draws — per-row chips
   // AND the SOURCES/SURFACES group headers — so "the labels disappear"
   // wholesale. Flag-off / unarmed = literal 1 (no-op).
-  const casesFade = ARC_CASES_TERMINAL ? arcLabelFade(arcCasesLevelRef.current.level) : 1;
+  const casesFade = ARC_CASES_CARD ? arcLabelFade(arcCasesLevelRef.current.level) : 1;
   el.style.opacity = (ctx.visibilityOpacity * lock * epFade * casesFade).toFixed(3);
   if (Math.abs(slidePx) > 0.01) {
     // Appended AFTER the tracker's translate/origin/scale segments and

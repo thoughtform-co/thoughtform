@@ -17,7 +17,8 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-031: Rail Manifest](../sentinel/decisions/031-rail-manifest.md)
 - [ADR-033: Arc Cases Orbit + funnel](../sentinel/decisions/033-arc-cases-orbit.md) (orbit superseded; funnel live)
 - [ADR-034: Arc Cases Terrace](../sentinel/decisions/034-arc-cases-terrace.md) (superseded by ADR-035)
-- [ADR-035: Arc Cases Terminal](../sentinel/decisions/035-arc-cases-terminal.md) (the live cases reveal)
+- [ADR-035: Arc Cases Terminal](../sentinel/decisions/035-arc-cases-terminal.md) (reveal surface superseded by ADR-036)
+- [ADR-036: Arc Cases Card](../sentinel/decisions/036-arc-cases-card.md) (the live cases reveal)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
@@ -34,8 +35,9 @@ Ref: BEST-PRACTICES "Nested-root portals".
 → services → about (bio) → continuum (philosophy) → practice → contact.
 `#tools` and `#build` retired — the four production cases live ONLY on
 the Arc's Build-park cases reveal (click-armed via the "VIEW THE CASES"
-chip under the Build title; a fixed DOM overlay unfurls edges-to-centre,
-NO camera move, NO in-canvas object — see ADR-035). The order is owned by the parse arrays in
+chip under the Build title; an in-canvas 3D tools card materializes
+between the two nodes with the node streams folding onto its slab edges,
+NO camera move — see ADR-036). The order is owned by the parse arrays in
 `app/(marketing)/page.tsx` (`CORRIDOR_REPLACED_STATIONS` /
 `CORRIDOR_RELOCATED_STATIONS`) — never by prototype-HTML edits — in
 lockstep with `MANIFEST_ENTRIES` and the drift-guard tests
@@ -45,25 +47,7 @@ case module; `tools-cards/` otherwise survives only as the
 `/test/project-cards` lab's shared core (console skin, chrome, stack
 hook) — do not remount it on the landing.
 
-**Arc Cases is a fixed DOM overlay — no camera channel (ADR-035, supersedes
-ADR-034).** The cases reveal is `ArcCasesTerminal`, a fixed DOM overlay
-mounted in `HomeCorridor` (chip `ArcCasesTerminalCta` mounted under the Build
-title by `CorridorStationHeaders`). On arm the two halves converge to a
-centre seam via a pure CSS clip-path transition and the sources/surfaces DOM
-labels fade out on `arcCasesLevelRef` (single writer = the overlay's DOM rAF;
-readers = `gateStackLabel` label fade + the caption-card fade + — since ADR-035
-Update 1 — `ShellStack`, which folds the source/surface node streams onto the
-panel's exact left/right borders so the screen reads as mounted on the nodes.
-The ref now also carries the panel's screen `panelRect`, the single source of
-truth for that mount geometry; the fold re-solves its attach points against the
-live camera each frame and is a per-frame morph of the existing stream geometry,
-flag-off / unarmed = rest pose byte-identical). The corridor
-camera is a pure Z dolly through arm/disarm — the ADR-034 lateral shift,
-`getTerraceViewportLayout`, and the terrain-shroud screen are RETIRED. Gate
-parity: the JS `ARC_CASES_MEDIA` gate == the CSS hide of BOTH the chip dock
-and the overlay. No scroll writer, no scroll lock, no backdrop; inert is
-reconciled every frame; DOM order = focus order. Do NOT re-introduce a
-camera channel or an in-canvas cases object.
+**Arc Cases is an in-canvas 3D card — no camera channel (ADR-036, supersedes ADR-035).** The cases reveal is `ArcCasesCard`, ONE in-canvas portrait tools card mounted in the gyro assembly (a sibling of `ShellStack`) between the two Build-park stack columns, in front of the sphere; the arming chip `ArcCasesTerminalCta` is mounted under the Build title by `CorridorStationHeaders`, and the accessible stepper row `ArcCasesStepper` (◂ 01 02 03 04 ▸, region id `arc-cases-terminal`) is mounted in `HomeCorridor`. On arm the sources/surfaces DOM labels fade out on `arcCasesLevelRef` (single writer = the card's R3F `useFrame` at priority −5; readers = `gateStackLabel` label fade + the caption-card fade + the stepper's own rAF + `ShellStack`, which folds the source/surface node streams onto the card's actual left/right slab side walls so the screen reads as mounted on the nodes). The ref carries the card's slab edges (`cardEdges`, shell-local — the single source of truth for that mount geometry, direct math, NO viewport unprojection / `panelRect`). The corridor camera is a pure Z dolly through arm/disarm. Gate parity: the JS `ARC_CASES_MEDIA` gate == the CSS hide of BOTH the chip dock and the stepper. No scroll writer, no scroll lock, no backdrop; inert is reconciled every frame; DOM order = focus order. Do NOT re-introduce a camera channel, the DOM overlay panel, or the `panelRect` unprojection latch.
 
 **The left-rail manifest is parse-injected (ADR-031).** Its skeleton is
 built at parse time (`lib/v7-parse/railManifest.ts`) into the authored

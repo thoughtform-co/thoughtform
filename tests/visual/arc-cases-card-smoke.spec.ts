@@ -1,18 +1,20 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Arc Cases Terminal smoke (ADR-035 — supersedes the ADR-034 terrace).
+ * Arc Cases Card smoke (ADR-036 — supersedes the ADR-035 terminal overlay).
  *
- * Structural contracts only — the converging clip-path unfurl is NOT
- * asserted pixel-wise here; the arm/band/label math is pinned in
- * `tests/lib/arc-cases-math.test.ts`. This suite proves the DOM half:
- * the CTA docks UNDER the Build title, arming opens the overlay AND
- * fades the stack labels to nothing (which requires the overlay's own
- * rAF level writer to actually run), stepping swaps the case, closing
- * drains, and walking out of the band auto-disarms.
+ * Structural contracts only — the in-canvas card + the node-stream fold are
+ * verified visually against the running dev server (verify-card-*.png); the
+ * arm/band/label/layout math is pinned in `tests/lib/arc-cases-*.test.ts`.
+ * This suite proves the DOM half: the CTA docks UNDER the Build title,
+ * arming reveals the DOM stepper row AND fades the stack labels to nothing
+ * (which requires the CARD's R3F level writer to actually run — the label
+ * fade reads the same `arcCasesLevelRef.level` the card writes), stepping
+ * swaps the front slot, closing drains, and walking out of the band
+ * auto-disarms.
  *
- * Desktop-only feature (ARC_CASES_MEDIA ≥ 1101×760 + no reduced
- * motion): the mobile/tablet projects assert absence instead.
+ * Desktop-only feature (ARC_CASES_MEDIA ≥ 1101×760 + no reduced motion):
+ * the mobile/tablet projects assert absence instead.
  */
 
 /** Corridor raw stage progress for the Build park:
@@ -37,7 +39,7 @@ function isDesktop(page: Page): boolean {
   return !!viewport && viewport.width >= 1101 && viewport.height >= 760;
 }
 
-test.describe("Arc cases terminal smoke (ADR-035)", () => {
+test.describe("Arc cases card smoke (ADR-036)", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
@@ -77,26 +79,27 @@ test.describe("Arc cases terminal smoke (ADR-035)", () => {
     }
   });
 
-  test("arming opens the overlay, drops inert, and fades the stack labels", async ({ page }) => {
+  test("arming reveals the stepper, drops inert, and fades the stack labels", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
     const chip = page.locator(".home-v2-cases-cta");
-    const terminal = page.locator("#arc-cases-terminal");
-    await expect(terminal).toHaveCount(1);
+    const stepper = page.locator("#arc-cases-terminal");
+    await expect(stepper).toHaveCount(1);
 
     await chip.click();
     await expect(chip).toHaveAttribute("data-armed", "true");
     await expect(chip).toContainText("CLOSE");
-    await expect(terminal).toHaveAttribute("data-open", "true");
+    await expect(stepper).toHaveAttribute("data-open", "true");
 
-    // The overlay drops `inert` once the sweep passes the arrive
-    // threshold — proving the level-writer rAF is alive.
-    await expect(terminal).not.toHaveAttribute("inert", "", { timeout: 5000 });
+    // The stepper drops `inert` once the arm level passes the arrive
+    // threshold — proving the CARD's R3F level-writer useFrame is alive.
+    await expect(stepper).not.toHaveAttribute("inert", "", { timeout: 5000 });
+    await expect(stepper).toBeVisible();
 
-    // The stack labels disappear on the DOM level writer — a per-row
-    // source chip must compute to ~0 opacity after the arm settles.
+    // The stack labels disappear on the shared arm level — a per-row source
+    // chip must compute to ~0 opacity after the arm settles.
     const stackChip = page.locator('.home-v2-stack-item[data-stack-side="sources"]').first();
     await expect
       .poll(async () => Number(await stackChip.evaluate((el) => getComputedStyle(el).opacity)), {
@@ -105,7 +108,7 @@ test.describe("Arc cases terminal smoke (ADR-035)", () => {
       .toBeLessThan(0.05);
   });
 
-  test("stepping + selecting swaps the front case", async ({ page }) => {
+  test("stepping + selecting swaps the front slot", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
@@ -113,36 +116,36 @@ test.describe("Arc cases terminal smoke (ADR-035)", () => {
     await page.locator(".home-v2-cases-cta").click();
     await expect(page.locator("#arc-cases-terminal")).toHaveAttribute("data-open", "true");
 
-    const chips = page.locator(".home-v2-cases-terminal__chip");
+    const chips = page.locator(".home-v2-cases-stepper__chip");
     await expect(chips).toHaveCount(4);
     await expect(chips.nth(0)).toHaveAttribute("aria-pressed", "true");
 
-    const codename = page.locator(".home-v2-cases-terminal__codename");
-    const first = await codename.textContent();
-
-    await page.locator(".home-v2-cases-terminal__step--next").click();
+    // Next steps the pressed chip forward (the baked card face crossfades in
+    // the canvas — not asserted here).
+    await page.locator(".home-v2-cases-stepper__step--next").click();
     await expect(chips.nth(1)).toHaveAttribute("aria-pressed", "true");
-    await expect(codename).not.toHaveText(first ?? "");
+    await expect(chips.nth(0)).toHaveAttribute("aria-pressed", "false");
 
     await chips.nth(3).click();
     await expect(chips.nth(3)).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("closing drains — overlay hidden, labels recover", async ({ page }) => {
+  test("closing drains — stepper inert/hidden, labels recover", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
     const chip = page.locator(".home-v2-cases-cta");
-    const terminal = page.locator("#arc-cases-terminal");
+    const stepper = page.locator("#arc-cases-terminal");
     await chip.click();
-    await expect(terminal).toHaveAttribute("data-open", "true");
+    await expect(stepper).toHaveAttribute("data-open", "true");
+    await expect(stepper).not.toHaveAttribute("inert", "", { timeout: 5000 });
 
     await chip.click();
     await expect(chip).toHaveAttribute("data-armed", "false");
-    await expect(terminal).toHaveAttribute("data-open", "false");
-    // Closed overlay is inert (hidden by the delayed-visibility close).
-    await expect(terminal).toHaveAttribute("inert", "", { timeout: 5000 });
+    await expect(stepper).toHaveAttribute("data-open", "false");
+    // Closed stepper is inert again once the level drains back below arrive.
+    await expect(stepper).toHaveAttribute("inert", "", { timeout: 5000 });
 
     // Stack labels recover once the level drains back to 0.
     const stackChip = page.locator('.home-v2-stack-item[data-stack-side="sources"]').first();
@@ -175,11 +178,11 @@ test.describe("Arc cases terminal smoke (ADR-035)", () => {
     await chip.click();
   });
 
-  test("mobile/tablet never shows the dock or the overlay", async ({ page }) => {
+  test("mobile/tablet never shows the dock or the stepper", async ({ page }) => {
     test.skip(isDesktop(page), "absence check is for small viewports");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
 
-    // The overlay self-gates on ARC_CASES_MEDIA (renders null off-desktop).
+    // The stepper self-gates on ARC_CASES_MEDIA (renders null off-desktop).
     await expect(page.locator("#arc-cases-terminal")).toHaveCount(0);
 
     // The dock may exist in the (hidden) station-headers layer — the
