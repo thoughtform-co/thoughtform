@@ -54,6 +54,41 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-14 — Phase 3 (performance: landing First Load JS)
+
+- **The WebGL stack is out of the landing's initial bundle**: First Load JS
+  **449.8 → 106.8 kB gzip (−76%)**, parsed 1553.7 → 330.7 kB. Four seams,
+  each its own commit:
+  - `98e48cf` — HomeCorridor lazy inside `useCorridorMount`'s nested root
+    (React.lazy + Suspense; the sync `.home-corridor-host` wrapper keeps the
+    `hasContent` recovery guard satisfied).
+  - `da410e8` — BrandmarkParticleCanvas via `next/dynamic` ssr:false (the
+    vector actor + dock glyphs are the mark; the canvas is atmosphere).
+  - `b3c5681` — journey scalars extracted to the three-free
+    `journeyScalars.ts` (intelligenceLayerGeom re-exports; bodies
+    byte-identical).
+  - `3443801` — `RING_CARD_CTA_BOX` + bake dims to the three-free
+    `hologram/ringCtaBox.ts` (one layout constant was dragging
+    three/fiber/drei in via ServicesRingHitAreas).
+  - `e653950` — services-ring smoke measures the runway AFTER the corridor
+    inflates (the lazy chunk widened a pre-existing post-hydration
+    inflation window; below-the-fold, no CLS change).
+- **Lab mobile (same-day)**: FCP 2.0→1.5 s, Speed Index 5.0→3.0 s,
+  LCP 8.2→7.1 s, TTI 12.1→10.8 s (before = prod www / old bundle; after =
+  localhost prod build). Remaining initial: supabase-js 34 kB gz,
+  gsap 19.2 kB gz, landing DOM.
+- **Newly exposed follow-ups (not this phase):** mobile LCP is the hero
+  PARAGRAPH at 93% render-delay — the `[data-m]` reveal only fires `.is-in`
+  after hydration, so LCP ≈ hydration; a CSS-only first-viewport reveal
+  would collapse LCP toward FCP (ADR-scale, touches reveal choreography).
+  `Gateway_v1b.webp` is 835 kB (hero visual) — recompress. TBT burst from
+  the async three chunk parse — consider idle/first-scroll deferral on the
+  mobile tier.
+- Gate: typecheck, ESLint 0 errors / 327 warnings, 242 unit tests, prod
+  build, corridor 36/36 + ring 16/16 + arc-cases 8/8 smokes, landing
+  eyeballed at 6 depths incl. an early-load frame (hero composed at 700 ms,
+  no brandmark flash).
+
 ### 2026-07-14 — Phase 2 (security + correctness)
 
 - **Interlude (post-Phase-1, Vince-directed):** no-unused-vars zeroed out via
