@@ -66,6 +66,9 @@ export function CelestialConnector({ config, slotId }: CelestialConnectorProps) 
       { threshold: 0.1, rootMargin: "0px 0px -4% 0px" }
     );
     obs.observe(el);
+    // React 19 ref cleanup: portal-mounted connectors can unmount before
+    // they ever intersect — disconnect so the observer doesn't outlive us.
+    return () => obs.disconnect();
   }, []);
 
   return (
