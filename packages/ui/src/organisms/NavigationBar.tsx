@@ -56,9 +56,9 @@ export interface NavigationBarProps extends React.HTMLAttributes<HTMLElement> {
 export function NavigationBar({
   logo,
   items = [],
-  corners = "four",
-  cornerPreset = "subtle",
-  cornerColor = gold.DEFAULT,
+  corners: _corners = "four",
+  cornerPreset: _cornerPreset = "subtle",
+  cornerColor: _cornerColor = gold.DEFAULT,
   border = true,
   borderColor = dawn["08"],
   backgroundColor,

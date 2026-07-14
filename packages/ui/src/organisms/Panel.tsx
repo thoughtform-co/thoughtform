@@ -45,12 +45,12 @@ export const Panel = React.forwardRef<HTMLDivElement, PanelProps>(
   (
     {
       header,
-      corners = "none",
-      cornerPreset = "panel",
-      cornerColor = gold.DEFAULT,
-      border = true,
+      corners: _corners = "none",
+      cornerPreset: _cornerPreset = "panel",
+      cornerColor: _cornerColor = gold.DEFAULT,
+      border: _border = true,
       borderColor = gold[30],
-      surface = "transparent",
+      surface: _surface = "transparent",
       maxHeight,
       children,
       className,

@@ -53,6 +53,20 @@ const config = [
       "react-hooks/purity": "warn",
       "react-hooks/refs": "warn",
       "react-hooks/set-state-in-effect": "warn",
+      // Sanction the two deliberate unused-binding patterns left after the
+      // 2026-07-14 burn-down (128 → 19): rest-sibling prop stripping ahead of
+      // a `...props` DOM spread (packages/ui Panel/NavigationBar, VaultView,
+      // survey analyze route) and underscore-prefixed intentionally-unused
+      // params (uniform fn-family signatures, exported no-op APIs).
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
 ];

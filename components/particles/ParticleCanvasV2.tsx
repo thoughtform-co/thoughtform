@@ -153,7 +153,7 @@ function generateGatewayShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
@@ -523,7 +523,7 @@ function generateLorenzShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
@@ -574,7 +574,7 @@ function generateHalvorsenShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
@@ -619,7 +619,7 @@ function generateRosslerShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
@@ -705,7 +705,7 @@ function generateGridlinesShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
@@ -752,7 +752,7 @@ function generateContourShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
@@ -793,7 +793,7 @@ function generateWireframeSphereShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
@@ -842,7 +842,7 @@ function generateStarfieldShape(
   particles: Particle[],
   landmark: LandmarkConfig,
   index: number,
-  manifoldConfig: ParticleSystemConfig["manifold"]
+  _manifoldConfig: ParticleSystemConfig["manifold"]
 ): void {
   const colorRgb = hexToRgb(landmark.color);
   const scale = landmark.scale;
