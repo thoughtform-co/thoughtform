@@ -3,6 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { LEG_1_REVEAL_END, LEG_1_REVEAL_START } from "./LatentWormholeWalls";
 
@@ -118,14 +119,9 @@ export function ScrollStreaks({ count }: ScrollStreaksProps = {}) {
   // Counts bumped 2026-05-25 (+27% across tiers) so the punctuation
   // streaks read denser during fast scrolls — paired with the
   // raised alpha cap below.
-  const particleCount = useMemo(() => {
-    if (count != null) return count;
-    if (typeof window === "undefined") return 1800;
-    const w = window.innerWidth;
-    if (w < 760) return 1100;
-    if (w < 1280) return 2000;
-    return 2800;
-  }, [count]);
+  // Governed per-tier count (ADR-038); the lab `count` prop still wins.
+  const governedParticleCount = useCorridorCount(2800, 2000, 1100);
+  const particleCount = count ?? governedParticleCount;
 
   const geometry = useMemo(() => {
     const positions = new Float32Array(particleCount * 3);

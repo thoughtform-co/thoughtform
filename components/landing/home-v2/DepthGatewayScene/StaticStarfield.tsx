@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
+import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getThoughtformBootEnvelope } from "./sceneGeom";
 
@@ -117,14 +118,9 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   // v3.2: desktop bumped 2400 -> 3200 to support the Build/epilogue
   // brightness boost (more stars means the boosted field still reads
   // as discrete points rather than a uniform glow).
-  const starCount = useMemo(() => {
-    if (count != null) return count;
-    if (typeof window === "undefined") return 1900;
-    const w = window.innerWidth;
-    if (w < 760) return 1200;
-    if (w < 1280) return 1700;
-    return 3200;
-  }, [count]);
+  // Governed per-tier count (ADR-038); the lab `count` prop still wins.
+  const governedStarCount = useCorridorCount(3200, 1700, 1200);
+  const starCount = count ?? governedStarCount;
 
   const geometry = useMemo(() => {
     const positions = new Float32Array(starCount * 3);

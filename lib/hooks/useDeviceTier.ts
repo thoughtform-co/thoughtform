@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { probeWebGL } from "@/lib/webgl/probe";
+import { classifyRenderer } from "@/lib/webgl/rendererClass";
 
 /**
  * lib/hooks/useDeviceTier — single source of truth for the home-v2
@@ -83,6 +84,15 @@ interface NavigatorWithCaps extends Navigator {
 export function corridorCapable(): boolean {
   if (typeof window === "undefined") return false;
   if (!probeWebGL()) return false;
+  // Software rasterizer (SwiftShader / llvmpipe / Microsoft Basic Render):
+  // a 2-canvas 3D corridor on the CPU is guaranteed jank — route to the
+  // static text fallback. (Phase 4 GPU-capability probe, ADR-038.)
+  // EXCEPT under automation: headless test browsers render WebGL via
+  // SwiftShader, and the corridor smokes must still exercise the real 3D
+  // corridor rather than the fallback. `navigator.webdriver` is never set
+  // for a real visitor, so this carve-out cannot affect production.
+  const automated = (navigator as Navigator).webdriver === true;
+  if (!automated && classifyRenderer() === "software") return false;
   const nav = navigator as NavigatorWithCaps;
   const cores = nav.hardwareConcurrency ?? 8;
   const mem = nav.deviceMemory ?? 8;

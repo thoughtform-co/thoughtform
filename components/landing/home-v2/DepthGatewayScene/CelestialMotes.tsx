@@ -3,6 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBuildApproachFade, getThoughtformBootEnvelope } from "./sceneGeom";
 import { LEG_1_REVEAL_END, LEG_1_REVEAL_START } from "./LatentWormholeWalls";
@@ -116,14 +117,6 @@ const COOL_COLOR = new THREE.Color("#cfc5af");
 const WARM_COLOR = new THREE.Color("#caa554");
 
 // ─── Helpers ────────────────────────────────────────────────────
-
-function pickCount(desktop: number, tablet: number, mobile: number): number {
-  if (typeof window === "undefined") return desktop;
-  const w = window.innerWidth;
-  if (w < 760) return mobile;
-  if (w < 1280) return tablet;
-  return desktop;
-}
 
 /** Build local-frame point offsets for one mote using a Fibonacci
  *  sphere distribution. Output is `[x0, y0, z0, x1, y1, z1, ...]`
@@ -244,10 +237,8 @@ export function CelestialMotes() {
   const lastTime = useRef<number>(-1);
   const smoothedAlpha = useRef<number>(0);
 
-  const moteCount = useMemo(
-    () => pickCount(MOTE_COUNT_DESKTOP, MOTE_COUNT_TABLET, MOTE_COUNT_MOBILE),
-    []
-  );
+  // Governed per-tier count (ADR-038).
+  const moteCount = useCorridorCount(MOTE_COUNT_DESKTOP, MOTE_COUNT_TABLET, MOTE_COUNT_MOBILE);
   const totalPoints = moteCount * POINTS_PER_MOTE;
 
   // Per-mote state lives in plain TypedArrays we mutate every

@@ -3,6 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBuildApproachFade, getThoughtformBootEnvelope } from "./sceneGeom";
 
@@ -213,14 +214,6 @@ const TOKEN_TILE_W = 128;
 const TOKEN_TILE_H = 128;
 
 // ─── Helpers ────────────────────────────────────────────────────
-
-function pickCount(desktop: number, tablet: number, mobile: number): number {
-  if (typeof window === "undefined") return desktop;
-  const w = window.innerWidth;
-  if (w < 760) return mobile;
-  if (w < 1280) return tablet;
-  return desktop;
-}
 
 /** Sample an XY position inside the wide cone at the given camera
  *  distance, biased toward the centre so the field reads as focused
@@ -540,18 +533,15 @@ export function LatentFieldTunnel() {
   const vectorsAlpha = useRef<number>(0);
   const tokensAlpha = useRef<number>(0);
 
-  const pointCount = useMemo(
-    () => pickCount(POINT_COUNT_DESKTOP, POINT_COUNT_TABLET, POINT_COUNT_MOBILE),
-    []
+  // Governed per-tier counts (ADR-038): the quality multiplier scales
+  // these live, so a governor step-down rebuilds the geometry below.
+  const pointCount = useCorridorCount(POINT_COUNT_DESKTOP, POINT_COUNT_TABLET, POINT_COUNT_MOBILE);
+  const vectorPairCount = useCorridorCount(
+    VECTOR_PAIR_COUNT_DESKTOP,
+    VECTOR_PAIR_COUNT_TABLET,
+    VECTOR_PAIR_COUNT_MOBILE
   );
-  const vectorPairCount = useMemo(
-    () => pickCount(VECTOR_PAIR_COUNT_DESKTOP, VECTOR_PAIR_COUNT_TABLET, VECTOR_PAIR_COUNT_MOBILE),
-    []
-  );
-  const tokenCount = useMemo(
-    () => pickCount(TOKEN_COUNT_DESKTOP, TOKEN_COUNT_TABLET, TOKEN_COUNT_MOBILE),
-    []
-  );
+  const tokenCount = useCorridorCount(TOKEN_COUNT_DESKTOP, TOKEN_COUNT_TABLET, TOKEN_COUNT_MOBILE);
 
   // ── Geometries ────────────────────────────────────────────────
 

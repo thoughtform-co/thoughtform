@@ -50,6 +50,8 @@ Write an ADR when you:
 | 029 | [Services Card Ring](029-services-card-ring.md)                           | Accepted | 2026-07 |
 | 030 | [Tools Section Cover Stack](030-tools-section-cover-stack.md)             | Accepted | 2026-07 |
 | 031 | [Rail Manifest](031-rail-manifest.md)                                     | Accepted | 2026-07 |
+| 037 | [Supabase RLS Trust Boundary](037-supabase-rls-trust-boundary.md)         | Proposed | 2026-07 |
+| 038 | [Corridor Quality Governor](038-corridor-quality-governor.md)             | Accepted | 2026-07 |
 
 ---
 

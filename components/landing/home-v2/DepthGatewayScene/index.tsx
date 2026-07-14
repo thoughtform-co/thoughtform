@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
+import {
+  effectiveDprCeiling,
+  reportFrameSample,
+  resetFrameSampler,
+  useDprCeiling,
+  useQualityStore,
+} from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { BrandmarkPhysicsCoreActor } from "./BrandmarkPhysicsCoreActor";
@@ -36,6 +43,7 @@ import {
  * even when the user flicks through a window in a single frame.
  */
 function MotionFollowerDriver() {
+  const wasEngagedRef = useRef(false);
   useFrame((_, delta) => {
     const {
       paintProgress,
@@ -46,6 +54,13 @@ function MotionFollowerDriver() {
       dockProgress,
       servicesAmbient,
     } = useDepthGatewayStore.getState().transform;
+    // Quality governor: sample rolling frame time only while engaged, and
+    // arm the cooldown on each fresh engage so warm-up frames don't count
+    // (ADR-038). Cheap — EMA lives in module scope, no re-render.
+    const engagedNow = active || armed || docked || servicesAmbient;
+    if (engagedNow && !wasEngagedRef.current) resetFrameSampler();
+    wasEngagedRef.current = engagedNow;
+    if (engagedNow) reportFrameSample(delta);
     const layers = getBrandmarkAccretionLayers(paintProgress);
     // Pass `active || armed || docked || servicesAmbient` so the follower
     // eases continuously across the active <-> armed boundary (corridor
@@ -287,6 +302,14 @@ function viewportAspect(): number {
  */
 export function DepthGatewayScene() {
   const tier = useDeviceTier();
+  // Quality governor: subscribe to the live DPR ceiling so a mid-session
+  // step-down re-renders and R3F re-applies the pixel ratio (no remount);
+  // and run the one-shot GPU-capability probe to seed the starting budget
+  // for weak-but-real GPUs (ADR-038).
+  const dprCeiling = useDprCeiling();
+  useEffect(() => {
+    useQualityStore.getState().probe();
+  }, []);
   const [lx, ly, lz] = getCameraLookAt(0);
   // `glEpoch` is bumped on `webglcontextrestored` to force a Canvas
   // remount so all `useMemo` geometry rebuilds against the fresh
@@ -323,8 +346,11 @@ export function DepthGatewayScene() {
   // Mobile performance tier: cap the drawing-buffer pixel ratio (phones
   // report DPR ~3, so [1, 1.4] is the dominant GPU lever) and drop MSAA
   // (expensive on a high-DPR panel; the dpr cap carries edge quality).
+  // The upper bound is the quality governor's live ceiling (starts at the
+  // tier max, steps 1.75→1.25→1.0 under sustained load; mobile still caps
+  // at 1.4). At full quality this is byte-identical to the old fixed caps.
   const isMobile = tier === "mobile";
-  const dpr: [number, number] = isMobile ? [1, 1.4] : [1, 1.75];
+  const dpr: [number, number] = [1, effectiveDprCeiling(tier, dprCeiling)];
 
   return (
     <Canvas
