@@ -54,6 +54,45 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-14 — Phase 3b (performance: assets, auth path, payloads)
+
+- **Case screenshots** (`22f5e60`): the four Build-park PNGs
+  (2000–2263 px, 3.07 MB) → 1000 px webp q82 (**133 kB, −96%**); dims
+  updated in `toolCardData`; HTTP cache warmed at corridor mount so the
+  first-arm bake isn't a cold burst. Baked card eyeballed at DPR 1.75 —
+  identical (LUT + dot veil dominate).
+- **Fonts** (`4bec129`): six brand faces → woff2 (**789 → 321 kB, −59%**),
+  woff2-only src (universal since ~2016; OTF/TTF deleted, mondwest stays on
+  next/font). The three bake-critical faces are preloaded — kills the
+  `waitForCardFonts` 1500 ms bake-with-fallback race.
+- **Hero** (`566467d`): explicit dims + `fetchpriority=high` +
+  page-level preload for `Gateway_v1b.webp`. The 835 kB asset is NOT
+  swapped — candidates for owner review in `assets-staging/hero-candidates/`
+  (webp re-encode barely helps; **AVIF q45 = 190 kB**, 2048px webp = 143 kB).
+- **Supabase off the anonymous path** (`566cc02`): AuthProvider lazy-inits
+  gated on persisted `sb-*` token / URL auth params / a same-tab sign-in
+  bridge; UserStatus defers signOut to click. **First Load JS 106.8 →
+  72.8 kB gzip** (449.8 at origin, **−84% cumulative**). Verified: anonymous
+  → zero supabase chunks/calls (dev + prod build); token → lazy init opens;
+  /admin terminal renders; prod /astrogation still walls.
+- **Prototype HTML trim** (`74ad0a1`): 107 annotation comments stripped at
+  the parse-pipeline tail (source file untouched) — the served landing
+  document drops **133.5 → 111.0 kB** (comments shipped twice: SSR + RSC).
+- **Deploy hygiene** (`eb508e3`): `.vercelignore` drops ~33 MB of
+  lab-only/unreferenced assets (gateway-hero, studio.hdr, showcase/,
+  Vince-4.jpg). Kept: `videos/` (the PUBLIC /claude-workshop route ships
+  the key visual — caught in verification) and `images/gateway/` (admin
+  orrery). Labs verified serving in dev.
+- **Mobile chunk defer** (`7d6acc0`): the corridor WebGL chunk gates on
+  first scroll/input/idle (2.5 s cap) on ≤960 px viewports — the parse
+  burst leaves the hydration window; mount machinery untouched.
+- Gate: typecheck, ESLint 0 errors / 327 warnings, 242 unit tests,
+  prod build, corridor 36/36 (+ring/arc-cases green; single-project runs
+  need bounded workers — WebGL starvation), landing + card + fonts
+  eyeballed. Local-lab Lighthouse (noisy machine): desktop 79 / LCP 1.6 s;
+  mobile 59 / LCP 7.9 s — mobile LCP remains hydration+reveal-gated
+  ([data-m]), the explicit Phase-4 decision item.
+
 ### 2026-07-14 — Phase 3 (performance: landing First Load JS)
 
 - **The WebGL stack is out of the landing's initial bundle**: First Load JS
