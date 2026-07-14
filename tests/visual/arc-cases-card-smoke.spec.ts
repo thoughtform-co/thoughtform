@@ -1,17 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Arc Cases Card smoke (ADR-036 — supersedes the ADR-035 terminal overlay).
+ * Arc Cases Card smoke (ADR-036; sigil trigger + phased reveal ADR-041).
  *
  * Structural contracts only — the in-canvas card + the node-stream fold are
- * verified visually against the running dev server (verify-card-*.png); the
- * arm/band/label/layout math is pinned in `tests/lib/arc-cases-*.test.ts`.
- * This suite proves the DOM half: the CTA docks UNDER the Build title,
- * arming reveals the DOM stepper row AND fades the stack labels to nothing
- * (which requires the CARD's R3F level writer to actually run — the label
- * fade reads the same `arcCasesLevelRef.level` the card writes), stepping
- * swaps the front slot, closing drains, and walking out of the band
- * auto-disarms.
+ * verified visually against the running dev server; the arm/band/phase/layout
+ * math is pinned in `tests/lib/arc-cases-*.test.ts`. This suite proves the DOM
+ * half:
+ *   - the SIGIL is welded to the sphere's front pole (viewport centre at the
+ *     park) and only offers itself once the sources/surfaces notes have
+ *     SETTLED — inert mid-corridor and while they're still accreting;
+ *   - arming fades the stack labels to nothing AND reveals the stepper row,
+ *     which requires the CARD's R3F level writer to actually run (both read
+ *     the `arcCasesLevelRef` the card writes);
+ *   - THE ORDERING (ADR-041): the card has ZERO presence while the node fold
+ *     is still running — the stepper rides `cardPresence`, so it must still be
+ *     at 0 on the frame the labels have already begun to fade;
+ *   - stepping swaps the front slot, CLOSE drains, Escape returns focus to the
+ *     sigil, and walking out of the band auto-disarms.
  *
  * Desktop-only feature (ARC_CASES_MEDIA ≥ 1101×760 + no reduced motion):
  * the mobile/tablet projects assert absence instead.
@@ -20,6 +26,14 @@ import { expect, test, type Page } from "@playwright/test";
 /** Corridor raw stage progress for the Build park:
  *  paintProgress 0.9225 × EPILOGUE_START (620/820). */
 const BUILD_PARK_RAW = 0.9225 * (620 / 820);
+
+/** Mid-Build, while the sources/surfaces are still ACCRETING (paintProgress
+ *  0.90 — the stack window is [0.875, 0.95]). The sigil must not offer
+ *  itself here: the notes are still moving. */
+const NOTES_ACCRETING_RAW = 0.9 * (620 / 820);
+
+const SIGIL = '[data-world-anchor="intelligence.sigil"]';
+const SIGIL_BTN = ".home-v2-cases-sigil__btn";
 
 async function scrollToStageProgress(page: Page, raw: number) {
   await page.evaluate((value: number) => {
@@ -39,73 +53,176 @@ function isDesktop(page: Page): boolean {
   return !!viewport && viewport.width >= 1101 && viewport.height >= 760;
 }
 
-test.describe("Arc cases card smoke (ADR-036)", () => {
+/**
+ * Click the sigil with a REAL mouse click at its projected centre.
+ *
+ * `locator.click()` cannot be used: the sigil is re-projected by the world-DOM
+ * tracker every frame and the gyro assembly carries a continuous idle drift, so
+ * its bounding box never repeats across two animation frames and Playwright's
+ * actionability check fails forever with "element is not stable". (That is test
+ * strictness, not a usability problem — the drift is sub-pixel on a 34px
+ * target.) `page.mouse.click` still routes through the browser's real hit test,
+ * so this keeps proving the pointer-events opt-in and the z-order: if anything
+ * covered the marker, the click would land on that instead and the arm
+ * assertions after each call would fail.
+ */
+async function clickSigil(page: Page) {
+  const box = await page.locator(SIGIL_BTN).boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+}
+
+test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
     await page.waitForTimeout(800);
   });
 
-  test("CTA docks under the Build title — inert mid-corridor, live at the park", async ({
+  test("the sigil sits on the sphere's front pole and waits for the notes to settle", async ({
     page,
   }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
-    const dock = page.locator(".home-v2-cases-cta-dock");
-    await expect(dock).toHaveCount(1);
+    const sigil = page.locator(SIGIL);
+    await expect(sigil).toHaveCount(1);
 
-    // The dock is a descendant of a station header's `__head` band.
-    const headWithDock = page.locator(".home-v2-station-header__head", { has: dock });
-    await expect(headWithDock).toHaveCount(1);
+    // The trigger is the OLD chip's successor: no dock under the Build title.
+    await expect(page.locator(".home-v2-cases-cta-dock")).toHaveCount(0);
 
-    // Mid-corridor (Encode-ish): the dock must be inert.
+    // Mid-corridor (Encode-ish): inert.
     await scrollToStageProgress(page, 0.45);
-    await expect(dock).toHaveAttribute("inert", "");
+    await expect(sigil).toHaveAttribute("inert", "");
 
-    // Build park: live, rest label.
+    // Still inert while the sources/surfaces are ACCRETING — the reveal must
+    // not be armable before the notes have landed (ADR-041).
+    await scrollToStageProgress(page, NOTES_ACCRETING_RAW);
+    await expect(sigil).toHaveAttribute("inert", "");
+
+    // Build park: the notes have settled — the sigil is live.
     await scrollToStageProgress(page, BUILD_PARK_RAW);
-    await page.waitForTimeout(600);
-    await expect(dock).not.toHaveAttribute("inert", "");
-    const chip = page.locator(".home-v2-cases-cta");
-    await expect(chip).toContainText("VIEW THE CASES");
+    await page.waitForTimeout(700);
+    await expect(sigil).not.toHaveAttribute("inert", "");
 
-    // The chip sits BELOW the title console in the same head band.
-    const title = headWithDock.locator(".home-v2-station-header__console--title");
-    const chipBox = await chip.boundingBox();
-    const titleBox = await title.boundingBox();
-    expect(chipBox).not.toBeNull();
-    expect(titleBox).not.toBeNull();
-    if (chipBox && titleBox) {
-      expect(chipBox.y).toBeGreaterThanOrEqual(titleBox.y + titleBox.height - 4);
+    // Welded to the FRONT POLE: it projects onto the sphere's centre, which
+    // at the on-axis park is the middle of the viewport.
+    const box = await sigil.boundingBox();
+    const viewport = page.viewportSize();
+    expect(box).not.toBeNull();
+    if (box && viewport) {
+      const cx = box.x + box.width / 2;
+      const cy = box.y + box.height / 2;
+      expect(Math.abs(cx - viewport.width / 2)).toBeLessThan(viewport.width * 0.06);
+      expect(Math.abs(cy - viewport.height / 2)).toBeLessThan(viewport.height * 0.12);
     }
   });
 
-  test("arming reveals the stepper, drops inert, and fades the stack labels", async ({ page }) => {
+  test("arming fades the stack labels and reveals the stepper", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    const chip = page.locator(".home-v2-cases-cta");
+    const sigil = page.locator(SIGIL);
     const stepper = page.locator("#arc-cases-terminal");
     await expect(stepper).toHaveCount(1);
 
-    await chip.click();
-    await expect(chip).toHaveAttribute("data-armed", "true");
-    await expect(chip).toContainText("CLOSE");
+    await clickSigil(page);
+    await expect(sigil).toHaveAttribute("data-armed", "true");
+    await expect(page.locator(SIGIL_BTN)).toHaveAttribute("aria-expanded", "true");
     await expect(stepper).toHaveAttribute("data-open", "true");
 
-    // The stepper drops `inert` once the arm level passes the arrive
-    // threshold — proving the CARD's R3F level-writer useFrame is alive.
+    // The stepper drops `inert` once cardPresence passes the arrive threshold —
+    // proving the CARD's R3F level-writer useFrame is alive.
     await expect(stepper).not.toHaveAttribute("inert", "", { timeout: 5000 });
     await expect(stepper).toBeVisible();
 
-    // The stack labels disappear on the shared arm level — a per-row source
-    // chip must compute to ~0 opacity after the arm settles.
+    // The stack labels disappear on the shared arm level.
     const stackChip = page.locator('.home-v2-stack-item[data-stack-side="sources"]').first();
     await expect
       .poll(async () => Number(await stackChip.evaluate((el) => getComputedStyle(el).opacity)), {
         timeout: 5000,
       })
       .toBeLessThan(0.05);
+
+    // The card covers the sigil's axis, so the marker fades out — but it stays
+    // FOCUSABLE (not inert) so Escape can return focus to the trigger, and it
+    // drops mouse events so it can't be clicked through the card face.
+    await expect
+      .poll(async () => Number(await sigil.evaluate((el) => getComputedStyle(el).opacity)), {
+        timeout: 5000,
+      })
+      .toBeLessThan(0.05);
+    await expect(sigil).not.toHaveAttribute("inert", "");
+    expect(await page.locator(SIGIL_BTN).evaluate((el) => getComputedStyle(el).pointerEvents)).toBe(
+      "none"
+    );
+  });
+
+  // THE ORDERING INVARIANT (ADR-041) — the reason the phase split exists.
+  // The stepper's opacity IS `cardPresence`, so sampling it while the labels
+  // are mid-fade proves the card has not begun while the nodes are still
+  // folding.
+  //
+  // Each sample is TIME-STAMPED and the assertion is scoped to the fold window
+  // rather than to a fixed sample count: the fold completes when the damped arm
+  // level reaches ARC_FOLD_DONE (0.62), i.e. −ln(1 − 0.62) / ARC_ARM_RATE(2.2)
+  // ≈ 440 ms. A fixed 5×90 ms probe straddled that edge and caught the card's
+  // very first frame (0.004) — a probe artifact, not a violation. FOLD_WINDOW_MS
+  // keeps a margin below the real boundary so scheduling jitter can't flake it.
+  test("ORDERING: the card has zero presence while the nodes are still folding", async ({
+    page,
+  }) => {
+    test.skip(!isDesktop(page), "desktop-only feature");
+    await scrollToStageProgress(page, BUILD_PARK_RAW);
+    await page.waitForTimeout(800);
+
+    /** Safely inside the ~440 ms fold; see the note above. */
+    const FOLD_WINDOW_MS = 360;
+
+    const trace = await page.evaluate(async () => {
+      const btn = document.querySelector<HTMLElement>(".home-v2-cases-sigil__btn");
+      const stepper = document.querySelector<HTMLElement>("#arc-cases-terminal");
+      const label = document.querySelector<HTMLElement>(
+        '[data-world-anchor="intelligence.sourcesLabel"]'
+      );
+      if (!btn || !stepper || !label) return [];
+      const samples: { ms: number; cardPresence: number; label: number }[] = [];
+      const t0 = performance.now();
+      btn.click();
+      for (let i = 0; i < 6; i++) {
+        await new Promise((r) => setTimeout(r, 80));
+        samples.push({
+          ms: performance.now() - t0,
+          cardPresence: Number(stepper.style.opacity || 0),
+          label: Number(label.style.opacity || 0),
+        });
+      }
+      return samples;
+    });
+
+    const inFold = trace.filter((s) => s.ms < FOLD_WINDOW_MS);
+    expect(inFold.length).toBeGreaterThanOrEqual(3);
+
+    // The labels must ACTUALLY be fading (the arm is progressing) …
+    expect(trace[trace.length - 1].label).toBeLessThan(trace[0].label);
+
+    // … while the card is still completely absent. The fold owns this stretch.
+    for (const sample of inFold) {
+      expect(sample.cardPresence).toBe(0);
+    }
+
+    // And the card DOES arrive afterwards (the phase split delays it, not kills it).
+    await expect
+      .poll(
+        async () =>
+          Number(
+            await page
+              .locator("#arc-cases-terminal")
+              .evaluate((el) => (el as HTMLElement).style.opacity)
+          ),
+        { timeout: 5000 }
+      )
+      .toBeGreaterThan(0.9);
   });
 
   test("stepping + selecting swaps the front slot", async ({ page }) => {
@@ -113,7 +230,7 @@ test.describe("Arc cases card smoke (ADR-036)", () => {
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    await page.locator(".home-v2-cases-cta").click();
+    await clickSigil(page);
     await expect(page.locator("#arc-cases-terminal")).toHaveAttribute("data-open", "true");
 
     const chips = page.locator(".home-v2-cases-stepper__chip");
@@ -130,30 +247,54 @@ test.describe("Arc cases card smoke (ADR-036)", () => {
     await expect(chips.nth(3)).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("closing drains — stepper inert/hidden, labels recover", async ({ page }) => {
+  test("CLOSE drains the reveal — stepper inert, labels + sigil recover", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    const chip = page.locator(".home-v2-cases-cta");
+    const sigil = page.locator(SIGIL);
     const stepper = page.locator("#arc-cases-terminal");
-    await chip.click();
+    await clickSigil(page);
     await expect(stepper).toHaveAttribute("data-open", "true");
     await expect(stepper).not.toHaveAttribute("inert", "", { timeout: 5000 });
 
-    await chip.click();
-    await expect(chip).toHaveAttribute("data-armed", "false");
+    // The sigil is behind the card, so CLOSE lives in the stepper row.
+    await page.locator(".home-v2-cases-stepper__close").click();
+    await expect(sigil).toHaveAttribute("data-armed", "false");
     await expect(stepper).toHaveAttribute("data-open", "false");
-    // Closed stepper is inert again once the level drains back below arrive.
     await expect(stepper).toHaveAttribute("inert", "", { timeout: 5000 });
 
-    // Stack labels recover once the level drains back to 0.
+    // Stack labels and the sigil recover once the level drains back to 0.
     const stackChip = page.locator('.home-v2-stack-item[data-stack-side="sources"]').first();
     await expect
       .poll(async () => Number(await stackChip.evaluate((el) => getComputedStyle(el).opacity)), {
         timeout: 5000,
       })
       .toBeGreaterThan(0.3);
+    await expect
+      .poll(async () => Number(await sigil.evaluate((el) => getComputedStyle(el).opacity)), {
+        timeout: 5000,
+      })
+      .toBeGreaterThan(0.5);
+  });
+
+  test("Escape closes and returns focus to the sigil", async ({ page }) => {
+    test.skip(!isDesktop(page), "desktop-only feature");
+    await scrollToStageProgress(page, BUILD_PARK_RAW);
+    await page.waitForTimeout(800);
+
+    await clickSigil(page);
+    await expect(page.locator("#arc-cases-terminal")).toHaveAttribute("data-open", "true");
+
+    await page.keyboard.press("Escape");
+    await expect(page.locator(SIGIL)).toHaveAttribute("data-armed", "false");
+    // The trigger takes focus back (it stays focusable while armed precisely
+    // so this works — see ADR-041).
+    expect(
+      await page.evaluate(() =>
+        document.activeElement?.classList.contains("home-v2-cases-sigil__btn")
+      )
+    ).toBe(true);
   });
 
   test("walking out of the Build band auto-disarms; re-arming is clean", async ({ page }) => {
@@ -161,33 +302,33 @@ test.describe("Arc cases card smoke (ADR-036)", () => {
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    const chip = page.locator(".home-v2-cases-cta");
-    await chip.click();
-    await expect(chip).toHaveAttribute("data-armed", "true");
+    const sigil = page.locator(SIGIL);
+    await clickSigil(page);
+    await expect(sigil).toHaveAttribute("data-armed", "true");
 
-    // Scroll back toward Encode — the watcher must disarm.
+    // Scroll back toward Encode — the watcher (now owned by the sigil) disarms.
     await scrollToStageProgress(page, 0.45);
-    await expect(chip).toHaveAttribute("data-armed", "false");
+    await expect(sigil).toHaveAttribute("data-armed", "false");
 
-    // Return: rest label, clean re-arm.
+    // Return: clean re-arm.
     await scrollToStageProgress(page, BUILD_PARK_RAW);
-    await page.waitForTimeout(600);
-    await expect(chip).toContainText("VIEW THE CASES");
-    await chip.click();
-    await expect(chip).toHaveAttribute("data-armed", "true");
-    await chip.click();
+    await page.waitForTimeout(700);
+    await expect(sigil).not.toHaveAttribute("inert", "");
+    await clickSigil(page);
+    await expect(sigil).toHaveAttribute("data-armed", "true");
+    await page.locator(".home-v2-cases-stepper__close").click();
   });
 
-  test("mobile/tablet never shows the dock or the stepper", async ({ page }) => {
+  test("mobile/tablet never shows the sigil or the stepper", async ({ page }) => {
     test.skip(isDesktop(page), "absence check is for small viewports");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
 
-    // The stepper self-gates on ARC_CASES_MEDIA (renders null off-desktop).
+    // Both self-gate on ARC_CASES_MEDIA (render null off-desktop).
     await expect(page.locator("#arc-cases-terminal")).toHaveCount(0);
 
-    // The dock may exist in the (hidden) station-headers layer — the
-    // ARC_CASES_MEDIA-mirroring CSS hide must keep it invisible.
-    const dock = page.locator(".home-v2-cases-cta-dock");
-    if ((await dock.count()) > 0) await expect(dock).toBeHidden();
+    // If the sigil is in the DOM at all, the ARC_CASES_MEDIA-mirroring CSS
+    // hide must keep it invisible (gate parity).
+    const sigil = page.locator(SIGIL);
+    if ((await sigil.count()) > 0) await expect(sigil).toBeHidden();
   });
 });
