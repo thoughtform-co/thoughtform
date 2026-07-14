@@ -82,12 +82,19 @@ export default async function Home() {
   const celestialSlots = await getCelestialSlotsCached();
 
   return (
-    <LandingPage
-      bodyHtml={bodyHtml}
-      bodyClass={bodyClass}
-      celestialSlots={celestialSlots}
-      corridorText={corridorText}
-      corridorMountId={CORRIDOR_MOUNT_ID}
-    />
+    <>
+      {/* Hero key visual — the full-bleed .hero__bg image inside the
+          injected prototype markup. Preload so the fetch starts with the
+          document instead of after the innerHTML commit (React hoists
+          this link into <head>). */}
+      <link rel="preload" as="image" href="/images/Gateway_v1b.webp" fetchPriority="high" />
+      <LandingPage
+        bodyHtml={bodyHtml}
+        bodyClass={bodyClass}
+        celestialSlots={celestialSlots}
+        corridorText={corridorText}
+        corridorMountId={CORRIDOR_MOUNT_ID}
+      />
+    </>
   );
 }
