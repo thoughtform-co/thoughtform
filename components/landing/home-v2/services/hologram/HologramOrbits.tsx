@@ -403,6 +403,9 @@ export function HologramOrbits({
   );
   const local = useRef(new THREE.Vector3());
   const world = useRef(new THREE.Vector3());
+  // Reused projection scratch — avoids a per-orbit, per-frame Vector3
+  // allocation from the old `world.current.clone().project()` (ADR-038).
+  const projected = useRef(new THREE.Vector3());
   // Damped dissipate clock (−1 sentinel = snap on first frame). 1 when parked.
   const scrollEntrance = entrance === "scroll";
   const dissipateRef = useRef(scrollEntrance ? -1 : 1);
@@ -438,13 +441,13 @@ export function HologramOrbits({
         .applyEuler(eulers[i])
         .multiplyScalar(scale);
       world.current.copy(local.current).applyMatrix4(group.matrixWorld);
-      const projected = world.current.clone().project(camera);
+      const p = projected.current.copy(world.current).project(camera);
       anchors.push({
-        depth: projected.z,
+        depth: p.z,
         serviceId: o.id as ServiceId,
-        visible: projected.z < 1 && projected.z > -1,
-        x: (projected.x * 0.5 + 0.5) * size.width,
-        y: (-projected.y * 0.5 + 0.5) * size.height,
+        visible: p.z < 1 && p.z > -1,
+        x: (p.x * 0.5 + 0.5) * size.width,
+        y: (-p.y * 0.5 + 0.5) * size.height,
       });
     });
     publishAnchors?.(anchors);

@@ -243,6 +243,13 @@ export function ThoughtformAtmosphere() {
   const starsRef = useRef<THREE.Points>(null);
   const bootGlowRef = useRef<THREE.Mesh>(null);
   const shockwaveRef = useRef<THREE.LineLoop>(null);
+  // Accumulated animation phase (ADR-038): advanced by CLAMPED dt only
+  // while painting, replacing absolute `clock.elapsedTime`. R3F's clock
+  // pauses in demand mode and jumps on re-engage, which snapped the
+  // twinkle + boot-glow breath on scroll re-entry; a local accumulator
+  // with a clamped dt continues smoothly instead. Continuous-play cadence
+  // is unchanged (a periodic sin — the absolute phase offset is moot).
+  const phaseRef = useRef(0);
 
   const starCount = useCorridorCount(STAR_COUNT_DESKTOP, STAR_COUNT_TABLET, STAR_COUNT_MOBILE);
 
@@ -342,7 +349,7 @@ export function ThoughtformAtmosphere() {
     bootGlowMaterial,
   ]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const stars = starsRef.current;
     const shockwave = shockwaveRef.current;
     const bootGlow = bootGlowRef.current;
@@ -357,7 +364,9 @@ export function ThoughtformAtmosphere() {
       return;
     }
 
-    starMaterial.uniforms.uTime.value = state.clock.elapsedTime;
+    // Advance the local phase with a clamped dt (see phaseRef note).
+    phaseRef.current += Math.min(0.1, Math.max(0, delta));
+    starMaterial.uniforms.uTime.value = phaseRef.current;
     starMaterial.uniforms.uPixelRatio.value = state.viewport.dpr;
 
     // Local star cluster — combine the centering-pan ramp with a
@@ -435,7 +444,7 @@ export function ThoughtformAtmosphere() {
       bootGlow.visible = true;
       bootGlow.position.x = shockwaveX;
       bootGlow.position.z = STATION_THOUGHTFORM.position[2] + BOOT_GLOW_Z_BEHIND_GATE;
-      const breath = 1 + Math.sin(state.clock.elapsedTime * 0.9) * 0.04;
+      const breath = 1 + Math.sin(phaseRef.current * 0.9) * 0.04;
       bootGlowMaterial.uniforms.uBreath.value = breath;
       bootGlowMaterial.uniforms.uOpacity.value = glowAlpha;
     }

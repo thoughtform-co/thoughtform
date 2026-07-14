@@ -293,6 +293,11 @@ export function ThoughtformCompassGate() {
   // sweep around the compass like the v7 CSS-animated dots.
   const orbitDot1GroupRef = useRef<THREE.Group>(null);
   const orbitDot2GroupRef = useRef<THREE.Group>(null);
+  // Accumulated spin phase (ADR-038): clamped-dt accumulator replacing
+  // absolute `clock.elapsedTime` for the orbit-dot rotations + compass
+  // breath, so they don't phase-snap when R3F's clock jumps on demand->
+  // always re-engage. Advanced only while painting.
+  const phaseRef = useRef(0);
 
   // ── Geometries ────────────────────────────────────────────────
   const ringGeoms = useMemo(() => {
@@ -451,7 +456,7 @@ export function ThoughtformCompassGate() {
   ]);
 
   // ── Per-frame motion + visibility ─────────────────────────────
-  useFrame((state) => {
+  useFrame((_state, delta) => {
     const group = groupRef.current;
     if (!group) return;
     const {
@@ -471,6 +476,7 @@ export function ThoughtformCompassGate() {
       return;
     }
     group.visible = true;
+    phaseRef.current += Math.min(0.1, Math.max(0, delta));
     const progress = paintProgress;
 
     // Cinematic centering pan: slide the whole group laterally
@@ -562,14 +568,14 @@ export function ThoughtformCompassGate() {
     // below; the result is close enough to v7 for a subtle ambient
     // motion that the eye reads as "alive".
     if (orbitDot1GroupRef.current) {
-      orbitDot1GroupRef.current.rotation.z = state.clock.elapsedTime * ORBIT_DOT_1.angularVelocity;
+      orbitDot1GroupRef.current.rotation.z = phaseRef.current * ORBIT_DOT_1.angularVelocity;
     }
     if (orbitDot2GroupRef.current) {
-      orbitDot2GroupRef.current.rotation.z = state.clock.elapsedTime * ORBIT_DOT_2.angularVelocity;
+      orbitDot2GroupRef.current.rotation.z = phaseRef.current * ORBIT_DOT_2.angularVelocity;
     }
 
     // Hairline Z-spin (the v7 compass has a subtle "breath" cue).
-    group.rotation.z = state.clock.elapsedTime * 0.012;
+    group.rotation.z = phaseRef.current * 0.012;
   });
 
   return (

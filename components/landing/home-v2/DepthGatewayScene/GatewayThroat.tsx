@@ -335,6 +335,11 @@ function buildThroat(): {
 
 export function GatewayThroat() {
   const groupRef = useRef<THREE.Group>(null);
+  // Accumulated shader time (ADR-038): clamped-dt accumulator replacing
+  // absolute `clock.elapsedTime`, so the throat flow doesn't phase-snap
+  // when R3F's clock jumps on demand->always re-engage. Advanced only
+  // while painting.
+  const phaseRef = useRef(0);
 
   // Desktop-only — same gate as `LatentWormholeWalls` /
   // `LatentTopographyContours`. The centred mobile composition keeps
@@ -380,7 +385,7 @@ export function GatewayThroat() {
     };
   }, [material, geometry]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group || !geometry) return;
 
@@ -392,6 +397,7 @@ export function GatewayThroat() {
       return;
     }
     group.visible = true;
+    phaseRef.current += Math.min(0.1, Math.max(0, delta));
     const p = t.paintProgress;
 
     // Welded to the gate through the centering pan — identical
@@ -399,7 +405,7 @@ export function GatewayThroat() {
     group.position.x = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
 
     material.uniforms.uPixelRatio.value = state.viewport.dpr;
-    material.uniforms.uTime.value = state.clock.elapsedTime;
+    material.uniforms.uTime.value = phaseRef.current;
     (material.uniforms.uCameraPos.value as THREE.Vector3).copy(state.camera.position);
 
     // Boot lift (gateway powers on as one beat) × handoff fade-out
