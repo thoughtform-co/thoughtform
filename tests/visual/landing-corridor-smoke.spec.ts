@@ -10,6 +10,12 @@ import { expect, test, type Page } from "@playwright/test";
  * the visual snapshots).
  */
 
+// The corridor's attribute writers live inside the WebGL frameloop —
+// running many landing pages in parallel against one dev server starves
+// headless GPU contexts and the hooks never mount (same failure mode
+// services-ring-smoke.spec.ts documents). Serialize this file's tests.
+test.describe.configure({ mode: "serial" });
+
 async function scrollToPercentage(page: Page, percentage: number) {
   await page.evaluate((pct: number) => {
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -100,17 +106,31 @@ test.describe("Homepage corridor smoke", () => {
   });
 
   test("ADR-018: corridor engagement attribute toggles around the stage", async ({ page }) => {
-    await scrollToPercentage(page, 0);
-    const engagedAtHero = await page.evaluate(() =>
-      document.documentElement.getAttribute("data-corridor-engaged")
-    );
-    expect(engagedAtHero).not.toBe("true");
+    // ON leg — the attribute engages inside the corridor band. The band
+    // sits at a different page-height fraction per viewport, so probe a
+    // spread of depths instead of pinning one exact percentage.
+    // (No hero-at-0 assertion: on 390x844 the armed phase legitimately
+    // reaches scroll 0 — the hero is inside the corridor's arming band.)
+    let engagedInCorridor = false;
+    for (const pct of [25, 30, 20, 35, 40]) {
+      await scrollToPercentage(page, pct);
+      const engaged = await page.evaluate(() =>
+        document.documentElement.getAttribute("data-corridor-engaged")
+      );
+      if (engaged === "true") {
+        engagedInCorridor = true;
+        break;
+      }
+    }
+    expect(engagedInCorridor).toBe(true);
 
-    await scrollToPercentage(page, 25);
-    const engagedInCorridor = await page.evaluate(() =>
+    // OFF leg — deep past the corridor (post-dock tail) the flag must
+    // release on every viewport, so the v7 HUD can own the rail again.
+    await scrollToPercentage(page, 90);
+    const engagedAtTail = await page.evaluate(() =>
       document.documentElement.getAttribute("data-corridor-engaged")
     );
-    expect(engagedInCorridor).toBe("true");
+    expect(engagedAtTail).not.toBe("true");
   });
 
   test("ADR-021: dock attribute releases on reverse scroll back into corridor", async ({
@@ -173,74 +193,13 @@ test.describe("Homepage corridor smoke", () => {
     }
   });
 
-  test("ADR-021 follow-up: Services can keep ambient particles without brandmark gates", async ({
-    page,
-  }) => {
-    await page.evaluate(() => {
-      const services = document.getElementById("services");
-      if (!services) return;
-      window.scrollTo({
-        top: services.offsetTop + window.innerHeight * 0.2,
-        behavior: "instant",
-      });
-    });
-    await page.waitForTimeout(500);
-
-    const attrs = await page.evaluate(() => ({
-      fallback: document.querySelector<HTMLElement>(".home-v2-stage")?.dataset.fallback === "true",
-      ambient: document.documentElement.getAttribute("data-services-ambient"),
-      pixelate: document.documentElement.getAttribute("data-services-pixelate"),
-      brandmark: document.documentElement.getAttribute("data-services-brandmark"),
-    }));
-
-    if (!attrs.fallback) {
-      expect(attrs.ambient).toBe("true");
-    }
-    expect(attrs.pixelate).toBeNull();
-    expect(attrs.brandmark).toBeNull();
-  });
-
-  test("Services hologram: production section renders scan notes and one expanded card", async ({
-    page,
-  }) => {
-    await page.evaluate(() => {
-      const services = document.getElementById("services");
-      if (!services) return;
-      window.scrollTo({
-        top: services.offsetTop + window.innerHeight * 0.2,
-        behavior: "instant",
-      });
-    });
-    await page.waitForTimeout(900);
-
-    const viewport = page.viewportSize();
-    const expectsHologramCanvas = (viewport?.width ?? 0) >= 961;
-
-    await expect(page.locator("#services .services-hologram canvas")).toHaveCount(
-      expectsHologramCanvas ? 1 : 0
-    );
-    await expect(page.locator("#services .services-scan-note")).toHaveCount(3);
-    await expect(page.locator("#services .services-expanded-card")).toHaveCount(1);
-
-    const attrs = await page.evaluate(() => ({
-      pixelate: document.documentElement.getAttribute("data-services-pixelate"),
-      brandmark: document.documentElement.getAttribute("data-services-brandmark"),
-    }));
-    expect(attrs.pixelate).toBeNull();
-    expect(attrs.brandmark).toBeNull();
-  });
-
-  test("Services hologram: demo route has clickable scan notes", async ({ page }) => {
-    await page.goto("/test/services-demo", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector(".services-scan-note");
-    await page.waitForTimeout(900);
-
-    await expect(page.locator("canvas")).toHaveCount(1);
-    await expect(page.locator(".services-scan-note")).toHaveCount(3);
-    await expect(page.locator(".services-expanded-card")).toHaveCount(1);
-    await expect(page.locator(".services-expanded-card__verb")).toContainText("KEYNOTE");
-
-    await page.getByRole("button", { name: /Substrate capture/i }).click();
-    await expect(page.locator(".services-expanded-card__verb")).toContainText("WORKSHOP");
-  });
+  // NOTE (2026-07-14): the three Services-hologram tests that lived here
+  // (ambient hold, production scan notes, /test/services-demo scan notes)
+  // asserted markup retired by the ADR-029/030/033 Services reworks — the
+  // `.services-scan-note` / `.services-expanded-card` selectors no longer
+  // exist in the product, and their `behavior: "instant"` teleports skip
+  // the corridor's engagement band (see services-ring-smoke.spec.ts header).
+  // The CURRENT Services surface — card ring, step clock, readout, CTAs,
+  // source-bus register, and the ambient hold clearing at the services →
+  // about seam — is covered by tests/visual/services-ring-smoke.spec.ts.
 });
