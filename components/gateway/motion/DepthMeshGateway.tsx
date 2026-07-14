@@ -192,6 +192,9 @@ export function DepthMeshGateway({
       }}
       onCreated={({ gl }) => {
         const canvas = gl.domElement;
+        // Element-lifetime listeners (intentionally no removal): the canvas
+        // and these handlers are discarded together when `key={glEpoch}`
+        // remounts <Canvas>; no global target to unhook.
         canvas.addEventListener("webglcontextlost", (e) => e.preventDefault(), false);
         canvas.addEventListener("webglcontextrestored", () => setGlEpoch((n) => n + 1), false);
       }}

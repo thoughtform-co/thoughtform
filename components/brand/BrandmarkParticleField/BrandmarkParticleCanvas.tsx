@@ -138,6 +138,9 @@ export function BrandmarkParticleCanvas({
           const canvas = gl.domElement;
           const onLost = (e: Event) => e.preventDefault();
           const onRestored = () => setGlEpoch((n) => n + 1);
+          // Element-lifetime listeners (intentionally no removal): the
+          // canvas and these handlers are discarded together when
+          // `key={glEpoch}` remounts <Canvas>; no global target to unhook.
           canvas.addEventListener("webglcontextlost", onLost as EventListener, false);
           canvas.addEventListener("webglcontextrestored", onRestored, false);
         }}
