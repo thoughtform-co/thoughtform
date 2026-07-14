@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { motion, type PanInfo } from "framer-motion";
 import { ServiceCard, type ServiceData } from "./ServiceCard";
 import { SERVICES_DATA, DEFAULT_SIGIL_CONFIGS } from "./ServicesDeck";
 import type { SigilConfig } from "./SigilCanvas";

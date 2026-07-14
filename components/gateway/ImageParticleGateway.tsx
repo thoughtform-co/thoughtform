@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { hexToRgb } from "@/lib/particle-config";
 
 // ═══════════════════════════════════════════════════════════════
 // IMAGE-TO-PARTICLE GATEWAY
@@ -12,7 +11,6 @@ import { hexToRgb } from "@/lib/particle-config";
 const GRID = 3;
 const DAWN_RGB = "236, 227, 214";
 const GOLD_RGB = "202, 165, 84";
-const VOID_RGB = "5, 4, 3";
 
 // Grid snapping
 function snap(value: number): number {

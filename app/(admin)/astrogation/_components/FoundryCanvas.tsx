@@ -47,7 +47,6 @@ interface CanvasItemProps {
 const CanvasItem = memo(function CanvasItem({
   item,
   isSelected,
-  zoom,
   onSelect,
   onDragStart,
   onUpdateItemArgs,
@@ -201,9 +200,6 @@ export function FoundryCanvas({
   const { viewport, items } = document;
 
   // Get the currently selected item
-  const selectedItem = selectedItemId
-    ? items.find((item) => item.id === selectedItemId) || null
-    : null;
 
   // ─────────────────────────────────────────────────────────────
   // KEYBOARD SHORTCUTS

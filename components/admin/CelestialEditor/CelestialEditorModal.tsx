@@ -20,7 +20,7 @@ import {
   CENTER_SHAPES,
   DEFAULT_CONFIG,
 } from "@/lib/celestial/schema";
-import type { Preset, LabelEntry } from "@/lib/celestial/schema";
+import type { Preset } from "@/lib/celestial/schema";
 import { DiagramSvg } from "@/components/landing/v7/CelestialConnector/DiagramSvg";
 import { useCelestialDrafts } from "./useCelestialDrafts";
 import { randomizeConfig } from "./randomize";

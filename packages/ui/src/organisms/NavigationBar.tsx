@@ -4,7 +4,7 @@
 
 import * as React from "react";
 import { cn } from "../utils/cn";
-import { Frame, type CornerToken, type CornerPreset } from "../molecules/Frame";
+import { type CornerToken, type CornerPreset } from "../molecules/Frame";
 import { gold, dawn, void_ } from "../tokens/colors";
 import { fontFamily, fontSize, letterSpacing } from "../tokens/typography";
 

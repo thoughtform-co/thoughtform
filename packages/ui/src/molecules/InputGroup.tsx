@@ -4,7 +4,7 @@
 
 import * as React from "react";
 import { cn } from "../utils/cn";
-import { gold, dawn, void_ } from "../tokens/colors";
+import { gold, dawn } from "../tokens/colors";
 import { fontFamily, fontSize } from "../tokens/typography";
 
 export interface InputGroupProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {

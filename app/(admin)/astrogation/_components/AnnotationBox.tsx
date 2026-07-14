@@ -49,7 +49,7 @@ export function AnnotationBox({
     width: 0,
     height: 0,
   });
-  const [isHovered, setIsHovered] = useState(false);
+  const [, setIsHovered] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editNote, setEditNote] = useState(annotation.note || "");

@@ -16,7 +16,6 @@ import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 // ═══════════════════════════════════════════════════════════════
 
 const GRID = 3;
-const ALERT_RGB = "255, 107, 53";
 
 // Grid snapping function
 function snap(value: number): number {
@@ -1070,8 +1069,6 @@ export function ParticleCanvasV2({
   const animationRef = useRef<number>(0);
   const dimensionsRef = useRef({ width: 0, height: 0 });
   const scrollProgressRef = useRef(0);
-  const lockedScrollProgressRef = useRef(0);
-  const wasLockActiveRef = useRef(false);
   const lockScrollProgressRef = useRef(false);
   const manifestoRevealProgressRef = useRef(0);
   const manifestoCompleteRef = useRef(false);
@@ -1184,10 +1181,6 @@ export function ParticleCanvasV2({
       const FOCAL = camera.focalLength;
       const cx_geo = width * camera.vanishX;
       const cy = height * camera.vanishY;
-
-      const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-      const easeInOutCubic = (t: number) =>
-        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
       // No post-manifesto camera tilt — keep camera motion continuous and uniform.
       const dynamicPitchDeg = camera.pitch;

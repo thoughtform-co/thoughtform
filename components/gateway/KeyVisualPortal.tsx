@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef, useMemo, useEffect, useState, useCallback } from "react";
+import React, { useRef, useMemo, useEffect, useState } from "react";
 import { useFrame, useThree, type ThreeElement } from "@react-three/fiber";
-import { Points, shaderMaterial } from "@react-three/drei";
+import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
 import { sampleImageToParticles, sampleWithDepthMap } from "@/lib/key-visual/sampler";

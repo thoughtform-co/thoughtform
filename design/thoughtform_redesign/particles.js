@@ -4,7 +4,6 @@
 // Stars: center | Landmarks: right side (like looking out a window)
 // ═══════════════════════════════════════════════════════════════
 
-const GRID = 3;
 const DAWN = '#ebe3d6';
 const GOLD = '#caa554';
 const ALERT = '#ff6b35';

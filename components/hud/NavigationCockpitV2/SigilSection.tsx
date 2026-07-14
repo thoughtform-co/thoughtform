@@ -323,7 +323,6 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   } else if (scrollProgress >= sigilOutStart && scrollProgress < sigilOutEnd) {
     // Moving toward navbar logo - stay fully visible until they reach the destination
     exitProgress = (scrollProgress - sigilOutStart) / (sigilOutEnd - sigilOutStart);
-    const easedExit = easeOutCubic(exitProgress);
 
     // Keep opacity at 1 until particles are actually at the logo (100% progress)
     // Only start fading in the final 5% of the journey, completing at the logo

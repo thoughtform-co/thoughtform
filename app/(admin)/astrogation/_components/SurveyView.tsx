@@ -117,7 +117,6 @@ function DetailView({
   segments = [],
   showSegments = false,
   isSegmenting = false,
-  onGenerateSegments,
   onToggleSegments,
   onUpdateSegmentLabel,
   onDeleteSegment,
@@ -224,17 +223,6 @@ function DetailView({
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-    };
-  }, []);
-
-  const pixelToPercent = useCallback((pixelX: number, pixelY: number) => {
-    const img = imageRef.current;
-    if (!img) return { x: 0, y: 0 };
-    // Use getBoundingClientRect for accurate dimensions under zoom
-    const rect = img.getBoundingClientRect();
-    return {
-      x: (pixelX / rect.width) * 100,
-      y: (pixelY / rect.height) * 100,
     };
   }, []);
 

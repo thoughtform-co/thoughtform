@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRef, useMemo, useEffect, useState } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,11 +13,7 @@ import {
 } from "@/lib/particle-config";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import { KeyVisualPortal } from "./KeyVisualPortal";
-import {
-  KeyVisualOverlayPortal,
-  type KeyVisualOverlayConfig,
-  DEFAULT_OVERLAY_CONFIG,
-} from "./KeyVisualOverlayPortal";
+import { KeyVisualOverlayPortal, DEFAULT_OVERLAY_CONFIG } from "./KeyVisualOverlayPortal";
 
 // ═══════════════════════════════════════════════════════════════
 // THREE.JS GATEWAY - SOLID ARCHITECTURAL PORTAL
@@ -302,7 +298,6 @@ const geometricShapeGenerators: Record<string, ShapePointFn> = {
   // 6-sided hexagon
   hexagon: (t, radius) => {
     const sides = 6;
-    const angle = t * Math.PI * 2;
     const segment = Math.floor(t * sides) % sides;
     const segmentT = (t * sides) % 1;
 
@@ -1047,7 +1042,6 @@ function DottedMarkerRing({
   density,
   radius,
   dashPattern,
-  strokeWidth,
   dotSize = 0.012,
 }: {
   opacity: number;
@@ -1055,7 +1049,6 @@ function DottedMarkerRing({
   density: number;
   radius: number;
   dashPattern: number[]; // [dash, gap, dash, gap, ...] - relative proportions
-  strokeWidth: number;
   dotSize?: number;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
@@ -1220,7 +1213,6 @@ function FramedBorderGateway({
         density={density}
         radius={1.08}
         dashPattern={outerDashPattern}
-        strokeWidth={5.67}
         dotSize={0.014}
       />
       <DottedMarkerRing
@@ -1229,7 +1221,6 @@ function FramedBorderGateway({
         density={density}
         radius={0.95}
         dashPattern={middleDashPattern}
-        strokeWidth={3.87}
         dotSize={0.012}
       />
       <DottedMarkerRing
@@ -1238,7 +1229,6 @@ function FramedBorderGateway({
         density={density}
         radius={0.88}
         dashPattern={innerDashPattern}
-        strokeWidth={2.08}
         dotSize={0.01}
       />
 

@@ -47,7 +47,7 @@ export function Typewriter({
   className,
 }: TypewriterProps) {
   const [displayedText, setDisplayedText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [, setIsTyping] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [glitchChar, setGlitchChar] = useState<string | null>(null);
   const hasStartedRef = React.useRef(false);
@@ -77,9 +77,14 @@ export function Typewriter({
     const typeNextChar = () => {
       if (charIndex < text.length) {
         const currentChar = text[charIndex];
-        
+
         // Skip glitch for spaces and newlines
-        if (glitch && currentChar !== ' ' && currentChar !== '\n' && glitchCount < glitchIterations) {
+        if (
+          glitch &&
+          currentChar !== " " &&
+          currentChar !== "\n" &&
+          glitchCount < glitchIterations
+        ) {
           // Show glitch character
           setGlitchChar(getRandomGlitchChar());
           setDisplayedText(text.slice(0, charIndex));
@@ -107,23 +112,33 @@ export function Typewriter({
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [active, text, startDelay, getRandomSpeed, getRandomGlitchChar, glitch, glitchIterations, speed, onComplete]);
+  }, [
+    active,
+    text,
+    startDelay,
+    getRandomSpeed,
+    getRandomGlitchChar,
+    glitch,
+    glitchIterations,
+    speed,
+    onComplete,
+  ]);
 
   return (
-    <span className={`typewriter ${className || ''}`} style={{ whiteSpace: 'pre-line' }}>
+    <span className={`typewriter ${className || ""}`} style={{ whiteSpace: "pre-line" }}>
       {displayedText}
-      {glitchChar && (
-        <span className="typewriter-glitch">{glitchChar}</span>
-      )}
-      {showCursor && !isComplete && (
-        <span className="typewriter-cursor">
-          {cursor}
-        </span>
-      )}
+      {glitchChar && <span className="typewriter-glitch">{glitchChar}</span>}
+      {showCursor && !isComplete && <span className="typewriter-cursor">{cursor}</span>}
       <style jsx>{`
         @keyframes cursor-blink {
-          0%, 49% { opacity: 1; }
-          50%, 100% { opacity: 0; }
+          0%,
+          49% {
+            opacity: 1;
+          }
+          50%,
+          100% {
+            opacity: 0;
+          }
         }
         .typewriter-cursor {
           color: var(--gold, #caa554);

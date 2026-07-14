@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { getComponentById, CATEGORIES, searchComponents } from "../catalog";
+import { getComponentById, CATEGORIES } from "../catalog";
 import type { UIComponentPreset, FoundryCanvasItem, ComponentSource } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
 import { getRegistryKeyForCatalog, isRegistryComponent } from "./registry-map";

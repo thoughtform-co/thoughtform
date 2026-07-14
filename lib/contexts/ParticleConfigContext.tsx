@@ -454,7 +454,7 @@ export function ParticleConfigProvider({ children, initialConfig }: ParticleConf
         setError("Failed to reset configuration");
         return false;
       }
-    } catch (err) {
+    } catch {
       setError("Failed to reset - server unavailable");
       return false;
     }

@@ -143,7 +143,7 @@ function PropsDiagram({ props }: { props: PropDef[] }) {
 
   return (
     <div className="spec-props-diagram">
-      {props.slice(0, 4).map((prop, i) => (
+      {props.slice(0, 4).map((prop) => (
         <div key={prop.name} className="spec-prop-node">
           <span className="spec-prop-node__connector" />
           <span className="spec-prop-node__name">{prop.name}</span>

@@ -425,7 +425,7 @@ export async function POST(request: NextRequest) {
         jsonStr = jsonMatch[1];
       }
       rawParams = JSON.parse(jsonStr.trim());
-    } catch (parseError) {
+    } catch {
       console.error("Failed to parse Claude response:", textContent.text);
       return NextResponse.json(
         { error: "Failed to parse style parameters", raw: textContent.text },
@@ -445,7 +445,7 @@ export async function POST(request: NextRequest) {
     // ─── Persist to database ───
     const vectorStr = `[${styleVector.join(",")}]`;
 
-    const { data: result, error: upsertError } = await supabase.rpc("upsert_style_signature", {
+    const { error: upsertError } = await supabase.rpc("upsert_style_signature", {
       p_survey_item_id: itemId,
       p_style_params: styleParams,
       p_style_vector: vectorStr,

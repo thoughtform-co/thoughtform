@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { CATEGORIES, type CategoryDef } from "../catalog";
+import { CATEGORIES } from "../catalog";
 
 // ═══════════════════════════════════════════════════════════════
 // FILTER BUTTON - Component Type & Project Filter

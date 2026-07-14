@@ -42,8 +42,6 @@ export function AccentBar({
   className,
   style,
 }: AccentBarProps) {
-  const isHorizontal = position === "top" || position === "bottom";
-
   const positionStyles: React.CSSProperties = {
     position: "absolute",
     background: color,

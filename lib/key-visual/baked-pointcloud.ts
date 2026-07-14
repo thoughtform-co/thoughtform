@@ -11,7 +11,7 @@ import type {
   ArtDirectionConfig,
   LayerConfig,
 } from "./layered-sampler";
-import { DEFAULT_ART_DIRECTION, DEFAULT_LAYER_CONFIG } from "./layered-sampler";
+import { DEFAULT_LAYER_CONFIG } from "./layered-sampler";
 
 // ═══════════════════════════════════════════════════════════════
 // FORMAT SPECIFICATION

@@ -495,7 +495,6 @@ export function useSurvey({
       // ═══════════════════════════════════════════════════════════════
       // UPLOAD LOCK: Prevent loadItems during upload flow
       // ═══════════════════════════════════════════════════════════════
-      const wasUploading = isUploadingRef.current;
       isUploadingRef.current = true;
 
       try {

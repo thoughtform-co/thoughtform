@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, memo, useEffect, useRef, useMemo } from "react";
-import type { SurveyItem, SurveyItemSource, SurveyAnnotation, SurveyCollection } from "./types";
+import type { SurveyItem, SurveyAnnotation, SurveyCollection } from "./types";
 import { NestedSelect } from "./NestedSelect";
 import { SurveyUploadModal } from "./SurveyUploadModal";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -51,8 +51,6 @@ export interface SurveyInspectorPanelProps {
   onCreateCollection?: (name: string) => Promise<SurveyCollection>;
 }
 
-type InspectorTab = "fields" | "chat";
-
 function SurveyInspectorPanelInner({
   item,
   onUpdate,
@@ -74,25 +72,17 @@ function SurveyInspectorPanelInner({
   pipelineStatus = "idle",
   onSegmentAndLabel,
   onReSegment,
-  onToggleSegments,
   onReLabelSegments,
   isSegmenting = false,
   isLabelingSegments = false,
-  showSegments = false,
   segmentCount = 0,
   allItems = [],
   collections = [],
   onCreateCollection,
 }: SurveyInspectorPanelProps) {
-  const [activeTab, setActiveTab] = useState<InspectorTab>("fields");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [localItem, setLocalItem] = useState<Partial<SurveyItem> | null>(null);
   const [isSourcesExpanded, setIsSourcesExpanded] = useState(false);
-  const [chatMessages, setChatMessages] = useState<
-    Array<{ role: "user" | "assistant"; content: string }>
-  >([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isChatLoading, setIsChatLoading] = useState(false);
   const [editingAnnotationId, setEditingAnnotationId] = useState<string | null>(null);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [annotationNote, setAnnotationNote] = useState("");
@@ -610,41 +600,6 @@ function SurveyInspectorPanelInner({
     },
     [effectiveItem?.annotations, handleFieldChange]
   );
-
-  // Handle chat submit
-  const handleChatSubmit = useCallback(async () => {
-    if (!chatInput.trim() || !item) return;
-
-    const userMessage = chatInput.trim();
-    setChatInput("");
-    setChatMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setIsChatLoading(true);
-
-    try {
-      const res = await fetch("/api/survey/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          itemId: item.id,
-          message: userMessage,
-          history: chatMessages,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Chat request failed");
-
-      const data = await res.json();
-      setChatMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
-    } catch (error) {
-      console.error("Chat error:", error);
-      setChatMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Sorry, I encountered an error. Please try again." },
-      ]);
-    } finally {
-      setIsChatLoading(false);
-    }
-  }, [chatInput, item, chatMessages]);
 
   const hasChanges = localItem !== null;
   const annotationCount = effectiveItem?.annotations?.length || 0;

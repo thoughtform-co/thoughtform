@@ -7,7 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
-import { isAuthorized, getServerUser } from "@/lib/auth-server";
+import { isAuthorized } from "@/lib/auth-server";
 
 // Voice type matching database schema
 export interface ManifestoVoice {

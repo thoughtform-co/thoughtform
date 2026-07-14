@@ -4,14 +4,9 @@
 
 import * as React from "react";
 import { cn } from "../utils/cn";
-import {
-  Frame,
-  type CornerToken,
-  type CornerPreset,
-  type SurfaceVariant,
-} from "../molecules/Frame";
-import { gold, dawn } from "../tokens/colors";
-import { fontFamily, fontSize, letterSpacing } from "../tokens/typography";
+import { type CornerToken, type CornerPreset, type SurfaceVariant } from "../molecules/Frame";
+import { gold } from "../tokens/colors";
+import { fontFamily, letterSpacing } from "../tokens/typography";
 
 export interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Panel header title */

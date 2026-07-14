@@ -85,7 +85,6 @@ import {
   SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE,
   SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL,
   SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY,
-  SUBSTRATE_GYRO_GLOBE_LINE_OPACITY,
   SUBSTRATE_GYRO_GLOBE_SEGMENTS,
   SUBSTRATE_GYRO_GLOBE_SPIN,
   SUBSTRATE_GYRO_MAJOR_TICK_EVERY,
@@ -461,51 +460,6 @@ function buildGreatCircle(
     positions[i * 3] = Math.cos(a) * radius;
     positions[i * 3 + 1] = 0;
     positions[i * 3 + 2] = Math.sin(a) * radius;
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  return g;
-}
-
-function buildArc(
-  radius: number,
-  startRad: number,
-  endRad: number,
-  segments = SUBSTRATE_GYRO_GLOBE_SEGMENTS
-): THREE.BufferGeometry {
-  const positions = new Float32Array(segments * 2 * 3);
-  for (let i = 0; i < segments; i++) {
-    const t0 = i / segments;
-    const t1 = (i + 1) / segments;
-    const a0 = startRad + (endRad - startRad) * t0;
-    const a1 = startRad + (endRad - startRad) * t1;
-    const idx = i * 6;
-    positions[idx] = Math.cos(a0) * radius;
-    positions[idx + 1] = 0;
-    positions[idx + 2] = Math.sin(a0) * radius;
-    positions[idx + 3] = Math.cos(a1) * radius;
-    positions[idx + 4] = 0;
-    positions[idx + 5] = Math.sin(a1) * radius;
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  return g;
-}
-
-/** Latitude parallel (small circle) at `latRad` from the equator. */
-function buildParallel(
-  radius: number,
-  latRad: number,
-  segments = SUBSTRATE_GYRO_GLOBE_SEGMENTS
-): THREE.BufferGeometry {
-  const y = Math.sin(latRad) * radius;
-  const r = Math.cos(latRad) * radius;
-  const positions = new Float32Array((segments + 1) * 3);
-  for (let i = 0; i <= segments; i++) {
-    const a = (i / segments) * Math.PI * 2;
-    positions[i * 3] = Math.cos(a) * r;
-    positions[i * 3 + 1] = y;
-    positions[i * 3 + 2] = Math.sin(a) * r;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -892,7 +846,6 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
 
   const mats = useMemo(() => {
     const gold = new THREE.Color(COLOR_GOLD);
-    const dawn = new THREE.Color(COLOR_DAWN);
     return {
       globeDots: (() => {
         const m = makeParticleMaterial();

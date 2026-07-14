@@ -117,7 +117,7 @@ export function useReferenceMatch(): UseReferenceMatchReturn {
    * Match a description directly (without Survey item)
    */
   const matchFromDescription = useCallback(
-    async (description: string, componentId?: string): Promise<MatchResult | null> => {
+    async (description: string): Promise<MatchResult | null> => {
       setIsMatching(true);
       setError(null);
 

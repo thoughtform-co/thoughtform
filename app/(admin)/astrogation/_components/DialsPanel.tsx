@@ -11,7 +11,6 @@ import {
   NO_FRAME_CONTROLS_COMPONENTS,
 } from "./types";
 import { CornerSelector } from "./helpers";
-import { NestedSelect } from "./NestedSelect";
 import { getRegistryComponent, getRegistryKeyForCatalog } from "./registry-map";
 
 // Helper to check if a shape is a notch type

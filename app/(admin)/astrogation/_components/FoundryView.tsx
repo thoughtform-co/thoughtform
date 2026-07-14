@@ -82,7 +82,6 @@ export function FoundryView({
   onApplyVariant,
   isFocused,
   onFocusChange,
-  onPropsChange,
   isForgeMode,
   forgeDoc,
   onForgeDocChange,

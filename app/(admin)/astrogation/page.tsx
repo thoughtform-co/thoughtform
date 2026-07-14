@@ -18,20 +18,15 @@ import {
   FoundryTemplatesPanel,
   VaultPickerOverlay,
   SelectionConnector,
-  generateJSXCode,
-  VectorEditor,
   type SurveyAnnotation,
-  type SurveyViewBundledProps,
   type WorkspaceTab,
   type VectorDocument,
   type FoundryCanvasDocument,
   type FoundryCanvasItem,
   type FoundryViewport,
-  EMPTY_FOUNDRY_DOCUMENT,
 } from "./_components";
 import { FoundryAssistantDock } from "./_components/FoundryAssistantDock";
 import { BridgeBrowserPanel } from "./_components/bridge/BridgeBrowserPanel";
-import { BridgePreviewPanel } from "./_components/bridge/BridgePreviewPanel";
 import { BridgeInspectorPanel } from "./_components/bridge/BridgeInspectorPanel";
 
 // Import state management
@@ -119,8 +114,6 @@ function AstrogationContent() {
     isBriefing,
     isSaving,
     pipelineStatus,
-    searchSpace,
-    setSearchSpace,
   } = useSurvey({
     dispatch,
     surveyCategoryId,
@@ -415,14 +408,6 @@ function AstrogationContent() {
   const handlePresetNameChange = useCallback((name: string) => {
     dispatch(actions.setPresetName(name));
   }, []);
-
-  // Copy code
-  const handleCopyCode = useCallback(() => {
-    if (!selectedComponentId) return;
-    const code = generateJSXCode(selectedComponentId, componentProps);
-    navigator.clipboard.writeText(code);
-    dispatch(actions.showToast("Code copied to clipboard"));
-  }, [selectedComponentId, componentProps]);
 
   // Apply patch from assistant
   const handleApplyPatch = useCallback(

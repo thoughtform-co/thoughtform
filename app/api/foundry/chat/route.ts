@@ -157,10 +157,7 @@ interface ComponentVariant {
 }
 
 // Helper to search Survey embeddings for design inspiration
-async function searchSurveyReferences(
-  query: string,
-  authHeader: string | null
-): Promise<SurveyReference[]> {
+async function searchSurveyReferences(query: string): Promise<SurveyReference[]> {
   try {
     const voyageApiKey = process.env.VOYAGE_API_KEY;
     if (!voyageApiKey) {
@@ -448,8 +445,7 @@ ${COMPONENTS.map((c) => `- ${c.id}: ${c.name} (${c.category})`).join("\n")}
     let surveyContext = "";
     let surveyRefs: SurveyReference[] = [];
     if (searchSurvey) {
-      const authHeader = request.headers.get("authorization");
-      surveyRefs = await searchSurveyReferences(message, authHeader);
+      surveyRefs = await searchSurveyReferences(message);
 
       if (surveyRefs.length > 0) {
         surveyContext = `

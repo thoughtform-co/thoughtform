@@ -6,7 +6,7 @@ export interface WordmarkProps {
   hideVectorI?: boolean;
 }
 
-export function Wordmark({ className = "", hideVectorI = false }: WordmarkProps) {
+export function Wordmark({ className = "" }: WordmarkProps) {
   // Semantic color for text (replacing white from original)
   const dawnColor = "#ECE3D6";
   // Tensor gold (same as original)

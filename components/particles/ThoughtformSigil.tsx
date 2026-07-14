@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect } from "react";
 
 // Exported type for particle position data
 export interface ParticlePosition {
@@ -175,7 +175,6 @@ export function ThoughtformSigil({
   const animationRef = useRef<number>(0);
   const particlesRef = useRef<Particle[]>([]);
   const initializedRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize particles once
   useEffect(() => {
@@ -185,7 +184,7 @@ export function ThoughtformSigil({
     const sampledPoints = samplePointsFromPaths(BRANDMARK_PATHS, particleCount, size);
     const center = size / 2;
 
-    particlesRef.current = sampledPoints.map((point, i) => {
+    particlesRef.current = sampledPoints.map((point) => {
       const baseX = point.x - center;
       const baseY = point.y - center;
       const baseAlpha = 0.3 + Math.random() * 0.6;

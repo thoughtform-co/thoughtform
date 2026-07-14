@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { SurveyItem } from "./types";
 import { useReferenceMatch, type MatchResult } from "../_hooks/useReferenceMatch";
-import { extractDesignTokens, tokensToDescription } from "./utils";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY ASSISTANT DOCK
@@ -72,7 +71,7 @@ export function FoundryAssistantDock({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Reference matching hook
-  const { matchReference, matchFromDescription, isMatching, lastResult } = useReferenceMatch();
+  const { matchReference, isMatching } = useReferenceMatch();
 
   // Per-component chat history
   const historyKey = componentId || "__no_component__";

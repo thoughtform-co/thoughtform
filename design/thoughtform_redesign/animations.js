@@ -112,7 +112,7 @@ const hud = {
 const navLinks = document.querySelectorAll('.nav-link');
 const sectionMarkers = document.querySelectorAll('.section-marker');
 
-function updateHUD(sectionId, progress = 0) {
+function updateHUD(sectionId) {
   const data = sectionData[sectionId];
   if (!data) return;
   

@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  CATEGORIES,
-  getComponentsByCategory,
-  type CategoryDef,
-  type ComponentDef,
-} from "../catalog";
+import { CATEGORIES, getComponentsByCategory } from "../catalog";
 
 // ═══════════════════════════════════════════════════════════════
 // NESTED SELECT - Single dropdown with category -> component submenus

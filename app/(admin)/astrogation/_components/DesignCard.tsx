@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo } from "react";
 import { renderRegistryComponent, getRegistryComponent } from "./registry-map";
-import type { ComponentSource } from "./types";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DESIGN CARD - mcp-ui Compatible Design Proposal Card
@@ -241,7 +240,7 @@ export function DesignCard({
           </button>
           {isExpanded && (
             <div className="design-card__diff">
-              {diffEntries.map(({ key, currentVal, proposedVal }) => (
+              {diffEntries.map(({ key, proposedVal }) => (
                 <div key={key} className="design-card__diff-row">
                   <span className="design-card__diff-key">{key}</span>
                   <span className="design-card__diff-arrow">→</span>

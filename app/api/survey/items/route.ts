@@ -143,7 +143,6 @@ export async function POST(request: NextRequest) {
 
     // Generate file path
     const timestamp = Date.now();
-    const ext = file.name.split(".").pop() || "png";
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_").slice(0, 50);
     const filePath = `uploads/${timestamp}_${safeName}`;
 

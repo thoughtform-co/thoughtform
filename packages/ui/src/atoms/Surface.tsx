@@ -4,7 +4,7 @@
 
 import * as React from "react";
 import { cn } from "../utils/cn";
-import { void_, surface, dawn } from "../tokens/colors";
+import { void_, dawn } from "../tokens/colors";
 
 export type SurfaceVariant = "void" | "elevated" | "glass" | "transparent";
 

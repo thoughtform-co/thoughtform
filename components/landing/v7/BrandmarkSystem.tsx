@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useLayoutEffect, useState, type RefObject } from "react";
+import { forwardRef, useLayoutEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";

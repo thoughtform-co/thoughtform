@@ -103,7 +103,7 @@ export function GlitchText({ initialText, finalText, progress, className = "" }:
 
       // Use final text structure as template, preserving all newlines
       const finalChars = finalText.split("");
-      const scrambled = finalChars.map((char, i) => {
+      const scrambled = finalChars.map((char) => {
         // Always preserve newlines
         if (char === "\n") {
           return "\n";

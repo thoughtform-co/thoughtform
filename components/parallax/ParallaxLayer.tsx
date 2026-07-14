@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 interface ParallaxLayerProps {
   children: React.ReactNode;
@@ -31,11 +31,7 @@ export function ParallaxLayer({
 
   // Transform scroll progress to Y movement
   // Speed of 1 = moves with scroll, 0 = fixed, negative = opposite direction
-  const y = useTransform(
-    scrollYProgress,
-    offset,
-    [0, speed * -200]
-  );
+  const y = useTransform(scrollYProgress, offset, [0, speed * -200]);
 
   return (
     <motion.div ref={ref} style={{ y }} className={className}>
@@ -54,11 +50,7 @@ interface ParallaxContainerProps {
 }
 
 export function ParallaxContainer({ children, className }: ParallaxContainerProps) {
-  return (
-    <div className={`relative overflow-hidden ${className || ""}`}>
-      {children}
-    </div>
-  );
+  return <div className={`relative overflow-hidden ${className || ""}`}>{children}</div>;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -114,26 +106,26 @@ export function FadeInOnScroll({
   const initialPosition = getInitialPosition();
   const hasX = "x" in initialPosition;
   const hasY = "y" in initialPosition;
-  
+
   // Always call hooks unconditionally (React rules of hooks)
   const xTransform = useTransform(
-    scrollYProgress, 
-    [0, 1], 
+    scrollYProgress,
+    [0, 1],
     [hasX ? (initialPosition as { x: number }).x : 0, 0]
   );
   const yTransform = useTransform(
-    scrollYProgress, 
-    [0, 1], 
+    scrollYProgress,
+    [0, 1],
     [hasY ? (initialPosition as { y: number }).y : 0, 0]
   );
 
   return (
     <motion.div
       ref={ref}
-      style={{ 
-        opacity, 
-        x: hasX ? xTransform : undefined, 
-        y: hasY ? yTransform : undefined 
+      style={{
+        opacity,
+        x: hasX ? xTransform : undefined,
+        y: hasY ? yTransform : undefined,
       }}
       className={className}
       transition={{ duration, delay }}
@@ -154,11 +146,7 @@ interface ScaleOnScrollProps {
   className?: string;
 }
 
-export function ScaleOnScroll({
-  children,
-  range = [0.8, 1],
-  className,
-}: ScaleOnScrollProps) {
+export function ScaleOnScroll({ children, range = [0.8, 1], className }: ScaleOnScrollProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -174,4 +162,3 @@ export function ScaleOnScroll({
     </motion.div>
   );
 }
-

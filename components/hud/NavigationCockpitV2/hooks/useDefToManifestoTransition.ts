@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { easeInOutCubic, easeOutCubic, lerp } from "./easing";
+import { easeInOutCubic, easeOutCubic } from "./easing";
 
 /**
  * Scroll thresholds for definition→manifesto transition
@@ -15,7 +15,6 @@ const DEF_TO_MANIFESTO_END = 0.35; // Complete transformation by 35%
 const BASE_WIDTH = 500;
 const WIDTH_GROWTH = 200; // 500px → 700px
 const BASE_HEIGHT = 100;
-const HEIGHT_GROWTH = 300; // 100px → 400px (min-height)
 const ACTUAL_CONTENT_HEIGHT = 640; // Actual terminal content height
 
 export interface DefToManifestoTransitionResult {

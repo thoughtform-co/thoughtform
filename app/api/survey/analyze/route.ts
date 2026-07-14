@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
         jsonStr = jsonMatch[1];
       }
       analysis = JSON.parse(jsonStr.trim());
-    } catch (parseError) {
+    } catch {
       console.error("Failed to parse Claude response:", textContent.text);
       return NextResponse.json(
         { error: "Failed to parse analysis", raw: textContent.text },

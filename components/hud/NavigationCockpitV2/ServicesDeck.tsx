@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { ServiceCard, type ServiceData } from "./ServiceCard";
 import { type SigilConfig, DEFAULT_SIGIL_CONFIG } from "./SigilCanvas";
 

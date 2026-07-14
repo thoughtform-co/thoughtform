@@ -32,8 +32,6 @@ export interface CatalogPanelProps {
 }
 
 function CatalogPanelInner({
-  selectedCategory,
-  onSelectCategory,
   selectedComponentId,
   onSelectComponent,
   filterCategoryId = null,

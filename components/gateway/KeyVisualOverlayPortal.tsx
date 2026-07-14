@@ -12,11 +12,10 @@ import {
   type LayerKind,
   type LayerConfig,
   type ArtDirectionConfig,
-  DEFAULT_LAYERED_SAMPLER_CONFIG,
   DEFAULT_ART_DIRECTION,
   DEFAULT_LAYER_CONFIG,
 } from "@/lib/key-visual/layered-sampler";
-import { loadTFPC, type DecodedTFPC } from "@/lib/key-visual/baked-pointcloud";
+import { loadTFPC } from "@/lib/key-visual/baked-pointcloud";
 
 // ═══════════════════════════════════════════════════════════════
 // KEY VISUAL OVERLAY PORTAL
@@ -520,19 +519,6 @@ export function KeyVisualOverlayPortal({
   // Update draw range when density changes
   useEffect(() => {
     if (!geometryRef.current || !mergedData) return;
-
-    // Calculate total visible count based on density multipliers
-    let visibleCount = 0;
-    const { offsets } = mergedData;
-    const layerOrder: LayerKind[] = ["contour", "fill", "highlight"];
-
-    for (const kind of layerOrder) {
-      const layerConfig = opts.layers[kind];
-      if (layerConfig.enabled) {
-        const layerVisibleCount = Math.round(offsets[kind].count * layerConfig.density);
-        visibleCount += layerVisibleCount;
-      }
-    }
 
     // For now, use simple drawRange (full data, density controlled via shader discard)
     // A more optimized approach would sort by importance and use actual drawRange

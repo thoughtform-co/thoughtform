@@ -29,14 +29,7 @@ function processSVGText(text: string, color: string): string {
 }
 
 // Component to load SVG files and apply dynamic colors
-function DynamicSVGInner({
-  src,
-  color = "#caa554",
-  width,
-  height,
-  className,
-  preserveAspectRatio = "xMidYMid meet",
-}: DynamicSVGProps) {
+function DynamicSVGInner({ src, color = "#caa554", width, height, className }: DynamicSVGProps) {
   const [rawSVG, setRawSVG] = useState<string | null>(() => svgCache.get(src) ?? null);
   const [isLoading, setIsLoading] = useState(!svgCache.has(src));
 

@@ -6,10 +6,8 @@ import {
   dawn,
   chamferColors,
   // Atoms
-  CornerBracket,
   CornerBrackets,
   Surface,
-  AccentBar,
   Label,
   Diamond,
   Rail,
@@ -22,7 +20,6 @@ import {
   // Organisms
   Card,
   Button,
-  Panel,
 } from "@thoughtform/ui";
 
 export default function DesignSystemTest() {

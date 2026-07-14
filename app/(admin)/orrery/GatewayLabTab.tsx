@@ -13,7 +13,6 @@ import {
   type LayeredParticleData,
   type LayerKind,
   DEFAULT_ART_DIRECTION,
-  DEFAULT_LAYER_CONFIG,
 } from "@/lib/key-visual/layered-sampler";
 import {
   encodeTFPC,

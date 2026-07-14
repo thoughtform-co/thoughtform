@@ -573,8 +573,6 @@ function NavigationCockpitInner() {
   // Frame growth values - define first since used in position calculations
   const baseWidth = 500;
   const widthGrowth = 280; // 500px → 780px (increased from 200 for wider manifesto panel)
-  const baseHeight = 100;
-  const heightGrowth = 300; // 100px → 400px (min-height)
   // Note: Actual content height is ~720px to fit question + manifesto text
   // Use actual content height for centering calculation
   const actualContentHeight = 720;
@@ -584,21 +582,6 @@ function NavigationCockpitInner() {
   const manifestoBottomVh = 50;
   // NOTE: the px component is computed dynamically (inside `bridgeFrameStyles`) so the terminal
   // frame can "unroll" with the manifesto text reveal and fold back on reverse scroll.
-
-  // Hero→definition bottom calculation (for definition state)
-  const heroBottomPx = 90 * (1 - tHeroToDef);
-  const heroBottomVh = tHeroToDef * defBottomVh;
-  const heroBottomOffsetPx = tHeroToDef * defBottomPx;
-
-  // Definition position (when tDefToManifesto = 0)
-  const definitionBottomPx = heroBottomPx + heroBottomOffsetPx;
-  const definitionBottomVh = heroBottomVh;
-
-  // Apply smoother easing to growth for more subtle animation
-  const growthProgress = tDefToManifesto;
-
-  // Calculate current height during transition
-  const currentHeight = baseHeight + growthProgress * heightGrowth;
 
   // Interpolate BOTTOM position for manifesto transition
   // As frame grows, adjust bottom to keep frame CENTERED (not pushed to top)

@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useParticleConfig, type ConfigPreset } from "@/lib/contexts/ParticleConfigContext";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import {
   COLOR_PRESETS,
@@ -10,7 +9,6 @@ import {
   SHAPE_IS_THOUGHTFORM,
   GATEWAY_SHAPE_LABELS,
   GATEWAY_SHAPE_IS_ATTRACTOR,
-  DEFAULT_MOBILE_GATEWAY,
   DEFAULT_KEY_VISUAL_OVERLAY,
   getMobileEffectiveConfig,
   type LandmarkShape,
@@ -20,7 +18,6 @@ import {
   type GatewayConfig,
   type CameraConfig,
   type SigilConfig,
-  type KeyVisualOverlayConfig,
   type KeyVisualLayerKind,
 } from "@/lib/particle-config";
 
@@ -134,9 +131,9 @@ interface ParticleAdminPanelProps {
   onClose: () => void;
 }
 
-export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps) {
+export function ParticleAdminPanel({ isOpen }: ParticleAdminPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("gateway");
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   // Detect if on mobile device - edits will be routed to mobile-specific config
@@ -215,7 +212,6 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
     updateLandmark,
     addLandmark,
     removeLandmark,
-    saveConfig,
     resetToDefaults,
     presets,
     activePresetId,
@@ -301,8 +297,6 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
     };
     addLandmark(newLandmark);
   }, [addLandmark]);
-
-  const { user } = useAuth();
 
   // Show panel if open (logged-in users can save, others can view/test locally)
   if (isLoading || !isOpen) return null;
