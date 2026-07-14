@@ -54,6 +54,50 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-14 — Phase 2 (security + correctness)
+
+- **Interlude (post-Phase-1, Vince-directed):** no-unused-vars zeroed out via
+  rule options + underscore aliases (`b077fbf`, 346 → 327 warnings), the two
+  remaining showcase dupes dropped (`ebbe433`), and the corridor smoke suite
+  made **fully green (36/36)** — the three stale Services tests retired in
+  favor of `services-ring-smoke` coverage and the `:102` engagement contract
+  reformulated as ON/OFF legs after empirically mapping the band across
+  viewports (`c06fef1`, `1d2f967`); the file is serialized against WebGL
+  context starvation.
+- **BYPASS_AUTH closed** (`885c5fa`): astrogation's hardcoded `true` is now
+  `NODE_ENV === "development"` (compile-time-inlined). Verified both ways
+  with a Playwright drive: the `.next-verify` production build served on
+  :3013 redirects sessionless `/astrogation` to the `/admin` Credential
+  Terminal with zero tool nodes mounted; dev keeps the bypass branch.
+- **RLS review** (`a7c2718`): ADR-037 documents the trust boundary —
+  public reads on landing content are intentional; every
+  "any-authenticated-can-write" policy is a gap-if-signups-open;
+  `brandmark_presets` anon INSERT is a constrained lab feature; the
+  `useTemplates` client write is RLS-safe (`auth.uid() = user_id`).
+  Staged (NOT applied): `DRAFT-20260714_tighten_admin_write_policies.sql`
+  with an `is_admin()` JWT-email check. Two owner actions pending.
+- **Effect cleanup** (`b991a2c`, `3f2a3f4`): CelestialConnector's reveal
+  observer now disconnects via React 19 ref cleanup (real leak); the four
+  `onCreated` webglcontext listener pairs documented as element-lifetime
+  (intentional); useBrandmarkJourney/useRevealMotion verified false
+  positives.
+- **SSR guards** (`e66c0a7`): ServicesCardRing veil/glow texture bakes
+  guard `document`; NavigationCockpitV2 confirmed internal-only (Phase-5
+  deletion candidate).
+- **Impure state updaters** (`e4f3bd0`): ParticleConfigContext's ten
+  update callbacks now schedule the debounced autosave AFTER commit
+  instead of inside `setConfig` updaters. The seven flagged production
+  components (ServicesStage, HudNav, TerminalReveal, Tree,
+  ServicesPlateCluster, IntelligenceArtifactScene, AuthProvider) were
+  read individually: none contains a `setState(fn)`-nested side effect —
+  the rule's callback-shape heuristic misfires on sibling setStates in
+  ordinary event/subscription handlers. Left as-is by design.
+- **no-eval P0**: `new Function(code)` in `legacy/canvas/ThreeBackground`
+  — archived, unimported, build-excluded; Phase-5 deletion candidate.
+- Gate: typecheck, ESLint 0 errors (327 warnings), 242 unit tests,
+  production build, corridor smokes 36/36, landing eyeballed at 10 scroll
+  depths, bundle unchanged at 449.8 kB gzip.
+
 ### 2026-07-14 — Phase 1 (zero-risk hygiene: delete-only + trivial)
 
 - **Orphans deleted** (all verified zero-reference; owner decision: delete
