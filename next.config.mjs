@@ -29,6 +29,11 @@ const securityHeaders = buildSecurityHeaders({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Build output directory. Overridable so verification builds can target an
+  // alternate dir (e.g. `NEXT_DIST_DIR=.next-verify npm run build`) without
+  // clobbering the `.next` that a running dev server is serving from.
+  // Defaults to `.next` — behavior is byte-identical when the env var is unset.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   transpilePackages: ["three", "@react-three/fiber", "@react-three/drei"],
   // Pin the workspace root so Next 16 doesn't pick up the stray lockfile in $HOME.
   // Applies to both Turbopack and webpack build paths.

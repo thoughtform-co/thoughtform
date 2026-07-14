@@ -5,6 +5,10 @@ node_modules
 
 # Build outputs
 .next
+# Alternate build dirs for verification builds (NEXT_DIST_DIR override) so they
+# never clobber the `.next` a running dev server serves from.
+.next-verify
+.next-build
 out
 dist
 build
@@ -67,6 +71,9 @@ services/sam-segmenter/checkpoints/
 
 # Claude worktrees and build artifacts
 .claude/worktrees/
+
+# Codex CLI local config (agent/tooling scratch, mirrors .cursor / .claude)
+.codex/
 
 # Editor-local settings
 .vscode/
