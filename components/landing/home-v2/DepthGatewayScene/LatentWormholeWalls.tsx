@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   STATION_DIAGNOSTIC,
@@ -226,7 +227,12 @@ const EXIT_MOUTH_DEPTH_BLOOM = 0.18;
  *
  *  Cheap by construction — a few hundred line segments, no per-frame
  *  vertex shuffling. */
-const STREAK_COUNT = 520;
+/** Desktop exit-mouth streak count. Tier-gated below (was a fixed 520 on
+ *  every tier that renders streaks — Phase 4, ADR-038). Desktop unchanged;
+ *  the whole streak layer is already gated off below 760px. */
+const STREAK_COUNT_DESKTOP = 520;
+const STREAK_COUNT_TABLET = 360;
+const STREAK_COUNT_MOBILE = 240;
 /** Min/max base length along Z. Min applies at the inner (camera-side)
  *  end of the field; max applies at the mouth end. Bumped 0.7/3.2 ->
  *  1.4/3.6 (v3.8) so near streaks read as light-speed lines when they
@@ -989,13 +995,18 @@ function buildExitMouthBloom(fromZ: number, toZ: number, buf: PointBuffers): voi
  *  Static geometry. The "motion" comes from the camera dollying past
  *  the streaks while `uExitWarp` brightens them, not from per-frame
  *  position updates. */
-function buildExitMouthStreaks(fromZ: number, toZ: number, buf: StreakBuffers): void {
+function buildExitMouthStreaks(
+  fromZ: number,
+  toZ: number,
+  buf: StreakBuffers,
+  streakCount: number
+): void {
   const gold = new THREE.Color(GOLD_HEX);
   const dawn = new THREE.Color(DAWN_HEX);
   const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
   const span = toZ - fromZ;
 
-  for (let i = 0; i < STREAK_COUNT; i++) {
+  for (let i = 0; i < streakCount; i++) {
     // v3.8 UNIFORM distribution along the exit span. The previous
     // rim-biased `Math.pow(u, 1.6)` clustered streaks at the mouth,
     // which in screen space sat directly behind the gyroscope sphere
@@ -1004,7 +1015,7 @@ function buildExitMouthStreaks(fromZ: number, toZ: number, buf: StreakBuffers): 
     // passing band (which the shader now uses for brightness) as the
     // camera dollies forward — continuous warp-speed flow past the
     // side walls, not a one-shot bloom at the mouth.
-    const u = (i + 0.5) / STREAK_COUNT;
+    const u = (i + 0.5) / streakCount;
     const zT = lerp(STREAK_START_FRAC, STREAK_END_FRAC, u);
     const tailZ = fromZ + span * zT;
 
@@ -1160,7 +1171,7 @@ function buildWormholeWalls(): {
  *  `<lineSegments>` mount. Kept independent so the streaks can use a
  *  dedicated material/shader without inflating the points-shader
  *  vertex throughput. */
-function buildWormholeStreaks(): {
+function buildWormholeStreaks(streakCount: number): {
   positions: Float32Array;
   colors: Float32Array;
   strengths: Float32Array;
@@ -1178,7 +1189,7 @@ function buildWormholeStreaks(): {
   const leg2Start = lerp(dgZ, intZ, LEG_RAIL_START_FRAC);
   const leg2End = lerp(dgZ, intZ, LEG_RAIL_END_FRAC);
 
-  buildExitMouthStreaks(leg2Start, leg2End, buf);
+  buildExitMouthStreaks(leg2Start, leg2End, buf, streakCount);
 
   return {
     positions: new Float32Array(buf.positions),
@@ -1224,6 +1235,14 @@ export function LatentWormholeWalls() {
     return window.innerWidth >= 760;
   }, []);
 
+  // Governed exit-mouth streak count (ADR-038). Desktop unchanged; tablet
+  // lighter; the layer is already off below 760px so mobile is moot.
+  const streakCount = useCorridorCount(
+    STREAK_COUNT_DESKTOP,
+    STREAK_COUNT_TABLET,
+    STREAK_COUNT_MOBILE
+  );
+
   const geometry = useMemo(() => {
     if (!enabled) return null;
     const { positions, colors, reveals, sizes, mouths } = buildWormholeWalls();
@@ -1241,14 +1260,14 @@ export function LatentWormholeWalls() {
   // from camera dolly + uExitWarp opacity ramp.
   const streakGeometry = useMemo(() => {
     if (!enabled) return null;
-    const { positions, colors, strengths, ends } = buildWormholeStreaks();
+    const { positions, colors, strengths, ends } = buildWormholeStreaks(streakCount);
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
     geom.setAttribute("aStreamStrength", new THREE.BufferAttribute(strengths, 1));
     geom.setAttribute("aEnd", new THREE.BufferAttribute(ends, 1));
     return geom;
-  }, [enabled]);
+  }, [enabled, streakCount]);
 
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({

@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { SPHERE_GOLD } from "@/lib/home-v2/goldPalette";
 import { getSmoothedThoughtformOffsetX } from "./motionFollower";
@@ -50,7 +51,11 @@ import {
 
 // ── Local star cluster ──────────────────────────────────────────
 
-const STAR_COUNT = 420;
+/** Desktop star count. Tier-gated below (was a fixed 420 on every tier —
+ *  Phase 4, ADR-038). Desktop is unchanged. */
+const STAR_COUNT_DESKTOP = 420;
+const STAR_COUNT_TABLET = 300;
+const STAR_COUNT_MOBILE = 200;
 
 /** Volume bounding box (world units). X/Y are half-widths centred
  *  on the optical axis after the Thoughtform pan completes; Z
@@ -239,11 +244,13 @@ export function ThoughtformAtmosphere() {
   const bootGlowRef = useRef<THREE.Mesh>(null);
   const shockwaveRef = useRef<THREE.LineLoop>(null);
 
+  const starCount = useCorridorCount(STAR_COUNT_DESKTOP, STAR_COUNT_TABLET, STAR_COUNT_MOBILE);
+
   // Star geometry — randomly distributed inside the cluster volume.
   const starGeometry = useMemo(() => {
-    const positions = new Float32Array(STAR_COUNT * 3);
-    const seeds = new Float32Array(STAR_COUNT);
-    for (let i = 0; i < STAR_COUNT; i++) {
+    const positions = new Float32Array(starCount * 3);
+    const seeds = new Float32Array(starCount);
+    for (let i = 0; i < starCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 2 * STAR_HALF_X;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 2 * STAR_HALF_Y;
       positions[i * 3 + 2] = STAR_Z_MIN + Math.random() * (STAR_Z_MAX - STAR_Z_MIN);
@@ -253,7 +260,7 @@ export function ThoughtformAtmosphere() {
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geom.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
     return geom;
-  }, []);
+  }, [starCount]);
 
   const starMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
