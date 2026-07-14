@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
+import { clamp01 } from "@/lib/math";
 
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
+// `clamp01` now comes from `@/lib/math` (Phase-5 consolidation).
 /** Smoothstep on [0,1] — hook eases, CSS maps linearly (house pattern). */
 function smoothstep01(t: number): number {
   const x = clamp01(t);

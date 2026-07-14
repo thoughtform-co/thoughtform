@@ -38,18 +38,7 @@ export function easeInOutCubic(t: number): number {
 }
 
 /**
- * Linear interpolation between two values
- * @param a Start value
- * @param b End value
- * @param t Progress from 0 (a) to 1 (b)
+ * `lerp` (linear interpolation) and `clamp` are re-exported from the
+ * canonical `@/lib/math` (Phase-5 consolidation, 2026-07-14).
  */
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-/**
- * Clamp a value between min and max
- */
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
+export { clamp, lerp } from "@/lib/math";

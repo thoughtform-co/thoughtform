@@ -19,6 +19,8 @@
  * rather than a chart.
  */
 
+import { clamp01, lerp } from "@/lib/math";
+
 // ── Phase envelopes (global progress [0..1] → per-phase scalars) ─────
 
 export interface PhaseWindow {
@@ -213,18 +215,17 @@ export const COLOR_SURFACES_CSS = "#ebe3d6";
 
 // ── Phase math helpers ───────────────────────────────────────────────
 
-export function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
+// `clamp01` and `lerp` are imported from `@/lib/math` (Phase-5
+// consolidation, 2026-07-14) and re-exported so consumers of this module
+// (and `intelligence-artifact/index.ts`'s `export *`) keep working.
+export { clamp01, lerp };
 
+/** Smoothstep — keeps its own implementation (NOT the `@/lib/math`
+ *  canonical) because of the `edge0 === edge1` degenerate-edge guard. */
 export function smoothstep(edge0: number, edge1: number, x: number): number {
   if (edge0 === edge1) return x < edge0 ? 0 : 1;
   const t = clamp01((x - edge0) / (edge1 - edge0));
   return t * t * (3 - 2 * t);
-}
-
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
 }
 
 /** Evaluate a phase envelope: emerges over [start, peak], holds at 1

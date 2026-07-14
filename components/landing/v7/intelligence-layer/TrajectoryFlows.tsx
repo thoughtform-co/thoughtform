@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { createCometMaterial } from "./celestialMaterials";
 import { TRAJECTORY_CURVES, orbitEmerge, type TrajectorySpec } from "./intelligenceLayerGeom";
 import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
+import { smoothstep } from "@/lib/math";
 
 /**
  * TrajectoryFlows — slow, continuous particle drift along each
@@ -142,7 +143,4 @@ export function TrajectoryFlows() {
   );
 }
 
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
+// `smoothstep` now comes from `@/lib/math` (Phase-5 consolidation).

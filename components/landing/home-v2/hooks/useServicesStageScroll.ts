@@ -3,6 +3,7 @@
 import { useEffect, type RefObject } from "react";
 
 import { RING_STEP_COUNT, exitProgressForRunway } from "@/lib/services-ring/ringMath";
+import { clamp01 } from "@/lib/math";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
 /** Scroll segments in the pinned stage: ONE lead-in segment where every
@@ -53,10 +54,9 @@ const FADE_END = 0.65;
 const CONTENT_IN_START = 0.7;
 const CONTENT_IN_END = 1.0;
 
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
+// `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local
+// `smoothstep`/`smootherstep` below keep their own implementations because
+// of the `edge1 <= edge0` degenerate-edge guard.
 /** Smoothstep on [edge0, edge1]. */
 function smoothstep(edge0: number, edge1: number, x: number): number {
   if (edge1 <= edge0) return x >= edge1 ? 1 : 0;

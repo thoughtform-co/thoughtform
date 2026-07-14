@@ -21,6 +21,7 @@ import * as THREE from "three";
 import type { ServiceId } from "../serviceData";
 import type { ConnectorAnchor } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
+import { clamp01 } from "@/lib/math";
 
 export interface OrbitConfig {
   /** ServiceId for a service ring; any unique key for a decorative shell. */
@@ -220,11 +221,9 @@ const REVEAL_WINDOWS: ReadonlyArray<readonly [number, number]> = [
   [0.64, 1.0],
 ];
 
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-/** Ken Perlin smootherstep (C2-continuous). */
+// `clamp01` now comes from `@/lib/math` (Phase-5 consolidation).
+/** Ken Perlin smootherstep (C2-continuous) — keeps its own
+ *  implementation because of the `edge1 <= edge0` degenerate-edge guard. */
 function smootherstep(edge0: number, edge1: number, x: number): number {
   if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
   const t = clamp01((x - edge0) / (edge1 - edge0));

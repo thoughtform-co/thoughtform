@@ -3,6 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { resolveBeat } from "@/lib/home-v2/corridorMap";
 import { INITIAL_TRANSFORM, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { clamp01 } from "@/lib/math";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import { DepthGatewayScene } from "../DepthGatewayScene";
 import { ProjectedBrandmarkActor } from "../ProjectedBrandmarkActor";
@@ -23,9 +24,7 @@ interface HandoffLabPageProps {
 const EPILOGUE_MIN = 0.58;
 const EPILOGUE_MAX = 1;
 
-function clamp01(value: number): number {
-  return Math.max(0, Math.min(1, value));
-}
+// `clamp01` now comes from `@/lib/math` (Phase-5 consolidation).
 
 function useHudNav(rootRef: RefObject<HTMLDivElement | null>) {
   useEffect(() => {

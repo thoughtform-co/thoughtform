@@ -48,6 +48,7 @@ import {
 } from "@/components/landing/home-v2/services";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import { supabase } from "@/lib/supabase";
+import { clamp, clamp01 } from "@/lib/math";
 
 type LabMode = "solid" | "particle";
 type SavedLabMode = LabMode | "scene";
@@ -2572,13 +2573,7 @@ function seededRandom(seed: string): () => number {
   };
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function clamp01(value: number): number {
-  return clamp(value, 0, 1);
-}
+// `clamp` and `clamp01` now come from `@/lib/math` (Phase-5 consolidation).
 
 function numberValue(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;

@@ -12,6 +12,8 @@
 // World size = value × armillary scale (0.62 in the corridor) × the parked
 // group scale, so the ring inherits every scale the armillary already rides.
 
+import { clamp01, lerp } from "@/lib/math";
+
 /** Number of cards — one per service, quarter spacing. */
 export const RING_COUNT = 4;
 
@@ -229,16 +231,15 @@ export const RING_TRACK_REVEAL_LEAD = 0.06;
 export const RING_DEPTH_WRITE_ON_NZ = 0.37;
 export const RING_DEPTH_WRITE_OFF_NZ = 0.33;
 
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+// `clamp01` and `lerp` are imported from `@/lib/math` (Phase-5
+// consolidation). `lerp` is re-exported so existing consumers of
+// `@/lib/services-ring/ringMath` keep working.
+export { lerp };
 
 /** Smootherstep on [edge0, edge1] — C2-continuous (matches the services
- *  entrance easing convention in useServicesStageScroll). */
+ *  entrance easing convention in useServicesStageScroll). Keeps its own
+ *  implementation (NOT the `@/lib/math` canonical) because of the
+ *  `edge1 <= edge0` degenerate-edge guard. */
 export function smootherstep(edge0: number, edge1: number, x: number): number {
   if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
   const t = clamp01((x - edge0) / (edge1 - edge0));

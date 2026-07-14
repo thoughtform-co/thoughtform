@@ -186,18 +186,10 @@ export function rotateZ(v: Vec3, angle: number): Vec3 {
 
 // ─── Utility Functions ───
 
-export function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-export function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
-  return t * t * (3 - 2 * t);
-}
+// `clamp`, `lerp`, and `smoothstep` are re-exported from the canonical
+// `@/lib/math` (Phase-5 consolidation, 2026-07-14). The vector helpers
+// (`lerp3`, `add3`, …) remain defined in this module.
+export { clamp, lerp, smoothstep } from "@/lib/math";
 
 export function remap(
   value: number,

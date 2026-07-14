@@ -24,6 +24,7 @@ import {
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
+import { clamp01 } from "@/lib/math";
 
 /**
  * ProjectedBrandmarkActor — the primary brandmark painter for the
@@ -134,9 +135,7 @@ const PROJECTED_BRANDMARK_UNDER_CANVAS_Z_INDEX = 4;
  *  curve. */
 const DOCK_BLEND_TAU_S = 0.28;
 
-function clamp01(x: number): number {
-  return Math.max(0, Math.min(1, x));
-}
+// `clamp01` now comes from `@/lib/math` (Phase-5 consolidation).
 
 /** Mutable per-actor scratch + cache for the epilogue / dock welded
  *  projection. Holds the mirror camera, vector scratch, dock blend

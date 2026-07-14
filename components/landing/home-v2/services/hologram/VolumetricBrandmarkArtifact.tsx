@@ -29,6 +29,7 @@ import * as THREE from "three";
 import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
 import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 import { volumetricFragmentShader, volumetricVertexShader } from "./volumetricShaders";
+import { lerp } from "@/lib/math";
 
 export const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
 export const BRANDMARK_WIRE_GLB = "/models/brandmark/brandmark-wire.glb";
@@ -58,10 +59,9 @@ const ENTRANCE_POINTSIZE_MUL = 1.3; // softer/larger specks mid-morph
 const ENTRANCE_ENTROPY = 1.0; // dispersion amount at the seam
 const ENTRANCE_GLITCH_PEAK = 1.0; // glitch/latent-resolve intensity at mid-morph (bell)
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-/** Ken Perlin smootherstep (C2-continuous). */
+// `lerp` now comes from `@/lib/math` (Phase-5 consolidation).
+/** Ken Perlin smootherstep (C2-continuous) — keeps its own
+ *  implementation because of the `edge1 <= edge0` degenerate-edge guard. */
 function smootherstep(edge0: number, edge1: number, x: number): number {
   if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));

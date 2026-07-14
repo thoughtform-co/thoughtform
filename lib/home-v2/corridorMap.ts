@@ -32,31 +32,17 @@
  * camera sits at large +Z and dollies toward -Z across the stage.
  */
 
+import { clamp01, lerp, smoothstep, smootherstep } from "@/lib/math";
+
 export type Vec3 = readonly [number, number, number];
 
-// ── Shared math (kept here so the kernel is dependency-free) ─────────
+// ── Shared math (Phase-5 consolidation, 2026-07-14) ──────────────────
+// The five canonical scalar helpers now live in `@/lib/math` (imported at
+// the top of this file). Re-exported here so the many consumers that
+// import `{ clamp01, smoothstep, smootherstep, lerp }` from this module —
+// and transitively via `depthGatewayStore` — keep working unchanged.
 
-export function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-export function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = clamp01((x - edge0) / (edge1 - edge0));
-  return t * t * (3 - 2 * t);
-}
-
-/** Ken Perlin's smootherstep — like `smoothstep` but with zero 1st AND
- *  2nd derivatives at both ends, so a ramp accelerates and settles
- *  more gently. Used on the SVG→particle-core handoff so the
- *  cross-dissolve eases in/out instead of having a perceptible edge. */
-export function smootherstep(edge0: number, edge1: number, x: number): number {
-  const t = clamp01((x - edge0) / (edge1 - edge0));
-  return t * t * t * (t * (t * 6 - 15) + 10);
-}
-
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+export { clamp01, lerp, smoothstep, smootherstep };
 
 // ── Camera path constants (shared with sceneGeom) ───────────────────
 

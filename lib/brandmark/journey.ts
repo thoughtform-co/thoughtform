@@ -47,6 +47,7 @@ import {
   vectorRingOpacity,
 } from "@/components/landing/v7/intelligence-layer/journeyScalars";
 import type { BrandmarkShapeKey } from "@/lib/brandmark/shapes";
+import { clamp01, lerp } from "@/lib/math";
 
 // ────────────────────────────────────────────────────────────────────
 // Types
@@ -374,8 +375,7 @@ const SECTION_READING_ZONE_FRAC = 0.35;
 // Math helpers
 // ────────────────────────────────────────────────────────────────────
 
-const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+// `clamp01` and `lerp` now come from `@/lib/math` (Phase-5 consolidation).
 
 function sectionReadingZoneExitY(
   section: HTMLElement | null,

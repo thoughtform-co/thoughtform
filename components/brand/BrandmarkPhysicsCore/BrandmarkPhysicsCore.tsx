@@ -45,6 +45,7 @@ import {
   type BrandmarkParticleSample,
 } from "@/lib/brandmark/sampleBrandmarkParticles";
 import { brandmarkCoreFragmentShader, brandmarkCoreVertexShader } from "./shaders";
+import { lerp } from "@/lib/math";
 
 /** Force coefficients tuned per ignite state. */
 export interface BrandmarkPhysicsCoreForces {
@@ -485,10 +486,9 @@ function buildScatteredInitial(
   return out;
 }
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
+// `lerp` now comes from `@/lib/math` (Phase-5 consolidation). `clamp01`
+// keeps its own non-finite-guarding implementation (NaN/±Infinity -> 0),
+// which differs from the canonical `@/lib/math` clamp01.
 function clamp01(x: number): number {
   if (!Number.isFinite(x)) return 0;
   if (x < 0) return 0;

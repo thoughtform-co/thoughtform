@@ -3,6 +3,7 @@
 import { useEffect, type RefObject } from "react";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { clamp01 } from "@/lib/math";
 
 /** Corridor `epilogueProgress` at/after which the live sphere docks as
  *  a fixed backdrop for the corridor-exit zoom-dissipate (ADR-021).
@@ -43,9 +44,7 @@ const AMBIENT_ENGAGE_RAW = 0.999;
 const NEXT_STATION_FADE_START_VH = 0.6;
 const NEXT_STATION_FADE_END_VH = 0.0;
 
-function clamp01(value: number): number {
-  return Math.max(0, Math.min(1, value));
-}
+// `clamp01` now comes from `@/lib/math` (Phase-5 consolidation).
 
 /**
  * useCorridorExitScroll — single rAF scroll watcher for the

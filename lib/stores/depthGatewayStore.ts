@@ -27,15 +27,13 @@ import type { Beat } from "@/lib/home-v2/corridorMap";
 // `corridorMap`. They are re-exported here so the many
 // `@/lib/stores/depthGatewayStore` importers keep working unchanged.
 // New code should prefer importing from `@/lib/home-v2/corridorMap`.
-export {
-  BEAT_PARK_CENTRES,
-  BEAT_WINDOWS,
-  clamp01,
-  lerp,
-  resolveBeat,
-  smoothstep,
-} from "@/lib/home-v2/corridorMap";
+export { BEAT_PARK_CENTRES, BEAT_WINDOWS, resolveBeat } from "@/lib/home-v2/corridorMap";
 export type { Beat } from "@/lib/home-v2/corridorMap";
+// The scalar math helpers (Phase-5 consolidation, 2026-07-14) come
+// straight from `@/lib/math`. Re-exported here so the many corridor
+// painters that import `{ clamp01, lerp, smoothstep }` from this store
+// keep working unchanged.
+export { clamp01, lerp, smoothstep } from "@/lib/math";
 
 export interface DepthGatewayTransform {
   /** Global 0..1 progress across the sticky stage. */

@@ -11,18 +11,14 @@
  * here, so scene-side consumers are unaffected.
  */
 
-export function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
+import { clamp01, lerp, smoothstep } from "@/lib/math";
 
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-export function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
+// Re-exported (Phase-5 consolidation, 2026-07-14) so the brandmark
+// journey + `intelligenceLayerGeom` consumers that import these from
+// here keep working. `@/lib/math` is a pure leaf (no `three`), so this
+// module stays out of the WebGL chunk — the whole point of its
+// extraction.
+export { clamp01, lerp, smoothstep };
 
 export const SUBSTRATE_PHASE = {
   arriveOut: 0.04,

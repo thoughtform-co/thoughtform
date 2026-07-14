@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { clamp01 } from "@/lib/math";
 
 export interface LatentScrollState {
   /** 0..1 progress through the tall scroll track */
@@ -31,10 +32,8 @@ export interface LatentScrollState {
   reduceMotion: boolean;
 }
 
-function clamp01(n: number): number {
-  return Math.max(0, Math.min(1, n));
-}
-
+// `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local
+// `lerp` below is intentionally NOT the canonical one — it clamps `t`.
 function smooth(n: number): number {
   const t = clamp01(n);
   return t * t * (3 - 2 * t);

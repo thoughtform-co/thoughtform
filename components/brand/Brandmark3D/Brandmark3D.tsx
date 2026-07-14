@@ -32,6 +32,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { clamp } from "@/lib/math";
 import {
   buildBrandmarkGeometry,
   DEFAULT_BRANDMARK_SVG_URL,
@@ -1567,9 +1568,8 @@ function hash01(value: number): number {
   return x - Math.floor(x);
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
+// `clamp` now comes from `@/lib/math` (Phase-5 consolidation, 2026-07-14).
+// The local `clamp01` above keeps its own non-finite-guarding variant.
 
 function subscribeReducedMotion(onStoreChange: () => void): () => void {
   if (typeof window === "undefined" || !window.matchMedia) return () => {};

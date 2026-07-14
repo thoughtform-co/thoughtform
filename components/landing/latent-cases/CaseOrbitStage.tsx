@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { LOOP_CASE_STUDIES } from "./caseData";
 import { LatentCaseCard } from "./LatentCaseCard";
+import { clamp01, lerp, smoothstep } from "@/lib/math";
 
 interface CaseOrbitStageProps {
   activeCaseIndex: number;
@@ -35,18 +36,8 @@ const EXIT_ORIGIN: { xPercent: number; translateZ: number; rotateY: number; scal
   scale: 0.32,
 };
 
-function clamp01(n: number): number {
-  return Math.max(0, Math.min(1, n));
-}
-
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = clamp01((x - edge0) / (edge1 - edge0));
-  return t * t * (3 - 2 * t);
-}
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+// `clamp01`, `smoothstep`, and `lerp` now come from `@/lib/math`
+// (Phase-5 consolidation, 2026-07-14).
 
 function wrapDistance(i: number, active: number, n: number): number {
   let d = i - active;

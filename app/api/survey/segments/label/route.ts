@@ -8,6 +8,7 @@ import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
+import { clamp } from "@/lib/math";
 
 const BUCKET_NAME = "survey-media";
 
@@ -32,9 +33,7 @@ interface LabelRequestBody {
   force?: boolean;
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
-}
+// `clamp` now comes from `@/lib/math` (Phase-5 consolidation).
 
 function extractJson(text: string): unknown {
   // Handle possible ```json fences
