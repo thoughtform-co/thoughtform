@@ -55,7 +55,18 @@ function PresetsBar({
 
   return (
     <div className="presets-bar">
-      <div className="presets-header" onClick={() => setIsExpanded(!isExpanded)}>
+      <div
+        className="presets-header"
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsExpanded(!isExpanded);
+          }
+        }}
+      >
         <span className="presets-label">
           <span className="presets-icon">◆</span>
           {activePreset ? activePreset.name : "No Preset"}
@@ -73,10 +84,15 @@ function PresetsBar({
                   key={preset.id}
                   className={`preset-chip ${preset.id === activePresetId ? "active" : ""}`}
                 >
-                  <button className="preset-chip-name" onClick={() => onLoadPreset(preset.id)}>
+                  <button
+                    type="button"
+                    className="preset-chip-name"
+                    onClick={() => onLoadPreset(preset.id)}
+                  >
                     {preset.name}
                   </button>
                   <button
+                    type="button"
                     className="preset-chip-delete"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -109,12 +125,12 @@ function PresetsBar({
                   }
                 }}
               />
-              <button className="presets-save-btn" onClick={handleCreate}>
+              <button type="button" className="presets-save-btn" onClick={handleCreate}>
                 Create
               </button>
             </div>
           ) : (
-            <button className="presets-add-btn" onClick={() => setShowInput(true)}>
+            <button type="button" className="presets-add-btn" onClick={() => setShowInput(true)}>
               + New Preset
             </button>
           )}
@@ -331,14 +347,17 @@ export function ParticleAdminPanel({ isOpen }: ParticleAdminPanelProps) {
             {saveMessage && <span className="admin-message">{saveMessage}</span>}
             {error && <span className="admin-error">{error}</span>}
             <button
+              type="button"
               onClick={handleReset}
               className="admin-icon-btn"
               disabled={isSaving}
               title="Reset to defaults"
+              aria-label="Reset to defaults"
             >
               ↺
             </button>
             <button
+              type="button"
               onClick={handleSave}
               className={`admin-icon-btn save ${hasChanges ? "has-changes" : ""}`}
               disabled={isSaving || !hasChanges}
@@ -376,10 +395,15 @@ export function ParticleAdminPanel({ isOpen }: ParticleAdminPanelProps) {
                 }}
               />
               <div className="save-prompt-actions">
-                <button className="save-prompt-cancel" onClick={() => setShowSavePrompt(false)}>
+                <button
+                  type="button"
+                  className="save-prompt-cancel"
+                  onClick={() => setShowSavePrompt(false)}
+                >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   className="save-prompt-save"
                   onClick={handleSaveNewPreset}
                   disabled={!newPresetName.trim()}
@@ -394,30 +418,35 @@ export function ParticleAdminPanel({ isOpen }: ParticleAdminPanelProps) {
         {/* Tabs */}
         <div className="admin-tabs">
           <button
+            type="button"
             className={`admin-tab ${activeTab === "gateway" ? "active" : ""}`}
             onClick={() => setActiveTab("gateway")}
           >
             Gateway
           </button>
           <button
+            type="button"
             className={`admin-tab ${activeTab === "manifold" ? "active" : ""}`}
             onClick={() => setActiveTab("manifold")}
           >
             Manifold
           </button>
           <button
+            type="button"
             className={`admin-tab ${activeTab === "camera" ? "active" : ""}`}
             onClick={() => setActiveTab("camera")}
           >
             Camera
           </button>
           <button
+            type="button"
             className={`admin-tab ${activeTab === "landmarks" ? "active" : ""}`}
             onClick={() => setActiveTab("landmarks")}
           >
             Landmarks
           </button>
           <button
+            type="button"
             className={`admin-tab ${activeTab === "sigil" ? "active" : ""}`}
             onClick={() => setActiveTab("sigil")}
           >
@@ -1269,6 +1298,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
               .filter((k) => !GATEWAY_SHAPE_IS_ATTRACTOR[k])
               .map((shapeKey) => (
                 <button
+                  type="button"
                   key={shapeKey}
                   className={`shape-btn ${gateway.shape === shapeKey ? "active" : ""}`}
                   onClick={() => onUpdate({ shape: shapeKey })}
@@ -1308,6 +1338,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
               )
               .map((shapeKey) => (
                 <button
+                  type="button"
                   key={shapeKey}
                   className={`shape-btn attractor ${gateway.shape === shapeKey ? "active" : ""}`}
                   onClick={() => onUpdate({ shape: shapeKey })}
@@ -1340,6 +1371,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
               )
               .map((shapeKey) => (
                 <button
+                  type="button"
                   key={shapeKey}
                   className={`shape-btn attractor ${gateway.shape === shapeKey ? "active" : ""}`}
                   onClick={() => onUpdate({ shape: shapeKey })}
@@ -1367,6 +1399,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
           <div className="admin-color-row">
             {Object.entries(COLOR_PRESETS).map(([name, color]) => (
               <button
+                type="button"
                 key={name}
                 className={`admin-color-btn ${gateway.primaryColor === color ? "active" : ""}`}
                 style={{ backgroundColor: color }}
@@ -1387,6 +1420,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
           <div className="admin-color-row">
             {Object.entries(COLOR_PRESETS).map(([name, color]) => (
               <button
+                type="button"
                 key={name}
                 className={`admin-color-btn ${gateway.accentColor === color ? "active" : ""}`}
                 style={{ backgroundColor: color }}
@@ -1576,6 +1610,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                   {(["spiral", "lissajous", "fieldLines", "particleStreams", "all"] as const).map(
                     (pattern) => (
                       <button
+                        type="button"
                         key={pattern}
                         className={`shape-btn ${gateway.algorithmicPattern === pattern ? "active" : ""}`}
                         onClick={() => onUpdate({ algorithmicPattern: pattern })}
@@ -1637,6 +1672,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
               <div className="admin-label">Mode</div>
               <div className="shape-selector" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
                 <button
+                  type="button"
                   className={`shape-btn ${gateway.keyVisualOverlay?.mode === "dynamic" ? "active" : ""}`}
                   onClick={() =>
                     onUpdate({
@@ -1651,6 +1687,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                   <span className="shape-name">Dynamic</span>
                 </button>
                 <button
+                  type="button"
                   className={`shape-btn ${gateway.keyVisualOverlay?.mode === "baked" ? "active" : ""}`}
                   onClick={() =>
                     onUpdate({
@@ -2040,6 +2077,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                           style={{ gridTemplateColumns: "repeat(2, 1fr)" }}
                         >
                           <button
+                            type="button"
                             className={`shape-btn ${layerConfig.colorMode === "image" ? "active" : ""}`}
                             onClick={() =>
                               onUpdate({
@@ -2061,6 +2099,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                             <span className="shape-name">Image</span>
                           </button>
                           <button
+                            type="button"
                             className={`shape-btn ${layerConfig.colorMode === "tint" ? "active" : ""}`}
                             onClick={() =>
                               onUpdate({
@@ -2110,6 +2149,7 @@ function ManifoldControls({ manifold, onUpdate }: ManifoldControlsProps) {
           <div className="admin-color-row">
             {Object.entries(COLOR_PRESETS).map(([name, color]) => (
               <button
+                type="button"
                 key={name}
                 className={`admin-color-btn ${manifold.color === color ? "active" : ""}`}
                 style={{ backgroundColor: color }}
@@ -2409,6 +2449,7 @@ function CameraControls({ camera, onUpdate }: CameraControlsProps) {
         <div className="admin-section-title">Presets</div>
         <div className="admin-color-row" style={{ gap: "4px" }}>
           <button
+            type="button"
             className="admin-btn admin-btn-secondary"
             style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
             onClick={() =>
@@ -2428,6 +2469,7 @@ function CameraControls({ camera, onUpdate }: CameraControlsProps) {
             Default
           </button>
           <button
+            type="button"
             className="admin-btn admin-btn-secondary"
             style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
             onClick={() =>
@@ -2447,6 +2489,7 @@ function CameraControls({ camera, onUpdate }: CameraControlsProps) {
             Top-Down
           </button>
           <button
+            type="button"
             className="admin-btn admin-btn-secondary"
             style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
             onClick={() =>
@@ -2493,7 +2536,9 @@ function LandmarksControls({ landmarks, onUpdate, onAdd, onRemove }: LandmarksCo
               style={{ maxWidth: "200px" }}
             />
             <button
+              type="button"
               className="landmark-delete"
+              aria-label="Delete landmark"
               onClick={() => onRemove(landmark.id)}
               title="Delete landmark"
             >
@@ -2556,6 +2601,7 @@ function LandmarksControls({ landmarks, onUpdate, onAdd, onRemove }: LandmarksCo
             <div className="admin-color-row">
               {Object.entries(COLOR_PRESETS).map(([name, color]) => (
                 <button
+                  type="button"
                   key={name}
                   className={`admin-color-btn ${landmark.color === color ? "active" : ""}`}
                   style={{ backgroundColor: color }}
@@ -2689,7 +2735,7 @@ function LandmarksControls({ landmarks, onUpdate, onAdd, onRemove }: LandmarksCo
         </div>
       ))}
 
-      <button className="admin-add-btn" onClick={onAdd}>
+      <button type="button" className="admin-add-btn" onClick={onAdd}>
         + Add Landmark
       </button>
     </div>
@@ -2789,22 +2835,28 @@ function SigilControls({ sigil, onUpdate }: SigilControlsProps) {
           <div className="admin-label">Color</div>
           <div className="admin-color-row">
             <button
+              type="button"
               className={`admin-color-btn ${sigil.color === "202, 165, 84" ? "active" : ""}`}
               style={{ backgroundColor: "rgb(202, 165, 84)" }}
               onClick={() => onUpdate({ color: "202, 165, 84" })}
               title="Tensor Gold"
+              aria-label="Tensor Gold"
             />
             <button
+              type="button"
               className={`admin-color-btn ${sigil.color === "236, 227, 214" ? "active" : ""}`}
               style={{ backgroundColor: "rgb(236, 227, 214)" }}
               onClick={() => onUpdate({ color: "236, 227, 214" })}
               title="Dawn"
+              aria-label="Dawn"
             />
             <button
+              type="button"
               className={`admin-color-btn ${sigil.color === "180, 180, 180" ? "active" : ""}`}
               style={{ backgroundColor: "rgb(180, 180, 180)" }}
               onClick={() => onUpdate({ color: "180, 180, 180" })}
               title="Silver"
+              aria-label="Silver"
             />
           </div>
         </div>
@@ -2863,6 +2915,7 @@ function SigilControls({ sigil, onUpdate }: SigilControlsProps) {
         <div className="admin-section-title">Presets</div>
         <div className="admin-color-row" style={{ gap: "4px" }}>
           <button
+            type="button"
             className="admin-btn admin-btn-secondary"
             style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
             onClick={() =>
@@ -2880,6 +2933,7 @@ function SigilControls({ sigil, onUpdate }: SigilControlsProps) {
             Default
           </button>
           <button
+            type="button"
             className="admin-btn admin-btn-secondary"
             style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
             onClick={() =>
@@ -2897,6 +2951,7 @@ function SigilControls({ sigil, onUpdate }: SigilControlsProps) {
             Dense
           </button>
           <button
+            type="button"
             className="admin-btn admin-btn-secondary"
             style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
             onClick={() =>

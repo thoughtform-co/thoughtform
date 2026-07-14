@@ -826,7 +826,9 @@ function AstrogationContent() {
             style={{ display: "none" }}
           />
           <button
+            type="button"
             className="nav-action-btn"
+            aria-label="Upload reference image"
             onClick={() => document.getElementById("nav-upload-input")?.click()}
             title="Upload reference image"
           >
@@ -848,7 +850,9 @@ function AstrogationContent() {
           {/* Vault Picker Button (Phase 2.3) */}
           {activeTab === "foundry" && (
             <button
+              type="button"
               className="nav-action-btn"
+              aria-label="Insert from Vault"
               onClick={handleOpenVaultPicker}
               title="Insert from Vault"
             >
@@ -870,7 +874,9 @@ function AstrogationContent() {
             </button>
           )}
           <button
+            type="button"
             className="nav-action-btn"
+            aria-label="Open Forge (Vector Editor)"
             onClick={handleOpenForge}
             title="Open Forge (Vector Editor)"
           >

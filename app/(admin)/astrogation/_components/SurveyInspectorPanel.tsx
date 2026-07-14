@@ -689,7 +689,9 @@ function SurveyInspectorPanelInner({
           toolbarSlot={
             <>
               <button
+                type="button"
                 className="inspector-toolbar__btn inspector-toolbar__btn--save"
+                aria-label="Save changes"
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
                 title="Save changes"
@@ -711,7 +713,9 @@ function SurveyInspectorPanelInner({
                 </svg>
               </button>
               <button
+                type="button"
                 className="inspector-toolbar__btn inspector-toolbar__btn--delete"
+                aria-label="Delete reference"
                 onClick={handleDeleteClick}
                 title="Delete reference"
               >
@@ -725,7 +729,9 @@ function SurveyInspectorPanelInner({
                 </svg>
               </button>
               <button
+                type="button"
                 className="inspector-toolbar__btn inspector-toolbar__btn--reset"
+                aria-label="Reset changes"
                 onClick={handleReset}
                 disabled={!hasChanges}
                 title="Reset changes"
@@ -800,7 +806,9 @@ function SurveyInspectorPanelInner({
                               </a>
                               <div className="spec-source-chip__actions">
                                 <button
+                                  type="button"
                                   className="spec-source-chip__btn spec-source-chip__btn--edit"
+                                  aria-label="Edit source"
                                   onClick={() => handleStartEditSource(i, source.url || "")}
                                   title="Edit source"
                                 >
@@ -815,7 +823,9 @@ function SurveyInspectorPanelInner({
                                   </svg>
                                 </button>
                                 <button
+                                  type="button"
                                   className="spec-source-chip__btn spec-source-chip__btn--delete"
+                                  aria-label="Remove source"
                                   onClick={() => handleRemoveSource(i)}
                                   title="Remove source"
                                 >
@@ -944,6 +954,7 @@ function SurveyInspectorPanelInner({
                       <button
                         type="button"
                         className="spec-collection-selected__clear"
+                        aria-label="Remove from collection"
                         onClick={() => handleSelectCollection(null)}
                         title="Remove from collection"
                       >
@@ -1035,7 +1046,7 @@ function SurveyInspectorPanelInner({
                   label="Analysis"
                   badge="AI"
                   action={
-                    <button onClick={onAnalyze} disabled={isAnalyzing}>
+                    <button type="button" onClick={onAnalyze} disabled={isAnalyzing}>
                       {effectiveItem?.analysis ? "Re-analyze" : "Analyze"}
                     </button>
                   }
@@ -1066,6 +1077,7 @@ function SurveyInspectorPanelInner({
                     segmentCount > 0 ? (
                       <div className="flow-connector__action-group">
                         <button
+                          type="button"
                           onClick={onReSegment}
                           disabled={isSegmenting || isLabelingSegments}
                           title="Re-run segmentation"
@@ -1073,6 +1085,7 @@ function SurveyInspectorPanelInner({
                           Re-segment
                         </button>
                         <button
+                          type="button"
                           onClick={onReLabelSegments}
                           disabled={isSegmenting || isLabelingSegments}
                           title="Re-label segments"
@@ -1082,6 +1095,7 @@ function SurveyInspectorPanelInner({
                       </div>
                     ) : (
                       <button
+                        type="button"
                         onClick={onSegmentAndLabel}
                         disabled={isSegmenting || isLabelingSegments || !effectiveItem?.analysis}
                         title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
@@ -1162,7 +1176,9 @@ function SurveyInspectorPanelInner({
                             {/* Action icons - visible on hover */}
                             <div className="spec-annotation__actions">
                               <button
+                                type="button"
                                 className="spec-annotation__action-icon spec-annotation__action-icon--save"
+                                aria-label="Save"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSaveAnnotationNote();
@@ -1180,7 +1196,9 @@ function SurveyInspectorPanelInner({
                                 </svg>
                               </button>
                               <button
+                                type="button"
                                 className="spec-annotation__action-icon spec-annotation__action-icon--delete"
+                                aria-label="Delete annotation"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteAnnotation(annotation.id);
@@ -1200,7 +1218,9 @@ function SurveyInspectorPanelInner({
                               {/* Crop thumbnail (shows when crop exists) */}
                               {annotation.crop_path && (
                                 <button
+                                  type="button"
                                   className="spec-annotation__action-icon spec-annotation__action-icon--crop"
+                                  aria-label="View annotation crop"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (annotation.crop_url) {
@@ -1277,6 +1297,7 @@ function SurveyInspectorPanelInner({
                   action={
                     onGenerateBriefing ? (
                       <button
+                        type="button"
                         onClick={onGenerateBriefing}
                         disabled={isBriefing || !effectiveItem?.analysis}
                         title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
@@ -1309,6 +1330,7 @@ function SurveyInspectorPanelInner({
         {/* Sticky Embed Footer - Industrial "JUMP" style button */}
         <div className="inspector-footer">
           <button
+            type="button"
             className={`inspector-footer__embed-btn ${effectiveItem?.briefing ? "inspector-footer__embed-btn--ready" : ""}`}
             onClick={() => void onEmbed()}
             disabled={!effectiveItem?.briefing || isEmbedding}

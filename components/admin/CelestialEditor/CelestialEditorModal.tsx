@@ -329,7 +329,12 @@ export function CelestialEditorModal({
             <span style={{ color: "var(--dawn-30)", marginLeft: 8 }}>· {activeSlotId}</span>
           )}
         </span>
-        <button className="celestial-editor__close" onClick={onClose}>
+        <button
+          type="button"
+          className="celestial-editor__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
           &times;
         </button>
       </div>
@@ -340,6 +345,7 @@ export function CelestialEditorModal({
         <div className="celestial-editor__presets">
           {PRESETS.map((p) => (
             <button
+              type="button"
               key={p}
               className={`celestial-editor__preset-tile ${config.preset === p ? "celestial-editor__preset-tile--active" : ""}`}
               onClick={() => applyPreset(p)}
@@ -359,6 +365,7 @@ export function CelestialEditorModal({
           <div className="celestial-editor__toggle-group">
             {(["horizontal", "vertical"] as Orientation[]).map((o) => (
               <button
+                type="button"
                 key={o}
                 className={`celestial-editor__toggle-btn ${config.orientation === o ? "celestial-editor__toggle-btn--active" : ""}`}
                 onClick={() => patch({ orientation: o })}
@@ -373,6 +380,7 @@ export function CelestialEditorModal({
           <div className="celestial-editor__toggle-group">
             {SIZES.map((s) => (
               <button
+                type="button"
                 key={s}
                 className={`celestial-editor__toggle-btn ${config.size === s ? "celestial-editor__toggle-btn--active" : ""}`}
                 onClick={() => patch({ size: s })}
@@ -649,6 +657,7 @@ export function CelestialEditorModal({
       {activeSlotId && (
         <div className="celestial-editor__actions">
           <button
+            type="button"
             className="celestial-editor__btn celestial-editor__btn--primary"
             onClick={handleSaveToSection}
             disabled={saving}
@@ -657,13 +666,14 @@ export function CelestialEditorModal({
             {saving ? "Saving..." : "Save to Section"}
           </button>
           <button
+            type="button"
             className="celestial-editor__btn"
             onClick={() => setConfig(randomizeConfig())}
             title="Re-roll a new celestial composition"
           >
             ↻ Randomize
           </button>
-          <button className="celestial-editor__btn" onClick={onClose}>
+          <button type="button" className="celestial-editor__btn" onClick={onClose}>
             Cancel
           </button>
         </div>
@@ -671,7 +681,11 @@ export function CelestialEditorModal({
 
       {/* Design library (collapsible secondary section) */}
       <div className="celestial-editor__section">
-        <button className="celestial-editor__disclosure" onClick={() => setShowLibrary((v) => !v)}>
+        <button
+          type="button"
+          className="celestial-editor__disclosure"
+          onClick={() => setShowLibrary((v) => !v)}
+        >
           <span className="celestial-editor__section-label" style={{ marginBottom: 0 }}>
             Design Library
           </span>
@@ -698,7 +712,9 @@ export function CelestialEditorModal({
                   <span className="celestial-editor__library-name">{d.name}</span>
                   <div className="celestial-editor__library-actions">
                     <button
+                      type="button"
                       title="Delete"
+                      aria-label="Delete"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDelete(d.id);
@@ -717,6 +733,7 @@ export function CelestialEditorModal({
             </div>
             <div className="celestial-editor__actions" style={{ borderTop: "none", paddingTop: 6 }}>
               <button
+                type="button"
                 className="celestial-editor__btn"
                 onClick={() => handleLibrarySave(true)}
                 disabled={saving}
@@ -725,6 +742,7 @@ export function CelestialEditorModal({
               </button>
               {activeDesignId && (
                 <button
+                  type="button"
                   className="celestial-editor__btn"
                   onClick={() => handleLibrarySave(false)}
                   disabled={saving}
@@ -734,6 +752,7 @@ export function CelestialEditorModal({
               )}
               {activeSlotId && activeDesignId && (
                 <button
+                  type="button"
                   className="celestial-editor__btn"
                   onClick={handleLibraryApply}
                   disabled={saving}

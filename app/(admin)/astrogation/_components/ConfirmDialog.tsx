@@ -55,7 +55,13 @@ export function ConfirmDialog({
           >
             {title}
           </h2>
-          <button className="confirm-dialog__close" onClick={onCancel} title="Close">
+          <button
+            type="button"
+            className="confirm-dialog__close"
+            onClick={onCancel}
+            title="Close"
+            aria-label="Close"
+          >
             ×
           </button>
         </div>
@@ -63,10 +69,15 @@ export function ConfirmDialog({
         <p className="confirm-dialog__message">{message}</p>
 
         <div className="confirm-dialog__actions">
-          <button className="confirm-dialog__btn confirm-dialog__btn--cancel" onClick={onCancel}>
+          <button
+            type="button"
+            className="confirm-dialog__btn confirm-dialog__btn--cancel"
+            onClick={onCancel}
+          >
             {cancelLabel}
           </button>
           <button
+            type="button"
             className={`confirm-dialog__btn confirm-dialog__btn--confirm ${variant === "danger" ? "confirm-dialog__btn--danger" : ""}`}
             onClick={onConfirm}
             autoFocus

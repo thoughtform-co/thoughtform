@@ -67,8 +67,10 @@ export function CornerSelector({ value, onChange }: CornerSelectorProps) {
         {/* Clickable corners */}
         {corners.map((corner) => (
           <button
+            type="button"
             key={corner}
             className={`corner-toggle corner-toggle--${corner} ${activeCorners.has(corner) ? "active" : ""}`}
+            aria-label={`Toggle ${corner.toUpperCase()} corner`}
             onClick={() => toggleCorner(corner)}
             title={`Toggle ${corner.toUpperCase()} corner`}
           />

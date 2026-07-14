@@ -133,6 +133,7 @@ function SurveyCatalogPanelInner({
               <button
                 type="button"
                 className="input-group__addon input-group__addon--end"
+                aria-label="Clear search"
                 onClick={() => handleSearchChange("")}
                 title="Clear search"
               >
@@ -148,6 +149,7 @@ function SurveyCatalogPanelInner({
             <div className="astrogation-section__label">Results ({filteredComponents.length})</div>
             {filteredComponents.map((comp) => (
               <button
+                type="button"
                 key={comp.id}
                 className={`catalog-item ${selectedComponentKey === comp.id ? "selected" : ""}`}
                 onClick={() => handleSelection(comp.id)}

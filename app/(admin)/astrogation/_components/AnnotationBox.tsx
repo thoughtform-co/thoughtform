@@ -291,6 +291,7 @@ export function AnnotationBox({
 
       {/* Number badge - outside the annotation box, top-right, always visible */}
       <button
+        type="button"
         className={`survey-canvas__annotation-number ${isPopoverOpen || isSelected ? "survey-canvas__annotation-number--active" : ""}`}
         style={{
           left: `calc(${annotation.x + annotation.width}% + 4px)`,
@@ -317,6 +318,7 @@ export function AnnotationBox({
             <span className="annotation-popover__title">Annotation #{index}</span>
             {isEditing ? (
               <button
+                type="button"
                 className="annotation-popover__action-btn annotation-popover__action-btn--save"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -337,6 +339,7 @@ export function AnnotationBox({
               </button>
             ) : (
               <button
+                type="button"
                 className="annotation-popover__action-btn annotation-popover__action-btn--delete"
                 onClick={handleDelete}
                 title="Delete annotation"

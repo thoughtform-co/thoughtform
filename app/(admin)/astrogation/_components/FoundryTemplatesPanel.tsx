@@ -211,12 +211,14 @@ function FoundryTemplatesPanelInner({ userId, onAddToCanvas }: FoundryTemplatesP
         <div className="astrogation-section">
           <div className="foundry-templates__tabs">
             <button
+              type="button"
               className={`foundry-templates__tab ${activeSection === "catalog" ? "foundry-templates__tab--active" : ""}`}
               onClick={() => setActiveSection("catalog")}
             >
               Add Component
             </button>
             <button
+              type="button"
               className={`foundry-templates__tab ${activeSection === "templates" ? "foundry-templates__tab--active" : ""}`}
               onClick={() => setActiveSection("templates")}
             >
@@ -231,6 +233,7 @@ function FoundryTemplatesPanelInner({ userId, onAddToCanvas }: FoundryTemplatesP
             <div className="astrogation-section__label">Results ({filteredComponents.length})</div>
             {filteredComponents.map((comp) => (
               <button
+                type="button"
                 key={comp.id}
                 className="catalog-item"
                 onClick={() => handleAddComponent(comp.id)}
@@ -325,6 +328,7 @@ function FoundryTemplatesPanelInner({ userId, onAddToCanvas }: FoundryTemplatesP
                       <div className="astrogation-section__label">{cat.name}</div>
                       {categoryTemplates.map((template) => (
                         <button
+                          type="button"
                           key={template.id}
                           className="catalog-item"
                           onClick={() => handleAddTemplate(template)}
@@ -344,6 +348,7 @@ function FoundryTemplatesPanelInner({ userId, onAddToCanvas }: FoundryTemplatesP
                     <div className="astrogation-section__label">Other</div>
                     {templatesByCategory["uncategorized"].map((template) => (
                       <button
+                        type="button"
                         key={template.id}
                         className="catalog-item"
                         onClick={() => handleAddTemplate(template)}

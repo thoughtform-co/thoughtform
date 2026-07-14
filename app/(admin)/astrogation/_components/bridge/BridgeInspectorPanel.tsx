@@ -184,13 +184,13 @@ export function BridgeInspectorPanel() {
 
             {/* Quick actions */}
             <div className="bridge-inspector-actions">
-              <button className="bridge-action-btn" onClick={handleCopySvg}>
+              <button type="button" className="bridge-action-btn" onClick={handleCopySvg}>
                 {state.exportLoading ? "..." : copied ? "COPIED" : "COPY SVG"}
               </button>
-              <button className="bridge-action-btn" onClick={handleCopyNodeId}>
+              <button type="button" className="bridge-action-btn" onClick={handleCopyNodeId}>
                 COPY ID
               </button>
-              <button className="bridge-action-btn" onClick={handleOpenInFigma}>
+              <button type="button" className="bridge-action-btn" onClick={handleOpenInFigma}>
                 OPEN IN FIGMA
               </button>
             </div>

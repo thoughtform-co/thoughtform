@@ -234,6 +234,7 @@ export function FoundryView({
           >
             {/* Toggle button */}
             <button
+              type="button"
               className="foundry__variants-toggle"
               onClick={() => setVariantsCollapsed(!variantsCollapsed)}
               title={variantsCollapsed ? "Expand variants" : "Collapse variants"}
@@ -263,6 +264,7 @@ export function FoundryView({
                       </div>
                       <div className="foundry__variant-actions">
                         <button
+                          type="button"
                           className="foundry__variant-apply"
                           onClick={() => onApplyVariant(variant)}
                           title="Apply this variant to main preview"
@@ -270,7 +272,9 @@ export function FoundryView({
                           Apply
                         </button>
                         <button
+                          type="button"
                           className="foundry__variant-remove"
+                          aria-label="Remove this variant"
                           onClick={() => onRemoveVariant(variant.id)}
                           title="Remove this variant"
                         >
@@ -378,6 +382,7 @@ export function FoundryView({
         >
           {/* Toggle button */}
           <button
+            type="button"
             className="foundry__variants-toggle"
             onClick={() => setVariantsCollapsed(!variantsCollapsed)}
             title={variantsCollapsed ? "Expand variants" : "Collapse variants"}
@@ -407,6 +412,7 @@ export function FoundryView({
                     </div>
                     <div className="foundry__variant-actions">
                       <button
+                        type="button"
                         className="foundry__variant-apply"
                         onClick={() => onApplyVariant(variant)}
                         title="Apply this variant to main preview"
@@ -414,7 +420,9 @@ export function FoundryView({
                         Apply
                       </button>
                       <button
+                        type="button"
                         className="foundry__variant-remove"
+                        aria-label="Remove this variant"
                         onClick={() => onRemoveVariant(variant.id)}
                         title="Remove this variant"
                       >

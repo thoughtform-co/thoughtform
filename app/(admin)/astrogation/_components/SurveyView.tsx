@@ -57,7 +57,7 @@ interface GridItemProps {
 
 function GridItem({ item, onClick }: GridItemProps) {
   return (
-    <button className="survey-grid__item" onClick={onClick}>
+    <button type="button" className="survey-grid__item" onClick={onClick}>
       {item.image_url ? (
         <img
           src={item.image_url}
@@ -456,6 +456,7 @@ function DetailView({
           </span>
         </div>
         <button
+          type="button"
           className="survey-detail-focused__eye-btn"
           onClick={() => {
             if (canToggleSegments) {
@@ -612,6 +613,7 @@ function DetailView({
                                 placeholder="Enter label..."
                               />
                               <button
+                                type="button"
                                 className="survey-segment-overlay__action-btn survey-segment-overlay__action-btn--save"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -619,6 +621,7 @@ function DetailView({
                                   setEditingSegmentId(null);
                                 }}
                                 title="Save label"
+                                aria-label="Save label"
                               >
                                 <Check size={12} strokeWidth={2} />
                               </button>
@@ -636,12 +639,14 @@ function DetailView({
                                 {displayLabel}
                               </span>
                               <button
+                                type="button"
                                 className="survey-segment-overlay__action-btn survey-segment-overlay__action-btn--delete"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setDeletingSegmentId(segment.id);
                                 }}
                                 title="Delete segment"
+                                aria-label="Delete segment"
                               >
                                 <Trash2 size={12} strokeWidth={2} />
                               </button>
@@ -659,12 +664,14 @@ function DetailView({
                               </span>
                               <div className="survey-segment-overlay__delete-confirm-actions">
                                 <button
+                                  type="button"
                                   className="survey-segment-overlay__delete-confirm-btn survey-segment-overlay__delete-confirm-btn--cancel"
                                   onClick={() => setDeletingSegmentId(null)}
                                 >
                                   Cancel
                                 </button>
                                 <button
+                                  type="button"
                                   className="survey-segment-overlay__delete-confirm-btn survey-segment-overlay__delete-confirm-btn--confirm"
                                   onClick={async () => {
                                     // Delete the segment via callback or API

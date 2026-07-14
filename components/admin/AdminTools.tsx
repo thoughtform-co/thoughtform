@@ -84,6 +84,7 @@ export function AdminTools({
 
           return (
             <button
+              type="button"
               key={tool.id}
               className={`admin-tools__item admin-tools__item--${tool.id} ${isActive ? "is-active" : ""}`}
               onClick={tool.onClick}

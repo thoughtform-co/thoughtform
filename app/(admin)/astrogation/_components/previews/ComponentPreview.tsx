@@ -1028,6 +1028,7 @@ function renderComponent(
           cornerLength={fullSize ? 16 : 8}
         >
           <button
+            type="button"
             style={{
               padding: sizeStyles[btnSize as keyof typeof sizeStyles],
               ...variantStyles[variant as keyof typeof variantStyles],
@@ -1313,6 +1314,7 @@ function renderComponent(
             {/* CTA Button */}
             {showCTA && (
               <button
+                type="button"
                 style={{
                   marginTop: 32 * heroScale,
                   padding: `${12 * heroScale}px ${32 * heroScale}px`,

@@ -154,6 +154,7 @@ function ImageUploader({
                 </span>
               )}
               <button
+                type="button"
                 className="gateway-lab__preview-change"
                 onClick={() => inputRef.current?.click()}
                 disabled={isLoading}
@@ -164,6 +165,7 @@ function ImageUploader({
           </div>
         ) : (
           <button
+            type="button"
             onClick={() => inputRef.current?.click()}
             disabled={isLoading}
             className="gateway-lab__upload-btn"
@@ -304,6 +306,7 @@ function LayerControls({
           <div className="gateway-lab__color-mode">
             <span>Color:</span>
             <button
+              type="button"
               className={config.colorMode === "image" ? "active" : ""}
               onClick={() => onChange({ colorMode: "image" })}
               disabled={disabled}
@@ -311,6 +314,7 @@ function LayerControls({
               Image
             </button>
             <button
+              type="button"
               className={config.colorMode === "tint" ? "active" : ""}
               onClick={() => onChange({ colorMode: "tint" })}
               disabled={disabled}
@@ -739,6 +743,7 @@ export default function GatewayLabTab() {
               {/* Generate Button */}
               {hasImage && !hasParticles && (
                 <button
+                  type="button"
                   onClick={handleGeneratePreview}
                   disabled={isGenerating}
                   className="gateway-lab__generate-btn"
@@ -763,6 +768,7 @@ export default function GatewayLabTab() {
               <div className="gateway-lab__presets">
                 {GATEWAY_PRESETS.map((preset) => (
                   <button
+                    type="button"
                     key={preset.id}
                     className={`gateway-lab__preset-btn ${activePreset === preset.id ? "active" : ""}`}
                     onClick={() => loadPreset(preset)}
@@ -778,6 +784,7 @@ export default function GatewayLabTab() {
               <h3 className="orrery__section-title">Render Style</h3>
               <div className="gateway-lab__mode-selector">
                 <button
+                  type="button"
                   className={!config.sigilMode ? "active" : ""}
                   onClick={() => handleConfigChange({ sigilMode: false })}
                   disabled={!hasParticles}
@@ -785,6 +792,7 @@ export default function GatewayLabTab() {
                   ○ Organic
                 </button>
                 <button
+                  type="button"
                   className={config.sigilMode ? "active" : ""}
                   onClick={() => handleConfigChange({ sigilMode: true })}
                   disabled={!hasParticles}
@@ -868,6 +876,7 @@ export default function GatewayLabTab() {
               {/* Regenerate button */}
               {hasParticles && (
                 <button
+                  type="button"
                   onClick={handleRegenerate}
                   disabled={isGenerating}
                   className="gateway-lab__regenerate-btn"
@@ -1051,6 +1060,7 @@ export default function GatewayLabTab() {
 
                 <div className="gateway-lab__bake-actions">
                   <button
+                    type="button"
                     onClick={handleBake}
                     disabled={isBaking}
                     className="gateway-lab__bake-btn"
@@ -1060,12 +1070,17 @@ export default function GatewayLabTab() {
 
                   {bakedData && (
                     <>
-                      <button onClick={handleDownload} className="gateway-lab__download-btn">
+                      <button
+                        type="button"
+                        onClick={handleDownload}
+                        className="gateway-lab__download-btn"
+                      >
                         💾 Download TFPC
                       </button>
 
                       {isAdmin && (
                         <button
+                          type="button"
                           onClick={handleUpload}
                           disabled={isUploading}
                           className="gateway-lab__upload-btn"
@@ -1093,6 +1108,7 @@ export default function GatewayLabTab() {
             {/* Debug Toggle */}
             <div className="orrery__section">
               <button
+                type="button"
                 onClick={() => setShowStats((s) => !s)}
                 className={`gateway-lab__toggle-btn ${showStats ? "active" : ""}`}
               >

@@ -103,6 +103,7 @@ const TreeItem = memo(function TreeItem({
       >
         {canExpand ? (
           <button
+            type="button"
             className="bridge-tree-expander"
             onClick={(e) => {
               e.stopPropagation();
@@ -197,7 +198,7 @@ export function BridgeBrowserPanel() {
           <div className="bridge-error">
             <div className="bridge-error-title">Connection Error</div>
             <div className="bridge-error-message">{state.treeError}</div>
-            <button className="bridge-retry-btn" onClick={() => loadFileTree()}>
+            <button type="button" className="bridge-retry-btn" onClick={() => loadFileTree()}>
               RETRY
             </button>
           </div>

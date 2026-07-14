@@ -518,7 +518,9 @@ function ParticlesTab() {
       </div>
 
       {/* Codex Button - Above Left Panel */}
-      <button className="codex-btn">CODEX</button>
+      <button type="button" className="codex-btn">
+        CODEX
+      </button>
 
       {/* Left Panel - Presets & Shapes */}
       <aside className="lab-panel lab-panel--left">
@@ -531,11 +533,16 @@ function ParticlesTab() {
               placeholder="Preset name..."
               onKeyDown={(e) => e.key === "Enter" && savePreset()}
             />
-            <button onClick={savePreset} disabled={!presetName.trim()}>
+            <button
+              type="button"
+              onClick={savePreset}
+              disabled={!presetName.trim()}
+              aria-label="Save preset"
+            >
               +
             </button>
           </div>
-          <button className="lab__reset-btn" onClick={resetToDefaults}>
+          <button type="button" className="lab__reset-btn" onClick={resetToDefaults}>
             Reset to Default
           </button>
         </div>
@@ -546,10 +553,15 @@ function ParticlesTab() {
             <div className="preset-list">
               {presets.map((p) => (
                 <div key={p.id} className="preset-item">
-                  <button className="preset-load" onClick={() => loadPreset(p)}>
+                  <button type="button" className="preset-load" onClick={() => loadPreset(p)}>
                     {p.name}
                   </button>
-                  <button className="preset-delete" onClick={() => deletePreset(p.id)}>
+                  <button
+                    type="button"
+                    className="preset-delete"
+                    onClick={() => deletePreset(p.id)}
+                    aria-label="Delete preset"
+                  >
                     ×
                   </button>
                 </div>
@@ -564,6 +576,7 @@ function ParticlesTab() {
             <div className="shape-list">
               {shapes.map((shape) => (
                 <button
+                  type="button"
                   key={shape.id}
                   className={`shape-btn ${shapeId === shape.id ? "active" : ""}`}
                   onClick={() => setShapeId(shape.id)}
@@ -584,7 +597,9 @@ function ParticlesTab() {
       </main>
 
       {/* Dials Button - Above Right Panel */}
-      <button className="dials-btn">DIALS</button>
+      <button type="button" className="dials-btn">
+        DIALS
+      </button>
 
       {/* Right Panel - Parameters */}
       <aside className="lab-panel lab-panel--right">
@@ -593,7 +608,9 @@ function ParticlesTab() {
           <div className="seed-row">
             <Slider label="" value={seed} min={1} max={999} onChange={setSeed} />
             <button
+              type="button"
               className="icon-btn"
+              aria-label="Randomize seed"
               onClick={() => setSeed(Math.floor(Math.random() * 999) + 1)}
             >
               🎲
@@ -744,6 +761,7 @@ function OrreryContent() {
             { id: "landmarks", label: "03" },
           ].map((marker) => (
             <button
+              type="button"
               key={marker.id}
               className={`section-marker ${activeTab === marker.id ? "active" : ""}`}
               onClick={() => setActiveTab(marker.id as LabTab)}
@@ -762,6 +780,7 @@ function OrreryContent() {
         </Link>
         <div className="lab-nav__tabs">
           <button
+            type="button"
             className={`lab-nav__tab ${activeTab === "particles" ? "active" : ""}`}
             onClick={() => setActiveTab("particles")}
           >
@@ -769,6 +788,7 @@ function OrreryContent() {
             <span>Particles</span>
           </button>
           <button
+            type="button"
             className={`lab-nav__tab ${activeTab === "gateway" ? "active" : ""}`}
             onClick={() => setActiveTab("gateway")}
           >
@@ -776,6 +796,7 @@ function OrreryContent() {
             <span>Gateway</span>
           </button>
           <button
+            type="button"
             className={`lab-nav__tab ${activeTab === "landmarks" ? "active" : ""}`}
             onClick={() => setActiveTab("landmarks")}
           >

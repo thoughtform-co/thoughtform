@@ -133,7 +133,13 @@ export function VaultPickerOverlay({
             <span className="vault-picker-overlay__icon">◇</span>
             Insert from Vault
           </div>
-          <button className="vault-picker-overlay__close" onClick={onClose} title="Close (Esc)">
+          <button
+            type="button"
+            className="vault-picker-overlay__close"
+            onClick={onClose}
+            title="Close (Esc)"
+            aria-label="Close"
+          >
             ×
           </button>
         </div>
@@ -172,6 +178,7 @@ export function VaultPickerOverlay({
                 <p>No presets found</p>
                 {searchQuery && (
                   <button
+                    type="button"
                     className="vault-picker-overlay__clear-search"
                     onClick={() => setSearchQuery("")}
                   >
@@ -190,6 +197,7 @@ export function VaultPickerOverlay({
                     <div className="vault-picker-overlay__group-items">
                       {componentPresets.map((preset) => (
                         <button
+                          type="button"
                           key={preset.id}
                           className={`vault-picker-overlay__item ${
                             selectedPresetId === preset.id
@@ -248,10 +256,11 @@ export function VaultPickerOverlay({
 
         {/* Footer */}
         <div className="vault-picker-overlay__footer">
-          <button className="vault-picker-overlay__cancel" onClick={onClose}>
+          <button type="button" className="vault-picker-overlay__cancel" onClick={onClose}>
             Cancel
           </button>
           <button
+            type="button"
             className="vault-picker-overlay__insert"
             onClick={handleInsert}
             disabled={!selectedPreset}

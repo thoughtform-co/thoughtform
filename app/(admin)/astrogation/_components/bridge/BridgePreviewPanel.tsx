@@ -41,18 +41,21 @@ export function BridgePreviewPanel() {
       {/* Sub-tabs */}
       <div className="bridge-subtabs">
         <button
+          type="button"
           className={`bridge-subtab ${activeView === "preview" ? "bridge-subtab--active" : ""}`}
           onClick={() => setActiveView("preview")}
         >
           PREVIEW
         </button>
         <button
+          type="button"
           className={`bridge-subtab ${activeView === "tokens" ? "bridge-subtab--active" : ""}`}
           onClick={handleLoadTokens}
         >
           TOKEN DIFF
         </button>
         <button
+          type="button"
           className={`bridge-subtab ${activeView === "components" ? "bridge-subtab--active" : ""}`}
           onClick={handleLoadComponents}
         >
@@ -89,7 +92,7 @@ export function BridgePreviewPanel() {
                 className="bridge-preview-image"
               />
               <div className="bridge-preview-actions">
-                <button className="bridge-action-btn" onClick={handleExportSvg}>
+                <button type="button" className="bridge-action-btn" onClick={handleExportSvg}>
                   {state.exportLoading ? "EXPORTING..." : "COPY SVG"}
                 </button>
               </div>
@@ -101,6 +104,7 @@ export function BridgePreviewPanel() {
               <div className="bridge-svg-header">
                 <span>SVG Content</span>
                 <button
+                  type="button"
                   className="bridge-action-btn bridge-action-btn--sm"
                   onClick={() => navigator.clipboard.writeText(state.svgContent!)}
                 >

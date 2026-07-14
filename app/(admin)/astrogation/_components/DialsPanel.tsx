@@ -95,6 +95,7 @@ function ColorPickerDropdown({
   return (
     <div className="color-picker-dropdown" ref={containerRef}>
       <button
+        type="button"
         className="color-picker-dropdown__trigger"
         onClick={() => setIsOpen(!isOpen)}
         title={isTransparent ? "None / Transparent" : selectedOption?.name || "Select color"}
@@ -111,6 +112,7 @@ function ColorPickerDropdown({
         <div className="color-picker-dropdown__menu">
           {supportsTransparent && (
             <button
+              type="button"
               className={`color-picker-dropdown__option ${isTransparent ? "active" : ""}`}
               onClick={() => {
                 onChange("transparent");
@@ -125,6 +127,7 @@ function ColorPickerDropdown({
           )}
           {options.map((opt) => (
             <button
+              type="button"
               key={opt.name}
               className={`color-picker-dropdown__option ${value === opt.value ? "active" : ""}`}
               onClick={() => {
@@ -584,6 +587,7 @@ function DialsPanelInner({
                   <div className="spec-breadcrumb__dropdown">
                     {CATEGORIES.map((cat) => (
                       <button
+                        type="button"
                         key={cat.id}
                         className={`spec-breadcrumb__option ${currentCategoryId === cat.id ? "spec-breadcrumb__option--active" : ""}`}
                         onClick={() => {
@@ -607,6 +611,7 @@ function DialsPanelInner({
                   <div className="spec-breadcrumb__dropdown">
                     {components.map((comp) => (
                       <button
+                        type="button"
                         key={comp.id}
                         className={`spec-breadcrumb__option ${selectedComponentId === comp.id ? "spec-breadcrumb__option--active" : ""}`}
                         onClick={() => {
@@ -923,7 +928,12 @@ function DialsPanelInner({
                   onChange={(e) => onPresetNameChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
                 />
-                <button className="dials-save__btn" onClick={onSavePreset} disabled={!canSave}>
+                <button
+                  type="button"
+                  className="dials-save__btn"
+                  onClick={onSavePreset}
+                  disabled={!canSave}
+                >
                   Save to Vault
                 </button>
               </div>

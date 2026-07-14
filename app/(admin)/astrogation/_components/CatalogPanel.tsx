@@ -68,6 +68,7 @@ function CatalogPanelInner({
             <div className="astrogation-section__label">Results ({filteredComponents.length})</div>
             {filteredComponents.map((comp) => (
               <button
+                type="button"
                 key={comp.id}
                 className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
                 onClick={() => onSelectComponent(comp.id)}

@@ -296,7 +296,7 @@ export function VoiceUploadZone({
             ) : null}
             <div className="preview-info">
               <span className="preview-name">{uploadedFile?.name || "Uploaded media"}</span>
-              <button className="clear-button" onClick={handleClear}>
+              <button type="button" className="clear-button" onClick={handleClear}>
                 ✕ Remove
               </button>
             </div>

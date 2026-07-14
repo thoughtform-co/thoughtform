@@ -163,6 +163,7 @@ export function DesignCard({
         <div className="design-card__header">
           <span className="design-card__title">{proposal.title}</span>
           <button
+            type="button"
             className="design-card__apply design-card__apply--compact"
             onClick={handleApply}
             disabled={isApplying}
@@ -187,7 +188,13 @@ export function DesignCard({
           )}
         </div>
         {onDismiss && (
-          <button className="design-card__dismiss" onClick={onDismiss} title="Dismiss">
+          <button
+            type="button"
+            className="design-card__dismiss"
+            onClick={onDismiss}
+            title="Dismiss"
+            aria-label="Dismiss"
+          >
             ×
           </button>
         )}
@@ -203,12 +210,14 @@ export function DesignCard({
           {proposal.preview?.currentArgs && (
             <div className="design-card__view-toggle">
               <button
+                type="button"
                 className={`design-card__view-btn ${viewMode === "proposed" ? "design-card__view-btn--active" : ""}`}
                 onClick={() => setViewMode("proposed")}
               >
                 Proposed
               </button>
               <button
+                type="button"
                 className={`design-card__view-btn ${viewMode === "current" ? "design-card__view-btn--active" : ""}`}
                 onClick={() => setViewMode("current")}
               >
@@ -234,7 +243,11 @@ export function DesignCard({
       {/* Expandable Diff */}
       {diffEntries.length > 0 && (
         <div className="design-card__diff-section">
-          <button className="design-card__diff-toggle" onClick={() => setIsExpanded(!isExpanded)}>
+          <button
+            type="button"
+            className="design-card__diff-toggle"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
             <span className="design-card__diff-toggle-icon">{isExpanded ? "▾" : "▸"}</span>
             {diffEntries.length} change{diffEntries.length !== 1 ? "s" : ""}
           </button>
@@ -258,7 +271,12 @@ export function DesignCard({
 
       {/* Actions */}
       <div className="design-card__actions">
-        <button className="design-card__apply" onClick={handleApply} disabled={isApplying}>
+        <button
+          type="button"
+          className="design-card__apply"
+          onClick={handleApply}
+          disabled={isApplying}
+        >
           {isApplying ? "Applying..." : `◇ ${operationLabel}`}
         </button>
       </div>

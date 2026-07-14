@@ -168,6 +168,7 @@ export function VaultView({
                       className={`vault__item ${selectedPresetId === preset.id ? "vault__item--selected" : ""}`}
                     >
                       <button
+                        type="button"
                         className="vault__item-load"
                         onClick={() => handlePresetClick(preset)}
                         onDoubleClick={() => handlePresetDoubleClick(preset)}
@@ -176,7 +177,9 @@ export function VaultView({
                         <span className="vault__item-name">{preset.name}</span>
                       </button>
                       <button
+                        type="button"
                         className="vault__item-delete"
+                        aria-label="Delete preset"
                         onClick={() => onDeletePreset(preset.id)}
                         title="Delete preset"
                       >

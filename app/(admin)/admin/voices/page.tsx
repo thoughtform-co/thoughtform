@@ -234,7 +234,7 @@ export default function VoicesAdminPage() {
         <div className="voices-admin__error">
           <h2>Access Denied</h2>
           <p>You need to be logged in as an admin to access this page.</p>
-          <button onClick={() => router.push("/admin")} className="voices-admin__btn">
+          <button type="button" onClick={() => router.push("/admin")} className="voices-admin__btn">
             Go to Login
           </button>
         </div>
@@ -247,7 +247,7 @@ export default function VoicesAdminPage() {
       {/* Header */}
       <header className="voices-admin__header">
         <div className="voices-admin__header-left">
-          <button onClick={() => router.push("/")} className="voices-admin__back">
+          <button type="button" onClick={() => router.push("/")} className="voices-admin__back">
             ← Home
           </button>
           <h1>Manifesto Voices</h1>
@@ -268,6 +268,7 @@ export default function VoicesAdminPage() {
           <div className="voices-admin__sidebar-header">
             <h2>Voices</h2>
             <button
+              type="button"
               onClick={handleNewVoice}
               className="voices-admin__btn voices-admin__btn--primary"
             >
@@ -283,7 +284,15 @@ export default function VoicesAdminPage() {
                 <li
                   key={voice.id}
                   className={`voices-admin__list-item ${selectedVoice?.id === voice.id ? "active" : ""} ${!voice.is_active ? "inactive" : ""}`}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleSelectVoice(voice)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleSelectVoice(voice);
+                    }
+                  }}
                 >
                   <div className="voices-admin__list-item-thumb">
                     {voice.thumbnail_url ? (
@@ -313,6 +322,7 @@ export default function VoicesAdminPage() {
             <h2>{formData.id ? "Edit Voice" : "New Voice"}</h2>
             {formData.id && (
               <button
+                type="button"
                 onClick={handleDelete}
                 className="voices-admin__btn voices-admin__btn--danger"
                 disabled={isSaving}

@@ -317,6 +317,7 @@ function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
 
               {/* Component ID with copy */}
               <button
+                type="button"
                 className={`spec-blueprint__id ${copied ? "spec-blueprint__id--copied" : ""}`}
                 onClick={handleCopyId}
                 title="Copy component ID"

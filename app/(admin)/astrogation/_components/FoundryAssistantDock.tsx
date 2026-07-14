@@ -287,7 +287,9 @@ export function FoundryAssistantDock({
     <div className="foundry-assistant-dock">
       {/* Toggle Button */}
       <button
+        type="button"
         className={`foundry-assistant-btn ${isOpen ? "foundry-assistant-btn--active" : ""}`}
+        aria-label="Open AI Assistant"
         onClick={() => setIsOpen(!isOpen)}
         title="Open AI Assistant"
       >
@@ -318,7 +320,9 @@ export function FoundryAssistantDock({
         <div className="foundry-assistant-drawer__header">
           <span className="foundry-assistant-drawer__title">◇ Foundry Assistant</span>
           <button
+            type="button"
             className="foundry-assistant-drawer__close"
+            aria-label="Close"
             onClick={() => setIsOpen(false)}
             title="Close"
           >
@@ -365,6 +369,7 @@ export function FoundryAssistantDock({
               </div>
               {message.patch && (
                 <button
+                  type="button"
                   className="foundry-assistant-message__apply"
                   onClick={() => handleApplyPatch(message.patch!)}
                 >
@@ -382,6 +387,7 @@ export function FoundryAssistantDock({
                         <p className="foundry-assistant-variant__desc">{variant.description}</p>
                         <div className="foundry-assistant-variant__actions">
                           <button
+                            type="button"
                             className="foundry-assistant-variant__apply"
                             onClick={() =>
                               handleApplyPatch({
@@ -395,6 +401,7 @@ export function FoundryAssistantDock({
                           </button>
                           {onCreateVariant && (
                             <button
+                              type="button"
                               className="foundry-assistant-variant__create"
                               onClick={() => onCreateVariant(variant)}
                               title="Create as new variant in canvas"
@@ -422,6 +429,7 @@ export function FoundryAssistantDock({
                         <p className="foundry-assistant-variant__desc">{variant.description}</p>
                         <div className="foundry-assistant-variant__actions">
                           <button
+                            type="button"
                             className="foundry-assistant-variant__apply"
                             onClick={() =>
                               handleApplyPatch({
@@ -434,6 +442,7 @@ export function FoundryAssistantDock({
                           </button>
                           {onCreateVariant && (
                             <button
+                              type="button"
                               className="foundry-assistant-variant__create"
                               onClick={() => onCreateVariant(variant)}
                               title="Create as new variant in canvas"
@@ -470,7 +479,9 @@ export function FoundryAssistantDock({
                 Apply from Survey Reference
               </span>
               <button
+                type="button"
                 className="foundry-assistant-references__close"
+                aria-label="Close"
                 onClick={() => {
                   setShowReferencePanel(false);
                   setSelectedReferenceId(null);
@@ -487,6 +498,7 @@ export function FoundryAssistantDock({
               ) : (
                 surveyItems.slice(0, 12).map((item) => (
                   <button
+                    type="button"
                     key={item.id}
                     className={`foundry-assistant-reference ${
                       selectedReferenceId === item.id ? "foundry-assistant-reference--selected" : ""
@@ -527,6 +539,7 @@ export function FoundryAssistantDock({
                   )}
                 </div>
                 <button
+                  type="button"
                   className="foundry-assistant-references__apply-btn"
                   onClick={() => handleApplyFromReference(selectedReference)}
                   disabled={isMatching || !componentId}
@@ -542,11 +555,13 @@ export function FoundryAssistantDock({
         <div className="foundry-assistant-input">
           {/* Reference toggle button */}
           <button
+            type="button"
             className={`foundry-assistant-input__reference-btn ${
               showReferencePanel ? "foundry-assistant-input__reference-btn--active" : ""
             }`}
             onClick={() => setShowReferencePanel(!showReferencePanel)}
             title="Apply from Survey reference"
+            aria-label="Apply from Survey reference"
           >
             <svg
               viewBox="0 0 24 24"
@@ -571,7 +586,9 @@ export function FoundryAssistantDock({
             rows={1}
           />
           <button
+            type="button"
             className="foundry-assistant-input__send"
+            aria-label="Send message"
             onClick={sendMessage}
             disabled={!inputValue.trim() || isLoading}
             title="Send (Enter)"

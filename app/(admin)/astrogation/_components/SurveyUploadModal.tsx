@@ -115,7 +115,13 @@ export function SurveyUploadModal({
       <div className="survey-upload-modal__content" onClick={(e) => e.stopPropagation()}>
         <div className="survey-upload-modal__header">
           <h2 className="survey-upload-modal__title">Upload Reference</h2>
-          <button className="survey-upload-modal__close" onClick={onClose} title="Close">
+          <button
+            type="button"
+            className="survey-upload-modal__close"
+            onClick={onClose}
+            title="Close"
+            aria-label="Close"
+          >
             ×
           </button>
         </div>
@@ -144,6 +150,7 @@ export function SurveyUploadModal({
               </span>
               <span className="survey-upload-modal__hint">PNG, JPEG, WebP, GIF</span>
               <button
+                type="button"
                 className="survey-upload-modal__browse-btn"
                 onClick={() => fileInputRef.current?.click()}
               >

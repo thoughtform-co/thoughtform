@@ -49,6 +49,7 @@ function ToolbarInner({
       <div className="forge-toolbar__group forge-toolbar__group--tools">
         {TOOLS.map((tool) => (
           <button
+            type="button"
             key={tool.id}
             className={`forge-toolbar__btn ${activeTool === tool.id ? "forge-toolbar__btn--active" : ""}`}
             onClick={() => onToolChange(tool.id)}
@@ -69,6 +70,7 @@ function ToolbarInner({
       {/* Grid Controls */}
       <div className="forge-toolbar__group forge-toolbar__group--grid">
         <button
+          type="button"
           className={`forge-toolbar__btn ${grid.enabled ? "forge-toolbar__btn--active" : ""}`}
           onClick={() => onGridChange({ ...grid, enabled: !grid.enabled })}
           onMouseDown={(e) => e.preventDefault()}
@@ -80,6 +82,7 @@ function ToolbarInner({
         </button>
 
         <button
+          type="button"
           className={`forge-toolbar__btn ${grid.snap ? "forge-toolbar__btn--active" : ""}`}
           onClick={() => onGridChange({ ...grid, snap: !grid.snap })}
           onMouseDown={(e) => e.preventDefault()}
@@ -112,6 +115,7 @@ function ToolbarInner({
       {/* History */}
       <div className="forge-toolbar__group forge-toolbar__group--history">
         <button
+          type="button"
           className="forge-toolbar__btn"
           onClick={onUndo}
           onMouseDown={(e) => e.preventDefault()}
@@ -123,6 +127,7 @@ function ToolbarInner({
         </button>
 
         <button
+          type="button"
           className="forge-toolbar__btn"
           onClick={onRedo}
           onMouseDown={(e) => e.preventDefault()}
@@ -140,6 +145,7 @@ function ToolbarInner({
       {/* Object Actions */}
       <div className="forge-toolbar__group forge-toolbar__group--actions">
         <button
+          type="button"
           className="forge-toolbar__btn"
           onClick={onDuplicate}
           onMouseDown={(e) => e.preventDefault()}
@@ -150,6 +156,7 @@ function ToolbarInner({
         </button>
 
         <button
+          type="button"
           className="forge-toolbar__btn forge-toolbar__btn--danger"
           onClick={onDelete}
           onMouseDown={(e) => e.preventDefault()}
@@ -166,6 +173,7 @@ function ToolbarInner({
       {/* Export */}
       <div className="forge-toolbar__group forge-toolbar__group--export">
         <button
+          type="button"
           className="forge-toolbar__btn forge-toolbar__btn--primary"
           onClick={onCopySVG}
           onMouseDown={(e) => e.preventDefault()}
