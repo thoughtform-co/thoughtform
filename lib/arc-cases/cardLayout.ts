@@ -49,6 +49,17 @@ export const CARD_CENTER_Y = 0;
  *  the floating screen. */
 export const CARD_Z = 1.2;
 
+/** Sigil face Z in shell-local coords (ADR-041). The "VIEW THE CASES"
+ *  trigger is a world-anchored marker at the sphere's FRONT POLE — where
+ *  the horizontal and sword-tilted gimbal rings cross in screen projection
+ *  (both edge-on, planes meeting on the Z axis → an "X" through the centre
+ *  of the front face). It sits just proud of the dotted shell (front face
+ *  at local z ≈ 0.95) and well INSIDE the card face (`CARD_Z` 1.2), on the
+ *  SAME optical axis (x = y = 0) the card materializes on — so the card
+ *  grows from it and occludes it once open. Pinned between the shell and
+ *  the card in `tests/lib/arc-cases-card-layout.test.ts`. */
+export const SIGIL_Z = 0.98;
+
 /** Half-width target as a fraction of the column half-span (colX). The
  *  slab's side walls should sit clearly INSIDE the pip columns so the
  *  folded streams have a visible run. This is the aspirational upper knob;

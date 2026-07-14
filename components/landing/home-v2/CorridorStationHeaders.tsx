@@ -29,7 +29,6 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { ARC_CASES_CARD } from "./arcCasesCard";
-import { ArcCasesTerminalCta } from "./arc-cases";
 
 /**
  * CorridorStationHeaders — flat 2D screen-space layer for the three
@@ -1732,7 +1731,6 @@ export function CorridorStationHeaders() {
           registerCursors={bldRegisterCursors}
           content={bld}
           typewriter={typewriter}
-          afterContent={ARC_CASES_CARD ? <ArcCasesTerminalCta /> : undefined}
           split
         />
       )}

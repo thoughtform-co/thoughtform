@@ -665,52 +665,107 @@ html[data-corridor-exit="true"] #about {
   text-align: center;
 }
 
-/* == Arc Cases Card (ADR-036 - supersedes the ADR-035 DOM overlay) ==
-   The reveal is now ONE in-canvas 3D tools card (in the R3F
-   DepthGatewayScene), so the only DOM chrome here is the arming chip
-   (docked under the Build title) and the accessible stepper row (fixed
-   bottom-centre, the card's keyboard/AT surface). Both carry their OWN
-   media hide so gate parity with the JS ARC_CASES_MEDIA gate holds. */
+/* == Arc Cases Card (ADR-036; sigil trigger + phased reveal ADR-041) ==
+   The reveal is ONE in-canvas 3D tools card (in the R3F
+   DepthGatewayScene), so the only DOM chrome here is the arming SIGIL (a
+   world-anchored marker welded to the sphere's front pole) and the
+   accessible stepper row (fixed bottom-centre, the card's keyboard/AT
+   surface, carrying CLOSE). Both carry their OWN media hide so gate parity
+   with the JS ARC_CASES_MEDIA gate holds. */
 
-/* -- Arming chip dock ---------------------------------------------
-   In-flow inside `.home-v2-station-header__head`, centered under the
-   "BUILD ON THE LAYER." title. Opacity + inert are rAF-driven by the
-   component (the CorridorProgressRail pattern) on the Build band. The
-   dock is a pointer-events pass-through (the station header layer is
-   `pointer-events: none`); only the chip opts back in via the
-   `.home-v2-copy-cta` convention below. */
-.home-v2-cases-cta-dock {
-  display: flex;
-  justify-content: center;
-  margin-top: clamp(14px, 1.5vh, 22px);
-  pointer-events: none;
-  opacity: 0;
+/* -- The arming sigil ---------------------------------------------
+   (ADR-041, replaces the ADR-035 chip that docked under the Build title.)
+   A world-anchored marker at the sphere's FRONT POLE, where the horizontal
+   and sword-tilted gimbal rings cross. It lives in `.home-v2-copy-layer`
+   and is positioned + scaled per frame by `useWorldDomTracker` (anchor
+   `intelligence.sigil`); its OPACITY is written by `gateSigil` (sceneGeom)
+   — fading in as the notes settle, out as the card grows over it. So there
+   is NO opacity/transform here: CSS owns only the mark, the pulse, and the
+   hit behaviour.
+
+   The copy layer sets `pointer-events: none` on every `[data-world-anchor]`
+   (see the blanket rule below); the BUTTON opts back in, mirroring the
+   `.home-v2-copy-cta` convention. While armed the card covers this marker,
+   so mouse events are dropped (`[data-armed="true"]`) — the marker never
+   catches a phantom click over the card face, and CLOSE is owned by the
+   stepper. It stays focusable while armed (not inert) so Escape can return
+   focus to the trigger that opened the reveal. */
+.home-v2-cases-sigil {
+  /* transform + opacity are tracker-owned; do not set them here. */
+  width: 34px;
+  height: 34px;
 }
-.home-v2-cases-cta-dock[inert] {
+.home-v2-cases-sigil[inert] {
   visibility: hidden;
 }
-
-/* Compact chip variant of the copy CTA - the full plate (12px/22px pad,
-   210px min) would crowd the title's under-band. */
-.home-v2-copy-cta.home-v2-cases-cta {
+.home-v2-cases-sigil__btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
   pointer-events: auto;
   cursor: pointer;
-  min-width: 0;
-  gap: 12px;
-  padding: 6px 14px;
-  font-size: 10.5px;
-  letter-spacing: 0.24em;
-  background: rgba(10, 9, 8, 0.55);
 }
-/* Armed = terminal inverse video (the rail rolodex active convention):
-   gold fill, void ink - the chip reads as the live CLOSE control. */
-.home-v2-copy-cta.home-v2-cases-cta[data-armed="true"] {
+/* Armed: the card has grown over the marker — keep it out of the mouse's
+   way (still focusable; see the note above). */
+.home-v2-cases-sigil[data-armed="true"] .home-v2-cases-sigil__btn {
+  pointer-events: none;
+  cursor: default;
+}
+/* The mark — a small gold diamond reticle (the HUD chamfer grammar, same
+   recipe as the Encode cardinal markers). */
+.home-v2-cases-sigil__mark {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.22);
+  rotate: 45deg;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+/* The soft pulse — a breathing ring around the mark. Cloned from
+   `servicesReadoutPip` (services.css), the corridor's established subtle
+   pulse: a slow opacity breath, no transform churn on the tracker's
+   element. Reduced motion kills it below (and ARC_CASES_MEDIA hides the
+   whole sigil there anyway — this is belt-and-suspenders). */
+.home-v2-cases-sigil__pulse {
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--gold-60, rgba(202, 165, 84, 0.6));
+  rotate: 45deg;
+  opacity: 0.5;
+  animation: home-v2-cases-sigil-pulse 2.6s ease-in-out infinite;
+}
+@keyframes home-v2-cases-sigil-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    scale: 1;
+  }
+  50% {
+    opacity: 0.18;
+    scale: 1.28;
+  }
+}
+.home-v2-cases-sigil__btn:hover .home-v2-cases-sigil__mark,
+.home-v2-cases-sigil__btn:focus-visible .home-v2-cases-sigil__mark {
   background: var(--gold, #caa554);
-  border-color: var(--gold, #caa554);
-  color: #110f09;
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.75);
 }
-.home-v2-copy-cta.home-v2-cases-cta[data-armed="true"] .home-v2-copy-cta__chev {
-  border-color: #110f09;
+.home-v2-cases-sigil__btn:focus-visible {
+  outline: 1px solid var(--gold, #caa554);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-cases-sigil__pulse {
+    animation: none;
+  }
 }
 
 /* -- The stepper row ----------------------------------------------
@@ -790,12 +845,49 @@ html[data-corridor-exit="true"] #about {
   text-decoration-thickness: 1px;
 }
 
-/* Gate parity - BOTH the chip dock and the stepper hide below the JS
-   ARC_CASES_MEDIA floor (the dock needs its OWN hide: the station-headers
-   layer hides at 760px, not 1101px). Keep this media list in lockstep with
+/* CLOSE (ADR-041) - the sigil trigger is welded to the sphere's front pole,
+   which the card covers once open, so the close lives here instead. Sits
+   under the stepper row, centred; same chevron grammar as the retired chip. */
+.home-v2-cases-stepper__close {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px auto 0;
+  padding: 5px 14px;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  background: rgba(5, 4, 3, 0.62);
+  color: var(--gold, #caa554);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  pointer-events: auto;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+.home-v2-cases-stepper__close:hover,
+.home-v2-cases-stepper__close:focus-visible {
+  border-color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.12);
+}
+.home-v2-cases-stepper__close-chevrons {
+  display: flex;
+  gap: 2px;
+}
+.home-v2-cases-stepper__close-chev {
+  width: 4px;
+  height: 4px;
+  border-top: 1px solid var(--gold-60, rgba(202, 165, 84, 0.6));
+  border-right: 1px solid var(--gold-60, rgba(202, 165, 84, 0.6));
+  rotate: 45deg;
+}
+
+/* Gate parity - BOTH the sigil and the stepper hide below the JS
+   ARC_CASES_MEDIA floor. Keep this media list in lockstep with
    ARC_CASES_MEDIA in arcCasesCard.ts. */
 @media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
-  .home-v2-cases-cta-dock,
+  .home-v2-cases-sigil,
   .home-v2-cases-stepper {
     display: none;
   }

@@ -13,6 +13,8 @@ import {
 import { SHELL_PRIMITIVES } from "./DepthGatewayScene/shell/shellGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { StationTitle } from "./StationTitle";
+import { ArcCasesSigil } from "./arc-cases/ArcCasesSigil";
+import { ARC_CASES_CARD } from "./arcCasesCard";
 
 /**
  * CopyAnchors — DOM text overlay for the home-v2 depth corridor
@@ -324,6 +326,13 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           </span>
         </div>
       ))}
+
+      {/* Cases sigil (ADR-041) — the "VIEW THE CASES" trigger, welded to the
+          sphere's front pole where the two edge-on gimbal rings cross. Self-
+          gates on ARC_CASES_MEDIA (null off-desktop), so it can mount here
+          unconditionally; its anchor is `intelligence.sigil` in COPY_ANCHORS
+          and its opacity is painted by `gateSigil`. */}
+      {ARC_CASES_CARD && <ArcCasesSigil />}
     </div>
   );
 }

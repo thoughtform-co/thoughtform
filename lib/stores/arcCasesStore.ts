@@ -7,12 +7,13 @@
  * churn is wrong for once-per-frame values (the `ringProgressRef`
  * precedent).
  *
- * Writers: `ArcCasesTerminalCta` (toggle + auto-disarm watcher),
- * `ArcCasesStepper` (step/select, Escape disarm). Readers: `ArcCasesCard`'s
- * useFrame (armed + slot, via getState — no subscription), the CTA label,
- * the DOM stepper's chips + `data-open`.
+ * Writers: `ArcCasesSigil` (toggle + auto-disarm watcher — ADR-041; it took
+ * both over from the retired `ArcCasesTerminalCta` chip), `ArcCasesStepper`
+ * (step/select, CLOSE, Escape disarm). Readers: `ArcCasesCard`'s useFrame
+ * (armed + slot, via getState — no subscription), the sigil's `aria-expanded`
+ * + `data-armed`, the DOM stepper's chips + `data-open`.
  *
- * `arm()` is UI-unused (toggle covers the chip) — kept for the lab and
+ * `arm()` is UI-unused (toggle covers the sigil) — kept for the lab and
  * API symmetry with `disarm()`.
  */
 

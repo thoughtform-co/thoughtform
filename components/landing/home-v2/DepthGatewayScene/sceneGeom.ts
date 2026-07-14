@@ -47,8 +47,9 @@ import {
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
-import { arcLabelFade } from "@/lib/arc-cases/arcCasesMath";
+import { arcLabelFade, sigilSettle } from "@/lib/arc-cases/arcCasesMath";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
+import { SIGIL_Z } from "@/lib/arc-cases/cardLayout";
 import { ARC_CASES_CARD } from "../arcCasesCard";
 
 // Re-exported for back-compat: external modules (FlyingCameraRig,
@@ -1860,6 +1861,23 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   applyGyroDomBank(el);
 };
 
+/** onPaint for the Build-park cases sigil (ADR-041): a world-anchored gold
+ *  marker welded to the sphere's front pole. It fades IN as the notes
+ *  settle (`sigilSettle` on the smoothed stack — shared with the button's
+ *  inert gate), OUT as the card materializes on the same axis
+ *  (`1 − cardPresence` — the card grows from it and occludes it), and OUT
+ *  on the epilogue exit drain. Banks with the gyro like the stack labels.
+ *  The button's interactivity (`ArcCasesSigil`'s own inert rAF) reads the
+ *  SAME settle gate but WITHOUT the card-fade, so Escape can refocus the
+ *  trigger while the card is open. */
+const gateSigil: WorldAnchor["onPaint"] = (ctx, el) => {
+  const settle = sigilSettle(getSmoothedAccretionLayers().stack);
+  const cardFade = ARC_CASES_CARD ? 1 - arcCasesLevelRef.current.cardPresence : 1;
+  const epFade = 1 - epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
+  el.style.opacity = (ctx.visibilityOpacity * settle * cardFade * epFade).toFixed(3);
+  applyGyroDomBank(el);
+};
+
 /** Per-cardinal cartridge stagger overlap for Encode. Higher overlap
  *  means each cardinal's curved fly-in spans a bigger slice of the
  *  `orbits` reveal — same parent envelope, but each cartridge's arc
@@ -2489,6 +2507,23 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       max: 1.1,
     },
     onPaint: gateStackLabel,
+  },
+  // Cases sigil (ADR-041) — the "VIEW THE CASES" trigger, welded to the
+  // sphere's FRONT POLE (x = y = 0, z = SIGIL_Z) where the two edge-on
+  // gimbal rings cross. Only the intelligence beat (the Build park); its
+  // opacity is further gated by `gateSigil` (notes-settled × card-fade ×
+  // epilogue-drain). `center` origin drops the marker onto the crossing.
+  {
+    id: "intelligence.sigil",
+    position: (transform) => gyroAssemblyWorldPosition(transform, [0, 0, SIGIL_Z]),
+    visibilityBeats: ["intelligence"],
+    fadeFrac: 0.14,
+    perspectiveScale: {
+      referenceDistance: STATION_INTELLIGENCE.parkDistance,
+      min: 0.4,
+      max: 1.2,
+    },
+    onPaint: gateSigil,
   },
   // Per-item stack labels — one DOM anchor per source pip / surface
   // tip. World position is the pip's column X. Flow pass
