@@ -1,10 +1,24 @@
 "use client";
 
-import { useLayoutEffect, useRef, type RefObject } from "react";
+import { lazy, Suspense, useLayoutEffect, useRef, type RefObject } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
-import { HomeCorridor } from "@/components/landing/home-v2/HomeCorridor";
 import type { V7CorridorText } from "@/lib/v7-parse";
+
+// Lazy seam (2026-07-14 perf pass): HomeCorridor drags the whole WebGL
+// stack (three core + @react-three/fiber + drei + DepthGatewayScene,
+// ~270 kB gzip) — importing it statically here put all of it in the
+// landing route's First Load JS and was the main mobile-LCP cost. The
+// corridor only ever exists client-side inside this nested root, so a
+// React.lazy chunk changes nothing about the mount contract; the chunk
+// fetch starts on the first mountCorridor() render right after
+// hydration. The synchronous `.home-corridor-host` wrapper below keeps
+// the `hasContent` guard satisfied while the chunk is in flight.
+const HomeCorridor = lazy(() =>
+  import("@/components/landing/home-v2/HomeCorridor").then((m) => ({
+    default: m.HomeCorridor,
+  }))
+);
 
 /**
  * useCorridorMount — owns the nested React root that mounts
@@ -115,7 +129,9 @@ export function useCorridorMount(
       corridorRootRef.current = createRoot(mount);
       corridorRootRef.current.render(
         <div className="home-corridor-host">
-          <HomeCorridor text={corridorText} debug={debug} />
+          <Suspense fallback={null}>
+            <HomeCorridor text={corridorText} debug={debug} />
+          </Suspense>
         </div>
       );
 
