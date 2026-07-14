@@ -343,14 +343,29 @@ export function DepthGatewayScene() {
     return unsubscribe;
   }, []);
 
-  // Mobile performance tier: cap the drawing-buffer pixel ratio (phones
-  // report DPR ~3, so [1, 1.4] is the dominant GPU lever) and drop MSAA
+  // Mobile GPU profile: cap the drawing-buffer pixel ratio (phones report
+  // DPR ~3, so [1, 1.4] is the dominant GPU lever) and drop MSAA
   // (expensive on a high-DPR panel; the dpr cap carries edge quality).
   // The upper bound is the quality governor's live ceiling (starts at the
-  // tier max, steps 1.75→1.25→1.0 under sustained load; mobile still caps
-  // at 1.4). At full quality this is byte-identical to the old fixed caps.
+  // tier max, steps 1.75→1.25→1.0 under sustained load; the mobile GPU
+  // profile still caps at 1.4). At full quality this is byte-identical to
+  // the old fixed caps.
+  //
+  // TABLET BAND (Phase 4, ADR-038): 760–1280px COARSE-POINTER devices
+  // (iPads and the like) are the ones most likely to struggle, yet the
+  // width tier called them "tablet" and handed them the DESKTOP GPU
+  // profile (antialias on, DPR 1.75). Give them the mobile GPU profile
+  // instead. A tablet-WIDTH window on a real desktop GPU (fine pointer /
+  // mouse) keeps the desktop profile — the coarse-pointer test is the
+  // hardware signal, not the width.
   const isMobile = tier === "mobile";
-  const dpr: [number, number] = [1, effectiveDprCeiling(tier, dprCeiling)];
+  const coarsePointer =
+    typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches;
+  const mobileGpuProfile = isMobile || (tier === "tablet" && coarsePointer);
+  const dpr: [number, number] = [
+    1,
+    effectiveDprCeiling(mobileGpuProfile ? "mobile" : tier, dprCeiling),
+  ];
 
   return (
     <Canvas
@@ -380,7 +395,7 @@ export function DepthGatewayScene() {
       dpr={dpr}
       gl={{
         alpha: true,
-        antialias: !isMobile,
+        antialias: !mobileGpuProfile,
         premultipliedAlpha: false,
         powerPreference: "low-power",
         preserveDrawingBuffer: false,
