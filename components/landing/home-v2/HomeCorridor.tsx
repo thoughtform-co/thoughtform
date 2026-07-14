@@ -18,7 +18,7 @@ import { CorridorProgressRail } from "./CorridorProgressRail";
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { ARC_CASES_CARD } from "./arcCasesCard";
-import { ArcCasesStepper } from "./arc-cases";
+import { ArcCasesStepper, prefetchCaseCardImages } from "./arc-cases";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -77,6 +77,9 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
   useEffect(() => {
     setWebglOK(probeWebGL());
     setCapable(corridorCapable());
+    // Warm the case-screenshot HTTP cache at corridor entry so the
+    // deferred Build-park face bake isn't a cold image burst on first arm.
+    prefetchCaseCardImages(PROJECT_CASES);
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReducedMotion(mql.matches);
     const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);

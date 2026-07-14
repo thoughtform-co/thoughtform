@@ -92,10 +92,10 @@ export const PROJECT_CASES: ProjectCase[] = [
     stack: ["Next.js", "Supabase", "Gemini", "Claude Skills", "MCP", "Slack"],
     surfaces: ["Web app", "MCP server", "Claude", "Cursor", "Slack", "ChatGPT"],
     image: {
-      src: "/project-cards/mimir.png",
+      src: "/project-cards/mimir.webp",
       alt: "Mímir briefing agent interface",
-      width: 1971,
-      height: 1263,
+      width: 1000,
+      height: 641,
     },
   },
   {
@@ -144,10 +144,10 @@ export const PROJECT_CASES: ProjectCase[] = [
     ],
     surfaces: ["Web app", "MCP server", "REST", "Claude / Cursor"],
     image: {
-      src: "/project-cards/vesper.png",
+      src: "/project-cards/vesper.webp",
       alt: "Vesper generation canvas",
-      width: 2254,
-      height: 1253,
+      width: 1000,
+      height: 556,
     },
   },
   {
@@ -187,10 +187,10 @@ export const PROJECT_CASES: ProjectCase[] = [
     stack: ["Next.js", "Supabase", "Anthropic", "Gemini"],
     surfaces: ["Web app", "Share-link review"],
     image: {
-      src: "/project-cards/babylon.png",
+      src: "/project-cards/babylon.webp",
       alt: "Babylon dubbing pipeline overview",
-      width: 2263,
-      height: 1260,
+      width: 1000,
+      height: 557,
     },
   },
   {
@@ -230,10 +230,10 @@ export const PROJECT_CASES: ProjectCase[] = [
     stack: ["Next.js", "Supabase", "Vercel KV", "Monday", "Figma", "Frontify", "Meta", "Anthropic"],
     surfaces: ["Web app", "Figma plugin", "Iterator plugin", "GPT Actions API"],
     image: {
-      src: "/project-cards/heimdall.png",
+      src: "/project-cards/heimdall.webp",
       alt: "Heimdall briefing overview",
-      width: 2252,
-      height: 1248,
+      width: 1000,
+      height: 554,
     },
   },
 ];

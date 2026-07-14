@@ -141,6 +141,22 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+let caseImagesPrefetched = false;
+
+/** Warm the HTTP cache for the four case screenshots (~130 kB webp total)
+ *  as soon as the corridor mounts, so the deferred Build-park bake isn't a
+ *  cold four-image burst the first time the cases arm. Idempotent; errors
+ *  are ignored (the bake has its own dot-grid stand-in). */
+export function prefetchCaseCardImages(cases: ReadonlyArray<{ image: { src: string } }>): void {
+  if (caseImagesPrefetched || typeof document === "undefined") return;
+  caseImagesPrefetched = true;
+  for (const projectCase of cases) {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = projectCase.image.src;
+  }
+}
+
 export async function waitForCardFonts(): Promise<void> {
   if (typeof document === "undefined" || !document.fonts?.load) return;
   const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1500));

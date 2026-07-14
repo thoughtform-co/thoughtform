@@ -8,3 +8,4 @@
 export { ArcCasesCardGate } from "./ArcCasesCard";
 export { ArcCasesTerminalCta } from "./ArcCasesTerminalCta";
 export { ArcCasesStepper } from "./ArcCasesStepper";
+export { prefetchCaseCardImages } from "./caseCardBake";
