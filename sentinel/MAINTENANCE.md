@@ -96,14 +96,28 @@ A/B capture rules above). Newest first.
   BOTH flag states. The USER-VISIBLE gate is real (headline missing at 700 ms
   under 4× throttle without the flag, painted with it) — A/B screenshots in
   `assets-staging/hero-reveal-ab/` await Vince's brand-motion call.
-- **Deferred with cause:** rAF-loop consolidation (the DOM loops carry
-  one-writer ordering contracts — e.g. `brandmarkScreenRectRef` write/read
-  ordering between the SVG actor and the physics core — a dedicated pass);
-  services wheel listener (verified already correctly scoped — preventDefault
-  unreachable unless the ring is captured); anchor-array hoists (a fresh array
-  per frame IS the Zustand change-detection signal; reuse would freeze
-  connectors); `generateMipmaps=false` on card faces (orbiting cards minify at
-  depth — shimmer risk wants an owner eyeball first).
+- **Deferred → moved to Phase 5 (owner decision, 2026-07-14):** P4 is
+  code-complete; the remaining code items are micro-optimizations, not
+  adaptivity gaps, and were formally re-scoped to Phase 5:
+  - rAF-loop consolidation — the DOM loops carry one-writer ordering
+    contracts (e.g. `brandmarkScreenRectRef` write/read ordering between
+    the SVG actor and the physics core). Merge with the "~25 useFrame
+    painters dispatch regardless of per-layer visibility" lever into ONE
+    Phase-5 "frame orchestration" pass (same files, one verification
+    cycle).
+  - Anchor-array hoists — a fresh array per frame IS the Zustand
+    change-detection signal; reuse would freeze connectors. Needs a
+    redesigned change signal (version counter), not a mechanical hoist.
+  - `generateMipmaps=false` on card faces — desktop-only ~15 MB GPU win;
+    orbiting cards minify at depth, so shimmer risk wants an owner eyeball.
+  - Services wheel listener: CLOSED without change (verified already
+    correctly scoped — preventDefault unreachable unless the ring is
+    captured).
+- **P4 sign-off still owed (owner, not Phase 5):** real-device pass (iOS
+  Safari / Android Chrome / one older Android — the governor shipped on
+  SwiftShader evidence); eyeball the scroll re-entry pop removal; decide
+  ADR-039 (`?heroReveal=css` entrance — flip default or drop). ADR-037's
+  two owner actions remain open independently of any phase.
 - Gate per commit: typecheck, ESLint 0 errors / 327 warnings, 246 unit tests,
   `NEXT_DIST_DIR` prod build (First Load JS unchanged at 72.8 kB gzip),
   corridor 36/36 + services-ring 16/16 + arc-cases 8/8 + device-matrix 12/12
