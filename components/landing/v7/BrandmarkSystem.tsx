@@ -2,11 +2,27 @@
 
 import { forwardRef, useLayoutEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";
-import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleField";
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { BrandmarkVectorActor, BrandmarkRingGlyph } from "@/components/brand/BrandmarkVectorActor";
+
+// Lazy seam (2026-07-14 perf pass): the particle canvas is the LAST
+// static consumer of three/@react-three/fiber in the landing's initial
+// graph — splitting it moves the whole WebGL runtime out of First Load
+// JS. `ssr: false` is contract-identical (the R3F canvas never paints
+// on the server), and a late-arriving chunk is visually benign by
+// design: the vector actor + dock glyphs ARE the brand mark; this
+// canvas only adds atmosphere grain + transit exhaust (see the
+// error-boundary note at the render site).
+const BrandmarkParticleCanvas = dynamic(
+  () =>
+    import("@/components/brand/BrandmarkParticleField").then((m) => ({
+      default: m.BrandmarkParticleCanvas,
+    })),
+  { ssr: false }
+);
 
 /**
  * BrandmarkSystem
