@@ -68,9 +68,14 @@ A/B capture rules above). Newest first.
   bundle (landing First Load JS 449.8 kB gzip; three.js core 166.5 kB gzip),
   ESLint (0 errors / 470 warnings), react-doctor 0.7.7 (true post-prune score
   **30/100**, up from the worktree-polluted 13), Playwright smokes (87 pass /
-  13 fail / 32 skip — the 2 documented scan-notes tests red as expected, plus a
-  flagged Services-ambient red), Lighthouse (desktop 99 / mobile 73; mobile
-  LCP 8.2 s).
+  13 fail / 32 skip), Lighthouse (desktop 99 / mobile 73; mobile LCP 8.2 s).
+- **Known-red baseline widened after warm-server verification:** the corridor
+  suite reproduces the identical 13 failures against a freshly started,
+  pre-warmed dev server, so the reds are not a cold-server artifact. The
+  known-red set is the Services-hologram cluster (`:176`/`:203`/`:233` — stale
+  tests asserting markup retired by the ADR-029/030/033 Services reworks) plus
+  a deterministic iphone-14-only red at `:102`. See
+  [`baselines/2026-07-14-phase0/playwright-smokes.md`](baselines/2026-07-14-phase0/playwright-smokes.md).
 - Commits: `cca26d7` (guardrail), `489a842` (baselines), and this ledger entry.
 
 ---

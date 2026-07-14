@@ -30,33 +30,48 @@ mobile absence-check on desktop.
 - `:146` ADR-021 amendment seam pixel field is NOT mounted
 - `:157` ADR-021 amendment retired in-`#services` brandmark attributes never set
 
-## Red
+## Red — known-red baseline (do NOT fix here)
 
-### Documented known-red baseline (do NOT fix here) — the two scan-notes tests
+> **Warm-server verification (2026-07-14).** The corridor suite was run twice:
+> once against a long-running dev server and once against a **freshly started,
+> pre-warmed** dev server (`/` and `/test/services-demo` curled to 200 before
+> the run). The failure list is **byte-identical in both runs** — 13 failures,
+> same tests, same viewports. The Services cluster is therefore a real
+> pre-existing red on `main`, **not** a cold-server / compile-timeout artifact.
+> Phase 0's diff is build-config + docs only and cannot affect rendering.
 
-Both fail on all 4 viewports; the `#services` production hologram + scan-notes
-subsystem does not render in this run (`.services-scan-note` count 0, expected 3;
-hologram canvas absent; `/test/services-demo` times out waiting for
-`.services-scan-note`):
+### The Services-hologram cluster (12 instances = 3 tests × 4 viewports)
+
+The known-red baseline is the **whole retired-Services-markup cluster**, not
+just the two scan-notes tests:
 
 - `:203` Services hologram: production section renders scan notes and one expanded card
 - `:233` Services hologram: demo route has clickable scan notes
+- `:176` ADR-021 follow-up: Services can keep ambient particles without brandmark gates
 
-### Deviations beyond the documented baseline (flagged, not caused by Phase 0)
+**Root cause — stale tests asserting retired markup, predating Phase 0.**
+The `.services-scan-note` / `.services-expanded-card` selectors these tests
+assert exist **only in the test file**: no product source renders them anymore.
+The Services section was reworked through ADR-029 (services card ring), ADR-030
+(tools cover stack) and ADR-033 Phases C/D ("Funnel: services → about →
+continuum → practice; #tools/#build retire", commits `55afc8a` / `b403d40` —
+both before this baseline's `776dc74`). The `serviceScanNotes.ts` **data**
+module survives and feeds `ServicesStationReadout` — which is why the
+`service-scan-notes` unit test stays green while the DOM assertions fail.
+For `:176`: `data-services-ambient` is still set by `useCorridorExitScroll`
+(line ~185) but only inside the reworked corridor-exit window; the old test's
+scroll targeting no longer lands in it. The **newer** `services-ring-smoke`
+spec checks the same attribute at the correct seam and **passes**.
 
-- **`:176` "Services can keep ambient particles without brandmark gates" — RED on
-  all 4 viewports.** Assertion `data-services-ambient === "true"` fails (received
-  `null`) while the stage is NOT in fallback mode. This is the **same `#services`
-  WebGL/hologram subsystem** as the known-red scan-notes tests, so it is almost
-  certainly the same root condition (the Services 3D/scan-notes surface not
-  coming up against the long-running dev server), not a fresh regression — Phase
-  0 changed only build config (`next.config.mjs`, `tsconfig.json`, `.gitignore`),
-  which cannot affect Services rendering. Worth confirming against a **fresh**
-  dev server in a later phase; if it still fails, the "known-red" baseline should
-  be widened from 2 tests to this whole subsystem.
-- **`:102` "corridor engagement attribute toggles" — flaky.** Passed on
-  pro-max / tablet / desktop, failed only on `iphone-14`. Mobile scroll-timing
-  flake (attribute not yet `"true"` at the sampled scroll depth); not a hard red.
+Resolution for a later phase: retire or rewrite these three tests against the
+current Services markup (per MAINTENANCE Cycle A row 5), not "fix" the product.
+
+### `:102` "corridor engagement attribute toggles" — deterministic iphone-14 red
+
+Failed on `iphone-14` (390×844) in **both** runs and passed on the other three
+viewports in both runs — a deterministic viewport-specific threshold/timing red
+(2/2 reproduction), not a random flake. Same treatment: baseline it and
+investigate the scroll-depth sampling for the 390px viewport in a later phase.
 
 ## Unit tests (context)
 
