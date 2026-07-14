@@ -82,13 +82,22 @@ A/B capture rules above). Newest first.
   arg-order and clamped-t variants) — consolidating them would change
   behavior. The journeyScalars three-free seam holds (`lib/math` imports
   nothing).
+- **A11y batch** (`5028eea`, Opus subagent + orchestrator diff review):
+  react-doctor's mechanical cluster on app/(admin) + components/admin —
+  176× `type="button"` (form-submit trap checked per button: the two
+  in-scope forms have no bare submit buttons), 38× `aria-label` on
+  icon-only controls, 2× keyboard triads on trivial clickable divs.
+  Deliberately left: modal backdrops with interactive children,
+  drag/canvas surfaces, hover menus, labels needing `useId`
+  restructuring, visible-text buttons (aria-label would override).
 - Gate per commit: typecheck, ESLint 0 errors, 246 unit tests, prod /
   analyze build (First Load JS unchanged at 72.8 kB gzip), corridor
   36/36; + ring 16/16 + arc-cases 8/8 on the math commit.
-- **Still on the Phase-5 board:** frame-orchestration pass (rAF
-  consolidation + per-layer painter dispatch — the remaining perf
-  lever), hooks-warning burndown (300), a11y batch, anchor change-signal
-  redesign, card-face mipmaps (eyeball-gated).
+- **Still on the Phase-5 board (each wants a fresh, focused session):**
+  frame-orchestration pass (rAF read/write phasing + per-layer painter
+  dispatch — the remaining perf lever; eyeball-gated), hooks-warning
+  burndown (300, semantic not mechanical), anchor change-signal redesign
+  (per-frame store contract), card-face mipmaps (eyeball-gated).
 
 ### 2026-07-14 — Phase 4 (WebGL/device hardening + the mobile-LCP lever)
 
