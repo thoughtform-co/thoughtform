@@ -35,12 +35,27 @@ attribute in `<head>` (the established theme-script pattern) means the CSS
 applies on first paint, before hydration, with no dynamic rendering.
 
 **The reveal (CSS).** Under the flag, `html[data-hero-css-reveal="1"] .hero
-[data-m]` runs `@keyframes heroCssReveal` on load. The keyframe defines only the
-`to` frame, so the browser's **implicit `from` is each element's own
-role-specific hidden state** — the entrance is identical to the `.is-in`
-transition (title clip-reveal, eyebrow wipe, body rise), just triggered by the
-animation at ~FCP instead of by JS at hydration. `animation-fill-mode: both`
-holds the end state. Reduced motion reveals instantly (no animation, no motion).
+[data-m]` paints **opaque from the first frame** and enters with a
+**transform-only** rise (`@keyframes heroCssReveal` defines only the `to`
+frame; the implicit `from` is the role's rise offset). `opacity`, `clip-path`
+and `filter` are forced to their revealed values up front. Reduced motion
+reveals instantly (no animation, no motion).
+
+**Why transform-only (both alternatives measured on the prod build):**
+
+1. _Full-choreography CSS reveal_ (animating the role's clip-wipe/filter):
+   clip-path/filter animations are **main-thread**, and hydration jams the main
+   thread exactly when the paint is needed. LCP stayed ~9.6 s.
+2. _Composited fade_ (opacity+transform, from opacity 0): visually perfect —
+   screenshots show the headline fully painted at 700 ms under 4× CPU throttle
+   vs MISSING without the flag — but LCP **still** ~9.6 s, because Chrome
+   **excludes opacity-0 paints from LCP** and a compositor-driven fade produces
+   no new main-thread paint records; the h1's next recorded paint is the
+   hydration re-render. Any fade-from-zero on the LCP element structurally pins
+   the metric to hydration.
+
+Hence: opaque first paint + rise. On first load the hero trades its fade /
+clip-wipe entrance for a pure rise — below-the-fold choreography unchanged.
 
 **No double-fire.** Because the animation's end state equals the `.is-in` end
 state and fill holds it, a later `.is-in` is a visual no-op. Belt-and-braces,
@@ -48,12 +63,40 @@ state and fill holds it, a later `.is-in` is a visual no-op. Belt-and-braces,
 active. Below-the-fold choreography (IntersectionObserver reveals, station
 pauses, staggers) is completely unchanged.
 
+## What the A/B actually measured (read before trusting any LCP number)
+
+Three methods, prod build (`.next-verify`, localhost:3014), mobile emulation:
+
+| Method                                                | Flag OFF             | Flag ON              | Verdict                             |
+| ----------------------------------------------------- | -------------------- | -------------------- | ----------------------------------- |
+| Screenshots @700 ms, 4× CPU throttle                  | headline **MISSING** | headline **painted** | the real user-visible win           |
+| Real Chrome LCP entries (PerformanceObserver, 4× CPU) | H1 @ **292 ms**      | H1 @ **236 ms**      | metric already early in BOTH states |
+| Lighthouse simulated (lantern, mobile)                | LCP 9.6 s            | LCP 9.5 s            | artifact — doesn't move             |
+| Lighthouse devtools-throttled                         | LCP = FCP 3.5 s      | LCP = FCP 3.6 s      | network-bound on this machine       |
+
+Two findings that reframe the premise:
+
+1. **This Chromium records the H1's LCP entry at first paint even at
+   `opacity: 0`** (flag OFF: entry at 292 ms while the headline is invisible
+   until hydration — the 700 ms screenshot proves it). So field LCP was likely
+   never actually pinned by the reveal; the sweep's "mobile LCP 7.9 s at 93%
+   render-delay, hydration+reveal-gated" reading came from **lantern**, whose
+   pessimistic text-LCP graph chains the JS bundle into the estimate — which is
+   also why lantern reports ~9.5 s in BOTH flag states here.
+2. **The user-visible problem is real regardless of the metric:** without the
+   flag the hero headline IS invisible until hydration (seconds on a throttled
+   device). The flag fixes what users see; no lab LCP method credits it.
+
+A/B screenshots for the owner review: `assets-staging/hero-reveal-ab/`
+(gitignored, like `hero-candidates/`).
+
 ## Consequences
 
 ### Positive
 
-- Mobile LCP collapses from hydration-bound (~7.9 s) toward FCP — the hero copy
-  paints on load. Measured A/B: see the Phase 4 ledger entry.
+- The hero headline paints at ~FCP instead of at hydration — screenshot-proven
+  under 4× CPU throttle. On a real mid-range phone this is seconds of
+  perceived-paint win on the most important element of the page.
 - Zero effect when the flag is off (default). No dynamic rendering; the inline
   script is a few bytes.
 
@@ -63,9 +106,13 @@ pauses, staggers) is completely unchanged.
   (the JS per-index `--m-i` stagger is set post-hydration, too late for the CSS
   animation). Acceptable for a prototype; a CSS `nth-child` stagger is the
   refinement before this becomes default.
-- This is the hero's entrance — **brand motion**. It must be eyeballed by Vince
-  in the first second on a real mobile before flipping the default. The
-  before/after screenshots + Lighthouse numbers are provided for that review.
+- On first load the hero enters with a pure rise — no fade, no clip-wipe (the
+  measured constraints above rule those out). This is the hero's entrance —
+  **brand motion**. It must be eyeballed by Vince on a real mobile before
+  flipping the default; the A/B screenshots are staged for that review.
+- Lab Lighthouse will NOT credit the change (see the measurement table) — the
+  evidence for the win is the screenshots + real paint entries, not the lab
+  LCP number. Field (CrUX) LCP was likely early already.
 
 ## References
 

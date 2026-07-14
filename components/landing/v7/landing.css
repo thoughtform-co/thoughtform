@@ -7160,6 +7160,22 @@ body.density-dense .station {
    state, so the later JS `.is-in` is a visual no-op (no double-fire).
    Not applied under reduced motion (the fade path below still governs). */
 html[data-hero-css-reveal="1"] .hero [data-m] {
+  /* TRANSFORM-ONLY entrance, opaque from the first frame. Two hard
+     constraints force this shape (both measured on the prod build):
+       1. clip-path/filter animations are main-thread — hydration jams the
+          main thread exactly when we need the paint, so animating them
+          can't beat hydration (LCP stayed ~9.6s).
+       2. Chrome EXCLUDES opacity-0 paints from LCP, and a compositor
+          fade produces no new paint records — so ANY fade-from-zero
+          pins the h1's recorded LCP to the next main-thread repaint
+          (hydration), even though the fade is visually complete at ~FCP
+          (screenshot-verified at 700ms under 4x throttle).
+     So under the flag the hero paints opaque immediately and enters with
+     the role's rise transform only (no fade, no clip-wipe on first
+     load). A brand-motion trade for Vince to weigh — see ADR-039. */
+  opacity: 1 !important;
+  clip-path: none !important;
+  filter: none !important;
   animation: heroCssReveal var(--m-dur-base) var(--m-ease) both;
 }
 html[data-hero-css-reveal="1"] .hero [data-m="title"] {
@@ -7170,10 +7186,7 @@ html[data-hero-css-reveal="1"] .hero [data-m="eyebrow"] {
 }
 @keyframes heroCssReveal {
   to {
-    opacity: 1;
     transform: translateY(0) scale(1);
-    clip-path: inset(0 0 0 0);
-    filter: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
