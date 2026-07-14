@@ -53,6 +53,7 @@ import * as THREE from "three";
 
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
+import { BAKE_W, BAKE_H, PAD_X, CTA_H, CTA_Y0 } from "./ringCtaBox";
 
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
@@ -117,8 +118,6 @@ const RESUME_IDLE_GAP_MS = 500;
 /* ── Card-face bake ─────────────────────────────────────────────────────── */
 
 /** Bake at the asset's native 2× card size (420 × 680 CSS). */
-const BAKE_W = 840;
-const BAKE_H = 1360;
 /** Chamfer cut — the open plate's 26px at 2×. Top-right + bottom-left, the
  *  `.svc-plate__sh` polygon. */
 const BAKE_CH = 52;
@@ -284,18 +283,10 @@ const CARD_SANS = '"PP Neue Montreal", "Helvetica Neue", Arial, sans-serif';
 /* Copy-stack geometry (bake px — 2× the 420×680 CSS plate; text sizes are
  * 2× the open plate's CSS values in services.css). The CTA box is FIXED so
  * the DOM hit layer can overlay a real link on the front card. */
-const PAD_X = 52;
-const CTA_H = 84; // 42px CSS
-const CTA_Y0 = BAKE_H - 44 - CTA_H;
 
-/** Normalized CTA rect within the card face — `ServicesRingHitAreas` maps
- *  this onto the front card's published screen rect to place a real <a>. */
-export const RING_CARD_CTA_BOX = {
-  x: PAD_X / BAKE_W,
-  y: CTA_Y0 / BAKE_H,
-  w: (BAKE_W - PAD_X * 2) / BAKE_W,
-  h: CTA_H / BAKE_H,
-} as const;
+/** The normalized CTA rect (RING_CARD_CTA_BOX) lives in `./ringCtaBox.ts`
+ *  — three-free so `ServicesRingHitAreas` can import it without pulling
+ *  this file's WebGL stack into the initial bundle (2026-07-14). */
 
 type InkRun = { text: string; gold: boolean };
 

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { RING_CARD_CTA_BOX } from "./hologram/ServicesCardRing";
+import { RING_CARD_CTA_BOX } from "./hologram/ringCtaBox";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICE_PLATES } from "./servicePlateData";
 import type { ServiceId } from "./serviceData";
