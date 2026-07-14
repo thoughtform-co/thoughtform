@@ -33,7 +33,6 @@ This is the Thoughtform.co website, a Next.js application with a sophisticated p
 - **Animation**: Framer Motion, GSAP
 - **3D**: Three.js, React Three Fiber, Drei
 - **Database**: Supabase
-- **Editor**: TipTap (rich text)
 
 ## Project Structure
 
@@ -41,18 +40,18 @@ This is the Thoughtform.co website, a Next.js application with a sophisticated p
 app/
   (marketing)/          # Public landing page (V7 prototype composite)
   (admin)/              # Gated tools: /admin, /astrogation, /orrery
-  (internal)/           # Dev-only routes: /test/*, /archive/*
+  (internal)/           # Dev-only routes: /test/* (middleware-blocked in prod)
   api/                  # API routes (celestial, particles, survey, etc.)
 components/
   landing/v7/           # V7 landing: LandingPage, CelestialConnector
-  hud/                  # Navigation HUD (NavigationCockpitV2, bars, chrome)
+  landing/home-v2/      # Depth corridor (DepthGatewayScene, services, arc-cases)
+  hud/                  # Navigation chrome (NavigationBar, frames, status)
   gateway/              # ImageParticleGateway, ThreeGateway, KeyVisualPortal
   particles/            # ParticleCanvasV2, ThoughtformSigil, WordmarkMorph
   admin/                # Admin overlays (CelestialEditor, AdminGate)
   auth/                 # AuthProvider
   ui/                   # Shared UI primitives
 lib/                    # Utilities, hooks, domain modules (celestial/, auth/, etc.)
-constants/              # Configuration defaults
 supabase/               # Database schema and migrations
 legacy/                 # Archived code (excluded from TypeScript build)
 ```
@@ -61,9 +60,10 @@ legacy/                 # Archived code (excluded from TypeScript build)
 
 ### Navigation System
 
-- `NavigationCockpitV2/` - Main scroll-driven HUD with frame morphing
 - `NavigationBar.tsx` - Top navigation with mobile section indicator
-- Section indicator shows current section (01 Home → 02 Interface → 03 Manifesto → 04 Services)
+- (The old `NavigationCockpitV2` scroll HUD and its `/archive/current-home`
+  route were deleted in the 2026-07 Phase 5 cleanup — git history is the
+  archive.)
 
 ### Particle System
 

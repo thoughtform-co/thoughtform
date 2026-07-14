@@ -1,8 +1,0 @@
-// ═══════════════════════════════════════════════════════════════════
-// NAVIGATION COCKPIT V2 - Re-export for backwards compatibility
-// ═══════════════════════════════════════════════════════════════════
-// This component has been refactored into smaller modules.
-// Import from here or directly from the new location:
-// import { NavigationCockpitV2 } from "@/components/hud/NavigationCockpitV2";
-
-export { NavigationCockpitV2 } from "./NavigationCockpitV2/index";

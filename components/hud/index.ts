@@ -12,7 +12,6 @@ export { NavigationBar } from "./NavigationBar";
 export { Wordmark } from "./Wordmark";
 export { WordmarkSans } from "./WordmarkSans";
 export { GlitchText } from "./GlitchText";
-export { NavigationCockpitV2 } from "./NavigationCockpitV2";
 export { CanvasErrorBoundary } from "./CanvasErrorBoundary";
 export { StatusBar } from "./StatusBar";
 export { PanelGlow } from "./PanelGlow";

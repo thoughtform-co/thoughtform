@@ -24,7 +24,8 @@ export function snapToGrid(value: number, gridSize: number): number {
 
 // ═══════════════════════════════════════════════════════════════════
 // ANIMATION & MATH UTILITIES
-// Extracted from NavigationCockpitV2 for reuse across components
+// Extracted from the retired NavigationCockpitV2 HUD (deleted 2026-07,
+// Phase 5 cleanup) for reuse across components
 // ═══════════════════════════════════════════════════════════════════
 
 /**

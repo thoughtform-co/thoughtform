@@ -1485,7 +1485,7 @@
    Container for the 3-card services layout.
    
    Layout: Cards fan out from behind the bridge-frame during scroll.
-   See: components/hud/NavigationCockpitV2/ServicesDeck.tsx
+   See: the retired NavigationCockpitV2 ServicesDeck (deleted 2026-07, git history)
    
    Deck structure:
    ┌──────────┐ ┌──────────┐ ┌──────────┐

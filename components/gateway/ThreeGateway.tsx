@@ -1853,7 +1853,7 @@ export function ThreeGateway({
   const isMobile = useIsMobile();
 
   // Use config as passed - mobile overrides should be applied via ParticleConfigContext
-  // The caller (NavigationCockpitV2) is responsible for passing the effective config
+  // The caller is responsible for passing the effective config
   const gatewayConfig = { ...DEFAULT_GATEWAY, ...config };
 
   const travelResolved: Required<GatewayTravelOptions> = useMemo(() => {
