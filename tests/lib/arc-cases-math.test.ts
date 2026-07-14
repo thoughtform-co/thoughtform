@@ -5,14 +5,22 @@
 import { describe, expect, it } from "vitest";
 import {
   ARC_BAND_IN,
+  ARC_CARD_PHASE,
   ARC_EPILOGUE_KILL,
+  ARC_FOLD_DONE,
   ARC_LABEL_FADE_OUT,
+  ARC_SIGIL_SETTLE,
   CASE_COUNT,
   arcBandFactor,
+  arcCardPresence,
+  arcFoldInput,
   arcLabelFade,
   dampLevel,
+  sigilSettle,
   stepSlot,
 } from "@/lib/arc-cases/arcCasesMath";
+import { CARD_Z, SIGIL_Z } from "@/lib/arc-cases/cardLayout";
+import { arcLatchEnvelope } from "@/lib/arc-cases/streamLatchMath";
 
 describe("dampLevel", () => {
   it("converges monotonically toward the target", () => {
@@ -83,6 +91,93 @@ describe("arcLabelFade (ADR-035 label fade)", () => {
 
   it("labels are gone by mid-arm — before the halves meet (fade end < 0.6)", () => {
     expect(ARC_LABEL_FADE_OUT[1]).toBeLessThan(0.6);
+  });
+});
+
+describe("reveal phasing (ADR-041) — the fold lands BEFORE the card emerges", () => {
+  it("arcFoldInput is a clamped ratio: 0 at rest, 1 by ARC_FOLD_DONE, held above", () => {
+    expect(arcFoldInput(0)).toBe(0);
+    expect(arcFoldInput(ARC_FOLD_DONE)).toBe(1);
+    expect(arcFoldInput(1)).toBe(1);
+    expect(arcFoldInput(ARC_FOLD_DONE / 2)).toBeCloseTo(0.5, 6);
+  });
+
+  it("arcFoldInput is monotonically non-decreasing and clamped to [0, 1]", () => {
+    let prev = -1;
+    for (let level = -0.2; level <= 1.2001; level += 0.05) {
+      const fold = arcFoldInput(level);
+      expect(fold).toBeGreaterThanOrEqual(prev - 1e-9);
+      expect(fold).toBeGreaterThanOrEqual(0);
+      expect(fold).toBeLessThanOrEqual(1);
+      prev = fold;
+    }
+  });
+
+  it("arcCardPresence is 0 until the fold is done, 1 at full arm, monotonic", () => {
+    expect(arcCardPresence(0)).toBe(0);
+    expect(arcCardPresence(ARC_CARD_PHASE[0])).toBe(0);
+    expect(arcCardPresence(1)).toBe(1);
+    let prev = -1;
+    for (let level = 0; level <= 1.0001; level += 0.05) {
+      const presence = arcCardPresence(level);
+      expect(presence).toBeGreaterThanOrEqual(prev - 1e-9);
+      expect(presence).toBeGreaterThanOrEqual(0);
+      expect(presence).toBeLessThanOrEqual(1);
+      prev = presence;
+    }
+  });
+
+  // THE ORDERING INVARIANT — the whole point of the phase split. The card
+  // must have ZERO presence at every level where the node fold has not yet
+  // completed, so the screen can never lead the nodes it hangs from.
+  it("ORDERING: the card has zero presence while the fold is still running", () => {
+    expect(ARC_CARD_PHASE[0]).toBeGreaterThanOrEqual(ARC_FOLD_DONE);
+    for (let level = 0; level < ARC_FOLD_DONE; level += 0.01) {
+      expect(arcFoldInput(level)).toBeLessThan(1);
+      expect(arcCardPresence(level)).toBe(0);
+    }
+  });
+
+  it("ORDERING: the labels are gone before the fold lands", () => {
+    expect(ARC_LABEL_FADE_OUT[1]).toBeLessThanOrEqual(ARC_FOLD_DONE);
+  });
+
+  it("the fold envelope is fully latched exactly when the card begins", () => {
+    expect(arcLatchEnvelope(arcFoldInput(ARC_CARD_PHASE[0]))).toBe(1);
+  });
+});
+
+describe("sigilSettle (ADR-041) — the trigger waits for the notes", () => {
+  it("is 0 before the notes move and 1 once they've landed", () => {
+    expect(sigilSettle(0)).toBe(0);
+    expect(sigilSettle(ARC_SIGIL_SETTLE[0])).toBe(0);
+    expect(sigilSettle(ARC_SIGIL_SETTLE[1])).toBe(1);
+    expect(sigilSettle(1)).toBe(1);
+  });
+
+  it("is monotonically non-decreasing in the stack reveal", () => {
+    let prev = -1;
+    for (let stack = 0; stack <= 1.0001; stack += 0.05) {
+      const settle = sigilSettle(stack);
+      expect(settle).toBeGreaterThanOrEqual(prev - 1e-9);
+      prev = settle;
+    }
+  });
+
+  it("only opens well after the stack accretion is underway", () => {
+    expect(ARC_SIGIL_SETTLE[0]).toBeGreaterThan(0.5);
+    expect(ARC_SIGIL_SETTLE[0]).toBeLessThan(ARC_SIGIL_SETTLE[1]);
+  });
+});
+
+describe("SIGIL_Z (ADR-041) — the marker sits on the sphere's front pole", () => {
+  // The dotted shell's front face is at shell-local z ≈ 0.95 and the card
+  // face at CARD_Z. The sigil must sit BETWEEN them: proud of the sphere so
+  // it reads as sitting on the surface, and behind the card so the card
+  // grows over it and occludes it once open.
+  it("sits proud of the dotted shell and behind the card face", () => {
+    expect(SIGIL_Z).toBeGreaterThan(0.95);
+    expect(SIGIL_Z).toBeLessThan(CARD_Z);
   });
 });
 

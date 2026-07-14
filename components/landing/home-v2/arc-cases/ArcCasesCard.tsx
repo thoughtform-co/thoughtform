@@ -45,7 +45,12 @@ import * as THREE from "three";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { SERVICES_GOLD } from "@/lib/home-v2/goldPalette";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { ARC_ARM_RATE, arcBandFactor, dampLevel } from "@/lib/arc-cases/arcCasesMath";
+import {
+  ARC_ARM_RATE,
+  arcBandFactor,
+  arcCardPresence,
+  dampLevel,
+} from "@/lib/arc-cases/arcCasesMath";
 import { getCardGeometry } from "@/lib/arc-cases/cardLayout";
 import { useArcCasesStore } from "@/lib/stores/arcCasesStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -333,6 +338,7 @@ function ArcCasesCardOverlay({
   useEffect(() => {
     return () => {
       arcCasesLevelRef.current.level = 0;
+      arcCasesLevelRef.current.cardPresence = 0;
     };
   }, []);
 
@@ -366,17 +372,25 @@ function ArcCasesCardOverlay({
     const master = armLevelRef.current * band;
     arcCasesLevelRef.current.level = master;
 
+    // Phase split (ADR-041): the fold reads `arcFoldInput(master)` (in
+    // ShellStack) and lands FIRST; the CARD reads this later `cardPresence`
+    // window, so the slab only materializes into the frame the nodes made.
+    // Published on the ref by this single writer so no reader recomputes it.
+    const cardPresence = arcCardPresence(master);
+    arcCasesLevelRef.current.cardPresence = cardPresence;
+
     // Deferred bake: kick as soon as the Build band opens.
     if (!bakeRequested && band > 0.01) setBakeRequested(true);
 
     const group = groupRef.current;
     if (!group) return;
 
-    // Materialize: opacity ramp + a slight scale-in off the RAW arm level;
-    // the band multiplies opacity only (a scroll-out mid-arm fades in place).
-    const scaleIn = CARD_SCALE_IN_FROM + (1 - CARD_SCALE_IN_FROM) * armLevelRef.current;
+    // Materialize: opacity ramp + a slight scale-in. Both ride the phased
+    // card presence (a scroll-out mid-arm fades in place — presence is a
+    // pure function of the master, which already folds in the band).
+    const scaleIn = CARD_SCALE_IN_FROM + (1 - CARD_SCALE_IN_FROM) * cardPresence;
     group.scale.setScalar(scaleIn);
-    group.visible = master > 0.004;
+    group.visible = cardPresence > 0.004;
 
     // Content crossfade — the incoming face damps in over the settled one;
     // rapid stepping just retargets the same damp (no queue).
@@ -405,21 +419,21 @@ function ArcCasesCardOverlay({
       }
     }
 
-    materials.slab[0].opacity = RING_GLASS_OPACITY * master;
-    materials.slab[1].opacity = RING_GLASS_EDGE_OPACITY * master;
-    materials.glint.opacity = RING_EDGE_GLINT_OPACITY * master;
-    materials.glow.opacity = RING_GLOW_OPACITY * master;
-    materials.contentBack.opacity = master;
+    materials.slab[0].opacity = RING_GLASS_OPACITY * cardPresence;
+    materials.slab[1].opacity = RING_GLASS_EDGE_OPACITY * cardPresence;
+    materials.glint.opacity = RING_EDGE_GLINT_OPACITY * cardPresence;
+    materials.glow.opacity = RING_GLOW_OPACITY * cardPresence;
+    materials.contentBack.opacity = cardPresence;
     materials.contentFront.opacity =
-      incomingSlotRef.current !== null ? master * fadeRef.current : 0;
-    materials.veil.opacity = master;
+      incomingSlotRef.current !== null ? cardPresence * fadeRef.current : 0;
+    materials.veil.opacity = cardPresence;
 
     // Depth-write hysteresis on the SETTLED content plane only: translucent
     // while materializing (sphere shows through), opaque once settled.
-    if (!depthWriteRef.current && master >= CARD_DEPTH_WRITE_ON) {
+    if (!depthWriteRef.current && cardPresence >= CARD_DEPTH_WRITE_ON) {
       materials.contentBack.depthWrite = true;
       depthWriteRef.current = true;
-    } else if (depthWriteRef.current && master <= CARD_DEPTH_WRITE_OFF) {
+    } else if (depthWriteRef.current && cardPresence <= CARD_DEPTH_WRITE_OFF) {
       materials.contentBack.depthWrite = false;
       depthWriteRef.current = false;
     }

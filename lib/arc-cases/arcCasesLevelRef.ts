@@ -23,10 +23,12 @@
 //     nulls `cardEdges` on unmount.
 //   READERS — `gateStackLabel` (sceneGeom): fades every stack-label element
 //     via `arcLabelFade(level)`; `CorridorStationHeaders`: fades the
-//     persistent caption card via `1 − level`; the DOM stepper: rides
-//     `level` for its own opacity/inert; `ShellStack` (R3F): folds the
+//     persistent caption card via `1 − level`; `ShellStack` (R3F): folds the
 //     source/surface field streams onto `cardEdges`'s left / right side
-//     walls by an eased envelope of `level`. The edges are the SINGLE
+//     walls by an eased envelope of `arcFoldInput(level)` (the fold PHASE of
+//     the master level, ADR-041). The CARD and the DOM stepper instead read
+//     the phased `cardPresence` (their opacity / visibility / inert), so the
+//     card never leads the fold. The edges are the SINGLE
 //     source of truth for the mount geometry, in SHELL-LOCAL coords shared
 //     with the streams — so the fold is direct local-space math (no
 //     viewport unprojection, no live-camera re-solve; both retired with the
@@ -55,8 +57,16 @@ export interface ArcCasesCardEdges {
 }
 
 export interface ArcCasesLevel {
-  /** Effective card presence 0..1 (damped arm level × band factor). */
+  /** Effective MASTER arm level 0..1 (damped arm level × band factor). The
+   *  fold + label-fade + caption-fade inputs; the card DOES NOT read this
+   *  directly (see `cardPresence`). */
   level: number;
+  /** Card-materialize presence 0..1 (ADR-041): `arcCardPresence(level)` —
+   *  the phased sub-window of `level` across which the card slab emerges,
+   *  0 until the node fold has landed. Published by the SAME writer so no
+   *  reader recomputes the phase. The card's own material opacities /
+   *  visibility / depth-write and the stepper's opacity+inert read THIS. */
+  cardPresence: number;
   /** The card's slab edge geometry, or `null` when unpublished / unmounted.
    *  Constant while mounted (rigid in the shared local space), kept
    *  populated while draining so the fold unwinds from the same edges it
@@ -65,5 +75,5 @@ export interface ArcCasesLevel {
 }
 
 export const arcCasesLevelRef: { current: ArcCasesLevel } = {
-  current: { level: 0, cardEdges: null },
+  current: { level: 0, cardPresence: 0, cardEdges: null },
 };

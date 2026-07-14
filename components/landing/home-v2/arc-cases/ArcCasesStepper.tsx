@@ -9,13 +9,15 @@
  * `aria-controls="arc-cases-terminal"` stays honest (the chip opens/steps
  * this region), with NO change to `ArcCasesTerminalCta`.
  *
- * It rides the shared arm LEVEL for its own opacity + `inert`: a small rAF
- * reads `arcCasesLevelRef.current.level` (written by the card's useFrame),
- * fades the row via a CSS custom property, and reconciles `inert` EVERY
- * frame (a store-driven re-render must never leave a stale inert behind —
- * the CTA-dock bug). Below the arrive threshold the row is closed and takes
- * no focus. Escape while armed disarms and refocuses the CTA (not a modal:
- * a bare window listener, no focus trap, scroll stays free).
+ * It rides the card's phased PRESENCE for its own opacity + `inert`: a small
+ * rAF reads `arcCasesLevelRef.current.cardPresence` (written by the card's
+ * useFrame — the same phase the slab materializes on, ADR-041, so the
+ * control row can't arrive before the card it controls), fades the row via a
+ * CSS custom property, and reconciles `inert` EVERY frame (a store-driven
+ * re-render must never leave a stale inert behind — the CTA-dock bug). Below
+ * the arrive threshold the row is closed and takes no focus. Escape while
+ * armed disarms and refocuses the CTA (not a modal: a bare window listener,
+ * no focus trap, scroll stays free).
  *
  * Self-gates on `ARC_CASES_MEDIA` (gate parity with the CSS hide) so it
  * never mounts off-desktop.
@@ -27,9 +29,9 @@ import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { useArcCasesStore } from "@/lib/stores/arcCasesStore";
 import { ARC_CASES_MEDIA } from "../arcCasesCard";
 
-/** Level at which the row becomes interactive / drops `inert` — matches the
- *  CTA dock's ARRIVE convention. Below it the card is mid-materialize or
- *  closed and the row should not take focus. */
+/** Card-presence at which the row becomes interactive / drops `inert` —
+ *  matches the CTA dock's ARRIVE convention. Below it the card is
+ *  mid-materialize or closed and the row should not take focus. */
 const ARRIVE_LEVEL = 0.5;
 
 function ArcCasesStepperRow() {
@@ -37,24 +39,25 @@ function ArcCasesStepperRow() {
   const slot = useArcCasesStore((s) => s.slot);
   const step = useArcCasesStore((s) => s.step);
   const select = useArcCasesStore((s) => s.select);
+  const disarm = useArcCasesStore((s) => s.disarm);
 
   const rowRef = useRef<HTMLDivElement | null>(null);
   const lastOp = useRef(-1);
 
-  // Own rAF — opacity + inert on the shared arm level. Redundant-write
+  // Own rAF — opacity + inert on the card's phased presence. Redundant-write
   // suppression on opacity; inert reconciled EVERY frame.
   useEffect(() => {
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
-      const level = arcCasesLevelRef.current.level;
+      const presence = arcCasesLevelRef.current.cardPresence;
       const row = rowRef.current;
       if (!row) return;
-      if (Math.abs(level - lastOp.current) > 0.002) {
-        lastOp.current = level;
-        row.style.opacity = level.toFixed(3);
+      if (Math.abs(presence - lastOp.current) > 0.002) {
+        lastOp.current = presence;
+        row.style.opacity = presence.toFixed(3);
       }
-      row.toggleAttribute("inert", level < ARRIVE_LEVEL);
+      row.toggleAttribute("inert", presence < ARRIVE_LEVEL);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -115,6 +118,23 @@ function ArcCasesStepperRow() {
           onClick={() => step(1)}
         />
       </div>
+      {/* CLOSE (ADR-041) — the sigil trigger is welded to the sphere's front
+          pole, which the card covers once it materializes, so it can't carry
+          the close. The control row can: it arrives WITH the card and is the
+          reveal's whole pointer/AT surface while open. */}
+      <button
+        type="button"
+        className="home-v2-cases-stepper__close"
+        aria-label="Close the production cases"
+        onClick={disarm}
+      >
+        CLOSE
+        <span className="home-v2-cases-stepper__close-chevrons" aria-hidden="true">
+          <span className="home-v2-cases-stepper__close-chev" />
+          <span className="home-v2-cases-stepper__close-chev" />
+          <span className="home-v2-cases-stepper__close-chev" />
+        </span>
+      </button>
     </div>
   );
 }

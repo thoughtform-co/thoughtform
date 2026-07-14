@@ -88,6 +88,7 @@ import { band, epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { CARD_EDGE_INSET } from "@/lib/arc-cases/cardLayout";
+import { arcFoldInput } from "@/lib/arc-cases/arcCasesMath";
 import {
   arcLatchEnvelope,
   attachFractionForRow,
@@ -812,7 +813,12 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     // drain never fight: when the level is up the drain fronts are 0, and
     // when the drain engages the level (hence the envelope) has already
     // collapsed.
-    const latchLevel = ARC_CASES_CARD ? arcCasesLevelRef.current.level : 0;
+    // Fold PHASE input (ADR-041): the fold runs on `arcFoldInput(level)` so
+    // the nodes latch onto the card frame across the FIRST part of the arm,
+    // landing before the card materializes (which reads the later
+    // `cardPresence` phase). `arcLatchEnvelope` supplies the easing — feed
+    // it the bare clamped ratio, never a pre-eased value.
+    const latchLevel = ARC_CASES_CARD ? arcFoldInput(arcCasesLevelRef.current.level) : 0;
     const latchEnv = arcLatchEnvelope(latchLevel);
     const cardEdges = arcCasesLevelRef.current.cardEdges;
     let latchedThisFrame = false;
