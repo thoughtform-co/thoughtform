@@ -7147,6 +7147,45 @@ body.density-dense .station {
   transition-delay: calc(var(--m-i, 0) * var(--m-stagger));
 }
 
+/* ── Hero CSS-only first-paint reveal (ADR-039, PROTOTYPE — flag-gated) ──
+   Default reveal waits for the post-hydration JS (`useRevealMotion` adds
+   `.is-in`), so on mobile the hero paragraph — the LCP element — only
+   paints at hydration (~7.9s, 93% render-delay). Under
+   `html[data-hero-css-reveal="1"]` (set by the layout head script before
+   <body> paints) the first-viewport `[data-m]` elements reveal via an
+   on-load CSS animation instead, so they paint at ~FCP without waiting
+   for JS. The animation defines only the `to` frame, so the browser's
+   implicit `from` is each element's own role-specific hidden state — the
+   entrance matches the `.is-in` transition. Fill `both` holds the end
+   state, so the later JS `.is-in` is a visual no-op (no double-fire).
+   Not applied under reduced motion (the fade path below still governs). */
+html[data-hero-css-reveal="1"] .hero [data-m] {
+  animation: heroCssReveal var(--m-dur-base) var(--m-ease) both;
+}
+html[data-hero-css-reveal="1"] .hero [data-m="title"] {
+  animation-duration: var(--m-dur-slow);
+}
+html[data-hero-css-reveal="1"] .hero [data-m="eyebrow"] {
+  animation-duration: var(--m-dur-fast);
+}
+@keyframes heroCssReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    clip-path: inset(0 0 0 0);
+    filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-hero-css-reveal="1"] .hero [data-m] {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    filter: none;
+  }
+}
+
 /* Reduced motion — collapse to a pure fade, very short */
 @media (prefers-reduced-motion: reduce) {
   [data-m] {

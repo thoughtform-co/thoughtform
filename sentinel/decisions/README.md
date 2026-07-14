@@ -52,6 +52,7 @@ Write an ADR when you:
 | 031 | [Rail Manifest](031-rail-manifest.md)                                     | Accepted | 2026-07 |
 | 037 | [Supabase RLS Trust Boundary](037-supabase-rls-trust-boundary.md)         | Proposed | 2026-07 |
 | 038 | [Corridor Quality Governor](038-corridor-quality-governor.md)             | Accepted | 2026-07 |
+| 039 | [Hero CSS First-Paint Reveal](039-hero-css-first-paint-reveal.md)         | Proposed | 2026-07 |
 
 ---
 

@@ -67,6 +67,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${ibmPlex.variable} ${ibmPlexMono.variable} ${ppMondwest.variable}`}
     >
       <head>
+        {/* Hero-reveal flag (ADR-039, PROTOTYPE — OFF by default). When
+            active, first-viewport `[data-m]` elements reveal via a CSS
+            on-load animation instead of waiting for the post-hydration
+            JS reveal — collapsing mobile LCP (hero paragraph) toward FCP.
+            Set before <body> paints so the CSS applies on first paint.
+            Toggle per-URL with `?heroReveal=css` (or `=off`); the
+            NEXT_PUBLIC_HERO_CSS_REVEAL env var sets the no-param default.
+            Never affects production until Vince signs off and it becomes
+            the default. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var q=new URLSearchParams(location.search).get("heroReveal");var on=q?q==="css":${
+              process.env.NEXT_PUBLIC_HERO_CSS_REVEAL === "1" ? "true" : "false"
+            };if(on)document.documentElement.setAttribute("data-hero-css-reveal","1");}catch(e){}})();`,
+          }}
+        />
         {/* Brand faces the canvas bakes depend on (ServicesCardRing +
             caseCardBake draw with PT Mono / PP Neue Montreal). Preloading
             removes the waitForCardFonts() race against its 1500ms

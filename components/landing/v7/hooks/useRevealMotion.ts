@@ -37,13 +37,19 @@ export function useRevealMotion(rootRef: React.RefObject<HTMLElement | null>) {
       targets.forEach((t) => t.classList.add("is-in"));
     }
 
-    // Hero reveals immediately
-    const heroRaf = requestAnimationFrame(() => {
-      root
-        .querySelectorAll<HTMLElement>(".hero [data-m]")
-        .forEach((el) => el.classList.add("is-in"));
-    });
-    cleanups.push(() => cancelAnimationFrame(heroRaf));
+    // Hero reveals immediately — UNLESS the CSS-only first-paint reveal
+    // flag is active (ADR-039), where the hero already animates in via CSS
+    // on load and re-adding `.is-in` would be a redundant re-trigger.
+    const heroCssReveal = document.documentElement.getAttribute("data-hero-css-reveal") === "1";
+    let heroRaf = 0;
+    if (!heroCssReveal) {
+      heroRaf = requestAnimationFrame(() => {
+        root
+          .querySelectorAll<HTMLElement>(".hero [data-m]")
+          .forEach((el) => el.classList.add("is-in"));
+      });
+      cleanups.push(() => cancelAnimationFrame(heroRaf));
+    }
 
     // Scroll-based fallback: catches any element IO missed (rapid scroll,
     // scroll restoration, layout shifts from late font/image loads).
