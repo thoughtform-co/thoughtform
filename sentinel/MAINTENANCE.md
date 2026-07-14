@@ -54,6 +54,37 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-14 — Phase 1 (zero-risk hygiene: delete-only + trivial)
+
+- **Orphans deleted** (all verified zero-reference; owner decision: delete
+  outright, git history is the archive): the v7 landing twins
+  (`LandingV7`/`V7Landing`/`prototypeRuntime`), the traveling-orbits cluster,
+  DepthGatewayScene leftovers (`AstrogationField`, `brandmarkCloud`,
+  `CorridorSeamPixelField`, `ServicesCardStack`), lib leftovers
+  (`useOrbitDrift`, `ParticleSceneContext`, `useScrollMetrics`),
+  `LatentTopographyContours` (+ stale docstring fixed), `HandoffOrbitEmbed`,
+  `orbitStyles`, `LoginModal` (auth-checked: no dynamic/string imports),
+  `constants/` + the legacy-only constants re-export in `lib/types.ts`, and
+  `intelligence-layer/_legacy/` (ADR-014, superseded by ADR-016).
+- **Dead deps removed:** 3× `@dnd-kit/*`, 5× `@tiptap/*` (only consumer was
+  build-excluded `legacy/`); `@types/sharp` moved to devDependencies.
+- **Logging:** the 9 API/hook `console.log` sites now route through
+  `lib/logger`; stale "terrace" comment fixed (ADR-036); dead
+  `buildDepthTicksHtml` alias deleted.
+- **Hygiene:** duplicated showcase assets dropped (sha256-identical to
+  `public/project-cards/`); 316 untracked root dev screenshots (~116 MB)
+  purged from disk (already ignored by the root `/*.png` pattern).
+- **Lint:** `@typescript-eslint/no-unused-vars` burned down 128 → 19 across
+  59 files; total warnings 470 → 346. The 19 that remain are deliberate
+  (rest-sibling prop stripping, uniform fn-family params, exported no-op API)
+  and need rule options the config doesn't enable — see the burn-down commit.
+- **Gate:** typecheck, ESLint (0 errors), 242 unit tests, production build
+  green; corridor smokes byte-identical to the Phase 0 known-red baseline
+  (no new reds); landing First Load JS unchanged at 449.8 kB gzip (≤ baseline).
+- Commits: `a2ae117`, `f8b8f79`, `206c560`, `c47fb6b` (orphan clusters),
+  `d5a23c6` (needs-verification), `7ce66e4` (deps), `aca6f2c` (logging),
+  `7ae7474` (hygiene), `c6d79a8` (lint), plus this ledger entry.
+
 ### 2026-07-14 — Phase 0 (cleanup plan kickoff)
 
 - **Worktrees pruned:** 6 in-repo + 1 external git worktree removed (~2.6 GB
