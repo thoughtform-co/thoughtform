@@ -14,10 +14,44 @@ import type { V7CorridorText } from "@/lib/v7-parse";
 // fetch starts on the first mountCorridor() render right after
 // hydration. The synchronous `.home-corridor-host` wrapper below keeps
 // the `hasContent` guard satisfied while the chunk is in flight.
+//
+// Mobile-tier defer (same pass, TBT follow-up): on narrow viewports the
+// ~730 kB (parsed) WebGL chunk burst used to compete with hydration on a
+// 4x-throttled CPU. The corridor is below the hero fold, so on mobile
+// the import gate waits for first scroll / first interaction / idle
+// (2.5 s cap) before fetching. Desktop resolves immediately. Only the
+// chunk ARRIVAL shifts — the ADR-018 mount machinery is untouched.
+function corridorImportGate(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  const isNarrow = window.matchMedia?.("(max-width: 960px)").matches ?? false;
+  if (!isNarrow) return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener("scroll", go);
+      window.removeEventListener("pointerdown", go);
+      window.removeEventListener("keydown", go);
+      resolve();
+    };
+    window.addEventListener("scroll", go, { passive: true, once: true });
+    window.addEventListener("pointerdown", go, { passive: true, once: true });
+    window.addEventListener("keydown", go, { once: true });
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(() => go(), { timeout: 2500 });
+    } else {
+      globalThis.setTimeout(go, 2500);
+    }
+  });
+}
+
 const HomeCorridor = lazy(() =>
-  import("@/components/landing/home-v2/HomeCorridor").then((m) => ({
-    default: m.HomeCorridor,
-  }))
+  corridorImportGate()
+    .then(() => import("@/components/landing/home-v2/HomeCorridor"))
+    .then((m) => ({
+      default: m.HomeCorridor,
+    }))
 );
 
 /**
