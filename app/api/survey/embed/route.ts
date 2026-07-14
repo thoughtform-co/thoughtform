@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
+import { logger } from "@/lib/logger";
 
 const BUCKET_NAME = "survey-media";
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
@@ -278,7 +279,7 @@ export async function POST(request: NextRequest) {
 
         // Fallback if RPC doesn't exist
         if (updateError) {
-          console.log("RPC not available, trying direct update...");
+          logger.log("RPC not available, trying direct update...");
 
           const { error: fallbackError } = await supabase
             .from("survey_items")

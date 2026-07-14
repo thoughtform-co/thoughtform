@@ -5,6 +5,7 @@ import type { SurveyItem, SurveySegment, SurveyCollection } from "../_components
 import type { AstrogationAction } from "../_state/astrogationReducer";
 import { actions } from "../_state/astrogationReducer";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { logger } from "@/lib/logger";
 
 // ═══════════════════════════════════════════════════════════════
 // SURVEY HOOK - Manages Survey CRUD operations
@@ -233,7 +234,7 @@ export function useSurvey({
     // If an upload is in progress, skip this load request to prevent
     // race conditions where the newly uploaded item disappears from UI.
     if (isUploadingRef.current) {
-      console.log("[useSurvey] Skipping loadItems - upload in progress");
+      logger.log("[useSurvey] Skipping loadItems - upload in progress");
       return;
     }
 
@@ -269,7 +270,7 @@ export function useSurvey({
         });
         const filteredCount = beforeCount - mergedItems.length;
         if (filteredCount > 0) {
-          console.log(
+          logger.log(
             `[useSurvey] Filtering out ${filteredCount} recently deleted items during reload`
           );
         }
@@ -291,7 +292,7 @@ export function useSurvey({
         }
 
         if (itemsToPreserve.length > 0) {
-          console.log(
+          logger.log(
             `[useSurvey] Preserving ${itemsToPreserve.length} recently added items during reload`
           );
           mergedItems = [...itemsToPreserve, ...mergedItems];

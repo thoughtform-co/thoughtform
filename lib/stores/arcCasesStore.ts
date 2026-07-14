@@ -20,7 +20,8 @@ import { create } from "zustand";
 import { stepSlot } from "@/lib/arc-cases/arcCasesMath";
 
 interface ArcCasesState {
-  /** True while the visitor has the terrace open at the Build park. */
+  /** True while the visitor has the tools card open at the Build park
+   *  (ADR-036 — the terrace this originally armed was retired). */
   armed: boolean;
   /** Front case slot 0..3 — plain, wrapping (the cumulative-index +
    *  shortest-delta machinery died with the physical ring). */

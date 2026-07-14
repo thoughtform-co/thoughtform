@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
+import { logger } from "@/lib/logger";
 import Replicate from "replicate";
 import sharp from "sharp";
 
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
 
     // OPTION 1: Use Replicate (Online)
     if (replicate) {
-      console.log("Using Replicate for segmentation...");
+      logger.log("Using Replicate for segmentation...");
       try {
         // Run SAM-2 on Replicate.
         // NOTE: This model returns mask image URLs (combined_mask, individual_masks), not bbox objects.
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
           }
         )) as { individual_masks?: unknown } & Record<string, unknown>;
 
-        console.log("Replicate output keys:", Object.keys(output || {}));
+        logger.log("Replicate output keys:", Object.keys(output || {}));
 
         const rawMasks = output?.individual_masks;
         if (!rawMasks || !Array.isArray(rawMasks) || rawMasks.length === 0) {
@@ -251,7 +252,7 @@ export async function POST(request: NextRequest) {
     }
     // OPTION 2: Use Local Service (Docker)
     else {
-      console.log("Using local service for segmentation...");
+      logger.log("Using local service for segmentation...");
       try {
         const segmentResponse = await fetch(`${SEGMENTER_URL}/segment`, {
           method: "POST",

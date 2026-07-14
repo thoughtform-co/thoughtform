@@ -89,15 +89,6 @@ export function buildRightRailTicksHtml(): string {
   return buildRailHtml(RIGHT_TICKS);
 }
 
-/**
- * @deprecated Use `buildLeftRailTicksHtml` / `buildRightRailTicksHtml`.
- * Kept as an alias of the left-rail builder for any external caller
- * that hard-coded the old single-ladder name.
- */
-export function buildDepthTicksHtml(): string {
-  return buildLeftRailTicksHtml();
-}
-
 /** Inject the per-side ladders into `#leftTicks` and `#rightTicks`
  *  if they are present in the body markup, and the station manifest
  *  into `#railManifest` (ADR-031 — the home prototype's left rail

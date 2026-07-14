@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
+import { logger } from "@/lib/logger";
 
 const BUCKET_NAME = "gateway-particles";
 
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Check for admin authorization
     const authorized = await isAuthorized(request);
     if (!authorized) {
-      console.log("[gateway-particles/upload] Unauthorized request");
+      logger.log("[gateway-particles/upload] Unauthorized request");
       return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 
