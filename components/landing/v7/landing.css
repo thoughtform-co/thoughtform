@@ -3,28 +3,28 @@
 /* ── Fonts (V7 canonical) ──────────────────────────────────────── */
 @font-face {
   font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Light.otf") format("opentype");
+  src: url("/fonts/PPNeueMontreal-Light.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Book.otf") format("opentype");
+  src: url("/fonts/PPNeueMontreal-Book.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Medium.otf") format("opentype");
+  src: url("/fonts/PPNeueMontreal-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Bold.otf") format("opentype");
+  src: url("/fonts/PPNeueMontreal-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -34,14 +34,14 @@
    and the brand rule is no italics anywhere — emphasis is upright gold. */
 @font-face {
   font-family: "PT Mono";
-  src: url("/fonts/PTMono-Regular.ttf") format("truetype");
+  src: url("/fonts/PTMono-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "PT Mono";
-  src: url("/fonts/PTMono-Bold.ttf") format("truetype");
+  src: url("/fonts/PTMono-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;

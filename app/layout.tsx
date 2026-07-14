@@ -66,6 +66,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${ibmPlex.variable} ${ibmPlexMono.variable} ${ppMondwest.variable}`}
     >
+      <head>
+        {/* Brand faces the canvas bakes depend on (ServicesCardRing +
+            caseCardBake draw with PT Mono / PP Neue Montreal). Preloading
+            removes the waitForCardFonts() race against its 1500ms
+            bake-with-fallback timeout. woff2-only: every browser that can
+            run this site supports woff2. */}
+        <link
+          rel="preload"
+          href="/fonts/PTMono-Regular.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/PTMono-Bold.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/PPNeueMontreal-Book.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
