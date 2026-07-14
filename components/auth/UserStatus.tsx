@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
-import { signOut } from "@/lib/auth";
 
 export function UserStatus() {
   const { user, userName, isLoading } = useAuth();
@@ -53,7 +52,12 @@ export function UserStatus() {
             }}
           >
             <button
-              onClick={() => signOut()}
+              onClick={() => {
+                // Deferred import: keeps the Supabase client out of the
+                // anonymous First Load JS (this button only renders for a
+                // signed-in session, and only matters on click).
+                void import("@/lib/auth").then((m) => m.signOut());
+              }}
               className="flex items-center gap-2 w-full px-3 py-3 text-left font-mono text-[10px] tracking-[0.08em] uppercase transition-colors"
               style={{ color: "rgba(236, 227, 214, 0.3)" }}
               onMouseEnter={(e) => {

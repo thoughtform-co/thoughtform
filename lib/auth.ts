@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { notifyAuthSessionStarted } from "./auth/authBridge";
 
 export async function signInWithEmail(email: string, password: string) {
   if (!supabase) {
@@ -11,6 +12,9 @@ export async function signInWithEmail(email: string, password: string) {
   });
 
   if (error) throw error;
+  // Same-tab sign-in: tell the lazily-initialized AuthProvider a session
+  // now exists (no reload happens on the password path).
+  notifyAuthSessionStarted();
   return data;
 }
 
