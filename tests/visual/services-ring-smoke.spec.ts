@@ -31,8 +31,15 @@ test.describe.configure({ mode: "serial" });
  * smooth scroll), NOT `{ behavior: "instant" }`: an instant teleport skips
  * the corridor's scroll-driven engagement band, the canvas frameloop never
  * wakes, and the instrument (mark + card ring) renders nothing — the smoke
- * then fails on a dead canvas that no real scroll path produces. */
+ * then fails on a dead canvas that no real scroll path produces.
+ *
+ * The runway position MUST be measured AFTER the corridor has mounted and
+ * inflated the layout above #services: HomeCorridor is a lazy client chunk
+ * (2026-07-14 perf pass), so `.services-stage` appearing does not yet mean
+ * the page has its final height — measuring early lands the scroll far
+ * above the runway and the step clock reads 0. */
 async function scrollServicesRunway(page: Page, progress: number): Promise<boolean> {
+  await page.waitForSelector(".home-v2-stage", { timeout: 20_000 });
   const target = await page.evaluate((p) => {
     const runway = document.querySelector(".services-stage-root");
     if (!runway) return null;
