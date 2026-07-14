@@ -8,6 +8,10 @@ const config = [
     ignores: [
       // Build / generated output (incl. nested `.next/` from agent worktrees and tooling caches)
       "**/.next/**",
+      // Alternate NEXT_DIST_DIR verification builds (see next.config.mjs) —
+      // without these, `npx eslint .` after a verify build lints build output.
+      "**/.next-verify/**",
+      "**/.next-build/**",
       "**/node_modules/**",
       "**/dist/**",
       "**/out/**",
