@@ -54,6 +54,42 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-14 — Phase 5, round 1 (structural: deletions, CI, math)
+
+- **Deletions** (`fd9abb9`, `21cb068`): the repo's single react-doctor P0
+  (`legacy/canvas/ThreeBackground.tsx`, archived `new Function()`) and
+  `lib/queries.ts` (legacy page-editor tables, ADR-037) — both
+  legacy-only consumers, Phase-1 precedent. Then the NavigationCockpitV2
+  cluster: the old scroll-HUD homepage (25 files), its
+  `/archive/current-home` route + the `/test` index that mounted it, and
+  the orphaned `lib/particle-config-server.ts`; barrel + stale comments +
+  CLAUDE.md references fixed. **ESLint 327 → 300 warnings.**
+- **CI hardening** (`414f856`): `verify.yml` gains a corridor-smokes job
+  (landing-corridor + device-matrix, every PR/push, chromium ×4 viewport
+  projects, failure artifacts) and a PR-only react-doctor job scoped to
+  NEW issues (`--scope changed`, fetch-depth 0). ADR-040 records the
+  deliberately-accepted finding classes (v7-parse html sink,
+  long-documented-component style, impure-updater misfires, legacy/
+  registry scan-scope caveat) so CI + future audits don't re-litigate.
+- **Math consolidation** (`85a96df`, Opus subagent + orchestrator seam
+  review): 58 scattered clamp01/clamp/lerp/smoothstep/smootherstep
+  definitions → ONE canonical import-free `lib/math.ts`; exporting homes
+  re-export (import paths preserved: corridorMap, ringMath,
+  particle-geometry, utils, depthGatewayStore, journeyScalars,
+  artifactGeom); 15 files' identical local copies swapped to imports;
+  **13 behavioral variants deliberately left** (degenerate-edge guards,
+  NaN/Infinity-to-0 clamps incl. the test-asserted seamPixelize,
+  arg-order and clamped-t variants) — consolidating them would change
+  behavior. The journeyScalars three-free seam holds (`lib/math` imports
+  nothing).
+- Gate per commit: typecheck, ESLint 0 errors, 246 unit tests, prod /
+  analyze build (First Load JS unchanged at 72.8 kB gzip), corridor
+  36/36; + ring 16/16 + arc-cases 8/8 on the math commit.
+- **Still on the Phase-5 board:** frame-orchestration pass (rAF
+  consolidation + per-layer painter dispatch — the remaining perf
+  lever), hooks-warning burndown (300), a11y batch, anchor change-signal
+  redesign, card-face mipmaps (eyeball-gated).
+
 ### 2026-07-14 — Phase 4 (WebGL/device hardening + the mobile-LCP lever)
 
 - **Quality governor** (`6796253`, ADR-038): the corridor's missing adaptive
