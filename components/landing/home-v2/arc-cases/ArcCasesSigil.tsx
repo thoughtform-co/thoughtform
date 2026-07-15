@@ -115,7 +115,43 @@ function ArcCasesSigilButton() {
         onClick={toggle}
       >
         <span className="home-v2-cases-sigil__pulse" aria-hidden="true" />
-        <span className="home-v2-cases-sigil__mark" aria-hidden="true" />
+        {/* A celestial-navigation SIGIL — a compass/astrolabe star at the ring
+            crossing: outer ring + dashed orbit + a four-point compass star +
+            registration ticks + a pole-star node, in the site's gold light
+            motif. It banks in 3D with the sphere (gateSigil). */}
+        <svg
+          className="home-v2-cases-sigil__glyph"
+          viewBox="0 0 48 48"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="24" cy="24" r="20.5" stroke="currentColor" strokeWidth="1.2" />
+          <circle
+            cx="24"
+            cy="24"
+            r="13"
+            stroke="currentColor"
+            strokeWidth="0.8"
+            strokeDasharray="1.3 3"
+            opacity="0.5"
+          />
+          <path
+            d="M24 6 L26.8 21.2 L42 24 L26.8 26.8 L24 42 L21.2 26.8 L6 24 L21.2 21.2 Z"
+            fill="currentColor"
+            opacity="0.9"
+          />
+          <g stroke="currentColor" strokeWidth="1.1" opacity="0.55">
+            <path d="M34.6 13.4 l2.4 -2.4" />
+            <path d="M13.4 13.4 l-2.4 -2.4" />
+            <path d="M34.6 34.6 l2.4 2.4" />
+            <path d="M13.4 34.6 l-2.4 2.4" />
+          </g>
+          <circle cx="24" cy="24" r="2.5" fill="#0a0806" stroke="currentColor" strokeWidth="1" />
+          <circle cx="24" cy="3.5" r="1.8" fill="currentColor" />
+        </svg>
+        <span className="home-v2-cases-sigil__label" aria-hidden="true">
+          see tools
+        </span>
       </button>
     </div>
   );

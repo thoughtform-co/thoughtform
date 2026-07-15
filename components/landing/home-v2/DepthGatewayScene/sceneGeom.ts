@@ -1999,7 +1999,10 @@ const gateSigil: WorldAnchor["onPaint"] = (ctx, el) => {
   const cardFade = ARC_CASES_CARD ? 1 - arcCasesLevelRef.current.cardPresence : 1;
   const epFade = 1 - epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
   el.style.opacity = (ctx.visibilityOpacity * settle * cardFade * epFade).toFixed(3);
-  applyGyroDomBank(el);
+  // Full bank (not the labels' damped 0.65) so the compass-star sigil visibly
+  // tilts WITH the sphere it's inscribed on — it reads as part of the
+  // instrument, not a flat screen overlay.
+  applyGyroDomBank(el, 1);
 };
 
 /** Project a gyro-assembly-local point to screen px through the tracker's
