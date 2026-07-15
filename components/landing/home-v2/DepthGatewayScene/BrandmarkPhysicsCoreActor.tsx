@@ -328,20 +328,28 @@ const POINTER_LOOK_AMP = 0.12;
  *  sits softer than the 4px corridor stations (≈⅓ their per-dot ink). */
 const CENTER_OPACITY = 1.0;
 
-/** Parked-boost ramp (2026-07-06 "one holographic instrument" pass): the
- *  centerpiece read "too subtle / too light / too thin" next to the signal
- *  plates, so the clean-field DENSITY (surviving-particle keep) and DOT WEIGHT
- *  ramp UP with `recT` as the mark shrinks into its parked #services position —
- *  the wireframe visibly densifies/boldens as you scroll into the section.
- *  BASE values equal the BrandmarkPhysicsCore prop defaults, so at recT = 0
- *  (corridor + in-sphere epilogue) every frame is byte-identical to the
- *  pre-boost render; only the docked centerpiece changes. Keep stays well
- *  inside the fixed 6000-particle budget (0.82 ≈ 4900 drawn — no count / sim
- *  texture change, ADR-023 pitfall respected). */
+/** Parked clean-field ramp for the docked #services centerpiece. As `recT`
+ *  → 1 (the mark shrinks into its parked position) the clean-field keep
+ *  (surviving-particle fraction) and dot weight ramp toward the PARKED
+ *  values below. BASE values equal the BrandmarkPhysicsCore prop defaults,
+ *  so at recT = 0 (corridor + in-sphere epilogue) every frame is
+ *  byte-identical to the base render; only the docked centerpiece changes.
+ *
+ *  History: the 2026-07-06 "one holographic instrument" pass boosted these
+ *  UP (keep 0.82, dot 0.68) to fix a "too subtle / thin" read. That
+ *  OVERSHOT — on the large, static parked mark the fat dots on the
+ *  VOLUMETRIC wireframe (front + back edges, `EdgesGeometry`) smeared the
+ *  near-parallel strands into thick speckle bands, reading chunky /
+ *  low-res / "components too close together" rather than a clean minimal
+ *  wireframe. 2026-07-15 refine: pull the DOT WEIGHT well down (0.68 → 0.44,
+ *  below base) so the strands read as fine distinct lines, and relax the
+ *  density boost (0.82 → 0.66, ≈ base) so it stays airy but continuous.
+ *  Tuned in `/test/brandmark-physics-core` (Centerpiece view). Still no
+ *  count / sim-texture change (ADR-023 pitfall respected). */
 const CENTER_FIELD_KEEP_BASE = 0.65;
-const CENTER_FIELD_KEEP_PARKED = 0.82;
+const CENTER_FIELD_KEEP_PARKED = 0.66;
 const CENTER_DOT_SCALE_BASE = 0.5;
-const CENTER_DOT_SCALE_PARKED = 0.68;
+const CENTER_DOT_SCALE_PARKED = 0.44;
 
 /** Corridor → services baton-pass (2026-06-24): the centerpiece dome fades OUT
  *  across this short, late dissipate window as the `#services` wireframe forms

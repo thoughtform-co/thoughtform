@@ -513,8 +513,8 @@ export default function BrandmarkPhysicsCorePage() {
     setPointSize(4.0); // CORE_POINT_SIZE_3D
     setCount(6000); // BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP
     setCorridorKeep(0.27); // ≈ CORRIDOR_DRAW_TARGET / count (corridor stays calm)
-    setCleanFieldKeep(0.65); // CLEAN_FIELD_KEEP
-    setCleanFieldDotScale(0.5);
+    setCleanFieldKeep(0.66); // CENTER_FIELD_KEEP_PARKED
+    setCleanFieldDotScale(0.44); // CENTER_DOT_SCALE_PARKED (2026-07-15 refine)
     setCleanFieldEdge(0.4);
   }, []);
 
