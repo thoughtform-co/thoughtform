@@ -83,33 +83,38 @@ export const RING_QUARTER = (Math.PI * 2) / RING_COUNT;
 
 /** Fraction of each scroll beat spent TRAVELLING to the incoming card; the
  *  remainder is dwell (the card holds front while its copy is read).
- *  Widened 0.45 → 0.55 in Update 3 so a snapped beat spreads its turn over
- *  more of the scroll animation (smoother read, still ample dwell). */
-export const RING_TRAVEL_FRAC = 0.55;
+ *  0.45 → 0.55 (Update 3). Raised 0.55 → 0.85 in the 2026-07-15 native-
+ *  scroll pass: the wheel snap hijack is retired, so rotation now tracks
+ *  native scroll directly — shrinking the dwell kills the "move → hold →
+ *  move" staircase so scrubbing over the cards reads continuous, while a
+ *  short 15% settle still lands a card front-centre when scroll stops. */
+export const RING_TRAVEL_FRAC = 0.85;
 
-/** Spring frequency (rad/s) for the rotation follower. Slowed 6.0 → 4.2 in
- *  Update 3, 4.2 → 3.4 in Update 5 — with the snap path now riding the
- *  eased ringScrollTween, the spring's remaining job is smoothing NATIVE
- *  scroll (scrollbar drags, stepped mouse-wheel ticks below the band),
- *  and the softer follow turns that staircase into a glide. */
-export const RING_SPRING_OMEGA = 3.4;
+/** Spring frequency (rad/s) for the rotation follower. 6.0 → 4.2 (Update 3)
+ *  → 3.4 (Update 5) while the spring only had to smear the browser's snap
+ *  easing. Raised 3.4 → 6.5 in the 2026-07-15 native-scroll pass: with the
+ *  snap hijack gone the spring's job flips to TRACKING native scroll
+ *  crisply, so it follows the scrub tightly instead of lagging behind it. */
+export const RING_SPRING_OMEGA = 6.5;
 
 /** Damping ratio < 1 → a small underdamped overshoot that decays to rest.
  *  This IS the "bounded decaying sway": the only motion after scroll stops
  *  is this spring settling — there is no wall-clock term anywhere.
- *  0.82 → 0.9 in Update 3, → 0.93 in Update 5: glide over wobble. */
+ *  0.82 → 0.9 in Update 3, → 0.93 in Update 5: glide over wobble. Kept at
+ *  0.93 in the 2026-07-15 native-scroll pass — the faster OMEGA already
+ *  tracks the scrub crisply, and the settle stays a whisper of sway (the
+ *  overshoot ratio at 0.93 is ~3e-4, imperceptible) rather than a dead
+ *  stop, preserving the ADR-021 bounded-decaying-sway character. */
 export const RING_SPRING_ZETA = 0.93;
 
-/** Hard cap (rad ≈ 32°) on |rotation − target|. Bounds both the tracking
+/** Hard cap (rad ≈ 16°) on |rotation − target|. Bounds both the tracking
  *  lag during fast scroll AND the post-scroll sway, so the ring can never
  *  revolve on its own (ADR-021 addendum: no time-clock rotation behind
- *  readable services copy). Widened 0.12 → 0.38 in Update 3 (at 0.12 the
- *  spring rode the clamp through every quarter-turn and the motion was
- *  effectively the browser's scroll easing), → 0.55 in Update 5 so the
- *  slower spring has room to shape a native-scroll quarter-turn without
- *  being dragged at the clamp. Still well under the quarter (π/2), still
- *  hard-bounded + decaying — firmly scroll-owned. */
-export const RING_SWAY_CAP_RAD = 0.55;
+ *  readable services copy). 0.12 → 0.38 (Update 3) → 0.55 (Update 5) for the
+ *  slow snap-era spring. Tightened 0.55 → 0.28 in the 2026-07-15 native-
+ *  scroll pass so the crisper spring can't rubber-band behind the scrub;
+ *  still hard-bounded + decaying — firmly scroll-owned. */
+export const RING_SWAY_CAP_RAD = 0.28;
 
 /** Card scale from depth: back → front. Floor lifted 0.62 → 0.72 in
  *  Update 1 — side cards sit closer and read as reachable cards. */

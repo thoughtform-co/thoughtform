@@ -15,13 +15,14 @@
 //   - The tween writes ONLY the window scroll position (two-arg instant
 //     scrollTo per frame) — the runway scroll stays the single rotation
 //     owner; this is a scroll driver, not a second rotation writer.
-//   - Any genuine user scroll intent cancels it instantly: a wheel event
-//     nobody consumed (useServicesRingWheel preventDefaults the gestures it
-//     owns), a scrollbar grab, a touch, or a scroll key. The user is never
-//     fought for the scroll position.
-//   - `ringScrollTweenProgress()` lets the wheel hook chain the next beat
-//     near the end of the current glide instead of guessing with a fixed
-//     cooldown tuned to the browser's opaque smooth-scroll duration.
+//   - Any genuine user scroll intent cancels it instantly: an unconsumed
+//     wheel event, a scrollbar grab, a touch, or a scroll key. The user is
+//     never fought for the scroll position. (Since the 2026-07-15 native-
+//     scroll pass this tween is driven ONLY by click-to-select — the
+//     wheel-snap hijack that also used it is retired — so any wheel while
+//     a click-glide is in flight now cleanly hands scroll back to the user.)
+//   - `ringScrollTweenProgress()` reports glide progress (retained utility;
+//     its wheel-snap chaining consumer was retired in the same pass).
 
 import { smootherstep } from "./ringMath";
 

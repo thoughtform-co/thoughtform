@@ -76,7 +76,8 @@ describe("ringIndexForProgress — the smooth staircase", () => {
       // Travel completes exactly at the travel fraction…
       expect(ringIndexForProgress(beatProgress(k, RING_TRAVEL_FRAC))).toBeCloseTo(from + 1, 12);
       // …and the whole dwell is EXACTLY integral (settled front card).
-      for (const u of [RING_TRAVEL_FRAC + 0.01, 0.6, 0.75, 0.9, 0.999]) {
+      // Samples all sit past RING_TRAVEL_FRAC (0.85) — the dwell window.
+      for (const u of [RING_TRAVEL_FRAC + 0.01, 0.9, 0.95, 0.99, 0.999]) {
         expect(ringIndexForProgress(beatProgress(k, u))).toBe(from + 1);
       }
     }
@@ -117,7 +118,7 @@ describe("ring rotation ↔ step clock agreement", () => {
 
   it("agrees through every dwell (any u past the travel fraction)", () => {
     for (let k = 1; k < RING_STEP_COUNT; k++) {
-      for (const u of [RING_TRAVEL_FRAC + 0.02, 0.7, 0.95]) {
+      for (const u of [RING_TRAVEL_FRAC + 0.02, 0.92, 0.95]) {
         const p = beatProgress(k, u);
         expect(frontCardIndex(ringRotationForProgress(p))).toBe(activeServiceForProgress(p));
       }

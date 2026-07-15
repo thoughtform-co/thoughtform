@@ -8,7 +8,6 @@ import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
 import { ServicesStationReadout } from "./ServicesStationReadout";
 import { SERVICES, type ServiceId } from "./serviceData";
-import { useServicesRingWheel } from "../hooks/useServicesRingWheel";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { startRingScrollTween } from "@/lib/services-ring/ringScrollTween";
@@ -138,20 +137,13 @@ export function ServicesStage() {
   // `data-active-step` — the step that owns which plate is open.
   useServicesStageScroll(stageRef, setActiveByStep);
 
-  // Ring mode (ADR-029 Update 2): wheel over the instrument snaps the ring
-  // one beat per gesture (via the same selectService smooth-scroll, so
-  // scroll position stays the single rotation owner); pointer below the
-  // instrument band keeps native scrolling toward the next section.
-  useServicesRingWheel(stageRef, {
-    enabled: cardRingActive,
-    activeIndex: Math.max(
-      0,
-      SERVICES.findIndex((service) => service.id === activeServiceId)
-    ),
-    leadIn: expandedServiceId === null,
-    serviceCount: SERVICES.length,
-    onStep: (index) => selectService(SERVICES[index].id),
-  });
+  // Ring rotation is NATIVE-SCROLL-OWNED (2026-07-15 pass): the wheel-snap
+  // hijack is retired so scrubbing over the cards reads as continuous
+  // scroll and scrolling in the dead space around them advances the runway
+  // normally. `useServicesStageScroll` (above) maps runway scroll → the
+  // ring spring; the tightened follower (ringMath) tracks it crisply.
+  // Clicking a side card still glides it to front via `selectService`
+  // (the ringScrollTween — an explicit programmatic scroll, unchanged).
 
   return (
     <div

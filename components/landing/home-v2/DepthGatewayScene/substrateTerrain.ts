@@ -28,11 +28,15 @@ export const HFOV_TAN = 0.612;
 
 // ── Terrain layout ───────────────────────────────────────────────
 
-/** Terrain Z span. The near edge starts where ground first enters
- *  the parked camera's lower frame edge (≈ 8 units ahead at the
- *  valley depth below) — nearer rows would never be visible from
- *  the park and would only waste points. */
-export const REALM_Z_NEAR = INT_Z - 1.5;
+/** Terrain Z span. The near edge is pulled IN FRONT of the sphere
+ *  plane (`INT_Z + 2`) so (a) the flat near rows fill the parked
+ *  camera's lower frame edge + bottom corners, and (b) there is
+ *  ground around the sphere for the corridor-exit camera to descend
+ *  BENEATH — the topology reads as a ceiling once the camera drops
+ *  under it (ADR-021 addendum). Was `INT_Z − 1.5` (behind the
+ *  sphere); the flatter near rows (see `terrainHeight` bowl gate)
+ *  are what make the nearer rows read as floor rather than clutter. */
+export const REALM_Z_NEAR = INT_Z + 2.0;
 export const REALM_Z_FAR = INT_Z - 52;
 
 /** Row Z distribution bias (> 1 packs rows toward the near edge —
@@ -57,6 +61,14 @@ export const REALM_HORIZON_LIFT = 0.72;
 export const REALM_BOWL_RISE = 1.12;
 export const REALM_BOWL_POWER = 1.8;
 
+/** Fraction of the row span (from the near edge) over which the bowl
+ *  rise ramps in. The nearest rows stay FLAT at the basin floor so
+ *  the valley fills the parked camera's bottom frame corners — the
+ *  bowl only lifted the near-row edges to ≈ −2.0 (above the corner),
+ *  which was the empty-corner artifact. Ridge flanks are preserved
+ *  in the mid/far field where they read as the horizon line. */
+export const NEAR_BOWL_ROWS = 0.3;
+
 /** Relief amplitude: calm basin floor, stronger ridges at the
  *  flanks. */
 export const REALM_BASIN_AMP = 0.26;
@@ -69,6 +81,12 @@ export const REALM_Y_CEILING = -1.05;
 
 // ── Heightfield ──────────────────────────────────────────────────
 
+/** Local smoothstep (no three/DOM) for the near-row bowl gate. */
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
 /** Layered-sine relief over the valley bowl. */
 export function terrainHeight(x: number, z: number, edgeT: number, rowT: number): number {
   const rolling =
@@ -76,7 +94,11 @@ export function terrainHeight(x: number, z: number, edgeT: number, rowT: number)
     0.27 * Math.sin(x * 0.45 - z * 0.085 + 4.2) +
     0.6 * Math.sin(x * 0.065 + z * 0.05 + 2.4);
   const amp = REALM_BASIN_AMP + REALM_EDGE_AMP * Math.pow(edgeT, REALM_EDGE_POWER);
-  const bowl = REALM_BOWL_RISE * Math.pow(edgeT, REALM_BOWL_POWER);
+  // Ramp the bowl in past the near rows so they stay flat at the basin
+  // floor (fills the bottom frame corners); ridge flanks return in the
+  // mid/far field as the horizon.
+  const bowlRowGate = smoothstep(0, NEAR_BOWL_ROWS, rowT);
+  const bowl = REALM_BOWL_RISE * Math.pow(edgeT, REALM_BOWL_POWER) * bowlRowGate;
   const base = REALM_BASE_Y + rowT * REALM_HORIZON_LIFT + bowl;
   return Math.min(REALM_Y_CEILING, base + rolling * amp);
 }

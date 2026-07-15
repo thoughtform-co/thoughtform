@@ -184,7 +184,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".services-readout")).toContainText("WORKSHOP");
   });
 
-  test("desktop: wheel over the instrument snaps beats; below the band it scrolls on", async ({
+  test("desktop: wheel over the instrument scrolls natively and rotates the ring", async ({
     page,
   }) => {
     test.skip(!isDesktopViewport(page), "ring wheel is desktop-only (≥961px)");
@@ -192,23 +192,36 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
     expect(await scrollServicesRunway(page, 0.3)).toBe(true);
-    // Park + texture bakes settle before the wheel hook engages.
+    // Park + texture bakes settle.
     await page.waitForTimeout(4000);
 
-    // Wheel with the pointer ON the instrument → one beat per gesture.
-    await page.mouse.move(720, 400);
-    await page.mouse.wheel(0, 140);
-    await expect(page.locator(".services-readout")).toContainText("EMBEDDED", {
-      timeout: 10_000,
-    });
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
+    // 2026-07-15 native-scroll pass: the wheel-snap hijack is retired. A wheel
+    // with the pointer OVER the cards is plain native scroll — it advances the
+    // runway (scrollY climbs) and the ring rotation follows continuously, with
+    // NO discrete one-beat lockout.
+    const startY = await page.evaluate(() => window.scrollY);
+    const startStep = Number(
+      await page.locator(".services-stage").getAttribute("data-active-step")
+    );
+    await page.mouse.move(720, 400); // pointer over the instrument
+    for (let i = 0; i < 6; i++) {
+      await page.mouse.wheel(0, 120);
+      await page.waitForTimeout(120);
+    }
+    await page.waitForTimeout(600);
+    const overY = await page.evaluate(() => window.scrollY);
+    // Native scroll advanced the runway (not swallowed by a snap hijack)…
+    expect(overY).toBeGreaterThan(startY);
+    // …and the ring rotated with it (the active step advanced).
+    const overStep = Number(await page.locator(".services-stage").getAttribute("data-active-step"));
+    expect(overStep).toBeGreaterThan(startStep);
 
-    // Pointer BELOW the instrument band → wheel stays native page scroll.
-    await page.waitForTimeout(900); // let the snap scroll settle
+    // Pointer in the dead space beside the cards → also native page scroll
+    // (per the "outside the cards → normal scroll-through" decision).
     const heldY = await page.evaluate(() => window.scrollY);
-    await page.mouse.move(720, 830);
-    await page.mouse.wheel(0, 500);
-    await page.waitForTimeout(800);
+    await page.mouse.move(120, 400);
+    await page.mouse.wheel(0, 400);
+    await page.waitForTimeout(600);
     const movedY = await page.evaluate(() => window.scrollY);
     expect(movedY).toBeGreaterThan(heldY);
   });

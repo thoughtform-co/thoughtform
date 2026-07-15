@@ -1,13 +1,12 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { lerp, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getSmoothedEpilogueProgress } from "./motionFollower";
-import { getSubstrateRealmEnvelope } from "./sceneGeom";
+import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
+import { getCameraFov, getSubstrateRealmEnvelope } from "./sceneGeom";
 import {
-  HFOV_TAN,
   INT_Z,
   PARK_CAM_Z,
   REALM_ROW_BIAS,
@@ -85,16 +84,37 @@ const GOLD_HEX = "#caa554";
 
 /** Terrain rows (Z slices) and samples per row. Anisotropic on
  *  purpose: dense along X, discrete in Z — from high above, the
- *  rows read as topographic contour lines crossing the valley. */
-const REALM_ROWS = 38;
+ *  rows read as topographic contour lines crossing the valley.
+ *  Bumped 38 → 44 to hold near-field density over the longer Z span
+ *  after the near edge was pulled forward (REALM_ROW_BIAS packs the
+ *  extra rows toward the near edge). */
+const REALM_ROWS = 44;
 const REALM_SAMPLES_PER_ROW = 164;
 
 /** Visibility + material. */
 const REALM_VISIBLE_FAR = 74;
 const REALM_OPACITY_BASE = 1.05;
 
-/** Epilogue recession floor. */
-const REALM_EPILOGUE_FLOOR = 0.4;
+/** Epilogue recession floor. Raised 0.4 → 0.85 so the topology stays
+ *  clearly legible THROUGH the see-through sphere during the "racing
+ *  to build" flyover (the terrain is additive + depthWrite:false, so
+ *  it composites through the sphere's shell + smoky core). Still
+ *  recedes — just not to near-invisibility. Supersedes the ADR-018
+ *  "recede to 0.4 so the title owns the frame" intent. */
+const REALM_EPILOGUE_FLOOR = 0.85;
+
+/** Services-entry floor dive. As the corridor-exit dock ramps (entering
+ *  #services) the WHOLE topology translates up and off the top of the
+ *  frame (+Y world units) and fades — so the (unmoved) camera reads as
+ *  sinking down THROUGH the ground into the latent fabric. Moving the
+ *  floor instead of the camera keeps the services centrepiece framed and
+ *  avoids any ADR-021 camera-seam surgery (Vince: "move the floor, not the
+ *  camera"). Driven by the smoothed dock/dissipate clock; pinned fully
+ *  risen + faded across the ambient hold, auto-returns to 0 on reverse
+ *  scroll back into the corridor. */
+const REALM_DOCK_RISE_Y = 10;
+const REALM_DOCK_FADE_START = 0.55;
+const REALM_DOCK_FADE_END = 1.0;
 
 // ── Threshold wave ("the Crossing") ─────────────────────────────
 
@@ -330,7 +350,19 @@ function hash(n: number): number {
   return s - Math.floor(s);
 }
 
-function buildRealm(): {
+/** Live viewport aspect (SSR-safe: falls back to 16:9). */
+function currentAspect(): number {
+  if (typeof window === "undefined") return 16 / 9;
+  return window.innerWidth / Math.max(1, window.innerHeight);
+}
+
+/** Bucket the aspect (0.05 granularity) so the realm only rebuilds on
+ *  a meaningful viewport-shape change, not on every resize pixel. */
+function aspectBucket(aspect: number): number {
+  return Math.round(aspect * 20);
+}
+
+function buildRealm(aspect: number): {
   positions: Float32Array;
   colors: Float32Array;
   sizes: Float32Array;
@@ -341,6 +373,12 @@ function buildRealm(): {
   const sizes: number[] = [];
   const delays: number[] = [];
 
+  // Horizontal half-FOV tangent from the SAME camera FOV the rig uses
+  // (`getCameraFov`), so the wedge fills the frame at any aspect
+  // instead of the baked 16:9 `HFOV_TAN`. At 16:9 this resolves to
+  // 0.612 → bit-identical to the retired constant.
+  const hHalfTan = aspect * Math.tan((getCameraFov(aspect) * Math.PI) / 180 / 2);
+
   const dawn = new THREE.Color(DAWN_HEX);
   const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
   const gold = new THREE.Color(GOLD_HEX);
@@ -350,7 +388,7 @@ function buildRealm(): {
     const zRow = lerp(REALM_Z_NEAR, REALM_Z_FAR, Math.pow(rowT, REALM_ROW_BIAS));
 
     const camDist = Math.max(1, PARK_CAM_Z - zRow);
-    const xHalf = HFOV_TAN * camDist * REALM_WIDTH_MARGIN + 0.6;
+    const xHalf = hHalfTan * camDist * REALM_WIDTH_MARGIN + 0.6;
     const spacing = (xHalf * 2) / REALM_SAMPLES_PER_ROW;
 
     for (let i = 0; i < REALM_SAMPLES_PER_ROW; i++) {
@@ -383,7 +421,7 @@ function buildRealm(): {
         1,
         Math.max(0, (WAVE_ROLLOUT_ORIGIN_Z - z) / WAVE_ROLLOUT_Z_REACH)
       );
-      const sxAbs = Math.min(1, Math.abs(x / (pdist * HFOV_TAN)));
+      const sxAbs = Math.min(1, Math.abs(x / (pdist * hHalfTan)));
       const radialNorm = Math.min(
         1,
         Math.sqrt(forwardNorm * forwardNorm + Math.pow(sxAbs * WAVE_ROLLOUT_X_WEIGHT, 2))
@@ -633,16 +671,44 @@ export function SubstrateTopography() {
     return window.innerWidth >= 760;
   }, []);
 
+  // Aspect bucket drives a debounced rebuild so the wedge re-widens on
+  // resize/rotate (buildRealm reads aspect at build time). Mirrors the
+  // resize handling in FlyingCameraRig.
+  const [aspectKey, setAspectKey] = useState(() => aspectBucket(currentAspect()));
+
+  useEffect(() => {
+    if (!enabled) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onResize = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setAspectKey((prev) => {
+          const next = aspectBucket(currentAspect());
+          return next === prev ? prev : next;
+        });
+      }, 150);
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [enabled]);
+
   const geometry = useMemo(() => {
     if (!enabled) return null;
-    const { positions, colors, sizes, delays } = buildRealm();
+    const { positions, colors, sizes, delays } = buildRealm(currentAspect());
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
     geom.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
     geom.setAttribute("aDelay", new THREE.BufferAttribute(delays, 1));
     return geom;
-  }, [enabled]);
+    // aspectKey triggers the rebuild; currentAspect() reads the live value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, aspectKey]);
 
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({
@@ -693,22 +759,35 @@ export function SubstrateTopography() {
     });
   }, []);
 
+  // Static resources — disposed on unmount only.
   useEffect(() => {
     return () => {
       material.dispose();
-      geometry?.dispose();
       waveMaterial.dispose();
       waveGeometry?.dispose();
     };
-  }, [material, geometry, waveMaterial, waveGeometry]);
+  }, [material, waveMaterial, waveGeometry]);
+
+  // The realm geometry is rebuilt on aspect change — dispose the prior
+  // buffer whenever it is swapped (React runs this cleanup before the
+  // next effect), and on unmount.
+  useEffect(() => {
+    return () => {
+      geometry?.dispose();
+    };
+  }, [geometry]);
 
   useFrame((state, delta) => {
     if (!geometry) return;
     const { camera, viewport } = state;
     const dt = Math.min(0.1, Math.max(0, delta));
 
-    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
-    const painting = active || armed;
+    const { paintProgress, active, armed, docked, servicesAmbient } =
+      useDepthGatewayStore.getState().transform;
+    // Persist through the dock + ambient hold (was `active || armed`, which
+    // hard-cut the floor to 0 the instant #services docked). The floor now
+    // stays painting so it can visibly rise up and out of frame instead.
+    const painting = active || armed || docked || servicesAmbient;
 
     material.uniforms.uPixelRatio.value = viewport.dpr;
     waveMaterial.uniforms.uPixelRatio.value = viewport.dpr;
@@ -725,6 +804,7 @@ export function SubstrateTopography() {
       waveMaterial.uniforms.uOpacity.value = 0;
       const wavePts = wavePointsRef.current;
       if (wavePts) wavePts.visible = false;
+      if (pointsRef.current) pointsRef.current.position.y = 0;
       return;
     }
 
@@ -747,7 +827,16 @@ export function SubstrateTopography() {
     // Epilogue recession.
     const ep = getSmoothedEpilogueProgress();
     const epDamp = 1 - (1 - REALM_EPILOGUE_FLOOR) * epilogueBand(ep);
-    material.uniforms.uOpacity.value = REALM_OPACITY_BASE * epDamp;
+
+    // Services-entry floor dive: the whole topology climbs up out of frame
+    // and fades on the dock/dissipate clock, so the (unmoved) camera reads
+    // as sinking down through the ground into the latent fabric. Pinned
+    // fully risen across the ambient hold so it stays gone while #services
+    // is read; auto-returns to Y 0 on reverse-scroll back into the corridor.
+    const dockRise = servicesAmbient ? 1 : docked ? getSmoothedDissipate() : 0;
+    if (pointsRef.current) pointsRef.current.position.y = dockRise * REALM_DOCK_RISE_Y;
+    const dockFade = 1 - smoothstep01(REALM_DOCK_FADE_START, REALM_DOCK_FADE_END, dockRise);
+    material.uniforms.uOpacity.value = REALM_OPACITY_BASE * epDamp * dockFade;
 
     // Diagram cascade.
     const phase = frontRef.current;
@@ -781,5 +870,13 @@ function epilogueBand(ep: number): number {
   if (ep <= 0.1) return 0;
   if (ep >= 0.55) return 1;
   const t = (ep - 0.1) / 0.45;
+  return t * t * (3 - 2 * t);
+}
+
+/** Clamped smoothstep — the floor-dive fade curve. */
+function smoothstep01(edge0: number, edge1: number, x: number): number {
+  if (x <= edge0) return 0;
+  if (x >= edge1) return 1;
+  const t = (x - edge0) / (edge1 - edge0);
   return t * t * (3 - 2 * t);
 }
