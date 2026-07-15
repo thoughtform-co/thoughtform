@@ -2,13 +2,17 @@
 
 ## Sentinel — patterns and decisions
 
-Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes:
+Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes. Full index: [`sentinel/decisions/`](sentinel/decisions/) (ADR-001 … ADR-042). Load-bearing entries for the current surface:
 
+- **Home-v2 depth corridor:** [ADR-018](sentinel/decisions/018-home-v2-depth-corridor.md) — the dominant landing surface (scroll-driven WebGL corridor)
+- **Arc cases (Build park):** [ADR-033](sentinel/decisions/033-arc-cases-orbit.md) → [ADR-042](sentinel/decisions/042-arc-cases-cue.md) — cases orbit, terrace, terminal, card, sigil, cue
+- **Rail manifest:** [ADR-031](sentinel/decisions/031-rail-manifest.md)
+- **Corridor quality governor:** [ADR-038](sentinel/decisions/038-corridor-quality-governor.md) — GPU probe + FPS degradation
 - **Landing v7 compositing:** [ADR-008](sentinel/decisions/008-landing-v7-background-layers.md)
-- **Brandmark choreography:** [ADR-010](sentinel/decisions/010-brandmark-choreography.md) (state machine, SVG fallback)
-- **Brandmark particle artifact:** [ADR-011](sentinel/decisions/011-brandmark-particle-artifact.md) (R3F point-cloud painter, density tiers, fallback policy)
+- **Brandmark choreography / particles:** [ADR-010](sentinel/decisions/010-brandmark-choreography.md), [ADR-011](sentinel/decisions/011-brandmark-particle-artifact.md), [ADR-013](sentinel/decisions/013-brandmark-journey-refactor.md)
 - **Scroll architecture:** [ADR-002](sentinel/decisions/002-scroll-animation-architecture.md)
-- **Auth centralization:** [ADR-003](sentinel/decisions/003-auth-centralization.md)
+- **Auth centralization / Supabase RLS:** [ADR-003](sentinel/decisions/003-auth-centralization.md), [ADR-037](sentinel/decisions/037-supabase-rls-trust-boundary.md)
+- **Landing data caching:** [ADR-028](sentinel/decisions/028-landing-data-caching.md)
 - **Focus overlay system:** [ADR-006](sentinel/decisions/006-focus-overlay-system.md)
 
 When path-scoped rules in [`.claude/rules/`](.claude/rules/) match your files, follow them. Don’t import the whole `sentinel/` tree into prompts — use ADRs, rules, and skills on demand to save context.
@@ -19,7 +23,7 @@ When path-scoped rules in [`.claude/rules/`](.claude/rules/) match your files, f
 - **At the end of a session that changed code:** run the **post-incident checklist** in [sentinel/MAINTENANCE.md](sentinel/MAINTENANCE.md); if a row triggers, update ADR / BEST-PRACTICES / rule / skill before pushing.
 - **Vocabulary:** [LANGUAGE.md](LANGUAGE.md) — use terms like _Module, Seam, Station, Actor_ consistently.
 
-**Hooks:** [lint-staged](package.json) runs ESLint + Prettier on staged `*.{ts,tsx}`; CI/build uses `npm run lint`. Optional: [`.cursor/hooks.json`](.cursor/hooks.json) + [`scripts/sentinel-pre-edit-hint.mjs`](scripts/sentinel-pre-edit-hint.mjs) inject a one-line Sentinel hint on matched writes.
+**Hooks & CI:** [lint-staged](package.json) runs ESLint + Prettier on staged `*.{ts,tsx}` (and Prettier on `*.{json,css,md}`). CI is [`.github/workflows/verify.yml`](.github/workflows/verify.yml): `npm run verify` (lint + typecheck + unit tests) and a production build, plus Playwright corridor smokes and react-doctor (new-issues-only on PRs). Optional: [`.cursor/hooks.json`](.cursor/hooks.json) + [`scripts/sentinel-pre-edit-hint.mjs`](scripts/sentinel-pre-edit-hint.mjs) inject a one-line Sentinel hint on matched writes.
 
 ---
 
@@ -74,7 +78,7 @@ legacy/                 # Archived code (excluded from TypeScript build)
 ### Landing Page (V7)
 
 - `app/(marketing)/page.tsx` - Server component that fetches V7 content and celestial slot data
-- `lib/v7-parse.ts` - Reads and parses `public/prototypes/v7/landing-v7-motion.html` at build time
+- `lib/v7-parse/` - Reads and parses `public/prototypes/v7/landing-v7-motion.html` at build time (entry `lib/v7-parse/index.ts`; body/CSS/section/rail parsers alongside)
 - `components/landing/v7/LandingPage.tsx` - Client component: scroll, reveal, sigil choreography
 - `components/landing/v7/CelestialConnector/` - Parametric celestial diagrams between sections
 
@@ -96,15 +100,15 @@ npm run format   # Format with Prettier
 
 ## Skills Available
 
-### Context7 Documentation
+Skills live in [`.claude/skills/`](.claude/skills/) and load on demand — don't pull them all into context. Current set:
 
-Use "context7" or "get docs for [library]" to fetch up-to-date documentation.
-Example: "use context7 to get the latest Next.js App Router docs"
-
-### Frontend Design
-
-Use when optimizing front-end, designing components, or improving responsive design. Guides design decisions while maintaining the HUD aesthetic and avoiding generic patterns.
-Example: "optimize the front-end design", "make this component responsive", "design a new component"
+- **context7** — fetch up-to-date, version-specific library docs. Trigger: "use context7", "get docs for [library]".
+- **frontend-design** — front-end / component / responsive design decisions that hold the HUD aesthetic and avoid generic patterns.
+- **landing-v7-compositing** — stacking / gateway / hero / shield rules for `components/landing/v7/**` (pairs with ADR-008).
+- **landing-performance** — load-order, code-split, and payload doctrine for the landing route (keeps the WebGL corridor and Supabase off First Load JS).
+- **brandmark-choreography** — the scroll-driven brandmark journey (continuous transform model, ADR-013).
+- **brandmark-particle** — the brandmark particle painters (atmosphere / silhouette / substrate-sphere).
+- **thoughtform-design** — Thoughtform-specific design overrides (tokens, shape law, HUD grammar).
 
 ## Conventions
 
@@ -129,7 +133,7 @@ Example: "optimize the front-end design", "make this component responsive", "des
 
 - `(marketing)` — public-facing pages (the landing page).
 - `(admin)` — tools gated by `AdminGate` + `useAuth` (admin login, astrogation, orrery).
-- `(internal)` — dev-only routes blocked by `middleware.ts` in production (test pages, archive).
+- `(internal)` — dev-only routes (`/test/*`) blocked by `middleware.ts` in production.
 - New public pages go in `(marketing)`. New admin tools go in `(admin)` with `AdminGate`. New dev/test pages go in `(internal)`.
 
 ## Design System Patterns
