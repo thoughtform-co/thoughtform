@@ -14,7 +14,6 @@ import { SHELL_PRIMITIVES } from "./DepthGatewayScene/shell/shellGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { MobileEpilogueSignal } from "./MobileEpilogueSignal";
 import { StationTitle } from "./StationTitle";
-import { ArcCasesSigil } from "./arc-cases/ArcCasesSigil";
 import { ArcCasesHitLayer } from "./arc-cases/ArcCasesHitLayer";
 import { ARC_CASES_CARD } from "./arcCasesCard";
 
@@ -126,6 +125,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body3Html }} />
         </div>
       ) : (
         <div
@@ -136,6 +136,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body3Html }} />
           {cta}
         </div>
       )}
@@ -309,12 +310,10 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         </div>
       ))}
 
-      {/* Cases sigil (ADR-041) — the "VIEW THE CASES" trigger, welded to the
-          sphere's front pole where the two edge-on gimbal rings cross. Self-
-          gates on ARC_CASES_MEDIA (null off-desktop), so it can mount here
-          unconditionally; its anchor is `intelligence.sigil` in COPY_ANCHORS
-          and its opacity is painted by `gateSigil`. */}
-      {ARC_CASES_CARD && <ArcCasesSigil />}
+      {/* Cases cue (ADR-042) — the "VIEW THE CASES" trigger moved OFF the sphere
+          to a dotted-leader + label docked under the Build station title; it is
+          mounted by `CorridorStationHeaders` as the Build block's afterContent,
+          not here. (The ADR-041 sphere sigil that lived here is retired.) */}
 
       {/* Cases hit layer (ADR-041 addendum) — transparent <button>s welded
           over the baked pager + ✕ on the card face; anchor

@@ -68,6 +68,8 @@ export interface V7CorridorText {
     body1Html: string;
     /** Second lede paragraph. */
     body2Html: string;
+    /** Third lede paragraph. */
+    body3Html: string;
     /** CTA label, e.g. "See the thesis". */
     cta: string;
     /** "North star" caption title. */

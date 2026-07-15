@@ -41,10 +41,13 @@ export function extractV7Text(): V7CorridorText {
     "AI collapsed the distance between <em>thought</em> and <em>form</em>.";
   const tfBody1 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 0) ??
-    "Context is the new frontier, and every platform wants to capture it.";
+    "But AI still does not know your work.";
   const tfBody2 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 1) ??
-    "We help your team own yours,<br />and then build from it.";
+    "Context is the new frontier; and every platform wants to capture it.";
+  const tfBody3 =
+    innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 2) ??
+    "We help your team own yours, then build from it.";
   const tfCtaMatch = /<a\b[^>]*\bclass="[^"]*\bbtn--solid\b[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(
     tfHtml
   );
@@ -100,6 +103,7 @@ export function extractV7Text(): V7CorridorText {
       titleHtml: tfTitle.trim(),
       body1Html: tfBody1.trim(),
       body2Html: tfBody2.trim(),
+      body3Html: tfBody3.trim(),
       cta: tfCta,
       northStarTitle: tfNorthTitle,
       northStarDesc: tfNorthDesc,

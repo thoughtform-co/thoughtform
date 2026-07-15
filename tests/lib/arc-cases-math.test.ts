@@ -19,7 +19,6 @@ import {
   sigilSettle,
   stepSlot,
 } from "@/lib/arc-cases/arcCasesMath";
-import { CARD_Z, SIGIL_Z } from "@/lib/arc-cases/cardLayout";
 import { arcLatchEnvelope } from "@/lib/arc-cases/streamLatchMath";
 
 describe("dampLevel", () => {
@@ -170,16 +169,10 @@ describe("sigilSettle (ADR-041) — the trigger waits for the notes", () => {
   });
 });
 
-describe("SIGIL_Z (ADR-041) — the marker sits on the sphere's front pole", () => {
-  // The dotted shell's front face is at shell-local z ≈ 0.95 and the card
-  // face at CARD_Z. The sigil must sit BETWEEN them: proud of the sphere so
-  // it reads as sitting on the surface, and behind the card so the card
-  // grows over it and occludes it once open.
-  it("sits proud of the dotted shell and behind the card face", () => {
-    expect(SIGIL_Z).toBeGreaterThan(0.95);
-    expect(SIGIL_Z).toBeLessThan(CARD_Z);
-  });
-});
+// (ADR-042) The `SIGIL_Z` front-pole placement pin is retired with the sphere
+// sigil — the trigger is now `ArcCasesCue`, a DOM label under the Build title
+// with no place on the sphere's optical axis. The settle gate that arms it
+// (`sigilSettle` / `ARC_SIGIL_SETTLE`) is still pinned above.
 
 describe("stepSlot", () => {
   it("wraps forward 3 → 0", () => {

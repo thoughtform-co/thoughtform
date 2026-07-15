@@ -207,16 +207,17 @@ surface + two superseded ADR-036 sections). Three changes:
   made. Strict ordering invariant (`arcCardPresence === 0` while
   `arcFoldInput < 1`) is unit-pinned; the live arm trace shows cardPresence
   exactly 0 for the first ~384 ms while the labels fade 0.66 → 0.
-- **The trigger is a sigil, not a chip.** `ArcCasesTerminalCta` deleted;
-  `ArcCasesSigil` is a world-anchored DOM marker at the sphere's FRONT POLE
-  (`SIGIL_Z` 0.98 — where the two EDGE-ON gimbal rings cross, since their
-  planes meet on the Z axis; derivation in the ADR so it can't be
-  re-litigated). CSS-keyframe pulse (no JS clock). It arms only once the
-  notes have SETTLED (`sigilSettle`, window **measured live**, not guessed —
-  a first pass at [0.72, 0.96] left the trigger unreachable). CLOSE moved to
-  the stepper. Chose world-anchored DOM over an in-canvas sigil after finding
-  the corridor canvas is `pointer-events: none` with **zero R3F click
-  handlers** — in-canvas would still need a DOM hit area.
+- **The trigger is a cue under the Build title, not a sphere sigil (ADR-042
+  supersedes ADR-041 §2).** `ArcCasesTerminalCta` (chip) and `ArcCasesSigil`
+  (sphere marker) are BOTH deleted; `ArcCasesCue` is a DOM dotted-leader +
+  label docked under the Build station title (the sphere sigil "felt out of
+  place"). Its `intelligence.sigil` anchor, `gateSigil`, and `SIGIL_Z` are
+  gone. It arms on the SAME settle gate (`sigilSettle`, window **measured
+  live** — a first pass at [0.72, 0.96] left the trigger unreachable) and
+  keeps the aria/inert/auto-disarm contracts. Because it sits clear of the
+  centred card it stays visible + interactive while armed (a 2nd click /
+  Escape closes; the stepper ✕ CLOSE also stays), so the ADR-041
+  fade-to-0/pointer-events-drop guard is gone.
 - **Card face** gains the four capability rows from the retired horizontal
   console card, as a MEASURED fit (full → title-only → skipped) into the
   ~320 px dead band; Heimdall (longest copy) verified collision-free.

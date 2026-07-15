@@ -47,9 +47,9 @@ import {
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
-import { arcLabelFade, sigilSettle } from "@/lib/arc-cases/arcCasesMath";
+import { arcLabelFade } from "@/lib/arc-cases/arcCasesMath";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { CARD_CENTER_Y, CARD_Z, SIGIL_Z, getCardGeometry } from "@/lib/arc-cases/cardLayout";
+import { CARD_CENTER_Y, CARD_Z, getCardGeometry } from "@/lib/arc-cases/cardLayout";
 import { ARC_CASES_CARD } from "../arcCasesCard";
 
 // Re-exported for back-compat: external modules (FlyingCameraRig,
@@ -1985,25 +1985,11 @@ const gateMobileBuildTitle: WorldAnchor["onPaint"] = (ctx, el) => {
   el.style.opacity = (ctx.visibilityOpacity * buildOut).toFixed(3);
 };
 
-/** onPaint for the Build-park cases sigil (ADR-041): a world-anchored gold
- *  marker welded to the sphere's front pole. It fades IN as the notes
- *  settle (`sigilSettle` on the smoothed stack — shared with the button's
- *  inert gate), OUT as the card materializes on the same axis
- *  (`1 − cardPresence` — the card grows from it and occludes it), and OUT
- *  on the epilogue exit drain. Banks with the gyro like the stack labels.
- *  The button's interactivity (`ArcCasesSigil`'s own inert rAF) reads the
- *  SAME settle gate but WITHOUT the card-fade, so Escape can refocus the
- *  trigger while the card is open. */
-const gateSigil: WorldAnchor["onPaint"] = (ctx, el) => {
-  const settle = sigilSettle(getSmoothedAccretionLayers().stack);
-  const cardFade = ARC_CASES_CARD ? 1 - arcCasesLevelRef.current.cardPresence : 1;
-  const epFade = 1 - epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
-  el.style.opacity = (ctx.visibilityOpacity * settle * cardFade * epFade).toFixed(3);
-  // Full bank (not the labels' damped 0.65) so the compass-star sigil visibly
-  // tilts WITH the sphere it's inscribed on — it reads as part of the
-  // instrument, not a flat screen overlay.
-  applyGyroDomBank(el, 1);
-};
+// (ADR-042) The Build-park cases trigger no longer lives on the sphere. Its
+// world anchor (`intelligence.sigil`) + `onPaint` gate (`gateSigil`) are retired
+// — the trigger is now `ArcCasesCue`, a DOM dotted-leader + label docked under
+// the Build station title, whose visibility rides the Build header's own opacity
+// band and whose arm gate is the shared `sigilSettle` inside the component.
 
 /** Project a gyro-assembly-local point to screen px through the tracker's
  *  mirror camera (reused each frame; a single scratch vector). */
@@ -2736,23 +2722,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     },
     onPaint: gateStackLabel,
   },
-  // Cases sigil (ADR-041) — the "VIEW THE CASES" trigger, welded to the
-  // sphere's FRONT POLE (x = y = 0, z = SIGIL_Z) where the two edge-on
-  // gimbal rings cross. Only the intelligence beat (the Build park); its
-  // opacity is further gated by `gateSigil` (notes-settled × card-fade ×
-  // epilogue-drain). `center` origin drops the marker onto the crossing.
-  {
-    id: "intelligence.sigil",
-    position: (transform) => gyroAssemblyWorldPosition(transform, [0, 0, SIGIL_Z]),
-    visibilityBeats: ["intelligence"],
-    fadeFrac: 0.14,
-    perspectiveScale: {
-      referenceDistance: STATION_INTELLIGENCE.parkDistance,
-      min: 0.4,
-      max: 1.2,
-    },
-    onPaint: gateSigil,
-  },
+  // (ADR-042) The cases trigger's world anchor (`intelligence.sigil`) is
+  // retired — the trigger moved off the sphere to `ArcCasesCue` in the Build
+  // station header. The in-canvas card + its hit layer below are unchanged.
   // Cases hit layer (ADR-041 addendum) — a transparent DOM box welded over
   // the card's screen projection (sized + banked by `gateCasesHit`); its
   // buttons drive the baked pager + ✕. Same optical axis (x = 0) as the

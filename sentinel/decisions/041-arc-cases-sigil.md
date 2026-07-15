@@ -1,8 +1,13 @@
 # ADR-041: Arc Cases — the reveal is PHASED (nodes fold, then the card emerges), the trigger becomes a sigil welded to the sphere's front pole, and the card face carries the capability rows
 
 **Date:** 2026-07-14
-**Status:** Accepted (supersedes ADR-036 §3's single-level card read and §5's
-DOM arming chip. Everything else in ADR-036 remains LIVE and unchanged: the
+**Status:** Accepted, but **§2 (the sphere-welded sigil trigger) and the §3
+"CLOSE-on-stepper because the sigil sits behind the card" rationale are
+SUPERSEDED by [ADR-042](042-arc-cases-cue.md)** — the trigger moved off the
+sphere to a dotted-leader + label cue under the Build title. §1 (the phased
+`arcFoldInput` → `arcCardPresence` reveal + ordering invariant) and §4 (the card
+face capability rows) remain LIVE. (This ADR supersedes ADR-036 §3's single-level
+card read and §5's DOM arming chip. Everything else in ADR-036 remains LIVE and unchanged: the
 in-canvas card in the gyro assembly, `cardEdges` + the direct shell-local fold,
 the pure `streamLatchMath`, `arcCasesStore`, the `ARC_CASES_MEDIA` gate,
 `arcBandFactor`'s Build-band × epilogue-kill exclusivity + dissipate guard, the

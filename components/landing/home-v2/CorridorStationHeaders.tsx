@@ -29,6 +29,7 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { ARC_CASES_CARD } from "./arcCasesCard";
+import { ArcCasesCue } from "./arc-cases/ArcCasesCue";
 
 /**
  * CorridorStationHeaders — flat 2D screen-space layer for the three
@@ -624,11 +625,15 @@ function StationBlock({
         {split ? (
           /* Split blocks render the title band only — the support caption
              lives in the persistent CaptionCard (2026-07-03). The Build
-             block passes its Arc Cases CTA as `afterContent` so the chip
-             docks centered UNDER the title (ADR-035). */
+             block passes its Arc Cases cue as `afterContent`; the
+             `__headgroup` wrapper is a fit-content column so the cue
+             left-aligns under the title's first word (BUILD), not centred
+             under the whole "BUILD ON THE LAYER" phrase (ADR-042). */
           <div className="home-v2-station-header__head">
-            <TitleConsole>{head}</TitleConsole>
-            {afterContent}
+            <div className="home-v2-station-header__headgroup">
+              <TitleConsole>{head}</TitleConsole>
+              {afterContent}
+            </div>
           </div>
         ) : (
           <>
@@ -749,11 +754,15 @@ function StationBlock({
       {split ? (
         /* Split blocks render the title band only — the support caption
            lives in the persistent CaptionCard (2026-07-03). The Build
-           block passes its Arc Cases CTA as `afterContent` so the chip
-           docks centered UNDER the title (ADR-035). */
+           block passes its Arc Cases cue as `afterContent`; the
+           `__headgroup` wrapper groups the title + cue at a tight gap so
+           "SEE TOOLS" tucks just under the title, centred under the whole
+           "BUILD ON THE LAYER" title (ADR-042). */
         <div className="home-v2-station-header__head">
-          <TitleConsole>{titleEl}</TitleConsole>
-          {afterContent}
+          <div className="home-v2-station-header__headgroup">
+            <TitleConsole>{titleEl}</TitleConsole>
+            {afterContent}
+          </div>
         </div>
       ) : (
         <>
@@ -1732,6 +1741,11 @@ export function CorridorStationHeaders() {
           content={bld}
           typewriter={typewriter}
           split
+          // The Arc Cases trigger (ADR-042) docks centered UNDER the Build
+          // title — a dotted-leader + "tools we've built" label that arms the
+          // in-canvas tools card. Self-gates on ARC_CASES_MEDIA; the outer guard
+          // keeps it off the tree entirely when the media snapshot is null.
+          afterContent={ARC_CASES_CARD ? <ArcCasesCue /> : null}
         />
       )}
       {/* Persistent caption card — ONE bottom instrument for all three

@@ -1,23 +1,27 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
- * Arc Cases Card smoke (ADR-036; sigil trigger + phased reveal ADR-041).
+ * Arc Cases Card smoke (ADR-036; phased reveal ADR-041; DOM cue trigger ADR-042).
  *
  * Structural contracts only — the in-canvas card + the node-stream fold are
  * verified visually against the running dev server; the arm/band/phase/layout
  * math is pinned in `tests/lib/arc-cases-*.test.ts`. This suite proves the DOM
  * half:
- *   - the SIGIL is welded to the sphere's front pole (viewport centre at the
- *     park) and only offers itself once the sources/surfaces notes have
- *     SETTLED — inert mid-corridor and while they're still accreting;
- *   - arming fades the stack labels to nothing AND reveals the hit layer,
- *     which requires the CARD's R3F level writer to actually run (both read
- *     the `arcCasesLevelRef` the card writes);
- *   - THE ORDERING (ADR-041): the card has ZERO presence while the node fold
- *     is still running — the hit layer's region rides `cardPresence`, so it
- *     must still be at 0 on the frame the labels have already begun to fade;
+ *   - the CUE docks UNDER the Build station title (upper viewport, centred) and
+ *     only offers itself once the sources/surfaces notes have SETTLED — inert
+ *     mid-corridor and while they're still accreting;
+ *   - arming fades the stack labels to nothing AND reveals the hit layer, which
+ *     requires the CARD's R3F level writer to actually run (both read the
+ *     `arcCasesLevelRef` the card writes);
+ *   - THE ORDERING (ADR-041): the card has ZERO presence while the node fold is
+ *     still running — the hit layer's region rides `cardPresence`, so it must
+ *     still be at 0 on the frame the labels have already begun to fade;
  *   - stepping swaps the front slot, CLOSE drains, Escape returns focus to the
- *     sigil, and walking out of the band auto-disarms.
+ *     cue, and walking out of the band auto-disarms.
+ *
+ * Unlike the retired ADR-041 sphere sigil, the cue sits at the top of the
+ * viewport, clear of the centred card — so it stays visible AND interactive
+ * while armed (that is how a second click / Escape closes it).
  *
  * Desktop-only feature (ARC_CASES_MEDIA ≥ 1101×760 + no reduced motion):
  * the mobile/tablet projects assert absence instead.
@@ -28,12 +32,12 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 const BUILD_PARK_RAW = 0.9225 * (620 / 820);
 
 /** Mid-Build, while the sources/surfaces are still ACCRETING (paintProgress
- *  0.90 — the stack window is [0.875, 0.95]). The sigil must not offer
- *  itself here: the notes are still moving. */
+ *  0.90 — the stack window is [0.875, 0.95]). The cue must not offer itself
+ *  here: the notes are still moving. */
 const NOTES_ACCRETING_RAW = 0.9 * (620 / 820);
 
-const SIGIL = '[data-world-anchor="intelligence.sigil"]';
-const SIGIL_BTN = ".home-v2-cases-sigil__btn";
+const CUE = ".home-v2-cases-cue";
+const CUE_BTN = ".home-v2-cases-cue__btn";
 
 async function scrollToStageProgress(page: Page, raw: number) {
   await page.evaluate((value: number) => {
@@ -54,29 +58,18 @@ function isDesktop(page: Page): boolean {
 }
 
 /**
- * Click the sigil with a REAL mouse click at its projected centre.
+ * Click a re-projected / parallaxed hit target by its box centre.
  *
- * `locator.click()` cannot be used: the sigil is re-projected by the world-DOM
- * tracker every frame and the gyro assembly carries a continuous idle drift, so
- * its bounding box never repeats across two animation frames and Playwright's
- * actionability check fails forever with "element is not stable". (That is test
- * strictness, not a usability problem — the drift is sub-pixel on a 34px
- * target.) `page.mouse.click` still routes through the browser's real hit test,
- * so this keeps proving the pointer-events opt-in and the z-order: if anything
- * covered the marker, the click would land on that instead and the arm
- * assertions after each call would fail.
+ * `locator.click()` cannot be relied on: the cue rides the Build header's
+ * per-frame gyro parallax, and the baked pager / ✕ hit frame is re-projected
+ * every frame with a continuous idle drift, so their bounding boxes never repeat
+ * across two animation frames and Playwright's actionability check fails forever
+ * with "element is not stable". (That is test strictness, not a usability
+ * problem — the drift is sub-pixel.) `page.mouse.click` still routes through the
+ * browser's real hit test, so this keeps proving the pointer-events opt-in and
+ * the z-order: if anything covered the target, the click would land on that
+ * instead and the arm assertions after each call would fail.
  */
-async function clickSigil(page: Page) {
-  const box = await page.locator(SIGIL_BTN).boundingBox();
-  expect(box).not.toBeNull();
-  if (!box) return;
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-}
-
-/** Click a re-projected hit target (baked pager ordinal / ✕) by its box
- *  centre — same rationale as clickSigil: the hit frame is re-projected every
- *  frame and idle-drifts with the gyro, so `locator.click()` never passes
- *  Playwright actionability ("element is not stable"). */
 async function clickByBox(page: Page, locator: Locator) {
   const box = await locator.boundingBox();
   expect(box).not.toBeNull();
@@ -84,47 +77,52 @@ async function clickByBox(page: Page, locator: Locator) {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 }
 
-test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
+async function clickCue(page: Page) {
+  await clickByBox(page, page.locator(CUE_BTN));
+}
+
+test.describe("Arc cases card smoke (ADR-036 / ADR-041 / ADR-042)", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
     await page.waitForTimeout(800);
   });
 
-  test("the sigil sits on the sphere's front pole and waits for the notes to settle", async ({
+  test("the cue docks under the Build title and waits for the notes to settle", async ({
     page,
   }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
-    const sigil = page.locator(SIGIL);
-    await expect(sigil).toHaveCount(1);
+    const cue = page.locator(CUE);
+    await expect(cue).toHaveCount(1);
 
-    // The trigger is the OLD chip's successor: no dock under the Build title.
+    // The trigger is NOT the retired ADR-035 chip dock (that never returned).
     await expect(page.locator(".home-v2-cases-cta-dock")).toHaveCount(0);
 
     // Mid-corridor (Encode-ish): inert.
     await scrollToStageProgress(page, 0.45);
-    await expect(sigil).toHaveAttribute("inert", "");
+    await expect(cue).toHaveAttribute("inert", "");
 
     // Still inert while the sources/surfaces are ACCRETING — the reveal must
     // not be armable before the notes have landed (ADR-041).
     await scrollToStageProgress(page, NOTES_ACCRETING_RAW);
-    await expect(sigil).toHaveAttribute("inert", "");
+    await expect(cue).toHaveAttribute("inert", "");
 
-    // Build park: the notes have settled — the sigil is live.
+    // Build park: the notes have settled — the cue is live and armable.
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(700);
-    await expect(sigil).not.toHaveAttribute("inert", "");
+    await expect(cue).not.toHaveAttribute("inert", "");
+    await expect(cue).toHaveClass(/is-armable/);
 
-    // Welded to the FRONT POLE: it projects onto the sphere's centre, which
-    // at the on-axis park is the middle of the viewport.
-    const box = await sigil.boundingBox();
+    // Docked UNDER the Build title: it projects into the UPPER band of the
+    // viewport, horizontally centred with the header.
+    const box = await page.locator(CUE_BTN).boundingBox();
     const viewport = page.viewportSize();
     expect(box).not.toBeNull();
     if (box && viewport) {
       const cx = box.x + box.width / 2;
       const cy = box.y + box.height / 2;
-      expect(Math.abs(cx - viewport.width / 2)).toBeLessThan(viewport.width * 0.06);
-      expect(Math.abs(cy - viewport.height / 2)).toBeLessThan(viewport.height * 0.12);
+      expect(Math.abs(cx - viewport.width / 2)).toBeLessThan(viewport.width * 0.18);
+      expect(cy).toBeLessThan(viewport.height * 0.3);
     }
   });
 
@@ -133,13 +131,13 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    const sigil = page.locator(SIGIL);
+    const cue = page.locator(CUE);
     const stepper = page.locator("#arc-cases-terminal");
     await expect(stepper).toHaveCount(1);
 
-    await clickSigil(page);
-    await expect(sigil).toHaveAttribute("data-armed", "true");
-    await expect(page.locator(SIGIL_BTN)).toHaveAttribute("aria-expanded", "true");
+    await clickCue(page);
+    await expect(cue).toHaveAttribute("data-armed", "true");
+    await expect(page.locator(CUE_BTN)).toHaveAttribute("aria-expanded", "true");
     await expect(stepper).toHaveAttribute("data-open", "true");
 
     // The stepper drops `inert` once cardPresence passes the arrive threshold —
@@ -155,17 +153,13 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
       })
       .toBeLessThan(0.05);
 
-    // The card covers the sigil's axis, so the marker fades out — but it stays
-    // FOCUSABLE (not inert) so Escape can return focus to the trigger, and it
-    // drops mouse events so it can't be clicked through the card face.
-    await expect
-      .poll(async () => Number(await sigil.evaluate((el) => getComputedStyle(el).opacity)), {
-        timeout: 5000,
-      })
-      .toBeLessThan(0.05);
-    await expect(sigil).not.toHaveAttribute("inert", "");
-    expect(await page.locator(SIGIL_BTN).evaluate((el) => getComputedStyle(el).pointerEvents)).toBe(
-      "none"
+    // Unlike the sigil, the cue sits at the top of the viewport, clear of the
+    // centred card — so it stays visible AND interactive while armed (a second
+    // click / Escape closes it, and Escape can return focus to it).
+    await expect(cue).not.toHaveAttribute("inert", "");
+    await expect(cue).toBeVisible();
+    expect(await page.locator(CUE_BTN).evaluate((el) => getComputedStyle(el).pointerEvents)).toBe(
+      "auto"
     );
   });
 
@@ -191,7 +185,7 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     const FOLD_WINDOW_MS = 360;
 
     const trace = await page.evaluate(async () => {
-      const btn = document.querySelector<HTMLElement>(".home-v2-cases-sigil__btn");
+      const btn = document.querySelector<HTMLElement>(".home-v2-cases-cue__btn");
       const stepper = document.querySelector<HTMLElement>("#arc-cases-terminal");
       const label = document.querySelector<HTMLElement>(
         '[data-world-anchor="intelligence.sourcesLabel"]'
@@ -241,7 +235,7 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    await clickSigil(page);
+    await clickCue(page);
     await expect(page.locator("#arc-cases-terminal")).toHaveAttribute("data-open", "true");
 
     const pagers = page.locator(".home-v2-cases-hit__pager");
@@ -260,53 +254,48 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     await expect(pagers.nth(3)).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("CLOSE drains the reveal — stepper inert, labels + sigil recover", async ({ page }) => {
+  test("CLOSE drains the reveal — stepper inert, labels recover, cue disarms", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    const sigil = page.locator(SIGIL);
+    const cue = page.locator(CUE);
     const stepper = page.locator("#arc-cases-terminal");
-    await clickSigil(page);
+    await clickCue(page);
     await expect(stepper).toHaveAttribute("data-open", "true");
     await expect(stepper).not.toHaveAttribute("inert", "", { timeout: 5000 });
 
-    // The sigil is behind the card once open, so the ✕ close lives on the
-    // card face — a box-click on its welded hit button.
+    // The ✕ close lives on the card face — a box-click on its welded hit button.
     await clickByBox(page, page.locator(".home-v2-cases-hit__close"));
-    await expect(sigil).toHaveAttribute("data-armed", "false");
+    await expect(cue).toHaveAttribute("data-armed", "false");
     await expect(stepper).toHaveAttribute("data-open", "false");
     await expect(stepper).toHaveAttribute("inert", "", { timeout: 5000 });
 
-    // Stack labels and the sigil recover once the level drains back to 0.
+    // Stack labels recover once the level drains back to 0; the cue stayed live.
     const stackChip = page.locator('.home-v2-stack-item[data-stack-side="sources"]').first();
     await expect
       .poll(async () => Number(await stackChip.evaluate((el) => getComputedStyle(el).opacity)), {
         timeout: 5000,
       })
       .toBeGreaterThan(0.3);
-    await expect
-      .poll(async () => Number(await sigil.evaluate((el) => getComputedStyle(el).opacity)), {
-        timeout: 5000,
-      })
-      .toBeGreaterThan(0.5);
+    await expect(cue).not.toHaveAttribute("inert", "");
   });
 
-  test("Escape closes and returns focus to the sigil", async ({ page }) => {
+  test("Escape closes and returns focus to the cue", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    await clickSigil(page);
+    await clickCue(page);
     await expect(page.locator("#arc-cases-terminal")).toHaveAttribute("data-open", "true");
 
     await page.keyboard.press("Escape");
-    await expect(page.locator(SIGIL)).toHaveAttribute("data-armed", "false");
-    // The trigger takes focus back (it stays focusable while armed precisely
-    // so this works — see ADR-041).
+    await expect(page.locator(CUE)).toHaveAttribute("data-armed", "false");
+    // The trigger takes focus back (it stays focusable while armed precisely so
+    // this works — see ADR-042).
     expect(
       await page.evaluate(() =>
-        document.activeElement?.classList.contains("home-v2-cases-sigil__btn")
+        document.activeElement?.classList.contains("home-v2-cases-cue__btn")
       )
     ).toBe(true);
   });
@@ -316,33 +305,33 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    const sigil = page.locator(SIGIL);
-    await clickSigil(page);
-    await expect(sigil).toHaveAttribute("data-armed", "true");
+    const cue = page.locator(CUE);
+    await clickCue(page);
+    await expect(cue).toHaveAttribute("data-armed", "true");
 
-    // Scroll back toward Encode — the watcher (now owned by the sigil) disarms.
+    // Scroll back toward Encode — the watcher (owned by the cue) disarms.
     await scrollToStageProgress(page, 0.45);
-    await expect(sigil).toHaveAttribute("data-armed", "false");
+    await expect(cue).toHaveAttribute("data-armed", "false");
 
     // Return: clean re-arm.
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(700);
-    await expect(sigil).not.toHaveAttribute("inert", "");
-    await clickSigil(page);
-    await expect(sigil).toHaveAttribute("data-armed", "true");
+    await expect(cue).not.toHaveAttribute("inert", "");
+    await clickCue(page);
+    await expect(cue).toHaveAttribute("data-armed", "true");
     await clickByBox(page, page.locator(".home-v2-cases-hit__close"));
   });
 
-  test("mobile/tablet never shows the sigil or the hit layer", async ({ page }) => {
+  test("mobile/tablet never shows the cue or the hit layer", async ({ page }) => {
     test.skip(isDesktop(page), "absence check is for small viewports");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
 
     // Both self-gate on ARC_CASES_MEDIA (render null off-desktop).
     await expect(page.locator("#arc-cases-terminal")).toHaveCount(0);
 
-    // If the sigil is in the DOM at all, the ARC_CASES_MEDIA-mirroring CSS
-    // hide must keep it invisible (gate parity).
-    const sigil = page.locator(SIGIL);
-    if ((await sigil.count()) > 0) await expect(sigil).toBeHidden();
+    // If the cue is in the DOM at all, the ARC_CASES_MEDIA-mirroring CSS hide
+    // must keep it invisible (gate parity).
+    const cue = page.locator(CUE);
+    if ((await cue.count()) > 0) await expect(cue).toBeHidden();
   });
 });
