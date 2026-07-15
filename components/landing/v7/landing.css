@@ -1648,7 +1648,7 @@
   text-transform: uppercase;
   color: var(--dawn-70, var(--dawn));
   margin: clamp(20px, 2.4vh, 32px) 0 0;
-  max-width: 42ch;
+  max-width: 44ch;
 }
 
 .hero__cta {

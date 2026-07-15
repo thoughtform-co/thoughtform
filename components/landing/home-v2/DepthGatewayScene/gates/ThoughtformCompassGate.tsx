@@ -112,7 +112,7 @@ const RING_RADII = SIGIL_RING_MORPHS.map((r) => r.ringRadius / 200);
  *  behind a brighter projected brandmark + grain field in home-v2.
  *  The compass should read as present instrument structure, but the
  *  brandmark remains the dominant gold object. */
-const RING_ALPHA_WEIGHTS = [0.32, 0.36, 0.56, 0.76];
+const RING_ALPHA_WEIGHTS = [0.46, 0.5, 0.68, 0.86];
 
 /** Per-ring colours — outer two are dawn, inner two are gold. */
 const DAWN_HEX = "#ebe3d6";
