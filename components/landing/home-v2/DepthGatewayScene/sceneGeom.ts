@@ -910,16 +910,38 @@ export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobil
   // Both surfaces fade OUT together in the final sliver of the dwell so
   // the composed layout exits as one unit when the corridor fly begins.
   const exitFade = 1 - smoothstep(0.24, MOBILE_THOUGHTFORM_END, p);
-  // Diagram entrance — brief fade-in at the top of the dwell so the mark
-  // and compass "power on" behind the copy rather than snapping into
-  // view. Copy is held at 1 from the start (the composition reads
-  // fully assembled on arrival, matching the "furnished room" rule).
-  const diagramEntrance = smoothstep(0.06, 0.15, p);
+  // Gateway visible at REST (2026-07-15 pass 3): the compass + diagram
+  // read as "already there" the moment the hero curtain lifts, matching
+  // desktop (where `diagramFactor ≡ 1`). The arrival flourish is carried
+  // by `getThoughtformBootEnvelope` (an additive glow lift on the rings),
+  // NOT by fading the diagram in — the prior `smoothstep(0.06, 0.15, p)`
+  // entrance kept the whole gateway invisible until the user had already
+  // scrolled into the beat ("the gateway should already be visible").
+  // So `diagramFactor` now just tracks the exit fade.
   return {
     copyFactor: exitFade,
-    diagramFactor: diagramEntrance * exitFade,
+    diagramFactor: exitFade,
     slideY: 0,
   };
+}
+
+/** Mobile thesis "rise to centre" (2026-07-15 pass 3). At REST the
+ *  brandmark + compass sit a touch BELOW the gate centre; as the beat
+ *  scrubs they rise together, reaching centre exactly at the
+ *  SVG→particle handoff (`CORRIDOR_TIMELINE.brandmark.thoughtformHold`).
+ *  Returning to 0 at the handoff keeps the morph + corridor fly
+ *  byte-identical — this only adds a rest→centre lift in the early dwell
+ *  ("when you scroll it goes into the centre together with the gateway,
+ *  and then you enter it"). Both consumers read this so the mark and its
+ *  gateway rise as ONE: the projected brandmark via
+ *  `getBrandmarkWorldPosition`, and the `ThoughtformCompassGate` group Y.
+ *  Keyed off PAINT progress (the clock both consumers already use).
+ *  Desktop returns 0 → provably unchanged. */
+export const MOBILE_THOUGHTFORM_RISE_OFFSET = 0.85;
+export function getThoughtformMobileRiseOffset(paintProgress: number): number {
+  if (!isMobileComposition()) return 0;
+  const hold = CORRIDOR_TIMELINE.brandmark.thoughtformHold;
+  return -MOBILE_THOUGHTFORM_RISE_OFFSET * (1 - smoothstep(0, hold, clamp01(paintProgress)));
 }
 
 /** Thoughtform compass — off-axis-right at parked rest so the
@@ -1421,12 +1443,17 @@ export function getBrandmarkWorldPosition(
   const tfX = BRANDMARK_ANCHOR_THOUGHTFORM[0] + tfOffsetX;
 
   if (progress <= thoughtformHold) {
-    // Mobile composed layout (2026-07-15): the mark sits at the gate
-    // centre for the whole dwell — the retired `slideY` from-below
-    // approach is gone. `slideY` in `ThoughtformMobilePhase` is now
-    // always 0, so this branch reads the plain anchor.
+    // Mobile (2026-07-15 pass 3): the mark rests a touch BELOW centre and
+    // rises to it as the beat scrubs, reaching centre exactly at
+    // `thoughtformHold` (this branch's upper bound) so the handoff into
+    // the arrival lerp below is C0-continuous and the morph/fly are
+    // byte-identical. Desktop offset is 0. See `getThoughtformMobileRiseOffset`.
     void rawProgress;
-    return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_THOUGHTFORM[2]];
+    return [
+      tfX,
+      BRANDMARK_ANCHOR_THOUGHTFORM[1] + getThoughtformMobileRiseOffset(progress),
+      BRANDMARK_ANCHOR_THOUGHTFORM[2],
+    ];
   }
   if (progress <= diagnosticArrival) {
     // Arrival lerp lands at the LEAD position at `diagnosticArrival`,
@@ -2411,9 +2438,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
   {
     id: "navigate.support",
-    // Mobile straddle widened -0.65 → -2.0 (ADR-018 pass 2) so the
-    // framed caption drops into the empty band below the sphere.
-    position: () => stationHeaderPosition(STATION_NAVIGATE, "support", -2.0),
+    // Mobile straddle -0.65 → -2.0 (pass 2) → -1.8 (pass 3): pass 2 read
+    // bottom-heavy, so pulled up toward centre while keeping ~0.2 world
+    // clearance below the Navigate sphere (its radius is the largest of
+    // the three via `navBoost`).
+    position: () => stationHeaderPosition(STATION_NAVIGATE, "support", -1.8),
     visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
     perspectiveScale: {
@@ -2490,10 +2519,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_DIAGNOSTIC,
-        // Mobile straddle -0.88 → -1.7 (ADR-018 pass 2): caption drops
-        // into the empty band below the sphere.
+        // Mobile straddle -0.88 → -1.7 (pass 2) → -1.5 (pass 3): pulled
+        // up so the caption reads less bottom-heavy (Encode's sphere has
+        // no navBoost, so ~0.27 world clearance remains below it).
         "support",
-        -1.7,
+        -1.5,
         diagnosticApproachDepthOffset(transform.paintProgress)
       ),
     visibilityBeats: ["pass-01b", "diagnostic"],
@@ -2573,12 +2603,12 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_INTELLIGENCE,
-        // Mobile straddle -0.9 → -1.45 (ADR-018 pass 2): drops below the
-        // sphere but stays modest — the Build support cluster ALSO carries
-        // the 2x2 case mini-cards, so it grows further down than
-        // Navigate/Encode and must not run off the bottom of the frame.
+        // Mobile straddle -0.9 → -1.45 (pass 2) → -1.35 (pass 3): pulled
+        // up so the caption reads less bottom-heavy AND the 2x2 case
+        // mini-cards below it gain room at the bottom of the frame. Kept
+        // the most modest of the three (the cards grow furthest down).
         "support",
-        -1.45,
+        -1.35,
         intelligenceApproachDepthOffset(transform.paintProgress)
       ),
     visibilityBeats: ["passthrough-02", "intelligence"],

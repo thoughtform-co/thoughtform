@@ -12,6 +12,7 @@ import {
   depthOpacityForWorldPosition,
   getThoughtformBootEnvelope,
   getThoughtformMobilePhase,
+  getThoughtformMobileRiseOffset,
   getThoughtformRingFlythrough,
 } from "../sceneGeom";
 
@@ -503,14 +504,14 @@ export function ThoughtformCompassGate() {
     // wall-clock time, in lockstep with the brandmark + copy + stars.
     group.position.x = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
 
-    // Mobile composed layout (2026-07-15 quality pass): the compass
-    // stays at the gate centre for the whole dwell (no slide-in), and
-    // `diagramFactor` is a brief entrance fade only — after that it
-    // holds at 1 so the diagram sits alongside the copy for the rest
-    // of the beat. `slideY` is retired (always 0), so we just anchor
-    // to the station Y. Keyed off RAW progress, not paintProgress.
+    // Mobile (2026-07-15 pass 3): the compass is visible at REST
+    // (`diagramFactor` holds at 1 through the dwell, only dropping at the
+    // exit) and RISES to the gate centre with the brandmark as the beat
+    // scrubs — `getThoughtformMobileRiseOffset` returns the shared Y lift
+    // (0 at the handoff, 0 on desktop) so the mark + gateway move as one.
+    // `diagramFactor` is keyed off RAW progress; the rise off PAINT.
     const { diagramFactor } = getThoughtformMobilePhase(rawProgress);
-    group.position.y = STATION_THOUGHTFORM.position[1];
+    group.position.y = STATION_THOUGHTFORM.position[1] + getThoughtformMobileRiseOffset(progress);
 
     // Boot envelope — runs alongside the centering pan and the
     // first beat of the parked composition. Painters in this gate

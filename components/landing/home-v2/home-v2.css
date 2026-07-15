@@ -943,7 +943,10 @@ html[data-corridor-exit="true"] #about {
 }
 .home-v2-case-cards__tagline {
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 9.5px;
+  /* 9.5 → 9 (pass 3 type-scale harmonisation): the mobile arc uses a
+     clean 4-step mono scale — 16 (title) / 12 (codename) / 11 (body) /
+     9 (all meta: kicker, badge, coord, index, tagline). */
+  font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(235, 227, 214, 0.55);
@@ -2914,7 +2917,8 @@ html[data-corridor-exit="true"] #about {
     width: 8px;
   }
   .home-v2-readout__badge {
-    font-size: 8px;
+    /* 8 → 9 (pass 3): unify the meta tier onto a single 9px step. */
+    font-size: 9px;
     padding: 2px 6px;
     letter-spacing: 0.16em;
   }
@@ -3035,7 +3039,8 @@ html[data-corridor-exit="true"] #about {
     top: -20px;
     pointer-events: none;
     font-family: var(--font-pt-mono, ui-monospace, monospace);
-    font-size: 8px;
+    /* 8 → 9 (pass 3): unify the meta tier onto a single 9px step. */
+    font-size: 9px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: rgba(202, 165, 84, 0.5);

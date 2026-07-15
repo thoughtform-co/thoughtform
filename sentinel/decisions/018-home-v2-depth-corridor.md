@@ -12,6 +12,54 @@
 
 ---
 
+## 2026-07-15 Revision 3 — Mobile Quality Pass, Round 3 (thesis rise + gateway-at-rest + caption + type scale)
+
+Owner visual-tuning follow-up to Revision 2. Desktop stays byte-identical
+— all gated on `isMobileComposition()` / mobile media queries, and both
+mobile-phase helpers return identity on desktop.
+
+1. **Thesis: gateway visible at REST + rise-to-centre.** Two coupled
+   changes to the mobile Thoughtform beat:
+   - `getThoughtformMobilePhase` no longer ramps `diagramFactor` in
+     (`smoothstep(0.06, 0.15, p)` → now held at the exit fade). The
+     compass + phase bearings read as "already there" the instant the
+     hero curtain lifts, matching desktop (`diagramFactor ≡ 1`); the
+     arrival flourish is carried by `getThoughtformBootEnvelope` (a glow
+     lift on the rings), NOT a diagram fade-in. Fixes "the gateway should
+     already be visible" — it was gated invisible until the user had
+     already scrolled into the beat.
+   - New `getThoughtformMobileRiseOffset(paintProgress)` returns a shared
+     Y lift (`MOBILE_THOUGHTFORM_RISE_OFFSET = 0.85`) that seats the
+     brandmark + compass a touch BELOW the gate centre at rest and rises
+     them TOGETHER to centre, reaching 0 exactly at
+     `CORRIDOR_TIMELINE.brandmark.thoughtformHold` (the SVG→particle
+     handoff). Because the offset is 0 at the handoff, the morph +
+     corridor fly are byte-identical — this only adds a rest→centre lift
+     in the early dwell. Applied in the two consumers that must move as
+     one: `getBrandmarkWorldPosition` (thoughtform branch) and
+     `ThoughtformCompassGate` group Y. Revives the intent of the
+     Round-1-retired `slideY`, but driven off PAINT progress and gated to
+     complete before the handoff. Fixes "the brand mark is too much in
+     the middle / needs to be a bit lower" + "when you scroll it goes
+     into the centre together with the gateway, and then you enter it."
+2. **Arc caption pulled up.** Revision 2's support straddles read
+   bottom-heavy; magnitudes reduced (Navigate −2.0 → −1.8, Encode −1.7 →
+   −1.5, Build −1.45 → −1.35), each still clearing its sphere (Navigate
+   is bounded by its larger `navBoost × mobileGyroSphereScale` sphere).
+   Side effect: the Build 2×2 case cards now fit fully in-frame — the
+   bottom row was clipping at the −1.45 straddle.
+3. **Mobile arc type scale.** Collapsed a scattered 8 / 9 / 9.5px meta
+   cluster onto a clean 4-step mono scale — 16 (title) / 12 (codename) /
+   11 (support) / 9 (all meta: kicker chip, badge, coord tag, case index,
+   tagline). Only three sizes moved (badge 8→9, coord 8→9, tagline 9.5→9).
+
+Verified in-browser (390×844): gateway visible at rest with the mark
+seated low, measured rising toward centre on scroll (brandmark screen-cy
+537 → 506 → 456), captions less bottom-heavy, Build cards fully in-frame,
+meta fonts uniform at 9px. lint / typecheck green. Desktop unchanged.
+
+---
+
 ## 2026-07-15 Revision 2 — Mobile Quality Pass, Round 2 (title chrome + caption reticle + sphere + epilogue font)
 
 Round 1 (below) fixed the structural mobile bugs but left three

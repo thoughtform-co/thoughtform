@@ -54,6 +54,27 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-15 — Mobile Landing Quality Pass, Round 3 (ADR-018 Revision 3)
+
+Owner visual-tuning follow-up to Round 2. Cycle A. All gated mobile →
+desktop byte-identical.
+
+- **Thesis gateway visible at rest + rise-to-centre.**
+  `getThoughtformMobilePhase` holds `diagramFactor` at the exit fade (was
+  a scroll-in ramp) so the compass reads as already-there on arrival; new
+  `getThoughtformMobileRiseOffset` seats the brandmark + compass below
+  centre at rest and rises them to centre by the SVG→particle handoff
+  (offset 0 there → morph/fly byte-identical). Applied in
+  `getBrandmarkWorldPosition` + `ThoughtformCompassGate`.
+- **Arc caption pull-up.** Support straddles −2.0 / −1.7 / −1.45 → −1.8 /
+  −1.5 / −1.35 (less bottom-heavy; the Build case cards now fit fully).
+- **Type scale.** Mobile arc meta unified onto 9px (badge / coord /
+  tagline); clean 16 / 12 / 11 / 9 mono scale.
+
+Three code files (`sceneGeom.ts`, `ThoughtformCompassGate.tsx`,
+`home-v2.css`) + docs. lint / typecheck green; verified in-browser at
+390×844.
+
 ### 2026-07-15 — Mobile Landing Quality Pass, Round 2 (ADR-018 Revision 2)
 
 Follow-up to the same-day Round 1 below. Round 1 landed 7 of its 9
