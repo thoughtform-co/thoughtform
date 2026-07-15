@@ -29,16 +29,31 @@ import { getDeviceTier, type DeviceTier } from "@/lib/hooks/useDeviceTier";
  *      the governor steps DOWN one rung and arms a cooldown so the
  *      rebuild/DPR-change spike doesn't cascade.
  *
- * The ladder is: DPR ceiling 1.75 → 1.25 → 1.0, THEN particle multiplier
- * 1.0 → 0.6 → 0.35. It is MONOTONIC — the governor never steps up
- * mid-session (no oscillation, no thrash). DPR steps are free (R3F
- * reactive `dpr`); the two count steps rebuild geometry once each and are
- * gated behind exhausting the DPR steps first, so they only ever fire on
- * a device that is genuinely struggling after the cheap levers are spent.
+ * The DOWN ladder is: DPR ceiling 1.75 → 1.25 → 1.0, THEN particle
+ * multiplier 1.0 → 0.6 → 0.35. DPR steps are free (R3F reactive `dpr`);
+ * the two count steps rebuild geometry once each and are gated behind
+ * exhausting the DPR steps first, so they only ever fire on a device
+ * genuinely struggling after the cheap levers are spent.
  *
- * Per-frame stats (EMA, slow-streak, cooldown) live in module scope, NOT
- * store state: only an actual rung change calls `set()`, so sampling is
- * allocation- and re-render-free.
+ * RECOVERY (ADR-038 rev 2): the governor also climbs back UP one rung
+ * when the smoothed frame time stays comfortably fast (below `FAST_MS`, a
+ * wide deadband under `SLOW_MS`) for `RECOVER_SUSTAIN_MS`. So a capable
+ * device that only tripped the governor on the heavy scroll-dive regains
+ * full crispness once it settles into the calm parked state, instead of
+ * staying degraded (and rendering the flagship wireframe at half
+ * resolution) for the rest of the session. Recovery reverses the ladder
+ * (counts back first, then DPR) and never exceeds the opening budget
+ * (`maxDprCeiling` / `maxCountMultiplier`, seeded by the probe).
+ * Anti-oscillation: recovery only fires from the wide fast deadband, on a
+ * long streak, behind its own cooldown — and if a step-up proves
+ * unsustainable (a degrade fires within `LOCK_WINDOW_MS` of it), that rung
+ * is LOCKED (the recovery ceiling drops to the degraded value) so the
+ * governor never retries it. At most one up→down flip per rung per
+ * session; no perpetual thrash.
+ *
+ * Per-frame stats (EMA, slow/fast streaks, cooldown) live in module
+ * scope, NOT store state: only an actual rung change calls `set()`, so
+ * sampling is allocation- and re-render-free.
  */
 
 // ── Ladder constants ─────────────────────────────────────────────
@@ -70,6 +85,20 @@ const DPR_STEP_LOW = 1.0;
 const COUNT_STEP_MID = 0.6;
 const COUNT_STEP_LOW = 0.35;
 
+// ── Recovery constants (ADR-038 rev 2) ───────────────────────────
+/** Smoothed frame time (ms) below which the corridor is "comfortably
+ *  fast" — a WIDE deadband under SLOW_MS so a one-rung step-up (which can
+ *  nearly double pixel work) can't immediately re-cross SLOW_MS. */
+const FAST_MS = 14;
+/** How long the smoothed frame time must stay fast before a step-up. */
+const RECOVER_SUSTAIN_MS = 3000;
+/** Quiet window after a step-up so its own resolution jump settles before
+ *  the sampler judges the new rung. */
+const RECOVER_COOLDOWN_MS = 2000;
+/** A degrade within this window of a step-up is treated as caused by that
+ *  step-up: the rung is locked so recovery never retries it. */
+const LOCK_WINDOW_MS = 4000;
+
 // ── Store ────────────────────────────────────────────────────────
 
 export interface QualityState {
@@ -78,13 +107,23 @@ export interface QualityState {
   dprCeiling: number;
   /** Multiplier applied to per-tier particle/point counts. */
   countMultiplier: number;
+  /** Recovery ceilings — the governor never climbs above these. Seeded to
+   *  the opening budget the probe granted, and lowered when a step-up is
+   *  locked out (anti-oscillation). */
+  maxDprCeiling: number;
+  maxCountMultiplier: number;
   /** True once the one-shot renderer probe has run. */
   probed: boolean;
 }
 
 interface QualityStore extends QualityState {
-  /** Advance one rung down the degradation ladder. No-op at the bottom. */
-  degrade: () => void;
+  /** Advance one rung DOWN the ladder. No-op at the bottom. When
+   *  `causedByRecovery`, the reached rung is locked as the new recovery
+   *  ceiling so it is never climbed back to. */
+  degrade: (causedByRecovery?: boolean) => void;
+  /** Climb one rung UP the ladder (reverse order, clamped to the opening
+   *  budget). Returns whether anything changed. */
+  recover: () => boolean;
   /** Seed from the GPU-capability probe. Idempotent. */
   probe: () => void;
 }
@@ -92,16 +131,46 @@ interface QualityStore extends QualityState {
 export const useQualityStore = create<QualityStore>((set, get) => ({
   dprCeiling: DPR_BASE_DESKTOP,
   countMultiplier: 1,
+  maxDprCeiling: DPR_BASE_DESKTOP,
+  maxCountMultiplier: 1,
   probed: false,
-  degrade: () => {
+  degrade: (causedByRecovery = false) => {
     const { dprCeiling, countMultiplier } = get();
+    const patch: Partial<QualityState> = {};
     if (dprCeiling > DPR_STEP_LOW) {
-      set({ dprCeiling: dprCeiling > DPR_STEP_MID ? DPR_STEP_MID : DPR_STEP_LOW });
+      patch.dprCeiling = dprCeiling > DPR_STEP_MID ? DPR_STEP_MID : DPR_STEP_LOW;
     } else if (countMultiplier > COUNT_STEP_MID) {
-      set({ countMultiplier: COUNT_STEP_MID });
+      patch.countMultiplier = COUNT_STEP_MID;
     } else if (countMultiplier > COUNT_STEP_LOW) {
-      set({ countMultiplier: COUNT_STEP_LOW });
+      patch.countMultiplier = COUNT_STEP_LOW;
+    } else {
+      return; // at the bottom
     }
+    // A degrade caused by a just-applied step-up means that rung is
+    // unsustainable on this device: lock the recovery ceiling at the
+    // degraded value so the governor never climbs back to it.
+    if (causedByRecovery) {
+      if (patch.dprCeiling !== undefined) patch.maxDprCeiling = patch.dprCeiling;
+      if (patch.countMultiplier !== undefined) patch.maxCountMultiplier = patch.countMultiplier;
+    }
+    set(patch);
+  },
+  recover: () => {
+    const { dprCeiling, countMultiplier, maxDprCeiling, maxCountMultiplier } = get();
+    // Reverse of degrade (which lowers DPR first, then counts): recover
+    // COUNTS first (0.35 → 0.6 → 1.0), THEN DPR (1.0 → 1.25 → 1.75), each
+    // clamped to the opening budget the probe granted.
+    if (countMultiplier < maxCountMultiplier) {
+      const next = countMultiplier < COUNT_STEP_MID ? COUNT_STEP_MID : 1;
+      set({ countMultiplier: Math.min(next, maxCountMultiplier) });
+      return true;
+    }
+    if (dprCeiling < maxDprCeiling) {
+      const next = dprCeiling < DPR_STEP_MID ? DPR_STEP_MID : DPR_BASE_DESKTOP;
+      set({ dprCeiling: Math.min(next, maxDprCeiling) });
+      return true;
+    }
+    return false;
   },
   probe: () => {
     if (get().probed) return;
@@ -112,10 +181,23 @@ export const useQualityStore = create<QualityStore>((set, get) => ({
     const cls = classifyRenderer();
     if (cls === "software") {
       // Should already be on the static fallback, but if it ever runs
-      // 3D, open at the floor.
-      set({ probed: true, dprCeiling: DPR_STEP_LOW, countMultiplier: COUNT_STEP_LOW });
+      // 3D, open — and pin — at the floor (max == current → no recovery).
+      set({
+        probed: true,
+        dprCeiling: DPR_STEP_LOW,
+        countMultiplier: COUNT_STEP_LOW,
+        maxDprCeiling: DPR_STEP_LOW,
+        maxCountMultiplier: COUNT_STEP_LOW,
+      });
     } else if (cls === "low") {
-      set({ probed: true, dprCeiling: DPR_STEP_MID, countMultiplier: COUNT_STEP_MID });
+      // Open a couple rungs down; recovery may return here but no higher.
+      set({
+        probed: true,
+        dprCeiling: DPR_STEP_MID,
+        countMultiplier: COUNT_STEP_MID,
+        maxDprCeiling: DPR_STEP_MID,
+        maxCountMultiplier: COUNT_STEP_MID,
+      });
     } else {
       set({ probed: true });
     }
@@ -126,37 +208,70 @@ export const useQualityStore = create<QualityStore>((set, get) => ({
 
 let ema = 0;
 let slowSinceMs = 0;
+let fastSinceMs = 0;
 let cooldownUntilMs = 0;
+// -Infinity = "no step-up yet", so `now - lastRecoverAtMs` is never inside
+// LOCK_WINDOW_MS until a recovery actually happens (a 0 sentinel would
+// wrongly flag the first degrade when the clock is still near zero).
+let lastRecoverAtMs = -Infinity;
 
-/** Arm the cooldown (called on engage and after each step-down). */
+function nowMs(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+/** Arm the cooldown + clear streaks (called on engage and after each
+ *  step-down). */
 export function resetFrameSampler(): void {
   ema = 0;
   slowSinceMs = 0;
-  cooldownUntilMs =
-    (typeof performance !== "undefined" ? performance.now() : Date.now()) + COOLDOWN_MS;
+  fastSinceMs = 0;
+  lastRecoverAtMs = -Infinity;
+  cooldownUntilMs = nowMs() + COOLDOWN_MS;
 }
 
 /**
  * Feed one engaged frame's delta (seconds, from R3F `useFrame`). Cheap:
- * updates a module-scope EMA and only touches the store on an actual
- * step-down.
+ * updates a module-scope EMA and only touches the store on an actual rung
+ * change (down OR up).
  */
 export function reportFrameSample(deltaSeconds: number): void {
   if (isAutomated()) return;
-  const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const now = nowMs();
   const dtMs = deltaSeconds * 1000;
   // Ignore absurd deltas (tab was backgrounded / debugger paused).
   if (dtMs <= 0 || dtMs > 200) return;
   ema = ema === 0 ? dtMs : ema * (1 - EMA_ALPHA) + dtMs * EMA_ALPHA;
   if (now < cooldownUntilMs) return;
+
   if (ema > SLOW_MS) {
+    // Sustained slow → step DOWN. If this follows a recent step-up, that
+    // rung is unsustainable: degrade() locks it out of future recovery.
+    fastSinceMs = 0;
     if (slowSinceMs === 0) slowSinceMs = now;
     else if (now - slowSinceMs >= SUSTAIN_MS) {
-      useQualityStore.getState().degrade();
+      useQualityStore.getState().degrade(now - lastRecoverAtMs < LOCK_WINDOW_MS);
       resetFrameSampler();
     }
-  } else {
+  } else if (ema < FAST_MS) {
+    // Sustained comfortably-fast → step UP one rung (if there is headroom
+    // left under the opening budget).
     slowSinceMs = 0;
+    if (fastSinceMs === 0) fastSinceMs = now;
+    else if (now - fastSinceMs >= RECOVER_SUSTAIN_MS) {
+      if (useQualityStore.getState().recover()) {
+        lastRecoverAtMs = now;
+        ema = 0;
+        slowSinceMs = 0;
+        fastSinceMs = 0;
+        cooldownUntilMs = now + RECOVER_COOLDOWN_MS;
+      } else {
+        fastSinceMs = 0; // already at the opening budget — stop counting
+      }
+    }
+  } else {
+    // Deadband [FAST_MS, SLOW_MS]: hold the current rung.
+    slowSinceMs = 0;
+    fastSinceMs = 0;
   }
 }
 
@@ -173,8 +288,12 @@ export function effectiveDprCeiling(tier: DeviceTier, dprCeiling: number): numbe
 
 // ── React hooks ──────────────────────────────────────────────────
 
-/** Reactive governor snapshot. */
-export function useQualityTier(): QualityState {
+/** Reactive governor snapshot (consumer-facing fields; the recovery
+ *  ceilings are internal bookkeeping and deliberately not exposed). */
+export function useQualityTier(): Pick<
+  QualityState,
+  "dprCeiling" | "countMultiplier" | "probed"
+> {
   return useQualityStore((s) => ({
     dprCeiling: s.dprCeiling,
     countMultiplier: s.countMultiplier,

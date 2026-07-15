@@ -58,11 +58,13 @@ DPR ceiling 1.75 → 1.25 → 1.0     (cheap; R3F reactive dpr prop, no rebuild)
 THEN count multiplier 1.0 → 0.6 → 0.35   (rebuilds governed geometry once)
 ```
 
-**The ladder is MONOTONIC — the governor never steps up mid-session.** This is
-deliberate: stepping up would re-detect slowness and oscillate. A session that
-degrades stays degraded until reload. DPR steps are exhausted first because they
-are free; the two count steps only ever fire on a device still slow after the
-cheap levers are spent, and each fires at most once.
+**The DOWN ladder was originally MONOTONIC — the governor never stepped up
+mid-session** (a session that degraded stayed degraded until reload). DPR steps
+are exhausted first because they are free; the two count steps only ever fire on
+a device still slow after the cheap levers are spent, and each fires at most
+once. **This monotonic-down invariant is superseded by rev 2 below** (recovery),
+which re-introduces controlled step-UP behind a wide deadband + per-rung lock so
+it cannot oscillate the way a naive step-up would.
 
 ### 3. How consumers read it
 
@@ -78,6 +80,45 @@ cheap levers are spent, and each fires at most once.
   **the corridor is byte-identical at full quality — desktop never degrades and
   is unaffected.** The consuming geometry `useMemo`s already depend on the count,
   so a multiplier step rebuilds them.
+
+## Update — rev 2: bidirectional recovery (2026-07-15)
+
+**Problem.** The monotonic-down design meant the heavy scroll-dive — the one
+place a *capable* desktop can briefly dip below ~42fps — could trip a DPR
+step-down, and that step-down then persisted through the calm parked #services
+state for the rest of the session. The flagship brandmark wireframe (the
+`BrandmarkPhysicsCore` point cloud, sized by `uPointSize × uPixelRatio`) is a
+thin dotted instrument; rendered at a stuck DPR 1.0 on a 2× retina panel it
+upscales ~2× and reads visibly low-res / aliased. Reported as "sometimes the
+wireframe looks low quality" — "sometimes" = "the sessions where the dive
+tripped the governor."
+
+**Decision.** The governor now climbs back UP one rung when the smoothed frame
+time stays **below `FAST_MS` (14ms, ~72fps)** for **`RECOVER_SUSTAIN_MS`
+(3000ms)**. Recovery **reverses** the ladder (counts back first, then DPR) and
+is **clamped to the opening budget** (`maxDprCeiling` / `maxCountMultiplier`,
+seeded by the probe: `ok/unknown` → 1.75/1.0, `low` → 1.25/0.6, `software` →
+pinned at the floor so it never recovers). Because the recovery threshold sits
+in a **wide deadband** under the 24ms degrade threshold and each step-up is
+followed by its own `RECOVER_COOLDOWN_MS`, a step-up cannot immediately
+re-cross into "slow".
+
+**Anti-oscillation (the reason the original was monotonic).** If a step-up *is*
+unsustainable — a degrade fires within `LOCK_WINDOW_MS` (4000ms) of it — that
+rung is **locked**: `degrade(causedByRecovery=true)` lowers the recovery ceiling
+to the degraded value, so the governor never retries it. Result: **at most one
+up→down flip per rung per session**, then it settles. In the common case (a
+capable machine that only dipped on the dive) it climbs straight back to 1.75
+once parked and stays there. Recovery only fires while engaged (the sampler runs
+under `frameloop="always"`), so it happens in the calm parked/hero states, not
+mid-dive.
+
+Sentinel: sentinel of the sentinel — the `-Infinity` "no step-up yet" sentinel
+matters (a `0` sentinel would flag the first-ever degrade as recovery-caused
+when `performance.now()` is still near zero, wrongly locking the top rung).
+Invariants pinned in `tests/lib/quality-governor.test.ts` (reverse-order +
+budget clamp + lock). At `countMultiplier === 1` the corridor is still
+byte-identical at full quality.
 
 ## Consequences
 
