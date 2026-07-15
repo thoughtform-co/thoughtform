@@ -244,6 +244,11 @@ export function BrandmarkParticleStation() {
     u.uHalfSize.value.set(transform.rect.width / 2, transform.rect.height / 2);
     u.uOpacity.value = transform.opacity;
     u.uVisibleCount.value = visibleCount;
+    // Sync uPixelRatio to the actual renderer DPR each frame (mobile
+    // quality pass, 2026-07-15). See BrandmarkSilhouettePoints for
+    // rationale: pinning the uniform once at mount left the atmosphere
+    // dots ~14% oversized on 3× phones vs the capped canvas DPR.
+    u.uPixelRatio.value = state.viewport.dpr;
     // ADR-019: while the global silhouette mesh is painting the
     // brandmark shape, damp the atmosphere's dispersion bump so the
     // silhouette reads cleanly. The atmosphere's role across the

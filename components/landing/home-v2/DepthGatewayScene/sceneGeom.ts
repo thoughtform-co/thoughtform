@@ -822,13 +822,20 @@ export function depthOpacityForWorldPosition(
 // world-Z, half-extent, and park progress all derive from the map.
 
 /** Raw-progress end of the mobile Thoughtform DWELL — the scroll span
- *  that holds BOTH mobile moments (copy, then brandmark+diagram) before
- *  the corridor fly begins. The mobile stage is taller (see
- *  `home-v2.css` `@media (max-width:760px)`) so this 0..0.38 raw window
- *  is ~two viewports of scroll. `getMobilePaintProgress` maps the whole
- *  dwell into the camera-hold span `[0, dollyHoldEnd]` so the camera is
- *  still through both moments; the fly owns `[0.38, 1]`. */
-export const MOBILE_THOUGHTFORM_END = 0.38;
+ *  that holds the mobile Thoughtform composition (copy above +
+ *  brandmark/compass diagram below in a single composed portrait
+ *  layout) before the corridor fly begins.
+ *
+ *  Mobile quality pass (2026-07-15): the mobile stage was raised from
+ *  620svh to 820svh (matching desktop) to fix the "too fast to read"
+ *  scroll on the Navigate→Encode→Build fly. With the taller stage the
+ *  corridor scroll span is now ~620svh (up from ~469svh), so this raw
+ *  window is retuned from 0.38 → 0.30 to keep the Thoughtform dwell at
+ *  ~2 viewports (~186svh) — same reading time as before while the
+ *  reclaimed ~130svh flows into the fly section. Every consumer already
+ *  reads `paintProgress` via `getMobilePaintProgress`, so the retune
+ *  shifts the whole timeline coherently. */
+export const MOBILE_THOUGHTFORM_END = 0.3;
 
 /**
  * Mobile-only paint-progress remap — two mobile Thoughtform moments,
@@ -862,35 +869,57 @@ export function getMobilePaintProgress(progress: number): number {
   return hold + ((p - dwell) * (1 - hold)) / (1 - dwell);
 }
 
-/** Per-element factors for the mobile two-moment Thoughtform beat,
- *  keyed off RAW scroll progress (not `paintProgress`, which is pinned
- *  into the held span across the dwell). Consumers multiply these in:
+/** Per-element factors for the mobile Thoughtform beat, keyed off
+ *  RAW scroll progress (not `paintProgress`, which is pinned into the
+ *  held span across the dwell). Consumers multiply these in:
  *
- *   - `copyFactor`    1 → 0 : copy block opacity (Moment 1 → fades out).
- *   - `diagramFactor` 0 → 1 : brandmark + compass + phase-label opacity
- *                             (fades in for Moment 2; saturates to 1 by
- *                             0.30 so it stays full through the fly).
- *   - `slideY` world-Y added to brandmark + compass + phase labels:
- *                eases from below-centre up to centre as the diagram
- *                fades in ("scrolls into the middle").
+ *   - `copyFactor`    copy block opacity. Held at 1 through the dwell
+ *                     (single composed layout — copy no longer fades
+ *                     out to make room for the diagram; both share the
+ *                     frame). Only drops to 0 at the very end of the
+ *                     dwell so the whole composition drifts off
+ *                     together as the corridor fly begins.
+ *   - `diagramFactor` brandmark + compass + phase-label opacity. Fades
+ *                     in early as an entrance effect, then holds at 1
+ *                     alongside the copy through the rest of the dwell.
+ *   - `slideY`        legacy channel; retained as always-0 on the new
+ *                     composed layout so the brandmark sits stably at
+ *                     its mobile world-Y offset (see
+ *                     `MOBILE_BRANDMARK_ANCHOR_Y_OFFSET`). The old
+ *                     -0.55 → 0 slide belonged to the retired
+ *                     "Moment 1 → Moment 2" choreography.
  *
  *  Desktop short-circuits to the identity `{1, 1, 0}` so every consumer
- *  can multiply unconditionally and desktop is provably unchanged. */
+ *  can multiply unconditionally and desktop is provably unchanged.
+ *
+ *  Timing note: the raw progress windows below are proportional to
+ *  `MOBILE_THOUGHTFORM_END`, which was retuned from 0.38 to 0.30 in the
+ *  same pass. The entrance window `[0.06, 0.15]` puts the diagram fade
+ *  in the first third of the dwell; the exit fade `[0.24, 0.30]` fires
+ *  in the final ~10% so the composition leaves the frame right as the
+ *  camera fly begins. */
 export interface ThoughtformMobilePhase {
   copyFactor: number;
   diagramFactor: number;
   slideY: number;
 }
 
-const MOBILE_BRANDMARK_SLIDE_FROM = -0.55;
-
 export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobilePhase {
   if (!isMobileComposition()) return { copyFactor: 1, diagramFactor: 1, slideY: 0 };
   const p = clamp01(rawProgress);
-  const copyFactor = 1 - smoothstep(0.12, 0.19, p);
-  const diagramFactor = smoothstep(0.16, 0.3, p);
-  const slideY = lerp(MOBILE_BRANDMARK_SLIDE_FROM, 0, smoothstep(0.16, 0.32, p));
-  return { copyFactor, diagramFactor, slideY };
+  // Both surfaces fade OUT together in the final sliver of the dwell so
+  // the composed layout exits as one unit when the corridor fly begins.
+  const exitFade = 1 - smoothstep(0.24, MOBILE_THOUGHTFORM_END, p);
+  // Diagram entrance — brief fade-in at the top of the dwell so the mark
+  // and compass "power on" behind the copy rather than snapping into
+  // view. Copy is held at 1 from the start (the composition reads
+  // fully assembled on arrival, matching the "furnished room" rule).
+  const diagramEntrance = smoothstep(0.06, 0.15, p);
+  return {
+    copyFactor: exitFade,
+    diagramFactor: diagramEntrance * exitFade,
+    slideY: 0,
+  };
 }
 
 /** Thoughtform compass — off-axis-right at parked rest so the
@@ -1392,10 +1421,12 @@ export function getBrandmarkWorldPosition(
   const tfX = BRANDMARK_ANCHOR_THOUGHTFORM[0] + tfOffsetX;
 
   if (progress <= thoughtformHold) {
-    // Mobile two-moment beat: the mark slides up from below-centre to
-    // centre as Moment 2 fades it in (no-op on desktop → slideY 0).
-    const { slideY } = getThoughtformMobilePhase(rawProgress);
-    return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1] + slideY, BRANDMARK_ANCHOR_THOUGHTFORM[2]];
+    // Mobile composed layout (2026-07-15): the mark sits at the gate
+    // centre for the whole dwell — the retired `slideY` from-below
+    // approach is gone. `slideY` in `ThoughtformMobilePhase` is now
+    // always 0, so this branch reads the plain anchor.
+    void rawProgress;
+    return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_THOUGHTFORM[2]];
   }
   if (progress <= diagnosticArrival) {
     // Arrival lerp lands at the LEAD position at `diagnosticArrival`,
@@ -1729,21 +1760,48 @@ export function getNavigateApparentSizeBoost(paintProgress: number): number {
 /** Mobile inward-pull for the Thoughtform phase labels. Portrait FOV
  *  (widened by `getCameraFov`) spreads the gate-relative label offsets
  *  toward the frame edges, so on mobile they're scaled toward the gate
- *  centre to read clearly around the mark. */
-const MOBILE_PHASE_SCALE = 0.7;
+ *  centre to read clearly around the mark.
+ *
+ *  Mobile quality pass (2026-07-15): bumped 0.7 → 0.92. The old value
+ *  pulled labels so tightly against the compass that "NAVIGATE" and
+ *  "BUILD" sat on top of the ring's rendered lines, and the copy above
+ *  ended up crowded against them. With the copy moved into the upper
+ *  third (see `MOBILE_COPY_ANCHOR_Y`) and the compass staying at gate
+ *  centre, the labels can breathe closer to their true v7 sigil
+ *  positions. */
+const MOBILE_PHASE_SCALE = 0.92;
+
+/** World-Y position of the mobile Thoughtform copy anchor
+ *  (`thoughtform.leftCopy`). Lifts the whole copy block into the upper
+ *  third of the portrait frame so the brandmark + compass diagrams
+ *  have the middle/lower two-thirds to themselves. Chosen empirically
+ *  for the reference iPhone 14 portrait (390×844 with the corridor's
+ *  70° portrait FOV at parkDistance 6.2): +1.35 world units ≈ upper
+ *  quarter of the visible frame. Desktop keeps the two-column layout
+ *  (world X=-1.8, Y=0), so this constant is read only in the mobile
+ *  branch of `thoughtform.leftCopy`'s position resolver. */
+const MOBILE_COPY_ANCHOR_Y = 1.35;
 
 /** Position resolver for a Thoughtform phase label at gate-relative
  *  offset `[offsetX, offsetY]`. Folds in the centering pan (desktop)
- *  and, on mobile, pulls the offset inward (`MOBILE_PHASE_SCALE`) and
- *  rides the Moment-2 slide so the labels travel up with the mark. */
+ *  and, on mobile, pulls the offset toward the compass frame edge
+ *  (`MOBILE_PHASE_SCALE`) so the labels sit just outside the outer
+ *  ring without crowding the mark or overlapping the copy above.
+ *
+ *  Mobile quality pass (2026-07-15): the retired `slideY` channel is
+ *  gone — the composed layout keeps the compass at gate centre for the
+ *  whole dwell instead of sliding it up from below. `slideY` in
+ *  `ThoughtformMobilePhase` is now always 0; consumers that still read
+ *  it (the brandmark world position and the compass gate group Y) are
+ *  effectively no-ops. */
 function thoughtformPhasePosition(offsetX: number, offsetY: number): WorldAnchorPosition {
   return (transform: DepthGatewayTransform) => {
+    void transform;
     const mobile = isMobileComposition();
     const s = mobile ? MOBILE_PHASE_SCALE : 1;
-    const slideY = mobile ? getThoughtformMobilePhase(transform.progress).slideY : 0;
     return [
       STATION_THOUGHTFORM.position[0] + offsetX * s + getSmoothedThoughtformOffsetX(),
-      STATION_THOUGHTFORM.position[1] + offsetY * s + slideY,
+      STATION_THOUGHTFORM.position[1] + offsetY * s,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ];
   };
@@ -1859,6 +1917,26 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
     el.style.transform = `${el.style.transform} translateX(${slidePx.toFixed(2)}px)`;
   }
   applyGyroDomBank(el);
+};
+
+/** onPaint for the mobile Build title/support (ADR-018 mobile epilogue
+ *  fix, 2026-07-15): on desktop the Build station title lives in the
+ *  hidden `CorridorStationHeaders` layer, which owns its own BUILD_OUT
+ *  crossfade so "BUILD ON THE LAYER." clears before the "EVERYONE IS
+ *  RACING..." signal fades in. Mobile renders the Build title via the
+ *  world-anchored `intelligence.title` / `intelligence.support` DOM
+ *  anchors, which had no epilogue fade — so the Build title persisted
+ *  through the epilogue and users never saw the racing title / CTA.
+ *  This handler applies the same BUILD_OUT drain the desktop title uses.
+ *  Desktop short-circuits to a no-op (base `ctx.visibilityOpacity` write)
+ *  so nothing changes for non-mobile compositions. */
+const gateMobileBuildTitle: WorldAnchor["onPaint"] = (ctx, el) => {
+  if (!isMobileComposition()) {
+    el.style.opacity = ctx.visibilityOpacity.toFixed(3);
+    return;
+  }
+  const buildOut = 1 - epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
+  el.style.opacity = (ctx.visibilityOpacity * buildOut).toFixed(3);
 };
 
 /** onPaint for the Build-park cases sigil (ADR-041): a world-anchored gold
@@ -2194,17 +2272,27 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "thoughtform.leftCopy",
     // Desktop: the FULL copy block (bridge + title + lede + CTA),
     // off-axis-left at world X=-1.8 (two-column composition).
-    // Mobile: the FULL copy block (bridge + title + body + chevron cue)
-    // as ONE vertically-centred column over the gate centre. Copy and
-    // the brandmark never share the frame (copy fades out in Moment 1
-    // before the mark slides in for Moment 2), so the block is centred
-    // (`data-anchor-origin="center"`, Y = 0) and reads as one cohesive
-    // paragraph rather than split above/below the mark. (ADR-018 mobile
-    // two-moment revision.)
+    //
+    // Mobile (2026-07-15 quality pass): the FULL copy block (title +
+    // body paragraphs) as ONE vertically stacked column parked in the
+    // UPPER THIRD of the portrait frame. Copy and the brandmark now
+    // SHARE the frame — upper third = copy, middle/lower = mark +
+    // compass diagrams. The old choreography (copy fades out in
+    // Moment 1, mark slides in from below-centre in Moment 2) is
+    // retired: it required a full extra viewport of scroll to see the
+    // diagram and never let the two surfaces read as one instrument.
+    // The `MOBILE_COPY_ANCHOR_Y` offset (+ world units) is what lifts
+    // the copy above the mark; the brandmark's own anchor stays at
+    // the gate centre (world Y = 0) so the compass + phase labels
+    // stay welded to it.
     position: () => {
       const off = getSmoothedThoughtformOffsetX();
       if (isMobileComposition()) {
-        return [STATION_THOUGHTFORM.position[0] + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
+        return [
+          STATION_THOUGHTFORM.position[0] + off,
+          MOBILE_COPY_ANCHOR_Y,
+          STATION_THOUGHTFORM.position[2] + 0.1,
+        ];
       }
       return [-1.8 + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
     },
@@ -2215,8 +2303,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // from invisible to full ("furnished room on arrival") rather
     // than a 40%-window crossfade as the user scrolls in.
     fadeFrac: 0,
-    // Mobile: fade the copy block out as Moment 2 (the brandmark +
-    // diagram reveal) begins. No-op on desktop.
+    // Mobile: fade the copy block out with the mark at the very end
+    // of the dwell so the whole composition leaves the frame as one
+    // unit. `copyFactor` is 1 through the composed layout (see
+    // `getThoughtformMobilePhase`) and only drops in the exit window.
+    // No-op on desktop.
     onPaint: gateThoughtformCopy,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — pinned to the v7
@@ -2442,6 +2533,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       far: STATION_INTELLIGENCE.parkDistance + 2.3,
       farFade: 2.2,
     },
+    // Mobile-only epilogue BUILD_OUT fade — desktop no-op. See
+    // `gateMobileBuildTitle`.
+    onPaint: gateMobileBuildTitle,
   },
   {
     id: "intelligence.support",
@@ -2465,6 +2559,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       far: STATION_INTELLIGENCE.parkDistance + 2.3,
       farFade: 2.2,
     },
+    onPaint: gateMobileBuildTitle,
   },
   // Stack v3 (2026-06-10 polish round 3) — Sources / Surfaces become
   // proper COLUMN HEADERS hanging above their respective columns, with

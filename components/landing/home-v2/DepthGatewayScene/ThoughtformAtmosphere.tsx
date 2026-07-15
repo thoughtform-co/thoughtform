@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useCorridorCount } from "@/lib/hooks/useQualityTier";
+import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { SPHERE_GOLD } from "@/lib/home-v2/goldPalette";
 import { getSmoothedThoughtformOffsetX } from "./motionFollower";
@@ -52,10 +53,18 @@ import {
 // ── Local star cluster ──────────────────────────────────────────
 
 /** Desktop star count. Tier-gated below (was a fixed 420 on every tier —
- *  Phase 4, ADR-038). Desktop is unchanged. */
+ *  Phase 4, ADR-038). Desktop is unchanged.
+ *
+ *  Mobile quality pass (2026-07-15): dropped 200 → 130 so the local
+ *  cluster reads as a subtle depth backdrop over `StaticStarfield`
+ *  rather than competing with it. On portrait FOV, the old count
+ *  paired with the 6px point size and DPR bug (fixed above) made the
+ *  cluster the visually DOMINANT star field, drowning out the more
+ *  spread-out `StaticStarfield`. Lower count + smaller point size (see
+ *  the uniform below) puts it back in its intended role. */
 const STAR_COUNT_DESKTOP = 420;
 const STAR_COUNT_TABLET = 300;
-const STAR_COUNT_MOBILE = 200;
+const STAR_COUNT_MOBILE = 130;
 
 /** Volume bounding box (world units). X/Y are half-widths centred
  *  on the optical axis after the Thoughtform pan completes; Z
@@ -270,11 +279,19 @@ export function ThoughtformAtmosphere() {
   }, [starCount]);
 
   const starMaterial = useMemo(() => {
+    // Mobile quality pass (2026-07-15): halve the point size on portrait
+    // (6 → 3.4). The cluster is meant to be a depth backdrop BEHIND the
+    // gate — at 6px it dominated the wider `StaticStarfield` and, with
+    // the DPR bug (now fixed), rendered as chunky ~18px blobs on a 3×
+    // phone. 3.4px keeps the cluster visible as texture without pulling
+    // focus. Desktop unchanged (still 6). `uPixelRatio` is synced per
+    // frame in the useFrame below.
+    const initialPointSize = isMobileComposition() ? 3.4 : 6;
     return new THREE.ShaderMaterial({
       vertexShader: starVertexShader,
       fragmentShader: starFragmentShader,
       uniforms: {
-        uPointSize: { value: 6 },
+        uPointSize: { value: initialPointSize },
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
         uColor: { value: STAR_COLOR.clone() },
         uOpacity: { value: 0 },

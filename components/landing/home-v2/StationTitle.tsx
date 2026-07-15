@@ -60,18 +60,19 @@ export function StationTitle({ content, base }: StationTitleProps) {
         data-anchor-origin={titleOrigin}
       >
         {isMobile && t && (
+          // Mobile quality pass (2026-07-15): the pre-pass chip row
+          // packed sector + callsign + code + metric + status into a
+          // single `white-space: nowrap` flex row that overflowed the
+          // 380px mobile container. Simplified to sector + callsign +
+          // status only — the `code` and `metric` chips were literal
+          // duplicates of `sector` / `status` in the corridor map, so
+          // dropping them removes redundancy AND stops the wrap.
           <div className="home-v2-readout__header" aria-hidden="true">
             <span className="home-v2-readout__chip home-v2-readout__chip--sector">{t.sector}</span>
             <span className="home-v2-readout__chip-sep">{"//"}</span>
             <span className="home-v2-readout__chip home-v2-readout__chip--callsign">
               {t.callsign}
             </span>
-            <span className="home-v2-readout__chip-spacer" />
-            <span className="home-v2-readout__chip home-v2-readout__chip--code">{t.code}</span>
-            <span className="home-v2-readout__chip-dot" aria-hidden="true">
-              ·
-            </span>
-            <span className="home-v2-readout__chip home-v2-readout__chip--metric">{t.metric}</span>
             <span className="home-v2-readout__badge">
               <span className="home-v2-readout__badge-tick" aria-hidden="true" />
               {t.status}
@@ -134,14 +135,21 @@ export function StationTitle({ content, base }: StationTitleProps) {
           {/* Mobile Build-park case index (ADR-033): capable phones run
               the real corridor but get no cases orbit (gate parity with
               the CTA layer), so the four production cases surface here
-              as a static mono chip row riding the same world anchor +
-              fade as the support copy. Non-interactive by design. */}
+              as static mini-cards riding the same world anchor + fade
+              as the support copy. Non-interactive by design.
+              Mobile quality pass (2026-07-15): the plain mono chips
+              were upgraded to two-line cards (codename + tagline) that
+              echo the desktop `ArcCasesCard` grammar — same 2x2 grid
+              feel, gold ordinal, dawn codename, muted tagline. */}
           {isMobile && base === "intelligence" && (
-            <ul className="home-v2-case-chips" aria-label="Production cases">
+            <ul className="home-v2-case-cards" aria-label="Production cases">
               {PROJECT_CASES.map((projectCase) => (
-                <li key={projectCase.id} className="home-v2-case-chips__chip">
-                  <span className="home-v2-case-chips__index">{projectCase.index}</span>
-                  {projectCase.codename.toUpperCase()}
+                <li key={projectCase.id} className="home-v2-case-cards__card">
+                  <span className="home-v2-case-cards__index">{projectCase.index}</span>
+                  <span className="home-v2-case-cards__codename">
+                    {projectCase.codename.toUpperCase()}
+                  </span>
+                  <span className="home-v2-case-cards__tagline">{projectCase.tagline}</span>
                 </li>
               ))}
             </ul>

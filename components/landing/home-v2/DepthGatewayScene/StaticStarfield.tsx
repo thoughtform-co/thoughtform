@@ -125,21 +125,28 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   const geometry = useMemo(() => {
     const positions = new Float32Array(starCount * 3);
     const seeds = new Float32Array(starCount);
-    // Distribute across a wide volume: x/y in [-25, +25]/[-15,+15],
+    // Distribute across a wide volume: x/y in [-30, +30]/[-22,+22],
     // z in [-46, -26] so all stars sit BEHIND the deepest gate
     // (intelligence ≈ z -22.5 after the 2026-06-08 entry-buildup pass)
     // AND behind the camera's deepest dolly point (CAMERA_END z -17).
     // Keeping the whole volume behind the camera is load-bearing: if
     // the camera dollies INTO the star volume, near stars sweep past /
-    // float beside the camera (worst on reverse scroll). This range
-    // was pushed deeper as CAMERA_END went -8 → -14 → -17 — the
-    // original [-30,-10] range left the deep half of the corridor
-    // inside the starfield. The volume is still big enough that the
-    // dolly shows parallax without any star running off the viewport
-    // edge.
+    // float beside the camera (worst on reverse scroll).
+    //
+    // Mobile quality pass (2026-07-15): Y range expanded from ±15 to
+    // ±22 and X from ±25 to ±30. Portrait FOV widens to ~70° vertical
+    // (see `getCameraFov`), so at the farthest star depth (-46 world,
+    // camera at -17 = 29 units away) the frustum half-height reads
+    // ~20.3 world units — ABOVE the old ±15 spawn range. Stars were
+    // physically absent from the top/bottom viewport edges on portrait,
+    // making the field read as "centered" instead of filling the
+    // frame. The new ±22 comfortably covers the worst-case portrait
+    // frustum with margin. Desktop is unchanged in visible density
+    // because the desktop landscape FOV (38°) never uses the outer
+    // volume — the extra stars sit off-screen for landscape viewports.
     for (let i = 0; i < starCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 50;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 30;
+      positions[i * 3] = (Math.random() - 0.5) * 60;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 44;
       positions[i * 3 + 2] = -26 - Math.random() * 20;
       seeds[i] = Math.random();
     }
@@ -182,9 +189,19 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   //    paintProgress is pinned at 1 across the epilogue, the boost
   //    HOLDS through the planet flyover — the sky stays bright behind
   //    the orbital horizon view.
-  useFrame(() => {
+  useFrame((state) => {
     const { paintProgress, active, armed, docked, servicesAmbient, servicesAmbientLevel } =
       useDepthGatewayStore.getState().transform;
+    // Sync `uPixelRatio` to the R3F renderer's actual DPR every frame.
+    // Prior versions set the uniform ONCE at mount from raw
+    // `window.devicePixelRatio` (~3 on iPhone), while the corridor
+    // canvas renders at a capped DPR of 1.4 on mobile
+    // (`effectiveDprCeiling`). Each star was therefore rasterised at
+    // ~2× the intended pixel size on portrait — the "thick starfield
+    // competing with the compass" complaint. Reading `viewport.dpr`
+    // here (R3F's canvas-scoped pixel ratio) matches the shader math
+    // to the framebuffer. Desktop DPR is unchanged, so no visual diff.
+    material.uniforms.uPixelRatio.value = state.viewport.dpr;
     if (!active && !armed && !docked && !servicesAmbient) {
       material.uniforms.uOpacity.value = STARFIELD_BASE_OPACITY;
       material.uniforms.uPointSize.value = STARFIELD_BASE_POINT_SIZE;

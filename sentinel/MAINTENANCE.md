@@ -54,6 +54,82 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-15 — Mobile Landing Quality Pass (ADR-018 addendum)
+
+Owner-driven quality pass to raise the mobile landing to parity with
+desktop (Cycle A — multiple linked fixes on a shared surface). Nine
+workstreams, all gated on `isMobileComposition()` (~760px) or an
+equivalent media query so desktop is byte-identical:
+
+- **Two bug fixes that were the biggest visible issues.** (1) A CSS
+  cascade order bug hid the mobile stack-item hide behind the base
+  `display: flex` rules, so the SOURCES/SURFACES rails and chips
+  rendered on phones and overlapped the BUILD title (visible in every
+  Build-park mobile screenshot). Relocated the hide to the late-cascade
+  block; joined the Encode cardinal callouts. (2) `StaticStarfield` +
+  the two BrandmarkParticleField painters set `uPixelRatio` once at
+  mount from raw `window.devicePixelRatio` (~3 on iPhone) while the
+  canvas caps at DPR 1.4 / 1.75 — every point rasterised 20–115%
+  oversized on mobile, the "thicker starfield competing with the
+  compass" complaint. Fixed with a per-frame sync to `state.viewport.dpr`.
+- **Missing mobile epilogue.** The whole desktop signal layer
+  (`CorridorStationHeaders`) is `display: none` at ≤760px, and the
+  world-anchored mobile Build title had no epilogue crossfade — so
+  "BUILD ON THE LAYER." persisted through the whole epilogue and mobile
+  visitors never saw "EVERYONE IS RACING…" or the "WE HELP YOU BUILD
+  YOURS" CTA. Fix: a new `MobileEpilogueSignal` component (fixed layer
+  driven by the same `TITLE_IN` / `SIGNAL_OUT` bands) mounted from the
+  mobile branch of `CopyAnchors`, paired with a new `gateMobileBuildTitle`
+  `onPaint` handler on `intelligence.title` / `intelligence.support`
+  that multiplies visibility by `1 - epilogueBand(ep, "BUILD_OUT")` on
+  mobile (desktop no-op).
+- **Composed Thoughtform layout replaces the two-moment sequence.**
+  The retired two-moment beat (copy fades out in Moment 1, brandmark +
+  diagram slide in from below in Moment 2) required a full extra
+  viewport of scroll before the diagram appeared and left the
+  composition disjoint. Now copy sits in the upper third
+  (`MOBILE_COPY_ANCHOR_Y = 1.35` on `thoughtform.leftCopy`), brandmark
+  - `ThoughtformCompassGate` stay at the gate centre for the whole
+    dwell (retired `MOBILE_BRANDMARK_SLIDE_FROM`; `slideY` in
+    `ThoughtformMobilePhase` deprecated to always 0), and the diagram
+    fades in briefly as an entrance effect then holds. Phase labels
+    spread wider (`MOBILE_PHASE_SCALE` 0.7 → 0.92) so NAVIGATE/ENCODE/BUILD
+    sit outside the outer ring. `COMPASS_MOBILE_ALPHA_BOOST = 1.5` lifts
+    every compass line's final alpha on portrait so the diagram matches
+    its desktop presence (previously invisible at portrait FOV + DPR 1.4).
+- **Scroll runway.** Mobile corridor stage raised `620svh → 820svh`
+  (matching desktop's `EPILOGUE_START = 620/820` split);
+  `MOBILE_THOUGHTFORM_END` retuned `0.38 → 0.30` so the Thoughtform
+  dwell stays ~2 viewports and the reclaimed ~130svh flows into the
+  Navigate→Encode→Build fly. Resolves the "too fast on mobile" scroll.
+- **Corridor presence on mobile.** `LatentWormholeWalls` `innerWidth >= 760`
+  hard block retired — the walls are the ONLY layer that makes the fly
+  read as a corridor, and the tier-governed `STREAK_COUNT_MOBILE = 240`
+  was already defined for this path. `SubstrateTopography` stays
+  desktop-only pending device perf verification.
+- **Starfield spread + local cluster.** `StaticStarfield` spawn volume
+  widened from ±25/±15 to ±30/±22 so the field covers the widest
+  portrait frustum instead of leaving empty top/bottom edges. Local
+  `ThoughtformAtmosphere` cluster dropped mobile point size (6 → 3.4)
+  and count (200 → 130) so it reads as depth backdrop over
+  `StaticStarfield` rather than a dominant second field. Chevron scroll
+  cue removed (nothing to cue toward with copy + diagram sharing the
+  frame).
+- **Styling parity.** Mobile kicker chip row simplified from
+  `sector // callsign · code · metric [status]` to
+  `sector // callsign [status]` — the dropped chips were literal
+  duplicates that overflowed the mobile container. Mobile Build-park
+  case chips upgraded to a 2×2 grid of mini-cards (codename + tagline)
+  matching the desktop `ArcCasesCard` grammar; still non-interactive
+  per the ADR-033 gate parity rule.
+
+Every change documented in a single ADR-018 addendum at the top of
+[sentinel/decisions/018-home-v2-depth-corridor.md](decisions/018-home-v2-depth-corridor.md).
+Nine touched files: `home-v2.css`, `sceneGeom.ts`,
+`ThoughtformCompassGate.tsx`, `CopyAnchors.tsx`, `StationTitle.tsx`,
+`MobileEpilogueSignal.tsx` (new), `StaticStarfield.tsx`,
+`ThoughtformAtmosphere.tsx`, `LatentWormholeWalls.tsx`, plus BrandmarkParticleStation / BrandmarkSilhouettePoints DPR fix. Lint clean, TypeScript clean.
+
 ### 2026-07-14 — Arc Cases: phased reveal + front-pole sigil (ADR-041)
 
 Owner-driven feature pass on the Build-park cases reveal (Cycle B — new

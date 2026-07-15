@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { SIGIL_RING_MORPHS } from "@/lib/celestial/orbits";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedThoughtformOffsetX } from "../motionFollower";
 import {
   STATION_THOUGHTFORM,
@@ -20,6 +21,21 @@ import {
  *  thickening any linework — pairs with the `ThoughtformAtmosphere`
  *  boot-glow disk and the `StaticStarfield` boot lift. */
 const COMPASS_BOOT_BOOST = 0.18;
+
+/** Multiplicative alpha boost applied to every compass ring, bearing,
+ *  tick, phase dot, and connector line on the mobile composition.
+ *
+ *  Mobile quality pass (2026-07-15): portrait FOV widens to preserve
+ *  60° horizontal (`getCameraFov`), which visually shrinks the compass
+ *  and makes its thin world-space lines read as faint pixel-wide
+ *  strokes at native DPR. The raw ring alphas (`RING_ALPHA_WEIGHTS`
+ *  [0.32, 0.36, 0.56, 0.76]) were tuned for landscape and left the
+ *  outer frame invisible on iPhone — the "gateway diagrams are
+ *  missing on mobile" complaint. This factor lifts every material's
+ *  final opacity so the diagram matches its desktop presence at
+ *  parked rest; capped at 1 by the `Math.min(1, …)` sinks that already
+ *  wrap every alpha write. Desktop reads exactly 1.0 → no change. */
+const COMPASS_MOBILE_ALPHA_BOOST = 1.5;
 
 /**
  * ThoughtformCompassGate — the v7 sigil compass rendered as a
@@ -487,13 +503,14 @@ export function ThoughtformCompassGate() {
     // wall-clock time, in lockstep with the brandmark + copy + stars.
     group.position.x = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
 
-    // Mobile two-moment beat: the whole compass rides the Moment-2
-    // slide (up from below-centre) and is gated by `diagramFactor` so
-    // it only appears in Moment 2. Both are no-ops on desktop
-    // (slideY 0, diagramFactor 1) and once raw progress passes the
-    // dwell. Keyed off RAW progress, not paintProgress.
-    const { diagramFactor, slideY } = getThoughtformMobilePhase(rawProgress);
-    group.position.y = STATION_THOUGHTFORM.position[1] + slideY;
+    // Mobile composed layout (2026-07-15 quality pass): the compass
+    // stays at the gate centre for the whole dwell (no slide-in), and
+    // `diagramFactor` is a brief entrance fade only — after that it
+    // holds at 1 so the diagram sits alongside the copy for the rest
+    // of the beat. `slideY` is retired (always 0), so we just anchor
+    // to the station Y. Keyed off RAW progress, not paintProgress.
+    const { diagramFactor } = getThoughtformMobilePhase(rawProgress);
+    group.position.y = STATION_THOUGHTFORM.position[1];
 
     // Boot envelope — runs alongside the centering pan and the
     // first beat of the parked composition. Painters in this gate
@@ -504,10 +521,15 @@ export function ThoughtformCompassGate() {
     // driven from the same envelope, so the whole gateway powers
     // on as one beat.
     const boot = getThoughtformBootEnvelope(progress);
-    // `diagramFactor` (mobile Moment-2 reveal) folds into the shared
-    // alpha multiplier so every ring + bearing + phase dot fades in
-    // together; ×1 on desktop and past the mobile dwell.
-    const bootBoost = (1 + boot * COMPASS_BOOT_BOOST) * diagramFactor;
+    // `diagramFactor` (mobile entrance fade) folds into the shared
+    // alpha multiplier so every ring + bearing + phase dot arrives
+    // together; `COMPASS_MOBILE_ALPHA_BOOST` lifts the final alpha on
+    // portrait so the diagram matches its desktop presence (the raw
+    // ring weights were tuned for landscape and read as invisible on
+    // iPhone before this pass). Desktop = ×1 × 1 = identity.
+    const mobile = isMobileComposition();
+    const mobileBoost = mobile ? COMPASS_MOBILE_ALPHA_BOOST : 1;
+    const bootBoost = (1 + boot * COMPASS_BOOT_BOOST) * diagramFactor * mobileBoost;
 
     // Staggered ring flythrough — each ring rides its own [start, end]
     // window in `FLYTHROUGH_WINDOWS`. Opacity is now derived from

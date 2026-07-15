@@ -1229,14 +1229,26 @@ export function LatentWormholeWalls() {
   const glowRef = useRef<THREE.Mesh>(null);
   const lastTime = useRef<number>(-1);
 
-  // Skip on narrow viewports — same gate as `LatentTopographyContours`.
+  // Mobile quality pass (2026-07-15): the previous `innerWidth >= 760`
+  // hard-block was retired so the wormhole walls now paint on capable
+  // phones too. The walls are the ONLY layer that makes the fly-through
+  // read as "flying through a corridor" rather than an empty starfield
+  // — without them, users reported "the mobile version doesn't seem to
+  // have our corridor". The governed count tiers (`STREAK_COUNT_MOBILE`
+  // = 240, `STREAK_COUNT_TABLET` = 360) were already defined for this
+  // path and are ~46% / ~30% of desktop's 520 respectively, so the GPU
+  // cost stays within the mobile budget documented in ADR-038.
+  //
+  // We still keep this behind SSR + typeof-window so the geometry never
+  // builds on the server.
   const enabled = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return window.innerWidth >= 760;
+    return typeof window !== "undefined";
   }, []);
 
-  // Governed exit-mouth streak count (ADR-038). Desktop unchanged; tablet
-  // lighter; the layer is already off below 760px so mobile is moot.
+  // Governed exit-mouth streak count (ADR-038). Mobile tier now paints
+  // 240 streaks alongside the desktop 520; the wall dot cloud
+  // (buildWormholeWalls, unchanged) provides the bulk of the visual
+  // read.
   const streakCount = useCorridorCount(
     STREAK_COUNT_DESKTOP,
     STREAK_COUNT_TABLET,

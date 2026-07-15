@@ -42,10 +42,7 @@ import { BRANDMARK_VIEWBOX } from "@/components/landing/v7/BrandmarkGlyph";
 import { sampleShape } from "@/lib/brandmark/sampleShape";
 import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
 import { useBrandmarkJourneyStore, DEFAULT_TINT } from "@/lib/stores/brandmarkJourneyStore";
-import {
-  brandmarkSilhouetteVertexShader,
-  brandmarkSilhouetteFragmentShader,
-} from "./shaders";
+import { brandmarkSilhouetteVertexShader, brandmarkSilhouetteFragmentShader } from "./shaders";
 
 /** Brandmark viewBox parsed from `BRANDMARK_VIEWBOX`. Same parser as
  *  `BrandmarkParticleStation`. */
@@ -128,7 +125,10 @@ export function BrandmarkSilhouettePoints() {
     }
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(new Float32Array(sample.count * 3), 3));
-    geom.setAttribute("aHome", new THREE.BufferAttribute(padHomeBuffer(sample.home, sample.count), 2));
+    geom.setAttribute(
+      "aHome",
+      new THREE.BufferAttribute(padHomeBuffer(sample.home, sample.count), 2)
+    );
     geom.setAttribute("aSeed", new THREE.BufferAttribute(sample.seed, 2));
 
     const initialViewport =
@@ -203,6 +203,13 @@ export function BrandmarkSilhouettePoints() {
     u.uMorph.value = transform.silhouetteMorph;
     u.uSuppress.value = suppress;
     u.uTime.value = state.clock.elapsedTime;
+    // Sync uPixelRatio to the actual renderer DPR every frame
+    // (mobile quality pass, 2026-07-15). The initial value was pinned
+    // once at mount from `min(devicePixelRatio, 2)` which read 2 on
+    // 3× phones while the canvas renders at `dpr={[1, 1.75]}`. Reading
+    // `state.viewport.dpr` matches the shader math to the framebuffer
+    // so silhouette points don't bloat on mobile.
+    u.uPixelRatio.value = state.viewport.dpr;
   });
 
   useEffect(() => {

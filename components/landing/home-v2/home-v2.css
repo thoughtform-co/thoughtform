@@ -893,33 +893,61 @@ html[data-corridor-exit="true"] #about {
   }
 }
 
-/* ── Mobile Build-park case index (ADR-033) ───────────────────────
-   The four production cases as a static mono chip row under the Build
+/* ── Mobile Build-park case cards (ADR-033) ───────────────────────
+   The four production cases as static mini-cards under the Build
    stage's mobile support copy (capable phones run the corridor but get
    no orbit — gate parity). Rides the support cluster's world anchor +
-   fade; non-interactive. */
-.home-v2-case-chips {
+   fade; non-interactive.
+
+   Mobile quality pass (2026-07-15): replaced the single-line chip row
+   with a 2x2 grid of two-line cards (codename + tagline) so the case
+   surface matches the desktop `ArcCasesCard` grammar. Each card is a
+   flex-column with the ordinal in gold at the top-left, the codename
+   in dawn beneath it, and the tagline muted below. */
+.home-v2-case-cards {
   list-style: none;
-  margin: 14px 0 0;
+  margin: 18px 0 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: min(90vw, 380px);
+  margin-left: auto;
+  margin-right: auto;
 }
-.home-v2-case-chips__chip {
+.home-v2-case-cards__card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(202, 165, 84, 0.28);
+  background:
+    linear-gradient(180deg, rgba(202, 165, 84, 0.08), rgba(10, 9, 8, 0)), rgba(10, 9, 8, 0.65);
+  text-align: left;
+  transition: border-color 200ms ease;
+}
+.home-v2-case-cards__index {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--gold, #caa554);
+  opacity: 0.9;
+}
+.home-v2-case-cards__codename {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: var(--dawn, #ebe3d6);
+  line-height: 1.1;
+}
+.home-v2-case-cards__tagline {
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 9.5px;
-  letter-spacing: 0.2em;
-  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
-  border: 1px solid rgba(202, 165, 84, 0.24);
-  padding: 4px 9px;
-  white-space: nowrap;
-}
-.home-v2-case-chips__index {
-  color: var(--gold-60, rgba(202, 165, 84, 0.6));
-  margin-right: 7px;
-  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+  line-height: 1.25;
 }
 
 /* Dotted particle frame runs — folded (scaleX 0) until the container
@@ -1729,23 +1757,150 @@ html[data-corridor-exit="true"] #about {
   }
 }
 
+/* ── Mobile epilogue signal (ADR-018 mobile epilogue fix, 2026-07-15) ──
+   The mobile counterpart to `.home-v2-station-header--signal` — a small
+   viewport-fixed block that carries the "EVERYONE IS RACING…" title +
+   "WE HELP YOU BUILD YOURS" CTA on the mobile corridor composition,
+   because the desktop signal layer is `display: none` at ≤760px.
+
+   Positioned in the upper third of the viewport so the sphere/planet
+   remains visible below it. Opacity + exit lift are written per frame
+   by `MobileEpilogueSignal.tsx`. Uses the same colour + type tokens as
+   the desktop signal (`--gold`, `--dawn`, PT Mono), scaled to mobile.
+
+   Hidden by default (opacity 0, hidden above 760px) so the mobile
+   markup never bleeds onto the desktop composition. */
+.home-v2-mobile-signal {
+  position: fixed;
+  top: clamp(56px, 12vh, 108px);
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  width: min(90vw, 460px);
+  padding: 0 clamp(12px, 4vw, 20px);
+  text-align: center;
+  z-index: 15;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity, transform;
+  display: none;
+}
+
+.home-v2-mobile-signal[inert] {
+  pointer-events: none;
+}
+.home-v2-mobile-signal:not([inert]) {
+  pointer-events: auto;
+}
+
+.home-v2-mobile-signal__title {
+  margin: 0 0 clamp(16px, 4vw, 22px);
+  font-family: var(--font-source-serif, "Source Serif Pro", Georgia, serif);
+  font-size: clamp(22px, 6.4vw, 32px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.005em;
+  color: var(--dawn, #ebe3d6);
+  text-wrap: balance;
+  text-shadow:
+    0 0 22px rgba(10, 9, 8, 0.9),
+    0 0 12px rgba(202, 165, 84, 0.14);
+}
+
+.home-v2-mobile-signal__title em {
+  font-style: italic;
+  color: var(--gold, #caa554);
+}
+
+.home-v2-mobile-signal__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2.4vw, 14px);
+}
+
+.home-v2-mobile-signal__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: clamp(11px, 3vw, 13px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gold, #caa554);
+  border: 1px solid rgba(202, 165, 84, 0.55);
+  background:
+    linear-gradient(180deg, rgba(202, 165, 84, 0.14), rgba(202, 165, 84, 0.06)),
+    rgba(10, 9, 8, 0.72);
+  transition:
+    background 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+  min-width: min(80vw, 320px);
+}
+
+.home-v2-mobile-signal__cta:hover,
+.home-v2-mobile-signal__cta:focus-visible {
+  outline: none;
+  border-color: rgba(202, 165, 84, 0.8);
+  background:
+    linear-gradient(180deg, rgba(202, 165, 84, 0.22), rgba(202, 165, 84, 0.1)), rgba(10, 9, 8, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(10, 9, 8, 0.88),
+    0 0 24px rgba(202, 165, 84, 0.24);
+}
+
+.home-v2-mobile-signal__cta-label {
+  font-weight: 700;
+}
+
+.home-v2-mobile-signal__cta-chevrons {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.home-v2-mobile-signal__cta-chev {
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.65;
+}
+
+.home-v2-mobile-signal__note {
+  margin: 0;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: clamp(10px, 2.6vw, 12px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.5);
+  text-shadow: 0 0 14px rgba(10, 9, 8, 0.85);
+}
+
+@media (max-width: 760px) {
+  .home-v2-mobile-signal {
+    display: block;
+  }
+}
+
 @media (max-width: 760px) {
   /* Hide the 2D header layer on mobile; the world-anchored straddle
      in CopyAnchors owns the centred portrait composition. */
   .home-v2-station-headers {
     display: none;
   }
-  /* Stack v3 (2026-06-10) — the registry-column chips and column
-     headers are calibrated for desktop frustum widths; on portrait
-     mobile the column X clamps inward to fit the frame, which puts
-     the chips on top of the sphere. The mobile composition reads
-     the Build content via `StationTitle` (mobile straddle), so the
-     stack chips/headers are hidden on portrait to avoid the sphere
-     overlap. */
-  .home-v2-stack-item,
-  .home-v2-stack-label {
-    display: none;
-  }
+  /* Stack v3 (2026-06-10) — the registry-column chips + column headers
+     are hidden here for semantics; the ACTUAL hide (with cascade order
+     that beats the base `.home-v2-stack-item { display: flex }` /
+     `.home-v2-stack-label { display: flex }` rules further down this
+     file) lives at the bottom of the mobile block, `@media (max-width:
+     760px)` after those base declarations. See "MOBILE HIDES (LATE
+     CASCADE)" below. Keeping this comment in place so future edits
+     don't re-add a duplicate rule here. */
 }
 
 /* All world-anchored elements share this base: positioned at the
@@ -2639,13 +2794,45 @@ html[data-corridor-exit="true"] #about {
    landing-v7-motion.html (~L1335-1380) so the corridor and the static
    fallback read identically across the capability boundary. */
 @media (max-width: 760px) {
-  /* Taller stage on mobile: the Thoughtform beat is sequenced into two
-     scroll moments (copy, then the brandmark + diagram reveal), each
-     ~one viewport, before the corridor fly. `getMobilePaintProgress`
-     maps the [0, 0.38] raw dwell into the camera-hold span. (ADR-018
-     mobile two-moment revision.) */
+  /* ── MOBILE HIDES (LATE CASCADE) ────────────────────────────────
+     These declarations sit AFTER the base `.home-v2-stack-item`,
+     `.home-v2-stack-label`, and `.home-v2-encode-primitive`
+     definitions above so their `display: none` actually wins at
+     equal specificity — an earlier mobile hide block (L1732 range)
+     was declared BEFORE the base `display: flex` rules and
+     silently lost, leaving the SOURCES/SURFACES rails + Encode
+     cardinals overlapping the sphere on phones. Stack v3 (2026-06-10)
+     was calibrated for desktop frustum widths; on portrait the
+     column X clamps inward and the chips crowd the sphere, so on
+     mobile the Build story is told exclusively by the world-
+     anchored `StationTitle` straddle + case mini-cards.
+
+     Encode cardinal callouts (JUDGMENT / VOICE / TASTE / CRAFT)
+     are also hidden on mobile: they sit tight against the gimbal
+     sphere at portrait FOV and crowd the Encode/Build straddle
+     copy. The Encode narrative reads through the world-anchored
+     support paragraph on mobile. */
+  .home-v2-stack-item,
+  .home-v2-stack-label,
+  .home-v2-encode-primitive {
+    display: none;
+  }
+
+  /* Mobile stage matches DESKTOP height (820svh) as of the 2026-07-15
+     mobile quality pass. Before, the mobile stage was 620svh which,
+     combined with EPILOGUE_START = 620/820, gave the corridor ~469svh
+     of runway (vs desktop's 620svh) — the Navigate→Encode→Build fly
+     ran through in ~290svh of scroll, so touch scroll (which is 1:1
+     with the stage) felt "too fast" and easy to overshoot. Aligning
+     the mobile stage with desktop restores the same absolute scroll
+     budget without touching any timeline math (EPILOGUE_START stays
+     620/820). `getMobilePaintProgress` still maps the Thoughtform
+     dwell into the camera-hold span, just over a longer scroll span
+     so each moment gets more breathing room. `MOBILE_THOUGHTFORM_END`
+     retuned in sceneGeom.ts to keep the dwell at ~2 viewports of the
+     new taller stage. (ADR-018 mobile quality pass.) */
   .home-v2-stage {
-    height: 620svh;
+    height: 820svh;
   }
   /* Mobile Thoughtform copy: one vertically-centred column (bridge,
      title, body, chevron cue) that reads as a single cohesive paragraph.
@@ -2736,58 +2923,12 @@ html[data-corridor-exit="true"] #about {
   }
 }
 
-/* ── Mobile scroll-cue chevrons (Thoughtform Moment 1 → Moment 2) ──
-   Three down-pointing chevrons that glow in sequence like a launch-pad
-   runway, cueing the scroll from the copy into the brandmark + diagram
-   reveal. Mobile-only (rendered by CopyAnchors on the mobile branch).
-   The button lives in the lower copy block, so it fades with the copy
-   via the `copyFactor` gate as Moment 2 begins. */
-.home-v2-scroll-chevrons {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 8px;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-.home-v2-scroll-chevrons__c {
-  width: 18px;
-  height: 18px;
-  border-right: 2px solid var(--gold, #caa554);
-  border-bottom: 2px solid var(--gold, #caa554);
-  transform: rotate(45deg);
-  opacity: 0.25;
-  animation: home-v2-chevron-glow 1.5s ease-in-out infinite;
-}
-.home-v2-scroll-chevrons__c:nth-child(1) {
-  animation-delay: 0s;
-}
-.home-v2-scroll-chevrons__c:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.home-v2-scroll-chevrons__c:nth-child(3) {
-  animation-delay: 0.4s;
-}
-@keyframes home-v2-chevron-glow {
-  0%,
-  60%,
-  100% {
-    opacity: 0.25;
-    filter: none;
-  }
-  20% {
-    opacity: 1;
-    filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.7));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .home-v2-scroll-chevrons__c {
-    animation: none;
-    opacity: 1;
-  }
-}
+/* Mobile scroll-cue chevrons — REMOVED in the 2026-07-15 mobile
+   quality pass. The two-moment Thoughtform choreography (copy fades
+   out, then brandmark + compass fade in) was retired in favour of a
+   single composed portrait layout where copy and diagrams share the
+   frame; there is no "scroll down for moment 2" cue to make anymore.
+   The DOM `mobileChevrons` block in CopyAnchors.tsx is gone too. */
 
 /* ── HUD progress chrome (debug) ─────────────────────────────── */
 

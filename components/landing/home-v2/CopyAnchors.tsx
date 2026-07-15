@@ -12,6 +12,7 @@ import {
 } from "./DepthGatewayScene/sceneGeom";
 import { SHELL_PRIMITIVES } from "./DepthGatewayScene/shell/shellGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
+import { MobileEpilogueSignal } from "./MobileEpilogueSignal";
 import { StationTitle } from "./StationTitle";
 import { ArcCasesSigil } from "./arc-cases/ArcCasesSigil";
 import { ARC_CASES_CARD } from "./arcCasesCard";
@@ -101,40 +102,21 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
     </div>
   );
 
-  // Mobile CTA: three down-pointing chevrons that glow in sequence
-  // (launch-pad runway) as a "scroll down to continue" cue into the
-  // Moment-2 brandmark + diagram reveal. Tapping scrolls ~one viewport
-  // forward; honours reduced-motion (instant scroll + static-lit CSS).
-  const scrollForward = () => {
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    window.scrollBy({ top: window.innerHeight, behavior: reduce ? "auto" : "smooth" });
-  };
-  const mobileChevrons = (
-    <div className="home-v2-copy-cta-row">
-      <button
-        type="button"
-        className="home-v2-scroll-chevrons"
-        aria-label="Scroll down to continue"
-        onClick={scrollForward}
-      >
-        <span className="home-v2-scroll-chevrons__c" />
-        <span className="home-v2-scroll-chevrons__c" />
-        <span className="home-v2-scroll-chevrons__c" />
-      </button>
-    </div>
-  );
-
   return (
     <div ref={layerRef} className="home-v2-copy-layer" aria-hidden="false">
       {/* ─────────── THOUGHTFORM ─────────── */}
       {isMobile ? (
-        // One vertically-centred copy column. Copy and the brandmark
-        // never share the frame (copy fades out before the mark slides
-        // in for Moment 2), so the whole block — bridge, title, body,
-        // and the chevron scroll cue — reads as a single cohesive
-        // paragraph centred in the viewport. (ADR-018 two-moment.)
+        // Single composed portrait layout (2026-07-15 mobile quality
+        // pass): the copy sits in the UPPER third of the viewport
+        // (`thoughtform.leftCopy` mobile anchor Y is shifted up), the
+        // brandmark + compass gateway diagrams sit CENTRED below. Copy
+        // and diagram now SHARE the frame — the two-moment fade-copy-
+        // out / fade-diagram-in choreography is retired because it left
+        // the composition feeling disjoint and forced the user to scroll
+        // a full viewport just to see the diagram appear. The scroll
+        // chevron cue is gone with it (nothing to cue toward). The whole
+        // block reads as one instrument — copy above, mark + diagrams
+        // below — and drifts off together as the corridor fly begins.
         <div
           className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
           data-world-anchor="thoughtform.leftCopy"
@@ -143,7 +125,6 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-          {mobileChevrons}
         </div>
       ) : (
         <div
@@ -333,6 +314,17 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           unconditionally; its anchor is `intelligence.sigil` in COPY_ANCHORS
           and its opacity is painted by `gateSigil`. */}
       {ARC_CASES_CARD && <ArcCasesSigil />}
+
+      {/* Mobile epilogue signal (ADR-018 mobile epilogue fix, 2026-07-15).
+          The desktop epilogue title + CTA live in `CorridorStationHeaders`,
+          whose whole tree is `display: none` at ≤760px — leaving mobile
+          visitors with the Build title through the epilogue. This block
+          renders the same "EVERYONE IS RACING…" title + "WE HELP YOU BUILD
+          YOURS" CTA on mobile only, driven by the same TITLE_IN /
+          SIGNAL_OUT clocks. Cross-fades with the mobile Build title,
+          whose `intelligence.title` / `intelligence.support` anchors now
+          fade on BUILD_OUT via `gateMobileBuildTitle`. */}
+      {isMobile && <MobileEpilogueSignal />}
     </div>
   );
 }

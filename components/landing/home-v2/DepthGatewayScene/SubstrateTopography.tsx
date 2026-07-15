@@ -619,7 +619,15 @@ export function SubstrateTopography() {
   const terrainMidRef = useRef<number>(0);
   const terrainRef = useRef<number>(0);
 
-  // Same mobile-narrow gate as the wormhole walls.
+  // Mobile-narrow gate. The wormhole walls were re-enabled on mobile in
+  // the 2026-07-15 quality pass (the corridor was reading as an empty
+  // starfield without them), but SubstrateTopography stays desktop-only
+  // for now: it builds significantly larger buffers, runs the more
+  // expensive `waveMaterial` sim, and only becomes fully visible during
+  // the epilogue flyover — a moment where mobile is already carrying the
+  // dissipating sphere + planet grow. Enabling the topography on top
+  // would push the mobile GPU budget past the ADR-038 targets. Revisit
+  // after wall re-enabling has been perf-verified on real devices.
   const enabled = useMemo(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth >= 760;
