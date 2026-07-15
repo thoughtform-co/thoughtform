@@ -144,8 +144,37 @@ export const RING_ENTRANCE_WINDOWS: ReadonlyArray<readonly [number, number]> = [
   [0.78, 1.0],
 ];
 
-/** Cards fly IN from a slightly wider radius while fading in. */
+/** Legacy radial fly-in multiplier (cards start a touch wider, ease to 1).
+ *  Kept as a small secondary term — the DOMINANT entrance is now the
+ *  directional off-frame slide below (RING_ENTRANCE_DIRECTIONS), so the
+ *  cards visibly ENTER the viewport instead of fading in place. */
 export const RING_ENTRANCE_RADIUS_FROM = 1.18;
+
+/** Per-card entrance travel direction, in the ring's local screen plane
+ *  (+x right / +y up) — the off-frame point each card flies IN FROM, like
+ *  an After-Effects position keyframe parked outside the viewport. The two
+ *  visible side cards sweep in from the left/right edges; the front card
+ *  rises from below; the hidden back card drops from above. Deterministic
+ *  (resumability + tests depend on no runtime randomness). */
+export const RING_ENTRANCE_DIRECTIONS: ReadonlyArray<readonly [number, number]> = [
+  [0, -1], // card 0 — rises from below the frame (parks front-centre)
+  [1.25, 0], // card 1 — sweeps in from the right edge
+  [0, 1], // card 2 — drops from above (the back card, hidden behind the mark)
+  [-1.25, 0], // card 3 — sweeps in from the left edge
+];
+
+/** Entrance travel magnitude (orbit-config units) applied along each card's
+ *  RING_ENTRANCE_DIRECTIONS — sized so the card STARTS fully outside the
+ *  frame and slides into its orbit slot. Tuned against the corridor
+ *  composition; retune with the armillary scale if the mark's framing
+ *  changes. */
+export const RING_ENTRANCE_OFFSET = 2.1;
+
+/** Fraction of each entrance window over which OPACITY completes — opacity
+ *  LEADS the travel so the card is essentially solid by the time it clears
+ *  the frame edge (the eye reads a card sliding in, not one fading up in
+ *  place). The remaining travel happens at full opacity. */
+export const RING_ENTRANCE_OPACITY_LEAD = 0.5;
 
 /* ── Decommission exit (ADR-030 Update 1: "the viewscreen changes modes")
  * The runway's final beat is the DECOMMISSION beat: the cards fly OUT and
@@ -561,15 +590,35 @@ export function depthWriteGate(previous: boolean, nz: number): boolean {
 export interface RingEntrance {
   opacity: number;
   radiusMul: number;
+  /** Off-frame → orbit-slot slide (orbit-config units, ring-local x/y).
+   *  Zero once the card has settled. */
+  offsetX: number;
+  offsetY: number;
 }
 
-/** Staggered dock entrance for card `index` from the dissipate clock —
- *  fade in while flying in from a slightly wider radius. */
+/** Staggered dock entrance for card `index` from the dissipate clock — the
+ *  card SLIDES IN from off-frame (RING_ENTRANCE_DIRECTIONS) into its orbit
+ *  slot while a lead-in opacity ramp brings it up, so it reads as a solid
+ *  pane entering the viewport rather than materializing in place. A small
+ *  residual radial fly-in rides along. Identity ({opacity 1, radiusMul 1,
+ *  offset 0}) at dissipate = 1, so the parked pose is byte-identical. */
 export function entranceEnvelope(dissipate: number, index: number): RingEntrance {
-  const window =
-    RING_ENTRANCE_WINDOWS[Math.max(0, Math.min(RING_ENTRANCE_WINDOWS.length - 1, index))];
+  const clamped = Math.max(0, Math.min(RING_ENTRANCE_WINDOWS.length - 1, index));
+  const window = RING_ENTRANCE_WINDOWS[clamped];
+  // Travel clock over the full window; (1 − t) is the remaining off-frame
+  // distance, eased so the card decelerates into its slot.
   const t = smootherstep(window[0], window[1], dissipate);
-  return { opacity: t, radiusMul: lerp(RING_ENTRANCE_RADIUS_FROM, 1, t) };
+  // Opacity leads: completes at RING_ENTRANCE_OPACITY_LEAD of the window.
+  const litEnd = lerp(window[0], window[1], RING_ENTRANCE_OPACITY_LEAD);
+  const lit = smootherstep(window[0], litEnd, dissipate);
+  const dir = RING_ENTRANCE_DIRECTIONS[clamped];
+  const travel = (1 - t) * RING_ENTRANCE_OFFSET;
+  return {
+    opacity: lit,
+    radiusMul: lerp(RING_ENTRANCE_RADIUS_FROM, 1, t),
+    offsetX: dir[0] * travel,
+    offsetY: dir[1] * travel,
+  };
 }
 
 /** Staggered DECOMMISSION for card `index` off the exit clock — fade out
@@ -580,5 +629,7 @@ export function entranceEnvelope(dissipate: number, index: number): RingEntrance
 export function exitEnvelope(exit: number, index: number): RingEntrance {
   const window = RING_EXIT_WINDOWS[Math.max(0, Math.min(RING_EXIT_WINDOWS.length - 1, index))];
   const t = smootherstep(window[0], window[1], exit);
-  return { opacity: 1 - t, radiusMul: lerp(1, RING_EXIT_RADIUS_TO, t) };
+  // The decommission keeps its radial fly-out (ADR-030); no directional
+  // slide — offsets stay 0 so the exit choreography is unchanged.
+  return { opacity: 1 - t, radiusMul: lerp(1, RING_EXIT_RADIUS_TO, t), offsetX: 0, offsetY: 0 };
 }

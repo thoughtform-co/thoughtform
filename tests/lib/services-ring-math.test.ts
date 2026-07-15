@@ -11,6 +11,11 @@ import {
   RING_OPACITY_WINDOW,
   RING_Y_OFFSET,
   RING_ENTRANCE_RADIUS_FROM,
+  RING_ENTRANCE_WINDOWS,
+  RING_ENTRANCE_DIRECTIONS,
+  RING_ENTRANCE_OFFSET,
+  RING_ENTRANCE_OPACITY_LEAD,
+  lerp,
   RING_DEPTH_WRITE_ON_NZ,
   RING_DEPTH_WRITE_OFF_NZ,
   RING_CARD_ORBIT_GEOMETRY,
@@ -532,9 +537,28 @@ describe("entranceEnvelope", () => {
       const before = entranceEnvelope(0, i);
       expect(before.opacity).toBe(0);
       expect(before.radiusMul).toBeCloseTo(RING_ENTRANCE_RADIUS_FROM, 12);
+      // Parked fully off-frame along its entrance direction before the window.
+      const dir = RING_ENTRANCE_DIRECTIONS[i];
+      expect(before.offsetX).toBeCloseTo(dir[0] * RING_ENTRANCE_OFFSET, 12);
+      expect(before.offsetY).toBeCloseTo(dir[1] * RING_ENTRANCE_OFFSET, 12);
       const after = entranceEnvelope(1, i);
       expect(after.opacity).toBe(1);
       expect(after.radiusMul).toBeCloseTo(1, 12);
+      // Settled: no residual slide, so the parked pose is byte-identical.
+      expect(after.offsetX).toBeCloseTo(0, 12);
+      expect(after.offsetY).toBeCloseTo(0, 12);
+    }
+  });
+
+  it("opacity leads the travel — solid before the slide finishes", () => {
+    for (let i = 0; i < RING_COUNT; i++) {
+      const window = RING_ENTRANCE_WINDOWS[i];
+      // At the opacity-lead point the card is fully lit but still off its slot.
+      const mid = lerp(window[0], window[1], RING_ENTRANCE_OPACITY_LEAD);
+      const env = entranceEnvelope(mid, i);
+      expect(env.opacity).toBeCloseTo(1, 6);
+      const stillTravelling = Math.hypot(env.offsetX, env.offsetY);
+      expect(stillTravelling).toBeGreaterThan(0);
     }
   });
 

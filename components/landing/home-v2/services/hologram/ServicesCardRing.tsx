@@ -1019,7 +1019,13 @@ export function ServicesCardRing({
       // the slab's depth reads while it is THE in-view card; the bias is
       // a constant term after cardFacingYaw, scroll-owned via nz.
       const bias = frontPoseBias(placed.nz);
-      cardGroup.position.set(placed.x, placed.y, placed.z);
+      // Directional entrance slide (ADR-029 follow-up, 2026-07-15): the card
+      // flies IN from off-frame into its orbit slot (env.offsetX/Y), so it
+      // ENTERS the viewport instead of fading in place. Zero once settled and
+      // in the "off" (lab) path, so the parked pose is unchanged.
+      const entX = env ? env.offsetX : 0;
+      const entY = env ? env.offsetY : 0;
+      cardGroup.position.set(placed.x + entX, placed.y + entY, placed.z);
       cardGroup.rotation.set(
         tilt.pitch + bias.pitch,
         cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw,
