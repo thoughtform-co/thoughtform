@@ -42,7 +42,7 @@ export const ARC_CASES_CARD = true;
  * cannot.
  *
  * GATE PARITY: this JS gate is the exact twin of the CSS hide of
- * `.home-v2-cases-cta-dock` AND `.home-v2-cases-stepper` at the same
+ * `.home-v2-cases-sigil` AND `.home-v2-cases-hit` at the same
  * `(max-width: 1100px), (max-height: 759px), (prefers-reduced-motion:
  * reduce)` media in home-v2.css. If one moves, both move.
  */

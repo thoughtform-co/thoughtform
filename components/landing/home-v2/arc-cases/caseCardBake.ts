@@ -1,15 +1,19 @@
-// caseCardBake — the portrait case-card FACE bake (ADR-036, capability band
-// added ADR-041). Restored from the ADR-033 orbit ring's inline
-// `bakeCaseCardFace` (`ArcCasesRing.tsx` @ 55afc8a, lines ~104–531) into a
-// standalone module: an 840×1360 portrait canvas with the ServicesCardRing
-// plate grammar — opaque void ground, a contain-fit gold-LUT screenshot band
-// with a hairline frame, top + ground scrims, the chamfered shell stroke +
-// two bright ticks, a FILLED gold codename chip + `NN/04 · STATUS` top row,
-// the four CAPABILITY rows (gold `CAP 0N` index + title + wrapped desc,
-// transposed from the retired horizontal console card to fill the mid-band),
-// and a bottom-anchored copy stack (stack chips → subline lede → title runs
-// em→gold → caption row mode·tagline / metric gold). NO CTA box — the repos
-// are private; the card is a showcase, not a link.
+// caseCardBake — the portrait case-card FACE bake (ADR-036; capability band
+// ADR-041; face restructured in the ADR-041 addendum). A standalone module
+// producing an 840×1360 portrait canvas with the ServicesCardRing plate
+// grammar — opaque void ground, a contain-fit gold-LUT screenshot band with a
+// hairline frame, top + ground scrims, the chamfered shell stroke + two bright
+// ticks. Face content, top → bottom: the tool NAME (title segments em→gold)
+// top-left + a ✕ close top-right; the screenshot band; then a top-down copy
+// flow — Challenge (heading + paragraph), Workflow Shift (heading + mode verb
+// badge + paragraph), a gold divider, the Stack chip row; then the four
+// CAPABILITY rows (gold `CAP 0N` index + title + wrapped desc, a measured-fit
+// flex zone); and a baked pager (01 02 03 04, active gold + underlined) at the
+// bottom. The ✕ and pager are baked visuals only — their transparent DOM hit
+// buttons weld over them via `CASE_CARD_HIT_REGIONS` (ArcCasesHitLayer). The
+// codename chip, `NN/04 · STATUS`, tagline, subline and caption row were
+// dropped in the restructure. NO CTA box — the repos are private; the card is
+// a showcase, not a link.
 //
 // The bake produces a `CanvasTexture` source the in-canvas card slab floats
 // as its content plane (deferred until the Build band first opens or the
@@ -33,7 +37,11 @@ const DAWN = "236, 227, 214";
  *  row — never portrait-cropped (cropping a UI screenshot destroys the
  *  read). */
 const SHOT_Y0 = 170;
-const SHOT_H = 470;
+// Shortened 470 → 350 in the ADR-041-addendum restructure: the face now
+// carries the Challenge + Workflow-Shift body copy above the CAP band, so
+// the screenshot band gives up height to make room. Every case still lands
+// four FULL CAP rows (measured — Heimdall, the longest, is the tight one).
+const SHOT_H = 350;
 
 /* Dot-matrix hologram veil (the plate feed read). */
 export const DOT_PITCH = 8;
@@ -60,9 +68,7 @@ const PAD_X = 52;
 /** Left gutter reserved for the gold `CAP 0N` index; the title + desc hang
  *  to its right. */
 const CAP_GUTTER = 104;
-/** Air below the screenshot frame before the first cap row. */
-const CAP_BAND_TOP_GAP = 34;
-/** Air above the caption row (which sits ~16px tall on the `capY` baseline). */
+/** Air above the pager row before the CAP band bottom. */
 const CAP_BAND_BOTTOM_GAP = 28;
 /** Title line box height + baseline ascent within it. */
 const CAP_TITLE_LH = 30;
@@ -74,6 +80,51 @@ const CAP_DESC_MAX_LINES = 2;
 const CAP_ROW_GAP = 15;
 /** Row height when only the title is drawn (degraded tier). */
 const CAP_TITLE_ONLY_LH = 34;
+
+/* ── Top-down copy flow (ADR-041 addendum) ──
+ * The face inverted from a bottom-anchored copy stack to a top-down flow:
+ * tool-name header → image → Challenge → Workflow Shift → divider → Stack →
+ * CAP band (flex) → baked pager. Body copy is sans; section headings +
+ * badges + pager are mono. */
+const BODY_FONT_PX = 23;
+const BODY_LH = 31;
+const HEADING_FONT_PX = 16;
+const SECTION_GAP = 26; // air between one block and the next heading
+const HEADING_GAP = 12; // air between a heading and its paragraph
+const IMAGE_TO_BODY_GAP = 30; // air below the screenshot frame
+
+/** Baked pager row (case switcher) — four ordinals centred at the bottom,
+ *  the active one gold + underlined. */
+const PAGER_BASELINE_Y = 1300;
+const PAGER_CENTERS_X = [297, 381, 465, 549] as const;
+const PAGER_TOP = PAGER_BASELINE_Y - 30; // reserve above the ordinals
+/** ✕ close glyph — top-right, where the removed index/status sat, left of
+ *  the top-right chamfer. */
+const CLOSE_CENTER_X = BAKE_W - BAKE_CH - 26; // 762
+const CLOSE_CENTER_Y = 92;
+
+/** Shared hit-region map (fractions of the 840×1360 face) — the SINGLE
+ *  source of truth for both the baked glyph positions here and the
+ *  transparent DOM hit buttons welded over the card's projection
+ *  (`ArcCasesHitLayer`). Keeping them in one place stops the visual and the
+ *  hit target from drifting. */
+const PAGER_HIT_HALF_W = 42;
+const PAGER_HIT_HALF_H = 52;
+const CLOSE_HIT_HALF = 42;
+export const CASE_CARD_HIT_REGIONS = {
+  pager: PAGER_CENTERS_X.map((cx) => ({
+    x: (cx - PAGER_HIT_HALF_W) / BAKE_W,
+    y: (PAGER_BASELINE_Y - 14 - PAGER_HIT_HALF_H) / BAKE_H,
+    w: (PAGER_HIT_HALF_W * 2) / BAKE_W,
+    h: (PAGER_HIT_HALF_H * 2) / BAKE_H,
+  })),
+  close: {
+    x: (CLOSE_CENTER_X - CLOSE_HIT_HALF) / BAKE_W,
+    y: (CLOSE_CENTER_Y - CLOSE_HIT_HALF) / BAKE_H,
+    w: (CLOSE_HIT_HALF * 2) / BAKE_W,
+    h: (CLOSE_HIT_HALF * 2) / BAKE_H,
+  },
+} as const;
 
 /** Dot-matrix veil tile (one column, repeated horizontally by the texture). */
 export function buildVeilCanvas(): HTMLCanvasElement {
@@ -191,9 +242,10 @@ export async function waitForCardFonts(): Promise<void> {
   try {
     await Promise.race([
       Promise.all([
-        document.fonts.load('700 26px "PT Mono"'),
-        document.fonts.load('400 20px "PT Mono"'),
-        document.fonts.load('400 27px "PP Neue Montreal"'),
+        document.fonts.load('700 36px "PT Mono"'),
+        document.fonts.load('700 16px "PT Mono"'),
+        document.fonts.load('400 16px "PT Mono"'),
+        document.fonts.load('400 23px "PP Neue Montreal"'),
       ]).then(() => undefined),
       timeout,
     ]);
@@ -258,11 +310,11 @@ function titleSegsToInk(segments: readonly TitleSegment[]): InkSeg[] {
 }
 
 /**
- * Bake one case card face — the ServicesCardRing plate grammar in the case
- * layout: codename chip + index/status (top), framed letterboxed screenshot
- * window, then the bottom-anchored copy stack (stack chips, subline lede,
- * title segments em→gold, caption row mode·tagline / headline metric gold).
- * NO CTA box.
+ * Bake one case card face — the ServicesCardRing plate grammar in the
+ * restructured case layout (ADR-041 addendum): tool-name header (em→gold) +
+ * ✕ close, framed letterboxed screenshot, then the top-down flow — Challenge,
+ * Workflow Shift (+ mode verb badge), divider, Stack — the measured-fit CAP
+ * rows, and the baked pager. NO CTA box.
  */
 export function bakeCaseCardFace(
   projectCase: ProjectCase,
@@ -379,120 +431,119 @@ export function bakeCaseCardFace(
   ctx.lineTo(BAKE_CH, BAKE_H - 1.5);
   ctx.stroke();
 
-  // Chip row — FILLED gold codename chip + index/status right.
+  // Header — tool NAME top-left (title segments, em→gold). No codename chip,
+  // no index/status, no tagline/subline (ADR-041 addendum).
   const label = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
-  ctx.textBaseline = "middle";
-  label.letterSpacing = "4.8px";
-  ctx.font = `700 24px ${CARD_FONT}`;
-  const chipText = projectCase.codename.toUpperCase();
-  const chipTextW = ctx.measureText(chipText).width;
-  const chipH = 54;
-  const chipY = 74 - chipH / 2;
-  const chipW = 30 + 10 + 18 + chipTextW + 30;
-  ctx.fillStyle = SERVICES_GOLD;
-  ctx.fillRect(44, chipY, chipW, chipH);
-  ctx.fillStyle = "#110f09"; // --latent-night
-  ctx.save();
-  ctx.translate(44 + 30 + 5, 74);
-  ctx.rotate(Math.PI / 4);
-  ctx.fillRect(-4, -4, 8, 8);
-  ctx.restore();
-  ctx.fillText(chipText, 44 + 30 + 10 + 18, 76);
-  label.letterSpacing = "3px";
-  ctx.font = `400 22px ${CARD_FONT}`;
-  ctx.fillStyle = `rgba(${DAWN}, 0.62)`;
-  ctx.textAlign = "right";
-  ctx.fillText(
-    `${projectCase.index}/04 · ${projectCase.status.toUpperCase()}`,
-    BAKE_W - BAKE_CH - 18,
-    74
-  );
-  ctx.textAlign = "left";
-
-  /* ── Copy stack — bottom-anchored (no CTA box). ── */
   const maxW = BAKE_W - PAD_X * 2;
   ctx.textBaseline = "alphabetic";
-
-  // Stack row — mono chips with gold separators (first 6 entries).
   label.letterSpacing = "3px";
-  ctx.font = `400 18px ${CARD_FONT}`;
+  ctx.font = `700 36px ${CARD_FONT}`;
+  const headerLines = wrapRuns(ctx, titleSegsToInk(projectCase.title), maxW);
+  const HEADER_LH = 46;
+  headerLines.forEach((line, i) => {
+    drawRunLine(ctx, line, PAD_X, 98 + i * HEADER_LH, `rgb(${DAWN})`);
+  });
+  label.letterSpacing = "0px";
+
+  // ✕ close (drawn strokes → font-independent). The DOM hit button in
+  // ArcCasesHitLayer is welded over this via CASE_CARD_HIT_REGIONS.close.
+  const clR = 11;
+  ctx.strokeStyle = `rgba(${DAWN}, 0.66)`;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(CLOSE_CENTER_X - clR, CLOSE_CENTER_Y - clR);
+  ctx.lineTo(CLOSE_CENTER_X + clR, CLOSE_CENTER_Y + clR);
+  ctx.moveTo(CLOSE_CENTER_X + clR, CLOSE_CENTER_Y - clR);
+  ctx.lineTo(CLOSE_CENTER_X - clR, CLOSE_CENTER_Y + clR);
+  ctx.stroke();
+
+  /* ── Top-down copy flow (ADR-041 addendum): Challenge → Workflow Shift →
+     divider → Stack, flowing down from below the screenshot. A single
+     cursor `y` tracks the baseline. ── */
+  let y = SHOT_Y0 + SHOT_H + IMAGE_TO_BODY_GAP;
+
+  // Section heading helper (gold mono, letter-spaced).
+  const drawHeading = (text: string): void => {
+    label.letterSpacing = "3.5px";
+    ctx.font = `700 ${HEADING_FONT_PX}px ${CARD_FONT}`;
+    ctx.fillStyle = SERVICES_GOLD;
+    ctx.fillText(text, PAD_X, y + HEADING_FONT_PX);
+    label.letterSpacing = "0px";
+    y += HEADING_FONT_PX + HEADING_GAP;
+  };
+
+  // Body-paragraph helper (sans, dim dawn); advances `y` past the wrapped
+  // block. Returns nothing — `y` is the running cursor.
+  const drawBody = (text: string): void => {
+    ctx.font = `400 ${BODY_FONT_PX}px ${CARD_SANS}`;
+    const lines = wrapRuns(ctx, [{ text }], maxW);
+    lines.forEach((line, i) => {
+      drawRunLine(ctx, line, PAD_X, y + BODY_FONT_PX + i * BODY_LH, `rgba(${DAWN}, 0.72)`);
+    });
+    y += lines.length * BODY_LH;
+  };
+
+  // 1. Challenge.
+  drawHeading("CHALLENGE");
+  drawBody(projectCase.challenge);
+  y += SECTION_GAP;
+
+  // 2. Workflow Shift — heading (left) + verb badge (right) on one row, then
+  //    the shift paragraph. The badge reuses the codename-chip fill recipe.
+  label.letterSpacing = "3.5px";
+  ctx.font = `700 ${HEADING_FONT_PX}px ${CARD_FONT}`;
+  ctx.fillStyle = SERVICES_GOLD;
+  ctx.textBaseline = "middle";
+  const wsRowMid = y + 15;
+  ctx.fillText("WORKFLOW SHIFT", PAD_X, wsRowMid);
+  // Verb badge (mode) — filled gold chip, void ink, right-aligned.
+  label.letterSpacing = "3px";
+  ctx.font = `700 15px ${CARD_FONT}`;
+  const badgeText = projectCase.mode.toUpperCase();
+  const badgeTextW = ctx.measureText(badgeText).width;
+  const badgePadX = 16;
+  const badgeW = badgeTextW + badgePadX * 2;
+  const badgeH = 30;
+  const badgeX = PAD_X + maxW - badgeW;
+  ctx.fillStyle = SERVICES_GOLD;
+  ctx.fillRect(badgeX, wsRowMid - badgeH / 2, badgeW, badgeH);
+  ctx.fillStyle = "#110f09"; // --latent-night
+  ctx.textAlign = "center";
+  ctx.fillText(badgeText, badgeX + badgeW / 2, wsRowMid + 1);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  label.letterSpacing = "0px";
+  y += 30 + HEADING_GAP;
+  drawBody(projectCase.shift);
+  y += SECTION_GAP;
+
+  // 3. Divider — a gold hairline rule.
+  ctx.fillStyle = "rgba(202, 165, 84, 0.28)";
+  ctx.fillRect(PAD_X, y, maxW, 2);
+  y += 2 + 24;
+
+  // 4. Stack — mono chips with gold separators (first 6 entries).
+  label.letterSpacing = "3px";
+  ctx.font = `400 16px ${CARD_FONT}`;
   const stackSegments: InkSeg[] = [];
   projectCase.stack.slice(0, 6).forEach((item, i) => {
     if (i > 0) stackSegments.push({ text: "·", gold: true });
     stackSegments.push({ text: item.toUpperCase() });
   });
   const stackLines = wrapRuns(ctx, stackSegments, maxW);
-  const STACK_LH = 30;
-  const stackBottom = BAKE_H - 56;
+  const STACK_LH = 28;
   stackLines.forEach((line, i) => {
-    drawRunLine(
-      ctx,
-      line,
-      PAD_X,
-      stackBottom - (stackLines.length - 1 - i) * STACK_LH,
-      `rgba(${DAWN}, 0.5)`
-    );
+    drawRunLine(ctx, line, PAD_X, y + 16 + i * STACK_LH, `rgba(${DAWN}, 0.5)`);
   });
-  const stackTop = stackBottom - (stackLines.length - 1) * STACK_LH - 22;
-
-  // Lede — the subline sentence, sans, em-free (dim dawn).
   label.letterSpacing = "0px";
-  ctx.font = `400 27px ${CARD_SANS}`;
-  const ledeLines = wrapRuns(ctx, [{ text: projectCase.subline }], maxW);
-  const LEDE_LH = 40;
-  const ledeBottom = stackTop - 26;
-  ledeLines.forEach((line, i) => {
-    drawRunLine(
-      ctx,
-      line,
-      PAD_X,
-      ledeBottom - (ledeLines.length - 1 - i) * LEDE_LH,
-      `rgba(${DAWN}, 0.7)`
-    );
-  });
-  const ledeTop = ledeBottom - (ledeLines.length - 1) * LEDE_LH - 28;
+  y += stackLines.length * STACK_LH;
 
-  // Title — the case title segments, mono bold uppercase, em → gold.
-  label.letterSpacing = "3px";
-  ctx.font = `700 34px ${CARD_FONT}`;
-  const titleLines = wrapRuns(ctx, titleSegsToInk(projectCase.title), maxW);
-  const TITLE_LH = 46;
-  const titleBottom = ledeTop - 26;
-  titleLines.forEach((line, i) => {
-    drawRunLine(
-      ctx,
-      line,
-      PAD_X,
-      titleBottom - (titleLines.length - 1 - i) * TITLE_LH,
-      `rgb(${DAWN})`
-    );
-  });
-  const titleTop = titleBottom - (titleLines.length - 1) * TITLE_LH - 34;
-
-  // Caption row — mode + tagline left (dim), headline metric right (gold).
-  label.letterSpacing = "3.5px";
-  ctx.font = `400 16px ${CARD_FONT}`;
-  ctx.fillStyle = `rgba(${DAWN}, 0.4)`;
-  const capY = titleTop - 24;
-  ctx.fillText(`${projectCase.mode} · ${projectCase.tagline.toUpperCase()}`, PAD_X, capY);
-  if (projectCase.metric) {
-    ctx.fillStyle = "rgba(202, 165, 84, 0.85)";
-    ctx.textAlign = "right";
-    ctx.fillText(
-      `${projectCase.metric.value} ${projectCase.metric.label.toUpperCase()}`,
-      PAD_X + maxW,
-      capY
-    );
-    ctx.textAlign = "left";
-  }
-  label.letterSpacing = "0px";
-
-  /* ── Capability rows (ADR-041) — fill the band between the screenshot and
-     the copy stack with the four capabilities (from the retired console
-     card). MEASURED fit: full rows if the band affords them, title-only if
-     tight, skipped if there's no room — never overflowing the copy stack. ── */
-  const capBandTop = SHOT_Y0 + SHOT_H + CAP_BAND_TOP_GAP;
-  const capBandBottom = capY - 16 - CAP_BAND_BOTTOM_GAP;
+  /* ── Capability rows (ADR-041) — the flex zone between the stack and the
+     baked pager. MEASURED fit: full rows if the band affords them, title-
+     only if tight, skipped if there's no room — never overflowing the
+     pager. ── */
+  const capBandTop = y + 30;
+  const capBandBottom = PAGER_TOP - CAP_BAND_BOTTOM_GAP;
   const capBandH = capBandBottom - capBandTop;
   const capBodyX = PAD_X + CAP_GUTTER;
   const capBodyW = maxW - CAP_GUTTER;
@@ -536,6 +587,26 @@ export function bakeCaseCardFace(
     });
     label.letterSpacing = "0px";
   }
+
+  /* ── Pager (ADR-041 addendum) — the case switcher baked into the face; the
+     ordinal equal to this case's index is gold + underlined, the rest dim.
+     The DOM hit buttons in ArcCasesHitLayer weld over these via
+     CASE_CARD_HIT_REGIONS.pager. ── */
+  label.letterSpacing = "4px";
+  ctx.font = `700 20px ${CARD_FONT}`;
+  ctx.textAlign = "center";
+  const activeSlot = Number(projectCase.index) - 1;
+  PAGER_CENTERS_X.forEach((cx, i) => {
+    const active = i === activeSlot;
+    ctx.fillStyle = active ? SERVICES_GOLD : `rgba(${DAWN}, 0.45)`;
+    const ordinal = `0${i + 1}`;
+    ctx.fillText(ordinal, cx, PAGER_BASELINE_Y);
+    if (active) {
+      ctx.fillRect(cx - 16, PAGER_BASELINE_Y + 12, 32, 2);
+    }
+  });
+  ctx.textAlign = "left";
+  label.letterSpacing = "0px";
 
   return canvas;
 }

@@ -67,9 +67,9 @@ export const PROJECT_CASES: ProjectCase[] = [
     year: 2025,
     mode: "INVENT",
     challenge:
-      "Every briefing cycle meant manual digging across Reddit, ad dashboards, Meta Ad Library, and past notes — with Loop's proprietary ad data too sensitive for outside tools.",
+      "Creative Strategy drove the briefings, but each cycle meant manual digging across Reddit, ad dashboards, Meta Ad Library, and past notes, with Loop's proprietary ad data too sensitive to hand to outside tools.",
     shift:
-      "Mímir unifies customer voice, ad performance, competitive signals, and prior briefings into a permissioned knowledge graph that surfaces insight while the brief is being written.",
+      "Mímir unifies customer voice, ad performance, competitive signals, and prior briefings into a permissioned knowledge graph that surfaces relevant insight while a brief is being written.",
     capabilities: [
       {
         title: "Permissioned graph",
@@ -110,7 +110,7 @@ export const PROJECT_CASES: ProjectCase[] = [
     year: 2025,
     mode: "COMPRESS",
     challenge:
-      "Studio was losing creative flow to scattered generation tools, opaque costs, and too many model choices — the team needed one opinionated canvas tied to Loop's product context.",
+      "Studio was losing creative flow to scattered generation tools, opaque costs, and too many model choices. The team needed one opinionated canvas tied to Loop's product context.",
     shift:
       "One canvas runs prompt enhancement, multi-model generation, and image-to-video on only the models Studio actually uses.",
     capabilities: [
@@ -164,7 +164,7 @@ export const PROJECT_CASES: ProjectCase[] = [
     challenge:
       "UGC localization had to scale across 30+ markets without turning every language into another agency handoff, Figma copy-paste loop, and reviewer queue.",
     shift:
-      "Transcribe, translate, dub, and Gemini-verify in one pipeline, so reviewers only judge the rows where culture actually matters.",
+      "Transcribe, translate, dub, and Gemini-verify in one pipeline so reviewers only judge the rows where culture matters.",
     capabilities: [
       {
         title: "30+ markets",
@@ -205,9 +205,9 @@ export const PROJECT_CASES: ProjectCase[] = [
     year: 2025,
     mode: "REPAIR",
     challenge:
-      "Briefings lived in Monday, designers worked in Figma, assets shipped through Frontify — every handoff was manual copy-paste, and proofreaders waited on whoever could pull the latest copy out by hand.",
+      "Built for the project managers around the creative team, collapsing the manual workflow that lives around the design work itself: briefings flow from Monday into Figma, copy gets extracted for proofreaders, and assets sync back through Frontify.",
     shift:
-      "One webhook chain moves briefings from Monday into Figma, pulls copy out for proofreading, and routes finished assets back through Frontify — without a single manual copy-paste.",
+      "One webhook chain moves briefings from Monday into Figma, pulls copy out for proofreading, and routes the finished assets back through Frontify, without a single manual copy-paste.",
     capabilities: [
       {
         title: "Monday → Figma sync",

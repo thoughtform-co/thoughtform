@@ -8,10 +8,10 @@
  * precedent).
  *
  * Writers: `ArcCasesSigil` (toggle + auto-disarm watcher — ADR-041; it took
- * both over from the retired `ArcCasesTerminalCta` chip), `ArcCasesStepper`
- * (step/select, CLOSE, Escape disarm). Readers: `ArcCasesCard`'s useFrame
+ * both over from the retired `ArcCasesTerminalCta` chip), `ArcCasesHitLayer`
+ * (step/select, ✕ close, Escape disarm). Readers: `ArcCasesCard`'s useFrame
  * (armed + slot, via getState — no subscription), the sigil's `aria-expanded`
- * + `data-armed`, the DOM stepper's chips + `data-open`.
+ * + `data-armed`, the hit layer's pager buttons + region `data-open`.
  *
  * `arm()` is UI-unused (toggle covers the sigil) — kept for the lab and
  * API symmetry with `disarm()`.

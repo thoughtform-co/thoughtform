@@ -49,7 +49,7 @@ import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
 import { arcLabelFade, sigilSettle } from "@/lib/arc-cases/arcCasesMath";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
-import { SIGIL_Z } from "@/lib/arc-cases/cardLayout";
+import { CARD_CENTER_Y, CARD_Z, SIGIL_Z, getCardGeometry } from "@/lib/arc-cases/cardLayout";
 import { ARC_CASES_CARD } from "../arcCasesCard";
 
 // Re-exported for back-compat: external modules (FlyingCameraRig,
@@ -1631,6 +1631,7 @@ export function getBrandmarkWrapHalfExtent(progress: number): number {
 
 // ── Copy + label world anchors ───────────────────────────────────
 
+import * as THREE from "three";
 import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
@@ -2001,6 +2002,65 @@ const gateSigil: WorldAnchor["onPaint"] = (ctx, el) => {
   applyGyroDomBank(el);
 };
 
+/** Project a gyro-assembly-local point to screen px through the tracker's
+ *  mirror camera (reused each frame; a single scratch vector). */
+const _casesHitProj = new THREE.Vector3();
+function projectGyroLocalToScreen(
+  transform: DepthGatewayTransform,
+  camera: THREE.PerspectiveCamera,
+  vw: number,
+  vh: number,
+  local: readonly [number, number, number]
+): [number, number] {
+  const [wx, wy, wz] = gyroAssemblyWorldPosition(transform, local);
+  _casesHitProj.set(wx, wy, wz).project(camera);
+  return [(_casesHitProj.x * 0.5 + 0.5) * vw, (-_casesHitProj.y * 0.5 + 0.5) * vh];
+}
+
+/** onPaint for the cases hit layer (ADR-041 addendum). Positions each
+ *  transparent hit button (baked pager ordinals + ✕) by projecting ITS OWN
+ *  baked-glyph rect — mapped from `CASE_CARD_HIT_REGIONS` fractions to card
+ *  content-plane local coords — through the SAME mirror camera the WebGL card
+ *  is rendered by, so every button stays welded to the glyph it covers under
+ *  any gyro bank / scale. (A single CSS-banked frame only APPROXIMATES the 3D
+ *  projection — `applyGyroDomBank` scales the tilt by 0.65 — so the targets
+ *  drift off the baked numbers, which is unclickable.) Each child carries its
+ *  rect as `data-hit-{x,y,w,h}` (fractions of the 840×1360 face, y-down). The
+ *  frame's own transform is reset so children position in viewport px. */
+const gateCasesHit: WorldAnchor["onPaint"] = (ctx, el) => {
+  const { camera, vw, vh, transform } = ctx;
+  const geom = getCardGeometry(getStackColumnLocalX(vw / vh));
+  const hw = geom.halfWidth;
+  const hh = geom.halfHeight;
+  // Card's projected extents (px) — for the button sizes.
+  const [cx0, cy0] = projectGyroLocalToScreen(transform, camera, vw, vh, [0, 0, CARD_Z]);
+  const [rx0] = projectGyroLocalToScreen(transform, camera, vw, vh, [hw, 0, CARD_Z]);
+  const [, ty0] = projectGyroLocalToScreen(transform, camera, vw, vh, [0, hh, CARD_Z]);
+  const cardWpx = 2 * Math.abs(rx0 - cx0);
+  const cardHpx = 2 * Math.abs(ty0 - cy0);
+
+  el.style.transform = "none";
+  const kids = el.children;
+  for (let i = 0; i < kids.length; i++) {
+    const b = kids[i] as HTMLElement;
+    const fx = parseFloat(b.dataset.hitX ?? "");
+    const fy = parseFloat(b.dataset.hitY ?? "");
+    const fw = parseFloat(b.dataset.hitW ?? "");
+    const fh = parseFloat(b.dataset.hitH ?? "");
+    if (!Number.isFinite(fx) || !Number.isFinite(fy)) continue;
+    // Baked-glyph centre fraction → content-plane local (y-down → world y-up).
+    const localX = (fx + fw / 2 - 0.5) * 2 * hw;
+    const localY = (0.5 - (fy + fh / 2)) * 2 * hh;
+    const [sx, sy] = projectGyroLocalToScreen(transform, camera, vw, vh, [localX, localY, CARD_Z]);
+    const wpx = fw * cardWpx;
+    const hpx = fh * cardHpx;
+    b.style.left = `${(sx - wpx / 2).toFixed(1)}px`;
+    b.style.top = `${(sy - hpx / 2).toFixed(1)}px`;
+    b.style.width = `${wpx.toFixed(1)}px`;
+    b.style.height = `${hpx.toFixed(1)}px`;
+  }
+};
+
 /** Per-cardinal cartridge stagger overlap for Encode. Higher overlap
  *  means each cardinal's curved fly-in spans a bigger slice of the
  *  `orbits` reveal — same parent envelope, but each cartridge's arc
@@ -2082,7 +2142,12 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
       depthScale = 1 - backT * 0.12;
     }
   }
-  el.style.opacity = (ctx.visibilityOpacity * op * depthOp * buildOut).toFixed(3);
+  // Arc Cases (ADR-041): fade the Encode cardinals when the card arms — the
+  // same casesFade gateStackLabel applies to the stack labels. Without it
+  // these z-14 DOM primitives (VOICE/TASTE/CRAFT/JUDGMENT) clip in FRONT of
+  // the z-5 card. arcLabelFade(0) === 1, so flag-off / unarmed is byte-identical.
+  const casesFade = ARC_CASES_CARD ? arcLabelFade(arcCasesLevelRef.current.level) : 1;
+  el.style.opacity = (ctx.visibilityOpacity * op * depthOp * buildOut * casesFade).toFixed(3);
   applyGyroDomBank(el, 0.8);
   if (depthScale !== 1) {
     el.style.transform = `${el.style.transform} scale(${depthScale.toFixed(3)})`;
@@ -2684,6 +2749,17 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       max: 1.2,
     },
     onPaint: gateSigil,
+  },
+  // Cases hit layer (ADR-041 addendum) — a transparent DOM box welded over
+  // the card's screen projection (sized + banked by `gateCasesHit`); its
+  // buttons drive the baked pager + ✕. Same optical axis (x = 0) as the
+  // sigil/card. No perspectiveScale: `gateCasesHit` sets the whole transform.
+  {
+    id: "intelligence.casesHit",
+    position: (transform) => gyroAssemblyWorldPosition(transform, [0, CARD_CENTER_Y, CARD_Z]),
+    visibilityBeats: ["intelligence"],
+    fadeFrac: 0.14,
+    onPaint: gateCasesHit,
   },
   // Per-item stack labels — one DOM anchor per source pip / surface
   // tip. World position is the pip's column X. Flow pass

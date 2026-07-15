@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import "@/components/landing/home-v2/home-v2.css";
 
 import { ArcCasesCardGate } from "@/components/landing/home-v2/arc-cases";
-import { ArcCasesStepper } from "@/components/landing/home-v2/arc-cases";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { useArcCasesStore } from "@/lib/stores/arcCasesStore";
@@ -17,8 +16,10 @@ import { useArcCasesStore } from "@/lib/stores/arcCasesStore";
  * Build band pinned open (`bandGetter={() => 1}`) and `preload` so the four
  * faces bake immediately; a level slider drives the arm envelope directly
  * (`levelOverride`) so you can inspect the materialize / crossfade / veil at
- * any presence. The DOM stepper rides the same shared level, so it appears
- * once the slider crosses the arrive threshold.
+ * any presence. The pager (01 02 03 04) + ✕ are baked into the card face now;
+ * the lab's own store controls below drive arm / step / select for look-dev
+ * (the corridor's `ArcCasesHitLayer` needs the world tracker, so it is not
+ * mounted here — its hit alignment is verified on the live route).
  *
  * NOTE: the node-stream FOLD is a corridor-only read (it lives in ShellStack,
  * which needs the full accretion shell) — verify that on the live route. This
@@ -50,9 +51,6 @@ export default function ArcCasesCardLabPage() {
           <ArcCasesCardGate bandGetter={() => 1} preload levelOverride={level} />
         </Canvas>
       </div>
-
-      {/* The real DOM stepper — rides the shared level. */}
-      <ArcCasesStepper />
 
       {/* Lab controls. */}
       <div

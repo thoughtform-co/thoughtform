@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
  * Arc Cases Card smoke (ADR-036; sigil trigger + phased reveal ADR-041).
@@ -10,12 +10,12 @@ import { expect, test, type Page } from "@playwright/test";
  *   - the SIGIL is welded to the sphere's front pole (viewport centre at the
  *     park) and only offers itself once the sources/surfaces notes have
  *     SETTLED — inert mid-corridor and while they're still accreting;
- *   - arming fades the stack labels to nothing AND reveals the stepper row,
+ *   - arming fades the stack labels to nothing AND reveals the hit layer,
  *     which requires the CARD's R3F level writer to actually run (both read
  *     the `arcCasesLevelRef` the card writes);
  *   - THE ORDERING (ADR-041): the card has ZERO presence while the node fold
- *     is still running — the stepper rides `cardPresence`, so it must still be
- *     at 0 on the frame the labels have already begun to fade;
+ *     is still running — the hit layer's region rides `cardPresence`, so it
+ *     must still be at 0 on the frame the labels have already begun to fade;
  *   - stepping swaps the front slot, CLOSE drains, Escape returns focus to the
  *     sigil, and walking out of the band auto-disarms.
  *
@@ -73,6 +73,17 @@ async function clickSigil(page: Page) {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 }
 
+/** Click a re-projected hit target (baked pager ordinal / ✕) by its box
+ *  centre — same rationale as clickSigil: the hit frame is re-projected every
+ *  frame and idle-drifts with the gyro, so `locator.click()` never passes
+ *  Playwright actionability ("element is not stable"). */
+async function clickByBox(page: Page, locator: Locator) {
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+}
+
 test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -117,7 +128,7 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     }
   });
 
-  test("arming fades the stack labels and reveals the stepper", async ({ page }) => {
+  test("arming fades the stack labels and reveals the hit layer", async ({ page }) => {
     test.skip(!isDesktop(page), "desktop-only feature");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
@@ -233,18 +244,20 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     await clickSigil(page);
     await expect(page.locator("#arc-cases-terminal")).toHaveAttribute("data-open", "true");
 
-    const chips = page.locator(".home-v2-cases-stepper__chip");
-    await expect(chips).toHaveCount(4);
-    await expect(chips.nth(0)).toHaveAttribute("aria-pressed", "true");
+    const pagers = page.locator(".home-v2-cases-hit__pager");
+    await expect(pagers).toHaveCount(4);
+    await expect(pagers.nth(0)).toHaveAttribute("aria-pressed", "true");
 
-    // Next steps the pressed chip forward (the baked card face crossfades in
-    // the canvas — not asserted here).
-    await page.locator(".home-v2-cases-stepper__step--next").click();
-    await expect(chips.nth(1)).toHaveAttribute("aria-pressed", "true");
-    await expect(chips.nth(0)).toHaveAttribute("aria-pressed", "false");
+    // ArrowRight steps the pressed pager forward (the baked card face
+    // crossfades in the canvas — not asserted here).
+    await page.keyboard.press("ArrowRight");
+    await expect(pagers.nth(1)).toHaveAttribute("aria-pressed", "true");
+    await expect(pagers.nth(0)).toHaveAttribute("aria-pressed", "false");
 
-    await chips.nth(3).click();
-    await expect(chips.nth(3)).toHaveAttribute("aria-pressed", "true");
+    // Clicking a pager ordinal selects it (box-click — the hit frame is
+    // re-projected every frame, so `locator.click()` can't stabilise).
+    await clickByBox(page, pagers.nth(3));
+    await expect(pagers.nth(3)).toHaveAttribute("aria-pressed", "true");
   });
 
   test("CLOSE drains the reveal — stepper inert, labels + sigil recover", async ({ page }) => {
@@ -258,8 +271,9 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     await expect(stepper).toHaveAttribute("data-open", "true");
     await expect(stepper).not.toHaveAttribute("inert", "", { timeout: 5000 });
 
-    // The sigil is behind the card, so CLOSE lives in the stepper row.
-    await page.locator(".home-v2-cases-stepper__close").click();
+    // The sigil is behind the card once open, so the ✕ close lives on the
+    // card face — a box-click on its welded hit button.
+    await clickByBox(page, page.locator(".home-v2-cases-hit__close"));
     await expect(sigil).toHaveAttribute("data-armed", "false");
     await expect(stepper).toHaveAttribute("data-open", "false");
     await expect(stepper).toHaveAttribute("inert", "", { timeout: 5000 });
@@ -316,10 +330,10 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041)", () => {
     await expect(sigil).not.toHaveAttribute("inert", "");
     await clickSigil(page);
     await expect(sigil).toHaveAttribute("data-armed", "true");
-    await page.locator(".home-v2-cases-stepper__close").click();
+    await clickByBox(page, page.locator(".home-v2-cases-hit__close"));
   });
 
-  test("mobile/tablet never shows the sigil or the stepper", async ({ page }) => {
+  test("mobile/tablet never shows the sigil or the hit layer", async ({ page }) => {
     test.skip(isDesktop(page), "absence check is for small viewports");
     await scrollToStageProgress(page, BUILD_PARK_RAW);
 

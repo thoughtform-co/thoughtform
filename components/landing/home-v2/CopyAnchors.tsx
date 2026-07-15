@@ -15,6 +15,7 @@ import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { MobileEpilogueSignal } from "./MobileEpilogueSignal";
 import { StationTitle } from "./StationTitle";
 import { ArcCasesSigil } from "./arc-cases/ArcCasesSigil";
+import { ArcCasesHitLayer } from "./arc-cases/ArcCasesHitLayer";
 import { ARC_CASES_CARD } from "./arcCasesCard";
 
 /**
@@ -314,6 +315,13 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           unconditionally; its anchor is `intelligence.sigil` in COPY_ANCHORS
           and its opacity is painted by `gateSigil`. */}
       {ARC_CASES_CARD && <ArcCasesSigil />}
+
+      {/* Cases hit layer (ADR-041 addendum) — transparent <button>s welded
+          over the baked pager + ✕ on the card face; anchor
+          `intelligence.casesHit` in COPY_ANCHORS, sized + banked by
+          `gateCasesHit`. Replaces the retired floating stepper row; mounted
+          last so DOM order = focus order. Self-gates on ARC_CASES_MEDIA. */}
+      {ARC_CASES_CARD && <ArcCasesHitLayer />}
 
       {/* Mobile epilogue signal (ADR-018 mobile epilogue fix, 2026-07-15).
           The desktop epilogue title + CTA live in `CorridorStationHeaders`,

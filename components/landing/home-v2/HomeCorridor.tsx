@@ -17,8 +17,7 @@ import { CorridorProgressRail } from "./CorridorProgressRail";
 // a section seam" composition.
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
-import { ARC_CASES_CARD } from "./arcCasesCard";
-import { ArcCasesStepper, prefetchCaseCardImages } from "./arc-cases";
+import { prefetchCaseCardImages } from "./arc-cases";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -175,16 +174,10 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             aspect ratio. Mobile keeps the legacy world-anchored
             straddle inside `CopyAnchors`. (2026-06-08 2D pivot.) */}
         {!fallback && <CorridorStationHeaders />}
-
-        {/* Arc Cases Card stepper (ADR-036) — the accessible DOM control
-            row (◂ 01 02 03 04 ▸) for the in-canvas 3D cases card, which
-            materializes between the stack columns when the visitor arms
-            the "VIEW THE CASES" chip under the Build title. Sits right
-            after the station headers so DOM order = focus order (the
-            progress rail below has no focusables). Self-gates on
-            ARC_CASES_MEDIA and renders null off-desktop; the card itself
-            lives in the R3F canvas (DepthGatewayScene). */}
-        {!fallback && ARC_CASES_CARD && <ArcCasesStepper />}
+        {/* The Arc Cases pager + ✕ moved to a baked-into-the-card face with a
+            transparent hit layer (`ArcCasesHitLayer`, ADR-041 addendum),
+            mounted in `CopyAnchors` next to the sigil — the floating stepper
+            row is retired. */}
 
         {/* Persistent HUD breadcrumb — Navigate → Encode → Build,
             appending each stage as the camera arrives. Sits on the top

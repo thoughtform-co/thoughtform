@@ -768,127 +768,61 @@ html[data-corridor-exit="true"] #about {
   }
 }
 
-/* -- The stepper row ----------------------------------------------
-   The card itself is a 3D object in the R3F canvas (no DOM); this is its
-   accessible control row - a compact fixed row centred below the card's
-   screen region. Re-homed from the retired overlay's footer stepper:
-   diamond prev/next, active chip gold + underline (the right-rail active
-   signature). Opacity + inert are rAF-driven off the shared arm level;
-   the row is `pointer-events: none` and its buttons opt back in. Carries
-   the region id `arc-cases-terminal` so the CTA's `aria-controls` stays
-   honest without touching the chip. */
-.home-v2-cases-stepper {
+/* -- The hit layer ------------------------------------------------
+   The card (incl. the pager 01 02 03 04 + the ✕ close) is BAKED into the R3F
+   card texture; this is the transparent DOM control surface welded over its
+   screen projection so those baked glyphs are clickable (the canvas is
+   pointer-events: none). The region wrapper `#arc-cases-terminal` rides the
+   card's phased cardPresence for opacity + inert (its opacity is the smoke
+   ORDERING probe) and carries the region id the sigil's `aria-controls`
+   targets. The tracked frame inside is positioned by useWorldDomTracker and
+   sized + banked by gateCasesHit; only its buttons opt into pointer events. */
+.home-v2-cases-hit {
   position: fixed;
-  left: 50%;
-  bottom: clamp(24px, 7vh, 60px);
-  transform: translateX(-50%);
+  inset: 0;
   z-index: 16;
   pointer-events: none;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  color: var(--gold, #caa554);
 }
-.home-v2-cases-stepper[inert] {
+.home-v2-cases-hit[inert] {
   visibility: hidden;
 }
-.home-v2-cases-stepper__inner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  background: rgba(5, 4, 3, 0.62);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(202, 165, 84, 0.22);
-  font-size: 11px;
-  letter-spacing: 0.2em;
+/* A viewport-coordinate root at (0,0); gateCasesHit resets its transform each
+   frame and positions the buttons in viewport px (left/top/width/height). */
+.home-v2-cases-hit__frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
 }
-.home-v2-cases-stepper__step {
-  position: relative;
-  width: 18px;
-  height: 18px;
+/* Transparent hit buttons over the baked pager ordinals + ✕. Each button's
+   left/top/width/height is set per frame by gateCasesHit — projecting its
+   baked-glyph centre through the mirror camera so it stays welded to the glyph
+   under gyro bank. No fill — the gold glyphs live on the card texture behind
+   them; only a focus ring shows. */
+.home-v2-cases-hit__pager,
+.home-v2-cases-hit__close {
+  position: absolute;
+  margin: 0;
   padding: 0;
   border: 0;
+  border-radius: 3px;
   background: transparent;
+  color: transparent;
   pointer-events: auto;
   cursor: pointer;
 }
-.home-v2-cases-stepper__step::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border: 1px solid var(--gold-60, rgba(202, 165, 84, 0.6));
-  rotate: 45deg;
-  transition: background 0.15s ease;
-}
-.home-v2-cases-stepper__step:hover::after,
-.home-v2-cases-stepper__step:focus-visible::after {
-  background: var(--gold-30, rgba(202, 165, 84, 0.3));
-}
-.home-v2-cases-stepper__chip {
-  padding: 2px 3px 4px;
-  border: 0;
-  background: transparent;
-  color: var(--dawn-45, rgba(236, 227, 214, 0.45));
-  font: inherit;
-  letter-spacing: inherit;
-  pointer-events: auto;
-  cursor: pointer;
-}
-.home-v2-cases-stepper__chip:hover,
-.home-v2-cases-stepper__chip:focus-visible {
-  color: var(--dawn, #ece3d6);
-}
-.home-v2-cases-stepper__chip[aria-pressed="true"] {
-  color: var(--gold, #caa554);
-  text-decoration: underline;
-  text-underline-offset: 5px;
-  text-decoration-thickness: 1px;
+.home-v2-cases-hit__pager:focus-visible,
+.home-v2-cases-hit__close:focus-visible {
+  outline: 2px solid var(--gold, #caa554);
+  outline-offset: 2px;
 }
 
-/* CLOSE (ADR-041) - the sigil trigger is welded to the sphere's front pole,
-   which the card covers once open, so the close lives here instead. Sits
-   under the stepper row, centred; same chevron grammar as the retired chip. */
-.home-v2-cases-stepper__close {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px auto 0;
-  padding: 5px 14px;
-  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  background: rgba(5, 4, 3, 0.62);
-  color: var(--gold, #caa554);
-  font: inherit;
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  pointer-events: auto;
-  cursor: pointer;
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease;
-}
-.home-v2-cases-stepper__close:hover,
-.home-v2-cases-stepper__close:focus-visible {
-  border-color: var(--gold, #caa554);
-  background: rgba(202, 165, 84, 0.12);
-}
-.home-v2-cases-stepper__close-chevrons {
-  display: flex;
-  gap: 2px;
-}
-.home-v2-cases-stepper__close-chev {
-  width: 4px;
-  height: 4px;
-  border-top: 1px solid var(--gold-60, rgba(202, 165, 84, 0.6));
-  border-right: 1px solid var(--gold-60, rgba(202, 165, 84, 0.6));
-  rotate: 45deg;
-}
-
-/* Gate parity - BOTH the sigil and the stepper hide below the JS
+/* Gate parity - BOTH the sigil and the hit layer hide below the JS
    ARC_CASES_MEDIA floor. Keep this media list in lockstep with
    ARC_CASES_MEDIA in arcCasesCard.ts. */
 @media (max-width: 1100px), (max-height: 759px), (prefers-reduced-motion: reduce) {
   .home-v2-cases-sigil,
-  .home-v2-cases-stepper {
+  .home-v2-cases-hit {
     display: none;
   }
 }
