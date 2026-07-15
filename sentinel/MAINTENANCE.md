@@ -54,6 +54,47 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-15 — Mobile Landing Quality Pass, Round 2 (ADR-018 Revision 2)
+
+Follow-up to the same-day Round 1 below. Round 1 landed 7 of its 9
+workstreams cleanly but its "styling parity" workstream never actually
+removed the title chrome or reframed the support copy (only the kicker +
+case cards shipped), and its new mobile epilogue introduced a font
+regression. Four user-visible items + a broadened alignment sweep. Cycle
+A (multiple linked fixes on a shared surface). All gated on
+`@media (max-width: 760px)` / `isMobileComposition()` / mobile-only
+classes → desktop byte-identical (spot-checked at 1280×800).
+
+- **Bare Arc titles.** The gold `.home-v2-readout__corner` L-brackets
+  were only hidden on desktop (`--twocol`); mobile leaked them. Hidden
+  on mobile → matches the bare desktop title grammar (bare since
+  2026-07-03).
+- **Compact caption reticle.** Mobile support dropped
+  `.home-v2-copy-body` (which was overriding PT-Mono → sans) and is now
+  wrapped in a new `.home-v2-readout__caption*` reticle (dashed frame +
+  gold corner crosses + coord tag) echoing the desktop `CaptionCard`,
+  minus the arm/aperture choreography / glass / meta / rail / pips.
+- **Copy spread + sphere enlarged.** Six `mobileStraddleY` offsets
+  widened to use the empty portrait bands; new `mobileGyroSphereScale()`
+  (1.1 mobile / 1 desktop) enlarges the gyro sphere, applied in the two
+  synced places (`BrandmarkAccretionShell` group `setScalar` +
+  `getBrandmarkSphereMatchHalfExtent`) so the brandmark keeps filling the
+  sphere (ADR-023).
+- **Epilogue font.** `.home-v2-mobile-signal__title` was using the
+  undefined `--font-source-serif` token (→ Georgia serif + italic);
+  repointed to PP Neue Montreal, uppercase, `0.04em`, upright gold `em`
+  — matching desktop and the no-italics rule.
+- **Alignment sweep ("center everything").** `#about` bio + `#continuum`
+  head centred on mobile; `#practice` approach-phase rules centred
+  (inert on the current placeholder markup, defensive); `#services`
+  cards + `#continuum` spectrum rail kept left (component grammar).
+
+Reverses two explicit Round-1 non-goals (kept L-corners; kept `#about`
+left) per owner feedback — noted in the ADR-018 Revision-2 header. Six
+touched files: `home-v2.css`, `StationTitle.tsx`, `sceneGeom.ts`,
+`BrandmarkAccretionShell.tsx`, `landing.css`, plus the ADR/ledger docs.
+lint / typecheck / vitest all green.
+
 ### 2026-07-15 — Mobile Landing Quality Pass (ADR-018 addendum)
 
 Owner-driven quality pass to raise the mobile landing to parity with

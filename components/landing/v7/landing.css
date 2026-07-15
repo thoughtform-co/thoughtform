@@ -5899,6 +5899,15 @@
     grid-template-columns: 1fr;
     row-gap: clamp(20px, 3vh, 32px);
     margin-bottom: clamp(32px, 4vh, 56px);
+    /* Mobile alignment sweep (ADR-018 pass 2): centre the philosophy
+       title + lede with the rest of the mobile composition (desktop
+       keeps the two-column left-aligned editorial head). */
+    text-align: center;
+    justify-items: center;
+  }
+  .continuum__lede {
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -8678,12 +8687,18 @@ html {
   .approach__phase {
     min-height: clamp(560px, 92vh, 880px);
     padding: clamp(40px, 8vh, 72px) clamp(12px, 2vw, 24px);
+    /* Mobile alignment sweep (ADR-018 pass 2): the phase copy centres
+       with the rest of the mobile composition (desktop keeps the
+       flex-start editorial column). */
+    align-items: center;
+    text-align: center;
   }
   .approach__phase--first {
     min-height: clamp(640px, 100vh, 980px);
   }
-  .approach__cta {
-    align-self: flex-start;
+  .approach__cta,
+  .approach__phase[data-phase="build"] .approach__cta {
+    align-self: center;
     margin-top: clamp(20px, 4vh, 36px);
   }
 }
@@ -9209,7 +9224,9 @@ html {
   .voidwalker {
     grid-template-columns: 1fr;
     justify-items: center;
-    text-align: left;
+    /* Mobile alignment sweep (ADR-018 pass 2): the bio centres with the
+       rest of the mobile composition instead of hugging the left. */
+    text-align: center;
   }
 }
 

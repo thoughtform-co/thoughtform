@@ -9,7 +9,11 @@ import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTime
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "./motionFollower";
-import { getBrandmarkWorldPosition, getNavigateApparentSizeBoost } from "./sceneGeom";
+import {
+  getBrandmarkWorldPosition,
+  getNavigateApparentSizeBoost,
+  mobileGyroSphereScale,
+} from "./sceneGeom";
 import { ShellEncode } from "./shell/ShellEncode";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
@@ -127,7 +131,12 @@ export function BrandmarkAccretionShell() {
     // line is byte-identical at Encode/Build. See
     // `getNavigateApparentSizeBoost` for the envelope.
     const navBoost = getNavigateApparentSizeBoost(paintProgress);
-    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * planetScale * navBoost);
+    // Mobile-only sphere enlargement (ADR-018 pass 2) — kept in sync with
+    // `getBrandmarkSphereMatchHalfExtent` so the brandmark still fills the
+    // sphere. Desktop returns 1 (byte-identical).
+    gyroAssembly.scale.setScalar(
+      GYRO_ASSEMBLY_SCALE * planetScale * navBoost * mobileGyroSphereScale()
+    );
 
     const layers = getSmoothedAccretionLayers();
     const tiltCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_TILT_FLOOR) * layers.orbits;

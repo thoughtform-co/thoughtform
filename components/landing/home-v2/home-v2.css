@@ -1794,11 +1794,18 @@ html[data-corridor-exit="true"] #about {
 
 .home-v2-mobile-signal__title {
   margin: 0 0 clamp(16px, 4vw, 22px);
-  font-family: var(--font-source-serif, "Source Serif Pro", Georgia, serif);
+  /* Match the DESKTOP signal headline (`.home-v2-station-header__title`):
+     PP Neue Montreal, uppercase, tracked. The prior `--font-source-serif`
+     token is undefined (there is no @font-face for it anywhere), so it fell
+     back to Georgia/serif — a different family from every other landing
+     headline. Aligning family + transform + tracking makes the mobile
+     epilogue read as the same instrument as desktop. (ADR-018 pass 2.) */
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-size: clamp(22px, 6.4vw, 32px);
   font-weight: 400;
   line-height: 1.15;
-  letter-spacing: 0.005em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
   text-wrap: balance;
   text-shadow:
@@ -1807,8 +1814,11 @@ html[data-corridor-exit="true"] #about {
 }
 
 .home-v2-mobile-signal__title em {
-  font-style: italic;
+  /* No italics anywhere on the site — the accent is upright gold,
+     matching desktop `.home-v2-station-header__title em`. */
+  font-style: normal;
   color: var(--gold, #caa554);
+  font-weight: 500;
 }
 
 .home-v2-mobile-signal__actions {
@@ -2920,6 +2930,120 @@ html[data-corridor-exit="true"] #about {
     font-size: clamp(10px, 2.9vw, 12px);
     letter-spacing: 0.01em;
     max-width: 36ch;
+  }
+
+  /* Mobile title reads BARE (2026-07-15 quality pass 2). The gold
+     L-corner brackets were a StationTitle-only artifact, hidden on
+     desktop via the `--twocol` variant that mobile never receives.
+     Desktop titles have read bare since 2026-07-03 — match that grammar
+     here so the mobile Arc titles stop carrying the retired corner
+     chrome (the title keeps its gold halo, so it still reads "lit by
+     the gate"). */
+  .home-v2-readout__corner {
+    display: none;
+  }
+
+  /* Compact caption reticle (mobile) — the bottom support copy now reads
+     inside a framed instrument echoing the desktop `CaptionCard`: a
+     dashed hairline frame + gold corner crosses + a small mono coord tag.
+     The desktop card's arm/aperture choreography, glass plate, meta row,
+     tick rail, and diamond pips are dropped for a calm phone-width variant
+     (the "compact" choice). The support `<p>` drops `.home-v2-copy-body`
+     in the markup so it renders in PT-Mono again — the sans copy-body
+     override was the "wrong font" on the bottom text. (ADR-018 pass 2.) */
+  .home-v2-readout__caption {
+    position: relative;
+    width: min(86vw, 360px);
+    margin: 0 auto;
+    padding: 18px 22px 16px;
+    text-align: center;
+  }
+  .home-v2-readout__caption .home-v2-readout__support {
+    margin: 0 auto;
+  }
+  .home-v2-readout__caption-frame {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .home-v2-readout__caption-frame--x {
+    background:
+      repeating-linear-gradient(to right, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px) 0
+        0 / 100% 1px no-repeat,
+      repeating-linear-gradient(to right, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px) 0
+        100% / 100% 1px no-repeat;
+  }
+  .home-v2-readout__caption-frame--y {
+    background:
+      repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px) 0
+        0 / 1px 100% no-repeat,
+      repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px)
+        100% 0 / 1px 100% no-repeat;
+  }
+  .home-v2-readout__caption-cross {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    pointer-events: none;
+  }
+  .home-v2-readout__caption-cross::before,
+  .home-v2-readout__caption-cross::after {
+    content: "";
+    position: absolute;
+  }
+  .home-v2-readout__caption-cross::before {
+    left: 0;
+    right: 0;
+    top: 7px;
+    height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(202, 165, 84, 0.8) 0 1.5px,
+      transparent 1.5px 5px
+    );
+  }
+  .home-v2-readout__caption-cross::after {
+    top: 0;
+    bottom: 0;
+    left: 7px;
+    width: 1px;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(202, 165, 84, 0.8) 0 1.5px,
+      transparent 1.5px 5px
+    );
+  }
+  .home-v2-readout__caption-cross.is-tl {
+    left: -8px;
+    top: -8px;
+  }
+  .home-v2-readout__caption-cross.is-tr {
+    right: -8px;
+    top: -8px;
+  }
+  .home-v2-readout__caption-cross.is-bl {
+    left: -8px;
+    bottom: -8px;
+  }
+  .home-v2-readout__caption-cross.is-br {
+    right: -8px;
+    bottom: -8px;
+  }
+  .home-v2-readout__caption-coord {
+    position: absolute;
+    left: 0;
+    top: -20px;
+    pointer-events: none;
+    font-family: var(--font-pt-mono, ui-monospace, monospace);
+    font-size: 8px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(202, 165, 84, 0.5);
+    white-space: nowrap;
+  }
+  /* Space the Build-park case cards below the framed caption. */
+  .home-v2-readout__caption + .home-v2-case-cards {
+    margin-top: 16px;
   }
 }
 

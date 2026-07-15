@@ -113,25 +113,52 @@ export function StationTitle({ content, base }: StationTitleProps) {
 
       {/* ── Support cluster ────────────────────────────────────────
           Desktop: top-RIGHT band of the gate, paired with the title
-          column. Mobile: below the reticle with a vertical up-leader. */}
+          column. Mobile: below the gate inside a compact caption
+          reticle (dashed frame + gold corner crosses + coord tag) that
+          echoes the desktop `CaptionCard`. */}
       {supportHtml && (
         <div
           className={`home-v2-readout home-v2-readout--support${layoutClass}`}
           data-world-anchor={`${base}.support`}
           data-anchor-origin={supportOrigin}
         >
-          {isMobile && (
-            <span
-              className="home-v2-readout__leader home-v2-readout__leader--up"
-              aria-hidden="true"
-            >
-              <span className="home-v2-readout__leader-node" />
-            </span>
+          {isMobile ? (
+            // Mobile quality pass 2 (2026-07-15): the bottom copy reads
+            // inside a compact caption reticle instead of loose text. The
+            // paragraph drops `home-v2-copy-body` HERE so it renders in
+            // PT-Mono (the sans copy-body override was the "wrong font" on
+            // the bottom text); desktop is untouched because StationTitle
+            // is mobile-only. The old up-leader is retired — the frame is
+            // the binding to the instrument now.
+            <div className="home-v2-readout__caption">
+              <i
+                className="home-v2-readout__caption-frame home-v2-readout__caption-frame--x"
+                aria-hidden="true"
+              />
+              <i
+                className="home-v2-readout__caption-frame home-v2-readout__caption-frame--y"
+                aria-hidden="true"
+              />
+              <i className="home-v2-readout__caption-cross is-tl" aria-hidden="true" />
+              <i className="home-v2-readout__caption-cross is-tr" aria-hidden="true" />
+              <i className="home-v2-readout__caption-cross is-bl" aria-hidden="true" />
+              <i className="home-v2-readout__caption-cross is-br" aria-hidden="true" />
+              {t && (
+                <span className="home-v2-readout__caption-coord" aria-hidden="true">
+                  {t.callsign}
+                </span>
+              )}
+              <p
+                className="home-v2-readout__support home-v2-station-support"
+                dangerouslySetInnerHTML={{ __html: supportHtml }}
+              />
+            </div>
+          ) : (
+            <p
+              className="home-v2-readout__support home-v2-copy-body home-v2-station-support"
+              dangerouslySetInnerHTML={{ __html: supportHtml }}
+            />
           )}
-          <p
-            className="home-v2-readout__support home-v2-copy-body home-v2-station-support"
-            dangerouslySetInnerHTML={{ __html: supportHtml }}
-          />
           {/* Mobile Build-park case index (ADR-033): capable phones run
               the real corridor but get no cases orbit (gate parity with
               the CTA layer), so the four production cases surface here

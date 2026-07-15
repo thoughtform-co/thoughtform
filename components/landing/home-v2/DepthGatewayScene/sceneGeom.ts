@@ -1568,8 +1568,26 @@ export function getBrandmarkSphereMatchHalfExtent(progress: number): number {
     SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL *
     GYRO_ASSEMBLY_SCALE *
     getNavigateApparentSizeBoost(progress) *
+    mobileGyroSphereScale() *
     BRANDMARK_SPHERE_FILL
   );
+}
+
+/** Mobile-only uniform enlargement for the corridor gyro sphere AND its
+ *  matched brandmark fill. Portrait widens the vertical FOV to the 70°
+ *  cap (`getCameraFov`), which shrinks the gimbal's apparent size at the
+ *  Navigate / Encode / Build parks so the sphere reads a touch small on
+ *  phones. This bump restores presence WITHOUT touching the FOV (which
+ *  would also shrink the copy runway we just reclaimed with the wider
+ *  straddles). It MUST be applied in the two synced places that define
+ *  the sphere's visible radius and the brandmark's matched radius — the
+ *  gyro-assembly group scale in `BrandmarkAccretionShell` and
+ *  `getBrandmarkSphereMatchHalfExtent` above — so the mark keeps filling
+ *  the sphere (ADR-023 `BRANDMARK_SPHERE_FILL`). Desktop returns 1 →
+ *  byte-identical. (ADR-018 mobile quality pass 2.) */
+export const MOBILE_GYRO_SPHERE_SCALE = 1.1;
+export function mobileGyroSphereScale(): number {
+  return isMobileComposition() ? MOBILE_GYRO_SPHERE_SCALE : 1;
 }
 
 /** Half-extent shared by the projected SVG and the particle core
@@ -2368,7 +2386,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // pass-01a — without it the gate would clip opacity to 0 there.
   {
     id: "navigate.title",
-    position: () => stationHeaderPosition(STATION_NAVIGATE, "title", 0.6),
+    // Mobile straddle widened 0.6 → 2.0 (ADR-018 pass 2) so the title
+    // uses the empty band above the (now slightly larger) gyro sphere
+    // instead of hugging it. Navigate's sphere is the biggest of the
+    // three (navBoost 1.3 × mobile 1.1), so it gets the most clearance.
+    position: () => stationHeaderPosition(STATION_NAVIGATE, "title", 2.0),
     visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
     // referenceDistance + depthFade tracks STATION_NAVIGATE.parkDistance
@@ -2389,7 +2411,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
   {
     id: "navigate.support",
-    position: () => stationHeaderPosition(STATION_NAVIGATE, "support", -0.65),
+    // Mobile straddle widened -0.65 → -2.0 (ADR-018 pass 2) so the
+    // framed caption drops into the empty band below the sphere.
+    position: () => stationHeaderPosition(STATION_NAVIGATE, "support", -2.0),
     visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
     perspectiveScale: {
@@ -2426,8 +2450,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_DIAGNOSTIC,
+        // Mobile straddle 0.78 → 1.7 (ADR-018 pass 2): spread up into
+        // the empty band. Encode's sphere has no navBoost, so it needs
+        // less clearance than Navigate.
         "title",
-        0.78,
+        1.7,
         diagnosticApproachDepthOffset(transform.paintProgress)
       ),
     visibilityBeats: ["pass-01b", "diagnostic"],
@@ -2463,8 +2490,10 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_DIAGNOSTIC,
+        // Mobile straddle -0.88 → -1.7 (ADR-018 pass 2): caption drops
+        // into the empty band below the sphere.
         "support",
-        -0.88,
+        -1.7,
         diagnosticApproachDepthOffset(transform.paintProgress)
       ),
     visibilityBeats: ["pass-01b", "diagnostic"],
@@ -2509,8 +2538,10 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_INTELLIGENCE,
+        // Mobile straddle 0.74 → 1.65 (ADR-018 pass 2): spread up into
+        // the empty band above the Build sphere.
         "title",
-        0.74,
+        1.65,
         intelligenceApproachDepthOffset(transform.paintProgress)
       ),
     visibilityBeats: ["passthrough-02", "intelligence"],
@@ -2542,8 +2573,12 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_INTELLIGENCE,
+        // Mobile straddle -0.9 → -1.45 (ADR-018 pass 2): drops below the
+        // sphere but stays modest — the Build support cluster ALSO carries
+        // the 2x2 case mini-cards, so it grows further down than
+        // Navigate/Encode and must not run off the bottom of the frame.
         "support",
-        -0.9,
+        -1.45,
         intelligenceApproachDepthOffset(transform.paintProgress)
       ),
     visibilityBeats: ["passthrough-02", "intelligence"],

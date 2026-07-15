@@ -12,6 +12,93 @@
 
 ---
 
+## 2026-07-15 Revision 2 — Mobile Quality Pass, Round 2 (title chrome + caption reticle + sphere + epilogue font)
+
+Round 1 (below) fixed the structural mobile bugs but left three
+chrome/parity items open and shipped one font regression. This round
+closes them. Desktop stays byte-identical — every change is gated on
+`@media (max-width: 760px)`, `isMobileComposition()`, or lives on a
+mobile-only class (`StationTitle` is never mounted on desktop;
+`.home-v2-mobile-signal*` is `display: none` above 760px).
+
+**Reverses two Round-1 non-goals.** Round 1 deliberately kept the
+L-corner title brackets ("it IS the mobile identifier") and left
+`#about` left-aligned ("right call for readability"). User feedback
+overrode both.
+
+1. **Mobile Arc titles read BARE.** The gold `.home-v2-readout__corner`
+   L-brackets were only ever hidden on desktop via
+   `.home-v2-readout--twocol` (a class mobile never receives), so they
+   leaked on every mobile Arc title. Desktop titles have read bare (no
+   frame) since 2026-07-03; a `@media (max-width: 760px) { .home-v2-readout__corner { display: none } }`
+   now matches that grammar. The title keeps its gold text-halo, so it
+   still reads "lit by the gate."
+2. **Bottom support = compact caption reticle.** The mobile support
+   paragraph was loose, unframed, and in the WRONG family: it carried
+   `.home-v2-copy-body`, whose late-cascade
+   `font-family: var(--font-pp-neue-montreal…)` (sans) beat the
+   readout's PT-Mono. Fix: (a) the mobile branch of `StationTitle` drops
+   `home-v2-copy-body` from the `<p>` → PT-Mono restored; (b) the
+   paragraph is wrapped in a new compact reticle
+   (`.home-v2-readout__caption*`) echoing the desktop `CaptionCard` —
+   dashed hairline frame + gold corner crosses + a mono coord tag
+   (callsign) — but WITHOUT the desktop card's arm/aperture clip
+   choreography, glass plate, meta row, tick rail, or pips (those are
+   coupled to `.home-v2-caption-card.is-armed` and would collapse to a
+   centre slit if the classes were reused standalone). The old up-leader
+   is retired — the frame is the binding now. Compact per the design
+   call (faithful-but-trimmed, not a 1:1 port).
+3. **Arc copy spread + sphere enlarged.** The world-anchored title /
+   support straddles hugged the sphere (±0.6…0.9 world units) while the
+   portrait frustum half-height is ≈4.34, leaving big empty bands.
+   `mobileStraddleY` widened (title 0.6 / 0.78 / 0.74 → 2.0 / 1.7 / 1.65;
+   support −0.65 / −0.88 / −0.9 → −2.0 / −1.7 / −1.45 — Build's support
+   kept the most modest because it ALSO carries the 2×2 case cards below
+   it). The Navigate / Encode / Build gyro sphere had no mobile size
+   compensation (only the Thoughtform mark did, 0.32→0.4); a new
+   `mobileGyroSphereScale()` (1.1 on mobile, 1 on desktop) enlarges it,
+   applied in the TWO synced places that define the sphere's visible
+   radius and the brandmark's matched fill — the gyro-assembly
+   `setScalar` in `BrandmarkAccretionShell` AND
+   `getBrandmarkSphereMatchHalfExtent` — so the mark keeps filling the
+   sphere (ADR-023 `BRANDMARK_SPHERE_FILL` invariant preserved).
+4. **Epilogue headline font regression.** `MobileEpilogueSignal`'s
+   `.home-v2-mobile-signal__title` used `var(--font-source-serif, …)` —
+   an UNDEFINED token with no `@font-face` anywhere — so it fell back to
+   Georgia / serif with an italic `em`, a different family from every
+   other landing headline. Repointed to `var(--font-pp-neue-montreal…)`
+   \+ `text-transform: uppercase` + `letter-spacing: 0.04em`, and the
+   `em` set to upright gold weight 500 — matching desktop
+   `.home-v2-station-header__title` and the site's no-italics rule.
+   Verified in-browser (computed family = PP Neue Montreal, transform
+   uppercase, em fontStyle normal).
+
+**Alignment sweep — "center everything" (user directive; reverses the
+Round-1 `#about` non-goal).**
+
+- `#about` bio (`.voidwalker`) centred on mobile (was `text-align: left`).
+- `#continuum` head (philosophy title + lede) centred on mobile.
+- `#practice` `.approach__phase` family + CTA centred in the mobile media
+  blocks — DEFENSIVE only: the current parsed `#practice` is an
+  eyebrow-only placeholder, so the rule is inert on the live page but
+  correct if the approach chamber ever renders on mobile.
+- **Left-alignment KEPT where it is component grammar, not loose copy:**
+  `#services` `svc-plate` cards (chip / title / lede / feature
+  bullet-lists) and the `#continuum` spectrum beats (a vertical timeline
+  rail with a left spine + diamond nodes) — centring bullet lists or a
+  left-spine timeline breaks those components. Corner eyebrow labels
+  (`.station__idx`) likewise stay left.
+
+**Verification.** lint / typecheck / vitest all green. In-browser mobile
+scroll-through (390×844) confirmed bare titles, framed mono captions with
+breathing room, a larger sphere, and the corrected epilogue font at
+Navigate / Encode / Build / epilogue; `#about` + `#continuum` head
+centred. Desktop spot-check (1280×800) unchanged — the desktop
+`CorridorStationHeaders` + `CaptionCard` path and normal sphere scale are
+untouched.
+
+---
+
 ## 2026-07-15 Revision — Mobile Quality Pass (supersedes the two-moment revision)
 
 Bug fixes + a composed-layout replacement for the mobile Thoughtform
