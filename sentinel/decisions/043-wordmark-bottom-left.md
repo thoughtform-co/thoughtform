@@ -66,17 +66,23 @@ De-risking established the bottom-left corner is functionally empty:
   Linear-register direction explored in `/test/services-wordmark`; its
   right-rail-paragraph question remains open under ADR-031).
 
-## Update (2026-07-16) — bottom corner connection
+## Update (2026-07-16) — rail bottom mirrors the top; last tick is the terminus
 
-Owner niggle: the bottom corners floated disconnected below the rails (the
-rail box budgets THIS wordmark's height on BOTH sides, leaving the BR
-bracket 36–50px below the last tick). Fix: the guide TRACKS alone extend
-past the rail box (`landing.css` `.hud__rail--l/--r .hud__rail__track`
-negative `bottom`) — layout-free, so ticks/labels/registers/detents keep
-their geometry. Right: the track lands exactly on the BR bracket's top
-edge, co-linear with its vertical arm (one continuous line; verified 0.0px
-at 1280/1920/2560). Left: the track terminates 8px above this wordmark.
-**Lockstep:** the extension calc reuses the same
-`clamp(44px, 3.6vw, 63px)` + `clamp(16px, 1.8vw, 32px)` clamps as the
-`.hud__rail` bottom clearance — retune them together or the junction
-drifts.
+Owner niggle, two rounds. Round 1 read "the corners are not connecting
+with the last tick" as _extend the hairline into the corner chrome_ — a
+bare track dangling past the last tick (left) and welding into the BR
+bracket (right). **Rejected on sight**: the rail's terminus must be the
+LAST TICK; the track never extends past it and never touches the corner
+chrome.
+
+Round 2 (shipped): the `.hud__rail` bottom clearance now **mirrors
+`--hud-rail-y-start`** (`margin + corner-zone + breathing`) instead of
+budgeting this wordmark's height on both sides. Ticks sit at 0–100% of
+the rail box (`lib/v7-parse/hudTicks.ts`), so the 100% tick rides the
+new bottom edge as the terminus — holding the same breathing gap above
+the BR bracket as the first tick holds below the TL bracket, and making
+the rail vertically centred (mid-rail = viewport midline, the ADR-031 U8
+register anchor; it was ~6.5px off before). A `max()` arm guards THIS
+wordmark on short viewports (lockup taller than the corner zone → the
+rail ends 8px above it instead). Verified at 1280/1920/2560/961: track
+dangle 0.0 both sides, 21–30px tick→bracket, 6–12px tick→wordmark.

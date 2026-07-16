@@ -670,15 +670,26 @@
   }
 }
 
-/* Rails — clear the corner brackets above and the wordmark lockup below */
+/* Rails — clear the corner brackets above and below */
 .hud__rail {
   position: absolute;
   top: var(--hud-rail-y-start);
-  /* Bottom clearance budgets the BOTTOM-LEFT WORDMARK lockup (ADR-043):
-     clamp(44px,3.6vw,63px) is the lockup's rendered height (width
-     clamp(104px,8.5vw,150px) × its ~300:126 aspect), replacing the old
-     clamp(24px,2.5vw,40px) sigil budget, + the same breathing gap. */
-  bottom: calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + clamp(16px, 1.8vw, 32px));
+  /* Bottom end MIRRORS --hud-rail-y-start (owner, 2026-07-16): the
+     ladder's LAST TICK (ticks sit at 0–100% of this box, so the 100%
+     tick rides this edge) is the rail's terminus, holding the same
+     breathing gap above the BR corner bracket as the first tick holds
+     below the TL bracket — and the rail is vertically centred, so
+     mid-rail = the viewport midline (the ADR-031 U8 register anchor).
+     The track never extends past the last tick and never touches the
+     corner chrome (round-2 lesson — a bare dangling hairline reads
+     broken). The max() arm guards the BOTTOM-LEFT WORDMARK lockup
+     (ADR-043, height clamp(44px,3.6vw,63px)) on short viewports where
+     the lockup is taller than the corner zone: the rail then ends 8px
+     above it instead. */
+  bottom: max(
+    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
+    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
+  );
   width: var(--hud-rail-width);
   display: flex;
   flex-direction: column;
@@ -706,28 +717,11 @@
   pointer-events: none;
   background: var(--hud-rail-line);
 }
-/* Bottom connection (owner, 2026-07-16): the guide hairline RUNS INTO
-   the bottom corner chrome instead of stopping at the rail box. The
-   rail box's bottom clearance budgets the WORDMARK height on both
-   sides (see .hud__rail above), which left the bottom-right bracket
-   floating 36-50px below the line and the last tick hanging in dead
-   air. The track alone extends past the box — layout-free (ticks,
-   labels, registers, and the manifest detent table all keep their
-   geometry):
-   - LEFT: down to 8px above the wordmark lockup, so the rail
-     terminates AT the brand. Extension = breathing gap − 8px.
-   - RIGHT: exactly to the BR bracket's top edge — the track and the
-     bracket's vertical arm are co-linear (both at --hud-margin), so
-     they read as ONE continuous line into the corner. Extension =
-     (wordmark budget + breathing) − corner zone; the clamps MUST stay
-     in lockstep with the .hud__rail bottom clearance above. */
 .hud__rail--l .hud__rail__track {
   left: var(--hud-rail-guide-inset);
-  bottom: calc(-1 * (clamp(16px, 1.8vw, 32px) - 8px));
 }
 .hud__rail--r .hud__rail__track {
   right: var(--hud-rail-guide-inset);
-  bottom: calc(-1 * (clamp(44px, 3.6vw, 63px) + clamp(16px, 1.8vw, 32px) - var(--hud-corner-zone)));
 }
 
 /* Ticks — extend OUTWARD from the guide (left rail extends LEFT,
