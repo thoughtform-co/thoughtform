@@ -72,6 +72,48 @@ const orbitExitGetter = () =>
   (1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress)) *
   (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1);
 
+/** Sub-pixel deadband for the anchor publish delta gate. Anchors are
+ *  screen-space pixels; a quarter-pixel drift is invisible under the
+ *  1px connector strokes, while pointer-look motion moves whole pixels
+ *  per frame and re-opens publishing immediately. */
+const ANCHOR_PUBLISH_EPSILON_PX = 0.25;
+
+function anchorsWithinEpsilon(a: ConnectorAnchor[], b: ConnectorAnchor[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const p = a[i];
+    const q = b[i];
+    if (
+      p.serviceId !== q.serviceId ||
+      p.visible !== q.visible ||
+      Math.abs(p.x - q.x) > ANCHOR_PUBLISH_EPSILON_PX ||
+      Math.abs(p.y - q.y) > ANCHOR_PUBLISH_EPSILON_PX ||
+      Math.abs(p.depth - q.depth) > 0.001
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function featuresWithinEpsilon(a: FeatureAnchor[], b: FeatureAnchor[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const p = a[i];
+    const q = b[i];
+    if (
+      p.featureId !== q.featureId ||
+      p.visible !== q.visible ||
+      Math.abs(p.x - q.x) > ANCHOR_PUBLISH_EPSILON_PX ||
+      Math.abs(p.y - q.y) > ANCHOR_PUBLISH_EPSILON_PX ||
+      Math.abs(p.depth - q.depth) > 0.001
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number }) {
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId) ?? SERVICES[0].id;
   const setAnchors = useHologramConnectors((s) => s.setAnchors);
@@ -93,6 +135,18 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
   // `clearedRef` makes the un-park clear the HUD anchors exactly once (so
   // connectors vanish on reverse-scroll) without spamming the store.
   const clearedRef = useRef(true);
+  // Publish delta gate (2026-07-16 perf pass, ADR-047 U5): while parked
+  // with no pointer/scroll motion the projected anchors are static, but
+  // the store publish fired every frame — and every publish re-renders
+  // the DOM subscribers (ServicesDesignationLayer, ServicesPlateCluster,
+  // ServiceScanInterface). Hold the last published arrays and skip the
+  // store writes when every point is within a sub-pixel epsilon and the
+  // ids/visibility flags match; pointer-look motion trivially exceeds
+  // the epsilon, so live tracking is untouched.
+  const lastPublishedRef = useRef<{
+    anchors: ConnectorAnchor[];
+    features: FeatureAnchor[];
+  } | null>(null);
 
   useFrame(() => {
     const parked = getSmoothedDissipate() >= ANCHOR_PUBLISH_DISSIPATE;
@@ -103,6 +157,7 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
         setAnchors([]);
         setFeatureAnchors([]);
         clearedRef.current = true;
+        lastPublishedRef.current = null;
       }
       return;
     }
@@ -140,6 +195,18 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
       };
     });
     clearedRef.current = false;
+    // Skip both store writes while the projection is static (see the
+    // delta-gate note above). Compared together so the two anchor sets
+    // can never desync a frame apart.
+    const prev = lastPublishedRef.current;
+    if (
+      prev &&
+      anchorsWithinEpsilon(prev.anchors, anchors) &&
+      featuresWithinEpsilon(prev.features, featureAnchors)
+    ) {
+      return;
+    }
+    lastPublishedRef.current = { anchors, features: featureAnchors };
     setAnchors(anchors);
     setFeatureAnchors(featureAnchors);
   });
