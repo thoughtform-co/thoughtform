@@ -52,8 +52,14 @@ const TAU = Math.PI * 2;
  * "a bit too many scrolls"; now ~31svh). */
 
 /** Beat 0 — the deck flips π and glides onto the DOM slot; the orbit
- *  cluster materializes around it; the receded mark + tracks clear. */
-export const ABOUT_FLIP_WINDOW: readonly [number, number] = [0.04, 0.26];
+ *  cluster materializes around it; the tracks clear (the receded mark
+ *  now only DIMS — it persists through the stage, owner 2026-07-16).
+ *  Starts at 0 (owner, same pass: "stacking and flipping should be one
+ *  smooth scroll movement") — the #about pin coincides with services
+ *  exit = 1 (the -100svh margin weld), so a 0 start makes the flip pick
+ *  up in the same wheel motion that finished the stack; the old 0.04
+ *  pre-roll read as a second, separate scroll. */
+export const ABOUT_FLIP_WINDOW: readonly [number, number] = [0, 0.22];
 
 /** Beat 1 — the DOM cluster (deck welded to its slot) translates right. */
 export const ABOUT_SHIFT_WINDOW: readonly [number, number] = [0.32, 0.56];
