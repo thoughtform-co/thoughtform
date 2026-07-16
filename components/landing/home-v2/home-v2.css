@@ -1238,18 +1238,20 @@ html[data-corridor-exit="true"] #continuum {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   /* Glass weight tunes per dominant station (see the `data-station`
-     variant below) — ease so the Build darken isn't an abrupt swap. */
-  transition:
-    background 0.6s ease,
-    backdrop-filter 0.6s ease,
-    -webkit-backdrop-filter 0.6s ease;
+     variant below) — ease so the Build darken isn't an abrupt swap.
+     ONLY `background` transitions (2026-07-16 perf pass, ADR-047 U5):
+     animating backdrop-filter forces the browser to re-blur the live
+     corridor canvas behind the plate on every frame of the 0.6s window,
+     a heavy composited cost during station swaps. The blur itself is
+     static (14px at every station) so the cached backdrop path stays
+     cheap; the Build beat's extra weight rides on `background` alone. */
+  transition: background 0.6s ease;
 }
 /* Build station — the arc's last beat reads with a touch more weight:
-   slightly darker / less transparent plate than Navigate + Encode. */
+   slightly darker / less transparent plate than Navigate + Encode.
+   (Blur stays 14px — see the transition note above.) */
 .home-v2-caption-card[data-station="bld"] .home-v2-reticle__glass {
   background: rgba(5, 4, 3, 0.54);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 @supports not (backdrop-filter: blur(1px)) {
   /* No blur available to haze the sphere — darken the fill instead so
