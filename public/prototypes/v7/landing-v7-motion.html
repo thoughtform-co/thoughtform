@@ -4195,14 +4195,17 @@ html { scroll-behavior: smooth; }
 
 <!-- ═══ HUD CHROME ═══ -->
 <div class="hud" aria-hidden="false">
-  <!-- Top-left corner bracket is intentionally omitted: the brandmark
-       lockup below occupies that corner instead. -->
-  <div class="hud__corner hud__corner--bl"></div>
+  <!-- Bottom-left corner bracket is intentionally omitted: the wordmark
+       lockup occupies that corner instead (ADR-043 — it moved down from
+       the top-left, whose plain bracket is restored below). -->
+  <div class="hud__corner hud__corner--tl"></div>
   <div class="hud__corner hud__corner--br"></div>
 
-  <!-- Top-left brandmark lockup (compass + wordmark, dual gold/dawn),
-       aligned to the left rail (Brand Codex "Hero Omega"). Distinct from
-       the traveling brandmark sigil anchored bottom-left. -->
+  <!-- Bottom-left wordmark lockup (compass + wordmark, dual gold/dawn),
+       aligned to the left rail (Brand Codex "Hero Omega") and anchored
+       to the BOTTOM-left corner by landing.css (ADR-043). Distinct from
+       the dormant brandmark sigil slot at the same corner
+       (#hudBrandmark, inert — never paints). -->
   <a class="hud__brand" href="#hero" aria-label="Thoughtform — home">
     <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />
   </a>

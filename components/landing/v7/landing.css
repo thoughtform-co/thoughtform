@@ -261,26 +261,30 @@
   border-right: 2px solid var(--hud-rail-line);
 }
 
-/* ── Top-left wordmark lockup ──────────────────────────────────────
+/* ── Bottom-left wordmark lockup (ADR-043) ─────────────────────────
    Static text lockup aligned to the left rail (Brand Codex "Hero
-   Omega"). Distinct from the traveling brandmark sigil (bottom-left,
-   `.hud__brandmark`). Sits above the corner bracket. */
+   Omega"), anchored to the BOTTOM-left corner — it moved down from the
+   top-left so section titles can own the top band without competing
+   with the brand (the top-left now carries its plain corner bracket
+   again). Shares the corner with the dormant sigil slot
+   (`.hud__brandmark`, inert — never paints). */
 .hud__brand {
   position: absolute;
-  top: var(--hud-margin);
+  bottom: var(--hud-margin);
   left: var(--hud-margin);
   width: clamp(104px, 8.5vw, 150px);
   display: block;
   pointer-events: auto;
   z-index: 52;
-  /* Anchor the shrink to the top-left rail so the lockup stays pinned
-     in its corner as it scales down. The explicit `scale(1)` base means
-     the collapse transition interpolates matrix→matrix (transitions
-     FROM the `none` keyword don't animate reliably). No `will-change`:
-     the corridor's R3F canvases already pressure the GPU (context loss
-     under load), so a permanent extra compositor layer for the wordmark
-     isn't worth it — the brief transition promotes/demotes on its own. */
-  transform-origin: top left;
+  /* Anchor the shrink to the bottom-left rail so the lockup stays
+     pinned in its corner as it scales down. The explicit `scale(1)`
+     base means the collapse transition interpolates matrix→matrix
+     (transitions FROM the `none` keyword don't animate reliably). No
+     `will-change`: the corridor's R3F canvases already pressure the
+     GPU (context loss under load), so a permanent extra compositor
+     layer for the wordmark isn't worth it — the brief transition
+     promotes/demotes on its own. */
+  transform-origin: bottom left;
   transform: scale(1);
   transition:
     opacity 0.4s var(--ease-out),
@@ -292,7 +296,9 @@
    element (not a root attribute) to avoid a document-wide recalc at
    the seam. */
 .hud__brand.is-collapsed {
-  transform: scale(0.82);
+  /* 0.82 → 0.68 with the bottom-left move (ADR-043): once scrolled, the
+     wordmark should read as a quiet signature, not a nav element. */
+  transform: scale(0.68);
 }
 .hud__brand img {
   width: 100%;
@@ -651,11 +657,15 @@
   }
 }
 
-/* Rails — clear the corner brackets above and the brandmark below */
+/* Rails — clear the corner brackets above and the wordmark lockup below */
 .hud__rail {
   position: absolute;
   top: var(--hud-rail-y-start);
-  bottom: calc(var(--hud-margin) + clamp(24px, 2.5vw, 40px) + clamp(16px, 1.8vw, 32px));
+  /* Bottom clearance budgets the BOTTOM-LEFT WORDMARK lockup (ADR-043):
+     clamp(44px,3.6vw,63px) is the lockup's rendered height (width
+     clamp(104px,8.5vw,150px) × its ~300:126 aspect), replacing the old
+     clamp(24px,2.5vw,40px) sigil budget, + the same breathing gap. */
+  bottom: calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + clamp(16px, 1.8vw, 32px));
   width: var(--hud-rail-width);
   display: flex;
   flex-direction: column;
@@ -1681,6 +1691,11 @@
    but drops the uppercasing so the phonetic characters render intact. */
 .hero__flywheel--ipa {
   text-transform: none;
+  /* The pronunciation line moves to the hero's bottom-RIGHT (ADR-043):
+     the bottom-left gutter now belongs to the relocated wordmark
+     lockup. Same content inset, mirrored side. */
+  left: auto;
+  right: var(--hud-content-inset);
 }
 .hero__flywheel__line::after {
   content: "";
@@ -2042,6 +2057,12 @@
     left: 28px;
     bottom: clamp(64px, 9vh, 88px);
   }
+  /* Pronunciation stays bottom-RIGHT on mobile too (ADR-043) — the
+     lifted bottom clears the relocated wordmark on the opposite side. */
+  .hero__flywheel--ipa {
+    left: auto;
+    right: 28px;
+  }
   .hero__flywheel__line {
     width: clamp(48px, 22vw, 110px);
   }
@@ -2054,6 +2075,10 @@
   }
   .hero__flywheel {
     left: 32px;
+  }
+  .hero__flywheel--ipa {
+    left: auto;
+    right: 32px;
   }
   /* The gateway analysis cards are desktop composition elements. At
      compact widths they compress into the key visual, so mirror the
