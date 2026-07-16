@@ -624,3 +624,16 @@ shared; keep the byte-exact `<nav>` shell (change `buildRailManifestHtml`
 
 - the drift-guard tests in lockstep); never `createRoot` into
   `[data-rail-manifest-root]`; the 13-tick ladder always stays (Update 2).
+
+### Update 11 — the SOURCE BUS register retires with the services masthead (2026-07-16)
+
+**ADR-044** introduces the `#services` section masthead (title left /
+intro paragraph right in the upper band) and, by owner decision, retires
+the right rail's "SOURCE BUS · 04" register during services — the
+masthead paragraph is the services right-side text now. This deliberately
+amends the Updates 7-8 uniformity contract ("each pillar: name left,
+sub-items right"): during services the right rail is empty. The Arc's
+`CorridorProgressRail` register is unchanged. `ServicesRailRegister.tsx`
+
+- its CSS + the `[data-tools-rail-root]` shell stay on disk for rollback
+  — see ADR-044 for the reconciliation notes.

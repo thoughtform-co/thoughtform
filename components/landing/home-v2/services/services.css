@@ -482,6 +482,301 @@
   }
 }
 
+/* ── Services masthead (ADR-044, 2026-07-16) ─────────────────────────────
+ * The #services register handover: full-caps title LEFT, intro paragraph
+ * RIGHT, in the stage's upper band (Linear-style editorial split promoted
+ * from /test/services-wordmark). SECTION copy only — per-card copy stays
+ * on the baked WebGL faces (ADR-029) and this band NEVER keys off
+ * data-active-step. Entrance × decommission mirrors the readout strip
+ * (--svc-content-in × (1 − --svc-exit)) plus the svc-stack 18px rise.
+ * Mounted only under SERVICES_CARD_RING (JSX gate), so the flag-off rack
+ * path never sees it. pointer-events: none — it can never shadow the ring
+ * hit targets or the front card's CTA link.
+ */
+.services-masthead {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: calc(var(--svc-content-in, 1) * (1 - var(--svc-exit, 0)));
+  transform: translateY(calc((1 - var(--svc-content-in, 1)) * 18px));
+  will-change: opacity, transform;
+  /* Lab-validated band geometry (/test/services-wordmark DEFAULTS): columns
+   * pull 8vw inboard from the rail guides; the band top clears the corner
+   * chrome + rail origin at 900–1080px heights (rail-y-start is px-clamped;
+   * the extra clamp is vh-based). */
+  --masthead-inset: calc(var(--hud-margin, 54px) + 8vw);
+  /* Band top raised twice on owner review (2026-07-16, "bring it even
+   * higher — we have enough real estate"): anchored to the CORNER zone
+   * now (margin + corner + small pad), not the rail origin — the eyebrow
+   * hangs just below the top-left bracket's arm. */
+  --masthead-top: calc(
+    var(--hud-margin, 54px) + var(--hud-corner-zone, 45px) + clamp(8px, 1.5vh, 20px)
+  );
+}
+.services-masthead__lead {
+  position: absolute;
+  left: var(--masthead-inset);
+  top: var(--masthead-top);
+  max-width: 40vw;
+}
+.services-masthead__eyebrow {
+  margin: 0 0 16px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+}
+.services-masthead__title {
+  margin: 0;
+  /* EXACTLY `.home-v2-station-header__title` (home-v2.css) — the corridor
+   * station-header voice ("EVERYONE IS RACING TO BUILD THIS LAYER."):
+   * PP Neue Montreal uppercase, 0.04em, gold-washed shadow. The one
+   * big-title face of the whole journey (owner, 2026-07-16: "that's the
+   * font I want — we have it everywhere except the services section"). */
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 3vw, 44px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+.services-masthead__title-line {
+  display: block;
+  /* Reserve the line box while the decode has the text blanked, so the
+   * band never collapses / jumps during the reveal. */
+  min-height: 1.1em;
+}
+.services-masthead__title-line--em {
+  /* Station-header em recipe: gold, weight 500. */
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+
+/* ── Glitchy-typewriter reveal (owner, 2026-07-16) ──────────────────────
+ * The eyebrow + title decode through the captionScramble kernel on section
+ * arrival (driven by ServicesMasthead's controller off --svc-content-in);
+ * the CRT block cursor is the station-header caret verbatim, riding the
+ * line being decoded ([data-live], written by the controller). The intro
+ * holds until the title resolves ([data-reveal]), then fades + rises in.
+ * The controller is gated to the enhanced tier, so mobile / PRM / no-JS
+ * never see these states — the static full text stands. */
+.services-masthead__eyebrow {
+  min-height: 1em;
+}
+.services-masthead__cursor {
+  display: none;
+  margin-left: 0.06em;
+  color: var(--gold, #caa554);
+  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  /* Retro-terminal caret, not a giant glyph (station-header recipe). */
+  transform: translateY(-0.04em) scaleY(0.78);
+  transform-origin: center bottom;
+  pointer-events: none;
+}
+.services-masthead__title-line[data-live] .services-masthead__cursor {
+  display: inline-block;
+  animation: services-masthead-cursor-blink 1.05s steps(2, start) infinite;
+}
+@keyframes services-masthead-cursor-blink {
+  /* Hard on/off CRT blink (steps, not a fade) — station-header canon. */
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
+}
+/* Aperture unfold — the Arc caption card's arm choreography (X1-B,
+ * home-v2.css `.home-v2-reticle`): at rest (armed / while the title is
+ * decoding) the plate is clipped to a zero-width CENTRE SLIT; when the
+ * title resolves (data-reveal="done") the inset sweeps open toward both
+ * edges at once and the corner crosses ride the opening edges out to the
+ * corners on the same 0.55s clock (rules below). NO rise, NO fade — the
+ * sweep is the reveal, and the paragraph types on inside it in sync
+ * (owner, 2026-07-16). Negative insets keep the crosses' ±10px overhang
+ * inside the final aperture. */
+.services-masthead__intro {
+  clip-path: inset(-14px -14px -14px -14px);
+  transition: clip-path 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Slit holds ONLY while armed — the moment the reveal begins (attr flips
+ * to "typing") the aperture releases, so the unfold runs IN SYNC with the
+ * title decode on the left (owner, 2026-07-16). */
+.services-masthead[data-reveal="armed"] .services-masthead__intro {
+  clip-path: inset(-14px 50% -14px 50%);
+}
+.services-masthead__intro {
+  position: absolute;
+  right: var(--masthead-inset);
+  /* +34px aligns the paragraph's first line with the title's first line
+   * (the validated Linear-masthead read); −16px compensates the plate's
+   * top padding so the TEXT keeps that alignment inside the frame. */
+  top: calc(var(--masthead-top) + 34px - 16px);
+  margin: 0;
+  max-width: min(42ch, 34vw);
+  padding: 16px 20px;
+  text-align: left;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.5;
+  /* Full semantic dawn — the 70% tint read too gray on the glass plate
+   * (owner, 2026-07-16). */
+  color: var(--dawn, #ebe3d6);
+  /* X1-B dotted-reticle chrome in miniature (the Arc caption card,
+   * home-v2.css): dashed dawn hairline frame as background runs —
+   * `border` can't dash this way — over a void-glass plate (::before),
+   * with the gold corner crosses as sibling spans. Keeps the intro in
+   * the same instrument family as the corridor captions. */
+  background:
+    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
+      100% 1px no-repeat,
+    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0
+      100% / 100% 1px no-repeat,
+    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
+      1px 100% no-repeat,
+    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 100%
+      0 / 1px 100% no-repeat;
+  /* Own stacking context so the glass pseudo's z-index:-1 stays inside
+   * the plate instead of dropping behind the masthead. */
+  isolation: isolate;
+}
+.services-masthead__intro::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: rgba(5, 4, 3, 0.38);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  /* No blur available to haze the instrument — darken the fill instead. */
+  .services-masthead__intro::before {
+    background: rgba(5, 4, 3, 0.72);
+  }
+}
+.services-masthead__intro-copy {
+  margin: 0;
+  position: relative;
+}
+/* Typewriter layers: the hidden ghost reserves the FULL copy's box so
+ * the plate never reflows while printing; the typed span overlays it and
+ * receives the growing slice (a mutable Text node — the controller never
+ * touches innerHTML). */
+.services-masthead__intro-ghost {
+  visibility: hidden;
+}
+.services-masthead__intro-typed {
+  position: absolute;
+  inset: 0;
+}
+/* Paragraph print cursor — created by the controller, exists only while
+ * printing (the final character replaces it). */
+.services-masthead__cursor--para {
+  display: inline-block;
+  animation: services-masthead-cursor-blink 1.05s steps(2, start) infinite;
+}
+/* Gold dashed corner crosses — the caption-card recipe verbatim (19×19,
+ * dashed gold strokes crossing at 9px), statically parked at the plate's
+ * corners ("the golden thingies", owner 2026-07-16). */
+.services-masthead__intro-cross {
+  position: absolute;
+  width: 19px;
+  height: 19px;
+  pointer-events: none;
+  /* On arm the crosses RIDE the opening aperture edges out to the
+   * corners — same duration + curve as the clip inset (the reticle
+   * choreography verbatim). */
+  transition:
+    left 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    right 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Parked at the horizontal centre only while armed — they ride out with
+ * the aperture as the reveal begins, in sync with the title decode. */
+.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-tl,
+.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-bl {
+  left: 50%;
+}
+.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-tr,
+.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-br {
+  right: 50%;
+}
+.services-masthead__intro-cross::before,
+.services-masthead__intro-cross::after {
+  content: "";
+  position: absolute;
+}
+.services-masthead__intro-cross::before {
+  left: 0;
+  right: 0;
+  top: 9px;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.8) 0 1.5px,
+    transparent 1.5px 5px
+  );
+}
+.services-masthead__intro-cross::after {
+  top: 0;
+  bottom: 0;
+  left: 9px;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(202, 165, 84, 0.8) 0 1.5px,
+    transparent 1.5px 5px
+  );
+}
+.services-masthead__intro-cross.is-tl {
+  left: -10px;
+  top: -10px;
+}
+.services-masthead__intro-cross.is-tr {
+  right: -10px;
+  top: -10px;
+}
+.services-masthead__intro-cross.is-bl {
+  left: -10px;
+  bottom: -10px;
+}
+.services-masthead__intro-cross.is-br {
+  right: -10px;
+  bottom: -10px;
+}
+
+/* Mobile / reduced motion — static in-flow band ABOVE the plate accordion
+ * (the masthead is the section header there; the scroll clocks are parked
+ * at content-in = 1 / exit = 0, so the desktop calc would resolve to 1
+ * anyway — position: static is the real change). */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .services-masthead {
+    position: static;
+    inset: auto;
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+    margin-bottom: clamp(28px, 6vh, 48px);
+  }
+  .services-masthead__lead,
+  .services-masthead__intro {
+    position: static;
+    max-width: none;
+  }
+  .services-masthead__intro {
+    margin-top: 18px;
+    max-width: 38ch;
+  }
+}
+
 /* ── Services designations (ADR-025 Update 9, 2026-07-09) ────────────────
  * Spacecraft-cutaway callouts pinned to named wireframe features, in the
  * NASA technical-diagram grammar (Vince review, 2026-07-09): BARE mono

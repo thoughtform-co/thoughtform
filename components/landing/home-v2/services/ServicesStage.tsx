@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ServicesDesignationLayer } from "./ServicesDesignationLayer";
+import { ServicesMasthead } from "./ServicesMasthead";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
 import { ServicesStationReadout } from "./ServicesStationReadout";
@@ -153,6 +154,12 @@ export function ServicesStage() {
       data-card-ring={SERVICES_CARD_RING ? "on" : "off"}
     >
       <div className="services-stage__items">
+        {/* Section masthead (ADR-044): title left / intro right in the upper
+            band. Ring-mode only (the flag-off racks own the upper corners);
+            FIRST in DOM so the mobile/PRM accordion flow puts it above the
+            plates for free — on desktop it is absolutely positioned. */}
+        {SERVICES_CARD_RING && <ServicesMasthead />}
+
         {showServicesCanvas ? <ServicesHologramCanvas activeServiceId={activeServiceId} /> : null}
 
         {/* Designation layer sits under the plate cluster so an open plate

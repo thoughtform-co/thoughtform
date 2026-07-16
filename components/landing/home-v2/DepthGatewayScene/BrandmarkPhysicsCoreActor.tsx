@@ -276,7 +276,23 @@ const PRODUCTION_CORRIDOR_KEEP: number | null = null;
 const SHRINK_START = 0.04;
 const SHRINK_END = 0.9;
 const CENTER_DISTANCE = 3.2;
-const CENTER_TARGET_SCALE = 1.15;
+/** 1.15 → 1.0 (ADR-044): ~13% smaller parked instrument so the services
+ *  masthead band (title left / intro right) reads clearly above it. Scales
+ *  mark + orbits + card ring as ONE group; recT = 0 through the whole
+ *  corridor, so pre-dock frames are byte-identical. */
+const CENTER_TARGET_SCALE = 1.0;
+/** Camera-space DOWN offset of the parked instrument, world units at
+ *  CENTER_DISTANCE (ADR-044). Lowers the whole docked instrument (mark +
+ *  orbits + card ring) below the masthead band. Derivation: viewport height
+ *  at the park plane = 2 × CENTER_DISTANCE × tan(FOV 38° / 2) = 2.204 wu,
+ *  so 0.1 wu ≈ 4.5vh screen drop (the nearer front card shifts ~6.3vh).
+ *  Shipped at 0.2, halved to 0.1 on owner review (2026-07-16) once the
+ *  masthead band anchored to the corner zone — the instrument re-balances
+ *  toward center while keeping ~5vh clearance under the title band.
+ *  Folded into the park target BEFORE the recT lerp, so it eases in with
+ *  the park itself and recT = 0 frames — the corridor and the ~0.14
+ *  matched-pixel SVG handoff — stay byte-identical. */
+const CENTER_Y_OFFSET = 0.1;
 
 /** Decommission recede (ADR-030 Update 1, "the viewscreen changes modes"):
  *  across the services runway's final beat the parked centerpiece pulls
@@ -439,6 +455,7 @@ export function BrandmarkPhysicsCoreActor({
   const fwdScratch = useRef(new THREE.Vector3());
   const frontScratch = useRef(new THREE.Vector3());
   const posScratch = useRef(new THREE.Vector3());
+  const upScratch = useRef(new THREE.Vector3());
   // Scratch for the centerpiece gentle-drift tilt (avoid per-frame allocs).
   const driftQuatScratch = useRef(new THREE.Quaternion());
   const driftEulerScratch = useRef(new THREE.Euler());
@@ -803,6 +820,12 @@ export function BrandmarkPhysicsCoreActor({
       const cam = state.camera;
       fwdScratch.current.set(0, 0, -1).applyQuaternion(cam.quaternion);
       frontScratch.current.copy(cam.position).addScaledVector(fwdScratch.current, CENTER_DISTANCE);
+      // Parked-band offset (ADR-044): drop the park target along camera-DOWN
+      // so the docked instrument sits below the services masthead band.
+      // Folded into the target BEFORE the recT lerp → eases in with the same
+      // smootherstep as the park; recT = 0 (corridor) is untouched.
+      upScratch.current.set(0, 1, 0).applyQuaternion(cam.quaternion);
+      frontScratch.current.addScaledVector(upScratch.current, -CENTER_Y_OFFSET);
       posScratch.current.lerp(frontScratch.current, recT);
       // Decommission recede: push the parked mark AWAY along camera-forward
       // — the "space view" withdrawing behind the incoming data readout.

@@ -12,7 +12,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
-import { ServicesPortal, ServicesRailRegisterPortal } from "@/components/landing/home-v2/services";
+import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -459,11 +459,10 @@ export function LandingPage({
           chip under the Build title; no in-canvas cases object).
           BuildCasesPortal + ToolsPortal are gone with their stations. */}
       <ServicesPortal containerRef={rootRef} />
-      {/* Services rail register ("SOURCE BUS · 04"): the service verbs in
-          four stable slots in the authored RIGHT HUD rail — the services
-          half of the retired ToolsRailRegister (ADR-033). Nested-root
-          lifecycle matches ServicesPortal. */}
-      <ServicesRailRegisterPortal containerRef={rootRef} />
+      {/* The "SOURCE BUS · 04" services rail register is RETIRED (ADR-044) —
+          the section masthead's intro paragraph is the services right-side
+          text now. ServicesRailRegisterPortal stays on disk for rollback;
+          the [data-tools-rail-root] shell in the prototype stays (empty). */}
       {/* Rail manifest (ADR-031): the left rail's station backplane —
           sockets ahead, seated modules behind, one powered slot
           (absorbing the ADR-030 station label). NOT a nested root: the

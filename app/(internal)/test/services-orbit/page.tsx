@@ -55,9 +55,10 @@ const PALETTE = {
 };
 
 /** Armillary/ring scale + parked rig scale — the corridor instrument's
- *  values (CorridorArmillary ARMILLARY_SCALE × the parked group scale). */
+ *  values (CorridorArmillary ARMILLARY_SCALE × the parked group scale;
+ *  the latter = CENTER_TARGET_SCALE, 1.15 → 1.0 with ADR-044). */
 const INSTRUMENT_SCALE = 0.62;
-const PARKED_GROUP_SCALE = 1.15;
+const PARKED_GROUP_SCALE = 1.0;
 
 interface OrbitLabConfig {
   progress: number;

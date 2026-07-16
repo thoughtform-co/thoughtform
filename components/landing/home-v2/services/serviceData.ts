@@ -72,6 +72,22 @@ export interface Service {
  * `verb` feeds the bottom readout strip; `name`/`tagline`/`body`/`meta` feed
  * the mobile card stack. Ids/index/order/phase are unchanged so every spatial
  * map stays valid. */
+/** Section masthead copy (2026-07-16, promoted from /test/services-wordmark —
+ * ADR-044). SECTION-level register copy ONLY — the title/intro for #services as
+ * a whole, never per-card (ADR-029: card copy stays baked on the WebGL faces).
+ * The em line renders gold. Note: "THREE DEPTHS." predates the fourth service
+ * (Strategic Advisory, 2026-07-09) — owner-chosen wording, revisit if the
+ * roster framing changes. */
+export const SERVICES_MASTHEAD = {
+  eyebrow: "Services · 04",
+  titleLines: [
+    { text: "ONE LOOP.", em: false },
+    { text: "THREE DEPTHS.", em: true },
+  ],
+  intro:
+    "Install the frame in a room, build the skill by hand, then move the practice in — one loop, run at the depth each team needs and tuned to the AI calls you're actually making.",
+} as const;
+
 export const SERVICES: readonly Service[] = [
   {
     id: "keynote",
