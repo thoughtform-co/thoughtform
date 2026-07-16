@@ -706,11 +706,28 @@
   pointer-events: none;
   background: var(--hud-rail-line);
 }
+/* Bottom connection (owner, 2026-07-16): the guide hairline RUNS INTO
+   the bottom corner chrome instead of stopping at the rail box. The
+   rail box's bottom clearance budgets the WORDMARK height on both
+   sides (see .hud__rail above), which left the bottom-right bracket
+   floating 36-50px below the line and the last tick hanging in dead
+   air. The track alone extends past the box — layout-free (ticks,
+   labels, registers, and the manifest detent table all keep their
+   geometry):
+   - LEFT: down to 8px above the wordmark lockup, so the rail
+     terminates AT the brand. Extension = breathing gap − 8px.
+   - RIGHT: exactly to the BR bracket's top edge — the track and the
+     bracket's vertical arm are co-linear (both at --hud-margin), so
+     they read as ONE continuous line into the corner. Extension =
+     (wordmark budget + breathing) − corner zone; the clamps MUST stay
+     in lockstep with the .hud__rail bottom clearance above. */
 .hud__rail--l .hud__rail__track {
   left: var(--hud-rail-guide-inset);
+  bottom: calc(-1 * (clamp(16px, 1.8vw, 32px) - 8px));
 }
 .hud__rail--r .hud__rail__track {
   right: var(--hud-rail-guide-inset);
+  bottom: calc(-1 * (clamp(44px, 3.6vw, 63px) + clamp(16px, 1.8vw, 32px) - var(--hud-corner-zone)));
 }
 
 /* Ticks — extend OUTWARD from the guide (left rail extends LEFT,

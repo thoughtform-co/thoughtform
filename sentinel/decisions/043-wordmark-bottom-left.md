@@ -65,3 +65,18 @@ De-risking established the bottom-left corner is functionally empty:
 - The top band is now clear for rail-aligned section mastheads (the
   Linear-register direction explored in `/test/services-wordmark`; its
   right-rail-paragraph question remains open under ADR-031).
+
+## Update (2026-07-16) — bottom corner connection
+
+Owner niggle: the bottom corners floated disconnected below the rails (the
+rail box budgets THIS wordmark's height on BOTH sides, leaving the BR
+bracket 36–50px below the last tick). Fix: the guide TRACKS alone extend
+past the rail box (`landing.css` `.hud__rail--l/--r .hud__rail__track`
+negative `bottom`) — layout-free, so ticks/labels/registers/detents keep
+their geometry. Right: the track lands exactly on the BR bracket's top
+edge, co-linear with its vertical arm (one continuous line; verified 0.0px
+at 1280/1920/2560). Left: the track terminates 8px above this wordmark.
+**Lockstep:** the extension calc reuses the same
+`clamp(44px, 3.6vw, 63px)` + `clamp(16px, 1.8vw, 32px)` clamps as the
+`.hud__rail` bottom clearance — retune them together or the junction
+drifts.
