@@ -86,21 +86,22 @@ const BUILD_FADE_IN: [number, number] = [0.84, 0.91];
 // ── Corridor phase → left-rail manifest (ADR-030 Update 3; consumer
 // is now the ADR-031 RailManifestController) ──
 // While the corridor owns the HUD (`data-corridor-engaged`), the
-// left-rail manifest resolves its active slot from the corridor's
-// section identity. The corridor reads as TWO sections on the rail:
-// the opening "thesis" beat (the compass-gate / definition statement
-// before the fly-through), then "the Arc" — the whole
-// Navigate→Encode→Build fly-through is ONE section called the Arc, not
-// three changing stage names (owner, 2026-07-11). This rAF is the
-// corridor's single text writer, so it publishes the phase as a
-// delta-gated `data-corridor-phase` attribute on <html>; the label
-// observes it (staying fully event-driven). The boundary is DERIVED
-// from the Navigate fade-in so "thesis" covers the armed pre-pin
-// stretch + the intro beat, and "arc" holds from where the fly-through
-// begins through the epilogue (paintProgress pinned at 1) until
-// disengagement hands over to `data-screen-label`s.
-const ARC_ENTER_AT = NAVIGATE_FADE_IN[0];
-type CorridorPhase = "thesis" | "arc";
+// left-rail marker resolves its active beat from the corridor's
+// published phase. Since ADR-031 Update 9 the corridor reads at BEAT
+// granularity on the rail: "thesis" (the compass-gate / definition
+// statement before the fly-through), then the Arc's three moves —
+// "navigate" / "encode" / "build" — so the detent diamond follows the
+// corridor's structure instead of one merged "arc" section (owner,
+// 2026-07-16; supersedes the 2026-07-11 two-section read). This rAF is
+// the corridor's single text writer, so it publishes the phase as a
+// delta-gated `data-corridor-phase` attribute on <html>; the rail
+// observes it (staying fully event-driven). The hand-offs MIRROR
+// CorridorProgressRail's STAGES band starts (keep the two in lockstep)
+// so the left diamond and the right-rail register agree on the active
+// beat; "build" holds through the epilogue (paintProgress pinned at 1)
+// until disengagement hands over to `data-screen-label`s.
+const CORRIDOR_BEAT_ENTER = { navigate: 0.2, encode: 0.48, build: 0.78 } as const;
+type CorridorPhase = "thesis" | "navigate" | "encode" | "build";
 
 // ── Typewriter tuning ─────────────────────────────────────────────
 /** Container opacity above which a header is considered "arrived"
@@ -1245,14 +1246,18 @@ export function CorridorStationHeaders() {
       const docked = t.docked;
       const nowSec = performance.now() / 1000;
 
-      // Publish the corridor phase for the left-rail station label (see
-      // ARC_ENTER_AT). Delta-gated: one attribute write per phase change,
-      // none per frame. Reverse scroll reverses by construction.
+      // Publish the corridor beat for the left-rail marker (see
+      // CORRIDOR_BEAT_ENTER). Delta-gated: one attribute write per beat
+      // change, none per frame. Reverse scroll reverses by construction.
       const corridorPhase: CorridorPhase | null = !painting
         ? null
-        : p < ARC_ENTER_AT
-          ? "thesis"
-          : "arc";
+        : p >= CORRIDOR_BEAT_ENTER.build
+          ? "build"
+          : p >= CORRIDOR_BEAT_ENTER.encode
+            ? "encode"
+            : p >= CORRIDOR_BEAT_ENTER.navigate
+              ? "navigate"
+              : "thesis";
       if (corridorPhase !== lastCorridorPhase) {
         lastCorridorPhase = corridorPhase;
         if (corridorPhase)

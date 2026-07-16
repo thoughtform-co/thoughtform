@@ -8,14 +8,17 @@
  *
  * activeIdx resolution priority:
  *   1. `data-corridor-engaged` → the entry matching `data-corridor-phase`
- *      (thesis fallback — the WebGL fallback has no corridor writer);
+ *      (Update 9: the corridor publishes BEAT granularity — thesis /
+ *      navigate / encode / build; thesis fallback — the WebGL fallback
+ *      has no corridor writer);
  *   2. else `data-active-station` → its station entry;
  *   3. seam-gap fix: if that yields hero but the corridor mount sits
- *      above viewport-mid, the corridor has been PASSED → Arc. (The
- *      mount is not a `.station`, so `data-active-station` lags at
- *      "hero" between corridor disengage and the services crossing.)
+ *      above viewport-mid, the corridor has been PASSED → its last beat
+ *      (Build). (The mount is not a `.station`, so `data-active-station`
+ *      lags at "hero" between corridor disengage and the services
+ *      crossing.)
  *
- * Pure read — never mutates. The rolodex controller keys its wake
+ * Pure read — never mutates. The rail controller keys its wake
  * sources (MutationObserver on the three attributes below + a
  * hero/corridor-gated scroll listener for rule 3) off this.
  */
@@ -23,7 +26,13 @@
 import { CORRIDOR_MOUNT_ID, MANIFEST_ENTRIES } from "./entries";
 
 export const THESIS_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "thesis");
-export const ARC_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "arc");
+
+/** Index of the corridor's LAST beat (Build) — the seam-gap fallback and
+ *  the boundary of the hero/corridor scroll-wake regime. */
+export const LAST_CORRIDOR_IDX = MANIFEST_ENTRIES.reduce(
+  (acc, e, i) => (e.kind === "corridor" ? i : acc),
+  0
+);
 
 /** The `<html>` attributes the resolver reads — the shared MutationObserver filter. */
 export const ACTIVE_IDX_ATTRIBUTES = [
@@ -45,9 +54,10 @@ export function resolveActiveIdx(html: HTMLElement): number {
   if (idx === 0) {
     // Rule 3 — seam gap. Single batched rect read, active only in the
     // hero/corridor regime (callers gate their scroll listener on
-    // `idx <= ARC_IDX`).
+    // `idx <= LAST_CORRIDOR_IDX`).
     const mount = document.getElementById(CORRIDOR_MOUNT_ID);
-    if (mount && mount.getBoundingClientRect().top < window.innerHeight / 2) return ARC_IDX;
+    if (mount && mount.getBoundingClientRect().top < window.innerHeight / 2)
+      return LAST_CORRIDOR_IDX;
   }
   return idx;
 }

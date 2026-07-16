@@ -535,3 +535,92 @@ markers stay as passive outline ticks (they gold with the row via
 deliberate pair with distinct active signatures: **left = full-frame
 fill, right = underline**. The far-left 13-tick rail ladder is unchanged
 (still load-bearing; Update 2).
+
+## Update 9 (2026-07-16) — the left rail becomes a single detent diamond
+
+**Owner redirect.** The three-pillar terminal rolodex (ARC / SERVICES /
+ABOUT titles) is replaced by **one small gold diamond** that snaps to a
+vertical detent per journey entry and reveals the section's title on
+hover / focus. This **reverses the display decisions of Updates 3, 6, 7,
+8** (the rolodex reel, the 3-pillar roster, the terminal selection bar,
+the no-per-row-marker rule). What it does NOT touch: the journey model
+(`MANIFEST_ENTRIES`), `resolveActiveIdx`, `clickToNavigate`, the
+parse-injected skeleton + null-render controller pattern, the byte-exact
+`<nav>` shell, and the **13-tick ladder (Update 2, still load-bearing)**.
+
+### Decision
+
+1. **One diamond over the WHOLE journey, not a 3-pillar reel.** The
+   diamond tracks every `MANIFEST_ENTRIES` entry plus any future
+   interstitial slides — it is data-driven off that array, so
+   adding/removing a section reshuffles the spacing automatically. It is
+   **visible from the hero** (owner choice; hero is title-less, so the
+   "no rail title on hero" canon holds — only the marker shows).
+   **Same-day owner refinement: the corridor is represented at BEAT
+   granularity** — the journey is hero → thesis → **Navigate → Encode →
+   Build** → services → about → continuum → practice → contact (10
+   entries; the single "arc" entry is retired). The Arc's three moves are
+   corridor-kind entries sharing the mount with `scrollFraction`s at
+   their parks (paintProgress × EPILOGUE_START 620/820: 0.40→0.30,
+   0.636→0.48, 0.923→0.70), so the diamond follows the corridor's
+   structure — "the most important beats, not just section to section."
+   To resolve the active beat, the `data-corridor-phase` attribute
+   (single writer: the `CorridorStationHeaders` RAF) now publishes
+   `thesis | navigate | encode | build` at hand-offs `0.2 / 0.48 / 0.78`
+   in paintProgress — MIRRORING `CorridorProgressRail`'s STAGES band
+   starts (keep the two in lockstep), so the left diamond and the
+   right-rail register always agree on the active beat. `ARC_IDX` is
+   replaced by `LAST_CORRIDOR_IDX` (the Build beat) for the seam-gap
+   rule 3 and the scroll-wake regime.
+
+2. **Position = a scroll-proportional detent, but still a pure function
+   of the active index.** Each entry's detent is its real scroll offset
+   normalized 0..1 (`detentTable.ts`, reusing the click-nav offset recipe
+   `scrollTargetForEntry` in `clickToNavigate.ts`), so the long 820svh
+   WebGL corridor occupies a proportionally tall slice and short stations
+   cluster. The detent TABLE is recomputed only on mount / resize /
+   `ResizeObserver` (late WebGL + Services-card layout) — **never per
+   scroll frame**. The controller writes `--rail-diamond-top` on the
+   active-index change; scroll only re-resolves WHICH index is active (the
+   geometric seam-gap rule 3), never geometry. The 350ms `top` glide is
+   the one allowed tween (Update 3 canon), gated behind `data-ready`; the
+   diamond is hidden until then so a mid-page reload appears at its detent
+   instead of sliding from hero. Reduced motion jumps (no glide).
+
+3. **Hover / focus reveals the title, if any.** The active entry's title
+   is written into a hidden `.rail-manifest__title` chip; a pure-CSS
+   `:hover`/`:focus-visible` reveal is gated on `data-has-title`. Title
+   eligibility is `manifestTitle(entry)` (`entries.ts`) — `null` for
+   `hideActiveName` (hero) or a blank `name` (future interstitials), so
+   those reveal nothing. The diamond is a real `<button>` (keyboard focus;
+   a click re-centers the active section).
+
+### Scope / files
+
+`lib/rail-manifest/entries.ts` (new `manifestTitle`; beat-granularity
+journey; `RAIL_ROWS` / `RAIL_ROW_INDICES` / `glyph` REMOVED — nothing
+rendered them), `lib/rail-manifest/clickToNavigate.ts` (extract
+`scrollTargetForEntry`), `lib/rail-manifest/detentTable.ts` (new),
+`lib/rail-manifest/resolveActiveIdx.ts` (`ARC_IDX` →
+`LAST_CORRIDOR_IDX`), `lib/v7-parse/railManifest.ts` (diamond + title
+skeleton), `components/landing/v7/RailManifest.tsx` (controller
+rewrite), `components/landing/home-v2/CorridorStationHeaders.tsx`
+(`data-corridor-phase` publishes beat granularity at the
+`CORRIDOR_BEAT_ENTER` hand-offs), `components/landing/v7/landing.css`
+(12px diamond centred on the 2px track, bloom on an un-clipped `::after`
+— a `box-shadow` on the clip-path'd `::before` would be cropped by its
+own clip, gate parity, reduced-motion),
+`tests/lib/{rail-manifest,v7-parse,detentTable}.test.ts` (drift pins
+moved in lockstep). The `.claude`/`.cursor` `landing-v7` rule docs' rail
+sections are updated to describe the diamond.
+
+**Guardrails (updated):** the rail DISPLAYS one detent diamond over the
+full journey — do NOT re-add the rolodex reel, the 3-pillar roster, the
+terminal selection bar, or per-row buttons. Position stays a pure
+function of the active index into the layout-computed detent table — do
+NOT scroll-scrub the diamond or add a per-frame scroll writer (recompute
+the table on layout only). Keep `resolveActiveIdx` + `clickToNavigate`
+shared; keep the byte-exact `<nav>` shell (change `buildRailManifestHtml`
+
+- the drift-guard tests in lockstep); never `createRoot` into
+  `[data-rail-manifest-root]`; the 13-tick ladder always stays (Update 2).

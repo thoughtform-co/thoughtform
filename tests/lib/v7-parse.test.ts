@@ -75,10 +75,10 @@ describe("v7-parse — pristine prototype shape", () => {
     // the ladder is load-bearing rail identity, never removed).
     expect(bodyHtml).toMatch(/<div id="leftTicks"><div class="hud__rail__tick/);
     expect(bodyHtml).toMatch(/<div id="rightTicks"><div class="hud__rail__tick/);
-    // The left rail ALSO carries the manifest rolodex (ADR-031 U3:
-    // masked window → reel → entry rows), filled at parse time.
+    // The left rail ALSO carries the manifest marker (ADR-031 U9: a single
+    // detent diamond button), filled at parse time.
     expect(bodyHtml).toMatch(
-      /data-rail-manifest-root[^>]*><div class="rail-manifest__window"><div class="rail-manifest__reel"><button[^>]*rail-manifest__entry/
+      /data-rail-manifest-root[^>]*><button[^>]*class="rail-manifest__diamond"/
     );
   });
 });

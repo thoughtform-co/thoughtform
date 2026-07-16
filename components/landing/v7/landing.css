@@ -739,185 +739,131 @@
   right: calc(var(--hud-rail-guide-inset) + 10px);
 }
 
-/* Rail manifest (ADR-031, Update 3) — the left rail's rolodex. A
-   masked window anchored at mid-rail holds a flow-stacked reel of
-   every journey entry; the active row always sits at the window's
-   center line and section changes slide the WHOLE reel via
-   --rail-manifest-idx — one 350ms detent glide (the owner-approved
-   narrowing of the "never smooth tweening" canon; the glyph confirm
-   stays quantized steps()). The 13-tick ladder STAYS (Update 2 — it
-   is load-bearing rail identity; never remove it), and with the reel
-   off the tick rows the "2"/"5" bearing numerals return. States are
-   attribute-driven by RailManifestController (parse-injected
-   skeleton, client mutation): data-dist dims rows by distance from
-   active, data-dormant hides the window while hero is active (hero
-   canon: no rail title), data-ready gates every transition so a
-   mid-page reload paints at its detent instead of sliding up from
-   hero. */
+/* Rail manifest (ADR-031, Update 9) — the left rail's journey marker. A
+   single gold diamond snaps to one vertical detent per journey entry,
+   spaced PROPORTIONAL to each section's real scroll distance (the long
+   WebGL corridor takes a tall slice; short stations cluster). It rides the
+   SAME ruler as the 13-tick ladder — [data-rail-manifest-root] is inset:0
+   inside .hud__rail--l, the box the ticks' top:% resolve against — and that
+   ladder STAYS (Update 2, load-bearing rail identity, never removed).
+   Position is a pure function of the active index into a layout-computed
+   detent table (RailManifestController; parse-injected skeleton, client
+   mutation) — never scroll-scrubbed; the 350ms glide is the one allowed
+   tween, gated behind data-ready so a mid-page reload paints at its detent
+   instead of sliding from hero. On hover / focus the diamond reveals the
+   active entry's title, but only when it has one (data-has-title). */
 .hud__rail--l [data-rail-manifest-root] {
   position: absolute;
   inset: 0;
   z-index: 2;
-  pointer-events: none;
-  /* The rolodex row unit is the shared rail grid step (variables.css) so
-     the left list and the right registers keep one vertical rhythm. */
-  --rail-manifest-row-h: var(--rail-row-pitch, 24px);
+  pointer-events: none; /* the diamond opts back in */
 }
 
-/* Window: seven rows on the mid-rail anchor, edge-faded by the mask
-   so distant rows dissolve instead of clipping. overflow: clip (not
-   hidden) — no scroll container, focus can never shift the window. */
-.rail-manifest__window {
+/* The gold detent diamond — seated on the guide hairline, glides between
+   detents. `--rail-diamond-top` is written by the controller on each active
+   change; `translate: 0 -50%` centres the mark on the detent, and `left`
+   centres the 12px box on the 2px track (track centre = guide-inset + 1px).
+   Modeled on the retired scroll-depth diamond (.hud__depth) but
+   detent-snapped, not scroll-scrubbed. Hidden until data-ready so it appears
+   at its measured detent. */
+.rail-manifest__diamond {
   position: absolute;
-  top: 50%;
-  left: 0;
-  width: 180px;
-  height: calc(var(--rail-manifest-row-h) * 7);
+  left: calc(var(--hud-rail-guide-inset) + 1px - 6px);
+  top: var(--rail-diamond-top, 0%);
+  width: 12px;
+  height: 12px;
   translate: 0 -50%;
-  overflow: clip;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 14%,
-    #000 86%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
-}
-[data-rail-manifest-root]:not([data-ready]) .rail-manifest__window,
-[data-rail-manifest-root][data-dormant] .rail-manifest__window {
-  opacity: 0;
-  visibility: hidden;
-}
-[data-rail-manifest-root][data-ready] .rail-manifest__window {
-  transition:
-    opacity 350ms var(--ease-out),
-    visibility 0s 350ms;
-}
-[data-rail-manifest-root][data-ready]:not([data-dormant]) .rail-manifest__window {
-  transition:
-    opacity 350ms var(--ease-out),
-    visibility 0s;
-}
-
-/* Reel: position is a pure function of the active index — row idx's
-   center lands exactly on the window's center line. Retargets
-   mid-glide on every detent write (fast travel = one redirected
-   slide, never a queued chain). */
-.rail-manifest__reel {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  transform: translateY(
-    calc((var(--rail-manifest-idx, 0) + 0.5) * var(--rail-manifest-row-h) * -1)
-  );
-}
-[data-rail-manifest-root][data-ready] .rail-manifest__reel {
-  transition: transform 350ms var(--ease-out);
-}
-
-/* Rows: fixed height keeps the detent math exact. Text sits on the
-   bearing-label column (guide + 10px) so the reel reads with the page
-   rhythm rather than floating in the gutter. */
-.rail-manifest__entry {
-  display: flex;
-  align-items: center;
-  height: var(--rail-manifest-row-h);
-  width: max-content;
-  /* Gap between the rail guide hairline and the selection bar's left
-     edge, so the filled terminal bar floats clear of the rail rather
-     than butting onto it (owner, 2026-07-13). */
-  padding: 0 0 0 calc(var(--hud-rail-guide-inset) + 16px);
+  margin: 0;
+  padding: 0;
   border: 0;
   background: none;
   cursor: pointer;
   pointer-events: auto;
-  font-family: var(--font-pt-mono);
-  /* Runs a touch larger than the right-rail register (11px): the left
-     list is the primary brand-pillar index and the terminal bar wants
-     the extra weight; the two rails read as a deliberate pair, not twins
-     (owner, 2026-07-13). Size follows the grid, not an ad-hoc nudge. */
-  font-size: 13px;
-  letter-spacing: var(--track-wider);
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--dawn-50);
-}
-[data-rail-manifest-root][data-ready] .rail-manifest__entry {
-  transition:
-    opacity 350ms var(--ease-out),
-    color 350ms var(--ease-out);
-}
-/* State dimming — with only the three pillars shown, all stay readable
-   (no distance falloff): a pillar ahead is dim, one already reached is
-   brighter, the one you're in is full gold. */
-.rail-manifest__entry[data-state="upcoming"] {
-  opacity: 0.5;
-}
-.rail-manifest__entry[data-state="seated"] {
-  opacity: 0.8;
-}
-.rail-manifest__entry[data-state="active"] {
   opacity: 1;
-  color: var(--gold);
+  z-index: 3;
 }
-.rail-manifest__entry:not([data-state="active"]):hover,
-.rail-manifest__entry:focus-visible {
-  opacity: 0.95;
+.rail-manifest__diamond::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  opacity: 1;
+  transition: filter 200ms var(--ease-out);
 }
-.rail-manifest__entry:focus-visible {
+/* The bloom rides a separate un-clipped layer (a clip-path on ::before would
+   crop its own box-shadow), sized to the diamond's inner diagonal. */
+.rail-manifest__diamond::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  rotate: 45deg;
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.6);
+  transition: box-shadow 200ms var(--ease-out);
+}
+.rail-manifest__diamond:hover::before,
+.rail-manifest__diamond:focus-visible::before {
+  filter: brightness(1.2);
+}
+.rail-manifest__diamond:hover::after,
+.rail-manifest__diamond:focus-visible::after {
+  box-shadow: 0 0 20px rgba(202, 165, 84, 0.85);
+}
+.rail-manifest__diamond:focus-visible {
   outline: 1px solid var(--gold);
   outline-offset: 3px;
 }
-
-/* Terminal selection bar (owner, 2026-07-13 — replaces the folded-card
-   glyph; caret gutter removed 2026-07-13 for a clean titles-only list).
-   The name sits in its own inline block with fixed padding on EVERY row,
-   so activation only recolours the block — the text never shifts. The
-   active pillar reads as an inverse-video terminal selection (void ink
-   on a gold fill), like a highlighted track in a retro console. Nothing
-   sits left of the names but the fill; the rail carries no per-row
-   marker on this side (the fill IS the mark — its counterpart on the
-   right rail is an underline). */
-.rail-manifest__name {
-  display: inline-block;
-  padding: 3px 9px;
+/* Hidden + no transition until the first sync is flushed (data-ready), so a
+   mid-page reload appears at its detent instead of sliding from hero. */
+[data-rail-manifest-root]:not([data-ready]) .rail-manifest__diamond {
+  opacity: 0;
+  transition: none;
+}
+[data-rail-manifest-root][data-ready] .rail-manifest__diamond {
+  transition:
+    top 350ms var(--ease-out),
+    opacity 350ms var(--ease-out);
 }
 
-/* Active pillar — the filled terminal bar: void ink on a solid gold
-   block with a soft bloom. */
-.rail-manifest__entry[data-state="active"] .rail-manifest__name {
-  color: var(--void, #0a0908);
-  background: var(--gold);
-  box-shadow: 0 0 16px rgba(202, 165, 84, 0.4);
+/* Title chip — inside the guide on the bearing-label column, tracks the
+   diamond's detent. Hidden until the diamond is hovered / focused AND the
+   active entry actually has a title (data-has-title): title-less entries
+   (hero, future interstitials) reveal nothing. */
+.rail-manifest__title {
+  position: absolute;
+  left: calc(var(--hud-rail-guide-inset) + 18px);
+  top: var(--rail-diamond-top, 0%);
+  translate: 0 -50%;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-wider);
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
 }
-[data-rail-manifest-root][data-ready]
-  .rail-manifest__entry[data-state="active"]
-  .rail-manifest__name {
-  animation: rail-manifest-flash 320ms steps(2, start);
+[data-rail-manifest-root]:not([data-ready]) .rail-manifest__title {
+  transition: none;
+}
+[data-rail-manifest-root][data-ready] .rail-manifest__title {
+  transition:
+    top 350ms var(--ease-out),
+    opacity 200ms var(--ease-out);
+}
+[data-rail-manifest-root][data-has-title] .rail-manifest__diamond:hover ~ .rail-manifest__title,
+[data-rail-manifest-root][data-has-title]
+  .rail-manifest__diamond:focus-visible
+  ~ .rail-manifest__title {
+  opacity: 1;
 }
 
-/* Power-on flash as a pillar becomes the active row — quantized steps()
-   (retriggers on reverse re-arrival; ADR-031 confirm canon: the reel
-   glide is the only tween, garnish stays stepped). */
-@keyframes rail-manifest-flash {
-  0%,
-  49.99% {
-    filter: brightness(1.5) drop-shadow(0 0 10px rgba(202, 165, 84, 0.95));
-  }
-  50%,
-  100% {
-    filter: none;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .rail-manifest__entry[data-state="active"] .rail-manifest__name {
-    animation: none !important;
-  }
-  [data-rail-manifest-root] .rail-manifest__window,
-  [data-rail-manifest-root] .rail-manifest__reel,
-  [data-rail-manifest-root] .rail-manifest__entry {
+  /* No glide — the diamond JUMPS between detents; the title reveals
+     instantly. */
+  [data-rail-manifest-root] .rail-manifest__diamond,
+  [data-rail-manifest-root] .rail-manifest__diamond::before,
+  [data-rail-manifest-root] .rail-manifest__title {
     transition: none !important;
   }
 }
@@ -6789,9 +6735,9 @@ body.density-dense .station {
   .hud__rail__label {
     display: none;
   }
-  /* The rolodex is a text instrument — below 1100px it stands down
-     entirely; the tick ladder keeps the rail identity and HudNav
-     carries navigation. */
+  /* The journey diamond is a desktop instrument — below 1100px it stands
+     down entirely (gate parity with the retired rolodex); the tick ladder
+     keeps the rail identity and HudNav carries navigation. */
   [data-rail-manifest-root] {
     display: none;
   }

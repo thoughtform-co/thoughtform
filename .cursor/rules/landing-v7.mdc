@@ -30,18 +30,33 @@ landing.
 
 **The reveal is PHASED (ADR-041, supersedes ADR-036 §3/§5); the trigger is a CUE under the Build title (ADR-042, supersedes ADR-041 §2).** ONE damped arm level, TWO ordered phases: the node fold runs on `arcFoldInput(level)` (complete at `ARC_FOLD_DONE` 0.62 — feed `arcLatchEnvelope` the BARE clamped ratio; it supplies the easing, pre-easing double-eases) and the CARD reads `arcCardPresence(level)` (`smootherstep(0.62, 1)`), published as `cardPresence` on `arcCasesLevelRef` by the same single writer. Beat: **labels fade → nodes fold and latch → card materializes into the frame they made**; close plays it backwards. The card's material opacities / visibility / scale-in / depth-write AND the stepper's opacity+inert all read `cardPresence`, never the raw `level` — the strict invariant (`arcCardPresence === 0` while `arcFoldInput < 1`) is unit-pinned. The sphere sigil is DELETED (ADR-042): the trigger is `ArcCasesCue`, a DOM dotted-leader + label docked UNDER the Build station title (mounted as the Build `StationBlock`'s `afterContent`; it inherits the Build header's per-frame opacity). Its `intelligence.sigil` anchor, `gateSigil`, and `SIGIL_Z` are gone. It keeps the ADR-041 contracts verbatim (aria-controls/expanded, every-frame inert reconciliation, stable callback ref, auto-disarm watcher) and arms only once the notes have SETTLED (`sigilSettle`, `ARC_SIGIL_SETTLE` [0.70, 0.84] on the smoothed stack — **measured against the live corridor; re-measure before retuning**); below the gate it is `inert` + CSS-faded (`.is-armable`). Because it sits at the TOP of the viewport, clear of the centred card, it **stays visible AND interactive while armed** (a 2nd click / Escape closes; Escape refocus falls out for free — it was never inert) — no phantom-click guard, no fade-to-0. The stepper ✕ CLOSE stays. Do NOT retune `ARC_BAND_IN` to "fix" its stale stack comment — the park (0.9225) sits below the accretion peak (0.95), so raising it would gate the card off entirely; sequencing is enforced on the trigger instead. In Playwright the cue rides the Build header's gyro parallax, so `locator.click()` can still flake ("element is not stable") — click at its box centre via `page.mouse.click`.
 
-**Rail manifest (ADR-031; roster ADR-033):** the left-rail manifest
-skeleton is parse-injected (`lib/v7-parse/railManifest.ts`) and mutated
-in place by `RailManifestController` — never `createRoot` into
+**Rail manifest (ADR-031; roster ADR-033; left rail Update 9):** the
+left-rail manifest skeleton is parse-injected
+(`lib/v7-parse/railManifest.ts`) and mutated in place by
+`RailManifestController` — never `createRoot` into
 `[data-rail-manifest-root]`, keep the prototype shell byte-exact, and
 change journey order only in `lib/rail-manifest/entries.ts` (drift-guard
-tested). The rolodex renders ONLY the pillars **Arc / Services / About**.
-The reel detent (Update 3) is a 350ms transform transition gated behind
-`data-ready`, a pure function of `activeIdx` — never scroll-scrubbed;
-glyph confirm stays quantized `steps()`; no FLIP flights; the 13-tick
-ladder always stays. The right rail: `THE ARC · 03` register during the
-corridor, `SOURCE BUS · 04` (`ServicesRailRegister`, services.css) during
-services — both on the shared `--rail-register-pitch` grid, active row =
-gold underline.
+tested). **Update 9 (2026-07-16): the left rail is ONE travelling gold
+detent diamond (12px, `.rail-manifest__diamond`, centred on the 2px
+track), not the 3-pillar rolodex.** It snaps to a detent per EVERY
+`MANIFEST_ENTRIES` entry (+ future interstitials), at BEAT granularity in
+the corridor — hero → thesis → Navigate → Encode → Build → sections (the
+"arc" entry is retired). Detents are scroll-PROPORTIONAL
+(`detentTable.ts` + `scrollTargetForEntry`; corridor beats at their parks,
+fractions 0.30/0.48/0.70), recomputed on resize/layout only. Position
+(`--rail-diamond-top`) is a pure function of `activeIdx` — never
+scroll-scrubbed, no per-frame scroll writer; the 350ms `top` glide is
+gated behind `data-ready`; the 13-tick ladder always stays. The active
+corridor beat comes from `data-corridor-phase`, now published as
+`thesis|navigate|encode|build` (CorridorStationHeaders RAF, hand-offs
+`CORRIDOR_BEAT_ENTER` 0.2/0.48/0.78 — mirrors CorridorProgressRail's
+STAGES band starts, keep in lockstep). Hover/focus reveals the active
+entry's title (hidden `.rail-manifest__title`, gated on `data-has-title`;
+`manifestTitle` is `null` for hero + blank-name interstitials). Do NOT
+re-add the rolodex reel / 3-pillar roster / terminal bar; `RAIL_ROWS` /
+`glyph` are removed. The right rail: `THE ARC · 03`
+register during the corridor, `SOURCE BUS · 04` (`ServicesRailRegister`,
+services.css) during services — both on the shared `--rail-register-pitch`
+grid, active row = gold underline.
 
 **Process:** `sentinel/MAINTENANCE.md` — Cycle B before large section work; Cycle A after non-trivial fixes.

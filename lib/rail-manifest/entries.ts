@@ -1,26 +1,21 @@
 /**
  * Rail Manifest — canonical journey data (ADR-031).
  *
- * The left HUD rail's station manifest: one slot per journey entry, in
- * PRODUCTION order (ADR-033 funnel — hero → corridor [Thesis/Arc] →
- * services → about → continuum → practice → contact), NOT the authored
- * prototype order. The corridor phases are first-class entries even
- * though they share one mount element, which is why this list is
- * explicitly curated instead of DOM-derived;
+ * The left HUD rail's journey registry: one entry per beat, in
+ * PRODUCTION order (ADR-033 funnel — hero → corridor → services →
+ * about → continuum → practice → contact). Since Update 9 the rail
+ * renders ONE detent diamond over this list, and the corridor is
+ * represented at BEAT granularity — Thesis → Navigate → Encode → Build
+ * (the Arc's three moves are first-class journey entries, so the
+ * marker follows the corridor's structure, not just section
+ * boundaries). All four share one mount element, which is why this
+ * list is explicitly curated instead of DOM-derived;
  * `tests/lib/rail-manifest.test.ts` carries a drift guard asserting the
  * station-kind entries match the parsed production DOM.
  *
- * `label` is the authored station number, displayed ONLY on the
- * ACTIVE rolodex row (Update 3 canon — every row shows its name, the
- * number rides the active row alone): the production sequence is
- * non-monotonic (…03, 08, 09, 05…) because services + about relocate
- * ahead of continuum, and showing one number at a time keeps that
- * invisible while staying consistent with the station corner chrome
- * ("08 SERVICES").
- *
- * The `tools` ("Products") + `build` entries retired with their
- * stations (ADR-033) — the four production cases live in the Arc's
- * Build-park orbit now, and About is the third brand pillar.
+ * `label` is the authored station number (the Arc's beats all carry
+ * the Arc's "03"). Display of labels retired with the rolodex
+ * (Update 9) — kept as data.
  *
  * Pure data — imported by the server-side parse builder
  * (`lib/v7-parse/railManifest.ts`) and the client controller
@@ -30,7 +25,9 @@
 export type ManifestEntryId =
   | "hero"
   | "thesis"
-  | "arc"
+  | "navigate"
+  | "encode"
+  | "build"
   | "services"
   | "about"
   | "continuum"
@@ -39,10 +36,9 @@ export type ManifestEntryId =
 
 export interface ManifestEntry {
   id: ManifestEntryId;
-  /** Authored station number — rides ONLY the active rolodex row. */
+  /** Authored station number (vestigial since Update 9 — not displayed). */
   label: string;
-  /** Station name — always visible in the reel (the active row
-   *  prefixes the authored number, scramble-decoded). */
+  /** Beat name — revealed by the detent diamond on hover / focus. */
   name: string;
   kind: "station" | "corridor";
   /**
@@ -50,18 +46,36 @@ export interface ManifestEntry {
    * for corridor entries (which add `scrollFraction` into the runway).
    */
   targetId: string;
-  corridorPhase?: "thesis" | "arc";
-  /** Corridor only: fraction into the mount runway the click lands at. */
+  /**
+   * Corridor only: the `data-corridor-phase` value that marks this beat
+   * active. Published by the CorridorStationHeaders RAF (single writer)
+   * from `paintProgress` hand-offs that MIRROR CorridorProgressRail's
+   * STAGES band starts, so the left diamond and the right-rail register
+   * agree on the active beat.
+   */
+  corridorPhase?: "thesis" | "navigate" | "encode" | "build";
+  /** Corridor only: fraction into the mount runway (raw stage progress,
+   *  0..1 across the whole 820svh) — BOTH the click-nav landing spot and
+   *  the detent position. Beat parks are paintProgress × EPILOGUE_START
+   *  (620/820): Navigate 0.40 → 0.30, Encode 0.636 → 0.48,
+   *  Build 0.923 → 0.70. */
   scrollFraction?: number;
-  /** Brand pillars (Arc / Services / Tools): the layered-stack module
-   *  glyph (the folded card ring) rides these three rolodex rows as a
-   *  "most important elements" marker — always shown, fill by state. */
-  glyph?: "stack";
   /** Hero canon: the first viewport shows no rail title. */
   hideActiveName?: boolean;
 }
 
 export const CORRIDOR_MOUNT_ID = "home-corridor-mount";
+
+/**
+ * The title the rail marker reveals on hover for a given entry — or
+ * `null` when the entry has none (ADR-031 Update 9, the detent diamond).
+ * `hero` hides its rail title (hero canon), and future interstitial
+ * slides can opt out the same way (`hideActiveName: true`, or an empty
+ * `name`). One place so the controller and any test agree on the rule.
+ */
+export function manifestTitle(entry: ManifestEntry): string | null {
+  return entry.hideActiveName || !entry.name?.trim() ? null : entry.name;
+}
 
 export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
   {
@@ -81,17 +95,35 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     corridorPhase: "thesis",
     scrollFraction: 0,
   },
+  // ── The Arc's three beats (Update 9 — was one "arc" entry). The
+  // diamond visits each park; `data-corridor-phase` advances at the
+  // shared hand-offs (0.2 / 0.48 / 0.78 in paintProgress). ──
   {
-    id: "arc",
+    id: "navigate",
     label: "03",
-    name: "Arc",
+    name: "Navigate",
     kind: "corridor",
     targetId: CORRIDOR_MOUNT_ID,
-    corridorPhase: "arc",
-    // Provisional — tuned against where data-corridor-phase actually
-    // flips to "arc" (ADR-031; verify live).
-    scrollFraction: 0.35,
-    glyph: "stack",
+    corridorPhase: "navigate",
+    scrollFraction: 0.3,
+  },
+  {
+    id: "encode",
+    label: "03",
+    name: "Encode",
+    kind: "corridor",
+    targetId: CORRIDOR_MOUNT_ID,
+    corridorPhase: "encode",
+    scrollFraction: 0.48,
+  },
+  {
+    id: "build",
+    label: "03",
+    name: "Build",
+    kind: "corridor",
+    targetId: CORRIDOR_MOUNT_ID,
+    corridorPhase: "build",
+    scrollFraction: 0.7,
   },
   {
     id: "services",
@@ -99,39 +131,18 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     name: "Services",
     kind: "station",
     targetId: "services",
-    glyph: "stack",
   },
   {
     // The navigator is the third brand pillar (ADR-033; replaced the
     // retired "Products"/#tools entry — the cases live in the Arc's
-    // Build-park orbit now).
+    // Build-park reveal now).
     id: "about",
     label: "09",
     name: "About",
     kind: "station",
     targetId: "about",
-    glyph: "stack",
   },
   { id: "continuum", label: "05", name: "Continuum", kind: "station", targetId: "continuum" },
   { id: "practice", label: "06", name: "Practice", kind: "station", targetId: "practice" },
   { id: "contact", label: "10", name: "Contact", kind: "station", targetId: "contact" },
 ] as const;
-
-/**
- * The rows the rolodex actually RENDERS — the three brand pillars
- * (Arc / Services / About), curated down from the full journey
- * (owner, 2026-07-13: pillars are the "most important elements" set;
- * About replaced Products with ADR-033). They are exactly the
- * `glyph: "stack"` entries. The full `MANIFEST_ENTRIES` is untouched:
- * it still drives active-index resolution, corridor phases, and click
- * targets; only what the rail DISPLAYS is reduced. `RAIL_ROW_INDICES`
- * are each pillar's index back in the full journey, so the controller
- * can derive per-row state.
- */
-export const RAIL_ROWS: readonly ManifestEntry[] = MANIFEST_ENTRIES.filter(
-  (e) => e.glyph === "stack"
-);
-
-export const RAIL_ROW_INDICES: readonly number[] = RAIL_ROWS.map((e) =>
-  MANIFEST_ENTRIES.indexOf(e)
-);

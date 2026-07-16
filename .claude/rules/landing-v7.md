@@ -61,41 +61,39 @@ it in place. Never `createRoot` into `[data-rail-manifest-root]` (it
 clobbers the server skeleton); keep the shell markup in the prototype
 HTML byte-exact (the parse regex + `tests/lib/rail-manifest.test.ts`
 pin it); journey order lives in `lib/rail-manifest/entries.ts` under a
-drift-guard test. The reel detent (Update 3 rolodex) is a 350ms
-transform transition gated behind `data-ready`, and its position is a
-pure function of `activeIdx` — never scroll-scrubbed, no new scroll
-writers; the glyph confirm stays quantized `steps()`; still no FLIP
-flights (retired, ADR-030 Updates 1–3). The 13-tick ladder always
-stays (ADR-031 Update 2).
+drift-guard test. The marker detent (Update 9 diamond) is a 350ms `top`
+glide gated behind `data-ready`, and its position is a pure function of
+`activeIdx` into a layout-computed detent table — never scroll-scrubbed,
+no new scroll writers (recompute the table on resize/layout only). The
+13-tick ladder always stays (ADR-031 Update 2).
 
-**The rolodex is the three brand pillars (ADR-031 Update 6; roster
-ADR-033).** The rail renders ONLY **Arc / Services / About** —
-`RAIL_ROWS = MANIFEST_ENTRIES.filter(glyph === "stack")` — not the full
-journey; do NOT re-expand it to every row (that's a deliberate reversal
-now). `MANIFEST_ENTRIES` stays the full 8-entry journey and still drives
-`resolveActiveIdx` + click targets — only what the rail DISPLAYS is
-curated. Each pillar's state (`upcoming`/`active`/`seated`) is a pure
-function of its journey index vs the resolved active index; the reel
-slides to the active/last-reached pillar; dimming is state-based (all
-three stay readable). The retired "Products"/`#tools` pillar is gone
-with its station (ADR-033) — do not re-add a tools entry.
-A separate loadout bay was tried and retired (Update 5) — do NOT
-reintroduce `RailLoadout`/`data-rail-loadout-root` or a charge gauge.
-Keep the shared `resolveActiveIdx.ts` + `clickToNavigate.ts`. The
-rolodex is **dormant until the Arc** (`activeIdx < ARC_IDX` — hidden
-through hero AND thesis; Update 7).
-
-**The rolodex is a terminal list, not an icon menu (ADR-031 Update 8).**
-The per-row folded-card glyph is RETIRED — rows are bare name buttons;
-the active pillar is marked by a CSS **terminal selection bar**
-(`.rail-manifest__name` inverse-video: gold fill, void ink, gold bloom).
-No per-row marker or caret sits beside the titles — the fill IS the mark
-(Update 8: the caret tick was tried then removed). Do NOT reinstate a
-per-row glyph, marker, or caret.
-`MANIFEST_ENTRIES[].glyph` stays as the pillar tag but does not render.
-Rolodex type is **13px** — deliberately LARGER than the 11px right-rail
-register (the two rails are a pair, not twins); do not shrink it to
-match the register.
+**The left rail is a single detent diamond (ADR-031 Update 9, supersedes
+the Update 3/6/7/8 rolodex).** The rail DISPLAYS one gold diamond (12px,
+`.rail-manifest__diamond`, centred on the 2px rail track) that snaps to a
+detent per journey entry — EVERY `MANIFEST_ENTRIES` row plus future
+interstitials, at BEAT granularity in the corridor: hero → thesis →
+**Navigate → Encode → Build** → services → about → continuum → practice
+→ contact (the single "arc" entry is retired; the diamond follows the
+corridor's structure, not just section boundaries). Do NOT re-add the
+rolodex reel, the 3-pillar roster, per-row buttons, or the terminal
+selection bar. Detent positions are scroll-PROPORTIONAL (each entry's
+real scroll offset normalized 0..1 via `detentTable.ts` +
+`scrollTargetForEntry` in `clickToNavigate.ts`; the corridor beats sit at
+their parks — paintProgress × EPILOGUE_START → fractions 0.30/0.48/0.70),
+recomputed on mount/resize/`ResizeObserver` only — the position write
+(`--rail-diamond-top`) stays a pure function of the active index; do NOT
+scroll-scrub it or add a per-frame scroll writer. The active corridor
+beat comes from `data-corridor-phase`, which now publishes
+`thesis|navigate|encode|build` (single writer: the CorridorStationHeaders
+RAF, hand-offs `CORRIDOR_BEAT_ENTER` 0.2/0.48/0.78 — MIRRORS
+CorridorProgressRail's STAGES band starts, keep in lockstep). The diamond
+is visible from the hero (owner). On hover/focus it reveals the active
+entry's title via a hidden `.rail-manifest__title` chip, gated on
+`data-has-title`; `manifestTitle(entry)` (`entries.ts`) is `null` for
+`hideActiveName` (hero) or a blank `name` (interstitials), so those
+reveal nothing. `RAIL_ROWS`/`glyph` are REMOVED. A separate loadout bay
+was tried and retired (Update 5) — do NOT reintroduce
+`RailLoadout`/`data-rail-loadout-root`.
 
 **Rail uniformity — each pillar: name on the left, sub-items on the
 right (ADR-031 Updates 7–8).** During the Arc the right rail carries
@@ -109,15 +107,15 @@ Do NOT move the Arc register back to a top-centre breadcrumb; pure read
 of `paintProgress`, no new scroll writer. **Both registers share one
 grid (Update 8):** they hang off mid-rail via
 `calc(50% ± n·var(--rail-register-pitch))` (NOT the old
-33.3/41.7/50/58.3%vh gauge), centred on the same midline the rolodex
-centres its active pillar on (`--rail-row-pitch` / `--rail-register-pitch`
-in `variables.css`). Keep the Arc and Services registers on the SAME
-token — tighten/space them together, never one alone. **Active
-signature = underline** (Update 8): the active row is marked by a gold
-`text-decoration` underline (both registers), NOT a filled diamond — the
-diamond markers stay passive outline ticks. This is the right-rail
-counterpart to the left rolodex's full-frame fill; keep the pair (left
-fill / right underline) distinct.
+33.3/41.7/50/58.3%vh gauge), centred on the viewport midline
+(`--rail-register-pitch` in `variables.css`). Keep the Arc and Services
+registers on the SAME token — tighten/space them together, never one
+alone. **Active signature = underline** (Update 8): the active row is
+marked by a gold `text-decoration` underline (both registers), NOT a
+filled diamond — the diamond markers stay passive outline ticks. (The
+LEFT rail is now the Update 9 travelling detent diamond, not the terminal
+rolodex — the two rails are still a deliberate pair, but the left's mark
+is the single gold diamond, the right's is the register underline.)
 
 **Process**
 
