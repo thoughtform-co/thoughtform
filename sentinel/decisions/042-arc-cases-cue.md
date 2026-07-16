@@ -120,3 +120,75 @@ and opens the tools card on click.
 built"), the leader length / drip cadence, and whether the armed state should
 retitle the label (currently static, `aria-expanded` + a solid underline carry
 the open state).
+
+## Addendum (2026-07-16) — owner aesthetic pass: dashed bracket + appear-with-title
+
+Two owner-requested refinements to the cue, both within the "aesthetic pass"
+reserved above. The arm gate and the reveal are UNCHANGED; only the cue's
+presentation and its VISUAL fade-in clock moved.
+
+1. **The leader became a dashed bracket.** The single vertical
+   `.home-v2-cases-cue__leader` under the label is replaced by two flanking
+   `.home-v2-cases-cue__rule` hairlines (`--left` / `--right`) that run out to
+   the title's TEXT edges, each with a short vertical connector (`::before`)
+   rising toward the ends of "BUILD … LAYER". The label's own dashed underline
+   is dropped — the flanking rules are the "line" now. The rules are inset by
+   `padding-inline: clamp(18px, 2.2vw, 30px)` (mirroring the `--title` console
+   side padding) so the connectors align to the title text, not the padded
+   console box. The drip bead is retired for an inward bead drift along each
+   rule toward the label, armed-only.
+
+2. **The cue now fades in WITH the Build title, not at the park.** ADR-042 §2
+   coupled the cue's opacity to the arm gate (`.is-armable` fades it in only
+   once the notes settle). That is decoupled: the cue's own `opacity` is `1`,
+   so it INHERITS the Build station header container's fade (`BUILD_FADE_IN`) —
+   it appears in step with "BUILD ON THE LAYER". Interactivity is UNCHANGED:
+   `sigilSettle(stack) ≥ ARM_SETTLE` still gates `inert` + `.is-armable`, so the
+   reveal still can't be offered before the frame it lands in exists; between
+   title-arrival and settle the cue is visible-but-inert, then `.is-armable`
+   activates the click + the bead drift. The old `[inert] { visibility: hidden }`
+   hide is removed (the header container's own opacity keeps the cue invisible
+   off the Build beat). Smoke contract preserved: still inert mid-corridor and
+   while the notes accrete, live + `.is-armable` at the park.
+
+## Addendum 2 (2026-07-16) — bracket clamp to the title + staged reveal
+
+3. **The bracket is clamped to the visible title width.** The flanking rules span
+   the title console (via the `padding-inline` mirror), but the Build title's
+   trailing typewriter caret (`.home-v2-station-header__cursor`, a ~36px block
+   glyph) widened the title box, so the right connector overshot the visible
+   "LAYER." by the caret width. Fix, scoped to the Build title only via
+   `.home-v2-station-header__headgroup:has(.home-v2-cases-cue) …__cursor`: the
+   caret is set to `width: 0; margin-left: 0; overflow: visible` — it still paints
+   and blinks at the text end, but no longer contributes layout width. The title
+   box now measures the visible glyphs, so the bracket (and the centred label)
+   hug "BUILD … LAYER." symmetrically and never exceed it. Verified live: left
+   connector at the "B" edge, right connector at the "." edge, cue centred on the
+   visible-title centre.
+
+4. **The cue reveals in two staged beats.** A new `.is-revealed` class (added by
+   the component's rAF the frame the Build header container opacity crosses
+   `REVEAL_ARRIVE` 0.5 — the same threshold the title typewriter arms at, and
+   removed below `REVEAL_REARM` 0.04 so it replays on re-approach) drives a CSS
+   sequence: (a) SEE TOOLS types in via a `steps()` clip wipe with a block caret
+   that blinks a few beats, then (b) the two rules unfold OUTWARD from the centre
+   via `scaleX` from each INNER edge (`transform-origin` right/left), each
+   carrying its vertical connector to the tip. **The unfold uses `scaleX`, NOT
+   `clip-path`** — the connector (`::before`) sits ABOVE the rule's ~0-height box,
+   and a `clip-path: inset(0)` end-state shears it off (the "missing dividers"
+   bug); `scaleX` scales without clipping. This is INDEPENDENT of the click arm
+   gate (`.is-armable` / `sigilSettle`), so the reveal plays with the title while
+   interactivity still waits for the notes to settle. Reduced motion (already
+   `display: none` for the whole cue) also has a transform/animation reset as a
+   belt-and-suspenders.
+
+5. **The tools card materialises a touch faster on click** (ADR-036/041 reveal
+   timing tuning, not a contract change). `ARC_ARM_RATE` 2.2 → 2.4 and
+   `ARC_CARD_PHASE` upper bound 1 → 0.9 in `lib/arc-cases/arcCasesMath.ts`: the
+   arm level damps a little quicker and the card reaches FULL presence at level
+   0.9 (decisively) instead of crawling up the damp's asymptotic tail toward 1.
+   The fold→card ORDERING is untouched — `ARC_CARD_PHASE[0]` stays `ARC_FOLD_DONE`
+   (0.62), so the card still has zero presence until the fold lands; the fold now
+   completes ≈403 ms in (was ≈440 ms), still safely inside the smoke's 360 ms fold
+   window. `arc-cases-math` pins stay green (clamping keeps `arcCardPresence(1)`
+   at 1).

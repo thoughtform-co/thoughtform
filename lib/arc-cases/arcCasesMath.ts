@@ -28,10 +28,12 @@ export function stepSlot(slot: number, dir: 1 | -1): number {
   return (((slot + dir) % CASE_COUNT) + CASE_COUNT) % CASE_COUNT;
 }
 
-/** Exponential damp rate (per second) for the arm level — ≈0.45s to
- *  settle. The ONLY clock the reveal owns (disarm plays it backwards);
- *  everything else is scroll-owned band gating. */
-export const ARC_ARM_RATE = 2.2;
+/** Exponential damp rate (per second) for the arm level — ≈0.4s to settle.
+ *  The ONLY clock the reveal owns (disarm plays it backwards); everything else
+ *  is scroll-owned band gating. Bumped 2.2 → 2.4 (2026-07-16) so the tools card
+ *  materialises a touch faster on click; the fold still completes ≈403 ms in
+ *  (−ln(1−ARC_FOLD_DONE)/rate), safely inside the smoke's fold window. */
+export const ARC_ARM_RATE = 2.4;
 
 /** Frame-rate-independent exponential damp toward `target`. */
 export function dampLevel(
@@ -120,10 +122,13 @@ export function arcFoldInput(level: number): number {
 /** Level window across which the CARD materializes — opens exactly as the
  *  fold lands (`ARC_FOLD_DONE`, so the ordering is strict: the card has
  *  ZERO presence for any level at which the fold is not yet complete) and
- *  finishes at full arm. Because `smootherstep` is flat at its start the
- *  card emerges gently right off the latch, so there's no dead beat
- *  between the nodes arriving and the screen appearing. */
-export const ARC_CARD_PHASE: readonly [number, number] = [ARC_FOLD_DONE, 1];
+ *  finishes just BELOW full arm (0.9, 2026-07-16) so the card reaches full
+ *  presence decisively instead of crawling up the damp's asymptotic tail —
+ *  it reads as appearing a touch quicker on click. Because `smootherstep` is
+ *  flat at its start the card still emerges gently right off the latch, so
+ *  there's no dead beat between the nodes arriving and the screen appearing.
+ *  The lower bound is unchanged, so the fold→card ordering invariant holds. */
+export const ARC_CARD_PHASE: readonly [number, number] = [ARC_FOLD_DONE, 0.9];
 
 /** Card presence 0..1 as a function of the arm level: 0 until the fold is
  *  essentially done (`ARC_CARD_PHASE[0]`), smoothersteps up to 1 at full

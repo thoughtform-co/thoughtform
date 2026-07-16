@@ -31,7 +31,7 @@ describe("dampLevel", () => {
       expect(level).toBeLessThanOrEqual(1);
       prev = level;
     }
-    expect(level).toBeGreaterThan(0.85); // ~1s at rate 2.2
+    expect(level).toBeGreaterThan(0.85); // ~1s at rate 2.4
   });
 
   it("is frame-rate independent (many small steps ≈ few large steps)", () => {

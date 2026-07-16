@@ -170,8 +170,8 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041 / ADR-042)", () => {
   //
   // Each sample is TIME-STAMPED and the assertion is scoped to the fold window
   // rather than to a fixed sample count: the fold completes when the damped arm
-  // level reaches ARC_FOLD_DONE (0.62), i.e. −ln(1 − 0.62) / ARC_ARM_RATE(2.2)
-  // ≈ 440 ms. A fixed 5×90 ms probe straddled that edge and caught the card's
+  // level reaches ARC_FOLD_DONE (0.62), i.e. −ln(1 − 0.62) / ARC_ARM_RATE(2.4)
+  // ≈ 403 ms. A fixed 5×90 ms probe straddled that edge and caught the card's
   // very first frame (0.004) — a probe artifact, not a violation. FOLD_WINDOW_MS
   // keeps a margin below the real boundary so scheduling jitter can't flake it.
   test("ORDERING: the card has zero presence while the nodes are still folding", async ({
@@ -181,7 +181,7 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041 / ADR-042)", () => {
     await scrollToStageProgress(page, BUILD_PARK_RAW);
     await page.waitForTimeout(800);
 
-    /** Safely inside the ~440 ms fold; see the note above. */
+    /** Safely inside the ~403 ms fold; see the note above. */
     const FOLD_WINDOW_MS = 360;
 
     const trace = await page.evaluate(async () => {

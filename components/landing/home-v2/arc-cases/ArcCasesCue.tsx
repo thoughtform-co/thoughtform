@@ -2,9 +2,11 @@
 
 /**
  * ArcCasesCue — the "VIEW THE CASES" trigger (ADR-042, supersedes the ADR-041
- * sphere-welded `ArcCasesSigil`). A subtle dotted-leader + label that docks
+ * sphere-welded `ArcCasesSigil`). A subtle dashed-bracket + label that docks
  * DIRECTLY UNDER the Build station title ("BUILD ON THE LAYER"), where the
- * pre-ADR-041 chip lived. It rides the Build header's `__head` band (the RAF in
+ * pre-ADR-041 chip lived: a hairline rule flanks the label left/right out to
+ * the title's edges, each outer end rising in a short vertical connector toward
+ * "BUILD … LAYER". It rides the Build header's `__head` band (the RAF in
  * `CorridorStationHeaders` fades that container in on the Build beat and out on
  * the epilogue), so the cue inherits the station's scroll-in / scroll-out for
  * free — this component owns only the button, its arm gate, and its
@@ -50,6 +52,14 @@ import { ARC_CASES_MEDIA } from "../arcCasesCard";
  *  trigger should take no focus and offer no click. */
 const ARM_SETTLE = 0.5;
 
+/** Build-header container opacity at which the staged REVEAL (SEE TOOLS type-in
+ *  → rules unfold) arms, and below which it re-arms. Mirrors the station
+ *  typewriter's ARRIVE / REARM so the cue reveals in lockstep with the Build
+ *  title typing in — independent of the click arm gate (`ARM_SETTLE`), which
+ *  still waits for the notes to settle. */
+const REVEAL_ARRIVE = 0.5;
+const REVEAL_REARM = 0.04;
+
 function ArcCasesCueButton() {
   const armed = useArcCasesStore((s) => s.armed);
   const toggle = useArcCasesStore((s) => s.toggle);
@@ -64,6 +74,8 @@ function ArcCasesCueButton() {
   // which is what lets a second click / Escape close it.
   useEffect(() => {
     let raf = 0;
+    let revealed = false;
+    let container: HTMLElement | null = null;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const host = hostRef.current;
@@ -74,6 +86,22 @@ function ArcCasesCueButton() {
       const armable = parked && settle >= ARM_SETTLE;
       host.toggleAttribute("inert", !armable);
       host.classList.toggle("is-armable", armable);
+
+      // Staged reveal (SEE TOOLS type-in → rules unfold) arms WITH the Build
+      // title, NOT with the click gate. The CorridorStationHeaders RAF is the
+      // single writer of the Build header container's opacity, so reading it
+      // here fires the CSS reveal on the same frame the title's typewriter arms
+      // (same ARRIVE / REARM thresholds). Scroll back out → re-arm so it
+      // replays. The click gate (`.is-armable` above) still waits for settle.
+      if (!container) container = host.closest<HTMLElement>(".home-v2-station-header");
+      const bandOp = container ? parseFloat(container.style.opacity || "0") : 0;
+      if (!revealed && bandOp >= REVEAL_ARRIVE) {
+        revealed = true;
+        host.classList.add("is-revealed");
+      } else if (revealed && bandOp < REVEAL_REARM) {
+        revealed = false;
+        host.classList.remove("is-revealed");
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -102,9 +130,11 @@ function ArcCasesCueButton() {
 
   return (
     <div ref={setHostRef} className="home-v2-cases-cue" data-armed={armed ? "true" : "false"}>
-      {/* The subtle dotted leader — a hairline dashed rule dropping from the
-          Build title down to the label, tying the invitation to the phase. */}
-      <span className="home-v2-cases-cue__leader" aria-hidden="true" />
+      {/* Dashed bracket (ADR-042 owner aesthetic pass): a hairline rule flanks
+          the label on each side, running out toward the title's edges, with a
+          short vertical tick at each OUTER end rising toward the ends of
+          "BUILD … LAYER" — the leader no longer sits under the label. */}
+      <span className="home-v2-cases-cue__rule home-v2-cases-cue__rule--left" aria-hidden="true" />
       <button
         type="button"
         className="home-v2-cases-cue__btn"
@@ -115,6 +145,7 @@ function ArcCasesCueButton() {
       >
         <span className="home-v2-cases-cue__label">See tools</span>
       </button>
+      <span className="home-v2-cases-cue__rule home-v2-cases-cue__rule--right" aria-hidden="true" />
     </div>
   );
 }
