@@ -62,7 +62,11 @@ import {
 import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
 import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
-import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
+import {
+  SERVICES_CARD_RING,
+  SERVICES_CARTRIDGE_DOCK,
+  UNIFIED_SERVICES_ARMILLARY,
+} from "../unifiedServicesInstrument";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
@@ -876,9 +880,17 @@ export function BrandmarkPhysicsCoreActor({
       const engaged = UNIFIED_SERVICES_ARMILLARY && recT > 0.9;
       const k = Math.min(1, delta * 4);
 
+      // Cartridge-dock stillness (ADR-046): as the exit clock runs, the
+      // pointer-look + per-service pose damp OUT so the whole instrument
+      // eases frontal while the cards fly to their seats — the seat
+      // targeting compensates live matrices anyway, but a still parent
+      // keeps the flight legible. `exitT` already carries the recT product
+      // and the flag-off path multiplies by exactly 1 (byte-identical).
+      const dockStill = SERVICES_CARTRIDGE_DOCK ? 1 - exitT : 1;
+
       // Pointer-look channel — nudge toward the cursor when parked.
-      const tgtPitch = engaged ? pointerTargetRef.current.pitch : 0;
-      const tgtYaw = engaged ? pointerTargetRef.current.yaw : 0;
+      const tgtPitch = engaged ? pointerTargetRef.current.pitch * dockStill : 0;
+      const tgtYaw = engaged ? pointerTargetRef.current.yaw * dockStill : 0;
       const damp = pointerDampRef.current;
       damp.pitch += (tgtPitch - damp.pitch) * k;
       damp.yaw += (tgtYaw - damp.yaw) * k;
@@ -886,8 +898,8 @@ export function BrandmarkPhysicsCoreActor({
       // Per-service settle channel — hold a distinct bounded pose per active
       // service; eases to frontal when not parked so the dive/corridor are
       // unaffected. Composes additively under the billboard + gentle drift.
-      const poseTgtPitch = engaged ? servicePoseTargetRef.current.pitch : 0;
-      const poseTgtYaw = engaged ? servicePoseTargetRef.current.yaw : 0;
+      const poseTgtPitch = engaged ? servicePoseTargetRef.current.pitch * dockStill : 0;
+      const poseTgtYaw = engaged ? servicePoseTargetRef.current.yaw * dockStill : 0;
       const pose = servicePoseDampRef.current;
       pose.pitch += (poseTgtPitch - pose.pitch) * k;
       pose.yaw += (poseTgtYaw - pose.yaw) * k;

@@ -12,7 +12,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
-import { ServicesPortal } from "@/components/landing/home-v2/services";
+import { ServicesCartridgeDock, ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -359,14 +359,12 @@ export function LandingPage({
       });
     });
 
-    const voidwalker = root.querySelector<HTMLElement>(".voidwalker");
-    if (voidwalker) {
-      voidwalker.setAttribute("data-m-group", "");
-      const orbit = voidwalker.querySelector(".voidwalker__orbit");
-      if (orbit) orbit.setAttribute("data-m", "instrument");
-      const copy = voidwalker.querySelector(".voidwalker__copy");
-      if (copy) tagIfEmpty(copy, "body");
-    }
+    // #about (.voidwalker) reveal attributes are AUTHORED in the prototype
+    // markup since the 2026-07-16 emerge rework (ADR-045): the portrait
+    // clip-wipes in first, then the orbit svg / particles / corner readouts
+    // stagger around it. No JS tagging here — and no parallax on
+    // `.voidwalker__orbit` (retired the same day; the cluster must sit
+    // welded to the bio column while the emerge plays).
 
     const contact = root.querySelector<HTMLElement>(".contact");
     if (contact) {
@@ -387,7 +385,6 @@ export function LandingPage({
     const parallaxMap: Array<[string, number]> = [
       [".hero__video", 0.03],
       [".tri__center", 0.04],
-      [".voidwalker__orbit", 0.06],
       [".build-quote__gateway__img", 0.04],
     ];
     parallaxMap.forEach(([selector, speed]) => {
@@ -497,6 +494,12 @@ export function LandingPage({
       {/* Top-right HUD nav: inline links in the hero that collapse into
           a right-rail-aligned hamburger once the hero scrolls away. */}
       <HudNav />
+      {/* Bottom-right cartridge dock (ADR-046): the fixed HUD console the
+          four WebGL service cards seat into across the services exit beat,
+          persisting for the rest of the page. Mounted HERE (never inside a
+          station — containment rebases fixed descendants, the ADR-030 pill
+          lesson) with zero store subscriptions (render-stability rule). */}
+      <ServicesCartridgeDock />
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve
           re-render can't replace the dangerouslySetInnerHTML markup

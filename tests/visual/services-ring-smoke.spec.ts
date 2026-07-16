@@ -93,14 +93,70 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // The readout tracks the same active-service clock (service 01).
     await expect(page.locator(".services-readout")).toContainText("ADVISORY");
 
-    // SOURCE BUS register (ADR-033 split — the services half of the
-    // retired ToolsRailRegister) renders its four verb rows in the
-    // authored right-rail slot, with the active row tracking service 01.
-    await expect(page.locator(".tools-rail-register__heading--services")).toHaveText(
-      "SOURCE BUS · 04"
-    );
-    await expect(page.locator(".tools-rail-register__row--service")).toHaveCount(4);
-    await expect(page.locator(".tools-rail-register__row--service[data-active]")).toHaveCount(1);
+    // The SOURCE BUS right-rail register is RETIRED (ADR-044) — the
+    // section masthead carries the services title/intro instead. The
+    // masthead is pure DOM (ring mode only), title left / intro right.
+    await expect(page.locator(".tools-rail-register__heading--services")).toHaveCount(0);
+    await expect(page.locator(".services-masthead")).toHaveCount(1);
+    await expect(page.locator(".services-masthead__title")).toContainText("ONE PRACTICE.");
+  });
+
+  test("desktop: the exit beat seats the cartridge dock; it persists and returns", async ({
+    page,
+  }) => {
+    test.skip(!isDesktopViewport(page), "the dock is desktop-only (ring gate, ADR-046)");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 15_000 });
+
+    // Reading beats: the dock exists in the DOM but is dormant — hidden,
+    // inert, every bay empty (exit clock is 0, byte-identical guardrail).
+    expect(await scrollServicesRunway(page, 0.3)).toBe(true);
+    await page.waitForTimeout(1600);
+    const dock = page.locator(".svc-dock");
+    await expect(dock).toHaveCount(1);
+    await expect(dock).toBeHidden();
+    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(0);
+
+    // Mid-exit (p≈0.87 → exitP≈0.22): the fixture is live but no card has
+    // reached its seat swap yet.
+    expect(await scrollServicesRunway(page, 0.87)).toBe(true);
+    await page.waitForTimeout(900);
+    await expect(dock).toHaveAttribute("data-live", "");
+    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(0);
+
+    // Deeper (p≈0.92 → exitP≈0.52): the stagger has seated card 0 while
+    // the front card (3) is still in flight.
+    expect(await scrollServicesRunway(page, 0.92)).toBe(true);
+    await page.waitForTimeout(900);
+    await expect(page.locator(".svc-dock__bay").first()).toHaveAttribute("data-state", "seated");
+    await expect(page.locator(".svc-dock__bay").last()).toHaveAttribute("data-state", "empty");
+
+    // Runway end + walk into #about: all four seated, dock persists as
+    // fixed chrome over the opaque cover (seated state is a pure function
+    // of runway progress, which clamps at 1 below the runway).
+    expect(await scrollServicesRunway(page, 1)).toBe(true);
+    await page.waitForTimeout(900);
+    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(4);
+    const aboutY = await page.evaluate(() => {
+      const about = document.getElementById("about");
+      if (!about) return null;
+      return Math.round(about.getBoundingClientRect().top + window.scrollY + 80);
+    });
+    expect(aboutY).not.toBeNull();
+    await page.evaluate((y) => window.scrollTo(0, y as number), aboutY);
+    await page.waitForTimeout(900);
+    await expect(dock).toBeVisible();
+    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(4);
+
+    // A seated cartridge is a real button: clicking bay 2 glides the page
+    // back to service 02's beat (the tween is the ring's speed ramp).
+    await page.locator(".svc-dock__bay").nth(1).click();
+    await page.waitForTimeout(2600);
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
+    await expect(page.locator(".services-readout")).toContainText("EMBEDDED");
+    // Back on a reading beat, the dock is dormant again (reversible).
+    await expect(dock).toBeHidden();
   });
 
   test("desktop: the services → about seam ends the ambient hold under the bio cover", async ({
@@ -283,6 +339,13 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".svc-plate")).toHaveCount(4);
     // No ring overlays mount below the desktop gate.
     await expect(page.locator(".svc-ring-hits")).toHaveCount(0);
+    // The cartridge dock never materializes below the gate (ADR-046):
+    // CSS belt-hides it and the JS gate keeps it dormant.
+    const dockDisplay = await page
+      .locator(".svc-dock")
+      .evaluate((el) => getComputedStyle(el).display)
+      .catch(() => "none");
+    expect(dockDisplay).toBe("none");
   });
 
   test("reduced motion keeps the accordion and mounts no ring overlays", async ({ browser }) => {
@@ -300,6 +363,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     await expect(page.locator(".svc-plate")).toHaveCount(4);
     await expect(page.locator(".svc-ring-hits")).toHaveCount(0);
+    // The dock is display:none under reduced motion (ADR-046 gate parity).
+    const dockDisplay = await page
+      .locator(".svc-dock")
+      .evaluate((el) => getComputedStyle(el).display)
+      .catch(() => "none");
+    expect(dockDisplay).toBe("none");
     await context.close();
   });
 });

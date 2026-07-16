@@ -11,6 +11,7 @@ import { ServicesStationReadout } from "./ServicesStationReadout";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { servicesBeatScrollTarget } from "@/lib/services-ring/beatScrollTarget";
 import { startRingScrollTween } from "@/lib/services-ring/ringScrollTween";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
@@ -104,24 +105,16 @@ export function ServicesStage() {
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
       (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
     const runway = stageRef.current?.parentElement; // .services-stage-root
-    if (inert || !runway) {
+    // Beat-target math is shared with the cartridge dock's seated buttons
+    // (ADR-046) via `servicesBeatScrollTarget` — service i opens on step
+    // i+1 of the 6-beat runway; aim for the middle of its beat. `null`
+    // covers the unmeasurable / no-travel cases alongside the inert gate.
+    const targetY = inert || !runway ? null : servicesBeatScrollTarget(index, runway);
+    if (targetY === null) {
       setActiveServiceId(serviceId);
       setExpandedServiceId(serviceId);
       return;
     }
-    const vh = window.innerHeight || 1;
-    const rect = runway.getBoundingClientRect();
-    const travel = rect.height - vh;
-    if (travel <= 0) {
-      setActiveServiceId(serviceId);
-      setExpandedServiceId(serviceId);
-      return;
-    }
-    // Service i opens on step i+1 of `services + 2` scroll beats (step 0 is
-    // the collapsed lead-in; the last beat is the ADR-030 exit hold); aim
-    // for the middle of service i's beat.
-    const stepCount = SERVICES.length + 2;
-    const targetY = window.scrollY + rect.top + ((index + 1.5) / stepCount) * travel;
     if (SERVICES_CARD_RING) {
       // Ring mode: the runway scroll owns the ring rotation, so the snap
       // rides an explicit smootherstep tween — the ring's speed ramp IS

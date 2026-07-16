@@ -2237,6 +2237,11 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
 [data-m="instrument"]  { transform: translateY(8px) scale(0.97); filter: blur(2px);
   transition-duration: var(--m-dur-slow); transition-timing-function: var(--m-ease-long); }
 [data-m="fade"]        { transform: none; transition-duration: var(--m-dur-slow); }
+/* the about portrait card: title-grade rise + top-down clip wipe (ADR-045).
+   Centering must NOT live on the transform channel — see the
+   .voidwalker__orbit__portrait inset/margin centering. */
+[data-m="portrait"]    { transform: translateY(var(--m-shift)); clip-path: inset(0 0 100% 0);
+  transition-duration: var(--m-dur-slow); }
 
 /* Reveal state — triggered by IO via .is-in or by is-ready on initial hero.
    Doubled attr selector bumps specificity (0,3,0) so it wins over role
@@ -3960,8 +3965,10 @@ html { scroll-behavior: smooth; }
 }
 .voidwalker__orbit__portrait {
   position: absolute;
-  left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
+  /* inset+margin centering: the transform channel belongs to the
+     data-m="portrait" emerge (reveal writes transform; PRM writes
+     transform: none) — ADR-045 */
+  inset: 0; margin: auto;
   width: 52%; aspect-ratio: 3 / 4;
   overflow: hidden;
   background: var(--void);
@@ -4046,15 +4053,35 @@ html { scroll-behavior: smooth; }
 .voidwalker__orbit__particles {
   position: absolute; inset: 0; pointer-events: none;
 }
+/* Each span is a rotated DIAMETER ARM with the dot on its top tip, so the
+   authored --r reads as a percentage of the ORBIT (a translateY % on the
+   3px dot itself resolved against its own height — the halo collapsed to
+   the center, hidden behind the portrait). ADR-045 fix. */
 .voidwalker__orbit__particles span {
   position: absolute; left: 50%; top: 50%;
-  width: 3px; height: 3px;
-  background: var(--gold); border-radius: 50%;
-  transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(calc(var(--r, 40%) * -1));
+  width: 3px; height: calc(var(--r, 40%) * 2);
+  transform: translate(-50%, -50%) rotate(var(--a, 0deg));
   opacity: var(--o, 0.8);
+}
+.voidwalker__orbit__particles span::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 3px; border-radius: 50%;
+  background: var(--gold);
   box-shadow: 0 0 6px rgba(202,165,84,0.6);
 }
-.voidwalker__orbit__particles span.d { background: var(--dawn); box-shadow: none; opacity: 0.5; width: 2px; height: 2px; }
+.voidwalker__orbit__particles span.d { opacity: 0.5; }
+.voidwalker__orbit__particles span.d::before { background: var(--dawn); box-shadow: none; width: 2px; height: 2px; }
+
+/* ── ABOUT emerge (ADR-045): portrait first, instrument cluster around it.
+   Orbit child --m-i order (DOM): tl 0 · tr 1 · bl 2 · br 3 · svg 4 ·
+   particles 5 · portrait 6. Selectors stay ≤ (0,2,0) so the generic
+   [data-m][data-m].is-in reveal keeps winning. */
+.voidwalker__orbit__label--tr[data-m],
+.voidwalker__orbit__label--br[data-m] { clip-path: inset(0 0 0 100%); }
+.voidwalker__orbit__portrait[data-m]  { transition-delay: 0ms; }
+.voidwalker__orbit__svg[data-m]       { transition-delay: calc(6 * var(--m-stagger)); }
+.voidwalker__orbit__particles[data-m] { transition-delay: calc(8 * var(--m-stagger)); }
+.voidwalker__orbit__label[data-m]     { transition-delay: calc((9 + var(--m-i, 0)) * var(--m-stagger)); }
 
 /* ═══════════════════════════════════════════════════════════════════
    v17 — CELESTIAL CONNECTORS
@@ -5352,9 +5379,9 @@ html { scroll-behavior: smooth; }
   <section class="station" id="about" data-station="about" data-screen-label="09 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
-    <div class="voidwalker">
+    <div class="voidwalker" data-m-group>
       <!-- LEFT · bio -->
-      <div class="voidwalker__copy" data-m-group>
+      <div class="voidwalker__copy" data-m="body" data-m-group>
         <h2 class="voidwalker__name" data-m="title">
           Vince Buyssens<br>
           <em>// Voidwalker.</em>
@@ -5408,24 +5435,28 @@ html { scroll-behavior: smooth; }
         </div>
       </div>
 
-      <!-- RIGHT · orbital portrait -->
-      <div class="voidwalker__orbit" aria-hidden="true">
+      <!-- RIGHT · orbital portrait. Emerge order (ADR-045): the portrait
+           lands first, then the ring svg / particle halo / corner readouts
+           stagger in around it — delays live in the ABOUT emerge CSS block.
+           data-m attrs are authored here (not JS-tagged); DOM order is
+           paint order, so the portrait stays last. -->
+      <div class="voidwalker__orbit" aria-hidden="true" data-m-group>
         <!-- corner readouts -->
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--tl">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--tl" data-m="eyebrow">
           <span class="k">SUBJECT</span><br>VB · 0001
         </div>
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--tr">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--tr" data-m="eyebrow">
           <span class="k">BEARING</span><br>N · 000 · lock
         </div>
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--bl">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--bl" data-m="eyebrow">
           <span class="k">FIELD</span><br>VOIDWALKER
         </div>
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--br">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--br" data-m="eyebrow">
           <span class="k">MODE</span><br>navigate
         </div>
 
         <!-- orbital rings & ticks (sigil grammar, amplified) -->
-        <svg class="voidwalker__orbit__svg" viewBox="-200 -200 400 400" fill="none" preserveAspectRatio="xMidYMid meet">
+        <svg class="voidwalker__orbit__svg" data-m="instrument" viewBox="-200 -200 400 400" fill="none" preserveAspectRatio="xMidYMid meet">
           <!-- concentric rings -->
           <g fill="none" stroke-width="0.7">
             <circle r="192" stroke="var(--dawn-15)" stroke-dasharray="1 7"/>
@@ -5505,7 +5536,7 @@ html { scroll-behavior: smooth; }
         </svg>
 
         <!-- static CSS particle halo -->
-        <div class="voidwalker__orbit__particles">
+        <div class="voidwalker__orbit__particles" data-m="fade">
           <span style="--a: 12deg;  --r: 46%; --o: 0.8;"></span>
           <span class="d" style="--a: 38deg; --r: 42%;"></span>
           <span style="--a: 68deg;  --r: 48%; --o: 0.6;"></span>
@@ -5521,7 +5552,7 @@ html { scroll-behavior: smooth; }
         </div>
 
         <!-- portrait, centered, black-and-white -->
-        <div class="voidwalker__orbit__portrait">
+        <div class="voidwalker__orbit__portrait" data-m="portrait">
           <img src="assets/vince-portrait.jpg" alt="Vince Buyssens, founder of Thoughtform" loading="lazy"/>
         </div>
       </div>
@@ -5937,6 +5968,31 @@ html { scroll-behavior: smooth; }
   };
   setTimeout(safetySweep, 900);
   setTimeout(safetySweep, 2400);
+
+  // Scroll fallback (mirrors production useRevealMotion, ADR-045): Chrome
+  // clips IntersectionObserver geometry by the TARGET'S OWN clip-path, so
+  // fully-clipped hidden roles (title / eyebrow / portrait) never cross the
+  // 0.12 area threshold and the IO alone strands them. Sweep on scroll,
+  // rAF-throttled, and detach once everything has revealed.
+  let revealRaf = null;
+  const revealFallbackSweep = () => {
+    revealRaf = null;
+    const vh = window.innerHeight;
+    const hidden = document.querySelectorAll('[data-m]:not(.is-in)');
+    if (!hidden.length) {
+      window.removeEventListener('scroll', onRevealScroll);
+      return;
+    }
+    hidden.forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < vh * 0.94) el.classList.add('is-in');
+    });
+  };
+  const onRevealScroll = () => {
+    if (revealRaf !== null) return;
+    revealRaf = requestAnimationFrame(revealFallbackSweep);
+  };
+  window.addEventListener('scroll', onRevealScroll, { passive: true });
 
   /* 4. Parallax (scroll-rate Y translation on decorative layers) */
   if (!reduce) {

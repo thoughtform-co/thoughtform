@@ -54,6 +54,44 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-16 — Services copy sweep · About emerge + rail parity (ADR-045) · Cartridge dock (ADR-046)
+
+Owner-directed triple pass. Cycle B for the two new surfaces; the copy
+sweep is data-only.
+
+- **Services copy sweep.** All four card titles/ledes + the masthead moved
+  to Vince's concrete first-person voice ("I move in with your team.");
+  the stale "ONE LOOP. THREE DEPTHS." (predated the fourth service) became
+  "ONE PRACTICE. FOUR WAYS IN.". `servicePlateData` (production) +
+  `serviceData` vestigial fields in lockstep; `/test/services-wordmark`
+  lab defaults mirrored; ADR-044 consequence note updated. Verified: all
+  four baked WebGL faces re-bake without overflow; mobile plates share
+  the strings by construction.
+- **About rework (ADR-045).** The `.voidwalker__orbit` parallax +
+  whole-cluster JS instrument tag retired for an authored emerge sequence
+  (portrait clip-wipes first, rings/halo/readouts stagger around it);
+  portrait centering moved off the transform channel (inset/margin);
+  `--rail-inset` promoted to `:root` and consumed by both the services
+  masthead and the about grid — measured 0px text-edge delta at 1968w.
+  Two pre-existing defects fixed in passing: the 12-dot particle halo was
+  invisible since authoring (span-relative translateY %), and the
+  standalone prototype's reveal JS stranded every clip-path-hidden
+  element (Chrome clips IO geometry by the target's own clip-path — 44
+  stuck elements including every title; production's scroll fallback is
+  the load-bearing reveal there, prototype gained the same fallback).
+- **Cartridge dock (ADR-046, flag `SERVICES_CARTRIDGE_DOCK`).** The exit
+  beat's cards now eject, flatten, and fly in-world to a bottom-right DOM
+  console; DOM cartridges crossfade in AT the seat, persist page-long
+  (pure function of clamped runway progress — no latch), and glide back
+  on click via the shared `servicesBeatScrollTarget`. New pure-math module
+  `dockMath` (13 unit tests incl. the identity pin), seat-rect bridge,
+  ring exit branch, pointer-look exit damp, ADR-008 paint-stack row 5a,
+  landing-v7 rule note, smoke probes (+ fixed the stale ADR-044 SOURCE BUS
+  assertion). Two bugs found live: rAF-order staleness on teleport jumps
+  (fixed with a trailing sync tick) and **React dropping clicks on a
+  props-disabled button whose DOM `disabled` was flipped imperatively**
+  (fixed by keeping `disabled` out of JSX — captured in BEST-PRACTICES).
+
 ### 2026-07-15 — Mobile Landing Quality Pass, Round 3 (ADR-018 Revision 3)
 
 Owner visual-tuning follow-up to Round 2. Cycle A. All gated mobile →

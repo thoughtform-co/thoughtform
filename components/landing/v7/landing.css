@@ -92,6 +92,13 @@
   --hud-rail-line: rgba(235, 227, 214, 0.55);
   --hud-rail-line-soft: rgba(235, 227, 214, 0.28);
   --hud-content-inset: calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px, 3vw, 56px));
+  /* ADR-044 masthead column pull — how far the rail-aligned editorial
+     columns sit inboard of the STATION CONTENT BOX (stations already
+     carry --hud-content-inset padding; the effective viewport inset is
+     the sum of both layers). Shared by .services-masthead (services.css)
+     and the #about .voidwalker grid (ADR-045), so the two stations'
+     text edges stay in lockstep. */
+  --rail-inset: calc(var(--hud-margin) + 8vw);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -7057,6 +7064,10 @@ body.density-dense .station {
      body     — paragraphs, soft fade + 14px rise
      frame    — bordered panels/cards, border draw + fade
      instrument — SVG/geometry, longer fade (depth cue)
+     fade     — container-level pure fade, no transform
+     portrait — the about portrait card: title-grade rise + top-down
+                clip wipe (ADR-045; kept separate from `title` because
+                the portrait owns a load-bearing ::after vignette)
      stagger-child — sits inside a [data-m-group], inherits cadence
 
    Parallax: [data-parallax="<speed>"] translates on Y with scroll.
@@ -7108,6 +7119,16 @@ body.density-dense .station {
 }
 [data-m="fade"] {
   transform: none;
+  transition-duration: var(--m-dur-slow);
+}
+[data-m="portrait"] {
+  /* the about portrait card: title-grade rise + top-down clip wipe.
+     Centering must NOT live on the transform channel (see the
+     .voidwalker__orbit__portrait inset/margin centering) — the generic
+     .is-in reveal writes `transform`, and reduced motion writes
+     `transform: none !important`. */
+  transform: translateY(var(--m-shift));
+  clip-path: inset(0 0 100% 0);
   transition-duration: var(--m-dur-slow);
 }
 
@@ -9200,6 +9221,22 @@ html {
     text-align: center;
   }
 }
+/* Desktop rail parity (ADR-045, ADR-044 family): the bio column starts
+   at the services masthead's left text edge and the orbit cluster ends
+   at its right text edge, so #services and #about share one editorial
+   frame. The station keeps its generic --hud-content-inset padding
+   (identical to .station--services, which the masthead lives inside) and
+   the grid pulls a further --rail-inset inboard — the same two-layer
+   chain as the masthead, so the stations stay in lockstep through both
+   tokens. ≤960px keeps the 2026-07-15 centered stack byte-untouched —
+   that is why this is min-width scoped. */
+@media (min-width: 961px) {
+  .voidwalker {
+    justify-content: space-between;
+    margin-inline: var(--rail-inset); /* the clamp() top margin survives from the base rule */
+    max-width: none;
+  }
+}
 
 .voidwalker__copy {
   max-width: 52ch;
@@ -9339,9 +9376,13 @@ html {
 }
 .voidwalker__orbit__portrait {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  /* inset+margin centering (was left/top 50% + translate(-50%,-50%)):
+     the transform channel belongs to the data-m="portrait" emerge —
+     the generic .is-in reveal writes `transform: translateY(0) scale(1)`
+     and the reduced-motion collapse writes `transform: none`, either of
+     which would destroy transform-based centering (ADR-045). */
+  inset: 0;
+  margin: auto;
   width: 52%;
   aspect-ratio: 3 / 4;
   overflow: hidden;
@@ -9453,24 +9494,67 @@ html {
   inset: 0;
   pointer-events: none;
 }
+/* Each span is a rotated DIAMETER ARM with the dot on its top tip, so
+   the authored --r reads as a percentage of the ORBIT (the arm's height
+   resolves against the container). The previous single-dot transform
+   (`translateY(calc(var(--r) * -1))`) resolved --r against the span's
+   own 3px height — every dot sat ~1.4px from center, hidden behind the
+   portrait (ADR-045 fix). */
 .voidwalker__orbit__particles span {
   position: absolute;
   left: 50%;
   top: 50%;
   width: 3px;
-  height: 3px;
-  background: var(--gold);
-  border-radius: 50%;
-  transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(calc(var(--r, 40%) * -1));
+  height: calc(var(--r, 40%) * 2);
+  transform: translate(-50%, -50%) rotate(var(--a, 0deg));
   opacity: var(--o, 0.8);
+}
+.voidwalker__orbit__particles span::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--gold);
   box-shadow: 0 0 6px rgba(202, 165, 84, 0.6);
 }
 .voidwalker__orbit__particles span.d {
+  opacity: 0.5;
+}
+.voidwalker__orbit__particles span.d::before {
   background: var(--dawn);
   box-shadow: none;
-  opacity: 0.5;
   width: 2px;
   height: 2px;
+}
+
+/* ── ABOUT emerge (ADR-045): the portrait lands first, the instrument
+   cluster materializes around it, inside-out. Replaces the retired
+   `.voidwalker__orbit` scroll parallax (LandingPage.tsx parallaxMap)
+   and the whole-cluster instrument fade. All beats are multiples of
+   --m-stagger (70ms). Selectors stay ≤ (0,2,0) so the generic
+   [data-m][data-m].is-in reveal keeps winning; the reduced-motion
+   collapse above flattens everything via the global [data-m] rules.
+   Orbit child --m-i order (DOM): tl 0 · tr 1 · bl 2 · br 3 · svg 4 ·
+   particles 5 · portrait 6. */
+.voidwalker__orbit__label--tr[data-m],
+.voidwalker__orbit__label--br[data-m] {
+  /* right-aligned readouts wipe from the right edge instead */
+  clip-path: inset(0 0 0 100%);
+}
+.voidwalker__orbit__portrait[data-m] {
+  transition-delay: 0ms; /* the anchor beat */
+}
+.voidwalker__orbit__svg[data-m] {
+  transition-delay: calc(6 * var(--m-stagger)); /* rings frame the settling card */
+}
+.voidwalker__orbit__particles[data-m] {
+  transition-delay: calc(8 * var(--m-stagger)); /* halo */
+}
+.voidwalker__orbit__label[data-m] {
+  transition-delay: calc((9 + var(--m-i, 0)) * var(--m-stagger)); /* tl→tr→bl→br */
 }
 
 /* ═══════════════════════════════════════════════════════════════════

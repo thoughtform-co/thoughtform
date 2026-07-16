@@ -32,19 +32,20 @@ After Regression 1 was reverted, connectors still flashed gold → black for ~88
 
 The following ordering is load-bearing and must not be changed without an ADR update:
 
-| Layer | Element                                                 | Position | z-index                | Paints                                                                                                      |
-| ----- | ------------------------------------------------------- | -------- | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 0     | `body`                                                  | static   | —                      | `rgb(10, 9, 8)` (`--void`)                                                                                  |
-| 1     | `.gateway`                                              | fixed    | 0                      | gold + green radials + `--void`                                                                             |
-| 1a    | `.gateway__grain`                                       | absolute | auto                   | radial dither, `mix-blend-mode: overlay`                                                                    |
-| 2     | `.stations`                                             | relative | 10                     | (transparent; creates stacking context)                                                                     |
-| 3     | `.hero`                                                 | sticky   | 1                      | video + overlay; goes `visibility: hidden` at `heroCover ≥ 1`                                               |
-| 4     | `.station:not(.hero)`                                   | relative | 2                      | `var(--void)` — opaque shield                                                                               |
-| 4     | `.celestial-connector`                                  | relative | 2                      | `var(--void)` — opaque shield                                                                               |
-| 4a    | `.home-v2-stage__canvas` during `data-corridor-docked`  | fixed    | 2 inside corridor host | live R3F sphere/ambient backdrop; its painters retire on their own opacity channels                         |
-| 4b    | `#tools` during `data-corridor-exit` + `#tools::before` | relative | 6; internal 0          | intentional transparent lead-in; the pseudo shield reaches opaque before the ambient canvas retires         |
-| 5     | `#tools .tools__head` on the enhanced capability        | fixed    | 12 inside `.stations`  | rail-to-rail text/datum only; no structural background, so its opacity/clip reveal cannot unshield the page |
-| 6     | `.hud` including `[data-tools-rail-root]`               | fixed    | 50                     | persistent rails/nav; right-rail register paints inside this existing HUD stacking context                  |
+| Layer | Element                                                 | Position | z-index                | Paints                                                                                                        |
+| ----- | ------------------------------------------------------- | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 0     | `body`                                                  | static   | —                      | `rgb(10, 9, 8)` (`--void`)                                                                                    |
+| 1     | `.gateway`                                              | fixed    | 0                      | gold + green radials + `--void`                                                                               |
+| 1a    | `.gateway__grain`                                       | absolute | auto                   | radial dither, `mix-blend-mode: overlay`                                                                      |
+| 2     | `.stations`                                             | relative | 10                     | (transparent; creates stacking context)                                                                       |
+| 3     | `.hero`                                                 | sticky   | 1                      | video + overlay; goes `visibility: hidden` at `heroCover ≥ 1`                                                 |
+| 4     | `.station:not(.hero)`                                   | relative | 2                      | `var(--void)` — opaque shield                                                                                 |
+| 4     | `.celestial-connector`                                  | relative | 2                      | `var(--void)` — opaque shield                                                                                 |
+| 4a    | `.home-v2-stage__canvas` during `data-corridor-docked`  | fixed    | 2 inside corridor host | live R3F sphere/ambient backdrop; its painters retire on their own opacity channels                           |
+| 4b    | `#tools` during `data-corridor-exit` + `#tools::before` | relative | 6; internal 0          | intentional transparent lead-in; the pseudo shield reaches opaque before the ambient canvas retires           |
+| 5     | `#tools .tools__head` on the enhanced capability        | fixed    | 12 inside `.stations`  | rail-to-rail text/datum only; no structural background, so its opacity/clip reveal cannot unshield the page   |
+| 5a    | `.svc-dock` (ADR-046 cartridge dock)                    | fixed    | 48                     | bottom-right console chrome only (no full-bleed fill); above stations/canvas, below `.hud` (50) / HudNav (60) |
+| 6     | `.hud` including `[data-tools-rail-root]`               | fixed    | 50                     | persistent rails/nav; right-rail register paints inside this existing HUD stacking context                    |
 
 Any new `position: fixed` or `position: sticky` layer on the landing page must be added to this table in the same PR.
 

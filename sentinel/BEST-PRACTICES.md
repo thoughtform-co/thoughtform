@@ -607,6 +607,36 @@ const handleComponentClick = (componentId: string, parentCategoryId: string) => 
 
 **Solution:** Check if parent needs updating, update it first, then update child.
 
+### React drops clicks on a props-`disabled` button even after you flip the DOM property
+
+When a controller manages a button's enabled state imperatively (the
+render-stable, no-re-render pattern used by HUD chrome like the ADR-046
+cartridge dock), do NOT also render `disabled` as a JSX prop:
+
+```tsx
+// ❌ BAD: React's synthetic event system reads the FIBER PROPS, not the
+// live DOM property. props.disabled stays true forever (the component
+// never re-renders), so React silently drops every click — even though
+// the DOM button looks and hit-tests enabled, native listeners fire, and
+// the event bubbles to document.
+<button disabled ref={...} onClick={...} />   // controller later sets el.disabled = false
+
+// ✅ GOOD: keep `disabled` out of React's hands entirely. Seed it in the
+// controller effect before the first sync, and flip only the DOM property.
+<button ref={...} onClick={...} />            // effect: el.disabled = true, then flips
+```
+
+**Why it matters:** React's `getListener` nulls interactive-event handlers
+(onClick etc.) on form controls whose **props** say `disabled` — it never
+re-reads the DOM. The failure is invisible: hit-testing, native
+`addEventListener`, and `props.onClick(...)` called manually all work,
+only the delegated synthetic path is dead. Found live on the cartridge
+dock (2026-07-16); cost a four-probe bisect to localize.
+
+**Corollary:** an `inert` ancestor suppresses even programmatic
+`el.click()` in Chrome — when probing chrome that toggles `inert`, confirm
+the current inert state before interpreting a dead click.
+
 ---
 
 ## 🎨 CSS & Styling

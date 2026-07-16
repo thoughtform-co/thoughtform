@@ -57,8 +57,19 @@ import { BAKE_W, BAKE_H, PAD_X, CTA_H, CTA_Y0 } from "./ringCtaBox";
 
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
+import { SERVICES_CARTRIDGE_DOCK } from "../../unifiedServicesInstrument";
 import { SERVICES_GOLD } from "@/lib/home-v2/goldPalette";
 import { useHologramConnectors, type RingCardAnchor } from "@/lib/stores/hologramConnectorStore";
+import {
+  DOCK_ANCHORS_OFF_EXIT,
+  DOCK_DEPTH_WRITE_OFF_EXIT,
+  DOCK_FALLBACK_NDC,
+  DOCK_FALLBACK_SLOT_H_PX,
+  dockFlatYaw,
+  dockTravelEnvelope,
+  seatWorldHeight,
+} from "@/lib/services-ring/dockMath";
+import { dockSeatRectsRef } from "@/lib/services-ring/dockSeatRef";
 import {
   servicesRingProgressRef,
   type ServicesRingProgress,
@@ -97,6 +108,7 @@ import {
   entranceEnvelope,
   frontCardIndex,
   frontPoseBias,
+  lerp,
   placeCardOnOrbit,
   ringRotationForProgress,
   smootherstep,
@@ -660,6 +672,24 @@ export function ServicesCardRing({
   const cornerLocal = useRef(new THREE.Vector3());
   const cornerWorld = useRef(new THREE.Vector3());
 
+  /* ── Cartridge dock (ADR-046) — scratch objects for the per-frame seat
+     targeting. The seat is derived VIEWPORT-FIRST every frame (slot rect →
+     NDC → camera space at the card's live depth → world → ring-local via
+     one shared inverse parent matrix), so the brandmark recede,
+     pointer-look residue, resize, and DPR steps are all compensated
+     automatically — never a fixed world offset (BEST-PRACTICES; the
+     ADR-034 terrace precedent). No per-frame allocation. */
+  const ringGroupRef = useRef<THREE.Group>(null);
+  const dockParentInv = useRef(new THREE.Matrix4());
+  const dockParentCol = useRef(new THREE.Vector3());
+  const dockWorldScratch = useRef(new THREE.Vector3());
+  const dockCamScratch = useRef(new THREE.Vector3());
+  const dockSeatScratch = useRef(new THREE.Vector3());
+  const dockFlatYaws = useMemo(
+    () => SERVICE_PLATES.map((_, i) => dockFlatYaw(i, facingBlend)),
+    [facingBlend]
+  );
+
   const cardW = cardHeight * RING_CARD_ASPECT;
   const slabW = cardW + bezelMargin * 2;
   const slabH = cardHeight + bezelMargin * 2;
@@ -946,14 +976,39 @@ export function ServicesCardRing({
     // pre-exit frames byte-identical; entrance "off" (labs) never exits.
     const exitP = entrance === "scroll" ? exitProgressForRunway(progressRef.current.progress) : 0;
 
+    // Cartridge dock (ADR-046): with the flag on, the exit beat's cards
+    // travel to the bottom-right DOM console instead of the ADR-030 radial
+    // fade-out. The dock branch only runs while exitP > 0, so every
+    // pre-exit frame takes the exact shipped code path (byte-identical
+    // guardrail), and reverse scroll re-enters it seamlessly (the envelope
+    // is identity at exit 0). Per-frame shared seat geometry: one inverse
+    // parent matrix + camera terms for all four cards, scratch objects only.
+    const dockEngaged = SERVICES_CARTRIDGE_DOCK && entrance === "scroll" && exitP > 0;
+    const dockAnchorsLive =
+      !(SERVICES_CARTRIDGE_DOCK && entrance === "scroll") || exitP < DOCK_ANCHORS_OFF_EXIT;
+    let dockHalfFovTan = 0;
+    let dockAspect = 1;
+    let dockParentScale = 1;
+    if (dockEngaged && ringGroupRef.current) {
+      const ring = ringGroupRef.current;
+      ring.updateWorldMatrix(true, false);
+      dockParentInv.current.copy(ring.matrixWorld).invert();
+      dockParentScale =
+        dockParentCol.current.setFromMatrixColumn(ring.matrixWorld, 0).length() || 1;
+      const persp = camera as THREE.PerspectiveCamera;
+      dockHalfFovTan = Math.tan(((persp.fov ?? 40) * Math.PI) / 360);
+      dockAspect = persp.aspect || size.width / Math.max(1, size.height);
+    }
+
     const parked = dissipate >= ANCHOR_PUBLISH_DISSIPATE;
     const anchors: RingCardAnchor[] = [];
 
     // Hovered card from LAST frame's projected rects (one frame of lag is
     // imperceptible at the veil's damp rate). Front-most containing rect
-    // wins; nothing hovers until parked.
+    // wins; nothing hovers until parked — and never during the dock travel
+    // (the veil re-engages as the feed "powers down" in transit).
     let hovered = -1;
-    if (parked) {
+    if (parked && !dockEngaged) {
       const pointer = pointerPxRef.current;
       let bestNz = -Infinity;
       for (let i = 0; i < RING_COUNT; i++) {
@@ -979,14 +1034,15 @@ export function ServicesCardRing({
       if (!cardGroup || !mesh || !material) continue;
 
       const env = entrance === "scroll" ? entranceEnvelope(dissipate, i) : null;
-      // Exit composes onto the entrance: identity while exitP = 0, then
-      // the card flies OUT (radius widens) while fading — the reverse of
-      // the fly-in. (The decommission beat is now the send-off into the
-      // void before #about — ADR-033; the #tools pill handover retired.)
+      // Exit composes onto the entrance: identity while exitP = 0. Flag
+      // OFF: the ADR-030 radial decommission (fly OUT + fade). Flag ON
+      // (ADR-046): the dock travel replaces it — the card ejects
+      // (radiusMul bump), flattens, and flies to the DOM console seat.
       const exit = exitEnvelope(exitP, i);
+      const dockEnv = dockEngaged ? dockTravelEnvelope(exitP, i) : null;
       const placed = placeCardOnOrbit(i, spring.pos, cardOrbitGeoms[i], {
         yOffset,
-        radiusMul: (env ? env.radiusMul : 1) * exit.radiusMul,
+        radiusMul: (env ? env.radiusMul : 1) * (dockEnv ? dockEnv.radiusMul : exit.radiusMul),
       });
 
       // Hover tilt — the hovered card leans with the pointer so its slab
@@ -1025,23 +1081,112 @@ export function ServicesCardRing({
       // in the "off" (lab) path, so the parked pose is unchanged.
       const entX = env ? env.offsetX : 0;
       const entY = env ? env.offsetY : 0;
-      cardGroup.position.set(placed.x + entX, placed.y + entY, placed.z);
-      cardGroup.rotation.set(
-        tilt.pitch + bias.pitch,
-        cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw,
-        0
-      );
-      cardGroup.scale.setScalar(depthScale(placed.nz, scaleRange));
+      const ringX = placed.x + entX;
+      const ringY = placed.y + entY;
+      const ringZ = placed.z;
+      const ringPitch = tilt.pitch + bias.pitch;
+      const ringYaw = cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw;
+      const ringScale = depthScale(placed.nz, scaleRange);
 
-      const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
-      const master = (env ? env.opacity : 1) * exit.opacity * masterOpacity;
+      if (dockEnv && ringGroupRef.current) {
+        // ── ADR-046 dock travel: ring pose → seat pose, viewport-first.
+        // Seat NDC from the live DOM slot rect (fallback anchor until the
+        // dock has measured — the crossfade at seat absorbs the residue).
+        const seats = dockSeatRectsRef.current;
+        const slot = seats.valid && seats.slots.length > i ? seats.slots[i] : null;
+        const ndcX = slot ? (slot.cx / Math.max(1, size.width)) * 2 - 1 : DOCK_FALLBACK_NDC[0];
+        const ndcY = slot ? -((slot.cy / Math.max(1, size.height)) * 2 - 1) : DOCK_FALLBACK_NDC[1];
+        const slotH = slot ? slot.h : DOCK_FALLBACK_SLOT_H_PX;
+
+        // Camera-space depth of the card's RING pose — the seat is placed
+        // at the SAME depth, so the travel is screen-lateral and the
+        // projected card lands exactly on the slot regardless of the
+        // brandmark recede or pointer-look residue (both recomputed here
+        // every frame through the live matrices).
+        dockWorldScratch.current
+          .set(ringX, ringY, ringZ)
+          .applyMatrix4(ringGroupRef.current.matrixWorld);
+        dockCamScratch.current
+          .copy(dockWorldScratch.current)
+          .applyMatrix4(camera.matrixWorldInverse);
+        const camDepth = Math.max(0.1, -dockCamScratch.current.z);
+
+        // Seat point: NDC at that depth → world → ring-local.
+        dockSeatScratch.current
+          .set(
+            ndcX * dockHalfFovTan * dockAspect * camDepth,
+            ndcY * dockHalfFovTan * camDepth,
+            -camDepth
+          )
+          .applyMatrix4(camera.matrixWorld)
+          .applyMatrix4(dockParentInv.current);
+
+        // Bowed path: perpendicular of the local travel direction (XY),
+        // flipped upward — the card lifts off the straight line, then
+        // drops into the socket ("ejected, then inserted").
+        const dx = dockSeatScratch.current.x - ringX;
+        const dy = dockSeatScratch.current.y - ringY;
+        const len = Math.hypot(dx, dy);
+        let bendX = 0;
+        let bendY = 0;
+        if (len > 1e-5) {
+          bendX = -dy / len;
+          bendY = dx / len;
+          if (bendY < 0) {
+            bendX = -bendX;
+            bendY = -bendY;
+          }
+        }
+        const posT = dockEnv.positionT;
+        cardGroup.position.set(
+          lerp(ringX, dockSeatScratch.current.x, posT) + bendX * dockEnv.bend,
+          lerp(ringY, dockSeatScratch.current.y, posT) + bendY * dockEnv.bend,
+          lerp(ringZ, dockSeatScratch.current.z, posT)
+        );
+        // Flatten: pitch/hover ease out; yaw unwinds to the settled pose's
+        // nearest full turn (dockFlatYaw — deterministic, computed from the
+        // settled exit pose so the unwind direction can never flip on
+        // spring wobble mid-flight).
+        cardGroup.rotation.set(
+          ringPitch * (1 - dockEnv.flattenT),
+          lerp(ringYaw, dockFlatYaws[i], dockEnv.flattenT),
+          0
+        );
+        // Scale: ring depth-scale → absolute seat scale (projected card
+        // height == the DOM slot height — also equalizes the four
+        // cartridges in flight, erasing the per-depth scale spread).
+        const seatScale =
+          seatWorldHeight(slotH, Math.max(1, size.height), camDepth, dockHalfFovTan) /
+          Math.max(1e-6, cardHeight * dockParentScale);
+        cardGroup.scale.setScalar(lerp(ringScale, seatScale, posT));
+      } else {
+        cardGroup.position.set(ringX, ringY, ringZ);
+        cardGroup.rotation.set(ringPitch, ringYaw, 0);
+        cardGroup.scale.setScalar(ringScale);
+      }
+
+      // Depth-based opacity lifts to UNIFORM during the dock travel (the
+      // back card must not fly at its 0.16 floor); the WebGL card then
+      // hands off to the DOM cartridge across the seat swap
+      // (dockEnv.webglOpacity 1 → 0) instead of the radial exit fade.
+      const depthOBase = depthOpacity(placed.nz, opacityRange, opacityWindow);
+      const depthO = dockEnv ? lerp(depthOBase, opacityRange[1], dockEnv.flattenT) : depthOBase;
+      const master =
+        (env ? env.opacity : 1) * (dockEnv ? dockEnv.webglOpacity : exit.opacity) * masterOpacity;
       const opacity = depthO * master;
-      material.opacity = opacity;
+      // The content ink dims toward the cartridge read in transit (faceDim);
+      // the slab body / gold lip / glint stay solid until the seat swap.
+      material.opacity = opacity * (dockEnv ? dockEnv.faceDim : 1);
       slabMaterials[i][0].opacity = glassOpacity * depthO * master;
       slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
       glintMaterials[i].opacity = glintOpacity * depthO * master;
-      // Halo is front-weighted: swells as the card parks, gone on the sides.
-      glowMaterials[i].opacity = glowOpacity * smootherstep(0.35, 0.95, placed.nz) * master;
+      // Halo is front-weighted: swells as the card parks, gone on the sides
+      // — and dies over the dock eject beat (the feed powers down).
+      glowMaterials[i].opacity =
+        glowOpacity *
+        smootherstep(0.35, 0.95, placed.nz) *
+        master *
+        (dockEnv ? dockEnv.glowMul : 1);
       // Hover-resolve: the hovered card's veil damps toward its resolved
       // residue; everyone else restores to the full feed read.
       const veilTarget = i === hovered ? RING_VEIL_HOVER_LEVEL : 1;
@@ -1051,8 +1196,13 @@ export function ServicesCardRing({
       cardGroup.visible = opacity > 0.004;
 
       // depthWrite hysteresis — only the near-front card's CONTENT writes
-      // depth (the glass never does).
-      const write = depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity > 0.55;
+      // depth (the glass never does). Force-OFF just past the dock's exit
+      // start: a solid card travelling across the mark must never punch
+      // holes in the depthWrite:false particle pass (ADR-046).
+      const write =
+        dockEngaged && exitP > DOCK_DEPTH_WRITE_OFF_EXIT
+          ? false
+          : depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity > 0.55;
       if (write !== material.depthWrite) material.depthWrite = write;
       depthWriteRef.current[i] = write;
 
@@ -1090,8 +1240,12 @@ export function ServicesCardRing({
         // floor 0.16 stopped the old `> 0.1` gate from filtering it). The
         // same shadowed rect must not steal HOVER either.
         const occludedByFront = i === (front + 2) % RING_COUNT;
+        // `dockAnchorsLive` retires the rects at the dock's exit start
+        // (ADR-046): the dock travel keeps cards OPAQUE (no fade), so the
+        // old `opacity > 0.1` gate alone would leave a live CTA link riding
+        // the flight to the corner.
         hoverRectsRef.current[i] =
-          !clipped && !occludedByFront && opacity > 0.1
+          !clipped && !occludedByFront && opacity > 0.1 && dockAnchorsLive
             ? { x: minX, y: minY, w: maxX - minX, h: maxY - minY, nz: placed.nz }
             : null;
         if (publishAnchors) {
@@ -1102,7 +1256,7 @@ export function ServicesCardRing({
             w: maxX - minX,
             h: maxY - minY,
             depth: centreDepth,
-            visible: !clipped && !occludedByFront && opacity > 0.1,
+            visible: !clipped && !occludedByFront && opacity > 0.1 && dockAnchorsLive,
             front: i === front,
           });
         }
@@ -1133,7 +1287,7 @@ export function ServicesCardRing({
       : undefined;
 
   return (
-    <group scale={scale}>
+    <group ref={ringGroupRef} scale={scale}>
       {/* Each card's own orbital track — drawn from the SAME ellipse
           parametrization the card rides (cardTrackOrbits.ts), offset to
           the ring plane like the cards themselves. */}

@@ -41,3 +41,28 @@ export const UNIFIED_SERVICES_ARMILLARY = true;
  * byte-identically (all DOM changes key off `data-card-ring`).
  */
 export const SERVICES_CARD_RING = true;
+
+/**
+ * Feature flag for the SERVICES CARTRIDGE DOCK (ADR-046, 2026-07-16).
+ *
+ * When ON (and SERVICES_CARD_RING is on, same media gate):
+ *   - across the runway's final (decommission) beat the four WebGL ring
+ *     cards no longer fly out radially and fade (the ADR-030 exit): each
+ *     card EJECTS off its orbit, flattens to face the camera, shrinks, and
+ *     travels to the bottom-right DOM console (`ServicesCartridgeDock`,
+ *     mounted at HUD level in LandingPage), where a DOM cartridge
+ *     crossfades in AT THE SEAT — the card itself miniaturizes; the DOM
+ *     never flies (ADR-031's rule stands for DOM chrome);
+ *   - the seated rack persists for the rest of the page (seated state is a
+ *     pure function of runway progress, which clamps at 1 below the
+ *     runway — no latch, no release guard) and each cartridge is a real
+ *     button that glides the page back to that service's beat
+ *     (`servicesBeatScrollTarget` + `startRingScrollTween`);
+ *   - hit-rect anchors retire at exit ≥ DOCK_ANCHORS_OFF_EXIT and the
+ *     pointer-look damps out across the exit so the seat targeting holds.
+ *
+ * OFF restores the ADR-030 radial fade-out exit byte-identically (the ring
+ * branch never runs, the dock never mounts). Mobile / reduced-motion /
+ * corridor-fallback never see the dock regardless of the flag.
+ */
+export const SERVICES_CARTRIDGE_DOCK = true;

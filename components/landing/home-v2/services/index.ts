@@ -1,4 +1,5 @@
 export { ServicesPortal } from "./ServicesPortal";
+export { ServicesCartridgeDock } from "./ServicesCartridgeDock";
 export { ServicesRailRegisterPortal } from "./ServicesRailRegister";
 export { ServicesStage } from "./ServicesStage";
 export { ServicesBrandmarkField } from "./ServicesBrandmarkField";
