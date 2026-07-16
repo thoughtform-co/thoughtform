@@ -387,6 +387,39 @@ follow-up; CURRENT).** Two follow-ups landed after the harmonization above.
 
 ---
 
+## Addendum (2026-07-16) — Terminal-crisp flight
+
+The 2026-06-25 "never warp" pass deliberately released `vCrisp` to 0 mid-flight
+so the wind-blown morph kept a "living dust character". In practice that window
+(uDepth ∈ [0.2, 0.7], corridor progress ≈ 0.20–0.31) rendered as large
+(3.9–6.4px), soft-masked (edge 0.30), size-varied, twinkling sprites — the
+owner read it as "almost painted, ugly, not terminal/retro-futuristic". That
+choice is **superseded**: the flight must read as discrete phosphor particles.
+
+Three identity-default knobs (each 0 ⇒ legacy render, byte-identical; all are
+algebraic no-ops at uDepth = 0, uDepth = 1, and uCleanField = 1, so the
+matched-pixel handoff frame, the landed wireframe, and the parked centerpiece
+are provably untouched — Invariants 3/13/14 hold):
+
+- `FLIGHT_CRISP_FLOOR = 0.7` (`shaders.ts`, vertex vCrisp block) —
+  `vCrisp = max(max(flatCrisp, wireCrisp), FLOOR)`. One move hardens the dot
+  mask (0.30 → 0.37), flattens size variance ([0.78, 1.28] → [0.91, 1.11]) and
+  stills the twinkle (band → [0.865, 1.0]) mid-flight. Range 0.5–0.85; above
+  ~0.9 the flight loses all differentiation from the rests.
+- `CORE_POINT_SIZE_FLIGHT_DIP = 0.9` (`BrandmarkPhysicsCoreActor.tsx`) —
+  `pointSize = FLAT + (3D − FLAT)·depth − DIP·sin(π·depth)`; mid-flight sprite
+  base ~4.7 → ~3.8px. `sin(0·π) = sin(1·π) = 0` keeps both endpoints exact
+  (the flat frame keeps 5.0 — the "finer flat dots" pitfall does not apply).
+- `RECEDE_SIZE_ATTEN = 0.12` (`shaders.ts`, sizeMul block) — receded particles
+  shrink on the same `flowBell` as the recede itself: small+dim reads as a
+  distant point where big+dim read painterly.
+
+The flight **choreography** (per-particle stagger, tangent orbit, +Z recede,
+glitch bell) is untouched — this is a rendering-only change. The glitch
+intensity was left at 0.35 (the crisped window has enough character).
+Screenshot-verified against a pre-change baseline at progress
+0.13/0.145/0.19/0.22/0.25/0.28/0.31/0.42 + parked #services.
+
 ## References
 
 - Live tuning: `/test/brandmark-physics-core`

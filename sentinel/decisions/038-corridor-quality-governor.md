@@ -84,7 +84,7 @@ it cannot oscillate the way a naive step-up would.
 ## Update — rev 2: bidirectional recovery (2026-07-15)
 
 **Problem.** The monotonic-down design meant the heavy scroll-dive — the one
-place a *capable* desktop can briefly dip below ~42fps — could trip a DPR
+place a _capable_ desktop can briefly dip below ~42fps — could trip a DPR
 step-down, and that step-down then persisted through the calm parked #services
 state for the rest of the session. The flagship brandmark wireframe (the
 `BrandmarkPhysicsCore` point cloud, sized by `uPointSize × uPixelRatio`) is a
@@ -103,7 +103,7 @@ in a **wide deadband** under the 24ms degrade threshold and each step-up is
 followed by its own `RECOVER_COOLDOWN_MS`, a step-up cannot immediately
 re-cross into "slow".
 
-**Anti-oscillation (the reason the original was monotonic).** If a step-up *is*
+**Anti-oscillation (the reason the original was monotonic).** If a step-up _is_
 unsustainable — a degrade fires within `LOCK_WINDOW_MS` (4000ms) of it — that
 rung is **locked**: `degrade(causedByRecovery=true)` lowers the recovery ceiling
 to the degraded value, so the governor never retries it. Result: **at most one
@@ -142,6 +142,35 @@ byte-identical at full quality.
   remount. Low-risk and arguably more correct.
 - The `low`-GPU marker list is intentionally small/specific to avoid demoting
   mid-range parts; it errs toward `ok`.
+
+## Update (2026-07-16) — the raw-DPR `uPixelRatio` bug, second half of the low-res report
+
+Rev 2 fixed the _persistence_ half of "sometimes the wireframe looks low
+quality" (a stuck 1.0 ceiling now recovers). The remaining half was a consumer
+bug: `BrandmarkPhysicsCore` pinned its point-size uniform once at mount from
+**raw** `window.devicePixelRatio` (`min(dpr, 2)` → 2 on retina) while the
+corridor canvas renders at the governed ceiling (1.75 → 1.0 under load). After
+a step-down, dots were sized for a 2× buffer inside a 1× buffer — fat, chunky,
+aliased. It was the **last** corridor painter off the governed idiom.
+
+Fix: the uniform now syncs **per frame** from `state.viewport.dpr` in the
+component's `useFrame` (the same recipe as the BrandmarkSilhouettePoints
+2026-07-15 mobile pass), so a governor step lands in the shader the same frame;
+the mount-time raw read and the resize listener are deleted.
+
+**Consumer contract:** any painter that sizes points as
+`uPointSize * uPixelRatio` MUST feed `uPixelRatio` from `state.viewport.dpr`
+(or `gl.getPixelRatio()`) per frame — never from `window.devicePixelRatio` —
+or a governed step-down renders it broken instead of merely softer. A grep for
+`devicePixelRatio` under `components/landing/home-v2` + `components/brand`
+should stay empty of per-painter reads.
+
+The 2026-07-16 seam perf pass (ADR-047 U5) also removed most of the load that
+tripped the governor on this dive: post-change traces (1280×800, full budget)
+went from p50 ≈ 21–25ms / p95 ≈ 50–58ms / up to 13 long tasks to p50 16.7ms /
+p95 ≈ 38–42ms / ~0 long tasks, so the step-down itself should now be rare on
+capable hardware. No governor constants changed — the rev 2 ladder + lock
+rules stand.
 
 ## References
 

@@ -211,7 +211,7 @@ smooth. Two levers:
 2. **Perf.** The stage keeps the corridor canvas alive through a band the
    pre-047 opaque #about used to cover, and three actors kept drawing at
    opacity 0 through it. All are now draw-gated (`visible = opacity >
-   0.002`, written in the same frame as the fade so reverse scroll is
+0.002`, written in the same frame as the fade so reverse scroll is
    seamless; labs and flag-off paths hold opacity > 0 so their gates never
    close): the mark's point pass (`BrandmarkPhysicsCore` — also skips the
    SVG-rest and #continuum-approach transparent states; the sim keeps
@@ -238,7 +238,7 @@ beat became dead scroll.
 Fix, two coupled pieces:
 
 1. **The sweep restored** (`about-stage.css`): `#about.station[data-about-
-   mode="stage"] { margin-top: -100svh }` — gated on the stage attribute
+mode="stage"] { margin-top: -100svh }` — gated on the stage attribute
    (set once at engage, stable), NOT the transient `data-corridor-exit`
    band flag (geometry must not inflate mid-scroll). The about runway now
    pins while the stack settles, and the flip window's `[0 → 0.04]`
@@ -292,3 +292,50 @@ aboutFlipLinearT(p)))`) for tests and any future undamped consumer; the
 ring poses from `deckFlipFromT(dampedT)` so the rendered pose, the
 renderOrder swap, the portrait-back opacity gate, and the depth writer
 all read the SAME damped clock.
+
+## Update 5 (2026-07-16) — seam perf pass: full draw-gate inventory + DOM-layer gates
+
+The epilogue→#services seam janked (baseline 1280×800, full budget: p50
+21–25ms, p95 50–58ms, ~45% of frames over 24ms, long tasks up to 798ms/run).
+Update 2's insight — the stage keeps the corridor canvas alive through bands
+an opaque section used to cover, so invisible work is real work — is now
+applied across the whole surface. Post-change: p50 16.7ms (vsync), p95
+37–42ms, >50ms frames ≈ 0, long tasks eliminated. Discipline throughout is
+Update 2's: **the `visible` flag is written beside its opacity, in the same
+frame**, so reverse scroll restores every layer frame-exact.
+
+1. **Draw gates extended to the remaining painters** (Update 2 gated the
+   mark/orbits/gates/shell): `LatentWormholeWalls` (walls + streaks + exit
+   glow — heaviest ungated painter, pinned at 0 through the whole epilogue by
+   its buildFade), `LatentFieldTunnel` (points/vectors/tokens; the CPU flow
+   loop — three per-frame buffer re-uploads — now also skips while the whole
+   field is invisible), `SubstrateTopography` main terrain points,
+   `ScrollStreaks` (velocity-gated → closes at every idle beat corridor-wide),
+   `CelestialMotes`, `CorridorPhotons`, `StaticStarfield` (stays open through
+   ambient by design; its gate only closes if the envelope reaches 0).
+2. **Ticker display gate + arc freeze** (`CorridorStationHeaders`): the fixed
+   full-viewport ticker SVG ran a SMIL text-on-path relayout every frame under
+   two viewport-sized drop-shadow filters — at opacity 0. The single-writer
+   headers rAF stamps `data-signal-live` on `<html>` (crossing-gated); CSS
+   `display:none`s the SVG outside the window and the ticker rAF skips its
+   projection work. Once the docked dissipate passes SIGNAL_OUT.start (0.86)
+   the arc FREEZES (exit is pure translation + fade), killing the per-frame
+   textPath `d` rewrite exactly across the seam; skip epsilon 0.5 → 1.5px.
+3. **Caption glass**: `visibility: hidden` written in the same opacity delta
+   branch (engines don't reliably skip backdrop-filter at opacity 0 over a
+   live canvas), and the `backdrop-filter` TRANSITION on
+   `.home-v2-reticle__glass` is removed (blur is a static 14px at every
+   station now; the Build weight rides on `background` alone).
+4. **Root-style writes delta-gated**: the four per-frame
+   `documentElement.style.setProperty` calls (`--signal-exit-lift/scale`,
+   `--ticker-exit-lift`, `--signal-opacity`) fire only on meaningful change,
+   as one group.
+5. **Armillary anchor publishes delta-gated** (`CorridorArmillary`): while
+   parked idle the identical projected anchor arrays republished to
+   `hologramConnectorStore` every frame, re-rendering the DOM subscribers at
+   60fps. Publishes now skip within a 0.25px/1e-3-depth deadband (ids +
+   visibility compared; both sets together so they can never desync).
+
+Not touched: the frameloop/FrameInvalidator contract (ADR-018/021/this ADR),
+the ambient retarget, and the governor constants (see the ADR-038 2026-07-16
+update for the paired `uPixelRatio` fix and the post-change numbers).

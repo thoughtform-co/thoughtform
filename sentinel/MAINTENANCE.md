@@ -54,6 +54,35 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-16 (evening) — Services surface polish: seam perf, retina DPR, morph crispness, layout + card scale
+
+Four owner complaints, one pass (Cycle A per workstream; 8 commits, each
+independently revertible):
+
+- **Seam perf (ADR-047 Update 5).** Corridor→#services scroll janked.
+  Draw gates extended to all remaining painters (walls/tunnel/topography/
+  streaks/motes/photons/starfield, same-frame-as-opacity discipline), ticker
+  display-gate + SIGNAL_OUT arc freeze, caption glass visibility gate +
+  backdrop-filter transition removal, root-style + armillary anchor publish
+  delta gates. Headed-Chromium trace 1280×800: p50 21–25ms → **16.7ms
+  (vsync)**, p95 50–58 → 37–42ms, >50ms frames 9–22 → 0–4, long tasks
+  798ms/run → ~0. Governor constants untouched (not needed post-fix).
+- **Retina brandmark (ADR-038 update).** `BrandmarkPhysicsCore.uPixelRatio`
+  read raw `devicePixelRatio` instead of the governed buffer DPR → fat
+  chunky dots after a governor step-down on MacBook. Per-frame
+  `state.viewport.dpr` sync; consumer contract documented. Post-deploy check
+  for Vince: scroll the seam on the MacBook — the parked wireframe should
+  stay crisp, and briefly-soft states should recover within ~5s of idling.
+- **Terminal-crisp morph (ADR-023 addendum).** The 2D→3D flight window read
+  "painted". `FLIGHT_CRISP_FLOOR` 0.7 + point-size sin-dip 0.9 + recede
+  atten 0.12 — identity-default knobs, endpoints screenshot-verified
+  pixel-equivalent, choreography untouched. `brandmark.md` updated.
+- **Layout + card scale (ADR-044 update).** Corner-LINE masthead rule (both
+  text blocks top-anchored on the bracket line, vertical-only change) +
+  `parkedInstrumentScale` viewport boost (1.15× on MacBook-class, 1.0 wide/
+  tall, recT-target-only so the corridor is byte-identical; new unit suite).
+  Deck-flip portrait landing verified at 1280×800 and 1920×1080.
+
 ### 2026-07-16 (later) — About deck-flip stage (ADR-047; supersedes the ADR-046 dock, same day)
 
 Owner redesign of the services→about transition: the cartridge dock was

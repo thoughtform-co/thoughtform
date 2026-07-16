@@ -83,3 +83,46 @@ becomes **smaller and lower**.
   first (both on the right would compete).
 - The flag-off (`SERVICES_CARD_RING = false`) rack path renders no
   masthead — that fallback surface is unchanged.
+
+## Update (2026-07-16, responsive pass) — corner-line rule + viewport-aware parked scale
+
+Two coupled moves fixing the MacBook-class complaints ("right paragraph too
+close to the card"; "cards too small on smaller viewports"). Root cause for
+both: `getCameraFov` returns a constant 38° vertical FOV for every landscape
+aspect, so the front card is ~42% of viewport height on ALL desktop sizes —
+few absolute pixels on 800–900px-tall laptops — while its WIDTH fraction grows
+as aspect narrows, crowding the intro paragraph.
+
+1. **Corner-LINE text rule (third raise in the same owner trajectory).**
+   `--masthead-top` drops the corner-zone + vh-pad terms and anchors the band
+   top directly on the top-left bracket's line:
+   `calc(var(--hud-margin) + var(--masthead-top-trim, 0px))`. The intro plate
+   joins the SAME line (`top: var(--masthead-top)`) — the `+34px − 16px`
+   first-line alignment is superseded by the unified top. One rule, no vh
+   terms, all desktop viewports. The corner-zone term existed to clear the
+   bracket ZONE, but the bracket arm is only `--hud-corner-zone` wide while
+   the text columns start 8vw inboard — sharing the line is safe (verified
+   1280×800 / 1440×900 / 1920×1080). `--masthead-top-trim` is the optical
+   knob. `--masthead-inset` / `--rail-inset` (ADR-045 lockstep) untouched —
+   this change is vertical-only.
+
+2. **Viewport-aware parked scale** (`lib/home-v2/parkedInstrumentScale.ts`,
+   pinned by `tests/lib/parked-instrument-scale.test.ts`).
+   `getParkedInstrumentScaleMul(aspect, vh)` ramps 1 → 1.15 on MacBook-class
+   viewports (aspect ≤ ~1.62 AND height ≤ 1000px; smoothstep edges, portrait
+   and near-square guarded) and is exactly 1 on wide (≥16:9) or tall (≥1100px)
+   monitors. Applied in `BrandmarkPhysicsCoreActor` to the parked lerp
+   TARGETS only (`CENTER_TARGET_SCALE * mul`, `EXIT_RECEDE_SCALE * mul`), so
+   mark + orbits + card ring scale as ONE rig and every `recT = 0` frame (the
+   whole corridor + the SVG handoff) is byte-identical. This partially
+   restores the pre-ADR-044 1.15 scale — but viewport-scoped, enabled by the
+   raised band (exactly the interaction this ADR predicted). The ADR-047
+   deck-flip seat math needs no feed: it divides the live `matrixWorld`
+   parent scale back out per frame (verified: about portrait landing exact at
+   1280×800 mul=1.15 and 1920×1080 mul=1). `CENTER_Y_OFFSET` remains the
+   clearance lever; ring math constants untouched (unit-pins hold).
+
+Correction to the earlier consequence note: the "ONE PRACTICE. / FOUR WAYS
+IN." copy was itself reverted — live copy is `ONE LOOP. / THREE DEPTHS.`
+(`serviceData.ts`, "DEPTHS. returns DELIBERATELY"); the smoke spec's
+`ONE LOOP.` assertion is current, not stale.
