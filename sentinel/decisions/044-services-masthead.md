@@ -72,6 +72,12 @@ becomes **smaller and lower**.
   the owner chose for post-corridor sections.
 - Copy tension, owner-accepted: "THREE DEPTHS." predates the fourth
   service (Strategic Advisory, 2026-07-09). Data-only change if revisited.
+  **Revisited 2026-07-16 (same-day copy sweep):** masthead is now
+  `ONE PRACTICE.` / `FOUR WAYS IN.` with a concrete intro, and the card
+  titles/ledes moved to Vince's first-person voice (`SERVICE_PLATES` +
+  the vestigial `SERVICES` fields in lockstep). Data-only, as predicted.
+  The masthead inset also consumes the shared `--rail-inset` token since
+  ADR-045 (about rail parity) — same computed value, calc kept as fallback.
 - Rollback of the register = remount `ServicesRailRegisterPortal` in
   `LandingPage` (one line) — but reconcile with the masthead paragraph
   first (both on the right would compete).

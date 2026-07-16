@@ -63,15 +63,14 @@ const ROW_TOPS = [
   "calc(50% + 1.5 * var(--rail-register-pitch, 30px))",
 ] as const;
 
-/** Default right-column paragraph — the four service taglines woven into one
- *  intro (all genuine serviceData strings). Split as its own sentences so it
- *  reads as a manifesto, not a run-on. Editable via `?para=`. */
+/** Default right-column paragraph — mirrors the production
+ *  `SERVICES_MASTHEAD.intro` (2026-07-16 copy sweep). Editable via `?para=`. */
 const DEFAULT_PARA =
-  "Install the frame in a room, build the skill by hand, then move the practice in — one loop, run at the depth each team needs and tuned to the AI calls you're actually making.";
+  "A keynote, a workshop, standing advice, or a fixed-term embed inside your teams. Four depths of the same work: making AI capability your own.";
 
 /** Default title. A leading `|` splits the display lines; the LAST line renders
  *  in gold (the emphasis segment). Editable via `?title=`. */
-const DEFAULT_TITLE = "ONE LOOP.|THREE DEPTHS.";
+const DEFAULT_TITLE = "ONE PRACTICE.|FOUR WAYS IN.";
 
 type TitleFont = "mono" | "sans";
 
