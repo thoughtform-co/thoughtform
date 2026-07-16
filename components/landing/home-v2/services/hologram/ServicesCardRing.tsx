@@ -600,9 +600,11 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
 }
 
 /** Mirrored chamfer trace (TL/BR cuts) for the PORTRAIT BACK bake: the
- *  slab itself carries only the deck's Rx(π) at full flip, so its physical
- *  TR/BL chamfers land at screen BR/TL — the back face must frame the
- *  OTHER two corners for its chrome to align with the flipped silhouette. */
+ *  slab itself carries only the deck's Ry(π) at full flip, so its physical
+ *  TR/BL chamfers land at screen TL/BR — the back face must frame the
+ *  OTHER two corners for its chrome to align with the flipped silhouette.
+ *  (Same TL/BR cut set as the retired Rx(π) flip — a π flip about either
+ *  in-plane axis maps the TR/BL diagonal onto the TL/BR one.) */
 function traceChamferPathMirrored(ctx: CanvasRenderingContext2D, inset: number): void {
   const x = inset;
   const y = inset;
@@ -625,7 +627,7 @@ function traceChamferPathMirrored(ctx: CanvasRenderingContext2D, inset: number):
  * fifth face of the same deck. Minimal chrome only (no chip row, no copy
  * stack, no CTA — and no fonts, so this bake never waits on
  * `waitForCardFonts`). Drawn UPRIGHT: the back plane carries
- * `rotation.x = π`, and the deck's own Rx(π) flip composes with it to
+ * `rotation.y = π`, and the deck's own Ry(π) flip composes with it to
  * identity, so the canvas reads exactly like an unrotated front plane at
  * full flip (see the back-plane JSX note).
  */
@@ -1276,6 +1278,16 @@ export function ServicesCardRing({
     // slack either way). All four backs share one material — correct
     // because the backs are only ever seen converged.
     backMaterial.opacity = flip !== null ? opacityRange[1] * masterOpacity * deckBgKill : 0;
+    // The portrait back is the deck's depth writer once the flip passes
+    // edge-on (pre-midpoint every back is FrontSide-culled — no fragments,
+    // so the early enable is inert): the four backs draw in the rebased
+    // back-to-front order, the nearest (deck-rear card 0's) wins the
+    // buffer, and the renderOrder-1 brandmark point pass depth-tests
+    // behind the portrait instead of painting over it (ADR-047 rev 2).
+    // The opacity floor releases the writer as the about tail's
+    // deckBgKill fades the deck under the shield.
+    const backWrite = flip !== null && backMaterial.opacity > 0.55;
+    if (backWrite !== backMaterial.depthWrite) backMaterial.depthWrite = backWrite;
 
     const parked = dissipate >= ANCHOR_PUBLISH_DISSIPATE;
     const anchors: RingCardAnchor[] = [];
@@ -1373,24 +1385,28 @@ export function ServicesCardRing({
       const ringScale = depthScale(placed.nz, scaleRange);
 
       if (flip) {
-        // ── ADR-047 flip: the deck rotates about its pivot's X axis as
-        // ONE rigid slab (position = pivot + Rx(θ)·offset) while the pivot
-        // glides onto — then tracks — the DOM portrait slot. Past the flip
-        // window posBlend = 1, so the DOM cluster's beat-1 translate
-        // carries the deck with zero extra code (one motion owner).
+        // ── ADR-047 flip (rev 2: Y axis): the deck rotates about its
+        // pivot's Y axis as ONE rigid slab (position = pivot + Ry(θ)·offset)
+        // while the pivot glides onto — then tracks — the DOM portrait
+        // slot. Past the flip window posBlend = 1, so the DOM cluster's
+        // beat-1 translate carries the deck with zero extra code (one
+        // motion owner). Y, not X: the owner's "flip on the x-axis" brief
+        // named the left↔right travel DIRECTION — the literal Rx shipped
+        // first and read as a top-over-bottom tumble.
         const off = DECK_OFFSETS[i];
         const offX = off.x * flipRigidScale;
         const offY = off.y * flipRigidScale;
         const offZ = off.z * flipRigidScale;
         cardGroup.position.set(
-          flipPivotX + offX,
-          flipPivotY + offY * flipCos - offZ * flipSin,
-          flipPivotZ + offY * flipSin + offZ * flipCos
+          flipPivotX + offX * flipCos + offZ * flipSin,
+          flipPivotY + offY,
+          flipPivotZ - offX * flipSin + offZ * flipCos
         );
-        // 'XYZ' order: the yaw is a full turn (identity), so this is
-        // exactly Rx(θ) — and the back plane's own rotation.x = π composes
-        // with it to identity at full flip (upright, unmirrored portrait).
-        cardGroup.rotation.set(flip.theta, DECK_PHI_TARGETS[i], 0);
+        // The yaw slot composes φ (a full turn — identity) with θ, so this
+        // is exactly Ry(θ) — and the back plane's own rotation.y = π
+        // composes with it to identity at full flip (upright, unmirrored
+        // portrait).
+        cardGroup.rotation.set(0, DECK_PHI_TARGETS[i] + flip.theta, 0);
         cardGroup.scale.setScalar(flipCardScale);
       } else if (stack) {
         // ── ADR-047 stack: the azimuth sweep already carried position and
@@ -1434,14 +1450,21 @@ export function ServicesCardRing({
       veilMaterials[i].opacity = veilLevelRef.current[i] * depthO * master;
       cardGroup.visible = opacity > 0.004;
 
-      // depthWrite hysteresis — only the near-front card's CONTENT writes
-      // depth (the glass never does). Force-OFF for the whole deck life:
-      // the sweep drives EVERY card's nz → 1, so the plain gate would
-      // switch four near-coplanar stacked writers ON (sorting carnage +
-      // holes in the depthWrite:false particle pass) — ADR-047.
+      // depthWrite discipline — only the near-front card's CONTENT writes
+      // depth (the glass never does); that single writer is what occludes
+      // the renderOrder-1 brandmark point pass behind the card. During the
+      // deck life the plain nz gate would switch four near-coplanar
+      // stacked writers ON (sorting carnage + holes in the depthWrite:false
+      // particle pass), so the writer is picked EXPLICITLY instead: the
+      // nearest deck slot (deckOrder top — the same θ = π/2 swap the
+      // renderOrder rebase uses). Rev 2 of ADR-047: the original force-OFF
+      // left NO writer, so the mark's points painted OVER the deck (user
+      // report, 2026-07-16). Post-midpoint the top slot's FrontSide
+      // content plane culls away and the shared portrait back material
+      // takes over as the writer (set beside its opacity above).
       const write =
         deckEngaged && (exitP > DECK_DEPTH_WRITE_OFF_EXIT || aboutP > 0)
-          ? false
+          ? deckOrder(i, flip ? flip.flipped : false) === RING_COUNT - 1 && opacity > 0.55
           : depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity > 0.55;
       if (write !== material.depthWrite) material.depthWrite = write;
       depthWriteRef.current[i] = write;
@@ -1633,21 +1656,21 @@ export function ServicesCardRing({
               toneMapped={false}
             />
           </mesh>
-          {/* The deck's PORTRAIT BACK (ADR-047) — floated behind the back
-              cap, rotation.x = π so the deck's rigid Rx(π) flip composes
-              with it to IDENTITY: at full flip it reads exactly like an
-              unrotated front plane (upright, unmirrored; a y = π plane
-              would land the portrait upside-down). Shares ONE texture +
-              material across all four cards; opacity gated to the flip
-              phase (FrontSide culling covers the flat-deck frames). No
-              back veil (the portrait carries its own scrims) and no glow
-              twin (the +z glow FrontSide-culls after the flip AND is
-              already dead via the stack's glowMul). */}
+          {/* The deck's PORTRAIT BACK (ADR-047, rev 2) — floated behind the
+              back cap, rotation.y = π so the deck's rigid Ry(π) flip
+              composes with it to IDENTITY: at full flip it reads exactly
+              like an unrotated front plane (upright, unmirrored; an x = π
+              plane would land the portrait upside-down under the Y flip).
+              Shares ONE texture + material across all four cards; opacity
+              gated to the flip phase (FrontSide culling covers the
+              flat-deck frames). No back veil (the portrait carries its own
+              scrims) and no glow twin (the +z glow FrontSide-culls after
+              the flip AND is already dead via the stack's glowMul). */}
           {ABOUT_DECK_STAGE && (
             <mesh
               renderOrder={0.11}
               position={[0, 0, -(slabDepth / 2 + RING_CONTENT_LIFT)]}
-              rotation={[Math.PI, 0, 0]}
+              rotation={[0, Math.PI, 0]}
               geometry={backGeometry}
               material={backMaterial}
               frustumCulled={false}

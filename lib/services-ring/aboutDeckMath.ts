@@ -13,7 +13,10 @@
 //      yaw-unwind, depth-opacity lift, and scale-equalize all fall out of
 //      `placeCardOnOrbit` as nz → 1.
 //   2. THE FLIP (about stage clock, 0→1 across the pinned #about runway):
-//      the deck rotates π about its pivot's X axis AS ONE RIGID SLAB,
+//      the deck rotates π about its pivot's Y axis AS ONE RIGID SLAB
+//      (a left↔right swing — rev 2; the owner's "flip on the x-axis"
+//      brief named the travel direction, and the literal Rx read as a
+//      top-over-bottom tumble),
 //      revealing the portrait back faces, while the pivot glides onto the
 //      DOM portrait slot (aboutSlotRef); past the flip window the pivot IS
 //      the live slot rect every frame, so the DOM cluster's beat-1
@@ -262,7 +265,7 @@ export function deckStackEnvelope(exit: number, index: number): DeckStack {
 }
 
 export interface DeckFlip {
-  /** Rigid flip angle about the pivot's X axis: 0 → exactly π. */
+  /** Rigid flip angle about the pivot's Y axis: 0 → exactly π. */
   theta: number;
   /** Pivot glide DECK_PIVOT_LOCAL → the DOM slot point (same window — the
    *  flip masks the position correction; 1 = welded to the live slot). */

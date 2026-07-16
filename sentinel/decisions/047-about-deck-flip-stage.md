@@ -163,3 +163,37 @@ visible`) and its authored `::before` radial wash is overridden into a
   approach and scroll anchoring compensates the inflation.
 - Rollback: flip `ABOUT_DECK_STAGE = false` (one line) — ADR-030 radial
   exit + opaque #about cover restore; the fallback surfaces never changed.
+
+## Update 1 (2026-07-16) — rev 2: Y-axis flip + deck depth writer
+
+Two owner reports the day the stage shipped, both verified in code:
+
+1. **The flip axis was wrong.** The owner's brief _"flip on the x-axis"_
+   named the left↔right travel DIRECTION; the implementation took it
+   literally as `Rx(θ)`, which reads as a top-over-bottom tumble. The deck
+   now flips about its pivot's **Y axis** (`position = pivot + Ry(θ)·offset`,
+   `rotation.set(0, deckPhiTarget + θ, 0)` — φ is a full turn, so the yaw
+   slot composes to exactly `Ry(θ)`). The back-face gotcha inverts with it:
+   the portrait plane now carries `rotation.y = π` (Ry(π)∘Ry(π) = identity —
+   an `x = π` plane would land upside-down under the Y flip). The
+   `bakePortraitBack` mirrored chamfer trace is UNCHANGED: a π flip about
+   either in-plane axis maps the slab's physical TR/BL chamfer diagonal onto
+   the screen TL/BR one, so the TL/BR cut set stays correct. The θ = π/2
+   renderOrder swap (`flipped`) is axis-agnostic.
+2. **The mark's points painted OVER the deck.** The rev-1 depthWrite
+   force-OFF left the deck with NO depth writer, so the renderOrder-1
+   brandmark point pass (transparent, depthTest, drawn after every card
+   layer) composited straight over the card faces — the "background
+   presence" read as foreground residue on the cards. The ring's
+   single-writer contract is now restored for the deck life instead of
+   suspended: past `DECK_DEPTH_WRITE_OFF_EXIT` the writer is picked
+   EXPLICITLY as the nearest deck slot (`deckOrder` top — the same θ = π/2
+   swap the renderOrder rebase uses), never the plain nz gate (which would
+   have switched four near-coplanar writers ON — the rev-1 fear, still
+   valid). Post-midpoint that slot's FrontSide content plane culls away and
+   the shared portrait `backMaterial` takes over as the writer (enabled
+   beside its opacity write; inert pre-midpoint — every back plane is
+   FrontSide-culled, no fragments). The `EXIT_DIM` partial dim and the
+   flip-window `aboutFlipFade` stage-clearing kill are unchanged — the mark
+   is now additionally OCCLUDED wherever the deck actually covers it, which
+   is what "background presence" was supposed to mean.
