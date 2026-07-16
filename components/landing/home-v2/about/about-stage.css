@@ -103,15 +103,29 @@
 
 /* ── LEFT — copy column reveal (beat 1). Scrubbed per-child stagger:
    each child carries an inline --ci-off (0 … 0.48); --ci renormalizes
-   --about-copy-in past that offset. Reversible, observer-free. */
+   --about-copy-in past that offset. Reversible, observer-free.
+
+   Direction (owner, 2026-07-16): the column EMERGES FROM THE CENTER —
+   each child slides right→left into place (the deck it emerges from
+   sits center/right) and reveals right-to-left via a left-inset wipe,
+   replacing the earlier rise-up ("cringy") translateY. The identity
+   lines additionally scramble-decode (AboutStage effect — the caption
+   kernel), so the beat reads as the terminal printing the dossier. */
 #about[data-about-mode="stage"] .about-stage__copy > * {
   --ci: clamp(0, calc((var(--about-copy-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
   opacity: var(--ci);
-  transform: translateY(calc((1 - var(--ci)) * 14px));
+  transform: translateX(calc((1 - var(--ci)) * 32px));
+  /* Right-to-left wipe: the hidden region shrinks from the LEFT edge,
+     so the text's center-facing end lands first and the reveal runs
+     outward to the left margin. */
+  clip-path: inset(0 0 0 calc((1 - var(--ci)) * 100%));
 }
-#about[data-about-mode="stage"] .about-stage__copy .voidwalker__name {
-  /* The title wipe — the [data-m="title"] grammar, scrubbed. */
-  clip-path: inset(0 0 calc((1 - var(--ci)) * 100%) 0);
+/* Decode targets keep their line box while blanked pre-arm (the scramble
+   kernel owns their textContent — see AboutStage). */
+.about-stage__decode-line {
+  display: inline-block;
+  min-height: 1em;
+  min-width: 1px;
 }
 
 /* ── RIGHT — the orbit cluster. Beat 0: rings/readouts/halo materialize

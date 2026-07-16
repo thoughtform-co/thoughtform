@@ -1,11 +1,24 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { ABOUT_STAGE, type BioSegment } from "./aboutStageData";
 import { useAboutStageScroll } from "../hooks/useAboutStageScroll";
 import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
+import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { aboutCopyT } from "@/lib/services-ring/aboutDeckMath";
+import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
+
+/** Copy-clock threshold that ARMS the identity decode (name / em / role
+ *  scramble toward their finals). Slightly into the copy reveal so the
+ *  decode plays on text that is already visibly emerging. */
+const SCRAMBLE_ARM_AT = 0.05;
+/** Reverse-scroll re-arm floor — below this the decode resets so the next
+ *  forward entry plays fresh (mirrors the ServicesMasthead thresholds). */
+const SCRAMBLE_REARM_BELOW = 0.02;
+/** Per-target decode stagger (seconds) — name, then em, then role. */
+const SCRAMBLE_STAGGER_S = 0.14;
 
 /**
  * AboutStage — the pinned #about deck-flip stage (ADR-047, capable
@@ -98,8 +111,60 @@ export function AboutStage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
   const clusterRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const nameEmRef = useRef<HTMLElement>(null);
+  const roleRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery("(min-width: 961px) and (prefers-reduced-motion: no-preference)");
   useAboutStageScroll(stageRef, slotRef, clusterRef);
+
+  // Identity decode (owner, 2026-07-16): the name / "// Voidwalker." em /
+  // role eyebrow SCRAMBLE-DECODE into place via the caption kernel (the
+  // same terminal glitch as the corridor captions + services masthead)
+  // while the CSS right-to-left emergence scrubs the column in. The
+  // targets are BLANKED until the copy clock arms so the decode plays on
+  // first render of the beat (the kernel no-ops when from === to);
+  // reverse scroll below the re-arm floor restores finals + re-blanks on
+  // the next forward pass. rAF is component-local (single writer for
+  // these text nodes); the stage is gated to desktop no-preference, so
+  // reduced-motion never reaches this loop (the static .voidwalker
+  // fallback carries the full text there).
+  useEffect(() => {
+    if (!ABOUT_DECK_STAGE || !capable) return;
+    const targets = [
+      { el: nameRef.current, to: ABOUT_STAGE.name, at: 0 },
+      { el: nameEmRef.current, to: ABOUT_STAGE.nameEm, at: SCRAMBLE_STAGGER_S },
+      { el: roleRef.current, to: ABOUT_STAGE.role, at: SCRAMBLE_STAGGER_S * 2 },
+    ];
+    const jobs: ScrambleJob[] = [];
+    let armed = false;
+    let blanked = false;
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const copyT = aboutCopyT(aboutStageProgressRef.current.progress);
+      const nowSec = performance.now() / 1000;
+      if (!blanked && !armed && copyT < SCRAMBLE_ARM_AT) {
+        // Pre-beat: hold the targets empty so the decode has something
+        // to decode INTO (they sit at opacity ~0 here — no visible blank).
+        blanked = true;
+        for (const t of targets) if (t.el) t.el.textContent = "";
+      }
+      if (!armed && blanked && copyT >= SCRAMBLE_ARM_AT) {
+        armed = true;
+        for (const t of targets) if (t.el) queueScramble(jobs, t.el, t.to, nowSec + t.at);
+      } else if (armed && copyT <= SCRAMBLE_REARM_BELOW) {
+        // Reverse scroll: reset finals (no half-decoded residue if the
+        // user re-enters slowly) and allow a fresh blank + decode.
+        armed = false;
+        blanked = false;
+        jobs.length = 0;
+        for (const t of targets) if (t.el) t.el.textContent = t.to;
+      }
+      if (jobs.length) advanceScrambles(jobs, nowSec);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [capable]);
 
   // Below the gate the static .voidwalker fallback owns the section — no
   // duplicate DOM (the hook also never engages, so `data-about-mode`
@@ -116,11 +181,23 @@ export function AboutStage() {
             stage needs reversible, portal-safe reveals). */}
         <div className="about-stage__copy voidwalker__copy">
           <h2 className="voidwalker__name" style={{ ["--ci-off" as string]: 0 }}>
-            {ABOUT_STAGE.name}
+            {/* Line spans are the scramble-decode targets (the kernel
+                writes textContent, so the <br/> + <em> structure must
+                live OUTSIDE the decoded nodes). min-height on the lines
+                reserves the box while blanked. */}
+            <span className="about-stage__decode-line" ref={nameRef}>
+              {ABOUT_STAGE.name}
+            </span>
             <br />
-            <em>{ABOUT_STAGE.nameEm}</em>
+            <em className="about-stage__decode-line" ref={nameEmRef}>
+              {ABOUT_STAGE.nameEm}
+            </em>
           </h2>
-          <div className="voidwalker__role" style={{ ["--ci-off" as string]: 0.08 }}>
+          <div
+            className="voidwalker__role about-stage__decode-line"
+            ref={roleRef}
+            style={{ ["--ci-off" as string]: 0.08 }}
+          >
             {ABOUT_STAGE.role}
           </div>
           {ABOUT_STAGE.bios.map((bio, i) => (
