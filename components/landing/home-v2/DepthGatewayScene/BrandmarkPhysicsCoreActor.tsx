@@ -321,6 +321,12 @@ const CENTER_Y_OFFSET = 0.1;
 const EXIT_RECEDE_SCALE = 0.9;
 const EXIT_RECEDE_DIST = 0.55;
 const EXIT_DIM = 0.45;
+/** How much MORE the mark dims across the about flip window, on top of
+ *  EXIT_DIM (owner revision 2026-07-16 — the mark PERSISTS through #about
+ *  instead of clearing). Persisted ink ≈ (1 − EXIT_DIM) · (1 − this)
+ *  ≈ 0.55 · 0.55 ≈ 0.30 of the parked opacity — a subtle receded centre
+ *  presence behind the flipped portrait. 1.0 restores the full clear. */
+const ABOUT_FLIP_MARK_DIM = 0.45;
 
 /** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
  *  reveals the kept dome's depth, so the mark reads as a living 3D object
@@ -639,13 +645,18 @@ export function BrandmarkPhysicsCoreActor({
       ? smootherstep(0, 1, exitProgressForRunway(servicesRingProgressRef.current.progress)) * recT
       : 0;
 
-    // About flip fade (ADR-047): the exit dim is only PARTIAL (the receded
-    // mark stays a background presence through the deck stack), so as the
-    // pinned #about stage flips the deck to the portrait, the mark clears
-    // FULLY across the flip window — the portrait gets a clean stage.
+    // About flip dim (ADR-047; owner revision 2026-07-16): the mark no
+    // longer clears FULLY across the flip — it PERSISTS through the whole
+    // #about stage as a subtle, receded centre presence ("the wireframe
+    // should persist and just stay at the center … a bit more subtle").
+    // The flip window now only deepens the exit dim toward a floor
+    // (1 − ABOUT_FLIP_MARK_DIM); the orbits/tracks keep their own full
+    // clear (CorridorArmillary's orbitExitGetter still multiplies
+    // 1 − aboutFlipT to 0). The mark still dies with the ambient envelope
+    // as #continuum arrives (handoffFade → servicesAmbientLevel).
     // Identity (1) everywhere the about clock is 0.
     const aboutFlipFade = ABOUT_DECK_STAGE
-      ? 1 - aboutFlipT(aboutStageProgressRef.current.progress)
+      ? 1 - ABOUT_FLIP_MARK_DIM * aboutFlipT(aboutStageProgressRef.current.progress)
       : 1;
 
     // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
