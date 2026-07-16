@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
 import {
+  DISSIPATE_BANDS,
   DOCKED_INSTRUMENT_EPILOGUE_POSE,
   dissipateBand,
   dissipateShellScatter,
@@ -912,6 +913,14 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       const path = pathRef.current;
       if (!svg || !path) return;
 
+      // Display gate (2026-07-16 perf pass, ADR-047 U5): the single-writer
+      // headers rAF toggles `data-signal-live` on <html> as the signal
+      // block crosses visibility; CSS hides this SVG entirely while the
+      // attribute is absent. Skip all projection work too — while hidden
+      // there is nothing to track, and on re-show the arc recomputes on
+      // the first visible frame.
+      if (!document.documentElement.hasAttribute("data-signal-live")) return;
+
       // Ticker opacity is CSS-driven via `--signal-opacity` (single-writer
       // sync, 2026-06-19), so this rAF does NOT set opacity. `sigOp` is read
       // only as a cheap input to the skip-relayout cache below (so the arc
@@ -962,6 +971,16 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       //     uses) so the arc curvature widens / flattens at the sphere's
       //     pace and hugs the expanding dotted-shell limb.
       const tickerExit = transform.docked ? getSmoothedDissipate() : 0;
+
+      // Arc freeze (2026-07-16 perf pass, ADR-047 U5): once SIGNAL_OUT
+      // begins the signal group exits by pure translation
+      // (`--ticker-exit-lift`) + the opacity tail — curvature changes are
+      // invisible under the exit motion. Hold the last good arc and stop
+      // the per-frame textPath `d` rewrite (each rewrite forces a
+      // text-on-path relayout of the full marquee) exactly across the
+      // corridor→#services seam where the frames are needed most.
+      if (transform.docked && tickerExit >= DISSIPATE_BANDS.SIGNAL_OUT.start) return;
+
       const basePose = getEpilogueCameraPose(ep);
       const camPos = basePose.position;
       const camLook = basePose.lookAt;
@@ -1011,11 +1030,15 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       }
 
       // Skip the text-on-path relayout when nothing moved meaningfully.
+      // 1.5px epsilon (was 0.5, 2026-07-16 perf pass): sub-2px arc drift
+      // under 18px type is imperceptible, and the wider deadband stops
+      // the damped settle tails from rewriting the path for dozens of
+      // extra frames after the motion has visually stopped.
       if (
         last.op === sigOp &&
-        Math.abs(cx - last.cx) < 0.5 &&
-        Math.abs(cy - last.cy) < 0.5 &&
-        Math.abs(ringR - last.r) < 0.5
+        Math.abs(cx - last.cx) < 1.5 &&
+        Math.abs(cy - last.cy) < 1.5 &&
+        Math.abs(ringR - last.r) < 1.5
       ) {
         return;
       }
@@ -1236,6 +1259,18 @@ export function CorridorStationHeaders() {
   useEffect(() => {
     let raf = 0;
     let lastCorridorPhase: CorridorPhase | null = null;
+    // Ticker display-gate + <html> var deltas (2026-07-16 perf pass):
+    // last-written values so the four documentElement custom-prop writes
+    // and the `data-signal-live` toggle fire only on meaningful change —
+    // a per-frame inline-style write on <html> invalidates style on the
+    // whole document even when the value is identical.
+    let lastSignalLive: boolean | null = null;
+    const lastSignalVars = {
+      lift: Infinity,
+      scale: Infinity,
+      tickerLift: Infinity,
+      sig: Infinity,
+    };
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const t = useDepthGatewayStore.getState().transform;
@@ -1374,6 +1409,21 @@ export function CorridorStationHeaders() {
         else signalEl.setAttribute("inert", "");
       }
 
+      // Ticker display gate (2026-07-16 perf pass, ADR-047 U5): outside
+      // the signal window the fixed full-viewport ticker SVG still cost a
+      // per-frame text-on-path relayout (the SMIL startOffset marquee
+      // never pauses) plus two viewport-sized drop-shadow filter rasters —
+      // all at opacity 0. `data-signal-live` on <html> lets CSS
+      // display:none the SVG and the ticker rAF skip its projection work.
+      // Crossing-gated: one attribute write per state change, restored in
+      // the same frame the signal opacity returns on reverse scroll.
+      const signalLive = containerOps.sig > 0.002;
+      if (signalLive !== lastSignalLive) {
+        lastSignalLive = signalLive;
+        if (signalLive) document.documentElement.setAttribute("data-signal-live", "");
+        else document.documentElement.removeAttribute("data-signal-live");
+      }
+
       // World-coupled parallax for the bottom-centre cartouche
       // (2026-06-10 polish round 3). Read the live gyro bank and
       // shift each corridor cartouche by a small pixel offset so the
@@ -1416,6 +1466,15 @@ export function CorridorStationHeaders() {
         if (Math.abs(cardOp - cs.lastOp) > 0.002) {
           cs.lastOp = cardOp;
           cardEl.style.opacity = cardOp.toFixed(3);
+          // Compositor skip (2026-07-16 perf pass, ADR-047 U5): at
+          // opacity 0 the card's glass plate still declares
+          // backdrop-filter: blur(14px), and engines don't reliably skip
+          // backdrop work for opacity-0 elements — over the live docked
+          // canvas that's a standing per-frame re-blur through the whole
+          // epilogue/seam/#services stretch. visibility:hidden makes the
+          // skip explicit; written in the same delta branch as opacity so
+          // reverse scroll restores the card in the exact same frame.
+          cardEl.style.visibility = cardOp > 0.002 ? "" : "hidden";
         }
         cardEl.style.transform = cartoucheTransform;
         // Chrome arm/rearm — the unfold plays on arm, the collapse (its
@@ -1480,16 +1539,33 @@ export function CorridorStationHeaders() {
       // ticker ran its own rAF that re-read the signal opacity + store a
       // frame apart, which made it blank/clip out of step with the title
       // at the dock boundary — 2026-06-19 single-writer sync.)
-      document.documentElement.style.setProperty(
-        "--signal-exit-lift",
-        `${signalLiftPx.toFixed(2)}px`
-      );
-      document.documentElement.style.setProperty("--signal-exit-scale", signalScale.toFixed(4));
-      document.documentElement.style.setProperty(
-        "--ticker-exit-lift",
-        `${tickerLiftPx.toFixed(2)}px`
-      );
-      document.documentElement.style.setProperty("--signal-opacity", containerOps.sig.toFixed(4));
+      // Delta-gated (2026-07-16 perf pass): these four inline writes on
+      // <html> previously fired unconditionally every frame — an
+      // every-frame style invalidation on the root element even while
+      // parked with nothing moving. One combined deadband (0.25px on the
+      // lifts, matching the opacity epsilons elsewhere in this tick)
+      // writes all four together so the group can never desync.
+      if (
+        Math.abs(signalLiftPx - lastSignalVars.lift) > 0.25 ||
+        Math.abs(signalScale - lastSignalVars.scale) > 0.0005 ||
+        Math.abs(tickerLiftPx - lastSignalVars.tickerLift) > 0.25 ||
+        Math.abs(containerOps.sig - lastSignalVars.sig) > 0.002
+      ) {
+        lastSignalVars.lift = signalLiftPx;
+        lastSignalVars.scale = signalScale;
+        lastSignalVars.tickerLift = tickerLiftPx;
+        lastSignalVars.sig = containerOps.sig;
+        document.documentElement.style.setProperty(
+          "--signal-exit-lift",
+          `${signalLiftPx.toFixed(2)}px`
+        );
+        document.documentElement.style.setProperty("--signal-exit-scale", signalScale.toFixed(4));
+        document.documentElement.style.setProperty(
+          "--ticker-exit-lift",
+          `${tickerLiftPx.toFixed(2)}px`
+        );
+        document.documentElement.style.setProperty("--signal-opacity", containerOps.sig.toFixed(4));
+      }
 
       // Per-station typewriter pass.
       for (const key of ["nav", "enc", "bld", "sig"] as const) {

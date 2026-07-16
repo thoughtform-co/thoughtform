@@ -1736,6 +1736,15 @@ html[data-corridor-exit="true"] #continuum {
   max-width: min(70vw, 560px);
 }
 
+/* Display gate (2026-07-16 perf pass, ADR-047 U5): the single-writer
+   headers rAF stamps `data-signal-live` on <html> only while the signal
+   block is visibly on screen. Outside that window this fixed
+   full-viewport SVG — whose SMIL startOffset marquee forces a
+   text-on-path relayout every frame it paints, under two viewport-sized
+   drop-shadow filters — is fully display-gated, not just at opacity 0. */
+html:not([data-signal-live]) .home-v2-signal-ticker {
+  display: none;
+}
 .home-v2-signal-ticker {
   /* Own fixed full-viewport layer. No viewBox → 1 SVG user unit = 1px,
      so `EpilogueNewsTicker` rewrites the arc PATH in viewport pixels each
