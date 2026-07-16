@@ -21,7 +21,7 @@ export const SERVICE_SCAN_NOTES: readonly ServiceScanNote[] = [
     label: "Standing read",
     coordinate: "CV:03.18 / N-ARC",
     confidence: 0.91,
-    signals: ["where to invest", "what to ignore", "tested against real work"],
+    signals: ["where to invest", "what to skip", "tested against real work"],
     summary: "A standing read for the people making the AI calls, kept honest against live work.",
   },
   {

@@ -61,9 +61,12 @@ export interface Service {
  * rendered all-caps by the card), one literal support line (`body`), three
  * ≤5-word data rows (Runs / Format / Leaves — the phase pill folds into
  * Runs), one CTA. `kicker` is retained for the mobile card stack only. */
-/* Copy + order rewritten 2026-07-09 (Vince review); copy swept again
- * 2026-07-16 (concrete first-person voice, kept in lockstep with
- * `servicePlateData` — the production card copy). The four ServiceId keys
+/* Copy + order rewritten 2026-07-09 (Vince review); swept 2026-07-16
+ * (first-person voice), then replaced the same evening with the owner's
+ * full-section copy: tightened bodies, no em dashes, voice moved from
+ * first-person singular ("I advise") to the practice "we" / neutral.
+ * Kept in lockstep with `servicePlateData` — the production card copy.
+ * The four ServiceId keys
  * are FIXED SPATIAL SLOTS shared with `servicePlateData` (each id is wired to
  * a rack position, a brandmark anchor, a designation set, and a scan note).
  * The service occupying each slot changed; the id → service mapping is:
@@ -77,17 +80,19 @@ export interface Service {
 /** Section masthead copy (2026-07-16, promoted from /test/services-wordmark —
  * ADR-044). SECTION-level register copy ONLY — the title/intro for #services as
  * a whole, never per-card (ADR-029: card copy stays baked on the WebGL faces).
- * The em line renders gold. Rewritten 2026-07-16 (Vince copy sweep): the stale
- * "THREE DEPTHS." (predated the fourth service) is retired; plain concrete
- * register, first-person voice reserved for the cards. */
+ * The em line renders gold. Owner copy, 2026-07-16 evening sweep: "THREE
+ * DEPTHS." returns DELIBERATELY (an earlier pass retired it as stale) — the
+ * intro reframes the count: talk / workshop / embedded term are the three
+ * DEPTHS of one loop, and Advisory is the standing read alongside them
+ * (the eyebrow's · 04 still counts all four cards). */
 export const SERVICES_MASTHEAD = {
   eyebrow: "Services · 04",
   titleLines: [
-    { text: "ONE PRACTICE.", em: false },
-    { text: "FOUR WAYS IN.", em: true },
+    { text: "ONE LOOP.", em: false },
+    { text: "THREE DEPTHS.", em: true },
   ],
   intro:
-    "A keynote, a workshop, standing advice, or a fixed-term embed inside your teams. Four depths of the same work: making AI capability your own.",
+    "One loop, run at three depths. A talk to reset the room, a workshop to build the first tools, and an embedded term where we run strategy and build with your teams. Tuned to the AI decisions you're actually making.",
 } as const;
 
 export const SERVICES: readonly Service[] = [
@@ -96,9 +101,9 @@ export const SERVICES: readonly Service[] = [
     index: "01",
     verb: "ADVISORY",
     name: "Strategic Advisory",
-    kicker: "ONGOING STRATEGIC ADVICE",
-    tagline: "Ongoing strategic advice.",
-    body: "I advise the people making your AI decisions. A monthly cadence on where to invest, what to ignore, and what to build next.",
+    kicker: "KNOW WHERE TO INVEST IN AI",
+    tagline: "Know where to invest in AI.",
+    body: "A monthly read for the people making the AI calls: where to invest, what to skip, what to build. Tested against real work.",
     meta: [
       { label: "Runs", value: "Monthly cadence" },
       { label: "Format", value: "Strategic memos · NL/EN" },
@@ -114,9 +119,9 @@ export const SERVICES: readonly Service[] = [
     index: "02",
     verb: "EMBEDDED",
     name: "Embedded AI Partner",
-    kicker: "I MOVE IN WITH YOUR TEAM",
-    tagline: "I move in with your team.",
-    body: "For a fixed term I work inside your company — setting AI strategy, building tools, training your people. Everything stays when I leave.",
+    kicker: "WE BUILD INSIDE YOUR TEAMS",
+    tagline: "We build inside your teams.",
+    body: "We run strategy and build with your teams on a fixed term. You keep the tools, the judgment, and the people who can run them.",
     meta: [
       { label: "Runs", value: "Fixed term" },
       { label: "Format", value: "Dated handover" },
@@ -132,9 +137,9 @@ export const SERVICES: readonly Service[] = [
     index: "03",
     verb: "KEYNOTE",
     name: "Keynote",
-    kicker: "ONE TALK RESETS THE ROOM",
-    tagline: "One talk that resets the room.",
-    body: "A keynote tuned to your industry, built on live demos. Your people leave with a shared language for what AI changes in their work.",
+    kicker: "CHANGE HOW YOUR ROOM SEES AI",
+    tagline: "Change how your room sees AI.",
+    body: "Built for your industry, run on live demos. The room leaves with shared language and a clear next step.",
     meta: [
       { label: "Runs", value: "Navigate" },
       { label: "Format", value: "30–90 min · NL/EN" },
@@ -150,9 +155,9 @@ export const SERVICES: readonly Service[] = [
     index: "04",
     verb: "WORKSHOP",
     name: "Workshop",
-    kicker: "YOUR TEAM LEARNS BY BUILDING",
-    tagline: "Your team learns by building.",
-    body: "A hands-on day where your team puts AI on their own workflows. They leave with working skills and a clear list of what to build next.",
+    kicker: "YOUR TEAM BUILDS ITS FIRST AI TOOLS",
+    tagline: "Your team builds its first AI tools.",
+    body: "A hands-on session on your team's real work. They leave with the first patterns encoded and a build list.",
     meta: [
       { label: "Runs", value: "Navigate · Encode" },
       { label: "Format", value: "Half-day to multi-day" },

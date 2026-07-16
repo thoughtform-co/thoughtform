@@ -256,3 +256,39 @@ The "disjoint by page order" wording in the original Decision is
 superseded: the clocks now OVERLAP by ~100svh, and the seam guarantee is
 carried by the window gate + the shared constant pose at the boundary
 instead of by page separation.
+
+## Update 4 (2026-07-16) — the flip speed ramp
+
+Owner: _"can the card flip be a bit smoother — really look at a smooth
+speed ramp; almost there."_ Two compounding causes, two fixes
+(`aboutDeckMath.ts` + the ring's useFrame):
+
+1. **Velocity profile.** θ rode `aboutFlipT` (smootherstep), whose peak
+   velocity is 1.875× the window average — over the short flip window the
+   rotation read as near-still → whip → near-still. θ (and posBlend) now
+   run `flipRamp`, a motion-control S-curve: smoothstep-shaped velocity
+   ramps (`FLIP_RAMP_D` = 0.28 each side) around a CONSTANT-velocity
+   cruise, peak 1/(1 − D) ≈ 1.39× average. C2 at both ends (starts and
+   ends at rest — seam-continuous with the settled stack and the welded
+   hold). Exact 0/1 at the window edges, symmetric (θ = π/2 still lands
+   mid-window, so the `flipped` renderOrder swap stays edge-on). The
+   smootherstep `aboutFlipT` REMAINS for the opacity consumers (orbit
+   cluster reveal, mark/track fades, the DOM `--about-flip` mirror).
+2. **Wheel quantization.** θ followed raw scroll, so every wheel tick
+   (~100px) landed as a discrete rotation jump at the cruise. The ring's
+   useFrame now damps the ramp t through an exponential follower
+   (`DECK_FLIP_DAMP_RATE` 12/s ≈ 90% in 190ms) with the ring-spring
+   discipline: hard deviation cap (`DECK_FLIP_DAMP_CAP` 0.35 — a flick
+   never drags the pose > ~63° behind scroll truth), snap epsilon
+   (`DECK_FLIP_SNAP_EPS` — byte-exact 0/1 at rest, so the stack-seam
+   identity and the welded shift-tracking hold exactly), snap-on-engage
+   (deep links / idle resumes pose instantly), and the delta clamp
+   covers hidden-tab resumes. Reverse scroll is symmetric. The DOM
+   channels stay RAW scrubbed vars (the ADR grammar); a ~100ms
+   rotation-vs-opacity offset is imperceptible.
+
+`deckFlip(aboutP)` still exists (= `deckFlipFromT(flipRamp(
+aboutFlipLinearT(p)))`) for tests and any future undamped consumer; the
+ring poses from `deckFlipFromT(dampedT)` so the rendered pose, the
+renderOrder swap, the portrait-back opacity gate, and the depth writer
+all read the SAME damped clock.

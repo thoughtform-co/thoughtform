@@ -18,12 +18,16 @@ import {
   DECK_SETTLED_ROTATION,
   DECK_Z,
   DECK_Z_PITCH,
+  FLIP_RAMP_D,
   aboutBgInT,
   aboutCopyT,
+  aboutFlipLinearT,
   aboutFlipT,
   aboutShiftT,
   deckFlip,
+  deckFlipFromT,
   deckOrder,
+  flipRamp,
   deckPhiDelta,
   deckPhiTarget,
   deckStackEnvelope,
@@ -205,6 +209,57 @@ describe("deckFlip", () => {
       expect(f.posBlend).toBeGreaterThanOrEqual(lastBlend);
       lastTheta = f.theta;
       lastBlend = f.posBlend;
+    }
+  });
+});
+
+describe("flipRamp — the Update 4 speed ramp", () => {
+  it("pins exact endpoints (byte-identity at the seams)", () => {
+    expect(flipRamp(0)).toBe(0);
+    expect(flipRamp(1)).toBe(1);
+    expect(flipRamp(-0.5)).toBe(0);
+    expect(flipRamp(1.5)).toBe(1);
+  });
+
+  it("is monotone and symmetric (θ = π/2 lands at the window midpoint)", () => {
+    let last = -1;
+    for (let s = 0; s <= 200; s++) {
+      const x = s / 200;
+      const y = flipRamp(x);
+      expect(y).toBeGreaterThanOrEqual(last);
+      // Symmetry: ramp(x) + ramp(1 − x) = 1 → flipped switches mid-window.
+      expect(y + flipRamp(1 - x)).toBeCloseTo(1, 12);
+      last = y;
+    }
+    expect(flipRamp(0.5)).toBeCloseTo(0.5, 12);
+  });
+
+  it("is continuous at the cruise joins", () => {
+    const eps = 1e-6;
+    for (const j of [FLIP_RAMP_D, 1 - FLIP_RAMP_D]) {
+      expect(flipRamp(j + eps) - flipRamp(j - eps)).toBeLessThan(1e-4);
+    }
+  });
+
+  it("cruises flatter than smootherstep's peak (the whole point)", () => {
+    // Numeric slope at mid-window: the cruise velocity 1/(1 − D) ≈ 1.39
+    // must stay well under smootherstep's 1.875 peak.
+    const h = 1e-4;
+    const cruiseSlope = (flipRamp(0.5 + h) - flipRamp(0.5 - h)) / (2 * h);
+    expect(cruiseSlope).toBeCloseTo(1 / (1 - FLIP_RAMP_D), 6);
+    expect(cruiseSlope).toBeLessThan(1.6);
+    // Ends start/stop at rest: near-zero slope at both ends.
+    expect((flipRamp(2 * h) - flipRamp(0)) / (2 * h)).toBeLessThan(0.01);
+    expect((flipRamp(1) - flipRamp(1 - 2 * h)) / (2 * h)).toBeLessThan(0.01);
+  });
+
+  it("deckFlipFromT mirrors deckFlip through the ramp", () => {
+    for (const p of [0, 0.1, 0.15, 0.2, 0.26, 0.5]) {
+      const viaClock = deckFlip(p);
+      const viaT = deckFlipFromT(flipRamp(aboutFlipLinearT(p)));
+      expect(viaT.theta).toBe(viaClock.theta);
+      expect(viaT.posBlend).toBe(viaClock.posBlend);
+      expect(viaT.flipped).toBe(viaClock.flipped);
     }
   });
 });

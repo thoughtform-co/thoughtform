@@ -2234,7 +2234,10 @@
 .svc-plate__lede {
   margin-top: 10px;
   font-family: var(--sans);
-  font-size: 13.5px;
+  /* 15.5px (was 13.5, owner request 2026-07-16) — keep at HALF the baked
+     card-face lede (31px in ServicesCardRing bakeCardFace): the bake/DOM
+     parity contract. */
+  font-size: 15.5px;
   line-height: 1.5;
   color: var(--dawn-70);
   letter-spacing: 0.01em;

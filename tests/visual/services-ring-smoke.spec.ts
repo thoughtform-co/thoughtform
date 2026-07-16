@@ -98,7 +98,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // masthead is pure DOM (ring mode only), title left / intro right.
     await expect(page.locator(".tools-rail-register__heading--services")).toHaveCount(0);
     await expect(page.locator(".services-masthead")).toHaveCount(1);
-    await expect(page.locator(".services-masthead__title")).toContainText("ONE PRACTICE.");
+    await expect(page.locator(".services-masthead__title")).toContainText("ONE LOOP.");
   });
 
   test("desktop: the ambient hold survives the pinned #about stage and dies under #continuum", async ({

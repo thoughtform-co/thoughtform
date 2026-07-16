@@ -277,15 +277,63 @@ export interface DeckFlip {
   flipped: boolean;
 }
 
-/** Rigid deck flip off the about stage clock. Identity ({ 0, 0, false })
- *  at aboutP = 0 — seam-continuous with the stack's converged pose. */
-export function deckFlip(aboutP: number): DeckFlip {
-  const t = aboutFlipT(aboutP);
+/* ── Flip speed ramp (ADR-047 Update 4) ──────────────────────────────
+ * The θ channel previously rode `aboutFlipT` (smootherstep), whose peak
+ * velocity is 1.875× the window average — over the short flip window the
+ * middle read as a whip between near-still ends. The rotation now runs a
+ * motion-control S-curve: smoothstep-shaped velocity ramps of FLIP_RAMP_D
+ * each side around a CONSTANT-velocity cruise (peak 1/(1 − FLIP_RAMP_D)
+ * ≈ 1.39× average) — gentle spin-up, even sweep, gentle settle. C2 at
+ * both ends (starts and ends at REST — seam-continuous with the settled
+ * stack below and the welded hold above). The smootherstep `aboutFlipT`
+ * stays for the OPACITY consumers (orbit cluster, mark/track fades). */
+export const FLIP_RAMP_D = 0.28;
+const FLIP_RAMP_V = 1 / (1 - FLIP_RAMP_D);
+/** ∫₀ᵘ smoothstep = u³ − u⁴/2 (u = position inside a velocity ramp). */
+function rampArea(u: number): number {
+  return u * u * u - (u * u * u * u) / 2;
+}
+/** Position along the S-curve for linear window fraction x ∈ [0, 1]. */
+export function flipRamp(x: number): number {
+  const t = clamp01(x);
+  if (t < FLIP_RAMP_D) return FLIP_RAMP_V * FLIP_RAMP_D * rampArea(t / FLIP_RAMP_D);
+  if (t > 1 - FLIP_RAMP_D) return 1 - FLIP_RAMP_V * FLIP_RAMP_D * rampArea((1 - t) / FLIP_RAMP_D);
+  return FLIP_RAMP_V * (t - FLIP_RAMP_D / 2);
+}
+
+/** Linear (un-eased) flip-window fraction — the speed ramp's input. */
+export function aboutFlipLinearT(aboutP: number): number {
+  const [w0, w1] = ABOUT_FLIP_WINDOW;
+  return clamp01((clamp01(aboutP) - w0) / (w1 - w0));
+}
+
+/** Exponential-follower rate for the deck's flip clock (the ring's
+ *  useFrame damps the ramp t through this before posing the deck).
+ *  Wheel ticks land as ~100px scroll steps; θ following raw scroll turns
+ *  each into a visible rotation jump at the cruise. ~12/s ≈ 90% converged
+ *  in 190ms — rounds the steps without reading as lag. */
+export const DECK_FLIP_DAMP_RATE = 12;
+/** Hard bound on |target − damped| (the ring-spring cap grammar): an
+ *  ultra-fast flick can never drag the rendered pose more than ~63° of
+ *  flip behind the scroll truth. */
+export const DECK_FLIP_DAMP_CAP = 0.35;
+/** Snap epsilon — restores byte-exact endpoints at rest (identity 0 at
+ *  the stack seam; welded 1 through the shift/hold). */
+export const DECK_FLIP_SNAP_EPS = 1e-3;
+
+/** Deck flip pose from an already-ramped (and possibly damped) t. */
+export function deckFlipFromT(t: number): DeckFlip {
   return {
     theta: Math.PI * t,
     posBlend: t,
     flipped: t > 0.5,
   };
+}
+
+/** Rigid deck flip off the about stage clock. Identity ({ 0, 0, false })
+ *  at aboutP = 0 — seam-continuous with the stack's converged pose. */
+export function deckFlip(aboutP: number): DeckFlip {
+  return deckFlipFromT(flipRamp(aboutFlipLinearT(aboutP)));
 }
 
 /** Draw order of card `index` within the deck (0 = drawn first = visually

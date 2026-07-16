@@ -4,10 +4,13 @@
  * truth shared by the production `#services` cluster (`ServicesPlateCluster`)
  * and the design lab (`/test/services-prime`).
  *
- * Copy rewritten 2026-07-16 (Vince review — concrete first-person voice;
- * the HUD flavour lives in the chrome, not the sentences). Emphasis segments
- * ({ em }) render as UPRIGHT GOLD, not italic, per the site's no-italics
- * brand rule (the handoff mock used italics).
+ * Copy rewritten 2026-07-16 (Vince review), replaced the same evening with
+ * the owner's full-section copy: tightened bodies, no em dashes, voice moved
+ * from first-person singular to the practice "we" / neutral. Chrome (chips,
+ * status codes, feed labels, includes, CTAs, footer telemetry) intact per
+ * the same brief; the HUD flavour lives in the chrome, not the sentences.
+ * Emphasis segments ({ em }) render as UPRIGHT GOLD, not italic, per the
+ * site's no-italics brand rule (the handoff mock used italics).
  *
  * Photos are the subject-centered, web-compressed crops produced by
  * `scripts/services-photos/prepare.mjs` (public/images/services/{id}.{webp,jpg}).
@@ -89,9 +92,9 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     id: "keynote",
     chip: "Strategic Advisory",
     statusCode: "ADV-01",
-    title: "Ongoing strategic advice.",
+    title: "Know where to invest in AI.",
     lede: [
-      "I advise the people making your AI decisions. A monthly cadence on where to invest, what to ignore, and what to build next.",
+      "A monthly read for the people making the AI calls: where to invest, what to skip, what to build. Tested against real work.",
     ],
     feedLabel: "Feed 03 · At the table",
     feedStatus: "Standby",
@@ -104,9 +107,9 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     id: "workshop",
     chip: "Embedded AI Partner",
     statusCode: "BLD-02",
-    title: "I move in with your team.",
+    title: "We build inside your teams.",
     lede: [
-      "For a fixed term I work inside your company — setting AI strategy, building tools, training your people. Everything stays when I leave.",
+      "We run strategy and build with your teams on a fixed term. You keep the tools, the judgment, and the people who can run them.",
     ],
     feedLabel: "Feed 04 · On site",
     feedStatus: "Standby",
@@ -119,9 +122,9 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     id: "embedded",
     chip: "Keynote",
     statusCode: "NAV-02",
-    title: "One talk that resets the room.",
+    title: "Change how your room sees AI.",
     lede: [
-      "A keynote tuned to your industry, built on live demos. Your people leave with a shared language for what AI changes in their work.",
+      "Built for your industry, run on live demos. The room leaves with shared language and a clear next step.",
     ],
     feedLabel: "Feed 01 · On stage",
     feedStatus: "Live",
@@ -134,9 +137,9 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     id: "guided-build",
     chip: "Workshop",
     statusCode: "ENC-04",
-    title: "Your team learns by building.",
+    title: "Your team builds its first AI tools.",
     lede: [
-      "A hands-on day where your team puts AI on their own workflows. They leave with working skills and a clear list of what to build next.",
+      "A hands-on session on your team's real work. They leave with the first patterns encoded and a build list.",
     ],
     feedLabel: "Feed 02 · On the floor",
     feedStatus: "Standby",

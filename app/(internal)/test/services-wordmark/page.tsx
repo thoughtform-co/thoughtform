@@ -66,11 +66,11 @@ const ROW_TOPS = [
 /** Default right-column paragraph — mirrors the production
  *  `SERVICES_MASTHEAD.intro` (2026-07-16 copy sweep). Editable via `?para=`. */
 const DEFAULT_PARA =
-  "A keynote, a workshop, standing advice, or a fixed-term embed inside your teams. Four depths of the same work: making AI capability your own.";
+  "One loop, run at three depths. A talk to reset the room, a workshop to build the first tools, and an embedded term where we run strategy and build with your teams. Tuned to the AI decisions you're actually making.";
 
 /** Default title. A leading `|` splits the display lines; the LAST line renders
  *  in gold (the emphasis segment). Editable via `?title=`. */
-const DEFAULT_TITLE = "ONE PRACTICE.|FOUR WAYS IN.";
+const DEFAULT_TITLE = "ONE LOOP.|THREE DEPTHS.";
 
 type TitleFont = "mono" | "sans";
 

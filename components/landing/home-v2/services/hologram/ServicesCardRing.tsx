@@ -69,14 +69,19 @@ import {
   DECK_OFFSETS,
   DECK_PHI_TARGETS,
   DECK_PIVOT_LOCAL,
+  DECK_FLIP_DAMP_CAP,
+  DECK_FLIP_DAMP_RATE,
+  DECK_FLIP_SNAP_EPS,
   DECK_RENDER_PITCH,
   DECK_RENDER_REBASE_EXIT,
   DECK_SETTLED_ROTATION,
   aboutBgInT,
+  aboutFlipLinearT,
   aboutFlipT,
-  deckFlip,
+  deckFlipFromT,
   deckOrder,
   deckStackEnvelope,
+  flipRamp,
 } from "@/lib/services-ring/aboutDeckMath";
 import {
   aboutStageProgressRef,
@@ -551,10 +556,13 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   const incTop = incBottom - (incLines.length - 1) * INC_LH - 22;
 
   // Lede — sans body, `{ em }` spans upright gold (no-italics rule).
+  // 31px (was 27, owner request 2026-07-16: bigger body; the bottom-
+  // anchored stack pushes the title up to make room). Keep = 2× the
+  // .svc-plate__lede CSS value (15.5px) — the bake/DOM parity contract.
   label.letterSpacing = "0px";
-  ctx.font = `400 27px ${CARD_SANS}`;
+  ctx.font = `400 31px ${CARD_SANS}`;
   const ledeLines = wrapRuns(ctx, plate.lede, maxW);
-  const LEDE_LH = 40;
+  const LEDE_LH = 46;
   const ledeBottom = incTop - 26;
   ledeLines.forEach((line, i) => {
     drawRunLine(
@@ -860,6 +868,9 @@ export function ServicesCardRing({
   /** True while the deck's explicit per-slot renderOrder rebase is applied
    *  (restored to the JSX constants exactly once on disengage). */
   const deckOrderAppliedRef = useRef(false);
+  /** Damped flip clock (ADR-047 Update 4): `t` follows the ramped scroll
+   *  target through DECK_FLIP_DAMP_RATE; `live` gates snap-on-engage. */
+  const deckFlipDampRef = useRef({ t: 0, live: false });
 
   const cardW = cardHeight * RING_CARD_ASPECT;
   const slabW = cardW + bezelMargin * 2;
@@ -1213,16 +1224,42 @@ export function ServicesCardRing({
 
     // Flip-phase shared geometry (one inverse parent matrix + camera terms
     // + the pivot's seat for all four cards — scratch objects only).
-    // The ADR-047 Update 3 sweep overlaps the two clocks: the about runway
-    // now pins WHILE the stack is still settling (exit ≈ 0.93 → 1), so the
-    // flip branch must not seize the pose at raw aboutP > 0 — it engages
-    // only once its own window opens (posBlend = aboutFlipT > 0, i.e. past
-    // ABOUT_FLIP_WINDOW[0] ≈ the exit clock's end). Below that the STACK
-    // branch owns the settle, and the two poses meet byte-identically at
-    // the boundary (settle end = the DECK_PLACEMENTS constants = the
-    // flip's exact identity at θ = 0, posBlend = 0).
-    const flipCandidate = deckEngaged && aboutP > 0 ? deckFlip(aboutP) : null;
-    const flip = flipCandidate && flipCandidate.posBlend > 0 ? flipCandidate : null;
+    //
+    // Damped flip clock (ADR-047 Update 4 — the speed ramp): the target t
+    // is the S-curve `flipRamp` over the LINEAR window fraction (gentle
+    // spin-up → constant-velocity cruise → gentle settle; the raw
+    // smootherstep's 1.875× mid-window peak read as a whip), and a fast
+    // exponential follower rounds wheel-tick scroll steps into that ramp.
+    // Discipline mirrors the ring spring: hard deviation cap (an ultra-
+    // fast flick never drags the pose > ~63° behind scroll truth), snap
+    // epsilon (byte-exact 0/1 endpoints at rest — identity at the stack
+    // seam, welded 1 through the shift), snap-on-engage (idle resumes and
+    // deep links pose exactly, no greeting animation), and the delta
+    // clamp covers hidden-tab resumes.
+    //
+    // The Update 3 sweep gate is preserved by construction: the clocks
+    // overlap (the about runway pins while the stack settles), but the
+    // ramp target is 0 until ABOUT_FLIP_WINDOW opens, so the flip branch
+    // (damped t > 0) never seizes the pose from the settling STACK branch
+    // — the two poses meet byte-identically at the boundary (settle end =
+    // the DECK_PLACEMENTS constants = the flip's identity at θ = 0).
+    const flipDamp = deckFlipDampRef.current;
+    const flipTargetT = deckEngaged ? flipRamp(aboutFlipLinearT(aboutP)) : 0;
+    if (!deckEngaged) {
+      flipDamp.live = false;
+      flipDamp.t = 0;
+    } else if (!flipDamp.live) {
+      flipDamp.live = true;
+      flipDamp.t = flipTargetT;
+    } else {
+      flipDamp.t += (flipTargetT - flipDamp.t) * Math.min(1, delta * DECK_FLIP_DAMP_RATE);
+      if (Math.abs(flipTargetT - flipDamp.t) < DECK_FLIP_SNAP_EPS) flipDamp.t = flipTargetT;
+      else if (flipTargetT - flipDamp.t > DECK_FLIP_DAMP_CAP)
+        flipDamp.t = flipTargetT - DECK_FLIP_DAMP_CAP;
+      else if (flipDamp.t - flipTargetT > DECK_FLIP_DAMP_CAP)
+        flipDamp.t = flipTargetT + DECK_FLIP_DAMP_CAP;
+    }
+    const flip = deckEngaged && flipDamp.t > 0 ? deckFlipFromT(flipDamp.t) : null;
     let flipSin = 0;
     let flipCos = 1;
     let flipPivotX = 0;

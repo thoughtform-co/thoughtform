@@ -86,7 +86,7 @@ export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation
   // 01 Strategic Advisory
   keynote: [
     D("crown", "AI STRATEGY", "the standing read", "right", 36, -26),
-    D("upper-left-arm", "WHERE TO INVEST", "and what to ignore", "right", 24, -60),
+    D("upper-left-arm", "WHERE TO INVEST", "and what to skip", "right", 24, -60),
     D("lower-right-arm", "TESTED LIVE", "against real work", "left", 24, 60),
     D("base", "NAVIGATE", "the operating posture", "left", 36, 36),
   ],
