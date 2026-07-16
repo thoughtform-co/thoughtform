@@ -843,19 +843,23 @@ html[data-corridor-exit="true"] #about {
   text-shadow:
     0 0 6px rgba(5, 4, 3, 0.9),
     0 1px 3px rgba(5, 4, 3, 0.9);
-  /* Collapsed until the reveal arms — SEE TOOLS types in via a stepped clip
-     wipe (terminal feel). */
+  /* Collapsed from the left until the reveal arms — SEE TOOLS TYPES IN
+     left-to-right, one monospace character per step (a proper terminal
+     typewriter), while the block caret below blinks at the head. */
   clip-path: inset(0 100% 0 0);
   transition:
     color 0.22s ease,
     text-shadow 0.22s ease;
 }
-/* A block caret that trails the label; blinks a few beats once the type
-   finishes, then rests off. */
-.home-v2-cases-cue__label::after {
+/* Blinking block caret at the typing head — a real terminal cursor. Lives on
+   the BUTTON (not the label) so the label's type-in clip never hides it, so it
+   blinks throughout the type and holds after. Sits right after the text. */
+.home-v2-cases-cue__btn::after {
   content: "▮";
-  font-size: 0.92em;
-  color: rgba(231, 205, 134, 0.92);
+  margin-left: 0.12em;
+  font-size: 0.9em;
+  line-height: 1;
+  color: rgba(231, 205, 134, 0.95);
   opacity: 0;
 }
 .home-v2-cases-cue__btn:hover .home-v2-cases-cue__label,
@@ -893,24 +897,24 @@ html[data-corridor-exit="true"] #about {
    Armed by the component (`.is-revealed`) the frame the Build title's typewriter
    arms (same container-opacity threshold), so the cue reveals in lockstep with
    "BUILD ON THE LAYER":
-     1. SEE TOOLS types in — a stepped clip wipe (terminal feel) — while a block
-        caret blinks a few beats at the end;
+     1. SEE TOOLS TYPES IN left-to-right, one monospace char per step (a proper
+        terminal typewriter), while the block caret blinks at the head;
      2. THEN the two rules unfold outward from the centre toward the title edges,
         each carrying its vertical connector to the tip.
    Scroll back out of the Build beat re-arms it (the component drops the class),
    so it replays on the next arrival. */
 .home-v2-cases-cue.is-revealed .home-v2-cases-cue__label {
-  animation: home-v2-cases-cue-type 0.5s steps(9, end) both;
+  animation: home-v2-cases-cue-type 0.34s steps(9, end) both;
 }
-.home-v2-cases-cue.is-revealed .home-v2-cases-cue__label::after {
-  animation: home-v2-cases-cue-caret 0.72s steps(1) 0.5s 3;
+.home-v2-cases-cue.is-revealed .home-v2-cases-cue__btn::after {
+  animation: home-v2-cases-cue-caret 0.8s linear infinite;
 }
 .home-v2-cases-cue.is-revealed .home-v2-cases-cue__rule--left {
-  animation: home-v2-cases-cue-unfold-left 0.45s ease-out 0.52s both;
+  animation: home-v2-cases-cue-unfold-left 0.42s ease-out 0.36s both;
   transform-origin: right center;
 }
 .home-v2-cases-cue.is-revealed .home-v2-cases-cue__rule--right {
-  animation: home-v2-cases-cue-unfold-right 0.45s ease-out 0.52s both;
+  animation: home-v2-cases-cue-unfold-right 0.42s ease-out 0.36s both;
   transform-origin: left center;
 }
 @keyframes home-v2-cases-cue-type {
@@ -923,10 +927,10 @@ html[data-corridor-exit="true"] #about {
 }
 @keyframes home-v2-cases-cue-caret {
   0%,
-  50% {
-    opacity: 0.9;
+  49.999% {
+    opacity: 0.95;
   }
-  50.01%,
+  50%,
   100% {
     opacity: 0;
   }
@@ -963,7 +967,7 @@ html[data-corridor-exit="true"] #about {
 @media (prefers-reduced-motion: reduce) {
   /* No bead, no type/unfold — show the bracket + label fully at rest. */
   .home-v2-cases-cue__rule::after,
-  .home-v2-cases-cue__label::after {
+  .home-v2-cases-cue__btn::after {
     display: none;
   }
   .home-v2-cases-cue__label {
