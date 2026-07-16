@@ -206,16 +206,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
 
-    // Exit-hold beat (ADR-030): deep in the runway the step clock reads 5
-    // while the LAST service stays active — an unclamped step would wrap
-    // the clock back to Advisory (the bug the clamps kill). The Workshop
-    // CTA staying front proves the LAST service holds active.
-    expect(await scrollServicesRunway(page, 0.95)).toBe(true);
-    await page.waitForTimeout(1200);
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "5");
+    // Step 4 (p=0.75 → floor(4.5)): the LAST service (Workshop) is front —
+    // its CTA link proves the service clock reached the end of the roster
+    // while the hit areas are still alive (they retire in the exit beat).
+    expect(await scrollServicesRunway(page, 0.75)).toBe(true);
+    await page.waitForTimeout(1600);
     await expect(page.getByRole("link", { name: "Book a workshop" })).toBeVisible({
       timeout: 20_000,
     });
+
+    // Exit-hold beat (ADR-030): deep in the runway the step clock reads 5
+    // while the LAST service stays active — an unclamped step would wrap
+    // the clock back to Advisory (the bug the clamps kill).
+    expect(await scrollServicesRunway(page, 0.95)).toBe(true);
+    await page.waitForTimeout(1200);
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "5");
   });
 
   test("desktop: wheel over the instrument scrolls natively and rotates the ring", async ({
