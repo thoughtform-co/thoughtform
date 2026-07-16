@@ -83,8 +83,12 @@ export const EPILOGUE_BANDS = {
    *  pulled 0.7/0.9 -> 0.52/0.74 so the title rises DURING the
    *  landing arc (~1 viewport into the epilogue at the new 200svh
    *  span) instead of waiting until after it (~2.1 viewports at
-   *  the old 300svh span). */
-  TITLE_IN: { start: 0.52, end: 0.74 } as const,
+   *  the old 300svh span). Owner pass 2026-07-16: pulled again
+   *  0.52/0.74 -> 0.48/0.70 so the title + CTA + ticker arrive IN
+   *  SYNC with the pan over the pole (LAND.start = 0.48) rather
+   *  than trailing it — "appear a bit sooner, in sync with the pan
+   *  to the top side of the sphere". Same 0.22 width. */
+  TITLE_IN: { start: 0.48, end: 0.7 } as const,
 } as const;
 
 /** Helper that returns the eased 0..1 reveal for a named band. */
