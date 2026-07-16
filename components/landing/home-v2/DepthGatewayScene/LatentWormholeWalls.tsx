@@ -1216,6 +1216,7 @@ const OPACITY_RESPONSE = 5;
 
 export function LatentWormholeWalls() {
   const pointsRef = useRef<THREE.Points>(null);
+  const streakRef = useRef<THREE.LineSegments>(null);
   const opacityRef = useRef<number>(0);
   // v3.9 — smoothed velocity factor for the line streaks. Light
   // streaks only make sense while travelling fast, so the streak
@@ -1402,6 +1403,15 @@ export function LatentWormholeWalls() {
       streakMaterial.uniforms.uOpacity.value = 0;
       streakMaterial.uniforms.uExitWarp.value = 0;
       glowMaterial.uniforms.uOpacity.value = 0;
+      // Draw gate (2026-07-16 perf pass, ADR-047 U5): fully transparent
+      // is a long-lived state here — the walls stay at 0 through the
+      // whole epilogue + docked/#services ambient stretch, where this
+      // was the heaviest ungated painter still rasterising invisible
+      // fragments every frame. Written beside the opacity, same frame,
+      // so reverse scroll restores the draw the exact frame it returns.
+      if (pointsRef.current) pointsRef.current.visible = false;
+      if (streakRef.current) streakRef.current.visible = false;
+      if (glowRef.current) glowRef.current.visible = false;
       return;
     }
 
@@ -1459,7 +1469,12 @@ export function LatentWormholeWalls() {
     // ambient noise on the left/right edges. Stays at 0 through the
     // epilogue because paintProgress is pinned at 1.
     const buildFade = getBuildApproachFade(paintProgress);
-    material.uniforms.uOpacity.value = Math.min(1, opacityRef.current) * buildFade;
+    const wallOpacity = Math.min(1, opacityRef.current) * buildFade;
+    material.uniforms.uOpacity.value = wallOpacity;
+    // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with the
+    // opacity write. `paintProgress` pins at 1 through the epilogue, so
+    // buildFade holds the walls at 0 across the entire epilogue + seam.
+    if (pointsRef.current) pointsRef.current.visible = wallOpacity > 0.002;
 
     // v3.9 — streaks are VELOCITY-GATED: light streaks only make
     // sense while travelling fast, so the line layer eases in with
@@ -1470,8 +1485,11 @@ export function LatentWormholeWalls() {
     // fast flick = full.
     const streakVelTarget = smoothstep(0.06, 0.32, velocityT);
     streakVelRef.current += (streakVelTarget - streakVelRef.current) * k;
-    streakMaterial.uniforms.uOpacity.value =
-      Math.min(1, opacityRef.current * 1.05) * streakVelRef.current;
+    const streakOpacity = Math.min(1, opacityRef.current * 1.05) * streakVelRef.current;
+    streakMaterial.uniforms.uOpacity.value = streakOpacity;
+    // Draw gate — the velocity gate means the streaks are invisible at
+    // every idle beat corridor-wide, not just the seam.
+    if (streakRef.current) streakRef.current.visible = streakOpacity > 0.002;
 
     // v3.12 — exit glow runs on its OWN envelope (`getExitGlowEnvelope`)
     // independent of the wall opacity / build-approach fade. That's
@@ -1481,8 +1499,10 @@ export function LatentWormholeWalls() {
     // light source, not a kinetic accent. Peak alpha is small by
     // design (`EXIT_GLOW_PEAK_OPACITY`) so additive blending against
     // the gyroscope rims its silhouette without flooding it.
-    glowMaterial.uniforms.uOpacity.value =
-      getExitGlowEnvelope(paintProgress) * EXIT_GLOW_PEAK_OPACITY;
+    const glowOpacity = getExitGlowEnvelope(paintProgress) * EXIT_GLOW_PEAK_OPACITY;
+    glowMaterial.uniforms.uOpacity.value = glowOpacity;
+    // Draw gate — same-frame with the opacity write.
+    if (glowRef.current) glowRef.current.visible = glowOpacity > 0.002;
   });
 
   if (!geometry) return null;
@@ -1493,7 +1513,12 @@ export function LatentWormholeWalls() {
     <group>
       <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
       {streakGeometry && (
-        <lineSegments geometry={streakGeometry} material={streakMaterial} frustumCulled={false} />
+        <lineSegments
+          ref={streakRef}
+          geometry={streakGeometry}
+          material={streakMaterial}
+          frustumCulled={false}
+        />
       )}
       {glowGeometry && (
         <mesh

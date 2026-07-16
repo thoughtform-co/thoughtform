@@ -804,7 +804,12 @@ export function SubstrateTopography() {
       waveMaterial.uniforms.uOpacity.value = 0;
       const wavePts = wavePointsRef.current;
       if (wavePts) wavePts.visible = false;
-      if (pointsRef.current) pointsRef.current.position.y = 0;
+      if (pointsRef.current) {
+        pointsRef.current.position.y = 0;
+        // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with
+        // the zero-opacity write above.
+        pointsRef.current.visible = false;
+      }
       return;
     }
 
@@ -836,7 +841,12 @@ export function SubstrateTopography() {
     const dockRise = servicesAmbient ? 1 : docked ? getSmoothedDissipate() : 0;
     if (pointsRef.current) pointsRef.current.position.y = dockRise * REALM_DOCK_RISE_Y;
     const dockFade = 1 - smoothstep01(REALM_DOCK_FADE_START, REALM_DOCK_FADE_END, dockRise);
-    material.uniforms.uOpacity.value = REALM_OPACITY_BASE * epDamp * dockFade;
+    const realmOpacity = REALM_OPACITY_BASE * epDamp * dockFade;
+    material.uniforms.uOpacity.value = realmOpacity;
+    // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with the
+    // opacity write. dockFade holds the terrain at 0 across the docked +
+    // #services ambient stretch (the wave layer is already gated below).
+    if (pointsRef.current) pointsRef.current.visible = realmOpacity > 0.002;
 
     // Diagram cascade.
     const phase = frontRef.current;

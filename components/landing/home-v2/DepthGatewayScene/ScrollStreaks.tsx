@@ -218,7 +218,12 @@ export function ScrollStreaks({ count }: ScrollStreaksProps = {}) {
     // the corridor density grew. Streaks still cap below 1.0 so
     // they remain a punctuation layer on top of the
     // LatentFieldTunnel, not a competing foreground.
-    material.uniforms.uOpacity.value = visibleAlpha.current * 0.65 * revealGate;
+    const streakOpacity = visibleAlpha.current * 0.65 * revealGate;
+    material.uniforms.uOpacity.value = streakOpacity;
+    // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with the
+    // opacity write. Velocity-driven alpha decays to 0 at EVERY idle
+    // beat corridor-wide, so this gate wins far beyond the seam.
+    points.visible = streakOpacity > 0.002;
 
     if (!active) {
       return;

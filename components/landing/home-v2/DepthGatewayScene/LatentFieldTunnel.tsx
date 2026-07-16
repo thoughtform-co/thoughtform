@@ -765,6 +765,12 @@ export function LatentFieldTunnel() {
       pointsMaterial.uniforms.uOpacity.value = 0;
       vectorsMaterial.uniforms.uOpacity.value = 0;
       if (tokensMaterial) tokensMaterial.uniforms.uOpacity.value = 0;
+      // Draw gate (2026-07-16 perf pass, ADR-047 U5) — written beside
+      // the opacity, same frame, so re-engagement restores the draw on
+      // the exact frame opacity returns.
+      points.visible = false;
+      vectors.visible = false;
+      if (tokensRef.current) tokensRef.current.visible = false;
       return;
     }
 
@@ -810,6 +816,20 @@ export function LatentFieldTunnel() {
     if (tokensMaterial) {
       tokensMaterial.uniforms.uOpacity.value = Math.min(1, tokensAlpha.current);
     }
+    // Draw gates (2026-07-16 perf pass, ADR-047 U5) — same-frame with
+    // the opacity writes. buildFade pins the whole field at 0 through
+    // the epilogue + docked/#services stretch (paintProgress holds 1).
+    const fieldInvisible =
+      pointsAlpha.current <= 0.002 && vectorsAlpha.current <= 0.002 && tokensAlpha.current <= 0.002;
+    points.visible = pointsAlpha.current > 0.002;
+    vectors.visible = vectorsAlpha.current > 0.002;
+    if (tokensRef.current) tokensRef.current.visible = tokensAlpha.current > 0.002;
+    // While the WHOLE field is invisible, also skip the CPU flow below —
+    // it walks every point/vector/token and re-uploads three position
+    // buffers to the GPU per frame (`needsUpdate = true`), pure waste on
+    // an invisible layer. The field is ambient dust with no continuity
+    // contract, so freezing its flow while hidden is visually a no-op.
+    if (fieldInvisible) return;
 
     // ── Flow: advance points + tokens, sync vector endpoints ────
     const flowSpeed = velocity * SCROLL_GAIN + AMBIENT_DRIFT;

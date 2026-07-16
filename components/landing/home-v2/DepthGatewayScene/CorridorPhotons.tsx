@@ -243,6 +243,9 @@ export function CorridorPhotons() {
 
     if (!painting) {
       material.uniforms.uOpacity.value = 0;
+      // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with
+      // the zero-opacity write.
+      if (pointsRef.current) pointsRef.current.visible = false;
       // Reset all photons to inactive so a re-engage starts from a
       // clean cadence rather than carrying stale traversals across
       // a long disengage.
@@ -266,6 +269,10 @@ export function CorridorPhotons() {
     const reveal2 = smoothstep(LEG_2_REVEAL_START, LEG_2_REVEAL_END, paintProgress);
     const layerReveal = Math.max(reveal1, reveal2);
     material.uniforms.uOpacity.value = layerReveal;
+    // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with the
+    // opacity write. Only closes pre-reveal; through the epilogue
+    // layerReveal holds 1, so this is a safe no-op there.
+    if (pointsRef.current) pointsRef.current.visible = layerReveal > 0.002;
 
     // 1) Advance every active photon. Photons that finish their rail
     //    deactivate; their slot is reusable on the next spawn.

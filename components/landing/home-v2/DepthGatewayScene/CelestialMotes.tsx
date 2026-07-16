@@ -362,6 +362,9 @@ export function CelestialMotes() {
     if (!painting) {
       smoothedAlpha.current = 0;
       material.uniforms.uOpacity.value = 0;
+      // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with
+      // the zero-opacity write.
+      if (pointsRef.current) pointsRef.current.visible = false;
       return;
     }
 
@@ -398,7 +401,12 @@ export function CelestialMotes() {
       revealGate;
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     smoothedAlpha.current += (target - smoothedAlpha.current) * k;
-    material.uniforms.uOpacity.value = Math.min(1, smoothedAlpha.current);
+    const motesOpacity = Math.min(1, smoothedAlpha.current);
+    material.uniforms.uOpacity.value = motesOpacity;
+    // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with the
+    // opacity write. buildFade holds the motes at 0 through the epilogue
+    // + docked/#services stretch.
+    if (pointsRef.current) pointsRef.current.visible = motesOpacity > 0.002;
 
     // Flow: motes drift in lock-step with scroll velocity only —
     // exactly zero motion at rest. Rotation also gates on movement

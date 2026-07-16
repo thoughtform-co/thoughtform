@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -121,6 +121,7 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   // Governed per-tier count (ADR-038); the lab `count` prop still wins.
   const governedStarCount = useCorridorCount(3200, 1700, 1200);
   const starCount = count ?? governedStarCount;
+  const pointsRef = useRef<THREE.Points>(null);
 
   const geometry = useMemo(() => {
     const positions = new Float32Array(starCount * 3);
@@ -190,6 +191,7 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   //    HOLDS through the planet flyover — the sky stays bright behind
   //    the orbital horizon view.
   useFrame((state) => {
+    const points = pointsRef.current;
     const { paintProgress, active, armed, docked, servicesAmbient, servicesAmbientLevel } =
       useDepthGatewayStore.getState().transform;
     // Sync `uPixelRatio` to the R3F renderer's actual DPR every frame.
@@ -205,6 +207,9 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
     if (!active && !armed && !docked && !servicesAmbient) {
       material.uniforms.uOpacity.value = STARFIELD_BASE_OPACITY;
       material.uniforms.uPointSize.value = STARFIELD_BASE_POINT_SIZE;
+      // Baseline is visible — reopen the gate in the same frame in case
+      // the ambient envelope closed it before a fast reverse scroll.
+      if (points) points.visible = true;
       return;
     }
     const boot = getThoughtformBootEnvelope(paintProgress);
@@ -236,10 +241,15 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
       opacity *= servicesAmbientLevel;
     }
     material.uniforms.uOpacity.value = opacity;
+    // Draw gate (2026-07-16 perf pass, ADR-047 U5) — same-frame with the
+    // opacity write. The starfield stays visible through the whole
+    // corridor + ambient hold by design, so this only closes if the
+    // ambient envelope actually reaches 0 (the #continuum cover).
+    if (points) points.visible = opacity > 0.002;
     material.uniforms.uPointSize.value =
       STARFIELD_BASE_POINT_SIZE +
       buildBoostT * (STARFIELD_BUILD_POINT_SIZE_PEAK - STARFIELD_BASE_POINT_SIZE);
   });
 
-  return <points geometry={geometry} material={material} frustumCulled={false} />;
+  return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />;
 }
