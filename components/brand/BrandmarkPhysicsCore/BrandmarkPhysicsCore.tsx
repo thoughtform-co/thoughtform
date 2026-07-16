@@ -575,7 +575,6 @@ export function BrandmarkPhysicsCore({
   renderOrder = 1,
 }: BrandmarkPhysicsCoreProps) {
   const renderer = useThree((s) => s.gl);
-  const gl = useThree((s) => s.gl);
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -730,12 +729,14 @@ export function BrandmarkPhysicsCore({
 
   // ── Material ───────────────────────────────────────────────
   const material = useMemo(() => {
-    const dpr = typeof window === "undefined" ? 1 : Math.min(window.devicePixelRatio || 1, 2);
     return new THREE.ShaderMaterial({
       uniforms: {
         uPositionTexture: { value: null },
         uPointSize: { value: pointSize },
-        uPixelRatio: { value: dpr },
+        // Placeholder — corrected to the GOVERNED buffer DPR
+        // (`state.viewport.dpr`) on the first frame; see the per-frame
+        // sync in useFrame (ADR-038 addendum, 2026-07-16).
+        uPixelRatio: { value: 1 },
         uColor: { value: new THREE.Color(color) },
         uAccentColor: { value: new THREE.Color(accentColor) },
         // Settled-wireframe palette (ADR-023 2026-06-25). Default to the
@@ -819,23 +820,21 @@ export function BrandmarkPhysicsCore({
     resources.sim.setHomePositions(seedFromPositions);
   }, [resources, seedFromPositions]);
 
-  // Keep the pixel ratio uniform in step with viewport changes.
-  useEffect(() => {
-    if (typeof window === "undefined" || !materialRef.current) return;
-    const onResize = () => {
-      const mat = materialRef.current;
-      if (!mat) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      mat.uniforms.uPixelRatio.value = dpr;
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [gl]);
-
   // ── Per-frame: drive forces, run sim, write material uniforms ─
   useFrame((state, delta) => {
     const mat = materialRef.current;
     if (!mat || !resources) return;
+
+    // Sync uPixelRatio to the GOVERNED renderer DPR every frame
+    // (ADR-038 addendum, 2026-07-16; mirrors the BrandmarkSilhouettePoints
+    // mobile quality pass). The old mount-time pin read RAW
+    // `devicePixelRatio` (2 on retina) while the corridor canvas renders
+    // at the governor's ceiling (1.75, stepping to 1.0 under load) — so a
+    // governed step-down left dots sized for a 2× buffer inside a 1×
+    // buffer: fat, chunky, "low-poly". `state.viewport.dpr` tracks the
+    // Canvas `dpr` prop, so this follows governor steps mid-session in
+    // the same frame they land.
+    mat.uniforms.uPixelRatio.value = state.viewport.dpr;
 
     // Live size / brightness: prefer the refs so the corridor actor can
     // ramp the core from its parked baseline up to the bright fly-in
