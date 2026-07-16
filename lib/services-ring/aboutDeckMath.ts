@@ -47,17 +47,19 @@ const TAU = Math.PI * 2;
 
 /* ── About-stage beat windows (fractions of the pinned #about runway) ──
  * Single source for the WebGL deck AND the DOM stage's CSS mirrors —
- * beats must never drift apart. Runway = 300svh (3 beats). */
+ * beats must never drift apart. Runway = 240svh (2026-07-16 pacing pass:
+ * 300svh + flip end 0.3 made the flip take ~52svh of scrolling — owner:
+ * "a bit too many scrolls"; now ~31svh). */
 
 /** Beat 0 — the deck flips π and glides onto the DOM slot; the orbit
  *  cluster materializes around it; the receded mark + tracks clear. */
-export const ABOUT_FLIP_WINDOW: readonly [number, number] = [0.04, 0.3];
+export const ABOUT_FLIP_WINDOW: readonly [number, number] = [0.04, 0.26];
 
 /** Beat 1 — the DOM cluster (deck welded to its slot) translates right. */
-export const ABOUT_SHIFT_WINDOW: readonly [number, number] = [0.38, 0.62];
+export const ABOUT_SHIFT_WINDOW: readonly [number, number] = [0.32, 0.56];
 
 /** Beat 1, trailing — the left copy column reveals. */
-export const ABOUT_COPY_WINDOW: readonly [number, number] = [0.46, 0.72];
+export const ABOUT_COPY_WINDOW: readonly [number, number] = [0.4, 0.66];
 
 /** Runway tail — the station's fail-opaque shield restores (and the deck +
  *  DOM cluster die with it) so #continuum covers an already-shielded

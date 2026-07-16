@@ -16,7 +16,7 @@ const ABOUT_STEP_COUNT = 3;
  * deck-flip stage (ADR-047). The single writer of:
  *
  *   - `data-about-mode="stage"` on `#about` — the CSS mode switch that
- *     hides the static `.voidwalker` fallback and activates the 300svh
+ *     hides the static `.voidwalker` fallback and activates the 240svh
  *     runway + sticky stage. Removed on ANY disengage (media gate,
  *     corridor fallback, unmount), so every failure mode collapses to
  *     the static opaque station (fail-static).
@@ -177,9 +177,14 @@ export function useAboutStageScroll(
 
       // The deck's seat — measured per frame (gBCR reads the cluster's
       // live translate; the one-frame R3F staleness is the accepted
-      // brandmarkScreenRectRef precedent).
+      // brandmarkScreenRectRef precedent). ONLY while the runway
+      // intersects the viewport: `write` runs on every page scroll while
+      // engaged, and this gBCR (after the var writes above) forces a
+      // synchronous layout — a page-wide per-scroll tax the deck only
+      // needs inside its own band (outside it `flip` is null / the deck
+      // is dead under the shield; the first in-band frame re-measures).
       const slot = slotRef.current;
-      if (slot) {
+      if (slot && r.bottom > 0 && r.top < vh) {
         const rect = slot.getBoundingClientRect();
         writeAboutSlotRect(
           rect.left + rect.width / 2,

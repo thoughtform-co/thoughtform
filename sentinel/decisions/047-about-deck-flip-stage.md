@@ -139,8 +139,8 @@ visible`) and its authored `::before` radial wash is overridden into a
   deck branch never runs pre-exit; reverse scroll reconstructs everything.
 - The seat is derived viewport-first per frame — never a stored world
   offset. The DOM cluster owns the shift motion; the deck follows the rect.
-- Beat windows change in `aboutDeckMath.ts` only; runway height (300svh)
-  is the pacing knob.
+- Beat windows change in `aboutDeckMath.ts` only; runway height (240svh
+  since Update 2; was 300svh) is the pacing knob.
 - The fail-opaque shield's default (unwritten ⇒ 1) and the fail-static
   attribute default (absent ⇒ static voidwalker) must never be inverted.
 - The two "docks" remain distinct: the corridor zoom-dissipate dock
@@ -197,3 +197,62 @@ Two owner reports the day the stage shipped, both verified in code:
    flip-window `aboutFlipFade` stage-clearing kill are unchanged — the mark
    is now additionally OCCLUDED wherever the deck actually covers it, which
    is what "background presence" was supposed to mean.
+
+## Update 2 (2026-07-16) — pacing + zero-opacity draw gates
+
+Owner: the flip "takes a bit too many scrolls," and the band should stay
+smooth. Two levers:
+
+1. **Pacing.** Runway 300svh → **240svh** and the beats pulled tighter:
+   flip `[0.04, 0.26]` (was `[0.04, 0.3]`), shift `[0.32, 0.56]`, copy
+   `[0.4, 0.66]`; the tail stays `[0.92, 1]`. The flip now completes in
+   ~31svh of scrolling (was ~52svh). The unit tests pin beat ORDERING,
+   not values — retimes stay free.
+2. **Perf.** The stage keeps the corridor canvas alive through a band the
+   pre-047 opaque #about used to cover, and three actors kept drawing at
+   opacity 0 through it. All are now draw-gated (`visible = opacity >
+   0.002`, written in the same frame as the fade so reverse scroll is
+   seamless; labs and flag-off paths hold opacity > 0 so their gates never
+   close): the mark's point pass (`BrandmarkPhysicsCore` — also skips the
+   SVG-rest and #continuum-approach transparent states; the sim keeps
+   stepping so every state stays warm), the armillary + card-track lines
+   and orbit nodes (`HologramOrbits`). Additionally `useAboutStageScroll`
+   measures the slot rect ONLY while the runway intersects the viewport —
+   it previously forced a synchronous layout on every page scroll
+   (write-vars-then-read-gBCR) from engage onward, i.e. everywhere on the
+   landing page.
+
+## Update 3 (2026-07-16) — the sweep: stack→flip as one movement
+
+Owner: _"the cards stacking and the card flipping … should be one smooth
+movement whereas right now I still need to scroll three times or smth to
+get it to flip."_ A live probe of the CSS mirrors showed why: the stack
+completed (`--svc-exit` = 1) a full ~100svh before the about runway
+pinned (`--about-flip` > 0) — a dead viewport of scroll between the two
+clocks. Root cause: the services runway's final EXIT-HOLD beat exists so
+the NEXT station can sweep up over the still-pinned stack (`margin-top:
+-100svh`, the ADR-030 grammar). Pre-047 the opaque #about carried that
+margin; the transparent stage dropped it, and nothing swept — the hold
+beat became dead scroll.
+
+Fix, two coupled pieces:
+
+1. **The sweep restored** (`about-stage.css`): `#about.station[data-about-
+   mode="stage"] { margin-top: -100svh }` — gated on the stage attribute
+   (set once at engage, stable), NOT the transient `data-corridor-exit`
+   band flag (geometry must not inflate mid-scroll). The about runway now
+   pins while the stack settles, and the flip window's `[0 → 0.04]`
+   pre-roll (~50px) lands exactly on the exit clock's settle tail
+   (`DECK_SETTLE_WINDOW` end): the deck stacks and flips as ONE gesture.
+   Fallback paths (attribute absent) keep normal flow — fail-static.
+2. **The flip branch yields until its window opens** (`ServicesCardRing`):
+   with the clocks overlapping, `aboutP > 0` no longer implies the stack
+   is done, so the flip engages only at `posBlend = aboutFlipT > 0`
+   (past `ABOUT_FLIP_WINDOW[0]`). Below that the STACK branch owns the
+   settle; the two poses meet byte-identically at the boundary (settle
+   end = `DECK_PLACEMENTS` constants = the flip's identity at θ = 0).
+
+The "disjoint by page order" wording in the original Decision is
+superseded: the clocks now OVERLAP by ~100svh, and the seam guarantee is
+carried by the window gate + the shared constant pose at the boundary
+instead of by page separation.

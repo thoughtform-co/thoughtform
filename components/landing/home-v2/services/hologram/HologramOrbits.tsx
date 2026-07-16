@@ -320,11 +320,19 @@ function OrbitRing({
         line.geometry.instanceCount = Math.max(0, Math.ceil(reveal * SEGMENTS));
         line.material.opacity = baseOpacity * master;
       }
+      // Draw gate (2026-07-16 perf pass): the exit dim + about flip fade
+      // hold every line at opacity 0 through the post-flip #about beats —
+      // skip the (expensive fat-line) draw there. Labs / flag-off keep
+      // master = 1 so the gate never closes on them; the visible flag is
+      // written beside the opacity every frame, so reverse scroll restores
+      // the draw in the same frame the fade does. Visual no-op.
+      line.visible = line.material.opacity > 0.002;
     }
     if (nodeMatRef.current) {
       // The node body appears once its ring has nearly finished wrapping.
       nodeMatRef.current.opacity =
         nodeBaseOpacity * smootherstep(revealEnd - 0.18, revealEnd, d) * master;
+      if (nodeRef.current) nodeRef.current.visible = nodeMatRef.current.opacity > 0.002;
     }
   });
 

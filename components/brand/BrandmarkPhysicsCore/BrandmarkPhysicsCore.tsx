@@ -854,6 +854,16 @@ export function BrandmarkPhysicsCore({
       : cleanFieldDotScale;
     const resolvedFreezeMotion = freezeMotionRef ? freezeMotionRef.current : freezeMotion;
 
+    // Draw gate (2026-07-16 perf pass): at uOpacity 0 the point pass still
+    // costs a full count-sized vertex run (sim texture fetch + raster of
+    // invisible fragments). Fully-transparent states are real and long-
+    // lived — SVG-rest pre-handoff, the post-flip #about beats, the
+    // #continuum approach — so skip the draw entirely there. The sim keeps
+    // stepping below (state stays warm) and both this flag and the uniform
+    // are written in the same useFrame, so the mark re-appears in the
+    // exact frame opacity returns. Visual no-op by construction.
+    if (pointsRef.current) pointsRef.current.visible = resolvedOpacity > 0.002;
+
     // Reduced-motion / static path. The home texture was bound once
     // when resources were built; we just keep tint / opacity / depth /
     // time in step here. No compute, no GPU writes from this component.

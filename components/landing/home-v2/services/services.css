@@ -68,10 +68,12 @@
   /* Runway the sticky stage pins within — one viewport-tall scroll segment per
    * beat (6 steps since ADR-030: a collapsed lead-in, one per service
    * — Advisory / Embedded / Keynote / Workshop — and a final EXIT-HOLD beat
-   * during which the #tools station sweeps up over the still-pinned stage
-   * via its -100svh margin; the cover completes exactly when this runway
-   * would unpin the stage): the scroll position owns which signal plate is
-   * OPEN (useServicesStageScroll STEP_COUNT → expanded card in
+   * during which the next station sweeps up over the still-pinned stage
+   * via its -100svh margin. Under ADR-047 Update 3 that sweeper is the
+   * TRANSPARENT #about deck-flip stage (about-stage.css): its runway pins
+   * while the deck stack settles, so the stack hands straight into the
+   * flip with no dead viewport): the scroll position owns which signal
+   * plate is OPEN (useServicesStageScroll STEP_COUNT → expanded card in
    * ServicesPlateCluster; must stay in lockstep with STEP_COUNT × 100svh so
    * each beat still owns one viewport of scroll travel). The corridor-exit
    * dissipate clock keys off #services's TOP + a fixed span

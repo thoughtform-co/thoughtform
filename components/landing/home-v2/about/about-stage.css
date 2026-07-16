@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════
  * ADR-047 — ABOUT DECK-FLIP STAGE (#about, capable desktop path)
  *
- * A 300svh runway pins a sticky TRANSPARENT stage over the still-live
+ * A 240svh runway pins a sticky TRANSPARENT stage over the still-live
  * corridor canvas: the WebGL card deck flips π to Vince's portrait and
  * lands on `.about-stage__slot` while the orbit cluster materializes
  * around it (beat 0), the cluster + deck then translate right while the
@@ -31,10 +31,11 @@
 }
 
 #about[data-about-mode="stage"] .about-stage-root {
-  /* 3 beats × 100svh (the services-stage-root pattern). Widen to 400svh
-     if the flip feels rushed — the beat windows are fractions, so the
-     runway height is the single pacing knob. */
-  min-height: 300svh;
+  /* 240svh (2026-07-16 pacing pass — 300svh made the flip take too many
+     wheel ticks; owner report). The beat windows are fractions, so the
+     runway height is the single pacing knob — widen back toward 300svh
+     if the flip feels rushed. */
+  min-height: 240svh;
 }
 #about[data-about-mode="stage"] .about-stage {
   display: flex;
@@ -54,6 +55,19 @@
   display: none;
 }
 #about.station[data-about-mode="stage"] {
+  /* THE SWEEP (Update 3 — one continuous stack→flip movement): the
+     station rides up over the services runway's final EXIT-HOLD beat —
+     the ADR-030 grammar that beat exists FOR. Pre-047 the opaque #about
+     carried this margin; the transparent stage dropped it, leaving a
+     full dead viewport between the stack completing (exit = 1) and the
+     flip starting. With the sweep restored, the about runway pins
+     ~100svh earlier and the flip window's 0.04 pre-roll lands exactly
+     on the exit clock's settle tail — the deck stacks and flips as one
+     gesture. Gated on the stage attribute (set once at engage, stable),
+     NOT on the transient data-corridor-exit band flag — geometry must
+     not inflate mid-scroll. Fallback paths (attribute absent) keep
+     normal flow. */
+  margin-top: -100svh;
   /* Pin math = station geometry: the runway's bottom must coincide with
      #continuum's top (the ADR-047 shield/ambient ordering invariant), so
      the station's vertical padding zeroes while pinned. The horizontal
@@ -61,7 +75,7 @@
      parity inset chain (ADR-045). */
   padding-top: 0;
   padding-bottom: 0;
-  /* The ADR-030 containment-placeholder trap: a ~300svh station must
+  /* The ADR-030 containment-placeholder trap: a ~240svh station must
      never collapse to its contain-intrinsic-size placeholder offscreen
      or every scroll target below it lands wrong. */
   content-visibility: visible;

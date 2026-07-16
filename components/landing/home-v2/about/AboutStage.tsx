@@ -11,7 +11,7 @@ import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
  * AboutStage — the pinned #about deck-flip stage (ADR-047, capable
  * desktop only).
  *
- * A 300svh runway (`.about-stage-root`, the portal slot) pins this
+ * A 240svh runway (`.about-stage-root`, the portal slot) pins this
  * sticky, TRANSPARENT stage over the still-live corridor canvas. Beats
  * (windows in `lib/services-ring/aboutDeckMath.ts`, mirrored to CSS vars
  * by `useAboutStageScroll`):

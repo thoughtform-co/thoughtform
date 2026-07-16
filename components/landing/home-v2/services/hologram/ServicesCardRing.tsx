@@ -1213,7 +1213,16 @@ export function ServicesCardRing({
 
     // Flip-phase shared geometry (one inverse parent matrix + camera terms
     // + the pivot's seat for all four cards — scratch objects only).
-    const flip = deckEngaged && aboutP > 0 ? deckFlip(aboutP) : null;
+    // The ADR-047 Update 3 sweep overlaps the two clocks: the about runway
+    // now pins WHILE the stack is still settling (exit ≈ 0.93 → 1), so the
+    // flip branch must not seize the pose at raw aboutP > 0 — it engages
+    // only once its own window opens (posBlend = aboutFlipT > 0, i.e. past
+    // ABOUT_FLIP_WINDOW[0] ≈ the exit clock's end). Below that the STACK
+    // branch owns the settle, and the two poses meet byte-identically at
+    // the boundary (settle end = the DECK_PLACEMENTS constants = the
+    // flip's exact identity at θ = 0, posBlend = 0).
+    const flipCandidate = deckEngaged && aboutP > 0 ? deckFlip(aboutP) : null;
+    const flip = flipCandidate && flipCandidate.posBlend > 0 ? flipCandidate : null;
     let flipSin = 0;
     let flipCos = 1;
     let flipPivotX = 0;
