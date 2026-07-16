@@ -264,13 +264,23 @@ export const brandmarkCoreVertexShader = /* glsl */ `
 
     // PRESENTED-shape crispness (2026-06-25 "never warp" pass): high at the
     // FLAT rest (uDepth → 0, the matched-pixel SVG mark) AND at the landed
-    // wireframe (uDepth → 1), low only during the wind-blown flight. When
-    // the brandmark SHAPE is presented it must read clean + uniform — never
-    // brushy/clumpy — so this drives the fragment's dot-tighten + twinkle/
-    // pulse still + the size-variance flatten below. The flight (mid-uDepth)
-    // keeps its living dust character (vCrisp → 0 there).
+    // wireframe (uDepth → 1). When the brandmark SHAPE is presented it must
+    // read clean + uniform — never brushy/clumpy — so this drives the
+    // fragment's dot-tighten + twinkle/pulse still + the size-variance
+    // flatten below.
+    //
+    // Terminal-crisp flight (ADR-023 addendum 2026-07-16): the wind-blown
+    // flight previously released vCrisp fully to 0 ("living dust"), which
+    // rendered the mid-morph as large soft size-varied sprites — the
+    // "painted/airbrushed" read the owner rejected. The floor keeps
+    // in-flight particles reading as discrete phosphor points (dot mask
+    // ~0.37, size variance ±10%, twinkle nearly still) while the flight
+    // CHOREOGRAPHY (stagger, tangent drift, recede, glitch) is untouched.
+    // 0.0 restores the legacy soft-dust flight byte-identically (max() is
+    // an identity at both rests, where crisp is already 1).
+    const float FLIGHT_CRISP_FLOOR = 0.7;
     float flatCrisp = 1.0 - smoothstep(0.0, 0.2, uDepth);
-    float crisp = max(flatCrisp, wireCrisp);
+    float crisp = max(max(flatCrisp, wireCrisp), FLIGHT_CRISP_FLOOR);
     vCrisp = crisp;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
@@ -283,8 +293,17 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     float sizeMul = 0.78 + aEdgeWeight * 0.32 + aLuma * 0.18;
     // PRESENTED-shape: flatten the per-particle size variance toward a
     // uniform dot so the matched-pixel mark + landed wireframe read CLEAN,
-    // not clumpy/brushy. Mid-flight (vCrisp → 0) keeps the lively variance.
+    // not clumpy/brushy. The FLIGHT_CRISP_FLOOR above keeps most of this
+    // flatten active mid-flight too (terminal-crisp pass).
     sizeMul = mix(sizeMul, 1.0, vCrisp * 0.85);
+    // Terminal-crisp flight (ADR-023 addendum 2026-07-16): receded
+    // particles shrink slightly instead of staying big-and-dim — big+dim
+    // reads painterly, small+dim reads as a distant phosphor point. Uses
+    // the same wind bell as the recede itself (flowBell, staggered per
+    // particle), so it is exactly 0 at both flight endpoints and at the
+    // parked centerpiece. 0.0 restores the legacy size.
+    const float RECEDE_SIZE_ATTEN = 0.12;
+    sizeMul *= 1.0 - RECEDE_SIZE_ATTEN * flowBell * (1.0 - uCleanField);
     // Cover-in size ramp so particles condense into focus rather than
     // appearing as full-size dots from frame one when they're clustered
     // at the rect centre. Identity at coverIn = 1, so the parked corridor

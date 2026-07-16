@@ -136,6 +136,13 @@ const CORE_OPACITY = 0.84;
 // prior 3→4 ramp. Paired with the shader's depth-tied `depthKeep` density.
 const CORE_POINT_SIZE_FLAT = 5.0;
 const CORE_POINT_SIZE_3D = 4.45;
+/** Terminal-crisp flight (ADR-023 addendum 2026-07-16): dip the sprite
+ *  size mid-flight (sin bell, exactly 0 at both endpoints) so in-flight
+ *  particles read as small discrete phosphor points instead of the large
+ *  soft sprites that painted the mid-morph. The flat handoff frame keeps
+ *  5.0 exactly (matched-pixel contract) and the landed wireframe keeps
+ *  4.45 — sin(0·π) = sin(1·π) = 0. 0 restores the legacy linear ramp. */
+const CORE_POINT_SIZE_FLIGHT_DIP = 0.9;
 
 /** Corridor brandmark palette (ADR-023 unified Tensor gold, 2026-06-25 +
  *  2026-07-06 "one holographic instrument" convergence).
@@ -422,10 +429,11 @@ export function BrandmarkPhysicsCoreActor({
     : BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP;
   // Corridor draws only a fraction of the (large) global count so it stays calm
   // while the centerpiece draws densely from the same cloud. Desktop:
-  // 1600/6000 ≈ 0.27; mobile: min(1, 1600/650) = 1 (no thinning — already low).
+  // 2600/6000 ≈ 0.43 (CORRIDOR_DRAW_TARGET, raised from 1600 in the 2026-06-25
+  // de-pixelate pass); mobile: min(1, 2600/650) = 1 (no thinning — already low).
   // `PRODUCTION_CORRIDOR_KEEP` overrides this for sparse bases (edge-lattice):
   // the lattice already collapses the cloud to a small set of unique cells, so
-  // the count-based 0.27 keep would shred the voxel grid — pin it to 1.0 there.
+  // the count-based keep would shred the voxel grid — pin it to 1.0 there.
   const corridorKeep = PRODUCTION_CORRIDOR_KEEP ?? Math.min(1, CORRIDOR_DRAW_TARGET / count);
 
   const groupRef = useRef<THREE.Group>(null);
@@ -807,9 +815,13 @@ export function BrandmarkPhysicsCoreActor({
       (1 - EXIT_DIM * exitT) *
       aboutFlipFade;
     // Crisp small specks for the flat silhouette → slightly larger
-    // specks for the luminous 3D body, riding the depth extrude.
+    // specks for the luminous 3D body, riding the depth extrude — with a
+    // mid-flight DIP (terminal-crisp pass, see CORE_POINT_SIZE_FLIGHT_DIP)
+    // so the wind-blown particles read as small discrete points.
     pointSizeRef.current =
-      CORE_POINT_SIZE_FLAT + (CORE_POINT_SIZE_3D - CORE_POINT_SIZE_FLAT) * depth;
+      CORE_POINT_SIZE_FLAT +
+      (CORE_POINT_SIZE_3D - CORE_POINT_SIZE_FLAT) * depth -
+      CORE_POINT_SIZE_FLIGHT_DIP * Math.sin(Math.PI * depth);
 
     // Size: shared with the projected SVG so the medium blend is
     // size-continuous. The 2D mark starts growing during the early
