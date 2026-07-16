@@ -339,3 +339,30 @@ frame**, so reverse scroll restores every layer frame-exact.
 Not touched: the frameloop/FrameInvalidator contract (ADR-018/021/this ADR),
 the ambient retarget, and the governor constants (see the ADR-038 2026-07-16
 update for the paired `uPixelRatio` fix and the post-change numbers).
+
+## Update 6 (2026-07-16, owner round 2) — one-scroll flip, rtl copy emergence, persistent mark
+
+1. **One continuous movement.** `ABOUT_FLIP_WINDOW` [0.04, 0.26] → **[0,
+   0.22]**. The #about pin coincides with services exit = 1 (the −100svh
+   margin weld), so the 0.04 pre-roll (~5.6svh of held scroll) was the only
+   dead travel between stack-complete and flip-start — it read as "two
+   scrolls". The exit = 1 pose is pure constants, so flipping straight out of
+   it is exact. Window ordering + endpoint pins hold (they reference the
+   constants).
+2. **Copy emerges right-to-left from the center.** The per-child scrubbed
+   reveal swaps `translateY(14px)` for `translateX(32px → 0)` + a left-inset
+   clip wipe (each line lands center-first, reveals outward to the left
+   margin) — the owner read the upward rise as "cringy". Additionally the
+   NAME / "// Voidwalker." em / ROLE eyebrow **scramble-decode** via the
+   shared caption kernel, armed off the copy clock (`aboutCopyT ≥ 0.05` via
+   `aboutStageProgressRef`, re-arm below 0.02, targets = line spans since the
+   kernel owns `textContent`). Component-local rAF, single writer for those
+   text nodes.
+3. **The receded mark persists.** `ABOUT_FLIP_MARK_DIM = 0.45` replaces the
+   full flip clear on the mark's opacity (`BrandmarkPhysicsCoreActor`) —
+   ~0.30 of parked ink survives as a subtle centre presence behind the
+   flipped portrait ("the wireframe should persist and just stay at the
+   center"). The orbits/tracks keep their FULL clear (the armillary getter
+   is untouched); the ambient envelope still kills the mark at #continuum.
+   Screenshot-verified: the persisted dots read as ambient instrument
+   around the portrait (the cluster shifts right, the mark holds centre).

@@ -115,6 +115,20 @@ A/B screenshots for the owner review: `assets-staging/hero-reveal-ab/`
   evidence for the win is the screenshots + real paint entries, not the lab
   LCP number. Field (CrUX) LCP was likely early already.
 
+## Update (2026-07-16) — hero terminal boot layers ON TOP, LCP-safe
+
+The owner wanted the hero to carry the site's glitch grammar (headline
+scramble-decode, typed paragraph with CRT cursor, CTA buttons unfurling
+centre-out like the arc console frames). The boot (a `LandingPage` effect +
+`.hero__cta[data-unfurl]` CSS) deliberately runs **at hydration on
+already-painted text** — it never holds the hero blank pre-JS, so this ADR's
+LCP contract is untouched: the text paints at FCP exactly as before (CSS-first
+path included), LCP records that first paint, and the boot re-decodes it as a
+one-shot moment when JS arrives (post-paint mutations don't retract LCP).
+`data-unfurl` is JS-set only (no-JS never clips the buttons); reduced motion
+skips the whole boot. Trade accepted by the owner: on slow connections the
+hero text is readable, then re-types once at hydration.
+
 ## References
 
 - `app/layout.tsx` (flag script), `components/landing/v7/landing.css`

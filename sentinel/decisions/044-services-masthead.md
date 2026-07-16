@@ -126,3 +126,21 @@ Correction to the earlier consequence note: the "ONE PRACTICE. / FOUR WAYS
 IN." copy was itself reverted — live copy is `ONE LOOP. / THREE DEPTHS.`
 (`serviceData.ts`, "DEPTHS. returns DELIBERATELY"); the smoke spec's
 `ONE LOOP.` assertion is current, not stale.
+
+### Same-day revision (round 2) — the big-title LINE + readout retirement
+
+The corner-line rule lasted hours: on review the owner read it as "still a
+bit too high — the previous section's big titles are in the right position."
+The vertical anchor is now the **corridor station-title line**, promoted to a
+shared token `--station-title-top` (landing.css :root, the
+`clamp(48px, 6.8vh, 84px)` the corridor heads always used).
+`.home-v2-station-header__head` consumes it; `--masthead-top` derives from it
+(−20px lead offset: corridor console pad +9px vs masthead eyebrow block
+≈29px, so the TITLE caps align exactly). One rhythm source, both surfaces —
+retuning the token moves the corridor and services titles together.
+
+The **bottom readout strip is retired** (`ServicesStationReadout` deleted;
+CSS tombstoned) — it cost the exact vertical band the bigger card ring needs
+on short viewports. The step clock's other surfaces (data-active-step, the
+plates, ring highlight, designations) carry the active-service signal; the
+ring smoke re-points its assertions at those.
