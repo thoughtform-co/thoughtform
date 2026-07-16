@@ -89,6 +89,15 @@ const CARDS = [
     fx: 0.42,
     fy: 0.28,
   },
+  {
+    // The about portrait (ADR-047 deck back face): the studio portrait is
+    // TALLER than the card aspect, so the taller-branch crops height and
+    // anchors the face high; fy centers on the face band.
+    id: "vince",
+    src: pub("images", "vince-portrait.jpg"),
+    fx: 0.5,
+    fy: 0.22,
+  },
 ];
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

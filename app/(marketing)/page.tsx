@@ -5,6 +5,7 @@ import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/services/services.css";
+import "@/components/landing/home-v2/about/about-stage.css";
 // handoff-lab.css intentionally NOT imported here: the cover-plane
 // sweep was retired from production (ADR-021 — the live corridor-exit
 // seam is the zoom-dissipate), and the /test/handoff-* lab routes

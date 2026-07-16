@@ -33,7 +33,7 @@ import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
 import { brandmarkScanAnchorPointsRef, type BrandmarkFeatureId } from "../brandmarkScanAnchorsRef";
-import { SERVICES_CARD_RING } from "../unifiedServicesInstrument";
+import { ABOUT_DECK_STAGE, SERVICES_CARD_RING } from "../unifiedServicesInstrument";
 import {
   HologramOrbits,
   STRUCTURAL_ORBITS,
@@ -41,6 +41,8 @@ import {
 import { ServicesCardRing } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
+import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import {
@@ -61,11 +63,14 @@ const ANCHOR_PUBLISH_DISSIPATE = 0.88;
 
 /** Decommission dim on the structural armillary lines (ADR-030 Update 1):
  *  as the exit clock runs, the gold orbit lines sink most of the way out so
- *  the receding mark reads alone behind the incoming #tools readout. The
- *  ambient envelope + canvas release finish the kill. */
+ *  the receding mark reads alone behind the assembling deck. Under ADR-047
+ *  the residue then clears FULLY across the about flip window (the flipped
+ *  portrait gets a clean stage); the ambient envelope + canvas release
+ *  finish the kill as #continuum arrives. */
 const ORBIT_EXIT_DIM = 0.85;
 const orbitExitGetter = () =>
-  1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress);
+  (1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress)) *
+  (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1);
 
 export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number }) {
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId) ?? SERVICES[0].id;

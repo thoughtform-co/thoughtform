@@ -2,11 +2,11 @@
 
 ## Sentinel — patterns and decisions
 
-Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes. Full index: [`sentinel/decisions/`](sentinel/decisions/) (ADR-001 … ADR-046). Load-bearing entries for the current surface:
+Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes. Full index: [`sentinel/decisions/`](sentinel/decisions/) (ADR-001 … ADR-047). Load-bearing entries for the current surface:
 
 - **Home-v2 depth corridor:** [ADR-018](sentinel/decisions/018-home-v2-depth-corridor.md) — the dominant landing surface (scroll-driven WebGL corridor)
 - **Arc cases (Build park):** [ADR-033](sentinel/decisions/033-arc-cases-orbit.md) → [ADR-042](sentinel/decisions/042-arc-cases-cue.md) — cases orbit, terrace, terminal, card, sigil, cue
-- **Services exit + about:** [ADR-045](sentinel/decisions/045-about-emerge-rail-parity.md) (about emerge + rail parity), [ADR-046](sentinel/decisions/046-services-cartridge-dock.md) (cartridge dock)
+- **Services exit + about:** [ADR-047](sentinel/decisions/047-about-deck-flip-stage.md) (the deck-flip stage — cards stack, flip to portrait, ambient survives to #continuum), [ADR-045](sentinel/decisions/045-about-emerge-rail-parity.md) (the mobile/fallback about surface; ADR-046's dock is superseded)
 - **Rail manifest:** [ADR-031](sentinel/decisions/031-rail-manifest.md)
 - **Corridor quality governor:** [ADR-038](sentinel/decisions/038-corridor-quality-governor.md) — GPU probe + FPS degradation
 - **Landing v7 compositing:** [ADR-008](sentinel/decisions/008-landing-v7-background-layers.md)

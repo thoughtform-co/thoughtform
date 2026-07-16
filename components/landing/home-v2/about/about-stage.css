@@ -1,0 +1,145 @@
+/* ═══════════════════════════════════════════════════════════════════════
+ * ADR-047 — ABOUT DECK-FLIP STAGE (#about, capable desktop path)
+ *
+ * A 300svh runway pins a sticky TRANSPARENT stage over the still-live
+ * corridor canvas: the WebGL card deck flips π to Vince's portrait and
+ * lands on `.about-stage__slot` while the orbit cluster materializes
+ * around it (beat 0), the cluster + deck then translate right while the
+ * copy column reveals (beat 1), and the reading hold (beat 2) closes
+ * with the fail-opaque shield restoring under #continuum.
+ *
+ * EVERYTHING here is attribute-gated on `#about[data-about-mode="stage"]`
+ * (written by useAboutStageScroll only while the ring's media gate holds
+ * and the corridor is not in WebGL fallback): no attribute ⇒ the stage is
+ * display:none, the runway is flat, and the static `.voidwalker` fallback
+ * + the ADR-045 emerge own the section — mobile, reduced-motion,
+ * WebGL-fallback, JS-failure and flag-off all land there (fail-static).
+ *
+ * The scroll-driven channels (--about-flip / --about-shift /
+ * --about-copy-in / --about-bg-in) are per-frame CSS-var mirrors of the
+ * aboutDeckMath beat windows — NO transitions on them (scroll owns the
+ * motion; everything is reversible by construction).
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+.about-stage-root {
+  position: relative;
+  z-index: 2;
+}
+/* No stage without the mode attribute — fail-static. */
+.about-stage {
+  display: none;
+}
+
+#about[data-about-mode="stage"] .about-stage-root {
+  /* 3 beats × 100svh (the services-stage-root pattern). Widen to 400svh
+     if the flip feels rushed — the beat windows are fractions, so the
+     runway height is the single pacing knob. */
+  min-height: 300svh;
+}
+#about[data-about-mode="stage"] .about-stage {
+  display: flex;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  align-items: center;
+  /* ADR-008 Rule 2 exception (sanctioned for #about by ADR-047): the
+     stage is transparent so the live corridor canvas — the flipping deck
+     + the held ambient bed — shows through the pinned beat. The
+     fail-opaque station shield (#about.station::before, home-v2.css)
+     sits underneath for every non-engaged state. */
+  background: transparent;
+}
+/* The static fallback hides only while the stage owns the section. */
+#about[data-about-mode="stage"] > .voidwalker {
+  display: none;
+}
+#about.station[data-about-mode="stage"] {
+  /* Pin math = station geometry: the runway's bottom must coincide with
+     #continuum's top (the ADR-047 shield/ambient ordering invariant), so
+     the station's vertical padding zeroes while pinned. The horizontal
+     --hud-content-inset padding STAYS — it is layer one of the rail-
+     parity inset chain (ADR-045). */
+  padding-top: 0;
+  padding-bottom: 0;
+  /* The ADR-030 containment-placeholder trap: a ~300svh station must
+     never collapse to its contain-intrinsic-size placeholder offscreen
+     or every scroll target below it lands wrong. */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+/* ── The grid — rail parity with the services masthead (two-layer inset:
+   station --hud-content-inset padding + --rail-inset margins, exactly
+   the ADR-045 static-about recipe). */
+#about[data-about-mode="stage"] .about-stage__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 480px) minmax(0, 520px);
+  gap: clamp(28px, 3.5vw, 56px);
+  align-items: center;
+  justify-content: space-between;
+  margin-inline: var(--rail-inset);
+  /* The tail kill: as the fail-opaque shield restores (--about-bg-in →
+     1, written on #about and inherited here), every stage child dies
+     with it so nothing outlives the cover — the WebGL deck multiplies
+     the same term (deckBgKill). Children, never the shielding wrapper
+     (ADR-008 Rule 3). */
+  opacity: calc(1 - var(--about-bg-in, 0));
+}
+
+/* ── LEFT — copy column reveal (beat 1). Scrubbed per-child stagger:
+   each child carries an inline --ci-off (0 … 0.48); --ci renormalizes
+   --about-copy-in past that offset. Reversible, observer-free. */
+#about[data-about-mode="stage"] .about-stage__copy > * {
+  --ci: clamp(0, calc((var(--about-copy-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
+  opacity: var(--ci);
+  transform: translateY(calc((1 - var(--ci)) * 14px));
+}
+#about[data-about-mode="stage"] .about-stage__copy .voidwalker__name {
+  /* The title wipe — the [data-m="title"] grammar, scrubbed. */
+  clip-path: inset(0 0 calc((1 - var(--ci)) * 100%) 0);
+}
+
+/* ── RIGHT — the orbit cluster. Beat 0: rings/readouts/halo materialize
+   around the flipping deck (opacity + a small scale settle off
+   --about-flip). Beats 0–1 position: the cluster is laid out at its
+   FINAL grid slot and translated LEFT to viewport centre by
+   --about-center-dx (measured offset-chain by the hook), easing to 0
+   across --about-shift — getBoundingClientRect on the slot reads this
+   live translate, which is exactly how the WebGL deck stays welded. */
+#about[data-about-mode="stage"] .about-stage__cluster {
+  transform: translateX(calc(var(--about-center-dx, 0px) * (1 - var(--about-shift, 0))));
+}
+#about[data-about-mode="stage"] .about-stage__cluster .voidwalker__orbit__svg {
+  opacity: var(--about-flip, 0);
+  transform: scale(calc(0.92 + 0.08 * var(--about-flip, 0)));
+}
+#about[data-about-mode="stage"] .about-stage__cluster .voidwalker__orbit__label,
+#about[data-about-mode="stage"] .about-stage__cluster .voidwalker__orbit__particles {
+  opacity: var(--about-flip, 0);
+}
+
+/* The deck's seat — a pure measurement element (the flipped WebGL card
+   IS the portrait; its chrome is baked on the card face). CARD aspect
+   (420/680), not the fallback portrait's 3/4 — the deck height-matches
+   this rect via seatWorldHeight. */
+#about[data-about-mode="stage"] .about-stage__slot {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 52%;
+  aspect-ratio: 420 / 680;
+  pointer-events: none;
+}
+
+/* The stage never exists below the ring gate (JS parity gate in the
+   hook + the component's own media return; this is the CSS belt — the
+   .svc-ring-hits precedent). */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .about-stage {
+    display: none !important;
+  }
+  .about-stage-root {
+    min-height: 0 !important;
+  }
+}

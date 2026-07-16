@@ -1,0 +1,291 @@
+// About deck-flip — pure math for the services→about card transition
+// (ADR-047, supersedes the ADR-046 cartridge dock).
+//
+// Two clocks, disjoint by page order, both clamped outside their ranges so
+// the seam between them is a byte-stable hold:
+//
+//   1. THE STACK (services exit clock, `exitProgressForRunway` 0→1): each
+//      card's azimuth SWEEPS along its own orbit to its nearest-full-turn
+//      front (never a Cartesian lerp — card 1 arcs around the mark on its
+//      drawn track instead of crossing it), while a radius correction
+//      seats the four converged cards on evenly-pitched deck depths (the
+//      raw radius·ecc products would interpenetrate cards 1–2). Position,
+//      yaw-unwind, depth-opacity lift, and scale-equalize all fall out of
+//      `placeCardOnOrbit` as nz → 1.
+//   2. THE FLIP (about stage clock, 0→1 across the pinned #about runway):
+//      the deck rotates π about its pivot's X axis AS ONE RIGID SLAB,
+//      revealing the portrait back faces, while the pivot glides onto the
+//      DOM portrait slot (aboutSlotRef); past the flip window the pivot IS
+//      the live slot rect every frame, so the DOM cluster's beat-1
+//      translate carries the deck (one motion owner: the DOM).
+//
+// Kept free of DOM/three so it stays unit-testable
+// (tests/lib/about-deck-math.test.ts). Consumed by
+// components/landing/home-v2/services/hologram/ServicesCardRing.tsx (deck
+// branch), BrandmarkPhysicsCoreActor + CorridorArmillary (the flip-window
+// stage-clearing fades), and useAboutStageScroll (the CSS-var mirrors of
+// the same beat windows — the `--svc-exit` pattern).
+
+import { clamp01, lerp } from "@/lib/math";
+
+import {
+  RING_CARD_ORBIT_GEOMETRY,
+  RING_COUNT,
+  RING_DIRECTION,
+  RING_EXIT_WINDOWS,
+  RING_QUARTER,
+  RING_SCALE_RANGE,
+  basePhi,
+  placeCardOnOrbit,
+  smootherstep,
+} from "./ringMath";
+
+const TAU = Math.PI * 2;
+
+/* ── About-stage beat windows (fractions of the pinned #about runway) ──
+ * Single source for the WebGL deck AND the DOM stage's CSS mirrors —
+ * beats must never drift apart. Runway = 300svh (3 beats). */
+
+/** Beat 0 — the deck flips π and glides onto the DOM slot; the orbit
+ *  cluster materializes around it; the receded mark + tracks clear. */
+export const ABOUT_FLIP_WINDOW: readonly [number, number] = [0.04, 0.3];
+
+/** Beat 1 — the DOM cluster (deck welded to its slot) translates right. */
+export const ABOUT_SHIFT_WINDOW: readonly [number, number] = [0.38, 0.62];
+
+/** Beat 1, trailing — the left copy column reveals. */
+export const ABOUT_COPY_WINDOW: readonly [number, number] = [0.46, 0.72];
+
+/** Runway tail — the station's fail-opaque shield restores (and the deck +
+ *  DOM cluster die with it) so #continuum covers an already-shielded
+ *  station BEFORE the ambient canvas is killed (the ADR-030 ordering
+ *  invariant). */
+export const ABOUT_BG_IN_WINDOW: readonly [number, number] = [0.92, 1.0];
+
+export function aboutFlipT(aboutP: number): number {
+  return smootherstep(ABOUT_FLIP_WINDOW[0], ABOUT_FLIP_WINDOW[1], clamp01(aboutP));
+}
+export function aboutShiftT(aboutP: number): number {
+  return smootherstep(ABOUT_SHIFT_WINDOW[0], ABOUT_SHIFT_WINDOW[1], clamp01(aboutP));
+}
+export function aboutCopyT(aboutP: number): number {
+  return smootherstep(ABOUT_COPY_WINDOW[0], ABOUT_COPY_WINDOW[1], clamp01(aboutP));
+}
+export function aboutBgInT(aboutP: number): number {
+  return smootherstep(ABOUT_BG_IN_WINDOW[0], ABOUT_BG_IN_WINDOW[1], clamp01(aboutP));
+}
+
+/* ── Deck geometry constants ─────────────────────────────────────────── */
+
+/** Converged z (orbit-config units) of the deck FACE card (index 3 — the
+ *  ring parks on the last card, so the card being read becomes the face). */
+export const DECK_FRONT_Z = 1.35;
+
+/** Per-slot z pitch. Budget: slab depth 0.045 + content/veil lift overhang
+ *  ~0.031 per side + margin — adjacent cards keep ≥ 0.034 orbit-units of
+ *  air (≈ 0.021 world at armillary 0.62), far above depth-buffer epsilon:
+ *  no z-fighting between stacked translucent slabs. */
+export const DECK_Z_PITCH = 0.085;
+
+/** Card-local stack-clock span over which the ring pose flattens (front
+ *  bias + hover tilt ease out; cardFacingYaw converges on its own as
+ *  φ → 2πk). */
+export const DECK_FLATTEN_END = 0.55;
+
+/** Glow dies early in the stack — four converged halos would bloom. */
+export const DECK_GLOW_OFF_END = 0.35;
+
+/** EXIT-clock span over which the spring residual is absorbed, so the
+ *  exitP = 1 pose is a pure constant (byte-stable across the services →
+ *  about hold) regardless of spring state. */
+export const DECK_SETTLE_WINDOW: readonly [number, number] = [0.85, 1];
+
+/** Hit-rect / CTA anchors retire once the exit clock passes this — cards
+ *  stay OPAQUE through the stack, so the old opacity gate alone would
+ *  leave a live CTA riding the sweep (carried from ADR-046). */
+export const DECK_ANCHORS_OFF_EXIT = 0.05;
+
+/** Content depthWrite forces OFF past this exit level: the sweep drives
+ *  every card's nz → 1, so the plain hysteresis gate would switch all four
+ *  stacked writers ON (sorting carnage + holes in the depthWrite:false
+ *  particle pass). Carried from ADR-046. */
+export const DECK_DEPTH_WRITE_OFF_EXIT = 0.02;
+
+/** Exit level at which explicit per-deck-slot renderOrder takes over from
+ *  three's same-order depth sorting. Before this the cards are still
+ *  angularly spread (depth sort is correct); at/after it they are converged
+ *  near-coplanar slabs where depth sorting would jitter. Card 3's window
+ *  ends at 0.9, so the deck is fully assembled exactly here. */
+export const DECK_RENDER_REBASE_EXIT = 0.9;
+
+/** Per-deck-slot renderOrder pitch. Intra-card mesh offsets span 0..0.12
+ *  (glow excluded — it is dead by the time the rebase engages), so 0.16
+ *  keeps every mesh of deck slot k below every mesh of slot k+1, and the
+ *  max (3·0.16 + 0.12 = 0.6) stays under the mark's point pass at 1. */
+export const DECK_RENDER_PITCH = 0.16;
+
+/** Fallback seat when the DOM slot rect is unmeasurable: viewport centre,
+ *  slightly high (where the about cluster centres during the flip beat). */
+export const ABOUT_FALLBACK_NDC: readonly [number, number] = [0, 0.02];
+export const ABOUT_FALLBACK_SLOT_H_PX = 360;
+
+/** Card scale at deck convergence — depthScale(nz = 1), the ring's own
+ *  front-card scale, so the stack→flip seam is scale-continuous. */
+export const DECK_CARD_SCALE = RING_SCALE_RANGE[1];
+
+/** The ring rotation the staircase parks on (last card front). */
+export const DECK_SETTLED_ROTATION = RING_DIRECTION * (RING_COUNT - 1) * RING_QUARTER;
+
+/* ── Per-card sweep targets ──────────────────────────────────────────── */
+
+/**
+ * The azimuth card `index` sweeps TO: its settled exit azimuth rounded to
+ * the nearest full turn (where nz = cos φ = 1 exactly and cardFacingYaw is
+ * exactly flat). The −1e-9 nudge breaks card 1's exact half-turn tie
+ * (settled φ = −π) toward the ring's orbit direction (−2π) — deterministic,
+ * computed from the SETTLED pose so the sweep direction can never flip on
+ * spring wobble (the ADR-046 dockFlatYaw technique, applied to φ).
+ */
+export function deckPhiTarget(index: number): number {
+  const settledPhi = basePhi(index) + DECK_SETTLED_ROTATION;
+  return TAU * Math.round(settledPhi / TAU - 1e-9);
+}
+
+/** Full sweep delta for card `index` (target − settled azimuth). */
+export function deckPhiDelta(index: number): number {
+  return deckPhiTarget(index) - (basePhi(index) + DECK_SETTLED_ROTATION);
+}
+
+/* ── Precomputed canonical deck pose (module scope — pure functions of the
+ *    ring's orbit constants; yOffset deliberately EXCLUDED so the runtime
+ *    can add its own yOffset prop to the pivot). ─────────────────────── */
+
+/** Converged deck depths, rear → front = index order (card 3 = face). */
+export const DECK_Z: readonly number[] = Array.from(
+  { length: RING_COUNT },
+  (_, i) => DECK_FRONT_Z - (RING_COUNT - 1 - i) * DECK_Z_PITCH
+);
+
+/** Radius multiplier seating card `i`'s converged z on DECK_Z[i] — the
+ *  correction for the orbit ecc/tilt products (raw converged z-gaps dip to
+ *  0.033 < one card's z footprint; cards 1–2 would interpenetrate). z is
+ *  linear in radiusMul, so the ratio against the radiusMul = 1 placement
+ *  is exact. */
+export const DECK_RADIUS_MUL: readonly number[] = Array.from({ length: RING_COUNT }, (_, i) => {
+  const z1 = placeCardOnOrbit(
+    i,
+    DECK_SETTLED_ROTATION + deckPhiDelta(i),
+    RING_CARD_ORBIT_GEOMETRY[i],
+    { yOffset: 0, radiusMul: 1 }
+  ).z;
+  return DECK_Z[i] / z1;
+});
+
+export interface DeckPoint {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/** The four converged placements (yOffset 0). */
+export const DECK_PLACEMENTS: readonly DeckPoint[] = Array.from({ length: RING_COUNT }, (_, i) => {
+  const p = placeCardOnOrbit(
+    i,
+    DECK_SETTLED_ROTATION + deckPhiDelta(i),
+    RING_CARD_ORBIT_GEOMETRY[i],
+    { yOffset: 0, radiusMul: DECK_RADIUS_MUL[i] }
+  );
+  return { x: p.x, y: p.y, z: p.z };
+});
+
+/** The rigid deck's pivot — the mean of the converged placements. The
+ *  small per-card x/y spread that remains (orbit tilt deviations, ≤ ~8% of
+ *  a card width) is the deterministic "hand-stacked deck" jitter. */
+export const DECK_PIVOT_LOCAL: DeckPoint = {
+  x: DECK_PLACEMENTS.reduce((s, p) => s + p.x, 0) / RING_COUNT,
+  y: DECK_PLACEMENTS.reduce((s, p) => s + p.y, 0) / RING_COUNT,
+  z: DECK_PLACEMENTS.reduce((s, p) => s + p.z, 0) / RING_COUNT,
+};
+
+/** Per-card offsets from the pivot — what the flip rotates. */
+export const DECK_OFFSETS: readonly DeckPoint[] = DECK_PLACEMENTS.map((p) => ({
+  x: p.x - DECK_PIVOT_LOCAL.x,
+  y: p.y - DECK_PIVOT_LOCAL.y,
+  z: p.z - DECK_PIVOT_LOCAL.z,
+}));
+
+/** The flat yaw each card holds through the deck (cardFacingYaw(2πk) = 2πk
+ *  for any blend, so this is blend-independent). */
+export const DECK_PHI_TARGETS: readonly number[] = Array.from({ length: RING_COUNT }, (_, i) =>
+  deckPhiTarget(i)
+);
+
+/* ── Envelopes ───────────────────────────────────────────────────────── */
+
+export interface DeckStack {
+  /** The card's own stack clock (0..1 inside its RING_EXIT_WINDOWS slot —
+   *  the ADR-030 stagger reads well here too: the right-side card seats
+   *  rear first, the front card flattens last while still being read). */
+  t: number;
+  /** Azimuth sweep progress: settled φ → nearest-full-turn front. */
+  phiDelta: number;
+  /** Orbit radius multiplier → the deck-depth correction. */
+  radiusMul: number;
+  /** Front-pose bias + hover-tilt kill (yaw converges via the sweep). */
+  flattenT: number;
+  /** Behind-card halo multiplier (dies early — stacked halos bloom). */
+  glowMul: number;
+  /** Spring-residual absorption over DECK_SETTLE_WINDOW of the EXIT clock
+   *  (not the card-local clock) — the exitP = 1 pose is pure constants. */
+  settle: number;
+}
+
+/**
+ * Per-card stack envelope off the services exit clock. EXACT identity at
+ * exit = 0 ({ t: 0, phiDelta: 0, radiusMul: 1, flattenT: 0, glowMul: 1,
+ * settle: 0 }) so every pre-exit frame is byte-identical with the shipped
+ * ring — the unit-pinned ADR-030 guardrail carried through ADR-046/047.
+ */
+export function deckStackEnvelope(exit: number, index: number): DeckStack {
+  const window = RING_EXIT_WINDOWS[Math.max(0, Math.min(RING_EXIT_WINDOWS.length - 1, index))];
+  const t = smootherstep(window[0], window[1], exit);
+  return {
+    t,
+    // `+ 0` normalizes the −0 that a negative delta × t = 0 produces, so
+    // the exit-0 identity is EXACT (Object.is-level) for the unit pin.
+    phiDelta: deckPhiDelta(index) * t + 0,
+    radiusMul: lerp(1, DECK_RADIUS_MUL[index] ?? 1, t),
+    flattenT: smootherstep(0, DECK_FLATTEN_END, t),
+    glowMul: 1 - smootherstep(0, DECK_GLOW_OFF_END, t),
+    settle: smootherstep(DECK_SETTLE_WINDOW[0], DECK_SETTLE_WINDOW[1], exit),
+  };
+}
+
+export interface DeckFlip {
+  /** Rigid flip angle about the pivot's X axis: 0 → exactly π. */
+  theta: number;
+  /** Pivot glide DECK_PIVOT_LOCAL → the DOM slot point (same window — the
+   *  flip masks the position correction; 1 = welded to the live slot). */
+  posBlend: number;
+  /** θ crossed π/2 — the renderOrder side switch (deck is edge-on there,
+   *  so the swap is imperceptible). */
+  flipped: boolean;
+}
+
+/** Rigid deck flip off the about stage clock. Identity ({ 0, 0, false })
+ *  at aboutP = 0 — seam-continuous with the stack's converged pose. */
+export function deckFlip(aboutP: number): DeckFlip {
+  const t = aboutFlipT(aboutP);
+  return {
+    theta: Math.PI * t,
+    posBlend: t,
+    flipped: t > 0.5,
+  };
+}
+
+/** Draw order of card `index` within the deck (0 = drawn first = visually
+ *  rearmost). Pre-flip the face card (3) is nearest the camera; at θ = π
+ *  the z-offsets negate and card 0 is nearest — the order reverses. */
+export function deckOrder(index: number, flipped: boolean): number {
+  return flipped ? RING_COUNT - 1 - index : index;
+}

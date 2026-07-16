@@ -101,73 +101,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".services-masthead__title")).toContainText("ONE PRACTICE.");
   });
 
-  test("desktop: the exit beat seats the cartridge dock; it persists and returns", async ({
+  test("desktop: the ambient hold survives the pinned #about stage and dies under #continuum", async ({
     page,
   }) => {
-    test.skip(!isDesktopViewport(page), "the dock is desktop-only (ring gate, ADR-046)");
+    test.skip(!isDesktopViewport(page), "the deck-flip stage is desktop-only (ring gate)");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
 
-    // Reading beats: the dock exists in the DOM but is dormant — hidden,
-    // inert, every bay empty (exit clock is 0, byte-identical guardrail).
-    expect(await scrollServicesRunway(page, 0.3)).toBe(true);
-    await page.waitForTimeout(1600);
-    const dock = page.locator(".svc-dock");
-    await expect(dock).toHaveCount(1);
-    await expect(dock).toBeHidden();
-    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(0);
-
-    // Mid-exit (p≈0.87 → exitP≈0.22): the fixture is live but no card has
-    // reached its seat swap yet.
-    expect(await scrollServicesRunway(page, 0.87)).toBe(true);
-    await page.waitForTimeout(900);
-    await expect(dock).toHaveAttribute("data-live", "");
-    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(0);
-
-    // Deeper (p≈0.92 → exitP≈0.52): the stagger has seated card 0 while
-    // the front card (3) is still in flight.
-    expect(await scrollServicesRunway(page, 0.92)).toBe(true);
-    await page.waitForTimeout(900);
-    await expect(page.locator(".svc-dock__bay").first()).toHaveAttribute("data-state", "seated");
-    await expect(page.locator(".svc-dock__bay").last()).toHaveAttribute("data-state", "empty");
-
-    // Runway end + walk into #about: all four seated, dock persists as
-    // fixed chrome over the opaque cover (seated state is a pure function
-    // of runway progress, which clamps at 1 below the runway).
-    expect(await scrollServicesRunway(page, 1)).toBe(true);
-    await page.waitForTimeout(900);
-    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(4);
-    const aboutY = await page.evaluate(() => {
-      const about = document.getElementById("about");
-      if (!about) return null;
-      return Math.round(about.getBoundingClientRect().top + window.scrollY + 80);
-    });
-    expect(aboutY).not.toBeNull();
-    await page.evaluate((y) => window.scrollTo(0, y as number), aboutY);
-    await page.waitForTimeout(900);
-    await expect(dock).toBeVisible();
-    await expect(page.locator(".svc-dock__bay[data-state='seated']")).toHaveCount(4);
-
-    // A seated cartridge is a real button: clicking bay 2 glides the page
-    // back to service 02's beat (the tween is the ring's speed ramp).
-    await page.locator(".svc-dock__bay").nth(1).click();
-    await page.waitForTimeout(2600);
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
-    await expect(page.locator(".services-readout")).toContainText("EMBEDDED");
-    // Back on a reading beat, the dock is dormant again (reversible).
-    await expect(dock).toBeHidden();
-  });
-
-  test("desktop: the services → about seam ends the ambient hold under the bio cover", async ({
-    page,
-  }) => {
-    test.skip(!isDesktopViewport(page), "the exit seam is desktop-only (dock gate)");
-
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector(".services-stage", { timeout: 15_000 });
-
-    // #about directly follows #services (ADR-033 funnel).
+    // #about directly follows #services (ADR-033 funnel; ADR-047 makes it
+    // the pinned transparent deck-flip stage).
     const followsServices = await page.evaluate(() => {
       const services = document.getElementById("services");
       const about = document.getElementById("about");
@@ -176,34 +119,63 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     });
     expect(followsServices).toBe(true);
 
-    // Ride the runway to its end, then walk into #about: the ambient
-    // hold (and its body-veil exit band) must clear as the opaque bio
-    // covers the viewport — no receded-mark ghost behind About.
+    // Ride the runway to its end, then walk into the pinned #about stage:
+    // the ambient hold must SURVIVE (the canvas is the deck's backdrop) and
+    // the stage must be engaged + transparent (ADR-047 inverts the ADR-033
+    // seam this test used to pin).
     expect(await scrollServicesRunway(page, 0.98)).toBe(true);
     await page.waitForTimeout(900);
-    const aboutTop = await page.evaluate(() => {
-      const about = document.getElementById("about");
-      if (!about) return null;
-      const rect = about.getBoundingClientRect();
-      return Math.round(rect.top + window.scrollY + window.innerHeight * 0.25);
+    const aboutMid = await page.evaluate(() => {
+      const runway = document.querySelector(".about-stage-root");
+      if (!runway) return null;
+      const rect = runway.getBoundingClientRect();
+      return Math.round(rect.top + window.scrollY + (rect.height - window.innerHeight) * 0.5);
     });
-    expect(aboutTop).not.toBeNull();
-    await page.evaluate((y) => window.scrollTo(0, y as number), aboutTop);
+    expect(aboutMid).not.toBeNull();
+    await page.evaluate((y) => window.scrollTo(0, y as number), aboutMid);
     await page.waitForTimeout(900);
 
-    const seam = await page.evaluate(() => ({
+    const mid = await page.evaluate(() => ({
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       exit: document.documentElement.hasAttribute("data-corridor-exit"),
-      aboutVisible: (() => {
-        const about = document.getElementById("about");
-        if (!about) return false;
-        const rect = about.getBoundingClientRect();
-        return rect.top <= 0 && rect.bottom > window.innerHeight * 0.5;
+      mode: document.getElementById("about")?.getAttribute("data-about-mode") ?? null,
+      aboutBg: getComputedStyle(document.getElementById("about")!).backgroundColor,
+      flip: (
+        document
+          .querySelector<HTMLElement>(".about-stage")
+          ?.style.getPropertyValue("--about-flip") ?? ""
+      ).slice(0, 6),
+      voidwalkerDisplay: (() => {
+        const vw = document.querySelector<HTMLElement>("#about > .voidwalker");
+        return vw ? getComputedStyle(vw).display : null;
       })(),
     }));
-    expect(seam.aboutVisible).toBe(true);
-    expect(seam.ambient).toBe(false);
-    expect(seam.exit).toBe(false);
+    expect(mid.ambient).toBe(true);
+    expect(mid.exit).toBe(true);
+    expect(mid.mode).toBe("stage");
+    // The station is transparent over the live canvas (ADR-008 Rule 2
+    // exception) and the static fallback yields to the stage.
+    expect(mid.aboutBg).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
+    expect(parseFloat(mid.flip || "0")).toBe(1);
+    expect(mid.voidwalkerDisplay).toBe("none");
+
+    // Walk under #continuum: the ambient hold ends there now (the
+    // retargeted kill — and the gate keyed to the SAME rect as the fade
+    // envelope, so there is no hard cut at about.top = 0).
+    const underContinuum = await page.evaluate(() => {
+      const c = document.getElementById("continuum");
+      if (!c) return null;
+      return Math.round(window.scrollY + c.getBoundingClientRect().top + window.innerHeight * 0.3);
+    });
+    expect(underContinuum).not.toBeNull();
+    await page.evaluate((y) => window.scrollTo(0, y as number), underContinuum);
+    await page.waitForTimeout(900);
+    const after = await page.evaluate(() => ({
+      ambient: document.documentElement.hasAttribute("data-services-ambient"),
+      exit: document.documentElement.hasAttribute("data-corridor-exit"),
+    }));
+    expect(after.ambient).toBe(false);
+    expect(after.exit).toBe(false);
   });
 
   test("desktop: the scroll clock advances the active service", async ({ page }) => {
@@ -339,13 +311,19 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".svc-plate")).toHaveCount(4);
     // No ring overlays mount below the desktop gate.
     await expect(page.locator(".svc-ring-hits")).toHaveCount(0);
-    // The cartridge dock never materializes below the gate (ADR-046):
-    // CSS belt-hides it and the JS gate keeps it dormant.
-    const dockDisplay = await page
-      .locator(".svc-dock")
-      .evaluate((el) => getComputedStyle(el).display)
-      .catch(() => "none");
-    expect(dockDisplay).toBe("none");
+    // The about deck-flip stage never engages below the gate (ADR-047):
+    // the static voidwalker owns #about and the runway stays flat.
+    const aboutStatic = await page.evaluate(() => ({
+      mode: document.getElementById("about")?.getAttribute("data-about-mode") ?? null,
+      runwayH: document.querySelector(".about-stage-root")?.getBoundingClientRect().height ?? 0,
+      voidwalker: (() => {
+        const vw = document.querySelector<HTMLElement>("#about > .voidwalker");
+        return vw ? getComputedStyle(vw).display : null;
+      })(),
+    }));
+    expect(aboutStatic.mode).toBeNull();
+    expect(aboutStatic.runwayH).toBeLessThan(10);
+    expect(aboutStatic.voidwalker).not.toBe("none");
   });
 
   test("reduced motion keeps the accordion and mounts no ring overlays", async ({ browser }) => {
@@ -363,12 +341,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     await expect(page.locator(".svc-plate")).toHaveCount(4);
     await expect(page.locator(".svc-ring-hits")).toHaveCount(0);
-    // The dock is display:none under reduced motion (ADR-046 gate parity).
-    const dockDisplay = await page
-      .locator(".svc-dock")
-      .evaluate((el) => getComputedStyle(el).display)
-      .catch(() => "none");
-    expect(dockDisplay).toBe("none");
+    // Reduced motion keeps the static about (no deck-flip stage) — ADR-047
+    // gate parity with the ring.
+    const aboutMode = await page.evaluate(
+      () => document.getElementById("about")?.getAttribute("data-about-mode") ?? null
+    );
+    expect(aboutMode).toBeNull();
     await context.close();
   });
 });

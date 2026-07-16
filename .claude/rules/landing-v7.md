@@ -54,21 +54,29 @@ the Arc's Build-park cases reveal (click-armed via the CUE — a dotted-leader
 
 **The reveal is PHASED (ADR-041, supersedes ADR-036 §3/§5); the trigger is a CUE under the Build title (ADR-042, supersedes ADR-041 §2).** ONE damped arm level, TWO ordered phases: the node fold runs on `arcFoldInput(level)` (complete at `ARC_FOLD_DONE` 0.62 — feed `arcLatchEnvelope` the BARE clamped ratio; it supplies the easing, pre-easing double-eases) and the CARD reads `arcCardPresence(level)` (`smootherstep(0.62, 1)`), published as `cardPresence` on `arcCasesLevelRef` by the same single writer. So the beat is **labels fade → nodes fold and latch → card materializes into the frame they made**; close plays it backwards. The card's material opacities / visibility / scale-in / depth-write AND the stepper's opacity+inert all read `cardPresence`, never the raw `level` — the strict invariant (`arcCardPresence === 0` while `arcFoldInput < 1`) is unit-pinned. The sphere sigil is DELETED (ADR-042): the trigger is `ArcCasesCue`, a DOM dotted-leader + label docked UNDER the Build station title (mounted as the Build `StationBlock`'s `afterContent` in `CorridorStationHeaders`; it inherits the Build header's per-frame opacity, so it writes no scroll-coupled opacity of its own). Its world anchor (`intelligence.sigil`), `gateSigil`, and `SIGIL_Z` are gone. It keeps the ADR-041 contracts verbatim: `aria-controls="arc-cases-terminal"` + `aria-expanded`, every-frame `inert` reconciliation, stable callback ref, and the auto-disarm watcher. It arms only once the notes have SETTLED (`sigilSettle`, `ARC_SIGIL_SETTLE` [0.70, 0.84] on the smoothed stack — **measured against the live corridor; re-measure before retuning**); below the gate it is `inert` and CSS fades it out (`.is-armable`, toggled by its rAF). Because it sits at the TOP of the viewport, clear of the centred card, it **stays visible AND interactive while armed** (a second click / Escape closes it; Escape refocus falls out for free — it was never inert) — no phantom-click guard, no fade-to-0/pointer-events drop. The stepper ✕ CLOSE stays. Do NOT retune `ARC_BAND_IN` to "fix" its stale stack comment — the park (0.9225) sits below the accretion peak (0.95), so raising it would gate the card off entirely; sequencing is enforced on the trigger instead. In Playwright the cue rides the Build header's gyro parallax, so `locator.click()` can still flake ("element is not stable") — click at its box centre via `page.mouse.click`.
 
-**The bottom-right cartridge dock is fixed HUD chrome (ADR-046).** During
-the services exit beat the four WebGL ring cards fly in-world to
-`ServicesCartridgeDock` (mounted in LandingPage, NEVER inside a station —
-containment rebases fixed descendants) and DOM cartridges crossfade in AT
-THE SEAT; the seated rack persists for the rest of the page and each
-cartridge glides back to its beat (`servicesBeatScrollTarget` +
-`startRingScrollTween`). One clock (`exitProgressForRunway` off
-`servicesRingProgressRef`) — the dock and the ring are READERS; no new
-scroll writer, no seated latch (state is a pure function of runway
-progress, which clamps at 1 below the runway). The DOM never flies
-(ADR-031's rule stands for DOM chrome); the seat is derived viewport-first
-per frame (never a fixed world offset); hit anchors retire at exit ≥ 0.05;
-gate parity = the ring's media gate + not `data-fallback`. Flag:
-`SERVICES_CARTRIDGE_DOCK`. Registered in the ADR-008 paint stack at z48
-(row 5a).
+**#about is the pinned deck-flip stage (ADR-047; the ADR-046 cartridge
+dock is REMOVED).** Across the services exit clock the four WebGL cards
+STACK into a deck (azimuth sweep — never a Cartesian lerp; math in
+`lib/services-ring/aboutDeckMath.ts`, exact identity at exit 0); the
+pinned TRANSPARENT `#about` stage (300svh runway, `AboutStagePortal` →
+`[data-about-root]`) then FLIPS the deck π on X to the shared portrait
+back face (back planes carry `rotation.x = π` — Rx(π)∘Rx(π) = identity,
+upright/unmirrored; the bake's chamfer chrome is MIRRORED to match the
+flipped slab) and the deck lands on `.about-stage__slot`
+(`aboutSlotRef`, viewport-first per frame). Beat 1 translates the cluster
+right (the DOM owns the motion; the deck follows the rect) while the copy
+reveals via scrubbed `--ci-off` stagger (never `useRevealMotion` — portal
+nodes are unobserved and `.is-in` is one-shot). Two clamped clocks
+(`exitProgressForRunway` + `aboutStageProgressRef`), single writer
+`useAboutStageScroll`; the corridor ambient SURVIVES through #about and
+dies at `#continuum` (retargeted kill; gate keyed to the SAME rect as the
+fade envelope — the ADR-030 seam-cut bug). Fail-opaque shield
+(`--about-bg-in`, default 1) + fail-static attribute
+(`data-about-mode` absent ⇒ static `.voidwalker` + ADR-045 emerge —
+mobile/PRM/fallback/flag-off). Flag: `ABOUT_DECK_STAGE`. Paint-stack rows
+4c–4e in ADR-008. Every disengage path must clear `data-about-mode`
+(including the media-flip null-render — the hook disengages when its
+stage ref goes null).
 
 **The left-rail manifest is parse-injected (ADR-031).** Its skeleton is
 built at parse time (`lib/v7-parse/railManifest.ts`) into the authored

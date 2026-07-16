@@ -364,14 +364,52 @@ html[data-corridor-exit="true"] #services > * {
   z-index: 7;
 }
 
-/* #about follows #services since ADR-033 (the #tools transparent
-   lead-in retired with its station). About is an ordinary OPAQUE
-   station — it IS the cover that ends the ambient hold — so it keeps
-   its authored background; it only needs to STACK above the body veil
-   (z5) + fixed canvas while the exit band is live, and to escape
-   `.station:not(.hero)`'s content-visibility paint containment (the
-   same clipping trap as exit-state #services above). */
+/* ── #about — the pinned TRANSPARENT deck-flip stage (ADR-047) ──────────
+   #about follows #services; under ADR-047 it is no longer the opaque
+   cover that ends the ambient hold — that role moved to #continuum
+   (below). While the exit band is live, #about goes transparent exactly
+   like #services (ADR-008 Rule 2: INTENTIONAL — the live corridor canvas
+   must show through so the WebGL deck can flip to the portrait over the
+   still-held ambient bed), and its authored ::before radial wash is
+   overridden into a FAIL-OPAQUE shield: `--about-bg-in` defaults to 1,
+   so a JS failure, the flag being off, or the stage never engaging all
+   leave #about visually indistinguishable from a normal opaque station
+   (the ADR-030 `--tools-bg-in` recipe, with the fade channel + LOCKSTEP
+   ordering restored: the shield completes at the stage's unpin —
+   continuum.top ≥ 1vh — BEFORE the ambient fade even starts at 0.6vh).
+   Reveals never ride this wrapper (ADR-008 Rule 3) — the stage children
+   carry every animation; the shield is a pseudo BELOW them. */
 html[data-corridor-exit="true"] #about {
+  position: relative;
+  z-index: 6;
+  background-color: transparent;
+  background-image: none;
+  /* the .station:not(.hero) content-visibility containment trap — same
+     escape as exit-state #services above */
+  content-visibility: visible;
+}
+html[data-corridor-exit="true"] #about > * {
+  position: relative;
+  z-index: 7;
+}
+html[data-corridor-exit="true"] #about.station::before {
+  /* Shield replaces the authored radial wash while the band is live —
+     mirrors .station:not(.hero)'s surface (void + stars tile) so opacity
+     1 is indistinguishable from the normal station shield. Written by
+     useAboutStageScroll (0 while the stage is pinned + capable; back to
+     1 across the runway tail); unwritten ⇒ 1 ⇒ fail-opaque. */
+  inset: 0;
+  background: var(--void, #0a0908) url("/v7-stars.svg") center top / 1600px 900px repeat;
+  opacity: var(--about-bg-in, 1);
+  z-index: 0;
+}
+
+/* #continuum is the cover that ends the ambient hold (ADR-047 — the role
+   #about carried under ADR-033). It keeps its authored opaque .station
+   background; it only needs to STACK above the body veil (z5) + fixed
+   canvas (z2) while the exit band is live, and to escape the
+   content-visibility paint containment. */
+html[data-corridor-exit="true"] #continuum {
   position: relative;
   z-index: 6;
   content-visibility: visible;

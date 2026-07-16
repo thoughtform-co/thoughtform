@@ -45,6 +45,7 @@ import {
   RING_Y_OFFSET,
   activeServiceForProgress,
 } from "@/lib/services-ring/ringMath";
+import type { AboutStageProgress } from "@/lib/services-ring/aboutStageProgressRef";
 import type { ServicesRingProgress } from "@/lib/services-ring/ringProgressRef";
 
 const PALETTE = {
@@ -62,6 +63,7 @@ const PARKED_GROUP_SCALE = 1.0;
 
 interface OrbitLabConfig {
   progress: number;
+  aboutP: number;
   entrance: "off" | "scroll";
   dissipate: number;
   orbitBase: number;
@@ -94,6 +96,7 @@ interface OrbitLabConfig {
 
 const DEFAULTS: OrbitLabConfig = {
   progress: 0.3, // beat-1 midpoint: service 01 front, settled
+  aboutP: 0, // ADR-047 about stage clock (deck flip; needs progress = 1)
   entrance: "off",
   dissipate: 1,
   orbitBase: RING_ORBIT_BASE_RADIUS,
@@ -249,6 +252,15 @@ export default function ServicesOrbitLabPage() {
     progressRef.current.progress = cfg.progress;
   }, [cfg.progress]);
 
+  // Simulated ADR-047 about stage clock — the deck STACK needs runway
+  // progress at 1 (exit clock pinned) before the flip reads correctly, so
+  // the slider drives both refs the way the page's scroll geometry would.
+  const aboutRef = useRef<AboutStageProgress>({ progress: DEFAULTS.aboutP, engaged: false });
+  useEffect(() => {
+    aboutRef.current.progress = cfg.aboutP;
+    aboutRef.current.engaged = cfg.aboutP > 0;
+  }, [cfg.aboutP]);
+
   // Simulated corridor-exit dissipate clock — written to the same CSS var
   // production writes, so the scene + ring exercise their real entrance path.
   useEffect(() => {
@@ -348,6 +360,7 @@ RING_GLOW_OPACITY = ${cfg.glowOp.toFixed(3)}`;
             <ServicesCardRing
               scale={INSTRUMENT_SCALE}
               progressRef={progressRef}
+              aboutProgressRef={aboutRef}
               entrance={cfg.entrance}
               facingBlend={cfg.facingBlend}
               masterOpacity={cfg.masterOpacity}
@@ -418,6 +431,34 @@ RING_GLOW_OPACITY = ${cfg.glowOp.toFixed(3)}`;
               onClick={() => set({ progress: 0.1 })}
             />
           </Row>
+        </Section>
+
+        <Section title="ABOUT DECK (ADR-047)">
+          {/* The flip needs the deck assembled: progress 1 pins the exit
+              clock (stack converged), then aboutP flips it. The slot ref is
+              left invalid here, so the deck targets the fallback NDC anchor
+              — orientation + seat math exercise without a DOM stage. */}
+          <Row>
+            <LabButton
+              label="STACK (p=1)"
+              active={cfg.progress === 1}
+              onClick={() => set({ progress: 1, entrance: "scroll", dissipate: 1 })}
+            />
+            <LabButton
+              label="FLIPPED"
+              active={cfg.aboutP >= 0.3}
+              onClick={() => set({ progress: 1, entrance: "scroll", dissipate: 1, aboutP: 0.32 })}
+            />
+            <LabButton label="RESET" onClick={() => set({ aboutP: 0 })} />
+          </Row>
+          <Slider
+            label="about p"
+            value={cfg.aboutP}
+            min={0}
+            max={1}
+            step={0.001}
+            onChange={(v) => set({ aboutP: v })}
+          />
         </Section>
 
         <Section title="ENTRANCE">

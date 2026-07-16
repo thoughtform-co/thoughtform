@@ -630,8 +630,9 @@ cartridge dock), do NOT also render `disabled` as a JSX prop:
 (onClick etc.) on form controls whose **props** say `disabled` — it never
 re-reads the DOM. The failure is invisible: hit-testing, native
 `addEventListener`, and `props.onClick(...)` called manually all work,
-only the delegated synthetic path is dead. Found live on the cartridge
-dock (2026-07-16); cost a four-probe bisect to localize.
+only the delegated synthetic path is dead. Found live on the
+since-superseded ADR-046 cartridge dock (2026-07-16) — the lesson stands;
+cost a four-probe bisect to localize.
 
 **Corollary:** an `inert` ancestor suppresses even programmatic
 `el.click()` in Chrome — when probing chrome that toggles `inert`, confirm

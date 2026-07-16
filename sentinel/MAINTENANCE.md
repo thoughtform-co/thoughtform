@@ -54,6 +54,42 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-16 (later) — About deck-flip stage (ADR-047; supersedes the ADR-046 dock, same day)
+
+Owner redesign of the services→about transition: the cartridge dock was
+"gimmicky and doesn't solve the transition." Cycle B (new surface) + the
+full dock removal.
+
+- **Deck stack + flip (WebGL).** Across the services exit clock the four
+  ring cards STACK via an azimuth sweep (`aboutDeckMath.ts` — per-card
+  nearest-full-turn φ targets, deck-depth radius correction, spring-settle;
+  exact identity at exit 0, unit-pinned). The pinned `#about` stage then
+  FLIPS the deck π on X to a shared gold-tone portrait back face
+  (`bakePortraitBack`, mirrored chamfer chrome; back planes at
+  `rotation.x = π` so Rx(π)∘Rx(π) = identity — upright, verified live)
+  and the deck lands on the DOM portrait slot (viewport-first per frame).
+- **Pinned transparent #about (DOM).** 300svh runway + sticky transparent
+  stage (`AboutStagePortal`/`AboutStage`/`useAboutStageScroll`,
+  `[data-about-root]` prototype shell); orbit cluster reuses the
+  `.voidwalker__orbit*` grammar; copy via `aboutStageData.ts` (lockstep
+  with the fallback markup); scrubbed `--ci-off` reveals (not
+  useRevealMotion — portal nodes unobserved, one-shot `.is-in`).
+- **Ambient kill retargeted #about → #continuum** with the gate keyed to
+  the same rect as the fade envelope (the ADR-030 seam-cut bug, avoided);
+  `#about` gets the transparent treatment + a FAIL-OPAQUE `::before`
+  shield (`--about-bg-in`, default 1); `#continuum` takes the opaque-cover
+  role. Verified bidirectionally in-browser: ambient survives the whole
+  about band both directions, dies/re-engages exactly at continuum.
+- **Found live:** the media-flip null-render stranded `data-about-mode`
+  (empty about on mobile) — the hook now disengages when its stage ref
+  goes null (fail-static hardening).
+- **Dock removal:** component/CSS/flag/math/tests deleted; kept
+  `viewportSeat.ts` (extracted seat projection), `beatScrollTarget.ts`
+  (ServicesStage uses it), and the BEST-PRACTICES disabled-button lesson.
+  ADR-046 → Superseded; ADR-045's desktop emerge → superseded note
+  (fallback surfaces unchanged); ADR-008 paint-stack rows 4b–4e rewritten;
+  landing-v7 + scroll-animations rules updated.
+
 ### 2026-07-16 — Services copy sweep · About emerge + rail parity (ADR-045) · Cartridge dock (ADR-046)
 
 Owner-directed triple pass. Cycle B for the two new surfaces; the copy

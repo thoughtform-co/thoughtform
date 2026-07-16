@@ -43,26 +43,31 @@ export const UNIFIED_SERVICES_ARMILLARY = true;
 export const SERVICES_CARD_RING = true;
 
 /**
- * Feature flag for the SERVICES CARTRIDGE DOCK (ADR-046, 2026-07-16).
+ * Feature flag for the ABOUT DECK-FLIP STAGE (ADR-047, 2026-07-16 —
+ * supersedes the ADR-046 cartridge dock).
  *
  * When ON (and SERVICES_CARD_RING is on, same media gate):
- *   - across the runway's final (decommission) beat the four WebGL ring
- *     cards no longer fly out radially and fade (the ADR-030 exit): each
- *     card EJECTS off its orbit, flattens to face the camera, shrinks, and
- *     travels to the bottom-right DOM console (`ServicesCartridgeDock`,
- *     mounted at HUD level in LandingPage), where a DOM cartridge
- *     crossfades in AT THE SEAT — the card itself miniaturizes; the DOM
- *     never flies (ADR-031's rule stands for DOM chrome);
- *   - the seated rack persists for the rest of the page (seated state is a
- *     pure function of runway progress, which clamps at 1 below the
- *     runway — no latch, no release guard) and each cartridge is a real
- *     button that glides the page back to that service's beat
- *     (`servicesBeatScrollTarget` + `startRingScrollTween`);
- *   - hit-rect anchors retire at exit ≥ DOCK_ANCHORS_OFF_EXIT and the
- *     pointer-look damps out across the exit so the seat targeting holds.
+ *   - across the services runway's final (decommission) beat the four
+ *     WebGL ring cards STACK into a deck: each card's azimuth sweeps along
+ *     its own orbit to front-centre (staggered, the front card flattens
+ *     last) and the radii correct onto evenly-pitched deck depths;
+ *   - `#about` becomes a pinned TRANSPARENT stage over the still-live
+ *     corridor canvas (`AboutStagePortal` → `useAboutStageScroll`): the
+ *     deck FLIPS π on the X axis as one rigid slab, revealing the portrait
+ *     back faces, and lands on the DOM portrait slot (`aboutSlotRef`)
+ *     inside the orbit cluster; the cluster then translates right with the
+ *     deck welded to it while the name/bio copy reveals on the left;
+ *   - the corridor ambient hold survives THROUGH `#about` and dies as
+ *     `#continuum` approaches (`useCorridorExitScroll` next-station
+ *     retarget); the receded mark + orbit tracks clear across the flip
+ *     window; the pointer-look damps out for the whole deck life;
+ *   - every channel is a pure function of two clamped clocks (the services
+ *     exit clock + the about stage clock), so the whole sequence reverses
+ *     under scroll and holds byte-stable between the runways.
  *
- * OFF restores the ADR-030 radial fade-out exit byte-identically (the ring
- * branch never runs, the dock never mounts). Mobile / reduced-motion /
- * corridor-fallback never see the dock regardless of the flag.
+ * OFF restores the ADR-030 radial fade-out exit AND the opaque #about
+ * cover byte-identically (deck branch never runs, the stage never mounts,
+ * the fail-opaque shield defaults shut). Mobile / reduced-motion /
+ * corridor-fallback keep the static about regardless of the flag.
  */
-export const SERVICES_CARTRIDGE_DOCK = true;
+export const ABOUT_DECK_STAGE = true;

@@ -12,7 +12,8 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
-import { ServicesCartridgeDock, ServicesPortal } from "@/components/landing/home-v2/services";
+import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
+import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -456,6 +457,12 @@ export function LandingPage({
           chip under the Build title; no in-canvas cases object).
           BuildCasesPortal + ToolsPortal are gone with their stations. */}
       <ServicesPortal containerRef={rootRef} />
+      {/* About deck-flip stage (ADR-047): a nested root into the
+          [data-about-root] slot inside #about — the pinned transparent
+          stage the WebGL card deck flips onto. The static .voidwalker
+          markup in the same station stays the mobile/PRM/fallback
+          surface. Same nested-root rules as ServicesPortal. */}
+      <AboutStagePortal containerRef={rootRef} />
       {/* The "SOURCE BUS · 04" services rail register is RETIRED (ADR-044) —
           the section masthead's intro paragraph is the services right-side
           text now. ServicesRailRegisterPortal stays on disk for rollback;
@@ -494,12 +501,6 @@ export function LandingPage({
       {/* Top-right HUD nav: inline links in the hero that collapse into
           a right-rail-aligned hamburger once the hero scrolls away. */}
       <HudNav />
-      {/* Bottom-right cartridge dock (ADR-046): the fixed HUD console the
-          four WebGL service cards seat into across the services exit beat,
-          persisting for the rest of the page. Mounted HERE (never inside a
-          station — containment rebases fixed descendants, the ADR-030 pill
-          lesson) with zero store subscriptions (render-stability rule). */}
-      <ServicesCartridgeDock />
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve
           re-render can't replace the dangerouslySetInnerHTML markup

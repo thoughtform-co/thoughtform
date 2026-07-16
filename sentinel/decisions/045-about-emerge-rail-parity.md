@@ -1,7 +1,12 @@
 # ADR-045: About emerge sequence + rail parity (parallax retired)
 
 **Date:** 2026-07-16
-**Status:** Accepted
+**Status:** Accepted; the DESKTOP emerge is superseded by
+[ADR-047](047-about-deck-flip-stage.md) (same day) — on the capable path
+`#about` is now the pinned deck-flip stage and the static `.voidwalker`
+block (with this ADR's emerge choreography, particle-halo fix, portrait
+role, and rail parity) is the mobile / reduced-motion / WebGL-fallback /
+flag-off surface. Everything below remains live on that fallback path.
 **Scope:** `components/landing/v7/LandingPage.tsx` (voidwalker tagging block +
 parallax entry removed), `public/prototypes/v7/landing-v7-motion.html`
 (authored `data-m` attrs on the about block, `<style>` mirror, inline-JS

@@ -181,6 +181,10 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     // The right-rail register slot survives (it hosts the services
     // SOURCE BUS register; legacy attr name kept — ADR-033).
     expect(bodyHtml).toContain("data-tools-rail-root");
+    // The about-stage portal slot survives the relocation INSIDE the
+    // relocated #about (ADR-047 — AboutStagePortal mounts into it).
+    expect(bodyHtml).toMatch(/<div\b[^>]*\bdata-about-root/);
+    expect(bodyHtml.search(/<div\b[^>]*\bdata-about-root/)).toBeGreaterThan(aboutIdx);
 
     // The orphaned connector slot must NOT appear right after #services.
     const between = bodyHtml.slice(servicesIdx);

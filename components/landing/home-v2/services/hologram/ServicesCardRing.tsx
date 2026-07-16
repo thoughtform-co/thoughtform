@@ -57,23 +57,37 @@ import { BAKE_W, BAKE_H, PAD_X, CTA_H, CTA_Y0 } from "./ringCtaBox";
 
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
-import { SERVICES_CARTRIDGE_DOCK } from "../../unifiedServicesInstrument";
+import { ABOUT_DECK_STAGE } from "../../unifiedServicesInstrument";
 import { SERVICES_GOLD } from "@/lib/home-v2/goldPalette";
 import { useHologramConnectors, type RingCardAnchor } from "@/lib/stores/hologramConnectorStore";
 import {
-  DOCK_ANCHORS_OFF_EXIT,
-  DOCK_DEPTH_WRITE_OFF_EXIT,
-  DOCK_FALLBACK_NDC,
-  DOCK_FALLBACK_SLOT_H_PX,
-  dockFlatYaw,
-  dockTravelEnvelope,
-  seatWorldHeight,
-} from "@/lib/services-ring/dockMath";
-import { dockSeatRectsRef } from "@/lib/services-ring/dockSeatRef";
+  ABOUT_FALLBACK_NDC,
+  ABOUT_FALLBACK_SLOT_H_PX,
+  DECK_ANCHORS_OFF_EXIT,
+  DECK_CARD_SCALE,
+  DECK_DEPTH_WRITE_OFF_EXIT,
+  DECK_OFFSETS,
+  DECK_PHI_TARGETS,
+  DECK_PIVOT_LOCAL,
+  DECK_RENDER_PITCH,
+  DECK_RENDER_REBASE_EXIT,
+  DECK_SETTLED_ROTATION,
+  aboutBgInT,
+  aboutFlipT,
+  deckFlip,
+  deckOrder,
+  deckStackEnvelope,
+} from "@/lib/services-ring/aboutDeckMath";
+import {
+  aboutStageProgressRef,
+  type AboutStageProgress,
+} from "@/lib/services-ring/aboutStageProgressRef";
+import { aboutSlotRef, type AboutSlot } from "@/lib/services-ring/aboutSlotRef";
 import {
   servicesRingProgressRef,
   type ServicesRingProgress,
 } from "@/lib/services-ring/ringProgressRef";
+import { seatNdcFromRect, seatWorldHeight } from "@/lib/services-ring/viewportSeat";
 import {
   RING_CARD_ASPECT,
   RING_CARD_HEIGHT,
@@ -126,6 +140,13 @@ const ANCHOR_PUBLISH_DISSIPATE = 0.88;
  *  gate and the ring visibly TELEPORTED. The snap itself is also now
  *  conditional — see the useFrame comment. */
 const RESUME_IDLE_GAP_MS = 500;
+
+/** Intra-card renderOrder offsets in the per-card group's CHILDREN order
+ *  — [glow, slab, glint, content, back, veil]. The JSX constants; also the
+ *  offsets the deck's per-slot rebase adds to its base (glow is dead by
+ *  the time the rebase engages, so its −0.1 never straddles a slot
+ *  boundary; the live span 0..0.12 < DECK_RENDER_PITCH 0.16). */
+const DECK_INTRA_ORDERS = [-0.1, 0, 0.05, 0.1, 0.11, 0.12] as const;
 
 /* ── Card-face bake ─────────────────────────────────────────────────────── */
 
@@ -578,6 +599,141 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   return canvas;
 }
 
+/** Mirrored chamfer trace (TL/BR cuts) for the PORTRAIT BACK bake: the
+ *  slab itself carries only the deck's Rx(π) at full flip, so its physical
+ *  TR/BL chamfers land at screen BR/TL — the back face must frame the
+ *  OTHER two corners for its chrome to align with the flipped silhouette. */
+function traceChamferPathMirrored(ctx: CanvasRenderingContext2D, inset: number): void {
+  const x = inset;
+  const y = inset;
+  const w = BAKE_W - inset * 2;
+  const h = BAKE_H - inset * 2;
+  const ch = BAKE_CH;
+  ctx.beginPath();
+  ctx.moveTo(x + ch, y);
+  ctx.lineTo(x + w, y);
+  ctx.lineTo(x + w, y + h - ch);
+  ctx.lineTo(x + w - ch, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.lineTo(x, y + ch);
+  ctx.closePath();
+}
+
+/**
+ * The deck's PORTRAIT BACK face (ADR-047): Vince's portrait under the same
+ * gold-tone card treatment as the four service faces — it reads as the
+ * fifth face of the same deck. Minimal chrome only (no chip row, no copy
+ * stack, no CTA — and no fonts, so this bake never waits on
+ * `waitForCardFonts`). Drawn UPRIGHT: the back plane carries
+ * `rotation.x = π`, and the deck's own Rx(π) flip composes with it to
+ * identity, so the canvas reads exactly like an unrotated front plane at
+ * full flip (see the back-plane JSX note).
+ */
+function bakePortraitBack(img: HTMLImageElement | null): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = BAKE_W;
+  canvas.height = BAKE_H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+
+  ctx.fillStyle = VOID;
+  ctx.fillRect(0, 0, BAKE_W, BAKE_H);
+
+  if (img) {
+    // Portrait, cover-fit + the shared gold-tone LUT pass (identical to the
+    // service faces — buildGoldToneLut).
+    const scale = Math.max(BAKE_W / img.naturalWidth, BAKE_H / img.naturalHeight);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    ctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
+    const lut = buildGoldToneLut();
+    const data = ctx.getImageData(0, 0, BAKE_W, BAKE_H);
+    const px = data.data;
+    for (let i = 0; i < px.length; i += 4) {
+      const lum = Math.min(
+        255,
+        Math.round(0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2])
+      );
+      px[i] = lut.r[lum];
+      px[i + 1] = lut.g[lum];
+      px[i + 2] = lut.b[lum];
+    }
+    ctx.putImageData(data, 0, 0);
+  } else {
+    // Schematic dot-grid stand-in — the deck never flips to a raw void back.
+    const tile = document.createElement("canvas");
+    tile.width = 8;
+    tile.height = 8;
+    const tctx = tile.getContext("2d");
+    if (tctx) {
+      tctx.fillStyle = "rgba(202, 165, 84, 0.24)";
+      tctx.beginPath();
+      tctx.arc(2, 2, 1.7, 0, Math.PI * 2);
+      tctx.fill();
+      const pattern = ctx.createPattern(tile, "repeat");
+      if (pattern) {
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0, 0, BAKE_W, BAKE_H);
+      }
+    }
+  }
+
+  // Gentle top + ground scrims — the portrait carries no copy, so these
+  // only seat the face into the slab (no deep copy-ground needed).
+  const top = ctx.createLinearGradient(0, 0, 0, 150);
+  top.addColorStop(0, "rgba(5, 4, 3, 0.55)");
+  top.addColorStop(1, "rgba(5, 4, 3, 0)");
+  ctx.fillStyle = top;
+  ctx.fillRect(0, 0, BAKE_W, 150);
+  const ground = ctx.createLinearGradient(0, BAKE_H - 320, 0, BAKE_H);
+  ground.addColorStop(0, "rgba(5, 4, 3, 0)");
+  ground.addColorStop(1, "rgba(5, 4, 3, 0.72)");
+  ctx.fillStyle = ground;
+  ctx.fillRect(0, BAKE_H - 320, BAKE_W, 320);
+
+  // MIRRORED chamfer corners (TL/BR — see traceChamferPathMirrored) —
+  // opaque void, same contract as the front faces.
+  ctx.fillStyle = VOID;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(BAKE_CH, 0);
+  ctx.lineTo(0, BAKE_CH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(BAKE_W, BAKE_H - BAKE_CH);
+  ctx.lineTo(BAKE_W, BAKE_H);
+  ctx.lineTo(BAKE_W - BAKE_CH, BAKE_H);
+  ctx.closePath();
+  ctx.fill();
+
+  // Mirrored shell stroke + bright chamfer ticks.
+  const shell = ctx.createLinearGradient(BAKE_W, 0, BAKE_W * 0.75, BAKE_H);
+  shell.addColorStop(0, "rgba(202, 165, 84, 0.52)");
+  shell.addColorStop(0.38, `rgba(${DAWN}, 0.14)`);
+  shell.addColorStop(0.66, "rgba(202, 165, 84, 0.16)");
+  shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
+  ctx.strokeStyle = shell;
+  ctx.lineWidth = 2.5;
+  traceChamferPathMirrored(ctx, 1.5);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(BAKE_CH, 1.5);
+  ctx.lineTo(1.5, BAKE_CH);
+  ctx.moveTo(BAKE_W - 1.5, BAKE_H - BAKE_CH);
+  ctx.lineTo(BAKE_W - BAKE_CH, BAKE_H - 1.5);
+  ctx.stroke();
+
+  return canvas;
+}
+
+/** Portrait source for the deck's back face — produced by
+ *  scripts/services-photos/prepare.mjs (the `vince` entry), same 840×1360
+ *  card crop as the service photos. */
+const PORTRAIT_BACK_SRC = "/images/services/vince.jpg";
+
 /* ── Component ──────────────────────────────────────────────────────────── */
 
 export interface ServicesCardRingProps {
@@ -587,6 +743,13 @@ export interface ServicesCardRingProps {
   /** Runway progress source. Defaults to the module bridge ref written by
    *  useServicesStageScroll; labs pass their own simulate-scroll ref. */
   progressRef?: { current: ServicesRingProgress };
+  /** About stage progress source (ADR-047 deck flip). Defaults to the
+   *  module bridge ref written by useAboutStageScroll; labs pass their own
+   *  simulated ref. */
+  aboutProgressRef?: { current: AboutStageProgress };
+  /** About portrait-slot rect source (the deck's seat). Defaults to the
+   *  module ref written by useAboutStageScroll. */
+  aboutSlotSource?: { current: AboutSlot };
   /** Dissipate clock for the dock entrance. Corridor passes
    *  `getSmoothedDissipate`; default reads `--corridor-dissipate` (damped),
    *  the `HologramOrbits` pattern. Ignored when `entrance="off"`. */
@@ -629,6 +792,8 @@ export interface ServicesCardRingProps {
 export function ServicesCardRing({
   scale = 1,
   progressRef = servicesRingProgressRef,
+  aboutProgressRef = aboutStageProgressRef,
+  aboutSlotSource = aboutSlotRef,
   dissipateGetter,
   entrance = "scroll",
   publishAnchors = false,
@@ -660,6 +825,10 @@ export function ServicesCardRing({
   const setRingAnchors = useHologramConnectors((s) => s.setRingAnchors);
 
   const [textures, setTextures] = useState<THREE.CanvasTexture[] | null>(null);
+  // The deck's shared portrait back (ADR-047): ONE texture + ONE material +
+  // ONE geometry across all four back planes — the backs are only ever
+  // seen converged (the flip), so identical faces are correct and cheap.
+  const [backTexture, setBackTexture] = useState<THREE.CanvasTexture | null>(null);
   const cardGroupRefs = useRef<Array<THREE.Group | null>>([]);
   const meshRefs = useRef<Array<THREE.Mesh | null>>([]); // content planes (anchor projection)
   const matRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]); // content materials
@@ -672,23 +841,23 @@ export function ServicesCardRing({
   const cornerLocal = useRef(new THREE.Vector3());
   const cornerWorld = useRef(new THREE.Vector3());
 
-  /* ── Cartridge dock (ADR-046) — scratch objects for the per-frame seat
-     targeting. The seat is derived VIEWPORT-FIRST every frame (slot rect →
-     NDC → camera space at the card's live depth → world → ring-local via
-     one shared inverse parent matrix), so the brandmark recede,
-     pointer-look residue, resize, and DPR steps are all compensated
-     automatically — never a fixed world offset (BEST-PRACTICES; the
-     ADR-034 terrace precedent). No per-frame allocation. */
+  /* ── About deck (ADR-047) — scratch objects for the per-frame seat
+     targeting. The deck pivot's seat is derived VIEWPORT-FIRST every frame
+     (DOM slot rect → NDC → camera space at the pivot's live depth → world
+     → ring-local via one shared inverse parent matrix), so the brandmark
+     recede, pointer-look residue, resize, and DPR steps are all
+     compensated automatically — never a fixed world offset
+     (BEST-PRACTICES; the ADR-034 terrace precedent). No per-frame
+     allocation. */
   const ringGroupRef = useRef<THREE.Group>(null);
-  const dockParentInv = useRef(new THREE.Matrix4());
-  const dockParentCol = useRef(new THREE.Vector3());
-  const dockWorldScratch = useRef(new THREE.Vector3());
-  const dockCamScratch = useRef(new THREE.Vector3());
-  const dockSeatScratch = useRef(new THREE.Vector3());
-  const dockFlatYaws = useMemo(
-    () => SERVICE_PLATES.map((_, i) => dockFlatYaw(i, facingBlend)),
-    [facingBlend]
-  );
+  const deckParentInv = useRef(new THREE.Matrix4());
+  const deckParentCol = useRef(new THREE.Vector3());
+  const deckWorldScratch = useRef(new THREE.Vector3());
+  const deckCamScratch = useRef(new THREE.Vector3());
+  const deckSeatScratch = useRef(new THREE.Vector3());
+  /** True while the deck's explicit per-slot renderOrder rebase is applied
+   *  (restored to the JSX constants exactly once on disengage). */
+  const deckOrderAppliedRef = useRef(false);
 
   const cardW = cardHeight * RING_CARD_ASPECT;
   const slabW = cardW + bezelMargin * 2;
@@ -898,15 +1067,26 @@ export function ServicesCardRing({
       );
       if (disposed) return;
       const maxAniso = gl.capabilities.getMaxAnisotropy?.() ?? 1;
-      setTextures(
-        baked.map((canvas) => {
-          const texture = new THREE.CanvasTexture(canvas);
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = Math.min(8, maxAniso);
-          texture.needsUpdate = true;
-          return texture;
-        })
-      );
+      const toTexture = (canvas: HTMLCanvasElement) => {
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(8, maxAniso);
+        texture.needsUpdate = true;
+        return texture;
+      };
+      setTextures(baked.map(toTexture));
+      // The portrait back bakes independently (no fonts, one photo) and
+      // only under the deck flag — flag-off never fetches the asset.
+      if (ABOUT_DECK_STAGE) {
+        let portrait: HTMLImageElement | null = null;
+        try {
+          portrait = await loadImage(PORTRAIT_BACK_SRC);
+        } catch {
+          portrait = null; // schematic fallback keeps the flip whole
+        }
+        if (disposed) return;
+        setBackTexture(toTexture(bakePortraitBack(portrait)));
+      }
     })();
     return () => {
       disposed = true;
@@ -914,13 +1094,48 @@ export function ServicesCardRing({
   }, [gl]);
 
   // Dispose bakes on replacement/unmount (materials/geometries are
-  // declarative — R3F disposes those).
+  // declarative — R3F disposes those; the shared back material/geometry
+  // are memoized and disposed below).
   useEffect(() => {
     if (!textures) return;
     return () => {
       for (const texture of textures) texture.dispose();
     };
   }, [textures]);
+  useEffect(() => {
+    if (!backTexture) return;
+    return () => backTexture.dispose();
+  }, [backTexture]);
+
+  // ONE geometry + ONE material shared by the four back planes.
+  const backGeometry = useMemo(
+    () => new THREE.PlaneGeometry(cardW, cardHeight),
+    [cardW, cardHeight]
+  );
+  const backMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: backTexture,
+        transparent: true,
+        opacity: 0,
+        side: THREE.FrontSide,
+        depthWrite: false,
+        depthTest: true,
+        blending: THREE.NormalBlending,
+        toneMapped: false,
+      }),
+    [backTexture]
+  );
+  useEffect(() => {
+    return () => {
+      backGeometry.dispose();
+    };
+  }, [backGeometry]);
+  useEffect(() => {
+    return () => {
+      backMaterial.dispose();
+    };
+  }, [backMaterial]);
 
   // Clear published rects when the ring unmounts mid-park.
   useEffect(() => {
@@ -976,39 +1191,101 @@ export function ServicesCardRing({
     // pre-exit frames byte-identical; entrance "off" (labs) never exits.
     const exitP = entrance === "scroll" ? exitProgressForRunway(progressRef.current.progress) : 0;
 
-    // Cartridge dock (ADR-046): with the flag on, the exit beat's cards
-    // travel to the bottom-right DOM console instead of the ADR-030 radial
-    // fade-out. The dock branch only runs while exitP > 0, so every
-    // pre-exit frame takes the exact shipped code path (byte-identical
-    // guardrail), and reverse scroll re-enters it seamlessly (the envelope
-    // is identity at exit 0). Per-frame shared seat geometry: one inverse
-    // parent matrix + camera terms for all four cards, scratch objects only.
-    const dockEngaged = SERVICES_CARTRIDGE_DOCK && entrance === "scroll" && exitP > 0;
-    const dockAnchorsLive =
-      !(SERVICES_CARTRIDGE_DOCK && entrance === "scroll") || exitP < DOCK_ANCHORS_OFF_EXIT;
-    let dockHalfFovTan = 0;
-    let dockAspect = 1;
-    let dockParentScale = 1;
-    if (dockEngaged && ringGroupRef.current) {
+    // About deck (ADR-047): with the flag on, the exit beat's cards STACK
+    // into a deck (azimuth sweep, replacing the ADR-030 radial fade-out)
+    // and the pinned #about stage then FLIPS the deck π onto the DOM
+    // portrait slot. The deck branch only runs while exitP > 0 or the
+    // about clock is live, so every pre-exit frame takes the exact shipped
+    // code path (byte-identical guardrail), and reverse scroll re-enters
+    // it seamlessly (both envelopes are identity at their zeros).
+    const aboutP =
+      ABOUT_DECK_STAGE && entrance === "scroll" ? aboutProgressRef.current.progress : 0;
+    const deckEngaged = ABOUT_DECK_STAGE && entrance === "scroll" && (exitP > 0 || aboutP > 0);
+    const deckAnchorsLive =
+      !(ABOUT_DECK_STAGE && entrance === "scroll") ||
+      (exitP < DECK_ANCHORS_OFF_EXIT && aboutP <= 0);
+    // The about tail's fail-opaque shield covers the stage across
+    // ABOUT_BG_IN_WINDOW — the deck (and its DOM cluster, in CSS) dies
+    // with it so nothing outlives the cover.
+    const deckBgKill = deckEngaged ? 1 - aboutBgInT(aboutP) : 1;
+
+    // Flip-phase shared geometry (one inverse parent matrix + camera terms
+    // + the pivot's seat for all four cards — scratch objects only).
+    const flip = deckEngaged && aboutP > 0 ? deckFlip(aboutP) : null;
+    let flipSin = 0;
+    let flipCos = 1;
+    let flipPivotX = 0;
+    let flipPivotY = 0;
+    let flipPivotZ = 0;
+    let flipRigidScale = 1;
+    let flipCardScale = DECK_CARD_SCALE;
+    if (flip && ringGroupRef.current) {
       const ring = ringGroupRef.current;
       ring.updateWorldMatrix(true, false);
-      dockParentInv.current.copy(ring.matrixWorld).invert();
-      dockParentScale =
-        dockParentCol.current.setFromMatrixColumn(ring.matrixWorld, 0).length() || 1;
+      deckParentInv.current.copy(ring.matrixWorld).invert();
+      const parentScale =
+        deckParentCol.current.setFromMatrixColumn(ring.matrixWorld, 0).length() || 1;
       const persp = camera as THREE.PerspectiveCamera;
-      dockHalfFovTan = Math.tan(((persp.fov ?? 40) * Math.PI) / 360);
-      dockAspect = persp.aspect || size.width / Math.max(1, size.height);
+      const halfFovTan = Math.tan(((persp.fov ?? 40) * Math.PI) / 360);
+      const aspect = persp.aspect || size.width / Math.max(1, size.height);
+
+      // Camera-space depth of the UNBLENDED deck pivot — the seat is
+      // constructed at the same depth, so the glide is screen-lateral and
+      // the projected deck lands exactly on the slot regardless of the
+      // brandmark recede or pointer-look residue (both recomputed through
+      // the live matrices every frame).
+      deckWorldScratch.current
+        .set(DECK_PIVOT_LOCAL.x, DECK_PIVOT_LOCAL.y + yOffset, DECK_PIVOT_LOCAL.z)
+        .applyMatrix4(ring.matrixWorld);
+      deckCamScratch.current.copy(deckWorldScratch.current).applyMatrix4(camera.matrixWorldInverse);
+      const camDepth = Math.max(0.1, -deckCamScratch.current.z);
+
+      // The DOM portrait slot → NDC → world → ring-local (viewport-first;
+      // the fallback anchor covers the pre-measure frames).
+      const slot = aboutSlotSource.current;
+      const [ndcX, ndcY] = slot.valid
+        ? seatNdcFromRect(
+            slot.rect.cx,
+            slot.rect.cy,
+            Math.max(1, size.width),
+            Math.max(1, size.height),
+            ABOUT_FALLBACK_NDC
+          )
+        : ABOUT_FALLBACK_NDC;
+      const slotH = slot.valid ? slot.rect.h : ABOUT_FALLBACK_SLOT_H_PX;
+      deckSeatScratch.current
+        .set(ndcX * halfFovTan * aspect * camDepth, ndcY * halfFovTan * camDepth, -camDepth)
+        .applyMatrix4(camera.matrixWorld)
+        .applyMatrix4(deckParentInv.current);
+
+      const seatScale =
+        seatWorldHeight(slotH, Math.max(1, size.height), camDepth, halfFovTan) /
+        Math.max(1e-6, cardHeight * parentScale);
+      const posBlend = flip.posBlend;
+      flipPivotX = lerp(DECK_PIVOT_LOCAL.x, deckSeatScratch.current.x, posBlend);
+      flipPivotY = lerp(DECK_PIVOT_LOCAL.y + yOffset, deckSeatScratch.current.y, posBlend);
+      flipPivotZ = lerp(DECK_PIVOT_LOCAL.z, deckSeatScratch.current.z, posBlend);
+      flipCardScale = lerp(DECK_CARD_SCALE, seatScale, posBlend);
+      flipRigidScale = flipCardScale / DECK_CARD_SCALE;
+      flipSin = Math.sin(flip.theta);
+      flipCos = Math.cos(flip.theta);
     }
+
+    // The shared portrait back only exists during the flip phase (the
+    // FrontSide culling of the flat deck gives the gate half a beat of
+    // slack either way). All four backs share one material — correct
+    // because the backs are only ever seen converged.
+    backMaterial.opacity = flip !== null ? opacityRange[1] * masterOpacity * deckBgKill : 0;
 
     const parked = dissipate >= ANCHOR_PUBLISH_DISSIPATE;
     const anchors: RingCardAnchor[] = [];
 
     // Hovered card from LAST frame's projected rects (one frame of lag is
     // imperceptible at the veil's damp rate). Front-most containing rect
-    // wins; nothing hovers until parked — and never during the dock travel
-    // (the veil re-engages as the feed "powers down" in transit).
+    // wins; nothing hovers until parked — and never during the deck life
+    // (the veil restores to the full feed read as the cards converge).
     let hovered = -1;
-    if (parked && !dockEngaged) {
+    if (parked && !deckEngaged) {
       const pointer = pointerPxRef.current;
       let bestNz = -Infinity;
       for (let i = 0; i < RING_COUNT; i++) {
@@ -1036,13 +1313,20 @@ export function ServicesCardRing({
       const env = entrance === "scroll" ? entranceEnvelope(dissipate, i) : null;
       // Exit composes onto the entrance: identity while exitP = 0. Flag
       // OFF: the ADR-030 radial decommission (fly OUT + fade). Flag ON
-      // (ADR-046): the dock travel replaces it — the card ejects
-      // (radiusMul bump), flattens, and flies to the DOM console seat.
+      // (ADR-047): the deck STACK replaces it — the azimuth sweep + deck
+      // radius correction feed placeCardOnOrbit directly, and the spring
+      // residual is absorbed over the settle window so the exitP = 1 pose
+      // is a pure constant (byte-stable across the services→about hold).
       const exit = exitEnvelope(exitP, i);
-      const dockEnv = dockEngaged ? dockTravelEnvelope(exitP, i) : null;
-      const placed = placeCardOnOrbit(i, spring.pos, cardOrbitGeoms[i], {
+      const stack = deckEngaged ? deckStackEnvelope(exitP, i) : null;
+      const rotationInput = stack
+        ? DECK_SETTLED_ROTATION +
+          (spring.pos - DECK_SETTLED_ROTATION) * (1 - stack.settle) +
+          stack.phiDelta
+        : spring.pos;
+      const placed = placeCardOnOrbit(i, rotationInput, cardOrbitGeoms[i], {
         yOffset,
-        radiusMul: (env ? env.radiusMul : 1) * (dockEnv ? dockEnv.radiusMul : exit.radiusMul),
+        radiusMul: (env ? env.radiusMul : 1) * (stack ? stack.radiusMul : exit.radiusMul),
       });
 
       // Hover tilt — the hovered card leans with the pointer so its slab
@@ -1088,105 +1372,60 @@ export function ServicesCardRing({
       const ringYaw = cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw;
       const ringScale = depthScale(placed.nz, scaleRange);
 
-      if (dockEnv && ringGroupRef.current) {
-        // ── ADR-046 dock travel: ring pose → seat pose, viewport-first.
-        // Seat NDC from the live DOM slot rect (fallback anchor until the
-        // dock has measured — the crossfade at seat absorbs the residue).
-        const seats = dockSeatRectsRef.current;
-        const slot = seats.valid && seats.slots.length > i ? seats.slots[i] : null;
-        const ndcX = slot ? (slot.cx / Math.max(1, size.width)) * 2 - 1 : DOCK_FALLBACK_NDC[0];
-        const ndcY = slot ? -((slot.cy / Math.max(1, size.height)) * 2 - 1) : DOCK_FALLBACK_NDC[1];
-        const slotH = slot ? slot.h : DOCK_FALLBACK_SLOT_H_PX;
-
-        // Camera-space depth of the card's RING pose — the seat is placed
-        // at the SAME depth, so the travel is screen-lateral and the
-        // projected card lands exactly on the slot regardless of the
-        // brandmark recede or pointer-look residue (both recomputed here
-        // every frame through the live matrices).
-        dockWorldScratch.current
-          .set(ringX, ringY, ringZ)
-          .applyMatrix4(ringGroupRef.current.matrixWorld);
-        dockCamScratch.current
-          .copy(dockWorldScratch.current)
-          .applyMatrix4(camera.matrixWorldInverse);
-        const camDepth = Math.max(0.1, -dockCamScratch.current.z);
-
-        // Seat point: NDC at that depth → world → ring-local.
-        dockSeatScratch.current
-          .set(
-            ndcX * dockHalfFovTan * dockAspect * camDepth,
-            ndcY * dockHalfFovTan * camDepth,
-            -camDepth
-          )
-          .applyMatrix4(camera.matrixWorld)
-          .applyMatrix4(dockParentInv.current);
-
-        // Bowed path: perpendicular of the local travel direction (XY),
-        // flipped upward — the card lifts off the straight line, then
-        // drops into the socket ("ejected, then inserted").
-        const dx = dockSeatScratch.current.x - ringX;
-        const dy = dockSeatScratch.current.y - ringY;
-        const len = Math.hypot(dx, dy);
-        let bendX = 0;
-        let bendY = 0;
-        if (len > 1e-5) {
-          bendX = -dy / len;
-          bendY = dx / len;
-          if (bendY < 0) {
-            bendX = -bendX;
-            bendY = -bendY;
-          }
-        }
-        const posT = dockEnv.positionT;
+      if (flip) {
+        // ── ADR-047 flip: the deck rotates about its pivot's X axis as
+        // ONE rigid slab (position = pivot + Rx(θ)·offset) while the pivot
+        // glides onto — then tracks — the DOM portrait slot. Past the flip
+        // window posBlend = 1, so the DOM cluster's beat-1 translate
+        // carries the deck with zero extra code (one motion owner).
+        const off = DECK_OFFSETS[i];
+        const offX = off.x * flipRigidScale;
+        const offY = off.y * flipRigidScale;
+        const offZ = off.z * flipRigidScale;
         cardGroup.position.set(
-          lerp(ringX, dockSeatScratch.current.x, posT) + bendX * dockEnv.bend,
-          lerp(ringY, dockSeatScratch.current.y, posT) + bendY * dockEnv.bend,
-          lerp(ringZ, dockSeatScratch.current.z, posT)
+          flipPivotX + offX,
+          flipPivotY + offY * flipCos - offZ * flipSin,
+          flipPivotZ + offY * flipSin + offZ * flipCos
         );
-        // Flatten: pitch/hover ease out; yaw unwinds to the settled pose's
-        // nearest full turn (dockFlatYaw — deterministic, computed from the
-        // settled exit pose so the unwind direction can never flip on
-        // spring wobble mid-flight).
+        // 'XYZ' order: the yaw is a full turn (identity), so this is
+        // exactly Rx(θ) — and the back plane's own rotation.x = π composes
+        // with it to identity at full flip (upright, unmirrored portrait).
+        cardGroup.rotation.set(flip.theta, DECK_PHI_TARGETS[i], 0);
+        cardGroup.scale.setScalar(flipCardScale);
+      } else if (stack) {
+        // ── ADR-047 stack: the azimuth sweep already carried position and
+        // scale through placeCardOnOrbit (nz → 1 lifts depth-scale to the
+        // deck scale); only the pose residue (front bias + hover tilt)
+        // flattens here — cardFacingYaw converges to the flat full-turn on
+        // its own as φ → 2πk.
+        cardGroup.position.set(ringX, ringY, ringZ);
         cardGroup.rotation.set(
-          ringPitch * (1 - dockEnv.flattenT),
-          lerp(ringYaw, dockFlatYaws[i], dockEnv.flattenT),
+          (tilt.pitch + bias.pitch) * (1 - stack.flattenT),
+          cardFacingYaw(placed.rotY, facingBlend) + (tilt.yaw + bias.yaw) * (1 - stack.flattenT),
           0
         );
-        // Scale: ring depth-scale → absolute seat scale (projected card
-        // height == the DOM slot height — also equalizes the four
-        // cartridges in flight, erasing the per-depth scale spread).
-        const seatScale =
-          seatWorldHeight(slotH, Math.max(1, size.height), camDepth, dockHalfFovTan) /
-          Math.max(1e-6, cardHeight * dockParentScale);
-        cardGroup.scale.setScalar(lerp(ringScale, seatScale, posT));
+        cardGroup.scale.setScalar(ringScale);
       } else {
         cardGroup.position.set(ringX, ringY, ringZ);
         cardGroup.rotation.set(ringPitch, ringYaw, 0);
         cardGroup.scale.setScalar(ringScale);
       }
 
-      // Depth-based opacity lifts to UNIFORM during the dock travel (the
-      // back card must not fly at its 0.16 floor); the WebGL card then
-      // hands off to the DOM cartridge across the seat swap
-      // (dockEnv.webglOpacity 1 → 0) instead of the radial exit fade.
-      const depthOBase = depthOpacity(placed.nz, opacityRange, opacityWindow);
-      const depthO = dockEnv ? lerp(depthOBase, opacityRange[1], dockEnv.flattenT) : depthOBase;
-      const master =
-        (env ? env.opacity : 1) * (dockEnv ? dockEnv.webglOpacity : exit.opacity) * masterOpacity;
+      // Depth-based opacity lifts to uniform ON ITS OWN during the stack
+      // (the sweep drives nz → 1). The deck never fades on exit — it lives
+      // through the pinned #about and dies only with the stage's
+      // fail-opaque shield (deckBgKill, the about tail).
+      const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
+      const master = (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * masterOpacity;
       const opacity = depthO * master;
-      // The content ink dims toward the cartridge read in transit (faceDim);
-      // the slab body / gold lip / glint stay solid until the seat swap.
-      material.opacity = opacity * (dockEnv ? dockEnv.faceDim : 1);
+      material.opacity = opacity;
       slabMaterials[i][0].opacity = glassOpacity * depthO * master;
       slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
       glintMaterials[i].opacity = glintOpacity * depthO * master;
       // Halo is front-weighted: swells as the card parks, gone on the sides
-      // — and dies over the dock eject beat (the feed powers down).
+      // — and dies early in the stack (four converged halos would bloom).
       glowMaterials[i].opacity =
-        glowOpacity *
-        smootherstep(0.35, 0.95, placed.nz) *
-        master *
-        (dockEnv ? dockEnv.glowMul : 1);
+        glowOpacity * smootherstep(0.35, 0.95, placed.nz) * master * (stack ? stack.glowMul : 1);
       // Hover-resolve: the hovered card's veil damps toward its resolved
       // residue; everyone else restores to the full feed read.
       const veilTarget = i === hovered ? RING_VEIL_HOVER_LEVEL : 1;
@@ -1196,11 +1435,12 @@ export function ServicesCardRing({
       cardGroup.visible = opacity > 0.004;
 
       // depthWrite hysteresis — only the near-front card's CONTENT writes
-      // depth (the glass never does). Force-OFF just past the dock's exit
-      // start: a solid card travelling across the mark must never punch
-      // holes in the depthWrite:false particle pass (ADR-046).
+      // depth (the glass never does). Force-OFF for the whole deck life:
+      // the sweep drives EVERY card's nz → 1, so the plain gate would
+      // switch four near-coplanar stacked writers ON (sorting carnage +
+      // holes in the depthWrite:false particle pass) — ADR-047.
       const write =
-        dockEngaged && exitP > DOCK_DEPTH_WRITE_OFF_EXIT
+        deckEngaged && (exitP > DECK_DEPTH_WRITE_OFF_EXIT || aboutP > 0)
           ? false
           : depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity > 0.55;
       if (write !== material.depthWrite) material.depthWrite = write;
@@ -1240,12 +1480,12 @@ export function ServicesCardRing({
         // floor 0.16 stopped the old `> 0.1` gate from filtering it). The
         // same shadowed rect must not steal HOVER either.
         const occludedByFront = i === (front + 2) % RING_COUNT;
-        // `dockAnchorsLive` retires the rects at the dock's exit start
-        // (ADR-046): the dock travel keeps cards OPAQUE (no fade), so the
-        // old `opacity > 0.1` gate alone would leave a live CTA link riding
-        // the flight to the corner.
+        // `deckAnchorsLive` retires the rects at the deck's exit start
+        // (ADR-047): the stack keeps cards OPAQUE (no fade), so the old
+        // `opacity > 0.1` gate alone would leave a live CTA link riding
+        // the sweep — and the flipped portrait must never expose one.
         hoverRectsRef.current[i] =
-          !clipped && !occludedByFront && opacity > 0.1 && dockAnchorsLive
+          !clipped && !occludedByFront && opacity > 0.1 && deckAnchorsLive
             ? { x: minX, y: minY, w: maxX - minX, h: maxY - minY, nz: placed.nz }
             : null;
         if (publishAnchors) {
@@ -1256,13 +1496,44 @@ export function ServicesCardRing({
             w: maxX - minX,
             h: maxY - minY,
             depth: centreDepth,
-            visible: !clipped && !occludedByFront && opacity > 0.1 && dockAnchorsLive,
+            visible: !clipped && !occludedByFront && opacity > 0.1 && deckAnchorsLive,
             front: i === front,
           });
         }
       } else {
         hoverRectsRef.current[i] = null;
       }
+
+      // Explicit per-deck-slot renderOrder once the deck has assembled —
+      // same-order depth sorting would jitter between near-coplanar
+      // slabs; before assembly the cards are angularly spread and the
+      // depth sort is the correct (original) behavior. `flipped` swaps
+      // the order at θ = π/2, where the deck is edge-on (imperceptible).
+      if (deckEngaged && (exitP >= DECK_RENDER_REBASE_EXIT || aboutP > 0)) {
+        const base = DECK_RENDER_PITCH * deckOrder(i, flip ? flip.flipped : false);
+        const kids = cardGroup.children;
+        for (let k = 0; k < kids.length && k < DECK_INTRA_ORDERS.length; k++) {
+          kids[k].renderOrder = base + DECK_INTRA_ORDERS[k];
+        }
+        deckOrderAppliedRef.current = true;
+      }
+    }
+
+    // Restore the JSX renderOrder constants exactly once when the deck
+    // disengages (reverse scroll back into the reading beats) — pre-exit
+    // frames never see per-frame renderOrder writes.
+    if (
+      deckOrderAppliedRef.current &&
+      !(deckEngaged && (exitP >= DECK_RENDER_REBASE_EXIT || aboutP > 0))
+    ) {
+      for (let i = 0; i < RING_COUNT; i++) {
+        const kids = cardGroupRefs.current[i]?.children;
+        if (!kids) continue;
+        for (let k = 0; k < kids.length && k < DECK_INTRA_ORDERS.length; k++) {
+          kids[k].renderOrder = DECK_INTRA_ORDERS[k];
+        }
+      }
+      deckOrderAppliedRef.current = false;
     }
 
     if (publishAnchors) {
@@ -1281,9 +1552,13 @@ export function ServicesCardRing({
   // Decommission dim for the drawn card tracks — same clock and magnitude
   // as the structural armillary (CorridorArmillary), derived from THIS
   // ring's progress source so labs with a simulate-scroll ref exit too.
+  // Under ADR-047 the residue then clears FULLY across the about flip
+  // window (the portrait gets a clean stage).
   const trackExitGetter =
     entrance === "scroll"
-      ? () => 1 - 0.85 * exitProgressForRunway(progressRef.current.progress)
+      ? () =>
+          (1 - 0.85 * exitProgressForRunway(progressRef.current.progress)) *
+          (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutProgressRef.current.progress) : 1)
       : undefined;
 
   return (
@@ -1330,7 +1605,11 @@ export function ServicesCardRing({
             material={glintMaterials[i]}
             frustumCulled={false}
           />
-          {/* The baked plate face, floated above the front cap. */}
+          {/* The baked plate face, floated above the front cap. FrontSide
+              since ADR-047: the only pose that ever showed this bake's
+              reverse was the hidden occluded back card (a mirrored text
+              ghost at the 0.16 opacity floor) — and the deck's portrait
+              back plane must own the rear view. */}
           <mesh
             renderOrder={0.1}
             position={[0, 0, slabDepth / 2 + RING_CONTENT_LIFT]}
@@ -1347,13 +1626,33 @@ export function ServicesCardRing({
               map={textures[i]}
               transparent
               opacity={0}
-              side={THREE.DoubleSide}
+              side={THREE.FrontSide}
               depthWrite={false}
               depthTest
               blending={THREE.NormalBlending}
               toneMapped={false}
             />
           </mesh>
+          {/* The deck's PORTRAIT BACK (ADR-047) — floated behind the back
+              cap, rotation.x = π so the deck's rigid Rx(π) flip composes
+              with it to IDENTITY: at full flip it reads exactly like an
+              unrotated front plane (upright, unmirrored; a y = π plane
+              would land the portrait upside-down). Shares ONE texture +
+              material across all four cards; opacity gated to the flip
+              phase (FrontSide culling covers the flat-deck frames). No
+              back veil (the portrait carries its own scrims) and no glow
+              twin (the +z glow FrontSide-culls after the flip AND is
+              already dead via the stack's glowMul). */}
+          {ABOUT_DECK_STAGE && (
+            <mesh
+              renderOrder={0.11}
+              position={[0, 0, -(slabDepth / 2 + RING_CONTENT_LIFT)]}
+              rotation={[Math.PI, 0, 0]}
+              geometry={backGeometry}
+              material={backMaterial}
+              frustumCulled={false}
+            />
+          )}
           {/* Hologram veil — the plate's dot-matrix feed read over the
               photo zone; fades on hover so the photo resolves (the
               `.svc-plate:hover` behavior, Update 3). */}

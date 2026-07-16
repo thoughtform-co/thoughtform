@@ -63,12 +63,14 @@ import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
 import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
 import {
+  ABOUT_DECK_STAGE,
   SERVICES_CARD_RING,
-  SERVICES_CARTRIDGE_DOCK,
   UNIFIED_SERVICES_ARMILLARY,
 } from "../unifiedServicesInstrument";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
+import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { getServicePose } from "@/lib/home-v2/servicePose";
@@ -628,6 +630,15 @@ export function BrandmarkPhysicsCoreActor({
       ? smootherstep(0, 1, exitProgressForRunway(servicesRingProgressRef.current.progress)) * recT
       : 0;
 
+    // About flip fade (ADR-047): the exit dim is only PARTIAL (the receded
+    // mark stays a background presence through the deck stack), so as the
+    // pinned #about stage flips the deck to the portrait, the mark clears
+    // FULLY across the flip window — the portrait gets a clean stage.
+    // Identity (1) everywhere the about clock is 0.
+    const aboutFlipFade = ABOUT_DECK_STAGE
+      ? 1 - aboutFlipT(aboutStageProgressRef.current.progress)
+      : 1;
+
     // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
     // Three coupled clocks, all derived from `getBrandmarkCoreBlend(progress)`
     // (the shared 0..1 wrap clock anchored at substrate.start → substrate.peakAt):
@@ -787,10 +798,13 @@ export function BrandmarkPhysicsCoreActor({
     const inEpilogueOrDock = t.docked || t.servicesAmbient || t.epilogueProgress > 1e-3;
     const inSvgRest = !inEpilogueOrDock && progress < BRANDMARK_CORE_HANDOFF_PROGRESS;
     // The exit dim is PARTIAL (the mark stays a background presence
-    // through the #tools lead-in); handoffFade (servicesAmbientLevel)
-    // completes the death as the first tool card arrives.
+    // through the deck stack); the ADR-047 about flip then clears it
+    // fully (aboutFlipFade), and handoffFade (servicesAmbientLevel)
+    // finishes the kill as #continuum arrives.
     opacityRef.current =
-      (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * (1 - EXIT_DIM * exitT);
+      (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) *
+      (1 - EXIT_DIM * exitT) *
+      aboutFlipFade;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude.
     pointSizeRef.current =
@@ -880,17 +894,20 @@ export function BrandmarkPhysicsCoreActor({
       const engaged = UNIFIED_SERVICES_ARMILLARY && recT > 0.9;
       const k = Math.min(1, delta * 4);
 
-      // Cartridge-dock stillness (ADR-046): as the exit clock runs, the
-      // pointer-look + per-service pose damp OUT so the whole instrument
-      // eases frontal while the cards fly to their seats — the seat
+      // Deck stillness (ADR-047, carried from ADR-046): as the exit clock
+      // runs — and for the whole pinned-about deck life — the pointer-look
+      // + per-service pose damp OUT so the instrument eases frontal while
+      // the cards stack and the deck sits welded on its DOM slot. The seat
       // targeting compensates live matrices anyway, but a still parent
-      // keeps the flight legible. `exitT` already carries the recT product
+      // keeps the beat legible. `exitT` already carries the recT product
       // and the flag-off path multiplies by exactly 1 (byte-identical).
-      const dockStill = SERVICES_CARTRIDGE_DOCK ? 1 - exitT : 1;
+      const deckStill = ABOUT_DECK_STAGE
+        ? 1 - Math.max(exitT, aboutStageProgressRef.current.progress > 0 ? 1 : 0)
+        : 1;
 
       // Pointer-look channel — nudge toward the cursor when parked.
-      const tgtPitch = engaged ? pointerTargetRef.current.pitch * dockStill : 0;
-      const tgtYaw = engaged ? pointerTargetRef.current.yaw * dockStill : 0;
+      const tgtPitch = engaged ? pointerTargetRef.current.pitch * deckStill : 0;
+      const tgtYaw = engaged ? pointerTargetRef.current.yaw * deckStill : 0;
       const damp = pointerDampRef.current;
       damp.pitch += (tgtPitch - damp.pitch) * k;
       damp.yaw += (tgtYaw - damp.yaw) * k;
@@ -898,8 +915,8 @@ export function BrandmarkPhysicsCoreActor({
       // Per-service settle channel — hold a distinct bounded pose per active
       // service; eases to frontal when not parked so the dive/corridor are
       // unaffected. Composes additively under the billboard + gentle drift.
-      const poseTgtPitch = engaged ? servicePoseTargetRef.current.pitch * dockStill : 0;
-      const poseTgtYaw = engaged ? servicePoseTargetRef.current.yaw * dockStill : 0;
+      const poseTgtPitch = engaged ? servicePoseTargetRef.current.pitch * deckStill : 0;
+      const poseTgtYaw = engaged ? servicePoseTargetRef.current.yaw * deckStill : 0;
       const pose = servicePoseDampRef.current;
       pose.pitch += (poseTgtPitch - pose.pitch) * k;
       pose.yaw += (poseTgtYaw - pose.yaw) * k;

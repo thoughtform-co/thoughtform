@@ -1,7 +1,15 @@
 # ADR-046: Services cartridge dock (cards seat into a bottom-right console)
 
 **Date:** 2026-07-16
-**Status:** Accepted
+**Status:** Superseded by [ADR-047](047-about-deck-flip-stage.md) (same day —
+owner: the dock was gimmicky and didn't solve the services→about
+transition). The dock component/CSS/flag/math were REMOVED; the reusable
+pieces carried forward: the viewport-first seat projection
+(`lib/services-ring/viewportSeat.ts`), the nearest-full-turn unwind
+technique, the anchors/depthWrite gate constants, the module-ref bridge
+pattern, and the "state is a pure function of a clamped clock — no latch"
+lesson. The React props-`disabled` click-drop lesson (BEST-PRACTICES) also
+came from this build and stands.
 **Flag:** `SERVICES_CARTRIDGE_DOCK` (`components/landing/home-v2/unifiedServicesInstrument.ts`)
 **Scope:** `lib/services-ring/dockMath.ts` + `dockSeatRef.ts` +
 `beatScrollTarget.ts` (new), `services/hologram/ServicesCardRing.tsx` (exit

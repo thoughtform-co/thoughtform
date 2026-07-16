@@ -5557,6 +5557,18 @@ html { scroll-behavior: smooth; }
         </div>
       </div>
     </div>
+
+    <!-- ABOUT STAGE (ADR-047): on the capable desktop path the React
+         portal (AboutStagePortal) mounts the pinned deck-flip stage into
+         this slot and data-about-mode="stage" hides the static voidwalker
+         block above; every other path (mobile, reduced motion, WebGL
+         fallback, no JS) keeps the authored voidwalker markup + the
+         ADR-045 emerge untouched. Copy in the stage duplicates the
+         voidwalker strings via aboutStageData.ts - edit BOTH (lockstep).
+         NOTE: this comment must contain NO angle-bracket tag syntax; the
+         v7-parse relocate walkers regex-scan the raw HTML, comments
+         included. -->
+    <div class="about-stage-root" data-about-root></div>
   </section>
 
   <!-- ═══════════ 06 CONTACT ═══════════ -->

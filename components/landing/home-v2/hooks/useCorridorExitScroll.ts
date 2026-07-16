@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
+import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/math";
@@ -35,12 +36,14 @@ const VEIL_DOCK_CAP = 0.38;
 const VEIL_AMBIENT_CAP = 0.12;
 /** Start the ambient hold once the surface dissipate is complete. */
 const AMBIENT_ENGAGE_RAW = 0.999;
-/** Fade the ambient particles as the NEXT station (#about; #continuum
- *  fallback) approaches. ADR-033 retune: #about is an ordinary OPAQUE
- *  station (the #tools transparent lead-in retired with its station),
- *  so the receded mark + ambient bed finish dying exactly as the
- *  station's opaque top reaches the viewport top — nothing survives
- *  underneath a cover that no longer lets it show through. */
+/** Fade the ambient particles as the NEXT station approaches. Under
+ *  ADR-047 the next station is `#continuum`: `#about` is a pinned
+ *  TRANSPARENT stage (the deck-flip beat plays over the still-live
+ *  canvas), so the ambient hold survives THROUGH #about and the receded
+ *  bed finishes dying exactly as #continuum's opaque top reaches the
+ *  viewport top — cover and canvas death land on the same edge (the
+ *  ADR-033 coincide-by-design retune, moved one station down). Flag off
+ *  (ABOUT_DECK_STAGE=false) restores #about as the kill target. */
 const NEXT_STATION_FADE_START_VH = 0.6;
 const NEXT_STATION_FADE_END_VH = 0.0;
 
@@ -134,20 +137,27 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dissipate = corridorExitSpeedRamp(rawDissipate);
       const sectionNearDock =
         servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) && servicesRect.bottom > 0;
-      // The AMBIENT hold outlives the dock gate (ADR-030 Update 1; the
-      // next station is #about since ADR-033): in normal flow
-      // services.bottom == about.top, so a plain `bottom > 0` conjunction
-      // would HARD-CUT the canvas (and the receding mark) at exactly
-      // about.top = 0. The ambient's bottom gate must expire WITH the
-      // fade envelope (END_VH = 0 now makes these coincide by design —
-      // the opaque cover and the canvas death land on the same edge).
-      const sectionNearAmbient =
-        servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) &&
-        servicesRect.bottom > vh * NEXT_STATION_FADE_END_VH;
-      const nextStation =
-        root.querySelector<HTMLElement>("#about") ?? root.querySelector<HTMLElement>("#continuum");
+      // The kill target (ADR-047): the ambient fade keys off #continuum —
+      // #about is the pinned transparent deck-flip stage the ambient must
+      // SURVIVE. Flag off restores the ADR-033 #about kill byte-identically.
+      const nextStation = ABOUT_DECK_STAGE
+        ? (root.querySelector<HTMLElement>("#continuum") ??
+          root.querySelector<HTMLElement>("#practice"))
+        : (root.querySelector<HTMLElement>("#about") ??
+          root.querySelector<HTMLElement>("#continuum"));
       const nextStationTopVh =
         (nextStation?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
+      // The AMBIENT hold outlives the dock gate (ADR-030 Update 1). The
+      // bottom gate must expire WITH the fade envelope — a rect-boundary
+      // conjunction (services.bottom > 0, or about.bottom > 0 with the
+      // ADR-047 retarget) HARD-CUTS the canvas at exactly the next
+      // station's top because adjacent rects share that edge (the ADR-030
+      // Update 1 §6 seam bug, recorded twice now). Keying the gate to the
+      // SAME next-station top the envelope reads makes the two expire
+      // together by construction, spanning the whole pinned #about.
+      const sectionNearAmbient =
+        servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) &&
+        nextStationTopVh > NEXT_STATION_FADE_END_VH;
 
       // Dock OFF the corridor epilogue (sphere landed + BILLIONS title
       // up), not off this section's scroll position. See ADR-021.
