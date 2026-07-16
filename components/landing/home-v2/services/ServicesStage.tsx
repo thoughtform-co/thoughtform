@@ -7,7 +7,6 @@ import { ServicesDesignationLayer } from "./ServicesDesignationLayer";
 import { ServicesMasthead } from "./ServicesMasthead";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
-import { ServicesStationReadout } from "./ServicesStationReadout";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
@@ -180,9 +179,11 @@ export function ServicesStage() {
             never split the card into a photo plane + a text console). */}
         {cardRingActive && <ServicesRingHitAreas onSelectService={selectService} />}
 
-        {/* Station readout — the mono row along the bottom of the stage
-            that ties the racks + designation layer into one instrument. */}
-        <ServicesStationReadout activeServiceId={activeServiceId} />
+        {/* Station readout RETIRED (owner, 2026-07-16): the mono row along
+            the bottom of the stage was removed to give the card ring + the
+            title band more vertical real estate on short viewports. The
+            step clock's other surfaces (data-active-step, plates, ring
+            highlight, designations) carry the active-service signal. */}
       </div>
     </div>
   );

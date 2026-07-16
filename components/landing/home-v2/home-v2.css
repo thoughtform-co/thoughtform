@@ -647,8 +647,11 @@ html[data-corridor-exit="true"] #continuum {
      breadcrumb that sits on the top HUD frame line (rail bottom ≈
      hud-margin + 16px ≈ 52-70px). The framed title console carries
      its own vertical padding, so the band hugs that boundary
-     instead of the old clamp(44px, 7vh, 96px). */
-  top: clamp(48px, 6.8vh, 84px);
+     instead of the old clamp(44px, 7vh, 96px). Since 2026-07-16 the
+     clamp lives in the shared `--station-title-top` token
+     (landing.css :root) — the services masthead derives from the
+     SAME line, so the two surfaces' big titles share one anchor. */
+  top: var(--station-title-top, clamp(48px, 6.8vh, 84px));
   left: 0;
   right: 0;
   display: flex;

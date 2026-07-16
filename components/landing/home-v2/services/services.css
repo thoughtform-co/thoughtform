@@ -390,99 +390,12 @@
   color: var(--dawn);
 }
 
-/* ── Services readout strip (ADR-025 Update 9, 2026-07-09) ───────────────
- * Bottom-of-stage mono row that ties the racks + designation layer to the
- * HUD frame. Same PT Mono grammar as `.hud__rail__label` and the corridor
- * caption chrome; the three data cells scramble-decode on service change
- * via the caption kernel. Fades in with `--svc-content-in` like the rest
- * of the section content, and hides on mobile / reduced motion. */
-.services-readout {
-  position: absolute;
-  left: clamp(64px, 8vw, 168px);
-  right: clamp(64px, 8vw, 168px);
-  bottom: clamp(28px, 4vh, 52px);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: clamp(10px, 1vw, 16px);
-  pointer-events: none;
-  /* Entrance × decommission (ADR-030 Update 1): the readout strip
-   * retires with the cards across the exit beat — the rail pills carry
-   * the identity onward. Both vars come from useServicesStageScroll. */
-  opacity: calc(var(--svc-content-in, 1) * (1 - var(--svc-exit, 0)));
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--dawn-60, rgba(236, 227, 214, 0.6));
-}
-.services-readout__leader {
-  flex: 1;
-  min-width: 24px;
-  height: 1px;
-  background: repeating-linear-gradient(
-    to right,
-    rgba(236, 227, 214, 0.22) 0 1px,
-    transparent 1px 6px
-  );
-}
-.services-readout__sep {
-  width: 5px;
-  height: 5px;
-  background: var(--gold, #caa554);
-  opacity: 0.5;
-  transform: rotate(45deg);
-  flex: none;
-}
-.services-readout__cell {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  white-space: nowrap;
-}
-.services-readout__key {
-  color: rgba(236, 227, 214, 0.36);
-}
-.services-readout__val {
-  color: var(--dawn-70, rgba(236, 227, 214, 0.7));
-}
-.services-readout__val--name {
-  color: var(--gold, #caa554);
-  letter-spacing: 0.22em;
-}
-.services-readout__val--live {
-  color: var(--gold, #caa554);
-}
-.services-readout__diamond {
-  width: 4px;
-  height: 4px;
-  background: var(--gold, #caa554);
-  transform: rotate(45deg);
-  align-self: center;
-}
-.services-readout__pip {
-  width: 5px;
-  height: 5px;
-  background: var(--gold, #caa554);
-  border-radius: 50%;
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.6);
-  align-self: center;
-  animation: servicesReadoutPip 1.6s ease-in-out infinite;
-}
-@keyframes servicesReadoutPip {
-  0%,
-  100% {
-    opacity: 0.9;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-@media (max-width: 960px), (prefers-reduced-motion: reduce) {
-  .services-readout {
-    display: none;
-  }
-}
+/* ── Services readout strip — RETIRED (owner, 2026-07-16) ────────────────
+ * The ADR-025 U9 bottom-of-stage mono row ("SVC 01/04 · ADVISORY · CV …")
+ * was removed to give the card ring + title band more vertical room on
+ * short viewports. The step clock's remaining surfaces (data-active-step,
+ * plates, ring highlight, designation layer) carry the active-service
+ * signal; git history holds the component + styles. */
 
 /* ── Services masthead (ADR-044, 2026-07-16) ─────────────────────────────
  * The #services register handover: full-caps title LEFT, intro paragraph
@@ -510,17 +423,19 @@
    * shared `--rail-inset` token (landing.css :root) so #about stays in
    * lockstep; the calc fallback keeps the standalone labs working. */
   --masthead-inset: var(--rail-inset, calc(var(--hud-margin, 54px) + 8vw));
-  /* Corner-LINE rule (ADR-044 addendum 2026-07-16, third raise in the
-   * same owner trajectory): the band top sits ON the top-left bracket's
-   * horizontal line (`top: var(--hud-margin)`) at every desktop
-   * viewport — ONE rule, no vh terms, so the text band and the card
-   * ring stop competing on low-aspect (MacBook-class) screens. The
-   * former corner-zone + pad terms cleared the bracket ZONE, but the
-   * bracket arm is only var(--hud-corner-zone) wide while these columns
-   * start 8vw inboard — the text can safely share the bracket's line.
-   * `--masthead-top-trim` is the optical iteration knob (e.g. 2px to
-   * seat the cap height under the bracket's stroke). */
-  --masthead-top: calc(var(--hud-margin, 54px) + var(--masthead-top-trim, 0px));
+  /* Big-title LINE rule (ADR-044 addendum 2026-07-16, fourth revision —
+   * supersedes the same-day corner-line rule, which the owner read as
+   * "a bit too high"): the masthead TITLE's cap now sits on the SAME
+   * line as the corridor station titles ("NAVIGATE THE INTELLIGENCE."
+   * etc.) via the shared `--station-title-top` token (landing.css
+   * :root). The corridor titles carry +9px console padding above their
+   * cap; the masthead carries its eyebrow block (~13px line + 16px
+   * margin ≈ 29px) above its title — so the lead anchors 20px above
+   * the token line (+9 − 29) and the TITLE cap lands exactly on it.
+   * `--masthead-top-trim` remains the optical iteration knob. */
+  --masthead-top: calc(
+    var(--station-title-top, clamp(48px, 6.8vh, 84px)) - 20px + var(--masthead-top-trim, 0px)
+  );
   --masthead-top-trim: 0px;
 }
 .services-masthead__lead {

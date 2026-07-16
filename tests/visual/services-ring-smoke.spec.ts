@@ -90,8 +90,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.getByRole("link", { name: "Open an advisory" })).toBeVisible({
       timeout: 20_000,
     });
-    // The readout tracks the same active-service clock (service 01).
-    await expect(page.locator(".services-readout")).toContainText("ADVISORY");
+    // The bottom readout strip is RETIRED (owner, 2026-07-16) — the
+    // active-service clock is asserted via data-active-step + the CTA
+    // link in the step tests below.
+    await expect(page.locator(".services-readout")).toHaveCount(0);
 
     // The SOURCE BUS right-rail register is RETIRED (ADR-044) — the
     // section masthead carries the services title/intro instead. The
@@ -184,9 +186,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
 
+    // (Readout strip retired 2026-07-16 — the active-service clock is
+    // asserted via data-active-step + the front card's CTA link.)
     expect(await scrollServicesRunway(page, 0.3)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(page.locator(".services-readout")).toContainText("ADVISORY");
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "1");
     await expect(page.getByRole("link", { name: "Open an advisory" })).toBeVisible({
       timeout: 20_000,
     });
@@ -195,7 +199,6 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // (0.7 would land in step 4 / Workshop now.)
     expect(await scrollServicesRunway(page, 0.6)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(page.locator(".services-readout")).toContainText("KEYNOTE");
     // The ring rotated with the clock: the front card (and so its CTA
     // link) is now the Keynote plate.
     await expect(page.getByRole("link", { name: "Book a keynote" })).toBeVisible({
@@ -205,11 +208,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     // Exit-hold beat (ADR-030): deep in the runway the step clock reads 5
     // while the LAST service stays active — an unclamped step would wrap
-    // the readout back to Advisory (the bug the clamps kill).
+    // the clock back to Advisory (the bug the clamps kill). The Workshop
+    // CTA staying front proves the LAST service holds active.
     expect(await scrollServicesRunway(page, 0.95)).toBe(true);
     await page.waitForTimeout(1200);
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "5");
-    await expect(page.locator(".services-readout")).toContainText("WORKSHOP");
+    await expect(page.getByRole("link", { name: "Book a workshop" })).toBeVisible({
+      timeout: 20_000,
+    });
   });
 
   test("desktop: wheel over the instrument scrolls natively and rotates the ring", async ({

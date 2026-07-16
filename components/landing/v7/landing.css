@@ -99,6 +99,12 @@
      and the #about .voidwalker grid (ADR-045), so the two stations'
      text edges stay in lockstep. */
   --rail-inset: calc(var(--hud-margin) + 8vw);
+  /* Big-title line (2026-07-16 responsive pass) — the ONE vertical anchor
+     every station-scale title band hangs from: the corridor station heads
+     (.home-v2-station-header__head) and the services masthead derive from
+     this token, so "where do big titles sit" has a single source of truth
+     across surfaces (Linear-style shared rhythm, adapted to the HUD). */
+  --station-title-top: clamp(48px, 6.8vh, 84px);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1669,6 +1675,57 @@
 .hero__cta__arrow {
   font-size: 1.05em;
   line-height: 1;
+}
+
+/* ── Hero terminal boot (owner, 2026-07-16) ──────────────────────────────
+   LandingPage's boot effect scramble-decodes the headline lines, types the
+   paragraph behind a CRT cursor, and UNFURLS the CTA buttons centre-out —
+   the X1-B aperture idiom from the arc caption card (home-v2.css
+   .home-v2-reticle), scaled to a button: clip opens from a centre slit on
+   the same spring curve. `data-unfurl` is set by JS at hydration only, so
+   the no-JS / reduced-motion paths never clip the buttons. */
+.hero__headline-line {
+  display: inline-block;
+  min-height: 1em;
+  min-width: 1px;
+}
+.hero__type-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--gold);
+  animation: heroTypeCursor 0.9s steps(1) infinite;
+}
+@keyframes heroTypeCursor {
+  50% {
+    opacity: 0;
+  }
+}
+.hero__cta[data-unfurl] .hero__cta__btn {
+  clip-path: inset(-2px 50% -2px 50%);
+  opacity: 0;
+  transition:
+    clip-path 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease,
+    background 180ms var(--ease-out),
+    color 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+.hero__cta[data-unfurl="open"] .hero__cta__btn {
+  clip-path: inset(-2px -2px -2px -2px);
+  opacity: 1;
+}
+/* The ghost button trails the primary by a beat — the arc frames' arrival
+   stagger. */
+.hero__cta[data-unfurl="open"] .hero__cta__btn--ghost {
+  transition-delay: 0.14s, 0.14s, 0s, 0s, 0s, 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero__cta[data-unfurl] .hero__cta__btn {
+    clip-path: none;
+    opacity: 1;
+    transition: none;
+  }
 }
 
 /* Bottom-left ADOPTION ——→ AUTOMATION flywheel strip. */
