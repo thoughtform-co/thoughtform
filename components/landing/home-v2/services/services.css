@@ -510,13 +510,18 @@
    * shared `--rail-inset` token (landing.css :root) so #about stays in
    * lockstep; the calc fallback keeps the standalone labs working. */
   --masthead-inset: var(--rail-inset, calc(var(--hud-margin, 54px) + 8vw));
-  /* Band top raised twice on owner review (2026-07-16, "bring it even
-   * higher — we have enough real estate"): anchored to the CORNER zone
-   * now (margin + corner + small pad), not the rail origin — the eyebrow
-   * hangs just below the top-left bracket's arm. */
-  --masthead-top: calc(
-    var(--hud-margin, 54px) + var(--hud-corner-zone, 45px) + clamp(8px, 1.5vh, 20px)
-  );
+  /* Corner-LINE rule (ADR-044 addendum 2026-07-16, third raise in the
+   * same owner trajectory): the band top sits ON the top-left bracket's
+   * horizontal line (`top: var(--hud-margin)`) at every desktop
+   * viewport — ONE rule, no vh terms, so the text band and the card
+   * ring stop competing on low-aspect (MacBook-class) screens. The
+   * former corner-zone + pad terms cleared the bracket ZONE, but the
+   * bracket arm is only var(--hud-corner-zone) wide while these columns
+   * start 8vw inboard — the text can safely share the bracket's line.
+   * `--masthead-top-trim` is the optical iteration knob (e.g. 2px to
+   * seat the cap height under the bracket's stroke). */
+  --masthead-top: calc(var(--hud-margin, 54px) + var(--masthead-top-trim, 0px));
+  --masthead-top-trim: 0px;
 }
 .services-masthead__lead {
   position: absolute;
@@ -618,10 +623,12 @@
 .services-masthead__intro {
   position: absolute;
   right: var(--masthead-inset);
-  /* +34px aligns the paragraph's first line with the title's first line
-   * (the validated Linear-masthead read); −16px compensates the plate's
-   * top padding so the TEXT keeps that alignment inside the frame. */
-  top: calc(var(--masthead-top) + 34px - 16px);
+  /* Shared top-line rule (ADR-044 addendum 2026-07-16): the plate joins
+   * the masthead on the SAME corner line — the previous `+34px − 16px`
+   * first-line alignment is superseded by the unified band top. The
+   * corner crosses overhang −10px above the plate and ride just above
+   * the line; nudge with `+ 10px` here if that ever reads wrong. */
+  top: var(--masthead-top);
   margin: 0;
   max-width: min(42ch, 34vw);
   padding: 16px 20px;

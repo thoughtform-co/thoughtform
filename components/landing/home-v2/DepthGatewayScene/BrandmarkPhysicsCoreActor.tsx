@@ -44,6 +44,7 @@ import {
   TENSOR_ACCENT,
 } from "@/lib/home-v2/goldPalette";
 import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
+import { getParkedInstrumentScaleMul } from "@/lib/home-v2/parkedInstrumentScale";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   BrandmarkPhysicsCore,
@@ -825,10 +826,26 @@ export function BrandmarkPhysicsCoreActor({
     // Sphere-fill scale (today's behaviour) → small centerpiece scale as
     // the core shrinks. At recT 0 this is byte-identical to before.
     const sphereScale = half * 2 * planetScale;
-    let scale = sphereScale + (CENTER_TARGET_SCALE - sphereScale) * recT;
+    // Viewport-aware parked boost (ADR-044 addendum, 2026-07-16): on
+    // MacBook-class viewports (aspect ~1.5–1.6, height ≤1000px) the
+    // parked instrument — mark + orbits + card ring, ONE rig under this
+    // group — scales up ~15% so the service cards keep presence where
+    // the constant 38° FOV otherwise locks them to ~42% of a short
+    // viewport. Wide/tall monitors get exactly 1 (byte-identical), and
+    // the multiplier rides ONLY the recT/exitT lerp TARGETS, so every
+    // recT = 0 frame (the whole corridor + the SVG handoff) is
+    // untouched. The deck-flip seat math divides the live parent scale
+    // back out per frame, so the about portrait landing is unaffected.
+    const parkedMul = getParkedInstrumentScaleMul(
+      state.size.width / Math.max(1, state.size.height),
+      state.size.height
+    );
+    let scale = sphereScale + (CENTER_TARGET_SCALE * parkedMul - sphereScale) * recT;
     // Decommission recede: the parked mark eases toward the smaller exit
     // scale as the viewscreen changes modes (exitT 0 pre-exit → no-op).
-    scale += (EXIT_RECEDE_SCALE - scale) * exitT;
+    // Same multiplier on the recede target keeps the recede RATIO
+    // constant across viewports.
+    scale += (EXIT_RECEDE_SCALE * parkedMul - scale) * exitT;
 
     // Position: sphere centre (world) → a point dead-centre in front of
     // the LIVE camera, so the camera fly-in can't carry the shrinking mark
