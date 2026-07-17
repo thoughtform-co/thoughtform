@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  RING_ARRIVAL_FRAC,
   RING_COUNT,
+  RING_EXIT_START,
   RING_STEP_COUNT,
   RING_TRAVEL_FRAC,
   RING_QUARTER,
@@ -45,8 +47,15 @@ import {
   type RingSpringState,
 } from "@/lib/services-ring/ringMath";
 
-/** Progress at local position `u` (0..1) inside beat `k` (0-based). */
+/** Progress at local position `u` (0..1) inside beat `k` (0-based) of the
+ *  RING_STEP_COUNT grid — used by the (unchanged) exit-clock tests. */
 const beatProgress = (k: number, u: number) => (k + u) / RING_STEP_COUNT;
+
+/** Progress at local position `u` (0..1) inside rotation segment `k` (0..2)
+ *  of the arrival-remapped reading zone [RING_ARRIVAL_FRAC, RING_EXIT_START]. */
+const ROTATIONS = RING_COUNT - 1;
+const segProgress = (k: number, u: number) =>
+  RING_ARRIVAL_FRAC + ((k + u) / ROTATIONS) * (RING_EXIT_START - RING_ARRIVAL_FRAC);
 
 describe("basePhi", () => {
   it("spaces the four cards evenly with card 0 at the front", () => {
@@ -57,48 +66,44 @@ describe("basePhi", () => {
   });
 });
 
-describe("ringIndexForProgress — the smooth staircase", () => {
-  it("holds card 0 only through the arrival beat, then travels from beat 1", () => {
-    // The lead-in beat was removed 2026-07-17: card 0 is front for beat 0
-    // (arrival) only, and the FIRST scroll movement after settling (beat 1)
-    // already begins rotating toward card 1 — no second dead viewport.
+describe("ringIndexForProgress — arrival remap (2026-07-17)", () => {
+  it("holds card 0 through the short arrival, then rotates from the first reading scroll", () => {
+    // The ring holds Advisory (index 0) only through the brief arrival while
+    // the dissipate settles; the first scroll into the reading zone already
+    // turns toward card 1 — no dead "settled but not rotating" beat.
     expect(ringIndexForProgress(0)).toBe(0);
-    expect(ringIndexForProgress(beatProgress(0, 0.5))).toBe(0);
-    expect(ringIndexForProgress(beatProgress(0, 0.999))).toBe(0);
-    // Beat 1 starts on card 0 (continuity) and travels within the beat.
-    expect(ringIndexForProgress(beatProgress(1, 0))).toBeCloseTo(0, 12);
-    expect(ringIndexForProgress(beatProgress(1, 0.5))).toBeGreaterThan(0);
-    expect(ringIndexForProgress(beatProgress(1, 0.5))).toBeLessThan(1);
-    expect(ringIndexForProgress(beatProgress(1, RING_TRAVEL_FRAC))).toBeCloseTo(1, 12);
+    expect(ringIndexForProgress(RING_ARRIVAL_FRAC * 0.5)).toBe(0);
+    expect(ringIndexForProgress(RING_ARRIVAL_FRAC)).toBe(0);
+    // Just into the reading zone: on card 0 (continuity), then travelling.
+    expect(ringIndexForProgress(segProgress(0, 0))).toBeCloseTo(0, 12);
+    expect(ringIndexForProgress(segProgress(0, 0.5))).toBeGreaterThan(0);
+    expect(ringIndexForProgress(segProgress(0, 0.5))).toBeLessThan(1);
+    expect(ringIndexForProgress(segProgress(0, RING_TRAVEL_FRAC))).toBeCloseTo(1, 12);
   });
 
-  it("travels during the first RING_TRAVEL_FRAC of each later beat, then dwells", () => {
-    // The FINAL beat is the ADR-030 exit hold (no travel) — see the
-    // dedicated pin below; only beats 1..stepCount−2 travel.
-    for (let k = 1; k < RING_STEP_COUNT - 1; k++) {
-      const from = k - 1;
-      // Start of the beat: still on the previous card (continuity).
-      expect(ringIndexForProgress(beatProgress(k, 0))).toBeCloseTo(from, 12);
+  it("travels during the first RING_TRAVEL_FRAC of each rotation, then dwells", () => {
+    // Three quarter-turns (0→1, 1→2, 2→3) packed across the reading zone.
+    for (let k = 0; k < ROTATIONS; k++) {
+      // Start of the rotation: still on the previous card (continuity).
+      expect(ringIndexForProgress(segProgress(k, 0))).toBeCloseTo(k, 12);
       // Mid-travel: strictly between the two integer indices.
-      const mid = ringIndexForProgress(beatProgress(k, RING_TRAVEL_FRAC / 2));
-      expect(mid).toBeGreaterThan(from);
-      expect(mid).toBeLessThan(from + 1);
+      const mid = ringIndexForProgress(segProgress(k, RING_TRAVEL_FRAC / 2));
+      expect(mid).toBeGreaterThan(k);
+      expect(mid).toBeLessThan(k + 1);
       // Travel completes exactly at the travel fraction…
-      expect(ringIndexForProgress(beatProgress(k, RING_TRAVEL_FRAC))).toBeCloseTo(from + 1, 12);
+      expect(ringIndexForProgress(segProgress(k, RING_TRAVEL_FRAC))).toBeCloseTo(k + 1, 12);
       // …and the whole dwell is EXACTLY integral (settled front card).
-      // Samples all sit past RING_TRAVEL_FRAC (0.85) — the dwell window.
-      for (const u of [RING_TRAVEL_FRAC + 0.01, 0.9, 0.95, 0.99, 0.999]) {
-        expect(ringIndexForProgress(beatProgress(k, u))).toBe(from + 1);
+      for (const u of [RING_TRAVEL_FRAC + 0.01, 0.9, 0.99]) {
+        expect(ringIndexForProgress(segProgress(k, u))).toBe(k + 1);
       }
     }
   });
 
   it("pins the LAST card through the whole exit-hold beat (ADR-030)", () => {
-    // Beat stepCount−1 exists so the #tools cover can sweep over the
-    // pinned stage while the ring stands perfectly still on card 3.
-    const k = RING_STEP_COUNT - 1;
-    for (const u of [0, 0.001, 0.25, RING_TRAVEL_FRAC, 0.75, 0.999]) {
-      expect(ringIndexForProgress(beatProgress(k, u))).toBe(RING_COUNT - 1);
+    // The exit-hold band [RING_EXIT_START, 1] holds card 3 still while the
+    // next station's cover sweeps up over the pinned stage.
+    for (const p of [RING_EXIT_START, 0.85, 0.9, 0.99, 1]) {
+      expect(ringIndexForProgress(p)).toBe(RING_COUNT - 1);
     }
   });
 
@@ -118,29 +123,25 @@ describe("ringIndexForProgress — the smooth staircase", () => {
 });
 
 describe("ring rotation ↔ step clock agreement", () => {
-  it("frontCardIndex(rotation) equals the step-derived active service at every beat midpoint", () => {
-    for (let k = 0; k < RING_STEP_COUNT; k++) {
-      const p = beatProgress(k, 0.5);
-      const rot = ringRotationForProgress(p);
-      expect(frontCardIndex(rot)).toBe(activeServiceForProgress(p));
+  it("frontCardIndex(rotation) equals the active service at EVERY progress (exact lockstep)", () => {
+    // activeServiceForProgress is the round of the same continuous ring
+    // index frontCardIndex rounds, so they agree by construction.
+    for (let i = 0; i <= 400; i++) {
+      const p = i / 400;
+      expect(frontCardIndex(ringRotationForProgress(p))).toBe(activeServiceForProgress(p));
     }
   });
 
-  it("agrees through every dwell (any u past the travel fraction)", () => {
-    for (let k = 1; k < RING_STEP_COUNT; k++) {
-      for (const u of [RING_TRAVEL_FRAC + 0.02, 0.92, 0.95]) {
-        const p = beatProgress(k, u);
-        expect(frontCardIndex(ringRotationForProgress(p))).toBe(activeServiceForProgress(p));
-      }
-    }
+  it("starts on the first service through the arrival", () => {
+    expect(activeServiceForProgress(0)).toBe(0);
+    expect(activeServiceForProgress(RING_ARRIVAL_FRAC * 0.5)).toBe(0);
+    expect(activeServiceForProgress(RING_ARRIVAL_FRAC)).toBe(0);
   });
 
-  it("clamps the active service to the roster through the exit-hold beat", () => {
-    // The final step (the ADR-030 exit hold) must keep the LAST service
-    // active — an unclamped step would index past the roster and the stage
-    // would wrap the readout back to the first service.
+  it("holds the LAST service active through the exit-hold beat", () => {
     expect(activeServiceForProgress(1)).toBe(RING_COUNT - 1);
-    expect(activeServiceForProgress(beatProgress(RING_STEP_COUNT - 1, 0.5))).toBe(RING_COUNT - 1);
+    expect(activeServiceForProgress(RING_EXIT_START)).toBe(RING_COUNT - 1);
+    expect(activeServiceForProgress(0.9)).toBe(RING_COUNT - 1);
     expect(activeServiceForProgress(1.5)).toBe(RING_COUNT - 1);
   });
 

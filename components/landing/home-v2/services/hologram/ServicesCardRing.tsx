@@ -1184,7 +1184,7 @@ export function ServicesCardRing({
     // target still nearby just zeroes the stale velocity and glides in.
     // Unconditional snapping made every >gap frame hitch a visible
     // teleport mid-turn (ADR-029 Update 5).
-    const target = ringRotationForProgress(progressRef.current.progress, undefined, travelFrac);
+    const target = ringRotationForProgress(progressRef.current.progress, travelFrac);
     const snap = resumed && Math.abs(target - springRef.current.pos) > swayCap;
     if (resumed && !snap) springRef.current.vel = 0;
     const spring = stepRingSpring(springRef.current, target, delta, {

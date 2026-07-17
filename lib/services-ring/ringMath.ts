@@ -289,63 +289,74 @@ export function basePhi(index: number): number {
   return (index / RING_COUNT) * Math.PI * 2;
 }
 
+/** Fraction of the runway that HOLDS the first card (Advisory) front while
+ *  the corridor→services dissipate settles, before any rotation. Kept short
+ *  (owner, 2026-07-17: "when you enter the services section you should be
+ *  able to scroll through the cards immediately") so the FIRST scroll after
+ *  the section lands turns the ring — no dead "settled but not rotating"
+ *  beat. Tuned to ≈ the corridor-exit dissipate SETTLE point on the runway
+ *  (dissipate → 1, `servicesAmbient` engages ~p0.14), so the ring begins
+ *  turning right as the star-field fly-through resolves rather than during
+ *  it. The earlier beat model held a full beat (0.2) here — that trailing
+ *  ~0.24vh of "settled but not turning" scroll is the dead beat this
+ *  removes. Lower it toward the fly-in completion (~0.08) for a more
+ *  aggressive immediate-turn; raise it for a longer Advisory dwell. */
+export const RING_ARRIVAL_FRAC = 0.14;
+
+/** Where the exit-hold beat begins — the last 1/RING_STEP_COUNT of the
+ *  runway. UNCHANGED from the beat model on purpose: the exit clock
+ *  (`exitProgressForRunway`) and the #about −100svh sweep (ADR-047) both key
+ *  off this boundary, so keeping it byte-identical leaves that seam untouched
+ *  while only the arrival + rotation packing before it changes. */
+export const RING_EXIT_START = (RING_STEP_COUNT - 1) / RING_STEP_COUNT;
+
 /**
- * Continuous ring index for runway progress p ∈ [0,1] — a SMOOTH STAIRCASE
- * over the 5-beat runway (2026-07-17: the vestigial lead-in beat that held
- * card 0 for a second dead beat was removed, so rotation begins on the very
- * next beat after arrival):
+ * Continuous ring index for runway progress p ∈ [0,1] (2026-07-17 arrival
+ * remap):
  *
- *   beat 0 (arrival): index 0 — card 0 (Advisory) is front as the section
- *     settles out of the corridor dissipate;
- *   beat k ∈ [1, stepCount−2]: index travels (k−1) → k with smootherstep
- *     over the first RING_TRAVEL_FRAC of the beat, then dwells — so the
- *     FIRST scroll movement after arrival already rotates toward card 1;
- *   the final beat (k = stepCount−1, the ADR-030 exit hold): the
- *     RING_COUNT−1 cap pins the index on the LAST card for the whole
- *     beat — the ring stands still while the next station's cover rises.
+ *   p ≤ RING_ARRIVAL_FRAC — index 0: card 0 (Advisory) holds front through
+ *     the brief arrival while the dissipate settles;
+ *   RING_ARRIVAL_FRAC < p < RING_EXIT_START — the three quarter-turns
+ *     (0→1→2→3) are packed evenly across this reading zone; each brings the
+ *     next card front over the first RING_TRAVEL_FRAC of its span, then
+ *     dwells, so the first scroll after arrival already rotates;
+ *   p ≥ RING_EXIT_START — the RING_COUNT−1 cap pins the index on the LAST
+ *     card for the whole exit-hold beat (ADR-030), ring still under the sweep.
  *
- * Monotonic, continuous, and exactly integral during every dwell — the
- * front card is settled whenever the step clock (floor(p·stepCount)) is
- * mid-beat.
+ * Monotonic, continuous, and exactly integral during every dwell.
  */
 export function ringIndexForProgress(
   progress: number,
-  stepCount: number = RING_STEP_COUNT,
   travelFrac: number = RING_TRAVEL_FRAC
 ): number {
   const p = clamp01(progress);
-  const seg = p * stepCount;
+  if (p >= RING_EXIT_START) return RING_COUNT - 1;
+  if (p <= RING_ARRIVAL_FRAC) return 0;
+  const rotations = RING_COUNT - 1; // three quarter-turns: 0→1, 1→2, 2→3
+  const seg = ((p - RING_ARRIVAL_FRAC) / (RING_EXIT_START - RING_ARRIVAL_FRAC)) * rotations;
   const k = Math.floor(seg);
   const u = seg - k;
-  if (k < 1) return 0;
-  const travel = travelFrac > 0 ? smootherstep(0, 1, Math.min(1, u / travelFrac)) : 1;
-  return Math.min(RING_COUNT - 1, k - 1 + travel);
+  // Clamp to [0,1]: smootherstep can round to ~1+1e-15 near t=1 (FP), which
+  // would push `k + travel` a hair past k+1 and break strict monotonicity.
+  const travel = travelFrac > 0 ? Math.min(1, smootherstep(0, 1, Math.min(1, u / travelFrac))) : 1;
+  return Math.min(RING_COUNT - 1, k + travel);
 }
 
 /** Ring rotation (rad) for runway progress — the scroll-derived TARGET the
  *  spring follows. Card `frontCardIndex(rotation)` faces the camera. */
 export function ringRotationForProgress(
   progress: number,
-  stepCount: number = RING_STEP_COUNT,
   travelFrac: number = RING_TRAVEL_FRAC
 ): number {
-  return RING_DIRECTION * ringIndexForProgress(progress, stepCount, travelFrac) * RING_QUARTER;
+  return RING_DIRECTION * ringIndexForProgress(progress, travelFrac) * RING_QUARTER;
 }
 
-/** Step-derived ACTIVE service index (0..3) for the same runway progress —
- *  mirrors useServicesStageScroll: step = floor(p·stepCount) clamped,
- *  service = step clamped into [0, RING_COUNT−1]. Since the lead-in beat
- *  was removed (2026-07-17), beat `i` owns service `i` directly (no −1
- *  offset). The upper clamp is load-bearing for the exit-hold beat
- *  (ADR-030): the final step must keep the LAST service active, not wrap
- *  past the roster. Exported so tests can pin ring/step agreement. */
-export function activeServiceForProgress(
-  progress: number,
-  stepCount: number = RING_STEP_COUNT
-): number {
-  const p = clamp01(progress);
-  const step = Math.max(0, Math.min(stepCount - 1, Math.floor(p * stepCount)));
-  return Math.min(RING_COUNT - 1, Math.max(0, step));
+/** ACTIVE service index (0..RING_COUNT−1) — the card currently nearest the
+ *  front. Derived as the round of the continuous ring index, so the active
+ *  service (designations, plate highlight) tracks the ring EXACTLY — the
+ *  ring↔step lockstep is exact by construction (ADR-029 guardrail). */
+export function activeServiceForProgress(progress: number): number {
+  return Math.max(0, Math.min(RING_COUNT - 1, Math.round(ringIndexForProgress(progress))));
 }
 
 /**

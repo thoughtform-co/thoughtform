@@ -191,8 +191,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     // (Readout strip retired 2026-07-16 — the active-service clock is
     // asserted via data-active-step + the front card's CTA link.)
-    // 5-beat runway since the 2026-07-17 lead-in removal: beat `i` owns
-    // service `i`. p=0.18 → floor(0.9) = step 0 (Advisory, front on arrival).
+    // Arrival remap (2026-07-17): the ring holds Advisory through the short
+    // arrival, then rotates. `data-active-step` = the front-card index
+    // (0..3). p=0.18 is in the arrival window → Advisory front (step 0).
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "0");
@@ -200,7 +201,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       timeout: 20_000,
     });
 
-    // p=0.58 → floor(2.9) = step 2 (Keynote).
+    // p=0.58 → the ring has turned two quarter-turns: Keynote front (step 2).
     expect(await scrollServicesRunway(page, 0.58)).toBe(true);
     await page.waitForTimeout(1600);
     // The ring rotated with the clock: the front card (and so its CTA
@@ -210,21 +211,22 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
 
-    // Step 3 (p=0.78 → floor(3.9)): the LAST service (Workshop) is front —
-    // its CTA link proves the service clock reached the end of the roster
-    // while the hit areas are still alive (they retire in the exit beat).
+    // p=0.78 → the LAST service (Workshop) is front (step 3) — its CTA link
+    // proves the rotation reached the end of the roster while the hit areas
+    // are still alive (they retire in the exit beat).
     expect(await scrollServicesRunway(page, 0.78)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.getByRole("link", { name: "Book a workshop" })).toBeVisible({
       timeout: 20_000,
     });
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
 
-    // Exit-hold beat (ADR-030): deep in the runway the step clock reads 4
-    // while the LAST service stays active — an unclamped step would wrap
+    // Exit-hold beat (ADR-030): deep in the runway the front-card index
+    // stays clamped on the LAST service (3) — an unclamped index would wrap
     // the clock back to Advisory (the bug the clamps kill).
     expect(await scrollServicesRunway(page, 0.95)).toBe(true);
     await page.waitForTimeout(1200);
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "4");
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
   });
 
   test("desktop: wheel over the instrument scrolls natively and rotates the ring", async ({

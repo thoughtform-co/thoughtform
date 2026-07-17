@@ -490,3 +490,44 @@ the mobile plate):
 The bottom-anchored stack means removing the top rows just frees space above
 the title — the CTA / includes / lede stay put. Verified across the four
 baked faces at 1440×900.
+
+## Update (2026-07-17, later 2) — arrival remap: the ring turns right at the park
+
+Owner, third pass on the same seam: "when you enter the services section you
+should be able to scroll through the cards immediately" — after the
+(2026-07-17) lead-in removal there was STILL a trailing beat where the
+corridor→services dissipate had settled (cards parked) but the ring stood
+still on Advisory (~0.24vh) before beat 1 turned it. That "settled but not
+rotating" scroll is the dead zone.
+
+Fix: replace the uniform 5-beat step grid for the RING with an **arrival
+remap** (the runway height + the exit clock are UNCHANGED):
+
+- `RING_ARRIVAL_FRAC` (0.14 ≈ the dissipate settle point): the ring holds
+  Advisory front only through the short arrival, so it begins turning the
+  instant the section parks (`servicesAmbient` engages ~p0.14) instead of a
+  beat later.
+- The three quarter-turns are packed across `[RING_ARRIVAL_FRAC,
+RING_EXIT_START]`; each brings the next card front over `RING_TRAVEL_FRAC`
+  then dwells.
+- `RING_EXIT_START = (RING_STEP_COUNT − 1) / RING_STEP_COUNT` — the exit-hold
+  band is KEPT at the last 1/RING_STEP_COUNT so `exitProgressForRunway`
+  (brandmark recede, orbit dim, card exit, #about deck stack, the −100svh
+  sweep) is byte-identical and that seam is untouched.
+- `activeServiceForProgress = round(ringIndexForProgress)` — `data-active-step`
+  is now the FRONT-CARD INDEX (0..RING_COUNT−1), so the step clock tracks the
+  ring EXACTLY (round of the same continuous index the ring uses); the
+  lockstep is exact by construction, no `floor(p·stepCount)` offset.
+  `useServicesStageScroll`, `ServicesStage.setActiveByStep`, and
+  `servicesBeatScrollTarget` (service i parks on the dwell of its rotation)
+  move with it.
+
+`ringIndexForProgress` / `ringRotationForProgress` drop the `stepCount`
+param (they use the module constants now); `ServicesCardRing`'s call updated.
+`RING_STEP_COUNT` stays 5 as the runway height (svh-hundreds) + exit-band
+derivation. Tuning: lower `RING_ARRIVAL_FRAC` toward the fly-in completion
+(~0.08) for a more aggressive immediate-turn (the ring then turns during the
+dissipate tail); raise it for a longer Advisory dwell. Unit + smoke re-pinned
+(front-card indices; exit step 4→3). One FP fix: `travel` is clamped to ≤1
+(smootherstep can round to 1+1e-15 near t=1 — dense sampling exposed a latent
+monotonicity break).

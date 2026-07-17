@@ -2,22 +2,19 @@
 
 import { useEffect, type RefObject } from "react";
 
-import { RING_STEP_COUNT, exitProgressForRunway } from "@/lib/services-ring/ringMath";
+import { activeServiceForProgress, exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { clamp01 } from "@/lib/math";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
-/** Scroll segments in the pinned stage: beat `i` owns service `i` — beat 0
- *  is the arrival beat (service 0 / Advisory front as the section settles),
- *  beats 1..N-1 rotate the remaining services front, and the final beat is
- *  the EXIT-HOLD segment (ADR-030) during which the last card dwells while
- *  the next station sweeps up over the still-pinned stage. The vestigial
- *  lead-in beat that used to hold service 0 for a SECOND dead viewport
- *  before rotation began was removed 2026-07-17, so `STEP_COUNT = services
- *  + 1`; the runway `min-height` in services.css is kept in lockstep at
- *  `STEP_COUNT × 100svh` so each beat still owns one viewport of scroll
- *  travel. Aliased from RING_STEP_COUNT so the ring staircase and the
- *  step clock can never drift (ADR-029 guardrail). */
-const STEP_COUNT = RING_STEP_COUNT;
+/** The pinned stage: the ring holds Advisory front through a short arrival
+ *  while the corridor→services dissipate settles, then the first scroll
+ *  rotates the remaining services front (arrival remap, 2026-07-17), and the
+ *  final `RING_EXIT_START` band is the EXIT-HOLD (ADR-030) during which the
+ *  last card dwells while the next station sweeps up. `data-active-step` is
+ *  the front-card index (`activeServiceForProgress`, round of the continuous
+ *  ring index), so the step clock tracks the ring EXACTLY — they can never
+ *  drift (ADR-029 guardrail). The runway `min-height` in services.css keys
+ *  off RING_STEP_COUNT for its total scroll length. */
 
 /**
  * Brandmark "arrive" envelopes, in `--corridor-dissipate` units (0..1 —
@@ -207,8 +204,10 @@ export function useServicesStageScroll(
       // active-service clock can never desync.
       servicesRingProgressRef.current.progress = p;
       setExit(stage, exitProgressForRunway(p));
-      const step = Math.max(0, Math.min(STEP_COUNT - 1, Math.floor(p * STEP_COUNT)));
-      setStep(stage, step);
+      // `data-active-step` IS the front-card index (round of the continuous
+      // ring index), so the plate highlight / designations track the ring
+      // exactly through the arrival-remapped rotation.
+      setStep(stage, activeServiceForProgress(p));
     };
 
     const requestWrite = () => {

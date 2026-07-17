@@ -54,6 +54,26 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-17 (latest 3) — Services ring: arrival remap so it turns at the park (ADR-029 update)
+
+Owner, third pass on the same seam: entering #services still had a trailing
+~0.24vh where the section had settled (cards parked) but the ring stood
+still on Advisory before it began rotating. Cycle A:
+
+- **ADR-029 update.** Replaced the uniform 5-beat ring grid with an arrival
+  remap: `RING_ARRIVAL_FRAC` (0.14 ≈ the dissipate settle) holds Advisory
+  through the short arrival, then three quarter-turns pack across the reading
+  zone, then the exit-hold. `RING_EXIT_START` keeps the exit band at the last
+  1/RING_STEP_COUNT so `exitProgressForRunway` (+ the #about −100svh sweep)
+  is byte-identical. `data-active-step` = the front-card index
+  (`activeServiceForProgress = round(ringIndex)`), exact ring↔step lockstep.
+  `beatScrollTarget` + `ServicesCardRing` call updated; `travel` clamped ≤1
+  (FP monotonicity). Tunable via `RING_ARRIVAL_FRAC`.
+- Verification: `npm run verify` green (297); desktop ring smoke re-pinned
+  (front-card indices, exit step 4→3); entry map + screenshot confirm the
+  ring begins turning right at the park (p≈0.14) — Advisory sliding out,
+  Embedded rotating to front — instead of a beat later.
+
 ### 2026-07-17 (latest 2) — Tab-return desync: corridor scroll writers re-sync on visibilitychange
 
 Owner report: switching tabs and back sometimes left the #services masthead
