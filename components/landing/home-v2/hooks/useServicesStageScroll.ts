@@ -6,12 +6,14 @@ import { RING_STEP_COUNT, exitProgressForRunway } from "@/lib/services-ring/ring
 import { clamp01 } from "@/lib/math";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
-/** Scroll segments in the pinned stage: ONE lead-in segment where every
- *  plate is collapsed (step 0), one segment per service (steps 1..4)
- *  that opens that service's plate, and one EXIT-HOLD segment (step 5,
- *  ADR-030) during which the last card dwells while the #tools station
- *  sweeps up over the still-pinned stage. `STEP_COUNT = services + 2`;
- *  the runway `min-height` in services.css is kept in lockstep at
+/** Scroll segments in the pinned stage: beat `i` owns service `i` — beat 0
+ *  is the arrival beat (service 0 / Advisory front as the section settles),
+ *  beats 1..N-1 rotate the remaining services front, and the final beat is
+ *  the EXIT-HOLD segment (ADR-030) during which the last card dwells while
+ *  the next station sweeps up over the still-pinned stage. The vestigial
+ *  lead-in beat that used to hold service 0 for a SECOND dead viewport
+ *  before rotation began was removed 2026-07-17, so `STEP_COUNT = services
+ *  + 1`; the runway `min-height` in services.css is kept in lockstep at
  *  `STEP_COUNT × 100svh` so each beat still owns one viewport of scroll
  *  travel. Aliased from RING_STEP_COUNT so the ring staircase and the
  *  step clock can never drift (ADR-029 guardrail). */

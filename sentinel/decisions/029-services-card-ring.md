@@ -429,3 +429,39 @@ Safe by construction: hit-areas/designation anchors project from the posed
 exit/entrance envelopes touch only radius+opacity. Unit-pinned in
 `tests/lib/services-ring-math.test.ts` (zero outside the window, full
 constants at the front, monotone ramp, bounded well clear of edge-on).
+
+## Update (2026-07-17) — the vestigial lead-in beat is removed (6 → 5 beats)
+
+Owner report: entering `#services` you had to scroll one dead viewport —
+stars / sphere remnants drifting, nothing rotating — before the cards
+began to turn. Root cause: the runway held card 0 for TWO beats before
+any rotation. Beat 0 was a "collapsed lead-in" (a `ServicesPlateCluster`
+accordion-era holdover meaning "no plate open yet"), and beat 1 was
+service 0's own read beat — both pinned the ring on card 0. In the CARD
+RING model there is no "nothing open" state (the cards are always present,
+card 0 simply front), so the lead-in beat was pure dead scroll AFTER the
+corridor-exit dissipate had already settled the section (~1.3 viewports of
+it).
+
+Fix: remove the lead-in so **beat `i` owns service `i`** — card 0 is front
+on the arrival beat (beat 0, which overlaps the tail of the dissipate) and
+the FIRST scroll movement after settling (beat 1) already rotates toward
+card 1. `RING_STEP_COUNT` 6 → 5; runway `500svh` (ADR-029's guardrail
+already named 500svh — ADR-030's 6-beat bump had left it stale, so this
+restores the match). The four lead-in-offset encodings move together to
+preserve the ring↔step lockstep guardrail:
+
+- `ringIndexForProgress`: guard `k <= 1` → `k < 1`, travel base `k − 2` →
+  `k − 1` (beat 0 holds, beats 1..N-2 travel, final beat is the exit hold
+  via the unchanged `RING_COUNT − 1` cap).
+- `activeServiceForProgress` + `ServicesStage.setActiveByStep`: `step − 1`
+  → `step` (and `setActiveByStep` no longer emits the `null` lead-in open
+  state — beat 0 opens service 0).
+- `servicesBeatScrollTarget`: `(index + 1.5)` → `(index + 0.5)` (service i
+  centred on beat i).
+
+The exit-hold beat, the ADR-030 decommission clock, and the ADR-047 #about
+deck-flip sweep are all preserved by construction: `exitProgressForRunway`
+is a pure function of the (now 5-beat) `RING_STEP_COUNT`, so the exit is
+still exactly the final viewport of the runway and the -100svh #about sweep
+still overlaps it. Unit + smoke suites re-pinned to the 5-beat mapping.

@@ -2,9 +2,11 @@
 //
 // `ServicesStage.selectService` (card / plate clicks) and the cartridge
 // dock's seated buttons both need "the window scrollY that parks service i
-// front-centre": the middle of service i's beat on the 6-beat pinned runway
-// (step 0 is the collapsed lead-in; the final beat is the ADR-030 exit
-// hold). Extracted so the two click paths can never drift.
+// front-centre": the middle of service i's beat on the 5-beat pinned runway.
+// Since the lead-in beat was removed (2026-07-17), beat `i` owns service `i`
+// directly — service i's beat is [i, i+1)/STEP_COUNT, centred at
+// (i + 0.5)/STEP_COUNT (the final beat is the ADR-030 exit hold).
+// Extracted so the two click paths can never drift.
 
 import { RING_STEP_COUNT } from "./ringMath";
 
@@ -28,5 +30,5 @@ export function servicesBeatScrollTarget(
   const rect = el.getBoundingClientRect();
   const travel = rect.height - vh;
   if (travel <= 0) return null;
-  return window.scrollY + rect.top + ((index + 1.5) / RING_STEP_COUNT) * travel;
+  return window.scrollY + rect.top + ((index + 0.5) / RING_STEP_COUNT) * travel;
 }

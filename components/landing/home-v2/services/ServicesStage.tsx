@@ -74,16 +74,17 @@ export function ServicesStage() {
   // accordion stays exactly as before regardless of the flag.
   const cardRingActive = SERVICES_CARD_RING && useHologramCanvas;
 
-  // Step 0 is the collapsed lead-in (no plate open); steps 1..N open service
-  // 0..N-1 in turn; the final step is the ADR-030 exit-hold beat (the #tools
-  // cover rises over the pinned stage) — the UPPER clamp keeps the LAST
-  // service active there instead of wrapping `SERVICES[N]` → undefined →
-  // first service (see useServicesStageScroll STEP_COUNT = services + 2).
-  // The backdrop/readout follow the plate that is (or is about to be) open.
+  // Beat `i` owns service `i` (the lead-in beat was removed 2026-07-17):
+  // beat 0 = Advisory front on arrival, beats 1..N-1 rotate in the rest,
+  // and the final beat is the ADR-030 exit-hold (the next station's cover
+  // rises over the pinned stage) — the UPPER clamp keeps the LAST service
+  // active there instead of wrapping `SERVICES[N]` → undefined → first
+  // service (see useServicesStageScroll STEP_COUNT = services + 1). The
+  // backdrop/highlight follow the plate that is (or is about to be) front.
   const setActiveByStep = useCallback((step: number) => {
-    const serviceIndex = Math.min(SERVICES.length - 1, Math.max(0, step - 1));
+    const serviceIndex = Math.min(SERVICES.length - 1, Math.max(0, step));
     setActiveServiceId(SERVICES[serviceIndex].id);
-    setExpandedServiceId(step <= 0 ? null : SERVICES[serviceIndex].id);
+    setExpandedServiceId(SERVICES[serviceIndex].id);
   }, []);
 
   // Click-to-scroll (proven ServiceScanInterface behavior): scroll owns the
@@ -105,9 +106,9 @@ export function ServicesStage() {
       (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
     const runway = stageRef.current?.parentElement; // .services-stage-root
     // Beat-target math is shared with the cartridge dock's seated buttons
-    // (ADR-046) via `servicesBeatScrollTarget` — service i opens on step
-    // i+1 of the 6-beat runway; aim for the middle of its beat. `null`
-    // covers the unmeasurable / no-travel cases alongside the inert gate.
+    // (ADR-046) via `servicesBeatScrollTarget` — service i owns beat i of
+    // the 5-beat runway; aim for the middle of its beat. `null` covers the
+    // unmeasurable / no-travel cases alongside the inert gate.
     const targetY = inert || !runway ? null : servicesBeatScrollTarget(index, runway);
     if (targetY === null) {
       setActiveServiceId(serviceId);

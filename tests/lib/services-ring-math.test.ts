@@ -58,20 +58,25 @@ describe("basePhi", () => {
 });
 
 describe("ringIndexForProgress — the smooth staircase", () => {
-  it("holds card 0 through the lead-in beat and service 0's own beat", () => {
+  it("holds card 0 only through the arrival beat, then travels from beat 1", () => {
+    // The lead-in beat was removed 2026-07-17: card 0 is front for beat 0
+    // (arrival) only, and the FIRST scroll movement after settling (beat 1)
+    // already begins rotating toward card 1 — no second dead viewport.
     expect(ringIndexForProgress(0)).toBe(0);
     expect(ringIndexForProgress(beatProgress(0, 0.5))).toBe(0);
     expect(ringIndexForProgress(beatProgress(0, 0.999))).toBe(0);
-    expect(ringIndexForProgress(beatProgress(1, 0.001))).toBe(0);
-    expect(ringIndexForProgress(beatProgress(1, 0.5))).toBe(0);
-    expect(ringIndexForProgress(beatProgress(1, 0.999))).toBe(0);
+    // Beat 1 starts on card 0 (continuity) and travels within the beat.
+    expect(ringIndexForProgress(beatProgress(1, 0))).toBeCloseTo(0, 12);
+    expect(ringIndexForProgress(beatProgress(1, 0.5))).toBeGreaterThan(0);
+    expect(ringIndexForProgress(beatProgress(1, 0.5))).toBeLessThan(1);
+    expect(ringIndexForProgress(beatProgress(1, RING_TRAVEL_FRAC))).toBeCloseTo(1, 12);
   });
 
   it("travels during the first RING_TRAVEL_FRAC of each later beat, then dwells", () => {
     // The FINAL beat is the ADR-030 exit hold (no travel) — see the
-    // dedicated pin below; only beats 2..stepCount−2 travel.
-    for (let k = 2; k < RING_STEP_COUNT - 1; k++) {
-      const from = k - 2;
+    // dedicated pin below; only beats 1..stepCount−2 travel.
+    for (let k = 1; k < RING_STEP_COUNT - 1; k++) {
+      const from = k - 1;
       // Start of the beat: still on the previous card (continuity).
       expect(ringIndexForProgress(beatProgress(k, 0))).toBeCloseTo(from, 12);
       // Mid-travel: strictly between the two integer indices.
@@ -131,8 +136,8 @@ describe("ring rotation ↔ step clock agreement", () => {
   });
 
   it("clamps the active service to the roster through the exit-hold beat", () => {
-    // Step 5 (the ADR-030 exit hold) must keep the LAST service active —
-    // an unclamped step−1 would index past the roster and the stage
+    // The final step (the ADR-030 exit hold) must keep the LAST service
+    // active — an unclamped step would index past the roster and the stage
     // would wrap the readout back to the first service.
     expect(activeServiceForProgress(1)).toBe(RING_COUNT - 1);
     expect(activeServiceForProgress(beatProgress(RING_STEP_COUNT - 1, 0.5))).toBe(RING_COUNT - 1);

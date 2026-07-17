@@ -64,13 +64,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
-    expect(await scrollServicesRunway(page, 0.3)).toBe(true);
+    // Arrival beat (5-beat runway, lead-in removed 2026-07-17): beat 0 owns
+    // service 0, so Advisory is front on arrival and its CTA is the one to
+    // assert. p=0.18 → floor(0.9) = step 0.
+    expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     // Step clock + scramble decode settle.
     await page.waitForTimeout(1600);
 
     const stage = page.locator(".services-stage");
     await expect(stage).toHaveAttribute("data-card-ring", "on");
-    await expect(stage).toHaveAttribute("data-active-step", "1");
+    await expect(stage).toHaveAttribute("data-active-step", "0");
 
     // Racks exist in the DOM (mobile path needs them) but render none.
     const rackDisplay = await page
@@ -188,39 +191,40 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     // (Readout strip retired 2026-07-16 — the active-service clock is
     // asserted via data-active-step + the front card's CTA link.)
-    expect(await scrollServicesRunway(page, 0.3)).toBe(true);
+    // 5-beat runway since the 2026-07-17 lead-in removal: beat `i` owns
+    // service `i`. p=0.18 → floor(0.9) = step 0 (Advisory, front on arrival).
+    expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "1");
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "0");
     await expect(page.getByRole("link", { name: "Open an advisory" })).toBeVisible({
       timeout: 20_000,
     });
 
-    // 6-beat runway since ADR-030: p=0.6 → floor(3.6) = step 3 (Keynote).
-    // (0.7 would land in step 4 / Workshop now.)
-    expect(await scrollServicesRunway(page, 0.6)).toBe(true);
+    // p=0.58 → floor(2.9) = step 2 (Keynote).
+    expect(await scrollServicesRunway(page, 0.58)).toBe(true);
     await page.waitForTimeout(1600);
     // The ring rotated with the clock: the front card (and so its CTA
     // link) is now the Keynote plate.
     await expect(page.getByRole("link", { name: "Book a keynote" })).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
 
-    // Step 4 (p=0.75 → floor(4.5)): the LAST service (Workshop) is front —
+    // Step 3 (p=0.78 → floor(3.9)): the LAST service (Workshop) is front —
     // its CTA link proves the service clock reached the end of the roster
     // while the hit areas are still alive (they retire in the exit beat).
-    expect(await scrollServicesRunway(page, 0.75)).toBe(true);
+    expect(await scrollServicesRunway(page, 0.78)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.getByRole("link", { name: "Book a workshop" })).toBeVisible({
       timeout: 20_000,
     });
 
-    // Exit-hold beat (ADR-030): deep in the runway the step clock reads 5
+    // Exit-hold beat (ADR-030): deep in the runway the step clock reads 4
     // while the LAST service stays active — an unclamped step would wrap
     // the clock back to Advisory (the bug the clamps kill).
     expect(await scrollServicesRunway(page, 0.95)).toBe(true);
     await page.waitForTimeout(1200);
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "5");
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "4");
   });
 
   test("desktop: wheel over the instrument scrolls natively and rotates the ring", async ({

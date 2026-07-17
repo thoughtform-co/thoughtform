@@ -65,20 +65,21 @@
 .services-stage-root {
   position: relative;
   z-index: 2;
-  /* Runway the sticky stage pins within — one viewport-tall scroll segment per
-   * beat (6 steps since ADR-030: a collapsed lead-in, one per service
-   * — Advisory / Embedded / Keynote / Workshop — and a final EXIT-HOLD beat
-   * during which the next station sweeps up over the still-pinned stage
-   * via its -100svh margin. Under ADR-047 Update 3 that sweeper is the
-   * TRANSPARENT #about deck-flip stage (about-stage.css): its runway pins
-   * while the deck stack settles, so the stack hands straight into the
-   * flip with no dead viewport): the scroll position owns which signal
-   * plate is OPEN (useServicesStageScroll STEP_COUNT → expanded card in
-   * ServicesPlateCluster; must stay in lockstep with STEP_COUNT × 100svh so
-   * each beat still owns one viewport of scroll travel). The corridor-exit
-   * dissipate clock keys off #services's TOP + a fixed span
-   * (useCorridorExitScroll), NOT this height. */
-  min-height: 600svh;
+  /* Runway the sticky stage pins within — one viewport-tall scroll segment
+   * per beat (5 beats since the 2026-07-17 lead-in removal: beat `i` owns
+   * service `i` — Advisory front on arrival, Embedded / Keynote / Workshop
+   * rotating in on beats 1-3 — and a final EXIT-HOLD beat during which the
+   * next station sweeps up over the still-pinned stage via its -100svh
+   * margin. Under ADR-047 Update 3 that sweeper is the TRANSPARENT #about
+   * deck-flip stage (about-stage.css): its runway pins while the deck stack
+   * settles, so the stack hands straight into the flip with no dead
+   * viewport): the scroll position owns which service is FRONT
+   * (useServicesStageScroll STEP_COUNT → active card in the ring /
+   * expanded plate in ServicesPlateCluster; must stay in lockstep with
+   * STEP_COUNT × 100svh so each beat still owns one viewport of scroll
+   * travel). The corridor-exit dissipate clock keys off #services's TOP +
+   * a fixed span (useCorridorExitScroll), NOT this height. */
+  min-height: 500svh;
 }
 
 /* ── Pinned stage ────────────────────────────────────────────────── */

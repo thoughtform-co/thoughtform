@@ -39,6 +39,7 @@ import {
   RING_EXIT_WINDOWS,
   RING_SCALE_RANGE,
   RING_SLAB_DEPTH,
+  RING_STEP_COUNT,
   basePhi,
   exitProgressForRunway,
   placeCardOnOrbit,
@@ -60,7 +61,12 @@ describe("deckStackEnvelope — identity pin (the ADR-030/047 guardrail)", () =>
   });
 
   it("stays identity through every reading beat (exit clock is 0 there)", () => {
-    for (const p of [0, 0.2, 0.5, 5 / 6 - 0.001, 5 / 6]) {
+    // The exit beat is the final beat; every earlier (reading) beat keeps
+    // the exit clock at 0. Expressed via RING_STEP_COUNT so it tracks the
+    // beat count (5 since the 2026-07-17 lead-in removal) instead of a
+    // hardcoded 6-beat boundary.
+    const lastReadingBeatEnd = (RING_STEP_COUNT - 1) / RING_STEP_COUNT;
+    for (const p of [0, 0.2, 0.5, lastReadingBeatEnd - 0.001, lastReadingBeatEnd]) {
       const exit = exitProgressForRunway(p);
       const env = deckStackEnvelope(exit, 0);
       expect(env.phiDelta).toBe(0);

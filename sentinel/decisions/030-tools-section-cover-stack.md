@@ -496,3 +496,15 @@ The component and the `[data-rail-label-root]` shell are deleted. The
 right-rail register and everything else in this ADR are unchanged; the
 manifest's services-module seat keys off the same
 `data-active-station → "tools"` flip as the Update 4 handover.
+
+## Update (2026-07-17) — the beat count returned to 5 (lead-in removed)
+
+The `#tools` cover this ADR built is retired (ADR-033), but the runway beat
+machinery it created lives on for the services ring + the ADR-047 #about
+sweep. This ADR bumped `STEP_COUNT`/`RING_STEP_COUNT` `5 → 6` (600svh) to
+add the exit-hold beat. On 2026-07-17 the SEPARATE vestigial "collapsed
+lead-in" beat (which predated this ADR) was removed, returning the count to
+**5 (500svh)** — see the ADR-029 update for the full rationale and the
+lockstep-offset changes. The exit-hold beat this ADR added is unchanged
+(still the final beat, `RING_COUNT − 1` cap); only the lead-in went. So the
+inline "== 6" invariants below now read **== 5**.

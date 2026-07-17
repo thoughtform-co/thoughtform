@@ -17,12 +17,16 @@ import { clamp01, lerp } from "@/lib/math";
 /** Number of cards — one per service, quarter spacing. */
 export const RING_COUNT = 4;
 
-/** Runway beats — ONE collapsed lead-in + one beat per service + ONE
- *  exit-hold beat (ADR-030: the last card dwells while the #tools station
- *  sweeps up over the still-pinned stage). MUST stay in lockstep with
+/** Runway beats — ONE arrival beat per service (beat `i` owns service `i`:
+ *  card 0 is front on arrival, cards 1..3 travel in on beats 1..3) + ONE
+ *  exit-hold beat (ADR-030: the last card dwells while the next station
+ *  sweeps up over the still-pinned stage). The vestigial "collapsed
+ *  lead-in" beat (a plate-cluster-era holdover that held card 0 for a
+ *  SECOND beat before rotation began — a dead viewport after the section
+ *  settled) was removed 2026-07-17: 6 → 5. MUST stay in lockstep with
  *  `STEP_COUNT` in useServicesStageScroll.ts (which aliases this constant)
- *  and the 600svh runway in services.css. */
-export const RING_STEP_COUNT = 6;
+ *  and the 500svh runway in services.css. */
+export const RING_STEP_COUNT = 5;
 
 /** Card orbit radius — between the keynote shell (1.52, labs) and the
  *  meridian (1.78) so cards clear the mark but stay inside the outer frame. */
@@ -287,15 +291,18 @@ export function basePhi(index: number): number {
 
 /**
  * Continuous ring index for runway progress p ∈ [0,1] — a SMOOTH STAIRCASE
- * over the 6-beat runway:
+ * over the 5-beat runway (2026-07-17: the vestigial lead-in beat that held
+ * card 0 for a second dead beat was removed, so rotation begins on the very
+ * next beat after arrival):
  *
- *   beat 0 (lead-in) and beat 1 (service 0's beat): index 0 — the first
- *     card is already front when the section settles;
- *   beat k ≥ 2: index travels (k−2) → (k−1) with smootherstep over the
- *     first RING_TRAVEL_FRAC of the beat, then dwells;
+ *   beat 0 (arrival): index 0 — card 0 (Advisory) is front as the section
+ *     settles out of the corridor dissipate;
+ *   beat k ∈ [1, stepCount−2]: index travels (k−1) → k with smootherstep
+ *     over the first RING_TRAVEL_FRAC of the beat, then dwells — so the
+ *     FIRST scroll movement after arrival already rotates toward card 1;
  *   the final beat (k = stepCount−1, the ADR-030 exit hold): the
  *     RING_COUNT−1 cap pins the index on the LAST card for the whole
- *     beat — the ring stands still while the #tools cover rises.
+ *     beat — the ring stands still while the next station's cover rises.
  *
  * Monotonic, continuous, and exactly integral during every dwell — the
  * front card is settled whenever the step clock (floor(p·stepCount)) is
@@ -310,9 +317,9 @@ export function ringIndexForProgress(
   const seg = p * stepCount;
   const k = Math.floor(seg);
   const u = seg - k;
-  if (k <= 1) return 0;
+  if (k < 1) return 0;
   const travel = travelFrac > 0 ? smootherstep(0, 1, Math.min(1, u / travelFrac)) : 1;
-  return Math.min(RING_COUNT - 1, k - 2 + travel);
+  return Math.min(RING_COUNT - 1, k - 1 + travel);
 }
 
 /** Ring rotation (rad) for runway progress — the scroll-derived TARGET the
@@ -327,17 +334,18 @@ export function ringRotationForProgress(
 
 /** Step-derived ACTIVE service index (0..3) for the same runway progress —
  *  mirrors useServicesStageScroll: step = floor(p·stepCount) clamped,
- *  service = step − 1 clamped into [0, RING_COUNT−1]. The upper clamp is
- *  load-bearing since the exit-hold beat (ADR-030): step 5 must keep the
- *  LAST service active, not wrap past the roster. Exported so tests can
- *  pin ring/step agreement. */
+ *  service = step clamped into [0, RING_COUNT−1]. Since the lead-in beat
+ *  was removed (2026-07-17), beat `i` owns service `i` directly (no −1
+ *  offset). The upper clamp is load-bearing for the exit-hold beat
+ *  (ADR-030): the final step must keep the LAST service active, not wrap
+ *  past the roster. Exported so tests can pin ring/step agreement. */
 export function activeServiceForProgress(
   progress: number,
   stepCount: number = RING_STEP_COUNT
 ): number {
   const p = clamp01(progress);
   const step = Math.max(0, Math.min(stepCount - 1, Math.floor(p * stepCount)));
-  return Math.min(RING_COUNT - 1, Math.max(0, step - 1));
+  return Math.min(RING_COUNT - 1, Math.max(0, step));
 }
 
 /**

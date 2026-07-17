@@ -54,6 +54,26 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-17 (later) — Services runway: drop the vestigial lead-in beat (ADR-029/030 update)
+
+Owner report: entering #services cost one dead scroll viewport (stars /
+sphere remnants drifting, cards not rotating) before the ring engaged.
+Root cause: two beats held card 0 before rotation — a `ServicesPlateCluster`
+accordion-era "collapsed lead-in" beat (meaningless in the card-ring model)
+plus service 0's own read beat. Cycle A:
+
+- **ADR-029 update.** `RING_STEP_COUNT` 6 → 5, runway 600 → 500svh; beat
+  `i` now owns service `i` (card 0 front on arrival, first scroll rotates
+  to card 1). The four lead-in offsets moved in lockstep
+  (`ringIndexForProgress` `k<=1`/`k-2` → `k<1`/`k-1`,
+  `activeServiceForProgress`/`setActiveByStep` `step-1` → `step`,
+  `servicesBeatScrollTarget` `+1.5` → `+0.5`). Exit-hold beat + ADR-047
+  #about sweep preserved (exitProgressForRunway is a pure function of the
+  count). ADR-030's stale "== 6" invariants annotated.
+- Verification: unit suite re-pinned (46 pass); ring smoke active-service
+  progress values remapped; `npm run verify` green; browser-checked the
+  first scroll after arrival now rotates.
+
 ### 2026-07-17 — Editorial band: shared horizontal frame for section text (ADR-048)
 
 Owner compared the services masthead against linear.app: margins felt
