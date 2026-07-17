@@ -9579,7 +9579,11 @@ html {
     max-width: none;
   }
   .voidwalker__name {
-    font-size: clamp(28px, 7vw, 40px);
+    /* Track the masthead face (`.services-masthead__title`, same clamp) so
+       the name matches "AI YOUR TEAM CAN RUN." below 640px and never jumps
+       at the 641→640 boundary (was clamp(28px, 7vw, 40px), which overshot
+       the masthead's flat 26px floor). */
+    font-size: clamp(26px, 3vw, 44px);
   }
   .voidwalker__bio {
     font-size: 16px;
