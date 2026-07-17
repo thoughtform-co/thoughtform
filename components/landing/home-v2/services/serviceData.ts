@@ -83,10 +83,11 @@ export interface Service {
  * The em line renders gold. Owner copy, 2026-07-16 evening sweep: "THREE
  * DEPTHS." returns DELIBERATELY (an earlier pass retired it as stale) — the
  * intro reframes the count: talk / workshop / embedded term are the three
- * DEPTHS of one loop, and Advisory is the standing read alongside them
- * (the eyebrow's · 04 still counts all four cards). */
+ * DEPTHS of one loop, and Advisory is the standing read alongside them.
+ * The "Services · 04" eyebrow is RETIRED (owner, 2026-07-17) — the last
+ * station-index eyebrow on the journey; the corridor heads and the v7
+ * stations dropped theirs long ago ("headline reads first"). */
 export const SERVICES_MASTHEAD = {
-  eyebrow: "Services · 04",
   titleLines: [
     { text: "ONE LOOP.", em: false },
     { text: "THREE DEPTHS.", em: true },

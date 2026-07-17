@@ -430,16 +430,17 @@
   --masthead-inset: var(--rail-inset, calc(var(--hud-margin, 54px) + 8vw));
   /* Big-title LINE rule (ADR-044 addendum 2026-07-16, fourth revision —
    * supersedes the same-day corner-line rule, which the owner read as
-   * "a bit too high"): the masthead TITLE's cap now sits on the SAME
-   * line as the corridor station titles ("NAVIGATE THE INTELLIGENCE."
-   * etc.) via the shared `--station-title-top` token (landing.css
-   * :root). The corridor titles carry +9px console padding above their
-   * cap; the masthead carries its eyebrow block (~13px line + 16px
-   * margin ≈ 29px) above its title — so the lead anchors 20px above
-   * the token line (+9 − 29) and the TITLE cap lands exactly on it.
-   * `--masthead-top-trim` remains the optical iteration knob. */
+   * "a bit too high"): the masthead TITLE's cap sits on the SAME line
+   * as the corridor station titles ("NAVIGATE THE INTELLIGENCE." etc.)
+   * via the shared `--station-title-top` token (landing.css :root).
+   * The corridor titles carry +9px console padding above their cap;
+   * since the eyebrow retirement (owner, 2026-07-17) the TITLE is the
+   * lead's first box, so the lead anchors that same +9px below the
+   * token line and the caps align. (The retired eyebrow block ≈29px
+   * used to make this offset −20px = +9 − 29.) `--masthead-top-trim`
+   * remains the optical iteration knob. */
   --masthead-top: calc(
-    var(--station-title-top, clamp(48px, 6.8vh, 84px)) - 20px + var(--masthead-top-trim, 0px)
+    var(--station-title-top, clamp(48px, 6.8vh, 84px)) + 9px + var(--masthead-top-trim, 0px)
   );
   --masthead-top-trim: 0px;
 }
@@ -454,14 +455,9 @@
    * so this is future-copy insurance — no visual change today. */
   max-width: min(40vw, calc(var(--band-max, 1200px) * 0.52));
 }
-.services-masthead__eyebrow {
-  margin: 0 0 16px;
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--gold, #caa554);
-}
+/* (.services-masthead__eyebrow retired 2026-07-17 — the "Services · 04"
+ * station-index line above the title; the headline reads first now,
+ * matching the corridor heads and the global .station__idx hide.) */
 .services-masthead__title {
   margin: 0;
   /* EXACTLY `.home-v2-station-header__title` (home-v2.css) — the corridor
@@ -491,16 +487,13 @@
 }
 
 /* ── Glitchy-typewriter reveal (owner, 2026-07-16) ──────────────────────
- * The eyebrow + title decode through the captionScramble kernel on section
+ * The title lines decode through the captionScramble kernel on section
  * arrival (driven by ServicesMasthead's controller off --svc-content-in);
  * the CRT block cursor is the station-header caret verbatim, riding the
  * line being decoded ([data-live], written by the controller). The intro
  * holds until the title resolves ([data-reveal]), then fades + rises in.
  * The controller is gated to the enhanced tier, so mobile / PRM / no-JS
  * never see these states — the static full text stands. */
-.services-masthead__eyebrow {
-  min-height: 1em;
-}
 .services-masthead__cursor {
   display: none;
   margin-left: 0.06em;

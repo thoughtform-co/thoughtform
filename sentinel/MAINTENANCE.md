@@ -77,6 +77,10 @@ uncapped and viewport-proportional — effective side inset drifted
   crossover). Found in passing: the landing-page `toHaveScreenshot`
   suite has NO committed baselines (never in git; first local run writes
   actuals and exits 1) — noted in ADR-048, no action taken.
+- **Same-day follow-up (ADR-044 update):** the "Services · 04" masthead
+  eyebrow retired (the journey's last station-index eyebrow);
+  `--masthead-top` re-derived −20px → +9px so the title cap stays on the
+  big-title line; decode targets are now the two title lines only.
 
 ### 2026-07-16 (evening) — Services surface polish: seam perf, retina DPR, morph crispness, layout + card scale
 

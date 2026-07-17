@@ -16,7 +16,7 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  * never reads `data-active-step`.
  *
  * REVEAL (owner, 2026-07-16): everything launches TOGETHER on section
- * arrival. The eyebrow + title decode through the canonical
+ * arrival. The title lines decode through the canonical
  * `captionScramble` kernel (the corridor caption-chrome idiom) with the
  * station-header CRT cursor riding the line being decoded, WHILE the intro
  * plate plays the Arc caption card's X1-B choreography — a CENTRE-OUT
@@ -44,7 +44,7 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
 const REVEAL_AT = 0.2;
 /** Clock floor that re-arms the reveal for a replay on re-entry. */
 const REARM_BELOW = 0.05;
-/** Per-target start stagger (eyebrow → title line 1 → title line 2), s. */
+/** Per-target start stagger (title line 1 → title line 2), s. */
 const TARGET_STAGGER_S = 0.18;
 /** Paragraph typewriter rate — a fast print sweep, sized so the copy
  *  finishes just after the 0.55s aperture unfold completes. */
@@ -55,7 +55,6 @@ const PARA_START_DELAY_S = 0.12;
 
 export function ServicesMasthead() {
   const rootRef = useRef<HTMLElement | null>(null);
-  const eyebrowRef = useRef<HTMLSpanElement | null>(null);
   const lineRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const typedRef = useRef<HTMLSpanElement | null>(null);
 
@@ -71,13 +70,11 @@ export function ServicesMasthead() {
     const typed = typedRef.current;
     if (!root || !stage || !typed) return;
 
-    const targetSources: Array<{ el: HTMLSpanElement | null; text: string }> = [
-      { el: eyebrowRef.current, text: SERVICES_MASTHEAD.eyebrow },
-      ...SERVICES_MASTHEAD.titleLines.map((line, i) => ({
+    const targetSources: Array<{ el: HTMLSpanElement | null; text: string }> =
+      SERVICES_MASTHEAD.titleLines.map((line, i) => ({
         el: lineRefs.current[i] ?? null,
         text: line.text as string,
-      })),
-    ];
+      }));
     const targets = targetSources.filter(
       (t): t is { el: HTMLSpanElement; text: string } => t.el !== null
     );
@@ -105,11 +102,10 @@ export function ServicesMasthead() {
       return Number.isFinite(raw) ? raw : 1;
     };
 
-    /** The CRT cursor rides the FIRST title line still decoding
-     *  (targets[0] is the eyebrow — no cursor there). */
+    /** The CRT cursor rides the FIRST title line still decoding. */
     const placeCursor = () => {
       let placed = false;
-      for (let i = 1; i < targets.length; i++) {
+      for (let i = 0; i < targets.length; i++) {
         const t = targets[i];
         const show = state === "typing" && !placed && t.el.textContent !== t.text;
         if (show) placed = true;
@@ -198,9 +194,9 @@ export function ServicesMasthead() {
       observer.disconnect();
       if (raf) cancelAnimationFrame(raf);
       jobs.length = 0;
-      for (const t of targets) t.el.textContent = t.text;
-      for (let i = 1; i < targets.length; i++) {
-        targets[i].el.parentElement?.removeAttribute("data-live");
+      for (const t of targets) {
+        t.el.textContent = t.text;
+        t.el.parentElement?.removeAttribute("data-live");
       }
       typed.textContent = paraText;
       root.removeAttribute("data-reveal");
@@ -210,9 +206,8 @@ export function ServicesMasthead() {
   return (
     <header className="services-masthead" ref={rootRef}>
       <div className="services-masthead__lead">
-        <p className="services-masthead__eyebrow">
-          <span ref={eyebrowRef}>{SERVICES_MASTHEAD.eyebrow}</span>
-        </p>
+        {/* The "Services · 04" eyebrow was retired here (owner, 2026-07-17)
+            — the headline reads first, matching the corridor heads. */}
         {/* aria-label keeps the section heading stable for AT while the
             visual characters decode. */}
         <h2

@@ -159,3 +159,22 @@ fallback deliberately keeps the pre-band formula — harness path, do not
 modernize). `.services-masthead__lead` gains a band-relative cap
 (`min(40vw, calc(var(--band-max) * 0.52))`) so the columns can never cross
 inside the capped band on ultrawide.
+
+## Update (2026-07-17, later) — the eyebrow is retired
+
+The "Services · 04" eyebrow above the masthead title is REMOVED (owner:
+"maybe we don't need these eyebrows"). It was the LAST station-index
+eyebrow on the journey — the corridor heads dropped their numbered
+eyebrows ("01 · Navigate") long ago and the v7 stations hide `.station__idx`
+globally ("headline reads first") — so this completes that decision for
+services. Changes: the eyebrow leaves `SERVICES_MASTHEAD` (serviceData.ts)
+and the `ServicesMasthead` JSX; the decode targets are now just the two
+title lines (the CRT cursor logic previously skipped `targets[0]` — the
+eyebrow — and now rides every target); `--masthead-top` re-derives from
+`− 20px` to `+ 9px` off `--station-title-top` so the TITLE cap stays
+exactly on the big-title line (the −20 was +9 corridor console pad minus
+the ~29px eyebrow block; with the title as the lead's first box the
+offset is the bare +9). The intro plate keeps `top: var(--masthead-top)`
+— its frame now tops out level with the title's line box. Rollback =
+restore the data field, the `<p>` block, the CSS rules, and the −20px
+derivation together.
