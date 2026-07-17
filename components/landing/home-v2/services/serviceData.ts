@@ -86,14 +86,20 @@ export interface Service {
  * DEPTHS of one loop, and Advisory is the standing read alongside them.
  * The "Services · 04" eyebrow is RETIRED (owner, 2026-07-17) — the last
  * station-index eyebrow on the journey; the corridor heads and the v7
- * stations dropped theirs long ago ("headline reads first"). */
+ * stations dropped theirs long ago ("headline reads first").
+ * Headline rewritten 2026-07-17 (owner): "ONE LOOP. / THREE DEPTHS." read
+ * as meaningless abstraction; replaced with the practical positioning line
+ * — the capability-handover angle (his differentiator: teams keep the
+ * tools + judgment, not consultancy dependency). Intro tightened + matched
+ * to it, and de-framed in services.css (owner: the plate frame didn't
+ * fit). The em (second) line renders gold. */
 export const SERVICES_MASTHEAD = {
   titleLines: [
-    { text: "ONE LOOP.", em: false },
-    { text: "THREE DEPTHS.", em: true },
+    { text: "AI YOUR TEAM", em: false },
+    { text: "CAN RUN.", em: true },
   ],
   intro:
-    "One loop, run at three depths. A talk to reset the room, a workshop to build the first tools, and an embedded term where we run strategy and build with your teams. Tuned to the AI decisions you're actually making.",
+    "A talk, a workshop, or an embedded term building alongside your team. All tuned to the AI decisions you're actually making, and built to leave your team able to run it.",
 } as const;
 
 export const SERVICES: readonly Service[] = [

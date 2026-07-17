@@ -525,78 +525,28 @@
     opacity: 0.25;
   }
 }
-/* Aperture unfold — the Arc caption card's arm choreography (X1-B,
- * home-v2.css `.home-v2-reticle`): at rest (armed / while the title is
- * decoding) the plate is clipped to a zero-width CENTRE SLIT; when the
- * title resolves (data-reveal="done") the inset sweeps open toward both
- * edges at once and the corner crosses ride the opening edges out to the
- * corners on the same 0.55s clock (rules below). NO rise, NO fade — the
- * sweep is the reveal, and the paragraph types on inside it in sync
- * (owner, 2026-07-16). Negative insets keep the crosses' ±10px overhang
- * inside the final aperture. */
-.services-masthead__intro {
-  clip-path: inset(-14px -14px -14px -14px);
-  transition: clip-path 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-}
-/* Slit holds ONLY while armed — the moment the reveal begins (attr flips
- * to "typing") the aperture releases, so the unfold runs IN SYNC with the
- * title decode on the left (owner, 2026-07-16). */
-.services-masthead[data-reveal="armed"] .services-masthead__intro {
-  clip-path: inset(-14px 50% -14px 50%);
-}
+/* The plate frame + aperture-unfold reveal were REMOVED 2026-07-17 (owner:
+ * "remove the frame around it, I don't think it fits here"). The intro is
+ * now bare text; the typewriter print (ServicesMasthead controller) is the
+ * reveal on its own — no clip-path, no glass, no corner crosses. */
 .services-masthead__intro {
   position: absolute;
   right: var(--masthead-inset);
-  /* Shared top-line rule (ADR-044 addendum 2026-07-16): the plate joins
-   * the masthead on the SAME corner line — the previous `+34px − 16px`
-   * first-line alignment is superseded by the unified band top. The
-   * corner crosses overhang −10px above the plate and ride just above
-   * the line; nudge with `+ 10px` here if that ever reads wrong. */
+  /* Shares the band top with the title (ADR-044 addendum): first lines
+   * align on the same line, title left / intro right. */
   top: var(--masthead-top);
   margin: 0;
+  /* No frame padding since the de-frame (2026-07-17): the text right edge
+   * sits on the band, mirroring the title's left edge. */
+  padding: 0;
   max-width: min(42ch, 34vw);
-  padding: 16px 20px;
   text-align: left;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-weight: 400;
   font-size: clamp(15px, 1.15vw, 18px);
   line-height: 1.5;
-  /* Full semantic dawn — the 70% tint read too gray on the glass plate
-   * (owner, 2026-07-16). */
+  /* Full semantic dawn (the frame's 70% tint is retired with it). */
   color: var(--dawn, #ebe3d6);
-  /* X1-B dotted-reticle chrome in miniature (the Arc caption card,
-   * home-v2.css): dashed dawn hairline frame as background runs —
-   * `border` can't dash this way — over a void-glass plate (::before),
-   * with the gold corner crosses as sibling spans. Keeps the intro in
-   * the same instrument family as the corridor captions. */
-  background:
-    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
-      100% 1px no-repeat,
-    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0
-      100% / 100% 1px no-repeat,
-    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
-      1px 100% no-repeat,
-    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 100%
-      0 / 1px 100% no-repeat;
-  /* Own stacking context so the glass pseudo's z-index:-1 stays inside
-   * the plate instead of dropping behind the masthead. */
-  isolation: isolate;
-}
-.services-masthead__intro::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: rgba(5, 4, 3, 0.38);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-@supports not (backdrop-filter: blur(1px)) {
-  /* No blur available to haze the instrument — darken the fill instead. */
-  .services-masthead__intro::before {
-    background: rgba(5, 4, 3, 0.72);
-  }
 }
 .services-masthead__intro-copy {
   margin: 0;
@@ -619,73 +569,11 @@
   display: inline-block;
   animation: services-masthead-cursor-blink 1.05s steps(2, start) infinite;
 }
-/* Gold dashed corner crosses — the caption-card recipe verbatim (19×19,
- * dashed gold strokes crossing at 9px), statically parked at the plate's
- * corners ("the golden thingies", owner 2026-07-16). */
+/* Gold dashed corner crosses RETIRED with the frame (2026-07-17, owner:
+ * "the golden thingies" go too). The 4 spans still render in the JSX
+ * (LandingPage render-stability — no JSX churn); this hides them. */
 .services-masthead__intro-cross {
-  position: absolute;
-  width: 19px;
-  height: 19px;
-  pointer-events: none;
-  /* On arm the crosses RIDE the opening aperture edges out to the
-   * corners — same duration + curve as the clip inset (the reticle
-   * choreography verbatim). */
-  transition:
-    left 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-    right 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-}
-/* Parked at the horizontal centre only while armed — they ride out with
- * the aperture as the reveal begins, in sync with the title decode. */
-.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-tl,
-.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-bl {
-  left: 50%;
-}
-.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-tr,
-.services-masthead[data-reveal="armed"] .services-masthead__intro-cross.is-br {
-  right: 50%;
-}
-.services-masthead__intro-cross::before,
-.services-masthead__intro-cross::after {
-  content: "";
-  position: absolute;
-}
-.services-masthead__intro-cross::before {
-  left: 0;
-  right: 0;
-  top: 9px;
-  height: 1px;
-  background: repeating-linear-gradient(
-    to right,
-    rgba(202, 165, 84, 0.8) 0 1.5px,
-    transparent 1.5px 5px
-  );
-}
-.services-masthead__intro-cross::after {
-  top: 0;
-  bottom: 0;
-  left: 9px;
-  width: 1px;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(202, 165, 84, 0.8) 0 1.5px,
-    transparent 1.5px 5px
-  );
-}
-.services-masthead__intro-cross.is-tl {
-  left: -10px;
-  top: -10px;
-}
-.services-masthead__intro-cross.is-tr {
-  right: -10px;
-  top: -10px;
-}
-.services-masthead__intro-cross.is-bl {
-  left: -10px;
-  bottom: -10px;
-}
-.services-masthead__intro-cross.is-br {
-  right: -10px;
-  bottom: -10px;
+  display: none;
 }
 
 /* Mobile / reduced motion — static in-flow band ABOVE the plate accordion
@@ -2165,12 +2053,13 @@
 .svc-plate__lede {
   margin-top: 10px;
   font-family: var(--sans);
-  /* 15.5px (was 13.5, owner request 2026-07-16) — keep at HALF the baked
-     card-face lede (31px in ServicesCardRing bakeCardFace): the bake/DOM
-     parity contract. */
-  font-size: 15.5px;
+  /* 17.5px (owner 2026-07-17: bigger + less gray body) — keep at HALF the
+     baked card-face lede (35px in ServicesCardRing bakeCardFace): the
+     bake/DOM parity contract. Color lifted --dawn-70 → --dawn-90 to match
+     the bake's dawn 0.92. */
+  font-size: 17.5px;
   line-height: 1.5;
-  color: var(--dawn-70);
+  color: var(--dawn-90);
   letter-spacing: 0.01em;
 }
 /* No-italics brand rule: emphasis = UPRIGHT gold, not italic. */

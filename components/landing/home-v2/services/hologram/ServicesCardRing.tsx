@@ -490,28 +490,30 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   // latent-night, the shared CTA/chip treatment) + status code right.
   const label = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
   ctx.textBaseline = "middle";
-  label.letterSpacing = "4.8px";
-  ctx.font = `700 24px ${CARD_FONT}`;
+  // Service label chip — enlarged (owner 2026-07-17: the top-left service
+  // name is the "what is this service" read and wasn't big enough). Font
+  // 24 → 30, chip height 54 → 66. The right-side "<CODE> · OPEN" status
+  // code was REMOVED in the same pass — decorative HUD filler that crowded
+  // the label; `statusCode` stays in servicePlateData for the mobile plate.
+  label.letterSpacing = "5px";
+  ctx.font = `700 30px ${CARD_FONT}`;
   const chipText = plate.chip.toUpperCase();
   const chipTextW = ctx.measureText(chipText).width;
-  const chipH = 54; // 27px CSS
-  const chipY = 74 - chipH / 2;
-  const chipW = 30 + 10 + 18 + chipTextW + 30; // pad · diamond · gap · text · pad
+  const chipH = 66;
+  const chipCY = 80;
+  const chipY = chipCY - chipH / 2;
+  const chipPadL = 34; // chip-left → diamond centre
+  const chipGap = 24; // diamond centre → text
+  const chipW = chipPadL + chipGap + chipTextW + 34;
   ctx.fillStyle = SERVICES_GOLD;
   ctx.fillRect(44, chipY, chipW, chipH);
   ctx.fillStyle = "#110f09"; // --latent-night
   ctx.save();
-  ctx.translate(44 + 30 + 5, 74);
+  ctx.translate(44 + chipPadL, chipCY);
   ctx.rotate(Math.PI / 4);
-  ctx.fillRect(-4, -4, 8, 8);
+  ctx.fillRect(-5.5, -5.5, 11, 11);
   ctx.restore();
-  ctx.fillText(chipText, 44 + 30 + 10 + 18, 76);
-  label.letterSpacing = "3px";
-  ctx.font = `400 22px ${CARD_FONT}`;
-  ctx.fillStyle = `rgba(${DAWN}, 0.62)`;
-  ctx.textAlign = "right";
-  ctx.fillText(`${plate.statusCode} · OPEN`, BAKE_W - BAKE_CH - 18, 74);
-  ctx.textAlign = "left";
+  ctx.fillText(chipText, 44 + chipPadL + chipGap, chipCY + 2);
 
   /* ── Copy stack — the open C3 plate's text, bottom-anchored above the
      fixed CTA box (sizes = 2× the services.css open-plate values). ── */
@@ -556,13 +558,14 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   const incTop = incBottom - (incLines.length - 1) * INC_LH - 22;
 
   // Lede — sans body, `{ em }` spans upright gold (no-italics rule).
-  // 31px (was 27, owner request 2026-07-16: bigger body; the bottom-
-  // anchored stack pushes the title up to make room). Keep = 2× the
-  // .svc-plate__lede CSS value (15.5px) — the bake/DOM parity contract.
+  // 35px + dawn 0.92 (owner 2026-07-17: bigger + less gray — this line is
+  // where "what is this service" actually lands, so it must read first).
+  // Keep = 2× the .svc-plate__lede CSS value (17.5px) — the bake/DOM
+  // parity contract.
   label.letterSpacing = "0px";
-  ctx.font = `400 31px ${CARD_SANS}`;
+  ctx.font = `400 35px ${CARD_SANS}`;
   const ledeLines = wrapRuns(ctx, plate.lede, maxW);
-  const LEDE_LH = 46;
+  const LEDE_LH = 51;
   const ledeBottom = incTop - 26;
   ledeLines.forEach((line, i) => {
     drawRunLine(
@@ -570,7 +573,7 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
       line,
       PAD_X,
       ledeBottom - (ledeLines.length - 1 - i) * LEDE_LH,
-      `rgba(${DAWN}, 0.7)`
+      `rgba(${DAWN}, 0.92)`
     );
   });
   const ledeTop = ledeBottom - (ledeLines.length - 1) * LEDE_LH - 28;
@@ -590,19 +593,12 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
       `rgb(${DAWN})`
     );
   });
-  const titleTop = titleBottom - (titleLines.length - 1) * TITLE_LH - 34;
-
-  // Feed caption — label left, status right in gold (the C3 pcap row).
-  label.letterSpacing = "3.5px";
-  ctx.font = `400 16px ${CARD_FONT}`;
-  ctx.fillStyle = `rgba(${DAWN}, 0.4)`;
-  const capY = titleTop - 24;
-  ctx.fillText(plate.feedLabel.toUpperCase(), PAD_X, capY);
-  ctx.fillStyle = "rgba(202, 165, 84, 0.85)";
-  ctx.textAlign = "right";
-  ctx.fillText(plate.feedStatus.toUpperCase(), PAD_X + maxW, capY);
-  ctx.textAlign = "left";
-  label.letterSpacing = "0px";
+  // Feed caption ("FEED 0X · …" left + STANDBY/LIVE right) REMOVED
+  // 2026-07-17 (owner): decorative HUD filler above the title. Dropping it
+  // opens breathing room between the photo and the headline, and the title
+  // is now the top of the copy stack (nothing anchors above it — `titleTop`
+  // is no longer computed). feedLabel/feedStatus stay in servicePlateData
+  // for the mobile plate.
 
   return canvas;
 }

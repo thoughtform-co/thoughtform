@@ -54,6 +54,23 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-17 (latest) — Services message pass: headline, de-framed intro, decluttered card (ADR-044/029 update)
+
+Owner: #services is where a visitor must know what he does immediately, and
+the copy/chrome was fighting it. Cycle A:
+
+- **Headline** "ONE LOOP. / THREE DEPTHS." → "AI YOUR TEAM / CAN RUN." (the
+  capability-handover positioning; picked from three offered directions).
+- **Intro** de-framed (dashed plate + glass `::before` + gold corner
+  crosses + aperture clip-path all removed; bare text on the band, padding 0) and tightened to match. Cross spans stay in JSX, `display:none`.
+- **Card face** (baked): service-label chip 24→30px; the `<CODE> · OPEN`
+  status and the `FEED 0X · …`/STANDBY caption removed (HUD filler); body
+  31→35px + dawn 0.7→0.92 (bigger, less gray). `.svc-plate__lede` mobile
+  parity moved 15.5→17.5px / dawn-70→dawn-90.
+- Verification: `npm run verify` green; desktop ring smoke re-pinned
+  (`ONE LOOP.` → `AI YOUR TEAM`); four baked faces screenshot-checked at
+  1440×900.
+
 ### 2026-07-17 (later) — Services runway: drop the vestigial lead-in beat (ADR-029/030 update)
 
 Owner report: entering #services cost one dead scroll viewport (stars /

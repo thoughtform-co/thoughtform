@@ -191,3 +191,27 @@ at 13–17%; front-card clearance caps us at 11.5). One retune of
 `--station-title-top` still moves the corridor heads AND the masthead
 together — the rhythm-source intent survives; only the "same line"
 literalism is retired. Numbers + collision math in ADR-048's update.
+
+## Update (2026-07-17, latest) — headline rewritten + intro de-framed
+
+Owner: "ONE LOOP. / THREE DEPTHS." read as meaningless abstraction on the
+one surface where a visitor must immediately grasp what he does. Two
+changes:
+
+- **Headline → the practical positioning line.** `SERVICES_MASTHEAD.title
+Lines` is now `AI YOUR TEAM` / `CAN RUN.` (second line gold) — the
+  capability-handover angle, his differentiator (teams keep the tools +
+  judgment, not consultancy dependency; the Embedded card's body says it
+  outright). Chosen from three directions offered to the owner.
+- **Intro de-framed + tightened.** The dotted-reticle plate around the
+  right paragraph (dashed hairline `background`, `::before` void-glass +
+  blur, the four gold corner-cross spans, and the aperture-unfold
+  clip-path reveal) is REMOVED — owner: "remove the frame, it doesn't fit
+  here." The intro is now bare dawn text, right edge on the band (padding
+  0), first line on the shared band top; the typewriter print is the whole
+  reveal. Copy tightened and matched to the new headline. The cross spans
+  still render in JSX (render-stability) but are `display: none`. The
+  smoke's masthead-title assertion moved `ONE LOOP.` → `AI YOUR TEAM`.
+
+Correction to the earlier "the smoke's `ONE LOOP.` assertion is current"
+note: that copy is now superseded.

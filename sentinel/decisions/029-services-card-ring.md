@@ -465,3 +465,28 @@ deck-flip sweep are all preserved by construction: `exitProgressForRunway`
 is a pure function of the (now 5-beat) `RING_STEP_COUNT`, so the exit is
 still exactly the final viewport of the runway and the -100svh #about sweep
 still overlaps it. Unit + smoke suites re-pinned to the 5-beat mapping.
+
+## Update (2026-07-17) — card face decluttered ("know what I do immediately")
+
+Owner review of the baked card face (`bakeCardFace` in `ServicesCardRing`):
+this is the surface where a visitor must grasp the offering at a glance, and
+the sci-fi HUD chrome was competing with the message. Changes (bake only —
+`servicePlateData` copy untouched; the removed fields stay in the data for
+the mobile plate):
+
+- **Service-label chip enlarged** — font 24 → 30px, chip height 54 → 66. The
+  top-left service name is the "what is this" read and was too small.
+- **Status code removed** — the right-side `<CODE> · OPEN` (e.g. "ADV-01 ·
+  OPEN") was decorative filler crowding the label; deleted.
+- **Feed caption removed** — the "FEED 0X · …" + STANDBY/LIVE row above the
+  title was HUD filler; deleting it opens breathing room between the photo
+  and the headline. The title is now the top of the copy stack (`titleTop`
+  no longer computed).
+- **Lede bigger + brighter** — body font 31 → 35px, colour dawn 0.7 → 0.92.
+  The body is where "what is this service" actually lands, so it reads
+  first now. `.svc-plate__lede` (mobile) moved in lockstep (15.5 → 17.5px,
+  dawn-70 → dawn-90) to hold the 2× bake/DOM parity contract.
+
+The bottom-anchored stack means removing the top rows just frees space above
+the title — the CTA / includes / lede stay put. Verified across the four
+baked faces at 1440×900.
