@@ -75,8 +75,12 @@ export function ContinuumWaistRail({ scale = 1 }: { scale?: number }) {
     const approach = continuumApproachT(continuumStageProgressRef.current.progress);
 
     // Advance the ping-pong ONLY while the beat is engaged, via a delta
-    // accumulator (no wall clock — a tab-hide must not jump the thumb).
-    if (approach > 0.02) phaseRef.current += delta / THUMB_PERIOD_S;
+    // accumulator (no wall clock — a tab-hide must not jump the thumb). The
+    // delta is CLAMPED (Math.min(0.1, …), the BEST-PRACTICES dt-clamp rule
+    // every other integrator follows): a backgrounded tab / frameloop reset
+    // can hand back a huge first-frame delta that would otherwise snap the
+    // thumb to an arbitrary phase on return.
+    if (approach > 0.02) phaseRef.current += Math.min(0.1, delta) / THUMB_PERIOD_S;
 
     const thumb = thumbRef.current;
     if (thumb) {
