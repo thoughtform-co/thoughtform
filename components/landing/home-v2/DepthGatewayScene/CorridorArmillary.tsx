@@ -95,11 +95,20 @@ const waistContinuumGetter = () =>
   );
 
 /** Per-ring getter selector: the waist re-brightens on the continuum
- *  approach; every other structural ring keeps the plain exit getter
- *  (stays cleared through #continuum). Absent when the flag is off ⇒
- *  HologramOrbits falls back to `masterOpacityGetter` (byte-identical). */
-const continuumWaistSelector = (o: OrbitConfig): (() => number) | undefined =>
-  o.id === "shell-waist" ? waistContinuumGetter : orbitExitGetter;
+ *  approach; every other structural ring keeps the plain exit getter — but
+ *  ONLY while the SERVICES_CARD_RING rollback gate is on, mirroring the
+ *  sibling `masterOpacityGetter={SERVICES_CARD_RING ? orbitExitGetter :
+ *  undefined}` prop. With the card ring OFF the non-waist branch returns
+ *  `undefined`, so HologramOrbits' `masterOpacityGetterFor?.(o) ??
+ *  masterOpacityGetter` chain falls through to the intentionally-undefined
+ *  getter (master 1, byte-identical to the pre-services-ring armillary —
+ *  ADR-049 Invariant 4). Returning `orbitExitGetter` unconditionally here
+ *  would dim every structural ring on the services-exit clock even with the
+ *  gate off, breaking the "absent ⇒ 1" invariant. */
+const continuumWaistSelector = (o: OrbitConfig): (() => number) | undefined => {
+  if (o.id === "shell-waist") return waistContinuumGetter;
+  return SERVICES_CARD_RING ? orbitExitGetter : undefined;
+};
 
 /** Sub-pixel deadband for the anchor publish delta gate. Anchors are
  *  screen-space pixels; a quarter-pixel drift is invisible under the
