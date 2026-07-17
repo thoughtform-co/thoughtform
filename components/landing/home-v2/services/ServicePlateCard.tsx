@@ -64,6 +64,12 @@ export function ServicePlateCard({
 }: ServicePlateCardProps) {
   const open = state === "open";
   const revealId = `svc-plate-${service.id}-reveal`;
+  // The includes meta line renders visually ABOVE the <h3> (parity with the
+  // baked card face, ADR-047). To keep it in READING order for heading-nav
+  // screen readers — who land on the h3 and read forward — the h3 references
+  // it via aria-describedby so the includes are announced with the title,
+  // without moving DOM/visual order and desyncing the bake parity.
+  const includesId = `svc-plate-${service.id}-inc`;
 
   // Wireframe materialization: the open C3 title scramble-decodes into place
   // (the corridor caption grammar, same kernel). A self-terminating rAF loop
@@ -202,7 +208,7 @@ export function ServicePlateCard({
                 <span className="svc-plate__cap-g">{service.feedStatus}</span>
               </div>
 
-              <div className="svc-plate__inc svc-plate__fx svc-plate__fx--d2">
+              <div id={includesId} className="svc-plate__inc svc-plate__fx svc-plate__fx--d2">
                 {service.includes.map((item, i) => (
                   <Fragment key={item}>
                     {i > 0 && <b aria-hidden="true">·</b>}
@@ -211,7 +217,11 @@ export function ServicePlateCard({
                 ))}
               </div>
 
-              <h3 ref={titleRef} className="svc-plate__title svc-plate__fx svc-plate__fx--d3">
+              <h3
+                ref={titleRef}
+                className="svc-plate__title svc-plate__fx svc-plate__fx--d3"
+                aria-describedby={includesId}
+              >
                 {service.title}
               </h3>
 
