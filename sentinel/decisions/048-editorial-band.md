@@ -163,3 +163,48 @@ static in-flow, station padding flips to 32px, voidwalker parity is
   split the combined media query for this.
 - 961–1100 static-fallback tier: voidwalker columns widen ~300→419px each
   (definite-size portrait, nothing distorts).
+
+## Update (2026-07-17, later) — the vertical axis joins the band
+
+Owner follow-up with five side-by-side references (hematogenix.com,
+innovations.vareximaging.com, srg.ava-digital.site, flshfrm.com,
+rebooot.me): the services header still lacked "tranquil breathing room
+above it". Diagnosis: the original decision systemized the HORIZONTAL
+axis but left the vertical anchor inherited from `--station-title-top` —
+the corridor's cinematic title-card line at ~7.5% of viewport height.
+Every reference (and Linear) puts editorial section-header caps at
+~13–17% of viewport height; ours sat at half that. The corridor line is
+right for the corridor (a centered title card over the sphere — the
+round-2 owner call stands there); it was never an editorial
+section-header value.
+
+New tokens (landing.css `:root`, beside the horizontal band tokens):
+
+```css
+--band-air: clamp(28px, 4.7svh, 52px);
+--band-top: calc(var(--station-title-top) + var(--band-air));
+```
+
+`--masthead-top` now derives from `--band-top` (+ the existing
+`--masthead-top-trim` optical knob) — superseding both the round-2
+big-title LINE rule and the eyebrow-retirement `+9px` cap alignment for
+this surface. Both masthead columns (title + intro plate) drop together;
+the corridor heads are untouched. Because `--band-top` composes the
+title-line token, one retune of `--station-title-top` still moves the
+corridor AND the masthead — the round-2 "one rhythm source" intent
+survives; only the "same line" literalism is retired.
+
+| Viewport h | band-top  | was (+9px rule) | % of vh |
+| ---------- | --------- | --------------- | ------- |
+| 800        | 92        | 63              | 11.5%   |
+| 900        | 103.5     | 70              | 11.5%   |
+| 1080       | 124       | 82              | 11.5%   |
+| 1440       | 136 (cap) | 93              | 9.4%    |
+
+Deliberately shy of the references' 13–17%: unlike them, this station
+carries a full-height centered instrument below the band — the front
+card's top edge sits ≈22svh on MacBook-class viewports (the ADR-044
+1.15× parked boost), so 13svh+ would graze it (measured: title block
+bottom at 13svh ≈ 189px vs front card top ≈ 178px at 1280×800).
+`--band-air` is the dial; if more air is ever wanted, the sanctioned
+clearance lever below is `CENTER_Y_OFFSET` (ADR-044), never ring math.

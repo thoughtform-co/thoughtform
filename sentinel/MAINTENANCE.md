@@ -81,6 +81,14 @@ uncapped and viewport-proportional — effective side inset drifted
   eyebrow retired (the journey's last station-index eyebrow);
   `--masthead-top` re-derived −20px → +9px so the title cap stays on the
   big-title line; decode targets are now the two title lines only.
+- **Same-day follow-up 2 (ADR-048 update):** the vertical axis joined
+  the band — owner reference pass (hematogenix / varex / srg / flshfrm /
+  rebooot: editorial headers at 13–17% of viewport height vs our 7.5%
+  corridor title-card line). `--band-top` = `--station-title-top` +
+  `--band-air` (clamp(28px, 4.7svh, 52px)); the masthead title + intro
+  drop to ~11.5svh (front-card clearance caps us below the references'
+  13–17%). Corridor heads untouched; retuning --station-title-top still
+  moves every surface together.
 
 ### 2026-07-16 (evening) — Services surface polish: seam perf, retina DPR, morph crispness, layout + card scale
 

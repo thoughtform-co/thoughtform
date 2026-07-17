@@ -428,19 +428,24 @@
    * (standalone harnesses); production and /test/services-wordmark both
    * load landing.css and always resolve the token. Do not "simplify" it. */
   --masthead-inset: var(--rail-inset, calc(var(--hud-margin, 54px) + 8vw));
-  /* Big-title LINE rule (ADR-044 addendum 2026-07-16, fourth revision —
-   * supersedes the same-day corner-line rule, which the owner read as
-   * "a bit too high"): the masthead TITLE's cap sits on the SAME line
-   * as the corridor station titles ("NAVIGATE THE INTELLIGENCE." etc.)
-   * via the shared `--station-title-top` token (landing.css :root).
-   * The corridor titles carry +9px console padding above their cap;
-   * since the eyebrow retirement (owner, 2026-07-17) the TITLE is the
-   * lead's first box, so the lead anchors that same +9px below the
-   * token line and the caps align. (The retired eyebrow block ≈29px
-   * used to make this offset −20px = +9 − 29.) `--masthead-top-trim`
-   * remains the optical iteration knob. */
+  /* Band-TOP rule (ADR-048 update, 2026-07-17 — supersedes the round-2
+   * big-title LINE rule and the same-day eyebrow-retirement +9px cap
+   * alignment): the masthead anchors on the EDITORIAL band top —
+   * `--band-top` (landing.css :root) = the corridor title line + one
+   * `--band-air` unit — giving the section header reference-grade
+   * breathing room above it (~11.5svh to the title's line box vs the
+   * corridor's ~7.5svh title-card line; the owner's references put
+   * editorial headers at 13-17%, capped here by front-card clearance).
+   * One retune of --station-title-top still moves every surface; the
+   * intro plate shares the same line. `--masthead-top-trim` remains the
+   * optical iteration knob; the calc fallback mirrors the token chain
+   * for standalone harnesses. */
   --masthead-top: calc(
-    var(--station-title-top, clamp(48px, 6.8vh, 84px)) + 9px + var(--masthead-top-trim, 0px)
+    var(
+        --band-top,
+        calc(var(--station-title-top, clamp(48px, 6.8vh, 84px)) + clamp(28px, 4.7svh, 52px))
+      ) +
+      var(--masthead-top-trim, 0px)
   );
   --masthead-top-trim: 0px;
 }

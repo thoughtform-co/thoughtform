@@ -178,3 +178,16 @@ offset is the bare +9). The intro plate keeps `top: var(--masthead-top)`
 — its frame now tops out level with the title's line box. Rollback =
 restore the data field, the `<p>` block, the CSS rules, and the −20px
 derivation together.
+
+## Update (2026-07-17, latest) — vertical anchor moves to the editorial band top
+
+The eyebrow update's `+9px` cap alignment (and with it the round-2 "one
+big-title LINE" rule for the masthead) is superseded the same day by the
+ADR-048 vertical band: `--masthead-top` now derives from `--band-top`
+(= `--station-title-top` + `--band-air`, landing.css :root), giving the
+editorial register ~11.5svh of air above the title vs the corridor's
+~7.5svh title-card line (owner references put editorial section headers
+at 13–17%; front-card clearance caps us at 11.5). One retune of
+`--station-title-top` still moves the corridor heads AND the masthead
+together — the rhythm-source intent survives; only the "same line"
+literalism is retired. Numbers + collision math in ADR-048's update.
