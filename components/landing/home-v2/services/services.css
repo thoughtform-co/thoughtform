@@ -1374,8 +1374,8 @@
  *     dim status, seed title, 46px dot-matrix feed band ("Standby").
  *   · OPEN = the ORIGINAL full-bleed C3 signal plate: photo covers the whole
  *     card (dots + soft hologram + C3 scrim, resolves on hover), gold chip,
- *     status appends "· Open", photo window → feed caption → title → lede →
- *     includes → CTA.
+ *     status appends "· Open", photo window → feed caption → includes →
+ *     title → lede → CTA.
  *   · Morph: two grid regions trade heights (seed 1fr→0fr, reveal 0fr→1fr)
  *     while width, chamfer (--ch), padding, shell/body light, and the
  *     full-bleed photo transition with them. Ghost → gold: gold belongs to

@@ -35,7 +35,7 @@
  *
  * Card faces are baked ONCE into CanvasTextures as the COMPLETE open C3
  * plate — photo with the plate's gold-tone treatment, chamfered gold shell,
- * filled gold chip, feed caption, title, lede, includes, and the outlined
+ * filled gold chip, feed caption, includes, title, lede, and the outlined
  * CTA (2026-07-10 Vince red-alert: one plate, never a photo plane plus a
  * separate text console; the DOM only overlays hit targets). Chamfer
  * corners stay OPAQUE VOID — on the glass slab they read as the device's
