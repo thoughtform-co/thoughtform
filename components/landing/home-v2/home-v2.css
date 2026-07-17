@@ -633,11 +633,12 @@ html[data-corridor-exit="true"] #continuum {
 }
 
 /* Split cartouche (corridor stations) — full-height wrapper, head
-   band above the sphere, foot band below it. */
+   band above the sphere, foot band below it. Width cap = the shared
+   editorial band cap (ADR-048); same value as before, now one token. */
 .home-v2-station-header--split {
   top: 0;
   bottom: 0;
-  width: min(92vw, 1200px);
+  width: min(92vw, var(--band-max, 1200px));
   display: block;
 }
 
