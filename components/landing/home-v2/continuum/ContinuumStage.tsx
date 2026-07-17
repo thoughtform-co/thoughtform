@@ -107,7 +107,16 @@ export function ContinuumStage() {
           {/* The open centre — the WebGL mark + waist ring + thumb live here
             (in the corridor canvas behind this transparent stage). No DOM. */}
 
-          <div className="continuum-stage__labels" aria-hidden="true">
+          {/* The three spectrum stop descriptions ARE exposed to assistive
+              tech — this is the section's core explanatory content and the
+              static `.crail__stops-grid` fallback exposes the identical
+              kicker/title/body. Only decorative chrome (the ring frame,
+              bearings, reticle, readout, brand image) is hidden, and here
+              that chrome is all WebGL / outside this wrapper — the empty
+              `.crail__tick` divs below carry no text, so they add nothing to
+              the AT tree. Do NOT re-add aria-hidden here (regression guard,
+              ADR-049 / plan 6.2). */}
+          <div className="continuum-stage__labels">
             {CONTINUUM_STAGE.stops.map((stop, i) => (
               <div
                 key={stop.pos}
