@@ -52,10 +52,12 @@
   background: transparent;
 }
 /* The static fallback (head + crail spectrum) hides only while the stage
-   owns the section. */
+   owns the section. The fallback spectrum is a single
+   `<div class="continuum continuum--focused">`, so the structural
+   `> .continuum` already targets it — no separate `.continuum--focused`
+   selector needed. */
 #continuum[data-continuum-mode="stage"] > .continuum__head,
-#continuum[data-continuum-mode="stage"] > .continuum,
-#continuum[data-continuum-mode="stage"] .continuum--focused {
+#continuum[data-continuum-mode="stage"] > .continuum {
   display: none;
 }
 #continuum.station[data-continuum-mode="stage"] {
