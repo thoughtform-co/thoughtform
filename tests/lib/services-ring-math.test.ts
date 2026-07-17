@@ -26,6 +26,11 @@ import {
   RING_FRONT_BIAS_PITCH,
   RING_FRONT_BIAS_WINDOW,
   RING_FRONT_BIAS_YAW,
+  RING_FRONT_EMPHASIS_NARROW,
+  RING_FRONT_EMPHASIS_WIDE,
+  RING_FRONT_EMPHASIS_WIDTH,
+  frontScaleEmphasis,
+  frontScaleBoost,
   basePhi,
   buildCardOrbitGeometries,
   cardFacingYaw,
@@ -400,6 +405,115 @@ describe("frontPoseBias — parked front card holds a 3/4 pose (ADR-029 addendum
     // Held pose + max hover tilt must stay far from ±π/2 (legibility rule).
     const maxYaw = Math.abs(RING_FRONT_BIAS_YAW) + 0.2; // hover yaw amplitude
     expect(maxYaw).toBeLessThan(Math.PI / 6);
+  });
+});
+
+describe("frontScaleEmphasis — narrow-viewport front-card boost amount (2026-07-17)", () => {
+  it("gives the full narrow boost at/below the low width edge", () => {
+    // At/below RING_FRONT_EMPHASIS_WIDTH[0] the emphasis is the full narrow
+    // amount (laptops read the parked plate too small without it).
+    expect(frontScaleEmphasis(RING_FRONT_EMPHASIS_WIDTH[0])).toBeCloseTo(
+      RING_FRONT_EMPHASIS_NARROW,
+      12
+    );
+    expect(frontScaleEmphasis(1000)).toBeCloseTo(RING_FRONT_EMPHASIS_NARROW, 12);
+    expect(frontScaleEmphasis(640)).toBeCloseTo(RING_FRONT_EMPHASIS_NARROW, 12);
+  });
+
+  it("gives the gentler wide boost at/above the high width edge", () => {
+    expect(frontScaleEmphasis(RING_FRONT_EMPHASIS_WIDTH[1])).toBeCloseTo(
+      RING_FRONT_EMPHASIS_WIDE,
+      12
+    );
+    expect(frontScaleEmphasis(2560)).toBeCloseTo(RING_FRONT_EMPHASIS_WIDE, 12);
+  });
+
+  it("pins the CURRENT MacBook-Air (~1440) behaviour: inside the band, diluted", () => {
+    // 1440 sits INSIDE the [1280, 1728] interpolation band, so the named
+    // MacBook-Air target gets a diluted ~0.206 emphasis, NOT the full 0.24.
+    // This freezes today's shipped constants (the 2.1 retune is a separate
+    // decision, deliberately NOT applied here).
+    const air = frontScaleEmphasis(1440);
+    expect(air).toBeCloseTo(0.2055, 3);
+    expect(air).toBeLessThan(RING_FRONT_EMPHASIS_NARROW);
+    expect(air).toBeGreaterThan(RING_FRONT_EMPHASIS_WIDE);
+  });
+
+  it("decreases monotonically from narrow to wide across the width band", () => {
+    let prev = Infinity;
+    for (let s = 0; s <= 100; s++) {
+      const px =
+        RING_FRONT_EMPHASIS_WIDTH[0] +
+        (s / 100) * (RING_FRONT_EMPHASIS_WIDTH[1] - RING_FRONT_EMPHASIS_WIDTH[0]);
+      const e = frontScaleEmphasis(px);
+      expect(e).toBeLessThanOrEqual(prev + 1e-12);
+      expect(e).toBeLessThanOrEqual(RING_FRONT_EMPHASIS_NARROW + 1e-12);
+      expect(e).toBeGreaterThanOrEqual(RING_FRONT_EMPHASIS_WIDE - 1e-12);
+      prev = e;
+    }
+  });
+});
+
+describe("frontScaleBoost — front-weighted scale multiplier + seam identities (2026-07-17)", () => {
+  it("is EXACTLY 1 at fade 0 for every card/viewport (deck seam untouched when not engaged)", () => {
+    // The ring fades the boost out to identity as the deck assembles; at
+    // fade 0 the multiplier must be a hard 1 so the exit-stack / about-deck
+    // seam is byte-identical.
+    for (const nz of [-1, 0, RING_FRONT_BIAS_WINDOW[0], RING_FRONT_BIAS_WINDOW[1], 1]) {
+      for (const px of [640, 1280, 1440, 1728, 2560]) {
+        expect(frontScaleBoost(nz, px, 0)).toBe(1);
+      }
+    }
+  });
+
+  it("is EXACTLY 1 on side/back cards (nz at or below the front window low edge)", () => {
+    // Only the near-front card grows; side (nz≈0) and back (nz=−1) cards keep
+    // their depth-scale untouched — w = 0 below RING_FRONT_BIAS_WINDOW[0].
+    for (const px of [640, 1280, 1440, 1728, 2560]) {
+      expect(frontScaleBoost(-1, px)).toBe(1);
+      expect(frontScaleBoost(0, px)).toBe(1);
+      expect(frontScaleBoost(RING_FRONT_BIAS_WINDOW[0], px)).toBe(1);
+    }
+  });
+
+  it("reaches 1 + emphasis at the parked front (nz at/above the window high edge)", () => {
+    // Narrow viewport: full 1.24× at the front; wide viewport: gentler 1.10×.
+    expect(frontScaleBoost(RING_FRONT_BIAS_WINDOW[1], RING_FRONT_EMPHASIS_WIDTH[0])).toBeCloseTo(
+      1 + RING_FRONT_EMPHASIS_NARROW,
+      12
+    );
+    expect(frontScaleBoost(1, RING_FRONT_EMPHASIS_WIDTH[0])).toBeCloseTo(
+      1 + RING_FRONT_EMPHASIS_NARROW,
+      12
+    );
+    expect(frontScaleBoost(1, RING_FRONT_EMPHASIS_WIDTH[1])).toBeCloseTo(
+      1 + RING_FRONT_EMPHASIS_WIDE,
+      12
+    );
+    // Default fade is 1.
+    expect(frontScaleBoost(1, 1280)).toBe(frontScaleBoost(1, 1280, 1));
+  });
+
+  it("scales linearly with fade between identity and the full boost", () => {
+    for (const px of [1280, 1440, 1728]) {
+      const full = frontScaleBoost(1, px, 1) - 1;
+      expect(frontScaleBoost(1, px, 0.5) - 1).toBeCloseTo(0.5 * full, 12);
+      expect(frontScaleBoost(1, px, 0.25) - 1).toBeCloseTo(0.25 * full, 12);
+    }
+  });
+
+  it("ramps monotonically over the front nz window (scroll-owned, no snap)", () => {
+    let prev = -Infinity;
+    for (let s = 0; s <= 60; s++) {
+      const nz =
+        RING_FRONT_BIAS_WINDOW[0] +
+        (s / 60) * (RING_FRONT_BIAS_WINDOW[1] - RING_FRONT_BIAS_WINDOW[0]);
+      const b = frontScaleBoost(nz, 1280);
+      expect(b).toBeGreaterThanOrEqual(prev - 1e-12);
+      expect(b).toBeGreaterThanOrEqual(1 - 1e-12);
+      prev = b;
+    }
+    expect(prev).toBeCloseTo(1 + RING_FRONT_EMPHASIS_NARROW, 12);
   });
 });
 
