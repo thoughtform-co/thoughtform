@@ -107,3 +107,15 @@ calc(var(--hud-margin) + 8vw)` is promoted to `landing.css :root`;
   scroll fallback, not the observer** — a new `data-m` role with a fully
   clipping hidden state is fine in production but needs the fallback
   wherever the reveal JS is reimplemented (the prototype now has one).
+
+## Update (2026-07-17) — the parity formula is band-derived (ADR-048)
+
+§4's formula `--rail-inset: calc(var(--hud-margin) + 8vw)` is superseded by
+the [ADR-048](048-editorial-band.md) editorial-band derivation:
+`calc(var(--band-margin) − var(--hud-content-inset))`, i.e. 0 below the
+~1503px cap crossover (the grids then span the full station content box,
+hero-edge-aligned) and band-centering above it. The **two-layer composition
+contract stands unchanged** — station padding + `--rail-inset`, "compose
+the same two layers, never invent a third inset" — the band system IS that
+composition, now capped. The services.css `--masthead-inset` fallback calc
+deliberately keeps the pre-band formula (standalone-harness path).

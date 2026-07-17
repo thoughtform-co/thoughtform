@@ -54,6 +54,30 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-17 — Editorial band: shared horizontal frame for section text (ADR-048)
+
+Owner compared the services masthead against linear.app: margins felt
+arbitrary/inconsistent across widths. Root cause: the two-layer inset
+(station `--hud-content-inset` + `--rail-inset: --hud-margin + 8vw`) was
+uncapped and viewport-proportional — effective side inset drifted
+218→451px across 1024→2560 with no stable proportion. Cycle B:
+
+- **ADR-048.** New `:root` band tokens (`--band-max` 1200px /
+  `--band-pull` 0px / `--band-margin`); `--rail-inset` re-derived as the
+  band remainder — below the ~1503px crossover the text edges sit ON the
+  hero headline edge (one shared content edge, owner's pick), above it
+  the band pins centered at `--band-max`. All three consumers (services
+  masthead, both about grids) moved in lockstep with zero consumer-site
+  edits. Band-relative masthead lead cap; Arc split cap consolidated onto
+  the token (zero visual change). ADR-044/045 addenda; landing-v7 rule
+  updated.
+- Verification: `npm run verify` green; ring smoke unchanged; browser
+  rect-probe at 1280/1440/1680/1920/2560 matched the ADR-048 table ±1px
+  (services lead + about grid + hero edge in lockstep below the
+  crossover). Found in passing: the landing-page `toHaveScreenshot`
+  suite has NO committed baselines (never in git; first local run writes
+  actuals and exits 1) — noted in ADR-048, no action taken.
+
 ### 2026-07-16 (evening) — Services surface polish: seam perf, retina DPR, morph crispness, layout + card scale
 
 Four owner complaints, one pass (Cycle A per workstream; 8 commits, each

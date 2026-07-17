@@ -416,12 +416,17 @@
   opacity: calc(var(--svc-content-in, 1) * (1 - var(--svc-exit, 0)));
   transform: translateY(calc((1 - var(--svc-content-in, 1)) * 18px));
   will-change: opacity, transform;
-  /* Lab-validated band geometry (/test/services-wordmark DEFAULTS): columns
-   * pull 8vw inboard from the rail guides; the band top clears the corner
-   * chrome + rail origin at 900–1080px heights (rail-y-start is px-clamped;
-   * the extra clamp is vh-based). Since ADR-045 the inset consumes the
-   * shared `--rail-inset` token (landing.css :root) so #about stays in
-   * lockstep; the calc fallback keeps the standalone labs working. */
+  /* Editorial-band geometry (ADR-048; supersedes the lab-era "8vw inboard
+   * of the rail guides" rule): left/right resolve against the STATION
+   * CONTENT BOX, and `--rail-inset` (landing.css :root) is defined as
+   * `--band-margin − --hud-content-inset`, so the text edges land on the
+   * shared editorial band at every width — flush with the hero headline
+   * edge below the ~1503px cap crossover, pinned to a centered
+   * `--band-max` (1200px) band above it. #about consumes the same token
+   * (ADR-045 lockstep). The calc fallback preserves the ORIGINAL pre-band
+   * geometry and fires only where landing.css's :root tokens are absent
+   * (standalone harnesses); production and /test/services-wordmark both
+   * load landing.css and always resolve the token. Do not "simplify" it. */
   --masthead-inset: var(--rail-inset, calc(var(--hud-margin, 54px) + 8vw));
   /* Big-title LINE rule (ADR-044 addendum 2026-07-16, fourth revision —
    * supersedes the same-day corner-line rule, which the owner read as
@@ -442,7 +447,12 @@
   position: absolute;
   left: var(--masthead-inset);
   top: var(--masthead-top);
-  max-width: 40vw;
+  /* Band-relative safety cap (ADR-048): 40vw was tuned for the uncapped
+   * band; inside a 1200px band an ultrawide 40vw (1024px at 2560) could
+   * cross the intro column. 0.52 × band = 624px keeps ≥160px of gutter
+   * against the intro's 42ch worst case. Current copy measures ~360px,
+   * so this is future-copy insurance — no visual change today. */
+  max-width: min(40vw, calc(var(--band-max, 1200px) * 0.52));
 }
 .services-masthead__eyebrow {
   margin: 0 0 16px;

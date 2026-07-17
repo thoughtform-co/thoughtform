@@ -92,13 +92,36 @@
   --hud-rail-line: rgba(235, 227, 214, 0.55);
   --hud-rail-line-soft: rgba(235, 227, 214, 0.28);
   --hud-content-inset: calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px, 3vw, 56px));
+  /* ── Editorial band (ADR-048) ─────────────────────────────────────
+     The ONE horizontal frame for section-level editorial text (a
+     Linear-class content band in the HUD execution). Below the cap
+     crossover (~1503px) the band edges sit ON the station content box
+     — i.e. the hero headline's left edge, one shared content edge
+     across the whole journey. Above it the band pins at --band-max,
+     centered, so margins grow symmetrically instead of drifting
+     open-ended with the retired 8vw pull.
+     --band-pull: owner knob — a fixed extra pull inboard of the
+     content edge below the crossover (0px = flush with the hero edge;
+     raising it also raises the crossover). The first max() arm floors
+     the band at the content box, so content can never cross outboard
+     toward the rail chrome (ADR-031), even at negative pull. */
+  --band-max: 1200px; /* = Arc split cap (home-v2.css) + legacy --content-max-width (variables.css) */
+  --band-pull: 0px;
+  --band-margin: max(
+    var(--hud-content-inset),
+    calc(var(--hud-content-inset) + var(--band-pull)),
+    calc((100vw - var(--band-max)) / 2)
+  );
   /* ADR-044 masthead column pull — how far the rail-aligned editorial
      columns sit inboard of the STATION CONTENT BOX (stations already
      carry --hud-content-inset padding; the effective viewport inset is
-     the sum of both layers). Shared by .services-masthead (services.css)
-     and the #about .voidwalker grid (ADR-045), so the two stations'
-     text edges stay in lockstep. */
-  --rail-inset: calc(var(--hud-margin) + 8vw);
+     the sum of both layers — which the band derivation makes exactly
+     --band-margin by construction). Shared by .services-masthead
+     (services.css), the #about deck-flip grid (about-stage.css) and
+     the static .voidwalker grid (ADR-045), so all stations' text edges
+     stay in lockstep. ADR-048 supersedes the old open-ended formula
+     (calc(var(--hud-margin) + 8vw)) — capped and chrome-true now. */
+  --rail-inset: calc(var(--band-margin) - var(--hud-content-inset));
   /* Big-title line (2026-07-16 responsive pass) — the ONE vertical anchor
      every station-scale title band hangs from: the corridor station heads
      (.home-v2-station-header__head) and the services masthead derive from
@@ -9296,7 +9319,10 @@ html {
    (identical to .station--services, which the masthead lives inside) and
    the grid pulls a further --rail-inset inboard — the same two-layer
    chain as the masthead, so the stations stay in lockstep through both
-   tokens. ≤960px keeps the 2026-07-15 centered stack byte-untouched —
+   tokens. Since ADR-048 --rail-inset is band-derived: it is 0 below the
+   ~1503px crossover (the grid then spans the full station content box,
+   hero-edge-aligned) and grows to center a --band-max band above it.
+   ≤960px keeps the 2026-07-15 centered stack byte-untouched —
    that is why this is min-width scoped. */
 @media (min-width: 961px) {
   .voidwalker {

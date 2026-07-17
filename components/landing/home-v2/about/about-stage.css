@@ -84,7 +84,10 @@
 
 /* ── The grid — rail parity with the services masthead (two-layer inset:
    station --hud-content-inset padding + --rail-inset margins, exactly
-   the ADR-045 static-about recipe). */
+   the ADR-045 static-about recipe). (--rail-inset is the ADR-048
+   editorial-band remainder — 0 below the ~1503px crossover, so the grid
+   then spans the full station content box, hero-edge-aligned;
+   band-centering above it.) */
 #about[data-about-mode="stage"] .about-stage__grid {
   flex: 1;
   display: grid;

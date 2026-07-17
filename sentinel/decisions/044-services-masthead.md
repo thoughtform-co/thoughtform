@@ -144,3 +144,18 @@ CSS tombstoned) — it cost the exact vertical band the bigger card ring needs
 on short viewports. The step clock's other surfaces (data-active-step, the
 plates, ring highlight, designations) carry the active-service signal; the
 ring smoke re-points its assertions at those.
+
+## Update (2026-07-17) — horizontal inset re-derived through the editorial band (ADR-048)
+
+`--rail-inset` is now the band remainder `calc(var(--band-margin) −
+var(--hud-content-inset))` ([ADR-048](048-editorial-band.md)): capped at a
+centered `--band-max` (1200px) band above the ~1503px crossover, flush with
+the station content edge (= the hero headline edge) below it. This
+supersedes §1's lab rule "columns `--hud-margin + 8vw` inboard of the rail
+guides" — **horizontal only**; the `--station-title-top` vertical
+derivation (round-2 revision above) is untouched, and `--masthead-inset`
+still consumes the shared token with the original calc as fallback (the
+fallback deliberately keeps the pre-band formula — harness path, do not
+modernize). `.services-masthead__lead` gains a band-relative cap
+(`min(40vw, calc(var(--band-max) * 0.52))`) so the columns can never cross
+inside the capped band on ultrawide.
