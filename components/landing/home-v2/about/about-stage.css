@@ -120,8 +120,13 @@
   transform: translateX(calc((1 - var(--ci)) * 32px));
   /* Right-to-left wipe: the hidden region shrinks from the LEFT edge,
      so the text's center-facing end lands first and the reveal runs
-     outward to the left margin. */
-  clip-path: inset(0 0 0 calc((1 - var(--ci)) * 100%));
+     outward to the left margin. Top/bottom are padded -32px (≥ the 22px
+     `.voidwalker__name` text-shadow blur radius) so the resolved --ci=1
+     state has vertical blur headroom — plain inset(0) still clips at the
+     border box and cropped the name's gold glow flat (the h2 line box has
+     no slack). The LEFT inset (the wipe driver) and the right stay 0 so
+     the emergence reveal is unchanged (ADR-047 copy-reveal contract). */
+  clip-path: inset(-32px 0 -32px calc((1 - var(--ci)) * 100%));
 }
 /* Decode targets keep their line box while blanked pre-arm (the scramble
    kernel owns their textContent — see AboutStage). */
