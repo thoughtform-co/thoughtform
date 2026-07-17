@@ -73,9 +73,18 @@ export const RING_FRONT_BIAS_YAW = 0.13;
 export const RING_FRONT_BIAS_PITCH = -0.04;
 export const RING_FRONT_BIAS_WINDOW: readonly [number, number] = [0.35, 0.95];
 
+/** Front-window ramp over parametric depth `nz` — the shared 0.35→0.95
+ *  smootherstep every parked-front curve rides (pose bias, size boost, and
+ *  the ServicesCardRing halo). 0 on side/back cards (nz ≤ window low), 1 on
+ *  the near-front card. Extracted so the one window has one implementation
+ *  (dedup: it was computed identically in three places). */
+export function frontWindowWeight(nz: number): number {
+  return smootherstep(RING_FRONT_BIAS_WINDOW[0], RING_FRONT_BIAS_WINDOW[1], nz);
+}
+
 /** Pose bias for a card at parametric depth `nz` (−1 back … 1 front). */
 export function frontPoseBias(nz: number): { pitch: number; yaw: number } {
-  const w = smootherstep(RING_FRONT_BIAS_WINDOW[0], RING_FRONT_BIAS_WINDOW[1], nz);
+  const w = frontWindowWeight(nz);
   return { pitch: RING_FRONT_BIAS_PITCH * w, yaw: RING_FRONT_BIAS_YAW * w };
 }
 
@@ -105,7 +114,7 @@ export function frontScaleEmphasis(px: number): number {
  *  pose bias, so only the near-front card grows. `fade` (default 1) eases
  *  it back out as the deck stacks (pass `1 − flattenT`). */
 export function frontScaleBoost(nz: number, px: number, fade: number = 1): number {
-  const w = smootherstep(RING_FRONT_BIAS_WINDOW[0], RING_FRONT_BIAS_WINDOW[1], nz);
+  const w = frontWindowWeight(nz);
   return 1 + frontScaleEmphasis(px) * w * fade;
 }
 

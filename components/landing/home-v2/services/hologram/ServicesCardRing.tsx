@@ -128,10 +128,10 @@ import {
   frontCardIndex,
   frontPoseBias,
   frontScaleBoost,
+  frontWindowWeight,
   lerp,
   placeCardOnOrbit,
   ringRotationForProgress,
-  smootherstep,
   stepRingSpring,
   type RingSpringState,
 } from "@/lib/services-ring/ringMath";
@@ -1501,7 +1501,7 @@ export function ServicesCardRing({
       // Halo is front-weighted: swells as the card parks, gone on the sides
       // — and dies early in the stack (four converged halos would bloom).
       glowMaterials[i].opacity =
-        glowOpacity * smootherstep(0.35, 0.95, placed.nz) * master * (stack ? stack.glowMul : 1);
+        glowOpacity * frontWindowWeight(placed.nz) * master * (stack ? stack.glowMul : 1);
       // Hover-resolve: the hovered card's veil damps toward its resolved
       // residue; everyone else restores to the full feed read.
       const veilTarget = i === hovered ? RING_VEIL_HOVER_LEVEL : 1;
