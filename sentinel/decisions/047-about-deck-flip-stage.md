@@ -353,11 +353,12 @@ update for the paired `uPixelRatio` fix and the post-change numbers).
    reveal swaps `translateY(14px)` for `translateX(32px → 0)` + a left-inset
    clip wipe (each line lands center-first, reveals outward to the left
    margin) — the owner read the upward rise as "cringy". Additionally the
-   NAME / "// Voidwalker." em / ROLE eyebrow **scramble-decode** via the
+   the NAME + ROLE eyebrow **scramble-decode** via the
    shared caption kernel, armed off the copy clock (`aboutCopyT ≥ 0.05` via
    `aboutStageProgressRef`, re-arm below 0.02, targets = line spans since the
    kernel owns `textContent`). Component-local rAF, single writer for those
-   text nodes.
+   text nodes. (Superseded by Update 7: the middle `// Voidwalker.` em target
+   was dropped — decode is now the TWO targets NAME + ROLE, not three.)
 3. **The receded mark persists.** `ABOUT_FLIP_MARK_DIM = 0.45` replaces the
    full flip clear on the mark's opacity (`BrandmarkPhysicsCoreActor`) —
    ~0.30 of parked ink survives as a subtle centre presence behind the
@@ -366,3 +367,20 @@ update for the paired `uPixelRatio` fix and the post-change numbers).
    is untouched); the ambient envelope still kills the mark at #continuum.
    Screenshot-verified: the persisted dots read as ambient instrument
    around the portrait (the cluster shifts right, the mark holds centre).
+
+## Update 7 (2026-07-17, owner) — two-target decode: "just my name in caps"
+
+The identity **scramble-decode** dropped from THREE targets to TWO. The
+middle `// Voidwalker.` em alias line was removed entirely (owner: "just my
+name in caps") — the name now renders UPPERCASE via CSS on `.voidwalker__name`
+instead of carrying a separate `<em>` handle/alias underneath it. The decode
+kernel (`AboutStage.tsx`) therefore drives exactly two nodes now:
+
+1. **NAME** (the `.voidwalker__name` inner span), `at: 0`.
+2. **ROLE** eyebrow (`.voidwalker__role`), `at: SCRAMBLE_STAGGER_S` (0.14s).
+
+Net: name at t0, role one stagger step later — no third (2×-stagger) em beat.
+`SCRAMBLE_STAGGER_S` is now a single step between the two, not the base of a
+three-step ladder. Nothing else in the beat/emergence contract changes (the
+copy clock arm at 0.05, re-arm floor at 0.02, and the RTL emergence wipe all
+hold). This is the mandated post-incident ADR sync for the decode-target set.

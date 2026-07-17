@@ -10,14 +10,16 @@ import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { aboutCopyT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 
-/** Copy-clock threshold that ARMS the identity decode (name / em / role
- *  scramble toward their finals). Slightly into the copy reveal so the
+/** Copy-clock threshold that ARMS the identity decode (name, then role
+ *  scramble toward their finals — the `// Voidwalker.` em target was dropped
+ *  2026-07-17, ADR-047 Update 7). Slightly into the copy reveal so the
  *  decode plays on text that is already visibly emerging. */
 const SCRAMBLE_ARM_AT = 0.05;
 /** Reverse-scroll re-arm floor — below this the decode resets so the next
  *  forward entry plays fresh (mirrors the ServicesMasthead thresholds). */
 const SCRAMBLE_REARM_BELOW = 0.02;
-/** Per-target decode stagger (seconds) — name, then em, then role. */
+/** Per-target decode stagger (seconds) — name at 0, then role one step later
+ *  (two targets since the em alias was dropped, ADR-047 Update 7). */
 const SCRAMBLE_STAGGER_S = 0.14;
 
 /**
