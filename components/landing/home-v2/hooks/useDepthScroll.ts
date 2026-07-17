@@ -321,10 +321,25 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("scroll", scheduleDecay, { passive: true });
     window.addEventListener("resize", onScroll);
+    // Tab-return re-sync (2026-07-17): the demand frameloop AND this
+    // rAF-throttled watcher both freeze while the tab is hidden, and on
+    // return neither the browser nor Lenis reliably fires a scroll/resize —
+    // so without this the store keeps whatever it read on the last pre-hide
+    // frame, and a resume race can leave the corridor desynced (the
+    // brandmark stuck at a mid-flight non-wireframe pose, the #services
+    // masthead faded to 0 through --svc-content-in). Force ONE synchronous
+    // re-sync from the LIVE stage rect the instant the tab returns. It is
+    // idempotent: the change-guards inside writeFrame drop it to a no-op
+    // when the frozen state was already correct.
+    const onVisibility = () => {
+      if (!document.hidden) writeFrame();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("scroll", scheduleDecay);
       window.removeEventListener("resize", onScroll);
+      document.removeEventListener("visibilitychange", onVisibility);
       if (rafId.current != null) {
         window.cancelAnimationFrame(rafId.current);
         rafId.current = null;

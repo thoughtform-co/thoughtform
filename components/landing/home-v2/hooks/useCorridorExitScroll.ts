@@ -257,12 +257,24 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
     requestWrite();
     window.addEventListener("scroll", requestWrite, { passive: true });
     window.addEventListener("resize", requestWrite);
+    // Tab-return re-sync (2026-07-17): this rAF-throttled watcher freezes
+    // while the tab is hidden and no scroll/resize reliably fires on return,
+    // so the dissipate / docked / servicesAmbient channels can hold a stale
+    // pre-hide read — leaving the brandmark centerpiece un-parked and the
+    // #services copy hidden. Force a fresh write from the live #services
+    // rect the instant the tab returns (idempotent — the per-property
+    // change-guards no-op it when the frozen state was already correct).
+    const onVisibility = () => {
+      if (!document.hidden) write();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       disposed = true;
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", requestWrite);
+      document.removeEventListener("visibilitychange", onVisibility);
       document.documentElement.removeAttribute("data-corridor-docked");
       document.documentElement.removeAttribute("data-corridor-exit");
       document.documentElement.removeAttribute("data-services-ambient");

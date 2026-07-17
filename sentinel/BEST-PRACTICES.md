@@ -237,6 +237,54 @@ not a scene-graph error.
 
 ---
 
+### rAF-throttled DOM/store writers must re-sync on tab-return
+
+The corridor's scroll writers (`useDepthScroll`, `useCorridorExitScroll`,
+`useServicesStageScroll`) and the masthead reveal controller are
+rAF-throttled and driven by `scroll` / `resize` — they never re-run on their
+own. When the tab is backgrounded, `document.hidden` freezes rAF (and the
+demand frameloop), and on return **neither the browser nor Lenis reliably
+fires a scroll/resize**. So whatever value the writer last wrote before the
+hide is left stale, and because nothing re-runs the writer, it STAYS stale
+until the user scrolls.
+
+Shipped symptoms (2026-07-17): after a tab switch, the `#services` masthead
+copy faded to 0 (its opacity is `--svc-content-in * (1 − --svc-exit)`, and
+`--svc-content-in` held a stale low value) and the brandmark centerpiece
+showed a mid-flight **non-wireframe** pose (`paintProgress` / `servicesAmbient`
+desynced) — "some elements disappeared / the mark is particles not wireframe
+on tab-return."
+
+Rule: any rAF-throttled hook that WRITES DOM vars or store state from the
+scroll position must also force a fresh re-sync on `visibilitychange` resume.
+
+```ts
+const onVisibility = () => {
+  if (!document.hidden) writeFrame(); // re-read the live rect, re-establish state
+};
+document.addEventListener("visibilitychange", onVisibility);
+```
+
+Two gotchas found while fixing it:
+
+- If the writer dedupes with an internal cache (`currentContentIn`, …), reset
+  the cache before the forced write — a stale-but-matching cache will skip
+  the heal (a plain `write()` thinks the value is already correct).
+- If a controller tracks internal state a DOM mutation would normally drive
+  (the masthead's armed/done), force the resolved end-state directly on
+  resume rather than relying on the observer re-firing.
+
+**Runtime check:** at settled `#services`, set `--svc-content-in` to 0 +
+clear the masthead text, dispatch `visibilitychange`, and assert the copy +
+opacity return (the `scratchpad` resume-resync repro does exactly this).
+
+**Why it matters:** the hooks that DO handle visibility (`useWorldDomTracker`,
+`useLenis`, `useCorridorMount`, the motion-follower's `RESUME_IDLE_GAP` snap)
+are the precedent — the corridor DOM/store writers were simply the ones that
+had been missed.
+
+---
+
 ### Cover Swipes Are Replacement Planes, Not Fade-Outs
 
 For Active Theory / Hashgraph-style handoffs, keep the completed scene as a

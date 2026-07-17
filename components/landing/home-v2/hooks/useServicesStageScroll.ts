@@ -219,12 +219,36 @@ export function useServicesStageScroll(
     requestWrite();
     window.addEventListener("scroll", requestWrite, { passive: true });
     window.addEventListener("resize", requestWrite);
+    // Tab-return re-sync (2026-07-17): this rAF watcher freezes while the
+    // tab is hidden and no scroll/resize reliably fires on return, so
+    // `--svc-content-in` / `--svc-arrive` / the ring progress can hold a
+    // stale pre-hide read — the #services masthead opacity is
+    // `--svc-content-in * (1 − --svc-exit)`, so a stale 0 there is the
+    // "copy disappeared on tab-return" symptom. Force a fresh write (which
+    // re-reads --corridor-dissipate) the instant the tab returns; the
+    // resulting `--svc-content-in` mutation also re-fires the masthead
+    // reveal controller's clock. Idempotent via the per-property guards.
+    const onVisibility = () => {
+      if (document.hidden) return;
+      // Drop the write-dedupe caches so the forced re-sync ALWAYS re-writes
+      // the live values — even if a resume race left the DOM vars stale
+      // while these caches still hold the last pre-hide value (a plain
+      // write() would then skip them, thinking they were already correct).
+      currentStep = -1;
+      currentShrink = -1;
+      currentFade = -1;
+      currentContentIn = -1;
+      currentExit = -1;
+      write();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       disposed = true;
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", requestWrite);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [onStepChange, stageRef]);
 }

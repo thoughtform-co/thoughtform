@@ -190,8 +190,41 @@ export function ServicesMasthead() {
     const observer = new MutationObserver(onClock);
     observer.observe(stage, { attributes: true, attributeFilter: ["style"] });
 
+    // Tab-return safety (2026-07-17): if the tab was hidden mid-reveal, or a
+    // resume race left the controller armed (text cleared) while the stage
+    // clock has already settled, the MutationObserver may not fire on return
+    // (no fresh style mutation). Re-evaluate the clock on visibility resume
+    // so the masthead copy can never stay blank after a tab switch.
+    const onVisibility = () => {
+      if (document.hidden) return;
+      // Guarantee the copy is never left blank after a tab switch: if the
+      // section has settled, force the resolved full-text state directly (a
+      // hide mid-reveal or a resume race can leave the internal state out of
+      // step with the observer, which won't re-fire without a fresh style
+      // mutation). Below the reveal threshold, re-arm via onClock.
+      if (readClock() >= REVEAL_AT) {
+        if (raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+        jobs.length = 0;
+        paraRunning = false;
+        state = "done";
+        for (const t of targets) {
+          t.el.textContent = t.text;
+          t.el.parentElement?.removeAttribute("data-live");
+        }
+        typed.textContent = paraText;
+        root.setAttribute("data-reveal", "done");
+      } else {
+        onClock();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       observer.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
       if (raf) cancelAnimationFrame(raf);
       jobs.length = 0;
       for (const t of targets) {

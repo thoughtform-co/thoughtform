@@ -54,6 +54,29 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-07-17 (latest 2) — Tab-return desync: corridor scroll writers re-sync on visibilitychange
+
+Owner report: switching tabs and back sometimes left the #services masthead
+copy gone and the brandmark stuck as scattered particles instead of the
+settled wireframe. Root cause (a bug CLASS — new BEST-PRACTICES pattern):
+the corridor's rAF-throttled scroll writers (`useDepthScroll`,
+`useCorridorExitScroll`, `useServicesStageScroll`) + the masthead reveal
+controller are driven by `scroll`/`resize` only. The tab-hide freezes rAF +
+the demand frameloop; on return no scroll/resize reliably fires, so a stale
+pre-hide value can stick (masthead opacity = `--svc-content-in * (1−exit)`;
+brandmark reads `paintProgress`/`servicesAmbient`). Cycle A:
+
+- Added a `visibilitychange` resume handler to all three writers (force a
+  synchronous re-sync from the live scroll rect) + the masthead controller
+  (force the resolved full-text state when settled). `useServicesStageScroll`
+  busts its write-dedupe caches first so the heal can't be skipped.
+- Verification: `npm run verify` green (297); desktop ring smoke 7/7; a
+  Playwright repro corrupts the masthead to the "gone" state, dispatches
+  `visibilitychange`, and confirms opacity + copy return (title/intro
+  fully restored). BEST-PRACTICES pattern "rAF-throttled DOM/store writers
+  must re-sync on tab-return" added (sits with the demand-loop + dt-clamp
+  frameloop-resume family).
+
 ### 2026-07-17 (latest) — Services message pass: headline, de-framed intro, decluttered card (ADR-044/029 update)
 
 Owner: #services is where a visitor must know what he does immediately, and
