@@ -596,7 +596,9 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   });
   const incLines = wrapRuns(ctx, incSegments, maxW);
   const INC_LH = 30;
-  const incBottom = titleTop - 20;
+  // Gap below the includes, above the title = 24 = 2× the DOM plate's
+  // .svc-plate__title margin-top (12px) — the bake/DOM parity contract.
+  const incBottom = titleTop - 24;
   incLines.forEach((line, i) => {
     drawRunLine(
       ctx,
