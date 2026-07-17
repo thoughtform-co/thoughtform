@@ -49,6 +49,12 @@ export interface ServicePlateCardProps {
   variant?: PlateVariant;
 }
 
+/** Scramble-decode arming offset (s). Mirrors the title's
+ *  `.svc-plate__fx--d3` transition-delay in services.css (0.22s) so the first
+ *  resolved characters land WITH the title's rise. Keep in lockstep with that
+ *  rule — the title moved d2→d3 (0.18→0.22) on 2026-07-17. */
+const TITLE_DECODE_OFFSET_S = 0.22;
+
 export function ServicePlateCard({
   service,
   state,
@@ -85,10 +91,16 @@ export function ServicePlateCard({
       el.textContent = service.title;
       return;
     }
-    // Decode in from blank; +0.18s start lands the first resolved characters
-    // with the __fx--d2 rise so the decode reads as the title coming online.
+    // Decode in from blank; the arming offset lands the first resolved
+    // characters with the __fx--d3 rise so the decode reads as the title
+    // coming online.
     el.textContent = "";
-    queueScramble(scrambleJobsRef.current, el, service.title, performance.now() / 1000 + 0.18);
+    queueScramble(
+      scrambleJobsRef.current,
+      el,
+      service.title,
+      performance.now() / 1000 + TITLE_DECODE_OFFSET_S
+    );
     const tick = () => {
       advanceScrambles(scrambleJobsRef.current, performance.now() / 1000);
       scrambleRafRef.current = scrambleJobsRef.current.length ? requestAnimationFrame(tick) : 0;
