@@ -227,6 +227,10 @@ export function useServicesStageScroll(
     // re-reads --corridor-dissipate) the instant the tab returns; the
     // resulting `--svc-content-in` mutation also re-fires the masthead
     // reveal controller's clock. Idempotent via the per-property guards.
+    // NOTE: this watcher is one of THREE parallel pinned-stage scroll hooks —
+    // useAboutStageScroll + useContinuumStageScroll carry the same
+    // visibilitychange re-sync; a shared parametrized factory is the eventual
+    // convergence fix (plan 7.2 / 5.1). Keep the three in lockstep by hand.
     const onVisibility = () => {
       if (document.hidden) return;
       // Drop the write-dedupe caches so the forced re-sync ALWAYS re-writes

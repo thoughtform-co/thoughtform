@@ -204,10 +204,25 @@ export function useAboutStageScroll(
       measureCenterDx();
       requestWrite();
     };
+    // Tab-return re-sync (the ee48079 pattern, ported from
+    // useContinuumStageScroll — plan 7.2): this rAF watcher freezes while the
+    // tab is hidden and neither the browser nor Lenis reliably fires a
+    // scroll/resize on return, so the mode attribute + --about-* vars + the
+    // progress ref + the slot rect can hold a stale pre-hide frame. Force an
+    // idempotent write on visibility restore so everything reconstructs from
+    // the live rect (write() re-runs the same media/fallback/disengage
+    // guards). NOTE: useContinuumStageScroll + useServicesStageScroll are the
+    // two parallel copies of this pinned-stage watcher; a shared parametrized
+    // factory is the eventual convergence fix (plan 7.2 / 5.1) — until then
+    // keep the three in lockstep by hand.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") requestWrite();
+    };
 
     requestWrite();
     window.addEventListener("scroll", requestWrite, { passive: true });
     window.addEventListener("resize", onResize);
+    document.addEventListener("visibilitychange", onVisibility);
     capableMedia.addEventListener?.("change", onResize);
     // Late-hydration settle passes (the services runway inflates the page
     // above this stage asynchronously — remeasure once things land).
@@ -221,6 +236,7 @@ export function useAboutStageScroll(
       window.clearTimeout(t2);
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
       capableMedia.removeEventListener?.("change", onResize);
       disengage(stageRef.current);
     };
