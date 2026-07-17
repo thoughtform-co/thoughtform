@@ -5951,19 +5951,27 @@
   margin-bottom: clamp(48px, 6vh, 96px);
   text-align: left;
 }
+/* Restyled to the canonical `.home-v2-station-header__title` /
+   `.services-masthead__title` recipe (the 2026-07 "message pass" pass,
+   ADR-049): PP Neue Montreal 400, uppercase, 0.04em, --dawn with the gold
+   wash; the em line is --gold weight 500 (upright — no italics). Applied
+   unconditionally so the static crail fallback AND the capable-path
+   continuum stage speak the same voice. */
 .continuum__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
-  font-size: clamp(28px, 3vw, 44px);
+  font-size: clamp(26px, 3vw, 44px);
   line-height: 1.1;
-  letter-spacing: -0.022em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--dawn);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
   margin: 0;
   text-wrap: balance;
 }
 .continuum__title em {
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--gold);
 }
 .continuum__lede {

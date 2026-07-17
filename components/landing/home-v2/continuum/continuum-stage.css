@@ -1,0 +1,266 @@
+/* ═══════════════════════════════════════════════════════════════════════
+ * ADR-049 — CONTINUUM RAIL STAGE (#continuum, capable desktop path)
+ *
+ * A 200svh runway pins a sticky TRANSPARENT stage over the still-live
+ * corridor canvas: the receded brandmark re-emerges to mid-prominence and
+ * eases closer, its near-horizontal waist ring re-brightens, and a reticle
+ * thumb travels the tool ↔ collaborator spectrum along that ring — all in
+ * the corridor canvas BEHIND this stage. This DOM stage carries only the
+ * readable chrome: the masthead (top), the three spectrum labels (lower
+ * third, registered left/centre/right under the ring), the instrument
+ * readout, and the CTA. The reading hold closes with the fail-opaque
+ * shield restoring under #practice.
+ *
+ * EVERYTHING here is attribute-gated on
+ * `#continuum[data-continuum-mode="stage"]` (written by
+ * useContinuumStageScroll only while the ring's media gate holds and the
+ * corridor is not in WebGL fallback): no attribute ⇒ the stage is
+ * display:none, the runway is flat, and the static `.continuum__head` +
+ * `.crail` spectrum own the section — mobile, reduced-motion,
+ * WebGL-fallback, JS-failure and flag-off all land there (fail-static).
+ *
+ * The scroll-driven channels (--continuum-approach / --continuum-copy-in /
+ * --continuum-bg-in) are per-frame CSS-var mirrors of the continuumStageMath
+ * beat windows — NO transitions on them (scroll owns the motion; everything
+ * is reversible by construction).
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+.continuum-stage-root {
+  position: relative;
+  z-index: 2;
+}
+/* No stage without the mode attribute — fail-static. */
+.continuum-stage {
+  display: none;
+}
+
+#continuum[data-continuum-mode="stage"] .continuum-stage-root {
+  /* 200svh — the beat windows are fractions, so the runway height is the
+     single pacing knob. Widen if the approach/read feels rushed. */
+  min-height: 200svh;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage {
+  display: block;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  /* ADR-008 Rule 2 exception (sanctioned for #continuum by ADR-049): the
+     stage is transparent so the live corridor canvas — the re-emerged
+     mark + the re-brightened waist ring + the thumb — shows through the
+     pinned beat. The fail-opaque station shield (#continuum.station::before,
+     home-v2.css) sits underneath for every non-engaged state. */
+  background: transparent;
+}
+/* The static fallback (head + crail spectrum) hides only while the stage
+   owns the section. */
+#continuum[data-continuum-mode="stage"] > .continuum__head,
+#continuum[data-continuum-mode="stage"] > .continuum,
+#continuum[data-continuum-mode="stage"] .continuum--focused {
+  display: none;
+}
+#continuum.station[data-continuum-mode="stage"] {
+  /* The ADR-030 containment-placeholder trap: a ~200svh station must never
+     collapse to its contain-intrinsic-size placeholder offscreen or every
+     scroll target below it lands wrong. */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+  /* The station's vertical padding zeroes while pinned so the runway's
+     bottom coincides with #practice's top (the ADR-049 shield/ambient
+     ordering invariant). The horizontal --hud-content-inset padding STAYS
+     (the rail-parity inset chain, ADR-045/048). Fallback paths (attribute
+     absent) keep normal flow. */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── The invisible brandmark-journey rail anchor. A runway CHILD (sibling
+   of the display:none-able .continuum-stage), so it ALWAYS carries a valid
+   rect whether or not the stage is engaged — a 0×0 rail rect makes
+   computeBrandmarkTransform return null every frame (journey.ts
+   keyframeCentreY), freezing the whole brandmark journey page-wide. Absolute
+   in the runway (a valid position inside #continuum); the rail→orbit transit
+   launches from here. Pure measurement — no paint. It must NOT match the
+   native-glyph reveal CSS (scoped to .crail--large .crail__brand), which
+   this is not.
+   (Iteration point, ADR-049 uncertainty #3: pin it precisely to the WebGL
+   mark's viewport centre while pinned so the transit launches from the mark
+   — v1 keeps the simpler runway-absolute placement to avoid an engage-time
+   position jump.) */
+#continuum .continuum-stage__brand {
+  position: absolute;
+  left: 50%;
+  top: 50svh;
+  width: 56px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* ── The column: head at top, an open centre band for the mark, then the
+   labels + readout + CTA clustered in the lower third. The tail kill rides
+   this inner wrapper (ADR-008 Rule 3: children, never the shielding
+   station wrapper); the per-child copy reveal composes beneath it. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-block: clamp(40px, 7svh, 88px) clamp(28px, 4svh, 56px);
+  padding-inline: var(--hud-content-inset, 0);
+  opacity: calc(1 - var(--continuum-bg-in, 0));
+}
+
+/* ── Masthead — the Linear-style two-column head (title left, lede right),
+   reusing the #continuum head grammar but restyled to the Services
+   masthead recipe. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  column-gap: clamp(40px, 5vw, 96px);
+  align-items: start;
+  margin-inline: var(--rail-inset);
+}
+
+/* The canonical big-title face — EXACTLY `.home-v2-station-header__title`
+   / `.services-masthead__title` (the 2026-07 "message pass" recipe): PP
+   Neue Montreal 400, clamp(26px,3vw,44px), 0.04em, UPPERCASE, --dawn with
+   the gold wash; the em line is --gold weight 500 (upright — the site's
+   no-italics rule). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 3vw, 44px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  text-wrap: balance;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__title-line {
+  display: block;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__title-line--em {
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__lede {
+  margin: 0;
+  align-self: end;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.55;
+  color: var(--dawn-70);
+  max-width: 38ch;
+  letter-spacing: -0.005em;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__lede em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+}
+
+/* ── The three spectrum labels — lower third, registered under the waist
+   ring's left/centre/right. Width ≈ the ring's projected span (v1 eyeball;
+   iteration point: project the ring's f = 1/6, 1/2, 5/6 to pixels and
+   write --crail-x-l/m/r for exact registration). The reticle thumb + tick
+   diamonds are the WebGL ring; these are the readable stops beneath. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__labels {
+  margin: auto auto 0;
+  width: min(88vw, calc(64svh * 1.6));
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: clamp(16px, 2.5vw, 40px);
+  align-items: start;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop {
+  position: relative;
+  padding-top: 26px;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--l {
+  text-align: left;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--m {
+  text-align: center;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--r {
+  text-align: right;
+}
+/* Tick registration to the label column edges (mirrors the crail ticks). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__tick {
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 20px;
+  background: var(--dawn-30);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--l .crail__tick {
+  left: 6%;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--m .crail__tick {
+  left: 50%;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--r .crail__tick {
+  right: 6%;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop-line {
+  display: block;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__b {
+  max-width: 26ch;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--m .crail__b {
+  margin: 0 auto;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop--r .crail__b {
+  margin-left: auto;
+}
+
+/* ── Readout + CTA under the labels. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__readout {
+  text-align: center;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-30);
+  margin-top: 18px;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__close {
+  margin-top: clamp(16px, 2.5svh, 32px);
+  text-align: center;
+}
+
+/* ── Reveal — the copy column scrubbed off --continuum-copy-in with a
+   per-child --ci-off stagger (the about-stage.css recipe: each child
+   carries an inline --ci-off; --ci renormalizes --continuum-copy-in past
+   that offset). Reversible, observer-free — NOT useRevealMotion. The
+   masthead/labels EMERGE from the centre, sliding into place with a
+   right-to-left wipe. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__title,
+#continuum[data-continuum-mode="stage"] .continuum-stage__lede,
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop,
+#continuum[data-continuum-mode="stage"] .continuum-stage__readout,
+#continuum[data-continuum-mode="stage"] .continuum-stage__close {
+  --ci: clamp(
+    0,
+    calc((var(--continuum-copy-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))),
+    1
+  );
+  opacity: var(--ci);
+  transform: translateY(calc((1 - var(--ci)) * 18px));
+}
+
+/* The stage never exists below the ring gate (JS parity gate in the hook +
+   the component's own media return; this is the CSS belt — the
+   about-stage.css precedent). */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .continuum-stage {
+    display: none !important;
+  }
+  .continuum-stage-root {
+    min-height: 0 !important;
+  }
+}

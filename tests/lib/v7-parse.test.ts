@@ -185,6 +185,15 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     // relocated #about (ADR-047 — AboutStagePortal mounts into it).
     expect(bodyHtml).toMatch(/<div\b[^>]*\bdata-about-root/);
     expect(bodyHtml.search(/<div\b[^>]*\bdata-about-root/)).toBeGreaterThan(aboutIdx);
+    // The continuum-stage portal slot survives INSIDE #continuum, and
+    // sits BEFORE the .continuum__head (ADR-049 — so the stage's own
+    // .crail__brand journey anchor wins querySelector over the static
+    // #crailBrand below it while engaged).
+    const continuumRootIdx = bodyHtml.search(/<div\b[^>]*\bdata-continuum-root/);
+    expect(continuumRootIdx).toBeGreaterThan(continuumIdx);
+    expect(continuumRootIdx).toBeLessThan(
+      bodyHtml.search(/<header\b[^>]*\bclass="continuum__head"/)
+    );
 
     // The orphaned connector slot must NOT appear right after #services.
     const between = bodyHtml.slice(servicesIdx);

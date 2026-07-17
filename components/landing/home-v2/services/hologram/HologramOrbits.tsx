@@ -313,12 +313,16 @@ function OrbitRing({
       if (config.dashed) {
         // Dashed ring can't stroke-draw-on; reveal by fading in (matches the
         // SVG orbit-map's dotted ring).
-        line.material.opacity = baseOpacity * reveal * master;
+        // Cap at 1: a per-ring master (the ADR-049 waist re-brighten) may
+        // exceed 1 to lift the line above its base opacity. min(1, …) is a
+        // no-op when master ≤ 1 (labs / flag-off byte-identical, baseOpacity
+        // is already ≤ 1).
+        line.material.opacity = Math.min(1, baseOpacity * reveal * master);
       } else {
         // Solid ring: stroke draw-on around the mark via the instanced
         // segment count (fat lines render one instance per segment).
         line.geometry.instanceCount = Math.max(0, Math.ceil(reveal * SEGMENTS));
-        line.material.opacity = baseOpacity * master;
+        line.material.opacity = Math.min(1, baseOpacity * master);
       }
       // Draw gate (2026-07-16 perf pass): the exit dim + about flip fade
       // hold every line at opacity 0 through the post-flip #about beats —
@@ -330,8 +334,10 @@ function OrbitRing({
     }
     if (nodeMatRef.current) {
       // The node body appears once its ring has nearly finished wrapping.
-      nodeMatRef.current.opacity =
-        nodeBaseOpacity * smootherstep(revealEnd - 0.18, revealEnd, d) * master;
+      nodeMatRef.current.opacity = Math.min(
+        1,
+        nodeBaseOpacity * smootherstep(revealEnd - 0.18, revealEnd, d) * master
+      );
       if (nodeRef.current) nodeRef.current.visible = nodeMatRef.current.opacity > 0.002;
     }
   });
@@ -389,6 +395,12 @@ export interface HologramOrbitsProps {
    *  Update 1: the decommission dims the armillary on the exit clock).
    *  Absent → 1 — labs and flag-off stay byte-identical. */
   masterOpacityGetter?: () => number;
+  /** Per-RING master opacity getter (ADR-049: the continuum stage
+   *  re-brightens ONLY the waist ring while the meridian stays cleared).
+   *  Called once per ring with its config; a returned getter overrides
+   *  `masterOpacityGetter` for that ring, `undefined` falls back to it.
+   *  The whole prop absent ⇒ labs / flag-off byte-identical. */
+  masterOpacityGetterFor?: (config: OrbitConfig) => (() => number) | undefined;
 }
 
 export function HologramOrbits({
@@ -399,6 +411,7 @@ export function HologramOrbits({
   scale = 1,
   entrance = "off",
   masterOpacityGetter,
+  masterOpacityGetterFor,
 }: HologramOrbitsProps) {
   const groupRef = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera);
@@ -474,7 +487,7 @@ export function HologramOrbits({
             dissipateRef={dissipateRef}
             revealStart={win[0]}
             revealEnd={win[1]}
-            masterOpacityGetter={masterOpacityGetter}
+            masterOpacityGetter={masterOpacityGetterFor?.(o) ?? masterOpacityGetter}
           />
         );
       })}

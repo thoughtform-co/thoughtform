@@ -4981,6 +4981,20 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
   <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="05 Continuum">
     <div class="station__idx">Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
+    <!-- CONTINUUM STAGE (ADR-049): on the capable desktop path the React
+         portal (ContinuumStagePortal) mounts the pinned rail stage into
+         this slot and data-continuum-mode="stage" hides the static head +
+         crail spectrum below; every other path (mobile, reduced motion,
+         WebGL fallback, no JS) keeps the authored crail markup + the 7s
+         CSS reticle loop untouched. Copy in the stage duplicates the
+         continuum strings via continuumStageData.ts - edit BOTH (lockstep).
+         Placed BEFORE .continuum__head so the stage's own .crail__brand
+         journey anchor wins querySelector("#continuum .crail__brand") over
+         the static #crailBrand below while engaged (the brandmark journey
+         rail keyframe). NOTE: this comment must contain NO angle-bracket
+         tag syntax; the v7-parse relocate walkers regex-scan the raw HTML,
+         comments included. -->
+    <div class="continuum-stage-root" data-continuum-root></div>
     <header class="continuum__head" data-m-group>
       <h2 class="continuum__title" data-m="title">
         AI isn't software to command.<br><em>It's intelligence to navigate.</em>

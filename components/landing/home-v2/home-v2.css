@@ -404,12 +404,46 @@ html[data-corridor-exit="true"] #about.station::before {
   z-index: 0;
 }
 
-/* #continuum is the cover that ends the ambient hold (ADR-047 — the role
-   #about carried under ADR-033). It keeps its authored opaque .station
-   background; it only needs to STACK above the body veil (z5) + fixed
-   canvas (z2) while the exit band is live, and to escape the
-   content-visibility paint containment. */
+/* #continuum is now a pinned TRANSPARENT rail stage (ADR-049 — the role
+   #about took under ADR-047): the re-emerged brandmark + re-brightened
+   waist ring + the tool ↔ collaborator thumb show through the pinned beat,
+   so #continuum drops its authored opaque background for a fail-opaque
+   shield. The shield (#continuum.station::before) defaults to opacity 1
+   (opaque — flag-off / JS-failure / mobile land here, indistinguishable
+   from a normal station), is driven to 0 while the stage is pinned +
+   capable by useContinuumStageScroll, and restores across the runway tail
+   at the unpin — BEFORE the ambient fade even starts (the ADR-030 lockstep
+   ordering). Reveals never ride this wrapper (ADR-008 Rule 3) — the stage
+   children carry every animation; the shield is a pseudo BELOW them. */
 html[data-corridor-exit="true"] #continuum {
+  position: relative;
+  z-index: 6;
+  background-color: transparent;
+  background-image: none;
+  content-visibility: visible;
+}
+html[data-corridor-exit="true"] #continuum > * {
+  position: relative;
+  z-index: 7;
+}
+html[data-corridor-exit="true"] #continuum.station::before {
+  /* Shield replaces the authored station surface while the band is live —
+     mirrors .station:not(.hero)'s surface (void + stars tile) so opacity 1
+     is indistinguishable from the normal station shield. Written by
+     useContinuumStageScroll (0 while the stage is pinned + capable; back to
+     1 across the runway tail); unwritten ⇒ 1 ⇒ fail-opaque. */
+  inset: 0;
+  background: var(--void, #0a0908) url("/v7-stars.svg") center top / 1600px 900px repeat;
+  opacity: var(--continuum-bg-in, 1);
+  z-index: 0;
+}
+
+/* #practice is now the cover that ends the ambient hold (ADR-049 — the
+   role #continuum carried under ADR-047, #about under ADR-033). It keeps
+   its authored opaque .station background; it only needs to STACK above
+   the body veil (z5) + fixed canvas (z2) while the exit band is live, and
+   to escape the content-visibility paint containment. */
+html[data-corridor-exit="true"] #practice {
   position: relative;
   z-index: 6;
   content-visibility: visible;

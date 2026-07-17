@@ -13,6 +13,7 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
+import { ContinuumStagePortal } from "@/components/landing/home-v2/continuum/ContinuumStagePortal";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
@@ -557,6 +558,14 @@ export function LandingPage({
           markup in the same station stays the mobile/PRM/fallback
           surface. Same nested-root rules as ServicesPortal. */}
       <AboutStagePortal containerRef={rootRef} />
+      {/* Continuum rail stage (ADR-049): a nested root into the
+          [data-continuum-root] slot inside #continuum — the pinned
+          transparent stage over which the receded brandmark re-emerges,
+          its waist ring re-brightens, and the tool ↔ collaborator thumb
+          travels. The static .crail markup in the same station stays the
+          mobile/PRM/fallback surface. Same nested-root rules as
+          ServicesPortal / AboutStagePortal. */}
+      <ContinuumStagePortal containerRef={rootRef} />
       {/* The "SOURCE BUS · 04" services rail register is RETIRED (ADR-044) —
           the section masthead's intro paragraph is the services right-side
           text now. ServicesRailRegisterPortal stays on disk for rollback;

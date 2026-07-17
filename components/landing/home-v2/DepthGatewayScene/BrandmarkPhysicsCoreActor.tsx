@@ -65,6 +65,7 @@ import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
 import {
   ABOUT_DECK_STAGE,
+  CONTINUUM_RAIL_STAGE,
   SERVICES_CARD_RING,
   UNIFIED_SERVICES_ARMILLARY,
 } from "../unifiedServicesInstrument";
@@ -72,6 +73,12 @@ import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
+import {
+  CONTINUUM_MARK_INK,
+  CONTINUUM_RECEDE_RELEASE,
+  continuumApproachT,
+} from "@/lib/services-ring/continuumStageMath";
+import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { getServicePose } from "@/lib/home-v2/servicePose";
@@ -659,6 +666,22 @@ export function BrandmarkPhysicsCoreActor({
       ? 1 - ABOUT_FLIP_MARK_DIM * aboutFlipT(aboutStageProgressRef.current.progress)
       : 1;
 
+    // Continuum re-emergence (ADR-049): as the pinned #continuum stage
+    // approaches, the receded mark (~0.30 about-ambient ink) LIFTS to
+    // CONTINUUM_MARK_INK and eases part-way back toward the parked pose —
+    // "the brandmark returns, clearer, for the vision beat". 0 everywhere
+    // the continuum clock is 0 (flag-off / pre-continuum byte-identical);
+    // clamps to 1 below the runway (byte-stable through #practice arrival).
+    const continuumT = CONTINUUM_RAIL_STAGE
+      ? continuumApproachT(continuumStageProgressRef.current.progress)
+      : 0;
+    // Pose-only recede RELEASE: eases the #services exit recede (scale +
+    // camera-forward push) back by CONTINUUM_RECEDE_RELEASE as the mark
+    // re-emerges, so it reads closer/larger WITHOUT re-docking. Applied
+    // ONLY to the two pose lerps below — NOT the opacity dim, point size,
+    // or clean-field (those keep exitT). Identity at continuumT = 0.
+    const exitTPose = exitT * (1 - CONTINUUM_RECEDE_RELEASE * continuumT);
+
     // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
     // Three coupled clocks, all derived from `getBrandmarkCoreBlend(progress)`
     // (the shared 0..1 wrap clock anchored at substrate.start → substrate.peakAt):
@@ -818,13 +841,16 @@ export function BrandmarkPhysicsCoreActor({
     const inEpilogueOrDock = t.docked || t.servicesAmbient || t.epilogueProgress > 1e-3;
     const inSvgRest = !inEpilogueOrDock && progress < BRANDMARK_CORE_HANDOFF_PROGRESS;
     // The exit dim is PARTIAL (the mark stays a background presence
-    // through the deck stack); the ADR-047 about flip then clears it
-    // fully (aboutFlipFade), and handoffFade (servicesAmbientLevel)
-    // finishes the kill as #continuum arrives.
-    opacityRef.current =
-      (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) *
-      (1 - EXIT_DIM * exitT) *
-      aboutFlipFade;
+    // through the deck stack); the ADR-047 about flip then deepens it
+    // toward the ~0.30 ambient floor (aboutFlipFade). Under ADR-049 the
+    // #continuum approach then LIFTS that floor back up to
+    // CONTINUUM_MARK_INK (the mark re-emerges to mid-prominence); the
+    // retargeted handoffFade (servicesAmbientLevel) still finishes the
+    // kill, now as #practice arrives. continuumT = 0 ⇒ dimMix = the exact
+    // about dim product (byte-identical, ADR-023 Invariant 11).
+    const dimProduct = (1 - EXIT_DIM * exitT) * aboutFlipFade;
+    const dimMix = dimProduct + (CONTINUUM_MARK_INK - dimProduct) * continuumT;
+    opacityRef.current = (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * dimMix;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude — with a
     // mid-flight DIP (terminal-crisp pass, see CORE_POINT_SIZE_FLIGHT_DIP)
@@ -867,8 +893,9 @@ export function BrandmarkPhysicsCoreActor({
     // Decommission recede: the parked mark eases toward the smaller exit
     // scale as the viewscreen changes modes (exitT 0 pre-exit → no-op).
     // Same multiplier on the recede target keeps the recede RATIO
-    // constant across viewports.
-    scale += (EXIT_RECEDE_SCALE * parkedMul - scale) * exitT;
+    // constant across viewports. exitTPose releases half the recede across
+    // the #continuum approach so the mark grows back toward parked (ADR-049).
+    scale += (EXIT_RECEDE_SCALE * parkedMul - scale) * exitTPose;
 
     // Position: sphere centre (world) → a point dead-centre in front of
     // the LIVE camera, so the camera fly-in can't carry the shrinking mark
@@ -887,8 +914,10 @@ export function BrandmarkPhysicsCoreActor({
       posScratch.current.lerp(frontScratch.current, recT);
       // Decommission recede: push the parked mark AWAY along camera-forward
       // — the "space view" withdrawing behind the incoming data readout.
-      if (exitT > 1e-4) {
-        posScratch.current.addScaledVector(fwdScratch.current, EXIT_RECEDE_DIST * exitT);
+      // exitTPose eases the push back in across the #continuum approach so
+      // the mark comes forward again (ADR-049).
+      if (exitTPose > 1e-4) {
+        posScratch.current.addScaledVector(fwdScratch.current, EXIT_RECEDE_DIST * exitTPose);
       }
       // Head-on billboard base so the mark faces the viewer at the centerpiece.
       group.quaternion.identity().slerp(cam.quaternion, recT);

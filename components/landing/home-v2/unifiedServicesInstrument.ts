@@ -71,3 +71,39 @@ export const SERVICES_CARD_RING = true;
  * corridor-fallback keep the static about regardless of the flag.
  */
 export const ABOUT_DECK_STAGE = true;
+
+/**
+ * Feature flag for the CONTINUUM RAIL STAGE (ADR-049, 2026-07-17).
+ *
+ * Presumes ABOUT_DECK_STAGE (both true in production). When ON (and the
+ * about deck stage is on, same media gate):
+ *   - `#continuum` ("AI isn't software to command…") becomes a pinned
+ *     TRANSPARENT stage over the still-live corridor canvas
+ *     (`ContinuumStagePortal` → `[data-continuum-root]` →
+ *     `useContinuumStageScroll`): the receded brandmark RE-EMERGES to
+ *     mid-prominence (~0.60 ink, clearer than the ~0.30 about ambient,
+ *     subtler than the #services centerpiece) and eases back toward the
+ *     parked pose, and the near-horizontal "Saturn" waist ring alone
+ *     RE-BRIGHTENS while the meridian + card tracks stay cleared;
+ *   - a small reticle THUMB travels left↔right along the waist ring's
+ *     front arc (the tool ↔ collaborator spectrum, on the mark itself),
+ *     replacing the DOM `.crail` slider's autonomous reticle on the
+ *     capable path (`ContinuumWaistRail`);
+ *   - the corridor ambient hold — which under ADR-047 died as #continuum
+ *     covered — is RETARGETED one station down to die at `#practice`
+ *     (`useCorridorExitScroll` next-station retarget), and #continuum
+ *     gains the fail-opaque shield #about carries, so the mark shows
+ *     through the pinned beat;
+ *   - every channel is a pure function of the clamped continuum stage
+ *     clock, so the beat reverses under scroll and holds byte-stable
+ *     between the runways.
+ *
+ * OFF restores today's passive #continuum byte-visually: the ambient kill
+ * stays targeted at #continuum, the hook never engages, the portal stage
+ * null-renders, the fail-opaque shield defaults shut, and the static DOM
+ * `.crail` slider (7s CSS loop) owns the section. Mobile / reduced-motion /
+ * corridor-fallback keep the static crail regardless of the flag
+ * (fail-static). The `.continuum__title` restyle to the Services masthead
+ * recipe is unconditional (pure CSS, both tiers).
+ */
+export const CONTINUUM_RAIL_STAGE = true;

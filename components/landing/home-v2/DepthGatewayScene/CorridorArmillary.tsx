@@ -33,18 +33,27 @@ import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
 import { brandmarkScanAnchorPointsRef, type BrandmarkFeatureId } from "../brandmarkScanAnchorsRef";
-import { ABOUT_DECK_STAGE, SERVICES_CARD_RING } from "../unifiedServicesInstrument";
+import {
+  ABOUT_DECK_STAGE,
+  CONTINUUM_RAIL_STAGE,
+  SERVICES_CARD_RING,
+} from "../unifiedServicesInstrument";
+import { ContinuumWaistRail } from "@/components/landing/home-v2/services/hologram/ContinuumWaistRail";
 import {
   HologramOrbits,
   STRUCTURAL_ORBITS,
+  type OrbitConfig,
 } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
 import { ServicesCardRing } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
+import { CONTINUUM_WAIST_LEVEL, continuumApproachT } from "@/lib/services-ring/continuumStageMath";
+import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+import { lerp } from "@/lib/math";
 import {
   useHologramConnectors,
   type ConnectorAnchor,
@@ -71,6 +80,26 @@ const ORBIT_EXIT_DIM = 0.85;
 const orbitExitGetter = () =>
   (1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress)) *
   (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1);
+
+/** Waist-ring master opacity across the continuum stage (ADR-049): lerps
+ *  the cleared exit level TOWARD CONTINUUM_WAIST_LEVEL (> 1 brightens the
+ *  0.68-base line above its rest, capped at 1 in OrbitRing) as the approach
+ *  opens. continuumApproachT is 0 outside #continuum, so this equals
+ *  orbitExitGetter() everywhere else — the waist tracks the meridian
+ *  through #services / #about, then re-brightens alone here. */
+const waistContinuumGetter = () =>
+  lerp(
+    orbitExitGetter(),
+    CONTINUUM_WAIST_LEVEL,
+    continuumApproachT(continuumStageProgressRef.current.progress)
+  );
+
+/** Per-ring getter selector: the waist re-brightens on the continuum
+ *  approach; every other structural ring keeps the plain exit getter
+ *  (stays cleared through #continuum). Absent when the flag is off ⇒
+ *  HologramOrbits falls back to `masterOpacityGetter` (byte-identical). */
+const continuumWaistSelector = (o: OrbitConfig): (() => number) | undefined =>
+  o.id === "shell-waist" ? waistContinuumGetter : orbitExitGetter;
 
 /** Sub-pixel deadband for the anchor publish delta gate. Anchors are
  *  screen-space pixels; a quarter-pixel drift is invisible under the
@@ -228,6 +257,7 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
         scale={scale}
         activeServiceId={activeServiceId}
         masterOpacityGetter={SERVICES_CARD_RING ? orbitExitGetter : undefined}
+        masterOpacityGetterFor={CONTINUUM_RAIL_STAGE ? continuumWaistSelector : undefined}
       />
       {/* ADR-029: the four service cards orbit the mark in this same rig —
           scroll-owned rotation (runway progress via servicesRingProgressRef),
@@ -242,6 +272,11 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           publishAnchors
         />
       )}
+      {/* ADR-049: the tool ↔ collaborator thumb + tick diamonds riding the
+          waist ring's front arc, gated to the continuum approach envelope
+          (invisible + inert everywhere else). Shares this rig, so it banks
+          with the parked instrument. */}
+      {CONTINUUM_RAIL_STAGE && ringCapable && <ContinuumWaistRail scale={scale} />}
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
-import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
+import { ABOUT_DECK_STAGE, CONTINUUM_RAIL_STAGE } from "../unifiedServicesInstrument";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/math";
@@ -37,13 +37,15 @@ const VEIL_AMBIENT_CAP = 0.12;
 /** Start the ambient hold once the surface dissipate is complete. */
 const AMBIENT_ENGAGE_RAW = 0.999;
 /** Fade the ambient particles as the NEXT station approaches. Under
- *  ADR-047 the next station is `#continuum`: `#about` is a pinned
- *  TRANSPARENT stage (the deck-flip beat plays over the still-live
- *  canvas), so the ambient hold survives THROUGH #about and the receded
- *  bed finishes dying exactly as #continuum's opaque top reaches the
- *  viewport top — cover and canvas death land on the same edge (the
- *  ADR-033 coincide-by-design retune, moved one station down). Flag off
- *  (ABOUT_DECK_STAGE=false) restores #about as the kill target. */
+ *  ADR-049 the next station is `#practice`: BOTH `#about` and `#continuum`
+ *  are pinned TRANSPARENT stages (the deck-flip beat, then the rail-stage
+ *  beat, both play over the still-live canvas), so the ambient hold
+ *  survives THROUGH #about AND #continuum and the receded bed finishes
+ *  dying exactly as #practice's opaque top reaches the viewport top —
+ *  cover and canvas death land on the same edge (the ADR-033
+ *  coincide-by-design retune, now moved TWO stations down). Flag off
+ *  (CONTINUUM_RAIL_STAGE=false) restores #continuum as the kill target;
+ *  ABOUT_DECK_STAGE=false additionally restores #about. */
 const NEXT_STATION_FADE_START_VH = 0.6;
 const NEXT_STATION_FADE_END_VH = 0.0;
 
@@ -137,14 +139,20 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dissipate = corridorExitSpeedRamp(rawDissipate);
       const sectionNearDock =
         servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) && servicesRect.bottom > 0;
-      // The kill target (ADR-047): the ambient fade keys off #continuum —
-      // #about is the pinned transparent deck-flip stage the ambient must
-      // SURVIVE. Flag off restores the ADR-033 #about kill byte-identically.
-      const nextStation = ABOUT_DECK_STAGE
-        ? (root.querySelector<HTMLElement>("#continuum") ??
-          root.querySelector<HTMLElement>("#practice"))
-        : (root.querySelector<HTMLElement>("#about") ??
-          root.querySelector<HTMLElement>("#continuum"));
+      // The kill target (ADR-049): the ambient fade keys off #practice —
+      // #about AND #continuum are both pinned transparent stages the
+      // ambient must SURVIVE (the deck-flip beat, then the rail-stage
+      // beat). Flag off (CONTINUUM_RAIL_STAGE) restores the ADR-047
+      // #continuum kill; ABOUT_DECK_STAGE off additionally restores the
+      // ADR-033 #about kill — each byte-identically.
+      const nextStation = CONTINUUM_RAIL_STAGE
+        ? (root.querySelector<HTMLElement>("#practice") ??
+          root.querySelector<HTMLElement>("#contact"))
+        : ABOUT_DECK_STAGE
+          ? (root.querySelector<HTMLElement>("#continuum") ??
+            root.querySelector<HTMLElement>("#practice"))
+          : (root.querySelector<HTMLElement>("#about") ??
+            root.querySelector<HTMLElement>("#continuum"));
       const nextStationTopVh =
         (nextStation?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
       // The AMBIENT hold outlives the dock gate (ADR-030 Update 1). The

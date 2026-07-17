@@ -22,6 +22,7 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-041: Arc Cases Sigil + phased reveal](../sentinel/decisions/041-arc-cases-sigil.md) (the phased reveal + ordering; its §2 sphere-sigil trigger is superseded by ADR-042)
 - [ADR-042: Arc Cases cue under the Build title](../sentinel/decisions/042-arc-cases-cue.md) (the live trigger — a DOM dotted-leader + label, off the sphere)
 - [ADR-048: Editorial band](../sentinel/decisions/048-editorial-band.md) (the shared horizontal frame for section text — `--band-max`/`--band-margin`/`--rail-inset`; never re-widen the inset per-section)
+- [ADR-049: Continuum rail stage](../sentinel/decisions/049-continuum-rail-stage.md) (the brandmark returns to mid-prominence at #continuum, its waist ring re-brightens, the tool ↔ collaborator thumb rides that ring; #continuum becomes a transparent stage and the ambient kill retargets to #practice)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
@@ -69,9 +70,10 @@ right (the DOM owns the motion; the deck follows the rect) while the copy
 reveals via scrubbed `--ci-off` stagger (never `useRevealMotion` — portal
 nodes are unobserved and `.is-in` is one-shot). Two clamped clocks
 (`exitProgressForRunway` + `aboutStageProgressRef`), single writer
-`useAboutStageScroll`; the corridor ambient SURVIVES through #about and
-dies at `#continuum` (retargeted kill; gate keyed to the SAME rect as the
-fade envelope — the ADR-030 seam-cut bug). Fail-opaque shield
+`useAboutStageScroll`; the corridor ambient SURVIVES through #about AND
+#continuum (both transparent stages) and dies at `#practice` (ADR-049
+retargeted kill, one station past ADR-047; gate keyed to the SAME rect as
+the fade envelope — the ADR-030 seam-cut bug). Fail-opaque shield
 (`--about-bg-in`, default 1) + fail-static attribute
 (`data-about-mode` absent ⇒ static `.voidwalker` + ADR-045 emerge —
 mobile/PRM/fallback/flag-off). Flag: `ABOUT_DECK_STAGE`. Paint-stack rows
