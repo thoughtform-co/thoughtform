@@ -25,7 +25,7 @@ export type PlateVariant = "glass" | "wireframe";
  *   open       the original full-bleed signal plate: the photo COVERS the
  *              whole card (dots + soft hologram layers + C3 scrim, resolves
  *              on hover), gold chip, status appends "· Open", then — below
- *              the photo window — feed caption, title, lede, includes, CTA.
+ *              the photo window — feed caption, includes, title, lede, CTA.
  *
  * Morph (canvas SEQ choreography): the plate grows (width + the two grid
  * regions trade heights), the seed's title/band collapse while the full-bleed
@@ -180,7 +180,7 @@ export function ServicePlateCard({
             </div>
           </div>
 
-          {/* ── Open body (C3): photo window → caption → title → lede → inc → CTA ── */}
+          {/* ── Open body (C3): photo window → caption → inc → title → lede → CTA ── */}
           <div className="svc-plate__reveal" id={revealId} aria-hidden={!open}>
             <div className="svc-plate__reveal-inner">
               <div className="svc-plate__pspace" aria-hidden="true" />
@@ -190,11 +190,20 @@ export function ServicePlateCard({
                 <span className="svc-plate__cap-g">{service.feedStatus}</span>
               </div>
 
-              <h3 ref={titleRef} className="svc-plate__title svc-plate__fx svc-plate__fx--d2">
+              <div className="svc-plate__inc svc-plate__fx svc-plate__fx--d2">
+                {service.includes.map((item, i) => (
+                  <Fragment key={item}>
+                    {i > 0 && <b aria-hidden="true">·</b>}
+                    <span>{item}</span>
+                  </Fragment>
+                ))}
+              </div>
+
+              <h3 ref={titleRef} className="svc-plate__title svc-plate__fx svc-plate__fx--d3">
                 {service.title}
               </h3>
 
-              <p className="svc-plate__lede svc-plate__fx svc-plate__fx--d3">
+              <p className="svc-plate__lede svc-plate__fx svc-plate__fx--d4">
                 {service.lede.map((seg, i) =>
                   typeof seg === "string" ? (
                     <Fragment key={i}>{seg}</Fragment>
@@ -203,15 +212,6 @@ export function ServicePlateCard({
                   )
                 )}
               </p>
-
-              <div className="svc-plate__inc svc-plate__fx svc-plate__fx--d4">
-                {service.includes.map((item, i) => (
-                  <Fragment key={item}>
-                    {i > 0 && <b aria-hidden="true">·</b>}
-                    <span>{item}</span>
-                  </Fragment>
-                ))}
-              </div>
 
               <a
                 className="svc-plate__cta svc-plate__fx svc-plate__fx--d5"

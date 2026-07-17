@@ -9369,12 +9369,19 @@ html {
   background: var(--gold);
 }
 .voidwalker__name {
+  /* Matched EXACTLY to `.services-masthead__title` (services.css) — the
+     journey's one big-title face — so VINCE BUYSSENS reads at the same
+     size + tracking as "AI YOUR TEAM CAN RUN." in the previous section
+     (owner 2026-07-17: "just my name in caps", consistent with that
+     title). PP Neue uppercase, weight 400, 0.04em, gold text-shadow. */
   font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
-  font-size: clamp(28px, 3.2vw, 44px);
-  letter-spacing: -0.022em;
+  font-size: clamp(26px, 3vw, 44px);
+  letter-spacing: 0.04em;
   line-height: 1.1;
+  text-transform: uppercase;
   color: var(--dawn);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
   margin: 0 0 10px;
 }
 .voidwalker__name em {

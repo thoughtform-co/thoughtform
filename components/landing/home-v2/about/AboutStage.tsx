@@ -112,13 +112,12 @@ export function AboutStage() {
   const slotRef = useRef<HTMLDivElement>(null);
   const clusterRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLSpanElement>(null);
-  const nameEmRef = useRef<HTMLElement>(null);
   const roleRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery("(min-width: 961px) and (prefers-reduced-motion: no-preference)");
   useAboutStageScroll(stageRef, slotRef, clusterRef);
 
-  // Identity decode (owner, 2026-07-16): the name / "// Voidwalker." em /
-  // role eyebrow SCRAMBLE-DECODE into place via the caption kernel (the
+  // Identity decode (owner, 2026-07-16): the name / role eyebrow
+  // SCRAMBLE-DECODE into place via the caption kernel (the
   // same terminal glitch as the corridor captions + services masthead)
   // while the CSS right-to-left emergence scrubs the column in. The
   // targets are BLANKED until the copy clock arms so the decode plays on
@@ -132,8 +131,7 @@ export function AboutStage() {
     if (!ABOUT_DECK_STAGE || !capable) return;
     const targets = [
       { el: nameRef.current, to: ABOUT_STAGE.name, at: 0 },
-      { el: nameEmRef.current, to: ABOUT_STAGE.nameEm, at: SCRAMBLE_STAGGER_S },
-      { el: roleRef.current, to: ABOUT_STAGE.role, at: SCRAMBLE_STAGGER_S * 2 },
+      { el: roleRef.current, to: ABOUT_STAGE.role, at: SCRAMBLE_STAGGER_S },
     ];
     const jobs: ScrambleJob[] = [];
     let armed = false;
@@ -181,17 +179,13 @@ export function AboutStage() {
             stage needs reversible, portal-safe reveals). */}
         <div className="about-stage__copy voidwalker__copy">
           <h2 className="voidwalker__name" style={{ ["--ci-off" as string]: 0 }}>
-            {/* Line spans are the scramble-decode targets (the kernel
-                writes textContent, so the <br/> + <em> structure must
-                live OUTSIDE the decoded nodes). min-height on the lines
-                reserves the box while blanked. */}
+            {/* The name is the single decode target, rendered UPPERCASE via
+                CSS (the "// Voidwalker." alias line was dropped, owner
+                2026-07-17). The kernel writes textContent, so the decode
+                node is the inner span. */}
             <span className="about-stage__decode-line" ref={nameRef}>
               {ABOUT_STAGE.name}
             </span>
-            <br />
-            <em className="about-stage__decode-line" ref={nameEmRef}>
-              {ABOUT_STAGE.nameEm}
-            </em>
           </h2>
           <div
             className="voidwalker__role about-stage__decode-line"

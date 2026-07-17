@@ -79,6 +79,36 @@ export function frontPoseBias(nz: number): { pitch: number; yaw: number } {
   return { pitch: RING_FRONT_BIAS_PITCH * w, yaw: RING_FRONT_BIAS_YAW * w };
 }
 
+/** Front-card SIZE emphasis (2026-07-17, owner: "the card in the centre
+ *  should be bigger than the rest, especially on MacBook Air and small
+ *  screens"). A front-weighted scale multiplier layered ON TOP of the
+ *  depth-scale: 1 on the side cards (untouched), growing toward the in-view
+ *  front card — and larger on NARROW viewports, where the parked plate read
+ *  too small on laptops. Kept OUT of RING_SCALE_RANGE (and thus
+ *  DECK_CARD_SCALE) so the exit-stack / about-deck seam is unchanged; the
+ *  ring fades it out as the deck assembles (see ServicesCardRing). */
+export const RING_FRONT_EMPHASIS_NARROW = 0.24;
+export const RING_FRONT_EMPHASIS_WIDE = 0.1;
+/** Viewport-width band (CSS px) the emphasis interpolates across: at/below
+ *  the low edge cards get the full narrow boost (laptops incl. MacBook Air
+ *  ~1440); at/above the high edge, the gentler wide-desktop boost. */
+export const RING_FRONT_EMPHASIS_WIDTH: readonly [number, number] = [1280, 1728];
+
+/** Front emphasis amount for a viewport of width `px`. */
+export function frontScaleEmphasis(px: number): number {
+  const t = smootherstep(RING_FRONT_EMPHASIS_WIDTH[0], RING_FRONT_EMPHASIS_WIDTH[1], px);
+  return lerp(RING_FRONT_EMPHASIS_NARROW, RING_FRONT_EMPHASIS_WIDE, t);
+}
+
+/** Front-weighted scale multiplier for a card at depth `nz` on a viewport
+ *  of width `px`. Ramps 1 → 1 + emphasis over the same nz window as the
+ *  pose bias, so only the near-front card grows. `fade` (default 1) eases
+ *  it back out as the deck stacks (pass `1 − flattenT`). */
+export function frontScaleBoost(nz: number, px: number, fade: number = 1): number {
+  const w = smootherstep(RING_FRONT_BIAS_WINDOW[0], RING_FRONT_BIAS_WINDOW[1], nz);
+  return 1 + frontScaleEmphasis(px) * w * fade;
+}
+
 /** Orbit direction: −1 → the next service's card arrives from screen-right. */
 export const RING_DIRECTION = -1;
 

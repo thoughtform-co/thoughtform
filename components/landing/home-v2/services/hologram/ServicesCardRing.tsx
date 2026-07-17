@@ -127,6 +127,7 @@ import {
   entranceEnvelope,
   frontCardIndex,
   frontPoseBias,
+  frontScaleBoost,
   lerp,
   placeCardOnOrbit,
   ringRotationForProgress,
@@ -535,38 +536,24 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   ctx.fillText("→", PAD_X + maxW - 28, ctaMidY + 2);
   ctx.textAlign = "left";
 
-  // Includes row — mono chips with gold separators, above the CTA.
-  label.letterSpacing = "3px";
-  ctx.font = `400 18px ${CARD_FONT}`;
-  const incSegments: LedeSegment[] = [];
-  plate.includes.forEach((item, i) => {
-    if (i > 0) incSegments.push({ em: "·" });
-    incSegments.push(item.toUpperCase());
-  });
-  const incLines = wrapRuns(ctx, incSegments, maxW);
-  const INC_LH = 30;
-  const incBottom = CTA_Y0 - 30;
-  incLines.forEach((line, i) => {
-    drawRunLine(
-      ctx,
-      line,
-      PAD_X,
-      incBottom - (incLines.length - 1 - i) * INC_LH,
-      `rgba(${DAWN}, 0.5)`
-    );
-  });
-  const incTop = incBottom - (incLines.length - 1) * INC_LH - 22;
-
   // Lede — sans body, `{ em }` spans upright gold (no-italics rule).
   // 35px + dawn 0.92 (owner 2026-07-17: bigger + less gray — this line is
   // where "what is this service" actually lands, so it must read first).
   // Keep = 2× the .svc-plate__lede CSS value (17.5px) — the bake/DOM
-  // parity contract.
+  // parity contract. Seated directly above the CTA now that the includes
+  // row moved to the TOP of the copy stack (above the title, owner
+  // 2026-07-17).
   label.letterSpacing = "0px";
   ctx.font = `400 35px ${CARD_SANS}`;
   const ledeLines = wrapRuns(ctx, plate.lede, maxW);
   const LEDE_LH = 51;
-  const ledeBottom = incTop - 26;
+  // Gap above the CTA — 60 (owner 2026-07-17): with the includes row moved
+  // to the top of the stack, the LEDE (body copy) now sits directly over
+  // the button, and body text crowds a CTA more than the old meta line did.
+  // Enlarged 34 → 60 so the button reads as deliberately separated from the
+  // paragraph (well above the ~26 inter-block gaps). = 2× the DOM plate's
+  // .svc-plate__cta margin-top (30px) — the bake/DOM parity contract.
+  const ledeBottom = CTA_Y0 - 60;
   ledeLines.forEach((line, i) => {
     drawRunLine(
       ctx,
@@ -578,7 +565,7 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   });
   const ledeTop = ledeBottom - (ledeLines.length - 1) * LEDE_LH - 28;
 
-  // Title — mono bold uppercase (the plate headline).
+  // Title — mono bold uppercase (the plate headline), above the lede.
   label.letterSpacing = "3px";
   ctx.font = `700 34px ${CARD_FONT}`;
   const titleLines = wrapRuns(ctx, [plate.title.toUpperCase()], maxW);
@@ -593,12 +580,32 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
       `rgb(${DAWN})`
     );
   });
-  // Feed caption ("FEED 0X · …" left + STANDBY/LIVE right) REMOVED
-  // 2026-07-17 (owner): decorative HUD filler above the title. Dropping it
-  // opens breathing room between the photo and the headline, and the title
-  // is now the top of the copy stack (nothing anchors above it — `titleTop`
-  // is no longer computed). feedLabel/feedStatus stay in servicePlateData
-  // for the mobile plate.
+  const titleTop = titleBottom - (titleLines.length - 1) * TITLE_LH - 30;
+
+  // Includes row — the meta line (cadence · memos · … · NL/EN) now LEADS
+  // the copy stack, ABOVE the title (owner 2026-07-17). Mono chips with
+  // gold `·` separators. The old feed caption that used to sit above the
+  // title stays REMOVED — this row takes that slot; feedLabel/feedStatus
+  // remain in servicePlateData for the mobile plate.
+  label.letterSpacing = "3px";
+  ctx.font = `400 18px ${CARD_FONT}`;
+  const incSegments: LedeSegment[] = [];
+  plate.includes.forEach((item, i) => {
+    if (i > 0) incSegments.push({ em: "·" });
+    incSegments.push(item.toUpperCase());
+  });
+  const incLines = wrapRuns(ctx, incSegments, maxW);
+  const INC_LH = 30;
+  const incBottom = titleTop - 20;
+  incLines.forEach((line, i) => {
+    drawRunLine(
+      ctx,
+      line,
+      PAD_X,
+      incBottom - (incLines.length - 1 - i) * INC_LH,
+      `rgba(${DAWN}, 0.5)`
+    );
+  });
 
   return canvas;
 }
@@ -1425,6 +1432,15 @@ export function ServicesCardRing({
       const ringPitch = tilt.pitch + bias.pitch;
       const ringYaw = cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw;
       const ringScale = depthScale(placed.nz, scaleRange);
+      // Front-card emphasis (owner 2026-07-17): the in-view card reads
+      // BIGGER than its neighbours, more so on narrow viewports. A separate
+      // multiplier on top of the depth-scale — side cards (frontWindow ≈ 0)
+      // are untouched, and RING_SCALE_RANGE / the deck seam stay exactly as
+      // tuned. During the stack it fades out via (1 − flattenT) so the deck
+      // assembles at its original scale, continuous with the reading pose at
+      // the exit boundary. The flip owns its own seat-matched scale, so the
+      // boost is applied only in the two non-flip branches below.
+      const frontBoost = frontScaleBoost(placed.nz, size.width, stack ? 1 - stack.flattenT : 1);
 
       if (flip) {
         // ── ADR-047 flip (rev 2: Y axis): the deck rotates about its
@@ -1462,11 +1478,11 @@ export function ServicesCardRing({
           cardFacingYaw(placed.rotY, facingBlend) + (tilt.yaw + bias.yaw) * (1 - stack.flattenT),
           0
         );
-        cardGroup.scale.setScalar(ringScale);
+        cardGroup.scale.setScalar(ringScale * frontBoost);
       } else {
         cardGroup.position.set(ringX, ringY, ringZ);
         cardGroup.rotation.set(ringPitch, ringYaw, 0);
-        cardGroup.scale.setScalar(ringScale);
+        cardGroup.scale.setScalar(ringScale * frontBoost);
       }
 
       // Depth-based opacity lifts to uniform ON ITS OWN during the stack

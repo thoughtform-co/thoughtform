@@ -16,21 +16,21 @@
 export type BioSegment = string | { em: string } | { strong: string };
 
 export const ABOUT_STAGE = {
-  /** The h2, two lines — the second renders gold (voidwalker__name em). */
+  /** The h2 — the name only, rendered UPPERCASE via CSS (owner 2026-07-17:
+   *  "just my name in caps"). The "// Voidwalker." alias line was dropped. */
   name: "Vince Buyssens",
-  nameEm: "// Voidwalker.",
   role: "Founder · Navigator · Loop Earplugs AI Strategy",
   bios: [
     [
       { strong: "Vince" },
-      " has spent a decade moving teams through the tides of digital change — the web, mobile, creator economies, and now ",
+      " has been navigating the tides of digital change for over a decade: the advent of social media, online communities, and now ",
       { em: "intelligence itself." },
     ],
     [
-      "Through Thoughtform he teaches organisations how to think and build with AI — keynotes, intensives, and embedded residencies with teams ready to ship.",
+      "That last wave is different. AI is not software to command. It is an intelligence to navigate. Through Thoughtform, Vince helps teams build that relationship: mapping the fit between their work and the intelligence available to it.",
     ],
     [
-      "Inside Loop Earplugs he runs the same practice from the inside: shaping AI strategy and using AI to prototype the tools that power the marketing engine.",
+      "He runs the same practice inside Loop Earplugs, leading AI adoption across the company: advising leadership, embedding with teams, and building the tools that power the marketing engine.",
     ],
   ] as readonly BioSegment[][],
   meta: [
