@@ -51,6 +51,7 @@ import {
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   BRANDMARK_PHYSICS_CORE_COUNT_MOBILE,
   type BrandmarkBasis,
+  type BrandmarkCoreBandState,
   type BrandmarkCoreBlending,
   type BrandmarkCoreGlyph,
   type BrandmarkCoreShape,
@@ -76,8 +77,27 @@ import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef
 import {
   CONTINUUM_MARK_INK,
   CONTINUUM_RECEDE_RELEASE,
+  continuumApproachT,
   continuumFormT,
 } from "@/lib/services-ring/continuumStageMath";
+import {
+  BAND_BASE_GAIN,
+  BAND_HALF,
+  BAND_HEAD_GAIN,
+  BAND_HEAD_W,
+  BAND_SIZE_BOOST,
+  BAND_SOFT,
+  BAND_SWING_PERIOD_S,
+  BAND_TRAIL_GAIN,
+  BAND_TRAIL_LEN,
+  BAND_X_HALF,
+  BAND_Y,
+  MARK_HALF_EXTENT,
+  bandGainT,
+  bandPendulumDir,
+  bandPendulumX,
+} from "@/lib/services-ring/continuumBandMath";
+import { continuumBandAnchorsRef } from "@/lib/services-ring/continuumBandAnchorsRef";
 import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
@@ -335,6 +355,41 @@ const EXIT_DIM = 0.45;
  *  presence behind the flipped portrait. 1.0 restores the full clear. */
 const ABOUT_FLIP_MARK_DIM = 0.45;
 
+/** ── Continuum mark-band spectrum (ADR-049 Update 3, production wiring) ──
+ *  At #continuum the SAME mark that traveled the whole corridor comes closer
+ *  (the recede release above) and its inner horizontal band lights up as the
+ *  tool ↔ collaborator spectrum: a soft base glow + a bright pendulum head
+ *  swinging Tool ↔ Collaborator with a comet trail (the `uBand*` block ported
+ *  into BrandmarkPhysicsCore/shaders.ts from the /test/continuum-band lab).
+ *  No second painter, no orbit chrome — the spectrum IS the mark.
+ *
+ *  The slab constants in continuumBandMath are SAMPLER-space
+ *  (±MARK_HALF_EXTENT = ±0.87, the space the lab tunes against); the
+ *  corridor core normalizes its wireframe homes to ±TARGET_HALF = 0.5
+ *  (see BrandmarkPhysicsCoreWithGLB), so the geometry converts by this
+ *  ratio. Head width / trail length are x01 units — no conversion. */
+const CONTINUUM_BAND_LOCAL_SCALE = 0.5 / MARK_HALF_EXTENT;
+
+/** Band-end probe positions in the core's group-local space — the SAME
+ *  points the shader lights, so the DOM Tool/Collaborator labels dock to
+ *  the drawn band exactly (ADR-049 Update 3 rev a). */
+const BAND_ANCHOR_X = BAND_X_HALF * CONTINUUM_BAND_LOCAL_SCALE;
+const BAND_ANCHOR_Y = BAND_Y * CONTINUUM_BAND_LOCAL_SCALE;
+
+/** Horizontal gap between a projected band endpoint and its docked label. */
+const BAND_LABEL_GAP_PX = 18;
+/** Viewport edge clamp for the docked labels (the lab's recipe). */
+const BAND_LABEL_EDGE_PX = 40;
+
+/** The per-frame band drive shared with `BrandmarkPhysicsCore` (shader
+ *  uniforms) and `ContinuumBandLabelAnchors` (DOM label docking). */
+interface ContinuumBandActorState extends BrandmarkCoreBandState {
+  /** Docked-label opacity: the band master gain × the continuum approach
+   *  (labels wait for the stage proper — during the #about exit prelude the
+   *  band glows label-free while the departing copy still owns the sides). */
+  labelGain: number;
+}
+
 /** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
  *  reveals the kept dome's depth, so the mark reads as a living 3D object
  *  rather than a flat decal. Kept small-amplitude so it NEVER rotates edge-on
@@ -517,6 +572,30 @@ export function BrandmarkPhysicsCoreActor({
   const opacityRef = useRef(0);
   const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
   const pausedRef = useRef(true);
+  // Continuum band drive (ADR-049 Update 3): geometry is constant (converted
+  // once to group-local); the gains/sweep are written per frame below. All
+  // gains 0 ⇒ the shader block is byte-identical off (every pre-continuum
+  // frame, flag-off, and the whole corridor).
+  const bandStateRef = useRef<ContinuumBandActorState>({
+    gain: 0,
+    sweep: bandPendulumX(0),
+    dir: 1,
+    headGain: 0,
+    trailGain: 0,
+    y: BAND_ANCHOR_Y,
+    half: BAND_HALF * CONTINUUM_BAND_LOCAL_SCALE,
+    soft: BAND_SOFT * CONTINUUM_BAND_LOCAL_SCALE,
+    xHalf: BAND_ANCHOR_X,
+    headW: BAND_HEAD_W,
+    trailLen: BAND_TRAIL_LEN,
+    sizeBoost: BAND_SIZE_BOOST,
+    labelGain: 0,
+  });
+  // Pendulum phase — a useFrame delta accumulator (never a wall clock: a
+  // tab-hide must not jump the head; the ContinuumWaistRail discipline).
+  // Reset to 0 whenever the band is closed so the first half-swing after
+  // every (re-)entry plays Tool → Collaborator, left → right.
+  const bandPhaseRef = useRef(0);
 
   // Pointer-look listener for the parked unified instrument (window-level: the
   // canvas is pointer-events:none, so R3F's own pointer never fires here).
@@ -559,6 +638,12 @@ export function BrandmarkPhysicsCoreActor({
     if (!painting) {
       group.visible = false;
       pausedRef.current = true;
+      // The band's docked DOM labels must die with the canvas: below the
+      // runway the clamped continuum clock holds labelGain at 1, so without
+      // this zero the caps would keep painting over #practice after the
+      // ambient release. (The stage's own tail kill is the primary cover;
+      // this is the canvas-side belt.)
+      bandStateRef.current.labelGain = 0;
       return;
     }
 
@@ -687,6 +772,34 @@ export function BrandmarkPhysicsCoreActor({
     // ONLY to the two pose lerps below — NOT the opacity dim, point size,
     // or clean-field (those keep exitT). Identity at continuumT = 0.
     const exitTPose = exitT * (1 - CONTINUUM_RECEDE_RELEASE * continuumT);
+
+    // ── Continuum mark-band spectrum drive (ADR-049 Update 3) ───────────
+    // The band exists only once the re-ink is under way (bandGainT window
+    // over the SAME formation clock as the ink lift above): it starts
+    // breathing in during the #about exit slide (the formT prelude plateaus
+    // at 0.4 ⇒ ~70% gain through the inter-runway gap) and is fully open
+    // before the stage's reading beat. The pendulum phase accumulates on
+    // the clamped frame delta only while the band is open and re-arms at
+    // the Tool end whenever it closes, so the first half-swing always
+    // reads left → right ("lights up left to right"). bandGainT(0) = 0 ⇒
+    // every pre-exit frame keeps the all-zero gains (shader identity).
+    const bandMaster = CONTINUUM_RAIL_STAGE ? bandGainT(continuumT) : 0;
+    if (bandMaster > 0) {
+      bandPhaseRef.current += Math.min(0.1, delta) / BAND_SWING_PERIOD_S;
+    } else {
+      bandPhaseRef.current = 0;
+    }
+    const band = bandStateRef.current;
+    band.gain = bandMaster * BAND_BASE_GAIN;
+    band.headGain = bandMaster * BAND_HEAD_GAIN;
+    band.trailGain = bandMaster * BAND_TRAIL_GAIN;
+    band.sweep = bandPendulumX(bandPhaseRef.current);
+    band.dir = bandPendulumDir(bandPhaseRef.current);
+    // Docked-label opacity: gated on the continuum APPROACH (not the form
+    // prelude) so the Tool/Collaborator caps wait for the stage proper —
+    // during the #about slide the band glows label-free while the departing
+    // copy/portrait still own the flanks.
+    band.labelGain = bandMaster * continuumApproachT(continuumStageProgressRef.current.progress);
 
     // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
     // Three coupled clocks, all derived from `getBrandmarkCoreBlend(progress)`
@@ -1038,6 +1151,7 @@ export function BrandmarkPhysicsCoreActor({
             pausedRef={pausedRef}
             reducedMotion={reducedMotion}
             seedFromPositions={seedFromPositions}
+            bandRef={bandStateRef}
           />
         </Suspense>
         {/* Unified #services armillary — the orbit rings wrap the parked core in
@@ -1045,6 +1159,11 @@ export function BrandmarkPhysicsCoreActor({
           behind) and move as one instrument. Gated by the flag; the standalone
           ServicesHologramScene remains the lab harness. */}
         {UNIFIED_SERVICES_ARMILLARY ? <CorridorArmillary /> : null}
+        {/* Continuum band label docking (ADR-049 Update 3 rev a): projects the
+          mark-band's endpoints — inside this same rig, so pointer-look / the
+          approach zoom carry the labels — and writes the DOM Tool/Collaborator
+          caps registered by ContinuumStage. */}
+        {CONTINUUM_RAIL_STAGE ? <ContinuumBandLabelAnchors bandRef={bandStateRef} /> : null}
       </group>
     </group>
   );
@@ -1076,6 +1195,7 @@ interface BrandmarkPhysicsCoreWithGLBProps {
   pausedRef: { readonly current: boolean };
   reducedMotion: boolean;
   seedFromPositions: Float32Array | null;
+  bandRef: { readonly current: BrandmarkCoreBandState };
 }
 
 function BrandmarkPhysicsCoreWithGLB({
@@ -1098,6 +1218,7 @@ function BrandmarkPhysicsCoreWithGLB({
   pausedRef,
   reducedMotion,
   seedFromPositions,
+  bandRef,
 }: BrandmarkPhysicsCoreWithGLBProps) {
   // useGLTF suspends until the asset is ready. Shared cache with
   // VolumetricBrandmarkArtifact (services hologram), which preloads the
@@ -1340,6 +1461,7 @@ function BrandmarkPhysicsCoreWithGLB({
       landedAccent={landedAccent}
       pausedRef={pausedRef}
       reducedMotion={reducedMotion}
+      bandRef={bandRef}
       // ── Production appearance (PRODUCTION_* constants above). These
       // are passed EXPLICITLY rather than relying on the component's
       // default props so the live corridor look can't drift if the lab
@@ -1356,6 +1478,77 @@ function BrandmarkPhysicsCoreWithGLB({
       primitiveAspect={PRODUCTION_PRIMITIVE_ASPECT}
       lineJitter={PRODUCTION_LINE_JITTER}
     />
+  );
+}
+
+/** ContinuumBandLabelAnchors — docks the DOM Tool/Collaborator caps to the
+ *  mark-band's PROJECTED 3D endpoints (ADR-049 Update 3 rev a, the lab's
+ *  `BandLabelAnchors` ported to the corridor rig).
+ *
+ *  Two probes sit at the band's group-local endpoints — the SAME space the
+ *  shader lights — inside the actor's pointer-look rig, so the labels ride
+ *  the instrument through the approach zoom and pointer-look instead of
+ *  being plastered at fixed positions. Projection each frame; the canvas
+ *  loop is the single writer of the caps' transform/opacity (no store, no
+ *  re-render, no DOM-side rAF — the `continuumBandAnchorsRef` handles are
+ *  registered by ContinuumStage). Opacity rides `labelGain` (band master ×
+ *  continuum approach), so the caps are inert everywhere the band is. */
+function ContinuumBandLabelAnchors({
+  bandRef,
+}: {
+  bandRef: { readonly current: ContinuumBandActorState };
+}) {
+  const leftProbeRef = useRef<THREE.Object3D>(null);
+  const rightProbeRef = useRef<THREE.Object3D>(null);
+  const worldScratch = useRef(new THREE.Vector3());
+  // Last-written opacity so the parked-invisible state costs zero style
+  // writes (the CorridorArmillary anchor delta-gate discipline).
+  const lastOpRef = useRef(-1);
+
+  useFrame(({ camera, size }) => {
+    const els = continuumBandAnchorsRef.current;
+    const left = leftProbeRef.current;
+    const right = rightProbeRef.current;
+    if (!els.leftEl || !els.rightEl || !left || !right) return;
+
+    const world = worldScratch.current;
+    const project = (obj: THREE.Object3D): [number, number, boolean] => {
+      obj.getWorldPosition(world);
+      const p = world.project(camera);
+      return [(p.x * 0.5 + 0.5) * size.width, (-p.y * 0.5 + 0.5) * size.height, Math.abs(p.z) < 1];
+    };
+    const [lx, ly, lVisible] = project(left);
+    const [rx, ry, rVisible] = project(right);
+    const op = lVisible && rVisible ? bandRef.current.labelGain : 0;
+
+    if (op < 0.002) {
+      if (lastOpRef.current !== 0) {
+        els.leftEl.style.opacity = "0";
+        els.rightEl.style.opacity = "0";
+        lastOpRef.current = 0;
+      }
+      return;
+    }
+    lastOpRef.current = op;
+
+    const clampY = (y: number) =>
+      Math.min(size.height - BAND_LABEL_EDGE_PX, Math.max(BAND_LABEL_EDGE_PX, y));
+    const opacity = op.toFixed(3);
+    els.leftEl.style.transform = `translate3d(${(lx - BAND_LABEL_GAP_PX).toFixed(1)}px, ${clampY(
+      ly
+    ).toFixed(1)}px, 0) translate(-100%, -50%)`;
+    els.leftEl.style.opacity = opacity;
+    els.rightEl.style.transform = `translate3d(${(rx + BAND_LABEL_GAP_PX).toFixed(1)}px, ${clampY(
+      ry
+    ).toFixed(1)}px, 0) translate(0, -50%)`;
+    els.rightEl.style.opacity = opacity;
+  });
+
+  return (
+    <>
+      <object3D ref={leftProbeRef} position={[-BAND_ANCHOR_X, BAND_ANCHOR_Y, 0]} />
+      <object3D ref={rightProbeRef} position={[BAND_ANCHOR_X, BAND_ANCHOR_Y, 0]} />
+    </>
   );
 }
 

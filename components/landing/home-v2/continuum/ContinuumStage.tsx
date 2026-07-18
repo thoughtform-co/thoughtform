@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { CONTINUUM_STAGE, type ContinuumSegment } from "./continuumStageData";
 import { useContinuumStageScroll } from "../hooks/useContinuumStageScroll";
 import { CONTINUUM_RAIL_STAGE } from "../unifiedServicesInstrument";
+import { continuumBandAnchorsRef } from "@/lib/services-ring/continuumBandAnchorsRef";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 
 /**
@@ -14,18 +15,25 @@ import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
  * A 200svh runway (`.continuum-stage-root`, the portal slot) pins this
  * sticky, TRANSPARENT stage over the still-live corridor canvas. The
  * receded brandmark re-emerges to mid-prominence in the OPEN CENTRE (the
- * WebGL mark owns that band — nothing DOM paints there), its near-
- * horizontal waist ring re-brightens, and a reticle thumb travels the
- * tool ↔ collaborator spectrum along that ring. This DOM stage carries
- * only the readable chrome — the masthead (restyled to the Services
- * masthead recipe), the three spectrum labels registered left/centre/
- * right under the ring, the instrument readout, and the CTA.
+ * WebGL mark owns that band — nothing DOM paints there) and its inner
+ * horizontal band lights up as the tool ↔ collaborator spectrum: a soft
+ * base glow + a pendulum head with a comet trail, IN the mark's own shader
+ * (ADR-049 Update 3 — no orbits, no axis chrome; the spectrum is the mark
+ * itself). This DOM stage carries only the readable chrome — the masthead
+ * (restyled to the Services masthead recipe), the Tool/Collaborator caps
+ * DOCKED to the band's projected endpoints (written imperatively by the
+ * corridor canvas via `continuumBandAnchorsRef` — the elements register
+ * here, the per-frame transform/opacity comes from
+ * `ContinuumBandLabelAnchors` in BrandmarkPhysicsCoreActor), the three
+ * spectrum stops beneath, the instrument readout, and the CTA.
  *
  * Beats (windows in `lib/services-ring/continuumStageMath.ts`, mirrored to
  * CSS vars by useContinuumStageScroll):
  *
- *   0 APPROACH — the mark re-emerges + eases closer; the waist ring
- *                re-brightens; the thumb's opacity gate opens.
+ *   0 APPROACH — the mark re-emerges + eases closer; the band's sweep is
+ *                already breathing in (it pre-warms on the formT prelude
+ *                during the #about exit slide); the docked caps fade in
+ *                with the approach.
  *   1 COPY     — the masthead + labels reveal (scrubbed --continuum-copy-in
  *                with per-child --ci-off stagger — the about-stage.css
  *                recipe; NEVER useRevealMotion: portal nodes are
@@ -51,8 +59,24 @@ function LedeText({ segments }: { segments: readonly ContinuumSegment[] }) {
 
 export function ContinuumStage() {
   const stageRef = useRef<HTMLDivElement>(null);
+  const bandCapLeftRef = useRef<HTMLDivElement>(null);
+  const bandCapRightRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery("(min-width: 961px) and (prefers-reduced-motion: no-preference)");
   useContinuumStageScroll(stageRef);
+
+  // Register the band-cap elements for the corridor-side projector
+  // (ContinuumBandLabelAnchors). Re-runs when the media gate flips so a
+  // desktop resize re-registers the freshly-rendered caps; cleanup nulls
+  // the handles so the projector never writes into a detached tree.
+  useEffect(() => {
+    const anchors = continuumBandAnchorsRef.current;
+    anchors.leftEl = bandCapLeftRef.current;
+    anchors.rightEl = bandCapRightRef.current;
+    return () => {
+      anchors.leftEl = null;
+      anchors.rightEl = null;
+    };
+  }, [capable]);
 
   // Below the gate the static .continuum + .crail fallback owns the
   // section — no duplicate DOM (the hook also never engages, so
@@ -104,32 +128,31 @@ export function ContinuumStage() {
             </p>
           </header>
 
-          {/* ── The spectrum, ON the mark ────────────────────────────────
-              A BOLD horizontal tool ↔ collaborator axis painted across the
-              re-emerged brandmark's centre (the WebGL mark sits behind this
-              transparent stage, roughly at --continuum-axis-y). A traveling
-              reticle glides the front span (Tool 1/6 ↔ Collaborator 5/6,
-              THUMB_F_MIN/MAX) on the same 7s ping-pong the DOM crail uses.
-              Purely decorative chrome — the READABLE spectrum content is the
-              three stop descriptions below (they carry the kicker/title/body
-              the static `.crail__stops-grid` fallback exposes identically), so
-              the axis is aria-hidden and the stops are NOT (regression guard,
-              ADR-049 / plan 6.2). The axis draws in on --continuum-approach
-              (with the mark), the stops on --continuum-copy-in. */}
+          {/* ── The spectrum IS the mark (ADR-049 Update 3) ───────────────
+              The re-emerged WebGL brandmark behind this transparent stage
+              lights its own inner horizontal band — base glow + pendulum
+              head + comet trail, in the mark shader — so no DOM axis paints
+              here anymore (the Update-1 interim axis is deleted). The only
+              spectrum chrome this stage carries is the two Tool /
+              Collaborator caps, DOCKED to the band's projected endpoints:
+              position/opacity are written per frame by the corridor canvas
+              (ContinuumBandLabelAnchors → continuumBandAnchorsRef), so they
+              ride the instrument through pointer-look + the approach zoom.
+              Decorative chrome — the READABLE spectrum content is the three
+              stop descriptions below (they carry the kicker/title/body the
+              static `.crail__stops-grid` fallback exposes identically), so
+              the caps are aria-hidden and the stops are NOT (regression
+              guard, ADR-049 / plan 6.2). The stops reveal on
+              --continuum-copy-in. */}
           <div className="continuum-stage__spectrum">
-            <div className="continuum-stage__axis" aria-hidden="true">
-              <div className="continuum-stage__axis-line" />
-              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--l" />
-              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--m" />
-              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--r" />
-              <span className="continuum-stage__axis-cap continuum-stage__axis-cap--l">Tool</span>
-              <span className="continuum-stage__axis-cap continuum-stage__axis-cap--r">
-                Collaborator
-              </span>
-              <div className="continuum-stage__marker">
-                <span className="continuum-stage__marker-ring" />
-                <span className="continuum-stage__marker-core" />
-                <span className="continuum-stage__marker-cross" />
+            <div className="continuum-stage__band-caps" aria-hidden="true">
+              <div ref={bandCapLeftRef} className="continuum-stage__band-cap">
+                <span>Tool</span>
+                <span className="continuum-stage__band-dash" />
+              </div>
+              <div ref={bandCapRightRef} className="continuum-stage__band-cap">
+                <span className="continuum-stage__band-dash continuum-stage__band-dash--flip" />
+                <span>Collaborator</span>
               </div>
             </div>
 

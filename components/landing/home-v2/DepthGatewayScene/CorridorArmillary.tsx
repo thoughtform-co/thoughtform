@@ -250,13 +250,14 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           publishAnchors
         />
       )}
-      {/* ADR-049 (revised 2026-07-17): the tool ↔ collaborator spectrum is
-          now a BOLD horizontal DOM axis painted across the mark's centre in
-          the transparent continuum stage (ContinuumStage), not an edge-on
-          reticle riding the near-horizontal waist ring — the 3D thumb read
-          too subtly. The waist ring still re-brightens as ambiance while the
-          mark comes forward (waistContinuumGetter above); only the traveling
-          thumb (ContinuumWaistRail) is retired. */}
+      {/* ADR-049 Update 3 (2026-07-18): the tool ↔ collaborator spectrum is
+          the MARK ITSELF — its inner horizontal band lights in the
+          BrandmarkPhysicsCore shader (driven by the corridor actor's band
+          state; Tool/Collaborator labels dock to the band's projected
+          endpoints via ContinuumBandLabelAnchors). This armillary carries
+          NO continuum emphasis: the structural rings stay cleared through
+          #about and #continuum on the plain exit getter above — do not
+          re-add a per-ring continuum override. */}
     </>
   );
 }
