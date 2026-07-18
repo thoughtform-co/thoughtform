@@ -77,31 +77,34 @@ export const ABOUT_DECK_STAGE = true;
  *
  * Presumes ABOUT_DECK_STAGE (both true in production). When ON (and the
  * about deck stage is on, same media gate):
- *   - `#continuum` ("AI isn't software to command…") becomes a pinned
- *     TRANSPARENT stage over the still-live corridor canvas
+ *   - `#continuum` (the vision beat — "Tool or collaborator?") becomes a
+ *     pinned TRANSPARENT stage over the still-live corridor canvas
  *     (`ContinuumStagePortal` → `[data-continuum-root]` →
- *     `useContinuumStageScroll`): the receded brandmark RE-EMERGES to
- *     mid-prominence (~0.60 ink, clearer than the ~0.30 about ambient,
- *     subtler than the #services centerpiece) and eases back toward the
- *     parked pose — pre-warmed DURING the #about exit slide via
- *     `continuumFormT` (Update 2) — while every orbit track stays
- *     cleared (Update 3 removed the waist re-brighten);
- *   - the SPECTRUM is the crail instrument, FORMED FROM the mark
- *     (Update 4): the dashed guide rail + bearings + register brackets
- *     wipe outward from the mark's centre on the scrubbed
- *     `--continuum-rail-form` envelope, the stops bloom centre-out, and
- *     the navigator reticle condenses on the mark, launches to the Tool
- *     pole (`data-continuum-formed`), and rides the fallback crail's 7s
- *     ping-pong — the mark keeps the rail's 1/2 seat ("AI lives here",
- *     the v7 `.crail__brand` composition);
+ *     `useContinuumStageScroll`): the receded brandmark RETURNS as the
+ *     vision-beat hero — full recede release + the CONTINUUM_SCALE_BOOST
+ *     overshoot past the parked #services pose, ~0.60 ink — on the
+ *     CONTINUOUS formation clock `continuumFormT` (Update 5: about-exit
+ *     prelude → inter-runway entry bridge → pinned landing; no dead
+ *     plateau), while every orbit track stays cleared (Update 3);
+ *   - the SPECTRUM is INTEGRATED INTO the mark itself (Update 6): the
+ *     mark's inner horizontal wireframe band lights in its own shader
+ *     (the `uBand*` block — base glow + pendulum head + comet trail),
+ *     and the slider's crisp chrome docks to the band's PROJECTED
+ *     geometry via `continuumBandAnchorsRef` — the navigator reticle
+ *     rides the glowing head (condense at the seat → launch to Tool →
+ *     the fallback crail's 7s ping-pong) and the Tool / Collaborator
+ *     caps hang off the band ends. The whole instrument assembles DURING
+ *     the About → Continuum approach and snaps together at the pin;
  *   - the corridor ambient hold — which under ADR-047 died as #continuum
  *     covered — is RETARGETED one station down to die at `#practice`
  *     (`useCorridorExitScroll` next-station retarget), and #continuum
  *     gains the fail-opaque shield #about carries, so the mark shows
  *     through the pinned beat;
- *   - every channel is a pure function of the clamped continuum stage
- *     clock, so the beat reverses under scroll and holds byte-stable
- *     between the runways.
+ *   - every scrubbed channel is a pure function of its clamped clock
+ *     (runway progress / entry / about progress), so the beat reverses
+ *     under scroll and holds byte-stable between the runways; the only
+ *     time-based motion is the slider head itself (delta-accumulator,
+ *     the sanctioned crail cadence).
  *
  * OFF restores today's passive #continuum byte-visually: the ambient kill
  * stays targeted at #continuum, the hook never engages, the portal stage

@@ -21,11 +21,19 @@ export interface ContinuumStageProgress {
   /** Runway progress 0..1 across the pinned #continuum stage (0 while the
    *  stage is inert / disengaged / above the viewport). */
   progress: number;
+  /** ENTRY progress 0..1 as the runway's top travels viewport-bottom →
+   *  viewport-top (the pin). Bridges the inter-runway gap where the about
+   *  clock has clamped to 1 and `progress` still clamps at 0, so the
+   *  continuum formation (continuumFormT) can keep moving through the
+   *  whole About → Continuum handoff instead of plateauing (ADR-049
+   *  Update 5). 0 while the runway is a full viewport away or the stage
+   *  is disengaged; 1 from the pin on (clamped — byte-stable below). */
+  entry: number;
   /** True only while the capable-path stage is engaged (media gate +
    *  no corridor fallback + flag). */
   engaged: boolean;
 }
 
 export const continuumStageProgressRef: { current: ContinuumStageProgress } = {
-  current: { progress: 0, engaged: false },
+  current: { progress: 0, entry: 0, engaged: false },
 };

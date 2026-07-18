@@ -161,6 +161,41 @@ const DEFAULT_OPACITY = 0.78;
  *  only ever read `.current`. */
 type ReadonlyRef<T> = { readonly current: T };
 
+/** Continuum band-highlight channel (ADR-049 Update 3, ported from the lab
+ *  `VolumetricBrandmarkArtifact`): the mark's inner horizontal band lights as
+ *  the tool ↔ collaborator spectrum — a soft base glow + a pendulum head with
+ *  a comet trail. The component stays generic: this is just "a horizontal
+ *  band highlight" driven per frame; the continuum clocks + slab constants
+ *  live in the corridor actor (`lib/services-ring/continuumBandMath`). All
+ *  gains 0 (or no ref) ⇒ the shader block is byte-identical off. */
+export interface BrandmarkCoreBandState {
+  /** Base band glow gain (master pre-applied; 0 = off). */
+  gain: number;
+  /** Pendulum head x01 position. */
+  sweep: number;
+  /** ±1 direction of travel — the trail stretches opposite this. */
+  dir: number;
+  /** Head brightness (master pre-applied). */
+  headGain: number;
+  /** Trail brightness at the head (master pre-applied). */
+  trailGain: number;
+  /** Slab centre y (group-local units — the ±TARGET_HALF space of
+   *  `targetHomes`). */
+  y: number;
+  /** Slab half-height (group-local). */
+  half: number;
+  /** Slab y-edge feather (group-local). */
+  soft: number;
+  /** Slab half-width / x01 normalization span (group-local). */
+  xHalf: number;
+  /** Head gaussian half-width (x01 units). */
+  headW: number;
+  /** Trail e-folding length behind the head (x01 units). */
+  trailLen: number;
+  /** Point-size boost on lit band particles. */
+  sizeBoost: number;
+}
+
 /** Render-mode + symbol identifiers for the lab particle-type switch
  *  (ADR-023 addendum). Encoded to the `int` shader uniforms below.
  *
@@ -412,6 +447,11 @@ export interface BrandmarkPhysicsCoreProps {
    *  `pausedRef`. Wins over the static `freezeMotion` prop when both
    *  are provided. */
   freezeMotionRef?: ReadonlyRef<boolean>;
+  /** Continuum band-highlight channel (ADR-049 Update 3). Read every frame
+   *  inside `useFrame`; absent ⇒ every `uBand*` uniform stays at its 0-gain
+   *  mount default (byte-identical — the corridor pre-continuum, every lab,
+   *  and any other consumer are untouched). */
+  bandRef?: ReadonlyRef<BrandmarkCoreBandState>;
   /** Blend mode of the points material. "additive" (default) is the luminous
    *  glow; "normal" flattens it into a crisp retro field (kills the bloom that
    *  reads as "Christmas lights"). */
@@ -568,6 +608,7 @@ export function BrandmarkPhysicsCore({
   lineJitter = 0,
   freezeMotion = false,
   freezeMotionRef,
+  bandRef,
   blending = "additive",
   basis = "dome-fill",
   gridSnap,
@@ -760,6 +801,21 @@ export function BrandmarkPhysicsCore({
         uLineJitter: { value: lineJitter },
         uFreezeMotion: { value: freezeMotion ? 1 : 0 },
         uTime: { value: 0 },
+        // Continuum band highlight (ADR-049 Update 3) — all gains 0 = off.
+        // Geometry values are irrelevant while the gains are 0; the per-frame
+        // bandRef write below owns every field when a consumer opts in.
+        uBandGain: { value: 0 },
+        uBandSweep: { value: -1 },
+        uBandDir: { value: 1 },
+        uBandY: { value: 0 },
+        uBandHalf: { value: 0 },
+        uBandSoft: { value: 0.01 },
+        uBandXHalf: { value: 0.5 },
+        uBandHeadW: { value: 0.07 },
+        uBandHeadGain: { value: 0 },
+        uBandTrailLen: { value: 0.28 },
+        uBandTrailGain: { value: 0 },
+        uBandSizeBoost: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
       fragmentShader: brandmarkCoreFragmentShader,
@@ -835,6 +891,25 @@ export function BrandmarkPhysicsCore({
     // Canvas `dpr` prop, so this follows governor steps mid-session in
     // the same frame they land.
     mat.uniforms.uPixelRatio.value = state.viewport.dpr;
+
+    // Continuum band highlight (ADR-049 Update 3) — path-independent uniform
+    // writes (the static fallback keeps the same contract). No ref ⇒ the
+    // 0-gain mount defaults stand and the shader block is identity.
+    const band = bandRef?.current;
+    if (band) {
+      mat.uniforms.uBandGain.value = band.gain;
+      mat.uniforms.uBandSweep.value = band.sweep;
+      mat.uniforms.uBandDir.value = band.dir;
+      mat.uniforms.uBandHeadGain.value = band.headGain;
+      mat.uniforms.uBandTrailGain.value = band.trailGain;
+      mat.uniforms.uBandY.value = band.y;
+      mat.uniforms.uBandHalf.value = band.half;
+      mat.uniforms.uBandSoft.value = band.soft;
+      mat.uniforms.uBandXHalf.value = band.xHalf;
+      mat.uniforms.uBandHeadW.value = band.headW;
+      mat.uniforms.uBandTrailLen.value = band.trailLen;
+      mat.uniforms.uBandSizeBoost.value = band.sizeBoost;
+    }
 
     // Live size / brightness: prefer the refs so the corridor actor can
     // ramp the core from its parked baseline up to the bright fly-in

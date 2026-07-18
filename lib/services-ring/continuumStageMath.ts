@@ -1,35 +1,29 @@
 // Continuum rail stage — pure math for the #continuum "brandmark returns"
-// beat (ADR-049; spectrum = the crail instrument formed FROM the mark
-// since Update 4).
+// beat (ADR-049; since Update 6 the tool ↔ collaborator slider is
+// INTEGRATED INTO the mark's own horizontal wireframe band).
 //
-// One clock (the continuum stage clock, 0→1 across the pinned #continuum
-// runway), clamped outside its range so the seams against #about (above)
-// and #practice (below) are byte-stable holds. Four scrubbed envelopes:
+// Two clock families:
 //
-//   1. APPROACH (continuumApproachT) — the receded mark lifts from its
-//      ~0.30 about-ambient ink to CONTINUUM_MARK_INK and eases back toward
-//      the parked pose (RECEDE release). Consumed by the WebGL mark
-//      opacity/pose (BrandmarkPhysicsCoreActor) via continuumFormT.
-//   2. COPY (continuumCopyT) — the DOM stage's masthead reveals (the
-//      CSS-var mirror, `--continuum-copy-in`, with per-child --ci-off
-//      stagger — the about-stage.css recipe).
-//   3. RAIL-FORM (continuumRailFormT) — the crail instrument FORMS out of
-//      the re-emerged mark (`--continuum-rail-form`): the dashed guide
-//      rail + bearings + brackets wipe OUTWARD from the mark's centre,
-//      the stops bloom centre-out beneath, and the reticle condenses at
-//      the mark before its launch gate arms (the data-continuum-formed
-//      hysteresis below).
-//   4. BG-IN (continuumBgInT) — the fail-opaque shield restores across the
-//      runway tail, completing at the unpin (i.e. as #practice's top
-//      reaches the viewport) BEFORE the ambient fade even starts (the
-//      ADR-030 lockstep ordering invariant, inherited from ADR-047).
+//   · The pinned-runway clock (0→1 across the #continuum runway, clamped
+//     outside so the seams against #about and #practice are byte-stable
+//     holds) drives the DOM copy: APPROACH (the formation's landing
+//     settle), COPY (masthead + stops reveal), BG-IN (the fail-opaque
+//     shield restores across the tail, completing at the unpin BEFORE the
+//     ambient fade — the ADR-030 lockstep ordering invariant).
+//   · The FORMATION clock (continuumFormT below — about-exit prelude →
+//     inter-runway entry bridge → pinned landing) drives everything that
+//     belongs to the MARK: its ink lift, pose release + hero scale boost,
+//     the in-shader band highlight (continuumBandMath.bandGainT), and the
+//     slider CHROME window (continuumChromeT — the reticle + Tool /
+//     Collaborator caps that dock to the band's projected geometry), so
+//     the whole instrument assembles DURING the approach and snaps
+//     together by the pin instead of forming afterwards.
 //
-// The THUMB helpers document the spectrum geometry the DOM instrument
-// draws (mirroring the fallback `.crail` reticle's 7s loop): fraction f
-// sweeps 1/6 ↔ 5/6 (Tool ↔ Collaborator stops) on a 7s ping-pong, and
-// the arc angle a = π·(1 − f) maps a fraction onto a front arc. The 3D
-// ContinuumWaistRail consumer was retired in Update 1; the fractions are
-// the single source for the DOM rail's tick/travel percentages.
+// The THUMB helpers document the spectrum geometry (the fallback `.crail`
+// reticle's 7s loop): fraction f sweeps 1/6 ↔ 5/6 (Tool ↔ Collaborator
+// stops) on a 7s ping-pong, and the arc angle a = π·(1 − f) maps a
+// fraction onto a front arc. The live slider's motion lives in
+// continuumBandMath (bandPendulumX / bandLaunchX — the same cadence).
 //
 // Kept free of DOM/three (tests/lib/continuum-stage-math.test.ts).
 
@@ -39,33 +33,28 @@ import { smootherstep } from "./ringMath";
 
 /* ── Continuum-stage beat windows (fractions of the pinned runway) ────────
  * Single source for the WebGL beat AND the DOM stage's CSS mirrors — the
- * beats must never drift apart. Runway = 200svh (continuum-stage.css). */
+ * beats must never drift apart. Runway = 150svh (continuum-stage.css);
+ * the instrument itself assembles PRE-pin on the formation clock, so the
+ * pinned travel is just the landing settle + the read hold + the tail. */
 
-/** Beat 0 — the mark re-emerges + eases closer; the waist ring
- *  re-brightens; the thumb's opacity gate opens. Starts at 0 (the
- *  #continuum pin coincides with the about tail, so the lift picks up in
- *  the same wheel motion that finished #about). */
-export const CONTINUUM_APPROACH_WINDOW: readonly [number, number] = [0, 0.3];
+/** Beat 0 — the formation's landing settle: the last few percent of the
+ *  mark's approach (continuumFormT reaches CONTINUUM_FORM_ENTRY at the
+ *  pin; this window lands the remainder — a short, near-immediate
+ *  settle, per the owner's "almost immediately snap together"). */
+export const CONTINUUM_APPROACH_WINDOW: readonly [number, number] = [0, 0.12];
 
-/** Beat 0, trailing — the masthead reveals. (The spectrum stops ride the
- *  RAIL-FORM envelope below since Update 4 — they belong to the
- *  instrument's centre-out bloom, not the masthead's editorial reveal.) */
-export const CONTINUUM_COPY_WINDOW: readonly [number, number] = [0.06, 0.38];
-
-/** Beat 1 — the crail instrument FORMS out of the mark: the dashed guide
- *  rail + bearings + register brackets wipe outward from the mark's
- *  centre (a scrubbed clip-path release — never scaleX, which would
- *  stretch the dash pattern), the three stops bloom centre-out beneath
- *  (per-child `--cs-off` against this envelope), and the navigator
- *  reticle condenses at the mark across the tail. Overlaps the back half
- *  of APPROACH so mark-return and instrument-formation read as one
- *  continuous motion; completes well before the BG-IN shield tail. */
-export const CONTINUUM_RAIL_FORM_WINDOW: readonly [number, number] = [0.12, 0.44];
+/** Beat 1 — the masthead + stops + readout + CTA reveal (scrubbed
+ *  `--continuum-copy-in` with per-child --ci-off stagger). Fast: the
+ *  instrument is already assembled when the pin lands, so the copy
+ *  arrives with it rather than trailing a long formation. */
+export const CONTINUUM_COPY_WINDOW: readonly [number, number] = [0.02, 0.3];
 
 /** Runway tail — the fail-opaque shield restores (and every stage child
  *  dies with it) so #practice covers an already-shielded station BEFORE
- *  the ambient canvas is killed (the ADR-030 ordering invariant). */
-export const CONTINUUM_BG_IN_WINDOW: readonly [number, number] = [0.92, 1.0];
+ *  the ambient canvas is killed (the ADR-030 ordering invariant).
+ *  Fractions of the SHORTER 150svh runway (50svh travel), so the window
+ *  is wider than the old 200svh tune to keep the same on-screen ramp. */
+export const CONTINUUM_BG_IN_WINDOW: readonly [number, number] = [0.85, 1.0];
 
 export function continuumApproachT(continuumP: number): number {
   return smootherstep(
@@ -77,54 +66,69 @@ export function continuumApproachT(continuumP: number): number {
 export function continuumCopyT(continuumP: number): number {
   return smootherstep(CONTINUUM_COPY_WINDOW[0], CONTINUUM_COPY_WINDOW[1], clamp01(continuumP));
 }
-export function continuumRailFormT(continuumP: number): number {
-  return smootherstep(
-    CONTINUUM_RAIL_FORM_WINDOW[0],
-    CONTINUUM_RAIL_FORM_WINDOW[1],
-    clamp01(continuumP)
-  );
-}
 export function continuumBgInT(continuumP: number): number {
   return smootherstep(CONTINUUM_BG_IN_WINDOW[0], CONTINUUM_BG_IN_WINDOW[1], clamp01(continuumP));
 }
 
-/* ── Reticle-launch hysteresis (`data-continuum-formed`) ─────────────────
- * The reticle's PING-PONG POSITION is the one channel that cannot be a
- * pure scrub (it is the fallback crail's autonomous 7s loop, sanctioned
- * since the original station): its CSS animation timeline starts when
- * useContinuumStageScroll stamps `data-continuum-formed` on the stage —
- * the launch keyframe then plays the reticle from the mark's centre out
- * to the Tool pole before the loop takes over ("the navigator detaches
- * from the mark"). Opacity stays scrubbed (`--continuum-rail-form` tail),
- * reaching 0 exactly at RESET_BELOW, so clearing the attribute on reverse
- * scroll never snaps a visible reticle back to centre. The SET/CLEAR gap
- * keeps a frame straddling one threshold from strobing the timeline. */
-
-/** Stamp `data-continuum-formed` when continuumRailFormT crosses this. */
-export const CONTINUUM_RETICLE_LAUNCH_AT = 0.98;
-/** Clear it only once continuumRailFormT falls back below this (also the
- *  foot of the reticle/trail opacity ramp in continuum-stage.css — keep
- *  in lockstep). */
-export const CONTINUUM_RETICLE_RESET_BELOW = 0.88;
-
 /** Fraction of the continuum formation that PRE-WARMS during the #about
- *  exit slide, so the brandmark re-inks and the waist ring begins
- *  re-brightening AS the copy/portrait slide away — the two beats read as
- *  one continuous motion instead of a hard cut at the pin. The remaining
- *  (1 − prelude) lands across the continuum approach proper. */
+ *  exit slide, so the brandmark re-inks and begins growing AS the
+ *  copy/portrait slide away — the two beats read as one continuous motion
+ *  instead of a hard cut at the pin. */
 export const CONTINUUM_FORM_PRELUDE = 0.4;
 
-/** THE continuum-formation clock. 0 → CONTINUUM_FORM_PRELUDE across the
- *  #about exit slide, plateaus across the inter-runway gap (the two clamped
- *  clocks are disjoint by page order — about p = 1 while continuum p = 0 for
- *  ~100svh), then continuumApproachT takes over via max-compose and carries
- *  it to 1. Monotone along the journey, reversible, and IDENTITY 0 before
- *  the exit begins (continuumFormT(≤0.74, 0) === 0) so every pre-exit frame
- *  is byte-identical to the pre-slide baseline. Consumed by the mark ink
- *  lift (BrandmarkPhysicsCoreActor) and the waist re-brighten
- *  (CorridorArmillary); a future WebGL continuum band reads the same clock. */
-export function continuumFormT(aboutP: number, continuumP: number): number {
-  return Math.max(CONTINUUM_FORM_PRELUDE * aboutExitT(aboutP), continuumApproachT(continuumP));
+/** Formation level the ENTRY bridge carries the mark to by the pin
+ *  (ADR-049 Update 5; retimed by Update 6). The pre-pin entry clock
+ *  (continuumStageProgressRef.entry: the runway's top traveling
+ *  viewport-bottom → viewport-top) spans the inter-runway gap where the
+ *  about clock has clamped to 1 and the runway clock still clamps at 0 —
+ *  without it the formation plateaued at CONTINUUM_FORM_PRELUDE for that
+ *  whole ~100svh stretch and the handoff read as grow → dead stall → grow
+ *  ("too jaggy"). 0.95: the mark + slider are essentially ASSEMBLED as
+ *  the pin arrives ("almost immediately snap together"); the pinned
+ *  approach window lands only the last sliver as an arrival settle. */
+export const CONTINUUM_FORM_ENTRY = 0.95;
+
+/** Slider-chrome window over the FORMATION clock — the navigator reticle
+ *  + the Tool / Collaborator caps (the DOM chrome docked to the band's
+ *  projected geometry) fade in across the entry ramp's tail, completing
+ *  AT CONTINUUM_FORM_ENTRY — i.e. exactly as the section pins, the
+ *  instrument clicks together over the already-lit band. Identity 0 at
+ *  formT 0 (nothing docks before the band exists). */
+export const CONTINUUM_CHROME_WINDOW: readonly [number, number] = [0.78, 0.95];
+
+/** Slider-chrome opacity for a formation level. Exactly 0 at formT = 0. */
+export function continuumChromeT(formT: number): number {
+  return smootherstep(CONTINUUM_CHROME_WINDOW[0], CONTINUUM_CHROME_WINDOW[1], clamp01(formT));
+}
+
+/** THE continuum-formation clock — max-compose of three eased, value-nested
+ *  segments, each easing to zero slope where the next picks up (C1 along
+ *  the scroll journey — no kinks, no dead plateau):
+ *
+ *    1. PRELUDE  0 → 0.4   across the #about exit slide (aboutExitT);
+ *    2. ENTRY    0.4 → 0.75 across the inter-runway gap (the entry clock —
+ *       the runway top traveling viewport-bottom → the pin), gated so a
+ *       zero entry contributes nothing (identity discipline; on the real
+ *       page the about plateau masks the gate edge by geometry: entry
+ *       starts exactly where aboutP clamps to 1);
+ *    3. APPROACH 0.75 → 1  across the pinned runway's approach window,
+ *       gated the same way (continuumP = 0 exactly until the pin, where
+ *       entry has already delivered 0.75 — the seam is continuous).
+ *
+ *  Monotone along the journey, reversible, IDENTITY 0 before the exit
+ *  begins (continuumFormT(≤0.74, 0, 0) === 0) so every pre-exit frame is
+ *  byte-identical to the pre-slide baseline, and constant 1 below the
+ *  runway. Consumed by the mark ink lift + recede release + scale boost
+ *  (BrandmarkPhysicsCoreActor). */
+export function continuumFormT(aboutP: number, continuumP: number, entryP = 0): number {
+  const prelude = CONTINUUM_FORM_PRELUDE * aboutExitT(aboutP);
+  const entry =
+    entryP > 0
+      ? lerp(CONTINUUM_FORM_PRELUDE, CONTINUUM_FORM_ENTRY, smootherstep(0, 1, clamp01(entryP)))
+      : 0;
+  const approach =
+    continuumP > 0 ? lerp(CONTINUUM_FORM_ENTRY, 1, continuumApproachT(continuumP)) : 0;
+  return Math.max(prelude, entry, approach);
 }
 
 /* ── Mark prominence tunables ─────────────────────────────────────────────
@@ -138,9 +142,19 @@ export function continuumFormT(aboutP: number, continuumP: number): number {
 export const CONTINUUM_MARK_INK = 0.6;
 
 /** Fraction of the #services EXIT_RECEDE_* scale/distance push released
- *  across the approach, so the mark eases ~halfway back toward the parked
- *  pose ("comes closer / more present") without fully re-docking. */
-export const CONTINUUM_RECEDE_RELEASE = 0.5;
+ *  across the formation. 1 = the pose returns FULLY to the parked
+ *  #services scale/distance (ADR-049 Update 5, owner: the mark should be
+ *  "way bigger" at the vision beat — was 0.5, a halfway release that left
+ *  the mark ~87% of parked apparent size). CONTINUUM_SCALE_BOOST below
+ *  then carries it PAST parked. */
+export const CONTINUUM_RECEDE_RELEASE = 1;
+
+/** Scale multiplier the mark grows TOWARD (riding the same formation
+ *  clock) ON TOP of the fully-released parked pose — the vision-beat hero
+ *  size, deliberately LARGER than the #services centerpiece. Identity at
+ *  formT = 0 (byte-identical pre-exit); with the full recede release the
+ *  continuum mark reads ~1.45× its previous apparent size. */
+export const CONTINUUM_SCALE_BOOST = 1.25;
 
 /** Master-opacity multiplier the waist ring lerps TOWARD across the
  *  approach (> 1 brightens: shell-waist's 0.68 base × ~1.3 ≈ 0.88; the

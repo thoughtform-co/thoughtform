@@ -4,6 +4,7 @@ import {
   BAND_BASE_GAIN,
   BAND_GAIN_WINDOW,
   BAND_HALF,
+  BAND_LAUNCH_S,
   BAND_SOFT,
   BAND_SWING_MAX,
   BAND_SWING_MIN,
@@ -13,6 +14,7 @@ import {
   BAND_Y,
   MARK_HALF_EXTENT,
   bandGainT,
+  bandLaunchX,
   bandPendulumDir,
   bandPendulumX,
 } from "@/lib/services-ring/continuumBandMath";
@@ -92,6 +94,40 @@ describe("pendulum direction — the trail's anchor", () => {
       const d = bandPendulumX(p + 0.004) - bandPendulumX(p - 0.004);
       expect(Math.sign(d)).toBe(bandPendulumDir(p));
     }
+  });
+});
+
+describe("launch — the navigator detaches from the seat (ADR-049 Update 6)", () => {
+  it("starts at the seat (x01 0.5) and lands exactly on the pendulum's phase-0 position", () => {
+    // Value-continuity contract: the launch's end must equal
+    // bandPendulumX(0) so the seat → Tool → swing handoff has no jump.
+    expect(bandLaunchX(0)).toBeCloseTo(0.5, 12);
+    expect(bandLaunchX(1)).toBeCloseTo(bandPendulumX(0), 12);
+  });
+
+  it("clamps outside [0, 1] (byte-stable at both rests)", () => {
+    expect(bandLaunchX(-1)).toBeCloseTo(0.5, 12);
+    expect(bandLaunchX(2)).toBeCloseTo(BAND_SWING_MIN, 12);
+  });
+
+  it("moves monotonically leftward (seat → Tool), eased at both ends", () => {
+    let prev = Infinity;
+    for (let t = 0; t <= 1.0001; t += 0.02) {
+      const x = bandLaunchX(t);
+      expect(x).toBeLessThanOrEqual(prev + 1e-9);
+      prev = x;
+    }
+    // Zero slope at both ends (smootherstep): the reticle condenses gently
+    // and arrives at the Tool pole without a velocity kink into the swing's
+    // own zero-slope turnaround.
+    const speed = (t: number) => Math.abs(bandLaunchX(t + 0.005) - bandLaunchX(t - 0.005));
+    expect(speed(0.02)).toBeLessThan(speed(0.5) * 0.25);
+    expect(speed(0.98)).toBeLessThan(speed(0.5) * 0.25);
+  });
+
+  it("keeps a sane launch duration", () => {
+    expect(BAND_LAUNCH_S).toBeGreaterThan(0);
+    expect(BAND_LAUNCH_S).toBeLessThan(3);
   });
 });
 

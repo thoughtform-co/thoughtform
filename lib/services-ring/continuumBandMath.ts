@@ -114,3 +114,22 @@ export function bandPendulumDir(phase: number): 1 | -1 {
   const p = phase - Math.floor(phase);
   return p < 0.5 ? 1 : -1;
 }
+
+/* ── The launch (the navigator detaches from the mark's seat) ───────────────
+ * The crail choreography the slider keeps (ADR-049 Update 6): the reticle
+ * CONDENSES at the mark's centre — the "AI lives here" seat, x01 0.5 — and
+ * LAUNCHES out to the Tool pole as the instrument snaps together, then the
+ * pendulum swing takes over from phase 0 (Tool end, so its first half-swing
+ * reads left → right). The host accumulates launchT on the clamped frame
+ * delta (never a wall clock) and resets it with the pendulum phase whenever
+ * the band closes, so every (re-)entry replays seat → Tool → swing. */
+
+/** Seconds for the seat → Tool launch leg (the crail's launch timing). */
+export const BAND_LAUNCH_S = 1.1;
+
+/** Launch head x01 for a launch progress t ∈ [0, 1]: the seat (0.5) eased
+ *  out to the Tool end (BAND_SWING_MIN — the pendulum's phase-0 position,
+ *  so the launch hands off to the swing value-continuously). */
+export function bandLaunchX(t: number): number {
+  return lerp(0.5, BAND_SWING_MIN, smootherstep(0, 1, clamp01(t)));
+}

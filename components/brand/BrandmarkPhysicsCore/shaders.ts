@@ -91,6 +91,31 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   uniform float uCleanFieldKeep;     // surviving particle fraction at clean = 1 (centerpiece)
   uniform float uCleanFieldDotScale; // dot-size multiplier at clean = 1
 
+  // ── Continuum band highlight (ADR-049 Update 3, ported from
+  // volumetricShaders.ts Update 4) — the mark's inner horizontal band as the
+  // tool ↔ collaborator spectrum: a soft BASE glow along the whole band + a
+  // bright PENDULUM head swinging left ↔ right with a comet TRAIL decaying
+  // behind its direction of travel. Selection is geometric over the SETTLED
+  // wireframe home (aTarget3D, group-local ±TARGET_HALF): a horizontal slab
+  // [uBandY ± uBandHalf] across [±uBandXHalf]. The corridor's targetHomes are
+  // wire-only (surfaceCount/shellCount 0), so no part filter is needed here
+  // (the lab shader gates on aPart; this cloud IS the wire). All gains
+  // default 0 ⇒ the whole block is identity for every non-continuum frame.
+  // Vertex-only uniforms → plain precision (no vertex/fragment
+  // precision-match constraint, Invariant 8).
+  uniform float uBandGain;      // base band glow gain (0 = off / identity)
+  uniform float uBandSweep;     // pendulum head x01
+  uniform float uBandDir;       // ±1 direction of travel (trail stretches opposite)
+  uniform float uBandY;         // slab centre y (group-local units)
+  uniform float uBandHalf;      // slab half-height
+  uniform float uBandSoft;      // slab y-edge feather
+  uniform float uBandXHalf;     // slab half-width (x01 normalization span)
+  uniform float uBandHeadW;     // head gaussian half-width (x01)
+  uniform float uBandHeadGain;  // head brightness
+  uniform float uBandTrailLen;  // trail e-folding length behind the head (x01)
+  uniform float uBandTrailGain; // trail brightness at the head
+  uniform float uBandSizeBoost; // point-size boost on lit band particles
+
   attribute vec2 aUV;
   attribute float aLuma;        // per-particle phase [0, 1)
   attribute float aEdgeWeight;  // edge proximity [0, 1]
@@ -112,6 +137,9 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   //     flattening the wind-blown flight.
   varying float vWireCrisp;
   varying float vCrisp;
+  // Continuum band weights (gains pre-applied; 0 everywhere off-continuum).
+  varying float vBandFill;
+  varying float vBandHead;
 
   // Cheap deterministic hash for the per-band scanline displacement.
   float hash11(float n) {
@@ -122,6 +150,9 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     vLuma = aLuma;
     vEdgeWeight = aEdgeWeight;
     vAngle = aAngle;
+    // Written for every path (the rank-clip below returns early).
+    vBandFill = 0.0;
+    vBandHead = 0.0;
     
     // Sim-driven position. The texture is updated each frame by the
     // GPGPU compute pass (or, on the static path, by a one-shot
@@ -283,6 +314,27 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     float crisp = max(max(flatCrisp, wireCrisp), FLIGHT_CRISP_FLOOR);
     vCrisp = crisp;
 
+    // ── Continuum band highlight weights (identity when all gains are 0).
+    // Selected over the SETTLED wireframe home (aTarget3D) so the slab is
+    // stable regardless of sim jitter — at #continuum the mark is landed
+    // (uDepth = 1), so the drawn position IS this home. The x feather is
+    // proportional (×1.12 ≈ the lab's +0.1 over the 0.87 sampler half-
+    // extent) so a slab retune keeps the same edge character.
+    if (uBandGain + uBandHeadGain + uBandTrailGain > 0.0001) {
+      float slabY = 1.0 - smoothstep(uBandHalf, uBandHalf + max(1e-4, uBandSoft), abs(aTarget3D.y - uBandY));
+      float slabX = 1.0 - smoothstep(uBandXHalf, uBandXHalf * 1.12, abs(aTarget3D.x));
+      float slab = slabY * slabX;
+      float x01 = clamp((aTarget3D.x / max(1e-4, uBandXHalf)) * 0.5 + 0.5, 0.0, 1.0);
+      // Base: the whole band softly lit — the axis the pendulum rides.
+      vBandFill = slab * uBandGain;
+      // Head: bright gaussian at the pendulum position. Trail: exponential
+      // decay stretching BEHIND the direction of travel (the comet tail).
+      float dh = (x01 - uBandSweep) / max(1e-4, uBandHeadW);
+      float back = (x01 - uBandSweep) * -uBandDir; // > 0 = behind the head
+      float trail = back > 0.0 ? exp(-back / max(1e-4, uBandTrailLen)) : 0.0;
+      vBandHead = slab * (exp(-dh * dh) * uBandHeadGain + trail * uBandTrailGain);
+    }
+
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
     
@@ -367,7 +419,9 @@ export const brandmarkCoreVertexShader = /* glsl */ `
       gl_PointSize = 0.0;
       return;
     }
-    gl_PointSize = uPointSize * uPixelRatio * sizeMul;
+    // Lit band particles grow slightly (uBandSizeBoost 0 ⇒ identity).
+    float bandSize = 1.0 + clamp(vBandFill + vBandHead, 0.0, 1.0) * uBandSizeBoost;
+    gl_PointSize = uPointSize * uPixelRatio * sizeMul * bandSize;
   }
 `;
 
@@ -417,6 +471,8 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   varying float vCoverMorph;    // [0, 1] cover-in factor — alpha gate during SVG → particle handoff
   varying float vWireCrisp;     // 0 mid-flight → 1 settled wireframe (crisp + still + Services palette)
   varying float vCrisp;         // 1 at flat rest AND landed (presented), 0 mid-flight — clean shape
+  varying float vBandFill;      // continuum band base-glow weight (gain pre-applied; 0 off-continuum)
+  varying float vBandHead;      // continuum band pendulum-head + trail weight
 
   float hashF(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
@@ -675,6 +731,21 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // owns the visibility ramp. At coverIn = 1 (post-cut and beyond) the
     // multiplier is identity, so the parked corridor / sphere /
     // centerpiece look is byte-identical.
-    gl_FragColor = vec4(color, alpha * uOpacity * vCoverMorph * wireAlpha);
+    float outAlpha = alpha * uOpacity * vCoverMorph * wireAlpha;
+
+    // ── Continuum band highlight (ADR-049 Update 3): lit band particles pull
+    // toward the accent tone (alpha lifted toward the ink ceiling so the band
+    // reads as a continuous lit stroke), and the pendulum head + comet trail
+    // add a bright pass over it. bandLit = 0 everywhere off-continuum, so
+    // every non-continuum frame is byte-identical.
+    float bandLit = clamp(vBandFill + vBandHead, 0.0, 1.0);
+    if (bandLit > 0.001) {
+      color = mix(color, accentTone, bandLit * 0.85);
+      color += accentTone * vBandHead * 0.5;
+      outAlpha = mix(outAlpha, mask * uOpacity, bandLit * 0.6);
+      outAlpha += vBandHead * 0.25 * mask * uOpacity;
+    }
+
+    gl_FragColor = vec4(color, outAlpha);
   }
 `;

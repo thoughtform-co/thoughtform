@@ -28,10 +28,15 @@ export interface ContinuumStop {
 export const CONTINUUM_STAGE = {
   /** The masthead — restyled to the Services masthead recipe
    *  (`.home-v2-station-header__title`): PP Neue Montreal, uppercase, the
-   *  em line rendered gold at weight 500. The line break is authored. */
+   *  em line rendered gold at weight 500. The line break is authored.
+   *  CONCISE by owner direction (2026-07-18): the long thesis statement
+   *  ("AI isn't software to command…") was already made upstream AND
+   *  restated by the lede — the masthead now poses the question the
+   *  instrument answers (the middle stop replies "neither pure tool nor
+   *  true collaborator"; the gold line hands to SEE THE PRACTICE). */
   titleLines: [
-    { text: "AI isn't software to command.", em: false },
-    { text: "It's intelligence to navigate.", em: true },
+    { text: "Tool or collaborator?", em: false },
+    { text: "Navigation is the skill.", em: true },
   ],
   lede: [
     "Software is commanded. Intelligence is navigated. AI sits on a continuum between ",

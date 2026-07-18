@@ -23,6 +23,7 @@ export type {
   BrandmarkCoreShape,
   BrandmarkCoreGlyph,
   BrandmarkCoreBlending,
+  BrandmarkCoreBandState,
 } from "./BrandmarkPhysicsCore";
 
 // Re-export the basis type from the sampler so consumers (the lab,
