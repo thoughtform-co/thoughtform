@@ -76,8 +76,11 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --ignore-scripts
 
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+      # Chromium for the desktop project + WebKit for the iPhone/iPad
+      # device-matrix projects (playwright.config.ts) — Chromium-only left
+      # the three WebKit projects failing at browser launch.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Corridor + device-matrix smokes
         run: npx playwright test tests/visual/landing-corridor-smoke.spec.ts tests/visual/corridor-device-matrix-smoke.spec.ts --reporter=list
