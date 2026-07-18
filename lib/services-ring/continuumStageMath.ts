@@ -33,6 +33,7 @@
 // Kept free of DOM/three (tests/lib/continuum-stage-math.test.ts).
 
 import { clamp01, lerp } from "@/lib/math";
+import { aboutExitT } from "./aboutDeckMath";
 import { smootherstep } from "./ringMath";
 
 /* ── Continuum-stage beat windows (fractions of the pinned runway) ────────
@@ -65,6 +66,26 @@ export function continuumCopyT(continuumP: number): number {
 }
 export function continuumBgInT(continuumP: number): number {
   return smootherstep(CONTINUUM_BG_IN_WINDOW[0], CONTINUUM_BG_IN_WINDOW[1], clamp01(continuumP));
+}
+
+/** Fraction of the continuum formation that PRE-WARMS during the #about
+ *  exit slide, so the brandmark re-inks and the waist ring begins
+ *  re-brightening AS the copy/portrait slide away — the two beats read as
+ *  one continuous motion instead of a hard cut at the pin. The remaining
+ *  (1 − prelude) lands across the continuum approach proper. */
+export const CONTINUUM_FORM_PRELUDE = 0.4;
+
+/** THE continuum-formation clock. 0 → CONTINUUM_FORM_PRELUDE across the
+ *  #about exit slide, plateaus across the inter-runway gap (the two clamped
+ *  clocks are disjoint by page order — about p = 1 while continuum p = 0 for
+ *  ~100svh), then continuumApproachT takes over via max-compose and carries
+ *  it to 1. Monotone along the journey, reversible, and IDENTITY 0 before
+ *  the exit begins (continuumFormT(≤0.74, 0) === 0) so every pre-exit frame
+ *  is byte-identical to the pre-slide baseline. Consumed by the mark ink
+ *  lift (BrandmarkPhysicsCoreActor) and the waist re-brighten
+ *  (CorridorArmillary); a future WebGL continuum band reads the same clock. */
+export function continuumFormT(aboutP: number, continuumP: number): number {
+  return Math.max(CONTINUUM_FORM_PRELUDE * aboutExitT(aboutP), continuumApproachT(continuumP));
 }
 
 /* ── Mark prominence tunables ─────────────────────────────────────────────

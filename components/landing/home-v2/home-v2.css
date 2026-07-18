@@ -374,11 +374,15 @@ html[data-corridor-exit="true"] #services > * {
    overridden into a FAIL-OPAQUE shield: `--about-bg-in` defaults to 1,
    so a JS failure, the flag being off, or the stage never engaging all
    leave #about visually indistinguishable from a normal opaque station
-   (the ADR-030 `--tools-bg-in` recipe, with the fade channel + LOCKSTEP
-   ordering restored: the shield completes at the stage's unpin —
-   continuum.top ≥ 1vh — BEFORE the ambient fade even starts at 0.6vh).
-   Reveals never ride this wrapper (ADR-008 Rule 3) — the stage children
-   carry every animation; the shield is a pseudo BELOW them. */
+   (the ADR-030 `--tools-bg-in` recipe). ADR-047 rev (2026-07-18): the
+   shield is now written 0 for the stage's WHOLE engaged life and never
+   restores mid-seam — the exit is a slide-out (copy left, portrait right)
+   over the live corridor bed, not a fade-to-shield. The lockstep cover
+   that must precede the ambient kill is now #continuum's tail restore
+   (the ambient survives to #practice), not this one. The shield restores
+   to opaque only via the disengage var-clear (→ default 1). Reveals never
+   ride this wrapper (ADR-008 Rule 3) — the stage children carry every
+   animation; the shield is a pseudo BELOW them. */
 html[data-corridor-exit="true"] #about {
   position: relative;
   z-index: 6;
@@ -395,9 +399,9 @@ html[data-corridor-exit="true"] #about > * {
 html[data-corridor-exit="true"] #about.station::before {
   /* Shield replaces the authored radial wash while the band is live —
      mirrors .station:not(.hero)'s surface (void + stars tile) so opacity
-     1 is indistinguishable from the normal station shield. Written by
-     useAboutStageScroll (0 while the stage is pinned + capable; back to
-     1 across the runway tail); unwritten ⇒ 1 ⇒ fail-opaque. */
+     1 is indistinguishable from the normal station shield. Written 0 by
+     useAboutStageScroll for the whole engaged life (the slide-out exit
+     keeps the corridor bed visible); unwritten ⇒ 1 ⇒ fail-opaque. */
   inset: 0;
   background: var(--void, #0a0908) url("/v7-stars.svg") center top / 1600px 900px repeat;
   opacity: var(--about-bg-in, 1);

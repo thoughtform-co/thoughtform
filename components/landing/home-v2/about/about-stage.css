@@ -1,12 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════════════
  * ADR-047 — ABOUT DECK-FLIP STAGE (#about, capable desktop path)
  *
- * A 240svh runway pins a sticky TRANSPARENT stage over the still-live
+ * A 250svh runway pins a sticky TRANSPARENT stage over the still-live
  * corridor canvas: the WebGL card deck flips π to Vince's portrait and
  * lands on `.about-stage__slot` while the orbit cluster materializes
  * around it (beat 0), the cluster + deck then translate right while the
- * copy column reveals (beat 1), and the reading hold (beat 2) closes
- * with the fail-opaque shield restoring under #continuum.
+ * copy column reveals (beat 1), the reading hold (beat 2) holds, and the
+ * EXIT beat (ADR-047 rev, 2026-07-18) slides the copy column LEFT and the
+ * cluster RIGHT off-screen so the live corridor bed shows through the
+ * handoff to #continuum — replacing the old fade-to-void-shield tail.
  *
  * EVERYTHING here is attribute-gated on `#about[data-about-mode="stage"]`
  * (written by useAboutStageScroll only while the ring's media gate holds
@@ -16,9 +18,11 @@
  * WebGL-fallback, JS-failure and flag-off all land there (fail-static).
  *
  * The scroll-driven channels (--about-flip / --about-shift /
- * --about-copy-in / --about-bg-in) are per-frame CSS-var mirrors of the
+ * --about-copy-in / --about-exit) are per-frame CSS-var mirrors of the
  * aboutDeckMath beat windows — NO transitions on them (scroll owns the
- * motion; everything is reversible by construction).
+ * motion; everything is reversible by construction). --about-bg-in is no
+ * longer scrubbed (the shield is written 0 for the whole engaged life);
+ * it survives only as the fail-opaque default for non-engaged states.
  * ═══════════════════════════════════════════════════════════════════════ */
 
 .about-stage-root {
@@ -31,11 +35,11 @@
 }
 
 #about[data-about-mode="stage"] .about-stage-root {
-  /* 240svh (2026-07-16 pacing pass — 300svh made the flip take too many
-     wheel ticks; owner report). The beat windows are fractions, so the
-     runway height is the single pacing knob — widen back toward 300svh
-     if the flip feels rushed. */
-  min-height: 240svh;
+  /* 250svh — 240svh for the stack/flip/hold (2026-07-16 pacing pass) plus
+     +10svh for the 2026-07-18 EXIT slide (ABOUT_EXIT_WINDOW). The beat
+     windows are fractions, so the runway height is the single pacing knob
+     — widen if the flip or the slide feels rushed. */
+  min-height: 250svh;
 }
 #about[data-about-mode="stage"] .about-stage {
   display: flex;
@@ -75,7 +79,7 @@
      parity inset chain (ADR-045). */
   padding-top: 0;
   padding-bottom: 0;
-  /* The ADR-030 containment-placeholder trap: a ~240svh station must
+  /* The ADR-030 containment-placeholder trap: a ~250svh station must
      never collapse to its contain-intrinsic-size placeholder offscreen
      or every scroll target below it lands wrong. */
   content-visibility: visible;
@@ -96,12 +100,11 @@
   align-items: center;
   justify-content: space-between;
   margin-inline: var(--rail-inset);
-  /* The tail kill: as the fail-opaque shield restores (--about-bg-in →
-     1, written on #about and inherited here), every stage child dies
-     with it so nothing outlives the cover — the WebGL deck multiplies
-     the same term (deckBgKill). Children, never the shielding wrapper
-     (ADR-008 Rule 3). */
-  opacity: calc(1 - var(--about-bg-in, 0));
+  /* No tail opacity kill (ADR-047 rev): the exit is a slide-out, not a
+     fade-under-shield. The copy column and the cluster each translate
+     off-screen on --about-exit (below); the WebGL deck rides the cluster's
+     slot off the right frustum edge and gets a terminal safety fade
+     (aboutDeckFadeT) so nothing outlives the runway. */
 }
 
 /* ── LEFT — copy column reveal (beat 1). Scrubbed per-child stagger:
@@ -136,15 +139,42 @@
   min-width: 1px;
 }
 
+/* ── EXIT — the copy COLUMN slides LEFT off-screen on --about-exit (the
+   cluster mirrors it RIGHT, above). This is on the column itself, distinct
+   from the per-child --about-copy-in reveal (which stays on
+   .about-stage__copy > *); the two transforms compose (child reveal
+   relative to the sliding column). Self-sizing distance — 100% (own width)
+   + --band-margin (the column's exact left inset under the ADR-048 band
+   chain) + 48px glow pad (≥ the name's 22px text-shadow) — so the column
+   is provably off-viewport at exit = 1 on every width. No transition:
+   scroll owns it, reversible. */
+#about[data-about-mode="stage"] .about-stage__copy {
+  transform: translateX(calc(var(--about-exit, 0) * (-100% - var(--band-margin, 200px) - 48px)));
+}
+
 /* ── RIGHT — the orbit cluster. Beat 0: rings/readouts/halo materialize
    around the flipping deck (opacity + a small scale settle off
    --about-flip). Beats 0–1 position: the cluster is laid out at its
    FINAL grid slot and translated LEFT to viewport centre by
    --about-center-dx (measured offset-chain by the hook), easing to 0
    across --about-shift — getBoundingClientRect on the slot reads this
-   live translate, which is exactly how the WebGL deck stays welded. */
+   live translate, which is exactly how the WebGL deck stays welded.
+
+   EXIT (ADR-047 rev): a SECOND, additive translate rides the cluster
+   fully RIGHT off-screen on --about-exit. The distance self-sizes —
+   100% (own width) + --band-margin (the cluster's exact right inset under
+   the ADR-048 band chain) + 48px glow pad — so it is provably off-viewport
+   at exit = 1 on every width. --about-center-dx is offset-chain-measured
+   (transform-independent), so this exit term never feeds back into its own
+   target; the slot's gBCR rides it and the welded deck follows off the
+   right frustum edge (three culls it). */
 #about[data-about-mode="stage"] .about-stage__cluster {
-  transform: translateX(calc(var(--about-center-dx, 0px) * (1 - var(--about-shift, 0))));
+  transform: translateX(
+    calc(
+      var(--about-center-dx, 0px) * (1 - var(--about-shift, 0)) + var(--about-exit, 0) *
+        (100% + var(--band-margin, 200px) + 48px)
+    )
+  );
 }
 #about[data-about-mode="stage"] .about-stage__cluster .voidwalker__orbit__svg {
   opacity: var(--about-flip, 0);

@@ -104,51 +104,69 @@ export function ContinuumStage() {
             </p>
           </header>
 
-          {/* The open centre — the WebGL mark + waist ring + thumb live here
-            (in the corridor canvas behind this transparent stage). No DOM. */}
-
-          {/* The three spectrum stop descriptions ARE exposed to assistive
-              tech — this is the section's core explanatory content and the
-              static `.crail__stops-grid` fallback exposes the identical
-              kicker/title/body. Only decorative chrome (the ring frame,
-              bearings, reticle, readout, brand image) is hidden, and here
-              that chrome is all WebGL / outside this wrapper — the empty
-              `.crail__tick` divs below carry no text, so they add nothing to
-              the AT tree. Do NOT re-add aria-hidden here (regression guard,
-              ADR-049 / plan 6.2). */}
-          <div className="continuum-stage__labels">
-            {CONTINUUM_STAGE.stops.map((stop, i) => (
-              <div
-                key={stop.pos}
-                className={`continuum-stage__stop continuum-stage__stop--${stop.pos}`}
-                style={{ ["--ci-off" as string]: 0.16 + i * 0.06 }}
-              >
-                <div className="crail__tick" />
-                <div
-                  className={"crail__k" + (stop.kickerMod ? ` crail__k--${stop.kickerMod}` : "")}
-                >
-                  {stop.kicker}
-                </div>
-                <div className="crail__t">
-                  {stop.title.map((line, j) => (
-                    <span key={j} className="continuum-stage__stop-line">
-                      {line}
-                    </span>
-                  ))}
-                </div>
-                <div className="crail__b">{stop.body}</div>
+          {/* ── The spectrum, ON the mark ────────────────────────────────
+              A BOLD horizontal tool ↔ collaborator axis painted across the
+              re-emerged brandmark's centre (the WebGL mark sits behind this
+              transparent stage, roughly at --continuum-axis-y). A traveling
+              reticle glides the front span (Tool 1/6 ↔ Collaborator 5/6,
+              THUMB_F_MIN/MAX) on the same 7s ping-pong the DOM crail uses.
+              Purely decorative chrome — the READABLE spectrum content is the
+              three stop descriptions below (they carry the kicker/title/body
+              the static `.crail__stops-grid` fallback exposes identically), so
+              the axis is aria-hidden and the stops are NOT (regression guard,
+              ADR-049 / plan 6.2). The axis draws in on --continuum-approach
+              (with the mark), the stops on --continuum-copy-in. */}
+          <div className="continuum-stage__spectrum">
+            <div className="continuum-stage__axis" aria-hidden="true">
+              <div className="continuum-stage__axis-line" />
+              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--l" />
+              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--m" />
+              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--r" />
+              <span className="continuum-stage__axis-cap continuum-stage__axis-cap--l">Tool</span>
+              <span className="continuum-stage__axis-cap continuum-stage__axis-cap--r">
+                Collaborator
+              </span>
+              <div className="continuum-stage__marker">
+                <span className="continuum-stage__marker-ring" />
+                <span className="continuum-stage__marker-core" />
+                <span className="continuum-stage__marker-cross" />
               </div>
-            ))}
-          </div>
+            </div>
 
-          <div className="continuum-stage__readout" style={{ ["--ci-off" as string]: 0.4 }}>
-            {CONTINUUM_STAGE.readout}
-          </div>
+            <div className="continuum-stage__labels">
+              {CONTINUUM_STAGE.stops.map((stop, i) => (
+                <div
+                  key={stop.pos}
+                  className={`continuum-stage__stop continuum-stage__stop--${stop.pos}`}
+                  style={{ ["--ci-off" as string]: 0.16 + i * 0.06 }}
+                >
+                  <div className="crail__tick" />
+                  <div
+                    className={"crail__k" + (stop.kickerMod ? ` crail__k--${stop.kickerMod}` : "")}
+                  >
+                    {stop.kicker}
+                  </div>
+                  <div className="crail__t">
+                    {stop.title.map((line, j) => (
+                      <span key={j} className="continuum-stage__stop-line">
+                        {line}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="crail__b">{stop.body}</div>
+                </div>
+              ))}
+            </div>
 
-          <div className="continuum-stage__close" style={{ ["--ci-off" as string]: 0.48 }}>
-            <a href={CONTINUUM_STAGE.cta.href} className="btn btn--ghost continuum-stage__cta">
-              {CONTINUUM_STAGE.cta.label} <span className="arrow" />
-            </a>
+            <div className="continuum-stage__readout" style={{ ["--ci-off" as string]: 0.4 }}>
+              {CONTINUUM_STAGE.readout}
+            </div>
+
+            <div className="continuum-stage__close" style={{ ["--ci-off" as string]: 0.48 }}>
+              <a href={CONTINUUM_STAGE.cta.href} className="btn btn--ghost continuum-stage__cta">
+                {CONTINUUM_STAGE.cta.label} <span className="arrow" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

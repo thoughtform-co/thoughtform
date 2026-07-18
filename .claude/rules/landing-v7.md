@@ -22,7 +22,7 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-041: Arc Cases Sigil + phased reveal](../sentinel/decisions/041-arc-cases-sigil.md) (the phased reveal + ordering; its §2 sphere-sigil trigger is superseded by ADR-042)
 - [ADR-042: Arc Cases cue under the Build title](../sentinel/decisions/042-arc-cases-cue.md) (the live trigger — a DOM dotted-leader + label, off the sphere)
 - [ADR-048: Editorial band](../sentinel/decisions/048-editorial-band.md) (the shared horizontal frame for section text — `--band-max`/`--band-margin`/`--rail-inset`; never re-widen the inset per-section)
-- [ADR-049: Continuum rail stage](../sentinel/decisions/049-continuum-rail-stage.md) (the brandmark returns to mid-prominence at #continuum, its waist ring re-brightens, the tool ↔ collaborator thumb rides that ring; #continuum becomes a transparent stage and the ambient kill retargets to #practice)
+- [ADR-049: Continuum rail stage](../sentinel/decisions/049-continuum-rail-stage.md) (the brandmark returns to mid-prominence at #continuum; the tool ↔ collaborator spectrum is a BOLD horizontal DOM axis across the mark's centre with a travelling marker, copy beneath — Update 1 retired the edge-on waist-ring thumb; #continuum becomes a transparent stage and the ambient kill retargets to #practice)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
@@ -60,7 +60,7 @@ the Arc's Build-park cases reveal (click-armed via the CUE — a dotted-leader
 dock is REMOVED).** Across the services exit clock the four WebGL cards
 STACK into a deck (azimuth sweep — never a Cartesian lerp; math in
 `lib/services-ring/aboutDeckMath.ts`, exact identity at exit 0); the
-pinned TRANSPARENT `#about` stage (300svh runway, `AboutStagePortal` →
+pinned TRANSPARENT `#about` stage (250svh runway, `AboutStagePortal` →
 `[data-about-root]`) then FLIPS the deck π on X to the shared portrait
 back face (back planes carry `rotation.x = π` — Rx(π)∘Rx(π) = identity,
 upright/unmirrored; the bake's chamfer chrome is MIRRORED to match the
@@ -68,13 +68,19 @@ flipped slab) and the deck lands on `.about-stage__slot`
 (`aboutSlotRef`, viewport-first per frame). Beat 1 translates the cluster
 right (the DOM owns the motion; the deck follows the rect) while the copy
 reveals via scrubbed `--ci-off` stagger (never `useRevealMotion` — portal
-nodes are unobserved and `.is-in` is one-shot). Two clamped clocks
+nodes are unobserved and `.is-in` is one-shot); the EXIT beat then slides
+the copy column LEFT + the cluster (deck welded to its slot) RIGHT
+off-screen on `--about-exit` over the live corridor bed (ADR-047 Update 8
+— NO fade-to-void-shield; `#continuum`'s `--continuum-bg-in` tail is the
+lockstep cover, and the mark re-inks DURING the slide via
+`continuumFormT`). Two clamped clocks
 (`exitProgressForRunway` + `aboutStageProgressRef`), single writer
 `useAboutStageScroll`; the corridor ambient SURVIVES through #about AND
 #continuum (both transparent stages) and dies at `#practice` (ADR-049
 retargeted kill, one station past ADR-047; gate keyed to the SAME rect as
 the fade envelope — the ADR-030 seam-cut bug). Fail-opaque shield
-(`--about-bg-in`, default 1) + fail-static attribute
+(`--about-bg-in`, default 1 — written 0 for the whole engaged life now,
+restored only via the disengage var-clear) + fail-static attribute
 (`data-about-mode` absent ⇒ static `.voidwalker` + ADR-045 emerge —
 mobile/PRM/fallback/flag-off). Flag: `ABOUT_DECK_STAGE`. Paint-stack rows
 4c–4e in ADR-008. Every disengage path must clear `data-about-mode`

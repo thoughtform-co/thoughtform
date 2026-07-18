@@ -9,6 +9,7 @@ export {
   BRANDMARK_GLB,
   BRANDMARK_WIRE_GLB,
   VolumetricBrandmarkArtifact,
+  type ContinuumBandDrive,
   type VolumetricBrandmarkBlending,
   type VolumetricBrandmarkArtifactProps,
 } from "./VolumetricBrandmarkArtifact";

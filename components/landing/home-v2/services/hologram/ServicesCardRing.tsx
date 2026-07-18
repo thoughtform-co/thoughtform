@@ -75,7 +75,7 @@ import {
   DECK_RENDER_PITCH,
   DECK_RENDER_REBASE_EXIT,
   DECK_SETTLED_ROTATION,
-  aboutBgInT,
+  aboutDeckFadeT,
   aboutFlipLinearT,
   aboutFlipT,
   deckFlipFromT,
@@ -1222,10 +1222,14 @@ export function ServicesCardRing({
     const deckAnchorsLive =
       !(ABOUT_DECK_STAGE && entrance === "scroll") ||
       (exitP < DECK_ANCHORS_OFF_EXIT && aboutP <= 0);
-    // The about tail's fail-opaque shield covers the stage across
-    // ABOUT_BG_IN_WINDOW — the deck (and its DOM cluster, in CSS) dies
-    // with it so nothing outlives the cover.
-    const deckBgKill = deckEngaged ? 1 - aboutBgInT(aboutP) : 1;
+    // The about tail is a slide-out now (ADR-047 rev): the DOM cluster
+    // rides the deck's slot off the RIGHT frustum edge on --about-exit, so
+    // the deck is already off-canvas well before this fires. deckBgKill is
+    // a WebGL-only TERMINAL safety fade (ABOUT_DECK_FADE_WINDOW [0.92, 1])
+    // that guarantees the back material is exactly 0 (and its depth-write
+    // released) in the byte-stable hold below the runway — not the thing
+    // the eye sees leave.
+    const deckBgKill = deckEngaged ? 1 - aboutDeckFadeT(aboutP) : 1;
 
     // Flip-phase shared geometry (one inverse parent matrix + camera terms
     // + the pivot's seat for all four cards — scratch objects only).
@@ -1335,8 +1339,9 @@ export function ServicesCardRing({
     // back-to-front order, the nearest (deck-rear card 0's) wins the
     // buffer, and the renderOrder-1 brandmark point pass depth-tests
     // behind the portrait instead of painting over it (ADR-047 rev 2).
-    // The opacity floor releases the writer as the about tail's
-    // deckBgKill fades the deck under the shield.
+    // The opacity floor releases the writer as the about tail's terminal
+    // deckBgKill fades the deck out (by which point it has already slid off
+    // the right frustum edge with the cluster).
     const backWrite = flip !== null && backMaterial.opacity > 0.55;
     if (backWrite !== backMaterial.depthWrite) backMaterial.depthWrite = backWrite;
 

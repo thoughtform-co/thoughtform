@@ -179,12 +179,27 @@ export const RING_OPACITY_RANGE: readonly [number, number] = [0.16, 0.9];
 export const RING_OPACITY_WINDOW: readonly [number, number] = [-0.55, 0.6];
 
 /** Per-card entrance windows in `--corridor-dissipate` units — staggered
- *  after the orbit draw-on begins (~0.45), matching the armillary reveal. */
+ *  after the orbit draw-on begins (~0.45), matching the armillary reveal.
+ *
+ *  Ordering (2026-07-18 sync fix): the windows are keyed by CARD INDEX, but
+ *  index order ≠ on-screen order. The three VISIBLE cards — 0 (front), 1
+ *  (right edge), 3 (left edge) — must LAND TOGETHER (all settle by ~0.88) so
+ *  none lags into the reading zone; the ONLY late lander is index 2, the
+ *  card that parks BEHIND the mark (basePhi 180°, hidden), whose late arrival
+ *  is invisible. The two side cards (1 + 3) share one window so they sweep in
+ *  from the left/right edges in lockstep.
+ *
+ *  Before this the windows stepped strictly by index (…, [0.72,0.96],
+ *  [0.78,1.0]), which scheduled the VISIBLE left card (index 3) DEAD LAST —
+ *  after even the hidden back card — so it landed out of sync with the others
+ *  and its tail slid right up to dissipate 1.0 (≈ runway p 0.14, where
+ *  rotation begins), eating the first services scroll before the ring would
+ *  turn. Keep the hidden card (index 2) as the sole late window. */
 export const RING_ENTRANCE_WINDOWS: ReadonlyArray<readonly [number, number]> = [
-  [0.6, 0.88],
-  [0.66, 0.92],
-  [0.72, 0.96],
-  [0.78, 1.0],
+  [0.58, 0.88], // card 0 — front (visible): rises from below, parks centre
+  [0.62, 0.88], // card 1 — right edge (visible): synced with the left card
+  [0.7, 1.0], // card 2 — BACK (hidden behind the mark): the only late lander
+  [0.62, 0.88], // card 3 — left edge (visible): synced with the right card
 ];
 
 /** Legacy radial fly-in multiplier (cards start a touch wider, ease to 1).

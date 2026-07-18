@@ -110,7 +110,12 @@
   flex-direction: column;
   height: 100%;
   padding-block: clamp(40px, 7svh, 88px) clamp(28px, 4svh, 56px);
-  padding-inline: var(--hud-content-inset, 0);
+  /* NO padding-inline here (ADR-048/049 fix): the station already carries
+     the --hud-content-inset layer (.station:not(.hero)) and the head adds
+     --rail-inset — the ADR-045 two-layer band chain, matching services /
+     about. A third inset here re-widened the masthead one whole
+     --hud-content-inset (~145–192px/side) inboard of the shared editorial
+     band ("too centered"). */
   opacity: calc(1 - var(--continuum-bg-in, 0));
 }
 
@@ -164,14 +169,167 @@
   color: var(--gold, #caa554);
 }
 
-/* ── The three spectrum labels — lower third, registered under the waist
-   ring's left/centre/right. Width ≈ the ring's projected span (v1 eyeball;
-   iteration point: project the ring's f = 1/6, 1/2, 5/6 to pixels and
-   write --crail-x-l/m/r for exact registration). The reticle thumb + tick
-   diamonds are the WebGL ring; these are the readable stops beneath. */
+/* ── The spectrum block — the bold horizontal axis painted ACROSS the
+   re-emerged mark's centre, with the three readable stops directly beneath
+   it. Absolutely anchored so the axis line sits on the WebGL mark regardless
+   of how tall the copy below runs.
+
+   --continuum-axis-y is the on-screen height of the axis line — tuned to the
+   mark's centre while the stage is pinned. NUDGE THIS (single knob) if the
+   axis rides above/below the mark on a given viewport; the copy follows it. */
+#continuum[data-continuum-mode="stage"] .continuum-stage {
+  --continuum-axis-y: 47svh;
+  /* Marker travel span — Tool (THUMB_F_MIN = 1/6) ↔ Collaborator
+     (THUMB_F_MAX = 5/6), as percentages of the axis width. The three ticks
+     sit at 1/6, 1/2, 5/6 to match continuumStageMath.THUMB_TICK_FRACTIONS. */
+  --continuum-axis-lo: 16.667%;
+  --continuum-axis-hi: 83.333%;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__spectrum {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--continuum-axis-y);
+  /* No padding-inline (ADR-048/049): the children are centered fixed-width,
+     so this was a visual no-op — but it started edge-registered band
+     content one --hud-content-inset off. Band parity for any future
+     edge-registered content is margin-inline: var(--rail-inset). */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* The axis itself — a bold gold line, brighter at the centre (where AI
+   lives), with three registration ticks, the Tool/Collaborator end caps, and
+   the traveling reticle. Draws in on --continuum-approach (with the mark). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis {
+  position: relative;
+  width: min(760px, 62vw);
+  height: 2px;
+  opacity: var(--continuum-approach, 0);
+  transition: none;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-line {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(202, 165, 84, 0.12) 0%,
+    rgba(202, 165, 84, 0.65) 16.667%,
+    rgba(235, 227, 214, 0.9) 50%,
+    rgba(202, 165, 84, 0.65) 83.333%,
+    rgba(202, 165, 84, 0.12) 100%
+  );
+  box-shadow:
+    0 0 12px rgba(202, 165, 84, 0.35),
+    0 0 2px rgba(235, 227, 214, 0.5);
+}
+/* Registration ticks at the three stops (1/6 · 1/2 · 5/6). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-tick {
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  background: var(--dawn-30);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-tick--l {
+  left: var(--continuum-axis-lo);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-tick--m {
+  left: 50%;
+  height: 16px;
+  background: var(--gold-40, rgba(202, 165, 84, 0.4));
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-tick--r {
+  left: var(--continuum-axis-hi);
+}
+/* End caps — Tool (left) / Collaborator (right), keyed to the marker span. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-cap {
+  position: absolute;
+  top: -22px;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  white-space: nowrap;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-cap--l {
+  left: var(--continuum-axis-lo);
+  transform: translateX(-50%);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__axis-cap--r {
+  left: var(--continuum-axis-hi);
+  transform: translateX(-50%);
+}
+
+/* The traveling reticle — glides Tool ↔ Collaborator on the same 7s
+   ping-pong the DOM crail reticle uses (crailSlideLarge). The stage is
+   display:none until engaged, so the animation is inert off-stage. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__marker {
+  position: absolute;
+  top: 50%;
+  left: var(--continuum-axis-lo);
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  animation: continuumMarkerSlide 7s cubic-bezier(0.65, 0, 0.35, 1) infinite alternate;
+}
+/* Literal endpoints (NOT var() — custom properties inside @keyframes are
+   unreliable across engines). Keep these in lockstep with
+   --continuum-axis-lo / --continuum-axis-hi above (Tool 1/6 ↔ Collaborator
+   5/6). */
+@keyframes continuumMarkerSlide {
+  from {
+    left: 16.667%;
+  }
+  to {
+    left: 83.333%;
+  }
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__marker-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold, #caa554);
+  box-shadow:
+    0 0 14px rgba(202, 165, 84, 0.5),
+    inset 0 0 6px rgba(202, 165, 84, 0.3);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__marker-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--dawn, #ebe3d6);
+  box-shadow: 0 0 8px rgba(235, 227, 214, 0.8);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__marker-cross {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(90deg, transparent 47%, rgba(202, 165, 84, 0.35) 50%, transparent 53%),
+    linear-gradient(0deg, transparent 47%, rgba(202, 165, 84, 0.35) 50%, transparent 53%);
+}
+/* The reduced-motion belt is the @media block at the file tail (the stage
+   never mounts under prefers-reduced-motion), so the marker animation never
+   runs for motion-sensitive users. */
+
+/* ── The three readable stops — directly beneath the axis, registered under
+   its left/centre/right ticks. These carry the spectrum's actual content
+   (the reticle + ticks above are decorative chrome). */
 #continuum[data-continuum-mode="stage"] .continuum-stage__labels {
-  margin: auto auto 0;
-  width: min(88vw, calc(64svh * 1.6));
+  margin: clamp(30px, 5svh, 64px) 0 0;
+  width: min(760px, 62vw);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   column-gap: clamp(16px, 2.5vw, 40px);
