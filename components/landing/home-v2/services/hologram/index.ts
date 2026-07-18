@@ -9,6 +9,7 @@ export {
   BRANDMARK_GLB,
   BRANDMARK_WIRE_GLB,
   VolumetricBrandmarkArtifact,
+  type ContinuumBandDrive,
   type VolumetricBrandmarkBlending,
   type VolumetricBrandmarkArtifactProps,
 } from "./VolumetricBrandmarkArtifact";
@@ -20,4 +21,3 @@ export {
 } from "./HologramOrbits";
 export { ServicesHologramScene, type ServicesHologramSceneProps } from "./ServicesHologramScene";
 export { ServicesCardRing, type ServicesCardRingProps } from "./ServicesCardRing";
-export { ContinuumBand, type ContinuumBandProps } from "./ContinuumBand";

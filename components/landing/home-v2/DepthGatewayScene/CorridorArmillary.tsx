@@ -33,26 +33,18 @@ import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
 import { brandmarkScanAnchorPointsRef, type BrandmarkFeatureId } from "../brandmarkScanAnchorsRef";
-import {
-  ABOUT_DECK_STAGE,
-  CONTINUUM_RAIL_STAGE,
-  SERVICES_CARD_RING,
-} from "../unifiedServicesInstrument";
+import { ABOUT_DECK_STAGE, SERVICES_CARD_RING } from "../unifiedServicesInstrument";
 import {
   HologramOrbits,
   STRUCTURAL_ORBITS,
-  type OrbitConfig,
 } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
 import { ServicesCardRing } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
-import { CONTINUUM_WAIST_LEVEL, continuumFormT } from "@/lib/services-ring/continuumStageMath";
-import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
-import { lerp } from "@/lib/math";
 import {
   useHologramConnectors,
   type ConnectorAnchor,
@@ -80,41 +72,13 @@ const orbitExitGetter = () =>
   (1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress)) *
   (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1);
 
-/** Waist-ring master opacity across the continuum stage (ADR-049;
- *  formation-prelude rev 2026-07-18): lerps the cleared exit level TOWARD
- *  CONTINUUM_WAIST_LEVEL (> 1 brightens the 0.68-base line above its rest,
- *  capped at 1 in OrbitRing) as the formation clock opens. continuumFormT
- *  PRE-WARMS 40% during the #about exit slide (the waist begins
- *  re-brightening AS the copy/portrait slide away — matching the mark's
- *  re-ink), then the continuum approach carries it home. Both clocks are 0
- *  outside the seam, so this equals orbitExitGetter() everywhere else — the
- *  waist tracks the meridian through #services / #about, then re-brightens
- *  alone here. */
-const waistContinuumGetter = () =>
-  lerp(
-    orbitExitGetter(),
-    CONTINUUM_WAIST_LEVEL,
-    continuumFormT(
-      aboutStageProgressRef.current.progress,
-      continuumStageProgressRef.current.progress
-    )
-  );
-
-/** Per-ring getter selector: the waist re-brightens on the continuum
- *  approach; every other structural ring keeps the plain exit getter — but
- *  ONLY while the SERVICES_CARD_RING rollback gate is on, mirroring the
- *  sibling `masterOpacityGetter={SERVICES_CARD_RING ? orbitExitGetter :
- *  undefined}` prop. With the card ring OFF the non-waist branch returns
- *  `undefined`, so HologramOrbits' `masterOpacityGetterFor?.(o) ??
- *  masterOpacityGetter` chain falls through to the intentionally-undefined
- *  getter (master 1, byte-identical to the pre-services-ring armillary —
- *  ADR-049 Invariant 4). Returning `orbitExitGetter` unconditionally here
- *  would dim every structural ring on the services-exit clock even with the
- *  gate off, breaking the "absent ⇒ 1" invariant. */
-const continuumWaistSelector = (o: OrbitConfig): (() => number) | undefined => {
-  if (o.id === "shell-waist") return waistContinuumGetter;
-  return SERVICES_CARD_RING ? orbitExitGetter : undefined;
-};
+/* ADR-049 Update 3 (2026-07-18, owner): the continuum beat carries NO orbit
+ * emphasis — the waist-ring re-brighten (waistContinuumGetter /
+ * continuumWaistSelector, ADR-049 Updates 0–2) is REMOVED. The spectrum is
+ * the MARK ITSELF: its inner horizontal band lights left → right (the
+ * volumetric-shader band highlight, look-dev at /test/continuum-band). The
+ * structural rings simply stay cleared through #about and #continuum on the
+ * plain exit getter below. */
 
 /** Sub-pixel deadband for the anchor publish delta gate. Anchors are
  *  screen-space pixels; a quarter-pixel drift is invisible under the
@@ -272,7 +236,6 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
         scale={scale}
         activeServiceId={activeServiceId}
         masterOpacityGetter={SERVICES_CARD_RING ? orbitExitGetter : undefined}
-        masterOpacityGetterFor={CONTINUUM_RAIL_STAGE ? continuumWaistSelector : undefined}
       />
       {/* ADR-029: the four service cards orbit the mark in this same rig —
           scroll-owned rotation (runway progress via servicesRingProgressRef),

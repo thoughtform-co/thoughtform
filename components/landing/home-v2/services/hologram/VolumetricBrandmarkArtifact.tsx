@@ -28,12 +28,39 @@ import * as THREE from "three";
 
 import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
 import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
+import {
+  BAND_HALF,
+  BAND_HEAD_W,
+  BAND_SIZE_BOOST,
+  BAND_SOFT,
+  BAND_TRAIL_LEN,
+  BAND_X_HALF,
+  BAND_Y,
+} from "@/lib/services-ring/continuumBandMath";
 import { volumetricFragmentShader, volumetricVertexShader } from "./volumetricShaders";
 import { lerp } from "@/lib/math";
 
 export const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
 export const BRANDMARK_WIRE_GLB = "/models/brandmark/brandmark-wire.glb";
 export type VolumetricBrandmarkBlending = "additive" | "normal";
+
+/** Per-frame drive values for the continuum band highlight (ADR-049 Update 3
+ *  — the mark's inner horizontal band as the tool ↔ collaborator spectrum: a
+ *  pendulum head swinging left ↔ right with a comet trail). Returned by
+ *  `bandDriveGetter` each frame; all-zero gains (or no getter) ⇒ the
+ *  highlight is byte-identical off. */
+export interface ContinuumBandDrive {
+  /** Pendulum head x01 position. */
+  sweep: number;
+  /** ±1 direction of travel — the trail stretches opposite this. */
+  dir: number;
+  /** Base band-glow gain (0 = off). */
+  gain: number;
+  /** Head brightness. */
+  headGain: number;
+  /** Trail brightness at the head. */
+  trailGain: number;
+}
 
 const DEFAULT_COLOR = TENSOR_GOLD; // harmonized Tensor Gold — unified with the orbit armillary
 const DEFAULT_ACCENT = TENSOR_ACCENT; // brighter Tensor Gold — luminous Fresnel limb
@@ -113,6 +140,23 @@ export interface VolumetricBrandmarkArtifactProps {
    *  wireframe in directly (scale + fade + scan + haze settle, no dome, no
    *  glitch) so the mark is ALWAYS 3D. Default "dome". */
   entranceForm?: "dome" | "wire";
+  /** Continuum band highlight drive (ADR-049 Update 3) — called once per
+   *  frame; absent ⇒ the highlight is off (all uniforms 0, byte-identical). */
+  bandDriveGetter?: () => ContinuumBandDrive;
+  /** Band slab centre y (mark-local units, sampler space ±0.87). */
+  bandY?: number;
+  /** Band slab half-height. */
+  bandHalf?: number;
+  /** Band slab y-edge feather. */
+  bandSoft?: number;
+  /** Band slab half-width (x01 normalization span). */
+  bandXHalf?: number;
+  /** Head gaussian half-width (x01 units). */
+  bandHeadW?: number;
+  /** Comet-trail e-folding length behind the head (x01 units). */
+  bandTrailLen?: number;
+  /** Point-size boost on lit band particles. */
+  bandSizeBoost?: number;
 }
 
 function BrandmarkPoints({
@@ -135,6 +179,14 @@ function BrandmarkPoints({
   spin = 0,
   entrance = "off",
   entranceForm = "dome",
+  bandDriveGetter,
+  bandY = BAND_Y,
+  bandHalf = BAND_HALF,
+  bandSoft = BAND_SOFT,
+  bandXHalf = BAND_X_HALF,
+  bandHeadW = BAND_HEAD_W,
+  bandTrailLen = BAND_TRAIL_LEN,
+  bandSizeBoost = BAND_SIZE_BOOST,
 }: VolumetricBrandmarkArtifactProps) {
   const groupRef = useRef<THREE.Group>(null);
   const pointsRef = useRef<THREE.Points>(null);
@@ -207,6 +259,19 @@ function BrandmarkPoints({
         uTransform: { value: 1 },
         uEntropy: { value: 0 },
         uGlitch: { value: 0 },
+        // Continuum band highlight (ADR-049 Update 3) — all gains 0 = off.
+        uBandGain: { value: 0 },
+        uBandSweep: { value: -1 },
+        uBandDir: { value: 1 },
+        uBandY: { value: BAND_Y },
+        uBandHalf: { value: BAND_HALF },
+        uBandSoft: { value: BAND_SOFT },
+        uBandXHalf: { value: BAND_X_HALF },
+        uBandHeadW: { value: BAND_HEAD_W },
+        uBandHeadGain: { value: 0 },
+        uBandTrailLen: { value: BAND_TRAIL_LEN },
+        uBandTrailGain: { value: 0 },
+        uBandSizeBoost: { value: 0 },
       },
       vertexShader: volumetricVertexShader,
       fragmentShader: volumetricFragmentShader,
@@ -243,6 +308,31 @@ function BrandmarkPoints({
     u.uWireStroke.value = wireStroke;
     (u.uColor.value as THREE.Color).set(color);
     (u.uAccent.value as THREE.Color).set(accentColor);
+
+    // ── Continuum band highlight (ADR-049 Update 3): slab geometry from props
+    // (lab-tunable), drive values from the per-frame getter. No getter ⇒ all
+    // gains stay 0 ⇒ the shader block is identity (services / other labs
+    // byte-identical).
+    u.uBandY.value = bandY;
+    u.uBandHalf.value = bandHalf;
+    u.uBandSoft.value = bandSoft;
+    u.uBandXHalf.value = bandXHalf;
+    u.uBandHeadW.value = bandHeadW;
+    u.uBandTrailLen.value = bandTrailLen;
+    if (bandDriveGetter) {
+      const drive = bandDriveGetter();
+      u.uBandGain.value = drive.gain;
+      u.uBandSweep.value = drive.sweep;
+      u.uBandDir.value = drive.dir;
+      u.uBandHeadGain.value = drive.headGain;
+      u.uBandTrailGain.value = drive.trailGain;
+      u.uBandSizeBoost.value = bandSizeBoost;
+    } else {
+      u.uBandGain.value = 0;
+      u.uBandHeadGain.value = 0;
+      u.uBandTrailGain.value = 0;
+      u.uBandSizeBoost.value = 0;
+    }
 
     // ── Scroll entrance: transform the corridor dome into the wireframe ──
     // Read the corridor-exit dissipate clock (`--corridor-dissipate` on <html>,
