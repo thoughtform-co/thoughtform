@@ -661,6 +661,15 @@ active 10.5px, tighter tracking, `dawn` α .34) so the active context
 dominates. Rows are real `<button>`s (`aria-current`), clickable via
 `scrollToManifestEntry`.
 
+**Visibility — Arc-only (owner refinement, 2026-07-18).** The menu is an
+Arc-contextual overlay: it fades in ONLY while the reader is inside the
+corridor's Navigate/Encode/Build beats, and fades out before (hero/thesis)
+and after (services →). The gate is pure CSS off the `<html>` corridor bus
+— `[data-corridor-engaged="true"]` AND `[data-corridor-phase]` ∈ {navigate,
+encode, build} — so the component keeps rendering + tracking and its
+content is correct the instant it shows; buttons take clicks only while
+shown. (This supersedes the initial "always shown" persistent model.)
+
 **No new scroll writer (ADR-002).** State is a pure read of the SAME
 single-writer `<html>` bus the diamond uses — `resolveActiveIdx` +
 `ACTIVE_IDX_ATTRIBUTES`, woken by a MutationObserver + the hero/corridor
@@ -673,10 +682,15 @@ mutate-in-place `RailManifestController`).
   RETIRED — unmounted from `HomeCorridor`; the component stays on disk for
   rollback (like `ServicesRailRegister`, Update 11 / ADR-044). During the
   Arc the right rail is now empty; the left menu carries the beats.
-- The left detent diamond hides on DESKTOP (`≥1101×760`, where the menu
-  shows) — the menu is the journey indicator there. `RailManifestController`
-  is untouched; the diamond + title chip stay below that gate as the
-  compact fallback marker.
+- The left detent diamond hides on desktop (`≥1101×760`) ONLY inside the
+  Arc — where the menu takes over. OUTSIDE the Arc (and below the gate) the
+  diamond is the journey indicator again, so the desktop is never without
+  a marker. Its hide is scoped to the SAME in-Arc `<html>` condition and
+  fades (opacity, not display) so it hands off to/from the menu smoothly.
+  `RailManifestController` is untouched; the 13-tick ladder always stays.
+  (Owner refinement 2026-07-18 — the initial Update 12 hid the diamond on
+  all desktop, which left no marker outside the Arc once the menu became
+  Arc-only.)
 
 **Kept.** The 13-tick ladder + hairline (Update 2, always). The
 parse-injected `<nav data-rail-manifest-root>` skeleton, `MANIFEST_ENTRIES`,

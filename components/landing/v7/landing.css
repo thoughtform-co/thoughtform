@@ -941,14 +941,22 @@
   }
 }
 
-/* ADR-031 Update 12 — on desktop the left-side terminal-tree section menu
-   (`CorridorSectionMenu`) is the journey indicator, so the detent diamond
-   hides there; it stays below the menu's ≥1101×760 gate as the compact
-   fallback marker. (The 13-tick ladder + hairline always remain.) */
+/* ADR-031 Update 12 — the left-side terminal-tree section menu
+   (`CorridorSectionMenu`) is an Arc-contextual overlay: it shows ONLY
+   inside the corridor's Navigate/Encode/Build beats. So the detent
+   diamond is the journey indicator EVERYWHERE ELSE and hides only where
+   the menu takes over — desktop (≥1101×760) AND in the Arc. Outside the
+   Arc (and below the gate) the diamond stays. It fades out (opacity, not
+   display) so it hands off to the menu smoothly. */
 @media (min-width: 1101px) and (min-height: 760px) {
-  .rail-manifest__diamond,
-  .rail-manifest__title {
-    display: none;
+  html[data-corridor-engaged="true"]:is(
+      [data-corridor-phase="navigate"],
+      [data-corridor-phase="encode"],
+      [data-corridor-phase="build"]
+    )
+    :is(.rail-manifest__diamond, .rail-manifest__title) {
+    opacity: 0;
+    pointer-events: none;
   }
 }
 

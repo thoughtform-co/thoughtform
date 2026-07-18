@@ -20,9 +20,17 @@ import {
  * journey indicator (Updates 7–9 are superseded; the reversal is
  * deliberate and owner-driven).
  *
- * The full 8-station journey is always shown; the ACTIVE section is an
- * inverse-video block while every other section RECEDES (smaller, tighter,
- * dim) so the active context dominates. The Arc unfolds its three beats
+ * VISIBILITY: it is an Arc-contextual overlay — visible ONLY while the
+ * reader is inside the corridor's Navigate/Encode/Build beats (owner:
+ * "only visible when you enter the arc"), fading out before and after.
+ * That gate is pure CSS off the `<html>` corridor bus (see home-v2.css);
+ * this component keeps rendering + tracking so its content is correct the
+ * instant it fades in. Outside the Arc the left rail's detent diamond is
+ * the indicator again (its desktop hide is scoped to the same in-Arc
+ * window). The full 8-station journey is shown while visible; the ACTIVE
+ * section is an inverse-video block while every other section RECEDES
+ * (smaller, tighter, dim) so the active context dominates. The Arc
+ * unfolds its three beats
  * (Navigate / Encode / Build) ONLY while the reader is inside the corridor
  * arc, with the active beat lit and a blinking cursor.
  *
