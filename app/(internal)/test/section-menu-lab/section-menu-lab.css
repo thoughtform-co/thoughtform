@@ -1,0 +1,822 @@
+/* ═══════════════════════════════════════════════════════════════════
+   section-menu-lab — lab-scoped styles (sml-*).
+
+   Five design routes for a detached left-side section + subsection menu,
+   over a static reproduction of the parked Navigate viewport. Imports
+   landing.css + home-v2.css for real tokens/fonts/chrome; every rule
+   here is namespaced `sml-`/`smenu`/`smg-`/`smgauge-`/`smtape-`/`smterm-`/
+   `smspine-` so nothing collides with production.
+
+   Shape law: border-radius 0 (the gate ellipse is the one sanctioned
+   round, set-dressing not UI); diamonds not circles; gold = active/
+   wayfinding only; no italics. Motion: quantized snap + steps(); the
+   altitude-tape caret is the only continuous glide (350ms), by design.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Lab stage ──────────────────────────────────────────────────────
+   Cancel the home-v2 scroll model: a fixed full-viewport box that owns
+   the void and holds the frame + menu + console. */
+.sml {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+}
+
+/* hudHtml ships the fixed gold gateway radial; production covers it with
+   the opaque corridor canvas — here the sml-scene owns the backdrop. */
+.sml .gateway {
+  display: none;
+}
+
+/* HUD chrome is scenery — pass clicks through except real links. */
+.sml__hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.sml__hud .hud {
+  pointer-events: none;
+}
+.sml__hud a {
+  pointer-events: auto;
+}
+
+/* ── Backdrop approximation (latent-field starscape) ───────────────── */
+.sml-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sml-scene__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 72vmin;
+  height: 72vmin;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(202, 165, 84, 0.1),
+    rgba(202, 165, 84, 0.03) 42%,
+    transparent 70%
+  );
+}
+/* The NavigateGate ellipse ring — set-dressing, the sanctioned round. */
+.sml-scene__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46vmin;
+  height: 31vmin;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  border: 1px solid rgba(236, 227, 214, 0.13);
+  border-radius: 50%;
+}
+.sml-scene__gate {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.6);
+}
+.sml-scene__dot {
+  position: absolute;
+  background: rgba(236, 227, 214, 0.9);
+}
+
+/* ── Shared menu shell ─────────────────────────────────────────────── */
+.smenu {
+  position: fixed;
+  /* Detached from the left rail: clear its full width + a gap. */
+  left: calc(var(--hud-margin, 40px) + var(--hud-rail-width, 64px) + clamp(14px, 1.6vw, 30px));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  text-transform: uppercase;
+  pointer-events: none;
+  -webkit-font-smoothing: antialiased;
+}
+.smenu button {
+  margin: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  pointer-events: auto;
+}
+.smenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Shared corner-bracket cursor (R1). Legs offset by stroke width so the
+   vertex reads as a corner, not a plus. */
+.sml-bracket {
+  position: absolute;
+  inset: -3px -6px;
+  pointer-events: none;
+}
+.sml-bracket__c {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border: 0 solid var(--gold, #caa554);
+}
+.sml-bracket__c--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+}
+.sml-bracket__c--tr {
+  top: 0;
+  right: 0;
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+}
+.sml-bracket__c--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+}
+.sml-bracket__c--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
+}
+
+/* Shared unfold for subsection rows. */
+@keyframes sml-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ═══ R1 · GLYPH INDEX ═══════════════════════════════════════════════ */
+.smg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.smg-item {
+  position: relative;
+}
+.smg-row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 3px 12px 3px 0;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: rgba(235, 227, 214, clamp(0.24, calc(0.55 - var(--d, 0) * 0.075), 0.55));
+  transition: color 120ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.smg-idx {
+  min-width: 2ch;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(202, 165, 84, 0.5);
+}
+.smg-name {
+  white-space: nowrap;
+}
+.smg-item[data-active] .smg-row {
+  color: var(--gold, #caa554);
+  font-size: 13px;
+}
+.smg-item[data-active] .smg-idx {
+  color: var(--gold, #caa554);
+}
+.smg-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 4px 0;
+}
+.smg-subrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0 2px 26px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgba(235, 227, 214, 0.4);
+  animation: sml-unfold 260ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: calc(var(--j, 0) * 60ms);
+}
+.smg-sub-diamond {
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  background: rgba(235, 227, 214, 0.3);
+  flex: none;
+}
+.smg-sub-idx {
+  font-size: 9px;
+  color: rgba(202, 165, 84, 0.5);
+}
+.smg-sub-name {
+  white-space: nowrap;
+}
+.smg-sub[data-active] .smg-subrow {
+  color: var(--gold, #caa554);
+}
+.smg-sub[data-active] .smg-sub-diamond {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+}
+.smg-sub[data-active] .smg-sub-idx {
+  color: var(--gold, #caa554);
+}
+
+/* ═══ R2 · GAUGE MANIFEST ════════════════════════════════════════════ */
+.smgauge-head {
+  margin-bottom: 12px;
+  padding-left: 2px;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  color: rgba(235, 227, 214, 0.4);
+}
+.smgauge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.smgauge-row {
+  display: grid;
+  grid-template-columns: 2ch 8.5ch 92px 3ch;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.44);
+}
+.smgauge-num {
+  font-size: 9px;
+  color: rgba(202, 165, 84, 0.5);
+}
+.smgauge-name {
+  white-space: nowrap;
+  text-align: left;
+}
+.smgauge-track {
+  position: relative;
+  height: 7px;
+}
+.smgauge-track::before,
+.smgauge-track::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 1px;
+  background: rgba(235, 227, 214, 0.3);
+}
+.smgauge-track::before {
+  left: 0;
+}
+.smgauge-track::after {
+  right: 0;
+}
+.smgauge-fill {
+  position: absolute;
+  left: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 3px;
+  background: rgba(235, 227, 214, 0.26);
+  transition: width 200ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.smgauge-read {
+  font-size: 8px;
+  text-align: right;
+  color: rgba(235, 227, 214, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+.smgauge-item[data-active] .smgauge-row {
+  color: var(--gold, #caa554);
+}
+.smgauge-item[data-active] .smgauge-num,
+.smgauge-item[data-active] .smgauge-read {
+  color: var(--gold, #caa554);
+}
+.smgauge-item[data-active] .smgauge-fill {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.5);
+}
+.smgauge-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 5px 0;
+}
+.smgauge-subrow {
+  display: grid;
+  grid-template-columns: 3ch 7.5ch 60px 3ch;
+  align-items: center;
+  gap: 9px;
+  padding-left: 22px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.4);
+  animation: sml-unfold 260ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+.smgauge-subnum {
+  color: rgba(202, 165, 84, 0.5);
+}
+.smgauge-track--sub {
+  height: 6px;
+}
+.smgauge-subitem[data-active] .smgauge-subrow {
+  color: var(--gold, #caa554);
+}
+.smgauge-subitem[data-active] .smgauge-subnum {
+  color: var(--gold, #caa554);
+}
+.smgauge-subitem[data-active] .smgauge-fill {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 7px rgba(202, 165, 84, 0.5);
+}
+
+/* ═══ R3 · ALTITUDE TAPE ═════════════════════════════════════════════ */
+.smtape-scale {
+  position: relative;
+  width: 156px;
+  /* Bounded so the plot clears the bottom caption reticle even at the
+     ≥760px gate floor. */
+  height: clamp(320px, 46svh, 460px);
+}
+.smtape-line {
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(235, 227, 214, 0.22);
+  -webkit-mask-image: linear-gradient(transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(transparent, #000 8%, #000 92%, transparent);
+}
+.smtape-minor {
+  position: absolute;
+  left: 4px;
+  width: 6px;
+  height: 1px;
+  transform: translateY(-50%);
+  background: rgba(235, 227, 214, 0.2);
+}
+.smtape-tick {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 0;
+  white-space: nowrap;
+}
+.smtape-tick__mark {
+  width: 13px;
+  height: 1px;
+  margin-left: 4px;
+  background: rgba(235, 227, 214, 0.5);
+  flex: none;
+}
+.smtape-tick__num {
+  font-size: 8px;
+  color: rgba(202, 165, 84, 0.45);
+}
+.smtape-tick__name {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.44);
+}
+.smtape-tick[data-active] .smtape-tick__mark {
+  width: 17px;
+  background: var(--gold, #caa554);
+}
+.smtape-tick[data-active] .smtape-tick__num,
+.smtape-tick[data-active] .smtape-tick__name {
+  color: var(--gold, #caa554);
+}
+.smtape-sub {
+  position: absolute;
+  left: 14px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0;
+  white-space: nowrap;
+  animation: sml-unfold 240ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+.smtape-sub__mark {
+  width: 8px;
+  height: 1px;
+  background: rgba(235, 227, 214, 0.4);
+  flex: none;
+}
+.smtape-sub__name {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.4);
+}
+.smtape-sub[data-active] .smtape-sub__mark {
+  background: var(--gold, #caa554);
+}
+.smtape-sub[data-active] .smtape-sub__name {
+  color: var(--gold, #caa554);
+}
+/* The one continuous route — caret + chip glide to the active tick. */
+.smtape-caret {
+  position: absolute;
+  left: 3px;
+  width: 0;
+  height: 0;
+  transform: translateY(-50%);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid var(--gold, #caa554);
+  transition: top 350ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.smtape-chip {
+  position: absolute;
+  left: 116px;
+  transform: translateY(-50%);
+  padding: 3px 7px;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: rgba(235, 227, 214, 0.6);
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  white-space: nowrap;
+  transition: top 350ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.smtape-chip b {
+  font-weight: 400;
+  color: var(--gold, #caa554);
+}
+
+/* ═══ R4 · TERMINAL TREE ═════════════════════════════════════════════ */
+.smterm-head {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(235, 227, 214, 0.4);
+  border-bottom: 1px solid rgba(235, 227, 214, 0.12);
+}
+.smterm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.smterm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.46);
+}
+.smterm-branch {
+  color: rgba(235, 227, 214, 0.28);
+  white-space: pre;
+}
+.smterm-name {
+  white-space: nowrap;
+  padding: 0 2px;
+}
+.smterm-disc {
+  margin-left: 2px;
+  font-size: 9px;
+  color: rgba(202, 165, 84, 0.6);
+}
+.smterm-item[data-active] .smterm-row,
+.smterm-item[data-active] .smterm-branch {
+  color: var(--gold, #caa554);
+}
+/* Inverse-video active block — the rolodex U8 bar, demoted to a row accent. */
+.smterm-item[data-active] .smterm-name {
+  padding: 1px 6px;
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.35);
+}
+.smterm-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0;
+}
+.smterm-subrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.4);
+  animation: sml-unfold 220ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+.smterm-pipe {
+  color: rgba(235, 227, 214, 0.25);
+  white-space: pre;
+}
+.smterm-subname {
+  white-space: nowrap;
+}
+.smterm-subitem[data-active] .smterm-subrow {
+  color: var(--gold, #caa554);
+}
+.smterm-cursor {
+  color: var(--gold, #caa554);
+  animation: smterm-blink 1s steps(2, start) infinite;
+}
+@keyframes smterm-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ═══ R5 · ASTROGATION SPINE ═════════════════════════════════════════ */
+.smspine-plot {
+  position: relative;
+  width: 176px;
+  /* Bounded so the plot clears the bottom caption reticle even at the
+     ≥760px gate floor. */
+  height: clamp(320px, 46svh, 460px);
+}
+.smspine-line {
+  position: absolute;
+  left: 10px;
+  width: 1px;
+}
+.smspine-line--past {
+  top: 0;
+  background: rgba(235, 227, 214, 0.4);
+}
+.smspine-line--future {
+  bottom: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(235, 227, 214, 0.28) 0 2px,
+    transparent 2px 6px
+  );
+}
+.smspine-spur__elbow {
+  position: absolute;
+  left: 10px;
+  width: 12px;
+  height: 1px;
+  transform: translateY(-50%);
+  background: rgba(235, 227, 214, 0.18);
+}
+.smspine-spur__line {
+  position: absolute;
+  left: 22px;
+  width: 1px;
+  background: rgba(235, 227, 214, 0.18);
+}
+.smspine-node {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  padding: 4px 6px 4px 0;
+  white-space: nowrap;
+}
+.smspine-diamond {
+  position: relative;
+  left: 6px;
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(235, 227, 214, 0.4);
+  background: var(--void, #0a0908);
+  flex: none;
+}
+.smspine-node[data-past] .smspine-diamond {
+  border-color: rgba(235, 227, 214, 0.5);
+  background: rgba(235, 227, 214, 0.4);
+}
+.smspine-name {
+  margin-left: 14px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.44);
+}
+.smspine-node[data-active] .smspine-diamond {
+  left: 5px;
+  width: 7px;
+  height: 7px;
+  border: 0;
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.6);
+}
+.smspine-node[data-active] .smspine-name {
+  color: var(--gold, #caa554);
+}
+.smspine-ret {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1px solid rgba(202, 165, 84, 0.6);
+  pointer-events: none;
+}
+.smspine-sub {
+  position: absolute;
+  left: 20px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  padding: 3px 0;
+  white-space: nowrap;
+  animation: sml-unfold 240ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+.smspine-sub__diamond {
+  position: relative;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(235, 227, 214, 0.4);
+  background: var(--void, #0a0908);
+  flex: none;
+}
+.smspine-sub__name {
+  margin-left: 14px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(235, 227, 214, 0.4);
+}
+.smspine-sub[data-active] .smspine-sub__diamond {
+  border: 0;
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+}
+.smspine-sub[data-active] .smspine-sub__name {
+  color: var(--gold, #caa554);
+}
+.smspine-sub__ret {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1px solid rgba(202, 165, 84, 0.55);
+  pointer-events: none;
+}
+
+/* ── Lab console (top-right; clears the centered title + caption) ───── */
+.sml-console {
+  position: fixed;
+  top: clamp(56px, 8vh, 92px);
+  right: clamp(16px, 2vw, 40px);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(34vw, 320px);
+  padding: 14px 16px;
+  background: rgba(10, 9, 8, 0.78);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.sml-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sml-chip {
+  padding: 5px 8px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.6);
+  background: rgba(235, 227, 214, 0.02);
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  cursor: pointer;
+}
+.sml-chip[data-on] {
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.sml-toggles {
+  display: flex;
+  gap: 8px;
+}
+.sml-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+  background: none;
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  cursor: pointer;
+}
+.sml-toggle__led {
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: rgba(235, 227, 214, 0.25);
+}
+.sml-toggle[data-on] {
+  color: var(--gold, #caa554);
+  border-color: rgba(202, 165, 84, 0.4);
+}
+.sml-toggle[data-on] .sml-toggle__led {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+}
+.sml-thesis {
+  margin: 2px 0 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(235, 227, 214, 0.7);
+}
+.sml-prov {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.sml-prov__diamond {
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  background: rgba(202, 165, 84, 0.6);
+  flex: none;
+}
+
+/* ── Desktop gate (parity with the production register ≥1101×760) ───── */
+@media (max-width: 1100px), (max-height: 759px) {
+  .smenu {
+    display: none;
+  }
+}
+
+/* ── Reduced motion — full static frame, no glide/unfold/blink ─────── */
+@media (prefers-reduced-motion: reduce) {
+  .smtape-caret,
+  .smtape-chip,
+  .smgauge-fill {
+    transition: none;
+  }
+  .smg-subrow,
+  .smgauge-subrow,
+  .smtape-sub,
+  .smterm-subrow,
+  .smspine-sub {
+    animation: none;
+  }
+  .smterm-cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
