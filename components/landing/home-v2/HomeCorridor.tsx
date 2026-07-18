@@ -7,7 +7,6 @@ import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
-import { CorridorProgressRail } from "./CorridorProgressRail";
 // ADR-021 amendment (2026-06-19): CorridorSeamPixelField is RETIRED on
 // the production path. `#services` is now a content section (Keynote /
 // Workshop / Embedded terminal cards), not a brandmark runway, and the
@@ -179,12 +178,12 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             mounted in `CopyAnchors` next to the sigil — the floating stepper
             row is retired. */}
 
-        {/* Persistent HUD breadcrumb — Navigate → Encode → Build,
-            appending each stage as the camera arrives. Sits on the top
-            HUD frame line (sibling in spirit to the left/right depth
-            rails); reads the depth store directly. Desktop-only via
-            CSS, matching the 2D station headers. */}
-        {!fallback && <CorridorProgressRail />}
+        {/* The right-rail Arc register (`CorridorProgressRail`, "THE ARC ·
+            03") is RETIRED (ADR-031 Update 12). The Navigate → Encode →
+            Build subsections now live in the left-side journey overview
+            (`CorridorSectionMenu`, mounted page-level in LandingPage), which
+            unfolds them while the reader is inside the Arc. The component
+            stays on disk for rollback, like `ServicesRailRegister`. */}
 
         {/* Projected brandmark — lives inside the sticky stage so
             armed prepaint is clipped to the incoming Thoughtform

@@ -100,8 +100,17 @@ glide gated behind `data-ready`, and its position is a pure function of
 no new scroll writers (recompute the table on resize/layout only). The
 13-tick ladder always stays (ADR-031 Update 2).
 
+**⚠ SUPERSEDED ON DESKTOP by Update 12 (2026-07-18):** a detached
+terminal-tree section menu (`CorridorSectionMenu`, left, near the rail)
+is now the journey indicator at `≥1101×760`, and the detent diamond is
+CSS-hidden there. The diamond below describes the SUB-GATE fallback (it
+still shows, controller untouched) + the history. Do NOT "restore" the
+diamond on desktop or delete the menu to "return to the diamond" — that
+reverts a deliberate owner decision. The 13-tick ladder always stays.
+
 **The left rail is a single detent diamond (ADR-031 Update 9, supersedes
-the Update 3/6/7/8 rolodex).** The rail DISPLAYS one gold diamond (12px,
+the Update 3/6/7/8 rolodex; Update 12 supersedes it ON DESKTOP).** The
+rail DISPLAYS one gold diamond (12px,
 `.rail-manifest__diamond`, centred on the 2px rail track) that snaps to a
 detent per journey entry — EVERY `MANIFEST_ENTRIES` row plus future
 interstitials, at BEAT granularity in the corridor: hero → thesis →
@@ -128,8 +137,17 @@ reveal nothing. `RAIL_ROWS`/`glyph` are REMOVED. A separate loadout bay
 was tried and retired (Update 5) — do NOT reintroduce
 `RailLoadout`/`data-rail-loadout-root`.
 
+**⚠ The Arc register is RETIRED by Update 12 (2026-07-18):** the Arc's
+Navigate/Encode/Build no longer live on the RIGHT rail — the left
+terminal-tree menu (`CorridorSectionMenu`) unfolds them while inside the
+corridor. `CorridorProgressRail` is unmounted (kept on disk for
+rollback). The "sub-items on the right" half of the uniformity contract
+below is history for the Arc; the paragraph stays for context + the
+Services/SOURCE-BUS lineage. Do NOT remount `CorridorProgressRail`.
+
 **Rail uniformity — each pillar: name on the left, sub-items on the
-right (ADR-031 Updates 7–8).** During the Arc the right rail carries
+right (ADR-031 Updates 7–8; the Arc's right register RETIRED by Update
+12).** During the Arc the right rail carries
 Navigate/Encode/Build via `CorridorProgressRail` (a right-rail register
 styled like `.tools-rail-register`, header `THE ARC · 03`), and
 Services shows `SOURCE BUS · 04` via `ServicesRailRegister` (the

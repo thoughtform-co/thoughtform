@@ -941,6 +941,17 @@
   }
 }
 
+/* ADR-031 Update 12 — on desktop the left-side terminal-tree section menu
+   (`CorridorSectionMenu`) is the journey indicator, so the detent diamond
+   hides there; it stays below the menu's ≥1101×760 gate as the compact
+   fallback marker. (The 13-tick ladder + hairline always remain.) */
+@media (min-width: 1101px) and (min-height: 760px) {
+  .rail-manifest__diamond,
+  .rail-manifest__title {
+    display: none;
+  }
+}
+
 /* Scroll-depth diamond (left rail). Centered on the guide so it
    tracks scroll position along the canonical Brand Codex hairline.
    `top` is rewritten per scroll frame by `useLandingScroll`. */

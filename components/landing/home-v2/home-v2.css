@@ -638,6 +638,168 @@ html[data-corridor-exit="true"] #practice {
   }
 }
 
+/* ══ Left-rail section menu — the journey overview (ADR-031 Update 12) ══
+   A detached terminal-tree section menu near the LEFT rail (not on it),
+   the successor to the retired rolodex. Shows the full 8-station journey;
+   the ACTIVE section is an inverse-video block while every other section
+   RECEDES (smaller, tighter, dim) so the active context dominates. The
+   Arc unfolds Navigate / Encode / Build only while the reader is inside
+   it. Replaces `CorridorProgressRail` + (on desktop) the rail diamond;
+   driven by `CorridorSectionMenu.tsx` off the same `<html>` attribute bus.
+   Component: components/landing/home-v2/CorridorSectionMenu.tsx */
+.home-v2-section-menu {
+  position: fixed;
+  /* Near the rail but detached — clears the rail guide + bearing labels
+     with a small gap (closer than the /test/section-menu-lab probe). */
+  left: calc(var(--hud-margin, 40px) + clamp(34px, 3.2vw, 56px));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 18;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.home-v2-section-menu button {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  /* Inherit ONLY the family (PT Mono) + casing — never `font`/`color`,
+     which (at this selector's higher specificity) would out-rank the
+     row rules' size / tracking / dim and collapse the recede hierarchy.
+     The row + sub rules own font-size, letter-spacing, and colour. */
+  font-family: inherit;
+  text-transform: inherit;
+  pointer-events: auto;
+}
+.home-v2-section-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.home-v2-section-menu__head {
+  margin-bottom: 7px;
+  padding-bottom: 5px;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(235, 227, 214, 0.32);
+  border-bottom: 1px solid rgba(235, 227, 214, 0.1);
+}
+.home-v2-section-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Non-active row — RECEDED: smaller, tighter, dim ("not in the view"). */
+.home-v2-section-menu__row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 1px 0;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: rgba(235, 227, 214, 0.34);
+  transition: color 140ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.home-v2-section-menu__branch {
+  color: rgba(235, 227, 214, 0.2);
+  white-space: pre;
+}
+.home-v2-section-menu__name {
+  white-space: nowrap;
+  padding: 0 1px;
+}
+.home-v2-section-menu__disc {
+  margin-left: 2px;
+  font-size: 8px;
+  color: rgba(202, 165, 84, 0.5);
+}
+
+/* Active section — PROMINENT: larger, gold, inverse-video block. */
+.home-v2-section-menu__item[data-active] .home-v2-section-menu__row {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--gold, #caa554);
+}
+.home-v2-section-menu__item[data-active] .home-v2-section-menu__branch {
+  color: var(--gold, #caa554);
+}
+.home-v2-section-menu__item[data-active] .home-v2-section-menu__name {
+  padding: 1px 6px;
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
+}
+
+/* Subsections — only while inside the Arc. */
+.home-v2-section-menu__subs {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 1px 0 2px;
+}
+.home-v2-section-menu__subrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: rgba(235, 227, 214, 0.38);
+  animation: home-v2-section-menu-unfold 220ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+.home-v2-section-menu__pipe {
+  color: rgba(235, 227, 214, 0.2);
+  white-space: pre;
+}
+.home-v2-section-menu__subname {
+  white-space: nowrap;
+}
+.home-v2-section-menu__subitem[data-active] .home-v2-section-menu__subrow {
+  color: var(--gold, #caa554);
+}
+.home-v2-section-menu__cursor {
+  color: var(--gold, #caa554);
+  animation: home-v2-section-menu-blink 1s steps(2, start) infinite;
+}
+@keyframes home-v2-section-menu-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes home-v2-section-menu-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Desktop-only, matching the register's capability gate (≥1101×760). */
+@media (max-width: 1100px), (max-height: 759px) {
+  .home-v2-section-menu {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-section-menu__subrow {
+    animation: none;
+  }
+  .home-v2-section-menu__cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 .home-v2-station-header {
   position: fixed;
   /* Base anchor = bottom-centre stack (used by the epilogue signal

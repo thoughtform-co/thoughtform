@@ -637,3 +637,62 @@ sub-items right"): during services the right rail is empty. The Arc's
 
 - its CSS + the `[data-tools-rail-root]` shell stay on disk for rollback
   — see ADR-044 for the reconciliation notes.
+
+### Update 12 — a terminal-tree section menu returns to the left (2026-07-18)
+
+**Owner decision, chosen from the `/test/section-menu-lab` exploration
+(five routes over the parked Navigate frame; the "terminal tree" won).**
+The section + subsection overview returns to the LEFT as a detached
+**terminal-tree menu** (`components/landing/home-v2/CorridorSectionMenu.tsx`),
+near the rail but not on it. This **deliberately reverses the Update 3/6/7/8/9
+display decisions**: the left is no longer "one detent diamond", and the
+Arc's subsections no longer live on the right rail.
+
+**What it is.** A fixed, desktop-only `<nav>` mounted page-level in
+`LandingPage` (a self-contained leaf — local state, so it never
+re-renders LandingPage; nested-root-safe). It shows the full 8-station
+journey (`hero · thesis · THE ARC · services · about · continuum ·
+practice · contact`, positional numbering) folded from
+`MANIFEST_ENTRIES`; the three corridor beats become THE ARC's
+subsections, which UNFOLD only while the reader is inside the corridor
+(`▾`, the active beat lit + a blinking cursor). The active section is an
+inverse-video gold block; every OTHER section RECEDES (smaller 9px vs the
+active 10.5px, tighter tracking, `dawn` α .34) so the active context
+dominates. Rows are real `<button>`s (`aria-current`), clickable via
+`scrollToManifestEntry`.
+
+**No new scroll writer (ADR-002).** State is a pure read of the SAME
+single-writer `<html>` bus the diamond uses — `resolveActiveIdx` +
+`ACTIVE_IDX_ATTRIBUTES`, woken by a MutationObserver + the hero/corridor
+seam-gap scroll listener. It RENDERS its own DOM (unlike the
+mutate-in-place `RailManifestController`).
+
+**What it replaces.**
+
+- The right-rail Arc register `CorridorProgressRail` ("THE ARC · 03") is
+  RETIRED — unmounted from `HomeCorridor`; the component stays on disk for
+  rollback (like `ServicesRailRegister`, Update 11 / ADR-044). During the
+  Arc the right rail is now empty; the left menu carries the beats.
+- The left detent diamond hides on DESKTOP (`≥1101×760`, where the menu
+  shows) — the menu is the journey indicator there. `RailManifestController`
+  is untouched; the diamond + title chip stay below that gate as the
+  compact fallback marker.
+
+**Kept.** The 13-tick ladder + hairline (Update 2, always). The
+parse-injected `<nav data-rail-manifest-root>` skeleton, `MANIFEST_ENTRIES`,
+and every drift-guard test — all unchanged (the menu folds the same data;
+`tests/lib/{rail-manifest,v7-parse}.test.ts` stay green). The
+`resolveActiveIdx` + `scrollToManifestEntry` shared helpers.
+
+**Files:** `CorridorSectionMenu.tsx` (new), `home-v2.css` (menu styles +
+recede hierarchy, replacing the `.home-v2-progress-rail` block's role),
+`landing.css` (desktop diamond hide), `LandingPage.tsx` (mount),
+`HomeCorridor.tsx` (register unmount). The `landing-v7` rule's "single
+detent diamond" + "rail uniformity" sections are updated to point here.
+
+**Guardrails.** The recede hierarchy is the point — never flatten
+non-active rows back to the active size (the "clear hierarchy" owner ask).
+Keep the button reset from setting `font`/`color` (it out-specifies the
+row rules and collapses the hierarchy — the bug fixed on landing). Subs
+render ONLY while inside the Arc. If the register or the desktop diamond
+is ever wanted back, both are one line away (remount / drop the gate).
