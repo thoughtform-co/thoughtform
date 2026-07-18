@@ -81,9 +81,12 @@
   padding-bottom: 0;
   /* The ADR-030 containment-placeholder trap: a ~250svh station must
      never collapse to its contain-intrinsic-size placeholder offscreen
-     or every scroll target below it lands wrong. */
+     or every scroll target below it lands wrong. (`auto none` — a bare
+     `auto` is not a valid <contain-intrinsic-size> and was silently
+     dropped; harmless only because content-visibility is forced visible
+     here. Spotted in the ADR-049 Update 4 pass.) */
   content-visibility: visible;
-  contain-intrinsic-size: auto;
+  contain-intrinsic-size: auto none;
 }
 
 /* ── The grid — rail parity with the services masthead (two-layer inset:

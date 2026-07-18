@@ -22,7 +22,7 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-041: Arc Cases Sigil + phased reveal](../sentinel/decisions/041-arc-cases-sigil.md) (the phased reveal + ordering; its §2 sphere-sigil trigger is superseded by ADR-042)
 - [ADR-042: Arc Cases cue under the Build title](../sentinel/decisions/042-arc-cases-cue.md) (the live trigger — a DOM dotted-leader + label, off the sphere)
 - [ADR-048: Editorial band](../sentinel/decisions/048-editorial-band.md) (the shared horizontal frame for section text — `--band-max`/`--band-margin`/`--rail-inset`; never re-widen the inset per-section)
-- [ADR-049: Continuum rail stage](../sentinel/decisions/049-continuum-rail-stage.md) (the brandmark returns to mid-prominence at #continuum; the tool ↔ collaborator spectrum is a BOLD horizontal DOM axis across the mark's centre with a travelling marker, copy beneath — Update 1 retired the edge-on waist-ring thumb; #continuum becomes a transparent stage and the ambient kill retargets to #practice)
+- [ADR-049: Continuum rail stage](../sentinel/decisions/049-continuum-rail-stage.md) (the brandmark returns to mid-prominence at #continuum and the crail instrument — the tool ↔ collaborator slider — FORMS out of the mark on the scrubbed rail-form envelope, the reticle launching from the mark's centre seat into the 7s ping-pong; Update 4 — the Update-1 DOM axis, the Update-2 waist-ring beam, and the Update-3 mark-band are all superseded/rejected; #continuum becomes a transparent stage and the ambient kill retargets to #practice)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 

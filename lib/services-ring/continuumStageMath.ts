@@ -1,34 +1,35 @@
 // Continuum rail stage — pure math for the #continuum "brandmark returns"
-// beat (ADR-049).
+// beat (ADR-049; spectrum = the crail instrument formed FROM the mark
+// since Update 4).
 //
 // One clock (the continuum stage clock, 0→1 across the pinned #continuum
 // runway), clamped outside its range so the seams against #about (above)
-// and #practice (below) are byte-stable holds. Three scrubbed envelopes +
-// the waist-ring thumb parametrization:
+// and #practice (below) are byte-stable holds. Four scrubbed envelopes:
 //
 //   1. APPROACH (continuumApproachT) — the receded mark lifts from its
 //      ~0.30 about-ambient ink to CONTINUUM_MARK_INK and eases back toward
-//      the parked pose (RECEDE release), while the near-horizontal waist
-//      ring alone re-brightens toward CONTINUUM_WAIST_LEVEL. Shared by the
-//      WebGL mark opacity/pose (BrandmarkPhysicsCoreActor), the per-ring
-//      waist getter (CorridorArmillary), and the thumb's own opacity gate
-//      (ContinuumWaistRail).
-//   2. COPY (continuumCopyT) — the DOM stage's masthead + labels reveal
-//      (the CSS-var mirror, `--continuum-copy-in`, with per-child --ci-off
+//      the parked pose (RECEDE release). Consumed by the WebGL mark
+//      opacity/pose (BrandmarkPhysicsCoreActor) via continuumFormT.
+//   2. COPY (continuumCopyT) — the DOM stage's masthead reveals (the
+//      CSS-var mirror, `--continuum-copy-in`, with per-child --ci-off
 //      stagger — the about-stage.css recipe).
-//   3. BG-IN (continuumBgInT) — the fail-opaque shield restores across the
+//   3. RAIL-FORM (continuumRailFormT) — the crail instrument FORMS out of
+//      the re-emerged mark (`--continuum-rail-form`): the dashed guide
+//      rail + bearings + brackets wipe OUTWARD from the mark's centre,
+//      the stops bloom centre-out beneath, and the reticle condenses at
+//      the mark before its launch gate arms (the data-continuum-formed
+//      hysteresis below).
+//   4. BG-IN (continuumBgInT) — the fail-opaque shield restores across the
 //      runway tail, completing at the unpin (i.e. as #practice's top
 //      reaches the viewport) BEFORE the ambient fade even starts (the
 //      ADR-030 lockstep ordering invariant, inherited from ADR-047).
 //
-// The THUMB rides the waist ring's front arc on a time-based ping-pong
-// (mirroring the DOM `.crail` reticle's 7s `crailSlideLarge` loop): its
-// fraction f sweeps 1/6 ↔ 5/6 (Tool ↔ Collaborator stops), and the arc
-// angle a = π·(1 − f) maps that onto the front arc so f = 1/6 sits left
-// (Tool) and f = 5/6 sits right (Collaborator). The phase advance is a
-// useFrame delta accumulator in the component (no wall clock — tab-hide
-// must not jump); this module supplies only the pure phase → fraction →
-// angle mapping so it stays unit-testable.
+// The THUMB helpers document the spectrum geometry the DOM instrument
+// draws (mirroring the fallback `.crail` reticle's 7s loop): fraction f
+// sweeps 1/6 ↔ 5/6 (Tool ↔ Collaborator stops) on a 7s ping-pong, and
+// the arc angle a = π·(1 − f) maps a fraction onto a front arc. The 3D
+// ContinuumWaistRail consumer was retired in Update 1; the fractions are
+// the single source for the DOM rail's tick/travel percentages.
 //
 // Kept free of DOM/three (tests/lib/continuum-stage-math.test.ts).
 
@@ -46,8 +47,20 @@ import { smootherstep } from "./ringMath";
  *  the same wheel motion that finished #about). */
 export const CONTINUUM_APPROACH_WINDOW: readonly [number, number] = [0, 0.3];
 
-/** Beat 0, trailing — the masthead + labels reveal. */
+/** Beat 0, trailing — the masthead reveals. (The spectrum stops ride the
+ *  RAIL-FORM envelope below since Update 4 — they belong to the
+ *  instrument's centre-out bloom, not the masthead's editorial reveal.) */
 export const CONTINUUM_COPY_WINDOW: readonly [number, number] = [0.06, 0.38];
+
+/** Beat 1 — the crail instrument FORMS out of the mark: the dashed guide
+ *  rail + bearings + register brackets wipe outward from the mark's
+ *  centre (a scrubbed clip-path release — never scaleX, which would
+ *  stretch the dash pattern), the three stops bloom centre-out beneath
+ *  (per-child `--cs-off` against this envelope), and the navigator
+ *  reticle condenses at the mark across the tail. Overlaps the back half
+ *  of APPROACH so mark-return and instrument-formation read as one
+ *  continuous motion; completes well before the BG-IN shield tail. */
+export const CONTINUUM_RAIL_FORM_WINDOW: readonly [number, number] = [0.12, 0.44];
 
 /** Runway tail — the fail-opaque shield restores (and every stage child
  *  dies with it) so #practice covers an already-shielded station BEFORE
@@ -64,9 +77,35 @@ export function continuumApproachT(continuumP: number): number {
 export function continuumCopyT(continuumP: number): number {
   return smootherstep(CONTINUUM_COPY_WINDOW[0], CONTINUUM_COPY_WINDOW[1], clamp01(continuumP));
 }
+export function continuumRailFormT(continuumP: number): number {
+  return smootherstep(
+    CONTINUUM_RAIL_FORM_WINDOW[0],
+    CONTINUUM_RAIL_FORM_WINDOW[1],
+    clamp01(continuumP)
+  );
+}
 export function continuumBgInT(continuumP: number): number {
   return smootherstep(CONTINUUM_BG_IN_WINDOW[0], CONTINUUM_BG_IN_WINDOW[1], clamp01(continuumP));
 }
+
+/* ── Reticle-launch hysteresis (`data-continuum-formed`) ─────────────────
+ * The reticle's PING-PONG POSITION is the one channel that cannot be a
+ * pure scrub (it is the fallback crail's autonomous 7s loop, sanctioned
+ * since the original station): its CSS animation timeline starts when
+ * useContinuumStageScroll stamps `data-continuum-formed` on the stage —
+ * the launch keyframe then plays the reticle from the mark's centre out
+ * to the Tool pole before the loop takes over ("the navigator detaches
+ * from the mark"). Opacity stays scrubbed (`--continuum-rail-form` tail),
+ * reaching 0 exactly at RESET_BELOW, so clearing the attribute on reverse
+ * scroll never snaps a visible reticle back to centre. The SET/CLEAR gap
+ * keeps a frame straddling one threshold from strobing the timeline. */
+
+/** Stamp `data-continuum-formed` when continuumRailFormT crosses this. */
+export const CONTINUUM_RETICLE_LAUNCH_AT = 0.98;
+/** Clear it only once continuumRailFormT falls back below this (also the
+ *  foot of the reticle/trail opacity ramp in continuum-stage.css — keep
+ *  in lockstep). */
+export const CONTINUUM_RETICLE_RESET_BELOW = 0.88;
 
 /** Fraction of the continuum formation that PRE-WARMS during the #about
  *  exit slide, so the brandmark re-inks and the waist ring begins

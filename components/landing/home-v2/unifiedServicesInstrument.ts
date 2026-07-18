@@ -83,12 +83,17 @@ export const ABOUT_DECK_STAGE = true;
  *     `useContinuumStageScroll`): the receded brandmark RE-EMERGES to
  *     mid-prominence (~0.60 ink, clearer than the ~0.30 about ambient,
  *     subtler than the #services centerpiece) and eases back toward the
- *     parked pose, and the near-horizontal "Saturn" waist ring alone
- *     RE-BRIGHTENS while the meridian + card tracks stay cleared;
- *   - a small reticle THUMB travels left↔right along the waist ring's
- *     front arc (the tool ↔ collaborator spectrum, on the mark itself),
- *     replacing the DOM `.crail` slider's autonomous reticle on the
- *     capable path (`ContinuumWaistRail`);
+ *     parked pose — pre-warmed DURING the #about exit slide via
+ *     `continuumFormT` (Update 2) — while every orbit track stays
+ *     cleared (Update 3 removed the waist re-brighten);
+ *   - the SPECTRUM is the crail instrument, FORMED FROM the mark
+ *     (Update 4): the dashed guide rail + bearings + register brackets
+ *     wipe outward from the mark's centre on the scrubbed
+ *     `--continuum-rail-form` envelope, the stops bloom centre-out, and
+ *     the navigator reticle condenses on the mark, launches to the Tool
+ *     pole (`data-continuum-formed`), and rides the fallback crail's 7s
+ *     ping-pong — the mark keeps the rail's 1/2 seat ("AI lives here",
+ *     the v7 `.crail__brand` composition);
  *   - the corridor ambient hold — which under ADR-047 died as #continuum
  *     covered — is RETARGETED one station down to die at `#practice`
  *     (`useCorridorExitScroll` next-station retarget), and #continuum

@@ -317,6 +317,35 @@ the zoom-dissipate; the lab routes (`/test/handoff-a|b|c`) + the
 Reuse the appropriate recipe verbatim — do not invent a third hybrid that
 fades the canvas with `opacity`.
 
+### A pinned-runway station must release the passive section's explicit height
+
+When a passive one-viewport section (`height: 100svh` "viewport lock") is
+upgraded to a pinned stage (a taller sticky runway inside the same station —
+the ADR-047/049 grammar), the engaged mode MUST override that height
+(`height: auto`, gated on the stage's mode attribute so fallbacks keep the
+authored lock). Otherwise the station stays a one-viewport box, the runway
+**overflows** it, and every in-flow sibling below sits one-runway-minus-one-
+viewport too early. The failure is invisible in the DOM state (all vars/
+opacities correct) and devastating on screen: under the exit compositing the
+next station is an OPAQUE cover at the **same z-index** as the station, so
+DOM order wins — it slides over the pinned beat from mid-hold, eating the
+stage content from below, and every rect-keyed envelope on the next station's
+top (ambient fade, shield lockstep) fires a viewport early. Found live on
+`#continuum` (ADR-049 Update 4 §6): the `landing.css` viewport lock predated
+the stage and was never released.
+
+**Runtime check:** drive the pinned beat with Playwright at mid-hold
+(progress ≈ 0.5) and assert (a) `station.offsetHeight === runway.offsetHeight`,
+(b) the next station's `getBoundingClientRect().top` is still below the
+viewport, and (c) `document.elementsFromPoint(...)` over the stage's copy
+returns the copy itself first — not a sibling `section`. Computed opacity
+alone proves nothing; only the hit-test/pixel truth catches a cover.
+
+**Why it matters:** unit tests pin the clocks, but layout composition bugs
+live between stylesheets (the passive section's CSS vs the stage's). One
+explicit height silently defeats the whole ADR-030 shield/ambient ordering
+contract.
+
 ---
 
 ## 🧷 DOM Pinning & ScrollTrigger (brandmark / fixed actors)

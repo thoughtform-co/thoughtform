@@ -6,7 +6,10 @@ import {
   CONTINUUM_COPY_WINDOW,
   CONTINUUM_FORM_PRELUDE,
   CONTINUUM_MARK_INK,
+  CONTINUUM_RAIL_FORM_WINDOW,
   CONTINUUM_RECEDE_RELEASE,
+  CONTINUUM_RETICLE_LAUNCH_AT,
+  CONTINUUM_RETICLE_RESET_BELOW,
   CONTINUUM_WAIST_LEVEL,
   THUMB_F_MAX,
   THUMB_F_MIN,
@@ -15,6 +18,7 @@ import {
   continuumBgInT,
   continuumCopyT,
   continuumFormT,
+  continuumRailFormT,
   continuumThumbAngle,
   continuumThumbFraction,
 } from "@/lib/services-ring/continuumStageMath";
@@ -24,30 +28,39 @@ describe("continuum envelopes — identity pin (the ADR-030/047/049 guardrail)",
   it("returns EXACT 0 at continuumP = 0 for every scrubbed channel", () => {
     // Flag-off / pre-continuum frames must be byte-identical with the
     // shipped page: every envelope is exactly 0 at the runway start.
+    // For the rail-form envelope this is ALSO the formation-order
+    // invariant: it is a function of continuumP alone, so the crail
+    // instrument cannot begin forming during the #about exit prelude
+    // (where continuumFormT already sits at the 0.4 plateau but the
+    // continuum clock is still 0).
     expect(continuumApproachT(0)).toBe(0);
     expect(continuumCopyT(0)).toBe(0);
+    expect(continuumRailFormT(0)).toBe(0);
     expect(continuumBgInT(0)).toBe(0);
   });
 
   it("clamps to 0 below the runway (negative progress) and 1 above it", () => {
     expect(continuumApproachT(-0.5)).toBe(0);
     expect(continuumCopyT(-1)).toBe(0);
+    expect(continuumRailFormT(-0.3)).toBe(0);
     expect(continuumBgInT(-0.2)).toBe(0);
     expect(continuumApproachT(2)).toBe(1);
     expect(continuumCopyT(1.5)).toBe(1);
+    expect(continuumRailFormT(1.5)).toBe(1);
     expect(continuumBgInT(3)).toBe(1);
   });
 
   it("reaches exactly 1 at continuumP = 1 (constant hold through #practice)", () => {
     expect(continuumApproachT(1)).toBe(1);
     expect(continuumCopyT(1)).toBe(1);
+    expect(continuumRailFormT(1)).toBe(1);
     expect(continuumBgInT(1)).toBe(1);
   });
 });
 
 describe("continuum window monotonicity + ordering", () => {
   it("each envelope is non-decreasing across the runway", () => {
-    const channels = [continuumApproachT, continuumCopyT, continuumBgInT];
+    const channels = [continuumApproachT, continuumCopyT, continuumRailFormT, continuumBgInT];
     for (const f of channels) {
       let prev = -Infinity;
       for (let p = 0; p <= 1.0001; p += 0.02) {
@@ -68,9 +81,31 @@ describe("continuum window monotonicity + ordering", () => {
     expect(CONTINUUM_BG_IN_WINDOW[1]).toBe(1);
   });
 
+  it("the rail forms FROM the mark, not before it: opens inside the approach, closes before the shield", () => {
+    // The instrument's outward wipe must start only once the approach has
+    // the mark re-inking (a strictly-positive open inside the approach
+    // window) and must be fully formed — reticle launched, stops bloomed —
+    // with reading room to spare before the tail shield opens.
+    expect(CONTINUUM_RAIL_FORM_WINDOW[0]).toBeGreaterThan(CONTINUUM_APPROACH_WINDOW[0]);
+    expect(CONTINUUM_RAIL_FORM_WINDOW[0]).toBeLessThan(CONTINUUM_APPROACH_WINDOW[1]);
+    expect(CONTINUUM_RAIL_FORM_WINDOW[1]).toBeLessThan(CONTINUUM_BG_IN_WINDOW[0]);
+  });
+
   it("the shield is still 0 while the copy is mid-reveal (no premature cover)", () => {
     const copyMid = (CONTINUUM_COPY_WINDOW[0] + CONTINUUM_COPY_WINDOW[1]) / 2;
     expect(continuumBgInT(copyMid)).toBe(0);
+  });
+
+  it("reticle-launch hysteresis is ordered and lives inside the envelope's tail", () => {
+    // CLEAR strictly below SET (the anti-strobe gap), both in (0, 1]; the
+    // SET edge sits at the envelope's tail so the launch fires only once
+    // the instrument is essentially formed. The CSS opacity ramp foot in
+    // continuum-stage.css (--crf-nav) must equal RESET_BELOW so the
+    // discrete attribute flip is invisible at both edges.
+    expect(CONTINUUM_RETICLE_RESET_BELOW).toBeGreaterThan(0);
+    expect(CONTINUUM_RETICLE_RESET_BELOW).toBeLessThan(CONTINUUM_RETICLE_LAUNCH_AT);
+    expect(CONTINUUM_RETICLE_LAUNCH_AT).toBeLessThanOrEqual(1);
+    expect(CONTINUUM_RETICLE_LAUNCH_AT).toBeGreaterThan(0.9);
   });
 });
 

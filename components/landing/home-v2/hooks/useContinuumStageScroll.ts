@@ -4,9 +4,12 @@ import { useEffect, type RefObject } from "react";
 
 import { CONTINUUM_RAIL_STAGE } from "../unifiedServicesInstrument";
 import {
+  CONTINUUM_RETICLE_LAUNCH_AT,
+  CONTINUUM_RETICLE_RESET_BELOW,
   continuumApproachT,
   continuumBgInT,
   continuumCopyT,
+  continuumRailFormT,
 } from "@/lib/services-ring/continuumStageMath";
 import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { clamp01 } from "@/lib/math";
@@ -29,12 +32,19 @@ const CONTINUUM_STEP_COUNT = 3;
  *     restores to 1 across the runway tail (CONTINUUM_BG_IN_WINDOW),
  *     completing at the unpin — i.e. BEFORE the retargeted ambient fade
  *     even starts (the ADR-030 lockstep ordering invariant).
- *   - `--continuum-copy-in` / `--continuum-approach` + `data-continuum-step`
- *     on the stage — the DOM mirrors of the beat windows (single source:
- *     continuumStageMath), driving the masthead/label reveal.
+ *   - `--continuum-copy-in` / `--continuum-approach` / `--continuum-rail-form`
+ *     + `data-continuum-step` on the stage — the DOM mirrors of the beat
+ *     windows (single source: continuumStageMath), driving the masthead
+ *     reveal and the crail instrument's outward formation wipe.
+ *   - `data-continuum-formed` on the stage — the reticle-launch gate
+ *     (hysteresis: SET at CONTINUUM_RETICLE_LAUNCH_AT, CLEAR below
+ *     CONTINUUM_RETICLE_RESET_BELOW). The one discrete channel: it starts
+ *     the reticle's CSS animation timeline (centre → Tool launch, then
+ *     the 7s ping-pong the fallback crail runs); its opacity stays
+ *     scrubbed and is 0 wherever the attribute flips, so the discrete
+ *     edge is never visible.
  *   - `continuumStageProgressRef` — the cross-root clock the WebGL mark
- *     lift (BrandmarkPhysicsCoreActor), the waist re-brighten getter
- *     (CorridorArmillary), and the thumb (ContinuumWaistRail) read.
+ *     lift (BrandmarkPhysicsCoreActor) reads via continuumFormT.
  *
  * Progress = clamp01(−root.top / (root.height − vh)) over the
  * `.continuum-stage-root` runway (the useAboutStageScroll formula) — it
@@ -52,7 +62,12 @@ export function useContinuumStageScroll(stageRef: RefObject<HTMLElement | null>)
     let currentStep = -1;
     let currentApproach = -1;
     let currentCopy = -1;
+    let currentRailForm = -1;
     let currentBgIn = -1;
+    // null = unknown (first write / after disengage reconciles the DOM
+    // attribute unconditionally, whichever state a previous engagement
+    // left on the persistent stage element).
+    let currentFormed: boolean | null = null;
 
     const capableMedia = window.matchMedia(
       "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
@@ -77,7 +92,8 @@ export function useContinuumStageScroll(stageRef: RefObject<HTMLElement | null>)
       continuum?.style.removeProperty("--continuum-bg-in");
       continuumStageProgressRef.current.progress = 0;
       continuumStageProgressRef.current.engaged = false;
-      currentStep = currentApproach = currentCopy = currentBgIn = -1;
+      currentStep = currentApproach = currentCopy = currentRailForm = currentBgIn = -1;
+      currentFormed = null;
     };
 
     const write = () => {
@@ -120,6 +136,7 @@ export function useContinuumStageScroll(stageRef: RefObject<HTMLElement | null>)
 
       const approach = continuumApproachT(p);
       const copyIn = continuumCopyT(p);
+      const railForm = continuumRailFormT(p);
       const bgIn = continuumBgInT(p);
       if (Math.abs(approach - currentApproach) >= 0.001) {
         stage.style.setProperty("--continuum-approach", approach.toFixed(4));
@@ -128,6 +145,21 @@ export function useContinuumStageScroll(stageRef: RefObject<HTMLElement | null>)
       if (Math.abs(copyIn - currentCopy) >= 0.001) {
         stage.style.setProperty("--continuum-copy-in", copyIn.toFixed(4));
         currentCopy = copyIn;
+      }
+      if (Math.abs(railForm - currentRailForm) >= 0.001) {
+        stage.style.setProperty("--continuum-rail-form", railForm.toFixed(4));
+        currentRailForm = railForm;
+      }
+      // Reticle-launch gate — hysteresis, not a plain threshold, so a
+      // frame straddling one edge can't strobe the reticle's CSS
+      // animation timeline (which restarts on every attribute SET).
+      const formed = currentFormed
+        ? railForm >= CONTINUUM_RETICLE_RESET_BELOW
+        : railForm >= CONTINUUM_RETICLE_LAUNCH_AT;
+      if (formed !== currentFormed) {
+        if (formed) stage.setAttribute("data-continuum-formed", "");
+        else stage.removeAttribute("data-continuum-formed");
+        currentFormed = formed;
       }
       if (Math.abs(bgIn - currentBgIn) >= 0.001) {
         continuum.style.setProperty("--continuum-bg-in", bgIn.toFixed(4));

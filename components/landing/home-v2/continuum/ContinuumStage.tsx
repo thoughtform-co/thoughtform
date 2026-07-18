@@ -8,30 +8,37 @@ import { CONTINUUM_RAIL_STAGE } from "../unifiedServicesInstrument";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 
 /**
- * ContinuumStage — the pinned #continuum rail stage (ADR-049, capable
- * desktop only).
+ * ContinuumStage — the pinned #continuum rail stage (ADR-049 Update 4,
+ * capable desktop only).
  *
  * A 200svh runway (`.continuum-stage-root`, the portal slot) pins this
  * sticky, TRANSPARENT stage over the still-live corridor canvas. The
  * receded brandmark re-emerges to mid-prominence in the OPEN CENTRE (the
- * WebGL mark owns that band — nothing DOM paints there), its near-
- * horizontal waist ring re-brightens, and a reticle thumb travels the
- * tool ↔ collaborator spectrum along that ring. This DOM stage carries
- * only the readable chrome — the masthead (restyled to the Services
- * masthead recipe), the three spectrum labels registered left/centre/
- * right under the ring, the instrument readout, and the CTA.
+ * WebGL mark owns that band — nothing DOM paints there except the
+ * spectrum instrument that forms from it), and the crail instrument —
+ * the tool ↔ collaborator slider — FORMS OUT OF the mark: the dashed
+ * guide rail + bearings + register brackets wipe outward from the mark's
+ * centre, the stops bloom centre-out beneath, and the navigator reticle
+ * condenses on the mark, launches to the Tool pole, and rides the 7s
+ * ping-pong the fallback `.crail` runs. The mark stays seated at the
+ * rail's 1/2 stop — "AI lives here" — the original v7 `.crail__brand`
+ * composition with the WebGL mark in the seat.
  *
  * Beats (windows in `lib/services-ring/continuumStageMath.ts`, mirrored to
  * CSS vars by useContinuumStageScroll):
  *
- *   0 APPROACH — the mark re-emerges + eases closer; the waist ring
- *                re-brightens; the thumb's opacity gate opens.
- *   1 COPY     — the masthead + labels reveal (scrubbed --continuum-copy-in
- *                with per-child --ci-off stagger — the about-stage.css
- *                recipe; NEVER useRevealMotion: portal nodes are
- *                unobserved and .is-in is one-shot).
- *   2 HOLD     — the reading state; the tail restores the fail-opaque
- *                shield and everything dies together under #practice.
+ *   0 APPROACH  — the mark re-emerges + eases closer (pre-warmed during
+ *                 the #about exit slide via continuumFormT).
+ *   1 COPY      — the masthead reveals (scrubbed --continuum-copy-in with
+ *                 per-child --ci-off stagger — the about-stage.css recipe;
+ *                 NEVER useRevealMotion: portal nodes are unobserved and
+ *                 .is-in is one-shot).
+ *   1' RAIL-FORM — the instrument wipes outward from the mark
+ *                 (--continuum-rail-form; stops/readout/CTA ride it with
+ *                 per-child --cs-off); data-continuum-formed then launches
+ *                 the reticle.
+ *   2 HOLD      — the reading state; the tail restores the fail-opaque
+ *                 shield and everything dies together under #practice.
  *
  * Copy strings live in `continuumStageData.ts`, lockstep with the static
  * `.crail` fallback markup. Below the media gate the static crail owns the
@@ -104,41 +111,52 @@ export function ContinuumStage() {
             </p>
           </header>
 
-          {/* ── The spectrum, ON the mark ────────────────────────────────
-              A BOLD horizontal tool ↔ collaborator axis painted across the
-              re-emerged brandmark's centre (the WebGL mark sits behind this
-              transparent stage, roughly at --continuum-axis-y). A traveling
-              reticle glides the front span (Tool 1/6 ↔ Collaborator 5/6,
-              THUMB_F_MIN/MAX) on the same 7s ping-pong the DOM crail uses.
-              Purely decorative chrome — the READABLE spectrum content is the
-              three stop descriptions below (they carry the kicker/title/body
-              the static `.crail__stops-grid` fallback exposes identically), so
-              the axis is aria-hidden and the stops are NOT (regression guard,
-              ADR-049 / plan 6.2). The axis draws in on --continuum-approach
-              (with the mark), the stops on --continuum-copy-in. */}
+          {/* ── The spectrum, FORMED FROM the mark ───────────────────────
+              The crail instrument (the v7 tool ↔ collaborator slider)
+              returns as the spectrum (ADR-049 Update 4): dashed guide
+              rail + 12 bearing ticks + register-mark corner brackets +
+              end diamonds, wiping OUTWARD from the re-emerged mark's
+              centre on --continuum-rail-form (two gold runners lead the
+              reveal edges — the signal leaving the mark). The WebGL mark
+              sits behind this transparent stage at the rail's 1/2 seat
+              (--continuum-axis-y). The reticle condenses on the mark
+              across the envelope's tail, then data-continuum-formed
+              launches it to the Tool pole and hands it to the same 7s
+              ping-pong the fallback crail runs (+ the traveling trail).
+              Purely decorative chrome — the READABLE spectrum content is
+              the three stop descriptions below (they carry the
+              kicker/title/body the static `.crail__stops-grid` fallback
+              exposes identically), so the rail is aria-hidden and the
+              stops are NOT (regression guard, ADR-049 / plan 6.2). The
+              stops/readout/CTA bloom centre-out on the same rail-form
+              envelope (per-child --cs-off: middle seat first — the mark
+              is already there — then the poles). */}
           <div className="continuum-stage__spectrum">
-            <div className="continuum-stage__axis" aria-hidden="true">
-              <div className="continuum-stage__axis-line" />
-              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--l" />
-              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--m" />
-              <div className="continuum-stage__axis-tick continuum-stage__axis-tick--r" />
-              <span className="continuum-stage__axis-cap continuum-stage__axis-cap--l">Tool</span>
-              <span className="continuum-stage__axis-cap continuum-stage__axis-cap--r">
-                Collaborator
-              </span>
-              <div className="continuum-stage__marker">
-                <span className="continuum-stage__marker-ring" />
-                <span className="continuum-stage__marker-core" />
-                <span className="continuum-stage__marker-cross" />
+            <div className="continuum-stage__rail" aria-hidden="true">
+              <div className="continuum-stage__rail-draw">
+                <span className="continuum-stage__frame continuum-stage__frame--tl" />
+                <span className="continuum-stage__frame continuum-stage__frame--tr" />
+                <span className="continuum-stage__frame continuum-stage__frame--bl" />
+                <span className="continuum-stage__frame continuum-stage__frame--br" />
+                <div className="continuum-stage__bearings" />
+                <div className="continuum-stage__rail-line" />
+              </div>
+              <span className="continuum-stage__runner continuum-stage__runner--l" />
+              <span className="continuum-stage__runner continuum-stage__runner--r" />
+              <div className="continuum-stage__trail" />
+              <div className="continuum-stage__reticle">
+                <span className="continuum-stage__reticle-ring" />
+                <span className="continuum-stage__reticle-cross" />
+                <span className="continuum-stage__reticle-diamond" />
               </div>
             </div>
 
             <div className="continuum-stage__labels">
-              {CONTINUUM_STAGE.stops.map((stop, i) => (
+              {CONTINUUM_STAGE.stops.map((stop) => (
                 <div
                   key={stop.pos}
                   className={`continuum-stage__stop continuum-stage__stop--${stop.pos}`}
-                  style={{ ["--ci-off" as string]: 0.16 + i * 0.06 }}
+                  style={{ ["--cs-off" as string]: stop.pos === "m" ? 0.52 : 0.64 }}
                 >
                   <div className="crail__tick" />
                   <div
@@ -158,11 +176,11 @@ export function ContinuumStage() {
               ))}
             </div>
 
-            <div className="continuum-stage__readout" style={{ ["--ci-off" as string]: 0.4 }}>
+            <div className="continuum-stage__readout" style={{ ["--cs-off" as string]: 0.78 }}>
               {CONTINUUM_STAGE.readout}
             </div>
 
-            <div className="continuum-stage__close" style={{ ["--ci-off" as string]: 0.48 }}>
+            <div className="continuum-stage__close" style={{ ["--cs-off" as string]: 0.86 }}>
               <a href={CONTINUUM_STAGE.cta.href} className="btn btn--ghost continuum-stage__cta">
                 {CONTINUUM_STAGE.cta.label} <span className="arrow" />
               </a>
