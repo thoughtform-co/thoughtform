@@ -38,7 +38,6 @@ import {
   CONTINUUM_RAIL_STAGE,
   SERVICES_CARD_RING,
 } from "../unifiedServicesInstrument";
-import { ContinuumWaistRail } from "@/components/landing/home-v2/services/hologram/ContinuumWaistRail";
 import {
   HologramOrbits,
   STRUCTURAL_ORBITS,
@@ -49,7 +48,7 @@ import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
-import { CONTINUUM_WAIST_LEVEL, continuumApproachT } from "@/lib/services-ring/continuumStageMath";
+import { CONTINUUM_WAIST_LEVEL, continuumFormT } from "@/lib/services-ring/continuumStageMath";
 import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
@@ -81,17 +80,24 @@ const orbitExitGetter = () =>
   (1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress)) *
   (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1);
 
-/** Waist-ring master opacity across the continuum stage (ADR-049): lerps
- *  the cleared exit level TOWARD CONTINUUM_WAIST_LEVEL (> 1 brightens the
- *  0.68-base line above its rest, capped at 1 in OrbitRing) as the approach
- *  opens. continuumApproachT is 0 outside #continuum, so this equals
- *  orbitExitGetter() everywhere else — the waist tracks the meridian
- *  through #services / #about, then re-brightens alone here. */
+/** Waist-ring master opacity across the continuum stage (ADR-049;
+ *  formation-prelude rev 2026-07-18): lerps the cleared exit level TOWARD
+ *  CONTINUUM_WAIST_LEVEL (> 1 brightens the 0.68-base line above its rest,
+ *  capped at 1 in OrbitRing) as the formation clock opens. continuumFormT
+ *  PRE-WARMS 40% during the #about exit slide (the waist begins
+ *  re-brightening AS the copy/portrait slide away — matching the mark's
+ *  re-ink), then the continuum approach carries it home. Both clocks are 0
+ *  outside the seam, so this equals orbitExitGetter() everywhere else — the
+ *  waist tracks the meridian through #services / #about, then re-brightens
+ *  alone here. */
 const waistContinuumGetter = () =>
   lerp(
     orbitExitGetter(),
     CONTINUUM_WAIST_LEVEL,
-    continuumApproachT(continuumStageProgressRef.current.progress)
+    continuumFormT(
+      aboutStageProgressRef.current.progress,
+      continuumStageProgressRef.current.progress
+    )
   );
 
 /** Per-ring getter selector: the waist re-brightens on the continuum
@@ -281,11 +287,13 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           publishAnchors
         />
       )}
-      {/* ADR-049: the tool ↔ collaborator thumb + tick diamonds riding the
-          waist ring's front arc, gated to the continuum approach envelope
-          (invisible + inert everywhere else). Shares this rig, so it banks
-          with the parked instrument. */}
-      {CONTINUUM_RAIL_STAGE && ringCapable && <ContinuumWaistRail scale={scale} />}
+      {/* ADR-049 (revised 2026-07-17): the tool ↔ collaborator spectrum is
+          now a BOLD horizontal DOM axis painted across the mark's centre in
+          the transparent continuum stage (ContinuumStage), not an edge-on
+          reticle riding the near-horizontal waist ring — the 3D thumb read
+          too subtly. The waist ring still re-brightens as ambiance while the
+          mark comes forward (waistContinuumGetter above); only the traveling
+          thumb (ContinuumWaistRail) is retired. */}
     </>
   );
 }

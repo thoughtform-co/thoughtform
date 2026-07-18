@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ABOUT_BG_IN_WINDOW,
   ABOUT_COPY_WINDOW,
+  ABOUT_DECK_FADE_WINDOW,
+  ABOUT_EXIT_WINDOW,
   ABOUT_FLIP_WINDOW,
   ABOUT_SHIFT_WINDOW,
   DECK_ANCHORS_OFF_EXIT,
@@ -19,8 +20,9 @@ import {
   DECK_Z,
   DECK_Z_PITCH,
   FLIP_RAMP_D,
-  aboutBgInT,
   aboutCopyT,
+  aboutDeckFadeT,
+  aboutExitT,
   aboutFlipLinearT,
   aboutFlipT,
   aboutShiftT,
@@ -288,7 +290,13 @@ describe("about beat windows", () => {
   it("orders the beats and keeps gates inside the first exit window", () => {
     expect(ABOUT_FLIP_WINDOW[1]).toBeLessThan(ABOUT_SHIFT_WINDOW[0]);
     expect(ABOUT_SHIFT_WINDOW[0]).toBeLessThan(ABOUT_COPY_WINDOW[0]);
-    expect(ABOUT_COPY_WINDOW[1]).toBeLessThan(ABOUT_BG_IN_WINDOW[0]);
+    // The reading HOLD sits after copy lands and before the exit slide.
+    expect(ABOUT_COPY_WINDOW[1]).toBeLessThan(ABOUT_EXIT_WINDOW[0]);
+    expect(ABOUT_SHIFT_WINDOW[1]).toBeLessThanOrEqual(ABOUT_EXIT_WINDOW[0]);
+    // The slide completes BEFORE the unpin (leaves a clean-bed breath); the
+    // terminal deck fade lands exactly at 1 (deck provably dead in the hold).
+    expect(ABOUT_EXIT_WINDOW[1]).toBeLessThan(ABOUT_DECK_FADE_WINDOW[1]);
+    expect(ABOUT_DECK_FADE_WINDOW[1]).toBe(1);
     expect(DECK_DEPTH_WRITE_OFF_EXIT).toBeLessThan(DECK_ANCHORS_OFF_EXIT);
     expect(DECK_ANCHORS_OFF_EXIT).toBeLessThan(RING_EXIT_WINDOWS[0][1]);
   });
@@ -300,7 +308,17 @@ describe("about beat windows", () => {
     expect(aboutShiftT(ABOUT_SHIFT_WINDOW[1])).toBe(1);
     expect(aboutCopyT(ABOUT_COPY_WINDOW[0])).toBe(0);
     expect(aboutCopyT(ABOUT_COPY_WINDOW[1])).toBe(1);
-    expect(aboutBgInT(ABOUT_BG_IN_WINDOW[0])).toBe(0);
-    expect(aboutBgInT(1)).toBe(1);
+    expect(aboutExitT(ABOUT_EXIT_WINDOW[0])).toBe(0);
+    expect(aboutExitT(ABOUT_EXIT_WINDOW[1])).toBe(1);
+    expect(aboutDeckFadeT(ABOUT_DECK_FADE_WINDOW[0])).toBe(0);
+    expect(aboutDeckFadeT(1)).toBe(1);
+  });
+
+  it("holds byte-stable through the reading beat (exit identity 0 pre-slide)", () => {
+    // Every frame at or before the exit window start is byte-identical to
+    // the pre-slide baseline — the reading hold must not creep.
+    expect(aboutExitT(ABOUT_EXIT_WINDOW[0])).toBe(0);
+    expect(aboutExitT(ABOUT_COPY_WINDOW[1])).toBe(0);
+    expect(aboutExitT(0.5)).toBe(0);
   });
 });

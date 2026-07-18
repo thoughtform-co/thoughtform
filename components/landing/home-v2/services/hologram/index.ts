@@ -20,3 +20,4 @@ export {
 } from "./HologramOrbits";
 export { ServicesHologramScene, type ServicesHologramSceneProps } from "./ServicesHologramScene";
 export { ServicesCardRing, type ServicesCardRingProps } from "./ServicesCardRing";
+export { ContinuumBand, type ContinuumBandProps } from "./ContinuumBand";

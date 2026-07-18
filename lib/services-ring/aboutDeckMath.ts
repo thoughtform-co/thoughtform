@@ -47,9 +47,9 @@ const TAU = Math.PI * 2;
 
 /* ── About-stage beat windows (fractions of the pinned #about runway) ──
  * Single source for the WebGL deck AND the DOM stage's CSS mirrors —
- * beats must never drift apart. Runway = 240svh (2026-07-16 pacing pass:
- * 300svh + flip end 0.3 made the flip take ~52svh of scrolling — owner:
- * "a bit too many scrolls"; now ~31svh). */
+ * beats must never drift apart. Runway = 250svh (2026-07-16 pacing pass
+ * set 240svh for the stack/flip; 2026-07-18 added the +10svh EXIT beat so
+ * the copy/portrait slide off has room without hurrying the reading hold). */
 
 /** Beat 0 — the deck flips π and glides onto the DOM slot; the orbit
  *  cluster materializes around it; the tracks clear (the receded mark
@@ -67,11 +67,22 @@ export const ABOUT_SHIFT_WINDOW: readonly [number, number] = [0.32, 0.56];
 /** Beat 1, trailing — the left copy column reveals. */
 export const ABOUT_COPY_WINDOW: readonly [number, number] = [0.4, 0.66];
 
-/** Runway tail — the station's fail-opaque shield restores (and the deck +
- *  DOM cluster die with it) so #continuum covers an already-shielded
- *  station BEFORE the ambient canvas is killed (the ADR-030 ordering
- *  invariant). */
-export const ABOUT_BG_IN_WINDOW: readonly [number, number] = [0.92, 1.0];
+/** Runway tail — THE EXIT SLIDE (ADR-047 rev, 2026-07-18, supersedes the
+ *  old ABOUT_BG_IN fade-to-shield). The copy column slides LEFT off-screen
+ *  and the cluster (WebGL portrait deck welded to its slot) slides RIGHT,
+ *  scrubbed on this envelope, so the live corridor bed shows through the
+ *  handoff instead of a pair of restoring void panes. Ends at 0.96 (before
+ *  the unpin) so the horizontal slide completes while still pinned and the
+ *  stage gets a clean-bed breath before #continuum forms. */
+export const ABOUT_EXIT_WINDOW: readonly [number, number] = [0.74, 0.96];
+
+/** Runway terminal — a WebGL-only safety fade on the portrait deck's back
+ *  material, completing exactly at p = 1 so the deck is provably dead (and
+ *  its depth-write released) in the byte-stable hold below the runway. In
+ *  practice invisible: at 0.92 the slot has already ridden past the right
+ *  frustum edge on ABOUT_EXIT, so this only guarantees the terminal state,
+ *  it is not the thing the eye sees leave. */
+export const ABOUT_DECK_FADE_WINDOW: readonly [number, number] = [0.92, 1.0];
 
 export function aboutFlipT(aboutP: number): number {
   return smootherstep(ABOUT_FLIP_WINDOW[0], ABOUT_FLIP_WINDOW[1], clamp01(aboutP));
@@ -82,8 +93,15 @@ export function aboutShiftT(aboutP: number): number {
 export function aboutCopyT(aboutP: number): number {
   return smootherstep(ABOUT_COPY_WINDOW[0], ABOUT_COPY_WINDOW[1], clamp01(aboutP));
 }
-export function aboutBgInT(aboutP: number): number {
-  return smootherstep(ABOUT_BG_IN_WINDOW[0], ABOUT_BG_IN_WINDOW[1], clamp01(aboutP));
+/** The exit-slide envelope — 0 through the reading hold (p ≤ 0.74), 1 by
+ *  0.96. Drives `--about-exit` (copy/cluster translateX) in about-stage.css
+ *  and the continuum formation prelude (continuumFormT). */
+export function aboutExitT(aboutP: number): number {
+  return smootherstep(ABOUT_EXIT_WINDOW[0], ABOUT_EXIT_WINDOW[1], clamp01(aboutP));
+}
+/** The deck's terminal safety fade (WebGL back material only). */
+export function aboutDeckFadeT(aboutP: number): number {
+  return smootherstep(ABOUT_DECK_FADE_WINDOW[0], ABOUT_DECK_FADE_WINDOW[1], clamp01(aboutP));
 }
 
 /* ── Deck geometry constants ─────────────────────────────────────────── */

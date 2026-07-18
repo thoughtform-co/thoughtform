@@ -76,7 +76,7 @@ import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef
 import {
   CONTINUUM_MARK_INK,
   CONTINUUM_RECEDE_RELEASE,
-  continuumApproachT,
+  continuumFormT,
 } from "@/lib/services-ring/continuumStageMath";
 import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
@@ -666,14 +666,20 @@ export function BrandmarkPhysicsCoreActor({
       ? 1 - ABOUT_FLIP_MARK_DIM * aboutFlipT(aboutStageProgressRef.current.progress)
       : 1;
 
-    // Continuum re-emergence (ADR-049): as the pinned #continuum stage
-    // approaches, the receded mark (~0.30 about-ambient ink) LIFTS to
-    // CONTINUUM_MARK_INK and eases part-way back toward the parked pose —
-    // "the brandmark returns, clearer, for the vision beat". 0 everywhere
-    // the continuum clock is 0 (flag-off / pre-continuum byte-identical);
-    // clamps to 1 below the runway (byte-stable through #practice arrival).
+    // Continuum re-emergence (ADR-049; formation-prelude rev 2026-07-18):
+    // the receded mark (~0.30 about-ambient ink) LIFTS to CONTINUUM_MARK_INK
+    // and eases part-way back toward the parked pose — "the brandmark
+    // returns, clearer, for the vision beat". continuumFormT PRE-WARMS this
+    // 40% of the way DURING the #about exit slide (so the mark re-inks AS
+    // the copy/portrait slide away — one continuous motion), then the
+    // continuum approach carries it home. 0 everywhere both clocks are 0
+    // (flag-off / pre-exit byte-identical); clamps to 1 below the runway
+    // (byte-stable through #practice arrival).
     const continuumT = CONTINUUM_RAIL_STAGE
-      ? continuumApproachT(continuumStageProgressRef.current.progress)
+      ? continuumFormT(
+          aboutStageProgressRef.current.progress,
+          continuumStageProgressRef.current.progress
+        )
       : 0;
     // Pose-only recede RELEASE: eases the #services exit recede (scale +
     // camera-forward push) back by CONTINUUM_RECEDE_RELEASE as the mark

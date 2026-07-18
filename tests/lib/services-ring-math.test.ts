@@ -682,15 +682,30 @@ describe("entranceEnvelope", () => {
     }
   });
 
-  it("staggers the cards — earlier index reveals first", () => {
+  it("lands the visible cards together, the hidden back card last", () => {
+    // Sync fix (2026-07-18): the entrance no longer staggers strictly by
+    // index. The three VISIBLE cards — 0 (front), 1 (right), 3 (left) — reveal
+    // together so none lags into the reading zone; the ONLY late lander is the
+    // HIDDEN back card (index 2, parked behind the mark), whose lateness is
+    // invisible. (Was: "earlier index reveals first", which scheduled the
+    // visible LEFT card dead-last — after even the hidden card.)
     const d = 0.7;
-    let prev = Infinity;
+    const op = (i: number) => entranceEnvelope(d, i).opacity;
+    // The two side cards ride one shared window — perfectly in lockstep.
+    expect(op(1)).toBeCloseTo(op(3), 12);
+    // Every visible card leads the hidden back card…
+    expect(op(0)).toBeGreaterThan(op(2));
+    expect(op(1)).toBeGreaterThan(op(2));
+    expect(op(3)).toBeGreaterThan(op(2));
+    expect(op(0)).toBeGreaterThan(0);
+    // …because index 2 is the sole window that starts last.
     for (let i = 0; i < RING_COUNT; i++) {
-      const { opacity } = entranceEnvelope(d, i);
-      expect(opacity).toBeLessThanOrEqual(prev);
-      prev = opacity;
+      if (i === 2) continue;
+      expect(RING_ENTRANCE_WINDOWS[i][0]).toBeLessThan(RING_ENTRANCE_WINDOWS[2][0]);
     }
-    expect(entranceEnvelope(0.7, 0).opacity).toBeGreaterThan(0);
+    // And all three visible cards settle together (identical window end).
+    expect(RING_ENTRANCE_WINDOWS[0][1]).toBeCloseTo(RING_ENTRANCE_WINDOWS[1][1], 12);
+    expect(RING_ENTRANCE_WINDOWS[1][1]).toBeCloseTo(RING_ENTRANCE_WINDOWS[3][1], 12);
   });
 
   it("clamps out-of-range card indices instead of crashing", () => {

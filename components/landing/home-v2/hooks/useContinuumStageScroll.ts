@@ -163,16 +163,27 @@ export function useContinuumStageScroll(stageRef: RefObject<HTMLElement | null>)
     window.addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibility);
     capableMedia.addEventListener?.("change", onResize);
-    // Late-hydration settle passes (the services + about runways inflate
-    // the page above this stage asynchronously — remeasure once they land).
-    const t1 = window.setTimeout(onResize, 600);
-    const t2 = window.setTimeout(onResize, 1800);
+    // Bounded settle loop — the corridor stage (`.home-v2-stage`) is
+    // code-split and can mount AFTER the first writes, and the services +
+    // about runways inflate the page above this stage asynchronously. The
+    // old two fixed passes (600ms + 1800ms) could both fire before the
+    // corridor was ready, leaving the stage disengaged until the next scroll
+    // event landed — a user who arrives at #continuum without a further
+    // scroll frame then saw the static `.crail` fallback (fail-static)
+    // instead of the pinned stage. Re-check on a cadence until we actually
+    // engage (or give up), so engagement never hinges on a scroll event
+    // arriving after the corridor mounts. Self-terminates the instant
+    // `engaged` flips true; capped so a genuinely-incapable path stops.
+    let settleTries = 0;
+    const settle = window.setInterval(() => {
+      requestWrite();
+      if (engaged || ++settleTries >= 20) window.clearInterval(settle);
+    }, 400);
 
     return () => {
       disposed = true;
       if (frame) window.cancelAnimationFrame(frame);
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
+      window.clearInterval(settle);
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);

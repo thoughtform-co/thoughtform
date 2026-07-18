@@ -4,6 +4,7 @@ import {
   CONTINUUM_APPROACH_WINDOW,
   CONTINUUM_BG_IN_WINDOW,
   CONTINUUM_COPY_WINDOW,
+  CONTINUUM_FORM_PRELUDE,
   CONTINUUM_MARK_INK,
   CONTINUUM_RECEDE_RELEASE,
   CONTINUUM_WAIST_LEVEL,
@@ -13,9 +14,11 @@ import {
   continuumApproachT,
   continuumBgInT,
   continuumCopyT,
+  continuumFormT,
   continuumThumbAngle,
   continuumThumbFraction,
 } from "@/lib/services-ring/continuumStageMath";
+import { ABOUT_EXIT_WINDOW } from "@/lib/services-ring/aboutDeckMath";
 
 describe("continuum envelopes — identity pin (the ADR-030/047/049 guardrail)", () => {
   it("returns EXACT 0 at continuumP = 0 for every scrubbed channel", () => {
@@ -68,6 +71,59 @@ describe("continuum window monotonicity + ordering", () => {
   it("the shield is still 0 while the copy is mid-reveal (no premature cover)", () => {
     const copyMid = (CONTINUUM_COPY_WINDOW[0] + CONTINUUM_COPY_WINDOW[1]) / 2;
     expect(continuumBgInT(copyMid)).toBe(0);
+  });
+});
+
+describe("continuumFormT — the about-exit formation prelude (rev 2026-07-18)", () => {
+  it("is EXACTLY 0 before the exit begins (pre-slide byte-identical)", () => {
+    // Both clocks 0 ⇒ 0; and the about clock through the reading hold
+    // (aboutP ≤ ABOUT_EXIT_WINDOW[0]) leaves it 0 while continuum is 0.
+    expect(continuumFormT(0, 0)).toBe(0);
+    expect(continuumFormT(ABOUT_EXIT_WINDOW[0], 0)).toBe(0);
+    expect(continuumFormT(0.5, 0)).toBe(0);
+  });
+
+  it("pre-warms to EXACTLY the prelude by the end of the about slide (the plateau)", () => {
+    // aboutP = 1, continuumP = 0 across the ~100svh inter-runway gap.
+    expect(continuumFormT(1, 0)).toBeCloseTo(CONTINUUM_FORM_PRELUDE, 12);
+    expect(continuumFormT(ABOUT_EXIT_WINDOW[1], 0)).toBeCloseTo(CONTINUUM_FORM_PRELUDE, 12);
+  });
+
+  it("reaches exactly 1 when the continuum approach completes", () => {
+    expect(continuumFormT(1, 1)).toBe(1);
+    expect(continuumFormT(0, 1)).toBe(1);
+  });
+
+  it("equals continuumApproachT whenever the about clock is 0 (max-compose)", () => {
+    for (let p = 0; p <= 1.0001; p += 0.05) {
+      expect(continuumFormT(0, p)).toBeCloseTo(continuumApproachT(p), 12);
+    }
+  });
+
+  it("is non-decreasing in each argument", () => {
+    // In continuumP at fixed aboutP…
+    for (const a of [0, 0.5, 1]) {
+      let prev = -Infinity;
+      for (let p = 0; p <= 1.0001; p += 0.05) {
+        const v = continuumFormT(a, p);
+        expect(v).toBeGreaterThanOrEqual(prev - 1e-9);
+        prev = v;
+      }
+    }
+    // …and in aboutP at fixed continuumP.
+    for (const c of [0, 0.5, 1]) {
+      let prev = -Infinity;
+      for (let a = 0; a <= 1.0001; a += 0.05) {
+        const v = continuumFormT(a, c);
+        expect(v).toBeGreaterThanOrEqual(prev - 1e-9);
+        prev = v;
+      }
+    }
+  });
+
+  it("keeps the prelude a proper partial pre-warm (0 < prelude < 1)", () => {
+    expect(CONTINUUM_FORM_PRELUDE).toBeGreaterThan(0);
+    expect(CONTINUUM_FORM_PRELUDE).toBeLessThan(1);
   });
 });
 

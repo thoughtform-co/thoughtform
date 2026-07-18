@@ -531,3 +531,27 @@ dissipate tail); raise it for a longer Advisory dwell. Unit + smoke re-pinned
 (front-card indices; exit step 4→3). One FP fix: `travel` is clamped to ≤1
 (smootherstep can round to 1+1e-15 near t=1 — dense sampling exposed a latent
 monotonicity break).
+
+## Update (2026-07-18) — entrance sync: visible cards land together, hidden card last
+
+Owner: the LEFT card was "out of sync" arriving into #services — it landed
+noticeably after the others (visible at the far-left edge while the right/front
+cards had already parked), so the first services scroll was spent finishing its
+entrance before the ring would rotate ("scroll twice"). Cause: `RING_ENTRANCE_WINDOWS`
+stepped strictly by card INDEX (…[0.72,0.96],[0.78,1.0]), but index order ≠
+on-screen order — index 3 is the VISIBLE left card and index 2 is the HIDDEN
+back card. So the visible left card was scheduled DEAD LAST (window tail at
+dissipate 1.0 ≈ runway p 0.14, exactly where rotation begins), _after_ even the
+hidden card.
+
+Fix (data + test only): reorder the windows so the three VISIBLE cards land
+together and the sole late lander is the hidden back card (index 2) —
+`[0.58,0.88]` (0 front), `[0.62,0.88]` (1 right), **`[0.70,1.0]` (2 back —
+hidden)**, `[0.62,0.88]` (3 left). The two side cards (1 + 3) share one window
+so they sweep in from the left/right edges in lockstep and settle by dissipate
+0.88 (≈ runway p 0.11), clearing before rotation at `RING_ARRIVAL_FRAC` 0.14.
+The orbit tracks follow automatically (`cardTrackOrbits.ts` derives each
+track's reveal from `RING_ENTRANCE_WINDOWS[i] − RING_TRACK_REVEAL_LEAD`).
+`RING_ARRIVAL_FRAC` is UNCHANGED (still the separate immediate-turn knob). The
+`services-ring-math` "staggers … earlier index reveals first" test is replaced
+by "lands the visible cards together, the hidden back card last".

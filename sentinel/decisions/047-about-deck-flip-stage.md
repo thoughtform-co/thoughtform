@@ -384,3 +384,44 @@ Net: name at t0, role one stagger step later — no third (2×-stagger) em beat.
 three-step ladder. Nothing else in the beat/emergence contract changes (the
 copy clock arm at 0.05, re-arm floor at 0.02, and the RTL emergence wipe all
 hold). This is the mandated post-incident ADR sync for the decode-target set.
+
+## Update 8 (2026-07-18, owner) — the EXIT is a SLIDE-OUT, not a fade-to-shield
+
+The owner reported the About → Continuum handoff read as "a black pane
+sliding over, then another black pane" — the two sequential fail-opaque
+station shields (`#about` then `#continuum`) restoring/holding opaque `void +
+stars` while the content cross-faded in place. The TAIL (item 4) is replaced:
+
+- **Runway 240svh → 250svh.** The stack/flip/hold windows are byte-unchanged
+  (the +4% rescale is imperceptible); the +10svh is the new EXIT beat.
+- **`ABOUT_BG_IN_WINDOW`/`aboutBgInT` are GONE**, replaced by
+  `ABOUT_EXIT_WINDOW [0.74, 0.96]` + `aboutExitT` (the slide) and
+  `ABOUT_DECK_FADE_WINDOW [0.92, 1]` + `aboutDeckFadeT` (a WebGL-only terminal
+  safety fade on the portrait deck's back material, completing at exactly
+  p = 1 so the deck is provably dead in the byte-stable hold).
+- **The slide** (`about-stage.css`): `.about-stage__copy` translates fully
+  LEFT and `.about-stage__cluster` fully RIGHT on `--about-exit` — distances
+  self-size as `±(100% + --band-margin + 48px)` so they are provably
+  off-viewport at exit = 1 on every width. The welded WebGL deck follows the
+  cluster's slot rect off the right frustum edge (three culls it); no R3F
+  change. The grid `opacity: 1 − --about-bg-in` tail-kill is deleted.
+- **The shield stops restoring mid-seam.** `useAboutStageScroll` writes
+  `--about-bg-in: 0` ONCE at engage and leaves it there for the whole engaged
+  life; it restores to opaque only via the disengage var-clear (→ default 1).
+  So the live corridor bed shows through the handoff — no dark pane. The
+  fail-opaque default and every non-engaged path are byte-unchanged.
+- **Lockstep now carried by `#continuum`.** With `#about`'s shield no longer
+  restoring, the cover that must precede the ambient kill is `#continuum`'s
+  tail restore (`--continuum-bg-in`, untouched) — consistent with ADR-049
+  retargeting the ambient death from `#continuum` to `#practice` (so the fixed
+  canvas survives under both transparent stations at every seam frame; there
+  is no scroll range showing raw void).
+- **Formation prelude.** The mark re-ink + waist re-brighten now begin DURING
+  the slide via `continuumFormT(aboutP, continuumP)` (continuumStageMath) =
+  `max(CONTINUUM_FORM_PRELUDE · aboutExitT(aboutP), continuumApproachT(continuumP))`
+  — the two beats read as one motion. See ADR-049 Update 2.
+
+Invariant addenda: runway height (now 250svh) stays the single pacing knob;
+`aboutExitT` is EXACT identity 0 through the reading hold (p ≤ 0.74) so the
+hold is byte-stable; `aboutDeckFadeT(1) = 1` pins the terminal deck-dead
+state. Rollback is unchanged (`ABOUT_DECK_STAGE = false`).

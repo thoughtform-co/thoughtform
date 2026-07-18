@@ -3,7 +3,7 @@
 import { useEffect, type RefObject } from "react";
 
 import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
-import { aboutBgInT, aboutCopyT, aboutFlipT, aboutShiftT } from "@/lib/services-ring/aboutDeckMath";
+import { aboutCopyT, aboutExitT, aboutFlipT, aboutShiftT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 import { invalidateAboutSlot, writeAboutSlotRect } from "@/lib/services-ring/aboutSlotRef";
 import { clamp01 } from "@/lib/math";
@@ -16,15 +16,23 @@ const ABOUT_STEP_COUNT = 3;
  * deck-flip stage (ADR-047). The single writer of:
  *
  *   - `data-about-mode="stage"` on `#about` — the CSS mode switch that
- *     hides the static `.voidwalker` fallback and activates the 240svh
+ *     hides the static `.voidwalker` fallback and activates the 250svh
  *     runway + sticky stage. Removed on ANY disengage (media gate,
  *     corridor fallback, unmount), so every failure mode collapses to
  *     the static opaque station (fail-static).
  *   - `--about-bg-in` on `#about` — the fail-opaque shield's channel
- *     (unwritten ⇒ 1 ⇒ opaque). 0 while pinned + capable; restores to 1
- *     across the runway tail (ABOUT_BG_IN_WINDOW), completing at the
- *     unpin — i.e. BEFORE the retargeted ambient fade even starts (the
- *     ADR-030 lockstep ordering invariant).
+ *     (unwritten ⇒ 1 ⇒ opaque). Written 0 ONCE at engage and left there
+ *     for the stage's whole engaged life: the ADR-047-rev exit is a
+ *     slide-out (below), not a fade-to-shield, so the shield stays
+ *     transparent through the handoff — the live corridor bed shows
+ *     through. The shield only restores to opaque via the disengage
+ *     var-clear (→ default 1), so flag-off / mobile / JS-failure still
+ *     land on a normal opaque station.
+ *   - `--about-exit` on the stage — the exit-slide channel
+ *     (ABOUT_EXIT_WINDOW): the copy column slides LEFT off-screen and the
+ *     cluster (WebGL portrait deck) slides RIGHT as it ramps 0 → 1 across
+ *     the runway tail. The continuum formation reads the same beat via
+ *     continuumFormT (prelude), so the mark re-inks AS the slide happens.
  *   - `--about-flip` / `--about-shift` / `--about-copy-in` +
  *     `data-about-step` on the stage — the DOM mirrors of the beat
  *     windows (single source: aboutDeckMath), driving the cluster
@@ -62,7 +70,7 @@ export function useAboutStageScroll(
     let currentFlip = -1;
     let currentShift = -1;
     let currentCopy = -1;
-    let currentBgIn = -1;
+    let currentExit = -1;
 
     const capableMedia = window.matchMedia(
       "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
@@ -99,11 +107,16 @@ export function useAboutStageScroll(
       engaged = false;
       const about = stage ? aboutOf(stage) : document.querySelector<HTMLElement>("#about");
       about?.removeAttribute("data-about-mode");
+      // Clearing --about-bg-in restores the shield to its fail-opaque
+      // default (1); clearing --about-exit resets the slide. Both are inert
+      // once data-about-mode is gone (the selectors are mode-gated), but we
+      // clear them so a re-engage starts from a known state.
       about?.style.removeProperty("--about-bg-in");
+      stage?.style.removeProperty("--about-exit");
       aboutStageProgressRef.current.progress = 0;
       aboutStageProgressRef.current.engaged = false;
       invalidateAboutSlot();
-      currentStep = currentFlip = currentShift = currentCopy = currentBgIn = -1;
+      currentStep = currentFlip = currentShift = currentCopy = currentExit = -1;
     };
 
     const write = () => {
@@ -131,6 +144,11 @@ export function useAboutStageScroll(
       if (!engaged) {
         engaged = true;
         about.setAttribute("data-about-mode", "stage");
+        // Drop the shield transparent for the whole engaged life (ADR-047
+        // rev): the exit is a slide-out over the live corridor bed, so the
+        // shield never restores mid-seam. Written once here; restored to
+        // opaque only by the disengage var-clear (→ fail-opaque default 1).
+        about.style.setProperty("--about-bg-in", "0");
         // The mode flip changes layout (runway inflates, cluster moves to
         // its grid slot) — measure AFTER this frame's style/layout apply.
         window.requestAnimationFrame(() => {
@@ -152,7 +170,7 @@ export function useAboutStageScroll(
       const flip = aboutFlipT(p);
       const shift = aboutShiftT(p);
       const copyIn = aboutCopyT(p);
-      const bgIn = aboutBgInT(p);
+      const exit = aboutExitT(p);
       if (Math.abs(flip - currentFlip) >= 0.001) {
         stage.style.setProperty("--about-flip", flip.toFixed(4));
         currentFlip = flip;
@@ -165,9 +183,9 @@ export function useAboutStageScroll(
         stage.style.setProperty("--about-copy-in", copyIn.toFixed(4));
         currentCopy = copyIn;
       }
-      if (Math.abs(bgIn - currentBgIn) >= 0.001) {
-        about.style.setProperty("--about-bg-in", bgIn.toFixed(4));
-        currentBgIn = bgIn;
+      if (Math.abs(exit - currentExit) >= 0.001) {
+        stage.style.setProperty("--about-exit", exit.toFixed(4));
+        currentExit = exit;
       }
       const step = Math.max(0, Math.min(ABOUT_STEP_COUNT - 1, Math.floor(p * ABOUT_STEP_COUNT)));
       if (step !== currentStep) {
