@@ -45,12 +45,17 @@
 }
 
 #continuum[data-continuum-mode="stage"] .continuum-stage-root {
-  /* 150svh — the beat windows are fractions, so the runway height is the
-     single pacing knob. Update 6 shortened it from 200svh: the instrument
-     assembles PRE-pin on the formation clock, so the pinned travel only
-     carries the landing settle, the copy reveal, the read hold, and the
-     shield tail. Widen if the read feels rushed. */
-  min-height: 150svh;
+  /* 200svh — the beat windows are fractions, so the runway height is the
+     single pacing knob. The instrument assembles PRE-pin on the formation
+     clock (the entry bridge delivers CONTINUUM_FORM_ENTRY at the pin), so
+     the pinned travel is pure read/exit pacing: the landing settle, the
+     copy reveal, the read HOLD, and the shield tail. U6 shortened this to
+     150svh chasing the "snap together"; the owner then found the scroll
+     from #continuum to the next section "happens too [fast]", so it is
+     back to 200svh — the snap is entry-clock-driven and unaffected, but
+     the read hold (~55svh) and the shield tail (~15svh) both roughly
+     double, so the exit to #practice eases instead of hurrying. */
+  min-height: 200svh;
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage {
   display: block;

@@ -383,6 +383,20 @@ const CONTINUUM_BAND_LOCAL_SCALE = 0.5 / MARK_HALF_EXTENT;
 const BAND_ANCHOR_X = BAND_X_HALF * CONTINUUM_BAND_LOCAL_SCALE;
 const BAND_ANCHOR_Y = BAND_Y * CONTINUUM_BAND_LOCAL_SCALE;
 
+/** The docked CHROME (caps + reticle) drops slightly below the slab's
+ *  geometric centre onto the lit beam's VISUAL centre (owner 2026-07-18:
+ *  the reticle should sit "really in the middle of the horizontal band").
+ *  The GLB's dense inner crossbar — the arm the shader lights brightest —
+ *  sits a touch below the mark's geometric mid-line, so chrome docked at
+ *  BAND_ANCHOR_Y read a few px high. Projection-only: the shader slab
+ *  (bandStateRef.y = BAND_ANCHOR_Y) is UNCHANGED, so the lit beam does not
+ *  move — only the DOM markers drop onto it. Group-local, so it tracks the
+ *  mark's hero scale (0.5 group-local ≈ the band's on-screen half-width
+ *  ≈ 377px at 1852×1269, so 0.04 ≈ a ~30px drop — the single knob to
+ *  nudge if the reticle rides above/below the beam's bright centre). */
+const BAND_CHROME_DROP = 0.04;
+const BAND_CHROME_ANCHOR_Y = BAND_ANCHOR_Y - BAND_CHROME_DROP;
+
 /** Horizontal gap between a projected band endpoint and its docked cap. */
 const BAND_LABEL_GAP_PX = 22;
 /** Viewport edge clamp for the docked chrome. */
@@ -1594,8 +1608,8 @@ function ContinuumBandSliderAnchors({
 
   return (
     <>
-      <object3D ref={leftProbeRef} position={[-BAND_ANCHOR_X, BAND_ANCHOR_Y, 0]} />
-      <object3D ref={rightProbeRef} position={[BAND_ANCHOR_X, BAND_ANCHOR_Y, 0]} />
+      <object3D ref={leftProbeRef} position={[-BAND_ANCHOR_X, BAND_CHROME_ANCHOR_Y, 0]} />
+      <object3D ref={rightProbeRef} position={[BAND_ANCHOR_X, BAND_CHROME_ANCHOR_Y, 0]} />
     </>
   );
 }

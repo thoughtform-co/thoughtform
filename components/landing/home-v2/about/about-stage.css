@@ -35,11 +35,15 @@
 }
 
 #about[data-about-mode="stage"] .about-stage-root {
-  /* 250svh — 240svh for the stack/flip/hold (2026-07-16 pacing pass) plus
-     +10svh for the 2026-07-18 EXIT slide (ABOUT_EXIT_WINDOW). The beat
-     windows are fractions, so the runway height is the single pacing knob
-     — widen if the flip or the slide feels rushed. */
-  min-height: 250svh;
+  /* 275svh — 240svh for the stack/flip/hold (2026-07-16 pacing pass),
+     +10svh for the 2026-07-18 EXIT slide (ABOUT_EXIT_WINDOW), +25svh for
+     the 2026-07-18 pacing pass (owner: the scroll from #about INTO
+     #continuum "happens too quickly"). The beat windows are fractions, so
+     the runway height is the single pacing knob — the extra travel spreads
+     the exit slide (and the continuumFormT prelude it feeds) over more
+     scroll, so the handoff eases instead of snapping. Widen further if the
+     flip or the slide still feels rushed. */
+  min-height: 275svh;
 }
 #about[data-about-mode="stage"] .about-stage {
   display: flex;
