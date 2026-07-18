@@ -683,17 +683,20 @@ html[data-corridor-exit="true"] #practice {
   padding: 0;
 }
 
-/* Visible ONLY inside the Arc — the corridor's Navigate/Encode/Build
-   beats (owner: "only visible when you enter the arc"). The `<html>`
-   corridor bus already marks these; the menu fades in/out with it and
-   only takes clicks while shown. Thesis and every non-corridor station
-   keep it hidden. */
+/* Visible ONLY in sections that carry subsections — the corridor's
+   Navigate/Encode/Build beats (THE ARC) and #services (the four service
+   verbs). The `<html>` bus already marks these (corridor phase /
+   active-station); the menu fades in/out with them and only takes clicks
+   while shown. Thesis, hero, about, continuum, practice, contact keep it
+   hidden. `data-services-ambient` is deliberately NOT used — it survives
+   into #about/#continuum and would leak the menu there. */
 html[data-corridor-engaged="true"]:is(
     [data-corridor-phase="navigate"],
     [data-corridor-phase="encode"],
     [data-corridor-phase="build"]
   )
-  .home-v2-section-menu {
+  .home-v2-section-menu,
+html[data-active-station="services"] .home-v2-section-menu {
   opacity: 1;
 }
 html[data-corridor-engaged="true"]:is(
@@ -702,7 +705,8 @@ html[data-corridor-engaged="true"]:is(
     [data-corridor-phase="build"]
   )
   .home-v2-section-menu
-  button {
+  button,
+html[data-active-station="services"] .home-v2-section-menu button {
   pointer-events: auto;
 }
 .home-v2-section-menu__head {

@@ -661,14 +661,30 @@ active 10.5px, tighter tracking, `dawn` α .34) so the active context
 dominates. Rows are real `<button>`s (`aria-current`), clickable via
 `scrollToManifestEntry`.
 
-**Visibility — Arc-only (owner refinement, 2026-07-18).** The menu is an
-Arc-contextual overlay: it fades in ONLY while the reader is inside the
-corridor's Navigate/Encode/Build beats, and fades out before (hero/thesis)
-and after (services →). The gate is pure CSS off the `<html>` corridor bus
-— `[data-corridor-engaged="true"]` AND `[data-corridor-phase]` ∈ {navigate,
-encode, build} — so the component keeps rendering + tracking and its
-content is correct the instant it shows; buttons take clicks only while
-shown. (This supersedes the initial "always shown" persistent model.)
+**Visibility — section-contextual (owner refinement, 2026-07-18).** The
+menu is a section-contextual overlay: it fades in ONLY inside a section
+that carries subsections — **the Arc** (corridor Navigate/Encode/Build)
+AND **#services** (the four service verbs) — and fades out everywhere else
+(hero/thesis, about, continuum, practice, contact). The gate is pure CSS
+off the `<html>` bus: `[data-corridor-engaged="true"]` AND
+`[data-corridor-phase]` ∈ {navigate, encode, build}, OR
+`[data-active-station="services"]`. `data-services-ambient` is deliberately
+NOT used — it survives into #about/#continuum (ADR-049) and would leak the
+menu there. The component keeps rendering + tracking so content is correct
+the instant it shows; buttons take clicks only while shown. (Supersedes the
+initial "always shown" persistent model, then the "Arc-only" first cut.)
+
+**Services subsections (2026-07-18).** #services carries the four service
+verbs (`ADVISORY · EMBEDDED · KEYNOTE · WORKSHOP`, `SERVICES` /
+`serviceData.ts` — the retired SOURCE BUS register's data). The tree folds
+them onto the `services` node the same way the corridor beats fold onto THE
+ARC. The active verb tracks the card ring exactly via
+`activeServiceForProgress(servicesRingProgressRef.current.progress)` — the
+same source the old `ServicesRailRegister` used — polled on scroll while in
+#services (the active service changes on scroll, not via any attribute), so
+the menu's scroll listener stays alive through #services as well as the
+corridor seam. Service subs all scroll to `#services` (the ring has no
+distinct per-service scroll target); Arc beats scroll to their own park.
 
 **No new scroll writer (ADR-002).** State is a pure read of the SAME
 single-writer `<html>` bus the diamond uses — `resolveActiveIdx` +
@@ -682,12 +698,13 @@ mutate-in-place `RailManifestController`).
   RETIRED — unmounted from `HomeCorridor`; the component stays on disk for
   rollback (like `ServicesRailRegister`, Update 11 / ADR-044). During the
   Arc the right rail is now empty; the left menu carries the beats.
-- The left detent diamond hides on desktop (`≥1101×760`) ONLY inside the
-  Arc — where the menu takes over. OUTSIDE the Arc (and below the gate) the
-  diamond is the journey indicator again, so the desktop is never without
-  a marker. Its hide is scoped to the SAME in-Arc `<html>` condition and
-  fades (opacity, not display) so it hands off to/from the menu smoothly.
-  `RailManifestController` is untouched; the 13-tick ladder always stays.
+- The left detent diamond hides on desktop (`≥1101×760`) ONLY where the
+  menu takes over — inside the Arc OR #services. EVERYWHERE ELSE (and below
+  the gate) the diamond is the journey indicator again, so the desktop is
+  never without a marker. Its hide is scoped to the SAME `<html>` condition
+  as the menu-show and fades (opacity, not display) so it hands off to/from
+  the menu smoothly. `RailManifestController` is untouched; the 13-tick
+  ladder always stays.
   (Owner refinement 2026-07-18 — the initial Update 12 hid the diamond on
   all desktop, which left no marker outside the Arc once the menu became
   Arc-only.)
