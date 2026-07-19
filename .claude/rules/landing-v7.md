@@ -108,24 +108,36 @@ still shows, controller untouched) + the history. Do NOT "restore" the
 diamond on desktop or delete the menu to "return to the diamond" — that
 reverts a deliberate owner decision. The 13-tick ladder always stays.
 
-**⚠ The HUD lives BEHIND the hero curtain (ADR-031 Update 16 rev a,
-2026-07-19, owner):** `.hud`'s base `z-index` is `3` — BELOW the hero
-(`z 4`) — so the whole frame chrome (corner brackets, both rails: tracks,
-ticks, labels, manifest ladder, detent diamond) is physically covered by
-the opaque hero and the ADR-022 curtain scroll-up UNCOVERS the real HUD
-along with section 2 (NOT a timed opacity fade layered on top — a true
-z-order swap). A second CSS rule in `landing.css` RAISES `.hud` back to
-`z-index: 50` the instant `data-corridor-entry` clears (existing
-single-writer signal, no new writer, ADR-002), so it resumes painting
-above every later opaque station; the corridor-incapable fallback
-(`data-fallback="true"`) keeps it always-raised. This supersedes Update
-9's "the diamond is visible from the hero" and the rev-0 opacity-fade
-draft, and retired the load-time `cornerDraw` one-shot. "The ladder
-always stays" now means: in the DOM at every beat, UNCOVERED everywhere
-except the hero. Do not reintroduce an opacity-fade version or gate the
-swap on a new scroll writer. The journey menu (`CorridorSectionMenu`)
-also drops HERO/THESIS from its roster as of this update — it starts at
-THE ARC (`MENU_HIDDEN_IDS`); `resolveActiveIdx` tracking is unaffected.
+**⚠ The hero curtain CLIP-UNCOVERS the frame chrome (ADR-031 Update 16
+rev c, 2026-07-19, owner):** the corner brackets + both rails
+(tracks/ticks/labels/manifest/diamond) are REVEALED by the hero sliding
+over them — a spatial clip, NOT an opacity fade, NOT a z-index pop. Each
+frame element clips ONLY its top edge to the hero's bottom edge:
+`.hud__rail`/`.hud__corner--tl`/`.hud__corner--br { clip-path: inset(max(0px,
+calc((1 − var(--hero-lift))·100dvh − <its own top offset>)) <sides>) }`
+(rail top `--hud-rail-y-start`, TL corner `--hud-margin`, BR corner
+`margin + corner-zone − lift·100dvh`). The RAIL's side/bottom insets MUST be
+negative (`−100px`) — its tick marks + manifest diamond OVERHANG the rail box
+~21px, so `0` sides clip them off (the bug the ticks vanished from). `--hero-lift` is the hero's LINEAR
+off-screen fraction (`scrollY/vh`) written by the SAME single
+`useLandingScroll` writer as `--hero-cover` (no new writer, ADR-002; NOT
+the smootherstep `--hero-cover` — the clip edge must track the hero's 1:1
+scroll). The inset saturates to 0 once the hero is gone (`lift → 1`), so
+NO `data-corridor-entry` gate / past-curtain rule is needed; reduced-motion
+just `clip-path: none`. WHY per-element and not a whole-`.hud` clip: the
+WORDMARK (`.hud__brand`) must stay VISIBLE on the hero, and a parent clip
+clips all descendants — so `.hud` itself is un-clipped and the wordmark
+docks into its corner via the EXISTING `.hud__brand.is-collapsed` scale
+(HudNav, 50vh). WHY not z-index: `.hud` sits OUTSIDE the `.stations` (z 10)
+stacking context, so any z is entirely under or over the sections — a
+z-swap always pops (rev a's failure). Top-right nav (`.hud-nav-overlay`,
+separate z 60) untouched. Supersedes Update 9's "diamond visible from the
+hero" + the rev-0 fade / rev-a z-swap / rev-b whole-`.hud`-clip drafts;
+`cornerDraw` retired. "The ladder always stays" now means: in the DOM at
+every beat, UNCOVERED everywhere except the hero. Do NOT reintroduce a
+fade, a z-swap, or a whole-`.hud` clip (it hides the wordmark). The journey
+menu (`CorridorSectionMenu`) also drops HERO/THESIS — it starts at THE ARC
+(`MENU_HIDDEN_IDS`); `resolveActiveIdx` tracking is unaffected.
 
 **The left rail is a single detent diamond (ADR-031 Update 9, supersedes
 the Update 3/6/7/8 rolodex; Update 12 supersedes it ON DESKTOP).** The

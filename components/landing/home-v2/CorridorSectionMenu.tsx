@@ -11,6 +11,7 @@ import {
 } from "@/lib/rail-manifest/resolveActiveIdx";
 import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+import { scrambleText } from "@/lib/home-v2/terminalReveal";
 
 import { SERVICES } from "./services/serviceData";
 
@@ -34,6 +35,13 @@ import { SERVICES } from "./services/serviceData";
  * highlighted section and its active subsection are horizontally aligned.
  * e.g. the centre line reads `THE ARC ▸ · · NAVIGATE 01`. Both panels are one
  * component; the reel offsets are the `--active-row` / `--active-sub` props.
+ *
+ * TERMINAL REVEAL (Update 17): each time the menu ENTERS a section it belongs
+ * to (the Arc or #services), its nav items "boot in" — the names decode-
+ * scramble through random glyphs and resolve left-to-right, staggered
+ * top-to-bottom (`scrambleText`, lib/home-v2/terminalReveal.ts) — instead of
+ * a plain fade. Driven by a `menuVisible` effect that re-runs on every
+ * (re-)entry and restores the text on leave; skipped under reduced motion.
  *
  * VISIBILITY: both panels are a section-contextual overlay — visible ONLY
  * while the reader is inside a section that carries subsections: the
@@ -173,6 +181,30 @@ export function CorridorSectionMenu() {
   const activeIsBeat = !!activeEntry && ARC_BEAT_IDS.has(activeEntry.id);
   const activeIsServices = activeEntry?.id === "services";
   const activeTopId = activeIsBeat ? "arc" : (activeEntry?.id ?? "hero");
+
+  // Terminal decode-in: each time the menu ENTERS a section it belongs to
+  // (the Arc or #services — where it fades in), its nav items "boot" by
+  // scrambling through random glyphs and resolving left-to-right, staggered
+  // top-to-bottom (a console decode, not a plain fade). Re-runs on every
+  // (re-)entry via the `menuVisible` dependency; cleans up (restores text)
+  // on leave / re-trigger. Skipped under reduced motion. Mono font ⇒ no
+  // layout thrash (see terminalReveal.ts). React never overwrites the
+  // scrambled text: the rendered strings don't change, so the text nodes
+  // are left untouched across re-renders.
+  const menuVisible = activeIsBeat || activeIsServices;
+  useEffect(() => {
+    if (!menuVisible || prm()) return;
+    const STAGGER_MS = 45;
+    const DUR_MS = 330;
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        ".home-v2-section-menu__name, .home-v2-section-submenu__num, .home-v2-section-submenu__name"
+      )
+    );
+    const cleanups = nodes.map((el, i) => scrambleText(el, i * STAGGER_MS, DUR_MS));
+    return () => cleanups.forEach((fn) => fn());
+  }, [menuVisible]);
+
   // The section whose subsections unfold — THE ARC in the corridor, SERVICES
   // in #services; nothing elsewhere.
   const expandedTopId = activeIsBeat ? "arc" : activeIsServices ? "services" : null;

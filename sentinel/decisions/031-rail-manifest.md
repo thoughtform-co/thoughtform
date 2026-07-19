@@ -857,37 +857,85 @@ second section, and the brandmark in a diagram is moving to the center — that
 is a moment when I want our left and right rail and also the corners to
 appear."
 
-**Decision (rev a — TRUE LAYERING, not an opacity fade).** The first cut used
-an opacity gate (chrome invisible-but-present on the hero, faded in via CSS
-transition). The owner's actual ask is physical: **the HUD lives BEHIND the
-hero curtain**, so the ADR-022 scroll-up curtain reveal UNCOVERS the real HUD
-along with section 2, the same way it uncovers the parked compass diagram —
-not a timed fade layered on top.
+**Decision (rev b — the hero curtain CLIPS-UNCOVERS the HUD).** Two earlier
+cuts failed the owner's actual ask ("it should not fade in… it should already
+be part of the second section, but hidden in the hero section since the hero
+slides over it"): rev 0 was an opacity fade; rev a dropped `.hud` to `z-index:
+3` (under the hero) and raised it to `50` past the handoff. Rev a still
+POPPED, because `.hud` lives OUTSIDE the `.stations` stacking context (`.hud`
+is a sibling of `.stations` at `z 3`; `.stations` is `z 10` and wraps BOTH the
+hero (its internal `z 4`) and the corridor host (its internal `z 3`)). A z
+outside that context can only be entirely under the whole `.stations` block
+(hidden through the curtain, revealed only at the raise = pop) or entirely
+over it (visible on the hero). It can never sit BETWEEN the hero and the
+corridor. Probed live: mid-curtain the corridor stage painted at the rail
+edge over the `z 3` HUD — the rail never revealed until the `z 50` pop.
 
-Implementation: `.hud`'s base `z-index` drops from `50` to `3` — BELOW the
-hero (`z 4`) and level with the corridor host stack (`z 3`, but earlier in
-DOM so the corridor host still paints over it while both are 3). The hero's
-opaque background fully covers the HUD through the whole hero life. The
-instant the ADR-022 curtain hands off — `data-corridor-entry` clears (the
-existing single-writer signal, `useLandingScroll`, no new writer, ADR-002) —
-a second rule RAISES `.hud` back to `z-index: 50`, so it resumes painting
-above every later opaque station (`#services` z5 → `#contact` z7):
+**The reveal is a CLIP, not a z-swap.** `.hud` returns to a persistent
+`z-index: 50` (its original layer) but is `clip-path: inset(100% 0 0 0)` —
+clipped to nothing — by default, and UNCOVERED bottom-up in lockstep with the
+hero's rising bottom edge while the ADR-022 curtain is engaged
+(`data-corridor-entry`):
+
+```
+html[data-corridor-entry] .hud {
+  clip-path: inset(calc((1 - var(--hero-lift, 0)) * 100dvh) 0 0 0);
+}
+```
+
+`--hero-lift` is the hero's LINEAR off-screen fraction (`scrollY / vh`),
+written on the root by the SAME single hero-curtain writer that already emits
+`--hero-cover` (`useLandingScroll`, no new writer, ADR-002 — and deliberately
+NOT the smootherstep `--hero-cover`: the clip edge must track the hero's 1:1
+scroll, verified `heroTop === -scrollY`, `transform: none`). The hero covers
+viewport `[0, vh·(1 − lift)]`; clipping the HUD's top by that exact height
+leaves precisely the region the hero has vacated, so **the clip edge IS the
+hero's bottom edge, frame-for-frame** (probed: clip inset 1269→952→634→317px
+at lift 0→0.25→0.5→0.75, equal to `hero.getBoundingClientRect().bottom` at
+each). `.hud` is `inset: 0` so its box is the viewport and the `dvh` math is
+exact. The moment `data-corridor-entry` clears (hero fully gone) the
+past-curtain rule drops the clip (`clip-path: none`) so the chrome persists
+over the opaque later stations (`#services` z5 → `#contact` z7):
 
 ```
 html:not([data-corridor-entry])[data-corridor-engaged="true"][data-corridor-phase] .hud,
 html:not([data-corridor-entry])[data-active-station]:not([data-active-station="hero"]) .hud,
-html:has(.home-v2-stage[data-fallback="true"]) .hud { z-index: 50; }
+html:has(.home-v2-stage[data-fallback="true"]) .hud { clip-path: none; }
 ```
 
-The three arms mirror the original gate (corridor beats, every later station,
-the corridor-incapable fallback which keeps the HUD always-on-top since no
-curtain choreography exists there). The flip is a hard z-index swap, not a
-transition — nothing overlaps the HUD at the exact handoff frame either way,
-so there is no visible pop. This supersedes the rev-0 opacity fade in full
-(`.hud__corner`/`.hud__rail` no longer carry their own opacity/transition —
-the whole `.hud` node moves as one layer). The load-time `cornerDraw`
-one-shot stays retired (deleted in rev 0; still correct — the curtain reveal
-is the corners' entrance now).
+The top-right nav (`.hud-nav-overlay`, a SEPARATE `z 60` element, not a child
+of `.hud`) is unaffected — it stays on the hero as before. Reduced-motion
+drops the slide (discrete hidden-through-hero → shown-at-section-2). The
+load-time `cornerDraw` one-shot stays retired.
+
+**Rev c (owner) — keep the WORDMARK visible on the hero; clip the frame
+per-element.** Rev b clipped the whole `.hud`, which also hid the bottom-left
+wordmark lockup on the hero — a regression (owner: "make sure the wordmark is
+visible in the hero section and then move to its right positioning when you
+scroll into the second section"). The wordmark can't be exempted from a
+parent `clip-path` (it clips all descendants), so the reveal moves OFF `.hud`
+and onto the frame elements INDIVIDUALLY — `.hud__rail`, `.hud__corner--tl`,
+`.hud__corner--br` each get `clip-path: inset(max(0px, calc((1 −
+--hero-lift)·100dvh − <its own top offset>)) <sides>)` (rail top =
+`--hud-rail-y-start`, TL corner top = `--hud-margin`, BR corner reduces to
+`margin + corner-zone − lift·100dvh`). **The rail's side/bottom insets are
+`−100px` (only the TOP is clipped):** the tick marks + the manifest diamond
+OVERHANG the rail's border box by ~21px to the left (right rail mirrors), so
+a `0` side inset would clip them off — the negative insets keep the overhang
+visible. The corners have no overhang, so `0` sides are fine there. Subtracting each element's own top
+keeps the clip edge viewport-aligned to the hero's bottom edge; the inset
+saturates to 0 once the hero is gone (`lift → 1`), so the whole
+`data-corridor-entry` gate + past-curtain rule + reduced-motion clip are
+GONE (the lift-driven clip covers every state on its own; reduced-motion just
+sets `clip-path: none`). `.hud` itself carries no clip now, so the wordmark
+(`.hud__brand`, z 52) is visible full-size on the hero and DOCKS into its
+corner signature via the EXISTING `.hud__brand.is-collapsed` scale (0.68,
+`transform-origin: bottom left`, toggled by `HudNav` at 50vh) — "its right
+positioning". No new wordmark motion was added; rev b had merely masked the
+behavior that was already there. Verified live: hero = wordmark `scale(1)` at
+`[54,1152]`, rail `clip inset(1138px)` (hidden), hero-bg wins the rail-top
+paint test; section 2 = wordmark `scale(0.68)` `is-collapsed`, rail `clip
+inset(0)` and the rail element wins its own paint test.
 
 **Also this pass — the journey menu starts at THE ARC.** `CorridorSectionMenu`
 no longer lists HERO or THESIS (owner: "the left nav items should not show
@@ -899,23 +947,47 @@ active-tracking). The now-dead `hideActiveName` field (it only ever applied
 to the hero row) is removed from the tree type + render.
 
 **Supersedes:** the Update 9 note "the diamond is visible from the hero" —
-the diamond (a rail child) now lives behind the hero curtain like the rest of
-the chrome; its behavior PAST the hero is unchanged. The Update 2 "13-tick
-ladder always stays" doctrine is amended, not broken: the ladder still exists
-in the DOM at every beat and is UNCOVERED everywhere except the hero.
+the diamond (a rail child) is now clipped away with the rest of the chrome
+until the curtain uncovers it; its behavior PAST the hero is unchanged. The
+Update 2 "13-tick ladder always stays" doctrine is amended, not broken: the
+ladder still exists in the DOM at every beat and is UNCOVERED everywhere
+except the hero.
 
-**Verified live** (dev, 1945×1269, fresh navigation): hero = the hero's own
-`hero__bg` paints at the corner test-points (`z 3` HUD is covered), `data-
-corridor-entry="1"`; mid-curtain scroll — still covered, entry still set;
-section 2 — the corridor host paints at the corner spot, `.hud` measures
-`z-index: 50`, `data-corridor-entry` is absent, and the left rail's own
-track element wins `elementsFromPoint` at its exact x/y (the rail is really
-on top, not just the z-index number); scrolled back to the hero — `z-index`
-drops to `3` and `hero__bg` covers the corner again, symmetric. Left menu at
-every beat reads `THE ARC · SERVICES · ABOUT · CONTINUUM · PRACTICE ·
-CONTACT` — no HERO/THESIS row at any scroll position. Typecheck + lint
-clean.
+**Verified live** (dev, 1945×1269): the HUD's clip inset tracked the hero's
+bottom edge frame-for-frame — clip `inset(1269 / 952 / 634 / 317px)` at
+`--hero-lift` `0 / 0.25 / 0.5 / 0.75`, equal to `hero.bottom` at each; the
+mid-curtain screenshot shows the rail + wordmark + corner uncovered in the
+lower (hero-vacated) region while the upper region is still the hero with NO
+chrome. Hero at rest = `inset(100%)` (fully hidden); section 2 and every
+later beat = `clip-path: none` (fully shown); reverse-scroll re-clips
+symmetrically. Left menu at every beat reads `THE ARC · SERVICES · ABOUT ·
+CONTINUUM · PRACTICE · CONTACT` — no HERO/THESIS row. Typecheck + lint clean.
 
-**Files:** `landing.css` (`.hud` base z 3, the raise-on-handoff rule replacing
-the opacity gate; `cornerDraw` stays deleted), `CorridorSectionMenu.tsx`
-(`MENU_HIDDEN_IDS` filter; `hideActiveName` removed from `TreeNode` + render).
+**Files:** `landing.css` (rev c: per-element `--hero-lift` clip on
+`.hud__rail`/`.hud__corner--tl`/`.hud__corner--br`; `.hud` itself un-clipped
+so the wordmark stays visible + docks via the existing `.is-collapsed`;
+`cornerDraw` stays deleted), `useLandingScroll.ts` (`--hero-lift` on the root,
+same single writer), `CorridorSectionMenu.tsx` (`MENU_HIDDEN_IDS` filter;
+`hideActiveName` removed from `TreeNode` + render).
+
+### Update 17 — terminal decode-in for the section menu (2026-07-19, owner)
+
+**Owner ask:** "make the left nav items appear with a cool terminal effect —
+right now they just appear." The `CorridorSectionMenu` names now BOOT IN like
+a console decoding text instead of a plain opacity fade: each time the menu
+enters a section it belongs to (the Arc or #services), every nav item
+(`.home-v2-section-menu__name` + the right panel's `__num`/`__name`)
+scrambles through random glyphs and RESOLVES LEFT-TO-RIGHT, staggered
+top-to-bottom (45ms/row, ~330ms each). Pure text mutation via
+`scrambleText` (`lib/home-v2/terminalReveal.ts`, rAF, spaces preserved) — the
+menu is PT Mono so every glyph is the same width and the decode causes ZERO
+layout thrash even under the live WebGL corridor. Trigger: a `menuVisible =
+activeIsBeat || activeIsServices` effect that re-runs on every (re-)entry
+(NOT on beat changes within the Arc — `menuVisible` stays true there) and
+restores the text on leave / re-trigger; skipped under `prefers-reduced-
+motion`. React never fights it: the rendered strings don't change, so it
+leaves the mutated text nodes untouched across re-renders. Verified live:
+entering the Arc decoded `VGY 1U8 → THE ARC`, `OL\F3++I → SERVICES`, … and
+settled; the existing opacity fade still runs underneath (menu materializes +
+decodes). **Files:** `lib/home-v2/terminalReveal.ts` (new), `Corridor-
+SectionMenu.tsx` (the reveal effect).

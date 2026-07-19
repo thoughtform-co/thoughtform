@@ -278,11 +278,10 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  /* Hero-regime base: UNDER the hero curtain (hero z 4), above the
-     corridor host (z 3, earlier in DOM) — the curtain reveal uncovers
-     the HUD. Raised back to 50 past the handoff (see the layering block
-     below the corner rules, ADR-031 Update 16 rev a). */
-  z-index: 3;
+  z-index: 50;
+  /* The FRAME chrome (corners + rails) is uncovered by the hero curtain —
+     clipped per-element below (the wordmark stays visible + docks). See
+     ADR-031 Update 16 rev c. */
 }
 .hud > * {
   pointer-events: auto;
@@ -317,30 +316,54 @@
   border-right: 2px solid var(--hud-rail-line);
 }
 
-/* ── The HUD lives BEHIND the hero curtain (ADR-031 Update 16 rev a) ───
-   The whole `.hud` frame (corners, both rails with ticks/labels/manifest/
-   diamond, the wordmark lockup) sits UNDER the hero (z 3 < hero z 4,
-   above the corridor host's z 3 by DOM order), so the ADR-022 curtain
-   scroll-up PHYSICALLY REVEALS the real HUD along with section 2 — the
-   chrome emerges under the hero's rising bottom edge while the brandmark
-   pans to centre in the compass diagram. (Rev a replaces the U16 opacity
-   fade with this true layering.)
+/* ── The hero curtain UNCOVERS the frame chrome (ADR-031 Update 16 rev c) ─
+   The corner brackets + both rails (tracks, ticks, labels, manifest ladder,
+   diamond) are uncovered bottom-up in lockstep with the hero's rising
+   bottom edge as the ADR-022 curtain slides up — revealed WITH section 2,
+   as if always there behind the hero. The WORDMARK is exempt (it stays
+   visible on the hero and docks into the corner — see below), which is why
+   the reveal clips each frame element individually rather than the whole
+   `.hud`.
 
-   The base z here is the hero-regime state; the raise below restores
-   z 50 the moment the curtain hands off (`data-corridor-entry` clears
-   exactly when the hero has fully left), so the chrome keeps painting
-   ABOVE the opaque later stations (#services → #contact sit at z 5-7).
-   The flip frame is invisible: at handoff nothing overlaps the chrome
-   either way. Pure CSS off the existing `<html>` bus — no new scroll
-   writer (ADR-002). Pre-hydration no raise-selector matches, so first
-   paint on the hero is chrome-free (the hero covers z 3). The
-   corridor-incapable path (mobile / reduced-motion / no-WebGL) marks
-   the stage `data-fallback="true"` and keeps the HUD always-on-top —
-   no curtain choreography exists there. */
-html:not([data-corridor-entry])[data-corridor-engaged="true"][data-corridor-phase] .hud,
-html:not([data-corridor-entry])[data-active-station]:not([data-active-station="hero"]) .hud,
-html:has(.home-v2-stage[data-fallback="true"]) .hud {
-  z-index: 50;
+   `--hero-lift` is the hero's LINEAR off-screen fraction (`scrollY/vh`,
+   written by the single hero-curtain writer in useLandingScroll — NOT the
+   smootherstep `--hero-cover`; the clip edge must track the hero 1:1). The
+   hero covers viewport `[0, vh·(1 − lift)]`, so clipping an element's TOP
+   by `(vh·(1 − lift) − elementTopInViewport)` leaves exactly the part below
+   the hero's bottom edge — the clip edge IS the hero's bottom edge. Each
+   element subtracts its OWN top offset so the edge is viewport-aligned; the
+   inset saturates to 0 (fully shown) once the hero is gone (`lift → 1`), so
+   no `data-corridor-entry` gate or past-curtain rule is needed. rev a/b are
+   superseded (a z-swap popped; a whole-`.hud` clip hid the wordmark too). */
+.hud__rail {
+  /* Clip ONLY the top edge to the hero's bottom edge — the sides/bottom get
+     negative insets so the rail's OVERHANGING children (tick marks + the
+     manifest diamond sit ~21px LEFT of the rail's border box; right rail
+     mirrors) are never horizontally clipped. */
+  clip-path: inset(
+    max(
+        0px,
+        calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-rail-y-start))
+      ) -100px -100px -100px
+  );
+}
+.hud__corner--tl {
+  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) 0 0 0);
+}
+.hud__corner--br {
+  /* Bottom-anchored: its top sits at `100dvh − margin − corner-zone`, so the
+     hero-edge inset reduces to `margin + corner-zone − lift·100dvh`. */
+  clip-path: inset(
+    max(0px, calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100dvh)) 0 0 0
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No slide reveal — the frame is simply present (no clip). */
+  .hud__rail,
+  .hud__corner--tl,
+  .hud__corner--br {
+    clip-path: none;
+  }
 }
 
 /* ── Bottom-left wordmark lockup (ADR-043) ─────────────────────────

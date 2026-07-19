@@ -158,6 +158,16 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       // `position: fixed` during the entry band, so its top reads ~0 even
       // at scrollY 0 and can't drive the hero's own exit).
       const raw = Math.max(0, Math.min(1, scrollY / vh));
+      // Linear hero lift (0..1 across the first viewport). The hero rides
+      // native scroll 1:1 (no transform), so `raw` IS its exact off-screen
+      // fraction, and `vh·(1 − raw)` is its live bottom-edge in the viewport.
+      // Written on the ROOT (the fixed `.hud` lives outside #hero) so the
+      // HUD reveal clip (landing.css) can uncover the frame chrome in
+      // LOCKSTEP with the hero's bottom edge as the curtain slides up — a
+      // spatial reveal, not a fade. Same single writer as `--hero-cover`
+      // (no new scroll writer, ADR-002); smootherstep is deliberately NOT
+      // used here — the clip edge must track the hero's LINEAR travel.
+      document.documentElement.style.setProperty("--hero-lift", raw.toFixed(4));
       // smootherstep so the hero eases away rather than tracking the
       // wheel 1:1 — this is the "soft dissolve" exit feel.
       heroCover = raw * raw * raw * (raw * (raw * 6 - 15) + 10);
