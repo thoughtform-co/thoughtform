@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 
 import { scrollToManifestEntry } from "@/lib/rail-manifest/clickToNavigate";
 import { MANIFEST_ENTRIES, type ManifestEntryId } from "@/lib/rail-manifest/entries";
@@ -34,8 +34,11 @@ import { SERVICES } from "./services/serviceData";
  * detent diamond is the indicator again (its desktop hide is scoped to the
  * same windows). The full 8-station journey is shown while visible; the
  * ACTIVE section is an inverse-video block while every other section
- * RECEDES (smaller, tighter, dim). The active section unfolds its
- * subsections with the active one lit + a blinking cursor.
+ * RECEDES on a shallow 3D rolodex wheel (Update 13): each row tilts on X
+ * and falls back on Z by its distance from the active row (`rolodexStyle`),
+ * so the section you're in sits forward + flat + crisp and the rest curve
+ * away and dim. The active section unfolds its subsections with the active
+ * one lit + a blinking cursor.
  *
  * State is a pure read of existing single-writer signals — `resolveActiveIdx`
  * off the `<html>` attribute bus (no new scroll writer, ADR-002), plus the
@@ -114,6 +117,26 @@ const JOURNEY_TREE: readonly TreeNode[] = (() => {
 
 const prm = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
+/**
+ * Rolodex depth for a row, keyed to its signed distance from the ACTIVE row.
+ * The section you're in sits forward and flat (offset 0 → no transform); every
+ * other row tilts on X and recedes on Z (a shallow wheel) and dims, so the
+ * further a section is from where you are, the more it falls away. Squared
+ * depth/dim give the wheel its foreshortened curve; the rotation is capped so
+ * far rows stay legible rather than folding edge-on. Flattened under
+ * prefers-reduced-motion in CSS.
+ */
+function rolodexStyle(offset: number): CSSProperties {
+  const rot = Math.max(-40, Math.min(40, offset * -10));
+  const depth = -Math.min(150, offset * offset * 8);
+  const dim = Math.max(0.3, 1 - offset * offset * 0.07);
+  return {
+    "--row-rot": `${rot}deg`,
+    "--row-depth": `${depth}px`,
+    "--row-dim": `${dim}`,
+  } as CSSProperties;
+}
+
 export function CorridorSectionMenu() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [serviceIdx, setServiceIdx] = useState(0);
@@ -174,13 +197,12 @@ export function CorridorSectionMenu() {
     if (entry) scrollToManifestEntry(entry, prm());
   };
 
-  const lastIdx = JOURNEY_TREE.length - 1;
+  // The active row's position in the display tree — the rolodex pivots around
+  // it (its row is offset 0 → forward + flat).
+  const activeDisplayIdx = JOURNEY_TREE.findIndex((n) => n.id === activeTopId);
 
   return (
     <nav className="home-v2-section-menu" aria-label="Journey sections">
-      <div className="home-v2-section-menu__head" aria-hidden="true">
-        TF://JOURNEY — {String(JOURNEY_TREE.length).padStart(2, "0")} STN
-      </div>
       <ul className="home-v2-section-menu__list">
         {JOURNEY_TREE.map((node, i) => {
           const active = node.id === activeTopId;
@@ -191,6 +213,7 @@ export function CorridorSectionMenu() {
               key={node.id}
               className="home-v2-section-menu__item"
               data-active={active || undefined}
+              style={rolodexStyle(i - activeDisplayIdx)}
             >
               <button
                 type="button"
@@ -198,9 +221,6 @@ export function CorridorSectionMenu() {
                 aria-current={active ? "true" : undefined}
                 onClick={() => go(node.entryIdx)}
               >
-                <span className="home-v2-section-menu__branch" aria-hidden="true">
-                  {i === lastIdx ? "└─" : "├─"}
-                </span>
                 <span className="home-v2-section-menu__name">
                   {node.hideActiveName && active ? "····" : node.name}
                 </span>
@@ -213,9 +233,8 @@ export function CorridorSectionMenu() {
 
               {showSubs && (
                 <ul className="home-v2-section-menu__subs">
-                  {node.subs!.map((sub, j) => {
+                  {node.subs!.map((sub) => {
                     const sActive = sub.id === activeSubId;
-                    const subLast = j === node.subs!.length - 1;
                     return (
                       <li
                         key={sub.id}
@@ -228,9 +247,6 @@ export function CorridorSectionMenu() {
                           aria-current={sActive ? "true" : undefined}
                           onClick={() => go(sub.targetIdx)}
                         >
-                          <span className="home-v2-section-menu__pipe" aria-hidden="true">
-                            {`│   ${subLast ? "└─" : "├─"}`}
-                          </span>
                           <span className="home-v2-section-menu__subname">
                             ·{sub.num} {sub.name}
                           </span>

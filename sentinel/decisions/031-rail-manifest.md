@@ -727,3 +727,43 @@ Keep the button reset from setting `font`/`color` (it out-specifies the
 row rules and collapses the hierarchy — the bug fixed on landing). Subs
 render ONLY while inside the Arc. If the register or the desktop diamond
 is ever wanted back, both are one line away (remount / drop the gate).
+
+### Update 13 — hug the rail, larger type, a real rolodex wheel (2026-07-19)
+
+**Owner refinement.** Three tweaks to the Update 12 menu, all
+presentation-only (no new signal, no scroll writer — still a pure read of
+`activeTopId`):
+
+- **Closer to the rail.** The detach gap dropped from
+  `clamp(34px, 3.2vw, 56px)` to `clamp(16px, 1.7vw, 28px)` past the
+  `--hud-margin` — it read as floating off into the corridor. Still clears
+  the rail guide + bearing labels.
+- **Larger type.** The scale went up ~2px across (non-active row 9→11px,
+  active row 10.5→12.5px, head 8→9px, disc 8→9px, subrow 9.5→11px). The
+  recede size gap (active vs non-active) is preserved — the hierarchy
+  guardrail above still holds.
+- **A literal 3D rolodex.** The Update-12 recede (smaller + dim) is now a
+  shallow 3D wheel. `CorridorSectionMenu`'s `rolodexStyle(offset)` keys each
+  row to its SIGNED distance from the active row (`i - activeDisplayIdx`) and
+  writes `--row-rot` / `--row-depth` / `--row-dim` custom props; the
+  `__list` is a `perspective: 620px` stage and each `__item` applies
+  `translateZ(--row-depth) rotateX(--row-rot)` + `opacity: --row-dim`. The
+  active row is offset 0 → forward + flat + crisp; every other row tilts on X
+  (rows above top-back, rows below bottom-back) and recedes on Z, farther =
+  more. Squared depth/dim give the wheel its foreshortened curve; rotation is
+  capped at ±40° so far rows stay legible, never fold edge-on. Flattened
+  entirely under `prefers-reduced-motion` (motion-sickness parity with the
+  rest of the corridor). The `offset` is a display-index delta, not a scroll
+  signal — no ADR-002 writer is added.
+- **No ASCII tree chrome (owner ask).** The `TF://JOURNEY — 08 STN` head and
+  the `├─`/`└─` row connectors + `│  ├─` sub-pipes are REMOVED — the wheel
+  itself now carries the hierarchy. The `__head`, `__branch`, `__pipe`
+  elements + rules are gone; subsection nesting is a `14px` left indent on
+  `__subs`. The disclosure caret (`▾`/`▸`), the active inverse-video block,
+  the `·NN VERB`/beat numbering, and the blinking sub-cursor (`█`) stay — the
+  menu reads as a clean indented list, not a boxed-drawing tree.
+
+**Files:** `CorridorSectionMenu.tsx` (`rolodexStyle` + `activeDisplayIdx` +
+per-`<li>` style; head/branch/pipe spans removed), `home-v2.css` (menu
+`left`, type sizes, `__list` perspective + `__item` transform, reduced-motion
+flatten; `__head`/`__branch`/`__pipe` rules removed, `__subs` indent).

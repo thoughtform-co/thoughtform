@@ -649,9 +649,10 @@ html[data-corridor-exit="true"] #practice {
    Component: components/landing/home-v2/CorridorSectionMenu.tsx */
 .home-v2-section-menu {
   position: fixed;
-  /* Near the rail but detached — clears the rail guide + bearing labels
-     with a small gap (closer than the /test/section-menu-lab probe). */
-  left: calc(var(--hud-margin, 40px) + clamp(34px, 3.2vw, 56px));
+  /* Hugging the rail — a tight gap that clears the rail guide + bearing
+     labels without floating off into the corridor (was clamp(34px,3.2vw,56px),
+     which read as detached). */
+  left: calc(var(--hud-margin, 40px) + clamp(16px, 1.7vw, 28px));
   top: 50%;
   transform: translateY(-50%);
   z-index: 18;
@@ -709,18 +710,26 @@ html[data-corridor-engaged="true"]:is(
 html[data-active-station="services"] .home-v2-section-menu button {
   pointer-events: auto;
 }
-.home-v2-section-menu__head {
-  margin-bottom: 7px;
-  padding-bottom: 5px;
-  font-size: 8px;
-  letter-spacing: 0.2em;
-  color: rgba(235, 227, 214, 0.32);
-  border-bottom: 1px solid rgba(235, 227, 214, 0.1);
-}
 .home-v2-section-menu__list {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  /* Rolodex stage — the list is a shallow 3D wheel. Each row's depth comes
+     from CorridorSectionMenu (rolodexStyle, keyed to distance from active);
+     the active row sits at offset 0 (forward + flat), the rest recede. */
+  perspective: 620px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+}
+/* The wheel slat — forward+flat when active, tilted+receded otherwise. */
+.home-v2-section-menu__item {
+  transform: translateZ(var(--row-depth, 0px)) rotateX(var(--row-rot, 0deg));
+  transform-origin: center;
+  opacity: var(--row-dim, 1);
+  backface-visibility: hidden;
+  transition:
+    transform 280ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+    opacity 280ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 /* Non-active row — RECEDED: smaller, tighter, dim ("not in the view"). */
@@ -729,14 +738,10 @@ html[data-active-station="services"] .home-v2-section-menu button {
   align-items: center;
   gap: 7px;
   padding: 1px 0;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   color: rgba(235, 227, 214, 0.34);
   transition: color 140ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-.home-v2-section-menu__branch {
-  color: rgba(235, 227, 214, 0.2);
-  white-space: pre;
 }
 .home-v2-section-menu__name {
   white-space: nowrap;
@@ -744,17 +749,14 @@ html[data-active-station="services"] .home-v2-section-menu button {
 }
 .home-v2-section-menu__disc {
   margin-left: 2px;
-  font-size: 8px;
+  font-size: 9px;
   color: rgba(202, 165, 84, 0.5);
 }
 
 /* Active section — PROMINENT: larger, gold, inverse-video block. */
 .home-v2-section-menu__item[data-active] .home-v2-section-menu__row {
-  font-size: 10.5px;
+  font-size: 12.5px;
   letter-spacing: 0.1em;
-  color: var(--gold, #caa554);
-}
-.home-v2-section-menu__item[data-active] .home-v2-section-menu__branch {
   color: var(--gold, #caa554);
 }
 .home-v2-section-menu__item[data-active] .home-v2-section-menu__name {
@@ -764,25 +766,22 @@ html[data-active-station="services"] .home-v2-section-menu button {
   box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
 }
 
-/* Subsections — only while inside the Arc. */
+/* Subsections — only while inside the Arc. Indented (was the `│  ├─` pipe's
+   job) so they still read as nested under their parent section. */
 .home-v2-section-menu__subs {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  margin: 1px 0 2px;
+  margin: 2px 0 2px 14px;
 }
 .home-v2-section-menu__subrow {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   color: rgba(235, 227, 214, 0.38);
   animation: home-v2-section-menu-unfold 220ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
-}
-.home-v2-section-menu__pipe {
-  color: rgba(235, 227, 214, 0.2);
-  white-space: pre;
 }
 .home-v2-section-menu__subname {
   white-space: nowrap;
@@ -823,6 +822,12 @@ html[data-active-station="services"] .home-v2-section-menu button {
 }
 @media (prefers-reduced-motion: reduce) {
   .home-v2-section-menu {
+    transition: none;
+  }
+  /* Flatten the rolodex — no wheel tilt/recede, just the flat receded list. */
+  .home-v2-section-menu__item {
+    transform: none;
+    opacity: 1;
     transition: none;
   }
   .home-v2-section-menu__subrow {
