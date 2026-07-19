@@ -785,13 +785,34 @@ export function BrandmarkPhysicsCoreActor({
     // 0 everywhere all three clocks are 0 (flag-off / pre-exit
     // byte-identical); clamps to 1 below the runway (byte-stable through
     // #practice arrival).
-    const continuumT = CONTINUUM_RAIL_STAGE
-      ? continuumFormT(
-          aboutStageProgressRef.current.progress,
-          continuumStageProgressRef.current.progress,
-          continuumStageProgressRef.current.entry
-        )
-      : 0;
+    //
+    // REGIME GATE (bugfix 2026-07-19): the formation is a POST-CORRIDOR
+    // beat — it exists ONLY while the mark is in its parked docked /
+    // services-ambient life (the ambient hold that survives #services →
+    // #about → #continuum, killed at #practice) and NEVER while the
+    // corridor is actively reading (`t.active` — the Navigate/Encode/Build
+    // Arc beats). Every clean continuum frame is `!active && ambient`;
+    // every Arc frame is `active`. Forcing continuumT = 0 whenever the
+    // corridor is active keeps the in-sphere Arc mark byte-identical no
+    // matter what a stale or lagging about/continuum runway rect momentarily
+    // reports. Without this, a fast reverse scroll from #continuum (Lenis
+    // smooth-scroll desyncs the corridor transform from the stage writer's
+    // rAF) could land a frame where the transform already read "active"
+    // (Arc) while entry/progress had not yet reset — the mark then glowed
+    // (band gains) and grew (CONTINUUM_SCALE_BOOST) PAST the substrate
+    // sphere. `!t.active` is the reliable per-frame corridor signal; the
+    // `docked || ambient` term additionally pins the beat to the parked
+    // regime. Nothing real is clipped: every legitimate continuum frame
+    // runs `!active` under the ambient hold (recT = 1).
+    const inContinuumRegime = !t.active && (t.docked || t.servicesAmbient);
+    const continuumT =
+      CONTINUUM_RAIL_STAGE && inContinuumRegime
+        ? continuumFormT(
+            aboutStageProgressRef.current.progress,
+            continuumStageProgressRef.current.progress,
+            continuumStageProgressRef.current.entry
+          )
+        : 0;
     // Pose-only recede RELEASE: eases the #services exit recede (scale +
     // camera-forward push) back OUT by CONTINUUM_RECEDE_RELEASE (= 1: the
     // full parked pose returns; CONTINUUM_SCALE_BOOST below then carries
