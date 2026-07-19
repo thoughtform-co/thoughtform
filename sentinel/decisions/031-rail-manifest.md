@@ -849,3 +849,53 @@ Reduced-motion drops the reel transition (jump, no slide).
 **Files:** `CorridorSectionMenu.tsx` (`--active-row`/`--active-sub` on the
 navs; `__head` removed), `home-v2.css` (centre-line base + `--menu-row-h`
 slats + per-list reel transforms; `__head`/`unfold` removed).
+
+### Update 16 — the HUD chrome powers on at section 2 (2026-07-19, owner)
+
+**Owner idea:** "the left and right rail only appears when you scroll in the
+second section, and the brandmark in a diagram is moving to the center — that
+is a moment when I want our left and right rail and also the corners to
+appear."
+
+**Decision — hero-dormant frame chrome.** The HUD frame chrome — the corner
+brackets (`.hud__corner--tl`/`--br`) and BOTH rails (`.hud__rail--l/--r`,
+including their tracks, tick ladders, bearing labels, the parse-injected
+manifest ladder, and the detent diamond, all rail children) — is now DORMANT
+on the hero (`opacity: 0`) and POWERS ON at the section-2 handoff: the ADR-022
+curtain lifts, the corridor engages, and the brandmark pans to centre inside
+the Thoughtform compass diagram (`thoughtformPan` window, paintProgress
+0→0.109 — the "mark arrives at centre" beat). The gate is pure CSS in
+`landing.css` off the existing `<html>` bus — NO new scroll writer (ADR-002):
+
+- visible under `html[data-corridor-engaged="true"][data-corridor-phase]`
+  (the corridor beats, thesis → build — flips on exactly at the curtain
+  handoff where the thesis beat begins);
+- OR `html[data-active-station]:not([data-active-station="hero"])` (every
+  later station, services → contact — also covers deep links);
+- OR `html:has(.home-v2-stage[data-fallback="true"])` (the
+  corridor-incapable path — mobile / reduced-motion / no-WebGL: no corridor
+  handoff exists there, so the chrome stays always-on as before).
+
+Pre-hydration none of these match, so the chrome is dark from first paint —
+no flash — which also RETIRES the load-time `cornerDraw` one-shot (deleted;
+the power-on bloom is the corners' entrance now). Appear: 620ms ease-out,
+rails trailing the corners by 140ms; the hidden base carries a fast 240ms
+dim so reverse-scrolling to the hero powers the chrome off quickly.
+`prefers-reduced-motion`: no transition (instant flip; that path is
+usually fallback-routed and always-on anyway).
+
+**Supersedes:** the Update 9 note "the diamond is visible from the hero" —
+the diamond (a rail child) is now hero-dormant with the rest of the chrome;
+its behavior PAST the hero is unchanged. The Update 2 "13-tick ladder always
+stays" doctrine is amended, not broken: the ladder still exists in the DOM at
+every beat and shows everywhere except the hero.
+
+**Verified live** (dev, 1852×1269): hero = zero chrome (no corners, rails,
+ticks, or diamond; nav + wordmark untouched); section 2 = full chrome around
+the centred mark; all later beats (Arc, services, about, continuum, contact)
+keep it; settled return to the hero powers it off. Transient note: the
+engaged/phase writers settle a beat after a programmatic scroll jump, so
+mid-flight probes can read stale — judge at rest.
+
+**Files:** `landing.css` only (the power-on gate beside the `.hud__corner`
+definitions; the `cornerDraw` block deleted).

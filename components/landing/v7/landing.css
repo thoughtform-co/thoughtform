@@ -313,6 +313,47 @@
   border-right: 2px solid var(--hud-rail-line);
 }
 
+/* ── HUD chrome power-on at section 2 (ADR-031 Update 16) ──────────────
+   The frame chrome — corner brackets + BOTH rails (tracks, ticks, bearing
+   labels, manifest ladder + detent diamond, all rail children) — is
+   DORMANT on the hero and powers on at the section-2 handoff: the curtain
+   lifts, the corridor engages, and the brandmark pans to centre inside
+   the compass diagram (the thesis beat). Pure CSS off the existing
+   `<html>` bus — no new scroll writer (ADR-002):
+     · corridor beats (thesis → build): engaged + any phase;
+     · every later station (services → contact): data-active-station;
+     · corridor-incapable path (mobile / reduced-motion / no-WebGL): the
+       stage marks data-fallback="true" — chrome stays always-on there,
+       since no corridor handoff exists to power it on.
+   Pre-hydration nothing matches, so the chrome is dark from first paint
+   (this also supersedes the load-time `cornerDraw` one-shot, deleted).
+   Reverse scroll to the hero powers it off again — the hidden base
+   carries the FAST dim; the shown rules carry the slow bloom, rails
+   trailing the corners by a beat. */
+.hud__corner,
+.hud__rail {
+  opacity: 0;
+  transition: opacity 240ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+html[data-corridor-engaged="true"][data-corridor-phase] .hud__corner,
+html[data-active-station]:not([data-active-station="hero"]) .hud__corner,
+html:has(.home-v2-stage[data-fallback="true"]) .hud__corner {
+  opacity: 1;
+  transition: opacity 620ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+html[data-corridor-engaged="true"][data-corridor-phase] .hud__rail,
+html[data-active-station]:not([data-active-station="hero"]) .hud__rail,
+html:has(.home-v2-stage[data-fallback="true"]) .hud__rail {
+  opacity: 1;
+  transition: opacity 620ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 140ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud__corner,
+  .hud__rail {
+    transition: none;
+  }
+}
+
 /* ── Bottom-left wordmark lockup (ADR-043) ─────────────────────────
    Static text lockup aligned to the left rail (Brand Codex "Hero
    Omega"), anchored to the BOTTOM-left corner — it moved down from the
@@ -7455,23 +7496,9 @@ html[data-hero-css-reveal="1"] .hero [data-m="eyebrow"] {
   display: none !important;
 }
 
-/* Corner brackets draw in once on first reveal */
-
-.hud__corner {
-  opacity: 0;
-  animation: cornerDraw 520ms var(--m-ease-instr) 180ms forwards;
-}
-.hud__corner--bl {
-  animation-delay: 280ms;
-}
-.hud__corner--br {
-  animation-delay: 330ms;
-}
-@keyframes cornerDraw {
-  to {
-    opacity: 1;
-  }
-}
+/* (The load-time cornerDraw one-shot is retired — the HUD chrome now
+   powers on at the section-2 handoff instead; see the power-on gate by
+   the .hud__corner definitions, ADR-031 Update 16.) */
 
 /* Once the sigil docks into the HUD brand slot, retire the bracket lines
    underneath it so the mark sits cleanly in the corner. */

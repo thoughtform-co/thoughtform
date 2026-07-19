@@ -108,6 +108,19 @@ still shows, controller untouched) + the history. Do NOT "restore" the
 diamond on desktop or delete the menu to "return to the diamond" — that
 reverts a deliberate owner decision. The 13-tick ladder always stays.
 
+**⚠ The HUD chrome is HERO-DORMANT (ADR-031 Update 16, 2026-07-19,
+owner):** the corner brackets + both rails (tracks, ticks, labels,
+manifest ladder, detent diamond) are `opacity: 0` on the hero and power
+on at the section-2 handoff (curtain lift, mark centring in the compass
+diagram) via a pure-CSS gate in `landing.css` off the `<html>` bus
+(`data-corridor-engaged`+`data-corridor-phase`, non-hero
+`data-active-station`, or the stage `data-fallback="true"` — the
+fallback path keeps chrome always-on). This supersedes Update 9's "the
+diamond is visible from the hero" and retired the load-time `cornerDraw`
+one-shot. "The ladder always stays" now means: in the DOM at every beat,
+VISIBLE everywhere except the hero. Do not re-add a load-time chrome
+draw-in or gate the chrome on a new scroll writer (ADR-002).
+
 **The left rail is a single detent diamond (ADR-031 Update 9, supersedes
 the Update 3/6/7/8 rolodex; Update 12 supersedes it ON DESKTOP).** The
 rail DISPLAYS one gold diamond (12px,
@@ -129,7 +142,9 @@ beat comes from `data-corridor-phase`, which now publishes
 `thesis|navigate|encode|build` (single writer: the CorridorStationHeaders
 RAF, hand-offs `CORRIDOR_BEAT_ENTER` 0.2/0.48/0.78 — MIRRORS
 CorridorProgressRail's STAGES band starts, keep in lockstep). The diamond
-is visible from the hero (owner). On hover/focus it reveals the active
+is visible from the hero (owner; SUPERSEDED by Update 16 — the whole rail
+is hero-dormant now, so the diamond first shows at section 2). On
+hover/focus it reveals the active
 entry's title via a hidden `.rail-manifest__title` chip, gated on
 `data-has-title`; `manifestTitle(entry)` (`entries.ts`) is `null` for
 `hideActiveName` (hero) or a blank `name` (interstitials), so those
