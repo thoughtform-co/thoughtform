@@ -23,14 +23,14 @@ export const ABOUT_STAGE = {
   bios: [
     [
       { strong: "Vince" },
-      " has been navigating the tides of digital change for over a decade: the advent of social media, online communities, and now ",
+      " has been navigating the tides of digital change for over a decade: social media, online communities, now ",
       { em: "intelligence itself." },
     ],
     [
-      "That last wave is different. AI is not software to command. It is an intelligence to navigate. Through Thoughtform, Vince helps teams build that relationship: mapping the fit between their work and the intelligence available to it.",
+      "AI is different: it isn't software to command, but an intelligence to navigate. Through Thoughtform, he helps teams build that relationship, mapping the fit between their work and the intelligence available.",
     ],
     [
-      "He runs the same practice inside Loop Earplugs, leading AI adoption across the company: advising leadership, embedding with teams, and building the tools that power the marketing engine.",
+      "He runs the same practice inside Loop Earplugs, leading AI adoption: advising leadership, embedding with teams, building the tools behind the marketing engine.",
     ],
   ] as readonly BioSegment[][],
   meta: [

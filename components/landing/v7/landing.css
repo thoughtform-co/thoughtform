@@ -367,16 +367,21 @@
 }
 
 /* ── Bottom-left wordmark lockup (ADR-043) ─────────────────────────
-   Static text lockup aligned to the left rail (Brand Codex "Hero
-   Omega"), anchored to the BOTTOM-left corner — it moved down from the
-   top-left so section titles can own the top band without competing
+   Static text lockup aligned to the hero content column (Brand Codex
+   "Hero Omega"), anchored to the BOTTOM-left corner — it moved down from
+   the top-left so section titles can own the top band without competing
    with the brand (the top-left now carries its plain corner bracket
    again). Shares the corner with the dormant sigil slot
    (`.hud__brandmark`, inert — never paints). */
 .hud__brand {
   position: absolute;
   bottom: var(--hud-margin);
-  left: var(--hud-margin);
+  /* Left edge tracks the hero content column (--hud-content-inset, the
+     headline / subhead / CTA gutter set by `.hero`'s padding-left), not
+     the rail gutter — so on wider viewports the wordmark reads as the
+     foot of the same editorial column instead of floating out at the
+     rail. Mobile matches the hero's flat padding in the ≤960 block. */
+  left: var(--hud-content-inset);
   width: clamp(104px, 8.5vw, 150px);
   display: block;
   pointer-events: auto;
@@ -393,7 +398,8 @@
   transform: scale(1);
   transition:
     opacity 0.4s var(--ease-out),
-    transform 0.4s var(--ease-out);
+    transform 0.4s var(--ease-out),
+    left 0.4s var(--ease-out);
 }
 /* Shrink the wordmark in sync with the inline-nav → hamburger morph.
    `HudNav` toggles `.is-collapsed` on this element off the same 50vh
@@ -401,8 +407,14 @@
    element (not a root attribute) to avoid a document-wide recalc at
    the seam. */
 .hud__brand.is-collapsed {
-  /* 0.82 → 0.68 with the bottom-left move (ADR-043): once scrolled, the
-     wordmark should read as a quiet signature, not a nav element. */
+  /* On scroll-off (past 50vh, entering section 2) the wordmark DOCKS back
+     into the left rail's bottom-left corner (--hud-margin) — its original
+     ADR-043 resting spot — instead of shrinking in place at the content
+     column. On the hero it sits inboard, aligned with the copy; the
+     collapse glides it to the rail AND scales it down in one 0.4s move
+     (transform-origin: bottom left keeps the shrunk mark pinned in the
+     corner). 0.82 → 0.68: once scrolled it reads as a quiet signature. */
+  left: var(--hud-margin);
   transform: scale(0.68);
 }
 .hud__brand img {
@@ -1887,11 +1899,12 @@
    but drops the uppercasing so the phonetic characters render intact. */
 .hero__flywheel--ipa {
   text-transform: none;
-  /* The pronunciation line moves to the hero's bottom-RIGHT (ADR-043):
-     the bottom-left gutter now belongs to the relocated wordmark
-     lockup. Same content inset, mirrored side. */
+  /* The pronunciation line sits at the hero's bottom-RIGHT (ADR-043).
+     Its right edge aligns with the top-right nav (both at --hud-margin)
+     so it reads as the foot of that right-hand column — the mirror of
+     the wordmark tracking the content column on the left. */
   left: auto;
-  right: var(--hud-content-inset);
+  right: var(--hud-margin);
 }
 .hero__flywheel__line::after {
   content: "";
@@ -2253,11 +2266,12 @@
     left: 28px;
     bottom: clamp(64px, 9vh, 88px);
   }
-  /* Pronunciation stays bottom-RIGHT on mobile too (ADR-043) — the
-     lifted bottom clears the relocated wordmark on the opposite side. */
+  /* Pronunciation stays bottom-RIGHT on mobile too (ADR-043), right edge
+     aligned with the nav (--hud-margin) — the lifted bottom clears the
+     relocated wordmark on the opposite side. */
   .hero__flywheel--ipa {
     left: auto;
-    right: 28px;
+    right: var(--hud-margin);
   }
   .hero__flywheel__line {
     width: clamp(48px, 22vw, 110px);
@@ -2269,12 +2283,17 @@
     padding-left: 32px;
     padding-right: 32px;
   }
+  /* Wordmark tracks the hero's flat 32px left padding (content-column
+     parity); this rule also covers ≤640 since it wins on source order. */
+  .hud__brand {
+    left: 32px;
+  }
   .hero__flywheel {
     left: 32px;
   }
   .hero__flywheel--ipa {
     left: auto;
-    right: 32px;
+    right: var(--hud-margin);
   }
   /* The gateway analysis cards are desktop composition elements. At
      compact widths they compress into the key visual, so mirror the
@@ -9426,6 +9445,52 @@ html {
 
 .voidwalker__copy {
   max-width: 52ch;
+  position: relative;
+}
+/* ── Dossier register (owner 2026-07-19) ──────────────────────────────
+   The readable left column gets a whisper of the same navigational grammar
+   as the right SUBJECT-scan instrument — a diagonal pair of registration
+   corner brackets (the site's section-corner + portrait-frame convention)
+   that frame the copy as a "dossier panel" paired with the "scan", not a
+   bare paragraph block. Deliberately faint gold hairlines — the type stays
+   the hero. Both marks live DIRECTLY on `.voidwalker__copy` (its own two
+   pseudos): on the deck-flip stage every copy CHILD gets a reveal transform,
+   which would hijack the containing block of any child-hosted pseudo, so the
+   frame must anchor to the column element itself. Outset + pointer-events:
+   none ⇒ zero layout impact (the ADR-045 rail-parity edges are untouched).
+   Hidden ≤960 where the column centres (mobile stays clean); the stage
+   opacity gate lives in about-stage.css (the stage reveals the copy
+   per-child, so these column-level pseudos must fade in with it). */
+.voidwalker__copy::before {
+  /* Top-left registration corner. */
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: clamp(-26px, -1.5vw, -16px);
+  width: 15px;
+  height: 15px;
+  border-top: 1px solid rgba(202, 165, 84, 0.5);
+  border-left: 1px solid rgba(202, 165, 84, 0.5);
+  pointer-events: none;
+}
+.voidwalker__copy::after {
+  /* Bottom-right registration corner — the diagonal partner (TL↔BR, the
+     section-corner convention), anchored to the column's own box. */
+  content: "";
+  position: absolute;
+  bottom: -12px;
+  right: -12px;
+  width: 15px;
+  height: 15px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.5);
+  border-right: 1px solid rgba(202, 165, 84, 0.5);
+  pointer-events: none;
+}
+@media (max-width: 960px) {
+  .voidwalker__copy::before,
+  .voidwalker__copy::after {
+    display: none;
+  }
 }
 .voidwalker__eyebrow {
   font-family: var(--font-pt-mono);

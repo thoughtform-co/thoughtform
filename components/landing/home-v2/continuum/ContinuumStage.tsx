@@ -82,6 +82,8 @@ export function ContinuumStage() {
   // `data-continuum-mode` stays absent and the runway stays flat).
   if (!CONTINUUM_RAIL_STAGE || !capable) return null;
 
+  const [toolStop, midStop, collabStop] = CONTINUUM_STAGE.stops;
+
   return (
     <>
       {/* The invisible brandmark-journey rail anchor (ADR-049): the v7 DOM
@@ -108,6 +110,10 @@ export function ContinuumStage() {
             every visible child dies with the fail-opaque shield restoring
             under #practice. Per-child copy reveals compose beneath it. */}
         <div className="continuum-stage__inner">
+          {/* Two-column head — title LEFT / lede RIGHT, first lines aligned
+              on the editorial band (owner 2026-07-19: "same structure as the
+              services section", superseding the Update-2 centred head). The
+              lede returns from the foot to the right column. */}
           <header className="continuum-stage__head">
             <h2 className="continuum-stage__title" style={{ ["--ci-off" as string]: 0 }}>
               {CONTINUUM_STAGE.titleLines.map((line, i) => (
@@ -139,61 +145,84 @@ export function ContinuumStage() {
               content is the three stop descriptions below (they carry the
               kicker/title/body the static `.crail__stops-grid` fallback
               exposes identically; regression guard, ADR-049 / plan 6.2). */}
-          <div aria-hidden="true">
-            <div ref={bandCapLeftRef} className="continuum-stage__band-cap">
-              <span>Tool</span>
-              <span className="continuum-stage__band-dash" />
-              <span className="continuum-stage__band-pole" />
-            </div>
-            <div ref={bandCapRightRef} className="continuum-stage__band-cap">
-              <span className="continuum-stage__band-pole" />
-              <span className="continuum-stage__band-dash continuum-stage__band-dash--flip" />
-              <span>Collaborator</span>
-            </div>
-            <div ref={reticleRef} className="continuum-stage__reticle">
-              <span className="continuum-stage__reticle-ring" />
-              <span className="continuum-stage__reticle-cross" />
-              <span className="continuum-stage__reticle-diamond" />
+          {/* The Tool / Collaborator caps carry their READABLE description
+              now — the title + body hang UNDER the pole label as an
+              absolutely-positioned block (`__cap-copy`), so they ride the
+              cap's projected transform and read as "attached to the rail
+              endpoint" (owner 2026-07-19). The cap BOX stays the one label
+              row, so the projector's `-50%` anchor still centres the label on
+              the band; the copy hangs below via top:100%. Decorative leader
+              (dash + pole) is aria-hidden; the label + copy are semantic. */}
+          <div ref={bandCapLeftRef} className="continuum-stage__band-cap continuum-stage__band-cap--l">
+            <span className="continuum-stage__band-label">{toolStop.kicker}</span>
+            <span className="continuum-stage__band-dash" aria-hidden="true" />
+            <span className="continuum-stage__band-pole" aria-hidden="true" />
+            <div className="continuum-stage__cap-copy">
+              <div className="crail__t">
+                {toolStop.title.map((line, j) => (
+                  <span key={j} className="continuum-stage__stop-line">
+                    {line}
+                  </span>
+                ))}
+              </div>
+              <div className="crail__b">{toolStop.body}</div>
             </div>
           </div>
+          <div ref={bandCapRightRef} className="continuum-stage__band-cap continuum-stage__band-cap--r">
+            <span className="continuum-stage__band-pole" aria-hidden="true" />
+            <span className="continuum-stage__band-dash continuum-stage__band-dash--flip" aria-hidden="true" />
+            <span className="continuum-stage__band-label">{collabStop.kicker}</span>
+            <div className="continuum-stage__cap-copy">
+              <div className="crail__t">
+                {collabStop.title.map((line, j) => (
+                  <span key={j} className="continuum-stage__stop-line">
+                    {line}
+                  </span>
+                ))}
+              </div>
+              <div className="crail__b">{collabStop.body}</div>
+            </div>
+          </div>
+          <div ref={reticleRef} className="continuum-stage__reticle" aria-hidden="true">
+            <span className="continuum-stage__reticle-ring" />
+            <span className="continuum-stage__reticle-cross" />
+            <span className="continuum-stage__reticle-diamond" />
+          </div>
 
-          {/* ── The readable stops + readout + CTA — beneath the mark, on
-              the stage's copy reveal (the instrument above is already
-              assembled when these arrive). */}
+          {/* ── The readable centre stop + readout + lede — beneath the mark,
+              on the stage's copy reveal. The Tool / Collaborator stops moved
+              UP onto their rail caps (above); only the middle "AI lives here"
+              stop stays centred under the mark. The lede is relocated to the
+              FOOT of the beat (owner 2026-07-19) — it keeps its continuum
+              styling but now closes the section instead of opening it; the
+              "See the practice" CTA is removed. */}
           <div className="continuum-stage__spectrum">
-            <div className="continuum-stage__labels">
-              {CONTINUUM_STAGE.stops.map((stop, i) => (
+            <div className="continuum-stage__labels continuum-stage__labels--mid">
+              <div
+                className="continuum-stage__stop continuum-stage__stop--m"
+                style={{ ["--ci-off" as string]: 0.3 }}
+              >
+                <div className="crail__tick" />
                 <div
-                  key={stop.pos}
-                  className={`continuum-stage__stop continuum-stage__stop--${stop.pos}`}
-                  style={{ ["--ci-off" as string]: 0.3 + i * 0.08 }}
+                  className={
+                    "crail__k" + (midStop.kickerMod ? ` crail__k--${midStop.kickerMod}` : "")
+                  }
                 >
-                  <div className="crail__tick" />
-                  <div
-                    className={"crail__k" + (stop.kickerMod ? ` crail__k--${stop.kickerMod}` : "")}
-                  >
-                    {stop.kicker}
-                  </div>
-                  <div className="crail__t">
-                    {stop.title.map((line, j) => (
-                      <span key={j} className="continuum-stage__stop-line">
-                        {line}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="crail__b">{stop.body}</div>
+                  {midStop.kicker}
                 </div>
-              ))}
+                <div className="crail__t">
+                  {midStop.title.map((line, j) => (
+                    <span key={j} className="continuum-stage__stop-line">
+                      {line}
+                    </span>
+                  ))}
+                </div>
+                <div className="crail__b">{midStop.body}</div>
+              </div>
             </div>
 
-            <div className="continuum-stage__readout" style={{ ["--ci-off" as string]: 0.58 }}>
+            <div className="continuum-stage__readout" style={{ ["--ci-off" as string]: 0.5 }}>
               {CONTINUUM_STAGE.readout}
-            </div>
-
-            <div className="continuum-stage__close" style={{ ["--ci-off" as string]: 0.68 }}>
-              <a href={CONTINUUM_STAGE.cta.href} className="btn btn--ghost continuum-stage__cta">
-                {CONTINUUM_STAGE.cta.label} <span className="arrow" />
-              </a>
             </div>
           </div>
         </div>

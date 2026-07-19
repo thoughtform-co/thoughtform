@@ -30,9 +30,11 @@ import { SERVICES } from "./services/serviceData";
  * rail's SECTIONS translate so the ACTIVE section sits inside a fixed gold
  * highlight at centre (the highlight never moves; the titles move to it).
  * The RIGHT rail's SUBSECTIONS — THE ARC's Navigate/Encode/Build, or the four
- * #services verbs, each `NAME NN` (index on the rail side), active sub lit
- * gold — translate so the ACTIVE sub lands on the SAME centre line, so the
- * highlighted section and its active subsection are horizontally aligned.
+ * #services verbs, each `NAME NN` (index on the rail side), the active sub lit
+ * gold with a GOLD UNDERLINE (the lighter subsection analog of the left's
+ * inverse-video block — see home-v2.css) — translate so the ACTIVE sub lands on
+ * the SAME centre line, so the highlighted section and its active subsection are
+ * horizontally aligned.
  * e.g. the centre line reads `THE ARC ▸ · · NAVIGATE 01`. Both panels are one
  * component; the reel offsets are the `--active-row` / `--active-sub` props.
  *

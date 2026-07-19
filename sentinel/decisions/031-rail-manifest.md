@@ -991,3 +991,59 @@ entering the Arc decoded `VGY 1U8 → THE ARC`, `OL\F3++I → SERVICES`, … and
 settled; the existing opacity fade still runs underneath (menu materializes +
 decodes). **Files:** `lib/home-v2/terminalReveal.ts` (new), `Corridor-
 SectionMenu.tsx` (the reveal effect).
+
+### Update 18 — the active subsection gets a gold underline (2026-07-19, owner)
+
+**Context:** the `c469581` pin lifted the ACTIVE marker off the reel into a
+fixed centre-line `…__highlight` chip for BOTH panels — the LEFT section chip
+is an inverse-video gold block, the RIGHT subsection chip was lit-gold text
+only. **Owner ask:** "do the same fixed-highlight for the right subsection nav,
+but the selected subsection needs a GOLD UNDERLINE — not a full block — and
+make sure it's horizontally aligned with the left."
+
+- **Underline:** `.home-v2-section-submenu__highlight .home-v2-section-submenu__name`
+  gains a `::after` bar (1.5px, `var(--gold)`, soft glow, `bottom: -3px`) — the
+  lighter subsection analog of the left section's filled block. The bar is
+  absolutely positioned OUTSIDE the text box (no padding), so the name's optical
+  centre does not shift; only the NAME is underlined (the `NN` index stays
+  clear). Applies to both subsection sets (THE ARC's Navigate/Encode/Build and
+  the four #services verbs) since both render through the one highlight chip.
+- **Alignment:** already correct by construction and left unchanged — both navs
+  are `position: fixed; top: 50%` and both highlights are a single
+  `--menu-row-h`-tall `translateY(-50%)` element, so the two selections share
+  the exact centre line (measured `cy` identical L/R at 1600×900). The underline
+  is placed so it does not disturb that parity.
+
+**Files:** `home-v2.css` (the `__highlight` name `::after`),
+`CorridorSectionMenu.tsx` (layout-note comment only).
+
+### Update 19 — deferred reveal kills the reel "double" on a beat change (2026-07-19)
+
+**Bug (owner):** "services are sometimes shown double and appear before the
+arc." Repro caught live: on a section change (e.g. reverse-scrolling from
+#services into the Arc) the reel showed the OUTGOING section doubled at the
+centre line for the first ~2–3 frames.
+
+**Root cause:** the `c469581` decoupling made the highlight text + `--active-row`
+swap INSTANT, but the reel `transform` still eases 320ms — and
+`…__item[data-active] { visibility: hidden }` is keyed to the NEW active row.
+So at t+0 of a change the OUTGOING row is still physically on the centre line
+(the reel hasn't glided yet) AND it is no longer `[data-active]`, so it flips
+`visible` and collides with the pinned highlight. (Measured: at t+9ms the reel
+transform was still at the pre-change value while a visible reel row sat dead on
+the centre line; clean again by ~t+95ms.)
+
+**Fix (CSS only):** defer the REVEAL of a row leaving the active slot past the
+glide, keep the HIDE instant — a directional `visibility` transition-delay on
+the reel slat, applied to BOTH panels:
+`.home-v2-section-menu__item, .home-v2-section-submenu__item { transition:
+visibility 0s linear 320ms; }` (delay matches the reel duration) and
+`…__item[data-active] { transition-delay: 0s; }` (incoming row hides at once).
+So the outgoing row stays hidden until the reel carries it clear of the centre,
+and the centre line is owned by the highlight alone throughout. Zeroed under
+`prefers-reduced-motion` (no glide ⇒ nothing to cover). Verified across the
+full 320ms both directions: zero frames with a visible reel row in the centre
+band, and the outgoing row re-reveals correctly once settled.
+
+**Files:** `home-v2.css` (reel-slat `transition` + `[data-active]`
+`transition-delay` + the reduced-motion list).

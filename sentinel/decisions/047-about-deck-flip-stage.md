@@ -425,3 +425,30 @@ Invariant addenda: runway height (now 250svh) stays the single pacing knob;
 `aboutExitT` is EXACT identity 0 through the reading hold (p ≤ 0.74) so the
 hold is byte-stable; `aboutDeckFadeT(1) = 1` pins the terminal deck-dead
 state. Rollback is unchanged (`ABOUT_DECK_STAGE = false`).
+
+## Update 9 (2026-07-19, owner) — the copy column reads as a "dossier" panel
+
+Owner: the left copy "deserves something similar" to the site's diagram /
+navigational leitmotifs — subtly, without overdoing it. The right column is
+the SUBJECT-scan instrument (labelled corners, reticle, `FIG` annotations); the
+left now gets a whisper of the same grammar: a **diagonal pair of registration
+corner brackets** (TL + BR, the site's section-corner + portrait-frame
+convention) framing the copy as the "dossier" that pairs with the "scan".
+
+- Pure CSS on the SHARED `.voidwalker__copy` (landing.css `::before` = TL,
+  `::after` = BR — faint gold hairlines, 15px arms, outset + `pointer-events:
+  none` so there is ZERO layout impact; the ADR-045 rail-parity edges are
+  untouched). Both the stage and the static fallback carry it.
+- Both marks live on `.voidwalker__copy` ITSELF, not a child pseudo, on
+  purpose: the stage gives every copy CHILD a `--ci` reveal `transform`, which
+  would become the containing block of any child-hosted absolute pseudo and
+  mis-anchor it — the column element is the only reliable anchor.
+- Stage reveal parity: `about-stage.css` gates both pseudos' opacity on
+  `--about-copy-in` (the per-child reveal is on `> *`, so the column-level
+  pseudos need their own gate to fade in WITH the text, not before it).
+- Hidden ≤960 (the column centres on mobile — kept clean). A `FIG · NN`
+  figure caption was prototyped and dropped for now (a 3rd mark needs a real
+  DOM node in both the stage + the static fallback markup; the bracket frame
+  alone is the subtler call). Verified in an isolated preview of the exact
+  copy markup + tokens (the live deep-scroll stage will not composite in the
+  headless pane).

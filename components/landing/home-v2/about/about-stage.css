@@ -138,6 +138,15 @@
      the emergence reveal is unchanged (ADR-047 copy-reveal contract). */
   clip-path: inset(-32px 0 -32px calc((1 - var(--ci)) * 100%));
 }
+/* Dossier register chrome (landing.css `.voidwalker__copy::before/::after` —
+   the TL + BR registration corner brackets) rides the copy column's per-child
+   reveal: gate both on --about-copy-in so they fade in WITH the text, not
+   before it. Reversible, scroll-owned like the rest of the copy reveal. */
+#about[data-about-mode="stage"] .about-stage__copy::before,
+#about[data-about-mode="stage"] .about-stage__copy::after {
+  opacity: var(--about-copy-in, 0);
+}
+
 /* Decode targets keep their line box while blanked pre-arm (the scramble
    kernel owns their textContent — see AboutStage). */
 .about-stage__decode-line {

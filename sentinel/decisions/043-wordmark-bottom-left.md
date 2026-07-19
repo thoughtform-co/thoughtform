@@ -86,3 +86,46 @@ register anchor; it was ~6.5px off before). A `max()` arm guards THIS
 wordmark on short viewports (lockup taller than the corner zone → the
 rail ends 8px above it instead). Verified at 1280/1920/2560/961: track
 dangle 0.0 both sides, 21–30px tick→bracket, 6–12px tick→wordmark.
+
+## Update (2026-07-19) — the corner texts align to the editorial columns, not the chrome
+
+Owner: on wider viewports the bottom-corner texts read as detached from
+the hero copy — the wordmark floated out at the rail gutter while the
+headline column began ~113px inboard, and the pronunciation line sat the
+same ~113px inboard of the top-right nav. Both now align to their column,
+superseding **point 1** (`.hud__brand` `left` was "unchanged" = rail
+gutter, `var(--hud-margin)`) and **point 4** (`.hero__flywheel--ipa` at
+`var(--hud-content-inset)`):
+
+- **`.hud__brand` `left` → `var(--hud-content-inset)`** — the wordmark's
+  left edge now tracks the hero content column (headline / subhead / CTAs,
+  set by `.hero`'s `padding-left`), reading as the foot of that column.
+  On `≤960` a `.hud__brand { left: 32px }` rule matches the hero's flat
+  32px padding (this rule also covers `≤640` — the `≤960` block wins on
+  source order, the same cascade quirk that already pins the hero's own
+  `padding-left` to 32px below 640).
+- **`.hero__flywheel--ipa` `right` → `var(--hud-margin)`** (base + the
+  `≤960`/`≤640` mirrors, which were `32px`/`28px`) — its right edge now
+  aligns with the top-right nav (`.hud-nav-overlay`, also at
+  `--hud-margin`), the mirror of the wordmark's move on the left.
+
+Verified at 1600/900/500: wordmark left ≈ content left and pronunciation
+right ≈ nav right at every breakpoint (residual ≤3px is glyph side-bearing),
+no wordmark↔pronunciation collision on mobile. The rail-clearance geometry
+above is untouched — this is a horizontal alignment only.
+
+### Follow-up (2026-07-19, owner) — the collapse DOCKS the wordmark back to the rail
+
+The content-column alignment above is a HERO-only rest position. Owner:
+"make the wordmark move to the bottom-left corner of the left rail like it
+used to when you scroll from the hero into the second section." So the
+`.is-collapsed` state (toggled by `HudNav` past 50vh, entering section 2)
+now sets **`left: var(--hud-margin)`** in addition to the `scale(0.68)`, and
+`left` joins the `.hud__brand` `transition` (`0.4s var(--ease-out)`). The
+wordmark therefore rests inboard on the hero (aligned with the copy) and, on
+scroll-off, glides to the rail's bottom-left corner AND shrinks in one move —
+`transform-origin: bottom left` keeps the shrunk mark pinned there. This
+restores the original ADR-043 resting spot (`--hud-margin`) for the SCROLLED
+state while keeping the new content-aligned hero position. Verified at 1440×900:
+hero `left` ≈ content edge (145 vs 142), collapsed `left` = `--hud-margin`
+(41 vs 40.5); `transition-property` includes `left`.

@@ -701,6 +701,15 @@ html[data-corridor-exit="true"] #practice {
   display: flex;
   align-items: center;
   height: var(--menu-row-h);
+  /* Deferred REVEAL (anti-double, 2026-07-19). A row LEAVING the active slot
+     must not flip visible until the reel's 320ms glide has carried it off the
+     centre line — otherwise, for the first frames of a section change, the
+     OUTGOING row is still physically on the centre line (the reel eases there)
+     while the `[data-active]` visibility swap has already released it, so it
+     collides with the pinned highlight ("section shown double / before the
+     arc"). Delaying the show past the glide keeps the centre line owned by the
+     highlight alone. The HIDE stays instant (delay 0s on `[data-active]`). */
+  transition: visibility 0s linear 320ms;
 }
 .home-v2-section-submenu__item {
   justify-content: flex-end;
@@ -788,9 +797,13 @@ html[data-active-station="contact"] .home-v2-section-menu button {
    Painting the highlight on a row that rides the reel is exactly what made it
    jump: the `data-active` swap is instant, the reel transform eases 320ms, so
    the block snapped a row off-centre and glided back. The fixed highlight
-   below renders the active section on the centre line instead. */
+   below renders the active section on the centre line instead. The HIDE is
+   instant (delay 0s) — only the REVEAL of a row leaving this slot is deferred
+   (base rule above), so the incoming active row vanishes the moment it is
+   selected while the outgoing one stays hidden until the reel clears it. */
 .home-v2-section-menu__item[data-active] {
   visibility: hidden;
+  transition-delay: 0s;
 }
 
 /* Pinned highlight — PROMINENT gold inverse-video block, fixed on the centre
@@ -845,14 +858,20 @@ html[data-active-station="contact"] .home-v2-section-menu button {
   white-space: nowrap;
 }
 /* The active reel row is HIDDEN (slot kept) — the fixed highlight renders the
-   active subsection on the centre line instead (same anti-jump decoupling as
-   the left panel). */
+   active subsection on the centre line instead (same anti-jump decoupling +
+   deferred-reveal anti-double as the left panel). */
 .home-v2-section-submenu__item[data-active] {
   visibility: hidden;
+  transition-delay: 0s;
 }
 
-/* Pinned highlight — the lit-gold active subsection, fixed on the centre line
-   and right-aligned to the rail edge; only its text changes, never its Y. */
+/* Pinned highlight — the active subsection, fixed on the SAME centre line as
+   the left section highlight (both navs `top: 50%`, both a --menu-row-h tall
+   translateY(-50%) element ⇒ the two selections are horizontally aligned by
+   construction) and right-aligned to the rail edge; only its text changes,
+   never its Y. The selection is marked by a GOLD UNDERLINE under the name
+   (owner) — the lighter subsection analog of the left section's inverse-video
+   block: "the same fixed highlight, but an underline, not a full block". */
 .home-v2-section-submenu__highlight {
   position: absolute;
   top: 0;
@@ -866,6 +885,23 @@ html[data-active-station="contact"] .home-v2-section-menu button {
   font-size: 12px;
   color: var(--gold, #caa554);
   pointer-events: none;
+}
+.home-v2-section-submenu__highlight .home-v2-section-submenu__name {
+  position: relative;
+}
+/* The gold underline — a thin lit bar just under the name glyphs, placed
+   OUTSIDE the text box (absolute, no padding) so the name's optical centre
+   stays on the shared centre line (no baseline shift vs the left highlight,
+   which keeps the two selections aligned). */
+.home-v2-section-submenu__highlight .home-v2-section-submenu__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1.5px;
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.4);
 }
 .home-v2-section-submenu__highlight .home-v2-section-submenu__num {
   font-size: 9px;
@@ -883,7 +919,11 @@ html[data-active-station="contact"] .home-v2-section-menu button {
   .home-v2-section-menu,
   .home-v2-section-submenu,
   .home-v2-section-menu__list,
-  .home-v2-section-submenu__list {
+  .home-v2-section-submenu__list,
+  /* No reel glide ⇒ no window to cover, so drop the deferred reveal too
+     (otherwise a row leaving the active slot would blink out for 320ms). */
+  .home-v2-section-menu__item,
+  .home-v2-section-submenu__item {
     transition: none;
   }
 }

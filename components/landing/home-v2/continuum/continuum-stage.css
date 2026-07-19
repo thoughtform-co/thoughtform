@@ -152,22 +152,21 @@
   opacity: calc(1 - var(--continuum-bg-in, 0));
 }
 
-/* ── Masthead — CENTERED over the centered instrument (owner rebalance,
-   2026-07-18): #continuum is the one `station--centered` stage, and the
-   two-column services head read lopsided against the symmetric mark +
-   band + stops axis on entry. Title and lede stack on the viewport
-   midline — the whole beat is one centred column: eyebrow → masthead →
-   mark (band + caps + reticle) → stops → readout → CTA. The inset chain
-   is unchanged (still inside the station's --hud-content-inset layer;
-   ADR-045/048 band parity concerns left-edge registration, which a
-   centred block does not violate). */
+/* ── Masthead — TWO-COLUMN, title LEFT / lede RIGHT (owner 2026-07-19:
+   "same structure as the services section", superseding the Update-2 centred
+   head). Mirrors `.services-masthead` (ADR-044): the two columns hang off the
+   editorial band edges via `justify-content: space-between` inside the
+   --rail-inset band, first lines aligned on the band top (`align-items:
+   flex-start`). The instrument (mark + caps + centre stop) stays centred
+   below. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__head {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(14px, 2svh, 22px);
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: clamp(24px, 4vw, 72px);
   margin-inline: var(--rail-inset);
-  text-align: center;
+  text-align: left;
 }
 
 /* The canonical big-title face — EXACTLY `.home-v2-station-header__title`
@@ -185,7 +184,9 @@
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
   text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
-  text-wrap: balance;
+  /* Left column of the two-column head — mirrors `.services-masthead__lead`
+     (its 0.52×band / 40vw cap). */
+  max-width: min(40vw, calc(var(--band-max, 1200px) * 0.52));
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__title-line {
   display: block;
@@ -194,14 +195,19 @@
   color: var(--gold, #caa554);
   font-weight: 500;
 }
+/* The lede is the RIGHT column of the two-column head (owner 2026-07-19) —
+   mirrors `.services-masthead__intro`: its right edge hangs on the band (the
+   flex space-between), the copy left-aligned (ragged right), first line level
+   with the title's first line. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__lede {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(14px, 1.05vw, 17px);
-  line-height: 1.55;
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.5;
   color: var(--dawn-70);
-  max-width: 52ch;
+  max-width: min(42ch, 34vw);
   letter-spacing: -0.005em;
+  text-align: left;
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__lede em {
   font-style: normal;
@@ -259,6 +265,54 @@
   background: transparent;
   transform: rotate(45deg);
   flex: none;
+}
+
+/* ── The cap's readable description — the Tool / Collaborator title + body,
+   hanging UNDER the pole label (owner 2026-07-19). Absolute (top:100%) so it
+   does NOT change the cap's box height — the projector's `-50%` anchor keeps
+   the LABEL row centred on the band while the copy hangs beneath it, reading
+   as "attached to the rail endpoint". Rides the cap's projected transform +
+   opacity (it is a child), so it materialises WITH the instrument. The copy
+   splays OUTBOARD from each end (left cap → left, right cap → right) to keep
+   the mark + centre stop clear. Resets the cap's nowrap / uppercase / gold
+   glow so the body reads as body. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy {
+  position: absolute;
+  top: calc(100% + clamp(10px, 1.4svh, 18px));
+  width: clamp(20ch, 17vw, 24ch);
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  text-shadow: none;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--l .continuum-stage__cap-copy {
+  right: 0;
+  text-align: right;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--r .continuum-stage__cap-copy {
+  left: 0;
+  text-align: left;
+}
+/* The description title / body reuse the crail stop type; re-pin the sizes
+   here (the base .crail__t/.crail__b are unscoped) and drop the stop's
+   auto-centering so text-align controls the outboard splay. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy .crail__t {
+  font-family: var(--font-pt-mono);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy .crail__b {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dawn-70);
+  max-width: none;
+  margin: 0;
 }
 
 /* ── The navigator reticle (v7 `.crail__reticle`: rotated outlined ring +
@@ -348,16 +402,14 @@
   align-items: center;
 }
 
-/* The three stops — CENTRED columns (the v7 `.crail--large` stop recipe:
-   tick hairline + outlined diamond foot at each column's 50%). These carry
-   the spectrum's actual content (the docked chrome above is decorative). */
+/* The centre "AI lives here" stop — a single CENTRED column now (the Tool /
+   Collaborator stops moved onto their rail caps, owner 2026-07-19). Keeps the
+   v7 `.crail--large` stop recipe: tick hairline + outlined diamond foot at the
+   column's 50%, connecting the copy up to the mark's centre seat. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__labels {
-  margin: clamp(30px, 5svh, 64px) 0 0;
-  width: min(760px, 62vw);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  column-gap: clamp(16px, 2.5vw, 40px);
-  align-items: start;
+  margin: clamp(24px, 4svh, 52px) auto 0;
+  width: min(440px, 60vw);
+  display: block;
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop {
   position: relative;
@@ -403,10 +455,6 @@
   color: var(--dawn-30);
   margin-top: 18px;
 }
-#continuum[data-continuum-mode="stage"] .continuum-stage__close {
-  margin-top: clamp(16px, 2.5svh, 32px);
-  text-align: center;
-}
 
 /* ── Reveal — ALL stage copy (masthead + stops + readout + CTA) rides the
    scrubbed --continuum-copy-in with per-child --ci-off stagger (the
@@ -416,8 +464,7 @@
 #continuum[data-continuum-mode="stage"] .continuum-stage__title,
 #continuum[data-continuum-mode="stage"] .continuum-stage__lede,
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop,
-#continuum[data-continuum-mode="stage"] .continuum-stage__readout,
-#continuum[data-continuum-mode="stage"] .continuum-stage__close {
+#continuum[data-continuum-mode="stage"] .continuum-stage__readout {
   --ci: clamp(
     0,
     calc((var(--continuum-copy-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))),
