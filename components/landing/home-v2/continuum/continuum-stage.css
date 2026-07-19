@@ -142,7 +142,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-block: clamp(40px, 7svh, 88px) clamp(28px, 4svh, 56px);
+  /* Top pad = the editorial band top (--band-top) so the two-column head's
+     first line sits on the SAME line as the services masthead (its `top:
+     var(--masthead-top)` == --band-top; owner 2026-07-19: match the services
+     gold standard). The head is the only in-flow child here (caps/reticle are
+     position:fixed, the spectrum is absolute), so this moves ONLY the head.
+     Was clamp(40px, 7svh, 88px) — ~40px too high. */
+  padding-block: var(--band-top, clamp(40px, 7svh, 88px)) clamp(28px, 4svh, 56px);
   /* NO padding-inline here (ADR-048/049 fix): the station already carries
      the --hud-content-inset layer (.station:not(.hero)) and the head adds
      --rail-inset — the ADR-045 two-layer band chain, matching services /
