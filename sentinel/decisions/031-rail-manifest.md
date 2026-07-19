@@ -857,45 +857,65 @@ second section, and the brandmark in a diagram is moving to the center — that
 is a moment when I want our left and right rail and also the corners to
 appear."
 
-**Decision — hero-dormant frame chrome.** The HUD frame chrome — the corner
-brackets (`.hud__corner--tl`/`--br`) and BOTH rails (`.hud__rail--l/--r`,
-including their tracks, tick ladders, bearing labels, the parse-injected
-manifest ladder, and the detent diamond, all rail children) — is now DORMANT
-on the hero (`opacity: 0`) and POWERS ON at the section-2 handoff: the ADR-022
-curtain lifts, the corridor engages, and the brandmark pans to centre inside
-the Thoughtform compass diagram (`thoughtformPan` window, paintProgress
-0→0.109 — the "mark arrives at centre" beat). The gate is pure CSS in
-`landing.css` off the existing `<html>` bus — NO new scroll writer (ADR-002):
+**Decision (rev a — TRUE LAYERING, not an opacity fade).** The first cut used
+an opacity gate (chrome invisible-but-present on the hero, faded in via CSS
+transition). The owner's actual ask is physical: **the HUD lives BEHIND the
+hero curtain**, so the ADR-022 scroll-up curtain reveal UNCOVERS the real HUD
+along with section 2, the same way it uncovers the parked compass diagram —
+not a timed fade layered on top.
 
-- visible under `html[data-corridor-engaged="true"][data-corridor-phase]`
-  (the corridor beats, thesis → build — flips on exactly at the curtain
-  handoff where the thesis beat begins);
-- OR `html[data-active-station]:not([data-active-station="hero"])` (every
-  later station, services → contact — also covers deep links);
-- OR `html:has(.home-v2-stage[data-fallback="true"])` (the
-  corridor-incapable path — mobile / reduced-motion / no-WebGL: no corridor
-  handoff exists there, so the chrome stays always-on as before).
+Implementation: `.hud`'s base `z-index` drops from `50` to `3` — BELOW the
+hero (`z 4`) and level with the corridor host stack (`z 3`, but earlier in
+DOM so the corridor host still paints over it while both are 3). The hero's
+opaque background fully covers the HUD through the whole hero life. The
+instant the ADR-022 curtain hands off — `data-corridor-entry` clears (the
+existing single-writer signal, `useLandingScroll`, no new writer, ADR-002) —
+a second rule RAISES `.hud` back to `z-index: 50`, so it resumes painting
+above every later opaque station (`#services` z5 → `#contact` z7):
 
-Pre-hydration none of these match, so the chrome is dark from first paint —
-no flash — which also RETIRES the load-time `cornerDraw` one-shot (deleted;
-the power-on bloom is the corners' entrance now). Appear: 620ms ease-out,
-rails trailing the corners by 140ms; the hidden base carries a fast 240ms
-dim so reverse-scrolling to the hero powers the chrome off quickly.
-`prefers-reduced-motion`: no transition (instant flip; that path is
-usually fallback-routed and always-on anyway).
+```
+html:not([data-corridor-entry])[data-corridor-engaged="true"][data-corridor-phase] .hud,
+html:not([data-corridor-entry])[data-active-station]:not([data-active-station="hero"]) .hud,
+html:has(.home-v2-stage[data-fallback="true"]) .hud { z-index: 50; }
+```
+
+The three arms mirror the original gate (corridor beats, every later station,
+the corridor-incapable fallback which keeps the HUD always-on-top since no
+curtain choreography exists there). The flip is a hard z-index swap, not a
+transition — nothing overlaps the HUD at the exact handoff frame either way,
+so there is no visible pop. This supersedes the rev-0 opacity fade in full
+(`.hud__corner`/`.hud__rail` no longer carry their own opacity/transition —
+the whole `.hud` node moves as one layer). The load-time `cornerDraw`
+one-shot stays retired (deleted in rev 0; still correct — the curtain reveal
+is the corners' entrance now).
+
+**Also this pass — the journey menu starts at THE ARC.** `CorridorSectionMenu`
+no longer lists HERO or THESIS (owner: "the left nav items should not show
+hero and thesis"). `MENU_HIDDEN_IDS = {hero, thesis}` filters them out of
+`JOURNEY_TREE`; `resolveActiveIdx`/`MANIFEST_ENTRIES` are untouched (the menu
+is CSS-hidden anyway while the reader is in either section — the section-
+contextual gate from Update 12 — so this only trims the ROSTER, not the
+active-tracking). The now-dead `hideActiveName` field (it only ever applied
+to the hero row) is removed from the tree type + render.
 
 **Supersedes:** the Update 9 note "the diamond is visible from the hero" —
-the diamond (a rail child) is now hero-dormant with the rest of the chrome;
-its behavior PAST the hero is unchanged. The Update 2 "13-tick ladder always
-stays" doctrine is amended, not broken: the ladder still exists in the DOM at
-every beat and shows everywhere except the hero.
+the diamond (a rail child) now lives behind the hero curtain like the rest of
+the chrome; its behavior PAST the hero is unchanged. The Update 2 "13-tick
+ladder always stays" doctrine is amended, not broken: the ladder still exists
+in the DOM at every beat and is UNCOVERED everywhere except the hero.
 
-**Verified live** (dev, 1852×1269): hero = zero chrome (no corners, rails,
-ticks, or diamond; nav + wordmark untouched); section 2 = full chrome around
-the centred mark; all later beats (Arc, services, about, continuum, contact)
-keep it; settled return to the hero powers it off. Transient note: the
-engaged/phase writers settle a beat after a programmatic scroll jump, so
-mid-flight probes can read stale — judge at rest.
+**Verified live** (dev, 1945×1269, fresh navigation): hero = the hero's own
+`hero__bg` paints at the corner test-points (`z 3` HUD is covered), `data-
+corridor-entry="1"`; mid-curtain scroll — still covered, entry still set;
+section 2 — the corridor host paints at the corner spot, `.hud` measures
+`z-index: 50`, `data-corridor-entry` is absent, and the left rail's own
+track element wins `elementsFromPoint` at its exact x/y (the rail is really
+on top, not just the z-index number); scrolled back to the hero — `z-index`
+drops to `3` and `hero__bg` covers the corner again, symmetric. Left menu at
+every beat reads `THE ARC · SERVICES · ABOUT · CONTINUUM · PRACTICE ·
+CONTACT` — no HERO/THESIS row at any scroll position. Typecheck + lint
+clean.
 
-**Files:** `landing.css` only (the power-on gate beside the `.hud__corner`
-definitions; the `cornerDraw` block deleted).
+**Files:** `landing.css` (`.hud` base z 3, the raise-on-handoff rule replacing
+the opacity gate; `cornerDraw` stays deleted), `CorridorSectionMenu.tsx`
+(`MENU_HIDDEN_IDS` filter; `hideActiveName` removed from `TreeNode` + render).

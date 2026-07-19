@@ -278,7 +278,11 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 50;
+  /* Hero-regime base: UNDER the hero curtain (hero z 4), above the
+     corridor host (z 3, earlier in DOM) — the curtain reveal uncovers
+     the HUD. Raised back to 50 past the handoff (see the layering block
+     below the corner rules, ADR-031 Update 16 rev a). */
+  z-index: 3;
 }
 .hud > * {
   pointer-events: auto;
@@ -313,45 +317,30 @@
   border-right: 2px solid var(--hud-rail-line);
 }
 
-/* ── HUD chrome power-on at section 2 (ADR-031 Update 16) ──────────────
-   The frame chrome — corner brackets + BOTH rails (tracks, ticks, bearing
-   labels, manifest ladder + detent diamond, all rail children) — is
-   DORMANT on the hero and powers on at the section-2 handoff: the curtain
-   lifts, the corridor engages, and the brandmark pans to centre inside
-   the compass diagram (the thesis beat). Pure CSS off the existing
-   `<html>` bus — no new scroll writer (ADR-002):
-     · corridor beats (thesis → build): engaged + any phase;
-     · every later station (services → contact): data-active-station;
-     · corridor-incapable path (mobile / reduced-motion / no-WebGL): the
-       stage marks data-fallback="true" — chrome stays always-on there,
-       since no corridor handoff exists to power it on.
-   Pre-hydration nothing matches, so the chrome is dark from first paint
-   (this also supersedes the load-time `cornerDraw` one-shot, deleted).
-   Reverse scroll to the hero powers it off again — the hidden base
-   carries the FAST dim; the shown rules carry the slow bloom, rails
-   trailing the corners by a beat. */
-.hud__corner,
-.hud__rail {
-  opacity: 0;
-  transition: opacity 240ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-html[data-corridor-engaged="true"][data-corridor-phase] .hud__corner,
-html[data-active-station]:not([data-active-station="hero"]) .hud__corner,
-html:has(.home-v2-stage[data-fallback="true"]) .hud__corner {
-  opacity: 1;
-  transition: opacity 620ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-html[data-corridor-engaged="true"][data-corridor-phase] .hud__rail,
-html[data-active-station]:not([data-active-station="hero"]) .hud__rail,
-html:has(.home-v2-stage[data-fallback="true"]) .hud__rail {
-  opacity: 1;
-  transition: opacity 620ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 140ms;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hud__corner,
-  .hud__rail {
-    transition: none;
-  }
+/* ── The HUD lives BEHIND the hero curtain (ADR-031 Update 16 rev a) ───
+   The whole `.hud` frame (corners, both rails with ticks/labels/manifest/
+   diamond, the wordmark lockup) sits UNDER the hero (z 3 < hero z 4,
+   above the corridor host's z 3 by DOM order), so the ADR-022 curtain
+   scroll-up PHYSICALLY REVEALS the real HUD along with section 2 — the
+   chrome emerges under the hero's rising bottom edge while the brandmark
+   pans to centre in the compass diagram. (Rev a replaces the U16 opacity
+   fade with this true layering.)
+
+   The base z here is the hero-regime state; the raise below restores
+   z 50 the moment the curtain hands off (`data-corridor-entry` clears
+   exactly when the hero has fully left), so the chrome keeps painting
+   ABOVE the opaque later stations (#services → #contact sit at z 5-7).
+   The flip frame is invisible: at handoff nothing overlaps the chrome
+   either way. Pure CSS off the existing `<html>` bus — no new scroll
+   writer (ADR-002). Pre-hydration no raise-selector matches, so first
+   paint on the hero is chrome-free (the hero covers z 3). The
+   corridor-incapable path (mobile / reduced-motion / no-WebGL) marks
+   the stage `data-fallback="true"` and keeps the HUD always-on-top —
+   no curtain choreography exists there. */
+html:not([data-corridor-entry])[data-corridor-engaged="true"][data-corridor-phase] .hud,
+html:not([data-corridor-entry])[data-active-station]:not([data-active-station="hero"]) .hud,
+html:has(.home-v2-stage[data-fallback="true"]) .hud {
+  z-index: 50;
 }
 
 /* ── Bottom-left wordmark lockup (ADR-043) ─────────────────────────

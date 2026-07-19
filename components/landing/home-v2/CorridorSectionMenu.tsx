@@ -69,18 +69,25 @@ interface TreeNode {
   num: string;
   name: string;
   entryIdx: number;
-  hideActiveName?: boolean;
   subs?: TreeSub[];
 }
 
-/** Fold MANIFEST_ENTRIES into the 8-station display tree. The three Arc
- *  beats become THE ARC's subsections; #services carries the four service
- *  verbs as its own. Positional numbering (01..08) for the top level. */
+/** Sections the menu does NOT list (owner, ADR-031 U16 rev a): the hero
+ *  and the thesis are the approach — the journey menu starts at THE ARC.
+ *  They stay in MANIFEST_ENTRIES (resolveActiveIdx still tracks them);
+ *  they just never render as reel rows. While the reader is inside one
+ *  of them the menu is CSS-hidden anyway (the section-contextual gate). */
+const MENU_HIDDEN_IDS = new Set<ManifestEntryId>(["hero", "thesis"]);
+
+/** Fold MANIFEST_ENTRIES into the display tree (THE ARC → CONTACT). The
+ *  three Arc beats become THE ARC's subsections; #services carries the
+ *  four service verbs as its own. Positional numbering for the top level. */
 const JOURNEY_TREE: readonly TreeNode[] = (() => {
   const pad = (n: number) => String(n).padStart(2, "0");
   const out: TreeNode[] = [];
   let pos = 0;
   MANIFEST_ENTRIES.forEach((entry, i) => {
+    if (MENU_HIDDEN_IDS.has(entry.id)) return;
     if (ARC_BEAT_IDS.has(entry.id)) {
       if (entry.id === "navigate") {
         pos += 1;
@@ -102,7 +109,6 @@ const JOURNEY_TREE: readonly TreeNode[] = (() => {
       num: pad(pos),
       name: entry.name.toUpperCase(),
       entryIdx: i,
-      hideActiveName: entry.hideActiveName,
     };
     if (entry.id === "services") {
       // The four service verbs (SOURCE BUS), in ring order — all scroll to
@@ -226,9 +232,7 @@ export function CorridorSectionMenu() {
                   aria-current={active ? "true" : undefined}
                   onClick={() => go(node.entryIdx)}
                 >
-                  <span className="home-v2-section-menu__name">
-                    {node.hideActiveName && active ? "····" : node.name}
-                  </span>
+                  <span className="home-v2-section-menu__name">{node.name}</span>
                   {node.subs && (
                     <span className="home-v2-section-menu__disc" aria-hidden="true">
                       ▸

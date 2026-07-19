@@ -108,18 +108,24 @@ still shows, controller untouched) + the history. Do NOT "restore" the
 diamond on desktop or delete the menu to "return to the diamond" — that
 reverts a deliberate owner decision. The 13-tick ladder always stays.
 
-**⚠ The HUD chrome is HERO-DORMANT (ADR-031 Update 16, 2026-07-19,
-owner):** the corner brackets + both rails (tracks, ticks, labels,
-manifest ladder, detent diamond) are `opacity: 0` on the hero and power
-on at the section-2 handoff (curtain lift, mark centring in the compass
-diagram) via a pure-CSS gate in `landing.css` off the `<html>` bus
-(`data-corridor-engaged`+`data-corridor-phase`, non-hero
-`data-active-station`, or the stage `data-fallback="true"` — the
-fallback path keeps chrome always-on). This supersedes Update 9's "the
-diamond is visible from the hero" and retired the load-time `cornerDraw`
-one-shot. "The ladder always stays" now means: in the DOM at every beat,
-VISIBLE everywhere except the hero. Do not re-add a load-time chrome
-draw-in or gate the chrome on a new scroll writer (ADR-002).
+**⚠ The HUD lives BEHIND the hero curtain (ADR-031 Update 16 rev a,
+2026-07-19, owner):** `.hud`'s base `z-index` is `3` — BELOW the hero
+(`z 4`) — so the whole frame chrome (corner brackets, both rails: tracks,
+ticks, labels, manifest ladder, detent diamond) is physically covered by
+the opaque hero and the ADR-022 curtain scroll-up UNCOVERS the real HUD
+along with section 2 (NOT a timed opacity fade layered on top — a true
+z-order swap). A second CSS rule in `landing.css` RAISES `.hud` back to
+`z-index: 50` the instant `data-corridor-entry` clears (existing
+single-writer signal, no new writer, ADR-002), so it resumes painting
+above every later opaque station; the corridor-incapable fallback
+(`data-fallback="true"`) keeps it always-raised. This supersedes Update
+9's "the diamond is visible from the hero" and the rev-0 opacity-fade
+draft, and retired the load-time `cornerDraw` one-shot. "The ladder
+always stays" now means: in the DOM at every beat, UNCOVERED everywhere
+except the hero. Do not reintroduce an opacity-fade version or gate the
+swap on a new scroll writer. The journey menu (`CorridorSectionMenu`)
+also drops HERO/THESIS from its roster as of this update — it starts at
+THE ARC (`MENU_HIDDEN_IDS`); `resolveActiveIdx` tracking is unaffected.
 
 **The left rail is a single detent diamond (ADR-031 Update 9, supersedes
 the Update 3/6/7/8 rolodex; Update 12 supersedes it ON DESKTOP).** The
