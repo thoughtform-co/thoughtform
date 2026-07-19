@@ -638,34 +638,45 @@ html[data-corridor-exit="true"] #practice {
   }
 }
 
-/* ══ Left-rail section menu — the journey overview (ADR-031 Update 12) ══
-   A detached terminal-tree section menu near the LEFT rail (not on it),
-   the successor to the retired rolodex. Shows the full 8-station journey;
-   the ACTIVE section is an inverse-video block while every other section
-   RECEDES (smaller, tighter, dim) so the active context dominates. The
-   Arc unfolds Navigate / Encode / Build only while the reader is inside
-   it. Replaces `CorridorProgressRail` + (on desktop) the rail diamond;
-   driven by `CorridorSectionMenu.tsx` off the same `<html>` attribute bus.
-   Component: components/landing/home-v2/CorridorSectionMenu.tsx */
-.home-v2-section-menu {
+/* ══ Section menu — LEFT sections / RIGHT subsections (ADR-031 Update 14) ══
+   Restores the U7/U8 split the U12 tree had merged: the LEFT rail shows the
+   full 8-station journey (the ACTIVE section an inverse-video gold block,
+   the rest receded); the RIGHT rail shows the active section's SUBSECTIONS
+   — THE ARC's Navigate/Encode/Build, or the four #services verbs — as a
+   mirrored register, the active sub lit + a blinking cursor. Both fade in
+   together only inside the Arc and #services. Driven by
+   `CorridorSectionMenu.tsx` off the same `<html>` attribute bus. */
+.home-v2-section-menu,
+.home-v2-section-submenu {
   position: fixed;
-  /* Hugging the rail — a tight gap that clears the rail guide + bearing
-     labels without floating off into the corridor (was clamp(34px,3.2vw,56px),
-     which read as detached). */
-  left: calc(var(--hud-margin, 40px) + clamp(16px, 1.7vw, 28px));
+  /* The container top IS the fixed centre line; each list reels so its active
+     row's centre lands here (no block-centering translate — the reel owns Y). */
   top: 50%;
-  transform: translateY(-50%);
   z-index: 18;
+  /* Reel unit — one row's vertical stride; the list translates by a multiple
+     of this so the active row lands on the centre line. */
+  --menu-row-h: 22px;
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   text-transform: uppercase;
   pointer-events: none;
-  /* Hidden by default — the menu is an Arc-contextual overlay that only
-     fades in while the reader is inside the corridor's Navigate/Encode/
-     Build beats (the in-Arc rule below). */
+  /* Hidden by default — contextual overlays that fade in only inside the
+     Arc's Navigate/Encode/Build beats and #services (the gate below). */
   opacity: 0;
   transition: opacity 300ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
-.home-v2-section-menu button {
+/* LEFT — hugging the left rail (a tight gap that clears the rail guide +
+   bearing labels without floating off into the corridor). */
+.home-v2-section-menu {
+  left: calc(var(--hud-margin, 40px) + clamp(16px, 1.7vw, 28px));
+}
+/* RIGHT — anchored on the right rail, RIGHT-aligned so the index column
+   (`NAME NN`, number on the rail side) lines up cleanly on the right edge. */
+.home-v2-section-submenu {
+  right: calc(var(--hud-margin, 40px) + clamp(16px, 1.7vw, 28px));
+  text-align: right;
+}
+.home-v2-section-menu button,
+.home-v2-section-submenu button {
   margin: 0;
   border: 0;
   padding: 0;
@@ -673,31 +684,41 @@ html[data-corridor-exit="true"] #practice {
   cursor: pointer;
   /* Inherit ONLY the family (PT Mono) + casing — never `font`/`color`,
      which (at this selector's higher specificity) would out-rank the
-     row rules' size / tracking / dim and collapse the recede hierarchy.
-     The row + sub rules own font-size, letter-spacing, and colour. */
+     row rules' size / tracking / dim and collapse the hierarchy. */
   font-family: inherit;
   text-transform: inherit;
 }
-.home-v2-section-menu ul {
+.home-v2-section-menu ul,
+.home-v2-section-submenu ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+/* Reel slat — every row is exactly one stride tall so the translate math
+   lands the active row dead-centre. */
+.home-v2-section-menu__item,
+.home-v2-section-submenu__item {
+  display: flex;
+  align-items: center;
+  height: var(--menu-row-h);
+}
+.home-v2-section-submenu__item {
+  justify-content: flex-end;
+}
 
 /* Visible ONLY in sections that carry subsections — the corridor's
-   Navigate/Encode/Build beats (THE ARC) and #services (the four service
-   verbs). The `<html>` bus already marks these (corridor phase /
-   active-station); the menu fades in/out with them and only takes clicks
-   while shown. Thesis, hero, about, continuum, practice, contact keep it
-   hidden. `data-services-ambient` is deliberately NOT used — it survives
-   into #about/#continuum and would leak the menu there. */
+   Navigate/Encode/Build beats (THE ARC) and #services. The `<html>` bus
+   marks these (corridor phase / active-station); both panels fade in/out
+   with them and only take clicks while shown. `data-services-ambient` is
+   deliberately NOT used — it survives into #about/#continuum and would leak
+   the menu there. */
 html[data-corridor-engaged="true"]:is(
     [data-corridor-phase="navigate"],
     [data-corridor-phase="encode"],
     [data-corridor-phase="build"]
   )
-  .home-v2-section-menu,
-html[data-active-station="services"] .home-v2-section-menu {
+  :is(.home-v2-section-menu, .home-v2-section-submenu),
+html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu) {
   opacity: 1;
 }
 html[data-corridor-engaged="true"]:is(
@@ -705,33 +726,21 @@ html[data-corridor-engaged="true"]:is(
     [data-corridor-phase="encode"],
     [data-corridor-phase="build"]
   )
-  .home-v2-section-menu
+  :is(.home-v2-section-menu, .home-v2-section-submenu)
   button,
-html[data-active-station="services"] .home-v2-section-menu button {
+html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu) button {
   pointer-events: auto;
 }
+
+/* ── LEFT panel — the sections (a reel) ─────────────────────────────── */
 .home-v2-section-menu__list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  /* Rolodex stage — the list is a shallow 3D wheel. Each row's depth comes
-     from CorridorSectionMenu (rolodexStyle, keyed to distance from active);
-     the active row sits at offset 0 (forward + flat), the rest recede. */
-  perspective: 620px;
-  perspective-origin: 50% 50%;
-  transform-style: preserve-3d;
+  /* Reel: translate so the ACTIVE row's centre sits on the container top
+     (the fixed centre line). --active-row is the active section's index. */
+  transform: translateY(calc(-1 * (var(--active-row, 0) + 0.5) * var(--menu-row-h)));
+  transition: transform 320ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
-/* The wheel slat — forward+flat when active, tilted+receded otherwise. */
-.home-v2-section-menu__item {
-  transform: translateZ(var(--row-depth, 0px)) rotateX(var(--row-rot, 0deg));
-  transform-origin: center;
-  opacity: var(--row-dim, 1);
-  backface-visibility: hidden;
-  transition:
-    transform 280ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
-    opacity 280ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-
 /* Non-active row — RECEDED: smaller, tighter, dim ("not in the view"). */
 .home-v2-section-menu__row {
   display: flex;
@@ -752,7 +761,6 @@ html[data-active-station="services"] .home-v2-section-menu button {
   font-size: 9px;
   color: rgba(202, 165, 84, 0.5);
 }
-
 /* Active section — PROMINENT: larger, gold, inverse-video block. */
 .home-v2-section-menu__item[data-active] .home-v2-section-menu__row {
   font-size: 12.5px;
@@ -766,76 +774,55 @@ html[data-active-station="services"] .home-v2-section-menu button {
   box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
 }
 
-/* Subsections — only while inside the Arc. Indented (was the `│  ├─` pipe's
-   job) so they still read as nested under their parent section. */
-.home-v2-section-menu__subs {
+/* ── RIGHT panel — the active section's subsections (a reel) ─────────── */
+.home-v2-section-submenu__list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  margin: 2px 0 2px 14px;
+  align-items: flex-end;
+  /* Reel: translate so the ACTIVE subsection lands on the SAME centre line as
+     the left highlight. --active-sub is the active sub's index. */
+  transform: translateY(calc(-1 * (var(--active-sub, 0) + 0.5) * var(--menu-row-h)));
+  transition: transform 320ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
-.home-v2-section-menu__subrow {
+.home-v2-section-submenu__row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-end;
+  gap: 7px;
   font-size: 11px;
   letter-spacing: 0.08em;
   color: rgba(235, 227, 214, 0.38);
-  animation: home-v2-section-menu-unfold 220ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  transition: color 140ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
-.home-v2-section-menu__subname {
+.home-v2-section-submenu__num {
+  font-size: 9px;
+  color: rgba(235, 227, 214, 0.28);
+}
+.home-v2-section-submenu__name {
   white-space: nowrap;
 }
-.home-v2-section-menu__subitem[data-active] .home-v2-section-menu__subrow {
+/* Active subsection — lit gold, larger (no cursor). */
+.home-v2-section-submenu__item[data-active] .home-v2-section-submenu__row {
+  font-size: 12px;
   color: var(--gold, #caa554);
 }
-.home-v2-section-menu__cursor {
-  color: var(--gold, #caa554);
-  animation: home-v2-section-menu-blink 1s steps(2, start) infinite;
-}
-@keyframes home-v2-section-menu-blink {
-  0%,
-  50% {
-    opacity: 1;
-  }
-  50.01%,
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes home-v2-section-menu-unfold {
-  from {
-    opacity: 0;
-    transform: translateY(-3px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.home-v2-section-submenu__item[data-active] .home-v2-section-submenu__num {
+  color: rgba(202, 165, 84, 0.7);
 }
 
 /* Desktop-only, matching the register's capability gate (≥1101×760). */
 @media (max-width: 1100px), (max-height: 759px) {
-  .home-v2-section-menu {
+  .home-v2-section-menu,
+  .home-v2-section-submenu {
     display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home-v2-section-menu {
+  .home-v2-section-menu,
+  .home-v2-section-submenu,
+  .home-v2-section-menu__list,
+  .home-v2-section-submenu__list {
     transition: none;
-  }
-  /* Flatten the rolodex — no wheel tilt/recede, just the flat receded list. */
-  .home-v2-section-menu__item {
-    transform: none;
-    opacity: 1;
-    transition: none;
-  }
-  .home-v2-section-menu__subrow {
-    animation: none;
-  }
-  .home-v2-section-menu__cursor {
-    animation: none;
-    opacity: 1;
   }
 }
 

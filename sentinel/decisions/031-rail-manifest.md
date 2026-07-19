@@ -728,7 +728,7 @@ row rules and collapses the hierarchy — the bug fixed on landing). Subs
 render ONLY while inside the Arc. If the register or the desktop diamond
 is ever wanted back, both are one line away (remount / drop the gate).
 
-### Update 13 — hug the rail, larger type, a real rolodex wheel (2026-07-19)
+### Update 13 — hug the rail, larger type, no ASCII tree chrome (2026-07-19)
 
 **Owner refinement.** Three tweaks to the Update 12 menu, all
 presentation-only (no new signal, no scroll writer — still a pure read of
@@ -742,19 +742,16 @@ presentation-only (no new signal, no scroll writer — still a pure read of
   active row 10.5→12.5px, head 8→9px, disc 8→9px, subrow 9.5→11px). The
   recede size gap (active vs non-active) is preserved — the hierarchy
   guardrail above still holds.
-- **A literal 3D rolodex.** The Update-12 recede (smaller + dim) is now a
-  shallow 3D wheel. `CorridorSectionMenu`'s `rolodexStyle(offset)` keys each
-  row to its SIGNED distance from the active row (`i - activeDisplayIdx`) and
-  writes `--row-rot` / `--row-depth` / `--row-dim` custom props; the
-  `__list` is a `perspective: 620px` stage and each `__item` applies
-  `translateZ(--row-depth) rotateX(--row-rot)` + `opacity: --row-dim`. The
-  active row is offset 0 → forward + flat + crisp; every other row tilts on X
-  (rows above top-back, rows below bottom-back) and recedes on Z, farther =
-  more. Squared depth/dim give the wheel its foreshortened curve; rotation is
-  capped at ±40° so far rows stay legible, never fold edge-on. Flattened
-  entirely under `prefers-reduced-motion` (motion-sickness parity with the
-  rest of the corridor). The `offset` is a display-index delta, not a scroll
-  signal — no ADR-002 writer is added.
+- **A literal 3D rolodex — TRIED then REVERTED same day (owner ask).** The
+  Update-12 recede was briefly a shallow 3D wheel (`rolodexStyle(offset)` →
+  `--row-rot`/`--row-depth`/`--row-dim` on a `perspective: 620px` `__list`,
+  per-row `translateZ`+`rotateX`+graded opacity keyed to distance from the
+  active row). The owner asked to remove it: the menu is back to the flat
+  Update-12 recede (active inverse-video block + non-active smaller/dim, all
+  co-planar). `rolodexStyle`, `activeDisplayIdx`, the `--row-*` props, the
+  `__list` perspective + `__item` transform, and the reduced-motion flatten
+  are all gone. The closer position + larger type + no-tree-chrome below
+  survive.
 - **No ASCII tree chrome (owner ask).** The `TF://JOURNEY — 08 STN` head and
   the `├─`/`└─` row connectors + `│  ├─` sub-pipes are REMOVED — the wheel
   itself now carries the hierarchy. The `__head`, `__branch`, `__pipe`
@@ -763,7 +760,92 @@ presentation-only (no new signal, no scroll writer — still a pure read of
   the `·NN VERB`/beat numbering, and the blinking sub-cursor (`█`) stay — the
   menu reads as a clean indented list, not a boxed-drawing tree.
 
-**Files:** `CorridorSectionMenu.tsx` (`rolodexStyle` + `activeDisplayIdx` +
-per-`<li>` style; head/branch/pipe spans removed), `home-v2.css` (menu
-`left`, type sizes, `__list` perspective + `__item` transform, reduced-motion
-flatten; `__head`/`__branch`/`__pipe` rules removed, `__subs` indent).
+**Files:** `CorridorSectionMenu.tsx` (head/branch/pipe spans removed; the
+rolodex `rolodexStyle`/`activeDisplayIdx`/per-`<li>` style was added then
+removed same day), `home-v2.css` (menu `left`, type sizes; `__head`/
+`__branch`/`__pipe` rules removed, `__subs` indent; the rolodex `__list`
+perspective + `__item` transform + reduced-motion flatten were added then
+removed same day).
+
+### Update 14 — re-split: LEFT sections / RIGHT subsections (2026-07-19)
+
+**Owner ask — reintroduce the U7/U8 split the U12 tree had merged.** The
+single left terminal-tree (sections + inline subsections) splits back into
+two mirrored panels: the **LEFT** rail carries the SECTIONS (the full
+8-station list, active = inverse-video gold block, rest receded — Update 13
+recede, no rolodex), the **RIGHT** rail carries the ACTIVE section's
+SUBSECTIONS as a RIGHT-aligned register — THE ARC's Navigate/Encode/Build, or
+the four #services verbs — headed by the section name, each `NAME NN` (index
+on the rail side, so the numbers line up as a clean right column), the active
+sub lit gold (no cursor). e.g. `LEFT: THE ARC · RIGHT: NAVIGATE 01 /
+ENCODE 02 / BUILD 03`. A `▸` on the two sections-with-detail hints "detail on
+the right". (Owner iterated the right panel: right-align → left-align →
+right-align with `NAME NN` order; and dropped the blinking cursor.)
+
+**One component, not the old two registers.** Unlike the U7/U8 design (which
+paired the RailManifest left rolodex with the separate paintProgress-driven
+`CorridorProgressRail` right register), this is ONE component —
+`CorridorSectionMenu` renders both panels off its single existing tracker
+(`resolveActiveIdx` for the active section; `servicesRingProgressRef` /
+`activeServiceForProgress` for the active #services verb, already wired since
+U12). So Services gets the right-panel subs for free, and there is no second
+scroll reader / clock. The retired `CorridorProgressRail` stays on disk
+(unmounted) as before; it is NOT revived.
+
+**CSS:** the `.home-v2-section-menu` block generalizes — a shared base
+(fixed, mono, gated) with `.home-v2-section-menu` (left) and the new
+`.home-v2-section-submenu` (anchored on the right rail, `text-align: right` /
+`justify-content: flex-end`, rows `NAME NN`). The `blink` keyframe +
+`__cursor` are removed with the dropped cursor.
+Both share the SAME `<html>`-bus visibility gate (Arc phases + #services) via
+`:is(.home-v2-section-menu, .home-v2-section-submenu)`, the same media/
+reduced-motion guards, and the `blink`/`unfold` keyframes. The inline
+`__subs`/`__subrow`/`__subname`/`__cursor` left rules are removed; the right
+panel owns `__head`/`__list`/`__row`/`__num`/`__name`/`__cursor`.
+
+**Verified live** (dev, fresh `.next`): both panels fade in together only in
+the Arc and #services; LEFT active = THE ARC / SERVICES, RIGHT = the matching
+subs with the active one lit (ADVISORY tracked the front card). Typecheck +
+lint clean. **Turbopack note:** rapid HMR during this edit left the browser
+console showing stale `lastIdx`/`rolodexStyle` ReferenceErrors from
+superseded chunks (the ADR-049 U6 rev b signature) — the component rendered
+correctly throughout; the served chunk's only `lastIdx` is an unrelated
+bundled module (`computeBaseTransform`), and a `.next` wipe + restart proved
+the build clean. Recognize this signature before diagnosing "missing" code.
+
+**Files:** `CorridorSectionMenu.tsx` (render splits into `<nav
+.home-v2-section-menu>` + `<nav .home-v2-section-submenu>`; `expandedNode`
+feeds the right panel), `home-v2.css` (shared base + left/right panel
+blocks).
+
+### Update 15 — both panels become REELS on a fixed centre line (2026-07-19)
+
+**Owner ask.** "It should not be the yellow highlight that moves but the
+section titles moving to the positioning of the highlight as you scroll
+through — keep the yellow highlight in a fixed position and have the
+corresponding subsection horizontally aligned with it." Also: the right panel
+no longer needs the section-name header above the subs.
+
+**Decision — a fixed centre line, two reels.** Both panels are pinned at
+`top: 50%` (the block-centering `translateY(-50%)` is dropped) and each LIST
+translates so its ACTIVE row's centre lands exactly on that line:
+`translateY(calc(-1 * (var(--active-row) + 0.5) * var(--menu-row-h)))` on the
+left (`--active-row` = the active section's tree index) and the same on the
+right with `--active-sub` (the active subsection's index). Rows are fixed
+`--menu-row-h` (22px) slats so the stride math is exact. Result: the gold
+highlight stays put at viewport centre while the section titles REEL to it,
+and the active section (left) and its active subsection (right) share ONE
+horizontal line — probed live at 1504-wide: THE ARC / NAVIGATE 01 both at
+y = 635 = viewport centre; scrolling Navigate → Encode reels the right so
+ENCODE 02 takes the centre while THE ARC holds; #services: SERVICES /
+ADVISORY 01 both centred. The reel offsets are React custom props
+(`--active-row` / `--active-sub`) on each `<nav>`; a `transform` transition
+slides the reel (within-section it only moves on the right as the beat
+changes — the left section change happens while the menu is faded out between
+Arc and #services, so it never visibly jumps). The right `__head` (section
+name) is removed; the `unfold` keyframe retires (the reel is the motion).
+Reduced-motion drops the reel transition (jump, no slide).
+
+**Files:** `CorridorSectionMenu.tsx` (`--active-row`/`--active-sub` on the
+navs; `__head` removed), `home-v2.css` (centre-line base + `--menu-row-h`
+slats + per-list reel transforms; `__head`/`unfold` removed).

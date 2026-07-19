@@ -24,21 +24,25 @@ import { SERVICES } from "./services/serviceData";
  * journey indicator (Updates 7–9 are superseded; the reversal is
  * deliberate and owner-driven).
  *
- * VISIBILITY: it is a section-contextual overlay — visible ONLY while the
- * reader is inside a section that carries subsections: the corridor's
- * Navigate/Encode/Build beats (THE ARC) OR #services (the four service
- * verbs). It fades out everywhere else. The gate is pure CSS off the
- * `<html>` bus (`data-corridor-phase` / `data-active-station`, see
- * home-v2.css); this component keeps rendering + tracking so its content is
- * correct the instant it fades in. Outside those sections the left rail's
- * detent diamond is the indicator again (its desktop hide is scoped to the
- * same windows). The full 8-station journey is shown while visible; the
- * ACTIVE section is an inverse-video block while every other section
- * RECEDES on a shallow 3D rolodex wheel (Update 13): each row tilts on X
- * and falls back on Z by its distance from the active row (`rolodexStyle`),
- * so the section you're in sits forward + flat + crisp and the rest curve
- * away and dim. The active section unfolds its subsections with the active
- * one lit + a blinking cursor.
+ * LAYOUT (ADR-031 Update 14 — the U7/U8 split; reel refinement Update 15):
+ * both panels are vertical REELS pinned to a fixed centre line. The LEFT
+ * rail's SECTIONS translate so the ACTIVE section sits inside a fixed gold
+ * highlight at centre (the highlight never moves; the titles move to it).
+ * The RIGHT rail's SUBSECTIONS — THE ARC's Navigate/Encode/Build, or the four
+ * #services verbs, each `NAME NN` (index on the rail side), active sub lit
+ * gold — translate so the ACTIVE sub lands on the SAME centre line, so the
+ * highlighted section and its active subsection are horizontally aligned.
+ * e.g. the centre line reads `THE ARC ▸ · · NAVIGATE 01`. Both panels are one
+ * component; the reel offsets are the `--active-row` / `--active-sub` props.
+ *
+ * VISIBILITY: both panels are a section-contextual overlay — visible ONLY
+ * while the reader is inside a section that carries subsections: the
+ * corridor's Navigate/Encode/Build beats (THE ARC) OR #services. They fade
+ * out everywhere else. The gate is pure CSS off the `<html>` bus
+ * (`data-corridor-phase` / `data-active-station`, see home-v2.css); this
+ * component keeps rendering + tracking so its content is correct the instant
+ * it fades in. Outside those sections the left rail's detent diamond is the
+ * indicator again (its desktop hide is scoped to the same windows).
  *
  * State is a pure read of existing single-writer signals — `resolveActiveIdx`
  * off the `<html>` attribute bus (no new scroll writer, ADR-002), plus the
@@ -117,26 +121,6 @@ const JOURNEY_TREE: readonly TreeNode[] = (() => {
 
 const prm = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
-/**
- * Rolodex depth for a row, keyed to its signed distance from the ACTIVE row.
- * The section you're in sits forward and flat (offset 0 → no transform); every
- * other row tilts on X and recedes on Z (a shallow wheel) and dims, so the
- * further a section is from where you are, the more it falls away. Squared
- * depth/dim give the wheel its foreshortened curve; the rotation is capped so
- * far rows stay legible rather than folding edge-on. Flattened under
- * prefers-reduced-motion in CSS.
- */
-function rolodexStyle(offset: number): CSSProperties {
-  const rot = Math.max(-40, Math.min(40, offset * -10));
-  const depth = -Math.min(150, offset * offset * 8);
-  const dim = Math.max(0.3, 1 - offset * offset * 0.07);
-  return {
-    "--row-rot": `${rot}deg`,
-    "--row-depth": `${depth}px`,
-    "--row-dim": `${dim}`,
-  } as CSSProperties;
-}
-
 export function CorridorSectionMenu() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [serviceIdx, setServiceIdx] = useState(0);
@@ -197,74 +181,103 @@ export function CorridorSectionMenu() {
     if (entry) scrollToManifestEntry(entry, prm());
   };
 
-  // The active row's position in the display tree — the rolodex pivots around
-  // it (its row is offset 0 → forward + flat).
-  const activeDisplayIdx = JOURNEY_TREE.findIndex((n) => n.id === activeTopId);
+  // The section whose subsections fill the RIGHT panel (THE ARC or SERVICES).
+  const expandedNode = expandedTopId
+    ? (JOURNEY_TREE.find((n) => n.id === expandedTopId) ?? null)
+    : null;
+
+  // Reel offsets — both panels translate so the ACTIVE row lands on the fixed
+  // centre line (the highlight stays put; the titles move to it). The active
+  // section and its active subsection then share one horizontal line.
+  const activeRowIdx = Math.max(
+    0,
+    JOURNEY_TREE.findIndex((n) => n.id === activeTopId)
+  );
+  const activeSubIdx = expandedNode
+    ? Math.max(
+        0,
+        expandedNode.subs!.findIndex((s) => s.id === activeSubId)
+      )
+    : 0;
 
   return (
-    <nav className="home-v2-section-menu" aria-label="Journey sections">
-      <ul className="home-v2-section-menu__list">
-        {JOURNEY_TREE.map((node, i) => {
-          const active = node.id === activeTopId;
-          const expanded = node.id === expandedTopId;
-          const showSubs = !!node.subs && expanded;
-          return (
-            <li
-              key={node.id}
-              className="home-v2-section-menu__item"
-              data-active={active || undefined}
-              style={rolodexStyle(i - activeDisplayIdx)}
-            >
-              <button
-                type="button"
-                className="home-v2-section-menu__row"
-                aria-current={active ? "true" : undefined}
-                onClick={() => go(node.entryIdx)}
+    <>
+      {/* LEFT — the journey's sections, a vertical REEL: the list translates
+          so the ACTIVE section sits on the fixed centre line inside the gold
+          highlight (the highlight never moves; the titles move to it). A `▸`
+          marks the two sections whose detail shows on the RIGHT panel. */}
+      <nav
+        className="home-v2-section-menu"
+        aria-label="Journey sections"
+        style={{ "--active-row": activeRowIdx } as CSSProperties}
+      >
+        <ul className="home-v2-section-menu__list">
+          {JOURNEY_TREE.map((node) => {
+            const active = node.id === activeTopId;
+            return (
+              <li
+                key={node.id}
+                className="home-v2-section-menu__item"
+                data-active={active || undefined}
               >
-                <span className="home-v2-section-menu__name">
-                  {node.hideActiveName && active ? "····" : node.name}
-                </span>
-                {node.subs && (
-                  <span className="home-v2-section-menu__disc" aria-hidden="true">
-                    {expanded ? "▾" : "▸"}
+                <button
+                  type="button"
+                  className="home-v2-section-menu__row"
+                  aria-current={active ? "true" : undefined}
+                  onClick={() => go(node.entryIdx)}
+                >
+                  <span className="home-v2-section-menu__name">
+                    {node.hideActiveName && active ? "····" : node.name}
                   </span>
-                )}
-              </button>
+                  {node.subs && (
+                    <span className="home-v2-section-menu__disc" aria-hidden="true">
+                      ▸
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
-              {showSubs && (
-                <ul className="home-v2-section-menu__subs">
-                  {node.subs!.map((sub) => {
-                    const sActive = sub.id === activeSubId;
-                    return (
-                      <li
-                        key={sub.id}
-                        className="home-v2-section-menu__subitem"
-                        data-active={sActive || undefined}
-                      >
-                        <button
-                          type="button"
-                          className="home-v2-section-menu__subrow"
-                          aria-current={sActive ? "true" : undefined}
-                          onClick={() => go(sub.targetIdx)}
-                        >
-                          <span className="home-v2-section-menu__subname">
-                            ·{sub.num} {sub.name}
-                          </span>
-                          {sActive && (
-                            <span className="home-v2-section-menu__cursor" aria-hidden="true">
-                              █
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+      {/* RIGHT — the active section's subsections (THE ARC's beats, or the
+          four #services verbs), also a REEL: the active sub lands on the SAME
+          centre line as the left highlight, so section ↔ subsection align.
+          Empty (and CSS-hidden) outside the Arc / #services. */}
+      <nav
+        className="home-v2-section-submenu"
+        aria-label="Section detail"
+        aria-hidden={expandedNode ? undefined : true}
+        style={{ "--active-sub": activeSubIdx } as CSSProperties}
+      >
+        {expandedNode && (
+          <ul className="home-v2-section-submenu__list">
+            {expandedNode.subs!.map((sub) => {
+              const sActive = sub.id === activeSubId;
+              return (
+                <li
+                  key={sub.id}
+                  className="home-v2-section-submenu__item"
+                  data-active={sActive || undefined}
+                >
+                  <button
+                    type="button"
+                    className="home-v2-section-submenu__row"
+                    aria-current={sActive ? "true" : undefined}
+                    onClick={() => go(sub.targetIdx)}
+                  >
+                    <span className="home-v2-section-submenu__name">{sub.name}</span>
+                    <span className="home-v2-section-submenu__num" aria-hidden="true">
+                      {sub.num}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </nav>
+    </>
   );
 }
