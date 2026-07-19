@@ -995,13 +995,14 @@
 }
 
 /* ADR-031 Update 12 — the left-side terminal-tree section menu
-   (`CorridorSectionMenu`) is a section-contextual overlay: it shows ONLY
-   inside the corridor's Navigate/Encode/Build beats (THE ARC) and
-   #services (the service verbs). So the detent diamond is the journey
-   indicator EVERYWHERE ELSE and hides only where the menu takes over —
-   desktop (≥1101×760) AND (in the Arc OR in #services). Everywhere else
-   (and below the gate) the diamond stays. It fades out (opacity, not
-   display) so it hands off to the menu smoothly. */
+   (`CorridorSectionMenu`) is the desktop journey indicator. Menu XOR
+   diamond: wherever the menu shows, the detent diamond hides (opacity, not
+   display, so the hand-off is smooth). Since 2026-07-19 the LEFT section
+   reel PERSISTS from THE ARC through #contact (home-v2.css visibility
+   split), so the diamond's desktop hide now spans the SAME window — the
+   Arc's Navigate/Encode/Build beats AND #services AND the post-corridor
+   stations (#about → #contact). The diamond remains the indicator only in
+   the pre-Arc regime (hero / thesis) and below the desktop gate. */
 @media (min-width: 1101px) and (min-height: 760px) {
   html[data-corridor-engaged="true"]:is(
       [data-corridor-phase="navigate"],
@@ -1009,7 +1010,14 @@
       [data-corridor-phase="build"]
     )
     :is(.rail-manifest__diamond, .rail-manifest__title),
-  html[data-active-station="services"] :is(.rail-manifest__diamond, .rail-manifest__title) {
+  html:is(
+      [data-active-station="services"],
+      [data-active-station="about"],
+      [data-active-station="continuum"],
+      [data-active-station="practice"],
+      [data-active-station="contact"]
+    )
+    :is(.rail-manifest__diamond, .rail-manifest__title) {
     opacity: 0;
     pointer-events: none;
   }

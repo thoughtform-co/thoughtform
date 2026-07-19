@@ -706,12 +706,20 @@ html[data-corridor-exit="true"] #practice {
   justify-content: flex-end;
 }
 
-/* Visible ONLY in sections that carry subsections — the corridor's
-   Navigate/Encode/Build beats (THE ARC) and #services. The `<html>` bus
-   marks these (corridor phase / active-station); both panels fade in/out
-   with them and only take clicks while shown. `data-services-ambient` is
-   deliberately NOT used — it survives into #about/#continuum and would leak
-   the menu there. */
+/* VISIBILITY (owner, 2026-07-19 — the menu must PERSIST across the journey,
+   not vanish at #about). Split into two windows:
+
+   • BOTH panels share the ARC + #services window — the only sections that
+     carry SUBSECTIONS (the Arc's Navigate/Encode/Build; the four #services
+     verbs). The right subsection reel is meaningful only here.
+   • The LEFT section reel ALSO persists through the remaining stations
+     (#about → #contact) so the journey nav stays on screen the whole way
+     down; the active section keeps reeling to the fixed centre highlight.
+
+   `data-services-ambient` is deliberately NOT used as a gate — it survives
+   into #about/#continuum (ADR-049) and would be the wrong signal. We key the
+   post-corridor window on the precise `data-active-station` per section
+   instead. Both panels only take clicks while shown. */
 html[data-corridor-engaged="true"]:is(
     [data-corridor-phase="navigate"],
     [data-corridor-phase="encode"],
@@ -719,6 +727,14 @@ html[data-corridor-engaged="true"]:is(
   )
   :is(.home-v2-section-menu, .home-v2-section-submenu),
 html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu) {
+  opacity: 1;
+}
+/* LEFT reel only — persist through the post-corridor stations. The right
+   submenu stays hidden here (those sections carry no subsections). */
+html[data-active-station="about"] .home-v2-section-menu,
+html[data-active-station="continuum"] .home-v2-section-menu,
+html[data-active-station="practice"] .home-v2-section-menu,
+html[data-active-station="contact"] .home-v2-section-menu {
   opacity: 1;
 }
 html[data-corridor-engaged="true"]:is(
@@ -729,6 +745,12 @@ html[data-corridor-engaged="true"]:is(
   :is(.home-v2-section-menu, .home-v2-section-submenu)
   button,
 html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu) button {
+  pointer-events: auto;
+}
+html[data-active-station="about"] .home-v2-section-menu button,
+html[data-active-station="continuum"] .home-v2-section-menu button,
+html[data-active-station="practice"] .home-v2-section-menu button,
+html[data-active-station="contact"] .home-v2-section-menu button {
   pointer-events: auto;
 }
 
@@ -761,13 +783,34 @@ html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section
   font-size: 9px;
   color: rgba(202, 165, 84, 0.5);
 }
-/* Active section — PROMINENT: larger, gold, inverse-video block. */
-.home-v2-section-menu__item[data-active] .home-v2-section-menu__row {
+/* The active reel row is HIDDEN — its slot stays (visibility, not display, so
+   the centering math is unchanged) but the gold block is NOT painted on it.
+   Painting the highlight on a row that rides the reel is exactly what made it
+   jump: the `data-active` swap is instant, the reel transform eases 320ms, so
+   the block snapped a row off-centre and glided back. The fixed highlight
+   below renders the active section on the centre line instead. */
+.home-v2-section-menu__item[data-active] {
+  visibility: hidden;
+}
+
+/* Pinned highlight — PROMINENT gold inverse-video block, fixed on the centre
+   line (the nav's top:50%). It mirrors the active section's text and NEVER
+   translates, so a section change only swaps its text; it can't move. */
+.home-v2-section-menu__highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: var(--menu-row-h);
   font-size: 12.5px;
   letter-spacing: 0.1em;
   color: var(--gold, #caa554);
+  pointer-events: none;
 }
-.home-v2-section-menu__item[data-active] .home-v2-section-menu__name {
+.home-v2-section-menu__highlight .home-v2-section-menu__name {
   padding: 1px 6px;
   color: var(--void, #0a0908);
   background: var(--gold, #caa554);
@@ -801,12 +844,31 @@ html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section
 .home-v2-section-submenu__name {
   white-space: nowrap;
 }
-/* Active subsection — lit gold, larger (no cursor). */
-.home-v2-section-submenu__item[data-active] .home-v2-section-submenu__row {
+/* The active reel row is HIDDEN (slot kept) — the fixed highlight renders the
+   active subsection on the centre line instead (same anti-jump decoupling as
+   the left panel). */
+.home-v2-section-submenu__item[data-active] {
+  visibility: hidden;
+}
+
+/* Pinned highlight — the lit-gold active subsection, fixed on the centre line
+   and right-aligned to the rail edge; only its text changes, never its Y. */
+.home-v2-section-submenu__highlight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  height: var(--menu-row-h);
   font-size: 12px;
   color: var(--gold, #caa554);
+  pointer-events: none;
 }
-.home-v2-section-submenu__item[data-active] .home-v2-section-submenu__num {
+.home-v2-section-submenu__highlight .home-v2-section-submenu__num {
+  font-size: 9px;
   color: rgba(202, 165, 84, 0.7);
 }
 

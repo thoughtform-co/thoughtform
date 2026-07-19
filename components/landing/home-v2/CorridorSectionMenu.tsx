@@ -43,14 +43,18 @@ import { SERVICES } from "./services/serviceData";
  * a plain fade. Driven by a `menuVisible` effect that re-runs on every
  * (re-)entry and restores the text on leave; skipped under reduced motion.
  *
- * VISIBILITY: both panels are a section-contextual overlay — visible ONLY
- * while the reader is inside a section that carries subsections: the
- * corridor's Navigate/Encode/Build beats (THE ARC) OR #services. They fade
- * out everywhere else. The gate is pure CSS off the `<html>` bus
+ * VISIBILITY (owner, 2026-07-19 — the menu PERSISTS across the journey):
+ * the LEFT section reel is visible the whole way down, from THE ARC through
+ * #contact — the active section keeps reeling to the fixed centre highlight
+ * so the journey nav never disappears mid-scroll. The RIGHT subsection panel
+ * stays section-contextual — shown ONLY where subsections exist (the
+ * corridor's Navigate/Encode/Build beats, or #services). Both fade out in the
+ * pre-Arc regime (hero / thesis). The gate is pure CSS off the `<html>` bus
  * (`data-corridor-phase` / `data-active-station`, see home-v2.css); this
- * component keeps rendering + tracking so its content is correct the instant
- * it fades in. Outside those sections the left rail's detent diamond is the
- * indicator again (its desktop hide is scoped to the same windows).
+ * component keeps rendering + tracking (its MutationObserver re-resolves the
+ * active section on every `data-active-station` flip) so its content is
+ * correct the instant it shows. The left rail's detent diamond remains the
+ * indicator only in the pre-Arc regime.
  *
  * State is a pure read of existing single-writer signals — `resolveActiveIdx`
  * off the `<html>` attribute bus (no new scroll writer, ADR-002), plus the
@@ -225,8 +229,8 @@ export function CorridorSectionMenu() {
     : null;
 
   // Reel offsets — both panels translate so the ACTIVE row lands on the fixed
-  // centre line (the highlight stays put; the titles move to it). The active
-  // section and its active subsection then share one horizontal line.
+  // centre line. The highlight itself is a SEPARATE element pinned to that
+  // line (see below); the reel just glides the names behind it.
   const activeRowIdx = Math.max(
     0,
     JOURNEY_TREE.findIndex((n) => n.id === activeTopId)
@@ -238,17 +242,32 @@ export function CorridorSectionMenu() {
       )
     : 0;
 
+  // The node whose content the FIXED highlight mirrors. The highlight is
+  // decoupled from the reel so it can never ride the list translate — the
+  // reason the gold block used to briefly jump a row and glide back on every
+  // section change (the `data-active` swap is instant; the reel transform
+  // eases over 320ms, so a highlight painted on the active row lagged behind
+  // it). Pinned on the centre line, it only ever changes its TEXT.
+  const activeTopNode = JOURNEY_TREE[activeRowIdx];
+  const activeSubNode = expandedNode?.subs?.[activeSubIdx] ?? null;
+
   return (
     <>
-      {/* LEFT — the journey's sections, a vertical REEL: the list translates
-          so the ACTIVE section sits on the fixed centre line inside the gold
-          highlight (the highlight never moves; the titles move to it). A `▸`
-          marks the two sections whose detail shows on the RIGHT panel. */}
+      {/* LEFT — the journey's sections, a vertical REEL. The list translates so
+          the active section rides to the fixed centre line; the gold highlight
+          is a SEPARATE element pinned on that line (never in the reel), so the
+          names glide THROUGH it and it can't jump. A `▸` marks the sections
+          whose detail shows on the RIGHT panel. */}
       <nav
         className="home-v2-section-menu"
         aria-label="Journey sections"
         style={{ "--active-row": activeRowIdx } as CSSProperties}
       >
+        {/* Pinned highlight — mirrors the active section, centre-line only. */}
+        <div className="home-v2-section-menu__highlight" aria-hidden="true">
+          <span className="home-v2-section-menu__name">{activeTopNode.name}</span>
+          {activeTopNode.subs && <span className="home-v2-section-menu__disc">▸</span>}
+        </div>
         <ul className="home-v2-section-menu__list">
           {JOURNEY_TREE.map((node) => {
             const active = node.id === activeTopId;
@@ -265,11 +284,6 @@ export function CorridorSectionMenu() {
                   onClick={() => go(node.entryIdx)}
                 >
                   <span className="home-v2-section-menu__name">{node.name}</span>
-                  {node.subs && (
-                    <span className="home-v2-section-menu__disc" aria-hidden="true">
-                      ▸
-                    </span>
-                  )}
                 </button>
               </li>
             );
@@ -278,9 +292,9 @@ export function CorridorSectionMenu() {
       </nav>
 
       {/* RIGHT — the active section's subsections (THE ARC's beats, or the
-          four #services verbs), also a REEL: the active sub lands on the SAME
-          centre line as the left highlight, so section ↔ subsection align.
-          Empty (and CSS-hidden) outside the Arc / #services. */}
+          four #services verbs), also a REEL with a pinned highlight on the SAME
+          centre line as the left one, so section ↔ subsection align. Empty
+          (and CSS-hidden) outside the Arc / #services. */}
       <nav
         className="home-v2-section-submenu"
         aria-label="Section detail"
@@ -288,30 +302,37 @@ export function CorridorSectionMenu() {
         style={{ "--active-sub": activeSubIdx } as CSSProperties}
       >
         {expandedNode && (
-          <ul className="home-v2-section-submenu__list">
-            {expandedNode.subs!.map((sub) => {
-              const sActive = sub.id === activeSubId;
-              return (
-                <li
-                  key={sub.id}
-                  className="home-v2-section-submenu__item"
-                  data-active={sActive || undefined}
-                >
-                  <button
-                    type="button"
-                    className="home-v2-section-submenu__row"
-                    aria-current={sActive ? "true" : undefined}
-                    onClick={() => go(sub.targetIdx)}
+          <>
+            {/* Pinned highlight — mirrors the active subsection. */}
+            <div className="home-v2-section-submenu__highlight" aria-hidden="true">
+              <span className="home-v2-section-submenu__name">{activeSubNode?.name}</span>
+              <span className="home-v2-section-submenu__num">{activeSubNode?.num}</span>
+            </div>
+            <ul className="home-v2-section-submenu__list">
+              {expandedNode.subs!.map((sub) => {
+                const sActive = sub.id === activeSubId;
+                return (
+                  <li
+                    key={sub.id}
+                    className="home-v2-section-submenu__item"
+                    data-active={sActive || undefined}
                   >
-                    <span className="home-v2-section-submenu__name">{sub.name}</span>
-                    <span className="home-v2-section-submenu__num" aria-hidden="true">
-                      {sub.num}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                    <button
+                      type="button"
+                      className="home-v2-section-submenu__row"
+                      aria-current={sActive ? "true" : undefined}
+                      onClick={() => go(sub.targetIdx)}
+                    >
+                      <span className="home-v2-section-submenu__name">{sub.name}</span>
+                      <span className="home-v2-section-submenu__num" aria-hidden="true">
+                        {sub.num}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </nav>
     </>
