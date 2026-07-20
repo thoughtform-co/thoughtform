@@ -92,11 +92,17 @@ export interface Service {
  * — the capability-handover angle (his differentiator: teams keep the
  * tools + judgment, not consultancy dependency). Intro tightened + matched
  * to it, and de-framed in services.css (owner: the plate frame didn't
- * fit). The em (second) line renders gold. */
+ * fit). The em (second) line renders gold.
+ * Headline rewritten again 2026-07-20 (owner): "AI YOUR TEAM CAN RUN." →
+ * "AI capability your team owns." — same positioning, ownership over
+ * ability. Split 2 words / 3 words (was 3/2) to keep both lines close in
+ * measure at the title clamp (26–44px); the em line still carries the
+ * payoff. `services-ring-smoke.spec.ts`'s masthead-title assertion moved
+ * `AI YOUR TEAM` → `AI CAPABILITY` in lockstep — see ADR-044. */
 export const SERVICES_MASTHEAD = {
   titleLines: [
-    { text: "AI YOUR TEAM", em: false },
-    { text: "CAN RUN.", em: true },
+    { text: "AI CAPABILITY", em: false },
+    { text: "YOUR TEAM OWNS.", em: true },
   ],
   intro:
     "A talk, a workshop, or an embedded term building alongside your team. All tuned to the AI decisions you're actually making, and built to leave your team able to run it.",

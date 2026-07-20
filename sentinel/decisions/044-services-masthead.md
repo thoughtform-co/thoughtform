@@ -215,3 +215,29 @@ Lines` is now `AI YOUR TEAM` / `CAN RUN.` (second line gold) — the
 
 Correction to the earlier "the smoke's `ONE LOOP.` assertion is current"
 note: that copy is now superseded.
+
+## Update (2026-07-20) — headline rewritten again: ownership over ability
+
+Owner: change the masthead title to "AI capability your team owns."
+(`SERVICES_MASTHEAD.titleLines`, `serviceData.ts`). Same positioning as
+the 07-17 rewrite (capability handover, teams keep the tools + judgment),
+sharpened toward ownership of the outcome rather than ability to act.
+
+- **Line split — 2 words / 3 words, was 3/2:** `AI CAPABILITY` /
+  `YOUR TEAM OWNS.` (em, gold, unchanged convention: the payoff line is
+  gold). The instruction gave only the running phrase, not a line break or
+  which words get emphasis — the split was chosen to keep both lines close
+  in measure at the title clamp (26–44px) rather than mirror the old
+  short-punch-word shape (`… OWNS.` alone would have made line 1 ~23
+  characters against line 2's `AI YOUR TEAM CAN RUN.`'s 12, real overflow
+  risk at the `min(40vw, 624px)` column's narrow end, ≈384px at the
+  961px enhanced-tier floor). If the owner wants the punch isolated on
+  `OWNS.` alone, re-split and re-check that width.
+- **`services-ring-smoke.spec.ts`'s masthead-title assertion** moved
+  `AI YOUR TEAM` → `AI CAPABILITY`, same lockstep discipline as the 07-17
+  move. Re-run and confirmed passing (desktop project;
+  `npm run verify` doesn't cover Playwright).
+- Verified via the live decode controller: forced `--svc-content-in` to 1
+  on `.services-stage` (the var the masthead controller's
+  `MutationObserver` reads), confirmed `data-reveal="done"` and both
+  resolved line texts + the joined `aria-label`.
