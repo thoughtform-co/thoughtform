@@ -160,8 +160,14 @@ beat comes from `data-corridor-phase`, which now publishes
 `thesis|navigate|encode|build` (single writer: the CorridorStationHeaders
 RAF, hand-offs `CORRIDOR_BEAT_ENTER` 0.2/0.48/0.78 — MIRRORS
 CorridorProgressRail's STAGES band starts, keep in lockstep). The diamond
-is visible from the hero (owner; SUPERSEDED by Update 16 — the whole rail
-is hero-dormant now, so the diamond first shows at section 2). On
+is visible from the hero (owner; SUPERSEDED twice — by Update 16, which
+made the whole rail hero-dormant so the diamond first showed at section 2,
+then by **Update 20 (2026-07-20, owner): the diamond is hidden on the WHOLE
+desktop gate, unconditionally** — the U12 hide used to enumerate phases and
+left it painting alone in section 2, since the menu drops hero/thesis too.
+Desktop = tick ladder + `CorridorSectionMenu` only; the diamond survives
+ONLY below `1101×760`, controller untouched. Do NOT re-add a phase/station
+enumeration to that media block). On
 hover/focus it reveals the active
 entry's title via a hidden `.rail-manifest__title` chip, gated on
 `data-has-title`; `manifestTitle(entry)` (`entries.ts`) is `null` for

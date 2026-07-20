@@ -1009,27 +1009,21 @@
 /* ADR-031 Update 12 — the left-side terminal-tree section menu
    (`CorridorSectionMenu`) is the desktop journey indicator. Menu XOR
    diamond: wherever the menu shows, the detent diamond hides (opacity, not
-   display, so the hand-off is smooth). Since 2026-07-19 the LEFT section
-   reel PERSISTS from THE ARC through #contact (home-v2.css visibility
-   split), so the diamond's desktop hide now spans the SAME window — the
-   Arc's Navigate/Encode/Build beats AND #services AND the post-corridor
-   stations (#about → #contact). The diamond remains the indicator only in
-   the pre-Arc regime (hero / thesis) and below the desktop gate. */
+   display, so the hand-off stays smooth).
+
+   Update 20 (2026-07-20, owner): the desktop hide is UNCONDITIONAL — it no
+   longer enumerates phases/stations. The enumerated form deliberately left
+   the diamond as the indicator in the pre-Arc regime (hero / thesis), but
+   the menu drops those sections too (`MENU_HIDDEN_IDS`), so there was no
+   desktop beat where the diamond was the live indicator — it just painted
+   alone in SECTION 2, the moment the hero curtain uncovered the rail
+   (Update 16 rev c). On desktop the left rail now reads as the 13-tick
+   ladder alone ("the ladder always stays" is untouched — this hides only
+   the marker). The diamond remains the indicator BELOW the desktop gate,
+   where the menu never mounts; the controller is untouched, so the
+   sub-gate fallback and its detent math are unaffected. */
 @media (min-width: 1101px) and (min-height: 760px) {
-  html[data-corridor-engaged="true"]:is(
-      [data-corridor-phase="navigate"],
-      [data-corridor-phase="encode"],
-      [data-corridor-phase="build"]
-    )
-    :is(.rail-manifest__diamond, .rail-manifest__title),
-  html:is(
-      [data-active-station="services"],
-      [data-active-station="about"],
-      [data-active-station="continuum"],
-      [data-active-station="practice"],
-      [data-active-station="contact"]
-    )
-    :is(.rail-manifest__diamond, .rail-manifest__title) {
+  [data-rail-manifest-root] :is(.rail-manifest__diamond, .rail-manifest__title) {
     opacity: 0;
     pointer-events: none;
   }
@@ -9447,51 +9441,18 @@ html {
   max-width: 52ch;
   position: relative;
 }
-/* ── Dossier register (owner 2026-07-19) ──────────────────────────────
-   The readable left column gets a whisper of the same navigational grammar
-   as the right SUBJECT-scan instrument — a diagonal pair of registration
-   corner brackets (the site's section-corner + portrait-frame convention)
-   that frame the copy as a "dossier panel" paired with the "scan", not a
-   bare paragraph block. Deliberately faint gold hairlines — the type stays
-   the hero. Both marks live DIRECTLY on `.voidwalker__copy` (its own two
-   pseudos): on the deck-flip stage every copy CHILD gets a reveal transform,
-   which would hijack the containing block of any child-hosted pseudo, so the
-   frame must anchor to the column element itself. Outset + pointer-events:
-   none ⇒ zero layout impact (the ADR-045 rail-parity edges are untouched).
-   Hidden ≤960 where the column centres (mobile stays clean); the stage
-   opacity gate lives in about-stage.css (the stage reveals the copy
-   per-child, so these column-level pseudos must fade in with it). */
-.voidwalker__copy::before {
-  /* Top-left registration corner. */
-  content: "";
-  position: absolute;
-  top: -12px;
-  left: clamp(-26px, -1.5vw, -16px);
-  width: 15px;
-  height: 15px;
-  border-top: 1px solid rgba(202, 165, 84, 0.5);
-  border-left: 1px solid rgba(202, 165, 84, 0.5);
-  pointer-events: none;
-}
-.voidwalker__copy::after {
-  /* Bottom-right registration corner — the diagonal partner (TL↔BR, the
-     section-corner convention), anchored to the column's own box. */
-  content: "";
-  position: absolute;
-  bottom: -12px;
-  right: -12px;
-  width: 15px;
-  height: 15px;
-  border-bottom: 1px solid rgba(202, 165, 84, 0.5);
-  border-right: 1px solid rgba(202, 165, 84, 0.5);
-  pointer-events: none;
-}
-@media (max-width: 960px) {
-  .voidwalker__copy::before,
-  .voidwalker__copy::after {
-    display: none;
-  }
-}
+/* ── Dossier register — REMOVED (owner 2026-07-20) ────────────────────
+   The diagonal pair of gold registration corner brackets on the copy column
+   (`.voidwalker__copy::before` TL + `::after` BR, added 2026-07-19) is gone:
+   the corners read as chrome around the bio and the owner wants the type to
+   carry the column unframed. The right-hand SUBJECT-scan instrument keeps
+   the navigational grammar for this section, so the pairing it was added for
+   survives on the side that earns it. `position: relative` stays on
+   `.voidwalker__copy` above (unrelated children rely on it). The matching
+   opacity gate in about-stage.css is removed in lockstep. Do NOT reinstate
+   these pseudos without re-checking the stage reveal — a child-hosted pseudo
+   would have its containing block hijacked by the per-child reveal
+   transform, which is why they lived on the column element. */
 .voidwalker__eyebrow {
   font-family: var(--font-pt-mono);
   font-size: 11px;

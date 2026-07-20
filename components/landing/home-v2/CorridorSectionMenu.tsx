@@ -194,9 +194,24 @@ export function CorridorSectionMenu() {
   // top-to-bottom (a console decode, not a plain fade). Re-runs on every
   // (re-)entry via the `menuVisible` dependency; cleans up (restores text)
   // on leave / re-trigger. Skipped under reduced motion. Mono font ⇒ no
-  // layout thrash (see terminalReveal.ts). React never overwrites the
-  // scrambled text: the rendered strings don't change, so the text nodes
-  // are left untouched across re-renders.
+  // layout thrash (see terminalReveal.ts).
+  //
+  // SCOPED TO THE REEL LISTS — never the pinned highlights (bug, owner
+  // 2026-07-20: "the left menu is missing About; Arc is shown twice").
+  // `scrambleText` CAPTURES textContent at call time and its cleanup
+  // force-writes that captured string back. That is only safe on nodes whose
+  // text is CONSTANT — the reel rows, one fixed section name each. Both
+  // highlights are the opposite: their text is React-owned and re-renders on
+  // every section change (`activeTopNode.name` / `activeSubNode`). An
+  // unscoped selector therefore staled the highlight — leaving #services for
+  // #about, React committed "ABOUT", then this effect's cleanup (deps
+  // [menuVisible], which flips false on that same transition, so cleanup runs
+  // AFTER the commit) wrote the captured "THE ARC" back over it. React never
+  // repaired it: its vdom already read "ABOUT", so no further mutation. With
+  // the live ABOUT reel row `visibility: hidden` (it is `[data-active]`, U19),
+  // the section vanished and THE ARC appeared twice. Keep the highlights out
+  // of any textContent-writing effect; they read as the LOCKED readout and do
+  // not decode.
   const menuVisible = activeIsBeat || activeIsServices;
   useEffect(() => {
     if (!menuVisible || prm()) return;
@@ -204,7 +219,7 @@ export function CorridorSectionMenu() {
     const DUR_MS = 330;
     const nodes = Array.from(
       document.querySelectorAll<HTMLElement>(
-        ".home-v2-section-menu__name, .home-v2-section-submenu__num, .home-v2-section-submenu__name"
+        ".home-v2-section-menu__list .home-v2-section-menu__name, .home-v2-section-submenu__list .home-v2-section-submenu__num, .home-v2-section-submenu__list .home-v2-section-submenu__name"
       )
     );
     const cleanups = nodes.map((el, i) => scrambleText(el, i * STAGGER_MS, DUR_MS));

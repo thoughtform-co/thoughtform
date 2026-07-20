@@ -437,7 +437,7 @@ convention) framing the copy as the "dossier" that pairs with the "scan".
 
 - Pure CSS on the SHARED `.voidwalker__copy` (landing.css `::before` = TL,
   `::after` = BR — faint gold hairlines, 15px arms, outset + `pointer-events:
-  none` so there is ZERO layout impact; the ADR-045 rail-parity edges are
+none` so there is ZERO layout impact; the ADR-045 rail-parity edges are
   untouched). Both the stage and the static fallback carry it.
 - Both marks live on `.voidwalker__copy` ITSELF, not a child pseudo, on
   purpose: the stage gives every copy CHILD a `--ci` reveal `transform`, which
@@ -452,3 +452,55 @@ convention) framing the copy as the "dossier" that pairs with the "scan".
   alone is the subtler call). Verified in an isolated preview of the exact
   copy markup + tokens (the live deep-scroll stage will not composite in the
   headless pane).
+
+> **REVERSED by Update 10 (2026-07-20, owner)** — the corner brackets are
+> removed. The rest of this update (the reasoning for anchoring column-level
+> rather than child-hosted) is retained as the note to read before anyone
+> reinstates them.
+
+## Update 10 (2026-07-20, owner) — no corners; the copy STUTTERS on instead of swiping in
+
+Three owner calls on the #about bio panel, all on the copy column.
+
+**1. The dossier corner brackets are REMOVED (reverses Update 9).** The gold
+TL/BR registration corners read as chrome around the bio; the type carries the
+column unframed. Deleted: `.voidwalker__copy::before/::after` + their ≤960
+`display:none` (landing.css) and the `--about-copy-in` opacity gate
+(about-stage.css). Removed from BOTH surfaces — the pseudos were on the SHARED
+`.voidwalker__copy`, and stage↔fallback parity is the point of that sharing.
+`position: relative` stays on `.voidwalker__copy` (unrelated children rely on
+it). Update 9's containing-block warning still applies to any future reinstate.
+
+**2. Role copy.** `Founder · Navigator · Loop Earplugs AI Strategy` →
+`Creative Technologist · Founder · AI Adoption`, in the usual lockstep pair
+(`aboutStageData.ts` + the `.voidwalker__role` node in
+`landing-v7-motion.html`). Single-spaced separators per house convention.
+NOT propagated to the forked `landing-claude-workshop.html` (a separate
+surface with its own copy) — flagged to the owner rather than changed blind.
+
+**3. The copy reveal is a TERMINAL POWER-ON, not a wipe (supersedes the
+Update 6 rtl emergence).** Owner: the panel "appears via a swipe which looks
+like a glorified powerpoint transition". The Update 6 reveal slid each child
+32px right→left behind a left-inset `clip-path` wipe — legible as a slide
+because the travel and the wipe edge moved together. Replaced by an
+IN-PLACE stutter: three piecewise `clamp()` ramps off the existing `--ci`
+compose a strike → dropout → settle curve
+(`0 → 0.62 → 0.12 → 1`, measured live at `--ci` 0/0.11/0.27/0.59/1), with a
+2.5px lateral TEAR carried by `(g1 − g2)` that exists only during the strike
+and is exactly 0 at rest and at `--ci = 0` — so the flicker never becomes
+travel. Staggered by the untouched per-child `--ci-off`, the column reads as
+a dossier booting row by row. The identity-line scramble decode (Update 7)
+is unchanged and now lands on a matching glitch instead of fighting a wipe.
+
+- **Still plain `clamp()` math on `--ci`** — a pure scrubbed function of
+  scroll. No keyframes, no transition, no new writer, nothing outside the
+  corridor's CSS floor; reversible by construction (ADR-002 / ADR-047).
+- **The `clip-path` is GONE, not relaxed.** Its `-32px` top/bottom padding
+  existed only to stop the border box cropping `.voidwalker__name`'s 22px gold
+  text-shadow (the Update 6 bug). With no clip that failure mode is retired —
+  do not reintroduce one here without restoring the vertical headroom.
+- Verified by driving `--about-copy-in` directly and sampling computed
+  `opacity` / `transform` / `clip-path` per child: the deep-scroll stage will
+  not composite in the headless pane, and the preview tab reports
+  `visibilityState: "hidden"`, which throttles the hook's rAF — so the scroll
+  clock cannot be driven there (see ADR-031 Update 20 for the same trap).

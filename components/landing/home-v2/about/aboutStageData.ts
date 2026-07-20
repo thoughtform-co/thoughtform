@@ -19,7 +19,7 @@ export const ABOUT_STAGE = {
   /** The h2 — the name only, rendered UPPERCASE via CSS (owner 2026-07-17:
    *  "just my name in caps"). The "// Voidwalker." alias line was dropped. */
   name: "Vince Buyssens",
-  role: "Founder · Navigator · Loop Earplugs AI Strategy",
+  role: "Creative Technologist · Founder · AI Adoption",
   bios: [
     [
       { strong: "Vince" },

@@ -118,33 +118,41 @@
    each child carries an inline --ci-off (0 … 0.48); --ci renormalizes
    --about-copy-in past that offset. Reversible, observer-free.
 
-   Direction (owner, 2026-07-16): the column EMERGES FROM THE CENTER —
-   each child slides right→left into place (the deck it emerges from
-   sits center/right) and reveals right-to-left via a left-inset wipe,
-   replacing the earlier rise-up ("cringy") translateY. The identity
-   lines additionally scramble-decode (AboutStage effect — the caption
-   kernel), so the beat reads as the terminal printing the dossier. */
+   TERMINAL POWER-ON (owner, 2026-07-20 — supersedes the 2026-07-16
+   emerge-from-center wipe): the previous reveal slid each child 32px
+   right→left behind a left-inset `clip-path` wipe, which read as "a
+   glorified PowerPoint swipe". The line now appears IN PLACE and STUTTERS
+   on, like a terminal row striking, dropping out, then settling — no
+   travel, no wipe.
+
+   The stutter is three piecewise ramps off --ci (plain clamp() math, so it
+   stays a pure scrubbed function of scroll — reversible, no keyframes, no
+   new writer, and no exotic CSS the corridor's browser floor might miss):
+     --g1 strike  (--ci 0 → 0.11)   opacity to 0.62
+     --g2 dropout (--ci 0.16 → 0.27) subtracts 0.5  ⇒ dips to ~0.12
+     --g3 settle  (--ci 0.34 → 0.59) adds 0.88      ⇒ resolves to 1
+   Net curve 0 → 0.62 → 0.12 → 1. Staggered across children, the column
+   reads as a dossier booting row by row rather than sweeping in.
+
+   The only displacement is a 2.5px lateral TEAR carried by (g1 − g2): it
+   exists only during the strike and is exactly 0 once the dropout catches
+   up, so every child is unshifted at rest (and at --ci = 0) — the flicker
+   never becomes travel. The identity lines additionally scramble-decode
+   (AboutStage effect — the caption kernel), which now lands on a matching
+   glitch rather than fighting a wipe.
+
+   NOTE: the `clip-path` is deliberately GONE, not merely relaxed. It was
+   the wipe driver, and its -32px top/bottom padding existed solely to stop
+   the border box cropping `.voidwalker__name`'s 22px gold text-shadow. With
+   no clip at all that whole failure mode is retired — do not reintroduce a
+   clip-path here without restoring that vertical headroom. */
 #about[data-about-mode="stage"] .about-stage__copy > * {
   --ci: clamp(0, calc((var(--about-copy-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
-  opacity: var(--ci);
-  transform: translateX(calc((1 - var(--ci)) * 32px));
-  /* Right-to-left wipe: the hidden region shrinks from the LEFT edge,
-     so the text's center-facing end lands first and the reveal runs
-     outward to the left margin. Top/bottom are padded -32px (≥ the 22px
-     `.voidwalker__name` text-shadow blur radius) so the resolved --ci=1
-     state has vertical blur headroom — plain inset(0) still clips at the
-     border box and cropped the name's gold glow flat (the h2 line box has
-     no slack). The LEFT inset (the wipe driver) and the right stay 0 so
-     the emergence reveal is unchanged (ADR-047 copy-reveal contract). */
-  clip-path: inset(-32px 0 -32px calc((1 - var(--ci)) * 100%));
-}
-/* Dossier register chrome (landing.css `.voidwalker__copy::before/::after` —
-   the TL + BR registration corner brackets) rides the copy column's per-child
-   reveal: gate both on --about-copy-in so they fade in WITH the text, not
-   before it. Reversible, scroll-owned like the rest of the copy reveal. */
-#about[data-about-mode="stage"] .about-stage__copy::before,
-#about[data-about-mode="stage"] .about-stage__copy::after {
-  opacity: var(--about-copy-in, 0);
+  --g1: clamp(0, calc(var(--ci) * 9), 1);
+  --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
+  --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
+  opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
+  transform: translateX(calc((var(--g1) - var(--g2)) * 2.5px));
 }
 
 /* Decode targets keep their line box while blanked pre-arm (the scramble

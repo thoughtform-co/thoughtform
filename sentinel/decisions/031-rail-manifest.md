@@ -1047,3 +1047,94 @@ band, and the outgoing row re-reveals correctly once settled.
 
 **Files:** `home-v2.css` (reel-slat `transition` + `[data-active]`
 `transition-delay` + the reduced-motion list).
+
+### Update 20 — the detent diamond leaves the desktop entirely (2026-07-20, owner)
+
+**Bug (owner):** "the left rail still has that diamond square in the second
+section." Confirmed live at `data-corridor-phase="thesis"`: the diamond painted
+at `opacity: 1`, 12×12 on the left rail.
+
+**Root cause:** Update 12's desktop hide ENUMERATED the beats where the section
+menu shows (the Arc's navigate/encode/build + `data-active-station` services →
+contact), deliberately leaving the diamond as the indicator in the "pre-Arc
+regime (hero / thesis)". But the menu drops hero + thesis too
+(`MENU_HIDDEN_IDS`, U16 rev a), so that regime never actually handed off to
+anything — the diamond simply painted ALONE in section 2. It was invisible
+before U16 only because the whole rail was hero-dormant; once the curtain
+clip-uncovered the rail at section 2 (U16 rev c), the leftover became visible.
+So this is U16 fallout, not a new regression.
+
+**Fix (CSS only):** make the desktop hide unconditional — drop the phase /
+station enumeration and hide on the gate alone:
+`@media (min-width: 1101px) and (min-height: 760px) { [data-rail-manifest-root]
+:is(.rail-manifest__diamond, .rail-manifest__title) { opacity: 0;
+pointer-events: none } }`. Kept as `opacity` (not `display`) so the sub-gate
+hand-off stays smooth, and scoped through `[data-rail-manifest-root]` so it
+outranks the base `.rail-manifest__diamond { opacity: 1 }` on specificity
+rather than source order.
+
+**What is NOT changed:** the 13-tick ladder ("the ladder always stays" —
+this hides the MARKER only, verified 13 ticks still at `opacity: 1`);
+`RailManifestController` and the detent table (untouched, so the sub-gate
+fallback keeps its full behaviour); the sub-gate itself — at 1400×700 the
+diamond is still `opacity: 1` / `pointer-events: auto` with the menu
+`display: none`. On desktop the left rail now reads as the tick ladder alone,
+with `CorridorSectionMenu` as the sole journey indicator.
+
+**Verification note (repo-wide gotcha):** the preview tab reports
+`document.visibilityState === "hidden"` and THROTTLES transitions — the
+diamond's 350ms opacity transition sat at `currentTime: 0` forever, so
+`getComputedStyle` kept returning the pre-change `1` even though the rule had
+applied (`pointer-events` had already flipped to `none`). Force the end state
+with `el.getAnimations().forEach(a => a.finish())` before reading, or a correct
+CSS fix reads as a no-op.
+
+**Files:** `landing.css` (the Update 12 media block).
+
+### Update 21 — the decode must never write the pinned highlights (2026-07-20)
+
+**Bug (owner):** "the left menu is missing About from the list; Arc is shown
+twice for some reason." Seen at #about: the reel read THE ARC / SERVICES /
+**THE ARC** (highlighted) / CONTINUUM / PRACTICE / CONTACT.
+
+**Root cause — a capture-and-restore effect pointed at React-owned text.**
+`scrambleText` (Update 17) CAPTURES `el.textContent` at call time and its
+cleanup force-writes that captured string back. That contract is only safe on
+nodes whose text is CONSTANT. The menu's selector was unscoped
+(`.home-v2-section-menu__name, …`), so it also matched the span inside the
+Update 15 PINNED HIGHLIGHT — whose text is the opposite of constant: it is
+`activeTopNode.name`, re-rendered on every section change. Sequence leaving
+#services for #about:
+
+1. React commits the new highlight label — "ABOUT".
+2. `menuVisible` (= `activeIsBeat || activeIsServices`) flips **false** on that
+   same transition, so the effect's cleanup runs — and React runs cleanups
+   AFTER the DOM commit.
+3. The cleanup writes the captured "THE ARC" back over "ABOUT".
+4. React never repairs it: its vdom already reads "ABOUT", so there is no
+   further mutation. The stale label persists for the rest of the journey.
+
+Compounded by Update 19: the live ABOUT reel row is `visibility: hidden`
+because it is `[data-active]`, so the section did not merely mislabel — it
+disappeared, and THE ARC appeared twice. Both symptoms, one cause. Note the
+menu DATA was never wrong (`JOURNEY_TREE` still listed all six sections, and
+`--active-row` still reeled to the right slot) — only the painted label.
+
+**Fix (one selector):** scope the decode to the reel LISTS —
+`.home-v2-section-menu__list .home-v2-section-menu__name`,
+`.home-v2-section-submenu__list .home-v2-section-submenu__{name,num}` — so it
+matches the 6 static rows and neither highlight (was 7 nodes, now 6). The
+submenu highlight carried the identical latent bug (`activeSubNode`) and is
+excluded by the same change. The highlights read as the LOCKED readout and
+simply do not decode.
+
+**Invariant:** keep BOTH pinned highlights out of any effect that writes
+`textContent`. Their text is React-owned and dynamic; the reel rows are the
+only safe scramble targets. Anything that captures-then-restores text will
+stale them, and React will not notice.
+
+**Verified** by A/B-replaying the exact sequence (capture → commit "ABOUT" →
+cleanup restore) against both selectors in the live DOM: old ⇒ highlight reads
+"THE ARC" (bug reproduced), new ⇒ "ABOUT". `npm run verify` green.
+
+**Files:** `CorridorSectionMenu.tsx` (the decode effect's selector).
