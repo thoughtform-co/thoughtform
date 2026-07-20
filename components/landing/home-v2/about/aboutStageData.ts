@@ -8,12 +8,16 @@
  * Edit BOTH when the bio changes (the accepted dual-source pattern:
  * serviceData/servicePlateData, MAINTENANCE 2026-07-16).
  *
- * `{ em }` segments render as UPRIGHT GOLD (the site's no-italics rule);
- * `{ strong }` segments render gold at weight 500 (the `.voidwalker__bio
- * strong` treatment).
+ * `{ em }` and `{ strong }` segments are semantic-dawn (owner 2026-07-20 —
+ * upright per the no-italics rule; weight is the only emphasis they carry
+ * now, not color). `{ accent }` is the ONE exception: a phrase-specific
+ * HIGHLIGHT (`.voidwalker__bio-accent`) — gold FILL with latent-night ink,
+ * the section menu's inverse-video block, not gold text. Reserved for a
+ * single owner-named phrase — do not reuse it for general emphasis, that is
+ * what `em`/`strong` are for.
  */
 
-export type BioSegment = string | { em: string } | { strong: string };
+export type BioSegment = string | { em: string } | { strong: string } | { accent: string };
 
 export const ABOUT_STAGE = {
   /** The h2 — the name only, rendered UPPERCASE via CSS (owner 2026-07-17:
@@ -27,7 +31,9 @@ export const ABOUT_STAGE = {
       { em: "intelligence itself." },
     ],
     [
-      "AI is different: it isn't software to command, but an intelligence to navigate. Through Thoughtform, he helps teams build that relationship, mapping the fit between their work and the intelligence available.",
+      "AI is different: it isn't software to command, but an ",
+      { accent: "intelligence to navigate" },
+      ". Through Thoughtform, he helps teams build that relationship, mapping the fit between their work and the intelligence available.",
     ],
     [
       "He runs the same practice inside Loop Earplugs, leading AI adoption: advising leadership, embedding with teams, building the tools behind the marketing engine.",

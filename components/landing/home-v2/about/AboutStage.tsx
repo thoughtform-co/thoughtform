@@ -55,7 +55,12 @@ function BioText({ segments }: { segments: readonly BioSegment[] }) {
       {segments.map((seg, i) => {
         if (typeof seg === "string") return <span key={i}>{seg}</span>;
         if ("em" in seg) return <em key={i}>{seg.em}</em>;
-        return <strong key={i}>{seg.strong}</strong>;
+        if ("strong" in seg) return <strong key={i}>{seg.strong}</strong>;
+        return (
+          <span key={i} className="voidwalker__bio-accent">
+            {seg.accent}
+          </span>
+        );
       })}
     </>
   );

@@ -504,3 +504,82 @@ is unchanged and now lands on a matching glitch instead of fighting a wipe.
   not composite in the headless pane, and the preview tab reports
   `visibilityState: "hidden"`, which throttles the hook's rAF — so the scroll
   clock cannot be driven there (see ADR-031 Update 20 for the same trap).
+
+## Update 11 (2026-07-20, owner) — the bio column is semantic dawn; ONE gold accent
+
+Owner: "make all font colors semantic dawn; and then highlight in tensor gold
+'intelligence to navigate'". Two moves on the copy column's color grammar
+(right-hand SUBJECT-scan chrome untouched — out of scope, a different
+instrument).
+
+**1. Neutralized to dawn** (landing.css): `.voidwalker__bio em` (was gold —
+"intelligence itself.", bio 1), `.voidwalker__bio strong` (was gold —
+"Vince", bio 1; keeps its `font-weight: 500`, so it still reads as emphasis
+via weight, not color), `.voidwalker__meta__k` (was gold — the BASE /
+PRACTICE / ALSO AT labels; landed on `--dawn-50`, not full `--dawn`, so the
+label↔value hierarchy the gold saturation used to carry survives as a
+brightness step against `__v`'s full dawn), and `.voidwalker__name em`
+(currently dead — no `<em>` in the name — touched for lockstep only, zero
+visual effect). Link hover (`.voidwalker__links a:hover`, border+color+bg)
+was deliberately LEFT gold — that is the sitewide interactive-affordance
+convention (CLAUDE.md "Grid Item Hover States"), not a body font color, and
+this instruction was about the text.
+
+**2. One new accent hook, not a repurposed `em`/`strong`.** Since those two
+are now dawn everywhere else in the column, highlighting a THIRD, different
+phrase needed its own hook rather than colliding with the (now-neutral)
+existing ones. Added `{ accent: string }` to the `BioSegment` union
+(`aboutStageData.ts`) → `.voidwalker__bio-accent` (landing.css) → rendered as
+a plain `<span>` (`AboutStage.tsx` `BioText`). Applied to exactly one phrase,
+split out of bio 2: `"AI is different: … but an "`,
+`{ accent: "intelligence to navigate" }`, `". Through Thoughtform, …"`.
+Mirrored in the lockstep static fallback (`landing-v7-motion.html`) as a
+literal `<span class="voidwalker__bio-accent">` around the same phrase — same
+reuse-the-shared-class approach as `em`/`strong` already used there.
+
+**2a. The accent is an inverse-video HIGHLIGHT, not gold text** (owner, same
+day, correcting the first pass: _"intelligence to navigate should not have
+golden text color; the text color should be black (latent night) and then the
+highlight should be tensor gold like we have on the menu on the left"_). So
+the gold is the FILL and the type is dark — the section menu's active-row
+treatment (`.home-v2-section-menu__highlight .home-v2-section-menu__name`,
+home-v2.css), bloom included. Two deliberate departures from that menu rule,
+both house law:
+
+- **Ink is `--latent-night` (#110f09), NOT `--void`.** "Text on a tensor-gold
+  fill is latent-night, not void" is the shared on-gold guardrail (ADR-025
+  §"on-gold text"; `.svc-plate__chip`, `.hero__cta__btn--primary`). The menu
+  block itself uses `--void` and thereby predates/ignores that guardrail —
+  do NOT copy its ink value when mirroring its look. `--latent-night` has no
+  `variables.css` entry, so it carries the literal `#110f09` fallback exactly
+  like every other call site.
+- **`box-decoration-break: clone` + em-relative padding.** Unlike a one-line
+  menu row, this phrase WRAPS mid-highlight — measured live: 2 line
+  fragments at the production column width (it breaks after "…but an
+  intelligence"). Without `clone`, padding and bloom apply once across the
+  whole sliced inline box rather than per fragment, which reads as a broken
+  block. Same reason the corridor caption gold-wash marker uses it. Verified
+  both fragments render at equal height (23px) with their own padding.
+
+**Verified:** computed `color` sampled per node on BOTH the stage and the
+static fallback — `.voidwalker__bio-accent` is the only node in the column
+carrying a gold value, and it carries it as `background` `rgb(202,165,84)`
+with `color` `rgb(17,15,9)`; every other text node resolves to a `--dawn`
+shade. Identical on both surfaces. `npm run verify` green (350 tests); no
+console errors.
+
+**Not "Tensor Gold" the WebGL constant.** The owner's "tensor gold" reads as
+this codebase's informal name for the brand gold family in diagram/scan
+contexts (see `landing.css` line ~4350, "Tensor Gold orbital family" — which
+resolves to the ordinary `var(--gold)` `#caa554`), not the distinct
+`TENSOR_GOLD` `#b08b42` hex scoped to the corridor brandmark's WebGL shaders
+(`.claude/rules/brandmark.md`). This is DOM, so `var(--gold)` is the correct
+token either way — flagging the naming collision so a future reader doesn't
+go looking for a `--tensor-gold` CSS variable that doesn't exist. The section
+menu highlight this mirrors also fills with plain `var(--gold)`, which
+settles it.
+
+**Files:** `landing.css` (the color rules + the new accent class),
+`aboutStageData.ts` (`BioSegment` union + the split bio-2 segments),
+`AboutStage.tsx` (`BioText` accent branch), `landing-v7-motion.html` (the
+lockstep fallback markup).

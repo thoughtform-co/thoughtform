@@ -9487,8 +9487,12 @@ html {
   margin: 0 0 10px;
 }
 .voidwalker__name em {
+  /* Dawn, not gold (owner 2026-07-20 — see the bio note below): the ONE gold
+     accent in this column is `.voidwalker__bio-accent`. This selector is
+     currently unused (no `<em>` in the name), kept for lockstep should that
+     change. */
   font-style: normal;
-  color: var(--gold);
+  color: var(--dawn);
 }
 .voidwalker__role {
   font-family: var(--font-pt-mono);
@@ -9521,11 +9525,47 @@ html {
 }
 .voidwalker__bio em {
   font-style: normal;
-  color: var(--gold);
+  color: var(--dawn);
 }
 .voidwalker__bio strong {
-  color: var(--gold);
+  color: var(--dawn);
   font-weight: 500;
+}
+/* The bio column's font colors are semantic dawn throughout (owner
+   2026-07-20 — `em`/`strong` above no longer carry gold; weight is the only
+   emphasis signal). The ONE exception is this accent span, the single
+   highlight the owner called out by name ("intelligence to navigate", bio
+   paragraph 2, aboutStageData.ts). A dedicated class rather than reusing
+   `em`/`strong` — those are now dawn everywhere else in the column, so a
+   phrase-specific accent needs its own hook.
+
+   It is a HIGHLIGHT, not gold text (owner: "should not have golden text
+   color … the highlight should be tensor gold like we have on the menu on
+   the left"): the gold is the FILL and the type is dark, i.e. the same
+   inverse-video block as the section menu's active row
+   (`.home-v2-section-menu__highlight .home-v2-section-menu__name`,
+   home-v2.css), bloom included.
+
+   Two deliberate departures from that menu rule, both house law:
+   1. Ink is `--latent-night` (#110f09), NOT `--void` — "text on a tensor-gold
+      fill is latent-night, not void" is the shared on-gold guardrail
+      (ADR-025; `.svc-plate__chip`, `.hero__cta__btn--primary`). The menu
+      block predates/ignores it; do not copy its `--void` here. The token has
+      no `variables.css` entry, so it carries the literal fallback like every
+      other call site.
+   2. `box-decoration-break: clone` + em-relative padding, because unlike a
+      one-line menu row this phrase WRAPS mid-highlight (it breaks after "…but
+      an intelligence" at the production column width). Without `clone` the
+      padding and bloom apply once across the whole sliced inline box instead
+      of per line fragment, which reads as a broken block. Same reason the
+      corridor caption gold-wash marker uses it (home-v2.css). */
+.voidwalker__bio-accent {
+  color: var(--latent-night, #110f09);
+  background: var(--gold);
+  padding: 0.1em 0.28em;
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 .voidwalker__meta {
   margin-top: 28px;
@@ -9545,7 +9585,12 @@ html {
   color: var(--dawn-50);
 }
 .voidwalker__meta__k {
-  color: var(--gold);
+  /* Dawn, not gold (owner 2026-07-20). Held at dawn-50 rather than full
+     dawn — `.voidwalker__meta__cell`'s own dawn-50 is the ambient default,
+     and `__v` below is full dawn, so this keeps the label→value hierarchy
+     (dim label, bright value) the gold color used to carry via saturation
+     alone. */
+  color: var(--dawn-50);
   margin-bottom: 6px;
   display: block;
 }
