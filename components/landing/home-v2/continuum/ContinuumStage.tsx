@@ -195,20 +195,27 @@ export function ContinuumStage() {
             ref={bandCapLeftRef}
             className="continuum-stage__band-cap continuum-stage__band-cap--l"
           >
+            {/* Rev d: the cap is a STATION — the plate label with its copy
+                column hung directly beneath it: small dashed connector, then
+                the CENTRED telemetry line + body, no frame. The station
+                wrapper (plate-sized) is the anchor; connector + copy are
+                absolute children centred on the plate. */}
             <div className="continuum-stage__cap-axis">
-              <span className="continuum-stage__band-label">{toolStop.kicker}</span>
+              <div className="continuum-stage__cap-station">
+                <span className="continuum-stage__band-label">{toolStop.kicker}</span>
+                <span className="continuum-stage__cap-leader" aria-hidden="true" />
+                <div className="continuum-stage__cap-copy">
+                  <div className="continuum-stage__cap-fn">
+                    {toolStop.bearing ? (
+                      <span className="continuum-stage__cap-index">{toolStop.bearing} · </span>
+                    ) : null}
+                    {toolStop.title.join(" ")}
+                  </div>
+                  <p className="continuum-stage__cap-body">{toolStop.body}</p>
+                </div>
+              </div>
               <span className="continuum-stage__band-dash" aria-hidden="true" />
               <span className="continuum-stage__band-pole" aria-hidden="true" />
-            </div>
-            <span className="continuum-stage__cap-leader" aria-hidden="true" />
-            <div className="continuum-stage__cap-copy">
-              <div className="continuum-stage__cap-fn">
-                {toolStop.bearing ? (
-                  <span className="continuum-stage__cap-index">{toolStop.bearing} · </span>
-                ) : null}
-                {toolStop.title.join(" ")}
-              </div>
-              <p className="continuum-stage__cap-body">{toolStop.body}</p>
             </div>
           </div>
           <div
@@ -221,17 +228,19 @@ export function ContinuumStage() {
                 className="continuum-stage__band-dash continuum-stage__band-dash--flip"
                 aria-hidden="true"
               />
-              <span className="continuum-stage__band-label">{collabStop.kicker}</span>
-            </div>
-            <span className="continuum-stage__cap-leader" aria-hidden="true" />
-            <div className="continuum-stage__cap-copy">
-              <div className="continuum-stage__cap-fn">
-                {collabStop.bearing ? (
-                  <span className="continuum-stage__cap-index">{collabStop.bearing} · </span>
-                ) : null}
-                {collabStop.title.join(" ")}
+              <div className="continuum-stage__cap-station">
+                <span className="continuum-stage__band-label">{collabStop.kicker}</span>
+                <span className="continuum-stage__cap-leader" aria-hidden="true" />
+                <div className="continuum-stage__cap-copy">
+                  <div className="continuum-stage__cap-fn">
+                    {collabStop.bearing ? (
+                      <span className="continuum-stage__cap-index">{collabStop.bearing} · </span>
+                    ) : null}
+                    {collabStop.title.join(" ")}
+                  </div>
+                  <p className="continuum-stage__cap-body">{collabStop.body}</p>
+                </div>
               </div>
-              <p className="continuum-stage__cap-body">{collabStop.body}</p>
             </div>
           </div>
           <div ref={reticleRef} className="continuum-stage__reticle" aria-hidden="true">
@@ -251,13 +260,21 @@ export function ContinuumStage() {
               label layer read as pasted on. The writer owns transform +
               --seat-gain; CSS owns the vertical drop (`top`) and the
               per-child --ci scroll reveal composes underneath the gain. */}
+          {/* Rev e (owner: "shouldn't the middle thing be aligned with Tool
+              and Collaborator?"): the seat becomes a STATION matching the
+              caps exactly — kicker PROMOTED to a plate sitting ON the band
+              line (same __band-label treatment, lit via --seat-lit instead
+              of --cap-lit), a small connector, then the centred copy column.
+              Before this the kicker rendered at telemetry scale inside the
+              copy flow, so it landed a full drop BELOW the Tool/Collaborator
+              plates instead of beside them — the three-position row
+              (TOOL — AI LIVES HERE — COLLABORATOR) never actually lined up. */}
           <div ref={seatRef} className="continuum-stage__spectrum">
             <div className="continuum-stage__labels continuum-stage__labels--mid">
               <div
                 className="continuum-stage__stop continuum-stage__stop--m"
                 style={{ ["--ci-off" as string]: 0.3 }}
               >
-                <div className="crail__tick" />
                 <div
                   className={
                     "crail__k" + (midStop.kickerMod ? ` crail__k--${midStop.kickerMod}` : "")
@@ -265,29 +282,35 @@ export function ContinuumStage() {
                 >
                   {midStop.kicker}
                 </div>
-                <div className="crail__t">
-                  {midStop.title.map((line, j) => (
-                    <span key={j} className="continuum-stage__stop-line">
-                      {line}
-                    </span>
-                  ))}
-                </div>
-                <div className="crail__b">{midStop.body}</div>
-              </div>
-            </div>
+                <span className="continuum-stage__seat-leader" aria-hidden="true" />
+                <div className="continuum-stage__seat-copy">
+                  <div className="crail__t">
+                    {midStop.title.map((line, j) => (
+                      <span key={j} className="continuum-stage__stop-line">
+                        {line}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="crail__b">{midStop.body}</div>
 
-            {/* LIVE readout (U9): the corridor projector writes the two value
-                spans every frame from the slider head's sweep — complementary
-                weights that always sum to 1.00. The surrounding label text is
-                static; only the numbers move. */}
-            <div className="continuum-stage__readout" style={{ ["--ci-off" as string]: 0.5 }}>
-              <span className="continuum-stage__readout-line">
-                {CONTINUUM_STAGE.readout.prefix} · {CONTINUUM_STAGE.readout.toolLabel}{" "}
-                <span ref={readoutToolRef}>{CONTINUUM_STAGE.readout.rest}</span>
-                {" — "}
-                {CONTINUUM_STAGE.readout.collabLabel}{" "}
-                <span ref={readoutCollabRef}>{CONTINUUM_STAGE.readout.rest}</span>
-              </span>
+                  {/* LIVE readout (U9) — the seat column's last line. The
+                      corridor projector writes the two value spans every
+                      frame from the slider head's sweep — complementary
+                      weights that always sum to 1.00. The surrounding label
+                      text is static; only the numbers move. Reveals with the
+                      stop (no own --ci-off), types on last in the
+                      assembly. */}
+                  <div className="continuum-stage__readout">
+                    <span className="continuum-stage__readout-line">
+                      {CONTINUUM_STAGE.readout.prefix} · {CONTINUUM_STAGE.readout.toolLabel}{" "}
+                      <span ref={readoutToolRef}>{CONTINUUM_STAGE.readout.rest}</span>
+                      {" — "}
+                      {CONTINUUM_STAGE.readout.collabLabel}{" "}
+                      <span ref={readoutCollabRef}>{CONTINUUM_STAGE.readout.rest}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

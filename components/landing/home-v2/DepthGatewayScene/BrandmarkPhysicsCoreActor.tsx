@@ -410,6 +410,14 @@ const BAND_LABEL_EDGE_PX = 40;
  *  squared inside the writer, so the flare is tight around the dock and the
  *  chrome is at rest through the middle of each swing. */
 const CAP_LIT_RADIUS = 0.22;
+/** Phosphor persistence decay (U9 rev b). The instant proximity lights the
+ *  chrome (--cap-lit), but the body PARAGRAPHS ride a persistence trace
+ *  (--cap-persist / --seat-persist): painted to 1 when the head docks, then
+ *  decaying linearly over this many seconds — a radar-scope phosphor trail.
+ *  7s == the pendulum period, so a painted description has fully faded to
+ *  the CSS ghost floor by the time the beam next reaches it, and at most
+ *  one paragraph is bright at any moment. */
+const PERSIST_DECAY_S = 7;
 /** Assembly hysteresis on labelGain: the type-on fires once as the chrome
  *  window OPENS and only re-arms once the band has properly closed, so a
  *  scrub that hovers near the threshold can never stutter the sequence. */
@@ -1617,8 +1625,11 @@ function ContinuumBandSliderAnchors({
   const lastToolStrRef = useRef("");
   const lastCollabStrRef = useRef("");
   const assembledRef = useRef(false);
+  // Phosphor traces per station (value + last-written 2dp) — see
+  // PERSIST_DECAY_S. Frame-delta accumulators, so tab-hide safe.
+  const persistRef = useRef({ l: 0, r: 0, s: 0, wl: -1, wr: -1, ws: -1 });
 
-  useFrame(({ camera, size }) => {
+  useFrame(({ camera, size }, delta) => {
     const els = continuumBandAnchorsRef.current;
     const left = leftProbeRef.current;
     const right = rightProbeRef.current;
@@ -1647,12 +1658,16 @@ function ContinuumBandSliderAnchors({
         els.leftEl.style.setProperty("--cap-lit", "0");
         els.rightEl.style.setProperty("--cap-lit", "0");
         els.seatEl.style.setProperty("--seat-lit", "0");
+        els.leftEl.style.setProperty("--cap-persist", "0");
+        els.rightEl.style.setProperty("--cap-persist", "0");
+        els.seatEl.style.setProperty("--seat-persist", "0");
         els.stageEl.removeAttribute("data-continuum-assembled");
         assembledRef.current = false;
         lastSeatGainRef.current = 0;
         lastLitLRef.current = 0;
         lastLitRRef.current = 0;
         lastLitSeatRef.current = 0;
+        persistRef.current = { l: 0, r: 0, s: 0, wl: 0, wr: 0, ws: 0 };
         lastOpRef.current = 0;
       }
       return;
@@ -1690,11 +1705,16 @@ function ContinuumBandSliderAnchors({
     els.reticleEl.style.opacity = opacity;
 
     // The centre SEAT docks to the band's MIDPOINT (U9) — the mark's own ½
-    // position on the spectrum. Transform only: CSS owns the drop below the
-    // band line (`top`) and the copy reveal, which composes under this gain.
+    // position on the spectrum. Rev e: vertically CENTRED on the midpoint
+    // (translate(-50%, -50%), matching the caps' translate(-100%/0%, -50%))
+    // instead of hanging below it — the seat's element now shrinkwraps to
+    // just its kicker plate (CSS), so centering the element centres the
+    // plate on the band line exactly like a cap's plate. The copy column
+    // still hangs below via CSS (--panel-drop off the station), which
+    // composes under --seat-gain.
     els.seatEl.style.transform = `translate3d(${((lx + rx) / 2).toFixed(1)}px, ${clampY(
       (ly + ry) / 2
-    ).toFixed(1)}px, 0) translate(-50%, 0)`;
+    ).toFixed(1)}px, 0) translate(-50%, -50%)`;
     const seatGain = Math.round(op * 100) / 100;
     if (seatGain !== lastSeatGainRef.current) {
       els.seatEl.style.setProperty("--seat-gain", String(seatGain));
@@ -1702,15 +1722,19 @@ function ContinuumBandSliderAnchors({
     }
 
     // Lighting reciprocity — how strongly the head is docked at each
-    // station. Squared falloff keeps the flare tight around the dock, and
-    // scaling by `op` keeps the lighting inside the chrome's own fade.
-    const litAt = (delta: number) => {
-      const t = Math.max(0, 1 - Math.abs(delta) / CAP_LIT_RADIUS);
-      return Math.round(t * t * op * 100) / 100;
+    // station. Squared falloff keeps the flare tight around the dock; the
+    // instant channel (--cap-lit, chrome flare) additionally scales by `op`
+    // so it stays inside the chrome's own fade.
+    const proxAt = (d: number) => {
+      const t = Math.max(0, 1 - Math.abs(d) / CAP_LIT_RADIUS);
+      return t * t;
     };
-    const litL = litAt(sweep - BAND_SWING_MIN);
-    const litR = litAt(sweep - BAND_SWING_MAX);
-    const litSeat = litAt(sweep - 0.5);
+    const proxL = proxAt(sweep - BAND_SWING_MIN);
+    const proxR = proxAt(sweep - BAND_SWING_MAX);
+    const proxSeat = proxAt(sweep - 0.5);
+    const litL = Math.round(proxL * op * 100) / 100;
+    const litR = Math.round(proxR * op * 100) / 100;
+    const litSeat = Math.round(proxSeat * op * 100) / 100;
     if (litL !== lastLitLRef.current) {
       els.leftEl.style.setProperty("--cap-lit", String(litL));
       lastLitLRef.current = litL;
@@ -1722,6 +1746,34 @@ function ContinuumBandSliderAnchors({
     if (litSeat !== lastLitSeatRef.current) {
       els.seatEl.style.setProperty("--seat-lit", String(litSeat));
       lastLitSeatRef.current = litSeat;
+    }
+
+    // Phosphor persistence (U9 rev b) — the body paragraphs' paint channel.
+    // Each station's trace jumps to the head's raw proximity when the beam
+    // is on it and decays linearly over PERSIST_DECAY_S after it leaves, so
+    // a painted description stays readable through the swing away and has
+    // faded back to the CSS ghost floor by the next pass. Raw proximity
+    // (not ×op): the seat container's opacity already carries the global
+    // gain, and scaling twice would dim the paint during formation.
+    const fade = Math.min(0.1, delta) / PERSIST_DECAY_S;
+    const pr = persistRef.current;
+    pr.l = Math.max(proxL, pr.l - fade);
+    pr.r = Math.max(proxR, pr.r - fade);
+    pr.s = Math.max(proxSeat, pr.s - fade);
+    const pL = Math.round(pr.l * 100) / 100;
+    const pR = Math.round(pr.r * 100) / 100;
+    const pS = Math.round(pr.s * 100) / 100;
+    if (pL !== pr.wl) {
+      els.leftEl.style.setProperty("--cap-persist", String(pL));
+      pr.wl = pL;
+    }
+    if (pR !== pr.wr) {
+      els.rightEl.style.setProperty("--cap-persist", String(pR));
+      pr.wr = pR;
+    }
+    if (pS !== pr.ws) {
+      els.seatEl.style.setProperty("--seat-persist", String(pS));
+      pr.ws = pS;
     }
 
     // The LIVE readout — complementary weights of the head's position, so

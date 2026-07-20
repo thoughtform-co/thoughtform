@@ -62,6 +62,19 @@
   position: sticky;
   top: 0;
   height: 100svh;
+  /* PHOSPHOR GHOST FLOOR (U9 rev b) — the resting opacity of the three body
+     paragraphs. The instrument's resting state shows only its grammar (pole
+     tags, statement, readout); the descriptions sit at this ghost level and
+     are PAINTED to full brightness by the comet head docking at their
+     station (--cap-persist / --seat-persist, written by the projector),
+     then decay like phosphor. One knob, used by both body rules. */
+  --copy-ghost: 0.22;
+  /* COPY DROP (U9 rev c/d) — the ONE vertical from the band line to the top
+     of all three stations' copy columns. The cap columns and the seat
+     column hang from this same line, and the connectors/tick span exactly
+     band → copy, so the whole lower register reads as one aligned
+     instrument cluster instead of three floating text blocks. */
+  --panel-drop: clamp(34px, 4.8svh, 52px);
   /* ADR-008 Rule 2 exception (sanctioned for #continuum by ADR-049): the
      stage is transparent so the live corridor canvas — the returned mark
      with its lit slider band — shows through the pinned beat. The
@@ -254,12 +267,6 @@
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
-  /* Lighting reciprocity (U9): --cap-lit is written per frame by the
-     projector from the slider head's proximity to THIS pole, so the label
-     flares as the shader's comet head docks here and settles back as it
-     swings away. Base sits just under the old flat 0.5 so the lit peak
-     reads as an event rather than the resting state. */
-  text-shadow: 0 0 22px rgb(202 165 84 / calc(0.32 + var(--cap-lit, 0) * 0.45));
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -271,6 +278,39 @@
   display: flex;
   align-items: center;
   gap: 14px;
+}
+/* The pole LABEL PLATE (U9 rev c, owner: "Tool / Collaborator more
+   outspoken… panels, labels"). The primary labels stop being bare tracked
+   text and become key-cap PLATES — the reference grammar's chip (the
+   Departure Mono "AUTO" block / this site's own active-menu inverse block).
+   Resting: outlined cap on a void tint. DOCKED: the plate flips to INVERSE
+   VIDEO — gold fill, void glyphs, bloom — driven by the same --cap-lit the
+   pole diamond uses, so the beam arriving reads as the station keying up.
+   The ×1.6/×1.8 boosts steepen the squared proximity into a decisive flip
+   (no muddy mid-gray text) while staying continuous. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-label {
+  padding: 0.26em 0.5em 0.24em;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--gold, #caa554) calc(min(var(--cap-lit, 0) * 1.6, 1) * 100%),
+      var(--dawn-30)
+    );
+  background: color-mix(
+    in srgb,
+    var(--gold, #caa554) calc(min(var(--cap-lit, 0) * 1.5, 1) * 95%),
+    rgba(10, 9, 8, 0.6)
+  );
+  color: color-mix(
+    in srgb,
+    var(--void, #0a0908) calc(min(var(--cap-lit, 0) * 1.8, 1) * 100%),
+    var(--dawn, #ebe3d6)
+  );
+  box-shadow: 0 0 calc(var(--cap-lit, 0) * 18px) rgb(202 165 84 / calc(var(--cap-lit, 0) * 0.45));
+  /* The resting text glow (was on the cap) fades out as the plate flips —
+     a gold halo behind void glyphs on a gold plate would just be mud; the
+     lit bloom comes from the plate's box-shadow instead. */
+  text-shadow: 0 0 22px rgb(202 165 84 / calc(0.32 * (1 - min(var(--cap-lit, 0) * 1.8, 1))));
 }
 /* Leader dash pointing at the band end (gold fades toward the label). */
 #continuum[data-continuum-mode="stage"] .continuum-stage__band-dash {
@@ -305,59 +345,59 @@
   flex: none;
 }
 
-/* ── The cap's readable description — the Tool / Collaborator title + body,
-   hanging UNDER the pole label (owner 2026-07-19). Absolute (top:100%) so it
-   does NOT change the cap's box height — the projector's `-50%` anchor keeps
-   the LABEL row centred on the band while the copy hangs beneath it, reading
-   as "attached to the rail endpoint". Rides the cap's projected transform +
-   opacity (it is a child), so it materialises WITH the instrument. The copy
-   splays OUTBOARD from each end (left cap → left, right cap → right) to keep
-   the mark + centre stop clear. Resets the cap's nowrap / uppercase / gold
-   glow so the body reads as body. */
-#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy {
+/* ── The cap STATION (U9 rev d, owner: centre-align the copy under each
+   pole, drop the frame, keep a small connector). The plate label is the
+   anchor: `__cap-station` is a plate-sized relative wrapper inside the axis
+   row, and the connector + copy hang as absolute children CENTRED on it —
+   plate → small dashed connector → telemetry line → body, one centred
+   column per pole, no box. The seat is the same composition on the band's
+   midpoint, so all three stations read as one family. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-station {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+/* The copy column — CENTRED under the plate. Absolute, so it never changes
+   the station's height (the projector's `-50%` anchor keeps the plate on the
+   band). Top hangs at the shared --panel-drop below the band line (50% of
+   the station box == the band, since the station shrinkwraps to the plate
+   and the plate is centred on/in it) — the SAME line every station's copy
+   hangs from, caps and seat alike. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy,
+#continuum[data-continuum-mode="stage"] .continuum-stage__seat-copy {
   position: absolute;
-  /* Lockstep with .continuum-stage__cap-leader's height — the leader must
-     bridge this exact gap. */
-  top: calc(100% + clamp(14px, 2svh, 22px));
-  /* Widened with the 2026-07-20 type bump so the MEASURE holds — bigger type
-     in the same column just means fewer characters per line. Splays outboard
-     into empty frame, so there is room on both sides at every width. */
-  width: clamp(21ch, 18vw, 26ch);
+  top: calc(50% + var(--panel-drop));
+  left: 50%;
+  transform: translateX(-50%);
   white-space: normal;
+  text-align: center;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy {
+  width: clamp(220px, 17.5vw, 276px);
   text-transform: none;
   letter-spacing: normal;
   text-shadow: none;
 }
-#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--l .continuum-stage__cap-copy {
-  right: 0;
-  text-align: right;
-}
-#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--r .continuum-stage__cap-copy {
-  left: 0;
-  text-align: left;
+#continuum[data-continuum-mode="stage"] .continuum-stage__seat-copy {
+  width: min(440px, 60vw);
 }
 
-/* The dashed DROP-LEADER (U9) — a hairline of gold dashes falling from the
-   axis row to the copy block, the `.home-v2-reticle__meta__lead` dashed-rule
-   grammar turned vertical. This is what makes the copy read as HUNG from the
-   band terminal instead of merely sitting near it. Aligned under the pole
-   diamond's centre (the outboard end of the axis row). */
-#continuum[data-continuum-mode="stage"] .continuum-stage__cap-leader {
+/* The small dashed CONNECTOR — plate bottom → copy top, centred on the
+   plate (the `.home-v2-reticle__meta__lead` dashed-rule grammar turned
+   vertical). Both ends derive from --panel-drop: it starts just under the
+   plate (top: 100%) and lands just above the copy (the 50% term is half
+   the STATION's height, i.e. the plate-bottom → band-line distance — the
+   seat's station shrinkwraps to its plate exactly like a cap's, so the same
+   formula lands the seat's connector at the same relative spot). One rule
+   for all three stations — the row reads as one family. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-leader,
+#continuum[data-continuum-mode="stage"] .continuum-stage__seat-leader {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
+  left: 50%;
   width: 1px;
-  /* Matches the cap-copy's gap exactly, so the leader spans axis → copy with
-     no daylight at either end. Dot pitch is DENSE (1.5px on / 2.5px off) and
-     gold-60: at 1px wide over a ~20px run, the sparser 5px-pitch gold-40
-     dashes this started as rendered ~3 marks and read as nothing at all. */
-  height: clamp(14px, 2svh, 22px);
+  height: calc(var(--panel-drop) - 50% - 12px);
   background: repeating-linear-gradient(to bottom, var(--gold-60) 0 1.5px, transparent 1.5px 4px);
-}
-#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--l .continuum-stage__cap-leader {
-  right: 4px;
-}
-#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--r .continuum-stage__cap-leader {
-  left: 4px;
 }
 
 /* The cap's function line — TELEMETRY grade (U9). It used to be a 15px bold
@@ -369,8 +409,9 @@
    does, lighting up when the head is there) → body. The zero-padded bearing
    is the navigation-grammar index. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__cap-fn {
-  /* inline-block so the assembly type-on's clip-path shrinkwraps the glyphs
-     rather than wiping the full column width. */
+  /* inline-block so the type-on's clip wipe shrinkwraps the glyphs — the
+     copy column is centred (rev d), and a full-width wipe on centred text
+     reveals leading whitespace first. */
   display: inline-block;
   font-family: var(--font-pt-mono);
   font-weight: 400;
@@ -386,7 +427,8 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--gold, #caa554) calc(var(--cap-lit, 0) * 100%), var(--dawn-50));
   line-height: 1.4;
-  margin-bottom: 8px;
+  margin: 0 0 8px;
+  /* Void halo — no panel surface behind this any more (rev d). */
   text-shadow: 0 0 12px rgba(10, 9, 8, 0.72);
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__cap-index {
@@ -395,7 +437,16 @@
 }
 /* Body — PP Neue Montreal (the only body face). The void halo is the
    #about support-copy precedent: readable DOM copy sitting over the lit
-   wireframe needs its own dark bloom or the dots eat the glyph edges. */
+   wireframe needs its own dark bloom or the dots eat the glyph edges.
+
+   PHOSPHOR PERSISTENCE (U9 rev b, owner: "too much is happening"). Radar /
+   avionics grammar puts labels, values and geometry next to an instrument —
+   never paragraphs. So the descriptions rest at the --copy-ghost floor and
+   the BEAM PAINTS them: --cap-persist rises to 1 as the comet head docks at
+   this pole, then decays over ~7s (the projector's PERSIST_DECAY_S), like a
+   trace on a phosphor scope. At most one paragraph is bright at a time and
+   the pendulum becomes the narrator — the content is all still here, it is
+   just surfaced contextually instead of shouting at rest. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__cap-body {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
@@ -407,7 +458,9 @@
   letter-spacing: normal;
   text-transform: none;
   color: var(--dawn-70);
+  /* Void halo — the copy sits directly over the wireframe again (rev d). */
   text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
+  opacity: calc(var(--copy-ghost, 0.22) + (1 - var(--copy-ghost, 0.22)) * var(--cap-persist, 0));
 }
 
 /* ── The navigator reticle (v7 `.crail__reticle`: rotated outlined ring +
@@ -472,10 +525,11 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
-/* ── The centre SEAT — the readable "AI lives here" stop + the readout,
-   hanging directly beneath the mark's own ½ position on the band.
+/* ── The centre SEAT — a STATION matching the caps exactly (U9 rev e), the
+   mark's own ½ position on the spectrum: kicker PLATE on the band line →
+   small connector → centred copy column.
 
-   U9: PROJECTED, not screen-anchored. It used to sit at a fixed
+   PROJECTED, not screen-anchored (U9). It used to sit at a fixed
    --continuum-axis-y (54svh, the parked instrument's projected centre) while
    the caps and reticle rode the band's projected geometry — so the moment the
    mark moved (approach zoom, pointer-look, hero boost) the seat slid against
@@ -484,74 +538,44 @@
    block at the band's projected MIDPOINT every frame, exactly as it does the
    caps, and caps + reticle + seat translate as one rigid body.
 
+   Rev e: the kicker ("AI lives here") was ALSO screen-anchored relative to
+   this block — it rendered at telemetry scale, first in the copy flow, so it
+   landed a full --panel-drop BELOW the caps' plates instead of beside them
+   (owner: "shouldn't the middle thing be aligned with Tool and
+   Collaborator?"). Fix: this whole chain (spectrum → labels → stop) now
+   SHRINKWRAPS to just the kicker (width: fit-content at every level, like
+   __cap-station), so the writer's `translate(-50%, -50%)` centres the PLATE
+   — not the tall content stack — on the band line, exactly like a cap's
+   axis row centres its plate. The copy column hangs off `.stop` exactly like
+   `__cap-copy` hangs off `__cap-station` (same --panel-drop math).
+
    Writer owns: transform + --seat-gain (chrome window opacity).
-   CSS owns: `top` (the drop below the band line — the single tuning knob,
-   was --continuum-axis-y) and the per-child --ci copy reveal, which
-   multiplies under the gain so the scroll scrub still works. */
+   CSS owns: the copy drop (via --panel-drop, shared with the caps) and the
+   per-child --ci copy reveal, which multiplies under the gain so the scroll
+   scrub still works. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__spectrum {
   position: fixed;
   left: 0;
-  top: clamp(10px, 1.6svh, 22px);
-  width: min(440px, 60vw);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  top: 0;
+  width: fit-content;
   opacity: var(--seat-gain, 0);
   pointer-events: none;
   will-change: transform, opacity;
 }
-
-/* The centre "AI lives here" stop — a single CENTRED column now (the Tool /
-   Collaborator stops moved onto their rail caps, owner 2026-07-19). Keeps the
-   v7 `.crail--large` stop recipe: tick hairline + outlined diamond foot at the
-   column's 50%, connecting the copy up to the mark's centre seat. (The old
-   margin-top spacer is gone — the seat's own `top` now owns the drop.) */
 #continuum[data-continuum-mode="stage"] .continuum-stage__labels {
   margin: 0;
-  width: 100%;
+  width: fit-content;
   display: block;
 }
+/* The seat STATION — plate-sized anchor for the connector + copy, exactly
+   `__cap-station`'s role. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop {
   position: relative;
-  padding-top: 26px;
-  text-align: center;
+  width: fit-content;
 }
-/* Tick anchors: hairline + outlined diamond foot (the v7 `.crail__tick` +
-   its ::before diamond), centred per column — the seat's own leader up to
-   the band. It lights with --seat-lit as the head crosses the ½ position,
-   the same reciprocity the caps get at their poles. */
-#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__tick {
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  width: 1px;
-  height: 20px;
-  background: color-mix(
-    in srgb,
-    var(--gold, #caa554) calc(var(--seat-lit, 0) * 100%),
-    var(--dawn-30)
-  );
-}
-#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__tick::before {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  border: 1px solid;
-  border-color: color-mix(
-    in srgb,
-    var(--gold, #caa554) calc(var(--seat-lit, 0) * 100%),
-    var(--dawn-30)
-  );
-  transform: translate(-50%, 50%) rotate(45deg);
-  background: color-mix(
-    in srgb,
-    var(--gold, #caa554) calc(var(--seat-lit, 0) * 75%),
-    var(--void, #0a0908)
-  );
-}
+/* The seat's connector — literally the cap leader's recipe (see the combined
+   selector below), so the two ends of the "TOOL — AI LIVES HERE —
+   COLLABORATOR" row read as one family. */
 /* One authored line each (block), but SHRINKWRAPPED (fit-content + auto
    margins) so the assembly type-on's clip-path wipes the glyphs rather than
    the centred column's full width. Plain `inline-block` would collapse the
@@ -561,30 +585,69 @@
   width: fit-content;
   margin-inline: auto;
 }
-/* The seat's type tracks the caps' ramp exactly (2026-07-20) — the two sides
-   are one instrument, so the centre must not stay pinned while the caps grow.
-   Kicker == the caps' telemetry grade; body == the caps' body; the statement
-   is the one bold line and sits just under the pole labels at every width. */
+/* The seat's kicker — PROMOTED to plate scale (rev e), the exact
+   `__band-label` recipe (size, tracking, plate padding/border/fill, the
+   inverse-video dock flip) but lit by --seat-lit instead of --cap-lit, so
+   "AI lives here" reads as the THIRD pole in the row — TOOL / AI LIVES HERE
+   / COLLABORATOR — not a subordinate tag. Kept as a plain selector (not
+   combined with __band-label) because kickerMod colour variants elsewhere
+   on the site still target bare `.crail__k`; this scoped rule simply wins
+   on specificity while the stage is engaged. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__k {
   display: inline-block;
-  font-size: clamp(10px, 0.8vw, 12.5px);
-  color: color-mix(in srgb, var(--gold, #caa554) calc(var(--seat-lit, 0) * 100%), var(--dawn-50));
+  /* The base (unscoped) .crail__k carries `margin-bottom: 8px` for its
+     original in-flow stop layout — silently leaking through here (our rule
+     never mentioned `margin`, so the cascade doesn't touch it) inflated
+     `.stop`'s shrinkwrap height by 8px and threw the plate's vertical
+     centring on the band line off by exactly half that, 4px. Zero it. */
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-weight: 400;
+  font-size: clamp(15px, 1.3vw, 19px);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0.26em 0.5em 0.24em;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--gold, #caa554) calc(min(var(--seat-lit, 0) * 1.6, 1) * 100%),
+      var(--dawn-30)
+    );
+  background: color-mix(
+    in srgb,
+    var(--gold, #caa554) calc(min(var(--seat-lit, 0) * 1.5, 1) * 95%),
+    rgba(10, 9, 8, 0.6)
+  );
+  color: color-mix(
+    in srgb,
+    var(--void, #0a0908) calc(min(var(--seat-lit, 0) * 1.8, 1) * 100%),
+    var(--dawn, #ebe3d6)
+  );
+  box-shadow: 0 0 calc(var(--seat-lit, 0) * 18px) rgb(202 165 84 / calc(var(--seat-lit, 0) * 0.45));
+  text-shadow: 0 0 22px rgb(202 165 84 / calc(0.32 * (1 - min(var(--seat-lit, 0) * 1.8, 1))));
 }
+/* Statement + body — unchanged sizing, just now nested one level deeper
+   inside `.continuum-stage__seat-copy` (still matched by these descendant
+   selectors). The statement is the beat's one bold title. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__t {
   font-size: clamp(15px, 1.15vw, 18px);
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__b {
   font-size: clamp(13px, 1.02vw, 16px);
-  max-width: 26ch;
+  max-width: 28ch;
   margin-inline: auto;
-  /* Void halo — the seat's body sits directly over the lit wireframe. */
   text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
+  /* Phosphor persistence — painted by the head crossing the ½ seat (see the
+     __cap-body comment for the full model). The kicker + statement + readout
+     stay resting-visible; only this paragraph ghosts. */
+  opacity: calc(var(--copy-ghost, 0.22) + (1 - var(--copy-ghost, 0.22)) * var(--seat-persist, 0));
 }
 
-/* ── The LIVE readout under the seat (U9). The projector writes the two
-   value spans every frame from the head's sweep; the line lifts toward gold
-   as the head crosses the seat, so the telemetry brightens exactly when it
-   reads 0.50 / 0.50. */
+/* ── The LIVE readout — the seat column's last line (unframed since rev d).
+   The projector writes the two value spans every frame from the head's
+   sweep; the line lifts toward gold as the head crosses the seat, so the
+   telemetry brightens exactly when it reads 0.50 / 0.50. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__readout {
   text-align: center;
   font-family: var(--font-pt-mono);
@@ -593,7 +656,7 @@
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: color-mix(in srgb, var(--gold, #caa554) calc(var(--seat-lit, 0) * 70%), var(--dawn-30));
-  margin-top: 18px;
+  margin: 16px 0 0;
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__readout-line {
   display: inline-block;
@@ -606,7 +669,10 @@
    appearing rather than an instrument coming online. Now the connectors
    unfold, the mono labels type on in glyph steps (the ArcCasesCue terminal
    recipe, home-v2.css), the telemetry follows, and the readout lands last —
-   one ~1.5s power-up sequence, ordered structure → identity → data.
+   one ~1.5s power-up sequence, ordered structure → identity → data. The
+   body paragraphs are NOT in this sequence (U9 rev b): they rest at the
+   ghost floor and the beam paints them afterwards (phosphor persistence),
+   so the power-up hands directly into the launch narrative.
 
    Trigger: `data-continuum-assembled`, set/removed by the corridor projector
    on a labelGain hysteresis (0.15 on / 0.03 off — never mid-fade). Removing
@@ -641,14 +707,15 @@
   transform-origin: left center;
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__cap-leader,
-#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__tick {
+#continuum[data-continuum-mode="stage"] .continuum-stage__seat-leader {
   transform: scaleY(0);
   transform-origin: top center;
 }
-#continuum[data-continuum-mode="stage"] .continuum-stage__cap-body,
-#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__b {
-  opacity: 0;
-}
+/* (The body paragraphs have NO assembly rest state or animation — their
+   arrival IS the beam painting them via the persist vars, which start at 0
+   on every re-entry. The sequencing falls out of the actor clock for free:
+   assembly completes → the head launches to Tool → the Tool description is
+   the first trace painted.) */
 
 @keyframes continuum-type {
   from {
@@ -674,17 +741,6 @@
     transform: scaleY(1);
   }
 }
-@keyframes continuum-body-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 /* 1 — structure: the connectors draw first. */
 #continuum[data-continuum-mode="stage"]
   .continuum-stage[data-continuum-assembled]
@@ -693,13 +749,10 @@
 }
 #continuum[data-continuum-mode="stage"]
   .continuum-stage[data-continuum-assembled]
-  .continuum-stage__stop
-  .crail__tick {
-  animation: continuum-unfold-y 0.32s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.1s both;
-}
+  .continuum-stage__cap-leader,
 #continuum[data-continuum-mode="stage"]
   .continuum-stage[data-continuum-assembled]
-  .continuum-stage__cap-leader {
+  .continuum-stage__seat-leader {
   animation: continuum-unfold-y 0.3s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.3s both;
 }
 
@@ -720,7 +773,11 @@
   .continuum-stage[data-continuum-assembled]
   .continuum-stage__stop
   .crail__k {
-  animation: continuum-type 0.28s steps(13, end) 0.3s both;
+  /* Rev e: the kicker is a plate now — same 0.08s beat as the two pole
+     plates, so the row (TOOL — AI LIVES HERE — COLLABORATOR) resolves as
+     one identity reveal, and the connectors (0.3s) visibly drop FROM the
+     already-typed row rather than racing it. */
+  animation: continuum-type 0.28s steps(13, end) 0.08s both;
 }
 
 /* 3 — telemetry + the seat's statement. */
@@ -740,18 +797,8 @@
   animation: continuum-type 0.26s linear 0.64s both;
 }
 
-/* 4 — the reading copy, then the live readout last. */
-#continuum[data-continuum-mode="stage"]
-  .continuum-stage[data-continuum-assembled]
-  .continuum-stage__cap-body {
-  animation: continuum-body-in 0.32s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.75s both;
-}
-#continuum[data-continuum-mode="stage"]
-  .continuum-stage[data-continuum-assembled]
-  .continuum-stage__stop
-  .crail__b {
-  animation: continuum-body-in 0.32s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.85s both;
-}
+/* 4 — the live readout lands last. (The body paragraphs are deliberately
+   absent: the beam paints them — see the phosphor block above.) */
 #continuum[data-continuum-mode="stage"]
   .continuum-stage[data-continuum-assembled]
   .continuum-stage__readout-line {
@@ -763,10 +810,13 @@
    about-stage.css renormalized-offset recipe; reversible, observer-free —
    NOT useRevealMotion). Fast by design: the instrument is already
    assembled when the pin lands, so the copy arrives with it. */
+/* (The readout left this list in U9 rev c — it is the seat panel's footer
+   row now, so it reveals as part of `__stop` instead of on its own offset;
+   a second translate inside the framed panel would poke it through the
+   plate border mid-scrub.) */
 #continuum[data-continuum-mode="stage"] .continuum-stage__title,
 #continuum[data-continuum-mode="stage"] .continuum-stage__lede,
-#continuum[data-continuum-mode="stage"] .continuum-stage__stop,
-#continuum[data-continuum-mode="stage"] .continuum-stage__readout {
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop {
   --ci: clamp(
     0,
     calc((var(--continuum-copy-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))),
