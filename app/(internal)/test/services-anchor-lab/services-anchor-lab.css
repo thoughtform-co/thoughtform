@@ -1,0 +1,475 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/services-anchor-lab — seating the #services masthead
+   ═══════════════════════════════════════════════════════════════════════
+
+   Shape law (thoughtform-design): radius 0 everywhere; diamonds, never
+   circles; gold is WAYFINDING only — it marks where the frame locks onto
+   the text, never decoration; no italics.
+
+   Anchoring doctrine for every route below: the rule spans RAIL TO RAIL
+   (from the left `--hud-margin` track to the right one) so it is welded to
+   the frame at BOTH ends, and the gold appears ONLY where it meets the copy.
+   A uniformly bright bar reads as a grid; a dim bar with local gold locks
+   reads as an instrument acquiring a value — which is the whole point.
+
+   NOTHING here restyles a production class outside a
+   `.sal[data-anchor-variant=…]` scope. The lab sheet loads last, so those
+   scoped rules win the cascade without touching the shipped surface.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.sal {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  /* ── Lab tokens ──────────────────────────────────────────────────── */
+  /* Dim ink: the rail track is rgba(235,227,214,0.55); the horizon sits
+     UNDER it in weight so the rails stay the dominant frame. */
+  --sal-bar-ink: rgba(235, 227, 214, 0.2);
+  --sal-lock-ink: var(--gold, #caa554);
+  --sal-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --sal-nudge: 0px;
+  /* How far past a column's text edge a gold lock segment bleeds. */
+  --sal-lock-bleed: 12px;
+  /* Gap the interrupted rule leaves either side of the copy. */
+  --sal-seg-gap: 16px;
+
+  /* The seat: which title baseline the horizon rides. LINE 2 by default —
+     the gold em line ("YOUR TEAM OWNS.") sitting ON the rule is the
+     strongest read, since the frame then locks onto the accent itself. */
+  --sal-baseline-y: calc(var(--sal-line2-bottom, 50vh) + var(--sal-nudge));
+
+  /* Stand in for `useLandingScroll` (ADR-031 Update 16 rev c): the corner
+     brackets and BOTH rails are CLIP-UNCOVERED by the hero sliding off, so
+     every one of them carries `clip-path: inset(max(0px, (1 − --hero-lift) ·
+     100dvh − <its own top offset>) …)`. With no scroll writer running the
+     var is unset, the inset resolves to a full viewport height, and the
+     entire rail ladder is clipped away — the frame paints as an empty void.
+     We are parked at #services, far past the curtain, so the honest value is
+     the saturated one. Without this the lab has no rails to anchor TO. */
+  --hero-lift: 1;
+}
+.sal[data-seat="l1"] {
+  --sal-baseline-y: calc(var(--sal-line1-bottom, 50vh) + var(--sal-nudge));
+}
+
+/* hudHtml ships the fixed gold gateway radial; production covers it with the
+   opaque corridor canvas — here the void bed + ring canvas own the backdrop. */
+.sal .gateway {
+  display: none;
+}
+
+/* ── Backdrop ──────────────────────────────────────────────────────── */
+.sal-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(130% 100% at 42% 45%, #0d0a07 0%, #050403 72%);
+}
+
+/* HUD chrome is scenery — pass clicks through except real links. */
+.sal__hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.sal__hud .hud {
+  pointer-events: none;
+}
+.sal__hud a {
+  pointer-events: auto;
+}
+
+/* ── Station content box ───────────────────────────────────────────────
+   Reproduces `.stations { padding: 0 var(--hud-content-inset) }`
+   (landing.css). LOAD-BEARING, not cosmetic: the masthead's columns are
+   `left/right: var(--masthead-inset)` where
+   `--masthead-inset: var(--rail-inset)` = `--band-margin − --hud-content-inset`
+   (landing.css :root, ADR-048). That subtraction assumes the content box has
+   already eaten `--hud-content-inset` — mount the stage full-bleed and every
+   text edge lands one inset too far outboard, which would make this entire
+   study a judgement of the wrong geometry. See the ADR-048 comment block in
+   services.css. */
+.sal-stationbox {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 0 var(--hud-content-inset);
+  pointer-events: none;
+}
+
+/* ── The anchor layer ──────────────────────────────────────────────────
+   Sits UNDER the ring canvas (z 2): the horizon is frame furniture, and the
+   instrument is an object IN FRONT of the frame — where a card or the
+   wireframe crosses the rule, the rule reads as passing BEHIND it (proper
+   instrument-panel depth) instead of a hairline slicing across a photo
+   card, which is how the first draft (z 6, over everything) read. The
+   locks/caps/labels all live outboard of the instrument at park, so they
+   stay legible; the HUD rails (z 10) still terminate everything. */
+.sal-anchor {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Shared: anything spanning the frame runs rule-to-rule. The 2px rail track
+   sits AT `--hud-margin`, so +2px abuts its inner edge exactly. */
+.sal-bar,
+.sal-strip,
+.sal-seg {
+  position: absolute;
+  height: 1px;
+  background: var(--sal-bar-ink);
+}
+.sal-bar,
+.sal-strip {
+  left: calc(var(--hud-margin) + 2px);
+  right: calc(var(--hud-margin) + 2px);
+}
+
+/* ═══ V1 · BASELINE BAR ═══════════════════════════════════════════════
+   One horizon at the H1 baseline. The title SITS on it, the paragraph
+   HANGS from it, and mono readouts cap both ends against the rails so the
+   bar reads as instrumentation rather than a divider. */
+.sal-bar {
+  top: var(--sal-baseline-y);
+}
+
+/* The gold locks — the bar "acquiring" each column. */
+.sal-bar__lock {
+  position: absolute;
+  top: var(--sal-baseline-y);
+  height: 1px;
+  background: var(--sal-lock-ink);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.45);
+}
+.sal-bar__lock--lead {
+  left: calc(var(--sal-lead-l, 0px) - var(--sal-lock-bleed));
+  width: calc(var(--sal-lead-r, 0px) - var(--sal-lead-l, 0px) + var(--sal-lock-bleed) * 2);
+}
+.sal-bar__lock--intro {
+  left: calc(var(--sal-intro-l, 0px) - var(--sal-lock-bleed));
+  width: calc(var(--sal-intro-r, 0px) - var(--sal-intro-l, 0px) + var(--sal-lock-bleed) * 2);
+}
+
+/* Rail-end caps. The void background knocks the rule out behind the glyphs
+   so the readout reads as mounted ON the bar, not crossed by it. */
+.sal-cap {
+  position: absolute;
+  top: var(--sal-baseline-y);
+  transform: translateY(-50%);
+  padding: 0 6px;
+  background: var(--void, #0a0908);
+  font-family: var(--sal-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.5);
+  white-space: nowrap;
+}
+.sal-cap--l {
+  left: calc(var(--hud-margin) + 2px);
+}
+.sal-cap--r {
+  right: calc(var(--hud-margin) + 2px);
+}
+
+/* V1 re-seats the intro so it HANGS from the shared horizon instead of
+   sharing the title's band top — the whole point of the route. Scoped to the
+   variant; production geometry is untouched everywhere else. */
+.sal[data-anchor-variant="v1"] .services-masthead__intro {
+  top: calc(var(--sal-baseline-y) + 14px);
+}
+
+/* ═══ V2 · ANNUNCIATOR STRIP ══════════════════════════════════════════
+   The rule moves ABOVE the band as a labelled jurisdiction bar: it claims
+   the section, and both blocks hang beneath it. Pure token math — this route
+   needs no measurement at all, which also makes it the most robust. */
+.sal-strip {
+  top: calc(var(--band-top) - 22px);
+}
+.sal-strip__label {
+  position: absolute;
+  top: calc(var(--band-top) - 22px);
+  transform: translateY(-50%);
+  padding: 0 10px;
+  background: var(--void, #0a0908);
+  font-family: var(--sal-mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+  white-space: nowrap;
+}
+/* Tick stems tie each label down to the rule it rides. */
+.sal-strip__label::before,
+.sal-strip__label::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 6px;
+  background: rgba(202, 165, 84, 0.55);
+}
+.sal-strip__label::before {
+  left: 0;
+}
+.sal-strip__label::after {
+  right: 0;
+}
+.sal-strip__label--l {
+  left: calc(var(--hud-margin) + 2px);
+}
+.sal-strip__label--c {
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--sal-lock-ink);
+}
+.sal-strip__label--r {
+  right: calc(var(--hud-margin) + 2px);
+}
+
+/* ═══ V3 · INTERRUPTED RULE ═══════════════════════════════════════════
+   The rule breaks where the copy crosses it and resumes on the far side, so
+   the text is NOTCHED INTO the frame (chart-cartouche grammar) rather than
+   laid over it. Gold shoulder-ticks mark every break. */
+.sal-seg {
+  top: calc(var(--sal-line1-bottom, 50vh) + var(--sal-nudge));
+}
+.sal-seg--l {
+  left: calc(var(--hud-margin) + 2px);
+  width: calc(var(--sal-line1-l, 0px) - var(--hud-margin) - 2px - var(--sal-seg-gap));
+}
+.sal-seg--m {
+  left: calc(var(--sal-line1-r, 0px) + var(--sal-seg-gap));
+  width: calc(var(--sal-intro-l, 0px) - var(--sal-line1-r, 0px) - var(--sal-seg-gap) * 2);
+}
+.sal-seg--r {
+  left: calc(var(--sal-intro-r, 0px) + var(--sal-seg-gap));
+  right: calc(var(--hud-margin) + 2px);
+  width: auto;
+}
+/* Shoulders: a 4px riser at each cut end. */
+.sal-seg::before,
+.sal-seg::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  width: 1px;
+  height: 5px;
+  background: var(--sal-lock-ink);
+}
+.sal-seg::before {
+  left: 0;
+}
+.sal-seg::after {
+  right: 0;
+}
+/* The outboard ends terminate ON the rails — no shoulder there. */
+.sal-seg--l::before,
+.sal-seg--r::after {
+  display: none;
+}
+
+/* ═══ V4 · BAR + FEET ═════════════════════════════════════════════════
+   A faint rule BELOW BOTH BLOCKS with short gold stems dropping onto it:
+   the copy STANDS on the frame under gravity instead of hovering.
+
+   The standing line clears whichever column runs longer, so both blocks rest
+   on ONE datum and the stems stay short — columns of unequal height on a
+   shared chart baseline. Seating it on a title baseline instead (the first
+   draft) put the rule ABOVE the paragraph's own bottom, and the intro's
+   stems stretched into 76px verticals that read as brackets flanking the
+   copy rather than legs under it. */
+.sal {
+  --sal-stand-y: calc(
+    max(var(--sal-lead-bottom, 50vh), var(--sal-intro-bottom, 50vh)) + 16px + var(--sal-nudge)
+  );
+}
+.sal-bar--faint {
+  top: var(--sal-stand-y);
+  /* Same ink as every other route. An earlier 0.14 alpha was invisible next
+     to the 0.55 rail track — V4 is distinguished by the FEET, not by being
+     fainter, and a rule you cannot see cannot be stood on. */
+  background: var(--sal-bar-ink);
+}
+.sal-foot {
+  position: absolute;
+  width: 1px;
+  background: var(--sal-lock-ink);
+  opacity: 0.75;
+}
+.sal-foot--lead-l,
+.sal-foot--lead-r {
+  top: var(--sal-lead-bottom, 50vh);
+  height: calc(var(--sal-stand-y) - var(--sal-lead-bottom, 50vh));
+}
+.sal-foot--lead-l {
+  left: var(--sal-lead-l, 0px);
+}
+.sal-foot--lead-r {
+  left: var(--sal-lead-r, 0px);
+}
+.sal-foot--intro-l,
+.sal-foot--intro-r {
+  top: var(--sal-intro-bottom, 50vh);
+  height: calc(var(--sal-stand-y) - var(--sal-intro-bottom, 50vh));
+}
+.sal-foot--intro-l {
+  left: var(--sal-intro-l, 0px);
+}
+.sal-foot--intro-r {
+  left: var(--sal-intro-r, 0px);
+}
+
+/* ── Lab console ───────────────────────────────────────────────────── */
+/* Docked to the BOTTOM right: the whole study lives in the upper band, and a
+   top-right console sat straight on top of the intro column and the right
+   rail cap — you cannot judge chrome you are covering. */
+.sal-console {
+  position: fixed;
+  bottom: clamp(16px, 3vh, 40px);
+  right: clamp(16px, 2vw, 40px);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(34vw, 320px);
+  padding: 14px 16px;
+  background: rgba(10, 9, 8, 0.82);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.sal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sal-chip {
+  padding: 5px 8px;
+  font-family: var(--sal-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.6);
+  background: rgba(235, 227, 214, 0.02);
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  cursor: pointer;
+}
+.sal-chip--sm {
+  padding: 4px 7px;
+  font-size: 8.5px;
+}
+.sal-chip[data-on] {
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.sal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sal-field__label {
+  font-family: var(--sal-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.45);
+}
+.sal-range {
+  width: 100%;
+  accent-color: var(--gold, #caa554);
+}
+.sal-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.sal-toggles {
+  display: flex;
+  gap: 8px;
+}
+.sal-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  font-family: var(--sal-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+  background: none;
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  cursor: pointer;
+}
+.sal-toggle__led {
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: rgba(235, 227, 214, 0.25);
+}
+.sal-toggle[data-on] {
+  color: var(--gold, #caa554);
+  border-color: rgba(202, 165, 84, 0.4);
+}
+.sal-toggle[data-on] .sal-toggle__led {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+}
+.sal-thesis {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(235, 227, 214, 0.7);
+}
+.sal-prov {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-family: var(--sal-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.sal-prov__diamond {
+  width: 4px;
+  height: 4px;
+  flex: none;
+  transform: rotate(45deg);
+  background: rgba(202, 165, 84, 0.6);
+}
+
+/* ── Desktop gate (parity with the production menus ≥1101×760) ──────── */
+.sal-gate-warn {
+  display: none;
+}
+@media (max-width: 1100px), (max-height: 759px) {
+  .sal-gate-warn {
+    display: block;
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 9000;
+    margin: 0;
+    padding: 7px 12px;
+    background: rgba(10, 9, 8, 0.9);
+    border: 1px solid rgba(202, 165, 84, 0.35);
+    font-family: var(--sal-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold, #caa554);
+  }
+}
