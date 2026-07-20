@@ -35,7 +35,7 @@ import { SERVICES } from "./services/serviceData";
  * inverse-video block — see home-v2.css) — translate so the ACTIVE sub lands on
  * the SAME centre line, so the highlighted section and its active subsection are
  * horizontally aligned.
- * e.g. the centre line reads `THE ARC ▸ · · NAVIGATE 01`. Both panels are one
+ * e.g. the centre line reads `ARC ▸ · · NAVIGATE 01`. Both panels are one
  * component; the reel offsets are the `--active-row` / `--active-sub` props.
  *
  * TERMINAL REVEAL (Update 17): each time the menu ENTERS a section it belongs
@@ -113,7 +113,7 @@ const JOURNEY_TREE: readonly TreeNode[] = (() => {
             name: m.name.toUpperCase(),
             targetIdx: mi,
           }));
-        out.push({ id: "arc", num: pad(pos), name: "THE ARC", entryIdx: i, subs });
+        out.push({ id: "arc", num: pad(pos), name: "ARC", entryIdx: i, subs });
       }
       return;
     }
