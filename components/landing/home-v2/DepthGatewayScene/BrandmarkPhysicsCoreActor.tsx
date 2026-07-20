@@ -89,6 +89,8 @@ import {
   BAND_LAUNCH_S,
   BAND_SIZE_BOOST,
   BAND_SOFT,
+  BAND_SWING_MAX,
+  BAND_SWING_MIN,
   BAND_SWING_PERIOD_S,
   BAND_TRAIL_GAIN,
   BAND_TRAIL_LEN,
@@ -401,6 +403,18 @@ const BAND_CHROME_ANCHOR_Y = BAND_ANCHOR_Y - BAND_CHROME_DROP;
 const BAND_LABEL_GAP_PX = 22;
 /** Viewport edge clamp for the docked chrome. */
 const BAND_LABEL_EDGE_PX = 40;
+
+/** Lighting reciprocity (ADR-049 U9). The shader's comet head docks at each
+ *  pole and crosses the centre seat; the DOM chrome answers. This is the x01
+ *  radius over which a station counts as "lit" by the head — the falloff is
+ *  squared inside the writer, so the flare is tight around the dock and the
+ *  chrome is at rest through the middle of each swing. */
+const CAP_LIT_RADIUS = 0.22;
+/** Assembly hysteresis on labelGain: the type-on fires once as the chrome
+ *  window OPENS and only re-arms once the band has properly closed, so a
+ *  scrub that hovers near the threshold can never stutter the sequence. */
+const ASSEMBLE_ON = 0.15;
+const ASSEMBLE_OFF = 0.03;
 
 /** The per-frame band drive shared with `BrandmarkPhysicsCore` (shader
  *  uniforms) and `ContinuumBandSliderAnchors` (DOM chrome docking). */
@@ -1566,7 +1580,22 @@ function BrandmarkPhysicsCoreWithGLB({
  *  opacity (no store, no re-render, no DOM-side rAF — the
  *  `continuumBandAnchorsRef` handles are registered by ContinuumStage).
  *  Opacity rides `labelGain` (band master × the formation chrome window),
- *  so the chrome is inert everywhere the band is. */
+ *  so the chrome is inert everywhere the band is.
+ *
+ *  Update 9 — this writer now drives the WHOLE label layer, not just the
+ *  caps and reticle:
+ *    · the centre SEAT docks to the band's projected midpoint (it used to
+ *      be screen-anchored, so it drifted against the caps under the
+ *      approach zoom and pointer-look — the instrument now moves as one
+ *      rigid body);
+ *    · `--cap-lit` / `--seat-lit` publish how strongly the shader's comet
+ *      head is docked at each station, so the DOM chrome lights with the
+ *      particles instead of ignoring them;
+ *    · the readout's two value spans go live off the same `sweep`;
+ *    · `data-continuum-assembled` (labelGain hysteresis) arms the CSS
+ *      type-on, and clearing it on close re-arms the replay.
+ *  All of it stays delta-gated, layout-read-free, and dead in the parked
+ *  branch — the frame cost of an inert #continuum is unchanged. */
 function ContinuumBandSliderAnchors({
   bandRef,
 }: {
@@ -1578,12 +1607,23 @@ function ContinuumBandSliderAnchors({
   // Last-written opacity so the parked-invisible state costs zero style
   // writes (the CorridorArmillary anchor delta-gate discipline).
   const lastOpRef = useRef(-1);
+  // U9 delta-gates: the seat's gain, the three lighting weights, and the
+  // readout's rendered strings. Same discipline — a frame that changes
+  // nothing writes nothing.
+  const lastSeatGainRef = useRef(-1);
+  const lastLitLRef = useRef(-1);
+  const lastLitRRef = useRef(-1);
+  const lastLitSeatRef = useRef(-1);
+  const lastToolStrRef = useRef("");
+  const lastCollabStrRef = useRef("");
+  const assembledRef = useRef(false);
 
   useFrame(({ camera, size }) => {
     const els = continuumBandAnchorsRef.current;
     const left = leftProbeRef.current;
     const right = rightProbeRef.current;
-    if (!els.leftEl || !els.rightEl || !els.reticleEl || !left || !right) return;
+    if (!els.leftEl || !els.rightEl || !els.reticleEl || !els.seatEl || !els.stageEl) return;
+    if (!left || !right) return;
 
     const world = worldScratch.current;
     const project = (obj: THREE.Object3D): [number, number, boolean] => {
@@ -1600,11 +1640,34 @@ function ContinuumBandSliderAnchors({
         els.leftEl.style.opacity = "0";
         els.rightEl.style.opacity = "0";
         els.reticleEl.style.opacity = "0";
+        els.seatEl.style.setProperty("--seat-gain", "0");
+        // Park the lighting AND disarm the assembly, so the next entry
+        // replays the type-on from its rest state in lockstep with the
+        // band's own condense → launch replay.
+        els.leftEl.style.setProperty("--cap-lit", "0");
+        els.rightEl.style.setProperty("--cap-lit", "0");
+        els.seatEl.style.setProperty("--seat-lit", "0");
+        els.stageEl.removeAttribute("data-continuum-assembled");
+        assembledRef.current = false;
+        lastSeatGainRef.current = 0;
+        lastLitLRef.current = 0;
+        lastLitRRef.current = 0;
+        lastLitSeatRef.current = 0;
         lastOpRef.current = 0;
       }
       return;
     }
     lastOpRef.current = op;
+
+    // Assembly trigger — hysteresis so a scrub parked near the threshold
+    // cannot stutter the sequence (fires on the way up only).
+    if (!assembledRef.current && op >= ASSEMBLE_ON) {
+      els.stageEl.setAttribute("data-continuum-assembled", "");
+      assembledRef.current = true;
+    } else if (assembledRef.current && op < ASSEMBLE_OFF) {
+      els.stageEl.removeAttribute("data-continuum-assembled");
+      assembledRef.current = false;
+    }
 
     const clampY = (y: number) =>
       Math.min(size.height - BAND_LABEL_EDGE_PX, Math.max(BAND_LABEL_EDGE_PX, y));
@@ -1625,6 +1688,58 @@ function ContinuumBandSliderAnchors({
       1
     )}px, 0) translate(-50%, -50%)`;
     els.reticleEl.style.opacity = opacity;
+
+    // The centre SEAT docks to the band's MIDPOINT (U9) — the mark's own ½
+    // position on the spectrum. Transform only: CSS owns the drop below the
+    // band line (`top`) and the copy reveal, which composes under this gain.
+    els.seatEl.style.transform = `translate3d(${((lx + rx) / 2).toFixed(1)}px, ${clampY(
+      (ly + ry) / 2
+    ).toFixed(1)}px, 0) translate(-50%, 0)`;
+    const seatGain = Math.round(op * 100) / 100;
+    if (seatGain !== lastSeatGainRef.current) {
+      els.seatEl.style.setProperty("--seat-gain", String(seatGain));
+      lastSeatGainRef.current = seatGain;
+    }
+
+    // Lighting reciprocity — how strongly the head is docked at each
+    // station. Squared falloff keeps the flare tight around the dock, and
+    // scaling by `op` keeps the lighting inside the chrome's own fade.
+    const litAt = (delta: number) => {
+      const t = Math.max(0, 1 - Math.abs(delta) / CAP_LIT_RADIUS);
+      return Math.round(t * t * op * 100) / 100;
+    };
+    const litL = litAt(sweep - BAND_SWING_MIN);
+    const litR = litAt(sweep - BAND_SWING_MAX);
+    const litSeat = litAt(sweep - 0.5);
+    if (litL !== lastLitLRef.current) {
+      els.leftEl.style.setProperty("--cap-lit", String(litL));
+      lastLitLRef.current = litL;
+    }
+    if (litR !== lastLitRRef.current) {
+      els.rightEl.style.setProperty("--cap-lit", String(litR));
+      lastLitRRef.current = litR;
+    }
+    if (litSeat !== lastLitSeatRef.current) {
+      els.seatEl.style.setProperty("--seat-lit", String(litSeat));
+      lastLitSeatRef.current = litSeat;
+    }
+
+    // The LIVE readout — complementary weights of the head's position, so
+    // the pair always sums to 1.00 ("the ratio shifts with every prompt").
+    const norm = Math.min(
+      1,
+      Math.max(0, (sweep - BAND_SWING_MIN) / (BAND_SWING_MAX - BAND_SWING_MIN))
+    );
+    const toolStr = (1 - norm).toFixed(2);
+    const collabStr = norm.toFixed(2);
+    if (els.readoutToolEl && toolStr !== lastToolStrRef.current) {
+      els.readoutToolEl.textContent = toolStr;
+      lastToolStrRef.current = toolStr;
+    }
+    if (els.readoutCollabEl && collabStr !== lastCollabStrRef.current) {
+      els.readoutCollabEl.textContent = collabStr;
+      lastCollabStrRef.current = collabStr;
+    }
   });
 
   return (

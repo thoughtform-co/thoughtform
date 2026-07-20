@@ -23,6 +23,11 @@ export interface ContinuumStop {
   /** One entry per authored line (the fallback's `<br>` splits). */
   title: readonly string[];
   body: string;
+  /** Zero-padded pole bearing ("01" / "02") prefixed to the cap's telemetry
+   *  line (ADR-049 U9, the `tools-rail-register__index` grammar). STAGE-ONLY
+   *  instrument chrome — deliberately NOT in the static `.crail` fallback,
+   *  the same live-chrome divergence class as the readout's live values. */
+  bearing?: string;
 }
 
 export const CONTINUUM_STAGE = {
@@ -56,6 +61,7 @@ export const CONTINUUM_STAGE = {
       kicker: "Tool",
       title: ["Executes commands"],
       body: "You provide the thinking. The output is predictable, because you already knew what you wanted.",
+      bearing: "01",
     },
     {
       pos: "m",
@@ -70,9 +76,21 @@ export const CONTINUUM_STAGE = {
       kickerMod: "end",
       title: ["Interprets intent"],
       body: "You provide direction and judgment. The output surprises you — in useful ways, if you've learned to navigate.",
+      bearing: "02",
     },
   ] as readonly ContinuumStop[],
-  /** The instrument readout under the rail. */
-  readout: "Nav · Tool 0.00 — Collab 1.00",
+  /** The instrument readout under the rail — LIVE since ADR-049 U9. The
+   *  corridor projector writes the two value spans every frame with
+   *  complementary weights of the slider head's sweep (they always sum to
+   *  1.00 — "the ratio shifts with every prompt", per the lede), so the
+   *  readout proves the instrument is real instead of printing a frozen
+   *  pair. `rest` is the initial/SSR text: the head parked at the centre
+   *  seat. The static `.crail` fallback keeps its own hardcoded string.
+   *
+   *  LOCKSTEP with the assembly type-on in continuum-stage.css: the
+   *  `steps()` glyph counts there mirror these rendered string lengths
+   *  ("Nav · Tool 0.50 — Collab 0.50" = 29). Update both when copy
+   *  changes — a stale count types at the wrong cadence. */
+  readout: { prefix: "Nav", toolLabel: "Tool", collabLabel: "Collab", rest: "0.50" },
   cta: { label: "See the practice", href: "#practice" },
 } as const;

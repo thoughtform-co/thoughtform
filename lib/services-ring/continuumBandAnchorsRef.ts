@@ -28,8 +28,34 @@ export interface ContinuumBandAnchorEls {
    *  lights, so the crisp DOM diamond and the glowing particle head are
    *  one object). */
   reticleEl: HTMLElement | null;
+  /** The centre seat block ("AI lives here" + the statement + body +
+   *  readout), projected to the band's MIDPOINT (ADR-049 U9). Before U9 it
+   *  was screen-anchored at a fixed --continuum-axis-y, so it drifted
+   *  against the projected caps under the approach zoom and pointer-look
+   *  and read as pasted over the mark. Projecting it makes the whole
+   *  instrument — caps, reticle, seat — one rigid body riding the mark. */
+  seatEl: HTMLElement | null;
+  /** The readout's live value spans. The projector writes textContent every
+   *  frame (delta-gated on the 2dp string) with the head's complementary
+   *  tool / collaborator weights. */
+  readoutToolEl: HTMLElement | null;
+  readoutCollabEl: HTMLElement | null;
+  /** The stage root. Carries the writer-owned `data-continuum-assembled`
+   *  attribute: the projector sets it when the chrome window opens
+   *  (hysteresis on labelGain) and removes it when the band closes, which
+   *  resets the CSS type-on / unfold animations so the instrument re-plays
+   *  its assembly on every re-entry. */
+  stageEl: HTMLElement | null;
 }
 
 export const continuumBandAnchorsRef: { current: ContinuumBandAnchorEls } = {
-  current: { leftEl: null, rightEl: null, reticleEl: null },
+  current: {
+    leftEl: null,
+    rightEl: null,
+    reticleEl: null,
+    seatEl: null,
+    readoutToolEl: null,
+    readoutCollabEl: null,
+    stageEl: null,
+  },
 };

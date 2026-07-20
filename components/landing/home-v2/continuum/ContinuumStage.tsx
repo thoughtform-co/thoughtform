@@ -27,15 +27,31 @@ import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
  * together as the section pins.
  *
  * This component therefore renders only:
- *   · the masthead + the three readable stops + readout + CTA (stage-flow
- *     copy, scrubbed off `--continuum-copy-in` with per-child --ci-off —
- *     the about-stage recipe; NEVER useRevealMotion: portal nodes are
- *     unobserved and .is-in is one-shot), and
- *   · the docked chrome elements (caps + reticle), which it REGISTERS
- *     into `continuumBandAnchorsRef` — the corridor canvas
- *     (ContinuumBandSliderAnchors) is the single writer of their
- *     transform/opacity every frame. Without the corridor writer they
- *     never paint (opacity 0 default).
+ *   · the masthead (stage-flow copy, scrubbed off `--continuum-copy-in`
+ *     with per-child --ci-off — the about-stage recipe; NEVER
+ *     useRevealMotion: portal nodes are unobserved and .is-in is
+ *     one-shot), and
+ *   · the docked instrument, which it REGISTERS into
+ *     `continuumBandAnchorsRef` — the corridor canvas
+ *     (ContinuumBandSliderAnchors) is the single writer of its
+ *     transform/opacity every frame. Without the corridor writer it
+ *     never paints (opacity 0 default).
+ *
+ * Update 9 — ONE RIGID INSTRUMENT. The caps and reticle already rode the
+ * band projection, but the centre seat (the "AI lives here" stop + the
+ * readout) was screen-anchored at a fixed --continuum-axis-y, so it
+ * drifted against them under the approach zoom and pointer-look and the
+ * whole label layer read as discombobulated chrome floating over the mark.
+ * Now the seat projects to the band's MIDPOINT too — caps, reticle and
+ * seat translate as one body. Three more moves finish the integration:
+ *   · terminal end-cap hierarchy — the cap function lines demote to
+ *     telemetry grade under dashed drop-leaders, leaving the seat's
+ *     statement as the only bold title;
+ *   · lighting reciprocity — the projector publishes --cap-lit / --seat-lit
+ *     from the head's proximity, so the DOM chrome lights as the shader's
+ *     comet head docks at each pole and crosses the seat;
+ *   · the readout goes LIVE off the same sweep, and the chrome types on
+ *     (writer-owned `data-continuum-assembled`) as the window opens.
  *
  * Copy strings live in `continuumStageData.ts`, lockstep with the static
  * `.crail` fallback markup. Below the media gate the static crail owns the
@@ -58,6 +74,9 @@ export function ContinuumStage() {
   const bandCapLeftRef = useRef<HTMLDivElement>(null);
   const bandCapRightRef = useRef<HTMLDivElement>(null);
   const reticleRef = useRef<HTMLDivElement>(null);
+  const seatRef = useRef<HTMLDivElement>(null);
+  const readoutToolRef = useRef<HTMLSpanElement>(null);
+  const readoutCollabRef = useRef<HTMLSpanElement>(null);
   const capable = useMediaQuery("(min-width: 961px) and (prefers-reduced-motion: no-preference)");
   useContinuumStageScroll(stageRef);
 
@@ -65,15 +84,25 @@ export function ContinuumStage() {
   // (ContinuumBandSliderAnchors). Re-runs when the media gate flips so a
   // desktop resize re-registers the freshly-rendered elements; cleanup
   // nulls the handles so the projector never writes into a detached tree.
+  // ALL handles register atomically in this one effect — the projector's
+  // guard requires the structural ones together (U9).
   useEffect(() => {
     const anchors = continuumBandAnchorsRef.current;
     anchors.leftEl = bandCapLeftRef.current;
     anchors.rightEl = bandCapRightRef.current;
     anchors.reticleEl = reticleRef.current;
+    anchors.seatEl = seatRef.current;
+    anchors.readoutToolEl = readoutToolRef.current;
+    anchors.readoutCollabEl = readoutCollabRef.current;
+    anchors.stageEl = stageRef.current;
     return () => {
       anchors.leftEl = null;
       anchors.rightEl = null;
       anchors.reticleEl = null;
+      anchors.seatEl = null;
+      anchors.readoutToolEl = null;
+      anchors.readoutCollabEl = null;
+      anchors.stageEl = null;
     };
   }, [capable]);
 
@@ -141,46 +170,68 @@ export function ContinuumStage() {
               the navigator reticle (ring + crosshairs + gold diamond — the
               v7 `.crail__reticle` recipe) rides the projected slider head,
               i.e. the SAME point the shader's glowing pendulum head lights.
-              Purely decorative chrome (aria-hidden) — the READABLE spectrum
-              content is the three stop descriptions below (they carry the
+              Since U9 the centre seat projects to the band's midpoint too, so
+              all three dock to the same geometry. The stops still carry the
               kicker/title/body the static `.crail__stops-grid` fallback
-              exposes identically; regression guard, ADR-049 / plan 6.2). */}
+              exposes identically (regression guard, ADR-049 / plan 6.2). */}
           {/* The Tool / Collaborator caps carry their READABLE description
-              now — the title + body hang UNDER the pole label as an
-              absolutely-positioned block (`__cap-copy`), so they ride the
-              cap's projected transform and read as "attached to the rail
-              endpoint" (owner 2026-07-19). The cap BOX stays the one label
-              row, so the projector's `-50%` anchor still centres the label on
-              the band; the copy hangs below via top:100%. Decorative leader
-              (dash + pole) is aria-hidden; the label + copy are semantic. */}
-          <div ref={bandCapLeftRef} className="continuum-stage__band-cap continuum-stage__band-cap--l">
-            <span className="continuum-stage__band-label">{toolStop.kicker}</span>
-            <span className="continuum-stage__band-dash" aria-hidden="true" />
-            <span className="continuum-stage__band-pole" aria-hidden="true" />
+              now — the copy hangs UNDER the pole label as an absolutely-
+              positioned block (`__cap-copy`), so it rides the cap's projected
+              transform and reads as "attached to the rail endpoint" (owner
+              2026-07-19). The cap BOX's first row (`__cap-axis`) stays the one
+              label row, so the projector's `-50%` anchor still centres the
+              label on the band; the copy hangs below via top:100%.
+
+              U9 terminal end-cap hierarchy: the function line demotes from a
+              15px bold `.crail__t` (which competed with the centre seat's
+              statement — three shouting titles) to TELEMETRY grade
+              (`__cap-fn`: 10px tracked mono, dawn-50 lifting to gold as the
+              head docks) with a zero-padded pole bearing, and a dashed
+              drop-leader (`__cap-leader`) tethers the copy block back up to
+              the band axis so it reads as hung from the instrument rather
+              than floating beside it. Decorative chrome (dash, pole, leader)
+              is aria-hidden; the label + copy are semantic. */}
+          <div
+            ref={bandCapLeftRef}
+            className="continuum-stage__band-cap continuum-stage__band-cap--l"
+          >
+            <div className="continuum-stage__cap-axis">
+              <span className="continuum-stage__band-label">{toolStop.kicker}</span>
+              <span className="continuum-stage__band-dash" aria-hidden="true" />
+              <span className="continuum-stage__band-pole" aria-hidden="true" />
+            </div>
+            <span className="continuum-stage__cap-leader" aria-hidden="true" />
             <div className="continuum-stage__cap-copy">
-              <div className="crail__t">
-                {toolStop.title.map((line, j) => (
-                  <span key={j} className="continuum-stage__stop-line">
-                    {line}
-                  </span>
-                ))}
+              <div className="continuum-stage__cap-fn">
+                {toolStop.bearing ? (
+                  <span className="continuum-stage__cap-index">{toolStop.bearing} · </span>
+                ) : null}
+                {toolStop.title.join(" ")}
               </div>
-              <div className="crail__b">{toolStop.body}</div>
+              <p className="continuum-stage__cap-body">{toolStop.body}</p>
             </div>
           </div>
-          <div ref={bandCapRightRef} className="continuum-stage__band-cap continuum-stage__band-cap--r">
-            <span className="continuum-stage__band-pole" aria-hidden="true" />
-            <span className="continuum-stage__band-dash continuum-stage__band-dash--flip" aria-hidden="true" />
-            <span className="continuum-stage__band-label">{collabStop.kicker}</span>
+          <div
+            ref={bandCapRightRef}
+            className="continuum-stage__band-cap continuum-stage__band-cap--r"
+          >
+            <div className="continuum-stage__cap-axis">
+              <span className="continuum-stage__band-pole" aria-hidden="true" />
+              <span
+                className="continuum-stage__band-dash continuum-stage__band-dash--flip"
+                aria-hidden="true"
+              />
+              <span className="continuum-stage__band-label">{collabStop.kicker}</span>
+            </div>
+            <span className="continuum-stage__cap-leader" aria-hidden="true" />
             <div className="continuum-stage__cap-copy">
-              <div className="crail__t">
-                {collabStop.title.map((line, j) => (
-                  <span key={j} className="continuum-stage__stop-line">
-                    {line}
-                  </span>
-                ))}
+              <div className="continuum-stage__cap-fn">
+                {collabStop.bearing ? (
+                  <span className="continuum-stage__cap-index">{collabStop.bearing} · </span>
+                ) : null}
+                {collabStop.title.join(" ")}
               </div>
-              <div className="crail__b">{collabStop.body}</div>
+              <p className="continuum-stage__cap-body">{collabStop.body}</p>
             </div>
           </div>
           <div ref={reticleRef} className="continuum-stage__reticle" aria-hidden="true">
@@ -189,14 +240,18 @@ export function ContinuumStage() {
             <span className="continuum-stage__reticle-diamond" />
           </div>
 
-          {/* ── The readable centre stop + readout + lede — beneath the mark,
-              on the stage's copy reveal. The Tool / Collaborator stops moved
-              UP onto their rail caps (above); only the middle "AI lives here"
-              stop stays centred under the mark. The lede is relocated to the
-              FOOT of the beat (owner 2026-07-19) — it keeps its continuum
-              styling but now closes the section instead of opening it; the
-              "See the practice" CTA is removed. */}
-          <div className="continuum-stage__spectrum">
+          {/* ── The centre SEAT — the readable "AI lives here" stop + the live
+              readout, the mark's own ½ position on the spectrum. The Tool /
+              Collaborator stops moved UP onto their rail caps (above); only
+              this middle stop stays under the mark.
+
+              U9: position:fixed and PROJECTED to the band's midpoint by the
+              corridor writer (like the caps), not screen-anchored at a fixed
+              --continuum-axis-y — that mismatch was the drift that made the
+              label layer read as pasted on. The writer owns transform +
+              --seat-gain; CSS owns the vertical drop (`top`) and the
+              per-child --ci scroll reveal composes underneath the gain. */}
+          <div ref={seatRef} className="continuum-stage__spectrum">
             <div className="continuum-stage__labels continuum-stage__labels--mid">
               <div
                 className="continuum-stage__stop continuum-stage__stop--m"
@@ -221,8 +276,18 @@ export function ContinuumStage() {
               </div>
             </div>
 
+            {/* LIVE readout (U9): the corridor projector writes the two value
+                spans every frame from the slider head's sweep — complementary
+                weights that always sum to 1.00. The surrounding label text is
+                static; only the numbers move. */}
             <div className="continuum-stage__readout" style={{ ["--ci-off" as string]: 0.5 }}>
-              {CONTINUUM_STAGE.readout}
+              <span className="continuum-stage__readout-line">
+                {CONTINUUM_STAGE.readout.prefix} · {CONTINUUM_STAGE.readout.toolLabel}{" "}
+                <span ref={readoutToolRef}>{CONTINUUM_STAGE.readout.rest}</span>
+                {" — "}
+                {CONTINUUM_STAGE.readout.collabLabel}{" "}
+                <span ref={readoutCollabRef}>{CONTINUUM_STAGE.readout.rest}</span>
+              </span>
             </div>
           </div>
         </div>

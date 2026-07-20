@@ -235,22 +235,42 @@
   position: fixed;
   top: 0;
   left: 0;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  /* U9: block, not flex — the axis ROW (`__cap-axis`) owns the old flex
+     layout so the leader + copy can stack beneath it while the projector's
+     `-50%` anchor still centres the axis row on the band. */
+  display: block;
   font-family: var(--font-pt-mono);
   /* The spectrum's POLES — primary instrument labels, not micro-chrome
      (owner rebalance 2026-07-18: "Tool and Collaborator should be much
-     bigger"; was 9px). */
-  font-size: clamp(13px, 1.3vw, 19px);
+     bigger"; was 9px).
+
+     The cap block's THREE sizes (this label · __cap-fn telemetry ·
+     __cap-body) are all fluid on a shared vw slope so the block scales as
+     ONE unit — see __cap-fn for the ratio table. The floor is 15px (was
+     13px) purely so the hierarchy cannot inverted at the 961px gate, where
+     a 13px floor collided with the body's own 13px floor. Above ~1154px
+     (where 1.3vw = 15px) this is identical to the old value. */
+  font-size: clamp(15px, 1.3vw, 19px);
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.5);
+  /* Lighting reciprocity (U9): --cap-lit is written per frame by the
+     projector from the slider head's proximity to THIS pole, so the label
+     flares as the shader's comet head docks here and settles back as it
+     swings away. Base sits just under the old flat 0.5 so the lit peak
+     reads as an event rather than the resting state. */
+  text-shadow: 0 0 22px rgb(202 165 84 / calc(0.32 + var(--cap-lit, 0) * 0.45));
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   will-change: transform, opacity;
+}
+/* The axis row — label · dash · pole, mirrored per side so the leader always
+   points inward at the band end. This is the row the projector centres. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-axis {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 /* Leader dash pointing at the band end (gold fades toward the label). */
 #continuum[data-continuum-mode="stage"] .continuum-stage__band-dash {
@@ -258,17 +278,29 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--gold, #caa554));
 }
+/* The right cap mirrors via the GRADIENT, not scaleX(-1) (U9): the transform
+   channel belongs to the assembly unfold now, and a scaleX(-1) there would
+   fight it. Keep gold at the pole side on both caps. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__band-dash--flip {
-  transform: scaleX(-1);
+  background: linear-gradient(270deg, transparent, var(--gold, #caa554));
 }
 /* Outlined pole diamond marking the band's end (the v7 rail end-diamond
    recipe) — the instrument's terminal, sitting right at the projected
-   endpoint the shader's band reaches. Scaled with the cap type. */
+   endpoint the shader's band reaches. Scaled with the cap type. It FILLS
+   with gold and blooms as the head docks (--cap-lit), so the crisp DOM
+   terminal and the particle head read as the same lighting event. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__band-pole {
   width: 9px;
   height: 9px;
-  border: 1px solid var(--dawn-30);
-  background: transparent;
+  border: 1px solid;
+  border-color: color-mix(
+    in srgb,
+    var(--gold, #caa554) calc(var(--cap-lit, 0) * 100%),
+    var(--dawn-30)
+  );
+  background: rgb(202 165 84 / calc(var(--cap-lit, 0) * 0.95));
+  box-shadow: 0 0 calc(2px + var(--cap-lit, 0) * 12px)
+    rgb(202 165 84 / calc(var(--cap-lit, 0) * 0.55));
   transform: rotate(45deg);
   flex: none;
 }
@@ -284,8 +316,13 @@
    glow so the body reads as body. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy {
   position: absolute;
-  top: calc(100% + clamp(10px, 1.4svh, 18px));
-  width: clamp(20ch, 17vw, 24ch);
+  /* Lockstep with .continuum-stage__cap-leader's height — the leader must
+     bridge this exact gap. */
+  top: calc(100% + clamp(14px, 2svh, 22px));
+  /* Widened with the 2026-07-20 type bump so the MEASURE holds — bigger type
+     in the same column just means fewer characters per line. Splays outboard
+     into empty frame, so there is room on both sides at every width. */
+  width: clamp(21ch, 18vw, 26ch);
   white-space: normal;
   text-transform: none;
   letter-spacing: normal;
@@ -299,26 +336,78 @@
   left: 0;
   text-align: left;
 }
-/* The description title / body reuse the crail stop type; re-pin the sizes
-   here (the base .crail__t/.crail__b are unscoped) and drop the stop's
-   auto-centering so text-align controls the outboard splay. */
-#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy .crail__t {
-  font-family: var(--font-pt-mono);
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: -0.005em;
-  text-transform: uppercase;
-  color: var(--dawn);
-  line-height: 1.2;
-  margin-bottom: 8px;
+
+/* The dashed DROP-LEADER (U9) — a hairline of gold dashes falling from the
+   axis row to the copy block, the `.home-v2-reticle__meta__lead` dashed-rule
+   grammar turned vertical. This is what makes the copy read as HUNG from the
+   band terminal instead of merely sitting near it. Aligned under the pole
+   diamond's centre (the outboard end of the axis row). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-leader {
+  position: absolute;
+  top: 100%;
+  width: 1px;
+  /* Matches the cap-copy's gap exactly, so the leader spans axis → copy with
+     no daylight at either end. Dot pitch is DENSE (1.5px on / 2.5px off) and
+     gold-60: at 1px wide over a ~20px run, the sparser 5px-pitch gold-40
+     dashes this started as rendered ~3 marks and read as nothing at all. */
+  height: clamp(14px, 2svh, 22px);
+  background: repeating-linear-gradient(to bottom, var(--gold-60) 0 1.5px, transparent 1.5px 4px);
 }
-#continuum[data-continuum-mode="stage"] .continuum-stage__cap-copy .crail__b {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--dawn-70);
-  max-width: none;
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--l .continuum-stage__cap-leader {
+  right: 4px;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--r .continuum-stage__cap-leader {
+  left: 4px;
+}
+
+/* The cap's function line — TELEMETRY grade (U9). It used to be a 15px bold
+   `.crail__t`, i.e. the same weight as the centre seat's statement, so the
+   beat carried three competing titles and nothing read as the answer. Now it
+   sits at readout scale (the `.tools-rail-register` row recipe) under the big
+   pole label, and its colour lifts dawn-50 → gold as the head docks here, so
+   the hierarchy is: POLE LABEL (what this end is) → function line (what it
+   does, lighting up when the head is there) → body. The zero-padded bearing
+   is the navigation-grammar index. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-fn {
+  /* inline-block so the assembly type-on's clip-path shrinkwraps the glyphs
+     rather than wiping the full column width. */
+  display: inline-block;
+  font-family: var(--font-pt-mono);
+  font-weight: 400;
+  /* FLUID, on the cap block's shared slope (owner 2026-07-20: the copy read
+     undersized on a wide display). Fixed px was the bug: the pole label is
+     fluid and hit its 19px ceiling on a ~2000px viewport while this sat
+     pinned at 10px, so the hierarchy gap WIDENED with viewport width instead
+     of holding. The block's ratio at the top of the ramp is
+     label 19 · telemetry 12.5 · body 16 — telemetry stays clearly
+     subordinate to the pole, body stays the reading size. */
+  font-size: clamp(10px, 0.8vw, 12.5px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold, #caa554) calc(var(--cap-lit, 0) * 100%), var(--dawn-50));
+  line-height: 1.4;
+  margin-bottom: 8px;
+  text-shadow: 0 0 12px rgba(10, 9, 8, 0.72);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-index {
+  color: var(--gold-60);
+  font-size: 9px;
+}
+/* Body — PP Neue Montreal (the only body face). The void halo is the
+   #about support-copy precedent: readable DOM copy sitting over the lit
+   wireframe needs its own dark bloom or the dots eat the glyph edges. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-body {
   margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  /* Fluid on the block's slope — a step under the continuum lede
+     (clamp(15px, 1.15vw, 18px)), which is the right relationship: the lede
+     is the beat's editorial voice, this is instrument annotation. */
+  font-size: clamp(13px, 1.02vw, 16px);
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--dawn-70);
+  text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
 }
 
 /* ── The navigator reticle (v7 `.crail__reticle`: rotated outlined ring +
@@ -383,38 +472,43 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
-/* ── The readable spectrum copy — the three stops beneath the mark, then
-   the readout + CTA. Anchored at --continuum-axis-y so the block hangs
-   beneath the mark's band regardless of copy height.
+/* ── The centre SEAT — the readable "AI lives here" stop + the readout,
+   hanging directly beneath the mark's own ½ position on the band.
 
-   --continuum-axis-y: 54svh = the parked instrument's projected centre
-   (camera axis 50svh + CENTER_Y_OFFSET 0.1wu at CENTER_DISTANCE ≈ 4.5svh
-   — scale-independent, so the hero boost doesn't move it). NUDGE THIS
-   (single knob) if the copy rides too high/low on a viewport. */
-#continuum[data-continuum-mode="stage"] .continuum-stage {
-  --continuum-axis-y: 54svh;
-}
+   U9: PROJECTED, not screen-anchored. It used to sit at a fixed
+   --continuum-axis-y (54svh, the parked instrument's projected centre) while
+   the caps and reticle rode the band's projected geometry — so the moment the
+   mark moved (approach zoom, pointer-look, hero boost) the seat slid against
+   the rest of the instrument and the whole label layer read as pasted over
+   the mark rather than part of it. Now the corridor writer positions this
+   block at the band's projected MIDPOINT every frame, exactly as it does the
+   caps, and caps + reticle + seat translate as one rigid body.
+
+   Writer owns: transform + --seat-gain (chrome window opacity).
+   CSS owns: `top` (the drop below the band line — the single tuning knob,
+   was --continuum-axis-y) and the per-child --ci copy reveal, which
+   multiplies under the gain so the scroll scrub still works. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__spectrum {
-  position: absolute;
+  position: fixed;
   left: 0;
-  right: 0;
-  top: var(--continuum-axis-y);
-  /* No padding-inline (ADR-048/049): the children are centered fixed-width,
-     so this was a visual no-op — but it started edge-registered band
-     content one --hud-content-inset off. Band parity for any future
-     edge-registered content is margin-inline: var(--rail-inset). */
+  top: clamp(10px, 1.6svh, 22px);
+  width: min(440px, 60vw);
   display: flex;
   flex-direction: column;
   align-items: center;
+  opacity: var(--seat-gain, 0);
+  pointer-events: none;
+  will-change: transform, opacity;
 }
 
 /* The centre "AI lives here" stop — a single CENTRED column now (the Tool /
    Collaborator stops moved onto their rail caps, owner 2026-07-19). Keeps the
    v7 `.crail--large` stop recipe: tick hairline + outlined diamond foot at the
-   column's 50%, connecting the copy up to the mark's centre seat. */
+   column's 50%, connecting the copy up to the mark's centre seat. (The old
+   margin-top spacer is gone — the seat's own `top` now owns the drop.) */
 #continuum[data-continuum-mode="stage"] .continuum-stage__labels {
-  margin: clamp(24px, 4svh, 52px) auto 0;
-  width: min(440px, 60vw);
+  margin: 0;
+  width: 100%;
   display: block;
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop {
@@ -423,14 +517,20 @@
   text-align: center;
 }
 /* Tick anchors: hairline + outlined diamond foot (the v7 `.crail__tick` +
-   its ::before diamond), centred per column. */
+   its ::before diamond), centred per column — the seat's own leader up to
+   the band. It lights with --seat-lit as the head crosses the ½ position,
+   the same reciprocity the caps get at their poles. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__tick {
   position: absolute;
   top: -4px;
   left: 50%;
   width: 1px;
   height: 20px;
-  background: var(--dawn-30);
+  background: color-mix(
+    in srgb,
+    var(--gold, #caa554) calc(var(--seat-lit, 0) * 100%),
+    var(--dawn-30)
+  );
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__tick::before {
   content: "";
@@ -439,27 +539,223 @@
   left: 50%;
   width: 6px;
   height: 6px;
-  border: 1px solid var(--dawn-30);
+  border: 1px solid;
+  border-color: color-mix(
+    in srgb,
+    var(--gold, #caa554) calc(var(--seat-lit, 0) * 100%),
+    var(--dawn-30)
+  );
   transform: translate(-50%, 50%) rotate(45deg);
-  background: var(--void, #0a0908);
+  background: color-mix(
+    in srgb,
+    var(--gold, #caa554) calc(var(--seat-lit, 0) * 75%),
+    var(--void, #0a0908)
+  );
 }
+/* One authored line each (block), but SHRINKWRAPPED (fit-content + auto
+   margins) so the assembly type-on's clip-path wipes the glyphs rather than
+   the centred column's full width. Plain `inline-block` would collapse the
+   two lines into one run ("NEITHER PURE TOOLNOR TRUE COLLABORATOR"). */
 #continuum[data-continuum-mode="stage"] .continuum-stage__stop-line {
   display: block;
-}
-#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__b {
-  max-width: 26ch;
+  width: fit-content;
   margin-inline: auto;
 }
+/* The seat's type tracks the caps' ramp exactly (2026-07-20) — the two sides
+   are one instrument, so the centre must not stay pinned while the caps grow.
+   Kicker == the caps' telemetry grade; body == the caps' body; the statement
+   is the one bold line and sits just under the pole labels at every width. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__k {
+  display: inline-block;
+  font-size: clamp(10px, 0.8vw, 12.5px);
+  color: color-mix(in srgb, var(--gold, #caa554) calc(var(--seat-lit, 0) * 100%), var(--dawn-50));
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__t {
+  font-size: clamp(15px, 1.15vw, 18px);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__b {
+  font-size: clamp(13px, 1.02vw, 16px);
+  max-width: 26ch;
+  margin-inline: auto;
+  /* Void halo — the seat's body sits directly over the lit wireframe. */
+  text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
+}
 
-/* ── Readout + CTA under the labels. */
+/* ── The LIVE readout under the seat (U9). The projector writes the two
+   value spans every frame from the head's sweep; the line lifts toward gold
+   as the head crosses the seat, so the telemetry brightens exactly when it
+   reads 0.50 / 0.50. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__readout {
   text-align: center;
   font-family: var(--font-pt-mono);
-  font-size: 9px;
+  /* Fluid too, but the FLOOR of the ramp — telemetry under telemetry. */
+  font-size: clamp(9px, 0.72vw, 11px);
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: var(--dawn-30);
+  color: color-mix(in srgb, var(--gold, #caa554) calc(var(--seat-lit, 0) * 70%), var(--dawn-30));
   margin-top: 18px;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__readout-line {
+  display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ASSEMBLY (U9) — the instrument TYPES ITSELF ON as the chrome window opens.
+
+   The chrome used to simply fade up on labelGain, which read as a graphic
+   appearing rather than an instrument coming online. Now the connectors
+   unfold, the mono labels type on in glyph steps (the ArcCasesCue terminal
+   recipe, home-v2.css), the telemetry follows, and the readout lands last —
+   one ~1.5s power-up sequence, ordered structure → identity → data.
+
+   Trigger: `data-continuum-assembled`, set/removed by the corridor projector
+   on a labelGain hysteresis (0.15 on / 0.03 off — never mid-fade). Removing
+   the attribute resets every animation to the rest state below, so leaving
+   and re-entering #continuum re-plays the whole assembly in lockstep with the
+   band's own condense → launch replay.
+
+   No reduced-motion variant: the stage does not exist under PRM at all (the
+   media belt at the foot of this file is the CSS half of that gate).
+
+   LOCKSTEP: the steps() counts are GLYPH COUNTS of the rendered strings in
+   continuumStageData.ts — "Tool" 4, "Collaborator" 12, "01 · Executes
+   commands" 22, "AI lives here" 13, "Nav · Tool 0.50 — Collab 0.50" 29.
+   Change the copy, change the count, or the cadence goes wrong. */
+
+/* Rest state — what the chrome looks like before the window opens. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-label,
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-fn,
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__k,
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop-line,
+#continuum[data-continuum-mode="stage"] .continuum-stage__readout-line {
+  clip-path: inset(0 100% 0 0);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-dash {
+  transform: scaleX(0);
+}
+/* Each dash unfolds OUTWARD from its pole, toward the label. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--l .continuum-stage__band-dash {
+  transform-origin: right center;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__band-cap--r .continuum-stage__band-dash {
+  transform-origin: left center;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-leader,
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__tick {
+  transform: scaleY(0);
+  transform-origin: top center;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__cap-body,
+#continuum[data-continuum-mode="stage"] .continuum-stage__stop .crail__b {
+  opacity: 0;
+}
+
+@keyframes continuum-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes continuum-unfold-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes continuum-unfold-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes continuum-body-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 1 — structure: the connectors draw first. */
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__band-dash {
+  animation: continuum-unfold-x 0.36s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__stop
+  .crail__tick {
+  animation: continuum-unfold-y 0.32s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.1s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__cap-leader {
+  animation: continuum-unfold-y 0.3s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.3s both;
+}
+
+/* 2 — identity: the poles name themselves. */
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__band-cap--l
+  .continuum-stage__band-label {
+  animation: continuum-type 0.16s steps(4, end) 0.08s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__band-cap--r
+  .continuum-stage__band-label {
+  animation: continuum-type 0.28s steps(12, end) 0.08s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__stop
+  .crail__k {
+  animation: continuum-type 0.28s steps(13, end) 0.3s both;
+}
+
+/* 3 — telemetry + the seat's statement. */
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__cap-fn {
+  animation: continuum-type 0.34s steps(22, end) 0.45s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__stop-line:nth-child(1) {
+  animation: continuum-type 0.26s linear 0.5s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__stop-line:nth-child(2) {
+  animation: continuum-type 0.26s linear 0.64s both;
+}
+
+/* 4 — the reading copy, then the live readout last. */
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__cap-body {
+  animation: continuum-body-in 0.32s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.75s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__stop
+  .crail__b {
+  animation: continuum-body-in 0.32s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) 0.85s both;
+}
+#continuum[data-continuum-mode="stage"]
+  .continuum-stage[data-continuum-assembled]
+  .continuum-stage__readout-line {
+  animation: continuum-type 0.5s steps(29, end) 1s both;
 }
 
 /* ── Reveal — ALL stage copy (masthead + stops + readout + CTA) rides the
