@@ -106,6 +106,21 @@ export const SERVICES_MASTHEAD = {
   ],
   intro:
     "A talk, a workshop, or an embedded term building alongside your team. All tuned to the AI decisions you're actually making, and built to leave your team able to run it.",
+  /**
+   * M2 "survey plate" chrome (design handoff "Band Masthead — M2", 2026-07-21).
+   * The title + brief read as two surveyed panels of the instrument, each
+   * carrying a PT-Mono designation and a coordinate stamp; the brief also
+   * carries the one gold state chip. Purely presentational flavour — the
+   * coord strings are the design's registration-mark coordinates (verbatim
+   * from the handoff), not live geometry.
+   */
+  survey: {
+    titleDesig: "SVC / TITLE · 01",
+    briefDesig: "SVC / BRIEF · 02",
+    state: "Open",
+    titleCoord: "0344 / 0260",
+    briefCoord: "1588 / 0260",
+  },
 } as const;
 
 export const SERVICES: readonly Service[] = [

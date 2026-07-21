@@ -573,6 +573,151 @@
   display: none;
 }
 
+/* ── Services masthead — M2 "survey plate" chrome (design handoff, 2026-07-21)
+ * The title + brief read as two SURVEYED PANELS of the terminal instrument,
+ * claimed by a diagonal pair of 1px registration marks (gold ORIGIN cross at
+ * the title's head, dawn CLOSE cross at the brief's foot), each panel carrying
+ * a PT-Mono designation label, a coordinate stamp, and a masked dot-grid lift
+ * — so the copy reads as page chrome (rails, hub menus) instead of floating
+ * text. Grammar: retrofuturistic terminal / avionics survey plate.
+ *
+ * Geometry is expressed against the REAL editorial band, NOT the handoff's
+ * fixed 1948px stage: every element is a child of the two text columns
+ * (`.services-masthead__lead` / `__intro`, both anchored on `--masthead-inset`)
+ * and the FOOT furniture keys off each block's own live height (`100%`) rather
+ * than the handoff's fixed datum — so the marks track the real copy at every
+ * width (the intro out-runs the title's height below ~1500px, where a fixed
+ * datum would drop the stamp INTO the paragraph). All offsets are `--survey-*`
+ * props — the optical knobs, like `--masthead-top-trim`.
+ *
+ * The whole layer is decorative (aria-hidden) and rides the band's own opacity
+ * envelope (it lives inside `.services-masthead`) — no separate reveal clock.
+ * Gold is rationed to the ORIGIN mark + OPEN + the cursor + title line 2;
+ * every other survey element sits at ≤ 70% dawn (handoff hierarchy rule).
+ * Desktop-only — hidden with the static mobile/PRM stack below. */
+.services-masthead {
+  --survey-ink: rgba(235, 227, 214, 0.4); /* designation labels */
+  --survey-ink-faint: rgba(235, 227, 214, 0.22); /* coord stamps */
+  --survey-mark-dawn: rgba(235, 227, 214, 0.7); /* close mark */
+  --survey-label-rise: 34px; /* label top above the block head */
+  --survey-coord-drop: 26px; /* coord stamp below the block foot */
+  --survey-mark-out: 24px; /* registration mark, outboard of the far corner */
+  --survey-mark-rise: 26px; /* origin mark centre above the title head */
+  --survey-mark-drop: 22px; /* close mark centre below the brief foot */
+  --survey-mark-arm: 18px; /* full cross-arm length */
+  --survey-grid-bleed-x: 22px;
+  --survey-grid-bleed-y: 16px;
+}
+/* Keep the readable copy above its own dot-grid lift. */
+.services-masthead__lead .services-masthead__title,
+.services-masthead__intro-copy {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dot-grid lift — a masked radial-dot field under each block. Not a bordered
+ * box: it fades at its own edges (the mask), lifting the panel off the void. */
+.services-masthead__grid {
+  position: absolute;
+  inset: calc(-1 * var(--survey-grid-bleed-y)) calc(-1 * var(--survey-grid-bleed-x));
+  z-index: 0;
+  background-image: radial-gradient(rgba(235, 227, 214, 0.06) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  pointer-events: none;
+}
+
+/* Designation labels — PT Mono, above each block's head-left. */
+.services-masthead__desig {
+  position: absolute;
+  top: calc(-1 * var(--survey-label-rise));
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--survey-ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* State chip — the single gold survey element (brief head-right). */
+.services-masthead__state {
+  position: absolute;
+  top: calc(-1 * var(--survey-label-rise));
+  right: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Coordinate stamps — faint PT Mono, keyed to each block's own foot (100%). */
+.services-masthead__coord {
+  position: absolute;
+  top: calc(100% + var(--survey-coord-drop));
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--survey-ink-faint);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.services-masthead__coord--r {
+  left: auto;
+  /* pulled in to clear the close mark (handoff) */
+  right: calc(var(--survey-mark-out) + 8px);
+  text-align: right;
+}
+
+/* Registration marks — 1px crosses centred on their anchor point (the
+ * translate re-centres the arm box). Gold origin claims the title head; dawn
+ * close claims the brief foot; together they span the band on one diagonal. */
+.services-masthead__mark {
+  position: absolute;
+  width: var(--survey-mark-arm);
+  height: var(--survey-mark-arm);
+  pointer-events: none;
+}
+.services-masthead__mark::before,
+.services-masthead__mark::after {
+  content: "";
+  position: absolute;
+  background: currentcolor;
+}
+.services-masthead__mark::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+.services-masthead__mark::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+.services-masthead__mark--origin {
+  top: calc(-1 * var(--survey-mark-rise));
+  left: calc(-1 * var(--survey-mark-out));
+  transform: translate(-50%, -50%);
+  color: var(--gold, #caa554);
+}
+.services-masthead__mark--close {
+  top: calc(100% + var(--survey-mark-drop));
+  right: calc(-1 * var(--survey-mark-out));
+  transform: translate(50%, -50%);
+  color: var(--survey-mark-dawn);
+}
+
 /* Mobile / reduced motion — static in-flow band ABOVE the plate accordion
  * (the masthead is the section header there; the scroll clocks are parked
  * at content-in = 1 / exit = 0, so the desktop calc would resolve to 1
@@ -594,6 +739,17 @@
   .services-masthead__intro {
     margin-top: 18px;
     max-width: 38ch;
+  }
+  /* The M2 survey chrome is absolute geometry keyed to the desktop band; the
+   * mobile band is a static stacked header where none of it maps. Drop it —
+   * the copy stands on its own (handoff: reduced-motion renders resolved,
+   * and the desktop plate geometry simply doesn't exist here). */
+  .services-masthead__grid,
+  .services-masthead__mark,
+  .services-masthead__desig,
+  .services-masthead__state,
+  .services-masthead__coord {
+    display: none;
   }
 }
 

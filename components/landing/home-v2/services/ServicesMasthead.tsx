@@ -236,9 +236,21 @@ export function ServicesMasthead() {
     };
   }, []);
 
+  const { survey } = SERVICES_MASTHEAD;
+
   return (
     <header className="services-masthead" ref={rootRef}>
       <div className="services-masthead__lead">
+        {/* M2 survey plate: the title block is a surveyed panel — a masked
+            dot-grid lift behind it, the gold origin registration mark
+            claiming its head, a PT-Mono designation above, a coordinate
+            stamp at its foot. All decorative (aria-hidden); geometry hangs
+            off the block via --survey-* tokens and rides the band opacity. */}
+        <i className="services-masthead__grid" aria-hidden="true" />
+        <i className="services-masthead__mark services-masthead__mark--origin" aria-hidden="true" />
+        <span className="services-masthead__desig" aria-hidden="true">
+          {survey.titleDesig}
+        </span>
         {/* The "Services · 04" eyebrow was retired here (owner, 2026-07-17)
             — the headline reads first, matching the corridor heads. */}
         {/* aria-label keeps the section heading stable for AT while the
@@ -270,12 +282,24 @@ export function ServicesMasthead() {
             </span>
           ))}
         </h2>
+        <span className="services-masthead__coord" aria-hidden="true">
+          {survey.titleCoord}
+        </span>
       </div>
-      {/* Intro plate — the Arc caption card's X1-B dotted-reticle chrome in
-          miniature (dashed hairline frame + void glass + gold corner
-          crosses). The ghost span reserves the full copy's box so the
-          typewriter never reflows the plate; the typed span prints over it. */}
+      {/* Brief block — the second surveyed panel. Same survey furniture plus
+          the one gold OPEN state chip at its head-right and the dawn CLOSE
+          registration mark at its foot; the origin + close marks span the
+          band corner-to-corner on one diagonal. The retired X1-B corner
+          crosses stay in the JSX (LandingPage render-stability) — CSS keeps
+          them hidden. */}
       <div className="services-masthead__intro">
+        <i className="services-masthead__grid" aria-hidden="true" />
+        <span className="services-masthead__desig" aria-hidden="true">
+          {survey.briefDesig}
+        </span>
+        <span className="services-masthead__state" aria-hidden="true">
+          {survey.state}
+        </span>
         <span className="services-masthead__intro-cross is-tl" aria-hidden="true" />
         <span className="services-masthead__intro-cross is-tr" aria-hidden="true" />
         <span className="services-masthead__intro-cross is-bl" aria-hidden="true" />
@@ -288,6 +312,10 @@ export function ServicesMasthead() {
             {SERVICES_MASTHEAD.intro}
           </span>
         </p>
+        <span className="services-masthead__coord services-masthead__coord--r" aria-hidden="true">
+          {survey.briefCoord}
+        </span>
+        <i className="services-masthead__mark services-masthead__mark--close" aria-hidden="true" />
       </div>
     </header>
   );
