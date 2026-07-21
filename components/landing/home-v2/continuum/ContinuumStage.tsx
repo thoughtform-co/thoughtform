@@ -112,6 +112,7 @@ export function ContinuumStage() {
   if (!CONTINUUM_RAIL_STAGE || !capable) return null;
 
   const [toolStop, midStop, collabStop] = CONTINUUM_STAGE.stops;
+  const { survey } = CONTINUUM_STAGE;
 
   return (
     <>
@@ -144,7 +145,24 @@ export function ContinuumStage() {
               services section", superseding the Update-2 centred head). The
               lede returns from the foot to the right column. */}
           <header className="continuum-stage__head">
+            {/* M2 survey plate: parity with the Services masthead
+                (ADR-044 ServicesMasthead, 2026-07-21). Title + lede read as
+                two surveyed panels of the terminal instrument — a gold
+                origin cross claims the title's head, a dawn close cross
+                claims the lede's foot, on one shared diagonal, each with a
+                PT-Mono designation, a masked dot-grid lift, and a
+                coordinate stamp; the lede carries the one gold OPEN state
+                chip. All decorative (aria-hidden) and rides the head's own
+                --ci reveal — no separate clock. */}
             <h2 className="continuum-stage__title" style={{ ["--ci-off" as string]: 0 }}>
+              <i className="continuum-stage__grid" aria-hidden="true" />
+              <i
+                className="continuum-stage__mark continuum-stage__mark--origin"
+                aria-hidden="true"
+              />
+              <span className="continuum-stage__desig" aria-hidden="true">
+                {survey.titleDesig}
+              </span>
               {CONTINUUM_STAGE.titleLines.map((line, i) => (
                 <span
                   key={i}
@@ -156,9 +174,28 @@ export function ContinuumStage() {
                   {line.text}
                 </span>
               ))}
+              <span className="continuum-stage__coord" aria-hidden="true">
+                {survey.titleCoord}
+              </span>
             </h2>
             <p className="continuum-stage__lede" style={{ ["--ci-off" as string]: 0.08 }}>
-              <LedeText segments={CONTINUUM_STAGE.lede} />
+              <i className="continuum-stage__grid" aria-hidden="true" />
+              <span className="continuum-stage__desig" aria-hidden="true">
+                {survey.briefDesig}
+              </span>
+              <span className="continuum-stage__state" aria-hidden="true">
+                {survey.state}
+              </span>
+              <span className="continuum-stage__lede-copy">
+                <LedeText segments={CONTINUUM_STAGE.lede} />
+              </span>
+              <span className="continuum-stage__coord continuum-stage__coord--r" aria-hidden="true">
+                {survey.briefCoord}
+              </span>
+              <i
+                className="continuum-stage__mark continuum-stage__mark--close"
+                aria-hidden="true"
+              />
             </p>
           </header>
 

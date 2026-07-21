@@ -194,6 +194,7 @@
    the gold wash; the em line is --gold weight 500 (upright — the site's
    no-italics rule). */
 #continuum[data-continuum-mode="stage"] .continuum-stage__title {
+  position: relative;
   margin: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-weight: 400;
@@ -209,6 +210,9 @@
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__title-line {
   display: block;
+  /* Above the M2 survey grid lift (z-index:0, below). */
+  position: relative;
+  z-index: 1;
 }
 #continuum[data-continuum-mode="stage"] .continuum-stage__title-line--em {
   color: var(--gold, #caa554);
@@ -219,6 +223,7 @@
    flex space-between), the copy left-aligned (ragged right), first line level
    with the title's first line. */
 #continuum[data-continuum-mode="stage"] .continuum-stage__lede {
+  position: relative;
   margin: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-size: clamp(15px, 1.15vw, 18px);
@@ -231,6 +236,154 @@
 #continuum[data-continuum-mode="stage"] .continuum-stage__lede em {
   font-style: normal;
   color: var(--gold, #caa554);
+}
+/* The readable copy sits above the M2 survey grid lift (z-index:0, below). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__lede-copy {
+  position: relative;
+  z-index: 1;
+  display: inline;
+}
+
+/* ── Continuum masthead — M2 "survey plate" chrome, parity with the
+ * Services masthead (`ServicesMasthead` / ADR-044, 2026-07-21). The title +
+ * lede read as two SURVEYED PANELS of the terminal instrument, claimed by a
+ * diagonal pair of 1px registration marks (gold ORIGIN cross at the title's
+ * head, dawn CLOSE cross at the lede's foot), each panel carrying a PT-Mono
+ * designation label, a coordinate stamp, and a masked dot-grid lift — the
+ * same furniture that makes the services headline read as page chrome
+ * instead of floating text. Grammar: retrofuturistic terminal / avionics
+ * survey plate.
+ *
+ * Geometry hangs off the title (h2) / lede (p) elements themselves — there
+ * is no separate wrapper div here (unlike services' `__lead` / `__intro`),
+ * so `.continuum-stage__title` / `__lede` are the positioning contexts
+ * directly. The foot furniture keys off each block's own live height
+ * (`100%`), so it tracks the real copy at every width. All offsets are
+ * `--survey-*` props on the shared `__head` row, identical to services'
+ * tokens.
+ *
+ * The whole layer is decorative (aria-hidden) and rides the SAME --ci
+ * scroll reveal as its parent (title/lede already carry
+ * `opacity: var(--ci)` — see the Reveal block below) — no separate clock.
+ * Gold is rationed to the ORIGIN mark + OPEN + the title's em line; every
+ * other survey element sits at ≤ 70% dawn (the services hierarchy rule).
+ * The whole stage is already display:none below the 960px / reduced-motion
+ * gate, so — unlike services — no separate mobile-hide rule is needed. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__head {
+  --survey-ink: rgba(235, 227, 214, 0.4); /* designation labels */
+  --survey-ink-faint: rgba(235, 227, 214, 0.22); /* coord stamps */
+  --survey-mark-dawn: rgba(235, 227, 214, 0.7); /* close mark */
+  --survey-label-rise: 34px; /* label top above the block head */
+  --survey-coord-drop: 26px; /* coord stamp below the block foot */
+  --survey-mark-out: 24px; /* registration mark, outboard of the far corner */
+  --survey-mark-rise: 26px; /* origin mark centre above the title head */
+  --survey-mark-drop: 22px; /* close mark centre below the lede foot */
+  --survey-mark-arm: 18px; /* full cross-arm length */
+  --survey-grid-bleed-x: 22px;
+  --survey-grid-bleed-y: 16px;
+}
+
+/* Dot-grid lift — a masked radial-dot field under each block. Not a bordered
+ * box: it fades at its own edges (the mask), lifting the panel off the void. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__grid {
+  position: absolute;
+  inset: calc(-1 * var(--survey-grid-bleed-y)) calc(-1 * var(--survey-grid-bleed-x));
+  z-index: 0;
+  background-image: radial-gradient(rgba(235, 227, 214, 0.06) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  pointer-events: none;
+}
+
+/* Designation labels — PT Mono, above each block's head-left. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__desig {
+  position: absolute;
+  top: calc(-1 * var(--survey-label-rise));
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--survey-ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* State chip — the single gold survey element (lede head-right). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__state {
+  position: absolute;
+  top: calc(-1 * var(--survey-label-rise));
+  right: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Coordinate stamps — faint PT Mono, keyed to each block's own foot (100%). */
+#continuum[data-continuum-mode="stage"] .continuum-stage__coord {
+  position: absolute;
+  top: calc(100% + var(--survey-coord-drop));
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--survey-ink-faint);
+  white-space: nowrap;
+  pointer-events: none;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__coord--r {
+  left: auto;
+  /* pulled in to clear the close mark. */
+  right: calc(var(--survey-mark-out) + 8px);
+  text-align: right;
+}
+
+/* Registration marks — 1px crosses centred on their anchor point (the
+ * translate re-centres the arm box). Gold origin claims the title head; dawn
+ * close claims the lede foot; together they span the head on one diagonal. */
+#continuum[data-continuum-mode="stage"] .continuum-stage__mark {
+  position: absolute;
+  width: var(--survey-mark-arm);
+  height: var(--survey-mark-arm);
+  pointer-events: none;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__mark::before,
+#continuum[data-continuum-mode="stage"] .continuum-stage__mark::after {
+  content: "";
+  position: absolute;
+  background: currentcolor;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__mark::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__mark::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__mark--origin {
+  top: calc(-1 * var(--survey-mark-rise));
+  left: calc(-1 * var(--survey-mark-out));
+  transform: translate(-50%, -50%);
+  color: var(--gold, #caa554);
+}
+#continuum[data-continuum-mode="stage"] .continuum-stage__mark--close {
+  top: calc(100% + var(--survey-mark-drop));
+  right: calc(-1 * var(--survey-mark-out));
+  transform: translate(50%, -50%);
+  color: var(--survey-mark-dawn);
 }
 
 /* ── Tool / Collaborator caps — DOCKED to the mark-band's projected 3D

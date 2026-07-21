@@ -93,4 +93,20 @@ export const CONTINUUM_STAGE = {
    *  changes — a stale count types at the wrong cadence. */
   readout: { prefix: "Nav", toolLabel: "Tool", collabLabel: "Collab", rest: "0.50" },
   cta: { label: "See the practice", href: "#practice" },
+  /**
+   * M2 "survey plate" chrome — parity with the Services masthead
+   * (`ServicesMasthead` / ADR-044, 2026-07-21). The stage's two-column head
+   * reads as two surveyed panels of the same terminal instrument as
+   * services, each carrying a PT-Mono designation and a coordinate stamp;
+   * the lede also carries the one gold state chip. Purely presentational —
+   * the coord strings reuse the same handoff datum services renders, not
+   * live geometry.
+   */
+  survey: {
+    titleDesig: "CTM / TITLE · 01",
+    briefDesig: "CTM / LEDE · 02",
+    state: "Open",
+    titleCoord: "0344 / 0260",
+    briefCoord: "1588 / 0260",
+  },
 } as const;
