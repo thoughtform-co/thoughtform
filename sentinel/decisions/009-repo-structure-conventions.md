@@ -51,3 +51,66 @@ A repo structure audit confirmed the layout is broadly healthy for a Next.js 14 
 - V7 swap history: `docs/V7_SWAP_CHECKLIST.md`
 - Legacy archival: `sentinel/decisions/004-legacy-code-archival.md`
 - V7 compositing: `sentinel/decisions/008-landing-v7-background-layers.md`
+
+---
+
+## Update 1 — documentation consolidates to two homes; `legacy/` is deleted (2026-07-23, owner)
+
+**Why:** an owner review of the repo root asked whether the top-level files should
+be reorganised. The audit found the root itself is NOT the problem — of 27 tracked
+root files, ~20 are pinned there by tooling (Next.js resolves `next.config.mjs`,
+`middleware.ts`, `instrumentation.ts`, `tsconfig.json`, `postcss.config.mjs` from
+the root only; npm/Vercel/ESLint/Prettier likewise; `CLAUDE.md`, `AGENTS.md`,
+`.cursorrules` must sit at root for the agent tooling to load them). Moving those
+would break the build or force config-path indirection for no gain.
+
+The real problems were one level down:
+
+1. **Documentation lived in six places** — root (7 `.md`), `docs/`, `design/`,
+   `plans/`, `sentinel/`, `.linear-issues/` — which is what actually made the tree
+   read as chaotic.
+2. **`legacy/` was 130 files / 1.4 MB of provably dead code** (see ADR-004
+   Update 1, which owns that deletion).
+
+**Decision — documentation has exactly TWO homes:**
+
+- **`sentinel/`** — the decision system. ADRs, `BEST-PRACTICES.md`,
+  `MAINTENANCE.md`, `research/`, `baselines/`. Unchanged; this is the tree CLAUDE.md
+  points at and it keeps its meaning. Do NOT put mockups or scratch plans here.
+- **`docs/`** — everything else, absorbing the strays:
+  - `design/` → `docs/design/` (mockups, brand explorations, inspiration; ~31 MB)
+  - `plans/` → `docs/plans/`
+  - `.linear-issues/` → `docs/issues/` (also un-hides it — a dotfile directory read
+    as tooling config when it is really project documentation)
+
+This takes six documentation locations to two. The four movable root markdowns
+(`DESIGN.md`, `LANGUAGE.md`, `ROADMAP.md`, `SECURITY-SUPPLY-CHAIN.md`) were
+deliberately LEFT at root this pass — the owner scoped the change to directory
+consolidation, and root markdown is a discoverability surface.
+
+**Knock-on fixes:** `eslint.config.mjs` (`.linear-issues/**` → `docs/**` as the
+non-source ignore), the ADR-018 plan link, the `thoughtform-design` skill's atlas
+reference in both `.claude/` and `.agents/` (which pointed at an already-stale
+`design/mockups/…` path), and the `docs/issues/README.md` self-references.
+
+**Bonus — deploy payload.** `.vercelignore` was carefully excluding ~33 MB of
+`public/` assets for build perf (2026-07-14 pass) while `design/` (~31 MB) and
+`sentinel/` (~10 MB) uploaded on every single deploy. Consolidation made this a
+two-line fix: `docs` + `sentinel` are now excluded. Verified first that no
+build-time code reads either path — nothing in `app/`, `lib/`, `components/`,
+`scripts/`, or `next.config.mjs` does.
+
+**This supersedes Decision §1's "no further broad folder moves"** — that deferral
+was explicitly conditioned on "only when motivated by a real problem", and the
+six-way doc sprawl was one. §3's conventions for new work are unchanged. The
+`legacy/` clause of §4 is resolved by deletion rather than renaming (ADR-004 U1).
+
+**Still deliberately deferred** (unchanged from §4, and reaffirmed): moving
+`public/prototypes/v7/` out of `public/`, merging the parallel V7 entry points, and
+splitting `(admin)`. **Explicitly rejected this pass: a `src/` migration** — it
+would invalidate path references across ~50 ADRs, every glob in `.claude/rules/`,
+every skill trigger path, and the parse-pipeline docs, for zero functional gain;
+`app/ components/ lib/ public/ types/ tests/` is already the standard Next.js shape.
+
+**Verification:** typecheck clean, lint 0 errors (308 pre-existing warnings,
+unchanged count), 350/350 unit tests, production build succeeds.

@@ -137,3 +137,45 @@ Do NOT archive:
 - Code that might be reactivated soon
 - Utilities still imported elsewhere
 - Components with active feature flags
+
+---
+
+## Update 1 — the `legacy/` tree is DELETED; git history is the archive (2026-07-23, owner)
+
+**Why:** the archive had done its job. `legacy/` had grown to 130 files / 1.4 MB
+with **zero imports** from `app/`, `components/`, `lib/`, `tests/`, `scripts/`,
+`stories/`, or `packages/` — verified by an exhaustive sweep for `from "…legacy"`,
+`require()`, dynamic `import()`, and the `@/legacy` alias. It was already fenced
+out of every pipeline (`tsconfig.json` exclude, `eslint.config.mjs` ignore,
+`vitest.config.ts` exclude), so it shipped nothing and typechecked nothing — it
+only inflated the working tree and made the repo read as twice as complex as it
+is. The owner's repo-structure review called it: the archive folder was the single
+biggest contributor to apparent clutter.
+
+**Decision:** delete the tree outright. Git history is the archive — recovering any
+file is `git log --diff-filter=D -- legacy/<path>` then `git show <sha>^:<path>`.
+This is the same rationale already applied to the 2026-07 Phase 5 cleanup of
+`NavigationCockpitV2` / `/archive/current-home` ("git history is the archive",
+CLAUDE.md).
+
+**Scope of the removal:**
+
+- `legacy/**` (130 files) — deleted.
+- The archive's own governance is retired: `.claude/rules/legacy.md` and
+  `.cursor/rules/legacy.mdc` deleted; the `legacy/` branch of
+  `scripts/sentinel-pre-edit-hint.mjs` removed.
+- Dead exclusions cleared now that the path cannot exist: `tsconfig.json`
+  (`exclude`), `eslint.config.mjs` (ignores), `vitest.config.ts` (exclude).
+- Tree diagrams + the root-barrel note updated in `CLAUDE.md`, `AGENTS.md`,
+  `README.md`, and the `components/index.ts` header comment (which now records
+  WHAT was archived and how to recover it, rather than pointing at a live path).
+
+**What still stands from the original ADR:** the *archival criteria* below (stable
+V2 replacement / 30+ days unimported / abandoned experiment) remain the test for
+retiring code. What changes is the destination — retired code is now **deleted in
+a titled commit**, not moved to `legacy/`. Do not recreate a `legacy/` directory;
+if a future retirement needs a staging area, open a new ADR for it.
+
+**Verification:** `npm run verify` (lint + typecheck + unit tests) and a production
+build both pass with the tree removed; no import, alias, or config reference to
+`legacy/` survives outside historical ADR prose.

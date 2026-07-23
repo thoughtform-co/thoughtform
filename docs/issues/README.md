@@ -45,7 +45,7 @@ This system serves as a **persistent issue memory** that:
 ## Folder Structure
 
 ```
-.linear-issues/
+docs/issues/
 ├── README.md                           # This file
 ├── ISSUE_TEMPLATE.md                   # Template for new issues
 ├── OPEN_ISSUES.md                      # Index of all open issues
@@ -132,7 +132,7 @@ not just browser emulation.
 
 When asking an AI assistant to work on an issue:
 
-1. Reference the issue file: "See TFM-010 in .linear-issues/"
+1. Reference the issue file: "See TFM-010 in docs/issues/"
 2. AI can read attempted solutions to avoid repeating them
 3. AI should update the issue file with new attempts
 4. On resolution, AI should fill in Solution and Product Learning

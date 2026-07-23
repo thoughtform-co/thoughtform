@@ -20,7 +20,6 @@ export default defineConfig({
       "tests/visual/**",
       "tests/**/*.spec.ts",
       ".claude/**",
-      "legacy/**",
       "registry/**",
       "playwright-report/**",
       "test-results/**",

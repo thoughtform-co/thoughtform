@@ -64,7 +64,11 @@ supabase/
   migrations/         # Timestamped SQL migrations
   config.toml         # Supabase CLI config
 packages/ui/          # Shared UI package (@thoughtform/ui)
-legacy/               # Archived code (excluded from TypeScript build)
+docs/                 # All non-decision documentation
+  design/             # Mockups, brand explorations, inspiration
+  plans/              # Work-in-progress plans
+  issues/             # Issue tracker notes (was .linear-issues/)
+sentinel/             # Decision records (ADRs), BEST-PRACTICES, MAINTENANCE
 ```
 
 ### Root documents

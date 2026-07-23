@@ -24,11 +24,10 @@ const config = [
       // Agent / tooling scratch space
       ".claude/**",
       ".cursor/**",
-      ".linear-issues/**",
       ".husky/**",
       ".vscode/**",
       // Archived / non-source content
-      "legacy/**",
+      "docs/**",
       "public/prototypes/**",
       "registry/**",
       "supabase/.temp/**",

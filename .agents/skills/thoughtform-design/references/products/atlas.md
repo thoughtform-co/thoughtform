@@ -6,7 +6,7 @@ Research-station density: **full HUD** grammar, particles, canvas-forward UI.
 
 - **App tokens / globals:** `src/app/globals.css`.
 - **Brand token package:** `thoughtform-brand/tokens/tokens.css`.
-- **Particle + canvas grammar:** `design/mockups/thoughtform_redesign/PARTICLE_GUIDELINES.md`.
+- **Particle + canvas grammar:** `docs/design/thoughtform_redesign/` (DESIGN_SYSTEM.md / particles.js).
 - **Shared particle icon rules:** `references/particle-icon-grammar.md` (global); align Atlas-specific motion/density with live components.
 
 ## Notes

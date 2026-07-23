@@ -85,14 +85,6 @@ const rules = [
     test: (p) => p.includes("supabase/") || p.includes("lib/celestial/"),
     line: "Sentinel: Supabase / celestial — CLAUDE.md migration naming + RLS; sentinel/MAINTENANCE.md",
   },
-  {
-    test: (p) =>
-      p.startsWith("legacy/") ||
-      p.includes("/legacy/") ||
-      p.includes("\\legacy\\") ||
-      /(^|[/\\])legacy[/\\]/i.test(p),
-    line: "Sentinel: legacy/ is archived (ADR-004) — read-only; sentinel/MAINTENANCE.md",
-  },
 ];
 
 const raw = readStdin();

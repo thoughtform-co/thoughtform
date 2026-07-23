@@ -3364,7 +3364,7 @@ The corridor was previously gated off for any viewport `< 760px`
 `FallbackCorridor` — losing both the flythrough and the section-2
 brandmark composition. This revision runs the real 3D corridor on
 **capable phones** ("corridor-lite") and stacks the Thoughtform copy
-above the brandmark in portrait. Plan: `plans/mobile-3d-corridor.md`.
+above the brandmark in portrait. Plan: `docs/plans/mobile-3d-corridor.md`.
 
 Changes:
 

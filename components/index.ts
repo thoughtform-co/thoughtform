@@ -28,16 +28,12 @@ export {
 } from "./parallax/ParallaxLayer";
 
 // ═══════════════════════════════════════════════════════════════
-// LEGACY COMPONENTS - Archived per ADR-004
-// The following components have been moved to legacy/:
-// - components/sections/* → legacy/sections/
-// - components/editor/* → legacy/editor/
-// - components/canvas/* → legacy/canvas/
-// - store/* → legacy/store/
-// - app/v2/* → legacy/landing-v2/
-// - app/v3/* → legacy/landing-v3/
-// - app/v4/* + components/hud/r3f/* + lib/v4/* → legacy/landing-v4/
+// RETIRED COMPONENTS - archived per ADR-004, DELETED 2026-07-23
+// These trees were archived under `legacy/` and have now been
+// removed from the working tree entirely (ADR-004 Update 1):
+//   components/sections|editor|canvas/*, store/*,
+//   app/v2|v3|v4/*, components/hud/r3f/*, lib/v4/*
 //
-// These are kept for reference but not actively compiled.
-// Import directly from legacy/ if needed for testing.
+// Git history is the archive — recover any of them with
+// `git log --diff-filter=D -- legacy/<path>`.
 // ═══════════════════════════════════════════════════════════════

@@ -54,7 +54,11 @@ components/
 lib/                    # Utilities, hooks, domain modules (celestial/, auth/, etc.)
 constants/              # Configuration defaults
 supabase/               # Database schema and migrations
-legacy/                 # Archived code (excluded from TypeScript build)
+docs/                   # All non-decision documentation
+  design/               # Mockups, brand explorations, inspiration
+  plans/                # Work-in-progress plans
+  issues/               # Issue tracker notes (was .linear-issues/)
+sentinel/               # Decision records (ADRs), BEST-PRACTICES, MAINTENANCE
 ```
 
 ## Key Components
@@ -117,7 +121,7 @@ Example: "optimize the front-end design", "make this component responsive", "des
 ### Imports and barrels
 
 - **Feature barrels** (`components/hud/index.ts`, `components/gateway/index.ts`, `lib/celestial/index.ts`) are kept current and are the preferred import path for that feature's public API.
-- **Root barrel** (`components/index.ts`) is a historical compatibility layer documenting legacy moves per ADR-004. Do not add new exports there; import from feature barrels directly.
+- **Root barrel** (`components/index.ts`) is a historical compatibility layer recording the ADR-004 archival (the `legacy/` tree itself was deleted 2026-07-23 — git history is the archive). Do not add new exports there; import from feature barrels directly.
 - Prefer `@/components/feature` or `@/lib/module` over deep path imports when a barrel exists.
 
 ### Supabase migrations
