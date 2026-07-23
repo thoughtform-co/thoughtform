@@ -2321,7 +2321,7 @@ const STACK_SOURCE_NAMES = [
   "Support replies",
   "Weekly reporting",
 ] as const;
-const STACK_SURFACE_NAMES = ["Memory", "Tools", "Model", "Workflow", "Agent"] as const;
+const STACK_SURFACE_NAMES = ["Memory", "API", "Model", "CLI", "Agent"] as const;
 
 export const STACK_SOURCE_ITEMS: StackItem[] = Array.from({ length: STACK_LANE_COUNT }, (_, i) => ({
   id: STACK_SOURCE_NAMES[i].toLowerCase().replace(/\s+/g, "-"),

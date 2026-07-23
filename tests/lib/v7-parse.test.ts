@@ -256,7 +256,6 @@ describe("v7-parse — extractV7Text", () => {
     expect(text.thoughtform.titleHtml.length).toBeGreaterThan(0);
     expect(text.thoughtform.body1Html.length).toBeGreaterThan(0);
     expect(text.thoughtform.body2Html.length).toBeGreaterThan(0);
-    expect(text.thoughtform.body3Html.length).toBeGreaterThan(0);
     expect(text.thoughtform.phaseLabels).toEqual({
       navigate: "Navigate",
       encode: "Encode",

@@ -239,7 +239,6 @@ function FallbackCorridor({ text }: { text: V7CorridorText }) {
         <h2 dangerouslySetInnerHTML={{ __html: text.thoughtform.titleHtml }} />
         <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body1Html }} />
         <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body2Html }} />
-        <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body3Html }} />
       </section>
       {enc && (
         <section>

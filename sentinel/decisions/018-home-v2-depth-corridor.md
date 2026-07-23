@@ -4173,6 +4173,69 @@ through to the literal `Surface N` fallback label on the extra chip.
 the stack. Both column headers come from the shared `ARTIFACT_LABELS`,
 so the internal `/test/intelligence-artifact` lab inherits the rename.
 
+## 2026-07-23 revision — full Arc copy pass + a 3-slot parser fallback bug
+
+Follow-up in the same session extended the copy pass to the other two
+Arc stations and the hero, and surfaced a real bug in the parse
+pipeline.
+
+**Station footers (`corridorMap.ts`).** Navigate: "AI is not software to
+command..." → "AI is not one tool to roll out. It is **intelligence to
+navigate**. / We map where it belongs, then help your team brief, steer,
+and judge it inside live work." Encode: "...lives in your team's
+heads..." → "The most **valuable context** lives in how your team sees,
+decides, and works. / We encode it into a reusable layer that people and
+agents can work from." Build's footer also iterated once more: "Different
+work needs **different intelligence**. / We find the right setup and
+build the tools with your team." (the gold `<em>` highlight moved to
+"different intelligence" per the owner). `STACK_SURFACE_NAMES`
+(`sceneGeom.ts`) changed again: `Tools` → `API`, `Workflow` → `CLI` — the
+5-slot taxonomy and `Model`'s gold lift are otherwise unchanged from the
+prior revision above.
+
+**Hero thesis (`landing-v7-motion.html`, parsed by `lib/v7-parse`).** The
+`#definition` station's `.tri__left` copy — title + 3 body paragraphs —
+is a SEPARATE source from the corridor station map: it's authored in the
+prototype HTML and read at build/request time by
+`extractV7Text`/`parseV7HtmlUncached` (mtime-keyed cache, self-invalidates
+on file change). Title "AI collapsed the distance between _thought_ and
+_form_." → "AI brings another source of intelligence into the work." (the
+old title retired; the phrase that used to be body paragraph 1 was
+promoted into the title slot). Remaining body: "The question is where
+and how it should take part. / We turn that answer into a capability
+your team owns."
+
+**Bug found + fixed: the parser had a hardcoded 3-slot contract with
+stale literal fallbacks.** `extractText.ts` pulled exactly three
+`.tri__title--secondary` paragraphs into `body1Html`/`body2Html`/
+`body3Html`, each with its own hardcoded fallback string used only when
+that slot's paragraph is missing from the HTML. Collapsing the hero copy
+from 3 paragraphs to 2 (title absorbed the old paragraph 1) left the
+`body3Html` slot without a matching `<p>` — so its fallback
+("We help your team own yours, then build from it.", the OLD pre-rewrite
+line) silently reappeared as a phantom third paragraph, in dev AND in any
+production build, not a caching artifact. Fix: removed the 3rd slot
+end-to-end rather than patch the fallback string — `tfBody3`/`body3Html`
+deleted from `extractText.ts`, `types.ts`, both `CopyAnchors.tsx` render
+branches (mobile + desktop), the `HomeCorridor.tsx` no-JS fallback, and
+the `tests/lib/v7-parse.test.ts` assertion that required it non-empty.
+**Any hardcoded N-slot text contract with per-slot literal fallbacks
+will silently resurrect old copy if a slot's source paragraph is ever
+removed — when trimming authored body copy, grep the parser
+(`lib/v7-parse/`) for a matching fixed-slot extraction before assuming
+the HTML edit alone is sufficient.**
+
+Separately: a stray `ReferenceError: tfBody3 is not defined` kept
+appearing in `read_console_messages` even after the fix landed, tests
+passed, and the dev server was fully stopped/restarted — traced to a
+persisted console-log buffer on the long-lived browser tab (from the
+genuinely-broken intermediate edit state moments earlier), not a live
+recompile issue. A brand-new tab against the same running server showed
+zero console errors. Don't diagnose a live SSR bug from
+`read_console_messages` alone once a fix has landed — open a fresh tab
+(or check `preview_logs` server-side) before concluding a fix didn't
+take.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

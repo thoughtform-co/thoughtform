@@ -125,7 +125,6 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body3Html }} />
         </div>
       ) : (
         <div
@@ -136,7 +135,6 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
           <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body3Html }} />
           {cta}
         </div>
       )}

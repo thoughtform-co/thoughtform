@@ -259,9 +259,9 @@ export const CORRIDOR_MAP = [
       kicker: "01 · NAVIGATE",
       titleHtml: "<em>NAVIGATE</em> THE INTELLIGENCE.",
       supportHtml:
-        "AI is not software to command. It is an <em>intelligence to navigate</em>.<br>Your team learns to brief it, steer it, and judge what comes back inside live work.",
+        "AI is not one tool to roll out. It is <em>intelligence to navigate</em>.<br>We map where it belongs, then help your team brief, steer, and judge it inside live work.",
       floorHtml:
-        "AI is not software to command. It is an <em>intelligence to navigate</em>.<br>Your team learns to brief it, steer it, and judge what comes back inside live work.",
+        "AI is not one tool to roll out. It is <em>intelligence to navigate</em>.<br>We map where it belongs, then help your team brief, steer, and judge it inside live work.",
       telemetry: {
         sector: "01 · NAVIGATE",
         callsign: "NAV-01",
@@ -289,9 +289,9 @@ export const CORRIDOR_MAP = [
       kicker: "02 · ENCODE",
       titleHtml: "<em>ENCODE</em> THE CONTEXT.",
       supportHtml:
-        "The most <em>valuable context</em> lives in your team's heads.<br>We encode it into a reusable layer any colleague and agent can use.",
+        "The most <em>valuable context</em> lives in how your team sees, decides, and works.<br>We encode it into a reusable layer that people and agents can work from.",
       floorHtml:
-        "The most <em>valuable context</em> lives in your team's heads.<br>We encode it into a reusable layer any colleague and agent can use.",
+        "The most <em>valuable context</em> lives in how your team sees, decides, and works.<br>We encode it into a reusable layer that people and agents can work from.",
       telemetry: {
         sector: "02 · ENCODE",
         callsign: "ENC-02",

@@ -45,9 +45,6 @@ export function extractV7Text(): V7CorridorText {
   const tfBody2 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 1) ??
     "Context is the new frontier; and every platform wants to capture it.";
-  const tfBody3 =
-    innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 2) ??
-    "We help your team own yours, then build from it.";
   const tfCtaMatch = /<a\b[^>]*\bclass="[^"]*\bbtn--solid\b[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(
     tfHtml
   );
@@ -103,7 +100,6 @@ export function extractV7Text(): V7CorridorText {
       titleHtml: tfTitle.trim(),
       body1Html: tfBody1.trim(),
       body2Html: tfBody2.trim(),
-      body3Html: tfBody3.trim(),
       cta: tfCta,
       northStarTitle: tfNorthTitle,
       northStarDesc: tfNorthDesc,
