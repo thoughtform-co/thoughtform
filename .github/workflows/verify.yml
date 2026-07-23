@@ -23,9 +23,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          # Pinned to the runtime Vercel deploys with (same major as
-          # the repo's @types/node devDependency).
-          node-version: 20
+          # Single source of truth: .nvmrc — the runtime Vercel deploys
+          # with, the same major as @types/node, and what `nvm use` picks
+          # up locally. package.json `engines` is the matching floor.
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
@@ -70,7 +71,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
@@ -110,7 +111,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
