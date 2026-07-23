@@ -259,9 +259,9 @@ export const CORRIDOR_MAP = [
       kicker: "01 · NAVIGATE",
       titleHtml: "<em>NAVIGATE</em> THE INTELLIGENCE.",
       supportHtml:
-        "AI is not one tool to roll out. It is <em>intelligence to navigate</em>.<br>We map where it belongs, then help your team brief, steer, and judge it inside live work.",
+        "AI is not one tool to roll out. It is <em>intelligence to navigate</em>.<br>We map where it belongs, then help your team brief, steer, and judge it in live work.",
       floorHtml:
-        "AI is not one tool to roll out. It is <em>intelligence to navigate</em>.<br>We map where it belongs, then help your team brief, steer, and judge it inside live work.",
+        "AI is not one tool to roll out. It is <em>intelligence to navigate</em>.<br>We map where it belongs, then help your team brief, steer, and judge it in live work.",
       telemetry: {
         sector: "01 · NAVIGATE",
         callsign: "NAV-01",
