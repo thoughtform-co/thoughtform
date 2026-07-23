@@ -2301,10 +2301,10 @@ function applyGyroDomBank(el: HTMLElement, scale = 0.65): void {
 
 // ── Build-phase per-item label registry ────────────────────────────
 //
-// Names are representative of typical Loop substrate / surface tools;
-// counts mirror `ShellStack`'s pip arrays (5 lanes / 6 surfaces) and
-// the Y positions exactly match the `sourcePipPositions` /
-// `surfaceFanEnds` derivations there.
+// Names map the Build station's WORK inputs (left) to the rented
+// INTELLIGENCE it runs on (right); counts mirror `ShellStack`'s pip
+// arrays (5 lanes / 5 surfaces) and the Y positions exactly match the
+// `sourcePipPositions` / `surfaceFanEnds` derivations there.
 
 export interface StackItem {
   /** Stable DOM id suffix (`intelligence.source.{id}` / `…surface.{id}`). */
@@ -2314,8 +2314,14 @@ export interface StackItem {
   y: number;
 }
 
-const STACK_SOURCE_NAMES = ["Snowflake", "Notion", "Monday", "Frontify", "CRM"] as const;
-const STACK_SURFACE_NAMES = ["Cursor", "Claude", "Web app", "REST", "Slack", "Agents"] as const;
+const STACK_SOURCE_NAMES = [
+  "Pricing calls",
+  "Contract review",
+  "Campaign copy",
+  "Support replies",
+  "Weekly reporting",
+] as const;
+const STACK_SURFACE_NAMES = ["Memory", "Tools", "Model", "Workflow", "Agent"] as const;
 
 export const STACK_SOURCE_ITEMS: StackItem[] = Array.from({ length: STACK_LANE_COUNT }, (_, i) => ({
   id: STACK_SOURCE_NAMES[i].toLowerCase().replace(/\s+/g, "-"),

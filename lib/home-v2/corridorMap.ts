@@ -327,9 +327,9 @@ export const CORRIDOR_MAP = [
       kicker: "03 · BUILD",
       titleHtml: "<em>BUILD</em> ON THE LAYER.",
       supportHtml:
-        "Once context is encoded, it becomes a <em>layer to build on</em>.<br>We turn it into tools, workflows, and agents your team can run and extend.",
+        "Different work needs <em>different intelligence</em>.<br>We find the right setup and build the tools with your team.",
       floorHtml:
-        "Once context is encoded, it becomes a <em>layer to build on</em>.<br>We turn it into tools, workflows, and agents your team can run and extend.",
+        "Different work needs <em>different intelligence</em>.<br>We find the right setup and build the tools with your team.",
       telemetry: {
         sector: "03 · BUILD",
         callsign: "BLD-03",

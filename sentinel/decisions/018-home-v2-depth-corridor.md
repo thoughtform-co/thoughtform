@@ -4145,6 +4145,34 @@ context-loss/restore handler the corridor canvas already had, and the
 always-on `useLenis` + `useWorldDomTracker` rAF loops now pause while the
 tab is hidden.
 
+## 2026-07-23 — Build station copy repoint (WORK → INTELLIGENCE, 5 surface nodes)
+
+The Build park's registry was repointed from a **tooling** read to a
+**configuration** read, to a design mockup. The column headers
+(`ARTIFACT_LABELS`, `intelligence-artifact/artifactGeom.ts`) went
+`01 Sources / where the work lives` → `01 Work / the work that matters`
+and `03 Surfaces / where the layer is called` →
+`03 Intelligence / what you rent`; the cue docked under the title
+(`ArcCasesCue`) went `See tools` → `See the routes`; and the station
+support/floor copy (`corridorMap.ts`) became "Different work needs
+**different intelligence**. / We find the right setup and build the tools
+with your team."
+
+The node registries in `sceneGeom.ts` follow: sources are now the units
+of work (`Pricing calls` … `Weekly reporting`, still 5 lanes) and
+surfaces are the rented intelligence primitives (`Memory · Tools ·
+Model · Workflow · Agent`). **`STACK_FAN_COUNT` dropped 6 → 5**
+(`shell/shellGeom.ts`) so the fan rays match the five-primitive
+taxonomy. That constant is the single source for the canvas tips, the
+motes, the epilogue drain rows AND the DOM chips, so
+`STACK_SURFACE_NAMES.length` must track it — a shorter names array falls
+through to the literal `Surface N` fallback label on the extra chip.
+
+`Model` carries a quiet gold lift (`data-stack-emphasis`, written in
+`CopyAnchors` and styled in `home-v2.css`) as the load-bearing centre of
+the stack. Both column headers come from the shared `ARTIFACT_LABELS`,
+so the internal `/test/intelligence-artifact` lab inherits the rename.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

@@ -143,7 +143,7 @@ function ArcCasesCueButton() {
         aria-controls="arc-cases-terminal"
         onClick={toggle}
       >
-        <span className="home-v2-cases-cue__label">See tools</span>
+        <span className="home-v2-cases-cue__label">See the routes</span>
       </button>
       <span className="home-v2-cases-cue__rule home-v2-cases-cue__rule--right" aria-hidden="true" />
     </div>

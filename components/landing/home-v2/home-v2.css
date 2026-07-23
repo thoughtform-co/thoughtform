@@ -3244,6 +3244,26 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   padding-left: 12px;
 }
 
+/* Emphasised surface node — the rented MODEL sits at the centre of the
+   intelligence stack and carries a quiet gold lift (brighter frame +
+   faint glow + bolder label) so it reads as the load-bearing node
+   without competing with the sphere. */
+.home-v2-stack-item--surface[data-stack-emphasis="true"] {
+  color: var(--gold, #caa554);
+}
+.home-v2-stack-item--surface[data-stack-emphasis="true"] .home-v2-stack-item__chip {
+  border-color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(202, 165, 84, 0.25),
+    0 0 18px rgba(202, 165, 84, 0.18);
+}
+.home-v2-stack-item--surface[data-stack-emphasis="true"] .home-v2-stack-item__index,
+.home-v2-stack-item--surface[data-stack-emphasis="true"] .home-v2-stack-item__label {
+  font-weight: 600;
+  opacity: 1;
+}
+
 /* ── Encode primitive labels (cardinal callouts) ────────────────
    Polish round 2 (2026-06-10): replaced the heavy gold-bordered
    black box with a marker + leader + hairline-frame callout so the

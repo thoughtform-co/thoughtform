@@ -301,6 +301,9 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           data-anchor-origin="left-center"
           data-stack-side="surfaces"
           data-stack-idx={idx}
+          // The rented MODEL is the centre of the intelligence stack —
+          // give it a quiet gold lift so it reads as the load-bearing node.
+          data-stack-emphasis={item.id === "model" ? "true" : undefined}
         >
           <span className="home-v2-stack-item__leader" aria-hidden="true" />
           <span className="home-v2-stack-item__chip">

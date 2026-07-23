@@ -368,7 +368,7 @@ export const STACK_LANE_COUNT = 5;
  *  the registry reads as a compact manifest, not a full-height
  *  ladder. */
 export const STACK_LANE_Y_RANGE = 0.95;
-export const STACK_FAN_COUNT = 6;
+export const STACK_FAN_COUNT = 5;
 /** Surface column vertical spread. Polish round 4 (2026-06-10):
  *  1.15 -> 1.05 — matches the tightened source column rhythm. */
 export const STACK_FAN_HALF_HEIGHT = 1.05;

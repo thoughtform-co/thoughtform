@@ -387,8 +387,8 @@ export const ARTIFACT_LABELS: readonly ArtifactLabel[] = [
   {
     id: "sources",
     ordinal: "01",
-    title: "Sources",
-    sub: "where the work lives",
+    title: "Work",
+    sub: "the work that matters",
     color: COLOR_SOURCES_CSS,
   },
   {
@@ -401,8 +401,8 @@ export const ARTIFACT_LABELS: readonly ArtifactLabel[] = [
   {
     id: "surfaces",
     ordinal: "03",
-    title: "Surfaces",
-    sub: "where the layer is called",
+    title: "Intelligence",
+    sub: "what you rent",
     color: COLOR_SURFACES_CSS,
   },
 ];
