@@ -259,9 +259,9 @@ export const CORRIDOR_MAP = [
       kicker: "01 · NAVIGATE",
       titleHtml: "<em>NAVIGATE</em> THE INTELLIGENCE.",
       supportHtml:
-        "AI isn't just a tool to command. It's <em>intelligence to navigate</em>.<br>We map where it should execute, contribute, or defer; so your team can brief, steer, and judge it in live work.",
+        "AI isn't just a tool to command. It's <em>intelligence to navigate</em>.<br>We map when it should execute, contribute, or defer—so your team can steer it.",
       floorHtml:
-        "AI isn't just a tool to command. It's <em>intelligence to navigate</em>.<br>We map where it should execute, contribute, or defer; so your team can brief, steer, and judge it in live work.",
+        "AI isn't just a tool to command. It's <em>intelligence to navigate</em>.<br>We map when it should execute, contribute, or defer—so your team can steer it.",
       telemetry: {
         sector: "01 · NAVIGATE",
         callsign: "NAV-01",
