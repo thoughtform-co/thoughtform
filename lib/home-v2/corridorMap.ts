@@ -327,9 +327,9 @@ export const CORRIDOR_MAP = [
       kicker: "03 · BUILD",
       titleHtml: "<em>BUILD</em> ON THE LAYER.",
       supportHtml:
-        "Intelligence becomes <em>capability</em> when it is grounded in your context and designed into the work.<br>We build that capability with your team, so they can run and evolve it.",
+        "Intelligence becomes <em>capability</em> when it is grounded in your context and <em>designed into the work</em>.<br>We build that capability with your team, so they can run and evolve it.",
       floorHtml:
-        "Intelligence becomes <em>capability</em> when it is grounded in your context and designed into the work.<br>We build that capability with your team, so they can run and evolve it.",
+        "Intelligence becomes <em>capability</em> when it is grounded in your context and <em>designed into the work</em>.<br>We build that capability with your team, so they can run and evolve it.",
       telemetry: {
         sector: "03 · BUILD",
         callsign: "BLD-03",

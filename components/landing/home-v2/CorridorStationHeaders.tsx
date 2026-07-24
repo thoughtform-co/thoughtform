@@ -149,10 +149,13 @@ function bandOpacity(p: number, fadeIn: [number, number], fadeOut?: [number, num
 //   "Plain text <em>accent</em> more text."
 // Parse it into a flat array of char tokens, each tagged whether it
 // sits inside an `<em>` so the CSS gold em styling still applies.
-// Anything more complex than a single <em> span (or any other tag)
-// will throw the parse off — keep the corridor copy in the agreed
-// shape. (Single `<em>` per string is enforced by the corridorMap
-// content authoring rule already.)
+// The `em` flag is a state machine, so MULTIPLE (and multi-word)
+// `<em>` spans per string parse correctly — the Build caption runs
+// two, and the epilogue signal block accents "THIS LAYER". Each span
+// renders as its own continuous gold-wash marker because the per-char
+// background pads vertically only. Any OTHER tag is dropped, so keep
+// the corridor copy to plain text + `<em>` (`<br>` is split off by the
+// callers BEFORE they tokenize each line).
 
 interface CharToken {
   ch: string;
