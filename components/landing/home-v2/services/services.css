@@ -484,9 +484,21 @@
   min-height: 1.1em;
 }
 .services-masthead__title-line--em {
-  /* Station-header em recipe: gold, weight 500. */
+  /* The accent LINE now reads as the gold HIGHLIGHTER swipe (matching the
+     corridor hero "tool"/"collaborator" treatment): black ink on a solid
+     gold fill. The fill lives on the inner text span (below) so it hugs the
+     words — the line box itself is display:block / full-width. This parent
+     color keeps the block decode cursor gold. */
   color: var(--gold, #caa554);
   font-weight: 500;
+}
+.services-masthead__title-line--em > span:first-child {
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  padding: 0.04em 0.2em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
 }
 
 /* ── Glitchy-typewriter reveal (owner, 2026-07-16) ──────────────────────
