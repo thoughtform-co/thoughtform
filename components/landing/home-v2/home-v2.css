@@ -1033,6 +1033,43 @@ html[data-active-station="contact"] .home-v2-section-menu button {
   padding: 9px clamp(18px, 2.2vw, 30px) 11px;
 }
 
+/* Registration cross — a small gold "+" centred just above the corridor
+   station title, mirroring the #services masthead origin mark (ADR-044)
+   so the corridor heads and the services head share the same survey-plate
+   grammar. Two 1px arms via pseudo-elements; decorative — it rides the
+   header container's band opacity, so it fades in with the title (no
+   separate reveal clock). */
+.home-v2-station-header__cross {
+  position: absolute;
+  left: 50%;
+  top: calc(-1 * var(--arc-title-cross-gap, 8px));
+  width: var(--arc-title-cross-arm, 14px);
+  height: var(--arc-title-cross-arm, 14px);
+  transform: translate(-50%, -100%);
+  color: var(--gold, #caa554);
+  pointer-events: none;
+}
+.home-v2-station-header__cross::before,
+.home-v2-station-header__cross::after {
+  content: "";
+  position: absolute;
+  background: currentcolor;
+}
+.home-v2-station-header__cross::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.home-v2-station-header__cross::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
 /* ── Persistent caption card container (one artifact, 2026-07-03) ──
    Fixed at the bottom-centre band the per-station `__foot` used to own.
    The RAF loop writes its opacity (own band: in with Navigate, holds

@@ -245,6 +245,12 @@ interface StationContent {
 function TitleConsole({ children }: { children: ReactNode }) {
   return (
     <div className="home-v2-station-header__console home-v2-station-header__console--title">
+      {/* Small gold registration cross centred just above the title —
+          mirrors the #services masthead origin mark (ADR-044) so the
+          corridor heads (Navigate / Encode / Build) and the services
+          head share the same survey-plate grammar. Decorative
+          (aria-hidden); rides the header's band opacity, no own clock. */}
+      <span className="home-v2-station-header__cross" aria-hidden="true" />
       <span
         className="home-v2-station-header__frame home-v2-station-header__frame--top"
         aria-hidden="true"
