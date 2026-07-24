@@ -487,41 +487,35 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   ctx.lineTo(BAKE_CH, BAKE_H - 1.5);
   ctx.stroke();
 
-  // Chip row — the OPEN plate's FILLED gold chip (on-gold ink is
-  // latent-night, the shared CTA/chip treatment) + status code right.
+  // ── Layout (owner, 2026-07-24) — the includes META line LEADS the card at
+  //    the top (in place of the gold service chip); the SERVICE NAME drops
+  //    into the old headline slot directly above the paragraph; the CTA
+  //    button stays pinned at the card foot. The prose headline
+  //    (`plate.title`) is dropped — it stays in servicePlateData for the
+  //    mobile DOM plate + a quick revert.
   const label = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
-  ctx.textBaseline = "middle";
-  // Service label chip — enlarged (owner 2026-07-17: the top-left service
-  // name is the "what is this service" read and wasn't big enough). Font
-  // 24 → 30, chip height 54 → 66. The right-side "<CODE> · OPEN" status
-  // code was REMOVED in the same pass — decorative HUD filler that crowded
-  // the label; `statusCode` stays in servicePlateData for the mobile plate.
-  label.letterSpacing = "5px";
-  ctx.font = `700 30px ${CARD_FONT}`;
-  const chipText = plate.chip.toUpperCase();
-  const chipTextW = ctx.measureText(chipText).width;
-  const chipH = 66;
-  const chipCY = 80;
-  const chipY = chipCY - chipH / 2;
-  const chipPadL = 34; // chip-left → diamond centre
-  const chipGap = 24; // diamond centre → text
-  const chipW = chipPadL + chipGap + chipTextW + 34;
-  ctx.fillStyle = SERVICES_GOLD;
-  ctx.fillRect(44, chipY, chipW, chipH);
-  ctx.fillStyle = "#110f09"; // --latent-night
-  ctx.save();
-  ctx.translate(44 + chipPadL, chipCY);
-  ctx.rotate(Math.PI / 4);
-  ctx.fillRect(-5.5, -5.5, 11, 11);
-  ctx.restore();
-  ctx.fillText(chipText, 44 + chipPadL + chipGap, chipCY + 2);
-
-  /* ── Copy stack — the open C3 plate's text, bottom-anchored above the
-     fixed CTA box (sizes = 2× the services.css open-plate values). ── */
   const maxW = BAKE_W - PAD_X * 2;
   ctx.textBaseline = "alphabetic";
 
-  // CTA — outlined gold box, label left, arrow right (rest state).
+  // Meta line — cadence · memos · … · NL/EN, mono with gold `·` separators,
+  // seated at the top inside the top scrim band (the chip's old zone).
+  label.letterSpacing = "3px";
+  ctx.font = `400 20px ${CARD_FONT}`;
+  const metaSegments: LedeSegment[] = [];
+  plate.includes.forEach((item, i) => {
+    if (i > 0) metaSegments.push({ em: "·" });
+    metaSegments.push(item.toUpperCase());
+  });
+  const metaLines = wrapRuns(ctx, metaSegments, maxW);
+  const META_LH = 32;
+  const metaTop = 74; // first baseline, inside the top scrim band
+  metaLines.forEach((line, i) => {
+    drawRunLine(ctx, line, PAD_X, metaTop + i * META_LH, `rgba(${DAWN}, 0.72)`);
+  });
+
+  // CTA — outlined gold box at the card foot (CTA_Y0), label left + arrow
+  // right (rest state). The DOM hit rect (RING_CARD_CTA_BOX) derives from
+  // CTA_Y0, so the clickable <a> stays welded to it.
   label.letterSpacing = "4px";
   ctx.strokeStyle = SERVICES_GOLD;
   ctx.lineWidth = 2;
@@ -537,22 +531,11 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   ctx.textAlign = "left";
 
   // Lede — sans body, `{ em }` spans upright gold (no-italics rule).
-  // 35px + dawn 0.92 (owner 2026-07-17: bigger + less gray — this line is
-  // where "what is this service" actually lands, so it must read first).
-  // Keep = 2× the .svc-plate__lede CSS value (17.5px) — the bake/DOM
-  // parity contract. Seated directly above the CTA now that the includes
-  // row moved to the TOP of the copy stack (above the title, owner
-  // 2026-07-17).
+  // Bottom-anchored above the CTA box, drawn upward.
   label.letterSpacing = "0px";
   ctx.font = `400 35px ${CARD_SANS}`;
   const ledeLines = wrapRuns(ctx, plate.lede, maxW);
   const LEDE_LH = 51;
-  // Gap above the CTA — 60 (owner 2026-07-17): with the includes row moved
-  // to the top of the stack, the LEDE (body copy) now sits directly over
-  // the button, and body text crowds a CTA more than the old meta line did.
-  // Enlarged 34 → 60 so the button reads as deliberately separated from the
-  // paragraph (well above the ~26 inter-block gaps). = 2× the DOM plate's
-  // .svc-plate__cta margin-top (30px) — the bake/DOM parity contract.
   const ledeBottom = CTA_Y0 - 60;
   ledeLines.forEach((line, i) => {
     drawRunLine(
@@ -565,49 +548,33 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
   });
   const ledeTop = ledeBottom - (ledeLines.length - 1) * LEDE_LH - 28;
 
-  // Title — mono bold uppercase (the plate headline), above the lede.
+  // Service name — the card identity (e.g. "STRATEGIC ADVISORY"), rendered as
+  // the gold HIGHLIGHTER swipe (matching the masthead "YOUR TEAM OWNS." em):
+  // black ink on a solid gold fill with a soft gold glow, in the headline slot
+  // directly above the paragraph. The names all fit one line at this size; the
+  // fill's left edge sits on the PAD_X grid and the text is inset by
+  // NAME_PAD_H (mirrors the DOM highlight's inner padding).
   label.letterSpacing = "3px";
   ctx.font = `700 34px ${CARD_FONT}`;
-  const titleLines = wrapRuns(ctx, [plate.title.toUpperCase()], maxW);
-  const TITLE_LH = 46;
-  const titleBottom = ledeTop - 26;
-  titleLines.forEach((line, i) => {
-    drawRunLine(
-      ctx,
-      line,
-      PAD_X,
-      titleBottom - (titleLines.length - 1 - i) * TITLE_LH,
-      `rgb(${DAWN})`
-    );
-  });
-  const titleTop = titleBottom - (titleLines.length - 1) * TITLE_LH - 30;
-
-  // Includes row — the meta line (cadence · memos · … · NL/EN) now LEADS
-  // the copy stack, ABOVE the title (owner 2026-07-17). Mono chips with
-  // gold `·` separators. The old feed caption that used to sit above the
-  // title stays REMOVED — this row takes that slot; feedLabel/feedStatus
-  // remain in servicePlateData for the mobile plate.
-  label.letterSpacing = "3px";
-  ctx.font = `400 18px ${CARD_FONT}`;
-  const incSegments: LedeSegment[] = [];
-  plate.includes.forEach((item, i) => {
-    if (i > 0) incSegments.push({ em: "·" });
-    incSegments.push(item.toUpperCase());
-  });
-  const incLines = wrapRuns(ctx, incSegments, maxW);
-  const INC_LH = 30;
-  // Gap below the includes, above the title = 24 = 2× the DOM plate's
-  // .svc-plate__title margin-top (12px) — the bake/DOM parity contract.
-  const incBottom = titleTop - 24;
-  incLines.forEach((line, i) => {
-    drawRunLine(
-      ctx,
-      line,
-      PAD_X,
-      incBottom - (incLines.length - 1 - i) * INC_LH,
-      `rgba(${DAWN}, 0.5)`
-    );
-  });
+  const nameText = plate.chip.toUpperCase();
+  const nameW = ctx.measureText(nameText).width;
+  const NAME_CAP = 25; // ≈ cap height at 34px
+  const NAME_PAD_V = 7;
+  const NAME_PAD_H = 12;
+  const nameBaseline = ledeTop - 26;
+  ctx.save();
+  ctx.shadowColor = "rgba(202, 165, 84, 0.3)";
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = SERVICES_GOLD;
+  ctx.fillRect(
+    PAD_X,
+    nameBaseline - NAME_CAP - NAME_PAD_V,
+    nameW + NAME_PAD_H * 2,
+    NAME_CAP + NAME_PAD_V * 2
+  );
+  ctx.restore();
+  ctx.fillStyle = "#0a0908"; // --void ink
+  ctx.fillText(nameText, PAD_X + NAME_PAD_H, nameBaseline);
 
   return canvas;
 }
