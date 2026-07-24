@@ -94,7 +94,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     statusCode: "ADV-01",
     title: "Know where to invest in AI.",
     lede: [
-      "A monthly read for the people making the AI calls: where to invest, what to skip, what to build. Tested against real work.",
+      "A monthly read on where AI belongs, what to build, and what to leave alone. Tested against real work.",
     ],
     feedLabel: "Feed 03 · At the table",
     feedStatus: "Standby",
@@ -108,9 +108,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     chip: "Embedded AI Partner",
     statusCode: "BLD-02",
     title: "We build inside your teams.",
-    lede: [
-      "We run strategy and build with your teams on a fixed term. You keep the tools, the judgment, and the people who can run them.",
-    ],
+    lede: ["We build alongside your team. The tools, judgment, and know-how stay with you."],
     feedLabel: "Feed 04 · On site",
     feedStatus: "Standby",
     includes: ["Fixed term", "Dated handover", "Owned layer", "NL / EN"],
@@ -124,7 +122,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     statusCode: "NAV-02",
     title: "Change how your room sees AI.",
     lede: [
-      "Built for your industry, run on live demos. The room leaves with shared language and a clear next step.",
+      "A case for intelligence as a new kind of resource—why it behaves differently from software, and how that changes the way we work.",
     ],
     feedLabel: "Feed 01 · On stage",
     feedStatus: "Live",

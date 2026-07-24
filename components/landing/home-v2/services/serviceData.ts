@@ -105,7 +105,7 @@ export const SERVICES_MASTHEAD = {
     { text: "YOUR TEAM OWNS.", em: true },
   ],
   intro:
-    "A talk, a workshop, or an embedded term building alongside your team. All tuned to the AI decisions you're actually making, and built to leave your team able to run it.",
+    "From one session to an embedded term, we work on real decisions and workflows—so your team owns what comes next.",
   /**
    * M2 "survey plate" chrome (design handoff "Band Masthead — M2", 2026-07-21).
    * The title + brief read as two surveyed panels of the instrument, each
