@@ -151,7 +151,7 @@ function bandOpacity(p: number, fadeIn: [number, number], fadeOut?: [number, num
 // sits inside an `<em>` so the CSS gold em styling still applies.
 // The `em` flag is a state machine, so MULTIPLE (and multi-word)
 // `<em>` spans per string parse correctly — the Build caption runs
-// two, and the epilogue signal block accents "THIS LAYER". Each span
+// two, and the epilogue signal block accents "CAPABILITY". Each span
 // renders as its own continuous gold-wash marker because the per-char
 // background pads vertically only. Any OTHER tag is dropped, so keep
 // the corridor copy to plain text + `<em>` (`<br>` is split off by the
@@ -799,7 +799,7 @@ function StationBlock({
 // anchor pattern are identical — only the CSS variant (`--signal`)
 // and the opacity driver differ.
 const SIGNAL_CONTENT: StationContent = {
-  titleHtml: "EVERYONE IS RACING TO<br>BUILD <em>THIS LAYER</em>.",
+  titleHtml: "<em>CAPABILITY</em> IS WHAT YOUR TEAM<br>BUILDS AROUND THE MODEL.",
 };
 
 interface SignalTickerItem {
