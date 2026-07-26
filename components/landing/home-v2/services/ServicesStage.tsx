@@ -11,9 +11,16 @@ import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { servicesBeatScrollTarget } from "@/lib/services-ring/beatScrollTarget";
+import { openPlateRef } from "@/lib/services-ring/openPlateRef";
+import { drawerDismissedByScroll } from "@/lib/services-ring/ringMath";
+import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { startRingScrollTween } from "@/lib/services-ring/ringScrollTween";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
-import { SERVICES_CARD_RING, UNIFIED_SERVICES_ARMILLARY } from "../unifiedServicesInstrument";
+import {
+  SERVICES_CARD_DRAWER,
+  SERVICES_CARD_RING,
+  UNIFIED_SERVICES_ARMILLARY,
+} from "../unifiedServicesInstrument";
 
 // Flag-off / lab path only (see showServicesCanvas below). Lazy so the
 // postprocessing stack never enters the marketing route's initial JS —
@@ -73,6 +80,60 @@ export function ServicesStage() {
   // plane. Mobile / reduced motion never enters ring mode — the plate
   // accordion stays exactly as before regardless of the flag.
   const cardRingActive = SERVICES_CARD_RING && useHologramCanvas;
+
+  /* ── ADR-050: the open state ───────────────────────────────────────────────
+     The card that is currently showing its spec DRAWER. The drawer itself
+     renders in the CORRIDOR canvas (a second slab of the same card), which is
+     a separate React root — so the state crosses the seam through the
+     `openPlateRef` module bridge, and this component is its SINGLE WRITER
+     (the lab shell is the other, and only ever on its own route). */
+  const drawerActive = cardRingActive && SERVICES_CARD_DRAWER;
+  const [openServiceId, setOpenServiceId] = useState<ServiceId | null>(null);
+  const openFrontCard = useCallback((serviceId: ServiceId) => {
+    setOpenServiceId(serviceId);
+  }, []);
+  const closeDrawer = useCallback(() => setOpenServiceId(null), []);
+
+  useEffect(() => {
+    openPlateRef.current.serviceId = openServiceId;
+    return () => {
+      openPlateRef.current.serviceId = null;
+    };
+  }, [openServiceId]);
+
+  // Escape closes, the standard dismissal for an expanded surface. The baked
+  // ✕ chit is shimmed separately by ServicesRingHitAreas.
+  useEffect(() => {
+    if (!openServiceId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenServiceId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openServiceId]);
+
+  /* Runway-scroll dismissal — the half ADR-050 deferred to promotion, because
+     the lab had no real scroll owner (its progress bridge dispatches SYNTHETIC
+     scroll events that a listener could not tell from a user's).
+
+     Keyed to ring PROGRESS rather than to the step clock: the drawer is welded
+     to its card and rotates away with it, while `data-active-step` only
+     changes at beat boundaries — which would leave the drawer out through a
+     half-slot of rotation. The threshold and the comparison live in ringMath
+     so they are unit-pinned. Reading the progress ref (rather than scrollY)
+     also means the programmatic `startRingScrollTween` from a side-card click
+     dismisses too, and that mobile's zero-travel runway never trips it. */
+  useEffect(() => {
+    if (!openServiceId) return;
+    const openedAt = servicesRingProgressRef.current.progress;
+    const onScroll = () => {
+      if (drawerDismissedByScroll(openedAt, servicesRingProgressRef.current.progress)) {
+        setOpenServiceId(null);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [openServiceId]);
 
   // Beat `i` owns service `i` (the lead-in beat was removed 2026-07-17):
   // beat 0 = Advisory front on arrival, beats 1..N-1 rotate in the rest,
@@ -145,6 +206,11 @@ export function ServicesStage() {
       ref={stageRef}
       data-active-step="0"
       data-card-ring={SERVICES_CARD_RING ? "on" : "off"}
+      /* ADR-050: while a drawer is out the open pair scales up and paints
+         over the masthead (the corridor canvas out-stacks the station DOM),
+         so the section copy DIMS to read as background — services.css keys
+         `--svc-plate-dim` off this attribute. */
+      data-plate-open={drawerActive && openServiceId ? "1" : undefined}
     >
       <div className="services-stage__items">
         {/* Section masthead (ADR-044): title left / intro right in the upper
@@ -178,7 +244,19 @@ export function ServicesStage() {
             The cards carry ALL their copy on the baked face — one plate,
             exactly like the open C3 card (2026-07-10 Vince red-alert:
             never split the card into a photo plane + a text console). */}
-        {cardRingActive && <ServicesRingHitAreas onSelectService={selectService} />}
+        {cardRingActive && (
+          <ServicesRingHitAreas
+            onSelectService={selectService}
+            /* ADR-050: with the drawer promoted the FRONT card's target is the
+               whole face (the baked `OPEN` chit is the visible signal) and the
+               drawer's baked CTA / ✕ / spec copy get their own shims off the
+               second published rect. Flag off, these stay undefined and the
+               front card keeps the ADR-029 CTA link byte-identically. */
+            onOpenFront={drawerActive ? openFrontCard : undefined}
+            onCloseDrawer={drawerActive ? closeDrawer : undefined}
+            openServiceId={drawerActive ? openServiceId : null}
+          />
+        )}
 
         {/* Station readout RETIRED (owner, 2026-07-16): the mono row along
             the bottom of the stage was removed to give the card ring + the

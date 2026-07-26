@@ -53,7 +53,16 @@ import * as THREE from "three";
 
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
-import { BAKE_W, BAKE_H, PAD_X, CTA_H, CTA_Y0, DRAWER_CLOSE_BOX } from "./ringCtaBox";
+import {
+  BAKE_W,
+  BAKE_H,
+  PAD_X,
+  CTA_H,
+  CTA_Y0,
+  DRAWER_CLOSE_BOX,
+  DRAWER_CLOSE_INSET,
+  DRAWER_CLOSE_SIZE,
+} from "./ringCtaBox";
 
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
@@ -100,6 +109,7 @@ import {
   DRAWER_REVEAL_FRAC,
   DRAWER_SEAM,
   RING_CARD_RENDER_ORDERS,
+  drawerOpenBoost,
   drawerRecenterX,
   drawerSlideX,
   RING_CARD_ASPECT,
@@ -308,7 +318,13 @@ function buildGoldToneLut(): { r: Uint8ClampedArray; g: Uint8ClampedArray; b: Ui
   return { r, g, b };
 }
 
-function traceChamferPath(ctx: CanvasRenderingContext2D, inset: number): void {
+/** `cutTopRight` — the TIGHT face drops the TOP-RIGHT chamfer (owner,
+ *  2026-07-26): the drawer tray emerges along that edge, and a notched
+ *  corner next to the tray's straight top edge read as a misalignment. The
+ *  BOTTOM-LEFT chamfer stays — it is the corner the tray never touches, and
+ *  it keeps the device's asymmetric identity. `full` keeps both (the
+ *  ADR-029 byte-identical restore). */
+function traceChamferPath(ctx: CanvasRenderingContext2D, inset: number, cutTopRight = true): void {
   const x = inset;
   const y = inset;
   const w = BAKE_W - inset * 2;
@@ -316,8 +332,12 @@ function traceChamferPath(ctx: CanvasRenderingContext2D, inset: number): void {
   const ch = BAKE_CH;
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.lineTo(x + w - ch, y);
-  ctx.lineTo(x + w, y + ch);
+  if (cutTopRight) {
+    ctx.lineTo(x + w - ch, y);
+    ctx.lineTo(x + w, y + ch);
+  } else {
+    ctx.lineTo(x + w, y);
+  }
   ctx.lineTo(x + w, y + h);
   ctx.lineTo(x + ch, y + h);
   ctx.lineTo(x, y + h - ch);
@@ -382,14 +402,38 @@ const CARD_SANS = '"PP Neue Montreal", "Helvetica Neue", Arial, sans-serif';
  * rest of the stack, so these have no CSS twin to be 2× of. */
 const TIGHT_TITLE_PX = 40;
 const TIGHT_TITLE_LH = 52;
-const TIGHT_LEDE_PX = 30;
-const TIGHT_LEDE_LH = 44;
-/** The subtle OPEN affordance — an outlined chit, not the shipped CTA slab.
- *  Visual only: the WHOLE card is the hit target (`onOpenFront`), so this
- *  never needs a normalized box the way `RING_CARD_CTA_BOX` did. */
-const TIGHT_OPEN_H = 52;
-/** Bottom edge of the OPEN chit; the copy stack bottom-anchors above it. */
-const TIGHT_OPEN_BOTTOM = BAKE_H - 66;
+/** 35px — the size the owner already signed off for the FULL face's lede
+ *  (2026-07-17, "this line is where 'what is this service' actually lands").
+ *  Rev 3 dropped it to 30 to fix the inverted hierarchy, but that overshot:
+ *  on a MacBook-Air-class viewport (~900px tall) the parked card renders
+ *  small enough that 30px baked ≈ 13px on screen — unreadable (owner,
+ *  2026-07-26). At 35 vs the 40px bold-mono-uppercase title the hierarchy
+ *  still reads title-first; the weight/case/typeface differences compound
+ *  the 5px, where rev 2's 35-vs-34 had none of them. */
+const TIGHT_LEDE_PX = 35;
+const TIGHT_LEDE_LH = 50;
+/* The EXPAND affordance (owner, 2026-07-26 — replaces the bottom-left
+   `OPEN →` chit). A small square chit in the card's TOP-RIGHT carrying the
+   universal open-in-full glyph.
+
+   Sized and inset from the DRAWER's close chit deliberately, not by
+   coincidence: the control that opens the card and the control that closes it
+   then occupy the same corner at the same scale, so the pair reads as one
+   family across the open handoff rather than as two unrelated marks. Derived
+   rather than duplicated so re-tuning one moves both.
+
+   It also balances the header band — the filled gold chip sits top-LEFT at the
+   same optical height, so the two bracket the card's head instead of the
+   affordance floating alone above the bottom edge.
+
+   Visual only: the WHOLE card is the hit target (`onOpenFront`), so unlike
+   `RING_CARD_CTA_BOX` this needs no normalized box for the DOM to shim. */
+const TIGHT_EXPAND_SIZE = DRAWER_CLOSE_SIZE;
+const TIGHT_EXPAND_INSET = DRAWER_CLOSE_INSET;
+/** Baseline of the LAST lede line. With the chit gone from the bottom the copy
+ *  stack drops into the space it vacated; this keeps a bottom margin in the
+ *  same rhythm as the full face's CTA (whose box bottoms out at BAKE_H − 44). */
+const TIGHT_COPY_BOTTOM = BAKE_H - 72;
 
 type InkRun = { text: string; gold: boolean };
 
@@ -400,12 +444,12 @@ type InkRun = { text: string; gold: boolean };
  *    outlined CTA over the photo. FIVE content elements, which is the read
  *    the owner called overwhelming on 2026-07-25 (two headline-weight labels
  *    competing, poster and spec sheet mashed into one object).
- *  · `tight` — chip + title + lede + a subtle `OPEN` chit. The includes/meta
- *    row and the full-width CTA slab are gone; the breakdown and the spec
- *    grid move to the DOM open plate, which grows from this card's own
- *    projected rect. The lede STAYS — it is the line that says what the
- *    service is (owner, 2026-07-25) — but it now sits below a dominant
- *    title instead of competing with it at near-equal size.
+ *  · `tight` — chip + title + lede + a subtle EXPAND chit in the top-right.
+ *    The includes/meta row and the full-width CTA slab are gone; the
+ *    breakdown and the spec grid move to the drawer, which slides out of
+ *    this card's own right edge. The lede STAYS — it is the line that says
+ *    what the service is (owner, 2026-07-25) — but it now sits below a
+ *    dominant title instead of competing with it at near-equal size.
  *
  * Kept as a parameter rather than a rewrite so the two can be judged side by
  * side in `/test/services-card-face-lab` and so flipping production is a
@@ -540,13 +584,19 @@ function bakeCardFace(
   ctx.fillRect(0, 700, BAKE_W, BAKE_H - 700);
 
   // Chamfer corners — OPAQUE void (see module doc; never transparent).
+  // The TIGHT face keeps only the BOTTOM-LEFT cut (owner, 2026-07-26): the
+  // drawer tray docks along the right edge, so the top-right corner must be
+  // square for the pair to align — see traceChamferPath.
+  const cutTR = variant === "full";
   ctx.fillStyle = VOID;
-  ctx.beginPath();
-  ctx.moveTo(BAKE_W - BAKE_CH, 0);
-  ctx.lineTo(BAKE_W, 0);
-  ctx.lineTo(BAKE_W, BAKE_CH);
-  ctx.closePath();
-  ctx.fill();
+  if (cutTR) {
+    ctx.beginPath();
+    ctx.moveTo(BAKE_W - BAKE_CH, 0);
+    ctx.lineTo(BAKE_W, 0);
+    ctx.lineTo(BAKE_W, BAKE_CH);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.beginPath();
   ctx.moveTo(0, BAKE_H - BAKE_CH);
   ctx.lineTo(BAKE_CH, BAKE_H);
@@ -562,15 +612,17 @@ function bakeCardFace(
   shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
-  traceChamferPath(ctx, 1.5);
+  traceChamferPath(ctx, 1.5, cutTR);
   ctx.stroke();
 
-  // Brighter ticks along the two chamfer cuts (the connector plug-in edges).
+  // Brighter ticks along the chamfer cuts (the connector plug-in edges).
   ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(BAKE_W - BAKE_CH, 1.5);
-  ctx.lineTo(BAKE_W - 1.5, BAKE_CH);
+  if (cutTR) {
+    ctx.moveTo(BAKE_W - BAKE_CH, 1.5);
+    ctx.lineTo(BAKE_W - 1.5, BAKE_CH);
+  }
   ctx.moveTo(1.5, BAKE_H - BAKE_CH);
   ctx.lineTo(BAKE_CH, BAKE_H - 1.5);
   ctx.stroke();
@@ -610,45 +662,63 @@ function bakeCardFace(
   ctx.textBaseline = "alphabetic";
 
   if (variant === "tight") {
-    /* ── TIGHT face (ADR-050) — chip · title · lede · a subtle OPEN chit ──
+    /* ── TIGHT face (ADR-050) — chip · title · lede · a top-right EXPAND chit ──
        Drops the includes/meta row and the full-width CTA slab; keeps the
        lede, which is the line that says what the service actually is.
 
-       Built BOTTOM-UP from the OPEN chit so a longer title or a three-line
-       lede grows upward into the photo rather than pushing the affordance
-       off the card. */
+       Built BOTTOM-UP from the card's bottom margin so a longer title or a
+       three-line lede grows upward into the photo. The affordance no longer
+       constrains that growth — it moved to the header band (owner,
+       2026-07-26), which is also why the copy can now run to the bottom edge. */
 
-    /* The OPEN affordance — a small outlined chit sized to its label, not
-       the shipped CTA's full-width slab. Deliberately quieter: gold at 0.42
-       rather than solid, and it sits inboard instead of spanning the card.
-       Without SOMETHING here the tight card reads as a poster and nobody
-       discovers that it opens. */
-    label.letterSpacing = "4px";
-    ctx.font = `700 18px ${CARD_FONT}`;
-    const openLabel = "OPEN";
-    const openLabelW = ctx.measureText(openLabel).width;
-    const arrowW = 26;
-    const openPad = 22;
-    const openGap = 20;
-    const openW = openPad + openLabelW + openGap + arrowW + openPad;
-    const openY0 = TIGHT_OPEN_BOTTOM - TIGHT_OPEN_H;
-    ctx.strokeStyle = "rgba(202, 165, 84, 0.42)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(PAD_X, openY0, openW, TIGHT_OPEN_H);
-    ctx.fillStyle = SERVICES_GOLD;
-    ctx.textBaseline = "middle";
-    ctx.fillText(openLabel, PAD_X + openPad, openY0 + TIGHT_OPEN_H / 2 + 1);
-    label.letterSpacing = "0px";
-    ctx.font = `400 24px ${CARD_FONT}`;
-    ctx.fillText("→", PAD_X + openPad + openLabelW + openGap, openY0 + TIGHT_OPEN_H / 2);
-    ctx.textBaseline = "alphabetic";
+    /* The EXPAND affordance — the universal open-in-full glyph in a hairline
+       chit, top-right. Without SOMETHING here the tight card reads as a poster
+       and nobody discovers that it opens; an icon carries that at a fraction
+       of the ink the old `OPEN →` chit spent, and it stops competing with the
+       title for the bottom-left reading position.
+
+       Two diagonal arrows striking opposite corners. Drawn rather than typed:
+       there is no glyph for this in the card's mono face, and a text arrow
+       would sit on the font's baseline metrics instead of the chit's centre. */
+    {
+      const ex0 = BAKE_W - TIGHT_EXPAND_INSET - TIGHT_EXPAND_SIZE;
+      const ey0 = TIGHT_EXPAND_INSET;
+      ctx.strokeStyle = "rgba(202, 165, 84, 0.55)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(ex0, ey0, TIGHT_EXPAND_SIZE, TIGHT_EXPAND_SIZE);
+
+      // Glyph inset inside the chit; `arm` is the arrowhead leg length.
+      const gp = 16;
+      const arm = 10;
+      const gx0 = ex0 + gp;
+      const gy0 = ey0 + gp;
+      const gx1 = ex0 + TIGHT_EXPAND_SIZE - gp;
+      const gy1 = ey0 + TIGHT_EXPAND_SIZE - gp;
+      // Brighter than its box: the chit should recede, the mark should read.
+      ctx.strokeStyle = "rgba(202, 165, 84, 0.95)";
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "square";
+      ctx.beginPath();
+      ctx.moveTo(gx0, gy1);
+      ctx.lineTo(gx1, gy0);
+      // Arrowhead into the top-right corner.
+      ctx.moveTo(gx1 - arm, gy0);
+      ctx.lineTo(gx1, gy0);
+      ctx.lineTo(gx1, gy0 + arm);
+      // Arrowhead into the bottom-left corner.
+      ctx.moveTo(gx0 + arm, gy1);
+      ctx.lineTo(gx0, gy1);
+      ctx.lineTo(gx0, gy1 - arm);
+      ctx.stroke();
+      ctx.lineCap = "butt";
+    }
 
     // Lede — sans body, `{ em }` spans upright gold (no-italics rule). Now
     // SMALLER than the title so the hierarchy reads title-first.
     label.letterSpacing = "0px";
     ctx.font = `400 ${TIGHT_LEDE_PX}px ${CARD_SANS}`;
     const ledeLines = wrapRuns(ctx, plate.lede, maxW);
-    const ledeBottom = openY0 - 46;
+    const ledeBottom = TIGHT_COPY_BOTTOM;
     ledeLines.forEach((line, i) => {
       drawRunLine(
         ctx,
@@ -812,22 +882,18 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   ctx.fillStyle = wash;
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
-  // Chamfer corners + shell + cut ticks — the card's chrome verbatim, so the
-  // pair reads as two slabs of one device.
-  ctx.fillStyle = VOID;
-  ctx.beginPath();
-  ctx.moveTo(BAKE_W - BAKE_CH, 0);
-  ctx.lineTo(BAKE_W, 0);
-  ctx.lineTo(BAKE_W, BAKE_CH);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(0, BAKE_H - BAKE_CH);
-  ctx.lineTo(BAKE_CH, BAKE_H);
-  ctx.lineTo(0, BAKE_H);
-  ctx.closePath();
-  ctx.fill();
+  /* ── Tray chrome (owner, 2026-07-26 — replaces the card's chamfer chrome
+     verbatim). Rev 3 gave the drawer the card's full silhouette — chamfer
+     notches, closed shell, cut ticks — and the owner read the result as a
+     SECOND CARD parked next to the first, not as the first card unfolding.
+     He was right about the grammar: the chamfer IS this device's identity
+     mark, so repeating it declares "another device".
 
+     The tray is therefore deliberately SUBORDINATE: a plain rectangle whose
+     border runs top → right → bottom and never closes the LEFT edge — the
+     seam side stays open so the panel reads as continuous with the card it
+     slides out of. The matching 3D change (rectangular slab + open glint) is
+     in the drawer geometry memos. */
   const shell = ctx.createLinearGradient(0, 0, BAKE_W * 0.25, BAKE_H);
   shell.addColorStop(0, "rgba(202, 165, 84, 0.52)");
   shell.addColorStop(0.38, `rgba(${DAWN}, 0.14)`);
@@ -835,16 +901,21 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
-  traceChamferPath(ctx, 1.5);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";
-  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(BAKE_W - BAKE_CH, 1.5);
-  ctx.lineTo(BAKE_W - 1.5, BAKE_CH);
-  ctx.moveTo(1.5, BAKE_H - BAKE_CH);
-  ctx.lineTo(BAKE_CH, BAKE_H - 1.5);
+  ctx.moveTo(0, 1.5);
+  ctx.lineTo(BAKE_W - 1.5, 1.5);
+  ctx.lineTo(BAKE_W - 1.5, BAKE_H - 1.5);
+  ctx.lineTo(0, BAKE_H - 1.5);
   ctx.stroke();
+
+  // Seam shadow — the card overhangs the tray it houses, so the tray darkens
+  // toward the joint. This is the depth cue that sells "slides out from
+  // under", and it replaces every stroke the left edge no longer gets.
+  const seam = ctx.createLinearGradient(0, 0, 130, 0);
+  seam.addColorStop(0, "rgba(5, 4, 3, 0.6)");
+  seam.addColorStop(1, "rgba(5, 4, 3, 0)");
+  ctx.fillStyle = seam;
+  ctx.fillRect(0, 0, 130, BAKE_H);
 
   /* ── Close chit — a bare ✕ in a hairline box at DRAWER_CLOSE_BOX ─────── */
   const closeX = DRAWER_CLOSE_BOX.x * BAKE_W;
@@ -864,37 +935,42 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   ctx.lineTo(closeX + cInset, closeY + closeH - cInset);
   ctx.stroke();
 
-  /* ── 01 / WHAT ──────────────────────────────────────────────────────── */
+  /* ── 01 / WHAT ──────────────────────────────────────────────────────────
+     Body sizes raised 27 → 31 and ink lifted to 0.9 (owner, 2026-07-26):
+     on a MacBook-Air-class viewport the parked pair renders small enough
+     that the rev-3 sizes fell under comfortable reading size, and the ADR
+     had already flagged the drawer ink as "slightly dimmer, untuned". The
+     drawer has the vertical room — its column ends well above the CTA. */
   ctx.textBaseline = "alphabetic";
   let y = 150;
 
   const drawDesig = (text: string, atY: number): number => {
     label.letterSpacing = "4px";
-    ctx.font = `400 18px ${CARD_FONT}`;
+    ctx.font = `400 20px ${CARD_FONT}`;
     ctx.fillStyle = "rgba(202, 165, 84, 0.75)";
     ctx.fillText(text.toUpperCase(), PAD_X, atY);
     label.letterSpacing = "0px";
-    return atY + 46;
+    return atY + 50;
   };
 
   y = drawDesig("01 / What", y);
 
   // Breakdown bullets — gold diamonds, never dots (shape law).
   label.letterSpacing = "0px";
-  ctx.font = `400 27px ${CARD_SANS}`;
-  const BULLET_LH = 38;
-  const BULLET_GAP = 20;
-  const bulletIndent = 34;
+  ctx.font = `400 31px ${CARD_SANS}`;
+  const BULLET_LH = 44;
+  const BULLET_GAP = 24;
+  const bulletIndent = 38;
   for (const item of plate.breakdown) {
     const lines = wrapRuns(ctx, [item], maxW - bulletIndent);
     ctx.fillStyle = "rgba(202, 165, 84, 0.6)";
     ctx.save();
-    ctx.translate(PAD_X + 7, y - 9);
+    ctx.translate(PAD_X + 7, y - 10);
     ctx.rotate(Math.PI / 4);
-    ctx.fillRect(-5, -5, 10, 10);
+    ctx.fillRect(-5.5, -5.5, 11, 11);
     ctx.restore();
     lines.forEach((line, i) => {
-      drawRunLine(ctx, line, PAD_X + bulletIndent, y + i * BULLET_LH, `rgba(${DAWN}, 0.82)`);
+      drawRunLine(ctx, line, PAD_X + bulletIndent, y + i * BULLET_LH, `rgba(${DAWN}, 0.9)`);
     });
     y += lines.length * BULLET_LH + BULLET_GAP;
   }
@@ -912,28 +988,28 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   const colW = maxW / 2;
   const drawSpecCell = (dt: string, dd: string, cx: number, cy: number, wide: boolean): number => {
     label.letterSpacing = "3px";
-    ctx.font = `400 17px ${CARD_FONT}`;
-    ctx.fillStyle = `rgba(${DAWN}, 0.4)`;
+    ctx.font = `400 19px ${CARD_FONT}`;
+    ctx.fillStyle = `rgba(${DAWN}, 0.45)`;
     ctx.fillText(dt.toUpperCase(), cx, cy);
     label.letterSpacing = "0px";
-    ctx.font = `400 27px ${CARD_SANS}`;
+    ctx.font = `400 31px ${CARD_SANS}`;
     const lines = wrapRuns(ctx, [dd], (wide ? maxW : colW) - 24);
     lines.forEach((line, i) => {
-      drawRunLine(ctx, line, cx, cy + 36 + i * 34, wide ? SERVICES_GOLD : `rgba(${DAWN}, 0.86)`);
+      drawRunLine(ctx, line, cx, cy + 40 + i * 38, wide ? SERVICES_GOLD : `rgba(${DAWN}, 0.9)`);
     });
-    return 36 + lines.length * 34;
+    return 40 + lines.length * 38;
   };
 
   const rowA = Math.max(
     drawSpecCell("Duration", plate.spec.duration, PAD_X, y, false),
     drawSpecCell("Participants", plate.spec.participants, PAD_X + colW, y, false)
   );
-  y += rowA + 30;
+  y += rowA + 34;
   const rowB = Math.max(
     drawSpecCell("Format", plate.spec.format, PAD_X, y, false),
     drawSpecCell("Language", plate.spec.language, PAD_X + colW, y, false)
   );
-  y += rowB + 30;
+  y += rowB + 34;
   drawSpecCell("Leaves with", plate.spec.leavesWith, PAD_X, y, true);
 
   /* ── CTA — the card's own treatment, at the shared box ──────────────── */
@@ -960,19 +1036,34 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
  *  OTHER two corners for its chrome to align with the flipped silhouette.
  *  (Same TL/BR cut set as the retired Rx(π) flip — a π flip about either
  *  in-plane axis maps the TR/BL diagonal onto the TL/BR one.) */
-function traceChamferPathMirrored(ctx: CanvasRenderingContext2D, inset: number): void {
+/** `cutTopLeft` — the mirrored twin of `traceChamferPath`'s `cutTopRight`:
+ *  the flip maps the physical TOP-RIGHT cut to screen TOP-LEFT, so when the
+ *  tight silhouette drops the physical TR chamfer the back face must drop
+ *  its TL chrome to stay aligned with the slab it is baked onto. The BR cut
+ *  (physical BL) survives in both variants. */
+function traceChamferPathMirrored(
+  ctx: CanvasRenderingContext2D,
+  inset: number,
+  cutTopLeft = true
+): void {
   const x = inset;
   const y = inset;
   const w = BAKE_W - inset * 2;
   const h = BAKE_H - inset * 2;
   const ch = BAKE_CH;
   ctx.beginPath();
-  ctx.moveTo(x + ch, y);
+  if (cutTopLeft) {
+    ctx.moveTo(x + ch, y);
+  } else {
+    ctx.moveTo(x, y);
+  }
   ctx.lineTo(x + w, y);
   ctx.lineTo(x + w, y + h - ch);
   ctx.lineTo(x + w - ch, y + h);
   ctx.lineTo(x, y + h);
-  ctx.lineTo(x, y + ch);
+  if (cutTopLeft) {
+    ctx.lineTo(x, y + ch);
+  }
   ctx.closePath();
 }
 
@@ -986,7 +1077,10 @@ function traceChamferPathMirrored(ctx: CanvasRenderingContext2D, inset: number):
  * identity, so the canvas reads exactly like an unrotated front plane at
  * full flip (see the back-plane JSX note).
  */
-function bakePortraitBack(img: HTMLImageElement | null): HTMLCanvasElement {
+function bakePortraitBack(
+  img: HTMLImageElement | null,
+  variant: CardFaceVariant = "full"
+): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = BAKE_W;
   canvas.height = BAKE_H;
@@ -1048,15 +1142,19 @@ function bakePortraitBack(img: HTMLImageElement | null): HTMLCanvasElement {
   ctx.fillStyle = ground;
   ctx.fillRect(0, BAKE_H - 320, BAKE_W, 320);
 
-  // MIRRORED chamfer corners (TL/BR — see traceChamferPathMirrored) —
-  // opaque void, same contract as the front faces.
+  // MIRRORED chamfer corners (see traceChamferPathMirrored) — opaque void,
+  // same contract as the front faces. `tight` drops the TL cut (the flipped
+  // image of the physical TR chamfer the tight slab no longer has).
+  const cutTL = variant === "full";
   ctx.fillStyle = VOID;
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(BAKE_CH, 0);
-  ctx.lineTo(0, BAKE_CH);
-  ctx.closePath();
-  ctx.fill();
+  if (cutTL) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(BAKE_CH, 0);
+    ctx.lineTo(0, BAKE_CH);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.beginPath();
   ctx.moveTo(BAKE_W, BAKE_H - BAKE_CH);
   ctx.lineTo(BAKE_W, BAKE_H);
@@ -1072,13 +1170,15 @@ function bakePortraitBack(img: HTMLImageElement | null): HTMLCanvasElement {
   shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
-  traceChamferPathMirrored(ctx, 1.5);
+  traceChamferPathMirrored(ctx, 1.5, cutTL);
   ctx.stroke();
   ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(BAKE_CH, 1.5);
-  ctx.lineTo(1.5, BAKE_CH);
+  if (cutTL) {
+    ctx.moveTo(BAKE_CH, 1.5);
+    ctx.lineTo(1.5, BAKE_CH);
+  }
   ctx.moveTo(BAKE_W - 1.5, BAKE_H - BAKE_CH);
   ctx.lineTo(BAKE_W - BAKE_CH, BAKE_H - 1.5);
   ctx.stroke();
@@ -1207,6 +1307,12 @@ export function ServicesCardRing({
   // each drawer carries its OWN service's spec, so this is a per-card array
   // like `textures`. Null until baked (and forever when `openDrawer` is off).
   const [drawerTextures, setDrawerTextures] = useState<THREE.CanvasTexture[] | null>(null);
+  /** Lazy-bake latch (ADR-050 promotion): flipped once by the frame loop the
+   *  first time a service is opened, then never cleared for this mount. The
+   *  ref is the re-entry guard — the frame loop runs at 60 Hz and would
+   *  otherwise call `setDrawerRequested` every frame until the state landed. */
+  const [drawerRequested, setDrawerRequested] = useState(false);
+  const drawerRequestedRef = useRef(false);
   const cardGroupRefs = useRef<Array<THREE.Group | null>>([]);
   const meshRefs = useRef<Array<THREE.Mesh | null>>([]); // content planes (anchor projection)
   const matRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]); // content materials
@@ -1265,12 +1371,20 @@ export function ServicesCardRing({
     const ch = slabW * RING_SLAB_CHAMFER_FRAC;
     const hw = slabW / 2;
     const hh = slabH / 2;
-    // Chamfers at top-right (+x,+y) and bottom-left (−x,−y) — the bake's
-    // `.svc-plate__sh` polygon (CanvasTexture top row = plane +y).
+    // Chamfers — the bake's `.svc-plate__sh` polygon (CanvasTexture top row
+    // = plane +y). `full`: top-right (+x,+y) AND bottom-left (−x,−y), the
+    // historical ADR-029 silhouette. `tight`: BOTTOM-LEFT ONLY (owner,
+    // 2026-07-26) — the drawer tray docks along +x, so the top-right corner
+    // must be square for the open pair's top edges to align. The bake's
+    // chrome and the portrait back's mirrored chrome follow the same rule.
     const shape = new THREE.Shape();
     shape.moveTo(-hw, hh);
-    shape.lineTo(hw - ch, hh);
-    shape.lineTo(hw, hh - ch);
+    if (faceVariant === "full") {
+      shape.lineTo(hw - ch, hh);
+      shape.lineTo(hw, hh - ch);
+    } else {
+      shape.lineTo(hw, hh);
+    }
     shape.lineTo(hw, -hh);
     shape.lineTo(-hw + ch, -hh);
     shape.lineTo(-hw, -hh + ch);
@@ -1281,7 +1395,7 @@ export function ServicesCardRing({
     });
     geometry.translate(0, 0, -slabDepth / 2);
     return geometry;
-  }, [slabW, slabH, slabDepth]);
+  }, [slabW, slabH, slabDepth, faceVariant]);
   const glintGeometry = useMemo(() => new THREE.EdgesGeometry(slabGeometry), [slabGeometry]);
   useEffect(() => {
     return () => {
@@ -1289,6 +1403,66 @@ export function ServicesCardRing({
       glintGeometry.dispose();
     };
   }, [slabGeometry, glintGeometry]);
+
+  /* ── Drawer TRAY geometry (owner, 2026-07-26) ──────────────────────────────
+     Rev 3 reused the card's `slabGeometry`/`glintGeometry` for the drawer —
+     "two slabs of one device" — and the owner read the chamfered twin as a
+     SECOND CARD, not the first one unfolding. The chamfer is the device's
+     identity mark; only the CARD gets it. The drawer is a subordinate tray:
+
+     · a plain rectangular slab (same Extrude recipe, so the [caps, walls]
+       material-group pairing is preserved);
+     · a glint that traces top / right / bottom ONLY — the LEFT (seam) edge
+       stays unlit, because a gold line at the joint would re-assert exactly
+       the separation the tray exists to dissolve. The bake mirrors this
+       (open border + seam shadow in `bakeDrawerFace`).
+
+     Built only under `openDrawer`, like the drawer materials. */
+  const drawerSlabGeometry = useMemo(() => {
+    if (!openDrawer) return null;
+    const hw = slabW / 2;
+    const hh = slabH / 2;
+    const shape = new THREE.Shape();
+    shape.moveTo(-hw, hh);
+    shape.lineTo(hw, hh);
+    shape.lineTo(hw, -hh);
+    shape.lineTo(-hw, -hh);
+    shape.closePath();
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: slabDepth,
+      bevelEnabled: false,
+    });
+    geometry.translate(0, 0, -slabDepth / 2);
+    return geometry;
+  }, [openDrawer, slabW, slabH, slabDepth]);
+  const drawerGlintGeometry = useMemo(() => {
+    if (!openDrawer) return null;
+    const hw = slabW / 2;
+    const hh = slabH / 2;
+    const hd = slabDepth / 2;
+    const pts: number[] = [];
+    const seg = (ax: number, ay: number, az: number, bx: number, by: number, bz: number) =>
+      pts.push(ax, ay, az, bx, by, bz);
+    // Front + back face outlines, minus the seam (left) edge…
+    for (const z of [hd, -hd]) {
+      seg(-hw, hh, z, hw, hh, z); // top
+      seg(hw, hh, z, hw, -hh, z); // leading (right) edge
+      seg(hw, -hh, z, -hw, -hh, z); // bottom
+    }
+    // …plus the two depth edges of the leading corner, so the tray's open
+    // end still reads as a solid slab under the rig's yaw.
+    seg(hw, hh, hd, hw, hh, -hd);
+    seg(hw, -hh, hd, hw, -hh, -hd);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    return geometry;
+  }, [openDrawer, slabW, slabH, slabDepth]);
+  useEffect(() => {
+    return () => {
+      drawerSlabGeometry?.dispose();
+      drawerGlintGeometry?.dispose();
+    };
+  }, [drawerSlabGeometry, drawerGlintGeometry]);
 
   // The hologram veil — one tiny tiled strip shared by all four cards
   // (see buildVeilCanvas); per-card materials fade it on hover.
@@ -1400,12 +1574,13 @@ export function ServicesCardRing({
       ),
     [veilTexture]
   );
-  /* ── Drawer twins (ADR-050 rev 3) ────────────────────────────────────────
-     The drawer is another slab of the SAME device, so it reuses the card's
-     geometry (`slabGeometry` / `glintGeometry`) and the same material recipe
-     — but needs its OWN material instances, because its opacity rides the
-     open clock while the card's rides card presence. Built only under
-     `openDrawer` so the flag-off path allocates nothing. */
+  /* ── Drawer materials (ADR-050 rev 3) ────────────────────────────────────
+     Same material RECIPE as the card's slab/glint, but its own instances,
+     because the drawer's opacity rides the open clock while the card's rides
+     card presence. (The GEOMETRY is no longer shared — see the tray memos
+     above: the drawer is a plain rectangle with an open glint, owner
+     2026-07-26.) Built only under `openDrawer` so the flag-off path
+     allocates nothing. */
   const drawerSlabMaterials = useMemo(
     () =>
       !openDrawer
@@ -1533,21 +1708,53 @@ export function ServicesCardRing({
           portrait = null; // schematic fallback keeps the flip whole
         }
         if (disposed) return;
-        setBackTexture(toTexture(bakePortraitBack(portrait)));
-      }
-      // The DRAWER faces (ADR-050 rev 3) bake in this SAME effect so a
-      // glEpoch context-loss remount re-bakes them for free — and only under
-      // `openDrawer`, so production never pays the ~18 MB of extra texture.
-      // Fonts are already awaited above; the drawer uses the same families.
-      if (openDrawer) {
-        if (disposed) return;
-        setDrawerTextures(SERVICE_PLATES.map((plate) => toTexture(bakeDrawerFace(plate))));
+        setBackTexture(toTexture(bakePortraitBack(portrait, faceVariant)));
       }
     })();
     return () => {
       disposed = true;
     };
-  }, [gl, faceVariant, openDrawer]);
+  }, [gl, faceVariant]);
+
+  /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
+     Four drawer faces cost ~18 MB of texture, and most visitors scroll the
+     ring without ever opening a card — so the bake waits for the first open
+     REQUEST rather than running at mount. `drawerRequested` is latched once
+     by the frame loop (which is the only reader of `openPlateRef`) and never
+     falls back to false, so all four bake together on that first open and
+     every subsequent open is instant.
+
+     Its own effect, not the face bake's: folding it in would re-bake the four
+     card faces and the portrait back every time the latch flips.
+
+     A `glEpoch` context-loss REMOUNT resets the latch to false along with the
+     rest of this component's state — correct, and self-healing: if a drawer
+     was open when the context dropped, `openPlateRef` still holds its id, so
+     the frame loop re-requests on the very next frame.
+
+     ⚠ `wantOpen` in the frame loop is gated on `drawerTextures` landing, so
+     the drawer cannot slide out blank during this await. */
+  useEffect(() => {
+    if (!openDrawer || !drawerRequested) return;
+    let disposed = false;
+    (async () => {
+      await waitForCardFonts();
+      if (disposed) return;
+      const maxAniso = gl.capabilities.getMaxAnisotropy?.() ?? 1;
+      setDrawerTextures(
+        SERVICE_PLATES.map((plate) => {
+          const texture = new THREE.CanvasTexture(bakeDrawerFace(plate));
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.anisotropy = Math.min(8, maxAniso);
+          texture.needsUpdate = true;
+          return texture;
+        })
+      );
+    })();
+    return () => {
+      disposed = true;
+    };
+  }, [gl, openDrawer, drawerRequested]);
 
   // Dispose bakes on replacement/unmount (materials/geometries are
   // declarative — R3F disposes those; the shared back material/geometry
@@ -1826,6 +2033,18 @@ export function ServicesCardRing({
       }
     }
 
+    /* Latch the LAZY drawer bake on the first open request (ADR-050
+       promotion). The frame loop is the only reader of `openPlateRef`, so
+       this is where the DOM's open intent becomes visible to React. The ref
+       guard makes it fire exactly once per mount — without it this would
+       queue a setState every frame until the state landed. Deliberately
+       OUTSIDE the pointer-pick block above, which only runs when the ring is
+       parked and pickable. */
+    if (openDrawer && !drawerRequestedRef.current && openPlateRef.current.serviceId) {
+      drawerRequestedRef.current = true;
+      setDrawerRequested(true);
+    }
+
     for (let i = 0; i < RING_COUNT; i++) {
       const cardGroup = cardGroupRefs.current[i];
       const mesh = meshRefs.current[i];
@@ -1900,7 +2119,13 @@ export function ServicesCardRing({
          below reads it. */
       let drawerT = 0;
       if (openDrawer) {
-        const wantOpen = !deckEngaged && openPlateRef.current.serviceId === SERVICES[i].id;
+        /* Gated on the LAZY bake landing (ADR-050 promotion): until the four
+           drawer faces exist the level stays pinned at 0, so an open request
+           never slides a blank slab out from behind the card. The request
+           itself is latched above; `drawerTextures` arriving re-renders this
+           callback, and the damped level then eases open from rest. */
+        const wantOpen =
+          !deckEngaged && drawerTextures !== null && openPlateRef.current.serviceId === SERVICES[i].id;
         if (deckEngaged) drawerLevelRef.current[i] = 0;
         else {
           drawerLevelRef.current[i] +=
@@ -1933,16 +2158,26 @@ export function ServicesCardRing({
       // the exit boundary. The flip owns its own seat-matched scale, so the
       // boost is applied only in the two non-flip branches below.
       const frontBoost = frontScaleBoost(placed.nz, size.width, stack ? 1 - stack.flattenT : 1);
+      /* The open pair GROWS as the drawer extends (owner, 2026-07-26): the
+         spec sheet is the point of opening, so the pair steps toward the
+         viewer — over the section masthead, which the canvas genuinely
+         out-stacks (host z:3 > station z:2) and which dims in CSS via
+         `data-plate-open`. Rides drawerT, so it eases with the slide,
+         reverses on close, and is identity for the deck (drawerT snaps 0). */
+      const openBoost = drawerOpenBoost(drawerT);
 
       /* Recenter: as the drawer extends right, the CARD eases left by half
          the drawer's visible extent so the open pair stays centred on the
          brandmark (owner's composition call). The drawer's extent is
          card-LOCAL (it inherits cardGroup.scale), while this offset is in
-         ring-group space — hence `× ringScale × frontBoost`. The ring
-         group's own scale cancels: it multiplies positions and extents
-         alike. Identity at drawerT = 0, so the closed ring is byte-identical. */
+         ring-group space — hence the full card-scale term, `ringScale ×
+         frontBoost × openBoost`. The ring group's own scale cancels: it
+         multiplies positions and extents alike. Identity at drawerT = 0, so
+         the closed ring is byte-identical. */
       const ringX =
-        placed.x + entX - drawerRecenterX(drawerT, cardW, DRAWER_SEAM, ringScale * frontBoost);
+        placed.x +
+        entX -
+        drawerRecenterX(drawerT, cardW, DRAWER_SEAM, ringScale * frontBoost * openBoost);
 
       if (flip) {
         // ── ADR-047 flip (rev 2: Y axis): the deck rotates about its
@@ -1984,7 +2219,7 @@ export function ServicesCardRing({
       } else {
         cardGroup.position.set(ringX, ringY, ringZ);
         cardGroup.rotation.set(ringPitch, ringYaw, 0);
-        cardGroup.scale.setScalar(ringScale * frontBoost);
+        cardGroup.scale.setScalar(ringScale * frontBoost * openBoost);
       }
 
       // Depth-based opacity lifts to uniform ON ITS OWN during the stack
@@ -2352,16 +2587,27 @@ export function ServicesCardRing({
               paint over the drawer's text. Under the face means the card
               covers the drawer while it is housed. Z is behind the card's
               face so it slides out from *under* it. */}
-          {openDrawer && drawerTextures && drawerSlabMaterials && drawerGlintMaterials && (
+          {/* Mounted as soon as the flag is on — NOT gated on `drawerTextures`.
+              The lazy bake lands mid-session, and `DECK_INTRA_ORDERS` is
+              positional over `cardGroup.children`, so letting the bake add a
+              child would renumber the deck's slots underneath a running
+              rebase. The map stays null until the bake lands; the group is
+              `visible={false}` while shut and its open level is gated on the
+              same texture, so an unmapped drawer is never on screen. */}
+          {openDrawer && drawerSlabGeometry && drawerGlintGeometry && drawerSlabMaterials && drawerGlintMaterials && (
             <group
               ref={(el) => {
                 drawerGroupRefs.current[i] = el;
               }}
               visible={false}
             >
+              {/* Tray geometry, not the card's: a plain rectangle (no chamfer)
+                  with a glint that leaves the seam edge unlit — the drawer is
+                  the card UNFOLDING, so only the card carries the device's
+                  chamfered identity silhouette. */}
               <mesh
                 renderOrder={DRAWER_RENDER_ORDERS.slab}
-                geometry={slabGeometry}
+                geometry={drawerSlabGeometry}
                 material={drawerSlabMaterials[i]}
                 frustumCulled={false}
               />
@@ -2378,7 +2624,7 @@ export function ServicesCardRing({
                   ref={(el) => {
                     drawerMatRefs.current[i] = el;
                   }}
-                  map={drawerTextures[i]}
+                  map={drawerTextures?.[i] ?? null}
                   transparent
                   opacity={0}
                   side={THREE.FrontSide}
@@ -2390,7 +2636,7 @@ export function ServicesCardRing({
               </mesh>
               <lineSegments
                 renderOrder={DRAWER_RENDER_ORDERS.glint}
-                geometry={glintGeometry}
+                geometry={drawerGlintGeometry}
                 material={drawerGlintMaterials[i]}
                 frustumCulled={false}
               />

@@ -242,14 +242,26 @@ export function ServicesDesignationLayer({
         .filter((v): v is NonNullable<typeof v> => v !== null)
         // Ring-mode occlusion (ADR-029): drop callouts whose survey point,
         // landing point, or text run would sit on the front card's photo.
+        //
+        // ADR-050 promotion: the OPEN card's drawer is tested by the same
+        // rule. It is a second slab of the same device, published as its own
+        // rect because it carries its own yaw and foreshortening — and it
+        // extends into exactly the screen area these callouts occupy, so
+        // without it "AI STRATEGY / the standing read" lands on top of the
+        // drawer's spec grid. Same reasoning as the card itself: a callout
+        // over the drawer reads as annotating the spec sheet, not the mark.
         .filter(({ designation, anchorX, anchorY, landX, landY }) => {
           if (!frontCard) return true;
           const pad = 12;
-          const left = frontCard.x - ox - pad;
-          const right = frontCard.x + frontCard.w - ox + pad;
-          const top = frontCard.y - oy - pad;
-          const bottom = frontCard.y + frontCard.h - oy + pad;
-          const inside = (x: number, y: number) => x > left && x < right && y > top && y < bottom;
+          const rects = [frontCard, ...(frontCard.drawer ? [frontCard.drawer] : [])];
+          const inside = (x: number, y: number) =>
+            rects.some(
+              (r) =>
+                x > r.x - ox - pad &&
+                x < r.x + r.w - ox + pad &&
+                y > r.y - oy - pad &&
+                y < r.y + r.h - oy + pad
+            );
           const sideSign = designation.side === "right" ? 1 : -1;
           // Sample the text run ~90px from the landing point (labels grow
           // away from the leader on their side).

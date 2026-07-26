@@ -43,6 +43,45 @@ export const UNIFIED_SERVICES_ARMILLARY = true;
 export const SERVICES_CARD_RING = true;
 
 /**
+ * Feature flag for the ADR-050 CARD FACE + IN-CANVAS DRAWER (2026-07-26 —
+ * the `v2` lab variant promoted; presumes SERVICES_CARD_RING, same media gate).
+ *
+ * One flag carries BOTH halves of the promotion, because neither half is
+ * coherent alone: the tight face bakes an `OPEN →` chit unconditionally, so
+ * shipping it without the drawer paints an affordance that leads nowhere —
+ * while also dropping the full face's CTA slab, which is the only conversion
+ * control on the ring today.
+ *
+ * When ON:
+ *   - the card faces bake the `tight` stack — chip + title (40px) + lede
+ *     (30px) + the `OPEN` chit — instead of the ADR-029 `full` stack. The
+ *     includes/meta row and the full-width CTA slab are gone; the hierarchy
+ *     inverts back so the title reads before the lede;
+ *   - each card gains a DRAWER: a card-sized slab sharing the card's own
+ *     geometry that slides out along card-local +x when that service is
+ *     opened via `openPlateRef`. It lives in card-local space, so it inherits
+ *     the rig, the facing yaw, the pointer-look and the bounded sway — the
+ *     pair is ONE entity by construction, not by synchronisation;
+ *   - the front card's hit target becomes a full-rect open button, and the
+ *     drawer's baked CTA / close chit / spec copy are shimmed by
+ *     `ServicesRingHitAreas` off the second published rect
+ *     (`RingCardAnchor.drawer`);
+ *   - `ServicesStage` owns the open state and is the single writer of
+ *     `openPlateRef`; Escape and a runway-scroll delta both dismiss.
+ *
+ * Drawer faces bake LAZILY — on the first open request, not at mount — so the
+ * ~18 MB of drawer texture is never paid by the majority of visitors who
+ * never open a card (owner's call, 2026-07-26). The open level is gated on
+ * the bake landing, so a drawer can never slide out blank.
+ *
+ * OFF restores the ADR-029 full face byte-identically: no drawer children
+ * exist, no drawer bake is ever fetched, the frame loop's drawer work is
+ * skipped, and the front card keeps its `<a href="#contact">` CTA shim.
+ * Mobile / reduced motion keep the plate accordion regardless of the flag.
+ */
+export const SERVICES_CARD_DRAWER = true;
+
+/**
  * Feature flag for the ABOUT DECK-FLIP STAGE (ADR-047, 2026-07-16 —
  * supersedes the ADR-046 cartridge dock).
  *

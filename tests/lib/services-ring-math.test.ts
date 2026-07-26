@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DRAWER_DISMISS_PROGRESS,
+  DRAWER_OPEN_SCALE,
+  drawerDismissedByScroll,
+  drawerOpenBoost,
   RING_ARRIVAL_FRAC,
   RING_COUNT,
   RING_EXIT_START,
@@ -804,5 +808,70 @@ describe("entranceEnvelope", () => {
   it("clamps out-of-range card indices instead of crashing", () => {
     expect(entranceEnvelope(0.9, 99).opacity).toBe(entranceEnvelope(0.9, RING_COUNT - 1).opacity);
     expect(entranceEnvelope(0.9, -3).opacity).toBe(entranceEnvelope(0.9, 0).opacity);
+  });
+});
+
+/* ── Drawer scroll dismissal (ADR-050 promotion) ───────────────────────────
+   The rule that closes an open drawer when the runway moves. Pinned here
+   because it lives in a scroll listener in production, where it is awkward
+   to exercise — and because both failure directions are real: too tight and
+   the drawer flickers shut on scroll-anchor jitter; too loose and it hangs
+   off a card that has visibly rotated away. */
+/* ── Drawer open scale boost (ADR-050) ─────────────────────────────────────
+   Identity at 0 is the contract everything else leans on: the closed ring,
+   the entrance, and the deck (which snaps drawerT to 0 on engage) must all be
+   byte-identical to the pre-drawer surface. */
+describe("drawerOpenBoost", () => {
+  it("is identity at drawerT = 0 and the named peak at 1", () => {
+    expect(drawerOpenBoost(0)).toBe(1);
+    expect(drawerOpenBoost(1)).toBeCloseTo(DRAWER_OPEN_SCALE, 12);
+  });
+
+  it("clamps out-of-range levels instead of extrapolating", () => {
+    expect(drawerOpenBoost(-0.5)).toBe(1);
+    expect(drawerOpenBoost(1.7)).toBeCloseTo(DRAWER_OPEN_SCALE, 12);
+  });
+
+  it("grows monotonically, and the peak actually enlarges", () => {
+    expect(DRAWER_OPEN_SCALE).toBeGreaterThan(1);
+    let prev = drawerOpenBoost(0);
+    for (let t = 0.1; t <= 1.001; t += 0.1) {
+      const next = drawerOpenBoost(t);
+      expect(next).toBeGreaterThanOrEqual(prev);
+      prev = next;
+    }
+  });
+});
+
+describe("drawerDismissedByScroll", () => {
+  it("holds the drawer open while the runway has not meaningfully moved", () => {
+    expect(drawerDismissedByScroll(0.4, 0.4)).toBe(false);
+    // Sub-threshold jitter in BOTH directions survives.
+    expect(drawerDismissedByScroll(0.4, 0.4 + DRAWER_DISMISS_PROGRESS / 2)).toBe(false);
+    expect(drawerDismissedByScroll(0.4, 0.4 - DRAWER_DISMISS_PROGRESS / 2)).toBe(false);
+    // NB: the exact-threshold case is deliberately NOT asserted. The
+    // comparison is strict (`>`), but `0.4 + 0.02` is 0.42000000000000004 in
+    // binary floating point, so "exactly at the threshold" is not a state a
+    // caller can actually construct — pinning it would encode a rounding
+    // artifact as behaviour. Nothing depends on which way the boundary falls.
+  });
+
+  it("dismisses symmetrically once the runway passes the threshold", () => {
+    const past = DRAWER_DISMISS_PROGRESS * 1.001;
+    expect(drawerDismissedByScroll(0.4, 0.4 + past)).toBe(true);
+    expect(drawerDismissedByScroll(0.4, 0.4 - past)).toBe(true);
+  });
+
+  it("closes well inside one beat, so the card cannot rotate away still open", () => {
+    // A beat is 1/RING_STEP_COUNT of the runway; dismissal must be a small
+    // fraction of it, or the step clock would be the tighter gate and this
+    // rule would be pointless.
+    const beat = 1 / RING_STEP_COUNT;
+    expect(DRAWER_DISMISS_PROGRESS).toBeGreaterThan(0);
+    expect(DRAWER_DISMISS_PROGRESS).toBeLessThan(beat / 4);
+    // Crossing a whole beat always dismisses, from anywhere in the runway.
+    for (const openedAt of [0, 0.2, 0.5, 0.83, 1]) {
+      expect(drawerDismissedByScroll(openedAt, openedAt + beat)).toBe(true);
+    }
   });
 });

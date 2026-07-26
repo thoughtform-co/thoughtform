@@ -395,6 +395,27 @@
  * plates, ring highlight, designation layer) carry the active-service
  * signal; git history holds the component + styles. */
 
+/* ── Drawer-open dim (ADR-050, owner 2026-07-26) ─────────────────────────
+ * The dim factor is a REGISTERED custom property so the state change can
+ * transition. Transitioning the masthead's `opacity` itself would be wrong:
+ * that value is scroll-driven (per-frame `--svc-content-in` writes), and a
+ * transition on it would lag every scroll frame. Registering the dim var
+ * transitions ONLY the open/close state change, timed to the drawer's own
+ * damp (~1/DRAWER_DAMP_RATE ≈ 0.3s). Engines without @property (none on
+ * the ring's desktop tier) simply snap — acceptable degradation. */
+@property --svc-plate-dim {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+.services-stage {
+  --svc-plate-dim: 1;
+  transition: --svc-plate-dim 0.35s ease;
+}
+.services-stage[data-plate-open="1"] {
+  --svc-plate-dim: 0.18;
+}
+
 /* ── Services masthead (ADR-044, 2026-07-16) ─────────────────────────────
  * The #services register handover: full-caps title LEFT, intro paragraph
  * RIGHT, in the stage's upper band (Linear-style editorial split promoted
@@ -411,7 +432,12 @@
   inset: 0;
   z-index: 6;
   pointer-events: none;
-  opacity: calc(var(--svc-content-in, 1) * (1 - var(--svc-exit, 0)));
+  /* `--svc-plate-dim` (ADR-050, owner 2026-07-26): while a card's drawer is
+   * out the open pair scales up and paints OVER this band (the corridor
+   * canvas out-stacks the station DOM — host z:3 > station z:2), so the
+   * section copy recedes to background. A third factor on the existing
+   * entrance × decommission product — never a competing opacity writer. */
+  opacity: calc(var(--svc-content-in, 1) * (1 - var(--svc-exit, 0)) * var(--svc-plate-dim, 1));
   transform: translateY(calc((1 - var(--svc-content-in, 1)) * 18px));
   will-change: opacity, transform;
   /* Editorial-band geometry (ADR-048; supersedes the lab-era "8vw inboard

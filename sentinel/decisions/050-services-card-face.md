@@ -1,16 +1,23 @@
 # ADR-050: Services card face — tight rest state, expand-to-spec open plate
 
-**Date:** 2026-07-26 (rev 3)
-**Status:** Proposed (lab built, variant not yet promoted to production)
+**Date:** 2026-07-26 (rev 3; **promoted** same day)
+**Status:** Accepted — `v2` (tight face + drawer) is live in the corridor
+behind `SERVICES_CARD_DRAWER`.
 **Scope:** `components/landing/home-v2/services/hologram/ServicesCardRing.tsx`
 (`bakeCardFace` + `faceVariant`, `bakeDrawerFace` + `openDrawer`, the drawer
 children + frame-loop channel), `lib/services-ring/ringMath.ts` (drawer math +
-renderOrder slots), `lib/services-ring/openPlateRef.ts`,
+renderOrder slots + scroll dismissal), `lib/services-ring/openPlateRef.ts`,
 `components/landing/home-v2/services/hologram/ringCtaBox.ts` (drawer boxes),
 `components/landing/home-v2/services/ServicesRingHitAreas.tsx` (drawer shims),
 `components/landing/home-v2/services/servicePlateData.ts` (`ServiceSpec`,
 `breakdown`), `lib/stores/hologramConnectorStore.ts` (`RingCardAnchor.drawer`),
 `app/(internal)/test/services-card-face-lab/`.
+**Promotion also touched:** `components/landing/home-v2/unifiedServicesInstrument.ts`
+(the `SERVICES_CARD_DRAWER` flag), `components/landing/home-v2/DepthGatewayScene/CorridorArmillary.tsx`
+(passes `faceVariant` + `openDrawer`), `components/landing/home-v2/services/ServicesStage.tsx`
+(owns the open state; the production `openPlateRef` writer),
+`components/landing/home-v2/services/ServicesDesignationLayer.tsx`
+(occlusion extended to the drawer rect).
 
 **Rev history:** rev 1 crossfaded a DOM plate over the card; rev 2 dimmed the
 canvas behind it; rev 2b buffer-swapped a pixel-parity DOM replica. All three
@@ -50,19 +57,60 @@ Two further findings from the same pass:
   reverses that direction, which is precisely why it ships behind a variant
   rather than as a replacement.
 
-## Decision (proposed)
+## Decision
 
-**Nothing is switched.** `faceVariant` defaults to `"full"` and `onOpenFront`
-is undefined in production, so the shipped surface, the smoke tests, and the
-ADR-047 deck are byte-identical until the default is deliberately flipped.
+**As designed (rev 3), nothing was switched:** `faceVariant` defaults to
+`"full"` and `onOpenFront` is undefined, so the surface, the smoke tests and
+the ADR-047 deck stayed byte-identical while the variant was judged in the lab.
+**Promoted the same day** — see [Promotion](#promotion-2026-07-26-owner-directed).
+The defaults above are unchanged, so the flag remains a one-word revert.
 
 1. **`faceVariant: "full" | "tight"` on `ServicesCardRing`**, threaded into
    `bakeCardFace` (which re-bakes when it changes). `tight` keeps the chip, the
    title and the lede, drops the includes row and the CTA slab, and corrects
-   the hierarchy: title **40px**, lede **30px**. Built bottom-up from a small
-   outlined `OPEN` chit so long copy grows upward into the photo instead of
-   pushing the affordance off the card (worst case verified: Keynote at a
-   two-line title over a three-line lede).
+   the hierarchy: title **40px**, lede **35px** (raised from 30 — see the
+   readability note below). Copy is built bottom-up so long copy grows upward
+   into the photo (worst case verified: Keynote at a two-line title over a
+   three-line lede).
+
+   **Readability pass (owner, 2026-07-26): the rev-3 sizes undershot on
+   short viewports.** On a MacBook-Air-class window (~840–900px of viewport
+   height) the parked card renders small enough that the 30px baked lede
+   lands around 13px on screen. The lede went back to **35px** — the size the
+   owner had already approved for the full face's lede — and the hierarchy
+   still holds because rev 2's failure (35 lede vs 34 title, same-ish weight)
+   had none of the compounding differences this face has: 40 vs 35 **plus**
+   bold vs regular, mono vs sans, uppercase vs sentence case. The drawer's
+   body copy rose in step (bullets and spec values **27 → 31px**, labels 17 →
+   19 / 18 → 20) and its ink lifted to **0.9** — closing the "drawer ink
+   slightly dimmer, untuned" note below. The drawer column has the vertical
+   room: it still ends well above the pinned CTA at the worst case.
+
+   **Update (owner, 2026-07-26): the affordance is an EXPAND ICON in the
+   top-right, not the bottom-left `OPEN →` chit.** Rev 3 put a small outlined
+   `OPEN →` chit at the bottom-left and bottom-anchored the copy stack above
+   it. Two problems: it competed with the title for the bottom-left reading
+   position — the strongest slot on the card, which the title should own
+   outright — and it capped how far the copy could grow before pushing the
+   affordance off the card.
+
+   The replacement is a hairline square chit carrying the universal
+   open-in-full glyph (two diagonal arrows striking opposite corners), drawn
+   rather than typed because the card's mono face has no such glyph and a text
+   arrow would sit on font baseline metrics instead of the chit's centre.
+   Consequences:
+   - It is **sized and inset from `DRAWER_CLOSE_SIZE` / `DRAWER_CLOSE_INSET`**,
+     derived rather than duplicated. The control that opens the card and the
+     control that closes it then occupy the same corner at the same scale, and
+     with the drawer out the two sit at the same optical height — one control
+     family across the open handoff rather than two unrelated marks.
+   - It **balances the header band** against the filled gold chip top-left,
+     instead of floating alone above the bottom edge.
+   - The copy stack now bottom-anchors on `TIGHT_COPY_BOTTOM` (BAKE_H − 72,
+     the full face's CTA rhythm) and runs to the bottom edge; the affordance
+     no longer constrains its growth.
+   - Ink is split: the box recedes at gold **0.55**, the glyph reads at
+     **0.95**. Subtle chit, clear mark — the balance the owner asked for.
 
 2. **The open state is IN CANVAS: a second slab of the same device.** Three
    DOM revisions each failed the same way, and the root cause was
@@ -79,14 +127,82 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
      pointer-tilted, bloomed, dot-veiled slab, so the silhouette changes
      shape at the swap no matter how well the pixels are matched.
 
-   **Rev 3.** Each card group gains a DRAWER — a card-sized slab sharing the
-   card's own `slabGeometry` / `glintGeometry` — that slides out along
-   card-local **+x**. Because it lives in card-local space it inherits the
-   rig, the facing yaw, the pointer-look and the bounded sway _for free_: the
-   pair is one entity by construction rather than by synchronisation. No
-   swap, no replica, no DOM plate. `ServiceOpenPlate` and the entire
-   `.svc-open` CSS block are DELETED, and with them the rev-2 `plateHideRef`
-   channel — **nothing hides the card any more; that hide WAS the crossfade.**
+   **Rev 3.** Each card group gains a DRAWER — a card-sized slab that slides
+   out along card-local **+x**. Because it lives in card-local space it
+   inherits the rig, the facing yaw, the pointer-look and the bounded sway
+   _for free_: the pair is one entity by construction rather than by
+   synchronisation. No swap, no replica, no DOM plate. `ServiceOpenPlate` and
+   the entire `.svc-open` CSS block are DELETED, and with them the rev-2
+   `plateHideRef` channel — **nothing hides the card any more; that hide WAS
+   the crossfade.**
+
+   **Update (owner, 2026-07-26): the drawer is a TRAY, not a twin.** Rev 3
+   gave the drawer the card's silhouette wholesale — shared chamfered
+   `slabGeometry`/`glintGeometry`, plus the chamfer chrome baked verbatim
+   ("two slabs of one device"). Seen in production the owner read the result
+   as a SECOND CARD parked beside the first, not the first one unfolding —
+   and the grammar bears him out: the chamfer is the device's identity mark,
+   so repeating it declares "another device". The drawer is now deliberately
+   subordinate:
+   - **Own geometry** (`drawerSlabGeometry` / `drawerGlintGeometry`,
+     flag-gated memos): a plain rectangular slab (same Extrude recipe, so the
+     `[caps, walls]` material-group pairing is preserved) and a glint tracing
+     top / right / bottom ONLY. The LEFT (seam) edge stays unlit — a gold
+     line at the joint would re-assert exactly the separation the tray exists
+     to dissolve.
+   - **Open baked border** to match: the shell gradient runs top → right →
+     bottom and never closes the seam side; the chamfer corner fills and cut
+     ticks are gone.
+   - **Seam shadow**: the tray darkens toward the joint (a 130px void
+     gradient), the depth cue that sells "slides out from under" the
+     overhanging card.
+
+   Only the CARD carries the chamfered identity silhouette; the tray reads
+   as the card's own surface unfolding.
+
+   **Same-day follow-up (owner): the tight card drops its TOP-RIGHT chamfer
+   too.** With the tray now a clean rectangle, the card's own TR notch became
+   the last misalignment at the docking edge — a cut corner meeting the
+   tray's straight top edge. The tight silhouette is now **bottom-left
+   chamfer only**: the right edge is a full vertical line the tray docks
+   against flush, while the BL cut keeps the device's asymmetric identity
+   (it is the corner the tray never touches). Variant-threaded through all
+   three silhouette owners so `full` stays byte-identical: `slabGeometry`
+   (the physical cut), `bakeCardFace`'s chrome (fill + shell + tick via
+   `traceChamferPath(…, cutTR)`), and `bakePortraitBack`'s mirrored chrome
+   (the flip maps physical TR → screen TL, so the tight deck back drops its
+   TL cut — `traceChamferPathMirrored(…, cutTL)`).
+
+   **And the OPEN PAIR steps forward (owner: "bigger… really show the
+   contents").** Two halves, one state:
+   - `DRAWER_OPEN_SCALE` (1.18, ringMath) rides the drawer clock via
+     `drawerOpenBoost(drawerT)` — eases in with the slide, reverses on
+     close, identity at 0 (closed ring and deck byte-identical; the deck
+     snaps drawerT to 0 on engage). The recenter folds the boost into its
+     card-scale term so the enlarged pair stays centred on the mark.
+   - The section masthead (title + intro) DIMS behind it: `ServicesStage`
+     sets `data-plate-open="1"` while a drawer is out, and services.css
+     keys `--svc-plate-dim` (1 → 0.18) off it — a third factor on the
+     masthead's existing entrance × decommission opacity product, never a
+     competing writer. The var is a REGISTERED `@property` so the state
+     change transitions (0.35s) without putting a transition on the
+     scroll-driven `opacity` itself.
+
+   This works as real occlusion, not just a dim: the corridor canvas
+   OUT-STACKS the station DOM (`.home-corridor-host` z:3 >
+   `.station--services` z:2 inside `main.stations`), so the enlarged pair
+   genuinely paints over the masthead. (Same fact from the other side: the
+   promotion's designation "ghost" was DOM showing THROUGH the
+   semi-transparent drawer from beneath the canvas.)
+
+   ⚠ Measurement note: under the pointer-look, the published drawer rect is
+   legitimately smaller/offset vs the card's when the cursor is far from
+   the pair (the rigid pair pivots about the CARD's centre, so the drawer
+   swings deeper — full tilt at a parked corner cursor, e.g. Playwright's
+   default (0,0)). Verified rect self-consistency instead: the drawer
+   height derived from the close shim and the CTA shim agree to 0.1px. Do
+   not chase edge flushness from a screenshot taken with the cursor parked
+   off-pair.
 
    This also restores ADR-029's original guardrail in full ("the card is ONE
    object; the DOM only places hit targets"). The DOM plate was the deviation.
@@ -208,19 +324,76 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
   Rejected: it would stop being rigid with the card, which is the whole
   point. The pose FLATTENS instead, so the pair turns to face you together.
 
-## Open questions (why this is Proposed)
+## Promotion (2026-07-26, owner-directed)
 
-- Which variant is promoted: `v1` (tight face only) or `v2` (tight + drawer).
-- **Promotion checklist**, none of it done: flip `faceVariant` to `"tight"` and
-  pass `openDrawer` in `CorridorArmillary`; wire `onOpenFront` /
-  `onCloseDrawer` in `ServicesStage` with real scroll dismissal; rewrite the
-  smoke spec's front-card CTA assertion (it asserts the narrow `<a>` that the
-  tight face no longer bakes); decide EAGER vs LAZY drawer bakes (eager costs
-  ~18 MB of texture for four faces most visitors never open).
-- The card face keeps its baked `OPEN →` chit while the drawer is out. It is
-  baked, so hiding it needs a second face bake — currently it reads as a state
-  label, which is tolerable but not intentional.
-- The drawer's spec ink sits slightly dimmer than the card's copy. Untuned.
+`v2` — tight face **and** drawer — behind one flag, `SERVICES_CARD_DRAWER`.
+
+The variant question answered itself once the bake was read closely: the tight
+face bakes its `OPEN →` chit **unconditionally**, so `v1` alone would paint an
+affordance leading nowhere while also dropping the full face's CTA slab — a
+quieter conversion beat with nothing put in its place. The two halves are only
+coherent together, so they share a flag rather than getting one each.
+
+Checklist, now done:
+
+- `CorridorArmillary` passes `faceVariant={... ? "tight" : "full"}` and
+  `openDrawer`. Flag off restores ADR-029 byte-identically.
+- `ServicesStage` owns `openServiceId` and is the production single writer of
+  `openPlateRef` (the lab shell is the other, and only on its own route). It
+  wires `onOpenFront` / `onCloseDrawer` / `openServiceId` into
+  `ServicesRingHitAreas`, and dismisses on **Escape** and on **runway scroll**.
+- Smoke spec rewritten: the front-card assertions moved from the CTA `<a>` the
+  tight face no longer bakes to the full-rect OPEN button (named for the
+  plate's chip), plus a new test covering the ghost fence → open → Escape →
+  scroll-dismiss cycle.
+- **LAZY** drawer bakes (owner's call). See below.
+
+**Scroll dismissal is keyed to ring PROGRESS, not the step clock.** The drawer
+is welded to its card and rotates away with it, while `data-active-step` only
+changes at beat boundaries — which would leave a drawer hanging off a card
+that has visibly swung off front-centre. `drawerDismissedByScroll` +
+`DRAWER_DISMISS_PROGRESS` (0.02 — a tenth of a beat, ~9° of rotation) live in
+three-free `ringMath` and are unit-pinned, rather than buried in a listener.
+Reading the progress ref rather than `scrollY` also means the programmatic
+`startRingScrollTween` from a side-card click dismisses too, and that mobile's
+zero-travel runway never trips it.
+
+**The bake is LAZY, latched from the frame loop.** Four drawer faces cost
+~18 MB of texture and most visitors never open a card, so the bake waits for
+the first open REQUEST. The frame loop is the only reader of `openPlateRef`,
+so it is where the DOM's intent becomes visible to React: it latches
+`drawerRequested` once (ref-guarded — otherwise it would queue a setState at
+60 Hz), and a dedicated effect bakes all four. Two consequences worth keeping:
+
+- `wantOpen` is gated on `drawerTextures` landing, so a drawer can never slide
+  out blank during the await.
+- The drawer children stay **mounted from flag-on**, with a null map until the
+  bake lands — NOT gated on the textures. `DECK_INTRA_ORDERS` is positional
+  over `cardGroup.children`, so letting a mid-session bake add a child would
+  renumber the deck's slots underneath a running rebase.
+
+A `glEpoch` context-loss remount resets the latch along with the rest of the
+component's state, which is correct and self-healing: `openPlateRef` still
+holds the id, so the frame loop re-requests on the next frame.
+
+**One new collision, fixed in `ServicesDesignationLayer`.** The drawer extends
+into the screen area the brandmark's designation callouts occupy, so
+"AI STRATEGY / the standing read" landed on top of the spec grid. The layer
+already suppresses callouts that would sit on the front card's photo (they
+read as annotating the photograph, not the wireframe); that same filter now
+tests the drawer's published rect as well. Same rule, one more rect.
+
+## Open questions
+
+- ~~The card face keeps its baked `OPEN →` chit while the drawer is out.~~
+  **Largely resolved by the expand icon (2026-07-26).** The chit is still baked
+  and so still visible while open, but it no longer reads as a stale state
+  label: sharing size, inset and optical height with the drawer's ✕, the two
+  read as an open/close pair sitting side by side. Hiding it outright would
+  still need a second face bake, and is not worth it for this.
+- ~~The drawer's spec ink sits slightly dimmer than the card's copy.~~
+  Tuned in the 2026-07-26 readability pass (body ink 0.82/0.86 → 0.9, sizes
+  27 → 31px).
 - **Downstream:** the same four cards become the `#about` deck (ADR-047, plus
   a fifth `bakePortraitBack` face). A tight face changes what the deck looks
   like as it flips — verified as still reading, but a deliberate consequence.
@@ -253,6 +426,35 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
   canvas leaves the masthead, console and hit targets alive — `ssr: false`
   alone does not deliver that (see the BEST-PRACTICES note).
 
+### Promotion verification (2026-07-26)
+
+- `npm run verify` green — **360** unit tests (3 further: the scroll-dismissal
+  hold / symmetric-dismiss / closes-well-inside-one-beat contract). The
+  exact-threshold case is deliberately unpinned: `0.4 + 0.02` is
+  `0.42000000000000004`, so "exactly at the threshold" is not a state a caller
+  can construct, and asserting it would encode a rounding artifact.
+- `services-ring-smoke` on `desktop`: **8 passed, 1 skipped** (the mobile
+  case), including the new open/dismiss test.
+- Headed real-GPU capture at 1600×1000 against the PRODUCTION route (not the
+  lab), three runs:
+  - Closed: the tight face reads chip → title → lede → `OPEN` chit, with no
+    meta row and no CTA slab.
+  - Ghost fence holds on the production surface: `aria-expanded="false"`, zero
+    `.svc-ring-hits__sr` blocks, no drawer CTA link.
+  - Open: spec grid legible (`01 / WHAT`, `02 / HOW`, the five spec rows), the
+    baked CTA and ✕ reachable, the pair centred on the mark.
+  - Scroll one beat on: `aria-expanded="false"`, sr block gone.
+  - Zero console errors (the CSP `upgrade-insecure-requests` report-only notice
+    is the dev server's and predates this work).
+- ⚠ Corridor pose varies run-to-run at the same nominal runway progress
+  (page height settles differently as assets warm), so one capture in three
+  landed the pair left of centre. Not a recenter defect — confirmed by
+  re-running. Do not chase it from a single screenshot.
+- ⚠ `npm run test:run` cannot run on Node 18 in this workspace: vite 7 requires
+  Node 20+ and the config load dies with `ERR_REQUIRE_ESM` before any test file
+  is read. Pre-existing and unrelated to this change; `.nvmrc` pins 20 and CI
+  reads it. Use the pinned version locally.
+
 ## Guardrails
 
 - **The card stays ONE object, and NOTHING may hide it.** The open state is
@@ -267,7 +469,16 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
 - Drawer renderOrder stays POSITIVE and nested inside the card's range; a
   negative slot puts orbit-track ink over the drawer's text.
 - `DECK_INTRA_ORDERS` is positional over `cardGroup.children` and both rebase
-  loops are length-bounded — append children, and extend it in lockstep.
+  loops are length-bounded — append children, and extend it in lockstep. This
+  is also why the drawer children mount with the FLAG, not with their textures:
+  a lazily-added child would renumber the deck's slots mid-session.
+- The lazy-bake latch is **one-way per mount** and ref-guarded. It is read from
+  the frame loop, so dropping the guard queues a setState every frame.
+- `ServicesStage` is the ONLY production writer of `openPlateRef`. Adding a
+  second writer reintroduces the split-ownership bug the ref was built to
+  avoid.
+- Callout occlusion tests the drawer rect as well as the card's. Drop it and
+  the designation labels land on the spec grid.
 - Never composite dark dots over a clean photo — the feed is the photo seen
   _through_ the mask, plus a ghost.
 - Keep the ring mount gate and the services DOM gate the SAME media query.

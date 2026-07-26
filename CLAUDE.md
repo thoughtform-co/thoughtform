@@ -2,10 +2,11 @@
 
 ## Sentinel — patterns and decisions
 
-Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes. Full index: [`sentinel/decisions/`](sentinel/decisions/) (ADR-001 … ADR-048). Load-bearing entries for the current surface:
+Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes. Full index: [`sentinel/decisions/`](sentinel/decisions/) (ADR-001 … ADR-051). Load-bearing entries for the current surface:
 
 - **Home-v2 depth corridor:** [ADR-018](sentinel/decisions/018-home-v2-depth-corridor.md) — the dominant landing surface (scroll-driven WebGL corridor)
 - **Arc cases (Build park):** [ADR-033](sentinel/decisions/033-arc-cases-orbit.md) → [ADR-042](sentinel/decisions/042-arc-cases-cue.md) — cases orbit, terrace, terminal, card, sigil, cue
+- **Services card ring (the conversion beat):** [ADR-029](sentinel/decisions/029-services-card-ring.md) (the ring; the card is ONE object) → [ADR-050](sentinel/decisions/050-services-card-face.md) (tight face + the in-canvas drawer, live behind `SERVICES_CARD_DRAWER`). Five files move in lockstep — see [`.claude/rules/services-ring.md`](.claude/rules/services-ring.md)
 - **Services exit + about:** [ADR-047](sentinel/decisions/047-about-deck-flip-stage.md) (the deck-flip stage — cards stack, flip to portrait, ambient survives past #about), [ADR-045](sentinel/decisions/045-about-emerge-rail-parity.md) (the mobile/fallback about surface; ADR-046's dock is superseded)
 - **Continuum (vision beat):** [ADR-049](sentinel/decisions/049-continuum-rail-stage.md) — the brandmark returns to mid-prominence at #continuum and the crail instrument (the tool ↔ collaborator slider) FORMS out of the mark: rail + bearings + brackets wipe outward from its centre on the scrubbed rail-form envelope, the reticle launches from the mark into the 7s ping-pong, and the mark keeps the centre "AI lives here" seat (Update 4; the Update-1 DOM axis and the Update-3 mark-band spectrum are superseded/rejected); #continuum becomes a transparent stage and the corridor-exit ambient kill retargets to #practice (flag `CONTINUUM_RAIL_STAGE`)
 - **Rail manifest:** [ADR-031](sentinel/decisions/031-rail-manifest.md)

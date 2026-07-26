@@ -328,6 +328,23 @@ export const DRAWER_SEAM = 0.02;
 /** Damp rate (per second) for the drawer's open/close level. */
 export const DRAWER_DAMP_RATE = 7;
 
+/**
+ * Scale multiplier the open pair reaches at full `drawerT` (owner,
+ * 2026-07-26: "the opened card should be bigger… really show the contents").
+ * Rides the drawer clock, so it eases in with the slide and reverses on
+ * close — identity at drawerT = 0, so the closed ring and the deck (which
+ * snaps drawerT to 0 on engage) are byte-identical. Applied on top of the
+ * depth scale and the front emphasis in the frame loop's normal branch, and
+ * folded into the recenter's card-scale term so the enlarged pair stays
+ * centred on the brandmark.
+ */
+export const DRAWER_OPEN_SCALE = 1.18;
+
+/** The pair's scale multiplier at open level `t`. Pure; identity at 0. */
+export function drawerOpenBoost(t: number, peak: number = DRAWER_OPEN_SCALE): number {
+  return 1 + (peak - 1) * clamp01(t);
+}
+
 /** The drawer's own opacity ramp completes by this much of the open level —
  *  early enough that it finishes while the drawer is still fully covered by
  *  the card face, so nothing is ever seen fading (ADR-050's no-crossfade
@@ -379,6 +396,36 @@ export function drawerSlideX(t: number, cardW: number, seam: number = DRAWER_SEA
  *  cancels (it multiplies positions and extents alike). Pure. */
 export function drawerRecenterX(t: number, cardW: number, seam: number, cardScale: number): number {
   return (clamp01(t) * (cardW - seam) * cardScale) / 2;
+}
+
+/**
+ * Runway travel (in ring-progress units) tolerated with a drawer open before
+ * the open state is dismissed (ADR-050 promotion).
+ *
+ * The drawer is welded to its card, so it rotates away WITH the card as the
+ * ring turns — an open drawer on a card swinging off front-centre reads as a
+ * stuck panel. Dismissal is therefore keyed to ring progress, not to the step
+ * clock: `activeServiceForProgress` only changes at beat boundaries, which
+ * lets the ring rotate a half-slot (~45°) with the drawer still out.
+ *
+ * One beat is `1 / RING_STEP_COUNT` = 0.2, so 0.02 is a tenth of a beat —
+ * roughly 9° of ring rotation. Large enough to absorb scroll-anchoring jitter
+ * and the rubber-band at a runway end, small enough that any deliberate
+ * scroll closes the drawer before the card visibly leaves front-centre.
+ */
+export const DRAWER_DISMISS_PROGRESS = 0.02;
+
+/**
+ * Whether a drawer opened at `openedAt` should be dismissed now that the
+ * runway sits at `progress`. Pure, so the production dismissal rule is
+ * unit-pinned rather than living inside a scroll listener.
+ */
+export function drawerDismissedByScroll(
+  openedAt: number,
+  progress: number,
+  tolerance: number = DRAWER_DISMISS_PROGRESS
+): boolean {
+  return Math.abs(progress - openedAt) > tolerance;
 }
 
 /** Track draw-on windows lead the card entrance windows by this much

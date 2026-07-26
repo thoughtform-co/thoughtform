@@ -612,6 +612,78 @@ useEffect(() => {
 
 ---
 
+### Growing a canvas object's footprint invalidates every DOM overlay that dodges it
+
+When a WebGL object gains a second surface — a drawer, a panel, a wing — it
+starts covering screen area that DOM overlays were positioned into on the
+assumption that the area was empty. Those overlays do not collide-detect; they
+were hand-placed, or they filter against the object's **old** rect.
+
+Found 2026-07-26 promoting ADR-050's card drawer. `ServicesDesignationLayer`
+already dropped brandmark callouts that would land on the front card's photo
+(a callout over a photograph reads as annotating the photograph). The drawer
+extends card-local +x into exactly the region the right-hand callouts occupy,
+so "AI STRATEGY / the standing read" rendered straight through the drawer's
+spec grid — looking for all the world like a texture bleed-through, which is
+where the debugging time went.
+
+The fix is never a new suppression mechanism — it is feeding the new rect to
+the existing one:
+
+```ts
+// Test EVERY published surface of the object, not just its primary rect.
+const rects = [frontCard, ...(frontCard.drawer ? [frontCard.drawer] : [])];
+const inside = (x: number, y: number) => rects.some((r) => /* … */);
+```
+
+**Why it matters:** the symptom mimics a rendering bug (ghost text at partial
+alpha over a 3D surface), so it pulls you into shader/opacity/renderOrder
+territory when the cause is a DOM layer that simply does not know the object
+got bigger. Two checks that separate them fast: grep the ghost string — if it
+lives in a DOM data file it was never on the texture at all; and confirm the
+"bleed" does not move with the slab under pointer-look.
+
+**Corollary — publish the new rect before you need it.** A second surface
+carrying its own yaw and foreshortening is not a linear extension of the
+primary rect, so it needs its own projected anchor (`RingCardAnchor.drawer`).
+Anything that dodges, hit-tests, or annotates the object reads that anchor.
+
+---
+
+### A positional renderOrder rebase forbids mounting children mid-session
+
+If a loop assigns renderOrder by **index** over `group.children`, then adding a
+child later renumbers every slot after it — silently, while the loop is
+running. Lazy-loading a texture is fine; gating the child's _existence_ on that
+texture is not.
+
+ADR-050's drawer bakes lazily (~18 MB for four faces most visitors never open),
+and the obvious shape — `{drawerTextures && <group>…</group>}` — would have
+inserted a child into `cardGroup.children` on first open, mid-flight of the
+ADR-047 deck's positional rebase. Mount the child with its **flag** and let the
+map be null until the bake lands:
+
+```tsx
+{
+  openDrawer &&
+    materials && ( // ← mounts with the flag, stable indices
+      <mesh>
+        <meshBasicMaterial map={drawerTextures?.[i] ?? null} />
+      </mesh>
+    );
+}
+```
+
+Then gate the _behaviour_ on readiness instead, so the unmapped child is never
+visible: `const wantOpen = … && drawerTextures !== null`.
+
+**Why it matters:** the failure is invisible until the unrelated feature that
+owns the rebase runs (here, scrolling on into `#about`), and it presents as
+z-fighting between two different cards — about as far from "we added a lazy
+texture" as a bug report can land.
+
+---
+
 ## 🔐 Authentication
 
 ### Always Validate Server-Side

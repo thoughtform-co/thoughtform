@@ -33,7 +33,11 @@ import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
 import { brandmarkScanAnchorPointsRef, type BrandmarkFeatureId } from "../brandmarkScanAnchorsRef";
-import { ABOUT_DECK_STAGE, SERVICES_CARD_RING } from "../unifiedServicesInstrument";
+import {
+  ABOUT_DECK_STAGE,
+  SERVICES_CARD_DRAWER,
+  SERVICES_CARD_RING,
+} from "../unifiedServicesInstrument";
 import {
   HologramOrbits,
   STRUCTURAL_ORBITS,
@@ -248,6 +252,12 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           dissipateGetter={getSmoothedDissipate}
           entrance="scroll"
           publishAnchors
+          /* ADR-050 promotion: the tight face and the in-canvas drawer ride
+             ONE flag — the tight face bakes an `OPEN` chit unconditionally, so
+             the two are only coherent together. Flag off restores the ADR-029
+             full face byte-identically. */
+          faceVariant={SERVICES_CARD_DRAWER ? "tight" : "full"}
+          openDrawer={SERVICES_CARD_DRAWER}
         />
       )}
       {/* ADR-049 (revised 2026-07-17): the tool ↔ collaborator spectrum is

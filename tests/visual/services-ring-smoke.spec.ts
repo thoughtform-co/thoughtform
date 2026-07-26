@@ -85,14 +85,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Leader lines retire with the racks in ring mode.
     await expect(page.locator(".services-scan-connectors")).toHaveCount(0);
 
-    // The cards carry their full copy on the baked face; the DOM exposes
-    // the front card's CTA as a real link plus side-card view targets.
+    // The cards carry their copy on the baked face; the DOM exposes the
+    // front card as a full-rect OPEN button (ADR-050 — the tight face bakes
+    // an `OPEN` chit in place of the ADR-029 CTA slab, so there is no CTA box
+    // to shim until the drawer is out) plus side-card view targets.
     // Generous timeout: cold dev-server compile + texture bakes + the
     // parked-anchor gate all precede the first publish.
     await expect(page.locator(".svc-ring-hits")).toHaveCount(1);
-    await expect(page.getByRole("link", { name: "Open an advisory" })).toBeVisible({
-      timeout: 20_000,
-    });
+    const frontCard = page.getByRole("button", { name: "Open Strategic Advisory details" });
+    await expect(frontCard).toBeVisible({ timeout: 20_000 });
+    await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     // The bottom readout strip is RETIRED (owner, 2026-07-16) — the
     // active-service clock is asserted via data-active-step + the CTA
     // link in the step tests below.
@@ -104,6 +106,65 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".tools-rail-register__heading--services")).toHaveCount(0);
     await expect(page.locator(".services-masthead")).toHaveCount(1);
     await expect(page.locator(".services-masthead__title")).toContainText("AI CAPABILITY");
+  });
+
+  test("desktop: the front card opens its spec drawer, and Escape / scroll dismiss it", async ({
+    page,
+  }) => {
+    test.skip(!isDesktopViewport(page), "the card drawer is desktop-only (ring gate)");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 15_000 });
+    expect(await scrollServicesRunway(page, 0.18)).toBe(true);
+    await page.waitForTimeout(1600);
+
+    const frontCard = page.getByRole("button", { name: "Open Strategic Advisory details" });
+    await expect(frontCard).toBeVisible({ timeout: 20_000 });
+
+    // ── The ghost fence (ADR-050's blocking flaw) ────────────────────────
+    // Parked and closed, the drawer must not exist in ANY channel: no rect
+    // published, no shimmed CTA or close control, no screen-reader copy.
+    await expect(frontCard).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Open an advisory" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Close Strategic Advisory details" })).toHaveCount(
+      0
+    );
+
+    // ── Open ─────────────────────────────────────────────────────────────
+    // The drawer faces bake LAZILY on this first click, so the shims can
+    // take a beat longer to appear than the rest of the ring.
+    await frontCard.click();
+    await expect(frontCard).toHaveAttribute("aria-expanded", "true");
+    // The open state dims the section copy behind the enlarged pair
+    // (services.css keys --svc-plate-dim off this attribute).
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-plate-open", "1");
+    // The drawer's baked CTA, reachable as a real link on the second rect.
+    await expect(page.getByRole("link", { name: "Open an advisory" })).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(
+      page.getByRole("button", { name: "Close Strategic Advisory details" })
+    ).toBeVisible();
+    // The baked spec copy, readable.
+    await expect(page.locator(".svc-ring-hits__sr")).toContainText("Duration:");
+
+    // ── Escape dismisses ─────────────────────────────────────────────────
+    await page.keyboard.press("Escape");
+    await expect(frontCard).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator(".services-stage")).not.toHaveAttribute("data-plate-open", "1");
+    await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Open an advisory" })).toHaveCount(0);
+
+    // ── Runway scroll dismisses ──────────────────────────────────────────
+    // The drawer is welded to its card and rotates away with it, so moving
+    // the ring must close it rather than leave a panel hanging off a card
+    // swinging out of front-centre.
+    await frontCard.click();
+    await expect(frontCard).toHaveAttribute("aria-expanded", "true");
+    expect(await scrollServicesRunway(page, 0.3)).toBe(true);
+    await page.waitForTimeout(800);
+    await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
   });
 
   test("desktop: the ambient hold survives the pinned #about + #continuum stages and dies under #practice", async ({
@@ -208,33 +269,34 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
 
     // (Readout strip retired 2026-07-16 — the active-service clock is
-    // asserted via data-active-step + the front card's CTA link.)
+    // asserted via data-active-step + the front card's own hit target. Under
+    // ADR-050 that target is the full-rect OPEN button, named for the plate's
+    // chip, rather than the CTA link the full face used to bake.)
     // Arrival remap (2026-07-17): the ring holds Advisory through the short
     // arrival, then rotates. `data-active-step` = the front-card index
     // (0..3). p=0.18 is in the arrival window → Advisory front (step 0).
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "0");
-    await expect(page.getByRole("link", { name: "Open an advisory" })).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByRole("button", { name: "Open Strategic Advisory details" })).toBeVisible(
+      { timeout: 20_000 }
+    );
 
     // p=0.58 → the ring has turned two quarter-turns: Keynote front (step 2).
     expect(await scrollServicesRunway(page, 0.58)).toBe(true);
     await page.waitForTimeout(1600);
-    // The ring rotated with the clock: the front card (and so its CTA
-    // link) is now the Keynote plate.
-    await expect(page.getByRole("link", { name: "Book a keynote" })).toBeVisible({
+    // The ring rotated with the clock: the front card is now the Keynote plate.
+    await expect(page.getByRole("button", { name: "Open Keynote details" })).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
 
-    // p=0.78 → the LAST service (Workshop) is front (step 3) — its CTA link
-    // proves the rotation reached the end of the roster while the hit areas
-    // are still alive (they retire in the exit beat).
+    // p=0.78 → the LAST service (Workshop) is front (step 3) — its own hit
+    // target proves the rotation reached the end of the roster while the hit
+    // areas are still alive (they retire in the exit beat).
     expect(await scrollServicesRunway(page, 0.78)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(page.getByRole("link", { name: "Book a workshop" })).toBeVisible({
+    await expect(page.getByRole("button", { name: "Open Workshop details" })).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
