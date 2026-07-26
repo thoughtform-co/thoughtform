@@ -612,8 +612,25 @@ function bakeCardFace(
   shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
-  traceChamferPath(ctx, 1.5, cutTR);
-  ctx.stroke();
+  if (variant === "tight") {
+    /* The tight face's shell is OPEN on the right (owner, 2026-07-26): a
+       baked right-edge stroke paints at the face's renderOrder — OVER the
+       emerged tray — so it read as a vertical rule splitting the open pair.
+       Not stroking it costs the CLOSED card nothing: the slab GLINT already
+       draws the right silhouette just outboard of the face, and that glint
+       renders UNDER the tray's content (0.05 < 0.07), so the seam cleans
+       itself the moment the tray emerges. One ink, two states, no swap. */
+    ctx.beginPath();
+    ctx.moveTo(BAKE_W - 1.5, 1.5);
+    ctx.lineTo(1.5, 1.5);
+    ctx.lineTo(1.5, BAKE_H - BAKE_CH);
+    ctx.lineTo(BAKE_CH, BAKE_H - 1.5);
+    ctx.lineTo(BAKE_W - 1.5, BAKE_H - 1.5);
+    ctx.stroke();
+  } else {
+    traceChamferPath(ctx, 1.5, cutTR);
+    ctx.stroke();
+  }
 
   // Brighter ticks along the chamfer cuts (the connector plug-in edges).
   ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";

@@ -2588,6 +2588,16 @@
     outline: 1px dashed rgba(202, 165, 84, 0.55);
     outline-offset: -4px;
   }
+  /* ADR-050 (owner, 2026-07-26): while the drawer is OUT, the front card's
+   * dashed hover/focus ring is noise — its right edge lands exactly on the
+   * card↔tray seam and reads as a rule splitting the open pair. The outline
+   * is a CLOSED-state affordance cue ("this opens"); an open card already
+   * shows what opening means, and its shims (CTA / ✕) keep their own focus
+   * treatment. */
+  .svc-ring-hits__hit--front[aria-expanded="true"]:hover,
+  .svc-ring-hits__hit--front[aria-expanded="true"]:focus-visible {
+    outline: none;
+  }
   /* The front card's CTA link — the baked outline is the visual; the DOM
    * anchor only needs the hover/focus affordance to sit ON the box. */
   .svc-ring-hits__hit--cta:hover,

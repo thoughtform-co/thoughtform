@@ -195,6 +195,20 @@ The defaults above are unchanged, so the flag remains a one-word revert.
    promotion's designation "ghost" was DOM showing THROUGH the
    semi-transparent drawer from beneath the canvas.)
 
+   **Seam pass (owner, 2026-07-26): no vertical rule between the panels.**
+   Two inks drew a line down the card↔tray joint, each fixed at its source:
+   - The tight face's baked shell no longer strokes its RIGHT edge (the
+     stroke sits at the face's renderOrder, so it painted OVER the emerged
+     tray as a splitting rule). The closed card loses nothing: the slab
+     GLINT already draws the right silhouette just outboard of the face,
+     and that glint renders UNDER the tray's content (0.05 < 0.07) — so the
+     edge is present closed and self-cleans the moment the tray emerges.
+     One ink, two states, no texture swap.
+   - The front hit's dashed hover/focus outline is suppressed while
+     `aria-expanded="true"` — its right edge landed exactly on the seam.
+     The outline is a closed-state affordance cue; the open pair's own
+     shims (CTA / ✕) keep their focus treatment.
+
    ⚠ Measurement note: under the pointer-look, the published drawer rect is
    legitimately smaller/offset vs the card's when the cursor is far from
    the pair (the rigid pair pivots about the CARD's centre, so the drawer
