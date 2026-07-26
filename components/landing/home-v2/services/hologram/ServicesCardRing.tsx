@@ -195,9 +195,10 @@ const RING_VEIL_HOVER_LEVEL = 0.18;
 /** Damp rate (per second) for the hover resolve/restore transition. */
 const VEIL_DAMP_RATE = 7;
 
-/** ADR-050: damp rate for the card-hide while its DOM spec plate is open —
- *  tuned so the card is about gone when the plate's 0.34s grow completes. */
-const PLATE_HIDE_DAMP_RATE = 9;
+/* ADR-050 rev 2: the card-hide while its DOM spec plate is open is a SNAP
+ * (0 | 1), not a damped fade — see the plate-handoff comment in the frame
+ * loop. The rev-1 damp constant (PLATE_HIDE_DAMP_RATE 9) was the crossfade
+ * the owner rejected; do not reintroduce a rate here. */
 
 /** Hover tilt amplitudes (rad) — the hovered card leans with the pointer
  *  (yaw toward the pointer's side, pitch away from its height) so the
@@ -1633,17 +1634,18 @@ export function ServicesCardRing({
       const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
       const master = (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * masterOpacity;
       const opacity = depthO * master;
-      // ADR-050 plate handoff: while this card's DOM spec plate is open the
-      // card's MATERIALS damp out (the plate is this card, popped open), but
-      // `opacity` stays the LOGICAL value — `cardGroup.visible` and the
-      // anchor publish below key off it, because the hidden card must KEEP
-      // projecting its screen rect: that live rect is what the plate rides
-      // to inherit the rig's pointer-look. Deck life force-restores (the
-      // plate closes on scroll long before the exit sweep, but a damp
-      // mid-flight must never leave a ghost-faded deck card).
-      const hideTarget = !stack && openPlateRef.current.serviceId === SERVICES[i].id ? 1 : 0;
-      plateHideRef.current[i] +=
-        (hideTarget - plateHideRef.current[i]) * Math.min(1, delta * PLATE_HIDE_DAMP_RATE);
+      // ADR-050 plate handoff (rev 2): while this card's DOM spec plate is
+      // open the card's MATERIALS are OFF — a SNAP, not a damp. The plate
+      // mounts a pixel-parity replica ON the card's rect first and the swap
+      // fires one painted frame later, so any fade here would be exactly the
+      // crossfade the owner rejected; the snap is invisible because the
+      // replica already covers the card. `opacity` stays the LOGICAL value —
+      // `cardGroup.visible` and the anchor publish below key off it, because
+      // the hidden card must KEEP projecting its screen rect: that live rect
+      // is what the plate rides to inherit the rig's pointer-look. Deck life
+      // force-restores (the plate closes on scroll long before the exit
+      // sweep, but a mid-flight open must never leave a hidden deck card).
+      plateHideRef.current[i] = !stack && openPlateRef.current.serviceId === SERVICES[i].id ? 1 : 0;
       const shown = 1 - plateHideRef.current[i];
       material.opacity = opacity * shown;
       slabMaterials[i][0].opacity = glassOpacity * depthO * master * shown;

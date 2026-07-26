@@ -57,23 +57,36 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
    pushing the affordance off the card (worst case verified: Keynote at a
    two-line title over a three-line lede).
 
-2. **The open state is DOM, and the plate IS the card — one entity.** ADR-029
-   carries a red-alert guardrail from 2026-07-10 — never a photo plane plus a
-   separate text console. The first cut dimmed the whole canvas behind the
-   plate and the owner correctly read it as two overlapping entities
-   (2026-07-26: "this is one entity... it should pop open, not introduce a
-   new component"). The shipped mechanics: `ServiceOpenPlate` seats on the
-   front card's published `ringAnchors` rect and grows outward
-   (`EXPAND_W_MUL` 2.08, same centre and height), while `ServicesCardRing`
-   damps THAT card's materials to zero (`openPlateRef`, the cross-root
-   module-ref bridge; `PLATE_HIDE_DAMP_RATE` 9 ≈ the plate's grow) — **while
-   the hidden card keeps projecting and publishing its screen rect**. The
-   rest of the instrument (mark, orbits, side cards) stays at full strength;
-   the depthWrite gate keys on the effective (× shown) opacity so the
-   invisible card never occludes the particle pass as a phantom rectangle.
-   Close re-derives the collapse target from the card's LIVE rect and the
-   card damps back in — a visible hand-back, not an unmount (rendering by
-   `lastIdRef` through the close is what lets the collapse play at all).
+2. **The open state is a BUFFER SWAP plus a mechanical transform — never a
+   crossfade.** ADR-029's red-alert guardrail (2026-07-10) forbids a card
+   plus a console; the owner then rejected two softer cheats in turn: the
+   whole-canvas dim ("this is one entity... it should pop open, not
+   introduce a new component") and the rev-1 damped card-fade under a
+   growing plate ("without any cheating like cross fades"). Rev 2:
+   - `ServiceOpenPlate` mounts a **pixel-parity DOM replica** of the tight
+     baked face on the card's live rect at FULL opacity (every CSS metric is
+     the bake ÷ 2 — the parity contract exists for exactly this; the shell
+     stays the bake's 168°, not rev 1's 225°, for the same reason).
+   - One **painted** frame later (double-rAF + an 80ms hidden-document
+     fallback) the WebGL card **SNAPS off** via `openPlateRef` (cross-root
+     module-ref bridge). No damp: the replica already covers it, so the swap
+     is invisible. The rev-1 `PLATE_HIDE_DAMP_RATE` is deleted — do not
+     reintroduce a rate there.
+   - Then the plate's WIDTH transitions and the spec DRAWER is **uncovered
+     by the moving edge** — the card half never moves, the drawer extends
+     from whichever side has room (`deriveSeat` picks). Geometry reveals the
+     content; **nothing on the entity ever animates opacity** (verified: the
+     plate's computed opacity is `1` on every sampled frame of the open).
+     Division of labour holds: the card half is the SCREEN (opaque void +
+     photo feed, as baked), the drawer is the GLASS (backdrop-blur).
+
+   The hidden card **keeps projecting and publishing its rect** (`opacity`
+   in the ring loop stays the logical value; materials get `× shown`), the
+   depthWrite gate keys on effective opacity so the invisible card never
+   occludes the particle pass, and close plays it backwards: drawer
+   retracts onto the card's LIVE rect, the card snaps back on, the replica
+   unmounts a frame later (rendering by `lastIdRef` through the close is
+   what lets the retract play at all).
 
    DOM rather than a second bake because baked canvas text cannot reflow and
    is not selectable, linkable, or reachable by a screen reader — which is

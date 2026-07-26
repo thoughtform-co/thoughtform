@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════════════
  * services.css — Services station (#services) signal-plate cluster
  * ═══════════════════════════════════════════════════════════════════════
  *
@@ -2697,40 +2697,42 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   ServiceOpenPlate — the card's OPEN state (ADR-050)
+   ServiceOpenPlate — the card's OPEN state (ADR-050, rev 2: NO crossfade)
    ═══════════════════════════════════════════════════════════════════════
 
-   The rest face is a baked CanvasTexture (chip + title + OPEN tick, nothing
-   else). Clicking the front card seats THIS plate on that card's published
-   screen rect and grows it outward while the WebGL card recedes — a handoff,
-   not a console beside the ring (ADR-029's red-alert guardrail forbids the
-   latter, never the former).
+   Rev 1 faded the WebGL card out while the DOM plate faded in, and the owner
+   called it correctly: a crossfade between two components, not one card
+   opening. Rev 2 is a BUFFER SWAP plus a mechanical transform:
 
-   Vocabulary is deliberately the plate's own: 168° gold shell gradient,
-   glass body, the pbg filter chain on the photo, dotted gold echo frame,
-   outlined gold CTA that fills on hover. Palette is redeclared locally (the
-   `.services-plate-cluster` precedent) so the plate needs no external steps.
-   ═══════════════════════════════════════════════════════════════════════ */
+     · The plate mounts as a pixel-parity DOM REPLICA of the tight baked face
+       (every metric here is the bake value ÷ 2 — the bake/DOM parity
+       contract), seated on the card's live rect at FULL opacity.
+     · One frame later the WebGL card SNAPS off (no damp — the replica is
+       already covering it, so the swap is invisible).
+     · Then the plate's width transitions and the spec DRAWER is UNCOVERED
+       by the moving edge — revealed by geometry, like a drawer sliding out
+       of the card. Nothing on the entity animates opacity, ever.
+
+   Division of labour: the CARD half is the SCREEN (opaque void ground +
+   photo feed, exactly like the bake); the DRAWER half is the GLASS
+   (backdrop-blur — the instrument reads through it). */
 
 .svc-open {
   --void: #050403;
   --dawn: #ece3d6;
   --gold: #caa554;
   --dawn-80: rgba(236, 227, 214, 0.8);
-  --dawn-70: rgba(236, 227, 214, 0.7);
   --dawn-50: rgba(236, 227, 214, 0.5);
   --dawn-40: rgba(236, 227, 214, 0.4);
   --mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   --sans: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   --ch: 16px;
-  /* MUST match GROW_MS in ServiceOpenPlate.tsx — the component clears its
-     seat on this timing, so a longer transition here would be cut off. */
+  /* MUST match GROW_MS in ServiceOpenPlate.tsx. */
   --svc-open-dur: 0.34s;
   --svc-open-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 
   position: absolute;
   inset: 0;
-  /* Above the ring hit areas (z 4) so the plate owns its own clicks. */
   z-index: 6;
   pointer-events: none;
 }
@@ -2741,6 +2743,7 @@
   border-radius: 0;
 }
 
+/* ── The plate root — geometry only, NEVER opacity ───────────────────── */
 .svc-open__plate {
   --chamfer: polygon(
     0 0,
@@ -2750,40 +2753,24 @@
     var(--ch) 100%,
     0 calc(100% - var(--ch))
   );
-
   position: absolute;
   pointer-events: auto;
-  opacity: 0;
-  /* Pointer-look (ADR-021: motion only while the mouse moves). The angles are
-     written per frame by ServiceOpenPlate, damped exactly like the rig's, so
-     the plate leans WITH the instrument behind it.
-
-     `transform` is deliberately ABSENT from the transition list below —
-     transitioning it would make the tilt lag the cursor by the grow duration.
-     The rAF damping IS the smoothing. */
+  /* Pointer-look (ADR-021): angles written per frame by the follow loop.
+     `transform` and geometry share one rule so nothing here ever fades. */
   transform: perspective(2000px) rotateX(var(--svc-open-rx, 0rad)) rotateY(var(--svc-open-ry, 0rad));
   transform-origin: 50% 50%;
   transition:
     left var(--svc-open-dur) var(--svc-open-ease),
-    top var(--svc-open-dur) var(--svc-open-ease),
-    width var(--svc-open-dur) var(--svc-open-ease),
-    height var(--svc-open-dur) var(--svc-open-ease),
-    opacity 0.22s var(--svc-open-ease);
+    width var(--svc-open-dur) var(--svc-open-ease);
 }
-/* Once grown the plate RIDES the hidden card's live projected rect — the
-   follow loop writes geometry every frame, and a transition on those props
-   would drag each write out over the grow duration. Opacity keeps its
-   transition; geometry becomes immediate. */
+/* Once open the plate RIDES the hidden card's live projected rect — the
+   follow loop writes geometry every frame; transitions would drag each
+   write out over the grow duration. */
 .svc-open__plate[data-tracking] {
-  transition: opacity 0.22s var(--svc-open-ease);
+  transition: none;
 }
-.svc-open[data-open] .svc-open__plate {
-  opacity: 1;
-}
-/* Front halo — UNCLIPPED and behind everything, so the plate sits in a pool
-   of light like the ring's front card does. Deliberately NOT a `filter:
-   drop-shadow` on the plate: a filtered ancestor breaks the glass body's
-   `backdrop-filter`, which is the whole transparency read. */
+/* Front halo — ambient light around the slab, not part of the entity (the
+   WebGL card carries the same glow), so it may ease in. */
 .svc-open__plate::before {
   content: "";
   position: absolute;
@@ -2793,15 +2780,11 @@
   opacity: 0;
   transition: opacity 0.32s var(--svc-open-ease) 0.1s;
 }
-.svc-open[data-open] .svc-open__plate::before {
+.svc-open__plate[data-stage="open"]::before {
   opacity: 1;
 }
 
-/* ── Extruded thickness ────────────────────────────────────────────────
-   The ring cards are device SLABS, not planes — they carry a visible wall
-   with a gold lip. Offsetting a chamfer-clipped layer down-left fakes that
-   wall receding from the lit face, which is what stops the open plate from
-   reading as a flat panel pasted over the scene. */
+/* ── Slab anatomy (unchanged from rev 1) ─────────────────────────────── */
 .svc-open__slab {
   position: absolute;
   inset: 0;
@@ -2816,25 +2799,22 @@
     rgba(202, 165, 84, 0.2) 100%
   );
 }
-
-/* Chamfered gold shell (TR + BL cuts — the card's own silhouette). The
-   gradient axis runs corner-to-corner through BOTH cuts (225°, not the
-   plate's 168°) so the brightest gold lands exactly on the chamfers — the
-   baked face gets that glint from its explicit tick strokes. */
+/* Shell — the CARD's own 168° gradient (parity with the bake, which uses
+   168°; rev 1's 225° made the replica visibly differ at the swap frame). */
 .svc-open__sh {
   position: absolute;
   inset: 0;
   z-index: 2;
   clip-path: var(--chamfer);
   background: linear-gradient(
-    225deg,
-    rgba(202, 165, 84, 0.62) 0%,
-    rgba(236, 227, 214, 0.13) 26%,
-    rgba(202, 165, 84, 0.14) 62%,
-    rgba(202, 165, 84, 0.56) 100%
+    168deg,
+    rgba(202, 165, 84, 0.52) 0%,
+    rgba(236, 227, 214, 0.14) 38%,
+    rgba(202, 165, 84, 0.16) 66%,
+    rgba(202, 165, 84, 0.48) 100%
   );
 }
-/* Dotted gold echo frame — the connector grammar (stroke-dasharray 3 7). */
+/* Dotted echo frame — additive chrome outside the silhouette. */
 .svc-open__echo {
   position: absolute;
   inset: -7px;
@@ -2843,27 +2823,25 @@
   opacity: 0;
   transition: opacity 0.3s var(--svc-open-ease) 0.16s;
 }
-.svc-open[data-open] .svc-open__echo {
+.svc-open__plate[data-stage="open"] .svc-open__echo {
   opacity: 1;
 }
-/* Edge glint on the lit top + left faces, over the glass. */
 .svc-open__glint {
   position: absolute;
   inset: 0;
   z-index: 5;
+  pointer-events: none;
   clip-path: var(--chamfer);
   background:
     linear-gradient(180deg, rgba(236, 227, 214, 0.42), transparent 2px) top / 100% 2px no-repeat,
     linear-gradient(90deg, rgba(236, 227, 214, 0.2), transparent 2px) left / 2px 100% no-repeat;
 }
 
+/* ── Body: card (screen) + drawer (glass), both clipped by the root ──── */
 .svc-open__bd {
   position: absolute;
   inset: 1px;
   z-index: 3;
-  /* PADDING = the device bezel: a rim of glass around the readable content,
-     exactly as the WebGL slab frames its face (ADR-029 Update 1). */
-  padding: 9px;
   clip-path: polygon(
     0 0,
     calc(100% - (var(--ch) - 0.6px)) 0,
@@ -2872,45 +2850,28 @@
     calc(var(--ch) - 0.6px) 100%,
     0 calc(100% - (var(--ch) - 0.6px))
   );
-  /* 0.46, not 0.58: the instrument BEHIND the glass has to stay readable
-     through it or nothing about this reads as transparent. The blur carries
-     the legibility instead of opacity. */
-  background:
-    linear-gradient(172deg, rgba(236, 227, 214, 0.06) 0%, rgba(236, 227, 214, 0) 50%),
-    rgba(8, 7, 6, 0.46);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  overflow: hidden;
-}
-.svc-open__inner {
-  display: grid;
-  /* Photo band keeps the card's portrait proportion on the left; the copy
-     column takes everything the growth added. */
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-  height: 100%;
   overflow: hidden;
 }
 
-/* ── Photo band — a hologram FEED, not a photograph ──────────────────────
-   Two layers of the same image: a soft ghost, and the same image seen
-   THROUGH a 4px dot mask. Never dark dots composited over a clean photo —
-   that inversion was explicitly rejected on the card bake, and it is the
-   difference between "instrument feed" and "picture with a texture on it".
-   Lighter here than on the closed card (0.5 / 0.12 vs 0.62 / 0.3): opening
-   is the resolve, so the feed comes up a step. */
-.svc-open__photo {
-  position: relative;
+/* ── The CARD half — a DOM replica of the tight baked face ───────────── */
+.svc-open__card {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--svc-card-w, 100%);
+  background: var(--void);
   overflow: hidden;
-  /* A dark ground UNDER the feed layers. The bake composites its dots over
-     opaque void, so without this the same alphas read washed-out over glass
-     and the photo stops matching the closed card. This is the division of
-     labour on a device slab: the photo band is the SCREEN (dense), the copy
-     column is the GLASS (see-through). */
-  background: rgba(5, 4, 3, 0.55);
 }
-.svc-open__photo::before,
-.svc-open__veil {
-  content: "";
+.svc-open__plate[data-side="right"] .svc-open__card {
+  left: 0;
+}
+.svc-open__plate[data-side="left"] .svc-open__card {
+  right: 0;
+}
+/* Photo feed — soft ghost (bake PHOTO_SOFT_ALPHA 0.3) + the same image
+   through the 4px dot mask (bake PHOTO_DOTS_ALPHA 0.62), over opaque void.
+   Never dark dots over a clean photo. */
+.svc-open__pbg {
   position: absolute;
   inset: 0;
   background-image: var(--photo-jpg);
@@ -2923,87 +2884,146 @@
     var(--photo-jpg) type("image/jpeg")
   );
   background-size: cover;
-  background-position: var(--photo-pos, center);
-  /* The `.svc-plate__pbg` grade verbatim. */
+  background-position: center;
   filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
 }
-/* Soft ghost underneath. */
-.svc-open__photo::before {
-  opacity: 0.22;
+.svc-open__pbg--soft {
+  opacity: 0.3;
 }
-/* The dot-matrix feed. */
-.svc-open__veil {
-  opacity: 0.58;
+.svc-open__pbg--dots {
+  opacity: 0.62;
   -webkit-mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
   -webkit-mask-size: 4px 4px;
   mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
   mask-size: 4px 4px;
 }
-.svc-open__photo[data-photo="off"]::before,
-.svc-open__photo[data-photo="off"] .svc-open__veil {
-  background: none;
+.svc-open__card[data-photo="off"] .svc-open__pbg {
+  background: radial-gradient(rgba(202, 165, 84, 0.24) 0.85px, transparent 1.1px) 0 0 / 4px 4px;
   filter: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+  opacity: 1;
 }
-.svc-open__photo[data-photo="off"] {
-  background:
-    radial-gradient(rgba(202, 165, 84, 0.24) 0.85px, transparent 1.1px) 0 0 / 4px 4px,
-    rgba(5, 4, 3, 0.5);
-}
-/* Scrim so the chip stays legible over any crop. */
-.svc-open__photo::after {
-  content: "";
+/* Scrims — bake: top 190px (.78→0) and ground from y700/1360 (51.5%). */
+.svc-open__scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(5, 4, 3, 0.66) 0%,
-    rgba(5, 4, 3, 0) 34%,
-    rgba(5, 4, 3, 0.24) 100%
-  );
+  background:
+    linear-gradient(180deg, rgba(5, 4, 3, 0.78) 0%, rgba(5, 4, 3, 0) 95px),
+    linear-gradient(
+      180deg,
+      rgba(5, 4, 3, 0) 51.5%,
+      rgba(5, 4, 3, 0.58) 68%,
+      rgba(5, 4, 3, 0.9) 82%,
+      rgba(5, 4, 3, 0.96) 100%
+    );
 }
+/* Chip — bake: filled gold, h 66, cy 80, x 44, font 700 30px ls 5px → ÷2. */
 .svc-open__chip {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 1;
+  top: 23px;
+  left: 22px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 13px;
+  gap: 12px;
+  height: 33px;
+  padding: 0 17px;
   background: var(--gold);
   color: var(--latent-night, #110f09);
   font-family: var(--mono);
   font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-size: 15px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
   white-space: nowrap;
 }
 .svc-open__chip-dia {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   flex: none;
   transform: rotate(45deg);
   background: var(--latent-night, #110f09);
 }
-
-/* ── Copy column ─────────────────────────────────────────────────────── */
-.svc-open__copy {
-  position: relative;
+/* Face copy — bake ÷ 2: title 700 20px mono LH 26, lede 400 15px sans LH 22,
+   stack bottom-anchored above the OPEN chit (chit bottom 33, h 26, gap 23). */
+.svc-open__face {
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  bottom: 82px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 26px 26px 24px;
+  gap: 12px;
+}
+.svc-open__ftitle {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+.svc-open__flede {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 22px;
+  color: rgba(236, 227, 214, 0.82);
+}
+.svc-open__flede em {
+  font-style: normal;
+  color: var(--gold);
+}
+/* The OPEN chit — bake ÷ 2: outlined gold 0.42, h 26, label 700 9px ls 2px.
+   On open it exits MECHANICALLY (slides below the card's clip), no fade. */
+.svc-open__chit {
+  position: absolute;
+  left: 26px;
+  bottom: 33px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid rgba(202, 165, 84, 0.42);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: transform var(--svc-open-dur) var(--svc-open-ease);
+}
+.svc-open__plate[data-stage="open"] .svc-open__chit {
+  transform: translateY(70px);
+}
+
+/* ── The DRAWER — uncovered by the widening root, never faded ────────── */
+.svc-open__drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--svc-drawer-w, 440px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 26px 22px;
+  background:
+    linear-gradient(172deg, rgba(236, 227, 214, 0.06) 0%, rgba(236, 227, 214, 0) 50%),
+    linear-gradient(100deg, rgba(5, 4, 3, 0.5) 0%, rgba(5, 4, 3, 0.24) 100%), rgba(8, 7, 6, 0.46);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   overflow-y: auto;
-  /* The glass is transparent enough now that the instrument reads through it.
-     This local scrim buys the copy column its contrast back WITHOUT making
-     the whole plate opaque — the bezel and the photo band stay see-through. */
-  background: linear-gradient(
-    100deg,
-    rgba(5, 4, 3, 0.42) 0%,
-    rgba(5, 4, 3, 0.3) 55%,
-    rgba(5, 4, 3, 0.14) 100%
-  );
+}
+.svc-open__plate[data-side="right"] .svc-open__drawer {
+  left: var(--svc-card-w, 0px);
+  border-left: 1px solid rgba(202, 165, 84, 0.22);
+}
+.svc-open__plate[data-side="left"] .svc-open__drawer {
+  right: var(--svc-card-w, 0px);
+  border-right: 1px solid rgba(202, 165, 84, 0.22);
 }
 .svc-open__close {
   position: absolute;
@@ -3028,14 +3048,11 @@
   color: var(--gold);
   border-color: rgba(202, 165, 84, 0.45);
 }
-
 .svc-open__block {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-/* Survey designation — the masthead's `SVC / TITLE · 01` grammar, reused so
-   the plate reads as another panel of the same instrument. */
 .svc-open__desig {
   font-family: var(--mono);
   font-size: 9px;
@@ -3043,25 +3060,13 @@
   text-transform: uppercase;
   color: rgba(202, 165, 84, 0.75);
 }
-.svc-open__lede {
-  margin: 0;
-  font-family: var(--sans);
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--dawn-80);
-}
-/* Upright gold, never italic (site-wide brand rule). */
-.svc-open__lede em {
-  font-style: normal;
-  color: var(--gold);
-}
 .svc-open__list {
   margin: 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 .svc-open__list li {
   position: relative;
@@ -3069,9 +3074,8 @@
   font-family: var(--sans);
   font-size: 13px;
   line-height: 1.45;
-  color: var(--dawn-50);
+  color: var(--dawn-80);
 }
-/* Diamonds, never bullets (shape law). */
 .svc-open__list li::before {
   content: "";
   position: absolute;
@@ -3082,8 +3086,6 @@
   transform: rotate(45deg);
   background: rgba(202, 165, 84, 0.6);
 }
-
-/* ── 02 / HOW — the qualification grid ───────────────────────────────── */
 .svc-open__spec {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3118,8 +3120,6 @@
 .svc-open__spec-wide dd {
   color: var(--gold);
 }
-
-/* ── CTA — outlined gold, fills on hover (the plate's own treatment) ─── */
 .svc-open__cta {
   display: flex;
   align-items: center;
@@ -3153,23 +3153,13 @@
   color: var(--latent-night, #110f09);
 }
 
-/* Narrow / short viewports: the two-column plate cannot hold the grid, so
-   the photo band collapses out and the copy takes the whole plate. */
-@media (max-width: 1100px), (max-height: 759px) {
-  .svc-open__inner {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .svc-open__photo {
-    display: none;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .svc-open__plate,
-  .svc-open__echo {
+  .svc-open__plate::before,
+  .svc-open__echo,
+  .svc-open__chit {
     transition: none;
   }
-  /* The rAF loop already bails under reduced motion; this is the belt-and-
-     braces so a stale custom prop can never leave the plate tilted. */
   .svc-open__plate {
     transform: none;
   }
