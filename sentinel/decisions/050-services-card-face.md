@@ -95,14 +95,13 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
    such shims.
 
 3. **The plate is a device slab, not a panel.** Matching the ring card's
-   material is load-bearing for the handoff to read as the same object:
-   extruded thickness (offset chamfer-clipped layer with a gold lip), a 9px
-   bezel of glass around the content, the photo as a **dot-matrix feed** (soft
-   ghost + the same image through the 4px mask — never dark dots over a clean
-   photo), a 225° shell gradient so the brightest gold lands on both chamfer
-   cuts, and an edge glint. Division of labour: the photo band is the
-   **screen** (dense, dark ground under the feed layers), the copy column is
-   the **glass** (see-through, local scrim for contrast only).
+   material is load-bearing for the swap to be invisible: extruded thickness
+   (offset chamfer-clipped layer with a gold lip), the bake's own 168° shell
+   gradient, the photo as a **dot-matrix feed** at the bake's exact alphas
+   (soft ghost 0.3 + the image through the 4px mask at 0.62 — never dark
+   dots over a clean photo), and an edge glint. Rev 1's 9px glass bezel and
+   225° shell are gone — both made the replica visibly differ from the baked
+   card at the swap frame.
 
 4. **Content follows the proposal grammar**, minus `03 / WHO` (that is
    `#about`): `01 / WHAT` = lede + `breakdown[]`; `02 / HOW` = `ServiceSpec`
@@ -114,9 +113,8 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
    card is front across the 500svh runway, so a surviving plate would sit
    still while the ring rotated behind it. This keeps `useServicesStageScroll`
    the single scroll writer instead of scroll-locking a scroll-driven
-   corridor. The seat is **frozen at open time** and the anchors are read
-   imperatively via `getState()` — subscribing to `ringAnchors` re-renders at
-   frame rate and makes the plate jitter with the ADR-021 sway.
+   corridor. Anchors are read imperatively via `getState()` — subscribing to
+   `ringAnchors` would re-render the spec sheet at frame rate.
 
 6. **The plate inherits the rig's motion by RIDING the hidden card's live
    rect** (owner, 2026-07-26 — it "should inherit the behaviour of the closed
