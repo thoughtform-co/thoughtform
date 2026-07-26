@@ -1,0 +1,248 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/services-card-face-lab — what the #services card SAYS
+   ═══════════════════════════════════════════════════════════════════════
+
+   Shape law (thoughtform-design): radius 0 everywhere; diamonds, never
+   circles; gold is WAYFINDING only; no italics.
+
+   NOTHING here restyles a production class outside a `.scfl` scope. The lab
+   sheet loads last, so those scoped rules win the cascade without touching
+   the shipped surface. The one exception is the ring-canvas recede below,
+   which is a lab STAND-IN for a per-card fade the production ring would own.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.scfl {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  --scfl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+
+  /* Stand in for `useLandingScroll` (ADR-031 Update 16 rev c): the corner
+     brackets and BOTH rails are CLIP-UNCOVERED by the hero sliding off, so
+     each carries `clip-path: inset(max(0px, (1 − --hero-lift) · 100dvh −
+     <its own top offset>) …)`. With no scroll writer running the var is
+     unset, the inset resolves to a full viewport height, and the entire rail
+     ladder is clipped away — the frame paints as an empty void. We are parked
+     at #services, far past the curtain, so the honest value is saturated. */
+  --hero-lift: 1;
+}
+
+/* hudHtml ships the fixed gold gateway radial; production covers it with the
+   opaque corridor canvas — here the void bed + ring canvas own the backdrop. */
+.scfl .gateway {
+  display: none;
+}
+
+/* ── Backdrop ──────────────────────────────────────────────────────── */
+.scfl-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(130% 100% at 42% 45%, #0d0a07 0%, #050403 72%);
+}
+
+/* HUD chrome is scenery — pass clicks through except real links. */
+.scfl__hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.scfl__hud .hud {
+  pointer-events: none;
+}
+.scfl__hud a {
+  pointer-events: auto;
+}
+
+/* ── Station content box ───────────────────────────────────────────────
+   Reproduces `.stations { padding: 0 var(--hud-content-inset) }`
+   (landing.css). LOAD-BEARING, not cosmetic: the masthead's columns are
+   `left/right: var(--masthead-inset)` where `--masthead-inset:
+   var(--rail-inset)` = `--band-margin − --hud-content-inset` (ADR-048).
+   That subtraction assumes the content box has already eaten
+   `--hud-content-inset` — mount the stage full-bleed and every text edge
+   lands one inset too far outboard. */
+.scfl-stationbox {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 0 var(--hud-content-inset);
+  pointer-events: none;
+}
+
+/* ── The WebGL→DOM handoff ─────────────────────────────────────────────
+   When the spec plate is open the instrument RECEDES, so exactly one
+   readable object is on screen (ADR-029's "one object" guardrail — the plate
+   replaces the card, it never sits beside it).
+
+   LAB STAND-IN: production would fade the front card alone, inside
+   `ServicesCardRing`, keeping the side cards and the mark at full strength.
+   Dimming the whole canvas is the cheapest way to judge whether the HANDOFF
+   reads at all; if the direction is approved, the real fade belongs on the
+   card's own material opacity, not here.
+
+   0.55, not 0.26: the plate's body is transparent glass with a backdrop
+   blur, so if the instrument behind it is dimmed to near-black there is
+   nothing left to be transparent AGAINST and the plate collapses into a flat
+   panel. The instrument has to stay legible through the glass. */
+.scfl canvas {
+  transition: opacity 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.scfl[data-plate-open] canvas {
+  opacity: 0.55;
+}
+
+/* ── Lab console ───────────────────────────────────────────────────────
+   Bottom right: the study lives in the card band and the upper masthead, and
+   a top-right console sits straight on the intro column. */
+.scfl-console {
+  position: fixed;
+  bottom: clamp(16px, 3vh, 40px);
+  right: clamp(16px, 2vw, 40px);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(34vw, 330px);
+  padding: 14px 16px;
+  background: rgba(10, 9, 8, 0.82);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.scfl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.scfl-chip {
+  padding: 5px 8px;
+  font-family: var(--scfl-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.6);
+  background: rgba(235, 227, 214, 0.02);
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  cursor: pointer;
+}
+.scfl-chip--sm {
+  padding: 4px 7px;
+  font-size: 8.5px;
+}
+.scfl-chip[data-on] {
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.scfl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.scfl-field__label {
+  font-family: var(--scfl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.45);
+}
+.scfl-range {
+  width: 100%;
+  accent-color: var(--gold, #caa554);
+}
+.scfl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.scfl-toggles {
+  display: flex;
+  gap: 8px;
+}
+.scfl-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  font-family: var(--scfl-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+  background: none;
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  cursor: pointer;
+}
+.scfl-toggle:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+.scfl-toggle__led {
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: rgba(235, 227, 214, 0.25);
+}
+.scfl-toggle[data-on] {
+  color: var(--gold, #caa554);
+  border-color: rgba(202, 165, 84, 0.4);
+}
+.scfl-toggle[data-on] .scfl-toggle__led {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+}
+.scfl-thesis {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(235, 227, 214, 0.7);
+}
+.scfl-prov {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-family: var(--scfl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.scfl-prov__diamond {
+  width: 4px;
+  height: 4px;
+  flex: none;
+  transform: rotate(45deg);
+  background: rgba(202, 165, 84, 0.6);
+}
+
+/* ── Desktop gate (parity with the production menus ≥1101×760) ──────── */
+.scfl-gate-warn {
+  display: none;
+}
+@media (max-width: 1100px), (max-height: 759px) {
+  .scfl-gate-warn {
+    display: block;
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 9000;
+    margin: 0;
+    padding: 7px 12px;
+    background: rgba(10, 9, 8, 0.9);
+    border: 1px solid rgba(202, 165, 84, 0.35);
+    font-family: var(--scfl-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold, #caa554);
+  }
+}

@@ -28,8 +28,20 @@ const MIN_HIT_WIDTH = 44;
 
 export function ServicesRingHitAreas({
   onSelectService,
+  onOpenFront,
 }: {
   onSelectService: (serviceId: ServiceId) => void;
+  /**
+   * ADR-050. When provided, the FRONT card's hit target becomes a full-rect
+   * button that opens the DOM spec plate, instead of the narrow `<a>` shimmed
+   * over the baked CTA box. Required by the tight face, which carries no CTA
+   * to shim onto — and correct regardless, since the whole card is now the
+   * affordance (the baked `OPEN` tick is the visible signal).
+   *
+   * Omit it and the front card keeps the ADR-029 CTA link byte-identically,
+   * so the shipped surface and the `full` face variant are unaffected.
+   */
+  onOpenFront?: (serviceId: ServiceId) => void;
 }) {
   const ringAnchors = useHologramConnectors((s) => s.ringAnchors);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -45,6 +57,24 @@ export function ServicesRingHitAreas({
           .filter((anchor) => anchor.visible && anchor.w > 8)
           .map((anchor) => {
             const plate = SERVICE_PLATES.find((p) => p.id === anchor.serviceId);
+            if (anchor.front && onOpenFront) {
+              // Front card, ADR-050: the whole face opens the spec plate.
+              return (
+                <button
+                  key={anchor.serviceId}
+                  type="button"
+                  className="svc-ring-hits__hit svc-ring-hits__hit--front"
+                  style={{
+                    left: `${(anchor.x - origin.left).toFixed(1)}px`,
+                    top: `${(anchor.y - origin.top).toFixed(1)}px`,
+                    width: `${anchor.w.toFixed(1)}px`,
+                    height: `${anchor.h.toFixed(1)}px`,
+                  }}
+                  aria-label={`Open ${plate?.chip ?? anchor.serviceId} details`}
+                  onClick={() => onOpenFront(anchor.serviceId)}
+                />
+              );
+            }
             if (anchor.front) {
               // Front card: a real link over the baked CTA box. The card is
               // face-on when front, so mapping the normalized box linearly

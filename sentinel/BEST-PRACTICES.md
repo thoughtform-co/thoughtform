@@ -561,6 +561,23 @@ class CanvasErrorBoundary extends Component {
 
 **Why it matters:** Canvas errors shouldn't crash the entire page.
 
+**`dynamic(..., { ssr: false })` is NOT a substitute for the boundary.**
+Deferring a canvas out of the server render only handles SSR. A **runtime**
+throw inside `<Canvas>` — a lost GL context, or `postprocessing`'s
+`EffectComposer.addPass` reading `getContextAttributes().alpha` off a null
+context — bubbles straight past `ssr: false` to the nearest route error
+boundary (`app/error.tsx`) and replaces the **whole page** with the fault
+screen. Found 2026-07-26 in `/test/services-card-face-lab`, whose own comment
+claimed `ssr: false` meant "the frame still paints if WebGL is unavailable";
+it did not. Every canvas needs `CanvasErrorBoundary` regardless of how it is
+imported. To test it, force the failure rather than waiting for it:
+
+```ts
+const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+gl?.getExtension("WEBGL_lose_context")?.loseContext();
+// then assert the surrounding DOM is still mounted
+```
+
 ---
 
 ### Dispose Three.js Resources

@@ -327,7 +327,52 @@ const CARD_SANS = '"PP Neue Montreal", "Helvetica Neue", Arial, sans-serif';
  *  — three-free so `ServicesRingHitAreas` can import it without pulling
  *  this file's WebGL stack into the initial bundle (2026-07-14). */
 
+/* Tight-face geometry (ADR-050).
+ *
+ * The face keeps THREE things — chip, title, lede — and drops the two that
+ * made the shipped card hard to parse: the dense includes/meta row, and the
+ * full-width outlined CTA. The lede stays because it is where "what is this
+ * service" actually lands (owner, 2026-07-25); only the logistics move to the
+ * open plate.
+ *
+ * The hierarchy is the real fix. Shipped, the lede (35px) was BIGGER than the
+ * title (34px) — two lines at near-equal weight, which is why neither read
+ * first. Here the title clearly leads and the lede supports.
+ *
+ * NOT part of the bake/DOM parity contract: the DOM open plate carries the
+ * rest of the stack, so these have no CSS twin to be 2× of. */
+const TIGHT_TITLE_PX = 40;
+const TIGHT_TITLE_LH = 52;
+const TIGHT_LEDE_PX = 30;
+const TIGHT_LEDE_LH = 44;
+/** The subtle OPEN affordance — an outlined chit, not the shipped CTA slab.
+ *  Visual only: the WHOLE card is the hit target (`onOpenFront`), so this
+ *  never needs a normalized box the way `RING_CARD_CTA_BOX` did. */
+const TIGHT_OPEN_H = 52;
+/** Bottom edge of the OPEN chit; the copy stack bottom-anchors above it. */
+const TIGHT_OPEN_BOTTOM = BAKE_H - 66;
+
 type InkRun = { text: string; gold: boolean };
+
+/**
+ * Which copy stack the card face bakes (ADR-050).
+ *
+ *  · `full`  — the historical ADR-029 stack: includes row + title + lede +
+ *    outlined CTA over the photo. FIVE content elements, which is the read
+ *    the owner called overwhelming on 2026-07-25 (two headline-weight labels
+ *    competing, poster and spec sheet mashed into one object).
+ *  · `tight` — chip + title + lede + a subtle `OPEN` chit. The includes/meta
+ *    row and the full-width CTA slab are gone; the breakdown and the spec
+ *    grid move to the DOM open plate, which grows from this card's own
+ *    projected rect. The lede STAYS — it is the line that says what the
+ *    service is (owner, 2026-07-25) — but it now sits below a dominant
+ *    title instead of competing with it at near-equal size.
+ *
+ * Kept as a parameter rather than a rewrite so the two can be judged side by
+ * side in `/test/services-card-face-lab` and so flipping production is a
+ * one-word default change.
+ */
+export type CardFaceVariant = "full" | "tight";
 
 /** Greedy word-wrap for a single-font run of styled segments. Returns lines
  *  of runs so lede emphasis (`{ em }` → upright gold) survives wrapping. */
@@ -380,7 +425,11 @@ function drawRunLine(
   });
 }
 
-function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCanvasElement {
+function bakeCardFace(
+  plate: ServicePlate,
+  img: HTMLImageElement | null,
+  variant: CardFaceVariant = "full"
+): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = BAKE_W;
   canvas.height = BAKE_H;
@@ -520,6 +569,76 @@ function bakeCardFace(plate: ServicePlate, img: HTMLImageElement | null): HTMLCa
      fixed CTA box (sizes = 2× the services.css open-plate values). ── */
   const maxW = BAKE_W - PAD_X * 2;
   ctx.textBaseline = "alphabetic";
+
+  if (variant === "tight") {
+    /* ── TIGHT face (ADR-050) — chip · title · lede · a subtle OPEN chit ──
+       Drops the includes/meta row and the full-width CTA slab; keeps the
+       lede, which is the line that says what the service actually is.
+
+       Built BOTTOM-UP from the OPEN chit so a longer title or a three-line
+       lede grows upward into the photo rather than pushing the affordance
+       off the card. */
+
+    /* The OPEN affordance — a small outlined chit sized to its label, not
+       the shipped CTA's full-width slab. Deliberately quieter: gold at 0.42
+       rather than solid, and it sits inboard instead of spanning the card.
+       Without SOMETHING here the tight card reads as a poster and nobody
+       discovers that it opens. */
+    label.letterSpacing = "4px";
+    ctx.font = `700 18px ${CARD_FONT}`;
+    const openLabel = "OPEN";
+    const openLabelW = ctx.measureText(openLabel).width;
+    const arrowW = 26;
+    const openPad = 22;
+    const openGap = 20;
+    const openW = openPad + openLabelW + openGap + arrowW + openPad;
+    const openY0 = TIGHT_OPEN_BOTTOM - TIGHT_OPEN_H;
+    ctx.strokeStyle = "rgba(202, 165, 84, 0.42)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(PAD_X, openY0, openW, TIGHT_OPEN_H);
+    ctx.fillStyle = SERVICES_GOLD;
+    ctx.textBaseline = "middle";
+    ctx.fillText(openLabel, PAD_X + openPad, openY0 + TIGHT_OPEN_H / 2 + 1);
+    label.letterSpacing = "0px";
+    ctx.font = `400 24px ${CARD_FONT}`;
+    ctx.fillText("→", PAD_X + openPad + openLabelW + openGap, openY0 + TIGHT_OPEN_H / 2);
+    ctx.textBaseline = "alphabetic";
+
+    // Lede — sans body, `{ em }` spans upright gold (no-italics rule). Now
+    // SMALLER than the title so the hierarchy reads title-first.
+    label.letterSpacing = "0px";
+    ctx.font = `400 ${TIGHT_LEDE_PX}px ${CARD_SANS}`;
+    const ledeLines = wrapRuns(ctx, plate.lede, maxW);
+    const ledeBottom = openY0 - 46;
+    ledeLines.forEach((line, i) => {
+      drawRunLine(
+        ctx,
+        line,
+        PAD_X,
+        ledeBottom - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
+        `rgba(${DAWN}, 0.82)`
+      );
+    });
+    const ledeTop = ledeBottom - (ledeLines.length - 1) * TIGHT_LEDE_LH - 24;
+
+    // Title — mono bold uppercase, the dominant line.
+    label.letterSpacing = "3px";
+    ctx.font = `700 ${TIGHT_TITLE_PX}px ${CARD_FONT}`;
+    const titleLines = wrapRuns(ctx, [plate.title.toUpperCase()], maxW);
+    const titleBottom = ledeTop - 30;
+    titleLines.forEach((line, i) => {
+      drawRunLine(
+        ctx,
+        line,
+        PAD_X,
+        titleBottom - (titleLines.length - 1 - i) * TIGHT_TITLE_LH,
+        `rgb(${DAWN})`
+      );
+    });
+
+    label.letterSpacing = "0px";
+    return canvas;
+  }
 
   // CTA — outlined gold box, label left, arrow right (rest state).
   label.letterSpacing = "4px";
@@ -774,6 +893,11 @@ export interface ServicesCardRingProps {
   /** Publish per-card screen rects to `hologramConnectorStore.ringAnchors`
    *  (production hit-areas). Off in labs. */
   publishAnchors?: boolean;
+  /** Which copy stack the faces bake (ADR-050). Defaults to `full` — the
+   *  historical ADR-029 stack — so production and every existing lab stay
+   *  byte-identical until the default is deliberately flipped. Changing it
+   *  re-runs the bake effect. */
+  faceVariant?: CardFaceVariant;
   /** 0 = tidally locked outward (side cards edge-on), 1 = always facing the
    *  rig's forward axis. Partial blends keep the orbit read while photos
    *  stay visible in transit. Default RING_FACING_BLEND. */
@@ -812,6 +936,7 @@ export function ServicesCardRing({
   dissipateGetter,
   entrance = "scroll",
   publishAnchors = false,
+  faceVariant = "full",
   facingBlend = RING_FACING_BLEND,
   masterOpacity = 1,
   cardHeight = RING_CARD_HEIGHT,
@@ -1080,7 +1205,7 @@ export function ServicesCardRing({
               img = null; // schematic fallback keeps the ring whole
             }
           }
-          return bakeCardFace(plate, img);
+          return bakeCardFace(plate, img, faceVariant);
         })
       );
       if (disposed) return;
@@ -1109,7 +1234,7 @@ export function ServicesCardRing({
     return () => {
       disposed = true;
     };
-  }, [gl]);
+  }, [gl, faceVariant]);
 
   // Dispose bakes on replacement/unmount (materials/geometries are
   // declarative — R3F disposes those; the shared back material/geometry

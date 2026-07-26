@@ -1,0 +1,255 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
+import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import type { ServicePlateId } from "@/components/landing/home-v2/services/servicePlateData";
+import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
+import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+
+import { CardFaceFrame } from "./CardFaceFrame";
+import { FACE_VARIANTS } from "./variants";
+
+// three/fiber is client-only; keep it out of the server render entirely so the
+// frame + masthead still paint if WebGL is unavailable.
+//
+// `ssr: false` alone does NOT deliver that promise: a RUNTIME throw inside
+// <Canvas> (a lost GL context, or `postprocessing`'s EffectComposer reading
+// `getContextAttributes().alpha` off a null context) bubbles straight to the
+// route error boundary and replaces the whole page with "System Fault". The
+// production canvases are all wrapped in `CanvasErrorBoundary` for exactly
+// this reason — see HomeCorridor / DepthGatewayScene / BrandmarkSystem. The
+// lab must be too, or one dropped context costs the entire study.
+const RingBackdrop = dynamic(() => import("./RingBackdrop"), { ssr: false });
+
+/** Beat-1 midpoint — service 01 front and settled (the orbit lab's default). */
+const DEFAULT_PROGRESS = 0.3;
+/** Park math: centre of service i's beat across the 5-beat runway. */
+const parkFor = (i: number) => (i + 1.5) / 5;
+
+interface ShellProps {
+  hudHtml: string;
+  bodyClass: string;
+}
+
+/**
+ * CardFaceLabShell — owns lab state, the `<html>` attribute bus, the ring
+ * progress bridge, and the console.
+ *
+ * Deep-link state (`?v=` route, `?p=` progress) is read in a MOUNT EFFECT and
+ * written through `history.replaceState` — never `useSearchParams`, which
+ * forces a CSR bailout of the whole route (the project-cards / section-menu /
+ * anchor lab convention).
+ */
+export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
+  const [variantIdx, setVariantIdx] = useState(0);
+  const [progress, setProgress] = useState(DEFAULT_PROGRESS);
+  const [openServiceId, setOpenServiceId] = useState<ServicePlateId | null>(null);
+  const replayRef = useRef<(() => void) | null>(null);
+
+  // Adopt deep-linked state AFTER mount (SSR renders the defaults; reading
+  // location in the initialiser would mismatch hydration).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const v = q.get("v");
+    if (v) {
+      const byId = FACE_VARIANTS.findIndex((a) => a.id === v);
+      if (byId >= 0) setVariantIdx(byId);
+      else {
+        const n = Number(v);
+        if (Number.isFinite(n) && n >= 0 && n < FACE_VARIANTS.length) setVariantIdx(n);
+      }
+    }
+    const p = Number.parseFloat(q.get("p") ?? "");
+    if (Number.isFinite(p)) setProgress(Math.min(1, Math.max(0, p)));
+  }, []);
+
+  const commit = useCallback(
+    (next: { variantIdx?: number; progress?: number }) => {
+      const v = next.variantIdx ?? variantIdx;
+      const p = next.progress ?? progress;
+      if (next.variantIdx !== undefined) setVariantIdx(next.variantIdx);
+      if (next.progress !== undefined) setProgress(next.progress);
+      // Moving the ring or switching routes must not leave a plate seated on
+      // a rect the card has left.
+      setOpenServiceId(null);
+      const url = new URL(window.location.href);
+      url.searchParams.set("v", FACE_VARIANTS[v].id);
+      url.searchParams.set("p", p.toFixed(3));
+      window.history.replaceState(null, "", url.toString());
+    },
+    [variantIdx, progress]
+  );
+
+  /**
+   * The `<html>` bus. `CorridorSectionMenu` has no props — it resolves both its
+   * visibility and its active row from document-level state, so the lab must
+   * stand in for the corridor scroll rig and declare that we are parked at
+   * #services.
+   *
+   * `data-corridor-engaged` is deliberately NOT set: it would route
+   * `resolveActiveIdx` down the corridor/thesis branch and light the wrong
+   * station.
+   */
+  useEffect(() => {
+    const html = document.documentElement;
+    html.setAttribute("data-active-station", "services");
+    return () => {
+      html.removeAttribute("data-active-station");
+    };
+  }, []);
+
+  /**
+   * Ring progress bridge — the same module-level ref `useServicesStageScroll`
+   * writes in production. `ServicesCardRing` reads it per WebGL frame, but the
+   * MENU only re-reads on scroll/attribute events, so a synthetic scroll event
+   * is what makes the active verb follow the slider on a page that never
+   * scrolls.
+   *
+   * ⚠ `ServiceOpenPlate` closes on scroll (production dismissal), so it
+   * listens for exactly this event — which is why `commit` clears the open
+   * plate itself rather than relying on the dispatch below.
+   */
+  useEffect(() => {
+    servicesRingProgressRef.current.progress = progress;
+    window.dispatchEvent(new Event("scroll"));
+    return () => {
+      servicesRingProgressRef.current.progress = 0;
+    };
+  }, [progress]);
+
+  const onReplayReady = useCallback((fn: () => void) => {
+    replayRef.current = fn;
+  }, []);
+
+  // Side-card hit → park that service (production scrolls the runway there;
+  // the lab drives the same ring math through the progress bridge).
+  const onSelectService = useCallback(
+    (serviceId: string) => {
+      const i = SERVICES.findIndex((s) => s.id === serviceId);
+      if (i >= 0) commit({ progress: parkFor(i) });
+    },
+    [commit]
+  );
+
+  const onOpenService = useCallback((serviceId: ServicePlateId) => {
+    setOpenServiceId(serviceId);
+  }, []);
+  const onCloseService = useCallback(() => setOpenServiceId(null), []);
+
+  const variant = FACE_VARIANTS[variantIdx];
+  const activeIndex = activeServiceForProgress(progress);
+
+  return (
+    <main
+      className={`scfl home-v2-root ${bodyClass}`}
+      data-theme="dark"
+      data-face-variant={variant.id}
+      data-plate-open={openServiceId ? "1" : undefined}
+    >
+      <CanvasErrorBoundary>
+        <RingBackdrop progress={progress} faceVariant={variant.face} />
+      </CanvasErrorBoundary>
+
+      <CardFaceFrame
+        hudHtml={hudHtml}
+        openPlateEnabled={variant.openPlate}
+        openServiceId={openServiceId}
+        onOpenService={onOpenService}
+        onCloseService={onCloseService}
+        onSelectService={onSelectService}
+        onReplayReady={onReplayReady}
+      />
+
+      {/* ── Lab console ─────────────────────────────────────────────── */}
+      <div className="scfl-console" aria-label="Services card face lab controls">
+        <div className="scfl-chips" role="tablist" aria-label="Face routes">
+          {FACE_VARIANTS.map((a, i) => (
+            <button
+              key={a.id}
+              type="button"
+              role="tab"
+              className="scfl-chip"
+              data-on={i === variantIdx || undefined}
+              aria-selected={i === variantIdx}
+              onClick={() => commit({ variantIdx: i })}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="scfl-thesis">{variant.thesis}</p>
+        <p className="scfl-prov">
+          <span className="scfl-prov__diamond" aria-hidden="true" />
+          {variant.provenance}
+        </p>
+
+        <div className="scfl-field">
+          <span className="scfl-field__label">
+            RING · SVC {String(activeIndex + 1).padStart(2, "0")}/04 · {SERVICES[activeIndex].verb}
+          </span>
+          <input
+            type="range"
+            className="scfl-range"
+            min={0}
+            max={1}
+            step={0.001}
+            value={progress}
+            aria-label="Ring progress"
+            onChange={(e) => commit({ progress: Number.parseFloat(e.target.value) })}
+          />
+          <div className="scfl-row">
+            {SERVICES.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                className="scfl-chip scfl-chip--sm"
+                data-on={(activeIndex === i && progress > 0.2) || undefined}
+                onClick={() => commit({ progress: parkFor(i) })}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="scfl-chip scfl-chip--sm"
+              data-on={progress <= 0.2 || undefined}
+              onClick={() => commit({ progress: 0.1 })}
+            >
+              LEAD
+            </button>
+          </div>
+        </div>
+
+        <div className="scfl-toggles">
+          <button
+            type="button"
+            className="scfl-toggle"
+            data-on={openServiceId ? true : undefined}
+            aria-pressed={Boolean(openServiceId)}
+            disabled={!variant.openPlate}
+            onClick={() =>
+              openServiceId
+                ? onCloseService()
+                : onOpenService(SERVICES[activeIndex].id as ServicePlateId)
+            }
+          >
+            <i className="scfl-toggle__led" aria-hidden="true" />
+            {openServiceId ? "CLOSE" : "OPEN"} PLATE
+          </button>
+          <button type="button" className="scfl-toggle" onClick={() => replayRef.current?.()}>
+            <i className="scfl-toggle__led" aria-hidden="true" />
+            REPLAY
+          </button>
+        </div>
+      </div>
+
+      <p className="scfl-gate-warn">
+        Widen to ≥1101×760 — the journey menus are gated to the desktop tier.
+      </p>
+    </main>
+  );
+}

@@ -2695,3 +2695,461 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ServiceOpenPlate — the card's OPEN state (ADR-050)
+   ═══════════════════════════════════════════════════════════════════════
+
+   The rest face is a baked CanvasTexture (chip + title + OPEN tick, nothing
+   else). Clicking the front card seats THIS plate on that card's published
+   screen rect and grows it outward while the WebGL card recedes — a handoff,
+   not a console beside the ring (ADR-029's red-alert guardrail forbids the
+   latter, never the former).
+
+   Vocabulary is deliberately the plate's own: 168° gold shell gradient,
+   glass body, the pbg filter chain on the photo, dotted gold echo frame,
+   outlined gold CTA that fills on hover. Palette is redeclared locally (the
+   `.services-plate-cluster` precedent) so the plate needs no external steps.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.svc-open {
+  --void: #050403;
+  --dawn: #ece3d6;
+  --gold: #caa554;
+  --dawn-80: rgba(236, 227, 214, 0.8);
+  --dawn-70: rgba(236, 227, 214, 0.7);
+  --dawn-50: rgba(236, 227, 214, 0.5);
+  --dawn-40: rgba(236, 227, 214, 0.4);
+  --mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --sans: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  --ch: 16px;
+  /* MUST match GROW_MS in ServiceOpenPlate.tsx — the component clears its
+     seat on this timing, so a longer transition here would be cut off. */
+  --svc-open-dur: 0.34s;
+  --svc-open-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  position: absolute;
+  inset: 0;
+  /* Above the ring hit areas (z 4) so the plate owns its own clicks. */
+  z-index: 6;
+  pointer-events: none;
+}
+.svc-open *,
+.svc-open *::before,
+.svc-open *::after {
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+.svc-open__plate {
+  --chamfer: polygon(
+    0 0,
+    calc(100% - var(--ch)) 0,
+    100% var(--ch),
+    100% 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch))
+  );
+
+  position: absolute;
+  pointer-events: auto;
+  opacity: 0;
+  transition:
+    left var(--svc-open-dur) var(--svc-open-ease),
+    top var(--svc-open-dur) var(--svc-open-ease),
+    width var(--svc-open-dur) var(--svc-open-ease),
+    height var(--svc-open-dur) var(--svc-open-ease),
+    opacity 0.22s var(--svc-open-ease);
+}
+.svc-open[data-open] .svc-open__plate {
+  opacity: 1;
+}
+/* Front halo — UNCLIPPED and behind everything, so the plate sits in a pool
+   of light like the ring's front card does. Deliberately NOT a `filter:
+   drop-shadow` on the plate: a filtered ancestor breaks the glass body's
+   `backdrop-filter`, which is the whole transparency read. */
+.svc-open__plate::before {
+  content: "";
+  position: absolute;
+  inset: -26px;
+  z-index: 0;
+  background: radial-gradient(60% 50% at 50% 50%, rgba(202, 165, 84, 0.13), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.32s var(--svc-open-ease) 0.1s;
+}
+.svc-open[data-open] .svc-open__plate::before {
+  opacity: 1;
+}
+
+/* ── Extruded thickness ────────────────────────────────────────────────
+   The ring cards are device SLABS, not planes — they carry a visible wall
+   with a gold lip. Offsetting a chamfer-clipped layer down-left fakes that
+   wall receding from the lit face, which is what stops the open plate from
+   reading as a flat panel pasted over the scene. */
+.svc-open__slab {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform: translate(-8px, 8px);
+  clip-path: var(--chamfer);
+  background: linear-gradient(
+    168deg,
+    rgba(202, 165, 84, 0.26) 0%,
+    rgba(5, 4, 3, 0.9) 38%,
+    rgba(5, 4, 3, 0.92) 66%,
+    rgba(202, 165, 84, 0.2) 100%
+  );
+}
+
+/* Chamfered gold shell (TR + BL cuts — the card's own silhouette). The
+   gradient axis runs corner-to-corner through BOTH cuts (225°, not the
+   plate's 168°) so the brightest gold lands exactly on the chamfers — the
+   baked face gets that glint from its explicit tick strokes. */
+.svc-open__sh {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  clip-path: var(--chamfer);
+  background: linear-gradient(
+    225deg,
+    rgba(202, 165, 84, 0.62) 0%,
+    rgba(236, 227, 214, 0.13) 26%,
+    rgba(202, 165, 84, 0.14) 62%,
+    rgba(202, 165, 84, 0.56) 100%
+  );
+}
+/* Dotted gold echo frame — the connector grammar (stroke-dasharray 3 7). */
+.svc-open__echo {
+  position: absolute;
+  inset: -7px;
+  z-index: 4;
+  border: 1px dashed rgba(202, 165, 84, 0.28);
+  opacity: 0;
+  transition: opacity 0.3s var(--svc-open-ease) 0.16s;
+}
+.svc-open[data-open] .svc-open__echo {
+  opacity: 1;
+}
+/* Edge glint on the lit top + left faces, over the glass. */
+.svc-open__glint {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  clip-path: var(--chamfer);
+  background:
+    linear-gradient(180deg, rgba(236, 227, 214, 0.42), transparent 2px) top / 100% 2px no-repeat,
+    linear-gradient(90deg, rgba(236, 227, 214, 0.2), transparent 2px) left / 2px 100% no-repeat;
+}
+
+.svc-open__bd {
+  position: absolute;
+  inset: 1px;
+  z-index: 3;
+  /* PADDING = the device bezel: a rim of glass around the readable content,
+     exactly as the WebGL slab frames its face (ADR-029 Update 1). */
+  padding: 9px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - (var(--ch) - 0.6px)) 0,
+    100% calc(var(--ch) - 0.6px),
+    100% 100%,
+    calc(var(--ch) - 0.6px) 100%,
+    0 calc(100% - (var(--ch) - 0.6px))
+  );
+  /* 0.46, not 0.58: the instrument BEHIND the glass has to stay readable
+     through it or nothing about this reads as transparent. The blur carries
+     the legibility instead of opacity. */
+  background:
+    linear-gradient(172deg, rgba(236, 227, 214, 0.06) 0%, rgba(236, 227, 214, 0) 50%),
+    rgba(8, 7, 6, 0.46);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+.svc-open__inner {
+  display: grid;
+  /* Photo band keeps the card's portrait proportion on the left; the copy
+     column takes everything the growth added. */
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Photo band — a hologram FEED, not a photograph ──────────────────────
+   Two layers of the same image: a soft ghost, and the same image seen
+   THROUGH a 4px dot mask. Never dark dots composited over a clean photo —
+   that inversion was explicitly rejected on the card bake, and it is the
+   difference between "instrument feed" and "picture with a texture on it".
+   Lighter here than on the closed card (0.5 / 0.12 vs 0.62 / 0.3): opening
+   is the resolve, so the feed comes up a step. */
+.svc-open__photo {
+  position: relative;
+  overflow: hidden;
+  /* A dark ground UNDER the feed layers. The bake composites its dots over
+     opaque void, so without this the same alphas read washed-out over glass
+     and the photo stops matching the closed card. This is the division of
+     labour on a device slab: the photo band is the SCREEN (dense), the copy
+     column is the GLASS (see-through). */
+  background: rgba(5, 4, 3, 0.55);
+}
+.svc-open__photo::before,
+.svc-open__veil {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--photo-jpg);
+  background-image: -webkit-image-set(
+    var(--photo-webp) type("image/webp"),
+    var(--photo-jpg) type("image/jpeg")
+  );
+  background-image: image-set(
+    var(--photo-webp) type("image/webp"),
+    var(--photo-jpg) type("image/jpeg")
+  );
+  background-size: cover;
+  background-position: var(--photo-pos, center);
+  /* The `.svc-plate__pbg` grade verbatim. */
+  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
+}
+/* Soft ghost underneath. */
+.svc-open__photo::before {
+  opacity: 0.22;
+}
+/* The dot-matrix feed. */
+.svc-open__veil {
+  opacity: 0.58;
+  -webkit-mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  -webkit-mask-size: 4px 4px;
+  mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  mask-size: 4px 4px;
+}
+.svc-open__photo[data-photo="off"]::before,
+.svc-open__photo[data-photo="off"] .svc-open__veil {
+  background: none;
+  filter: none;
+}
+.svc-open__photo[data-photo="off"] {
+  background:
+    radial-gradient(rgba(202, 165, 84, 0.24) 0.85px, transparent 1.1px) 0 0 / 4px 4px,
+    rgba(5, 4, 3, 0.5);
+}
+/* Scrim so the chip stays legible over any crop. */
+.svc-open__photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 4, 3, 0.66) 0%,
+    rgba(5, 4, 3, 0) 34%,
+    rgba(5, 4, 3, 0.24) 100%
+  );
+}
+.svc-open__chip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 13px;
+  background: var(--gold);
+  color: var(--latent-night, #110f09);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.svc-open__chip-dia {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  transform: rotate(45deg);
+  background: var(--latent-night, #110f09);
+}
+
+/* ── Copy column ─────────────────────────────────────────────────────── */
+.svc-open__copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 26px 26px 24px;
+  overflow-y: auto;
+  /* The glass is transparent enough now that the instrument reads through it.
+     This local scrim buys the copy column its contrast back WITHOUT making
+     the whole plate opaque — the bezel and the photo band stay see-through. */
+  background: linear-gradient(
+    100deg,
+    rgba(5, 4, 3, 0.42) 0%,
+    rgba(5, 4, 3, 0.3) 55%,
+    rgba(5, 4, 3, 0.14) 100%
+  );
+}
+.svc-open__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 1px solid rgba(236, 227, 214, 0.18);
+  color: var(--dawn-50);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.2s var(--svc-open-ease),
+    border-color 0.2s var(--svc-open-ease);
+}
+.svc-open__close:hover,
+.svc-open__close:focus-visible {
+  color: var(--gold);
+  border-color: rgba(202, 165, 84, 0.45);
+}
+
+.svc-open__block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* Survey designation — the masthead's `SVC / TITLE · 01` grammar, reused so
+   the plate reads as another panel of the same instrument. */
+.svc-open__desig {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.75);
+}
+.svc-open__lede {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--dawn-80);
+}
+/* Upright gold, never italic (site-wide brand rule). */
+.svc-open__lede em {
+  font-style: normal;
+  color: var(--gold);
+}
+.svc-open__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.svc-open__list li {
+  position: relative;
+  padding-left: 16px;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--dawn-50);
+}
+/* Diamonds, never bullets (shape law). */
+.svc-open__list li::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  background: rgba(202, 165, 84, 0.6);
+}
+
+/* ── 02 / HOW — the qualification grid ───────────────────────────────── */
+.svc-open__spec {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+  padding-top: 4px;
+  border-top: 1px solid rgba(236, 227, 214, 0.1);
+}
+.svc-open__spec > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 10px;
+}
+.svc-open__spec-wide {
+  grid-column: 1 / -1;
+}
+.svc-open__spec dt {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+.svc-open__spec dd {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--dawn-80);
+}
+.svc-open__spec-wide dd {
+  color: var(--gold);
+}
+
+/* ── CTA — outlined gold, fills on hover (the plate's own treatment) ─── */
+.svc-open__cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  margin-top: auto;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition:
+    background 0.3s var(--svc-open-ease),
+    border-color 0.3s var(--svc-open-ease),
+    color 0.3s var(--svc-open-ease);
+}
+.svc-open__aro {
+  font-style: normal;
+  font-weight: 400;
+  color: inherit;
+}
+.svc-open__cta:hover,
+.svc-open__cta:focus-visible {
+  background: var(--gold);
+  color: var(--latent-night, #110f09);
+}
+
+/* Narrow / short viewports: the two-column plate cannot hold the grid, so
+   the photo band collapses out and the copy takes the whole plate. */
+@media (max-width: 1100px), (max-height: 759px) {
+  .svc-open__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .svc-open__photo {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-open__plate,
+  .svc-open__echo {
+    transition: none;
+  }
+}
