@@ -77,26 +77,13 @@
 }
 
 /* ── The WebGL→DOM handoff ─────────────────────────────────────────────
-   When the spec plate is open the instrument RECEDES, so exactly one
-   readable object is on screen (ADR-029's "one object" guardrail — the plate
-   replaces the card, it never sits beside it).
-
-   LAB STAND-IN: production would fade the front card alone, inside
-   `ServicesCardRing`, keeping the side cards and the mark at full strength.
-   Dimming the whole canvas is the cheapest way to judge whether the HANDOFF
-   reads at all; if the direction is approved, the real fade belongs on the
-   card's own material opacity, not here.
-
-   0.55, not 0.26: the plate's body is transparent glass with a backdrop
-   blur, so if the instrument behind it is dimmed to near-black there is
-   nothing left to be transparent AGAINST and the plate collapses into a flat
-   panel. The instrument has to stay legible through the glass. */
-.scfl canvas {
-  transition: opacity 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.scfl[data-plate-open] canvas {
-  opacity: 0.55;
-}
+   NO canvas dim here (an earlier stand-in dimmed the whole canvas to 0.55
+   and read as two entities — a plate floating over a still-visible card).
+   The real mechanism lives in `ServicesCardRing` now: while a plate is open
+   the ring damps THAT card's materials out (openPlateRef) while the card
+   keeps projecting its rect, which the plate rides. The instrument — mark,
+   orbits, side cards — stays at FULL strength behind the glass; that
+   see-through is the whole transparency read. */
 
 /* ── Lab console ───────────────────────────────────────────────────────
    Bottom right: the study lives in the card band and the upper masthead, and

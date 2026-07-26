@@ -2770,6 +2770,13 @@
     height var(--svc-open-dur) var(--svc-open-ease),
     opacity 0.22s var(--svc-open-ease);
 }
+/* Once grown the plate RIDES the hidden card's live projected rect — the
+   follow loop writes geometry every frame, and a transition on those props
+   would drag each write out over the grow duration. Opacity keeps its
+   transition; geometry becomes immediate. */
+.svc-open__plate[data-tracking] {
+  transition: opacity 0.22s var(--svc-open-ease);
+}
 .svc-open[data-open] .svc-open__plate {
   opacity: 1;
 }

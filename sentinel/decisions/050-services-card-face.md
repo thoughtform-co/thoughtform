@@ -57,12 +57,23 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
    pushing the affordance off the card (worst case verified: Keynote at a
    two-line title over a three-line lede).
 
-2. **The open state is DOM, and it is a HANDOFF, not a console.** ADR-029
+2. **The open state is DOM, and the plate IS the card — one entity.** ADR-029
    carries a red-alert guardrail from 2026-07-10 — never a photo plane plus a
-   separate text console. `ServiceOpenPlate` honours it by _replacing_ the
-   card: it seats on the front card's own published `ringAnchors` rect and
-   grows outward (`EXPAND_W_MUL` 2.08, same centre and height) while the WebGL
-   card recedes underneath. Exactly one readable object exists at any instant.
+   separate text console. The first cut dimmed the whole canvas behind the
+   plate and the owner correctly read it as two overlapping entities
+   (2026-07-26: "this is one entity... it should pop open, not introduce a
+   new component"). The shipped mechanics: `ServiceOpenPlate` seats on the
+   front card's published `ringAnchors` rect and grows outward
+   (`EXPAND_W_MUL` 2.08, same centre and height), while `ServicesCardRing`
+   damps THAT card's materials to zero (`openPlateRef`, the cross-root
+   module-ref bridge; `PLATE_HIDE_DAMP_RATE` 9 ≈ the plate's grow) — **while
+   the hidden card keeps projecting and publishing its screen rect**. The
+   rest of the instrument (mark, orbits, side cards) stays at full strength;
+   the depthWrite gate keys on the effective (× shown) opacity so the
+   invisible card never occludes the particle pass as a phantom rectangle.
+   Close re-derives the collapse target from the card's LIVE rect and the
+   card damps back in — a visible hand-back, not an unmount (rendering by
+   `lastIdRef` through the close is what lets the collapse play at all).
 
    DOM rather than a second bake because baked canvas text cannot reflow and
    is not selectable, linkable, or reachable by a screen reader — which is
@@ -94,20 +105,24 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
    imperatively via `getState()` — subscribing to `ringAnchors` re-renders at
    frame rate and makes the plate jitter with the ADR-021 sway.
 
-6. **The plate takes pointer-look, like the cards do** (owner, 2026-07-26 — a
-   static plate in front of a leaning instrument read as pasted on). The
-   derivation MIRRORS `ServicesHologramScene`'s rig: same viewport-normalized
-   pointer, `yaw = nx · amp`, `pitch = −ny · amp · 0.6`, same `delta · 4`
-   exponential damping — so the plate leans WITH the instrument, not against
-   it. Amplitude is the one difference: `LOOK_AMP` 0.045 rad (≈2.6° yaw) vs
-   the rig's 0.12, because the plate is a far larger object on screen and an
-   equal angle would both over-sweep and smear a spec sheet. Angles are
-   written as custom props straight onto the element per frame, never through
-   React state (a setState here re-renders the whole spec sheet per mouse
-   move), `transform` is kept OUT of the transition list (transitioning it
-   would lag the cursor by the grow duration), and it engages only once
-   `grown` — mirroring the rig's own "settled" gate. Still no wall-clock term
-   anywhere: ADR-021 holds.
+6. **The plate inherits the rig's motion by RIDING the hidden card's live
+   rect** (owner, 2026-07-26 — it "should inherit the behaviour of the closed
+   card in terms of how it's orbiting / aligned with the brandmark"). Once
+   the grow completes the plate switches to `data-tracking` (geometry
+   transitions off — a transition would drag every frame-write out over the
+   grow duration) and a rAF loop follows the live published rect each frame
+   with a light damp (`delta · 10`; the source is already rig-damped, this
+   only smooths publish quantisation). Because the rect is the card's real
+   projection, the plate carries the rig's pointer-look, the bounded ADR-021
+   sway, and the facing-width breathing — measured ≈98px of sweep between
+   pointer corners at 1600×1000 — rather than mirroring an approximation.
+   A small rotation tilt rides on top (the rect cannot carry rotation):
+   the rig's own formula (`yaw = nx · amp`, `pitch = −ny · amp · 0.6`,
+   `delta · 4` damp) at `LOOK_AMP` 0.045 rad vs the rig's 0.12 — the plate
+   is a far larger object, an equal angle would smear a spec sheet.
+   Everything is written straight onto the element (styles + custom props),
+   never through React state — a setState would re-render the whole spec
+   sheet at frame rate. Still no wall-clock term anywhere: ADR-021 holds.
 
 7. **Lab:** `/test/services-card-face-lab` (`?v=v0|v1|v2`, `?p=`), forked from
    `/test/services-anchor-lab` and inheriting its camera **calibration against

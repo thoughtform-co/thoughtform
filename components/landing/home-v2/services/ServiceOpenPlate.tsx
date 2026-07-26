@@ -2,7 +2,9 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
-import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
+import { openPlateRef } from "@/lib/services-ring/openPlateRef";
+import { useHologramConnectors, type RingCardAnchor } from "@/lib/stores/hologramConnectorStore";
+import type { ServiceId } from "./serviceData";
 import { SERVICE_PLATES, type ServicePlateId } from "./servicePlateData";
 
 /**
@@ -61,6 +63,47 @@ interface Rect {
   h: number;
 }
 
+interface Seat {
+  collapsed: Rect;
+  grown: Rect;
+}
+
+/**
+ * Derive both plate rects from the card's projected anchor (host-local).
+ * Pure — called at open, at close, and per frame while tracking, so the
+ * grown rect always re-derives from wherever the card currently is.
+ */
+function deriveSeat(origin: DOMRect, anchor: RingCardAnchor | undefined): Seat {
+  // Seat on the card's published rect when we have one. Without it (mobile,
+  // an un-parked instrument, or a lab with no canvas) fall back to a centred
+  // seat so the plate is never unreachable.
+  const fallbackW = Math.min(460, origin.width - EDGE_MARGIN * 2);
+  const fallbackH = Math.min(720, origin.height - EDGE_MARGIN * 2);
+  const collapsed: Rect = anchor
+    ? {
+        x: anchor.x - origin.left,
+        y: anchor.y - origin.top,
+        w: anchor.w,
+        h: anchor.h,
+      }
+    : {
+        w: fallbackW,
+        h: fallbackH,
+        x: (origin.width - fallbackW) / 2,
+        y: (origin.height - fallbackH) / 2,
+      };
+
+  // Grow symmetrically about the card's centre, clamped inside the overlay.
+  const grownW = Math.min(collapsed.w * EXPAND_W_MUL, Math.max(0, origin.width - EDGE_MARGIN * 2));
+  const centreX = collapsed.x + collapsed.w / 2;
+  const grownX = Math.min(
+    Math.max(centreX - grownW / 2, EDGE_MARGIN),
+    Math.max(EDGE_MARGIN, origin.width - EDGE_MARGIN - grownW)
+  );
+
+  return { collapsed, grown: { x: grownX, y: collapsed.y, w: grownW, h: collapsed.h } };
+}
+
 interface ServiceOpenPlateProps {
   /** The service whose plate is open, or null for closed. */
   serviceId: ServicePlateId | null;
@@ -73,21 +116,39 @@ export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) 
   const plateRef = useRef<HTMLElement>(null);
 
   /**
-   * BOTH rects are measured once, at open time, and frozen.
-   *
-   * The ring keeps swaying (the ADR-021 bounded spring) and re-publishes its
-   * screen rects every WebGL frame. Subscribing to `ringAnchors` would
-   * re-render this component at frame rate and make the plate jitter for as
-   * long as it stayed open — so the anchors are read IMPERATIVELY via
-   * `getState()` instead. Once open, the plate is a static object and the card
-   * behind it recedes.
+   * The seat is measured at open time for the GROW transition, then — once
+   * grown — the plate RIDES the card's live projected rect (owner,
+   * 2026-07-26: "this is one entity... the opened card should inherit the
+   * behaviour of the closed card"). The anchors are read IMPERATIVELY via
+   * `getState()` per frame, never subscribed: a subscription would re-render
+   * this whole spec sheet at WebGL frame rate. React state only changes at
+   * the open/close boundaries; the per-frame follow writes styles directly.
    */
-  const [seat, setSeat] = useState<{ collapsed: Rect; grown: Rect } | null>(null);
+  const [seat, setSeat] = useState<Seat | null>(null);
   const [grown, setGrown] = useState(false);
+  /** The service the plate was last open FOR — the close path re-derives its
+   *  collapse target from that card's live rect. */
+  const lastIdRef = useRef<ServiceId | null>(null);
+  /** The follow loop's current rect. Read during render so the close-path
+   *  re-render starts the collapse FROM the tracked position instead of
+   *  snapping back to the stale open-time rect for one frame. */
+  const trackedRectRef = useRef<Rect | null>(null);
 
   useEffect(() => {
     if (!serviceId) {
-      // Play the collapse, then unmount once it has run.
+      // Re-derive the collapse target from wherever the card is NOW — the
+      // ring kept swaying while the plate was open, so the frozen open-time
+      // seat may no longer be under the card. Landing the collapse on the
+      // live rect is what makes the plate visibly hand BACK to the card.
+      const host = hostRef.current;
+      const lastId = lastIdRef.current;
+      if (host && lastId) {
+        const origin = host.getBoundingClientRect();
+        const anchor = useHologramConnectors
+          .getState()
+          .ringAnchors.find((a) => a.serviceId === lastId);
+        if (anchor) setSeat(deriveSeat(origin, anchor));
+      }
       setGrown(false);
       const t = window.setTimeout(() => setSeat(null), GROW_MS);
       return () => window.clearTimeout(t);
@@ -95,51 +156,33 @@ export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) 
 
     const host = hostRef.current;
     if (!host) return;
+    lastIdRef.current = serviceId;
     const origin = host.getBoundingClientRect();
     const anchor = useHologramConnectors
       .getState()
       .ringAnchors.find((a) => a.serviceId === serviceId);
 
-    // Seat on the card's published rect when we have one. Without it (mobile,
-    // an un-parked instrument, or a lab with no canvas) fall back to a
-    // centred seat so the plate is never unreachable.
-    const fallbackW = Math.min(460, origin.width - EDGE_MARGIN * 2);
-    const fallbackH = Math.min(720, origin.height - EDGE_MARGIN * 2);
-    const collapsed: Rect = anchor
-      ? {
-          x: anchor.x - origin.left,
-          y: anchor.y - origin.top,
-          w: anchor.w,
-          h: anchor.h,
-        }
-      : {
-          w: fallbackW,
-          h: fallbackH,
-          x: (origin.width - fallbackW) / 2,
-          y: (origin.height - fallbackH) / 2,
-        };
-
-    // Grow symmetrically about the card's centre, clamped inside the overlay.
-    const grownW = Math.min(
-      collapsed.w * EXPAND_W_MUL,
-      Math.max(0, origin.width - EDGE_MARGIN * 2)
-    );
-    const centreX = collapsed.x + collapsed.w / 2;
-    const grownX = Math.min(
-      Math.max(centreX - grownW / 2, EDGE_MARGIN),
-      Math.max(EDGE_MARGIN, origin.width - EDGE_MARGIN - grownW)
-    );
-
-    setSeat({
-      collapsed,
-      grown: { x: grownX, y: collapsed.y, w: grownW, h: collapsed.h },
-    });
+    setSeat(deriveSeat(origin, anchor));
     // Two paints: mount at the collapsed rect, then transition to the grown
     // one. Spaced by a TIMEOUT, not rAF — rAF is throttled to a standstill in
     // hidden documents, which would strand the plate at card size during
     // headed verification (the services-anchor-lab replay lesson).
     const t = window.setTimeout(() => setGrown(true), 20);
     return () => window.clearTimeout(t);
+  }, [serviceId]);
+
+  /**
+   * The one-entity bridge (ADR-050): while the plate is open, the WebGL card
+   * it grew out of HIDES — `ServicesCardRing` reads this ref per frame and
+   * damps that card's materials out while still projecting its rect. Written
+   * in the same effect pass as the seat so the card starts receding the
+   * moment the plate starts growing.
+   */
+  useEffect(() => {
+    openPlateRef.current.serviceId = serviceId;
+    return () => {
+      openPlateRef.current.serviceId = null;
+    };
   }, [serviceId]);
 
   /**
@@ -172,22 +215,35 @@ export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) 
   }, [grown]);
 
   /**
-   * Pointer-look. Engages only once GROWN — the rig gates its own look on
-   * "settled" for the same reason, and tilting mid-grow fights the
-   * left/top/width/height transition.
+   * Ride the rig (the "one entity" contract). Engages only once GROWN — the
+   * grow itself is the CSS transition; tracking mid-grow would fight it.
    *
-   * The damped angles are written straight onto the element as custom props,
-   * never through React state: this runs at frame rate while the plate is
-   * open, and a setState here would re-render the whole spec sheet every
-   * mouse move.
+   * After the grow completes the plate switches to `data-tracking` (geometry
+   * transitions off — every frame write would otherwise lag by the grow
+   * duration) and each frame:
+   *
+   *  1. FOLLOWS the hidden card's live projected rect. The card keeps
+   *     projecting while hidden (see ServicesCardRing's plate-hide channel),
+   *     and that rect already carries the rig's damped pointer-look and the
+   *     bounded ADR-021 sway — so the plate moves exactly as the card it
+   *     replaced would have, rather than mirroring an approximation of it.
+   *  2. Adds the small rotation tilt (same rig formula, LOOK_AMP amplitude)
+   *     that the flat rect cannot carry.
+   *
+   * Everything is written straight onto the element — styles and custom
+   * props, never React state: this runs at frame rate, and a setState here
+   * would re-render the whole spec sheet every frame.
    */
   useEffect(() => {
     const plate = plateRef.current;
-    if (!grown || !plate) return;
+    const host = hostRef.current;
+    if (!grown || !plate || !host || !serviceId) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const target = { pitch: 0, yaw: 0 };
     const damp = { pitch: 0, yaw: 0 };
+    /** Damped follow rect — seeded from the current React-applied geometry. */
+    const rect = { ...(grown && seat ? seat.grown : { x: 0, y: 0, w: 0, h: 0 }) };
 
     const onMove = (e: PointerEvent) => {
       const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
@@ -197,35 +253,89 @@ export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) 
     };
     window.addEventListener("pointermove", onMove, { passive: true });
 
+    // Geometry transitions off from the first tracked frame.
+    let tracking = false;
+    const trackTimer = window.setTimeout(() => {
+      plate.setAttribute("data-tracking", "");
+      tracking = true;
+    }, 40);
+
     let raf = 0;
     let last = 0;
     const tick = (t: number) => {
       // First frame has no baseline; seed it rather than integrating from 0.
       const delta = last ? Math.min(1 / 30, (t - last) / 1000) : 0;
       last = t;
-      const k = Math.min(1, delta * 4);
-      damp.pitch += (target.pitch - damp.pitch) * k;
-      damp.yaw += (target.yaw - damp.yaw) * k;
+
+      // Rotation tilt — the rig's own damping constant.
+      const kLook = Math.min(1, delta * 4);
+      damp.pitch += (target.pitch - damp.pitch) * kLook;
+      damp.yaw += (target.yaw - damp.yaw) * kLook;
       plate.style.setProperty("--svc-open-rx", `${damp.pitch.toFixed(4)}rad`);
       plate.style.setProperty("--svc-open-ry", `${damp.yaw.toFixed(4)}rad`);
+
+      // Live-rect follow. The source is already rig-damped; the light damp
+      // here only smooths publish quantisation. Anchor gone (card occluded,
+      // instrument un-parked) → hold the last rect; scroll closes us anyway.
+      if (tracking) {
+        const anchor = useHologramConnectors
+          .getState()
+          .ringAnchors.find((a) => a.serviceId === serviceId);
+        if (anchor) {
+          const origin = host.getBoundingClientRect();
+          const live = deriveSeat(origin, anchor).grown;
+          const kFollow = Math.min(1, delta * 10);
+          rect.x += (live.x - rect.x) * kFollow;
+          rect.y += (live.y - rect.y) * kFollow;
+          rect.w += (live.w - rect.w) * kFollow;
+          rect.h += (live.h - rect.h) * kFollow;
+          plate.style.left = `${rect.x.toFixed(1)}px`;
+          plate.style.top = `${rect.y.toFixed(1)}px`;
+          plate.style.width = `${rect.w.toFixed(1)}px`;
+          plate.style.height = `${rect.h.toFixed(1)}px`;
+          trackedRectRef.current = { ...rect };
+        }
+      }
       raf = window.requestAnimationFrame(tick);
     };
     raf = window.requestAnimationFrame(tick);
 
     return () => {
       window.removeEventListener("pointermove", onMove);
+      window.clearTimeout(trackTimer);
       window.cancelAnimationFrame(raf);
+      plate.removeAttribute("data-tracking");
       plate.style.removeProperty("--svc-open-rx");
       plate.style.removeProperty("--svc-open-ry");
+      // Deliberately NOT nulling trackedRectRef here: the close-path render
+      // still needs it as the collapse's starting rect. It reseeds on the
+      // next open.
     };
-  }, [grown]);
+    // `seat` is deliberately NOT a dependency: it only seeds the follow rect.
+    // Re-running on the close-path seat write would tear tracking down a
+    // frame early; the `grown`/`serviceId` flips are the real boundaries.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grown, serviceId]);
 
   const handleClose = useCallback(() => onClose(), [onClose]);
 
   if (!seat) return <div ref={hostRef} className="svc-open" aria-hidden="true" />;
 
-  const plate = SERVICE_PLATES.find((p) => p.id === serviceId);
-  const rect = grown ? seat.grown : seat.collapsed;
+  // Ref reads during render, both deliberate (the lint warning is accepted —
+  // the overlay layers already read layout refs in render, the
+  // PlateConnectorOverlay precedent):
+  //  · On the close path `serviceId` is already null but the COLLAPSE still
+  //    has to play — render the last-open service's content until the seat
+  //    clears (unmounting at null was the original bug: the plate vanished
+  //    instantly instead of handing back to the card).
+  //  · While grown, prefer the follow loop's live rect: the close-path's
+  //    first re-render must start the collapse from where the plate actually
+  //    IS, not snap back to the stale open-time rect for a frame.
+  const displayId = serviceId ?? lastIdRef.current;
+  // eslint-disable-next-line react-hooks/refs -- deliberate render-time read, see above
+  const plate = SERVICE_PLATES.find((p) => p.id === displayId);
+  // eslint-disable-next-line react-hooks/refs -- deliberate render-time read, see above
+  const rect = grown ? (trackedRectRef.current ?? seat.grown) : seat.collapsed;
 
   return (
     <div ref={hostRef} className="svc-open" data-open={grown || undefined}>
