@@ -50,12 +50,12 @@ is undefined in production, so the shipped surface, the smoke tests, and the
 ADR-047 deck are byte-identical until the default is deliberately flipped.
 
 1. **`faceVariant: "full" | "tight"` on `ServicesCardRing`**, threaded into
-   `bakeCardFace` (which re-bakes when it changes). `tight` keeps chip + title
-   - lede and drops the includes row and the CTA slab, with the hierarchy
-     corrected: title **40px**, lede **30px**. Built bottom-up from a small
-     outlined `OPEN` chit so long copy grows upward into the photo instead of
-     pushing the affordance off the card (worst case verified: Keynote at 2-line
-     title + 3-line lede).
+   `bakeCardFace` (which re-bakes when it changes). `tight` keeps the chip, the
+   title and the lede, drops the includes row and the CTA slab, and corrects
+   the hierarchy: title **40px**, lede **30px**. Built bottom-up from a small
+   outlined `OPEN` chit so long copy grows upward into the photo instead of
+   pushing the affordance off the card (worst case verified: Keynote at a
+   two-line title over a three-line lede).
 
 2. **The open state is DOM, and it is a HANDOFF, not a console.** ADR-029
    carries a red-alert guardrail from 2026-07-10 — never a photo plane plus a
