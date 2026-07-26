@@ -94,7 +94,22 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
    imperatively via `getState()` — subscribing to `ringAnchors` re-renders at
    frame rate and makes the plate jitter with the ADR-021 sway.
 
-6. **Lab:** `/test/services-card-face-lab` (`?v=v0|v1|v2`, `?p=`), forked from
+6. **The plate takes pointer-look, like the cards do** (owner, 2026-07-26 — a
+   static plate in front of a leaning instrument read as pasted on). The
+   derivation MIRRORS `ServicesHologramScene`'s rig: same viewport-normalized
+   pointer, `yaw = nx · amp`, `pitch = −ny · amp · 0.6`, same `delta · 4`
+   exponential damping — so the plate leans WITH the instrument, not against
+   it. Amplitude is the one difference: `LOOK_AMP` 0.045 rad (≈2.6° yaw) vs
+   the rig's 0.12, because the plate is a far larger object on screen and an
+   equal angle would both over-sweep and smear a spec sheet. Angles are
+   written as custom props straight onto the element per frame, never through
+   React state (a setState here re-renders the whole spec sheet per mouse
+   move), `transform` is kept OUT of the transition list (transitioning it
+   would lag the cursor by the grow duration), and it engages only once
+   `grown` — mirroring the rig's own "settled" gate. Still no wall-clock term
+   anywhere: ADR-021 holds.
+
+7. **Lab:** `/test/services-card-face-lab` (`?v=v0|v1|v2`, `?p=`), forked from
    `/test/services-anchor-lab` and inheriting its camera **calibration against
    the live corridor's published hit rects** (`CAM_DIST 2.95`, `RIG_Y −0.21`,
    scale 0.62) — the reason lab card geometry matches production.
@@ -155,9 +170,15 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
   and the bounded decaying spring.
 - Never composite dark dots over a clean photo — the feed is the photo seen
   _through_ the mask, plus a ghost.
-- The plate's halo must not be a `filter: drop-shadow` on an ancestor: that
-  breaks the glass body's `backdrop-filter`, which is the entire transparency
-  read. Use an unclipped layer behind instead.
+- **Nothing may establish a new BACKDROP ROOT above the glass body**, or
+  `backdrop-filter` keeps reporting `blur(16px)` in computed style while
+  rendering nothing — the transparency read dies silently. `filter:
+drop-shadow` on an ancestor does exactly that, which is why the halo is an
+  unclipped layer behind the plate instead. The pointer-look's 3D transform
+  was measured and does **not** break it (crop A/B with
+  `backdrop-filter: none`: 38.7KB blurred vs 63.5KB unblurred). Re-run that
+  A/B before adding any `filter`, `mask`, or `opacity < 1` to the plate or its
+  ancestors — computed style will not warn you.
 - `--svc-open-dur` and `GROW_MS` must stay equal — the component clears its
   seat on that timing.
 - Keep the ring mount gate and the services DOM gate the SAME media query.

@@ -2754,6 +2754,15 @@
   position: absolute;
   pointer-events: auto;
   opacity: 0;
+  /* Pointer-look (ADR-021: motion only while the mouse moves). The angles are
+     written per frame by ServiceOpenPlate, damped exactly like the rig's, so
+     the plate leans WITH the instrument behind it.
+
+     `transform` is deliberately ABSENT from the transition list below —
+     transitioning it would make the tilt lag the cursor by the grow duration.
+     The rAF damping IS the smoothing. */
+  transform: perspective(2000px) rotateX(var(--svc-open-rx, 0rad)) rotateY(var(--svc-open-ry, 0rad));
+  transform-origin: 50% 50%;
   transition:
     left var(--svc-open-dur) var(--svc-open-ease),
     top var(--svc-open-dur) var(--svc-open-ease),
@@ -3151,5 +3160,10 @@
   .svc-open__plate,
   .svc-open__echo {
     transition: none;
+  }
+  /* The rAF loop already bails under reduced motion; this is the belt-and-
+     braces so a stale custom prop can never leave the plate tilted. */
+  .svc-open__plate {
+    transform: none;
   }
 }

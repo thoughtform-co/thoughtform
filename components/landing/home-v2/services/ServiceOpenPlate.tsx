@@ -37,6 +37,23 @@ const EDGE_MARGIN = 56;
 /** Must match the `--svc-open-dur` grow transition in services.css. */
 const GROW_MS = 340;
 
+/**
+ * Pointer-look amplitude in radians (ADR-021: the parked instrument moves ONLY
+ * when the mouse moves — there is no wall-clock term anywhere here either).
+ *
+ * The derivation MIRRORS `ServicesHologramScene`'s rig exactly — same
+ * viewport-normalized pointer, same `yaw = nx · amp`, same
+ * `pitch = −ny · amp · 0.6`, same `delta · 4` damping — so the plate leans
+ * WITH the instrument behind it rather than against it. Only the amplitude
+ * differs: the rig runs 0.12 rad, but the plate is a far larger object on
+ * screen, so an equal angle would be a much larger pixel sweep and would cost
+ * text crispness. 0.045 rad ≈ 2.6° of yaw reads as the same material without
+ * smearing a spec sheet.
+ */
+const LOOK_AMP = 0.045;
+/** Mouse Y is damped harder than X, as on the rig. */
+const LOOK_PITCH_RATIO = 0.6;
+
 interface Rect {
   x: number;
   y: number;
@@ -53,6 +70,7 @@ interface ServiceOpenPlateProps {
 export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const plateRef = useRef<HTMLElement>(null);
 
   /**
    * BOTH rects are measured once, at open time, and frozen.
@@ -153,6 +171,55 @@ export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) 
     if (grown) closeBtnRef.current?.focus();
   }, [grown]);
 
+  /**
+   * Pointer-look. Engages only once GROWN — the rig gates its own look on
+   * "settled" for the same reason, and tilting mid-grow fights the
+   * left/top/width/height transition.
+   *
+   * The damped angles are written straight onto the element as custom props,
+   * never through React state: this runs at frame rate while the plate is
+   * open, and a setState here would re-render the whole spec sheet every
+   * mouse move.
+   */
+  useEffect(() => {
+    const plate = plateRef.current;
+    if (!grown || !plate) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const target = { pitch: 0, yaw: 0 };
+    const damp = { pitch: 0, yaw: 0 };
+
+    const onMove = (e: PointerEvent) => {
+      const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
+      const ny = (e.clientY / window.innerHeight) * 2 - 1; // -1..1
+      target.pitch = -ny * LOOK_AMP * LOOK_PITCH_RATIO;
+      target.yaw = nx * LOOK_AMP;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+
+    let raf = 0;
+    let last = 0;
+    const tick = (t: number) => {
+      // First frame has no baseline; seed it rather than integrating from 0.
+      const delta = last ? Math.min(1 / 30, (t - last) / 1000) : 0;
+      last = t;
+      const k = Math.min(1, delta * 4);
+      damp.pitch += (target.pitch - damp.pitch) * k;
+      damp.yaw += (target.yaw - damp.yaw) * k;
+      plate.style.setProperty("--svc-open-rx", `${damp.pitch.toFixed(4)}rad`);
+      plate.style.setProperty("--svc-open-ry", `${damp.yaw.toFixed(4)}rad`);
+      raf = window.requestAnimationFrame(tick);
+    };
+    raf = window.requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.cancelAnimationFrame(raf);
+      plate.style.removeProperty("--svc-open-rx");
+      plate.style.removeProperty("--svc-open-ry");
+    };
+  }, [grown]);
+
   const handleClose = useCallback(() => onClose(), [onClose]);
 
   if (!seat) return <div ref={hostRef} className="svc-open" aria-hidden="true" />;
@@ -164,6 +231,7 @@ export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) 
     <div ref={hostRef} className="svc-open" data-open={grown || undefined}>
       {plate && (
         <section
+          ref={plateRef}
           className="svc-open__plate"
           aria-label={`${plate.chip} — details`}
           style={
