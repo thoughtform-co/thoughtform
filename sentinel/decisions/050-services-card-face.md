@@ -73,12 +73,23 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
      is invisible. The rev-1 `PLATE_HIDE_DAMP_RATE` is deleted — do not
      reintroduce a rate there.
    - Then the plate's WIDTH transitions and the spec DRAWER is **uncovered
-     by the moving edge** — the card half never moves, the drawer extends
-     from whichever side has room (`deriveSeat` picks). Geometry reveals the
-     content; **nothing on the entity ever animates opacity** (verified: the
-     plate's computed opacity is `1` on every sampled frame of the open).
-     Division of labour holds: the card half is the SCREEN (opaque void +
-     photo feed, as baked), the drawer is the GLASS (backdrop-blur).
+     by the moving edge**. Geometry reveals the content; **nothing on the
+     entity ever animates opacity** (verified: the plate's computed opacity
+     is `1` on every sampled frame of the open, while width runs 398px →
+     838px). Division of labour holds: the card half is the SCREEN (opaque
+     void + photo feed, as baked), the drawer is the GLASS (backdrop-blur).
+   - The drawer ALWAYS extends **right** (owner, 2026-07-26: it was landing
+     on either side). A side chosen from live measurements is not stable —
+     the front card's x and width both move with the ring's rotation and
+     pointer-look, so it flipped between opens, and because the follow loop
+     re-derives every frame it could disagree with the frozen `data-side`
+     attribute and jump the plate sideways mid-open. One fixed side deletes
+     that class of bug; `deriveSeat` is now a deterministic function of
+     (origin, anchor) alone. When the drawer will not fit, the plate slides
+     LEFT by the deficit instead of flipping (measured ≈74px at 1600×1000 —
+     the card barely moves). The right bound is the station content box, NOT
+     the viewport: `--hud-content-inset` reserves ~161px per side, and a
+     drawer past it would run under the right-rail register.
 
    The hidden card **keeps projecting and publishing its rect** (`opacity`
    in the ring loop stays the logical value; materials get `× shown`), the

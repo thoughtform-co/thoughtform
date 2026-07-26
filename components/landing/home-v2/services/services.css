@@ -2858,15 +2858,10 @@
   position: absolute;
   top: 0;
   bottom: 0;
+  left: 0;
   width: var(--svc-card-w, 100%);
   background: var(--void);
   overflow: hidden;
-}
-.svc-open__plate[data-side="right"] .svc-open__card {
-  left: 0;
-}
-.svc-open__plate[data-side="left"] .svc-open__card {
-  right: 0;
 }
 /* Photo feed — soft ghost (bake PHOTO_SOFT_ALPHA 0.3) + the same image
    through the 4px dot mask (bake PHOTO_DOTS_ALPHA 0.62), over opaque void.
@@ -3000,30 +2995,27 @@
   transform: translateY(70px);
 }
 
-/* ── The DRAWER — uncovered by the widening root, never faded ────────── */
+/* ── The DRAWER — uncovered by the widening root, never faded ──────────
+   ALWAYS to the right of the card: see `deriveSeat` for why the side is
+   FIXED rather than chosen from live measurements (a measured side flipped
+   between opens and could disagree with the CSS mid-open). */
 .svc-open__drawer {
   position: absolute;
   top: 0;
   bottom: 0;
+  left: var(--svc-card-w, 0px);
   width: var(--svc-drawer-w, 440px);
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 24px 26px 22px;
+  border-left: 1px solid rgba(202, 165, 84, 0.22);
   background:
     linear-gradient(172deg, rgba(236, 227, 214, 0.06) 0%, rgba(236, 227, 214, 0) 50%),
     linear-gradient(100deg, rgba(5, 4, 3, 0.5) 0%, rgba(5, 4, 3, 0.24) 100%), rgba(8, 7, 6, 0.46);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   overflow-y: auto;
-}
-.svc-open__plate[data-side="right"] .svc-open__drawer {
-  left: var(--svc-card-w, 0px);
-  border-left: 1px solid rgba(202, 165, 84, 0.22);
-}
-.svc-open__plate[data-side="left"] .svc-open__drawer {
-  right: var(--svc-card-w, 0px);
-  border-right: 1px solid rgba(202, 165, 84, 0.22);
 }
 .svc-open__close {
   position: absolute;

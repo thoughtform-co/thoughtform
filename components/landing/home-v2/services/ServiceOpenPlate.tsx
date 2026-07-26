@@ -38,6 +38,7 @@ import { SERVICE_PLATES, type ServicePlateId } from "./servicePlateData";
 
 /** Preferred drawer width (px); shrinks to fit the viewport margin. */
 const DRAWER_W = 440;
+/** Never narrower than this — below it the spec grid stops being readable. */
 const DRAWER_MIN = 300;
 /** Minimum breathing room between the grown plate and the overlay edges. */
 const EDGE_MARGIN = 40;
@@ -58,21 +59,34 @@ interface Rect {
   h: number;
 }
 
-type DrawerSide = "right" | "left";
-
 interface Seat {
-  /** The card's own rect (the face replica's footprint). */
+  /** The card's TRUE rect — the face replica's footprint at the swap frame.
+   *  Never shifted, or the replica would not cover the card it replaces. */
   card: Rect;
-  /** The full open rect: card + drawer, side-aware. */
+  /** The open rect: card + drawer, slid left only if the drawer would
+   *  otherwise overflow the viewport. */
   plate: Rect;
-  side: DrawerSide;
   drawerW: number;
 }
 
 /**
  * Derive the seat from the card's projected anchor (host-local). Pure —
- * called at open, at close, and per frame while tracking. The drawer opens
- * toward whichever side has room; the CARD NEVER MOVES.
+ * called at open, at close, and per frame while tracking, so it MUST be a
+ * deterministic function of (origin, anchor) alone.
+ *
+ * The drawer ALWAYS extends RIGHT (owner, 2026-07-26: it was appearing on
+ * either side). Two reasons beyond consistency:
+ *   · Reading order — the card is the identity, the spec reads after it.
+ *   · A side chosen from live measurements is not stable: the front card's x
+ *     and width both change with the ring's rotation and pointer-look, so
+ *     the side flipped between opens AND could differ between this function
+ *     and the frozen `data-side` attribute the CSS keyed off — which would
+ *     jump the plate sideways mid-open. With one fixed side that entire
+ *     class of bug is gone.
+ *
+ * When the drawer will not fit, the plate slides LEFT by the deficit rather
+ * than flipping. The card translates, but always in the same direction and
+ * only as far as it must.
  */
 function deriveSeat(origin: DOMRect, anchor: RingCardAnchor | undefined): Seat {
   const fallbackW = Math.min(460, origin.width - EDGE_MARGIN * 2);
@@ -86,18 +100,18 @@ function deriveSeat(origin: DOMRect, anchor: RingCardAnchor | undefined): Seat {
         y: (origin.height - fallbackH) / 2,
       };
 
-  const roomRight = origin.width - EDGE_MARGIN - (card.x + card.w);
-  const roomLeft = card.x - EDGE_MARGIN;
-  const side: DrawerSide = roomRight >= DRAWER_MIN || roomRight >= roomLeft ? "right" : "left";
-  const room = side === "right" ? roomRight : roomLeft;
-  const drawerW = Math.max(DRAWER_MIN, Math.min(DRAWER_W, room));
+  const rightEdge = origin.width - EDGE_MARGIN;
+  const roomRight = rightEdge - (card.x + card.w);
+  const drawerW = Math.min(DRAWER_W, Math.max(DRAWER_MIN, roomRight));
+  // Slide left only by what the drawer overruns, and never past the margin.
+  const overflow = Math.max(0, card.x + card.w + drawerW - rightEdge);
+  const plateX = Math.max(EDGE_MARGIN, card.x - overflow);
 
-  const plate: Rect =
-    side === "right"
-      ? { x: card.x, y: card.y, w: card.w + drawerW, h: card.h }
-      : { x: card.x - drawerW, y: card.y, w: card.w + drawerW, h: card.h };
-
-  return { card, plate, side, drawerW };
+  return {
+    card,
+    plate: { x: plateX, y: card.y, w: card.w + drawerW, h: card.h },
+    drawerW,
+  };
 }
 
 interface ServiceOpenPlateProps {
@@ -329,7 +343,6 @@ export function ServiceOpenPlate({ serviceId, onClose }: ServiceOpenPlateProps) 
           ref={plateRef}
           className="svc-open__plate"
           data-stage={open ? "open" : "face"}
-          data-side={seat.side}
           aria-label={`${plate.chip} — details`}
           style={
             {
