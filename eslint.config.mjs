@@ -68,6 +68,16 @@ const config = [
       ],
     },
   },
+  {
+    // Verbatim img2threejs output, checked in for provenance and regenerated
+    // rather than edited (see components/brand/Remnant3D/generated/README.md).
+    // Linting it would only pressure us to hand-patch a file whose whole value
+    // is being a faithful record of what the generator produced.
+    files: ["components/brand/Remnant3D/generated/**"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 ];
 
 export default config;

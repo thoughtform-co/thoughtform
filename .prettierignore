@@ -16,6 +16,11 @@ yarn.lock
 *.tsbuildinfo
 next-env.d.ts
 
+# Verbatim img2threejs output — kept byte-faithful for provenance and
+# regenerated rather than edited. Formatting it would defeat the point of
+# checking it in. See components/brand/Remnant3D/generated/README.md.
+components/brand/Remnant3D/generated/
+
 # Public assets
 public/
 
