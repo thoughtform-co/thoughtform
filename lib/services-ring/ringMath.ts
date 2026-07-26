@@ -311,6 +311,76 @@ export const RING_EDGE_GLINT_OPACITY = 0.42;
 /** Behind-card halo opacity (front-weighted; ~0 on side/back cards). */
 export const RING_GLOW_OPACITY = 0.16;
 
+/* ── ADR-050 rev 3: the in-canvas drawer ───────────────────────────────────
+ * The open state is a SECOND card-sized slab that slides out from behind the
+ * card, inside the same per-card group. Three earlier revisions put the open
+ * state in the DOM and each read as "switching to another component" — a flat
+ * DOM rect cannot be a perspective-projected, pointer-tilted, bloomed slab.
+ * In card-local space the drawer inherits the rig, the facing yaw and the
+ * bounded sway for free, so the pair is one entity by construction.
+ */
+
+/** Overlap between the card and its drawer at full open — the drawer stops
+ *  just short of a full card width so the two slabs still read as joined at
+ *  a seam rather than as two abutting tiles. Card-local units. */
+export const DRAWER_SEAM = 0.02;
+
+/** Damp rate (per second) for the drawer's open/close level. */
+export const DRAWER_DAMP_RATE = 7;
+
+/** The drawer's own opacity ramp completes by this much of the open level —
+ *  early enough that it finishes while the drawer is still fully covered by
+ *  the card face, so nothing is ever seen fading (ADR-050's no-crossfade
+ *  contract). See the anti-ghost note in ServicesCardRing's frame loop. */
+export const DRAWER_REVEAL_FRAC = 0.15;
+
+/**
+ * Intra-card renderOrder slots. Explicit because distance-sorting
+ * near-coplanar transparents flickers, and because three.js orders the
+ * transparent list STRICTLY by renderOrder before depth.
+ *
+ * The card's own slots are the ADR-029 Update-1 anatomy. The DRAWER's three
+ * slots sit between the card's glint (0.05) and its face (0.1) — deliberately
+ * POSITIVE: the orbit track lines render at 0, so a negative-slot drawer
+ * would have gold track dashes painted over its text (drawing at 0.1 is
+ * exactly how the card face defends against that). At 0.06–0.08 the drawer
+ * paints over the glass and the tracks but under the card face, so it reads
+ * as emerging THROUGH the card's bezel.
+ *
+ * The whole live span must stay below `DECK_RENDER_PITCH` (aboutDeckMath), or
+ * the #about deck's per-slot renderOrder rebase would interleave two cards.
+ */
+export const RING_CARD_RENDER_ORDERS = {
+  glow: -0.1,
+  slab: 0,
+  glint: 0.05,
+  content: 0.1,
+  back: 0.11,
+  veil: 0.12,
+} as const;
+
+export const DRAWER_RENDER_ORDERS = {
+  slab: 0.06,
+  content: 0.07,
+  glint: 0.08,
+} as const;
+
+/** Drawer's local +x offset at open level `t`. Identity at 0 (byte-identical
+ *  closed state), `cardW − seam` at 1. Pure. */
+export function drawerSlideX(t: number, cardW: number, seam: number = DRAWER_SEAM): number {
+  return clamp01(t) * (cardW - seam);
+}
+
+/** How far the CARD slides left so the open pair stays centred on the
+ *  brandmark (owner's composition call). Half the drawer's visible extent,
+ *  expressed in the RING group's units — hence `× cardScale`, because the
+ *  drawer's extent is card-local and inherits `cardGroup.scale`, while the
+ *  card's position is set in ring-group space. The ring group's own scale
+ *  cancels (it multiplies positions and extents alike). Pure. */
+export function drawerRecenterX(t: number, cardW: number, seam: number, cardScale: number): number {
+  return (clamp01(t) * (cardW - seam) * cardScale) / 2;
+}
+
 /** Track draw-on windows lead the card entrance windows by this much
  *  (dissipate units) so each orbit line is on screen just before its
  *  card flies in along it. */

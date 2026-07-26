@@ -67,6 +67,16 @@ export interface RingCardAnchor {
   visible: boolean;
   /** True for the card currently facing the camera. */
   front: boolean;
+  /**
+   * Screen rect of this card's in-canvas DRAWER (ADR-050 rev 3), present only
+   * while the drawer is out. The drawer's text is baked, so this rect is what
+   * the DOM layer maps the drawer's real CTA / close shims onto — the same
+   * contract `RING_CARD_CTA_BOX` has with the card face.
+   *
+   * A separate rect rather than a widened `w`: the drawer has its own yaw and
+   * foreshortening, so its projection is NOT a linear extension of the card's.
+   */
+  drawer?: { x: number; y: number; w: number; h: number };
 }
 
 interface HologramConnectorState {

@@ -49,6 +49,12 @@ import {
   depthWriteGate,
   entranceEnvelope,
   frontPoseBias,
+  DRAWER_SEAM,
+  DRAWER_REVEAL_FRAC,
+  DRAWER_RENDER_ORDERS,
+  RING_CARD_RENDER_ORDERS,
+  drawerSlideX,
+  drawerRecenterX,
   type RingSpringState,
 } from "@/lib/services-ring/ringMath";
 
@@ -648,6 +654,93 @@ describe("depthWriteGate hysteresis", () => {
     expect(depthWriteGate(true, inside)).toBe(true);
     expect(depthWriteGate(false, inside)).toBe(false);
     expect(depthWriteGate(true, RING_DEPTH_WRITE_OFF_NZ - 0.01)).toBe(false);
+  });
+});
+
+describe("drawer slide + recenter (ADR-050 rev 3)", () => {
+  const cardW = 0.877059;
+
+  it("drawerSlideX is identity closed and a card-width-minus-seam open", () => {
+    expect(drawerSlideX(0, cardW)).toBe(0);
+    expect(drawerSlideX(1, cardW)).toBeCloseTo(cardW - DRAWER_SEAM, 12);
+  });
+
+  it("drawerSlideX is monotone and clamped outside 0..1", () => {
+    let prev = -Infinity;
+    for (let t = 0; t <= 1.0001; t += 0.05) {
+      const x = drawerSlideX(t, cardW);
+      expect(x).toBeGreaterThanOrEqual(prev);
+      prev = x;
+    }
+    // Clamped: overshoot cannot push the drawer past its seated extent, and
+    // a negative level cannot pull it left through the card.
+    expect(drawerSlideX(1.4, cardW)).toBeCloseTo(cardW - DRAWER_SEAM, 12);
+    expect(drawerSlideX(-0.4, cardW)).toBe(0);
+  });
+
+  it("drawerRecenterX is zero closed and HALF the drawer extent open", () => {
+    // Identity closed is the byte-identical guarantee for the shipped ring.
+    expect(drawerRecenterX(0, cardW, DRAWER_SEAM, 1.06)).toBe(0);
+    // Open: the pair's centre of mass shifts by half the visible extent, so
+    // the card slides exactly that far left to stay centred on the mark.
+    const scale = 1.06;
+    expect(drawerRecenterX(1, cardW, DRAWER_SEAM, scale)).toBeCloseTo(
+      ((cardW - DRAWER_SEAM) * scale) / 2,
+      12
+    );
+  });
+
+  it("drawerRecenterX scales with the card group scale", () => {
+    // The drawer's extent is card-LOCAL, so it inherits cardGroup.scale; the
+    // card's position is set in ring-group space. Doubling the card scale
+    // must double the recenter, or a boosted front card under-recenters.
+    const a = drawerRecenterX(1, cardW, DRAWER_SEAM, 0.5);
+    const b = drawerRecenterX(1, cardW, DRAWER_SEAM, 1);
+    expect(b).toBeCloseTo(a * 2, 12);
+  });
+
+  it("the drawer's reveal ramp completes while still behind the card", () => {
+    // The ramp exists only to keep the drawer from ghosting through the
+    // card's sub-1.0 face alpha. It must finish well before the drawer's
+    // leading edge clears the card, or a fade becomes visible on screen.
+    const clearFrac = DRAWER_SEAM / cardW; // level at which the edge emerges
+    expect(DRAWER_REVEAL_FRAC).toBeGreaterThan(clearFrac);
+    expect(DRAWER_REVEAL_FRAC).toBeLessThan(0.5);
+  });
+});
+
+describe("renderOrder slots (ADR-050 rev 3)", () => {
+  it("seats the drawer between the card's glint and its face", () => {
+    // Positive slots, above the orbit tracks (renderOrder 0) so track ink is
+    // never painted over the drawer, and below the face so the card covers
+    // the drawer while it is housed.
+    expect(DRAWER_RENDER_ORDERS.slab).toBeGreaterThan(RING_CARD_RENDER_ORDERS.glint);
+    expect(DRAWER_RENDER_ORDERS.glint).toBeLessThan(RING_CARD_RENDER_ORDERS.content);
+    expect(DRAWER_RENDER_ORDERS.slab).toBeGreaterThan(0);
+    expect(DRAWER_RENDER_ORDERS.slab).toBeLessThan(DRAWER_RENDER_ORDERS.content);
+    expect(DRAWER_RENDER_ORDERS.content).toBeLessThan(DRAWER_RENDER_ORDERS.glint);
+  });
+
+  it("does not widen the intra-card span, so the deck rebase is unaffected", () => {
+    // The #about deck rebases renderOrder per slot in DECK_RENDER_PITCH
+    // steps. NOTE the card's OWN span already exceeds the pitch
+    // (glow −0.1 → veil 0.12 = 0.22 > 0.16), so slot N's glow already
+    // interleaves with slot N−1's veil today — tolerated only because the
+    // glow is damped to ~0 during the deck (stack.glowMul). That is
+    // pre-existing and out of scope here; what MUST hold is that the drawer
+    // does not make it worse, i.e. its slots nest inside the card's range.
+    const card = Object.values(RING_CARD_RENDER_ORDERS);
+    const drawer = Object.values(DRAWER_RENDER_ORDERS);
+    const cardSpan = Math.max(...card) - Math.min(...card);
+    const bothSpan = Math.max(...card, ...drawer) - Math.min(...card, ...drawer);
+    expect(bothSpan).toBeCloseTo(cardSpan, 12);
+    for (const slot of drawer) {
+      expect(slot).toBeGreaterThan(Math.min(...card));
+      expect(slot).toBeLessThan(Math.max(...card));
+    }
+    // And the drawer never collides with an existing slot (exact ties would
+    // fall back to depth sorting, which flickers on near-coplanar planes).
+    expect(new Set([...card, ...drawer]).size).toBe(card.length + drawer.length);
   });
 });
 

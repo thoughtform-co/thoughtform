@@ -26,3 +26,25 @@ export const RING_CARD_CTA_BOX = {
   w: (BAKE_W - PAD_X * 2) / BAKE_W,
   h: CTA_H / BAKE_H,
 } as const;
+
+/* ── ADR-050 rev 3: the in-canvas DRAWER face ──────────────────────────────
+ * The drawer is a second slab that slides out from behind the card, baked at
+ * the SAME dimensions as the card face so it shares the plane geometry and
+ * the bake/DOM parity arithmetic. Its text is baked like every other card
+ * face; these two boxes are the only interactive regions, mapped onto the
+ * drawer's own projected rect by `ServicesRingHitAreas`.
+ */
+
+/** Close affordance — a square chit in the drawer's top-right. */
+export const DRAWER_CLOSE_SIZE = 56;
+export const DRAWER_CLOSE_INSET = 34;
+export const DRAWER_CLOSE_BOX = {
+  x: (BAKE_W - DRAWER_CLOSE_INSET - DRAWER_CLOSE_SIZE) / BAKE_W,
+  y: DRAWER_CLOSE_INSET / BAKE_H,
+  w: DRAWER_CLOSE_SIZE / BAKE_W,
+  h: DRAWER_CLOSE_SIZE / BAKE_H,
+} as const;
+
+/** The drawer's CTA strip — same geometry as the card's, so the two read as
+ *  one control family across the open pair. */
+export const DRAWER_CTA_BOX = RING_CARD_CTA_BOX;

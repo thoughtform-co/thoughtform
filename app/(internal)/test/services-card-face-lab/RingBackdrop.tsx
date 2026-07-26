@@ -46,9 +46,12 @@ interface RingBackdropProps {
    *  the ring itself reads the module ref per WebGL frame. */
   progress: number;
   faceVariant: CardFaceVariant;
+  /** ADR-050 rev 3: mount the in-canvas drawer (V2 only). Its open/closed
+   *  state comes from `openPlateRef`, written by the lab shell. */
+  openDrawer: boolean;
 }
 
-export default function RingBackdrop({ progress, faceVariant }: RingBackdropProps) {
+export default function RingBackdrop({ progress, faceVariant, openDrawer }: RingBackdropProps) {
   // ADR-047's about clock stays parked: the deck flip is not part of this
   // study, and the ring's rest pose needs `engaged: false`.
   const aboutRef = useRef<AboutStageProgress>({ progress: 0, engaged: false });
@@ -98,6 +101,7 @@ export default function RingBackdrop({ progress, faceVariant }: RingBackdropProp
             aboutProgressRef={aboutRef}
             entrance="off"
             faceVariant={faceVariant}
+            openDrawer={openDrawer}
             publishAnchors
           />
         </ServicesHologramScene>

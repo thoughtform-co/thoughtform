@@ -1,14 +1,21 @@
 # ADR-050: Services card face — tight rest state, expand-to-spec open plate
 
-**Date:** 2026-07-26
+**Date:** 2026-07-26 (rev 3)
 **Status:** Proposed (lab built, variant not yet promoted to production)
 **Scope:** `components/landing/home-v2/services/hologram/ServicesCardRing.tsx`
-(`bakeCardFace` + `faceVariant`),
-`components/landing/home-v2/services/ServiceOpenPlate.tsx` (new),
-`components/landing/home-v2/services/ServicesRingHitAreas.tsx` (`onOpenFront`),
+(`bakeCardFace` + `faceVariant`, `bakeDrawerFace` + `openDrawer`, the drawer
+children + frame-loop channel), `lib/services-ring/ringMath.ts` (drawer math +
+renderOrder slots), `lib/services-ring/openPlateRef.ts`,
+`components/landing/home-v2/services/hologram/ringCtaBox.ts` (drawer boxes),
+`components/landing/home-v2/services/ServicesRingHitAreas.tsx` (drawer shims),
 `components/landing/home-v2/services/servicePlateData.ts` (`ServiceSpec`,
-`breakdown`), `components/landing/home-v2/services/services.css`
-(`.svc-open` block), `app/(internal)/test/services-card-face-lab/`.
+`breakdown`), `lib/stores/hologramConnectorStore.ts` (`RingCardAnchor.drawer`),
+`app/(internal)/test/services-card-face-lab/`.
+
+**Rev history:** rev 1 crossfaded a DOM plate over the card; rev 2 dimmed the
+canvas behind it; rev 2b buffer-swapped a pixel-parity DOM replica. All three
+were rejected by the owner. Rev 3 moves the open state INTO the canvas and
+deletes `ServiceOpenPlate.tsx` and the `.svc-open` CSS block entirely.
 
 ## Context
 
@@ -57,99 +64,123 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
    pushing the affordance off the card (worst case verified: Keynote at a
    two-line title over a three-line lede).
 
-2. **The open state is a BUFFER SWAP plus a mechanical transform — never a
-   crossfade.** ADR-029's red-alert guardrail (2026-07-10) forbids a card
-   plus a console; the owner then rejected two softer cheats in turn: the
-   whole-canvas dim ("this is one entity... it should pop open, not
-   introduce a new component") and the rev-1 damped card-fade under a
-   growing plate ("without any cheating like cross fades"). Rev 2:
-   - `ServiceOpenPlate` mounts a **pixel-parity DOM replica** of the tight
-     baked face on the card's live rect at FULL opacity (every CSS metric is
-     the bake ÷ 2 — the parity contract exists for exactly this; the shell
-     stays the bake's 168°, not rev 1's 225°, for the same reason).
-   - One **painted** frame later (double-rAF + an 80ms hidden-document
-     fallback) the WebGL card **SNAPS off** via `openPlateRef` (cross-root
-     module-ref bridge). No damp: the replica already covers it, so the swap
-     is invisible. The rev-1 `PLATE_HIDE_DAMP_RATE` is deleted — do not
-     reintroduce a rate there.
-   - Then the plate's WIDTH transitions and the spec DRAWER is **uncovered
-     by the moving edge**. Geometry reveals the content; **nothing on the
-     entity ever animates opacity** (verified: the plate's computed opacity
-     is `1` on every sampled frame of the open, while width runs 398px →
-     838px). Division of labour holds: the card half is the SCREEN (opaque
-     void + photo feed, as baked), the drawer is the GLASS (backdrop-blur).
-   - The drawer ALWAYS extends **right** (owner, 2026-07-26: it was landing
-     on either side). A side chosen from live measurements is not stable —
-     the front card's x and width both move with the ring's rotation and
-     pointer-look, so it flipped between opens, and because the follow loop
-     re-derives every frame it could disagree with the frozen `data-side`
-     attribute and jump the plate sideways mid-open. One fixed side deletes
-     that class of bug; `deriveSeat` is now a deterministic function of
-     (origin, anchor) alone. When the drawer will not fit, the plate slides
-     LEFT by the deficit instead of flipping (measured ≈74px at 1600×1000 —
-     the card barely moves). The right bound is the station content box, NOT
-     the viewport: `--hud-content-inset` reserves ~161px per side, and a
-     drawer past it would run under the right-rail register.
+2. **The open state is IN CANVAS: a second slab of the same device.** Three
+   DOM revisions each failed the same way, and the root cause was
+   architectural, not cosmetic — the closed card is a WebGL slab and the open
+   state was DOM:
+   - rev 1 crossfaded the two;
+   - rev 2 dimmed the whole canvas behind a DOM plate — the owner read it
+     immediately as two entities ("this is one entity... it should pop open,
+     not introduce a new component");
+   - rev 2b synchronised a buffer swap behind a pixel-parity DOM replica and
+     the owner still called it ("why can't you just transform the closed card
+     into the full card without any cheating like cross fades"). He was
+     right: a flat DOM rectangle cannot BE a perspective-projected,
+     pointer-tilted, bloomed, dot-veiled slab, so the silhouette changes
+     shape at the swap no matter how well the pixels are matched.
 
-   The hidden card **keeps projecting and publishing its rect** (`opacity`
-   in the ring loop stays the logical value; materials get `× shown`), the
-   depthWrite gate keys on effective opacity so the invisible card never
-   occludes the particle pass, and close plays it backwards: drawer
-   retracts onto the card's LIVE rect, the card snaps back on, the replica
-   unmounts a frame later (rendering by `lastIdRef` through the close is
-   what lets the retract play at all).
+   **Rev 3.** Each card group gains a DRAWER — a card-sized slab sharing the
+   card's own `slabGeometry` / `glintGeometry` — that slides out along
+   card-local **+x**. Because it lives in card-local space it inherits the
+   rig, the facing yaw, the pointer-look and the bounded sway _for free_: the
+   pair is one entity by construction rather than by synchronisation. No
+   swap, no replica, no DOM plate. `ServiceOpenPlate` and the entire
+   `.svc-open` CSS block are DELETED, and with them the rev-2 `plateHideRef`
+   channel — **nothing hides the card any more; that hide WAS the crossfade.**
 
-   DOM rather than a second bake because baked canvas text cannot reflow and
-   is not selectable, linkable, or reachable by a screen reader — which is
-   already why the front card needs a fake `<a>` shimmed over
-   `RING_CARD_CTA_BOX`. A spec grid plus CTA would have needed several more
-   such shims.
+   This also restores ADR-029's original guardrail in full ("the card is ONE
+   object; the DOM only places hit targets"). The DOM plate was the deviation.
 
-3. **The plate is a device slab, not a panel.** Matching the ring card's
-   material is load-bearing for the swap to be invisible: extruded thickness
-   (offset chamfer-clipped layer with a gold lip), the bake's own 168° shell
-   gradient, the photo as a **dot-matrix feed** at the bake's exact alphas
-   (soft ghost 0.3 + the image through the 4px mask at 0.62 — never dark
-   dots over a clean photo), and an edge glint. Rev 1's 9px glass bezel and
-   225° shell are gone — both made the replica visibly differ from the baked
-   card at the swap frame.
+   Choreography: the card **recenters** (eases left by half the drawer's
+   extent, `drawerRecenterX`) so the open pair stays centred on the
+   brandmark; the held 3/4 pose **flattens** as it opens (`biasKeep`), because
+   card-local +x is the receding axis under that bias and a foreshortened
+   spec grid stops reading — the device turning to face you. Pointer-look
+   survives the flatten, so ADR-021 holds. Close plays it backwards; the deck
+   force-closes.
 
-4. **Content follows the proposal grammar**, minus `03 / WHO` (that is
-   `#about`): `01 / WHAT` = lede + `breakdown[]`; `02 / HOW` = `ServiceSpec`
+   Text is BAKED, like every other card face (owner's call). Its
+   interactivity therefore lives in `ServicesRingHitAreas`, off a **second
+   published rect** — `RingCardAnchor.drawer`, projected from the drawer's own
+   mesh, because the drawer carries its own yaw and foreshortening and is NOT
+   a linear extension of the card's rect. Shims: a real `<a>` on
+   `DRAWER_CTA_BOX`, a `<button>` on `DRAWER_CLOSE_BOX`, `aria-expanded` on
+   the front-card hit, and an sr-only block carrying the baked copy.
+
+3. **Anatomy + renderOrder.** Three children APPENDED after the veil so
+   existing indices 0–5 stay stable (the deck's rebase is positional over
+   `cardGroup.children`): drawer slab `0.06`, content `0.07`, glint `0.08`,
+   with content at `cardContentZ − 0.02` so it emerges from _under_ the face.
+
+   The slots are **positive on purpose**. three.js orders transparents
+   strictly by renderOrder before depth, and the orbit track `Line`s render at
+   0 — a negative-slot drawer gets gold track dashes painted over its text
+   (drawing at 0.1 is precisely how the card face defends against that). At
+   0.06–0.08 the drawer paints over glass and tracks but under the face, so
+   the card covers it while housed. Slots are named constants
+   (`DRAWER_RENDER_ORDERS`, `RING_CARD_RENDER_ORDERS`) in three-free
+   `ringMath`, unit-pinned to nest inside the card's range and never collide.
+
+   ⚠ Writing this test surfaced a **pre-existing** condition worth recording:
+   the card's own span already exceeds `DECK_RENDER_PITCH` (glow −0.1 → veil
+   0.12 = 0.22 > 0.16), so slot N's glow already interleaves with slot N−1's
+   veil during the deck. It is invisible only because the glow is damped to
+   ~0 there (`stack.glowMul`). Out of scope, but do not assume the pitch is
+   respected today.
+
+4. **The two anti-ghost guards** — both required, both invisible, and both
+   easy to mistake for stray fades:
+   - The card face never reaches alpha 1 (`RING_OPACITY_RANGE` tops at 0.9),
+     so a housed drawer would bleed ~10% of its own text through every card.
+     The face therefore firms **0.9 → 1.0** as `drawerT` rises — the same
+     entity solidifying as it activates.
+   - The drawer's own opacity ramps over `DRAWER_REVEAL_FRAC` (0.15) and its
+     group is `visible = false` while shut. The ramp completes while the
+     drawer is still entirely behind the face, so nothing is ever _seen_
+     fading — unit-pinned to finish before the leading edge clears the card.
+
+   ⚠ Deleting either guard reintroduces the ghost. They are the ONLY places
+   the drawer touches opacity.
+
+5. **Depth-write discipline.** The drawer content material takes the card's
+   **elected** `write` boolean — never its own gate. Two independent gates
+   could both elect on one card, and an un-elected near-opaque drawer writing
+   depth would occlude the renderOrder-1 particle pass as an invisible
+   rectangle. The drawer draws first (0.07) and is farther in z, so the face
+   still passes LEQUAL behind it. Its glass/glint stay `depthWrite: false`
+   like the card's.
+
+6. **Deck safety.** `drawerLevelRef` is **snapped to 0** the frame
+   `deckEngaged` goes true, not left to decay: the recenter term lives in the
+   normal branch only, so a fast scroll reaching the stack branch with a
+   still-damping level would hand off between a shifted and an unshifted pose
+   — a positional snap. (The `flipDamp` engage-snap precedent.)
+
+7. **Hover.** An open card is force-marked `hovered` at the pick site, since
+   its drawer extends well outside the card's own rect. Without it the veil
+   re-fogs _and_ the tilt slumps the instant the pointer moves onto the
+   drawer — exactly while the user reaches for its CTA. Both channels read
+   `hovered`, so one line fixes both.
+
+8. **Content follows the proposal grammar**, minus `03 / WHO` (that is
+   `#about`): `01 / WHAT` = the `breakdown[]`; `02 / HOW` = `ServiceSpec`
    (duration, participants, format, language, leavesWith). **No price field**
    (owner, 2026-07-25): duration and group size filter enough for a first
-   conversation; money stays in the proposal.
+   conversation; money stays in the proposal. The lede stays on the CARD face
+   (rev 3) rather than repeating in the drawer.
 
-5. **Dismissal is close-on-scroll** (plus `×` and Escape). Scroll owns which
-   card is front across the 500svh runway, so a surviving plate would sit
-   still while the ring rotated behind it. This keeps `useServicesStageScroll`
-   the single scroll writer instead of scroll-locking a scroll-driven
-   corridor. Anchors are read imperatively via `getState()` — subscribing to
-   `ringAnchors` would re-render the spec sheet at frame rate.
+9. **Dismissal.** `openPlateRef`'s single writer is now `CardFaceLabShell`
+   (the DOM plate that owned it is deleted). Escape and the baked `✕` shim
+   close; the lab also closes on any ring-progress change. The lab
+   deliberately adds **no scroll/wheel listener** — it dispatches a synthetic
+   `scroll` on every slider move, which such a listener could not tell from a
+   real user scroll. Runway-driven dismissal belongs in `ServicesStage` at
+   promotion, where a real scroll owner exists.
 
-6. **The plate inherits the rig's motion by RIDING the hidden card's live
-   rect** (owner, 2026-07-26 — it "should inherit the behaviour of the closed
-   card in terms of how it's orbiting / aligned with the brandmark"). Once
-   the grow completes the plate switches to `data-tracking` (geometry
-   transitions off — a transition would drag every frame-write out over the
-   grow duration) and a rAF loop follows the live published rect each frame
-   with a light damp (`delta · 10`; the source is already rig-damped, this
-   only smooths publish quantisation). Because the rect is the card's real
-   projection, the plate carries the rig's pointer-look, the bounded ADR-021
-   sway, and the facing-width breathing — measured ≈98px of sweep between
-   pointer corners at 1600×1000 — rather than mirroring an approximation.
-   A small rotation tilt rides on top (the rect cannot carry rotation):
-   the rig's own formula (`yaw = nx · amp`, `pitch = −ny · amp · 0.6`,
-   `delta · 4` damp) at `LOOK_AMP` 0.045 rad vs the rig's 0.12 — the plate
-   is a far larger object, an equal angle would smear a spec sheet.
-   Everything is written straight onto the element (styles + custom props),
-   never through React state — a setState would re-render the whole spec
-   sheet at frame rate. Still no wall-clock term anywhere: ADR-021 holds.
-
-7. **Lab:** `/test/services-card-face-lab` (`?v=v0|v1|v2`, `?p=`), forked from
-   `/test/services-anchor-lab` and inheriting its camera **calibration against
-   the live corridor's published hit rects** (`CAM_DIST 2.95`, `RIG_Y −0.21`,
-   scale 0.62) — the reason lab card geometry matches production.
+10. **Lab:** `/test/services-card-face-lab` (`?v=v0|v1|v2`, `?p=`), forked from
+    `/test/services-anchor-lab` and inheriting its camera **calibration against
+    the live corridor's published hit rects** (`CAM_DIST 2.95`, `RIG_Y −0.21`,
+    scale 0.62) — the reason lab card geometry matches production.
 
 ## Alternatives considered
 
@@ -167,19 +198,32 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
 - **Copy-only tightening** (delete the meta row, keep everything else).
   Cheapest, and partly what shipped inside `tight` — but it leaves the
   qualification gap unaddressed.
-- **A second wide bake instead of a DOM plate.** Rejected: no reflow, no
-  selectable text, and every interactive element needs a projected shim.
+- **Keeping the open state in the DOM** (revs 1, 2, 2b). Rejected by the
+  owner three times, and the reason is structural: a flat DOM rect cannot be
+  a perspective-projected, tilted, bloomed slab, so however well the pixels
+  are matched the silhouette changes shape at the handoff. Its one real
+  advantage — selectable, reflowing text — was traded away deliberately
+  (baked text + hit shims + sr-only copy) to buy "one entity".
+- **Hinging the drawer** at its own yaw so it always faces the camera.
+  Rejected: it would stop being rigid with the card, which is the whole
+  point. The pose FLATTENS instead, so the pair turns to face you together.
 
 ## Open questions (why this is Proposed)
 
-- Which variant is promoted: `v1` (tight face only) or `v2` (tight + plate).
-- The plate is face-on and flat; the ring cards get part of their depth from
-  real perspective. A slight `rotateY` would close the gap at the cost of text
-  crispness — untried.
+- Which variant is promoted: `v1` (tight face only) or `v2` (tight + drawer).
+- **Promotion checklist**, none of it done: flip `faceVariant` to `"tight"` and
+  pass `openDrawer` in `CorridorArmillary`; wire `onOpenFront` /
+  `onCloseDrawer` in `ServicesStage` with real scroll dismissal; rewrite the
+  smoke spec's front-card CTA assertion (it asserts the narrow `<a>` that the
+  tight face no longer bakes); decide EAGER vs LAZY drawer bakes (eager costs
+  ~18 MB of texture for four faces most visitors never open).
+- The card face keeps its baked `OPEN →` chit while the drawer is out. It is
+  baked, so hiding it needs a second face bake — currently it reads as a state
+  label, which is tolerable but not intentional.
+- The drawer's spec ink sits slightly dimmer than the card's copy. Untuned.
 - **Downstream:** the same four cards become the `#about` deck (ADR-047, plus
   a fifth `bakePortraitBack` face). A tight face changes what the deck looks
-  like as it flips — verified as still reading, but it is a deliberate
-  consequence to accept, not a side effect to ignore.
+  like as it flips — verified as still reading, but a deliberate consequence.
 - `serviceData.ts` (`SERVICES`) and `servicePlateData.ts` (`SERVICE_PLATES`)
   still duplicate title/tagline/cta under a hand-maintained "keep in lockstep"
   comment. Deliberately **not** merged here — `SERVICES` has 20+ consumers
@@ -188,36 +232,44 @@ ADR-047 deck are byte-identical until the default is deliberately flipped.
 
 ## Verification
 
-- `npm run verify` green (350 unit tests). `ringMath` untouched, so
-  `services-ring-math` (21) and `about-deck-math` stand as regression fences.
-- Headed real-GPU capture of `?v=v0|v1|v2` at 1600×1000 (the calibration
-  size); worst-case copy lengths (Keynote, Workshop) captured cropped.
-- Production re-verified after every pass: front card still carries the CTA
-  `<a href="#contact">`, no `.svc-open` layer mounted at all, `#about` still
-  `data-about-mode="stage"`, zero console errors.
-- Canvas-boundary check: `WEBGL_lose_context` forced on the lab canvas leaves
-  the masthead, console and hit targets alive (see the BEST-PRACTICES note —
-  `ssr: false` alone does not deliver this).
+- `npm run verify` green — **357** unit tests (7 new: drawer slide/recenter
+  identities + monotonicity + clamping, the reveal-ramp-completes-under-cover
+  invariant, and the renderOrder nesting/collision contract).
+- Headed real-GPU acceptance at 1600×1000 (the calibration size):
+  - **Zero drawer ghost** at all five parks — no drawer rect published, no
+    sr-only block, `aria-expanded="false"`. This is the blocking-flaw fence.
+  - Open: the drawer's rect grows out of the card's right edge; the card
+    recenters ≈200px left; 5 hit targets live (card + drawer CTA + close +
+    two side cards); sr-only copy present.
+  - Pointer sweep: card and drawer move together as a rigid pair (they pivot
+    about the CARD's centre, so the drawer swings rather than translating —
+    correct rigid-body behaviour, not a tracking failure).
+  - Close via Escape: drawer rect and sr-only block gone,
+    `aria-expanded="false"`, card back at its closed rect.
+  - Zero console errors throughout.
+- Production re-verified: front card still carries the CTA `<a href="#contact">`,
+  no drawer bake fetched, `#about` still `data-about-mode="stage"`, zero errors.
+- Canvas-boundary check (rev 2, still valid): `WEBGL_lose_context` on the lab
+  canvas leaves the masthead, console and hit targets alive — `ssr: false`
+  alone does not deliver that (see the BEST-PRACTICES note).
 
 ## Guardrails
 
-- **The card stays ONE object.** The plate replaces the card at its own rect;
-  it must never sit beside a readable card (ADR-029, red alert 2026-07-10).
-- Add no wall-clock motion (ADR-021). At park the only motion is pointer-look
-  and the bounded decaying spring.
+- **The card stays ONE object, and NOTHING may hide it.** The open state is
+  its own drawer; the rev-2 `plateHideRef` channel is gone and must not
+  return — that hide was the crossfade (ADR-029 red alert, 2026-07-10).
+- Add no wall-clock motion (ADR-021). The only motions are the click-driven
+  slide, the rig's pointer-look, and the bounded spring.
+- **The two anti-ghost guards stay** (face 0.9→1.0, drawer ramp + visible
+  gate). Both complete under cover; deleting either reintroduces the ghost.
+- The drawer NEVER gets its own depthWrite gate — it takes the card's elected
+  boolean, or two writers can elect on one card.
+- Drawer renderOrder stays POSITIVE and nested inside the card's range; a
+  negative slot puts orbit-track ink over the drawer's text.
+- `DECK_INTRA_ORDERS` is positional over `cardGroup.children` and both rebase
+  loops are length-bounded — append children, and extend it in lockstep.
 - Never composite dark dots over a clean photo — the feed is the photo seen
   _through_ the mask, plus a ghost.
-- **Nothing may establish a new BACKDROP ROOT above the glass body**, or
-  `backdrop-filter` keeps reporting `blur(16px)` in computed style while
-  rendering nothing — the transparency read dies silently. `filter:
-drop-shadow` on an ancestor does exactly that, which is why the halo is an
-  unclipped layer behind the plate instead. The pointer-look's 3D transform
-  was measured and does **not** break it (crop A/B with
-  `backdrop-filter: none`: 38.7KB blurred vs 63.5KB unblurred). Re-run that
-  A/B before adding any `filter`, `mask`, or `opacity < 1` to the plate or its
-  ancestors — computed style will not warn you.
-- `--svc-open-dur` and `GROW_MS` must stay equal — the component clears its
-  seat on that timing.
 - Keep the ring mount gate and the services DOM gate the SAME media query.
 
 ## References

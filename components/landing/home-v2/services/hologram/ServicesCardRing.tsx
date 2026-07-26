@@ -53,7 +53,7 @@ import * as THREE from "three";
 
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
-import { BAKE_W, BAKE_H, PAD_X, CTA_H, CTA_Y0 } from "./ringCtaBox";
+import { BAKE_W, BAKE_H, PAD_X, CTA_H, CTA_Y0, DRAWER_CLOSE_BOX } from "./ringCtaBox";
 
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
@@ -95,6 +95,13 @@ import {
 } from "@/lib/services-ring/ringProgressRef";
 import { seatNdcFromRect, seatWorldHeight } from "@/lib/services-ring/viewportSeat";
 import {
+  DRAWER_DAMP_RATE,
+  DRAWER_RENDER_ORDERS,
+  DRAWER_REVEAL_FRAC,
+  DRAWER_SEAM,
+  RING_CARD_RENDER_ORDERS,
+  drawerRecenterX,
+  drawerSlideX,
   RING_CARD_ASPECT,
   RING_CARD_HEIGHT,
   RING_CONTENT_LIFT,
@@ -133,6 +140,7 @@ import {
   lerp,
   placeCardOnOrbit,
   ringRotationForProgress,
+  smootherstep,
   stepRingSpring,
   type RingSpringState,
 } from "@/lib/services-ring/ringMath";
@@ -148,12 +156,37 @@ const ANCHOR_PUBLISH_DISSIPATE = 0.88;
  *  conditional — see the useFrame comment. */
 const RESUME_IDLE_GAP_MS = 500;
 
-/** Intra-card renderOrder offsets in the per-card group's CHILDREN order
- *  — [glow, slab, glint, content, back, veil]. The JSX constants; also the
- *  offsets the deck's per-slot rebase adds to its base (glow is dead by
- *  the time the rebase engages, so its −0.1 never straddles a slot
- *  boundary; the live span 0..0.12 < DECK_RENDER_PITCH 0.16). */
-const DECK_INTRA_ORDERS = [-0.1, 0, 0.05, 0.1, 0.11, 0.12] as const;
+/**
+ * Intra-card renderOrder offsets in the per-card group's CHILDREN order —
+ * `[glow, slab, glint, content, back, veil, drawerSlab, drawerContent,
+ * drawerGlint]`. These are the JSX constants, and also the offsets the deck's
+ * per-slot rebase adds to its base (glow is dead by the time the rebase
+ * engages, so its −0.1 never straddles a slot boundary; the live span
+ * 0..0.12 < DECK_RENDER_PITCH 0.16).
+ *
+ * ⚠ POSITIONAL over `cardGroup.children`, and BOTH rebase loops are bounded
+ * by this array's length — a child appended in the JSX without an entry here
+ * keeps its JSX renderOrder while its siblings jump to `base + offset`, which
+ * breaks deck sorting ONLY during the #about flip (invisible in any lab that
+ * parks `aboutProgressRef` at 0). Keep the two in lockstep.
+ *
+ * ⚠ The back plane at index 4 is CONDITIONAL on `ABOUT_DECK_STAGE`; with the
+ * flag off the positional map shifts by one from there on. Harmless today
+ * because the rebase only ever runs deck-engaged, which requires that same
+ * flag — but it is a landmine if either gate ever changes. The drawer entries
+ * are last because appending keeps indices 0–5 stable.
+ */
+const DECK_INTRA_ORDERS = [
+  RING_CARD_RENDER_ORDERS.glow,
+  RING_CARD_RENDER_ORDERS.slab,
+  RING_CARD_RENDER_ORDERS.glint,
+  RING_CARD_RENDER_ORDERS.content,
+  RING_CARD_RENDER_ORDERS.back,
+  RING_CARD_RENDER_ORDERS.veil,
+  DRAWER_RENDER_ORDERS.slab,
+  DRAWER_RENDER_ORDERS.content,
+  DRAWER_RENDER_ORDERS.glint,
+] as const;
 
 /* ── Card-face bake ─────────────────────────────────────────────────────── */
 
@@ -737,6 +770,190 @@ function bakeCardFace(
   return canvas;
 }
 
+/**
+ * The DRAWER face (ADR-050 rev 3) — the open state's content, baked at the
+ * card's own dimensions so it shares the plane geometry and the bake/DOM
+ * parity arithmetic.
+ *
+ * This is the whole reason the open state moved into the canvas: three
+ * earlier revisions put it in the DOM and every one read as "switching to
+ * another component", because a flat DOM rect cannot be a
+ * perspective-projected, pointer-tilted, bloomed slab. Baked here, the
+ * drawer IS a slab in the same group as the card.
+ *
+ * Content is the owner's proposal grammar minus `03 / WHO` (that is #about):
+ *   01 / WHAT — the concrete breakdown
+ *   02 / HOW  — the qualification grid (no price; see ServiceSpec)
+ * plus the CTA at `DRAWER_CTA_BOX` and the close chit at `DRAWER_CLOSE_BOX`,
+ * whose normalized rects are the contract with the DOM hit shims.
+ *
+ * Ground is OPAQUE void, like the card face — the drawer is the "screen"
+ * half of the device's material law, and a translucent ground would let the
+ * card behind it show through as the slabs overlap at the seam.
+ */
+function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = BAKE_W;
+  canvas.height = BAKE_H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+
+  const label = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
+  const maxW = BAKE_W - PAD_X * 2;
+
+  // Ground — opaque void, with a whisper of the glass gradient so the drawer
+  // is not a flat black rectangle next to the photo-lit card.
+  ctx.fillStyle = VOID;
+  ctx.fillRect(0, 0, BAKE_W, BAKE_H);
+  const wash = ctx.createLinearGradient(0, 0, BAKE_W * 0.4, BAKE_H);
+  wash.addColorStop(0, `rgba(${DAWN}, 0.05)`);
+  wash.addColorStop(0.5, `rgba(${DAWN}, 0.012)`);
+  wash.addColorStop(1, "rgba(202, 165, 84, 0.03)");
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, BAKE_W, BAKE_H);
+
+  // Chamfer corners + shell + cut ticks — the card's chrome verbatim, so the
+  // pair reads as two slabs of one device.
+  ctx.fillStyle = VOID;
+  ctx.beginPath();
+  ctx.moveTo(BAKE_W - BAKE_CH, 0);
+  ctx.lineTo(BAKE_W, 0);
+  ctx.lineTo(BAKE_W, BAKE_CH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0, BAKE_H - BAKE_CH);
+  ctx.lineTo(BAKE_CH, BAKE_H);
+  ctx.lineTo(0, BAKE_H);
+  ctx.closePath();
+  ctx.fill();
+
+  const shell = ctx.createLinearGradient(0, 0, BAKE_W * 0.25, BAKE_H);
+  shell.addColorStop(0, "rgba(202, 165, 84, 0.52)");
+  shell.addColorStop(0.38, `rgba(${DAWN}, 0.14)`);
+  shell.addColorStop(0.66, "rgba(202, 165, 84, 0.16)");
+  shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
+  ctx.strokeStyle = shell;
+  ctx.lineWidth = 2.5;
+  traceChamferPath(ctx, 1.5);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(BAKE_W - BAKE_CH, 1.5);
+  ctx.lineTo(BAKE_W - 1.5, BAKE_CH);
+  ctx.moveTo(1.5, BAKE_H - BAKE_CH);
+  ctx.lineTo(BAKE_CH, BAKE_H - 1.5);
+  ctx.stroke();
+
+  /* ── Close chit — a bare ✕ in a hairline box at DRAWER_CLOSE_BOX ─────── */
+  const closeX = DRAWER_CLOSE_BOX.x * BAKE_W;
+  const closeY = DRAWER_CLOSE_BOX.y * BAKE_H;
+  const closeW = DRAWER_CLOSE_BOX.w * BAKE_W;
+  const closeH = DRAWER_CLOSE_BOX.h * BAKE_H;
+  ctx.strokeStyle = `rgba(${DAWN}, 0.22)`;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(closeX, closeY, closeW, closeH);
+  ctx.strokeStyle = `rgba(${DAWN}, 0.6)`;
+  ctx.lineWidth = 2.5;
+  const cInset = closeW * 0.34;
+  ctx.beginPath();
+  ctx.moveTo(closeX + cInset, closeY + cInset);
+  ctx.lineTo(closeX + closeW - cInset, closeY + closeH - cInset);
+  ctx.moveTo(closeX + closeW - cInset, closeY + cInset);
+  ctx.lineTo(closeX + cInset, closeY + closeH - cInset);
+  ctx.stroke();
+
+  /* ── 01 / WHAT ──────────────────────────────────────────────────────── */
+  ctx.textBaseline = "alphabetic";
+  let y = 150;
+
+  const drawDesig = (text: string, atY: number): number => {
+    label.letterSpacing = "4px";
+    ctx.font = `400 18px ${CARD_FONT}`;
+    ctx.fillStyle = "rgba(202, 165, 84, 0.75)";
+    ctx.fillText(text.toUpperCase(), PAD_X, atY);
+    label.letterSpacing = "0px";
+    return atY + 46;
+  };
+
+  y = drawDesig("01 / What", y);
+
+  // Breakdown bullets — gold diamonds, never dots (shape law).
+  label.letterSpacing = "0px";
+  ctx.font = `400 27px ${CARD_SANS}`;
+  const BULLET_LH = 38;
+  const BULLET_GAP = 20;
+  const bulletIndent = 34;
+  for (const item of plate.breakdown) {
+    const lines = wrapRuns(ctx, [item], maxW - bulletIndent);
+    ctx.fillStyle = "rgba(202, 165, 84, 0.6)";
+    ctx.save();
+    ctx.translate(PAD_X + 7, y - 9);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-5, -5, 10, 10);
+    ctx.restore();
+    lines.forEach((line, i) => {
+      drawRunLine(ctx, line, PAD_X + bulletIndent, y + i * BULLET_LH, `rgba(${DAWN}, 0.82)`);
+    });
+    y += lines.length * BULLET_LH + BULLET_GAP;
+  }
+
+  /* ── 02 / HOW — the qualification grid ──────────────────────────────── */
+  y += 34;
+  ctx.strokeStyle = `rgba(${DAWN}, 0.1)`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PAD_X, y - 42);
+  ctx.lineTo(PAD_X + maxW, y - 42);
+  ctx.stroke();
+  y = drawDesig("02 / How", y);
+
+  const colW = maxW / 2;
+  const drawSpecCell = (dt: string, dd: string, cx: number, cy: number, wide: boolean): number => {
+    label.letterSpacing = "3px";
+    ctx.font = `400 17px ${CARD_FONT}`;
+    ctx.fillStyle = `rgba(${DAWN}, 0.4)`;
+    ctx.fillText(dt.toUpperCase(), cx, cy);
+    label.letterSpacing = "0px";
+    ctx.font = `400 27px ${CARD_SANS}`;
+    const lines = wrapRuns(ctx, [dd], (wide ? maxW : colW) - 24);
+    lines.forEach((line, i) => {
+      drawRunLine(ctx, line, cx, cy + 36 + i * 34, wide ? SERVICES_GOLD : `rgba(${DAWN}, 0.86)`);
+    });
+    return 36 + lines.length * 34;
+  };
+
+  const rowA = Math.max(
+    drawSpecCell("Duration", plate.spec.duration, PAD_X, y, false),
+    drawSpecCell("Participants", plate.spec.participants, PAD_X + colW, y, false)
+  );
+  y += rowA + 30;
+  const rowB = Math.max(
+    drawSpecCell("Format", plate.spec.format, PAD_X, y, false),
+    drawSpecCell("Language", plate.spec.language, PAD_X + colW, y, false)
+  );
+  y += rowB + 30;
+  drawSpecCell("Leaves with", plate.spec.leavesWith, PAD_X, y, true);
+
+  /* ── CTA — the card's own treatment, at the shared box ──────────────── */
+  label.letterSpacing = "4px";
+  ctx.strokeStyle = SERVICES_GOLD;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(PAD_X, CTA_Y0, maxW, CTA_H);
+  ctx.font = `700 21px ${CARD_FONT}`;
+  ctx.fillStyle = SERVICES_GOLD;
+  const ctaMidY = CTA_Y0 + CTA_H / 2 + 8;
+  ctx.fillText(plate.ctaLabel.toUpperCase(), PAD_X + 28, ctaMidY);
+  label.letterSpacing = "0px";
+  ctx.font = `400 30px ${CARD_FONT}`;
+  ctx.textAlign = "right";
+  ctx.fillText("→", PAD_X + maxW - 28, ctaMidY + 2);
+  ctx.textAlign = "left";
+
+  return canvas;
+}
+
 /** Mirrored chamfer trace (TL/BR cuts) for the PORTRAIT BACK bake: the
  *  slab itself carries only the deck's Ry(π) at full flip, so its physical
  *  TR/BL chamfers land at screen TL/BR — the back face must frame the
@@ -904,6 +1121,16 @@ export interface ServicesCardRingProps {
    *  byte-identical until the default is deliberately flipped. Changing it
    *  re-runs the bake effect. */
   faceVariant?: CardFaceVariant;
+  /**
+   * Mount the ADR-050 rev-3 in-canvas DRAWER (the open state): a second
+   * card-sized slab per card that slides out from behind the card when that
+   * service's plate is opened via `openPlateRef`.
+   *
+   * Off by default, so production stays byte-identical — no drawer bake is
+   * fetched, no extra children exist, and the frame loop's drawer work is
+   * skipped entirely. Lab-only until promotion.
+   */
+  openDrawer?: boolean;
   /** 0 = tidally locked outward (side cards edge-on), 1 = always facing the
    *  rig's forward axis. Partial blends keep the orbit read while photos
    *  stay visible in transit. Default RING_FACING_BLEND. */
@@ -943,6 +1170,7 @@ export function ServicesCardRing({
   entrance = "scroll",
   publishAnchors = false,
   faceVariant = "full",
+  openDrawer = false,
   facingBlend = RING_FACING_BLEND,
   masterOpacity = 1,
   cardHeight = RING_CARD_HEIGHT,
@@ -975,9 +1203,19 @@ export function ServicesCardRing({
   // ONE geometry across all four back planes — the backs are only ever
   // seen converged (the flip), so identical faces are correct and cheap.
   const [backTexture, setBackTexture] = useState<THREE.CanvasTexture | null>(null);
+  // ADR-050 rev 3: per-card DRAWER faces. Unlike the deck's shared back,
+  // each drawer carries its OWN service's spec, so this is a per-card array
+  // like `textures`. Null until baked (and forever when `openDrawer` is off).
+  const [drawerTextures, setDrawerTextures] = useState<THREE.CanvasTexture[] | null>(null);
   const cardGroupRefs = useRef<Array<THREE.Group | null>>([]);
   const meshRefs = useRef<Array<THREE.Mesh | null>>([]); // content planes (anchor projection)
   const matRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]); // content materials
+  /* ── Drawer refs (ADR-050 rev 3) ─────────────────────────────────────── */
+  const drawerGroupRefs = useRef<Array<THREE.Group | null>>([]);
+  const drawerMeshRefs = useRef<Array<THREE.Mesh | null>>([]); // for anchor projection
+  const drawerMatRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
+  /** Per-card damped open level, 0 = shut. The `veilLevelRef` pattern. */
+  const drawerLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
   const depthWriteRef = useRef<boolean[]>(new Array(RING_COUNT).fill(false));
   const springRef = useRef<RingSpringState>({ pos: 0, vel: 0 });
   const lastWallRef = useRef(-1);
@@ -1162,6 +1400,50 @@ export function ServicesCardRing({
       ),
     [veilTexture]
   );
+  /* ── Drawer twins (ADR-050 rev 3) ────────────────────────────────────────
+     The drawer is another slab of the SAME device, so it reuses the card's
+     geometry (`slabGeometry` / `glintGeometry`) and the same material recipe
+     — but needs its OWN material instances, because its opacity rides the
+     open clock while the card's rides card presence. Built only under
+     `openDrawer` so the flag-off path allocates nothing. */
+  const drawerSlabMaterials = useMemo(
+    () =>
+      !openDrawer
+        ? null
+        : SERVICE_PLATES.map(() => {
+            const shared = {
+              transparent: true,
+              opacity: 0,
+              depthWrite: false,
+              depthTest: true,
+              blending: THREE.NormalBlending,
+              toneMapped: false,
+              side: THREE.FrontSide,
+            } as const;
+            return [
+              new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color("#14110c") }),
+              new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(SERVICES_GOLD) }),
+            ] as [THREE.MeshBasicMaterial, THREE.MeshBasicMaterial];
+          }),
+    [openDrawer]
+  );
+  const drawerGlintMaterials = useMemo(
+    () =>
+      !openDrawer
+        ? null
+        : SERVICE_PLATES.map(
+            () =>
+              new THREE.LineBasicMaterial({
+                color: new THREE.Color(SERVICES_GOLD),
+                transparent: true,
+                opacity: 0,
+                depthWrite: false,
+                toneMapped: false,
+              })
+          ),
+    [openDrawer]
+  );
+
   useEffect(() => {
     return () => {
       for (const [caps, walls] of slabMaterials) {
@@ -1173,6 +1455,19 @@ export function ServicesCardRing({
       for (const material of veilMaterials) material.dispose();
     };
   }, [slabMaterials, glintMaterials, glowMaterials, veilMaterials]);
+  useEffect(() => {
+    return () => {
+      if (drawerSlabMaterials) {
+        for (const [caps, walls] of drawerSlabMaterials) {
+          caps.dispose();
+          walls.dispose();
+        }
+      }
+      if (drawerGlintMaterials) {
+        for (const material of drawerGlintMaterials) material.dispose();
+      }
+    };
+  }, [drawerSlabMaterials, drawerGlintMaterials]);
 
   // Hover-resolve (Update 3): track the pointer window-level (the canvas is
   // pointer-events:none — the pointer-look precedent) and test it against
@@ -1183,10 +1478,10 @@ export function ServicesCardRing({
     Array<{ x: number; y: number; w: number; h: number; nz: number } | null>
   >(new Array(RING_COUNT).fill(null));
   const veilLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(1));
-  /** ADR-050: damped per-card hide level while that card's DOM spec plate is
-   *  open (the plate IS the card popped open — the WebGL card must vanish or
-   *  the two read as overlapping entities). 0 = shown, 1 = hidden. */
-  const plateHideRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
+  /* ADR-050 rev 3 removed the rev-2 `plateHideRef` channel entirely: the card
+     no longer hides when its open state appears, because the open state IS
+     this card now (the in-canvas drawer below). Nothing should ever hide the
+     card again — that hide was the crossfade the owner rejected. */
   const hoverTiltRef = useRef<Array<{ pitch: number; yaw: number }>>(
     Array.from({ length: RING_COUNT }, () => ({ pitch: 0, yaw: 0 }))
   );
@@ -1240,11 +1535,19 @@ export function ServicesCardRing({
         if (disposed) return;
         setBackTexture(toTexture(bakePortraitBack(portrait)));
       }
+      // The DRAWER faces (ADR-050 rev 3) bake in this SAME effect so a
+      // glEpoch context-loss remount re-bakes them for free — and only under
+      // `openDrawer`, so production never pays the ~18 MB of extra texture.
+      // Fonts are already awaited above; the drawer uses the same families.
+      if (openDrawer) {
+        if (disposed) return;
+        setDrawerTextures(SERVICE_PLATES.map((plate) => toTexture(bakeDrawerFace(plate))));
+      }
     })();
     return () => {
       disposed = true;
     };
-  }, [gl, faceVariant]);
+  }, [gl, faceVariant, openDrawer]);
 
   // Dispose bakes on replacement/unmount (materials/geometries are
   // declarative — R3F disposes those; the shared back material/geometry
@@ -1259,6 +1562,12 @@ export function ServicesCardRing({
     if (!backTexture) return;
     return () => backTexture.dispose();
   }, [backTexture]);
+  useEffect(() => {
+    if (!drawerTextures) return;
+    return () => {
+      for (const texture of drawerTextures) texture.dispose();
+    };
+  }, [drawerTextures]);
 
   // ONE geometry + ONE material shared by the four back planes.
   const backGeometry = useMemo(
@@ -1505,6 +1814,16 @@ export function ServicesCardRing({
           hovered = i;
         }
       }
+      /* An OPEN card counts as hovered regardless of where the pointer is
+         (ADR-050 rev 3). Its drawer extends well outside the card's own rect,
+         so without this the veil re-fogs AND the hover tilt slumps the moment
+         the pointer moves onto the drawer — exactly while the user is
+         reaching for the drawer's CTA. Forcing it here fixes both channels at
+         once, since both read `hovered`. */
+      if (openDrawer && openPlateRef.current.serviceId) {
+        const openIdx = SERVICES.findIndex((s) => s.id === openPlateRef.current.serviceId);
+        if (openIdx >= 0) hovered = openIdx;
+      }
     }
 
     for (let i = 0; i < RING_COUNT; i++) {
@@ -1568,11 +1887,42 @@ export function ServicesCardRing({
       // in the "off" (lab) path, so the parked pose is unchanged.
       const entX = env ? env.offsetX : 0;
       const entY = env ? env.offsetY : 0;
-      const ringX = placed.x + entX;
       const ringY = placed.y + entY;
       const ringZ = placed.z;
-      const ringPitch = tilt.pitch + bias.pitch;
-      const ringYaw = cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw;
+
+      /* ── The DRAWER clock (ADR-050 rev 3) ────────────────────────────────
+         Damped open level per card, the `veilLevelRef` pattern. SNAPPED to 0
+         the moment the deck engages rather than left to decay: the recenter
+         term below lives only in the normal branch, so a fast scroll that
+         reaches the stack branch with a still-damping level would hand off
+         between a shifted and an unshifted pose — a positional snap. (The
+         `flipDamp` engage-snap precedent.) Computed here because the pose
+         below reads it. */
+      let drawerT = 0;
+      if (openDrawer) {
+        const wantOpen = !deckEngaged && openPlateRef.current.serviceId === SERVICES[i].id;
+        if (deckEngaged) drawerLevelRef.current[i] = 0;
+        else {
+          drawerLevelRef.current[i] +=
+            ((wantOpen ? 1 : 0) - drawerLevelRef.current[i]) *
+            Math.min(1, delta * DRAWER_DAMP_RATE);
+        }
+        drawerT = smootherstep(0, 1, drawerLevelRef.current[i]);
+      }
+
+      /* The held 3/4 pose FLATTENS as the drawer opens (ADR-050 rev 3). The
+         drawer extends along card-local +x, which under the parked front
+         bias is the RECEDING axis — at full bias its face foreshortens hard
+         and the spec grid stops reading. Easing the bias out as the pair
+         opens is the device turning to face you, and it keeps the two slabs
+         rigid (one object) rather than hinging them apart.
+
+         Only the BIAS is flattened: `tilt` (pointer-look) survives, so the
+         open pair still leans with the cursor — ADR-021 intact. Identity at
+         drawerT = 0. */
+      const biasKeep = 1 - drawerT;
+      const ringPitch = tilt.pitch + bias.pitch * biasKeep;
+      const ringYaw = cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw * biasKeep;
       const ringScale = depthScale(placed.nz, scaleRange);
       // Front-card emphasis (owner 2026-07-17): the in-view card reads
       // BIGGER than its neighbours, more so on narrow viewports. A separate
@@ -1583,6 +1933,16 @@ export function ServicesCardRing({
       // the exit boundary. The flip owns its own seat-matched scale, so the
       // boost is applied only in the two non-flip branches below.
       const frontBoost = frontScaleBoost(placed.nz, size.width, stack ? 1 - stack.flattenT : 1);
+
+      /* Recenter: as the drawer extends right, the CARD eases left by half
+         the drawer's visible extent so the open pair stays centred on the
+         brandmark (owner's composition call). The drawer's extent is
+         card-LOCAL (it inherits cardGroup.scale), while this offset is in
+         ring-group space — hence `× ringScale × frontBoost`. The ring
+         group's own scale cancels: it multiplies positions and extents
+         alike. Identity at drawerT = 0, so the closed ring is byte-identical. */
+      const ringX =
+        placed.x + entX - drawerRecenterX(drawerT, cardW, DRAWER_SEAM, ringScale * frontBoost);
 
       if (flip) {
         // ── ADR-047 flip (rev 2: Y axis): the deck rotates about its
@@ -1634,34 +1994,60 @@ export function ServicesCardRing({
       const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
       const master = (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * masterOpacity;
       const opacity = depthO * master;
-      // ADR-050 plate handoff (rev 2): while this card's DOM spec plate is
-      // open the card's MATERIALS are OFF — a SNAP, not a damp. The plate
-      // mounts a pixel-parity replica ON the card's rect first and the swap
-      // fires one painted frame later, so any fade here would be exactly the
-      // crossfade the owner rejected; the snap is invisible because the
-      // replica already covers the card. `opacity` stays the LOGICAL value —
-      // `cardGroup.visible` and the anchor publish below key off it, because
-      // the hidden card must KEEP projecting its screen rect: that live rect
-      // is what the plate rides to inherit the rig's pointer-look. Deck life
-      // force-restores (the plate closes on scroll long before the exit
-      // sweep, but a mid-flight open must never leave a hidden deck card).
-      plateHideRef.current[i] = !stack && openPlateRef.current.serviceId === SERVICES[i].id ? 1 : 0;
-      const shown = 1 - plateHideRef.current[i];
-      material.opacity = opacity * shown;
-      slabMaterials[i][0].opacity = glassOpacity * depthO * master * shown;
-      slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master * shown;
-      glintMaterials[i].opacity = glintOpacity * depthO * master * shown;
+      /* ADR-050 rev 3 — ANTI-GHOST GUARD 2 of 2. The card's face never
+         reaches alpha 1 (RING_OPACITY_RANGE tops out at 0.9), so a drawer
+         housed behind it would bleed ~10% of its own text through. As the
+         drawer opens, the face firms 0.9 → 1.0: the same entity solidifying
+         as it activates, nothing appearing or disappearing. Identity at
+         drawerT = 0, so the shipped closed ring is byte-identical.
+         ⚠ Do NOT "clean this up" as a stray fade — deleting it reintroduces
+         the ghost (see ADR-050 rev 3). */
+      const faceO = lerp(depthO, 1, drawerT) * master;
+      material.opacity = faceO;
+      slabMaterials[i][0].opacity = glassOpacity * depthO * master;
+      slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
+      glintMaterials[i].opacity = glintOpacity * depthO * master;
       // Halo is front-weighted: swells as the card parks, gone on the sides
       // — and dies early in the stack (four converged halos would bloom).
       glowMaterials[i].opacity =
-        glowOpacity * frontWindowWeight(placed.nz) * master * (stack ? stack.glowMul : 1) * shown;
+        glowOpacity * frontWindowWeight(placed.nz) * master * (stack ? stack.glowMul : 1);
       // Hover-resolve: the hovered card's veil damps toward its resolved
-      // residue; everyone else restores to the full feed read.
+      // residue; everyone else restores to the full feed read. An open card
+      // is force-marked hovered at the pick site above, so it holds the
+      // resolved read (and its tilt) while the pointer is on its drawer.
       const veilTarget = i === hovered ? RING_VEIL_HOVER_LEVEL : 1;
       veilLevelRef.current[i] +=
         (veilTarget - veilLevelRef.current[i]) * Math.min(1, delta * VEIL_DAMP_RATE);
-      veilMaterials[i].opacity = veilLevelRef.current[i] * depthO * master * shown;
+      veilMaterials[i].opacity = veilLevelRef.current[i] * depthO * master;
       cardGroup.visible = opacity > 0.004;
+
+      /* ── The drawer's transform + ANTI-GHOST GUARD 1 of 2 ────────────────
+         The slide is pure geometry in card-local space. The opacity ramp is
+         NOT a crossfade: it completes by DRAWER_REVEAL_FRAC of the open
+         level, while the drawer is still entirely behind the card face, so
+         nothing is ever seen fading — it only stops the housed drawer from
+         ghosting through. The `visible` gate keeps a shut drawer out of the
+         render list entirely (and stops its glint from double-brightening
+         the card's coincident edges). */
+      const drawerGroup = drawerGroupRefs.current[i];
+      if (drawerGroup) {
+        const live = drawerT > 0.001 && opacity > 0.004;
+        drawerGroup.visible = live;
+        if (live) {
+          drawerGroup.position.x = drawerSlideX(drawerT, cardW, DRAWER_SEAM);
+          const reveal = Math.min(1, drawerT / DRAWER_REVEAL_FRAC);
+          const drawerO = opacity * reveal;
+          const drawerMat = drawerMatRefs.current[i];
+          if (drawerMat) drawerMat.opacity = drawerO;
+          const drawerSlab = drawerSlabMaterials?.[i];
+          if (drawerSlab) {
+            drawerSlab[0].opacity = glassOpacity * depthO * master * reveal;
+            drawerSlab[1].opacity = glassEdgeOpacity * depthO * master * reveal;
+          }
+          const drawerGlint = drawerGlintMaterials?.[i];
+          if (drawerGlint) drawerGlint.opacity = glintOpacity * depthO * master * reveal;
+        }
+      }
 
       // depthWrite discipline — only the near-front card's CONTENT writes
       // depth (the glass never does); that single writer is what occludes
@@ -1675,15 +2061,25 @@ export function ServicesCardRing({
       // report, 2026-07-16). Post-midpoint the top slot's FrontSide
       // content plane culls away and the shared portrait back material
       // takes over as the writer (set beside its opacity above).
-      // Both branches gate on the EFFECTIVE opacity (× shown): a plate-hidden
-      // card writing depth would occlude the renderOrder-1 particle pass as
-      // an invisible rectangle — the mark would vanish behind nothing.
       const write =
         deckEngaged && (exitP > DECK_DEPTH_WRITE_OFF_EXIT || aboutP > 0)
-          ? deckOrder(i, flip ? flip.flipped : false) === RING_COUNT - 1 && opacity * shown > 0.55
-          : depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity * shown > 0.55;
+          ? deckOrder(i, flip ? flip.flipped : false) === RING_COUNT - 1 && opacity > 0.55
+          : depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity > 0.55;
       if (write !== material.depthWrite) material.depthWrite = write;
       depthWriteRef.current[i] = write;
+      /* The drawer shares the card's ELECTED write boolean rather than
+         computing its own gate (ADR-050 rev 3): two independent gates could
+         both elect on one card, and an un-elected near-opaque drawer writing
+         depth would occlude the renderOrder-1 particle pass as an invisible
+         rectangle. The drawer draws first (0.07 < 0.1) and is farther in z,
+         so the face still passes LEQUAL behind it. */
+      const drawerMatForDepth = drawerMatRefs.current[i];
+      if (drawerMatForDepth) {
+        const drawerWrite = write && drawerT > 0.001;
+        if (drawerWrite !== drawerMatForDepth.depthWrite) {
+          drawerMatForDepth.depthWrite = drawerWrite;
+        }
+      }
 
       // Project the content plane's corners whenever parked — the store
       // publish is gated on `publishAnchors`, but the HOVER-resolve needs
@@ -1728,6 +2124,39 @@ export function ServicesCardRing({
             ? { x: minX, y: minY, w: maxX - minX, h: maxY - minY, nz: placed.nz }
             : null;
         if (publishAnchors) {
+          /* The DRAWER's own rect (ADR-050 rev 3) — projected from its own
+             mesh, not derived from the card's, because the drawer carries a
+             different yaw and foreshortening, so its projection is not a
+             linear extension of the card's. Only while actually out. */
+          let drawerRect: { x: number; y: number; w: number; h: number } | undefined;
+          const drawerMesh = drawerMeshRefs.current[i];
+          if (drawerT > 0.02 && drawerMesh && drawerGroupRefs.current[i]?.visible) {
+            drawerMesh.updateWorldMatrix(true, false);
+            let dMinX = Infinity;
+            let dMinY = Infinity;
+            let dMaxX = -Infinity;
+            let dMaxY = -Infinity;
+            let dClipped = false;
+            for (let cx = -1; cx <= 1; cx += 2) {
+              for (let cy = -1; cy <= 1; cy += 2) {
+                cornerLocal.current.set((cx * cardW) / 2, (cy * cardHeight) / 2, 0);
+                cornerWorld.current
+                  .copy(cornerLocal.current)
+                  .applyMatrix4(drawerMesh.matrixWorld)
+                  .project(camera);
+                if (cornerWorld.current.z >= 1 || cornerWorld.current.z <= -1) dClipped = true;
+                const sx = (cornerWorld.current.x * 0.5 + 0.5) * size.width;
+                const sy = (-cornerWorld.current.y * 0.5 + 0.5) * size.height;
+                dMinX = Math.min(dMinX, sx);
+                dMinY = Math.min(dMinY, sy);
+                dMaxX = Math.max(dMaxX, sx);
+                dMaxY = Math.max(dMaxY, sy);
+              }
+            }
+            if (!dClipped) {
+              drawerRect = { x: dMinX, y: dMinY, w: dMaxX - dMinX, h: dMaxY - dMinY };
+            }
+          }
           anchors.push({
             serviceId: SERVICES[i].id,
             x: minX,
@@ -1737,6 +2166,7 @@ export function ServicesCardRing({
             depth: centreDepth,
             visible: !clipped && !occludedByFront && opacity > 0.1 && deckAnchorsLive,
             front: i === front,
+            drawer: drawerRect,
           });
         }
       } else {
@@ -1903,6 +2333,69 @@ export function ServicesCardRing({
           >
             <planeGeometry args={[cardW, cardHeight]} />
           </mesh>
+          {/* ── The DRAWER (ADR-050 rev 3) — the open state, IN CANVAS ──────
+              A second slab of this same device, APPENDED after the veil so
+              the existing children keep indices 0–5 (the deck's positional
+              renderOrder rebase walks `cardGroup.children`).
+
+              It lives in CARD-LOCAL space, which is the entire point: it
+              inherits the rig, the facing yaw, the pointer-look and the
+              bounded sway for free, so card + drawer are one entity by
+              construction rather than by synchronisation. Three DOM
+              revisions of this open state each read as "another component"
+              because a flat DOM rect cannot be a projected, tilted, bloomed
+              slab.
+
+              renderOrder 0.06/0.07/0.08 sits between the card's glint (0.05)
+              and its face (0.1) — POSITIVE on purpose: the orbit tracks
+              render at 0, so negative slots would let gold track dashes
+              paint over the drawer's text. Under the face means the card
+              covers the drawer while it is housed. Z is behind the card's
+              face so it slides out from *under* it. */}
+          {openDrawer && drawerTextures && drawerSlabMaterials && drawerGlintMaterials && (
+            <group
+              ref={(el) => {
+                drawerGroupRefs.current[i] = el;
+              }}
+              visible={false}
+            >
+              <mesh
+                renderOrder={DRAWER_RENDER_ORDERS.slab}
+                geometry={slabGeometry}
+                material={drawerSlabMaterials[i]}
+                frustumCulled={false}
+              />
+              <mesh
+                renderOrder={DRAWER_RENDER_ORDERS.content}
+                position={[0, 0, slabDepth / 2 + RING_CONTENT_LIFT - 0.02]}
+                ref={(el) => {
+                  drawerMeshRefs.current[i] = el;
+                }}
+                frustumCulled={false}
+              >
+                <planeGeometry args={[cardW, cardHeight]} />
+                <meshBasicMaterial
+                  ref={(el) => {
+                    drawerMatRefs.current[i] = el;
+                  }}
+                  map={drawerTextures[i]}
+                  transparent
+                  opacity={0}
+                  side={THREE.FrontSide}
+                  depthWrite={false}
+                  depthTest
+                  blending={THREE.NormalBlending}
+                  toneMapped={false}
+                />
+              </mesh>
+              <lineSegments
+                renderOrder={DRAWER_RENDER_ORDERS.glint}
+                geometry={glintGeometry}
+                material={drawerGlintMaterials[i]}
+                frustumCulled={false}
+              />
+            </group>
+          )}
         </group>
       ))}
     </group>

@@ -1,17 +1,19 @@
-// Cross-root bridge for the ADR-050 open spec plate.
+// Cross-root bridge for the ADR-050 open state.
 //
-// When a service's DOM plate is open, the WebGL front card must HIDE — the
-// plate IS that card popped open, not a second component in front of it
-// (owner, 2026-07-26: "this is one entity"). The plate lives in the services
-// DOM root, the card in the corridor R3F canvas — separate React roots, so
-// the open state crosses the seam through a module-level ref, the
-// `ringProgressRef` precedent.
+// Which service is "open" is decided in the services DOM tree, but the open
+// state itself now RENDERS in the corridor R3F canvas as the card's own
+// drawer (rev 3) — separate React roots, so the flag crosses the seam through
+// a module-level ref, the `ringProgressRef` precedent.
 //
-// Single-writer contract: `ServiceOpenPlate` (the plate's owner) writes
-// `serviceId`; `ServicesCardRing` reads it once per WebGL frame and damps the
-// matching card's materials out — while STILL projecting and publishing its
-// screen rect, which is what the plate rides to inherit the rig's
-// pointer-look. Nobody else writes.
+// Single-writer contract: the surface that owns the open/closed state writes
+// `serviceId` — today `CardFaceLabShell` (ADR-050 rev 3; the previous writer,
+// the DOM `ServiceOpenPlate`, is deleted). `ServicesCardRing` reads it once
+// per WebGL frame to drive the matching card's DRAWER open level. Nobody else
+// writes.
+//
+// ⚠ Rev 2 used this ref to HIDE the card while a DOM plate covered it. That
+// channel is gone: the open state is now the card's own in-canvas drawer, so
+// the card must never be hidden again.
 //
 // Three-free on purpose (the `ringCtaBox` lesson): the DOM side imports this
 // without dragging the WebGL stack into First Load JS.

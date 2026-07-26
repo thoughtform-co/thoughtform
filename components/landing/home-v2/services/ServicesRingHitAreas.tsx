@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 
-import { RING_CARD_CTA_BOX } from "./hologram/ringCtaBox";
+import { DRAWER_CLOSE_BOX, DRAWER_CTA_BOX, RING_CARD_CTA_BOX } from "./hologram/ringCtaBox";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICE_PLATES } from "./servicePlateData";
 import type { ServiceId } from "./serviceData";
@@ -29,6 +29,8 @@ const MIN_HIT_WIDTH = 44;
 export function ServicesRingHitAreas({
   onSelectService,
   onOpenFront,
+  onCloseDrawer,
+  openServiceId,
 }: {
   onSelectService: (serviceId: ServiceId) => void;
   /**
@@ -42,6 +44,14 @@ export function ServicesRingHitAreas({
    * so the shipped surface and the `full` face variant are unaffected.
    */
   onOpenFront?: (serviceId: ServiceId) => void;
+  /**
+   * ADR-050 rev 3. The in-canvas drawer's text is BAKED, so this layer is the
+   * only place its CTA, its close control and its screen-reader text can
+   * exist. Provided together with `onOpenFront` by the drawer lab.
+   */
+  onCloseDrawer?: () => void;
+  /** The service whose drawer is currently out, for `aria-expanded`. */
+  openServiceId?: ServiceId | null;
 }) {
   const ringAnchors = useHologramConnectors((s) => s.ringAnchors);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -58,21 +68,63 @@ export function ServicesRingHitAreas({
           .map((anchor) => {
             const plate = SERVICE_PLATES.find((p) => p.id === anchor.serviceId);
             if (anchor.front && onOpenFront) {
-              // Front card, ADR-050: the whole face opens the spec plate.
+              const isOpen = openServiceId === anchor.serviceId;
+              // Front card, ADR-050: the whole face opens the drawer. When
+              // the drawer is out we ALSO shim its baked controls — the
+              // drawer's text lives on a texture, so these are the only
+              // reachable versions of its CTA and close control, and the
+              // sr-only block is the only readable copy of its spec.
               return (
-                <button
-                  key={anchor.serviceId}
-                  type="button"
-                  className="svc-ring-hits__hit svc-ring-hits__hit--front"
-                  style={{
-                    left: `${(anchor.x - origin.left).toFixed(1)}px`,
-                    top: `${(anchor.y - origin.top).toFixed(1)}px`,
-                    width: `${anchor.w.toFixed(1)}px`,
-                    height: `${anchor.h.toFixed(1)}px`,
-                  }}
-                  aria-label={`Open ${plate?.chip ?? anchor.serviceId} details`}
-                  onClick={() => onOpenFront(anchor.serviceId)}
-                />
+                <Fragment key={anchor.serviceId}>
+                  <button
+                    type="button"
+                    className="svc-ring-hits__hit svc-ring-hits__hit--front"
+                    style={{
+                      left: `${(anchor.x - origin.left).toFixed(1)}px`,
+                      top: `${(anchor.y - origin.top).toFixed(1)}px`,
+                      width: `${anchor.w.toFixed(1)}px`,
+                      height: `${anchor.h.toFixed(1)}px`,
+                    }}
+                    aria-label={`Open ${plate?.chip ?? anchor.serviceId} details`}
+                    aria-expanded={isOpen}
+                    onClick={() => onOpenFront(anchor.serviceId)}
+                  />
+                  {anchor.drawer && plate && (
+                    <>
+                      <a
+                        className="svc-ring-hits__hit svc-ring-hits__hit--cta"
+                        href={plate.ctaHref}
+                        style={{
+                          left: `${(anchor.drawer.x + anchor.drawer.w * DRAWER_CTA_BOX.x - origin.left).toFixed(1)}px`,
+                          top: `${(anchor.drawer.y + anchor.drawer.h * DRAWER_CTA_BOX.y - origin.top).toFixed(1)}px`,
+                          width: `${(anchor.drawer.w * DRAWER_CTA_BOX.w).toFixed(1)}px`,
+                          height: `${(anchor.drawer.h * DRAWER_CTA_BOX.h).toFixed(1)}px`,
+                        }}
+                        aria-label={plate.ctaLabel}
+                      />
+                      {onCloseDrawer && (
+                        <button
+                          type="button"
+                          className="svc-ring-hits__hit"
+                          style={{
+                            left: `${(anchor.drawer.x + anchor.drawer.w * DRAWER_CLOSE_BOX.x - origin.left).toFixed(1)}px`,
+                            top: `${(anchor.drawer.y + anchor.drawer.h * DRAWER_CLOSE_BOX.y - origin.top).toFixed(1)}px`,
+                            width: `${(anchor.drawer.w * DRAWER_CLOSE_BOX.w).toFixed(1)}px`,
+                            height: `${(anchor.drawer.h * DRAWER_CLOSE_BOX.h).toFixed(1)}px`,
+                          }}
+                          aria-label={`Close ${plate.chip} details`}
+                          onClick={onCloseDrawer}
+                        />
+                      )}
+                      {/* The baked drawer copy, readable. */}
+                      <p className="svc-ring-hits__sr">
+                        {plate.breakdown.join(". ")}. Duration: {plate.spec.duration}. Participants:{" "}
+                        {plate.spec.participants}. Format: {plate.spec.format}. Language:{" "}
+                        {plate.spec.language}. Leaves with: {plate.spec.leavesWith}.
+                      </p>
+                    </>
+                  )}
+                </Fragment>
               );
             }
             if (anchor.front) {

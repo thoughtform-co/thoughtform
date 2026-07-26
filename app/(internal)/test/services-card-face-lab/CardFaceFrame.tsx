@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 
 import { CorridorSectionMenu } from "@/components/landing/home-v2/CorridorSectionMenu";
-import { ServiceOpenPlate } from "@/components/landing/home-v2/services/ServiceOpenPlate";
 import { ServicesMasthead } from "@/components/landing/home-v2/services/ServicesMasthead";
 import { ServicesRingHitAreas } from "@/components/landing/home-v2/services/ServicesRingHitAreas";
 import type { ServiceId } from "@/components/landing/home-v2/services/serviceData";
@@ -16,7 +15,8 @@ import type { ServicePlateId } from "@/components/landing/home-v2/services/servi
  * Real production surface, parked at its end-state: the parse-injected HUD
  * chrome, the real `ServicesMasthead` inside a hand-built `.services-stage`,
  * the real `CorridorSectionMenu`, the real `ServicesRingHitAreas` over the
- * WebGL cards, and — for V2 — the real `ServiceOpenPlate`.
+ * WebGL cards. The V2 open state is IN CANVAS (the card's own drawer, from
+ * `ServicesCardRing`) — this frame only carries its DOM hit shims.
  *
  * The anchor lab's two deliberate departures are inherited verbatim, and both
  * are load-bearing:
@@ -110,17 +110,21 @@ export function CardFaceFrame({
         <div ref={stageRef} className="services-stage" data-card-ring="on" style={STAGE_STYLE}>
           <div className="services-stage__items">
             <ServicesMasthead />
+            {/* The open state itself is IN CANVAS now (ADR-050 rev 3 — the
+                card's own drawer, rendered by ServicesCardRing). This layer
+                only shims the interactive regions of the baked textures:
+                the front card's open target, and — while the drawer is out —
+                its CTA, its close control, and its screen-reader copy. */}
             <ServicesRingHitAreas
               onSelectService={onSelectService}
-              // Only V2 routes the front card into the plate; V0/V1 keep the
-              // ADR-029 CTA-box link so the reference stays honest.
+              // Only V2 opens a drawer; V0/V1 keep the ADR-029 CTA-box link
+              // so the reference stays honest.
               onOpenFront={
                 openPlateEnabled ? (id) => onOpenService(id as ServicePlateId) : undefined
               }
+              onCloseDrawer={openPlateEnabled ? onCloseService : undefined}
+              openServiceId={openPlateEnabled ? openServiceId : null}
             />
-            {openPlateEnabled && (
-              <ServiceOpenPlate serviceId={openServiceId} onClose={onCloseService} />
-            )}
           </div>
         </div>
       </div>

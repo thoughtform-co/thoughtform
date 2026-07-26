@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import type { ServicePlateId } from "@/components/landing/home-v2/services/servicePlateData";
+import { openPlateRef } from "@/lib/services-ring/openPlateRef";
 import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
@@ -108,9 +109,9 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
    * is what makes the active verb follow the slider on a page that never
    * scrolls.
    *
-   * ⚠ `ServiceOpenPlate` closes on scroll (production dismissal), so it
-   * listens for exactly this event — which is why `commit` clears the open
-   * plate itself rather than relying on the dispatch below.
+   * ⚠ This dispatch is why the lab must NOT add a scroll-dismissal listener
+   * for the drawer: it could not distinguish this synthetic event from a real
+   * user scroll. `commit()` closes the drawer directly instead.
    */
   useEffect(() => {
     servicesRingProgressRef.current.progress = progress;
@@ -139,6 +140,35 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
   }, []);
   const onCloseService = useCallback(() => setOpenServiceId(null), []);
 
+  /**
+   * The shell is the SINGLE WRITER of `openPlateRef` (ADR-050 rev 3 — the DOM
+   * plate that used to own it is deleted). `ServicesCardRing` reads this per
+   * WebGL frame to drive the drawer's open level.
+   */
+  useEffect(() => {
+    openPlateRef.current.serviceId = openServiceId;
+    return () => {
+      openPlateRef.current.serviceId = null;
+    };
+  }, [openServiceId]);
+
+  /**
+   * Escape closes. Deliberately NO scroll/wheel listeners in the lab: the
+   * progress bridge below dispatches a SYNTHETIC scroll event on every slider
+   * move, which such a listener could not tell from a real user scroll. The
+   * runway-driven dismissal belongs in `ServicesStage` at promotion time,
+   * where a real scroll owner exists; here `commit()` already closes on any
+   * progress change.
+   */
+  useEffect(() => {
+    if (!openServiceId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenServiceId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openServiceId]);
+
   const variant = FACE_VARIANTS[variantIdx];
   const activeIndex = activeServiceForProgress(progress);
 
@@ -150,7 +180,11 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
       data-plate-open={openServiceId ? "1" : undefined}
     >
       <CanvasErrorBoundary>
-        <RingBackdrop progress={progress} faceVariant={variant.face} />
+        <RingBackdrop
+          progress={progress}
+          faceVariant={variant.face}
+          openDrawer={variant.openPlate}
+        />
       </CanvasErrorBoundary>
 
       <CardFaceFrame

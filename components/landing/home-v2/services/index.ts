@@ -5,7 +5,6 @@ export { ServicesBrandmarkField } from "./ServicesBrandmarkField";
 export { ServicesOrbitMap } from "./ServicesOrbitMap";
 export { ServiceCelestialCard } from "./ServiceCelestialCard";
 export { ServiceScanInterface } from "./ServiceScanInterface";
-export { ServiceOpenPlate } from "./ServiceOpenPlate";
 export { SERVICES } from "./serviceData";
 export { SERVICE_PLATES } from "./servicePlateData";
 export type { ServicePlate, ServicePlateId, ServiceSpec } from "./servicePlateData";
