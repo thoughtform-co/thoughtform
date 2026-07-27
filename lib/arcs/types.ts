@@ -1,0 +1,224 @@
+/**
+ * lib/arcs — client arc pages (ADR-052).
+ *
+ * An "arc page" is a client-specific landing page under `/arcs/[slug]` —
+ * a ported presentation deck rendered in the landing's HUD grammar. This
+ * is DISTINCT from "the Arc" (the Navigate → Encode → Build loop on the
+ * corridor, LANGUAGE.md) — never shorten "arc page" to "the Arc".
+ *
+ * Content is data: each arc is one `ArcDef` whose sections are a small
+ * discriminated union of static primitives. Rendering lives in
+ * `components/arcs/*` server components. This module must stay free of
+ * runtime imports (no react, no three, no supabase) — types only.
+ */
+
+/**
+ * Split title with the upright-gold emphasis pivot. The site rule is no
+ * italics anywhere — `em` renders `font-style: normal; color: var(--gold)`
+ * (the corridor station-header recipe, home-v2.css).
+ */
+export interface ArcTitle {
+  pre?: string;
+  em?: string;
+  post?: string;
+}
+
+export interface ArcImage {
+  src: string;
+  alt: string;
+}
+
+export interface ArcMetaRow {
+  label: string;
+  value: string;
+}
+
+/**
+ * Shared section head — the services-masthead grammar rebuilt in flow:
+ * designation label + station-voice title on the left, state chip + intro
+ * copy on the right, survey crosses claiming the diagonal.
+ */
+export interface ArcHead {
+  /** PT Mono designation label above the title, e.g. "ARC / SETTINGS · 05". */
+  eyebrow?: string;
+  title: ArcTitle;
+  /** Right-column intro copy (editorial body register, `--band-copy`). */
+  sub?: string;
+  /** Right-column state chip (gold), e.g. "Open". */
+  state?: string;
+}
+
+export interface ArcCardItem {
+  id: string;
+  /** Mono counter, e.g. "01". */
+  n?: string;
+  /** Mono gold kicker above the title, e.g. "Stripe · January 2026". */
+  kicker?: string;
+  title: string;
+  body: string;
+  image?: ArcImage;
+  /** Mono label/value rows (e.g. SKU / Spend / ROAS on proof cards). */
+  metaRows?: readonly ArcMetaRow[];
+  /** Per-card mono receipt line (gold diamond prefix). */
+  receipt?: string;
+  /** Mono byline under the body, e.g. "Bloomberg · Enterprise track". */
+  byline?: string;
+  /** Optional outbound link — renders the title as an anchor. */
+  href?: string;
+}
+
+export interface ArcTip {
+  id: string;
+  /** Mono chip, e.g. "TIP · MEMORY". */
+  tag: string;
+  body: string;
+}
+
+export interface ArcListItem {
+  id: string;
+  /** Small mono status chip before the name, e.g. "LIVE". */
+  tag?: string;
+  name: string;
+  body?: string;
+  href?: string;
+  /** Trailing mono meta, e.g. a count or status label. */
+  meta?: string;
+}
+
+export interface ArcListGroup {
+  id: string;
+  label: string;
+  blurb?: string;
+  items: readonly ArcListItem[];
+}
+
+export interface ArcAnatomyRow {
+  id: string;
+  label: string;
+  body: string;
+}
+
+export interface ArcAction {
+  id: string;
+  label: string;
+  href: string;
+  primary?: boolean;
+}
+
+interface ArcSectionBase {
+  /** DOM id — anchor target + ArcMenu key. Unique within the arc. */
+  id: string;
+  ariaLabel?: string;
+  /** Present ⇒ the section appears in the left reel menu under this label. */
+  menuLabel?: string;
+}
+
+export type ArcSection = ArcSectionBase &
+  (
+    | {
+        /** Standalone masthead band (a chapter head with no body). */
+        kind: "head";
+        head: ArcHead;
+      }
+    | {
+        /** Numbered card grid + optional tips strip and receipt lines. */
+        kind: "cards";
+        head: ArcHead;
+        cards: readonly ArcCardItem[];
+        tips?: readonly ArcTip[];
+        receipt?: string;
+        footnote?: string;
+        columns?: 2 | 3 | 4;
+      }
+    | {
+        /** Grouped lists — status stacks (LIVE / IN PROGRESS / …) or column maps. */
+        kind: "list-groups";
+        head: ArcHead;
+        layout: "stack" | "columns";
+        groups: readonly ArcListGroup[];
+        closing?: string;
+      }
+    | {
+        /** Labelled rows — skill anatomy, invariants, freedom bands. */
+        kind: "anatomy";
+        head: ArcHead;
+        /** Gold chip badge above the head, e.g. "Claude · Skill". */
+        badge?: string;
+        rows: readonly ArcAnatomyRow[];
+      }
+    | {
+        /** Full-bleed display line — chapter question, callout, or quote. */
+        kind: "interstitial";
+        variant: "question" | "callout" | "quote";
+        eyebrow?: string;
+        line: ArcTitle;
+        subline?: string;
+        /** Quote variant only — the mono attribution line. */
+        attribution?: string;
+      }
+    | {
+        /** Framed video or image figure with a two-column head. */
+        kind: "media";
+        head: ArcHead;
+        media: {
+          type: "video" | "image";
+          src: string;
+          /** Required for video (preload="none" shows only the poster). */
+          poster?: string;
+          alt?: string;
+        };
+        caption: {
+          label: string;
+          role?: string;
+          meta?: string;
+          sourceLabel: string;
+          sourceHref?: string;
+        };
+      }
+    | {
+        /** Portrait + bio + meta rows (the About Vince read). */
+        kind: "portrait";
+        head: ArcHead;
+        image: ArcImage;
+        bio: readonly string[];
+        meta: readonly ArcMetaRow[];
+      }
+    | {
+        /** Closing CTA band — doubles as the page footer. */
+        kind: "close";
+        head: ArcHead;
+        actions: readonly ArcAction[];
+        footerLine?: string;
+        signature?: string;
+      }
+  );
+
+export type ArcSectionKind = ArcSection["kind"];
+
+/** The section narrowed to one kind — component prop types. */
+export type ArcSectionOf<K extends ArcSectionKind> = Extract<ArcSection, { kind: K }>;
+
+export type ArcFormat = "workshop" | "keynote";
+
+export interface ArcDef {
+  /** Route segment — kebab-case, unique across the registry. */
+  slug: string;
+  /** Overview card chip text (WORKSHOP / KEYNOTE). */
+  format: ArcFormat;
+  /** Overview card copy. */
+  cardTitle: string;
+  cardLede: string;
+  cardImage: ArcImage;
+  /** Detail-page hero (landing hero recipe, parallax photo background). */
+  hero: {
+    /** PT Mono designation above the headline, e.g. "THOUGHTFORM · CLAUDE WORKSHOP". */
+    eyebrow?: string;
+    title: ArcTitle;
+    lede: string;
+    actions?: readonly ArcAction[];
+    image: ArcImage & { width: number; height: number };
+  };
+  /** Route metadata (robots noindex is applied by the route, not here). */
+  meta: { title: string; description: string };
+  sections: readonly ArcSection[];
+}

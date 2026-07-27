@@ -1,0 +1,1352 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ARCS — client arc pages (/arcs, /arcs/[slug]) · ADR-052
+   The landing grammar on a standalone route: landing.css provides
+   fonts, tokens, the .hud chrome, the .hero recipe, and [data-parallax];
+   THIS sheet owns everything .arc-* — grammars COPIED (never imported)
+   from the corridor sheets, because home-v2.css / services.css are
+   coupled to corridor scroll state:
+     · station-title voice        ← home-v2.css .home-v2-station-header__title
+     · masthead + survey crosses  ← services.css .services-masthead (in-flow here)
+     · chamfer card face          ← ServicesCardRing bakeCardFace + .svc-plate shell
+     · left reel menu             ← home-v2.css .home-v2-section-menu
+   Import order is load-bearing: landing.css first, this sheet LAST.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Root & compositing (ADR-008) ──────────────────────────────────
+   The hudHtml slice ships the fixed `.gateway` gold radial. Arcs never
+   use it: it is display-none'd and every section carries an opaque
+   void background above it (belt and braces — transparent full-bleed
+   bands over the gateway are the documented regression class). */
+.arc-root {
+  position: relative;
+  min-height: 100svh;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  /* Decorative survey chrome (dot-grid lifts, crosses) deliberately
+     bleeds past the band; clip it so it can never widen the page.
+     `clip` (not `hidden`) — no new scroll container, and the fixed
+     .hud inside is unaffected (no transformed ancestor). */
+  overflow-x: clip;
+}
+.arc-root .gateway {
+  display: none;
+}
+.arc-hud-root {
+  display: contents;
+}
+.arc-section {
+  position: relative;
+  z-index: 1;
+  background: var(--void, #0a0908);
+}
+/* Site rule: no italics anywhere — emphasis is upright gold. The `i`
+   arm covers the empty decorative <i> elements (crosses, grids,
+   corners), which otherwise carry the UA italic style. */
+.arc-root em,
+.arc-root i {
+  font-style: normal;
+}
+
+/* ── Editorial band (ADR-048) ──────────────────────────────────────
+   Text edges land on --band-margin (landing.css :root): flush with the
+   hero headline edge below the cap crossover, pinned to the centered
+   1200px band above it. */
+.arc-band {
+  width: 100%;
+  padding-inline: var(--band-margin, var(--hud-content-inset, 48px));
+}
+
+/* ── Section rhythm — VIEWPORT BEATS (owner, 2026-07-27) ───────────
+   Every section is one full-viewport beat with its content vertically
+   centered — the deck read ("one viewport thing per section"), not a
+   flowing document. Long sections (skills rosters, the shift) simply
+   grow past the viewport and keep the same air. Mobile releases the
+   min-height and reads as a generously-spaced flow. */
+.arc-sec {
+  display: grid;
+  align-content: center;
+  min-height: 100svh;
+  padding-block: clamp(96px, 14vh, 200px);
+}
+.arc-sec--chapter {
+  min-height: 100svh;
+  padding-block: clamp(96px, 16vh, 220px);
+}
+
+/* ── Shared atoms ──────────────────────────────────────────────────── */
+.arc-desig {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+
+/* The one big-title voice of the journey (station-header recipe). */
+.arc-title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+.arc-title em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+
+/* Body-copy emphasis — the corridor caption gold-wash marker. */
+.arc-prose em,
+.arc-head__copy em,
+.arc-card-item__body em,
+.arc-inter__subline em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.16);
+  padding: 0.14em 0.16em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.arc-prose {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.6;
+  color: rgba(236, 227, 214, 0.8);
+}
+
+/* Mono receipt line — gold diamond prefix. */
+.arc-receipt {
+  margin: clamp(36px, 6vh, 64px) 0 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-receipt::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 10px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg) translateY(-1px);
+}
+.arc-footnote {
+  margin: clamp(28px, 4.5vh, 52px) 0 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(235, 227, 214, 0.4);
+  max-width: 72ch;
+}
+
+/* Filled gold chip badge (the card-face chip grammar at DOM scale). */
+.arc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(18px, 3vh, 28px);
+  padding: 7px 12px;
+  background: var(--gold, #caa554);
+  color: #110f09;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.arc-badge__dia {
+  width: 5px;
+  height: 5px;
+  background: #110f09;
+  transform: rotate(45deg);
+}
+
+/* Dotted-leader cue (the ArcCasesCue grammar, static). */
+.arc-cue {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: clamp(20px, 4vh, 40px) 0 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-cue::before,
+.arc-cue::after {
+  content: "";
+  width: clamp(40px, 9vw, 120px);
+  border-top: 1px dashed rgba(202, 165, 84, 0.4);
+}
+
+/* ── Reveal (IO, visible-by-default) ───────────────────────────────
+   Content stands without JS; ArcShell adds `is-arc-js` + `.is-in`. */
+.is-arc-js .arc-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.65s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+    transform 0.65s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.is-arc-js .arc-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── /arcs overview ────────────────────────────────────────────────── */
+.arc-index-hero {
+  display: grid;
+  align-content: center;
+  min-height: 86svh;
+  padding-block: clamp(110px, 16vh, 200px) clamp(36px, 6vh, 72px);
+}
+.arc-index-hero__band {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(16px, 2.8vh, 28px);
+}
+.arc-index-hero__title {
+  font-size: clamp(30px, 3.8vw, 56px);
+  max-width: 18ch;
+}
+.arc-index-hero__lede {
+  margin: 0;
+  max-width: 54ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.55;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+.arc-index-hero__band .arc-reveal:nth-child(2) {
+  transition-delay: 70ms;
+}
+.arc-index-hero__band .arc-reveal:nth-child(3) {
+  transition-delay: 140ms;
+}
+.arc-index-hero__band .arc-reveal:nth-child(4) {
+  transition-delay: 210ms;
+}
+.arc-index-grid {
+  padding-block: clamp(24px, 4vh, 56px) clamp(140px, 18vh, 220px);
+}
+
+/* ── Overview card face (the collapsed services card, in DOM) ──────
+   Geometry from the ring bake (840×1360 = 420×680 CSS @2x): chamfer
+   cuts top-right + bottom-left, 1px gold gradient hairline via the
+   .svc-plate padding trick, gold-duotone photo under two scrims, a
+   dot-matrix veil that resolves on hover, filled gold chip, and the
+   bottom-anchored title + lede. */
+.arc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 420px));
+  justify-content: center;
+  gap: clamp(20px, 2.5vw, 36px);
+}
+.arc-card {
+  --arc-card-ch: 26px;
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 420 / 680;
+  margin-inline: auto;
+  text-decoration: none;
+  opacity: 0.55;
+  transition: opacity 0.3s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.arc-card:hover,
+.arc-card:focus-visible {
+  opacity: 0.85;
+}
+.arc-card:focus-visible {
+  outline: 1px solid var(--gold, #caa554);
+  outline-offset: 4px;
+}
+.arc-card__sh {
+  position: absolute;
+  inset: 0;
+  display: block;
+  padding: 1px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--arc-card-ch)) 0,
+    100% var(--arc-card-ch),
+    100% 100%,
+    var(--arc-card-ch) 100%,
+    0 calc(100% - var(--arc-card-ch))
+  );
+  background: linear-gradient(
+    168deg,
+    rgba(202, 165, 84, 0.52) 0%,
+    rgba(236, 227, 214, 0.14) 38%,
+    rgba(202, 165, 84, 0.16) 66%,
+    rgba(202, 165, 84, 0.48) 100%
+  );
+}
+.arc-card__bd {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  clip-path: polygon(
+    0 0,
+    calc(100% - (var(--arc-card-ch) - 0.6px)) 0,
+    100% calc(var(--arc-card-ch) - 0.6px),
+    100% 100%,
+    calc(var(--arc-card-ch) - 0.6px) 100%,
+    0 calc(100% - (var(--arc-card-ch) - 0.6px))
+  );
+  background: #050403;
+}
+.arc-card__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
+}
+.arc-card__scrim {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background:
+    linear-gradient(to bottom, rgba(5, 4, 3, 0.78) 0%, transparent 28%),
+    linear-gradient(
+      to bottom,
+      transparent 51%,
+      rgba(5, 4, 3, 0.58) 68%,
+      rgba(5, 4, 3, 0.9) 82%,
+      rgba(5, 4, 3, 0.96) 100%
+    );
+}
+/* Dot-matrix veil — the hologram read; fades out = the photo resolves. */
+.arc-card__veil {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: #050403;
+  opacity: 0.45;
+  -webkit-mask-image: radial-gradient(circle, transparent 1.05px, #000 1.2px);
+  mask-image: radial-gradient(circle, transparent 1.05px, #000 1.2px);
+  -webkit-mask-size: 4px 4px;
+  mask-size: 4px 4px;
+  transition: opacity 0.35s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.arc-card:hover .arc-card__veil,
+.arc-card:focus-visible .arc-card__veil {
+  opacity: 0;
+}
+/* Brighter gold ticks riding the chamfer cuts. */
+.arc-card__tick {
+  position: absolute;
+  display: block;
+  height: 2px;
+  width: calc(var(--arc-card-ch) * 1.41421);
+  background: rgba(202, 165, 84, 0.85);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.35);
+}
+.arc-card__tick--tr {
+  top: calc(var(--arc-card-ch) / 2);
+  right: calc(var(--arc-card-ch) / 2);
+  transform: translate(50%, -50%) rotate(45deg);
+}
+.arc-card__tick--bl {
+  bottom: calc(var(--arc-card-ch) / 2);
+  left: calc(var(--arc-card-ch) / 2);
+  transform: translate(-50%, 50%) rotate(45deg);
+}
+.arc-card__chip {
+  position: absolute;
+  top: 23px;
+  left: 22px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 33px;
+  padding: 0 13px;
+  background: var(--gold, #caa554);
+  color: #110f09;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+.arc-card__chip::before {
+  content: "";
+  width: 5.5px;
+  height: 5.5px;
+  background: #110f09;
+  transform: rotate(45deg);
+}
+.arc-card__copy {
+  position: absolute;
+  z-index: 2;
+  left: 26px;
+  right: 26px;
+  bottom: 34px;
+  display: grid;
+  gap: 15px;
+}
+.arc-card__title {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ece3d6;
+}
+.arc-card__lede {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: 17.5px;
+  line-height: 25px;
+  color: rgba(236, 227, 214, 0.82);
+}
+
+/* ── Detail hero extras (base .hero__* comes from landing.css) ─────── */
+.arc-hero__eyebrow {
+  margin: 0 0 clamp(14px, 2.2vh, 24px);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-hero .hero__headline em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+}
+
+/* ── Section head — the masthead survey grammar, in flow ───────────── */
+.arc-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 72px);
+  align-items: start;
+  /* One clear breath between the head band and the section body — the
+     beat's own headline zone (viewport-beat rhythm, ADR-052 U1). */
+  margin-bottom: clamp(48px, 9vh, 112px);
+}
+.arc-head--solo {
+  grid-template-columns: 1fr;
+}
+.arc-head--center {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+}
+.arc-head__lead {
+  position: relative;
+}
+.arc-head__title {
+  max-width: 20ch;
+  position: relative;
+  z-index: 1;
+}
+.arc-head--center .arc-head__title {
+  max-width: 26ch;
+}
+.arc-head__intro {
+  position: relative;
+  justify-self: end;
+  max-width: min(42ch, 100%);
+  padding-top: 6px;
+}
+.arc-head__copy {
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--dawn, #ebe3d6);
+}
+.arc-head__copy--center {
+  max-width: 56ch;
+  text-align: center;
+  color: rgba(236, 227, 214, 0.8);
+  margin-top: clamp(10px, 1.6vh, 18px);
+}
+/* Survey chrome — masthead recipe (services.css), decorative. */
+.arc-head__desig {
+  position: absolute;
+  top: -34px;
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.arc-head--center .arc-head__lead {
+  display: grid;
+  justify-items: center;
+}
+.arc-head--center .arc-head__desig {
+  position: static;
+  margin-bottom: 14px;
+}
+.arc-head__state {
+  position: absolute;
+  top: -34px;
+  right: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  white-space: nowrap;
+  pointer-events: none;
+}
+.arc-head__coord {
+  position: absolute;
+  top: calc(100% + 22px);
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.22);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.arc-head__coord--r {
+  left: auto;
+  right: 32px;
+}
+/* The registration crosses — 1px arms via ::before/::after. */
+.arc-head__mark {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.arc-head__mark::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: currentcolor;
+}
+.arc-head__mark::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: currentcolor;
+}
+.arc-head__mark--origin {
+  top: -26px;
+  left: -24px;
+  transform: translate(-50%, -50%);
+  color: var(--gold, #caa554);
+}
+.arc-head__mark--close {
+  top: calc(100% + 22px);
+  right: -24px;
+  transform: translate(50%, -50%);
+  color: rgba(235, 227, 214, 0.7);
+}
+/* Masked dot-grid lift under each block. */
+.arc-head__grid {
+  position: absolute;
+  inset: -16px -22px;
+  z-index: 0;
+  background-image: radial-gradient(rgba(235, 227, 214, 0.06) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  pointer-events: none;
+}
+.arc-head--center .arc-head__mark,
+.arc-head--center .arc-head__coord {
+  display: none;
+}
+
+/* ── Cards grid (numbered plates) ──────────────────────────────────── */
+.arc-cards {
+  display: grid;
+  grid-template-columns: repeat(var(--arc-cols, 3), minmax(0, 1fr));
+  gap: clamp(20px, 2.6vw, 44px);
+}
+.arc-card-item {
+  position: relative;
+  padding: clamp(22px, 2.2vw, 36px) clamp(22px, 2.2vw, 36px) clamp(26px, 2.6vw, 40px);
+  border: 1px solid rgba(235, 227, 214, 0.08);
+  background:
+    linear-gradient(172deg, rgba(236, 227, 214, 0.03) 0%, rgba(236, 227, 214, 0) 55%),
+    rgba(8, 7, 6, 0.55);
+}
+.arc-card-item::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 34px;
+  height: 1px;
+  background: var(--gold, #caa554);
+  opacity: 0.7;
+}
+.arc-card-item__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.arc-card-item__n {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-card-item__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-card-item__media {
+  display: block;
+  margin: 0 0 14px;
+  background: #050403;
+  border: 1px solid rgba(235, 227, 214, 0.08);
+}
+.arc-card-item__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.arc-card-item__title {
+  margin: 0 0 12px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+}
+.arc-card-item__title a {
+  color: inherit;
+  text-decoration: none;
+}
+.arc-card-item__title a:hover {
+  color: var(--gold, #caa554);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.arc-card-item__body {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(236, 227, 214, 0.7);
+}
+.arc-card-item__meta {
+  margin: 14px 0 0;
+  display: grid;
+  gap: 6px;
+}
+.arc-card-item__meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(235, 227, 214, 0.1);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.arc-card-item__meta-row dt {
+  color: rgba(235, 227, 214, 0.4);
+}
+.arc-card-item__meta-row dd {
+  margin: 0;
+  color: rgba(236, 227, 214, 0.8);
+}
+.arc-card-item__receipt {
+  margin: 12px 0 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-card-item__receipt::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-right: 8px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg) translateY(-1px);
+}
+.arc-card-item__byline {
+  margin: 10px 0 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+/* Stagger inside a cards grid. */
+.arc-cards > .arc-reveal:nth-child(2) {
+  transition-delay: 60ms;
+}
+.arc-cards > .arc-reveal:nth-child(3) {
+  transition-delay: 120ms;
+}
+.arc-cards > .arc-reveal:nth-child(4) {
+  transition-delay: 180ms;
+}
+
+/* Tips strip under a cards grid. */
+.arc-tips {
+  margin-top: clamp(40px, 6.5vh, 80px);
+  border-top: 1px dashed rgba(202, 165, 84, 0.2);
+}
+.arc-tips__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 160px) 1fr;
+  gap: 8px clamp(16px, 2.5vw, 32px);
+  padding: clamp(16px, 2.2vh, 24px) 0;
+  border-bottom: 1px dashed rgba(235, 227, 214, 0.1);
+}
+.arc-tips__tag {
+  justify-self: start;
+  padding: 4px 8px;
+  border: 1px solid rgba(202, 165, 84, 0.35);
+  background: rgba(202, 165, 84, 0.08);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  white-space: nowrap;
+  height: fit-content;
+}
+.arc-tips__body {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(236, 227, 214, 0.7);
+}
+
+/* ── List groups ───────────────────────────────────────────────────── */
+.arc-groups {
+  display: grid;
+  gap: clamp(40px, 7vh, 80px);
+}
+.arc-groups--columns {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(28px, 3.5vw, 64px);
+  align-items: start;
+}
+.arc-groups__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.12);
+  margin-bottom: 10px;
+}
+.arc-groups__label {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.5);
+}
+.arc-groups__label[data-lead] {
+  color: var(--gold, #caa554);
+}
+.arc-groups__blurb {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 13px;
+  color: rgba(235, 227, 214, 0.4);
+}
+.arc-groups__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.arc-groups--stack .arc-groups__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0 clamp(20px, 3vw, 44px);
+}
+.arc-groups__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: clamp(12px, 1.8vh, 18px) 0;
+  border-bottom: 1px dashed rgba(235, 227, 214, 0.1);
+}
+.arc-groups__tag {
+  padding: 2px 6px;
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  white-space: nowrap;
+}
+.arc-groups__name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 16px;
+  line-height: 1.35;
+  color: rgba(236, 227, 214, 0.9);
+}
+.arc-groups__name a {
+  color: inherit;
+  text-decoration: underline dotted rgba(202, 165, 84, 0.5);
+  text-underline-offset: 4px;
+}
+.arc-groups__name a:hover {
+  color: var(--gold, #caa554);
+}
+.arc-groups__meta {
+  margin-left: auto;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-groups__body {
+  flex-basis: 100%;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(236, 227, 214, 0.6);
+}
+
+/* ── Anatomy rows ──────────────────────────────────────────────────── */
+.arc-anatomy {
+  margin: clamp(40px, 6.5vh, 80px) 0 0;
+  border-top: 1px solid rgba(235, 227, 214, 0.12);
+}
+.arc-anatomy__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: 8px clamp(24px, 3.5vw, 56px);
+  padding: clamp(20px, 3.2vh, 34px) 0;
+  border-bottom: 1px dashed rgba(202, 165, 84, 0.2);
+}
+.arc-anatomy__row dt {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.7);
+}
+.arc-anatomy__row dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.55;
+  color: rgba(236, 227, 214, 0.8);
+  max-width: 68ch;
+}
+
+/* ── Interstitial bands — full-viewport pauses ─────────────────────── */
+.arc-inter {
+  display: grid;
+  align-content: center;
+  min-height: 100svh;
+  padding-block: clamp(120px, 18vh, 240px);
+}
+.arc-inter__band {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(14px, 2.4vh, 24px);
+}
+.arc-inter--question .arc-inter__band::before {
+  content: "";
+  position: absolute;
+  inset: -48px -64px;
+  z-index: 0;
+  background-image: radial-gradient(rgba(235, 227, 214, 0.05) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(60% 80% at 50% 50%, #000 40%, transparent 95%);
+  mask-image: radial-gradient(60% 80% at 50% 50%, #000 40%, transparent 95%);
+  pointer-events: none;
+}
+.arc-inter__band > * {
+  position: relative;
+  z-index: 1;
+}
+.arc-inter__line {
+  margin: 0;
+  max-width: 24ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(30px, 4.2vw, 58px);
+  line-height: 1.12;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 26px rgba(202, 165, 84, 0.16);
+}
+.arc-inter__line em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+.arc-inter--callout .arc-inter__line {
+  font-size: clamp(38px, 5.4vw, 76px);
+}
+.arc-inter--quote .arc-inter__line {
+  max-width: 34ch;
+  font-size: clamp(24px, 3vw, 40px);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+.arc-inter__subline {
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.55;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+.arc-inter__attribution {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.arc-inter__rule {
+  width: 34px;
+  height: 1px;
+  background: rgba(202, 165, 84, 0.4);
+}
+
+/* ── Media figure ──────────────────────────────────────────────────── */
+.arc-media {
+  margin: clamp(40px, 6.5vh, 80px) auto 0;
+  max-width: min(100%, 880px);
+  display: grid;
+  gap: 16px;
+}
+.arc-media__frame {
+  position: relative;
+  padding: clamp(10px, 1.2vw, 16px);
+  border: 1px solid rgba(202, 165, 84, 0.25);
+  background: #050403;
+}
+.arc-media__frame::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 22px;
+  height: 22px;
+  border-top: 2px solid var(--gold, #caa554);
+  border-left: 2px solid var(--gold, #caa554);
+  opacity: 0.8;
+}
+.arc-media__frame::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-bottom: 2px solid var(--gold, #caa554);
+  border-right: 2px solid var(--gold, #caa554);
+  opacity: 0.8;
+}
+.arc-media__frame video,
+.arc-media__frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #050403;
+}
+.arc-media__cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.arc-media__cap-main {
+  color: rgba(236, 227, 214, 0.7);
+}
+.arc-media__cap-src {
+  margin-left: auto;
+}
+.arc-media__cap-src a {
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+}
+.arc-media__cap-src a:hover {
+  color: var(--gold, #caa554);
+}
+
+/* ── Portrait ──────────────────────────────────────────────────────── */
+.arc-portrait {
+  margin-top: clamp(40px, 6.5vh, 80px);
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: clamp(32px, 5vw, 88px);
+  align-items: start;
+}
+.arc-portrait__frame {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 4 / 5;
+  background: #050403;
+}
+.arc-portrait__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.arc-portrait__corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+.arc-portrait__corner.is-tl {
+  top: -2px;
+  left: -2px;
+  border-top: 2px solid var(--gold, #caa554);
+  border-left: 2px solid var(--gold, #caa554);
+}
+.arc-portrait__corner.is-tr {
+  top: -2px;
+  right: -2px;
+  border-top: 2px solid var(--gold, #caa554);
+  border-right: 2px solid var(--gold, #caa554);
+}
+.arc-portrait__corner.is-bl {
+  bottom: -2px;
+  left: -2px;
+  border-bottom: 2px solid var(--gold, #caa554);
+  border-left: 2px solid var(--gold, #caa554);
+}
+.arc-portrait__corner.is-br {
+  bottom: -2px;
+  right: -2px;
+  border-bottom: 2px solid var(--gold, #caa554);
+  border-right: 2px solid var(--gold, #caa554);
+}
+.arc-portrait__copy {
+  display: grid;
+  gap: 16px;
+  max-width: 60ch;
+}
+.arc-portrait__meta {
+  margin: 8px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(235, 227, 214, 0.12);
+  display: grid;
+  gap: 8px;
+}
+.arc-portrait__meta-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 14px;
+}
+.arc-portrait__meta-row dt {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.arc-portrait__meta-row dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(236, 227, 214, 0.8);
+}
+
+/* ── Close band — the final full-viewport beat ─────────────────────── */
+.arc-close {
+  display: grid;
+  align-content: center;
+  min-height: 100svh;
+  padding-block: clamp(96px, 16vh, 200px) clamp(120px, 18vh, 220px);
+}
+.arc-close__band {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(16px, 2.6vh, 26px);
+}
+.arc-close__title {
+  font-size: clamp(30px, 3.6vw, 52px);
+  max-width: 20ch;
+}
+.arc-close__sub {
+  margin: 0;
+  max-width: 46ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.55;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+.arc-close__cta {
+  justify-content: center;
+  margin-top: 6px;
+}
+.arc-close__foot {
+  width: 100%;
+  margin-top: clamp(56px, 10vh, 120px);
+  padding-top: 18px;
+  border-top: 1px dashed rgba(202, 165, 84, 0.2);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 28px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.arc-close__sig {
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+
+/* ── Left reel menu (section-menu grammar, arc-gated) ──────────────── */
+.arc-menu {
+  position: fixed;
+  top: 50%;
+  left: calc(var(--hud-margin, 40px) + clamp(16px, 1.7vw, 28px));
+  z-index: 18;
+  --menu-row-h: 22px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.arc-root[data-arc-scrolled] .arc-menu {
+  opacity: 1;
+}
+.arc-root[data-arc-scrolled] .arc-menu button {
+  pointer-events: auto;
+}
+.arc-menu button {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: inherit;
+}
+.arc-menu button:focus-visible {
+  outline: 1px solid var(--gold, #caa554);
+  outline-offset: 3px;
+}
+.arc-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.arc-menu__list {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(-1 * (var(--active-row, 0) + 0.5) * var(--menu-row-h)));
+  transition: transform 320ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.arc-menu__item {
+  display: flex;
+  align-items: center;
+  height: var(--menu-row-h);
+  transition: visibility 0s linear 320ms;
+}
+.arc-menu__item[data-active] {
+  visibility: hidden;
+  transition-delay: 0s;
+}
+.arc-menu__row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 1px 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(235, 227, 214, 0.34);
+  transition: color 140ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.arc-menu__row:hover {
+  color: rgba(235, 227, 214, 0.62);
+}
+.arc-menu__name {
+  white-space: nowrap;
+  padding: 0 1px;
+}
+.arc-menu__highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: var(--menu-row-h);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  color: var(--gold, #caa554);
+  pointer-events: none;
+}
+.arc-menu__highlight .arc-menu__name {
+  padding: 1px 6px;
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
+}
+.arc-menu__disc {
+  margin-left: 2px;
+  font-size: 9px;
+  color: rgba(202, 165, 84, 0.5);
+}
+@media (max-width: 1100px), (max-height: 759px) {
+  .arc-menu {
+    display: none;
+  }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 1280px) {
+  .arc-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  /* Mobile releases the viewport-beat min-height — a presentation idiom
+     for desktop rooms; phones read as a generously-spaced flow. */
+  .arc-sec,
+  .arc-sec--chapter,
+  .arc-inter,
+  .arc-close {
+    min-height: 0;
+    padding-block: clamp(72px, 12vh, 120px);
+  }
+  .arc-head,
+  .arc-head--split {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .arc-head {
+    margin-bottom: clamp(36px, 6vh, 64px);
+  }
+  .arc-head__intro {
+    justify-self: start;
+    padding-top: 0;
+  }
+  /* Survey chrome is desktop furniture (masthead mobile precedent). */
+  .arc-head__mark,
+  .arc-head__coord,
+  .arc-head__grid,
+  .arc-head__state {
+    display: none;
+  }
+  .arc-head__desig {
+    position: static;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .arc-portrait {
+    grid-template-columns: 1fr;
+  }
+  .arc-portrait__frame {
+    width: 100%;
+    max-width: 320px;
+  }
+  .arc-anatomy__row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .arc-tips__row {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 720px) {
+  .arc-cards {
+    grid-template-columns: 1fr;
+  }
+  .arc-groups--columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .is-arc-js .arc-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .arc-card,
+  .arc-card__veil,
+  .arc-menu,
+  .arc-menu__list,
+  .arc-menu__item {
+    transition: none;
+  }
+}
