@@ -36,13 +36,20 @@ export function scrollToManifestEntry(entry: ManifestEntry, reduceMotion: boolea
 }
 
 /**
- * Scroll to an element by id, using the same offsetTop recipe as a
- * station entry. For subsections that live INSIDE a station and so have
- * no manifest entry of their own — the `#proof` beats (ADR-054). Absent
- * element is a no-op.
+ * Scroll to an element by id. For subsections that live INSIDE a station
+ * and so have no manifest entry of their own — the `#proof` beats
+ * (ADR-054). Absent element is a no-op.
+ *
+ * Deliberately NOT `offsetTop`, which the station entries above can use
+ * safely only because they are direct children of the unpositioned
+ * `.stations`. A nested beat's `offsetParent` is its station — and
+ * `#proof` IS positioned while the corridor-exit band is live — so
+ * `offsetTop` yields a station-relative number (~900 instead of ~11520)
+ * and the click lands near the top of the page.
  */
 export function scrollToElementTop(elementId: string, reduceMotion: boolean): void {
   const el = document.getElementById(elementId);
   if (!el) return;
-  window.scrollTo({ top: el.offsetTop, behavior: reduceMotion ? "auto" : "smooth" });
+  const top = el.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo({ top, behavior: reduceMotion ? "auto" : "smooth" });
 }

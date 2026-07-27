@@ -7126,10 +7126,17 @@
   align-content: center;
   align-items: center;
 }
+/* Both children are pinned to ROW 1 explicitly. Column placement alone is
+   not enough: with auto-placement, a flipped beat puts the copy in column
+   2 first, which advances the cursor past column 1 — so the visual, which
+   wants column 1, wraps to row 2 and the beat renders diagonally at
+   double height instead of mirrored. */
 .proof__beat-copy {
+  grid-row: 1;
   grid-column: 1;
 }
 .proof__beat-visual {
+  grid-row: 1;
   grid-column: 2;
 }
 .proof__beat--flip .proof__beat-copy {
@@ -7457,10 +7464,13 @@
     padding-block: clamp(48px, 9svh, 88px);
     row-gap: 32px;
   }
+  /* Single column: release the desktop row/column pins so the two blocks
+     stack in DOM order (copy, then its evidence) on every beat. */
   .proof__beat-copy,
   .proof__beat-visual,
   .proof__beat--flip .proof__beat-copy,
   .proof__beat--flip .proof__beat-visual {
+    grid-row: auto;
     grid-column: 1;
   }
   .proof__stats {
