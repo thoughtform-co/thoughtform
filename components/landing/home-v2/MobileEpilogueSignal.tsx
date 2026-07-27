@@ -6,9 +6,9 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
 
 /**
- * MobileEpilogueSignal — the epilogue "CAPABILITY IS WHAT YOUR TEAM
- * BUILDS AROUND THE MODEL." title + "WE HELP YOU BUILD YOURS" CTA on
- * the mobile corridor composition (ADR-018 mobile epilogue fix, 2026-07-15).
+ * MobileEpilogueSignal — the epilogue "EVERYONE IS RACING TO BUILD THIS
+ * CAPABILITY." title + "WE HELP YOU OWN YOURS" CTA on the mobile
+ * corridor composition (ADR-018 mobile epilogue fix, 2026-07-15).
  *
  * On desktop this content lives inside `CorridorStationHeaders` (the
  * 2D header layer) with typewriter animation, a ticker, and the
@@ -100,24 +100,28 @@ export function MobileEpilogueSignal() {
       ref={ref}
       className="home-v2-mobile-signal"
       role="region"
-      aria-label="Capability is what your team builds around the model"
+      aria-label="Everyone is racing to build this capability"
       aria-hidden="false"
     >
+      {/* Keep in lockstep with SIGNAL_CONTENT.titleHtml
+          (CorridorStationHeaders) — same beat, two surfaces. The title's
+          BUILD and the CTA's OWN below are a deliberate inversion; move
+          them together. */}
       <h2 className="home-v2-mobile-signal__title">
-        <em>CAPABILITY</em> IS WHAT YOUR TEAM
+        EVERYONE IS RACING TO
         <br />
-        BUILDS AROUND THE MODEL.
+        <em>BUILD THIS CAPABILITY.</em>
       </h2>
       <div className="home-v2-mobile-signal__actions">
         <a className="home-v2-mobile-signal__cta" href="#contact">
-          <span className="home-v2-mobile-signal__cta-label">WE HELP YOU BUILD YOURS</span>
+          <span className="home-v2-mobile-signal__cta-label">WE HELP YOU OWN YOURS</span>
           <span className="home-v2-mobile-signal__cta-chevrons" aria-hidden="true">
             <span className="home-v2-mobile-signal__cta-chev" />
             <span className="home-v2-mobile-signal__cta-chev" />
             <span className="home-v2-mobile-signal__cta-chev" />
           </span>
         </a>
-        <p className="home-v2-mobile-signal__note">Before the lab sells it back to you.</p>
+        <p className="home-v2-mobile-signal__note">Before the labs sell it back to you.</p>
       </div>
     </div>
   );

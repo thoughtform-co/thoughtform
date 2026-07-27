@@ -2195,6 +2195,16 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   gap: clamp(9px, 1.2vh, 13px);
   margin-top: clamp(14px, 2vh, 22px);
   pointer-events: auto;
+
+  /* ── One type scale for the pair (owner, 2026-07-27) ────────────────
+     The CTA label is the anchor and the note below is DERIVED from it,
+     rather than the two carrying independent clamps that happened to
+     sit ~1.2 apart. Bumping the button then cannot leave the note
+     stranded at its old size — the ratio is the thing being preserved,
+     so it is written down instead of re-derived by hand.
+     Raised 20% from the original clamp(10px, 0.78vw, 12px). */
+  --signal-cta-type: clamp(12px, 0.94vw, 14px);
+  --signal-note-ratio: 1.2;
 }
 
 .home-v2-signal-cta {
@@ -2216,7 +2226,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
     rgba(10, 9, 8, 0.58);
   color: var(--dawn, #ebe3d6);
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: clamp(10px, 0.78vw, 12px);
+  font-size: var(--signal-cta-type);
   letter-spacing: 0.18em;
   line-height: 1;
   text-transform: uppercase;
@@ -2314,7 +2324,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 .home-v2-signal-note {
   margin: 0;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: clamp(12px, 0.95vw, 14px);
+  /* Derived from the CTA — see --signal-cta-type on .home-v2-signal-actions. */
+  font-size: calc(var(--signal-cta-type) * var(--signal-note-ratio));
   line-height: 1.45;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -2331,7 +2342,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 /* ── Mobile epilogue signal (ADR-018 mobile epilogue fix, 2026-07-15) ──
    The mobile counterpart to `.home-v2-station-header--signal` — a small
    viewport-fixed block that carries the "EVERYONE IS RACING…" title +
-   "WE HELP YOU BUILD YOURS" CTA on the mobile corridor composition,
+   "WE HELP YOU OWN YOURS" CTA on the mobile corridor composition,
    because the desktop signal layer is `display: none` at ≤760px.
 
    Positioned in the upper third of the viewport so the sphere/planet

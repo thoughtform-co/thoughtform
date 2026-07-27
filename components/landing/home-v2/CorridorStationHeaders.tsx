@@ -799,7 +799,16 @@ function StationBlock({
 // anchor pattern are identical — only the CSS variant (`--signal`)
 // and the opacity driver differ.
 const SIGNAL_CONTENT: StationContent = {
-  titleHtml: "<em>CAPABILITY</em> IS WHAT YOUR TEAM<br>BUILDS AROUND THE MODEL.",
+  // Owner, 2026-07-27. The accent moved from the leading noun to the
+  // CLOSING phrase, which is where every other headline on the site puts
+  // it ("Tools the team builds itself", "Plot your course.") — and it is
+  // the phrase the ticker underneath is evidence for.
+  //
+  // ⚠ The title and the CTA beneath it are a deliberate INVERSION —
+  // everyone races to BUILD, we help you OWN. Swapping either verb alone
+  // collapses the pair into a repetition and loses the whole point of the
+  // beat. Change them together or not at all.
+  titleHtml: "EVERYONE IS RACING TO<br><em>BUILD THIS CAPABILITY.</em>",
 };
 
 interface SignalTickerItem {
@@ -1146,10 +1155,11 @@ function SignalActions() {
     <div className="home-v2-signal-actions">
       <a className="home-v2-signal-cta" href="#contact">
         <ChevronCluster />
-        <span className="home-v2-signal-cta__label">WE HELP YOU BUILD YOURS</span>
+        {/* OWN, against the title's BUILD — see the note on SIGNAL_CONTENT. */}
+        <span className="home-v2-signal-cta__label">WE HELP YOU OWN YOURS</span>
         <ChevronCluster flipped />
       </a>
-      <p className="home-v2-signal-note">Before the lab sells it back to you.</p>
+      <p className="home-v2-signal-note">Before the labs sell it back to you.</p>
     </div>
   );
 }
