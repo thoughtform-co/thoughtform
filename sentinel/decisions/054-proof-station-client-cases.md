@@ -186,3 +186,64 @@ which took that slot. It cannot aim at a corridor-replaced station:
   reel, so its rows are not mouse-clickable. Verified identical at
   `#services`, the Arc beats, and `#proof` — inherited, not introduced.
   Tracked separately.
+
+---
+
+## Update 1 — the report head pins and decodes (2026-07-27, owner)
+
+**Amends** the "It is plain DOM" decision above: `#proof` now carries a
+CSS pin and a reveal controller. Everything else in this ADR stands.
+
+The owner's judgment: the mission report should arrive the way the
+services masthead does — held still, its copy appearing in place — not
+slide up the page on the generic `data-m` rise.
+
+### The pin
+
+`.proof__report` becomes `position: sticky; top: 0; height: 100svh`
+inside a new `.proof__report-runway` (`min-height: 200svh`, the single
+pacing knob — runway minus 100svh is the hold, currently one viewport).
+The head holds while its runway scrolls, then releases into the Navigate
+beat.
+
+Still **no scroll writer**: this is plain CSS sticky, not a pinned stage
+with a clock. `#services` and `#about` need clocks because they drive a
+WebGL canvas; the report only has to stay put. That distinction is the
+whole reason this stays a retune of the funnel and not a new stage.
+
+The ambient contract is untouched — the runway starts at the station's
+top, so `useCorridorExitScroll` reads the same rect. Re-verified headed:
+ambient alive at `#proof.top = +0.6vh` and `+0.2vh`, dead at `0.0vh`.
+
+Mobile (≤960px) collapses the runway and un-pins the head: the stacked
+copy can exceed a short viewport, and the decode is gated off there
+anyway.
+
+### The decode
+
+`ProofRevealController` (`components/landing/home-v2/proof/`) reproduces
+`ServicesMasthead`'s reveal: title lines decode through the canonical
+`captionScramble` kernel with the station-header CRT cursor riding the
+line still resolving, while the lede types on beside them. Neither moves
+— the `data-m` roles came OFF the title and the lede, because a rise is
+exactly what this replaces.
+
+Two forced differences from the services controller:
+
+1. The markup is **parse-injected**, not JSX, so this is a controller
+   that finds nodes and mutates them in place (the
+   `RailManifestController` precedent). It renders `null`.
+2. `#proof` has **no clock to read**, so arrival is an
+   `IntersectionObserver` on the head — no scroll listener, no writer.
+
+Everything else is held verbatim: writes confined to its own subtree,
+silent reconstruction on a reload already inside the station, re-arm on
+leaving upward, enhanced tier only (≥961px + no reduced motion), and a
+cleanup that restores the full text. Mobile / PRM / no-JS keep the static
+copy the markup already ships — verified: full title and 283-character
+lede present, `data-reveal` absent.
+
+### Consequence
+
+The station grows by one viewport (the hold). `.proof__report-runway`'s
+`min-height` is where to retune that, and nothing else keys off it.

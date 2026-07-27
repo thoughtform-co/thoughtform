@@ -15,9 +15,20 @@ Arc). See LANGUAGE.md.
 
 ## Contracts
 
-- **Plain DOM, no runtime.** No pin, no portal, no scroll writer, no
-  canvas coupling, no flag. If a change wants any of those, it is a new
-  ADR, not a retune.
+- **No scroll writer, no portal, no canvas coupling, no flag.** The head
+  DOES pin (ADR-054 U1) — but with a plain CSS sticky inside
+  `.proof__report-runway`, not a stage with a clock. `#services` and
+  `#about` need clocks because they drive the WebGL canvas; this station
+  only has to stay put. A change that wants a clock, a portal or canvas
+  coupling here is a new ADR, not a retune.
+- **The head's reveal is the DECODE, not `data-m`.**
+  `ProofRevealController` scramble-decodes the title lines and types the
+  lede in place, mirroring `ServicesMasthead` (ADR-044). Do not put a
+  `data-m` role back on `.proof__title` or `.proof__lede` — the roles
+  animate a rise, which is exactly what the decode replaces, and their
+  opacity would fight the controller. Arrival is an IntersectionObserver
+  (no clock exists here to read). Enhanced tier only; mobile / PRM / no-JS
+  keep the static copy the markup already ships.
 - **`#proof` is the ambient cover.** `useCorridorExitScroll` resolves
   `nextStation = ABOUT_DECK_STAGE ? (#proof ?? #practice) : (#about ?? #proof)`.
   The ambient bottom gate and the fade envelope MUST read the SAME rect —

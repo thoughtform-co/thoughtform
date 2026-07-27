@@ -67,6 +67,33 @@ function title(t: CaseTitle, cls = "proof__title-line"): string {
   return parts.join("");
 }
 
+/** Plain-text form of a split title — the stable `aria-label` while the
+ *  visible characters decode. */
+function titleText(t: CaseTitle): string {
+  return [t.pre, t.em, t.post].filter(Boolean).join(" ");
+}
+
+/**
+ * Report title lines, built for the DECODE reveal (ADR-054 Update 1).
+ *
+ * Each line wraps a `__text` span (the scramble target the controller
+ * rewrites per frame) plus the station-header CRT cursor, which the
+ * controller parks on whichever line is still decoding. Mirrors
+ * `ServicesMasthead`'s title markup so both surfaces share one recipe.
+ */
+function decodeTitle(t: CaseTitle): string {
+  const line = (text: string, em = false) =>
+    `<span class="proof__title-line${em ? " proof__title-line--em" : ""}" aria-hidden="true">` +
+    `<span class="proof__title-text">${esc(text)}</span>` +
+    `<span class="proof__cursor" aria-hidden="true">█</span>` +
+    `</span>`;
+  const parts: string[] = [];
+  if (t.pre) parts.push(line(t.pre));
+  if (t.em) parts.push(line(t.em, true));
+  if (t.post) parts.push(line(t.post));
+  return parts.join("");
+}
+
 /** Segment run → markup. `em` is the gold-wash caption marker. */
 function segments(runs: readonly CaseSegment[]): string {
   return runs
@@ -118,20 +145,34 @@ function reportHtml(def: CaseDef): string {
     .join("");
 
   return (
+    // The head PINS across its own runway (ADR-054 Update 1) — the sticky
+    // child holds while the runway scrolls, then releases into the beats.
+    `<div class="proof__report-runway">` +
     `<header class="proof__report" data-m-group>` +
-    // The reveal roles sit on the COPY, never on the plate — see plate().
+    // No `data-m` on the title or the lede: they are DECODED in place by
+    // ProofRevealController, and a data-m role would fight it (opacity 0
+    // until intersect, plus a rise the decode is meant to replace).
+    // Everything else in the head keeps its ordinary reveal.
     `<div class="proof__plate proof__plate--title">` +
     plate("PRF / REPORT · 01", def.slug, 1, "origin") +
-    `<h2 class="proof__title" data-m="title">${title(report.title)}</h2>` +
+    `<h2 class="proof__title" aria-label="${esc(titleText(report.title))}">` +
+    decodeTitle(report.title) +
+    `</h2>` +
     `</div>` +
     `<div class="proof__plate proof__plate--brief">` +
     plate("PRF / BRIEF · 02", def.slug, 2, "close") +
     `<span class="proof__state" data-m="fade">Live</span>` +
-    `<p class="proof__lede" data-m="body">${esc(report.lede)}</p>` +
+    // Ghost reserves the full copy's box so the plate never reflows while
+    // printing; the typed span overlays it and receives the growing slice.
+    `<p class="proof__lede">` +
+    `<span class="proof__lede-ghost" aria-hidden="true">${esc(report.lede)}</span>` +
+    `<span class="proof__lede-typed">${esc(report.lede)}</span>` +
+    `</p>` +
     `</div>` +
     `<ul class="proof__stats" data-m-group>${stats}</ul>` +
     `<dl class="proof__meta" data-m="eyebrow">${meta}</dl>` +
-    `</header>`
+    `</header>` +
+    `</div>`
   );
 }
 

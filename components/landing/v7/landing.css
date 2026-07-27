@@ -6914,7 +6914,18 @@
    the meta register. Deliberately the EDITORIAL masthead register, not
    the corridor's centered cinematic title card: this beat must not
    read as a second hero. */
+/* ── The pinned head (ADR-054 Update 1) ─────────────────────────────
+   The report HOLDS on screen while its runway scrolls, then releases
+   into the Navigate beat — the services-masthead behaviour, reached
+   with a plain CSS sticky instead of a scroll writer. `min-height` on
+   the runway is the single pacing knob: runway − 100svh = the hold. */
+.proof__report-runway {
+  min-height: 200svh;
+}
 .proof__report {
+  position: sticky;
+  top: 0;
+  height: 100svh;
   min-height: 100svh;
   /* The COPY starts on the band top, exactly like .services-masthead__lead
      / __intro (both `top: var(--masthead-top)`). The designation labels and
@@ -7093,7 +7104,9 @@
   max-width: min(40vw, calc(var(--band-max, 1200px) * 0.52));
 }
 /* One block line per title segment, so the phrase breaks where it was
-   authored instead of wrapping mid-clause. */
+   authored instead of wrapping mid-clause. `min-height` reserves the line
+   box while the decode has the text blanked, so the band never collapses
+   or jumps mid-reveal. */
 .proof__title-line {
   display: block;
   min-height: 1.1em;
@@ -7101,6 +7114,46 @@
 .proof__title-line--em {
   color: var(--gold, #caa554);
   font-weight: 500;
+}
+
+/* ── Decode reveal (ADR-054 U1) — the services-masthead recipe ───────
+   The title lines scramble-decode in place and the lede types on beside
+   them; neither moves. The CRT block caret is the station-header cursor
+   verbatim, shown only on the line the controller marks [data-live]. */
+.proof__cursor {
+  display: none;
+  margin-left: 0.06em;
+  color: var(--gold, #caa554);
+  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  /* Retro-terminal caret, not a giant glyph (station-header recipe). */
+  transform: translateY(-0.04em) scaleY(0.78);
+  transform-origin: center bottom;
+  pointer-events: none;
+}
+.proof__title-line[data-live] .proof__cursor,
+.proof__cursor--para {
+  display: inline-block;
+  animation: proof-cursor-blink 1.05s steps(2, start) infinite;
+}
+@keyframes proof-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+/* Typewriter layers: the hidden ghost reserves the FULL copy's box so the
+   plate never reflows while printing; the typed span overlays it and
+   receives the growing slice (a mutable Text node — never innerHTML). */
+.proof__lede-ghost {
+  visibility: hidden;
+}
+.proof__lede-typed {
+  position: absolute;
+  inset: 0;
 }
 /* EXACTLY `.services-masthead__intro`: the editorial body register at FULL
    dawn (the 70% tint went with that station's frame), 42ch measure. */
@@ -7518,6 +7571,16 @@
    rhythm — alternating the reading order buys nothing once the
    columns collapse). */
 @media (max-width: 960px) {
+  /* No pin below the enhanced tier: the head's copy can exceed a short
+     viewport once it stacks, and the decode controller is gated off here
+     anyway — so the runway collapses and the head scrolls normally. */
+  .proof__report-runway {
+    min-height: 0;
+  }
+  .proof__report {
+    position: static;
+    height: auto;
+  }
   .proof__report,
   .proof__beat {
     grid-template-columns: minmax(0, 1fr);
