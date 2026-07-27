@@ -22,7 +22,7 @@ When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you
 - [ADR-041: Arc Cases Sigil + phased reveal](../sentinel/decisions/041-arc-cases-sigil.md) (the phased reveal + ordering; its §2 sphere-sigil trigger is superseded by ADR-042)
 - [ADR-042: Arc Cases cue under the Build title](../sentinel/decisions/042-arc-cases-cue.md) (the live trigger — a DOM dotted-leader + label, off the sphere)
 - [ADR-048: Editorial band](../sentinel/decisions/048-editorial-band.md) (the shared horizontal frame for section text — `--band-max`/`--band-margin`/`--rail-inset`; never re-widen the inset per-section)
-- [ADR-049: Continuum rail stage](../sentinel/decisions/049-continuum-rail-stage.md) (the brandmark returns to mid-prominence at #continuum and the crail instrument — the tool ↔ collaborator slider — FORMS out of the mark on the scrubbed rail-form envelope, the reticle launching from the mark's centre seat into the 7s ping-pong; Update 4 — the Update-1 DOM axis, the Update-2 waist-ring beam, and the Update-3 mark-band are all superseded/rejected; #continuum becomes a transparent stage and the ambient kill retargets to #practice)
+- [ADR-054: Proof station + client cases](../sentinel/decisions/054-proof-station-client-cases.md) (`#proof` — the Loop Earplugs case — REPLACES #continuum in the funnel; plain opaque DOM, content generated from `lib/cases/` at parse time, and the ambient-kill cover after #about). **Supersedes [ADR-049](../sentinel/decisions/049-continuum-rail-stage.md)** on production: the crail stage, its clocks and its band math are deleted; only the `uBand*` shader block survives, dormant at 0 gain. Rules: [`.claude/rules/proof.md`](proof.md)
 - Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
 - Skill: `.claude/skills/brandmark-choreography/SKILL.md`
 
@@ -35,8 +35,9 @@ Do NOT add `useAuth` or other post-mount-updating subscriptions to
 LandingPage — push them into leaf components (see `CelestialEditorGate`).
 Ref: BEST-PRACTICES "Nested-root portals".
 
-**The funnel is the ADR-033 order:** hero → corridor (thesis + the Arc)
-→ services → about (bio) → continuum (philosophy) → practice → contact.
+**The funnel is the ADR-033 order, as amended by ADR-054:** hero →
+corridor (thesis + the Arc) → services → about (bio) → **proof (the
+client case)** → practice → contact.
 `#tools` and `#build` retired — the four production cases live ONLY on
 the Arc's Build-park cases reveal (click-armed via the CUE — a dotted-leader
 

@@ -64,6 +64,25 @@
  * still byte-stable on the corridor default.
  */
 
+/**
+ * ⚠ DORMANT: the `uBand*` block (ADR-054).
+ *
+ * The band highlight — a lit horizontal slab through the mark with a
+ * pendulum head and comet trail — was built for the ADR-049 continuum
+ * rail stage. That beat is RETIRED and its every driver deleted; nothing
+ * in the app writes these uniforms today.
+ *
+ * The block is kept on purpose. Every gain defaults to 0, and
+ * `BrandmarkPhysicsCore` leaves them at 0 whenever `bandRef` is absent
+ * (which is now always), so the vertex block short-circuits and the
+ * rendered result is byte-identical to having no band at all — it costs
+ * a dozen unused uniforms and nothing else. A future beat that wants to
+ * light part of the mark can drive it through `bandRef`
+ * (`BrandmarkCoreBandState`) with NO shader edit.
+ *
+ * So: do not delete it to "clean up", and do not read ADR-049 as live
+ * guidance for how to use it.
+ */
 export const brandmarkCoreVertexShader = /* glsl */ `
   uniform sampler2D uPositionTexture;
   uniform float uPointSize;     // CSS pixels
@@ -91,8 +110,9 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   uniform float uCleanFieldKeep;     // surviving particle fraction at clean = 1 (centerpiece)
   uniform float uCleanFieldDotScale; // dot-size multiplier at clean = 1
 
-  // ── Continuum band highlight (ADR-049 Update 3, ported from
-  // volumetricShaders.ts Update 4) — the mark's inner horizontal band as the
+  // ── Band highlight — DORMANT since ADR-054 (see the TS docblock above
+  // this shader): no driver writes these, all gains stay 0, the block
+  // short-circuits. Built for the retired ADR-049 continuum beat as the
   // tool ↔ collaborator spectrum: a soft BASE glow along the whole band + a
   // bright PENDULUM head swinging left ↔ right with a comet TRAIL decaying
   // behind its direction of travel. Selection is geometric over the SETTLED

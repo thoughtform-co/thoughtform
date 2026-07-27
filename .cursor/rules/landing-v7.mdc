@@ -13,8 +13,10 @@ When editing these paths, you are in a **layered composite** (fixed `.gateway`, 
 
 **Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `sentinel/decisions/031-rail-manifest.md`, `sentinel/decisions/033-arc-cases-orbit.md` (orbit superseded; funnel live), `sentinel/decisions/034-arc-cases-terrace.md` (superseded by ADR-035), `sentinel/decisions/035-arc-cases-terminal.md` (reveal surface superseded by ADR-036), `sentinel/decisions/036-arc-cases-card.md` (the live cases reveal; §3/§5 superseded by ADR-041), `sentinel/decisions/041-arc-cases-sigil.md` (the live trigger + ordering), `sentinel/decisions/048-editorial-band.md` (the shared horizontal frame for section text — `--band-max`/`--band-margin`/`--rail-inset`; never re-widen the inset per-section), `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
 
-**Funnel (ADR-033):** hero → corridor (thesis + Arc) → services → about →
-continuum → practice → contact. `#tools`/`#build` retired — the four
+**Funnel (ADR-033, amended by ADR-054):** hero → corridor (thesis + Arc) →
+services → about → **proof (the client case)** → practice → contact.
+`#continuum` is retired — see `sentinel/decisions/054-proof-station-client-cases.md`
+and `.claude/rules/proof.md`. `#tools`/`#build` retired — the four
 production cases live ONLY on the Arc's Build-park cases reveal
 (click-armed via the CUE — a dotted-leader + label docked under the Build title,
 ADR-042; the node streams fold onto an in-canvas 3D tools card's slab edges and

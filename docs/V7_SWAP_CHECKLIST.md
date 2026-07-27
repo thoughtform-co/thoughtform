@@ -29,7 +29,7 @@ The previous homepage is available at `/archive/current-home`, gated behind the 
 
 ## Content Parity
 
-- [ ] All 8 stations populated with final copy (hero, definition, continuum, practice, services, products, about, contact)
+- [ ] All stations populated with final copy (hero, corridor, services, about, proof, practice, contact — the live ADR-054 funnel; `definition`/`products`/`continuum` are retired)
 - [ ] Practice section tabs working (Adopt / Encode / Build with receipt case studies)
 - [ ] Services section cards rendering with inline SVG sigils
 - [ ] Products section cells linking to Astrolabe, Atlas, Sigil, Sybil
