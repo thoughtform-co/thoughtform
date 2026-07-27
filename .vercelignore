@@ -17,6 +17,10 @@ public/images/gateway-hero.png
 public/env
 public/showcase
 public/images/services/Vince-4.jpg
+# - proof-lab/            -> (internal) /test/proof-highlight-lab only; the
+#                            captured Arc-sphere still each direction dresses
+#                            (regenerate with scripts/capture-proof-sphere.mjs)
+public/proof-lab
 
 # Documentation + decision records — never imported by the app, but they
 # were being uploaded with every deploy (docs/ ~31 MB, mostly design

@@ -1,0 +1,943 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/proof-highlight-lab — four directions for the #proof highlight zone
+   ═══════════════════════════════════════════════════════════════════════
+
+   Shape law (thoughtform-design): radius 0 everywhere; diamonds, never
+   circles; gold is WAYFINDING only — it marks the value, never decoration;
+   no italics. Copy sizes ride the band tokens (--band-copy et al), never a
+   local px ramp.
+
+   NOTHING here restyles a production class outside a `.phl` scope. The lab
+   sheet loads last, so those scoped rules win the cascade without touching
+   the shipped surface.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.phl {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  /* Lab tokens */
+  --phl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --phl-ch: 20px; /* chamfer cut, the .svc-plate `--ch` analogue */
+  --phl-hair: rgba(235, 227, 214, 0.08);
+  --phl-ink-dim: rgba(235, 227, 214, 0.4);
+  --phl-ink-faint: rgba(235, 227, 214, 0.22);
+
+  /* Stand in for `useLandingScroll` (ADR-031 U16 rev c): the corner brackets
+     and BOTH rails are CLIP-UNCOVERED by the hero sliding off, so each carries
+     `clip-path: inset(max(0px, (1 − --hero-lift) · 100dvh − <own top offset>))`.
+     With no scroll writer running the var is unset, the inset resolves to a
+     full viewport, and the whole rail ladder is clipped away — the frame paints
+     empty. We are parked far past the curtain, so the honest value is 1. */
+  --hero-lift: 1;
+}
+
+/* hudHtml ships the fixed gold gateway radial; production covers it with the
+   opaque corridor canvas — here the void bed owns the backdrop. */
+.phl .gateway {
+  display: none;
+}
+
+.phl__hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+/* Reproduces `.stations`' content box — see the shell for why. */
+.phl-stationbox {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--hud-content-inset);
+  overflow: hidden;
+}
+
+/* ── The head, re-seated ────────────────────────────────────────────────
+   Production is a sticky 100svh head inside a 200svh runway. The lab has no
+   scrolling ancestor, so the sticky would be inert anyway — `relative` makes
+   that explicit so nobody re-introduces a scroll parent and gets a surprise
+   pin. Height stays 100svh so the slot budget is the honest one. */
+.phl-head {
+  position: relative;
+  grid-template-areas:
+    "title brief"
+    "hl hl";
+  grid-template-rows: auto minmax(0, 1fr);
+  /* Production sets `align-content: start` (rows pack to the top) and
+     `align-items: start` (each plate sizes to its own copy, so its coord stamp
+     keys to its own foot). Both must be released here or the `1fr` slot row
+     never constrains: the row sizes to CONTENT, the card grows past the head,
+     and every direction "fits" while running off the viewport. */
+  align-content: stretch;
+}
+.phl-slot {
+  grid-area: hl;
+  min-height: 0;
+  /* Re-stretch just this item — row 1's plates keep the production
+     `align-items: start` behaviour they need. */
+  align-self: stretch;
+  /* HUD clearance, and an honest one: the wordmark is fixed at the viewport's
+     bottom-left, so with the head pinned at 100svh anything full-bleed in this
+     zone runs UNDER it — in production exactly as here. Reserving the strip
+     keeps the directions legible and keeps the slot budget truthful. */
+  padding-bottom: 92px;
+}
+/* `min-height: 0` on both the row and the inner box is what makes the
+   overflow meter honest — without it the grid row grows to fit and every
+   direction "passes". */
+.phl-slot__inner {
+  height: 100%;
+  min-height: 0;
+}
+
+/* ══ Shared atoms ═══════════════════════════════════════════════════════ */
+
+/* The chamfered gradient shell — the `.svc-plate__sh` grammar. `--phl-ch`
+   must be defined locally: in production the var lives on `.svc-plate`, and
+   without it the clip-path silently resolves to square corners. */
+.phl-shell {
+  --ch: var(--phl-ch);
+  height: 100%;
+  padding: 1px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ch)) 0,
+    100% var(--ch),
+    100% 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch))
+  );
+  background: linear-gradient(
+    168deg,
+    rgba(202, 165, 84, 0.42) 0%,
+    rgba(236, 227, 214, 0.12) 45%,
+    rgba(202, 165, 84, 0.12) 70%,
+    rgba(202, 165, 84, 0.36) 100%
+  );
+}
+.phl-shell__bd {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ch) + 0.6px) 0,
+    100% calc(var(--ch) - 0.6px),
+    100% 100%,
+    calc(var(--ch) - 0.6px) 100%,
+    0 calc(100% - var(--ch) + 0.6px)
+  );
+  background:
+    linear-gradient(174deg, rgba(235, 227, 214, 0.05), rgba(235, 227, 214, 0.015) 60%, transparent),
+    radial-gradient(130% 70% at 84% -8%, rgba(202, 165, 84, 0.08), transparent 70%),
+    var(--void, #0a0908);
+}
+/* Scanlines — the plate's own CRT texture. */
+.phl-shell__bd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(202, 165, 84, 0.025) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* Header / footer rails */
+.phl-rail {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  font-family: var(--phl-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--phl-ink-dim);
+  flex: none;
+}
+.phl-rail--head {
+  border-bottom: 1px solid var(--phl-hair);
+}
+.phl-rail--foot {
+  border-top: 1px solid var(--phl-hair);
+  margin-top: auto;
+}
+.phl-rail__mark {
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.phl-rail__mid {
+  margin-inline: auto;
+}
+.phl-rail__idx {
+  color: var(--phl-ink-faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.phl-rail__idx i {
+  color: var(--gold);
+}
+
+/* Gold diamond — the one repeated marker (shape law). */
+.phl-dia {
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex: none;
+}
+
+/* CTA — inert in the lab, styled as the real one would read. */
+.phl-cta {
+  margin: 0;
+  font-family: var(--phl-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Capture panel — the shared media core every direction dresses. */
+.phl-capture {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.phl-capture__cap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  font-family: var(--phl-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--phl-ink-dim);
+}
+.phl-capture__pips {
+  width: 26px;
+  height: 4px;
+  background: repeating-linear-gradient(to right, var(--phl-ink-faint) 0 4px, transparent 4px 9px);
+}
+.phl-capture__frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  border: 1px solid var(--phl-hair);
+  background: rgba(5, 4, 3, 0.5);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.phl-capture__media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+/* Absolute + `object-fit: contain` rather than max-width/max-height: a
+   PERCENTAGE max-height does not resolve against a flex parent whose own
+   height came from `flex: 1 1 auto`, so the still sized itself by width and
+   the sphere's lower half was clipped by the frame's overflow. */
+.phl-capture__still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  /* The capture is an opaque black square, so on any backdrop that is not
+     pure black it draws its own rectangle — a letterbox inside a framed
+     panel, a hard-edged tile on the frameless void. A radial vignette lets
+     the globe sit on whatever is behind it. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 58%, transparent 76%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 58%, transparent 76%);
+}
+.phl-capture__canvas {
+  position: absolute;
+  inset: 0;
+}
+.phl-capture__ref,
+.phl-capture__tag {
+  position: absolute;
+  z-index: 2;
+  font-family: var(--phl-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--phl-ink-faint);
+  pointer-events: none;
+}
+.phl-capture__ref {
+  top: 8px;
+  left: 10px;
+}
+.phl-capture__tag {
+  right: 10px;
+  bottom: 8px;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+/* Corner brackets — two-sided borders, legs offset so the vertex reads as a
+   corner and not a plus. */
+.phl-bracket {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  border: 0 solid var(--gold-50, rgba(202, 165, 84, 0.5));
+}
+.phl-bracket--tl {
+  top: 5px;
+  left: 5px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.phl-bracket--tr {
+  top: 5px;
+  right: 5px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.phl-bracket--bl {
+  bottom: 5px;
+  left: 5px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.phl-bracket--br {
+  bottom: 5px;
+  right: 5px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* ══ A · FIELD LOG ══════════════════════════════════════════════════════ */
+
+.phl-fl__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  gap: 0;
+}
+.phl-fl__doc {
+  min-width: 0;
+  padding: 20px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 1px solid var(--phl-hair);
+}
+.phl-fl__client {
+  margin: 0;
+  font-family: var(--phl-mono);
+  font-weight: 700;
+  font-size: clamp(20px, 2.1vw, 30px);
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+.phl-fl__client i {
+  color: var(--gold);
+}
+.phl-fl__domain,
+.phl-fl__operator {
+  margin: 0;
+  font-family: var(--phl-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--phl-ink-dim);
+}
+.phl-fl__operator {
+  color: var(--phl-ink-faint);
+}
+.phl-fl__quote {
+  margin: 4px 0 0;
+  padding-left: 14px;
+  border-left: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--dawn);
+  max-width: 46ch;
+}
+.phl-fl__summary {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--dawn-70);
+  max-width: 52ch;
+}
+.phl-fl__meta {
+  margin: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.phl-metarow {
+  display: grid;
+  grid-template-columns: 8ch 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+}
+.phl-metarow dt {
+  font-family: var(--phl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--phl-ink-faint);
+}
+.phl-metarow__lead {
+  height: 1px;
+  border-bottom: 1px dashed rgba(235, 227, 214, 0.14);
+  transform: translateY(-3px);
+}
+.phl-metarow dd {
+  margin: 0;
+  font-family: var(--phl-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-70);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.phl-fl__capture {
+  min-width: 0;
+  padding: 20px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+.phl-fl__capture .phl-capture {
+  flex: 1 1 auto;
+}
+.phl-fl__stats {
+  flex: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--phl-hair);
+  border: 1px solid var(--phl-hair);
+}
+.phl-fl__stats li {
+  background: var(--void, #0a0908);
+  padding: 10px 10px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.phl-fl__stat-v {
+  font-weight: 700;
+  font-size: clamp(18px, 1.7vw, 24px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--gold);
+}
+.phl-fl__stat-l {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--dawn);
+}
+.phl-fl__stat-d {
+  font-family: var(--phl-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--phl-ink-faint);
+}
+
+/* ══ B · INSTRUMENT ═════════════════════════════════════════════════════ */
+
+/* The `.pcl-*` atoms inherit their mono face + night ink from `.pcl-stack` in
+   production; this stands in for it, or the rulers render in the wrong family. */
+.phl-pclscope {
+  --pcl-ink-night: var(--latent-night, #110f09);
+  font-family: var(--phl-mono);
+}
+.phl-in__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+.phl-in__gauges {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-right: 1px solid var(--phl-hair);
+}
+.phl-gauge {
+  position: relative;
+  min-width: 0;
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+.phl-gauge + .phl-gauge {
+  border-left: 1px solid var(--phl-hair);
+}
+.phl-gauge:nth-child(n + 3) {
+  border-top: 1px solid var(--phl-hair);
+}
+.phl-gauge:nth-child(3) {
+  border-left: 0;
+}
+.phl-gauge__idx {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: var(--phl-mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--phl-ink-faint);
+}
+.phl-gauge__v {
+  font-family: var(--phl-mono);
+  font-weight: 700;
+  font-size: clamp(26px, 3vw, 42px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--gold);
+}
+.phl-gauge__ruler {
+  height: 10px;
+  margin: 2px 0 4px;
+  opacity: 0.85;
+}
+.phl-gauge__l {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--dawn);
+}
+.phl-gauge__d {
+  font-family: var(--phl-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--phl-ink-faint);
+}
+.phl-in__scope {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+}
+.phl-in__scopeframe {
+  aspect-ratio: auto;
+}
+.phl-in__reticle {
+  position: absolute;
+  inset: 8%;
+  z-index: 1;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--gold-30, rgba(202, 165, 84, 0.3));
+  stroke-width: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+.phl-in__tape {
+  gap: 14px;
+}
+.phl-in__tapefields {
+  margin-inline: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dawn-70);
+  letter-spacing: 0.12em;
+}
+.phl-in__tapefields b {
+  font-weight: 400;
+  color: var(--phl-ink-faint);
+  margin-left: 10px;
+}
+.phl-in__tapefields b:first-child {
+  margin-left: 0;
+}
+.phl-in__barcode {
+  display: inline-flex;
+  width: 110px;
+  opacity: 0.7;
+}
+
+/* ══ C · SCHEMATIC ══════════════════════════════════════════════════════ */
+
+.phl-sc {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.phl-sc__plate {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Enlarged survey dot-grid — the frameless composition's only ground. */
+.phl-sc__grid {
+  position: absolute;
+  inset: -10px -22px;
+  background-image: radial-gradient(rgba(235, 227, 214, 0.055) 1px, transparent 1.2px);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(120% 130% at 50% 50%, #000 40%, transparent 96%);
+  mask-image: radial-gradient(120% 130% at 50% 50%, #000 40%, transparent 96%);
+  pointer-events: none;
+}
+.phl-sc__subject {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1;
+  z-index: 1;
+}
+.phl-sc__subject .phl-capture__media,
+.phl-or__subject .phl-capture__media {
+  position: relative;
+}
+/* The LIVE canvas renders on a transparent clear colour, so it only needs the
+   vignette where it floats frameless (C and D) to match the still's edge. */
+.phl-sc__subject .phl-capture__canvas,
+.phl-or__subject .phl-capture__canvas {
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 58%, transparent 76%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 58%, transparent 76%);
+}
+.phl-sc__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.phl-sc__stroke {
+  fill: none;
+  stroke: var(--gold);
+  stroke-opacity: 0.42;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.phl-sc__tick {
+  fill: var(--gold);
+  fill-opacity: 0.75;
+}
+.phl-sc__call {
+  position: absolute;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 22ch;
+  pointer-events: none;
+}
+.phl-sc__call--l {
+  align-items: flex-end;
+  text-align: right;
+}
+.phl-sc__call--r {
+  align-items: flex-start;
+  text-align: left;
+}
+.phl-sc__tag {
+  font-family: var(--phl-mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.phl-sc__v {
+  font-family: var(--phl-mono);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  color: var(--dawn);
+}
+.phl-sc__l {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--dawn-70);
+}
+.phl-sc__foot {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 28px;
+}
+.phl-sc__summary {
+  margin: 0;
+  font-size: var(--band-copy, 16px);
+  line-height: 1.5;
+  color: var(--dawn-70);
+  max-width: 62ch;
+}
+
+/* ══ D · ORBIT ══════════════════════════════════════════════════════════ */
+
+.phl-or {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.phl-or__track {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.phl-or__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.phl-or__lead {
+  fill: none;
+  stroke: var(--gold);
+  stroke-opacity: 0.4;
+  stroke-width: 0.6;
+}
+.phl-or__node {
+  fill: var(--gold);
+  fill-opacity: 0.9;
+}
+.phl-or__subject {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1;
+  z-index: 1;
+}
+.phl-or__ms {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.phl-or__ms-t {
+  font-family: var(--phl-mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.phl-or__ms-l {
+  font-family: var(--phl-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+.phl-or__foot {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  border-top: 1px solid var(--phl-hair);
+  padding-top: 12px;
+}
+.phl-or__stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: clamp(20px, 3vw, 52px);
+}
+.phl-or__stats li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.phl-or__stat-v {
+  font-weight: 700;
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--gold);
+}
+.phl-or__stat-l {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--dawn);
+}
+.phl-or__stat-l i {
+  font-style: normal;
+  font-family: var(--phl-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--phl-ink-faint);
+}
+
+/* ══ Console ════════════════════════════════════════════════════════════ */
+
+/* Collapsed by default it is just the chip strip, which lives inside the
+   slot's reserved HUD clearance and covers nothing. Expanded it overlays the
+   card's bottom-right corner — fine while reading the thesis, hence the
+   caret. */
+.phl-console {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  width: max-content;
+  max-width: min(34vw, 330px);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: rgba(10, 9, 8, 0.82);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  backdrop-filter: blur(10px);
+  font-family: var(--phl-mono);
+}
+.phl-console[data-open] {
+  width: min(34vw, 330px);
+  padding: 12px 14px 13px;
+}
+.phl-chip--caret {
+  border-color: rgba(235, 227, 214, 0.18);
+  padding-inline: 6px;
+}
+.phl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.phl-chip {
+  appearance: none;
+  border: 1px solid rgba(202, 165, 84, 0.35);
+  background: transparent;
+  color: var(--dawn-70);
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.phl-chip[data-on] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--latent-night, #110f09);
+}
+.phl-thesis {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--dawn-70);
+}
+.phl-prov {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--phl-ink-faint);
+}
+.phl-prov__diamond {
+  width: 4px;
+  height: 4px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex: none;
+}
+.phl-toggles {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.phl-toggle {
+  appearance: none;
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  background: transparent;
+  color: var(--dawn-70);
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.phl-toggle__led {
+  width: 5px;
+  height: 5px;
+  background: rgba(235, 227, 214, 0.3);
+  transform: rotate(45deg);
+}
+.phl-toggle[data-on] {
+  color: var(--gold);
+  border-color: rgba(202, 165, 84, 0.45);
+}
+.phl-toggle[data-on] .phl-toggle__led {
+  background: var(--gold);
+}
+.phl-meter {
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: var(--phl-ink-faint);
+}
+.phl-meter[data-warn] {
+  color: #e0674a;
+}
+
+.phl-gate-warn {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  margin: 0;
+  display: none;
+  font-family: var(--phl-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e0674a;
+}
+@media (max-width: 1100px), (max-height: 759px) {
+  .phl-gate-warn {
+    display: block;
+  }
+}
