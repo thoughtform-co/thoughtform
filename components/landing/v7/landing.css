@@ -6916,6 +6916,11 @@
    read as a second hero. */
 .proof__report {
   min-height: 100svh;
+  /* The COPY starts on the band top, exactly like .services-masthead__lead
+     / __intro (both `top: var(--masthead-top)`). The designation labels and
+     coordinate stamps are absolute chrome hung OUTBOARD of the copy blocks,
+     never flow siblings — a designation in flow pushes the title ~48px below
+     the band and the two stations stop agreeing. */
   padding-block: var(--band-top) clamp(48px, 8svh, 96px);
   display: grid;
   grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
@@ -6926,6 +6931,19 @@
   column-gap: clamp(36px, 4.5vw, 88px);
   row-gap: clamp(40px, 6svh, 80px);
   align-content: start;
+  /* Each plate sizes to its OWN copy rather than stretching to the row.
+     The coord stamps key off `100%` of their plate, so a stretched title
+     plate would hang its stamp under the (taller) brief's foot instead of
+     its own — the services stamps track each block's live height. */
+  align-items: start;
+  /* Survey-plate offsets — the .services-masthead --survey-* knobs verbatim
+     so both stations' chrome sits at the same distance from its copy. */
+  --survey-label-rise: 34px;
+  --survey-coord-drop: 26px;
+  --survey-mark-rise: 26px;
+  --survey-mark-out: 24px;
+  --survey-grid-bleed-x: 22px;
+  --survey-grid-bleed-y: 16px;
 }
 .proof__plate--title {
   grid-area: title;
@@ -6943,19 +6961,32 @@
 /* Survey plate — masked dot-grid lift + registration marks on one
    diagonal + PT Mono designation and coordinate stamp. The atoms are
    shared with the services masthead and the arc section heads. */
+/* No padding: the plate box IS the copy box, so the title's cap sits on
+   --band-top. Every survey element hangs off this box from outside it. */
 .proof__plate {
   position: relative;
-  padding: 22px 24px 24px;
 }
 .proof__grid {
   position: absolute;
+  /* Flush by default — the bordered evidence plates must not bleed their
+     lift past their own frame. Only the frameless report plates bleed. */
   inset: 0;
-  background-image: radial-gradient(circle at 1px 1px, var(--dawn-15) 1px, transparent 0);
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(ellipse at 12% 0%, #000 0%, transparent 72%);
-  mask-image: radial-gradient(ellipse at 12% 0%, #000 0%, transparent 72%);
-  opacity: 0.5;
+  z-index: 0;
+  background-image: radial-gradient(rgba(235, 227, 214, 0.06) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
   pointer-events: none;
+}
+.proof__plate--title .proof__grid,
+.proof__plate--brief .proof__grid {
+  inset: calc(-1 * var(--survey-grid-bleed-y)) calc(-1 * var(--survey-grid-bleed-x));
+}
+/* Keep the readable copy above its own dot-grid lift. */
+.proof__title,
+.proof__lede {
+  position: relative;
+  z-index: 1;
 }
 .proof__mark {
   position: absolute;
@@ -6982,70 +7013,105 @@
   height: 100%;
   transform: translateX(-50%);
 }
+/* Gold ORIGIN cross above the title head; dawn CLOSE cross below the
+   brief foot — one diagonal across the band (services-masthead grammar). */
 .proof__mark--origin {
-  top: 6px;
-  left: 6px;
+  top: calc(-1 * var(--survey-mark-rise));
+  left: calc(-1 * var(--survey-mark-out));
   color: var(--gold-50);
 }
 .proof__mark--close {
-  right: 6px;
-  bottom: 6px;
-  color: var(--dawn-30);
+  top: calc(100% + var(--survey-mark-rise) - 9px);
+  right: calc(-1 * var(--survey-mark-out));
+  color: rgba(235, 227, 214, 0.7);
 }
-.proof__desig,
-.proof__coord {
-  display: block;
-  font-family: var(--font-pt-mono, monospace);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--dawn-30);
-}
+/* Designation — PT Mono, above the block's head-left (absolute: in flow it
+   would push the title off the band top). */
 .proof__desig {
-  color: var(--gold-50);
-  margin-bottom: 4px;
+  position: absolute;
+  top: calc(-1 * var(--survey-label-rise));
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
 }
+/* Coordinate stamp — keyed to the block's own FOOT, so it tracks real copy
+   height at every width instead of a fixed datum. */
 .proof__coord {
   position: absolute;
-  right: 24px;
-  top: 22px;
+  top: calc(100% + var(--survey-coord-drop));
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.22);
+  white-space: nowrap;
+  pointer-events: none;
 }
+.proof__plate--brief .proof__coord {
+  left: auto;
+  right: calc(var(--survey-mark-out) + 8px);
+  text-align: right;
+}
+/* State chip — the one gold survey element on the brief, head-right. */
 .proof__state {
-  display: inline-block;
-  margin-bottom: 12px;
-  padding: 3px 9px;
-  border: 1px solid var(--gold-30);
-  font-family: var(--font-pt-mono, monospace);
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  position: absolute;
+  top: calc(-1 * var(--survey-label-rise));
+  right: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  white-space: nowrap;
+  pointer-events: none;
 }
 
+/* EXACTLY `.services-masthead__title` — the one big-title face of the whole
+   journey (ADR-044; the corridor station-header voice). PP Neue Montreal
+   uppercase at weight 400 with POSITIVE tracking and a gold-washed shadow,
+   NOT a heavy negative-tracked display face: the report is a section head,
+   not a second hero. Retune both stations together or neither. */
 .proof__title {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  font-size: clamp(36px, 5.5vw, 72px);
-  line-height: 0.92;
-  letter-spacing: -0.035em;
-  text-transform: uppercase;
-  color: var(--dawn);
-  max-width: 16ch;
-  margin: 12px 0 0;
-}
-.proof__title em,
-.proof__beat-title em {
-  font-style: normal;
-  color: var(--gold);
-}
-.proof__lede {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 300;
-  font-size: var(--band-copy);
-  line-height: 1.5;
-  color: var(--dawn-70);
-  max-width: 46ch;
   margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 3vw, 44px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  /* Band-relative safety cap, services-masthead verbatim. */
+  max-width: min(40vw, calc(var(--band-max, 1200px) * 0.52));
+}
+/* One block line per title segment, so the phrase breaks where it was
+   authored instead of wrapping mid-clause. */
+.proof__title-line {
+  display: block;
+  min-height: 1.1em;
+}
+.proof__title-line--em {
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+/* EXACTLY `.services-masthead__intro`: the editorial body register at FULL
+   dawn (the 70% tint went with that station's frame), 42ch measure. */
+.proof__lede {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--dawn, #ebe3d6);
+  max-width: min(42ch, 34vw);
 }
 
 /* Stat tiles — hairline frames, the number carrying the weight. */
@@ -7154,23 +7220,28 @@
   color: var(--gold-50);
   margin: 0 0 14px;
 }
+/* The station-header voice again — same family, weight, tracking, leading
+   and gold wash as .proof__title / .services-masthead__title, one step
+   DOWN in size so the mission report stays the section's loudest line. */
 .proof__beat-title {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  /* Deliberately below the report's station scale — the mission report
-     stays the section's loudest line. */
-  font-size: clamp(28px, 3.2vw, 48px);
-  line-height: 1;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-  color: var(--dawn);
-  max-width: 14ch;
   margin: 0 0 22px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(22px, 2.4vw, 34px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  max-width: 20ch;
 }
 .proof__body {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 300;
-  font-size: var(--band-copy);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  /* Editorial body register, matching the services intro (weight 400 at
+     --band-copy). The old 300/dawn-70 pairing read a full step lighter
+     than every other station's lede. */
+  font-weight: 400;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
   line-height: 1.6;
   color: var(--dawn-70);
   max-width: 42ch;
@@ -7476,8 +7547,22 @@
   .proof__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .proof__coord {
+  /* Release the desktop band caps: they are viewport-relative (40vw / 34vw
+     are the services-masthead two-column values) and would squeeze the copy
+     to ~150px once the band is a single narrow column. */
+  .proof__title,
+  .proof__lede,
+  .proof__beat-title {
+    max-width: none;
+  }
+  /* Outboard survey furniture is decorative and sits beyond the band edge —
+     at mobile insets that reaches past the viewport, so it goes. */
+  .proof__coord,
+  .proof__mark {
     display: none;
+  }
+  .proof__grid {
+    inset: calc(-1 * var(--survey-grid-bleed-y)) 0;
   }
   .proof__log-row {
     grid-template-columns: 6ch 1fr;

@@ -38,6 +38,13 @@ Arc). See LANGUAGE.md.
 - **Never a portal here.** `data-m` reveals only work because the nodes are
   in the `dangerouslySetInnerHTML` tree at mount; `useRevealMotion` cannot
   see portal children.
+- **`data-m="title"` / `"eyebrow"` / `"portrait"` CLIP to the border box**
+  (`clip-path: inset(...)`, and `inset(0px)` still clips once revealed). An
+  element carrying one of those roles can never host children positioned
+  OUTSIDE it — the survey chrome (labels above, stamps below, marks beyond
+  the corners) silently vanishes. Put the role on the COPY element and
+  leave the chrome in the unclipped plate; `data-m="fade"` is the one role
+  with neither clip nor transform, so decorative outboard pieces use it.
 - **Tool copy is referenced, never restated.** A `tool-strip` stores ids;
   `PROJECT_CASES` (`components/landing/v7/tools-cards/toolCardData.ts`) stays
   canonical for the four tools. The corridor's arc-cases card owns their
@@ -52,6 +59,14 @@ Arc). See LANGUAGE.md.
   flipped beat wrap to a second row and render diagonally at double height.
 - **Band tokens only.** `--band-max` / `--rail-inset` / `--band-copy`; never
   a per-section body size (ADR-048 — a local override re-opens the crossover).
+- **`.services-masthead` is the type + placement gold standard** (ADR-044).
+  `.proof__title` and `.proof__beat-title` are its recipe verbatim — PP Neue
+  Montreal, weight 400 (em 500 gold), POSITIVE `0.04em` tracking, `1.1`
+  leading, uppercase, gold-wash shadow — the beat titles only one size step
+  down. `.proof__lede` is `.services-masthead__intro`: weight 400 at
+  `--band-copy`, full dawn, 42ch. Copy starts ON `--band-top` with the
+  survey chrome hung outboard; the `--survey-*` offsets are that station's
+  values. Retune both stations together or neither.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash caption marker). Markup smuggled into
   copy strings fails the registry test.

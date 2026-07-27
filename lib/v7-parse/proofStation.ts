@@ -51,13 +51,20 @@ function coordStamp(seed: string, salt: number): string {
   return `${String(a).padStart(4, "0")} / ${String(b).padStart(4, "0")}`;
 }
 
-/** Split title → markup. `em` is UPRIGHT GOLD, never italics. */
-function title(t: CaseTitle): string {
+/**
+ * Split title → markup, one BLOCK LINE per segment (the services-masthead
+ * recipe: "AI CAPABILITY" / "YOUR TEAM OWNS."). Blocking the segments is
+ * what keeps the title to two short lines at the shared 44px cap instead
+ * of wrapping mid-phrase. `em` is UPRIGHT GOLD, never italics.
+ */
+function title(t: CaseTitle, cls = "proof__title-line"): string {
+  const line = (text: string, em = false) =>
+    `<span class="${cls}${em ? ` ${cls}--em` : ""}">${esc(text)}</span>`;
   const parts: string[] = [];
-  if (t.pre) parts.push(esc(t.pre));
-  if (t.em) parts.push(`<em>${esc(t.em)}</em>`);
-  if (t.post) parts.push(esc(t.post));
-  return parts.join(" ");
+  if (t.pre) parts.push(line(t.pre));
+  if (t.em) parts.push(line(t.em, true));
+  if (t.post) parts.push(line(t.post));
+  return parts.join("");
 }
 
 /** Segment run → markup. `em` is the gold-wash caption marker. */
@@ -67,13 +74,24 @@ function segments(runs: readonly CaseSegment[]): string {
     .join("");
 }
 
-/** The M2 survey-plate chrome shared by the report's two plates. */
+/**
+ * The M2 survey-plate chrome shared by the report's two plates.
+ *
+ * Each piece carries its OWN `data-m="fade"` rather than inheriting a
+ * reveal from the plate. That is load-bearing: `[data-m="title"]` and
+ * `[data-m="eyebrow"]` reveal via `clip-path: inset(...)`, which clips to
+ * the border box even when fully revealed — so an element carrying one of
+ * those roles CANNOT host children positioned outside its box, and all of
+ * this chrome is deliberately outboard (labels above, stamps below, marks
+ * beyond the corners). `fade` is the one role with neither a clip nor a
+ * transform, so it is safe here.
+ */
 function plate(desig: string, seed: string, salt: number, mark: "origin" | "close"): string {
   return (
-    `<span class="proof__grid" aria-hidden="true"></span>` +
-    `<span class="proof__mark proof__mark--${mark}" aria-hidden="true"></span>` +
-    `<span class="proof__desig">${esc(desig)}</span>` +
-    `<span class="proof__coord">${esc(coordStamp(seed, salt))}</span>`
+    `<span class="proof__grid" data-m="fade" aria-hidden="true"></span>` +
+    `<span class="proof__mark proof__mark--${mark}" data-m="fade" aria-hidden="true"></span>` +
+    `<span class="proof__desig" data-m="fade">${esc(desig)}</span>` +
+    `<span class="proof__coord" data-m="fade">${esc(coordStamp(seed, salt))}</span>`
   );
 }
 
@@ -101,14 +119,15 @@ function reportHtml(def: CaseDef): string {
 
   return (
     `<header class="proof__report" data-m-group>` +
-    `<div class="proof__plate proof__plate--title" data-m="title">` +
+    // The reveal roles sit on the COPY, never on the plate — see plate().
+    `<div class="proof__plate proof__plate--title">` +
     plate("PRF / REPORT · 01", def.slug, 1, "origin") +
-    `<h2 class="proof__title">${title(report.title)}</h2>` +
+    `<h2 class="proof__title" data-m="title">${title(report.title)}</h2>` +
     `</div>` +
-    `<div class="proof__plate proof__plate--brief" data-m="body">` +
+    `<div class="proof__plate proof__plate--brief">` +
     plate("PRF / BRIEF · 02", def.slug, 2, "close") +
-    `<span class="proof__state">Live</span>` +
-    `<p class="proof__lede">${esc(report.lede)}</p>` +
+    `<span class="proof__state" data-m="fade">Live</span>` +
+    `<p class="proof__lede" data-m="body">${esc(report.lede)}</p>` +
     `</div>` +
     `<ul class="proof__stats" data-m-group>${stats}</ul>` +
     `<dl class="proof__meta" data-m="eyebrow">${meta}</dl>` +
