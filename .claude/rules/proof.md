@@ -21,14 +21,22 @@ Arc). See LANGUAGE.md.
   `#about` need clocks because they drive the WebGL canvas; this station
   only has to stay put. A change that wants a clock, a portal or canvas
   coupling here is a new ADR, not a retune.
-- **The head's reveal is the DECODE, not `data-m`.**
-  `ProofRevealController` scramble-decodes the title lines and types the
-  lede in place, mirroring `ServicesMasthead` (ADR-044). Do not put a
-  `data-m` role back on `.proof__title` or `.proof__lede` — the roles
-  animate a rise, which is exactly what the decode replaces, and their
-  opacity would fight the controller. Arrival is an IntersectionObserver
-  (no clock exists here to read). Enhanced tier only; mobile / PRM / no-JS
-  keep the static copy the markup already ships.
+- **The head's reveal is the DECODE, not `data-m` — and the head carries
+  NO `data-m` at all.** `ProofRevealController` scramble-decodes the title
+  lines and types the lede in place, mirroring `ServicesMasthead`
+  (ADR-044); the survey chrome, state chip, stat row and meta register
+  reveal via `.proof__report[data-reveal]` CSS (hidden while armed,
+  in-place fade at the park; statically visible when the attribute is
+  absent). Do not put a `data-m` role back on ANYTHING inside
+  `.proof__report` — an IO-fired data-m reveal plays while the sticky head
+  is still travelling, and eyebrow/frame add a rise (ADR-054 U2 round 2;
+  the BEATS keep their data-m roles). Arrival is an IntersectionObserver
+  (no clock exists here to read) whose root is collapsed to a thin band at
+  the TOP of the viewport, so it fires when the sticky head reaches its
+  PARK — nothing in the head may be visible, or move, before that (the
+  services masthead carries the same park gate, ADR-044 round 2 — retune
+  both or neither). Enhanced tier only; mobile / PRM / no-JS keep the
+  static copy the markup already ships.
 - **`#proof` is the ambient cover.** `useCorridorExitScroll` resolves
   `nextStation = ABOUT_DECK_STAGE ? (#proof ?? #practice) : (#about ?? #proof)`.
   The ambient bottom gate and the fade envelope MUST read the SAME rect —

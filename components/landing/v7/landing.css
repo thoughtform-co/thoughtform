@@ -7120,6 +7120,40 @@
    The title lines scramble-decode in place and the lede types on beside
    them; neither moves. The CRT block caret is the station-header cursor
    verbatim, shown only on the line the controller marks [data-live]. */
+/* Park-gated head furniture (ADR-054 U2 round 2): the survey chrome, the
+   state chip, the stat row and the meta register carry NO data-m — the
+   head is sticky and travels to its park, so an IO-fired data-m reveal
+   (opacity + rise) would play on a moving head. They key off the
+   controller's `data-reveal` instead: hidden while ARMED (instantly — no
+   fade on moving furniture), pure in-place fade once the decode fires at
+   the park. No attribute (mobile / PRM / no-JS — the controller never
+   ran) means no rule matches and everything ships statically visible. */
+.proof__report[data-reveal="armed"] .proof__grid,
+.proof__report[data-reveal="armed"] .proof__mark,
+.proof__report[data-reveal="armed"] .proof__desig,
+.proof__report[data-reveal="armed"] .proof__coord,
+.proof__report[data-reveal="armed"] .proof__state,
+.proof__report[data-reveal="armed"] .proof__stats,
+.proof__report[data-reveal="armed"] .proof__meta {
+  opacity: 0;
+}
+.proof__report[data-reveal="typing"] .proof__grid,
+.proof__report[data-reveal="typing"] .proof__mark,
+.proof__report[data-reveal="typing"] .proof__desig,
+.proof__report[data-reveal="typing"] .proof__coord,
+.proof__report[data-reveal="typing"] .proof__state,
+.proof__report[data-reveal="typing"] .proof__stats,
+.proof__report[data-reveal="typing"] .proof__meta,
+.proof__report[data-reveal="done"] .proof__grid,
+.proof__report[data-reveal="done"] .proof__mark,
+.proof__report[data-reveal="done"] .proof__desig,
+.proof__report[data-reveal="done"] .proof__coord,
+.proof__report[data-reveal="done"] .proof__state,
+.proof__report[data-reveal="done"] .proof__stats,
+.proof__report[data-reveal="done"] .proof__meta {
+  opacity: 1;
+  transition: opacity 620ms var(--m-ease, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
 .proof__cursor {
   display: none;
   margin-left: 0.06em;

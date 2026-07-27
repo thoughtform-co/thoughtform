@@ -22,7 +22,10 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  *   2. `#proof` has NO scroll clock to read (ADR-054: no scroll writer on
  *      this station), so arrival is an IntersectionObserver on the head.
  *      That adds no scroll listener and no writer — the observer only
- *      fires at the crossing.
+ *      fires at the crossing. Its root is collapsed to a thin band at the
+ *      top of the viewport (`PIN_BAND`), so the crossing it reports is the
+ *      head reaching its STICKY PARK — the decode never plays on a head
+ *      that is still sliding up.
  *
  * Contracts kept from the services controller:
  *   - Writes text and attributes ONLY inside its own subtree.
@@ -40,8 +43,23 @@ const LINE_STAGGER_S = 0.18;
 const PARA_CHARS_PER_S = 220;
 /** Head start the title gets before the first lede character prints. */
 const PARA_START_DELAY_S = 0.12;
-/** Fraction of the head that must be on screen to fire the decode. */
-const REVEAL_RATIO = 0.35;
+/**
+ * The decode fires when the head has REACHED ITS STICKY PARK, not when it
+ * first comes into view (owner, 2026-07-27).
+ *
+ * `.proof__report` is `position: sticky; top: 0` inside a 200svh runway, so
+ * on the way in it SCROLLS UPWARD with the page until its top hits 0. The
+ * old trigger (35% of the head on screen) started the glitch while it was
+ * still travelling — the copy read as rising into place, which is exactly
+ * the motion the decode is meant to replace. Waiting for the park costs
+ * nothing: the head then holds for a full 100svh, so the whole reveal plays
+ * on a head standing perfectly still.
+ *
+ * This is the fraction of the viewport, measured from its top, that counts
+ * as "parked" — a thin band rather than a hard `top === 0` so a sub-pixel
+ * sticky offset or a rounded rect can never withhold the reveal.
+ */
+const PIN_BAND = 0.02;
 
 export function ProofRevealController() {
   useEffect(() => {
@@ -151,12 +169,11 @@ export function ProofRevealController() {
       head.setAttribute("data-reveal", "armed");
     };
 
-    // Arm immediately unless the head is already on screen (reload inside
+    // Arm immediately unless the head is already parked (a reload inside
     // #proof reconstructs silently, per the rolodex first-paint rule).
     const startRect = head.getBoundingClientRect();
-    const alreadyVisible =
-      startRect.top < window.innerHeight * (1 - REVEAL_RATIO) && startRect.bottom > 0;
-    if (alreadyVisible) settle();
+    const alreadyParked = startRect.top <= window.innerHeight * PIN_BAND && startRect.bottom > 0;
+    if (alreadyParked) settle();
     else arm();
 
     const observer = new IntersectionObserver(
@@ -165,13 +182,18 @@ export function ProofRevealController() {
           if (entry.isIntersecting) {
             if (state === "armed") begin();
           } else if (state !== "armed" && entry.boundingClientRect.top > 0) {
-            // Left downward (the head is below the viewport) — the reader
-            // scrolled back above the station, so re-arm for the replay.
+            // Below the band — the reader scrolled back above the station,
+            // so re-arm for the replay.
             arm();
           }
         }
       },
-      { threshold: REVEAL_RATIO }
+      // The root is collapsed to a thin band at the TOP of the viewport, so
+      // "intersecting" means "the sticky head has reached top: 0" rather
+      // than "the head is partly visible". That single margin is what moves
+      // the decode from the slide-in to the park; nothing else here reads
+      // scroll (ADR-054: `#proof` has no clock and gains no writer).
+      { rootMargin: `0px 0px -${(100 - PIN_BAND * 100).toFixed(2)}% 0px`, threshold: 0 }
     );
     observer.observe(head);
 

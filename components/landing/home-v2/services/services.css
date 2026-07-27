@@ -437,9 +437,17 @@
    * canvas out-stacks the station DOM — host z:3 > station z:2), so the
    * section copy recedes to background. A third factor on the existing
    * entrance × decommission product — never a competing opacity writer. */
-  opacity: calc(var(--svc-content-in, 1) * (1 - var(--svc-exit, 0)) * var(--svc-plate-dim, 1));
-  transform: translateY(calc((1 - var(--svc-content-in, 1)) * 18px));
-  will-change: opacity, transform;
+  /* NO entrance rise, NO entrance crossfade on the COPY (owner,
+   * 2026-07-27): the title and the intro are STATIONARY in their final
+   * position and their ONLY arrival animation is the decode. The old
+   * `--svc-content-in` opacity ramp + 18px `translateY` made the glitch
+   * play on text that was still sliding up and fading in; both are gone.
+   * The arrival clock still drives the SURVEY CHROME (below) — that is
+   * decorative furniture, not the copy — and the two remaining factors
+   * are the decommission (`--svc-exit`) and the drawer dim
+   * (`--svc-plate-dim`), neither of which is an entrance. */
+  opacity: calc((1 - var(--svc-exit, 0)) * var(--svc-plate-dim, 1));
+  will-change: opacity;
   /* Editorial-band geometry (ADR-048; supersedes the lab-era "8vw inboard
    * of the rail guides" rule): left/right resolve against the STATION
    * CONTENT BOX, and `--rail-inset` (landing.css :root) is defined as
@@ -520,7 +528,8 @@
  * arrival (driven by ServicesMasthead's controller off --svc-content-in);
  * the CRT block cursor is the station-header caret verbatim, riding the
  * line being decoded ([data-live], written by the controller). The intro
- * holds until the title resolves ([data-reveal]), then fades + rises in.
+ * TYPES on beside it in place. Neither block moves and neither crossfades
+ * (owner, 2026-07-27) — the decode IS the reveal.
  * The controller is gated to the enhanced tier, so mobile / PRM / no-JS
  * never see these states — the static full text stands. */
 .services-masthead__cursor {
@@ -642,6 +651,36 @@
 .services-masthead__intro-copy {
   position: relative;
   z-index: 1;
+}
+
+/* Survey-chrome reveal, PARK-GATED (owner, 2026-07-27 round 2 — replaces
+ * the same-day `--svc-content-in` opacity ride, which faded the chrome
+ * across the clock's ramp WHILE the sticky stage was still travelling, so
+ * the labels read as scrolling with the page). The chrome now keys off the
+ * controller's `data-reveal` lifecycle exactly like the copy: hidden while
+ * ARMED (instantly — never a fade on a moving stage), fading in IN PLACE
+ * once the decode fires at the park. No `data-reveal` attribute (mobile /
+ * PRM / no-JS / controller unmounted) means no rule matches and the chrome
+ * ships visible — same fail-open as the static copy. */
+.services-masthead[data-reveal="armed"] .services-masthead__grid,
+.services-masthead[data-reveal="armed"] .services-masthead__mark,
+.services-masthead[data-reveal="armed"] .services-masthead__desig,
+.services-masthead[data-reveal="armed"] .services-masthead__state,
+.services-masthead[data-reveal="armed"] .services-masthead__coord {
+  opacity: 0;
+}
+.services-masthead[data-reveal="typing"] .services-masthead__grid,
+.services-masthead[data-reveal="typing"] .services-masthead__mark,
+.services-masthead[data-reveal="typing"] .services-masthead__desig,
+.services-masthead[data-reveal="typing"] .services-masthead__state,
+.services-masthead[data-reveal="typing"] .services-masthead__coord,
+.services-masthead[data-reveal="done"] .services-masthead__grid,
+.services-masthead[data-reveal="done"] .services-masthead__mark,
+.services-masthead[data-reveal="done"] .services-masthead__desig,
+.services-masthead[data-reveal="done"] .services-masthead__state,
+.services-masthead[data-reveal="done"] .services-masthead__coord {
+  opacity: 1;
+  transition: opacity 620ms var(--m-ease, cubic-bezier(0.22, 0.61, 0.36, 1));
 }
 
 /* Dot-grid lift — a masked radial-dot field under each block. Not a bordered

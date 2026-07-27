@@ -241,3 +241,78 @@ sharpened toward ownership of the outcome rather than ability to act.
   on `.services-stage` (the var the masthead controller's
   `MutationObserver` reads), confirmed `data-reveal="done"` and both
   resolved line texts + the joined `aria-label`.
+
+## Update (2026-07-27) — the copy is STATIONARY: the decode is the whole reveal
+
+Owner: the masthead "moves upwards when you scroll into the section. That
+shouldn't happen… the animation that just needs to happen is a glitch
+animation: no moving up, no crossfade."
+
+So the Decision's "rides the existing envelopes only: `opacity:
+--svc-content-in × (1 − --svc-exit)` + the 18px content-in rise" no longer
+applies to the COPY. `.services-masthead` drops the entrance ramp and the
+`translateY` entirely:
+
+```css
+opacity: calc((1 - var(--svc-exit, 0)) * var(--svc-plate-dim, 1));
+```
+
+`--svc-exit` (decommission) and `--svc-plate-dim` (ADR-050 drawer dim) stay
+— neither is an entrance. The arrival clock now drives the **M2 survey
+chrome only** (`__grid`, `__mark`, `__desig`, `__state`, `__coord` each take
+`opacity: var(--svc-content-in, 1)`), so the plate still assembles around
+the copy instead of arriving with it. The chrome is `display: none` on
+mobile / PRM, so that rule is desktop-only in practice.
+
+- **`REVEAL_AT` 0.2 → 0.45.** The old threshold was tuned against the ramp:
+  at 20% the decoding text sat at 20% opacity and only became legible near
+  mid-arrival. At full strength the same 0.2 would punch the copy on screen
+  noticeably earlier, so the threshold moves to where the copy _used_ to
+  become readable — same perceived arrival point, minus the fade. Still far
+  under the ~0.95 the section reliably reaches, so a stalled clock can't
+  withhold the reveal (`REARM_BELOW` 0.05 unchanged).
+- **Do not re-attach an entrance transform or opacity to this band, and do
+  not give the title/intro a `data-m` role** — either puts the motion back
+  under the glitch.
+- `#proof` took the same instruction the same day; see
+  [ADR-054](054-proof-station-client-cases.md) Update 2. Both stations'
+  reveals are one recipe — retune together or neither.
+- Verified live: `.services-masthead` computed `transform: none` /
+  `opacity: 1` at `--svc-content-in` 0 (copy blank, `data-reveal="armed"`)
+  and at 1 (`done`), with the chrome tracking the clock.
+
+### Round 2 (same day) — the PARK gate: the clock is not "stationary"
+
+Owner, after the first pass: the title/paragraph still read as moving —
+clearly on **reverse scroll** (full text riding the stage as it unpins
+toward the corridor) and slightly on entry. Measured on the live corridor:
+`--svc-content-in` crosses `REVEAL_AT` while the sticky stage is still
+~100-200px below its pin, and on the way back the stage unpins and travels
+~300px before the clock falls to `REARM_BELOW` — so a clock-only lifecycle
+_cannot_ keep resolved copy off a moving stage.
+
+Fix: the controller adds a **park observer** — an `IntersectionObserver`
+whose root is a thin band at the top of the viewport (`PIN_BAND` 0.02, the
+`ProofRevealController` recipe verbatim) watching the masthead root (which
+is `inset: 0` in the stage, so its rect IS the stage rect):
+
+- `begin()` requires clock ≥ `REVEAL_AT` **and parked**; the observer
+  fires the begin at the pin (the clock writer dedupes, so no mutation is
+  guaranteed at the park moment — the crossing must be observed directly).
+- Leaving the band **downward** re-arms immediately — instant blank while
+  the copy has not yet visibly travelled. Leaving upward (exit into
+  `#about`) keeps the resolved state; the exit envelope owns that fade.
+- The survey chrome moves off the `--svc-content-in` opacity ride (round 1)
+  onto the same `data-reveal` lifecycle: armed → 0 instantly, typing/done →
+  620ms in-place fade. No attribute (mobile / PRM / no-JS) = visible.
+- No new scroll writer; the observer only fires at the crossing. The
+  MutationObserver clock stays — it is the LAB replay channel
+  (`services-anchor-lab` / `services-card-face-lab` drive
+  `--svc-content-in` 0→1 with the stage parked at the lab viewport top,
+  so the gate is transparent there; replay verified live).
+
+Verified on the live corridor: decode fires only at stage top = 0 (both
+entries), zero frames with a moved stage and visible copy or chrome on
+reverse scroll, replay on re-entry, lab replay intact. `#proof` got the
+same treatment the same day (ADR-054 U2 round 2) — one recipe, two
+stations, retune together or neither.

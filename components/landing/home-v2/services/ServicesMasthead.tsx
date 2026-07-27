@@ -15,15 +15,21 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  * (ADR-029 guardrail — no DOM text console beside the ring) and this band
  * never reads `data-active-step`.
  *
- * REVEAL (owner, 2026-07-16): everything launches TOGETHER on section
- * arrival. The title lines decode through the canonical
- * `captionScramble` kernel (the corridor caption-chrome idiom) with the
- * station-header CRT cursor riding the line being decoded, WHILE the intro
- * plate plays the Arc caption card's X1-B choreography — a CENTRE-OUT
- * APERTURE UNFOLD (clip-path slit → open, gold corner crosses riding the
- * opening edges out to the corners — no rise, no fade) — and the paragraph
- * TYPES on inside the opening aperture. All three resolve within the same
- * ~0.9s window.
+ * REVEAL (owner, 2026-07-16; amended 2026-07-27): everything launches
+ * TOGETHER on section arrival. The title lines decode through the
+ * canonical `captionScramble` kernel (the corridor caption-chrome idiom)
+ * with the station-header CRT cursor riding the line being decoded, while
+ * the paragraph TYPES on beside them. Both resolve within the same ~0.9s
+ * window.
+ *
+ * The copy DOES NOT MOVE AND DOES NOT CROSSFADE (owner, 2026-07-27): the
+ * band's 18px entrance rise and its `--svc-content-in` opacity ramp are
+ * gone from `.services-masthead` (services.css) — the arrival clock now
+ * fades in the survey CHROME only. The glitch is the entire reveal, and
+ * it plays on copy that is already parked at full strength. Do not
+ * re-attach an entrance transform or an entrance opacity to this band, and
+ * do not give the title/intro a `data-m` role — both would put the motion
+ * back under the decode. `#proof` carries the same contract (ADR-054 U1).
  * Rules honoured:
  *   - The arrival clock stays the single scroll writer: this controller
  *     only READS `--svc-content-in` off `.services-stage` (via a
@@ -39,11 +45,31 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  *     the full text and the open plate.
  */
 
-/** Arrival-clock crossing that starts the decode (early in the fade-in,
- *  so the type-on runs while the band's opacity ramps). */
-const REVEAL_AT = 0.2;
-/** Clock floor that re-arms the reveal for a replay on re-entry. */
+/** Arrival-clock crossing that (together with the park gate below) starts
+ *  the decode. Kept as a real threshold mostly for the LAB replays, which
+ *  drive this clock directly (0 → 1) with the stage always parked; in
+ *  production the park is the later, governing condition. */
+const REVEAL_AT = 0.45;
+/** Clock floor that re-arms the reveal for a replay on re-entry (the lab
+ *  replay path; in production the unpark observer re-arms first). */
 const REARM_BELOW = 0.05;
+/**
+ * PARK GATE (owner, 2026-07-27 round 2): the decode may only run — and the
+ * resolved copy may only be visible — while the sticky stage is PARKED at
+ * the viewport top. Measured, the arrival clock is not that signal:
+ * `--svc-content-in` crosses REVEAL_AT while the stage is still ~100-200px
+ * below its pin (forward), and on reverse scroll the stage unpins and
+ * travels ~300px with the full text still shown before the clock reaches
+ * REARM_BELOW — the "masthead moves up when scrolling back" complaint. So
+ * the controller also watches the stage's park state via an
+ * IntersectionObserver whose root is a thin band at the top of the
+ * viewport (the `#proof` PIN_BAND recipe, ProofRevealController):
+ * begin fires at clock ∧ parked, and the moment the stage UNPARKS upward
+ * the whole masthead re-arms (instant blank — never a fade on moving
+ * text). No scroll listener, no writer — the arrival clock stays the
+ * single scroll writer and the observer only fires at the crossing.
+ */
+const PIN_BAND = 0.02;
 /** Per-target start stagger (title line 1 → title line 2), s. */
 const TARGET_STAGGER_S = 0.18;
 /** Paragraph typewriter rate — a fast print sweep, sized so the copy
@@ -100,6 +126,16 @@ export function ServicesMasthead() {
     const readClock = () => {
       const raw = Number.parseFloat(stage.style.getPropertyValue("--svc-content-in"));
       return Number.isFinite(raw) ? raw : 1;
+    };
+
+    // Park gate: the sticky stage is at (or within PIN_BAND of) the
+    // viewport top. The masthead root is `inset: 0` inside the stage, so
+    // its own rect IS the stage rect. Both labs mount the stage in a
+    // full-viewport station box (top 0), so this reads parked there and
+    // the clock-driven replay keeps working.
+    const isParked = () => {
+      const r = root.getBoundingClientRect();
+      return r.top <= window.innerHeight * PIN_BAND && r.bottom > 0;
     };
 
     /** The CRT cursor rides the FIRST title line still decoding. */
@@ -171,13 +207,13 @@ export function ServicesMasthead() {
 
     const onClock = () => {
       const v = readClock();
-      if (state === "armed" && v >= REVEAL_AT) begin();
+      if (state === "armed" && v >= REVEAL_AT && isParked()) begin();
       else if (state !== "armed" && v < REARM_BELOW) arm();
     };
 
-    // First sync: a reload already inside the section shows the full text
-    // + open plate silently; arriving from the corridor arms the reveal.
-    if (readClock() >= REVEAL_AT) {
+    // First sync: a reload already parked inside the section shows the
+    // full text silently; arriving from the corridor arms the reveal.
+    if (readClock() >= REVEAL_AT && isParked()) {
       state = "done";
       root.setAttribute("data-reveal", "done");
     } else {
@@ -189,6 +225,28 @@ export function ServicesMasthead() {
     // cost; the rAF above runs only while a reveal is in flight).
     const observer = new MutationObserver(onClock);
     observer.observe(stage, { attributes: true, attributeFilter: ["style"] });
+
+    // Park observer (the `#proof` PIN_BAND recipe): the clock writer
+    // dedupes its writes, so once `--svc-content-in` saturates BEFORE the
+    // pin no further mutation fires at the park moment — the crossing has
+    // to be observed directly. Intersecting the top band = parked (try to
+    // begin); leaving the band DOWNWARD (rect below the band) = the stage
+    // unpinned toward the corridor, so re-arm NOW, while the copy has not
+    // yet visibly travelled. Leaving upward (exit into #about) keeps the
+    // resolved state — the exit envelope owns that fade.
+    const parkObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            if (state === "armed" && readClock() >= REVEAL_AT) begin();
+          } else if (state !== "armed" && entry.boundingClientRect.top > 0) {
+            arm();
+          }
+        }
+      },
+      { rootMargin: `0px 0px -${(100 - PIN_BAND * 100).toFixed(2)}% 0px`, threshold: 0 }
+    );
+    parkObserver.observe(root);
 
     // Tab-return safety (2026-07-17): if the tab was hidden mid-reveal, or a
     // resume race left the controller armed (text cleared) while the stage
@@ -202,7 +260,7 @@ export function ServicesMasthead() {
       // hide mid-reveal or a resume race can leave the internal state out of
       // step with the observer, which won't re-fire without a fresh style
       // mutation). Below the reveal threshold, re-arm via onClock.
-      if (readClock() >= REVEAL_AT) {
+      if (readClock() >= REVEAL_AT && isParked()) {
         if (raf) {
           cancelAnimationFrame(raf);
           raf = 0;
@@ -216,6 +274,11 @@ export function ServicesMasthead() {
         }
         typed.textContent = paraText;
         root.setAttribute("data-reveal", "done");
+      } else if (state !== "armed" && !isParked()) {
+        // Restored with the stage away from its park (scrolled while
+        // hidden) — blank rather than show resolved copy on a moving
+        // stage; the park observer re-fires the decode on re-entry.
+        arm();
       } else {
         onClock();
       }
@@ -224,6 +287,7 @@ export function ServicesMasthead() {
 
     return () => {
       observer.disconnect();
+      parkObserver.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
       if (raf) cancelAnimationFrame(raf);
       jobs.length = 0;

@@ -104,21 +104,22 @@ function segments(runs: readonly CaseSegment[]): string {
 /**
  * The M2 survey-plate chrome shared by the report's two plates.
  *
- * Each piece carries its OWN `data-m="fade"` rather than inheriting a
- * reveal from the plate. That is load-bearing: `[data-m="title"]` and
- * `[data-m="eyebrow"]` reveal via `clip-path: inset(...)`, which clips to
- * the border box even when fully revealed — so an element carrying one of
- * those roles CANNOT host children positioned outside its box, and all of
- * this chrome is deliberately outboard (labels above, stamps below, marks
- * beyond the corners). `fade` is the one role with neither a clip nor a
- * transform, so it is safe here.
+ * NO `data-m` roles anywhere in the report head (2026-07-27 round 2 —
+ * supersedes the U1 `data-m="fade"` pieces): the head is `position:
+ * sticky` and travels to its park, so an IntersectionObserver-fired
+ * `data-m` reveal plays while the head is still moving — the chrome read
+ * as scrolling upward. The whole head is ONE frozen unit now: everything
+ * outside the decode targets reveals via `.proof__report[data-reveal]`
+ * CSS (landing.css) — hidden while ARMED, pure in-place fade once the
+ * controller fires at the park, statically visible when the controller
+ * never runs (no attribute: mobile / PRM / no-JS).
  */
 function plate(desig: string, seed: string, salt: number, mark: "origin" | "close"): string {
   return (
-    `<span class="proof__grid" data-m="fade" aria-hidden="true"></span>` +
-    `<span class="proof__mark proof__mark--${mark}" data-m="fade" aria-hidden="true"></span>` +
-    `<span class="proof__desig" data-m="fade">${esc(desig)}</span>` +
-    `<span class="proof__coord" data-m="fade">${esc(coordStamp(seed, salt))}</span>`
+    `<span class="proof__grid" aria-hidden="true"></span>` +
+    `<span class="proof__mark proof__mark--${mark}" aria-hidden="true"></span>` +
+    `<span class="proof__desig">${esc(desig)}</span>` +
+    `<span class="proof__coord">${esc(coordStamp(seed, salt))}</span>`
   );
 }
 
@@ -127,7 +128,7 @@ function reportHtml(def: CaseDef): string {
   const stats = report.stats
     .map(
       (stat) =>
-        `<li class="proof__stat" data-m="frame">` +
+        `<li class="proof__stat">` +
         `<span class="proof__stat-value">${esc(stat.value)}</span>` +
         `<span class="proof__stat-label">${esc(stat.label)}</span>` +
         (stat.detail ? `<span class="proof__stat-detail">${esc(stat.detail)}</span>` : "") +
@@ -147,12 +148,13 @@ function reportHtml(def: CaseDef): string {
   return (
     // The head PINS across its own runway (ADR-054 Update 1) — the sticky
     // child holds while the runway scrolls, then releases into the beats.
+    // NO data-m anywhere inside it (2026-07-27 round 2): the head travels
+    // to its park, and an IO-fired data-m reveal (opacity + rise) would
+    // play on a moving head. The title + lede are DECODED in place by
+    // ProofRevealController; everything else reveals via the controller's
+    // `data-reveal` lifecycle (landing.css) — one frozen unit.
     `<div class="proof__report-runway">` +
-    `<header class="proof__report" data-m-group>` +
-    // No `data-m` on the title or the lede: they are DECODED in place by
-    // ProofRevealController, and a data-m role would fight it (opacity 0
-    // until intersect, plus a rise the decode is meant to replace).
-    // Everything else in the head keeps its ordinary reveal.
+    `<header class="proof__report">` +
     `<div class="proof__plate proof__plate--title">` +
     plate("PRF / REPORT · 01", def.slug, 1, "origin") +
     `<h2 class="proof__title" aria-label="${esc(titleText(report.title))}">` +
@@ -161,7 +163,7 @@ function reportHtml(def: CaseDef): string {
     `</div>` +
     `<div class="proof__plate proof__plate--brief">` +
     plate("PRF / BRIEF · 02", def.slug, 2, "close") +
-    `<span class="proof__state" data-m="fade">Live</span>` +
+    `<span class="proof__state">Live</span>` +
     // Ghost reserves the full copy's box so the plate never reflows while
     // printing; the typed span overlays it and receives the growing slice.
     `<p class="proof__lede">` +
@@ -169,8 +171,8 @@ function reportHtml(def: CaseDef): string {
     `<span class="proof__lede-typed">${esc(report.lede)}</span>` +
     `</p>` +
     `</div>` +
-    `<ul class="proof__stats" data-m-group>${stats}</ul>` +
-    `<dl class="proof__meta" data-m="eyebrow">${meta}</dl>` +
+    `<ul class="proof__stats">${stats}</ul>` +
+    `<dl class="proof__meta">${meta}</dl>` +
     `</header>` +
     `</div>`
   );

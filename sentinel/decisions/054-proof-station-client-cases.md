@@ -247,3 +247,60 @@ lede present, `data-reveal` absent.
 
 The station grows by one viewport (the hold). `.proof__report-runway`'s
 `min-height` is where to retune that, and nothing else keys off it.
+
+## Update 2 — the decode waits for the PARK (2026-07-27, owner)
+
+Same instruction that moved the services masthead
+([ADR-044](044-services-masthead.md), Update 2026-07-27): the head must be
+**stationary in its final position** while it glitches — no rise, no
+crossfade.
+
+The head's copy already carried no `data-m` and no transform, so nothing
+here was animating it. What moved was the head itself: `.proof__report` is
+`position: sticky; top: 0`, so on the way in it travels up with the page
+until its top hits 0. Update 1's trigger — an `IntersectionObserver` at
+`threshold: 0.35` — fired at `rect.top ≈ 0.65 × vh`, i.e. mid-travel, so the
+decode played on copy that was visibly rising into place.
+
+**The observer's root is now collapsed to a thin band at the top of the
+viewport** (`rootMargin: "0px 0px -98% 0px"`, `threshold: 0`; `PIN_BAND` =
+0.02 as a fraction of the viewport). "Intersecting" therefore means "the
+sticky head has reached its park", and the reveal plays on a head standing
+still. Costs nothing: the head then holds for a full 100svh.
+
+- The band, not a hard `rect.top === 0`, so a sub-pixel sticky offset or a
+  rounded rect can never withhold the reveal. The first-sync
+  `alreadyParked` check uses the same measure.
+- The re-arm branch is unchanged and still correct: not intersecting with
+  `boundingClientRect.top > 0` means the head is BELOW the band — the
+  reader scrolled back above the station.
+- Still no scroll listener and no writer — one margin on the existing
+  observer is the entire change.
+- Verified live: `data-reveal` flips `armed → typing` at `rect.top = 2px`
+  (was ≈ 470px), and re-arms on scrolling back above the station.
+
+### Round 2 (same day) — the head furniture joins the frozen unit
+
+Owner: the survey labels above the two plates ("PRF / REPORT · 01" /
+"PRF / BRIEF · 02") still visibly scrolled upward on entry. Cause: they —
+plus the marks, coord stamps, state chip, stat row and meta register —
+carried `data-m` roles, and `useRevealMotion`'s IO fires when they enter
+the **viewport**, i.e. while the sticky head is still travelling to its
+park; `eyebrow`/`frame` even add a rise of their own.
+
+So the report head now ships with **no `data-m` anywhere inside it**
+(`reportHtml`; the U1 "each chrome piece carries `data-m="fade"`" rule is
+superseded — U1's clip-trap note still governs the BEATS, which keep their
+roles). Everything that is not a decode target reveals via
+`.proof__report[data-reveal]` CSS (landing.css): hidden while `armed`
+(instantly — never a fade on moving furniture), 620ms in-place fade on
+`typing`/`done`. No attribute (mobile / PRM / no-JS — the controller never
+ran) leaves it all statically visible, matching the decode targets'
+fallback exactly.
+
+The `tests/lib/v7-parse.test.ts` reveal-roles assertion still holds — the
+beats carry the `data-m` vocabulary it pins. Verified live: every head
+element at opacity 0 through the whole approach (head top 641 → 321 → 0),
+decode + chrome fade firing only at top = 0, instant blank the moment the
+head unparks on reverse scroll. The services masthead took the same park
+gate the same day (ADR-044 round 2).
