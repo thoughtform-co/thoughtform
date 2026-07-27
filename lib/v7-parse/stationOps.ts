@@ -236,3 +236,30 @@ export function captureSections(
   captured.sort((a, b) => a.start - b.start);
   return captured;
 }
+
+/**
+ * Fill an EMPTY authored shell div with generated markup (ADR-054).
+ *
+ * The prototype carries `<div class="proof-body" data-proof-body></div>`;
+ * this drops the generated station body inside it at parse time, so the
+ * markup is server-rendered, indexable, and observable by
+ * `useRevealMotion` on first paint — none of which a nested React root
+ * into the same slot can offer.
+ *
+ * The shell must be EMPTY (whitespace only): matching a self-closing
+ * pair rather than balancing tags keeps this a single replace and makes
+ * a double-fill impossible. A missing shell is a no-op, so prototypes
+ * without the slot (the workshop fork) come through byte-identical.
+ */
+export function fillStationSlot(
+  bodyHtml: string,
+  slotAttribute: string,
+  innerHtml: string
+): string {
+  const attr = slotAttribute.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const shellRe = new RegExp(`(<div\\b[^>]*\\b${attr}\\b[^>]*>)\\s*(</div>)`);
+  return bodyHtml.replace(
+    shellRe,
+    (_full, open: string, close: string) => open + innerHtml + close
+  );
+}

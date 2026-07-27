@@ -25,12 +25,13 @@ import { useEffect, useRef, useState } from "react";
  * removes #definition / #intelligence-layer / #buildQuote etc.; #tools
  * and #build retired with ADR-033 — the cases live in the Arc's
  * Build-park orbit): SERVICES → #services, ABOUT → #about,
- * VISION → #continuum.
+ * PROOF → #proof (the client case, ADR-054 — it replaced the #continuum
+ * vision beat this slot used to point at).
  */
 const NAV_ITEMS = [
   { num: "01", label: "Services", href: "#services" },
   { num: "02", label: "About", href: "#about" },
-  { num: "03", label: "Vision", href: "#continuum" },
+  { num: "03", label: "Proof", href: "#proof" },
 ] as const;
 
 export function HudNav() {

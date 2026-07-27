@@ -4307,7 +4307,7 @@ html { scroll-behavior: smooth; }
         We map your work to the right intelligence, encode what makes it good, and build capability your team can run.
       </p>
       <div class="hero__cta">
-        <a class="hero__cta__btn hero__cta__btn--primary" href="#continuum">
+        <a class="hero__cta__btn hero__cta__btn--primary" href="#proof">
           Begin navigation <span class="hero__cta__arrow" aria-hidden="true">→</span>
         </a>
         <a class="hero__cta__btn hero__cta__btn--ghost" href="#services">See services</a>
@@ -4824,10 +4824,9 @@ html { scroll-behavior: smooth; }
            border, dawn-70 text, gold on hover, arrow-grow micro-
            motion) so it lines up with the rest of the v7 button
            system without re-declaring any of that. Deep-links to
-           #continuum because the next station is where the
-           Navigate/Encode/Build practice resolves the "easier than
-           it sounds" promise. -->
-      <a class="btn btn--ghost ilayer__cta" href="#continuum" data-m="body">
+           #proof because the case is where the Navigate/Encode/Build
+           practice resolves the "easier than it sounds" promise. -->
+      <a class="btn btn--ghost ilayer__cta" href="#proof" data-m="body">
         Which is easier than it sounds
         <span class="arrow" aria-hidden="true"></span>
       </a>
@@ -4979,97 +4978,20 @@ html { scroll-behavior: smooth; }
   </section>
   </div>
 
-  <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
-  <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="05 Continuum">
-    <div class="station__idx">Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
-    <!-- CONTINUUM STAGE (ADR-049): on the capable desktop path the React
-         portal (ContinuumStagePortal) mounts the pinned rail stage into
-         this slot and data-continuum-mode="stage" hides the static head +
-         crail spectrum below; every other path (mobile, reduced motion,
-         WebGL fallback, no JS) keeps the authored crail markup + the 7s
-         CSS reticle loop untouched. Copy in the stage duplicates the
-         continuum strings via continuumStageData.ts - edit BOTH (lockstep).
-         Placed BEFORE .continuum__head so the stage's own .crail__brand
-         journey anchor wins querySelector("#continuum .crail__brand") over
-         the static #crailBrand below while engaged (the brandmark journey
-         rail keyframe). NOTE: this comment must contain NO angle-bracket
-         tag syntax; the v7-parse relocate walkers regex-scan the raw HTML,
-         comments included. -->
-    <div class="continuum-stage-root" data-continuum-root></div>
-    <header class="continuum__head" data-m-group>
-      <h2 class="continuum__title" data-m="title">
-        Tool or collaborator?<br><em>Navigation is the skill.</em>
-      </h2>
-      <p class="continuum__lede" data-m="body">
-        Software is commanded. Intelligence is navigated. AI sits on a
-        continuum between <em>tool</em> and <em>collaborator</em>, and the
-        ratio shifts with every prompt.
-      </p>
-    </header>
-
-    <!-- The continuum: one big spectrum, centered. Single idea, no competing content. -->
-    <div class="continuum continuum--focused">
-
-      <!-- the spectrum: the whole section -->
-      <div class="continuum__spectrum continuum__spectrum--wide">
-
-        <!-- horizontal rail with three stops — instrument readout -->
-        <div class="crail crail--large">
-          <span class="crail__frame crail__frame--tl" aria-hidden="true"></span>
-          <span class="crail__frame crail__frame--tr" aria-hidden="true"></span>
-          <span class="crail__frame crail__frame--bl" aria-hidden="true"></span>
-          <span class="crail__frame crail__frame--br" aria-hidden="true"></span>
-
-          <div class="crail__bearings" aria-hidden="true"></div>
-          <div class="crail__line"></div>
-          <div class="crail__trail" aria-hidden="true"></div>
-
-          <div class="crail__reticle" id="crailDot" aria-hidden="true">
-            <span class="crail__reticle__ring"></span>
-            <span class="crail__reticle__cross"></span>
-            <span class="crail__reticle__diamond"></span>
-          </div>
-
-          <!-- Native rail brandmark — source-owned while the actor is
-               parked on the rail. Sits at the AI lives here (middle)
-               stop, scrolls naturally with the rail (no fixed-position
-               jiggle). The fixed BrandmarkActor only takes over for
-               the morphs in (backdrop → rail) and out (rail → orbit).
-               Anchor slot for v7 brandmark choreography — the `<img>`
-               is stripped at runtime and replaced by a portal'd
-               BrandmarkGlyph. -->
-          <div class="crail__brand" id="crailBrand" data-brand-anchor="rail" aria-hidden="true">
-            <img src="assets/logos/Thoughtform_Brandmark.svg" alt=""/>
-          </div>
-
-          <div class="crail__readout" aria-hidden="true">Nav · Tool 0.00 — Collab 1.00</div>
-
-          <div class="crail__stops-grid">
-            <div class="crail__stop crail__stop--l">
-              <div class="crail__tick"></div>
-              <div class="crail__k">Tool</div>
-              <div class="crail__t">Executes commands</div>
-              <div class="crail__b">You provide the thinking. The output is predictable, because you already knew what you wanted.</div>
-            </div>
-
-            <div class="crail__stop crail__stop--m">
-              <div class="crail__tick"></div>
-              <div class="crail__k crail__k--mid">AI lives here</div>
-              <div class="crail__t">Neither pure tool<br>nor true collaborator</div>
-              <div class="crail__b">Always both. Every prompt relocates the dot along the rail. Learning where to stand is the skill.</div>
-            </div>
-
-            <div class="crail__stop crail__stop--r">
-              <div class="crail__tick"></div>
-              <div class="crail__k crail__k--end">Collaborator</div>
-              <div class="crail__t">Interprets intent</div>
-              <div class="crail__b">You provide direction and judgment. The output surprises you — in useful ways, if you've learned to navigate.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
+  <!-- ═══════════ 05 PROOF — the client case (Loop Earplugs) ═══════════
+       The station BODY is generated at parse time from lib/cases and
+       injected into the empty slot below (ADR-054, ParseOptions.fillSlots
+       plus lib/v7-parse/proofStation.ts). It is deliberately NOT authored
+       here: lib/cases is the single source of truth for case copy, and a
+       generated body still ships server-rendered, indexable markup that
+       useRevealMotion observes on first paint. Viewing this prototype
+       standalone therefore shows the station head only.
+       NOTE: this comment must contain NO angle-bracket tag syntax; the
+       v7-parse relocate walkers regex-scan the raw HTML, comments
+       included. -->
+  <section class="station station--proof" id="proof" data-station="proof" data-screen-label="05 Proof">
+    <div class="station__idx">Proof<span class="landmark">Landmark · Loop Earplugs / navigate → encode → build</span></div>
+    <div class="proof-body" data-proof-body></div>
   </section>
 
   <!-- Connector slot removed: viewport-filling sections give the

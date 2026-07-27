@@ -30,7 +30,7 @@ export type ManifestEntryId =
   | "build"
   | "services"
   | "about"
-  | "continuum"
+  | "proof"
   | "practice"
   | "contact";
 
@@ -142,7 +142,10 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     kind: "station",
     targetId: "about",
   },
-  { id: "continuum", label: "05", name: "Continuum", kind: "station", targetId: "continuum" },
+  // The client case (ADR-054) — the evidence beat that replaced the
+  // ADR-049 continuum. Its three Navigate/Encode/Build sub-rows are
+  // folded in by CorridorSectionMenu, mirroring the ARC node.
+  { id: "proof", label: "05", name: "Proof", kind: "station", targetId: "proof" },
   { id: "practice", label: "06", name: "Practice", kind: "station", targetId: "practice" },
   { id: "contact", label: "10", name: "Contact", kind: "station", targetId: "contact" },
 ] as const;

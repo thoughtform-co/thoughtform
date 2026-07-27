@@ -143,10 +143,9 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // ABOUT_DECK_STAGE off restores the ADR-033 #about kill
       // byte-identically.
       const nextStation = ABOUT_DECK_STAGE
-        ? (root.querySelector<HTMLElement>("#continuum") ??
+        ? (root.querySelector<HTMLElement>("#proof") ??
           root.querySelector<HTMLElement>("#practice"))
-        : (root.querySelector<HTMLElement>("#about") ??
-          root.querySelector<HTMLElement>("#continuum"));
+        : (root.querySelector<HTMLElement>("#about") ?? root.querySelector<HTMLElement>("#proof"));
       const nextStationTopVh =
         (nextStation?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
       // The AMBIENT hold outlives the dock gate (ADR-030 Update 1). The

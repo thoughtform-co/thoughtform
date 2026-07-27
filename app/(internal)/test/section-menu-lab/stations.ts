@@ -75,7 +75,7 @@ function buildStations(): LabStation[] {
   return out;
 }
 
-/** hero · thesis · THE ARC(nav/enc/bld) · services · about · continuum · practice · contact. */
+/** hero · thesis · THE ARC(nav/enc/bld) · services · about · proof · practice · contact. */
 export const STATIONS: readonly LabStation[] = buildStations();
 
 /** Ids that live inside THE ARC — a click on one opens the drawer. */

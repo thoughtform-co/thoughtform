@@ -34,3 +34,15 @@ export function scrollToManifestEntry(entry: ManifestEntry, reduceMotion: boolea
   if (target == null) return;
   window.scrollTo({ top: target, behavior: reduceMotion ? "auto" : "smooth" });
 }
+
+/**
+ * Scroll to an element by id, using the same offsetTop recipe as a
+ * station entry. For subsections that live INSIDE a station and so have
+ * no manifest entry of their own — the `#proof` beats (ADR-054). Absent
+ * element is a no-op.
+ */
+export function scrollToElementTop(elementId: string, reduceMotion: boolean): void {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  window.scrollTo({ top: el.offsetTop, behavior: reduceMotion ? "auto" : "smooth" });
+}

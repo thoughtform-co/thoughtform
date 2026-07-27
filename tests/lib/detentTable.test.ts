@@ -21,7 +21,7 @@ const LAYOUT: Record<string, { top: number; height: number }> = {
   [CORRIDOR_MOUNT_ID]: { top: 800, height: 8200 }, // the long corridor runway
   services: { top: 9000, height: 800 },
   about: { top: 9800, height: 800 },
-  continuum: { top: 10600, height: 800 },
+  proof: { top: 10600, height: 800 },
   practice: { top: 11400, height: 800 },
   contact: { top: 12200, height: 800 },
 };
@@ -81,7 +81,7 @@ describe("computeDetentTable — proportional detents", () => {
   it("is proportional: the corridor spans more rail than a short station", () => {
     const t = computeDetentTable() as number[];
     const corridorSpan = t[idx("services")] - t[idx("thesis")];
-    const stationSpan = t[idx("practice")] - t[idx("continuum")];
+    const stationSpan = t[idx("practice")] - t[idx("proof")];
     expect(corridorSpan).toBeGreaterThan(stationSpan);
   });
 

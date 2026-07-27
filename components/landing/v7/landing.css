@@ -6055,6 +6055,15 @@
    no helper `paintTransitWithRects`, no `handleStageHandoff`. See
    `useSigilChoreography.ts` and ADR-012 v6. */
 
+/* ⚠ RETIRED (ADR-054, 2026-07-27): the #continuum station is gone from
+   BOTH routes — the homepage replaced it with #proof (the client case)
+   and /claude-workshop strips it at parse time (ADR-053). Every selector
+   in this block through the TWEAKS PANEL heading is therefore unmatched
+   and inert. Left in place deliberately for one cycle rather than bulk
+   deleted: the block interleaves `.distance` and other shared-looking
+   classes, and it deserves its own audited cleanup commit rather than a
+   sweep folded into the station swap. Do NOT extend it. */
+
 /* ═══════════ 05 CONTINUUM — spectrum + collapsed distances ═══════════
    Header now sits in a Linear-style two-column grid (title left, lede
    right) above the rail. Sizing draws on the Linear DESIGN.md
@@ -6855,6 +6864,643 @@
 .distance p em {
   font-style: normal;
   color: var(--gold);
+}
+
+/* ═══════════ 05 PROOF — the client case (ADR-054) ═══════════
+   The evidence beat: a MISSION REPORT head, then three full-height
+   beats that map the engagement onto the Arc (Navigate → Encode →
+   Build) in a zig-zag — text left, mirrored, left again.
+
+   Plain flowing DOM. No pin, no portal, no scroll writer, no canvas
+   coupling; the station is OPAQUE (it is the cover that ends the
+   corridor ambient hold — see home-v2.css). Reveals ride `data-m`
+   (useRevealMotion), the same system #contact uses, so the beats work
+   on mobile and without the corridor.
+
+   Markup is GENERATED from lib/cases by lib/v7-parse/proofStation.ts
+   and injected into the authored [data-proof-body] shell at parse time.
+   Class names are that generator's contract — rename in both. */
+
+#proof.station {
+  /* Release the one-viewport station lock: the body is four stacked
+     full-height bands, so its height is its content. */
+  height: auto;
+  min-height: 100svh;
+  display: block;
+  padding-top: 0;
+  padding-bottom: 0;
+  content-visibility: visible;
+  contain-intrinsic-size: auto none;
+}
+
+.proof-body {
+  display: block;
+}
+
+/* ── Shared band frame ──────────────────────────────────────────────
+   Every block inside #proof hangs off the ONE editorial band (ADR-048).
+   The station already carries --hud-content-inset padding, so
+   --rail-inset lands the text edge exactly on --band-margin. Never
+   re-widen per block. */
+.proof__report,
+.proof__beat {
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+}
+
+/* ── MISSION REPORT — the 15-second read ────────────────────────────
+   Two M2 survey plates on the band's top line (title left, brief
+   right — the services-masthead recipe), the stat row beneath, then
+   the meta register. Deliberately the EDITORIAL masthead register, not
+   the corridor's centered cinematic title card: this beat must not
+   read as a second hero. */
+.proof__report {
+  min-height: 100svh;
+  padding-block: var(--band-top) clamp(48px, 8svh, 96px);
+  display: grid;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  grid-template-areas:
+    "title brief"
+    "stats stats"
+    "meta  meta";
+  column-gap: clamp(36px, 4.5vw, 88px);
+  row-gap: clamp(40px, 6svh, 80px);
+  align-content: start;
+}
+.proof__plate--title {
+  grid-area: title;
+}
+.proof__plate--brief {
+  grid-area: brief;
+}
+.proof__stats {
+  grid-area: stats;
+}
+.proof__meta {
+  grid-area: meta;
+}
+
+/* Survey plate — masked dot-grid lift + registration marks on one
+   diagonal + PT Mono designation and coordinate stamp. The atoms are
+   shared with the services masthead and the arc section heads. */
+.proof__plate {
+  position: relative;
+  padding: 22px 24px 24px;
+}
+.proof__grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, var(--dawn-15) 1px, transparent 0);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at 12% 0%, #000 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse at 12% 0%, #000 0%, transparent 72%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.proof__mark {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+}
+.proof__mark::before,
+.proof__mark::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.proof__mark::before {
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.proof__mark::after {
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+.proof__mark--origin {
+  top: 6px;
+  left: 6px;
+  color: var(--gold-50);
+}
+.proof__mark--close {
+  right: 6px;
+  bottom: 6px;
+  color: var(--dawn-30);
+}
+.proof__desig,
+.proof__coord {
+  display: block;
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+.proof__desig {
+  color: var(--gold-50);
+  margin-bottom: 4px;
+}
+.proof__coord {
+  position: absolute;
+  right: 24px;
+  top: 22px;
+}
+.proof__state {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 3px 9px;
+  border: 1px solid var(--gold-30);
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.proof__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(36px, 5.5vw, 72px);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  max-width: 16ch;
+  margin: 12px 0 0;
+}
+.proof__title em,
+.proof__beat-title em {
+  font-style: normal;
+  color: var(--gold);
+}
+.proof__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: var(--band-copy);
+  line-height: 1.5;
+  color: var(--dawn-70);
+  max-width: 46ch;
+  margin: 0;
+}
+
+/* Stat tiles — hairline frames, the number carrying the weight. */
+.proof__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--dawn-08);
+  border: 1px solid var(--dawn-08);
+}
+.proof__stat {
+  background: var(--void, #0a0908);
+  padding: 24px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.proof__stat-value {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(30px, 3.4vw, 48px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--gold);
+}
+.proof__stat-label {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--dawn);
+}
+.proof__stat-detail {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+
+/* Meta register — CLIENT / ROLE / PERIOD / STATUS on one mono line. */
+.proof__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 clamp(28px, 4vw, 64px);
+  margin: 0;
+}
+.proof__meta-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.proof__meta-k {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+.proof__meta-v {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 13px;
+  color: var(--dawn-70);
+}
+
+/* ── BEATS — the zig-zag ────────────────────────────────────────────
+   DOM order is ALWAYS copy-then-visual, so tab order and the mobile
+   single-column stack never change; --flip is a CSS column swap only. */
+.proof__beat {
+  min-height: 100svh;
+  padding-block: clamp(64px, 10svh, 128px);
+  display: grid;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  column-gap: clamp(36px, 4.5vw, 88px);
+  align-content: center;
+  align-items: center;
+}
+.proof__beat-copy {
+  grid-column: 1;
+}
+.proof__beat-visual {
+  grid-column: 2;
+}
+.proof__beat--flip .proof__beat-copy {
+  grid-column: 2;
+}
+.proof__beat--flip .proof__beat-visual {
+  grid-column: 1;
+}
+
+.proof__eyebrow {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-50);
+  margin: 0 0 14px;
+}
+.proof__beat-title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  /* Deliberately below the report's station scale — the mission report
+     stays the section's loudest line. */
+  font-size: clamp(28px, 3.2vw, 48px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  max-width: 14ch;
+  margin: 0 0 22px;
+}
+.proof__body {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: var(--band-copy);
+  line-height: 1.6;
+  color: var(--dawn-70);
+  max-width: 42ch;
+  margin: 0 0 16px;
+}
+.proof__body:last-child {
+  margin-bottom: 0;
+}
+
+.proof__receipts {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.proof__receipt {
+  position: relative;
+  padding-left: 18px;
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--dawn-70);
+}
+.proof__receipt::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+
+.proof__quote {
+  margin: 26px 0 0;
+  padding-left: 18px;
+  border-left: 1px solid var(--gold-30);
+}
+.proof__quote p {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--band-copy);
+  line-height: 1.55;
+  color: var(--dawn);
+  margin: 0 0 8px;
+  max-width: 40ch;
+}
+.proof__quote cite {
+  font-style: normal;
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+
+/* The beat's one emphasized line. Emphasis is the corridor caption
+   marker — gold ink on a soft gold wash. Never italics (brand rule). */
+.proof__closer {
+  margin: 26px 0 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--band-copy);
+  line-height: 1.6;
+  color: var(--dawn);
+  max-width: 42ch;
+}
+.proof__closer em {
+  font-style: normal;
+  color: var(--gold);
+  background: rgba(202, 165, 84, 0.16);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 0.18em;
+}
+
+/* ── Evidence plates ────────────────────────────────────────────────
+   One signature instrument per beat: a terminal LOG (navigate), a
+   grouped REGISTRY (encode), a compact TOOL strip (build). */
+.proof__visual {
+  position: relative;
+}
+.proof__plate.proof__visual {
+  border: 1px solid var(--dawn-08);
+  padding: 26px 26px 24px;
+}
+.proof__visual-title {
+  display: block;
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-50);
+  margin-bottom: 18px;
+}
+.proof__visual-foot {
+  margin: 18px 0 0;
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--dawn-30);
+}
+
+/* LOG — mono stamp, dotted leader, event. */
+.proof__log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.proof__log-row {
+  display: grid;
+  grid-template-columns: 7ch 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+}
+.proof__log-t {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-50);
+}
+.proof__log-rule {
+  height: 1px;
+  border-bottom: 1px dashed var(--dawn-15);
+  transform: translateY(-3px);
+}
+.proof__log-event {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--dawn-70);
+  text-align: right;
+}
+
+/* REGISTRY — the five substrate groups, then sampled rows. */
+.proof__reg-groups {
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.proof__reg-group {
+  display: grid;
+  grid-template-columns: 11ch 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.proof__reg-name {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.proof__reg-gloss {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--dawn-70);
+}
+.proof__reg-rows {
+  border-top: 1px solid var(--dawn-08);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.proof__reg-row {
+  display: grid;
+  grid-template-columns: 11ch 1fr auto;
+  gap: 12px;
+  align-items: baseline;
+}
+.proof__reg-team {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+.proof__reg-skill {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 13px;
+  color: var(--dawn);
+}
+.proof__reg-tag {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-50);
+  border: 1px solid var(--gold-20);
+  padding: 2px 6px;
+}
+
+/* TOOL STRIP — the four production tools, referenced not restated.
+   The corridor's arc-cases card owns their deep read; this is
+   pattern + numbers only. */
+.proof__visual--tools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.proof__tool {
+  display: grid;
+  grid-template-columns: 104px 1fr auto;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid var(--dawn-08);
+  padding: 12px 16px 12px 12px;
+}
+.proof__tool-shot {
+  width: 104px;
+  height: 58px;
+  object-fit: cover;
+  border: 1px solid var(--dawn-08);
+  filter: grayscale(1) sepia(0.35) saturate(1.6) brightness(0.82);
+}
+.proof__tool-name {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.proof__tool-tag {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 12px;
+  color: var(--dawn-70);
+  grid-column: 2;
+  grid-row: 2;
+}
+.proof__tool-metric {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--dawn);
+  text-align: right;
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+.proof__tool-metric-label {
+  display: block;
+  font-family: var(--font-pt-mono, monospace);
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+.proof__tool-shot {
+  grid-row: 1 / span 2;
+}
+
+/* Media plates (unused by the Loop case v1; the model supports them). */
+.proof__image,
+.proof__video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--dawn-08);
+}
+
+/* ── Mobile / narrow ────────────────────────────────────────────────
+   Single column, copy above its evidence on EVERY beat (uniform
+   rhythm — alternating the reading order buys nothing once the
+   columns collapse). */
+@media (max-width: 960px) {
+  .proof__report,
+  .proof__beat {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: auto;
+  }
+  .proof__report {
+    grid-template-areas:
+      "title"
+      "brief"
+      "stats"
+      "meta";
+    padding-block: clamp(72px, 12svh, 120px) clamp(40px, 7svh, 72px);
+  }
+  .proof__beat {
+    padding-block: clamp(48px, 9svh, 88px);
+    row-gap: 32px;
+  }
+  .proof__beat-copy,
+  .proof__beat-visual,
+  .proof__beat--flip .proof__beat-copy,
+  .proof__beat--flip .proof__beat-visual {
+    grid-column: 1;
+  }
+  .proof__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .proof__coord {
+    display: none;
+  }
+  .proof__log-row {
+    grid-template-columns: 6ch 1fr;
+  }
+  .proof__log-rule {
+    display: none;
+  }
+  .proof__log-event {
+    text-align: left;
+    font-size: 12px;
+  }
+  .proof__reg-group,
+  .proof__reg-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .proof__reg-tag {
+    justify-self: start;
+    margin-top: 3px;
+  }
+  .proof__tool {
+    grid-template-columns: 72px 1fr;
+  }
+  .proof__tool-shot {
+    width: 72px;
+    height: 42px;
+  }
+  .proof__tool-metric {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    text-align: left;
+    font-size: 15px;
+  }
 }
 
 /* ═══════════ TWEAKS PANEL ═══════════ */

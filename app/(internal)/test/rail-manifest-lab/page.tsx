@@ -51,7 +51,7 @@ const ENTRIES: readonly LabEntry[] = [
   { id: "arc", label: "03", name: "Arc" },
   { id: "services", label: "08", name: "Services", glyph: "stack" },
   { id: "tools", label: "08A", name: "Tools" },
-  { id: "continuum", label: "05", name: "Continuum" },
+  { id: "proof", label: "05", name: "Proof" },
   { id: "practice", label: "06", name: "Practice" },
   { id: "build", label: "07", name: "Build" },
   { id: "about", label: "09", name: "About" },

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { extractV7Text, getV7Content } from "@/lib/v7-parse";
+import { buildProofStationHtml, extractV7Text, getV7Content } from "@/lib/v7-parse";
 import { LandingPage } from "@/components/landing/v7";
+import { PROOF_CASE } from "@/lib/cases/registry";
 import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
@@ -63,14 +64,21 @@ const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 //
 // Specs run in ARRAY ORDER and each inserts immediately after the
 // mount, so the LAST spec lands closest to the mount. about first,
-// services second ⇒ mount → #services → #about → #continuum →
-// #practice → #contact — the ADR-033 funnel: the corridor exits into
-// services (the navigator's engagements), the bio follows as the
-// opaque cover that ends the ambient hold, then the philosophy beat
-// (continuum) and the Loop practice proof.
+// services second ⇒ mount → #services → #about → #proof →
+// #practice → #contact — the ADR-033 funnel as amended by ADR-054:
+// the corridor exits into services (the navigator's engagements), the
+// bio follows, then the client case (#proof) is the opaque cover that
+// ends the ambient hold.
 const CORRIDOR_RELOCATED_STATIONS = [
   { stationId: "about" },
   { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
+] as const;
+
+// The #proof station body is GENERATED from lib/cases and injected into
+// the prototype's empty [data-proof-body] shell at parse time (ADR-054).
+// Module-level so the parse memo key stays stable across renders.
+const PROOF_FILL_SLOTS = [
+  { slotAttribute: "data-proof-body", html: buildProofStationHtml(PROOF_CASE) },
 ] as const;
 
 export default async function Home() {
@@ -78,6 +86,7 @@ export default async function Home() {
     removeStations: CORRIDOR_REPLACED_STATIONS,
     relocateStationsToMount: CORRIDOR_RELOCATED_STATIONS,
     corridorMountId: CORRIDOR_MOUNT_ID,
+    fillSlots: PROOF_FILL_SLOTS,
   });
   const corridorText = extractV7Text();
   const celestialSlots = await getCelestialSlotsCached();

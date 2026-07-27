@@ -225,11 +225,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(parseFloat(mid.flip || "0")).toBe(1);
     expect(mid.voidwalkerDisplay).toBe("none");
 
-    // Walk under the next OPAQUE station: THIS is where the ambient hold
-    // ends — the bottom gate is keyed to the SAME rect as the fade
-    // envelope, so there is no hard cut at the about runway's end.
+    // Walk under #proof: THIS is where the ambient hold ends (ADR-054 —
+    // the client case is the opaque cover). The bottom gate is keyed to
+    // the SAME rect as the fade envelope, so there is no hard cut at the
+    // about runway's end.
     const underNext = await page.evaluate(() => {
-      const next = document.getElementById("continuum");
+      const next = document.getElementById("proof");
       if (!next) return null;
       return Math.round(
         window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3

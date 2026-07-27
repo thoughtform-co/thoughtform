@@ -3,6 +3,7 @@ import { readFileSync, statSync } from "fs";
 import { injectStaticHudChildren } from "./hudTicks";
 import { scopeV7Css } from "./scopeCss";
 import {
+  fillStationSlot,
   relocateStationToMount,
   removeEmptyBuildQuoteRunway,
   removeHudNavEntries,
@@ -123,6 +124,17 @@ function parseV7HtmlUncached(
       bodyHtml = relocateStationToMount(bodyHtml, spec.stationId, mountId, {
         dropTrailingConnectorSlot: spec.dropTrailingConnectorSlot,
       });
+    }
+  }
+
+  // Optional surgery: fill empty authored shells with generated markup
+  // (ADR-054). Runs AFTER the station surgery — so a filled slot can
+  // never be sliced or relocated with stale content — and BEFORE the
+  // comment strip below, which the generators are required not to need
+  // (their output carries no HTML comments).
+  if (options?.fillSlots && options.fillSlots.length) {
+    for (const spec of options.fillSlots) {
+      bodyHtml = fillStationSlot(bodyHtml, spec.slotAttribute, spec.html);
     }
   }
 

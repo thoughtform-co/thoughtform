@@ -2,7 +2,7 @@
 
 import { type CSSProperties, useEffect, useState } from "react";
 
-import { scrollToManifestEntry } from "@/lib/rail-manifest/clickToNavigate";
+import { scrollToElementTop, scrollToManifestEntry } from "@/lib/rail-manifest/clickToNavigate";
 import { MANIFEST_ENTRIES, type ManifestEntryId } from "@/lib/rail-manifest/entries";
 import {
   ACTIVE_IDX_ATTRIBUTES,
@@ -68,15 +68,37 @@ import { SERVICES } from "./services/serviceData";
 
 const ARC_BEAT_IDS = new Set<ManifestEntryId>(["navigate", "encode", "build"]);
 const SERVICES_ENTRY_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "services");
+const PROOF_ENTRY_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "proof");
+
+/**
+ * The `#proof` beats as menu rows — the deliberate mirror of THE ARC's
+ * Navigate / Encode / Build (ADR-054). Duplicated from `lib/cases`
+ * rather than imported: this is a client component, and importing the
+ * registry would ship every case's copy in the landing bundle for three
+ * labels. LOCKSTEP with `caseBeatMenu(PROOF_CASE)`, pinned by
+ * `tests/lib/cases-registry.test.ts`.
+ */
+export const PROOF_SUBS: readonly { id: string; num: string; name: string }[] = [
+  { id: "proof-navigate", num: "01", name: "NAVIGATE" },
+  { id: "proof-encode", num: "02", name: "ENCODE" },
+  { id: "proof-build", num: "03", name: "BUILD" },
+];
+
+/** Viewport fraction a beat's centre is measured against when resolving
+ *  which `#proof` beat is active — the `pickActivePhase` seat. */
+const PROOF_BEAT_SEAT = 0.4;
 
 interface TreeSub {
-  /** Beat `ManifestEntryId` or `ServiceId`. */
+  /** Beat `ManifestEntryId`, `ServiceId`, or a `#proof` beat id. */
   id: string;
   num: string;
   name: string;
   /** MANIFEST_ENTRIES index a click scrolls to — a beat's own park, or
    *  #services for a service verb (the ring has no per-service scroll spot). */
   targetIdx: number;
+  /** DOM id a click scrolls to instead, for subsections that live INSIDE
+   *  a station and so have no manifest entry (the `#proof` beats). */
+  anchorId?: string;
 }
 interface TreeNode {
   id: string;
@@ -134,6 +156,18 @@ const JOURNEY_TREE: readonly TreeNode[] = (() => {
         targetIdx: i,
       }));
     }
+    if (entry.id === "proof") {
+      // The case's three Arc beats. Unlike the service verbs these DO
+      // have distinct scroll targets — each beat is a full-height block
+      // with its own DOM id — so they carry an anchorId (ADR-054).
+      node.subs = PROOF_SUBS.map((s) => ({
+        id: s.id,
+        num: s.num,
+        name: s.name,
+        targetIdx: i,
+        anchorId: s.id,
+      }));
+    }
     out.push(node);
   });
   return out;
@@ -144,22 +178,43 @@ const prm = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matche
 export function CorridorSectionMenu() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [serviceIdx, setServiceIdx] = useState(0);
+  const [proofIdx, setProofIdx] = useState(0);
 
   useEffect(() => {
     const html = document.documentElement;
     let scrollRaf = 0;
     // Scroll re-resolves while in the hero/corridor seam regime (the
-    // geometric seam rule) OR while in #services (where the active service
-    // changes on scroll as the ring rotates, not via any attribute).
+    // geometric seam rule), while in #services (where the active service
+    // changes on scroll as the ring rotates, not via any attribute), or
+    // while in #proof (whose active beat is a rect read, same reason).
     let watch = true;
 
     const update = () => {
       const next = resolveActiveIdx(html);
-      watch = next <= LAST_CORRIDOR_IDX || next === SERVICES_ENTRY_IDX;
+      watch = next <= LAST_CORRIDOR_IDX || next === SERVICES_ENTRY_IDX || next === PROOF_ENTRY_IDX;
       setActiveIdx((prev) => (prev === next ? prev : next));
       if (next === SERVICES_ENTRY_IDX) {
         const svc = activeServiceForProgress(servicesRingProgressRef.current.progress);
         setServiceIdx((prev) => (prev === svc ? prev : svc));
+      }
+      if (next === PROOF_ENTRY_IDX) {
+        // The beat whose centre sits nearest the reading seat. A pure
+        // rect READ on an existing scroll callback — no new writer
+        // (ADR-002), same class as resolveActiveIdx's own seam rule.
+        const seat = window.innerHeight * PROOF_BEAT_SEAT;
+        let best = 0;
+        let bestDist = Infinity;
+        PROOF_SUBS.forEach((sub, i) => {
+          const el = document.getElementById(sub.id);
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          const dist = Math.abs(rect.top + rect.height / 2 - seat);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = i;
+          }
+        });
+        setProofIdx((prev) => (prev === best ? prev : best));
       }
     };
 
@@ -186,6 +241,7 @@ export function CorridorSectionMenu() {
   const activeEntry = MANIFEST_ENTRIES[activeIdx];
   const activeIsBeat = !!activeEntry && ARC_BEAT_IDS.has(activeEntry.id);
   const activeIsServices = activeEntry?.id === "services";
+  const activeIsProof = activeEntry?.id === "proof";
   const activeTopId = activeIsBeat ? "arc" : (activeEntry?.id ?? "hero");
 
   // Terminal decode-in: each time the menu ENTERS a section it belongs to
@@ -212,7 +268,7 @@ export function CorridorSectionMenu() {
   // the section vanished and THE ARC appeared twice. Keep the highlights out
   // of any textContent-writing effect; they read as the LOCKED readout and do
   // not decode.
-  const menuVisible = activeIsBeat || activeIsServices;
+  const menuVisible = activeIsBeat || activeIsServices || activeIsProof;
   useEffect(() => {
     if (!menuVisible || prm()) return;
     const STAGGER_MS = 45;
@@ -226,18 +282,33 @@ export function CorridorSectionMenu() {
     return () => cleanups.forEach((fn) => fn());
   }, [menuVisible]);
 
-  // The section whose subsections unfold — THE ARC in the corridor, SERVICES
-  // in #services; nothing elsewhere.
-  const expandedTopId = activeIsBeat ? "arc" : activeIsServices ? "services" : null;
+  // The section whose subsections unfold — THE ARC in the corridor,
+  // SERVICES in #services, the case's beats in #proof; nothing elsewhere.
+  const expandedTopId = activeIsBeat
+    ? "arc"
+    : activeIsServices
+      ? "services"
+      : activeIsProof
+        ? "proof"
+        : null;
   const activeSubId = activeIsBeat
     ? activeEntry.id
     : activeIsServices
       ? (SERVICES[serviceIdx]?.id ?? null)
-      : null;
+      : activeIsProof
+        ? (PROOF_SUBS[proofIdx]?.id ?? null)
+        : null;
 
   const go = (entryIdx: number) => {
     const entry = MANIFEST_ENTRIES[entryIdx];
     if (entry) scrollToManifestEntry(entry, prm());
+  };
+
+  /** Subsection click: an in-station beat scrolls to its own anchor;
+   *  everything else falls back to its manifest entry. */
+  const goSub = (sub: TreeSub) => {
+    if (sub.anchorId) scrollToElementTop(sub.anchorId, prm());
+    else go(sub.targetIdx);
   };
 
   // The section whose subsections fill the RIGHT panel (THE ARC or SERVICES).
@@ -338,7 +409,7 @@ export function CorridorSectionMenu() {
                       type="button"
                       className="home-v2-section-submenu__row"
                       aria-current={sActive ? "true" : undefined}
-                      onClick={() => go(sub.targetIdx)}
+                      onClick={() => goSub(sub)}
                     >
                       <span className="home-v2-section-submenu__name">{sub.name}</span>
                       <span className="home-v2-section-submenu__num" aria-hidden="true">

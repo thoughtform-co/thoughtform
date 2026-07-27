@@ -14,7 +14,7 @@ const SECTORS: Record<string, string> = {
   askingGap: "Asking gap",
   intelligenceLayer: "Intelligence layer",
   buildQuote: "Axiom",
-  continuum: "Continuum",
+  proof: "Proof",
   practice: "Field",
   services: "Roadmap",
   about: "Story",

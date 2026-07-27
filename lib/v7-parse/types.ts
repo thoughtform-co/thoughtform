@@ -22,6 +22,15 @@ export interface RelocateStationSpec {
   dropTrailingConnectorSlot?: string;
 }
 
+export interface FillSlotSpec {
+  /** Bare data attribute marking the empty shell div to fill, e.g.
+   *  `"data-proof-body"`. Matched without a value. */
+  slotAttribute: string;
+  /** Generated inner HTML. Callers own escaping — see
+   *  `lib/v7-parse/proofStation.ts` for the reference builder. */
+  html: string;
+}
+
 export interface ParseOptions {
   /** Station ids to strip from `<main class="stations">`. The first
    *  removed section is replaced with a `<div id="${corridorMountId}"
@@ -38,6 +47,13 @@ export interface ParseOptions {
   /** Id used for the mount placeholder div + the redirected cross-
    *  links. Defaults to `"home-corridor-mount"`. */
   corridorMountId?: string;
+  /** Empty authored shells to fill with generated markup (ADR-054).
+   *  Powers `#proof`, whose station body is generated from `lib/cases`
+   *  at parse time rather than authored in the prototype. A spec whose
+   *  shell is absent is a no-op, so routes that don't carry the shell
+   *  (the workshop prototype) stay byte-identical. Runs AFTER the
+   *  station surgery and BEFORE the comment strip. */
+  fillSlots?: readonly FillSlotSpec[];
 }
 
 export interface V7Slice {

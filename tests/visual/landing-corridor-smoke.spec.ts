@@ -52,7 +52,7 @@ test.describe("Homepage corridor smoke", () => {
         // then the philosophy beat and the Loop practice proof. #tools
         // and #build retired (the cases orbit the Arc's Build park).
         "about",
-        "continuum",
+        "proof",
         "practice",
         "contact",
       ];

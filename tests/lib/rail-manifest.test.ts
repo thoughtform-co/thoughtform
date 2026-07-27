@@ -49,7 +49,7 @@ describe("MANIFEST_ENTRIES data model", () => {
       "build",
       "services",
       "about",
-      "continuum",
+      "proof",
       "practice",
       "contact",
     ]);
@@ -113,7 +113,7 @@ describe("buildRailManifestHtml — parse-time skeleton (Update 9, detent diamon
     expect(html).not.toContain("rail-manifest__reel");
     expect(html).not.toContain("rail-manifest__entry");
     expect(html).not.toContain("rail-manifest__name");
-    for (const id of ["hero", "arc", "services", "about", "continuum"]) {
+    for (const id of ["hero", "arc", "services", "about", "proof"]) {
       expect(html).not.toContain(`data-entry-id="${id}"`);
     }
   });
@@ -169,10 +169,12 @@ describe("drift guard — manifest order matches the parsed production DOM", () 
   it("#about directly follows #services; #tools/#build are gone (ADR-033)", () => {
     const servicesAt = bodyHtml.search(/<section[^>]*\bdata-station="services"/);
     const aboutAt = bodyHtml.search(/<section[^>]*\bdata-station="about"/);
-    const continuumAt = bodyHtml.search(/<section[^>]*\bdata-station="continuum"/);
+    // ADR-054: the client case took the slot the continuum used to hold.
+    const proofAt = bodyHtml.search(/<section[^>]*\bdata-station="proof"/);
     expect(servicesAt).toBeGreaterThan(-1);
     expect(aboutAt).toBeGreaterThan(servicesAt);
-    expect(continuumAt).toBeGreaterThan(aboutAt);
+    expect(proofAt).toBeGreaterThan(aboutAt);
+    expect(bodyHtml).not.toMatch(/<section[^>]*\bid="continuum"/);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="tools"/);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="build"/);
     // Element-form (prototype comments mention the slot names in prose).

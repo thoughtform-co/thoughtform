@@ -408,46 +408,14 @@ html[data-corridor-exit="true"] #about.station::before {
   z-index: 0;
 }
 
-/* #continuum is now a pinned TRANSPARENT rail stage (ADR-049 — the role
-   #about took under ADR-047): the re-emerged brandmark + re-brightened
-   waist ring + the tool ↔ collaborator thumb show through the pinned beat,
-   so #continuum drops its authored opaque background for a fail-opaque
-   shield. The shield (#continuum.station::before) defaults to opacity 1
-   (opaque — flag-off / JS-failure / mobile land here, indistinguishable
-   from a normal station), is driven to 0 while the stage is pinned +
-   capable by useContinuumStageScroll, and restores across the runway tail
-   at the unpin — BEFORE the ambient fade even starts (the ADR-030 lockstep
-   ordering). Reveals never ride this wrapper (ADR-008 Rule 3) — the stage
-   children carry every animation; the shield is a pseudo BELOW them. */
-html[data-corridor-exit="true"] #continuum {
-  position: relative;
-  z-index: 6;
-  background-color: transparent;
-  background-image: none;
-  content-visibility: visible;
-}
-html[data-corridor-exit="true"] #continuum > * {
-  position: relative;
-  z-index: 7;
-}
-html[data-corridor-exit="true"] #continuum.station::before {
-  /* Shield replaces the authored station surface while the band is live —
-     mirrors .station:not(.hero)'s surface (void + stars tile) so opacity 1
-     is indistinguishable from the normal station shield. Written by
-     useContinuumStageScroll (0 while the stage is pinned + capable; back to
-     1 across the runway tail); unwritten ⇒ 1 ⇒ fail-opaque. */
-  inset: 0;
-  background: var(--void, #0a0908) url("/v7-stars.svg") center top / 1600px 900px repeat;
-  opacity: var(--continuum-bg-in, 1);
-  z-index: 0;
-}
-
-/* #practice is now the cover that ends the ambient hold (ADR-049 — the
-   role #continuum carried under ADR-047, #about under ADR-033). It keeps
-   its authored opaque .station background; it only needs to STACK above
-   the body veil (z5) + fixed canvas (z2) while the exit band is live, and
-   to escape the content-visibility paint containment. */
-html[data-corridor-exit="true"] #practice {
+/* #proof is the cover that ends the ambient hold (ADR-054 — the role
+   #practice carried under ADR-049, #continuum under ADR-047, #about
+   under ADR-033). It is a plain OPAQUE station: it keeps its authored
+   .station background and needs no shield var, because unlike #about it
+   is never a transparent stage over the live canvas. It only has to
+   STACK above the body veil (z5) + fixed canvas (z2) while the exit band
+   is live, and to escape the content-visibility paint containment. */
+html[data-corridor-exit="true"] #proof {
   position: relative;
   z-index: 6;
   content-visibility: visible;
@@ -718,30 +686,31 @@ html[data-corridor-exit="true"] #practice {
 /* VISIBILITY (owner, 2026-07-19 — the menu must PERSIST across the journey,
    not vanish at #about). Split into two windows:
 
-   • BOTH panels share the ARC + #services window — the only sections that
-     carry SUBSECTIONS (the Arc's Navigate/Encode/Build; the four #services
-     verbs). The right subsection reel is meaningful only here.
+   • BOTH panels share the ARC + #services + #proof window — the only
+     sections that carry SUBSECTIONS (the Arc's Navigate/Encode/Build; the
+     four #services verbs; the case's three beats, ADR-054). The right
+     subsection reel is meaningful only here.
    • The LEFT section reel ALSO persists through the remaining stations
      (#about → #contact) so the journey nav stays on screen the whole way
      down; the active section keeps reeling to the fixed centre highlight.
 
    `data-services-ambient` is deliberately NOT used as a gate — it survives
-   into #about/#continuum (ADR-049) and would be the wrong signal. We key the
-   post-corridor window on the precise `data-active-station` per section
-   instead. Both panels only take clicks while shown. */
+   into #about and would be the wrong signal. We key the post-corridor
+   window on the precise `data-active-station` per section instead. Both
+   panels only take clicks while shown. */
 html[data-corridor-engaged="true"]:is(
     [data-corridor-phase="navigate"],
     [data-corridor-phase="encode"],
     [data-corridor-phase="build"]
   )
   :is(.home-v2-section-menu, .home-v2-section-submenu),
-html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu) {
+html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu),
+html[data-active-station="proof"] :is(.home-v2-section-menu, .home-v2-section-submenu) {
   opacity: 1;
 }
 /* LEFT reel only — persist through the post-corridor stations. The right
    submenu stays hidden here (those sections carry no subsections). */
 html[data-active-station="about"] .home-v2-section-menu,
-html[data-active-station="continuum"] .home-v2-section-menu,
 html[data-active-station="practice"] .home-v2-section-menu,
 html[data-active-station="contact"] .home-v2-section-menu {
   opacity: 1;
@@ -753,11 +722,11 @@ html[data-corridor-engaged="true"]:is(
   )
   :is(.home-v2-section-menu, .home-v2-section-submenu)
   button,
-html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu) button {
+html[data-active-station="services"] :is(.home-v2-section-menu, .home-v2-section-submenu) button,
+html[data-active-station="proof"] :is(.home-v2-section-menu, .home-v2-section-submenu) button {
   pointer-events: auto;
 }
 html[data-active-station="about"] .home-v2-section-menu button,
-html[data-active-station="continuum"] .home-v2-section-menu button,
 html[data-active-station="practice"] .home-v2-section-menu button,
 html[data-active-station="contact"] .home-v2-section-menu button {
   pointer-events: auto;

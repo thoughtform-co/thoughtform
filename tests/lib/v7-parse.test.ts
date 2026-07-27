@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { extractV7Text, getV7Content, sliceV7Sections } from "@/lib/v7-parse";
+import {
+  buildProofStationHtml,
+  extractV7Text,
+  getClaudeWorkshopContent,
+  getV7Content,
+  sliceV7Sections,
+} from "@/lib/v7-parse";
+import { PROOF_CASE } from "@/lib/cases/registry";
 
 /**
  * v7-parse contracts (regression coverage for the production homepage).
@@ -129,7 +136,12 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     // the React HudNav; found 2026-07-11 while adding #tools.)
     expect(bodyHtml).toMatch(/<a\s[^>]*href="#hero"/);
     expect(bodyHtml).toMatch(/<a\s[^>]*href="#services"/);
-    expect(bodyHtml).toMatch(/<a\s[^>]*href="#continuum"/);
+    // The hero's "Begin navigation" CTA — it deep-linked to the retired
+    // #continuum and now aims at #proof, which took that slot in the
+    // funnel (ADR-054). It must point at a SURVIVING station: this
+    // stripper removes any anchor to a removed one, so aiming it at a
+    // corridor-replaced station would silently delete the button.
+    expect(bodyHtml).toMatch(/<a\s[^>]*href="#proof"/);
   });
 
   it("redirects leftover cross-links to the corridor mount instead of dead anchors", () => {
@@ -162,14 +174,14 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     const mountIdx = bodyHtml.indexOf('id="home-corridor-mount"');
     const servicesIdx = bodyHtml.search(/<section\b[^>]*\bid="services"/);
     const aboutIdx = bodyHtml.search(/<section\b[^>]*\bid="about"/);
-    const continuumIdx = bodyHtml.search(/<section\b[^>]*\bid="continuum"/);
+    const proofIdx = bodyHtml.search(/<section\b[^>]*\bid="proof"/);
 
     expect(mountIdx).toBeGreaterThan(0);
     expect(servicesIdx).toBeGreaterThan(mountIdx);
     // #about (the bio) directly follows services — the ADR-033 funnel;
-    // continuum (the philosophy beat) comes after.
+    // #proof (the client case, ADR-054) comes after.
     expect(aboutIdx).toBeGreaterThan(servicesIdx);
-    expect(continuumIdx).toBeGreaterThan(aboutIdx);
+    expect(proofIdx).toBeGreaterThan(aboutIdx);
 
     // Both retired case surfaces are gone, portal slots included.
     // (Element-form assertions: the authored prototype's explanatory
@@ -185,15 +197,13 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     // relocated #about (ADR-047 — AboutStagePortal mounts into it).
     expect(bodyHtml).toMatch(/<div\b[^>]*\bdata-about-root/);
     expect(bodyHtml.search(/<div\b[^>]*\bdata-about-root/)).toBeGreaterThan(aboutIdx);
-    // The continuum-stage portal slot survives INSIDE #continuum, and
-    // sits BEFORE the .continuum__head (ADR-049 — so the stage's own
-    // .crail__brand journey anchor wins querySelector over the static
-    // #crailBrand below it while engaged).
-    const continuumRootIdx = bodyHtml.search(/<div\b[^>]*\bdata-continuum-root/);
-    expect(continuumRootIdx).toBeGreaterThan(continuumIdx);
-    expect(continuumRootIdx).toBeLessThan(
-      bodyHtml.search(/<header\b[^>]*\bclass="continuum__head"/)
-    );
+    // The #proof body slot survives INSIDE #proof (ADR-054 — the case
+    // markup is generated into it at parse time). The retired continuum
+    // station and its portal slot are gone entirely.
+    const proofSlotIdx = bodyHtml.search(/<div\b[^>]*\bdata-proof-body/);
+    expect(proofSlotIdx).toBeGreaterThan(proofIdx);
+    expect(bodyHtml).not.toMatch(/<section\b[^>]*\bid="continuum"/);
+    expect(bodyHtml).not.toMatch(/<div\b[^>]*\bdata-continuum-root/);
 
     // The orphaned connector slot must NOT appear right after #services.
     const between = bodyHtml.slice(servicesIdx);
@@ -209,7 +219,7 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
       corridorMountId: CORRIDOR_MOUNT_ID,
     });
 
-    const order = ["hero", "services", "about", "continuum", "practice", "contact"];
+    const order = ["hero", "services", "about", "proof", "practice", "contact"];
     let cursor = 0;
     for (const id of order) {
       const idx = bodyHtml.indexOf(`id="${id}"`, cursor);
@@ -273,5 +283,84 @@ describe("v7-parse — extractV7Text", () => {
     expect(text.intelligence.ledeHtml.length).toBeGreaterThan(0);
     expect(text.intelligence.leftLabel.length).toBeGreaterThan(0);
     expect(text.intelligence.rightLabel.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * `#proof` station generation (ADR-054).
+ *
+ * The case body is NOT authored in the prototype — `buildProofStationHtml`
+ * renders it from `lib/cases` and `fillSlots` injects it into the empty
+ * `[data-proof-body]` shell at parse time. These pin the contract that
+ * makes that safe: the fill lands inside the station, a route without the
+ * shell is byte-identical, text is escaped, and the output survives the
+ * comment strip that runs after it.
+ */
+describe("proof station generation (ADR-054)", () => {
+  const PROOF_FILL = [
+    { slotAttribute: "data-proof-body", html: buildProofStationHtml(PROOF_CASE) },
+  ];
+  const parse = () =>
+    getV7Content({
+      removeStations: CORRIDOR_REPLACED_STATIONS,
+      relocateStationsToMount: CORRIDOR_RELOCATED_STATIONS,
+      corridorMountId: CORRIDOR_MOUNT_ID,
+      fillSlots: PROOF_FILL,
+    }).bodyHtml;
+
+  it("fills the shell with the three beats, inside #proof and in Arc order", () => {
+    const bodyHtml = parse();
+    const proofIdx = bodyHtml.search(/<section\b[^>]*\bid="proof"/);
+    expect(proofIdx).toBeGreaterThan(-1);
+
+    const navIdx = bodyHtml.indexOf('data-proof-beat="navigate"');
+    const encIdx = bodyHtml.indexOf('data-proof-beat="encode"');
+    const bldIdx = bodyHtml.indexOf('data-proof-beat="build"');
+    expect(navIdx).toBeGreaterThan(proofIdx);
+    expect(encIdx).toBeGreaterThan(navIdx);
+    expect(bldIdx).toBeGreaterThan(encIdx);
+
+    // The generated body must land INSIDE the station, not after it.
+    const proofClose = bodyHtml.indexOf("</section>", bldIdx);
+    expect(proofClose).toBeGreaterThan(bldIdx);
+  });
+
+  it("emits the mission report and its stat tiles", () => {
+    const bodyHtml = parse();
+    expect(bodyHtml).toContain("proof__report");
+    const stats = bodyHtml.match(/class="proof__stat"/g);
+    expect(stats?.length).toBe(PROOF_CASE.report.stats.length);
+  });
+
+  it("carries data-m reveal roles so useRevealMotion can observe them", () => {
+    const bodyHtml = parse();
+    const proofIdx = bodyHtml.search(/<section\b[^>]*\bid="proof"/);
+    const proofBlock = bodyHtml.slice(proofIdx);
+    expect(proofBlock).toMatch(/data-m-group/);
+    expect(proofBlock).toMatch(/data-m="title"/);
+    expect(proofBlock).toMatch(/data-m="body"/);
+  });
+
+  it("emits no HTML comments (the ship-weight trim runs after the fill)", () => {
+    expect(buildProofStationHtml(PROOF_CASE)).not.toContain("<!--");
+  });
+
+  it("escapes interpolated copy", () => {
+    const hostile = {
+      ...PROOF_CASE,
+      report: {
+        ...PROOF_CASE.report,
+        lede: 'Angle < and " quote & amp',
+      },
+    };
+    const html = buildProofStationHtml(hostile);
+    expect(html).toContain("Angle &lt; and &quot; quote &amp; amp");
+    expect(html).not.toContain('Angle < and " quote & amp');
+  });
+
+  it("is a no-op on a prototype without the shell (the workshop fork)", () => {
+    const withFill = getClaudeWorkshopContent({ fillSlots: PROOF_FILL }).bodyHtml;
+    const without = getClaudeWorkshopContent().bodyHtml;
+    expect(withFill).toBe(without);
   });
 });
