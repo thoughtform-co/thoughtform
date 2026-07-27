@@ -434,41 +434,66 @@ square to the camera.** Three fixes, each closing one term:
    z-fighting is unreachable because the depth only ever does work where the
    two planes OVERLAP, and that overlap shrinks to the `DRAWER_SEAM` sliver
    on exactly the same clock. 99.1% → **99.98%** at a centred cursor.
-3. **Drawer stillness on the rig's yaw** (`BrandmarkPhysicsCoreActor`): the
-   `pointerLookRef` group sits ABOVE the ring, so its own yaw re-opened the
-   gap as the cursor travelled — a far-corner cursor still threw the tray 4%
-   tall. Its pointer YAW target now eases to 0 while `openPlateRef` holds a
-   service (a READ; `ServicesStage` stays the single writer), reusing the
-   `deckStill` channel's shape. Identity whenever nothing is open.
+3. **Cancel the RIG's yaw on the card** (`openPairYaw` + `rigPointerYawRef`):
+   the `pointerLookRef` group sits ABOVE the ring, so its own yaw re-opened
+   the gap as the cursor travelled — a far-corner cursor still threw the tray
+   4% tall. `BrandmarkPhysicsCoreActor` publishes the yaw it applies, and the
+   card SUBTRACTS it on the drawer clock, so the open pair's WORLD yaw is
+   zero while the rig keeps rotating.
 
-**PITCH survives all three, and that is what keeps pointer-look alive.**
-Pitch rotates about the very axis the tray is offset ALONG, so it moves both
-slabs identically and can never break the seam — the open pair still leans
-with the cursor, it just no longer turns. ADR-021 is untouched (this removes
-motion, never adds a clock).
+   ⚠ **The first attempt stilled the rig itself** — its pointer yaw target
+   eased to 0 while a drawer was open. That held the seam, but it froze the
+   mark and the orbits along with it: the whole instrument went dead at the
+   moment of most attention, to fix a defect in one object. Compensating on
+   the card confines the correction to the pair that needs it, and the result
+   reads better than either — a gimballed screen holding face-on while the
+   instrument moves behind it. Do not re-solve this by damping the rig.
+
+**PITCH survives all three, and that is what keeps pointer-look alive on the
+pair.** Pitch rotates about the very axis the tray is offset ALONG, so it
+moves both slabs identically and can never break the seam — the open pair
+still leans with the cursor, it just no longer turns. ADR-021 is untouched
+(this removes motion from one object, and adds no clock).
+
+Residual at an extreme corner cursor: the pair picks up a ≈0.5° ROLL, because
+the rig's pitch and yaw do not commute with the card's, so cancelling the yaw
+alone cannot cancel the composition exactly. It is a rigid roll of the whole
+pair — the two top edges stay on ONE line across the seam, verified in
+capture, and the heights still agree to 0.02%. Left alone deliberately: it
+reads as honest 3D, and removing it would mean cancelling the rig's pitch too,
+which is the channel the liveliness now lives on.
 
 ⚠ This is the **sixth** file in a surface the rule documents as five —
-`BrandmarkPhysicsCoreActor` is now a participant in the drawer's state.
+`BrandmarkPhysicsCoreActor` is now a participant in the drawer's state, as the
+single writer of `rigPointerYawRef`.
 
 ### Verification (2026-07-27)
 
-- `npm run verify` green — **366** unit tests (6 new: `drawerContentDepth`
-  identity/monotonicity/clamping, and the overlap-vs-depth pairing that is
-  the z-fighting argument).
+- `npm run verify` green — **369** unit tests (9 new: `drawerContentDepth`
+  identity/monotonicity/clamping plus the overlap-vs-depth pairing that is
+  the z-fighting argument, and `openPairYaw` — EXACT identity closed for any
+  rig yaw, and `rigYaw + openPairYaw(…, 1) === 0`, which asserts the
+  world-square invariant rather than the arithmetic).
 - `services-ring-smoke` on `desktop`: **8 passed, 1 skipped** — the
   documented baseline, unchanged.
 - Headed real-GPU measurement at 1600×1000 against the PRODUCTION route,
   card + drawer rects recovered from the published shims, sampled at three
   cursor positions (viewport centre / on the pair / far corner):
 
-  | cursor           | before | after yaw | after all three |
-  | ---------------- | ------ | --------- | --------------- |
-  | viewport centre  | 0.946  | 0.991     | **0.9986**      |
-  | on the pair      | 0.953  | 0.998     | **1.0004**      |
-  | far corner (5,5) | 1.144  | 1.034     | **0.9990**      |
+  | cursor           | before | after card yaw | + depth | + rig cancel |
+  | ---------------- | ------ | -------------- | ------- | ------------ |
+  | viewport centre  | 0.946  | 0.991          | 0.9986  | **0.9986**   |
+  | on the pair      | 0.953  | 0.998          | 1.0004  | **0.9986**   |
+  | far corner (5,5) | 1.144  | 1.034          | 1.042   | **1.0024**   |
 
-  (drawer height ÷ card height; top/bottom edge deltas ≤ 1.2px in the final
-  column, from 20px/28px.)
+  (drawer height ÷ card height. Top/bottom edge deltas ≤ 1.2px at a centred
+  cursor, from 20px/28px; at the far corner both edges shift TOGETHER by
+  ≈7px — the rigid roll noted above, not a step at the seam.)
+
+- The rig is provably still leaning after the change: the card's own x tracks
+  the cursor across the same three samples (227 → 222 → 148) and its AABB
+  aspect goes 0.621 → 0.687 as the pitch takes hold. Stilling the rig would
+  have pinned all three.
 
 ## Open questions
 
@@ -555,13 +580,19 @@ motion, never adds a clock).
   boolean, or two writers can elect on one card.
 - Drawer renderOrder stays POSITIVE and nested inside the card's range; a
   negative slot puts orbit-track ink over the drawer's text.
-- **The open pair stays square to the camera in YAW — all of it.** Card yaw,
-  rig yaw and the drawer's content depth all reach 0 at full open, and the
-  seam is only flush because all three do. Restoring any one of them (a
-  "livelier" open pair, a nonzero housed depth kept for the emerge read)
-  re-splits the borders, because the error goes as `sin(yaw) × offset` and
-  the tray is a card-width from the pivot. PITCH is the channel to spend
-  liveliness on — it cannot break the seam.
+- **The open pair stays square to the camera in YAW — all of it.** The card's
+  own yaw, the RIG's yaw (cancelled via `openPairYaw`, not stilled) and the
+  drawer's content depth all reach 0 at full open, and the seam is only flush
+  because all three do. Restoring any one of them (a "livelier" open pair, a
+  nonzero housed depth kept for the emerge read) re-splits the borders,
+  because the error goes as `sin(yaw) × offset` and the tray is a card-width
+  from the pivot. PITCH is the channel to spend liveliness on — it cannot
+  break the seam.
+- **Correct the CARD, never the instrument.** The rig's yaw is cancelled on
+  the card that owns the open drawer; damping the rig itself also works
+  geometrically and was tried first, but it stops the mark and the orbits
+  dead while a card is open. Keep corrections scoped to the object with the
+  defect.
 - `DECK_INTRA_ORDERS` is positional over `cardGroup.children` and both rebase
   loops are length-bounded — append children, and extend it in lockstep. This
   is also why the drawer children mount with the FLAG, not with their textures:

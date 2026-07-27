@@ -388,6 +388,29 @@ export function drawerSlideX(t: number, cardW: number, seam: number = DRAWER_SEA
   return clamp01(t) * (cardW - seam);
 }
 
+/**
+ * The card group's yaw while its drawer is opening — a lerp from the ring's
+ * own `localYaw` to **minus the rig's yaw**, on the drawer clock.
+ *
+ * Both ends matter and both are exact. At `t = 0` this returns `localYaw`
+ * untouched, so a closed ring (and the ADR-047 deck, which snaps `drawerT`
+ * to 0) is byte-identical. At `t = 1` it returns `−rigYaw`, which cancels the
+ * `pointerLookRef` group's rotation above the ring and leaves the open pair's
+ * WORLD yaw at zero — card-local +x parallel to the image plane, so the tray
+ * sits at exactly the card's depth and their borders project flush.
+ *
+ * The cancellation is what lets the RIG keep leaning with the cursor: the
+ * first fix stilled the rig's yaw whenever a drawer was open, which held the
+ * seam but froze the mark and orbits with it. Compensating on the card instead
+ * confines the stillness to the pair that needs it (owner, 2026-07-27).
+ *
+ * Pure — the caller passes the rig yaw in, so `ringMath` stays three-free.
+ */
+export function openPairYaw(localYaw: number, rigYaw: number, drawerT: number): number {
+  const t = clamp01(drawerT);
+  return localYaw * (1 - t) - rigYaw * t;
+}
+
 /** How far BEHIND the card's own content plane the drawer's sits while the
  *  drawer is housed. The gap is what sells "slides out from under the face"
  *  during the slide; renderOrder alone only fixes paint order, not parallax. */

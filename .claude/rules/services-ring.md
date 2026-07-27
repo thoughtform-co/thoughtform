@@ -41,14 +41,14 @@ rect — the drawer is not a linear extension of the card's.
 Changing the card's shape or state model touches **six** files in lockstep.
 Change one alone and the surface is incoherent, not merely imperfect:
 
-| File                            | Owns                                                                                               |
-| ------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `unifiedServicesInstrument.ts`  | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`)                                            |
-| `CorridorArmillary.tsx`         | mounts the ring; passes `faceVariant` / `openDrawer`                                               |
-| `ServicesStage.tsx`             | owns open state; the production `openPlateRef` writer                                              |
-| `ServicesRingHitAreas.tsx`      | every hit target + the sr-only copy of baked text                                                  |
-| `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                                 |
-| `BrandmarkPhysicsCoreActor.tsx` | the rig group above the ring — its pointer YAW stills while a drawer is open (ADR-050, 2026-07-27) |
+| File                            | Owns                                                                                   |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `unifiedServicesInstrument.ts`  | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`)                                |
+| `CorridorArmillary.tsx`         | mounts the ring; passes `faceVariant` / `openDrawer`                                   |
+| `ServicesStage.tsx`             | owns open state; the production `openPlateRef` writer                                  |
+| `ServicesRingHitAreas.tsx`      | every hit target + the sr-only copy of baked text                                      |
+| `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                     |
+| `BrandmarkPhysicsCoreActor.tsx` | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27) |
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.
@@ -72,7 +72,9 @@ Change one alone and the surface is incoherent, not merely imperfect:
   splitting the top/bottom borders. Nudging bake insets to compensate chases
   a moving target: the error tracks the cursor. Zero the yaw (and the
   drawer's content depth) instead; spend liveliness on PITCH, which moves
-  both slabs identically. ADR-050 "Flush seam".
+  both slabs identically. The RIG's yaw counts too — cancel it ON THE CARD
+  (`openPairYaw` × `rigPointerYawRef`), never by damping the rig, which
+  freezes the mark and orbits while a card is open. ADR-050 "Flush seam".
 - **Dismissal keys on ring PROGRESS, not the step clock** — `data-active-step`
   only changes at beat boundaries, which lets a card rotate a half-slot with
   its drawer still out (`drawerDismissedByScroll`, unit-pinned in `ringMath`).

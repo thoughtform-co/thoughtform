@@ -67,6 +67,7 @@ import {
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
 import { ABOUT_DECK_STAGE } from "../../unifiedServicesInstrument";
+import { rigPointerYawRef } from "../../rigPointerYawRef";
 import { SERVICES_GOLD } from "@/lib/home-v2/goldPalette";
 import { useHologramConnectors, type RingCardAnchor } from "@/lib/stores/hologramConnectorStore";
 import {
@@ -111,6 +112,7 @@ import {
   DRAWER_SEAM,
   RING_CARD_RENDER_ORDERS,
   drawerContentDepth,
+  openPairYaw,
   drawerOpenBoost,
   drawerRecenterX,
   drawerSlideX,
@@ -2178,10 +2180,33 @@ export function ServicesCardRing({
          (ADR-021 intact): the drawer is offset along x ONLY, so a rotation
          about the x-axis moves both slabs identically and cannot break the
          seam — the pair leans with the cursor without ever stepping apart.
-         Identity at drawerT = 0, and `bias.yaw × biasKeep` is unchanged. */
+         Identity at drawerT = 0, and `bias.yaw × biasKeep` is unchanged.
+
+         …and the RIG's yaw is CANCELLED here too, on the same clock. The
+         `pointerLookRef` group above this ring carries its own pointer yaw,
+         so zeroing only the card's local term still left the pair rotating
+         with the instrument — measured at a far-corner cursor, the tray came
+         out ~4% TALLER than the card. Subtracting the published rig yaw
+         (`rigPointerYawRef`) makes the open pair's WORLD yaw zero: local
+         term and rig term both vanish at drawerT = 1, so card-local +x is
+         parallel to the image plane and the tray sits at exactly the card's
+         depth.
+
+         Doing it HERE rather than stilling the rig is the point (owner,
+         2026-07-27): the first fix damped the rig's yaw whenever a drawer was
+         open, which held the seam but froze the mark and the orbits with it —
+         the whole instrument went dead at the moment of most attention. The
+         rig now leans exactly as it always did; only the open pair is held
+         square, so it reads as a gimballed screen staying face-on while the
+         instrument moves behind it. Cards without a drawer are untouched
+         (drawerT = 0 ⇒ the subtraction is exactly 0). */
       const biasKeep = 1 - drawerT;
       const ringPitch = tilt.pitch + bias.pitch * biasKeep;
-      const ringYaw = (cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw) * biasKeep;
+      const ringYaw = openPairYaw(
+        cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw,
+        rigPointerYawRef.current,
+        drawerT
+      );
       const ringScale = depthScale(placed.nz, scaleRange);
       // Front-card emphasis (owner 2026-07-17): the in-view card reads
       // BIGGER than its neighbours, more so on narrow viewports. A separate

@@ -59,6 +59,7 @@ import {
   RING_CARD_RENDER_ORDERS,
   DRAWER_HOUSED_DEPTH,
   drawerContentDepth,
+  openPairYaw,
   drawerSlideX,
   drawerRecenterX,
   type RingSpringState,
@@ -703,6 +704,39 @@ describe("drawer slide + recenter (ADR-050 rev 3)", () => {
     const a = drawerRecenterX(1, cardW, DRAWER_SEAM, 0.5);
     const b = drawerRecenterX(1, cardW, DRAWER_SEAM, 1);
     expect(b).toBeCloseTo(a * 2, 12);
+  });
+
+  it("openPairYaw is EXACT identity closed, so the closed ring never moves", () => {
+    // Not "close to" localYaw — exactly it. The closed ring and the ADR-047
+    // deck are byte-identical guarantees, and the rig yaw is nonzero most of
+    // the time, so a leaked fraction of it would drift every parked card.
+    for (const rigYaw of [0, 0.12, -0.12, 1.4]) {
+      expect(openPairYaw(0.37, rigYaw, 0)).toBe(0.37);
+      expect(openPairYaw(-0.21, rigYaw, 0)).toBe(-0.21);
+    }
+  });
+
+  it("openPairYaw cancels the rig exactly at full open, for any rig yaw", () => {
+    // This is the whole contract: world yaw = rig + card = 0, which is what
+    // puts the tray at the card's depth and their borders flush. Asserting
+    // the SUM keeps the test about the invariant, not the arithmetic.
+    for (const rigYaw of [0, 0.12, -0.12, 0.9]) {
+      for (const localYaw of [0, 0.4, -1.1]) {
+        expect(rigYaw + openPairYaw(localYaw, rigYaw, 1)).toBeCloseTo(0, 12);
+      }
+    }
+  });
+
+  it("openPairYaw clamps, and eases between the two ends", () => {
+    expect(openPairYaw(0.5, 0.12, -0.3)).toBe(0.5);
+    expect(0.12 + openPairYaw(0.5, 0.12, 1.6)).toBeCloseTo(0, 12);
+    // Monotone from localYaw toward −rigYaw across the slide.
+    let prev = openPairYaw(1, 0.2, 0);
+    for (let t = 0.1; t <= 1.0001; t += 0.1) {
+      const next = openPairYaw(1, 0.2, t);
+      expect(next).toBeLessThanOrEqual(prev);
+      prev = next;
+    }
   });
 
   it("drawerContentDepth is the housed depth closed and EXACTLY 0 open", () => {
