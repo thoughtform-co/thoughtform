@@ -64,6 +64,38 @@ tall viewports). **Why 11.5svh and not the editorial-classic 13–17%:** the ful
 instrument (card ring) puts its front card top at ≈22svh — at 13svh+ the title block grazes it
 (measured collision at 1280×800). 11.5svh is the tuned maximum.
 
+## 3a. The band — TYPE law (body copy)
+
+```
+--band-copy: clamp(15px, 1.15vw, 18px)   /* every station's lede */
+```
+
+The horizontal law (§2) keeps text edges in lockstep; this keeps text SIZE in lockstep. One
+register for every section lede — services intro, continuum lede (both stage and fallback), about
+bio, contact desc — so paragraphs that should read as one voice actually do.
+
+| Viewport | resolved       |
+| -------- | -------------- |
+| ≤1304px  | 15px (floor)   |
+| 1440px   | 16.56px        |
+| ≥1565px  | 18px (ceiling) |
+
+Before this token those five carried 15–18 clamp / 17 flat / 14–17 clamp / 16 flat / 18 flat. The
+spread mattered less than the **kind**: two were flat px inside a `clamp()`-driven shell, so they
+stopped responding while their neighbours kept scaling — the about bio and the services intro
+crossed over at ~1478px, which is how it was spotted. A flat px body size in this shell always
+drifts; keep the register fluid.
+
+Rank comes from **ink and weight, not size** — see §5. Retune at the token, never per section: a
+local override silently re-opens the crossover.
+
+**Out of register on purpose** (do not fold these in):
+
+- `.home-v2-copy-body` (20–26px) and `.home-v2-station-header__support` (20px) — the corridor's
+  larger cinematic voice, read over the 3D bed.
+- `.svc-plate__lede` (17.5px) — pinned at exactly HALF the baked card-face lede (35px,
+  `ServicesCardRing.bakeCardFace`). That is a bake/DOM parity contract, not a type choice.
+
 ## 4. The two-column masthead layout (desktop ≥961px)
 
 The masthead is an absolute overlay band inside the section (`inset: 0`, z-index 6,
@@ -73,7 +105,8 @@ The masthead is an absolute overlay band inside the section (`inset: 0`, z-index
   `max-width: min(40vw, 624px)` (= 52% of the 1200px band; the cap prevents column crossover on ultrawide).
 - **RIGHT column — the intro paragraph.** `right: band-margin`, **`top: band-top` (same line —
   title cap and intro first line align)**. Bare text, no frame, no plate, no background:
-  PP Neue Montreal 400, `clamp(15px, 1.15vw, 18px)`, line-height 1.5, color `#ebe3d6` (full dawn),
+  PP Neue Montreal 400, **`--band-copy`** (= `clamp(15px, 1.15vw, 18px)` — see §3a; this intro is
+  where the register's value came from), line-height 1.5, color `#ebe3d6` (full dawn),
   `max-width: min(42ch, 34vw)`, text-align left.
 
 At 1920×1080 this resolves to: title at (360, 124) max 624px wide @44px; intro right edge at
@@ -90,9 +123,14 @@ For sections that want title + lede as a flowing head instead of an absolute ove
 - One grid: `grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)`, `column-gap: clamp(40px, 5vw, 96px)`,
   `align-items: start`, `margin-inline` = the band inset.
 - Title identical to §1 (+ `text-wrap: balance`).
-- Lede (right cell): smaller + dimmer than the services intro — `clamp(14px, 1.05vw, 17px)`,
-  line-height 1.55, color `rgba(235,227,214,0.7)`, `max-width: 38ch`, letter-spacing −0.005em,
-  bottom-aligned in its cell (`align-self: end`). Gold upright `em` segments.
+- Lede (right cell): **dimmer** than the services intro, and since 2026-07-27 the **same size** —
+  `--band-copy` (§3a), line-height 1.55, color `rgba(235,227,214,0.7)`, `max-width: 38ch`,
+  letter-spacing −0.005em, bottom-aligned in its cell (`align-self: end`). Gold upright `em`
+  segments.
+  > It used to be smaller too (`clamp(14px, 1.05vw, 17px)`). The owner unified the body register
+  > on the services value, so the grid head now separates from the overlay masthead by **ink
+  > alone** — `--dawn-70` against the intro's full dawn. That is the intended hierarchy now:
+  > one body size page-wide, weight and ink carry the rank. Don't reintroduce a size delta here.
 - Vertical: in-flow at the top of the section's flex column, `padding-block: clamp(40px, 7svh, 88px)`.
 
 Choose: **overlay masthead** (services style) when the section is a full-viewport instrument stage;

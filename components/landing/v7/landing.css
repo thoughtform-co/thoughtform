@@ -144,6 +144,30 @@
      against measured front-card clearance. */
   --band-air: clamp(28px, 4.7svh, 52px);
   --band-top: calc(var(--station-title-top) + var(--band-air));
+  /* Editorial BODY size (owner, 2026-07-27) — the counterpart to
+     --station-title-top: that token answers "where do big titles sit",
+     this one answers "how big is section body copy", with the same
+     single-source-of-truth intent.
+
+     Every station's lede was carrying its own hand-picked number in the
+     SAME register — same family (PP Neue Montreal), same ~1.5 leading,
+     same --dawn-70 ink — at five different sizes: the services intro on
+     clamp(15,1.15vw,18), the about bio flat 17, the continuum lede on
+     clamp(14,1.05vw,17), the practice lede flat 16, the contact desc flat
+     18. So paragraphs that should read as one voice disagreed by up to 3px,
+     and the two FIXED ones stopped responding to the viewport entirely
+     while their neighbours kept scaling — the about bio and the services
+     intro crossed over around 1478px, which is how this was noticed.
+
+     The value is the services intro's, kept verbatim: the owner picked it
+     by eye against the live band. Fluid because the whole token stack is
+     (web-hud-adaptation §1) — a flat px body size inside a clamp()-driven
+     shell is the thing that drifts.
+
+     ⚠ Ceiling is reached at 1565px and the floor below 1304px, so the
+     register is only mid-scaling in between. Retune HERE, never per
+     section — a local override silently re-opens the crossover. */
+  --band-copy: clamp(15px, 1.15vw, 18px);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -3381,7 +3405,7 @@
 }
 .contact__desc {
   font-family: var(--font-pp-neue-montreal);
-  font-size: 18px;
+  font-size: var(--band-copy);
   line-height: 1.5;
   color: var(--dawn-70);
   margin: 0 auto var(--space-2xl);
@@ -6071,7 +6095,7 @@
 }
 .continuum__lede {
   font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(14px, 1.05vw, 17px);
+  font-size: var(--band-copy);
   line-height: 1.55;
   color: var(--dawn-70);
   margin: 0;
@@ -9226,7 +9250,7 @@ html {
 }
 .practice-cta__lede {
   font-family: var(--font-pp-neue-montreal);
-  font-size: 16px;
+  font-size: var(--band-copy);
   line-height: 1.55;
   color: var(--dawn-70);
   margin: 0 0 28px;
@@ -9514,7 +9538,7 @@ html {
 }
 .voidwalker__bio {
   font-family: var(--font-pp-neue-montreal);
-  font-size: 17px;
+  font-size: var(--band-copy);
   line-height: 1.55;
   color: var(--dawn);
   margin: 0 0 18px;
@@ -9724,9 +9748,11 @@ html {
        the masthead's flat 26px floor). */
     font-size: clamp(26px, 3vw, 44px);
   }
-  .voidwalker__bio {
-    font-size: 16px;
-  }
+  /* No .voidwalker__bio size override here any more (2026-07-27): the
+     16px was a local answer to a flat 17px desktop value that no longer
+     exists. --band-copy already floors at 15px well above this
+     breakpoint, so the bio scales with every other lede instead of
+     stepping at 641→640 — the same reasoning as the name above. */
   .voidwalker__links a {
     min-width: 44px;
     min-height: 44px;

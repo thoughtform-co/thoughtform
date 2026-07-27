@@ -566,7 +566,10 @@
   text-align: left;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-weight: 400;
-  font-size: clamp(15px, 1.15vw, 18px);
+  /* The editorial body register (landing.css :root). This clamp WAS the
+     literal here and is now the token's value — every station's lede reads
+     at this size. Same computed result; the number just has one home. */
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
   line-height: 1.5;
   /* Full semantic dawn (the frame's 70% tint is retired with it). */
   color: var(--dawn, #ebe3d6);

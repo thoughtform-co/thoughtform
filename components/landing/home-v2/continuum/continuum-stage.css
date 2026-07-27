@@ -226,7 +226,9 @@
   position: relative;
   margin: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(15px, 1.15vw, 18px);
+  /* Already the editorial body register — this clamp was hand-copied from
+     the services masthead for ADR-044 parity. Same value, now the token. */
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
   line-height: 1.5;
   color: var(--dawn-70);
   max-width: min(42ch, 34vw);
