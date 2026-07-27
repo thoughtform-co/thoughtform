@@ -127,9 +127,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Open an advisory" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Close Strategic Advisory details" })).toHaveCount(
-      0
-    );
+    await expect(
+      page.getByRole("button", { name: "Close Strategic Advisory details" })
+    ).toHaveCount(0);
 
     // ── Open ─────────────────────────────────────────────────────────────
     // The drawer faces bake LAZILY on this first click, so the shims can
@@ -167,7 +167,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
   });
 
-  test("desktop: the ambient hold survives the pinned #about + #continuum stages and dies under #practice", async ({
+  test("desktop: the ambient hold survives the pinned #about stage and dies under the next opaque station", async ({
     page,
   }) => {
     test.skip(!isDesktopViewport(page), "the deck-flip stage is desktop-only (ring gate)");
@@ -225,34 +225,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(parseFloat(mid.flip || "0")).toBe(1);
     expect(mid.voidwalkerDisplay).toBe("none");
 
-    // Walk under #continuum: the ambient hold SURVIVES here now (ADR-049 —
-    // #continuum is a SECOND transparent stage, the brandmark returns over
-    // the live bed; the kill retargeted one station further, to #practice).
-    const underContinuum = await page.evaluate(() => {
-      const c = document.getElementById("continuum");
-      if (!c) return null;
-      return Math.round(window.scrollY + c.getBoundingClientRect().top + window.innerHeight * 0.3);
+    // Walk under the next OPAQUE station: THIS is where the ambient hold
+    // ends — the bottom gate is keyed to the SAME rect as the fade
+    // envelope, so there is no hard cut at the about runway's end.
+    const underNext = await page.evaluate(() => {
+      const next = document.getElementById("continuum");
+      if (!next) return null;
+      return Math.round(
+        window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3
+      );
     });
-    expect(underContinuum).not.toBeNull();
-    await page.evaluate((y) => window.scrollTo(0, y as number), underContinuum);
-    await page.waitForTimeout(900);
-    const atContinuum = await page.evaluate(() => ({
-      ambient: document.documentElement.hasAttribute("data-services-ambient"),
-      exit: document.documentElement.hasAttribute("data-corridor-exit"),
-    }));
-    expect(atContinuum.ambient).toBe(true);
-    expect(atContinuum.exit).toBe(true);
-
-    // Walk under #practice: THIS is where the ambient hold ends now (the
-    // ADR-049 retargeted kill — the bottom gate keyed to the SAME #practice
-    // rect as the fade envelope, so there is no hard cut at continuum.top = 0).
-    const underPractice = await page.evaluate(() => {
-      const p = document.getElementById("practice");
-      if (!p) return null;
-      return Math.round(window.scrollY + p.getBoundingClientRect().top + window.innerHeight * 0.3);
-    });
-    expect(underPractice).not.toBeNull();
-    await page.evaluate((y) => window.scrollTo(0, y as number), underPractice);
+    expect(underNext).not.toBeNull();
+    await page.evaluate((y) => window.scrollTo(0, y as number), underNext);
     await page.waitForTimeout(900);
     const after = await page.evaluate(() => ({
       ambient: document.documentElement.hasAttribute("data-services-ambient"),

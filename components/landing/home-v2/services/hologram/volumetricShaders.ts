@@ -31,26 +31,6 @@ export const volumetricVertexShader = /* glsl */ `
   uniform float uEntropy;     // 0 = settled, >0 = dusty dispersion along normals
   uniform mediump float uGlitch; // 0 = clean, >0 = jitter + tears; mediump to match the fragment
 
-  // ── Continuum band highlight (ADR-049 Update 3) — the mark's inner
-  // horizontal band as the tool ↔ collaborator spectrum: a soft BASE glow
-  // along the whole band + a bright PENDULUM head swinging left ↔ right with
-  // a comet TRAIL decaying behind its direction of travel. Selection is
-  // geometric over the SETTLED home (aArmHome, mark-local): a horizontal
-  // slab [uBandY ± uBandHalf] across [±uBandXHalf]. All gains default 0 ⇒
-  // the whole block is identity for every non-continuum surface.
-  uniform float uBandGain;      // base band glow gain (0 = off / identity)
-  uniform float uBandSweep;     // pendulum head x01
-  uniform float uBandDir;       // ±1 direction of travel (trail stretches opposite)
-  uniform float uBandY;         // slab centre y (mark-local units)
-  uniform float uBandHalf;      // slab half-height
-  uniform float uBandSoft;      // slab y-edge feather
-  uniform float uBandXHalf;     // slab half-width (x01 normalization span)
-  uniform float uBandHeadW;     // head gaussian half-width (x01)
-  uniform float uBandHeadGain;  // head brightness
-  uniform float uBandTrailLen;  // trail e-folding length behind the head (x01)
-  uniform float uBandTrailGain; // trail brightness at the head
-  uniform float uBandSizeBoost; // point-size boost on lit band particles
-
   attribute vec3 aFlatHome;
   attribute vec3 aArmHome;
   attribute vec3 aDomeHome;
@@ -67,8 +47,6 @@ export const volumetricVertexShader = /* glsl */ `
   varying float vViewY;
   varying float vAngle;
   varying float vFacing;      // |n · viewDir| : 1 = facing camera, 0 = edge-on
-  varying float vBandFill;    // settled band-highlight weight (gain pre-applied)
-  varying float vBandHead;    // sweep-head + pulse weight (gains pre-applied)
 
   float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
@@ -108,26 +86,6 @@ export const volumetricVertexShader = /* glsl */ `
     }
     pos *= uScale;
 
-    // ── Continuum band highlight weights (identity when all gains are 0).
-    // Selected over the SETTLED home so the slab is stable through the
-    // dome→wireframe morph; wire + scan-accent parts only (the shell dust and
-    // the Fresnel surface fill must not light up).
-    {
-      float bandPart = aPart < 1.5 ? 1.0 : 0.0;
-      float slabY = 1.0 - smoothstep(uBandHalf, uBandHalf + max(1e-4, uBandSoft), abs(aArmHome.y - uBandY));
-      float slabX = 1.0 - smoothstep(uBandXHalf, uBandXHalf + 0.1, abs(aArmHome.x));
-      float slab = bandPart * slabY * slabX;
-      float x01 = clamp((aArmHome.x / max(1e-4, uBandXHalf)) * 0.5 + 0.5, 0.0, 1.0);
-      // Base: the whole band softly lit — the axis the pendulum rides.
-      vBandFill = slab * uBandGain;
-      // Head: bright gaussian at the pendulum position. Trail: exponential
-      // decay stretching BEHIND the direction of travel (the comet tail).
-      float dh = (x01 - uBandSweep) / max(1e-4, uBandHeadW);
-      float back = (x01 - uBandSweep) * -uBandDir; // > 0 = behind the head
-      float trail = back > 0.0 ? exp(-back / max(1e-4, uBandTrailLen)) : 0.0;
-      vBandHead = slab * (exp(-dh * dh) * uBandHeadGain + trail * uBandTrailGain);
-    }
-
     // Shell thins first as density drops; structure (wire/surface) holds.
     float keep = (aPart > 1.5 && aPart < 2.5) ? uDensity : mix(uDensity, 1.0, 0.72);
     if (aSeed > keep) {
@@ -149,9 +107,7 @@ export const volumetricVertexShader = /* glsl */ `
     float partBoost = (aPart > 1.5 && aPart < 2.5) ? 0.72 : 1.2;
     float sizeEdge = mix(0.8, 1.3, aEdge) * partBoost;
     float persp = uFocal / max(0.25, -mv.z);
-    // Lit band particles grow slightly (uBandSizeBoost 0 ⇒ identity).
-    float bandSize = 1.0 + clamp(vBandFill + vBandHead, 0.0, 1.0) * uBandSizeBoost;
-    gl_PointSize = uPointSize * uPixelRatio * sizeEdge * persp * bandSize;
+    gl_PointSize = uPointSize * uPixelRatio * sizeEdge * persp;
   }
 `;
 
@@ -178,8 +134,6 @@ export const volumetricFragmentShader = /* glsl */ `
   varying float vViewY;
   varying float vAngle;
   varying float vFacing;
-  varying float vBandFill;
-  varying float vBandHead;
 
   float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
@@ -240,18 +194,6 @@ export const volumetricFragmentShader = /* glsl */ `
     }
 
     float a = mask * uOpacity * depthDim * tw * partAlpha;
-
-    // ── Continuum band highlight (ADR-049 Update 3): lit band particles pull
-    // toward the accent gold, gain alpha (undoing the depth/twinkle dim so the
-    // band reads as a continuous lit stroke), and the sweep head / pulse adds
-    // an additive bloom on top. Identity when the vertex gains are 0.
-    float bandLit = clamp(vBandFill + vBandHead, 0.0, 1.0);
-    if (bandLit > 0.001) {
-      col = mix(col, uAccent, bandLit * 0.85);
-      col += uAccent * vBandHead * 0.5;
-      a = mix(a, mask * uOpacity, bandLit * 0.6);
-      a += vBandHead * 0.25 * mask * uOpacity;
-    }
 
     // Radar scan sweep.
     float scan = smoothstep(uScanWidth, 0.0, abs(vViewY - uScan));

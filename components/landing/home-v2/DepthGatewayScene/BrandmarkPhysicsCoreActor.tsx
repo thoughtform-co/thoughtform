@@ -51,7 +51,6 @@ import {
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   BRANDMARK_PHYSICS_CORE_COUNT_MOBILE,
   type BrandmarkBasis,
-  type BrandmarkCoreBandState,
   type BrandmarkCoreBlending,
   type BrandmarkCoreGlyph,
   type BrandmarkCoreShape,
@@ -67,7 +66,6 @@ import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
 import {
   ABOUT_DECK_STAGE,
-  CONTINUUM_RAIL_STAGE,
   SERVICES_CARD_RING,
   UNIFIED_SERVICES_ARMILLARY,
 } from "../unifiedServicesInstrument";
@@ -75,36 +73,6 @@ import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
-import {
-  CONTINUUM_MARK_INK,
-  CONTINUUM_RECEDE_RELEASE,
-  CONTINUUM_SCALE_BOOST,
-  continuumChromeT,
-  continuumFormT,
-} from "@/lib/services-ring/continuumStageMath";
-import {
-  BAND_BASE_GAIN,
-  BAND_HALF,
-  BAND_HEAD_GAIN,
-  BAND_HEAD_W,
-  BAND_LAUNCH_S,
-  BAND_SIZE_BOOST,
-  BAND_SOFT,
-  BAND_SWING_MAX,
-  BAND_SWING_MIN,
-  BAND_SWING_PERIOD_S,
-  BAND_TRAIL_GAIN,
-  BAND_TRAIL_LEN,
-  BAND_X_HALF,
-  BAND_Y,
-  MARK_HALF_EXTENT,
-  bandGainT,
-  bandLaunchX,
-  bandPendulumDir,
-  bandPendulumX,
-} from "@/lib/services-ring/continuumBandMath";
-import { continuumBandAnchorsRef } from "@/lib/services-ring/continuumBandAnchorsRef";
-import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { getServicePose } from "@/lib/home-v2/servicePose";
@@ -361,79 +329,6 @@ const EXIT_DIM = 0.45;
  *  presence behind the flipped portrait. 1.0 restores the full clear. */
 const ABOUT_FLIP_MARK_DIM = 0.45;
 
-/** ── Continuum band slider (ADR-049 Update 6) ──────────────────────────
- *  At #continuum the SAME mark that traveled the whole corridor comes
- *  closer (the recede release + hero boost above) and the tool ↔
- *  collaborator slider is INTEGRATED INTO its inner horizontal wireframe
- *  band: the band lights in the mark's own shader (the `uBand*` block in
- *  BrandmarkPhysicsCore/shaders.ts — soft base glow + a bright head with
- *  a comet trail), the navigator reticle rides the head's projected
- *  point, and the Tool / Collaborator caps dock to the band's projected
- *  endpoints. No separate DOM rail — the mark's own dotted band IS the
- *  slider track.
- *
- *  The slab constants in continuumBandMath are SAMPLER-space
- *  (±MARK_HALF_EXTENT = ±0.87, the space the /test/continuum-band lab
- *  tunes against); the corridor core normalizes its wireframe homes to
- *  ±TARGET_HALF = 0.5 (see BrandmarkPhysicsCoreWithGLB), so the geometry
- *  converts by this ratio. Head width / trail length are x01 units — no
- *  conversion. */
-const CONTINUUM_BAND_LOCAL_SCALE = 0.5 / MARK_HALF_EXTENT;
-
-/** Band-end probe positions in the core's group-local space — the SAME
- *  points the shader lights, so the DOM chrome docks to the drawn band
- *  exactly. */
-const BAND_ANCHOR_X = BAND_X_HALF * CONTINUUM_BAND_LOCAL_SCALE;
-const BAND_ANCHOR_Y = BAND_Y * CONTINUUM_BAND_LOCAL_SCALE;
-
-/** The docked CHROME (caps + reticle) drops slightly below the slab's
- *  geometric centre onto the lit beam's VISUAL centre (owner 2026-07-18:
- *  the reticle should sit "really in the middle of the horizontal band").
- *  The GLB's dense inner crossbar — the arm the shader lights brightest —
- *  sits a touch below the mark's geometric mid-line, so chrome docked at
- *  BAND_ANCHOR_Y read a few px high. Projection-only: the shader slab
- *  (bandStateRef.y = BAND_ANCHOR_Y) is UNCHANGED, so the lit beam does not
- *  move — only the DOM markers drop onto it. Group-local, so it tracks the
- *  mark's hero scale (0.5 group-local ≈ the band's on-screen half-width
- *  ≈ 377px at 1852×1269, so 0.04 ≈ a ~30px drop — the single knob to
- *  nudge if the reticle rides above/below the beam's bright centre). */
-const BAND_CHROME_DROP = 0.04;
-const BAND_CHROME_ANCHOR_Y = BAND_ANCHOR_Y - BAND_CHROME_DROP;
-
-/** Horizontal gap between a projected band endpoint and its docked cap. */
-const BAND_LABEL_GAP_PX = 22;
-/** Viewport edge clamp for the docked chrome. */
-const BAND_LABEL_EDGE_PX = 40;
-
-/** Lighting reciprocity (ADR-049 U9). The shader's comet head docks at each
- *  pole and crosses the centre seat; the DOM chrome answers. This is the x01
- *  radius over which a station counts as "lit" by the head — the falloff is
- *  squared inside the writer, so the flare is tight around the dock and the
- *  chrome is at rest through the middle of each swing. */
-const CAP_LIT_RADIUS = 0.22;
-/** Phosphor persistence decay (U9 rev b). The instant proximity lights the
- *  chrome (--cap-lit), but the body PARAGRAPHS ride a persistence trace
- *  (--cap-persist / --seat-persist): painted to 1 when the head docks, then
- *  decaying linearly over this many seconds — a radar-scope phosphor trail.
- *  7s == the pendulum period, so a painted description has fully faded to
- *  the CSS ghost floor by the time the beam next reaches it, and at most
- *  one paragraph is bright at any moment. */
-const PERSIST_DECAY_S = 7;
-/** Assembly hysteresis on labelGain: the type-on fires once as the chrome
- *  window OPENS and only re-arms once the band has properly closed, so a
- *  scrub that hovers near the threshold can never stutter the sequence. */
-const ASSEMBLE_ON = 0.15;
-const ASSEMBLE_OFF = 0.03;
-
-/** The per-frame band drive shared with `BrandmarkPhysicsCore` (shader
- *  uniforms) and `ContinuumBandSliderAnchors` (DOM chrome docking). */
-interface ContinuumBandActorState extends BrandmarkCoreBandState {
-  /** Docked-chrome opacity (reticle + caps): band master × the formation
-   *  CHROME window — the instrument's crisp pieces click together across
-   *  the entry ramp's tail, complete AS the section pins. */
-  labelGain: number;
-}
-
 /** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
  *  reveals the kept dome's depth, so the mark reads as a living 3D object
  *  rather than a flat decal. Kept small-amplitude so it NEVER rotates edge-on
@@ -616,32 +511,6 @@ export function BrandmarkPhysicsCoreActor({
   const opacityRef = useRef(0);
   const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
   const pausedRef = useRef(true);
-  // Continuum band-slider drive (ADR-049 Update 6): geometry is constant
-  // (converted once to group-local); the gains/head are written per frame
-  // below. All gains 0 ⇒ the shader block is byte-identical off (every
-  // pre-continuum frame, flag-off, and the whole corridor).
-  const bandStateRef = useRef<ContinuumBandActorState>({
-    gain: 0,
-    sweep: 0.5,
-    dir: -1,
-    headGain: 0,
-    trailGain: 0,
-    y: BAND_ANCHOR_Y,
-    half: BAND_HALF * CONTINUUM_BAND_LOCAL_SCALE,
-    soft: BAND_SOFT * CONTINUUM_BAND_LOCAL_SCALE,
-    xHalf: BAND_ANCHOR_X,
-    headW: BAND_HEAD_W,
-    trailLen: BAND_TRAIL_LEN,
-    sizeBoost: BAND_SIZE_BOOST,
-    labelGain: 0,
-  });
-  // Slider clock — useFrame delta accumulators (never a wall clock: a
-  // tab-hide must not jump the head). launchT plays the crail's seat →
-  // Tool launch leg once per band opening; the pendulum phase then swings
-  // Tool ↔ Collaborator on the shared 7s cadence. Both reset whenever the
-  // band closes, so every (re-)entry replays condense → launch → swing.
-  const bandLaunchTRef = useRef(0);
-  const bandPhaseRef = useRef(0);
 
   // Pointer-look listener for the parked unified instrument (window-level: the
   // canvas is pointer-events:none, so R3F's own pointer never fires here).
@@ -684,12 +553,6 @@ export function BrandmarkPhysicsCoreActor({
     if (!painting) {
       group.visible = false;
       pausedRef.current = true;
-      // The slider's docked DOM chrome must die with the canvas: below the
-      // runway the clamped formation clock holds labelGain up, so without
-      // this zero the reticle/caps would keep painting over #practice
-      // after the ambient release. (The stage's own tail kill is the
-      // primary cover; this is the canvas-side belt.)
-      bandStateRef.current.labelGain = 0;
       return;
     }
 
@@ -790,99 +653,12 @@ export function BrandmarkPhysicsCoreActor({
     // The flip window now only deepens the exit dim toward a floor
     // (1 − ABOUT_FLIP_MARK_DIM); the orbits/tracks keep their own full
     // clear (CorridorArmillary's orbitExitGetter still multiplies
-    // 1 − aboutFlipT to 0). The mark still dies with the ambient envelope
-    // as #continuum arrives (handoffFade → servicesAmbientLevel).
+    // 1 − aboutFlipT to 0). The mark dies with the ambient envelope as
+    // the next opaque station arrives (handoffFade → servicesAmbientLevel).
     // Identity (1) everywhere the about clock is 0.
     const aboutFlipFade = ABOUT_DECK_STAGE
       ? 1 - ABOUT_FLIP_MARK_DIM * aboutFlipT(aboutStageProgressRef.current.progress)
       : 1;
-
-    // Continuum re-emergence (ADR-049; continuous-formation rev, Update 5):
-    // the receded mark (~0.30 about-ambient ink) LIFTS to CONTINUUM_MARK_INK
-    // and grows back to the vision-beat hero pose — "the brandmark
-    // returns for the vision beat". continuumFormT PRE-WARMS this 40% of
-    // the way DURING the #about exit slide, the ENTRY clock (same
-    // single-writer ref — the runway top traveling viewport-bottom → the
-    // pin) carries it to 0.75 across the inter-runway gap, and the pinned
-    // approach lands it — one continuous motion with no dead plateau.
-    // 0 everywhere all three clocks are 0 (flag-off / pre-exit
-    // byte-identical); clamps to 1 below the runway (byte-stable through
-    // #practice arrival).
-    //
-    // REGIME GATE (bugfix 2026-07-19): the formation is a POST-CORRIDOR
-    // beat — it exists ONLY while the mark is in its parked docked /
-    // services-ambient life (the ambient hold that survives #services →
-    // #about → #continuum, killed at #practice) and NEVER while the
-    // corridor is actively reading (`t.active` — the Navigate/Encode/Build
-    // Arc beats). Every clean continuum frame is `!active && ambient`;
-    // every Arc frame is `active`. Forcing continuumT = 0 whenever the
-    // corridor is active keeps the in-sphere Arc mark byte-identical no
-    // matter what a stale or lagging about/continuum runway rect momentarily
-    // reports. Without this, a fast reverse scroll from #continuum (Lenis
-    // smooth-scroll desyncs the corridor transform from the stage writer's
-    // rAF) could land a frame where the transform already read "active"
-    // (Arc) while entry/progress had not yet reset — the mark then glowed
-    // (band gains) and grew (CONTINUUM_SCALE_BOOST) PAST the substrate
-    // sphere. `!t.active` is the reliable per-frame corridor signal; the
-    // `docked || ambient` term additionally pins the beat to the parked
-    // regime. Nothing real is clipped: every legitimate continuum frame
-    // runs `!active` under the ambient hold (recT = 1).
-    const inContinuumRegime = !t.active && (t.docked || t.servicesAmbient);
-    const continuumT =
-      CONTINUUM_RAIL_STAGE && inContinuumRegime
-        ? continuumFormT(
-            aboutStageProgressRef.current.progress,
-            continuumStageProgressRef.current.progress,
-            continuumStageProgressRef.current.entry
-          )
-        : 0;
-    // Pose-only recede RELEASE: eases the #services exit recede (scale +
-    // camera-forward push) back OUT by CONTINUUM_RECEDE_RELEASE (= 1: the
-    // full parked pose returns; CONTINUUM_SCALE_BOOST below then carries
-    // the scale PAST parked) as the mark re-emerges. Applied ONLY to the
-    // two pose lerps below — NOT the opacity dim, point size, or
-    // clean-field (those keep exitT). Identity at continuumT = 0.
-    const exitTPose = exitT * (1 - CONTINUUM_RECEDE_RELEASE * continuumT);
-
-    // ── Continuum band-slider drive (ADR-049 Update 6) ──────────────────
-    // The mark's inner horizontal band IS the slider: it breathes in on
-    // bandGainT over the SAME formation clock as the ink lift (opening
-    // during the #about exit slide, fully lit through the entry ramp).
-    // The head plays the crail choreography — CONDENSE at the seat (x01
-    // 0.5, the mark's centre), LAUNCH out to the Tool pole, then the 7s
-    // Tool ↔ Collaborator pendulum with the comet trail stretching behind
-    // travel. One clock drives the shader head AND the docked DOM reticle
-    // (ContinuumBandSliderAnchors reads the same state), so the glowing
-    // particles and the crisp diamond are one object. bandGainT(0) = 0 ⇒
-    // every pre-exit frame keeps the all-zero gains (shader identity).
-    const bandMaster = CONTINUUM_RAIL_STAGE ? bandGainT(continuumT) : 0;
-    const band = bandStateRef.current;
-    if (bandMaster > 0) {
-      const dt = Math.min(0.1, delta);
-      if (bandLaunchTRef.current < 1) {
-        bandLaunchTRef.current = Math.min(1, bandLaunchTRef.current + dt / BAND_LAUNCH_S);
-        band.sweep = bandLaunchX(bandLaunchTRef.current);
-        band.dir = -1; // launching leftward — trail stretches back toward the seat
-      } else {
-        bandPhaseRef.current += dt / BAND_SWING_PERIOD_S;
-        band.sweep = bandPendulumX(bandPhaseRef.current);
-        band.dir = bandPendulumDir(bandPhaseRef.current);
-      }
-    } else {
-      bandLaunchTRef.current = 0;
-      bandPhaseRef.current = 0;
-      band.sweep = 0.5;
-      band.dir = -1;
-    }
-    band.gain = bandMaster * BAND_BASE_GAIN;
-    band.headGain = bandMaster * BAND_HEAD_GAIN;
-    band.trailGain = bandMaster * BAND_TRAIL_GAIN;
-    // Docked-chrome opacity: the CHROME window over the formation clock —
-    // the reticle + Tool/Collaborator caps click together across the
-    // entry ramp's tail and are complete AS the section pins (the
-    // "instrument snaps together" beat). During the #about slide the band
-    // glows chrome-free while the departing copy still owns the flanks.
-    band.labelGain = bandMaster * continuumChromeT(continuumT);
 
     // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
     // Three coupled clocks, all derived from `getBrandmarkCoreBlend(progress)`
@@ -1044,14 +820,10 @@ export function BrandmarkPhysicsCoreActor({
     const inSvgRest = !inEpilogueOrDock && progress < BRANDMARK_CORE_HANDOFF_PROGRESS;
     // The exit dim is PARTIAL (the mark stays a background presence
     // through the deck stack); the ADR-047 about flip then deepens it
-    // toward the ~0.30 ambient floor (aboutFlipFade). Under ADR-049 the
-    // #continuum approach then LIFTS that floor back up to
-    // CONTINUUM_MARK_INK (the mark re-emerges to mid-prominence); the
-    // retargeted handoffFade (servicesAmbientLevel) still finishes the
-    // kill, now as #practice arrives. continuumT = 0 ⇒ dimMix = the exact
-    // about dim product (byte-identical, ADR-023 Invariant 11).
-    const dimProduct = (1 - EXIT_DIM * exitT) * aboutFlipFade;
-    const dimMix = dimProduct + (CONTINUUM_MARK_INK - dimProduct) * continuumT;
+    // toward the ~0.30 ambient floor (aboutFlipFade), and handoffFade
+    // (servicesAmbientLevel) finishes the kill as the next opaque
+    // station arrives.
+    const dimMix = (1 - EXIT_DIM * exitT) * aboutFlipFade;
     opacityRef.current = (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * dimMix;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude — with a
@@ -1095,15 +867,8 @@ export function BrandmarkPhysicsCoreActor({
     // Decommission recede: the parked mark eases toward the smaller exit
     // scale as the viewscreen changes modes (exitT 0 pre-exit → no-op).
     // Same multiplier on the recede target keeps the recede RATIO
-    // constant across viewports. exitTPose releases the FULL recede across
-    // the continuum formation so the mark grows back to parked (ADR-049).
-    scale += (EXIT_RECEDE_SCALE * parkedMul - scale) * exitTPose;
-    // Continuum hero boost (ADR-049 Update 5): the vision-beat mark grows
-    // PAST the parked pose toward CONTINUUM_SCALE_BOOST × parked, riding
-    // the same formation clock as the ink lift and the recede release.
-    // continuumT = 0 ⇒ ×1 (every pre-continuum frame byte-identical);
-    // clamps with the formation through #practice arrival.
-    scale *= 1 + (CONTINUUM_SCALE_BOOST - 1) * continuumT;
+    // constant across viewports.
+    scale += (EXIT_RECEDE_SCALE * parkedMul - scale) * exitT;
 
     // Position: sphere centre (world) → a point dead-centre in front of
     // the LIVE camera, so the camera fly-in can't carry the shrinking mark
@@ -1122,10 +887,8 @@ export function BrandmarkPhysicsCoreActor({
       posScratch.current.lerp(frontScratch.current, recT);
       // Decommission recede: push the parked mark AWAY along camera-forward
       // — the "space view" withdrawing behind the incoming data readout.
-      // exitTPose eases the push back in across the #continuum approach so
-      // the mark comes forward again (ADR-049).
-      if (exitTPose > 1e-4) {
-        posScratch.current.addScaledVector(fwdScratch.current, EXIT_RECEDE_DIST * exitTPose);
+      if (exitT > 1e-4) {
+        posScratch.current.addScaledVector(fwdScratch.current, EXIT_RECEDE_DIST * exitT);
       }
       // Head-on billboard base so the mark faces the viewer at the centerpiece.
       group.quaternion.identity().slerp(cam.quaternion, recT);
@@ -1247,7 +1010,6 @@ export function BrandmarkPhysicsCoreActor({
             pausedRef={pausedRef}
             reducedMotion={reducedMotion}
             seedFromPositions={seedFromPositions}
-            bandRef={bandStateRef}
           />
         </Suspense>
         {/* Unified #services armillary — the orbit rings wrap the parked core in
@@ -1255,12 +1017,6 @@ export function BrandmarkPhysicsCoreActor({
           behind) and move as one instrument. Gated by the flag; the standalone
           ServicesHologramScene remains the lab harness. */}
         {UNIFIED_SERVICES_ARMILLARY ? <CorridorArmillary /> : null}
-        {/* Continuum band-slider chrome docking (ADR-049 Update 6): projects
-          the mark-band's endpoints + the slider head — inside this same rig,
-          so the approach zoom carries them — and imperatively positions the
-          DOM Tool/Collaborator caps + the navigator reticle registered by
-          ContinuumStage. */}
-        {CONTINUUM_RAIL_STAGE ? <ContinuumBandSliderAnchors bandRef={bandStateRef} /> : null}
       </group>
     </group>
   );
@@ -1292,9 +1048,6 @@ interface BrandmarkPhysicsCoreWithGLBProps {
   pausedRef: { readonly current: boolean };
   reducedMotion: boolean;
   seedFromPositions: Float32Array | null;
-  /** Continuum band-slider drive (ADR-049 Update 6) — forwarded to the
-   *  core's `uBand*` uniforms; all gains 0 ⇒ shader identity. */
-  bandRef: { readonly current: BrandmarkCoreBandState };
 }
 
 function BrandmarkPhysicsCoreWithGLB({
@@ -1317,7 +1070,6 @@ function BrandmarkPhysicsCoreWithGLB({
   pausedRef,
   reducedMotion,
   seedFromPositions,
-  bandRef,
 }: BrandmarkPhysicsCoreWithGLBProps) {
   // useGLTF suspends until the asset is ready. Shared cache with
   // VolumetricBrandmarkArtifact (services hologram), which preloads the
@@ -1560,7 +1312,6 @@ function BrandmarkPhysicsCoreWithGLB({
       landedAccent={landedAccent}
       pausedRef={pausedRef}
       reducedMotion={reducedMotion}
-      bandRef={bandRef}
       // ── Production appearance (PRODUCTION_* constants above). These
       // are passed EXPLICITLY rather than relying on the component's
       // default props so the live corridor look can't drift if the lab
@@ -1577,236 +1328,6 @@ function BrandmarkPhysicsCoreWithGLB({
       primitiveAspect={PRODUCTION_PRIMITIVE_ASPECT}
       lineJitter={PRODUCTION_LINE_JITTER}
     />
-  );
-}
-
-/** ContinuumBandSliderAnchors — docks the DOM slider chrome (Tool /
- *  Collaborator caps + the navigator reticle) to the mark-band's PROJECTED
- *  geometry (ADR-049 Update 6).
- *
- *  Two probes sit at the band's group-local endpoints — the SAME space the
- *  shader lights — inside the actor's pointer-look rig, so the chrome rides
- *  the instrument through the approach zoom instead of being plastered at
- *  fixed positions. The reticle rides the slider head: its screen point is
- *  the affine blend of the projected endpoints at the drive's `sweep` x01 —
- *  exact while the mark is frontal (pointer-look is damped off through the
- *  deck + continuum), and the same x01 the shader's glowing head lights, so
- *  the crisp diamond and the particle glow are one object. Projection each
- *  frame; the canvas loop is the single writer of the elements' transform /
- *  opacity (no store, no re-render, no DOM-side rAF — the
- *  `continuumBandAnchorsRef` handles are registered by ContinuumStage).
- *  Opacity rides `labelGain` (band master × the formation chrome window),
- *  so the chrome is inert everywhere the band is.
- *
- *  Update 9 — this writer now drives the WHOLE label layer, not just the
- *  caps and reticle:
- *    · the centre SEAT docks to the band's projected midpoint (it used to
- *      be screen-anchored, so it drifted against the caps under the
- *      approach zoom and pointer-look — the instrument now moves as one
- *      rigid body);
- *    · `--cap-lit` / `--seat-lit` publish how strongly the shader's comet
- *      head is docked at each station, so the DOM chrome lights with the
- *      particles instead of ignoring them;
- *    · the readout's two value spans go live off the same `sweep`;
- *    · `data-continuum-assembled` (labelGain hysteresis) arms the CSS
- *      type-on, and clearing it on close re-arms the replay.
- *  All of it stays delta-gated, layout-read-free, and dead in the parked
- *  branch — the frame cost of an inert #continuum is unchanged. */
-function ContinuumBandSliderAnchors({
-  bandRef,
-}: {
-  bandRef: { readonly current: ContinuumBandActorState };
-}) {
-  const leftProbeRef = useRef<THREE.Object3D>(null);
-  const rightProbeRef = useRef<THREE.Object3D>(null);
-  const worldScratch = useRef(new THREE.Vector3());
-  // Last-written opacity so the parked-invisible state costs zero style
-  // writes (the CorridorArmillary anchor delta-gate discipline).
-  const lastOpRef = useRef(-1);
-  // U9 delta-gates: the seat's gain, the three lighting weights, and the
-  // readout's rendered strings. Same discipline — a frame that changes
-  // nothing writes nothing.
-  const lastSeatGainRef = useRef(-1);
-  const lastLitLRef = useRef(-1);
-  const lastLitRRef = useRef(-1);
-  const lastLitSeatRef = useRef(-1);
-  const lastToolStrRef = useRef("");
-  const lastCollabStrRef = useRef("");
-  const assembledRef = useRef(false);
-  // Phosphor traces per station (value + last-written 2dp) — see
-  // PERSIST_DECAY_S. Frame-delta accumulators, so tab-hide safe.
-  const persistRef = useRef({ l: 0, r: 0, s: 0, wl: -1, wr: -1, ws: -1 });
-
-  useFrame(({ camera, size }, delta) => {
-    const els = continuumBandAnchorsRef.current;
-    const left = leftProbeRef.current;
-    const right = rightProbeRef.current;
-    if (!els.leftEl || !els.rightEl || !els.reticleEl || !els.seatEl || !els.stageEl) return;
-    if (!left || !right) return;
-
-    const world = worldScratch.current;
-    const project = (obj: THREE.Object3D): [number, number, boolean] => {
-      obj.getWorldPosition(world);
-      const p = world.project(camera);
-      return [(p.x * 0.5 + 0.5) * size.width, (-p.y * 0.5 + 0.5) * size.height, Math.abs(p.z) < 1];
-    };
-    const [lx, ly, lVisible] = project(left);
-    const [rx, ry, rVisible] = project(right);
-    const op = lVisible && rVisible ? bandRef.current.labelGain : 0;
-
-    if (op < 0.002) {
-      if (lastOpRef.current !== 0) {
-        els.leftEl.style.opacity = "0";
-        els.rightEl.style.opacity = "0";
-        els.reticleEl.style.opacity = "0";
-        els.seatEl.style.setProperty("--seat-gain", "0");
-        // Park the lighting AND disarm the assembly, so the next entry
-        // replays the type-on from its rest state in lockstep with the
-        // band's own condense → launch replay.
-        els.leftEl.style.setProperty("--cap-lit", "0");
-        els.rightEl.style.setProperty("--cap-lit", "0");
-        els.seatEl.style.setProperty("--seat-lit", "0");
-        els.leftEl.style.setProperty("--cap-persist", "0");
-        els.rightEl.style.setProperty("--cap-persist", "0");
-        els.seatEl.style.setProperty("--seat-persist", "0");
-        els.stageEl.removeAttribute("data-continuum-assembled");
-        assembledRef.current = false;
-        lastSeatGainRef.current = 0;
-        lastLitLRef.current = 0;
-        lastLitRRef.current = 0;
-        lastLitSeatRef.current = 0;
-        persistRef.current = { l: 0, r: 0, s: 0, wl: 0, wr: 0, ws: 0 };
-        lastOpRef.current = 0;
-      }
-      return;
-    }
-    lastOpRef.current = op;
-
-    // Assembly trigger — hysteresis so a scrub parked near the threshold
-    // cannot stutter the sequence (fires on the way up only).
-    if (!assembledRef.current && op >= ASSEMBLE_ON) {
-      els.stageEl.setAttribute("data-continuum-assembled", "");
-      assembledRef.current = true;
-    } else if (assembledRef.current && op < ASSEMBLE_OFF) {
-      els.stageEl.removeAttribute("data-continuum-assembled");
-      assembledRef.current = false;
-    }
-
-    const clampY = (y: number) =>
-      Math.min(size.height - BAND_LABEL_EDGE_PX, Math.max(BAND_LABEL_EDGE_PX, y));
-    const opacity = op.toFixed(3);
-    els.leftEl.style.transform = `translate3d(${(lx - BAND_LABEL_GAP_PX).toFixed(1)}px, ${clampY(
-      ly
-    ).toFixed(1)}px, 0) translate(-100%, -50%)`;
-    els.leftEl.style.opacity = opacity;
-    els.rightEl.style.transform = `translate3d(${(rx + BAND_LABEL_GAP_PX).toFixed(1)}px, ${clampY(
-      ry
-    ).toFixed(1)}px, 0) translate(0, -50%)`;
-    els.rightEl.style.opacity = opacity;
-    // The reticle rides the slider head along the projected band segment.
-    const sweep = bandRef.current.sweep;
-    const hx = lx + (rx - lx) * sweep;
-    const hy = ly + (ry - ly) * sweep;
-    els.reticleEl.style.transform = `translate3d(${hx.toFixed(1)}px, ${clampY(hy).toFixed(
-      1
-    )}px, 0) translate(-50%, -50%)`;
-    els.reticleEl.style.opacity = opacity;
-
-    // The centre SEAT docks to the band's MIDPOINT (U9) — the mark's own ½
-    // position on the spectrum. Rev e: vertically CENTRED on the midpoint
-    // (translate(-50%, -50%), matching the caps' translate(-100%/0%, -50%))
-    // instead of hanging below it — the seat's element now shrinkwraps to
-    // just its kicker plate (CSS), so centering the element centres the
-    // plate on the band line exactly like a cap's plate. The copy column
-    // still hangs below via CSS (--panel-drop off the station), which
-    // composes under --seat-gain.
-    els.seatEl.style.transform = `translate3d(${((lx + rx) / 2).toFixed(1)}px, ${clampY(
-      (ly + ry) / 2
-    ).toFixed(1)}px, 0) translate(-50%, -50%)`;
-    const seatGain = Math.round(op * 100) / 100;
-    if (seatGain !== lastSeatGainRef.current) {
-      els.seatEl.style.setProperty("--seat-gain", String(seatGain));
-      lastSeatGainRef.current = seatGain;
-    }
-
-    // Lighting reciprocity — how strongly the head is docked at each
-    // station. Squared falloff keeps the flare tight around the dock; the
-    // instant channel (--cap-lit, chrome flare) additionally scales by `op`
-    // so it stays inside the chrome's own fade.
-    const proxAt = (d: number) => {
-      const t = Math.max(0, 1 - Math.abs(d) / CAP_LIT_RADIUS);
-      return t * t;
-    };
-    const proxL = proxAt(sweep - BAND_SWING_MIN);
-    const proxR = proxAt(sweep - BAND_SWING_MAX);
-    const proxSeat = proxAt(sweep - 0.5);
-    const litL = Math.round(proxL * op * 100) / 100;
-    const litR = Math.round(proxR * op * 100) / 100;
-    const litSeat = Math.round(proxSeat * op * 100) / 100;
-    if (litL !== lastLitLRef.current) {
-      els.leftEl.style.setProperty("--cap-lit", String(litL));
-      lastLitLRef.current = litL;
-    }
-    if (litR !== lastLitRRef.current) {
-      els.rightEl.style.setProperty("--cap-lit", String(litR));
-      lastLitRRef.current = litR;
-    }
-    if (litSeat !== lastLitSeatRef.current) {
-      els.seatEl.style.setProperty("--seat-lit", String(litSeat));
-      lastLitSeatRef.current = litSeat;
-    }
-
-    // Phosphor persistence (U9 rev b) — the body paragraphs' paint channel.
-    // Each station's trace jumps to the head's raw proximity when the beam
-    // is on it and decays linearly over PERSIST_DECAY_S after it leaves, so
-    // a painted description stays readable through the swing away and has
-    // faded back to the CSS ghost floor by the next pass. Raw proximity
-    // (not ×op): the seat container's opacity already carries the global
-    // gain, and scaling twice would dim the paint during formation.
-    const fade = Math.min(0.1, delta) / PERSIST_DECAY_S;
-    const pr = persistRef.current;
-    pr.l = Math.max(proxL, pr.l - fade);
-    pr.r = Math.max(proxR, pr.r - fade);
-    pr.s = Math.max(proxSeat, pr.s - fade);
-    const pL = Math.round(pr.l * 100) / 100;
-    const pR = Math.round(pr.r * 100) / 100;
-    const pS = Math.round(pr.s * 100) / 100;
-    if (pL !== pr.wl) {
-      els.leftEl.style.setProperty("--cap-persist", String(pL));
-      pr.wl = pL;
-    }
-    if (pR !== pr.wr) {
-      els.rightEl.style.setProperty("--cap-persist", String(pR));
-      pr.wr = pR;
-    }
-    if (pS !== pr.ws) {
-      els.seatEl.style.setProperty("--seat-persist", String(pS));
-      pr.ws = pS;
-    }
-
-    // The LIVE readout — complementary weights of the head's position, so
-    // the pair always sums to 1.00 ("the ratio shifts with every prompt").
-    const norm = Math.min(
-      1,
-      Math.max(0, (sweep - BAND_SWING_MIN) / (BAND_SWING_MAX - BAND_SWING_MIN))
-    );
-    const toolStr = (1 - norm).toFixed(2);
-    const collabStr = norm.toFixed(2);
-    if (els.readoutToolEl && toolStr !== lastToolStrRef.current) {
-      els.readoutToolEl.textContent = toolStr;
-      lastToolStrRef.current = toolStr;
-    }
-    if (els.readoutCollabEl && collabStr !== lastCollabStrRef.current) {
-      els.readoutCollabEl.textContent = collabStr;
-      lastCollabStrRef.current = collabStr;
-    }
-  });
-
-  return (
-    <>
-      <object3D ref={leftProbeRef} position={[-BAND_ANCHOR_X, BAND_CHROME_ANCHOR_Y, 0]} />
-      <object3D ref={rightProbeRef} position={[BAND_ANCHOR_X, BAND_CHROME_ANCHOR_Y, 0]} />
-    </>
   );
 }
 
