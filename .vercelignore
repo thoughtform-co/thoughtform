@@ -21,6 +21,10 @@ public/images/services/Vince-4.jpg
 #                            captured Arc-sphere still each direction dresses
 #                            (regenerate with scripts/capture-proof-sphere.mjs)
 public/proof-lab
+# - dossier-lab/          -> (internal) /test/proof-dossier-lab only; the
+#                            captured parked-mark still the dossier floats over
+#                            (regenerate with scripts/capture-dossier-mark.mjs)
+public/dossier-lab
 
 # Documentation + decision records — never imported by the app, but they
 # were being uploaded with every deploy (docs/ ~31 MB, mostly design

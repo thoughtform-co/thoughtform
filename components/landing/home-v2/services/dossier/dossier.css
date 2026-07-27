@@ -1,0 +1,674 @@
+/* ═══════════════════════════════════════════════════════════════════════
+ * dossier.css — the proof dossier, a terminal case file (`ProofDossier`)
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * One navigational-screen window over the parked brandmark at the top of
+ * `#services`, before the card ring arrives. Grammar is the house one,
+ * assembled from atoms that already ship: the `.svc-plate__bd` glass +
+ * scanline body, the survey dot-grid lift, the `.proof__stats`
+ * 1px-gap-as-hairline tile grid, the `.proof__log-row` dotted-leader row,
+ * the `.svc-plate__chip` inverse-video active state, and the station CRT
+ * caret. New here — and new to the site — are only the segmented title
+ * bar, the soft-key row, and the cascade offset stack.
+ *
+ * Shape law: radius 0 everywhere; diamonds, never circles; hairlines only,
+ * no shadows for depth (the cascade earns depth by OFFSET); no italics —
+ * emphasis is upright gold. Gold is rationed to exactly five things: the
+ * LIVE chip, the stat values, the active soft key, the receipt diamond,
+ * and the caret.
+ *
+ * Reveal (ADR-044 / ADR-054 protocol): the window never moves and never
+ * rides an entrance opacity ramp. `[data-reveal="armed"]` hides the
+ * furniture INSTANTLY (never a fade on a stage still travelling); at the
+ * park the controller flips to `typing` and the furniture fades IN PLACE
+ * while the readouts decode. No attribute at all — mobile, reduced motion,
+ * no-JS, or a standalone mount — means no rule matches and everything
+ * ships visible.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+.svc-dossier {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  /* The host never takes the pointer — only the soft keys and the peeking
+     bars opt back in, so this can never shadow a ring hit target if the
+     two ever overlap in time. */
+  pointer-events: none;
+
+  --dsr-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --dsr-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --dsr-frame: var(--dawn-15, rgba(235, 227, 214, 0.15));
+  --dsr-hair: var(--dawn-08, rgba(235, 227, 214, 0.08));
+  --dsr-ink: var(--dawn, #ebe3d6);
+  --dsr-ink-dim: rgba(235, 227, 214, 0.55);
+  --dsr-ink-faint: rgba(235, 227, 214, 0.32);
+  --dsr-ink-night: var(--latent-night, #110f09);
+
+  /* Window box. The width formula is band-relative on purpose: the dossier
+     is editorial furniture, so it narrows with the band instead of holding
+     a fixed pixel width against a shrinking column. */
+  --dsr-w: min(720px, 62%);
+  --dsr-h: min(72svh, 640px);
+  --dsr-pad: clamp(14px, 1.4vw, 20px);
+  /* Title-bar height — also the clip height that leaves a peeking panel
+     showing exactly its own bar. */
+  --dsr-bar-h: 30px;
+  /* Cascade: the reserved lane above/right of the active panel, and the
+     per-step offset within it. The lane is ~1.5 bars deep on purpose — at
+     one step per bar-height the far panel shows its whole title bar and the
+     near one shows most of its own, which is what makes the stack read as
+     three documents rather than as a hairline above a box. Widening it
+     costs no window height: the zone's `min-height` is fixed, so the lane
+     comes out of the ACTIVE panel's box, not out of the layout. */
+  --dsr-lane: 46px;
+  --dsr-step: 23px;
+  --dsr-swap: 260ms;
+}
+
+/* The dense ramp: air comes out, the zone does NOT. Starving the phase
+   zone was the first thing tried and it clipped the excerpt — the panel's
+   rows are the payload, so height is found in padding, bars and the lane
+   instead. The lab's `d` cut applies it on demand; short viewports get it
+   automatically below, because 72svh of a 768px laptop is genuinely tight
+   for five zones. */
+.svc-dossier[data-density="dense"],
+.svc-dossier {
+  --dsr-dense-pad: 12px;
+  --dsr-dense-bar: 26px;
+  --dsr-dense-lane: 38px;
+  --dsr-dense-step: 19px;
+}
+.svc-dossier[data-density="dense"] {
+  --dsr-pad: var(--dsr-dense-pad);
+  --dsr-bar-h: var(--dsr-dense-bar);
+  --dsr-lane: var(--dsr-dense-lane);
+  --dsr-step: var(--dsr-dense-step);
+}
+@media (max-height: 860px) {
+  .svc-dossier {
+    --dsr-pad: var(--dsr-dense-pad);
+    --dsr-bar-h: var(--dsr-dense-bar);
+    --dsr-lane: var(--dsr-dense-lane);
+    --dsr-step: var(--dsr-dense-step);
+  }
+}
+
+/* ── The window ─────────────────────────────────────────────────────── */
+.svc-dossier__win {
+  position: relative;
+  width: var(--dsr-w);
+  max-height: var(--dsr-h);
+  padding: var(--dsr-pad);
+  display: grid;
+  /* Every row is content-sized — the phase zone carries its own
+     `min-height` because its panels are absolutely positioned and so
+     contribute none. A `1fr` row here would resolve to zero for exactly
+     that reason (the window has a max-height, not a height). */
+  grid-template-rows: repeat(5, auto);
+  gap: clamp(10px, 1.1vh, 16px);
+  overflow: hidden;
+  border: 1px solid var(--dsr-frame);
+  /* The `.svc-plate__bd` glass recipe. ONE blur layer in the whole
+     composition — the phase sub-windows are opaque, so nothing nests a
+     second backdrop filter over the corridor canvas. */
+  background:
+    linear-gradient(174deg, rgba(236, 227, 214, 0.05), transparent 46%), rgba(8, 7, 6, 0.72);
+  backdrop-filter: blur(12px);
+  color: var(--dsr-ink);
+  font-family: var(--dsr-sans);
+}
+@supports not (backdrop-filter: blur(2px)) {
+  .svc-dossier__win {
+    background: rgba(8, 7, 6, 0.93);
+  }
+}
+/* Scanline veil — above the glass, under the content. */
+.svc-dossier__win::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(202, 165, 84, 0.025) 0 1px,
+    transparent 1px 3px
+  );
+}
+.svc-dossier__win > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dot-grid lift — the survey-plate recipe, masked so it fades at its own
+   edges rather than drawing a second rectangle inside the frame. */
+.svc-dossier__grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(235, 227, 214, 0.06) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(120% 130% at 50% 40%, #000 40%, transparent 96%);
+  mask-image: radial-gradient(120% 130% at 50% 40%, #000 40%, transparent 96%);
+}
+
+/* ── Zone 1 · segmented title bar ───────────────────────────────────── */
+.svc-dossier__bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  border: 1px solid var(--dsr-hair);
+  font-family: var(--dsr-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  min-height: var(--dsr-bar-h);
+}
+.svc-dossier__seg {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.svc-dossier__seg--mark {
+  color: var(--dsr-ink-faint);
+  border-right: 1px solid var(--dsr-hair);
+}
+.svc-dossier__seg--case {
+  /* An h2 — reset the heading ramp, this is chrome type. */
+  margin: 0;
+  font-size: inherit;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--dsr-ink);
+}
+.svc-dossier__seg--state {
+  border-left: 1px solid var(--dsr-hair);
+  color: var(--gold, #caa554);
+  letter-spacing: 0.22em;
+}
+
+/* ── Zone 2 · meta register ─────────────────────────────────────────── */
+.svc-dossier__meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.svc-dossier__meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 12px;
+  border-right: 1px solid var(--dsr-hair);
+}
+.svc-dossier__meta-cell:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+.svc-dossier__meta-k {
+  font-family: var(--dsr-mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dsr-ink-faint);
+}
+.svc-dossier__meta-v {
+  margin: 0;
+  font-family: var(--dsr-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--dsr-ink-dim);
+  /* Reserve the line while the value decodes from empty. */
+  min-height: 1.2em;
+}
+
+/* ── Zone 3 · brief (summary + gauge strip) ─────────────────────────── */
+.svc-dossier__brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(14px, 1.6vw, 26px);
+  align-items: start;
+}
+.svc-dossier__summary {
+  position: relative;
+  margin: 0;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.45;
+  color: var(--dsr-ink);
+}
+.svc-dossier[data-density="dense"] .svc-dossier__summary {
+  font-size: calc(var(--band-copy, 16px) * 0.92);
+}
+/* The ghost reserves the resolved copy's exact box so the row never
+   reflows while the line prints; the typed span overlays it. */
+.svc-dossier__summary-ghost {
+  visibility: hidden;
+}
+.svc-dossier__summary-typed {
+  position: absolute;
+  inset: 0;
+}
+
+.svc-dossier__stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* 1px gap over a hairline background IS the rule grid — the
+     `.proof__stats` trick, so the tiles read as one instrument register
+     rather than four boxes. */
+  gap: 1px;
+  background: var(--dsr-hair);
+  border: 1px solid var(--dsr-hair);
+}
+.svc-dossier__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px 10px;
+  /* Opaque tile so the hairlines read crisp over the glass. */
+  background: rgba(8, 7, 6, 0.72);
+}
+.svc-dossier__stat-v {
+  font-family: var(--dsr-mono);
+  font-weight: 700;
+  font-size: clamp(20px, 1.9vw, 28px);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--gold, #caa554);
+  /* Reserve the line while the value decodes from empty. */
+  min-height: 1.05em;
+}
+.svc-dossier__stat-l {
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: var(--dsr-ink-dim);
+}
+.svc-dossier__stat-d {
+  font-family: var(--dsr-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dsr-ink-faint);
+}
+
+/* ── Zone 4 · phase cascade ─────────────────────────────────────────── */
+/* The lane is the reserved strip the two peeking panels live in; the
+   active panel sits inset by exactly that much, so the stack never
+   overlaps the zone's neighbours. */
+.svc-dossier__phases {
+  position: relative;
+  /* The panels are absolute, so this IS the zone's height — and the active
+     panel gets `zone − lane`, which has to clear the bar plus pattern,
+     receipt and a three-row excerpt. The floor is set from that content,
+     not from what is left over. */
+  min-height: clamp(214px, 30svh, 272px);
+}
+.svc-dossier__phase {
+  position: absolute;
+  top: var(--dsr-lane);
+  right: var(--dsr-lane);
+  bottom: 0;
+  left: 0;
+  z-index: calc(10 - var(--d, 0));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--dsr-hair);
+  /* Opaque, NOT a second glass layer (nested backdrop filters compound
+     cost and artifact). Depth here comes from the offset. */
+  background: rgba(10, 9, 8, 0.94);
+  transform: translate(
+    calc(var(--d, 0) * var(--dsr-step)),
+    calc(var(--d, 0) * var(--dsr-step) * -1)
+  );
+  transition:
+    transform var(--dsr-swap) var(--m-ease, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    clip-path var(--dsr-swap) var(--m-ease, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+/* A peeking panel is clipped to its own title bar. Releasing the bottom
+   inset is the whole "bars vs content peek" question — one number. */
+.svc-dossier__phase:not([data-d="0"]) {
+  clip-path: inset(0 0 calc(100% - var(--dsr-bar-h)) 0);
+  border-color: var(--dsr-hair);
+}
+.svc-dossier[data-cascade="peek"] .svc-dossier__phase:not([data-d="0"]) {
+  clip-path: inset(0 0 calc(100% - var(--dsr-bar-h) - 24px) 0);
+}
+/* Flat: no stack at all — the soft keys alone swap a single panel. */
+.svc-dossier[data-cascade="flat"] .svc-dossier__phase {
+  top: 0;
+  right: 0;
+  transform: none;
+}
+.svc-dossier[data-cascade="flat"] .svc-dossier__phase:not([data-d="0"]) {
+  opacity: 0;
+  visibility: hidden;
+  clip-path: none;
+}
+
+.svc-dossier__phase-bar {
+  flex: none;
+  height: var(--dsr-bar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 11px;
+  border-bottom: 1px solid var(--dsr-hair);
+  font-family: var(--dsr-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dsr-ink-faint);
+}
+.svc-dossier__phase[data-d="0"] .svc-dossier__phase-desig {
+  color: var(--dsr-ink-dim);
+}
+/* Pointer-only shortcut to bring a peeking panel forward — the soft-key
+   tablist is the canonical keyboard path, so this is out of the tab order
+   and hidden from AT (it would otherwise be a second stop for one action). */
+.svc-dossier__peek {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 0 0 14px;
+  margin: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+}
+.svc-dossier__peek-mark {
+  width: 5px;
+  height: 5px;
+  background: var(--dsr-ink-faint);
+  transform: rotate(45deg);
+  transition: background 180ms var(--m-ease, ease);
+}
+.svc-dossier__peek:hover .svc-dossier__peek-mark,
+.svc-dossier__peek:focus-visible .svc-dossier__peek-mark {
+  background: var(--gold, #caa554);
+}
+
+.svc-dossier__phase-bd {
+  flex: 1;
+  min-height: 0;
+  padding: 11px 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  overflow: hidden;
+}
+.svc-dossier__pattern {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--dsr-ink);
+}
+.svc-dossier[data-density="dense"] .svc-dossier__pattern {
+  font-size: 12px;
+}
+/* Receipt — the gold diamond marks a claim that carries evidence. */
+.svc-dossier__receipt {
+  position: relative;
+  margin: 0;
+  padding-left: 14px;
+  font-family: var(--dsr-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  color: var(--dsr-ink-dim);
+}
+.svc-dossier__receipt::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.42em;
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+}
+
+.svc-dossier__excerpt {
+  margin-top: auto;
+  border-top: 1px solid var(--dsr-hair);
+  padding-top: 9px;
+  min-height: 0;
+}
+.svc-dossier__excerpt-t {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--dsr-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-50, rgba(202, 165, 84, 0.5));
+}
+.svc-dossier__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.svc-dossier__row {
+  display: grid;
+  align-items: baseline;
+  gap: 9px;
+  font-family: var(--dsr-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: var(--dsr-ink-dim);
+}
+/* The dotted-leader register row — `.proof__log-row` geometry. */
+.svc-dossier__row--log {
+  grid-template-columns: 7ch minmax(0, 1fr) auto;
+}
+.svc-dossier__row--reg,
+.svc-dossier__row--tool {
+  grid-template-columns: 9ch minmax(0, 1fr) auto;
+}
+.svc-dossier__row-t {
+  color: var(--dsr-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.svc-dossier__row--tool .svc-dossier__row-t {
+  color: var(--dsr-ink);
+  letter-spacing: 0.06em;
+}
+.svc-dossier__row-rule {
+  height: 1px;
+  border-bottom: 1px dashed var(--dawn-15, rgba(235, 227, 214, 0.15));
+  transform: translateY(-3px);
+}
+.svc-dossier__row-v {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.svc-dossier__row-tag {
+  color: var(--dsr-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 8px;
+}
+
+/* ── Zone 5 · soft-key row ──────────────────────────────────────────── */
+.svc-dossier__keys {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--dsr-hair);
+  padding-top: 10px;
+}
+.svc-dossier__keyrow {
+  display: flex;
+  gap: 6px;
+}
+.svc-dossier__key {
+  appearance: none;
+  pointer-events: auto;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1px solid var(--dawn-20, rgba(235, 227, 214, 0.2));
+  background: transparent;
+  color: var(--dsr-ink-dim);
+  font-family: var(--dsr-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition:
+    color 180ms var(--m-ease, ease),
+    border-color 180ms var(--m-ease, ease),
+    background-color 180ms var(--m-ease, ease);
+}
+.svc-dossier__key:hover {
+  color: var(--dsr-ink);
+  border-color: var(--gold-30, rgba(202, 165, 84, 0.3));
+}
+.svc-dossier__key:focus-visible {
+  outline: 1px solid var(--gold, #caa554);
+  outline-offset: 2px;
+}
+/* Active = inverse video. The one state change on this row, and the
+   instrument's whole selection signature. */
+.svc-dossier__key[data-on] {
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+  color: var(--dsr-ink-night);
+}
+.svc-dossier__key-n {
+  opacity: 0.7;
+}
+.svc-dossier__stamp {
+  margin-left: auto;
+  font-family: var(--dsr-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--dsr-ink-faint);
+}
+.svc-dossier__barcode {
+  display: block;
+  width: 74px;
+  opacity: 0.7;
+}
+/* Scoped copy of the tools-cards barcode fill, so production never has to
+   load that sheet for one primitive. */
+.svc-dossier__barcode .pcl-barcode {
+  height: 10px;
+  width: 100%;
+  fill: var(--dawn-30, rgba(235, 227, 214, 0.3));
+}
+
+/* ── The CRT caret ──────────────────────────────────────────────────── */
+.svc-dossier__cursor {
+  display: inline-block;
+  margin-left: 0.06em;
+  color: var(--gold, #caa554);
+  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  transform: translateY(-0.04em) scaleY(0.78);
+  transform-origin: center bottom;
+  pointer-events: none;
+  animation: svc-dossier-caret 1.05s steps(2, start) infinite;
+}
+@keyframes svc-dossier-caret {
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+/* ── Reveal states ──────────────────────────────────────────────────── */
+/* ARMED hides the furniture with NO transition — the window may still be
+   travelling to its park, and a fade on moving furniture is exactly the
+   regression this protocol exists to prevent. */
+.svc-dossier[data-reveal="armed"] .svc-dossier__grid,
+.svc-dossier[data-reveal="armed"] .svc-dossier__meta-cell,
+.svc-dossier[data-reveal="armed"] .svc-dossier__stat,
+.svc-dossier[data-reveal="armed"] .svc-dossier__phases,
+.svc-dossier[data-reveal="armed"] .svc-dossier__keys {
+  opacity: 0;
+}
+.svc-dossier[data-reveal="typing"] .svc-dossier__grid,
+.svc-dossier[data-reveal="done"] .svc-dossier__grid,
+.svc-dossier[data-reveal="typing"] .svc-dossier__meta-cell,
+.svc-dossier[data-reveal="done"] .svc-dossier__meta-cell,
+.svc-dossier[data-reveal="typing"] .svc-dossier__stat,
+.svc-dossier[data-reveal="done"] .svc-dossier__stat,
+.svc-dossier[data-reveal="typing"] .svc-dossier__phases,
+.svc-dossier[data-reveal="done"] .svc-dossier__phases,
+.svc-dossier[data-reveal="typing"] .svc-dossier__keys,
+.svc-dossier[data-reveal="done"] .svc-dossier__keys {
+  opacity: 1;
+  transition: opacity 560ms var(--m-ease, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+/* Intra-zone stagger — the register fills cell by cell, left to right. */
+.svc-dossier[data-reveal="typing"] .svc-dossier__meta-cell,
+.svc-dossier[data-reveal="done"] .svc-dossier__meta-cell,
+.svc-dossier[data-reveal="typing"] .svc-dossier__stat,
+.svc-dossier[data-reveal="done"] .svc-dossier__stat {
+  transition-delay: calc(var(--r-i, 0) * 55ms);
+}
+.svc-dossier[data-reveal="typing"] .svc-dossier__phases,
+.svc-dossier[data-reveal="done"] .svc-dossier__phases {
+  transition-delay: 150ms;
+}
+.svc-dossier[data-reveal="typing"] .svc-dossier__keys,
+.svc-dossier[data-reveal="done"] .svc-dossier__keys {
+  transition-delay: 220ms;
+}
+
+/* ── Mobile / reduced motion ────────────────────────────────────────── */
+/* The controller never runs below the enhanced tier, so no `data-reveal`
+   appears and everything above stays visible. What changes is the box:
+   the window becomes an in-flow block and the cascade flattens into three
+   stacked panels — no absolute lane, no clip, no swap. */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .svc-dossier {
+    position: static;
+    display: block;
+    pointer-events: auto;
+  }
+  .svc-dossier__win {
+    width: 100%;
+    max-height: none;
+    display: block;
+  }
+  .svc-dossier__win > * + * {
+    margin-top: 16px;
+  }
+  .svc-dossier__brief {
+    display: block;
+  }
+  .svc-dossier__stats {
+    margin-top: 16px;
+  }
+  .svc-dossier__phases {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .svc-dossier__phase {
+    position: static;
+    transform: none;
+    clip-path: none;
+    opacity: 1;
+    visibility: visible;
+  }
+  .svc-dossier__keys {
+    display: none;
+  }
+}

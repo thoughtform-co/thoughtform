@@ -1,0 +1,276 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/proof-dossier-lab — the Loop case as a terminal case file
+   ═══════════════════════════════════════════════════════════════════════
+
+   Shape law (thoughtform-design): radius 0 everywhere; diamonds, never
+   circles; gold is WAYFINDING only; no italics. Copy sizes ride the band
+   tokens (--band-copy et al), never a local px ramp.
+
+   NOTHING here restyles a production class outside a `.pdl` scope. The lab
+   sheet loads last, so those scoped rules win the cascade without touching
+   the shipped surface. The window itself carries no lab styling at all —
+   it is the production component, judged as-is.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.pdl {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  --pdl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --pdl-ink-faint: rgba(235, 227, 214, 0.22);
+
+  /* Stand in for `useLandingScroll` (ADR-031 U16 rev c): the corner brackets
+     and BOTH rails are CLIP-UNCOVERED by the hero sliding off, so each
+     carries `clip-path: inset(max(0px, (1 − --hero-lift) · 100dvh − <own top
+     offset>))`. With no scroll writer running the var is unset, the inset
+     resolves to a full viewport, and the whole rail ladder is clipped away —
+     the frame paints empty. We are parked far past the curtain, so the
+     honest value is 1. */
+  --hero-lift: 1;
+}
+
+/* hudHtml ships the fixed gold gateway radial; production covers it with the
+   opaque corridor canvas — here the bed owns the backdrop. */
+.pdl .gateway {
+  display: none;
+}
+
+.pdl__hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+/* Reproduces `.stations`' content box — see the shell for why. */
+.pdl-stationbox {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--hud-content-inset);
+  overflow: hidden;
+}
+
+/* ══ The bed — what the window floats over ═════════════════════════════ */
+
+.pdl-bed {
+  position: absolute;
+  inset: 0;
+  --pdl-mark-dim: 0.45;
+}
+
+/* Gold glow — the parked instrument's light, with no capture required. It
+   stays under the still so the composition holds either way. */
+.pdl-bed__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    46% 46% at 50% 52%,
+    rgba(202, 165, 84, 0.13),
+    rgba(202, 165, 84, 0.04) 46%,
+    transparent 72%
+  );
+}
+
+/* The captured mark. `contain` inside a centred square box, dimmed by the
+   knob that will become the production constant. */
+.pdl-bed__still {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(74vh, 62vw);
+  height: min(74vh, 62vw);
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  opacity: var(--pdl-mark-dim);
+  /* The capture is an opaque square; the vignette keeps it from drawing its
+     own rectangle over the void. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 56%, transparent 76%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 56%, transparent 76%);
+  pointer-events: none;
+}
+
+.pdl-bed__arcs {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(96vh, 82vw);
+  height: min(96vh, 82vw);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  opacity: calc(var(--pdl-mark-dim) * 0.9);
+  pointer-events: none;
+}
+.pdl-bed__arc {
+  fill: none;
+  stroke: rgba(202, 165, 84, 0.3);
+  stroke-width: 0.6;
+  vector-effect: non-scaling-stroke;
+}
+.pdl-bed__arc--dotted {
+  stroke-dasharray: 1 5;
+  stroke: rgba(202, 165, 84, 0.42);
+}
+
+/* The stage box. Production is `position: sticky; top: 0; height: 100svh`
+   inside a 600svh runway; the lab has no scrolling ancestor, so the sticky
+   would be inert anyway — `absolute` makes that explicit so nobody
+   re-introduces a scroll parent and gets a surprise pin. The height stays
+   100svh so the window's `72svh` budget is the honest one, and the park
+   gate reads true (top = 0). */
+.pdl-stage {
+  position: absolute;
+  inset: 0;
+  height: 100svh;
+}
+
+/* ══ Console ═══════════════════════════════════════════════════════════ */
+
+.pdl-console {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  width: max-content;
+  max-width: min(34vw, 330px);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: rgba(10, 9, 8, 0.82);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  backdrop-filter: blur(10px);
+  font-family: var(--pdl-mono);
+}
+.pdl-console[data-open] {
+  width: min(34vw, 330px);
+  padding: 12px 14px 13px;
+}
+.pdl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.pdl-chip {
+  appearance: none;
+  border: 1px solid rgba(202, 165, 84, 0.35);
+  background: transparent;
+  color: var(--dawn-70);
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.pdl-chip[data-on] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--latent-night, #110f09);
+}
+.pdl-chip--caret {
+  border-color: rgba(235, 227, 214, 0.18);
+  padding-inline: 6px;
+}
+.pdl-thesis {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--dawn-70);
+}
+.pdl-prov {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pdl-ink-faint);
+}
+.pdl-prov__diamond {
+  width: 4px;
+  height: 4px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex: none;
+}
+.pdl-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pdl-toggle {
+  appearance: none;
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  background: transparent;
+  color: var(--dawn-70);
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.pdl-toggle__led {
+  width: 5px;
+  height: 5px;
+  background: rgba(235, 227, 214, 0.3);
+  transform: rotate(45deg);
+}
+.pdl-toggle[data-on] {
+  color: var(--gold);
+  border-color: rgba(202, 165, 84, 0.45);
+}
+.pdl-toggle[data-on] .pdl-toggle__led {
+  background: var(--gold);
+}
+.pdl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pdl-field__label {
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pdl-ink-faint);
+}
+.pdl-range {
+  width: 100%;
+  accent-color: var(--gold);
+}
+.pdl-meter {
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: var(--pdl-ink-faint);
+}
+.pdl-meter[data-warn] {
+  color: #e0674a;
+}
+
+.pdl-gate-warn {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  margin: 0;
+  display: none;
+  font-family: var(--pdl-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e0674a;
+}
+@media (max-width: 1100px), (max-height: 759px) {
+  .pdl-gate-warn {
+    display: block;
+  }
+}
