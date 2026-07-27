@@ -1,0 +1,58 @@
+/* ═══════════════════════════════════════════════════════════════════
+   /claude-workshop — route-scoped neutralizations (ADR-053)
+
+   This page is a HOMEPAGE VARIANT: same LandingPage, same corridor, but
+   the station order is hero → about → corridor → services → contact.
+   Three homepage behaviours assume the production order and have to be
+   neutralized HERE — scoped under `.cw-root` so the homepage keeps them
+   byte-for-byte.
+
+   ⚠ Never port these rules into landing.css / home-v2.css / services.css.
+   They are variant-local by design; a shared-sheet edit would change `/`.
+   Imported LAST by the route so it wins the cascade.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. The entry hold must not cover #about ────────────────────────
+   `useLandingScroll` sets html[data-corridor-entry="1"] whenever the
+   corridor mount's top is below the viewport top — with no upper bound.
+   home-v2.css then pins the corridor's sticky cell `position: fixed`
+   full-viewport (z:3), which on the homepage is invisible because the
+   hero (z:4) is the curtain over it. Here #about (z:2) sits between the
+   hero and the mount, so the armed corridor frame would paint over the
+   bio's last viewport.
+
+   Restoring native sticky is the whole fix: the corridor then simply
+   rises into view after #about — the /test/home-v2 configuration, where
+   a normal-flow section precedes the stage. Engagement is rect-based
+   (`getCorridorEngagement`), so the corridor arms and pins exactly as
+   before. Specificity (0,3,1) beats the shared rule's (0,2,1). */
+html[data-corridor-entry="1"] .cw-root .home-v2-stage__sticky {
+  position: sticky;
+  top: 0;
+  left: auto;
+  width: 100%;
+  margin-left: 0;
+}
+
+/* ── 2. The journey menu can't read this order ──────────────────────
+   `CorridorSectionMenu` renders from MANIFEST_ENTRIES (the production
+   journey) and resolves its active row via `data-active-station`. Here
+   that attribute reads "about" from the second section onward, which
+   maps to an index AFTER services — so the reel would highlight ABOUT
+   through the whole corridor approach and glide backwards on arrival.
+   It would also show dead CONTINUUM / PRACTICE rows (silent no-op
+   clicks — those stations don't exist on this page).
+
+   The 13-tick ladder stays (ADR-031: "the ladder always stays"); only
+   the menu is suppressed. */
+.cw-root .home-v2-section-menu,
+.cw-root .home-v2-section-submenu {
+  display: none;
+}
+
+/* ── 3. The nav's "Vision" row points at a station we removed ───────
+   HudNav's items are hardcoded in React (not parsed markup), so the
+   parse-time href rewrite that fixes the hero CTA can't reach it. */
+.cw-root .hud__nav a[href="#continuum"] {
+  display: none;
+}

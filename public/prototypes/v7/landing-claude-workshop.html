@@ -4196,37 +4196,16 @@ html { scroll-behavior: smooth; }
 <!-- ═══ HUD CHROME ═══ -->
 <div class="hud" aria-hidden="false">
   <div class="hud__corner hud__corner--tl"></div>
-  <div class="hud__corner hud__corner--bl"></div>
   <div class="hud__corner hud__corner--br"></div>
 
-  <!-- Nav trigger — bare three lines, top-right -->
-  <header class="hud__top">
-    <nav class="hud__nav" id="hudNav">
-      <button class="hud__nav__btn" aria-label="Navigation menu" type="button">
-        <span class="bars"><span></span><span></span><span></span></span>
-      </button>
-      <div class="hud__nav__list">
-        <div class="hud__nav__list__head">
-          <span class="k">Navigate</span><span>Stations · 10</span>
-        </div>
-        <a href="#hero" data-station="hero" class="is-active"><span class="num">01</span>Interface</a>
-        <a href="#about" data-station="about"><span class="num">02</span>Bio</a>
-        <a href="#definition" data-station="definition"><span class="num">03</span>Thoughtform</a>
-        <a href="#missing-layer" data-station="missingLayer"><span class="num">04</span>Missing layer</a>
-        <a href="#intelligence-layer" data-station="intelligenceLayer"><span class="num">05</span>Intelligence layer</a>
-        <a href="#continuum" data-station="continuum"><span class="num">06</span>Continuum</a>
-        <a href="#practice" data-station="practice"><span class="num">07</span>Practice</a>
-        <a href="#build" data-station="build"><span class="num">08</span>Build</a>
-        <a href="#services" data-station="services"><span class="num">09</span>Services</a>
-        <a href="#contact" data-station="contact"><span class="num">10</span>Contact</a>
-        <div class="hud__nav__status">
-          <span><span class="k">δ</span><span id="coordD">0.27</span> <span class="k">θ</span><span id="coordT">058.1°</span></span>
-          <span><span class="k">Sector</span> <span id="hudSector">Origin</span></span>
-          <span><span class="k">Depth</span> <span id="hudProgress">00%</span></span>
-        </div>
-      </div>
-    </nav>
-  </header>
+  <!-- Bottom-left wordmark lockup (compass + wordmark, dual gold/dawn),
+       aligned to the left rail (Brand Codex "Hero Omega") and anchored
+       to the BOTTOM-left corner by landing.css (ADR-043). The bottom-left
+       corner bracket is intentionally omitted — the lockup owns that
+       corner. HudNav docks it past 50vh via .hud__brand.is-collapsed. -->
+  <a class="hud__brand" href="#hero" aria-label="Thoughtform — home">
+    <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />
+  </a>
 
   <!-- Left rail: depth gauge -->
   <aside class="hud__rail hud__rail--l">
@@ -4259,58 +4238,56 @@ html { scroll-behavior: smooth; }
 
   <!-- ═══════════ 01 HERO (pinned stage) ═══════════ -->
   <section class="station hero" id="hero" data-station="hero" data-screen-label="01 Hero">
-    <div class="hero__video" aria-hidden="true">
-      <video
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="metadata"
-        poster="/videos/thoughtform-key-visual-2-poster.jpg"
-        disablepictureinpicture
-        disableremoteplayback
-      >
-        <source src="/videos/thoughtform-key-visual-2-web.mp4" type="video/mp4" />
-      </video>
+    <div class="hero__bg" aria-hidden="true" data-parallax="0.03">
+      <img src="/images/Gateway_v1b.webp" alt="" decoding="async" width="2880" height="1620" fetchpriority="high" />
       <div class="hero__video__overlay"></div>
     </div>
+
     <div class="hero__content">
-      <div class="hero__wordmark">
-        <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />
-      </div>
-      <p class="hero__tagline">
-        AI capability, built <em>inside the work.</em>
+      <h1 class="hero__headline">AI capability,<br />built inside the work.</h1>
+      <p class="hero__desc">
+        We map your work to the right intelligence, encode what makes it good, and build capability your team can run.
       </p>
+      <div class="hero__cta">
+        <a class="hero__cta__btn hero__cta__btn--primary" href="#home-corridor-mount">
+          Begin navigation <span class="hero__cta__arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="hero__cta__btn hero__cta__btn--ghost" href="#services">See services</a>
+      </div>
     </div>
+
+    <div class="hero__flywheel hero__flywheel--ipa" aria-hidden="true">THOUGHTFORM /θɔːtfɔːrm · THAWT-form/</div>
   </section>
 
   <!-- ═══════════ 02 BIO · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
-  <section class="station" id="about" data-station="about" data-screen-label="02 Bio">
+  <section class="station" id="about" data-station="about" data-screen-label="09 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
-    <div class="voidwalker">
+    <div class="voidwalker" data-m-group>
       <!-- LEFT · bio -->
-      <div class="voidwalker__copy" data-m-group>
+      <div class="voidwalker__copy" data-m="body" data-m-group>
         <h2 class="voidwalker__name" data-m="title">
           Vince Buyssens
         </h2>
-        <div class="voidwalker__role" data-m="eyebrow">Founder · Navigator · Loop Earplugs AI Strategy</div>
+        <div class="voidwalker__role" data-m="eyebrow">Creative Technologist · Founder · AI Adoption</div>
 
         <p class="voidwalker__bio" data-m="body">
           <strong>Vince</strong> has been navigating the tides of digital
-          change for over a decade: the advent of social media, online
-          communities, and now <em>intelligence itself.</em>
+          change for over a decade: social media, online communities, now
+          <em>intelligence itself.</em>
         </p>
         <p class="voidwalker__bio" data-m="body">
-          That last wave is different. AI is not software to command. It is
-          an intelligence to navigate. Through Thoughtform, Vince helps teams
-          build that relationship: mapping the fit between their work and the
-          intelligence available to it.
+          AI is different: it isn't software to command, but an
+          <span class="voidwalker__bio-accent">intelligence to navigate</span>.
+          Through Thoughtform, he helps teams build that
+          relationship, mapping the fit between their work and the
+          intelligence available.
         </p>
         <p class="voidwalker__bio" data-m="body">
-          He runs the same practice inside Loop Earplugs, leading AI adoption
-          across the company: advising leadership, embedding with teams, and
-          building the tools that power the marketing engine.
+          He runs the same practice inside
+          <span class="voidwalker__bio-mark">Loop Earplugs</span>, leading AI
+          adoption: advising leadership, embedding with teams, building the
+          tools behind the marketing engine.
         </p>
 
         <div class="voidwalker__meta">
@@ -4344,24 +4321,28 @@ html { scroll-behavior: smooth; }
         </div>
       </div>
 
-      <!-- RIGHT · orbital portrait -->
-      <div class="voidwalker__orbit" aria-hidden="true">
+      <!-- RIGHT · orbital portrait. Emerge order (ADR-045): the portrait
+           lands first, then the ring svg / particle halo / corner readouts
+           stagger in around it — delays live in the ABOUT emerge CSS block.
+           data-m attrs are authored here (not JS-tagged); DOM order is
+           paint order, so the portrait stays last. -->
+      <div class="voidwalker__orbit" aria-hidden="true" data-m-group>
         <!-- corner readouts -->
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--tl">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--tl" data-m="eyebrow">
           <span class="k">SUBJECT</span><br>VB · 0001
         </div>
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--tr">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--tr" data-m="eyebrow">
           <span class="k">BEARING</span><br>N · 000 · lock
         </div>
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--bl">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--bl" data-m="eyebrow">
           <span class="k">FIELD</span><br>VOIDWALKER
         </div>
-        <div class="voidwalker__orbit__label voidwalker__orbit__label--br">
+        <div class="voidwalker__orbit__label voidwalker__orbit__label--br" data-m="eyebrow">
           <span class="k">MODE</span><br>navigate
         </div>
 
         <!-- orbital rings & ticks (sigil grammar, amplified) -->
-        <svg class="voidwalker__orbit__svg" viewBox="-200 -200 400 400" fill="none" preserveAspectRatio="xMidYMid meet">
+        <svg class="voidwalker__orbit__svg" data-m="instrument" viewBox="-200 -200 400 400" fill="none" preserveAspectRatio="xMidYMid meet">
           <!-- concentric rings -->
           <g fill="none" stroke-width="0.7">
             <circle r="192" stroke="var(--dawn-15)" stroke-dasharray="1 7"/>
@@ -4441,7 +4422,7 @@ html { scroll-behavior: smooth; }
         </svg>
 
         <!-- static CSS particle halo -->
-        <div class="voidwalker__orbit__particles">
+        <div class="voidwalker__orbit__particles" data-m="fade">
           <span style="--a: 12deg;  --r: 46%; --o: 0.8;"></span>
           <span class="d" style="--a: 38deg; --r: 42%;"></span>
           <span style="--a: 68deg;  --r: 48%; --o: 0.6;"></span>
@@ -4457,11 +4438,19 @@ html { scroll-behavior: smooth; }
         </div>
 
         <!-- portrait, centered, black-and-white -->
-        <div class="voidwalker__orbit__portrait">
+        <div class="voidwalker__orbit__portrait" data-m="portrait">
           <img src="assets/vince-portrait.jpg" alt="Vince Buyssens, founder of Thoughtform" loading="lazy"/>
         </div>
       </div>
     </div>
+
+    <!-- ADR-053 INVARIANT: the about-stage portal slot is deliberately
+         ABSENT here. On this variant #about sits ABOVE the corridor and
+         #services, so that slot would engage the ADR-047 deck-flip with
+         its clock clamped to 1 — the services card ring would arrive
+         already decommissioned (ghost cards, no orbits, dimmed mark) and
+         about-stage.css would pull a -100svh margin under the hero.
+         The static voidwalker above IS the about surface here. -->
   </section>
 
   <!-- ═══════════ 02 THOUGHTFORM — WHAT WE DO (sigil at center) ═══════════ -->
@@ -5439,126 +5428,11 @@ html { scroll-behavior: smooth; }
        Workshops · Strategy) and the closing funnel CTA that lands
        the user on /contact. The CTA in the Practice copy column
        (`See how we run it`) deep-links here via #execTitle. ===== -->
-  <section class="station" id="services" data-station="services" data-screen-label="09 Services">
+  <section class="station station--services" id="services" data-station="services" data-screen-label="08 Services">
     <div class="station__idx">Services<span class="landmark">Landmark · how we run it</span></div>
 
-    <!-- ── Execution strip — Keynotes · Workshops · Strategy ── -->
-    <div class="exec" aria-labelledby="execTitle">
-      <div class="exec__header">
-        <div class="exec__eyebrow" id="execTitle">/ Services - How we run it</div>
-        <p class="exec__lede">
-          Three ways to bring the practice in —<br>
-          <em>inspire the room, train the team, shape the roadmap.</em>
-        </p>
-      </div>
-
-      <div class="exec__grid">
-        <!-- Keynote -->
-        <div class="exec__card" role="button" tabindex="0">
-          <div class="exec__card__head">
-            <span class="k">Svc · 01</span>
-            <span class="exec__card__phase">Navigate</span>
-          </div>
-          <div class="exec__card__kicker">Inspire //</div>
-          <h3>Keynotes</h3>
-          <p>
-            See AI for what it actually is — an alien intelligence built
-            from human material. For rooms that need the signal, fast.
-          </p>
-          <div class="exec__card__foot">
-            <span>45–90 min · live or stage</span><span class="arrow">→</span>
-          </div>
-        </div>
-
-        <!-- Workshops -->
-        <div class="exec__card exec__card--lead" role="button" tabindex="0">
-          <div class="exec__card__head">
-            <span class="k">Svc · 02</span>
-            <span class="exec__card__phase">Navigate · Encode</span>
-          </div>
-          <div class="exec__card__kicker">Practice //</div>
-          <h3>Workshops</h3>
-          <p>
-            Hands-on sessions where teams learn to <em>think</em> with AI
-            tools. Building projects, encoding knowledge into skills.
-          </p>
-          <div class="exec__card__foot">
-            <span>2–5 days · hands-on</span><span class="arrow">→</span>
-          </div>
-        </div>
-
-        <!-- Strategy -->
-        <div class="exec__card" role="button" tabindex="0">
-          <div class="exec__card__head">
-            <span class="k">Svc · 03</span>
-            <span class="exec__card__phase">Encode · Build</span>
-          </div>
-          <div class="exec__card__kicker">Transform //</div>
-          <h3>Strategy</h3>
-          <p>
-            Map where your team is, design an adoption path that fits
-            your culture, and build the tools that make it <em>stick.</em>
-          </p>
-          <div class="exec__card__foot">
-            <span>ongoing · embedded</span><span class="arrow">→</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── CTA terminal — centered funnel lock ── -->
-    <div class="practice-cta practice-cta--funnel">
-      <span class="br"></span><span class="bl"></span>
-
-      <!-- funnel converging lines from above -->
-      <svg class="practice-cta__lines" viewBox="0 0 1200 176" preserveAspectRatio="none" aria-hidden="true">
-        <g stroke="var(--gold)" stroke-opacity="0.35" stroke-width="0.8" fill="none">
-          <path d="M200 0 L200 14"/>
-          <path d="M600 0 L600 22"/>
-          <path d="M1000 0 L1000 14"/>
-          <path d="M200 14 L600 172"/>
-          <path d="M600 22 L600 172"/>
-          <path d="M1000 14 L600 172"/>
-        </g>
-        <g stroke="var(--dawn-15)" stroke-width="0.4" fill="none" stroke-dasharray="1 4">
-          <path d="M200 14 L200 58 L600 128"/>
-          <path d="M1000 14 L1000 58 L600 128"/>
-        </g>
-        <g fill="var(--gold)" fill-opacity="0.9">
-          <rect x="196" y="10" width="8" height="8" transform="rotate(45 200 14)"/>
-          <rect x="596" y="18" width="8" height="8" transform="rotate(45 600 22)"/>
-          <rect x="996" y="10" width="8" height="8" transform="rotate(45 1000 14)"/>
-          <circle cx="600" cy="172" r="3"/>
-        </g>
-      </svg>
-
-
-      <!-- centered copy + CTAs -->
-      <div class="practice-cta__copy practice-cta__copy--center">
-        <div class="practice-cta__eyebrow">Destination · next move</div>
-        <h3 class="practice-cta__title">
-          Bring the practice <em>to your team.</em>
-        </h3>
-        <p class="practice-cta__lede">
-          One route. Three vehicles. Every engagement tuned to where your
-          team actually is on the map.
-        </p>
-        <div class="practice-cta__ctas">
-          <a href="#contact" class="btn btn--solid">Plot a course<span class="arrow"></span></a>
-          <a href="mailto:hello@thoughtform.co" class="btn">hello@thoughtform.co</a>
-        </div>
-        <div class="practice-cta__trail">
-          <span class="dot"></span><span>Reply · within 48h</span><span class="dot"></span>
-        </div>
-      </div>
-    </div>
+    <div class="services-stage-root" data-services-root></div>
   </section>
-
-  <!-- ═══════════ CONNECTOR · 06 → 07 (slot: React portal mount) ═══════════
-       Slot ID stays "practice-to-about" for stability with persisted
-       celestial_slots rows. The connector now bridges the Services
-       station into About. ====================================== -->
-  <div data-celestial-slot="practice-to-about"></div>
 
   <!-- ═══════════ 06 CONTACT ═══════════ -->
   <section class="station" id="contact" data-station="contact" data-screen-label="10 Contact">
