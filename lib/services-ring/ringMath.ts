@@ -388,6 +388,33 @@ export function drawerSlideX(t: number, cardW: number, seam: number = DRAWER_SEA
   return clamp01(t) * (cardW - seam);
 }
 
+/** How far BEHIND the card's own content plane the drawer's sits while the
+ *  drawer is housed. The gap is what sells "slides out from under the face"
+ *  during the slide; renderOrder alone only fixes paint order, not parallax. */
+export const DRAWER_HOUSED_DEPTH = 0.02;
+
+/**
+ * The drawer content plane's depth BEHIND the card's, at open level `t` —
+ * `DRAWER_HOUSED_DEPTH` housed, **0 at full open** (owner, 2026-07-27).
+ *
+ * A constant offset is a constant perspective mismatch: the drawer's baked
+ * border projects from further away than the card's, so it lands ~0.7%
+ * shorter (≈3px top and bottom at the calibration size) even with the pair
+ * perfectly square to the camera. That is the last thing between the open
+ * pair and one flush-edged component, and closing it costs nothing, because
+ * the depth only ever did work while the two planes OVERLAP — and the
+ * overlap shrinks to the `DRAWER_SEAM` sliver exactly as `t` → 1. Coplanar
+ * z-fighting is therefore unreachable: by the time the gap is 0 the planes
+ * no longer share screen area, and what remains is covered by the card face
+ * (which paints later, renderOrder 0.1 > 0.07).
+ *
+ * Pure; identity at 0, so the closed ring and the ADR-047 deck (which snaps
+ * `drawerT` to 0 on engage) are byte-identical.
+ */
+export function drawerContentDepth(t: number, housed: number = DRAWER_HOUSED_DEPTH): number {
+  return housed * (1 - clamp01(t));
+}
+
 /** How far the CARD slides left so the open pair stays centred on the
  *  brandmark (owner's composition call). Half the drawer's visible extent,
  *  expressed in the RING group's units — hence `× cardScale`, because the

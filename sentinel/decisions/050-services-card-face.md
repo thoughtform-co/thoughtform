@@ -218,6 +218,12 @@ The defaults above are unchanged, so the flag remains a one-word revert.
    not chase edge flushness from a screenshot taken with the cursor parked
    off-pair.
 
+   **Superseded by the flush-seam pass (owner, 2026-07-27) — the
+   foreshortening was not a measurement artifact, it was the defect.** See
+   [Flush seam](#flush-seam-2026-07-27-owner-directed): the drawer rect is
+   now within ~1px of the card's at every cursor position, so an off-pair
+   screenshot IS a valid read of edge flushness.
+
    This also restores ADR-029's original guardrail in full ("the card is ONE
    object; the DOM only places hit targets"). The DOM plate was the deviation.
 
@@ -397,6 +403,73 @@ already suppresses callouts that would sit on the front card's photo (they
 read as annotating the photograph, not the wireframe); that same filter now
 tests the drawer's published rect as well. Same rule, one more rect.
 
+## Flush seam (2026-07-27, owner-directed)
+
+> "make sure that the borders of the right panel align perfectly with those
+> of the left panel so it feels they're one-component"
+
+Seen in production, the tray's top and bottom borders sat visibly inside the
+card's. Measured against the live corridor at 1600×1000 with the cursor at
+the viewport centre, the tray projected at **94.6%** of the card's height —
+top edge ~20px low, bottom ~28px high. It read as two misaligned panels.
+
+**Root cause: the pair is rigid, so the tray's SIZE is a function of the
+pair's yaw.** The tray is offset along card-local +x, so any yaw of the
+assembly rotates it deeper than the card, and perspective then draws it
+smaller. Rev 3 already knew half of this — it flattens `bias` on open for
+exactly this reason — but flattening only the bias leaves three other yaw
+terms live, and the error is proportional to `sin(yaw) × offset`. There is
+no partial setting that keeps the edges flush: **the open pair has to be
+square to the camera.** Three fixes, each closing one term:
+
+1. **The flatten is TOTAL ON YAW** (`ServicesCardRing`): `ringYaw` is now
+   `(cardFacingYaw + tilt.yaw + bias.yaw) × biasKeep` rather than
+   `cardFacingYaw + tilt.yaw + bias.yaw × biasKeep`. The bias term is
+   algebraically unchanged, so this is a strict generalisation and drawerT=0
+   stays byte-identical. 94.6% → **99.1%**.
+2. **`drawerContentDepth(t)`** (three-free `ringMath`, unit-pinned): the
+   drawer's content plane closes its `DRAWER_HOUSED_DEPTH` (0.02) gap behind
+   the card's as it opens, reaching **exactly 0**. A constant depth offset is
+   a constant perspective mismatch — ~0.7%, ≈3px at each edge. Coplanar
+   z-fighting is unreachable because the depth only ever does work where the
+   two planes OVERLAP, and that overlap shrinks to the `DRAWER_SEAM` sliver
+   on exactly the same clock. 99.1% → **99.98%** at a centred cursor.
+3. **Drawer stillness on the rig's yaw** (`BrandmarkPhysicsCoreActor`): the
+   `pointerLookRef` group sits ABOVE the ring, so its own yaw re-opened the
+   gap as the cursor travelled — a far-corner cursor still threw the tray 4%
+   tall. Its pointer YAW target now eases to 0 while `openPlateRef` holds a
+   service (a READ; `ServicesStage` stays the single writer), reusing the
+   `deckStill` channel's shape. Identity whenever nothing is open.
+
+**PITCH survives all three, and that is what keeps pointer-look alive.**
+Pitch rotates about the very axis the tray is offset ALONG, so it moves both
+slabs identically and can never break the seam — the open pair still leans
+with the cursor, it just no longer turns. ADR-021 is untouched (this removes
+motion, never adds a clock).
+
+⚠ This is the **sixth** file in a surface the rule documents as five —
+`BrandmarkPhysicsCoreActor` is now a participant in the drawer's state.
+
+### Verification (2026-07-27)
+
+- `npm run verify` green — **366** unit tests (6 new: `drawerContentDepth`
+  identity/monotonicity/clamping, and the overlap-vs-depth pairing that is
+  the z-fighting argument).
+- `services-ring-smoke` on `desktop`: **8 passed, 1 skipped** — the
+  documented baseline, unchanged.
+- Headed real-GPU measurement at 1600×1000 against the PRODUCTION route,
+  card + drawer rects recovered from the published shims, sampled at three
+  cursor positions (viewport centre / on the pair / far corner):
+
+  | cursor           | before | after yaw | after all three |
+  | ---------------- | ------ | --------- | --------------- |
+  | viewport centre  | 0.946  | 0.991     | **0.9986**      |
+  | on the pair      | 0.953  | 0.998     | **1.0004**      |
+  | far corner (5,5) | 1.144  | 1.034     | **0.9990**      |
+
+  (drawer height ÷ card height; top/bottom edge deltas ≤ 1.2px in the final
+  column, from 20px/28px.)
+
 ## Open questions
 
 - ~~The card face keeps its baked `OPEN →` chit while the drawer is out.~~
@@ -482,6 +555,13 @@ tests the drawer's published rect as well. Same rule, one more rect.
   boolean, or two writers can elect on one card.
 - Drawer renderOrder stays POSITIVE and nested inside the card's range; a
   negative slot puts orbit-track ink over the drawer's text.
+- **The open pair stays square to the camera in YAW — all of it.** Card yaw,
+  rig yaw and the drawer's content depth all reach 0 at full open, and the
+  seam is only flush because all three do. Restoring any one of them (a
+  "livelier" open pair, a nonzero housed depth kept for the emerge read)
+  re-splits the borders, because the error goes as `sin(yaw) × offset` and
+  the tray is a card-width from the pivot. PITCH is the channel to spend
+  liveliness on — it cannot break the seam.
 - `DECK_INTRA_ORDERS` is positional over `cardGroup.children` and both rebase
   loops are length-bounded — append children, and extend it in lockstep. This
   is also why the drawer children mount with the FLAG, not with their textures:

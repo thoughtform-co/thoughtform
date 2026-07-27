@@ -105,10 +105,12 @@ import {
 import { seatNdcFromRect, seatWorldHeight } from "@/lib/services-ring/viewportSeat";
 import {
   DRAWER_DAMP_RATE,
+  DRAWER_HOUSED_DEPTH,
   DRAWER_RENDER_ORDERS,
   DRAWER_REVEAL_FRAC,
   DRAWER_SEAM,
   RING_CARD_RENDER_ORDERS,
+  drawerContentDepth,
   drawerOpenBoost,
   drawerRecenterX,
   drawerSlideX,
@@ -2142,7 +2144,9 @@ export function ServicesCardRing({
            itself is latched above; `drawerTextures` arriving re-renders this
            callback, and the damped level then eases open from rest. */
         const wantOpen =
-          !deckEngaged && drawerTextures !== null && openPlateRef.current.serviceId === SERVICES[i].id;
+          !deckEngaged &&
+          drawerTextures !== null &&
+          openPlateRef.current.serviceId === SERVICES[i].id;
         if (deckEngaged) drawerLevelRef.current[i] = 0;
         else {
           drawerLevelRef.current[i] +=
@@ -2159,12 +2163,25 @@ export function ServicesCardRing({
          opens is the device turning to face you, and it keeps the two slabs
          rigid (one object) rather than hinging them apart.
 
-         Only the BIAS is flattened: `tilt` (pointer-look) survives, so the
-         open pair still leans with the cursor — ADR-021 intact. Identity at
-         drawerT = 0. */
+         The FLATTEN IS TOTAL ON YAW (owner, 2026-07-27), not just the bias:
+         ANY residual yaw — the facing term, the pointer's — rotates the pair
+         about the card's centre, which swings the drawer (offset along local
+         +x) deeper and projects it SMALLER than the card. Measured at a
+         neutral cursor with only the bias flattened: the tray came out at
+         94.6% of the card's height, so its top edge sat ~20px low and its
+         bottom ~28px high — read as two misaligned panels, not one device.
+         The misalignment is proportional to sin(yaw) × the drawer's offset,
+         so there is no partial setting that keeps the edges flush; the open
+         pair has to be square to the camera.
+
+         PITCH survives untouched, and that is what keeps pointer-look alive
+         (ADR-021 intact): the drawer is offset along x ONLY, so a rotation
+         about the x-axis moves both slabs identically and cannot break the
+         seam — the pair leans with the cursor without ever stepping apart.
+         Identity at drawerT = 0, and `bias.yaw × biasKeep` is unchanged. */
       const biasKeep = 1 - drawerT;
       const ringPitch = tilt.pitch + bias.pitch * biasKeep;
-      const ringYaw = cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw * biasKeep;
+      const ringYaw = (cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw) * biasKeep;
       const ringScale = depthScale(placed.nz, scaleRange);
       // Front-card emphasis (owner 2026-07-17): the in-view card reads
       // BIGGER than its neighbours, more so on narrow viewports. A separate
@@ -2287,6 +2304,16 @@ export function ServicesCardRing({
         drawerGroup.visible = live;
         if (live) {
           drawerGroup.position.x = drawerSlideX(drawerT, cardW, DRAWER_SEAM);
+          /* …and the content plane rises to MEET the card's as it clears it
+             (owner, 2026-07-27). Housed, it sits `DRAWER_HOUSED_DEPTH` behind
+             the face so the slide reads as sliding out from under it; at full
+             open that depth is a pure perspective mismatch, projecting the
+             tray's baked border ~0.7% short of the card's. See
+             `drawerContentDepth` for why closing the gap cannot z-fight. */
+          const drawerMesh = drawerMeshRefs.current[i];
+          if (drawerMesh) {
+            drawerMesh.position.z = slabDepth / 2 + RING_CONTENT_LIFT - drawerContentDepth(drawerT);
+          }
           const reveal = Math.min(1, drawerT / DRAWER_REVEAL_FRAC);
           const drawerO = opacity * reveal;
           const drawerMat = drawerMatRefs.current[i];
@@ -2611,54 +2638,60 @@ export function ServicesCardRing({
               rebase. The map stays null until the bake lands; the group is
               `visible={false}` while shut and its open level is gated on the
               same texture, so an unmapped drawer is never on screen. */}
-          {openDrawer && drawerSlabGeometry && drawerGlintGeometry && drawerSlabMaterials && drawerGlintMaterials && (
-            <group
-              ref={(el) => {
-                drawerGroupRefs.current[i] = el;
-              }}
-              visible={false}
-            >
-              {/* Tray geometry, not the card's: a plain rectangle (no chamfer)
+          {openDrawer &&
+            drawerSlabGeometry &&
+            drawerGlintGeometry &&
+            drawerSlabMaterials &&
+            drawerGlintMaterials && (
+              <group
+                ref={(el) => {
+                  drawerGroupRefs.current[i] = el;
+                }}
+                visible={false}
+              >
+                {/* Tray geometry, not the card's: a plain rectangle (no chamfer)
                   with a glint that leaves the seam edge unlit — the drawer is
                   the card UNFOLDING, so only the card carries the device's
                   chamfered identity silhouette. */}
-              <mesh
-                renderOrder={DRAWER_RENDER_ORDERS.slab}
-                geometry={drawerSlabGeometry}
-                material={drawerSlabMaterials[i]}
-                frustumCulled={false}
-              />
-              <mesh
-                renderOrder={DRAWER_RENDER_ORDERS.content}
-                position={[0, 0, slabDepth / 2 + RING_CONTENT_LIFT - 0.02]}
-                ref={(el) => {
-                  drawerMeshRefs.current[i] = el;
-                }}
-                frustumCulled={false}
-              >
-                <planeGeometry args={[cardW, cardHeight]} />
-                <meshBasicMaterial
-                  ref={(el) => {
-                    drawerMatRefs.current[i] = el;
-                  }}
-                  map={drawerTextures?.[i] ?? null}
-                  transparent
-                  opacity={0}
-                  side={THREE.FrontSide}
-                  depthWrite={false}
-                  depthTest
-                  blending={THREE.NormalBlending}
-                  toneMapped={false}
+                <mesh
+                  renderOrder={DRAWER_RENDER_ORDERS.slab}
+                  geometry={drawerSlabGeometry}
+                  material={drawerSlabMaterials[i]}
+                  frustumCulled={false}
                 />
-              </mesh>
-              <lineSegments
-                renderOrder={DRAWER_RENDER_ORDERS.glint}
-                geometry={drawerGlintGeometry}
-                material={drawerGlintMaterials[i]}
-                frustumCulled={false}
-              />
-            </group>
-          )}
+                <mesh
+                  renderOrder={DRAWER_RENDER_ORDERS.content}
+                  /* Housed depth — the frame loop eases this to 0 as the tray
+                   clears the face (drawerContentDepth). */
+                  position={[0, 0, slabDepth / 2 + RING_CONTENT_LIFT - DRAWER_HOUSED_DEPTH]}
+                  ref={(el) => {
+                    drawerMeshRefs.current[i] = el;
+                  }}
+                  frustumCulled={false}
+                >
+                  <planeGeometry args={[cardW, cardHeight]} />
+                  <meshBasicMaterial
+                    ref={(el) => {
+                      drawerMatRefs.current[i] = el;
+                    }}
+                    map={drawerTextures?.[i] ?? null}
+                    transparent
+                    opacity={0}
+                    side={THREE.FrontSide}
+                    depthWrite={false}
+                    depthTest
+                    blending={THREE.NormalBlending}
+                    toneMapped={false}
+                  />
+                </mesh>
+                <lineSegments
+                  renderOrder={DRAWER_RENDER_ORDERS.glint}
+                  geometry={drawerGlintGeometry}
+                  material={drawerGlintMaterials[i]}
+                  frustumCulled={false}
+                />
+              </group>
+            )}
         </group>
       ))}
     </group>

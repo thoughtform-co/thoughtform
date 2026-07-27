@@ -57,6 +57,8 @@ import {
   DRAWER_REVEAL_FRAC,
   DRAWER_RENDER_ORDERS,
   RING_CARD_RENDER_ORDERS,
+  DRAWER_HOUSED_DEPTH,
+  drawerContentDepth,
   drawerSlideX,
   drawerRecenterX,
   type RingSpringState,
@@ -701,6 +703,43 @@ describe("drawer slide + recenter (ADR-050 rev 3)", () => {
     const a = drawerRecenterX(1, cardW, DRAWER_SEAM, 0.5);
     const b = drawerRecenterX(1, cardW, DRAWER_SEAM, 1);
     expect(b).toBeCloseTo(a * 2, 12);
+  });
+
+  it("drawerContentDepth is the housed depth closed and EXACTLY 0 open", () => {
+    // Closed must be the housed value verbatim — the JSX seats the mesh
+    // there, so anything else would jump the plane on the first live frame.
+    expect(drawerContentDepth(0)).toBe(DRAWER_HOUSED_DEPTH);
+    // Open must be exact zero, not merely small: any residual depth is a
+    // constant perspective mismatch between the two baked borders, which is
+    // precisely the misalignment this function exists to remove.
+    expect(drawerContentDepth(1)).toBe(0);
+  });
+
+  it("drawerContentDepth closes monotonically and clamps out-of-range levels", () => {
+    let prev = Infinity;
+    for (let t = 0; t <= 1.0001; t += 0.05) {
+      const z = drawerContentDepth(t);
+      expect(z).toBeLessThanOrEqual(prev);
+      expect(z).toBeGreaterThanOrEqual(0);
+      prev = z;
+    }
+    // An overshooting spring must never push the plane IN FRONT of the
+    // card's (negative depth) — that would invert the emerge-from-under read.
+    expect(drawerContentDepth(1.4)).toBe(0);
+    expect(drawerContentDepth(-0.4)).toBe(DRAWER_HOUSED_DEPTH);
+  });
+
+  it("the depth is still open while the two planes meaningfully overlap", () => {
+    // Why coplanar can't z-fight: the depth only does work where the drawer
+    // and the card face share screen area, and that overlap shrinks to the
+    // seam sliver exactly as the depth reaches 0. Pin the pairing — at the
+    // level where the drawer is HALF out, real separation must remain.
+    const halfOut = 0.5;
+    expect(drawerSlideX(halfOut, cardW)).toBeGreaterThan(cardW * 0.4);
+    expect(drawerContentDepth(halfOut)).toBeGreaterThan(DRAWER_HOUSED_DEPTH * 0.4);
+    // …and once the slide is seated, the planes no longer overlap at all.
+    expect(drawerSlideX(1, cardW)).toBeCloseTo(cardW - DRAWER_SEAM, 12);
+    expect(drawerContentDepth(1)).toBe(0);
   });
 
   it("the drawer's reveal ramp completes while still behind the card", () => {

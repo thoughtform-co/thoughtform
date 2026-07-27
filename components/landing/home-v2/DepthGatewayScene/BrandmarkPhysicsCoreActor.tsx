@@ -104,6 +104,7 @@ import {
 } from "@/lib/services-ring/continuumBandMath";
 import { continuumBandAnchorsRef } from "@/lib/services-ring/continuumBandAnchorsRef";
 import { continuumStageProgressRef } from "@/lib/services-ring/continuumStageProgressRef";
+import { openPlateRef } from "@/lib/services-ring/openPlateRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { getServicePose } from "@/lib/home-v2/servicePose";
@@ -1181,9 +1182,26 @@ export function BrandmarkPhysicsCoreActor({
         ? 1 - Math.max(exitT, aboutStageProgressRef.current.progress > 0 ? 1 : 0)
         : 1;
 
+      /* Drawer stillness (ADR-050, 2026-07-27) — YAW ONLY, and only while a
+         service drawer is out. The open pair is a card plus a tray offset
+         along the card's local +x, so any yaw of THIS group puts the two
+         slabs at different depths; perspective then projects them at
+         different sizes and the tray's top/bottom borders step away from the
+         card's. Flattening the card's own yaw (ServicesCardRing) fixes the
+         pair for a centred cursor, but this group sits above it, so its yaw
+         re-opens the gap as the cursor travels — at a far-corner cursor the
+         tray still came out ~4% taller than the card.
+         PITCH is deliberately untouched: it rotates about the very axis the
+         tray is offset ALONG, so it moves both slabs identically and can
+         never break the seam — the instrument keeps leaning with the cursor.
+         The existing damp eases the yaw home rather than snapping it, and
+         this is a READ of `openPlateRef` (ServicesStage stays its one
+         writer). Identity whenever nothing is open. */
+      const drawerStill = openPlateRef.current.serviceId !== null ? 0 : 1;
+
       // Pointer-look channel — nudge toward the cursor when parked.
       const tgtPitch = engaged ? pointerTargetRef.current.pitch * deckStill : 0;
-      const tgtYaw = engaged ? pointerTargetRef.current.yaw * deckStill : 0;
+      const tgtYaw = engaged ? pointerTargetRef.current.yaw * deckStill * drawerStill : 0;
       const damp = pointerDampRef.current;
       damp.pitch += (tgtPitch - damp.pitch) * k;
       damp.yaw += (tgtYaw - damp.yaw) * k;
