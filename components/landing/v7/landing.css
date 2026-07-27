@@ -9544,9 +9544,11 @@ html {
   margin: 0 0 18px;
   text-wrap: pretty;
 }
-.voidwalker__bio:last-of-type {
-  color: var(--dawn-70);
-}
+/* The closing paragraph used to dim to --dawn-70 via :last-of-type. Removed
+   (owner, 2026-07-27): the Loop Earplugs line is a credential, not a footnote,
+   and trailing off made it read as the least important thing in the column.
+   This also makes the note below literally true — the bio column is now
+   semantic dawn throughout, with the accent span as the ONE exception. */
 .voidwalker__bio em {
   font-style: normal;
   color: var(--dawn);
@@ -9590,6 +9592,32 @@ html {
   box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+/* Entity mark — dawn ink, gold UNDERLINE (owner, 2026-07-27: "Loop Earplugs"
+   in bio paragraph 3). The quietest of the column's four emphasis kinds: the
+   accent block above shouts, `em`/`strong` say nothing, and this names a real
+   organisation inside running copy.
+
+   `text-decoration` rather than a border-bottom precisely because this is
+   INLINE text that can wrap — a border paints one box across the whole
+   sliced inline, an underline follows each line fragment. (Same reason the
+   accent above needs box-decoration-break: clone.)
+
+   Gold here is `--gold`, the site brand gold, which is what "tensor gold"
+   means everywhere in the DOM layer — including the accent's own note above.
+   The literal TENSOR_GOLD (#b08b42, goldPalette.ts) is deliberately scoped
+   to the WebGL brandmark + sphere and must not leak into type.
+
+   NOT a link: no href, no pointer, no hover state. If it ever becomes one,
+   it needs a real <a> and the underline should move to the anchor. */
+.voidwalker__bio-mark {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 1px;
+  /* Clear of the descenders in "Earplugs" — at 15–18px body this lands the
+     rule just under the baseline without touching the p/g tails. */
+  text-underline-offset: 0.22em;
 }
 .voidwalker__meta {
   margin-top: 28px;

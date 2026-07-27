@@ -56,6 +56,13 @@ function BioText({ segments }: { segments: readonly BioSegment[] }) {
         if (typeof seg === "string") return <span key={i}>{seg}</span>;
         if ("em" in seg) return <em key={i}>{seg.em}</em>;
         if ("strong" in seg) return <strong key={i}>{seg.strong}</strong>;
+        // Not an <a>: the mark names an entity, it does not navigate.
+        if ("mark" in seg)
+          return (
+            <span key={i} className="voidwalker__bio-mark">
+              {seg.mark}
+            </span>
+          );
         return (
           <span key={i} className="voidwalker__bio-accent">
             {seg.accent}

@@ -15,9 +15,20 @@
  * the section menu's inverse-video block, not gold text. Reserved for a
  * single owner-named phrase — do not reuse it for general emphasis, that is
  * what `em`/`strong` are for.
+ *
+ * `{ mark }` is the quietest of the four (owner, 2026-07-27): dawn ink with
+ * a gold UNDERLINE (`.voidwalker__bio-mark`). It names a real-world entity
+ * inside running copy — currently "Loop Earplugs" — where the accent block
+ * would shout and `em`/`strong` would say nothing. It is NOT a link: there
+ * is no href, so it must not render as an `<a>` or take link affordances.
  */
 
-export type BioSegment = string | { em: string } | { strong: string } | { accent: string };
+export type BioSegment =
+  | string
+  | { em: string }
+  | { strong: string }
+  | { accent: string }
+  | { mark: string };
 
 export const ABOUT_STAGE = {
   /** The h2 — the name only, rendered UPPERCASE via CSS (owner 2026-07-17:
@@ -36,7 +47,9 @@ export const ABOUT_STAGE = {
       ". Through Thoughtform, he helps teams build that relationship, mapping the fit between their work and the intelligence available.",
     ],
     [
-      "He runs the same practice inside Loop Earplugs, leading AI adoption: advising leadership, embedding with teams, building the tools behind the marketing engine.",
+      "He runs the same practice inside ",
+      { mark: "Loop Earplugs" },
+      ", leading AI adoption: advising leadership, embedding with teams, building the tools behind the marketing engine.",
     ],
   ] as readonly BioSegment[][],
   meta: [
