@@ -71,6 +71,18 @@ inherited its ambient-cover role.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
   strings fails the registry test.
+- **Arrival is PER-PANEL, departure is whole-plane.** Every panel carries
+  `data-fl-panel` + an inline `--ci-off`; the sheet's TERMINAL POWER-ON block
+  runs the `#about` stutter off `--svc-proof-in`. It is scrubbed `clamp()`
+  math on purpose — reversible, no keyframes, no writer. The 2.5px tear must
+  stay exactly 0 at rest: these zones are absolutely positioned against the
+  rail's tick ladder, so a residual shift is a drift bug, not a flourish.
+- **The corner readout has its own `proof` row** (`sectionLabel.ts`), seated
+  before `services` and selected by `sectionReadout(idx, proofOwns)`. It is
+  NOT a manifest entry — the casefile shares `#services`' DOM section and
+  rail detent, and an entry would break the 1:1 drift guard. The flag comes
+  from `proofRelease` (not `proofPresence`, which would flicker with the
+  panel fade) and rests at 1 ⇒ "SERVICES".
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.

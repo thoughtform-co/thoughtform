@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { type ScrambleJob, advanceScrambles, queueScramble } from "@/lib/home-v2/captionScramble";
 import { CASES, PROOF_CASE } from "@/lib/cases/registry";
@@ -202,35 +202,77 @@ export function ServicesCasefile() {
   return (
     <section className="fl-case" ref={rootRef} aria-label={`Case file — ${def.client}`}>
       {/* ── Station chrome ──────────────────────────────────────────── */}
-      <span className="fl-case__label" data-fl-text="FLG / Field log · 00">
+      <span
+        className="fl-case__label"
+        data-fl-panel
+        style={{ "--ci-off": 0 } as CSSProperties}
+        data-fl-text="FLG / Field log · 00"
+      >
         FLG / Field log · 00
       </span>
-      <span className="fl-case__sys">
+      <span className="fl-case__sys" data-fl-panel style={{ "--ci-off": 0.04 } as CSSProperties}>
         <i className="fl-diamond" aria-hidden="true" />
         <span data-fl-text="TF // Field log — /expeditions/">TF // Field log — /expeditions/</span>
       </span>
-      <span className="fl-case__code" data-fl-text={`Log ${file.logCode} · ${file.state}`}>
+      <span
+        className="fl-case__code"
+        data-fl-panel
+        style={{ "--ci-off": 0.04 } as CSSProperties}
+        data-fl-text={`Log ${file.logCode} · ${file.state}`}
+      >
         {`Log ${file.logCode} · ${file.state}`}
       </span>
 
-      <ClientTabs
-        tabs={CASEFILE_TABS}
-        activeSlug={def.slug}
-        onSelect={selectClient}
-        controls={panelId}
-      />
+      <div data-fl-panel style={{ "--ci-off": 0.07 } as CSSProperties}>
+        <ClientTabs
+          tabs={CASEFILE_TABS}
+          activeSlug={def.slug}
+          onSelect={selectClient}
+          controls={panelId}
+        />
+      </div>
 
       {/* ── Connection grammar — the corridor caption card's own reticle
              marks and dashed runs (ADR-056; variant E of the lab). ────── */}
-      <i className="fl-rule fl-rule--section" aria-hidden="true" />
-      <i className="fl-split" aria-hidden="true" />
-      <i className="fl-rule fl-rule--brief" aria-hidden="true" />
-      <i className="fl-rule fl-rule--viz" aria-hidden="true" />
-      <i className="fl-ret fl-ret--tr" aria-hidden="true" />
-      <i className="fl-ret fl-ret--bl" aria-hidden="true" />
+      <i
+        className="fl-rule fl-rule--section"
+        data-fl-panel
+        style={{ "--ci-off": 0.1 } as CSSProperties}
+        aria-hidden="true"
+      />
+      <i
+        className="fl-split"
+        data-fl-panel
+        style={{ "--ci-off": 0.14 } as CSSProperties}
+        aria-hidden="true"
+      />
+      <i
+        className="fl-rule fl-rule--brief"
+        data-fl-panel
+        style={{ "--ci-off": 0.14 } as CSSProperties}
+        aria-hidden="true"
+      />
+      <i
+        className="fl-rule fl-rule--viz"
+        data-fl-panel
+        style={{ "--ci-off": 0.14 } as CSSProperties}
+        aria-hidden="true"
+      />
+      <i
+        className="fl-ret fl-ret--tr"
+        data-fl-panel
+        style={{ "--ci-off": 0.18 } as CSSProperties}
+        aria-hidden="true"
+      />
+      <i
+        className="fl-ret fl-ret--bl"
+        data-fl-panel
+        style={{ "--ci-off": 0.18 } as CSSProperties}
+        aria-hidden="true"
+      />
 
       {/* ── Left column · brief ─────────────────────────────────────── */}
-      <div className="fl-brief">
+      <div className="fl-brief" data-fl-panel style={{ "--ci-off": 0.24 } as CSSProperties}>
         <span className="fl-desig">Brief — expedition {file.ix}</span>
         <h3 className="fl-brief__title">
           <span data-fl-text={file.title.pre ?? ""}>{file.title.pre}</span>
@@ -258,7 +300,7 @@ export function ServicesCasefile() {
       <TrackPanel key={`${def.slug}-${track.id}`} track={track} id={panelId} labelledBy={rowId} />
 
       {/* ── Foot ────────────────────────────────────────────────────── */}
-      <div className="fl-foot">
+      <div className="fl-foot" data-fl-panel style={{ "--ci-off": 0.56 } as CSSProperties}>
         <span className="fl-tele">
           <i className="fl-diamond" aria-hidden="true" />
           {`00 · Field log · ${file.logCode} · `}

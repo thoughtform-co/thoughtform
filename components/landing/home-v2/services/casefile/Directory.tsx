@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type CSSProperties } from "react";
 
 import type { CaseTrack } from "@/lib/cases/types";
 
@@ -40,7 +40,12 @@ export function Directory({ tracks, activeId, onSelect, controls, idPrefix }: Di
   };
 
   return (
-    <div className="fl-dir" data-fl-zone="directory">
+    <div
+      className="fl-dir"
+      data-fl-zone="directory"
+      data-fl-panel
+      style={{ "--ci-off": 0.34 } as CSSProperties}
+    >
       <div className="fl-dir__head">
         <span className="fl-desig">Directory · /{idPrefix}/</span>
         <span className="fl-dir__count">{tracks.length} items</span>

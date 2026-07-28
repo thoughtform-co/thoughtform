@@ -39,6 +39,21 @@ const SERVICES_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "services");
  * and `ringProgressRef` are three-free on purpose, so this cannot drag
  * the WebGL stack into the landing's First Load JS.
  */
+/**
+ * Does the proof casefile own the `#services` beat right now (ADR-056)?
+ *
+ * Reads `proofRelease` — "who owns this beat" — and NOT `proofPresence`,
+ * which is the casefile's painted-opacity envelope and would make the corner
+ * flicker along with the panel's own fade. The release ramps across the
+ * deliberately empty stage between the casefile leaving and the offer
+ * arriving, so the label turns over while nothing on screen contradicts it.
+ *
+ * Its resting value is 1, so an unwritten ref, the flag-off path, mobile and
+ * reduced motion all fall through to the offer's row with no branch.
+ */
+const PROOF_OWNS_BELOW = 0.5;
+const proofOwnsServices = () => servicesRingProgressRef.current.proofRelease < PROOF_OWNS_BELOW;
+
 function resolveSub(idx: number): string | null {
   const entry = MANIFEST_ENTRIES[idx];
   if (!entry) return null;
@@ -47,6 +62,10 @@ function resolveSub(idx: number): string | null {
     return ARC_BEATS.has(phase) ? phase : null;
   }
   if (entry.id === "services") {
+    // While the casefile holds the stage there is no front card to name —
+    // the detail slot falls back to the journey position, which is the
+    // honest readout for a beat with no sub-position of its own.
+    if (proofOwnsServices()) return null;
     // `verb` is the display name and deliberately does NOT match `id`
     // (serviceData.ts) — print the verb, never the id.
     const verb = SERVICES[activeServiceForProgress(servicesRingProgressRef.current.progress)]?.verb;
@@ -89,7 +108,7 @@ export function useActiveSection(): ActiveSection {
     const update = () => {
       const idx = resolveActiveIdx(html);
       watch = idx <= LAST_CORRIDOR_IDX || idx === SERVICES_IDX;
-      const readout = sectionReadout(idx);
+      const readout = sectionReadout(idx, proofOwnsServices());
       const sub = resolveSub(idx);
       setSection((prev) =>
         prev.id === readout.id && prev.sub === sub ? prev : { ...readout, sub }

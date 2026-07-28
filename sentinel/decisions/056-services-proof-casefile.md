@@ -129,6 +129,51 @@ decode is destructive, so it is also gated on `document.visibilityState`
 and force-settles on hide — rAF stops in a hidden document, and an
 un-gated decode strands every line blank.
 
+### Arrival is per-panel (TERMINAL POWER-ON)
+
+The casefile does not fade in as a block. Each panel strikes on separately,
+in the reading order the owner named — chrome and registration frame first
+so the instrument exists before content fills it, then title + paragraph,
+the folder structure, the visualization, the numbers.
+
+The recipe is `#about`'s live copy reveal (`about-stage.css`) applied to
+panels instead of lines: three piecewise `clamp()` ramps off
+`--svc-proof-in`, net curve `0 → 0.62 → 0.12 → 1` — it hits, drops out,
+settles. Each panel carries an inline `--ci-off` and `--ci` renormalizes
+past it, which is what staggers them. Plain scrubbed math, so it is
+reversible, adds no writer and no keyframes.
+
+The only displacement is a 2.5px lateral tear carried by `(g1 − g2)`, which
+is exactly 0 once the dropout catches up — the flicker must never become
+travel, because these zones are absolutely positioned against the rail's
+tick ladder. The hairline rules and the split take the flicker without the
+tear, where a lateral shift would read as a break rather than a glitch.
+
+DEPARTURE stays a whole-plane fade on `--svc-proof-out`: the casefile
+assembles like an instrument and leaves like a page being turned.
+
+### The corner readout names the beat
+
+Printing "SERVICES" while someone reads the proof names a section they have
+not reached. `READOUT_SECTIONS` gains a `proof` row seated immediately
+before `services`, and `sectionReadout(idx, proofOwns)` picks between them.
+
+The row is deliberately NOT a `MANIFEST_ENTRIES` entry: the casefile shares
+one DOM section and one rail detent with the offer, so an entry would break
+the drift guard that pins station entries 1:1 against the parsed DOM. And
+`proofOwns` is a PARAMETER, not a read inside the module, so `sectionReadout`
+stays pure and index-addressable — every other caller keeps the
+single-argument form and gets the offer's row.
+
+`useActiveSection` supplies the flag from `proofRelease` (< 0.5), not
+`proofPresence`: the release is "who owns this beat", where presence is a
+painted-opacity envelope that would make the corner flicker with the panel's
+own fade. Its resting value is 1, so an unwritten ref, flag-off, mobile and
+reduced motion all fall through to "SERVICES" with no branch. The readout
+turns over across the deliberately empty stage between the casefile leaving
+and the offer arriving — nothing on screen contradicts it. The journey is
+06 rows again.
+
 ### Content
 
 `CaseCasefile` on `CaseDef`. `lib/cases/types.ts` keeps ZERO imports, so

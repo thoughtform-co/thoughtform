@@ -60,10 +60,11 @@
   color: var(--dawn, #ebe3d6);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
 
-  /* Arrival × departure, each owned by one writer in
-     `useServicesStageScroll`. Both fail open, so a missing clock can never
-     blank the surface. */
-  opacity: calc(var(--svc-proof-in, 1) * (1 - var(--svc-proof-out, 0)));
+  /* DEPARTURE only. Arrival is per-panel — see TERMINAL POWER-ON below.
+     Scrolling away fades the whole plane as one object, which is right: the
+     casefile arrives as an instrument assembling itself and leaves as a page
+     being turned. Fails open, so a missing clock can never blank it. */
+  opacity: calc(1 - var(--svc-proof-out, 0));
 
   --fl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   --fl-hair: rgba(235, 227, 214, 0.09);
@@ -150,6 +151,58 @@
 
 .services-stage[data-proof-live] .fl-case {
   visibility: visible;
+}
+
+/* ══ TERMINAL POWER-ON ═════════════════════════════════════════════════
+   The casefile does not fade in as a block — each panel strikes on
+   separately, like a terminal drawing its interface a row at a time. The
+   owner named the reading order: title + paragraph, then the folder
+   structure, then the visualization, then the numbers. The chrome and the
+   registration frame strike first, so the instrument exists before content
+   fills it.
+
+   The recipe is `#about`'s live copy reveal (about-stage.css) applied to
+   panels instead of lines — same three piecewise ramps, same net curve:
+
+     --g1 strike  (--ci 0 → 0.11)    opacity to 0.62
+     --g2 dropout (--ci 0.16 → 0.27) subtracts 0.5  ⇒ dips to ~0.12
+     --g3 settle  (--ci 0.34 → 0.59) adds 0.88      ⇒ resolves to 1
+
+   0 → 0.62 → 0.12 → 1: it hits, drops out, then settles. Plain clamp()
+   math off `--svc-proof-in`, so it stays a pure scrubbed function of scroll
+   — REVERSIBLE, no keyframes, no new writer, and nothing the corridor's
+   browser floor might miss. Each panel carries an inline `--ci-off` and
+   `--ci` renormalizes past it, which is what staggers them.
+
+   The only displacement is a 2.5px lateral TEAR carried by (g1 − g2): it
+   exists only during the strike and is exactly 0 once the dropout catches
+   up, so every panel is unshifted at rest AND at `--svc-proof-in` 0. The
+   flicker never becomes travel — the absolutely-positioned zones must not
+   drift off their tick alignment. ═════════════════════════════════════ */
+
+.fl-case [data-fl-panel] {
+  --ci: clamp(0, calc((var(--svc-proof-in, 1) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
+  --g1: clamp(0, calc(var(--ci) * 9), 1);
+  --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
+  --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
+  opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
+  transform: translateX(calc((var(--g1) - var(--g2)) * 2.5px));
+}
+
+/* The reticles own `transform` for their travel-to-the-corners (they animate
+   `left`/`right`, but carry a centring margin, not a transform — so the tear
+   is safe). The rules and the split are 1px hairlines where a lateral tear
+   reads as a break rather than a glitch, so they take the flicker only. */
+.fl-case .fl-rule[data-fl-panel],
+.fl-case .fl-split[data-fl-panel] {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-case [data-fl-panel] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ── Station chrome ─────────────────────────────────────────────────── */

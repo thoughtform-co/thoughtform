@@ -30,6 +30,23 @@ export const ARC_SECTION_LABEL = "THE ARC";
 /** The collapsed sequence's id for the corridor row. */
 export const ARC_SECTION_ID = "arc";
 
+/**
+ * The client casefile's row (ADR-056).
+ *
+ * It is NOT a manifest entry: the casefile lives at the front of the
+ * `#services` runway, so it shares one DOM section and one rail detent with
+ * the offer — giving it a `MANIFEST_ENTRIES` row would break the drift guard
+ * that pins station entries 1:1 against the parsed DOM.
+ *
+ * But it IS a beat the reader experiences as its own place, and the corner
+ * readout is the journey indicator: printing "SERVICES" while someone reads
+ * the proof names a section they have not reached yet. So the row is seated
+ * here, immediately before services, and `sectionReadout` picks between the
+ * two on the caller's `proofOwns` flag.
+ */
+export const PROOF_SECTION_LABEL = "PROOF";
+export const PROOF_SECTION_ID = "proof";
+
 export interface SectionReadout {
   /** Id within the collapsed sequence — `"arc"` or a station id. */
   id: string;
@@ -79,6 +96,10 @@ export const READOUT_SECTIONS: readonly { id: string; label: string }[] = (() =>
       rows.push({ id: ARC_SECTION_ID, label: ARC_SECTION_LABEL });
       continue;
     }
+    // ADR-056: the casefile is seated ahead of the offer it introduces.
+    if (entry.id === "services") {
+      rows.push({ id: PROOF_SECTION_ID, label: PROOF_SECTION_LABEL });
+    }
     rows.push({ id: entry.id, label: entry.name.toUpperCase() });
   }
   return rows;
@@ -89,10 +110,19 @@ export const READOUT_SECTIONS: readonly { id: string; label: string }[] = (() =>
  * the Arc row for hero and for any index outside the manifest — the
  * corner must never render an empty label, since it is also the nav
  * trigger.
+ *
+ * `proofOwns` splits the one `services` index into its two beats (ADR-056).
+ * It stays a PARAMETER rather than a read inside this module so the function
+ * remains pure and index-addressable: the caller
+ * (`useActiveSection`) owns the live scalar, and every other consumer —
+ * tests, the rail — keeps calling the single-argument form and gets the
+ * offer's row, which is the resting truth.
  */
-export function sectionReadout(idx: number): SectionReadout {
+export function sectionReadout(idx: number, proofOwns = false): SectionReadout {
   const entry = MANIFEST_ENTRIES[idx];
-  const id = !entry || entry.id === "hero" || entry.kind === "corridor" ? ARC_SECTION_ID : entry.id;
+  const base =
+    !entry || entry.id === "hero" || entry.kind === "corridor" ? ARC_SECTION_ID : entry.id;
+  const id = proofOwns && base === "services" ? PROOF_SECTION_ID : base;
   const pos = READOUT_SECTIONS.findIndex((row) => row.id === id);
   const seat = pos >= 0 ? pos : 0;
   const row = READOUT_SECTIONS[seat];

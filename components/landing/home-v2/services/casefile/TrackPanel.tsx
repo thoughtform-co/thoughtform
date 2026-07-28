@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { TrackVisual } from "./TrackVisual";
 import type { CaseTrack } from "@/lib/cases/types";
 
@@ -31,18 +33,29 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
       tabIndex={0}
       data-solo={solo || undefined}
     >
-      <div className="fl-panel__head">
+      <div className="fl-panel__head" data-fl-panel style={{ "--ci-off": 0.4 } as CSSProperties}>
         <span className="fl-desig">{track.preview}</span>
         <span className="fl-desig fl-desig--r">{track.vizLabel}</span>
       </div>
 
       {solo ? null : (
-        <div className="fl-panel__viz" data-fl-zone="plate" data-kind={track.visual.kind}>
+        <div
+          className="fl-panel__viz"
+          data-fl-zone="plate"
+          data-fl-panel
+          style={{ "--ci-off": 0.44 } as CSSProperties}
+          data-kind={track.visual.kind}
+        >
           <TrackVisual visual={track.visual} />
         </div>
       )}
 
-      <div className="fl-panel__foot" data-fl-zone="readouts">
+      <div
+        className="fl-panel__foot"
+        data-fl-zone="readouts"
+        data-fl-panel
+        style={{ "--ci-off": 0.52 } as CSSProperties}
+      >
         <ul className="fl-readouts" data-solo={solo || undefined}>
           {track.readouts.map((r, i) => (
             <li className="fl-readout" key={i}>
