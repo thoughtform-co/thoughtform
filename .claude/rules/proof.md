@@ -1,96 +1,79 @@
-# Rule: Proof station / client cases
+# Rule: Proof casefile / client cases
 
-`#proof` is the corridor's **evidence beat** — one client case told as a
-mission report plus three beats mapped onto the Arc. A "case" is content
-in `lib/cases/`; it is NOT an "arc page" (`/arcs/[slug]`, a ported deck)
-and NOT `arc-cases/` (the corridor's four-tool card, which belongs to the
-Arc). See LANGUAGE.md.
+The client casefile is the corridor's **evidence beat** — one client's
+engagement as an interactive viewport at the TOP of `#services`, over the
+parked brandmark, answering the epilogue's claim before the offer arrives.
+A "case" is content in `lib/cases/`; it is NOT an "arc page"
+(`/arcs/[slug]`, a ported deck) and NOT `arc-cases/` (the corridor's
+four-tool card, which belongs to the Arc). See LANGUAGE.md.
+
+⚠ **There is no `#proof` station.** ADR-054's station, its parse-time
+generator (`lib/v7-parse/proofStation.ts`) and its reveal controller were
+deleted by ADR-056. If you are here from an old comment expecting a station
+between `#about` and `#practice`, that funnel slot is gone and `#practice`
+inherited its ambient-cover role.
 
 **Read first**
 
-- [ADR-054: Proof station + client cases](../sentinel/decisions/054-proof-station-client-cases.md)
-- [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the station obeys
-- [ADR-047: About deck flip](../sentinel/decisions/047-about-deck-flip-stage.md) — the beat before, whose exit `#proof` covers
-- [ADR-048: Editorial band](../sentinel/decisions/048-editorial-band.md)
+- [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
+- [ADR-054](../sentinel/decisions/054-proof-station-client-cases.md) — superseded on placement; its content model and confidentiality envelope are still live
+- [ADR-029](../sentinel/decisions/029-services-card-ring.md) / [ADR-050](../sentinel/decisions/050-services-card-face.md) — the ring the casefile now holds back
+- [ADR-044](../sentinel/decisions/044-services-masthead.md) — the reveal protocol and the type standard
+- [ADR-008](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules it obeys
 
 ## Contracts
 
-- **No scroll writer, no portal, no canvas coupling, no flag.** The head
-  DOES pin (ADR-054 U1) — but with a plain CSS sticky inside
-  `.proof__report-runway`, not a stage with a clock. `#services` and
-  `#about` need clocks because they drive the WebGL canvas; this station
-  only has to stay put. A change that wants a clock, a portal or canvas
-  coupling here is a new ADR, not a retune.
-- **The head's reveal is the DECODE, not `data-m` — and the head carries
-  NO `data-m` at all.** `ProofRevealController` scramble-decodes the title
-  lines and types the lede in place, mirroring `ServicesMasthead`
-  (ADR-044); the survey chrome, state chip, stat row and meta register
-  reveal via `.proof__report[data-reveal]` CSS (hidden while armed,
-  in-place fade at the park; statically visible when the attribute is
-  absent). Do not put a `data-m` role back on ANYTHING inside
-  `.proof__report` — an IO-fired data-m reveal plays while the sticky head
-  is still travelling, and eyebrow/frame add a rise (ADR-054 U2 round 2;
-  the BEATS keep their data-m roles). Arrival is an IntersectionObserver
-  (no clock exists here to read) whose root is collapsed to a thin band at
-  the TOP of the viewport, so it fires when the sticky head reaches its
-  PARK — nothing in the head may be visible, or move, before that (the
-  services masthead carries the same park gate, ADR-044 round 2 — retune
-  both or neither). Enhanced tier only; mobile / PRM / no-JS keep the
-  static copy the markup already ships.
-- **`#proof` is the ambient cover.** `useCorridorExitScroll` resolves
-  `nextStation = ABOUT_DECK_STAGE ? (#proof ?? #practice) : (#about ?? #proof)`.
-  The ambient bottom gate and the fade envelope MUST read the SAME rect —
-  splitting them hard-cuts the canvas at the station's top (the ADR-030 §6
-  seam bug, recorded twice). The station is opaque and needs no shield var;
-  do not give it one.
-- **Content = `lib/cases/` only.** A copy change is a content-module edit
-  plus `npx vitest run tests/lib/cases-registry.test.ts`. `lib/cases/types.ts`
-  keeps **zero imports**; nothing under `lib/cases/` may import react, three,
-  or supabase (landing-performance doctrine — it is consumed by a server
-  module and must never reach First Load JS).
-- **Markup is GENERATED.** `lib/v7-parse/proofStation.ts` renders the case
-  into the authored `[data-proof-body]` shell via `ParseOptions.fillSlots`.
-  Its output must **escape every interpolated field** and contain **no HTML
-  comments** (the ship-weight trim runs after the fill and would eat them).
-  Class names are that generator's contract — rename in the builder and the
-  CSS together.
-- **Never a portal here.** `data-m` reveals only work because the nodes are
-  in the `dangerouslySetInnerHTML` tree at mount; `useRevealMotion` cannot
-  see portal children.
-- **`data-m="title"` / `"eyebrow"` / `"portrait"` CLIP to the border box**
-  (`clip-path: inset(...)`, and `inset(0px)` still clips once revealed). An
-  element carrying one of those roles can never host children positioned
-  OUTSIDE it — the survey chrome (labels above, stamps below, marks beyond
-  the corners) silently vanishes. Put the role on the COPY element and
-  leave the chrome in the unclipped plate; `data-m="fade"` is the one role
-  with neither clip nor transform, so decorative outboard pieces use it.
-- **Tool copy is referenced, never restated.** A `tool-strip` stores ids;
-  `PROJECT_CASES` (`components/landing/v7/tools-cards/toolCardData.ts`) stays
-  canonical for the four tools. The corridor's arc-cases card owns their
-  challenge/shift/capabilities — the Build beat carries pattern, numbers and
-  handoff only.
-- **No subsection register anywhere.** `PROOF_SUBS` — the corridor menu's
-  hardcoded duplicate of `caseBeatMenu(PROOF_CASE)` — retired with that
-  menu (ADR-055 dropped subsections site-wide; the journey readout in the
-  nav corner names stations only). `caseBeatMenu` survives as registry
-  data, guarded by its shape test. Do not reintroduce a beat register.
-- **Zig-zag:** mirroring is derived from beat index parity; there is no
-  `flip` field in the data. DOM order is ALWAYS copy-then-visual. Both grid
-  children are pinned to `grid-row: 1` — column placement alone makes a
-  flipped beat wrap to a second row and render diagonally at double height.
-- **Band tokens only.** `--band-max` / `--rail-inset` / `--band-copy`; never
-  a per-section body size (ADR-048 — a local override re-opens the crossover).
-- **`.services-masthead` is the type + placement gold standard** (ADR-044).
-  `.proof__title` and `.proof__beat-title` are its recipe verbatim — PP Neue
-  Montreal, weight 400 (em 500 gold), POSITIVE `0.04em` tracking, `1.1`
-  leading, uppercase, gold-wash shadow — the beat titles only one size step
-  down. `.proof__lede` is `.services-masthead__intro`: weight 400 at
-  `--band-copy`, full dawn, 42ch. Copy starts ON `--band-top` with the
-  survey chrome hung outboard; the `--survey-*` offsets are that station's
-  values. Retune both stations together or neither.
+- **The runway split is the whole mechanism.** The ring's visibility rides
+  `--corridor-dissipate`, which saturates ~14 % into the runway — it can
+  never express "scroll past a panel". `splitServicesRunway` (`ringMath.ts`)
+  gives the casefile the FRONT of the runway and re-derives the ring's
+  progress over the rest, so `RING_ARRIVAL_FRAC`, `RING_EXIT_START` and the
+  ADR-047 `#about` seam stay byte-identical. **Never delay the ring by
+  retuning `RING_ENTRANCE_WINDOWS`** — wrong clock. Widening the dwell is
+  safe by construction, but `SERVICES_PROOF_RUNWAY_VH` and
+  `--svc-proof-runway` must move together; the CSS is the one that has to
+  exist pre-hydration.
+- **One release ramp gates everything.** `proofRelease` is multiplied into
+  `--svc-content-in` (which carries the masthead, plates, designations,
+  orbit draw-on and scan interface) and published on
+  `servicesRingProgressRef.proofRelease` for the ring's and the orbits'
+  `masterOpacityGetter`. Do not add a second gate — add a factor to this one.
+- **The host is `pointer-events: none`.** Only the tabs and the directory
+  rows opt back in. `.svc-ring-hits__hit` is at z 4 and the casefile at z 6,
+  so an `auto` host silently swallows every card click once the ring lands.
+- **The band offset is `--rail-inset` ALONE.** The stage box is already
+  inset by `--hud-content-inset`; adding it again double-insets (visible at
+  1440 as a 290px left edge instead of 145). Same value `.services-masthead`
+  takes — the two must agree or the proof and the offer sit on different
+  left edges.
+- **The reveal needs BOTH the clock and the park gate.** `--svc-proof-in`
+  alone crosses its threshold while the sticky stage is still travelling
+  (measured on the masthead, twice). And the decode is DESTRUCTIVE — it
+  blanks each line before queueing — so it must also be gated on
+  `document.visibilityState` and force-settle on hide, or a tab switch
+  mid-decode strands blank copy. rAF stops in a hidden document.
+- **Geometry snaps to the HUD rail's 13-tick ladder.** Everything hangs off
+  `--fl-t*`, derived from the live `.hud__rail` box; the two section rules
+  land on tick 2 and the bearing-5 major. Two upstreams must stay in step:
+  `.hud__rail` in `landing.css` and `lib/v7-parse/hudTicks.ts`. **That drift
+  is the only way this design fails silently — check it first.**
+- **Content = `lib/cases/` only.** `types.ts` keeps ZERO imports; nothing
+  under `lib/cases/` may import react, three or supabase. The tool strip
+  stores IDs and the renderer resolves them against `PROJECT_CASES`, which
+  stays canonical for the four tools. A copy change is a content-module edit
+  plus `npx vitest run tests/lib/cases-registry.test.ts`.
+- **The beats and the casefile SHARE their plates.** Hoisted consts in the
+  content module, asserted reference-equal by the registry test. Re-typing a
+  plate inline is how the two surfaces drift.
+- **Context values stay ≤20 characters.** The dotted leader needs a
+  non-wrapping value, so a long one runs into the next column of the
+  three-up register. Pinned by the registry test.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
-  `CaseSegment` `{ em }` (the gold-wash caption marker). Markup smuggled into
-  copy strings fails the registry test.
+  `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
+  strings fails the registry test.
+- **The tab strip is derived from `CASES`.** Adding a second case lights up
+  a second tab with no component change. Do not ship placeholder clients on
+  the public page — the dim `+ Archive` is what marks it as a series.
 
 ## Confidentiality envelope
 
@@ -108,7 +91,17 @@ test to relax:
   (`services/serviceDesignations.ts`).
 - Where sources disagree on a number, print the **smaller, exec-facing**
   one and never show the other. Do not publish a second variant of a claim
-  that already appears on another surface — check `lib/arcs/content/**` first.
+  that already appears on another surface — check `lib/arcs/content/**`
+  first. The `Thoughtform Prime` handoff's 15+ teams / 20+ Skills / 90 % of
+  paid social are superseded and pinned OUT by the registry test.
+
+## Verifying
+
+`/test/field-log-lab` is the look-dev harness (all five connection
+grammars; variant E is what ships). On the landing, the beat is covered by
+`tests/visual/services-ring-smoke.spec.ts` — the casefile holds, the rows
+work while pinned, no hit anchors publish during the dwell, the ring takes
+over after. Drive REAL scrolls, never a teleport.
 
 **Process:** [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) — Cycle B
-when adding a case or a `CaseVisual` kind; Cycle A after fixes.
+when adding a case or a `CaseTrackVisual` kind; Cycle A after fixes.

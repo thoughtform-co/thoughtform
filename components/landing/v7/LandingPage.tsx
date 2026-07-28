@@ -13,7 +13,6 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
-import { ProofRevealController } from "@/components/landing/home-v2/proof/ProofRevealController";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
@@ -558,12 +557,11 @@ export function LandingPage({
           markup in the same station stays the mobile/PRM/fallback
           surface. Same nested-root rules as ServicesPortal. */}
       <AboutStagePortal containerRef={rootRef} />
-      {/* #proof mission-report decode (ADR-054 Update 1). Renders nothing —
-          it drives the PARSE-INJECTED report copy in place (the
-          RailManifestController precedent), decoding the title lines and
-          typing the lede on arrival. Never a portal here: a nested root
-          would replace the server markup the reveal system observes. */}
-      <ProofRevealController />
+      {/* (The ADR-054 #proof decode controller retired with ADR-056: the
+          client case is a mounted component inside ServicesStage now, and
+          owns its own reveal off the `--svc-proof-in` stage clock.
+          ProofRevealController + lib/v7-parse/proofStation stay on disk
+          for rollback.) */}
       {/* The "SOURCE BUS · 04" services rail register is RETIRED (ADR-044) —
           the section masthead's intro paragraph is the services right-side
           text now. ServicesRailRegisterPortal stays on disk for rollback;

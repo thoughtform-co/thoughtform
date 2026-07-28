@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { SERVICES_PROOF_RUNWAY_VH } from "../../components/landing/home-v2/unifiedServicesInstrument";
+
 /**
  * Services card ring smoke (ADR-029).
  *
@@ -38,16 +40,49 @@ test.describe.configure({ mode: "serial" });
  * (2026-07-14 perf pass), so `.services-stage` appearing does not yet mean
  * the page has its final height — measuring early lands the scroll far
  * above the runway and the step clock reads 0. */
-async function scrollServicesRunway(page: Page, progress: number): Promise<boolean> {
+/**
+ * Scroll to a given RING progress (0..1).
+ *
+ * ADR-056 put the proof casefile at the FRONT of the services runway, so
+ * runway progress is no longer ring progress — the first
+ * `SERVICES_PROOF_RUNWAY_VH` viewports belong to the casefile and the ring
+ * is dark across them. Converting here keeps every call site pinned to the
+ * BEAT it means rather than to a raw offset that silently shifted.
+ */
+async function scrollServicesRunway(page: Page, ringProgress: number): Promise<boolean> {
   await page.waitForSelector(".home-v2-stage", { timeout: 20_000 });
-  const target = await page.evaluate((p) => {
-    const runway = document.querySelector(".services-stage-root");
-    if (!runway) return null;
-    const rect = runway.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const travel = Math.max(0, rect.height - window.innerHeight);
-    return Math.round(top + travel * p);
-  }, progress);
+  const target = await page.evaluate(
+    ({ p, proofVh }) => {
+      const runway = document.querySelector(".services-stage-root");
+      if (!runway) return null;
+      const rect = runway.getBoundingClientRect();
+      const top = rect.top + window.scrollY;
+      const travel = Math.max(0, rect.height - window.innerHeight);
+      const proof = Math.min(travel, window.innerHeight * proofVh);
+      return Math.round(top + proof + (travel - proof) * p);
+    },
+    { p: ringProgress, proofVh: SERVICES_PROOF_RUNWAY_VH }
+  );
+  if (target == null) return false;
+  await page.evaluate((y) => window.scrollTo(0, y), target);
+  await page.waitForTimeout(600);
+  return true;
+}
+
+/** Scroll to a fraction of the CASEFILE's dwell at the front of the runway. */
+async function scrollCasefileDwell(page: Page, progress: number): Promise<boolean> {
+  await page.waitForSelector(".home-v2-stage", { timeout: 20_000 });
+  const target = await page.evaluate(
+    ({ p, proofVh }) => {
+      const runway = document.querySelector(".services-stage-root");
+      if (!runway) return null;
+      const rect = runway.getBoundingClientRect();
+      const top = rect.top + window.scrollY;
+      const travel = Math.max(0, rect.height - window.innerHeight);
+      return Math.round(top + Math.min(travel, window.innerHeight * proofVh) * p);
+    },
+    { p: progress, proofVh: SERVICES_PROOF_RUNWAY_VH }
+  );
   if (target == null) return false;
   await page.evaluate((y) => window.scrollTo(0, y), target);
   await page.waitForTimeout(600);
@@ -59,6 +94,60 @@ function isDesktopViewport(page: Page): boolean {
 }
 
 test.describe("Services card ring smoke (ADR-029)", () => {
+  test("desktop: the proof casefile holds the stage before the ring arrives (ADR-056)", async ({
+    page,
+  }) => {
+    test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 15_000 });
+
+    // Mid-dwell: the casefile owns the stage.
+    expect(await scrollCasefileDwell(page, 0.5)).toBe(true);
+    await page.waitForTimeout(1400);
+
+    const during = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      const casefile = document.querySelector<HTMLElement>(".fl-case");
+      return {
+        caseOpacity: casefile ? Number(getComputedStyle(casefile).opacity) : null,
+        contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "1"),
+        // The ring's hit anchors are published off the card opacity, so a
+        // published anchor here would mean a card is painting — AND that an
+        // invisible click target is sitting over the casefile.
+        hits: document.querySelectorAll(".svc-ring-hits__hit").length,
+        rows: document.querySelectorAll(".fl-row").length,
+      };
+    });
+    expect(during.caseOpacity).toBeGreaterThan(0.9);
+    expect(during.contentIn).toBeLessThan(0.05);
+    expect(during.hits).toBe(0);
+    expect(during.rows).toBeGreaterThan(0);
+
+    // The directory rows are the navigation, and they work while pinned.
+    const secondRow = page.locator(".fl-row").nth(1);
+    await secondRow.click();
+    await page.waitForTimeout(400);
+    await expect(secondRow).toHaveAttribute("aria-selected", "true");
+
+    // Past the dwell: the casefile is gone and the ring has taken over.
+    expect(await scrollServicesRunway(page, 0.18)).toBe(true);
+    await page.waitForTimeout(1400);
+
+    const after = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      const casefile = document.querySelector<HTMLElement>(".fl-case");
+      return {
+        caseOpacity: casefile ? Number(getComputedStyle(casefile).opacity) : null,
+        contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0"),
+        hits: document.querySelectorAll(".svc-ring-hits__hit").length,
+      };
+    });
+    expect(after.caseOpacity).toBeLessThan(0.05);
+    expect(after.contentIn).toBeGreaterThan(0.9);
+    expect(after.hits).toBeGreaterThan(0);
+  });
+
   test("desktop: ring mode retires the racks; cards expose their CTA", async ({ page }) => {
     test.skip(!isDesktopViewport(page), "ring mode is desktop-only (≥961px)");
 
@@ -225,12 +314,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(parseFloat(mid.flip || "0")).toBe(1);
     expect(mid.voidwalkerDisplay).toBe("none");
 
-    // Walk under #proof: THIS is where the ambient hold ends (ADR-054 —
-    // the client case is the opaque cover). The bottom gate is keyed to
-    // the SAME rect as the fade envelope, so there is no hard cut at the
-    // about runway's end.
+    // Walk under #practice: THIS is where the ambient hold ends (ADR-056 —
+    // #proof retired and #practice inherited the cover role at the same
+    // scroll position). The bottom gate is keyed to the SAME rect as the
+    // fade envelope, so there is no hard cut at the about runway's end.
     const underNext = await page.evaluate(() => {
-      const next = document.getElementById("proof");
+      const next = document.getElementById("practice");
       if (!next) return null;
       return Math.round(
         window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3

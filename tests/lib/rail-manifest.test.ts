@@ -26,6 +26,9 @@ const PRODUCTION_PARSE_OPTIONS = {
     // standalone case surfaces retired.
     "build",
     "tools",
+    // ADR-056: the client case moved to the top of #services as the
+    // casefile, so the station retired.
+    "proof",
   ] as unknown as readonly string[],
   relocateStationsToMount: [
     { stationId: "about" },
@@ -35,8 +38,8 @@ const PRODUCTION_PARSE_OPTIONS = {
 };
 
 describe("MANIFEST_ENTRIES data model", () => {
-  it("has 10 entries with unique ids in the expected journey order (beat granularity)", () => {
-    expect(MANIFEST_ENTRIES).toHaveLength(10);
+  it("has 9 entries with unique ids in the expected journey order (beat granularity)", () => {
+    expect(MANIFEST_ENTRIES).toHaveLength(9);
     const ids = MANIFEST_ENTRIES.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     // Update 9: the corridor is FOUR beats (thesis + the Arc's three moves),
@@ -49,7 +52,6 @@ describe("MANIFEST_ENTRIES data model", () => {
       "build",
       "services",
       "about",
-      "proof",
       "practice",
       "contact",
     ]);
@@ -166,14 +168,16 @@ describe("drift guard — manifest order matches the parsed production DOM", () 
     expect(mountAt).toBeLessThan(servicesAt);
   });
 
-  it("#about directly follows #services; #tools/#build are gone (ADR-033)", () => {
+  it("#about directly follows #services; #tools/#build/#proof are gone", () => {
     const servicesAt = bodyHtml.search(/<section[^>]*\bdata-station="services"/);
     const aboutAt = bodyHtml.search(/<section[^>]*\bdata-station="about"/);
-    // ADR-054: the client case took the slot the continuum used to hold.
-    const proofAt = bodyHtml.search(/<section[^>]*\bdata-station="proof"/);
+    const practiceAt = bodyHtml.search(/<section[^>]*\bdata-station="practice"/);
     expect(servicesAt).toBeGreaterThan(-1);
     expect(aboutAt).toBeGreaterThan(servicesAt);
-    expect(proofAt).toBeGreaterThan(aboutAt);
+    // ADR-056: #practice took the slot #proof held — it is the opaque
+    // cover that ends the corridor ambient now.
+    expect(practiceAt).toBeGreaterThan(aboutAt);
+    expect(bodyHtml).not.toMatch(/<section[^>]*\bid="proof"/);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="continuum"/);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="tools"/);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="build"/);

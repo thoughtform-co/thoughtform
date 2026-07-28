@@ -54,6 +54,13 @@ import {
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/home-v2/corridorMap";
+import { SERVICES_PROOF_CASEFILE } from "../../unifiedServicesInstrument";
+import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+
+/** How far the interior haze recedes behind the proof casefile (ADR-056).
+ *  Lighter than the mark's own `PROOF_MARK_DIM` — the haze sits directly
+ *  under the readout row, where the copy is smallest. */
+const PROOF_INTERIOR_DIM = 0.55;
 import {
   getSmoothedAccretionLayers,
   getSmoothedDissipate,
@@ -1002,9 +1009,18 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // the cloud to ~0.18 × 0.48 at the boundary). Outside the exit this
     // is the plain dock path; at dissipate 0 it returns 1 (identity), so
     // the parked epilogue pose is byte-identical to its pre-ADR-021 self.
-    const interiorMul = servicesAmbient
-      ? servicesAmbientOpacityMultiplier(servicesAmbientLevel)
-      : dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_HOLD_LEVEL);
+    // ADR-056: the proof casefile is a full-bleed reading surface over this
+    // parked instrument, so the interior haze recedes while it holds and
+    // comes back exactly as the offer arrives. `proofRelease` rests at 1, so
+    // this factor is identity everywhere outside the dwell — and with the
+    // flag off, in the corridor proper, and on the inert path.
+    const proofFade = SERVICES_PROOF_CASEFILE
+      ? 1 - PROOF_INTERIOR_DIM * (1 - servicesRingProgressRef.current.proofRelease)
+      : 1;
+    const interiorMul =
+      (servicesAmbient
+        ? servicesAmbientOpacityMultiplier(servicesAmbientLevel)
+        : dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_HOLD_LEVEL)) * proofFade;
     // Surface particles (dotted shell, globe dots, equator) — ADR-021
     // follow-up (2026-06-19). The original dissipate faded these fully
     // to 0 so the sphere dissolved into an empty view. The camera then

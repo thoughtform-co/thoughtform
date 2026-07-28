@@ -408,14 +408,18 @@ html[data-corridor-exit="true"] #about.station::before {
   z-index: 0;
 }
 
-/* #proof is the cover that ends the ambient hold (ADR-054 — the role
-   #practice carried under ADR-049, #continuum under ADR-047, #about
-   under ADR-033). It is a plain OPAQUE station: it keeps its authored
-   .station background and needs no shield var, because unlike #about it
-   is never a transparent stage over the live canvas. It only has to
-   STACK above the body veil (z5) + fixed canvas (z2) while the exit band
-   is live, and to escape the content-visibility paint containment. */
-html[data-corridor-exit="true"] #proof {
+/* #practice is the cover that ends the ambient hold (ADR-056 — the role
+   #proof carried under ADR-054, #continuum under ADR-047, #about under
+   ADR-033). It is a plain OPAQUE station: it keeps its authored .station
+   background and needs no shield var, because unlike #about it is never a
+   transparent stage over the live canvas. It only has to STACK above the
+   body veil (z5) + fixed canvas (z2) while the exit band is live, and to
+   escape the content-visibility paint containment.
+   Keep this selector and `useCorridorExitScroll`'s `nextStation` on the
+   SAME station: the fade envelope and the bottom gate both key to its
+   rect, and splitting them hard-cuts the canvas at its top edge (the
+   ADR-030 §6 seam bug, recorded three times now). */
+html[data-corridor-exit="true"] #practice {
   position: relative;
   z-index: 6;
   content-visibility: visible;

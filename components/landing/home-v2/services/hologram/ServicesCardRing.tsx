@@ -1257,6 +1257,19 @@ export interface ServicesCardRingProps {
    *  stay visible in transit. Default RING_FACING_BLEND. */
   facingBlend?: number;
   masterOpacity?: number;
+  /**
+   * Per-frame master opacity, multiplied on top of `masterOpacity` (ADR-056).
+   * Mirrors `HologramOrbits`' prop of the same name — a GETTER, because the
+   * value it carries (the proof casefile's release ramp) changes every scroll
+   * frame and must not re-render this tree.
+   *
+   * It is the only ring channel keyed to RUNWAY travel rather than to the
+   * corridor dissipate, which is what lets the cards wait behind a surface the
+   * user has to scroll past. Because it lands in `master`, and the hit-anchor
+   * publish gate reads the resulting `opacity`, a 0 here also stops the ring
+   * publishing click targets — the cards cannot be invisibly clickable.
+   */
+  masterOpacityGetter?: () => number;
   /* Look-dev tunables — defaults are the ringMath constants. */
   cardHeight?: number;
   yOffset?: number;
@@ -1294,6 +1307,7 @@ export function ServicesCardRing({
   openDrawer = false,
   facingBlend = RING_FACING_BLEND,
   masterOpacity = 1,
+  masterOpacityGetter,
   cardHeight = RING_CARD_HEIGHT,
   yOffset = RING_Y_OFFSET,
   travelFrac = RING_TRAVEL_FRAC,
@@ -1842,6 +1856,12 @@ export function ServicesCardRing({
     lastWallRef.current = now;
     const resumed = gap > RESUME_IDLE_GAP_MS;
 
+    // Master opacity for this frame (ADR-056). The static prop is the
+    // look-dev knob; the getter carries the proof casefile's release ramp,
+    // which is the only ring channel keyed to runway travel. Absent ⇒ 1, so
+    // every existing mount is byte-identical.
+    const master0 = masterOpacity * (masterOpacityGetter ? masterOpacityGetter() : 1);
+
     // Dissipate clock for the entrance envelope.
     let dissipate = 1;
     if (entrance === "scroll") {
@@ -2004,7 +2024,7 @@ export function ServicesCardRing({
     // FrontSide culling of the flat deck gives the gate half a beat of
     // slack either way). All four backs share one material — correct
     // because the backs are only ever seen converged.
-    backMaterial.opacity = flip !== null ? opacityRange[1] * masterOpacity * deckBgKill : 0;
+    backMaterial.opacity = flip !== null ? opacityRange[1] * master0 * deckBgKill : 0;
     // The portrait back is the deck's depth writer once the flip passes
     // edge-on (pre-midpoint every back is FrontSide-culled — no fragments,
     // so the early enable is inert): the four backs draw in the rebased
@@ -2286,7 +2306,7 @@ export function ServicesCardRing({
       // through the pinned #about and dies only with the stage's
       // fail-opaque shield (deckBgKill, the about tail).
       const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
-      const master = (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * masterOpacity;
+      const master = (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * master0;
       const opacity = depthO * master;
       /* ADR-050 rev 3 — ANTI-GHOST GUARD 2 of 2. The card's face never
          reaches alpha 1 (RING_OPACITY_RANGE tops out at 0.9), so a drawer

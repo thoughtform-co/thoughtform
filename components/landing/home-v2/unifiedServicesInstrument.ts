@@ -110,3 +110,54 @@ export const SERVICES_CARD_DRAWER = true;
  * corridor-fallback keep the static about regardless of the flag.
  */
 export const ABOUT_DECK_STAGE = true;
+
+/**
+ * Feature flag for the SERVICES PROOF CASEFILE (ADR-056, 2026-07-28 —
+ * supersedes ADR-054 on PLACEMENT; its content model and confidentiality
+ * envelope survive unchanged).
+ *
+ * The corridor's epilogue makes a claim ("EVERYONE IS RACING TO BUILD THIS
+ * CAPABILITY.") and used to hand straight to the offer. The evidence for it —
+ * the Loop Earplugs casefile — now sits at the TOP of `#services`, over the
+ * parked brandmark, and the card ring waits until it has been scrolled past.
+ *
+ * When ON:
+ *   - the `#services` runway grows by `SERVICES_PROOF_RUNWAY_VH` viewports at
+ *     its FRONT, and `useServicesStageScroll` splits its rect read with
+ *     `splitServicesRunway` so the ring's progress domain is unchanged —
+ *     `RING_ARRIVAL_FRAC`, `RING_EXIT_START` and the ADR-047 `#about` deck
+ *     seam all stay byte-identical;
+ *   - two new stage channels, `--svc-proof-in` (arrival, off the corridor
+ *     dissipate — the curve `--svc-content-in` used to own) and
+ *     `--svc-proof-out` (departure, off the casefile's own runway share);
+ *   - `--svc-content-in` is multiplied by the release ramp, which delays the
+ *     masthead, the plate cluster, the designations, the orbit draw-on and the
+ *     scan interface together, with no new consumer and no new listener;
+ *   - the same release multiplies the ring's and the orbits' master opacity,
+ *     so the cards neither paint nor publish hit anchors over the casefile.
+ *
+ * OFF restores the services stage byte-identically: the runway returns to
+ * 500svh, `splitServicesRunway` degenerates to the identity, `proofRelease`
+ * rests at 1 and the casefile never mounts. ⚠ It does NOT restore the `#proof`
+ * STATION — that removal lives in `CORRIDOR_REPLACED_STATIONS`
+ * (`app/(marketing)/page.tsx`) and is a separate one-line revert. Two
+ * switches, deliberately: the station's death is a funnel decision, this flag
+ * is a surface decision.
+ *
+ * Mobile / reduced motion keep the plate accordion regardless; there the
+ * casefile renders as resolved static flow content above it.
+ */
+export const SERVICES_PROOF_CASEFILE = true;
+
+/**
+ * How many viewports of the `#services` runway the casefile holds before the
+ * ring arrives (~2 screens — enough scroll to read the brief and click a few
+ * directory rows while the stage is pinned).
+ *
+ * This is the ONLY tuning knob for the dwell. It lengthens the page and moves
+ * nothing else: the split re-derives the ring's progress over the remainder,
+ * so widening it can never re-time a card. Read by `services.css` (as the
+ * `--svc-proof-runway` default) and by `useServicesStageScroll`; keep the two
+ * in step — the CSS owns the runway's height, this constant owns the split.
+ */
+export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 2 : 0;

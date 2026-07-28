@@ -67,6 +67,7 @@ import { CorridorArmillary } from "./CorridorArmillary";
 import {
   ABOUT_DECK_STAGE,
   SERVICES_CARD_RING,
+  SERVICES_PROOF_CASEFILE,
   UNIFIED_SERVICES_ARMILLARY,
 } from "../unifiedServicesInstrument";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
@@ -328,6 +329,19 @@ const EXIT_DIM = 0.45;
  *  ≈ 0.55 · 0.55 ≈ 0.30 of the parked opacity — a subtle receded centre
  *  presence behind the flipped portrait. 1.0 restores the full clear. */
 const ABOUT_FLIP_MARK_DIM = 0.45;
+
+/** Proof-casefile dim (ADR-056). The casefile is a full-bleed reading
+ *  surface over the PARKED mark, so the mark has to recede to a presence
+ *  while it holds — at full ink the accretion arcs cut straight through the
+ *  readout row. The mark is deliberately not killed: "over the parked
+ *  brandmark" is the composition, and the lab that settled this format
+ *  (`/test/proof-dossier-lab`) landed on the same 0.45.
+ *
+ *  Driven by `proofRelease`, the SAME scalar that gates the ring and
+ *  `--svc-content-in`, so the mark comes back up exactly as the offer
+ *  arrives. Identity (1) whenever the release is 1 — which is every frame
+ *  outside the dwell, the whole corridor, the inert path, and flag-off. */
+const PROOF_MARK_DIM = 0.45;
 
 /** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
  *  reveals the kept dome's depth, so the mark reads as a living 3D object
@@ -823,7 +837,12 @@ export function BrandmarkPhysicsCoreActor({
     // toward the ~0.30 ambient floor (aboutFlipFade), and handoffFade
     // (servicesAmbientLevel) finishes the kill as the next opaque
     // station arrives.
-    const dimMix = (1 - EXIT_DIM * exitT) * aboutFlipFade;
+    // ADR-056: and the proof casefile dims it while that surface holds the
+    // stage. `proofRelease` rests at 1, so this is identity everywhere else.
+    const proofFade = SERVICES_PROOF_CASEFILE
+      ? 1 - PROOF_MARK_DIM * (1 - servicesRingProgressRef.current.proofRelease)
+      : 1;
+    const dimMix = (1 - EXIT_DIM * exitT) * aboutFlipFade * proofFade;
     opacityRef.current = (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * dimMix;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude — with a

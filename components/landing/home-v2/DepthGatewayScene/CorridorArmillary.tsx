@@ -74,7 +74,17 @@ const ANCHOR_PUBLISH_DISSIPATE = 0.88;
 const ORBIT_EXIT_DIM = 0.85;
 const orbitExitGetter = () =>
   (1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress)) *
-  (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1);
+  (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1) *
+  // ADR-056: the structural rings are the instrument's chrome, so they hold
+  // with the cards while the proof casefile owns the stage. The MARK itself
+  // is untouched — the casefile is meant to sit over a parked brandmark, not
+  // over an empty stage. Rests at 1 with the flag off.
+  servicesRingProgressRef.current.proofRelease;
+
+/** ADR-056 — the cards' share of the same release. Separate getter from the
+ *  orbits' so the two can be tuned apart if the rings ever want to lead the
+ *  cards in; today they are deliberately identical. */
+const ringProofGetter = () => servicesRingProgressRef.current.proofRelease;
 
 /* ADR-049 Update 3 (2026-07-18, owner): the continuum beat carries NO orbit
  * emphasis — the waist-ring re-brighten (waistContinuumGetter /
@@ -250,6 +260,9 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           scale={scale}
           progressRef={servicesRingProgressRef}
           dissipateGetter={getSmoothedDissipate}
+          /* ADR-056: holds the cards dark — and their hit anchors
+             unpublished — until the proof casefile has been scrolled past. */
+          masterOpacityGetter={ringProofGetter}
           entrance="scroll"
           publishAnchors
           /* ADR-050 promotion: the tight face and the in-canvas drawer ride

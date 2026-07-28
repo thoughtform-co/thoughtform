@@ -49,6 +49,7 @@ Change one alone and the surface is incoherent, not merely imperfect:
 | `ServicesRingHitAreas.tsx`      | every hit target + the sr-only copy of baked text                                      |
 | `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                     |
 | `BrandmarkPhysicsCoreActor.tsx` | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27) |
+| `casefile/ServicesCasefile.tsx` | the proof casefile that holds the front of the runway (ADR-056)                        |
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.
@@ -85,6 +86,14 @@ Change one alone and the surface is incoherent, not merely imperfect:
   Mobile / reduced motion keep the plate accordion regardless of any flag.
 - **No wall-clock motion** (ADR-021) — only scroll clocks, click-driven slides,
   pointer-look, and the bounded spring.
+- **The ring no longer owns the front of its runway (ADR-056).** The proof
+  casefile does, and `splitServicesRunway` re-derives the ring's progress
+  over what is left so every ring constant is unchanged. Two consequences:
+  a runway FRACTION is not a ring progress any more (the smoke helper
+  converts — do not hand-roll offsets), and the ring's `masterOpacityGetter`
+  holds the cards dark AND their hit anchors unpublished during the dwell.
+  Delaying the ring by retuning `RING_ENTRANCE_WINDOWS` does not work: they
+  ride `--corridor-dissipate`, which has already saturated by then.
 
 ## Verifying
 

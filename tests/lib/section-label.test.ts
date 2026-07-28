@@ -37,7 +37,6 @@ describe("section readout", () => {
   it("names each station in the chrome register (uppercase)", () => {
     expect(sectionReadout(idxOf("services"))).toMatchObject({ id: "services", label: "SERVICES" });
     expect(sectionReadout(idxOf("about"))).toMatchObject({ id: "about", label: "ABOUT" });
-    expect(sectionReadout(idxOf("proof"))).toMatchObject({ id: "proof", label: "PROOF" });
     expect(sectionReadout(idxOf("practice"))).toMatchObject({ id: "practice", label: "PRACTICE" });
     expect(sectionReadout(idxOf("contact"))).toMatchObject({ id: "contact", label: "CONTACT" });
   });
@@ -47,13 +46,12 @@ describe("section readout", () => {
       "arc",
       "services",
       "about",
-      "proof",
       "practice",
       "contact",
     ]);
     const last = sectionReadout(idxOf("contact"));
-    expect(last.num).toBe("06");
-    expect(last.total).toBe("06");
+    expect(last.num).toBe("05");
+    expect(last.total).toBe("05");
     for (const [i, row] of READOUT_SECTIONS.entries()) {
       const seat = row.id === ARC_SECTION_ID ? idxOf("navigate") : idxOf(row.id);
       expect(sectionReadout(seat).num, row.id).toBe(String(i + 1).padStart(2, "0"));
@@ -63,11 +61,11 @@ describe("section readout", () => {
   it("gives the detail slot the subsection, or the position when there is none", () => {
     const arc = sectionReadout(idxOf("navigate"));
     expect(readoutDetail(arc, "navigate")).toBe("navigate //");
-    expect(readoutDetail(arc, null)).toBe("01/06");
+    expect(readoutDetail(arc, null)).toBe("01/05");
 
     const about = sectionReadout(idxOf("about"));
-    expect(readoutDetail(about, null)).toBe("03/06");
-    expect(readoutDetail(about)).toBe("03/06");
+    expect(readoutDetail(about, null)).toBe("03/05");
+    expect(readoutDetail(about)).toBe("03/05");
 
     // One slot for both forms is what keeps the swap a plain decode, so
     // the two must never render as an empty string.

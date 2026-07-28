@@ -594,6 +594,46 @@ export function exitProgressForRunway(
   return clamp01(clamp01(progress) * stepCount - (stepCount - 1));
 }
 
+/**
+ * RUNWAY SPLIT (ADR-056) — the proof casefile owns the FRONT of the
+ * `#services` runway; the ring owns the rest.
+ *
+ * The casefile has to be scrolled past before the cards arrive, and that
+ * demands real scroll travel. The ring's own visibility clock is
+ * `--corridor-dissipate`, which saturates ~14 % into the runway, so it
+ * cannot express the delay — only the runway rect can.
+ *
+ * The runway therefore GROWS by the casefile's dwell and this function
+ * re-derives the ring's progress over what is left, so `ringP` still spans
+ * exactly the travel it spanned before. That is the whole point: every ring
+ * constant — `RING_ARRIVAL_FRAC`, `RING_EXIT_START`, `exitProgressForRunway`,
+ * `ringIndexForProgress` — and the ADR-047 `#about` deck seam that keys off
+ * them stay byte-identical. Widening the casefile's dwell lengthens the page;
+ * it never re-times the ring.
+ *
+ * With `proofPx = 0` (flag off) this is the identity: `proofP` parks at 1 and
+ * `ringP === scrolledPx / travelPx`, the pre-ADR-056 value. That identity is
+ * the assertion in `tests/lib/services-ring-math.test.ts`.
+ *
+ * @param scrolledPx how far the runway's top has passed the viewport top
+ *   (`-runwayRect.top`), unclamped.
+ * @param travelPx the runway's total scrollable travel (`height − vh`).
+ * @param proofPx how much of that travel the casefile owns.
+ */
+export function splitServicesRunway(
+  scrolledPx: number,
+  travelPx: number,
+  proofPx: number
+): { proofP: number; ringP: number } {
+  if (!(travelPx > 0)) return { proofP: 1, ringP: 0 };
+  const proof = Math.max(0, Math.min(proofPx, travelPx));
+  // A casefile that owns no travel is already released — never 0/0.
+  const proofP = proof > 0 ? clamp01(scrolledPx / proof) : 1;
+  const ringTravel = Math.max(1, travelPx - proof);
+  const ringP = clamp01((scrolledPx - proof) / ringTravel);
+  return { proofP, ringP };
+}
+
 /** Which card index is nearest the front for a given rotation. */
 export function frontCardIndex(rotation: number): number {
   const k = Math.round((RING_DIRECTION * rotation) / RING_QUARTER);

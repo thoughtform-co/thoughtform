@@ -1,12 +1,19 @@
 /**
- * lib/cases — client case studies (ADR-054).
+ * lib/cases — client case studies (ADR-054, placement superseded by ADR-056).
  *
  * A "case" is one client engagement told as a MISSION REPORT plus three
- * beats that map the engagement onto the Arc (Navigate → Encode → Build).
- * First consumer: the landing `#proof` station, whose markup is generated
- * at parse time by `lib/v7-parse/proofStation.ts`. Future consumer:
- * `/cases/[slug]` subpages — `slug` + `meta` exist for that and nothing
- * else here is speculative.
+ * beats that map the engagement onto the Arc (Navigate → Encode → Build),
+ * plus a CASEFILE — the same evidence recomposed as one interactive
+ * viewport: a client tab strip, a terminal directory, and a panel that swaps
+ * per row.
+ *
+ * Live consumer: `components/landing/home-v2/services/casefile/`, mounted at
+ * the top of `#services` over the parked brandmark (ADR-056). The ADR-054
+ * `#proof` station and its parse-time generator (`lib/v7-parse/proofStation.ts`)
+ * are retired; `report` and `beats` survive because the casefile's tracks are
+ * built from them — the beats are still the single source of the evidence
+ * plates. Future consumer: `/cases/[slug]` subpages — `slug` + `meta` exist
+ * for that and nothing else here is speculative.
  *
  * DISTINCT from two neighbours that share vocabulary (LANGUAGE.md):
  *   · `components/landing/home-v2/arc-cases/` — the corridor's in-canvas
@@ -118,6 +125,89 @@ export interface CaseReport {
   meta: readonly CaseMetaRow[];
 }
 
+/* ── The casefile (ADR-056) ──────────────────────────────────────────────
+   The same evidence as `report` + `beats`, recomposed as ONE interactive
+   viewport at the top of `#services`. The report becomes the opening row of
+   a directory; the beats become tracks alongside the bodies of work they do
+   not cover. Nothing here duplicates a beat's plate — the tracks reference
+   the same `CaseVisual` objects. ──────────────────────────────────────── */
+
+/** One vertex on the adoption-signal curve. `x` runs 0 → 1 across the
+ *  timeline, `y` 0 (floor) → 1 (present). Data, not a drawn path: a second
+ *  client's curve is four numbers, not a new bezier. */
+export interface CaseSignalPoint {
+  x: number;
+  y: number;
+  /** Mono stamp above the label, e.g. "26.Q2". */
+  stamp: string;
+  label: string;
+}
+
+/** One readout tile under a track's plate. */
+export interface CaseReadout {
+  value: string;
+  label: string;
+}
+
+/**
+ * A track's evidence plate. The three shared kinds are the `CaseVisual`
+ * objects the beats already carry; `signal`, `register` and `readouts` exist
+ * only in the casefile format.
+ */
+export type CaseTrackVisual =
+  | { kind: "signal"; points: readonly CaseSignalPoint[]; t0: string; now: string }
+  | { kind: "log"; rows: readonly { t: string; event: string }[]; tail?: string }
+  | {
+      kind: "registry";
+      groups: readonly { name: string; gloss: string }[];
+      rows: readonly { team: string; name: string; tag?: string }[];
+      footer?: string;
+    }
+  /** References production tools BY ID — `PROJECT_CASES` stays canonical. */
+  | { kind: "tools"; toolIds: readonly string[] }
+  | { kind: "register"; rows: readonly { k: string; v: string }[]; footer?: string }
+  /** The readout block IS the plate. Used by the metrics row. */
+  | { kind: "readouts" };
+
+/** One directory row and the panel it swaps in. */
+export interface CaseTrack {
+  /** DOM id fragment, kebab-case and unique within the case. */
+  id: string;
+  /** The row's filename, rendered verbatim in mono caps. */
+  file: string;
+  /** The row's right-hand meta, e.g. "22 WORKSHOPS". */
+  meta: string;
+  icon: "doc" | "dir";
+  /** Panel head, left slot. */
+  preview: string;
+  /** Panel head, right slot. */
+  vizLabel: string;
+  visual: CaseTrackVisual;
+  /** Two to four tiles under the plate. */
+  readouts: readonly CaseReadout[];
+  /** Dotted-leader rows. Values stay ≤20 chars — the leader needs a
+   *  non-wrapping value, so a long one runs into the next column. */
+  context: readonly { k: string; v: string }[];
+  /** Mono provenance line at the foot of the panel. */
+  source: string;
+}
+
+export interface CaseCasefile {
+  /** Tab ordinal, e.g. "01". */
+  ix: string;
+  /** Tab label, mono caps. */
+  tab: string;
+  /** TF-<year of first contact>. */
+  logCode: string;
+  state: string;
+  title: CaseTitle;
+  classLine: string;
+  brief: readonly CaseSegment[];
+  /** The operator's own line, first person, one sentence. */
+  logEntry: string;
+  tracks: readonly CaseTrack[];
+}
+
 export interface CaseDef {
   /** Route segment for a future `/cases/[slug]`. Kebab-case, unique. */
   slug: string;
@@ -125,6 +215,8 @@ export interface CaseDef {
   report: CaseReport;
   /** Exactly the Arc — the tuple pins the count, a test pins the order. */
   beats: readonly [CaseBeat, CaseBeat, CaseBeat];
+  /** The interactive surface at the top of `#services` (ADR-056). */
+  casefile: CaseCasefile;
   /** Subpage metadata — the only forward-looking fields in the model. */
   meta: { title: string; description: string };
 }

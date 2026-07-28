@@ -2,9 +2,14 @@
 
 import { useEffect, type RefObject } from "react";
 
-import { activeServiceForProgress, exitProgressForRunway } from "@/lib/services-ring/ringMath";
+import {
+  activeServiceForProgress,
+  exitProgressForRunway,
+  splitServicesRunway,
+} from "@/lib/services-ring/ringMath";
 import { clamp01 } from "@/lib/math";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+import { SERVICES_PROOF_RUNWAY_VH } from "../unifiedServicesInstrument";
 
 /** The pinned stage: the ring holds Advisory front through a short arrival
  *  while the corridor→services dissipate settles, then the first scroll
@@ -52,6 +57,24 @@ const FADE_END = 0.65;
 // DOM overlays (cards, orbits, scan notes) arrive over it.
 const CONTENT_IN_START = 0.7;
 const CONTENT_IN_END = 1.0;
+
+/**
+ * Proof casefile envelopes (ADR-056), in the two clocks the stage already has.
+ *
+ * ARRIVAL rides the corridor-exit dissipate on exactly the `CONTENT_IN_*`
+ * band — the casefile inherits the beat the services copy used to own, so it
+ * lands at the same moment the copy used to, over the same parked mark.
+ *
+ * DEPARTURE and RELEASE ride the casefile's own share of the runway. They are
+ * deliberately OFFSET: the casefile finishes fading before the services
+ * content starts arriving, so the two never crossfade through each other —
+ * the stage is empty for a beat, which is what makes the handover read as a
+ * page turn rather than a dissolve.
+ */
+const PROOF_OUT_START = 0.72;
+const PROOF_OUT_END = 0.94;
+const PROOF_RELEASE_START = 0.82;
+const PROOF_RELEASE_END = 1.0;
 
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local
 // `smoothstep`/`smootherstep` below keep their own implementations because
@@ -116,6 +139,8 @@ export function useServicesStageScroll(
     let currentFade = -1;
     let currentContentIn = -1;
     let currentExit = -1;
+    let currentProofIn = -1;
+    let currentProofOut = -1;
 
     const isInert = () =>
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
@@ -158,6 +183,28 @@ export function useServicesStageScroll(
       }
     };
 
+    // Proof casefile channels (ADR-056). `--svc-proof-in` is also the var
+    // `ProofDossier` reads, so the reveal protocol is the pre-existing one.
+    const setProof = (stage: HTMLElement, inV: number, outV: number) => {
+      if (Math.abs(inV - currentProofIn) >= 0.001) {
+        stage.style.setProperty("--svc-proof-in", inV.toFixed(4));
+        currentProofIn = inV;
+      }
+      if (Math.abs(outV - currentProofOut) >= 0.001) {
+        stage.style.setProperty("--svc-proof-out", outV.toFixed(4));
+        currentProofOut = outV;
+      }
+    };
+
+    // The runway's height is STATIC CSS on purpose — it has to exist before
+    // hydration so `useCorridorExitScroll`'s first `servicesRect` read is
+    // stable. That sheet defaults to the flag-ON height, so the rollback path
+    // is the one that pays: with the casefile off, collapse the reserved
+    // dwell here, once, on mount. Flag on ⇒ no write, no reflow.
+    if (SERVICES_PROOF_RUNWAY_VH === 0) {
+      stageRef.current?.parentElement?.style.setProperty("--svc-proof-runway", "0svh");
+    }
+
     const write = () => {
       frame = 0;
       if (disposed) return;
@@ -171,7 +218,11 @@ export function useServicesStageScroll(
         setArrive(stage, 1, 1);
         setContentIn(stage, 1);
         setExit(stage, 0);
+        // The casefile is static flow content here, resolved and released —
+        // it never gates the accordion below it.
+        setProof(stage, 1, 0);
         servicesRingProgressRef.current.progress = 0;
+        servicesRingProgressRef.current.proofRelease = 1;
         return;
       }
 
@@ -187,21 +238,38 @@ export function useServicesStageScroll(
         smoothstep(SHRINK_START, SHRINK_END, dissipate),
         smoothstep(FADE_START, FADE_END, dissipate)
       );
-      // Services copy entrance — delayed + smootherstep so the list +
-      // paragraph rise in gently AFTER the core has shrunk to centre.
-      setContentIn(stage, smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate));
-
-      // Active step — from the runway scroll position.
+      // The runway rect — ONE read, split two ways (ADR-056).
       const runway = stage.parentElement; // .services-stage-root (the tall slot)
       if (!runway) return;
       const vh = window.innerHeight || 1;
       const r = runway.getBoundingClientRect();
       const travel = r.height - vh;
-      const p = travel > 0 ? clamp01(-r.top / travel) : 0;
+      // The casefile owns the FRONT of the runway; the ring owns the rest,
+      // over a domain `splitServicesRunway` keeps byte-identical to the
+      // pre-casefile 500svh. `proofP` is 1 immediately when the flag is off.
+      const { proofP, ringP } = splitServicesRunway(-r.top, travel, SERVICES_PROOF_RUNWAY_VH * vh);
+
+      // Casefile arrival rides the dissipate; departure rides its own share.
+      const proofIn = smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate);
+      setProof(stage, proofIn, smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP));
+
+      // ONE release ramp gates everything the casefile stands in front of.
+      // Multiplying it into `--svc-content-in` delays the masthead (and its
+      // decode controller), the plate cluster, the designation layer, the
+      // orbit draw-on and the scan interface together — no new consumer, no
+      // new listener. Flag off ⇒ proofP is 1 ⇒ release is 1 ⇒ unchanged.
+      const proofRelease = smootherstep(PROOF_RELEASE_START, PROOF_RELEASE_END, proofP);
+      servicesRingProgressRef.current.proofRelease = proofRelease;
+
+      // Services copy entrance — delayed + smootherstep so the list +
+      // paragraph rise in gently AFTER the core has shrunk to centre.
+      setContentIn(stage, smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate) * proofRelease);
+
       // Continuous runway progress for the card ring (ADR-029) — same read,
       // same writer, bridged across React roots via the module ref. The step
       // below stays the floor() of this value, so ring rotation and the
       // active-service clock can never desync.
+      const p = ringP;
       servicesRingProgressRef.current.progress = p;
       setExit(stage, exitProgressForRunway(p));
       // `data-active-step` IS the front-card index (round of the continuous
@@ -242,6 +310,8 @@ export function useServicesStageScroll(
       currentFade = -1;
       currentContentIn = -1;
       currentExit = -1;
+      currentProofIn = -1;
+      currentProofOut = -1;
       write();
     };
     document.addEventListener("visibilitychange", onVisibility);

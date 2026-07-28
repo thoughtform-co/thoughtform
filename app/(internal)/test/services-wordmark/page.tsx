@@ -243,7 +243,8 @@ export default function ServicesWordmarkLabPage() {
 
   // Fixed progress for the optional card ring (production reads this per frame
   // from useServicesStageScroll; the lab parks it at beat-1 midpoint).
-  const progressRef = useRef<ServicesRingProgress>({ progress: 0.3 });
+  // `proofRelease: 1` — the lab has no proof casefile to wait for (ADR-056).
+  const progressRef = useRef<ServicesRingProgress>({ progress: 0.3, proofRelease: 1 });
 
   // Late-mount canvas sizing nudge (services-demo convention).
   useEffect(() => {

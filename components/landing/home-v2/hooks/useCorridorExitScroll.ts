@@ -142,10 +142,15 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // the still-live canvas), so the kill lands one station down.
       // ABOUT_DECK_STAGE off restores the ADR-033 #about kill
       // byte-identically.
+      //
+      // ADR-056 retired `#proof`, which used to hold this slot. `#practice`
+      // now occupies the SAME scroll position (the removed station was
+      // between them), so the seam is unmoved — and it is a plain opaque
+      // station, which is the only property this read requires.
       const nextStation = ABOUT_DECK_STAGE
-        ? (root.querySelector<HTMLElement>("#proof") ??
-          root.querySelector<HTMLElement>("#practice"))
-        : (root.querySelector<HTMLElement>("#about") ?? root.querySelector<HTMLElement>("#proof"));
+        ? root.querySelector<HTMLElement>("#practice")
+        : (root.querySelector<HTMLElement>("#about") ??
+          root.querySelector<HTMLElement>("#practice"));
       const nextStationTopVh =
         (nextStation?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
       // The AMBIENT hold outlives the dock gate (ADR-030 Update 1). The

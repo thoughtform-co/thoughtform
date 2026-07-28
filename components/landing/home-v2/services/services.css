@@ -75,8 +75,17 @@
    * ADR-047 Update 3) sweeps up over it via its -100svh margin, so keeping
    * the exit clock byte-identical leaves that seam untouched. The
    * corridor-exit dissipate clock keys off #services's TOP + a fixed span
-   * (useCorridorExitScroll), NOT this height. */
-  min-height: 500svh;
+   * (useCorridorExitScroll), NOT this height.
+   *
+   * ADR-056: the proof casefile holds the FRONT of the runway, so the track
+   * grows by `--svc-proof-runway` (2 viewports, mirroring
+   * SERVICES_PROOF_RUNWAY_VH). `splitServicesRunway` then re-derives the
+   * ring's progress over the remaining 500svh, so the RING's domain — and
+   * with it RING_ARRIVAL_FRAC, RING_EXIT_START and the ADR-047 #about sweep —
+   * is unchanged. Only the page gets longer. Keep this default and the TS
+   * constant in step; the hook owns the split, this owns the height. */
+  --svc-proof-runway: 200svh;
+  min-height: calc(var(--svc-proof-runway) + 500svh);
 }
 
 /* ── Pinned stage ────────────────────────────────────────────────── */

@@ -49,10 +49,10 @@ test.describe("Homepage corridor smoke", () => {
         "home-corridor-mount",
         "services",
         // ADR-033 funnel: the bio follows services as the opaque cover,
-        // then the philosophy beat and the Loop practice proof. #tools
+        // then the philosophy beat. The Loop case is no longer a station:
+        // ADR-056 made it the casefile at the TOP of #services. #tools
         // and #build retired (the cases orbit the Arc's Build park).
         "about",
-        "proof",
         "practice",
         "contact",
       ];

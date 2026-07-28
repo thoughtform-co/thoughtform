@@ -43,14 +43,14 @@ import { readoutDetail } from "@/lib/rail-manifest/sectionLabel";
  * Link targets map onto the surviving sections (the corridor surgery
  * removes #definition / #intelligence-layer / #buildQuote etc.; #tools
  * and #build retired with ADR-033 — the cases live in the Arc's
- * Build-park orbit): SERVICES → #services, ABOUT → #about,
- * PROOF → #proof (the client case, ADR-054 — it replaced the #continuum
- * vision beat this slot used to point at).
+ * Build-park orbit; #proof retired with ADR-056 — the client case is the
+ * casefile at the TOP of #services now, so PROOF and SERVICES would be the
+ * same anchor and the row is dropped rather than duplicated).
  */
 const NAV_ITEMS = [
   { num: "01", label: "Services", href: "#services" },
   { num: "02", label: "About", href: "#about" },
-  { num: "03", label: "Proof", href: "#proof" },
+  { num: "03", label: "Practice", href: "#practice" },
 ] as const;
 
 /** Seconds the readout's decode waits on arrival — matches the CSS

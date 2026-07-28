@@ -247,7 +247,11 @@ export default function ServicesOrbitLabPage() {
   // The ring reads progress per WebGL frame from this ref — the slider writes
   // it (and mirrors into state for display), exactly like production's
   // servicesRingProgressRef written by useServicesStageScroll.
-  const progressRef = useRef<ServicesRingProgress>({ progress: DEFAULTS.progress });
+  // `proofRelease: 1` — the lab has no proof casefile to wait for (ADR-056).
+  const progressRef = useRef<ServicesRingProgress>({
+    progress: DEFAULTS.progress,
+    proofRelease: 1,
+  });
   useEffect(() => {
     progressRef.current.progress = cfg.progress;
   }, [cfg.progress]);

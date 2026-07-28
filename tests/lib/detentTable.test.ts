@@ -81,7 +81,7 @@ describe("computeDetentTable — proportional detents", () => {
   it("is proportional: the corridor spans more rail than a short station", () => {
     const t = computeDetentTable() as number[];
     const corridorSpan = t[idx("services")] - t[idx("thesis")];
-    const stationSpan = t[idx("practice")] - t[idx("proof")];
+    const stationSpan = t[idx("contact")] - t[idx("practice")];
     expect(corridorSpan).toBeGreaterThan(stationSpan);
   });
 

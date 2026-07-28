@@ -25,7 +25,10 @@ export type {
 
 export { extractV7Text } from "./extractText";
 export { sliceV7Sections } from "./sliceSections";
-export { buildProofStationHtml } from "./proofStation";
+// (`buildProofStationHtml` / `proofStation.ts` were deleted with ADR-056:
+// the client case is a mounted component inside `ServicesStage` now, not a
+// station whose markup is generated at parse time. `ParseOptions.fillSlots`
+// survives as a general capability — it just has no caller today.)
 
 /**
  * Production homepage caller (`app/(marketing)/page.tsx`). Reads the

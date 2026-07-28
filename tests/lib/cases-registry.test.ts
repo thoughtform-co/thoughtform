@@ -118,6 +118,114 @@ describe("cases registry (ADR-054)", () => {
     expect(offenders).toEqual([]);
   });
 
+  /* ── The casefile (ADR-056) ─────────────────────────────────────────
+     The guards that were proven on the lab data before promotion. The
+     casefile is the LIVE surface now, so these run against the registry. */
+
+  it("every case opens on a track, with unique anchorable track ids", () => {
+    for (const c of CASES) {
+      expect(c.casefile.tracks.length).toBeGreaterThan(0);
+      const ids = c.casefile.tracks.map((t) => t.id);
+      expect(new Set(ids).size).toBe(ids.length);
+      for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    }
+  });
+
+  it("every track carries a full panel (2..4 readouts, context, source)", () => {
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        expect(t.readouts.length).toBeGreaterThanOrEqual(2);
+        expect(t.readouts.length).toBeLessThanOrEqual(4);
+        expect(t.context.length).toBeGreaterThan(0);
+        expect(t.source.length).toBeGreaterThan(0);
+        expect(t.file.length).toBeGreaterThan(0);
+        for (const row of t.context) {
+          // The dotted leader needs a non-wrapping value, so a long one runs
+          // into the next column of the three-up register.
+          expect(row.v.length, `${c.slug}/${t.id} context "${row.k}"`).toBeLessThanOrEqual(20);
+        }
+      }
+    }
+  });
+
+  it("no track plate is empty", () => {
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        const v = t.visual;
+        if (v.kind === "log") expect(v.rows.length).toBeGreaterThan(0);
+        if (v.kind === "register") expect(v.rows.length).toBeGreaterThan(0);
+        if (v.kind === "registry") {
+          expect(v.rows.length).toBeGreaterThan(0);
+          expect(v.groups.length).toBeGreaterThan(0);
+        }
+        if (v.kind === "signal") expect(v.points.length).toBeGreaterThan(1);
+        if (v.kind === "tools") expect(v.toolIds.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("signal points stay inside the plot box and run left to right", () => {
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        if (t.visual.kind !== "signal") continue;
+        let prevX = -1;
+        for (const p of t.visual.points) {
+          expect(p.x).toBeGreaterThanOrEqual(0);
+          expect(p.x).toBeLessThanOrEqual(1);
+          expect(p.y).toBeGreaterThanOrEqual(0);
+          expect(p.y).toBeLessThanOrEqual(1);
+          expect(p.x).toBeGreaterThan(prevX);
+          prevX = p.x;
+        }
+      }
+    }
+  });
+
+  it("casefile tool ids resolve against PROJECT_CASES too", () => {
+    const known = new Set(PROJECT_CASES.map((p) => p.id));
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        if (t.visual.kind !== "tools") continue;
+        for (const id of t.visual.toolIds) expect(known.has(id as never)).toBe(true);
+      }
+    }
+  });
+
+  it("the beats and the casefile share their plates rather than restating them", () => {
+    // The hoisted consts in the content module are what stop the two
+    // surfaces drifting. If someone re-types a plate inline, the row arrays
+    // stop being reference-equal and this catches it.
+    for (const c of CASES) {
+      const beatLog = c.beats.find((b) => b.visual.kind === "log")?.visual;
+      const trackLog = c.casefile.tracks.find(
+        (t) => t.visual.kind === "log" && t.id === "transformation"
+      )?.visual;
+      if (beatLog?.kind === "log" && trackLog?.kind === "log") {
+        expect(trackLog.rows).toBe(beatLog.rows);
+      }
+      const beatReg = c.beats.find((b) => b.visual.kind === "registry")?.visual;
+      const trackReg = c.casefile.tracks.find((t) => t.visual.kind === "registry")?.visual;
+      if (beatReg?.kind === "registry" && trackReg?.kind === "registry") {
+        expect(trackReg.rows).toBe(beatReg.rows);
+        expect(trackReg.groups).toBe(beatReg.groups);
+      }
+    }
+  });
+
+  it("the handoff's superseded readouts never came along", () => {
+    // The `Thoughtform Prime` design handoff printed 15+ teams / 20+ Skills /
+    // 90% of paid social. Those predate the ADR-054 numbers doctrine (22 / 42
+    // / 4 / 5 → 130+), and "90% of paid social" is a near-variant of the "95%
+    // of briefings" claim already published on the ai-keynote arc page.
+    const offenders: string[] = [];
+    scanStrings(CASES, "cases", (value, path) => {
+      if (/\b15\+\s*teams\b/i.test(value)) offenders.push(`${path}: superseded team count`);
+      if (/\b20\+\s*skills\b/i.test(value)) offenders.push(`${path}: superseded skill count`);
+      if (/\b90\s*%/.test(value)) offenders.push(`${path}: duplicate paid-social claim`);
+    });
+    expect(offenders).toEqual([]);
+  });
+
   it("holds the confidentiality envelope (no money, boards, or repo links)", () => {
     // Currency symbols, amounts with a thousands separator, the adoption
     // board, and the private Skills/tool repos. Any of these reaching a

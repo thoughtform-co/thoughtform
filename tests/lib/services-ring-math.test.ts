@@ -18,6 +18,7 @@ import {
   RING_Y_OFFSET,
   RING_ENTRANCE_RADIUS_FROM,
   RING_ENTRANCE_WINDOWS,
+  splitServicesRunway,
   RING_ENTRANCE_DIRECTIONS,
   RING_ENTRANCE_OFFSET,
   RING_ENTRANCE_OPACITY_LEAD,
@@ -946,5 +947,102 @@ describe("drawerDismissedByScroll", () => {
     for (const openedAt of [0, 0.2, 0.5, 0.83, 1]) {
       expect(drawerDismissedByScroll(openedAt, openedAt + beat)).toBe(true);
     }
+  });
+});
+
+/**
+ * The runway split (ADR-056). The casefile owns the front of the `#services`
+ * runway; the ring owns what is left. The contract that matters is that the
+ * ring's PROGRESS DOMAIN never moves — so every ring constant and the ADR-047
+ * `#about` seam that keys off them stay byte-identical however the casefile's
+ * dwell is tuned.
+ */
+describe("splitServicesRunway (ADR-056)", () => {
+  const TRAVEL = 4000; // 500svh − 100svh at vh 1000
+
+  it("is the identity when the casefile owns no travel (flag off)", () => {
+    // THE assertion. With proofPx 0 the ring must see exactly the progress it
+    // saw before this function existed: `scrolled / travel`.
+    for (const scrolled of [-500, 0, 1, 947, 2000, 3999, 4000, 9999]) {
+      const { proofP, ringP } = splitServicesRunway(scrolled, TRAVEL, 0);
+      expect(proofP).toBe(1);
+      expect(ringP).toBeCloseTo(Math.max(0, Math.min(1, scrolled / TRAVEL)), 12);
+    }
+  });
+
+  it("gives the ring its full 0..1 over the travel the casefile leaves", () => {
+    const PROOF = 1800; // ~200svh at vh 900
+    // Ring is still at 0 for the whole casefile dwell…
+    for (const scrolled of [0, 500, 1799, 1800]) {
+      expect(splitServicesRunway(scrolled, TRAVEL, PROOF).ringP).toBe(0);
+    }
+    // …then spans exactly 0 → 1 across the remainder.
+    expect(splitServicesRunway(PROOF + (TRAVEL - PROOF) / 2, TRAVEL, PROOF).ringP).toBeCloseTo(
+      0.5,
+      12
+    );
+    expect(splitServicesRunway(TRAVEL, TRAVEL, PROOF).ringP).toBe(1);
+  });
+
+  it("runs the casefile 0 → 1 across its own share and then holds", () => {
+    const PROOF = 1800;
+    expect(splitServicesRunway(0, TRAVEL, PROOF).proofP).toBe(0);
+    expect(splitServicesRunway(900, TRAVEL, PROOF).proofP).toBeCloseTo(0.5, 12);
+    expect(splitServicesRunway(1800, TRAVEL, PROOF).proofP).toBe(1);
+    // Held at 1 for the rest of the runway — the casefile never re-arms
+    // while the ring is turning.
+    expect(splitServicesRunway(3500, TRAVEL, PROOF).proofP).toBe(1);
+  });
+
+  it("hands over exactly once: the ring starts as the casefile finishes", () => {
+    const PROOF = 1800;
+    const at = (s: number) => splitServicesRunway(s, TRAVEL, PROOF);
+    // One scroll pixel before the handover the ring is dark and the casefile
+    // has not quite finished; one pixel after, the reverse. No overlap band
+    // where both are mid-transition, and no gap where neither is.
+    expect(at(PROOF - 1).proofP).toBeLessThan(1);
+    expect(at(PROOF - 1).ringP).toBe(0);
+    expect(at(PROOF + 1).proofP).toBe(1);
+    expect(at(PROOF + 1).ringP).toBeGreaterThan(0);
+  });
+
+  it("is monotonic in scroll for both halves", () => {
+    const PROOF = 1800;
+    let lastProof = -1;
+    let lastRing = -1;
+    for (let s = -200; s <= TRAVEL + 200; s += 37) {
+      const { proofP, ringP } = splitServicesRunway(s, TRAVEL, PROOF);
+      expect(proofP).toBeGreaterThanOrEqual(lastProof);
+      expect(ringP).toBeGreaterThanOrEqual(lastRing);
+      lastProof = proofP;
+      lastRing = ringP;
+    }
+  });
+
+  it("degenerates safely: no travel, and a casefile wider than the runway", () => {
+    // Pre-hydration / zero-height runway — never NaN, never a divide by zero.
+    for (const t of [0, -1, Number.NaN]) {
+      const r = splitServicesRunway(100, t, 1800);
+      expect(r.proofP).toBe(1);
+      expect(r.ringP).toBe(0);
+      expect(Number.isFinite(r.proofP) && Number.isFinite(r.ringP)).toBe(true);
+    }
+    // A dwell longer than the runway is clamped, so the ring keeps a domain.
+    const over = splitServicesRunway(TRAVEL, TRAVEL, TRAVEL * 3);
+    expect(over.proofP).toBe(1);
+    expect(Number.isFinite(over.ringP)).toBe(true);
+  });
+
+  it("leaves the ring constants untouched — the whole point of the split", () => {
+    // If the ring's domain is preserved, the beat boundaries land where they
+    // always did. These are the values the #about deck seam depends on.
+    expect(RING_EXIT_START).toBe(0.8);
+    expect(RING_ARRIVAL_FRAC).toBe(0.14);
+    const PROOF = 1800;
+    // The exit-hold beat begins at the same DISTANCE FROM THE END of the
+    // runway, whatever the casefile takes at the front.
+    const ringTravel = TRAVEL - PROOF;
+    const exitStartsAt = PROOF + RING_EXIT_START * ringTravel;
+    expect(splitServicesRunway(exitStartsAt, TRAVEL, PROOF).ringP).toBeCloseTo(RING_EXIT_START, 12);
   });
 });

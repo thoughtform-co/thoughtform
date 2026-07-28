@@ -7,6 +7,7 @@ import { ServicesDesignationLayer } from "./ServicesDesignationLayer";
 import { ServicesMasthead } from "./ServicesMasthead";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
+import { ServicesCasefile } from "./casefile/ServicesCasefile";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
@@ -19,6 +20,7 @@ import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import {
   SERVICES_CARD_DRAWER,
   SERVICES_CARD_RING,
+  SERVICES_PROOF_CASEFILE,
   UNIFIED_SERVICES_ARMILLARY,
 } from "../unifiedServicesInstrument";
 
@@ -213,6 +215,14 @@ export function ServicesStage() {
       data-plate-open={drawerActive && openServiceId ? "1" : undefined}
     >
       <div className="services-stage__items">
+        {/* The client casefile (ADR-056) — the corridor epilogue's claim
+            answered with one engagement, over the parked brandmark, BEFORE
+            the offer. It holds the front of the runway; the ring and the
+            masthead wait behind it on `--svc-content-in` × the release ramp.
+            FIRST in DOM, ahead of the masthead, so the mobile/PRM accordion
+            flow puts the proof above the offer there too. */}
+        {SERVICES_PROOF_CASEFILE && <ServicesCasefile />}
+
         {/* Section masthead (ADR-044): title left / intro right in the upper
             band. Ring-mode only (the flag-off racks own the upper corners);
             FIRST in DOM so the mobile/PRM accordion flow puts it above the

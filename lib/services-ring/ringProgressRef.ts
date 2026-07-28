@@ -11,10 +11,21 @@
 // `useFrame`. Nobody else writes.
 
 export interface ServicesRingProgress {
-  /** Runway progress 0..1 across the 500svh services stage (0 while inert). */
+  /** RING progress 0..1 (0 while inert). Under ADR-056 the runway carries the
+   *  proof casefile's dwell at its front and this is the progress across what
+   *  is LEFT — `splitServicesRunway` keeps that domain byte-identical to the
+   *  pre-casefile 500svh, so every ring constant still lands where it did. */
   progress: number;
+  /** 0 while the proof casefile owns the stage, 1 once it has released
+   *  (ADR-056). Multiplied into the ring's and the orbits' master opacity so
+   *  the cards cannot paint — or publish hit anchors — over the casefile.
+   *
+   *  Defaults to 1: a reader that runs before the first write, with the flag
+   *  off, or on the inert (mobile / reduced-motion) path must see the ring
+   *  exactly as it was. Nothing may ever leave this at 0 as a resting state. */
+  proofRelease: number;
 }
 
 export const servicesRingProgressRef: { current: ServicesRingProgress } = {
-  current: { progress: 0 },
+  current: { progress: 0, proofRelease: 1 },
 };
