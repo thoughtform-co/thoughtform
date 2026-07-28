@@ -61,7 +61,7 @@ cannot express "scroll past a panel". The delay has to come from the
 runway rect.
 
 So the runway GROWS by the casefile's dwell (`--svc-proof-runway`,
-200svh) and `splitServicesRunway` (`ringMath.ts`) re-derives the ring's
+240svh) and `splitServicesRunway` (`ringMath.ts`) re-derives the ring's
 progress over what is left:
 
 ```
@@ -78,12 +78,22 @@ in `tests/lib/services-ring-math.test.ts`.
 
 ### Two new channels, one existing channel gated
 
-`useServicesStageScroll` gains `--svc-proof-in` (arrival, on the
-`CONTENT_IN_*` dissipate band — the casefile inherits the beat the
-services copy used to own) and `--svc-proof-out` (departure, on `proofP`).
-It then multiplies `--svc-content-in` by a release ramp, which delays the
-masthead, the plate cluster, the designation layer, the orbit draw-on and
-the scan interface **together**, with no new consumer and no new listener.
+`useServicesStageScroll` gains `--svc-proof-in` and `--svc-proof-out`.
+
+Arrival is a PRODUCT: the `CONTENT_IN_*` dissipate band as a pre-gate (the
+casefile can never appear before the corridor has resolved into the parked
+mark) times a `proofP` band as the actual timing. Keying the timing to
+runway travel rather than to the dissipate is not incidental — the
+epilogue signal exits on `DISSIPATE_BANDS.SIGNAL_OUT` = [0.86, 0.99], so a
+dissipate-band arrival OVERLAPS the beat it is answering. The first cut
+did exactly that and read as the two fighting; waiting on travel past the
+park lets the claim leave before the evidence lands, and makes "later" a
+distance rather than a curve reshape. Departure and the release ramp ride
+the same `proofP`.
+
+The release multiplies `--svc-content-in`, which delays the masthead, the
+plate cluster, the designation layer, the orbit draw-on and the scan
+interface **together**, with no new consumer and no new listener.
 
 The same release is published on `servicesRingProgressRef.proofRelease`
 and consumed by a new `masterOpacityGetter` on `ServicesCardRing`
@@ -143,7 +153,7 @@ it as a series. No placeholder clients on a public page.
   general parse capability with no caller.
 - The `.proof__*` block in `landing.css` is kept: `/test/proof-highlight-lab`
   still renders those classes.
-- The page grows ~200svh. `#proof` was ~500svh, so it is net shorter.
+- The page grows ~240svh. `#proof` was ~500svh, so it is net shorter.
 
 ## Verification
 

@@ -61,19 +61,27 @@ const CONTENT_IN_END = 1.0;
 /**
  * Proof casefile envelopes (ADR-056), in the two clocks the stage already has.
  *
- * ARRIVAL rides the corridor-exit dissipate on exactly the `CONTENT_IN_*`
- * band — the casefile inherits the beat the services copy used to own, so it
- * lands at the same moment the copy used to, over the same parked mark.
+ * ARRIVAL is a PRODUCT of both. The dissipate factor (the `CONTENT_IN_*`
+ * band) is a pre-gate: the casefile can never appear before the corridor has
+ * resolved into the parked mark. The `proofP` factor is the actual timing,
+ * and it is why arrival is keyed to runway travel rather than to the
+ * dissipate alone — the epilogue signal ("EVERYONE IS RACING TO BUILD THIS
+ * CAPABILITY.") exits on `DISSIPATE_BANDS.SIGNAL_OUT` = [0.86, 0.99], so an
+ * arrival on the dissipate band OVERLAPS the beat it is answering. Waiting on
+ * travel past the park lets the claim leave before the evidence arrives, and
+ * makes "a bit later" a distance rather than a curve reshape.
  *
- * DEPARTURE and RELEASE ride the casefile's own share of the runway. They are
- * deliberately OFFSET: the casefile finishes fading before the services
+ * DEPARTURE and RELEASE ride the same runway share. They are deliberately
+ * OFFSET from each other: the casefile finishes fading before the services
  * content starts arriving, so the two never crossfade through each other —
  * the stage is empty for a beat, which is what makes the handover read as a
  * page turn rather than a dissolve.
  */
+const PROOF_IN_START = 0.12;
+const PROOF_IN_END = 0.26;
 const PROOF_OUT_START = 0.72;
-const PROOF_OUT_END = 0.94;
-const PROOF_RELEASE_START = 0.82;
+const PROOF_OUT_END = 0.86;
+const PROOF_RELEASE_START = 0.86;
 const PROOF_RELEASE_END = 1.0;
 
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local
@@ -249,8 +257,11 @@ export function useServicesStageScroll(
       // pre-casefile 500svh. `proofP` is 1 immediately when the flag is off.
       const { proofP, ringP } = splitServicesRunway(-r.top, travel, SERVICES_PROOF_RUNWAY_VH * vh);
 
-      // Casefile arrival rides the dissipate; departure rides its own share.
-      const proofIn = smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate);
+      // Casefile arrival: dissipate as the pre-gate, runway travel as the
+      // timing, so the epilogue's claim is gone before the evidence lands.
+      const proofIn =
+        smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate) *
+        smootherstep(PROOF_IN_START, PROOF_IN_END, proofP);
       setProof(stage, proofIn, smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP));
 
       // ONE release ramp gates everything the casefile stands in front of.

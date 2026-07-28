@@ -151,8 +151,13 @@ export const SERVICES_PROOF_CASEFILE = true;
 
 /**
  * How many viewports of the `#services` runway the casefile holds before the
- * ring arrives (~2 screens — enough scroll to read the brief and click a few
- * directory rows while the stage is pinned).
+ * ring arrives.
+ *
+ * 2.4, not 2: the arrival waits on runway travel so the epilogue's claim has
+ * left before the evidence lands (see `PROOF_IN_*` in
+ * `useServicesStageScroll`), and that delay has to come from somewhere. At
+ * 2.4 the full-opacity reading window is still ~1.1 viewports — enough scroll
+ * to read the brief and click a few directory rows while the stage is pinned.
  *
  * This is the ONLY tuning knob for the dwell. It lengthens the page and moves
  * nothing else: the split re-derives the ring's progress over the remainder,
@@ -160,4 +165,4 @@ export const SERVICES_PROOF_CASEFILE = true;
  * `--svc-proof-runway` default) and by `useServicesStageScroll`; keep the two
  * in step — the CSS owns the runway's height, this constant owns the split.
  */
-export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 2 : 0;
+export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 2.4 : 0;
