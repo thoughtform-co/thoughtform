@@ -1015,7 +1015,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // this factor is identity everywhere outside the dwell — and with the
     // flag off, in the corridor proper, and on the inert path.
     const proofFade = SERVICES_PROOF_CASEFILE
-      ? 1 - PROOF_INTERIOR_DIM * (1 - servicesRingProgressRef.current.proofRelease)
+      ? 1 - PROOF_INTERIOR_DIM * servicesRingProgressRef.current.proofPresence
       : 1;
     const interiorMul =
       (servicesAmbient

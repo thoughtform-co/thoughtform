@@ -48,6 +48,15 @@
   z-index: 6;
   /* See THE SEAT. Only interactive leaves opt back in. */
   pointer-events: none;
+  /* HIT-TESTING GATE. Opacity 0 does NOT remove an element from the hit
+     test, and the tabs and rows below deliberately opt back into
+     `pointer-events: auto` — so a departed casefile at z 6 goes on
+     swallowing clicks meant for `.svc-ring-hits__hit` at z 4, which reads
+     as a dead card. `visibility` is inherited AND removes the subtree from
+     hit-testing, so one attribute closes both directions. The stage's
+     scroll hook owns it; absent ⇒ hidden is deliberate, since a casefile
+     with no clock behind it has nothing to show. */
+  visibility: hidden;
   color: var(--dawn, #ebe3d6);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
 
@@ -137,6 +146,10 @@
     rgba(236, 227, 214, 0.24) 0 1px,
     transparent 1px 6px
   );
+}
+
+.services-stage[data-proof-live] .fl-case {
+  visibility: visible;
 }
 
 /* ── Station chrome ─────────────────────────────────────────────────── */
@@ -975,6 +988,10 @@
     position: static;
     display: block;
     pointer-events: auto;
+    /* Unconditional here — the inert branch of the scroll hook sets the
+       live attribute too, but this surface must render even if no clock
+       ever runs (no-JS, a dead portal). */
+    visibility: visible;
     opacity: 1;
     left: auto;
     right: auto;

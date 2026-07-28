@@ -251,6 +251,7 @@ export default function ServicesOrbitLabPage() {
   const progressRef = useRef<ServicesRingProgress>({
     progress: DEFAULTS.progress,
     proofRelease: 1,
+    proofPresence: 0,
   });
   useEffect(() => {
     progressRef.current.progress = cfg.progress;

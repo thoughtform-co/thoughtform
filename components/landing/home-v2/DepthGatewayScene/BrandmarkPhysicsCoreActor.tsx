@@ -840,7 +840,7 @@ export function BrandmarkPhysicsCoreActor({
     // ADR-056: and the proof casefile dims it while that surface holds the
     // stage. `proofRelease` rests at 1, so this is identity everywhere else.
     const proofFade = SERVICES_PROOF_CASEFILE
-      ? 1 - PROOF_MARK_DIM * (1 - servicesRingProgressRef.current.proofRelease)
+      ? 1 - PROOF_MARK_DIM * servicesRingProgressRef.current.proofPresence
       : 1;
     const dimMix = (1 - EXIT_DIM * exitT) * aboutFlipFade * proofFade;
     opacityRef.current = (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * dimMix;

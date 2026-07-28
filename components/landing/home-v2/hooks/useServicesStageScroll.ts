@@ -77,8 +77,8 @@ const CONTENT_IN_END = 1.0;
  * the stage is empty for a beat, which is what makes the handover read as a
  * page turn rather than a dissolve.
  */
-const PROOF_IN_START = 0.12;
-const PROOF_IN_END = 0.26;
+const PROOF_IN_START = 0.05;
+const PROOF_IN_END = 0.24;
 const PROOF_OUT_START = 0.72;
 const PROOF_OUT_END = 0.86;
 const PROOF_RELEASE_START = 0.86;
@@ -149,6 +149,7 @@ export function useServicesStageScroll(
     let currentExit = -1;
     let currentProofIn = -1;
     let currentProofOut = -1;
+    let currentProofLive: boolean | null = null;
 
     const isInert = () =>
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
@@ -202,6 +203,18 @@ export function useServicesStageScroll(
         stage.style.setProperty("--svc-proof-out", outV.toFixed(4));
         currentProofOut = outV;
       }
+      // HIT-TESTING GATE. Opacity 0 does NOT remove an element from the hit
+      // test, and the casefile's tabs and rows deliberately opt back into
+      // `pointer-events: auto` — so a departed casefile at z 6 keeps
+      // swallowing clicks meant for the ring's hit areas at z 4. The sheet
+      // hangs `visibility` off this attribute, which drops the whole subtree
+      // out of hit-testing in one move.
+      const live = inV * (1 - outV) > 0.01;
+      if (live !== currentProofLive) {
+        if (live) stage.setAttribute("data-proof-live", "1");
+        else stage.removeAttribute("data-proof-live");
+        currentProofLive = live;
+      }
     };
 
     // The runway's height is STATIC CSS on purpose — it has to exist before
@@ -228,9 +241,13 @@ export function useServicesStageScroll(
         setExit(stage, 0);
         // The casefile is static flow content here, resolved and released —
         // it never gates the accordion below it.
+        // Resolved, released, and LIVE — here the casefile is static flow
+        // content above the accordion, so it must stay hit-testable.
         setProof(stage, 1, 0);
         servicesRingProgressRef.current.progress = 0;
         servicesRingProgressRef.current.proofRelease = 1;
+        // Static flow content, nothing in front of the instrument.
+        servicesRingProgressRef.current.proofPresence = 0;
         return;
       }
 
@@ -262,7 +279,12 @@ export function useServicesStageScroll(
       const proofIn =
         smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate) *
         smootherstep(PROOF_IN_START, PROOF_IN_END, proofP);
-      setProof(stage, proofIn, smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP));
+      const proofOut = smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP);
+      setProof(stage, proofIn, proofOut);
+      // What the casefile is actually painting — the mark and its haze dim
+      // against THIS, not against the release, so the instrument recedes as
+      // the surface arrives rather than the moment the stage parks.
+      servicesRingProgressRef.current.proofPresence = proofIn * (1 - proofOut);
 
       // ONE release ramp gates everything the casefile stands in front of.
       // Multiplying it into `--svc-content-in` delays the masthead (and its
@@ -323,6 +345,7 @@ export function useServicesStageScroll(
       currentExit = -1;
       currentProofIn = -1;
       currentProofOut = -1;
+      currentProofLive = null;
       write();
     };
     document.addEventListener("visibilitychange", onVisibility);

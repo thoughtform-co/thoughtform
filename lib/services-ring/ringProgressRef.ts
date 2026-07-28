@@ -24,8 +24,21 @@ export interface ServicesRingProgress {
    *  off, or on the inert (mobile / reduced-motion) path must see the ring
    *  exactly as it was. Nothing may ever leave this at 0 as a resting state. */
   proofRelease: number;
+  /** The casefile's own on-screen envelope — its arrival times the inverse
+   *  of its departure, i.e. exactly the opacity it is painting at (ADR-056).
+   *
+   *  DISTINCT from `proofRelease` on purpose. The ring must stay dark for the
+   *  WHOLE dwell, including the lead-in before the casefile has faded up, so
+   *  it reads the release. The parked mark and its haze must only recede
+   *  while something is actually in front of them, so they read this — keying
+   *  their dim to the release instead drops the instrument the moment the
+   *  stage parks, a beat before anything arrives to justify it.
+   *
+   *  Defaults to 0: nothing on screen ⇒ no dim, which is the resting truth
+   *  before the first write, with the flag off, and on the inert path. */
+  proofPresence: number;
 }
 
 export const servicesRingProgressRef: { current: ServicesRingProgress } = {
-  current: { progress: 0, proofRelease: 1 },
+  current: { progress: 0, proofRelease: 1, proofPresence: 0 },
 };

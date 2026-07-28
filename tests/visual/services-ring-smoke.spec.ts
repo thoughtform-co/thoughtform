@@ -146,6 +146,28 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(after.caseOpacity).toBeLessThan(0.05);
     expect(after.contentIn).toBeGreaterThan(0.9);
     expect(after.hits).toBeGreaterThan(0);
+
+    // …and it is OUT OF THE HIT TEST, not merely transparent. Opacity 0
+    // leaves an element clickable, and the casefile's tabs and rows opt into
+    // `pointer-events: auto`, so a departed casefile at z 6 goes on eating
+    // clicks meant for `.svc-ring-hits__hit` at z 4 — the front card reads as
+    // dead. Assert the real property (does a hit at the card's centre reach
+    // the ring?) rather than the mechanism, so a different fix still passes.
+    const cardHitReachable = await page.evaluate(() => {
+      const hit = document.querySelector<HTMLElement>(".svc-ring-hits__hit");
+      if (!hit) return null;
+      const r = hit.getBoundingClientRect();
+      const el = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return {
+        reached: !!el && (el === hit || hit.contains(el)),
+        blockedBy: el?.className ?? null,
+      };
+    });
+    expect(cardHitReachable, "a ring hit area must exist after the handover").not.toBeNull();
+    expect(
+      cardHitReachable?.reached,
+      `the departed casefile is still hit-testable — blocked by "${cardHitReachable?.blockedBy}"`
+    ).toBe(true);
   });
 
   test("desktop: ring mode retires the racks; cards expose their CTA", async ({ page }) => {
