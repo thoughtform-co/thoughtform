@@ -478,6 +478,22 @@
   letter-spacing: var(--track-wider);
   text-transform: uppercase;
   color: var(--dawn-70);
+  /* ── The corner's type ramp (ADR-055 Update 1) ────────────────────
+     The hero links and the collapsed readout are two STATES OF ONE
+     control, so they ride ONE fluid ramp a perfect fourth (~1.33)
+     apart — not two unrelated sizes.
+
+     Before: the links were fluid to 30px while the readout was a FIXED
+     12.5px, so the gap widened with the viewport (2.4x at 1920) and the
+     collapse read as a swap between two different objects rather than
+     one object changing form. Both are fluid now, so the ratio holds at
+     every width; the links came down and the readout came up to meet in
+     the middle (owner, 2026-07-28).
+
+     The drawer rows (`.hud__nav a`, 11px) already sit one further step
+     down, so the corner reads as three rungs of one scale. */
+  --nav-link-size: clamp(15px, 0.7rem + 0.44vw, 22px);
+  --nav-readout-size: clamp(11.5px, 0.53rem + 0.32vw, 16px);
 }
 
 /* Sized by its CONTENT since ADR-055: the trigger carries the section
@@ -563,7 +579,11 @@
 .hud__nav__sector {
   display: flex;
   align-items: baseline;
-  gap: 9px;
+  /* Second rung of the corner's shared ramp (see `.hud__nav`). The pair
+     sizes from HERE so the index and the gap stay proportional to the
+     name at every width — an em-based cluster, not three fixed px. */
+  font-size: var(--nav-readout-size);
+  gap: 0.62em;
   white-space: nowrap;
   opacity: 0;
   transition: opacity 260ms var(--ease-out);
@@ -574,18 +594,44 @@
   opacity: 1;
   transition-delay: 170ms;
 }
-.hud__nav__sector__idx {
-  font-size: 9px;
+/* The DETAIL slot — the subsection (`navigate //`) where the section has
+   one, the journey position (`03/06`) where it does not. ONE element for
+   both (ADR-055 Update 2): it makes the swap a plain decode between two
+   strings, so nothing flickers between the two forms mid-transition.
+
+   ALL CAPS (owner, 2026-07-28) — the slot briefly ran lowercase for case
+   contrast, but the corner reads as one instrument register and a
+   lowercase word was the only thing in it not speaking that way.
+
+   ⚠ Declared here, NOT inherited: `.hud__nav` sets `text-transform:
+   uppercase`, but the trigger `<button>` sits between it and this span,
+   and UA stylesheets give form controls their own `text-transform: none`
+   — which breaks the inheritance chain. (The section NAME is unaffected
+   because `sectionLabel` uppercases it in JS; the sub stays lowercase in
+   state so the accessible name reads as words, and is cased here.)
+
+   With both ranks in caps the nominal ratio IS the optical one
+   (cap-height against cap-height), so the lowercase compensation that
+   sized this at 0.85em no longer applies — held there it would have left
+   the two nearly the same size. It drops back onto the corner's own
+   perfect-fourth ramp instead: one rung below the name, exactly as the
+   name sits below the hero links. Links → name → detail now step 22 →
+   16 → 12 at the ceiling, with the drawer rows just under that.
+
+   Tracking goes back UP (`--track-widest`): caps want the air, and the
+   smaller-plus-wider pairing is the house's small-mono chrome grammar —
+   the rails and survey designations read the same way. Hierarchy rests
+   on SIZE and INK (--dawn-40 against the name's full dawn). Floored at
+   the 8.5px legibility limit for small mono. */
+.hud__nav__sector__detail {
+  font-size: max(8.5px, 0.75em);
   letter-spacing: var(--track-widest);
-  color: var(--dawn-30);
-}
-.hud__nav__sector__sep {
-  margin: 0 1px;
-  color: var(--dawn-15);
+  text-transform: uppercase;
+  color: var(--dawn-40);
 }
 .hud__nav__sector__name {
   position: relative;
-  font-size: 12.5px;
+  font-size: 1em;
   letter-spacing: var(--track-wider);
   color: var(--dawn);
   transition: color 180ms var(--ease-out);
@@ -754,9 +800,11 @@
 .hud__nav--inline .hud__nav__inline__link {
   display: inline-block;
   font-family: var(--font-pt-mono);
-  /* Match the Brand Codex "Hero Omega" nav scale (~30px on wide
-     desktops); steps down on smaller viewports. */
-  font-size: clamp(16px, 0.85rem + 0.78vw, 30px);
+  /* Top rung of the corner's shared ramp (see `.hud__nav`). Was a
+     standalone `clamp(16px, 0.85rem + 0.78vw, 30px)` — the Brand Codex
+     "Hero Omega" scale — which at ~30px shouted over the hero headline
+     and left the collapsed state nowhere to land. */
+  font-size: var(--nav-link-size);
   letter-spacing: var(--track-wide, 0.04em);
   text-transform: uppercase;
   color: var(--dawn);

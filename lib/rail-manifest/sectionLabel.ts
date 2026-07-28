@@ -47,6 +47,23 @@ function pad(n: number): string {
 }
 
 /**
+ * The readout's DETAIL slot — the text left of the section name.
+ *
+ * One slot, two jobs: the current subsection when the section has one
+ * (`navigate //`), and the journey position when it does not (`03/06`).
+ * They share an element ON PURPOSE — it makes the swap a plain decode
+ * between two strings instead of a conditional mount, so nothing can
+ * flicker between the two forms mid-transition, and the `//` decodes
+ * away with the word that earned it.
+ *
+ * The trailing `//` is the house path idiom, carried in the string
+ * rather than as its own styled node for exactly that reason.
+ */
+export function readoutDetail(readout: SectionReadout, sub?: string | null): string {
+  return sub ? `${sub} //` : `${readout.num}/${readout.total}`;
+}
+
+/**
  * The journey as the corner reads it: the Arc once, then every station.
  * Hero is dropped — it is the one entry with no readout (hero canon, the
  * same rule `manifestTitle` applies via `hideActiveName`).

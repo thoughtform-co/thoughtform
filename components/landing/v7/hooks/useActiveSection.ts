@@ -2,12 +2,58 @@
 
 import { useEffect, useState } from "react";
 
+import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
 import {
   ACTIVE_IDX_ATTRIBUTES,
   LAST_CORRIDOR_IDX,
   resolveActiveIdx,
 } from "@/lib/rail-manifest/resolveActiveIdx";
 import { sectionReadout, type SectionReadout } from "@/lib/rail-manifest/sectionLabel";
+import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
+import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+
+/** The section plus its live subsection, if the section has one. */
+export interface ActiveSection extends SectionReadout {
+  /** Lowercase subsection name, or `null` where the section has none. */
+  sub: string | null;
+}
+
+/** The Arc beats that read as subsections. `thesis` is a corridor phase
+ *  but not a beat — it shows no sub, exactly as the retired menu did. */
+const ARC_BEATS = new Set(["navigate", "encode", "build"]);
+
+const SERVICES_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "services");
+
+/**
+ * Resolve the subsection for a journey index (ADR-055 Update 2).
+ *
+ * The Arc's beat comes free: `resolveActiveIdx` already resolved the
+ * corridor phase into its own manifest entry, so the beat is just that
+ * entry's `corridorPhase` — no second attribute read, and `thesis` falls
+ * out as "no sub" on its own.
+ *
+ * Services reads the ring's front card instead, because which service is
+ * in front changes on SCROLL with no attribute mutation to observe (the
+ * reason the caller keeps its scroll listener awake there). `ringMath`
+ * and `ringProgressRef` are three-free on purpose, so this cannot drag
+ * the WebGL stack into the landing's First Load JS.
+ */
+function resolveSub(idx: number): string | null {
+  const entry = MANIFEST_ENTRIES[idx];
+  if (!entry) return null;
+  if (entry.kind === "corridor") {
+    const phase = entry.corridorPhase ?? "";
+    return ARC_BEATS.has(phase) ? phase : null;
+  }
+  if (entry.id === "services") {
+    // `verb` is the display name and deliberately does NOT match `id`
+    // (serviceData.ts) — print the verb, never the id.
+    const verb = SERVICES[activeServiceForProgress(servicesRingProgressRef.current.progress)]?.verb;
+    return verb ? verb.toLowerCase() : null;
+  }
+  return null;
+}
 
 /**
  * The live journey position for the nav-corner readout (ADR-055).
@@ -19,21 +65,21 @@ import { sectionReadout, type SectionReadout } from "@/lib/rail-manifest/section
  * the writers stay `useLandingScroll` / `useDepthScroll` /
  * `CorridorStationHeaders`.
  *
- * The one scroll listener is the seam-gap rule's cost: between corridor
- * disengage and the services crossing, `data-active-station` lags at
- * "hero" and only a rect read can tell that the corridor was passed
- * (`resolveActiveIdx` rule 3). It is passive, rAF-coalesced, and gated
- * off the moment the reader is past the corridor — the same `watch`
- * discipline the menu used. The menu additionally watched inside
- * #services / #proof to track SUBSECTIONS; those retired with it, so the
- * corridor gate is all that remains.
+ * The one scroll listener is passive, rAF-coalesced, and gated to the
+ * two regimes that need it: the hero/corridor seam (where only a rect
+ * read can tell that the corridor was passed — `resolveActiveIdx` rule
+ * 3) and `#services` (where the front card advances on scroll alone).
+ * That is the retired menu's `watch` expression exactly.
  *
- * State is keyed on the readout's ROW id, not the manifest index, so the
- * corridor's four beats settle as one state and the hero→corridor seam
- * costs zero re-renders.
+ * State is keyed on the readout's ROW id plus the sub, not the manifest
+ * index, so the corridor's four beats settle as one section and the
+ * hero→corridor seam costs zero re-renders.
  */
-export function useActiveSection(): SectionReadout {
-  const [readout, setReadout] = useState<SectionReadout>(() => sectionReadout(0));
+export function useActiveSection(): ActiveSection {
+  const [section, setSection] = useState<ActiveSection>(() => ({
+    ...sectionReadout(0),
+    sub: null,
+  }));
 
   useEffect(() => {
     const html = document.documentElement;
@@ -42,9 +88,12 @@ export function useActiveSection(): SectionReadout {
 
     const update = () => {
       const idx = resolveActiveIdx(html);
-      watch = idx <= LAST_CORRIDOR_IDX;
-      const next = sectionReadout(idx);
-      setReadout((prev) => (prev.id === next.id ? prev : next));
+      watch = idx <= LAST_CORRIDOR_IDX || idx === SERVICES_IDX;
+      const readout = sectionReadout(idx);
+      const sub = resolveSub(idx);
+      setSection((prev) =>
+        prev.id === readout.id && prev.sub === sub ? prev : { ...readout, sub }
+      );
     };
 
     const observer = new MutationObserver(update);
@@ -67,5 +116,5 @@ export function useActiveSection(): SectionReadout {
     };
   }, []);
 
-  return readout;
+  return section;
 }

@@ -5,6 +5,7 @@ import {
   ARC_SECTION_ID,
   ARC_SECTION_LABEL,
   READOUT_SECTIONS,
+  readoutDetail,
   sectionReadout,
 } from "@/lib/rail-manifest/sectionLabel";
 
@@ -56,6 +57,22 @@ describe("section readout", () => {
     for (const [i, row] of READOUT_SECTIONS.entries()) {
       const seat = row.id === ARC_SECTION_ID ? idxOf("navigate") : idxOf(row.id);
       expect(sectionReadout(seat).num, row.id).toBe(String(i + 1).padStart(2, "0"));
+    }
+  });
+
+  it("gives the detail slot the subsection, or the position when there is none", () => {
+    const arc = sectionReadout(idxOf("navigate"));
+    expect(readoutDetail(arc, "navigate")).toBe("navigate //");
+    expect(readoutDetail(arc, null)).toBe("01/06");
+
+    const about = sectionReadout(idxOf("about"));
+    expect(readoutDetail(about, null)).toBe("03/06");
+    expect(readoutDetail(about)).toBe("03/06");
+
+    // One slot for both forms is what keeps the swap a plain decode, so
+    // the two must never render as an empty string.
+    for (const sub of [null, "navigate", "workshop"]) {
+      expect(readoutDetail(sectionReadout(idxOf("services")), sub).length).toBeGreaterThan(0);
     }
   });
 

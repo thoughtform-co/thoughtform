@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useActiveSection } from "./hooks/useActiveSection";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
+import { readoutDetail } from "@/lib/rail-manifest/sectionLabel";
 
 /**
  * Top-right HUD navigation for the v7 landing page (Brand Codex
@@ -64,6 +65,7 @@ export function HudNav() {
   const btnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const sectorRef = useRef<HTMLSpanElement>(null);
+  const detailRef = useRef<HTMLSpanElement>(null);
   const section = useActiveSection();
 
   // Collapse once the hero has largely scrolled out of view. A
@@ -143,17 +145,21 @@ export function HudNav() {
    */
   useEffect(() => {
     const el = sectorRef.current;
-    if (!el) return;
+    const detailEl = detailRef.current;
+    if (!el || !detailEl) return;
+    const detail = readoutDetail(section, section.sub);
     // On the hero the readout is faded out AND blanked, so scrolling back
     // up can never leave a half-decoded ghost under the returning links —
     // and the next collapse gets a clean empty string to decode from.
     if (!collapsed) {
       el.textContent = "";
+      detailEl.textContent = "";
       return;
     }
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     if (reduced) {
       el.textContent = section.label;
+      detailEl.textContent = detail;
       return;
     }
     const jobs: ScrambleJob[] = [];
@@ -163,7 +169,11 @@ export function HudNav() {
     // rather than title pops in. A label change mid-journey starts at
     // once, from whatever is on screen.
     const lead = el.textContent ? 0 : READOUT_ARRIVE_DELAY_S;
-    queueScramble(jobs, el, section.label, performance.now() / 1000 + lead);
+    const startSec = performance.now() / 1000 + lead;
+    // Both slots on ONE jobs array and ONE rAF, so the subsection and the
+    // section resolve on the same beat instead of racing each other.
+    queueScramble(jobs, detailEl, detail, startSec);
+    queueScramble(jobs, el, section.label, startSec);
     if (jobs.length === 0) return;
     let raf = 0;
     const tick = () => {
@@ -178,7 +188,7 @@ export function HudNav() {
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [collapsed, section.label]);
+  }, [collapsed, section]);
 
   // The closed drawer is INERT, not merely invisible: it used to be
   // `opacity: 0; pointer-events: none` only, which left its three menu
@@ -265,12 +275,11 @@ export function HudNav() {
           onClick={() => setOpen((v) => !v)}
         >
           <span className="hud__nav__sector" aria-hidden="true">
-            <span className="hud__nav__sector__idx">
-              {section.num}
-              <span className="hud__nav__sector__sep">/</span>
-              {section.total}
-            </span>
-            {/* Written imperatively by the decode effect — see above. */}
+            {/* Both written imperatively by the decode effect — see above.
+                The detail slot carries the subsection (`navigate //`) or,
+                where the section has none, the journey position
+                (`03/06`). */}
+            <span className="hud__nav__sector__detail" ref={detailRef} />
             <span className="hud__nav__sector__name" ref={sectorRef} />
           </span>
           <span className="bars" aria-hidden="true">
@@ -283,6 +292,7 @@ export function HudNav() {
               what it reads (WCAG 2.5.3 label-in-name). */}
           <span className="visually-hidden">
             {open ? "Close navigation" : "Open navigation"} — current section: {section.label}
+            {section.sub ? `, ${section.sub}` : ""}
           </span>
         </button>
 

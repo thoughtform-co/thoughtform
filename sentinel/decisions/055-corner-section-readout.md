@@ -209,3 +209,146 @@ CONTACT` with indices `01/06 … 06/06`.
 - Reduced motion: no scramble, text assigned directly.
 - `/claude-workshop`: bars shown, readout suppressed, drawer unaffected.
 - 364 unit tests green; typecheck and lint clean.
+
+---
+
+## Update 1 — one type ramp for the corner (2026-07-28, owner)
+
+Owner: _"harmonize the font size of the nav bar items; in the hero it's
+very big and then when it collapses it's much smaller."_
+
+The two states were sized independently, and only one of them was fluid:
+
+|               | before                                | after                                                               |
+| ------------- | ------------------------------------- | ------------------------------------------------------------------- |
+| hero links    | `clamp(16px, 0.85rem + 0.78vw, 30px)` | `var(--nav-link-size)` = `clamp(15px, 0.7rem + 0.44vw, 22px)`       |
+| readout name  | fixed `12.5px`                        | `var(--nav-readout-size)` = `clamp(11.5px, 0.53rem + 0.32vw, 16px)` |
+| readout index | fixed `9px`                           | `max(8.5px, 0.66em)`                                                |
+
+Because the links scaled and the readout did not, **the mismatch widened
+with the viewport**: 1.28× at 640px but 2.4× at 1920px, where the collapse
+stopped reading as one control changing form and started reading as a swap
+between two different objects.
+
+Both rungs are now `--nav-*` custom properties on `.hud__nav`, so the pair
+holds a **perfect fourth (~1.33)** at every width — measured 1.34 across
+the fluid range, 1.30 at the floor, 1.38 at the ceiling. The links came
+down and the readout came up, per the owner's "middle ground": at 1938px
+that is 30 → 19.7 and 12.5 → 14.7.
+
+Details worth keeping:
+
+- The readout sizes from `.hud__nav__sector`, and its index and gap are
+  **em-based** (`0.66em`, `0.62em`) — an internally proportional cluster
+  rather than three unrelated pixel values.
+- The index carries a `max(8.5px, …)` floor. Pure proportional scaling put
+  it at 7.6px on phones, below the legibility limit for tracked mono caps.
+- The drawer rows (`.hud__nav a`, 11px) were left alone: they already sit
+  roughly one further step down, so the corner reads as three rungs of one
+  scale. They flatten against the readout below ~900px (1.05×), which is
+  acceptable — the drawer only exists while open, and both are compact
+  chrome at that size.
+- The Brand Codex "Hero Omega" ~30px nav scale is superseded here. It was
+  competing with the hero headline and left the collapsed state nowhere
+  to land.
+
+---
+
+## Update 2 — subsections return, as a path (2026-07-28, owner)
+
+Owner: _"Can't we style subsections like this — `navigate // THE ARC`"._
+
+The base decision dropped subsections ("for now", in the instruction that
+prompted it). They return here in a form the reels could not offer: a
+**path**, not a register. One line, two ranks.
+
+```
+navigate // THE ARC        03/06  ABOUT
+```
+
+**Why this earns its place where the reel did not.** The Arc is ~8
+viewports of scrolling during which the readout said `THE ARC` and
+nothing else — the longest stretch on the site, and the one place the
+corner went dead. The beat makes it live exactly there. Services gets the
+same treatment (the four verbs, `advisory // SERVICES` …), so both
+multi-beat sections read the same way.
+
+### One slot, two contents
+
+The subsection takes the DETAIL slot the position index occupies —
+`navigate //` where a section has a beat, `03/06` where it does not. They
+share **one element** on purpose: the swap is then a plain decode between
+two strings, so nothing can flicker between two forms mid-transition, and
+the `//` decodes away with the word that earned it. `readoutDetail()`
+composes it; the `//` is carried IN the string rather than as its own
+styled node, for the same reason.
+
+Both slots ride one jobs array and one rAF, so the subsection and the
+section resolve on the same beat instead of racing.
+
+### Type — `ENCODE // THE ARC`
+
+**All caps, `max(8.5px, 0.75em)`, `--track-widest`, `--dawn-40`.** Both
+ranks in caps, so the corner speaks in one instrument register; hierarchy
+rests on SIZE and INK.
+
+That size is not a free choice — it is the corner's own perfect-fourth
+ramp, one rung below the name exactly as the name sits below the hero
+links. The ladder now reads 22 → 16 → 12 at the ceiling (links → name →
+detail), with the drawer rows just under it, and the ratios hold at every
+width (1.34 / 1.33 measured).
+
+Two passes got here, and both are worth keeping on record because they
+are the same lesson from opposite sides:
+
+1. **Shipped lowercase at `0.7em`** — inheriting the numeric index's
+   step-down. Owner: "too small". A lowercase word shows ~30% less
+   visible height than caps at equal nominal size (PT Mono x-height
+   ~0.53em against a ~0.7em cap-height), so it measured a third smaller
+   but READ as nearly half. Fine for `03/06`, a coordinate you glance at;
+   wrong for `NAVIGATE`, a word you read.
+2. **Corrected to `0.85em`, then the case changed.** That value existed
+   only to compensate for lowercase optics. With both ranks in caps the
+   nominal ratio IS the optical one, so holding 0.85em would have left
+   the two nearly the same size — hence the drop to the ramp's 0.75em.
+
+Tracking moved with the case: `--track-wide` while lowercase (wide
+tracking mushes lowercase letterforms), back to `--track-widest` in caps,
+which is the house's small-mono chrome grammar — the rails and survey
+designations read the same way.
+
+⚠ **`text-transform: uppercase` is DECLARED on the slot, not inherited.**
+`.hud__nav` sets it, but the trigger `<button>` sits between them and UA
+stylesheets give form controls their own `text-transform: none`, which
+breaks the chain. Removing the lowercase override therefore did NOT yield
+caps — it yielded the raw lowercase state string. (The section name is
+immune: `sectionLabel` uppercases it in JS. The sub deliberately stays
+lowercase in state so the accessible name reads as words, and is cased in
+CSS.)
+
+### Where the subs come from
+
+- **The Arc:** free. `resolveActiveIdx` already resolves
+  `data-corridor-phase` into its own manifest entry, so the beat is that
+  entry's `corridorPhase` — no second attribute read, and `thesis` falls
+  out as "no sub" on its own (it is a phase, not a beat — the retired
+  menu drew the same line).
+- **Services:** the ring's front card, via
+  `activeServiceForProgress(servicesRingProgressRef…)`. That value moves
+  on SCROLL with no attribute mutation, so the hook's scroll listener
+  gate widens to `idx <= LAST_CORRIDOR_IDX || idx === SERVICES_IDX` —
+  the retired menu's `watch` expression exactly. Both modules are
+  three-free on purpose, so this cannot drag the WebGL stack into the
+  landing's First Load JS. Print `verb`, never `id`: they deliberately do
+  not match (`serviceData.ts`).
+- **`#proof`** was considered and left out. Its beats need a rect scan
+  and would re-create the beat register ADR-054's rule now forbids.
+
+Still no new scroll writer. The accessible name carries the sub too
+(`current section: THE ARC, navigate`).
+
+**Verified** on the live corridor, settled at each beat: `navigate //
+THE ARC` → `encode //` → `build //` → `advisory // SERVICES` →
+`embedded //` → `keynote //` → `workshop //` → `03/06 ABOUT` →
+`04/06 PROOF` → `05/06 PRACTICE` → `06/06 CONTACT`. 365 unit tests green;
+typecheck, lint and a production build clean.
