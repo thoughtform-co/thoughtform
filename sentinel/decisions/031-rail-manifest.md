@@ -1138,3 +1138,27 @@ cleanup restore) against both selectors in the live DOM: old ⇒ highlight reads
 "THE ARC" (bug reproduced), new ⇒ "ABOUT". `npm run verify` green.
 
 **Files:** `CorridorSectionMenu.tsx` (the decode effect's selector).
+
+---
+
+## Update 22 — the section menu is RETIRED; the indicator moves to the nav corner (2026-07-28, owner)
+
+The terminal-tree menu this ADR spent Updates 12–21 refining is deleted.
+It only ever existed above `1101×760`, so the journey indicator was absent
+on laptops and phones — the viewports where orientation matters most. The
+readout now lives in the top-right nav corner and doubles as the nav
+trigger, on every viewport.
+
+**See [ADR-055](055-corner-section-readout.md)**, which supersedes Updates
+12, 13, 14, 15, 17, 18, 19 and 21 in full.
+
+Still live from this ADR: Update 2 (the 13-tick ladder always stays),
+Update 9's manifest data / detent table / `resolveActiveIdx` — which the
+corner readout now consumes as its third client — Update 16 rev c (the
+hero-curtain clip; `.hud-nav-overlay` remains outside `.hud` and
+unclipped), and Update 20 (the desktop diamond stays hidden, for the new
+reason ADR-055 records).
+
+`lib/home-v2/terminalReveal.ts` (Update 17's decode kernel) is deleted
+with the menu — its capture-and-restore contract, the subject of Update
+21, is precisely why it could not drive a readout whose text changes.

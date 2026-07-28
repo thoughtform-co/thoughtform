@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
  * eyebrow is retired — so they float.
  *
  * This lab is a VERBATIM snapshot of #services (real parse-injected HUD
- * chrome, real `CorridorSectionMenu`, real `ServicesMasthead`, real WebGL
+ * chrome, real `ServicesMasthead`, real WebGL
  * card ring) with four sub-variants of the SHARED HORIZON BAR direction
  * layered over it — one hairline rule spanning rail-to-rail that both text
  * blocks key off (the avionics annunciator / Bloomberg-statusline grammar).

@@ -11,7 +11,6 @@ import { HudNav } from "./HudNav";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
-import { CorridorSectionMenu } from "@/components/landing/home-v2/CorridorSectionMenu";
 import { RailManifestController } from "./RailManifest";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
 import { ProofRevealController } from "@/components/landing/home-v2/proof/ProofRevealController";
@@ -575,14 +574,11 @@ export function LandingPage({
           skeleton is parse-injected and this controller mutates it in
           place. */}
       <RailManifestController containerRef={rootRef} />
-      {/* Left-side journey overview (ADR-031 Update 12): a detached
-          terminal-tree section menu near the left rail. Renders its own
-          DOM (unlike the mutate-in-place RailManifestController), reading
-          the SAME `<html>` active-index bus — no new scroll writer. It
-          replaces the right-rail Arc register (`CorridorProgressRail`) and
-          the desktop rail diamond. Self-contained leaf: its state is local,
-          so it never re-renders LandingPage (nested-root safety). */}
-      <CorridorSectionMenu />
+      {/* The journey overview moved to the nav corner (ADR-055): the
+          left/right `CorridorSectionMenu` reels are retired — they only
+          existed above 1101×760, so the indicator was missing on exactly
+          the laptops and phones that need it. `HudNav` now carries the
+          section readout, reading the SAME `<html>` active-index bus. */}
       {/* Hero → Corridor seam (ADR-022 v7, direct parallax reveal):
           NO proxy plane. The sticky `#hero` (z:1) drifts up + gently
           fades as the live corridor mount (`.home-corridor-host` z:3)

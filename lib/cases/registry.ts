@@ -21,10 +21,11 @@ export function getCase(slug: string): CaseDef | undefined {
 export const PROOF_CASE: CaseDef = LOOP_EARPLUGS_CASE;
 
 /**
- * Menu rows for the PROOF node's subsections — the deliberate mirror of
- * the ARC node's Navigate / Encode / Build (CorridorSectionMenu). Kept
- * here so the beat ids the menu scrolls to and the beat ids the station
- * renders come from ONE place.
+ * Beat rows for a case — id, ordinal and phase name in one place, so
+ * anything that lists a case's beats and the station that renders them
+ * agree. (It fed the retired section menu's PROOF subsections; since
+ * ADR-055 dropped subsections its remaining consumer is the registry
+ * test, which keeps it honest as a data guard.)
  */
 export function caseBeatMenu(def: CaseDef): { id: string; num: string; name: string }[] {
   return def.beats.map((beat: CaseBeat, i) => ({

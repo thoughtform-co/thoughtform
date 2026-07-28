@@ -69,9 +69,11 @@ Arc). See LANGUAGE.md.
   canonical for the four tools. The corridor's arc-cases card owns their
   challenge/shift/capabilities — the Build beat carries pattern, numbers and
   handoff only.
-- **`PROOF_SUBS` in `CorridorSectionMenu` is a deliberate duplicate** of
-  `caseBeatMenu(PROOF_CASE)` (a client component must not import the
-  registry). Change one, change both — the registry test is the alarm.
+- **No subsection register anywhere.** `PROOF_SUBS` — the corridor menu's
+  hardcoded duplicate of `caseBeatMenu(PROOF_CASE)` — retired with that
+  menu (ADR-055 dropped subsections site-wide; the journey readout in the
+  nav corner names stations only). `caseBeatMenu` survives as registry
+  data, guarded by its shape test. Do not reintroduce a beat register.
 - **Zig-zag:** mirroring is derived from beat index parity; there is no
   `flip` field in the data. DOM order is ALWAYS copy-then-visual. Both grid
   children are pinned to `grid-row: 1` — column placement alone makes a

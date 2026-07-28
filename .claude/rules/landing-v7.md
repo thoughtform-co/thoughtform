@@ -101,13 +101,35 @@ glide gated behind `data-ready`, and its position is a pure function of
 no new scroll writers (recompute the table on resize/layout only). The
 13-tick ladder always stays (ADR-031 Update 2).
 
-**⚠ SUPERSEDED ON DESKTOP by Update 12 (2026-07-18):** a detached
-terminal-tree section menu (`CorridorSectionMenu`, left, near the rail)
-is now the journey indicator at `≥1101×760`, and the detent diamond is
-CSS-hidden there. The diamond below describes the SUB-GATE fallback (it
-still shows, controller untouched) + the history. Do NOT "restore" the
-diamond on desktop or delete the menu to "return to the diamond" — that
-reverts a deliberate owner decision. The 13-tick ladder always stays.
+**⚠ THE JOURNEY INDICATOR IS THE NAV-CORNER READOUT (ADR-055,
+2026-07-28, owner) — the left/right section menus are DELETED.**
+`CorridorSectionMenu`, its CSS and `lib/home-v2/terminalReveal.ts` are
+gone (they only existed above `1101×760`, so laptops and phones had no
+indicator at all). `HudNav` now carries a section readout that is ALSO
+the drawer trigger, on every viewport. Contracts:
+
+- **Source:** `useActiveSection` → `resolveActiveIdx` (the shared
+  resolver) → `sectionReadout` (`lib/rail-manifest/sectionLabel.ts`).
+  No new scroll writer — a MutationObserver on the `<html>` bus plus one
+  passive listener gated on `idx <= LAST_CORRIDOR_IDX` for the seam rule.
+- **The Arc is ONE row.** All four corridor phases map to `THE ARC`;
+  there are NO subsections anywhere. That collapse is what makes the
+  hero→corridor seam flicker-free (three indices, one string, and
+  `queueScramble` no-ops on equal text). Unit-pinned in
+  `tests/lib/section-label.test.ts`.
+- **`.hud__nav__sector__name` is rendered CHILDLESS and written only
+  imperatively.** Give it a React child and the decode stops firing
+  silently (React commits the label first, so `from === to`).
+- **`captionScramble` only.** Never `scrambleText`-style capture-restore
+  on this node (ADR-031 U21).
+- **`.bars` stay** as the trigger below 641px pre-collapse and on
+  `/claude-workshop` (whose station order is not the manifest's).
+- **`HudNav` state stays LOCAL** (nested-root safety) and it remains the
+  only writer of `.hud__brand.is-collapsed` — the ADR-043 wordmark dock.
+- The desktop detent diamond stays hidden (ADR-031 U20), now because the
+  corner serves every viewport. The 13-tick ladder always stays.
+- `/arcs` still has its own reel (`ArcMenu`, same gate, same complaint) —
+  porting the readout there is an open follow-up, not an oversight.
 
 **⚠ The hero curtain CLIP-UNCOVERS the frame chrome (ADR-031 Update 16
 rev c, 2026-07-19, owner):** the corner brackets + both rails
@@ -136,9 +158,9 @@ separate z 60) untouched. Supersedes Update 9's "diamond visible from the
 hero" + the rev-0 fade / rev-a z-swap / rev-b whole-`.hud`-clip drafts;
 `cornerDraw` retired. "The ladder always stays" now means: in the DOM at
 every beat, UNCOVERED everywhere except the hero. Do NOT reintroduce a
-fade, a z-swap, or a whole-`.hud` clip (it hides the wordmark). The journey
-menu (`CorridorSectionMenu`) also drops HERO/THESIS — it starts at THE ARC
-(`MENU_HIDDEN_IDS`); `resolveActiveIdx` tracking is unaffected.
+fade, a z-swap, or a whole-`.hud` clip (it hides the wordmark). That the
+top-right nav is exempt from all of this is why ADR-055 could put the
+journey readout there with no curtain choreography at all.
 
 **The left rail is a single detent diamond (ADR-031 Update 9, supersedes
 the Update 3/6/7/8 rolodex; Update 12 supersedes it ON DESKTOP).** The
@@ -166,9 +188,9 @@ made the whole rail hero-dormant so the diamond first showed at section 2,
 then by **Update 20 (2026-07-20, owner): the diamond is hidden on the WHOLE
 desktop gate, unconditionally** — the U12 hide used to enumerate phases and
 left it painting alone in section 2, since the menu drops hero/thesis too.
-Desktop = tick ladder + `CorridorSectionMenu` only; the diamond survives
-ONLY below `1101×760`, controller untouched. Do NOT re-add a phase/station
-enumeration to that media block). On
+Desktop = tick ladder only since ADR-055 retired the menu — the diamond
+still survives ONLY below `1101×760`, controller untouched. Do NOT re-add a
+phase/station enumeration to that media block). On
 hover/focus it reveals the active
 entry's title via a hidden `.rail-manifest__title` chip, gated on
 `data-has-title`; `manifestTitle(entry)` (`entries.ts`) is `null` for
@@ -177,13 +199,13 @@ reveal nothing. `RAIL_ROWS`/`glyph` are REMOVED. A separate loadout bay
 was tried and retired (Update 5) — do NOT reintroduce
 `RailLoadout`/`data-rail-loadout-root`.
 
-**⚠ The Arc register is RETIRED by Update 12 (2026-07-18):** the Arc's
-Navigate/Encode/Build no longer live on the RIGHT rail — the left
-terminal-tree menu (`CorridorSectionMenu`) unfolds them while inside the
-corridor. `CorridorProgressRail` is unmounted (kept on disk for
-rollback). The "sub-items on the right" half of the uniformity contract
-below is history for the Arc; the paragraph stays for context + the
-Services/SOURCE-BUS lineage. Do NOT remount `CorridorProgressRail`.
+**⚠ The Arc register is RETIRED (Update 12), and so is the menu that
+replaced it (ADR-055):** the Arc's Navigate/Encode/Build live on NO rail
+and in NO menu — the corner readout names the Arc as one section and
+there are no subsections anywhere. `CorridorProgressRail` stays unmounted
+(kept on disk for rollback). The "sub-items on the right" half of the
+uniformity contract below is history; the paragraph stays for context +
+the Services/SOURCE-BUS lineage. Do NOT remount `CorridorProgressRail`.
 
 **Rail uniformity — each pillar: name on the left, sub-items on the
 right (ADR-031 Updates 7–8; the Arc's right register RETIRED by Update

@@ -79,7 +79,7 @@ export function ServicesAnchorLabShell({ hudHtml, bodyClass }: ShellProps) {
   );
 
   /**
-   * The `<html>` bus. `CorridorSectionMenu` has no props — both reels resolve
+   * The `<html>` bus. The chrome that reads it takes no props — it resolves
    * their visibility and their active row from document-level state, so the
    * lab must stand in for the corridor scroll rig and declare that we are
    * parked at #services.

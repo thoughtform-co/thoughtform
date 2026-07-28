@@ -480,25 +480,35 @@
   color: var(--dawn-70);
 }
 
+/* Sized by its CONTENT since ADR-055: the trigger carries the section
+   readout, which is text of varying length. `min-height` keeps the 44px
+   touch target and the right-aligned content puts either face — readout
+   or bars — with its right edge on the overlay's right edge, exactly
+   where the centred 44px box used to put the bars. */
 .hud__nav__btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin: -12px -12px 0 0;
+  justify-content: flex-end;
+  width: auto;
+  min-width: 44px;
+  height: auto;
+  min-height: 44px;
+  margin: -12px 0 0 0;
   background: none;
   border: 0;
   color: var(--dawn);
   cursor: pointer;
-  padding: 0;
+  padding: 0 0 0 14px;
   position: relative;
 }
 .hud__nav__btn .bars {
   position: relative;
   width: 20px;
   height: 14px;
-  display: block;
+  /* The readout owns the trigger; the bars stand down and survive only
+     where the readout cannot serve — below 641px before the collapse,
+     and on /claude-workshop (see those rules). */
+  display: none;
 }
 .hud__nav__btn .bars span {
   position: absolute;
@@ -540,6 +550,67 @@
   bottom: auto;
   transform: translateY(-50%) rotate(-45deg);
   width: 100%;
+}
+
+/* ── Section readout — the journey indicator (ADR-055) ──────────────
+   Replaces the left/right `CorridorSectionMenu` reels, which only
+   existed above 1101×760. It IS the trigger: the label names where the
+   reader is, pressing it opens the drawer. The name decodes through the
+   captionScramble kernel on every section change (HudNav owns that rAF);
+   the position index rides beside it in the rail's faint ink. Gold is
+   rationed to the one hairline that marks the control pressable — the
+   signature the retired submenu used for its active row. */
+.hud__nav__sector {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 260ms var(--ease-out);
+}
+/* Arrives on the beat the first bar used to draw in, so the corner's
+   rhythm through the collapse is unchanged. */
+.hud__nav.is-collapsed .hud__nav__sector {
+  opacity: 1;
+  transition-delay: 170ms;
+}
+.hud__nav__sector__idx {
+  font-size: 9px;
+  letter-spacing: var(--track-widest);
+  color: var(--dawn-30);
+}
+.hud__nav__sector__sep {
+  margin: 0 1px;
+  color: var(--dawn-15);
+}
+.hud__nav__sector__name {
+  position: relative;
+  font-size: 12.5px;
+  letter-spacing: var(--track-wider);
+  color: var(--dawn);
+  transition: color 180ms var(--ease-out);
+  /* Hold the line box: a decode frame can momentarily print nothing,
+     and the button must not resize under the reader's cursor. */
+  min-height: 1em;
+}
+.hud__nav__sector__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.4;
+  transition: opacity 180ms var(--ease-out);
+}
+.hud__nav__btn:hover .hud__nav__sector__name,
+.hud__nav__btn:focus-visible .hud__nav__sector__name {
+  color: var(--gold);
+}
+.hud__nav__btn:hover .hud__nav__sector__name::after,
+.hud__nav__btn:focus-visible .hud__nav__sector__name::after {
+  opacity: 1;
 }
 
 /* Expanded list — opens leftward from the trigger */
@@ -708,10 +779,17 @@
   padding: 0;
 }
 
-/* Hamburger trigger — always parked at the right-rail anchor; only its
-   three bars animate (they draw in on collapse, retract on expand), so
-   the nav reads as the items MORPHING into the hamburger rather than a
-   crossfade. */
+/* Trigger — always parked at the right-rail anchor; the inline links
+   peel away and the readout (or, where it is suppressed, the three bars)
+   takes their place, so the nav reads as the items MORPHING into the
+   trigger rather than a crossfade.
+
+   ⚠ It must stay ABSOLUTE. `.hud__nav__list` anchors on
+   `right: calc(100% + 16px)` of `.hud__nav`, whose width comes from the
+   inline row (still `display: flex`, merely `opacity: 0` when
+   collapsed). An absolute trigger contributes no width, so the drawer's
+   anchor is unaffected by the readout's variable length; make it static
+   and the drawer jumps per section name. */
 .hud__nav--inline .hud__nav__btn {
   position: absolute;
   top: 0;
@@ -778,13 +856,20 @@
   }
 }
 
-/* Mobile: hamburger only, at every scroll position (no morph). */
+/* Mobile: no inline row, so the corner carries the trigger at every
+   scroll position (no morph). The BARS carry it until the collapse —
+   before that the reader is still in the hero, and a section readout
+   there would name a section they have not reached. From the collapse
+   on, the readout takes over exactly as it does on desktop. */
 @media (max-width: 640px) {
   .hud__nav--inline .hud__nav__inline {
     display: none;
   }
   .hud__nav--inline .hud__nav__btn {
     pointer-events: auto;
+  }
+  .hud__nav--inline:not(.is-collapsed) .hud__nav__btn .bars {
+    display: block;
   }
 }
 
@@ -1030,22 +1115,14 @@
   }
 }
 
-/* ADR-031 Update 12 — the left-side terminal-tree section menu
-   (`CorridorSectionMenu`) is the desktop journey indicator. Menu XOR
-   diamond: wherever the menu shows, the detent diamond hides (opacity, not
-   display, so the hand-off stays smooth).
-
-   Update 20 (2026-07-20, owner): the desktop hide is UNCONDITIONAL — it no
-   longer enumerates phases/stations. The enumerated form deliberately left
-   the diamond as the indicator in the pre-Arc regime (hero / thesis), but
-   the menu drops those sections too (`MENU_HIDDEN_IDS`), so there was no
-   desktop beat where the diamond was the live indicator — it just painted
-   alone in SECTION 2, the moment the hero curtain uncovered the rail
-   (Update 16 rev c). On desktop the left rail now reads as the 13-tick
-   ladder alone ("the ladder always stays" is untouched — this hides only
-   the marker). The diamond remains the indicator BELOW the desktop gate,
-   where the menu never mounts; the controller is untouched, so the
-   sub-gate fallback and its detent math are unaffected. */
+/* The desktop detent diamond stays hidden (ADR-031 Update 20, kept by
+   ADR-055). It was hidden because the left-side section menu was the
+   desktop indicator; that menu is now retired and the indicator lives in
+   the nav corner instead — which serves EVERY viewport, so the reason to
+   restore a second marker here never arrived. On desktop the left rail
+   reads as the 13-tick ladder alone ("the ladder always stays" is
+   untouched — this hides only the marker). Below the gate the diamond is
+   still the rail's marker and its controller/detent math are untouched. */
 @media (min-width: 1101px) and (min-height: 760px) {
   [data-rail-manifest-root] :is(.rail-manifest__diamond, .rail-manifest__title) {
     opacity: 0;
@@ -10405,10 +10482,9 @@ html {
 
    It is a HIGHLIGHT, not gold text (owner: "should not have golden text
    color … the highlight should be tensor gold like we have on the menu on
-   the left"): the gold is the FILL and the type is dark, i.e. the same
-   inverse-video block as the section menu's active row
-   (`.home-v2-section-menu__highlight .home-v2-section-menu__name`,
-   home-v2.css), bloom included.
+   the left"): the gold is the FILL and the type is dark — the
+   inverse-video block the retired left section menu used for its active
+   row (ADR-055), bloom included.
 
    Two deliberate departures from that menu rule, both house law:
    1. Ink is `--latent-night` (#110f09), NOT `--void` — "text on a tensor-gold

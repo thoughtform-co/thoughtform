@@ -8,7 +8,7 @@
      · station-title voice        ← home-v2.css .home-v2-station-header__title
      · masthead + survey crosses  ← services.css .services-masthead (in-flow here)
      · chamfer card face          ← ServicesCardRing bakeCardFace + .svc-plate shell
-     · left reel menu             ← home-v2.css .home-v2-section-menu
+     · left reel menu             ← the retired corridor section menu (ADR-055)
    Import order is load-bearing: landing.css first, this sheet LAST.
    ═══════════════════════════════════════════════════════════════════ */
 

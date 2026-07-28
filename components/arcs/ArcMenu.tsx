@@ -6,12 +6,19 @@ import type { CSSProperties } from "react";
 import type { ArcMenuItem } from "./ArcShell";
 
 /**
- * ArcMenu — the left reel TOC for a detail arc page. The corridor
- * section-menu grammar (home-v2.css `.home-v2-section-menu`) copied to
- * `.arc-menu` with its own visibility gate: the corridor version keys
- * off `html[data-corridor-*]` attributes no arc page writes, so this
- * one shows once the page scrolls past the hero (`data-arc-scrolled`
- * on the arc root, written by useArcScroll) at desktop sizes only.
+ * ArcMenu — the left reel TOC for a detail arc page. It carries the
+ * corridor section-menu grammar, copied into `.arc-menu` with its own
+ * visibility gate (the corridor version keyed off `html[data-corridor-*]`
+ * attributes no arc page writes, so this one shows once the page scrolls
+ * past the hero — `data-arc-scrolled` on the arc root, written by
+ * useArcScroll — at desktop sizes only).
+ *
+ * NOTE: the corridor original is RETIRED (ADR-055 moved the landing's
+ * journey indicator into the nav corner, because the reel only existed
+ * above 1101×760). This copy is now the sole owner of the grammar. The
+ * same complaint applies here and porting the corner readout to /arcs is
+ * the open follow-up — deck pages may genuinely want a TOC, so it was
+ * left as a separate decision rather than swept along.
  * Active index comes from one IntersectionObserver over the section
  * elements (a mid-viewport band), never a scroll listener.
  */

@@ -10,7 +10,6 @@ import {
   useDepthGatewayStore,
 } from "@/lib/stores/depthGatewayStore";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
-import { SECTOR_LABELS } from "@/lib/home-v2/corridorMap";
 import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
 /** Fraction of the sticky stage that belongs to the calibrated
@@ -166,7 +165,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     // alone so `useLandingScroll` can drive them with the global
     // page progress instead.
     if (active || armed) {
-      writeV7HudReadouts(progress, beat);
+      writeV7HudReadouts(progress);
     }
 
     const now = performance.now();
@@ -354,41 +353,19 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
   }, [onScroll, writeFrame]);
 }
 
-/** HUD sector text per beat — derived from the declarative corridor
- *  map (`label` on each node). Passthrough beats carry their own label
- *  so the readout doesn't blank during travel. */
-function sectorForBeat(beat: Beat): string {
-  return SECTOR_LABELS[beat];
-}
-
 /**
- * Mirror the v7 HUD readouts so the depth diamond + status numbers
- * track stage progress.
+ * Mirror the v7 depth marker so it tracks stage progress.
+ *
+ * Only `#depthIndicator` is written: the `#hudProgress` / `#coordD` /
+ * `#coordT` / `#hudSector` writes that used to live here retired with
+ * ADR-055 — none of those elements exist in the parsed prototype (they
+ * live only inside its own inert <script>), so each was a per-frame
+ * getElementById for nothing. The section readout they were the ancestor
+ * of now lives in the nav corner, resolved from the `<html>` bus.
  */
-function writeV7HudReadouts(progress: number, beat: Beat): void {
+function writeV7HudReadouts(progress: number): void {
   if (typeof document === "undefined") return;
 
   const depthEl = document.getElementById("depthIndicator");
   if (depthEl) depthEl.style.top = `${(progress * 100).toFixed(2)}%`;
-
-  const progressEl = document.getElementById("hudProgress");
-  if (progressEl) {
-    const pct = Math.round(progress * 100);
-    progressEl.textContent = `${String(pct).padStart(2, "0")}%`;
-  }
-
-  const coordD = document.getElementById("coordD");
-  if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
-
-  const coordT = document.getElementById("coordT");
-  if (coordT) {
-    const deg = Math.round(progress * 359);
-    const tenths = Math.round((progress * 10) % 10);
-    coordT.textContent = `${String(deg).padStart(3, "0")}.${tenths}\u00b0`;
-  }
-
-  const sectorEl = document.getElementById("hudSector");
-  if (sectorEl) {
-    sectorEl.textContent = sectorForBeat(beat);
-  }
 }

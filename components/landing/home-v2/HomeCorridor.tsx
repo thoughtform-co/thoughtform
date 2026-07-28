@@ -179,11 +179,11 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             row is retired. */}
 
         {/* The right-rail Arc register (`CorridorProgressRail`, "THE ARC ·
-            03") is RETIRED (ADR-031 Update 12). The Navigate → Encode →
-            Build subsections now live in the left-side journey overview
-            (`CorridorSectionMenu`, mounted page-level in LandingPage), which
-            unfolds them while the reader is inside the Arc. The component
-            stays on disk for rollback, like `ServicesRailRegister`. */}
+            03") is RETIRED (ADR-031 Update 12). The left-side menu that
+            replaced it is retired too (ADR-055) — the journey indicator is
+            the nav-corner readout now, and it names the Arc as ONE section:
+            there is no Navigate/Encode/Build register anywhere. Both
+            components stay on disk for rollback, like `ServicesRailRegister`. */}
 
         {/* Projected brandmark — lives inside the sticky stage so
             armed prepaint is clipped to the incoming Thoughtform

@@ -7,20 +7,6 @@ interface ScrollTelemetry {
   heroCover: number;
 }
 
-const SECTORS: Record<string, string> = {
-  hero: "Origin",
-  definition: "North star",
-  missingLayer: "Missing layer",
-  askingGap: "Asking gap",
-  intelligenceLayer: "Intelligence layer",
-  buildQuote: "Axiom",
-  proof: "Proof",
-  practice: "Field",
-  services: "Roadmap",
-  about: "Story",
-  contact: "Horizon",
-};
-
 /** The hero scrolls on NATIVE (compositor) scroll — no JS wheel
  *  hijack. A main-thread scroll follower fought the corridor R3F
  *  render and read "heavy/laggy"; native compositor scroll stays
@@ -88,34 +74,25 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     // proxy plane, no held hero, no `--hero-cover` transform channel.
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Defer HUD rail/coord readouts to the corridor while it's the
-    // engaged owner of the depth gauge. `useDepthScroll` (home-v2)
-    // sets `data-corridor-engaged="true"` on <html> whenever the
-    // depth stage is armed or active; without this gate both hooks
-    // would write to `#depthIndicator`, `#hudProgress`, `#coordD`,
-    // `#coordT` every frame and the readout would oscillate. The
-    // active-station + parallax + heroCover writes below stay live
-    // either way — they describe the page's overall scroll state,
-    // not the corridor's internal beat.
+    // Defer the depth gauge to the corridor while it's the engaged
+    // owner. `useDepthScroll` (home-v2) sets `data-corridor-engaged="true"`
+    // on <html> whenever the depth stage is armed or active; without this
+    // gate both hooks would write `#depthIndicator` every frame and the
+    // marker would oscillate. The active-station + parallax + heroCover
+    // writes below stay live either way — they describe the page's
+    // overall scroll state, not the corridor's internal beat.
     const corridorEngaged =
       document.documentElement.getAttribute("data-corridor-engaged") === "true";
 
     if (!corridorEngaged) {
-      // Depth indicator
+      // Depth indicator. The only surviving HUD readout write: the
+      // `#hudProgress` / `#coordD` / `#coordT` / `#hudSector` writes that
+      // used to sit here retired with ADR-055 — none of those elements
+      // exist in the parsed prototype (they live only inside its own inert
+      // <script>), so each was a per-frame DOM query for nothing.
+      // `#depthIndicator` IS real markup, so this one stays.
       const depthEl = root.querySelector<HTMLElement>("#depthIndicator");
       if (depthEl) depthEl.style.top = `${progress * 100}%`;
-
-      // Progress text
-      const progressEl = root.querySelector<HTMLElement>("#hudProgress");
-      if (progressEl)
-        progressEl.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
-
-      // Coord readouts (inside nav status)
-      const coordD = root.querySelector<HTMLElement>("#coordD");
-      const coordT = root.querySelector<HTMLElement>("#coordT");
-      if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
-      if (coordT)
-        coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
     }
 
     // Depth CSS var — always written. Drives reveal/parallax envelopes
@@ -220,11 +197,6 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       const isActive = link.getAttribute("data-station") === activeKey;
       link.classList.toggle("is-active", isActive);
     });
-    if (!corridorEngaged) {
-      const sectorEl = root.querySelector<HTMLElement>("#hudSector");
-      if (sectorEl) sectorEl.textContent = SECTORS[activeKey] || "Field";
-    }
-
     // Parallax (reuses `reduceMotion` cached at the top of the frame)
     if (!reduceMotion && scrollY !== lastScrollY.current) {
       lastScrollY.current = scrollY;

@@ -34,25 +34,20 @@ html[data-corridor-entry="1"] .cw-root .home-v2-stage__sticky {
   margin-left: 0;
 }
 
-/* ── 2. The journey menu can't read this order ──────────────────────
-   `CorridorSectionMenu` renders from MANIFEST_ENTRIES (the production
-   journey) and resolves its active row via `data-active-station`. Here
-   that attribute reads "about" from the second section onward, which
-   maps to an index AFTER services — so the reel would highlight ABOUT
-   through the whole corridor approach and glide backwards on arrival.
-   It would also show dead CONTINUUM / PRACTICE rows (silent no-op
-   clicks — those stations don't exist on this page).
+/* ── 2. The section readout can't read this order ───────────────────
+   The nav-corner readout (ADR-055) resolves from MANIFEST_ENTRIES (the
+   production journey) via `data-active-station`. Here that attribute
+   reads "about" from the second section onward, which maps to an index
+   AFTER services — so the corner would name ABOUT through the whole
+   corridor approach and jump backwards on arrival.
 
-   The 13-tick ladder stays (ADR-031: "the ladder always stays"); only
-   the menu is suppressed. */
-.cw-root .home-v2-section-menu,
-.cw-root .home-v2-section-submenu {
+   So this page keeps the BARS as its trigger: same button, same drawer,
+   no claim about position. (This inherits the suppression the retired
+   `CorridorSectionMenu` carried here for the identical reason.) The
+   13-tick ladder stays either way — ADR-031: "the ladder always stays". */
+.cw-root .hud__nav__sector {
   display: none;
 }
-
-/* ── 3. The nav's "Vision" row points at a station we removed ───────
-   HudNav's items are hardcoded in React (not parsed markup), so the
-   parse-time href rewrite that fixes the hero CTA can't reach it. */
-.cw-root .hud__nav a[href="#continuum"] {
-  display: none;
+.cw-root .hud__nav__btn .bars {
+  display: block;
 }

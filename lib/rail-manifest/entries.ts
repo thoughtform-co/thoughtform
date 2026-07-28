@@ -143,8 +143,9 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     targetId: "about",
   },
   // The client case (ADR-054) — the evidence beat that replaced the
-  // ADR-049 continuum. Its three Navigate/Encode/Build sub-rows are
-  // folded in by CorridorSectionMenu, mirroring the ARC node.
+  // ADR-049 continuum. (Its three Navigate/Encode/Build sub-rows were
+  // folded into the retired section menu; subsections went with it,
+  // ADR-055.)
   { id: "proof", label: "05", name: "Proof", kind: "station", targetId: "proof" },
   { id: "practice", label: "06", name: "Practice", kind: "station", targetId: "practice" },
   { id: "contact", label: "10", name: "Contact", kind: "station", targetId: "contact" },

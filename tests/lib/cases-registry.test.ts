@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { PROOF_SUBS } from "@/components/landing/home-v2/CorridorSectionMenu";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
-import { CASES, PROOF_CASE, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
+import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
 
 /**
  * Case registry integrity (ADR-054) — the contracts the `#proof` station
- * generator and the corridor section menu rely on:
+ * generator relies on:
  *
  *   · unique kebab slugs (future /cases/[slug] static params);
  *   · exactly three beats in Arc order, with unique anchorable ids;
@@ -60,13 +59,10 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("the corridor menu's PROOF subs are in lockstep with the case's beats", () => {
-    // CorridorSectionMenu hardcodes these three rows rather than
-    // importing the registry — it is a client component, and the import
-    // would ship every case's copy in the landing bundle for three
-    // labels. This is the guard that keeps the duplicate honest.
-    expect(PROOF_SUBS).toEqual(caseBeatMenu(PROOF_CASE));
-  });
+  // (The lockstep guard on `CorridorSectionMenu`'s hardcoded PROOF subs
+  // retired with the menu itself — ADR-055 dropped subsections, so there
+  // is no longer a duplicate of `caseBeatMenu` to keep honest. The shape
+  // test above stays: it is a registry data guard in its own right.)
 
   it("the mission report reads as a summary (3..5 stats, meta rows present)", () => {
     for (const c of CASES) {

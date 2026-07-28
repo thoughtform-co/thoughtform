@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 
-import { CorridorSectionMenu } from "@/components/landing/home-v2/CorridorSectionMenu";
 import { ServicesMasthead } from "@/components/landing/home-v2/services/ServicesMasthead";
 import { ServicesRailRegisterPortal } from "@/components/landing/home-v2/services/ServicesRailRegister";
 import { ServicesRingHitAreas } from "@/components/landing/home-v2/services/ServicesRingHitAreas";
@@ -15,9 +14,6 @@ import type { ServiceId } from "@/components/landing/home-v2/services/serviceDat
  *   · the parse-injected HUD chrome (rails, 13-tick ladders, "2"/"5" majors,
  *     corner brackets, wordmark) via `hudHtml`;
  *   · the real `ServicesMasthead` inside a hand-built `.services-stage`;
- *   · the real `CorridorSectionMenu` (both reels — left sections, right
- *     service verbs), lit by the `html[data-active-station]` bus the shell
- *     writes;
  *   · optionally the real `ServicesRailRegister` (SOURCE BUS · 04) portalled
  *     into the injected HUD's `[data-tools-rail-root]` slot.
  *
@@ -125,9 +121,10 @@ export function ServicesFrame({
         </div>
       </div>
 
-      {/* Real journey menus — no props; visibility is pure CSS off the
-          `html[data-active-station="services"]` bus the shell writes. */}
-      <CorridorSectionMenu />
+      {/* (The journey menu that used to mount here retired with ADR-055 —
+          the readout lives in the nav corner now, which this lab does not
+          reproduce. It was ambient chrome parity, never part of what this
+          study measures.) */}
 
       {/* Real right-rail register, portalled into the injected HUD's
           `[data-tools-rail-root]` slot (the legacy ADR-033 name). Toggled so

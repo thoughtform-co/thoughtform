@@ -25,7 +25,7 @@ interface ShellProps {
  * card-face lab convention).
  *
  * No `<html>` attribute bus here: unlike the services labs, nothing in this
- * study reads `data-active-station` (no CorridorSectionMenu, no ring). The
+ * study reads `data-active-station` (no journey chrome, no ring). The
  * frame is chrome only.
  */
 export function ProofHighlightLabShell({ hudHtml, bodyClass }: ShellProps) {
