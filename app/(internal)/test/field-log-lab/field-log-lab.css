@@ -1,0 +1,1447 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/field-log-lab — the client casefile as ONE viewport
+   ═══════════════════════════════════════════════════════════════════════
+
+   Shape law (thoughtform-design): radius 0 everywhere; diamonds, never
+   circles; gold is WAYFINDING only — it marks the value, never decoration;
+   no italics (emphasis is upright gold on a wash).
+
+   NOTHING here restyles a production class outside a `.fll` scope. The lab
+   sheet loads last, so those scoped rules win the cascade without touching
+   the shipped surface.
+
+   ── ALIGNMENT LAW ────────────────────────────────────────────────────
+   The handoff's load-bearing idea: the casefile's horizontal rules do not
+   sit at arbitrary heights, they sit on the HUD rail's own 13-tick ladder.
+   Everything below hangs off `--fl-t*`, which are derived from the LIVE
+   rail box. Two sources have to stay in step with this block:
+
+     · `.hud__rail` (components/landing/v7/landing.css) — the `top` and both
+       arms of the `bottom: max(...)` are copied verbatim below;
+     · `lib/v7-parse/hudTicks.ts` — 13 ticks at 0 … 100 % of that box, with
+       majors at 33.33 % and 66.67 %.
+
+   If either moves, this block is stale and the rules drift off the ladder.
+   That drift is the ONLY way this design fails silently, so check it first.
+
+   ── TYPE ─────────────────────────────────────────────────────────────
+   `[data-type]` switches the client head between the handoff's terminal
+   voice (PT Mono 700) and the `.services-masthead` recipe (`.claude/rules/
+   proof.md` names the masthead the gold standard for this station). The
+   casefile replaces the proof head outright, so the mono voice is arguably
+   the point — but it is an open decision, hence the toggle. Body copy rides
+   `--band-copy` in both modes (ADR-048); the narrow-column derivation is a
+   FACTOR on that token, never a local px ramp, so retuning the band still
+   retunes this.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.fll {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  --fll-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --fll-hair: rgba(235, 227, 214, 0.09);
+  --fll-hair-gold: rgba(202, 165, 84, 0.22);
+  --fll-ink-dim: rgba(235, 227, 214, 0.4);
+  --fll-ink-faint: rgba(235, 227, 214, 0.24);
+
+  /* Stand in for `useLandingScroll` (ADR-031 U16 rev c): the corner brackets
+     and BOTH rails are CLIP-UNCOVERED by the hero sliding off, so each
+     carries `clip-path: inset(max(0px, (1 − --hero-lift) · 100dvh − <own top
+     offset>))`. With no scroll writer running the var is unset, the inset
+     resolves to a full viewport, and the whole ladder is clipped away — the
+     frame paints empty. We are parked far past the curtain, so 1 is honest. */
+  --hero-lift: 1;
+
+  /* ── The rail box, mirrored from `.hud__rail` ─────────────────────── */
+  --fl-rail-top: var(--hud-rail-y-start);
+  --fl-rail-bot: max(
+    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
+    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
+  );
+  --fl-rail-h: calc(100svh - var(--fl-rail-top) - var(--fl-rail-bot));
+
+  /* Tick heights, absolute from the viewport top. Names are the ladder
+     index, so `--fl-t8` really is the 9th tick — the bearing-5 major. */
+  --fl-t2: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.16667);
+  --fl-t7: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.58333);
+  --fl-t8: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.66667);
+  --fl-t11: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.91667);
+
+  /* Where the two columns start reading, and where they stop. */
+  --fl-body-top: calc(var(--fl-t2) + clamp(16px, 2.6svh, 38px));
+  --fl-split-end: var(--fl-t11);
+  /* How far the corner marks sit OUTBOARD of the content box they register.
+     Sitting exactly on the corner puts the top pair through the designation
+     labels, which start and end on the band edges; outboard is also what the
+     production survey chrome does (`--survey-mark-rise` / `--survey-mark-out`,
+     services.css). */
+  --fl-x-out: clamp(9px, 1.2svh, 15px);
+  --fl-viz-split: calc(var(--fl-t8) - var(--fl-body-top));
+
+  /* Column ratios, from the handoff's 400 / 692 split inside a 1152 band. */
+  --fl-col-l: 34.5%;
+  --fl-col-split: 37.5%;
+  --fl-col-r: 40%;
+
+  /* Horizontal offset from the band edge OUT to each rail's guide hairline,
+     for the junction diamonds. Negative by construction. */
+  --fl-rail-x: calc(var(--hud-margin) + 1px - var(--hud-content-inset) - var(--rail-inset));
+
+  /* Narrow-column derivation of the band copy size — a FACTOR on the token,
+     never a replacement for it (ADR-048), so retuning the band still retunes
+     this. 0.82 lands the brief at ~13.6px in the 397px column, which is what
+     the handoff's 44ch measure needs; at the bare token the lede runs seven
+     lines and overflows its zone at 900px tall. */
+  --fl-copy: calc(var(--band-copy) * 0.82);
+
+  /* 0 → 1 wipe for the signal plate; the reveal effect drives it. */
+  --fl-draw: 1;
+
+  /* ── Reticle grammar, lifted from the corridor caption card ────────────
+     `.home-v2-reticle__cross` (home-v2.css): each arm is 1px thick and
+     painted with a repeating gradient — a 1.5px gold dash on a 5px pitch —
+     which at that thickness reads as particulate rather than as a line. The
+     dawn frame runs are the same idea at 1px on a 6px pitch. Keep the three
+     pitches in step with that file if it is ever retuned. */
+  --fl-ret-arm: 19px;
+  --fl-ret-dash-x: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.8) 0 1.5px,
+    transparent 1.5px 5px
+  );
+  --fl-ret-dash-y: repeating-linear-gradient(
+    to bottom,
+    rgba(202, 165, 84, 0.8) 0 1.5px,
+    transparent 1.5px 5px
+  );
+  --fl-ret-rule-x: repeating-linear-gradient(
+    to right,
+    rgba(236, 227, 214, 0.24) 0 1px,
+    transparent 1px 6px
+  );
+  --fl-ret-rule-y: repeating-linear-gradient(
+    to bottom,
+    rgba(236, 227, 214, 0.24) 0 1px,
+    transparent 1px 6px
+  );
+  --fl-ret-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* hudHtml ships the fixed gold gateway radial; production covers it with the
+   opaque corridor canvas — here the void bed owns the backdrop. */
+.fll .gateway {
+  display: none;
+}
+
+.fll__hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+/* Reproduces `.stations`' content box: `--rail-inset` is defined as
+   `--band-margin − --hud-content-inset`, i.e. it assumes one inset has
+   already been eaten. */
+.fll-stationbox {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--hud-content-inset);
+  overflow: hidden;
+  z-index: 20;
+}
+
+/* ══ The casefile plane ════════════════════════════════════════════════
+   Positioning context for every zone. Inset to the editorial band, so a
+   child at `left: 0` sits on the band's left edge.
+
+   The inset is written HERE, not inherited from `.fll-stationbox`'s padding:
+   an absolutely positioned child resolves against its containing block's
+   PADDING BOX, so the station box's padding does not move it. That box still
+   earns its keep — it is the overflow clip and the `--rail-inset` reference
+   frame — but the offset has to be restated. ═══════════════════════════ */
+
+.fll-case {
+  --fl-band-inset: calc(var(--hud-content-inset) + var(--rail-inset));
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--fl-band-inset);
+  right: var(--fl-band-inset);
+}
+
+/* ── Station chrome ─────────────────────────────────────────────────── */
+
+.fll-desig,
+.fll-case__label,
+.fll-case__sys,
+.fll-case__code {
+  font-family: var(--fll-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fll-ink-dim);
+}
+
+.fll-case__label {
+  position: absolute;
+  left: 0;
+  top: calc(var(--fl-rail-top) - 23px);
+  letter-spacing: 0.24em;
+}
+
+.fll-case__sys {
+  position: absolute;
+  left: 0;
+  top: calc(var(--fl-rail-top) + 42px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(235, 227, 214, 0.7);
+}
+
+.fll-case__code {
+  position: absolute;
+  right: 0;
+  top: calc(var(--fl-rail-top) + 42px);
+  color: var(--gold);
+  letter-spacing: 0.18em;
+}
+
+.fll-diamond {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+
+/* ── Client tabs ───────────────────────────────────────────────────────
+   The strip's BOX BOTTOM is the section rule, so the active tab's underline
+   (`::after` at `bottom: -1px`) lands on the rule itself rather than near
+   it — the handoff's "underlined into the rule". ════════════════════════ */
+
+.fll-tabs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--fl-t2) - 34px);
+  height: 34px;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(18px, 2.4vw, 34px);
+  z-index: 3;
+}
+
+.fll-tabs__tab {
+  position: relative;
+  appearance: none;
+  margin: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0 0 11px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--fll-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.32);
+  transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fll-tabs__tab:hover {
+  color: rgba(235, 227, 214, 0.7);
+}
+.fll-tabs__tab:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 3px;
+}
+.fll-tabs__ix {
+  font-size: 8px;
+  opacity: 0.75;
+}
+.fll-tabs__tab[data-on] {
+  color: var(--gold);
+  font-weight: 700;
+}
+.fll-tabs__tab[data-on]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--gold);
+}
+.fll-tabs__archive {
+  align-self: flex-end;
+  padding-bottom: 11px;
+  font-family: var(--fll-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.2);
+}
+
+/* ══ Connection grammar ════════════════════════════════════════════════
+   Rules, split, crosshairs and junction diamonds. Every one of them is in
+   the DOM at all times; `[data-variant]` below decides which paint. ════ */
+
+.fll-rule {
+  position: absolute;
+  height: 1px;
+  z-index: 1;
+}
+.fll-rule--section {
+  left: 0;
+  right: 0;
+  top: var(--fl-t2);
+  background: var(--fll-hair);
+}
+.fll-rule--brief {
+  left: 0;
+  width: var(--fl-col-l);
+  top: var(--fl-t7);
+  border-top: 1px dotted var(--fll-hair-gold);
+  height: 0;
+}
+.fll-rule--viz {
+  left: var(--fl-col-r);
+  right: 0;
+  top: var(--fl-t8);
+  border-top: 1px dotted var(--fll-hair-gold);
+  height: 0;
+}
+
+.fll-split {
+  position: absolute;
+  left: var(--fl-col-split);
+  top: var(--fl-body-top);
+  width: 1px;
+  height: calc(var(--fl-split-end) - var(--fl-body-top));
+  background: var(--fll-hair);
+  z-index: 1;
+}
+
+/* Survey crosshairs — a registration mark, not a decoration. They bracket
+   the CONTENT BOX (band edges × where the column split starts and ends), so
+   they mark exactly the region the split divides.
+   They are deliberately NOT on the section rule at `--fl-t2`: the active
+   tab's underline lands there, and a crosshair under it reads as a mistake
+   (owner, 2026-07-28 — the same call that removed the lead crosshair). */
+.fll-x {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+}
+.fll-x::before,
+.fll-x::after {
+  content: "";
+  position: absolute;
+  background: rgba(235, 227, 214, 0.3);
+}
+.fll-x::before {
+  left: 0;
+  right: 0;
+  top: 6px;
+  height: 1px;
+}
+.fll-x::after {
+  top: 0;
+  bottom: 0;
+  left: 6px;
+  width: 1px;
+}
+/* (The handoff's big gold lead crosshair sat on the section rule at 4.5 % of
+   the band — directly under the active tab's underline. Two gold marks in
+   one place read as a mistake, and the underline is the one carrying
+   meaning. Removed, owner 2026-07-28. The three marks that used to punctuate
+   the column split at t2 / t8 / its foot went the same way in the same pass:
+   mid-composition marks read as debris, corner marks read as registration.) */
+.fll-x--tr {
+  right: 0;
+  top: calc(var(--fl-body-top) - var(--fl-x-out));
+  transform: translate(50%, -50%);
+}
+.fll-x--bl {
+  left: 0;
+  top: calc(var(--fl-split-end) + var(--fl-x-out));
+}
+
+/* Junction diamonds — the casefile's rules terminating ON the rail guides.
+   `--fl-rail-x` is negative, so these sit OUTSIDE the band. */
+.fll-jd {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  transform: translate(-50%, -50%) rotate(45deg);
+  box-shadow: 0 0 9px rgba(202, 165, 84, 0.4);
+  z-index: 4;
+}
+.fll-jd--tl {
+  left: var(--fl-rail-x);
+  top: var(--fl-t2);
+}
+.fll-jd--tr {
+  left: auto;
+  right: var(--fl-rail-x);
+  top: var(--fl-t2);
+  transform: translate(50%, -50%) rotate(45deg);
+}
+.fll-jd--bl {
+  left: var(--fl-rail-x);
+  top: var(--fl-t8);
+}
+.fll-jd--br {
+  left: auto;
+  right: var(--fl-rail-x);
+  top: var(--fl-t8);
+  transform: translate(50%, -50%) rotate(45deg);
+}
+
+/* Corner reticles — the corridor caption card's crosses, at casefile scale.
+   Painted only by variant `e`; in the DOM at all times like the rest of the
+   connection grammar. Positioned by `left`/`right` (never `transform`) so the
+   travel can be a plain property transition, exactly as the corridor's is. */
+.fll-ret {
+  position: absolute;
+  width: var(--fl-ret-arm);
+  height: var(--fl-ret-arm);
+  margin: calc(var(--fl-ret-arm) / -2) 0 0 calc(var(--fl-ret-arm) / -2);
+  display: none;
+  pointer-events: none;
+  z-index: 4;
+  transition:
+    left 0.55s var(--fl-ret-ease),
+    right 0.55s var(--fl-ret-ease);
+}
+.fll-ret::before,
+.fll-ret::after {
+  content: "";
+  position: absolute;
+}
+.fll-ret::before {
+  left: 0;
+  right: 0;
+  top: calc(var(--fl-ret-arm) / 2 - 0.5px);
+  height: 1px;
+  background: var(--fl-ret-dash-x);
+}
+.fll-ret::after {
+  top: 0;
+  bottom: 0;
+  left: calc(var(--fl-ret-arm) / 2 - 0.5px);
+  width: 1px;
+  background: var(--fl-ret-dash-y);
+}
+/* The right-hand mark anchors on `right`, so its own margin has to mirror. */
+.fll-ret--tr {
+  margin-left: 0;
+  margin-right: calc(var(--fl-ret-arm) / -2);
+}
+
+/* ══ Left column · brief ═══════════════════════════════════════════════ */
+
+.fll-brief {
+  position: absolute;
+  left: 0;
+  width: var(--fl-col-l);
+  top: var(--fl-body-top);
+  height: calc(var(--fl-t7) - var(--fl-body-top) - clamp(11px, 1.5svh, 18px));
+  overflow: hidden;
+  z-index: 2;
+}
+
+.fll-brief__title {
+  margin: clamp(9px, 1.5svh, 15px) 0 0;
+  display: flex;
+  align-items: baseline;
+  /* No gap: the gold full stop is part of the wordmark, not a sibling. The
+     placeholder chip carries its own margin instead. */
+  gap: 0;
+  font-family: var(--fll-mono);
+  font-weight: 700;
+  font-size: clamp(18px, 1.66vw, 24px);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--dawn);
+  text-shadow: 0 0 9px rgba(236, 227, 214, 0.22);
+}
+.fll-brief__dot {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* The `.services-masthead` recipe (ADR-044) — PP Neue Montreal 400, POSITIVE
+   0.04em tracking, 1.1 leading, uppercase, gold-wash shadow.
+   ⚠ The masthead head costs ~10px more vertical than the mono one, which the
+   brief zone does not have at 900px tall. The clamp is stepped down here (the
+   masthead's own is `clamp(26px, 3vw, 44px)`) so the two type modes can be
+   compared at the same fit rather than one of them clipping — that step is
+   itself part of the finding if `montreal` wins. */
+.fll-case[data-type="montreal"] .fll-brief__title {
+  margin-top: clamp(6px, 1svh, 12px);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(20px, 1.95vw, 30px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+.fll-case[data-type="montreal"] .fll-brief__dot {
+  font-weight: 500;
+}
+
+.fll-chip {
+  align-self: center;
+  margin-left: 12px;
+  padding: 2px 7px;
+  font-family: var(--fll-mono);
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  border: 1px solid rgba(202, 165, 84, 0.45);
+  background: rgba(202, 165, 84, 0.1);
+}
+
+.fll-brief__class {
+  margin: clamp(8px, 1.2svh, 11px) 0 0;
+  font-family: var(--fll-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fll-ink-dim);
+}
+
+.fll-brief__body {
+  margin: clamp(10px, 1.6svh, 15px) 0 0;
+  font-size: var(--fl-copy);
+  line-height: 1.52;
+  color: rgba(235, 227, 214, 0.7);
+}
+/* Emphasis is UPRIGHT gold on a soft wash — the brand's only marker. */
+.fll-brief__body em {
+  font-style: normal;
+  color: var(--gold);
+  background: rgba(202, 165, 84, 0.16);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 2px;
+}
+
+.fll-brief__log {
+  margin: clamp(11px, 1.8svh, 16px) 0 0;
+  font-family: var(--fll-mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: rgba(235, 227, 214, 0.7);
+}
+.fll-brief__lx {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ══ Left column · directory ═══════════════════════════════════════════ */
+
+.fll-dir {
+  position: absolute;
+  left: 0;
+  width: var(--fl-col-l);
+  top: calc(var(--fl-t7) + clamp(9px, 1.3svh, 14px));
+  height: calc(var(--fl-split-end) - var(--fl-t7) - clamp(9px, 1.3svh, 14px));
+  overflow: hidden;
+  z-index: 2;
+}
+
+.fll-dir__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  font-family: var(--fll-mono);
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.3);
+}
+.fll-dir__head .fll-desig {
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  color: rgba(235, 227, 214, 0.3);
+}
+.fll-dir__count {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.fll-dir__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fll-dir__list li + li .fll-row {
+  border-top: 1px dotted rgba(202, 165, 84, 0.13);
+}
+
+.fll-row {
+  appearance: none;
+  margin: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 0 12px;
+  align-items: center;
+  padding: clamp(4px, 0.6svh, 8px) 8px;
+  text-align: left;
+  font-family: var(--fll-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.7);
+  transition:
+    background var(--duration-normal, 120ms) var(--ease-out, ease),
+    color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fll-row:hover {
+  background: rgba(235, 227, 214, 0.04);
+}
+.fll-row:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -1px;
+}
+
+/* Folder / document glyphs — the retro file grammar, drawn not iconified. */
+.fll-row__glyph {
+  width: 14px;
+  height: 10px;
+  border: 1px solid rgba(202, 165, 84, 0.55);
+}
+.fll-row__glyph[data-icon="dir"] {
+  clip-path: polygon(0 0, 7px 0, 9px 3px, 100% 3px, 100% 100%, 0 100%);
+}
+.fll-row__glyph[data-icon="doc"] {
+  clip-path: polygon(0 0, 9px 0, 100% 4px, 100% 100%, 0 100%);
+}
+
+.fll-row__meta {
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  color: var(--fll-ink-dim);
+}
+
+/* Inverse-video active block — the section-menu lab's terminal accent. */
+.fll-row[data-on] {
+  background: var(--gold);
+  color: var(--void, #0a0908);
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(202, 165, 84, 0.22);
+}
+.fll-row[data-on] .fll-row__meta {
+  color: rgba(5, 4, 3, 0.7);
+}
+.fll-row[data-on] .fll-row__glyph {
+  border-color: var(--void, #0a0908);
+}
+
+/* ══ Right column ══════════════════════════════════════════════════════ */
+
+.fll-panel {
+  position: absolute;
+  left: var(--fl-col-r);
+  right: 0;
+  top: var(--fl-body-top);
+  height: calc(var(--fl-split-end) - var(--fl-body-top));
+  z-index: 2;
+}
+.fll-panel:focus-visible {
+  outline: 1px solid rgba(202, 165, 84, 0.4);
+  outline-offset: 8px;
+}
+
+.fll-panel__head {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.fll-desig--r {
+  color: rgba(235, 227, 214, 0.28);
+  letter-spacing: 0.16em;
+  font-size: 8.5px;
+}
+
+.fll-panel__viz {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 24px;
+  height: calc(var(--fl-viz-split) - 40px);
+  overflow: hidden;
+  border: 1px solid rgba(202, 165, 84, 0.2);
+  background: rgba(5, 4, 3, 0.4);
+}
+/* The signal plate is its own frame — the chart's graticule reads as the
+   instrument, so a second border around it doubles up. */
+.fll-panel__viz[data-kind="signal"] {
+  border-color: rgba(202, 165, 84, 0.2);
+}
+
+.fll-panel__foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--fl-viz-split) + 20px);
+  bottom: 0;
+  overflow: hidden;
+}
+/* METRICS.DAT has no evidence plate — the readouts ARE the plate, so the
+   foot claims the whole column instead of the band below the tick-8 rule. */
+.fll-panel[data-solo] .fll-panel__foot {
+  top: 26px;
+}
+
+/* ── Readouts ─────────────────────────────────────────────────────────── */
+
+.fll-readouts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 0 clamp(16px, 2vw, 26px);
+}
+.fll-readout__v {
+  display: block;
+  font-family: var(--fll-mono);
+  font-weight: 700;
+  font-size: clamp(22px, 2.2vw, 31px);
+  line-height: 1;
+  color: var(--dawn);
+}
+/* Long values ("5 → 130+", "Days → min") drop a step rather than wrapping
+   mid-figure. */
+.fll-readout__v[data-wide] {
+  font-size: clamp(16px, 1.5vw, 22px);
+}
+.fll-readout__k {
+  display: block;
+  margin-top: 9px;
+  font-family: var(--fll-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fll-ink-dim);
+  line-height: 1.6;
+}
+/* METRICS.DAT — the readouts ARE the plate, so they get the room the
+   evidence plate would have taken. */
+.fll-readouts[data-solo] {
+  gap: clamp(20px, 3svh, 34px) clamp(16px, 2vw, 26px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.fll-readouts[data-solo] .fll-readout__v {
+  font-size: clamp(28px, 3vw, 44px);
+}
+
+/* ── Context register ─────────────────────────────────────────────────── */
+
+.fll-ctx {
+  list-style: none;
+  margin: clamp(16px, 2.6svh, 28px) 0 0;
+  padding: clamp(12px, 1.8svh, 18px) 0 0;
+  border-top: 1px dotted var(--fll-hair-gold);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 24px;
+}
+/* The dotted leader only works with a non-wrapping value, so an overlong
+   value cannot reflow — it would run into the next column. Clip instead, and
+   keep the copy short: the guard test caps context values at 20 characters
+   so this never has to fire. */
+.fll-ctx__row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--fll-mono);
+  text-transform: uppercase;
+}
+.fll-ctx__k {
+  flex: none;
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  color: rgba(235, 227, 214, 0.3);
+}
+.fll-ctx__ld {
+  flex: 1;
+  border-bottom: 1px dotted rgba(202, 165, 84, 0.25);
+  transform: translateY(-3px);
+}
+.fll-ctx__v {
+  flex: none;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.7);
+  white-space: nowrap;
+}
+
+.fll-source {
+  margin: clamp(14px, 2.2svh, 22px) 0 0;
+  font-family: var(--fll-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.3);
+}
+
+/* ══ Evidence plates ═══════════════════════════════════════════════════ */
+
+.fll-plate {
+  height: 100%;
+  padding: clamp(14px, 2svh, 22px) clamp(16px, 1.8vw, 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.fll-plate__foot {
+  margin: auto 0 0;
+  padding-top: 12px;
+  font-family: var(--fll-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.35);
+}
+
+/* ── Log ──────────────────────────────────────────────────────────────── */
+
+.fll-log,
+.fll-register,
+.fll-reg__rows,
+.fll-tools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fll-log__row {
+  display: grid;
+  grid-template-columns: 9ch 1fr auto;
+  gap: 0 12px;
+  align-items: baseline;
+  padding: 5px 0;
+  font-family: var(--fll-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+.fll-log__t {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.65);
+}
+.fll-log__rule {
+  align-self: center;
+  border-bottom: 1px dashed rgba(235, 227, 214, 0.14);
+}
+.fll-log__event {
+  color: rgba(235, 227, 214, 0.72);
+  text-align: right;
+}
+
+/* ── Register ─────────────────────────────────────────────────────────── */
+
+.fll-register__row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  font-family: var(--fll-mono);
+  text-transform: uppercase;
+}
+.fll-register__row + .fll-register__row {
+  border-top: 1px dotted rgba(202, 165, 84, 0.12);
+}
+.fll-register__k {
+  flex: none;
+  min-width: 11ch;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(202, 165, 84, 0.65);
+}
+.fll-register__ld {
+  flex: 1;
+  border-bottom: 1px dotted rgba(235, 227, 214, 0.14);
+  transform: translateY(-3px);
+}
+.fll-register__v {
+  flex: none;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.72);
+}
+
+/* ── Registry ─────────────────────────────────────────────────────────── */
+
+.fll-reg__groups {
+  margin: 0 0 clamp(10px, 1.6svh, 16px);
+  padding: 0 0 clamp(10px, 1.6svh, 16px);
+  border-bottom: 1px dotted rgba(202, 165, 84, 0.14);
+  display: grid;
+  gap: 3px 0;
+}
+.fll-reg__group {
+  display: grid;
+  grid-template-columns: 11ch 1fr;
+  gap: 0 12px;
+  align-items: baseline;
+}
+.fll-reg__name {
+  font-family: var(--fll-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.7);
+}
+.fll-reg__gloss {
+  margin: 0;
+  font-size: calc(var(--fl-copy) * 0.78);
+  line-height: 1.45;
+  color: rgba(235, 227, 214, 0.5);
+}
+.fll-reg__row {
+  display: grid;
+  grid-template-columns: 11ch 1fr auto;
+  gap: 0 12px;
+  align-items: center;
+  padding: 4px 0;
+  font-family: var(--fll-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.fll-reg__team {
+  color: rgba(235, 227, 214, 0.35);
+  letter-spacing: 0.16em;
+  font-size: 8.5px;
+}
+.fll-reg__skill {
+  color: rgba(235, 227, 214, 0.75);
+}
+.fll-reg__tag {
+  padding: 2px 6px;
+  font-size: 7.5px;
+  letter-spacing: 0.16em;
+  color: rgba(202, 165, 84, 0.8);
+  border: 1px solid rgba(202, 165, 84, 0.3);
+}
+
+/* ── Tool strip ───────────────────────────────────────────────────────── */
+
+.fll-tools {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1svh, 12px);
+  height: 100%;
+}
+.fll-tool {
+  display: grid;
+  grid-template-columns: clamp(72px, 8vw, 104px) 1fr auto;
+  gap: 0 14px;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+}
+.fll-tool__shot {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  /* The duotone feed recipe — dark UI captures sit above the photo bar. */
+  filter: grayscale(1) sepia(0.35) saturate(1.6) brightness(0.82);
+}
+.fll-tool__name {
+  font-family: var(--fll-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+.fll-tool__tag {
+  grid-column: 2;
+  font-family: var(--fll-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fll-ink-dim);
+}
+.fll-tool__state {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-family: var(--fll-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.7);
+}
+
+/* ══ Signal chart ══════════════════════════════════════════════════════ */
+
+.fll-signal {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.fll-signal__grid {
+  stroke: rgba(236, 227, 214, 0.07);
+  stroke-dasharray: 2 5;
+}
+.fll-signal__halo {
+  fill: none;
+  stroke: rgba(202, 165, 84, 0.22);
+  stroke-width: 5;
+}
+.fll-signal__line {
+  fill: none;
+  stroke: var(--gold, #caa554);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 5;
+}
+.fll-signal__node {
+  fill: var(--gold, #caa554);
+}
+.fll-signal__stamp,
+.fll-signal__caption,
+.fll-signal__foot {
+  font-family: var(--fll-mono);
+  letter-spacing: 1px;
+}
+.fll-signal__stamp {
+  font-size: 7.5px;
+  fill: rgba(202, 165, 84, 0.8);
+}
+.fll-signal__caption {
+  font-size: 7px;
+  fill: rgba(236, 227, 214, 0.5);
+}
+.fll-signal__foot {
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  fill: rgba(236, 227, 214, 0.35);
+}
+.fll-signal__foot--gold {
+  fill: rgba(202, 165, 84, 0.7);
+}
+
+/* Draw-on wipe. A clip rect scaled on X, not a dash offset: the visible
+   stroke is itself dashed, and the wipe has to take the diamonds and the
+   milestone labels with it. */
+.fll-signal__wipe {
+  fill: #fff;
+  transform-box: fill-box;
+  transform-origin: left center;
+  transform: scaleX(var(--fl-draw, 1));
+  transition: transform 1.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ══ Foot row ══════════════════════════════════════════════════════════ */
+
+/* Under the column split, NOT under the rail's last tick: the handoff put
+   this at 91 % of a bare design frame, but the live HUD owns that corner —
+   the bottom-left wordmark lockup (ADR-043) sits exactly there and the two
+   collide. */
+.fll-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Clears the outboard bottom corner marks as well as the wordmark. */
+  top: calc(var(--fl-split-end) + clamp(26px, 3.6svh, 40px));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3;
+}
+.fll-tele {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--fll-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fll-ink-dim);
+}
+.fll-tele b {
+  font-weight: 400;
+  color: var(--gold);
+}
+.fll-prompt {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--fll-mono);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-decoration: none;
+}
+.fll-prompt:hover {
+  color: var(--dawn);
+}
+.fll-prompt__pfx {
+  font-weight: 400;
+  margin-right: 8px;
+}
+.fll-cursor {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--gold);
+  transform: scaleY(0.82);
+  transform-origin: center bottom;
+  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  animation: fll-blink 1.05s steps(2, start) infinite;
+}
+@keyframes fll-blink {
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+/* ══ Variants — the only thing the four cuts differ by ═════════════════
+   `a` DOCKED MARKS is the base above. Each rule below SUBTRACTS. ═══════ */
+
+/* b · RAIL WAYPOINTS — the junction pairing goes; the rail keeps a bearing
+   mark of its own, quieter and unglowing, because it belongs to the frame
+   rather than to the casefile. */
+.fll[data-variant="b"] .fll-jd {
+  width: 6px;
+  height: 6px;
+  background: rgba(202, 165, 84, 0.62);
+  box-shadow: none;
+}
+.fll[data-variant="b"] .fll-jd--tr,
+.fll[data-variant="b"] .fll-jd--br {
+  display: none;
+}
+
+/* c · CROSSHAIRS ONLY — every horizontal rule and the junction marks go.
+   The registration grid alone holds the composition. The active tab keeps
+   its underline: it is a state marker, not a layout rule. */
+.fll[data-variant="c"] .fll-rule,
+.fll[data-variant="c"] .fll-jd {
+  display: none;
+}
+.fll[data-variant="c"] .fll-split {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--fll-hair) 12%,
+    var(--fll-hair) 88%,
+    transparent
+  );
+}
+.fll[data-variant="c"] .fll-ctx {
+  border-top-color: transparent;
+}
+
+/* d · NOTCHED SHELL — the enclosed control. One chamfered plate around the
+   whole casefile: 1px gradient edge, glass body, scanlines. The `.svc-plate`
+   recipe (services.css) at casefile scale. */
+.fll[data-variant="d"] .fll-case::before,
+.fll[data-variant="d"] .fll-case::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  --ch: 26px;
+  left: -26px;
+  right: -26px;
+  top: calc(var(--fl-t2) - 56px);
+  bottom: calc(100svh - var(--fl-split-end) - 34px);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ch)) 0,
+    100% var(--ch),
+    100% 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch))
+  );
+}
+.fll[data-variant="d"] .fll-case::before {
+  background: linear-gradient(
+    168deg,
+    rgba(202, 165, 84, 0.42) 0%,
+    rgba(236, 227, 214, 0.12) 45%,
+    rgba(202, 165, 84, 0.12) 70%,
+    rgba(202, 165, 84, 0.36) 100%
+  );
+}
+.fll[data-variant="d"] .fll-case::after {
+  --ch: 25.4px;
+  left: calc(-26px + 1px);
+  right: calc(-26px + 1px);
+  top: calc(var(--fl-t2) - 55px);
+  bottom: calc(100svh - var(--fl-split-end) - 33px);
+  background:
+    repeating-linear-gradient(to bottom, rgba(202, 165, 84, 0.025) 0 1px, transparent 1px 3px),
+    linear-gradient(174deg, rgba(235, 227, 214, 0.05), rgba(235, 227, 214, 0.015) 60%, transparent),
+    radial-gradient(130% 70% at 84% -8%, rgba(202, 165, 84, 0.08), transparent 70%),
+    var(--void, #0a0908);
+}
+/* Inside a shell the junction diamonds would sit on the frame's own edge,
+   which is the enclosure argument making itself. */
+.fll[data-variant="d"] .fll-jd {
+  display: none;
+}
+.fll[data-variant="d"] .fll-rule--section {
+  background: rgba(202, 165, 84, 0.18);
+}
+
+/* e · RETICLE MARKS — the Arc's registration grammar, borrowed whole.
+   Dotted crosses bracket the casefile's four corners, and every rule is
+   redrawn as a dashed run, so the connective tissue is TEXTURE rather than
+   line. The junction diamonds go: a diamond and a cross on the same rule are
+   two marks doing one job. */
+.fll[data-variant="e"] .fll-jd {
+  display: none;
+}
+.fll[data-variant="e"] .fll-ret {
+  display: block;
+}
+
+/* Parked on the diagonal — the resting truth, and what an absent
+   `data-fl-armed` (reduced motion / hidden pane / no JS) resolves to. */
+.fll[data-variant="e"] .fll-ret--tr {
+  right: 0;
+  top: calc(var(--fl-body-top) - var(--fl-x-out));
+}
+.fll[data-variant="e"] .fll-ret--bl {
+  left: 0;
+  top: calc(var(--fl-split-end) + var(--fl-x-out));
+}
+
+/* Armed-at-0: gathered on the column split, the composition's own axis —
+   the corridor's crosses start gathered on the caption card's centre. */
+.fll[data-variant="e"] .fll-case[data-fl-armed="0"] .fll-ret--bl {
+  left: var(--fl-col-split);
+}
+.fll[data-variant="e"] .fll-case[data-fl-armed="0"] .fll-ret--tr {
+  right: calc(100% - var(--fl-col-split));
+}
+
+/* Rules and split become dashed runs. `background` replaces the dotted
+   borders wholesale, so the border declarations have to be unset too. */
+.fll[data-variant="e"] .fll-rule--section {
+  background: var(--fl-ret-rule-x);
+}
+.fll[data-variant="e"] .fll-rule--brief,
+.fll[data-variant="e"] .fll-rule--viz {
+  border-top: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.5) 0 1.5px,
+    transparent 1.5px 7px
+  );
+}
+.fll[data-variant="e"] .fll-split {
+  background: var(--fl-ret-rule-y);
+}
+.fll[data-variant="e"] .fll-ctx {
+  border-top: 0;
+  padding-top: calc(clamp(12px, 1.8svh, 18px) + 1px);
+  background: var(--fl-ret-rule-x) top left / 100% 1px no-repeat;
+}
+
+/* The reticles occupy the corners, which is where the plain crosshairs live —
+   so the plain ones stand down rather than double-draw. One registration
+   vocabulary on the plane, not two stacked. */
+.fll[data-variant="e"] .fll-x {
+  display: none;
+}
+
+/* Reduced motion — the resolved state IS the design; the reveal is a
+   convenience for judging arrival. */
+@media (prefers-reduced-motion: reduce) {
+  .fll-signal__wipe {
+    transition: none;
+    transform: none;
+  }
+  .fll-ret {
+    transition: none;
+  }
+  .fll-cursor {
+    animation: none;
+  }
+}
+
+/* ══ Console ═══════════════════════════════════════════════════════════ */
+
+.fll-console {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  width: max-content;
+  max-width: min(34vw, 340px);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: rgba(10, 9, 8, 0.82);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  backdrop-filter: blur(10px);
+  font-family: var(--fll-mono);
+}
+.fll-console[data-open] {
+  width: min(34vw, 340px);
+  padding: 12px 14px 13px;
+}
+.fll-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.fll-chip {
+  appearance: none;
+  border: 1px solid rgba(202, 165, 84, 0.35);
+  background: transparent;
+  color: var(--dawn-70);
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.fll-chip[data-on] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--void, #0a0908);
+}
+.fll-chip--caret {
+  border-color: rgba(235, 227, 214, 0.18);
+  padding-inline: 6px;
+}
+.fll-thesis {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--dawn-70);
+}
+.fll-prov {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fll-ink-faint);
+}
+.fll-prov__diamond {
+  width: 4px;
+  height: 4px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex: none;
+}
+.fll-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fll-toggle {
+  appearance: none;
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  background: transparent;
+  color: var(--dawn-70);
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.fll-toggle__led {
+  width: 5px;
+  height: 5px;
+  background: rgba(235, 227, 214, 0.3);
+  transform: rotate(45deg);
+}
+.fll-toggle[data-on] {
+  color: var(--gold);
+  border-color: rgba(202, 165, 84, 0.45);
+}
+.fll-toggle[data-on] .fll-toggle__led {
+  background: var(--gold);
+}
+.fll-warn {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(202, 165, 84, 0.75);
+}
+.fll-meter {
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fll-ink-faint);
+}
+.fll-meter[data-warn] {
+  color: #e0674a;
+}
+
+.fll-gate-warn {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  margin: 0;
+  display: none;
+  font-family: var(--fll-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e0674a;
+}
+@media (max-width: 1100px), (max-height: 759px) {
+  .fll-gate-warn {
+    display: block;
+  }
+}
