@@ -33,6 +33,23 @@ inherited its ambient-cover role.
   safe by construction, but `SERVICES_PROOF_RUNWAY_VH` and
   `--svc-proof-runway` must move together; the CSS is the one that has to
   exist pre-hydration.
+- **The fold and the release OVERLAP, and you tune them by VALUE.**
+  `PROOF_OUT` 0.66 → 0.88 against `PROOF_RELEASE` 0.62 → 1.0 on a 2.8-vh
+  dwell — the release opens UNDER the fold's edge so its flat smootherstep
+  start is spent before the panels visibly leave (~0.72), and the offer is
+  already drawing as they do (owner, round 2). Overlapping edges prove
+  nothing — `smootherstep` is nearly flat across its first third, so a
+  release that merely starts before the fold ends contributes ~0.06 while
+  the fold runs (measured, first attempt). Sample the crossing: at proofP
+  0.82 the casefile reads 0.43 opacity with the aperture 42 % closed
+  against `--svc-content-in` ≈ 0.53. The smoke spec pins that crossing.
+- **Two thresholds are READINGS ON THE RELEASE RAMP** — retune them with
+  its edges or they silently name a different scroll moment: the corner
+  readout's `PROOF_OWNS_BELOW` (`useActiveSection.ts`, 0.75 ⇒ flip at
+  proofP ≈ 0.87, as the plane finishes) and the masthead's `REVEAL_AT`
+  (`ServicesMasthead.tsx`, 0.5 ⇒ decode at proofP ≈ 0.81, once the
+  casefile's top-band chrome has sunk — it shares the masthead's band and
+  leaves LAST on the LIFO ladder).
 - **One release ramp gates everything.** `proofRelease` is multiplied into
   `--svc-content-in` (which carries the masthead, plates, designations,
   orbit draw-on and scan interface), into the orbits' `masterOpacityGetter`,
@@ -73,16 +90,33 @@ inherited its ambient-cover role.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
   strings fails the registry test.
-- **Arrival is PER-PANEL and DIRECTIONAL, departure is whole-plane.** Every
-  panel carries `data-fl-panel`, an inline `--ci-off`, and its own
-  `--fl-dx`/`--fl-dy` dimension (left column from the left, visualization
-  from the right, numbers from below, chrome from above); the sheet's
-  TERMINAL POWER-ON block runs the `#about` stutter + the travel off
+- **Arrival is PER-PANEL and DIRECTIONAL; so is the departure, in
+  reverse.** Every panel carries `data-fl-panel`, an inline `--ci-off`, and
+  its own `--fl-dx`/`--fl-dy` dimension (left column from the left,
+  visualization from the right, numbers from below, chrome from above); the
+  sheet's TERMINAL POWER-ON block runs the `#about` stutter + the travel off
   `--svc-proof-in`, which rides the DISSIPATE — the panels assemble WITH the
   brandmark's centering (owner, 2026-07-28). Scrubbed `clamp()` math on
   purpose — reversible, no keyframes, no writer. Travel AND tear must be
   exactly 0 at rest: these zones are absolutely positioned against the
   rail's tick ladder, so a residual shift is a drift bug, not a flourish.
+- **The departure FOLDS (ADR-056 Update 1, owner 2026-07-29).** `--co-off`
+  is derived in CSS as `0.56 − --ci-off` — the LIFO mirror of the arrival
+  ladder, so the numbers leave first and the chrome leaves last — and the
+  travel term continues each panel's own dimension INWARD past rest. The
+  plane then irises shut on a scrubbed `clip-path` toward a centre vertical
+  slit (the corridor caption card's aperture, run backwards), with opacity
+  demoted to a tail. Two laws: the iris must TRAIL the panels (it opens at
+  out 0.5 — at 0.35 it sliced legible copy mid-word at 86 % opacity), and
+  the zero-at-rest rule above covers the collapsed end state too, so
+  scrolling back must leave no residual transform.
+- **The offer answers on a LADDER, not a switch.** `--sc` renormalizes
+  `--svc-content-in` past a per-element `--sc-off` (services.css): orbit
+  draw-on 0 → dotted/nodes/cartography 0.10 → cards 0.20 → plate cluster
+  0.28 → svc-stack 0.30 → scan interface 0.35 → designations 0.45. Frame
+  first, callouts last. Anything anchored to a projected WebGL rect takes a
+  rung but NO travel. The masthead stays off the ladder — decode-only
+  (2026-07-27). The rings get the same lead in WebGL via `orbitReleaseLead`.
 - **The corner readout has its own `proof` row** (`sectionLabel.ts`), seated
   before `services` and selected by `sectionReadout(idx, proofOwns)`. It is
   NOT a manifest entry — the casefile shares `#services`' DOM section and

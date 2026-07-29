@@ -72,14 +72,31 @@ const ANCHOR_PUBLISH_DISSIPATE = 0.88;
  *  portrait gets a clean stage); the ambient envelope + canvas release
  *  finish the kill as #continuum arrives. */
 const ORBIT_EXIT_DIM = 0.85;
+
+/** Where in the release ramp the structural rings are fully back (2026-07-29).
+ *  The rings LEAD the cards: they are the instrument's frame, and a frame that
+ *  arrives with its contents reads as one flat crossfade. Renormalizing the
+ *  release over its first 55 % puts them at full just before the earliest card
+ *  entrance window opens (`RING_ENTRANCE_WINDOWS`, min edge 0.58), so the
+ *  armature draws itself and the cards then fly INTO it. This mirrors the
+ *  casefile's own grammar at the other end of the seam, where the chrome
+ *  strikes first on the way in and leaves last on the way out. */
+const ORBIT_LEAD_FRAC = 0.55;
+const orbitReleaseLead = () => {
+  const t = Math.min(1, servicesRingProgressRef.current.proofRelease / ORBIT_LEAD_FRAC);
+  // Smootherstep — same C2 settle the release ramp itself uses, so the lead
+  // never introduces a kick the rest of the beat does not have.
+  return t * t * t * (t * (t * 6 - 15) + 10);
+};
+
 const orbitExitGetter = () =>
   (1 - ORBIT_EXIT_DIM * exitProgressForRunway(servicesRingProgressRef.current.progress)) *
   (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutStageProgressRef.current.progress) : 1) *
   // ADR-056: the structural rings are the instrument's chrome, so they hold
   // with the cards while the proof casefile owns the stage. The MARK itself
   // is untouched — the casefile is meant to sit over a parked brandmark, not
-  // over an empty stage. Rests at 1 with the flag off.
-  servicesRingProgressRef.current.proofRelease;
+  // over an empty stage. Rests at 1 with the flag off (release 1 ⇒ lead 1).
+  orbitReleaseLead();
 
 /**
  * ADR-056 — the cards' entrance CLOCK, not a fade (owner, 2026-07-28: the

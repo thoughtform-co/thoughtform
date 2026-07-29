@@ -153,11 +153,16 @@ export const SERVICES_PROOF_CASEFILE = true;
  * How many viewports of the `#services` runway the casefile holds before the
  * ring arrives.
  *
- * 2.4, not 2: the arrival waits on runway travel so the epilogue's claim has
- * left before the evidence lands (see `PROOF_IN_*` in
- * `useServicesStageScroll`), and that delay has to come from somewhere. At
- * 2.4 the full-opacity reading window is still ~1.1 viewports — enough scroll
- * to read the brief and click a few directory rows while the stage is pinned.
+ * 2.8, not 2: the reading window has to survive the two choreographies at
+ * either end of the dwell. The casefile FOLDS shut (per-panel, LIFO, plus the
+ * iris) and the offer ASSEMBLES on a ladder, and since 2026-07-29 the two
+ * OVERLAP — the fold runs 0.66 → 0.88 of this runway and the release 0.62 →
+ * 1.0, opening just under the fold so the first rungs of the offer's ladder
+ * are already drawing as the panels start to leave. That handoff
+ * costs ~0.95 viewports of runway; at 2.8 the full-opacity reading window is
+ * still ~1.7, enough to read the brief and click through the directory while
+ * the stage is pinned. (It was 2.4 while the departure was a plain fade with
+ * a dead beat behind it.)
  *
  * This is the ONLY tuning knob for the dwell. It lengthens the page and moves
  * nothing else: the split re-derives the ring's progress over the remainder,
@@ -165,4 +170,4 @@ export const SERVICES_PROOF_CASEFILE = true;
  * `--svc-proof-runway` default) and by `useServicesStageScroll`; keep the two
  * in step — the CSS owns the runway's height, this constant owns the split.
  */
-export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 2.4 : 0;
+export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 2.8 : 0;

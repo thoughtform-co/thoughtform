@@ -46,10 +46,25 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  */
 
 /** Arrival-clock crossing that (together with the park gate below) starts
- *  the decode. Kept as a real threshold mostly for the LAB replays, which
- *  drive this clock directly (0 → 1) with the stage always parked; in
- *  production the park is the later, governing condition. */
-const REVEAL_AT = 0.45;
+ *  the decode.
+ *
+ *  Retuned 2026-07-29, and it is now the GOVERNING condition in production
+ *  too — the note below about the park being the later gate was written
+ *  before ADR-056 put the casefile at the front of this runway. The stage is
+ *  pinned for the whole casefile dwell, so it is parked long before this
+ *  clock moves at all, and the threshold alone decides when the title
+ *  strikes.
+ *
+ *  0.5 is not a delay — it is the SAME scroll moment the earlier 0.28 named
+ *  before the release ramp was pulled forward to 0.62 (round 2): this value
+ *  is a reading on the release ramp, so it must be retuned WITH the ramp's
+ *  edges or the beat silently moves. The moment it pins: proofP ≈ 0.81,
+ *  where the casefile's top-band chrome — which leaves LAST on the fold's
+ *  LIFO ladder, and which shares this band — is below ~0.3 and sinking, so
+ *  the title decodes INTO the fold without ever printing over legible
+ *  chrome. Earlier crossings put the decode against the casefile label at
+ *  full strength — the one collision this band cannot carry. */
+const REVEAL_AT = 0.5;
 /** Clock floor that re-arms the reveal for a replay on re-entry (the lab
  *  replay path; in production the unpark observer re-arms first). */
 const REARM_BELOW = 0.05;

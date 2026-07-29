@@ -83,8 +83,15 @@
    * ring's progress over the remaining 500svh, so the RING's domain — and
    * with it RING_ARRIVAL_FRAC, RING_EXIT_START and the ADR-047 #about sweep —
    * is unchanged. Only the page gets longer. Keep this default and the TS
-   * constant in step; the hook owns the split, this owns the height. */
-  --svc-proof-runway: 240svh;
+   * constant in step; the hook owns the split, this owns the height.
+   *
+   * 2026-07-29: 240 → 280svh. The casefile's departure became a FOLD and the
+   * offer's arrival became a LADDER (both scrubbed), and both need room —
+   * the old dwell spent its last third on a 0.34-viewport fade followed by a
+   * 0.34-viewport pop. Widening the dwell is safe by construction (the split
+   * re-derives the ring's domain), but this and SERVICES_PROOF_RUNWAY_VH must
+   * move together, and THIS is the one that has to exist pre-hydration. */
+  --svc-proof-runway: 280svh;
   min-height: calc(var(--svc-proof-runway) + 500svh);
 }
 
@@ -107,6 +114,39 @@
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+/* ══ THE ASSEMBLY LADDER ═══════════════════════════════════════════════
+ * The offer does not switch on. Before 2026-07-29 every `--svc-content-in`
+ * consumer was a flat simultaneous `opacity:` multiply over one short ramp,
+ * so the whole surface appeared at once and read — the owner's words — as
+ * elements coming out of nowhere. That is the far side of the same seam the
+ * proof casefile now folds shut on (ADR-056): the casefile collapses INWARD
+ * toward the centre, and this is what answers it — the services elements
+ * unfold OUT of that same centre, one after another.
+ *
+ * `--sc` is `--svc-content-in` renormalized past a per-element `--sc-off`,
+ * the exact idiom the casefile's `--ci` uses for its arrival ladder (the
+ * TERMINAL POWER-ON block, casefile.css). One clock still gates everything —
+ * this adds no channel, no writer and no second gate; it only reads the
+ * release ramp the hook already publishes and staggers off it in CSS.
+ *
+ * Travel, where a consumer takes it, is `offset × (1 − --sc)`, so it is
+ * EXACTLY 0 at rest. Two consumers deliberately refuse travel: anything
+ * registered to the WebGL mark (orbits, cartography, the scan interface's
+ * connectors anchor to projected rects) would visibly de-register if it
+ * drifted. The masthead is not here at all — its copy is decode-only by
+ * owner ruling (2026-07-27), and the decode firing while the casefile is
+ * still folding IS the sync. ═══════════════════════════════════════════ */
+.svc-orbit__path,
+.svc-orbit__node,
+.svc-cartography,
+.services-cards,
+.services-scan-interface,
+.services-designations,
+.svc-stack,
+.services-plate-cluster {
+  --sc: clamp(0, calc((var(--svc-content-in, 1) - var(--sc-off, 0)) / (1 - var(--sc-off, 0))), 1);
 }
 
 /* ── Center — particle brandmark (the "sun") ─────────────────────── */
@@ -186,24 +226,31 @@
  * brandmark on entry, echoing the corridor sphere envelop. `pathLength=100`
  * (set in the SVG) normalizes every ellipse. Defaults to 1 (fully drawn)
  * when the var is absent / inert (mobile / reduced-motion). */
+/* First rung of the assembly ladder (`--sc-off: 0`): the draw-on leads, so
+ * the instrument's frame exists before anything fills it — the mirror of the
+ * casefile's chrome, which leaves last. The draw IS the motion here, so this
+ * rung takes no travel. */
 .svc-orbit__path:not(.svc-orbit__path--dotted) {
   stroke-dasharray: 100;
-  stroke-dashoffset: calc(100 * (1 - var(--svc-content-in, 1)));
+  stroke-dashoffset: calc(100 * (1 - var(--sc, 1)));
 }
 /* The dotted orbit can't draw-on (its dash IS the dot pattern); reveal it
  * by fading in with arrival instead. */
 .svc-orbit__path--dotted {
-  opacity: var(--svc-content-in, 1);
+  --sc-off: 0.1;
+  opacity: var(--sc, 1);
 }
 /* Bodies + cartography fade in with arrival; the orbit LINES draw on
  * crisply (no opacity fade) so the wrap reads clearly. */
 .svc-orbit__node {
+  --sc-off: 0.1;
   fill: var(--gold);
   fill-opacity: 0.85;
-  opacity: var(--svc-content-in, 1);
+  opacity: var(--sc, 1);
 }
 .svc-cartography {
-  opacity: var(--svc-content-in, 1);
+  --sc-off: 0.1;
+  opacity: var(--sc, 1);
 }
 
 /* ── Service cards (HUD readouts, one revealed per step) ──────────── */
@@ -212,8 +259,10 @@
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  /* Same delayed entrance as the orrery (multiplies the per-card reveal). */
-  opacity: var(--svc-content-in, 1);
+  /* Same delayed entrance as the orrery (multiplies the per-card reveal),
+   * one rung further down the assembly ladder. */
+  --sc-off: 0.2;
+  opacity: var(--sc, 1);
 }
 
 .service-celestial-card {
@@ -851,8 +900,12 @@
   z-index: 2;
   pointer-events: none;
   /* Entrance × decommission (ADR-030 Update 1) — the cutaway callouts
-   * retire with the instrument they annotate across the exit beat. */
-  opacity: calc(var(--svc-content-in, 1) * (1 - var(--svc-exit, 0)));
+   * retire with the instrument they annotate across the exit beat.
+   * LAST rung of the assembly ladder: a callout cannot annotate a card that
+   * has not landed yet, so these wait out the ring's fly-in. No travel — the
+   * leaders anchor to projected WebGL rects and would visibly de-register. */
+  --sc-off: 0.45;
+  opacity: calc(var(--sc, 1) * (1 - var(--svc-exit, 0)));
   /* One ink. Hierarchy comes from opacity steps of the SAME gold, never
    * from a second color (the reference diagrams are single-ink). */
   --svc-des-ink: var(--gold, #caa554);
@@ -998,7 +1051,10 @@
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  opacity: var(--svc-content-in, 1);
+  /* Late rung — the notes read the instrument, so the instrument arrives
+   * first. No travel: the connectors anchor to projected rects. */
+  --sc-off: 0.35;
+  opacity: var(--sc, 1);
 }
 .services-scan-connectors {
   position: absolute;
@@ -1292,9 +1348,13 @@
   flex-direction: column;
   gap: 6px;
   pointer-events: none;
-  /* Delayed copy entrance — shared corridor-dissipate clock. */
-  opacity: var(--svc-content-in, 1);
-  transform: translateY(calc((1 - var(--svc-content-in, 1)) * 18px));
+  /* Delayed copy entrance — shared corridor-dissipate clock, taken through
+   * the assembly ladder so the rise staggers with everything else. The 18px
+   * is unchanged; it is just expressed as this rung's travel now. */
+  --sc-off: 0.3;
+  --sc-dy: 18px;
+  opacity: var(--sc, 1);
+  transform: translateY(calc((1 - var(--sc, 1)) * var(--sc-dy)));
   will-change: opacity, transform;
 }
 .svc-stack__card {
@@ -1452,6 +1512,21 @@
  * a static/simplified orrery as a header, then stack every card. The step
  * hook + drift are inert, so all cards read at full strength. */
 @media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  /* Park the assembly ladder. The inert branch of the scroll hook already
+   * writes `--svc-content-in: 1`, but this surface must stand on its own with
+   * no clock at all (no-JS, a dead portal) — parking `--sc` resolves every
+   * rung's opacity to 1 and every travel term to 0 in one declaration. */
+  .svc-orbit__path,
+  .svc-orbit__node,
+  .svc-cartography,
+  .services-cards,
+  .services-scan-interface,
+  .services-designations,
+  .svc-stack,
+  .services-plate-cluster {
+    --sc: 1;
+  }
+
   .services-stage-root {
     min-height: 0;
   }
@@ -1643,7 +1718,12 @@
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  opacity: var(--svc-content-in, 1);
+  /* Assembly-ladder rung. No travel: on the desktop ring path the racks are
+   * `display: none` (the ring carries the cards), and on the accordion path
+   * below 961px the media block parks the whole ladder — so a translate here
+   * would only ever move an empty box. */
+  --sc-off: 0.28;
+  opacity: var(--sc, 1);
   /* Perspective for the rack tilt (ADR-025 Update 9). Applied at the
    * cluster level so both racks share one vanishing point; child transforms
    * (rotateY on `.svc-rack--*`) then read as one instrument, not two

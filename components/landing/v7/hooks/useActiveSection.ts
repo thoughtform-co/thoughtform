@@ -44,14 +44,19 @@ const SERVICES_IDX = MANIFEST_ENTRIES.findIndex((e) => e.id === "services");
  *
  * Reads `proofRelease` — "who owns this beat" — and NOT `proofPresence`,
  * which is the casefile's painted-opacity envelope and would make the corner
- * flicker along with the panel's own fade. The release ramps across the
- * deliberately empty stage between the casefile leaving and the offer
- * arriving, so the label turns over while nothing on screen contradicts it.
+ * flicker along with the panel's own fade. Since 2026-07-29 the release
+ * overlaps the casefile's fold rather than following an empty stage, so this
+ * threshold is a reading on the release ramp and must be retuned WITH the
+ * ramp's edges: 0.75 lands the flip at proofP ≈ 0.87, just as the fold
+ * finishes at 0.88 — the label turns over with nothing on screen left to
+ * contradict it. (The earlier 0.5 named the same moment on the narrower
+ * 0.70-start ramp; kept at 0.5 after round 2 widened the ramp to 0.62, the
+ * corner would print "SERVICES" over a casefile still at ~0.7 opacity.)
  *
  * Its resting value is 1, so an unwritten ref, the flag-off path, mobile and
  * reduced motion all fall through to the offer's row with no branch.
  */
-const PROOF_OWNS_BELOW = 0.5;
+const PROOF_OWNS_BELOW = 0.75;
 const proofOwnsServices = () => servicesRingProgressRef.current.proofRelease < PROOF_OWNS_BELOW;
 
 function resolveSub(idx: number): string | null {

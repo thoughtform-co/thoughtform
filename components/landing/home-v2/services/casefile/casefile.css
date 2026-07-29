@@ -60,11 +60,29 @@
   color: var(--dawn, #ebe3d6);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
 
-  /* DEPARTURE only. Arrival is per-panel — see TERMINAL POWER-ON below.
-     Scrolling away fades the whole plane as one object, which is right: the
-     casefile arrives as an instrument assembling itself and leaves as a page
-     being turned. Fails open, so a missing clock can never blank it. */
-  opacity: calc(1 - var(--svc-proof-out, 0));
+  /* DEPARTURE — the plane IRISES SHUT (owner, 2026-07-29), superseding the
+     whole-plane fade. Left and right insets close toward a centre vertical
+     slit: the exact reverse of the corridor caption card's aperture unfold
+     (`.home-v2-reticle`, home-v2.css), which is where this instrument's
+     grammar comes from. Scrubbed off `--svc-proof-out` rather than
+     transitioned, because this lives inside a pinned dwell where scroll owns
+     the clock — the hero curtain (landing.css) is the same idiom.
+
+     The aperture TRAILS the panels. It opens at out 0.5, by which point the
+     brief is under 75 % and the numbers under 55 % — measured, and the reason
+     for the number: at 0.35 the crop reached legible copy and sliced the left
+     column mid-word while it still read at 86 %, which looks like a clipping
+     bug, not a fold. The panels have to be visibly leaving before the
+     aperture is allowed to take them. Negative top/bottom insets keep the
+     label above the rail box and the outboard corner marks inside the
+     aperture until the slit takes them.
+
+     Opacity is now the TAIL only: the iris owns removal, this dims the last
+     sliver so the closing edge never snaps. Both fail open — a missing clock
+     resolves to 0 ⇒ full width, full opacity. */
+  --fl-iris: clamp(0, calc((var(--svc-proof-out, 0) - 0.5) / 0.45), 1);
+  clip-path: inset(-30px calc(var(--fl-iris) * 50.5%) -30px calc(var(--fl-iris) * 50.5%));
+  opacity: clamp(0, calc((1 - var(--svc-proof-out, 0)) / 0.3), 1);
 
   --fl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   --fl-hair: rgba(235, 227, 214, 0.09);
@@ -185,7 +203,26 @@
   --g1: clamp(0, calc(var(--ci) * 9), 1);
   --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
   --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
-  opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
+
+  /* TERMINAL POWER-OFF (owner, 2026-07-29) — the ladder RUNS BACKWARDS on the
+     way out. `--co-off` is the LIFO mirror of `--ci-off` (0.56 is the last
+     rung of the arrival ladder), so the numbers and the telemetry line, which
+     arrived last, leave first, and the chrome and the registration frame,
+     which struck first, leave last: the instrument outlives its content
+     exactly as it preceded it. Derived in CSS from the offset the panel
+     already carries, so no panel needs a second inline var.
+
+     No stutter on the way out — the flicker grammar stays arrival-only
+     (owner's call). A power-off blink would land on top of the services
+     elements already assembling underneath, and two terminals talking at once
+     is noise. The fold is clean; the energy belongs to what arrives. */
+  --co-off: calc(0.56 - var(--ci-off, 0));
+  --co: clamp(0, calc((var(--svc-proof-out, 0) - var(--co-off)) / (1 - var(--co-off))), 1);
+  opacity: clamp(
+    0,
+    calc((var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88) * (1 - var(--co))),
+    1
+  );
   /* DIRECTIONAL TRAVEL (owner, 2026-07-28) — each panel arrives from its own
      dimension, the ADR-029 ring-entrance idea in DOM form: left column from
      the left, visualization from the right, numbers from below, chrome from
@@ -193,10 +230,22 @@
      RING_ENTRANCE_DIRECTIONS table). The travel term is `× (1 − --ci)`, so
      it is EXACTLY 0 at rest — these zones are absolutely positioned against
      the rail's tick ladder, and a residual offset is a drift bug. The 2.5px
-     tear rides on top and also zeroes once the dropout catches up. */
+     tear rides on top and also zeroes once the dropout catches up.
+
+     DEPARTURE reuses the same dimensions, CONTINUED PAST REST: subtracting
+     `--fl-dx * --co` sends each panel on INWARD, so the left column drifts
+     right, the panel column drifts left, the chrome sinks and the numbers
+     rise — four dimensions converging on the centre the iris is closing on.
+     0.6 keeps the drift to 13–29px on the 22–48px arrival offsets: a lean
+     into the fold, not a second flight. The term is `* --co`, and `--co` is 0
+     until the departure clock opens, so at rest BOTH travel terms vanish and
+     the panel sits exactly on its tick. */
   transform: translate3d(
-    calc(var(--fl-dx, 0px) * (1 - var(--ci)) + (var(--g1) - var(--g2)) * 2.5px),
-    calc(var(--fl-dy, 0px) * (1 - var(--ci))),
+    calc(
+      var(--fl-dx, 0px) * (1 - var(--ci)) + (var(--g1) - var(--g2)) * 2.5px - var(--fl-dx, 0px) *
+        var(--co) * 0.6
+    ),
+    calc(var(--fl-dy, 0px) * (1 - var(--ci)) - var(--fl-dy, 0px) * var(--co) * 0.6),
     0
   );
 }
@@ -214,6 +263,14 @@
   .fl-case [data-fl-panel] {
     opacity: 1;
     transform: none;
+  }
+
+  /* The iris is motion too — no aperture sweep here. The plane still fades
+     out on the departure clock (a static reader still needs the casefile to
+     leave before the offer arrives), it just does not fold to do it. */
+  .fl-case {
+    clip-path: none;
+    opacity: calc(1 - var(--svc-proof-out, 0));
   }
 }
 
@@ -1058,6 +1115,10 @@
        ever runs (no-JS, a dead portal). */
     visibility: visible;
     opacity: 1;
+    /* Same reason as the opacity above: the iris is a desktop composition and
+       must be off unconditionally, or a stray clock could crop a document
+       that is now just flowing copy. */
+    clip-path: none;
     left: auto;
     right: auto;
     padding-bottom: clamp(32px, 8vw, 64px);

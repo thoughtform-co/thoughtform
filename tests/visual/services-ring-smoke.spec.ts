@@ -130,6 +130,44 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.waitForTimeout(400);
     await expect(secondRow).toHaveAttribute("aria-selected", "true");
 
+    // THE INTERLEAVE (2026-07-29). The casefile's fold and the offer's
+    // assembly deliberately OVERLAP — the departure runs 0.66 → 0.88 of the
+    // dwell and the release 0.62 → 1.0, opening just under the fold so the
+    // offer is already drawing as the panels start to leave (owner, round
+    // 2). Sampling inside that overlap is the only assertion that fails if
+    // the windows are ever pulled back apart into a fade-then-pop, which is
+    // the handoff the owner rejected. 0.82 is the crossing: measured
+    // caseOpacity ≈ 0.43 against content-in ≈ 0.53. Sample the VALUES here,
+    // never the window edges — smootherstep is nearly flat across its first
+    // third, so overlapping edges alone prove nothing.
+    expect(await scrollCasefileDwell(page, 0.82)).toBe(true);
+    await page.waitForTimeout(1000);
+
+    const interleave = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      const casefile = document.querySelector<HTMLElement>(".fl-case");
+      const cs = casefile ? getComputedStyle(casefile) : null;
+      return {
+        caseOpacity: cs ? Number(cs.opacity) : null,
+        // The iris is the departure's other half; `none` here means the fold
+        // silently regressed to a plain fade.
+        clipPath: cs?.clipPath ?? null,
+        contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0"),
+      };
+    });
+    expect(interleave.caseOpacity).toBeGreaterThan(0.05);
+    expect(interleave.caseOpacity).toBeLessThan(0.95);
+    expect(interleave.contentIn).toBeGreaterThan(0.1);
+    expect(interleave.contentIn).toBeLessThan(0.9);
+    // A partly-closed aperture. `none` — or an inset still at 0% — means the
+    // fold silently regressed to a plain whole-plane fade.
+    expect(interleave.clipPath).toContain("inset");
+    const irisPct = Number.parseFloat(/([\d.]+)%/.exec(interleave.clipPath ?? "")?.[1] ?? "0");
+    expect(irisPct, `the iris should be mid-close, read "${interleave.clipPath}"`).toBeGreaterThan(
+      5
+    );
+    expect(irisPct).toBeLessThan(50.5);
+
     // Past the dwell: the casefile is gone and the ring has taken over.
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1400);

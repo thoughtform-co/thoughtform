@@ -75,19 +75,47 @@ const CONTENT_IN_END = 1.0;
  * (`--svc-content-in`), a different beat. These edges open while the mark is
  * still visibly travelling and close just before it parks.
  *
- * DEPARTURE and RELEASE ride the casefile's runway share. They are
- * deliberately OFFSET from each other: the casefile finishes fading before
- * the ring flies in, so the two never crossfade through each other — the
- * stage is empty for a beat, which is what makes the handover read as a page
- * turn. The release is also the RING'S ENTRANCE CLOCK (`CorridorArmillary`
- * feeds it into the entrance envelope), so the cards arrive MOVING on their
- * ADR-029 directional fly-in rather than fading up in place.
+ * DEPARTURE and RELEASE ride the casefile's runway share, and since
+ * 2026-07-29 they deliberately OVERLAP — reversing the earlier call.
+ *
+ * The old windows were strictly sequential (out ended at 0.86 exactly where
+ * release began) on the theory that a gap makes the handover read as a page
+ * turn. It did not. With both sides moving as one object each — a whole-plane
+ * fade out, then a flat simultaneous opacity ramp in — the gap read as the
+ * offer appearing out of nowhere (owner, 2026-07-29). The fix is not more
+ * separation but LESS: the casefile now FOLDS INWARD (per-panel LIFO travel +
+ * a scrubbed iris, casefile.css) and the offer ASSEMBLES on a ladder
+ * (`--sc`, services.css), so they are no longer two blocks that would smear
+ * through each other — they are two choreographies that interlock. Release
+ * starts at 0.62 — UNDER the fold's own 0.66 opening edge — so by the time
+ * the panels are visibly folding (~0.72) the release has climbed out of
+ * smootherstep's flat start and the first ladder rungs are already drawing
+ * (owner, 2026-07-29 round 2: "when the proof elements start collapsing,
+ * that's when you should see these elements coming into view"). The first
+ * cut started the release at 0.70 and the offer only became visible around
+ * 0.80, well after the fold was underway. The overlap has to be judged this
+ * way because `smootherstep` is nearly flat across its first third: a
+ * release that merely starts before the fold ends still contributes almost
+ * nothing while the fold is running (measured — out 0.87 against content-in
+ * 0.06). Judge this band by the VALUES at the crossing, never by the edges:
+ * at proofP 0.82 the casefile reads 0.43 against content-in ≈ 0.53.
+ *
+ * The release is also the RING'S ENTRANCE CLOCK (`CorridorArmillary` feeds it
+ * into the entrance envelope), so the cards arrive MOVING on their ADR-029
+ * directional fly-in rather than fading up in place. Its 0.30 span across a
+ * 2.8-viewport dwell gives that fly-in ~0.25 viewports of scroll; the old
+ * 0.14 span across 2.4 gave it under 0.07, which is why the cards read as
+ * popping in however correct their envelope was.
+ *
+ * ⚠ Retiming the handoff happens HERE, in proofP space. Never in
+ * `RING_ENTRANCE_WINDOWS` — those ride the raw dissipate, which saturated
+ * long ago (`.claude/rules/services-ring.md`).
  */
 const PROOF_GATE_START = 0.52;
 const PROOF_GATE_END = 0.95;
-const PROOF_OUT_START = 0.72;
-const PROOF_OUT_END = 0.86;
-const PROOF_RELEASE_START = 0.86;
+const PROOF_OUT_START = 0.66;
+const PROOF_OUT_END = 0.88;
+const PROOF_RELEASE_START = 0.62;
 const PROOF_RELEASE_END = 1.0;
 
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local

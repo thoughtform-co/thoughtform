@@ -160,6 +160,7 @@ tear, where a lateral shift would read as a break rather than a glitch.
 
 DEPARTURE stays a whole-plane fade on `--svc-proof-out`: the casefile
 assembles like an instrument and leaves like a page being turned.
+**Superseded by Update 1 — the casefile now folds shut.**
 
 ### The corner readout names the beat
 
@@ -234,3 +235,93 @@ so the invariant is that the curve is the same function of that rect.
   `useCorridorExitScroll`'s `nextStation` on the SAME station.** Splitting
   them hard-cuts the canvas at that station's top edge — recorded three
   times now.
+
+---
+
+## Update 1 — the casefile FOLDS, and the offer answers it (2026-07-29, owner)
+
+Supersedes "DEPARTURE stays a whole-plane fade" above, and reverses this
+ADR's decision to keep the departure and the release strictly sequential.
+
+**The complaint.** Scrolling from the proof into the offer, the services
+elements "start appearing out of nowhere — there's no nice transition
+between the two sections". Both halves were at fault and both were the
+same mistake in opposite directions: the casefile left as ONE object (a
+single `opacity: calc(1 - var(--svc-proof-out))` on the plane) and the
+offer arrived as ONE object (every `--svc-content-in` consumer a flat
+simultaneous opacity multiply), with a deliberate dead beat between them.
+Two blocks switching over cannot read as a transition no matter how they
+are timed. The ask named the fix by analogy: the corridor caption card's
+centre-out aperture unfold (`.home-v2-reticle`, home-v2.css), run backwards.
+
+**The casefile folds inward.** Two channels, both scrubbed `clamp()` off
+`--svc-proof-out` — no keyframes, no writer, reversible, and the same
+grammar as the arrival it undoes:
+
+- _Per-panel, LIFO._ `--co-off` is derived in CSS as `0.56 − --ci-off`,
+  the mirror of the arrival ladder, so the numbers and the telemetry line
+  leave first and the chrome and the registration frame leave last — the
+  instrument outlives its content exactly as it preceded it. No panel
+  gains a second inline var.
+- _Travel continues past rest._ Subtracting `--fl-dx × --co × 0.6` sends
+  each panel on INWARD along the dimension it arrived from: left column
+  drifts right, panel column left, chrome sinks, numbers rise. 13–29px on
+  the 22–48px arrival offsets. Both travel terms are 0 at rest, so the
+  tick-ladder alignment law of the arrival extends to the departure
+  unchanged.
+- _The plane irises shut._ `clip-path: inset(-30px calc(--fl-iris * 50.5%)
+…)` closes left and right toward a centre vertical slit — the exact
+  reverse of the caption card's aperture, scrubbed rather than
+  transitioned (the hero curtain is the precedent for a scrubbed clip).
+  Opacity is demoted to a tail that dims the last sliver.
+
+The iris TRAILS the panels: it opens at `--svc-proof-out` 0.5, not 0.35.
+At 0.35 the crop reached still-legible copy and sliced the left column
+mid-word at 86 % opacity, which reads as a clipping bug rather than a
+fold. Measured, both times.
+
+**The offer assembles on a ladder.** `--sc` is `--svc-content-in`
+renormalized past a per-element `--sc-off` — the arrival's `--ci` idiom
+applied to the far side of the seam. Rungs: orbit draw-on (0) → dotted
+ring / nodes / cartography (0.10) → cards (0.20) → plate cluster (0.28) →
+`.svc-stack` (0.30) → scan interface (0.35) → designations (0.45). The
+frame arrives first and the callouts last, answering the casefile's chrome
+leaving last. No new channel, no second gate: everything still hangs off
+the one release ramp. Consumers registered to the WebGL mark take a rung
+but no travel — their connectors anchor to projected rects and would
+visibly de-register if they drifted. The masthead is not on the ladder at
+all; its copy stays decode-only (2026-07-27), and the decode firing while
+the casefile is still folding IS the sync.
+
+The WebGL rings get the same treatment through `orbitReleaseLead()` —
+`proofRelease` renormalized over its first 55 % and smootherstepped, so
+the armature is fully drawn just before the earliest card entrance window
+(0.58) opens and the cards fly INTO a frame that already exists.
+
+**The windows now overlap.** `PROOF_OUT` 0.66 → 0.88 against
+`PROOF_RELEASE` 0.62 → 1.0, on a dwell widened 2.4 → 2.8 viewports. The
+release opens just UNDER the fold's edge (owner, round 2: "when the proof
+elements start collapsing, that's when you should see these elements
+coming into view") — smootherstep spends its flat first third climbing
+before the fold turns visible at ~0.72, so the panels never leave an
+already-empty stage and the offer never waits on one. Measured at proofP
+0.82, the casefile is at 0.43 opacity with its aperture 42 % closed while
+`--svc-content-in` is ≈ 0.53 and the rings are drawing.
+
+Two thresholds are READINGS ON THE RELEASE RAMP and must be retuned with
+its edges, or they silently name a different scroll moment: the corner
+readout's `PROOF_OWNS_BELOW` (0.75 ⇒ flip at proofP ≈ 0.87, as the plane
+finishes) and the masthead's `REVEAL_AT` (0.5 ⇒ decode at proofP ≈ 0.81,
+after the casefile's top-band chrome — which leaves LAST — has sunk below
+~0.3; earlier and the title prints over legible chrome in the same band).
+
+⚠ **Judge this band by the VALUES at the crossing, never by the edges.**
+The first attempt used 0.60/0.82 against 0.70/1.0 — the windows overlapped
+on paper, but `smootherstep` is nearly flat across its first third, so at
+the fold's end the release had contributed 0.06. Overlapping edges prove
+nothing. The smoke spec samples the crossing for this reason.
+
+Second-order effects, all checked: the ring's visible fly-in stretches
+from ~52px of scroll to ~280px (the release span is its entrance clock);
+`splitServicesRunway` keeps every ring constant and the ADR-047 `#about`
+seam byte-identical, so the wider dwell only lengthens the page.
