@@ -81,10 +81,28 @@ const orbitExitGetter = () =>
   // over an empty stage. Rests at 1 with the flag off.
   servicesRingProgressRef.current.proofRelease;
 
-/** ADR-056 — the cards' share of the same release. Separate getter from the
- *  orbits' so the two can be tuned apart if the rings ever want to lead the
- *  cards in; today they are deliberately identical. */
-const ringProofGetter = () => servicesRingProgressRef.current.proofRelease;
+/**
+ * ADR-056 — the cards' entrance CLOCK, not a fade (owner, 2026-07-28: the
+ * cards must arrive MOVING, never crossfade).
+ *
+ * The ring's whole entrance choreography — per-card windows, directions,
+ * radius travel, opacity lead (`entranceEnvelope`) — reads the dissipate
+ * clock, which saturated long before the casefile releases. Multiplying the
+ * release into the master OPACITY therefore faded the cards up in their
+ * parked pose. Multiplying it into the entrance CLOCK instead holds the
+ * envelope at its start (cards off-stage, full travel offsets) for the whole
+ * dwell, then replays the ADR-029 directional fly-in across the release ramp
+ * — the same staggered arrival the corridor exit originally played.
+ *
+ * Everything downstream keys off this one input: `env.opacity` lights the
+ * cards, the `ANCHOR_PUBLISH_DISSIPATE` park gate reads the same value, and
+ * the hit-area publish gate reads the resulting opacity — so no anchors can
+ * publish over the casefile, with no separate opacity gate to keep in sync.
+ * `proofRelease` rests at 1, so flag-off / inert / pre-write frames feed the
+ * smoothed dissipate through unchanged — byte-identical to pre-ADR-056.
+ */
+const ringEntranceClock = () =>
+  getSmoothedDissipate() * servicesRingProgressRef.current.proofRelease;
 
 /* ADR-049 Update 3 (2026-07-18, owner): the continuum beat carries NO orbit
  * emphasis — the waist-ring re-brighten (waistContinuumGetter /
@@ -259,10 +277,10 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
         <ServicesCardRing
           scale={scale}
           progressRef={servicesRingProgressRef}
-          dissipateGetter={getSmoothedDissipate}
-          /* ADR-056: holds the cards dark — and their hit anchors
-             unpublished — until the proof casefile has been scrolled past. */
-          masterOpacityGetter={ringProofGetter}
+          /* ADR-056: the release-gated entrance clock — holds the cards
+             OFF-STAGE (travel offsets, opacity 0, anchors unpublished) for
+             the casefile's dwell, then replays the directional fly-in. */
+          dissipateGetter={ringEntranceClock}
           entrance="scroll"
           publishAnchors
           /* ADR-050 promotion: the tight face and the in-canvas drawer ride

@@ -80,32 +80,33 @@ in `tests/lib/services-ring-math.test.ts`.
 
 `useServicesStageScroll` gains `--svc-proof-in` and `--svc-proof-out`.
 
-Arrival is a PRODUCT: a dissipate band as a pre-gate (the casefile can
-never appear before the corridor has resolved into the parked mark) times a
-`proofP` band as the actual timing. The pre-gate carries its OWN edges
-rather than reusing `CONTENT_IN_*` — sharing them made it the binding
-constraint at the front, so pulling the `proofP` band earlier stopped moving
-anything, and `CONTENT_IN_*` cannot be widened to fix that without re-timing
-the services copy, which is a different beat. Keying the timing to
-runway travel rather than to the dissipate is not incidental — the
-epilogue signal exits on `DISSIPATE_BANDS.SIGNAL_OUT` = [0.86, 0.99], so a
-dissipate-band arrival OVERLAPS the beat it is answering. The first cut
-did exactly that and read as the two fighting; waiting on travel past the
-park lets the claim leave before the evidence lands, and makes "later" a
-distance rather than a curve reshape. Departure and the release ramp ride
-the same `proofP`.
+Arrival rides the DISSIPATE — the brandmark's own centering clock — on its
+own `PROOF_GATE_*` band (not `CONTENT_IN_*`, which also times the services
+copy). The panels assemble WITH the mark as it moves to centre, each
+travelling in from its own dimension. Owner supersession, 2026-07-28: an
+earlier cut delayed arrival onto runway travel because a static fade-up
+overlapped the epilogue signal's exit (`SIGNAL_OUT` = [0.86, 0.99], the
+same clock) and read as the two fighting; with directional travel the
+overlap IS the choreography — the elements arrive out of the same motion
+that carries the previous centre away — so the runway-travel arrival factor
+was removed again. Departure and the release ramp ride `proofP`.
 
 The release multiplies `--svc-content-in`, which delays the masthead, the
 plate cluster, the designation layer, the orbit draw-on and the scan
 interface **together**, with no new consumer and no new listener.
 
 The same release is published on `servicesRingProgressRef.proofRelease`
-and consumed by a new `masterOpacityGetter` on `ServicesCardRing`
-(mirroring `HologramOrbits`' existing prop) plus a term in
-`CorridorArmillary`'s `orbitExitGetter`. Because it lands in `master`, and
-the hit-anchor publish gate reads the resulting `opacity`, a 0 there also
-stops the ring publishing click targets — the cards can never be
-invisibly clickable over the casefile.
+and consumed in two places: a term in `CorridorArmillary`'s
+`orbitExitGetter` (the structural rings fade), and — for the CARDS — the
+ENTRANCE CLOCK: `ringEntranceClock` = smoothed dissipate × release, fed as
+the ring's `dissipateGetter`. A first cut multiplied the release into a
+`masterOpacityGetter` instead, which lit the cards in their parked pose — a
+crossfade; gating the clock holds the entrance envelope at its start (cards
+off-stage, full travel offsets) through the dwell and then replays the
+ADR-029 directional fly-in across the release ramp (owner, 2026-07-28:
+"moving instead of a crossfade"). The anchor park gate and the hit-area
+publish gate read the same clock, so no click targets can publish over the
+casefile — with no separate opacity gate to keep in sync.
 
 ### The surface
 
@@ -147,7 +148,11 @@ settles. Each panel carries an inline `--ci-off` and `--ci` renormalizes
 past it, which is what staggers them. Plain scrubbed math, so it is
 reversible, adds no writer and no keyframes.
 
-The only displacement is a 2.5px lateral tear carried by `(g1 − g2)`, which
+Each panel also TRAVELS in from its own dimension (`--fl-dx`/`--fl-dy` —
+left column from the left, visualization from the right, numbers from
+below, chrome from above), the ring's `RING_ENTRANCE_DIRECTIONS` idea in
+DOM form; the travel term is `× (1 − --ci)` so it is exactly 0 at rest. On
+top of it rides a 2.5px lateral tear carried by `(g1 − g2)`, which
 is exactly 0 once the dropout catches up — the flicker must never become
 travel, because these zones are absolutely positioned against the rail's
 tick ladder. The hairline rules and the split take the flicker without the

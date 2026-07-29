@@ -186,7 +186,19 @@
   --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
   --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
   opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
-  transform: translateX(calc((var(--g1) - var(--g2)) * 2.5px));
+  /* DIRECTIONAL TRAVEL (owner, 2026-07-28) — each panel arrives from its own
+     dimension, the ADR-029 ring-entrance idea in DOM form: left column from
+     the left, visualization from the right, numbers from below, chrome from
+     above (`--fl-dx`/`--fl-dy` inline per panel, like the ring's
+     RING_ENTRANCE_DIRECTIONS table). The travel term is `× (1 − --ci)`, so
+     it is EXACTLY 0 at rest — these zones are absolutely positioned against
+     the rail's tick ladder, and a residual offset is a drift bug. The 2.5px
+     tear rides on top and also zeroes once the dropout catches up. */
+  transform: translate3d(
+    calc(var(--fl-dx, 0px) * (1 - var(--ci)) + (var(--g1) - var(--g2)) * 2.5px),
+    calc(var(--fl-dy, 0px) * (1 - var(--ci))),
+    0
+  );
 }
 
 /* The reticles own `transform` for their travel-to-the-corners (they animate

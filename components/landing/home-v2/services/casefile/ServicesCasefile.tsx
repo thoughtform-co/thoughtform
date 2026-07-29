@@ -205,25 +205,29 @@ export function ServicesCasefile() {
       <span
         className="fl-case__label"
         data-fl-panel
-        style={{ "--ci-off": 0 } as CSSProperties}
+        style={{ "--ci-off": 0, "--fl-dy": "-22px" } as CSSProperties}
         data-fl-text="FLG / Field log · 00"
       >
         FLG / Field log · 00
       </span>
-      <span className="fl-case__sys" data-fl-panel style={{ "--ci-off": 0.04 } as CSSProperties}>
+      <span
+        className="fl-case__sys"
+        data-fl-panel
+        style={{ "--ci-off": 0.04, "--fl-dy": "-22px" } as CSSProperties}
+      >
         <i className="fl-diamond" aria-hidden="true" />
         <span data-fl-text="TF // Field log — /expeditions/">TF // Field log — /expeditions/</span>
       </span>
       <span
         className="fl-case__code"
         data-fl-panel
-        style={{ "--ci-off": 0.04 } as CSSProperties}
+        style={{ "--ci-off": 0.04, "--fl-dx": "36px" } as CSSProperties}
         data-fl-text={`Log ${file.logCode} · ${file.state}`}
       >
         {`Log ${file.logCode} · ${file.state}`}
       </span>
 
-      <div data-fl-panel style={{ "--ci-off": 0.07 } as CSSProperties}>
+      <div data-fl-panel style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}>
         <ClientTabs
           tabs={CASEFILE_TABS}
           activeSlug={def.slug}
@@ -261,18 +265,22 @@ export function ServicesCasefile() {
       <i
         className="fl-ret fl-ret--tr"
         data-fl-panel
-        style={{ "--ci-off": 0.18 } as CSSProperties}
+        style={{ "--ci-off": 0.18, "--fl-dx": "30px" } as CSSProperties}
         aria-hidden="true"
       />
       <i
         className="fl-ret fl-ret--bl"
         data-fl-panel
-        style={{ "--ci-off": 0.18 } as CSSProperties}
+        style={{ "--ci-off": 0.18, "--fl-dx": "-30px" } as CSSProperties}
         aria-hidden="true"
       />
 
       {/* ── Left column · brief ─────────────────────────────────────── */}
-      <div className="fl-brief" data-fl-panel style={{ "--ci-off": 0.24 } as CSSProperties}>
+      <div
+        className="fl-brief"
+        data-fl-panel
+        style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
+      >
         <span className="fl-desig">Brief — expedition {file.ix}</span>
         <h3 className="fl-brief__title">
           <span data-fl-text={file.title.pre ?? ""}>{file.title.pre}</span>
@@ -300,7 +308,11 @@ export function ServicesCasefile() {
       <TrackPanel key={`${def.slug}-${track.id}`} track={track} id={panelId} labelledBy={rowId} />
 
       {/* ── Foot ────────────────────────────────────────────────────── */}
-      <div className="fl-foot" data-fl-panel style={{ "--ci-off": 0.56 } as CSSProperties}>
+      <div
+        className="fl-foot"
+        data-fl-panel
+        style={{ "--ci-off": 0.56, "--fl-dy": "28px" } as CSSProperties}
+      >
         <span className="fl-tele">
           <i className="fl-diamond" aria-hidden="true" />
           {`00 · Field log · ${file.logCode} · `}

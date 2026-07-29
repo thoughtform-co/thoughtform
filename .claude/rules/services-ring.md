@@ -90,10 +90,16 @@ Change one alone and the surface is incoherent, not merely imperfect:
   casefile does, and `splitServicesRunway` re-derives the ring's progress
   over what is left so every ring constant is unchanged. Two consequences:
   a runway FRACTION is not a ring progress any more (the smoke helper
-  converts — do not hand-roll offsets), and the ring's `masterOpacityGetter`
-  holds the cards dark AND their hit anchors unpublished during the dwell.
-  Delaying the ring by retuning `RING_ENTRANCE_WINDOWS` does not work: they
-  ride `--corridor-dissipate`, which has already saturated by then.
+  converts — do not hand-roll offsets), and the release gates the ring's
+  ENTRANCE CLOCK (`ringEntranceClock` in `CorridorArmillary` — smoothed
+  dissipate × `proofRelease`, fed as `dissipateGetter`), which holds the
+  cards OFF-STAGE for the dwell and then replays the ADR-029 directional
+  fly-in. Never swap that back to a `masterOpacityGetter` fade: a master
+  fade lights the cards in their PARKED pose, i.e. a crossfade — the exact
+  read the owner rejected (2026-07-28). The anchors follow for free (the
+  park gate and the publish gate read the same clock). Delaying the ring by
+  retuning `RING_ENTRANCE_WINDOWS` does not work either: they ride the raw
+  dissipate, which has already saturated by then.
 
 ## Verifying
 

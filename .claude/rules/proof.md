@@ -35,9 +35,11 @@ inherited its ambient-cover role.
   exist pre-hydration.
 - **One release ramp gates everything.** `proofRelease` is multiplied into
   `--svc-content-in` (which carries the masthead, plates, designations,
-  orbit draw-on and scan interface) and published on
-  `servicesRingProgressRef.proofRelease` for the ring's and the orbits'
-  `masterOpacityGetter`. Do not add a second gate — add a factor to this one.
+  orbit draw-on and scan interface), into the orbits' `masterOpacityGetter`,
+  and into the ring's ENTRANCE CLOCK (`ringEntranceClock`,
+  `CorridorArmillary`) so the cards ARRIVE MOVING on their ADR-029 fly-in —
+  never as a master-opacity crossfade. Do not add a second gate — add a
+  factor to one of these.
 - **The host is `pointer-events: none`.** Only the tabs and the directory
   rows opt back in. `.svc-ring-hits__hit` is at z 4 and the casefile at z 6,
   so an `auto` host silently swallows every card click once the ring lands.
@@ -71,11 +73,15 @@ inherited its ambient-cover role.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
   strings fails the registry test.
-- **Arrival is PER-PANEL, departure is whole-plane.** Every panel carries
-  `data-fl-panel` + an inline `--ci-off`; the sheet's TERMINAL POWER-ON block
-  runs the `#about` stutter off `--svc-proof-in`. It is scrubbed `clamp()`
-  math on purpose — reversible, no keyframes, no writer. The 2.5px tear must
-  stay exactly 0 at rest: these zones are absolutely positioned against the
+- **Arrival is PER-PANEL and DIRECTIONAL, departure is whole-plane.** Every
+  panel carries `data-fl-panel`, an inline `--ci-off`, and its own
+  `--fl-dx`/`--fl-dy` dimension (left column from the left, visualization
+  from the right, numbers from below, chrome from above); the sheet's
+  TERMINAL POWER-ON block runs the `#about` stutter + the travel off
+  `--svc-proof-in`, which rides the DISSIPATE — the panels assemble WITH the
+  brandmark's centering (owner, 2026-07-28). Scrubbed `clamp()` math on
+  purpose — reversible, no keyframes, no writer. Travel AND tear must be
+  exactly 0 at rest: these zones are absolutely positioned against the
   rail's tick ladder, so a residual shift is a drift bug, not a flourish.
 - **The corner readout has its own `proof` row** (`sectionLabel.ts`), seated
   before `services` and selected by `sectionReadout(idx, proofOwns)`. It is

@@ -1258,16 +1258,17 @@ export interface ServicesCardRingProps {
   facingBlend?: number;
   masterOpacity?: number;
   /**
-   * Per-frame master opacity, multiplied on top of `masterOpacity` (ADR-056).
-   * Mirrors `HologramOrbits`' prop of the same name — a GETTER, because the
-   * value it carries (the proof casefile's release ramp) changes every scroll
-   * frame and must not re-render this tree.
+   * Per-frame master opacity, multiplied on top of `masterOpacity`. Mirrors
+   * `HologramOrbits`' prop of the same name — a GETTER, so a scroll-frame
+   * scalar can drive it without re-rendering this tree. Lands in `master`,
+   * and the hit-anchor publish gate reads the resulting `opacity`, so 0 here
+   * also unpublishes the click targets.
    *
-   * It is the only ring channel keyed to RUNWAY travel rather than to the
-   * corridor dissipate, which is what lets the cards wait behind a surface the
-   * user has to scroll past. Because it lands in `master`, and the hit-anchor
-   * publish gate reads the resulting `opacity`, a 0 here also stops the ring
-   * publishing click targets — the cards cannot be invisibly clickable.
+   * NOTE (ADR-056 rev): production does NOT use this for the proof casefile
+   * any more — a master fade made the cards CROSSFADE in after the dwell.
+   * The release now gates the ENTRANCE CLOCK instead (`ringEntranceClock` in
+   * `CorridorArmillary`), so the cards replay their directional fly-in. This
+   * prop stays as the generic per-frame dimmer it always was.
    */
   masterOpacityGetter?: () => number;
   /* Look-dev tunables — defaults are the ringMath constants. */

@@ -61,34 +61,30 @@ const CONTENT_IN_END = 1.0;
 /**
  * Proof casefile envelopes (ADR-056), in the two clocks the stage already has.
  *
- * ARRIVAL is a PRODUCT of both. The dissipate factor is a PRE-GATE: the
- * casefile can never appear before the corridor has resolved into the parked
- * mark. The `proofP` factor is the actual timing, and it is why arrival is
- * keyed to runway travel rather than to the dissipate alone — the epilogue
- * signal ("EVERYONE IS RACING TO BUILD THIS CAPABILITY.") exits on
- * `DISSIPATE_BANDS.SIGNAL_OUT` = [0.86, 0.99], so an arrival on the dissipate
- * band OVERLAPS the beat it is answering. Waiting on travel past the park
- * lets the claim leave before the evidence arrives, and makes the timing a
- * distance rather than a curve reshape.
+ * ARRIVAL rides the DISSIPATE — the brandmark's own centering clock — so the
+ * panels assemble WITH the mark as it moves to centre, each travelling in
+ * from its own direction (the casefile sheet's TERMINAL POWER-ON block).
+ * Owner call, 2026-07-28, superseding the earlier runway-travel delay: that
+ * delay existed because a static fade-up overlapping the epilogue signal's
+ * exit read as the two fighting. With directional travel the overlap IS the
+ * choreography — the elements arrive out of the same motion that carries the
+ * previous centre away — so the `proofP` arrival factor is gone and the
+ * timing question dissolved with it.
  *
- * The pre-gate has its OWN edges rather than reusing `CONTENT_IN_*`. Sharing
- * them made the pre-gate the binding constraint at the front — pulling the
- * `proofP` band earlier stopped moving anything, because the dissipate factor
- * was still near 0 there — and `CONTENT_IN_*` cannot be widened to fix that
- * without re-timing the services copy, which is a different beat entirely.
- * These edges open earlier and close earlier, so the `proofP` band is what
- * the arrival actually reads.
+ * The band is NOT `CONTENT_IN_*`: that pair also times the services copy
+ * (`--svc-content-in`), a different beat. These edges open while the mark is
+ * still visibly travelling and close just before it parks.
  *
- * DEPARTURE and RELEASE ride the same runway share. They are deliberately
- * OFFSET from each other: the casefile finishes fading before the services
- * content starts arriving, so the two never crossfade through each other —
- * the stage is empty for a beat, which is what makes the handover read as a
- * page turn rather than a dissolve.
+ * DEPARTURE and RELEASE ride the casefile's runway share. They are
+ * deliberately OFFSET from each other: the casefile finishes fading before
+ * the ring flies in, so the two never crossfade through each other — the
+ * stage is empty for a beat, which is what makes the handover read as a page
+ * turn. The release is also the RING'S ENTRANCE CLOCK (`CorridorArmillary`
+ * feeds it into the entrance envelope), so the cards arrive MOVING on their
+ * ADR-029 directional fly-in rather than fading up in place.
  */
-const PROOF_GATE_START = 0.58;
-const PROOF_GATE_END = 0.92;
-const PROOF_IN_START = 0.02;
-const PROOF_IN_END = 0.19;
+const PROOF_GATE_START = 0.52;
+const PROOF_GATE_END = 0.95;
 const PROOF_OUT_START = 0.72;
 const PROOF_OUT_END = 0.86;
 const PROOF_RELEASE_START = 0.86;
@@ -284,11 +280,9 @@ export function useServicesStageScroll(
       // pre-casefile 500svh. `proofP` is 1 immediately when the flag is off.
       const { proofP, ringP } = splitServicesRunway(-r.top, travel, SERVICES_PROOF_RUNWAY_VH * vh);
 
-      // Casefile arrival: dissipate as the pre-gate, runway travel as the
-      // timing, so the epilogue's claim is gone before the evidence lands.
-      const proofIn =
-        smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate) *
-        smootherstep(PROOF_IN_START, PROOF_IN_END, proofP);
+      // Casefile arrival — the mark's centering clock, so the panels travel
+      // in WITH it (see the constants block for the owner's supersession).
+      const proofIn = smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate);
       const proofOut = smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP);
       setProof(stage, proofIn, proofOut);
       // What the casefile is actually painting — the mark and its haze dim

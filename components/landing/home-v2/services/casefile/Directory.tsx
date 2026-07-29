@@ -44,7 +44,7 @@ export function Directory({ tracks, activeId, onSelect, controls, idPrefix }: Di
       className="fl-dir"
       data-fl-zone="directory"
       data-fl-panel
-      style={{ "--ci-off": 0.34 } as CSSProperties}
+      style={{ "--ci-off": 0.34, "--fl-dx": "-48px" } as CSSProperties}
     >
       <div className="fl-dir__head">
         <span className="fl-desig">Directory · /{idPrefix}/</span>

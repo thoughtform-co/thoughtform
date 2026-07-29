@@ -33,7 +33,11 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
       tabIndex={0}
       data-solo={solo || undefined}
     >
-      <div className="fl-panel__head" data-fl-panel style={{ "--ci-off": 0.4 } as CSSProperties}>
+      <div
+        className="fl-panel__head"
+        data-fl-panel
+        style={{ "--ci-off": 0.4, "--fl-dx": "48px" } as CSSProperties}
+      >
         <span className="fl-desig">{track.preview}</span>
         <span className="fl-desig fl-desig--r">{track.vizLabel}</span>
       </div>
@@ -43,7 +47,7 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
           className="fl-panel__viz"
           data-fl-zone="plate"
           data-fl-panel
-          style={{ "--ci-off": 0.44 } as CSSProperties}
+          style={{ "--ci-off": 0.44, "--fl-dx": "48px" } as CSSProperties}
           data-kind={track.visual.kind}
         >
           <TrackVisual visual={track.visual} />
@@ -54,7 +58,7 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
         className="fl-panel__foot"
         data-fl-zone="readouts"
         data-fl-panel
-        style={{ "--ci-off": 0.52 } as CSSProperties}
+        style={{ "--ci-off": 0.52, "--fl-dy": "40px" } as CSSProperties}
       >
         <ul className="fl-readouts" data-solo={solo || undefined}>
           {track.readouts.map((r, i) => (
