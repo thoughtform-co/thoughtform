@@ -30,6 +30,7 @@ import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
 import { TENSOR_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 import { volumetricFragmentShader, volumetricVertexShader } from "./volumetricShaders";
 import { lerp } from "@/lib/math";
+import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 
 export const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
 export const BRANDMARK_WIRE_GLB = "/models/brandmark/brandmark-wire.glb";
@@ -252,10 +253,7 @@ function BrandmarkPoints({
     const scrollEntrance = entrance === "scroll";
     let target = 1;
     if (scrollEntrance) {
-      const raw = parseFloat(
-        document.documentElement.style.getPropertyValue("--corridor-dissipate")
-      );
-      target = Number.isFinite(raw) ? raw : 1;
+      target = readCorridorDissipate(1);
     }
     if (entranceDampRef.current < 0)
       entranceDampRef.current = target; // snap on first frame

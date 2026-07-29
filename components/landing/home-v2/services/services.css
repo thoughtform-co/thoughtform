@@ -462,17 +462,27 @@
  * transition on it would lag every scroll frame. Registering the dim var
  * transitions ONLY the open/close state change, timed to the drawer's own
  * damp (~1/DRAWER_DAMP_RATE ≈ 0.3s). Engines without @property (none on
- * the ring's desktop tier) simply snap — acceptable degradation. */
+ * the ring's desktop tier) simply snap — acceptable degradation.
+ *
+ * SCOPED TO THE MASTHEAD (2026-07-29 perf pass): the sole consumer is
+ * `.services-masthead` (:509), yet as an `inherits: true` registered prop
+ * declared on `.services-stage` every one of the stage's ~350 nodes
+ * stored and validated it on each recalc — and the `transition` sat on
+ * the exact element whose inline style rewrites every scroll frame, so
+ * the transition-update machinery ran per frame. Declaring the var + its
+ * transition on the masthead itself, flipped by the same stage attribute
+ * via a descendant selector, is behavior-identical (the attribute still
+ * lives on the stage; the dim still eases 0.35s) with none of that. */
 @property --svc-plate-dim {
   syntax: "<number>";
-  inherits: true;
+  inherits: false;
   initial-value: 1;
 }
-.services-stage {
+.services-masthead {
   --svc-plate-dim: 1;
   transition: --svc-plate-dim 0.35s ease;
 }
-.services-stage[data-plate-open="1"] {
+.services-stage[data-plate-open="1"] .services-masthead {
   --svc-plate-dim: 0.18;
 }
 

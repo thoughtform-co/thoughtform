@@ -84,6 +84,17 @@ inherited its ambient-cover role.
   blanks each line before queueing — so it must also be gated on
   `document.visibilityState` and force-settle on hide, or a tab switch
   mid-decode strands blank copy. rAF stops in a hidden document.
+- **The proof channels are HOSTED ON `.fl-case`, and the promotion is
+  scoped (ADR-056 U4, perf pass).** `setProof` writes `--svc-proof-in/-out`
+  on the casefile host — their consumers all live in that subtree, and
+  stage-hosted writes invalidated ~350 nodes per scroll frame.
+  `data-proof-live` stays on the stage. The `data-proof-live`-scoped
+  `will-change` block in casefile.css is what keeps the panels'
+  gradients/shadows/SVG rastering once per state instead of once per
+  frame — do not unscope it, and `contain: paint` stays banned (the
+  reticle overhang, U2). Both reveal controllers' `isParked()` read a
+  boolean their park IO maintains; never reintroduce a per-call rect
+  read inside the style MutationObserver.
 - **Geometry snaps to the HUD rail's 13-tick ladder.** Everything hangs off
   `--fl-t*`, derived from the live `.hud__rail` box; the two section rules
   land on tick 2 and the bearing-5 major. Two upstreams must stay in step:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
@@ -204,12 +204,33 @@ export function ServicesDesignationLayer({
   }, [activeServiceId]);
 
   // Rebase feature anchors from viewport pixels to the layer's local box —
-  // same trick as PlateConnectorOverlay. `useMemo` avoids re-computing when
-  // the store publishes new anchors but the rebase origin hasn't moved
-  // (getBoundingClientRect is cheap, memoing here is more about intent).
-  const originRect = layerRef.current?.getBoundingClientRect();
-  const ox = originRect?.left ?? 0;
-  const oy = originRect?.top ?? 0;
+  // same trick as PlateConnectorOverlay. The origin is CACHED (2026-07-29
+  // perf pass): the old render-time `getBoundingClientRect()` forced a
+  // layout on every store publish — every frame the instrument moved.
+  // Measured once per anchors empty→non-empty edge (the layer sits in the
+  // pinned stage, which cannot move while anchors publish), refreshed on
+  // resize / tab return.
+  const [origin, setOrigin] = useState<{ left: number; top: number } | null>(null);
+  const hasAnchors = featureAnchors.length > 0 || ringAnchors.length > 0;
+  useLayoutEffect(() => {
+    if (!hasAnchors) return;
+    const measure = () => {
+      const r = layerRef.current?.getBoundingClientRect();
+      if (!r) return;
+      setOrigin((prev) =>
+        prev && prev.left === r.left && prev.top === r.top ? prev : { left: r.left, top: r.top }
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    document.addEventListener("visibilitychange", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      document.removeEventListener("visibilitychange", measure);
+    };
+  }, [hasAnchors]);
+  const ox = origin?.left ?? 0;
+  const oy = origin?.top ?? 0;
 
   const frontCard = ringAnchors.find((a) => a.front && a.visible) ?? null;
 

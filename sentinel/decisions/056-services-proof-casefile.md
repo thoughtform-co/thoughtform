@@ -423,3 +423,66 @@ back from ring territory into dwell 0.40, where the clock reads ≈0.32 —
 and asserts the masthead is re-armed (blanked) while the casefile is
 live again, so the next regression fails a test instead of a scroll-feel
 review.
+
+## Update 4 — the transition window pays for itself (2026-07-29, perf pass)
+
+The owner's report: the corridor-exit → casefile transition "lags a lot",
+localhost and Vercel alike. Measured (Playwright + CDP, M2, DPR 2, real
+scroll drive): the dissipate window ran **89.5ms/frame average, p95
+236ms, 72% of wall time in long tasks** against ~57ms mid-corridor —
+main thread saturated by style recalc (~6 recalcs/frame at 8–9ms:
+whole-tree invalidation) plus per-frame forced layouts, GPU loaded by
+additive overdraw. After the pass: **39.4ms avg, p95 48.5ms, max 52ms,
+9% long-task share** (prod build; dwell 75.7 → 24.0ms, corridor-mid
+56.7 → 19.9ms). No frame in the journey now exceeds 52ms — the p95
+spikes (236–632ms) are gone entirely. Zero visual change, verified by
+screenshot parity forward and reverse plus the smoke suite at its known
+baseline.
+
+What this update pins for THIS surface (the corridor-side halves live in
+their own files' comments — the gyro's object-scale scatter, the
+`corridorDissipateRef` transport, the ticker's geometric gate):
+
+- **The proof channels live on the casefile host.** `--svc-proof-in/-out`
+  are written on `.fl-case` itself, never the stage: their only
+  consumers are this sheet and the casefile controller, and stage-hosted
+  writes invalidated the stage's ~350-node computed-style tree every
+  scroll frame of the dwell. `data-proof-live` STAYS on the stage (CSS
+  selectors + the smoke key off it there). The controller reads and
+  observes its own root — which also stops its observer waking on
+  `--svc-content-in`/`--svc-arrive` writes, and the masthead's on proof
+  writes.
+- **The panels are composited for the beat.** A `data-proof-live`-scoped
+  `will-change: transform, opacity` on `[data-fl-panel]` (+ `clip-path,
+opacity` on `.fl-case` for the iris) makes the gradient reticles,
+  text-shadow title and the 31-node signal SVG raster once per state
+  instead of once per frame — the single largest paint win of the pass.
+  The layers exist exactly while the attribute does; the mobile/PRM
+  blocks reset to `auto`. Do not "clean up" the promotion into an
+  unscoped rule, and do not add `contain: paint` (the reticles overhang
+  the border box — the Update 2 amputation).
+- **The park gate is a cached boolean, not a rect read.** Both reveal
+  controllers' `isParked()` now return the state their own park
+  IntersectionObserver maintains; the `getBoundingClientRect()` survives
+  only as the pre-first-delivery fallback. The old per-call read ran
+  inside the style MutationObserver — a forced layout against dirty
+  styles on every frame of the armed window (= the entire transition).
+- **The ring seam is warmed and delta-gated.** The baked card textures
+  (~24MB) upload one-per-rAF during corridor idle and the programs link
+  once via `compileAsync` — nothing becomes visible, `ringEntranceClock`
+  is untouched, the off-stage contract holds; the entrance hitch (first
+  upload + first link in one frame, ~60px after dissipate saturation)
+  is gone. `setRingAnchors` carries the `CorridorArmillary` epsilon
+  gate it was missing, and both anchor subscribers rebase against a
+  cached origin instead of rect-reading during render.
+- **The write deadband is 0.0025** on `--svc-content-in` and the proof
+  channels (<0.3% of an opacity ramp, <0.15px of travel — invisible;
+  the CSS clamps saturate before the vars' terminal values, so the
+  zero-at-rest law holds structurally). `--svc-exit` keeps 0.001.
+- **ADR-038 cannot govern this window, by design.** The governor's EMA
+  (α 0.1) + 1200ms sustain + 1500ms cooldown need seconds of sustained
+  jank; the dwell is 1.2 viewports and frames >200ms are discarded from
+  the EMA. The fast path HAS to carry the transition — which is why the
+  fixes above are structural rather than adaptive. (Recorded in ADR-038
+  as an addendum; wiring the gyro counts into the ladder remains a
+  wave-2 option for pre-degraded devices only.)

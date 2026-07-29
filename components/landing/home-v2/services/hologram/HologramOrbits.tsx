@@ -22,6 +22,7 @@ import type { ServiceId } from "../serviceData";
 import type { ConnectorAnchor } from "@/lib/stores/hologramConnectorStore";
 import { SERVICES_GOLD, TENSOR_ACCENT } from "@/lib/home-v2/goldPalette";
 import { clamp01 } from "@/lib/math";
+import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 
 export interface OrbitConfig {
   /** ServiceId for a service ring; any unique key for a decorative shell. */
@@ -437,10 +438,7 @@ export function HologramOrbits({
     // Read + damp the corridor-exit dissipate clock (parked / absent → 1).
     let target = 1;
     if (scrollEntrance) {
-      const raw = parseFloat(
-        document.documentElement.style.getPropertyValue("--corridor-dissipate")
-      );
-      target = Number.isFinite(raw) ? raw : 1;
+      target = readCorridorDissipate(1);
     }
     if (dissipateRef.current < 0) dissipateRef.current = target;
     else dissipateRef.current += (target - dissipateRef.current) * Math.min(1, delta * 8);

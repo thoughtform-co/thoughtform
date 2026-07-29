@@ -8,6 +8,7 @@ import {
   splitServicesRunway,
 } from "@/lib/services-ring/ringMath";
 import { clamp01 } from "@/lib/math";
+import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { SERVICES_PROOF_RUNWAY_VH } from "../unifiedServicesInstrument";
 
@@ -220,8 +221,16 @@ export function useServicesStageScroll(
       }
     };
 
+    // Write deadband for the two high-fan-out channels (2026-07-29 perf
+    // pass): every `--svc-content-in` / `--svc-proof-*` write invalidates
+    // computed style for its whole host subtree, and 0.0025 is <0.3% of
+    // an opacity ramp / <0.15px of panel travel — invisible, while
+    // halving writes on damped settle tails. `--svc-exit` keeps the
+    // tighter 0.001 (the decommission seam is threshold-sensitive).
+    const WRITE_EPS = 0.0025;
+
     const setContentIn = (stage: HTMLElement, v: number) => {
-      if (Math.abs(v - currentContentIn) >= 0.001) {
+      if (Math.abs(v - currentContentIn) >= WRITE_EPS) {
         stage.style.setProperty("--svc-content-in", v.toFixed(4));
         currentContentIn = v;
       }
@@ -238,16 +247,33 @@ export function useServicesStageScroll(
       }
     };
 
-    // Proof casefile channels (ADR-056). `--svc-proof-in` is also the var
-    // `ProofDossier` reads, so the reveal protocol is the pre-existing one.
-    const setProof = (stage: HTMLElement, inV: number, outV: number) => {
-      if (Math.abs(inV - currentProofIn) >= 0.001) {
-        stage.style.setProperty("--svc-proof-in", inV.toFixed(4));
-        currentProofIn = inV;
+    // Proof casefile channels (ADR-056). Written on the CASEFILE HOST
+    // (`.fl-case`), not the stage (2026-07-29 perf pass): every consumer —
+    // the sheet's arrival/departure clamps and the casefile controller's
+    // own clock read — lives inside that subtree, and stage-hosted writes
+    // were invalidating computed style for the stage's ~350 nodes (156 of
+    // them a display:none plate rack) every scroll frame of the dwell.
+    // `data-proof-live` STAYS on the stage — CSS selectors and the smoke
+    // spec key off it there. Null host (flag off ⇒ casefile unmounted) is
+    // fine: nothing consumes the channels then.
+    let proofHostEl: HTMLElement | null = null;
+    const proofHost = (stage: HTMLElement): HTMLElement | null => {
+      if (!proofHostEl || !proofHostEl.isConnected) {
+        proofHostEl = stage.querySelector<HTMLElement>(".fl-case");
       }
-      if (Math.abs(outV - currentProofOut) >= 0.001) {
-        stage.style.setProperty("--svc-proof-out", outV.toFixed(4));
-        currentProofOut = outV;
+      return proofHostEl;
+    };
+    const setProof = (stage: HTMLElement, inV: number, outV: number) => {
+      const host = proofHost(stage);
+      if (host) {
+        if (Math.abs(inV - currentProofIn) >= WRITE_EPS) {
+          host.style.setProperty("--svc-proof-in", inV.toFixed(4));
+          currentProofIn = inV;
+        }
+        if (Math.abs(outV - currentProofOut) >= WRITE_EPS) {
+          host.style.setProperty("--svc-proof-out", outV.toFixed(4));
+          currentProofOut = outV;
+        }
       }
       // HIT-TESTING GATE. Opacity 0 does NOT remove an element from the hit
       // test, and the casefile's tabs and rows deliberately opt back into
@@ -297,24 +323,30 @@ export function useServicesStageScroll(
         return;
       }
 
-      // Brandmark arrive — read the corridor-exit dissipate the sphere
-      // expansion already publishes. Defaults to 1 (parked) when the var
-      // is absent, so the mark never gets stuck hidden.
-      const dissipateRaw = parseFloat(
-        document.documentElement.style.getPropertyValue("--corridor-dissipate")
-      );
-      const dissipate = Number.isFinite(dissipateRaw) ? dissipateRaw : 1;
-      setArrive(
-        stage,
-        smoothstep(SHRINK_START, SHRINK_END, dissipate),
-        smoothstep(FADE_START, FADE_END, dissipate)
-      );
-      // The runway rect — ONE read, split two ways (ADR-056).
+      // ── READ PHASE (2026-07-29 perf pass: every layout read happens
+      // BEFORE the first style write, so this callback can never force
+      // a synchronous style+layout flush against its own dirty writes —
+      // the old order wrote `--svc-arrive` first and then rect-read the
+      // runway, paying a forced layout of the whole stage subtree every
+      // frame). The runway rect is ONE read, split two ways (ADR-056).
+      //
+      // Brandmark arrive — the corridor-exit dissipate the sphere
+      // expansion already publishes (module ref since 2026-07-29; the
+      // fallback keeps the labs' inline-style channel working).
+      // Defaults to 1 (parked) so the mark never gets stuck hidden.
+      const dissipate = readCorridorDissipate(1);
       const runway = stage.parentElement; // .services-stage-root (the tall slot)
       if (!runway) return;
       const vh = window.innerHeight || 1;
       const r = runway.getBoundingClientRect();
       const travel = r.height - vh;
+
+      // ── WRITE PHASE ──
+      setArrive(
+        stage,
+        smoothstep(SHRINK_START, SHRINK_END, dissipate),
+        smoothstep(FADE_START, FADE_END, dissipate)
+      );
       // The casefile owns the FRONT of the runway; the ring owns the rest,
       // over a domain `splitServicesRunway` keeps byte-identical to the
       // pre-casefile 500svh. `proofP` is 1 immediately when the flag is off.

@@ -2,9 +2,25 @@
 
 import { useEffect, type RefObject } from "react";
 import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
+import { corridorDissipateRef } from "@/lib/home-v2/corridorDissipateRef";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/math";
+
+/** Lazily-constructed MediaQueryList singletons (2026-07-29 perf pass —
+ *  `window.matchMedia()` was being CONSTRUCTED twice per scroll frame;
+ *  a `MediaQueryList` is live, so `.matches` per frame is the whole
+ *  intent). Module scope survives remounts; created on first frame so
+ *  the module stays SSR-safe. */
+let prmQuery: MediaQueryList | null = null;
+let mobileQuery: MediaQueryList | null = null;
+
+/** Smallest veil/ambient alpha step the compositor can express — the
+ *  quantum for the per-frame `<html>` var writes below. Both vars feed
+ *  8-bit alpha channels only, so skipping sub-1/255 deltas is
+ *  pixel-identical while cutting whole-document style invalidations
+ *  from every frame to ~35 across the window. */
+const ALPHA_QUANTUM = 1 / 255;
 
 /** Corridor `epilogueProgress` at/after which the live sphere docks as
  *  a fixed backdrop for the corridor-exit zoom-dissipate (ADR-021).
@@ -54,8 +70,14 @@ const NEXT_STATION_FADE_END_VH = 0.0;
  *
  * Writes:
  *
- *   - `--corridor-dissipate` (0..1) on `<html>` — the dissipate
- *     clock. CSS reads this for the leading-edge transparency.
+ *   - `corridorDissipateRef` (0..1) — the dissipate clock. The clock
+ *     has NO CSS consumers (every reader is JS), so since the
+ *     2026-07-29 perf pass it travels through the module ref and never
+ *     touches the DOM — the old per-frame `<html>` + `#services` var
+ *     writes invalidated computed style document-wide for nothing.
+ *     Readers go through `readCorridorDissipate(fallback)`, whose
+ *     inline-style fallback keeps the lab routes (which drive the var
+ *     on `documentElement` themselves) byte-identical.
  *   - `data-corridor-docked` attribute on `<html>` — promotes
  *     `.home-v2-stage__canvas` to a fixed full-viewport backdrop so
  *     the live R3F scene persists across the seam.
@@ -108,6 +130,19 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
   useEffect(() => {
     let frame = 0;
     let disposed = false;
+    // Element caches (2026-07-29 perf pass) — re-resolved only when
+    // missing or detached, instead of 3 querySelector walks per frame.
+    let servicesEl: HTMLElement | null = null;
+    let stageEl: HTMLElement | null = null;
+    let nextStationEl: HTMLElement | null = null;
+    // Last-written DOM state, so attributes flip only on edges and the
+    // two alpha vars only move in ≥1/255 steps — every one of these
+    // writes invalidates computed style document-wide, and they were
+    // all firing (or same-value re-firing) every frame.
+    let lastDocked: boolean | null = null;
+    let lastAmbientAttr: boolean | null = null;
+    let lastExitAttr: boolean | null = null;
+    let lastVeilVar = -1; // -1 ⇒ property currently absent
 
     const write = () => {
       frame = 0;
@@ -116,16 +151,22 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const root = rootRef.current;
       if (!root) return;
 
-      const services = root.querySelector<HTMLElement>("#services");
+      if (!servicesEl || !servicesEl.isConnected) {
+        servicesEl = root.querySelector<HTMLElement>("#services");
+      }
+      const services = servicesEl;
       if (!services) return;
 
       const vh = window.innerHeight || 1;
       const servicesRect = services.getBoundingClientRect();
-      const reducedMotion =
-        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-      const mobile = window.matchMedia?.("(max-width: 960px)").matches ?? false;
-      const corridorFallback =
-        document.querySelector<HTMLElement>(".home-v2-stage")?.dataset.fallback === "true";
+      prmQuery ??= window.matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
+      mobileQuery ??= window.matchMedia?.("(max-width: 960px)") ?? null;
+      const reducedMotion = prmQuery?.matches ?? false;
+      const mobile = mobileQuery?.matches ?? false;
+      if (!stageEl || !stageEl.isConnected) {
+        stageEl = document.querySelector<HTMLElement>(".home-v2-stage");
+      }
+      const corridorFallback = stageEl?.dataset.fallback === "true";
       const dockCapable = !reducedMotion && !mobile && !corridorFallback;
 
       // Dissipate clock: 0 when #services's top is at the viewport
@@ -147,12 +188,14 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // now occupies the SAME scroll position (the removed station was
       // between them), so the seam is unmoved — and it is a plain opaque
       // station, which is the only property this read requires.
-      const nextStation = ABOUT_DECK_STAGE
-        ? root.querySelector<HTMLElement>("#practice")
-        : (root.querySelector<HTMLElement>("#about") ??
-          root.querySelector<HTMLElement>("#practice"));
+      if (!nextStationEl || !nextStationEl.isConnected) {
+        nextStationEl = ABOUT_DECK_STAGE
+          ? root.querySelector<HTMLElement>("#practice")
+          : (root.querySelector<HTMLElement>("#about") ??
+            root.querySelector<HTMLElement>("#practice"));
+      }
       const nextStationTopVh =
-        (nextStation?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
+        (nextStationEl?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
       // The AMBIENT hold outlives the dock gate (ADR-030 Update 1). The
       // bottom gate must expire WITH the fade envelope — a rect-boundary
       // conjunction (services.bottom > 0, or about.bottom > 0 with the
@@ -170,12 +213,18 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const ep = useDepthGatewayStore.getState().transform.epilogueProgress;
       const docked = dockCapable && ep >= DOCK_ENGAGE_EP && sectionNearDock && rawDissipate < 0.999;
 
-      services.style.setProperty("--corridor-dissipate", dissipate.toFixed(4));
-      document.documentElement.style.setProperty("--corridor-dissipate", dissipate.toFixed(4));
-      if (docked) {
-        document.documentElement.setAttribute("data-corridor-docked", "true");
-      } else {
-        document.documentElement.removeAttribute("data-corridor-docked");
+      // The dissipate clock leaves through the module ref — no DOM
+      // write, no style invalidation (see the header note; every
+      // consumer is JS).
+      corridorDissipateRef.current.value = dissipate;
+      corridorDissipateRef.current.live = true;
+      if (docked !== lastDocked) {
+        if (docked) {
+          document.documentElement.setAttribute("data-corridor-docked", "true");
+        } else {
+          document.documentElement.removeAttribute("data-corridor-docked");
+        }
+        lastDocked = docked;
       }
 
       // ── Background-only Services ambient ───────────────────────
@@ -196,16 +245,18 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         ambientLevelRaw > 0.001;
       const servicesAmbientLevel = servicesAmbient ? ambientLevelRaw : 0;
 
-      if (servicesAmbient) {
-        document.documentElement.setAttribute("data-services-ambient", "true");
-        document.documentElement.style.setProperty(
-          "--services-ambient",
-          servicesAmbientLevel.toFixed(4)
-        );
-      } else {
-        document.documentElement.removeAttribute("data-services-ambient");
-        document.documentElement.style.removeProperty("--services-ambient");
+      if (servicesAmbient !== lastAmbientAttr) {
+        if (servicesAmbient) {
+          document.documentElement.setAttribute("data-services-ambient", "true");
+        } else {
+          document.documentElement.removeAttribute("data-services-ambient");
+        }
+        lastAmbientAttr = servicesAmbient;
       }
+      // (`--services-ambient` is no longer written: the 2026-07-29 perf
+      // pass found it had zero CSS or JS consumers — the level travels
+      // via `servicesAmbientLevel` on the store. The cleanup removals
+      // stay as one-time hygiene for any stale pre-pass value.)
 
       // ── Body veil ──────────────────────────────────────────────
       // While docked the veil ramps from 0 → VEIL_DOCK_CAP with the
@@ -219,12 +270,26 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         : servicesAmbient
           ? VEIL_AMBIENT_CAP * servicesAmbientLevel
           : 0;
+      if (corridorExit !== lastExitAttr) {
+        if (corridorExit) {
+          document.documentElement.setAttribute("data-corridor-exit", "true");
+        } else {
+          document.documentElement.removeAttribute("data-corridor-exit");
+        }
+        lastExitAttr = corridorExit;
+      }
       if (corridorExit) {
-        document.documentElement.setAttribute("data-corridor-exit", "true");
-        document.documentElement.style.setProperty("--corridor-exit-veil", veilAlpha.toFixed(4));
-      } else {
-        document.documentElement.removeAttribute("data-corridor-exit");
+        // The veil feeds one rgba() alpha (home-v2.css body::before), so
+        // sub-1/255 moves are invisible by construction — skip them. The
+        // regime edge above always flushes, so entry/exit values land
+        // exactly.
+        if (lastVeilVar < 0 || Math.abs(veilAlpha - lastVeilVar) >= ALPHA_QUANTUM) {
+          document.documentElement.style.setProperty("--corridor-exit-veil", veilAlpha.toFixed(4));
+          lastVeilVar = veilAlpha;
+        }
+      } else if (lastVeilVar >= 0) {
         document.documentElement.style.removeProperty("--corridor-exit-veil");
+        lastVeilVar = -1;
       }
 
       // Single-writer rule: only own dock / dissipate / inert seam +
@@ -281,6 +346,10 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", requestWrite);
       document.removeEventListener("visibilitychange", onVisibility);
+      // Hand the clock back to the inline-style fallback channel (labs,
+      // or a remount) — readers see `live: false` and re-derive.
+      corridorDissipateRef.current.live = false;
+      corridorDissipateRef.current.value = 0;
       document.documentElement.removeAttribute("data-corridor-docked");
       document.documentElement.removeAttribute("data-corridor-exit");
       document.documentElement.removeAttribute("data-services-ambient");

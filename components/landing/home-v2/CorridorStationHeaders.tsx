@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
+import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
 import {
   DISSIPATE_BANDS,
@@ -862,13 +863,25 @@ const TICKER_EDGE_MARGIN_PX = 96;
 /** Smoothed epilogue scrub below which the ticker is not painted
  *  (the planet hasn't landed and the title hasn't faded in yet). */
 const TICKER_MIN_EP = 0.42;
-/** Boost on the ticker's exit lift relative to the signal title/CTA
- *  (`--signal-exit-lift`). 1 means the ticker translates on EXACTLY the
- *  same raw dock clock as "EVERYONE IS RACING..." — not a frame before,
- *  not faster. Earlier variants either boosted this lift or replaced it
- *  with the smoothed camera fly-in; both made the ticker exit ahead of
- *  the headline. */
-const TICKER_EXIT_LIFT_BOOST = 1;
+/* (TICKER_EXIT_LIFT_BOOST retired 2026-07-29 — it had been pinned at 1
+ *  since the 2026-06-19 sync pass, meaning the ticker rides EXACTLY the
+ *  title/CTA's `--signal-exit-lift`, and its separate `--ticker-exit-lift`
+ *  channel had no consumer left. Earlier variants that boosted the lift or
+ *  replaced it with the smoothed camera fly-in made the ticker exit ahead
+ *  of the headline; a future re-split should revive the dedicated channel,
+ *  not scale the shared one.) */
+/** Dissipate at/after which the docked ticker is display-gated OFF
+ *  (2026-07-29 perf pass). A reading on the ticker's own exit geometry,
+ *  NOT a taste value: the exit lift is −dissipate·vh and the arc path
+ *  freezes at SIGNAL_OUT.start (0.86), after which the frozen path's
+ *  static bottom measures ≈ +4px across 1280×800 / 1440×900 / 1920×1080
+ *  — the marquee has physically cleared the viewport top at the freeze,
+ *  and by 0.88 it sampled ≥700px above it on all three. 0.90 adds
+ *  margin over every measurement while retiring the SMIL relayout +
+ *  drop-shadow rasters for the tail of the window, where the casefile
+ *  assembly needs the frames. Re-measure if the lift clock, the freeze
+ *  edge, or the arc geometry changes. */
+const TICKER_GONE_AT_DISSIPATE = 0.9;
 /** How much of the sphere's radial dissipate scatter the ticker arc
  *  adopts so it FOLLOWS THE SPHERE'S ARC as the planet expands. The arc
  *  radius is multiplied by `1 + (dissipateShellScatter - 1) * SHARE`,
@@ -917,6 +930,21 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
     let lastT = 0;
     let dockBlend = 0;
     let last = { cx: -1, cy: -1, r: -1, op: -1 };
+    // SMIL pause latch (2026-07-29 perf pass): the startOffset marquee
+    // forces a text-on-path relayout of the doubled headline run every
+    // frame it advances — even while the SVG is display-gated off or the
+    // arc is frozen off-screen. Paused at both of those states, resumed
+    // the frame the ticker is actively tracking again; resume-from-pause
+    // keeps the marquee phase, so the read on return is unchanged.
+    let smilPaused = false;
+    const pauseMarquee = (svg: SVGSVGElement) => {
+      if (!smilPaused) {
+        svg.pauseAnimations();
+        smilPaused = true;
+      }
+    };
+    // Cached signal-header lookup (was a per-frame document.querySelector).
+    let sigEl: HTMLElement | null = null;
 
     const onResize = () => {
       camera.aspect = aspect();
@@ -937,13 +965,18 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       // attribute is absent. Skip all projection work too — while hidden
       // there is nothing to track, and on re-show the arc recomputes on
       // the first visible frame.
-      if (!document.documentElement.hasAttribute("data-signal-live")) return;
+      if (!document.documentElement.hasAttribute("data-signal-live")) {
+        pauseMarquee(svg);
+        return;
+      }
 
       // Ticker opacity is CSS-driven via `--signal-opacity` (single-writer
       // sync, 2026-06-19), so this rAF does NOT set opacity. `sigOp` is read
       // only as a cheap input to the skip-relayout cache below (so the arc
       // path isn't rewritten when nothing meaningful changed).
-      const sigEl = document.querySelector<HTMLElement>(".home-v2-station-header--signal");
+      if (!sigEl || !sigEl.isConnected) {
+        sigEl = document.querySelector<HTMLElement>(".home-v2-station-header--signal");
+      }
       const sigOp = sigEl ? parseFloat(sigEl.style.opacity || "0") : 0;
 
       const transform = useDepthGatewayStore.getState().transform;
@@ -997,7 +1030,17 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       // the per-frame textPath `d` rewrite (each rewrite forces a
       // text-on-path relayout of the full marquee) exactly across the
       // corridor→#services seam where the frames are needed most.
-      if (transform.docked && tickerExit >= DISSIPATE_BANDS.SIGNAL_OUT.start) return;
+      if (transform.docked && tickerExit >= DISSIPATE_BANDS.SIGNAL_OUT.start) {
+        // The frozen arc is pure translation from here — and measured
+        // fully above the viewport top (see TICKER_GONE_AT_DISSIPATE) —
+        // so the marquee advance is invisible; stop paying its relayout.
+        pauseMarquee(svg);
+        return;
+      }
+      if (smilPaused) {
+        svg.unpauseAnimations();
+        smilPaused = false;
+      }
 
       const basePose = getEpilogueCameraPose(ep);
       const camPos = basePose.position;
@@ -1278,16 +1321,14 @@ export function CorridorStationHeaders() {
   useEffect(() => {
     let raf = 0;
     let lastCorridorPhase: CorridorPhase | null = null;
-    // Ticker display-gate + <html> var deltas (2026-07-16 perf pass):
-    // last-written values so the four documentElement custom-prop writes
-    // and the `data-signal-live` toggle fire only on meaningful change —
-    // a per-frame inline-style write on <html> invalidates style on the
-    // whole document even when the value is identical.
+    // Ticker display-gate + signal-var deltas (2026-07-16 perf pass;
+    // 2026-07-29: the vars moved off `<html>` onto the ticker SVG — see
+    // the write site): last-written values so the custom-prop writes and
+    // the `data-signal-live` toggle fire only on meaningful change.
     let lastSignalLive: boolean | null = null;
+    let tickerEl: SVGSVGElement | null = null;
     const lastSignalVars = {
       lift: Infinity,
-      scale: Infinity,
-      tickerLift: Infinity,
       sig: Infinity,
     };
     const tick = () => {
@@ -1353,15 +1394,14 @@ export function CorridorStationHeaders() {
       // and reading `t.dockProgress` (which the exit hook RESETS to 0 on
       // release) made the BILLIONS title + CTA + ticker POP back to full
       // opacity for the scroll band right as `#services` reaches the top.
-      // Read the eased dissipate the exit hook writes on `<html>` instead:
-      // it ramps 0 -> 1 with the section and STAYS at 1 after the section
+      // Read the eased dissipate the exit hook publishes instead: it
+      // ramps 0 -> 1 with the section and STAYS at 1 after the section
       // scrolls past, so the fade + lift complete and stay complete.
-      // Reads the INLINE custom prop (cheap, no style recalc). During the
-      // corridor climax (before `#services` enters) it is "0.0000" so the
-      // signal holds full; on `/test/home-v2` there is no exit hook so it
-      // is "" -> 0 and the title simply stays up (prior behavior).
-      const dissipateStr = document.documentElement.style.getPropertyValue("--corridor-dissipate");
-      const exitDissipate = dissipateStr ? parseFloat(dissipateStr) || 0 : 0;
+      // Module-ref transport since 2026-07-29 (the DOM var writes were
+      // a per-frame document-wide style invalidation); the fallback
+      // keeps `/test/home-v2` — no exit hook, no ref — at 0, so the
+      // title simply stays up (prior behavior).
+      const exitDissipate = readCorridorDissipate(0);
       const titleOut = dissipateBand(exitDissipate, "SIGNAL_OUT");
       // ADR-021 follow-through: the signal group (BILLIONS title + CTA +
       // note) AND the news ticker should be PUSHED OUT of the top of the
@@ -1383,12 +1423,13 @@ export function CorridorStationHeaders() {
       const vhNow = typeof window !== "undefined" ? window.innerHeight || 1 : 1;
       const signalLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow;
       const signalScale = reducedMotion ? 1 : 1 - signalDriftRaw * 0.03;
-      // Ticker exit (2026-06-19 sync pass): move the ticker on the same
-      // raw lift as the title/CTA. The ring's rAF still expands the arc
-      // outward with a restrained shell-scatter share, but the visible
-      // upward exit starts with "EVERYONE IS RACING..." and not a moment
-      // before.
-      const tickerLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow * TICKER_EXIT_LIFT_BOOST;
+      // Ticker exit (2026-06-19 sync pass): the ticker rides the SAME
+      // `--signal-exit-lift` as the title/CTA (TICKER_EXIT_LIFT_BOOST is
+      // pinned at 1 and its once-separate `--ticker-exit-lift` channel had
+      // no consumer left — retired 2026-07-29). The ring's rAF still
+      // expands the arc outward with a restrained shell-scatter share, but
+      // the visible upward exit starts with "EVERYONE IS RACING..." and
+      // not a moment before.
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
@@ -1431,12 +1472,26 @@ export function CorridorStationHeaders() {
       // Ticker display gate (2026-07-16 perf pass, ADR-047 U5): outside
       // the signal window the fixed full-viewport ticker SVG still cost a
       // per-frame text-on-path relayout (the SMIL startOffset marquee
-      // never pauses) plus two viewport-sized drop-shadow filter rasters —
-      // all at opacity 0. `data-signal-live` on <html> lets CSS
-      // display:none the SVG and the ticker rAF skip its projection work.
+      // never pauses) plus two drop-shadow filter rasters — all at
+      // opacity 0. `data-signal-live` on <html> lets CSS display:none
+      // the SVG and the ticker rAF skip its projection work.
       // Crossing-gated: one attribute write per state change, restored in
       // the same frame the signal opacity returns on reverse scroll.
-      const signalLive = containerOps.sig > 0.002;
+      //
+      // GEOMETRIC exit cut (2026-07-29 perf pass): the opacity-keyed gate
+      // alone held the ticker displayed until SIGNAL_OUT.end (dissipate
+      // 0.99) — right through the proof casefile's assembly, the hottest
+      // frames of the whole journey. But the exit is TRANSLATION-dominant
+      // (`--signal-exit-lift` = −dissipate·vh), and past the 0.86 arc
+      // freeze the frozen path's static bottom measures ≈ +4px at 1280×
+      // 800 / 1440×900 / 1920×1080 — i.e. the marquee has fully cleared
+      // the viewport top essentially AT the freeze (sampled ≥700px above
+      // the top by dissipate 0.88 on all three). Cutting display at 0.90
+      // is therefore zero-visual-delta by construction, with margin over
+      // every measurement; reverse scroll restores it crossing-gated,
+      // same as the opacity path.
+      const signalLive =
+        containerOps.sig > 0.002 && !(docked && exitDissipate >= TICKER_GONE_AT_DISSIPATE);
       if (signalLive !== lastSignalLive) {
         lastSignalLive = signalLive;
         if (signalLive) document.documentElement.setAttribute("data-signal-live", "");
@@ -1550,40 +1605,37 @@ export function CorridorStationHeaders() {
       if (sigEl) {
         sigEl.style.transform = `translate3d(-50%, ${signalLiftPx.toFixed(2)}px, 0) scale(${signalScale.toFixed(4)})`;
       }
-      // Title/CTA read these inherited vars for the 1:1 push-out. The
-      // ticker SVG reads BOTH `--signal-exit-lift` (same translate) AND
+      // The ticker SVG reads `--signal-exit-lift` (same translate) AND
       // `--signal-opacity` (same opacity) from THIS single rAF, so the
       // whole signal group — title, CTA, and news ticker — is driven by
       // ONE writer on ONE frame and can never desync. (Previously the
       // ticker ran its own rAF that re-read the signal opacity + store a
       // frame apart, which made it blank/clip out of step with the title
       // at the dock boundary — 2026-06-19 single-writer sync.)
-      // Delta-gated (2026-07-16 perf pass): these four inline writes on
-      // <html> previously fired unconditionally every frame — an
-      // every-frame style invalidation on the root element even while
-      // parked with nothing moving. One combined deadband (0.25px on the
-      // lifts, matching the opacity epsilons elsewhere in this tick)
-      // writes all four together so the group can never desync.
+      // Delta-gated (2026-07-16 perf pass) and, since 2026-07-29, written
+      // ON THE TICKER SVG rather than `<html>`: the two vars' only
+      // consumer is `.home-v2-signal-ticker` (home-v2.css), and hosting
+      // them on the root invalidated the whole document's computed style
+      // on every frame of the exit lift — one of the largest remaining
+      // recalc sources of the dissipate window. Same values, same writer,
+      // same frame; only the invalidation scope shrank to the SVG's own
+      // subtree. (`--signal-exit-scale` / `--ticker-exit-lift` had no
+      // consumer anywhere — the sigEl transform above carries scale
+      // inline, and the ticker rides the shared lift — so those two
+      // writes are simply gone.)
       if (
         Math.abs(signalLiftPx - lastSignalVars.lift) > 0.25 ||
-        Math.abs(signalScale - lastSignalVars.scale) > 0.0005 ||
-        Math.abs(tickerLiftPx - lastSignalVars.tickerLift) > 0.25 ||
         Math.abs(containerOps.sig - lastSignalVars.sig) > 0.002
       ) {
-        lastSignalVars.lift = signalLiftPx;
-        lastSignalVars.scale = signalScale;
-        lastSignalVars.tickerLift = tickerLiftPx;
-        lastSignalVars.sig = containerOps.sig;
-        document.documentElement.style.setProperty(
-          "--signal-exit-lift",
-          `${signalLiftPx.toFixed(2)}px`
-        );
-        document.documentElement.style.setProperty("--signal-exit-scale", signalScale.toFixed(4));
-        document.documentElement.style.setProperty(
-          "--ticker-exit-lift",
-          `${tickerLiftPx.toFixed(2)}px`
-        );
-        document.documentElement.style.setProperty("--signal-opacity", containerOps.sig.toFixed(4));
+        if (!tickerEl || !tickerEl.isConnected) {
+          tickerEl = document.querySelector<SVGSVGElement>(".home-v2-signal-ticker");
+        }
+        if (tickerEl) {
+          lastSignalVars.lift = signalLiftPx;
+          lastSignalVars.sig = containerOps.sig;
+          tickerEl.style.setProperty("--signal-exit-lift", `${signalLiftPx.toFixed(2)}px`);
+          tickerEl.style.setProperty("--signal-opacity", containerOps.sig.toFixed(4));
+        }
       }
 
       // Per-station typewriter pass.

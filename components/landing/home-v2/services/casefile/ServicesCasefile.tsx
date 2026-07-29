@@ -30,13 +30,23 @@ import { TrackPanel } from "./TrackPanel";
  *
  * REVEAL — the ADR-044 / ADR-054 protocol, the same one `ServicesMasthead`
  * uses:
- *   · the clock is `--svc-proof-in` on the enclosing `.services-stage`, read
- *     through a MutationObserver on that element's inline style. The stage's
- *     scroll hook stays the single writer; this adds no listener. A missing
- *     var FAILS OPEN to 1, so a standalone mount renders resolved.
+ *   · the clock is `--svc-proof-in`, written since the 2026-07-29 perf pass
+ *     on THIS component's own root (`.fl-case`) rather than the enclosing
+ *     stage — the proof channels' only consumers live in this subtree, and
+ *     hosting them here keeps every per-frame write from invalidating the
+ *     stage's ~350-node computed-style tree. Read through a MutationObserver
+ *     on the root's inline style; the stage's scroll hook stays the single
+ *     writer and this observer no longer wakes for the stage's OTHER
+ *     channels (`--svc-content-in`, `--svc-arrive`). A missing var FAILS
+ *     OPEN to 1, so a standalone mount renders resolved.
  *   · a PARK GATE is the second required condition. The clock alone crosses
  *     its threshold while the sticky stage is still travelling — measured on
- *     the masthead, twice. Copy must never decode on a moving stage.
+ *     the masthead, twice. Copy must never decode on a moving stage. The
+ *     park state is CACHED from the IntersectionObserver (2026-07-29): the
+ *     old rect-read-per-call ran inside the style MutationObserver, forcing
+ *     a layout against dirty styles on every scroll frame of the armed
+ *     window. The rect read survives only as the pre-first-delivery
+ *     fallback.
  *   · the decode is DESTRUCTIVE (it blanks each line before queueing it), so
  *     it must never start unless it can finish: rAF is throttled to a
  *     standstill in a hidden document. Hence the visibility gate and the
@@ -90,23 +100,27 @@ export function ServicesCasefile() {
     ).matches;
     if (!enhanced) return;
 
-    const stage = root.closest<HTMLElement>(".services-stage");
     const targets = Array.from(root.querySelectorAll<HTMLElement>("[data-fl-text]"));
     const jobs: ScrambleJob[] = [];
     let raf = 0;
     let state: "armed" | "live" | "done" = "done";
 
-    /** Missing stage / missing var ⇒ 1. A stage var can never blank a live
-     *  surface — the house convention, and what makes a bare mount work. */
+    /** Missing var ⇒ 1. A clock var can never blank a live surface — the
+     *  house convention, and what makes a bare mount work. The scroll hook
+     *  writes the proof channels on THIS root (2026-07-29). */
     const readClock = () => {
-      if (!stage) return 1;
-      const raw = Number.parseFloat(stage.style.getPropertyValue("--svc-proof-in"));
+      const raw = Number.parseFloat(root.style.getPropertyValue("--svc-proof-in"));
       return Number.isFinite(raw) ? raw : 1;
     };
 
     /** Parked = the casefile's own box has reached the top band. Its root is
-     *  `inset: 0` inside the stage, so its rect IS the stage rect. */
+     *  `inset: 0` inside the stage, so its rect IS the stage rect. The park
+     *  IntersectionObserver below maintains the cached boolean; the rect
+     *  read fires only before its first delivery, so `isParked()` inside
+     *  the per-frame clock observer never forces a layout. */
+    let parkedCached: boolean | null = null;
     const isParked = () => {
+      if (parkedCached !== null) return parkedCached;
       const r = root.getBoundingClientRect();
       return r.top <= window.innerHeight * PIN_BAND && r.bottom > 0;
     };
@@ -160,14 +174,16 @@ export function ServicesCasefile() {
     if (readClock() >= REVEAL_AT && isParked()) settle();
     else arm();
 
-    const clockObserver = stage ? new MutationObserver(onClock) : null;
-    if (stage && clockObserver) {
-      clockObserver.observe(stage, { attributes: true, attributeFilter: ["style"] });
-    }
+    // The proof channels land on this root's own inline style (scroll hook,
+    // 2026-07-29) — observing the root IS the clock, and the observer no
+    // longer fires for unrelated stage writes.
+    const clockObserver = new MutationObserver(onClock);
+    clockObserver.observe(root, { attributes: true, attributeFilter: ["style"] });
 
     const parkObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
+          parkedCached = entry.isIntersecting;
           if (entry.isIntersecting) {
             if (state === "armed" && readClock() >= REVEAL_AT) begin();
           } else if (state !== "armed" && entry.boundingClientRect.top > 0) {

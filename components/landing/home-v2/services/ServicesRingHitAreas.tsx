@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useRef } from "react";
+import { Fragment, useLayoutEffect, useRef, useState } from "react";
 
 import { DRAWER_CLOSE_BOX, DRAWER_CTA_BOX, RING_CARD_CTA_BOX } from "./hologram/ringCtaBox";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
@@ -55,10 +55,32 @@ export function ServicesRingHitAreas({
 }) {
   const ringAnchors = useHologramConnectors((s) => s.ringAnchors);
   const hostRef = useRef<HTMLDivElement>(null);
-  // Rebase published viewport coords into this layer's own box. Reading the
-  // rect during render is the established overlay pattern here (the layer
-  // re-renders off store pushes, same as PlateConnectorOverlay).
-  const origin = hostRef.current?.getBoundingClientRect();
+  // Rebase published viewport coords into this layer's own box. The origin
+  // is CACHED (2026-07-29 perf pass) — the old render-time
+  // `getBoundingClientRect()` forced a layout on every store push, i.e.
+  // every frame the ring moved. Measured once per empty→non-empty anchors
+  // edge (the host cannot move while anchors publish: the publish gate
+  // only opens with the stage pinned, and anchors clear on unpark before
+  // it travels), refreshed on resize / tab return.
+  const [origin, setOrigin] = useState<{ left: number; top: number } | null>(null);
+  const hasAnchors = ringAnchors.length > 0;
+  useLayoutEffect(() => {
+    if (!hasAnchors) return;
+    const measure = () => {
+      const r = hostRef.current?.getBoundingClientRect();
+      if (!r) return;
+      setOrigin((prev) =>
+        prev && prev.left === r.left && prev.top === r.top ? prev : { left: r.left, top: r.top }
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    document.addEventListener("visibilitychange", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      document.removeEventListener("visibilitychange", measure);
+    };
+  }, [hasAnchors]);
 
   return (
     <div ref={hostRef} className="svc-ring-hits">

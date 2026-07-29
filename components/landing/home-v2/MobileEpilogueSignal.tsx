@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { epilogueBand, dissipateBand } from "@/lib/home-v2/epilogueTimeline";
+import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
 
@@ -54,11 +55,9 @@ export function MobileEpilogueSignal() {
       // epilogue climax + dock lift.
       const ep = getSmoothedEpilogueProgress();
       const titleIn = epilogueBand(ep, "TITLE_IN");
-      const dissipateStr =
-        typeof document !== "undefined"
-          ? document.documentElement.style.getPropertyValue("--corridor-dissipate")
-          : "";
-      const exitDissipate = dissipateStr ? parseFloat(dissipateStr) || 0 : 0;
+      // Module-ref transport since 2026-07-29 (same read the desktop
+      // signal takes); absent ⇒ 0, the "exit not started" default.
+      const exitDissipate = readCorridorDissipate(0);
       const titleOut = dissipateBand(exitDissipate, "SIGNAL_OUT");
 
       // Visible while the corridor is engaged inside the epilogue

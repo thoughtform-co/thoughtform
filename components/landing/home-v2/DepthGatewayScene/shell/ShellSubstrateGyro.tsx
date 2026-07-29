@@ -926,15 +926,28 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     });
   }, [geom, effectiveRingCount, showParticles]);
 
-  // Smoothed copy of the dotted-shell radius multiplier so we can
-  // animate the BufferGeometry positions without thrashing the GPU
-  // buffer every frame. Only re-write when the smoothed value drifts
-  // far enough from the last write.
-  const lastShellRadiusMul = useRef<number>(SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL);
-  // Snapshot of the original dotted-shell vertex positions at parked
-  // mul — captured once on first frame so we can rescale them in
-  // place without rebuilding the geometry.
-  const dottedShellBase = useRef<Float32Array | null>(null);
+  // Dotted-shell radius multiplier rides the node's object scale, not
+  // the geometry: the scatter is a pure uniform scale about the origin,
+  // and `modelViewMatrix ∘ scale(k)` is exactly the old per-vertex
+  // `base·k` rewrite (the shader normalizes `normalMatrix * aNormal`,
+  // so the facing fade is invariant under uniform scale). The previous
+  // in-place rescale re-uploaded the full 80KB position buffer on a
+  // STATIC_DRAW attribute every frame the 0.18s follower was still
+  // converging — the single largest per-frame cost of the corridor-exit
+  // window (2026-07-29 perf pass).
+  const dottedShellRef = useRef<THREE.Points | null>(null);
+  // Draw-gate refs (2026-07-29 perf pass — the StaticStarfield.tsx
+  // `.visible = opacity > 0.002` parity this painter missed in the
+  // 2026-07-16 sweep). The instrument chrome is at uOpacity 0 from
+  // BUILD_OUT.end (epilogue 0.22) onward, and the occluder core /
+  // atmosphere are camera-enclosing spheres shaded at opacity 0 through
+  // the back half of the dissipate and the whole services dwell —
+  // ~25 draw calls (two of them near-fullscreen fills) submitted for
+  // nothing. Gated on the SAME products the materials just wrote, so
+  // visibility mirrors opacity exactly, forward and reverse.
+  const chromeRef = useRef<THREE.Group | null>(null);
+  const coreRef = useRef<THREE.Mesh | null>(null);
+  const atmosphereRef = useRef<THREE.Mesh | null>(null);
   // Tilt groups for the three gimbal rings — captured by ref so we
   // can write `rotation` directly each frame via the unfold lerp.
   const ringTiltRefs = useRef<(THREE.Group | null)[]>([]);
@@ -1213,6 +1226,28 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     mats.cardinalRing.uniforms.uOpacity.value =
       lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY) * buildOutFade * dissipateOp;
 
+    // Draw gates — skip submitting renderables whose opacity just
+    // computed to (effectively) zero. Every chrome material shares the
+    // `buildOutFade * dissipateOp` product, so the max over the family
+    // is an exact gate for the subtree; the core and atmosphere are
+    // independent envelopes. Reverse scroll re-raises the opacities and
+    // these gates re-open in the same frame.
+    if (chromeRef.current) {
+      chromeRef.current.visible =
+        Math.max(
+          mats.ring.uniforms.uOpacity.value,
+          mats.tick.uniforms.uOpacity.value,
+          mats.graduation.uniforms.uOpacity.value,
+          mats.symbol.uniforms.uOpacity.value,
+          mats.pivot.opacity,
+          mats.cardinalRing.uniforms.uOpacity.value
+        ) > 0.002;
+    }
+    if (coreRef.current) coreRef.current.visible = mats.core.uniforms.uOpacity.value > 0.002;
+    if (atmosphereRef.current) {
+      atmosphereRef.current.visible = mats.atmosphere.uniforms.uOpacity.value > 0.002;
+    }
+
     // Globe spin: keep the idle polar drift; add the decaying wrap-spin
     // on top so the meridians/parallels appear to swirl around the
     // mark during the unfold, then settle once reveal saturates.
@@ -1379,35 +1414,19 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       g.setDrawRange(0, n - (n % 2));
     }
 
-    // Dotted shell radius lerp: rescale vertex positions in-place from
-    // the captured `dottedShellBase` snapshot. We only re-upload when
-    // the smoothed radius mul drifts > 0.5% from the last write so the
-    // GPU buffer isn't churned every frame.
+    // Dotted shell radius lerp — an object-scale write, so the position
+    // buffer is uploaded exactly once and the radius now moves
+    // CONTINUOUSLY (the old in-place rescale stepped in 0.5% epsilon
+    // increments to spare the buffer churn it no longer has).
     //
     // ADR-021 dissipate: `dissipateShellMul` pushes the shell outward
     // (1 + AMP * dissipate) so the cassette geometry stays put but the
     // surface dots scatter radially as the camera flies in. Composes
     // multiplicatively on top of the existing `unfold.shellRadiusMul`,
-    // so dissipate 0 is byte-identical to the pre-ADR-021 write.
-    const targetShellMul = unfold.shellRadiusMul * dissipateShellMul;
-    const lastMul = lastShellRadiusMul.current;
-    if (Math.abs(targetShellMul - lastMul) > 0.005 || dottedShellBase.current === null) {
-      const attr = geom.dottedShell.getAttribute("position") as THREE.BufferAttribute | undefined;
-      if (attr) {
-        const arr = attr.array as Float32Array;
-        if (dottedShellBase.current === null) {
-          // First frame — snapshot the parked positions (at
-          // SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL by construction).
-          dottedShellBase.current = new Float32Array(arr.length);
-          dottedShellBase.current.set(arr);
-        }
-        const base = dottedShellBase.current;
-        const k = targetShellMul; // already relative to parked mul (1 = parked)
-        for (let i = 0; i < arr.length; i++) arr[i] = base[i] * k;
-        attr.needsUpdate = true;
-        lastShellRadiusMul.current = targetShellMul;
-      }
-    }
+    // so dissipate 0 is byte-identical to the pre-ADR-021 write (the
+    // multiplier is relative to the parked radius baked into the
+    // geometry: 1 = parked).
+    dottedShellRef.current?.scale.setScalar(unfold.shellRadiusMul * dissipateShellMul);
   });
 
   return (
@@ -1422,6 +1441,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
             traverse below lifts every other instrument renderable to
             renderOrder 2 so the bright elements stay on top. */}
         <mesh
+          ref={coreRef}
           name={CORE_MESH_NAME}
           geometry={geom.core}
           material={mats.core}
@@ -1459,8 +1479,14 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
 
       {/* Dotted shell — surface dots with per-dot facing fade so the
           gimbal cage reads as a real 3D sphere shell (front bright,
-          back hemisphere fades to near zero). */}
-      <points geometry={geom.dottedShell} material={mats.dottedShell} frustumCulled={false} />
+          back hemisphere fades to near zero). The node's own scale IS
+          the radius channel (unfold × dissipate scatter, per frame). */}
+      <points
+        ref={dottedShellRef}
+        geometry={geom.dottedShell}
+        material={mats.dottedShell}
+        frustumCulled={false}
+      />
 
       {/* v3.2 atmosphere — fresnel rim-glow on a sphere just outside
           the dotted shell. Invisible in the parked corridor (uOpacity
@@ -1468,20 +1494,33 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
           the substrate transitions into a planet. Back-faced +
           additive blending so it reads as a halo at the silhouette,
           not a sphere that occludes the surface. */}
-      <mesh geometry={geom.atmosphere} material={mats.atmosphere} frustumCulled={false} />
+      <mesh
+        ref={atmosphereRef}
+        geometry={geom.atmosphere}
+        material={mats.atmosphere}
+        frustumCulled={false}
+      />
 
-      <lineSegments geometry={geom.ticks} material={mats.tick} frustumCulled={false} />
-      <lineSegments geometry={geom.ticksMiddle} material={mats.tick} frustumCulled={false} />
-      <lineSegments geometry={geom.glyphs} material={mats.symbol} frustumCulled={false} />
+      {/* Instrument chrome — one identity group so the frame loop can
+          drop the whole subtree out of the draw list once BUILD_OUT has
+          taken every chrome material to 0 (the draw-gate block above). */}
+      <group ref={chromeRef}>
+        <lineSegments geometry={geom.ticks} material={mats.tick} frustumCulled={false} />
+        <lineSegments geometry={geom.ticksMiddle} material={mats.tick} frustumCulled={false} />
+        <lineSegments geometry={geom.glyphs} material={mats.symbol} frustumCulled={false} />
 
-      {/* Cardinal bezel — a flat XY-plane ring that contains the four
-          Encode cardinal labels (judgment / taste / craft / voice). The
-          labels (DOM, projected at world radius ~1.0) sit just inside
-          this ring at ~1.08, so the cluster reads as one grouped dial.
-          `<line>` (LINE_STRIP) so the trim-path draw-on actually shows. */}
-      <threeLine geometry={geom.cardinalRing} material={mats.cardinalRing} frustumCulled={false} />
+        {/* Cardinal bezel — a flat XY-plane ring that contains the four
+            Encode cardinal labels (judgment / taste / craft / voice). The
+            labels (DOM, projected at world radius ~1.0) sit just inside
+            this ring at ~1.08, so the cluster reads as one grouped dial.
+            `<line>` (LINE_STRIP) so the trim-path draw-on actually shows. */}
+        <threeLine
+          geometry={geom.cardinalRing}
+          material={mats.cardinalRing}
+          frustumCulled={false}
+        />
 
-      {/* Gimbal cage — counter-rotating rings + pivot diamonds.
+        {/* Gimbal cage — counter-rotating rings + pivot diamonds.
           Hierarchy per ring (outer → inner):
             tilt  — `ringTiltRefs[i]`: tilt-lerped each frame by
                      `gyroRingUnfold(reveal)` from near-coplanar to the
@@ -1489,63 +1528,64 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
             scale — `ringScaleRefs[i]`: small landing overshoot scale
                      so each ring snaps into place as it opens.
             spin  — `ringSpinRefs[i]`: idle counter-rotation (unchanged). */}
-      {SUBSTRATE_GYRO_GIMBAL_RINGS.slice(0, effectiveRingCount).map((axis, ringIdx) => (
-        <group
-          key={`gimbal-ring-${ringIdx}`}
-          ref={(node) => {
-            ringTiltRefs.current[ringIdx] = node;
-          }}
-        >
+        {SUBSTRATE_GYRO_GIMBAL_RINGS.slice(0, effectiveRingCount).map((axis, ringIdx) => (
           <group
+            key={`gimbal-ring-${ringIdx}`}
             ref={(node) => {
-              ringScaleRefs.current[ringIdx] = node;
+              ringTiltRefs.current[ringIdx] = node;
             }}
           >
             <group
               ref={(node) => {
-                ringSpinRefs.current[ringIdx] = node;
+                ringScaleRefs.current[ringIdx] = node;
               }}
             >
-              {/* `<line>` (LINE_STRIP) so `setDrawRange` actually
+              <group
+                ref={(node) => {
+                  ringSpinRefs.current[ringIdx] = node;
+                }}
+              >
+                {/* `<line>` (LINE_STRIP) so `setDrawRange` actually
                   trims the visible arc as the ring tilts open. The
                   great-circle geometry's first vertex == last so the
                   ring still closes at draw progress 1. */}
-              <threeLine
-                geometry={geom.gimbalRings[ringIdx]}
-                material={mats.ring}
-                frustumCulled={false}
-              />
-              {geom.ringGraduations[ringIdx] && (
-                <lineSegments
-                  geometry={geom.ringGraduations[ringIdx]}
-                  material={mats.graduation}
+                <threeLine
+                  geometry={geom.gimbalRings[ringIdx]}
+                  material={mats.ring}
                   frustumCulled={false}
                 />
-              )}
-              {/* Pivot diamonds at cardinal positions on each ring.
+                {geom.ringGraduations[ringIdx] && (
+                  <lineSegments
+                    geometry={geom.ringGraduations[ringIdx]}
+                    material={mats.graduation}
+                    frustumCulled={false}
+                  />
+                )}
+                {/* Pivot diamonds at cardinal positions on each ring.
                   Wrapped in a scale group so they pop in geometrically
                   as the ring's draw-on completes (Principle 4: emerge
                   via geometry, never via opacity). */}
-              <group
-                ref={(node) => {
-                  pivotScaleRefs.current[ringIdx] = node;
-                }}
-                scale={0}
-              >
-                {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, pi) => (
-                  <mesh
-                    key={`pivot-${ringIdx}-${pi}`}
-                    geometry={geom.pivot}
-                    material={mats.pivot}
-                    position={[Math.cos(a) * axis.radius, 0, Math.sin(a) * axis.radius]}
-                    frustumCulled={false}
-                  />
-                ))}
+                <group
+                  ref={(node) => {
+                    pivotScaleRefs.current[ringIdx] = node;
+                  }}
+                  scale={0}
+                >
+                  {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, pi) => (
+                    <mesh
+                      key={`pivot-${ringIdx}-${pi}`}
+                      geometry={geom.pivot}
+                      material={mats.pivot}
+                      position={[Math.cos(a) * axis.radius, 0, Math.sin(a) * axis.radius]}
+                      frustumCulled={false}
+                    />
+                  ))}
+                </group>
               </group>
             </group>
           </group>
-        </group>
-      ))}
+        ))}
+      </group>
     </group>
   );
 }

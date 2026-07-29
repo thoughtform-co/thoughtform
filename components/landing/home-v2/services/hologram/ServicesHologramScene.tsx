@@ -24,6 +24,7 @@ import * as THREE from "three";
 
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import { getServicePose } from "@/lib/home-v2/servicePose";
+import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { SERVICES, type ServiceId } from "../serviceData";
 import { HologramOrbits, type OrbitConfig } from "./HologramOrbits";
 import {
@@ -134,10 +135,7 @@ export function ServicesHologramScene({
     // Engage pointer-look only once the entrance has settled (parked → always on).
     let settled = true;
     if (scrollEntrance) {
-      const raw = parseFloat(
-        document.documentElement.style.getPropertyValue("--corridor-dissipate")
-      );
-      const target = Number.isFinite(raw) ? raw : 1;
+      const target = readCorridorDissipate(1);
       if (settleRef.current < 0) settleRef.current = target;
       else settleRef.current += (target - settleRef.current) * Math.min(1, delta * 8);
       settled = settleRef.current >= 0.985;

@@ -1833,7 +1833,12 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
      single-writer sync). The ticker rAF now only rewrites the arc PATH. */
   opacity: var(--signal-opacity, 0);
   transform: translate3d(0, var(--signal-exit-lift, 0px), 0);
-  filter: drop-shadow(0 0 16px rgba(10, 9, 8, 0.9)) drop-shadow(0 0 10px rgba(202, 165, 84, 0.18));
+  /* (The double drop-shadow moved to `__text` below, 2026-07-29 perf
+     pass: on this `inset: 0` root the filter region was the whole
+     viewport ×2 chained blurs, re-rastered every frame the arc moved.
+     The SVG paints exactly one visible node — the text — so filtering
+     that node is the identical composite over a region the size of the
+     arc band instead of the screen.) */
   /* Soft edge fade ONLY at the very edges (last ~5%): the arc itself is
      sized so the headlines run off-screen on both sides (see
      `EpilogueNewsTicker` dynamic half-span), and this just dissolves the
@@ -1850,6 +1855,10 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   letter-spacing: 0.045em;
   text-transform: none;
   fill: rgba(235, 227, 214, 0.9);
+  /* Hosts the root's former drop-shadows (see the root comment): same
+     paint order — text + text-shadow first, then the drop-shadows, then
+     the root's mask — over the text's own filter region. */
+  filter: drop-shadow(0 0 16px rgba(10, 9, 8, 0.9)) drop-shadow(0 0 10px rgba(202, 165, 84, 0.18));
   text-shadow:
     0 0 12px rgba(10, 9, 8, 0.95),
     0 0 18px rgba(202, 165, 84, 0.14);

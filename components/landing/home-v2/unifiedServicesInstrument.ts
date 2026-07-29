@@ -127,9 +127,12 @@ export const ABOUT_DECK_STAGE = true;
  *     `splitServicesRunway` so the ring's progress domain is unchanged —
  *     `RING_ARRIVAL_FRAC`, `RING_EXIT_START` and the ADR-047 `#about` deck
  *     seam all stay byte-identical;
- *   - two new stage channels, `--svc-proof-in` (arrival, off the corridor
+ *   - two new channels, `--svc-proof-in` (arrival, off the corridor
  *     dissipate — the curve `--svc-content-in` used to own) and
- *     `--svc-proof-out` (departure, off the casefile's own runway share);
+ *     `--svc-proof-out` (departure, off the casefile's own runway share),
+ *     hosted on the casefile's own `.fl-case` root since the 2026-07-29
+ *     perf pass (ADR-056 U4 — stage-hosted writes invalidated the whole
+ *     stage subtree per frame; `data-proof-live` stays on the stage);
  *   - `--svc-content-in` is multiplied by the release ramp, which delays the
  *     masthead, the plate cluster, the designations, the orbit draw-on and the
  *     scan interface together, with no new consumer and no new listener;

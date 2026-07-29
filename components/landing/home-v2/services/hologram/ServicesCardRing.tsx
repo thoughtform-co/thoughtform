@@ -69,6 +69,7 @@ import { SERVICES } from "../serviceData";
 import { ABOUT_DECK_STAGE } from "../../unifiedServicesInstrument";
 import { rigPointerYawRef } from "../../rigPointerYawRef";
 import { SERVICES_GOLD } from "@/lib/home-v2/goldPalette";
+import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { useHologramConnectors, type RingCardAnchor } from "@/lib/stores/hologramConnectorStore";
 import {
   ABOUT_FALLBACK_NDC,
@@ -162,6 +163,48 @@ import {
 /** Publish card rects only once the instrument is essentially parked — same
  *  threshold + clear-once semantics as `CorridorArmillary`'s scan anchors. */
 const ANCHOR_PUBLISH_DISSIPATE = 0.88;
+
+/** Sub-pixel epsilon for the anchor publish delta-gate. 0.75px is below
+ *  anything the hit shims or designation callouts can express (they snap
+ *  to whole CSS pixels), and above the bounded pointer spring's parked
+ *  jitter — so an idle ring publishes nothing. */
+const ANCHOR_PUBLISH_EPS_PX = 0.75;
+
+/** Do two anchor sets differ by less than the publish epsilon everywhere?
+ *  Exact on identity fields (id / front / visible / drawer presence),
+ *  epsilon on every rect channel — same shape as `CorridorArmillary`'s
+ *  `featureAnchors` gate. */
+function ringAnchorsWithinEpsilon(next: RingCardAnchor[], prev: RingCardAnchor[] | null): boolean {
+  if (!prev || prev.length !== next.length) return false;
+  for (let i = 0; i < next.length; i++) {
+    const a = next[i];
+    const b = prev[i];
+    if (a.serviceId !== b.serviceId || a.front !== b.front || a.visible !== b.visible) {
+      return false;
+    }
+    if (
+      Math.abs(a.x - b.x) > ANCHOR_PUBLISH_EPS_PX ||
+      Math.abs(a.y - b.y) > ANCHOR_PUBLISH_EPS_PX ||
+      Math.abs(a.w - b.w) > ANCHOR_PUBLISH_EPS_PX ||
+      Math.abs(a.h - b.h) > ANCHOR_PUBLISH_EPS_PX ||
+      Math.abs(a.depth - b.depth) > 0.002
+    ) {
+      return false;
+    }
+    if (!!a.drawer !== !!b.drawer) return false;
+    if (a.drawer && b.drawer) {
+      if (
+        Math.abs(a.drawer.x - b.drawer.x) > ANCHOR_PUBLISH_EPS_PX ||
+        Math.abs(a.drawer.y - b.drawer.y) > ANCHOR_PUBLISH_EPS_PX ||
+        Math.abs(a.drawer.w - b.drawer.w) > ANCHOR_PUBLISH_EPS_PX ||
+        Math.abs(a.drawer.h - b.drawer.h) > ANCHOR_PUBLISH_EPS_PX
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 /** Wall-clock gap treated as an idle resume (frameloop was paused). Raised
  *  200 → 500 ms in ADR-029 Update 5: at 200 ms an ordinary frame hitch
@@ -1364,6 +1407,12 @@ export function ServicesCardRing({
   // Damped CSS-var dissipate (fallback path); −1 sentinel = snap on first read.
   const dissipateRef = useRef(-1);
   const anchorsClearedRef = useRef(true);
+  /** Last-published anchor set for the epsilon delta-gate below —
+   *  `CorridorArmillary`'s scan-anchor precedent (2026-07-16 perf pass),
+   *  which this publisher missed: a fresh array every parked frame
+   *  re-rendered BOTH subscribers (`ServicesRingHitAreas`,
+   *  `ServicesDesignationLayer`) per frame even with the ring at rest. */
+  const publishedAnchorsRef = useRef<RingCardAnchor[] | null>(null);
   const cornerLocal = useRef(new THREE.Vector3());
   const cornerWorld = useRef(new THREE.Vector3());
 
@@ -1792,6 +1841,51 @@ export function ServicesCardRing({
     };
   }, [gl, openDrawer, drawerRequested]);
 
+  // GPU warm-up (2026-07-29 perf pass). The baked CanvasTextures carry
+  // `needsUpdate` and upload LAZILY — on the first frame `cardGroup`
+  // turns visible, which under ADR-056 is ~60px after the dissipate
+  // saturates, mid-gesture: four 840×1360 uploads (+mips, anisotropy 8)
+  // plus the first program link landed in ONE frame, a ~100ms-class p95
+  // spike at the ring's entrance. Drain ONE `gl.initTexture` per rAF
+  // during the calm corridor instead, then warm the programs once with
+  // `compileAsync` (compile traverses invisible nodes, so nothing is
+  // shown — the ADR-056 off-stage contract holds; `ringEntranceClock` is
+  // untouched). Keyed on the texture sets, so a glEpoch remount (fresh
+  // textures) re-warms, and the lazily-baked drawer set warms the same
+  // way when its latch lands.
+  const warmedTexturesRef = useRef<WeakSet<THREE.Texture>>(new WeakSet());
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    const queue: THREE.Texture[] = [];
+    for (const texture of [...(textures ?? []), backTexture, ...(drawerTextures ?? [])]) {
+      if (texture && !warmedTexturesRef.current.has(texture)) queue.push(texture);
+    }
+    if (!queue.length) return;
+    let raf = 0;
+    const drain = () => {
+      raf = 0;
+      const texture = queue.shift();
+      if (texture) {
+        try {
+          gl.initTexture(texture);
+        } catch {
+          // A lost context mid-warm is fine — the glEpoch remount re-runs.
+        }
+        warmedTexturesRef.current.add(texture);
+      }
+      if (queue.length) {
+        raf = requestAnimationFrame(drain);
+      } else {
+        // Textures resident — link the programs off the hot path too.
+        gl.compileAsync(scene, camera).catch(() => {});
+      }
+    };
+    raf = requestAnimationFrame(drain);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [gl, scene, camera, textures, backTexture, drawerTextures]);
+
   // Dispose bakes on replacement/unmount (materials/geometries are
   // declarative — R3F disposes those; the shared back material/geometry
   // are memoized and disposed below).
@@ -1869,10 +1963,7 @@ export function ServicesCardRing({
       if (dissipateGetter) {
         dissipate = dissipateGetter();
       } else {
-        const raw = parseFloat(
-          document.documentElement.style.getPropertyValue("--corridor-dissipate")
-        );
-        const target = Number.isFinite(raw) ? raw : 1;
+        const target = readCorridorDissipate(1);
         if (dissipateRef.current < 0) dissipateRef.current = target;
         else dissipateRef.current += (target - dissipateRef.current) * Math.min(1, delta * 8);
         dissipate = dissipateRef.current;
@@ -2532,10 +2623,18 @@ export function ServicesCardRing({
 
     if (publishAnchors) {
       if (parked && anchors.length) {
-        setRingAnchors(anchors);
+        // Epsilon delta-gate (2026-07-29 perf pass): only a meaningful
+        // move reaches the store — an idle parked ring stops re-rendering
+        // the hit-shim and designation overlays every frame. The pointer
+        // spring settles below the epsilon at rest, so this converges.
+        if (!ringAnchorsWithinEpsilon(anchors, publishedAnchorsRef.current)) {
+          setRingAnchors(anchors);
+          publishedAnchorsRef.current = anchors;
+        }
         anchorsClearedRef.current = false;
       } else if (!anchorsClearedRef.current) {
         setRingAnchors([]);
+        publishedAnchorsRef.current = null;
         anchorsClearedRef.current = true;
       }
     }

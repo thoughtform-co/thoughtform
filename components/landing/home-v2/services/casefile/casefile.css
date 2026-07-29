@@ -197,6 +197,26 @@
   visibility: visible;
 }
 
+/* ── Compositing promotion (2026-07-29 perf pass) ─────────────────────────
+   Every panel below animates opacity + transform EVERY SCROLL FRAME of the
+   arrival and the fold, and unpromoted that meant a full re-raster of each
+   panel's subtree per frame — including the brief title's text-shadow, the
+   gradient reticles/rules, the 31-node signal SVG and the readout foot —
+   measured as the dominant paint cost of the corridor→services window. With
+   the layers promoted, the statics raster ONCE per state and the per-frame
+   var changes are compositor-only updates. Scoped to `data-proof-live` so
+   the ~14 layers exist exactly for the beat and are released with it; the
+   iris keeps a `clip-path` hint on the root so the fold's scrubbed inset()
+   updates the promoted layer instead of re-painting the plane. The
+   mobile/PRM block below resets to `auto` — that path is static and must
+   not hold layers. */
+.services-stage[data-proof-live] .fl-case {
+  will-change: clip-path, opacity;
+}
+.services-stage[data-proof-live] .fl-case [data-fl-panel] {
+  will-change: transform, opacity;
+}
+
 /* ══ TERMINAL POWER-ON ═════════════════════════════════════════════════
    The casefile does not fade in as a block — each panel strikes on
    separately, like a terminal drawing its interface a row at a time. The
@@ -289,6 +309,7 @@
   .fl-case [data-fl-panel] {
     opacity: 1;
     transform: none;
+    will-change: auto;
   }
 
   /* The iris is motion too — no aperture sweep here. The plane still fades
@@ -297,6 +318,7 @@
   .fl-case {
     clip-path: none;
     opacity: calc(1 - var(--svc-proof-out, 0));
+    will-change: auto;
   }
 }
 
@@ -1121,6 +1143,11 @@
     left: auto;
     right: auto;
     padding-bottom: clamp(32px, 8vw, 64px);
+    /* Static flow content — never hold compositor layers here. */
+    will-change: auto;
+  }
+  .fl-case [data-fl-panel] {
+    will-change: auto;
   }
   /* The absolute registration grammar is a desktop composition; stacked,
      it is noise. */

@@ -172,6 +172,30 @@ p95 ≈ 38–42ms / ~0 long tasks, so the step-down itself should now be rare on
 capable hardware. No governor constants changed — the rev 2 ladder + lock
 rules stand.
 
+## Update (2026-07-29) — the transition window is beneath the reaction floor, by design
+
+The ADR-056 corridor-exit → casefile window measured 89.5ms/frame while
+this governor sat at full quality — and that is correct behavior, not a
+gap: the EMA (α 0.1) plus `SUSTAIN_MS` 1200 plus `COOLDOWN_MS` 1500 need
+seconds of sustained slowness, the dwell is 1.2 viewports (~1–3s of
+scroll), and frames >200ms are discarded from the EMA outright. **A
+transient heavy passage shorter than the detection latency must be fixed
+structurally, never adaptively** — a spike fast-path was considered and
+rejected (it would fire mid-choreography on mid-tier machines and cause
+a visible resolution shift; if ever wanted, it is its own ADR). The
+2026-07-29 perf pass carried the window to 39.4ms avg / 52ms max by
+structural fixes recorded in ADR-056 Update 4 and in the touched files.
+
+Two governor-adjacent notes from that pass: the gyro shell picked up the
+`.visible = opacity > 0.002` draw-gate parity this file's 2026-07-16
+sweep gave the other painters (chrome subtree, occluder core,
+atmosphere — ~25 draw calls at opacity 0 through the whole dwell), and
+wiring `SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP` / the interior cloud
+into the count ladder remains an open wave-2 option — it would only help
+devices already degraded before the window (probe-seeded `low`, or
+sessions that tripped the ladder earlier), since the in-window EMA can
+never react in time.
+
 ## References
 
 - `lib/hooks/useQualityTier.ts`, `lib/webgl/rendererClass.ts`,

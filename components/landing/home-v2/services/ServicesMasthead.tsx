@@ -180,7 +180,16 @@ export function ServicesMasthead() {
     // its own rect IS the stage rect. Both labs mount the stage in a
     // full-viewport station box (top 0), so this reads parked there and
     // the clock-driven replay keeps working.
+    //
+    // CACHED from the park IntersectionObserver (2026-07-29 perf pass):
+    // this gate runs inside the style MutationObserver — i.e. after every
+    // per-frame stage write, with styles dirty — and the old rect read
+    // forced a full style+layout flush each time. The IO already tracks
+    // exactly this crossing; the rect read survives only as the
+    // pre-first-delivery fallback (mount-time first sync).
+    let parkedCached: boolean | null = null;
     const isParked = () => {
+      if (parkedCached !== null) return parkedCached;
       const r = root.getBoundingClientRect();
       return r.top <= window.innerHeight * PIN_BAND && r.bottom > 0;
     };
@@ -284,6 +293,7 @@ export function ServicesMasthead() {
     const parkObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
+          parkedCached = entry.isIntersecting;
           if (entry.isIntersecting) {
             if (state === "armed" && readClock() >= REVEAL_AT) begin();
           } else if (state !== "armed" && entry.boundingClientRect.top > 0) {
