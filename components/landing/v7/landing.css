@@ -122,6 +122,24 @@
      stay in lockstep. ADR-048 supersedes the old open-ended formula
      (calc(var(--hud-margin) + 8vw)) — capped and chrome-true now. */
   --rail-inset: calc(var(--band-margin) - var(--hud-content-inset));
+  /* ── Instrument band (ADR-048 addendum, owner 2026-07-29) ─────────
+     The BREAKOUT tier for data-dense instrument panels — the editorial
+     grid's "wide figure" width, sitting between the text band (1200)
+     and the full-bleed canvas. Same derivation as the band: floored at
+     the station content box (content still never crosses outboard
+     toward the rail chrome, ADR-031), pinned at the cap above its own
+     crossover (~1800px, measured), centered so the breakout stays symmetric and
+     the seam with band-width sections below reads as hierarchy, not
+     misalignment. Below the crossover it degrades to the content box —
+     at MacBook Air widths the instrument and the band share the same
+     edge, byte-identical to before this tier existed.
+     Consumers: the proof casefile (casefile.css). Interior copy
+     measures must stay fixed when adopting this tier — extra width
+     goes to visualization and registers, never to paragraph measure
+     drift past ~75ch. */
+  --instrument-max: 1440px;
+  --instrument-margin: max(var(--hud-content-inset), calc((100vw - var(--instrument-max)) / 2));
+  --instrument-inset: calc(var(--instrument-margin) - var(--hud-content-inset));
   /* Big-title line (2026-07-16 responsive pass) — the ONE vertical anchor
      every station-scale title band hangs from: the corridor station heads
      (.home-v2-station-header__head) and the services masthead derive from

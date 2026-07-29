@@ -129,15 +129,29 @@
   --fl-col-split: 37.5%;
   --fl-col-r: 40%;
 
-  /* The editorial band. `--rail-inset` ALONE, not
-     `--hud-content-inset + --rail-inset`: the stage box is already inset by
-     the content inset (`.stations` padding, which `#services` breaks out of
-     and the runway re-enters), so adding it again double-insets — visible at
-     1440 as a 290px left edge instead of 145. This is the same value
-     `.services-masthead` takes as `--masthead-inset`; the two must agree or
-     the casefile and the offer sit on different left edges. */
-  left: var(--rail-inset);
-  right: var(--rail-inset);
+  /* The INSTRUMENT band (ADR-048 addendum, owner 2026-07-29) — the breakout
+     tier for data-dense panels, capped at --instrument-max (1440) against
+     the text band's 1200. Below the tier's ~1800px crossover the inset
+     degrades to 0 and the casefile sits on the station content box — at
+     MacBook Air widths this is byte-identical to the --rail-inset era, so
+     the widening only ever expresses on large displays where the 1200 cap
+     was leaving dead margin.
+
+     The inset is the INSTRUMENT inset ALONE, not
+     `--hud-content-inset + --instrument-inset`: the stage box is already
+     inset by the content inset (`.stations` padding, which `#services`
+     breaks out of and the runway re-enters), so adding it again
+     double-insets. The 0px fallback fails to the content box — wider than
+     intended, never overflowing the chrome.
+
+     This DELIBERATELY diverges from `.services-masthead`'s band edge above
+     the crossover (it used to share it): the breakout is symmetric, so
+     during the fold's interleave the wider evidence plane over the
+     band-width offer reads as hierarchy — the editorial grid's wide-figure
+     idiom — not as misalignment. Interior measures hold: the brief column
+     is ~51ch at the cap, inside the 45–75ch window. */
+  left: var(--instrument-inset, 0px);
+  right: var(--instrument-inset, 0px);
 
   /* Narrow-column derivation of the band copy size — a FACTOR on the token,
      never a replacement for it (ADR-048), so retuning the band still retunes

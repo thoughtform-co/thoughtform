@@ -208,3 +208,31 @@ card's top edge sits ≈22svh on MacBook-class viewports (the ADR-044
 bottom at 13svh ≈ 189px vs front card top ≈ 178px at 1280×800).
 `--band-air` is the dial; if more air is ever wanted, the sanctioned
 clearance lever below is `CENTER_Y_OFFSET` (ADR-044), never ring math.
+
+---
+
+## Update (2026-07-29) — the instrument band, a breakout tier
+
+The band gains a sibling: `--instrument-max` (1440px) with
+`--instrument-margin` / `--instrument-inset`, derived exactly as the text
+band is (floored at the station content box — ADR-031's "never outboard
+toward the rail chrome" holds — pinned and centered above its own
+crossover, ~1800px measured).
+
+**Why.** The 1200px text cap is right for reading copy, but a data-dense
+instrument panel leaves growing dead margin above the crossover — on an
+ultrawide, 40 %+ of the viewport. The editorial answer is the classic
+breakout ("wide figure") tier: copy holds its measure, instruments span
+wider grid lines. Below ~1800px the two tiers share an edge by
+construction, so MacBook-class layouts are byte-identical to before the
+tier existed.
+
+**Rules of the tier.** It is a TOKEN, not a per-section improvisation —
+one width, reused by anything that earns it. Symmetric always (the seam
+with band-width sections reads as hierarchy, not misalignment). Interior
+copy measures stay fixed when a surface adopts it — extra width goes to
+visualization and registers, never to paragraph drift past ~75ch.
+
+**Consumers:** the proof casefile (ADR-056; `casefile.css` takes
+`--instrument-inset` where it took `--rail-inset`). The services masthead
+and every other editorial surface stay on the text band.

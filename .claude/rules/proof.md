@@ -64,11 +64,15 @@ inherited its ambient-cover role.
 - **The host is `pointer-events: none`.** Only the tabs and the directory
   rows opt back in. `.svc-ring-hits__hit` is at z 4 and the casefile at z 6,
   so an `auto` host silently swallows every card click once the ring lands.
-- **The band offset is `--rail-inset` ALONE.** The stage box is already
-  inset by `--hud-content-inset`; adding it again double-insets (visible at
-  1440 as a 290px left edge instead of 145). Same value `.services-masthead`
-  takes — the two must agree or the proof and the offer sit on different
-  left edges.
+- **The band offset is `--instrument-inset` ALONE** (ADR-048 addendum,
+  owner 2026-07-29 — the casefile sits on the INSTRUMENT band, the 1440px
+  breakout tier, no longer on the 1200px text band). The stage box is
+  already inset by `--hud-content-inset`; adding it again double-insets
+  (visible at 1440 as a 290px left edge instead of 145). Below the tier's
+  ~1800px crossover the inset is 0 and the casefile shares the masthead's
+  edge exactly as before; above it the casefile deliberately runs 120px
+  wider per side than the offer — symmetric, so the seam reads as
+  hierarchy. Do not "fix" that divergence back to `--rail-inset`.
 - **The reveal needs BOTH the clock and the park gate.** `--svc-proof-in`
   alone crosses its threshold while the sticky stage is still travelling
   (measured on the masthead, twice). And the decode is DESTRUCTIVE — it
