@@ -214,6 +214,24 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       cardHitReachable?.reached,
       `the departed casefile is still hit-testable — blocked by "${cardHitReachable?.blockedBy}"`
     ).toBe(true);
+
+    // ── The REVERSE handoff (ADR-056 Update 3) ───────────────────────────
+    // Backing out of the offer re-enters the dwell with the stage still
+    // PINNED, so the masthead's unpark observer never fires and its
+    // REARM_BELOW floor (derived: REVEAL_AT − hysteresis) is the only thing
+    // that can blank the title. At dwell 0.40 the clock reads ≈0.32 — below
+    // the floor — so the title must already be re-armed (blanked, not merely
+    // faded) while the casefile is repainting. The pre-fix absolute floor
+    // (0.05) held the resolved title over the reassembled casefile for a
+    // third of the dwell, which is exactly what this drive would catch.
+    expect(await scrollCasefileDwell(page, 0.4)).toBe(true);
+    await expect(page.locator(".services-masthead")).toHaveAttribute("data-reveal", "armed");
+    await expect(
+      page.locator(".services-masthead__title-line").first().locator("span").first()
+    ).toHaveText("");
+    // …and the casefile is back in the hit test (the same gate the forward
+    // pass asserts from the other side).
+    await expect(page.locator(".services-stage")).toHaveAttribute("data-proof-live", "1");
   });
 
   test("desktop: ring mode retires the racks; cards expose their CTA", async ({ page }) => {

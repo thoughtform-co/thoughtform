@@ -53,7 +53,12 @@ inherited its ambient-cover role.
   masthead's band and leaves LAST on the LIFO ladder). Overlapping edges
   prove nothing on their own: sample the crossing, where the casefile
   reads ≈0.43 against `--svc-content-in` ≈0.52 (proofP 0.52). The smoke
-  spec pins exactly that.
+  spec pins exactly that. The masthead's `REARM_BELOW` is the REVERSE of
+  the same reading and stays DERIVED (`REVEAL_AT − REARM_HYSTERESIS`,
+  ADR-056 U3): the stage never unparks inside the dwell, so this floor —
+  not the unpark observer — is what blanks the title on the offer →
+  casefile path; the pre-056 absolute floor (0.05) held it on screen for
+  a third of the dwell.
 - **One release ramp gates everything.** `proofRelease` is multiplied into
   `--svc-content-in` (which carries the masthead, plates, designations,
   orbit draw-on and scan interface), into the orbits' `masterOpacityGetter`,

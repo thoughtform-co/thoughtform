@@ -58,16 +58,41 @@ import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2
  *  0.5 is not a delay — it is the SAME scroll moment the earlier 0.28 named
  *  before the release ramp was pulled forward to 0.62 (round 2): this value
  *  is a reading on the release ramp, so it must be retuned WITH the ramp's
- *  edges or the beat silently moves. The moment it pins: proofP ≈ 0.81,
- *  where the casefile's top-band chrome — which leaves LAST on the fold's
- *  LIFO ladder, and which shares this band — is below ~0.3 and sinking, so
- *  the title decodes INTO the fold without ever printing over legible
- *  chrome. Earlier crossings put the decode against the casefile label at
- *  full strength — the one collision this band cannot carry. */
+ *  edges or the beat silently moves. The moment it pins, measured on the
+ *  live page: proofP ≈ 0.50, where the fold has already taken the casefile's
+ *  top-band chrome — which leaves LAST on the fold's LIFO ladder, and which
+ *  shares this band — to ~0.17 and sinking, so the title decodes INTO the
+ *  fold without ever printing over legible chrome. Earlier crossings put the
+ *  decode against the casefile label at full strength — the one collision
+ *  this band cannot carry. */
 const REVEAL_AT = 0.5;
-/** Clock floor that re-arms the reveal for a replay on re-entry (the lab
- *  replay path; in production the unpark observer re-arms first). */
-const REARM_BELOW = 0.05;
+/** Hysteresis below `REVEAL_AT`, in clock units — the ONLY thing separating
+ *  the reverse blank from the forward strike, so the re-arm is a MIRROR of
+ *  the reveal rather than a latch with its own opinion.
+ *
+ *  This was a flat 0.05 floor, and it predates ADR-056: the PARK GATE note
+ *  below assumed the unpark observer always re-armed first in production,
+ *  which was true until the casefile put a 1.2-viewport dwell in FRONT of
+ *  this band. The stage is pinned for that entire dwell, so scrolling back
+ *  out of the offer never unparks — and a floor that was only ever meant to
+ *  serve the lab replay became the governing reverse threshold by accident.
+ *  Measured at vh 900: the title struck at y 8980 and did not blank until
+ *  y 8581 — 399px, more than a third of the dwell, with the title printed at
+ *  full strength over a casefile already 90 %+ reassembled beneath it
+ *  (owner, 2026-07-29: "the services title remains on the screen for a bit
+ *  too long").
+ *
+ *  The gap now buys exactly one thing — jitter immunity at the crossing — so
+ *  size it in PIXELS, not by feel. The release ramp's slope peaks at 1.875
+ *  per unit proofP, so across the 1.2-viewport dwell 0.08 is ~46px of
+ *  scroll: wide enough that a momentum overshoot cannot re-trigger the ~0.9s
+ *  decode, tight enough that the band reads as switching off where it
+ *  switched on. Keep the floor DERIVED — an absolute value here silently
+ *  stops mirroring the moment `REVEAL_AT` is retuned. */
+const REARM_HYSTERESIS = 0.08;
+/** Clock floor that re-arms the reveal — on the way back down the runway,
+ *  and for the lab replay path (which drives the clock to 0 outright). */
+const REARM_BELOW = REVEAL_AT - REARM_HYSTERESIS;
 /**
  * PARK GATE (owner, 2026-07-27 round 2): the decode may only run — and the
  * resolved copy may only be visible — while the sticky stage is PARKED at
@@ -83,6 +108,13 @@ const REARM_BELOW = 0.05;
  * the whole masthead re-arms (instant blank — never a fade on moving
  * text). No scroll listener, no writer — the arrival clock stays the
  * single scroll writer and the observer only fires at the crossing.
+ *
+ * ADR-056 SPLIT THE REVERSE PATH IN TWO, and this observer now covers only
+ * the outer one. Backing out of the whole runway into the corridor still
+ * unparks the stage, and this fires. Backing out of the OFFER into the
+ * casefile does not — the stage stays pinned across the casefile's dwell —
+ * so that crossing belongs entirely to `REARM_BELOW`. Both paths land on
+ * the same `arm()`; only the trigger differs.
  */
 const PIN_BAND = 0.02;
 /** Per-target start stagger (title line 1 → title line 2), s. */

@@ -382,3 +382,44 @@ directory rows 9.5 → 10.5px; every sub-8.5px UI label lifted to the house
 plate foot, reg tags, tool tag/state). Excluded on purpose: the signal
 chart's SVG-internal stamps (drawn-artifact internals, not UI copy) and
 everything already at or above the floor.
+
+---
+
+## Update 3 — the reverse handoff: the re-arm floor mirrors the strike (2026-07-29, owner)
+
+The complaint: "when you scroll back from the services section to the proof
+section, the services title remains on the screen for a bit too long."
+Measured at a 900px viewport: the title struck (forward) at y 8980 and did
+not blank (reverse) until y 8581 — 399px, more than a third of the dwell,
+with the resolved title printed over a casefile already 90 %+ reassembled
+beneath it.
+
+**The root cause is that this ADR split the reverse path in two and only
+one half had an owner.** The masthead's re-arm had two triggers, built
+pre-056: the unpark observer (blank the moment the stage unpins upward)
+and a `REARM_BELOW` clock floor at a flat 0.05 — sized for the lab replay
+path, with the park observer assumed to fire first in production. The
+casefile's dwell broke that assumption: the stage stays PINNED across the
+entire dwell, so backing out of the offer into the casefile never unparks,
+the observer never fires, and the 0.05 floor silently became the governing
+production threshold — 0.45 clock units (≈400px on the release ramp's
+midband slope) below the strike.
+
+**The fix is a derived floor:** `REARM_BELOW = REVEAL_AT −
+REARM_HYSTERESIS` with the hysteresis at 0.08 — ~46px of scroll at the
+ramp's peak slope, wide enough that a momentum overshoot cannot re-trigger
+the ~0.9s decode, tight enough that the band reads as switching off where
+it switched on. Re-measured: blank at y 8900, one 40px probe step after
+the strike point, against 399px before. The forward path is byte-identical
+(the floor only matters with `state !== "armed"`, which forward traversal
+never combines with a sub-threshold clock).
+
+The law, and why the constant is an expression rather than a number:
+**a floor that exists to mirror a strike threshold must be DERIVED from
+it.** An absolute floor near a derived threshold (`REVEAL_AT` is a reading
+on the release ramp — see Update 1's warning) stops mirroring silently on
+the next ramp retune. The smoke spec now drives the reverse crossing —
+back from ring territory into dwell 0.40, where the clock reads ≈0.32 —
+and asserts the masthead is re-armed (blanked) while the casefile is
+live again, so the next regression fails a test instead of a scroll-feel
+review.

@@ -71,11 +71,13 @@ export function CardFaceFrame({
   const stageRef = useRef<HTMLDivElement>(null);
 
   /**
-   * Replay the masthead reveal by re-driving its arrival clock: drop below
-   * REARM_BELOW (0.05) to re-arm, then cross REVEAL_AT (0.2) to fire. Spaced
-   * by a TIMEOUT, not rAF — the two writes must land as separate mutation
-   * records (synchronous writes to the same property coalesce), and rAF is
-   * throttled to a standstill in hidden documents, which strands the masthead
+   * Replay the masthead reveal by re-driving its arrival clock: drop to 0
+   * (below the masthead's REARM_BELOW floor) to re-arm, then to 1 (past its
+   * REVEAL_AT crossing) to fire — the endpoints, not the thresholds, so this
+   * replay survives any retune of the constants. Spaced by a TIMEOUT, not
+   * rAF — the two writes must land as separate mutation records (synchronous
+   * writes to the same property coalesce), and rAF is throttled to a
+   * standstill in hidden documents, which strands the masthead
    * blanked-and-armed during headed verification.
    */
   const replay = useCallback(() => {
