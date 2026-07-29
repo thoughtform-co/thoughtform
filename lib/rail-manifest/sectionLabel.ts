@@ -52,9 +52,16 @@ export interface SectionReadout {
   id: string;
   /** Display label, uppercase (the chrome register is caps). */
   label: string;
-  /** 1-based position in the collapsed sequence, zero-padded. */
+  /**
+   * 1-based position in the collapsed sequence, zero-padded.
+   *
+   * NOT printed anywhere since 2026-07-29 — the detail slot stopped
+   * falling back to `03/06`. Kept because the seat ORDER is a real
+   * property of the sequence and the ADR-056 test asserts through it
+   * that the `proof` row sits immediately before the offer it introduces.
+   */
   num: string;
-  /** Total rows in the collapsed sequence, zero-padded. */
+  /** Total rows in the collapsed sequence, zero-padded. Same status as `num`. */
   total: string;
 }
 
@@ -66,18 +73,25 @@ function pad(n: number): string {
 /**
  * The readout's DETAIL slot — the text left of the section name.
  *
- * One slot, two jobs: the current subsection when the section has one
- * (`navigate //`), and the journey position when it does not (`03/06`).
- * They share an element ON PURPOSE — it makes the swap a plain decode
- * between two strings instead of a conditional mount, so nothing can
- * flicker between the two forms mid-transition, and the `//` decodes
- * away with the word that earned it.
+ * The subsection where the section has one (`navigate //`), and NOTHING
+ * where it does not (owner, 2026-07-29). The slot used to fall back to
+ * the journey position (`03/06`); that is gone — no number, no slash, no
+ * separator of any kind. A section without subsections has nothing to
+ * say in this slot, and printing a coordinate to keep it occupied gave
+ * the corner a second thing to read on most of the journey.
+ *
+ * It stays ONE element rather than a conditional mount, which is what
+ * keeps the swap a plain decode: the outgoing word (and the `//` it
+ * earned) scrambles down to empty instead of unmounting mid-flight.
+ * `.hud__nav__sector__detail:empty` then drops it from the flex row so
+ * the cluster's gap goes with it.
  *
  * The trailing `//` is the house path idiom, carried in the string
- * rather than as its own styled node for exactly that reason.
+ * rather than as its own styled node for exactly that reason — a
+ * separate node would have to be hidden separately.
  */
-export function readoutDetail(readout: SectionReadout, sub?: string | null): string {
-  return sub ? `${sub} //` : `${readout.num}/${readout.total}`;
+export function readoutDetail(sub?: string | null): string {
+  return sub ? `${sub} //` : "";
 }
 
 /**

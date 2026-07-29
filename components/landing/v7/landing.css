@@ -595,9 +595,10 @@
   transition-delay: 170ms;
 }
 /* The DETAIL slot — the subsection (`navigate //`) where the section has
-   one, the journey position (`03/06`) where it does not. ONE element for
-   both (ADR-055 Update 2): it makes the swap a plain decode between two
-   strings, so nothing flickers between the two forms mid-transition.
+   one, and NOTHING where it does not (owner, 2026-07-29: "no number, no
+   slash"). It stays ONE always-mounted element rather than a conditional
+   one, which is what keeps the swap a plain decode — the outgoing word
+   scrambles down to empty instead of unmounting mid-flight.
 
    ALL CAPS (owner, 2026-07-28) — the slot briefly ran lowercase for case
    contrast, but the corner reads as one instrument register and a
@@ -610,24 +611,36 @@
    because `sectionLabel` uppercases it in JS; the sub stays lowercase in
    state so the accessible name reads as words, and is cased here.)
 
-   With both ranks in caps the nominal ratio IS the optical one
-   (cap-height against cap-height), so the lowercase compensation that
-   sized this at 0.85em no longer applies — held there it would have left
-   the two nearly the same size. It drops back onto the corner's own
-   perfect-fourth ramp instead: one rung below the name, exactly as the
-   name sits below the hero links. Links → name → detail now step 22 →
-   16 → 12 at the ceiling, with the drawer rows just under that.
+   SAME SIZE AS THE NAME (owner, 2026-07-29). The slot used to sit one
+   rung below it on the corner's perfect-fourth ramp (16 → 12 at the
+   ceiling); it now shares the name's `1em`, so the readout reads as ONE
+   line of one register rather than a title with a caption.
 
-   Tracking goes back UP (`--track-widest`): caps want the air, and the
-   smaller-plus-wider pairing is the house's small-mono chrome grammar —
-   the rails and survey designations read the same way. Hierarchy rests
-   on SIZE and INK (--dawn-40 against the name's full dawn). Floored at
-   the 8.5px legibility limit for small mono. */
+   Tracking comes back DOWN to the name's `--track-wider` with it. The
+   wider setting was the small-mono pairing — small text wants the air —
+   and at equal size it made the detail measure WIDER than the name and
+   therefore read LARGER, which is the opposite of what equal size is
+   for. The two must move together.
+
+   That leaves INK as the sole carrier of hierarchy (--dawn-40 against
+   the name's full dawn), which is enough: same size, same tracking, one
+   is simply quieter. The 8.5px small-mono floor goes with the 0.75em it
+   was protecting — at 1em this inherits the name's own floor through
+   `--nav-readout-size` (11.5px). */
 .hud__nav__sector__detail {
-  font-size: max(8.5px, 0.75em);
-  letter-spacing: var(--track-widest);
+  font-size: 1em;
+  letter-spacing: var(--track-wider);
   text-transform: uppercase;
   color: var(--dawn-40);
+}
+/* Empty ⇒ gone. An empty inline span has no width, but it is still a flex
+   ITEM, so the cluster's `gap` would survive it and leave the name indented
+   from nothing on every section without subsections — which is most of the
+   journey. `display: none` removes it from the flex formatting context, and
+   the gap goes with it. Not `:blank` (poor support) — the decode writes
+   `""`, never whitespace. */
+.hud__nav__sector__detail:empty {
+  display: none;
 }
 .hud__nav__sector__name {
   position: relative;

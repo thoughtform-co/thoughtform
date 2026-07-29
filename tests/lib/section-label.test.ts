@@ -86,19 +86,16 @@ describe("section readout", () => {
     }
   });
 
-  it("gives the detail slot the subsection, or the position when there is none", () => {
-    const arc = sectionReadout(idxOf("navigate"));
-    expect(readoutDetail(arc, "navigate")).toBe("navigate //");
-    expect(readoutDetail(arc, null)).toBe("01/06");
+  it("gives the detail slot the subsection, and NOTHING when there is none", () => {
+    expect(readoutDetail("navigate")).toBe("navigate //");
+    expect(readoutDetail("workshop")).toBe("workshop //");
 
-    const about = sectionReadout(idxOf("about"));
-    expect(readoutDetail(about, null)).toBe("04/06");
-    expect(readoutDetail(about)).toBe("04/06");
-
-    // One slot for both forms is what keeps the swap a plain decode, so
-    // the two must never render as an empty string.
-    for (const sub of [null, "navigate", "workshop"]) {
-      expect(readoutDetail(sectionReadout(idxOf("services")), sub).length).toBeGreaterThan(0);
+    // No sub ⇒ empty. Not a position, not a separator, not a space
+    // (owner, 2026-07-29). `:empty` is what drops the slot out of the
+    // flex row, and it only matches on a genuinely empty node — so a
+    // whitespace "placeholder" here would silently restore the gap.
+    for (const sub of [null, undefined, ""]) {
+      expect(readoutDetail(sub), String(sub)).toBe("");
     }
   });
 

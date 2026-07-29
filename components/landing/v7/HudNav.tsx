@@ -147,7 +147,7 @@ export function HudNav() {
     const el = sectorRef.current;
     const detailEl = detailRef.current;
     if (!el || !detailEl) return;
-    const detail = readoutDetail(section, section.sub);
+    const detail = readoutDetail(section.sub);
     // On the hero the readout is faded out AND blanked, so scrolling back
     // up can never leave a half-decoded ghost under the returning links —
     // and the next collapse gets a clean empty string to decode from.
@@ -276,9 +276,11 @@ export function HudNav() {
         >
           <span className="hud__nav__sector" aria-hidden="true">
             {/* Both written imperatively by the decode effect — see above.
-                The detail slot carries the subsection (`navigate //`) or,
-                where the section has none, the journey position
-                (`03/06`). */}
+                The detail slot carries the subsection (`navigate //`) and
+                is EMPTY where the section has none (owner, 2026-07-29 —
+                it used to fall back to the journey position). It stays
+                mounted so the outgoing word can decode down to nothing;
+                `:empty` drops it from the flex row at the end. */}
             <span className="hud__nav__sector__detail" ref={detailRef} />
             <span className="hud__nav__sector__name" ref={sectorRef} />
           </span>

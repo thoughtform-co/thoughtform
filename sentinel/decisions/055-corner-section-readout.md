@@ -352,3 +352,78 @@ THE ARC` → `encode //` → `build //` → `advisory // SERVICES` →
 `embedded //` → `keynote //` → `workshop //` → `03/06 ABOUT` →
 `04/06 PROOF` → `05/06 PRACTICE` → `06/06 CONTACT`. 365 unit tests green;
 typecheck, lint and a production build clean.
+
+---
+
+## Update 3 — the two ranks share one size (2026-07-29, owner)
+
+Supersedes Update 2's "Type" section: the detail slot is **`1em`,
+`--track-wider`, `--dawn-40`** — the name's own size and tracking, with
+only ink separating them.
+
+Update 2 put the slot one rung down the corner's perfect-fourth ramp
+(16 → 12 at the ceiling) and defended that as the corner's internal
+scale. The owner's call is that the readout is one line naming one
+place, not a title with a caption under it, so both ranks read at one
+size.
+
+**Tracking had to move with it.** `--track-widest` was the
+smaller-plus-wider small-mono pairing; held at equal size it made the
+detail measure wider than the name and therefore read LARGER — the
+opposite of the point. Size and tracking are one decision here, and this
+is the third time on this element that changing one without the other
+produced the wrong optical result (Update 2 records the other two, both
+about case).
+
+Hierarchy now rests on INK alone, which carries it: same size, same
+tracking, one rank simply quieter at `--dawn-40`.
+
+The `max(8.5px, …)` small-mono floor retires with the `0.75em` it was
+protecting — at `1em` the slot inherits the name's floor through
+`--nav-readout-size` (11.5px).
+
+**Measured** at 1440 / 1100 / 390: detail and name agree on
+`font-size`, `letter-spacing` and line-box height at every width
+(13.088 / 12 / 11.5px). The readout is `white-space: nowrap` and got
+~33 % wider, so the fit was checked too — worst case `NAVIGATE // THE
+ARC` at 320px measures 152px inside the corner, clear at every width.
+(The page's existing horizontal overflow at 320px and 1440px is a
+connector `<circle>`, unchanged by this and pre-dating it.)
+
+---
+
+## Update 4 — no sub, no slot (2026-07-29, owner)
+
+Supersedes the "one slot, two jobs" half of Update 2. `readoutDetail`
+returns the subsection or the **empty string** — the `03/06` fallback is
+gone. Owner: "when there's no sub item, then we shouldn't see anything,
+no number, no slash."
+
+Update 2 kept the position form to give the slot something to hold, on
+the theory that a permanently-occupied slot makes the swap a plain
+decode. Only the first half of that was load-bearing. The slot still
+stays MOUNTED — that is what lets the outgoing word scramble down to
+empty instead of unmounting mid-flight — but it no longer needs
+CONTENT to do it. What the fallback actually bought was a second thing
+to read on most of the journey, since only the Arc and Services have
+subs at all.
+
+**`:empty` is the other half of the change.** An empty inline span has
+no width but is still a flex ITEM, so the cluster's `gap: 0.62em` would
+survive it and leave the name indented from nothing on every other
+section. `.hud__nav__sector__detail:empty { display: none }` removes it
+from the flex formatting context and the gap goes with it. Not `:blank`
+(support), and the decode must therefore write `""` and never a space —
+a whitespace placeholder would silently restore the gap. The unit test
+pins that.
+
+`SectionReadout.num` / `.total` now print nowhere. They are KEPT: the
+seat order is a real property of the collapsed sequence, and the ADR-056
+test asserts through `num` that the `proof` row sits immediately before
+the offer it introduces.
+
+**Measured** at 1440, settled: `advisory // SERVICES` keeps its slot
+(sector 182.1px); `ABOUT`, `PRACTICE`, `CONTACT` and the `PROOF` beat
+all report `textContent === ""`, `display: none`, and **sector width
+exactly equal to the name width** — zero residual gap. The accessible
+name drops the sub cleanly with it (`current section: ABOUT`).
