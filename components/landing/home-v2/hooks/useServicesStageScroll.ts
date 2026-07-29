@@ -61,15 +61,23 @@ const CONTENT_IN_END = 1.0;
 /**
  * Proof casefile envelopes (ADR-056), in the two clocks the stage already has.
  *
- * ARRIVAL is a PRODUCT of both. The dissipate factor (the `CONTENT_IN_*`
- * band) is a pre-gate: the casefile can never appear before the corridor has
- * resolved into the parked mark. The `proofP` factor is the actual timing,
- * and it is why arrival is keyed to runway travel rather than to the
- * dissipate alone — the epilogue signal ("EVERYONE IS RACING TO BUILD THIS
- * CAPABILITY.") exits on `DISSIPATE_BANDS.SIGNAL_OUT` = [0.86, 0.99], so an
- * arrival on the dissipate band OVERLAPS the beat it is answering. Waiting on
- * travel past the park lets the claim leave before the evidence arrives, and
- * makes "a bit later" a distance rather than a curve reshape.
+ * ARRIVAL is a PRODUCT of both. The dissipate factor is a PRE-GATE: the
+ * casefile can never appear before the corridor has resolved into the parked
+ * mark. The `proofP` factor is the actual timing, and it is why arrival is
+ * keyed to runway travel rather than to the dissipate alone — the epilogue
+ * signal ("EVERYONE IS RACING TO BUILD THIS CAPABILITY.") exits on
+ * `DISSIPATE_BANDS.SIGNAL_OUT` = [0.86, 0.99], so an arrival on the dissipate
+ * band OVERLAPS the beat it is answering. Waiting on travel past the park
+ * lets the claim leave before the evidence arrives, and makes the timing a
+ * distance rather than a curve reshape.
+ *
+ * The pre-gate has its OWN edges rather than reusing `CONTENT_IN_*`. Sharing
+ * them made the pre-gate the binding constraint at the front — pulling the
+ * `proofP` band earlier stopped moving anything, because the dissipate factor
+ * was still near 0 there — and `CONTENT_IN_*` cannot be widened to fix that
+ * without re-timing the services copy, which is a different beat entirely.
+ * These edges open earlier and close earlier, so the `proofP` band is what
+ * the arrival actually reads.
  *
  * DEPARTURE and RELEASE ride the same runway share. They are deliberately
  * OFFSET from each other: the casefile finishes fading before the services
@@ -77,8 +85,10 @@ const CONTENT_IN_END = 1.0;
  * the stage is empty for a beat, which is what makes the handover read as a
  * page turn rather than a dissolve.
  */
-const PROOF_IN_START = 0.05;
-const PROOF_IN_END = 0.24;
+const PROOF_GATE_START = 0.58;
+const PROOF_GATE_END = 0.92;
+const PROOF_IN_START = 0.02;
+const PROOF_IN_END = 0.19;
 const PROOF_OUT_START = 0.72;
 const PROOF_OUT_END = 0.86;
 const PROOF_RELEASE_START = 0.86;
@@ -277,7 +287,7 @@ export function useServicesStageScroll(
       // Casefile arrival: dissipate as the pre-gate, runway travel as the
       // timing, so the epilogue's claim is gone before the evidence lands.
       const proofIn =
-        smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate) *
+        smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate) *
         smootherstep(PROOF_IN_START, PROOF_IN_END, proofP);
       const proofOut = smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP);
       setProof(stage, proofIn, proofOut);

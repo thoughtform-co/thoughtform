@@ -80,9 +80,13 @@ in `tests/lib/services-ring-math.test.ts`.
 
 `useServicesStageScroll` gains `--svc-proof-in` and `--svc-proof-out`.
 
-Arrival is a PRODUCT: the `CONTENT_IN_*` dissipate band as a pre-gate (the
-casefile can never appear before the corridor has resolved into the parked
-mark) times a `proofP` band as the actual timing. Keying the timing to
+Arrival is a PRODUCT: a dissipate band as a pre-gate (the casefile can
+never appear before the corridor has resolved into the parked mark) times a
+`proofP` band as the actual timing. The pre-gate carries its OWN edges
+rather than reusing `CONTENT_IN_*` — sharing them made it the binding
+constraint at the front, so pulling the `proofP` band earlier stopped moving
+anything, and `CONTENT_IN_*` cannot be widened to fix that without re-timing
+the services copy, which is a different beat. Keying the timing to
 runway travel rather than to the dissipate is not incidental — the
 epilogue signal exits on `DISSIPATE_BANDS.SIGNAL_OUT` = [0.86, 0.99], so a
 dissipate-band arrival OVERLAPS the beat it is answering. The first cut
