@@ -194,8 +194,6 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
       { em: "Every team briefed on the same forty-five minute frame" },
       ", the judgment that came out of those rooms encoded as Skills the teams own, and production tools built where off-the-shelf software never fit. The same Arc we teach, run at company scale.",
     ],
-    logEntry:
-      "I moved from the AI team into marketing to show AI would elevate them, not replace them.",
     tracks: [
       {
         id: "report",

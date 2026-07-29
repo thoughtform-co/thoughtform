@@ -163,8 +163,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(interleave.caseOpacity).toBeLessThan(0.95);
     expect(interleave.contentIn).toBeGreaterThan(0.1);
     expect(interleave.contentIn).toBeLessThan(0.9);
-    // A partly-closed aperture. `none` — or an inset still at 0% — means the
-    // fold silently regressed to a plain whole-plane fade.
+    // A partly-closed aperture. `none` — or an inset still at rest — means
+    // the fold silently regressed to a plain whole-plane fade. Since the
+    // 2026-07-29 reticle fix the insets rest at −12px (the crosses overhang
+    // the band by a half-arm) and serialize mid-iris as `calc(K% + Mpx)`,
+    // where K is still iris × 50.5 — so the first-% parse below keeps
+    // reading the iris fraction, with the px term invisible to it.
     expect(interleave.clipPath).toContain("inset");
     const irisPct = Number.parseFloat(/([\d.]+)%/.exec(interleave.clipPath ?? "")?.[1] ?? "0");
     expect(irisPct, `the iris should be mid-close, read "${interleave.clipPath}"`).toBeGreaterThan(

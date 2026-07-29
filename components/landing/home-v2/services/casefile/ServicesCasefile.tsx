@@ -201,32 +201,14 @@ export function ServicesCasefile() {
 
   return (
     <section className="fl-case" ref={rootRef} aria-label={`Case file — ${def.client}`}>
-      {/* ── Station chrome ──────────────────────────────────────────── */}
-      <span
-        className="fl-case__label"
-        data-fl-panel
-        style={{ "--ci-off": 0, "--fl-dy": "-22px" } as CSSProperties}
-        data-fl-text="FLG / Field log · 00"
-      >
-        FLG / Field log · 00
-      </span>
-      <span
-        className="fl-case__sys"
-        data-fl-panel
-        style={{ "--ci-off": 0.04, "--fl-dy": "-22px" } as CSSProperties}
-      >
-        <i className="fl-diamond" aria-hidden="true" />
-        <span data-fl-text="TF // Field log — /expeditions/">TF // Field log — /expeditions/</span>
-      </span>
-      <span
-        className="fl-case__code"
-        data-fl-panel
-        style={{ "--ci-off": 0.04, "--fl-dx": "36px" } as CSSProperties}
-        data-fl-text={`Log ${file.logCode} · ${file.state}`}
-      >
-        {`Log ${file.logCode} · ${file.state}`}
-      </span>
-
+      {/* The label/sys/code chrome trio that used to sit above the tabs was
+          REMOVED (owner, 2026-07-29) — the band above the tab strip stays
+          clean, and the tab row is the instrument's first line. The tabs
+          wrapper is therefore now the arrival ladder's first rung (--ci-off
+          0.07, which also makes it the LAST to leave on the departure LIFO —
+          the 0.56 mirror constant in casefile.css comes from the foot and is
+          unaffected). The foot's telemetry line still prints logCode/state,
+          so no data went orphan with the chrome. */}
       <div data-fl-panel style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}>
         <ClientTabs
           tabs={CASEFILE_TABS}
@@ -289,10 +271,10 @@ export function ServicesCasefile() {
         <p className="fl-brief__class" data-fl-text={file.classLine}>
           {file.classLine}
         </p>
+        {/* The `Log.001 >` operator-quote line that followed the body was
+            removed with the chrome (owner, 2026-07-29) — the brief ends on
+            its own paragraph. */}
         <p className="fl-brief__body">{file.brief.map(renderSegment)}</p>
-        <p className="fl-brief__log">
-          <span className="fl-brief__lx">Log.001 &gt;</span> {`“${file.logEntry}”`}
-        </p>
       </div>
 
       {/* ── Left column · directory ─────────────────────────────────── */}

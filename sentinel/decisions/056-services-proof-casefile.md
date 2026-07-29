@@ -342,3 +342,43 @@ from ~52px of scroll to ~185px (the release span is its entrance clock);
 `splitServicesRunway` keeps every ring constant and the ADR-047 `#about`
 seam byte-identical — `ringTravel` is `500svh − vh` whatever the dwell is —
 so resizing the dwell only resizes the page.
+
+---
+
+## Update 2 — the surface decluttered, and the iris regression (2026-07-29, owner)
+
+Four changes in one pass:
+
+**The header chrome trio is gone.** `.fl-case__label` / `__sys` / `__code`
+("FLG / Field log · 00" / "TF // Field log — /expeditions/" /
+"Log TF-24 · On record") are deleted — the band above the tab strip stays
+clean and the tab row is the instrument's first line. The tabs wrapper is
+now the arrival ladder's first rung (`--ci-off` 0.07, so also the LAST to
+leave on the departure LIFO); the `0.56` mirror constant comes from the
+foot and is unaffected. The decode target list drops 5 → 2 (brief title +
+class line). `logCode`/`state` stay consumed by the foot's telemetry —
+no orphaned data. `.fl-desig` and `.fl-diamond` survive (other users).
+
+**The `Log.001 >` operator quote is gone**, from the JSX, the sheet, and
+the content model (`CaseCasefile.logEntry` removed from `types.ts` and
+`loop-earplugs.ts`). The quote grammar survives on the BEATS
+(`CaseBeat.quote`) — a different field, still pinned by the registry test.
+
+**The iris was amputating the corner crosses — a regression from
+Update 1's fold.** The reticles centre on the band edges via a −9.5px
+margin, so half of each paints OUTSIDE `.fl-case`'s border box, and
+`inset(… 0%)` at rest cut exactly that half. The law that emerged: **every
+inset of the iris must rest NEGATIVE, because the registration marks
+overhang the reference box.** The horizontal insets now rest at −12px
+(half-arm + AA) and travel `calc(var(--fl-iris) * (50.5% + 12px) - 12px)`
+— same 50.5 % full close, same smoke-spec parse (the serialized
+`calc(K% + Mpx)` still leads with `K = iris × 50.5`).
+
+**Measured type pass.** `--fl-copy` factor 0.82 → 0.9 (brief ≈14.9px at
+1440, ≈13.5 at 1280, ≈16.2 at 1680 — re-measured against the tick-bound
+brief height at all three, zero clipping with the log line gone);
+directory rows 9.5 → 10.5px; every sub-8.5px UI label lifted to the house
+8.5px small-mono floor (tabs ix, dir head, row meta, readout keys, source,
+plate foot, reg tags, tool tag/state). Excluded on purpose: the signal
+chart's SVG-internal stamps (drawn-artifact internals, not UI copy) and
+everything already at or above the floor.

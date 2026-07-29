@@ -203,8 +203,10 @@ export interface CaseCasefile {
   title: CaseTitle;
   classLine: string;
   brief: readonly CaseSegment[];
-  /** The operator's own line, first person, one sentence. */
-  logEntry: string;
+  /* `logEntry` (the operator's first-person `Log.001 >` line) was removed
+     2026-07-29 (owner) along with the header chrome — the brief ends on its
+     own paragraph. The quote grammar survives on the BEATS (`CaseBeat.quote`),
+     which is a different field and still renders. */
   tracks: readonly CaseTrack[];
 }
 
