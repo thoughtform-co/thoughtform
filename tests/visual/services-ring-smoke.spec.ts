@@ -102,8 +102,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
 
-    // Mid-dwell: the casefile owns the stage.
-    expect(await scrollCasefileDwell(page, 0.5)).toBe(true);
+    // The settle, before the fold opens at 0.13. There is no "mid-dwell" to
+    // sample any more: since round 3 the release owns the ENTIRE dwell (the
+    // runway used to carry 1.7 viewports of dead scroll ahead of it), so the
+    // only stretch where the casefile is uncontested is smootherstep's flat
+    // first sliver.
+    expect(await scrollCasefileDwell(page, 0.1)).toBe(true);
     await page.waitForTimeout(1400);
 
     const during = await page.evaluate(() => {
@@ -131,16 +135,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(secondRow).toHaveAttribute("aria-selected", "true");
 
     // THE INTERLEAVE (2026-07-29). The casefile's fold and the offer's
-    // assembly deliberately OVERLAP — the departure runs 0.66 → 0.88 of the
-    // dwell and the release 0.62 → 1.0, opening just under the fold so the
-    // offer is already drawing as the panels start to leave (owner, round
-    // 2). Sampling inside that overlap is the only assertion that fails if
-    // the windows are ever pulled back apart into a fade-then-pop, which is
-    // the handoff the owner rejected. 0.82 is the crossing: measured
-    // caseOpacity ≈ 0.43 against content-in ≈ 0.53. Sample the VALUES here,
-    // never the window edges — smootherstep is nearly flat across its first
-    // third, so overlapping edges alone prove nothing.
-    expect(await scrollCasefileDwell(page, 0.82)).toBe(true);
+    // assembly deliberately OVERLAP — the departure runs 0.13 → 0.66 of the
+    // dwell and the release owns all of it, so the offer is already drawing
+    // as the panels start to leave. Sampling inside that overlap is the only
+    // assertion that fails if the windows are ever pulled back apart into a
+    // fade-then-pop, which is the handoff the owner rejected. 0.52 is the
+    // crossing: measured caseOpacity ≈ 0.43 against content-in ≈ 0.52.
+    // Sample the VALUES here, never the window edges — smootherstep is
+    // nearly flat across its first third, so overlapping edges alone prove
+    // nothing.
+    expect(await scrollCasefileDwell(page, 0.52)).toBe(true);
     await page.waitForTimeout(1000);
 
     const interleave = await page.evaluate(() => {

@@ -153,21 +153,27 @@ export const SERVICES_PROOF_CASEFILE = true;
  * How many viewports of the `#services` runway the casefile holds before the
  * ring arrives.
  *
- * 2.8, not 2: the reading window has to survive the two choreographies at
- * either end of the dwell. The casefile FOLDS shut (per-panel, LIFO, plus the
- * iris) and the offer ASSEMBLES on a ladder, and since 2026-07-29 the two
- * OVERLAP — the fold runs 0.66 → 0.88 of this runway and the release 0.62 →
- * 1.0, opening just under the fold so the first rungs of the offer's ladder
- * are already drawing as the panels start to leave. That handoff
- * costs ~0.95 viewports of runway; at 2.8 the full-opacity reading window is
- * still ~1.7, enough to read the brief and click through the directory while
- * the stage is pinned. (It was 2.4 while the departure was a plain fade with
- * a dead beat behind it.)
+ * 1.2, and the number came DOWN from 2.8 (owner, 2026-07-29 round 3). The
+ * dwell is NOT a reading window and never needed to be one: `--svc-proof-in`
+ * saturates 100px into the runway, because the panels assemble during the
+ * APPROACH on the dissipate, so the casefile is already settled when the
+ * stage pins. A reader who wants to read it simply stops — the stage is
+ * PINNED. Runway spent before the handoff opens is therefore not patience,
+ * it is dead scroll, and 2.8 with a 0.62 release start bought 1550px of it:
+ * 1.7 viewports where scrolling did nothing at all.
+ *
+ * So the whole dwell IS the handoff — the release spans [0, 1] and the fold
+ * sits at 0.13 → 0.66 inside it. The ramp ends up with MORE scroll in
+ * absolute pixels (~1080 at a 900px viewport, against ~958 before) on a
+ * runway less than half as long: the page loses ~1440px AND the transition
+ * answers the first scroll.
  *
  * This is the ONLY tuning knob for the dwell. It lengthens the page and moves
  * nothing else: the split re-derives the ring's progress over the remainder,
- * so widening it can never re-time a card. Read by `services.css` (as the
+ * so changing it can never re-time a card. Read by `services.css` (as the
  * `--svc-proof-runway` default) and by `useServicesStageScroll`; keep the two
  * in step — the CSS owns the runway's height, this constant owns the split.
+ * ⚠ It also rescales what a `PROOF_OUT_*` / `PROOF_RELEASE_*` fraction means
+ * in pixels, so re-measure the handoff after touching it.
  */
-export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 2.8 : 0;
+export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 1.2 : 0;

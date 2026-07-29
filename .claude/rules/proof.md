@@ -33,23 +33,27 @@ inherited its ambient-cover role.
   safe by construction, but `SERVICES_PROOF_RUNWAY_VH` and
   `--svc-proof-runway` must move together; the CSS is the one that has to
   exist pre-hydration.
-- **The fold and the release OVERLAP, and you tune them by VALUE.**
-  `PROOF_OUT` 0.66 → 0.88 against `PROOF_RELEASE` 0.62 → 1.0 on a 2.8-vh
-  dwell — the release opens UNDER the fold's edge so its flat smootherstep
-  start is spent before the panels visibly leave (~0.72), and the offer is
-  already drawing as they do (owner, round 2). Overlapping edges prove
-  nothing — `smootherstep` is nearly flat across its first third, so a
-  release that merely starts before the fold ends contributes ~0.06 while
-  the fold runs (measured, first attempt). Sample the crossing: at proofP
-  0.82 the casefile reads 0.43 opacity with the aperture 42 % closed
-  against `--svc-content-in` ≈ 0.53. The smoke spec pins that crossing.
-- **Two thresholds are READINGS ON THE RELEASE RAMP** — retune them with
-  its edges or they silently name a different scroll moment: the corner
-  readout's `PROOF_OWNS_BELOW` (`useActiveSection.ts`, 0.75 ⇒ flip at
-  proofP ≈ 0.87, as the plane finishes) and the masthead's `REVEAL_AT`
-  (`ServicesMasthead.tsx`, 0.5 ⇒ decode at proofP ≈ 0.81, once the
-  casefile's top-band chrome has sunk — it shares the masthead's band and
-  leaves LAST on the LIFO ladder).
+- **The DWELL IS THE HANDOFF — it is not a reading window.**
+  `PROOF_RELEASE` [0, 1] with `PROOF_OUT` 0.13 → 0.66 inside it, on a
+  1.2-vh dwell. `--svc-proof-in` is 0.94 AT the runway top and 0.998 80px
+  past it (the panels assemble on the DISSIPATE, during the approach), so
+  any runway ahead of the release is DEAD SCROLL — the 2.8-vh/0.62-start
+  tuning hid 1550px of it and the owner called it: "if you scroll, nothing
+  really happens". The stage is pinned; a reader who wants to read stops
+  scrolling. Scroll distance buys choreography, never patience.
+  `smootherstep`'s flat first third is the settle hold (~200px to the
+  fold), so never add an explicit hold in front of the release.
+- **Place the fold BY VALUE ON THE RELEASE RAMP, never by eye.** 0.13 and
+  0.66 are where the release reads ≈0.016 and ≈0.78 — the crossings the
+  choreography was validated at. Two derived thresholds ride that ramp and
+  survive a reshape only if you do this: the corner readout's
+  `PROOF_OWNS_BELOW` (`useActiveSection.ts`, 0.75 ⇒ flip as the plane
+  finishes) and the masthead's `REVEAL_AT` (`ServicesMasthead.tsx`, 0.5 ⇒
+  decode once the casefile's top-band chrome has sunk — it shares the
+  masthead's band and leaves LAST on the LIFO ladder). Overlapping edges
+  prove nothing on their own: sample the crossing, where the casefile
+  reads ≈0.43 against `--svc-content-in` ≈0.52 (proofP 0.52). The smoke
+  spec pins exactly that.
 - **One release ramp gates everything.** `proofRelease` is multiplied into
   `--svc-content-in` (which carries the masthead, plates, designations,
   orbit draw-on and scan interface), into the orbits' `masterOpacityGetter`,

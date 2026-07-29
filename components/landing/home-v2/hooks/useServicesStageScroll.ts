@@ -86,19 +86,31 @@ const CONTENT_IN_END = 1.0;
  * separation but LESS: the casefile now FOLDS INWARD (per-panel LIFO travel +
  * a scrubbed iris, casefile.css) and the offer ASSEMBLES on a ladder
  * (`--sc`, services.css), so they are no longer two blocks that would smear
- * through each other — they are two choreographies that interlock. Release
- * starts at 0.62 — UNDER the fold's own 0.66 opening edge — so by the time
- * the panels are visibly folding (~0.72) the release has climbed out of
- * smootherstep's flat start and the first ladder rungs are already drawing
- * (owner, 2026-07-29 round 2: "when the proof elements start collapsing,
- * that's when you should see these elements coming into view"). The first
- * cut started the release at 0.70 and the offer only became visible around
- * 0.80, well after the fold was underway. The overlap has to be judged this
- * way because `smootherstep` is nearly flat across its first third: a
- * release that merely starts before the fold ends still contributes almost
- * nothing while the fold is running (measured — out 0.87 against content-in
- * 0.06). Judge this band by the VALUES at the crossing, never by the edges:
- * at proofP 0.82 the casefile reads 0.43 against content-in ≈ 0.53.
+ * through each other — they are two choreographies that interlock.
+ *
+ * THE RELEASE OWNS THE WHOLE DWELL (owner, 2026-07-29 round 3: "when you're
+ * in the proof section and you scroll, the transition should immediately
+ * start"). Measured, `--svc-proof-in` saturates 100px into the runway — the
+ * panels assemble during the APPROACH, on the dissipate, so the casefile is
+ * already settled when the stage pins. Every runway pixel before the release
+ * opened was therefore dead: at a 0.62 start on the old 2.8-viewport dwell,
+ * that was 1550px — 1.7 viewports of scrolling with nothing to show for it,
+ * which is exactly the complaint. So the release now spans [0, 1] and the
+ * dwell shrank to 1.2 viewports. Both moves point the same way: the ramp
+ * gets MORE scroll in absolute pixels (~1080 vs ~958) on a runway less than
+ * half as long.
+ *
+ * `smootherstep`'s flat first third IS the settle hold — ~140px where the
+ * casefile reads as a stable object before the fold opens at 0.13. Do not
+ * add a hold in front of it; that is the dead zone coming back.
+ *
+ * The fold's edges are then placed by VALUE ON THE RELEASE RAMP, not by
+ * eye: 0.13 and 0.66 are where the release reads ≈0.016 and ≈0.78, the two
+ * crossings the previous tuning was validated at. That is what keeps
+ * `REVEAL_AT` and `PROOF_OWNS_BELOW` — both readings on this ramp — correct
+ * through a reshape that is nowhere near proportional. Judge this band by
+ * the VALUES at the crossing, never by the edges: at proofP 0.52 the
+ * casefile reads ≈0.43 against content-in ≈0.52.
  *
  * The release is also the RING'S ENTRANCE CLOCK (`CorridorArmillary` feeds it
  * into the entrance envelope), so the cards arrive MOVING on their ADR-029
@@ -113,9 +125,9 @@ const CONTENT_IN_END = 1.0;
  */
 const PROOF_GATE_START = 0.52;
 const PROOF_GATE_END = 0.95;
-const PROOF_OUT_START = 0.66;
-const PROOF_OUT_END = 0.88;
-const PROOF_RELEASE_START = 0.62;
+const PROOF_OUT_START = 0.13;
+const PROOF_OUT_END = 0.66;
+const PROOF_RELEASE_START = 0.0;
 const PROOF_RELEASE_END = 1.0;
 
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local

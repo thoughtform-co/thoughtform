@@ -85,13 +85,15 @@
    * is unchanged. Only the page gets longer. Keep this default and the TS
    * constant in step; the hook owns the split, this owns the height.
    *
-   * 2026-07-29: 240 → 280svh. The casefile's departure became a FOLD and the
-   * offer's arrival became a LADDER (both scrubbed), and both need room —
-   * the old dwell spent its last third on a 0.34-viewport fade followed by a
-   * 0.34-viewport pop. Widening the dwell is safe by construction (the split
-   * re-derives the ring's domain), but this and SERVICES_PROOF_RUNWAY_VH must
-   * move together, and THIS is the one that has to exist pre-hydration. */
-  --svc-proof-runway: 280svh;
+   * 2026-07-29: 240 → 280 → 120svh. The departure became a FOLD and the
+   * arrival a LADDER (both scrubbed), which first argued for MORE room —
+   * until measurement showed the casefile finishes assembling 100px in, so
+   * everything before the handoff opened was dead scroll. The handoff now
+   * owns the whole dwell and the dwell is less than half as long. Changing
+   * it is safe by construction (the split re-derives the ring's domain), but
+   * this and SERVICES_PROOF_RUNWAY_VH must move together, and THIS is the one
+   * that has to exist pre-hydration. */
+  --svc-proof-runway: 120svh;
   min-height: calc(var(--svc-proof-runway) + 500svh);
 }
 

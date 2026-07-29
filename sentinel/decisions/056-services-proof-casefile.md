@@ -298,22 +298,38 @@ The WebGL rings get the same treatment through `orbitReleaseLead()` —
 the armature is fully drawn just before the earliest card entrance window
 (0.58) opens and the cards fly INTO a frame that already exists.
 
-**The windows now overlap.** `PROOF_OUT` 0.66 → 0.88 against
-`PROOF_RELEASE` 0.62 → 1.0, on a dwell widened 2.4 → 2.8 viewports. The
-release opens just UNDER the fold's edge (owner, round 2: "when the proof
-elements start collapsing, that's when you should see these elements
-coming into view") — smootherstep spends its flat first third climbing
-before the fold turns visible at ~0.72, so the panels never leave an
-already-empty stage and the offer never waits on one. Measured at proofP
-0.82, the casefile is at 0.43 opacity with its aperture 42 % closed while
-`--svc-content-in` is ≈ 0.53 and the rings are drawing.
+**The release owns the whole dwell, and the dwell is short.**
+`PROOF_RELEASE` [0, 1] with `PROOF_OUT` 0.13 → 0.66 inside it, on a dwell
+cut 2.8 → **1.2** viewports.
 
-Two thresholds are READINGS ON THE RELEASE RAMP and must be retuned with
-its edges, or they silently name a different scroll moment: the corner
-readout's `PROOF_OWNS_BELOW` (0.75 ⇒ flip at proofP ≈ 0.87, as the plane
-finishes) and the masthead's `REVEAL_AT` (0.5 ⇒ decode at proofP ≈ 0.81,
-after the casefile's top-band chrome — which leaves LAST — has sunk below
-~0.3; earlier and the title prints over legible chrome in the same band).
+This is the third and load-bearing retune (owner: "when you're in the proof
+section and you scroll, the transition should immediately start — right
+now, if you scroll, nothing really happens"). Measurement settled it:
+`--svc-proof-in` is at 0.944 AT the runway top and 0.998 eighty pixels
+past it, because the panels assemble on the DISSIPATE during the approach.
+The casefile is fully built before the stage even pins. Everything the
+runway held ahead of the release was therefore dead scroll — 1550px, 1.7
+viewports of nothing, on the previous tuning.
+
+The dwell was never a reading window and did not need to be one: the stage
+is PINNED, so a reader who wants to read simply stops scrolling. Scroll
+distance buys choreography, not patience. Cutting the runway to 1.2 and
+letting the release span all of it gives the ramp MORE scroll in absolute
+pixels (~1080 at a 900px viewport, against ~958) on a runway less than half
+as long — the page loses ~1440px and the first scroll gets an answer.
+
+`smootherstep`'s flat first third IS the settle hold: measured, the fold
+opens ~200px past the pin, about two wheel notches. Do not add an explicit
+hold in front of the release — that is the dead zone returning.
+
+⚠ **Two thresholds are READINGS ON THE RELEASE RAMP** and must be re-checked
+against its shape, or they silently name a different scroll moment: the
+corner readout's `PROOF_OWNS_BELOW` (0.75) and the masthead's `REVEAL_AT`
+(0.5). Both survived this reshape unchanged, and not by luck — the fold's
+new edges were CHOSEN as the proofP where the release reads ≈0.016 and
+≈0.78, the two crossings the previous tuning had been validated at. Place
+the fold by value on the ramp and the derived thresholds come along; place
+it by eye and they do not.
 
 ⚠ **Judge this band by the VALUES at the crossing, never by the edges.**
 The first attempt used 0.60/0.82 against 0.70/1.0 — the windows overlapped
@@ -322,6 +338,7 @@ the fold's end the release had contributed 0.06. Overlapping edges prove
 nothing. The smoke spec samples the crossing for this reason.
 
 Second-order effects, all checked: the ring's visible fly-in stretches
-from ~52px of scroll to ~280px (the release span is its entrance clock);
+from ~52px of scroll to ~185px (the release span is its entrance clock);
 `splitServicesRunway` keeps every ring constant and the ADR-047 `#about`
-seam byte-identical, so the wider dwell only lengthens the page.
+seam byte-identical — `ringTravel` is `500svh − vh` whatever the dwell is —
+so resizing the dwell only resizes the page.
