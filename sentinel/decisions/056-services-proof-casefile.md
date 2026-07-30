@@ -734,3 +734,70 @@ remains far inside the 39.4 ms wave-1 baseline. If a clean re-measure ever
 does show a regression here, the first thing to look at is the decode target
 moving into the tab strip (`--ci-off` 0.07, the earliest rung), since that is
 the only behavioural addition in this update.
+
+## Update 8 — the films open in a lightbox (2026-07-30, owner)
+
+Owner: _"when you click on a video, it just shows a pop-up that shows the full
+aspect ratio."_ Two problems, one root cause — the plate rect is a fixed short
+band off the HUD rail, so two 16:9 films side by side land at ~310px. That is
+a thumbnail, and the height constraint was also fighting the tile's own
+aspect ratio and cropping the poster.
+
+### The tile was cropped by a flex rule, not by `object-fit`
+
+`.fl-filmcell__frame` carried `aspect-ratio: 16/9` AND `flex: 1 1 auto`
+inside a height-constrained column. Growing to fill the column wins over the
+ratio, so the box stopped being 16:9 and `cover` cut the frame. Now
+`flex: 0 0 auto` — the ratio governs and the cell top-aligns. Measured:
+310 x 174, ratio **1.778**, exactly 16:9, and it still fits the plate.
+
+The separate `__frame` wrapper is gone: **the tile IS the button.** `.fl-film`
+carries the box, the border, the backdrop and the pointer opt-in. (Removing
+the wrapper without moving its rules left the button `position: absolute`
+with nothing to position against — caught by the layout probe, not by eye.)
+
+### The overlay MUST portal to `document.body`
+
+`.fl-case` carries the iris `clip-path`, a translating arrival ladder, and an
+`overflow: hidden` plate. An overlay inside that subtree is clipped by all
+three, and `position: fixed` does not rescue it — a clipped or transformed
+ancestor becomes the containing block. `createPortal(…, document.body)` is
+the only thing that works here; it is not a style preference. Verified:
+`parentElement === document.body`, `closest('.fl-case') === null`, and
+`elementFromPoint` at the video's centre returns the video.
+
+Grammar is ADR-006's focus overlay at landing scope — dashed border, the
+mandated three-part shadow, radius 0, `modalFocusIn` on the CONTENT not the
+backdrop. The vars and keyframes are re-declared in `casefile.css` because
+the originals live in `.astrogation`, which the marketing route never loads.
+
+### `overflow: hidden` is NOT a scroll lock — measured
+
+The obvious lock failed the test: with `document.documentElement.style
+.overflow = "hidden"` the page still scrolled **739px**. It suppresses the
+scrollbar, not scrolling. What actually holds it is non-passive `wheel` and
+`touchmove` listeners that `preventDefault`, live only while the dialog is
+open. Keys are deliberately left alone — focus is inside the dialog, where
+space and arrows belong to the video's controls. `scrollY` is never
+reassigned (no position:fixed swap), so every corridor clock resumes exactly
+where it was.
+
+The `data-proof-live` observer stays as the safety net: if anything scrolls
+the stage out from under an open film, the lightbox goes with it rather than
+leaving a film playing over a departed surface.
+
+### Focus restore lost a race
+
+`close()` focused the trigger synchronously, and React tore the portal down
+on the following commit — removing the focused node hands focus to `<body>`,
+undoing the restore. Measured as `activeElement.className === ""`. The
+restore now runs in a `requestAnimationFrame`, after the unmount.
+
+### Verified
+
+Lightbox 1120 x 630 (ratio 1.778) and playing; wheel of 900px moves `scrollY`
+0px and leaves it open; backdrop click and Escape both close, both restore
+focus to the correct tile (`aria-label "Play DJ Neighbour · Loop ATL"`), both
+clear the lock, and scroll resumes from the same position. Zero `<video>`
+elements left in the document after close. verify 383/383,
+services-ring-smoke 18 passed, no page errors.

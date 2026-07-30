@@ -105,6 +105,16 @@ inherited its ambient-cover role.
   stores IDs and the renderer resolves them against `PROJECT_CASES`, which
   stays canonical for the four tools. A copy change is a content-module edit
   plus `npx vitest run tests/lib/cases-registry.test.ts`.
+- **The film lightbox PORTALS to `document.body` (ADR-056 Update 8).** Not a
+  style preference: `.fl-case` carries the iris `clip-path`, a translating
+  arrival ladder and an `overflow: hidden` plate, and a clipped or
+  transformed ancestor becomes the containing block even for
+  `position: fixed`. Anything that must escape this surface portals out.
+  Two traps proven by measurement, not eye: **`overflow: hidden` on `<html>`
+  is not a scroll lock** (the page still scrolled 739px — non-passive
+  `wheel`/`touchmove` `preventDefault` is what holds it), and **focus restore
+  must wait a frame** (focusing the trigger synchronously loses to React's
+  portal unmount, which hands focus to `<body>`).
 - **Media plates are poster-first and self-hosted (ADR-056 Update 5).**
   `stills` shows work WHOLE — tiles fit by height, `aspect-ratio: 4/5`, and
   in NATURAL COLOUR; the `tools` duotone is a UI-capture recipe, never a

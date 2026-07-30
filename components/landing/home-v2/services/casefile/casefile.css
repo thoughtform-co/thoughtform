@@ -768,7 +768,7 @@
    where nothing else is moving. */
 @supports (backdrop-filter: blur(2px)) {
   .services-stage[data-proof-settled] .fl-panel__viz,
-  .services-stage[data-proof-settled] .fl-filmcell__frame {
+  .services-stage[data-proof-settled] .fl-film {
     backdrop-filter: blur(7px);
     background: rgba(8, 7, 6, 0.5);
   }
@@ -1127,15 +1127,6 @@
   flex: 1 1 0;
   max-width: 52%;
 }
-.fl-filmcell__frame {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  min-height: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-  border: 1px solid rgba(202, 165, 84, 0.28);
-  background: rgba(5, 4, 3, 0.6);
-}
 .fl-filmcell__label {
   margin-top: 7px;
   font-family: var(--fl-mono);
@@ -1152,36 +1143,38 @@
   color: var(--fl-ink-dim);
 }
 
-/* The interactive opt-in — third and last on this surface, after
-   `.fl-tabs__tab` and `.fl-row`. Safe because `.fl-case` is
-   `visibility: hidden` until `[data-proof-live]`, and hidden subtrees do not
-   hit-test: that is what stops the departed casefile eating ring clicks. */
+/* The tile IS the button — there is no separate frame element. It carries
+   the 16:9 box, the border and the backdrop, and it is the interactive
+   opt-in: third and last on this surface after `.fl-tabs__tab` and
+   `.fl-row`. Safe because `.fl-case` is `visibility: hidden` until
+   `[data-proof-live]`, and hidden subtrees do not hit-test — which is what
+   stops the departed casefile eating ring clicks.
+
+   `flex: 0 0 auto`, NOT `1 1 auto` (2026-07-30): growing to fill the column
+   overrode `aspect-ratio`, so the box stopped being 16:9 and the poster got
+   cropped — the crop the owner saw. The ratio governs now and the cell
+   top-aligns; `contain` on the poster is the belt, so any future box shape
+   letterboxes against the plate instead of cutting the frame. */
 .fl-film {
   appearance: none;
   margin: 0;
   padding: 0;
-  border: 0;
-  background: none;
   cursor: pointer;
   pointer-events: auto;
-  position: absolute;
-  inset: 0;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(202, 165, 84, 0.28);
+  background: rgba(5, 4, 3, 0.6);
+}
+.fl-film__poster {
   display: block;
   width: 100%;
   height: 100%;
-}
-.fl-film__poster,
-.fl-film__video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.fl-film__video {
-  pointer-events: auto;
-  position: absolute;
-  inset: 0;
-  background: #000;
+  object-fit: contain;
 }
 
 /* Play cue — the brand's diamond, not a rounded media glyph. */
@@ -1207,6 +1200,135 @@
 .fl-film:focus-visible {
   outline: 1px solid var(--gold);
   outline-offset: -2px;
+}
+
+/* ══ Film lightbox ═════════════════════════════════════════════════════ */
+
+/* Rendered through a PORTAL to `document.body`, so these rules are the only
+   ones in this sheet that live OUTSIDE `.fl-case`. They have to: the case
+   carries the ADR-056 iris (`clip-path`), a translating arrival ladder and
+   an `overflow: hidden` plate, and a clipped or transformed ancestor becomes
+   the containing block even for `position: fixed`. Nothing here may be
+   nested under `.fl-case` or it stops working.
+
+   Grammar is ADR-006's focus overlay, at landing scope: dashed border, the
+   mandated three-part shadow, radius 0, `modalFocusIn` on the CONTENT (never
+   the backdrop). The vars are re-declared locally because the originals live
+   in `.astrogation`, which the marketing route never loads. */
+.fl-lightbox {
+  --fl-lb-border: rgba(235, 227, 214, 0.3);
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 64px);
+  background: rgba(10, 9, 8, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* Its own stacking + hit surface: the portal escapes `.fl-case`'s
+     `pointer-events: none`, so this must take the pointer explicitly. */
+  pointer-events: auto;
+  animation: flLightboxIn 0.22s ease-out;
+}
+.fl-lightbox:focus {
+  outline: none;
+}
+
+.fl-lightbox__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(1120px, 100%);
+  animation: modalFocusIn 0.3s ease-out;
+}
+
+.fl-lightbox__label {
+  font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+}
+.fl-lightbox__label i {
+  font-style: normal;
+  color: var(--gold);
+}
+
+/* THE POINT OF THE WHOLE OVERLAY: the film at its own shape. `aspect-ratio`
+   plus a viewport-bounded `max-height` means the box is 16:9 until height is
+   the binding constraint, and `contain` keeps it 16:9 after that — a short
+   window letterboxes rather than crops. */
+.fl-lightbox__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100svh - clamp(120px, 18vh, 200px));
+  object-fit: contain;
+  background: #000;
+  border: 1px dashed var(--fl-lb-border);
+  border-radius: 0;
+  box-shadow:
+    0 0 0 1px rgba(235, 227, 214, 0.05),
+    0 0 60px rgba(202, 165, 84, 0.1),
+    0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.fl-lightbox__close {
+  align-self: flex-end;
+  appearance: none;
+  margin: 0;
+  padding: 6px 14px;
+  cursor: pointer;
+  background: none;
+  border: 1px solid rgba(202, 165, 84, 0.35);
+  border-radius: 0;
+  font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold);
+  transition:
+    background var(--duration-normal, 120ms) var(--ease-out, ease),
+    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-lightbox__close:hover,
+.fl-lightbox__close:focus-visible {
+  background: rgba(202, 165, 84, 0.14);
+  border-color: var(--gold);
+}
+.fl-lightbox__close:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+@keyframes flLightboxIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* ADR-006's flexbox-centred variant, re-declared at landing scope. */
+@keyframes modalFocusIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-lightbox,
+  .fl-lightbox__frame {
+    animation: none;
+  }
 }
 
 /* ══ Signal chart ══════════════════════════════════════════════════════ */
