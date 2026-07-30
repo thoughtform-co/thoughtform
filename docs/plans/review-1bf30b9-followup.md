@@ -22,6 +22,15 @@ An xhigh-effort adversarial code review of commit `1bf30b9` ("feat(services, abo
 Only the base `.voidwalker__name` rule was restyled. The max-width-640 override `font-size: clamp(28px, 7vw, 40px)` at `components/landing/v7/landing.css:9573-9575` (mirrored `public/prototypes/v7/landing-v7-motion.html:4022-4024`) was untouched. Below 640px the static `.voidwalker` fallback is the ONLY about surface (ADR-045; deck stage gated ≥961px): name resolves up to 40px vs the masthead's 26px clamp floor, and the 641→640 crossing jumps 26px→40px.
 **Fix:** retune the ≤640 override to track the masthead clamp (same face = same clamp), in both landing.css and the motion prototype.
 
+**DONE.** `landing.css` + `landing-v7-motion.html` landed with the original
+pass; `landing-claude-workshop.html:4010` was MISSED and swept 2026-07-30 —
+that fork parses its **own** CSS (`getClaudeWorkshopContent`), so the sweep
+has to name it explicitly. All three now read `clamp(26px, 3vw, 44px)`.
+Verified live on `/claude-workshop`: base and ≤640 rules resolve to the same
+clamp, and the name computes 26px at both 641 and 640 (was 26 → 40) —
+matching `.services-masthead__title`. This is finding 5.1's drift mode
+firing a second time; the token extraction is still open.
+
 ### 1.3 Gold glow clipped flat in the deck stage — CONFIRMED
 
 New `text-shadow: 0 0 22px rgba(202,165,84,0.18)` on `.voidwalker__name` (`landing.css:9384`) is cropped by `about-stage.css:117-124`, which permanently applies `clip-path: inset(0 0 0 calc((1-var(--ci))*100%))` to every `.about-stage__copy` child — `inset(0)` still clips painting outside the border box, and the h2's ~48px line box has no headroom for a 22px blur. The masthead one section earlier shows the full halo.

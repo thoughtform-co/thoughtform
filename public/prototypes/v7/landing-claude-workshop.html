@@ -4008,7 +4008,13 @@ html { scroll-behavior: smooth; }
     max-width: none;
   }
   .voidwalker__name {
-    font-size: clamp(28px, 7vw, 40px);
+    /* Track the masthead face (`.services-masthead__title`, same clamp) so
+       the name matches the services title below 640px and never jumps at
+       the 641→640 boundary (was clamp(28px, 7vw, 40px)). Kept in lockstep
+       with `landing-v7-motion.html` and `landing.css` — this fork parses
+       its OWN CSS, so a sweep that misses it leaves /claude-workshop on
+       the old face. */
+    font-size: clamp(26px, 3vw, 44px);
   }
   .voidwalker__bio {
     font-size: 16px;
