@@ -131,6 +131,16 @@ const PROOF_OUT_END = 0.66;
 const PROOF_RELEASE_START = 0.0;
 const PROOF_RELEASE_END = 1.0;
 
+/** Where the casefile counts as SETTLED — published as `data-proof-settled`
+ *  on the stage, and the only gate for effects too expensive to run while
+ *  the arrival ladder is still travelling (today: the plate's
+ *  `backdrop-filter`). Measured, `--svc-proof-in` is 0.944 at the runway top
+ *  and 0.998 eighty pixels in, so ~0.06 of a 1.2-viewport dwell clears the
+ *  travel with margin while still landing inside `smootherstep`'s flat first
+ *  third — the settle hold, where nothing else is moving and switching a
+ *  backdrop on cannot read as a jump. */
+const PROOF_SETTLED_AT = 0.06;
+
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local
 // `smoothstep`/`smootherstep` below keep their own implementations because
 // of the `edge1 <= edge0` degenerate-edge guard.
@@ -197,6 +207,7 @@ export function useServicesStageScroll(
     let currentProofIn = -1;
     let currentProofOut = -1;
     let currentProofLive: boolean | null = null;
+    let currentProofSettled: boolean | null = null;
 
     const isInert = () =>
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
@@ -263,7 +274,7 @@ export function useServicesStageScroll(
       }
       return proofHostEl;
     };
-    const setProof = (stage: HTMLElement, inV: number, outV: number) => {
+    const setProof = (stage: HTMLElement, inV: number, outV: number, settled = false) => {
       const host = proofHost(stage);
       if (host) {
         if (Math.abs(inV - currentProofIn) >= WRITE_EPS) {
@@ -286,6 +297,20 @@ export function useServicesStageScroll(
         if (live) stage.setAttribute("data-proof-live", "1");
         else stage.removeAttribute("data-proof-live");
         currentProofLive = live;
+      }
+      // SETTLED — the stage is pinned and the arrival ladder has finished
+      // travelling. Separate from `live` because `live` turns on during the
+      // APPROACH, while the panels are still sliding in: the casefile's
+      // `backdrop-filter` hangs off this instead, and a blur on a translating
+      // element re-snapshots its backdrop every frame. Measured, blurring
+      // through the arrival cost +2.5..3.5ms avg on dissipate-approach and
+      // took frames over 33ms from 3% to 13-16% of that window; gated here it
+      // is paid only in the dwell, which has the headroom. Boolean and
+      // change-guarded, so this is one attribute write per crossing.
+      if (settled !== currentProofSettled) {
+        if (settled) stage.setAttribute("data-proof-settled", "1");
+        else stage.removeAttribute("data-proof-settled");
+        currentProofSettled = settled;
       }
     };
 
@@ -315,7 +340,7 @@ export function useServicesStageScroll(
         // it never gates the accordion below it.
         // Resolved, released, and LIVE — here the casefile is static flow
         // content above the accordion, so it must stay hit-testable.
-        setProof(stage, 1, 0);
+        setProof(stage, 1, 0, true);
         servicesRingProgressRef.current.progress = 0;
         servicesRingProgressRef.current.proofRelease = 1;
         // Static flow content, nothing in front of the instrument.
@@ -356,7 +381,7 @@ export function useServicesStageScroll(
       // in WITH it (see the constants block for the owner's supersession).
       const proofIn = smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate);
       const proofOut = smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP);
-      setProof(stage, proofIn, proofOut);
+      setProof(stage, proofIn, proofOut, proofP > PROOF_SETTLED_AT);
       // What the casefile is actually painting — the mark and its haze dim
       // against THIS, not against the release, so the instrument recedes as
       // the surface arrives rather than the moment the stage parks.
@@ -422,6 +447,7 @@ export function useServicesStageScroll(
       currentProofIn = -1;
       currentProofOut = -1;
       currentProofLive = null;
+      currentProofSettled = null;
       write();
     };
     document.addEventListener("visibilitychange", onVisibility);

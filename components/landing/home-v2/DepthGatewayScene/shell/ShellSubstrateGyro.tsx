@@ -58,9 +58,20 @@ import { SERVICES_PROOF_CASEFILE } from "../../unifiedServicesInstrument";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
 /** How far the interior haze recedes behind the proof casefile (ADR-056).
- *  Lighter than the mark's own `PROOF_MARK_DIM` — the haze sits directly
- *  under the readout row, where the copy is smallest. */
-const PROOF_INTERIOR_DIM = 0.55;
+ *  Deepened 0.55 -> 0.70 with the media plates (owner, 2026-07-30): once the
+ *  panels carry photography the bed behind them competes instead of
+ *  supporting. */
+const PROOF_INTERIOR_DIM = 0.7;
+
+/** And the SURFACE bed — the dotted shell / globe dots / equator that fill
+ *  the frame from inside the sphere for the whole services section. This one
+ *  was MISSING (owner, 2026-07-30: "the wireframe brandmark needs to be a bit
+ *  more dimmed in this section"): the interior and the mark both receded
+ *  behind the casefile while the surface stayed at its full ambient floor,
+ *  so the loudest layer behind the copy was the one nothing dimmed.
+ *  Rides `proofPresence` like the other two, so it is identity (1) outside
+ *  the dwell and the offer gets its bed back at full strength. */
+const PROOF_SURFACE_DIM = 0.55;
 import {
   getSmoothedAccretionLayers,
   getSmoothedDissipate,
@@ -1048,9 +1059,17 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // Services content, for the entire section. At dissipate 0 this is
     // identity (×1), so the parked / pre-exit epilogue pose is
     // byte-identical to its pre-ADR-021 self.
-    const surfaceMul = servicesAmbient
-      ? servicesAmbientOpacityMultiplier(servicesAmbientLevel, SERVICES_AMBIENT_SURFACE_LEVEL)
-      : dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_SURFACE_LEVEL);
+    // ADR-056 Update 6: the casefile recedes the surface bed too. Same
+    // `proofPresence` factor as the interior and the mark, so this is
+    // identity everywhere outside the dwell and byte-identical flag-off.
+    const proofSurfaceFade = SERVICES_PROOF_CASEFILE
+      ? 1 - PROOF_SURFACE_DIM * servicesRingProgressRef.current.proofPresence
+      : 1;
+    const surfaceMul =
+      (servicesAmbient
+        ? servicesAmbientOpacityMultiplier(servicesAmbientLevel, SERVICES_AMBIENT_SURFACE_LEVEL)
+        : dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_SURFACE_LEVEL)) *
+      proofSurfaceFade;
 
     // Temporally-smoothed reveals (motionFollower) — the gimbal's
     // ring cascade, globe Y-bloom, wrap-spin, and shell settle always

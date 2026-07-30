@@ -341,7 +341,7 @@ const ABOUT_FLIP_MARK_DIM = 0.45;
  *  `--svc-content-in`, so the mark comes back up exactly as the offer
  *  arrives. Identity (1) whenever the release is 1 — which is every frame
  *  outside the dwell, the whole corridor, the inert path, and flag-off. */
-const PROOF_MARK_DIM = 0.45;
+const PROOF_MARK_DIM = 0.62;
 
 /** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
  *  reveals the kept dome's depth, so the mark reads as a living 3D object

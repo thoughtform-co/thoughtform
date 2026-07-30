@@ -609,3 +609,79 @@ and `Directory` builds DOM ids from them.
   dissipate-approach 24.4 (p95 33.6) · casefile-dwell 20.0 · ring-zone 17.0.
   No segment regressed. Note the probe never opens a media row, so it
   measures the structural change only — the media cost is the table above.
+
+## Update 6 — the work leads, the bed recedes (2026-07-30, owner)
+
+Three owner calls on the surface Update 5 shipped.
+
+### 1. The studio is row one; the report closes the file
+
+Order is the directory, and **the first row is what the casefile opens on** —
+so the default panel is now the strongest single piece of evidence rather
+than a summary of it. `00_MISSION-REPORT.LOG` moves to the bottom, where a
+summary belongs; its `00_` keeps it reading as the master log rather than a
+sixth project.
+
+Cost, measured: the three studio stills (23.6 kB) now load at PAGE LOAD
+instead of on approach, because the default plate mounts with the casefile.
+That is ~6 % of what the five service photos already cost on the same page,
+and it means the panel is ready when the visitor arrives instead of popping.
+Accepted deliberately. The films still cost nothing until their row is
+opened, and the mp4s nothing until a click.
+
+### 2. Frosted glass on the plates — gated on SETTLED, not LIVE
+
+The plates float over a live WebGL bed and the 0.4 scrim was not enough
+separation once they carried photography. They now take a `backdrop-filter`.
+An opaque cover is still forbidden — the iris exists to reveal that bed.
+
+**The gate is the whole story.** `backdrop-filter` re-snapshots its backdrop
+every frame the element moves, and `.fl-panel__viz` is a `[data-fl-panel]`:
+it TRANSLATES through the entire arrival, which happens inside
+dissipate-approach — already the GPU-bound outlier. Measured on the prod
+build, `dissipate-approach` avg / share of frames over 33 ms:
+
+|                                                 | avg         | >33 ms  |
+| ----------------------------------------------- | ----------- | ------- |
+| no frost                                        | 22.2 ms     | 3 %     |
+| frost, `[data-proof-live]`, blur 9px + saturate | 24.6 ms     | 13 %    |
+| frost, `[data-proof-live]`, blur 6px            | 25.9 ms     | 16 %    |
+| **frost, `[data-proof-settled]`, blur 7px**     | **21.8 ms** | **4 %** |
+
+Two things that reads: **radius is not the driver, the snapshot is** (6px
+measured worse than 9px — that spread is the noise floor of "a blur is
+running at all"), and gating it correctly is worth more than tuning it.
+
+So the hook publishes a second attribute, `data-proof-settled`, at
+`PROOF_SETTLED_AT = 0.06` of the dwell — ~80 px in, past the travel
+(`--svc-proof-in` is 0.944 at the runway top and 0.998 eighty pixels later)
+and still inside `smootherstep`'s flat first third, the settle hold, where
+nothing else is moving and switching a backdrop on cannot read as a jump.
+The blur is then paid in `casefile-dwell` (18.2 vs 17.3 ms), which has the
+headroom. `data-proof-live` is unchanged and still owns `visibility`,
+`will-change` and the smoke's assertions — **do not merge the two gates**,
+they exist at different times on purpose.
+
+### 3. The surface bed was never dimmed
+
+Owner: _"our wireframe brandmark needs to be a bit more dimmed in this
+section and then increase back again when you scroll to the services
+section."_ The mechanism already existed and rested on `proofPresence` — but
+only for two of the three layers. `PROOF_MARK_DIM` dimmed the mark and
+`PROOF_INTERIOR_DIM` the interior haze, while the SURFACE bed (dotted shell,
+globe dots, equator — the sparse layer that fills the frame from inside the
+sphere for the whole services section) ran at its full ambient floor. The
+loudest layer behind the copy was the one nothing touched.
+
+- `PROOF_MARK_DIM` 0.45 → **0.62**
+- `PROOF_INTERIOR_DIM` 0.55 → **0.70**
+- `PROOF_SURFACE_DIM` **0.55, new** — `surfaceMul` now takes the same
+  `proofPresence` factor as the other two.
+
+All three are identity at `proofPresence` 0, so the corridor, the offer, the
+inert path and flag-off are byte-identical, and the bed comes back to full
+strength exactly as the offer arrives — which is the second half of what was
+asked for, and was already free once the factor existed.
+
+Second-order benefit: with the bed at 45 % behind the plate there is much
+less left to blur, which is part of why 7px reads as enough.

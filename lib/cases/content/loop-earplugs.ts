@@ -244,34 +244,14 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
       { em: "Every team briefed on the same forty-five minute frame" },
       ", the judgment encoded as Skills they own, and tools built where software never fit.",
     ],
+    /* ORDER IS THE DIRECTORY, and the first row is what the casefile OPENS
+       ON. The work leads (owner, 2026-07-30): the studio is the strongest
+       single piece of evidence, so it is row one and the default panel. The
+       mission report closes the file instead of opening it — it summarises
+       what the rows above already showed, which is the right place for a
+       summary. Its `00_` keeps it reading as the master log rather than a
+       sixth project. */
     tracks: [
-      {
-        id: "report",
-        file: "00_MISSION-REPORT.LOG",
-        meta: "2.4 KB",
-        project: "The engagement",
-        icon: "doc",
-        preview: "Preview — 00_mission-report.log",
-        vizLabel: "Viz — adoption signal",
-        visual: {
-          kind: "signal",
-          points: ADOPTION_SIGNAL,
-          t0: "T0 — embedded · 2024",
-          now: "Active — 2026.07",
-        },
-        readouts: [
-          { value: "22", label: "workshops run" },
-          { value: "42", label: "Skills encoded" },
-          { value: "4", label: "production tools" },
-          { value: "5 → 130+", label: "people on the layer" },
-        ],
-        context: [
-          { k: "Role", v: "Embedded AI lead" },
-          { k: "Mandate", v: "Adoption · tooling" },
-          { k: "Governance", v: "Legal · IT" },
-        ],
-        source: "Source — metrics.dat · sampled quarterly · rev 2026.07",
-      },
       {
         id: "studio",
         file: "01_STUDIO/",
@@ -439,6 +419,33 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         ],
         source: "Source — metrics.dat · sampled quarterly · rev 2026.07",
         stamp: { ord: "—", phase: "Metrics", ref: "MET-01" },
+      },
+      {
+        id: "report",
+        file: "00_MISSION-REPORT.LOG",
+        meta: "2.4 KB",
+        project: "The engagement",
+        icon: "doc",
+        preview: "Preview — 00_mission-report.log",
+        vizLabel: "Viz — adoption signal",
+        visual: {
+          kind: "signal",
+          points: ADOPTION_SIGNAL,
+          t0: "T0 — embedded · 2024",
+          now: "Active — 2026.07",
+        },
+        readouts: [
+          { value: "22", label: "workshops run" },
+          { value: "42", label: "Skills encoded" },
+          { value: "4", label: "production tools" },
+          { value: "5 → 130+", label: "people on the layer" },
+        ],
+        context: [
+          { k: "Role", v: "Embedded AI lead" },
+          { k: "Mandate", v: "Adoption · tooling" },
+          { k: "Governance", v: "Legal · IT" },
+        ],
+        source: "Source — metrics.dat · sampled quarterly · rev 2026.07",
       },
     ],
   },

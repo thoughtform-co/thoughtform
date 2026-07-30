@@ -744,6 +744,32 @@
   background: rgba(5, 4, 3, 0.4);
 }
 
+/* FROSTED GLASS (owner, 2026-07-30). The plate floats over a live WebGL bed
+   — the parked mark, its orbits and the substrate shell all read straight
+   through the 0.4 scrim, and the sparse surface bed in particular used to
+   crawl behind the evidence. A backdrop blur separates the two planes
+   without an opaque cover (which ADR-056 forbids: the iris exists to REVEAL
+   that bed).
+   GATED ON `[data-proof-settled]`, NOT `[data-proof-live]`. `backdrop-filter`
+   re-snapshots its backdrop every frame the element moves, and this is a
+   `[data-fl-panel]` — it TRANSLATES through the whole arrival, which happens
+   inside dissipate-approach, already the GPU-bound outlier. Measured on the
+   prod build: blurring through the arrival cost +2.4ms avg at 9px and +3.7ms
+   at 6px (radius is NOT the driver — the snapshot is), and took frames over
+   33ms from 3% to 13-16% of that window. `data-proof-settled` turns on ~80px
+   into the dwell, once the ladder has stopped travelling, so the cost lands
+   in casefile-dwell where the headroom is. The plate keeps its scrim either
+   way, so the unsupported / not-yet-settled path is the previous look rather
+   than a hole — nothing pops except the blur itself, during the settle hold
+   where nothing else is moving. */
+@supports (backdrop-filter: blur(2px)) {
+  .services-stage[data-proof-settled] .fl-panel__viz,
+  .services-stage[data-proof-settled] .fl-filmcell__frame {
+    backdrop-filter: blur(7px);
+    background: rgba(8, 7, 6, 0.5);
+  }
+}
+
 .fl-panel__foot {
   position: absolute;
   left: 0;

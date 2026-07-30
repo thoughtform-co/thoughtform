@@ -116,6 +116,26 @@ inherited its ambient-cover role.
   rAF. `.fl-film` is the THIRD and LAST pointer-events opt-in, safe only
   because the host is `visibility: hidden` until `data-proof-live`. CSP is
   `media-src 'self' blob:`, so video can never move to a bucket.
+- **`data-proof-live` and `data-proof-settled` are DIFFERENT gates — never
+  merge them.** `live` turns on during the APPROACH, while the ladder is
+  still travelling, and owns `visibility`, `will-change` and the smoke's
+  assertions. `settled` turns on ~80px into the dwell (`PROOF_SETTLED_AT`)
+  and exists for effects too expensive to run on a moving element — today
+  the plates' `backdrop-filter`. Measured: blurring through the arrival cost
+  +2.4 to +3.7ms avg on dissipate-approach and took >33ms frames from 3% to
+  13–16%; radius barely moved it, because the per-frame backdrop SNAPSHOT is
+  the cost, not the blur. Anything new that samples its backdrop goes behind
+  `settled`.
+- **The casefile dims THREE layers, not two.** `PROOF_MARK_DIM` (the mark),
+  `PROOF_INTERIOR_DIM` (the haze) and `PROOF_SURFACE_DIM` (the dotted-shell
+  bed — added 2026-07-30; it was the loudest layer behind the copy and the
+  only one nothing dimmed). All ride `proofPresence` and are identity at 0,
+  so the offer gets its bed back for free. Deepen them together.
+- **Row order IS the directory, and row one is the DEFAULT PANEL.** The
+  studio leads and the mission report closes the file (owner, 2026-07-30).
+  Consequence to keep in mind when reordering: the first row's plate mounts
+  with the casefile, so putting a media row first moves its bytes to page
+  load (23.6 kB today, accepted).
 - **The directory holds EIGHT rows and no more without a tick move.** The
   brief/directory seam is `--fl-t6` (moved from t7 when the eighth row
   landed — it was already clipping `METRICS.DAT` by 14px at 1440×800 with
