@@ -357,12 +357,18 @@
    it. The underline is the one solid gold mark on the plane — it carries
    STATE, where everything else here is structure. ═══════════════════════ */
 
+/* The strip's BOTTOM seats on tick 2, where `.fl-rule--section` runs, so the
+   active tab's underline lands on the ladder. Height and top are one var so
+   they can never drift apart. Raised 34 -> 44px (owner, 2026-07-30) to carry
+   the client name at display size — it is the ONLY place the client is named
+   now, so it stopped being chrome. */
 .fl-tabs {
+  --fl-tabs-h: 44px;
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(var(--fl-t2) - 34px);
-  height: 34px;
+  top: calc(var(--fl-t2) - var(--fl-tabs-h));
+  height: var(--fl-tabs-h);
   display: flex;
   align-items: flex-end;
   gap: clamp(18px, 2.4vw, 34px);
@@ -383,8 +389,10 @@
   align-items: baseline;
   gap: 8px;
   font-family: var(--fl-mono);
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  /* The client identity, at display size. Tracking tightens as the size goes
+     up — 0.2em was set for 10px chrome and reads as a gap at 15. */
+  font-size: clamp(12px, 1.05vw, 15px);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(235, 227, 214, 0.32);
   transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
@@ -397,10 +405,13 @@
   outline-offset: 3px;
 }
 .fl-tabs__ix {
-  /* 8.5px floor — the house small-mono legibility limit (owner type pass,
-     2026-07-29; every sub-floor UI label in this sheet was lifted to it). */
-  font-size: 8.5px;
-  opacity: 0.75;
+  /* Stays subordinate to the name beside it — an ordinal, not a label. The
+     8.5px house floor is a FLOOR (owner type pass, 2026-07-29), so this may
+     rise with the name; it must not track it 1:1 or the two read as one
+     string. */
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  opacity: 0.7;
 }
 .fl-tabs__tab[data-on] {
   color: var(--gold);
@@ -527,10 +538,18 @@
   z-index: 2;
 }
 
+/* The brief's display heading. Carries the SELECTED TRACK's project since
+   2026-07-30 (the client moved to the tab strip) — so unlike every other
+   block in this column it changes on a row click, and it MUST NOT WRAP: the
+   brief is height-boxed against tick 6, so a second line would push the
+   class line and reflow the body under it. `project` is pinned ≤20 chars by
+   the registry test, which at the 24px cap is ~290px against a ~340px
+   column; `nowrap` is the belt to that braces. */
 .fl-brief__title {
   margin: clamp(9px, 1.5svh, 15px) 0 0;
   display: flex;
   align-items: baseline;
+  white-space: nowrap;
   /* No gap: the gold full stop is part of the wordmark, not a sibling. */
   gap: 0;
   font-family: var(--fl-mono);
@@ -545,21 +564,6 @@
 .fl-brief__dot {
   color: var(--gold);
   font-weight: 700;
-}
-
-/* The selected row's project, under the client name (2026-07-30). Gold and
-   sentence-case so it reads as a NAME between the display-type client above
-   and the all-caps mono class line below — three ranks, three treatments. */
-.fl-brief__project {
-  margin: clamp(4px, 0.6svh, 7px) 0 0;
-  font-family: var(--fl-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gold);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .fl-brief__class {

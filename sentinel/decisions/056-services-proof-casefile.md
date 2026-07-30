@@ -685,3 +685,52 @@ asked for, and was already free once the factor existed.
 
 Second-order benefit: with the bed at 45 % behind the plate there is much
 less left to blur, which is part of why 7px reads as enough.
+
+## Update 7 — the client is named once (2026-07-30, owner)
+
+The brief's display heading said `LOOP EARPLUGS.` while the tab strip
+directly above it also said `LOOP EARPLUGS` — the biggest slot in the left
+column spent on something already on screen. Owner: make the tab carry the
+client at display size, and give the heading to the project.
+
+- **`.fl-tabs__tab` 10px → `clamp(12px, 1.05vw, 15px)`**, tracking 0.2em →
+  0.1em (0.2 was set for chrome and reads as a gap at 15px). The strip's
+  height moves 34 → 44px through a new `--fl-tabs-h`, which `top` also
+  reads, so the active tab's underline stays seated on tick 2 where
+  `.fl-rule--section` runs. `.fl-tabs__ix` goes 8.5 → 9.5px — it must rise
+  with the name but NOT 1:1, or the ordinal and the label read as one string.
+- **`.fl-brief__title` now renders `track.project`** + the gold full stop.
+  `.fl-brief__project` (the 10.5px gold line Update 5 added) is deleted — one
+  slot, not two.
+- **`CaseCasefile.title` is REMOVED.** It existed only to feed that heading;
+  `tab` is the last client label and there is no dead field left behind.
+- **The decode moved to the tab name.** It is per-CLIENT, which is exactly
+  the granularity the reveal effect caches at (dep `[def.slug]`), so unlike
+  the heading it can never go stale on a row switch — which is why the
+  heading itself is deliberately NOT a `[data-fl-text]` target. Two targets
+  still: tab name + class line.
+- **`project` is pinned ≤20 chars** (was 24) and the heading is `nowrap`.
+  At the 24px cap, 20 chars is ~290px against a ~340px column; the brief is
+  height-boxed against tick 6, so a wrap would reflow everything under it.
+
+Verified at 1280×720 / 1440×800 / 1920×1080: all eight headings swap on row
+click, zero brief clip, zero title overflow, zero row clip, tab strip does
+not overflow its band.
+
+### A measurement caveat, recorded honestly
+
+The frame probe was NOT conclusive for this change and should be re-run on a
+cool machine before anyone quotes it. Across this session the rig degraded
+monotonically — `corridor-mid`, which the casefile cannot touch, climbed
+16.8 → 19.1 ms while builds and headless browsers ran back to back. A
+same-session A/B measured `dissipate-approach` at 25.9 ms (HEAD) vs 28.2 and
+27.6 ms (this change) against a control that moved +0.7 to +1.7 ms over the
+same window, so roughly 1.5 ms is unattributed.
+
+What argues against a real regression: **style recalc/s (0.74 vs 0.75) and
+layout counts (190 vs 191) are identical between the two builds** — the
+change adds no style or layout work, and it removes a DOM node. Everything
+remains far inside the 39.4 ms wave-1 baseline. If a clean re-measure ever
+does show a regression here, the first thing to look at is the decode target
+moving into the tab strip (`--ci-off` 0.07, the earliest rung), since that is
+the only behavioural addition in this update.

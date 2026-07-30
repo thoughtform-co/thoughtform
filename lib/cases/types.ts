@@ -194,10 +194,11 @@ export interface CaseTrack {
   file: string;
   /** The row's right-hand meta, e.g. "22 WORKSHOPS". */
   meta: string;
-  /** Human name for this row, shown under the client name in the brief —
-   *  the filename says `01_STUDIO/`, this says what that IS. Keep it ≤24
-   *  chars: the brief column is height-boxed, so a second line pushes the
-   *  class line and reflows everything under it. */
+  /** Human name for this row — the filename says `01_STUDIO/`, this says
+   *  what that IS. Since 2026-07-30 this is the brief's DISPLAY HEADING (the
+   *  client moved to the tab), so keep it ≤20 chars: at the 24px cap that is
+   *  ~290px against a ~340px column, and the slot must never wrap — the
+   *  brief is height-boxed, so a second line reflows everything under it. */
   project: string;
   icon: "doc" | "dir";
   /** Panel head, left slot. */
@@ -226,7 +227,11 @@ export interface CaseCasefile {
   /** TF-<year of first contact>. */
   logCode: string;
   state: string;
-  title: CaseTitle;
+  /* `title` (the client wordmark as a display heading) was removed
+     2026-07-30 (owner). The client is named ONCE, by the tab strip, which
+     now carries it at display size — so the brief's heading slot belongs to
+     the SELECTED TRACK's `project` instead. `tab` is the only client label
+     left, and it is the decode target. */
   classLine: string;
   brief: readonly CaseSegment[];
   /* `logEntry` (the operator's first-person `Log.001 >` line) was removed

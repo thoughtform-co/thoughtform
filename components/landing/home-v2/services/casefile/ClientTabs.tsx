@@ -77,7 +77,14 @@ export function ClientTabs({ tabs, activeSlug, onSelect, controls }: ClientTabsP
             }}
           >
             <span className="fl-tabs__ix">{t.ix}</span>
-            <span className="fl-tabs__name">{t.tab}</span>
+            {/* Decode target (2026-07-30). The client name moved here from
+                the brief heading, and the reveal's scramble came with it —
+                this is per-CLIENT, which is exactly the granularity the
+                effect caches at (dep `[def.slug]`), so unlike the heading it
+                can never go stale on a row switch. */}
+            <span className="fl-tabs__name" data-fl-text={t.tab}>
+              {t.tab}
+            </span>
           </button>
         );
       })}

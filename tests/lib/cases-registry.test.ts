@@ -157,10 +157,12 @@ describe("cases registry (ADR-054)", () => {
         expect(t.context.length).toBeGreaterThan(0);
         expect(t.source.length).toBeGreaterThan(0);
         expect(t.file.length).toBeGreaterThan(0);
-        // The brief column is height-boxed, so a project title that wraps
-        // pushes the class line and reflows everything under it.
+        // `project` is the brief's DISPLAY HEADING since 2026-07-30, and the
+        // brief column is height-boxed — a title that wraps pushes the class
+        // line and reflows everything under it. 20 chars at the 24px cap is
+        // ~290px against a ~340px column.
         expect(t.project.length, `${c.slug}/${t.id} project`).toBeGreaterThan(0);
-        expect(t.project.length, `${c.slug}/${t.id} project`).toBeLessThanOrEqual(24);
+        expect(t.project.length, `${c.slug}/${t.id} project`).toBeLessThanOrEqual(20);
         for (const row of t.context) {
           // The dotted leader needs a non-wrapping value, so a long one runs
           // into the next column of the three-up register.

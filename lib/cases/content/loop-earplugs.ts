@@ -234,7 +234,6 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
     tab: "Loop Earplugs",
     logCode: "TF-24",
     state: "On record",
-    title: { pre: "Loop Earplugs", em: "." },
     classLine: "AI adoption · marketing → company-wide · 2024 — active",
     // `report.lede` verbatim, with one clause marked for the gold wash.
     // Re-typed as segments rather than sliced out of the string so the

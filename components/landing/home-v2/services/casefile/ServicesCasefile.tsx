@@ -279,19 +279,22 @@ export function ServicesCasefile() {
         data-fl-panel
         style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
       >
-        {/* The `Brief — expedition NN` designation was removed 2026-07-30
-            (owner): it named the format, not the work. The slot under the
-            client name now carries the SELECTED ROW's project instead — the
-            directory says `01_STUDIO/`, this says what that is. */}
-        <h3 className="fl-brief__title">
-          <span data-fl-text={file.title.pre ?? ""}>{file.title.pre}</span>
-          {file.title.em ? <b className="fl-brief__dot">{file.title.em}</b> : null}
-        </h3>
-        {/* Deliberately NOT a `data-fl-text` decode target. The reveal effect
+        {/* THE HEADING IS THE PROJECT, not the client (owner, 2026-07-30).
+            The client is named once, by the tab strip above, which carries it
+            at display size — repeating it here spent the brief's biggest slot
+            on something already on screen. The `Brief — expedition NN`
+            designation that used to sit above went the same way: it named the
+            format, not the work.
+
+            Deliberately NOT a `data-fl-text` decode target. The reveal effect
             caches those nodes once per client (dep `[def.slug]`), so a
-            track-reactive target would go stale on the first row switch. It
-            swaps instantly, matching the keyed right column. */}
-        <p className="fl-brief__project">{track.project}</p>
+            track-reactive target would go stale on the first row switch — the
+            decode lives on the tab name, which IS per-client. This swaps
+            instantly, matching the keyed right column. */}
+        <h3 className="fl-brief__title">
+          <span>{track.project}</span>
+          <b className="fl-brief__dot">.</b>
+        </h3>
         <p className="fl-brief__class" data-fl-text={file.classLine}>
           {file.classLine}
         </p>
