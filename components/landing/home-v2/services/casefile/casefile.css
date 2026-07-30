@@ -110,6 +110,11 @@
   /* Tick heights, absolute from the stage top. Names are the ladder index,
      so `--fl-t8` really is the 9th tick — the bearing-5 major. */
   --fl-t2: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.16667);
+  /* The brief/directory seam. Moved t7 -> t6 (2026-07-30) when the directory
+     went to eight rows: at t7 the list needed 231px and had 190, and it was
+     ALREADY clipping METRICS.DAT by 14px at 1440x800 with seven. The brief
+     body was trimmed to match — the seam is one line, both sides move. */
+  --fl-t6: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.5);
   --fl-t7: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.58333);
   --fl-t8: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.66667);
   --fl-t11: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.91667);
@@ -440,7 +445,7 @@
 .fl-rule--brief {
   left: 0;
   width: var(--fl-col-l);
-  top: var(--fl-t7);
+  top: var(--fl-t6);
   background: repeating-linear-gradient(
     to right,
     rgba(202, 165, 84, 0.5) 0 1.5px,
@@ -517,7 +522,7 @@
   left: 0;
   width: var(--fl-col-l);
   top: var(--fl-body-top);
-  height: calc(var(--fl-t7) - var(--fl-body-top) - clamp(11px, 1.5svh, 18px));
+  height: calc(var(--fl-t6) - var(--fl-body-top) - clamp(8px, 1.1svh, 14px));
   overflow: hidden;
   z-index: 2;
 }
@@ -542,8 +547,23 @@
   font-weight: 700;
 }
 
+/* The selected row's project, under the client name (2026-07-30). Gold and
+   sentence-case so it reads as a NAME between the display-type client above
+   and the all-caps mono class line below — three ranks, three treatments. */
+.fl-brief__project {
+  margin: clamp(4px, 0.6svh, 7px) 0 0;
+  font-family: var(--fl-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .fl-brief__class {
-  margin: clamp(8px, 1.2svh, 11px) 0 0;
+  margin: clamp(5px, 0.7svh, 8px) 0 0;
   font-family: var(--fl-mono);
   font-size: 8.5px;
   letter-spacing: 0.22em;
@@ -576,8 +596,8 @@
   position: absolute;
   left: 0;
   width: var(--fl-col-l);
-  top: calc(var(--fl-t7) + clamp(9px, 1.3svh, 14px));
-  height: calc(var(--fl-split-end) - var(--fl-t7) - clamp(9px, 1.3svh, 14px));
+  top: calc(var(--fl-t6) + clamp(9px, 1.3svh, 14px));
+  height: calc(var(--fl-split-end) - var(--fl-t6) - clamp(9px, 1.3svh, 14px));
   overflow: hidden;
   z-index: 2;
 }
@@ -586,7 +606,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   font-family: var(--fl-mono);
   font-size: 8.5px;
   letter-spacing: 0.24em;
@@ -625,7 +645,10 @@
   grid-template-columns: 20px 1fr auto;
   gap: 0 12px;
   align-items: center;
-  padding: clamp(4px, 0.6svh, 8px) 8px;
+  /* Tightened from clamp(4px, 0.6svh, 8px) for the eight-row directory
+     (2026-07-30). The 10.5px type stays — the owner's 2026-07-29 pass made
+     this a primary reading surface, so density comes out of the padding. */
+  padding: clamp(3px, 0.45svh, 7px) 8px;
   text-align: left;
   font-family: var(--fl-mono);
   /* 10.5px, up from 9.5 (owner type pass, 2026-07-29) — the directory is a
@@ -1018,6 +1041,142 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(202, 165, 84, 0.7);
+}
+
+/* ══ Stills — shipped work, shown whole ════════════════════════════════ */
+
+/* Tiles fit by HEIGHT so the 4:5 ads are never cropped: the plate rect is
+   short and wide, and cover-cropping would cut the composition the ad was
+   built around. `justify-content: center` lets the row breathe rather than
+   stretching three portraits across a landscape box.
+   NO duotone here — see `.fl-tool__shot` for the contrast. That filter is a
+   UI-capture treatment; this is the creative itself, and it renders in
+   natural colour with the gold living in the frame. */
+.fl-stills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(8px, 1.1vw, 18px);
+  height: 100%;
+  min-height: 0;
+}
+.fl-still {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid rgba(202, 165, 84, 0.28);
+}
+.fl-still__shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ══ Films — poster-first, the element arrives on click ════════════════ */
+
+.fl-films {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: clamp(10px, 1.4vw, 22px);
+  height: 100%;
+  min-height: 0;
+}
+.fl-filmcell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 0;
+  max-width: 52%;
+}
+.fl-filmcell__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  border: 1px solid rgba(202, 165, 84, 0.28);
+  background: rgba(5, 4, 3, 0.6);
+}
+.fl-filmcell__label {
+  margin-top: 7px;
+  font-family: var(--fl-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+.fl-filmcell__meta {
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fl-ink-dim);
+}
+
+/* The interactive opt-in — third and last on this surface, after
+   `.fl-tabs__tab` and `.fl-row`. Safe because `.fl-case` is
+   `visibility: hidden` until `[data-proof-live]`, and hidden subtrees do not
+   hit-test: that is what stops the departed casefile eating ring clicks. */
+.fl-film {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.fl-film__poster,
+.fl-film__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fl-film__video {
+  pointer-events: auto;
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+/* Play cue — the brand's diamond, not a rounded media glyph. */
+.fl-film__cue {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(202, 165, 84, 0.85);
+  background: rgba(10, 9, 8, 0.45);
+  transition:
+    background var(--duration-normal, 120ms) var(--ease-out, ease),
+    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-film:hover .fl-film__cue,
+.fl-film:focus-visible .fl-film__cue {
+  background: rgba(202, 165, 84, 0.28);
+  border-color: var(--gold);
+}
+.fl-film:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -2px;
 }
 
 /* ══ Signal chart ══════════════════════════════════════════════════════ */

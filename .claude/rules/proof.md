@@ -105,6 +105,23 @@ inherited its ambient-cover role.
   stores IDs and the renderer resolves them against `PROJECT_CASES`, which
   stays canonical for the four tools. A copy change is a content-module edit
   plus `npx vitest run tests/lib/cases-registry.test.ts`.
+- **Media plates are poster-first and self-hosted (ADR-056 Update 5).**
+  `stills` shows work WHOLE — tiles fit by height, `aspect-ratio: 4/5`, and
+  in NATURAL COLOUR; the `tools` duotone is a UI-capture recipe, never a
+  content one. `films` mounts NO `<video>` until a click (stricter than
+  `ArcMediaSection`: a mounted element costs a layer inside a ~14-layer
+  budget) and NO `poster` attribute on it (measured: re-fetches the raw JPEG
+  the optimizer already served). A `MutationObserver` on `data-proof-live`
+  tears the element down as the plane folds — never poll `--svc-proof-out` in
+  rAF. `.fl-film` is the THIRD and LAST pointer-events opt-in, safe only
+  because the host is `visibility: hidden` until `data-proof-live`. CSP is
+  `media-src 'self' blob:`, so video can never move to a bucket.
+- **The directory holds EIGHT rows and no more without a tick move.** The
+  brief/directory seam is `--fl-t6` (moved from t7 when the eighth row
+  landed — it was already clipping `METRICS.DAT` by 14px at 1440×800 with
+  seven). Adding a ninth means moving a tick and trimming the brief again,
+  both sides together. Measure at 1280×720 / 1440×800 / 1920×1080; the
+  10.5px row type is owner-set — take density out of padding, never type.
 - **The beats and the casefile SHARE their plates.** Hoisted consts in the
   content module, asserted reference-equal by the registry test. Re-typing a
   plate inline is how the two surfaces drift.

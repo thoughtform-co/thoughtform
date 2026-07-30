@@ -5,7 +5,9 @@ import Image from "next/image";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import type { CaseTrackVisual } from "@/lib/cases/types";
 
+import { FilmsPlate } from "./FilmsPlate";
 import { SignalChart } from "./SignalChart";
+import { StillsPlate } from "./StillsPlate";
 
 /**
  * TrackVisual — one switch over the evidence-plate kinds.
@@ -114,6 +116,12 @@ export function TrackVisual({ visual }: { visual: CaseTrackVisual }) {
           </ul>
         </div>
       );
+
+    case "stills":
+      return <StillsPlate shots={visual.shots} />;
+
+    case "films":
+      return <FilmsPlate films={visual.films} />;
 
     case "readouts":
       return null;

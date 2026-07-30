@@ -279,11 +279,19 @@ export function ServicesCasefile() {
         data-fl-panel
         style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
       >
-        <span className="fl-desig">Brief — expedition {file.ix}</span>
+        {/* The `Brief — expedition NN` designation was removed 2026-07-30
+            (owner): it named the format, not the work. The slot under the
+            client name now carries the SELECTED ROW's project instead — the
+            directory says `01_STUDIO/`, this says what that is. */}
         <h3 className="fl-brief__title">
           <span data-fl-text={file.title.pre ?? ""}>{file.title.pre}</span>
           {file.title.em ? <b className="fl-brief__dot">{file.title.em}</b> : null}
         </h3>
+        {/* Deliberately NOT a `data-fl-text` decode target. The reveal effect
+            caches those nodes once per client (dep `[def.slug]`), so a
+            track-reactive target would go stale on the first row switch. It
+            swaps instantly, matching the keyed right column. */}
+        <p className="fl-brief__project">{track.project}</p>
         <p className="fl-brief__class" data-fl-text={file.classLine}>
           {file.classLine}
         </p>
@@ -313,7 +321,9 @@ export function ServicesCasefile() {
       >
         <span className="fl-tele">
           <i className="fl-diamond" aria-hidden="true" />
-          {`00 · Field log · ${file.logCode} · `}
+          {track.stamp
+            ? `${track.stamp.ord} · ${track.stamp.phase} · ${track.stamp.ref} · `
+            : `00 · Field log · ${file.logCode} · `}
           <b>{file.state}</b>
         </span>
       </div>

@@ -149,6 +149,18 @@ export interface CaseReadout {
   label: string;
 }
 
+/** One film on a `films` plate. Poster-first by contract: the plate renders
+ *  a still and the `<video>` element does not exist until the viewer asks
+ *  for it, so a row nobody opens costs zero bytes and zero layers. */
+export interface CaseFilm {
+  src: string;
+  poster: string;
+  /** Mono label under the tile, e.g. "Smug Owl · Loop ATL". */
+  label: string;
+  /** Mono meta under the label, e.g. "16:9 master · 30 sec". */
+  meta: string;
+}
+
 /**
  * A track's evidence plate. The three shared kinds are the `CaseVisual`
  * objects the beats already carry; `signal`, `register` and `readouts` exist
@@ -166,6 +178,11 @@ export type CaseTrackVisual =
   /** References production tools BY ID — `PROJECT_CASES` stays canonical. */
   | { kind: "tools"; toolIds: readonly string[] }
   | { kind: "register"; rows: readonly { k: string; v: string }[]; footer?: string }
+  /** Shipped work, shown WHOLE — tiles fit by height so nothing is cropped,
+   *  and in natural colour. The gold is the frame, never the picture (the
+   *  duotone on `tools` is a UI-capture treatment, not a content one). */
+  | { kind: "stills"; shots: readonly CaseImage[] }
+  | { kind: "films"; films: readonly CaseFilm[] }
   /** The readout block IS the plate. Used by the metrics row. */
   | { kind: "readouts" };
 
@@ -177,6 +194,11 @@ export interface CaseTrack {
   file: string;
   /** The row's right-hand meta, e.g. "22 WORKSHOPS". */
   meta: string;
+  /** Human name for this row, shown under the client name in the brief —
+   *  the filename says `01_STUDIO/`, this says what that IS. Keep it ≤24
+   *  chars: the brief column is height-boxed, so a second line pushes the
+   *  class line and reflows everything under it. */
+  project: string;
   icon: "doc" | "dir";
   /** Panel head, left slot. */
   preview: string;
@@ -190,6 +212,10 @@ export interface CaseTrack {
   context: readonly { k: string; v: string }[];
   /** Mono provenance line at the foot of the panel. */
   source: string;
+  /** Foot telemetry for this row — `◆ {ord} · {phase} · {ref} · {state}`,
+   *  where `state` stays the casefile's. Absent falls back to the standing
+   *  `00 · Field log · {logCode}` line, so this is additive. */
+  stamp?: { ord: string; phase: string; ref: string };
 }
 
 export interface CaseCasefile {

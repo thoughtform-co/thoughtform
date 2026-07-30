@@ -67,6 +67,56 @@ const SKILL_FOOTER =
 const TOOL_IDS = ["mimir", "vesper", "babylon", "heimdall"] as const;
 
 /**
+ * Three paid-social cuts, reused verbatim from the ai-keynote arc page
+ * (`lib/arcs/content/ai-keynote.ts`) — same files, same alt text, so the two
+ * surfaces cannot end up describing the same ad differently.
+ *
+ * What deliberately does NOT come across: the arc carries per-ad spend,
+ * order value and ROAS. That page is a client deck; this is the public
+ * landing, where the confidentiality envelope bans currency outright
+ * (`.claude/rules/proof.md`, pinned by the registry test). The panel says
+ * "beat the ROAS benchmarks" and prints no figure.
+ */
+const STUDIO_SHOTS = [
+  {
+    src: "/arcs/studio-ads/exp-sb93-filter.jpg",
+    alt: "Loop Switch ad: It's parenting, but just the good bits — earplug case with hear/filter checklist.",
+    width: 1080,
+    height: 1350,
+  },
+  {
+    src: "/arcs/studio-ads/exp-lm103-highlight.jpg",
+    alt: "Loop fashion ad: monochrome portrait of a man with a Loop earplug highlighted by a square reticle.",
+    width: 1080,
+    height: 1350,
+  },
+  {
+    src: "/arcs/studio-ads/exp-sb92-ski.jpg",
+    alt: "Loop Engage ad: stress-free ski trips — skier in helmet and goggles, three callout chips around the ear.",
+    width: 1080,
+    height: 1350,
+  },
+] as const;
+
+/** Both above-the-line films, self-hosted. CSP is `media-src 'self' blob:`
+ *  (`lib/security/headers.mjs`), so these can never be served from a bucket
+ *  — a remote src would be blocked the moment CSP leaves report-only. */
+const ATL_FILMS = [
+  {
+    src: "/videos/loop-smug-owl-ai-atl.mp4",
+    poster: "/arcs/posters/smug-owl.jpg",
+    label: "Smug Owl · Loop ATL",
+    meta: "16:9 master · 30 sec",
+  },
+  {
+    src: "/videos/loop-dj-neighbour-ai-atl.mp4",
+    poster: "/arcs/posters/dj-neighbour.jpg",
+    label: "DJ Neighbour · Loop ATL",
+    meta: "16:9 master · 30 sec",
+  },
+] as const;
+
+/**
  * The rollout log re-read as an adoption curve. Milestones are the log's own
  * rows; the y-axis is the seat count the `5 → 130+` stat already publishes.
  * The handoff's invented quarters ("25.Q2 skill layer live", "25.Q4 4 tools
@@ -190,15 +240,16 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
     // Re-typed as segments rather than sliced out of the string so the
     // emphasis is data, not a fragile substring match.
     brief: [
-      "Eighteen months embedded in one company. ",
+      "Eighteen months inside one company. ",
       { em: "Every team briefed on the same forty-five minute frame" },
-      ", the judgment that came out of those rooms encoded as Skills the teams own, and production tools built where off-the-shelf software never fit. The same Arc we teach, run at company scale.",
+      ", the judgment encoded as Skills they own, and tools built where software never fit.",
     ],
     tracks: [
       {
         id: "report",
         file: "00_MISSION-REPORT.LOG",
         meta: "2.4 KB",
+        project: "The engagement",
         icon: "doc",
         preview: "Preview — 00_mission-report.log",
         vizLabel: "Viz — adoption signal",
@@ -222,11 +273,76 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         source: "Source — metrics.dat · sampled quarterly · rev 2026.07",
       },
       {
-        id: "transformation",
-        file: "01_AI-TRANSFORMATION/",
-        meta: "22 WORKSHOPS",
+        id: "studio",
+        file: "01_STUDIO/",
+        meta: "500 ADS/MO",
+        project: "AI Adoption Studio",
         icon: "dir",
-        preview: "Preview — 01_ai-transformation/",
+        preview: "Preview — 01_studio/",
+        vizLabel: "Viz — performance evidence",
+        visual: { kind: "stills", shots: STUDIO_SHOTS },
+        readouts: [
+          { value: "500", label: "ads a month with AI in the chain" },
+          { value: "2-3×", label: "faster than the agencies replaced" },
+        ],
+        context: [
+          { k: "Phase", v: "Build" },
+          { k: "Surface", v: "Production platform" },
+          { k: "Owner", v: "The studio" },
+        ],
+        source: "Source — studio production line · rev 2026.07",
+        stamp: { ord: "01", phase: "Build", ref: "BLD-01" },
+      },
+      {
+        id: "atl-films",
+        file: "02_ATL-FILMS/",
+        meta: "2 FILMS",
+        project: "AI Above-the-Line",
+        icon: "dir",
+        preview: "Preview — 02_atl-films/",
+        vizLabel: "Viz — the films",
+        visual: { kind: "films", films: ATL_FILMS },
+        readouts: [
+          { value: "2", label: "films fully AI-produced" },
+          { value: "1", label: "crew shared with live action" },
+        ],
+        context: [
+          { k: "Phase", v: "Build" },
+          { k: "Format", v: "Above-the-line" },
+          { k: "Owner", v: "The creative team" },
+        ],
+        source: "Source — creative archive · rev 2026.07",
+        stamp: { ord: "02", phase: "Build", ref: "BLD-02" },
+      },
+      {
+        id: "tooling",
+        file: "03_TOOLING/",
+        meta: "4 TOOLS",
+        project: "Production Tooling",
+        icon: "dir",
+        preview: "Preview — 03_tooling/",
+        vizLabel: "Fleet — in production",
+        visual: { kind: "tools", toolIds: TOOL_IDS },
+        readouts: [
+          { value: "04", label: "production tools" },
+          { value: "42", label: "Skills they stand on" },
+          { value: "Days → min", label: "briefing synthesis" },
+        ],
+        context: [
+          { k: "Built with", v: "The workflow owner" },
+          { k: "Instead of", v: "Off-the-shelf" },
+          { k: "Cadence", v: "Daily" },
+        ],
+        source: "Source — fleet registry · rev 2026.07",
+        stamp: { ord: "03", phase: "Build", ref: "BLD-03" },
+      },
+      {
+        id: "transformation",
+        file: "04_AI-TRANSFORMATION/",
+        meta: "22 WORKSHOPS",
+        project: "The Workshop Rollout",
+        icon: "dir",
+        preview: "Preview — 04_ai-transformation/",
         vizLabel: "Log — rollout",
         visual: { kind: "log", rows: ROLLOUT_ROWS, tail: ROLLOUT_TAIL },
         readouts: [
@@ -241,13 +357,15 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { k: "Handoff", v: "Per-team steward" },
         ],
         source: "Source — rollout log · one workflow worth encoding, per team",
+        stamp: { ord: "04", phase: "Navigate", ref: "NAV-01" },
       },
       {
         id: "skill-layer",
-        file: "02_SKILL-LAYER/",
+        file: "05_SKILL-LAYER/",
         meta: "42 SKILLS",
+        project: "The Skill Layer",
         icon: "dir",
-        preview: "Preview — 02_skill-layer/",
+        preview: "Preview — 05_skill-layer/",
         vizLabel: "Registry — 42 in motion",
         visual: {
           kind: "registry",
@@ -266,61 +384,13 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { k: "Grounding", v: "Their own work" },
         ],
         source: "Source — skills registry · exec headline count · rev 2026.07",
-      },
-      {
-        id: "video",
-        file: "03_AI-VIDEO/",
-        meta: "30+ MARKETS",
-        icon: "dir",
-        preview: "Preview — 03_ai-video/",
-        vizLabel: "Log — production line",
-        visual: {
-          kind: "log",
-          rows: [
-            { t: "Built", event: "Dubbing pipeline, with the localization team" },
-            { t: "Handover", event: "Product-managed end to end by that team" },
-            { t: "Reach", event: "Thirty-plus markets" },
-            { t: "Shipped", event: "A world-first AI above-the-line film" },
-            { t: "Next", event: "The same pipeline, moving above the line" },
-          ],
-          tail: "Handed over, not just delivered.",
-        },
-        readouts: [
-          { value: "30+", label: "markets served" },
-          { value: "01", label: "world-first AI film" },
-          { value: "04", label: "tools on the same layer" },
-        ],
-        context: [
-          { k: "Owner", v: "Localization team" },
-          { k: "Mode", v: "Handover" },
-          { k: "Stands on", v: "The Skills layer" },
-        ],
-        source: "Source — production line · rev 2026.07",
-      },
-      {
-        id: "tooling",
-        file: "04_TOOLING/",
-        meta: "4 TOOLS",
-        icon: "dir",
-        preview: "Preview — 04_tooling/",
-        vizLabel: "Fleet — in production",
-        visual: { kind: "tools", toolIds: TOOL_IDS },
-        readouts: [
-          { value: "04", label: "production tools" },
-          { value: "42", label: "Skills they stand on" },
-          { value: "Days → min", label: "briefing synthesis" },
-        ],
-        context: [
-          { k: "Built with", v: "The workflow owner" },
-          { k: "Instead of", v: "Off-the-shelf" },
-          { k: "Cadence", v: "Daily" },
-        ],
-        source: "Source — fleet registry · rev 2026.07",
+        stamp: { ord: "05", phase: "Encode", ref: "ENC-01" },
       },
       {
         id: "governance",
         file: "GOVERNANCE.MD",
         meta: "LEGAL · IT",
+        project: "Governance",
         icon: "doc",
         preview: "Preview — governance.md",
         vizLabel: "Register — parallel tracks",
@@ -345,11 +415,13 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { k: "Cadence", v: "Alongside" },
         ],
         source: "Source — governance track · rev 2026.07",
+        stamp: { ord: "—", phase: "Governance", ref: "GOV-01" },
       },
       {
         id: "metrics",
         file: "METRICS.DAT",
         meta: "4 READOUTS",
+        project: "Metrics",
         icon: "doc",
         preview: "Preview — metrics.dat",
         vizLabel: "Readouts — sampled quarterly",
@@ -366,6 +438,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { k: "Status", v: "Live" },
         ],
         source: "Source — metrics.dat · sampled quarterly · rev 2026.07",
+        stamp: { ord: "—", phase: "Metrics", ref: "MET-01" },
       },
     ],
   },

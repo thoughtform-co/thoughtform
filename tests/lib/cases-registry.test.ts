@@ -97,6 +97,24 @@ describe("cases registry (ADR-054)", () => {
           expect(ok(beat.visual.poster)).toBe(true);
         }
       }
+      // The casefile TRACKS carry media too (`stills` / `films`, ADR-056).
+      // This loop used to walk beats only, which left every track asset
+      // unguarded — a remote or mistyped src would have shipped silently.
+      for (const t of c.casefile.tracks) {
+        if (t.visual.kind === "stills") {
+          for (const shot of t.visual.shots) {
+            expect(ok(shot.src), `${c.slug}/${t.id} still ${shot.src}`).toBe(true);
+          }
+        }
+        if (t.visual.kind === "films") {
+          for (const film of t.visual.films) {
+            // Self-hosted only: CSP is `media-src 'self' blob:`, so a bucket
+            // URL here is blocked the moment CSP leaves report-only.
+            expect(ok(film.src), `${c.slug}/${t.id} film ${film.src}`).toBe(true);
+            expect(ok(film.poster), `${c.slug}/${t.id} poster ${film.poster}`).toBe(true);
+          }
+        }
+      }
     }
   });
 
@@ -139,6 +157,10 @@ describe("cases registry (ADR-054)", () => {
         expect(t.context.length).toBeGreaterThan(0);
         expect(t.source.length).toBeGreaterThan(0);
         expect(t.file.length).toBeGreaterThan(0);
+        // The brief column is height-boxed, so a project title that wraps
+        // pushes the class line and reflows everything under it.
+        expect(t.project.length, `${c.slug}/${t.id} project`).toBeGreaterThan(0);
+        expect(t.project.length, `${c.slug}/${t.id} project`).toBeLessThanOrEqual(24);
         for (const row of t.context) {
           // The dotted leader needs a non-wrapping value, so a long one runs
           // into the next column of the three-up register.
@@ -160,6 +182,19 @@ describe("cases registry (ADR-054)", () => {
         }
         if (v.kind === "signal") expect(v.points.length).toBeGreaterThan(1);
         if (v.kind === "tools") expect(v.toolIds.length).toBeGreaterThan(0);
+        if (v.kind === "stills") {
+          expect(v.shots.length).toBeGreaterThan(0);
+          // Alt text is the whole a11y story for this plate — the panel copy
+          // never describes the individual ads.
+          for (const shot of v.shots) expect(shot.alt.length).toBeGreaterThan(0);
+        }
+        if (v.kind === "films") {
+          expect(v.films.length).toBeGreaterThan(0);
+          for (const film of v.films) {
+            expect(film.poster.length).toBeGreaterThan(0);
+            expect(film.label.length).toBeGreaterThan(0);
+          }
+        }
       }
     }
   });

@@ -486,3 +486,126 @@ opacity` on `.fl-case` for the iris) makes the gradient reticles,
   fixes above are structural rather than adaptive. (Recorded in ADR-038
   as an addendum; wiring the gyro counts into the ladder remains a
   wave-2 option for pre-degraded devices only.)
+
+## Update 5 — the casefile shows the work (2026-07-30, owner)
+
+Every one of the seven directory rows resolved to a TEXT plate: a chart, two
+logs, a registry, a register, a readout block, one tool strip. The case
+_asserted_ the work. Two rows now **show** it — the paid-social studio as
+three ads, the above-the-line films as two players — and the brief column
+finally names which project you are looking at.
+
+### Two plate kinds, not a rebuild
+
+`CaseTrackVisual` gains `stills` (`readonly CaseImage[]`) and `films`
+(`readonly CaseFilm[]`, a new zero-import interface). This is the extension
+point the surface was already built around: `TrackVisual`'s `never`
+exhaustiveness check makes a new kind a **compile error until a branch
+exists**, and `TrackPanel`'s `key={slug}-{trackId}` guarantees a fresh
+subtree, so no plate kind ever reconciles into another. Nothing about the
+clocks, the arrival ladder, the fold or the iris was touched.
+
+**Stills fit by HEIGHT, in natural colour.** The plate rect is short and wide
+(690 × 240 at 1440×800) and the ads are 4:5, so cover-cropping would cut the
+composition the ad was built around. `aspect-ratio: 4/5; height: 100%` with a
+centred row shows them whole. The `tools` plate's duotone
+(`grayscale(1) sepia(.35)…`) is deliberately NOT applied — that recipe is for
+dark UI captures sitting on a photo bar; this is the creative itself. Same
+split `.claude/rules/arcs.md` already states: content media renders in
+natural colour, the gold is chrome.
+
+**Films are poster-first: no `<video>` element exists until a click.** This is
+stricter than `ArcMediaSection` (which mounts the element with
+`preload="none"`) and deliberately so — a mounted media element costs a
+compositor layer and a decoder inside a beat whose layer budget Update 4
+counted at ~14, for a row most visitors never open. The tile is a
+`next/image` poster in a `<button>`; the click is the play intent, so the
+element arrives already playing. It carries **no `poster` attribute** —
+measured, that re-fetched the raw 93 kB JPEG the optimizer had already served
+as the tile.
+
+**The element is torn down when the plane folds.** A `MutationObserver` on
+`.services-stage`'s `data-proof-live` — the same attribute the sheet gates its
+`will-change` on — drops it. Without this a film keeps decoding audio and
+video behind a closed iris. Do NOT poll `--svc-proof-out` in rAF: Update 4
+removed the per-frame reads on purpose.
+
+**`.fl-film` is the THIRD and last pointer-events opt-in**, after
+`.fl-tabs__tab` and `.fl-row`. Safe only because `.fl-case` is
+`visibility: hidden` until `data-proof-live` and hidden subtrees do not
+hit-test — that is what keeps the departed casefile from swallowing ring-card
+clicks (smoke test D).
+
+### Measured, on the prod build
+
+|                      | bytes                                                   |
+| -------------------- | ------------------------------------------------------- |
+| open `01_STUDIO/`    | **23.6 kB** — three 256w WebP off 432 kB of source JPEG |
+| open `02_ATL-FILMS/` | **19.1 kB** — two posters, **0 video requests**         |
+| click play           | 12.5 MB, the mp4, and only then                         |
+| after the fold       | `.fl-film__video` count **0**                           |
+
+No prefetch, by design: `TrackPanel` mounts only the selected track's plate
+and `report` is the default, so a visitor who never opens these rows pays
+nothing. The corridor-entry budget is already spent on ~130 kB of case-card
+WebP.
+
+### The directory geometry — a live bug, found while measuring
+
+`.fl-dir` spans one third of the rail height. At 1440×800 that is 190px, and
+seven rows needed 204 — **`METRICS.DAT` was already being clipped by 14.3px
+on the most common laptop viewport there is.** Eight rows needed 231.
+
+The brief/directory seam therefore moves **t7 → t6** (a tick, not a nudge —
+`.fl-rule--brief`, `.fl-brief`'s height and `.fl-dir`'s top all read the same
+var, so the seam stays one line), row padding tightens to
+`clamp(3px, 0.45svh, 7px)`, and the head's `padding-bottom` goes 8 → 6. The
+owner's 10.5px row type from Update 2 is untouched — density came out of the
+padding, never the type.
+
+That reclaims 50px on the directory side and costs it on the brief side, so
+the brief body was trimmed from five lines to three. Verified clip-free at
+**1280×720, 1440×800 and 1920×1080**.
+
+### The retired row, stated plainly
+
+`03_AI-VIDEO/` is gone. Its dubbing/localization pipeline and **"30+ markets"
+reach leave the site with this change** — nothing else on the landing carries
+that claim. Its `01 world-first AI film` readout is also gone, which is the
+right outcome: it would have contradicted `2 FILMS` two rows above, and the
+owner's new copy already softens the claim to "one of the first brands to air
+them". Re-add as a row when there is a plate worth giving it.
+
+### Row order
+
+`00_MISSION-REPORT.LOG` · `01_STUDIO/` · `02_ATL-FILMS/` · `03_TOOLING/` ·
+`04_AI-TRANSFORMATION/` · `05_SKILL-LAYER/` · `GOVERNANCE.MD` · `METRICS.DAT`.
+
+**Track `id`s did not change** — only `file`, `meta` and array position. The
+registry test pins plate reference-equality to `t.id === "transformation"`,
+and `Directory` builds DOM ids from them.
+
+### Also
+
+- `CaseTrack.project` — the human name, shown under the client name where
+  `Brief — expedition NN` used to be (it named the format, not the work).
+  Deliberately NOT a `[data-fl-text]` decode target: the reveal effect caches
+  those nodes once per client (dep `[def.slug]`), so a track-reactive target
+  would go stale on the first row switch. Pinned ≤24 chars — the brief column
+  is height-boxed and a wrap reflows everything under it.
+- `CaseTrack.stamp` — the foot telemetry becomes per-row
+  (`◆ 01 · Build · BLD-01 · On record`), falling back to the standing
+  `00 · Field log · TF-24` line when absent.
+- **The registry test's asset-path allowlist now walks `casefile.tracks`, not
+  just `beats`** — track media was entirely unguarded before this.
+- The three stills and the Smug Owl film are the SAME files
+  `/arcs/ai-keynote` serves, with the same alt text. What does not come across
+  is the arc's per-ad spend / order value / ROAS: that page is a client deck,
+  this is the public landing, and the envelope bans currency outright. The
+  second film (DJ Neighbour) was encoded from the master with
+  `npm run video:optimize --keep-audio` (11.4 MB) — audio matters when the
+  copy says "CD through sound".
+- Frame probe after the change, prod build: corridor-mid 16.9 ·
+  dissipate-approach 24.4 (p95 33.6) · casefile-dwell 20.0 · ring-zone 17.0.
+  No segment regressed. Note the probe never opens a media row, so it
+  measures the structural change only — the media cost is the table above.
