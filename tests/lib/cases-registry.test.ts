@@ -260,19 +260,36 @@ describe("cases registry (ADR-054)", () => {
     // The hoisted consts in the content module are what stop the two
     // surfaces drifting. If someone re-types a plate inline, the row arrays
     // stop being reference-equal and this catches it.
+    //
+    // ⚠ TWO WAYS THIS USED TO GO QUIET (both fixed 2026-07-31, after the
+    // directory was recomposed and neither would have been noticed):
+    //   · The log lookup keyed on a hardcoded track id. Renaming that row
+    //     did not fail the test — it made the `find` return undefined and
+    //     the assertion never ran. The lookup is by PLATE KIND now, matching
+    //     the registry branch, so no row id is load-bearing here.
+    //   · Both branches sat behind `if (beat && track)`, so deleting the
+    //     last row carrying a plate turned the guard into a no-op that still
+    //     reported green. The beat is the source of truth, so its plate now
+    //     ASSERTS that a casefile row shares it.
     for (const c of CASES) {
       const beatLog = c.beats.find((b) => b.visual.kind === "log")?.visual;
-      const trackLog = c.casefile.tracks.find(
-        (t) => t.visual.kind === "log" && t.id === "transformation"
-      )?.visual;
-      if (beatLog?.kind === "log" && trackLog?.kind === "log") {
-        expect(trackLog.rows).toBe(beatLog.rows);
+      if (beatLog?.kind === "log") {
+        const trackLog = c.casefile.tracks.find((t) => t.visual.kind === "log")?.visual;
+        expect(trackLog?.kind, `${c.slug}: no casefile row shares the beat's log plate`).toBe(
+          "log"
+        );
+        if (trackLog?.kind === "log") expect(trackLog.rows).toBe(beatLog.rows);
       }
       const beatReg = c.beats.find((b) => b.visual.kind === "registry")?.visual;
-      const trackReg = c.casefile.tracks.find((t) => t.visual.kind === "registry")?.visual;
-      if (beatReg?.kind === "registry" && trackReg?.kind === "registry") {
-        expect(trackReg.rows).toBe(beatReg.rows);
-        expect(trackReg.groups).toBe(beatReg.groups);
+      if (beatReg?.kind === "registry") {
+        const trackReg = c.casefile.tracks.find((t) => t.visual.kind === "registry")?.visual;
+        expect(trackReg?.kind, `${c.slug}: no casefile row shares the beat's registry plate`).toBe(
+          "registry"
+        );
+        if (trackReg?.kind === "registry") {
+          expect(trackReg.rows).toBe(beatReg.rows);
+          expect(trackReg.groups).toBe(beatReg.groups);
+        }
       }
     }
   });

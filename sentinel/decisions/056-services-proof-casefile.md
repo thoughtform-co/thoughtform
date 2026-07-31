@@ -584,14 +584,15 @@ them". Re-add as a row when there is a plate worth giving it.
 
 ### Row order
 
+⚠ **Superseded 2026-07-31 by Update 10 below** — the transformation leads now
+and `05_SKILL-LAYER/` is retired. The order as first shipped:
 `01_AI-FLUENCY-STUDIO/` · `02_AI-ABOVE-THE-LINE/` · `03_SOFTWARE-FOR-FEW/` ·
 `04_WORKSHOP-ROLLOUT/` · `05_SKILL-LAYER/` · `GOVERNANCE.MD` · `METRICS.DAT` ·
-`00_MISSION-REPORT.LOG`. (Renamed 2026-07-31 — see the correspondence rule
-in Update 9's fourth pass.)
+`00_MISSION-REPORT.LOG`.
 
 **Track `id`s did not change** — only `file`, `meta` and array position. The
-registry test pins plate reference-equality to `t.id === "transformation"`,
-and `Directory` builds DOM ids from them.
+registry test pinned plate reference-equality to `t.id === "transformation"`
+(no longer true — see Update 10), and `Directory` builds DOM ids from them.
 
 ### Also
 
@@ -1041,3 +1042,67 @@ true.
 Track `id`s are untouched (`studio`, `atl-films`, `tooling`, `transformation`
 …) — they are DOM ids and the plate-sharing test keys on them; only the
 display strings moved. `preview` strings follow the filenames.
+
+---
+
+## Update 10 — the transformation leads, and the panel becomes a map (2026-07-31)
+
+**Owner call.** The directory opened on `01_AI-FLUENCY-STUDIO/`. That was
+right while it was a list of deliverables and wrong once the role at Loop was
+formalised as Intelligence Architect: the studio, the films and the tools are
+OUTPUTS of eighteen months spent deciding what should run which work, and
+leading with them presented an output as if it were the engagement. The
+largest piece of the work had no row at all.
+
+**The directory, recomposed.** `01_AI-TRANSFORMATION/` (new, row one) ·
+`02_AI-FLUENCY-STUDIO/` · `03_AI-ABOVE-THE-LINE/` · `04_SOFTWARE-FOR-FEW/` ·
+`05_WORKSHOP-ROLLOUT/` · `GOVERNANCE.MD` · `METRICS.DAT` ·
+`00_MISSION-REPORT.LOG`. Still eight — `05_SKILL-LAYER/` came out ("we already
+mentioned it"), so no tick move was needed.
+
+**The registry plate changed meaning, not just content.** Its `tag` used to
+name which of the five shapes a row belonged to; it now names WHAT RUNS THE
+WORK — `Skill`, `Tool`, or `Human`. That single change is the difference
+between an inventory and a map, and it is the reason the skill-layer row could
+be absorbed rather than deleted. A count of Skills was never the claim worth
+leading with (owner: _"I'm reluctant to talk about how many Skills I've
+created because it's meaningless"_), so the row's readouts are system numbers
+— 22 teams mapped, 21 days to a practice, 05 shapes — and the panel shows the
+assignment instead.
+
+The **`Human` row is load-bearing**. The measure that makes this a decision
+record rather than a sales list is that "stays human" is recorded, not left as
+a gap. Do not remove it to make the panel look more automated; that inverts
+its meaning.
+
+**A First Load win.** Row one's plate mounts with the casefile. It is pure DOM
+now, so the three studio JPEGs (23.6 kB, accepted under protest in Update 9)
+no longer mount on arrival.
+
+### Two silent-clipping defects this surfaced, both pre-existing
+
+Neither had a test and both are invisible at 1920×1080, which is where this
+gets authored.
+
+- **The `registry` plate holds five groups plus THREE rows.** At six it
+  clipped to three rows at 1280×720 and four at 1440×800, and the footer was
+  cut at _every_ height — the old skills registry had the same defect, it just
+  sat on row five where few readers reached it. A fourth row has its tag
+  sliced at 1440, which reads as broken. The list is now a KEY — one exemplar
+  per assignment — which is also the more honest register.
+- **`.fl-brief` takes ~195 characters at 1280×720.** A 246-char draft lost
+  23px there and 9px at 1440×800 while looking perfect at 1920.
+
+### The plate-sharing guard was keyed on a string, and that was the bug
+
+`tests/lib/cases-registry.test.ts` found the log plate by
+`t.id === "transformation"` and both branches sat behind `if (beat && track)`.
+So renaming that row, or deleting the last row carrying a plate, did not fail
+the test — it made the assertion **never run** while still reporting green.
+Both are fixed: the lookup is by PLATE KIND (no row id is load-bearing here
+any more) and the beat's plate now ASSERTS that a casefile row shares it. The
+workshop row was renamed `transformation` → `workshop-rollout` in the same
+pass, since two ids one word apart was a standing trap.
+
+Verified by breaking it on purpose: re-typing the map rows inline fails the
+suite. A drift guard that has never been seen to fail is not known to work.

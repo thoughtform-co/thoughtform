@@ -170,14 +170,18 @@ inherited its ambient-cover role.
 - **A row's FILENAME and its PROJECT TITLE name the same thing** (owner,
   2026-07-31). `01_AI-FLUENCY-STUDIO/` heads "AI Fluency Studio"; articles
   are dropped from titles so the match is literal. Rename BOTH or the
-  registry test's normalise-and-compare guard fails. Track `id`s never
-  change with them — they are DOM ids and the plate-sharing test keys on
-  them.
+  registry test's normalise-and-compare guard fails. Track `id`s are DOM ids
+  and should not churn with a rename — but they are no longer load-bearing
+  for the plate-sharing guard, which keys on PLATE KIND since 2026-07-31
+  (`transformation` → `workshop-rollout` proved that a string-keyed guard
+  does not fail on a rename, it silently stops guarding).
 - **Row order IS the directory, and row one is the DEFAULT PANEL.** The
-  studio leads and the mission report closes the file (owner, 2026-07-30).
-  Consequence to keep in mind when reordering: the first row's plate mounts
-  with the casefile, so putting a media row first moves its bytes to page
-  load (23.6 kB today, accepted).
+  TRANSFORMATION leads and the mission report closes the file (owner,
+  2026-07-31; the studio led until then, which presented an output as the
+  engagement). Two consequences when reordering: the first row's plate
+  mounts with the casefile, so a media row there puts its bytes on page load
+  — that cost 23.6 kB while the studio led and a pure-DOM plate gives it
+  back — and row one is what every reader judges the case on.
 - **The directory holds EIGHT rows and no more without a tick move.** The
   brief/directory seam is `--fl-t6` (moved from t7 when the eighth row
   landed — it was already clipping `METRICS.DAT` by 14px at 1440×800 with
@@ -189,7 +193,16 @@ inherited its ambient-cover role.
   plate inline is how the two surfaces drift.
 - **Context values stay ≤20 characters.** The dotted leader needs a
   non-wrapping value, so a long one runs into the next column of the
-  three-up register. Pinned by the registry test.
+  three-up register. Pinned by the registry test. ⚠ The guard bounds the
+  VALUE only — `Unit of done` + a 20-char value still ran off the panel edge
+  at 1440. Keep the KEY short too, and measure.
+- **PLATE AND BRIEF BOXES CLIP SILENTLY, and only on short viewports.**
+  `.fl-brief` is height-boxed against `--fl-t6` and the `registry` plate
+  holds ~8 lines; both are `overflow: hidden` with no scrollbar and no test.
+  Measured 2026-07-31: the brief takes ~195 chars at 1280×720 (a 246-char
+  draft lost 23px there, 9px at 1440×800, and looked perfect at 1920), and
+  the registry plate takes FIVE groups plus THREE rows. A fourth row has its
+  tag sliced at 1440. Author at 1280×720 or you will not see the defect.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
   strings fails the registry test.
