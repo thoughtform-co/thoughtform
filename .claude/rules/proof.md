@@ -100,6 +100,22 @@ inherited its ambient-cover role.
   land on tick 2 and the bearing-5 major. Two upstreams must stay in step:
   `.hud__rail` in `landing.css` and `lib/v7-parse/hudTicks.ts`. **That drift
   is the only way this design fails silently — check it first.**
+- **The tools row is a CONTROLLED gallery (ADR-056 Update 9).** `TrackPanel`
+  owns `toolIdx` — not the plate — because the panel FOOT follows the tool in
+  view: capability tiles, `Mode / Team / Status`, and the tool's `shift` as
+  the provenance line. It is `TrackVisual`'s one controlled branch; the
+  `never` guard stays. Tile titles are `nowrap` and pinned ≤24 chars (a wrap
+  drops that tile's description below its neighbours'), `Team` prints the
+  DEPARTMENT only (the full strings are 38 chars against a ≤20 leader), and
+  short/narrow viewports drop the DESCRIPTIONS and the title to the 8.5px
+  floor rather than dropping tiles — measured, 4 tiles ran 27px past the foot
+  at 1280×720.
+- **One lightbox, `MediaLightbox`, shared by the films and the walkthroughs.**
+  Do not hand-write a second — its portal, scroll lock and focus restore each
+  cost a measurement to get right (Update 8).
+- **`PROJECT_CASES` is inside the confidentiality envelope now.** It renders
+  client copy on the public landing but lives outside `lib/cases/`, so the
+  registry test scans it too. Adding a tool means adding a walkthrough.
 - **Content = `lib/cases/` only.** `types.ts` keeps ZERO imports; nothing
   under `lib/cases/` may import react, three or supabase. The tool strip
   stores IDs and the renderer resolves them against `PROJECT_CASES`, which

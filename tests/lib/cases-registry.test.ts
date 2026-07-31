@@ -281,7 +281,50 @@ describe("cases registry (ADR-054)", () => {
         if (pattern.test(value)) offenders.push(`${path}: ${what}`);
       }
     });
+    // PROJECT_CASES renders on the SAME public surface (the casefile's tool
+    // gallery, ADR-056 Update 9) but lives outside `lib/cases/`, so it was
+    // never scanned. It carries client tool copy — challenge paragraphs,
+    // capability descriptions, stacks — and needs the same envelope.
+    scanStrings(PROJECT_CASES, "PROJECT_CASES", (value, path) => {
+      for (const [pattern, what] of banned) {
+        if (pattern.test(value)) offenders.push(`${path}: ${what}`);
+      }
+    });
     expect(offenders).toEqual([]);
+  });
+
+  it("PROJECT_CASES asset paths are repo-rooted, and every tool has a walkthrough", () => {
+    const ok = (src: string) => src.startsWith("/project-cards/") || src.startsWith("/videos/");
+    for (const c of PROJECT_CASES) {
+      expect(ok(c.image.src), `${c.id} image`).toBe(true);
+      // The gallery's Watch walkthrough button is conditional on this, so a
+      // missing one degrades silently rather than erroring.
+      expect(c.walkthrough, `${c.id} walkthrough`).toBeDefined();
+      expect(ok(c.walkthrough!.src), `${c.id} walkthrough src`).toBe(true);
+      expect(ok(c.walkthrough!.poster), `${c.id} walkthrough poster`).toBe(true);
+    }
+  });
+
+  it("PROJECT_CASES capability copy fits the casefile's foot tiles", () => {
+    // Four tiles across a ~690px foot band. The title is a single mono line
+    // and the desc is clamped to two — copy far past these silently loses its
+    // tail to the clamp, which reads as a truncation bug.
+    for (const c of PROJECT_CASES) {
+      expect(c.capabilities).toHaveLength(4);
+      for (const cap of c.capabilities) {
+        // The tile title must hold ONE line: it sits above a 2-line clamped
+        // desc in a ~45px band, so a wrap pushes its description out of line
+        // with the other three tiles. 24 is what the current copy needs and
+        // what the tile's tracking (0.08em, tightened for exactly this) was
+        // measured to fit in a ~165px column — verified in-browser at
+        // 1280/1440/1920, no title wraps.
+        expect(cap.title.length, `${c.id} "${cap.title}"`).toBeLessThanOrEqual(24);
+        expect(cap.desc.length, `${c.id} "${cap.title}" desc`).toBeLessThanOrEqual(95);
+      }
+      // The register's dotted leader needs a non-wrapping value; the panel
+      // shows the DEPARTMENT only for exactly this reason.
+      expect(c.team.split("·")[0].trim().length, `${c.id} team`).toBeLessThanOrEqual(20);
+    }
   });
 });
 

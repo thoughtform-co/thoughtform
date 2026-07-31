@@ -576,6 +576,12 @@ right outcome: it would have contradicted `2 FILMS` two rows above, and the
 owner's new copy already softens the claim to "one of the first brands to air
 them". Re-add as a row when there is a plate worth giving it.
 
+> **Corrected 2026-07-31 (see Update 9).** "30+ markets" is BACK on the page.
+> The tool gallery renders Babylon's capabilities, and its first tile is
+> literally `30+ markets`. That is a better home for the claim than the
+> retired log — it now sits on the tool that does the localisation — but the
+> paragraph above stood for a day reading as settled fact. It was not.
+
 ### Row order
 
 `00_MISSION-REPORT.LOG` · `01_STUDIO/` · `02_ATL-FILMS/` · `03_TOOLING/` ·
@@ -801,3 +807,104 @@ focus to the correct tile (`aria-label "Play DJ Neighbour · Loop ATL"`), both
 clear the lock, and scroll resumes from the same position. Zero `<video>`
 elements left in the document after close. verify 383/383,
 services-ring-smoke 18 passed, no page errors.
+
+## Update 9 — the tools row becomes a gallery (2026-07-31, owner)
+
+`03_TOOLING/` was the last row still rendering as a list: four ~100x46
+thumbnails with a name and a status word, too small to read, showing none of
+the four capabilities that make each tool interesting — under a foot that
+showed track-level numbers (`04 / 42 / Days → min`) saying nothing about any
+particular tool. Owner: make it a gallery, give it a walkthrough button, and
+make the bottom of the panel follow the tool in view.
+
+Heading is now **“Software for few.”**, matching the Build beat's own
+`title: { pre: "Software for", em: "few." }`. The row keeps its `03_TOOLING/`
+filename — the row is a filename, the heading is the project.
+
+### The selection is owned by `TrackPanel`
+
+The structural change. The foot has to follow the tool, so the state lives at
+the lowest node that sees both the plate and the foot: `TrackPanel` owns
+`toolIdx`, `TrackVisual` forwards it to `ToolGallery` as a controlled prop,
+and the foot derives its rows from `PROJECT_CASES[toolIdx]` rather than the
+track. `TrackVisual` keeps its `never` guard — `tools` is simply its one
+controlled branch. Reset is free: the panel is keyed `${slug}-${track.id}`
+upstream, so a row change remounts on tool 01.
+
+Per tool the foot now reads: the four **capabilities** as title + clamped
+description, context rows `Mode / Team / Status`, and the tool's `shift`
+sentence as the provenance line. Capability tiles are a separate list from
+`.fl-readout` — a title and a line is not a figure and a label, and the
+`data-wide` sizing exists for numbers.
+
+**`Team` prints the DEPARTMENT only.** The full strings run to 38 chars
+("Performance · Localization & Expansion"), three times what the register's
+dotted leader can hold without wrapping. The discipline after the "·" is
+already implied by the tagline in the gallery above.
+
+### The lightbox is now shared
+
+`MediaLightbox` is extracted from `FilmsPlate` and consumed by both. Its
+portal-to-body, its scroll lock and its focus restore each took a measurement
+to get right (Update 8), and a second hand-written copy would have
+re-introduced both bugs. `useCloseOnCasefileFold` moved with it, taking a ref
+inside the casefile rather than querying the document, because the overlay
+itself is portalled out of that subtree.
+
+### Assets
+
+Four walkthroughs ported from the shards `/ai-operator` case set to
+`public/videos/tools/`, with posters extracted (shards has none).
+
+**crf 26 was the wrong encode.** It bought **3–5 %** — the sources were
+already well compressed, so it was paying a generation of loss for nothing.
+crf 30 buys **36 %** (22.2 MB → 13.9 MB) and holds up at 2× zoom on UI text,
+which is the bar that matters for screen recordings. Checked before encoding
+that the sources carry no audio — they don't, so unlike the ATL films there
+was nothing for the script's default `-an` to strip.
+
+No new screenshots: the committed `/project-cards/*.webp` are 1000px against
+a ~509px render slot, and reusing them keeps each tool identical here and on
+the WebGL card.
+
+### The foot did not fit, and the fix is responsive
+
+Measured, not guessed. At **1280×720** the four tiles ran **27px past** the
+foot band and a 24-char title overran its ~140px column by **16px**.
+
+- **Short viewports drop the DESCRIPTIONS, not the tiles**
+  (`@media (max-height: 780px)`). Four capability titles still name what the
+  tool does; a one-line clamp would have shown ~20 characters of a
+  60-character sentence and read as a truncation bug.
+- **Narrow viewports drop the title to the 8.5px floor with tighter
+  tracking** (`@media (max-width: 1360px)`) — a width problem, not a height
+  one.
+- The tile title is `nowrap` + ellipsis and **pinned ≤24 chars**: a wrap
+  pushes that tile's description a line below its three neighbours', which
+  reads as a broken grid. Its tracking is 0.08em rather than the house
+  0.14em — tightening type was the lever, because the alternative was
+  trimming client copy to fit a column.
+
+One title did have to give: `Briefing split orchestrator` (27) →
+`Briefing splits`. Every sibling title is ≤20 and the description carries the
+meaning. Verified clip-free at 1280×720 / 1440×800 / 1920×1080.
+
+`.fl-tool` is the **fourth** pointer-events opt-in, after `.fl-tabs__tab`,
+`.fl-row` and `.fl-film`.
+
+### Test hardening
+
+`PROJECT_CASES` renders client copy on the public landing but sits outside
+`lib/cases/`, so the confidentiality scan never saw it. It is now scanned for
+the same banned patterns, its asset paths go through the repo-rooted
+allowlist, every tool is pinned to having a walkthrough, and the capability
+copy is pinned to what the foot tiles hold.
+
+### Measured, on a cool machine
+
+corridor-mid **16.9** · dissipate-approach **22.1** (p95 31.5, 3 % >33 ms) ·
+casefile-dwell **17.7** · ring-zone **16.8**. The control is at its
+session best, so this is a trustworthy reading — and it retires the
+uncertainty Update 7 recorded: `dissipate-approach` is exactly where the
+un-frosted baseline was (22.2, 3 %). verify 385/385, services-ring-smoke 18
+passed.

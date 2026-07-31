@@ -297,7 +297,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         id: "tooling",
         file: "03_TOOLING/",
         meta: "4 TOOLS",
-        project: "Production Tooling",
+        project: "Software for few",
         icon: "dir",
         preview: "Preview — 03_tooling/",
         vizLabel: "Fleet — in production",

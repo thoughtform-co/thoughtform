@@ -1,13 +1,12 @@
 "use client";
 
-import Image from "next/image";
-
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import type { CaseTrackVisual } from "@/lib/cases/types";
 
 import { FilmsPlate } from "./FilmsPlate";
 import { SignalChart } from "./SignalChart";
 import { StillsPlate } from "./StillsPlate";
+import { ToolGallery } from "./ToolGallery";
 
 /**
  * TrackVisual — one switch over the evidence-plate kinds.
@@ -34,7 +33,15 @@ function resolveTools(toolIds: readonly string[]) {
     .filter((c): c is (typeof PROJECT_CASES)[number] => Boolean(c));
 }
 
-export function TrackVisual({ visual }: { visual: CaseTrackVisual }) {
+interface TrackVisualProps {
+  visual: CaseTrackVisual;
+  /** Selected tool, for the `tools` branch only. Owned by `TrackPanel` so the
+   *  panel foot can read the same selection; ignored by every other kind. */
+  toolIdx?: number;
+  onToolIdx?: (idx: number) => void;
+}
+
+export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: TrackVisualProps) {
   switch (visual.kind) {
     case "signal":
       return <SignalChart points={visual.points} t0={visual.t0} now={visual.now} />;
@@ -96,25 +103,14 @@ export function TrackVisual({ visual }: { visual: CaseTrackVisual }) {
       );
 
     case "tools":
+      /* The only CONTROLLED branch. `TrackPanel` owns the selected index
+         because the panel FOOT follows the tool in view — see ToolGallery. */
       return (
-        <div className="fl-plate fl-plate--tools">
-          <ul className="fl-tools">
-            {resolveTools(visual.toolIds).map((tool) => (
-              <li className="fl-tool" key={tool.id}>
-                <Image
-                  className="fl-tool__shot"
-                  src={tool.image.src}
-                  alt={tool.image.alt}
-                  width={tool.image.width}
-                  height={tool.image.height}
-                />
-                <span className="fl-tool__name">{tool.codename}</span>
-                <span className="fl-tool__tag">{tool.tagline}</span>
-                <span className="fl-tool__state">{tool.status}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ToolGallery
+          tools={resolveTools(visual.toolIds)}
+          activeIdx={toolIdx}
+          onActive={onToolIdx}
+        />
       );
 
     case "stills":

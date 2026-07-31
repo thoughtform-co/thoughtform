@@ -50,6 +50,13 @@ export interface ProjectCase {
   stack: string[];
   surfaces: string[];
   image: { src: string; alt: string; width: number; height: number };
+  /** Screen-recorded walkthrough, played in the casefile's `MediaLightbox`
+   *  (ADR-056 Update 9). Poster-first by contract: no `<video>` element
+   *  exists until a click, so a tool nobody opens costs nothing. Ported from
+   *  the shards `/ai-operator` case set and re-encoded at crf 30 — the
+   *  sources were already well compressed, so crf 26 bought 4% for a
+   *  generation of loss; 30 buys 36% and holds up at 2x zoom on UI text. */
+  walkthrough?: { src: string; poster: string };
 }
 
 export const CASE_TOTAL = "04";
@@ -96,6 +103,10 @@ export const PROJECT_CASES: ProjectCase[] = [
       alt: "Mímir briefing agent interface",
       width: 1000,
       height: 641,
+    },
+    walkthrough: {
+      src: "/videos/tools/mimir.mp4",
+      poster: "/videos/tools/mimir-poster.jpg",
     },
   },
   {
@@ -149,6 +160,10 @@ export const PROJECT_CASES: ProjectCase[] = [
       width: 1000,
       height: 556,
     },
+    walkthrough: {
+      src: "/videos/tools/vesper.mp4",
+      poster: "/videos/tools/vesper-poster.jpg",
+    },
   },
   {
     id: "babylon",
@@ -192,6 +207,10 @@ export const PROJECT_CASES: ProjectCase[] = [
       width: 1000,
       height: 557,
     },
+    walkthrough: {
+      src: "/videos/tools/babylon.mp4",
+      poster: "/videos/tools/babylon-poster.jpg",
+    },
   },
   {
     id: "heimdall",
@@ -222,7 +241,11 @@ export const PROJECT_CASES: ProjectCase[] = [
         desc: "Spins up variants from the best-performing ads.",
       },
       {
-        title: "Briefing split orchestrator",
+        /* Shortened from "Briefing split orchestrator" (2026-07-31): at 27
+           chars it wrapped to a second line in the casefile's foot tiles and
+           knocked its row's descriptions out of alignment with the other
+           three. The desc carries the meaning; every sibling title is ≤20. */
+        title: "Briefing splits",
         desc: "Turns revenue projections and use-case splits into clear briefing assignments.",
       },
     ],
@@ -234,6 +257,10 @@ export const PROJECT_CASES: ProjectCase[] = [
       alt: "Heimdall briefing overview",
       width: 1000,
       height: 554,
+    },
+    walkthrough: {
+      src: "/videos/tools/heimdall.mp4",
+      poster: "/videos/tools/heimdall-poster.jpg",
     },
   },
 ];

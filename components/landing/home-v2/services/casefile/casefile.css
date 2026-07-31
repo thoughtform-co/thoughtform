@@ -1022,29 +1022,67 @@
   border: 1px solid rgba(202, 165, 84, 0.3);
 }
 
-/* ── Tool strip ───────────────────────────────────────────────────────── */
+/* ── Tool gallery ─────────────────────────────────────────────────────── */
 
-.fl-tools {
+/* Replaces the stacked strip (ADR-056 Update 9). Four ~100x46 thumbnails were
+   too small to read and showed none of the capabilities; now ONE tool is in
+   view at a readable size and the panel foot follows it. */
+.fl-plate--tools {
+  flex-direction: row;
+  gap: clamp(14px, 1.8vw, 26px);
+}
+
+.fl-toolnav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 34%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 1svh, 12px);
-  height: 100%;
+  justify-content: center;
+  gap: clamp(3px, 0.5svh, 7px);
 }
+
+/* The FOURTH pointer-events opt-in on this surface, after `.fl-tabs__tab`,
+   `.fl-row` and `.fl-film`. Safe for the same reason: `.fl-case` is
+   `visibility: hidden` until `[data-proof-live]`, and hidden subtrees do not
+   hit-test, so the departed casefile cannot eat ring-card clicks. */
 .fl-tool {
-  display: grid;
-  grid-template-columns: clamp(72px, 8vw, 104px) 1fr auto;
-  gap: 0 14px;
-  align-items: center;
-  flex: 1;
-  min-height: 0;
-}
-.fl-tool__shot {
+  appearance: none;
+  margin: 0;
+  border: 0;
+  border-left: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
   width: 100%;
-  height: 100%;
-  min-height: 0;
-  object-fit: cover;
-  /* The duotone feed recipe — dark UI captures sit above the photo bar. */
-  filter: grayscale(1) sepia(0.35) saturate(1.6) brightness(0.82);
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 0 10px;
+  align-items: baseline;
+  padding: clamp(4px, 0.7svh, 8px) 9px;
+  text-align: left;
+  transition:
+    background var(--duration-normal, 120ms) var(--ease-out, ease),
+    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-tool:hover {
+  background: rgba(202, 165, 84, 0.07);
+}
+.fl-tool[data-on] {
+  background: rgba(202, 165, 84, 0.11);
+  border-left-color: var(--gold);
+}
+.fl-tool:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -1px;
+}
+.fl-tool__ix {
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: rgba(202, 165, 84, 0.6);
 }
 .fl-tool__name {
   font-family: var(--fl-mono);
@@ -1052,25 +1090,163 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.62);
+}
+.fl-tool[data-on] .fl-tool__name {
   color: var(--dawn);
 }
 .fl-tool__tag {
   grid-column: 2;
+  display: block;
   font-family: var(--fl-mono);
   font-size: 8.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.fl-tool__state {
-  grid-column: 3;
-  grid-row: 1 / span 2;
-  align-self: center;
+
+/* The shot fits by HEIGHT and CONTAINS: the four captures run 1.56-1.81
+   aspect against a fixed box, so cover would crop a different amount off each
+   one. Natural colour — these are the product, not chrome (the old strip's
+   duotone was a thumbnail treatment and is retired with it). */
+.fl-toolshot {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(202, 165, 84, 0.22);
+  background: rgba(5, 4, 3, 0.55);
+  overflow: hidden;
+}
+.fl-toolshot__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fl-toolwatch {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  appearance: none;
+  margin: 0;
+  padding: 5px 11px;
+  cursor: pointer;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(202, 165, 84, 0.45);
+  border-radius: 0;
+  background: rgba(10, 9, 8, 0.72);
+  backdrop-filter: blur(4px);
   font-family: var(--fl-mono);
   font-size: 8.5px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(202, 165, 84, 0.7);
+  color: var(--gold);
+  transition:
+    background var(--duration-normal, 120ms) var(--ease-out, ease),
+    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-toolwatch:hover,
+.fl-toolwatch:focus-visible {
+  background: rgba(202, 165, 84, 0.2);
+  border-color: var(--gold);
+}
+.fl-toolwatch:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+/* Play triangle, drawn — no icon dependency, and a triangle rather than the
+   house diamond because this is a media control, not a wayfinding mark. */
+.fl-toolwatch__cue {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 7px;
+  border-color: transparent transparent transparent currentColor;
+}
+
+/* ── Capability tiles (the tool-gallery foot) ─────────────────────────── */
+
+/* Replaces the readout figures while a tool is in view: what the tool DOES
+   beats a count of tools. Four across at ~165px each; the desc is clamped to
+   two lines because the foot zone is a fixed ~130px band and the type floor
+   is 8.5px (owner pass, 2026-07-29) — density comes out of the line count,
+   never the size. */
+.fl-caps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 clamp(12px, 1.5vw, 20px);
+}
+.fl-cap {
+  min-width: 0;
+}
+/* MUST HOLD ONE LINE — a wrap here pushes this tile's description a line
+   below its three neighbours', which reads as a broken grid rather than a
+   long title. Tracking is 0.08em, not the 0.14em the other mono headings
+   use: tightening the type is the lever here, because the alternative was
+   trimming client copy to fit a column. Pinned at ≤24 chars by the registry
+   test. */
+.fl-cap__t {
+  display: block;
+  font-family: var(--fl-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* Belt for a future over-long title: an ellipsis is a legible degradation,
+     colliding with the next column is not. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--dawn);
+}
+.fl-cap__d {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  margin-top: 1px;
+  font-size: 8.5px;
+  /* 1.28, not the 1.42 the other body copy uses — two clamped lines plus the
+     context rows and the source line ran 1.8px past the foot band at
+     1440x800, and the descender of the second line was what got clipped. */
+  line-height: 1.28;
+  letter-spacing: 0.02em;
+  color: rgba(235, 227, 214, 0.5);
+}
+
+/* SHORT VIEWPORTS DROP THE DESCRIPTIONS, not the tiles (measured, 2026-07-31).
+   At 1280x720 the foot band is ~110px and the full tiles needed ~137 — 27px
+   over. Hiding the second line recovers exactly that and degrades honestly:
+   four capability TITLES still name what the tool does, where a one-line
+   clamp would have shown ~20 characters of a 60-character sentence and read
+   as a truncation bug. The 8.5px type floor is untouched. */
+@media (max-height: 780px) {
+  .fl-cap__d {
+    display: none;
+  }
+}
+/* NARROW viewports are a width problem, not a height one: at 1280 the four
+   columns are ~140px and a 24-char title overran by 16px. Drops to the house
+   floor with tighter tracking, which fits 24 chars in ~134px. */
+@media (max-width: 1360px) {
+  .fl-cap__t {
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+  }
 }
 
 /* ══ Stills — shipped work, shown whole ════════════════════════════════ */
@@ -1079,9 +1255,10 @@
    short and wide, and cover-cropping would cut the composition the ad was
    built around. `justify-content: center` lets the row breathe rather than
    stretching three portraits across a landscape box.
-   NO duotone here — see `.fl-tool__shot` for the contrast. That filter is a
-   UI-capture treatment; this is the creative itself, and it renders in
-   natural colour with the gold living in the frame. */
+   NO duotone. The tool strip's `.fl-tool__shot` used to carry a gold duotone
+   as a thumbnail treatment; it retired with the strip (Update 9) and every
+   plate now renders its media in natural colour, with the gold living in the
+   frame. Do not reintroduce a filter on content imagery. */
 .fl-stills {
   list-style: none;
   margin: 0;
