@@ -92,3 +92,7 @@ scripts/gateway-prep/out/
 assets-staging/
 public/images/navigator/
 .env*.local
+
+# HUD-instruments look-dev stills (96 PNGs / ~8 MB, fully regenerable via
+# `node scripts/capture-hud-instruments.mjs`)
+docs/design/hud-instruments/

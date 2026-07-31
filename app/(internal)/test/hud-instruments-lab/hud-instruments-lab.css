@@ -1,0 +1,674 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/hud-instruments-lab — section presence inside the rail columns
+   ═══════════════════════════════════════════════════════════════════════
+
+   Shape law (thoughtform-design): radius 0 everywhere; diamonds, never
+   circles; hairlines only; gold is WAYFINDING — it marks where you are and
+   nothing else; no italics.
+
+   Ink doctrine for every route below: PT Mono at the 8.5px chrome floor,
+   a dimmed dawn for what you have passed, full `--gold` for where you are,
+   nothing at all for what is ahead.
+
+   ⚠ MEASURED, not chosen (2026-07-31): the passed marks started at
+   `--dawn-30` on the reasoning that they must sit under the rail track's
+   `rgba(235,227,214,0.55)`. At 8.5px over the starfield that read as noise
+   rather than as a record — the log was there and could not be used. They
+   sit at 0.44 now: still clearly under the ladder, which stays the dominant
+   frame, but legible as the thing it is. Do not push past ~0.5, where the
+   marks start competing with the ticks.
+
+   NOTHING here restyles a production class outside a `.hil` scope. The lab
+   sheet loads last, so those scoped rules win the cascade without touching
+   the shipped surface.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Lab root ────────────────────────────────────────────────────────────
+   ⚠ `position` MUST stay STATIC. `scrollTargetForEntry` reads `offsetTop`
+   for station entries, which is document-absolute only while no ancestor
+   is positioned — position this and every detent in the lab silently
+   becomes relative to it. (See the note in `clickToNavigate.ts`.)
+
+   ⚠ And this root is NOT `position: fixed; inset: 0` like every other
+   frame lab. The document has to really scroll: `HudNav` collapses on
+   `scrollY > innerHeight * 0.5` and `computeDetentTable` divides by the
+   live scroll range, and both read 0 forever under a fixed root — with no
+   error. Real scrolling also means `--hero-lift` is written by the real
+   `useLandingScroll`, so the hero-curtain reveal is judged for real rather
+   than pinned open. NEVER declare `--hero-lift` here; a static value would
+   shadow the live write for the whole band. */
+.hil {
+  overflow-x: clip;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  --hil-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  /* How far inboard of the rail track each register sits. The bearing
+     labels ("2" / "5") already own +10px, so the index starts past them
+     and the two read as separate registers rather than one crowded column. */
+  --hil-idx-x: 26px;
+  --hil-tele-x: 8px;
+  --hil-name-x: 30px;
+  /* Passed ink — see the MEASURED note in the header. */
+  --hil-passed: rgba(235, 227, 214, 0.44);
+}
+
+/* `hudHtml` ships the fixed gold gateway radial; production covers it with
+   the opaque corridor canvas. Here the starfield bed owns the backdrop. */
+.hil .gateway {
+  display: none;
+}
+
+/* ⚠ `.home-v2-hud-root` is `display: contents` (home-v2.css) — this wrapper
+   generates NO BOX. Do not put `position` / `inset` / `pointer-events` on
+   it and then reason about them; they are dead declarations. The frame
+   inside positions itself. */
+
+/* ── The synthetic runway ───────────────────────────────────────────────
+   Spacers carry the real `.station` class for the production starfield bed
+   and so `useLandingScroll`'s `.station` sweep finds them. Their own
+   `min-height` / `padding` are zeroed so the block heights in `journey.ts`
+   are exactly what the page measures. `content-visibility` is pinned
+   VISIBLE: `auto` lets a block's contribution to `scrollHeight` change as
+   it enters and leaves, and `scrollHeight` is the denominator of every
+   detent in the lab. */
+.hil .hil-block {
+  min-height: 0;
+  padding: 0;
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+/* The corridor mount is not a `.station` (deliberately — that is what
+   `resolveActiveIdx` rule 3 exists for), so it needs the bed spelled out. */
+.hil .hil-block--mount {
+  position: relative;
+  z-index: 2;
+  background-color: var(--void, #0a0908);
+  background-image: url("/v7-stars.svg");
+  background-size: 1600px 900px;
+  background-position: center top;
+  background-repeat: repeat;
+}
+
+/* ── Portal hosts ───────────────────────────────────────────────────────
+   `inset: 0` inside `.hud__rail` is what buys the instruments the ticks'
+   percentage box, the hero-curtain clip, the wordmark-clearing bottom
+   terminus and every responsive gate — all without re-declaring one line
+   of that geometry.
+
+   `position: absolute` is NOT optional: `.hud__rail` is a flex column, and
+   a static child would become a flex item and stop sharing that box.
+   `overflow: visible` keeps a mark free to bleed outboard the way the
+   major ticks already do (ceiling ~100px, the rail clip's side inset). */
+.hil .hil-rail-host,
+.hil .hil-corner-host {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  /* Informational only (owner ruling): the nav corner stays the single
+     navigation. `.hud > *` sets `pointer-events: auto` on each rail, so
+     this has to be said out loud. */
+  pointer-events: none;
+}
+.hil .hil-layer {
+  display: contents;
+}
+
+/* ── Marks ──────────────────────────────────────────────────────────────
+   Every mark is `top: <detent>%` of the rail box, centred on its detent.
+   Percentages resolve against the host, which is the same box the ticks'
+   own `top: 33.33%` resolves against — so a mark and a tick at the same
+   fraction land on the same pixel, by construction rather than by tuning. */
+.hil .hil-mark {
+  position: absolute;
+  translate: 0 -50%;
+  pointer-events: none;
+  font-family: var(--hil-mono);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── LEFT RAIL — the STATION ROSTER (round 2) ────────────────────────────
+   Six fixed seats on the tick ladder, one per section. Round 1 seated its
+   marks at each section's real scroll detent and the result read as a
+   progress bar — correctly, because a detent-proportional column IS a
+   scale. Here position carries no information at all: it is structure, and
+   state does the moving. That is what separates an equipment bay from a
+   gauge.
+
+   The slot is ALWAYS present; only its content accrues. An empty seat
+   beside a filled one is a HUD idiom in its own right, and it keeps the
+   owner's progressive-disclosure ruling while fixing the read. */
+.hil .hil-slot {
+  left: calc(var(--hud-rail-guide-inset, 0px) + 2px);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 12px;
+}
+/* The connector back to the 2px track — what makes a slot read as WIRED to
+   the bus rather than floating beside it. */
+.hil .hil-slot__tab {
+  flex: none;
+  width: 12px;
+  height: 1px;
+  background: var(--hil-passed);
+}
+.hil .hil-slot__code {
+  font-weight: 400;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--hil-passed);
+}
+/* An empty seat holds its width AND prints a placeholder rule, so the
+   column never reflows and — more importantly — an unreached station still
+   reads as a SEAT rather than as absence. Without this the roster silently
+   degrades back into a progress bar: measured on r1, where the three seats
+   ahead were invisible and the panel read as "three things, then nothing". */
+.hil .hil-slot[data-state="ahead"] .hil-slot__code {
+  min-width: 22px;
+}
+.hil .hil-slot[data-state="ahead"] .hil-slot__code::before {
+  content: "···";
+  color: rgba(235, 227, 214, 0.22);
+}
+.hil .hil-slot[data-state="ahead"] .hil-slot__tab {
+  width: 7px;
+  background: rgba(235, 227, 214, 0.16);
+}
+/* The live seat swaps its code for the full name — see the note in
+   `RailStationRoster`. The column start never moves; only its content. */
+.hil .hil-slot__code[data-wide] {
+  letter-spacing: 0.1em;
+}
+.hil .hil-slot[data-state="here"] .hil-slot__tab {
+  width: 16px;
+  background: var(--gold, #caa554);
+}
+.hil .hil-slot[data-state="here"] .hil-slot__code {
+  color: var(--gold, #caa554);
+}
+/* The pip sits ON the track, so the live slot is visibly plugged into it. */
+.hil .hil-slot__pip {
+  position: absolute;
+  left: -3px;
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+}
+/* `bays` — each seat drawn as a bounded plate instead of a tab and a code.
+   ⚠ NOT decoration. Without the outline an unreached seat has nothing to
+   show but its stub tab, and the roster reads as three marks followed by
+   empty rail — which is the progress-bar read all over again. The plate is
+   what makes the STRUCTURE visible, which is the whole premise. */
+.hil .hil-layer[data-bays] .hil-slot {
+  padding: 2px 6px 2px 4px;
+  border: 1px solid rgba(235, 227, 214, 0.12);
+}
+.hil .hil-layer[data-bays] .hil-slot[data-state="here"] {
+  border-color: rgba(202, 165, 84, 0.45);
+}
+
+/* ── LEFT RAIL — round 1's ordinal ladder (the rejected read) ────────── */
+
+.hil .hil-idx {
+  left: calc(var(--hud-rail-guide-inset, 0px) + var(--hil-idx-x));
+  font-size: 8.5px;
+  letter-spacing: var(--track-widest, 0.15em);
+  color: var(--hil-passed);
+}
+.hil .hil-idx[data-on] {
+  color: var(--gold, #caa554);
+}
+
+/* The travelling selection bracket — TWO corners on ONE diagonal, never
+   four. Four corners close the composition into a box; a diagonal pair
+   registers it without framing it (the casefile's corner-reticle rule).
+   ONE element glides between detents on the rail's own 350ms tween; six
+   cross-fading brackets would read as a fade, not a move. */
+.hil .hil-bracket {
+  left: calc(var(--hud-rail-guide-inset, 0px) + var(--hil-idx-x) - 5px);
+  width: 25px;
+  height: 15px;
+}
+.hil .hil-bracket__c {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border: 0 solid var(--gold-40, rgba(202, 165, 84, 0.4));
+}
+.hil .hil-bracket__c--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.hil .hil-bracket__c--br {
+  right: 0;
+  bottom: 0;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+/* Gated on `data-ready` exactly as `RailManifestController` gates its
+   diamond: a mid-page reload paints AT its detent instead of sliding down
+   from the top of the rail. */
+.hil .hil-layer[data-ready] .hil-bracket {
+  transition: top 350ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* v2 — the drawn silhouettes. Bordered box, shape cut by `clip-path`
+   through the border with it (`.fl-row__glyph`, casefile.css).
+
+   ⚠ Sized 18×12, NOT the casefile's 14×10. First pass used 14×10 for
+   consistency and every silhouette collapsed into the same rectangle — the
+   cuts were smaller than the border was thick, so `arc`, `about` and
+   `contact` were indistinguishable. 18×12 with deeper cuts is this idea's
+   FAIREST version; if it still reads as a row of boxes, that is a verdict
+   on the approach rather than on the execution. */
+.hil .hil-glyph {
+  left: calc(var(--hud-rail-guide-inset, 0px) + var(--hil-idx-x) - 3px);
+  width: 18px;
+  height: 12px;
+  color: var(--hil-passed);
+  border: 1px solid currentcolor;
+}
+.hil .hil-glyph::before,
+.hil .hil-glyph::after {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  height: 1px;
+  background: currentcolor;
+}
+/* Plate cluster — two rules plus the bottom border read as three bars. */
+.hil .hil-glyph[data-glyph="services"]::before {
+  content: "";
+  top: 2px;
+}
+.hil .hil-glyph[data-glyph="services"]::after {
+  content: "";
+  top: 6px;
+}
+/* A single baseline. */
+.hil .hil-glyph[data-glyph="practice"]::before {
+  content: "";
+  top: 5px;
+}
+.hil .hil-glyph[data-on] {
+  color: var(--gold, #caa554);
+  background: currentcolor;
+}
+.hil .hil-glyph[data-on]::before,
+.hil .hil-glyph[data-on]::after {
+  background: var(--void, #0a0908);
+}
+
+/* ── RIGHT RAIL — continuous. How far. ──────────────────────────────────
+   The pointer is UN-SNAPPED and its position is pure CSS off
+   `--hil-journey`, which the journey writer publishes on the lab root. No
+   JS touches it per frame. That it moves continuously while the left rail
+   only changes at section boundaries IS the instrument. */
+/* The graduated scale — every other rung, printed. A bare track gives the
+   pointer nothing to be read against; graduations turn the right rail into
+   something you can take a value off. Straight from the Departure Mono
+   sheet's right-hand column. */
+.hil .hil-grad {
+  right: calc(var(--hud-rail-guide-inset, 0px) + 16px);
+  font-size: 8px;
+  letter-spacing: var(--track-wider, 0.1em);
+  color: rgba(235, 227, 214, 0.3);
+}
+
+.hil .hil-pointer {
+  right: calc(var(--hud-rail-guide-inset, 0px) + 5px);
+  top: calc(var(--hil-journey, 0) * 100%);
+  width: 7px;
+  height: 8px;
+  background: var(--gold, #caa554);
+  /* A diamond cut to its inboard half — a pointer aimed at the track. */
+  clip-path: polygon(0 0, 0 100%, 100% 50%);
+}
+/* The live value rides WITH the pointer, and sits outboard of the printed
+   graduations so the two registers never collide as it travels past one. */
+.hil .hil-range {
+  right: calc(var(--hud-rail-guide-inset, 0px) + 40px);
+  top: calc(var(--hil-journey, 0) * 100%);
+  font-size: 8.5px;
+  letter-spacing: var(--track-wider, 0.1em);
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+
+/* The key/value register — stacked, because 61px cannot hold
+   key + leader + value on one line. Same grammar as `.fl-ctx__row`, turned
+   through 90°: key above, dotted leader between, value below. */
+.hil .hil-tele {
+  right: calc(var(--hud-rail-guide-inset, 0px) + var(--hil-tele-x));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.hil .hil-tele__k {
+  font-weight: 400;
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+}
+.hil .hil-tele__rule {
+  width: 20px;
+  height: 0;
+  border-top: 1px dotted rgba(202, 165, 84, 0.25);
+}
+.hil .hil-tele__v {
+  font-weight: 400;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+
+.hil .hil-vertname {
+  right: calc(var(--hud-rail-guide-inset, 0px) + var(--hil-name-x));
+  top: 50%;
+  writing-mode: vertical-rl;
+  font-size: 9px;
+  letter-spacing: var(--track-widest, 0.15em);
+  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+}
+
+/* ── Corner modules ─────────────────────────────────────────────────────
+   Working INWARD from each bracket (owner: "not too much, but we have some
+   space there"). Each module hangs off the OPEN side of its own L — `--tl`
+   draws top+left so its module runs right along the horizontal arm; `--br`
+   draws bottom+right so its module runs left.
+
+   ⚠ Leaving the 37.5px corner box means re-declaring that corner's curtain
+   clip with NEGATIVE side insets. The top inset below is copied VERBATIM
+   from landing.css — it is what reveals the bracket as the hero lifts, and
+   changing it would silently change the reveal. Only the sides open up.
+   `.hud__rail` already does exactly this for its 21px tick overhang. */
+.hil .hud__corner--tl {
+  clip-path: inset(
+    max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) -220px -220px 0
+  );
+}
+.hil .hud__corner--br {
+  clip-path: inset(
+    max(
+        0px,
+        calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100dvh)
+      ) -220px -220px -220px
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .hil .hud__corner--tl,
+  .hil .hud__corner--br {
+    clip-path: none;
+  }
+}
+
+.hil .hil-cnr {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--hil-mono);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+/* Seated ON the bracket's horizontal arm, running inward from its elbow. */
+.hil .hil-cnr--tl {
+  top: -1px;
+  left: calc(100% + 8px);
+}
+.hil .hil-cnr--br {
+  bottom: -1px;
+  right: calc(100% + 8px);
+  flex-direction: row-reverse;
+}
+.hil .hil-cnr__k {
+  font-weight: 400;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(235, 227, 214, 0.3);
+}
+.hil .hil-cnr__rule {
+  width: 22px;
+  height: 0;
+  border-top: 1px dotted rgba(202, 165, 84, 0.25);
+}
+.hil .hil-cnr__v {
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--gold, #caa554);
+}
+.hil .hil-cnr__v em {
+  font-style: normal; /* house rule: no italics, ever */
+  color: rgba(235, 227, 214, 0.35);
+}
+
+/* ── Rail foot — the roster's summary, above the wordmark ────────────────
+   Lives inside the LEFT RAIL host, so it needs none of the clip surgery
+   above: the rail's own `bottom: max(...)` already clears the ADR-043
+   wordmark on short viewports, and the clip, the box and every responsive
+   gate come with it. */
+.hil .hil-foot {
+  left: calc(var(--hud-rail-guide-inset, 0px) + 8px);
+  top: auto;
+  bottom: 0;
+  translate: 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Fixed width so the dotted leaders have something to stretch across —
+     `flex: 1` on the leader needs the row to be bounded. Sized to sit
+     inside the narrowest rail (48px at the 1100px gate). */
+  width: 44px;
+}
+.hil .hil-foot__row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-weight: 400;
+}
+.hil .hil-foot__k {
+  font-style: normal;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: rgba(235, 227, 214, 0.3);
+}
+.hil .hil-foot__ld {
+  flex: 1;
+  min-width: 6px;
+  border-bottom: 1px dotted rgba(202, 165, 84, 0.22);
+  /* The optical nudge the casefile's dotted leaders carry — a leader on the
+     text baseline reads as an underline instead of a rule. */
+  transform: translateY(-3px);
+}
+.hil .hil-foot__v {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.55);
+}
+.hil .hil-foot__v--on {
+  color: var(--gold, #caa554);
+}
+
+/* ── Responsive — key off the PRODUCTION gates, never invent new ones ────
+   ≤1100  bearing labels + manifest already drop → index only here.
+   ≤960   `.hud__rail { display: none }` takes every rail instrument with
+          it for free. That is the owner ruling, so it is ASSERTED, not
+          patched — only the corner plates need saying out loud, because
+          the corner brackets survive on mobile and the nav corner is
+          already the answer there. */
+@media (max-width: 1100px) {
+  .hil .hil-tele,
+  .hil .hil-vertname {
+    display: none;
+  }
+}
+@media (max-width: 960px) {
+  .hil .hil-corner-host {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hil .hil-layer[data-ready] .hil-bracket {
+    transition: none;
+  }
+}
+
+/* ── Lab console ────────────────────────────────────────────────────────
+   Docked BOTTOM-CENTRE. Not top-right — that corner is the study. Not
+   bottom-right — that is the BR bracket plus the right rail's foot. Not
+   bottom-left — that is where the wordmark docks past 50vh. */
+.hil-console {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(10px, 2vh, 26px);
+  translate: -50% 0;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: min(94vw, 760px);
+  padding: 10px 14px;
+  background: rgba(10, 9, 8, 0.86);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.hil-console:not([data-open]) {
+  gap: 0;
+  width: auto;
+}
+.hil-console__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.hil-caret,
+.hil-readout {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.hil-caret {
+  padding: 0;
+  color: rgba(235, 227, 214, 0.7);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.hil-readout {
+  color: rgba(235, 227, 214, 0.4);
+}
+.hil-readout b {
+  font-weight: 400;
+  color: var(--gold, #caa554);
+}
+.hil-chips,
+.hil-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.hil-chip,
+.hil-toggle {
+  padding: 5px 8px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.6);
+  background: rgba(235, 227, 214, 0.02);
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  cursor: pointer;
+}
+.hil-chip--sm {
+  padding: 4px 7px;
+  font-size: 8.5px;
+}
+.hil-chip[data-on] {
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.hil-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+}
+.hil-toggle__led {
+  width: 5px;
+  height: 5px;
+  background: rgba(235, 227, 214, 0.25);
+  transform: rotate(45deg);
+}
+.hil-toggle[data-on] {
+  color: var(--gold, #caa554);
+  border-color: rgba(202, 165, 84, 0.4);
+}
+.hil-toggle[data-on] .hil-toggle__led {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+}
+.hil-thesis {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(235, 227, 214, 0.7);
+}
+.hil-prov {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.hil-prov__diamond {
+  width: 4px;
+  height: 4px;
+  flex: none;
+  background: rgba(202, 165, 84, 0.6);
+  transform: rotate(45deg);
+}
+
+/* ── Out-of-tier notice ─────────────────────────────────────────────── */
+.hil-gate-warn {
+  display: none;
+}
+@media (max-width: 960px) {
+  .hil-gate-warn {
+    position: fixed;
+    left: 50%;
+    top: 12px;
+    translate: -50% 0;
+    z-index: 9000;
+    display: block;
+    max-width: 78vw;
+    margin: 0;
+    padding: 7px 12px;
+    font-family: var(--font-pt-mono, ui-monospace, monospace);
+    font-size: 9px;
+    line-height: 1.4;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold, #caa554);
+    background: rgba(10, 9, 8, 0.9);
+    border: 1px solid rgba(202, 165, 84, 0.35);
+  }
+}
