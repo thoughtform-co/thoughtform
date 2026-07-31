@@ -312,12 +312,9 @@ describe("cases registry (ADR-054)", () => {
     for (const c of PROJECT_CASES) {
       expect(c.capabilities).toHaveLength(4);
       for (const cap of c.capabilities) {
-        // The tile title must hold ONE line: it sits above a 2-line clamped
-        // desc in a ~45px band, so a wrap pushes its description out of line
-        // with the other three tiles. 24 is what the current copy needs and
-        // what the tile's tracking (0.08em, tightened for exactly this) was
-        // measured to fit in a ~165px column — verified in-browser at
-        // 1280/1440/1920, no title wraps.
+        // The tile title must hold ONE line: a wrap pushes its description a
+        // line below its three neighbours', which reads as a broken grid.
+        // Verified in-browser at 1280/1440/1920 at the tile's 10.5px/0.06em.
         expect(cap.title.length, `${c.id} "${cap.title}"`).toBeLessThanOrEqual(24);
         expect(cap.desc.length, `${c.id} "${cap.title}" desc`).toBeLessThanOrEqual(95);
       }

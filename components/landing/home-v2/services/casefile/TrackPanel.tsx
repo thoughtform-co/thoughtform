@@ -61,7 +61,12 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
         { k: "Status", v: tool.status },
       ]
     : track.context;
-  const source = tool ? tool.shift : track.source;
+  /* NO provenance line while a tool is in view (owner, 2026-07-31). The
+     sentence that used to sit here IS the tool's `shift`, and it now reads
+     inside the plate beside the screenshot at reading size — printing it
+     twice would be the same words at two sizes, and dropping it here is what
+     buys the capability tiles the room to be legible. */
+  const source = tool ? null : track.source;
 
   return (
     <div
@@ -137,7 +142,7 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
           ))}
         </ul>
 
-        <p className="fl-source">{source}</p>
+        {source ? <p className="fl-source">{source}</p> : null}
       </div>
     </div>
   );

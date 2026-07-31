@@ -1024,94 +1024,129 @@
 
 /* ── Tool gallery ─────────────────────────────────────────────────────── */
 
-/* Replaces the stacked strip (ADR-056 Update 9). Four ~100x46 thumbnails were
-   too small to read and showed none of the capabilities; now ONE tool is in
-   view at a readable size and the panel foot follows it. */
+/* TYPE SCALE (owner, 2026-07-31: "make sure everything is legible enough").
+   This sheet has two sizes and they mean different things — 8.5px is the
+   CHROME floor (designations, leader keys, meta), 10.5px is the READING size
+   the owner set for the directory rows on 2026-07-29. Everything in this
+   block that carries content reads at 10.5 or above; only labels sit at 8.5.
+   The first pass had capability copy at 8.5, which put content at chrome
+   size — that is the bug this scale exists to prevent. */
 .fl-plate--tools {
-  flex-direction: row;
-  gap: clamp(14px, 1.8vw, 26px);
+  flex-direction: column;
+  gap: clamp(9px, 1.3svh, 14px);
 }
 
-.fl-toolnav {
-  list-style: none;
+/* Horizontal switcher. Deliberately NOT the client tabs above it: those are
+   left-packed, larger, and marked by an underline. These distribute across
+   the full width, carry an ordinal, and mark the active one with a gold rule
+   plus a wash — same family, visibly a different rank. */
+.fl-tooltabs {
+  display: flex;
+  gap: 1px;
+  flex: 0 0 auto;
+  border-bottom: 1px dotted rgba(202, 165, 84, 0.22);
+}
+.fl-tooltab {
+  appearance: none;
   margin: 0;
-  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  /* The FOURTH pointer-events opt-in on this surface, after `.fl-tabs__tab`,
+     `.fl-row` and `.fl-film`. Safe for the same reason: `.fl-case` is
+     `visibility: hidden` until `[data-proof-live]`, and hidden subtrees do
+     not hit-test, so the departed casefile cannot eat ring-card clicks. */
+  pointer-events: auto;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 0 0 7px;
+  text-align: left;
+  transition:
+    color var(--duration-normal, 120ms) var(--ease-out, ease),
+    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-tooltab:hover .fl-tooltab__name {
+  color: rgba(235, 227, 214, 0.85);
+}
+.fl-tooltab[data-on] {
+  border-bottom-color: var(--gold);
+}
+.fl-tooltab:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+.fl-tooltab__ix {
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: rgba(202, 165, 84, 0.5);
+}
+.fl-tooltab[data-on] .fl-tooltab__ix {
+  color: var(--gold);
+}
+.fl-tooltab__name {
+  font-family: var(--fl-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-tooltab[data-on] .fl-tooltab__name {
+  color: var(--dawn);
+}
+
+.fl-toolbody {
+  display: flex;
+  gap: clamp(14px, 1.8vw, 26px);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* The column the vertical switcher used to occupy. Carries the tool's
+   tagline and its `shift` sentence — the one-sentence abstract of what it
+   changed, which used to sit at the very bottom of the panel at chrome size
+   and is now beside the screenshot at reading size. */
+.fl-toolbrief {
   flex: 0 0 34%;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: clamp(3px, 0.5svh, 7px);
+  gap: 7px;
 }
-
-/* The FOURTH pointer-events opt-in on this surface, after `.fl-tabs__tab`,
-   `.fl-row` and `.fl-film`. Safe for the same reason: `.fl-case` is
-   `visibility: hidden` until `[data-proof-live]`, and hidden subtrees do not
-   hit-test, so the departed casefile cannot eat ring-card clicks. */
-.fl-tool {
-  appearance: none;
+.fl-toolbrief__tag {
+  font-family: var(--fl-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.fl-toolbrief__body {
   margin: 0;
-  border: 0;
-  border-left: 1px solid transparent;
-  background: none;
-  cursor: pointer;
-  pointer-events: auto;
-  width: 100%;
-  display: grid;
-  grid-template-columns: 20px 1fr;
-  gap: 0 10px;
-  align-items: baseline;
-  padding: clamp(4px, 0.7svh, 8px) 9px;
-  text-align: left;
-  transition:
-    background var(--duration-normal, 120ms) var(--ease-out, ease),
-    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
-}
-.fl-tool:hover {
-  background: rgba(202, 165, 84, 0.07);
-}
-.fl-tool[data-on] {
-  background: rgba(202, 165, 84, 0.11);
-  border-left-color: var(--gold);
-}
-.fl-tool:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: -1px;
-}
-.fl-tool__ix {
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.14em;
-  color: rgba(202, 165, 84, 0.6);
-}
-.fl-tool__name {
-  font-family: var(--fl-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.62);
-}
-.fl-tool[data-on] .fl-tool__name {
-  color: var(--dawn);
-}
-.fl-tool__tag {
-  grid-column: 2;
-  display: block;
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--fl-ink-dim);
-  white-space: nowrap;
+  /* Sans, not mono, and at reading size: this is a sentence, not a readout.
+     Clamped so a longer `shift` on a future tool cannot push the plate. */
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: rgba(235, 227, 214, 0.72);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  line-clamp: 7;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* The shot fits by HEIGHT and CONTAINS: the four captures run 1.56-1.81
-   aspect against a fixed box, so cover would crop a different amount off each
-   one. Natural colour — these are the product, not chrome (the old strip's
-   duotone was a thumbnail treatment and is retired with it). */
+   aspect against a fixed box, so cover would crop a different amount off
+   each one. Natural colour — these are the product, not chrome (the old
+   strip's duotone was a thumbnail treatment and retired with it). */
 .fl-toolshot {
   position: relative;
   flex: 1 1 auto;
@@ -1136,7 +1171,7 @@
   bottom: 8px;
   appearance: none;
   margin: 0;
-  padding: 5px 11px;
+  padding: 6px 12px;
   cursor: pointer;
   pointer-events: auto;
   display: inline-flex;
@@ -1147,8 +1182,8 @@
   background: rgba(10, 9, 8, 0.72);
   backdrop-filter: blur(4px);
   font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.2em;
+  font-size: 9px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
   transition:
@@ -1177,37 +1212,37 @@
 /* ── Capability tiles (the tool-gallery foot) ─────────────────────────── */
 
 /* Replaces the readout figures while a tool is in view: what the tool DOES
-   beats a count of tools. Four across at ~165px each; the desc is clamped to
-   two lines because the foot zone is a fixed ~130px band and the type floor
-   is 8.5px (owner pass, 2026-07-29) — density comes out of the line count,
-   never the size. */
+   beats a count of tools. Four across, and at READING size — see the type
+   scale note at the top of this block. The provenance line is suppressed for
+   this row (its sentence moved into the plate), which is what buys the space
+   these need. */
+/* TWO COLUMNS, not four (2026-07-31). At reading size four columns are
+   ~140px at 1280 and a 24-char title needs ~170 — measured, the titles
+   overran by 29px and a description lost 15px to its clamp. Four columns
+   only worked while the type was at chrome size, which is the thing this
+   pass is undoing. Two columns give ~330px, which holds both. */
 .fl-caps {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0 clamp(12px, 1.5vw, 20px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(4px, 0.7svh, 9px) clamp(18px, 2.2vw, 34px);
 }
 .fl-cap {
   min-width: 0;
 }
-/* MUST HOLD ONE LINE — a wrap here pushes this tile's description a line
-   below its three neighbours', which reads as a broken grid rather than a
-   long title. Tracking is 0.08em, not the 0.14em the other mono headings
-   use: tightening the type is the lever here, because the alternative was
-   trimming client copy to fit a column. Pinned at ≤24 chars by the registry
-   test. */
+/* MUST HOLD ONE LINE — a wrap pushes this tile's description a line below
+   its three neighbours', which reads as a broken grid rather than a long
+   title. Pinned ≤24 chars by the registry test. */
 .fl-cap__t {
   display: block;
   font-family: var(--fl-mono);
-  font-size: 9.5px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
-  /* Belt for a future over-long title: an ellipsis is a legible degradation,
-     colliding with the next column is not. */
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--dawn);
@@ -1218,34 +1253,20 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
-  margin-top: 1px;
-  font-size: 8.5px;
-  /* 1.28, not the 1.42 the other body copy uses — two clamped lines plus the
-     context rows and the source line ran 1.8px past the foot band at
-     1440x800, and the descender of the second line was what got clipped. */
-  line-height: 1.28;
-  letter-spacing: 0.02em;
-  color: rgba(235, 227, 214, 0.5);
+  margin-top: 2px;
+  font-size: 10.5px;
+  line-height: 1.36;
+  color: rgba(235, 227, 214, 0.58);
 }
 
-/* SHORT VIEWPORTS DROP THE DESCRIPTIONS, not the tiles (measured, 2026-07-31).
-   At 1280x720 the foot band is ~110px and the full tiles needed ~137 — 27px
-   over. Hiding the second line recovers exactly that and degrades honestly:
-   four capability TITLES still name what the tool does, where a one-line
-   clamp would have shown ~20 characters of a 60-character sentence and read
-   as a truncation bug. The 8.5px type floor is untouched. */
-@media (max-height: 780px) {
+/* Short viewports drop the DESCRIPTIONS, not the tiles, and never the type
+   size. Four capability TITLES still name what the tool does; shrinking the
+   type instead would put content back below the reading size this pass
+   exists to hold, and the plate's own brief already carries the tool's
+   sentence. */
+@media (max-height: 820px) {
   .fl-cap__d {
     display: none;
-  }
-}
-/* NARROW viewports are a width problem, not a height one: at 1280 the four
-   columns are ~140px and a 24-char title overran by 16px. Drops to the house
-   floor with tighter tracking, which fits 24 chars in ~134px. */
-@media (max-width: 1360px) {
-  .fl-cap__t {
-    font-size: 8.5px;
-    letter-spacing: 0.06em;
   }
 }
 

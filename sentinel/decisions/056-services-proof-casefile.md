@@ -908,3 +908,42 @@ session best, so this is a trustworthy reading — and it retires the
 uncertainty Update 7 recorded: `dissipate-approach` is exactly where the
 un-frosted baseline was (22.2, 3 %). verify 385/385, services-ring-smoke 18
 passed.
+
+### Second pass, same day — legibility (owner)
+
+_"The text in the bottom right panel is WAY too small… let's harmonise and
+make sure everything is legible enough."_
+
+**The type scale is the finding.** This sheet has two sizes and they mean
+different things: **8.5px is the CHROME floor** (designations, leader keys,
+meta) and **10.5px is the READING size** the owner set for the directory rows
+on 2026-07-29. The first pass put capability copy — actual content — at 8.5.
+That is the rule this scale now states out loud at the top of the tool-gallery
+block, so the next person does not repeat it.
+
+Now: tool tabs **11.5px**, plate brief **11.5px**, capability titles and
+descriptions **10.5px**, chrome unchanged at 8.5–9px.
+
+**The switcher went horizontal**, which is what paid for it. As a vertical
+list it occupied the column that now carries the tool's own description; as a
+tab row it costs ~37px of plate height and frees ~230px of width. The tabs
+are deliberately not the client tabs above them — those are left-packed,
+larger and underlined; these distribute across the full width, carry an
+`01–04` ordinal, and mark the active one with a gold rule.
+
+**The provenance line is gone for this row.** It held the tool's `shift`
+sentence at chrome size, three zones below the tool it described. That
+sentence now reads inside the plate beside the screenshot at 11.5px, and
+dropping the duplicate is what buys the capability tiles their room.
+
+**FOUR COLUMNS ONLY EVER WORKED AT CHROME SIZE.** Measured at reading size:
+titles overran their ~140px column by **29px** at 1280 and a description lost
+**15px** to its clamp at 1440. Two columns give ~330px, which holds both.
+Below 820px viewport height the descriptions drop and the four titles stand
+alone — never the type size, since shrinking it is the exact regression this
+pass undoes, and the plate's brief already carries the tool's sentence.
+
+Verified at 1280×720 / 1440×800 / 1920×1080: zero foot overflow, zero title
+overflow, zero description clipping, zero brief clipping. All four tabs swap
+tagline, brief, shot, tiles and context together; the walkthrough opens,
+plays and restores focus. verify 385/385, services-ring-smoke 18 passed.
