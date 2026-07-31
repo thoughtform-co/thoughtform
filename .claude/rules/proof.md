@@ -100,16 +100,26 @@ inherited its ambient-cover role.
   land on tick 2 and the bearing-5 major. Two upstreams must stay in step:
   `.hud__rail` in `landing.css` and `lib/v7-parse/hudTicks.ts`. **That drift
   is the only way this design fails silently — check it first.**
-- **The tools row is a CONTROLLED gallery (ADR-056 Update 9).** `TrackPanel`
-  owns `toolIdx` — not the plate — because the panel FOOT follows the tool in
-  view: capability tiles, `Mode / Team / Status`, and the tool's `shift` as
-  the provenance line. It is `TrackVisual`'s one controlled branch; the
-  `never` guard stays. Tile titles are `nowrap` and pinned ≤24 chars (a wrap
-  drops that tile's description below its neighbours'), `Team` prints the
-  DEPARTMENT only (the full strings are 38 chars against a ≤20 leader), and
-  short/narrow viewports drop the DESCRIPTIONS and the title to the 8.5px
-  floor rather than dropping tiles — measured, 4 tiles ran 27px past the foot
-  at 1280×720.
+- **The tools row is a CONTROLLED gallery on ONE grid (ADR-056 Update 9,
+  third pass).** `TrackPanel` owns `toolIdx` — not the plate — because the
+  panel FOOT follows the tool in view. The body splits 50/50 with no gap,
+  the tabs are quarters of the same rail, and the foot's 2×2 capability
+  tiles sit on the same split (`--fl-plate-px` / `--fl-shot-px` are the
+  shared text rails — measured aligned to 0.1px). The FUNCTIONAL NAME is
+  the tab label; the codename is chrome (a visitor cannot know "Mímir").
+  While a tool is in view the foot is the capabilities and NOTHING else —
+  mode/team/year live on the identity meta line, the `shift` sentence
+  beside the shot, status in the panel head. Content reads at `--fl-copy`
+  (the brief column's own size); 8.5–10px mono is CHROME ONLY. The
+  responsive ladder (≤930h / ≤800h / ≤760h) is measured against the worst
+  tool (Heimdall's 2-line lead over a 179-char shift) and never drops copy
+  below the 10.5px directory reading size — at ≤760h the TEXT COLUMN WIDENS
+  (58/42) instead of the sentence truncating. Tab-name overflow is a
+  TRACKING problem, not a size problem (0.05em cost 12px on a 146px
+  quarter). The shot BLEEDS to the viz box edges (cover, top-anchored;
+  `contain`'s letterbox was the "plastered on" read) and the whole frame is
+  the walkthrough button, with the bar fused to its bottom edge and the
+  duration printed from `walkthrough.duration`.
 - **One lightbox, `MediaLightbox`, shared by the films and the walkthroughs.**
   Do not hand-write a second — its portal, scroll lock and focus restore each
   cost a measurement to get right (Update 8).

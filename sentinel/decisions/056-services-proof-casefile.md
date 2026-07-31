@@ -947,3 +947,59 @@ Verified at 1280×720 / 1440×800 / 1920×1080: zero foot overflow, zero title
 overflow, zero description clipping, zero brief clipping. All four tabs swap
 tagline, brief, shot, tiles and context together; the walkthrough opens,
 plays and restores focus. verify 385/385, services-ring-smoke 18 passed.
+
+### Third pass, same day — the redesign (owner: "take a step back")
+
+The second pass fixed sizes without fixing the design. Owner: the panel text
+was still too small, the codenames alone were meaningless labels, the watch
+button was "ugly", the thumbnail "plastered on", and the foot did not align
+with the plate. All five had one root: the panel was assembled, not designed.
+
+**The panel is ONE grid now.** The plate body splits 50/50 with no gap; the
+tab row is quarters of the same rail; the foot's capability tiles sit on the
+same 50% split, odd tiles on the identity column's text rail (`--fl-plate-px`
+
+- the box border), even tiles on the watch bar's (`--fl-shot-px`). Measured:
+  identity text 25.1 / odd caps 25.0; bar text 398.3 / even caps 398.2.
+
+**The functional name is the label.** Tabs are two lines — `01 · MÍMIR` as
+chrome over `BRIEFING AGENT` as the label — because a visitor cannot be
+expected to know the codenames (owner: "don't just use the internal
+naming"). Tracking, not size, was the tab-overflow lever: 22 chars at 11px
++0.05em ran 11px past a 146px quarter; 10.5px +0.02em fits with 3px spare.
+
+**Content reads at `--fl-copy`** — the brief column's own body size (~16px at
+1600), which is the owner's evident reference for "legible". The identity
+column carries tagline kicker → subline lead (~17px) → the `shift` sentence →
+a `codename · mode · dept · year` meta line. Chrome (ordinals, kicker, meta,
+bar) stays at 8.5–10px mono. The foot is the four capabilities and NOTHING
+else — the context row and provenance line duplicated words the plate now
+carries, and dropping them bought the tiles reading size.
+
+**The shot is architecture.** It BLEEDS to the viz box edges (cover,
+top-anchored — a letterboxed `contain` was the "plastered on" read), its left
+border is the body's seam, and the walkthrough affordance is a full-width bar
+FUSED to its bottom edge with the duration on the right ("1:20", read off the
+encodes into `walkthrough.duration`). The whole frame is one button — a
+~430×280 target instead of a floating 130×26 pill. Focus ring on the frame,
+roving arrow-key tabs, same grammar as the client strip.
+
+**The responsive ladder is measured against the WORST tool** (Heimdall: a
+2-line lead over a 179-char shift), and it never drops below the 10.5px
+directory reading size:
+
+- ≤930h — kicker hidden, copy 15/14px (full size ran 25px past the column at
+  1600×900);
+- ≤800h — copy 13.5/13px; cap descriptions KEEP two lines (measured: they fit
+  with 16px spare — the second pass clamped them a step too early);
+- ≤760h — text column widens to 58/42 so the 185-char shift holds inside its
+  clamp (the shot narrows rather than the sentence truncating), cap
+  descriptions to one line.
+
+Verified clip-free at 1280×720 / 1440×800 / 1600×900 / 1920×1080 across all
+four tools (the one remaining "clip" is 720p's designed one-line ellipsis).
+All four tabs swap lead, shift, shot, tiles and meta together; the frame
+opens the lightbox and restores focus; the films path is unregressed. Frame
+probe on a cool control: corridor-mid 16.9 / dissipate-approach 21.7 /
+casefile-dwell 16.9 / ring-zone 16.7 — baseline. verify 385/385, smoke 18
+passed.

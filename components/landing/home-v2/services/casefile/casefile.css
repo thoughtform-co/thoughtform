@@ -1024,53 +1024,68 @@
 
 /* ── Tool gallery ─────────────────────────────────────────────────────── */
 
-/* TYPE SCALE (owner, 2026-07-31: "make sure everything is legible enough").
-   This sheet has two sizes and they mean different things — 8.5px is the
-   CHROME floor (designations, leader keys, meta), 10.5px is the READING size
-   the owner set for the directory rows on 2026-07-29. Everything in this
-   block that carries content reads at 10.5 or above; only labels sit at 8.5.
-   The first pass had capability copy at 8.5, which put content at chrome
-   size — that is the bug this scale exists to prevent. */
-.fl-plate--tools {
-  flex-direction: column;
-  gap: clamp(9px, 1.3svh, 14px);
+/* Third pass (owner, 2026-07-31 — "take a step back and fix it properly").
+   The panel is ONE grid now: the plate body splits 50/50 with no gap, the
+   tab row is quarters of the same rail, and the capability tiles in the
+   foot sit on the same 50% split with their text on the same left rails.
+   The misalignment complaint was three stacked zones each with a private
+   grid.
+
+   TYPE: content reads at `--fl-copy` — the SAME size as the brief column's
+   body, which is the owner's reference for "legible". 8.5–10px mono is
+   reserved for chrome (ordinals, kickers, meta, the watch bar). */
+.fl-panel {
+  /* Shared rails for the plate AND the foot below it. `--fl-plate-px` is
+     the plate's horizontal inset lifted to a var so the foot can align its
+     text to the plate's text; the +1 offsets in the foot account for the
+     viz box border. */
+  --fl-plate-px: clamp(16px, 1.8vw, 24px);
+  --fl-shot-px: 14px;
 }
 
-/* Horizontal switcher. Deliberately NOT the client tabs above it: those are
-   left-packed, larger, and marked by an underline. These distribute across
-   the full width, carry an ordinal, and mark the active one with a gold rule
-   plus a wash — same family, visibly a different rank. */
+/* The plate manages its own insets per zone — padding 0 so the screenshot
+   can BLEED to the box edges instead of floating inside them. */
+.fl-plate--tools {
+  padding: 0;
+  gap: 0;
+}
+
+/* Switcher: four quarters of the rail, two lines each. The CODENAME is
+   chrome (a visitor cannot be expected to know "Mímir"); the FUNCTIONAL
+   NAME is the label. Deliberately not the client tabs above: those are
+   left-packed, single-line, larger; these are a distributed register with
+   an ordinal line. */
 .fl-tooltabs {
-  display: flex;
-  gap: 1px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   flex: 0 0 auto;
+  padding-top: clamp(10px, 1.4svh, 14px);
   border-bottom: 1px dotted rgba(202, 165, 84, 0.22);
 }
 .fl-tooltab {
   appearance: none;
-  margin: 0;
+  margin: 0 0 -1px;
   border: 0;
+  /* Sits ON the container hairline; the active rule replaces it. */
   border-bottom: 2px solid transparent;
   background: none;
   cursor: pointer;
-  /* The FOURTH pointer-events opt-in on this surface, after `.fl-tabs__tab`,
-     `.fl-row` and `.fl-film`. Safe for the same reason: `.fl-case` is
-     `visibility: hidden` until `[data-proof-live]`, and hidden subtrees do
-     not hit-test, so the departed casefile cannot eat ring-card clicks. */
+  /* Pointer opt-in (the casefile host is `pointer-events: none`; the full
+     roster is the client tabs, the directory rows, the film tiles, these
+     tabs and the shot frame below — all safe because the host is
+     `visibility: hidden` until `[data-proof-live]`). */
   pointer-events: auto;
-  flex: 1 1 0;
   min-width: 0;
   display: flex;
-  align-items: baseline;
-  gap: 7px;
-  padding: 0 0 7px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 12px 8px var(--fl-shot-px);
   text-align: left;
-  transition:
-    color var(--duration-normal, 120ms) var(--ease-out, ease),
-    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+  transition: border-color var(--duration-normal, 120ms) var(--ease-out, ease);
 }
-.fl-tooltab:hover .fl-tooltab__name {
-  color: rgba(235, 227, 214, 0.85);
+/* The first tab's text sits on the plate text rail, like the column below. */
+.fl-tooltab:first-child {
+  padding-left: var(--fl-plate-px);
 }
 .fl-tooltab[data-on] {
   border-bottom-color: var(--gold);
@@ -1079,129 +1094,168 @@
   outline: 1px solid var(--gold);
   outline-offset: 2px;
 }
-.fl-tooltab__ix {
+.fl-tooltab__code {
   font-family: var(--fl-mono);
   font-size: 8.5px;
-  letter-spacing: 0.14em;
-  color: rgba(202, 165, 84, 0.5);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.45);
+  white-space: nowrap;
+  transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
 }
-.fl-tooltab[data-on] .fl-tooltab__ix {
-  color: var(--gold);
+.fl-tooltab[data-on] .fl-tooltab__code {
+  color: rgba(202, 165, 84, 0.85);
 }
 .fl-tooltab__name {
   font-family: var(--fl-mono);
-  font-size: 11.5px;
+  /* 10.5px + 0.02em: the longest name (22ch, "AI IMAGE & VIDEO SUITE") is
+     ~143px against a ~146px quarter at 1440 — tracking is the overflow
+     lever here, not size. Wider viewports step up below. */
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.45);
+  color: rgba(235, 227, 214, 0.42);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
 }
+.fl-tooltab:hover .fl-tooltab__name {
+  color: rgba(235, 227, 214, 0.78);
+}
 .fl-tooltab[data-on] .fl-tooltab__name {
   color: var(--dawn);
 }
 
+/* Body: identity column | screenshot, split down the middle, NO gap — the
+   shot frame's own left border is the seam. */
 .fl-toolbody {
-  display: flex;
-  gap: clamp(14px, 1.8vw, 26px);
   flex: 1 1 auto;
   min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
 
-/* The column the vertical switcher used to occupy. Carries the tool's
-   tagline and its `shift` sentence — the one-sentence abstract of what it
-   changed, which used to sit at the very bottom of the panel at chrome size
-   and is now beside the screenshot at reading size. */
-.fl-toolbrief {
-  flex: 0 0 34%;
+.fl-toolid {
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: clamp(5px, 0.9svh, 9px);
+  padding: clamp(10px, 1.6svh, 16px) clamp(16px, 2vw, 28px) clamp(10px, 1.6svh, 14px)
+    var(--fl-plate-px);
 }
-.fl-toolbrief__tag {
+.fl-toolid__kicker {
   font-family: var(--fl-mono);
   font-size: 9px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold);
 }
-.fl-toolbrief__body {
+/* The hook ("Replaced Krea. Built in-house.") — a lead, not a label, so it
+   is SANS at above body size. */
+.fl-toolid__lead {
   margin: 0;
-  /* Sans, not mono, and at reading size: this is a sentence, not a readout.
-     Clamped so a longer `shift` on a future tool cannot push the plate. */
-  font-size: 11.5px;
+  font-size: calc(var(--fl-copy) * 1.06);
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgba(235, 227, 214, 0.94);
+}
+/* The `shift` sentence — the abstract of what the tool changed. Reads at
+   the brief column's own size; it appears HERE and nowhere else in the
+   panel. The clamp is a belt for a longer future sentence, sized so the
+   longest today (185 chars) fits uncut at 1440 and above. */
+.fl-toolid__desc {
+  margin: 0;
+  font-size: var(--fl-copy);
   line-height: 1.5;
-  color: rgba(235, 227, 214, 0.72);
+  color: rgba(235, 227, 214, 0.68);
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 7;
-  line-clamp: 7;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
   overflow: hidden;
 }
-
-/* The shot fits by HEIGHT and CONTAINS: the four captures run 1.56-1.81
-   aspect against a fixed box, so cover would crop a different amount off
-   each one. Natural colour — these are the product, not chrome (the old
-   strip's duotone was a thumbnail treatment and retired with it). */
-.fl-toolshot {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(202, 165, 84, 0.22);
-  background: rgba(5, 4, 3, 0.55);
-  overflow: hidden;
-}
-.fl-toolshot__img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.fl-toolwatch {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  appearance: none;
-  margin: 0;
-  padding: 6px 12px;
-  cursor: pointer;
-  pointer-events: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid rgba(202, 165, 84, 0.45);
-  border-radius: 0;
-  background: rgba(10, 9, 8, 0.72);
-  backdrop-filter: blur(4px);
+.fl-toolid__meta {
+  margin-top: auto;
   font-family: var(--fl-mono);
   font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fl-ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The screenshot half. ONE BUTTON — image and watch bar fused into a frame
+   that bleeds to the viz box edges (top under the tabs, right and bottom to
+   the border). Cover, top-anchored: dashboards lead with their header, and
+   a letterboxed `contain` was the "plastered on" read. The whole frame is
+   the walkthrough trigger — a ~350×200 target instead of a floating
+   130×26 pill. */
+.fl-shot {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #050403;
+  cursor: pointer;
+  pointer-events: auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid rgba(202, 165, 84, 0.22);
+  text-align: left;
+}
+.fl-shot[data-static] {
+  cursor: default;
+  pointer-events: none;
+}
+.fl-shot:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -2px;
+}
+.fl-shot__img {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.fl-shot__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px var(--fl-shot-px);
+  border-top: 1px solid rgba(202, 165, 84, 0.3);
+  background: rgba(10, 9, 8, 0.88);
+  font-family: var(--fl-mono);
+  font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
-  transition:
-    background var(--duration-normal, 120ms) var(--ease-out, ease),
-    border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+  transition: background var(--duration-normal, 120ms) var(--ease-out, ease);
 }
-.fl-toolwatch:hover,
-.fl-toolwatch:focus-visible {
-  background: rgba(202, 165, 84, 0.2);
-  border-color: var(--gold);
+.fl-shot:hover .fl-shot__bar,
+.fl-shot:focus-visible .fl-shot__bar {
+  background: rgba(202, 165, 84, 0.18);
 }
-.fl-toolwatch:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 2px;
+.fl-shot__bar b {
+  margin-left: auto;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.55);
 }
-/* Play triangle, drawn — no icon dependency, and a triangle rather than the
-   house diamond because this is a media control, not a wayfinding mark. */
-.fl-toolwatch__cue {
+/* Play triangle, drawn — a media control, not a wayfinding diamond. */
+.fl-shot__cue {
+  flex: none;
   width: 0;
   height: 0;
   border-style: solid;
@@ -1211,34 +1265,37 @@
 
 /* ── Capability tiles (the tool-gallery foot) ─────────────────────────── */
 
-/* Replaces the readout figures while a tool is in view: what the tool DOES
-   beats a count of tools. Four across, and at READING size — see the type
-   scale note at the top of this block. The provenance line is suppressed for
-   this row (its sentence moved into the plate), which is what buys the space
-   these need. */
-/* TWO COLUMNS, not four (2026-07-31). At reading size four columns are
-   ~140px at 1280 and a 24-char title needs ~170 — measured, the titles
-   overran by 29px and a description lost 15px to its clamp. Four columns
-   only worked while the type was at chrome size, which is the thing this
-   pass is undoing. Two columns give ~330px, which holds both. */
+/* The foot is the four capabilities and NOTHING else while a tool is in
+   view — mode/team/year live on the identity meta line, the shift sentence
+   beside the shot, status in the panel head. 2×2 on the plate's own 50%
+   rail; the odd tiles share the identity column's text rail, the even
+   tiles the watch bar's. Same content sizes as the plate above. */
 .fl-caps {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(4px, 0.7svh, 9px) clamp(18px, 2.2vw, 34px);
+  gap: clamp(7px, 1.1svh, 12px) 0;
 }
 .fl-cap {
   min-width: 0;
 }
+.fl-cap:nth-child(odd) {
+  padding-left: calc(var(--fl-plate-px) + 1px);
+  padding-right: clamp(16px, 2vw, 28px);
+}
+.fl-cap:nth-child(even) {
+  padding-left: calc(var(--fl-shot-px) + 1px);
+  padding-right: var(--fl-plate-px);
+}
 /* MUST HOLD ONE LINE — a wrap pushes this tile's description a line below
-   its three neighbours', which reads as a broken grid rather than a long
-   title. Pinned ≤24 chars by the registry test. */
+   its neighbour's, which reads as a broken grid. Pinned ≤24 chars by the
+   registry test; ellipsis is the belt. */
 .fl-cap__t {
   display: block;
   font-family: var(--fl-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1254,19 +1311,76 @@
   line-clamp: 2;
   overflow: hidden;
   margin-top: 2px;
-  font-size: 10.5px;
-  line-height: 1.36;
-  color: rgba(235, 227, 214, 0.58);
+  font-size: var(--fl-copy);
+  line-height: 1.4;
+  color: rgba(235, 227, 214, 0.6);
 }
 
-/* Short viewports drop the DESCRIPTIONS, not the tiles, and never the type
-   size. Four capability TITLES still name what the tool does; shrinking the
-   type instead would put content back below the reading size this pass
-   exists to hold, and the plate's own brief already carries the tool's
-   sentence. */
-@media (max-height: 820px) {
-  .fl-cap__d {
+/* Wide viewports: the quarters have room to spare, so the label steps up. */
+@media (min-width: 1600px) {
+  .fl-tooltab__name {
+    font-size: 11.5px;
+  }
+}
+/* Short-viewport ladder. Three steps, all measured against the WORST tool
+   (Heimdall: a 2-line lead over a 179-char shift), never below the 10.5px
+   directory reading size — shrinking type past that is the regression this
+   pass exists to undo.
+   Step 1 (=<930h, e.g. 1600x900): the KICKER goes (the tab already names
+   the function) and the copy steps to 14px — at full size the stack ran
+   ~25px past the column. */
+@media (max-height: 930px) {
+  .fl-toolid__kicker {
     display: none;
+  }
+  .fl-toolid__lead {
+    font-size: 15px;
+  }
+  .fl-toolid__desc {
+    font-size: 14px;
+  }
+  .fl-cap__d {
+    font-size: 14px;
+  }
+}
+/* Step 2 (=<800h): copy to 13px. Two cap lines still fit the ~130px foot
+   with 16px spare — the 1-line clamp waits for step 3. */
+@media (max-height: 800px) {
+  .fl-toolid__lead {
+    font-size: 13.5px;
+  }
+  .fl-toolid__desc {
+    font-size: 13px;
+  }
+  .fl-cap__d {
+    font-size: 13px;
+  }
+}
+/* Second step (=<760h, the 720p laptop): the foot drops to ~110px, so the
+   cap descriptions hold one line — and the identity column gets a WIDER
+   text share (58/42), because the 185-char shift needs ~44 chars a line to
+   hold inside its 5-line clamp. The shot narrows rather than the sentence
+   truncating. */
+@media (max-height: 760px) {
+  .fl-toolbody {
+    grid-template-columns: 1.4fr 1fr;
+  }
+  .fl-toolid {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    gap: 5px;
+  }
+  .fl-cap__d {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+}
+/* Narrow: a ~121px quarter at 1280. 9px + minimal tracking holds the
+   longest name with ~3px margin; still above the 8.5px chrome floor. */
+@media (max-width: 1360px) {
+  .fl-tooltab__name {
+    font-size: 9px;
+    letter-spacing: 0.01em;
   }
 }
 

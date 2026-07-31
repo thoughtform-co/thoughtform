@@ -55,8 +55,10 @@ export interface ProjectCase {
    *  exists until a click, so a tool nobody opens costs nothing. Ported from
    *  the shards `/ai-operator` case set and re-encoded at crf 30 — the
    *  sources were already well compressed, so crf 26 bought 4% for a
-   *  generation of loss; 30 buys 36% and holds up at 2x zoom on UI text. */
-  walkthrough?: { src: string; poster: string };
+   *  generation of loss; 30 buys 36% and holds up at 2x zoom on UI text.
+   *  `duration` is printed on the watch bar ("1:20") — an honest CTA beats a
+   *  bare verb, and the values are read off the encodes, not guessed. */
+  walkthrough?: { src: string; poster: string; duration: string };
 }
 
 export const CASE_TOTAL = "04";
@@ -107,6 +109,7 @@ export const PROJECT_CASES: ProjectCase[] = [
     walkthrough: {
       src: "/videos/tools/mimir.mp4",
       poster: "/videos/tools/mimir-poster.jpg",
+      duration: "1:20",
     },
   },
   {
@@ -163,6 +166,7 @@ export const PROJECT_CASES: ProjectCase[] = [
     walkthrough: {
       src: "/videos/tools/vesper.mp4",
       poster: "/videos/tools/vesper-poster.jpg",
+      duration: "1:22",
     },
   },
   {
@@ -210,6 +214,7 @@ export const PROJECT_CASES: ProjectCase[] = [
     walkthrough: {
       src: "/videos/tools/babylon.mp4",
       poster: "/videos/tools/babylon-poster.jpg",
+      duration: "1:09",
     },
   },
   {
@@ -261,6 +266,7 @@ export const PROJECT_CASES: ProjectCase[] = [
     walkthrough: {
       src: "/videos/tools/heimdall.mp4",
       poster: "/videos/tools/heimdall-poster.jpg",
+      duration: "0:40",
     },
   },
 ];

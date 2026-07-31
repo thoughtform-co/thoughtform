@@ -23,12 +23,6 @@ import { TrackVisual } from "./TrackVisual";
  * it is the lowest node that sees both. The upstream `key` means it resets to
  * tool 01 whenever the row changes, for free.
  */
-/** "INVENT" -> "Invent". The mode is stored caps for the card chrome; the
- *  register's own `text-transform` owns the casing here. */
-function titleCase(s: string) {
-  return s.charAt(0) + s.slice(1).toLowerCase();
-}
-
 interface TrackPanelProps {
   track: CaseTrack;
   /** DOM id of the directory row that selects this panel. */
@@ -49,23 +43,15 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
       ? (PROJECT_CASES.find((c) => c.id === visual.toolIds[toolIdx]) ?? null)
       : null;
 
-  const contextRows = tool
-    ? [
-        { k: "Mode", v: titleCase(tool.mode) },
-        /* DEPARTMENT ONLY. The dotted leader needs a value that does not
-           wrap, and the full `team` strings run to 38 chars ("Performance ·
-           Localization & Expansion") — three times the budget the register's
-           three-up columns allow. The discipline after the "·" is already
-           implied by the tool's own tagline above. */
-        { k: "Team", v: tool.team.split("·")[0].trim() },
-        { k: "Status", v: tool.status },
-      ]
-    : track.context;
-  /* NO provenance line while a tool is in view (owner, 2026-07-31). The
-     sentence that used to sit here IS the tool's `shift`, and it now reads
-     inside the plate beside the screenshot at reading size — printing it
-     twice would be the same words at two sizes, and dropping it here is what
-     buys the capability tiles the room to be legible. */
+  /* WHILE A TOOL IS IN VIEW, THE FOOT IS THE CAPABILITIES AND NOTHING ELSE
+     (owner, 2026-07-31, third pass). The context row and the provenance line
+     both duplicated words the plate now carries at reading size — mode, team
+     and year live on the tool's identity meta line, the `shift` sentence
+     reads beside the screenshot, and status is already in the panel head
+     ("FLEET — IN PRODUCTION"). Dropping them is what buys the four tiles the
+     room to read at `--fl-copy`, and it collapses the foot from three
+     private grids down to the plate's own 50% rail. */
+  const contextRows = tool ? [] : track.context;
   const source = tool ? null : track.source;
 
   return (
@@ -132,15 +118,17 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
           </ul>
         )}
 
-        <ul className="fl-ctx">
-          {contextRows.map((c, i) => (
-            <li className="fl-ctx__row" key={i}>
-              <span className="fl-ctx__k">{c.k}</span>
-              <i className="fl-ctx__ld" aria-hidden="true" />
-              <span className="fl-ctx__v">{c.v}</span>
-            </li>
-          ))}
-        </ul>
+        {contextRows.length ? (
+          <ul className="fl-ctx">
+            {contextRows.map((c, i) => (
+              <li className="fl-ctx__row" key={i}>
+                <span className="fl-ctx__k">{c.k}</span>
+                <i className="fl-ctx__ld" aria-hidden="true" />
+                <span className="fl-ctx__v">{c.v}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         {source ? <p className="fl-source">{source}</p> : null}
       </div>

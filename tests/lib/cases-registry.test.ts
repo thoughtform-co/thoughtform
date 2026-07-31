@@ -302,6 +302,8 @@ describe("cases registry (ADR-054)", () => {
       expect(c.walkthrough, `${c.id} walkthrough`).toBeDefined();
       expect(ok(c.walkthrough!.src), `${c.id} walkthrough src`).toBe(true);
       expect(ok(c.walkthrough!.poster), `${c.id} walkthrough poster`).toBe(true);
+      // Printed on the watch bar — "m:ss", read off the encode, not guessed.
+      expect(c.walkthrough!.duration, `${c.id} duration`).toMatch(/^\d+:\d{2}$/);
     }
   });
 
