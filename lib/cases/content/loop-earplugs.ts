@@ -253,11 +253,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
     tracks: [
       {
         id: "studio",
-        file: "01_STUDIO/",
+        file: "01_AI-FLUENCY-STUDIO/",
         meta: "500 ADS/MO",
-        project: "AI Adoption Studio",
+        project: "AI Fluency Studio",
         icon: "dir",
-        preview: "Preview — 01_studio/",
+        preview: "Preview — 01_ai-fluency-studio/",
         vizLabel: "Viz — performance evidence",
         visual: { kind: "stills", shots: STUDIO_SHOTS },
         readouts: [
@@ -274,11 +274,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
       },
       {
         id: "atl-films",
-        file: "02_ATL-FILMS/",
+        file: "02_AI-ABOVE-THE-LINE/",
         meta: "2 FILMS",
         project: "AI Above-the-Line",
         icon: "dir",
-        preview: "Preview — 02_atl-films/",
+        preview: "Preview — 02_ai-above-the-line/",
         vizLabel: "Viz — the films",
         visual: { kind: "films", films: ATL_FILMS },
         readouts: [
@@ -295,11 +295,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
       },
       {
         id: "tooling",
-        file: "03_TOOLING/",
+        file: "03_SOFTWARE-FOR-FEW/",
         meta: "4 TOOLS",
         project: "Software for few",
         icon: "dir",
-        preview: "Preview — 03_tooling/",
+        preview: "Preview — 03_software-for-few/",
         vizLabel: "Fleet — in production",
         visual: { kind: "tools", toolIds: TOOL_IDS },
         readouts: [
@@ -317,11 +317,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
       },
       {
         id: "transformation",
-        file: "04_AI-TRANSFORMATION/",
+        file: "04_WORKSHOP-ROLLOUT/",
         meta: "22 WORKSHOPS",
-        project: "The Workshop Rollout",
+        project: "Workshop Rollout",
         icon: "dir",
-        preview: "Preview — 04_ai-transformation/",
+        preview: "Preview — 04_workshop-rollout/",
         vizLabel: "Log — rollout",
         visual: { kind: "log", rows: ROLLOUT_ROWS, tail: ROLLOUT_TAIL },
         readouts: [
@@ -342,7 +342,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         id: "skill-layer",
         file: "05_SKILL-LAYER/",
         meta: "42 SKILLS",
-        project: "The Skill Layer",
+        project: "Skill Layer",
         icon: "dir",
         preview: "Preview — 05_skill-layer/",
         vizLabel: "Registry — 42 in motion",
@@ -423,7 +423,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         id: "report",
         file: "00_MISSION-REPORT.LOG",
         meta: "2.4 KB",
-        project: "The engagement",
+        project: "Mission Report",
         icon: "doc",
         preview: "Preview — 00_mission-report.log",
         vizLabel: "Viz — adoption signal",

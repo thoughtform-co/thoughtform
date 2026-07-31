@@ -538,12 +538,12 @@ clicks (smoke test D).
 
 ### Measured, on the prod build
 
-|                      | bytes                                                   |
-| -------------------- | ------------------------------------------------------- |
-| open `01_STUDIO/`    | **23.6 kB** — three 256w WebP off 432 kB of source JPEG |
-| open `02_ATL-FILMS/` | **19.1 kB** — two posters, **0 video requests**         |
-| click play           | 12.5 MB, the mp4, and only then                         |
-| after the fold       | `.fl-film__video` count **0**                           |
+|                              | bytes                                                   |
+| ---------------------------- | ------------------------------------------------------- |
+| open `01_AI-FLUENCY-STUDIO/` | **23.6 kB** — three 256w WebP off 432 kB of source JPEG |
+| open `02_AI-ABOVE-THE-LINE/` | **19.1 kB** — two posters, **0 video requests**         |
+| click play                   | 12.5 MB, the mp4, and only then                         |
+| after the fold               | `.fl-film__video` count **0**                           |
 
 No prefetch, by design: `TrackPanel` mounts only the selected track's plate
 and `report` is the default, so a visitor who never opens these rows pays
@@ -584,8 +584,10 @@ them". Re-add as a row when there is a plate worth giving it.
 
 ### Row order
 
-`00_MISSION-REPORT.LOG` · `01_STUDIO/` · `02_ATL-FILMS/` · `03_TOOLING/` ·
-`04_AI-TRANSFORMATION/` · `05_SKILL-LAYER/` · `GOVERNANCE.MD` · `METRICS.DAT`.
+`01_AI-FLUENCY-STUDIO/` · `02_AI-ABOVE-THE-LINE/` · `03_SOFTWARE-FOR-FEW/` ·
+`04_WORKSHOP-ROLLOUT/` · `05_SKILL-LAYER/` · `GOVERNANCE.MD` · `METRICS.DAT` ·
+`00_MISSION-REPORT.LOG`. (Renamed 2026-07-31 — see the correspondence rule
+in Update 9's fourth pass.)
 
 **Track `id`s did not change** — only `file`, `meta` and array position. The
 registry test pins plate reference-equality to `t.id === "transformation"`,
@@ -1003,3 +1005,39 @@ opens the lightbox and restores focus; the films path is unregressed. Frame
 probe on a cool control: corridor-mid 16.9 / dissipate-approach 21.7 /
 casefile-dwell 16.9 / ring-zone 16.7 — baseline. verify 385/385, smoke 18
 passed.
+
+### Fourth pass — the row and its heading name the same thing (2026-07-31, owner)
+
+`01_STUDIO/` becomes **`01_AI-FLUENCY-STUDIO/`**, and with it a rule: _the
+project title corresponds to the folder title._ Five of eight rows were
+divergent — `01_STUDIO/` headed "AI Adoption Studio", `03_TOOLING/` headed
+"Software for few", `04_AI-TRANSFORMATION/` headed "The Workshop Rollout" —
+which read as two competing taxonomies for one directory.
+
+Where the owner had deliberately chosen a title, the FOLDER was renamed to
+match rather than the title reverted:
+
+| file                    | project           |
+| ----------------------- | ----------------- |
+| `01_AI-FLUENCY-STUDIO/` | AI Fluency Studio |
+| `02_AI-ABOVE-THE-LINE/` | AI Above-the-Line |
+| `03_SOFTWARE-FOR-FEW/`  | Software for few  |
+| `04_WORKSHOP-ROLLOUT/`  | Workshop Rollout  |
+| `05_SKILL-LAYER/`       | Skill Layer       |
+| `GOVERNANCE.MD`         | Governance        |
+| `METRICS.DAT`           | Metrics           |
+| `00_MISSION-REPORT.LOG` | Mission Report    |
+
+Articles are dropped from the titles ("The Skill Layer" → "Skill Layer") so
+the correspondence is literal and checkable at a glance rather than
+approximate.
+
+**Pinned mechanically.** `cases-registry.test.ts` normalises the filename —
+drops the ordinal prefix, the trailing slash and any extension, hyphens to
+spaces — and requires it to equal the project case-insensitively. Renaming
+one without the other now fails the suite, which is the only way this stays
+true.
+
+Track `id`s are untouched (`studio`, `atl-films`, `tooling`, `transformation`
+…) — they are DOM ids and the plate-sharing test keys on them; only the
+display strings moved. `preview` strings follow the filenames.

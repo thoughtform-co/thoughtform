@@ -194,11 +194,17 @@ export interface CaseTrack {
   file: string;
   /** The row's right-hand meta, e.g. "22 WORKSHOPS". */
   meta: string;
-  /** Human name for this row — the filename says `01_STUDIO/`, this says
-   *  what that IS. Since 2026-07-30 this is the brief's DISPLAY HEADING (the
-   *  client moved to the tab), so keep it ≤20 chars: at the 24px cap that is
-   *  ~290px against a ~340px column, and the slot must never wrap — the
-   *  brief is height-boxed, so a second line reflows everything under it. */
+  /** Human name for this row, and the brief's DISPLAY HEADING since
+   *  2026-07-30 (the client moved to the tab).
+   *
+   *  IT MUST CORRESPOND TO `file` (owner rule, 2026-07-31): the directory
+   *  row and the heading name the same thing, so `01_AI-FLUENCY-STUDIO/`
+   *  reads "AI Fluency Studio" and nothing else. Pinned by
+   *  `cases-registry.test.ts` — rename BOTH, or the guard fails.
+   *
+   *  ≤20 chars: at the 24px cap that is ~290px against a ~340px column, and
+   *  the slot must never wrap — the brief is height-boxed, so a second line
+   *  reflows everything under it. */
   project: string;
   icon: "doc" | "dir";
   /** Panel head, left slot. */

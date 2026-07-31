@@ -172,6 +172,34 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
+  it("every row's project title corresponds to its filename", () => {
+    // Owner rule, 2026-07-31: the directory row and the brief's heading name
+    // the SAME thing. They sat divergent for five of eight rows
+    // ("01_STUDIO/" over "AI Adoption Studio"), which reads as two
+    // taxonomies. Normalise the filename — drop the ordinal prefix, the
+    // trailing slash and any extension, hyphens to spaces — and it must
+    // equal the project, case- and hyphen-insensitively.
+    const norm = (s: string) =>
+      s
+        .replace(/^\d+_/, "")
+        .replace(/\/$/, "")
+        .replace(/\.(md|dat|log)$/i, "")
+        .replace(/[-\s]+/g, " ")
+        .trim()
+        .toUpperCase();
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        expect(norm(t.file), `${c.slug}/${t.id} file vs project`).toBe(norm(t.project));
+        // The row is `20px | 1fr | auto` with the meta right-aligned, and the
+        // filename column is at min-content. Measured at 21 chars the
+        // tightest row (`01_AI-FLUENCY-STUDIO/` against `500 ADS/MO`) keeps
+        // 12px of clearance at 1280/1440/1920 — that is the ceiling, not a
+        // comfortable margin.
+        expect(t.file.length, `${c.slug}/${t.id} file`).toBeLessThanOrEqual(21);
+      }
+    }
+  });
+
   it("no track plate is empty", () => {
     for (const c of CASES) {
       for (const t of c.casefile.tracks) {

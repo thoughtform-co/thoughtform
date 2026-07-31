@@ -167,6 +167,12 @@ inherited its ambient-cover role.
   bed — added 2026-07-30; it was the loudest layer behind the copy and the
   only one nothing dimmed). All ride `proofPresence` and are identity at 0,
   so the offer gets its bed back for free. Deepen them together.
+- **A row's FILENAME and its PROJECT TITLE name the same thing** (owner,
+  2026-07-31). `01_AI-FLUENCY-STUDIO/` heads "AI Fluency Studio"; articles
+  are dropped from titles so the match is literal. Rename BOTH or the
+  registry test's normalise-and-compare guard fails. Track `id`s never
+  change with them — they are DOM ids and the plate-sharing test keys on
+  them.
 - **Row order IS the directory, and row one is the DEFAULT PANEL.** The
   studio leads and the mission report closes the file (owner, 2026-07-30).
   Consequence to keep in mind when reordering: the first row's plate mounts
