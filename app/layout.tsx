@@ -3,6 +3,7 @@ import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { THEME_TOGGLE, THEME_STORAGE_KEY } from "@/components/landing/v7/themeToggle";
 
 // Google Fonts
 const ibmPlex = IBM_Plex_Sans({
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${ibmPlex.variable} ${ibmPlexMono.variable} ${ppMondwest.variable}`}
+      suppressHydrationWarning
     >
       <head>
         {/* Hero-reveal flag (ADR-039, PROTOTYPE — OFF by default). When
@@ -83,6 +85,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             };if(on)document.documentElement.setAttribute("data-hero-css-reveal","1");}catch(e){}})();`,
           }}
         />
+        {/* Light-mode bootstrap (ADR-058). Reads `?theme=light|dark`
+            first (QA/Playwright override, never persisted), then
+            `localStorage["tf-theme"]`; defaults to DARK. Sets the
+            attribute BEFORE <body> paints, so the light cascade applies
+            on first paint and there is no flash of the dark theme on a
+            light-mode reload. The attribute is only ever "light" or
+            absent — dark is the unqualified :root default. Only the
+            marketing + arcs routes import `theme.css`, so on admin/test
+            routes the attribute is inert. */}
+        {THEME_TOGGLE && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var q=new URLSearchParams(location.search).get("theme");var s=null;try{s=localStorage.getItem(${JSON.stringify(
+                THEME_STORAGE_KEY
+              )})}catch(e){}var t=(q==="light"||q==="dark")?q:((s==="light"||s==="dark")?s:"dark");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();`,
+            }}
+          />
+        )}
         {/* Brand faces the canvas bakes depend on (ServicesCardRing +
             caseCardBake draw with PT Mono / PP Neue Montreal). Preloading
             removes the waitForCardFonts() race against its 1500ms

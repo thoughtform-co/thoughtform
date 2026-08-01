@@ -8,6 +8,8 @@ import { useCorridorMount } from "./hooks/useCorridorMount";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
 import { HudNav } from "./HudNav";
+import { LightModeToggle } from "./LightModeToggle";
+import { THEME_TOGGLE } from "./themeToggle";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
@@ -605,6 +607,14 @@ export function LandingPage({
       {/* Top-right HUD nav: inline links in the hero that collapse into
           a right-rail-aligned hamburger once the hero scrolls away. */}
       <HudNav />
+      {/* Light/dark toggle (ADR-058): the bottom-right chrome band,
+          inboard of the `--br` corner bracket, pairing with the ADR-043
+          bottom-left wordmark. Its own fixed overlay outside `.hud`, so
+          the hero curtain never clips it. Theme state lives INSIDE the
+          leaf — a subscription here would re-render LandingPage and
+          orphan the nested roots above (same rationale as
+          CelestialEditorGate). */}
+      {THEME_TOGGLE && <LightModeToggle />}
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve
           re-render can't replace the dangerouslySetInnerHTML markup

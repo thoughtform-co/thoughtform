@@ -868,7 +868,7 @@ html[data-corridor-exit="true"] #practice {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: rgba(202, 165, 84, 0.85);
+  background: rgba(var(--gold-rgb), 0.85);
   filter: blur(0.4px);
   opacity: 0;
 }
@@ -928,10 +928,10 @@ html[data-corridor-exit="true"] #practice {
   font-size: 13px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgba(202, 165, 84, 0.82);
+  color: rgba(var(--gold-rgb), 0.82);
   text-shadow:
-    0 0 6px rgba(5, 4, 3, 0.9),
-    0 1px 3px rgba(5, 4, 3, 0.9);
+    0 0 6px rgba(var(--void-deep-rgb), 0.9),
+    0 1px 3px rgba(var(--void-deep-rgb), 0.9);
   /* Collapsed from the left until the reveal arms — SEE TOOLS TYPES IN
      left-to-right, one monospace character per step (a proper terminal
      typewriter), while the block caret below blinks at the head. */
@@ -955,8 +955,8 @@ html[data-corridor-exit="true"] #practice {
 .home-v2-cases-cue__btn:focus-visible .home-v2-cases-cue__label {
   color: #e7cd86;
   text-shadow:
-    0 0 10px rgba(202, 165, 84, 0.55),
-    0 1px 3px rgba(5, 4, 3, 0.95);
+    0 0 10px rgba(var(--gold-rgb), 0.55),
+    0 1px 3px rgba(var(--void-deep-rgb), 0.95);
 }
 /* Hover / focus also brightens the whole bracket so the invitation lifts as
    one. */
@@ -1159,9 +1159,10 @@ html[data-corridor-exit="true"] #practice {
   flex-direction: column;
   gap: 4px;
   padding: 10px 12px;
-  border: 1px solid rgba(202, 165, 84, 0.28);
+  border: 1px solid rgba(var(--gold-rgb), 0.28);
   background:
-    linear-gradient(180deg, rgba(202, 165, 84, 0.08), rgba(10, 9, 8, 0)), rgba(10, 9, 8, 0.65);
+    linear-gradient(180deg, rgba(var(--gold-rgb), 0.08), rgba(var(--void-rgb), 0)),
+    rgba(var(--void-rgb), 0.65);
   text-align: left;
   transition: border-color 200ms ease;
 }
@@ -1188,7 +1189,7 @@ html[data-corridor-exit="true"] #practice {
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.55);
+  color: rgba(var(--dawn-rgb), 0.55);
   line-height: 1.25;
 }
 
@@ -1205,7 +1206,7 @@ html[data-corridor-exit="true"] #practice {
   height: 1px;
   background-image: repeating-linear-gradient(
     to right,
-    rgba(202, 165, 84, 0.62) 0 1.5px,
+    rgba(var(--gold-rgb), 0.62) 0 1.5px,
     transparent 1.5px 7px
   );
   pointer-events: none;
@@ -1221,7 +1222,7 @@ html[data-corridor-exit="true"] #practice {
   right: clamp(14px, 3vw, 44px);
   background-image: repeating-linear-gradient(
     to right,
-    rgba(202, 165, 84, 0.5) 0 1.5px,
+    rgba(var(--gold-rgb), 0.5) 0 1.5px,
     transparent 1.5px 7px
   );
 }
@@ -1285,7 +1286,7 @@ html[data-corridor-exit="true"] #practice {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: rgba(5, 4, 3, 0.38);
+  background: rgba(var(--void-deep-rgb), 0.38);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   /* Glass weight tunes per dominant station (see the `data-station`
@@ -1302,13 +1303,13 @@ html[data-corridor-exit="true"] #practice {
    slightly darker / less transparent plate than Navigate + Encode.
    (Blur stays 14px — see the transition note above.) */
 .home-v2-caption-card[data-station="bld"] .home-v2-reticle__glass {
-  background: rgba(5, 4, 3, 0.54);
+  background: rgba(var(--void-deep-rgb), 0.54);
 }
 @supports not (backdrop-filter: blur(1px)) {
   /* No blur available to haze the sphere — darken the fill instead so
      the copy stays legible. */
   .home-v2-reticle__glass {
-    background: rgba(5, 4, 3, 0.72);
+    background: rgba(var(--void-deep-rgb), 0.72);
   }
 }
 
@@ -1321,20 +1322,20 @@ html[data-corridor-exit="true"] #practice {
   inset: 0;
   pointer-events: none;
   background:
-    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
-      100% 1px no-repeat,
-    repeating-linear-gradient(to right, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0
-      100% / 100% 1px no-repeat;
+    repeating-linear-gradient(to right, rgba(var(--dawn-alt-rgb), 0.24) 0 1px, transparent 1px 6px)
+      0 0 / 100% 1px no-repeat,
+    repeating-linear-gradient(to right, rgba(var(--dawn-alt-rgb), 0.24) 0 1px, transparent 1px 6px)
+      0 100% / 100% 1px no-repeat;
 }
 .home-v2-reticle__frame-y {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 0 0 /
-      1px 100% no-repeat,
-    repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.24) 0 1px, transparent 1px 6px) 100%
-      0 / 1px 100% no-repeat;
+    repeating-linear-gradient(to bottom, rgba(var(--dawn-alt-rgb), 0.24) 0 1px, transparent 1px 6px)
+      0 0 / 1px 100% no-repeat,
+    repeating-linear-gradient(to bottom, rgba(var(--dawn-alt-rgb), 0.24) 0 1px, transparent 1px 6px)
+      100% 0 / 1px 100% no-repeat;
 }
 
 /* Gold dashed crosses. At rest they sit at the horizontal centre
@@ -1363,7 +1364,7 @@ html[data-corridor-exit="true"] #practice {
   height: 1px;
   background: repeating-linear-gradient(
     to right,
-    rgba(202, 165, 84, 0.8) 0 1.5px,
+    rgba(var(--gold-rgb), 0.8) 0 1.5px,
     transparent 1.5px 5px
   );
 }
@@ -1374,7 +1375,7 @@ html[data-corridor-exit="true"] #practice {
   width: 1px;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(202, 165, 84, 0.8) 0 1.5px,
+    rgba(var(--gold-rgb), 0.8) 0 1.5px,
     transparent 1.5px 5px
   );
 }
@@ -1414,12 +1415,12 @@ html[data-corridor-exit="true"] #practice {
   font-size: 8px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(236, 227, 214, 0.28);
+  color: rgba(var(--dawn-alt-rgb), 0.28);
   white-space: nowrap;
 }
 .home-v2-reticle__coord b {
   font-weight: 400;
-  color: rgba(202, 165, 84, 0.55);
+  color: rgba(var(--gold-rgb), 0.55);
 }
 
 /* Tick rail hanging off the lower-right edge; one solid gold tick. */
@@ -1432,7 +1433,7 @@ html[data-corridor-exit="true"] #practice {
   pointer-events: none;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(236, 227, 214, 0.3) 0 1px,
+    rgba(var(--dawn-alt-rgb), 0.3) 0 1px,
     transparent 1px 8px
   );
 }
@@ -1464,7 +1465,7 @@ html[data-corridor-exit="true"] #practice {
   height: 1px;
   background: repeating-linear-gradient(
     to right,
-    rgba(236, 227, 214, 0.2) 0 1px,
+    rgba(var(--dawn-alt-rgb), 0.2) 0 1px,
     transparent 1px 6px
   );
 }
@@ -1472,7 +1473,7 @@ html[data-corridor-exit="true"] #practice {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: rgba(202, 165, 84, 0.7);
+  color: rgba(var(--gold-rgb), 0.7);
   white-space: nowrap;
 }
 .home-v2-reticle__status {
@@ -1483,13 +1484,13 @@ html[data-corridor-exit="true"] #practice {
   height: 4px;
   background: var(--gold, #caa554);
   transform: rotate(45deg);
-  box-shadow: 0 0 10px rgba(202, 165, 84, 0.7);
+  box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.7);
   flex: none;
 }
 .home-v2-caption-sep {
   width: 3px;
   height: 3px;
-  background: rgba(235, 227, 214, 0.32);
+  background: rgba(var(--dawn-rgb), 0.32);
   transform: rotate(45deg);
   flex: none;
 }
@@ -1552,8 +1553,8 @@ html[data-corridor-exit="true"] #practice {
   font-size: clamp(16px, 1.3vw, 20px);
   line-height: 1.45;
   letter-spacing: 0.008em;
-  color: rgba(235, 227, 214, 0.88);
-  text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
+  color: rgba(var(--dawn-rgb), 0.88);
+  text-shadow: 0 0 18px rgba(var(--void-rgb), 0.72);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1584,14 +1585,14 @@ html[data-corridor-exit="true"] #practice {
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(202, 165, 84, 0.78);
+  color: rgba(var(--gold-rgb), 0.78);
 }
 
 .home-v2-station-header__rule {
   display: block;
   width: clamp(28px, 6vw, 64px);
   height: 1px;
-  background: rgba(202, 165, 84, 0.5);
+  background: rgba(var(--gold-rgb), 0.5);
 }
 
 .home-v2-station-header__diamond {
@@ -1618,7 +1619,7 @@ html[data-corridor-exit="true"] #practice {
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
   text-align: center;
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
 }
 
 .home-v2-station-header__title em {
@@ -1640,7 +1641,7 @@ html[data-corridor-exit="true"] #practice {
   font-size: clamp(17px, 1.45vw, 21px);
   line-height: 1.5;
   letter-spacing: 0.005em;
-  color: rgba(235, 227, 214, 0.82);
+  color: rgba(var(--dawn-rgb), 0.82);
   text-align: center;
 }
 
@@ -1652,7 +1653,7 @@ html[data-corridor-exit="true"] #practice {
 .home-v2-station-header__support em {
   font-style: normal;
   color: var(--gold, #caa554);
-  background: rgba(202, 165, 84, 0.16);
+  background: rgba(var(--gold-rgb), 0.16);
   padding: 0.14em 0.16em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -1681,7 +1682,7 @@ html[data-corridor-exit="true"] #practice {
 .home-v2-station-header__support .home-v2-station-header__char--em {
   font-style: normal;
   color: var(--gold, #caa554);
-  background: rgba(202, 165, 84, 0.16);
+  background: rgba(var(--gold-rgb), 0.16);
   padding: 0.14em 0;
 }
 
@@ -1695,7 +1696,7 @@ html[data-corridor-exit="true"] #practice {
   margin-left: 0.06em;
   vertical-align: baseline;
   color: var(--gold, #caa554);
-  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  text-shadow: 0 0 12px rgba(var(--gold-rgb), 0.55);
   /* Inline-block scale to ~70% of font height so the block reads as
      a retro-terminal caret rather than a giant glyph. */
   transform: translateY(-0.04em) scaleY(0.78);
@@ -1854,14 +1855,15 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-weight: 400;
   letter-spacing: 0.045em;
   text-transform: none;
-  fill: rgba(235, 227, 214, 0.9);
+  fill: rgba(var(--dawn-rgb), 0.9);
   /* Hosts the root's former drop-shadows (see the root comment): same
      paint order — text + text-shadow first, then the drop-shadows, then
      the root's mask — over the text's own filter region. */
-  filter: drop-shadow(0 0 16px rgba(10, 9, 8, 0.9)) drop-shadow(0 0 10px rgba(202, 165, 84, 0.18));
+  filter: drop-shadow(0 0 16px rgba(var(--void-rgb), 0.9))
+    drop-shadow(0 0 10px rgba(var(--gold-rgb), 0.18));
   text-shadow:
-    0 0 12px rgba(10, 9, 8, 0.95),
-    0 0 18px rgba(202, 165, 84, 0.14);
+    0 0 12px rgba(var(--void-rgb), 0.95),
+    0 0 18px rgba(var(--gold-rgb), 0.14);
 }
 
 .home-v2-signal-ticker__source {
@@ -1906,15 +1908,15 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   gap: clamp(14px, 1.6vw, 20px);
   min-height: 44px;
   padding: 0 clamp(22px, 3.2vw, 38px);
-  border: 1px solid rgba(202, 165, 84, 0.62);
+  border: 1px solid rgba(var(--gold-rgb), 0.62);
   background:
     linear-gradient(
       90deg,
-      rgba(202, 165, 84, 0.08),
-      rgba(202, 165, 84, 0.18),
-      rgba(202, 165, 84, 0.08)
+      rgba(var(--gold-rgb), 0.08),
+      rgba(var(--gold-rgb), 0.18),
+      rgba(var(--gold-rgb), 0.08)
     ),
-    rgba(10, 9, 8, 0.58);
+    rgba(var(--void-rgb), 0.58);
   color: var(--dawn, #ebe3d6);
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: var(--signal-cta-type);
@@ -1923,8 +1925,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   text-transform: uppercase;
   text-decoration: none;
   box-shadow:
-    inset 0 0 0 1px rgba(235, 227, 214, 0.05),
-    0 0 28px rgba(202, 165, 84, 0.13);
+    inset 0 0 0 1px rgba(var(--dawn-rgb), 0.05),
+    0 0 28px rgba(var(--gold-rgb), 0.13);
   transition:
     border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
     color 140ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -1996,20 +1998,20 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   background:
     linear-gradient(
       90deg,
-      rgba(202, 165, 84, 0.14),
-      rgba(202, 165, 84, 0.26),
-      rgba(202, 165, 84, 0.14)
+      rgba(var(--gold-rgb), 0.14),
+      rgba(var(--gold-rgb), 0.26),
+      rgba(var(--gold-rgb), 0.14)
     ),
-    rgba(10, 9, 8, 0.72);
+    rgba(var(--void-rgb), 0.72);
   color: var(--gold, #caa554);
   outline: none;
 }
 
 .home-v2-signal-cta:focus-visible {
   box-shadow:
-    0 0 0 1px rgba(10, 9, 8, 0.88),
-    0 0 0 3px rgba(202, 165, 84, 0.48),
-    0 0 28px rgba(202, 165, 84, 0.18);
+    0 0 0 1px rgba(var(--void-rgb), 0.88),
+    0 0 0 3px rgba(var(--gold-rgb), 0.48),
+    0 0 28px rgba(var(--gold-rgb), 0.18);
 }
 
 .home-v2-signal-note {
@@ -2020,8 +2022,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   line-height: 1.45;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.46);
-  text-shadow: 0 0 16px rgba(10, 9, 8, 0.84);
+  color: rgba(var(--dawn-rgb), 0.46);
+  text-shadow: 0 0 16px rgba(var(--void-rgb), 0.84);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2082,8 +2084,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   color: var(--dawn, #ebe3d6);
   text-wrap: balance;
   text-shadow:
-    0 0 22px rgba(10, 9, 8, 0.9),
-    0 0 12px rgba(202, 165, 84, 0.14);
+    0 0 22px rgba(var(--void-rgb), 0.9),
+    0 0 12px rgba(var(--gold-rgb), 0.14);
 }
 
 .home-v2-mobile-signal__title em {
@@ -2113,10 +2115,10 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   text-transform: uppercase;
   text-decoration: none;
   color: var(--gold, #caa554);
-  border: 1px solid rgba(202, 165, 84, 0.55);
+  border: 1px solid rgba(var(--gold-rgb), 0.55);
   background:
-    linear-gradient(180deg, rgba(202, 165, 84, 0.14), rgba(202, 165, 84, 0.06)),
-    rgba(10, 9, 8, 0.72);
+    linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.06)),
+    rgba(var(--void-rgb), 0.72);
   transition:
     background 200ms ease,
     box-shadow 200ms ease,
@@ -2127,12 +2129,13 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 .home-v2-mobile-signal__cta:hover,
 .home-v2-mobile-signal__cta:focus-visible {
   outline: none;
-  border-color: rgba(202, 165, 84, 0.8);
+  border-color: rgba(var(--gold-rgb), 0.8);
   background:
-    linear-gradient(180deg, rgba(202, 165, 84, 0.22), rgba(202, 165, 84, 0.1)), rgba(10, 9, 8, 0.78);
+    linear-gradient(180deg, rgba(var(--gold-rgb), 0.22), rgba(var(--gold-rgb), 0.1)),
+    rgba(var(--void-rgb), 0.78);
   box-shadow:
-    0 0 0 1px rgba(10, 9, 8, 0.88),
-    0 0 24px rgba(202, 165, 84, 0.24);
+    0 0 0 1px rgba(var(--void-rgb), 0.88),
+    0 0 24px rgba(var(--gold-rgb), 0.24);
 }
 
 .home-v2-mobile-signal__cta-label {
@@ -2160,8 +2163,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-size: clamp(10px, 2.6vw, 12px);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.5);
-  text-shadow: 0 0 14px rgba(10, 9, 8, 0.85);
+  color: rgba(var(--dawn-rgb), 0.5);
+  text-shadow: 0 0 14px rgba(var(--void-rgb), 0.85);
 }
 
 @media (max-width: 760px) {
@@ -2232,7 +2235,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   text-align: center;
   /* Soft gold ambient glow on the whole cluster — reads as "lit by
      the gate" without painting any tinted background plate. */
-  filter: drop-shadow(0 0 18px rgba(202, 165, 84, 0.12));
+  filter: drop-shadow(0 0 18px rgba(var(--gold-rgb), 0.12));
 }
 
 /* ── Title readout (above the reticle) ──────────────────────────────
@@ -2323,7 +2326,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.45;
   text-align: left;
-  color: rgba(235, 227, 214, 0.78);
+  color: rgba(var(--dawn-rgb), 0.78);
 }
 
 /* ── Header chip row ────────────────────────────────────────────────
@@ -2349,7 +2352,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 }
 
 .home-v2-readout__chip {
-  color: rgba(235, 227, 214, 0.78);
+  color: rgba(var(--dawn-rgb), 0.78);
 }
 .home-v2-readout__chip--sector {
   color: var(--gold, #caa554);
@@ -2360,14 +2363,14 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-weight: 700;
 }
 .home-v2-readout__chip--code {
-  color: rgba(235, 227, 214, 0.55);
+  color: rgba(var(--dawn-rgb), 0.55);
 }
 .home-v2-readout__chip--metric {
-  color: rgba(235, 227, 214, 0.78);
+  color: rgba(var(--dawn-rgb), 0.78);
 }
 .home-v2-readout__chip-sep,
 .home-v2-readout__chip-dot {
-  color: rgba(202, 165, 84, 0.6);
+  color: rgba(var(--gold-rgb), 0.6);
 }
 .home-v2-readout__chip-spacer {
   /* Inline flex gap between the sector/callsign and the code/metric
@@ -2389,8 +2392,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-size: 9px;
   letter-spacing: 0.18em;
   color: var(--gold, #caa554);
-  border: 1px solid rgba(202, 165, 84, 0.42);
-  background: rgba(202, 165, 84, 0.06);
+  border: 1px solid rgba(var(--gold-rgb), 0.42);
+  background: rgba(var(--gold-rgb), 0.06);
 }
 .home-v2-readout__badge-tick {
   width: 5px;
@@ -2468,7 +2471,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   text-wrap: pretty;
   /* The soft gold halo on the title itself — keeps the "lit by the
      gate" read intact while the corners give the cluster body. */
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.22);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.22);
 }
 
 .home-v2-readout__title em {
@@ -2493,9 +2496,9 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   height: 18px;
   background: linear-gradient(
     to bottom,
-    rgba(202, 165, 84, 0) 0%,
-    rgba(202, 165, 84, 0.45) 45%,
-    rgba(202, 165, 84, 0.7) 100%
+    rgba(var(--gold-rgb), 0) 0%,
+    rgba(var(--gold-rgb), 0.45) 45%,
+    rgba(var(--gold-rgb), 0.7) 100%
   );
   transform: translateX(-50%);
   pointer-events: none;
@@ -2510,9 +2513,9 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   top: 0;
   background: linear-gradient(
     to top,
-    rgba(202, 165, 84, 0) 0%,
-    rgba(202, 165, 84, 0.45) 45%,
-    rgba(202, 165, 84, 0.7) 100%
+    rgba(var(--gold-rgb), 0) 0%,
+    rgba(var(--gold-rgb), 0.45) 45%,
+    rgba(var(--gold-rgb), 0.7) 100%
   );
 }
 .home-v2-readout__leader-node {
@@ -2522,7 +2525,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   height: 4px;
   background: var(--gold, #caa554);
   transform: translateX(-50%) rotate(45deg);
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.4);
+  box-shadow: 0 0 6px rgba(var(--gold-rgb), 0.4);
 }
 /* Node sits at the reticle-facing END of each leader (bottom for
    down-leaders, top for up-leaders). */
@@ -2548,8 +2551,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-size: clamp(11px, 0.9vw, 13px);
   line-height: 1.55;
   letter-spacing: 0.01em;
-  color: rgba(235, 227, 214, 0.72);
-  text-shadow: 0 0 18px rgba(202, 165, 84, 0.1);
+  color: rgba(var(--dawn-rgb), 0.72);
+  text-shadow: 0 0 18px rgba(var(--gold-rgb), 0.1);
   text-align: center;
 }
 
@@ -2616,7 +2619,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-style: normal;
   font-weight: 500;
   color: var(--gold, #caa554);
-  background: rgba(202, 165, 84, 0.16);
+  background: rgba(var(--gold-rgb), 0.16);
   padding: 0.14em 0.16em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -2665,8 +2668,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   color: var(--gold, #caa554);
   text-decoration: none;
   padding: 12px 22px;
-  border: 1px solid rgba(202, 165, 84, 0.4);
-  background: rgba(202, 165, 84, 0.06);
+  border: 1px solid rgba(var(--gold-rgb), 0.4);
+  background: rgba(var(--gold-rgb), 0.06);
   transition:
     border-color 200ms ease,
     background 200ms ease,
@@ -2674,8 +2677,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 }
 
 .home-v2-copy-cta:hover {
-  border-color: rgba(202, 165, 84, 0.7);
-  background: rgba(202, 165, 84, 0.12);
+  border-color: rgba(var(--gold-rgb), 0.7);
+  background: rgba(var(--gold-rgb), 0.12);
   transform: translateY(-1px);
 }
 
@@ -2717,7 +2720,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   }
   20% {
     opacity: 1;
-    filter: drop-shadow(0 0 5px rgba(202, 165, 84, 0.7));
+    filter: drop-shadow(0 0 5px rgba(var(--gold-rgb), 0.7));
   }
 }
 /* On hover the whole runway lifts to full so the button reads as
@@ -2805,9 +2808,9 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 11px;
   letter-spacing: 0.04em;
-  color: rgba(235, 227, 214, 0.85);
-  background: rgba(10, 9, 8, 0.55);
-  border: 1px solid rgba(235, 227, 214, 0.18);
+  color: rgba(var(--dawn-rgb), 0.85);
+  background: rgba(var(--void-rgb), 0.55);
+  border: 1px solid rgba(var(--dawn-rgb), 0.18);
   backdrop-filter: blur(6px);
   white-space: nowrap;
 }
@@ -2825,7 +2828,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 }
 
 .home-v2-copy-label__tag {
-  color: rgba(235, 227, 214, 0.78);
+  color: rgba(var(--dawn-rgb), 0.78);
 }
 
 /* ── Intelligence side body labels ────────────────────────── */
@@ -2885,10 +2888,10 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 }
 
 .home-v2-stack-label--sources .home-v2-stack-label__rule {
-  color: #5b7a4e;
+  color: var(--atreides-light);
 }
 .home-v2-stack-label--surfaces .home-v2-stack-label__rule {
-  color: #ebe3d6;
+  color: var(--dawn);
 }
 
 .home-v2-stack-label__body {
@@ -2927,7 +2930,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: lowercase;
-  color: rgba(235, 227, 214, 0.62);
+  color: rgba(var(--dawn-rgb), 0.62);
 }
 
 /* ── Per-row stack labels (one per source pip / surface tip) ────
@@ -2970,7 +2973,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   border: 1px solid currentColor;
   /* Quieter mask than the old cardinal box — the chip frames the
      text without competing with the gimbal sphere's depth read. */
-  background: rgba(10, 9, 8, 0.6);
+  background: rgba(var(--void-rgb), 0.6);
 }
 
 .home-v2-stack-item__index {
@@ -2983,10 +2986,10 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 }
 
 .home-v2-stack-item--source {
-  color: rgba(91, 122, 78, 0.92);
+  color: rgba(var(--atreides-rgb), 0.92);
 }
 .home-v2-stack-item--surface {
-  color: rgba(235, 227, 214, 0.85);
+  color: rgba(var(--dawn-rgb), 0.85);
   /* Stand off from the tip anchor so the leader hairline starts just
      past the canvas diamond arrowhead instead of crossing it. */
   padding-left: 12px;
@@ -3001,10 +3004,10 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
 }
 .home-v2-stack-item--surface[data-stack-emphasis="true"] .home-v2-stack-item__chip {
   border-color: var(--gold, #caa554);
-  background: rgba(202, 165, 84, 0.14);
+  background: rgba(var(--gold-rgb), 0.14);
   box-shadow:
-    0 0 0 1px rgba(202, 165, 84, 0.25),
-    0 0 18px rgba(202, 165, 84, 0.18);
+    0 0 0 1px rgba(var(--gold-rgb), 0.25),
+    0 0 18px rgba(var(--gold-rgb), 0.18);
 }
 .home-v2-stack-item--surface[data-stack-emphasis="true"] .home-v2-stack-item__index,
 .home-v2-stack-item--surface[data-stack-emphasis="true"] .home-v2-stack-item__label {
@@ -3053,7 +3056,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   background: var(--gold, #caa554);
   transform: rotate(45deg);
   flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.45);
+  box-shadow: 0 0 6px rgba(var(--gold-rgb), 0.45);
 }
 
 /* Thin leader between marker and caption — orientation handled by
@@ -3061,7 +3064,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
    set per axis below). */
 .home-v2-encode-primitive__leader {
   display: block;
-  background: rgba(202, 165, 84, 0.55);
+  background: rgba(var(--gold-rgb), 0.55);
   flex-shrink: 0;
 }
 .home-v2-encode-primitive--east .home-v2-encode-primitive__leader,
@@ -3082,8 +3085,8 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   /* Hairline frame — much lighter than the old solid-gold box so the
      label reads as a callout chip integrated with the instrument,
      not a sticker latched on. */
-  border: 1px solid rgba(202, 165, 84, 0.4);
-  background: rgba(10, 9, 8, 0.62);
+  border: 1px solid rgba(var(--gold-rgb), 0.4);
+  background: rgba(var(--void-rgb), 0.62);
 }
 
 .home-v2-encode-primitive__label {
@@ -3271,16 +3274,32 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   }
   .home-v2-readout__caption-frame--x {
     background:
-      repeating-linear-gradient(to right, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px) 0
-        0 / 100% 1px no-repeat,
-      repeating-linear-gradient(to right, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px) 0
-        100% / 100% 1px no-repeat;
+      repeating-linear-gradient(
+          to right,
+          rgba(var(--dawn-alt-rgb), 0.22) 0 1px,
+          transparent 1px 6px
+        )
+        0 0 / 100% 1px no-repeat,
+      repeating-linear-gradient(
+          to right,
+          rgba(var(--dawn-alt-rgb), 0.22) 0 1px,
+          transparent 1px 6px
+        )
+        0 100% / 100% 1px no-repeat;
   }
   .home-v2-readout__caption-frame--y {
     background:
-      repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px) 0
-        0 / 1px 100% no-repeat,
-      repeating-linear-gradient(to bottom, rgba(236, 227, 214, 0.22) 0 1px, transparent 1px 6px)
+      repeating-linear-gradient(
+          to bottom,
+          rgba(var(--dawn-alt-rgb), 0.22) 0 1px,
+          transparent 1px 6px
+        )
+        0 0 / 1px 100% no-repeat,
+      repeating-linear-gradient(
+          to bottom,
+          rgba(var(--dawn-alt-rgb), 0.22) 0 1px,
+          transparent 1px 6px
+        )
         100% 0 / 1px 100% no-repeat;
   }
   .home-v2-readout__caption-cross {
@@ -3301,7 +3320,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
     height: 1px;
     background: repeating-linear-gradient(
       to right,
-      rgba(202, 165, 84, 0.8) 0 1.5px,
+      rgba(var(--gold-rgb), 0.8) 0 1.5px,
       transparent 1.5px 5px
     );
   }
@@ -3312,7 +3331,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
     width: 1px;
     background: repeating-linear-gradient(
       to bottom,
-      rgba(202, 165, 84, 0.8) 0 1.5px,
+      rgba(var(--gold-rgb), 0.8) 0 1.5px,
       transparent 1.5px 5px
     );
   }
@@ -3342,7 +3361,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
     font-size: 9px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: rgba(202, 165, 84, 0.5);
+    color: rgba(var(--gold-rgb), 0.5);
     white-space: nowrap;
   }
   /* Space the Build-park case cards below the framed caption. */
@@ -3374,7 +3393,7 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.5);
+  color: rgba(var(--dawn-rgb), 0.5);
   pointer-events: none;
 }
 
@@ -3439,7 +3458,7 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-top: 1px solid rgba(235, 227, 214, 0.06);
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.06);
 }
 
 .home-v2-tail__eyebrow {
@@ -3466,7 +3485,7 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
 .home-v2-tail__body {
   font-size: clamp(16px, 1.2vw, 19px);
   line-height: 1.6;
-  color: rgba(235, 227, 214, 0.72);
+  color: rgba(var(--dawn-rgb), 0.72);
   max-width: 60ch;
 }
 
@@ -3518,7 +3537,7 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
   text-transform: uppercase;
   margin: 0;
   text-wrap: balance;
-  text-shadow: 0 0 18px rgba(202, 165, 84, 0.16);
+  text-shadow: 0 0 18px rgba(var(--gold-rgb), 0.16);
 }
 
 .home-v2-fallback-text h2 em {
@@ -3532,7 +3551,7 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
   line-height: 1.55;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.72);
+  color: rgba(var(--dawn-rgb), 0.72);
   margin: 0;
 }
 

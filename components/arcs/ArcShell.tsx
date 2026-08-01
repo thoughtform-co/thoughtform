@@ -5,6 +5,9 @@ import type { CSSProperties, ReactNode } from "react";
 
 import type { ArcMotion } from "@/lib/arcs/types";
 
+import { LightModeToggle } from "@/components/landing/v7/LightModeToggle";
+import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
+
 import { ArcMenu } from "./ArcMenu";
 import { ARC_TERMINAL_MEDIA } from "./arcMotion";
 import { useArcScroll } from "./useArcScroll";
@@ -112,6 +115,11 @@ export function ArcShell({
         dangerouslySetInnerHTML={{ __html: hudHtml }}
       />
       {variant === "detail" && menu && menu.length > 0 ? <ArcMenu items={menu} /> : null}
+      {/* Light/dark toggle (ADR-058). The same leaf the landing mounts —
+          three-free and Supabase-free, so it stays inside the arcs import
+          doctrine. `data-theme="dark"` on `.arc-root` above is an inert
+          marker; the live channel is the <html> attribute. */}
+      {THEME_TOGGLE && <LightModeToggle />}
       {children}
     </main>
   );

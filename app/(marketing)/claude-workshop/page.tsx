@@ -12,6 +12,8 @@ import "@/components/landing/home-v2/services/casefile/casefile.css";
 // this page mounts neither pinned stage (ADR-053 — #about is the static
 // voidwalker here, #continuum is removed).
 import "./claude-workshop.css";
+// Theme sheet LAST (ADR-058) — see the note in (marketing)/page.tsx.
+import "@/components/landing/v7/theme.css";
 
 export const metadata: Metadata = {
   title: "Thoughtform — Claude Workshop",

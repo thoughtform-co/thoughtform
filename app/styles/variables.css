@@ -32,7 +32,40 @@
   --gold-15: rgba(202, 165, 84, 0.15);
   --gold-10: rgba(202, 165, 84, 0.1);
   --gold-08: rgba(202, 165, 84, 0.08);
+  /* Text/iconography printed ON a gold fill (ADR-058). Byte-equal to
+     --void in dark, so swapping a `color: var(--void)` site on a gold
+     control to this token is a no-op here — but it survives the light
+     flip, where --void becomes parchment and would land ~3:1 on the
+     darkened gold. Light value lives in theme.css. */
+  --gold-contrast: #0a0908;
   --alert: #ff6b35;
+
+  /* ─── RGB TRIPLES (ADR-058) ───
+     The alpha ramps above cover the common steps, but the sheets carry
+     ~400 one-off alphas (gold at .55/.45/.18/.32, void at .62/.72/.85 …).
+     Inventing a token per alpha would violate the design system's "use
+     the nearest step, do not invent dawn-20" law and would still miss
+     the next one-off. These triples let any alpha flip with the theme:
+     `rgba(var(--gold-rgb), 0.55)` computes byte-identically to the
+     literal it replaced, and picks up the light value for free.
+
+     ⚠ TWO DAWN FAMILIES AND TWO VOIDS ARE LIVE, and the split is
+     deliberate for now. `--dawn-rgb` is this file's 235,227,214;
+     `--dawn-alt-rgb` is the brand-canon 236,227,214 that landing.css
+     and services.css also use. Likewise --void-rgb (#0a0908, live) vs
+     --void-deep-rgb (5,4,3 = the canon #050403). Mapping either family
+     onto the other would shift dark by 1/255 — a real pixel change for
+     cosmetic gain. Both collapse to the same ink/parchment in light, so
+     the drift self-heals there. Normalizing dark is a separate,
+     owner-approved pass; until then `--dawn-alt*` is the grep handle
+     for every site that would move. */
+  --gold-rgb: 202, 165, 84;
+  --dawn-rgb: 235, 227, 214;
+  --dawn-alt-rgb: 236, 227, 214;
+  --dawn-alt: #ece3d6;
+  --void-rgb: 10, 9, 8;
+  --void-deep-rgb: 5, 4, 3;
+  --void-deep-canon: #050403;
 
   /* Typography - Uses CSS variables from next/font in app/layout.tsx */
   --font-display: var(--font-mondwest), "PP Mondwest", serif;

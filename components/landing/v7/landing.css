@@ -78,10 +78,14 @@
   --track-widest: 0.15em;
   --atreides-mid: #3d4b33;
   --atreides-light: #5b7a4e;
-  --atreides-30: rgba(61, 75, 51, 0.3);
-  --atreides-15: rgba(61, 75, 51, 0.15);
-  --gold-05: rgba(202, 165, 84, 0.05);
-  --dawn-04: rgba(236, 227, 214, 0.04);
+  --atreides-30: rgba(var(--atreides-mid-rgb), 0.3);
+  --atreides-15: rgba(var(--atreides-mid-rgb), 0.15);
+  /* RGB triples for the one-off atreides alphas (ADR-058) — see the
+     block in variables.css for why these exist. */
+  --atreides-rgb: 91, 122, 78;
+  --atreides-mid-rgb: 61, 75, 51;
+  --gold-05: rgba(var(--gold-rgb), 0.05);
+  --dawn-04: rgba(var(--dawn-alt-rgb), 0.04);
   /* Rail hairline alpha. Bumped (0.42 -> 0.55 / 0.16 -> 0.28) for
      robustness: a 1px line over the bright hero key-visual can land on a
      fractional device pixel at non-100% zoom / HiDPI and get
@@ -89,8 +93,8 @@
      that split and keeps the rail readable over both bright video and
      dark space. (If the rail is STILL invisible, confirm the browser is
      at 100% zoom — Ctrl+0 — which is the most common cause.) */
-  --hud-rail-line: rgba(235, 227, 214, 0.55);
-  --hud-rail-line-soft: rgba(235, 227, 214, 0.28);
+  --hud-rail-line: rgba(var(--dawn-rgb), 0.55);
+  --hud-rail-line-soft: rgba(var(--dawn-rgb), 0.28);
   --hud-content-inset: calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px, 3vw, 56px));
   /* ── Editorial band (ADR-048) ─────────────────────────────────────
      The ONE horizontal frame for section-level editorial text (a
@@ -232,8 +236,12 @@
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(202, 165, 84, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 80% at 50% 50%, rgba(91, 122, 78, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(var(--gold-rgb), 0.08) 0%, transparent 60%),
+    radial-gradient(
+      ellipse 60% 80% at 50% 50%,
+      rgba(var(--atreides-rgb), 0.04) 0%,
+      transparent 50%
+    ),
     var(--void);
 }
 /* Rings behind everything, deeper layer — moves slower (parallax into depth) */
@@ -259,7 +267,7 @@
   mix-blend-mode: overlay;
   background-image: radial-gradient(
     circle at 1px 1px,
-    rgba(236, 227, 214, 0.04) 1px,
+    rgba(var(--dawn-alt-rgb), 0.04) 1px,
     transparent 0
   );
   background-size: 3px 3px;
@@ -305,7 +313,7 @@
   pointer-events: none;
   background-image: radial-gradient(
     circle at 1px 1px,
-    rgba(235, 227, 214, 0.022) 1px,
+    rgba(var(--dawn-rgb), 0.022) 1px,
     transparent 0
   );
   background-size: 2.5px 2.5px;
@@ -696,7 +704,7 @@
   top: -10px;
   right: calc(100% + 16px);
   width: 280px;
-  background: rgba(5, 4, 3, 0.94);
+  background: rgba(var(--void-deep-rgb), 0.94);
   border: 1px solid var(--dawn-08);
   backdrop-filter: blur(10px);
   opacity: 0;
@@ -763,7 +771,7 @@
 }
 .hud__nav a:hover {
   color: var(--dawn);
-  background: rgba(202, 165, 84, 0.05);
+  background: rgba(var(--gold-rgb), 0.05);
   padding-left: 30px;
 }
 .hud__nav a:hover::before {
@@ -1124,7 +1132,7 @@
   position: absolute;
   inset: 2px;
   rotate: 45deg;
-  box-shadow: 0 0 14px rgba(202, 165, 84, 0.6);
+  box-shadow: 0 0 14px rgba(var(--gold-rgb), 0.6);
   transition: box-shadow 200ms var(--ease-out);
 }
 .rail-manifest__diamond:hover::before,
@@ -1133,7 +1141,7 @@
 }
 .rail-manifest__diamond:hover::after,
 .rail-manifest__diamond:focus-visible::after {
-  box-shadow: 0 0 20px rgba(202, 165, 84, 0.85);
+  box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.85);
 }
 .rail-manifest__diamond:focus-visible {
   outline: 1px solid var(--gold);
@@ -1339,7 +1347,7 @@
   pointer-events: none;
   z-index: 24;
   transform-origin: 0 0;
-  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.25));
+  filter: drop-shadow(0 0 24px rgba(var(--gold-rgb), 0.25));
   /* Smooth dock-to-transit and transit-to-dock crossfades.
      The continuous brandmark journey (useSigilChoreography) writes
      inline opacity each rAF; when a parked CSS gate
@@ -1428,7 +1436,7 @@
      symmetrically (one out, one in) instead of dipping in combined
      opacity. */
   transition: opacity 120ms linear;
-  filter: drop-shadow(0 0 16px rgba(202, 165, 84, 0.45));
+  filter: drop-shadow(0 0 16px rgba(var(--gold-rgb), 0.45));
 }
 .crail--large .crail__brand img,
 .crail--large .crail__brand svg {
@@ -1466,7 +1474,7 @@
 [data-brand-on-missing="parked"] .miss__brand-slot img,
 [data-brand-on-missing="parked"] .miss__brand-slot svg {
   opacity: 1;
-  filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
+  filter: drop-shadow(0 0 28px rgba(var(--gold-rgb), 0.5));
   transform: scale(1);
 }
 [data-brand-on-missing="parked"] .tf-brandmark-actor {
@@ -1683,8 +1691,8 @@
    declared as inline `stroke-dasharray` on each ring's circle in
    the painter (see TravelingOrbits.tsx). */
 .tf-traveling-orbit--01 {
-  --ring-stroke-start: rgba(236, 227, 214, 0.15);
-  --ring-stroke-end: rgba(235, 227, 214, 0.6);
+  --ring-stroke-start: rgba(var(--dawn-alt-rgb), 0.15);
+  --ring-stroke-end: rgba(var(--dawn-rgb), 0.6);
   --ring-w-start: 0.5;
   --ring-w-end: 1.5;
 }
@@ -1692,14 +1700,14 @@
   stroke-dasharray: 1 5;
 }
 .tf-traveling-orbit--02 {
-  --ring-stroke-start: rgba(236, 227, 214, 0.15);
-  --ring-stroke-end: rgba(235, 227, 214, 0.6);
+  --ring-stroke-start: rgba(var(--dawn-alt-rgb), 0.15);
+  --ring-stroke-end: rgba(var(--dawn-rgb), 0.6);
   --ring-w-start: 0.6;
   --ring-w-end: 1.7;
 }
 .tf-traveling-orbit--03 {
-  --ring-stroke-start: rgba(202, 165, 84, 0.32);
-  --ring-stroke-end: rgba(202, 165, 84, 0.55);
+  --ring-stroke-start: rgba(var(--gold-rgb), 0.32);
+  --ring-stroke-end: rgba(var(--gold-rgb), 0.55);
   --ring-w-start: 0.6;
   --ring-w-end: 1.5;
 }
@@ -1707,8 +1715,8 @@
   stroke-dasharray: 2 7;
 }
 .tf-traveling-orbit--04 {
-  --ring-stroke-start: rgba(202, 165, 84, 0.45);
-  --ring-stroke-end: rgba(202, 165, 84, 0.5);
+  --ring-stroke-start: rgba(var(--gold-rgb), 0.45);
+  --ring-stroke-end: rgba(var(--gold-rgb), 0.5);
   --ring-w-start: 0.6;
   --ring-w-end: 1.4;
 }
@@ -1745,7 +1753,7 @@
    When the actor sits on the rail it should stay above the rail's
    line / frame / stops but below any HUD overlay. */
 [data-brand-on-rail="true"] .tf-brandmark-actor {
-  filter: drop-shadow(0 0 12px rgba(202, 165, 84, 0.55));
+  filter: drop-shadow(0 0 12px rgba(var(--gold-rgb), 0.55));
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1899,8 +1907,13 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, rgba(5, 4, 3, 0.55) 0%, rgba(5, 4, 3, 0.32) 42%, transparent 72%),
-    linear-gradient(to top, rgba(5, 4, 3, 0.35) 0%, transparent 38%);
+    linear-gradient(
+      to right,
+      rgba(var(--void-deep-rgb), 0.55) 0%,
+      rgba(var(--void-deep-rgb), 0.32) 42%,
+      transparent 72%
+    ),
+    linear-gradient(to top, rgba(var(--void-deep-rgb), 0.35) 0%, transparent 38%);
   pointer-events: none;
 }
 
@@ -1987,7 +2000,7 @@
   border: 1px solid var(--gold);
 }
 .hero__cta__btn--ghost:hover {
-  background: rgba(202, 165, 84, 0.08);
+  background: rgba(var(--gold-rgb), 0.08);
   transform: translateY(-2px);
 }
 .hero__cta__arrow {
@@ -2117,7 +2130,7 @@
 }
 .hero__analysis-line {
   fill: none;
-  stroke: rgba(202, 165, 84, 0.55);
+  stroke: rgba(var(--gold-rgb), 0.55);
   stroke-width: 1;
   stroke-linecap: square;
   stroke-linejoin: miter;
@@ -2170,7 +2183,7 @@
   left: 75%;
   width: clamp(140px, 13vw, 220px);
   padding: 14px 16px 15px;
-  background: rgba(5, 4, 3, 0.22);
+  background: rgba(var(--void-deep-rgb), 0.22);
   border: 1px solid var(--dawn-08);
   color: var(--dawn);
   backdrop-filter: blur(8px);
@@ -2227,7 +2240,7 @@
   line-height: 1;
   letter-spacing: 0.18em;
   color: var(--dawn);
-  text-shadow: 0 0 14px rgba(5, 4, 3, 0.75);
+  text-shadow: 0 0 14px rgba(var(--void-deep-rgb), 0.75);
 }
 .hero__analysis-card p {
   margin: 0;
@@ -2236,7 +2249,7 @@
   line-height: 1.45;
   letter-spacing: 0.04em;
   color: var(--dawn-70);
-  text-shadow: 0 0 12px rgba(5, 4, 3, 0.8);
+  text-shadow: 0 0 12px rgba(var(--void-deep-rgb), 0.8);
 }
 
 @keyframes heroAnalysisFade {
@@ -2389,29 +2402,29 @@
 /* gold top-left + dawn bottom-right */
 #definition.station::before {
   background:
-    radial-gradient(ellipse 50% 40% at 15% 25%, rgba(202, 165, 84, 0.05), transparent 65%),
-    radial-gradient(ellipse 60% 50% at 85% 75%, rgba(235, 227, 214, 0.025), transparent 70%);
+    radial-gradient(ellipse 50% 40% at 15% 25%, rgba(var(--gold-rgb), 0.05), transparent 65%),
+    radial-gradient(ellipse 60% 50% at 85% 75%, rgba(var(--dawn-rgb), 0.025), transparent 70%);
 }
 
 /* green bottom-left + gold top-right */
 #continuum.station::before {
   background:
-    radial-gradient(ellipse 55% 45% at 10% 80%, rgba(91, 122, 78, 0.04), transparent 65%),
-    radial-gradient(ellipse 50% 40% at 90% 20%, rgba(202, 165, 84, 0.045), transparent 65%);
+    radial-gradient(ellipse 55% 45% at 10% 80%, rgba(var(--atreides-rgb), 0.04), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 90% 20%, rgba(var(--gold-rgb), 0.045), transparent 65%);
 }
 
 /* gold center-left + dawn top-right */
 #build.station::before {
   background:
-    radial-gradient(ellipse 45% 60% at 5% 50%, rgba(202, 165, 84, 0.05), transparent 70%),
-    radial-gradient(ellipse 55% 45% at 80% 15%, rgba(235, 227, 214, 0.03), transparent 65%);
+    radial-gradient(ellipse 45% 60% at 5% 50%, rgba(var(--gold-rgb), 0.05), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 80% 15%, rgba(var(--dawn-rgb), 0.03), transparent 65%);
 }
 
 /* gold top-left + dawn bottom-center */
 #contact.station::before {
   background:
-    radial-gradient(ellipse 50% 45% at 20% 10%, rgba(202, 165, 84, 0.045), transparent 65%),
-    radial-gradient(ellipse 70% 40% at 50% 90%, rgba(235, 227, 214, 0.03), transparent 70%);
+    radial-gradient(ellipse 50% 45% at 20% 10%, rgba(var(--gold-rgb), 0.045), transparent 65%),
+    radial-gradient(ellipse 70% 40% at 50% 90%, rgba(var(--dawn-rgb), 0.03), transparent 70%);
 }
 
 @media (max-width: 640px) {
@@ -2545,7 +2558,12 @@
 }
 .btn--solid {
   background: var(--gold);
-  color: var(--void);
+  /* Text ON a gold fill: --gold-contrast, not --void (ADR-058). Byte-equal
+     to --void in dark; in light --void is the parchment ground and would
+     land ~3:1 on the darkened gold. The `:hover` rule below keeps --void
+     deliberately — there the fill is --dawn, so void-on-dawn inverts to
+     parchment-on-ink and stays correct inverse video. */
+  color: var(--gold-contrast);
   border-color: var(--gold);
 }
 .btn--solid:hover {
@@ -2597,7 +2615,7 @@
 /* ═══════════ Frame panels ═══════════ */
 .panel {
   position: relative;
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   border: 1px solid var(--dawn-08);
   padding: 22px;
   backdrop-filter: blur(8px);
@@ -2698,7 +2716,7 @@
   line-height: 1.8;
   border: 1px solid var(--dawn-08);
   padding: 20px;
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   backdrop-filter: blur(6px);
 }
 .def__dict .word {
@@ -2826,7 +2844,7 @@
   height: 14px;
   background: var(--gold);
   transform: translate(-50%, -50%) rotate(45deg);
-  box-shadow: 0 0 16px rgba(202, 165, 84, 0.5);
+  box-shadow: 0 0 16px rgba(var(--gold-rgb), 0.5);
   animation: spectrumFloat 5s var(--ease-out) infinite;
   z-index: 2;
 }
@@ -2988,7 +3006,7 @@
   position: relative;
   padding: 26px 24px 22px;
   border: 1px solid var(--dawn-08);
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   backdrop-filter: blur(8px);
 }
 .case::before,
@@ -3070,7 +3088,7 @@
   grid-template-columns: repeat(2, 1fr);
 }
 .case__stats > div {
-  background: rgba(5, 4, 3, 0.8);
+  background: rgba(var(--void-deep-rgb), 0.8);
   padding: 14px 12px;
 }
 .case__stat-v {
@@ -3094,7 +3112,7 @@
 /* ═══════════ 03 MANIFESTO (terminal) ═══════════ */
 .manifesto__terminal {
   border: 1px solid var(--dawn-08);
-  background: rgba(10, 9, 8, 0.7);
+  background: rgba(var(--void-rgb), 0.7);
   backdrop-filter: blur(10px);
   font-family: var(--font-pt-mono);
   font-size: 13px;
@@ -3205,7 +3223,7 @@
   position: relative;
   padding: 36px 28px 32px;
   border: 1px solid var(--dawn-08);
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   backdrop-filter: blur(8px);
   min-height: 420px;
   display: flex;
@@ -3253,7 +3271,7 @@
 .service-card:hover {
   transform: translateY(-3px);
   border-color: var(--gold-15);
-  background: rgba(10, 9, 8, 0.75);
+  background: rgba(var(--void-rgb), 0.75);
 }
 .service-card:hover::before,
 .service-card:hover::after,
@@ -3337,7 +3355,7 @@
 
 .product-cell {
   position: relative;
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   backdrop-filter: blur(8px);
   padding: 36px 32px;
   min-height: 220px;
@@ -3347,7 +3365,7 @@
   cursor: pointer;
 }
 .product-cell:hover {
-  background: rgba(10, 9, 8, 0.85);
+  background: rgba(var(--void-rgb), 0.85);
 }
 
 .product-cell__head {
@@ -3431,7 +3449,7 @@
 .principle {
   position: relative;
   border: 1px solid var(--dawn-08);
-  background: rgba(10, 9, 8, 0.4);
+  background: rgba(var(--void-rgb), 0.4);
   backdrop-filter: blur(4px);
   padding: 28px 24px;
 }
@@ -3519,7 +3537,7 @@
   }
 }
 .stat {
-  background: rgba(10, 9, 8, 0.5);
+  background: rgba(var(--void-rgb), 0.5);
   padding: 20px 18px;
 }
 .stat__n {
@@ -3871,8 +3889,8 @@
   /* Spaced dotted dawn. Start matches the inline dawn-15 stroke; end
      deepens to a low-alpha dawn so the ring picks up a touch of
      weight as it settles into orbit 01 (also spaced dotted). */
-  --ring-stroke-start: rgba(236, 227, 214, 0.15);
-  --ring-stroke-end: rgba(236, 227, 214, 0.5);
+  --ring-stroke-start: rgba(var(--dawn-alt-rgb), 0.15);
+  --ring-stroke-end: rgba(var(--dawn-alt-rgb), 0.5);
   --ring-w-start: 0.5;
   --ring-w-end: 0.7;
 }
@@ -3880,24 +3898,24 @@
   /* Solid dawn baseline — the morph target is the bold solid miss
      orbit 02, so this ring takes the largest weight bump of the
      four. Start matches the inline dawn-15 stroke. */
-  --ring-stroke-start: rgba(236, 227, 214, 0.15);
-  --ring-stroke-end: rgba(236, 227, 214, 0.6);
+  --ring-stroke-start: rgba(var(--dawn-alt-rgb), 0.15);
+  --ring-stroke-end: rgba(var(--dawn-alt-rgb), 0.6);
   --ring-w-start: 0.6;
   --ring-w-end: 0.9;
 }
 .sigil__ring--03 {
   /* Dotted gold — start matches inline gold 0.32; end saturates to
      gold 0.5 to match the warmer miss orbit 03. */
-  --ring-stroke-start: rgba(202, 165, 84, 0.32);
-  --ring-stroke-end: rgba(202, 165, 84, 0.5);
+  --ring-stroke-start: rgba(var(--gold-rgb), 0.32);
+  --ring-stroke-end: rgba(var(--gold-rgb), 0.5);
   --ring-w-start: 0.6;
   --ring-w-end: 0.75;
 }
 .sigil__ring--04 {
   /* Tight dotted gold — start matches inline gold 0.45; end settles
      into the warm inner cadence of miss orbit 04. */
-  --ring-stroke-start: rgba(202, 165, 84, 0.45);
-  --ring-stroke-end: rgba(202, 165, 84, 0.55);
+  --ring-stroke-start: rgba(var(--gold-rgb), 0.45);
+  --ring-stroke-end: rgba(var(--gold-rgb), 0.55);
   --ring-w-start: 0.6;
   --ring-w-end: 0.7;
 }
@@ -3963,7 +3981,7 @@
     var(--halo-start-y) + (var(--halo-target-y) - var(--halo-start-y)) * var(--halo-morph)
   );
   transform: translate(calc(-50% + var(--halo-x)), calc(-50% + var(--halo-y)));
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.4);
+  box-shadow: 0 0 6px rgba(var(--gold-rgb), 0.4);
   opacity: calc(0.75 * var(--halo-fade, 1));
   animation: haloFlicker 4s ease-in-out infinite;
 }
@@ -4050,7 +4068,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.25));
+  filter: drop-shadow(0 0 24px rgba(var(--gold-rgb), 0.25));
 }
 .sigil__mark img,
 .sigil__mark svg {
@@ -4266,11 +4284,11 @@
   pointer-events: none;
   z-index: -1;
   background:
-    radial-gradient(ellipse 62% 48% at 28% 30%, rgba(202, 165, 84, 0.085), transparent 65%),
-    radial-gradient(ellipse 55% 42% at 78% 70%, rgba(91, 122, 78, 0.06), transparent 65%),
-    radial-gradient(ellipse 75% 42% at 50% 50%, rgba(202, 165, 84, 0.035), transparent 72%),
-    radial-gradient(ellipse 42% 55% at 88% 22%, rgba(235, 227, 214, 0.03), transparent 70%),
-    radial-gradient(ellipse 38% 45% at 12% 80%, rgba(235, 227, 214, 0.022), transparent 70%);
+    radial-gradient(ellipse 62% 48% at 28% 30%, rgba(var(--gold-rgb), 0.085), transparent 65%),
+    radial-gradient(ellipse 55% 42% at 78% 70%, rgba(var(--atreides-rgb), 0.06), transparent 65%),
+    radial-gradient(ellipse 75% 42% at 50% 50%, rgba(var(--gold-rgb), 0.035), transparent 72%),
+    radial-gradient(ellipse 42% 55% at 88% 22%, rgba(var(--dawn-rgb), 0.03), transparent 70%),
+    radial-gradient(ellipse 38% 45% at 12% 80%, rgba(var(--dawn-rgb), 0.022), transparent 70%);
 }
 
 /* Starfield — sparse SVG dot field that paints between the nebula
@@ -4289,10 +4307,10 @@
   overflow: hidden;
 }
 .miss__stars circle {
-  fill: rgb(235, 227, 214);
+  fill: rgb(var(--dawn-rgb));
 }
 .miss__stars circle.miss__star--gold {
-  fill: rgb(202, 165, 84);
+  fill: rgb(var(--gold-rgb));
 }
 
 /* `.gateway__stars` (DOM-injected SVG starfield in `.gateway`) was
@@ -4519,7 +4537,7 @@
    like four distinct bodies after the morph completes. */
 .miss__orbit {
   fill: none;
-  stroke: rgba(202, 165, 84, 0.55);
+  stroke: rgba(var(--gold-rgb), 0.55);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
   transition:
@@ -4537,22 +4555,22 @@
    four sigil rings carry through into four gold orbits, no longer
    shifting palette mid-leg. */
 .miss__orbit--01 {
-  stroke: rgba(202, 165, 84, 0.62);
+  stroke: rgba(var(--gold-rgb), 0.62);
   stroke-width: 1.5;
   stroke-dasharray: none;
 }
 .miss__orbit--02 {
-  stroke: rgba(202, 165, 84, 0.72);
+  stroke: rgba(var(--gold-rgb), 0.72);
   stroke-width: 1.7;
   stroke-dasharray: none;
 }
 .miss__orbit--03 {
-  stroke: rgba(202, 165, 84, 0.58);
+  stroke: rgba(var(--gold-rgb), 0.58);
   stroke-width: 1.5;
   stroke-dasharray: none;
 }
 .miss__orbit--04 {
-  stroke: rgba(202, 165, 84, 0.55);
+  stroke: rgba(var(--gold-rgb), 0.55);
   stroke-width: 1.4;
   stroke-dasharray: none;
 }
@@ -4564,7 +4582,7 @@
    `miss__orbit` base styles still apply for stroke-width + dash
    transitions; the override here keeps them quiet. */
 .miss__orbit--ghost {
-  stroke: rgba(235, 227, 214, 0.13);
+  stroke: rgba(var(--dawn-rgb), 0.13);
   stroke-width: 1;
   stroke-dasharray: 1 6;
   stroke-linecap: round;
@@ -4585,22 +4603,22 @@
 }
 .miss__particle--01 {
   fill: var(--gold);
-  filter: drop-shadow(0 0 4px rgba(202, 165, 84, 0.55));
+  filter: drop-shadow(0 0 4px rgba(var(--gold-rgb), 0.55));
   offset-path: path("M 370,0 A 370,225 0 0,1 -370,0 A 370,225 0 0,1 370,0 Z");
 }
 .miss__particle--02 {
-  fill: rgba(236, 227, 214, 0.7);
+  fill: rgba(var(--dawn-alt-rgb), 0.7);
   /* Reverse direction (sweep-flag 0) so this orbit's particle
      travels CCW relative to the others. */
   offset-path: path("M 465,0 A 465,140 0 0,0 -465,0 A 465,140 0 0,0 465,0 Z");
 }
 .miss__particle--03 {
   fill: var(--gold);
-  filter: drop-shadow(0 0 3px rgba(202, 165, 84, 0.45));
+  filter: drop-shadow(0 0 3px rgba(var(--gold-rgb), 0.45));
   offset-path: path("M 395,0 A 395,175 0 0,1 -395,0 A 395,175 0 0,1 395,0 Z");
 }
 .miss__particle--04 {
-  fill: rgba(236, 227, 214, 0.7);
+  fill: rgba(var(--dawn-alt-rgb), 0.7);
   offset-path: path("M 305,0 A 305,185 0 0,0 -305,0 A 305,185 0 0,0 305,0 Z");
 }
 
@@ -4642,7 +4660,7 @@
   opacity: 0.7;
 }
 .miss__brand-halo-pip--dawn {
-  fill: rgba(236, 227, 214, 0.6);
+  fill: rgba(var(--dawn-alt-rgb), 0.6);
 }
 @keyframes brand-halo-spin {
   from {
@@ -4660,7 +4678,7 @@
 .miss__anchor {
   fill: var(--gold);
   opacity: 0.95;
-  filter: drop-shadow(0 0 4px rgba(202, 165, 84, 0.55));
+  filter: drop-shadow(0 0 4px rgba(var(--gold-rgb), 0.55));
   transition:
     opacity 220ms ease-out,
     transform 220ms ease-out,
@@ -4785,7 +4803,7 @@
      sigil-to-miss segment stays symmetric — no opacity dip in the
      middle of the handoff. */
   opacity: 0;
-  filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.15));
+  filter: drop-shadow(0 0 8px rgba(var(--gold-rgb), 0.15));
   transform: scale(0.92);
   transition:
     opacity 120ms linear,
@@ -4819,7 +4837,7 @@
   padding: 9px 16px;
   border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.18));
   border-radius: 14px;
-  background: rgba(10, 9, 8, 0.62);
+  background: rgba(var(--void-rgb), 0.62);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   /* Width budget for the diagnostic sentences. We declare both:
@@ -4895,15 +4913,15 @@
 
 .miss__label:hover,
 .miss__label:focus-visible {
-  border-color: rgba(202, 165, 84, 0.45);
+  border-color: rgba(var(--gold-rgb), 0.45);
   color: var(--dawn);
-  background: rgba(10, 9, 8, 0.75);
+  background: rgba(var(--void-rgb), 0.75);
   transform: translate(-50%, -50%) translateY(-2px);
 }
 .miss__label:hover .miss__label-pip,
 .miss__label:focus-visible .miss__label-pip {
   opacity: 1;
-  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+  box-shadow: 0 0 8px rgba(var(--gold-rgb), 0.6);
 }
 .miss__label:hover .miss__label-tag,
 .miss__label:focus-visible .miss__label-tag {
@@ -5230,8 +5248,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 48% 38% at 50% 56%, rgba(202, 165, 84, 0.08), transparent 62%),
-    radial-gradient(ellipse 80% 65% at 50% 56%, rgba(235, 227, 214, 0.03), transparent 72%);
+    radial-gradient(ellipse 48% 38% at 50% 56%, rgba(var(--gold-rgb), 0.08), transparent 62%),
+    radial-gradient(ellipse 80% 65% at 50% 56%, rgba(var(--dawn-rgb), 0.03), transparent 72%);
   pointer-events: none;
   z-index: 0;
 }
@@ -5657,8 +5675,8 @@
   color: var(--gold);
   font-variant-numeric: tabular-nums;
   text-shadow:
-    0 0 5px rgba(10, 9, 8, 0.95),
-    0 0 10px rgba(10, 9, 8, 0.85);
+    0 0 5px rgba(var(--void-rgb), 0.95),
+    0 0 10px rgba(var(--void-rgb), 0.85);
 }
 .ilayer__substrate-readout__val {
   font-family: var(--font-pp-neue-montreal);
@@ -5668,8 +5686,8 @@
   letter-spacing: -0.005em;
   text-wrap: pretty;
   text-shadow:
-    0 0 5px rgba(10, 9, 8, 0.95),
-    0 0 10px rgba(10, 9, 8, 0.85);
+    0 0 5px rgba(var(--void-rgb), 0.95),
+    0 0 10px rgba(var(--void-rgb), 0.85);
 }
 
 /* Constellation pip labels — track TriadScene pip projection */
@@ -5701,7 +5719,7 @@
   height: 12px;
   background: linear-gradient(
     to bottom,
-    rgba(235, 227, 214, 0) 0%,
+    rgba(var(--dawn-rgb), 0) 0%,
     var(--dawn-30, rgba(235, 227, 214, 0.45)) 60%,
     var(--dawn-30, rgba(235, 227, 214, 0.55)) 100%
   );
@@ -5718,8 +5736,8 @@
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--dawn);
-  background: rgba(10, 9, 8, 0.62);
-  border: 1px solid rgba(235, 227, 214, 0.18);
+  background: rgba(var(--void-rgb), 0.62);
+  border: 1px solid rgba(var(--dawn-rgb), 0.18);
   /* Lift the text box above the body's particle cloud and gold
      trajectories so the corner brackets always paint on the dark
      backplate, not against the gold haze. The bracket pseudos are
@@ -5775,13 +5793,13 @@
 /* Surfaces pips read as outflow — gold text + brighter accent corners
    so the right-side cluster registers as the engine radiating outward.
    Previously used `var(--gold-30)` for the text colour, which resolves
-   to `rgba(202, 165, 84, 0.30)` — the surface labels (Claude, Web,
+   to `rgba(var(--gold-rgb), 0.30)` — the surface labels (Claude, Web,
    REST, Slack, Agents, Cursor) were unreadable against the dark
    backplate. Now uses full-alpha `--gold` so the surface names are
    the most legible label cluster on the page. */
 .ilayer__pip-label[data-body="surfaces"] .ilayer__pip-label__text {
   color: var(--gold, #caa554);
-  border-color: rgba(202, 165, 84, 0.32);
+  border-color: rgba(var(--gold-rgb), 0.32);
 }
 .ilayer__pip-label[data-body="surfaces"] .ilayer__pip-label__text::before,
 .ilayer__pip-label[data-body="surfaces"] .ilayer__pip-label__text::after {
@@ -5872,7 +5890,7 @@
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--dawn-70);
-  background: rgba(10, 9, 8, 0.45);
+  background: rgba(var(--void-rgb), 0.45);
 }
 
 /* ── Ringfield artifact (ADR-012 v5) ───────────────────────────────
@@ -5940,15 +5958,15 @@
 }
 /* ADR-016 static fallback — three luminous spheres on a horizontal axis */
 .ilayer__triad__sphere {
-  fill: rgba(202, 165, 84, 0.14);
-  stroke: rgba(202, 165, 84, 0.55);
+  fill: rgba(var(--gold-rgb), 0.14);
+  stroke: rgba(var(--gold-rgb), 0.55);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.18));
+  filter: drop-shadow(0 0 24px rgba(var(--gold-rgb), 0.18));
 }
 .ilayer__triad__sphere--mid {
-  fill: rgba(202, 165, 84, 0.2);
-  stroke: rgba(202, 165, 84, 0.7);
+  fill: rgba(var(--gold-rgb), 0.2);
+  stroke: rgba(var(--gold-rgb), 0.7);
 }
 .ilayer__triad__ring {
   fill: none;
@@ -5962,7 +5980,7 @@
 }
 .ilayer__triad__comet {
   opacity: 0.9;
-  stroke: rgba(202, 165, 84, 0.35);
+  stroke: rgba(var(--gold-rgb), 0.35);
 }
 
 /* ── Brandmark substrate dock anchor (ADR-012 v5) ──────────────────
@@ -6019,7 +6037,7 @@
      overrides that with `opacity: 0 !important` whenever the
      section's R3F canvas is mounted. */
   opacity: 0;
-  filter: drop-shadow(0 0 32px rgba(202, 165, 84, 0.22));
+  filter: drop-shadow(0 0 32px rgba(var(--gold-rgb), 0.22));
   /* No transition -- the boundary handoff is a HARD SWAP, not a
      fade. Opacity changes via attribute toggle should happen in
      one frame for visual continuity to read as "same artifact,
@@ -6122,9 +6140,9 @@
     height: auto;
     padding: clamp(14px, 2.4vh, 22px) clamp(16px, 4vw, 24px);
     margin: 0 auto;
-    border: 1px solid rgba(235, 227, 214, 0.16);
+    border: 1px solid rgba(var(--dawn-rgb), 0.16);
     border-radius: 0;
-    background: rgba(10, 9, 8, 0.55);
+    background: rgba(var(--void-rgb), 0.55);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -6249,7 +6267,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--dawn);
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
   margin: 0;
   text-wrap: balance;
 }
@@ -6542,7 +6560,7 @@
   border: 1px solid var(--gold);
   border-radius: 0;
   transform: rotate(45deg);
-  box-shadow: 0 0 20px rgba(202, 165, 84, 0.35);
+  box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.35);
 }
 .crail__reticle__ring::after {
   content: "";
@@ -6824,7 +6842,7 @@
   height: 14px;
   background: var(--gold);
   transform: translate(-50%, -50%) rotate(45deg);
-  box-shadow: 0 0 16px rgba(202, 165, 84, 0.5);
+  box-shadow: 0 0 16px rgba(var(--gold-rgb), 0.5);
   animation: crailSlide 7s var(--ease-out) infinite;
   z-index: 2;
 }
@@ -7139,7 +7157,7 @@
      lift past their own frame. Only the frameless report plates bleed. */
   inset: 0;
   z-index: 0;
-  background-image: radial-gradient(rgba(235, 227, 214, 0.06) 1px, transparent 1.2px);
+  background-image: radial-gradient(rgba(var(--dawn-rgb), 0.06) 1px, transparent 1.2px);
   background-size: 24px 24px;
   -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
   mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
@@ -7190,7 +7208,7 @@
 .proof__mark--close {
   top: calc(100% + var(--survey-mark-rise) - 9px);
   right: calc(-1 * var(--survey-mark-out));
-  color: rgba(235, 227, 214, 0.7);
+  color: rgba(var(--dawn-rgb), 0.7);
 }
 /* Designation — PT Mono, above the block's head-left (absolute: in flow it
    would push the title off the band top). */
@@ -7203,7 +7221,7 @@
   line-height: 1;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.4);
+  color: rgba(var(--dawn-rgb), 0.4);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -7217,7 +7235,7 @@
   font-size: 8px;
   line-height: 1;
   letter-spacing: 0.1em;
-  color: rgba(235, 227, 214, 0.22);
+  color: rgba(var(--dawn-rgb), 0.22);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -7255,7 +7273,7 @@
   line-height: 1.1;
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
   /* Band-relative safety cap, services-masthead verbatim. */
   max-width: min(40vw, calc(var(--band-max, 1200px) * 0.52));
 }
@@ -7314,7 +7332,7 @@
   display: none;
   margin-left: 0.06em;
   color: var(--gold, #caa554);
-  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  text-shadow: 0 0 12px rgba(var(--gold-rgb), 0.55);
   /* Retro-terminal caret, not a giant glyph (station-header recipe). */
   transform: translateY(-0.04em) scaleY(0.78);
   transform-origin: center bottom;
@@ -7475,7 +7493,7 @@
   line-height: 1.1;
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
   max-width: 20ch;
 }
 .proof__body {
@@ -7557,7 +7575,7 @@
 .proof__closer em {
   font-style: normal;
   color: var(--gold);
-  background: rgba(202, 165, 84, 0.16);
+  background: rgba(var(--gold-rgb), 0.16);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   padding: 0 0.18em;
@@ -7858,7 +7876,7 @@
   bottom: 80px;
   width: 300px;
   z-index: 100;
-  background: rgba(10, 9, 8, 0.95);
+  background: rgba(var(--void-rgb), 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid var(--gold-15);
   padding: 18px 20px 20px;
@@ -7936,7 +7954,7 @@
 }
 .tweaks__segmented button.is-active {
   background: var(--gold);
-  color: var(--void);
+  color: var(--gold-contrast);
 }
 .tweaks__segmented button:not(.is-active):hover {
   background: var(--dawn-04);
@@ -7946,14 +7964,22 @@
 /* Theme variants (via Tweaks) */
 body.theme-instrument .gateway {
   background:
-    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(202, 165, 84, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 80% at 50% 50%, rgba(91, 122, 78, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(var(--gold-rgb), 0.08) 0%, transparent 60%),
+    radial-gradient(
+      ellipse 60% 80% at 50% 50%,
+      rgba(var(--atreides-rgb), 0.04) 0%,
+      transparent 50%
+    ),
     var(--void);
 }
 body.theme-latent .gateway {
   background:
-    radial-gradient(ellipse 60% 80% at 40% 60%, rgba(91, 122, 78, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(202, 165, 84, 0.06) 0%, transparent 60%),
+    radial-gradient(
+      ellipse 60% 80% at 40% 60%,
+      rgba(var(--atreides-rgb), 0.12) 0%,
+      transparent 55%
+    ),
+    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(var(--gold-rgb), 0.06) 0%, transparent 60%),
     linear-gradient(180deg, #060506 0%, var(--void) 60%);
 }
 
@@ -8672,11 +8698,11 @@ html {
   border-left: none;
 }
 .pnav__stop:hover:not([aria-selected="true"]) {
-  background: rgba(202, 165, 84, 0.03);
+  background: rgba(var(--gold-rgb), 0.03);
   color: var(--dawn);
 }
 .pnav__stop[aria-selected="true"] {
-  background: rgba(202, 165, 84, 0.05);
+  background: rgba(var(--gold-rgb), 0.05);
   color: var(--dawn);
 }
 /* Numbered index (mono) */
@@ -8722,7 +8748,7 @@ html {
   width: calc(100% / 3);
   height: 2px;
   background: var(--gold);
-  box-shadow: 0 0 18px rgba(202, 165, 84, 0.5);
+  box-shadow: 0 0 18px rgba(var(--gold-rgb), 0.5);
   transform: translateX(var(--pnav-x, 0%));
   transition: transform 480ms var(--m-ease-instr);
   pointer-events: none;
@@ -8893,7 +8919,7 @@ html {
   position: relative;
   padding: 28px 26px 24px;
   border: 1px solid var(--dawn-08);
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   backdrop-filter: blur(8px);
 }
 .receipt::before,
@@ -8995,7 +9021,7 @@ html {
   grid-template-columns: repeat(2, 1fr);
 }
 .receipt__stats > div {
-  background: rgba(5, 4, 3, 0.8);
+  background: rgba(var(--void-deep-rgb), 0.8);
   padding: 16px 14px;
   display: flex;
   flex-direction: column;
@@ -9003,7 +9029,7 @@ html {
   transition: background 240ms var(--m-ease-instr);
 }
 .receipt__stats > div:hover {
-  background: rgba(10, 9, 8, 0.85);
+  background: rgba(var(--void-rgb), 0.85);
 }
 .receipt__stat-v {
   font-family: var(--font-pt-mono);
@@ -9263,7 +9289,7 @@ html {
   stroke-opacity: 0.85;
   stroke-width: 1.1;
   stroke-dasharray: none;
-  filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.45));
+  filter: drop-shadow(0 0 6px rgba(var(--gold-rgb), 0.45));
 }
 
 /* Pillar labels — gain gold treatment when their phase is active. */
@@ -9303,7 +9329,7 @@ html {
   background: var(--gold);
   transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(var(--r) * -1))
     rotate(calc(var(--a) * -1));
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.4);
+  box-shadow: 0 0 6px rgba(var(--gold-rgb), 0.4);
   opacity: 0.7;
   animation: haloFlicker 4s ease-in-out infinite;
 }
@@ -9341,7 +9367,7 @@ html {
   stroke: var(--gold);
   stroke-width: 0.5;
   stroke-opacity: 0.55;
-  filter: drop-shadow(0 0 4px rgba(202, 165, 84, 0.4));
+  filter: drop-shadow(0 0 4px rgba(var(--gold-rgb), 0.4));
 }
 
 /* Tracked focus marker — diamond reticle that glides between phase
@@ -9363,7 +9389,7 @@ html {
   stroke: var(--gold);
   stroke-width: 0.6;
   stroke-opacity: 0.9;
-  filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.55));
+  filter: drop-shadow(0 0 6px rgba(var(--gold-rgb), 0.55));
 }
 .approach__orbit__focus__core {
   fill: var(--gold);
@@ -9379,7 +9405,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.28));
+  filter: drop-shadow(0 0 24px rgba(var(--gold-rgb), 0.28));
   z-index: 3;
   transform: translateZ(0);
 }
@@ -9591,7 +9617,7 @@ html {
   gap: 10px;
   padding: 14px 24px;
   background: var(--gold);
-  color: var(--void);
+  color: var(--gold-contrast);
   font-family: var(--font-pt-mono);
   font-size: 12px;
   font-weight: 700;
@@ -9685,11 +9711,11 @@ html {
 /* Active styling — title flares slightly when this phase is the active
    one. The active phase glyph is handled separately in the orbit stage. */
 .approach__phase[data-active="true"] .approach__phase__title {
-  text-shadow: 0 0 32px rgba(202, 165, 84, 0.18);
+  text-shadow: 0 0 32px rgba(var(--gold-rgb), 0.18);
 }
 .approach__phase[data-active="true"] .approach__phase__num {
   border-color: var(--gold);
-  background: rgba(202, 165, 84, 0.08);
+  background: rgba(var(--gold-rgb), 0.08);
 }
 
 .approach__phase[data-phase="build"] {
@@ -9730,7 +9756,7 @@ html {
   width: 32px;
   height: 32px;
   margin: 0 0 18px;
-  border: 1px solid rgba(202, 165, 84, 0.45);
+  border: 1px solid rgba(var(--gold-rgb), 0.45);
   background: transparent;
   color: var(--gold);
   font-family: var(--font-pt-mono);
@@ -9762,7 +9788,7 @@ html {
   font-size: 11px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: rgba(236, 227, 214, 0.55);
+  color: rgba(var(--dawn-alt-rgb), 0.55);
 }
 
 .approach__phase__verb::before {
@@ -9796,7 +9822,7 @@ html {
   font-weight: 700;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: rgba(202, 165, 84, 0.65);
+  color: rgba(var(--gold-rgb), 0.65);
   pointer-events: none;
 }
 
@@ -10040,7 +10066,7 @@ html {
 
 .exec__card {
   position: relative;
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   border: 1px solid var(--dawn-08);
   padding: clamp(32px, 3vw, 44px) clamp(28px, 2.6vw, 38px) clamp(26px, 2.4vw, 34px);
   display: grid;
@@ -10053,7 +10079,7 @@ html {
   cursor: pointer;
 }
 .exec__card:hover {
-  background: rgba(10, 9, 8, 0.85);
+  background: rgba(var(--void-rgb), 0.85);
   border-color: var(--dawn-15);
 }
 .exec__card__head {
@@ -10407,8 +10433,8 @@ html {
   position: absolute;
   inset: 0 -8vw;
   background:
-    radial-gradient(ellipse 50% 50% at 20% 30%, rgba(202, 165, 84, 0.05), transparent 60%),
-    radial-gradient(ellipse 60% 70% at 80% 70%, rgba(91, 122, 78, 0.035), transparent 65%);
+    radial-gradient(ellipse 50% 50% at 20% 30%, rgba(var(--gold-rgb), 0.05), transparent 60%),
+    radial-gradient(ellipse 60% 70% at 80% 70%, rgba(var(--atreides-rgb), 0.035), transparent 65%);
   pointer-events: none;
   z-index: 0;
 }
@@ -10501,7 +10527,7 @@ html {
   line-height: 1.1;
   text-transform: uppercase;
   color: var(--dawn);
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
   margin: 0 0 10px;
 }
 .voidwalker__name em {
@@ -10582,7 +10608,7 @@ html {
   color: var(--latent-night, #110f09);
   background: var(--gold);
   padding: 0.1em 0.28em;
-  box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
+  box-shadow: 0 0 14px rgba(var(--gold-rgb), 0.3);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -10621,7 +10647,7 @@ html {
   border: 1px solid var(--dawn-08);
 }
 .voidwalker__meta__cell {
-  background: rgba(10, 9, 8, 0.55);
+  background: rgba(var(--void-rgb), 0.55);
   padding: 16px 14px;
   font-family: var(--font-pt-mono);
   font-size: 10px;
@@ -10661,7 +10687,7 @@ html {
 .voidwalker__links a:hover {
   border-color: var(--gold);
   color: var(--gold);
-  background: rgba(202, 165, 84, 0.06);
+  background: rgba(var(--gold-rgb), 0.06);
 }
 .voidwalker__links a svg {
   width: 16px;
@@ -10699,7 +10725,7 @@ html {
   border: 1px solid var(--gold-15);
   box-shadow:
     0 30px 60px -10px rgba(0, 0, 0, 0.9),
-    0 0 0 6px rgba(10, 9, 8, 0.85),
+    0 0 0 6px rgba(var(--void-rgb), 0.85),
     0 0 0 7px var(--dawn-08);
 }
 .voidwalker__orbit__portrait img {
@@ -10716,7 +10742,7 @@ html {
   inset: 0;
   background:
     linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
-    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(202, 165, 84, 0.08), transparent 70%);
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(var(--gold-rgb), 0.08), transparent 70%);
   pointer-events: none;
 }
 .voidwalker__orbit__label {
@@ -10833,7 +10859,7 @@ html {
   height: 3px;
   border-radius: 50%;
   background: var(--gold);
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.6);
+  box-shadow: 0 0 6px rgba(var(--gold-rgb), 0.6);
 }
 .voidwalker__orbit__particles span.d {
   opacity: 0.5;
@@ -11272,7 +11298,7 @@ html {
    keep the default dawn-50 because they live on the dark half. */
 .build-quote__label--tl,
 .build-quote__label--tr {
-  color: rgba(10, 9, 8, 0.55);
+  color: rgba(var(--void-rgb), 0.55);
 }
 
 /* Gateway visual — atmospheric bridge from #practice into the Build
@@ -11377,9 +11403,9 @@ html {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(10, 9, 8, 0.22) 32%,
-    rgba(10, 9, 8, 0.6) 58%,
-    rgba(10, 9, 8, 0.88) 82%,
+    rgba(var(--void-rgb), 0.22) 32%,
+    rgba(var(--void-rgb), 0.6) 58%,
+    rgba(var(--void-rgb), 0.88) 82%,
     var(--void) 100%
   );
   backdrop-filter: blur(18px) saturate(0.9);
@@ -11461,7 +11487,7 @@ html {
   text-transform: uppercase;
   /* Dim void instead of dawn-50 — the eyebrow sits on the image's
      white half above the quote, so it needs dark tone for legibility. */
-  color: rgba(10, 9, 8, 0.6);
+  color: rgba(var(--void-rgb), 0.6);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -11544,7 +11570,7 @@ html {
   display: inline-block;
   /* Dim void on white half — was dawn-50 (light) which would
      vanish against the cream paper. */
-  color: rgba(10, 9, 8, 0.45);
+  color: rgba(var(--void-rgb), 0.45);
   text-decoration: none;
   font-weight: 300;
 }
@@ -11593,7 +11619,7 @@ html {
   text-transform: uppercase;
   /* Attribution lives just below the quote on the white half; tint
      to match the dark text family (was dawn-70). */
-  color: rgba(10, 9, 8, 0.68);
+  color: rgba(var(--void-rgb), 0.68);
 }
 .build-quote__attribution__rule {
   width: clamp(28px, 5vw, 56px);
@@ -11606,7 +11632,7 @@ html {
   letter-spacing: var(--track-wider, 0.16em);
 }
 .build-quote__attribution__meta {
-  color: rgba(10, 9, 8, 0.5);
+  color: rgba(var(--void-rgb), 0.5);
 }
 
 /* Reveal pinned to the figure (inner) only, per Rule 2. The wrapper
@@ -12044,7 +12070,7 @@ html {
 }
 .build-case__card__cta:hover,
 .build-case__card__cta:focus-visible {
-  background: rgba(202, 165, 84, 0.06);
+  background: rgba(var(--gold-rgb), 0.06);
   color: var(--gold);
 }
 .build-case__card__cta__arrow {

@@ -31,7 +31,9 @@ import * as THREE from "three";
 // first time the gimbal sphere reveals. Register the alias once at
 // module load so the trim-path rings render. (2026-06-10 fix.)
 extend({ ThreeLine: THREE.Line });
-import { COLOR_DAWN, COLOR_VOID } from "@/components/landing/intelligence-artifact/artifactGeom";
+import { COLOR_DAWN } from "@/components/landing/intelligence-artifact/artifactGeom";
+import { resolveScenePalette } from "@/lib/theme/palette";
+import { useThemeStore } from "@/lib/stores/themeStore";
 // Substrate-sphere gold — a more-yellow `#caa554` (2026-06-25 harmonization) so
 // the additive bloom reads gold, not orange. Matches the corridor → #services seam.
 import { SPHERE_GOLD as COLOR_GOLD } from "@/lib/home-v2/goldPalette";
@@ -366,7 +368,13 @@ function makeCoreMaterial(): THREE.ShaderMaterial {
     vertexShader: coreVertex,
     fragmentShader: coreFragment,
     uniforms: {
-      uColor: { value: new THREE.Color(COLOR_VOID) },
+      // The core absorbs toward the PAGE GROUND, so this tracks the theme
+      // (ADR-058) — it is the one colour in the instrument that must be
+      // invisible rather than on-brand. `resolveScenePalette()` reads the
+      // pre-paint attribute when the store has not hydrated yet, so a
+      // light-mode reload never paints a dark disc for a frame; the
+      // subscription in the component re-applies it on a live flip.
+      uColor: { value: new THREE.Color(resolveScenePalette().ground) },
       uOpacity: { value: 0 },
       uDensity: { value: SUBSTRATE_GYRO_CORE_DENSITY },
     },
@@ -914,6 +922,19 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     return () => {
       Object.values(mats).forEach((m) => m.dispose());
     };
+  }, [mats]);
+
+  // Theme flip → repaint the occluder core to the new page ground
+  // (ADR-058). Imperative on purpose: a store subscription that set React
+  // state here would re-render the instrument, and a colour is not worth
+  // a render. One `.set()` per flip, no per-frame cost — `blending` is
+  // per-draw GL state in three, so nothing needs `needsUpdate`.
+  useEffect(() => {
+    const apply = () => {
+      (mats.core.uniforms.uColor.value as THREE.Color).set(resolveScenePalette().ground);
+    };
+    apply();
+    return useThemeStore.subscribe(apply);
   }, [mats]);
 
   // Sort-bucket assignment for the occluder core (see the core

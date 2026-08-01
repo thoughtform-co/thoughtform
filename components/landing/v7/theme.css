@@ -1,0 +1,330 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THEME — the light-mode cascade + the toggle's chrome · ADR-058
+
+   ONE sheet, imported LAST by the public routes only:
+     app/(marketing)/page.tsx · claude-workshop/page.tsx
+     app/(marketing)/arcs/page.tsx · arcs/[slug]/page.tsx
+   Never from app/globals.css — keeping it out of that @import run
+   leaves the documented postcss-import ordering incident untouched, AND
+   is what scopes the theme: admin / astrogation / /test/* never load a
+   single light rule even though `<html data-theme>` is global.
+
+   ⚠ TWO LAWS FOR EVERY RULE BELOW.
+
+   1. NEVER author a `[data-theme="dark"]` selector. Dark is the
+      unqualified `:root` default. `LandingPage`, `ArcShell`, `HomeV2Page`
+      and seven test shells each carry an inert `data-theme="dark"` on an
+      INNER element; a dark-keyed rule would match those and fire in the
+      wrong place. The bootstrap only ever writes "light" or removes the
+      attribute.
+   2. NEVER use a `theme-*` CLASS. The landing root div's live className
+      is `theme-instrument density-comfortable`, and landing.css carries
+      inert `body.theme-instrument` / `body.theme-latent` ambience rules
+      that stay dead only because `<body>` never gets the class. The
+      attribute mechanism sidesteps that whole family.
+
+   `html[data-theme="light"]` (0,1,1) outranks the `:root` token blocks
+   (0,1,0) and, prefixed to a descendant, outranks every single-class
+   rule it overrides — so nothing here needs `!important`.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE TOGGLE — chrome for BOTH themes (the control exists in dark too)
+
+   Placement: the bottom-right chrome band, INBOARD of the `--br` corner
+   bracket. That bracket owns [right/bottom: --hud-margin] at
+   --hud-corner-zone; the rail terminus + its byte-pinned 100% tick stop
+   `clamp(16px,1.8vw,32px)` ABOVE the bracket and must not be crowded
+   (landing.css: "a bare dangling hairline reads broken"). So the free
+   slot is beside the bracket on the bottom margin line — which also
+   pairs it with the ADR-043 bottom-left wordmark: one chrome band, a
+   mark at each end.
+
+   Mounted OUTSIDE `.hud` (its own fixed overlay, the `.hud-nav-overlay`
+   precedent at z 60) so the ADR-031 U16 hero curtain never clips it —
+   a control inside `.hud__rail--r` would be invisible for the whole
+   hero and then pop in.
+   ═══════════════════════════════════════════════════════════════════ */
+.theme-toggle-overlay {
+  position: fixed;
+  right: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
+  bottom: max(var(--hud-margin), var(--safe-bottom, 0px));
+  height: var(--hud-corner-zone);
+  display: flex;
+  align-items: center;
+  z-index: 60;
+  pointer-events: none;
+}
+.theme-toggle-overlay > * {
+  pointer-events: auto;
+}
+
+.theme-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--dawn-70);
+  transition: color var(--duration-normal, 120ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.theme-toggle:hover,
+.theme-toggle:active {
+  color: var(--gold);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+/* Touch targets clear the 44px floor without growing the desktop mark. */
+@media (pointer: coarse) {
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* In light mode the toggle still has to read over the DARK hero raster
+   for the first viewport (the key visual stays a dark artifact — owner,
+   2026-08-01). A parchment chip solves that structurally, with no scroll
+   coupling and no new writer. Zero radius, no box-shadow (chrome law). */
+html[data-theme="light"] .theme-toggle {
+  background: rgba(236, 227, 214, 0.92);
+  border: 1px solid var(--dawn-15);
+}
+html[data-theme="light"] .theme-toggle:hover {
+  border-color: var(--gold-40);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 1 — global token overrides
+
+   Semantic Dawn becomes the environment; Latent Night becomes the ink.
+   The ink alpha ramp is NOT a mirror of the dawn ramp: the top steps are
+   pushed UP (.7→.88, .5→.62, .4→.5, .3→.4 — proven on Sigil) because
+   dark ink on parchment reads lighter than light text on void at the
+   same alpha. Steps ≤.15 are UNCHANGED — those are hairlines and washes,
+   and boosting them makes the page read ruled.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] {
+  color-scheme: light;
+  /* The overscroll/rubber-band field behind <body>. */
+  background: #ece3d6;
+
+  --void: #ece3d6;
+  --void-deep: #e4dac9;
+
+  --dawn: #110f09;
+  --dawn-90: rgba(17, 15, 9, 0.95);
+  --dawn-80: rgba(17, 15, 9, 0.92);
+  --dawn-70: rgba(17, 15, 9, 0.88);
+  --dawn-60: rgba(17, 15, 9, 0.75);
+  --dawn-50: rgba(17, 15, 9, 0.62);
+  --dawn-40: rgba(17, 15, 9, 0.5);
+  --dawn-35: rgba(17, 15, 9, 0.45);
+  --dawn-30: rgba(17, 15, 9, 0.4);
+  --dawn-25: rgba(17, 15, 9, 0.32);
+  --dawn-20: rgba(17, 15, 9, 0.25);
+  --dawn-15: rgba(17, 15, 9, 0.15);
+  --dawn-10: rgba(17, 15, 9, 0.1);
+  --dawn-08: rgba(17, 15, 9, 0.08);
+  --dawn-04: rgba(17, 15, 9, 0.04);
+
+  /* Tensor Gold keeps its ROLE and darkens for contrast against Dawn
+     (color-system.md: "Gold adapts its value for contrast but keeps its
+     role"). #CAA554 on parchment is ~2.2:1 — unusable for text. The
+     WebGL particle golds do NOT follow this: they are light emitters,
+     not type, and stay in the luminous family (owner, 2026-08-01). */
+  --gold: #9a7a2e;
+  --gold-70: rgba(154, 122, 46, 0.7);
+  --gold-60: rgba(154, 122, 46, 0.6);
+  --gold-50: rgba(154, 122, 46, 0.5);
+  --gold-40: rgba(154, 122, 46, 0.4);
+  --gold-30: rgba(154, 122, 46, 0.3);
+  --gold-20: rgba(154, 122, 46, 0.2);
+  --gold-15: rgba(154, 122, 46, 0.15);
+  --gold-10: rgba(154, 122, 46, 0.1);
+  --gold-08: rgba(154, 122, 46, 0.08);
+
+  --alert: #c24e1f;
+
+  /* ── RGB TRIPLES (ADR-058) ────────────────────────────────────────
+     These carry the ~400 one-off alphas the ramps do not have a step
+     for. Both dawn families collapse to ink here and both voids to
+     parchment — the dark-side drift self-heals in light. "Deep" means
+     RECESSED, not darker: in dark that is closer to black, in light it
+     is a slightly deeper parchment (surface-0), so a veil still reads
+     as the ground pulling back. */
+  --gold-rgb: 154, 122, 46;
+  --dawn-rgb: 17, 15, 9;
+  --dawn-alt-rgb: 17, 15, 9;
+  --dawn-alt: #110f09;
+  --void-rgb: 236, 227, 214;
+  --void-deep-rgb: 228, 218, 201;
+  --void-deep-canon: #e4dac9;
+  --atreides-rgb: 74, 98, 56;
+  /* --atreides-mid-rgb is unchanged: the provenance hue survives the
+     mode change (color-system.md §6 — "green stays virtually
+     identical across modes"). */
+
+  /* ── BLOCK 2 — landing.css `:root` locals ──────────────────────────
+     Atreides survives the mode change almost unchanged (it is the
+     provenance hue, not an environment one); only the light step
+     darkens. The rail hairlines keep their alphas — the anti-aliasing
+     robustness argument that raised them (0.42→0.55 / 0.16→0.28) is
+     symmetric across modes. THESE TWO ARE THE RAILS: latent night. */
+  --atreides-light: #4a6238;
+  --gold-05: rgba(154, 122, 46, 0.05);
+  --hud-rail-line: rgba(17, 15, 9, 0.55);
+  --hud-rail-line-soft: rgba(17, 15, 9, 0.28);
+
+  /* ── BLOCK 3 — vars that are USED but never DEFINED in dark ────────
+     Each of these has consumers reading it with a `var(--x, fallback)`
+     whose fallback is currently the shipped pixel. Defining them HERE
+     ONLY means dark keeps its fallbacks byte-exactly (defining them in
+     variables.css would change dark: `--gold-bright` has two different
+     fallbacks at two sites, and `--surface-1`'s fallback carries
+     alpha 0.94). `--dawn-45`'s only consumer is unmounted today
+     (CorridorProgressRail, kept for rollback) — future-proofing. */
+  --gold-bright: #b8922f;
+  --surface-1: #ddd2c0;
+  --dawn-45: rgba(17, 15, 9, 0.56);
+
+  /* ── BLOCK 6 — text on gold fills ─────────────────────────────────
+     Gold-filled controls print their label in the ground color. In dark
+     that is `--void`; flipping `--void` to parchment would land ~3:1 on
+     #9A7A2E. `--gold-contrast` is byte-equal to `--void` in dark (see
+     variables.css), so swapping a site to it is a no-op there, and
+     resolves to ink here (~4.9:1). */
+  --gold-contrast: #110f09;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4 — the services plate cluster's LOCAL palette
+
+   services.css:1707 redeclares --void/--dawn/--gold ON THE ELEMENT
+   ("redeclared locally so the plates need no external steps"). An
+   element-level custom property SHADOWS the html-level override, so the
+   cluster would stay dark unless it is re-overridden in its own scope.
+   Plates are an ELEVATED surface, so their ground is surface-2, not the
+   page ground.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .services-plate-cluster {
+  --void: #f2eae0;
+  --dawn: #110f09;
+  --gold: #9a7a2e;
+  --dawn-80: rgba(17, 15, 9, 0.92);
+  --dawn-70: rgba(17, 15, 9, 0.88);
+  --dawn-50: rgba(17, 15, 9, 0.62);
+  --dawn-40: rgba(17, 15, 9, 0.5);
+  --dawn-30: rgba(17, 15, 9, 0.4);
+  --dawn-04: rgba(17, 15, 9, 0.04);
+  --gold-40: rgba(154, 122, 46, 0.4);
+  --gold-05: rgba(154, 122, 46, 0.05);
+  /* The plate's own ground is the elevated surface, so its one-off
+     void alphas recede toward surface-1 rather than the page field. */
+  --gold-rgb: 154, 122, 46;
+  --dawn-rgb: 17, 15, 9;
+  --dawn-alt-rgb: 17, 15, 9;
+  --void-rgb: 242, 234, 224;
+  --void-deep-rgb: 221, 210, 192;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 5 — the hero island
+
+   `/images/Gateway_v1b.webp` is a dark raster and the LCP element; no
+   token can recolor it. Owner's call (2026-08-01): it STAYS dark and
+   light mode frames it — a window into the void at the top of a
+   parchment page. So the hero re-pins the DARK ramp for its own subtree
+   and renders pixel-identically in both themes, including `.hero__bg`
+   (`background: var(--void)`) and the `.hero__video__overlay` scrims,
+   which scrim a still-dark image and are therefore correct untouched.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .hero {
+  --void: #0a0908;
+  --void-deep: #050504;
+
+  --dawn: #ebe3d6;
+  --dawn-90: rgba(235, 227, 214, 0.9);
+  --dawn-80: rgba(235, 227, 214, 0.8);
+  --dawn-70: rgba(235, 227, 214, 0.7);
+  --dawn-60: rgba(235, 227, 214, 0.6);
+  --dawn-50: rgba(235, 227, 214, 0.5);
+  --dawn-40: rgba(235, 227, 214, 0.4);
+  --dawn-35: rgba(235, 227, 214, 0.35);
+  --dawn-30: rgba(235, 227, 214, 0.3);
+  --dawn-25: rgba(235, 227, 214, 0.25);
+  --dawn-20: rgba(235, 227, 214, 0.2);
+  --dawn-15: rgba(235, 227, 214, 0.15);
+  --dawn-10: rgba(235, 227, 214, 0.1);
+  --dawn-08: rgba(235, 227, 214, 0.08);
+  --dawn-04: rgba(236, 227, 214, 0.04);
+
+  --gold: #caa554;
+  --gold-70: rgba(202, 165, 84, 0.7);
+  --gold-60: rgba(202, 165, 84, 0.6);
+  --gold-50: rgba(202, 165, 84, 0.5);
+  --gold-40: rgba(202, 165, 84, 0.4);
+  --gold-30: rgba(202, 165, 84, 0.3);
+  --gold-20: rgba(202, 165, 84, 0.2);
+  --gold-15: rgba(202, 165, 84, 0.15);
+  --gold-10: rgba(202, 165, 84, 0.1);
+  --gold-08: rgba(202, 165, 84, 0.08);
+  --gold-05: rgba(202, 165, 84, 0.05);
+  --gold-bright: #e0bd6a;
+
+  --hud-rail-line: rgba(235, 227, 214, 0.55);
+  --hud-rail-line-soft: rgba(235, 227, 214, 0.28);
+  --gold-contrast: #0a0908;
+
+  /* The RGB triples too, or the ~400 swept one-off alphas inside the
+     hero would flip while the ramp tokens above held — the island has
+     to re-pin the WHOLE dark palette to stay pixel-identical. */
+  --gold-rgb: 202, 165, 84;
+  --dawn-rgb: 235, 227, 214;
+  --dawn-alt-rgb: 236, 227, 214;
+  --dawn-alt: #ece3d6;
+  --void-rgb: 10, 9, 8;
+  --void-deep-rgb: 5, 4, 3;
+  --void-deep-canon: #050403;
+  --atreides-rgb: 91, 122, 78;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LANE B — declarations whose whole value has to change
+
+   Anything here is a rule where tokenizing would not have been
+   byte-exact in dark, or where the property itself (not just a color)
+   has to differ. Kept short on purpose: the sweep's job is to move as
+   much as possible into the token blocks above.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The fixed gateway field (ADR-008 z:0). Color only — never the
+   opacity, geometry or z of this layer. */
+html[data-theme="light"] .gateway__stage {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(154, 122, 46, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 50% 50%, rgba(74, 98, 56, 0.05) 0%, transparent 50%),
+    var(--void);
+}
+
+/* `overlay` blending is calibrated against a dark backdrop — on
+   parchment it lifts to a milky haze. Multiply keeps the grain reading
+   as tooth in the paper, at a lower amplitude. */
+html[data-theme="light"] .gateway__grain {
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  background-image: radial-gradient(circle at 1px 1px, rgba(17, 15, 9, 0.05) 1px, transparent 0);
+}
+
+/* The global dot grid (base.css:31 — a raw 235-family literal). The
+   mask stays untouched: `#000` there is an alpha channel, not paint. */
+html[data-theme="light"] body::before {
+  background-image: radial-gradient(circle, rgba(17, 15, 9, 0.05) 1px, transparent 1.2px);
+}

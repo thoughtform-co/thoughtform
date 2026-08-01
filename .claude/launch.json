@@ -9,6 +9,11 @@
       "autoPort": true
     },
     {
+      "name": "thoughtform-dev-attach",
+      "port": 3003,
+      "url": "http://localhost:3003"
+    },
+    {
       "name": "Storybook",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "storybook"],

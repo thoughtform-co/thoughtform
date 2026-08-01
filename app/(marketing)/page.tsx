@@ -7,6 +7,10 @@ import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/services/services.css";
 import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/about/about-stage.css";
+// Theme sheet LAST (ADR-058): its `html[data-theme="light"]` cascade has
+// to win over every route sheet above. Imported per-route, never from
+// globals.css, so admin / astrogation / /test/* stay dark unconditionally.
+import "@/components/landing/v7/theme.css";
 // handoff-lab.css intentionally NOT imported here: the cover-plane
 // sweep was retired from production (ADR-021 — the live corridor-exit
 // seam is the zoom-dissipate), and the /test/handoff-* lab routes

@@ -9,6 +9,8 @@ import { sliceV7Sections } from "@/lib/v7-parse";
 
 import "@/components/landing/v7/landing.css";
 import "@/components/arcs/arcs.css";
+// Theme sheet LAST (ADR-058) — after arcs.css so the light cascade wins.
+import "@/components/landing/v7/theme.css";
 
 /**
  * /arcs/[slug] — one client arc (ADR-052). Statically generated from

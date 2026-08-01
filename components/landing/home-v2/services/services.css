@@ -281,15 +281,15 @@
   pointer-events: auto;
   /* Translucent panel + a faint gold dither stipple (background-image
    * paints under the text — legibility preserved). */
-  background-color: rgba(10, 9, 8, 0.62);
-  background-image: radial-gradient(rgba(202, 165, 84, 0.05) 0.5px, transparent 0.6px);
+  background-color: rgba(var(--void-rgb), 0.62);
+  background-image: radial-gradient(rgba(var(--gold-rgb), 0.05) 0.5px, transparent 0.6px);
   background-size: 4px 4px;
   backdrop-filter: blur(9px);
   -webkit-backdrop-filter: blur(9px);
   border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
   box-shadow:
-    0 0 0 1px rgba(235, 227, 214, 0.04),
-    0 0 60px rgba(202, 165, 84, 0.08),
+    0 0 0 1px rgba(var(--dawn-rgb), 0.04),
+    0 0 60px rgba(var(--gold-rgb), 0.08),
     0 30px 80px rgba(0, 0, 0, 0.55);
   /* Reveal state (inactive) — faded out + nudged down, taken out of the
    * pointer/hit path via visibility after the fade. */
@@ -579,7 +579,7 @@
   line-height: 1.1;
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
 }
 .services-masthead__title-line {
   display: block;
@@ -606,7 +606,7 @@
   display: none;
   margin-left: 0.06em;
   color: var(--gold, #caa554);
-  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  text-shadow: 0 0 12px rgba(var(--gold-rgb), 0.55);
   /* Retro-terminal caret, not a giant glyph (station-header recipe). */
   transform: translateY(-0.04em) scaleY(0.78);
   transform-origin: center bottom;
@@ -704,9 +704,9 @@
  * every other survey element sits at ≤ 70% dawn (handoff hierarchy rule).
  * Desktop-only — hidden with the static mobile/PRM stack below. */
 .services-masthead {
-  --survey-ink: rgba(235, 227, 214, 0.4); /* designation labels */
-  --survey-ink-faint: rgba(235, 227, 214, 0.22); /* coord stamps */
-  --survey-mark-dawn: rgba(235, 227, 214, 0.7); /* close mark */
+  --survey-ink: rgba(var(--dawn-rgb), 0.4); /* designation labels */
+  --survey-ink-faint: rgba(var(--dawn-rgb), 0.22); /* coord stamps */
+  --survey-mark-dawn: rgba(var(--dawn-rgb), 0.7); /* close mark */
   --survey-label-rise: 34px; /* label top above the block head */
   --survey-coord-drop: 26px; /* coord stamp below the block foot */
   --survey-mark-out: 24px; /* registration mark, outboard of the far corner */
@@ -759,7 +759,7 @@
   position: absolute;
   inset: calc(-1 * var(--survey-grid-bleed-y)) calc(-1 * var(--survey-grid-bleed-x));
   z-index: 0;
-  background-image: radial-gradient(rgba(235, 227, 214, 0.06) 1px, transparent 1.2px);
+  background-image: radial-gradient(rgba(var(--dawn-rgb), 0.06) 1px, transparent 1.2px);
   background-size: 24px 24px;
   -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
   mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
@@ -896,7 +896,7 @@
  * NASA technical-diagram grammar (Vince review, 2026-07-09): BARE mono
  * text — no box, no background, no border — and everything in ONE ink,
  * the parked instrument gold the wireframe itself converges to
- * (`SERVICES_GOLD` = `--gold` #caa554, per lib/home-v2/goldPalette.ts:
+ * (`SERVICES_GOLD` = `--gold` var(--gold), per lib/home-v2/goldPalette.ts:
  * "use for LINE/DOM elements that render at full coverage"). Leader lines
  * are thin SOLID hairlines (no dash, no glow) with one elbow running
  * straight into the text stack; the only ornament is a 3px diamond where
@@ -976,8 +976,8 @@
    * void shadow carves them out of the wire strokes passing behind,
    * without reading as a box on empty space. */
   text-shadow:
-    0 0 3px rgba(5, 4, 3, 0.95),
-    0 0 10px rgba(5, 4, 3, 0.85);
+    0 0 3px rgba(var(--void-deep-rgb), 0.95),
+    0 0 10px rgba(var(--void-deep-rgb), 0.85);
   animation: svcDesignationRiseIn 0.42s var(--svc-des-ease) both;
   animation-delay: calc(var(--svc-des-order, 0) * var(--svc-des-stagger) + 0.15s);
 }
@@ -1175,8 +1175,8 @@
   width: var(--orbit-label-width);
   box-sizing: border-box;
   color: var(--dawn-70, rgba(235, 227, 214, 0.7));
-  background: #0a0908;
-  border: 1px solid rgba(235, 227, 214, 0.12);
+  background: var(--void);
+  border: 1px solid rgba(var(--dawn-rgb), 0.12);
   border-radius: 0;
   opacity: 0.62;
   pointer-events: auto;
@@ -1188,18 +1188,18 @@
 }
 .services-orbit-label--focused {
   opacity: 0.85;
-  border-color: rgba(202, 165, 84, 0.28);
+  border-color: rgba(var(--gold-rgb), 0.28);
 }
 .services-orbit-label--expanded {
   z-index: 4;
   color: var(--dawn);
   opacity: 1;
-  border-color: rgba(235, 227, 214, 0.14);
+  border-color: rgba(var(--dawn-rgb), 0.14);
 }
 .services-orbit-label:hover,
 .services-orbit-label:focus-within {
   opacity: 0.95;
-  border-color: rgba(202, 165, 84, 0.42);
+  border-color: rgba(var(--gold-rgb), 0.42);
   transform: translateY(-2px);
 }
 .services-orbit-label--expanded:hover,
@@ -1225,7 +1225,7 @@
   cursor: pointer;
 }
 .services-orbit-label__chipbar:focus-visible {
-  outline: 1px solid rgba(202, 165, 84, 0.9);
+  outline: 1px solid rgba(var(--gold-rgb), 0.9);
   outline-offset: -3px;
 }
 .services-orbit-label__chip-id {
@@ -1301,13 +1301,13 @@
 .services-orbit-label__table {
   display: grid;
   margin: 0;
-  border-top: 1px solid rgba(235, 227, 214, 0.12);
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.12);
   font-family: var(--font-mono, "IBM Plex Mono", monospace);
 }
 .services-orbit-label__trow {
   display: grid;
   grid-template-columns: 96px 1fr;
-  border-bottom: 1px solid rgba(235, 227, 214, 0.09);
+  border-bottom: 1px solid rgba(var(--dawn-rgb), 0.09);
 }
 .services-orbit-label__trow dt {
   padding: 8px 12px;
@@ -1315,7 +1315,7 @@
   font-size: 8.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  border-right: 1px solid rgba(235, 227, 214, 0.09);
+  border-right: 1px solid rgba(var(--dawn-rgb), 0.09);
 }
 .services-orbit-label__trow dd {
   margin: 0;
@@ -1334,11 +1334,11 @@
   letter-spacing: 0.14em;
   text-decoration: none;
   text-transform: uppercase;
-  background: rgba(202, 165, 84, 0.06);
+  background: rgba(var(--gold-rgb), 0.06);
   transition: background-color 160ms var(--m-ease, ease);
 }
 .services-orbit-label__cta:hover {
-  background: rgba(202, 165, 84, 0.14);
+  background: rgba(var(--gold-rgb), 0.14);
 }
 
 /* ── Top-left service card stack (animejs-style scrollytelling) ───── */
@@ -1388,7 +1388,7 @@
   cursor: pointer;
 }
 .svc-stack__head:focus-visible {
-  outline: 1px solid rgba(202, 165, 84, 0.6);
+  outline: 1px solid rgba(var(--gold-rgb), 0.6);
   outline-offset: 4px;
 }
 .svc-stack__index {
@@ -1708,17 +1708,17 @@
   /* Self-contained plate palette (matches the handoff; --gold/--dawn also
    * match the site tokens, redeclared locally so the plates need no external
    * steps). */
-  --void: #050403;
-  --dawn: #ece3d6;
+  --void: var(--void-deep-canon);
+  --dawn: var(--dawn-alt);
   --gold: #caa554;
-  --dawn-80: rgba(236, 227, 214, 0.8);
-  --dawn-70: rgba(236, 227, 214, 0.7);
-  --dawn-50: rgba(236, 227, 214, 0.5);
-  --dawn-40: rgba(236, 227, 214, 0.4);
-  --dawn-30: rgba(236, 227, 214, 0.3);
-  --dawn-04: rgba(236, 227, 214, 0.04);
-  --gold-40: rgba(202, 165, 84, 0.4);
-  --gold-05: rgba(202, 165, 84, 0.05);
+  --dawn-80: rgba(var(--dawn-alt-rgb), 0.8);
+  --dawn-70: rgba(var(--dawn-alt-rgb), 0.7);
+  --dawn-50: rgba(var(--dawn-alt-rgb), 0.5);
+  --dawn-40: rgba(var(--dawn-alt-rgb), 0.4);
+  --dawn-30: rgba(var(--dawn-alt-rgb), 0.3);
+  --dawn-04: rgba(var(--dawn-alt-rgb), 0.04);
+  --gold-40: rgba(var(--gold-rgb), 0.4);
+  --gold-05: rgba(var(--gold-rgb), 0.05);
   --mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   --sans: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   /* Collapse timing (SPEC §4): open is the feature, close gets out of the way. */
@@ -1849,7 +1849,7 @@
   background: var(--gold);
   transform: rotate(45deg);
   opacity: 0.7;
-  box-shadow: 0 calc(100% + 5px) 0 rgba(202, 165, 84, 0.7);
+  box-shadow: 0 calc(100% + 5px) 0 rgba(var(--gold-rgb), 0.7);
 }
 
 /* ── Plate root — rack-relative flow, width morphs on open ──────────── */
@@ -1889,7 +1889,7 @@
   position: absolute;
   inset: -7px;
   pointer-events: none;
-  border: 1px dotted rgba(202, 165, 84, 0.22);
+  border: 1px dotted rgba(var(--gold-rgb), 0.22);
   opacity: 0;
   transition: opacity var(--plate-close) var(--plate-ease);
 }
@@ -1912,10 +1912,10 @@
   /* Seed shell — quiet ghost gradient (canvas S4). */
   background: linear-gradient(
     168deg,
-    rgba(202, 165, 84, 0.34) 0%,
-    rgba(236, 227, 214, 0.1) 45%,
-    rgba(202, 165, 84, 0.1) 70%,
-    rgba(202, 165, 84, 0.3) 100%
+    rgba(var(--gold-rgb), 0.34) 0%,
+    rgba(var(--dawn-alt-rgb), 0.1) 45%,
+    rgba(var(--gold-rgb), 0.1) 70%,
+    rgba(var(--gold-rgb), 0.3) 100%
   );
   transition:
     background var(--plate-open) var(--plate-ease),
@@ -1924,19 +1924,19 @@
 .svc-plate[data-state="collapsed"]:hover .svc-plate__sh {
   background: linear-gradient(
     168deg,
-    rgba(202, 165, 84, 0.5) 0%,
-    rgba(236, 227, 214, 0.16) 45%,
-    rgba(202, 165, 84, 0.2) 70%,
-    rgba(202, 165, 84, 0.44) 100%
+    rgba(var(--gold-rgb), 0.5) 0%,
+    rgba(var(--dawn-alt-rgb), 0.16) 45%,
+    rgba(var(--gold-rgb), 0.2) 70%,
+    rgba(var(--gold-rgb), 0.44) 100%
   );
 }
 .svc-plate[data-state="open"] .svc-plate__sh {
   background: linear-gradient(
     168deg,
-    rgba(202, 165, 84, 0.52) 0%,
-    rgba(236, 227, 214, 0.14) 38%,
-    rgba(202, 165, 84, 0.16) 66%,
-    rgba(202, 165, 84, 0.48) 100%
+    rgba(var(--gold-rgb), 0.52) 0%,
+    rgba(var(--dawn-alt-rgb), 0.14) 38%,
+    rgba(var(--gold-rgb), 0.16) 66%,
+    rgba(var(--gold-rgb), 0.48) 100%
   );
 }
 .svc-plate__bd {
@@ -1954,7 +1954,7 @@
   );
   /* Seed body (canvas .seed .bd). */
   background:
-    linear-gradient(172deg, rgba(236, 227, 214, 0.05) 0%, rgba(236, 227, 214, 0) 50%),
+    linear-gradient(172deg, rgba(var(--dawn-alt-rgb), 0.05) 0%, rgba(var(--dawn-alt-rgb), 0) 50%),
     rgba(8, 7, 6, 0.72);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -1969,11 +1969,11 @@
   background:
     linear-gradient(
       174deg,
-      rgba(236, 227, 214, 0.09) 0%,
-      rgba(236, 227, 214, 0.03) 26%,
-      rgba(236, 227, 214, 0) 60%
+      rgba(var(--dawn-alt-rgb), 0.09) 0%,
+      rgba(var(--dawn-alt-rgb), 0.03) 26%,
+      rgba(var(--dawn-alt-rgb), 0) 60%
     ),
-    radial-gradient(130% 70% at 84% -8%, rgba(202, 165, 84, 0.11), transparent 56%),
+    radial-gradient(130% 70% at 84% -8%, rgba(var(--gold-rgb), 0.11), transparent 56%),
     rgba(8, 7, 6, 0.58);
   -webkit-backdrop-filter: blur(16px) brightness(1.08);
   backdrop-filter: blur(16px) brightness(1.08);
@@ -1989,7 +1989,7 @@
   z-index: 2;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(202, 165, 84, 0.025) 0 1px,
+    rgba(var(--gold-rgb), 0.025) 0 1px,
     transparent 1px 3px
   );
   transition: opacity var(--plate-open) var(--plate-ease);
@@ -2051,8 +2051,8 @@
  * open like the photo layers. */
 .svc-plate__pbg--schematic {
   background:
-    radial-gradient(rgba(202, 165, 84, 0.24) 0.85px, transparent 1.1px) 0 0 / 4px 4px,
-    radial-gradient(rgba(236, 227, 214, 0.06) 0.6px, transparent 0.8px) 2px 2px / 6px 6px,
+    radial-gradient(rgba(var(--gold-rgb), 0.24) 0.85px, transparent 1.1px) 0 0 / 4px 4px,
+    radial-gradient(rgba(var(--dawn-alt-rgb), 0.06) 0.6px, transparent 0.8px) 2px 2px / 6px 6px,
     linear-gradient(180deg, rgba(8, 7, 6, 0.72), rgba(8, 7, 6, 0.94));
   opacity: 0;
   transition: opacity 0.5s var(--plate-ease);
@@ -2074,7 +2074,7 @@
 .svc-plate[data-photo="off"] .svc-plate__band {
   background: repeating-linear-gradient(
     45deg,
-    rgba(202, 165, 84, 0.09) 0 6px,
+    rgba(var(--gold-rgb), 0.09) 0 6px,
     transparent 6px 12px
   );
 }
@@ -2131,7 +2131,7 @@
   cursor: pointer;
 }
 .svc-plate__hit:focus-visible {
-  outline: 1px solid rgba(202, 165, 84, 0.9);
+  outline: 1px solid rgba(var(--gold-rgb), 0.9);
   outline-offset: 3px;
 }
 .svc-plate[data-state="open"] .svc-plate__hit {
@@ -2150,8 +2150,8 @@
    * touch bolder in the top-left corner. */
   height: 27px;
   padding: 0 15px;
-  border: 1px solid rgba(236, 227, 214, 0.25);
-  background: rgba(236, 227, 214, 0.05);
+  border: 1px solid rgba(var(--dawn-alt-rgb), 0.25);
+  background: rgba(var(--dawn-alt-rgb), 0.05);
   font-family: var(--mono);
   font-weight: 700;
   font-size: 12px;
@@ -2176,7 +2176,7 @@
     height var(--plate-open) var(--plate-ease);
 }
 .svc-plate[data-state="collapsed"]:hover .svc-plate__chip {
-  border-color: rgba(236, 227, 214, 0.45);
+  border-color: rgba(var(--dawn-alt-rgb), 0.45);
   color: var(--dawn);
 }
 .svc-plate[data-state="collapsed"]:hover .svc-plate__dia {
@@ -2199,7 +2199,7 @@
   font-family: var(--mono);
   font-size: 8px;
   letter-spacing: 0.18em;
-  color: rgba(202, 165, 84, 0.55);
+  color: rgba(var(--gold-rgb), 0.55);
   text-transform: uppercase;
   white-space: nowrap;
   transition:
@@ -2209,7 +2209,7 @@
 .svc-plate[data-state="open"] .svc-plate__st {
   font-size: 8.5px;
   letter-spacing: 0.2em;
-  color: rgba(202, 165, 84, 0.8);
+  color: rgba(var(--gold-rgb), 0.8);
 }
 
 /* ── Seed body (S4) — title + feed band, collapses on open ──────────── */
@@ -2294,7 +2294,7 @@
   color: var(--dawn-40);
 }
 .svc-plate__cap-g {
-  color: rgba(202, 165, 84, 0.7);
+  color: rgba(var(--gold-rgb), 0.7);
 }
 
 /* ── Open body (C3) — grid-rows 0fr→1fr reveals, never scales ───────── */
@@ -2361,7 +2361,7 @@
   color: var(--dawn-40);
 }
 .svc-plate__pcap .svc-plate__cap-g {
-  color: rgba(202, 165, 84, 0.85);
+  color: rgba(var(--gold-rgb), 0.85);
 }
 .svc-plate__title {
   /* margin-top: sits below the includes row now (owner 2026-07-17: the
@@ -2491,20 +2491,20 @@
 .svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__sh {
   background: linear-gradient(
     168deg,
-    rgba(202, 165, 84, 0.1) 0%,
-    rgba(236, 227, 214, 0.03) 45%,
-    rgba(202, 165, 84, 0.03) 70%,
-    rgba(202, 165, 84, 0.09) 100%
+    rgba(var(--gold-rgb), 0.1) 0%,
+    rgba(var(--dawn-alt-rgb), 0.03) 45%,
+    rgba(var(--gold-rgb), 0.03) 70%,
+    rgba(var(--gold-rgb), 0.09) 100%
   );
 }
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__sh,
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__sh {
   background: linear-gradient(
     168deg,
-    rgba(202, 165, 84, 0.18) 0%,
-    rgba(236, 227, 214, 0.06) 45%,
-    rgba(202, 165, 84, 0.06) 70%,
-    rgba(202, 165, 84, 0.16) 100%
+    rgba(var(--gold-rgb), 0.18) 0%,
+    rgba(var(--dawn-alt-rgb), 0.06) 45%,
+    rgba(var(--gold-rgb), 0.06) 70%,
+    rgba(var(--gold-rgb), 0.16) 100%
   );
 }
 
@@ -2515,7 +2515,7 @@
  * type over the scene, not a tinted panel. */
 .svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__bd {
   background:
-    linear-gradient(172deg, rgba(236, 227, 214, 0.02) 0%, rgba(236, 227, 214, 0) 50%),
+    linear-gradient(172deg, rgba(var(--dawn-alt-rgb), 0.02) 0%, rgba(var(--dawn-alt-rgb), 0) 50%),
     rgba(8, 7, 6, 0.1);
   -webkit-backdrop-filter: blur(0px);
   backdrop-filter: blur(0px);
@@ -2523,7 +2523,7 @@
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__bd,
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__bd {
   background:
-    linear-gradient(172deg, rgba(236, 227, 214, 0.03) 0%, rgba(236, 227, 214, 0) 50%),
+    linear-gradient(172deg, rgba(var(--dawn-alt-rgb), 0.03) 0%, rgba(var(--dawn-alt-rgb), 0) 50%),
     rgba(8, 7, 6, 0.34);
 }
 
@@ -2542,7 +2542,7 @@
  * seed→card handoff stays the same graduated 0.52s sequence — no new
  * abrupt step. */
 .svc-plate[data-variant="wireframe"] .svc-plate__seed-title {
-  color: rgba(202, 165, 84, 0.72);
+  color: rgba(var(--gold-rgb), 0.72);
   transition: color var(--plate-close) var(--plate-ease);
 }
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__seed-title,
@@ -2553,19 +2553,19 @@
  * Hover restores the dawn ghost chip (the glass grammar returning);
  * the open state's solid gold flip is untouched. */
 .svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__chip {
-  border-color: rgba(202, 165, 84, 0.32);
+  border-color: rgba(var(--gold-rgb), 0.32);
   background: transparent;
-  color: rgba(202, 165, 84, 0.8);
+  color: rgba(var(--gold-rgb), 0.8);
 }
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:hover .svc-plate__chip,
 .svc-plate[data-variant="wireframe"][data-state="collapsed"]:focus-within .svc-plate__chip {
-  border-color: rgba(236, 227, 214, 0.45);
-  background: rgba(236, 227, 214, 0.05);
+  border-color: rgba(var(--dawn-alt-rgb), 0.45);
+  background: rgba(var(--dawn-alt-rgb), 0.05);
   color: var(--dawn);
 }
 /* Band caption follows the ink. */
 .svc-plate[data-variant="wireframe"][data-state="collapsed"] .svc-plate__cap {
-  color: rgba(202, 165, 84, 0.45);
+  color: rgba(var(--gold-rgb), 0.45);
 }
 
 /* Halftone band → gold specimen: the 4px photo dots re-grade toward the
@@ -2728,7 +2728,7 @@
   }
   .svc-ring-hits__hit:hover,
   .svc-ring-hits__hit:focus-visible {
-    outline: 1px dashed rgba(202, 165, 84, 0.55);
+    outline: 1px dashed rgba(var(--gold-rgb), 0.55);
     outline-offset: -4px;
   }
   /* ADR-050 (owner, 2026-07-26): while the drawer is OUT, the front card's
