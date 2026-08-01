@@ -219,6 +219,26 @@ export interface CaseTrack {
   context: readonly { k: string; v: string }[];
   /** Mono provenance line at the foot of the panel. */
   source: string;
+  /**
+   * This row's own brief paragraph, replacing the casefile's standing one
+   * while the row is selected (2026-08-01, ADR-056 U11). Optional: the seven
+   * rows without one keep `CaseCasefile.brief`, which has to serve all of
+   * them and therefore cannot be specific to any.
+   *
+   * ⚠ SAME SILENT HEIGHT BOX as the casefile brief — `.fl-brief` is boxed
+   * against the `--fl-t6` seam with `overflow: hidden` and no scrollbar, so
+   * an overlong brief just loses its tail, and only on short viewports.
+   * The U11 tick move raised the budget to roughly 330 characters at
+   * 1280x720 (from ~195); `cases-registry.test.ts` pins that ceiling.
+   * Measure at 1280x720 after any edit — the taller viewports will not tell
+   * you.
+   *
+   * NOT a decode target, which is why this is safe where a per-track
+   * `classLine` is not: the reveal caches its `data-fl-text` nodes once per
+   * CLIENT, so a track-reactive decode target goes stale on the first row
+   * switch.
+   */
+  brief?: readonly CaseSegment[];
   /** Foot telemetry for this row — `◆ {ord} · {phase} · {ref} · {state}`,
    *  where `state` stays the casefile's. Absent falls back to the standing
    *  `00 · Field log · {logCode}` line, so this is additive. */

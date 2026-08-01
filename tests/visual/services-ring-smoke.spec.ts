@@ -234,6 +234,108 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".services-stage")).toHaveAttribute("data-proof-live", "1");
   });
 
+  test("desktop: no casefile box clips its content, on any row (ADR-056 U11)", async ({ page }) => {
+    test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
+
+    // 1440x800 — a MacBook Air, where the owner reads this, and the viewport
+    // that exposed both pre-existing bugs. The project's 1440x900 default
+    // hides them: at 900 the foot has room to spare and everything looks
+    // authored-at-1920 correct. Set BEFORE the goto so the corridor lays out
+    // once, at the height being asserted.
+    await page.setViewportSize({ width: 1440, height: 800 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 15_000 });
+
+    // The settle at the front of the dwell — panels assembled, stage pinned,
+    // nothing travelling. Same sample point as the hold assertion above.
+    expect(await scrollCasefileDwell(page, 0.1)).toBe(true);
+    await page.waitForTimeout(1400);
+
+    // THE ALIGNMENT LAW — both section rules land on the HUD rail's own tick
+    // ladder. This is what makes the composition read as bolted into the
+    // frame rather than floating in front of it, and `.claude/rules/proof.md`
+    // names tick drift the one way this design fails silently. It is measured
+    // against the LIVE rail box rather than recomputed from the tick formula,
+    // so a divergence between `.hud__rail` and `hudTicks.ts` fails here too.
+    //
+    // It nearly shipped broken: `--fl-sec`'s floor carried a 10px clearance
+    // term, which beat the raw tick at every laptop viewport and put the
+    // section rule 4-9px off the ladder.
+    //
+    // The strip hangs ABOVE the section rule, so the second assertion is the
+    // floor's actual job: never cross the top of the rail box.
+    const geom = await page.evaluate(() => {
+      const rail = document.querySelector<HTMLElement>(".hud__rail");
+      const sec = document.querySelector<HTMLElement>(".fl-rule--section");
+      const viz = document.querySelector<HTMLElement>(".fl-rule--viz");
+      const tabs = document.querySelector<HTMLElement>(".fl-tabs");
+      if (!rail || !sec || !viz || !tabs) return null;
+      const ticks = [...document.querySelectorAll(".hud__rail__tick")].map(
+        (t) => t.getBoundingClientRect().top
+      );
+      if (!ticks.length) return null;
+      const offTick = (y: number) => Math.min(...ticks.map((t) => Math.abs(t - y)));
+      return {
+        sec: offTick(sec.getBoundingClientRect().top),
+        viz: offTick(viz.getBoundingClientRect().top),
+        stripClearance: tabs.getBoundingClientRect().top - rail.getBoundingClientRect().top,
+      };
+    });
+    expect(geom, "the casefile and the HUD rail must both be mounted").not.toBeNull();
+    expect(
+      geom!.sec,
+      `the section rule is ${geom!.sec.toFixed(1)}px off the tick ladder`
+    ).toBeLessThan(1.5);
+    expect(geom!.viz, `the viz rule is ${geom!.viz.toFixed(1)}px off the tick ladder`).toBeLessThan(
+      1.5
+    );
+    expect(
+      geom!.stripClearance,
+      `the tab strip starts ${(-geom!.stripClearance).toFixed(1)}px above the rail box`
+    ).toBeGreaterThanOrEqual(0);
+
+    // EVERY ROW, not just the one that opens. The plate kinds differ per row
+    // — registry, stills, films, tools, log, register, readouts — and only
+    // the tools plate had any height handling before U11. These three boxes
+    // are all `overflow: hidden` with no scrollbar, so they clip SILENTLY:
+    // the `SOURCE — ADOPTION BOARD` line was already being cut by 24px at
+    // 1280x720 and 4px here, and nobody could see it.
+    const rowCount = await page.locator(".fl-row").count();
+    expect(rowCount, "the directory holds eight rows").toBe(8);
+
+    const clipped: string[] = [];
+    for (let i = 0; i < rowCount; i++) {
+      const row = page.locator(".fl-row").nth(i);
+      await row.click();
+      await page.waitForTimeout(350);
+
+      const overflow = await page.evaluate(() => {
+        const boxes = [".fl-brief", ".fl-panel__foot", ".fl-plate"] as const;
+        const file = document.querySelector<HTMLElement>(".fl-row[aria-selected='true']");
+        const out: { box: string; over: number; row: string }[] = [];
+        for (const sel of boxes) {
+          const el = document.querySelector<HTMLElement>(sel);
+          // `.fl-plate` is absent on the metrics row — the readouts ARE its
+          // plate — so a missing box is a shape, not a failure.
+          if (!el) continue;
+          out.push({
+            box: sel,
+            over: el.scrollHeight - el.clientHeight,
+            row: file?.textContent?.trim().slice(0, 28) ?? "?",
+          });
+        }
+        return out;
+      });
+
+      // 1px of tolerance for sub-pixel rounding on fractional line boxes;
+      // anything real is a whole line of type or more.
+      for (const o of overflow) {
+        if (o.over > 1) clipped.push(`${o.row} — ${o.box} clips ${o.over}px`);
+      }
+    }
+    expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);
+  });
+
   test("desktop: ring mode retires the racks; cards expose their CTA", async ({ page }) => {
     test.skip(!isDesktopViewport(page), "ring mode is desktop-only (≥961px)");
 

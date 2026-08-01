@@ -300,8 +300,15 @@ export function ServicesCasefile() {
         </p>
         {/* The `Log.001 >` operator-quote line that followed the body was
             removed with the chrome (owner, 2026-07-29) — the brief ends on
-            its own paragraph. */}
-        <p className="fl-brief__body">{file.brief.map(renderSegment)}</p>
+            its own paragraph.
+
+            PER-TRACK WHEN THE TRACK HAS ONE (2026-08-01). The casefile brief
+            has to serve all eight rows, so it can only ever describe the
+            engagement; a row that owns the largest piece of the work needs to
+            make its own claim. Same optional-with-fallback idiom as `stamp`.
+            Safe here and NOT for `classLine` because this is not a decode
+            target — see `CaseTrack.brief`. */}
+        <p className="fl-brief__body">{(track.brief ?? file.brief).map(renderSegment)}</p>
       </div>
 
       {/* ── Left column · directory ─────────────────────────────────── */}

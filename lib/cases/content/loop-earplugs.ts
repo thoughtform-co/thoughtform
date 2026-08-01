@@ -356,6 +356,25 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // confidentiality envelope bans the domain outright.
         source: "Source — adoption board · rev 2026.07",
         stamp: { ord: "01", phase: "Navigate", ref: "NAV-01" },
+        // THE ONLY PER-TRACK BRIEF (2026-08-01, ADR-056 U11). The standing
+        // casefile brief has to serve all eight rows, so it can only describe
+        // the engagement — it cannot make this row's claim, which is that
+        // THE DECISION IS THE WORK. Eighteen months of deciding what should
+        // run on which intelligence is the largest thing in this file, and
+        // until now it owned a two-word heading and a plate.
+        //
+        // The last sentence is load-bearing (ADR-056 U10): "stays human" is
+        // an ANSWER the mapping produced, not a gap in it. The map plate
+        // beside this paragraph shows exactly those three outcomes, so the
+        // brief previews the panel rather than restating the mission report.
+        //
+        // 284 chars against the ~330 the U11 tick move bought at 1280x720
+        // (the binding viewport; it was ~195 before). Re-measure THERE.
+        brief: [
+          "Most AI work starts by picking a tool. This started by deciding ",
+          { em: "which work should run on which intelligence" },
+          " — team by team, workflow by workflow, with the answer written down. Some became a Skill they own. Some became a tool. Some stays human, recorded as an answer rather than a gap.",
+        ],
       },
       {
         id: "studio",

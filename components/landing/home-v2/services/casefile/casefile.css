@@ -108,21 +108,64 @@
   --fl-rail-h: calc(100svh - var(--fl-rail-top) - var(--fl-rail-bot));
 
   /* Tick heights, absolute from the stage top. Names are the ladder index,
-     so `--fl-t8` really is the 9th tick — the bearing-5 major. */
-  --fl-t2: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.16667);
+     so `--fl-t7` really is the 8th tick.
+
+     THE WHOLE INSTRUMENT SITS ONE TICK HIGHER since 2026-08-01 (ADR-056 U11).
+     It used to open on t2 and split the right column on t8 — which left a
+     full DEAD TICK above the tab strip (155px of empty band at 1440x800
+     against a rail that starts at 99) while the panel foot below was ALREADY
+     CLIPPING its source line by 24px at 1280x720. The band above was the only
+     place the height could come from: every zone here is absolutely
+     positioned against this ladder, so bigger type was impossible without
+     moving it. t2 -> t1 and t8 -> t7 buy the foot ~50px at 1440x800 and ~68
+     at 1920x1080. Both targets are real ticks (`lib/v7-parse/hudTicks.ts`
+     declares 8.33% and 58.33%), so the alignment law holds.
+
+     Accepted cost, owner-approved: the viz rule LEAVES the labelled
+     bearing-5 major at 66.67%. The section rule gains the top of the ladder
+     in exchange. */
+  --fl-t1: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.08333);
   /* The brief/directory seam. Moved t7 -> t6 (2026-07-30) when the directory
      went to eight rows: at t7 the list needed 231px and had 190, and it was
      ALREADY clipping METRICS.DAT by 14px at 1440x800 with seven. The brief
      body was trimmed to match — the seam is one line, both sides move. */
   --fl-t6: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.5);
   --fl-t7: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.58333);
-  --fl-t8: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.66667);
   --fl-t11: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.91667);
 
+  /* The tab strip's height, hoisted here from `.fl-tabs` (2026-08-01) because
+     the guard below needs it: a var scoped to `.fl-tabs` resolves to NOTHING
+     on `.fl-case`, which silently invalidates the whole `max()` and collapses
+     every zone to `top: 0`. Hit while building this — the failure is total
+     and gives no console warning. Raised 34 -> 44px (owner, 2026-07-30) to
+     carry the client name at display size. */
+  --fl-tabs-h: 44px;
+
+  /* THE SECTION ANCHOR — t1, floored so the strip can never run off the top.
+     The tab strip hangs ABOVE this line (its box bottom IS the rule, so the
+     active underline lands on the ladder), so the anchor has to sit at least
+     the strip's own height below the rail top.
+
+     THE FLOOR CARRIES NO CLEARANCE TERM, and that is measured, not lazy. The
+     plan drafted `+ 10px` of breathing room; at 1440x800 the raw tick clears
+     the rail top by only 6.1px, so the floor won and the section rule landed
+     4px OFF the ladder — and the same at 1366x768 (5.9px off) and 1280x720
+     (9.0px off), i.e. at every laptop including the one this was reported
+     from. `.claude/rules/proof.md` names that drift the one way this design
+     fails silently, and the tick alignment is the entire justification for
+     moving here. A padding constant is not worth the law.
+
+     At 0 the tick wins at every viewport down to 720p (clearing by 1.1px at
+     1280x720, 6.1px at 1440x800, 24px at 1920x1080) and the floor engages
+     only below a ~528px rail box, where it seats the strip flush to the rail
+     top rather than over it. It also hands the plate back the 4-9px the tick
+     move had cost it, which is what clears the last three clipping rows. */
+  --fl-sec: max(var(--fl-t1), calc(var(--fl-rail-top) + var(--fl-tabs-h)));
+
   /* Where the two columns start reading, and where they stop. */
-  --fl-body-top: calc(var(--fl-t2) + clamp(16px, 2.6svh, 38px));
+  --fl-body-top: calc(var(--fl-sec) + clamp(16px, 2.6svh, 38px));
   --fl-split-end: var(--fl-t11);
-  --fl-viz-split: calc(var(--fl-t8) - var(--fl-body-top));
+  --fl-viz-split: calc(var(--fl-t7) - var(--fl-body-top));
   /* How far the corner marks sit OUTBOARD of the content box they register.
      On the corner they cut through the designation labels, which start and
      end on the band edges; outboard is also what the production survey
@@ -357,17 +400,16 @@
    it. The underline is the one solid gold mark on the plane — it carries
    STATE, where everything else here is structure. ═══════════════════════ */
 
-/* The strip's BOTTOM seats on tick 2, where `.fl-rule--section` runs, so the
-   active tab's underline lands on the ladder. Height and top are one var so
-   they can never drift apart. Raised 34 -> 44px (owner, 2026-07-30) to carry
-   the client name at display size — it is the ONLY place the client is named
-   now, so it stopped being chrome. */
+/* The strip's BOTTOM seats on the section anchor, where `.fl-rule--section`
+   runs, so the active tab's underline lands on the ladder. Height and top are
+   one var so they can never drift apart — `--fl-tabs-h` is declared on
+   `.fl-case` (see THE SECTION ANCHOR) because the anchor's floor is derived
+   from it. */
 .fl-tabs {
-  --fl-tabs-h: 44px;
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(var(--fl-t2) - var(--fl-tabs-h));
+  top: calc(var(--fl-sec) - var(--fl-tabs-h));
   height: var(--fl-tabs-h);
   display: flex;
   align-items: flex-end;
@@ -450,7 +492,7 @@
 .fl-rule--section {
   left: 0;
   right: 0;
-  top: var(--fl-t2);
+  top: var(--fl-sec);
   background: var(--fl-ret-rule-x);
 }
 .fl-rule--brief {
@@ -466,7 +508,7 @@
 .fl-rule--viz {
   left: var(--fl-col-r);
   right: 0;
-  top: var(--fl-t8);
+  top: var(--fl-t7);
   background: repeating-linear-gradient(
     to right,
     rgba(202, 165, 84, 0.5) 0 1.5px,
@@ -783,7 +825,7 @@
   overflow: hidden;
 }
 /* The metrics row has no evidence plate — the readouts ARE the plate, so the
-   foot claims the whole column instead of the band below the tick-8 rule. */
+   foot claims the whole column instead of the band below the viz rule. */
 .fl-panel[data-solo] .fl-panel__foot {
   top: 26px;
 }
@@ -811,11 +853,16 @@
 .fl-readout__v[data-wide] {
   font-size: clamp(16px, 1.5vw, 22px);
 }
+/* CONTENT, not chrome — these captions are what the big figure above them
+   MEANS, and at the 8.5px house floor they were the exact mistake ADR-056 U9
+   named out loud while fixing only the tool gallery. 10.5px is the directory's
+   reading size, the floor for anything a visitor is expected to read
+   (2026-08-01, U11). The tick move paid for it. */
 .fl-readout__k {
   display: block;
   margin-top: 9px;
   font-family: var(--fl-mono);
-  font-size: 8.5px;
+  font-size: 10.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
@@ -852,9 +899,12 @@
   font-family: var(--fl-mono);
   text-transform: uppercase;
 }
+/* The leader KEY stays chrome-ish — it labels the value rather than saying
+   anything — but 8.5px against a 10px value read as a different register
+   entirely, so it takes half a step. */
 .fl-ctx__k {
   flex: none;
-  font-size: 8.5px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   color: rgba(235, 227, 214, 0.3);
 }
@@ -865,7 +915,8 @@
 }
 .fl-ctx__v {
   flex: none;
-  font-size: 9px;
+  /* The value IS content — the period, the scope, the unit of done. */
+  font-size: 10px;
   letter-spacing: 0.12em;
   color: rgba(235, 227, 214, 0.7);
   white-space: nowrap;
@@ -969,9 +1020,13 @@
 
 /* ── Registry ─────────────────────────────────────────────────────────── */
 
+/* The plate pays for its bigger type out of the PADDING, never out of the
+   type — the ADR-056 U5 lever. The gloss went up 1.5px and the rows 1px; this
+   gives back the 4px a side that keeps the 5-groups-plus-3-rows ceiling
+   intact at 1440x800. */
 .fl-reg__groups {
-  margin: 0 0 clamp(10px, 1.6svh, 16px);
-  padding: 0 0 clamp(10px, 1.6svh, 16px);
+  margin: 0 0 clamp(8px, 1.2svh, 14px);
+  padding: 0 0 clamp(8px, 1.2svh, 14px);
   border-bottom: 1px dotted rgba(202, 165, 84, 0.14);
   display: grid;
   gap: 3px 0;
@@ -989,20 +1044,28 @@
   text-transform: uppercase;
   color: rgba(202, 165, 84, 0.7);
 }
+/* The five shape descriptions are the ARGUMENT of this plate — the whole
+   claim of row one is that all of it reduces to five shapes. A FACTOR on
+   `--fl-copy`, never a fixed px, so retuning the band still retunes this:
+   0.88 lands 13.1px at 1440 (was 0.78 / 11.6px, which sat below the
+   directory's own rows). */
 .fl-reg__gloss {
   margin: 0;
-  font-size: calc(var(--fl-copy) * 0.78);
+  font-size: calc(var(--fl-copy) * 0.88);
   line-height: 1.45;
   color: rgba(235, 227, 214, 0.5);
 }
+/* The sampled rows are the exemplars — the proof that the five shapes are
+   real work and not a taxonomy. `--fl-reg__team` and `__tag` below stay at
+   the chrome floor on purpose: they label the exemplar, they are not it. */
 .fl-reg__row {
   display: grid;
   grid-template-columns: 11ch 1fr auto;
   gap: 0 12px;
   align-items: center;
-  padding: 4px 0;
+  padding: 3px 0;
   font-family: var(--fl-mono);
-  font-size: 9.5px;
+  font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -1356,7 +1419,7 @@
     font-size: 13px;
   }
 }
-/* Second step (=<760h, the 720p laptop): the foot drops to ~110px, so the
+/* Step 3 (=<760h, the 720p laptop): the foot drops to ~110px, so the
    cap descriptions hold one line — and the identity column gets a WIDER
    text share (58/42), because the 185-char shift needs ~44 chars a line to
    hold inside its 5-line clamp. The shot narrows rather than the sentence
@@ -1373,6 +1436,28 @@
   .fl-cap__d {
     -webkit-line-clamp: 1;
     line-clamp: 1;
+  }
+}
+
+/* ── The registry plate's own 720p rung (2026-08-01, ADR-056 U11) ──────────
+   Row one's plate is the ONE that does not fit at 720p after the type pass:
+   five glosses plus three exemplar rows ran ~18px past the box there (it was
+   ~11px over BEFORE the pass — this plate has been clipping silently since
+   the directory went to eight rows). Same doctrine as the tools ladder
+   above: 720p is a designed degradation, and it degrades by LEADING and
+   PADDING, never by taking the type back below the reading floor. The type
+   is identical at every height; only the air between it moves. */
+@media (max-height: 760px) {
+  .fl-reg__gloss {
+    line-height: 1.3;
+  }
+  .fl-reg__groups {
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    gap: 2px 0;
+  }
+  .fl-reg__row {
+    padding: 2px 0;
   }
 }
 /* Narrow: a ~121px quarter at 1280. 9px + minimal tracking holds the

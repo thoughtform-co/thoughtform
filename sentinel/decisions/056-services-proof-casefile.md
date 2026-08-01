@@ -1106,3 +1106,175 @@ pass, since two ids one word apart was a standing trap.
 
 Verified by breaking it on purpose: re-typing the map rows inline fails the
 suite. A drift guard that has never been seen to fail is not known to work.
+
+---
+
+## Update 11 — the casefile moves up a tick, and the panel becomes legible (2026-08-01)
+
+**Two owner complaints, on a MacBook Air:** the bottom-right panel's text is
+too small and the panels could sit higher; and `01_AI-TRANSFORMATION/` doesn't
+say much despite being the largest piece of the work. Both had mechanical
+causes, and the first was worse than reported.
+
+### The foot was already clipping, and nothing said so
+
+`.fl-panel__foot` is `overflow: hidden` with no test, and its content already
+exceeded the box. Measured at the dwell, all eight rows, before any change:
+
+| viewport  | worst foot overflow        | worst plate overflow |
+| --------- | -------------------------- | -------------------- |
+| 1280×720  | **24px** (`GOVERNANCE.MD`) | 11px (`registry`)    |
+| 1366×768  | **20px** (`GOVERNANCE.MD`) | 1px                  |
+| 1440×800  | **17px** (`GOVERNANCE.MD`) | 0                    |
+| 1440×820  | **14px** (`GOVERNANCE.MD`) | 0                    |
+| 1600×900  | 0                          | 0                    |
+| 1920×1080 | 0                          | 0                    |
+
+`SOURCE — ADOPTION BOARD · REV 2026.07` was the first thing cut. Update 10's
+table recorded 4px at 1440×800 because it measured ROW ONE ONLY; walking every
+row found `GOVERNANCE.MD` four times worse and still broken at 1440×820, which
+that table had reported clean. **Per-row is the only honest way to measure this
+surface** — eight plate kinds, eight foot shapes.
+
+### The type never got the Update 9 pass
+
+Update 9 stated the law out loud — 8.5px is the CHROME floor, content reads at
+`--fl-copy` and never below the 10.5px directory reading size — and then fixed
+the tool gallery only. The `registry` plate and the shared foot, which every
+row renders, were never revisited: readout captions 8.5px, exemplar rows
+9.5px, glosses 11.6px against a `--fl-copy` of 14.9px.
+
+Now: `.fl-readout__k` 8.5 → 10.5px, `.fl-reg__row` 9.5 → 10.5px,
+`.fl-reg__gloss` `--fl-copy × 0.78` → `× 0.88`, `.fl-ctx__v` 9 → 10px,
+`.fl-ctx__k` 8.5 → 9px. `.fl-reg__team`, `.fl-reg__tag`, `.fl-desig`,
+`.fl-source` and `.fl-tele` stay at the floor — they label content, they are
+not it. The plate pays for the increase out of PADDING (the Update 5 lever),
+never out of type, and a `max-height: 760px` rung trims the registry plate's
+leading and dividers at 720p — a designed degradation, mirroring the tools
+ladder, with the type identical at every height.
+
+### There was a full dead tick above the instrument
+
+The tab strip seated on `--fl-t2` (16.667%), leaving 155px of empty band above
+it at 1440×800 against a rail starting at 99px, while the foot below clipped.
+Every zone is absolutely positioned against the tick ladder, so bigger type was
+impossible without moving it.
+
+**The instrument now opens on `--fl-t1` (8.33%) and splits the right column on
+`--fl-t7` (58.33%).** Both are real ticks (`lib/v7-parse/hudTicks.ts`), so the
+alignment law holds. Measured at the dwell:
+
+|                   | 1280×720  | 1440×800  | 1920×1080 |
+| ----------------- | --------- | --------- | --------- |
+| `.fl-panel__foot` | 115 → 160 | 130 → 180 | 185 → 253 |
+| `.fl-brief`       | 154 → 199 | 171 → 221 | 233 → 301 |
+| `.fl-plate`       | 210 → 210 | 238 → 238 | 339 → 339 |
+
+The plate comes out unchanged — Update 10's 3-row ceiling and no-footer rule
+needed no re-litigation.
+
+**Accepted cost:** the viz rule LEAVES the labelled bearing-5 major at 66.67%.
+That is a stated law of this ADR and is superseded here, deliberately, in
+exchange for the top of the ladder. `--fl-t2` and `--fl-t8` are deleted rather
+than left as two more dead ticks beside the one this revives.
+
+### The guard's clearance term had to be ZERO, and that is measured
+
+`--fl-sec` floors the anchor so the tab strip — which hangs ABOVE the section
+rule, its box bottom being the rule — can never cross the rail top:
+
+```css
+--fl-sec: max(var(--fl-t1), calc(var(--fl-rail-top) + var(--fl-tabs-h)));
+```
+
+The plan drafted `+ 10px` of breathing room inside that `max()`. **It would
+have shipped the surface off-ladder at every laptop viewport.** The raw tick
+clears the rail top by only 6.1px at 1440×800, so the floor won and the section
+rule landed 4.0px off a tick — 5.9px at 1366×768, 9.0px at 1280×720, 2.4px at
+1440×820. `.claude/rules/proof.md` names exactly that drift as the one way this
+design fails silently, and tick alignment is the whole justification for
+moving. At 0 the tick wins everywhere down to 720p (clearing by 1.1 / 4.1 / 6.1
+/ 7.5 / 12.4 / 24.1px across the six viewports) and the floor engages only
+below a ~528px rail box, where it seats the strip flush rather than over.
+
+It also handed the plate back the 4–9px the tick move had cost it, which is
+what cleared the last three clipping rows: the 10px version left the `log`
+plate 4px over at 1280×720 and the `registry` plate 6px over at 1366×768.
+
+**`--fl-tabs-h` had to move to the `.fl-case` token block** for the floor to
+reference it. A var scoped to `.fl-tabs` resolves to nothing on `.fl-case`,
+which invalidates the whole `max()` and collapses every zone to `top: 0`. Hit
+while building this; the failure is total and gives no warning.
+
+### The contested band — the flagged risk, and it did not materialise
+
+The strip moved into the band the corridor's exiting station header occupies
+during the dissipate. Their BOXES do overlap, by 5–6px at full opacity. Their
+INK does not: measured with Range rects across the approach, the header's
+glyphs end at y 112 and the tab's begin at y 115 at 1440×800 (3px of clearance;
+4px at 1440×820), and the two runs are 167px apart horizontally besides. No
+guard increase was needed. Re-measure if the strip's content ever moves right.
+
+### Row one has its own brief now
+
+`CaseCasefile.brief` is casefile-level and identical for all eight rows, so the
+paragraph on row one was the standing engagement summary — it _cannot_ be
+specific to the transformation, because it also has to serve the films row and
+the tools row. `CaseTrack.brief?: readonly CaseSegment[]` is optional and
+`ServicesCasefile` renders `track.brief ?? file.brief`, the same
+optional-with-fallback idiom `stamp` uses; the other seven rows are untouched.
+
+The claim is **the decision is the work** — and its last sentence is
+load-bearing for the same reason Update 10's `Human` row is: "stays human" is
+recorded as an answer, not a gap.
+
+**`classLine` deliberately did NOT get the same treatment.** It is a
+`data-fl-text` decode target and the decode caches its nodes once per client
+(dep `[def.slug]`), so a track-reactive target goes stale on the first row
+switch. `brief` is not a decode target, which is what makes it safe.
+
+**The brief budget is now pinned.** It was comment-and-measurement only. The
+box takes 364 characters of representative prose at 1280×720 after the move
+(from ~195 before); `cases-registry.test.ts` pins 330 for both the casefile
+brief and any track brief, leaving a line of margin because wrap points move
+with the words. Row one ships 284.
+
+### The guard that would have caught all of it
+
+`services-ring-smoke.spec.ts` gains a case at **1440×800** — not the project's
+1440×900 default, which hides these bugs — that walks **all eight rows** and
+asserts `scrollHeight <= clientHeight` for `.fl-brief`, `.fl-panel__foot` and
+`.fl-plate`, plus the alignment law itself: both section rules within 1.5px of
+a live `.hud__rail__tick`, and the strip never crossing the rail box. Measuring
+against the live rail means a divergence between `.hud__rail` and
+`hudTicks.ts` — the drift the rule file says to check first — now fails a test
+instead of a reading.
+
+### Verified
+
+- **0px overflow on all three boxes × all eight rows × six viewports**
+  (1280×720, 1366×768, 1440×800, 1440×820, 1600×900, 1920×1080), driven with
+  real scrolls to the dwell.
+- Both rules **+0.0px off the tick ladder** at all six.
+- **Zero at rest:** 13 `[data-fl-panel]` nodes, 0 residual transforms at
+  `--svc-proof-in` 1.000; the iris rests at `inset(-30px calc(0% - 12px))`.
+- `npm run verify` (387 unit tests) and the full desktop smoke (10 passed, 1
+  mobile skip), including the Update 3 reverse-traversal assertion.
+- **Not re-run: the frame probe.** This change adds no per-frame work — static
+  CSS values and one optional content field — and the machine had a second dev
+  server on it, which makes the number meaningless. Update 9's baseline stands.
+
+### Left open
+
+With the captions legible at 10.5px, two of the three readout labels on row one
+now wrap to a second line at 1440×800 and orphan their last word ("…ONE FRAME /
+EACH", "…ALL OF / IT"). Nothing clips and they hold one line at 1920. The
+labels are owner-set copy from Update 10, so tightening them is a content call,
+not a layout fix.
+
+### A stale fork, noted so the next person is not misled
+
+`app/(internal)/test/field-log-lab/field-log-lab.css` still uses `--fl-t2`,
+`--fl-t7` and `--fl-t8` on the pre-U11 geometry. It is a look-dev fork that
+does not track production and was deliberately left alone. Do not read it as
+the current contract.

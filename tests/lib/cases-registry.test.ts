@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
+import type { CaseSegment } from "@/lib/cases/types";
 
 /**
  * Case registry integrity (ADR-054) — the contracts the `#proof` station
@@ -168,6 +169,31 @@ describe("cases registry (ADR-054)", () => {
           // into the next column of the three-up register.
           expect(row.v.length, `${c.slug}/${t.id} context "${row.k}"`).toBeLessThanOrEqual(20);
         }
+      }
+    }
+  });
+
+  it("briefs stay inside the height box they cannot overflow visibly", () => {
+    // `.fl-brief` is boxed against the `--fl-t6` seam with `overflow: hidden`
+    // and NO scrollbar, so an overlong brief silently loses its tail — and
+    // only on short viewports, which is why it survived three passes: it
+    // looks perfect at 1920x1080, where this copy gets authored.
+    //
+    // The budget was ~195 chars at 1280x720 (the binding viewport) until the
+    // 2026-08-01 tick move took the brief box from 154px to 199px there. The
+    // box now takes 364 characters of representative prose before it clips
+    // (measured at 1280x720 / 1366x768 / 1440x800 — 364 / 366 / 366, so 720p
+    // still binds); 330 is that ceiling with a line of margin, because wrap
+    // points move with the words. This was a comment-and-measurement
+    // convention before — pinning it is the point of ADR-056 U11's test line.
+    const BRIEF_MAX = 330;
+    const len = (segs: readonly CaseSegment[]) =>
+      segs.map((s) => (typeof s === "string" ? s : s.em)).join("").length;
+    for (const c of CASES) {
+      expect(len(c.casefile.brief), `${c.slug} casefile brief`).toBeLessThanOrEqual(BRIEF_MAX);
+      for (const t of c.casefile.tracks) {
+        if (!t.brief) continue;
+        expect(len(t.brief), `${c.slug}/${t.id} brief`).toBeLessThanOrEqual(BRIEF_MAX);
       }
     }
   });

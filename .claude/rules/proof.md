@@ -96,10 +96,36 @@ inherited its ambient-cover role.
   boolean their park IO maintains; never reintroduce a per-call rect
   read inside the style MutationObserver.
 - **Geometry snaps to the HUD rail's 13-tick ladder.** Everything hangs off
-  `--fl-t*`, derived from the live `.hud__rail` box; the two section rules
-  land on tick 2 and the bearing-5 major. Two upstreams must stay in step:
-  `.hud__rail` in `landing.css` and `lib/v7-parse/hudTicks.ts`. **That drift
-  is the only way this design fails silently — check it first.**
+  `--fl-t*`, derived from the live `.hud__rail` box; since ADR-056 U11 the two
+  section rules land on **tick 1 (8.33 %) and tick 7 (58.33 %)** — the viz
+  rule LEFT the labelled bearing-5 major, deliberately, to buy the clipping
+  foot ~50px. Two upstreams must stay in step: `.hud__rail` in `landing.css`
+  and `lib/v7-parse/hudTicks.ts`. **That drift is the only way this design
+  fails silently — check it first**; the smoke now measures both rules against
+  live `.hud__rail__tick` rects, so it fails a test rather than a reading.
+  ⚠ `--fl-sec`'s `max()` floor carries **no clearance term** and must not
+  grow one: the raw tick clears the rail top by only 6.1px at 1440×800, so
+  even `+10px` beats the tick and puts the section rule 4–9px off the ladder
+  at every laptop viewport (U11 — it nearly shipped that way). `--fl-tabs-h`
+  lives on `.fl-case` for the same floor; scoped to `.fl-tabs` it resolves to
+  nothing there and collapses every zone to `top: 0`.
+- **THE TYPE LAW IS SURFACE-WIDE, not a tools-row rule.** Content reads at
+  `--fl-copy` or, in mono, never below the **10.5px** directory reading size;
+  **8.5px is the CHROME floor** and chrome means ordinals, kickers, team/tag
+  labels, designations and the provenance line — things that LABEL content
+  rather than being it. Update 9 wrote the law and applied it to the tool
+  gallery only, so the registry plate and the shared foot sat at 8.5–9.5px
+  for two more passes; U11 finished the job (`.fl-readout__k`, `.fl-reg__row`,
+  `.fl-reg__gloss`, `.fl-ctx__v`). When a box will not take the size, spend
+  PADDING and LEADING — the Update 5 lever, and what the `≤760h` registry
+  rung does. Never take the type back below the floor.
+- **A track can carry its OWN brief (`CaseTrack.brief`, U11).** Optional, with
+  `track.brief ?? file.brief` in the renderer; the casefile-level brief has to
+  serve all eight rows, so it can only ever describe the engagement. ⚠ Do NOT
+  make `classLine` per-track the same way: it is a `data-fl-text` decode
+  target and the decode caches its nodes once per CLIENT (dep `[def.slug]`),
+  so a track-reactive target goes stale on the first row switch. `brief` is
+  safe precisely because it is not decoded.
 - **The tools row is a CONTROLLED gallery on ONE grid (ADR-056 Update 9,
   third pass).** `TrackPanel` owns `toolIdx` — not the plate — because the
   panel FOOT follows the tool in view. The body splits 50/50 with no gap,
@@ -196,13 +222,18 @@ inherited its ambient-cover role.
   three-up register. Pinned by the registry test. ⚠ The guard bounds the
   VALUE only — `Unit of done` + a 20-char value still ran off the panel edge
   at 1440. Keep the KEY short too, and measure.
-- **PLATE AND BRIEF BOXES CLIP SILENTLY, and only on short viewports.**
-  `.fl-brief` is height-boxed against `--fl-t6` and the `registry` plate
-  holds ~8 lines; both are `overflow: hidden` with no scrollbar and no test.
-  Measured 2026-07-31: the brief takes ~195 chars at 1280×720 (a 246-char
-  draft lost 23px there, 9px at 1440×800, and looked perfect at 1920), and
-  the registry plate takes FIVE groups plus THREE rows. A fourth row has its
-  tag sliced at 1440. Author at 1280×720 or you will not see the defect.
+- **PLATE, BRIEF AND FOOT BOXES CLIP SILENTLY, and only on short viewports.**
+  All three are `overflow: hidden` with no scrollbar; `.fl-brief` is
+  height-boxed against `--fl-t6`, `.fl-panel__foot` against the viz rule.
+  **The foot was the worst of them and went unnoticed for four passes**
+  (`GOVERNANCE.MD` cut its source line by 24px at 1280×720 and 17px at
+  1440×800) because every measurement until U11 sampled ROW ONE ONLY — walk
+  ALL EIGHT, the plate kinds and foot shapes differ per row. There is a test
+  now (see Verifying); it is the guard, not your eye. Budgets after the U11
+  move: the brief takes 364 chars at 1280×720 and is PINNED at 330 by the
+  registry test; the registry plate still takes FIVE groups plus THREE rows,
+  and a fourth has its tag sliced at 1440. Author at 1280×720 or you will not
+  see the defect — 1920×1080 shows none of this.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
   strings fails the registry test.
@@ -266,10 +297,14 @@ test to relax:
 ## Verifying
 
 `/test/field-log-lab` is the look-dev harness (all five connection
-grammars; variant E is what ships). On the landing, the beat is covered by
-`tests/visual/services-ring-smoke.spec.ts` — the casefile holds, the rows
-work while pinned, no hit anchors publish during the dwell, the ring takes
-over after. Drive REAL scrolls, never a teleport.
+grammars; variant E is what ships) — but it is a STALE FORK on the pre-U11
+geometry, so never read its `--fl-t*` block as the contract. On the landing,
+the beat is covered by `tests/visual/services-ring-smoke.spec.ts` — the
+casefile holds, the rows work while pinned, no hit anchors publish during the
+dwell, the ring takes over after, and (U11) **no box clips on any of the eight
+rows at 1440×800, with both section rules on a live rail tick**. That case
+sets its own viewport: the project default is 1440×900, which hides every
+clipping bug this surface has ever had. Drive REAL scrolls, never a teleport.
 
 **Process:** [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) — Cycle B
 when adding a case or a `CaseTrackVisual` kind; Cycle A after fixes.
