@@ -33,6 +33,7 @@ import * as THREE from "three";
 extend({ ThreeLine: THREE.Line });
 import { COLOR_DAWN } from "@/components/landing/intelligence-artifact/artifactGeom";
 import { resolveScenePalette } from "@/lib/theme/palette";
+import { readThemeMode, type ThemeMode } from "@/lib/theme/themeModeRef";
 import { useThemeStore } from "@/lib/stores/themeStore";
 // Substrate-sphere gold — a more-yellow `#caa554` (2026-06-25 harmonization) so
 // the additive bloom reads gold, not orange. Matches the corridor → #services seam.
@@ -363,17 +364,49 @@ void main() {
 }
 `;
 
+/**
+ * Repaint the core for a theme (ADR-058). Two MODES, not two colours.
+ *
+ * ⚠ Painting the page's colour here does NOT work in light mode, and the
+ * reason is compositing, not palette. The corridor canvas is
+ * `premultipliedAlpha: false`, so three's NormalBlending writes
+ * `src·a + dst·(1−a)` into the buffer and the browser then composites that
+ * buffer as `page·(1−a) + rgb·a` — the colour is multiplied by alpha
+ * TWICE. Near-black on a near-black page is invisible either way (which is
+ * why dark has always been correct and why this went unnoticed); parchment
+ * lands at `page·(1−a) + parchment·a²`, a grey lens densest exactly where
+ * the Beer–Lambert alpha peaks. No colour can fix that — `page/a` would
+ * have to exceed 1.
+ *
+ * So in light the core stops painting and starts ERASING: a custom blend
+ * that scales the destination by `(1−a)` removes whatever the canvas drew
+ * behind the planet and lets the page itself show through. That is what
+ * "composite toward the ground" always meant; dark only got away with
+ * spelling it as a colour because its ground is nearly black.
+ *
+ * Dark keeps the original NormalBlending + void-ink path byte-for-byte.
+ */
+function applyCoreTheme(mat: THREE.ShaderMaterial, mode: ThemeMode): void {
+  const light = mode === "light";
+  (mat.uniforms.uColor.value as THREE.Color).set(resolveScenePalette(mode).ground);
+  mat.blending = light ? THREE.CustomBlending : THREE.NormalBlending;
+  if (light) {
+    // dstRGB = dst·(1−a), dstA = dstA·(1−a) — pure attenuation, no source
+    // colour contribution at all.
+    mat.blendEquation = THREE.AddEquation;
+    mat.blendSrc = THREE.ZeroFactor;
+    mat.blendDst = THREE.OneMinusSrcAlphaFactor;
+    mat.blendEquationAlpha = THREE.AddEquation;
+    mat.blendSrcAlpha = THREE.ZeroFactor;
+    mat.blendDstAlpha = THREE.OneMinusSrcAlphaFactor;
+  }
+}
+
 function makeCoreMaterial(): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
+  const mat = new THREE.ShaderMaterial({
     vertexShader: coreVertex,
     fragmentShader: coreFragment,
     uniforms: {
-      // The core absorbs toward the PAGE GROUND, so this tracks the theme
-      // (ADR-058) — it is the one colour in the instrument that must be
-      // invisible rather than on-brand. `resolveScenePalette()` reads the
-      // pre-paint attribute when the store has not hydrated yet, so a
-      // light-mode reload never paints a dark disc for a frame; the
-      // subscription in the component re-applies it on a live flip.
       uColor: { value: new THREE.Color(resolveScenePalette().ground) },
       uOpacity: { value: 0 },
       uDensity: { value: SUBSTRATE_GYRO_CORE_DENSITY },
@@ -383,6 +416,10 @@ function makeCoreMaterial(): THREE.ShaderMaterial {
     side: THREE.FrontSide,
     blending: THREE.NormalBlending,
   });
+  // Resolve from the pre-paint `data-theme` attribute so a light-mode
+  // reload never paints a dark disc for a frame before the store hydrates.
+  applyCoreTheme(mat, readThemeMode());
+  return mat;
 }
 
 // ── Dotted-shell surface shader (per-dot facing fade) ───────────────
@@ -930,9 +967,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
   // a render. One `.set()` per flip, no per-frame cost — `blending` is
   // per-draw GL state in three, so nothing needs `needsUpdate`.
   useEffect(() => {
-    const apply = () => {
-      (mats.core.uniforms.uColor.value as THREE.Color).set(resolveScenePalette().ground);
-    };
+    const apply = () => applyCoreTheme(mats.core, readThemeMode());
     apply();
     return useThemeStore.subscribe(apply);
   }, [mats]);
