@@ -200,11 +200,27 @@ export type ArcSectionOf<K extends ArcSectionKind> = Extract<ArcSection, { kind:
 
 export type ArcFormat = "workshop" | "keynote";
 
+/**
+ * Section choreography system (ADR-057). Absent or "reveal" is the
+ * ADR-052 one-shot IO reveal — those pages stay byte-identical, the flag
+ * being unset is what guarantees it. "terminal" is the pinned-beat
+ * grammar: sections pin, mastheads decode in place, panels power on, and
+ * the plane folds LIFO behind an iris before the beat unpins.
+ */
+export type ArcMotion = "reveal" | "terminal";
+
 export interface ArcDef {
   /** Route segment — kebab-case, unique across the registry. */
   slug: string;
   /** Overview card chip text (WORKSHOP / KEYNOTE). */
   format: ArcFormat;
+  /** Choreography system — see ArcMotion. Default "reveal". */
+  motion?: ArcMotion;
+  /**
+   * Overview chip override. Defaults to `format`; set it when two arcs
+   * share a format and would otherwise show identical chips.
+   */
+  cardChip?: string;
   /** Overview card copy. */
   cardTitle: string;
   cardLede: string;

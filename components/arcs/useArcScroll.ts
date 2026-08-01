@@ -20,15 +20,21 @@ import type { RefObject } from "react";
  *   · `data-arc-scrolled` on the root past 1vh — the ArcMenu gate.
  *
  * Never writes corridor channels (`--svc-*`, `data-corridor-*`, …).
+ *
+ * `onFrame` is how the ADR-057 beat clocks stay inside this one writer:
+ * the terminal controller owns the beat registry and the decode, but it
+ * adds NO listener of its own — it runs as the tail of this frame.
  */
 interface ArcScrollOptions {
   variant: "index" | "detail";
   rootRef: RefObject<HTMLElement | null>;
+  /** Stable callback run at the end of every frame (scrollY, vh). */
+  onFrame?: (scrollY: number, vh: number) => void;
 }
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
-export function useArcScroll({ variant, rootRef }: ArcScrollOptions) {
+export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
   const rafId = useRef<number | null>(null);
   const collapsedRef = useRef(false);
   const scrolledRef = useRef(false);
@@ -84,7 +90,9 @@ export function useArcScroll({ variant, rootRef }: ArcScrollOptions) {
       collapsedRef.current = collapsed;
       root.querySelector(".hud__brand")?.classList.toggle("is-collapsed", collapsed);
     }
-  }, [rootRef, variant]);
+
+    onFrame?.(scrollY, vh);
+  }, [rootRef, variant, onFrame]);
 
   const onScroll = useCallback(() => {
     if (rafId.current !== null) return;

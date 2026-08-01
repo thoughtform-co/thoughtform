@@ -27,17 +27,24 @@ export function ArcMenu({ items }: { items: readonly ArcMenuItem[] }) {
   const activeRef = useRef(0);
 
   useEffect(() => {
-    const sections = items
-      .map((item) => document.getElementById(item.id))
-      .filter((el): el is HTMLElement => el !== null);
-    if (sections.length === 0) return;
+    // Under terminal motion (ADR-057) the section is a RUNWAY several
+    // viewports tall, so watch its sticky stage instead: the stage is
+    // what the reader is actually looking at, and the flip then lands
+    // when the next beat parks rather than half a runway early. Reveal
+    // pages have no stage and fall back to the section itself.
+    const watched = new Map<Element, number>();
+    items.forEach((item, idx) => {
+      const section = document.getElementById(item.id);
+      if (!section) return;
+      watched.set(section.querySelector(".arc-stage") ?? section, idx);
+    });
+    if (watched.size === 0) return;
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          const id = (entry.target as HTMLElement).id;
-          const idx = items.findIndex((item) => item.id === id);
-          if (idx >= 0 && idx !== activeRef.current) {
+          const idx = watched.get(entry.target);
+          if (idx !== undefined && idx !== activeRef.current) {
             activeRef.current = idx;
             setActiveIdx(idx);
           }
@@ -47,7 +54,7 @@ export function ArcMenu({ items }: { items: readonly ArcMenuItem[] }) {
       // is the active one.
       { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
     );
-    sections.forEach((section) => io.observe(section));
+    watched.forEach((_, el) => io.observe(el));
     return () => io.disconnect();
   }, [items]);
 

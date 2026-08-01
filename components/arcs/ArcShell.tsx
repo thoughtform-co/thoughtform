@@ -3,8 +3,12 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
+import type { ArcMotion } from "@/lib/arcs/types";
+
 import { ArcMenu } from "./ArcMenu";
+import { ARC_TERMINAL_MEDIA } from "./arcMotion";
 import { useArcScroll } from "./useArcScroll";
+import { useArcTerminalMotion } from "./useArcTerminalMotion";
 
 export interface ArcMenuItem {
   id: string;
@@ -19,6 +23,8 @@ interface ArcShellProps {
   variant: "index" | "detail";
   /** Detail only — sections with a menuLabel, in page order. */
   menu?: readonly ArcMenuItem[];
+  /** Choreography system (ADR-057). Default: the ADR-052 IO reveal. */
+  motion?: ArcMotion;
   children: ReactNode;
 }
 
@@ -31,11 +37,29 @@ interface ArcShellProps {
  * The overview pins `--hero-lift: 1` inline (no hero curtain), so the
  * HUD rails are un-clipped from the first paint; detail pages write it
  * from scroll (useArcScroll) for the landing's curtain reveal.
+ *
+ * TWO MOTION SYSTEMS, DISJOINT BY GATE (ADR-057). A terminal page above
+ * the enhanced tier never gets `is-arc-js`, so the v1 reveal CSS is
+ * inert and the beat grammar owns everything; a reveal page never gets
+ * `data-motion`, so the terminal CSS is inert. Below the tier a terminal
+ * page falls back to the reveal path rather than to a dead static page.
+ * Because the class and the observer are added (or skipped) together,
+ * the "hidden but never revealed" failure mode is unreachable.
  */
-export function ArcShell({ hudHtml, bodyClass, variant, menu, children }: ArcShellProps) {
+export function ArcShell({
+  hudHtml,
+  bodyClass,
+  variant,
+  menu,
+  motion = "reveal",
+  children,
+}: ArcShellProps) {
   const rootRef = useRef<HTMLElement>(null);
 
-  useArcScroll({ variant, rootRef });
+  // The beat clocks ride the one scroll writer rather than adding a
+  // second listener (ADR-002) — hence the callback handoff.
+  const onBeatFrame = useArcTerminalMotion({ rootRef, motion });
+  useArcScroll({ variant, rootRef, onFrame: onBeatFrame });
 
   useEffect(() => {
     const root = rootRef.current;
@@ -45,6 +69,10 @@ export function ArcShell({ hudHtml, bodyClass, variant, menu, children }: ArcShe
     // right on detail pages but dead on the overview; on an arc the
     // brand should exit to the landing either way.
     root.querySelector(".hud__brand")?.setAttribute("href", "/");
+
+    // Same gate the terminal controller and the terminal CSS use — one
+    // constant, or a viewport band gets both systems (or neither).
+    if (motion === "terminal" && window.matchMedia(ARC_TERMINAL_MEDIA).matches) return;
 
     // Reveal opt-in — content is visible by default (no-JS contract,
     // the Shards reveal pattern); JS opts INTO the animated state.
@@ -68,13 +96,14 @@ export function ArcShell({ hudHtml, bodyClass, variant, menu, children }: ArcShe
     );
     nodes.forEach((node) => io.observe(node));
     return () => io.disconnect();
-  }, []);
+  }, [motion]);
 
   return (
     <main
       ref={rootRef}
       className={`arc-root arc-root--${variant} ${bodyClass}`}
       data-theme="dark"
+      data-motion={motion === "terminal" ? "terminal" : undefined}
       style={variant === "index" ? ({ "--hero-lift": "1" } as CSSProperties) : undefined}
     >
       <div

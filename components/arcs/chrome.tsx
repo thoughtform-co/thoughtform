@@ -7,7 +7,7 @@ import type { ArcSectionKind, ArcTitle } from "@/lib/arcs/types";
  */
 
 /** Does `post` glue directly to the em (leading punctuation) or need a space? */
-const glueFor = (post: string) => (/^[.,:;!?)]/.test(post) ? "" : " ");
+export const glueFor = (post: string) => (/^[.,:;!?)]/.test(post) ? "" : " ");
 
 export function ArcTitleText({ title }: { title: ArcTitle }) {
   const { pre, em, post } = title;

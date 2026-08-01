@@ -79,6 +79,9 @@ What maintainers get from depth. Change, bugs, knowledge, and verification conce
 | **Arc**       | The **strategic loop** — Navigate → Encode → Build → repeat — that Practice renders as UI. Canon term for what was informally called “the flywheel” in conversation and in `/thoughtform-strategy` / `/ai-adoption-loop`. Use **Arc** for the business/strategy concept; use **Practice** for the on-page block that visualizes it. _Avoid_: flywheel (superseded; still appears in older code identifiers like ADR-020's title — don't propagate it in new writing). |
 | **Arc page**  | A **client landing page** under `/arcs/[slug]` (ADR-052) — a ported deck (workshop / keynote) rendered in the landing's HUD grammar; the overview grid lives at `/arcs`. Also “client arc.” **Distinct from the Arc** (the strategic loop above) — never shorten “arc page” to “the Arc.” Code: `lib/arcs/` + `components/arcs/` (vs the corridor's `arc-cases/`, which belongs to the Arc).                                                                          |
 
+| **Reveal motion** | The ADR-052 arc-page choreography: one IntersectionObserver adds `.is-in` and each block fades up 14px, once. Live on the v1 arc pages. Selected by `ArcDef.motion` absent or `"reveal"`. |
+| **Terminal motion** | The ADR-057 arc-page choreography (`ArcDef.motion: "terminal"`, the `-v2` cuts): each section is a **beat** — a pinned stage (`sticky; top: vh − stageH`) plus a fold **tail** — whose masthead **types in and un-types out in place** (the masthead law: it never moves, never fades), whose panels power on from their own **rung**, and whose plane folds LIFO behind an **iris**. ⚠ Unrelated to ADR-035's retired “Arc Cases Terminal” (a reveal surface) and to `#practice`. |
+
 When writing ADRs, prefer these terms over ad-hoc names (“the floating thing”, “the middle part”).
 
 ---

@@ -1,6 +1,8 @@
-import type { ArcHead, ArcSectionKind } from "@/lib/arcs/types";
+import type { ArcHead, ArcMotion, ArcSectionKind } from "@/lib/arcs/types";
 
-import { ArcTitleText, coordStamp, padIndex, sectionDesig } from "./chrome";
+import { ArcDecodeTitle, ArcDecodeWord, ArcTypeCopy } from "./ArcDecodeText";
+import { rung } from "./arcMotion";
+import { coordStamp, padIndex, sectionDesig } from "./chrome";
 
 interface ArcSectionHeadProps {
   head: ArcHead;
@@ -8,6 +10,7 @@ interface ArcSectionHeadProps {
   index: number;
   sectionId: string;
   align?: "split" | "center";
+  motion?: ArcMotion;
 }
 
 /**
@@ -18,6 +21,13 @@ interface ArcSectionHeadProps {
  * lift. The corridor original (services.css `.services-masthead`) is
  * absolutely positioned and coupled to `--svc-*` scroll vars — this is
  * the static two-column form for stacked arc sections.
+ *
+ * Under terminal motion (ADR-057) the head takes rung 0.06 and NO
+ * TRAVEL VARS AT ALL. That is the whole ask: the masthead does not rise,
+ * does not crossfade, and does not move while it resolves — the decode
+ * IS the reveal (the services.css law, verbatim). Its chrome (grid,
+ * crosses, coord stamps) fades in off `data-reveal`, which only appears
+ * once the stage has parked.
  */
 export function ArcSectionHead({
   head,
@@ -25,23 +35,23 @@ export function ArcSectionHead({
   index,
   sectionId,
   align = "split",
+  motion = "reveal",
 }: ArcSectionHeadProps) {
   const eyebrow = head.eyebrow ?? sectionDesig(kind, index);
   const split = align === "split" && Boolean(head.sub || head.state);
   const centered = align === "center";
+  const terminal = motion === "terminal";
   return (
     <header
       className={`arc-head ${split ? "arc-head--split" : "arc-head--solo"}${centered ? " arc-head--center" : ""} arc-reveal`}
+      {...(terminal ? { "data-arc-still": "" } : {})}
+      {...rung(motion, 0.06)}
     >
       <div className="arc-head__lead">
         <i className="arc-head__grid" aria-hidden="true" />
         <i className="arc-head__mark arc-head__mark--origin" aria-hidden="true" />
-        <span className="arc-head__desig" aria-hidden="true">
-          {eyebrow}
-        </span>
-        <h2 className="arc-title arc-head__title">
-          <ArcTitleText title={head.title} />
-        </h2>
+        <ArcDecodeWord text={eyebrow} motion={motion} className="arc-head__desig" />
+        <ArcDecodeTitle title={head.title} motion={motion} className="arc-title arc-head__title" />
         <span className="arc-head__coord" aria-hidden="true">
           {coordStamp(sectionId, 1)}
         </span>
@@ -49,22 +59,30 @@ export function ArcSectionHead({
       {split ? (
         <div className="arc-head__intro">
           <i className="arc-head__grid" aria-hidden="true" />
-          <span className="arc-head__desig" aria-hidden="true">
-            {`ARC / BRIEF · ${padIndex(index)}`}
-          </span>
+          <ArcDecodeWord
+            text={`ARC / BRIEF · ${padIndex(index)}`}
+            motion={motion}
+            className="arc-head__desig"
+          />
           {head.state ? (
             <span className="arc-head__state" aria-hidden="true">
               {head.state}
             </span>
           ) : null}
-          {head.sub ? <p className="arc-head__copy">{head.sub}</p> : null}
+          {head.sub ? (
+            <ArcTypeCopy text={head.sub} motion={motion} className="arc-head__copy" />
+          ) : null}
           <span className="arc-head__coord arc-head__coord--r" aria-hidden="true">
             {coordStamp(sectionId, 2)}
           </span>
           <i className="arc-head__mark arc-head__mark--close" aria-hidden="true" />
         </div>
       ) : centered && head.sub ? (
-        <p className="arc-head__copy arc-head__copy--center">{head.sub}</p>
+        <ArcTypeCopy
+          text={head.sub}
+          motion={motion}
+          className="arc-head__copy arc-head__copy--center"
+        />
       ) : null}
     </header>
   );

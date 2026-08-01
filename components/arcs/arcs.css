@@ -1350,3 +1350,374 @@
     transition: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TERMINAL MOTION (ADR-057)
+   ═══════════════════════════════════════════════════════════════════════
+   Every selector below is prefixed `.arc-root[data-motion="terminal"]`.
+   A v1 page never carries that attribute and a terminal page never
+   carries `.is-arc-js`, so the two grammars are disjoint BY GATE, not by
+   discipline. The release query at the foot of this block is
+   `(max-width: 960px)` — it MUST mirror `ARC_TERMINAL_MEDIA`'s 961px
+   exactly. The v1 reveal block releases at 900px; borrowing that number
+   here would leave 901–960px with sticky runways and no clock writing to
+   them, i.e. dead scroll.
+
+   Fail-open everywhere: every channel reads `var(--sec-in, 1)` /
+   `var(--sec-out, 0)`, so with no JS the page renders fully resolved.
+
+   Structure (the split is load-bearing):
+     section      the beat — a sticky-bottom stage plus a fold tail
+     .arc-stage   the pin. Its height is CONTENT-DRIVEN with a 100svh
+                  floor, and its sticky `top` is `vh − stageH` (see the
+                  rule below): a stage that fits pins the instant its
+                  top reaches the viewport top, a taller one reads
+                  through its overflow and then pins on its last (fully
+                  visible) viewport. Measured on the real deck, only 15
+                  of 23 sections fit a plain top-0 pin at 1440×900 and 7
+                  at 1280×720 — without the offset, most of the page
+                  would trap content below the fold or drop it.
+                  Carries the OPAQUE VOID (ADR-008): never clipped,
+                  never faded.
+     .arc-plane   transparent. The iris clip and the departure tail live
+                  HERE — clipping the void-carrier punches a hole in the
+                  page.
+     .arc-beat__tail  the scroll the fold plays across. Pure CSS, so the
+                  beat needs no measured runway height.
+
+   PADDING IS NOT AIR HERE. In flow, the section padding was the breath
+   BETWEEN sections; pinned, the transition is that breath, and padding
+   only steals height from content that has to fit. Hence the much
+   tighter block padding below — it exists to keep copy off the HUD rail
+   chrome, nothing more.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Beat structure ────────────────────────────────────────────────── */
+.arc-root[data-motion="terminal"] .arc-sec,
+.arc-root[data-motion="terminal"] .arc-sec--chapter,
+.arc-root[data-motion="terminal"] .arc-inter,
+.arc-root[data-motion="terminal"] .arc-close {
+  display: block;
+  height: auto;
+  min-height: 0;
+  padding-block: 0;
+}
+/* ⚠ THE PIN IS `top` WITH A NEGATIVE OFFSET, NEVER `bottom: 0`.
+   Sticky-bottom only restrains an element from exiting through the
+   BOTTOM edge — scrolling past the park, the stage exits through the
+   TOP, so `bottom: 0` never engages and the whole fold plays on a
+   moving stage (shipped that way once; the reverse-scroll smoke caught
+   the head sliding 48px mid-un-type). `top: vh − stageH` is the pin
+   that means "hold on your LAST viewport": 0 for a fitting stage,
+   negative for a tall one so it reads through its overflow first. The
+   writer measures it (`--arc-stage-pin`) with the same numbers the
+   departure clock uses — one park, two consumers, gate parity. */
+.arc-root[data-motion="terminal"] .arc-stage {
+  position: sticky;
+  top: var(--arc-stage-pin, 0px);
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-block: clamp(32px, 5vh, 72px);
+  background: var(--void, #0a0908);
+}
+.arc-root[data-motion="terminal"] .arc-beat__tail {
+  display: block;
+  height: var(--beat-tail, 70svh);
+}
+/* The head's breath is the beat's own headline zone — but a pinned beat
+   pays for it out of a fixed viewport, so it is tighter here than in
+   the flowing v1 rhythm. */
+.arc-root[data-motion="terminal"] .arc-head {
+  margin-bottom: clamp(28px, 5.5vh, 72px);
+}
+
+/* ── Tall beats: the head sticky-pins (the masthead law) ───────────────
+   A stage taller than the viewport has no all-visible park for its head
+   — by the time the bottom pins, the head has scrolled off. So the head
+   pins itself at `--arc-head-pin` (JS writes the same number the clock
+   uses — gate parity) and the content reads through BENEATH it, which is
+   exactly the home-page masthead relation: the head holds, the work
+   moves. The void backing + fade are what make the pass-under read as
+   intentional instead of as a collision. `data-arc-tall` is written by
+   the measure pass, per viewport — a beat can be tall at 720p and
+   fitting at 1080p. */
+.arc-root[data-motion="terminal"] [data-arc-tall] .arc-head {
+  position: sticky;
+  top: var(--arc-head-pin, 64px);
+  z-index: 3;
+  background: var(--void, #0a0908);
+}
+.arc-root[data-motion="terminal"] [data-arc-tall] .arc-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 32px;
+  background: linear-gradient(var(--void, #0a0908), transparent);
+  pointer-events: none;
+}
+
+/* ── The plane: iris departure + tail ──────────────────────────────────
+   The fold ends by irising shut toward a centre vertical slit — the
+   corridor caption card's aperture, run backwards. Two laws:
+
+   · The iris TRAILS the panels. It opens at out 0.56, after the last
+     panel (the masthead, co-off 0.5) has begun to leave. Cropping
+     legible copy at high opacity does not read as a fold; it reads as a
+     clipping bug (ADR-056 measured this twice).
+   · EVERY inset rests NEGATIVE. Survey marks, corner brackets and
+     registration crosses all overhang their border box, and `inset(… 0)`
+     amputates exactly that overhang. */
+.arc-root[data-motion="terminal"] .arc-plane {
+  --iris: clamp(0, calc((var(--sec-out, 0) - 0.56) / 0.44), 1);
+  clip-path: inset(
+    -30px calc(var(--iris) * (50.5% + 14px) - 14px) -30px calc(var(--iris) * (50.5% + 14px) - 14px)
+  );
+  /* Opacity is a TAIL, not the departure — the iris owns removal. */
+  opacity: clamp(0, calc((1 - var(--sec-out, 0)) / 0.3), 1);
+}
+
+/* ── Arrival ladder + stutter + LIFO fold ──────────────────────────────
+   Each panel carries an inline `--ci-off` (its rung on the arrival
+   ladder) and its own `--dx`/`--dy` dimension. The departure offset is
+   DERIVED as `0.56 − --ci-off`, so the ladder plays backwards: whatever
+   arrived last leaves first, and the instrument outlives its content.
+
+   The opacity curve is a power-on, not a fade: strike to 0.62, drop out
+   to ~0.12, then settle to 1.
+
+   ZERO AT REST is structural, not tuned. Arrival travel carries
+   `(1 − --ci)`, departure travel carries `--co`, and the lateral tear is
+   `(--g1 − --g2)` — every term is exactly 0 once the beat is parked.
+   These panels sit in a centred grid; a residual offset is a drift bug,
+   not a flourish. */
+.arc-root[data-motion="terminal"] [data-arc-panel] {
+  --ci: clamp(0, calc((var(--sec-in, 1) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
+  --g1: clamp(0, calc(var(--ci) * 9), 1);
+  --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
+  --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
+  --co-off: calc(0.56 - var(--ci-off, 0));
+  --co: clamp(0, calc((var(--sec-out, 0) - var(--co-off)) / (1 - var(--co-off))), 1);
+  opacity: clamp(
+    0,
+    calc((var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88) * (1 - var(--co))),
+    1
+  );
+  transform: translate3d(
+    calc(
+      var(--dx, 0px) * (1 - var(--ci)) + (var(--g1) - var(--g2)) * 2.5px - var(--dx, 0px) *
+        var(--co) * 0.6
+    ),
+    calc(var(--dy, 0px) * (1 - var(--ci)) - var(--dy, 0px) * var(--co) * 0.6),
+    0
+  );
+}
+
+/* Hairline/rule panels take the flicker but NOT the tear — a lateral
+   shift on a rule reads as a break in the rule, not as a glitch. */
+.arc-root[data-motion="terminal"] .arc-anatomy[data-arc-panel],
+.arc-root[data-motion="terminal"] .arc-tips__row[data-arc-panel] {
+  transform: none;
+}
+
+/* THE MASTHEAD LAW (owner, twice — services 2026-07-27, arcs
+   2026-08-01): the masthead NEVER moves and NEVER fades, in EITHER
+   direction. It types in, it un-types out, and nothing else touches it —
+   so these panels carry NO clock factor at all. Opacity 1 is not a
+   default here, it is the law: visibility is carried entirely by the
+   text content (blank ↔ typing ↔ resolved ↔ un-typing), which the
+   controller owns, and by the chrome's own data-reveal fades. The old
+   `calc(1 - var(--co))` exit fade was the violation this replaced. */
+.arc-root[data-motion="terminal"] [data-arc-still] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Decode boxes ──────────────────────────────────────────────────────
+   The ServicesMasthead recipe, EXACTLY: the ghost holds the served text
+   in flow at `visibility: hidden` and reserves the multi-line box; the
+   live layer is ABSOLUTE over it and is what the controller blanks and
+   rewrites.
+
+   ⚠ The live layer being absolute is load-bearing, not stylistic. A
+   grid-stacked live layer contributes its own height to the cell, so
+   TYPING CHANGES LAYOUT — and when a beat above the viewport is mid
+   un-type, scroll anchoring compensates for those shifts by nudging
+   scrollY. The controller read the nudges as upward intent and churned
+   type ↔ un-type forever (found by stack-trapping data-reveal, 720p,
+   two adjacent tall beats). Absolute means typing can never move
+   layout, which also keeps an armed section's centred grid from
+   collapsing. */
+.arc-root[data-motion="terminal"] .arc-tdec {
+  position: relative;
+}
+.arc-root[data-motion="terminal"] .arc-tdec--inline {
+  display: inline-block;
+}
+.arc-root[data-motion="terminal"] .arc-tdec__ghost {
+  visibility: hidden;
+}
+.arc-root[data-motion="terminal"] .arc-tdec__live {
+  position: absolute;
+  inset: 0;
+}
+
+/* The CRT caret — the one keyframe in this sheet. It only exists while
+   a beat is actually resolving. */
+.arc-root[data-motion="terminal"] .arc-cursor {
+  display: inline-block;
+  width: 0.46em;
+  height: 0.92em;
+  margin-left: 0.08em;
+  vertical-align: -0.1em;
+  background: currentcolor;
+  opacity: 0;
+}
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="typing"] .arc-cursor,
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="untyping"] .arc-cursor {
+  opacity: 0.75;
+  animation: arc-cursor-blink 1.05s steps(2, start) infinite;
+}
+@keyframes arc-cursor-blink {
+  0%,
+  49.999% {
+    opacity: 0.75;
+  }
+  50%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+/* ── Survey chrome, park-gated ─────────────────────────────────────────
+   NO attribute ⇒ no rule matches ⇒ chrome ships visible. That is the
+   fail-open path for no-JS, for the fallback tier, and for the frames
+   before the controller mounts. */
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] .arc-head__grid,
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] .arc-head__mark,
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] .arc-head__state,
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] .arc-head__coord,
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] .arc-inter__eyebrow,
+.arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] .arc-inter__attribution {
+  opacity: 0;
+}
+.arc-root[data-motion="terminal"] .arc-stage .arc-head__grid,
+.arc-root[data-motion="terminal"] .arc-stage .arc-head__mark,
+.arc-root[data-motion="terminal"] .arc-stage .arc-head__state,
+.arc-root[data-motion="terminal"] .arc-stage .arc-head__coord,
+.arc-root[data-motion="terminal"] .arc-stage .arc-inter__eyebrow,
+.arc-root[data-motion="terminal"] .arc-stage .arc-inter__attribution {
+  transition: opacity 620ms var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+
+/* ── Aperture power-on (media + portrait frames) ───────────────────────
+   The frame unfolds from a zero-width centre slit toward both edges at
+   once, and its corner brackets ride the opening edges at the same rate
+   — the corridor caption card's motion, scrubbed off the panel's own
+   arrival rung instead of transitioned off a class.
+
+   "The unfold is PURE MOTION, zero fades": an aperture takes neither the
+   stutter nor travel, because a sweep and a flicker fight each other. */
+.arc-root[data-motion="terminal"] .arc-ap {
+  --ap: var(--ci, 1);
+  clip-path: inset(
+    -14px calc(50% - var(--ap) * (50% + 14px)) -14px calc(50% - var(--ap) * (50% + 14px))
+  );
+  opacity: calc(1 - var(--co, 0));
+  transform: none;
+}
+.arc-root[data-motion="terminal"] .arc-ap.arc-media__frame::before,
+.arc-root[data-motion="terminal"] .arc-ap .arc-portrait__corner.is-tl,
+.arc-root[data-motion="terminal"] .arc-ap .arc-portrait__corner.is-bl {
+  left: calc(50% - var(--ap) * (50% + 2px));
+}
+.arc-root[data-motion="terminal"] .arc-ap.arc-media__frame::after,
+.arc-root[data-motion="terminal"] .arc-ap .arc-portrait__corner.is-tr,
+.arc-root[data-motion="terminal"] .arc-ap .arc-portrait__corner.is-br {
+  right: calc(50% - var(--ap) * (50% + 2px));
+}
+
+/* ── Compositing promotion ─────────────────────────────────────────────
+   Scoped to the live attribute so the layers exist for the beat and are
+   released the moment it is done. NEVER unscope this, and never add
+   `contain: paint` — the survey marks overhang their border box, and
+   paint containment amputates them. */
+.arc-root[data-motion="terminal"] .arc-stage[data-sec-live] .arc-plane {
+  will-change: clip-path, opacity;
+}
+.arc-root[data-motion="terminal"] .arc-stage[data-sec-live] [data-arc-panel] {
+  will-change: transform, opacity;
+}
+
+/* ── Tailless beat (the close band) ────────────────────────────────────
+   No tail ⇒ no pin and no fold: there is nothing after this beat to hand
+   off to, and a fold with nothing behind it reads as the page eating
+   itself. It keeps the arrival ladder and the decode. */
+.arc-root[data-motion="terminal"] [data-arc-notail] .arc-stage {
+  position: static;
+}
+.arc-root[data-motion="terminal"] [data-arc-notail] .arc-plane {
+  clip-path: none;
+  opacity: 1;
+  will-change: auto;
+}
+
+/* ── Tier release — MUST mirror ARC_TERMINAL_MEDIA (961px) ─────────────
+   Below the tier the controller never runs, so every channel would sit
+   at its fail-open default with a sticky runway around it. Everything
+   resolves flat and the page falls back to the v1 reveal path. */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .arc-root[data-motion="terminal"] .arc-sec,
+  .arc-root[data-motion="terminal"] .arc-sec--chapter,
+  .arc-root[data-motion="terminal"] .arc-inter,
+  .arc-root[data-motion="terminal"] .arc-close {
+    display: grid;
+    align-content: center;
+    height: auto;
+    min-height: 100svh;
+    padding-block: clamp(96px, 14vh, 200px);
+  }
+  .arc-root[data-motion="terminal"] .arc-stage {
+    position: static;
+    height: auto;
+    min-height: 0;
+    padding-block: 0;
+    background: none;
+  }
+  .arc-root[data-motion="terminal"] .arc-beat__tail {
+    display: none;
+  }
+  .arc-root[data-motion="terminal"] .arc-head {
+    margin-bottom: clamp(48px, 9vh, 112px);
+  }
+  /* data-arc-tall is only ever written above the tier, but belt: */
+  .arc-root[data-motion="terminal"] [data-arc-tall] .arc-head {
+    position: static;
+    background: none;
+  }
+  .arc-root[data-motion="terminal"] [data-arc-tall] .arc-head::after {
+    content: none;
+  }
+  .arc-root[data-motion="terminal"] .arc-plane,
+  .arc-root[data-motion="terminal"] .arc-ap,
+  .arc-root[data-motion="terminal"] [data-arc-panel],
+  .arc-root[data-motion="terminal"] [data-arc-still] {
+    clip-path: none;
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
+  .arc-root[data-motion="terminal"] .arc-cursor {
+    display: none;
+  }
+  /* The decode never runs here, so the ghost is the only copy that
+     would paint — collapse the stack back to a single flow box. */
+  .arc-root[data-motion="terminal"] .arc-tdec > .arc-tdec__live {
+    display: none;
+  }
+  .arc-root[data-motion="terminal"] .arc-tdec__ghost {
+    visibility: visible;
+  }
+}

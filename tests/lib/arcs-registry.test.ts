@@ -81,4 +81,44 @@ describe("arcs registry (ADR-052)", () => {
     ARCS.forEach((arc) => scan(arc, arc.slug));
     expect(offenders).toEqual([]);
   });
+
+  it("motion flags are known and card identities are distinguishable", () => {
+    for (const arc of ARCS) {
+      if (arc.motion) expect(["reveal", "terminal"]).toContain(arc.motion);
+    }
+    // Two arcs may legitimately share a format, so the honest global
+    // invariants are the card title (grid) and the meta title (tab).
+    const cardTitles = ARCS.map((arc) => arc.cardTitle);
+    expect(new Set(cardTitles).size).toBe(cardTitles.length);
+    const metaTitles = ARCS.map((arc) => arc.meta.title);
+    expect(new Set(metaTitles).size).toBe(metaTitles.length);
+    // Any arc sharing a format with another must override the chip.
+    const formatCounts = new Map<string, number>();
+    for (const arc of ARCS) formatCounts.set(arc.format, (formatCounts.get(arc.format) ?? 0) + 1);
+    for (const arc of ARCS) {
+      if ((formatCounts.get(arc.format) ?? 0) > 1 && arc.motion === "terminal") {
+        expect(arc.cardChip).toBeDefined();
+        expect(arc.cardChip).not.toBe(arc.format);
+      }
+    }
+  });
+
+  it("terminal cuts share their source arc's sections BY REFERENCE (ADR-057)", () => {
+    const pairs: readonly [string, string][] = [
+      ["claude-workshop", "claude-workshop-v2"],
+      ["ai-keynote", "ai-keynote-v2"],
+    ];
+    for (const [v1Slug, v2Slug] of pairs) {
+      const v1 = getArc(v1Slug);
+      const v2 = getArc(v2Slug);
+      expect(v1).toBeDefined();
+      expect(v2).toBeDefined();
+      expect(v2?.motion).toBe("terminal");
+      expect(v1?.motion).toBeUndefined();
+      // Reference equality, not deep equality: a copied array would
+      // drift the moment either page's copy is edited.
+      expect(v2?.sections).toBe(v1?.sections);
+      expect(v2?.hero).toBe(v1?.hero);
+    }
+  });
 });

@@ -86,6 +86,10 @@ jobs:
       - name: Corridor + device-matrix smokes
         run: npx playwright test tests/visual/landing-corridor-smoke.spec.ts tests/visual/corridor-device-matrix-smoke.spec.ts --reporter=list
 
+      # Arc routes carry no WebGL, so this one is cheap and deterministic.
+      - name: Arc terminal-motion smoke
+        run: npx playwright test tests/visual/arc-terminal-smoke.spec.ts --project=desktop --reporter=list
+
       - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@v4

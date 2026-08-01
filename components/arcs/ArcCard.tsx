@@ -12,12 +12,11 @@ import type { ArcDef } from "@/lib/arcs/types";
  * is one link to the arc — no expand/collapse.
  */
 export function ArcCard({ arc }: { arc: ArcDef }) {
+  // Two arcs can share a format (a v1 and its terminal-motion cut), and
+  // the chip is the only thing distinguishing them at a glance.
+  const chip = arc.cardChip ?? arc.format;
   return (
-    <Link
-      href={`/arcs/${arc.slug}`}
-      className="arc-card"
-      aria-label={`${arc.format}: ${arc.cardTitle}`}
-    >
+    <Link href={`/arcs/${arc.slug}`} className="arc-card" aria-label={`${chip}: ${arc.cardTitle}`}>
       <span className="arc-card__sh" aria-hidden="true">
         <span className="arc-card__bd">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -36,7 +35,7 @@ export function ArcCard({ arc }: { arc: ArcDef }) {
           <span className="arc-card__tick arc-card__tick--bl" />
         </span>
       </span>
-      <span className="arc-card__chip">{arc.format}</span>
+      <span className="arc-card__chip">{chip}</span>
       <span className="arc-card__copy">
         <span className="arc-card__title">{arc.cardTitle}</span>
         <span className="arc-card__lede">{arc.cardLede}</span>
