@@ -156,6 +156,16 @@
 .svc-stack,
 .services-plate-cluster {
   --sc: clamp(0, calc((var(--svc-content-in, 1) - var(--sc-off, 0)) / (1 - var(--sc-off, 0))), 1);
+  /* EASED rung progress (owner, 2026-08-02: "more subtle, ease in"). The
+     raw `--sc` is linear inside its window, so every element used to start
+     its fade/draw at full velocity the frame its rung crossed — which is
+     the pop the owner flagged. Quadratic ease-in (t²) starts imperceptibly
+     and lands with the original pace; rung ORDER and window edges are
+     untouched, so the assembly ladder's choreography (frame first,
+     callouts last) is exactly as tuned. Consumers below read `--sc-e` for
+     everything the eye sees (opacity, dashoffset, travel); `--sc` itself
+     stays published for anything that needs the linear clock. */
+  --sc-e: calc(var(--sc, 1) * var(--sc, 1));
 }
 
 /* ── Center — particle brandmark (the "sun") ─────────────────────── */
@@ -241,13 +251,14 @@
  * rung takes no travel. */
 .svc-orbit__path:not(.svc-orbit__path--dotted) {
   stroke-dasharray: 100;
-  stroke-dashoffset: calc(100 * (1 - var(--sc, 1)));
+  /* Eased: the wrap starts as a whisper instead of snapping into draw. */
+  stroke-dashoffset: calc(100 * (1 - var(--sc-e, 1)));
 }
 /* The dotted orbit can't draw-on (its dash IS the dot pattern); reveal it
  * by fading in with arrival instead. */
 .svc-orbit__path--dotted {
   --sc-off: 0.1;
-  opacity: var(--sc, 1);
+  opacity: var(--sc-e, 1);
 }
 /* Bodies + cartography fade in with arrival; the orbit LINES draw on
  * crisply (no opacity fade) so the wrap reads clearly. */
@@ -255,11 +266,11 @@
   --sc-off: 0.1;
   fill: var(--gold);
   fill-opacity: 0.85;
-  opacity: var(--sc, 1);
+  opacity: var(--sc-e, 1);
 }
 .svc-cartography {
   --sc-off: 0.1;
-  opacity: var(--sc, 1);
+  opacity: var(--sc-e, 1);
 }
 
 /* ── Service cards (HUD readouts, one revealed per step) ──────────── */
@@ -271,7 +282,7 @@
   /* Same delayed entrance as the orrery (multiplies the per-card reveal),
    * one rung further down the assembly ladder. */
   --sc-off: 0.2;
-  opacity: var(--sc, 1);
+  opacity: var(--sc-e, 1);
 }
 
 .service-celestial-card {
@@ -924,7 +935,7 @@
    * has not landed yet, so these wait out the ring's fly-in. No travel — the
    * leaders anchor to projected WebGL rects and would visibly de-register. */
   --sc-off: 0.45;
-  opacity: calc(var(--sc, 1) * (1 - var(--svc-exit, 0)));
+  opacity: calc(var(--sc-e, 1) * (1 - var(--svc-exit, 0)));
   /* One ink. Hierarchy comes from opacity steps of the SAME gold, never
    * from a second color (the reference diagrams are single-ink). */
   --svc-des-ink: var(--gold, #caa554);
@@ -1073,7 +1084,7 @@
   /* Late rung — the notes read the instrument, so the instrument arrives
    * first. No travel: the connectors anchor to projected rects. */
   --sc-off: 0.35;
-  opacity: var(--sc, 1);
+  opacity: var(--sc-e, 1);
 }
 .services-scan-connectors {
   position: absolute;
@@ -1371,9 +1382,11 @@
    * the assembly ladder so the rise staggers with everything else. The 18px
    * is unchanged; it is just expressed as this rung's travel now. */
   --sc-off: 0.3;
-  --sc-dy: 18px;
-  opacity: var(--sc, 1);
-  transform: translateY(calc((1 - var(--sc, 1)) * var(--sc-dy)));
+  /* 18px → 10px with the easing pass (owner, 2026-08-02): the eased curve
+     already reads as a settle, so the long rise doubled the motion. */
+  --sc-dy: 10px;
+  opacity: var(--sc-e, 1);
+  transform: translateY(calc((1 - var(--sc-e, 1)) * var(--sc-dy)));
   will-change: opacity, transform;
 }
 .svc-stack__card {
@@ -1742,7 +1755,7 @@
    * below 961px the media block parks the whole ladder — so a translate here
    * would only ever move an empty box. */
   --sc-off: 0.28;
-  opacity: var(--sc, 1);
+  opacity: var(--sc-e, 1);
   /* Perspective for the rack tilt (ADR-025 Update 9). Applied at the
    * cluster level so both racks share one vanishing point; child transforms
    * (rotateY on `.svc-rack--*`) then read as one instrument, not two
