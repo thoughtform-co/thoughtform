@@ -60,21 +60,20 @@ import { clamp01 } from "@/lib/home-v2/corridorMap";
 import { SERVICES_PROOF_CASEFILE } from "../../unifiedServicesInstrument";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
-/** How far the interior haze recedes behind the proof casefile (ADR-056).
- *  Deepened 0.55 -> 0.70 with the media plates (owner, 2026-07-30): once the
- *  panels carry photography the bed behind them competes instead of
- *  supporting. */
-const PROOF_INTERIOR_DIM = 0.7;
+/* How far the interior haze and the SURFACE bed (dotted shell / globe dots /
+   equator) recede behind the proof casefile now lives in `proofDim` in
+   `lib/theme/palette.ts` — the values are PER-THEME since ADR-058 and both
+   layers are read from there at their use sites below.
 
-/** And the SURFACE bed — the dotted shell / globe dots / equator that fill
- *  the frame from inside the sphere for the whole services section. This one
- *  was MISSING (owner, 2026-07-30: "the wireframe brandmark needs to be a bit
- *  more dimmed in this section"): the interior and the mark both receded
- *  behind the casefile while the surface stayed at its full ambient floor,
- *  so the loudest layer behind the copy was the one nothing dimmed.
- *  Rides `proofPresence` like the other two, so it is identity (1) outside
- *  the dwell and the offer gets its bed back at full strength. */
-const PROOF_SURFACE_DIM = 0.55;
+   The dark values it carries and why: interior was deepened 0.55 → 0.70 with
+   the media plates (owner, 2026-07-30) — once the panels carry photography
+   the bed behind them competes instead of supporting. The surface dim (0.55)
+   was MISSING entirely until the same pass (owner: "the wireframe brandmark
+   needs to be a bit more dimmed in this section"): the interior and the mark
+   both receded behind the casefile while the surface stayed at its full
+   ambient floor, so the loudest layer behind the copy was the one nothing
+   dimmed. All three ride `proofPresence`, so they are identity (1) outside
+   the dwell and the offer gets its bed back at full strength. */
 import {
   getSmoothedAccretionLayers,
   getSmoothedDissipate,
@@ -1095,7 +1094,11 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // this factor is identity everywhere outside the dwell — and with the
     // flag off, in the corridor proper, and on the inert path.
     const proofFade = SERVICES_PROOF_CASEFILE
-      ? 1 - PROOF_INTERIOR_DIM * servicesRingProgressRef.current.proofPresence
+      ? Math.max(
+          0,
+          1 -
+            resolveScenePalette().proofDim.interior * servicesRingProgressRef.current.proofPresence
+        )
       : 1;
     const interiorMul =
       (servicesAmbient
@@ -1119,7 +1122,10 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // `proofPresence` factor as the interior and the mark, so this is
     // identity everywhere outside the dwell and byte-identical flag-off.
     const proofSurfaceFade = SERVICES_PROOF_CASEFILE
-      ? 1 - PROOF_SURFACE_DIM * servicesRingProgressRef.current.proofPresence
+      ? Math.max(
+          0,
+          1 - resolveScenePalette().proofDim.surface * servicesRingProgressRef.current.proofPresence
+        )
       : 1;
     const surfaceMul =
       (servicesAmbient

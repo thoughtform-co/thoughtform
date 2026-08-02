@@ -236,6 +236,116 @@ html[data-theme="light"] .services-plate-cluster {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4b — the proof casefile's frosted plate
+
+   The evidence plate is a sheet of glass over a LIVE WebGL bed: the
+   parked mark, its orbits and the substrate shell all read through it,
+   and ADR-056 forbids an opaque cover (the iris exists to reveal that
+   bed). So the fix for light mode is a LIGHT scrim, never a removed one
+   — dark glass on a parchment page turned the panel into a grey slab
+   and sank the ink copy on it to roughly 1.3:1.
+
+   Held a little denser than the dark scrim (0.5 → 0.72) for one
+   measured reason: the bed behind it is gold-on-parchment now, so it
+   competes with body copy at a contrast the near-black bed never did.
+   The blur still carries the plane separation; this only buys back the
+   legibility floor.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .fl-case {
+  /* NO FILL, NO FRAME (owner, 2026-08-02). The first pass gave the plate a
+     parchment scrim so the copy could clear the wireframe behind it — and
+     it read as a white box pasted over the instrument. The bed is faded
+     almost out in light instead (`proofDim` in lib/theme/palette.ts), which
+     buys the same legibility and lets the evidence be type on paper. The
+     token stays so the glass is one edit away if the bed ever comes back
+     up; the blur and the plate border go with it, below. */
+  --fl-glass: transparent;
+
+  /* CHROME INK LIFT. Not a preference — an asymmetry in the medium.
+     Cream at α over near-black keeps most of its contrast because the
+     luminance gap is enormous; ink at the same α over parchment gives
+     most of it away (α 0.28 measured 1.86:1 here, versus a comfortable
+     read in dark). This surface runs its labels at the 8.5px CHROME
+     floor, where that loss is the difference between quiet and gone.
+
+     The steps are lifted so each lands near its DARK counterpart's
+     ratio, NOT to a flat maximum: the hierarchy between designations,
+     keys, tab names and the deliberately-dim archive marker is the
+     information design, and flattening it to ink would read as louder,
+     not clearer. `+ Archive` stays the faintest thing on the plate —
+     it marks the case as a series (rules/proof.md). */
+  --fl-ink-dim: rgba(var(--dawn-rgb), 0.62);
+}
+
+/* The viz plate loses its scrim and its edge. `border-color` rather than
+   `border: 0` — the 1px is inside the absolute box's height math, so
+   removing the border outright would shift the plate a pixel. The blur
+   goes too: with the bed faded there is nothing left to separate from,
+   and `backdrop-filter` re-snapshots every frame it is composited. */
+html[data-theme="light"] .fl-panel__viz {
+  background: transparent;
+  border-color: transparent;
+}
+@supports (backdrop-filter: blur(2px)) {
+  html[data-theme="light"] .services-stage[data-proof-settled] .fl-panel__viz,
+  html[data-theme="light"] .services-stage[data-proof-settled] .fl-film {
+    backdrop-filter: none;
+  }
+}
+
+html[data-theme="light"] .fl-tabs__archive {
+  color: rgba(var(--dawn-rgb), 0.38);
+}
+html[data-theme="light"] .fl-desig,
+html[data-theme="light"] .fl-desig--r,
+html[data-theme="light"] .fl-source {
+  color: rgba(var(--dawn-rgb), 0.55);
+}
+html[data-theme="light"] .fl-ctx__k,
+html[data-theme="light"] .fl-tabs__tab {
+  color: rgba(var(--dawn-rgb), 0.58);
+}
+html[data-theme="light"] .fl-plate__foot,
+html[data-theme="light"] .fl-reg__team {
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+html[data-theme="light"] .fl-tooltab__name {
+  color: rgba(var(--dawn-rgb), 0.65);
+}
+
+/* Gold tops out near 3.2:1 on parchment even at full strength, so the
+   dark side's decorative dimming is headroom light mode cannot spare.
+   These are wayfinding labels, not decoration — they run at full. */
+html[data-theme="light"] .fl-reg__name,
+html[data-theme="light"] .fl-reg__tag {
+  color: var(--gold);
+}
+
+/* The active directory row is inverse video — a GOLD fill. Its meta is
+   printed in `--void-deep-rgb`, which is the page ground: near-black in
+   dark, parchment in light. That is the void-as-text-on-gold failure
+   again, reached through a different token than the `var(--void)` sites
+   the guard covers, so it reads pale-on-gold at 2.2:1. Ink, as the row's
+   own `--gold-contrast` already does. */
+html[data-theme="light"] .fl-row[data-on] .fl-row__meta {
+  color: rgba(var(--dawn-rgb), 0.75);
+}
+
+/* THE MARKER INVERTS ITS PARTS, not its meaning. Emphasis is a gold wash
+   with upright text (the brand's only marker — never italics). In dark
+   the TEXT carries it: gold on near-black is ~8:1. On parchment gold
+   tops out at 3.2:1 before the wash sits underneath it, measured 2.71:1
+   — below AA-large for body copy, on the one sentence of the brief that
+   is supposed to land hardest.
+   So in light the WASH carries the emphasis and the text stays ink,
+   which is what a highlighter does on paper. The wash comes up a little
+   because 0.16 gold reads softer on parchment than against near-black. */
+html[data-theme="light"] .fl-brief__body em {
+  color: var(--dawn);
+  background: rgba(var(--gold-rgb), 0.22);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    BLOCK 5 — the hero island
 
    `/images/Gateway_v1b.webp` is a dark raster and the LCP element; no

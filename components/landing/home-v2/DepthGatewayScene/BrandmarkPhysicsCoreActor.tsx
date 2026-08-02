@@ -76,6 +76,7 @@ import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+import { resolveScenePalette } from "@/lib/theme/palette";
 import { getServicePose } from "@/lib/home-v2/servicePose";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
@@ -330,18 +331,21 @@ const EXIT_DIM = 0.45;
  *  presence behind the flipped portrait. 1.0 restores the full clear. */
 const ABOUT_FLIP_MARK_DIM = 0.45;
 
-/** Proof-casefile dim (ADR-056). The casefile is a full-bleed reading
- *  surface over the PARKED mark, so the mark has to recede to a presence
- *  while it holds — at full ink the accretion arcs cut straight through the
- *  readout row. The mark is deliberately not killed: "over the parked
- *  brandmark" is the composition, and the lab that settled this format
- *  (`/test/proof-dossier-lab`) landed on the same 0.45.
- *
- *  Driven by `proofRelease`, the SAME scalar that gates the ring and
- *  `--svc-content-in`, so the mark comes back up exactly as the offer
- *  arrives. Identity (1) whenever the release is 1 — which is every frame
- *  outside the dwell, the whole corridor, the inert path, and flag-off. */
-const PROOF_MARK_DIM = 0.62;
+/* Proof-casefile dim (ADR-056) now lives in `proofDim.mark` in
+   `lib/theme/palette.ts` — PER-THEME since ADR-058, read at its use site
+   below. The casefile is a full-bleed reading surface over the PARKED mark,
+   so the mark has to recede to a presence while it holds: at full ink the
+   accretion arcs cut straight through the readout row. In DARK it is
+   deliberately not killed (0.62) — "over the parked brandmark" is the
+   composition, and the lab that settled this format
+   (`/test/proof-dossier-lab`) landed on the same 0.45. LIGHT fades it much
+   harder, because on parchment those same arcs are mid-tone strokes across
+   the copy rather than a dim ambient beneath it.
+
+   Driven by `proofRelease`, the SAME scalar that gates the ring and
+   `--svc-content-in`, so the mark comes back up exactly as the offer
+   arrives. Identity (1) whenever the release is 1 — which is every frame
+   outside the dwell, the whole corridor, the inert path, and flag-off. */
 
 /** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
  *  reveals the kept dome's depth, so the mark reads as a living 3D object
@@ -840,7 +844,10 @@ export function BrandmarkPhysicsCoreActor({
     // ADR-056: and the proof casefile dims it while that surface holds the
     // stage. `proofRelease` rests at 1, so this is identity everywhere else.
     const proofFade = SERVICES_PROOF_CASEFILE
-      ? 1 - PROOF_MARK_DIM * servicesRingProgressRef.current.proofPresence
+      ? Math.max(
+          0,
+          1 - resolveScenePalette().proofDim.mark * servicesRingProgressRef.current.proofPresence
+        )
       : 1;
     const dimMix = (1 - EXIT_DIM * exitT) * aboutFlipFade * proofFade;
     opacityRef.current = (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * dimMix;

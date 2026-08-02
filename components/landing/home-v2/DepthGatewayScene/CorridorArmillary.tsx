@@ -49,6 +49,7 @@ import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+import { resolveScenePalette } from "@/lib/theme/palette";
 import {
   useHologramConnectors,
   type ConnectorAnchor,
@@ -96,7 +97,16 @@ const orbitExitGetter = () =>
   // with the cards while the proof casefile owns the stage. The MARK itself
   // is untouched — the casefile is meant to sit over a parked brandmark, not
   // over an empty stage. Rests at 1 with the flag off (release 1 ⇒ lead 1).
-  orbitReleaseLead();
+  orbitReleaseLead() *
+  // ADR-058: and light mode takes them the rest of the way down. The lead
+  // alone still leaves ~4 % at the dwell's release — nothing against the
+  // void, a thin continuous gold line across the casefile's readouts on
+  // parchment, which is what forced the plate to grow a fill and a frame.
+  // `proofDim.orbits` is 0 in dark, so this whole term is ×1 there.
+  Math.max(
+    0,
+    1 - resolveScenePalette().proofDim.orbits * servicesRingProgressRef.current.proofPresence
+  );
 
 /**
  * ADR-056 — the cards' entrance CLOCK, not a fade (owner, 2026-07-28: the

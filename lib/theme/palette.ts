@@ -40,16 +40,60 @@ export interface ScenePalette {
    * `app/styles/variables.css` is what actually paints it.
    */
   ground: number;
+
+  /**
+   * How far the three corridor layers recede behind the proof casefile,
+   * as `1 − dim × proofPresence` (ADR-056 dims the MARK, the interior
+   * HAZE and the dotted-shell SURFACE bed — deepen them together).
+   *
+   * Light mode fades them almost to nothing, and that is a design
+   * decision, not a contrast patch (owner, 2026-08-02). On near-black
+   * the wireframe is a dim gold ambient that sits UNDER the copy; on
+   * parchment the same lines are mid-tone strokes that cross it, and the
+   * casefile then needs a filled, framed plate to stay readable — which
+   * reads as a white box pasted over the instrument. Fading the bed
+   * instead buys the same legibility with NO fill and NO frame, so the
+   * evidence stays type on paper.
+   *
+   * Not zero: ADR-056's iris exists to REVEAL this bed, so a trace of it
+   * has to survive or the departure animates nothing.
+   */
+  proofDim: { mark: number; interior: number; surface: number; orbits: number };
 }
 
 export const DARK_SCENE: ScenePalette = {
   ground: 0x0a0908,
+  // The shipped ADR-056 values, verbatim — dark must stay byte-identical.
+  // `orbits` is 0, i.e. NO extra dim: dark leaves the structural rings on
+  // `orbitReleaseLead` alone, exactly as ADR-056 tuned them.
+  proofDim: { mark: 0.62, interior: 0.7, surface: 0.55, orbits: 0 },
 };
 
 export const LIGHT_SCENE: ScenePalette = {
   // Semantic Dawn — the same `--void` the light token block sets, so the
   // occluder matches the page behind the canvas exactly.
   ground: 0xece3d6,
+  // Deeper than they look, and measured rather than guessed. `proofPresence`
+  // peaks near 0.94 at the dwell's head, so a dim of 0.97 leaves ~9 % — a
+  // residue that is invisible as gold-on-black and a legible texture as
+  // gold-on-parchment, because these are dense dot fields and dot fields
+  // aggregate. Parity by number is not parity by eye.
+  //
+  // `orbits` is the FOURTH layer, and the one that actually crossed the
+  // copy: the structural waist + meridian rings are not part of ADR-056's
+  // three, they ride `orbitReleaseLead` alone, and at the dwell's release
+  // (~0.09) that still leaves them near 4 % — a thin continuous gold line
+  // straight through the readouts, where the dot fields only stipple.
+  //
+  // ⚠ These exceed 1 on purpose, and the use sites clamp at 0. Measured:
+  // `proofPresence` PEAKS around 0.94 at the dwell's head, so a dim of
+  // exactly 1 still leaves ~6 % — enough for the dot shell, seen edge-on,
+  // to draw a visible band straight through the directory. Going past 1
+  // is what lets the bed actually reach zero while the casefile holds,
+  // and it fades proportionally faster on the way in rather than
+  // clipping. The MARK keeps a whisper (1.0 ⇒ ~6 %): ADR-056's iris has
+  // to have something left to reveal on the way out.
+  proofDim: { mark: 1.0, interior: 1.05, surface: 1.06, orbits: 1.06 },
 };
 
 /** Resolve the scene palette for a mode (defaults to the live theme). */

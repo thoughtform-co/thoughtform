@@ -60,6 +60,14 @@
   color: var(--dawn, #ebe3d6);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
 
+  /* The frosted-plate scrim (see FROSTED GLASS below). A token, because it
+     is the ONE surface on this file that cannot be derived from the palette
+     ramps: it is a sheet of glass over a live WebGL bed, so its job is a
+     LEGIBILITY floor for the copy on top, not a brand tone. theme.css
+     overrides it — a dark scrim on a parchment page turns the evidence
+     panel into a grey slab and sinks the ink copy to ~1.3:1. */
+  --fl-glass: rgba(8, 7, 6, 0.5);
+
   /* DEPARTURE — the plane IRISES SHUT (owner, 2026-07-29), superseding the
      whole-plane fade. Left and right insets close toward a centre vertical
      slit: the exact reverse of the corridor caption card's aperture unfold
@@ -812,7 +820,7 @@
   .services-stage[data-proof-settled] .fl-panel__viz,
   .services-stage[data-proof-settled] .fl-film {
     backdrop-filter: blur(7px);
-    background: rgba(8, 7, 6, 0.5);
+    background: var(--fl-glass);
   }
 }
 

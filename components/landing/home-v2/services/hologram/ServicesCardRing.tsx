@@ -51,6 +51,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
+import { resolveScenePalette } from "@/lib/theme/palette";
+
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
 import {
@@ -2651,7 +2653,17 @@ export function ServicesCardRing({
     entrance === "scroll"
       ? () =>
           (1 - 0.85 * exitProgressForRunway(progressRef.current.progress)) *
-          (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutProgressRef.current.progress) : 1)
+          (ABOUT_DECK_STAGE ? 1 - aboutFlipT(aboutProgressRef.current.progress) : 1) *
+          // ADR-058: the casefile dim. These tracks were the ONE layer over
+          // the casefile with no proof term — the structural rings hold via
+          // `orbitReleaseLead`, the mark / haze / surface bed via their
+          // `proofDim`s, but the four drawn tracks stayed at their full
+          // ~0.3-0.38 for the entire dwell. Unremarkable against the void;
+          // on parchment they are four continuous gold ellipses through the
+          // readouts, and they are what made the evidence plate look like it
+          // needed a fill and a frame. `proofDim.orbits` is 0 in dark, so
+          // this term is ×1 there and the beat is byte-identical.
+          Math.max(0, 1 - resolveScenePalette().proofDim.orbits * progressRef.current.proofPresence)
       : undefined;
 
   return (
