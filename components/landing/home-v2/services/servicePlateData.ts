@@ -126,76 +126,37 @@ const photo = (id: ServicePhotoAssetId, alt: string, position: string) => ({
 /* Copy + order rewritten 2026-07-09 (Vince review). The four ServicePlateId
  * keys are FIXED SPATIAL SLOTS (not service names) — each id is wired to a
  * rack position, a brandmark anchor pick, a designation set, and a scan note.
- * The visible service that occupies each slot changed, so the id → service
- * mapping is now:
- *   keynote  slot (left rack, top)    → 01 Strategic Advisory  (strategic photo)
- *   workshop slot (left rack, bottom) → 02 Embedded AI Partner (embedded photo)
- *   embedded slot (right rack, top)   → 03 Keynote             (keynote photo)
- *   guided   slot (right rack, bottom)→ 04 Workshop            (workshop photo)
- * Keeping the ids as slot keys avoids re-tuning every spatial map; the photo
- * for each slot is pointed at the correct asset by hand. All four slots carry
- * photos since the 2026-07-10 `-2` reshoot (ADR-029 card ring); the schematic
- * dot-grid fallback stays wired for any future photo-less service. */
+ *
+ * HARMONIZED 2026-08-02 (owner copy, verbatim — see serviceData.ts for the
+ * ruling). Every title is now the service's OUTCOME STATEMENT and the lede
+ * its one-sentence definition; the occupancy follows the owner's
+ * progression (shared frame → working setup → internal capability →
+ * portfolio direction), so the id → service mapping is now:
+ *   keynote  slot (left rack, top)    → 01 Keynote             (keynote photo)
+ *   workshop slot (left rack, bottom) → 02 Workshop            (workshop photo)
+ *   embedded slot (right rack, top)   → 03 Embedded AI Partner (embedded photo)
+ *   guided   slot (right rack, bottom)→ 04 Strategic Advisory  (strategic photo)
+ * Status codes re-cut to phase + index (NAV-01 / ENC-02 / BLD-03 / ADV-04)
+ * so the mobile chrome reads the same progression. Keeping the ids as slot
+ * keys avoids re-tuning every spatial map; the photo for each slot is
+ * pointed at the correct asset by hand. All four slots carry photos since
+ * the 2026-07-10 `-2` reshoot (ADR-029 card ring); the schematic dot-grid
+ * fallback stays wired for any future photo-less service.
+ *
+ * ⚠ BAKE FIT: the tight face wraps the lede upward from a fixed baseline
+ * (ServicesCardRing TIGHT_COPY_BOTTOM), so a longer lede EATS PHOTO, never
+ * clips — but the two new long ledes (Embedded 156ch, Advisory 146ch) run
+ * four lines at the 35px bake size where the old ones ran three. Verified
+ * on the baked faces 2026-08-02; anything longer than ~160ch starts
+ * crowding the title band. */
 export const SERVICE_PLATES: readonly ServicePlate[] = [
   {
     id: "keynote",
-    chip: "Strategic Advisory",
-    statusCode: "ADV-01",
-    title: "Know where to invest in AI.",
-    lede: [
-      "A monthly read on where AI belongs, what to build, and what to leave alone. Tested against real work.",
-    ],
-    breakdown: [
-      "A monthly session on the decisions actually in front of you",
-      "Written memos you can forward, not slideware",
-      "On-call reads when something lands mid-month",
-    ],
-    spec: {
-      duration: "Monthly, ongoing",
-      participants: "The people making the AI calls",
-      format: "Strategic memos and on-call reads",
-      language: "NL / EN",
-      leavesWith: "Sharper AI calls",
-    },
-    feedLabel: "Feed 03 · At the table",
-    feedStatus: "Standby",
-    includes: ["Monthly cadence", "Strategic memos", "On-call reads", "NL / EN"],
-    ctaLabel: "Open an advisory",
-    ctaHref: "#contact",
-    photo: photo("strategic", "Vince Buyssens at the table during an advisory session", "50% 32%"),
-  },
-  {
-    id: "workshop",
-    chip: "Embedded AI Partner",
-    statusCode: "BLD-02",
-    title: "We build inside your teams.",
-    lede: ["We build alongside your team. The tools, judgment, and know-how stay with you."],
-    breakdown: [
-      "We sit in your teams and build with them, not for them",
-      "Strategy and delivery in the same room",
-      "A dated handover of the tools and the people who run them",
-    ],
-    spec: {
-      duration: "Fixed term, dated handover",
-      participants: "One or more teams",
-      format: "On site and remote build",
-      language: "NL / EN",
-      leavesWith: "An AI layer your team owns",
-    },
-    feedLabel: "Feed 04 · On site",
-    feedStatus: "Standby",
-    includes: ["Fixed term", "Dated handover", "Owned layer", "NL / EN"],
-    ctaLabel: "Scope an engagement",
-    ctaHref: "#contact",
-    photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 45%"),
-  },
-  {
-    id: "embedded",
     chip: "Keynote",
-    statusCode: "NAV-02",
-    title: "Change how your room sees AI.",
+    statusCode: "NAV-01",
+    title: "A shared frame for AI.",
     lede: [
-      "A case for intelligence as a new kind of resource—why it behaves differently from software, and how that changes the way we work.",
+      "A grounded argument for treating AI as intelligence rather than software, and for designing its role in work accordingly.",
     ],
     breakdown: [
       "Built on your industry's cases, not generic AI slides",
@@ -217,12 +178,12 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     photo: photo("keynote", "Vince Buyssens delivering a keynote on stage", "50% 22%"),
   },
   {
-    id: "guided-build",
+    id: "workshop",
     chip: "Workshop",
-    statusCode: "ENC-04",
-    title: "Your team builds its first AI tools.",
+    statusCode: "ENC-02",
+    title: "A first working AI setup.",
     lede: [
-      "A hands-on session on your team's real work. They leave with the first patterns encoded and a build list.",
+      "A hands-on session around one real workflow, producing an encoded practice, a working first setup and a clear build path.",
     ],
     breakdown: [
       "We map your team's real workflows before touching a tool",
@@ -242,5 +203,59 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     ctaLabel: "Book a workshop",
     ctaHref: "#contact",
     photo: photo("workshop", "Vince Buyssens working with a team in a studio session", "50% 18%"),
+  },
+  {
+    id: "embedded",
+    chip: "Embedded AI Partner",
+    statusCode: "BLD-03",
+    title: "An AI capability the team can run.",
+    lede: [
+      "A sustained engagement inside the team, turning domain judgment into reusable Skills, tools and tested systems the team can continue to operate and improve.",
+    ],
+    breakdown: [
+      "We sit in your teams and build with them, not for them",
+      "Strategy and delivery in the same room",
+      "A dated handover of the tools and the people who run them",
+    ],
+    spec: {
+      duration: "Fixed term, dated handover",
+      participants: "One or more teams",
+      format: "On site and remote build",
+      language: "NL / EN",
+      leavesWith: "An AI layer your team owns",
+    },
+    feedLabel: "Feed 04 · On site",
+    feedStatus: "Standby",
+    includes: ["Fixed term", "Dated handover", "Owned layer", "NL / EN"],
+    ctaLabel: "Scope an engagement",
+    ctaHref: "#contact",
+    photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 45%"),
+  },
+  {
+    id: "guided-build",
+    chip: "Strategic Advisory",
+    statusCode: "ADV-04",
+    title: "A live map of where AI belongs.",
+    lede: [
+      "A recurring portfolio read across workflows, cost, evidence and ownership—showing what to build, what to change and what should remain person-led.",
+    ],
+    breakdown: [
+      "A monthly session on the decisions actually in front of you",
+      "Written memos you can forward, not slideware",
+      "On-call reads when something lands mid-month",
+    ],
+    spec: {
+      duration: "Monthly, ongoing",
+      participants: "The people making the AI calls",
+      format: "Strategic memos and on-call reads",
+      language: "NL / EN",
+      leavesWith: "Sharper AI calls",
+    },
+    feedLabel: "Feed 03 · At the table",
+    feedStatus: "Standby",
+    includes: ["Monthly cadence", "Strategic memos", "On-call reads", "NL / EN"],
+    ctaLabel: "Open an advisory",
+    ctaHref: "#contact",
+    photo: photo("strategic", "Vince Buyssens at the table during an advisory session", "50% 32%"),
   },
 ];

@@ -156,27 +156,44 @@ export const SERVICES_PROOF_CASEFILE = true;
  * How many viewports of the `#services` runway the casefile holds before the
  * ring arrives.
  *
- * 1.2, and the number came DOWN from 2.8 (owner, 2026-07-29 round 3). The
- * dwell is NOT a reading window and never needed to be one: `--svc-proof-in`
- * saturates 100px into the runway, because the panels assemble during the
- * APPROACH on the dissipate, so the casefile is already settled when the
- * stage pins. A reader who wants to read it simply stops — the stage is
- * PINNED. Runway spent before the handoff opens is therefore not patience,
- * it is dead scroll, and 2.8 with a 0.62 release start bought 1550px of it:
- * 1.7 viewports where scrolling did nothing at all.
+ * 3.2 since 2026-08-02 (owner: "scrolling now immediately transitions to
+ * the Services Section… make it so that scrolling scrolls through the
+ * different cases first"). The dwell is split in two by
+ * `SERVICES_PROOF_BROWSE_FRAC`:
  *
- * So the whole dwell IS the handoff — the release spans [0, 1] and the fold
- * sits at 0.13 → 0.66 inside it. The ramp ends up with MORE scroll in
- * absolute pixels (~1080 at a 900px viewport, against ~958 before) on a
- * runway less than half as long: the page loses ~1440px AND the transition
- * answers the first scroll.
+ *   · the BROWSE BAND (front 62.5 %, 2.0 viewports) steps the directory
+ *     through its rows — scroll IS the row selector there, quarter-band per
+ *     row with hysteresis, and a row click pins the scroll to its band so
+ *     the two selectors can never fight;
+ *   · the RELEASE (back 37.5 %, 1.2 viewports) is the 2026-07-29 handoff
+ *     UNCHANGED — the fold's 0.13/0.66, `REVEAL_AT`, `REARM_BELOW` and
+ *     `PROOF_OWNS_BELOW` all ride a releaseP RE-DERIVED over this back
+ *     stretch, so in pixels the handoff is byte-what-it-was.
  *
- * This is the ONLY tuning knob for the dwell. It lengthens the page and moves
- * nothing else: the split re-derives the ring's progress over the remainder,
- * so changing it can never re-time a card. Read by `services.css` (as the
- * `--svc-proof-runway` default) and by `useServicesStageScroll`; keep the two
- * in step — the CSS owns the runway's height, this constant owns the split.
- * ⚠ It also rescales what a `PROOF_OUT_*` / `PROOF_RELEASE_*` fraction means
- * in pixels, so re-measure the handoff after touching it.
+ * The round-3 ruling ("runway spent before the handoff opens is dead
+ * scroll") still binds — this is not that. 2.8/0.62 bought 1550px where
+ * NOTHING happened; here every browse quarter changes the panel, which is
+ * choreography, not patience. What would violate the ruling is browse
+ * runway beyond the rows' needs.
+ *
+ * This is the ONLY tuning knob for the dwell's length. It lengthens the page
+ * and moves nothing else: the split re-derives the ring's progress over the
+ * remainder, so changing it can never re-time a card. Read by `services.css`
+ * (as the `--svc-proof-runway` default) and by `useServicesStageScroll`; keep
+ * the two in step — the CSS owns the runway's height, this constant owns the
+ * split. ⚠ Changing it (or the browse fraction) rescales what a
+ * `PROOF_OUT_*` fraction means in pixels — re-measure the handoff after.
  */
-export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 1.2 : 0;
+export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 3.2 : 0;
+
+/**
+ * Where the browse band ends and the release begins, as a fraction of the
+ * proof runway. 0.625 of 3.2 = 2.0 viewports of browse (a half-viewport
+ * per directory row) + the release's original 1.2 — so the release's
+ * absolute pixel budget is exactly the pre-browse dwell.
+ *
+ * Consumed by `useServicesStageScroll` (the split), `ServicesCasefile`
+ * (the row scrollspy + the click-pins-scroll math) and the smoke spec
+ * (band-fraction targeting). One constant, three readers, zero drift.
+ */
+export const SERVICES_PROOF_BROWSE_FRAC = 0.625;

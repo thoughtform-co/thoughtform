@@ -1895,9 +1895,17 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
      sit ~1.2 apart. Bumping the button then cannot leave the note
      stranded at its old size — the ratio is the thing being preserved,
      so it is written down instead of re-derived by hand.
-     Raised 20% from the original clamp(10px, 0.78vw, 12px). */
+     Raised 20% from the original clamp(10px, 0.78vw, 12px).
+
+     ⚠ THE NOTE MUST NEVER OUT-MEASURE THE BUTTON (owner, 2026-08-02).
+     At ratio 1.2 the 36-char note ran ~460px against a ~399px CTA — a
+     subline wider (and larger) than the control it annotates. PT Mono's
+     advance is exactly 0.6em, so the check is arithmetic, not eyeball:
+     note ≤ 21ch·(0.6+0.18)em·ratio⁻¹… at 0.9 the note clears the button
+     by ~54px at the wide clamp end and ~27px at the narrow one. Anyone
+     retuning the ratio or the copy re-runs that product first. */
   --signal-cta-type: clamp(12px, 0.94vw, 14px);
-  --signal-note-ratio: 1.2;
+  --signal-note-ratio: 0.9;
 }
 
 .home-v2-signal-cta {

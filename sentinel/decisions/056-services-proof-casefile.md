@@ -1409,3 +1409,106 @@ services-ring smoke pass, including the U11 eight-row clip walk.
 
 The two readout labels that orphaned their last word at 1440×800 were on this
 row's foot, which no longer exists — the blocks replaced them.
+
+## Update 13 — the dwell browses, the plate opens, the directory shrinks (2026-08-02, owner)
+
+**Owner brief, three asks in one pass:** scrolling in the proof section
+"immediately transitions to the Services Section" — make scroll step through
+the cases first, "very smoothly"; the top-right panel should be "a
+minimalistic system à la aether /claude-adoption with an overview of the
+different skills where users can click on"; and the directory drops
+everything from `05_WORKSHOP-ROLLOUT/` on, leaving the four projects.
+
+### The browse band
+
+The dwell grows 1.2 → 3.2 viewports and splits at
+`SERVICES_PROOF_BROWSE_FRAC` (0.625, `unifiedServicesInstrument`):
+
+- **Browse (front 2.0 viewports):** scroll IS the row selector — a quarter
+  of the band per directory row. The hook publishes `--svc-proof-browse` on
+  the casefile host (same write path, same deadband as the other proof
+  channels); the casefile's EXISTING style MutationObserver derives the
+  active row from it, with 0.04 hysteresis so a reader parked on a band
+  edge never flickers, frozen once `--svc-proof-out` > 0.02 so the fold is
+  never interrupted by a row swap. No new listeners, no new scroll writers.
+- **Release (back 1.2 viewports):** the 07-29 handoff, byte-identical in
+  pixels. `PROOF_OUT` 0.13/0.66 and `PROOF_RELEASE` [0,1] now ride
+  `releaseP` — proofP re-derived past the browse fraction — so `REVEAL_AT`,
+  `REARM_BELOW`, `PROOF_OWNS_BELOW` and the smoke's validated crossings
+  kept their meanings without an edit. The smoke's absolute targets moved
+  by the linear map (releaseP 0.52 ⇒ total 0.82; 0.40 ⇒ 0.775).
+
+**A row click PINS THE SCROLL to its band's centre.** Without it the click
+and the spy fight: state moves, the next observer reading moves it back.
+Instant (`behavior: "auto"`) — a smooth glide would drag the spy through
+every intermediate row. Static contexts (mobile/PRM, unpinned stage,
+flag-off) keep the plain state write. The smoke asserts both directions:
+click row two ⇒ the browse channel lands in row two's band; scroll to the
+third quarter ⇒ row three selects with no click.
+
+Round-3's dead-scroll ruling is not overturned, it is qualified the same
+way U12 qualified July's numbers ruling: 2.8 viewports where nothing
+happened was dead; 2.0 viewports where every quarter swaps the panel is
+choreography. `PROOF_SETTLED_AT` moved 0.06 → 0.025 with the runway so it
+still means "~80px in".
+
+### The skills browser
+
+`CaseTrackVisual`'s registry member (track-side ONLY — the beat's union is
+untouched) gains `skills?: readonly CaseSkillEntry[]` — 47 entries read
+from the client's own board data: name, team, engine, lifecycle. The
+renderer branches to `SkillsBrowserPlate`: engine tabs carrying the U12
+counts (the weighted overview lives on as the selector — the bars lived
+exactly one pass), the selected engine's skills as clickable chips, and a
+provenance line (team · dotted leader · status) pinned to the plate foot.
+State lives in the plate (the ToolGallery precedent minus the foot
+coupling); `.fl-skills` is the FOURTH and last pointer-events opt-in,
+safe under the same `data-proof-live` visibility gate as `.fl-film`.
+
+What deliberately does not travel from the source data: per-skill OWNERS
+(client staff — the registry test now catches the "Toby + Maud" shape),
+per-skill body copy, and the four untagged cards (the suppressed 51
+denominator). New guards: every skill's engine names a real group, every
+group's printed count EQUALS its chip-list length (the browser makes the
+counts countable by eye, so drift is a visible contradiction), statuses
+from the four-word enum, names ≤30ch.
+
+The exemplar `MAP_ROWS` stay in the data — the beat renders them and the
+sharing guard asserts them shared — but the casefile no longer draws them:
+the browser shows the real portfolio the exemplars stood in for. Measured
+at the worst engine (Pattern, 14 chips): zero overflow at 1280×720 /
+1440×800 / 1600×900 / 1920×1080, gloss caption hidden ≤760h, chips at the
+10.5px reading floor in both themes.
+
+### Four rows
+
+`05_WORKSHOP-ROLLOUT/`, `GOVERNANCE.MD`, `METRICS.DAT` and
+`00_MISSION-REPORT.LOG` left the directory. Where their content lives on:
+the rollout log renders on the Navigate beat (ROLLOUT_ROWS was always
+shared); governance survives as beat/report copy; the metrics and report
+readouts were duplicates of `report.stats`; the ADOPTION_SIGNAL curve was
+deleted outright (the `signal` kind stays in the model). The registry
+test's log-sharing branch became conditional — the beat is the log's only
+renderer now — while the registry branch stays unconditional. The smoke
+pins four rows where it pinned eight.
+
+### Alongside, the services copy harmonized (owner copy, verbatim)
+
+Masthead intro rewritten; every card now leads with ONE OUTCOME STATEMENT
+progressing shared frame → working setup → internal capability → portfolio
+direction, and the slot occupancy moved WITH the progression (id → service:
+keynote→Keynote, workshop→Workshop, embedded→Embedded AI Partner,
+guided-build→Strategic Advisory — three ids re-aligned with their content;
+the designations, scan notes, photos and status codes travelled by the
+2026-07-09 rules). The smoke's occupancy-coupled names moved in lockstep.
+Bake fit verified on the faces (the two long ledes run four lines and eat
+photo, never clip). The Advisory body keeps the owner's em dash verbatim —
+the 07-16 "no em dashes" sweep is superseded where the owner writes one.
+
+### Verified
+
+tsc, ESLint, 440+ unit tests, the full desktop services-ring smoke (10/10
+
+- mobile skip) including the new browse/spy/click-pin assertions and the
+  remapped interleave, plus headed captures of both themes at rows 1/3/4,
+  the ring's new front card, and the docked light-mode wordmark.

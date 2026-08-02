@@ -5,6 +5,10 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { type ScrambleJob, advanceScrambles, queueScramble } from "@/lib/home-v2/captionScramble";
 import { CASES, PROOF_CASE } from "@/lib/cases/registry";
 import type { CaseSegment } from "@/lib/cases/types";
+import {
+  SERVICES_PROOF_BROWSE_FRAC,
+  SERVICES_PROOF_RUNWAY_VH,
+} from "@/components/landing/home-v2/unifiedServicesInstrument";
 
 import { ClientTabs } from "./ClientTabs";
 import { Directory } from "./Directory";
@@ -64,6 +68,31 @@ const REARM_BELOW = 0.05;
 /** Park band at the top of the viewport, in viewport heights. */
 const PIN_BAND = 0.02;
 
+/* ── The row scrollspy (ADR-056 U13) ───────────────────────────────────
+   The browse band gives each directory row an equal quarter of
+   `--svc-proof-browse`; the spy converts the value back to a row with
+   HYSTERESIS so a reader parked exactly on a band edge never flickers
+   between two panels. Driven from the SAME style MutationObserver the
+   reveal already owns — the scroll hook stays the single writer, and this
+   component gains no listener it did not have. */
+
+/** How far past a shared band edge the browse value must travel before the
+ *  spy crosses it, as a fraction of the whole browse band. ~26px of scroll
+ *  at a 2-viewport band on a 900px viewport — enough that rest jitter and
+ *  rubber-banding never flip a row, small enough to be imperceptible. */
+const BROWSE_HYSTERESIS = 0.04;
+/** Above this much fold the spy freezes: the panels are LEAVING, and a row
+ *  swap mid-departure is noise on top of choreography. */
+const BROWSE_FREEZE_OUT = 0.02;
+
+/** Next active row for a browse reading, honouring hysteresis. */
+function rowFromBrowse(browse: number, current: number, rowCount: number): number {
+  const raw = Math.min(rowCount - 1, Math.max(0, Math.floor(browse * rowCount)));
+  if (raw === current) return current;
+  if (raw > current) return browse >= raw / rowCount + BROWSE_HYSTERESIS ? raw : current;
+  return browse <= (raw + 1) / rowCount - BROWSE_HYSTERESIS ? raw : current;
+}
+
 /** Tab rows — every case in the registry, in registry order. One case today;
  *  adding a second to `lib/cases/` lights up a second tab with no edit here. */
 const CASEFILE_TABS = CASES.map((c) => ({
@@ -83,6 +112,14 @@ export function ServicesCasefile() {
   const panelId = "svc-casefile-panel";
   const rowId = `${def.slug}-row-${track.id}`;
 
+  /* The scrollspy reads the CURRENT row through a ref — its observer closure
+     outlives any single render, and hysteresis needs the live index. */
+  const trackIdxRef = useRef(0);
+  trackIdxRef.current = Math.max(
+    0,
+    file.tracks.findIndex((t) => t.id === track.id)
+  );
+
   const selectClient = useCallback((next: string) => {
     const c = CASES.find((x) => x.slug === next);
     if (!c) return;
@@ -90,6 +127,41 @@ export function ServicesCasefile() {
     // A track id is only meaningful inside its own casefile.
     setTrackId(c.casefile.tracks[0].id);
   }, []);
+
+  /* Row selection with the CLICK-PINS-SCROLL contract (ADR-056 U13). While
+     the stage is pinned, scroll position IS the row selector — so a click
+     that only set state would be overridden by the very next spy reading.
+     The click therefore also moves the scroll to the middle of the row's
+     browse band; the spy then derives the same row and the two selectors
+     agree by construction. Instant (`behavior: "auto"`): a smooth glide
+     would drag the spy through every intermediate row on the way.
+
+     Static contexts keep the plain state write: mobile/reduced motion (no
+     browse channel), a not-yet-pinned stage (teleporting the page under a
+     reader who clicked early would be worse than a transient spy override),
+     and the flag-off rollback (no runway at all). */
+  const selectTrack = useCallback(
+    (id: string) => {
+      setTrackId(id);
+      const root = rootRef.current;
+      if (!root || SERVICES_PROOF_RUNWAY_VH === 0) return;
+      const enhanced = window.matchMedia(
+        "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
+      ).matches;
+      if (!enhanced) return;
+      const runway = root.closest<HTMLElement>(".services-stage-root");
+      if (!runway) return;
+      const r = runway.getBoundingClientRect();
+      if (r.top > 2) return; // not pinned yet
+      const idx = file.tracks.findIndex((t) => t.id === id);
+      if (idx < 0) return;
+      const vh = window.innerHeight || 1;
+      const proofPx = Math.min(SERVICES_PROOF_RUNWAY_VH * vh, Math.max(0, r.height - vh));
+      const target = ((idx + 0.5) / file.tracks.length) * SERVICES_PROOF_BROWSE_FRAC * proofPx;
+      window.scrollTo({ top: r.top + window.scrollY + target, behavior: "auto" });
+    },
+    [file]
+  );
 
   /* ── Reveal ─────────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -162,8 +234,25 @@ export function ServicesCasefile() {
       raf = requestAnimationFrame(tick);
     };
 
+    /* The row scrollspy (ADR-056 U13) — one more reader of the style
+       mutations this observer already receives. Missing var ⇒ NO DRIVE
+       (unlike the clock's fail-open): a bare mount has no browse channel
+       and must keep its clicked/default row, not snap to the last band. */
+    const driveRow = () => {
+      const rawBrowse = Number.parseFloat(root.style.getPropertyValue("--svc-proof-browse"));
+      if (!Number.isFinite(rawBrowse)) return;
+      const rawOut = Number.parseFloat(root.style.getPropertyValue("--svc-proof-out"));
+      if (Number.isFinite(rawOut) && rawOut > BROWSE_FREEZE_OUT) return;
+      // `def` is the effect closure's — deps are [def.slug], so it is
+      // current for this observer's whole lifetime.
+      const tracks = def.casefile.tracks;
+      const idx = rowFromBrowse(rawBrowse, trackIdxRef.current, tracks.length);
+      if (idx !== trackIdxRef.current) setTrackId(tracks[idx].id);
+    };
+
     const onClock = () => {
       if (document.visibilityState === "hidden") return;
+      driveRow();
       const v = readClock();
       if (state === "armed" && v >= REVEAL_AT && isParked()) begin();
       else if (state !== "armed" && v < REARM_BELOW) arm();
@@ -315,7 +404,7 @@ export function ServicesCasefile() {
       <Directory
         tracks={file.tracks}
         activeId={track.id}
-        onSelect={setTrackId}
+        onSelect={selectTrack}
         controls={panelId}
         idPrefix={def.slug}
       />

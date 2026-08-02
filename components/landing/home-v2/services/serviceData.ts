@@ -63,20 +63,27 @@ export interface Service {
  * Runs), one CTA. `kicker` is retained for the mobile card stack only. */
 /* Copy + order rewritten 2026-07-09 (Vince review); swept 2026-07-16
  * (first-person voice), then replaced the same evening with the owner's
- * full-section copy: tightened bodies, no em dashes, voice moved from
- * first-person singular ("I advise") to the practice "we" / neutral.
- * Kept in lockstep with `servicePlateData` — the production card copy.
- * The four ServiceId keys
+ * full-section copy. Kept in lockstep with `servicePlateData` — the
+ * production card copy. The four ServiceId keys
  * are FIXED SPATIAL SLOTS shared with `servicePlateData` (each id is wired to
  * a rack position, a brandmark anchor, a designation set, and a scan note).
- * The service occupying each slot changed; the id → service mapping is:
- *   keynote  → 01 Strategic Advisory
- *   workshop → 02 Embedded AI Partner
- *   embedded → 03 Keynote
- *   guided   → 04 Workshop
- * `verb` feeds the bottom readout strip; `name`/`tagline`/`body`/`meta` feed
- * the mobile card stack. Ids/index/order/phase are unchanged so every spatial
- * map stays valid. */
+ *
+ * HARMONIZED 2026-08-02 (owner copy, verbatim). Every card now leads with
+ * ONE OUTCOME STATEMENT — a noun phrase naming what the buyer walks away
+ * with — and the four progress deliberately: shared frame → working setup →
+ * internal capability → portfolio direction. The occupancy moved WITH that
+ * progression, so the id → service mapping is now:
+ *   keynote      → 01 Keynote
+ *   workshop     → 02 Workshop
+ *   embedded     → 03 Embedded AI Partner
+ *   guided-build → 04 Strategic Advisory
+ * Three of four slot ids re-aligned with their own content in the move
+ * (2026-07-09 had rotated them apart); `guided-build` hosting Advisory is
+ * the one remaining misnomer — the id is a spatial key, do not rename it
+ * (rack position, anchor pick, designation set and scan note all hang off
+ * it). Spatial params everywhere stay slot-tuned; labels travel with the
+ * service. The Advisory body carries the owner's em dash verbatim — the
+ * 2026-07-16 "no em dashes" sweep is superseded where the owner writes one. */
 /** Section masthead copy (2026-07-16, promoted from /test/services-wordmark —
  * ADR-044). SECTION-level register copy ONLY — the title/intro for #services as
  * a whole, never per-card (ADR-029: card copy stays baked on the WebGL faces).
@@ -104,8 +111,10 @@ export const SERVICES_MASTHEAD = {
     { text: "AI CAPABILITY", em: false },
     { text: "YOUR TEAM OWNS.", em: true },
   ],
+  // Owner copy, 2026-08-02 (harmonization pass): two sentences, no dash —
+  // the second sentence is the section's whole claim, kept as its own beat.
   intro:
-    "From one session to an embedded term, we work on real decisions and workflows—so your team owns what comes next.",
+    "From a keynote to an embedded engagement, the work stays grounded in real decisions and workflows. What gets built stays with the people who own the work.",
   /**
    * M2 "survey plate" chrome (design handoff "Band Masthead — M2", 2026-07-21).
    * The title + brief read as two surveyed panels of the instrument, each
@@ -127,47 +136,11 @@ export const SERVICES: readonly Service[] = [
   {
     id: "keynote",
     index: "01",
-    verb: "ADVISORY",
-    name: "Strategic Advisory",
-    kicker: "KNOW WHERE TO INVEST IN AI",
-    tagline: "Know where to invest in AI.",
-    body: "A monthly read for the people making the AI calls: where to invest, what to skip, what to build. Tested against real work.",
-    meta: [
-      { label: "Runs", value: "Monthly cadence" },
-      { label: "Format", value: "Strategic memos · NL/EN" },
-      { label: "Leaves", value: "Sharper AI calls" },
-    ],
-    phase: "navigate",
-    ctaLabel: "Open an advisory",
-    ctaHref: "#contact",
-    shapeKey: "loop-forming",
-  },
-  {
-    id: "workshop",
-    index: "02",
-    verb: "EMBEDDED",
-    name: "Embedded AI Partner",
-    kicker: "WE BUILD INSIDE YOUR TEAMS",
-    tagline: "We build inside your teams.",
-    body: "We run strategy and build with your teams on a fixed term. You keep the tools, the judgment, and the people who can run them.",
-    meta: [
-      { label: "Runs", value: "Fixed term" },
-      { label: "Format", value: "Dated handover" },
-      { label: "Leaves", value: "An owned layer" },
-    ],
-    phase: "all",
-    ctaLabel: "Scope an engagement",
-    ctaHref: "#contact",
-    shapeKey: "loop-crystallized",
-  },
-  {
-    id: "embedded",
-    index: "03",
     verb: "KEYNOTE",
     name: "Keynote",
-    kicker: "CHANGE HOW YOUR ROOM SEES AI",
-    tagline: "Change how your room sees AI.",
-    body: "Built for your industry, run on live demos. The room leaves with shared language and a clear next step.",
+    kicker: "A SHARED FRAME FOR AI",
+    tagline: "A shared frame for AI.",
+    body: "A grounded argument for treating AI as intelligence rather than software, and for designing its role in work accordingly.",
     meta: [
       { label: "Runs", value: "Navigate" },
       { label: "Format", value: "30–90 min · NL/EN" },
@@ -179,13 +152,13 @@ export const SERVICES: readonly Service[] = [
     shapeKey: "loop-forming",
   },
   {
-    id: "guided-build",
-    index: "04",
+    id: "workshop",
+    index: "02",
     verb: "WORKSHOP",
     name: "Workshop",
-    kicker: "YOUR TEAM BUILDS ITS FIRST AI TOOLS",
-    tagline: "Your team builds its first AI tools.",
-    body: "A hands-on session on your team's real work. They leave with the first patterns encoded and a build list.",
+    kicker: "A FIRST WORKING AI SETUP",
+    tagline: "A first working AI setup.",
+    body: "A hands-on session around one real workflow, producing an encoded practice, a working first setup and a clear build path.",
     meta: [
       { label: "Runs", value: "Navigate · Encode" },
       { label: "Format", value: "Half-day to multi-day" },
@@ -196,5 +169,41 @@ export const SERVICES: readonly Service[] = [
     ctaHref: "#contact",
     lead: true,
     shapeKey: "loop-encoding",
+  },
+  {
+    id: "embedded",
+    index: "03",
+    verb: "EMBEDDED",
+    name: "Embedded AI Partner",
+    kicker: "AN AI CAPABILITY THE TEAM CAN RUN",
+    tagline: "An AI capability the team can run.",
+    body: "A sustained engagement inside the team, turning domain judgment into reusable Skills, tools and tested systems the team can continue to operate and improve.",
+    meta: [
+      { label: "Runs", value: "Fixed term" },
+      { label: "Format", value: "Dated handover" },
+      { label: "Leaves", value: "An owned layer" },
+    ],
+    phase: "all",
+    ctaLabel: "Scope an engagement",
+    ctaHref: "#contact",
+    shapeKey: "loop-crystallized",
+  },
+  {
+    id: "guided-build",
+    index: "04",
+    verb: "ADVISORY",
+    name: "Strategic Advisory",
+    kicker: "A LIVE MAP OF WHERE AI BELONGS",
+    tagline: "A live map of where AI belongs.",
+    body: "A recurring portfolio read across workflows, cost, evidence and ownership—showing what to build, what to change and what should remain person-led.",
+    meta: [
+      { label: "Runs", value: "Monthly cadence" },
+      { label: "Format", value: "Strategic memos · NL/EN" },
+      { label: "Leaves", value: "Sharper AI calls" },
+    ],
+    phase: "navigate",
+    ctaLabel: "Open an advisory",
+    ctaHref: "#contact",
+    shapeKey: "loop-forming",
   },
 ];

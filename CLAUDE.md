@@ -118,6 +118,7 @@ Skills live in [`.claude/skills/`](.claude/skills/) and load on demand — don't
 - **brandmark-choreography** — the scroll-driven brandmark journey (continuous transform model, ADR-013).
 - **brandmark-particle** — the brandmark particle painters (atmosphere / silhouette / substrate-sphere).
 - **thoughtform-design** — Thoughtform-specific design overrides (tokens, shape law, HUD grammar).
+- **theme-parity** — both-themes discipline (ADR-058): every new element ships styled AND verified in dark + light; DOM alpha lifts, WebGL palette pairs, per-theme assets, the verify recipe.
 
 ## Conventions
 

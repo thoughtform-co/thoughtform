@@ -1093,76 +1093,140 @@
   border: 1px solid rgba(var(--gold-rgb), 0.3);
 }
 
-/* ── The WEIGHTED registry (2026-08-02, ADR-056 U12) ───────────────────────
-   When the groups carry counts, the gloss line is replaced by the group's
-   WEIGHT — how many Skills sit on that shape, how far it spreads, and two
-   of them by name. The plate stops being a taxonomy and becomes a map with
-   a scale, which is the whole claim of the row it leads.
+/* ── The SKILLS BROWSER (2026-08-02, ADR-056 U13) ──────────────────────────
+   The Intelligence Map plate as a browsable portfolio: engine tabs carrying
+   the per-shape counts (where the U12 weighted overview lives on), the
+   selected engine's skills as clickable chips, and one provenance line for
+   the selected skill. Supersedes the U12 weighted-bar render, which lived
+   for a single pass — its counts moved onto the tabs.
 
-   The gloss is not deleted, it goes `visually-hidden` (absolutely
-   positioned, so it leaves the grid entirely and cannot shift a row). */
-.fl-plate--registry[data-weighted] .fl-reg__groups {
-  gap: clamp(5px, 0.8svh, 9px) 0;
-}
-/* The weight line takes the gloss's column. Explicit placement rather than
-   auto, so the visually-hidden gloss beside it can never claim the slot. */
-.fl-plate--registry[data-weighted] .fl-reg__name {
-  grid-column: 1;
-}
-.fl-reg__weight {
-  grid-column: 2;
-}
-.fl-reg__weight {
-  margin: 0;
+   ⚠ FOURTH pointer-events opt-in on the casefile host (rules/proof.md) —
+   safe only because the host is `visibility: hidden` until
+   `data-proof-live`; these buttons sit at z 6 over the ring's hit anchors
+   at z 4 and would otherwise swallow card clicks after the handoff. */
+.fl-skills {
+  pointer-events: auto;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+  flex-direction: column;
+  min-height: 0;
 }
-/* CONTENT — the figure is what the plate is now claiming, and the four of
-   them sum to the count the foot prints. Tabular so the column of numbers
-   lines up against the bars beside it. */
-.fl-reg__count {
-  flex: none;
-  min-width: 2.2ch;
-  font-family: var(--fl-mono);
-  font-size: 12.5px;
-  font-weight: 700;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  color: var(--dawn);
+.fl-skills__tabs {
+  display: flex;
+  gap: 4px;
+  padding-bottom: clamp(7px, 1svh, 11px);
+  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.14);
 }
-/* Scaled against the LARGEST group, not the total: at total-scale the
-   5-Skill shape draws a 3px stub that reads as "empty" rather than "small".
-   `--w` is the only inline value — the paint stays in the sheet. */
-.fl-reg__bar {
-  flex: 1;
-  min-width: 32px;
-  max-width: 132px;
-  position: relative;
-  height: 3px;
-  background: rgba(var(--dawn-rgb), 0.1);
-}
-.fl-reg__bar::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--w, 0) * 100%);
-  background: rgba(var(--gold-rgb), 0.5);
-}
-/* CHROME — it labels the spread, it is not the spread. */
-.fl-reg__teams {
-  flex: none;
+.fl-skills__tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 7px;
+  cursor: pointer;
   font-family: var(--fl-mono);
   font-size: 8.5px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.35);
+  color: rgba(var(--dawn-rgb), 0.45);
 }
-/* ⚠ ONE LINE PER GROUP IS THE WHOLE BUDGET. A second line naming two Skills
-   per shape was built and measured out: it clipped the plate 59px at
-   1440×820 and 39px at 1600×900, i.e. it only fitted above ~970h. Anything
-   added here pushes the exemplar rows out, and those carry the `Human` tag. */
+.fl-skills__tab[data-on] {
+  color: var(--gold);
+  background: rgba(var(--gold-rgb), 0.08);
+}
+.fl-skills__tab:focus-visible {
+  outline: 1px solid rgba(var(--gold-rgb), 0.5);
+  outline-offset: 1px;
+}
+/* The COUNT is content — the figure the foot's 47+ decomposes into. */
+.fl-skills__tab-count {
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--dawn);
+}
+.fl-skills__tab[data-on] .fl-skills__tab-count {
+  color: var(--gold);
+}
+.fl-skills__gloss {
+  margin: clamp(6px, 0.9svh, 10px) 0 0;
+  font-size: calc(var(--fl-copy) * 0.88);
+  line-height: 1.35;
+  color: rgba(var(--dawn-rgb), 0.5);
+}
+/* The cloud takes the plate's remaining height and CANNOT overflow it —
+   `overflow: hidden` is the same silent-clip contract every casefile box
+   carries, and the max engine (Pattern, 14 chips) is the measured worst
+   case. Chips wrap; a chip itself never does. */
+.fl-skills__cloud {
+  list-style: none;
+  margin: clamp(8px, 1.2svh, 12px) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 0;
+  overflow: hidden;
+  align-content: flex-start;
+}
+.fl-skills__chip {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 3px 8px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.18);
+  font-family: var(--fl-mono);
+  /* CONTENT — named Skills at the directory reading size, never below. */
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.62);
+  white-space: nowrap;
+}
+.fl-skills__chip:hover {
+  border-color: rgba(var(--gold-rgb), 0.4);
+  color: rgba(var(--dawn-rgb), 0.85);
+}
+.fl-skills__chip[data-on] {
+  border-color: rgba(var(--gold-rgb), 0.55);
+  background: rgba(var(--gold-rgb), 0.1);
+  color: var(--gold);
+}
+.fl-skills__chip:focus-visible {
+  outline: 1px solid rgba(var(--gold-rgb), 0.5);
+  outline-offset: 1px;
+}
+/* The readout pins to the plate FOOT (margin-top auto) so the provenance
+   line sits in the same optical slot every plate kind reserves. */
+.fl-skills__readout {
+  margin: auto 0 0;
+  padding-top: clamp(7px, 1svh, 11px);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  border-top: 1px dotted rgba(var(--gold-rgb), 0.14);
+  font-family: var(--fl-mono);
+  text-transform: uppercase;
+}
+.fl-skills__readout-team {
+  flex: none;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+.fl-skills__readout-ld {
+  flex: 1;
+  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.25);
+  transform: translateY(-3px);
+}
+.fl-skills__readout-status {
+  flex: none;
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  color: rgba(var(--gold-rgb), 0.8);
+}
 
 /* ── Tool gallery ─────────────────────────────────────────────────────── */
 
@@ -1599,10 +1663,12 @@
   }
 }
 
-/* ── The blocks foot's own rungs ───────────────────────────────────────────
+/* ── The blocks foot's own rungs, and the skills browser's ─────────────────
    The figure steps down on the same ladder the capability descriptions
-   already use. Everything here is scoped to a class that exists only on a
-   blocks foot, so the tool gallery's deliberate 2-lines-at-800 is untouched. */
+   already use. Everything here is scoped to classes that exist only on a
+   blocks foot / the browser plate, so the tool gallery's deliberate
+   2-lines-at-800 is untouched. The browser degrades by PADDING and the
+   gloss caption, never by chip type (the 10.5px reading floor). */
 @media (max-height: 930px) {
   .fl-caps--blocks {
     --fl-stat: 19px;
@@ -1613,6 +1679,17 @@
     --fl-stat: 17px;
     --fl-stat-gap: 2px;
     gap: 6px 0;
+  }
+  .fl-skills__chip {
+    padding: 2px 6px;
+  }
+  .fl-skills__cloud {
+    gap: 4px;
+  }
+}
+@media (max-height: 760px) {
+  .fl-skills__gloss {
+    display: none;
   }
 }
 @media (max-height: 760px) {

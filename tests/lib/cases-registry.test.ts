@@ -271,9 +271,9 @@ describe("cases registry (ADR-054)", () => {
         if (v.kind === "registry") {
           expect(v.rows.length).toBeGreaterThan(0);
           expect(v.groups.length).toBeGreaterThan(0);
-          // WEIGHTS ARE ALL-OR-NONE (ADR-056 U12). The renderer branches per
-          // group, so a half-weighted plate would draw some groups as bars
-          // and some as glosses — two designs in one box.
+          // WEIGHTS ARE ALL-OR-NONE (ADR-056 U12). The tabs print every
+          // group's count, so a half-weighted plate would render some tabs
+          // with figures and some without — two designs in one strip.
           const weighted = v.groups.filter((g) => g.count).length;
           expect(
             weighted === 0 || weighted === v.groups.length,
@@ -281,10 +281,45 @@ describe("cases registry (ADR-054)", () => {
           ).toBe(true);
           for (const g of v.groups) {
             if (!g.count) continue;
-            // Digits only: the bar's width is `Number(count)`, so "12+" would
-            // print a figure the bar cannot honour.
+            // Digits only: the browser counts chips against `Number(count)`.
             expect(g.count, `${c.slug}/${t.id} group "${g.name}" count`).toMatch(/^\d+$/);
             expect(g.teams?.length, `${c.slug}/${t.id} group "${g.name}" teams`).toBeGreaterThan(0);
+          }
+          // THE PORTFOLIO IS THE COUNTS, ENUMERATED (ADR-056 U13). Every
+          // skill files under a real group, and every group's printed count
+          // equals its chip-list length — the browser makes the figures
+          // countable by eye, so drift here is a visible contradiction.
+          if (v.skills?.length) {
+            const groupNames = new Set(v.groups.map((g) => g.name));
+            const STATUSES = new Set(["In use", "Shipped", "In build", "Scoped"]);
+            for (const s of v.skills) {
+              expect(
+                groupNames.has(s.engine),
+                `${c.slug}/${t.id} skill "${s.name}" engine "${s.engine}"`
+              ).toBe(true);
+              // Chips render nowrap at the 10.5px reading size against the
+              // plate's inner width; 30ch is the measured ceiling.
+              expect(s.name.length, `${c.slug}/${t.id} skill "${s.name}"`).toBeLessThanOrEqual(30);
+              expect(s.team.length, `${c.slug}/${t.id} skill "${s.name}" team`).toBeGreaterThan(0);
+              expect(
+                STATUSES.has(s.status),
+                `${c.slug}/${t.id} skill "${s.name}" status "${s.status}"`
+              ).toBe(true);
+              // The source data carries per-skill client OWNERS; those must
+              // never travel ("Toby + Maud" is the shape to catch).
+              expect(
+                /\s\+\s/.test(s.name) || /\s\+\s/.test(s.team),
+                `${c.slug}/${t.id} skill "${s.name}" smells like an owner pair`
+              ).toBe(false);
+            }
+            for (const g of v.groups) {
+              if (!g.count) continue;
+              const chips = v.skills.filter((s) => s.engine === g.name).length;
+              expect(
+                chips,
+                `${c.slug}/${t.id} group "${g.name}" prints ${g.count} but lists ${chips}`
+              ).toBe(Number(g.count));
+            }
           }
         }
         if (v.kind === "signal") expect(v.points.length).toBeGreaterThan(1);
@@ -348,13 +383,17 @@ describe("cases registry (ADR-054)", () => {
     //     last row carrying a plate turned the guard into a no-op that still
     //     reported green. The beat is the source of truth, so its plate now
     //     ASSERTS that a casefile row shares it.
+    //
+    // The LOG branch is conditional since the 2026-08-02 directory trim
+    // (ADR-056 U13): the rollout row left the casefile, so the beat is the
+    // log's ONLY renderer and there is no second surface to hold in sync.
+    // If a log row ever returns, it must share the beat's rows — that half
+    // still asserts. The REGISTRY branch stays unconditional: row one is
+    // the default panel and the beat's mirror by design.
     for (const c of CASES) {
       const beatLog = c.beats.find((b) => b.visual.kind === "log")?.visual;
       if (beatLog?.kind === "log") {
         const trackLog = c.casefile.tracks.find((t) => t.visual.kind === "log")?.visual;
-        expect(trackLog?.kind, `${c.slug}: no casefile row shares the beat's log plate`).toBe(
-          "log"
-        );
         if (trackLog?.kind === "log") expect(trackLog.rows).toBe(beatLog.rows);
       }
       const beatReg = c.beats.find((b) => b.visual.kind === "registry")?.visual;

@@ -110,6 +110,33 @@ export interface CaseRegistryRow {
   tag?: string;
 }
 
+/**
+ * One Skill in the casefile's browsable portfolio (ADR-056 U13) — the
+ * minimal public record: what it is called, whose work it encodes, which
+ * of the five shapes it belongs to, and how far along it is.
+ *
+ * `engine` is the EXACT `CaseRegistryGroup.name` it files under — the
+ * browser groups by matching the strings, and the registry test pins
+ * that every skill's engine names a real group AND that each group's
+ * printed `count` equals its skill-list length. That closes the loop the
+ * weighted plate opened: the count, the bar-…-turned-tab and the chips a
+ * reader can count are one dataset or the test is red.
+ *
+ * Confidentiality: NO owner field, deliberately — the source data carries
+ * per-skill owners ("Toby + Maud") and those are client staff. Team and
+ * status only.
+ */
+export interface CaseSkillEntry {
+  /** Display name, ≤30 chars (chips render at the 10.5px reading size). */
+  name: string;
+  /** The client team whose judgment it encodes. */
+  team: string;
+  /** Which shape of work runs it — must equal a group's `name`. */
+  engine: string;
+  /** Exec-honest lifecycle: "In use" | "Shipped" | "In build" | "Scoped". */
+  status: string;
+}
+
 /** A beat's evidence plate. Discriminated like `ArcSection` (ADR-052). */
 export type CaseVisual =
   | { kind: "image"; image: CaseImage; caption?: string }
@@ -238,6 +265,15 @@ export type CaseTrackVisual =
       kind: "registry";
       groups: readonly CaseRegistryGroup[];
       rows: readonly CaseRegistryRow[];
+      /**
+       * The browsable portfolio (ADR-056 U13). TRACK-SIDE ONLY — the beat's
+       * registry stays name + gloss + exemplar rows, so this field does not
+       * exist on `CaseVisual`. When present the casefile plate renders the
+       * skills browser (engine tabs + chips + a provenance line) INSTEAD of
+       * the exemplar rows; `rows` stays in the data because the beat still
+       * renders it and the plate-sharing guard still asserts it shared.
+       */
+      skills?: readonly CaseSkillEntry[];
       footer?: string;
     }
   /** References production tools BY ID — `PROJECT_CASES` stays canonical. */

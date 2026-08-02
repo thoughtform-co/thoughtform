@@ -92,8 +92,15 @@
    * owns the whole dwell and the dwell is less than half as long. Changing
    * it is safe by construction (the split re-derives the ring's domain), but
    * this and SERVICES_PROOF_RUNWAY_VH must move together, and THIS is the one
-   * that has to exist pre-hydration. */
-  --svc-proof-runway: 120svh;
+   * that has to exist pre-hydration.
+   *
+   * 2026-08-02: 120 → 320svh (owner — scroll browses the directory rows
+   * before the handoff). The FRONT 62.5 % (200svh, SERVICES_PROOF_BROWSE_FRAC)
+   * is the browse band — a half-viewport of scroll per row; the BACK 37.5 %
+   * (120svh) is the 07-29 release, byte-identical in pixels because every
+   * release threshold rides a re-derived sub-ramp. Not a return of the dead
+   * scroll the 07-29 note bans: each browse quarter swaps the panel. */
+  --svc-proof-runway: 320svh;
   min-height: calc(var(--svc-proof-runway) + 500svh);
 }
 

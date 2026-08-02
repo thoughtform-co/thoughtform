@@ -10,7 +10,7 @@ import {
 import { clamp01 } from "@/lib/math";
 import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
-import { SERVICES_PROOF_RUNWAY_VH } from "../unifiedServicesInstrument";
+import { SERVICES_PROOF_BROWSE_FRAC, SERVICES_PROOF_RUNWAY_VH } from "../unifiedServicesInstrument";
 
 /** The pinned stage: the ring holds Advisory front through a short arrival
  *  while the corridor→services dissipate settles, then the first scroll
@@ -131,15 +131,25 @@ const PROOF_OUT_END = 0.66;
 const PROOF_RELEASE_START = 0.0;
 const PROOF_RELEASE_END = 1.0;
 
+/* ── The browse band (2026-08-02, ADR-056 U13) ──────────────────────────
+   The front `SERVICES_PROOF_BROWSE_FRAC` of the dwell steps the directory
+   through its rows; everything above (the fold, the release, the settled
+   gate's intent) rides `releaseP`, proofP RE-DERIVED over the back stretch
+   — which is what keeps every threshold in this block meaning exactly what
+   it meant on the 1.2-viewport dwell. The browse value itself is published
+   as `--svc-proof-browse` on the casefile host; the casefile's own style
+   observer derives the active row from it (with hysteresis, over there —
+   the hook stays row-agnostic; it does not know what a track is). */
+
 /** Where the casefile counts as SETTLED — published as `data-proof-settled`
  *  on the stage, and the only gate for effects too expensive to run while
  *  the arrival ladder is still travelling (today: the plate's
  *  `backdrop-filter`). Measured, `--svc-proof-in` is 0.944 at the runway top
- *  and 0.998 eighty pixels in, so ~0.06 of a 1.2-viewport dwell clears the
- *  travel with margin while still landing inside `smootherstep`'s flat first
- *  third — the settle hold, where nothing else is moving and switching a
- *  backdrop on cannot read as a jump. */
-const PROOF_SETTLED_AT = 0.06;
+ *  and 0.998 eighty pixels in — the intent is "~80px into the dwell", so
+ *  the fraction moved with the runway (0.06 of 1.2vh → 0.025 of 3.2vh,
+ *  both ≈80px at a 900px viewport). Still far inside the browse band's
+ *  first row, where nothing else is moving. */
+const PROOF_SETTLED_AT = 0.025;
 
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local
 // `smoothstep`/`smootherstep` below keep their own implementations because
@@ -268,13 +278,20 @@ export function useServicesStageScroll(
     // spec key off it there. Null host (flag off ⇒ casefile unmounted) is
     // fine: nothing consumes the channels then.
     let proofHostEl: HTMLElement | null = null;
+    let currentProofBrowse = -1;
     const proofHost = (stage: HTMLElement): HTMLElement | null => {
       if (!proofHostEl || !proofHostEl.isConnected) {
         proofHostEl = stage.querySelector<HTMLElement>(".fl-case");
       }
       return proofHostEl;
     };
-    const setProof = (stage: HTMLElement, inV: number, outV: number, settled = false) => {
+    const setProof = (
+      stage: HTMLElement,
+      inV: number,
+      outV: number,
+      settled = false,
+      browse = 1
+    ) => {
       const host = proofHost(stage);
       if (host) {
         if (Math.abs(inV - currentProofIn) >= WRITE_EPS) {
@@ -284,6 +301,13 @@ export function useServicesStageScroll(
         if (Math.abs(outV - currentProofOut) >= WRITE_EPS) {
           host.style.setProperty("--svc-proof-out", outV.toFixed(4));
           currentProofOut = outV;
+        }
+        // The browse channel (ADR-056 U13). Same host, same observer, same
+        // deadband — the casefile's row scrollspy is one more reader of the
+        // style mutations it already watches, not a new listener.
+        if (Math.abs(browse - currentProofBrowse) >= WRITE_EPS) {
+          host.style.setProperty("--svc-proof-browse", browse.toFixed(4));
+          currentProofBrowse = browse;
         }
       }
       // HIT-TESTING GATE. Opacity 0 does NOT remove an element from the hit
@@ -377,11 +401,21 @@ export function useServicesStageScroll(
       // pre-casefile 500svh. `proofP` is 1 immediately when the flag is off.
       const { proofP, ringP } = splitServicesRunway(-r.top, travel, SERVICES_PROOF_RUNWAY_VH * vh);
 
+      // The browse/release split (ADR-056 U13). `browseP` steps the
+      // directory; `releaseP` is proofP re-derived over the back stretch so
+      // every threshold below rides exactly the ramp it was tuned on. Flag
+      // off ⇒ proofP is 1 ⇒ both saturate ⇒ unchanged.
+      const browseP =
+        SERVICES_PROOF_BROWSE_FRAC > 0 ? clamp01(proofP / SERVICES_PROOF_BROWSE_FRAC) : 1;
+      const releaseP = clamp01(
+        (proofP - SERVICES_PROOF_BROWSE_FRAC) / (1 - SERVICES_PROOF_BROWSE_FRAC)
+      );
+
       // Casefile arrival — the mark's centering clock, so the panels travel
       // in WITH it (see the constants block for the owner's supersession).
       const proofIn = smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate);
-      const proofOut = smootherstep(PROOF_OUT_START, PROOF_OUT_END, proofP);
-      setProof(stage, proofIn, proofOut, proofP > PROOF_SETTLED_AT);
+      const proofOut = smootherstep(PROOF_OUT_START, PROOF_OUT_END, releaseP);
+      setProof(stage, proofIn, proofOut, proofP > PROOF_SETTLED_AT, browseP);
       // What the casefile is actually painting — the mark and its haze dim
       // against THIS, not against the release, so the instrument recedes as
       // the surface arrives rather than the moment the stage parks.
@@ -391,8 +425,8 @@ export function useServicesStageScroll(
       // Multiplying it into `--svc-content-in` delays the masthead (and its
       // decode controller), the plate cluster, the designation layer, the
       // orbit draw-on and the scan interface together — no new consumer, no
-      // new listener. Flag off ⇒ proofP is 1 ⇒ release is 1 ⇒ unchanged.
-      const proofRelease = smootherstep(PROOF_RELEASE_START, PROOF_RELEASE_END, proofP);
+      // new listener. Flag off ⇒ releaseP is 1 ⇒ release is 1 ⇒ unchanged.
+      const proofRelease = smootherstep(PROOF_RELEASE_START, PROOF_RELEASE_END, releaseP);
       servicesRingProgressRef.current.proofRelease = proofRelease;
 
       // Services copy entrance — delayed + smootherstep so the list +

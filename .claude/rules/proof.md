@@ -33,16 +33,23 @@ inherited its ambient-cover role.
   safe by construction, but `SERVICES_PROOF_RUNWAY_VH` and
   `--svc-proof-runway` must move together; the CSS is the one that has to
   exist pre-hydration.
-- **The DWELL IS THE HANDOFF — it is not a reading window.**
-  `PROOF_RELEASE` [0, 1] with `PROOF_OUT` 0.13 → 0.66 inside it, on a
-  1.2-vh dwell. `--svc-proof-in` is 0.94 AT the runway top and 0.998 80px
-  past it (the panels assemble on the DISSIPATE, during the approach), so
-  any runway ahead of the release is DEAD SCROLL — the 2.8-vh/0.62-start
-  tuning hid 1550px of it and the owner called it: "if you scroll, nothing
-  really happens". The stage is pinned; a reader who wants to read stops
+- **The dwell is BROWSE then HANDOFF (ADR-056 U13).** The 3.2-vh dwell
+  splits at `SERVICES_PROOF_BROWSE_FRAC` (0.625): the front 2.0 viewports
+  are the BROWSE BAND — scroll IS the row selector, one quarter per
+  directory row, published as `--svc-proof-browse` on the casefile host
+  and consumed by the casefile's own style observer (hysteresis 0.04; the
+  spy freezes once `--svc-proof-out` > 0.02). A row CLICK PINS THE SCROLL
+  to its band's centre — that contract is what stops the spy overriding
+  the click one frame later; never remove one side of it without the
+  other. The back 1.2 viewports are the 07-29 handoff, byte-identical in
+  pixels: `PROOF_RELEASE` [0, 1] with `PROOF_OUT` 0.13 → 0.66 ride
+  `releaseP`, proofP RE-DERIVED past the browse fraction. The round-3
+  dead-scroll ruling still binds — the browse band is legal because every
+  quarter changes the panel; browse runway beyond the rows' needs is the
+  dead scroll coming back. `--svc-proof-in` is 0.94 AT the runway top and
+  0.998 80px past it (the panels assemble on the DISSIPATE, during the
+  approach). The stage is pinned; a reader who wants to read stops
   scrolling. Scroll distance buys choreography, never patience.
-  `smootherstep`'s flat first third is the settle hold (~200px to the
-  fold), so never add an explicit hold in front of the release.
 - **Place the fold BY VALUE ON THE RELEASE RAMP, never by eye.** 0.13 and
   0.66 are where the release reads ≈0.016 and ≈0.78 — the crossings the
   choreography was validated at. Two derived thresholds ride that ramp and
@@ -52,7 +59,8 @@ inherited its ambient-cover role.
   decode once the casefile's top-band chrome has sunk — it shares the
   masthead's band and leaves LAST on the LIFO ladder). Overlapping edges
   prove nothing on their own: sample the crossing, where the casefile
-  reads ≈0.43 against `--svc-content-in` ≈0.52 (proofP 0.52). The smoke
+  reads ≈0.43 against `--svc-content-in` ≈0.52 (releaseP 0.52 — total
+  runway 0.82 since U13's split; the smoke converts). The smoke
   spec pins exactly that. The masthead's `REARM_BELOW` is the REVERSE of
   the same reading and stays DERIVED (`REVEAL_AT − REARM_HYSTERESIS`,
   ADR-056 U3): the stage never unparks inside the dwell, so this floor —
@@ -66,8 +74,9 @@ inherited its ambient-cover role.
   `CorridorArmillary`) so the cards ARRIVE MOVING on their ADR-029 fly-in —
   never as a master-opacity crossfade. Do not add a second gate — add a
   factor to one of these.
-- **The host is `pointer-events: none`.** Only the tabs and the directory
-  rows opt back in. `.svc-ring-hits__hit` is at z 4 and the casefile at z 6,
+- **The host is `pointer-events: none`.** Exactly FOUR opt-ins: the tabs,
+  the directory rows, `.fl-film` and `.fl-skills` (the U13 browser).
+  `.svc-ring-hits__hit` is at z 4 and the casefile at z 6,
   so an `auto` host silently swallows every card click once the ring lands.
 - **The band offset is `--instrument-inset` ALONE** (ADR-048 addendum,
   owner 2026-07-29 — the casefile sits on the INSTRUMENT band, the 1440px
@@ -121,7 +130,7 @@ inherited its ambient-cover role.
   rung does. Never take the type back below the floor.
 - **A track can carry its OWN brief (`CaseTrack.brief`, U11).** Optional, with
   `track.brief ?? file.brief` in the renderer; the casefile-level brief has to
-  serve all eight rows, so it can only ever describe the engagement. ⚠ Do NOT
+  serve all four rows, so it can only ever describe the engagement. ⚠ Do NOT
   make `classLine` per-track the same way: it is a `data-fl-text` decode
   target and the decode caches its nodes once per CLIENT (dep `[def.slug]`),
   so a track-reactive target goes stale on the first row switch. `brief` is
@@ -175,7 +184,8 @@ inherited its ambient-cover role.
   budget) and NO `poster` attribute on it (measured: re-fetches the raw JPEG
   the optimizer already served). A `MutationObserver` on `data-proof-live`
   tears the element down as the plane folds — never poll `--svc-proof-out` in
-  rAF. `.fl-film` is the THIRD and LAST pointer-events opt-in, safe only
+  rAF. `.fl-film` is the THIRD pointer-events opt-in and `.fl-skills` (the
+  U13 browser plate) the FOURTH AND LAST, both safe only
   because the host is `visibility: hidden` until `data-proof-live`. CSP is
   `media-src 'self' blob:`, so video can never move to a bucket.
 - **`data-proof-live` and `data-proof-settled` are DIFFERENT gates — never
@@ -208,12 +218,17 @@ inherited its ambient-cover role.
   mounts with the casefile, so a media row there puts its bytes on page load
   — that cost 23.6 kB while the studio led and a pure-DOM plate gives it
   back — and row one is what every reader judges the case on.
-- **The directory holds EIGHT rows and no more without a tick move.** The
-  brief/directory seam is `--fl-t6` (moved from t7 when the eighth row
-  landed — it was already clipping `METRICS.DAT` by 14px at 1440×800 with
-  seven). Adding a ninth means moving a tick and trimming the brief again,
-  both sides together. Measure at 1280×720 / 1440×800 / 1920×1080; the
-  10.5px row type is owner-set — take density out of padding, never type.
+- **The directory holds FOUR rows (owner, 2026-08-02) — the projects,
+  one browse-band quarter each.** The rollout/governance/metrics/report
+  rows were trimmed in U13; where each one's content still lives is
+  documented at the trim site in `loop-earplugs.ts`, so nothing gets
+  restored from muscle memory. The brief/directory seam stays `--fl-t6`
+  (the four rows leave air, which is fine; clipping was the eight-row
+  problem). ⚠ Adding a row now also RESHAPES THE BROWSE BAND — the spy
+  divides it per row, so a fifth row changes every band edge and the
+  smoke's band-fraction targets. Measure at 1280×720 / 1440×800 /
+  1920×1080; the 10.5px row type is owner-set — take density out of
+  padding, never type.
 - **A track's foot is `readouts` OR `blocks`, never both (ADR-056 U12).**
   `blocks` is the 2×2 achievement grid — four `{ stat?, title, desc }` tiles
   reusing the tool gallery's `.fl-caps` / `.fl-cap` grammar, so the responsive
@@ -226,15 +241,22 @@ inherited its ambient-cover role.
   context register and the provenance line — three-line tiles plus both
   overrun the band. It keeps BOTH description lines at 720p, unlike the tools
   foot, because a block's sentence is the only place its claim is explained.
-- **The registry plate can be WEIGHTED, on ONE line per group.** `count` +
-  `teams` on `CaseRegistryGroup` turn the taxonomy into a map with a scale;
-  the bar scales against the LARGEST group (total-scale drew the 5-Skill shape
-  as a 3px stub) and only `--w` is inline. The gloss goes `visually-hidden`
-  rather than away — it is the definition of the term beside it. ⚠ A SECOND
-  line per group is not available: two named Skills per shape clipped the
-  plate 59px at 1440×820 and 39px at 1600×900, i.e. it fitted only above
-  ~970h. The three exemplar rows win every budget conflict here; they carry
-  the `Human` tag.
+- **The registry plate is the SKILLS BROWSER when the track carries a
+  portfolio (ADR-056 U13).** `skills` on the TRACK registry visual (never
+  the beat's) renders `SkillsBrowserPlate`: engine tabs carrying the
+  `count`s (where the U12 weighted overview lives on — the bars lived one
+  pass), clickable chips for the selected engine, one provenance line
+  (team · status). Guards: every skill's `engine` names a real group,
+  every group's `count` equals its chip-list length, statuses come from
+  the four-word enum, names stay ≤30ch, and NO OWNER PAIRS ("Toby +
+  Maud" is the shape the test catches — per-skill owners never travel
+  from the source data). The exemplar `rows` stay in the data unrendered
+  (the beat draws them; the sharing guard asserts them shared). Fit is
+  measured at the worst engine (Pattern, 14 chips): zero overflow at
+  1280×720 with the gloss caption's ≤760h rung. ⚠ A per-group SECOND
+  LINE is still not available on the fallback plate: two named Skills
+  per shape clipped 59px at 1440×820 — the browser exists because that
+  did not fit.
 - **The beats and the casefile SHARE their plates.** Hoisted consts in the
   content module, asserted reference-equal by the registry test. Re-typing a
   plate inline is how the two surfaces drift.
@@ -249,7 +271,7 @@ inherited its ambient-cover role.
   **The foot was the worst of them and went unnoticed for four passes**
   (`GOVERNANCE.MD` cut its source line by 24px at 1280×720 and 17px at
   1440×800) because every measurement until U11 sampled ROW ONE ONLY — walk
-  ALL EIGHT, the plate kinds and foot shapes differ per row. There is a test
+  ALL FOUR, the plate kinds and foot shapes differ per row. There is a test
   now (see Verifying); it is the guard, not your eye. Budgets after the U11
   move: the brief takes 364 chars at 1280×720 and is PINNED at 330 by the
   registry test; the registry plate still takes FIVE groups plus THREE rows,
@@ -341,7 +363,7 @@ grammars; variant E is what ships) — but it is a STALE FORK on the pre-U11
 geometry, so never read its `--fl-t*` block as the contract. On the landing,
 the beat is covered by `tests/visual/services-ring-smoke.spec.ts` — the
 casefile holds, the rows work while pinned, no hit anchors publish during the
-dwell, the ring takes over after, and (U11) **no box clips on any of the eight
+dwell, the ring takes over after, and (U11) **no box clips on any of the four
 rows at 1440×800, with both section rules on a live rail tick**. That case
 sets its own viewport: the project default is 1440×900, which hides every
 clipping bug this surface has ever had. Drive REAL scrolls, never a teleport.

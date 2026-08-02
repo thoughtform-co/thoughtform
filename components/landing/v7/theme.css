@@ -306,19 +306,30 @@ html[data-theme="light"] .fl-tabs__tab {
   color: rgba(var(--dawn-rgb), 0.58);
 }
 html[data-theme="light"] .fl-plate__foot,
-html[data-theme="light"] .fl-reg__team,
-html[data-theme="light"] .fl-reg__teams {
+html[data-theme="light"] .fl-reg__team {
   color: rgba(var(--dawn-rgb), 0.6);
 }
-/* The weight bars. Same asymmetry as the gold labels below: the dark side
-   dims the fill to 0.5 because gold on near-black has contrast to spare,
-   and parchment does not — the fill runs at full and the track takes a
-   step up so an empty bar still reads as a bar. */
-html[data-theme="light"] .fl-reg__bar {
-  background: rgba(var(--dawn-rgb), 0.16);
+/* The skills browser (ADR-056 U13). Chips and the readout team are CONTENT
+   at the 10.5px reading size — content-grade lifts; the tab labels and the
+   status are chrome and take the chrome lift. Border alphas step up a
+   notch for the same reason every ink alpha here does: ink over parchment
+   gives most of its contrast away. */
+html[data-theme="light"] .fl-skills__tab {
+  color: rgba(var(--dawn-rgb), 0.58);
 }
-html[data-theme="light"] .fl-reg__bar::after {
-  background: var(--gold);
+html[data-theme="light"] .fl-skills__chip {
+  border-color: rgba(var(--dawn-rgb), 0.3);
+  color: rgba(var(--dawn-rgb), 0.78);
+}
+html[data-theme="light"] .fl-skills__readout-team {
+  color: rgba(var(--dawn-rgb), 0.8);
+}
+/* Gold wayfinding runs at full on parchment (the asymmetry documented
+   below): the active tab/chip and the status line have no headroom to
+   spare at 0.8. */
+html[data-theme="light"] .fl-skills__chip[data-on],
+html[data-theme="light"] .fl-skills__readout-status {
+  color: var(--gold);
 }
 html[data-theme="light"] .fl-tooltab__name {
   color: rgba(var(--dawn-rgb), 0.65);
@@ -448,4 +459,35 @@ html[data-theme="light"] .gateway__grain {
    mask stays untouched: `#000` there is an alpha channel, not paint. */
 html[data-theme="light"] body::before {
   background-image: radial-gradient(circle, rgba(17, 15, 9, 0.05) 1px, transparent 1.2px);
+}
+
+/* ── The bottom-left wordmark swaps ARTWORK, not color (owner, 2026-08-02).
+   The lockup ships as a Dual (gold #caa554 / dawn #ebe3d6) SVG whose cream
+   half dissolves into parchment — no ink lift can fix artwork, so light
+   mode swaps the file for the Dual-Latent Night cut (gold / ink #110f09).
+   Mechanics, deliberate:
+   · GATED ON `.is-collapsed` (the ADR-043 dock, 50vh): the hero stays a
+     dark artifact in light mode (ADR-058 §5), and the wordmark's HOME
+     position sits ON the hero — the Night cut's ink half vanishes over
+     near-black, so the swap waits until the mark docks onto the parchment
+     page. Each background reads on what is actually behind it.
+   · The <img> lives in the parse-injected prototype body, so the swap is
+     CSS-only — no markup churn, and the rail-manifest byte-exactness
+     rules never come near it.
+   · `visibility: hidden` (not display) keeps the img sizing the anchor,
+     so the ADR-043 dock/collapse transform geometry is untouched, and
+     the ::after inherits the box it needs.
+   · An `::after` background rather than `content: url()` on the img —
+     Firefox still does not replace <img> content, and a wordmark that
+     swaps in two browsers out of three is a new bug, not a fix.
+   · Dark loads one file; light loads both (the Night cut is 5.7 kB). */
+html[data-theme="light"] .hud__brand.is-collapsed img {
+  visibility: hidden;
+}
+html[data-theme="light"] .hud__brand.is-collapsed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual-Latent%20Night%29.svg")
+    center / contain no-repeat;
 }

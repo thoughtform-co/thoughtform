@@ -1,4 +1,4 @@
-import type { CaseDef, CaseSignalPoint } from "../types";
+import type { CaseDef, CaseSkillEntry } from "../types";
 
 /**
  * Loop Earplugs — the flagship case (ADR-054), rendered as the casefile at
@@ -167,6 +167,197 @@ const MAP_ROWS = [
 const TOOL_IDS = ["mimir", "vesper", "babylon", "heimdall"] as const;
 
 /**
+ * The browsable portfolio (ADR-056 U13, owner: "a minimalistic system à la
+ * aether /claude-adoption with an overview of the different skills where
+ * users can click on").
+ *
+ * READ FROM THE CLIENT'S OWN BOARD DATA, verbatim per skill: name, team,
+ * shape tag and lifecycle. 47 entries because 47 are tagged to a shape —
+ * the same derivation the counts on MAP_GROUPS carry, and the registry
+ * test asserts each group's `count` equals its skill-list length here, so
+ * the two can never drift apart.
+ *
+ * What deliberately does NOT come across from the source: per-skill OWNERS
+ * (client staff names), per-skill body copy (internal workflow detail),
+ * and the four untagged registry cards (the suppressed 51-card
+ * denominator — see NUMBERS at the top of this file).
+ */
+const LOOP_SKILLS: readonly CaseSkillEntry[] = [
+  // Judgment — 12
+  { name: "NDA Pre-Check", team: "Legal", engine: "Judgment", status: "In build" },
+  { name: "Legal Risk Methodology", team: "Legal", engine: "Judgment", status: "In build" },
+  { name: "SPA Pre-Check", team: "Legal", engine: "Judgment", status: "Scoped" },
+  { name: "Product Ideation", team: "Product Management", engine: "Judgment", status: "In build" },
+  {
+    name: "Risk Management",
+    team: "Program Management & Product",
+    engine: "Judgment",
+    status: "In build",
+  },
+  { name: "BRR Generator", team: "Product Engineering", engine: "Judgment", status: "In use" },
+  {
+    name: "Onboarding & POps Processes",
+    team: "People Ops",
+    engine: "Judgment",
+    status: "In build",
+  },
+  {
+    name: "Partnership Inbox Filter",
+    team: "Brand & Partnerships",
+    engine: "Judgment",
+    status: "In build",
+  },
+  {
+    name: "Cost / Feasibility / Portfolio",
+    team: "Manufacturing Programs",
+    engine: "Judgment",
+    status: "In build",
+  },
+  {
+    name: "UX Foundations Evaluation",
+    team: "Product Design & UX",
+    engine: "Judgment",
+    status: "In build",
+  },
+  {
+    name: "Concept Triage Engine",
+    team: "Product Design & UX",
+    engine: "Judgment",
+    status: "In build",
+  },
+  { name: "Loop Creative Strategy", team: "Performance", engine: "Judgment", status: "In use" },
+  // Voice — 7
+  {
+    name: "Employer Branding TOV",
+    team: "Talent Acquisition",
+    engine: "Voice",
+    status: "In build",
+  },
+  { name: "People-team Voice", team: "People Ops", engine: "Voice", status: "In use" },
+  {
+    name: "Founder Tone of Voice",
+    team: "Brand & Partnerships",
+    engine: "Voice",
+    status: "In use",
+  },
+  { name: "Paid Social TOV", team: "Brand & Partnerships", engine: "Voice", status: "In build" },
+  { name: "Loop Paid Social", team: "Studio", engine: "Voice", status: "In use" },
+  { name: "Loop CRM", team: "Studio", engine: "Voice", status: "Shipped" },
+  { name: "Loop Marketplace", team: "Studio", engine: "Voice", status: "Shipped" },
+  // Validation — 9
+  { name: "Tracker Compliance Checker", team: "Legal", engine: "Validation", status: "In use" },
+  { name: "Interview Debrief", team: "Talent Acquisition", engine: "Validation", status: "Scoped" },
+  {
+    name: "GL Reconciliations",
+    team: "Finance & Accounting",
+    engine: "Validation",
+    status: "In build",
+  },
+  {
+    name: "Belgian VAT Return",
+    team: "Finance & Accounting",
+    engine: "Validation",
+    status: "Scoped",
+  },
+  {
+    name: "Quality Auditor",
+    team: "Warehousing & Customer Ops",
+    engine: "Validation",
+    status: "In use",
+  },
+  {
+    name: "Fraud Detection",
+    team: "Warehousing & Customer Ops",
+    engine: "Validation",
+    status: "In build",
+  },
+  {
+    name: "Invoice Processor",
+    team: "Warehousing & Customer Ops",
+    engine: "Validation",
+    status: "In use",
+  },
+  {
+    name: "Supplier QA Audit",
+    team: "Manufacturing Programs",
+    engine: "Validation",
+    status: "Scoped",
+  },
+  { name: "Localization", team: "Studio", engine: "Validation", status: "In build" },
+  // Stakeholder — 5
+  {
+    name: "Candidate Screening Brief",
+    team: "Talent Acquisition",
+    engine: "Stakeholder",
+    status: "Scoped",
+  },
+  {
+    name: "Program Status Updates",
+    team: "Program Management & Product",
+    engine: "Stakeholder",
+    status: "In build",
+  },
+  {
+    name: "Market Scan Brief",
+    team: "Strategic Insights",
+    engine: "Stakeholder",
+    status: "In build",
+  },
+  { name: "Survey Synthesis", team: "Strategic Insights", engine: "Stakeholder", status: "Scoped" },
+  { name: "Feedback Summarizer", team: "Studio", engine: "Stakeholder", status: "In use" },
+  // Pattern — 14
+  {
+    name: "Variance Commentary",
+    team: "Finance & Accounting",
+    engine: "Pattern",
+    status: "In use",
+  },
+  { name: "MEC Tracker", team: "Finance & Accounting", engine: "Pattern", status: "In use" },
+  {
+    name: "VSME Sustainability Reporting",
+    team: "Program Management & Product",
+    engine: "Pattern",
+    status: "Scoped",
+  },
+  { name: "Daily Brief", team: "Product Engineering", engine: "Pattern", status: "In use" },
+  {
+    name: "Dashboard Consolidation",
+    team: "Warehousing & Customer Ops",
+    engine: "Pattern",
+    status: "In use",
+  },
+  { name: "SOP Generator", team: "People Ops", engine: "Pattern", status: "In build" },
+  {
+    name: "360 Marketing Agent",
+    team: "Brand & Partnerships",
+    engine: "Pattern",
+    status: "In build",
+  },
+  { name: "Trend Scraper", team: "Strategic Insights", engine: "Pattern", status: "In build" },
+  {
+    name: "Lead Time Calculator",
+    team: "Manufacturing Programs",
+    engine: "Pattern",
+    status: "In use",
+  },
+  { name: "CMF File Generator", team: "Product Design & UX", engine: "Pattern", status: "In use" },
+  {
+    name: "Loop Packaging System",
+    team: "Product Design & UX",
+    engine: "Pattern",
+    status: "In use",
+  },
+  {
+    name: "Product Review Analysis",
+    team: "Product Design & UX",
+    engine: "Pattern",
+    status: "In build",
+  },
+  { name: "Asset Brief Generator", team: "Studio", engine: "Pattern", status: "In build" },
+  { name: "GenAI Prompting", team: "Studio", engine: "Pattern", status: "In use" },
+];
+
+/**
  * Three paid-social cuts, reused verbatim from the ai-keynote arc page
  * (`lib/arcs/content/ai-keynote.ts`) — same files, same alt text, so the two
  * surfaces cannot end up describing the same ad differently.
@@ -216,18 +407,9 @@ const ATL_FILMS = [
   },
 ] as const;
 
-/**
- * The rollout log re-read as an adoption curve. Milestones are the log's own
- * rows; the y-axis is the seat count the `5 → 130+` stat already publishes.
- * The handoff's invented quarters ("25.Q2 skill layer live", "25.Q4 4 tools
- * shipped") are not in this module and are not used.
- */
-const ADOPTION_SIGNAL: readonly CaseSignalPoint[] = [
-  { x: 0.04, y: 0.06, stamp: "2024", label: "Embedded" },
-  { x: 0.3, y: 0.24, stamp: "Pilot", label: "69 seats" },
-  { x: 0.66, y: 0.62, stamp: "26.Q2", label: "22 teams briefed" },
-  { x: 0.95, y: 0.94, stamp: "Now", label: "130+ on the layer" },
-];
+/* The ADOPTION_SIGNAL curve (the mission-report row's plate) left with the
+   directory trim (ADR-056 U13) — the `signal` kind and `CaseSignalPoint`
+   stay in the model for a future case's summary row. */
 
 export const LOOP_EARPLUGS_CASE: CaseDef = {
   slug: "loop-earplugs",
@@ -367,18 +549,27 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
        thing here is eighteen months of deciding what should run which work
        — so that is row one, and the evidence it produced follows it.
 
-       Two consequences worth knowing before reordering again:
-       · Row one's plate mounts WITH the casefile. A media row here puts its
-         bytes on page load — that cost 23.6 kB while the studio led, and
-         moving to a pure-DOM plate gives it back.
-       · The mission report closes the file instead of opening it: it
-         summarises what the rows above already showed. Its `00_` keeps it
-         reading as the master log rather than a sixth project. */
+       FOUR ROWS (owner, 2026-08-02: "remove everything from and including
+       05_Workshop-rollout … so we only have the first four"). The directory
+       is now the four PROJECTS, one browse-band quarter each; the rollout,
+       governance, metrics and mission-report rows left with the trim.
+       Where their content went, so nothing is restored by mistake:
+       · the rollout LOG still renders on the Navigate beat (ROLLOUT_ROWS is
+         shared data, and the beat is its remaining consumer);
+       · governance's register rows exist only as beats/report copy now;
+       · the metrics/report readouts were four duplicates of `report.stats`,
+         which remains the single summary surface;
+       · the ADOPTION_SIGNAL curve was deleted outright (its kind stays in
+         the model).
+
+       Row one's plate mounts WITH the casefile: a media row here puts its
+       bytes on page load — that cost 23.6 kB while the studio led, and
+       the pure-DOM browser plate keeps that win. */
     tracks: [
       {
-        // NOT `transformation` — that id belongs to the workshop-rollout row
-        // below and the plate-sharing guard keys on it. Two ids one word
-        // apart would be a standing trap.
+        // NOT `transformation` — that id belonged to the (now trimmed)
+        // workshop-rollout row and the plate-sharing guard used to key on
+        // it. Kept as a warning: two ids one word apart are a standing trap.
         // Renamed "AI Transformation" → "Intelligence Map" (owner,
         // 2026-08-02). The old title named a CATEGORY OF ENGAGEMENT, which
         // every consultancy's page also claims; this one names the artifact
@@ -401,10 +592,19 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // The ONLY `registry` track, and the reference-equality guard finds
         // the first one — so this is what keeps the beat/casefile plate
         // sharing live now that the skill-layer row is gone.
+        //
+        // `skills` makes the plate a BROWSER (ADR-056 U13): engine tabs
+        // carrying the group counts, clickable chips for the selected
+        // engine, a provenance line for the selected skill. The casefile
+        // stops rendering MAP_ROWS visually — the browser shows the real
+        // portfolio, which is what the exemplars stood in for — but the
+        // rows STAY here because the beat still renders them and the
+        // sharing guard still asserts them shared.
         visual: {
           kind: "registry",
           groups: MAP_GROUPS,
           rows: MAP_ROWS,
+          skills: LOOP_SKILLS,
         },
         // FOUR BLOCKS, not three readouts (owner, 2026-08-02). The readout
         // trio could only say things that reduce to a number, so the two
@@ -549,120 +749,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         source: "Source — fleet registry · rev 2026.07",
         stamp: { ord: "04", phase: "Build", ref: "BLD-03" },
       },
-      {
-        // Renamed from `transformation` (2026-07-31) when the AI Transformation
-        // row landed above. The plate-sharing guard in
-        // `tests/lib/cases-registry.test.ts` keys on this id BY STRING and
-        // does not fail on a rename — it silently stops guarding. The two
-        // move together or the guard is dead.
-        id: "workshop-rollout",
-        file: "05_WORKSHOP-ROLLOUT/",
-        meta: "22 WORKSHOPS",
-        project: "Workshop Rollout",
-        icon: "dir",
-        preview: "Preview — 05_workshop-rollout/",
-        vizLabel: "Log — rollout",
-        visual: { kind: "log", rows: ROLLOUT_ROWS, tail: ROLLOUT_TAIL },
-        readouts: [
-          { value: "22", label: "workshops run" },
-          { value: "5 → 130+", label: "people on the layer" },
-          { value: "21", label: "days to a practice" },
-          { value: "03", label: "tracks in parallel" },
-        ],
-        context: [
-          { k: "Frame", v: "45 min, every team" },
-          { k: "Trigger", v: "Inbound demand" },
-          { k: "Handoff", v: "Per-team steward" },
-        ],
-        source: "Source — rollout log · one workflow worth encoding, per team",
-        stamp: { ord: "05", phase: "Navigate", ref: "NAV-02" },
-      },
-      /* `05_SKILL-LAYER/` was retired here (owner, 2026-07-31): "we already
-         mentioned it". Its plate was not deleted — it moved up to row one and
-         became the work → intelligence map, which is the same evidence
-         answering a better question. A count of Skills was never the claim
-         worth leading with. */
-      {
-        id: "governance",
-        file: "GOVERNANCE.MD",
-        meta: "LEGAL · IT",
-        project: "Governance",
-        icon: "doc",
-        preview: "Preview — governance.md",
-        vizLabel: "Register — parallel tracks",
-        visual: {
-          kind: "register",
-          rows: [
-            { k: "Agreement", v: "Enterprise, signed" },
-            { k: "Access", v: "Single sign-on" },
-            { k: "Review", v: "Every connector, legal-reviewed" },
-            { k: "Ownership", v: "One steward per team" },
-          ],
-          footer: "Three tracks, run alongside the rollout — never after it.",
-        },
-        readouts: [
-          { value: "03", label: "tracks in parallel" },
-          { value: "22", label: "teams briefed, each with a steward" },
-          { value: "21", label: "days to a functioning practice" },
-        ],
-        context: [
-          { k: "Legal", v: "From workshop one" },
-          { k: "IT", v: "SSO · connectors" },
-          { k: "Cadence", v: "Alongside" },
-        ],
-        source: "Source — governance track · rev 2026.07",
-        stamp: { ord: "—", phase: "Governance", ref: "GOV-01" },
-      },
-      {
-        id: "metrics",
-        file: "METRICS.DAT",
-        meta: "4 READOUTS",
-        project: "Metrics",
-        icon: "doc",
-        preview: "Preview — metrics.dat",
-        vizLabel: "Readouts — sampled quarterly",
-        visual: { kind: "readouts" },
-        readouts: [
-          { value: "22", label: "workshops run · one per team" },
-          { value: "47+", label: "Skills encoded · versioned, team-owned" },
-          { value: "4", label: "production tools · built in-house" },
-          { value: "5 → 130+", label: "people on the layer · in 18 months" },
-        ],
-        context: [
-          { k: "Client", v: "Loop Earplugs" },
-          { k: "Period", v: "2024 · ongoing" },
-          { k: "Status", v: "Live" },
-        ],
-        source: "Source — metrics.dat · sampled quarterly · rev 2026.07",
-        stamp: { ord: "—", phase: "Metrics", ref: "MET-01" },
-      },
-      {
-        id: "report",
-        file: "00_MISSION-REPORT.LOG",
-        meta: "2.4 KB",
-        project: "Mission Report",
-        icon: "doc",
-        preview: "Preview — 00_mission-report.log",
-        vizLabel: "Viz — adoption signal",
-        visual: {
-          kind: "signal",
-          points: ADOPTION_SIGNAL,
-          t0: "T0 — embedded · 2024",
-          now: "Active — 2026.07",
-        },
-        readouts: [
-          { value: "22", label: "workshops run" },
-          { value: "47+", label: "Skills encoded" },
-          { value: "4", label: "production tools" },
-          { value: "5 → 130+", label: "people on the layer" },
-        ],
-        context: [
-          { k: "Role", v: "Embedded AI lead" },
-          { k: "Mandate", v: "Adoption · tooling" },
-          { k: "Governance", v: "Legal · IT" },
-        ],
-        source: "Source — metrics.dat · sampled quarterly · rev 2026.07",
-      },
+      /* Rows 05–08 (workshop rollout · governance · metrics · mission
+         report) were TRIMMED here 2026-08-02 (owner) — see the ORDER note
+         above for where each one's content still lives. `05_SKILL-LAYER/`
+         had already been retired 2026-07-31 ("we already mentioned it");
+         its evidence is row one's plate. */
     ],
   },
 

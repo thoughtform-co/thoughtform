@@ -102,11 +102,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
 
-    // The settle, before the fold opens at 0.13. There is no "mid-dwell" to
-    // sample any more: since round 3 the release owns the ENTIRE dwell (the
-    // runway used to carry 1.7 viewports of dead scroll ahead of it), so the
-    // only stretch where the casefile is uncontested is smootherstep's flat
-    // first sliver.
+    // Inside the BROWSE BAND (ADR-056 U13: the front 62.5 % of the dwell
+    // steps the directory; the release owns only the back stretch). 0.1 of
+    // the runway is row one's quarter — the casefile is settled, uncontested
+    // and fully live here.
     expect(await scrollCasefileDwell(page, 0.1)).toBe(true);
     await page.waitForTimeout(1400);
 
@@ -129,22 +128,43 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(during.rows).toBeGreaterThan(0);
 
     // The directory rows are the navigation, and they work while pinned.
+    // Since U13 a click also PINS THE SCROLL to the row's browse-band
+    // quarter — that is the contract that stops the scrollspy overriding
+    // the click on the next frame — so the browse channel must land inside
+    // row two's band (0.25..0.5, past the hysteresis edge).
     const secondRow = page.locator(".fl-row").nth(1);
     await secondRow.click();
     await page.waitForTimeout(400);
     await expect(secondRow).toHaveAttribute("aria-selected", "true");
+    const browseAfterClick = await page.evaluate(() =>
+      Number.parseFloat(
+        document
+          .querySelector<HTMLElement>(".fl-case")
+          ?.style.getPropertyValue("--svc-proof-browse") ?? "-1"
+      )
+    );
+    expect(browseAfterClick).toBeGreaterThan(0.29);
+    expect(browseAfterClick).toBeLessThan(0.5);
+
+    // …and SCROLL drives the same selector (the U13 scrollspy): two thirds
+    // into the browse band is row three's quarter, reached with no click.
+    expect(await scrollCasefileDwell(page, 0.42)).toBe(true);
+    await page.waitForTimeout(600);
+    await expect(page.locator(".fl-row").nth(2)).toHaveAttribute("aria-selected", "true");
 
     // THE INTERLEAVE (2026-07-29). The casefile's fold and the offer's
     // assembly deliberately OVERLAP — the departure runs 0.13 → 0.66 of the
-    // dwell and the release owns all of it, so the offer is already drawing
+    // RELEASE and the release ramp spans it, so the offer is already drawing
     // as the panels start to leave. Sampling inside that overlap is the only
     // assertion that fails if the windows are ever pulled back apart into a
-    // fade-then-pop, which is the handoff the owner rejected. 0.52 is the
-    // crossing: measured caseOpacity ≈ 0.43 against content-in ≈ 0.52.
-    // Sample the VALUES here, never the window edges — smootherstep is
-    // nearly flat across its first third, so overlapping edges alone prove
-    // nothing.
-    expect(await scrollCasefileDwell(page, 0.52)).toBe(true);
+    // fade-then-pop, which is the handoff the owner rejected. The crossing
+    // was validated at releaseP 0.52 (caseOpacity ≈ 0.43 against content-in
+    // ≈ 0.52); since U13 the release owns only the back 37.5 % of the
+    // runway, so the same releaseP sits at total 0.625 + 0.52 × 0.375 =
+    // 0.82. Sample the VALUES here, never the window edges — smootherstep
+    // is nearly flat across its first third, so overlapping edges alone
+    // prove nothing.
+    expect(await scrollCasefileDwell(page, 0.82)).toBe(true);
     await page.waitForTimeout(1000);
 
     const interleave = await page.evaluate(() => {
@@ -219,12 +239,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Backing out of the offer re-enters the dwell with the stage still
     // PINNED, so the masthead's unpark observer never fires and its
     // REARM_BELOW floor (derived: REVEAL_AT − hysteresis) is the only thing
-    // that can blank the title. At dwell 0.40 the clock reads ≈0.32 — below
-    // the floor — so the title must already be re-armed (blanked, not merely
-    // faded) while the casefile is repainting. The pre-fix absolute floor
-    // (0.05) held the resolved title over the reassembled casefile for a
-    // third of the dwell, which is exactly what this drive would catch.
-    expect(await scrollCasefileDwell(page, 0.4)).toBe(true);
+    // that can blank the title. At releaseP 0.40 the clock reads ≈0.32 —
+    // below the floor — so the title must already be re-armed (blanked, not
+    // merely faded) while the casefile is repainting. Same U13 remap as the
+    // interleave: releaseP 0.40 sits at total 0.625 + 0.40 × 0.375 = 0.775.
+    // The pre-fix absolute floor (0.05) held the resolved title over the
+    // reassembled casefile for a third of the dwell, which is exactly what
+    // this drive would catch.
+    expect(await scrollCasefileDwell(page, 0.775)).toBe(true);
     await expect(page.locator(".services-masthead")).toHaveAttribute("data-reveal", "armed");
     await expect(
       page.locator(".services-masthead__title-line").first().locator("span").first()
@@ -295,13 +317,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     ).toBeGreaterThanOrEqual(0);
 
     // EVERY ROW, not just the one that opens. The plate kinds differ per row
-    // — registry, stills, films, tools, log, register, readouts — and only
-    // the tools plate had any height handling before U11. These three boxes
-    // are all `overflow: hidden` with no scrollbar, so they clip SILENTLY:
-    // the `SOURCE — ADOPTION BOARD` line was already being cut by 24px at
-    // 1280x720 and 4px here, and nobody could see it.
+    // — the skills browser, stills, films, tools — and only the tools plate
+    // had any height handling before U11. These three boxes are all
+    // `overflow: hidden` with no scrollbar, so they clip SILENTLY: the
+    // `SOURCE — ADOPTION BOARD` line was already being cut by 24px at
+    // 1280x720 and 4px here, and nobody could see it. Four rows since the
+    // U13 directory trim (the rollout/governance/metrics/report rows left).
     const rowCount = await page.locator(".fl-row").count();
-    expect(rowCount, "the directory holds eight rows").toBe(8);
+    expect(rowCount, "the directory holds four rows").toBe(4);
 
     const clipped: string[] = [];
     for (let i = 0; i < rowCount; i++) {
@@ -369,7 +392,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Generous timeout: cold dev-server compile + texture bakes + the
     // parked-anchor gate all precede the first publish.
     await expect(page.locator(".svc-ring-hits")).toHaveCount(1);
-    const frontCard = page.getByRole("button", { name: "Open Strategic Advisory details" });
+    const frontCard = page.getByRole("button", { name: "Open Keynote details" });
     await expect(frontCard).toBeVisible({ timeout: 20_000 });
     await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     // The bottom readout strip is RETIRED (owner, 2026-07-16) — the
@@ -395,7 +418,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
 
-    const frontCard = page.getByRole("button", { name: "Open Strategic Advisory details" });
+    const frontCard = page.getByRole("button", { name: "Open Keynote details" });
     await expect(frontCard).toBeVisible({ timeout: 20_000 });
 
     // ── The ghost fence (ADR-050's blocking flaw) ────────────────────────
@@ -403,10 +426,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // published, no shimmed CTA or close control, no screen-reader copy.
     await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Open an advisory" })).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "Close Strategic Advisory details" })
-    ).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Book a keynote" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Close Keynote details" })).toHaveCount(0);
 
     // ── Open ─────────────────────────────────────────────────────────────
     // The drawer faces bake LAZILY on this first click, so the shims can
@@ -417,12 +438,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // (services.css keys --svc-plate-dim off this attribute).
     await expect(page.locator(".services-stage")).toHaveAttribute("data-plate-open", "1");
     // The drawer's baked CTA, reachable as a real link on the second rect.
-    await expect(page.getByRole("link", { name: "Open an advisory" })).toBeVisible({
+    await expect(page.getByRole("link", { name: "Book a keynote" })).toBeVisible({
       timeout: 20_000,
     });
-    await expect(
-      page.getByRole("button", { name: "Close Strategic Advisory details" })
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close Keynote details" })).toBeVisible();
     // The baked spec copy, readable.
     await expect(page.locator(".svc-ring-hits__sr")).toContainText("Duration:");
 
@@ -431,7 +450,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     await expect(page.locator(".services-stage")).not.toHaveAttribute("data-plate-open", "1");
     await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Open an advisory" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Book a keynote" })).toHaveCount(0);
 
     // ── Runway scroll dismisses ──────────────────────────────────────────
     // The drawer is welded to its card and rotates away with it, so moving
@@ -534,38 +553,40 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // asserted via data-active-step + the front card's own hit target. Under
     // ADR-050 that target is the full-rect OPEN button, named for the plate's
     // chip, rather than the CTA link the full face used to bake.)
-    // Arrival remap (2026-07-17): the ring holds Advisory through the short
-    // arrival, then rotates. `data-active-step` = the front-card index
-    // (0..3). p=0.18 is in the arrival window → Advisory front (step 0).
+    // Arrival remap (2026-07-17): the ring holds the first slot through the
+    // short arrival, then rotates. `data-active-step` = the front-card index
+    // (0..3). Occupancy since the 2026-08-02 harmonization: Keynote /
+    // Workshop / Embedded AI Partner / Strategic Advisory. p=0.18 is in the
+    // arrival window → Keynote front (step 0).
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "0");
-    await expect(page.getByRole("button", { name: "Open Strategic Advisory details" })).toBeVisible(
-      { timeout: 20_000 }
-    );
-
-    // p=0.58 → the ring has turned two quarter-turns: Keynote front (step 2).
-    expect(await scrollServicesRunway(page, 0.58)).toBe(true);
-    await page.waitForTimeout(1600);
-    // The ring rotated with the clock: the front card is now the Keynote plate.
     await expect(page.getByRole("button", { name: "Open Keynote details" })).toBeVisible({
       timeout: 20_000,
     });
+
+    // p=0.58 → the ring has turned two quarter-turns: the Embedded AI
+    // Partner plate is front (step 2).
+    expect(await scrollServicesRunway(page, 0.58)).toBe(true);
+    await page.waitForTimeout(1600);
+    await expect(
+      page.getByRole("button", { name: "Open Embedded AI Partner details" })
+    ).toBeVisible({ timeout: 20_000 });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
 
-    // p=0.78 → the LAST service (Workshop) is front (step 3) — its own hit
-    // target proves the rotation reached the end of the roster while the hit
-    // areas are still alive (they retire in the exit beat).
+    // p=0.78 → the LAST service (Strategic Advisory) is front (step 3) — its
+    // own hit target proves the rotation reached the end of the roster while
+    // the hit areas are still alive (they retire in the exit beat).
     expect(await scrollServicesRunway(page, 0.78)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(page.getByRole("button", { name: "Open Workshop details" })).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByRole("button", { name: "Open Strategic Advisory details" })).toBeVisible(
+      { timeout: 20_000 }
+    );
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
 
     // Exit-hold beat (ADR-030): deep in the runway the front-card index
     // stays clamped on the LAST service (3) — an unclamped index would wrap
-    // the clock back to Advisory (the bug the clamps kill).
+    // the clock back to the first slot (the bug the clamps kill).
     expect(await scrollServicesRunway(page, 0.95)).toBe(true);
     await page.waitForTimeout(1200);
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
