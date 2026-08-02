@@ -1,0 +1,316 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   RAIL INSTRUMENTS · ADR-059
+   ═══════════════════════════════════════════════════════════════════════
+
+   The journey's sections as marks in the frame's two working corners, plus
+   the right rail's telemetry. Ported from `/test/hud-instruments-lab` route
+   `r4`; the lab keeps its own `hil-`-scoped sheet for the routes that were
+   NOT taken.
+
+   Shape law: radius 0; diamonds, never circles; hairlines only; gold is
+   WAYFINDING — it marks where you are and nothing else; no italics.
+
+   Ink doctrine: dim for what is ahead, a measured dawn for what you have
+   passed, full `--gold` for where you are, and only the live mark prints
+   its name.
+
+   ⚠ EVERY INK VALUE GOES THROUGH `--dawn-rgb`, never a literal
+   `rgba(235,227,214,…)`. That literal is dawn in dark and INVISIBLE on
+   parchment; the triple flips to ink in `theme.css` (ADR-058). The lab's
+   own `--hil-passed` is a literal, which is why the lab's other routes are
+   dark-only — do not copy that pattern here.
+
+   The 0.44 passed value was MEASURED in the lab, not chosen: it started at
+   `--dawn-30`, read as noise against the starfield, and settled at 0.44.
+   Do not push past ~0.5, where marks start competing with the ticks.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --rin-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --rin-ahead: rgba(var(--dawn-rgb), 0.22);
+  --rin-passed: rgba(var(--dawn-rgb), 0.44);
+  /* Half a mark — what centres a terminal glyph ON the rail's track line
+     rather than butting it against one. */
+  --rin-half: 8px;
+  /* The right rail's own bottom terminus, mirrored from `landing.css` so
+     the dock can be placed relative to where the track actually ends.
+     Kept as the expression rather than a measured pixel: which `max()` arm
+     wins changes with viewport (arm 1 at 1440, arm 2 at 1280), so any
+     constant is right at one size and wrong at the next. */
+  --rin-rail-bottom: max(
+    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
+    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
+  );
+}
+
+/* ── Portal hosts ───────────────────────────────────────────────────────
+   `inset: 0` inside the rail is what buys the marks the ticks' percentage
+   box, the hero-curtain clip and the wordmark-clearing bottom terminus.
+
+   `position: absolute` is NOT optional — `.hud__rail` is a flex column and
+   a static child would become a flex item, leaving that box. */
+.rin-host {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  /* Informational only: the nav corner stays the single navigation.
+     `.hud > *` sets `pointer-events: auto` on each rail, so this has to be
+     said out loud. */
+  pointer-events: none;
+}
+
+/* ── THE CLUSTER IS THE CORNER ──────────────────────────────────────────
+   Each cluster replaces the bracket it stands in for, and its TERMINAL
+   mark is centred on that rail's track — the same line the ticks hang off
+   and the diamond rides. `--hud-rail-guide-inset` is the anchor rather
+   than a measured pixel, so the assembly stays rigid if that token ever
+   leaves 0. */
+.rin-cl {
+  position: absolute;
+}
+
+/* TOP-LEFT — hosted in the corner box, whose origin IS the bracket's
+   corner point. The row's TOP edge sits on the margin line rather than
+   straddling it: the corner's curtain inset saturates at 0px, so a row
+   centred on that line would lose its upper half at rest. */
+.rin-cl--approach {
+  top: 0;
+  left: calc(var(--hud-rail-guide-inset) - var(--rin-half));
+}
+
+/* BOTTOM-RIGHT — an exact 180° rotation of the approach row, which is the
+   only placement that makes the two corners read as a pair. Approach sits
+   with its TOP edge on the top margin line, so this sits with its BOTTOM
+   edge on the bottom margin line; labels then stack inward in both, and
+   both land the same distance clear of their rail's terminus.
+
+   The offset is `terminus − margin` because the host is the RAIL, whose
+   bottom is the terminus, not the margin.
+
+   ⚠ This occupies the band the ADR-058 toggle used to sit in — which is
+   why `THEME_TOGGLE_DOCKS_LEFT` exists. The strip between the rail's
+   terminus and that toggle is ~26px against a ~36px glyph-plus-label row,
+   so the corner cannot hold both. */
+.rin-cl--dock {
+  bottom: calc(-1 * (var(--rin-rail-bottom) - var(--hud-margin)));
+  right: calc(var(--hud-rail-guide-inset) - var(--rin-half));
+}
+
+.rin-cl__row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+/* The seat wrapper exists only to pair a rule with its mark in JSX — it
+   must not become a flex item or the gaps double up. */
+.rin-cl__seat {
+  display: contents;
+}
+/* The LOG | DOCK split: what is on the record, then where you are going. */
+.rin-cl__rule {
+  width: 1px;
+  height: 14px;
+  background: rgba(var(--dawn-rgb), 0.18);
+}
+
+.rin-cl__zone {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  font-family: var(--rin-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.3);
+  white-space: nowrap;
+}
+/* Each zone label sits at its cluster's OUTBOARD end — never above the
+   row. See the clip note on the label rule below. */
+.rin-cl--approach .rin-cl__zone {
+  left: calc(100% + 16px);
+}
+.rin-cl--dock .rin-cl__zone {
+  right: calc(100% + 16px);
+}
+
+/* ── The marks ──────────────────────────────────────────────────────────
+   `currentColor` on the SVG means the state colours the drawing and the
+   theme flips it, with no per-glyph rules. */
+.rin-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: var(--rin-ahead);
+  transition: color 300ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.rin-mark[data-state="passed"] {
+  color: var(--rin-passed);
+}
+.rin-mark[data-state="here"] {
+  color: var(--gold);
+}
+.rin-mark svg {
+  display: block;
+}
+
+/* ⚠ A LABEL POINTS AWAY FROM ITS HOST'S CLIPPED EDGE — not a style choice.
+   Every host here carries a curtain clip whose TOP inset is driven by
+   `--hero-lift` and saturates at 0px, so nothing survives above a host's
+   own box at rest. The approach cluster sits at the TOP of its corner, so
+   its labels hang BELOW; the dock sits at the BOTTOM of the rail, so its
+   labels go ABOVE. Set either the other way and it vanishes, with no
+   error. */
+.rin-mark__label {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  translate: -50% 0;
+  font-family: var(--rin-mono);
+  font-size: 8.5px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-70);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 250ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.rin-cl--dock .rin-mark__label {
+  top: auto;
+  bottom: calc(100% + 7px);
+}
+/* Only the live mark names itself — gold is wayfinding and nothing else. */
+.rin-mark[data-state="here"] .rin-mark__label {
+  opacity: 1;
+}
+/* The outermost labels pin to the TRACK LINE, not to the cluster's box.
+   The terminal glyph straddles the track, so its box edge is half a mark
+   outboard; a label flushed to that box overhangs the rail, which on the
+   dock side means the track draws through the last word. */
+.rin-cl--approach .rin-mark:first-of-type .rin-mark__label {
+  left: var(--rin-half);
+  translate: none;
+}
+.rin-cl--dock .rin-cl__seat:last-of-type .rin-mark__label {
+  left: auto;
+  right: var(--rin-half);
+  translate: none;
+}
+
+/* ── Right rail telemetry ───────────────────────────────────────────────
+   Seated on rungs of the same 13-tick ladder, so a readout and a tick at
+   the same fraction land on the same pixel by construction. Inboard at
+   +8px; the bearing labels ("2"/"5") own the left rail's +10px column and
+   this is the right rail, which has none. */
+.rin-tele {
+  position: absolute;
+  right: calc(var(--hud-rail-guide-inset) + 8px);
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--rin-mono);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.rin-tele__k {
+  font-weight: 400;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(var(--dawn-rgb), 0.3);
+}
+.rin-tele__rule {
+  width: 22px;
+  height: 0;
+  border-top: 1px dotted rgba(var(--gold-rgb), 0.25);
+}
+.rin-tele__v {
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+}
+
+/* The active section's name, set vertically along the rail — the one place
+   the frame says where you are in words rather than in marks. */
+.rin-vertname {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--hud-rail-guide-inset) + 30px);
+  translate: 0 -50%;
+  writing-mode: vertical-rl;
+  font-family: var(--rin-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.28);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── The brackets the clusters stand in for ─────────────────────────────
+   Suppressed only while the instruments are actually mounted, so a
+   flag-off frame keeps its corners. */
+html[data-rail-instruments] .hud__corner--tl,
+html[data-rail-instruments] .hud__corner--br {
+  border: 0;
+}
+
+/* ── Curtain clips, widened ─────────────────────────────────────────────
+   ⚠ The TOP inset of each is copied VERBATIM from `landing.css` — it is
+   what reveals the frame as the hero lifts, and changing it silently
+   changes the reveal. Only the SIDES open up.
+
+   Production ships −100px on the rail (sized for the 21px tick overhang
+   and the diamond) and 0 on the TL corner's left. The dock row reaches
+   ~130px inboard of the rail and the approach row's first mark sits half
+   a mark outboard of its corner — at the shipped values both were sliced
+   with no error, which reads as a layout mistake rather than a clip. */
+html[data-rail-instruments] .hud__rail {
+  clip-path: inset(
+    max(
+        0px,
+        calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-rail-y-start))
+      ) -340px -340px -340px
+  );
+}
+html[data-rail-instruments] .hud__corner--tl {
+  clip-path: inset(
+    max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) -340px -340px -340px
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .rin-mark,
+  .rin-mark__label {
+    transition: none;
+  }
+}
+
+/* ── Responsive — key off the PRODUCTION gates, never invent new ones ────
+   ≤960 `.hud__rail { display: none }` takes the dock and the telemetry
+   with it for free. Only the TL corner needs saying out loud, because the
+   corner brackets survive on mobile and the nav corner is the answer
+   there. ≤1100 drops the vertical name, alongside the bearing labels and
+   the manifest that already go at that width. */
+@media (max-width: 1100px) {
+  .rin-vertname {
+    display: none;
+  }
+}
+@media (max-width: 960px) {
+  .rin-cl--approach {
+    display: none;
+  }
+  /* The clusters are gone, so the brackets come back. */
+  html[data-rail-instruments] .hud__corner--tl,
+  html[data-rail-instruments] .hud__corner--br {
+    border-top: 2px solid var(--hud-rail-line);
+    border-left: 2px solid var(--hud-rail-line);
+  }
+  html[data-rail-instruments] .hud__corner--br {
+    border: 0;
+    border-bottom: 2px solid var(--hud-rail-line);
+    border-right: 2px solid var(--hud-rail-line);
+  }
+}

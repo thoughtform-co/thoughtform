@@ -44,10 +44,25 @@
    precedent at z 60) so the ADR-031 U16 hero curtain never clips it —
    a control inside `.hud__rail--r` would be invisible for the whole
    hero and then pop in.
+
+   ⚠ MOVED TO THE BOTTOM-LEFT (ADR-059, 2026-08-02). The dock cluster now
+   takes the bottom-right band: it is placed by the approach row's rule
+   read upside down, which is the only placement that makes the two
+   corners mirror, and the strip left between the right rail's terminus
+   and this control is ~26px against a ~36px glyph-plus-label row. The
+   corner cannot hold both.
+
+   The reasoning above survives the move intact, MIRRORED: the offset is
+   the same expression, measured inboard of the `--bl` bracket instead of
+   the `--br` one. The band now reads toggle at the left end, dock cluster
+   at the right, with the ADR-043 wordmark between them — it sits at
+   `--hud-content-inset` (the hero's editorial column), not at the margin,
+   so the mirrored slot clears it by ~14px at 1440 without a measured
+   pixel anywhere.
    ═══════════════════════════════════════════════════════════════════ */
 .theme-toggle-overlay {
   position: fixed;
-  right: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
+  left: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
   bottom: max(var(--hud-margin), var(--safe-bottom, 0px));
   height: var(--hud-corner-zone);
   display: flex;

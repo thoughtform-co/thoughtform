@@ -14,6 +14,8 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
+import { RailInstruments } from "./rail-instruments/RailInstruments";
+import { RAIL_INSTRUMENTS } from "./rail-instruments/flags";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
@@ -615,6 +617,13 @@ export function LandingPage({
           orphan the nested roots above (same rationale as
           CelestialEditorGate). */}
       {THEME_TOGGLE && <LightModeToggle />}
+      {/* Rail instruments (ADR-059): the journey's sections as marks in the
+          top-left and bottom-right corners, plus the right rail's
+          telemetry. A LEAF by contract — it owns its own journey
+          subscription, because a subscription in LandingPage would
+          re-render it, re-apply the innerHTML above, and orphan the
+          nested roots (same rationale as LightModeToggle). */}
+      {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} />}
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve
           re-render can't replace the dangerouslySetInnerHTML markup

@@ -5,9 +5,15 @@ import { Fragment, useSyncExternalStore } from "react";
 import { READOUT_SECTIONS, sectionReadout } from "@/lib/rail-manifest/sectionLabel";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
-import { APPROACH_IDX, APPROACH_MARKS, CLUSTER_ZONES, DOCK_MARKS } from "../clusters";
+import {
+  APPROACH_IDX,
+  APPROACH_MARKS,
+  CLUSTER_ZONES,
+  DOCK_MARKS,
+} from "@/components/landing/v7/rail-instruments/clusters";
+import { SECTION_GLYPHS } from "@/components/landing/v7/rail-instruments/sectionGlyphs";
+
 import { journeyRef, subscribeJourney } from "../journeyRef";
-import { SECTION_GLYPHS } from "./sectionGlyphs";
 
 /**
  * The corner clusters — the journey's sections as small marks grouped by

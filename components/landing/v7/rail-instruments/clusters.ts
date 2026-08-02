@@ -1,6 +1,13 @@
 /**
  * The corner clusters' content — which sections sit in which cluster.
  *
+ * ⚠ SHARED BY PRODUCTION AND THE LAB, which is why it lives here rather
+ * than under `/test`. `RailInstruments` renders it on the landing page and
+ * `/test/hud-instruments-lab` renders it against a synthetic runway; a copy
+ * in each would drift the moment a section is added, and the drift would
+ * show up as the lab quietly disagreeing with the site it exists to judge.
+ * Nothing in this file may import react, three, or anything under `app/`.
+ *
  * Round 3 (owner mockup, 2026-08-02). Rounds 1 and 2 both distributed marks
  * ALONG the left rail and differed only in whether the spacing was
  * proportional (a scale, rejected) or fixed (a roster). This round takes the

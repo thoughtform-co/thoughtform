@@ -11,6 +11,7 @@ import "@/components/landing/home-v2/about/about-stage.css";
 // to win over every route sheet above. Imported per-route, never from
 // globals.css, so admin / astrogation / /test/* stay dark unconditionally.
 import "@/components/landing/v7/theme.css";
+import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 // handoff-lab.css intentionally NOT imported here: the cover-plane
 // sweep was retired from production (ADR-021 — the live corridor-exit
 // seam is the zoom-dissipate), and the /test/handoff-* lab routes
