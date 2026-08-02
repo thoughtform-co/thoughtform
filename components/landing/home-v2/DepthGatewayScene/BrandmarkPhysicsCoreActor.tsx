@@ -61,7 +61,7 @@ import {
   worldPositionsToLocal,
 } from "@/lib/brandmark/sampleBrandmarkPixels";
 import { brandmarkScreenRectRef } from "../brandmarkScreenRectRef";
-import { rigPointerYawRef } from "../rigPointerYawRef";
+import { rigPointerPitchRef, rigPointerYawRef } from "../rigPointerYawRef";
 import { brandmarkScanAnchorPointsRef } from "../brandmarkScanAnchorsRef";
 import { CorridorArmillary } from "./CorridorArmillary";
 import {
@@ -988,13 +988,18 @@ export function BrandmarkPhysicsCoreActor({
       pose.yaw += (poseTgtYaw - pose.yaw) * k;
 
       const rigYaw = damp.yaw + pose.yaw;
-      pl.rotation.set(damp.pitch + pose.pitch, rigYaw, 0);
+      const rigPitch = damp.pitch + pose.pitch;
+      pl.rotation.set(rigPitch, rigYaw, 0);
       /* Publish the applied yaw for ServicesCardRing to CANCEL on a card
-         whose drawer is open (ADR-050 "Flush seam"). Written on the same
-         line that applies it, so the two can never disagree. This group
-         keeps leaning with the cursor — the compensation is the CARD's, so
-         only the open pair goes square and the instrument stays alive. */
+         whose drawer is open (ADR-050 "Flush seam") — and, since 2026-08-02,
+         the applied pitch for the ring to DAMP on the same clock (the
+         open pair's Escher fix — see rigPointerPitchRef). Written on the
+         same line that applies them, so the published values can never
+         disagree with the scene graph. This group keeps leaning with the
+         cursor — the compensation is the CARD's, so only the open pair
+         goes quiet and the instrument stays alive. */
       rigPointerYawRef.current = rigYaw;
+      rigPointerPitchRef.current = rigPitch;
     }
 
     // Keep the sim alive while the corridor is painting so the

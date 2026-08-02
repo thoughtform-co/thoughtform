@@ -69,7 +69,9 @@ import {
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
 import { SERVICES } from "../serviceData";
 import { ABOUT_DECK_STAGE } from "../../unifiedServicesInstrument";
-import { rigPointerYawRef } from "../../rigPointerYawRef";
+import { rigPointerPitchRef, rigPointerYawRef } from "../../rigPointerYawRef";
+import { readThemeMode, type ThemeMode } from "@/lib/theme/themeModeRef";
+import { useThemeStore } from "@/lib/stores/themeStore";
 import { SERVICES_GOLD } from "@/lib/home-v2/goldPalette";
 import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { useHologramConnectors, type RingCardAnchor } from "@/lib/stores/hologramConnectorStore";
@@ -115,6 +117,7 @@ import {
   DRAWER_SEAM,
   RING_CARD_RENDER_ORDERS,
   drawerContentDepth,
+  openPairPitch,
   openPairYaw,
   drawerOpenBoost,
   drawerRecenterX,
@@ -927,7 +930,53 @@ function bakeCardFace(
  * half of the device's material law, and a translucent ground would let the
  * card behind it show through as the slabs overlap at the seam.
  */
-function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
+/**
+ * The drawer's per-theme palette (owner, 2026-08-02: "the opened services
+ * cards semantic dawn with tensor gold and latent night accents").
+ *
+ * DARK is the shipped ADR-050 literals, verbatim — the dark bake must stay
+ * byte-identical (theme-parity law). LIGHT re-papers the spec sheet:
+ * Semantic Dawn ground (`--dawn` #ece3d6), Latent Night ink (#110f09) for
+ * everything that is READ, and the light-role gold (#9a7a2e — the light
+ * `--gold` token; wayfinding gold runs at full strength on parchment) for
+ * everything that POINTS. The CARD half of the open pair keeps its
+ * photo-dark treatment in both themes — kept-dark imagery is a Lane-0
+ * decision (ADR-058), and the tray reading as a paper pull-out against the
+ * dark device is the contrast that sells "spec sheet".
+ */
+interface DrawerPalette {
+  /** Plate ground. */
+  ground: string;
+  /** Body-copy ink at full read strength. */
+  ink: (a: number) => string;
+  /** The pointing color — desigs, bullets, CTA, shell, spec highlights. */
+  gold: string;
+  /** Gold with alpha, for the shell gradient stops. */
+  goldA: (a: number) => string;
+  /** The wash's second family (dawn on dark, ink on light). */
+  washA: (a: number) => string;
+  /** Seam shadow color (the card's overhang). */
+  seamA: (a: number) => string;
+}
+
+const DRAWER_DARK: DrawerPalette = {
+  ground: VOID,
+  ink: (a) => `rgba(${DAWN}, ${a})`,
+  gold: SERVICES_GOLD,
+  goldA: (a) => `rgba(202, 165, 84, ${a})`,
+  washA: (a) => `rgba(${DAWN}, ${a})`,
+  seamA: (a) => `rgba(5, 4, 3, ${a})`,
+};
+const DRAWER_LIGHT: DrawerPalette = {
+  ground: "#ece3d6",
+  ink: (a) => `rgba(17, 15, 9, ${a})`,
+  gold: "#9a7a2e",
+  goldA: (a) => `rgba(154, 122, 46, ${a})`,
+  washA: (a) => `rgba(17, 15, 9, ${a})`,
+  seamA: (a) => `rgba(17, 15, 9, ${a * 0.45})`,
+};
+
+function bakeDrawerFace(plate: ServicePlate, pal: DrawerPalette): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = BAKE_W;
   canvas.height = BAKE_H;
@@ -937,14 +986,14 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   const label = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
   const maxW = BAKE_W - PAD_X * 2;
 
-  // Ground — opaque void, with a whisper of the glass gradient so the drawer
-  // is not a flat black rectangle next to the photo-lit card.
-  ctx.fillStyle = VOID;
+  // Ground — opaque, with a whisper of the glass gradient so the drawer
+  // is not a flat rectangle next to the photo-lit card.
+  ctx.fillStyle = pal.ground;
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
   const wash = ctx.createLinearGradient(0, 0, BAKE_W * 0.4, BAKE_H);
-  wash.addColorStop(0, `rgba(${DAWN}, 0.05)`);
-  wash.addColorStop(0.5, `rgba(${DAWN}, 0.012)`);
-  wash.addColorStop(1, "rgba(202, 165, 84, 0.03)");
+  wash.addColorStop(0, pal.washA(0.05));
+  wash.addColorStop(0.5, pal.washA(0.012));
+  wash.addColorStop(1, pal.goldA(0.03));
   ctx.fillStyle = wash;
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
@@ -978,8 +1027,8 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   // toward the joint. This is the depth cue that sells "slides out from
   // under", and it replaces every stroke the left edge no longer gets.
   const seam = ctx.createLinearGradient(0, 0, 130, 0);
-  seam.addColorStop(0, "rgba(5, 4, 3, 0.6)");
-  seam.addColorStop(1, "rgba(5, 4, 3, 0)");
+  seam.addColorStop(0, pal.seamA(0.6));
+  seam.addColorStop(1, pal.seamA(0));
   ctx.fillStyle = seam;
   ctx.fillRect(0, 0, 130, BAKE_H);
 
@@ -988,10 +1037,10 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   const closeY = DRAWER_CLOSE_BOX.y * BAKE_H;
   const closeW = DRAWER_CLOSE_BOX.w * BAKE_W;
   const closeH = DRAWER_CLOSE_BOX.h * BAKE_H;
-  ctx.strokeStyle = `rgba(${DAWN}, 0.22)`;
+  ctx.strokeStyle = pal.ink(0.22);
   ctx.lineWidth = 2;
   ctx.strokeRect(closeX, closeY, closeW, closeH);
-  ctx.strokeStyle = `rgba(${DAWN}, 0.6)`;
+  ctx.strokeStyle = pal.ink(0.6);
   ctx.lineWidth = 2.5;
   const cInset = closeW * 0.34;
   ctx.beginPath();
@@ -1013,7 +1062,7 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   const drawDesig = (text: string, atY: number): number => {
     label.letterSpacing = "4px";
     ctx.font = `400 20px ${CARD_FONT}`;
-    ctx.fillStyle = "rgba(202, 165, 84, 0.75)";
+    ctx.fillStyle = pal.goldA(0.75);
     ctx.fillText(text.toUpperCase(), PAD_X, atY);
     label.letterSpacing = "0px";
     return atY + 50;
@@ -1029,21 +1078,21 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   const bulletIndent = 38;
   for (const item of plate.breakdown) {
     const lines = wrapRuns(ctx, [item], maxW - bulletIndent);
-    ctx.fillStyle = "rgba(202, 165, 84, 0.6)";
+    ctx.fillStyle = pal.goldA(0.6);
     ctx.save();
     ctx.translate(PAD_X + 7, y - 10);
     ctx.rotate(Math.PI / 4);
     ctx.fillRect(-5.5, -5.5, 11, 11);
     ctx.restore();
     lines.forEach((line, i) => {
-      drawRunLine(ctx, line, PAD_X + bulletIndent, y + i * BULLET_LH, `rgba(${DAWN}, 0.9)`);
+      drawRunLine(ctx, line, PAD_X + bulletIndent, y + i * BULLET_LH, pal.ink(0.9));
     });
     y += lines.length * BULLET_LH + BULLET_GAP;
   }
 
   /* ── 02 / HOW — the qualification grid ──────────────────────────────── */
   y += 34;
-  ctx.strokeStyle = `rgba(${DAWN}, 0.1)`;
+  ctx.strokeStyle = pal.ink(0.1);
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(PAD_X, y - 42);
@@ -1055,13 +1104,13 @@ function bakeDrawerFace(plate: ServicePlate): HTMLCanvasElement {
   const drawSpecCell = (dt: string, dd: string, cx: number, cy: number, wide: boolean): number => {
     label.letterSpacing = "3px";
     ctx.font = `400 19px ${CARD_FONT}`;
-    ctx.fillStyle = `rgba(${DAWN}, 0.45)`;
+    ctx.fillStyle = pal.ink(0.45);
     ctx.fillText(dt.toUpperCase(), cx, cy);
     label.letterSpacing = "0px";
     ctx.font = `400 31px ${CARD_SANS}`;
     const lines = wrapRuns(ctx, [dd], (wide ? maxW : colW) - 24);
     lines.forEach((line, i) => {
-      drawRunLine(ctx, line, cx, cy + 40 + i * 38, wide ? SERVICES_GOLD : `rgba(${DAWN}, 0.9)`);
+      drawRunLine(ctx, line, cx, cy + 40 + i * 38, wide ? pal.gold : pal.ink(0.9));
     });
     return 40 + lines.length * 38;
   };
@@ -1394,6 +1443,18 @@ export function ServicesCardRing({
    *  otherwise call `setDrawerRequested` every frame until the state landed. */
   const [drawerRequested, setDrawerRequested] = useState(false);
   const drawerRequestedRef = useRef(false);
+  /* The DRAWER's theme (ADR-050 + ADR-058, 2026-08-02). The spec sheet is a
+     baked texture, so the CSS flip cannot reach it — the mode travels as
+     React state and the bake/material memos key on it. Dark values are the
+     shipped literals (byte-identical); light re-papers the tray in Semantic
+     Dawn / Latent Night / light-role gold. Card faces deliberately do NOT
+     re-bake — kept-dark imagery, ADR-058 Lane 0. */
+  const [drawerTheme, setDrawerTheme] = useState<ThemeMode>(readThemeMode);
+  useEffect(() => {
+    const sync = () => setDrawerTheme(readThemeMode());
+    sync();
+    return useThemeStore.subscribe(sync);
+  }, []);
   const cardGroupRefs = useRef<Array<THREE.Group | null>>([]);
   const meshRefs = useRef<Array<THREE.Mesh | null>>([]); // content planes (anchor projection)
   const matRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]); // content materials
@@ -1530,14 +1591,17 @@ export function ServicesCardRing({
     const pts: number[] = [];
     const seg = (ax: number, ay: number, az: number, bx: number, by: number, bz: number) =>
       pts.push(ax, ay, az, bx, by, bz);
-    // Front + back face outlines, minus the seam (left) edge…
-    for (const z of [hd, -hd]) {
-      seg(-hw, hh, z, hw, hh, z); // top
-      seg(hw, hh, z, hw, -hh, z); // leading (right) edge
-      seg(hw, -hh, z, -hw, -hh, z); // bottom
-    }
-    // …plus the two depth edges of the leading corner, so the tray's open
-    // end still reads as a solid slab under the rig's yaw.
+    // FRONT face outline only, minus the seam (left) edge. The original
+    // also traced the BACK face's U — and because the seam edge is
+    // deliberately unlit, the back U had no left edge either, so under any
+    // tilt the eye saw two disconnected U-shapes joined only at the leading
+    // corner: a textbook impossible object (owner, 2026-08-02,
+    // "Escher-esque"). A closed solid can afford both silhouettes; an open
+    // bracket cannot. The two leading depth edges stay — they are what
+    // keeps the tray's open end reading as a slab with thickness.
+    seg(-hw, hh, hd, hw, hh, hd); // top
+    seg(hw, hh, hd, hw, -hh, hd); // leading (right) edge
+    seg(hw, -hh, hd, -hw, -hh, hd); // bottom
     seg(hw, hh, hd, hw, hh, -hd);
     seg(hw, -hh, hd, hw, -hh, -hd);
     const geometry = new THREE.BufferGeometry();
@@ -1682,12 +1746,18 @@ export function ServicesCardRing({
               toneMapped: false,
               side: THREE.FrontSide,
             } as const;
+            /* Caps sit visible only as the bezel ring around the content
+               plane; light gives them a dawn glass one step deeper than the
+               bake's ground so the ring still reads. Walls/glint take the
+               light-role gold — same pigment the bake's chrome uses. */
+            const caps = drawerTheme === "light" ? "#ded2c0" : "#14110c";
+            const walls = drawerTheme === "light" ? "#9a7a2e" : SERVICES_GOLD;
             return [
-              new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color("#14110c") }),
-              new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(SERVICES_GOLD) }),
+              new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(caps) }),
+              new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(walls) }),
             ] as [THREE.MeshBasicMaterial, THREE.MeshBasicMaterial];
           }),
-    [openDrawer]
+    [openDrawer, drawerTheme]
   );
   const drawerGlintMaterials = useMemo(
     () =>
@@ -1696,14 +1766,14 @@ export function ServicesCardRing({
         : SERVICE_PLATES.map(
             () =>
               new THREE.LineBasicMaterial({
-                color: new THREE.Color(SERVICES_GOLD),
+                color: new THREE.Color(drawerTheme === "light" ? "#9a7a2e" : SERVICES_GOLD),
                 transparent: true,
                 opacity: 0,
                 depthWrite: false,
                 toneMapped: false,
               })
           ),
-    [openDrawer]
+    [openDrawer, drawerTheme]
   );
 
   useEffect(() => {
@@ -1830,7 +1900,9 @@ export function ServicesCardRing({
       const maxAniso = gl.capabilities.getMaxAnisotropy?.() ?? 1;
       setDrawerTextures(
         SERVICE_PLATES.map((plate) => {
-          const texture = new THREE.CanvasTexture(bakeDrawerFace(plate));
+          const texture = new THREE.CanvasTexture(
+            bakeDrawerFace(plate, drawerTheme === "light" ? DRAWER_LIGHT : DRAWER_DARK)
+          );
           texture.colorSpace = THREE.SRGBColorSpace;
           texture.anisotropy = Math.min(8, maxAniso);
           texture.needsUpdate = true;
@@ -1841,7 +1913,9 @@ export function ServicesCardRing({
     return () => {
       disposed = true;
     };
-  }, [gl, openDrawer, drawerRequested]);
+    // `drawerTheme` re-runs the bake on a flip; the old set disposes via the
+    // `[drawerTextures]` cleanup effect below, exactly like a glEpoch rebake.
+  }, [gl, openDrawer, drawerRequested, drawerTheme]);
 
   // GPU warm-up (2026-07-29 perf pass). The baked CanvasTextures carry
   // `needsUpdate` and upload LAZILY — on the first frame `cardGroup`
@@ -2315,7 +2389,19 @@ export function ServicesCardRing({
          instrument moves behind it. Cards without a drawer are untouched
          (drawerT = 0 ⇒ the subtraction is exactly 0). */
       const biasKeep = 1 - drawerT;
-      const ringPitch = tilt.pitch + bias.pitch * biasKeep;
+      /* PITCH is DAMPED on the open clock, not zeroed (2026-08-02 — the
+         owner's "Escher-esque" report). It has no seam to protect, so the
+         2026-07-27 ruling left it fully alive — but the rig's pointer
+         pitch plus this card's hover pitch reach ~0.3 rad at a corner,
+         and at that lean the extruded frames (glass walls, chamfer cut,
+         double silhouettes) stop agreeing with the flat bakes. KEEP 0.22
+         holds ~4° of life; `openPairPitch` mirrors the yaw's rig
+         cancellation so the WORLD pitch is what gets damped. */
+      const ringPitch = openPairPitch(
+        tilt.pitch + bias.pitch * biasKeep,
+        rigPointerPitchRef.current,
+        drawerT
+      );
       const ringYaw = openPairYaw(
         cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw,
         rigPointerYawRef.current,

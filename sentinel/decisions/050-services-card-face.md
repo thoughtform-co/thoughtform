@@ -617,3 +617,49 @@ single writer of `rigPointerYawRef`.
   [021](021-corridor-exit-zoom-dissipate.md) (motion contract),
   [048](048-editorial-band.md) (band geometry).
 - Lab: `app/(internal)/test/services-card-face-lab/`
+
+## Addendum — the open pair squares up, and the tray learns the light theme (2026-08-02, owner)
+
+Owner report, with screenshots: the open pair's 3D frame read "a bit
+Escher-esque… both in light and dark mode", and the opened card should go
+"semantic dawn with tensor gold and latent night accents".
+
+**Diagnosis (scene-probed, not eyeballed).** The open pair's world matrix
+showed yaw at exactly zero (the flush-seam cancel working as designed) and
+PITCH at ~0.32 rad with the cursor at a screen corner — the rig's
+pointer-look pitch plus the card's own hover pitch, both fully alive at
+open. At that lean the extruded frames disagree with the flat bakes three
+ways: the glass box shows its side walls and BOTH silhouettes (double
+gold outlines the content planes don't echo), the chamfer's side wall
+draws a stray diagonal, and the tray's open glint — front U + back U +
+only two connecting depth edges, the seam edge deliberately unlit on both
+— literally forms an impossible object. Frame and content stopped agreeing
+about the projection; the eye calls that Escher.
+
+**Fix, three parts:**
+
+1. `openPairPitch` (`ringMath`) — `openPairYaw`'s sibling with a KEEP
+   instead of a hard zero: the pair's WORLD pitch (rig + local, via the new
+   `rigPointerPitchRef`, published on the same actor line as the yaw)
+   scales to `OPEN_PAIR_PITCH_KEEP = 0.22` on the drawer clock. ~4° of
+   pointer life survives; the walls sit effectively edge-on. t = 0 is
+   identity (closed ring + deck byte-identical), unit-pinned at both ends.
+   This QUALIFIES the 2026-07-27 "pitch survives untouched" ruling the
+   same way that ruling qualified stilling the rig: confine the stillness
+   to the pair, keep the instrument alive.
+2. The tray glint drops its BACK-face outline — an open bracket cannot
+   afford two silhouettes. Front U + the two leading depth edges carry the
+   thickness read.
+3. `bakeDrawerFace` takes a `DrawerPalette`: DARK is the shipped literals
+   verbatim; LIGHT re-papers the spec sheet in Semantic Dawn (#ece3d6)
+   with Latent Night ink (#110f09) and the light-role gold (#9a7a2e) for
+   everything that points — desigs, diamonds, shell, spec highlights, CTA.
+   Tray slab caps/walls/glint follow via `drawerTheme` (store-subscribed;
+   a flip re-bakes and the old texture set disposes through the existing
+   cleanup). The CARD faces stay photo-dark in both themes — ADR-058
+   Lane-0 kept-dark imagery; the parchment tray against the dark device is
+   the "spec sheet out of the machine" read.
+
+Verified headed in both themes with the cursor parked at the old worst-case
+corner; drawer/ring/scroll-clock smokes green; `services-ring-math` suite
+green with the new endpoint pins.

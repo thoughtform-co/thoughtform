@@ -76,6 +76,29 @@ Change one alone and the surface is incoherent, not merely imperfect:
   both slabs identically. The RIG's yaw counts too — cancel it ON THE CARD
   (`openPairYaw` × `rigPointerYawRef`), never by damping the rig, which
   freezes the mark and orbits while a card is open. ADR-050 "Flush seam".
+  **…and PITCH is DAMPED, not free (2026-08-02).** "Spend liveliness on
+  pitch" met its limit: rig pointer pitch + hover pitch reach ~0.3 rad at a
+  screen corner, and at that lean the pair's EXTRUDED frames (glass walls,
+  chamfer cut, double silhouettes, the tray's open glint) stop agreeing
+  with the flat bakes — the owner's "Escher-esque". `openPairPitch` ×
+  `rigPointerPitchRef` scales the open pair's WORLD pitch to
+  `OPEN_PAIR_PITCH_KEEP` (0.22 ≈ 4° max) on the same drawer clock; closed
+  ring and deck are byte-identical (t = 0 identity, unit-pinned). The tray
+  glint also dropped its BACK-face outline — an open bracket cannot afford
+  two silhouettes (front U + floating back U = an impossible object under
+  any tilt); the leading depth edges alone carry the thickness read.
+- **The DRAWER bake is THEMED; the card faces are not (2026-08-02).**
+  `bakeDrawerFace` takes a `DrawerPalette` — dark is the shipped ADR-050
+  literals verbatim, light is Semantic Dawn ground / Latent Night ink /
+  light-role gold (#9a7a2e), and the tray's slab caps, walls and glint
+  follow via the same `drawerTheme` state (re-baked on a store flip; the
+  old set disposes through the `[drawerTextures]` cleanup). The CARD faces
+  keep their photo-dark treatment in BOTH themes — kept-dark imagery is an
+  ADR-058 Lane-0 decision, and the parchment tray against the dark device
+  is what sells "spec sheet pulled out of the machine". ⚠ A raw
+  `data-theme` attribute write does NOT re-bake (only the store notifies);
+  both real paths — the toggle and the `?theme=` bootstrap — go through
+  the store/attribute pair correctly.
 - **Dismissal keys on ring PROGRESS, not the step clock** — `data-active-step`
   only changes at beat boundaries, which lets a card rotate a half-slot with
   its drawer still out (`drawerDismissedByScroll`, unit-pinned in `ringMath`).

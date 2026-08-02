@@ -411,6 +411,47 @@ export function openPairYaw(localYaw: number, rigYaw: number, drawerT: number): 
   return localYaw * (1 - t) - rigYaw * t;
 }
 
+/**
+ * How much of the pair's WORLD pitch survives at full open. Yaw goes to
+ * exactly zero (`openPairYaw` — the flush seam demands it: the tray is
+ * offset along local +x, so yaw splits the pair's depths). Pitch has no
+ * seam to protect — the tray moves WITH the card under x-rotation — so it
+ * was left untouched (owner, 2026-07-27, "pitch is what keeps pointer-look
+ * alive"). That ruling met its limit 2026-08-02: pitch accumulates TWO
+ * channels (the rig's pointer-look plus the card's own hover tilt), and at
+ * a screen corner the pair leaned ~0.3 rad — enough that the extruded
+ * glass frames showed side walls and double silhouettes while the flat
+ * baked faces barely foreshortened. The owner read it as "Escher-esque",
+ * and he was right: frame and content disagreed about the projection.
+ *
+ * 0.22 keeps ~4° at the old extreme — the pair still breathes with the
+ * cursor, the walls stay effectively edge-on, and the double outlines
+ * collapse to a hairline.
+ */
+export const OPEN_PAIR_PITCH_KEEP = 0.22;
+
+/**
+ * The card's local x-rotation while its drawer is open — `openPairYaw`'s
+ * sibling, one axis over, with a KEEP instead of a hard zero.
+ *
+ * At `t = 0` this returns `localPitch` untouched (closed ring and the
+ * ADR-047 deck are byte-identical). At `t = 1` the applied local rotation
+ * becomes `keep·localPitch − (1 − keep)·rigPitch`, so the pair's WORLD
+ * pitch — rig plus local — lands at `keep × (localPitch + rigPitch)`: the
+ * same cancellation geometry as the yaw, scaled to a whisper instead of
+ * zero. Pure — the caller passes the rig pitch in, so `ringMath` stays
+ * three-free.
+ */
+export function openPairPitch(
+  localPitch: number,
+  rigPitch: number,
+  drawerT: number,
+  keep: number = OPEN_PAIR_PITCH_KEEP
+): number {
+  const t = clamp01(drawerT);
+  return localPitch - (1 - keep) * t * (localPitch + rigPitch);
+}
+
 /** How far BEHIND the card's own content plane the drawer's sits while the
  *  drawer is housed. The gap is what sells "slides out from under the face"
  *  during the slide; renderOrder alone only fixes paint order, not parallax. */

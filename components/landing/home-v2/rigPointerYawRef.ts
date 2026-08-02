@@ -27,3 +27,19 @@
  */
 
 export const rigPointerYawRef: { current: number } = { current: 0 };
+
+/**
+ * rigPointerPitchRef — the same contract, one axis over: the `rotation.x`
+ * (pointer-look damp + settle pose) the actor applied this frame.
+ *
+ * Published 2026-08-02, when the owner reported the open pair reading
+ * "Escher-esque". Yaw had been cancelled since ADR-050, but PITCH still
+ * accumulated two channels (this rig term plus the card's own hover tilt) to
+ * ~0.3 rad at a screen corner — and at that lean the pair's extruded frames
+ * stop agreeing with their flat baked faces: the glass box shows its side
+ * walls and both silhouettes while the content barely foreshortens. The ring
+ * DAMPS (not zeroes) the pair's world pitch through `openPairPitch`, so the
+ * open state keeps a whisper of pointer life without the impossible-object
+ * read. Same single-writer line as the yaw above.
+ */
+export const rigPointerPitchRef: { current: number } = { current: 0 };

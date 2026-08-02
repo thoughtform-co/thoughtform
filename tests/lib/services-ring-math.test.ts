@@ -60,6 +60,7 @@ import {
   RING_CARD_RENDER_ORDERS,
   DRAWER_HOUSED_DEPTH,
   drawerContentDepth,
+  openPairPitch,
   openPairYaw,
   drawerSlideX,
   drawerRecenterX,
@@ -1044,5 +1045,24 @@ describe("splitServicesRunway (ADR-056)", () => {
     const ringTravel = TRAVEL - PROOF;
     const exitStartsAt = PROOF + RING_EXIT_START * ringTravel;
     expect(splitServicesRunway(exitStartsAt, TRAVEL, PROOF).ringP).toBeCloseTo(RING_EXIT_START, 12);
+  });
+});
+
+describe("openPairPitch (ADR-050, 2026-08-02 Escher fix)", () => {
+  const KEEP = 0.22;
+  it("is identity at drawerT = 0 — the closed ring and the deck are byte-identical", () => {
+    expect(openPairPitch(0.13, 0.4, 0)).toBe(0.13);
+  });
+  it("lands the WORLD pitch at keep x (local + rig) at full open", () => {
+    const local = 0.11;
+    const rig = 0.23;
+    const applied = openPairPitch(local, rig, 1);
+    // world = rig + applied local rotation
+    expect(rig + applied).toBeCloseTo(KEEP * (local + rig), 10);
+  });
+  it("keep = 0 degenerates to the yaw's full cancellation", () => {
+    const local = 0.11;
+    const rig = 0.23;
+    expect(rig + openPairPitch(local, rig, 1, 0)).toBeCloseTo(0, 10);
   });
 });
