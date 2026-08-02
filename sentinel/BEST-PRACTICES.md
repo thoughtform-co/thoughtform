@@ -13,6 +13,7 @@
 - [Authentication](#-authentication)
 - [CSS & Styling](#-css--styling)
 - [State Management](#-state-management)
+- [Content Guards](#-content-guards)
 - [After a non-trivial fix](#-after-a-non-trivial-fix)
 - [Quick Checklist](#-quick-checklist)
 
@@ -961,6 +962,42 @@ Terminal/manifesto text uses Tensor Gold with CRT glow:
 ```
 
 **Why it matters:** Consistent brand color for terminal aesthetic.
+
+---
+
+## 📐 Content Guards
+
+### Pin AGREEMENT between surfaces, not the literal value
+
+A published figure repeated on several surfaces drifts one surface at a time.
+The instinct is to pin the number in a test (`expect(stat.value).toBe("47+")`),
+which fails the moment the number legitimately changes — so the next person
+edits the test to match the code, and the guard has taught them to disable it.
+
+Pin the INVARIANT instead: collect every place the claim appears and assert
+they reduce to one value.
+
+```ts
+// Every stat / readout / block labelled "Skills", plus the sum of the
+// map plate's per-shape counts, must agree. No literal appears here.
+expect([...totals.keys()]).toHaveLength(1);
+```
+
+Raising the count then stays a pure content edit, and forgetting one of six
+printings is a red test with a message naming exactly which surfaces disagree
+(`tests/lib/cases-registry.test.ts`, ADR-056 U12 — 42 outlived its own source
+across six printings before this existed).
+
+Two corollaries learned the same day:
+
+- **A guard only covers what it walks.** The casefile scanner walked `CASES`
+  and `PROJECT_CASES`; the same claim on an unlisted `/arcs` deck page shipped
+  green for months. When a claim spans content modules, the pin belongs in
+  each module's own registry test.
+- **Pin the string the copy actually contains.** "22 teams mapped" reads as one
+  phrase but lives as a value (`"22"`) and a label (`"teams mapped"`) in
+  separate fields — a regex for the joined phrase can never match. Pin the
+  half that carries the meaning.
 
 ---
 

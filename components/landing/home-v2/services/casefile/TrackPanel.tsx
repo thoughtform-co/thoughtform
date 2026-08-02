@@ -8,8 +8,11 @@ import type { CaseTrack } from "@/lib/cases/types";
 import { TrackVisual } from "./TrackVisual";
 
 /**
- * TrackPanel — the right column. Preview head, evidence plate, readouts,
- * dotted-leader context rows, provenance line.
+ * TrackPanel — the right column. Preview head, evidence plate, then a foot
+ * that is ONE of three things: the tool gallery's capability tiles, the
+ * track's own 2×2 achievement blocks, or readouts over dotted-leader context
+ * rows and a provenance line. The first two suppress the register and the
+ * provenance line; see the comment on `contextRows` for why.
  *
  * It is the `tabpanel` for the directory's row tablist, so it carries the
  * ARIA wiring and a `key` on the track id upstream (a fresh subtree per
@@ -43,6 +46,11 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
       ? (PROJECT_CASES.find((c) => c.id === visual.toolIds[toolIdx]) ?? null)
       : null;
 
+  /* The track's own 2×2 achievement foot (ADR-056 U12), when it has one. A
+     tool in view still wins: its capabilities describe the thing on screen,
+     which is narrower than the row and therefore more specific. */
+  const blocks = !tool && track.blocks?.length ? track.blocks : null;
+
   /* WHILE A TOOL IS IN VIEW, THE FOOT IS THE CAPABILITIES AND NOTHING ELSE
      (owner, 2026-07-31, third pass). The context row and the provenance line
      both duplicated words the plate now carries at reading size — mode, team
@@ -50,9 +58,16 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
      reads beside the screenshot, and status is already in the panel head
      ("FLEET — IN PRODUCTION"). Dropping them is what buys the four tiles the
      room to read at `--fl-copy`, and it collapses the foot from three
-     private grids down to the plate's own 50% rail. */
-  const contextRows = tool ? [] : track.context;
-  const source = tool ? null : track.source;
+     private grids down to the plate's own 50% rail.
+
+     A BLOCKS FOOT DROPS THEM FOR THE SAME REASON, plus a measured one: its
+     tiles are three lines (figure, title, description) where a capability
+     tile is two, and four of those with the register AND the provenance line
+     underneath overruns the t7→t11 band at 1440×800. Something has to go,
+     and it is the two rows that repeat what the panel head and the brief
+     already say. */
+  const contextRows = tool || blocks ? [] : track.context;
+  const source = tool || blocks ? null : track.source;
 
   return (
     <div
@@ -103,9 +118,26 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
               </li>
             ))}
           </ul>
+        ) : blocks ? (
+          /* THE 2×2 ACHIEVEMENT FOOT (owner, 2026-08-02). Same grammar as the
+             capability tiles above — reused, not cloned, so the responsive
+             ladder and the light-theme rows live in one place — with one
+             addition: an OPTIONAL figure. A readout row can only say things
+             that reduce to a number; the claims worth making about an
+             engagement do not all reduce to one, and a tile with no figure
+             sits level with the tiles that have one rather than below them. */
+          <ul className="fl-caps fl-caps--blocks">
+            {blocks.map((b, i) => (
+              <li className="fl-cap" key={i}>
+                {b.stat ? <span className="fl-cap__n">{b.stat}</span> : null}
+                <span className="fl-cap__t">{b.title}</span>
+                <span className="fl-cap__d">{b.desc}</span>
+              </li>
+            ))}
+          </ul>
         ) : (
           <ul className="fl-readouts" data-solo={solo || undefined}>
-            {track.readouts.map((r, i) => (
+            {(track.readouts ?? []).map((r, i) => (
               <li className="fl-readout" key={i}>
                 {/* `data-wide` lets a value like "5 → 130+" or "Days → min"
                     drop a size step instead of wrapping mid-figure. */}

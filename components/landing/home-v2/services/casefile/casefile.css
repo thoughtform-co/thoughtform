@@ -1093,6 +1093,77 @@
   border: 1px solid rgba(var(--gold-rgb), 0.3);
 }
 
+/* ── The WEIGHTED registry (2026-08-02, ADR-056 U12) ───────────────────────
+   When the groups carry counts, the gloss line is replaced by the group's
+   WEIGHT — how many Skills sit on that shape, how far it spreads, and two
+   of them by name. The plate stops being a taxonomy and becomes a map with
+   a scale, which is the whole claim of the row it leads.
+
+   The gloss is not deleted, it goes `visually-hidden` (absolutely
+   positioned, so it leaves the grid entirely and cannot shift a row). */
+.fl-plate--registry[data-weighted] .fl-reg__groups {
+  gap: clamp(5px, 0.8svh, 9px) 0;
+}
+/* The weight line takes the gloss's column. Explicit placement rather than
+   auto, so the visually-hidden gloss beside it can never claim the slot. */
+.fl-plate--registry[data-weighted] .fl-reg__name {
+  grid-column: 1;
+}
+.fl-reg__weight {
+  grid-column: 2;
+}
+.fl-reg__weight {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+/* CONTENT — the figure is what the plate is now claiming, and the four of
+   them sum to the count the foot prints. Tabular so the column of numbers
+   lines up against the bars beside it. */
+.fl-reg__count {
+  flex: none;
+  min-width: 2.2ch;
+  font-family: var(--fl-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--dawn);
+}
+/* Scaled against the LARGEST group, not the total: at total-scale the
+   5-Skill shape draws a 3px stub that reads as "empty" rather than "small".
+   `--w` is the only inline value — the paint stays in the sheet. */
+.fl-reg__bar {
+  flex: 1;
+  min-width: 32px;
+  max-width: 132px;
+  position: relative;
+  height: 3px;
+  background: rgba(var(--dawn-rgb), 0.1);
+}
+.fl-reg__bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--w, 0) * 100%);
+  background: rgba(var(--gold-rgb), 0.5);
+}
+/* CHROME — it labels the spread, it is not the spread. */
+.fl-reg__teams {
+  flex: none;
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.35);
+}
+/* ⚠ ONE LINE PER GROUP IS THE WHOLE BUDGET. A second line naming two Skills
+   per shape was built and measured out: it clipped the plate 59px at
+   1440×820 and 39px at 1600×900, i.e. it only fitted above ~970h. Anything
+   added here pushes the exemplar rows out, and those carry the `Human` tag. */
+
 /* ── Tool gallery ─────────────────────────────────────────────────────── */
 
 /* Third pass (owner, 2026-07-31 — "take a step back and fix it properly").
@@ -1387,6 +1458,65 @@
   color: rgba(var(--dawn-rgb), 0.6);
 }
 
+/* ── Achievement blocks (a track's own 2×2 foot) ───────────────────────────
+   The capability tiles' grammar, REUSED — same grid, same title and
+   description rules, same short-viewport ladder — with one addition: an
+   optional figure above the title. Cloning the tile instead would have
+   duplicated three responsive rungs and every light-theme row, and the two
+   copies would have drifted the first time either moved.
+
+   Two differences earn their overrides. The rails are SYMMETRIC, because
+   there is no 50/50 plate above this foot to align to — the tools tiles
+   inherit the shot's rail on the right, and a blocks tile has no shot. And
+   the tiles are three lines rather than two, so the register and the
+   provenance line are dropped in the renderer (they do not fit) and the
+   figure takes a rung of its own on short viewports. */
+.fl-caps--blocks {
+  /* One source for the figure's size AND for the row it reserves below —
+     the short-viewport rungs retune this and the alignment follows. */
+  --fl-stat: clamp(19px, 1.7vw, 24px);
+  --fl-stat-gap: 3px;
+}
+.fl-caps--blocks .fl-cap:nth-child(odd) {
+  padding-left: calc(var(--fl-plate-px) + 1px);
+  padding-right: clamp(10px, 1.2vw, 16px);
+}
+.fl-caps--blocks .fl-cap:nth-child(even) {
+  padding-left: clamp(10px, 1.2vw, 16px);
+  padding-right: calc(var(--fl-plate-px) + 1px);
+}
+/* THE FIGURE ROW IS RESERVED WHETHER OR NOT THERE IS A FIGURE. Measured at
+   1440×800: left to flow, the tile with no stat pulled its title 27px up and
+   the fourth tile read as misaligned rather than as deliberately different.
+   Explicit rows keep every title on one rail, so the empty space above a
+   figureless tile says "this claim has no number" instead of "this grid is
+   broken". `1fr` on the description row also floors all four descriptions. */
+.fl-caps--blocks .fl-cap {
+  display: grid;
+  grid-template-rows: calc(var(--fl-stat) + var(--fl-stat-gap)) auto 1fr;
+  align-content: start;
+}
+.fl-caps--blocks .fl-cap__t {
+  grid-row: 2;
+  min-width: 0;
+}
+.fl-caps--blocks .fl-cap__d {
+  grid-row: 3;
+}
+/* Same register as `.fl-readout__v`, a step smaller: this figure shares its
+   tile with a title and a sentence, where a readout owns its column. */
+.fl-cap__n {
+  grid-row: 1;
+  display: block;
+  margin-bottom: var(--fl-stat-gap);
+  font-family: var(--fl-mono);
+  font-weight: 700;
+  font-size: var(--fl-stat);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--dawn);
+}
+
 /* Wide viewports: the quarters have room to spare, so the label steps up. */
 @media (min-width: 1600px) {
   .fl-tooltab__name {
@@ -1466,6 +1596,39 @@
   }
   .fl-reg__row {
     padding: 2px 0;
+  }
+}
+
+/* ── The blocks foot's own rungs ───────────────────────────────────────────
+   The figure steps down on the same ladder the capability descriptions
+   already use. Everything here is scoped to a class that exists only on a
+   blocks foot, so the tool gallery's deliberate 2-lines-at-800 is untouched. */
+@media (max-height: 930px) {
+  .fl-caps--blocks {
+    --fl-stat: 19px;
+  }
+}
+@media (max-height: 800px) {
+  .fl-caps--blocks {
+    --fl-stat: 17px;
+    --fl-stat-gap: 2px;
+    gap: 6px 0;
+  }
+}
+@media (max-height: 760px) {
+  .fl-caps--blocks {
+    --fl-stat: 15px;
+  }
+  /* THE BLOCKS KEEP BOTH LINES AT 720p — measured, and the opposite of the
+     tools foot's call one rung above. A capability tile sits under a plate
+     that already said most of it; a block's sentence is the only place its
+     claim is explained, and one line drops "Across creative, legal, finance,
+     product, programs and operations" to its first three words. The room is
+     real: 143px of tiles against a 160px band, because these four tiles have
+     no register or provenance line under them. */
+  .fl-caps--blocks .fl-cap__d {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 }
 /* Narrow: a ~121px quarter at 1280. 9px + minimal tracking holds the

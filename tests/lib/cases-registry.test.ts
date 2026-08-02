@@ -150,11 +150,47 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("every track carries a full panel (2..4 readouts, context, source)", () => {
+  it("every track carries a full panel (a readouts OR blocks foot, context, source)", () => {
     for (const c of CASES) {
       for (const t of c.casefile.tracks) {
-        expect(t.readouts.length).toBeGreaterThanOrEqual(2);
-        expect(t.readouts.length).toBeLessThanOrEqual(4);
+        // EXACTLY ONE FOOT (ADR-056 U12). The panel has one slot below the
+        // plate, so carrying both is not a richer row — it is a row whose
+        // rendered half is decided by a branch order in the renderer.
+        expect(
+          Boolean(t.readouts) !== Boolean(t.blocks),
+          `${c.slug}/${t.id} must carry readouts OR blocks, not both or neither`
+        ).toBe(true);
+        if (t.readouts) {
+          expect(t.readouts.length).toBeGreaterThanOrEqual(2);
+          expect(t.readouts.length).toBeLessThanOrEqual(4);
+        }
+        if (t.blocks) {
+          // The grid is 2×2 and the foot is `overflow: hidden` — a fifth
+          // tile does not wrap to a third row, it silently disappears.
+          expect(t.blocks.length, `${c.slug}/${t.id} blocks`).toBe(4);
+          for (const b of t.blocks) {
+            // Mono caps, `white-space: nowrap` with an ellipsis, against a
+            // half-rail of ~330px. It truncates rather than wrapping, so the
+            // ceiling is the guard.
+            expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeLessThanOrEqual(26);
+            // Two clamped lines, ONE at ≤760h.
+            expect(b.desc.length, `${c.slug}/${t.id} block "${b.title}" desc`).toBeLessThanOrEqual(
+              95
+            );
+            // The figure prints at display size on one line.
+            if (b.stat) {
+              expect(
+                b.stat.length,
+                `${c.slug}/${t.id} block "${b.title}" stat`
+              ).toBeLessThanOrEqual(4);
+            }
+          }
+        }
+        // The readouts kind IS the readouts — a blocks foot there would
+        // leave the row with no plate at all.
+        if (t.visual.kind === "readouts") {
+          expect(t.readouts, `${c.slug}/${t.id} solo plate needs readouts`).toBeDefined();
+        }
         expect(t.context.length).toBeGreaterThan(0);
         expect(t.source.length).toBeGreaterThan(0);
         expect(t.file.length).toBeGreaterThan(0);
@@ -235,6 +271,21 @@ describe("cases registry (ADR-054)", () => {
         if (v.kind === "registry") {
           expect(v.rows.length).toBeGreaterThan(0);
           expect(v.groups.length).toBeGreaterThan(0);
+          // WEIGHTS ARE ALL-OR-NONE (ADR-056 U12). The renderer branches per
+          // group, so a half-weighted plate would draw some groups as bars
+          // and some as glosses — two designs in one box.
+          const weighted = v.groups.filter((g) => g.count).length;
+          expect(
+            weighted === 0 || weighted === v.groups.length,
+            `${c.slug}/${t.id} registry weights are all-or-none`
+          ).toBe(true);
+          for (const g of v.groups) {
+            if (!g.count) continue;
+            // Digits only: the bar's width is `Number(count)`, so "12+" would
+            // print a figure the bar cannot honour.
+            expect(g.count, `${c.slug}/${t.id} group "${g.name}" count`).toMatch(/^\d+$/);
+            expect(g.teams?.length, `${c.slug}/${t.id} group "${g.name}" teams`).toBeGreaterThan(0);
+          }
         }
         if (v.kind === "signal") expect(v.points.length).toBeGreaterThan(1);
         if (v.kind === "tools") expect(v.toolIds.length).toBeGreaterThan(0);
@@ -322,7 +373,7 @@ describe("cases registry (ADR-054)", () => {
 
   it("the handoff's superseded readouts never came along", () => {
     // The `Thoughtform Prime` design handoff printed 15+ teams / 20+ Skills /
-    // 90% of paid social. Those predate the ADR-054 numbers doctrine (22 / 42
+    // 90% of paid social. Those predate the ADR-054 numbers doctrine (22 / 47+
     // / 4 / 5 → 130+), and "90% of paid social" is a near-variant of the "95%
     // of briefings" claim already published on the ai-keynote arc page.
     const offenders: string[] = [];
@@ -330,8 +381,62 @@ describe("cases registry (ADR-054)", () => {
       if (/\b15\+\s*teams\b/i.test(value)) offenders.push(`${path}: superseded team count`);
       if (/\b20\+\s*skills\b/i.test(value)) offenders.push(`${path}: superseded skill count`);
       if (/\b90\s*%/.test(value)) offenders.push(`${path}: duplicate paid-social claim`);
+      // 42 → 47+ (2026-08-02, ADR-056 U12). The Intelligence Map plate now
+      // SUMS its per-shape counts on screen, so a surviving 42 is a variant
+      // the reader can check against the plate beside it. Both registers are
+      // banned because the prose spells it out and the readouts do not.
+      if (/\bforty-two\b/i.test(value)) offenders.push(`${path}: superseded skill count (prose)`);
+      if (/\b42\s*skills\b/i.test(value)) offenders.push(`${path}: superseded skill count`);
+      // "22 teams mapped" claimed the 14-set's MEANING with the 22-set's
+      // VALUE — 22 is the count of teams briefed, 14 the count running the
+      // layer. The label carries the claim, so the label is what is pinned:
+      // the value and the label are separate strings and the joined phrase
+      // never exists to match on.
+      if (/\bteams\s+mapped\b/i.test(value)) offenders.push(`${path}: conflated team count`);
     });
     expect(offenders).toEqual([]);
+  });
+
+  it("one Skills total across the case, and the map plate sums to it", () => {
+    // THE PLATE MAKES THE ARITHMETIC CHECKABLE (ADR-056 U12). The weighted
+    // registry prints a count per shape; the foot prints the total. A reader
+    // can add the first up and compare, so any second variant of the total
+    // anywhere in the case is not a stale string — it is a visible
+    // contradiction. Six printings drifted from one source before this guard
+    // existed, which is exactly how 42 outlived the number it came from.
+    //
+    // No literal is pinned here on purpose: the guard is that the surfaces
+    // AGREE, so raising the count is one content edit and not a test edit.
+    const digits = (s: string) => Number(s.replace(/\D/g, ""));
+    for (const c of CASES) {
+      const totals = new Map<number, string[]>();
+      const note = (value: string, where: string) => {
+        const n = digits(value);
+        if (!n) return;
+        totals.set(n, [...(totals.get(n) ?? []), where]);
+      };
+      for (const s of c.report.stats) {
+        if (/skills?/i.test(s.label)) note(s.value, `report stat "${s.label}"`);
+      }
+      for (const t of c.casefile.tracks) {
+        for (const r of t.readouts ?? []) {
+          if (/skills?/i.test(r.label)) note(r.value, `${t.id} readout "${r.label}"`);
+        }
+        for (const b of t.blocks ?? []) {
+          if (b.stat && /skills?/i.test(b.title)) note(b.stat, `${t.id} block "${b.title}"`);
+        }
+        if (t.visual.kind === "registry" && t.visual.groups.some((g) => g.count)) {
+          const sum = t.visual.groups.reduce((n, g) => n + (Number(g.count) || 0), 0);
+          note(String(sum), `${t.id} map plate (sum of shape counts)`);
+        }
+      }
+      expect(
+        [...totals.keys()].sort((a, b) => a - b),
+        `${c.slug}: Skills totals disagree — ${[...totals]
+          .map(([n, where]) => `${n} (${where.join(", ")})`)
+          .join(" vs ")}`
+      ).toHaveLength(1);
+    }
   });
 
   it("holds the confidentiality envelope (no money, boards, or repo links)", () => {

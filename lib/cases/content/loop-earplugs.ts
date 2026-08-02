@@ -13,11 +13,20 @@ import type { CaseDef, CaseSignalPoint } from "../types";
  * NUMBERS. Every figure below is sourced; `stat.source` carries the
  * provenance. Where the harvest offered competing denominators the
  * SMALLER, exec-facing one is printed and the other is never shown:
- *   · 22 workshops = the board count of team sessions run. (14 is the
- *     count of teams with published skill cards — a different set.)
- *   · 42 Skills = the exec headline count of skills in motion. (51 is
- *     the registry's card count including scoped placeholders; printing
- *     both invites arithmetic that reconciles to neither.)
+ *   · 22 workshops = the board count of team sessions run. 14 is the count
+ *     of teams with published skill cards — A DIFFERENT SET, and since
+ *     2026-08-02 BOTH are published, so the wording has to keep them
+ *     apart: teams are BRIEFED (22, the rollout log and the governance
+ *     row) or they are USING THE LAYER (14, the Intelligence Map foot).
+ *     Never "22 teams mapped" — that phrasing claimed the second number's
+ *     meaning with the first number's value, and is now pinned out.
+ *   · 47+ Skills = the count tagged to one of the five shapes, and the
+ *     figure the Intelligence Map plate SUMS ON SCREEN (12 + 7 + 9 + 5 +
+ *     14). It replaced 42 on 2026-08-02, everywhere at once: the plate
+ *     makes the arithmetic visible, so a surviving 42 anywhere on the
+ *     page would be a second variant the reader can check. (51 is the
+ *     registry's card count including untagged and scoped placeholders;
+ *     printing both invites arithmetic that reconciles to neither.)
  *   · 4 tools = PROJECT_CASES / CASE_TOTAL.
  * "95% of briefings ship with AI" is deliberately ABSENT: it is already
  * published on the ai-keynote arc page (`lib/arcs/content/ai-keynote.ts`),
@@ -47,29 +56,72 @@ const ROLLOUT_ROWS = [
 const ROLLOUT_TAIL = "One workflow worth encoding, per team.";
 
 /**
- * The work → intelligence map (2026-07-31).
+ * The work → intelligence map (2026-07-31), WEIGHTED 2026-08-02.
  *
  * WHAT CHANGED AND WHY. This was a skills registry: the rows named a
  * workflow and the `tag` named which of the five shapes it belonged to. It
  * now names WHAT RUNS THE WORK. That one change is the difference between
- * a list of artifacts and a map — and a count of Skills is not evidence of
- * a transformation (owner, 2026-07-31: "I'm reluctant to talk about how
- * many Skills I've created because it's meaningless").
+ * a list of artifacts and a map.
  *
- * The `Human` row is the load-bearing one. A map with no human rows is a
- * sales list; the measurement that makes it a decision record is that
+ * THE WEIGHTS (2026-08-02, ADR-056 U12) are the second change, and they
+ * qualify the July ruling rather than reversing it. That ruling — "a count
+ * of Skills is not evidence of a transformation" — was about the FOOT of a
+ * row claiming a transformation. This row now claims THE MAP ITSELF, and a
+ * map with no scale is a diagram: how much of the portfolio each shape
+ * carries, and how far it spreads, is exactly what a reader needs to see
+ * that the taxonomy is load-bearing and not five words invented for a
+ * slide. The counts sum to the 47+ the foot prints, in view, which is why
+ * the sweep of that figure had to land in the same change.
+ *
+ * `count` and `teams` are read from the client's own adoption board (rev
+ * 2026.07), where the tagging lives. The BEAT renders name + gloss only, so
+ * it is unaffected by the weights it now carries — the two surfaces still
+ * share this array by reference, which is what stops them describing the
+ * same portfolio differently.
+ *
+ * A third field naming two Skills per shape was built and CUT: it clipped
+ * 59px at 1440×820 and 39px at 1600×900, so it would have shipped as copy
+ * visible on roughly one desktop in ten. See the note on `types.ts`.
+ *
+ * The `Human` row below is the load-bearing one. A map with no human rows
+ * is a sales list; the measurement that makes it a decision record is that
  * "stays human" is recorded rather than left as a gap. Do not remove it to
  * make the panel look more automated — that would invert its meaning.
  *
- * The groups are unchanged: the five shapes are the taxonomy of the work,
- * and they outlive the assignment beside them.
+ * The five shapes themselves are unchanged: they are the taxonomy of the
+ * work, and they outlive the assignment beside them.
  */
 const MAP_GROUPS = [
-  { name: "Judgment", gloss: "Applies senior judgment to varied inputs." },
-  { name: "Voice", gloss: "Writes in a specific Loop voice." },
-  { name: "Validation", gloss: "Checks output against a Loop bar." },
-  { name: "Stakeholder", gloss: "Frames information for a specific reader." },
-  { name: "Pattern", gloss: "Composes structured outputs from recurring inputs." },
+  {
+    name: "Judgment",
+    gloss: "Applies senior judgment to varied inputs.",
+    count: "12",
+    teams: "9 teams",
+  },
+  {
+    name: "Voice",
+    gloss: "Writes in a specific Loop voice.",
+    count: "7",
+    teams: "4 teams",
+  },
+  {
+    name: "Validation",
+    gloss: "Checks output against a Loop bar.",
+    count: "9",
+    teams: "6 teams",
+  },
+  {
+    name: "Stakeholder",
+    gloss: "Frames information for a specific reader.",
+    count: "5",
+    teams: "4 teams",
+  },
+  {
+    name: "Pattern",
+    gloss: "Composes structured outputs from recurring inputs.",
+    count: "14",
+    teams: "10 teams",
+  },
 ] as const;
 /**
  * THREE rows — ONE PER ASSIGNMENT. Measured, not chosen.
@@ -81,6 +133,12 @@ const MAP_GROUPS = [
  * is invisible on the machine most likely to be authoring it. A fourth row
  * looked fine at 1920 and had its TAG sliced at 1440 — a row with half a
  * tag reads as broken, which is worse than a shorter list.
+ *
+ * ⚠ THE WEIGHTS SPEND THE SAME BUDGET (2026-08-02), which is why they had to
+ * stay on ONE line per group. A second line — two Skills named per shape —
+ * cost 71px and clipped at every viewport below ~970h, and these rows are
+ * what it would have pushed out. They win that conflict every time: the
+ * `Human` row is the one thing on this plate that cannot be lost.
  *
  * The old skills registry had the same budget problem; it just sat on row
  * five where few readers reached it. As the default panel it is the first
@@ -186,10 +244,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         source: "adoption board, team-session count",
       },
       {
-        value: "42",
+        value: "47+",
         label: "Skills encoded",
         detail: "versioned, team-owned",
-        source: "exec headline count; the registry holds 51 cards incl. scoped",
+        source:
+          "count tagged to the five shapes (12+7+9+5+14), the figure the map plate sums; the registry holds 51 cards incl. untagged and scoped",
       },
       {
         value: "4",
@@ -237,7 +296,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
       phase: "encode",
       title: { pre: "Judgment,", em: "encoded." },
       body: [
-        "What surfaces in a workshop does not stay in the transcript. It becomes a Skill — versioned, reviewed, and owned by the team in one governed repository rather than by the person who wrote it. Forty-two are in motion across the company.",
+        "What surfaces in a workshop does not stay in the transcript. It becomes a Skill — versioned, reviewed, and owned by the team in one governed repository rather than by the person who wrote it. Forty-seven are in motion across the company.",
         "Encoding it is only half the act. The other half is deciding what should run each piece of work: a Skill the team owns, a tool built on those Skills, or a person, on the record. Every one of them is a variation on five recurring shapes of work — and the shapes outlive the model version, the team roster, and whatever surface launches next.",
       ],
       closer: [
@@ -300,13 +359,13 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
     /* ORDER IS THE DIRECTORY, and the first row is what the casefile OPENS
        ON.
 
-       THE TRANSFORMATION LEADS (owner, 2026-07-31). The studio held row one
-       while this directory was a list of deliverables, and it was the right
-       call then. It is the wrong one now: the studio, the films and the
-       tools are OUTPUTS of the mapping work, and leading with them presented
-       an output as if it were the engagement. The largest thing here is
-       eighteen months of deciding what should run which work — so that is
-       row one, and the evidence it produced follows it.
+       THE MAP LEADS (owner, 2026-07-31; retitled 2026-08-02). The studio
+       held row one while this directory was a list of deliverables, and it
+       was the right call then. It is the wrong one now: the studio, the
+       films and the tools are OUTPUTS of the mapping work, and leading with
+       them presented an output as if it were the engagement. The largest
+       thing here is eighteen months of deciding what should run which work
+       — so that is row one, and the evidence it produced follows it.
 
        Two consequences worth knowing before reordering again:
        · Row one's plate mounts WITH the casefile. A media row here puts its
@@ -320,12 +379,24 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // NOT `transformation` — that id belongs to the workshop-rollout row
         // below and the plate-sharing guard keys on it. Two ids one word
         // apart would be a standing trap.
+        // Renamed "AI Transformation" → "Intelligence Map" (owner,
+        // 2026-08-02). The old title named a CATEGORY OF ENGAGEMENT, which
+        // every consultancy's page also claims; this one names the artifact
+        // the engagement produced, which only someone who did the work can
+        // show. The word is deliberately vague on its own — the brief
+        // beside it is what resolves it, and the plate is what proves it.
+        //
+        // The ID DOES NOT CHURN with the rename (precedent: `transformation`
+        // → `workshop-rollout` kept its id). It is a DOM id, and the
+        // plate-sharing guard has keyed on plate KIND since 2026-07-31, so
+        // nothing downstream reads this string. `file` and `project` DO move
+        // together — the registry test normalises one against the other.
         id: "ai-transformation",
-        file: "01_AI-TRANSFORMATION/",
+        file: "01_INTELLIGENCE-MAP/",
         meta: "5 → 130+",
-        project: "AI Transformation",
+        project: "Intelligence Map",
         icon: "dir",
-        preview: "Preview — 01_ai-transformation/",
+        preview: "Preview — 01_intelligence-map/",
         vizLabel: "Map — work to intelligence",
         // The ONLY `registry` track, and the reference-equality guard finds
         // the first one — so this is what keeps the beat/casefile plate
@@ -335,14 +406,47 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           groups: MAP_GROUPS,
           rows: MAP_ROWS,
         },
-        // System numbers, not artifact counts (owner, 2026-07-31). How many
-        // Skills exist is not evidence of a transformation; how fast a
-        // company got a working practice, and how far it spread without
-        // being pushed, is.
-        readouts: [
-          { value: "22", label: "teams mapped, one frame each" },
-          { value: "21", label: "days to a functioning practice" },
-          { value: "05", label: "shapes underneath all of it" },
+        // FOUR BLOCKS, not three readouts (owner, 2026-08-02). The readout
+        // trio could only say things that reduce to a number, so the two
+        // claims that matter most here — that the layer is one system, and
+        // that the teams own it — had no way to appear. The 2×2 grammar is
+        // the tool gallery's, and the fourth block deliberately carries no
+        // figure at all.
+        //
+        // This QUALIFIES the July "system numbers, not artifact counts"
+        // ruling rather than discarding it: that ruling protected a row
+        // claiming a TRANSFORMATION from being evidenced by an inventory.
+        // The row now claims THE MAP, and the size of what is mapped is the
+        // evidence for it. The two numbers that left (21 days, 05 shapes)
+        // are not lost — 21 days still prints on the rollout and governance
+        // rows, and the five shapes ARE the plate above.
+        //
+        // ⚠ "14 teams" is a DIFFERENT SET from the 22 in the rollout log and
+        // the governance row (see NUMBERS at the top of this file). The
+        // titles are what keep them apart: USING THE LAYER vs BRIEFED. Do
+        // not harmonise the wording.
+        blocks: [
+          {
+            stat: "47+",
+            title: "Skills in active use",
+            desc: "Reusable methods, standards and review logic encoded for AI.",
+          },
+          {
+            stat: "14",
+            title: "Teams using the layer",
+            desc: "Across creative, legal, finance, product, programs and operations.",
+          },
+          {
+            stat: "1",
+            title: "Shared intelligence layer",
+            desc: "One system for authoring, testing, versioning, ownership and reuse.",
+          },
+          {
+            // No `stat`. The claim is a property of the layer, not a count
+            // of it, and inventing "14" here twice would say less.
+            title: "Domain-owned",
+            desc: "The teams that know the work maintain the Skills and extend them after handoff.",
+          },
         ],
         context: [
           { k: "Period", v: "2024 · ongoing" },
@@ -358,22 +462,27 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         stamp: { ord: "01", phase: "Navigate", ref: "NAV-01" },
         // THE ONLY PER-TRACK BRIEF (2026-08-01, ADR-056 U11). The standing
         // casefile brief has to serve all eight rows, so it can only describe
-        // the engagement — it cannot make this row's claim, which is that
-        // THE DECISION IS THE WORK. Eighteen months of deciding what should
-        // run on which intelligence is the largest thing in this file, and
-        // until now it owned a two-word heading and a plate.
+        // the engagement — it cannot make this row's claim.
         //
-        // The last sentence is load-bearing (ADR-056 U10): "stays human" is
-        // an ANSWER the mapping produced, not a gap in it. The map plate
-        // beside this paragraph shows exactly those three outcomes, so the
-        // brief previews the panel rather than restating the mission report.
+        // OWNER COPY, VERBATIM (2026-08-02). The words are not ours to
+        // tighten: the gold-wash marker was placed on an existing phrase
+        // rather than rewriting one in, and the split into segments is a
+        // display treatment only. It replaced a draft that opened on what
+        // "most AI work" does — a frame the reader has to accept before the
+        // sentence pays off. This one opens on the client's own before-state
+        // and names the thing the row is titled after, which is what makes
+        // "Intelligence Map" resolve instead of hang.
         //
-        // 284 chars against the ~330 the U11 tick move bought at 1280x720
+        // "Over eighteen months" is the SAME claim as the mission report's
+        // lede and the `5 → 130+` stat's detail — one duration, three
+        // surfaces, deliberately identical.
+        //
+        // 300 chars against the ~330 the U11 tick move bought at 1280x720
         // (the binding viewport; it was ~195 before). Re-measure THERE.
         brief: [
-          "Most AI work starts by picking a tool. This started by deciding ",
-          { em: "which work should run on which intelligence" },
-          " — team by team, workflow by workflow, with the answer written down. Some became a Skill they own. Some became a tool. Some stays human, recorded as an answer rather than a gap.",
+          "Over eighteen months, Loop's scattered AI experiments became a ",
+          { em: "shared intelligence layer" },
+          ": domain knowledge encoded as versioned Skills, connected to tools and agents, and mapped to the workflows they support. The result is one maintained system for reuse, evaluation and ownership across the company.",
         ],
       },
       {
@@ -429,7 +538,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         visual: { kind: "tools", toolIds: TOOL_IDS },
         readouts: [
           { value: "04", label: "production tools" },
-          { value: "42", label: "Skills they stand on" },
+          { value: "47+", label: "Skills they stand on" },
           { value: "Days → min", label: "briefing synthesis" },
         ],
         context: [
@@ -515,7 +624,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         visual: { kind: "readouts" },
         readouts: [
           { value: "22", label: "workshops run · one per team" },
-          { value: "42", label: "Skills encoded · versioned, team-owned" },
+          { value: "47+", label: "Skills encoded · versioned, team-owned" },
           { value: "4", label: "production tools · built in-house" },
           { value: "5 → 130+", label: "people on the layer · in 18 months" },
         ],
@@ -543,7 +652,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         },
         readouts: [
           { value: "22", label: "workshops run" },
-          { value: "42", label: "Skills encoded" },
+          { value: "47+", label: "Skills encoded" },
           { value: "4", label: "production tools" },
           { value: "5 → 130+", label: "people on the layer" },
         ],
@@ -560,6 +669,6 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
   meta: {
     title: "Loop Earplugs — Thoughtform case",
     description:
-      "Eighteen months at Loop Earplugs, mapping the company's work onto the intelligence available to it: 22 team workshops, 42 Skills encoded, and four production tools built on the layer they created.",
+      "Eighteen months at Loop Earplugs, mapping the company's work onto the intelligence available to it: 22 team workshops, 47+ Skills encoded, and four production tools built on the layer they created.",
   },
 };

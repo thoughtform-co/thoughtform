@@ -72,6 +72,44 @@ export interface CaseStat {
 /** The Arc phases a case's beats map onto, in order. */
 export type CasePhase = "navigate" | "encode" | "build";
 
+/**
+ * One shape of work on a registry plate. The gloss says what the shape IS;
+ * the optional trio below says how much of the portfolio sits on it, and is
+ * what turns the plate from a taxonomy into a WEIGHTED map (ADR-056 U12).
+ *
+ * Shared by both surfaces: the beat and the casefile track hold the same
+ * array by reference, and `cases-registry.test.ts` pins that identity. The
+ * fields are optional so a second case can carry an unweighted registry —
+ * the renderer branches on `count` and falls back to name + gloss.
+ */
+export interface CaseRegistryGroup {
+  name: string;
+  gloss: string;
+  /**
+   * Skills tagged to this shape, e.g. "12". DIGITS ONLY: the renderer sizes
+   * the bar from `Number(count)`, so the printed figure and the drawn bar
+   * cannot disagree. All-or-none within a plate (pinned).
+   */
+  count?: string;
+  /** How far the shape spreads, e.g. "9 teams". */
+  teams?: string;
+  /* NO `samples` FIELD, and this is a measurement not an omission. A second
+     line per group naming two Skills cost 71px, which the plate box only has
+     above ~970h: it clipped 59px at 1440×820 and 39px at 1600×900. Shipping
+     it behind a min-height rung would have made it copy that renders on one
+     desktop in ten — the same "dead copy someone will later edit believing
+     it ships" the MAP_ROWS footer note bans. The exemplar rows underneath
+     already name real Skills, which was most of what it bought. */
+}
+
+/** One exemplar row under a registry plate's groups. */
+export interface CaseRegistryRow {
+  team: string;
+  name: string;
+  /** What runs it — "Skill", "Tool" or "Human". */
+  tag?: string;
+}
+
 /** A beat's evidence plate. Discriminated like `ArcSection` (ADR-052). */
 export type CaseVisual =
   | { kind: "image"; image: CaseImage; caption?: string }
@@ -87,8 +125,8 @@ export type CaseVisual =
   | {
       kind: "registry";
       title: string;
-      groups: readonly { name: string; gloss: string }[];
-      rows: readonly { team: string; name: string; tag?: string }[];
+      groups: readonly CaseRegistryGroup[];
+      rows: readonly CaseRegistryRow[];
       footer?: string;
     }
   /**
@@ -149,6 +187,33 @@ export interface CaseReadout {
   label: string;
 }
 
+/**
+ * One achievement tile in a track's 2×2 foot (ADR-056 U12) — the same
+ * grammar the tool gallery's capability tiles use, with an OPTIONAL figure.
+ * That option is the whole point: a readout row can only say things that
+ * reduce to a number, and the claims worth making about an engagement do
+ * not all reduce to one. A block with no `stat` is not a lesser block.
+ *
+ * BUDGETS, pinned by `cases-registry.test.ts` and measured against the
+ * t7→t11 foot band, which is ~160px at 1280×720 and ~180px at 1440×800:
+ *   · `stat` ≤4 chars — it prints at display size on one line.
+ *   · `title` ≤26 chars — mono caps, `white-space: nowrap` with an ellipsis,
+ *     against a half-rail of ~330px. It does not wrap; it truncates.
+ *   · `desc` ≤95 chars — two clamped lines, ONE on short viewports, so the
+ *     first ~40 characters must carry the sentence.
+ * Exactly four blocks: the grid is 2×2 and a fifth silently falls out of
+ * the box.
+ *
+ * A track carries `blocks` OR `readouts`, never both — the foot has one
+ * slot. The either/or is pinned, not conventional.
+ */
+export interface CaseBlock {
+  /** The figure, when the claim has one, e.g. "47+". Absent = a text tile. */
+  stat?: string;
+  title: string;
+  desc: string;
+}
+
 /** One film on a `films` plate. Poster-first by contract: the plate renders
  *  a still and the `<video>` element does not exist until the viewer asks
  *  for it, so a row nobody opens costs zero bytes and zero layers. */
@@ -171,8 +236,8 @@ export type CaseTrackVisual =
   | { kind: "log"; rows: readonly { t: string; event: string }[]; tail?: string }
   | {
       kind: "registry";
-      groups: readonly { name: string; gloss: string }[];
-      rows: readonly { team: string; name: string; tag?: string }[];
+      groups: readonly CaseRegistryGroup[];
+      rows: readonly CaseRegistryRow[];
       footer?: string;
     }
   /** References production tools BY ID — `PROJECT_CASES` stays canonical. */
@@ -212,8 +277,25 @@ export interface CaseTrack {
   /** Panel head, right slot. */
   vizLabel: string;
   visual: CaseTrackVisual;
-  /** Two to four tiles under the plate. */
-  readouts: readonly CaseReadout[];
+  /**
+   * Two to four readout tiles under the plate. OPTIONAL since ADR-056 U12,
+   * and exactly one of `readouts` / `blocks` is present — a track whose foot
+   * is blocks has no readouts at all, rather than an empty array the next
+   * author would read as an invitation to fill it.
+   */
+  readouts?: readonly CaseReadout[];
+  /**
+   * The 2×2 achievement foot, replacing `readouts` on this track. Four
+   * tiles; see `CaseBlock` for the budgets and the either/or law.
+   *
+   * ⚠ A blocks foot DROPS the context register and the provenance line —
+   * three-line tiles plus both would overrun the band at 1440×800. That is
+   * the tool gallery's precedent ("while a tool is in view the foot is the
+   * capabilities and NOTHING else"), and it means `context` / `source`
+   * below are carried but unrendered on such a track. They stay in the data
+   * because they are the row's provenance whether or not the foot has room.
+   */
+  blocks?: readonly CaseBlock[];
   /** Dotted-leader rows. Values stay ≤20 chars — the leader needs a
    *  non-wrapping value, so a long one runs into the next column. */
   context: readonly { k: string; v: string }[];

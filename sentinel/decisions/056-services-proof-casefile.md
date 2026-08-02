@@ -1278,3 +1278,134 @@ not a layout fix.
 `--fl-t7` and `--fl-t8` on the pre-U11 geometry. It is a look-dev fork that
 does not track production and was deliberately left alone. Do not read it as
 the current contract.
+
+## Update 12 — the map gets a scale, and the foot stops being three numbers (2026-08-02, owner)
+
+**Owner brief:** make the bottom right of row one actually relevant; use the
+`04_SOFTWARE-FOR-FEW` four-block structure instead of three numbers, "which
+allows us to use numbers where it's relevant, but also just text for cases
+where there aren't any hard numbers"; and rename `AI TRANSFORMATION` to
+`INTELLIGENCE MAP` — vague on its own, resolved by the brief beside it.
+
+### The rename, and why the id did not move
+
+`project` → `Intelligence Map`, `file` → `01_INTELLIGENCE-MAP/` (20 chars,
+under the 21 the directory row allows), `preview` to match. The old title
+named a CATEGORY OF ENGAGEMENT that any consultancy's page also claims; the
+new one names the artifact the engagement produced. The track `id` stays
+`ai-transformation` — it is a DOM id, and the plate-sharing guard has keyed on
+plate KIND since Update 10, so nothing downstream reads the string.
+
+The brief is owner copy, verbatim, with the gold-wash marker placed on an
+existing phrase ("shared intelligence layer") rather than a rewritten one. It
+opens on the client's before-state instead of on what "most AI work" does — a
+frame the reader had to accept before the old sentence paid off. 300 chars
+against the ~330 U11 bought.
+
+### The plate becomes weighted
+
+`CaseRegistryGroup` / `CaseRegistryRow` are hoisted out of the two inline
+union members (beat + track) so one shape serves both, and gain optional
+`count` and `teams`. The renderer branches per group: with a count it draws
+the figure, a bar and the team spread; without one it draws the gloss exactly
+as before. **The gloss is not dropped when weighted, it goes
+`visually-hidden`** — the weight takes its slot, but "what this shape is" is
+the definition of the term beside it and a screen reader still needs it.
+
+Bars scale against the LARGEST group, not the total: at total-scale the
+5-Skill shape drew a 3px stub that read as "empty" rather than "small". Only
+`--w` is inline; the paint stays in the sheet.
+
+Why weights at all, against Update 10's "system numbers, not artifact counts"
+ruling: that ruling protected a row claiming a TRANSFORMATION from being
+evidenced by an inventory. This row claims THE MAP, and a map with no scale is
+a diagram. The counts sum to the figure the foot prints, in view.
+
+### A third line was built and measured out
+
+Two named Skills per shape, on a second line per group. It cost 71px:
+
+| viewport | plate overflow with the samples line |
+| -------- | ------------------------------------ |
+| 1440×820 | **59px**                             |
+| 1600×900 | **39px**                             |
+
+It only fitted above ~970h, so shipping it behind a rung would have made it
+copy visible on roughly one desktop in ten — the "dead copy someone will later
+edit believing it ships" the MAP_ROWS footer note already bans. Cut, with the
+note left in `types.ts` so it is not rebuilt. The exemplar rows underneath
+already name real Skills, which was most of what it bought. **The three
+exemplar rows win every budget conflict on this plate** — they carry the
+`Human` tag, the one thing here that cannot be lost.
+
+### The foot: four blocks, and one of them has no number
+
+`CaseTrack.readouts` becomes OPTIONAL, either/or with a new `blocks` — four
+tiles of `{ stat?, title, desc }`. Required-but-empty would have encoded a
+contradiction the next author "fixes" by filling it; optional makes `tsc` walk
+every consumer. Pinned: exactly four, stat ≤4, title ≤26, desc ≤95, and
+exactly one of the two feet present.
+
+It REUSES `.fl-caps` / `.fl-cap` rather than cloning them — a clone would have
+duplicated three responsive rungs and every light-theme row. Two overrides
+earn their keep: symmetric rails (there is no 50/50 plate above this foot to
+align to), and a **reserved figure row**. Measured at 1440×800, left to flow,
+the tile with no stat pulled its title 27px up and the fourth tile read as
+misaligned rather than as deliberately different; explicit grid rows put every
+title on one rail.
+
+Like the tools foot, a blocks foot drops the context register and the
+provenance line — three-line tiles plus both overran the band. And unlike the
+tools foot, **it keeps two description lines at 720p**: a capability tile sits
+under a plate that already said most of it, where a block's sentence is the
+only place its claim is explained. One line dropped "Across creative, legal,
+finance, product, programs and operations" to its first three words.
+
+### 42 → 47+, everywhere, in the same commit
+
+The plate now sums 12+7+9+5+14 on screen, so the total is arithmetic a reader
+can check — which makes any second variant a visible contradiction rather than
+a stale string. Swept: six printings in `lib/cases/`, plus
+`lib/arcs/content/ai-keynote.ts` ("Forty-two Skills across every team"), which
+`cases-registry.test.ts` does not scan.
+
+Three new guards close the class of bug rather than the instance:
+
+- **One Skills total per case.** Every stat / readout / block whose label says
+  "Skills", plus the sum of the plate's counts, must reduce to a single
+  number. No literal is pinned — raising the count stays a content edit.
+- **Superseded variants pinned out:** `forty-two`, `42 skills`, and
+  `teams mapped`. The last is the label, not the value: "22 teams mapped"
+  claimed the 14-set's MEANING with the 22-set's VALUE, and the two strings
+  never join, so a joined regex would never have matched.
+- **`tests/lib/arcs-registry.test.ts` gets the 42 pins**, because the
+  casefile's scanner walks `CASES` and `PROJECT_CASES` only — a claim
+  surviving on an unlisted deck page is the one place nobody looks.
+
+`22 teams briefed` (rollout log, governance row) is untouched: it is a
+different set from the 14, and the wording is what keeps them apart —
+BRIEFED vs USING THE LAYER.
+
+### Measured, all eight rows, both themes
+
+Zero overflow on `.fl-brief`, `.fl-panel__foot` and `.fl-plate` at every step:
+
+| viewport  | foot band | blocks height | spare |
+| --------- | --------- | ------------- | ----- |
+| 1280×720  | 160       | 150           | 10    |
+| 1366×768  | 172       | 154           | 18    |
+| 1440×800  | 180       | 154           | 26    |
+| 1440×820  | 186       | 168           | 18    |
+| 1600×900  | 206       | 169           | 37    |
+| 1920×1080 | 253       | 194           | 59    |
+
+Block titles hold one line at every width; both description lines survive at
+720p. Light theme carries the new classes (`.fl-reg__teams` on the chrome
+lift, the bar track up a step and its fill at full gold — the same headroom
+asymmetry the gold labels already document). `npm run verify` and the full
+services-ring smoke pass, including the U11 eight-row clip walk.
+
+### Resolved from U11's "left open"
+
+The two readout labels that orphaned their last word at 1440×800 were on this
+row's foot, which no longer exists — the blocks replaced them.

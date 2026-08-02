@@ -9,6 +9,16 @@ import { ARCS, arcSlugs, getArc } from "@/lib/arcs/registry";
  * and the site-wide no-italics rule (emphasis travels as ArcTitle.em,
  * never as markup smuggled into copy strings).
  */
+
+/** Walk every string in an arc, reporting a dotted path for each. */
+function scanArc(value: unknown, path: string, visit: (value: string, path: string) => void) {
+  if (typeof value === "string") visit(value, path);
+  else if (Array.isArray(value)) value.forEach((v, i) => scanArc(v, `${path}[${i}]`, visit));
+  else if (value && typeof value === "object") {
+    for (const [k, v] of Object.entries(value)) scanArc(v, `${path}.${k}`, visit);
+  }
+}
+
 describe("arcs registry (ADR-052)", () => {
   it("slugs are unique and kebab-case", () => {
     const slugs = arcSlugs();
@@ -69,16 +79,32 @@ describe("arcs registry (ADR-052)", () => {
 
   it("no italic markup smuggled into copy strings", () => {
     const offenders: string[] = [];
-    const scan = (value: unknown, path: string) => {
-      if (typeof value === "string") {
+    ARCS.forEach((arc) =>
+      scanArc(arc, arc.slug, (value, path) => {
         if (/<\s*(i|em)[\s>]/i.test(value)) offenders.push(path);
-      } else if (Array.isArray(value)) {
-        value.forEach((v, i) => scan(v, `${path}[${i}]`));
-      } else if (value && typeof value === "object") {
-        for (const [k, v] of Object.entries(value)) scan(v, `${path}.${k}`);
-      }
-    };
-    ARCS.forEach((arc) => scan(arc, arc.slug));
+      })
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("carries no superseded Loop claim the landing has already moved on from", () => {
+    // THE ARCS ARE OUTSIDE THE CASEFILE'S GUARD. `cases-registry.test.ts`
+    // scans `CASES` and `PROJECT_CASES` only, so a claim that also lives on
+    // a deck page could be swept on the landing and survive here — which is
+    // the one place nobody would look, because these pages are unlisted.
+    //
+    // 42 → 47+ Skills (2026-08-02, ADR-056 U12): the landing's Intelligence
+    // Map plate sums its per-shape counts on screen, so the two surfaces
+    // cannot print different totals for the same portfolio. Whoever raises
+    // the count next has to raise it in both places, and this is what says
+    // so out loud.
+    const offenders: string[] = [];
+    ARCS.forEach((arc) =>
+      scanArc(arc, arc.slug, (value, path) => {
+        if (/\bforty-two\b/i.test(value)) offenders.push(`${path}: superseded skill count (prose)`);
+        if (/\b42\s*skills\b/i.test(value)) offenders.push(`${path}: superseded skill count`);
+      })
+    );
     expect(offenders).toEqual([]);
   });
 

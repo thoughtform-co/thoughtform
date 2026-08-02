@@ -202,9 +202,9 @@ inherited its ambient-cover role.
   (`transformation` → `workshop-rollout` proved that a string-keyed guard
   does not fail on a rename, it silently stops guarding).
 - **Row order IS the directory, and row one is the DEFAULT PANEL.** The
-  TRANSFORMATION leads and the mission report closes the file (owner,
-  2026-07-31; the studio led until then, which presented an output as the
-  engagement). Two consequences when reordering: the first row's plate
+  INTELLIGENCE MAP leads and the mission report closes the file (owner,
+  2026-07-31, renamed from "AI Transformation" 2026-08-02; the studio led
+  until then, which presented an output as the engagement). Two consequences when reordering: the first row's plate
   mounts with the casefile, so a media row there puts its bytes on page load
   — that cost 23.6 kB while the studio led and a pure-DOM plate gives it
   back — and row one is what every reader judges the case on.
@@ -214,6 +214,27 @@ inherited its ambient-cover role.
   seven). Adding a ninth means moving a tick and trimming the brief again,
   both sides together. Measure at 1280×720 / 1440×800 / 1920×1080; the
   10.5px row type is owner-set — take density out of padding, never type.
+- **A track's foot is `readouts` OR `blocks`, never both (ADR-056 U12).**
+  `blocks` is the 2×2 achievement grid — four `{ stat?, title, desc }` tiles
+  reusing the tool gallery's `.fl-caps` / `.fl-cap` grammar, so the responsive
+  ladder and the light-theme rows live in ONE place; do not clone it into a
+  `.fl-blocks`. The optional `stat` is the point of the shape: a readout row
+  can only say things that reduce to a number. Pinned at four tiles, stat ≤4,
+  title ≤26, desc ≤95. Two rules that were measured, not chosen: the figure's
+  row is RESERVED even on a tile with no figure (left to flow, the fourth tile
+  pulled its title 27px up and read as broken), and a blocks foot DROPS the
+  context register and the provenance line — three-line tiles plus both
+  overrun the band. It keeps BOTH description lines at 720p, unlike the tools
+  foot, because a block's sentence is the only place its claim is explained.
+- **The registry plate can be WEIGHTED, on ONE line per group.** `count` +
+  `teams` on `CaseRegistryGroup` turn the taxonomy into a map with a scale;
+  the bar scales against the LARGEST group (total-scale drew the 5-Skill shape
+  as a 3px stub) and only `--w` is inline. The gloss goes `visually-hidden`
+  rather than away — it is the definition of the term beside it. ⚠ A SECOND
+  line per group is not available: two named Skills per shape clipped the
+  plate 59px at 1440×820 and 39px at 1600×900, i.e. it fitted only above
+  ~970h. The three exemplar rows win every budget conflict here; they carry
+  the `Human` tag.
 - **The beats and the casefile SHARE their plates.** Hoisted consts in the
   content module, asserted reference-equal by the registry test. Re-typing a
   plate inline is how the two surfaces drift.
@@ -232,7 +253,10 @@ inherited its ambient-cover role.
   now (see Verifying); it is the guard, not your eye. Budgets after the U11
   move: the brief takes 364 chars at 1280×720 and is PINNED at 330 by the
   registry test; the registry plate still takes FIVE groups plus THREE rows,
-  and a fourth has its tag sliced at 1440. Author at 1280×720 or you will not
+  and a fourth has its tag sliced at 1440 — and since U12 each of those five
+  groups carries a weight line, which is the whole of the remaining slack (see
+  the weighted-plate contract above). The blocks foot runs 10px inside its
+  band at 1280×720 and 26px at 1440×800. Author at 1280×720 or you will not
   see the defect — 1920×1080 shows none of this.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
@@ -292,7 +316,23 @@ test to relax:
   one and never show the other. Do not publish a second variant of a claim
   that already appears on another surface — check `lib/arcs/content/**`
   first. The `Thoughtform Prime` handoff's 15+ teams / 20+ Skills / 90 % of
-  paid social are superseded and pinned OUT by the registry test.
+  paid social are superseded and pinned OUT by the registry test, and so are
+  **42 / "forty-two" Skills** (superseded by 47+, 2026-08-02) and the label
+  **"teams mapped"**, which claimed the 14-set's meaning with the 22-set's
+  value. `lib/arcs/**` has its OWN copy of the 42 pins in
+  `arcs-registry.test.ts` — the casefile's scanner walks `CASES` and
+  `PROJECT_CASES` only, so an unlisted deck page is where a superseded claim
+  survives unnoticed. Sweep both, in one commit.
+- **Two team counts are published and they are DIFFERENT SETS.** 22 =
+  teams BRIEFED (rollout log, governance row). 14 = teams USING THE LAYER
+  (the Intelligence Map foot). The wording is the only thing keeping them
+  apart; do not harmonise it, and never write a phrasing that lends one
+  number the other's meaning.
+- **The Intelligence Map plate SUMS its counts on screen**, so the Skills
+  total is arithmetic a reader can check — a second variant anywhere in the
+  case is a visible contradiction, not a stale string. One guard enforces
+  agreement across every stat, readout, block and the plate's own sum,
+  pinning no literal, so raising the count stays a content edit.
 
 ## Verifying
 

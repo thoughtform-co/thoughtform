@@ -442,7 +442,11 @@ export const AI_KEYNOTE_ARC: ArcDef = {
       head: {
         eyebrow: "Proof",
         title: { pre: "What’s being", em: "encoded.", post: "At Loop" },
-        sub: "A real rollout at Loop Earplugs. Forty-two Skills across every team — each one captures how that team handles a specific piece of work, so people and agents can build on what the company already knows.",
+        // 42 → 47 with the landing casefile's sweep (2026-08-02): the
+        // Intelligence Map plate there SUMS the per-shape counts on screen,
+        // so a surviving 42 on this deck would be a second variant of a
+        // claim the reader can now check. One number, both surfaces.
+        sub: "A real rollout at Loop Earplugs. Forty-seven Skills across every team — each one captures how that team handles a specific piece of work, so people and agents can build on what the company already knows.",
       },
       groups: [
         {

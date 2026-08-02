@@ -306,8 +306,19 @@ html[data-theme="light"] .fl-tabs__tab {
   color: rgba(var(--dawn-rgb), 0.58);
 }
 html[data-theme="light"] .fl-plate__foot,
-html[data-theme="light"] .fl-reg__team {
+html[data-theme="light"] .fl-reg__team,
+html[data-theme="light"] .fl-reg__teams {
   color: rgba(var(--dawn-rgb), 0.6);
+}
+/* The weight bars. Same asymmetry as the gold labels below: the dark side
+   dims the fill to 0.5 because gold on near-black has contrast to spare,
+   and parchment does not — the fill runs at full and the track takes a
+   step up so an empty bar still reads as a bar. */
+html[data-theme="light"] .fl-reg__bar {
+  background: rgba(var(--dawn-rgb), 0.16);
+}
+html[data-theme="light"] .fl-reg__bar::after {
+  background: var(--gold);
 }
 html[data-theme="light"] .fl-tooltab__name {
   color: rgba(var(--dawn-rgb), 0.65);

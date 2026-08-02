@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import type { CaseTrackVisual } from "@/lib/cases/types";
 
@@ -62,14 +64,41 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
         </div>
       );
 
-    case "registry":
+    case "registry": {
+      /* WEIGHTED when the groups carry counts (ADR-056 U12) — the bar is
+         scaled against the LARGEST group, not the total, so the smallest
+         shape still reads as a bar rather than a sliver. `count` is digits
+         only and the width derives from it, so the printed figure and the
+         drawn bar cannot disagree. Groups are all-or-none (pinned), so the
+         first one decides the plate.
+
+         The gloss does not disappear when weighted, it goes VISUALLY
+         hidden: the weight line takes its slot, but "what this shape is"
+         is the definition of the term beside it and a screen reader still
+         needs it. */
+      const peak = visual.groups.reduce((max, g) => Math.max(max, Number(g.count) || 0), 0);
       return (
-        <div className="fl-plate fl-plate--registry">
+        <div className="fl-plate fl-plate--registry" data-weighted={peak > 0 || undefined}>
           <dl className="fl-reg__groups">
             {visual.groups.map((g, i) => (
               <div className="fl-reg__group" key={i}>
                 <dt className="fl-reg__name">{g.name}</dt>
-                <dd className="fl-reg__gloss">{g.gloss}</dd>
+                {g.count ? (
+                  <>
+                    <dd className="fl-reg__gloss visually-hidden">{g.gloss}</dd>
+                    <dd className="fl-reg__weight">
+                      <span className="fl-reg__count">{g.count}</span>
+                      <i
+                        className="fl-reg__bar"
+                        aria-hidden="true"
+                        style={{ "--w": Number(g.count) / peak } as CSSProperties}
+                      />
+                      {g.teams ? <span className="fl-reg__teams">{g.teams}</span> : null}
+                    </dd>
+                  </>
+                ) : (
+                  <dd className="fl-reg__gloss">{g.gloss}</dd>
+                )}
               </div>
             ))}
           </dl>
@@ -85,6 +114,7 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
           {visual.footer ? <p className="fl-plate__foot">{visual.footer}</p> : null}
         </div>
       );
+    }
 
     case "register":
       return (
