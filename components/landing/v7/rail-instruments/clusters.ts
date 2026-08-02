@@ -1,5 +1,5 @@
 /**
- * The corner clusters' content — which sections sit in which cluster.
+ * The journey row's content — every section, in order, as one cluster.
  *
  * ⚠ SHARED BY PRODUCTION AND THE LAB, which is why it lives here rather
  * than under `/test`. `RailInstruments` renders it on the landing page and
@@ -8,109 +8,104 @@
  * show up as the lab quietly disagreeing with the site it exists to judge.
  * Nothing in this file may import react, three, or anything under `app/`.
  *
- * Round 3 (owner mockup, 2026-08-02). Rounds 1 and 2 both distributed marks
- * ALONG the left rail and differed only in whether the spacing was
- * proportional (a scale, rejected) or fixed (a roster). This round takes the
- * marks OFF the ladder entirely and groups them by ROLE in the frame's two
- * working corners, so position encodes what a section IS rather than how far
- * down it sits. That is a third answer to the progress-bar complaint, not a
- * restyling of the first two.
+ * ⚠ ONE ROW, NOT TWO (owner, 2026-08-02 — ADR-059 Update 1). It was two
+ * corner clusters: the approach top-left, the destinations bottom-right,
+ * with grouping-by-corner carrying the meaning. The bottom-right corner is
+ * now the SETTINGS corner, so the destinations came up to join the approach
+ * and the frame reads by corner instead: journey / nav / brand / settings.
  *
- * ⚠ THE MOCKUP'S ROSTER IS NOT THIS SITE'S. It carried twelve sections,
- * three of which do not exist — HERALDING, TRANSMISSIONS and CONSTELLATION,
- * which between them replace `practice` (the mockup's own HERALDING section
- * header reads "DISPATCHES FROM THE PRACTICE"). Owner's call was to wire the
- * LIVE roster, so:
+ * The grouping survives as RULES inside the row rather than as distance
+ * across the frame — approach │ record │ destination. That is a weaker
+ * signal than two corners were, and it is the acknowledged cost of the
+ * four-corner scheme.
  *
- *   - the mockup's NAV row survives unchanged — it is exactly the five
- *     approach beats;
- *   - its COMMS cluster is DROPPED, both its sections being invented. The
- *     right rail therefore stays empty in this variant, which is worth
- *     seeing before anything is invented to fill it;
- *   - its bottom row survives 1:1 with CONSTELLATION → PRACTICE, keeping the
- *     LOG / DOCK split and the rule between them.
- *
- * If those three sections are ever built, they join here and the COMMS
- * cluster comes back — nothing else has to change.
+ * ⚠ TWO CLOCKS IN ONE ROW, and they are not interchangeable. The Arc's
+ * beats only exist on the MANIFEST index (`READOUT_SECTIONS` collapses all
+ * four to a single `arc` row), and `proof` only exists on the READOUT index
+ * (the casefile has no manifest entry at all — ADR-056). So each mark
+ * declares which one resolves it. Feeding a row-clock mark the beat index,
+ * or the reverse, silently lights the wrong glyph — it does not throw.
  */
 
 import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
 import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
 
-export interface ClusterMark {
+export interface JourneyMark {
   /** Stable key, the glyph lookup, and the `data-mark` hook. */
   id: string;
-  /** Printed by the active mark and by every mark in explain mode. */
+  /** Printed by the live mark, and by every mark in the lab's explain mode. */
   name: string;
-  /** A rule opens a new sub-group before this mark. */
+  /** Which index resolves this mark's state. See the two-clocks note above. */
+  clock: "beat" | "row";
+  /** Into `MANIFEST_ENTRIES` when `beat`, into `READOUT_SECTIONS` when `row`. */
+  idx: number;
+  /** A rule opens a new group before this mark. */
   ruleBefore?: boolean;
 }
 
 /**
- * Resolve a manifest id to its index, loudly.
+ * Resolve an id to its index, loudly.
  *
- * `MANIFEST_ENTRIES` is under a DOM drift guard, so a rename there is caught
- * — but nothing would catch it HERE, and a silently missing mark is the kind
- * of defect this lab exists to avoid producing.
+ * Both source lists are under drift guards, so a rename there is caught —
+ * but nothing would catch it HERE, and a silently missing mark is exactly
+ * the class of defect the lab exists to avoid shipping.
  */
-function manifestIdx(id: string): number {
+function beatIdx(id: string): number {
   const i = MANIFEST_ENTRIES.findIndex((e) => e.id === id);
-  if (i < 0) throw new Error(`[hud-instruments-lab] no MANIFEST_ENTRIES row "${id}"`);
+  if (i < 0) throw new Error(`[rail-instruments] no MANIFEST_ENTRIES row "${id}"`);
+  return i;
+}
+function rowIdx(id: string): number {
+  const i = READOUT_SECTIONS.findIndex((r) => r.id === id);
+  if (i < 0) throw new Error(`[rail-instruments] no READOUT_SECTIONS row "${id}"`);
   return i;
 }
 
+const beat = (id: string, name: string, ruleBefore = false): JourneyMark => ({
+  id,
+  name,
+  clock: "beat",
+  idx: beatIdx(id),
+  ruleBefore,
+});
+const row = (id: string, ruleBefore = false): JourneyMark => ({
+  id,
+  name: READOUT_SECTIONS[rowIdx(id)].label,
+  clock: "row",
+  idx: rowIdx(id),
+  ruleBefore,
+});
+
 /**
- * TOP-LEFT — the approach: everything before the offer.
+ * The whole journey, left to right.
  *
- * Per-BEAT, deliberately. `journeyRef.ts` warns that `reachedRows` and
- * `activeIdx` are different numbers because the four corridor beats collapse
- * to one readout row, and that mixing them "draws four Arc marks". This
- * cluster WANTS those four marks — the Arc's beats are the approach, and
- * collapsing them would leave the corner with two marks and nothing to say.
- * So it keys on `activeIdx` (manifest granularity), which is the opposite of
- * what `RailStationRoster` needs. Both are correct for their own design.
+ * The approach is per-BEAT because the Arc's four beats ARE the approach —
+ * collapsing them to one `arc` mark would leave the row saying almost
+ * nothing about the longest part of the page. Everything past it is
+ * row-level, because none of those sections have beats, and because that is
+ * the only index `proof` appears on.
+ *
+ * ⚠ The mockup's roster is not this site's. It carried three sections that
+ * do not exist (HERALDING / TRANSMISSIONS / CONSTELLATION, which between
+ * them replace `practice`); if they are ever built they join here and
+ * nothing else has to change.
  */
-export const APPROACH_MARKS: readonly ClusterMark[] = [
-  { id: "hero", name: "Hero" },
-  { id: "thesis", name: "Thesis" },
-  { id: "navigate", name: "Navigate" },
-  { id: "encode", name: "Encode" },
-  { id: "build", name: "Build" },
+export const JOURNEY_MARKS: readonly JourneyMark[] = [
+  beat("hero", "Hero"),
+  beat("thesis", "Thesis"),
+  beat("navigate", "Navigate"),
+  beat("encode", "Encode"),
+  beat("build", "Build"),
+  // approach │ record
+  row("proof", true),
+  row("services"),
+  row("about"),
+  // record │ destination
+  row("practice", true),
+  row("contact"),
 ];
 
-/** `activeIdx` values for the approach marks, resolved once at module load. */
-export const APPROACH_IDX: readonly number[] = APPROACH_MARKS.map((m) => manifestIdx(m.id));
-
-/**
- * BOTTOM-RIGHT — the destinations: the record, the offer, and the way out.
- *
- * This is `READOUT_SECTIONS` minus its leading `arc` row, which is exactly
- * the set the approach cluster does not carry — derived rather than
- * re-authored, so a new readout row lands here automatically. Row-level is
- * the right granularity here (none of these have beats), and it also gets
- * `proof` for free: the casefile is a readout row with NO manifest entry
- * (ADR-056), so a manifest-keyed list could not have held it.
- *
- * The rule sits where the mockup put it — after ABOUT, splitting what is on
- * the record from where you are going.
- */
-const DOCK_RULE_AFTER = "about";
-
-export const DOCK_MARKS: readonly ClusterMark[] = READOUT_SECTIONS.slice(1).map((row, i, rows) => ({
-  id: row.id,
-  name: row.label,
-  ruleBefore: i > 0 && rows[i - 1].id === DOCK_RULE_AFTER,
-}));
-
-/**
- * Zone labels — one per cluster, seated at its outer edge.
- *
- * The mockup stacked TWO above the bottom row (LOG and DOCK, capping each
- * half). That placement is unavailable: the BR corner's curtain clip has a
- * top inset that saturates at 0px, so nothing can paint above that corner's
- * box at rest. The rule inside the row carries the split instead.
- */
+/** Printed once at the row's outboard end. */
 export const CLUSTER_ZONES = {
-  approach: "Nav",
-  dock: "Dock",
+  journey: "Journey",
 } as const;

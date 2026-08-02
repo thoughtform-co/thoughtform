@@ -34,7 +34,16 @@ import { useEffect } from "react";
 import { ThemeGlyph } from "./ThemeGlyph";
 import { useThemeStore } from "@/lib/stores/themeStore";
 
-export function LightModeToggle() {
+/**
+ * The control itself, without its overlay.
+ *
+ * Split out for ADR-059's settings cluster, which owns the overlay so the
+ * theme switch and the session mark can share one positioned row. The state
+ * still lives in HERE rather than in the cluster — the leaf rule above is
+ * about theme state specifically, and a cluster that subscribed on its
+ * children's behalf would just move the problem up one level.
+ */
+export function ThemeToggleButton() {
   const mode = useThemeStore((s) => s.mode);
   const hydrated = useThemeStore((s) => s.hydrated);
   const toggle = useThemeStore((s) => s.toggle);
@@ -48,18 +57,28 @@ export function LightModeToggle() {
   const label = isLight ? "Switch to dark theme" : "Switch to light theme";
 
   return (
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={toggle}
+      role="switch"
+      aria-checked={isLight}
+      aria-label={label}
+      title={label}
+    >
+      <ThemeGlyph target={target} />
+    </button>
+  );
+}
+
+/**
+ * The standalone toggle — still the mount for `/arcs`, which has no
+ * settings cluster and wants exactly one control in this corner.
+ */
+export function LightModeToggle() {
+  return (
     <div className="theme-toggle-overlay">
-      <button
-        type="button"
-        className="theme-toggle"
-        onClick={toggle}
-        role="switch"
-        aria-checked={isLight}
-        aria-label={label}
-        title={label}
-      >
-        <ThemeGlyph target={target} />
-      </button>
+      <ThemeToggleButton />
     </div>
   );
 }

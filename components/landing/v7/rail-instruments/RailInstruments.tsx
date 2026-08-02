@@ -3,20 +3,27 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { createPortal } from "react-dom";
 
-import { APPROACH_IDX, APPROACH_MARKS, CLUSTER_ZONES, DOCK_MARKS } from "./clusters";
+import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
+
+import { CLUSTER_ZONES, JOURNEY_MARKS } from "./clusters";
 import { SECTION_GLYPHS } from "./sectionGlyphs";
 import { useJourneyMarks, useScrollReadouts } from "./useJourneyMarks";
 
 /**
- * The rail instruments (ADR-059) — the journey's sections as marks in the
- * frame's two working corners, plus the right rail's telemetry.
+ * The rail instruments (ADR-059) — the whole journey as one row of marks in
+ * the TOP-LEFT corner, plus the right rail's telemetry. Settings is the
+ * bottom-right corner and lives in `SettingsCluster`.
  *
  * Ported from `/test/hud-instruments-lab` route `r4` after three rounds
  * there. What survived and what did not is the useful part:
  *
- *   - the left rail's STATION ROSTER was tried and NOT taken (owner,
- *     2026-08-02). The ladder stays a ladder; the approach cluster is the
- *     left side's whole contribution.
+ *   - it was TWO clusters, approach top-left and destinations bottom-right,
+ *     with grouping-by-corner carrying the meaning. The bottom-right became
+ *     the settings corner (owner, 2026-08-02), so they merged into one row
+ *     and the grouping survives as rules inside it — a weaker signal, and
+ *     the acknowledged cost of the four-corner scheme.
+ *   - the left rail's STATION ROSTER was tried and NOT taken. The ladder
+ *     stays a ladder; this row is the left side's whole contribution.
  *   - the corner REGISTER (`cBr`) is dropped, because it printed
  *     `scroll01 × 100` and so does BEARING in the telemetry stack two
  *     lines away. Relocating it would have duplicated a live value; the
@@ -38,7 +45,8 @@ import { useJourneyMarks, useScrollReadouts } from "./useJourneyMarks";
  * `[data-rail-manifest-root]`, whose skeleton is parse-injected and mutated
  * in place — but one React root is the right answer everywhere here.
  *
- * Hosting INSIDE `.hud__corner--tl` and `.hud__rail--r` is the whole point:
+ * Hosting INSIDE `.hud__corner--tl` and `.hud__rail--r` is the whole point
+ * for these two —
  * the marks inherit the ADR-031 U16 hero-curtain clip, the ticks'
  * percentage box, the rail's wordmark-clearing bottom terminus and every
  * responsive gate, none of which then has to be re-declared and kept in
@@ -55,11 +63,24 @@ type MarkState = "ahead" | "passed" | "here";
 const stateFor = (seat: number, active: number): MarkState =>
   active === seat ? "here" : active > seat ? "passed" : "ahead";
 
-function Mark({ id, name, state }: { id: string; name: string; state: MarkState }): ReactElement {
+/**
+ * ⚠ NO LABEL, deliberately — unlike the lab, which prints one under every
+ * mark for its `nExplain` scaffolding.
+ *
+ * Two reasons, and the second is the load-bearing one. The label band sits
+ * at y 64–76, which on this page is occupied: measured collisions with
+ * `services-masthead__desig` ("SVC / TITLE · 01") and the corridor's
+ * `home-v2-stack-label__num`. Above the row is unavailable — the corner's
+ * curtain inset saturates at 0px — so there is nowhere for it to go.
+ *
+ * And it would be the THIRD place the active section is named, after the
+ * ADR-055 nav corner and the right rail's vertical name. The gold mark says
+ * where you are; something else already says what it is called.
+ */
+function Mark({ id, state }: { id: string; state: MarkState }): ReactElement {
   return (
     <span className="rin-mark" data-state={state} data-mark={id}>
       {SECTION_GLYPHS[id] ?? null}
-      <b className="rin-mark__label">{name}</b>
     </span>
   );
 }
@@ -123,19 +144,20 @@ export function RailInstruments({
   return (
     <>
       {createPortal(
-        <div className="rin-cl rin-cl--approach" aria-hidden="true">
-          <span className="rin-cl__zone">{CLUSTER_ZONES.approach}</span>
+        <div className="rin-cl rin-cl--journey" aria-hidden="true">
+          <span className="rin-cl__zone">{CLUSTER_ZONES.journey}</span>
           <span className="rin-cl__row">
-            {APPROACH_MARKS.map((mark, i) => (
-              <Mark
-                key={mark.id}
-                id={mark.id}
-                name={mark.name}
-                // Per BEAT — the Arc's four beats are the approach, and
-                // collapsing them to one readout row would leave this
-                // corner with two marks and nothing to say.
-                state={stateFor(APPROACH_IDX[i], activeIdx)}
-              />
+            {JOURNEY_MARKS.map((mark) => (
+              <span key={mark.id} className="rin-cl__seat">
+                {mark.ruleBefore && <i className="rin-cl__rule" />}
+                {/* Two clocks, one row — see the note in `clusters.ts`.
+                    The Arc's beats exist only on the manifest index; `proof`
+                    exists only on the readout index. */}
+                <Mark
+                  id={mark.id}
+                  state={stateFor(mark.idx, mark.clock === "beat" ? activeIdx : seat)}
+                />
+              </span>
             ))}
           </span>
         </div>,
@@ -144,19 +166,6 @@ export function RailInstruments({
 
       {createPortal(
         <>
-          <div className="rin-cl rin-cl--dock" aria-hidden="true">
-            <span className="rin-cl__zone">{CLUSTER_ZONES.dock}</span>
-            <span className="rin-cl__row">
-              {DOCK_MARKS.map((mark, i) => (
-                <span key={mark.id} className="rin-cl__seat">
-                  {mark.ruleBefore && <i className="rin-cl__rule" />}
-                  {/* Seat 0 is the Arc row, which this cluster does not carry. */}
-                  <Mark id={mark.id} name={mark.name} state={stateFor(i + 1, seat)} />
-                </span>
-              ))}
-            </span>
-          </div>
-
           {/* Every value here is real: BEARING is document scroll, SECTOR
               the readout's own seat, LOCAL progress through the section
               holding the viewport midline. No invented telemetry. */}
@@ -170,7 +179,7 @@ export function RailInstruments({
           <span className="rin-tele" aria-hidden="true" style={{ top: pct(TICK.sector) }}>
             <b className="rin-tele__k">Sector</b>
             <i className="rin-tele__rule" />
-            <b className="rin-tele__v">{`${pad(seat + 1)}/${pad(DOCK_MARKS.length + 1)}`}</b>
+            <b className="rin-tele__v">{`${pad(seat + 1)}/${pad(READOUT_SECTIONS.length)}`}</b>
           </span>
           <span className="rin-tele" aria-hidden="true" style={{ top: pct(TICK.local) }}>
             <b className="rin-tele__k">Local</b>

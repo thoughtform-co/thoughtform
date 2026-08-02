@@ -27,23 +27,15 @@
 export const RAIL_INSTRUMENTS = true;
 
 /**
- * The ADR-058 light/dark toggle moves to the BOTTOM-LEFT band, inboard of
- * the wordmark.
+ * The bottom-right corner is SETTINGS (ADR-059 Update 1).
  *
- * Not a preference — a geometric consequence. The dock cluster is placed by
- * the approach row's rule read upside down (its bottom edge on the bottom
- * margin line), which is the only placement that makes the two corners
- * mirror. That lands it in the strip the toggle occupied, and the strip
- * between the right rail's terminus and the toggle is ~26px against a
- * ~36px glyph-plus-label row — so the corner cannot hold both.
+ * `SettingsCluster` replaces the standalone `LightModeToggle` on the
+ * landing route, carrying the theme switch plus a session mark that only an
+ * allowlisted signed-in user ever sees. `/arcs` still mounts the standalone
+ * toggle — it has no cluster to join.
  *
- * Bottom-left keeps ADR-058's own reasoning intact ("one chrome band, a
- * mark at each end"); the band now reads wordmark + toggle at one end,
- * dock cluster at the other.
- *
- * Kept as its own const because it must survive `RAIL_INSTRUMENTS = false`:
- * flipping the instruments off should not silently move a shipped control
- * back under a cluster that is no longer there to justify it. Set this to
- * false only if the toggle is being put back deliberately.
+ * The short-lived `THEME_TOGGLE_DOCKS_LEFT` is gone with it: the toggle
+ * moved left only while the journey's destination marks held this corner,
+ * and those have since merged into the top-left row.
  */
-export const THEME_TOGGLE_DOCKS_LEFT = true;
+export const SETTINGS_CLUSTER = true;

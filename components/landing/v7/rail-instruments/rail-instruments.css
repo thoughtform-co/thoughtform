@@ -2,17 +2,20 @@
    RAIL INSTRUMENTS · ADR-059
    ═══════════════════════════════════════════════════════════════════════
 
-   The journey's sections as marks in the frame's two working corners, plus
-   the right rail's telemetry. Ported from `/test/hud-instruments-lab` route
-   `r4`; the lab keeps its own `hil-`-scoped sheet for the routes that were
-   NOT taken.
+   The whole journey as one row of marks in the TOP-LEFT corner, the right
+   rail's telemetry, and SETTINGS bottom-right. Ported from
+   `/test/hud-instruments-lab` route `r4`; the lab keeps its own
+   `hil-`-scoped sheet for the routes that were NOT taken.
+
+   The four corners each carry one idea: journey / nav / brand / settings.
 
    Shape law: radius 0; diamonds, never circles; hairlines only; gold is
    WAYFINDING — it marks where you are and nothing else; no italics.
 
    Ink doctrine: dim for what is ahead, a measured dawn for what you have
-   passed, full `--gold` for where you are, and only the live mark prints
-   its name.
+   passed, full `--gold` for where you are. NOTHING prints a name — the
+   ADR-055 nav corner and the rail's vertical readout already do, and the
+   label band collides with the services masthead besides.
 
    ⚠ EVERY INK VALUE GOES THROUGH `--dawn-rgb`, never a literal
    `rgba(235,227,214,…)`. That literal is dawn in dark and INVISIBLE on
@@ -32,15 +35,6 @@
   /* Half a mark — what centres a terminal glyph ON the rail's track line
      rather than butting it against one. */
   --rin-half: 8px;
-  /* The right rail's own bottom terminus, mirrored from `landing.css` so
-     the dock can be placed relative to where the track actually ends.
-     Kept as the expression rather than a measured pixel: which `max()` arm
-     wins changes with viewport (arm 1 at 1440, arm 2 at 1280), so any
-     constant is right at one size and wrong at the next. */
-  --rin-rail-bottom: max(
-    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
-    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
-  );
 }
 
 /* ── Portal hosts ───────────────────────────────────────────────────────
@@ -59,9 +53,9 @@
   pointer-events: none;
 }
 
-/* ── THE CLUSTER IS THE CORNER ──────────────────────────────────────────
-   Each cluster replaces the bracket it stands in for, and its TERMINAL
-   mark is centred on that rail's track — the same line the ticks hang off
+/* ── THE ROW IS THE CORNER ──────────────────────────────────────────────
+   It replaces the bracket it stands in for, and its FIRST mark is centred
+   on the left rail's track — the same line the ticks hang off
    and the diamond rides. `--hud-rail-guide-inset` is the anchor rather
    than a measured pixel, so the assembly stays rigid if that token ever
    leaves 0. */
@@ -73,33 +67,17 @@
    corner point. The row's TOP edge sits on the margin line rather than
    straddling it: the corner's curtain inset saturates at 0px, so a row
    centred on that line would lose its upper half at rest. */
-.rin-cl--approach {
+.rin-cl--journey {
   top: 0;
   left: calc(var(--hud-rail-guide-inset) - var(--rin-half));
-}
-
-/* BOTTOM-RIGHT — an exact 180° rotation of the approach row, which is the
-   only placement that makes the two corners read as a pair. Approach sits
-   with its TOP edge on the top margin line, so this sits with its BOTTOM
-   edge on the bottom margin line; labels then stack inward in both, and
-   both land the same distance clear of their rail's terminus.
-
-   The offset is `terminus − margin` because the host is the RAIL, whose
-   bottom is the terminus, not the margin.
-
-   ⚠ This occupies the band the ADR-058 toggle used to sit in — which is
-   why `THEME_TOGGLE_DOCKS_LEFT` exists. The strip between the rail's
-   terminus and that toggle is ~26px against a ~36px glyph-plus-label row,
-   so the corner cannot hold both. */
-.rin-cl--dock {
-  bottom: calc(-1 * (var(--rin-rail-bottom) - var(--hud-margin)));
-  right: calc(var(--hud-rail-guide-inset) - var(--rin-half));
 }
 
 .rin-cl__row {
   display: flex;
   align-items: center;
-  gap: 22px;
+  /* 18px, not the two-cluster 22px: the row carries ten marks and two
+     rules now, and at 22px it ran 404px across the top of the frame. */
+  gap: 18px;
 }
 /* The seat wrapper exists only to pair a rule with its mark in JSX — it
    must not become a flex item or the gaps double up. */
@@ -124,13 +102,10 @@
   color: rgba(var(--dawn-rgb), 0.3);
   white-space: nowrap;
 }
-/* Each zone label sits at its cluster's OUTBOARD end — never above the
-   row. See the clip note on the label rule below. */
-.rin-cl--approach .rin-cl__zone {
+/* The zone label sits at the row's OUTBOARD end — never above it. Above a
+   corner is unreachable at rest: the curtain inset saturates at 0px. */
+.rin-cl--journey .rin-cl__zone {
   left: calc(100% + 16px);
-}
-.rin-cl--dock .rin-cl__zone {
-  right: calc(100% + 16px);
 }
 
 /* ── The marks ──────────────────────────────────────────────────────────
@@ -151,50 +126,6 @@
 }
 .rin-mark svg {
   display: block;
-}
-
-/* ⚠ A LABEL POINTS AWAY FROM ITS HOST'S CLIPPED EDGE — not a style choice.
-   Every host here carries a curtain clip whose TOP inset is driven by
-   `--hero-lift` and saturates at 0px, so nothing survives above a host's
-   own box at rest. The approach cluster sits at the TOP of its corner, so
-   its labels hang BELOW; the dock sits at the BOTTOM of the rail, so its
-   labels go ABOVE. Set either the other way and it vanishes, with no
-   error. */
-.rin-mark__label {
-  position: absolute;
-  top: calc(100% + 7px);
-  left: 50%;
-  translate: -50% 0;
-  font-family: var(--rin-mono);
-  font-size: 8.5px;
-  font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--gold-70);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 250ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-.rin-cl--dock .rin-mark__label {
-  top: auto;
-  bottom: calc(100% + 7px);
-}
-/* Only the live mark names itself — gold is wayfinding and nothing else. */
-.rin-mark[data-state="here"] .rin-mark__label {
-  opacity: 1;
-}
-/* The outermost labels pin to the TRACK LINE, not to the cluster's box.
-   The terminal glyph straddles the track, so its box edge is half a mark
-   outboard; a label flushed to that box overhangs the rail, which on the
-   dock side means the track draws through the last word. */
-.rin-cl--approach .rin-mark:first-of-type .rin-mark__label {
-  left: var(--rin-half);
-  translate: none;
-}
-.rin-cl--dock .rin-cl__seat:last-of-type .rin-mark__label {
-  left: auto;
-  right: var(--rin-half);
-  translate: none;
 }
 
 /* ── Right rail telemetry ───────────────────────────────────────────────
@@ -249,11 +180,64 @@
   pointer-events: none;
 }
 
-/* ── The brackets the clusters stand in for ─────────────────────────────
-   Suppressed only while the instruments are actually mounted, so a
-   flag-off frame keeps its corners. */
-html[data-rail-instruments] .hud__corner--tl,
-html[data-rail-instruments] .hud__corner--br {
+/* ── SETTINGS, bottom-right (ADR-059 Update 1) ──────────────────────────
+   The four corners each carry one idea: journey top-left, nav top-right,
+   brand bottom-left, settings bottom-right.
+
+   ⚠ Its own fixed overlay OUTSIDE `.hud`, at the `.hud-nav-overlay` z 60
+   precedent — the ADR-058 constraint, unchanged by the corner's new
+   contents. `.hud__rail` and `.hud__corner--*` carry the hero-curtain
+   `clip-path`, so anything hosted in them is invisible for the whole hero
+   and pops in as the curtain lifts. Settings has to work on screen one.
+
+   The offset is ADR-058's original expression, restored: inboard of the
+   `--br` bracket, on the bottom margin line, pairing with the ADR-043
+   wordmark at the other end of the same band. */
+.rin-settings {
+  position: fixed;
+  right: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
+  bottom: max(var(--hud-margin), var(--safe-bottom, 0px));
+  height: var(--hud-corner-zone);
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 14px);
+  z-index: 60;
+  pointer-events: none;
+}
+.rin-settings > * {
+  pointer-events: auto;
+}
+
+/* The session mark — same 36px hit box as the theme control beside it, so
+   the two read as one row of controls rather than two sizes of thing. */
+.rin-session {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--dawn-50);
+  transition: color var(--duration-normal, 120ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.rin-session:hover,
+.rin-session:focus-visible {
+  color: var(--gold);
+}
+.rin-session:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .rin-session {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* ── The bracket the journey row stands in for ──────────────────────────
+   ⚠ ONLY the top-left. The bottom-right bracket STAYS: the settings
+   cluster sits inboard of it rather than replacing it, exactly as the
+   toggle always did, so that corner keeps its frame. */
+html[data-rail-instruments] .hud__corner--tl {
   border: 0;
 }
 
@@ -288,29 +272,29 @@ html[data-rail-instruments] .hud__corner--tl {
 }
 
 /* ── Responsive — key off the PRODUCTION gates, never invent new ones ────
-   ≤960 `.hud__rail { display: none }` takes the dock and the telemetry
-   with it for free. Only the TL corner needs saying out loud, because the
-   corner brackets survive on mobile and the nav corner is the answer
-   there. ≤1100 drops the vertical name, alongside the bearing labels and
-   the manifest that already go at that width. */
+   ≤960 `.hud__rail { display: none }` takes the telemetry and the vertical
+   name with it for free. The journey row lives in the TL CORNER, and the
+   corner brackets survive on mobile, so that one has to be said out loud.
+   ≤1100 drops the vertical name, alongside the bearing labels and the
+   manifest that already go at that width.
+
+   ⚠ SETTINGS IS NEVER GATED. It is the only control in the frame besides
+   the nav corner, it is `position: fixed` and owes nothing to the rails,
+   and a theme switch that disappears on a phone is a bug rather than a
+   simplification. */
 @media (max-width: 1100px) {
   .rin-vertname {
     display: none;
   }
 }
 @media (max-width: 960px) {
-  .rin-cl--approach {
+  .rin-cl--journey {
     display: none;
   }
-  /* The clusters are gone, so the brackets come back. */
-  html[data-rail-instruments] .hud__corner--tl,
-  html[data-rail-instruments] .hud__corner--br {
+  /* The row is gone, so its bracket comes back. Only the TL one is ever
+     suppressed — the BR bracket was never replaced. */
+  html[data-rail-instruments] .hud__corner--tl {
     border-top: 2px solid var(--hud-rail-line);
     border-left: 2px solid var(--hud-rail-line);
-  }
-  html[data-rail-instruments] .hud__corner--br {
-    border: 0;
-    border-bottom: 2px solid var(--hud-rail-line);
-    border-right: 2px solid var(--hud-rail-line);
   }
 }

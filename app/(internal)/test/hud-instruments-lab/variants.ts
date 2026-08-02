@@ -59,10 +59,8 @@ export type LayerId =
   | "cTl"
   /** Bottom-right corner: the range register. */
   | "cBr"
-  /** Top-left cluster: the five approach beats as marks. Round 3. */
-  | "nApproach"
-  /** Bottom-right cluster: the five destinations, LOG | DOCK. Round 3. */
-  | "nDock"
+  /** Top-left cluster: the whole journey as marks. Round 3. */
+  | "nJourney"
   /** Scaffolding: print every mark's name at once, and show reserved space. */
   | "nExplain";
 
@@ -79,8 +77,7 @@ export const LAYER_LABELS: Readonly<Record<LayerId, string>> = {
   rName: "R·name",
   cTl: "C·TL",
   cBr: "C·BR",
-  nApproach: "N·approach",
-  nDock: "N·dock",
+  nJourney: "N·journey",
   nExplain: "N·explain",
 };
 
@@ -136,7 +133,7 @@ export const HUD_INSTRUMENT_VARIANTS: readonly HudInstrumentVariant[] = [
     thesis:
       "The sections leave the ladder and group by ROLE: five approach beats top-left, five destinations bottom-right, split LOG | DOCK after ABOUT. Each cluster REPLACES its corner bracket and its terminal mark is centred on that rail's track line, so the row and the ladder share an edge instead of being three unrelated objects in a corner. The dock seats on the right rail's bottom terminus — the line already defined as clearing the wordmark and the ADR-058 toggle. Judge two things: whether grouping reads as meaning rather than as leftover marks, and whether the glyphs survive without their labels (N·explain names them, then turn it off). If you need the labels, the set has failed the way v2 did.",
     provenance: "Owner mockup, 2026-08-02 — HUD Rail Instruments",
-    layers: ["nApproach", "nDock"],
+    layers: ["nJourney"],
   },
   {
     id: "v1",

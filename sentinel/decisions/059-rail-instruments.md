@@ -1,9 +1,15 @@
 # ADR-059: Rail instruments — the journey's sections as corner marks
 
-**Status:** Accepted · 2026-08-02
-**Flag:** `RAIL_INSTRUMENTS` (`components/landing/v7/rail-instruments/flags.ts`), default ON
-**Supersedes on placement:** ADR-058's toggle position (bottom-right → bottom-left)
+**Status:** Accepted · 2026-08-02 — **read Update 1 first; it reshapes §2 and reverses §3**
+**Flags:** `RAIL_INSTRUMENTS`, `SETTINGS_CLUSTER` (`components/landing/v7/rail-instruments/flags.ts`), both default ON
+**Extends:** ADR-058 — the toggle's slot is unchanged, but it now shares it with a session mark
 **Lab:** `/test/hud-instruments-lab`, route `r4` + `rTelemetry` + `rName`
+
+> ⚠ §2 and §3 below describe the TWO-CLUSTER arrangement that held for a few
+> hours on 2026-08-02. Update 1 merged the clusters into one row and made the
+> bottom-right the settings corner. Both sections are kept because the
+> geometry they work out — the 180° rotation, why the corner cannot hold a
+> symmetric cluster and a control — is what forced the four-corner scheme.
 
 ## Context
 
@@ -125,10 +131,86 @@ coming BACK when the clusters leave. Both themes. No page errors.
 Journey tracking confirmed through a real scroll — hero → build → services →
 contact, with BEARING 000 → 031 → 074 → 100 and SECTOR 01/06 → 06/06.
 
+## Update 1 — four corners, four jobs (2026-08-02, owner)
+
+> _"can't we make it so that the bottom RIGHT corner includes everything
+> related to settings… I like that we have glyphs / sigils in the top left
+> corner so let's harmonize."_
+
+The frame now reads by corner: **journey** top-left, **nav** top-right,
+**brand** bottom-left, **settings** bottom-right.
+
+### The two clusters merge into one row
+
+The destinations came up to join the approach, so the top-left carries all
+ten marks. The approach/destination split survives as RULES inside the row
+(approach │ record │ destination) rather than as distance across the frame.
+That is a weaker signal than two corners were, and it is the acknowledged
+cost of the scheme.
+
+Gap tightens 22px → 18px: ten marks and two rules at 22px ran 404px across
+the top of the frame; at 18px it is 360px.
+
+⚠ **Two clocks in one row.** The Arc's beats exist only on the MANIFEST
+index (`READOUT_SECTIONS` collapses all four to one `arc` row) and `proof`
+exists only on the READOUT index (ADR-056 — the casefile has no manifest
+entry). Each mark declares which resolves it. Feed one the wrong index and
+it silently lights the wrong glyph; nothing throws.
+
+### The per-mark label is dropped in production
+
+Measured collisions at y 64–76 with `services-masthead__desig`
+("SVC / TITLE · 01") and the corridor's `home-v2-stack-label__num`. Above
+the row is unavailable — the corner's curtain inset saturates at 0px — so
+there was nowhere to move it.
+
+It was also redundant: with the vertical rail name and the ADR-055 nav
+corner, the active section would have been named three times. The gold mark
+says where you are; something else already says what it is called. The lab
+keeps its labels, which is where the glyph question gets judged.
+
+### Settings, and what is NOT in it
+
+`SettingsCluster` replaces the standalone `LightModeToggle` on the landing
+route (`/arcs` still mounts that directly, having no cluster to join). It
+carries the theme switch plus a session mark.
+
+**The session mark renders only for a signed-in allowlisted user** — it is
+absent from the DOM entirely otherwise, verified. There is deliberately no
+"sign in" control: a login affordance on a public page tells every visitor
+there is an admin surface and where it is, for the benefit of one person who
+already knows. The door stays `/admin` by URL; this is the way back to the
+tools once you are through it. Its glyph borrows the `encode` mark's
+bracket vocabulary so the corner reads as the same instrument family as the
+journey row.
+
+⚠ **Still its own fixed overlay outside `.hud`** — ADR-058's constraint,
+unchanged by the corner's new contents. Anything hosted in a rail or corner
+is invisible for the whole hero and pops in as the curtain lifts, and
+settings has to work on screen one. `.rin-settings` and
+`.theme-toggle-overlay` are deliberately the SAME expression: move one,
+move both, or the two public surfaces put the same control in two places.
+
+⚠ **Settings is never responsive-gated.** It is `position: fixed`, owes
+nothing to the rails, and a theme switch that vanishes on a phone is a bug.
+
+### Consequences for §3 above
+
+The toggle's bottom-LEFT move is reverted — it only moved while the
+destination marks held that corner. `THEME_TOGGLE_DOCKS_LEFT` is deleted;
+`SETTINGS_CLUSTER` replaces it. Only the TOP-LEFT bracket is now suppressed:
+the settings cluster sits inboard of the bottom-right bracket rather than
+replacing it, so that corner keeps its frame.
+
 ## Rollback
 
-`RAIL_INSTRUMENTS = false`. Nothing mounts, no host is created, the
-`data-rail-instruments` attribute is never set and every `rail-instruments.css`
-selector is unmatched — including the bracket suppression and both widened
-clips, so the frame returns byte-identically. `THEME_TOGGLE_DOCKS_LEFT` is
-deliberately independent and must be flipped separately.
+`RAIL_INSTRUMENTS = false` drops the journey row and the telemetry: nothing
+mounts, no host is created, `data-rail-instruments` is never set and every
+selector keyed on it is unmatched — including the bracket suppression and
+both widened clips, so the frame returns byte-identically.
+
+`SETTINGS_CLUSTER` is separate and must be flipped separately. It is not
+gated by the flag above, because the theme switch is a shipped control that
+predates these instruments — turning the journey row off must not take the
+site's only theme affordance with it. Flipping it back means restoring
+`<LightModeToggle />` in `LandingPage`.

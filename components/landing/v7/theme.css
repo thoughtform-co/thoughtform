@@ -45,24 +45,21 @@
    a control inside `.hud__rail--r` would be invisible for the whole
    hero and then pop in.
 
-   ⚠ MOVED TO THE BOTTOM-LEFT (ADR-059, 2026-08-02). The dock cluster now
-   takes the bottom-right band: it is placed by the approach row's rule
-   read upside down, which is the only placement that makes the two
-   corners mirror, and the strip left between the right rail's terminus
-   and this control is ~26px against a ~36px glyph-plus-label row. The
-   corner cannot hold both.
+   ⚠ THIS OVERLAY IS NOW `/arcs` ONLY (ADR-059 Update 1). The landing page
+   mounts `SettingsCluster` instead, which owns its own overlay in the same
+   slot and carries the theme switch plus a session mark. The geometry
+   below and `.rin-settings` are deliberately the SAME expression — if one
+   moves, move both, or the two public surfaces put the same control in
+   two different places.
 
-   The reasoning above survives the move intact, MIRRORED: the offset is
-   the same expression, measured inboard of the `--bl` bracket instead of
-   the `--br` one. The band now reads toggle at the left end, dock cluster
-   at the right, with the ADR-043 wordmark between them — it sits at
-   `--hud-content-inset` (the hero's editorial column), not at the margin,
-   so the mirrored slot clears it by ~14px at 1440 without a measured
-   pixel anywhere.
+   (It briefly moved to the bottom-LEFT earlier the same day, when the
+   journey's destination marks held this corner. They have since merged
+   into the top-left row and the corner became settings, so the original
+   right-hand placement is restored.)
    ═══════════════════════════════════════════════════════════════════ */
 .theme-toggle-overlay {
   position: fixed;
-  left: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
+  right: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
   bottom: max(var(--hud-margin), var(--safe-bottom, 0px));
   height: var(--hud-corner-zone);
   display: flex;

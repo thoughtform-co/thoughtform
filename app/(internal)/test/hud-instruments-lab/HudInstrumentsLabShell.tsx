@@ -14,7 +14,7 @@ import { journeyRef, subscribeJourney } from "./journeyRef";
 import { CornerRange, CornerSector, RailFoot } from "./instruments/CornerPlates";
 import { LeftRailIndex } from "./instruments/LeftRailIndex";
 import { RailStationRoster } from "./instruments/RailStationRoster";
-import { ApproachCluster, DockCluster } from "./instruments/SectionClusters";
+import { JourneyCluster } from "./instruments/SectionClusters";
 import { RightRailInstruments } from "./instruments/RightRailInstruments";
 import { useSyntheticJourney } from "./useSyntheticJourney";
 import { ALL_LAYERS, HUD_INSTRUMENT_VARIANTS, LAYER_LABELS, type LayerId } from "./variants";
@@ -131,8 +131,7 @@ export function HudInstrumentsLabShell({ hudHtml, bodyClass }: ShellProps) {
       // The cluster REPLACES its corner's bracket rather than sitting beside
       // it, so the bracket is suppressed exactly when its cluster is on —
       // keyed per corner, because the layers toggle independently.
-      data-hil-corner-tl={isOn("nApproach") || undefined}
-      data-hil-corner-br={isOn("nDock") || undefined}
+      data-hil-corner-tl={isOn("nJourney") || undefined}
     >
       <HudFrame hudHtml={hudHtml} onHosts={setHosts} />
       <Runway />
@@ -155,15 +154,6 @@ export function HudInstrumentsLabShell({ hudHtml, bodyClass }: ShellProps) {
               name={isOn("rName")}
               scale={isOn("rScale")}
             />
-            {/* The dock cluster hosts in the RIGHT RAIL, not the BR corner.
-                Two reasons, both structural. It has to sit above the ADR-058
-                toggle band — and the rail's own `bottom: max(...)` terminus
-                is defined as the line that clears exactly that band plus the
-                wordmark, so anchoring to it is the constraint, not a number
-                copied from it. And nothing can render above a corner's box
-                (the curtain inset saturates at 0px), which rules the corner
-                out for anything that must clear something below it. */}
-            {isOn("nDock") && <DockCluster />}
           </>,
           hosts.right
         )}
@@ -174,7 +164,7 @@ export function HudInstrumentsLabShell({ hudHtml, bodyClass }: ShellProps) {
           the collision, which is why it is not prevented here. */}
       {hosts && isOn("cTl") && createPortal(<CornerSector />, hosts.cornerTl)}
       {hosts && isOn("cBr") && createPortal(<CornerRange />, hosts.cornerBr)}
-      {hosts && isOn("nApproach") && createPortal(<ApproachCluster />, hosts.cornerTl)}
+      {hosts && isOn("nJourney") && createPortal(<JourneyCluster />, hosts.cornerTl)}
 
       <div className="hil-console" data-open={consoleOpen || undefined}>
         <div className="hil-console__head">

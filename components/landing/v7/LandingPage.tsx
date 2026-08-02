@@ -8,13 +8,13 @@ import { useCorridorMount } from "./hooks/useCorridorMount";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
 import { HudNav } from "./HudNav";
-import { LightModeToggle } from "./LightModeToggle";
 import { THEME_TOGGLE } from "./themeToggle";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
 import { RailInstruments } from "./rail-instruments/RailInstruments";
+import { SettingsCluster } from "./rail-instruments/SettingsCluster";
 import { RAIL_INSTRUMENTS } from "./rail-instruments/flags";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
@@ -616,13 +616,12 @@ export function LandingPage({
           leaf — a subscription here would re-render LandingPage and
           orphan the nested roots above (same rationale as
           CelestialEditorGate). */}
-      {THEME_TOGGLE && <LightModeToggle />}
-      {/* Rail instruments (ADR-059): the journey's sections as marks in the
-          top-left and bottom-right corners, plus the right rail's
-          telemetry. A LEAF by contract — it owns its own journey
-          subscription, because a subscription in LandingPage would
-          re-render it, re-apply the innerHTML above, and orphan the
-          nested roots (same rationale as LightModeToggle). */}
+      {/* Bottom-right = SETTINGS (ADR-059 U1): the theme switch, plus a
+          session mark that only an allowlisted signed-in user ever sees.
+          Replaces the standalone `LightModeToggle` on this route; `/arcs`
+          still mounts that directly, having no cluster to join. The auth
+          subscription lives in the cluster's own leaf, never here. */}
+      {THEME_TOGGLE && <SettingsCluster />}
       {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} />}
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve

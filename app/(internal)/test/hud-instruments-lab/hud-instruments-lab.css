@@ -585,50 +585,9 @@
    corner point. The row's TOP edge sits on the margin line rather than
    straddling it: the corner's curtain inset saturates at 0px, so a row
    centred on that line would have its upper half clipped away at rest. */
-.hil .hil-cl--approach {
+.hil .hil-cl--journey {
   top: 0;
   left: calc(var(--hud-rail-guide-inset) - var(--hil-cl-half));
-}
-
-/* BOTTOM-RIGHT — hosted in the RIGHT RAIL, seated on its bottom terminus.
-   That terminus is defined (landing.css) as the line clearing the ADR-043
-   wordmark and the bottom chrome band, which is exactly the clearance the
-   dock row needs from the ADR-058 toggle — so this anchors to the
-   constraint itself rather than to a number copied out of it. Right-aligned
-   to the right rail's track, mirroring the approach row's left edge. */
-.hil .hil-cl--dock {
-  /* ⚠ AN EXACT 180° ROTATION OF THE APPROACH ROW (owner, 2026-08-02:
-     "symmetry my dude").
-
-     Two earlier passes both failed the same test for different reasons.
-     `bottom: 18px` sat INSIDE the rail box, where the 2px track runs
-     through the terminal glyph. Centring it in the strip between the
-     rail's end and the toggle band got it outside the rail, but that strip
-     is only ~26px — the glyphs cleared, the labels above them did not, and
-     a cluster whose labels poke into the rail is not a mirror of one that
-     sits 27px clear of it.
-
-     So it is placed by the SAME rule as the approach row, read upside
-     down: the approach row's TOP edge sits on the top margin line, so the
-     dock row's BOTTOM edge sits on the bottom margin line. Labels then
-     stack inward (upward) exactly as the approach row's stack inward
-     (downward), and both clusters end up the same ~27px clear of their
-     rail's terminus. Measured symmetric to 0.1px.
-
-     The offset is `rail terminus − margin` because the host is the RAIL,
-     whose bottom is the terminus rather than the margin. Derived, not
-     measured: the terminus moves with the viewport (see
-     `--hil-rail-bottom`).
-
-     ⚠ THIS OCCUPIES THE ADR-058 TOGGLE'S BAND. Unavoidable, and it is the
-     real finding of this round rather than a bug: the strip between the
-     rail's terminus and the toggle is ~26px, a glyph row plus its label is
-     ~36px, so the corner cannot hold a symmetric cluster AND that control.
-     The lab does not mount the toggle, so nothing collides here — but
-     shipping this arrangement means relocating the toggle, and that is a
-     decision to take deliberately, not to discover in production. */
-  bottom: calc(-1 * (var(--hil-rail-bottom) - var(--hud-margin)));
-  right: calc(var(--hud-rail-guide-inset) - var(--hil-cl-half));
 }
 
 /* The bracket the cluster stands in for. Suppressed per corner, so a lone
@@ -641,7 +600,7 @@
 .hil .hil-cl__row {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 18px;
 }
 /* The LOG | DOCK split — what is on the record, then where you are going. */
 .hil .hil-cl__rule {
@@ -666,11 +625,8 @@
   top: 50%;
   translate: 0 -50%;
 }
-.hil .hil-cl--approach .hil-cl__zone {
+.hil .hil-cl--journey .hil-cl__zone {
   left: calc(100% + 16px);
-}
-.hil .hil-cl--dock .hil-cl__zone {
-  right: calc(100% + 16px);
 }
 
 /* ── The marks ──────────────────────────────────────────────────────────
@@ -717,10 +673,6 @@
   opacity: 0;
   transition: opacity 250ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
-.hil .hil-cl--dock .hil-ri__label {
-  top: auto;
-  bottom: calc(100% + 7px);
-}
 /* Only the live mark names itself — gold is wayfinding and nothing else. */
 .hil .hil-ri[data-state="here"] .hil-ri__label {
   opacity: 1;
@@ -732,13 +684,8 @@
    which on the dock side means the track draws straight through the last
    word. Flushing to the track keeps every mark and every label inside one
    edge. */
-.hil .hil-cl--approach .hil-ri:first-of-type .hil-ri__label {
+.hil .hil-cl--journey .hil-ri:first-of-type .hil-ri__label {
   left: var(--hil-cl-half);
-  translate: none;
-}
-.hil .hil-cl--dock .hil-ri:last-of-type .hil-ri__label {
-  left: auto;
-  right: var(--hil-cl-half);
   translate: none;
 }
 
@@ -755,11 +702,8 @@
 .hil[data-hil-explain] .hil-ri[data-state="here"] .hil-ri__label {
   color: var(--gold-70, rgba(202, 165, 84, 0.7));
 }
-.hil[data-hil-explain] .hil-cl--approach .hil-ri:nth-of-type(even) .hil-ri__label {
+.hil[data-hil-explain] .hil-ri:nth-of-type(even) .hil-ri__label {
   top: calc(100% + 20px);
-}
-.hil[data-hil-explain] .hil-cl--dock .hil-ri:nth-of-type(even) .hil-ri__label {
-  bottom: calc(100% + 20px);
 }
 
 @media (prefers-reduced-motion: reduce) {
