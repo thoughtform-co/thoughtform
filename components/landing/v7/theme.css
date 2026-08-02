@@ -135,21 +135,39 @@ html[data-theme="light"] {
   --dawn-08: rgba(17, 15, 9, 0.08);
   --dawn-04: rgba(17, 15, 9, 0.04);
 
-  /* Tensor Gold keeps its ROLE and darkens for contrast against Dawn
-     (color-system.md: "Gold adapts its value for contrast but keeps its
-     role"). #CAA554 on parchment is ~2.2:1 — unusable for text. The
-     WebGL particle golds do NOT follow this: they are light emitters,
-     not type, and stay in the luminous family (owner, 2026-08-01). */
-  --gold: #9a7a2e;
-  --gold-70: rgba(154, 122, 46, 0.7);
-  --gold-60: rgba(154, 122, 46, 0.6);
-  --gold-50: rgba(154, 122, 46, 0.5);
-  --gold-40: rgba(154, 122, 46, 0.4);
-  --gold-30: rgba(154, 122, 46, 0.3);
-  --gold-20: rgba(154, 122, 46, 0.2);
-  --gold-15: rgba(154, 122, 46, 0.15);
-  --gold-10: rgba(154, 122, 46, 0.1);
-  --gold-08: rgba(154, 122, 46, 0.08);
+  /* TENSOR GOLD SURVIVES THE MODE CHANGE UNCHANGED (owner, 2026-08-02 —
+     REVERSES the 2026-08-01 darkening to #9A7A2E, which is why the
+     ramps below are byte-equal to variables.css).
+
+     The darkened value was derived from ONE role — gold as small text,
+     where #CAA554 on parchment is 1.8:1 and #9A7A2E is 3.2:1. Measured
+     across all three roles it loses the other two: ink on a gold FILL
+     goes 8.2:1 → 4.7:1 (the directory row, the CTA, the emphasis
+     marker), and the darker value reads olive-drab at display size
+     rather than gold. It also put the DOM out of step with the WebGL
+     golds, which stayed luminous by design (emitters, not type) — the
+     services heading and the orbit rings were visibly different colours
+     in the same frame.
+
+     ⚠ THE KNOWN COST, ACCEPTED: gold as SMALL TEXT is now 1.8:1 — the
+     mono chrome (`4 ITEMS`, `IN BUILD`, `ON RECORD`, the contact
+     email). That is a real regression and the reason the darker value
+     existed; it is not an oversight. If it needs solving, the fix is a
+     SECOND token for gold-as-text, NOT re-darkening this one, which
+     would take the fills and the marker down with it.
+
+     The WebGL particle golds were always exempt and still are: they are
+     light emitters, not type (owner, 2026-08-01). */
+  --gold: #caa554;
+  --gold-70: rgba(202, 165, 84, 0.7);
+  --gold-60: rgba(202, 165, 84, 0.6);
+  --gold-50: rgba(202, 165, 84, 0.5);
+  --gold-40: rgba(202, 165, 84, 0.4);
+  --gold-30: rgba(202, 165, 84, 0.3);
+  --gold-20: rgba(202, 165, 84, 0.2);
+  --gold-15: rgba(202, 165, 84, 0.15);
+  --gold-10: rgba(202, 165, 84, 0.1);
+  --gold-08: rgba(202, 165, 84, 0.08);
 
   --alert: #c24e1f;
 
@@ -160,7 +178,7 @@ html[data-theme="light"] {
      RECESSED, not darker: in dark that is closer to black, in light it
      is a slightly deeper parchment (surface-0), so a veil still reads
      as the ground pulling back. */
-  --gold-rgb: 154, 122, 46;
+  --gold-rgb: 202, 165, 84;
   --dawn-rgb: 17, 15, 9;
   --dawn-alt-rgb: 17, 15, 9;
   --dawn-alt: #110f09;
@@ -179,7 +197,7 @@ html[data-theme="light"] {
      robustness argument that raised them (0.42→0.55 / 0.16→0.28) is
      symmetric across modes. THESE TWO ARE THE RAILS: latent night. */
   --atreides-light: #4a6238;
-  --gold-05: rgba(154, 122, 46, 0.05);
+  --gold-05: rgba(202, 165, 84, 0.05);
   --hud-rail-line: rgba(17, 15, 9, 0.55);
   --hud-rail-line-soft: rgba(17, 15, 9, 0.28);
 
@@ -191,7 +209,7 @@ html[data-theme="light"] {
      fallbacks at two sites, and `--surface-1`'s fallback carries
      alpha 0.94). `--dawn-45`'s only consumer is unmounted today
      (CorridorProgressRail, kept for rollback) — future-proofing. */
-  --gold-bright: #b8922f;
+  --gold-bright: #e0bd6a;
   --surface-1: #ddd2c0;
   --dawn-45: rgba(17, 15, 9, 0.56);
 
@@ -217,18 +235,18 @@ html[data-theme="light"] {
 html[data-theme="light"] .services-plate-cluster {
   --void: #f2eae0;
   --dawn: #110f09;
-  --gold: #9a7a2e;
+  --gold: #caa554;
   --dawn-80: rgba(17, 15, 9, 0.92);
   --dawn-70: rgba(17, 15, 9, 0.88);
   --dawn-50: rgba(17, 15, 9, 0.62);
   --dawn-40: rgba(17, 15, 9, 0.5);
   --dawn-30: rgba(17, 15, 9, 0.4);
   --dawn-04: rgba(17, 15, 9, 0.04);
-  --gold-40: rgba(154, 122, 46, 0.4);
-  --gold-05: rgba(154, 122, 46, 0.05);
+  --gold-40: rgba(202, 165, 84, 0.4);
+  --gold-05: rgba(202, 165, 84, 0.05);
   /* The plate's own ground is the elevated surface, so its one-off
      void alphas recede toward surface-1 rather than the page field. */
-  --gold-rgb: 154, 122, 46;
+  --gold-rgb: 202, 165, 84;
   --dawn-rgb: 17, 15, 9;
   --dawn-alt-rgb: 17, 15, 9;
   --void-rgb: 242, 234, 224;
@@ -375,11 +393,37 @@ html[data-theme="light"] .fl-row[data-on] .fl-row__meta {
    — below AA-large for body copy, on the one sentence of the brief that
    is supposed to land hardest.
    So in light the WASH carries the emphasis and the text stays ink,
-   which is what a highlighter does on paper. The wash comes up a little
-   because 0.16 gold reads softer on parchment than against near-black. */
-html[data-theme="light"] .fl-brief__body em {
+   which is what a highlighter does on paper.
+
+   AND THE FILL IS THE GOLD ITSELF, NOT A TINT OF IT (owner, 2026-08-02:
+   "make sure the highlight is tensor gold and not a lighter variant").
+   An alpha wash is the DARK recipe's logic — there the gold is a glow
+   read against near-black, so 0.16–0.22 is all it takes. Composite that
+   same alpha over parchment and it resolves to #E4D5B9, a sand tint that
+   reads as a smudge rather than a mark. Full-strength `--gold` is what
+   a highlighter actually is on paper, and it is the one role where gold
+   MEASURES BEST: ink on solid gold is 8.2:1, against 2.7:1 for ink on
+   the old wash. Do not "soften" this back to an alpha — that is the
+   defect, not the restraint.
+
+   EVERY WASHED MARKER ON THE SITE, not just the brief (owner,
+   2026-08-02). The corridor caption runs the same recipe through three
+   more selectors — the plain `<em>` (reduced-motion / fallback path),
+   the per-character `--em` spans the typewriter splits it into, and the
+   copy-anchor title — and gold-on-gold-wash fails identically in all of
+   them. The two caption paths MUST move together or the marker changes
+   colour when reduced-motion is on.
+
+   ⚠ Only the markers that carry a WASH invert. Gold text with no
+   background behind it (`__title em`, `.home-v2-copy-body em`) is
+   wayfinding at display size, not body copy on a tinted bed — it keeps
+   the gold, which is the whole point of the role. */
+html[data-theme="light"] .fl-brief__body em,
+html[data-theme="light"] .home-v2-station-header__support em,
+html[data-theme="light"] .home-v2-station-header__support .home-v2-station-header__char--em,
+html[data-theme="light"] .home-v2-copy-title em {
   color: var(--dawn);
-  background: rgba(var(--gold-rgb), 0.22);
+  background: var(--gold);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -456,7 +500,7 @@ html[data-theme="light"] .hero {
    opacity, geometry or z of this layer. */
 html[data-theme="light"] .gateway__stage {
   background:
-    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(154, 122, 46, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(202, 165, 84, 0.1) 0%, transparent 60%),
     radial-gradient(ellipse 60% 80% at 50% 50%, rgba(74, 98, 56, 0.05) 0%, transparent 50%),
     var(--void);
 }

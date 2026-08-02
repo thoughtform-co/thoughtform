@@ -90,7 +90,8 @@ Change one alone and the surface is incoherent, not merely imperfect:
 - **The DRAWER bake is THEMED; the card faces are not (2026-08-02).**
   `bakeDrawerFace` takes a `DrawerPalette` — dark is the shipped ADR-050
   literals verbatim, light is Semantic Dawn ground / Latent Night ink /
-  light-role gold (#9a7a2e), and the tray's slab caps, walls and glint
+  light-role gold (#caa554 — Tensor in BOTH modes since 2026-08-02;
+  ADR-058's one-day #9a7a2e darkening is reversed), and the tray's slab caps, walls and glint
   follow via the same `drawerTheme` state (re-baked on a store flip; the
   old set disposes through the `[drawerTextures]` cleanup). The CARD faces
   keep their photo-dark treatment in BOTH themes — kept-dark imagery is an

@@ -652,7 +652,9 @@ about the projection; the eye calls that Escher.
    thickness read.
 3. `bakeDrawerFace` takes a `DrawerPalette`: DARK is the shipped literals
    verbatim; LIGHT re-papers the spec sheet in Semantic Dawn (#ece3d6)
-   with Latent Night ink (#110f09) and the light-role gold (#9a7a2e) for
+   with Latent Night ink (#110f09) and the light-role gold (#CAA554 —
+   Tensor, unchanged across modes since 2026-08-02; this read #9A7A2E
+   for one day, see ADR-058) for
    everything that points — desigs, diamonds, shell, spec highlights, CTA.
    Tray slab caps/walls/glint follow via `drawerTheme` (store-subscribed;
    a flip re-bakes and the old texture set disposes through the existing

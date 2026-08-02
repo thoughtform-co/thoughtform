@@ -452,11 +452,11 @@ const FACE_LIGHT: FacePalette = {
   ground: "#ece3d6",
   scrimRgb: "236, 227, 214",
   lut: buildParchmentToneLut,
-  goldA: (a) => `rgba(154, 122, 46, ${a})`,
+  goldA: (a) => `rgba(202, 165, 84, ${a})`,
   washA: (a) => `rgba(17, 15, 9, ${a})`,
   ink: (a) => `rgba(17, 15, 9, ${a})`,
-  gold: "#9a7a2e",
-  chipFill: "#9a7a2e",
+  gold: "#caa554",
+  chipFill: "#caa554",
   chipInk: "#ece3d6",
 };
 
@@ -1070,8 +1070,8 @@ const DRAWER_DARK: DrawerPalette = {
 const DRAWER_LIGHT: DrawerPalette = {
   ground: "#ece3d6",
   ink: (a) => `rgba(17, 15, 9, ${a})`,
-  gold: "#9a7a2e",
-  goldA: (a) => `rgba(154, 122, 46, ${a})`,
+  gold: "#caa554",
+  goldA: (a) => `rgba(202, 165, 84, ${a})`,
   washA: (a) => `rgba(17, 15, 9, ${a})`,
   seamA: (a) => `rgba(17, 15, 9, ${a * 0.45})`,
 };
@@ -1777,7 +1777,7 @@ export function ServicesCardRing({
         // glass body — dawn glass in light), material 1 = the side walls
         // (the gold lip; light-role gold on parchment).
         const caps = ringTheme === "light" ? "#ded2c0" : "#14110c";
-        const walls = ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD;
+        const walls = ringTheme === "light" ? "#caa554" : SERVICES_GOLD;
         return [
           new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(caps) }),
           new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(walls) }),
@@ -1790,7 +1790,7 @@ export function ServicesCardRing({
       SERVICE_PLATES.map(
         () =>
           new THREE.LineBasicMaterial({
-            color: new THREE.Color(ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD),
+            color: new THREE.Color(ringTheme === "light" ? "#caa554" : SERVICES_GOLD),
             transparent: true,
             opacity: 0,
             depthWrite: false,
@@ -1857,7 +1857,7 @@ export function ServicesCardRing({
                bake's ground so the ring still reads. Walls/glint take the
                light-role gold — same pigment the bake's chrome uses. */
             const caps = ringTheme === "light" ? "#ded2c0" : "#14110c";
-            const walls = ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD;
+            const walls = ringTheme === "light" ? "#caa554" : SERVICES_GOLD;
             return [
               new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(caps) }),
               new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(walls) }),
@@ -1872,7 +1872,7 @@ export function ServicesCardRing({
         : SERVICE_PLATES.map(
             () =>
               new THREE.LineBasicMaterial({
-                color: new THREE.Color(ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD),
+                color: new THREE.Color(ringTheme === "light" ? "#caa554" : SERVICES_GOLD),
                 transparent: true,
                 opacity: 0,
                 depthWrite: false,

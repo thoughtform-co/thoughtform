@@ -109,6 +109,13 @@ for contrast but keeps its role"):
 - **The 2D bakes follow the DOM family**, because they are chrome and type
   rendered into a texture, and they sit at a visible seam with DOM chrome.
 
+> **REVERSED 2026-08-02 — see Update 1. The darkening lasted one day; gold
+> is now `#CAA554` in BOTH modes.** The bullets above are kept because the
+> reasoning is still the argument AGAINST the current value, and whoever
+> revisits this needs to see what it costs. The WebGL exemption survives
+> unchanged — it just no longer describes a split, since both families now
+> hold the same value.
+
 `--gold-contrast` is introduced for text printed ON a gold fill. Its dark
 value is byte-equal to `--void`, so migrating a `color: var(--void)` site to
 it is a no-op in dark, while surviving the flip (where `--void` becomes
@@ -238,6 +245,72 @@ written as **inline styles by JS** (`.home-v2-stack-label__*`, from
   through the WebGL work, and untuned painters will ship with
   `alphaGain = 0` — a quieter light corridor is acceptable, a broken one is
   not.
+
+## Update 1 — gold stops darkening, and the marker inverts everywhere (2026-08-02, owner)
+
+Two changes to the light cascade, both DOM-only. Dark stays byte-identical:
+every rule is `html[data-theme="light"]`-scoped and no dark literal moved.
+
+### 1. `--gold` is `#CAA554` in light, same as dark
+
+Decision 3 above darkened it to `#9A7A2E`. That value was derived from one
+role — gold as small text — and measuring all three roles reversed it:
+
+| gold's role                                | `#9A7A2E` | `#CAA554` |
+| ------------------------------------------ | --------- | --------- |
+| gold as SMALL TEXT on parchment            | 3.18:1    | 1.83:1    |
+| INK on a gold FILL (directory row, CTA)    | 4.74:1    | 8.23:1    |
+| PARCHMENT on a gold fill (chips)           | 3.18:1    | 1.83:1    |
+
+Two of three improve, and the darker value also read olive-drab at display
+size where gold is doing brand work, not wayfinding. It additionally put the
+DOM out of step with the WebGL golds — which stayed luminous by design — so
+the services heading and the orbit rings were visibly different colours in
+the same frame. Tensor makes the instrument one colour again.
+
+**The accepted cost, recorded so nobody re-derives it as a bug:** gold as
+small mono chrome (`4 ITEMS`, `IN BUILD`, `ON RECORD`, the contact email)
+now sits at 1.83:1. That is exactly what the darkening bought, and it is
+the standing argument for revisiting this. **The fix, if it is ever taken,
+is a SECOND token for gold-as-text — not re-darkening `--gold`**, which
+would drag the fills and the emphasis marker back down with it.
+
+Sites moved: the `html[data-theme="light"]` ramp + `--gold-rgb` +
+`--gold-05` + `--gold-bright`, the `.services-plate-cluster` scoped block,
+the `.gateway__stage` radial, and `ServicesCardRing`'s `FACE_LIGHT` /
+`DRAWER_LIGHT` / tray-wall literals. The `.hero` dark island is untouched
+(it re-pins the whole dark ramp and always did).
+
+### 2. The washed marker inverts on EVERY surface, and its fill is solid
+
+The `.fl-brief__body em` inversion (text → ink, wash carries the emphasis)
+was correct and was only ever applied to the casefile brief. The corridor
+caption runs the identical recipe through three more selectors and failed
+identically in all of them. All four now share one rule.
+
+Two rules govern which selectors join:
+
+- **Only markers with a WASH invert.** Gold text with nothing behind it
+  (`__title em`, `.home-v2-copy-body em`) is wayfinding at display size and
+  keeps its gold. Verified: `BUILD` / `NAVIGATE` still compute gold on a
+  transparent background.
+- **Both caption paths move together** — the plain `<em>` (reduced-motion /
+  fallback) and the per-character `--em` spans the typewriter splits it
+  into — or the marker changes colour when reduced motion is on.
+
+And the fill is now `var(--gold)`, **not an alpha of it**. An alpha wash is
+the dark recipe's logic, where gold is a glow read against near-black.
+Composited over parchment, `rgba(--gold-rgb, 0.22)` resolves to `#E4D5B9` —
+a sand tint that reads as a smudge rather than a mark. Solid gold is what a
+highlighter is on paper, and it is the role where gold measures best
+(8.2:1 with ink, against 2.7:1 on the old wash).
+
+**Known cosmetic gap:** the typewriter path carries no horizontal padding
+(it would gap the per-char backgrounds into a dashed bar) while the brief
+and plain `<em>` carry `0.16em`. Invisible at 22% alpha; at full strength
+the caption mark sits flush to its text while the brief's has breathing
+room. Fixing it needs run-boundary selectors (`:has()` + `:not(x + x)`) to
+extend only the first and last character outward — deliberately not taken.
 
 ## Rollback
 
