@@ -563,10 +563,6 @@
     calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
     calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
   );
-  /* The clear band between the end of the track and the top of the ADR-058
-     toggle band — the only strip that is outside the rail AND above the
-     bottom chrome. Runs ~20px at 1100 to ~32px at 1920. */
-  --hil-dock-band: calc(var(--hil-rail-bottom) - var(--hud-margin) - var(--hud-corner-zone));
 }
 
 /* ── THE CLUSTER *IS* THE CORNER (owner, 2026-08-02) ─────────────────────
@@ -601,22 +597,37 @@
    constraint itself rather than to a number copied out of it. Right-aligned
    to the right rail's track, mirroring the approach row's left edge. */
 .hil .hil-cl--dock {
-  /* ⚠ OUTSIDE the rail's vertical extent, not inside it — the correction
-     that makes this match the approach row (owner, 2026-08-02).
+  /* ⚠ AN EXACT 180° ROTATION OF THE APPROACH ROW (owner, 2026-08-02:
+     "symmetry my dude").
 
-     Seating it at `bottom: 18px` put it inside the rail box, where the 2px
-     TRACK runs straight through the terminal glyph and the terminal tick
-     sits under it. The approach row does not have that problem for a
-     reason worth naming: it sits in the corner zone ABOVE `--hud-rail-y-start`,
-     so the left track has not started yet and only the x-alignment reads.
-     The mirror of that is BELOW where the right track ends — hence the
-     negative offset out of the host, into `--hil-dock-band`.
+     Two earlier passes both failed the same test for different reasons.
+     `bottom: 18px` sat INSIDE the rail box, where the 2px track runs
+     through the terminal glyph. Centring it in the strip between the
+     rail's end and the toggle band got it outside the rail, but that strip
+     is only ~26px — the glyphs cleared, the labels above them did not, and
+     a cluster whose labels poke into the rail is not a mirror of one that
+     sits 27px clear of it.
 
-     The row is CENTRED in that band rather than pinned to either edge: the
-     band is only ~20px at 1100×760 and a 16px row leaves ~2px a side, so
-     any fixed gap that looks right at 1440 collides at the bottom of the
-     tier. Both edges have to give equally. */
-  bottom: calc(-1 * (var(--hil-dock-band) / 2 + var(--hil-cl-half)));
+     So it is placed by the SAME rule as the approach row, read upside
+     down: the approach row's TOP edge sits on the top margin line, so the
+     dock row's BOTTOM edge sits on the bottom margin line. Labels then
+     stack inward (upward) exactly as the approach row's stack inward
+     (downward), and both clusters end up the same ~27px clear of their
+     rail's terminus. Measured symmetric to 0.1px.
+
+     The offset is `rail terminus − margin` because the host is the RAIL,
+     whose bottom is the terminus rather than the margin. Derived, not
+     measured: the terminus moves with the viewport (see
+     `--hil-rail-bottom`).
+
+     ⚠ THIS OCCUPIES THE ADR-058 TOGGLE'S BAND. Unavoidable, and it is the
+     real finding of this round rather than a bug: the strip between the
+     rail's terminus and the toggle is ~26px, a glyph row plus its label is
+     ~36px, so the corner cannot hold a symmetric cluster AND that control.
+     The lab does not mount the toggle, so nothing collides here — but
+     shipping this arrangement means relocating the toggle, and that is a
+     decision to take deliberately, not to discover in production. */
+  bottom: calc(-1 * (var(--hil-rail-bottom) - var(--hud-margin)));
   right: calc(var(--hud-rail-guide-inset) - var(--hil-cl-half));
 }
 
