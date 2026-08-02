@@ -388,10 +388,24 @@
    clip with NEGATIVE side insets. The top inset below is copied VERBATIM
    from landing.css — it is what reveals the bracket as the hero lifts, and
    changing it would silently change the reveal. Only the sides open up.
-   `.hud__rail` already does exactly this for its 21px tick overhang. */
+   `.hud__rail` already does exactly this for its 21px tick overhang.
+
+   ⚠ The sides are −340px, not −220px: round 3's dock cluster reaches
+   ~258px past the BR bracket (the toggle clearance plus a six-item row) and
+   the approach cluster's zone label ~266px past the TL one. At −220px both
+   were sliced with no error — a clip failure looks like a layout mistake,
+   which is exactly how long it takes to find. Widening costs nothing; there
+   is nothing else out there to clip.
+
+   ⚠ ABOVE a corner is still unreachable, and always will be: the TOP inset
+   is the curtain and saturates at 0px. Anything a cluster wants to say goes
+   BESIDE or BELOW its row, never over it. */
+/* LEFT inset opened too (landing.css and round 2 both had 0): the approach
+   row's first mark is now CENTRED on the rail track, so half of it sits
+   outboard of the corner's own box. */
 .hil .hud__corner--tl {
   clip-path: inset(
-    max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) -220px -220px 0
+    max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) -340px -340px -340px
   );
 }
 .hil .hud__corner--br {
@@ -399,12 +413,31 @@
     max(
         0px,
         calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100dvh)
-      ) -220px -220px -220px
+      ) -340px -340px -340px
   );
 }
 @media (prefers-reduced-motion: reduce) {
   .hil .hud__corner--tl,
   .hil .hud__corner--br {
+    clip-path: none;
+  }
+}
+
+/* The RAIL's own curtain clip, re-declared for the same reason. Production
+   opens its sides to −100px, sized for the 21px tick overhang and the
+   diamond; the dock row reaches ~130px past the rail's inboard edge, so at
+   −100px its leading marks were sliced. TOP is copied verbatim — it is the
+   curtain, and the rail's is keyed to `--hud-rail-y-start`, not the margin. */
+.hil .hud__rail {
+  clip-path: inset(
+    max(
+        0px,
+        calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-rail-y-start))
+      ) -340px -340px -340px
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .hil .hud__rail {
     clip-path: none;
   }
 }
@@ -497,6 +530,232 @@
 }
 .hil .hil-foot__v--on {
   color: var(--gold, #caa554);
+}
+
+/* ═══ ROUND 3 — corner clusters ═════════════════════════════════════════
+   The sections leave the ladder and group by ROLE in the two working
+   corners. Both clusters ride their corner's CENTRELINE rather than its
+   arm: the bottom-right one has to line up with the theme toggle, which is
+   centred in a `--hud-corner-zone` box, and matching that on the top-left
+   keeps the two corners reading as a pair.
+
+   ⚠ INK IS THEME-AWARE HERE, unlike `--hil-passed` above. That token is a
+   literal `rgba(235,227,214,…)`, which is dawn in dark and INVISIBLE on
+   parchment. These go through `--dawn-rgb`, which theme.css flips to ink.
+   If the rest of the lab is ever taken to light, `--hil-passed` needs the
+   same treatment — it is the only reason those routes are dark-only.
+
+   The 0.44 passed value is carried over deliberately: it was MEASURED (see
+   the file header), and a glyph is more legible than the 8.5px text it was
+   measured against, so it is if anything conservative here. */
+.hil {
+  --hil-cl-ahead: rgba(var(--dawn-rgb, 235, 227, 214), 0.22);
+  --hil-cl-passed: rgba(var(--dawn-rgb, 235, 227, 214), 0.44);
+  /* Half a mark — what centres the terminal glyph ON the rail's track line
+     instead of butting it up against one. */
+  --hil-cl-half: 8px;
+  /* The right rail's own bottom terminus, mirrored from `landing.css` so the
+     dock can be placed RELATIVE to where the track actually ends. Kept as
+     one expression rather than a measured pixel: the `max()` arm that wins
+     changes with viewport (arm 1 at 1440, arm 2 at 1280), so any constant
+     here would be right at one size and wrong at the next. */
+  --hil-rail-bottom: max(
+    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
+    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
+  );
+  /* The clear band between the end of the track and the top of the ADR-058
+     toggle band — the only strip that is outside the rail AND above the
+     bottom chrome. Runs ~20px at 1100 to ~32px at 1920. */
+  --hil-dock-band: calc(var(--hil-rail-bottom) - var(--hud-margin) - var(--hud-corner-zone));
+}
+
+/* ── THE CLUSTER *IS* THE CORNER (owner, 2026-08-02) ─────────────────────
+   The first pass hung each cluster off its bracket's elbow at a fixed
+   offset, which aligned to nothing: at 1440 the approach row started at
+   x=92 with the left track at x=40.5, and the dock row ended at 1295 with
+   the right track at 1399.5. Three separate objects in each corner, none
+   of them on a shared line.
+
+   Now each cluster's TERMINAL mark is centred on its rail's track — the
+   same line the ticks hang off and the diamond rides — and the bracket it
+   replaces is suppressed. `--hud-rail-guide-inset` is the anchor rather
+   than a measured pixel, so the whole assembly still moves as one rigid
+   unit if that token ever leaves 0. */
+.hil .hil-cl {
+  position: absolute;
+}
+
+/* TOP-LEFT — hosted in the TL corner box, whose origin IS the bracket's
+   corner point. The row's TOP edge sits on the margin line rather than
+   straddling it: the corner's curtain inset saturates at 0px, so a row
+   centred on that line would have its upper half clipped away at rest. */
+.hil .hil-cl--approach {
+  top: 0;
+  left: calc(var(--hud-rail-guide-inset) - var(--hil-cl-half));
+}
+
+/* BOTTOM-RIGHT — hosted in the RIGHT RAIL, seated on its bottom terminus.
+   That terminus is defined (landing.css) as the line clearing the ADR-043
+   wordmark and the bottom chrome band, which is exactly the clearance the
+   dock row needs from the ADR-058 toggle — so this anchors to the
+   constraint itself rather than to a number copied out of it. Right-aligned
+   to the right rail's track, mirroring the approach row's left edge. */
+.hil .hil-cl--dock {
+  /* ⚠ OUTSIDE the rail's vertical extent, not inside it — the correction
+     that makes this match the approach row (owner, 2026-08-02).
+
+     Seating it at `bottom: 18px` put it inside the rail box, where the 2px
+     TRACK runs straight through the terminal glyph and the terminal tick
+     sits under it. The approach row does not have that problem for a
+     reason worth naming: it sits in the corner zone ABOVE `--hud-rail-y-start`,
+     so the left track has not started yet and only the x-alignment reads.
+     The mirror of that is BELOW where the right track ends — hence the
+     negative offset out of the host, into `--hil-dock-band`.
+
+     The row is CENTRED in that band rather than pinned to either edge: the
+     band is only ~20px at 1100×760 and a 16px row leaves ~2px a side, so
+     any fixed gap that looks right at 1440 collides at the bottom of the
+     tier. Both edges have to give equally. */
+  bottom: calc(-1 * (var(--hil-dock-band) / 2 + var(--hil-cl-half)));
+  right: calc(var(--hud-rail-guide-inset) - var(--hil-cl-half));
+}
+
+/* The bracket the cluster stands in for. Suppressed per corner, so a lone
+   layer does not leave a half-replaced frame. */
+.hil[data-hil-corner-tl] .hud__corner--tl,
+.hil[data-hil-corner-br] .hud__corner--br {
+  border: 0;
+}
+
+.hil .hil-cl__row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+/* The LOG | DOCK split — what is on the record, then where you are going. */
+.hil .hil-cl__rule {
+  width: 1px;
+  height: 14px;
+  background: rgba(var(--dawn-rgb, 235, 227, 214), 0.18);
+}
+
+.hil .hil-cl__zone {
+  position: absolute;
+  font-family: var(--hil-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.3);
+  white-space: nowrap;
+}
+/* Each zone label sits at its cluster's OUTBOARD end, past the last mark and
+   vertically centred on the row — never above it. See the clip note on
+   `.hil-ri__label`: above this corner is unreachable at rest. */
+.hil .hil-cl__zone {
+  top: 50%;
+  translate: 0 -50%;
+}
+.hil .hil-cl--approach .hil-cl__zone {
+  left: calc(100% + 16px);
+}
+.hil .hil-cl--dock .hil-cl__zone {
+  right: calc(100% + 16px);
+}
+
+/* ── The marks ──────────────────────────────────────────────────────────
+   Three states, the lab's standing doctrine: dim ahead, the measured dawn
+   for passed, gold for here. `currentColor` on the SVG means the state
+   colours the drawing and the theme flips it, with no per-glyph rules. */
+.hil .hil-ri {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: var(--hil-cl-ahead);
+  transition: color 300ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.hil .hil-ri[data-state="passed"] {
+  color: var(--hil-cl-passed);
+}
+.hil .hil-ri[data-state="here"] {
+  color: var(--gold, #caa554);
+}
+.hil .hil-ri svg {
+  display: block;
+}
+
+/* ⚠ A LABEL POINTS AWAY FROM ITS HOST'S CLIPPED EDGE — not a style choice.
+   Every host here carries a curtain clip whose TOP inset is driven by
+   `--hero-lift` and saturates at 0px, so nothing survives above a host's own
+   box at rest; the sides and bottom are the wide negative insets. The
+   approach cluster sits at the TOP of its corner, so its labels hang BELOW.
+   The dock sits at the BOTTOM of the rail, hundreds of pixels clear of that
+   clip edge and with the toggle band underneath, so its labels go ABOVE.
+   Set either one the other way and it vanishes, or collides, with no error. */
+.hil .hil-ri__label {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  translate: -50% 0;
+  font-family: var(--hil-mono);
+  font-size: 8.5px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 250ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.hil .hil-cl--dock .hil-ri__label {
+  top: auto;
+  bottom: calc(100% + 7px);
+}
+/* Only the live mark names itself — gold is wayfinding and nothing else. */
+.hil .hil-ri[data-state="here"] .hil-ri__label {
+  opacity: 1;
+}
+/* The row's outermost labels would run past the cluster if centred, so they
+   pin instead — and they pin to the TRACK LINE, not to the cluster's box.
+   The terminal glyph straddles the track, so its box edge is half a mark
+   outboard of it; a label flushed to that box overhangs the rail by 8px,
+   which on the dock side means the track draws straight through the last
+   word. Flushing to the track keeps every mark and every label inside one
+   edge. */
+.hil .hil-cl--approach .hil-ri:first-of-type .hil-ri__label {
+  left: var(--hil-cl-half);
+  translate: none;
+}
+.hil .hil-cl--dock .hil-ri:last-of-type .hil-ri__label {
+  left: auto;
+  right: var(--hil-cl-half);
+  translate: none;
+}
+
+/* ── N·explain — the scaffolding that settles the glyph question ─────────
+   Prints every name at once so the set can be judged as a SET. If the marks
+   only tell apart with this on, they have failed the same way v2's
+   silhouettes did, and that is the finding — not a reason to keep it on.
+   Alternate marks drop to a second line: five names in a 168px row overlap
+   by construction. */
+.hil[data-hil-explain] .hil-ri__label {
+  opacity: 1;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.38);
+}
+.hil[data-hil-explain] .hil-ri[data-state="here"] .hil-ri__label {
+  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+.hil[data-hil-explain] .hil-cl--approach .hil-ri:nth-of-type(even) .hil-ri__label {
+  top: calc(100% + 20px);
+}
+.hil[data-hil-explain] .hil-cl--dock .hil-ri:nth-of-type(even) .hil-ri__label {
+  bottom: calc(100% + 20px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hil .hil-ri,
+  .hil .hil-ri__label {
+    transition: none;
+  }
 }
 
 /* ── Responsive — key off the PRODUCTION gates, never invent new ones ────

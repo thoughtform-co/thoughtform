@@ -19,6 +19,16 @@
  * and practice — were distinguished by INNER RULES, not by outline. The
  * finding is kept in `glyphs.ts`, which stays on disk unmounted.
  *
+ * ROUND 3 (owner mockup, 2026-08-02) — `r4`. Rounds 1 and 2 both ran the
+ * marks along the LEFT RAIL and argued about the spacing; anything on a rail
+ * is on a scale, and the roster only escaped the progress-bar read by nailing
+ * the seats down. Round 3 leaves the ladder alone entirely and groups the
+ * sections by ROLE in the two working corners, so position says what a
+ * section IS rather than how far down it sits. It also re-opens the glyph
+ * question v2 closed — but as open stroke figures rather than a shared
+ * bordered box with a notch cut out of it. See `instruments/sectionGlyphs.tsx`
+ * for why that is a fair second hearing and not a repeat.
+ *
  * The layers are independent on purpose: the owner should not be stuck with
  * curated combinations. Selecting a route seeds the layer set; toggling a
  * layer overrides it.
@@ -48,7 +58,13 @@ export type LayerId =
   /** Top-left corner: the sector stamp, working inward from the bracket. */
   | "cTl"
   /** Bottom-right corner: the range register. */
-  | "cBr";
+  | "cBr"
+  /** Top-left cluster: the five approach beats as marks. Round 3. */
+  | "nApproach"
+  /** Bottom-right cluster: the five destinations, LOG | DOCK. Round 3. */
+  | "nDock"
+  /** Scaffolding: print every mark's name at once, and show reserved space. */
+  | "nExplain";
 
 export const LAYER_LABELS: Readonly<Record<LayerId, string>> = {
   lRoster: "L·roster",
@@ -63,6 +79,9 @@ export const LAYER_LABELS: Readonly<Record<LayerId, string>> = {
   rName: "R·name",
   cTl: "C·TL",
   cBr: "C·BR",
+  nApproach: "N·approach",
+  nDock: "N·dock",
+  nExplain: "N·explain",
 };
 
 export const ALL_LAYERS: readonly LayerId[] = Object.keys(LAYER_LABELS) as LayerId[];
@@ -110,6 +129,14 @@ export const HUD_INSTRUMENT_VARIANTS: readonly HudInstrumentVariant[] = [
       "The roster on the left, the key/value register on the right instead of the graduated scale. Left names the places, right reads the state. More words, no more marks.",
     provenance: "RAVENS-THR · THE SPARK's top-right status stack",
     layers: ["lRoster", "lExpand", "lFoot", "rTelemetry", "rName", "cTl"],
+  },
+  {
+    id: "r4",
+    label: "Corner clusters",
+    thesis:
+      "The sections leave the ladder and group by ROLE: five approach beats top-left, five destinations bottom-right, split LOG | DOCK after ABOUT. Each cluster REPLACES its corner bracket and its terminal mark is centred on that rail's track line, so the row and the ladder share an edge instead of being three unrelated objects in a corner. The dock seats on the right rail's bottom terminus — the line already defined as clearing the wordmark and the ADR-058 toggle. Judge two things: whether grouping reads as meaning rather than as leftover marks, and whether the glyphs survive without their labels (N·explain names them, then turn it off). If you need the labels, the set has failed the way v2 did.",
+    provenance: "Owner mockup, 2026-08-02 — HUD Rail Instruments",
+    layers: ["nApproach", "nDock"],
   },
   {
     id: "v1",

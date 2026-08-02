@@ -14,6 +14,7 @@ import { journeyRef, subscribeJourney } from "./journeyRef";
 import { CornerRange, CornerSector, RailFoot } from "./instruments/CornerPlates";
 import { LeftRailIndex } from "./instruments/LeftRailIndex";
 import { RailStationRoster } from "./instruments/RailStationRoster";
+import { ApproachCluster, DockCluster } from "./instruments/SectionClusters";
 import { RightRailInstruments } from "./instruments/RightRailInstruments";
 import { useSyntheticJourney } from "./useSyntheticJourney";
 import { ALL_LAYERS, HUD_INSTRUMENT_VARIANTS, LAYER_LABELS, type LayerId } from "./variants";
@@ -126,6 +127,12 @@ export function HudInstrumentsLabShell({ hudHtml, bodyClass }: ShellProps) {
       className={`hil ${bodyClass}`}
       data-theme="dark"
       data-hil-variant={variant.id}
+      data-hil-explain={isOn("nExplain") || undefined}
+      // The cluster REPLACES its corner's bracket rather than sitting beside
+      // it, so the bracket is suppressed exactly when its cluster is on —
+      // keyed per corner, because the layers toggle independently.
+      data-hil-corner-tl={isOn("nApproach") || undefined}
+      data-hil-corner-br={isOn("nDock") || undefined}
     >
       <HudFrame hudHtml={hudHtml} onHosts={setHosts} />
       <Runway />
@@ -141,16 +148,33 @@ export function HudInstrumentsLabShell({ hudHtml, bodyClass }: ShellProps) {
         )}
       {hosts &&
         createPortal(
-          <RightRailInstruments
-            pointer={isOn("rPointer")}
-            telemetry={isOn("rTelemetry")}
-            name={isOn("rName")}
-            scale={isOn("rScale")}
-          />,
+          <>
+            <RightRailInstruments
+              pointer={isOn("rPointer")}
+              telemetry={isOn("rTelemetry")}
+              name={isOn("rName")}
+              scale={isOn("rScale")}
+            />
+            {/* The dock cluster hosts in the RIGHT RAIL, not the BR corner.
+                Two reasons, both structural. It has to sit above the ADR-058
+                toggle band — and the rail's own `bottom: max(...)` terminus
+                is defined as the line that clears exactly that band plus the
+                wordmark, so anchoring to it is the constraint, not a number
+                copied from it. And nothing can render above a corner's box
+                (the curtain inset saturates at 0px), which rules the corner
+                out for anything that must clear something below it. */}
+            {isOn("nDock") && <DockCluster />}
+          </>,
           hosts.right
         )}
+      {/* Both corner hosts carry two independent layers: the round-2 register
+          (`cTl` / `cBr`) and the round-3 cluster. They are NOT designed to
+          coexist — each occupies its bracket's open arm — so `r4` ships
+          without the registers. Turning both on is a legitimate way to see
+          the collision, which is why it is not prevented here. */}
       {hosts && isOn("cTl") && createPortal(<CornerSector />, hosts.cornerTl)}
       {hosts && isOn("cBr") && createPortal(<CornerRange />, hosts.cornerBr)}
+      {hosts && isOn("nApproach") && createPortal(<ApproachCluster />, hosts.cornerTl)}
 
       <div className="hil-console" data-open={consoleOpen || undefined}>
         <div className="hil-console__head">

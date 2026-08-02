@@ -13,6 +13,13 @@ import { HudInstrumentsLabShell } from "./HudInstrumentsLabShell";
    geometry itself. */
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
+/* `theme.css` LAST of the production sheets (ADR-058's own import order).
+   The pre-paint bootstrap in `app/layout.tsx` already writes
+   `data-theme="light"` on `<html>` for `?theme=light` on EVERY route — this
+   lab just never imported the sheet that consumes it, so light mode was
+   unreachable here. It is inert in dark, so `v0` stays the pixel-identical
+   control it has to be. */
+import "@/components/landing/v7/theme.css";
 import "./hud-instruments-lab.css";
 
 export default function HudInstrumentsLabRoute() {
