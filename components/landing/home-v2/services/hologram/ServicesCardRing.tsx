@@ -311,7 +311,7 @@ const RING_HOVER_TILT_YAW = 0.2;
  * math (see PHOTO_* doc): between dots occlusion = 1 − SOFT; inside dots
  * the punch removes DOTS/(1 − SOFT) of it, leaving 1 − SOFT − DOTS.
  */
-function buildVeilCanvas(): HTMLCanvasElement {
+function buildVeilCanvas(pal: FacePalette = FACE_DARK): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = PHOTO_DOT_PITCH;
   canvas.height = BAKE_H;
@@ -319,12 +319,12 @@ function buildVeilCanvas(): HTMLCanvasElement {
   if (!ctx) return canvas;
   const between = 1 - PHOTO_SOFT_ALPHA;
   const gradient = ctx.createLinearGradient(0, 0, 0, BAKE_H);
-  gradient.addColorStop(0, "rgba(5, 4, 3, 0)");
-  gradient.addColorStop(VEIL_TOP_START / BAKE_H, "rgba(5, 4, 3, 0)");
-  gradient.addColorStop(VEIL_TOP_END / BAKE_H, `rgba(5, 4, 3, ${between})`);
-  gradient.addColorStop(VEIL_FADE_START / BAKE_H, `rgba(5, 4, 3, ${between})`);
-  gradient.addColorStop(VEIL_FADE_END / BAKE_H, "rgba(5, 4, 3, 0)");
-  gradient.addColorStop(1, "rgba(5, 4, 3, 0)");
+  gradient.addColorStop(0, `rgba(${pal.scrimRgb}, 0)`);
+  gradient.addColorStop(VEIL_TOP_START / BAKE_H, `rgba(${pal.scrimRgb}, 0)`);
+  gradient.addColorStop(VEIL_TOP_END / BAKE_H, `rgba(${pal.scrimRgb}, ${between})`);
+  gradient.addColorStop(VEIL_FADE_START / BAKE_H, `rgba(${pal.scrimRgb}, ${between})`);
+  gradient.addColorStop(VEIL_FADE_END / BAKE_H, `rgba(${pal.scrimRgb}, 0)`);
+  gradient.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, PHOTO_DOT_PITCH, BAKE_H);
   ctx.globalCompositeOperation = "destination-out";
@@ -369,6 +369,96 @@ function buildGoldToneLut(): { r: Uint8ClampedArray; g: Uint8ClampedArray; b: Ui
   }
   return { r, g, b };
 }
+
+/**
+ * The LIGHT photo treatment (owner, 2026-08-02: "shouldn't we also have a
+ * light mode filter for our pictures?") — the parchment PRINT to the gold
+ * LUT's phosphor plate. Same expression grammar so the DOM twin can mirror
+ * it as a CSS chain: sepia(0.55) saturate(0.88) brightness(1.1)
+ * contrast(0.9), then levels mapped into [30, 246] — the floor is what
+ * lifts print blacks to warm ink instead of void (a photo ON paper never
+ * reaches #000), the ceiling keeps highlights off the page white.
+ */
+function buildParchmentToneLut(): {
+  r: Uint8ClampedArray;
+  g: Uint8ClampedArray;
+  b: Uint8ClampedArray;
+} {
+  const r = new Uint8ClampedArray(256);
+  const g = new Uint8ClampedArray(256);
+  const b = new Uint8ClampedArray(256);
+  for (let v = 0; v < 256; v++) {
+    // sepia(0.55) on a grey pixel.
+    let cr = v * (0.45 + 0.55 * 1.351);
+    let cg = v * (0.45 + 0.55 * 1.203);
+    let cb = v * (0.45 + 0.55 * 0.937);
+    // saturate(0.88) around luminance — print, not phosphor.
+    const lum = 0.2126 * cr + 0.7152 * cg + 0.0722 * cb;
+    cr = lum + (cr - lum) * 0.88;
+    cg = lum + (cg - lum) * 0.88;
+    cb = lum + (cb - lum) * 0.88;
+    // brightness(1.1) then contrast(0.9).
+    cr = (cr * 1.1 - 127.5) * 0.9 + 127.5;
+    cg = (cg * 1.1 - 127.5) * 0.9 + 127.5;
+    cb = (cb * 1.1 - 127.5) * 0.9 + 127.5;
+    // Levels into [30, 246].
+    r[v] = 30 + (Math.max(0, Math.min(255, cr)) * (246 - 30)) / 255;
+    g[v] = 30 + (Math.max(0, Math.min(255, cg)) * (246 - 30)) / 255;
+    b[v] = 30 + (Math.max(0, Math.min(255, cb)) * (246 - 30)) / 255;
+  }
+  return { r, g, b };
+}
+
+/**
+ * The card FACE's per-theme palette (the DrawerPalette pattern, one surface
+ * up). DARK is the shipped literals verbatim — the dark bake stays
+ * byte-identical. LIGHT turns the whole face into the paper card the dawn
+ * tray already implied: parchment-print photo, parchment scrims, Latent
+ * Night copy, light-role gold chrome, and the chip kept as a gold stamp
+ * (its ink flips to parchment — Latent Night on the darker light gold
+ * measured ~2.4:1).
+ */
+interface FacePalette {
+  /** Canvas ground + the chamfer corner fill (must match the page). */
+  ground: string;
+  /** Scrim/veil fog family, as an "r, g, b" triple. */
+  scrimRgb: string;
+  /** The photo LUT for this theme. */
+  lut: () => { r: Uint8ClampedArray; g: Uint8ClampedArray; b: Uint8ClampedArray };
+  /** Chrome gold with alpha. */
+  goldA: (a: number) => string;
+  /** The shell gradient's second family (dawn on dark, ink on light). */
+  washA: (a: number) => string;
+  /** Reading ink (title/lede/full-variant copy). */
+  ink: (a: number) => string;
+  /** Solid gold — `{ em }` runs, the full face's CTA. */
+  gold: string;
+  chipFill: string;
+  chipInk: string;
+}
+
+const FACE_DARK: FacePalette = {
+  ground: VOID,
+  scrimRgb: "5, 4, 3",
+  lut: buildGoldToneLut,
+  goldA: (a) => `rgba(202, 165, 84, ${a})`,
+  washA: (a) => `rgba(${DAWN}, ${a})`,
+  ink: (a) => `rgba(${DAWN}, ${a})`,
+  gold: SERVICES_GOLD,
+  chipFill: SERVICES_GOLD,
+  chipInk: "#110f09", // --latent-night
+};
+const FACE_LIGHT: FacePalette = {
+  ground: "#ece3d6",
+  scrimRgb: "236, 227, 214",
+  lut: buildParchmentToneLut,
+  goldA: (a) => `rgba(154, 122, 46, ${a})`,
+  washA: (a) => `rgba(17, 15, 9, ${a})`,
+  ink: (a) => `rgba(17, 15, 9, ${a})`,
+  gold: "#9a7a2e",
+  chipFill: "#9a7a2e",
+  chipInk: "#ece3d6",
+};
 
 /** `cutTopRight` — the TIGHT face drops the TOP-RIGHT chamfer (owner,
  *  2026-07-26): the drawer tray emerges along that edge, and a notched
@@ -548,13 +638,14 @@ function drawRunLine(
   line: InkRun[],
   x: number,
   y: number,
-  baseInk: string
+  baseInk: string,
+  goldInk: string = SERVICES_GOLD
 ): void {
   const spaceW = ctx.measureText(" ").width;
   let cx = x;
   line.forEach((run, i) => {
     if (i > 0) cx += spaceW;
-    ctx.fillStyle = run.gold ? SERVICES_GOLD : baseInk;
+    ctx.fillStyle = run.gold ? goldInk : baseInk;
     ctx.fillText(run.text, cx, y);
     cx += ctx.measureText(run.text).width;
   });
@@ -563,7 +654,8 @@ function drawRunLine(
 function bakeCardFace(
   plate: ServicePlate,
   img: HTMLImageElement | null,
-  variant: CardFaceVariant = "full"
+  variant: CardFaceVariant = "full",
+  pal: FacePalette = FACE_DARK
 ): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = BAKE_W;
@@ -571,8 +663,8 @@ function bakeCardFace(
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
 
-  // Ground — everything outside/under the photo is opaque void.
-  ctx.fillStyle = VOID;
+  // Ground — everything outside/under the photo is opaque page color.
+  ctx.fillStyle = pal.ground;
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
   if (img) {
@@ -586,8 +678,9 @@ function bakeCardFace(
     const dh = img.naturalHeight * scale;
     ctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
 
-    // Plate gold-tone treatment (LUT pass — see buildGoldToneLut).
-    const lut = buildGoldToneLut();
+    // Plate tone treatment (LUT pass — gold plate in dark, parchment
+    // print in light; see buildGoldToneLut / buildParchmentToneLut).
+    const lut = pal.lut();
     const data = ctx.getImageData(0, 0, BAKE_W, BAKE_H);
     const px = data.data;
     for (let i = 0; i < px.length; i += 4) {
@@ -608,7 +701,7 @@ function bakeCardFace(
     tile.height = 8;
     const tctx = tile.getContext("2d");
     if (tctx) {
-      tctx.fillStyle = "rgba(202, 165, 84, 0.24)";
+      tctx.fillStyle = pal.goldA(0.24);
       tctx.beginPath();
       tctx.arc(2, 2, 1.7, 0, Math.PI * 2);
       tctx.fill();
@@ -620,27 +713,29 @@ function bakeCardFace(
     }
   }
 
-  // Scrims — chip row leads at the top; the C3 pgrade below (photo leads at
-  // the top of the plate, darkens to solid ground for the copy stack).
+  // Scrims — chip row leads at the top; the C3 pgrade below (photo leads
+  // at the top of the plate, resolves to solid page ground for the copy
+  // stack — void in dark, parchment in light, the copy ink flips with it).
   const top = ctx.createLinearGradient(0, 0, 0, 190);
-  top.addColorStop(0, "rgba(5, 4, 3, 0.78)");
-  top.addColorStop(1, "rgba(5, 4, 3, 0)");
+  top.addColorStop(0, `rgba(${pal.scrimRgb}, 0.78)`);
+  top.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
   ctx.fillStyle = top;
   ctx.fillRect(0, 0, BAKE_W, 190);
   const ground = ctx.createLinearGradient(0, 700, 0, BAKE_H);
-  ground.addColorStop(0, "rgba(5, 4, 3, 0)");
-  ground.addColorStop(0.34, "rgba(5, 4, 3, 0.58)");
-  ground.addColorStop(0.62, "rgba(5, 4, 3, 0.9)");
-  ground.addColorStop(1, "rgba(5, 4, 3, 0.96)");
+  ground.addColorStop(0, `rgba(${pal.scrimRgb}, 0)`);
+  ground.addColorStop(0.34, `rgba(${pal.scrimRgb}, 0.58)`);
+  ground.addColorStop(0.62, `rgba(${pal.scrimRgb}, 0.9)`);
+  ground.addColorStop(1, `rgba(${pal.scrimRgb}, 0.96)`);
   ctx.fillStyle = ground;
   ctx.fillRect(0, 700, BAKE_W, BAKE_H - 700);
 
-  // Chamfer corners — OPAQUE void (see module doc; never transparent).
-  // The TIGHT face keeps only the BOTTOM-LEFT cut (owner, 2026-07-26): the
-  // drawer tray docks along the right edge, so the top-right corner must be
-  // square for the pair to align — see traceChamferPath.
+  // Chamfer corners — OPAQUE page color (see module doc; never
+  // transparent). The TIGHT face keeps only the BOTTOM-LEFT cut (owner,
+  // 2026-07-26): the drawer tray docks along the right edge, so the
+  // top-right corner must be square for the pair to align — see
+  // traceChamferPath.
   const cutTR = variant === "full";
-  ctx.fillStyle = VOID;
+  ctx.fillStyle = pal.ground;
   if (cutTR) {
     ctx.beginPath();
     ctx.moveTo(BAKE_W - BAKE_CH, 0);
@@ -658,10 +753,10 @@ function bakeCardFace(
 
   // Chamfered shell stroke — the open plate's 168° gold gradient (1px CSS).
   const shell = ctx.createLinearGradient(0, 0, BAKE_W * 0.25, BAKE_H);
-  shell.addColorStop(0, "rgba(202, 165, 84, 0.52)");
-  shell.addColorStop(0.38, `rgba(${DAWN}, 0.14)`);
-  shell.addColorStop(0.66, "rgba(202, 165, 84, 0.16)");
-  shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
+  shell.addColorStop(0, pal.goldA(0.52));
+  shell.addColorStop(0.38, pal.washA(0.14));
+  shell.addColorStop(0.66, pal.goldA(0.16));
+  shell.addColorStop(1, pal.goldA(0.48));
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
   if (variant === "tight") {
@@ -685,7 +780,7 @@ function bakeCardFace(
   }
 
   // Brighter ticks along the chamfer cuts (the connector plug-in edges).
-  ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";
+  ctx.strokeStyle = pal.goldA(0.85);
   ctx.lineWidth = 3;
   ctx.beginPath();
   if (cutTR) {
@@ -715,9 +810,9 @@ function bakeCardFace(
   const chipPadL = 34; // chip-left → diamond centre
   const chipGap = 24; // diamond centre → text
   const chipW = chipPadL + chipGap + chipTextW + 34;
-  ctx.fillStyle = SERVICES_GOLD;
+  ctx.fillStyle = pal.chipFill;
   ctx.fillRect(44, chipY, chipW, chipH);
-  ctx.fillStyle = "#110f09"; // --latent-night
+  ctx.fillStyle = pal.chipInk; // latent-night on dark, parchment on light
   ctx.save();
   ctx.translate(44 + chipPadL, chipCY);
   ctx.rotate(Math.PI / 4);
@@ -752,7 +847,7 @@ function bakeCardFace(
     {
       const ex0 = BAKE_W - TIGHT_EXPAND_INSET - TIGHT_EXPAND_SIZE;
       const ey0 = TIGHT_EXPAND_INSET;
-      ctx.strokeStyle = "rgba(202, 165, 84, 0.55)";
+      ctx.strokeStyle = pal.goldA(0.55);
       ctx.lineWidth = 2;
       ctx.strokeRect(ex0, ey0, TIGHT_EXPAND_SIZE, TIGHT_EXPAND_SIZE);
 
@@ -764,7 +859,7 @@ function bakeCardFace(
       const gx1 = ex0 + TIGHT_EXPAND_SIZE - gp;
       const gy1 = ey0 + TIGHT_EXPAND_SIZE - gp;
       // Brighter than its box: the chit should recede, the mark should read.
-      ctx.strokeStyle = "rgba(202, 165, 84, 0.95)";
+      ctx.strokeStyle = pal.goldA(0.95);
       ctx.lineWidth = 2.5;
       ctx.lineCap = "square";
       ctx.beginPath();
@@ -794,7 +889,8 @@ function bakeCardFace(
         line,
         PAD_X,
         ledeBottom - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
-        `rgba(${DAWN}, 0.82)`
+        pal.ink(0.82),
+        pal.gold
       );
     });
     const ledeTop = ledeBottom - (ledeLines.length - 1) * TIGHT_LEDE_LH - 24;
@@ -810,7 +906,8 @@ function bakeCardFace(
         line,
         PAD_X,
         titleBottom - (titleLines.length - 1 - i) * TIGHT_TITLE_LH,
-        `rgb(${DAWN})`
+        pal.ink(1),
+        pal.gold
       );
     });
 
@@ -820,11 +917,11 @@ function bakeCardFace(
 
   // CTA — outlined gold box, label left, arrow right (rest state).
   label.letterSpacing = "4px";
-  ctx.strokeStyle = SERVICES_GOLD;
+  ctx.strokeStyle = pal.gold;
   ctx.lineWidth = 2;
   ctx.strokeRect(PAD_X, CTA_Y0, maxW, CTA_H);
   ctx.font = `700 21px ${CARD_FONT}`;
-  ctx.fillStyle = SERVICES_GOLD;
+  ctx.fillStyle = pal.gold;
   const ctaMidY = CTA_Y0 + CTA_H / 2 + 8;
   ctx.fillText(plate.ctaLabel.toUpperCase(), PAD_X + 28, ctaMidY);
   label.letterSpacing = "0px";
@@ -857,7 +954,8 @@ function bakeCardFace(
       line,
       PAD_X,
       ledeBottom - (ledeLines.length - 1 - i) * LEDE_LH,
-      `rgba(${DAWN}, 0.92)`
+      pal.ink(0.92),
+      pal.gold
     );
   });
   const ledeTop = ledeBottom - (ledeLines.length - 1) * LEDE_LH - 28;
@@ -874,7 +972,8 @@ function bakeCardFace(
       line,
       PAD_X,
       titleBottom - (titleLines.length - 1 - i) * TITLE_LH,
-      `rgb(${DAWN})`
+      pal.ink(1),
+      pal.gold
     );
   });
   const titleTop = titleBottom - (titleLines.length - 1) * TITLE_LH - 30;
@@ -902,7 +1001,8 @@ function bakeCardFace(
       line,
       PAD_X,
       incBottom - (incLines.length - 1 - i) * INC_LH,
-      `rgba(${DAWN}, 0.5)`
+      pal.ink(0.5),
+      pal.gold
     );
   });
 
@@ -1194,7 +1294,8 @@ function traceChamferPathMirrored(
  */
 function bakePortraitBack(
   img: HTMLImageElement | null,
-  variant: CardFaceVariant = "full"
+  variant: CardFaceVariant = "full",
+  pal: FacePalette = FACE_DARK
 ): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = BAKE_W;
@@ -1202,7 +1303,7 @@ function bakePortraitBack(
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
 
-  ctx.fillStyle = VOID;
+  ctx.fillStyle = pal.ground;
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
   if (img) {
@@ -1212,7 +1313,7 @@ function bakePortraitBack(
     const dw = img.naturalWidth * scale;
     const dh = img.naturalHeight * scale;
     ctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
-    const lut = buildGoldToneLut();
+    const lut = pal.lut();
     const data = ctx.getImageData(0, 0, BAKE_W, BAKE_H);
     const px = data.data;
     for (let i = 0; i < px.length; i += 4) {
@@ -1232,7 +1333,7 @@ function bakePortraitBack(
     tile.height = 8;
     const tctx = tile.getContext("2d");
     if (tctx) {
-      tctx.fillStyle = "rgba(202, 165, 84, 0.24)";
+      tctx.fillStyle = pal.goldA(0.24);
       tctx.beginPath();
       tctx.arc(2, 2, 1.7, 0, Math.PI * 2);
       tctx.fill();
@@ -1247,13 +1348,13 @@ function bakePortraitBack(
   // Gentle top + ground scrims — the portrait carries no copy, so these
   // only seat the face into the slab (no deep copy-ground needed).
   const top = ctx.createLinearGradient(0, 0, 0, 150);
-  top.addColorStop(0, "rgba(5, 4, 3, 0.55)");
-  top.addColorStop(1, "rgba(5, 4, 3, 0)");
+  top.addColorStop(0, `rgba(${pal.scrimRgb}, 0.55)`);
+  top.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
   ctx.fillStyle = top;
   ctx.fillRect(0, 0, BAKE_W, 150);
   const ground = ctx.createLinearGradient(0, BAKE_H - 320, 0, BAKE_H);
-  ground.addColorStop(0, "rgba(5, 4, 3, 0)");
-  ground.addColorStop(1, "rgba(5, 4, 3, 0.72)");
+  ground.addColorStop(0, `rgba(${pal.scrimRgb}, 0)`);
+  ground.addColorStop(1, `rgba(${pal.scrimRgb}, 0.72)`);
   ctx.fillStyle = ground;
   ctx.fillRect(0, BAKE_H - 320, BAKE_W, 320);
 
@@ -1261,7 +1362,7 @@ function bakePortraitBack(
   // same contract as the front faces. `tight` drops the TL cut (the flipped
   // image of the physical TR chamfer the tight slab no longer has).
   const cutTL = variant === "full";
-  ctx.fillStyle = VOID;
+  ctx.fillStyle = pal.ground;
   if (cutTL) {
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -1279,15 +1380,15 @@ function bakePortraitBack(
 
   // Mirrored shell stroke + bright chamfer ticks.
   const shell = ctx.createLinearGradient(BAKE_W, 0, BAKE_W * 0.75, BAKE_H);
-  shell.addColorStop(0, "rgba(202, 165, 84, 0.52)");
-  shell.addColorStop(0.38, `rgba(${DAWN}, 0.14)`);
-  shell.addColorStop(0.66, "rgba(202, 165, 84, 0.16)");
-  shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
+  shell.addColorStop(0, pal.goldA(0.52));
+  shell.addColorStop(0.38, pal.washA(0.14));
+  shell.addColorStop(0.66, pal.goldA(0.16));
+  shell.addColorStop(1, pal.goldA(0.48));
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
   traceChamferPathMirrored(ctx, 1.5, cutTL);
   ctx.stroke();
-  ctx.strokeStyle = "rgba(202, 165, 84, 0.85)";
+  ctx.strokeStyle = pal.goldA(0.85);
   ctx.lineWidth = 3;
   ctx.beginPath();
   if (cutTL) {
@@ -1449,9 +1550,10 @@ export function ServicesCardRing({
      shipped literals (byte-identical); light re-papers the tray in Semantic
      Dawn / Latent Night / light-role gold. Card faces deliberately do NOT
      re-bake — kept-dark imagery, ADR-058 Lane 0. */
-  const [drawerTheme, setDrawerTheme] = useState<ThemeMode>(readThemeMode);
+  const [ringTheme, setRingTheme] = useState<ThemeMode>(readThemeMode);
+  const facePal = ringTheme === "light" ? FACE_LIGHT : FACE_DARK;
   useEffect(() => {
-    const sync = () => setDrawerTheme(readThemeMode());
+    const sync = () => setRingTheme(readThemeMode());
     sync();
     return useThemeStore.subscribe(sync);
   }, []);
@@ -1621,13 +1723,14 @@ export function ServicesCardRing({
     // SSR guard: this memo runs during render. R3F children never render
     // on the server today, but the document access must not assume it.
     if (typeof document === "undefined") return null;
-    const texture = new THREE.CanvasTexture(buildVeilCanvas());
+    const texture = new THREE.CanvasTexture(buildVeilCanvas(facePal));
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
     texture.repeat.set(BAKE_W / PHOTO_DOT_PITCH, 1);
     return texture;
-  }, []);
+    // The fog family flips with the theme (parchment fog over the print).
+  }, [facePal]);
   useEffect(() => {
     return () => veilTexture?.dispose();
   }, [veilTexture]);
@@ -1671,27 +1774,30 @@ export function ServicesCardRing({
           side: THREE.FrontSide,
         } as const;
         // ExtrudeGeometry groups: material 0 = front/back caps (the smoked
-        // glass body), material 1 = the side walls (the gold lip).
+        // glass body — dawn glass in light), material 1 = the side walls
+        // (the gold lip; light-role gold on parchment).
+        const caps = ringTheme === "light" ? "#ded2c0" : "#14110c";
+        const walls = ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD;
         return [
-          new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color("#14110c") }),
-          new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(SERVICES_GOLD) }),
+          new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(caps) }),
+          new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(walls) }),
         ] as [THREE.MeshBasicMaterial, THREE.MeshBasicMaterial];
       }),
-    []
+    [ringTheme]
   );
   const glintMaterials = useMemo(
     () =>
       SERVICE_PLATES.map(
         () =>
           new THREE.LineBasicMaterial({
-            color: new THREE.Color(SERVICES_GOLD),
+            color: new THREE.Color(ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD),
             transparent: true,
             opacity: 0,
             depthWrite: false,
             toneMapped: false,
           })
       ),
-    []
+    [ringTheme]
   );
   const glowMaterials = useMemo(
     () =>
@@ -1750,14 +1856,14 @@ export function ServicesCardRing({
                plane; light gives them a dawn glass one step deeper than the
                bake's ground so the ring still reads. Walls/glint take the
                light-role gold — same pigment the bake's chrome uses. */
-            const caps = drawerTheme === "light" ? "#ded2c0" : "#14110c";
-            const walls = drawerTheme === "light" ? "#9a7a2e" : SERVICES_GOLD;
+            const caps = ringTheme === "light" ? "#ded2c0" : "#14110c";
+            const walls = ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD;
             return [
               new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(caps) }),
               new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(walls) }),
             ] as [THREE.MeshBasicMaterial, THREE.MeshBasicMaterial];
           }),
-    [openDrawer, drawerTheme]
+    [openDrawer, ringTheme]
   );
   const drawerGlintMaterials = useMemo(
     () =>
@@ -1766,14 +1872,14 @@ export function ServicesCardRing({
         : SERVICE_PLATES.map(
             () =>
               new THREE.LineBasicMaterial({
-                color: new THREE.Color(drawerTheme === "light" ? "#9a7a2e" : SERVICES_GOLD),
+                color: new THREE.Color(ringTheme === "light" ? "#9a7a2e" : SERVICES_GOLD),
                 transparent: true,
                 opacity: 0,
                 depthWrite: false,
                 toneMapped: false,
               })
           ),
-    [openDrawer, drawerTheme]
+    [openDrawer, ringTheme]
   );
 
   useEffect(() => {
@@ -1842,7 +1948,7 @@ export function ServicesCardRing({
               img = null; // schematic fallback keeps the ring whole
             }
           }
-          return bakeCardFace(plate, img, faceVariant);
+          return bakeCardFace(plate, img, faceVariant, facePal);
         })
       );
       if (disposed) return;
@@ -1865,13 +1971,16 @@ export function ServicesCardRing({
           portrait = null; // schematic fallback keeps the flip whole
         }
         if (disposed) return;
-        setBackTexture(toTexture(bakePortraitBack(portrait, faceVariant)));
+        setBackTexture(toTexture(bakePortraitBack(portrait, faceVariant, facePal)));
       }
     })();
     return () => {
       disposed = true;
     };
-  }, [gl, faceVariant]);
+    // `facePal` (the ring theme) re-runs the bake on a flip — light gets
+    // the parchment-print faces; the old set disposes via the `[textures]`
+    // cleanup, exactly like a glEpoch rebake.
+  }, [gl, faceVariant, facePal]);
 
   /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
      Four drawer faces cost ~18 MB of texture, and most visitors scroll the
@@ -1901,7 +2010,7 @@ export function ServicesCardRing({
       setDrawerTextures(
         SERVICE_PLATES.map((plate) => {
           const texture = new THREE.CanvasTexture(
-            bakeDrawerFace(plate, drawerTheme === "light" ? DRAWER_LIGHT : DRAWER_DARK)
+            bakeDrawerFace(plate, ringTheme === "light" ? DRAWER_LIGHT : DRAWER_DARK)
           );
           texture.colorSpace = THREE.SRGBColorSpace;
           texture.anisotropy = Math.min(8, maxAniso);
@@ -1913,9 +2022,9 @@ export function ServicesCardRing({
     return () => {
       disposed = true;
     };
-    // `drawerTheme` re-runs the bake on a flip; the old set disposes via the
+    // `ringTheme` re-runs the bake on a flip; the old set disposes via the
     // `[drawerTextures]` cleanup effect below, exactly like a glEpoch rebake.
-  }, [gl, openDrawer, drawerRequested, drawerTheme]);
+  }, [gl, openDrawer, drawerRequested, ringTheme]);
 
   // GPU warm-up (2026-07-29 perf pass). The baked CanvasTextures carry
   // `needsUpdate` and upload LAZILY — on the first frame `cardGroup`
@@ -2485,7 +2594,18 @@ export function ServicesCardRing({
       // (the sweep drives nz → 1). The deck never fades on exit — it lives
       // through the pinned #about and dies only with the stage's
       // fail-opaque shield (deckBgKill, the about tail).
-      const depthO = depthOpacity(placed.nz, opacityRange, opacityWindow);
+      /* LIGHT lifts the opacity CEILING to 1 (2026-08-02, with the
+         parchment-print faces): 0.9 over near-black reads solid, but the
+         same 0.9 over parchment reads as unprinted paper — a wash, not a
+         card. The floor and the depth falloff stay, so side cards still
+         recede; and an opaque front face HIDES the housed drawer outright,
+         which is strictly safer than the 0.9-ceiling anti-ghost dance
+         (whose firm-up to 1 at open still runs, now as a no-op in light). */
+      const depthO = depthOpacity(
+        placed.nz,
+        ringTheme === "light" ? ([opacityRange[0], 1] as const) : opacityRange,
+        opacityWindow
+      );
       const master = (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * master0;
       const opacity = depthO * master;
       /* ADR-050 rev 3 — ANTI-GHOST GUARD 2 of 2. The card's face never

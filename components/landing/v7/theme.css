@@ -331,6 +331,21 @@ html[data-theme="light"] .fl-skills__chip[data-on],
 html[data-theme="light"] .fl-skills__readout-status {
   color: var(--gold);
 }
+
+/* ── PHOTOGRAPHY reads as PRINT on parchment (owner, 2026-08-02) ──────────
+   The DOM twin of the WebGL bake's parchment-print LUT
+   (`buildParchmentToneLut`, ServicesCardRing): sepia(0.55) saturate(0.88)
+   brightness(1.1) contrast(0.9) — the same chain, minus the LUT's levels
+   floor, which CSS cannot express. Applied to the SERVICE photography and
+   the about portrait; deliberately NOT to the casefile's stills/films
+   (content shown whole, in natural colour — rules/proof.md) and never to
+   the hero (a dark artifact by ADR-058 §5). Keep this chain and the LUT's
+   numbers in lockstep — they are one recipe in two renderers. */
+html[data-theme="light"] .svc-plate__pbg,
+html[data-theme="light"] .svc-plate__band-im,
+html[data-theme="light"] .voidwalker__orbit__portrait img {
+  filter: sepia(0.55) saturate(0.88) brightness(1.1) contrast(0.9);
+}
 html[data-theme="light"] .fl-tooltab__name {
   color: rgba(var(--dawn-rgb), 0.65);
 }

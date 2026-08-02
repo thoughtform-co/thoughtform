@@ -78,6 +78,17 @@ constants and uniforms, so every painter needs a value PER MODE:
 
 ## Assets
 
+**Photography has ONE light recipe — the parchment print.** The WebGL side
+is `buildParchmentToneLut` (ServicesCardRing) and the DOM side is the
+matching CSS chain in theme.css (`sepia(0.55) saturate(0.88)
+brightness(1.1) contrast(0.9)`); they are one recipe in two renderers —
+change both or neither. It applies to SERVICE imagery (card faces, mobile
+plate photos, the about portrait). It deliberately does NOT apply to
+content imagery shown as evidence (casefile stills/films — natural colour,
+rules/proof.md) or the hero (dark artifact). Baked photo surfaces re-bake
+on the theme store flip (`ringTheme`); remember a raw `data-theme`
+attribute write does not notify the store.
+
 Artwork does not retint. A gold/cream asset dissolves on parchment and a
 gold/ink one dies on near-black — ship a variant per theme and gate the
 swap on WHAT IS ACTUALLY BEHIND IT, not just on the theme: the hero stays

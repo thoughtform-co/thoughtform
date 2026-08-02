@@ -663,3 +663,47 @@ about the projection; the eye calls that Escher.
 Verified headed in both themes with the cursor parked at the old worst-case
 corner; drawer/ring/scroll-clock smokes green; `services-ring-math` suite
 green with the new endpoint pins.
+
+## Addendum 2 — photography reads as print on parchment (2026-08-02, owner)
+
+Owner, same day: "shouldn't we also have a light mode filter for our
+pictures?" Yes — and the coherent end state is the one the dawn tray
+already implied: in light mode the whole card device goes paper.
+
+**One recipe, two renderers.** The dark faces' gold-tone treatment was
+already a luminance LUT (`buildGoldToneLut`, the documented
+sepia/saturate/brightness/contrast chain). Light adds its sibling,
+`buildParchmentToneLut`: sepia(0.55) saturate(0.88) brightness(1.1)
+contrast(0.9), then levels into [30, 246] — the floor lifts print blacks to
+warm ink (a photo ON paper never reaches #000), the ceiling keeps
+highlights off the page white. The DOM twin is the same chain as a CSS
+filter (theme.css) on the mobile plate photos and the about portrait —
+minus the levels floor, which CSS cannot express. Keep the two in
+lockstep; they are one recipe.
+
+**The `FacePalette` (the DrawerPalette pattern, one surface up).** Dark is
+the shipped literals verbatim — byte-identical, as always. Light re-papers
+the face end to end: parchment ground and chamfer corners, parchment
+scrims with Latent Night copy over them, light-role gold chrome, the chip
+kept as a gold stamp with parchment ink, dawn-glass slab caps, light-gold
+walls and glints, parchment veil fog. `ringTheme` (né `drawerTheme` —
+renamed, it governs the whole device now) re-bakes faces, veil, portrait
+back and drawer on a store flip.
+
+**The opacity ceiling lifts to 1 in light.** RING_OPACITY_RANGE's 0.9 top
+reads solid over near-black and as UNPRINTED PAPER over parchment — the
+front card looked washed at rest. Light lifts only the ceiling (floor and
+depth falloff stay, side cards still recede), and an opaque face hides the
+housed drawer outright — strictly safer than the anti-ghost firm-up, which
+still runs and is simply a no-op in light.
+
+**Deliberately untouched:** the casefile's stills and films (content shown
+whole, natural colour — rules/proof.md), and the hero (a dark artifact,
+ADR-058 §5). The photography recipe is for the SERVICE imagery — the
+pictures that are part of the instrument, not the pictures that are the
+evidence.
+
+Verified headed: light ring at rest (printed faces, receding sides), light
+open pair (paper device end to end), dark ring byte-identical; drawer /
+ring / scroll-clock / photo-404 smokes green; theme sweep + palette + ring
+math suites green.
