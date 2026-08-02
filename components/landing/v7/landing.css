@@ -678,24 +678,24 @@
      and the button must not resize under the reader's cursor. */
   min-height: 1em;
 }
-.hud__nav__sector__name::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -5px;
-  height: 1px;
-  background: var(--gold);
-  opacity: 0.4;
-  transition: opacity 180ms var(--ease-out);
-}
+/* The gold rule under the readout is REMOVED (owner, 2026-08-02). The
+   corner reads as one instrument register; the underline was the only
+   thing in it drawing a box around a word.
+
+   ⚠ It was also this button's ONLY non-colour state signal, and the
+   readout is the drawer trigger (ADR-055) — `.hud__nav__btn` carries no
+   outline of its own. Colour alone is not a focus indicator (WCAG 2.4.7
+   / 1.4.1), so the ring below replaces it rather than leaving keyboard
+   users with a hue change. Hover keeps the gold ink and needs nothing
+   more. `position: relative` stays on the name: the decode measures
+   against it. */
 .hud__nav__btn:hover .hud__nav__sector__name,
 .hud__nav__btn:focus-visible .hud__nav__sector__name {
   color: var(--gold);
 }
-.hud__nav__btn:hover .hud__nav__sector__name::after,
-.hud__nav__btn:focus-visible .hud__nav__sector__name::after {
-  opacity: 1;
+.hud__nav__btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
 }
 
 /* Expanded list — opens leftward from the trigger */
