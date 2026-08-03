@@ -48,19 +48,22 @@ const SERVICES_IDX = Math.max(
 const proofOwnsServices = () => servicesRingProgressRef.current.proofRelease < 0.75;
 
 export interface JourneyMarks {
-  /** `MANIFEST_ENTRIES` index — per-beat, for the approach cluster. */
+  /** `MANIFEST_ENTRIES` index — resolves the `beat`-clocked marks. */
   activeIdx: number;
-  /** `READOUT_SECTIONS` seat — row-level, for the dock cluster. */
+  /** `READOUT_SECTIONS` seat — resolves the `row`-clocked marks. */
   seat: number;
-  /** The active row's label, for the right rail's vertical name. */
-  label: string;
 }
 
+/**
+ * ⚠ NO `label`. This used to carry the active row's name for the right
+ * rail's vertical readout; that readout is gone (owner, 2026-08-03) and the
+ * ADR-055 nav corner is the only place the frame names a section in words.
+ * Nothing here needs a string — the marks are positional.
+ */
 export function useJourneyMarks(enabled: boolean): JourneyMarks {
   const [marks, setMarks] = useState<JourneyMarks>(() => ({
     activeIdx: 0,
     seat: 0,
-    label: READOUT_SECTIONS[0]?.label ?? "",
   }));
 
   useEffect(() => {
@@ -75,9 +78,7 @@ export function useJourneyMarks(enabled: boolean): JourneyMarks {
       const readout = sectionReadout(activeIdx, proofOwnsServices());
       const seat = READOUT_SECTIONS.findIndex((row) => row.id === readout.id);
       setMarks((prev) =>
-        prev.activeIdx === activeIdx && prev.seat === seat
-          ? prev
-          : { activeIdx, seat, label: readout.label }
+        prev.activeIdx === activeIdx && prev.seat === seat ? prev : { activeIdx, seat }
       );
     };
 

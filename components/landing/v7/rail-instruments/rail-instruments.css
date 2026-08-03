@@ -157,22 +157,13 @@
   color: var(--gold);
 }
 
-/* The active section's name, set vertically along the rail — the one place
-   the frame says where you are in words rather than in marks. */
-.rin-vertname {
-  position: absolute;
-  top: 50%;
-  right: calc(var(--hud-rail-guide-inset) + 30px);
-  translate: 0 -50%;
-  writing-mode: vertical-rl;
-  font-family: var(--rin-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.28);
-  white-space: nowrap;
-  pointer-events: none;
-}
+/* ⚠ NO VERTICAL SECTION NAME (owner, 2026-08-03). The right rail used to
+   set the active section's name vertically beside the telemetry — "THE ARC"
+   and so on. It is gone: the ADR-055 nav corner already names the section
+   in words, at a size you can read, and the corner marks say where you are.
+   Two words for one fact, one of them turned on its side.
+
+   This also retires the ≤1100 gate that used to drop it. */
 
 /* ── BOTTOM-RIGHT: THE EXIT + SETTINGS (ADR-059 Update 3) ────────────────
    One row: `contact` · session mark · theme switch. Marks INBOARD,
@@ -347,12 +338,13 @@ html[data-rail-instruments] .hud__corner--tl {
 }
 
 /* ── Responsive — key off the PRODUCTION gates, never invent new ones ────
-   ≤960 `.hud__rail { display: none }` takes the telemetry and the vertical
-   name with it for free. Both mark rows live in CORNERS — one in the TL
-   corner box, one in the settings overlay — and the corner brackets survive
-   on mobile, so both have to be said out loud. ≤1100 drops the vertical
-   name, alongside the bearing labels and the manifest that already go at
-   that width.
+   ≤960 `.hud__rail { display: none }` takes the telemetry with it for free.
+   Both mark rows live in CORNERS — one in the TL corner box, one in the
+   settings overlay — and the corner brackets survive on mobile, so both
+   have to be said out loud.
+
+   (There is no ≤1100 rule any more. It existed only to drop the vertical
+   section name, which is gone entirely.)
 
    ⚠ SETTINGS IS NEVER GATED — only the marks beside it are. It is the only
    control in the frame besides the nav corner, it is `position: fixed` and
@@ -360,11 +352,6 @@ html[data-rail-instruments] .hud__corner--tl {
    is a bug rather than a simplification. Losing the marks re-anchors the
    row to the ADR-058 slot (see the `min-width: 961px` block above), which
    is also what keeps the control clear of the bracket coming back. */
-@media (max-width: 1100px) {
-  .rin-vertname {
-    display: none;
-  }
-}
 @media (max-width: 960px) {
   .rin-cl--journey,
   .rin-settings__row {

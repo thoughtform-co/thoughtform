@@ -384,6 +384,29 @@ While the session mark closed the row it was the terminal element for the
 owner and the `contact` mark for everyone else, so the corner measured
 differently depending on who was looking at it.
 
+### The vertical section name is REMOVED
+
+The right rail's `.rin-vertname` — the active section set on its side beside
+the telemetry, "THE ARC" and so on — is gone (owner, 2026-08-03). The
+ADR-055 nav corner already names the section in words at a size you can
+read, and the corner marks say where you are; this was the same fact a
+third time, turned ninety degrees.
+
+Two consequences worth knowing:
+
+- `useJourneyMarks` no longer returns `label`. It existed only to feed this
+  node, and nothing else in the instruments needs a string — the marks are
+  positional.
+- **The ≤1100 media query is gone with it.** That gate existed solely to
+  drop the vertical name alongside the bearing labels and the manifest.
+  There is now exactly one responsive gate here, ≤960.
+
+It also simplifies the §"per-mark label is dropped" reasoning in U1: that
+called the labels the THIRD naming of the active section. It is now the
+second, but the load-bearing half of that argument — the measured y 64–76
+collision with `services-masthead__desig` — is untouched, so the marks stay
+unlabelled.
+
 ### The Arc's glyph
 
 Three chevrons — a SEQUENCE, not a loop. The Arc is a flywheel and a loop

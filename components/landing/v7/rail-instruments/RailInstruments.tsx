@@ -70,7 +70,7 @@ export function RailInstruments({
   const [hosts, setHosts] = useState<Hosts | null>(null);
   const ready = hosts !== null;
 
-  const { activeIdx, seat, label } = useJourneyMarks(ready);
+  const { activeIdx, seat } = useJourneyMarks(ready);
 
   const bearingRef = useRef<HTMLElement>(null);
   const localRef = useRef<HTMLElement>(null);
@@ -151,10 +151,6 @@ export function RailInstruments({
             <b className="rin-tele__v" ref={localRef}>
               0.00
             </b>
-          </span>
-
-          <span className="rin-vertname" aria-hidden="true">
-            {label}
           </span>
         </>,
         hosts.right
