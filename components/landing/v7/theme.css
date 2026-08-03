@@ -443,64 +443,46 @@ html[data-theme="light"] .home-v2-copy-title em {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   BLOCK 5 — the hero island
+   BLOCK 5 — the hero key visual, per theme
 
-   `/images/Gateway_v1b.webp` is a dark raster and the LCP element; no
-   token can recolor it. Owner's call (2026-08-01): it STAYS dark and
-   light mode frames it — a window into the void at the top of a
-   parchment page. So the hero re-pins the DARK ramp for its own subtree
-   and renders pixel-identically in both themes, including `.hero__bg`
-   (`background: var(--void)`) and the `.hero__video__overlay` scrims,
-   which scrim a still-dark image and are therefore correct untouched.
+   ⚠ THIS REVERSES ADR-058 §5 (owner, 2026-08-03 — see Update 2). There
+   used to be a "hero island" here: `html[data-theme="light"] .hero`
+   re-pinned the ENTIRE dark ramp plus every RGB triple, so the hero
+   rendered pixel-identically in both themes. That existed for one
+   reason — the key visual was a dark raster and no token can recolor a
+   raster, so light mode FRAMED it rather than owning it.
+
+   There is a light cut of the artwork now, so the island is gone and
+   the hero is a normal part of the parchment page: ink copy, ink CTAs,
+   parchment scrims (the `.hero__video__overlay` gradients ride
+   `--void-deep-rgb`, which is the light triple here, so they wash the
+   art in deep parchment instead of black — correct without a rule).
+
+   Three consequences that were load-bearing elsewhere:
+     · The wordmark's `.is-collapsed` gate is dropped below — its home
+       position sits on parchment now, so the Night cut is right from
+       the first paint.
+     · The toggle's parchment chip (BLOCK 1) is now parchment on
+       parchment. Harmless, kept — it still separates the control from
+       the artwork behind it.
+     · The top-right nav readout has no light accommodation at all and
+       used to print ink over the dark hero. That heals for free here.
+
+   ⚠ SWAP VIA CSS BACKGROUND, NOT BY EDITING THE `<img>`. The hero
+   markup is parse-injected from the prototype HTML, and `content: url()`
+   on an `<img>` still does not replace in Firefox — the wordmark below
+   learned both lessons first. The dark plate stays the `<img>` (it is
+   the preloaded LCP element); the light plate is this background, and
+   `display: none` on the img both reveals it and — with `loading="lazy"`
+   in the markup — stops the dark plate ever being fetched in light.
    ═══════════════════════════════════════════════════════════════════ */
-html[data-theme="light"] .hero {
-  --void: #0a0908;
-  --void-deep: #050504;
-
-  --dawn: #ebe3d6;
-  --dawn-90: rgba(235, 227, 214, 0.9);
-  --dawn-80: rgba(235, 227, 214, 0.8);
-  --dawn-70: rgba(235, 227, 214, 0.7);
-  --dawn-60: rgba(235, 227, 214, 0.6);
-  --dawn-50: rgba(235, 227, 214, 0.5);
-  --dawn-40: rgba(235, 227, 214, 0.4);
-  --dawn-35: rgba(235, 227, 214, 0.35);
-  --dawn-30: rgba(235, 227, 214, 0.3);
-  --dawn-25: rgba(235, 227, 214, 0.25);
-  --dawn-20: rgba(235, 227, 214, 0.2);
-  --dawn-15: rgba(235, 227, 214, 0.15);
-  --dawn-10: rgba(235, 227, 214, 0.1);
-  --dawn-08: rgba(235, 227, 214, 0.08);
-  --dawn-04: rgba(236, 227, 214, 0.04);
-
-  --gold: #caa554;
-  --gold-70: rgba(202, 165, 84, 0.7);
-  --gold-60: rgba(202, 165, 84, 0.6);
-  --gold-50: rgba(202, 165, 84, 0.5);
-  --gold-40: rgba(202, 165, 84, 0.4);
-  --gold-30: rgba(202, 165, 84, 0.3);
-  --gold-20: rgba(202, 165, 84, 0.2);
-  --gold-15: rgba(202, 165, 84, 0.15);
-  --gold-10: rgba(202, 165, 84, 0.1);
-  --gold-08: rgba(202, 165, 84, 0.08);
-  --gold-05: rgba(202, 165, 84, 0.05);
-  --gold-bright: #e0bd6a;
-
-  --hud-rail-line: rgba(235, 227, 214, 0.55);
-  --hud-rail-line-soft: rgba(235, 227, 214, 0.28);
-  --gold-contrast: #0a0908;
-
-  /* The RGB triples too, or the ~400 swept one-off alphas inside the
-     hero would flip while the ramp tokens above held — the island has
-     to re-pin the WHOLE dark palette to stay pixel-identical. */
-  --gold-rgb: 202, 165, 84;
-  --dawn-rgb: 235, 227, 214;
-  --dawn-alt-rgb: 236, 227, 214;
-  --dawn-alt: #ece3d6;
-  --void-rgb: 10, 9, 8;
-  --void-deep-rgb: 5, 4, 3;
-  --void-deep-canon: #050403;
-  --atreides-rgb: 91, 122, 78;
+html[data-theme="light"] .hero__bg {
+  background:
+    url("/images/Gateway_v2-light.webp") center / cover no-repeat,
+    var(--void);
+}
+html[data-theme="light"] .hero__bg img {
+  display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -541,11 +523,16 @@ html[data-theme="light"] body::before {
    half dissolves into parchment — no ink lift can fix artwork, so light
    mode swaps the file for the Dual-Latent Night cut (gold / ink #110f09).
    Mechanics, deliberate:
-   · GATED ON `.is-collapsed` (the ADR-043 dock, 50vh): the hero stays a
-     dark artifact in light mode (ADR-058 §5), and the wordmark's HOME
-     position sits ON the hero — the Night cut's ink half vanishes over
-     near-black, so the swap waits until the mark docks onto the parchment
-     page. Each background reads on what is actually behind it.
+   · UNGATED (2026-08-03). It used to require `.is-collapsed` — the
+     ADR-043 dock at 50vh — because the hero was a dark artifact
+     (ADR-058 §5) and the wordmark's HOME position sits ON it, so the
+     Night cut's ink half would have vanished over near-black. BLOCK 5
+     gave light mode its own parchment key visual, so the mark now sits
+     on parchment from the first paint and the gate is not just
+     unnecessary, it is wrong: keeping it would print the cream Dual cut
+     onto the light artwork for the whole first viewport. The rule the
+     gate encoded still holds — each background reads on what is
+     actually behind it — the answer just changed.
    · The <img> lives in the parse-injected prototype body, so the swap is
      CSS-only — no markup churn, and the rail-manifest byte-exactness
      rules never come near it.
@@ -556,10 +543,10 @@ html[data-theme="light"] body::before {
      Firefox still does not replace <img> content, and a wordmark that
      swaps in two browsers out of three is a new bug, not a fix.
    · Dark loads one file; light loads both (the Night cut is 5.7 kB). */
-html[data-theme="light"] .hud__brand.is-collapsed img {
+html[data-theme="light"] .hud__brand img {
   visibility: hidden;
 }
-html[data-theme="light"] .hud__brand.is-collapsed::after {
+html[data-theme="light"] .hud__brand::after {
   content: "";
   position: absolute;
   inset: 0;

@@ -1896,6 +1896,14 @@
   z-index: 0;
   background: var(--void);
 }
+/* ⚠ `display: contents` so the `<picture>` is not a layout box. The dark
+   plate became a `<picture>` (AVIF + WebP fallback, ADR-058 Update 2), and
+   an inline wrapper would put the img's percentage height on a different
+   containing block than the `.hero__bg` it used to resolve against. This
+   keeps the geometry byte-identical to the bare-`<img>` version. */
+.hero__bg picture {
+  display: contents;
+}
 .hero__bg img {
   width: 100%;
   height: 100%;

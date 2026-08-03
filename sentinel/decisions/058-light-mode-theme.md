@@ -129,7 +129,12 @@ so the top steps are pushed up (.7→.88, .5→.62, .4→.5, .3→.4 — proven 
 Sigil) while **steps ≤.15 are unchanged**: those are hairlines and washes, and
 boosting them makes the page read ruled.
 
-### 5. The hero stays a dark artifact
+### 5. The hero stays a dark artifact — ⚠ REVERSED BY UPDATE 2
+
+> This section is kept for the reasoning, which was sound and is worth
+> reading before touching the hero. Its conclusion no longer holds: there
+> is a light cut of the artwork now, the island below is deleted, and the
+> hero is an ordinary part of the parchment page. See Update 2.
 
 `/images/Gateway_v1b.webp` is a dark raster and the LCP element; no token can
 recolor it. Rather than commission a second asset or attempt a filter, light
@@ -256,11 +261,11 @@ every rule is `html[data-theme="light"]`-scoped and no dark literal moved.
 Decision 3 above darkened it to `#9A7A2E`. That value was derived from one
 role — gold as small text — and measuring all three roles reversed it:
 
-| gold's role                                | `#9A7A2E` | `#CAA554` |
-| ------------------------------------------ | --------- | --------- |
-| gold as SMALL TEXT on parchment            | 3.18:1    | 1.83:1    |
-| INK on a gold FILL (directory row, CTA)    | 4.74:1    | 8.23:1    |
-| PARCHMENT on a gold fill (chips)           | 3.18:1    | 1.83:1    |
+| gold's role                             | `#9A7A2E` | `#CAA554` |
+| --------------------------------------- | --------- | --------- |
+| gold as SMALL TEXT on parchment         | 3.18:1    | 1.83:1    |
+| INK on a gold FILL (directory row, CTA) | 4.74:1    | 8.23:1    |
+| PARCHMENT on a gold fill (chips)        | 3.18:1    | 1.83:1    |
 
 Two of three improve, and the darker value also read olive-drab at display
 size where gold is doing brand work, not wayfinding. It additionally put the
@@ -312,8 +317,101 @@ the caption mark sits flush to its text while the brief's has breathing
 room. Fixing it needs run-boundary selectors (`:has()` + `:not(x + x)`) to
 extend only the first and last character outward — deliberately not taken.
 
+## Update 2 — the hero gets a light cut (2026-08-03, owner)
+
+> _"For the light mode, I added this hero section image… you may need to
+> compress it without losing the quality and resolution."_
+
+**§5 is reversed.** The reason it existed was "no token can recolor a
+raster" — true, and the answer was to frame the dark artwork instead. The
+owner made a second raster, so the premise is gone.
+
+### The island is deleted
+
+`html[data-theme="light"] .hero` re-pinned the entire dark palette — both
+ramps and every RGB triple — so the hero rendered pixel-identically in both
+themes. It is gone, and the hero is now an ordinary part of the parchment
+page: ink headline and copy, ink nav, gold CTA on `--gold-contrast`.
+
+The scrims needed no rule. `.hero__video__overlay` rides
+`rgba(var(--void-deep-rgb), …)`, which is the light triple once the island
+stops overriding it, so the gradients wash the artwork in deep parchment
+instead of black — correct for free.
+
+Two things that existed _because_ of §5 move with it:
+
+- **The wordmark swap is UNGATED.** It required `.is-collapsed` (the
+  ADR-043 dock at 50vh) because the mark's home position sat on the dark
+  hero and the Night cut's ink half would have vanished there. On
+  parchment the gate is not merely unnecessary, it is wrong — it would
+  print the cream Dual cut onto the light artwork for the whole first
+  viewport. The rule the gate encoded still holds; the answer changed.
+- **The toggle's parchment chip is now parchment on parchment.** Kept — it
+  still separates the control from the artwork — but its comment no longer
+  claims a dark backing.
+
+**A bug heals for free:** the top-right nav readout has no light
+accommodation at all and had been printing ink over the dark hero. It is
+correct now without a rule.
+
+### Two plates, two codecs — measured, not chosen
+
+|       | file                    | bytes  | why                |
+| ----- | ----------------------- | ------ | ------------------ |
+| dark  | `Gateway_v1b.avif`      | 346 kB | was an 835 kB WebP |
+| light | `Gateway_v2-light.webp` | 435 kB | was a 7.0 MB PNG   |
+
+The asymmetry is the finding. Both plates are the same painterly artwork
+with the same film grain, but grain on near-black hides AVIF's block
+artifacts and grain on parchment does not. At q50 the light plate's
+upper-left wash breaks into visible rectangular tone blocks (max error 101
+against the master, vs WebP q85's 26) and it is still visible at q68 —
+which costs 381 kB, so there is no saving to trade for the damage. The dark
+plate at AVIF q50 is indistinguishable from its master down to the ring's
+hatching and the micro-annotations. **Do not harmonise them onto one
+format.** `scripts/hero-plates/prepare.mjs` records the numbers.
+
+This also lands the re-encode the perf notes had parked "awaiting Vince".
+
+### Neither theme fetches the other's plate
+
+That is the whole load design, and each half of it is load-bearing:
+
+- The light plate is a **CSS background** on `.hero__bg`. A background is
+  only fetched when its rule matches, so dark never touches it.
+- The dark plate stays a `<picture>` — AVIF with the WebP as fallback,
+  because this is the LCP element and Edge only got AVIF in 121 — carrying
+  **`loading="lazy"`**. In light the img is `display: none`, so it has no
+  box, never intersects, and is never fetched.
+- The preload is **injected by script**, not a static `<link>`. The preload
+  scanner runs before any script, so a server-rendered link would always
+  pull the dark plate and a light visitor would pay for both. It is typed
+  (`image/avif`), so a browser that cannot decode AVIF skips the preload
+  and takes the fallback rather than downloading both.
+- It sits **outside the `THEME_TOGGLE` gate** in `app/layout.tsx`. That
+  flag is this ADR's rollback; inside the gate, rolling back would silently
+  drop the hero preload on the only path left.
+
+Verified on a clean tab: dark fetches 346 kB and no WebP; light fetches
+435 kB and no dark plate at all. ⚠ Measure this in a FRESH tab — a tab that
+has visited the other theme reports the other plate as a memory-cache hit,
+with `initiatorType: "link"`, which reads exactly like a real second
+preload. It cost a round of chasing.
+
+Given up knowingly: no-JS clients and non-executing crawlers get no preload
+(the img still loads at layout; it is `alt=""` decoration), and client-side
+navigations lose the hoisted nav-time preload.
+
+### What is NOT changed
+
+The flip is still the **hard cut** of §2. The glitch (ADR-060) is a canvas
+laid over an already-flipped hero, not a transition of the flip itself.
+
 ## Rollback
 
 `THEME_TOGGLE = false`. The bootstrap never injects, the toggle never mounts,
 `<html>` never carries the attribute, and every `theme.css` light selector is
-unmatched (the sheet still ships, inert). The dark site is byte-identical.
+unmatched (the sheet still ships, inert). The dark site is byte-identical
+apart from the hero plate, which is now AVIF for everyone — that half is
+deliberately outside the flag, and reverting it means restoring the `<img
+src>` to the WebP.

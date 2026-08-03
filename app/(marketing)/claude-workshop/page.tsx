@@ -78,9 +78,9 @@ export default async function ClaudeWorkshopPage() {
 
   return (
     <>
-      {/* Hero key visual — preload so the fetch starts with the document
-          instead of after the innerHTML commit (React hoists this into head). */}
-      <link rel="preload" as="image" href="/images/Gateway_v1b.webp" fetchPriority="high" />
+      {/* The hero key visual's preload moved to `app/layout.tsx`, which
+          picks the plate by theme (ADR-058 Update 2). This route is in its
+          `HERO_ROUTES` list — see `lib/theme/heroPreload.ts`. */}
       <div className="cw-root">
         <LandingPage
           bodyHtml={bodyHtml}

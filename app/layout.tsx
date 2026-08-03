@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { THEME_TOGGLE, THEME_STORAGE_KEY } from "@/components/landing/v7/themeToggle";
+import { heroPreloadScript } from "@/lib/theme/heroPreload";
 
 // Google Fonts
 const ibmPlex = IBM_Plex_Sans({
@@ -103,6 +104,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }}
           />
         )}
+        {/* Hero key visual preload, chosen by theme (ADR-058 Update 2).
+            There are two plates now — a dark AVIF and a light WebP — and a
+            STATIC link would always fetch the dark one, because the preload
+            scanner runs before any script. So this reads the attribute the
+            bootstrap above just stamped and injects the matching link.
+            Deliberately OUTSIDE the THEME_TOGGLE gate: flipping that flag
+            off is ADR-058's rollback, which should fall back to the dark
+            plate — not lose the hero preload entirely. */}
+        <script dangerouslySetInnerHTML={{ __html: heroPreloadScript() }} />
         {/* Brand faces the canvas bakes depend on (ServicesCardRing +
             caseCardBake draw with PT Mono / PP Neue Montreal). Preloading
             removes the waitForCardFonts() race against its 1500ms

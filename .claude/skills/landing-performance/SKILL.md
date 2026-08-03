@@ -55,11 +55,22 @@ Load order for an anonymous first visit to `/`:
 2. **Preloaded woff2 bake faces.** `app/layout.tsx` `<link rel="preload">`s
    `PTMono-Regular`, `PTMono-Bold`, `PPNeueMontreal-Book` — the three faces the
    canvas bake paths draw with (see invariant 5).
-3. **Hero key visual.** `/images/Gateway_v1b.webp` (2880×1620). Explicit
-   `width`/`height` + `fetchpriority="high"` live in the prototype markup, and
-   `app/(marketing)/page.tsx` emits a page-level
-   `<link rel="preload" as="image" href="/images/Gateway_v1b.webp" fetchPriority="high">`
-   so the fetch starts with the document, not after the innerHTML commit.
+3. **Hero key visual — TWO plates, one per theme** (ADR-058 Update 2). Dark
+   `/images/Gateway_v1b.avif` (346 kB, in a `<picture>` with the 835 kB
+   `Gateway_v1b.webp` as fallback); light `/images/Gateway_v2-light.webp`
+   (435 kB, a CSS background on `.hero__bg`). Explicit `width`/`height` +
+   `fetchpriority="high"` live in the prototype markup, plus
+   **`loading="lazy"`** — that is what stops light mode fetching the dark
+   plate it has hidden with `display: none`. The preload is **injected by an
+   inline script** in `app/layout.tsx` (`lib/theme/heroPreload.ts`), not a
+   static `<link>`: the preload scanner runs before any script, so a static
+   link would always pull the dark plate and light visitors would pay for
+   both. It is typed, so non-AVIF browsers skip it and take the fallback,
+   and it sits OUTSIDE the `THEME_TOGGLE` gate so the rollback keeps its
+   preload. Re-encode with `node scripts/hero-plates/prepare.mjs`.
+   ⚠ Verify fetches in a FRESH tab — a tab that has visited the other theme
+   reports the other plate as a memory-cache hit with `initiatorType:
+"link"`, indistinguishable from a real second preload.
 4. **Hydration** on the ~72.8 kB gzip First Load JS (no three, no supabase).
 5. **Async three/WebGL chunk.** Fetched right after hydration. On **≤960 px**
    viewports the import is **deferred** by `corridorImportGate()` in
@@ -237,11 +248,15 @@ contracts; they do not see the composite.
   (fire the first fold without waiting on hydration) is THE remaining move —
   ADR-scale, and it touches the reveal choreography, so coordinate with
   `landing-v7-compositing` (the `data-m` opacity/transform contract).
-- **Hero re-encode is staged, awaiting Vince.** `Gateway_v1b.webp` ships at
-  835 kB. Candidates in `assets-staging/hero-candidates/` (gitignored): **AVIF
-  q50 = 346 kB, AVIF q45 = 190 kB, 2048 px webp = 143 kB.** (A webp re-encode at
-  native size barely helps — the film-grain texture defeats it.) The asset was
-  deliberately NOT swapped in the sweep.
+- ~~**Hero re-encode is staged, awaiting Vince.**~~ **LANDED 2026-08-03**
+  (ADR-058 Update 2). The dark plate ships as the staged **AVIF q50, 346 kB**,
+  down from 835 kB, with the WebP kept as the `<picture>` fallback. The other
+  staged candidates stay in `assets-staging/hero-candidates/` (gitignored):
+  AVIF q45 = 190 kB, 2048 px webp = 143 kB — both drop detail this artwork
+  shows. (A webp re-encode at native size barely helps — the film-grain
+  texture defeats it.) The light plate is a separate 435 kB WebP; AVIF bands
+  its parchment flats, so the two plates ship in different formats
+  deliberately — see `scripts/hero-plates/prepare.mjs`.
 - **Deferred Phase 4:** GPU-capability probe, FPS-adaptive quality governor,
   tablet 760–1280 px GPU profile fix, rAF consolidation.
 - **Deferred Phase 5:** math-util consolidation, hooks-warning burndown,

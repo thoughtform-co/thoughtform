@@ -97,11 +97,11 @@ export default async function Home() {
 
   return (
     <>
-      {/* Hero key visual — the full-bleed .hero__bg image inside the
-          injected prototype markup. Preload so the fetch starts with the
-          document instead of after the innerHTML commit (React hoists
-          this link into <head>). */}
-      <link rel="preload" as="image" href="/images/Gateway_v1b.webp" fetchPriority="high" />
+      {/* The hero key visual's preload moved to `app/layout.tsx` (ADR-058
+          Update 2). There are two plates now — dark AVIF, light WebP — and
+          a static link here would always fetch the dark one, because the
+          preload scanner runs before the theme is known. See
+          `lib/theme/heroPreload.ts`. */}
       <LandingPage
         bodyHtml={bodyHtml}
         bodyClass={bodyClass}

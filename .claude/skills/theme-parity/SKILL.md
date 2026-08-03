@@ -85,18 +85,40 @@ brightness(1.1) contrast(0.9)`); they are one recipe in two renderers —
 change both or neither. It applies to SERVICE imagery (card faces, mobile
 plate photos, the about portrait). It deliberately does NOT apply to
 content imagery shown as evidence (casefile stills/films — natural colour,
-rules/proof.md) or the hero (dark artifact). Baked photo surfaces re-bake
-on the theme store flip (`ringTheme`); remember a raw `data-theme`
-attribute write does not notify the store.
+rules/proof.md) or the hero key visual (its own artwork per theme — see
+below). Baked photo surfaces re-bake on the theme store flip
+(`ringTheme`); remember a raw `data-theme` attribute write does not notify
+the store.
 
 Artwork does not retint. A gold/cream asset dissolves on parchment and a
 gold/ink one dies on near-black — ship a variant per theme and gate the
-swap on WHAT IS ACTUALLY BEHIND IT, not just on the theme: the hero stays
-a dark artifact in light mode (ADR-058 §5), so an asset that lives over
-the hero swaps only once it leaves it (the bottom-left wordmark gates on
-`.is-collapsed` for exactly this). Swap via theme-scoped CSS
-(`::after` background — `content: url()` on `<img>` does not replace in
-Firefox), never by editing parse-injected prototype markup.
+swap on WHAT IS ACTUALLY BEHIND IT, not just on the theme. Swap via
+theme-scoped CSS (`::after` background, or a background on the wrapper —
+`content: url()` on `<img>` does not replace in Firefox), never by editing
+parse-injected prototype markup.
+
+⚠ "What is behind it" is a LIVE question, not a fact to memorise. The
+bottom-left wordmark gated its swap on `.is-collapsed` for a year because
+its home position sat on a dark hero; ADR-058 Update 2 gave light mode its
+own hero plate, and the same rule then demanded the gate be REMOVED — the
+gate would have printed the cream cut onto parchment. Re-derive it.
+
+**A per-theme raster is a load problem too, and both halves have to be
+arranged so neither theme fetches the other's file** (ADR-058 Update 2 is
+the worked example): the light plate is a CSS background, which is only
+fetched when its rule matches; the dark one is a `<picture>` carrying
+`loading="lazy"`, so `display: none` in light means no box, no
+intersection, no fetch. The preload must then be script-injected — the
+preload scanner runs before any script, so a static `<link>` always pulls
+the dark plate. **Measure it in a FRESH tab**: a tab that has visited the
+other theme reports the other plate as a memory-cache hit with
+`initiatorType: "link"`, which is indistinguishable from a real second
+preload.
+
+**And the two plates may not want the same codec.** Same artwork, same
+grain: on near-black AVIF's block artifacts are invisible, on parchment
+they are the first thing you see. The hero ships AVIF dark and WebP light
+for that reason. Compare a flat region against the master before picking.
 
 ## Verify — both themes, actually rendered
 

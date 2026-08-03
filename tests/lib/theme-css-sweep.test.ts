@@ -27,6 +27,24 @@ const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
  *  comments before asserting or the file fails its own rules. */
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
 
+/**
+ * The declarations of the first top-level rule whose selector is EXACTLY
+ * `selector`.
+ *
+ * Exact rather than "starts with" on purpose: `… .hero__bg` is a prefix of
+ * `… .hero__bg img`, and a prefix match would let one rule's assertions
+ * pass against the other's body. Rules nested in `@media` are invisible
+ * here — everything asserted below is top-level.
+ */
+const block = (css: string, selector: string): string => {
+  for (const rule of css.split("}")) {
+    const brace = rule.indexOf("{");
+    if (brace < 0) continue;
+    if (rule.slice(0, brace).trim() === selector) return rule.slice(brace + 1);
+  }
+  throw new Error(`no top-level rule for selector: ${selector}`);
+};
+
 describe("theme sweep — no self-referential custom properties", () => {
   // `--gold: var(--gold)` is a CSS dependency cycle: the property becomes
   // guaranteed-invalid and every consumer silently falls back to inherit.
@@ -89,14 +107,33 @@ describe("theme.css — the two authoring laws", () => {
     }
   });
 
-  it("re-pins the dark palette inside the hero island", () => {
-    // The hero key visual stays a dark raster (owner, 2026-08-01), so the
-    // island must re-pin the WHOLE dark palette — ramps AND triples — or
-    // the swept one-off alphas inside it flip while the ramps hold.
-    const island = theme.slice(theme.indexOf('html[data-theme="light"] .hero'));
-    for (const token of ["--gold-rgb", "--dawn-rgb", "--void-rgb", "--gold-contrast"]) {
-      expect(island).toContain(token);
-    }
+  it("has NO hero island — the hero is part of the parchment page", () => {
+    // ⚠ THIS ASSERTION IS THE REVERSE OF WHAT IT PINNED BEFORE, deliberately
+    // (ADR-058 Update 2, owner 2026-08-03). While the key visual was a dark
+    // raster, `html[data-theme="light"] .hero` re-pinned the entire dark
+    // ramp so the hero rendered identically in both themes. There is a light
+    // cut of the artwork now, so that island is gone and the hero takes ink
+    // copy on parchment like every other section. An island reintroduced by
+    // reflex would silently put cream copy back on the light artwork.
+    expect(theme).not.toMatch(/html\[data-theme="light"\]\s+\.hero\s*\{/);
+  });
+
+  it("swaps the hero key visual by CSS background, not by markup", () => {
+    // The hero <img> is parse-injected from the prototype HTML, and
+    // `content: url()` on an <img> does not replace in Firefox — so the
+    // light plate is a background on the wrapper and the img is hidden.
+    const bg = block(theme, 'html[data-theme="light"] .hero__bg');
+    expect(bg).toContain("Gateway_v2-light.webp");
+    expect(block(theme, 'html[data-theme="light"] .hero__bg img')).toContain("display: none");
+  });
+
+  it("swaps the wordmark artwork UNGATED", () => {
+    // It used to require `.is-collapsed`, because the mark's home position
+    // sat on the dark hero. The hero is parchment in light now, so gating
+    // the swap would print the cream Dual cut over the light artwork for
+    // the whole first viewport.
+    expect(theme).toContain('html[data-theme="light"] .hud__brand img');
+    expect(theme).not.toContain('html[data-theme="light"] .hud__brand.is-collapsed');
   });
 });
 
