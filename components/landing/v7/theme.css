@@ -454,9 +454,7 @@ html[data-theme="light"] .home-v2-copy-title em {
 
    There is a light cut of the artwork now, so the island is gone and
    the hero is a normal part of the parchment page: ink copy, ink CTAs,
-   parchment scrims (the `.hero__video__overlay` gradients ride
-   `--void-deep-rgb`, which is the light triple here, so they wash the
-   art in deep parchment instead of black — correct without a rule).
+   parchment scrims — with ONE rule the first pass got wrong, below.
 
    Three consequences that were load-bearing elsewhere:
      · The wordmark's `.is-collapsed` gate is dropped below — its home
@@ -483,6 +481,28 @@ html[data-theme="light"] .hero__bg {
 }
 html[data-theme="light"] .hero__bg img {
   display: none;
+}
+
+/* ⚠ THE SCRIMS WASH WITH THE PAGE COLOR, NOT VOID-DEEP (owner-caught,
+   2026-08-03). The overlay's gradients ride `--void-deep-rgb`, and in
+   light that is #e4dac9 — a DIFFERENT parchment than the #ece3d6 page.
+   With the plate's paper corrected to exactly the page token, the wash
+   was the only tint left, and it re-broke the match: the owner sampled
+   the hero at ~#e8decf in Photoshop, which is BYTE-FOR-BYTE the paper
+   under a 0.55-alpha wash of #e4dac9 (the gradient's left stop). The
+   plate was right; the scrim was repainting it.
+
+   Re-pinning the triple to the PAGE color makes the wash invisible over
+   open paper (page over page), while still lifting the drawn artwork
+   toward the page tone on the left (ink legibility) and blending the
+   drawn ground into the section below at the bottom edge.
+
+   The token re-pin — rather than re-declaring the gradients — keeps the
+   stop geometry in ONE place (landing.css); if the scrim shape ever
+   changes, light inherits it. Dark is untouched: this scope only exists
+   under the attribute. */
+html[data-theme="light"] .hero__video__overlay {
+  --void-deep-rgb: var(--void-rgb);
 }
 
 /* ═══════════════════════════════════════════════════════════════════

@@ -333,10 +333,35 @@ ramps and every RGB triple — so the hero rendered pixel-identically in both
 themes. It is gone, and the hero is now an ordinary part of the parchment
 page: ink headline and copy, ink nav, gold CTA on `--gold-contrast`.
 
-The scrims needed no rule. `.hero__video__overlay` rides
-`rgba(var(--void-deep-rgb), …)`, which is the light triple once the island
-stops overriding it, so the gradients wash the artwork in deep parchment
-instead of black — correct for free.
+The scrims needed one rule, and the first pass shipped without it —
+**owner-caught against a Photoshop eyedropper.** `.hero__video__overlay`
+rides `rgba(var(--void-deep-rgb), …)`, which in light is `#e4dac9` — a
+DIFFERENT parchment than the `#ece3d6` page. Once the plate's paper was
+corrected to exactly the page token (see below), that wash was the only
+tint left, and it silently re-broke the match: the owner sampled the hero
+at ~`#e8decf`, which is byte-for-byte the corrected paper under the
+gradient's 0.55-alpha left stop. The plate was right; the scrim was
+repainting it. Light mode therefore re-pins the overlay's triple to the
+PAGE color (`--void-deep-rgb: var(--void-rgb)`, sweep-test pinned) — the
+wash goes page-over-page (invisible on open paper) while still lifting the
+drawn artwork toward the page tone for ink legibility and blending the
+drawn ground into the section below.
+
+The general lesson, for the next per-theme asset: **matching the ASSET to
+the token is not the whole match — audit every layer composited over it.**
+A wash that was invisible over the old artwork (dark scrim on dark plate)
+becomes the dominant tint the moment the plate underneath stops supplying
+one.
+
+**The plate itself is color-corrected from a RAW master, computed not
+eyeballed** (`scripts/hero-plates/prepare.mjs`): the RAW's paper measured
+(223, 218, 208) against the token (236, 227, 214), so the pipeline applies
+a per-channel white-point gain of ×1.0592 / ×1.0397 / ×1.0295 — blacks stay
+anchored at 0,0,0, clipping touches 0.108 % of pixels, and the shipped
+plate's paper measures the token EXACTLY. The first master was hand-tinted
+toward the background and landed ~13 short on blue — the cool cast the
+owner spotted. Masters live in `assets-staging/hero-candidates/`
+(`Gateway_v2-light-raw.png` is the source; the tinted one is retired).
 
 Two things that existed _because_ of §5 move with it:
 

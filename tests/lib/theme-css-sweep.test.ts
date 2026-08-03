@@ -127,6 +127,18 @@ describe("theme.css — the two authoring laws", () => {
     expect(block(theme, 'html[data-theme="light"] .hero__bg img')).toContain("display: none");
   });
 
+  it("washes the hero scrims with the PAGE color, not void-deep", () => {
+    // The overlay's gradients ride --void-deep-rgb, which in light is a
+    // DIFFERENT parchment (#e4dac9) than the page (#ece3d6). Over a plate
+    // whose paper is corrected to exactly the page token, that wash is the
+    // only tint left — the owner sampled the drift at ~#e8decf, which is
+    // the paper under the gradient's 0.55-alpha left stop. The re-pin
+    // makes the wash page-over-page.
+    expect(block(theme, 'html[data-theme="light"] .hero__video__overlay')).toContain(
+      "--void-deep-rgb: var(--void-rgb)"
+    );
+  });
+
   it("swaps the wordmark artwork UNGATED", () => {
     // It used to require `.is-collapsed`, because the mark's home position
     // sat on the dark hero. The hero is parchment in light now, so gating

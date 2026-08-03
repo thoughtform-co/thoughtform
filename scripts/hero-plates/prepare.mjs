@@ -69,10 +69,46 @@ const DRY = process.argv.includes("--dry");
 const LIGHT_WEBP_Q = 85;
 const LIGHT_BUDGET_BYTES = 700 * 1024;
 
+/* ── The light plate's color correction (owner, 2026-08-03) ─────────────
+   The plate sits ON the page: `.hero__bg` composites it over the light
+   `--void` (#ece3d6), and the section below continues in the same token —
+   so if the artwork's PAPER is not that color, the hero reads as a pasted
+   rectangle with a visible seam at its bottom edge. The first master was
+   hand-tinted toward the background and measured (225, 218, 201): warm but
+   ~13 too dark in blue, which is exactly the cool/pink cast the owner
+   spotted against the real page.
+
+   So the correction is COMPUTED, not eyeballed: a per-channel white
+   balance mapping the RAW master's measured paper to the token.
+
+     RAW paper  (223, 218, 208)  — mean of min(r,g,b)>190 pixels across
+                                   three paper-only crops, 824k samples
+     target     (236, 227, 214)  — #ece3d6, theme.css light `--void`
+     gains      target / paper   =  R ×1.0592 · G ×1.0397 · B ×1.0295
+
+   Applied as `.linear(gain, 0)` — a levels white-point move. Multiply
+   keeps black at black (the ring core measures 0,0,0 before AND after)
+   and lands the paper within 0.7 of the token. Clipping exposure is
+   0.108 % of pixels (isolated bright specks), harmless.
+
+   ⚠ Two things NOT to "fix" later:
+   · The bottom strip corrects to ~(229, 219, 206), still ~7 under the
+     token. That is the DRAWN GROUND — artwork, darker than open paper by
+     design. Deriving the gains from that strip instead pushes the open
+     paper ~7 ABOVE the page and multiplies the clipping. The scrim's
+     bottom lift is what blends that edge.
+   · The gains are constants on purpose. They encode a measurement of THIS
+     raw master against THIS token; if either changes, re-measure — do not
+     tune by eye against a screenshot. */
+const LIGHT_GAINS = [1.0592, 1.0397, 1.0295];
+
 const kb = (n) => `${(n / 1024).toFixed(1)} kB`;
 
 async function encodeLight() {
-  const src = staged("Gateway_v2-light.png");
+  // The RAW master. The first, hand-tinted master (`Gateway_v2-light.png`)
+  // is RETIRED — its tint is what the computed correction replaces — but
+  // left in staging as the record of what shipped first.
+  const src = staged("Gateway_v2-light-raw.png");
   const out = pub("images", "Gateway_v2-light.webp");
 
   if (!fs.existsSync(src)) {
@@ -82,13 +118,14 @@ async function encodeLight() {
   }
 
   const meta = await sharp(src).metadata();
-  const buf = await sharp(src).webp({ quality: LIGHT_WEBP_Q }).toBuffer();
+  const corrected = () => sharp(src).linear(LIGHT_GAINS, [0, 0, 0]);
+  const buf = await corrected().webp({ quality: LIGHT_WEBP_Q }).toBuffer();
 
   // For the record only — the light plate ships as WebP to match the way the
   // CSS swap and the glitch loader treat it as one file per theme.
-  const avifBuf = await sharp(src).avif({ quality: 50, effort: 4 }).toBuffer();
+  const avifBuf = await corrected().avif({ quality: 50, effort: 4 }).toBuffer();
 
-  console.log(`light  ${meta.width}×${meta.height}`);
+  console.log(`light  ${meta.width}×${meta.height}  (paper → #ece3d6, gains ${LIGHT_GAINS.join(" / ")})`);
   console.log(`  png master      ${kb(fs.statSync(src).size)}`);
   console.log(`  webp q${LIGHT_WEBP_Q}        ${kb(buf.length)}  ← shipping`);
   console.log(`  avif q50        ${kb(avifBuf.length)}  (reference)`);
