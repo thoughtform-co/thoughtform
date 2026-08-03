@@ -607,42 +607,21 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
  *     register; the named connector list belongs to the client deck.
  */
 const LOOP_INTELLIGENCE: CaseIntelligence = {
-  /* Top of the stack first — the reading order is "what they got" down to
-     "what it runs on". Counts AGREE with the published figures elsewhere
-     in this file (4 tools, 47+ Skills) rather than introducing variants. */
-  stack: [
-    {
-      name: "Tools",
-      count: "4",
-      gloss: "Built in-house, owned by the teams that use them.",
-      items: ["Mímir", "Vesper", "Babylon", "Heimdall"],
-    },
-    {
-      name: "Skills",
-      count: "47+",
-      gloss: "Encoded judgment. Versioned, team-owned, model-portable.",
-      items: ["5 shapes", "14 teams"],
-    },
-    {
-      name: "Connectors",
-      count: "6",
-      gloss: "Where the work already lives, reached without copy-paste.",
-      items: ["Boards", "Mail", "Docs", "Design", "Commerce", "Transcripts"],
-    },
-    {
-      name: "Models",
-      count: "4",
-      gloss: "One ladder, from instant answers to the hardest builds.",
-      items: ["Fast", "Everyday", "Deep", "Frontier"],
-    },
-  ],
-  /* THE INVERSION IS THE PICTURE. Reach runs high at the top and falls;
-     draw does the opposite. A reader who only looks at seats concludes the
-     light tiers are the system; the draw column is what corrects them. */
+  /* THE INVERSION IS THE PICTURE, and since U17 it is also the LAYOUT:
+     these four are the allocation projection's columns, and the Skills
+     regroup underneath the tier their team leans on. Reach runs high at
+     the top and falls; draw does the opposite. A reader who only looks at
+     seats concludes the light tiers are the system; the draw figure is
+     what corrects them.
+
+     (U16's STACK view — tools/Skills/connectors/models as four layers —
+     was deleted here by owner ruling: it restated the row's brief and the
+     panel's four blocks. The tool count lives on the tools row, the 47+
+     on the blocks, the connectors on the client deck.) */
   tiers: [
     { name: "Fast", note: "instant answers", reach: 90, draw: 1 },
     { name: "Everyday", note: "the daily driver", reach: 90, draw: 19 },
-    { name: "Deep", note: "reasoning-heavy work", reach: 60, draw: 59 },
+    { name: "Deep", note: "reasoning-heavy", reach: 60, draw: 59 },
     { name: "Frontier", note: "the hardest builds", reach: 25, draw: 21 },
   ],
   /* The litmus, in three lines: the map has to explain WHY a team's draw
@@ -675,9 +654,13 @@ const LOOP_INTELLIGENCE: CaseIntelligence = {
 };
 
 /**
- * Per-team consumption bands for the lattice's TEAM axis — the gradient the
- * owner asked for ("cluster the type of teams or skills based on the work
- * and token consumption").
+ * Per-team consumption, two joins off one row — the gradient the owner
+ * asked for ("cluster the type of teams or skills based on the work and
+ * token consumption").
+ *
+ * `band` paints the team-axis mark and the allocation projection's tile
+ * fills. `tier` (ADR-056 U17) decides which allocation COLUMN a team's
+ * tiles fly to: the tier carrying that team's dominant draw.
  *
  * MAPPING. The casefile's team names are the client's own org labels and do
  * not match the usage snapshot's team rows one-for-one. The joins used:
@@ -687,22 +670,37 @@ const LOOP_INTELLIGENCE: CaseIntelligence = {
  * fulfilment rows. Where a casefile team has no snapshot row of its own it
  * takes the band of its department, which is why so many sit at "light" —
  * that is the true shape, and flattening it would lose the point.
+ *
+ * THE TIER LEANS, and why the result is lopsided on purpose:
+ *   · Frontier — Product Engineering alone (2 Skills). Firmware is the
+ *     deepest work in the company and draws accordingly.
+ *   · Deep — Legal (4), Product Design & UX (5), Performance (1) = 10.
+ *     Long nuanced documents, build-heavy design tooling, deep per-seat
+ *     analytics work.
+ *   · Everyday — the remaining ten teams = 35 Skills.
+ *   · Fast — NONE. Instant answers are ambient: every seat touches that
+ *     tier and no single workflow leans on it, so the column renders its
+ *     note instead of tiles. An empty column is the honest reading.
+ * 0 / 35 / 10 / 2 sums to 47. THE LOPSIDEDNESS IS THE ARGUMENT: the Skills
+ * mass sits on Everyday while the consumption mass (draw 59 + 21) sits on
+ * Deep and Frontier. Do not print these cluster counts on the surface —
+ * 35 would become a published claim the one-variant law then owns.
  */
 const LOOP_TEAM_DRAW: readonly CaseTeamDraw[] = [
-  { team: "Product Engineering", band: "intensive" },
-  { team: "Legal", band: "deep" },
-  { team: "Performance", band: "deep" },
-  { team: "Studio", band: "steady" },
-  { team: "Product Design & UX", band: "steady" },
-  { team: "Brand & Partnerships", band: "steady" },
-  { team: "Manufacturing Programs", band: "steady" },
-  { team: "Warehousing & Customer Ops", band: "steady" },
-  { team: "Finance & Accounting", band: "light" },
-  { team: "Program Management & Product", band: "light" },
-  { team: "People Ops", band: "light" },
-  { team: "Strategic Insights", band: "light" },
-  { team: "Talent Acquisition", band: "light" },
-  { team: "Product Management", band: "light" },
+  { team: "Product Engineering", band: "intensive", tier: "Frontier" },
+  { team: "Legal", band: "deep", tier: "Deep" },
+  { team: "Performance", band: "deep", tier: "Deep" },
+  { team: "Product Design & UX", band: "steady", tier: "Deep" },
+  { team: "Studio", band: "steady", tier: "Everyday" },
+  { team: "Brand & Partnerships", band: "steady", tier: "Everyday" },
+  { team: "Manufacturing Programs", band: "steady", tier: "Everyday" },
+  { team: "Warehousing & Customer Ops", band: "steady", tier: "Everyday" },
+  { team: "Finance & Accounting", band: "light", tier: "Everyday" },
+  { team: "Program Management & Product", band: "light", tier: "Everyday" },
+  { team: "People Ops", band: "light", tier: "Everyday" },
+  { team: "Strategic Insights", band: "light", tier: "Everyday" },
+  { team: "Talent Acquisition", band: "light", tier: "Everyday" },
+  { team: "Product Management", band: "light", tier: "Everyday" },
 ];
 
 /**

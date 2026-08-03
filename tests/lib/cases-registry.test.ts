@@ -495,11 +495,15 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("the intelligence map's higher-level views hold their shape (ADR-056 U16)", () => {
-    // The map is the CONFIGURATION, not just the Skills: four stack layers,
-    // four capability tiers, and the reads that say why the deep draw is the
-    // work rather than waste. These budgets are box budgets — every string
-    // here renders into a box that clips silently.
+  it("the intelligence map's projections hold their shape (ADR-056 U16 → U17)", () => {
+    // The map is the CONFIGURATION, not just the Skills: four capability
+    // tiers that double as the allocation projection's columns, and the
+    // reads that say why the deep draw is the work rather than waste.
+    // These budgets are box budgets — every string here renders into a box
+    // that clips silently.
+    //
+    // (U16's four-layer STACK view and its guards were deleted in U17 by
+    // owner ruling — it restated the row's brief and the panel's blocks.)
     const BANDS = new Set(["light", "steady", "deep", "intensive"]);
 
     for (const c of CASES) {
@@ -509,26 +513,7 @@ describe("cases registry (ADR-054)", () => {
         const where = `${c.slug}/${t.id}`;
 
         if (intelligence) {
-          const { stack, tiers, reads, trend } = intelligence;
-
-          // FOUR LAYERS, top of stack first. The grid reserves four rows.
-          expect(stack.length, `${where} stack layers`).toBe(4);
-          for (const l of stack) {
-            expect(l.name.length, `${where} layer "${l.name}"`).toBeLessThanOrEqual(14);
-            expect(l.gloss.length, `${where} layer "${l.name}" gloss`).toBeLessThanOrEqual(60);
-            for (const item of l.items ?? []) {
-              expect(item.length, `${where} chip "${item}"`).toBeLessThanOrEqual(14);
-            }
-          }
-          // The Skills layer must AGREE with the count published elsewhere
-          // in the case rather than introducing a second variant of it.
-          const skillsLayer = stack.find((l) => /skills/i.test(l.name));
-          if (skillsLayer && skills?.length) {
-            expect(
-              skillsLayer.count,
-              `${where} stack prints "${skillsLayer.count}" Skills against ${skills.length} listed`
-            ).toBe(`${skills.length}+`);
-          }
+          const { tiers, reads, trend } = intelligence;
 
           // FOUR TIERS, and the draw column is a share of one whole.
           expect(tiers.length, `${where} tiers`).toBe(4);
@@ -592,8 +577,18 @@ describe("cases registry (ADR-054)", () => {
         // row with no band is a hole in a scale a reader is reading across.
         if (teamDraw?.length && skills?.length) {
           const banded = new Set(teamDraw.map((t2) => t2.team));
+          // Every team's tier must name a real column, or its Skills fly to
+          // a column that does not exist and silently vanish from the
+          // allocation projection (ADR-056 U17).
+          const tierNames = new Set((intelligence?.tiers ?? []).map((t2) => t2.name));
           for (const t2 of teamDraw) {
             expect(BANDS.has(t2.band), `${where} band "${t2.band}" for ${t2.team}`).toBe(true);
+            if (tierNames.size) {
+              expect(
+                tierNames.has(t2.tier),
+                `${where} team "${t2.team}" leans on tier "${t2.tier}", which is not one of ${[...tierNames].join(" / ")}`
+              ).toBe(true);
+            }
           }
           for (const team of new Set(skills.map((s) => s.team))) {
             expect(banded.has(team), `${where} team "${team}" has Skills but no draw band`).toBe(

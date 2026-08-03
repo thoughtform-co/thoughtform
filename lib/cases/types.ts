@@ -154,13 +154,18 @@ export interface CaseSkillEntry {
   summary?: string;
 }
 
-/* ── The intelligence map's higher-level views (ADR-056 U16) ─────────────
-   The map is not just Skills: it is the CONFIGURATION — the models, the
-   connectors they reach, the Skills encoding judgment, the tools built on
-   top — and the allocation of work across it. One dataset, three
-   projections; presence of `intelligence` on the track's registry visual
-   is what turns the view tabs on, so a second client without the data
-   keeps the plain lattice. TRACK-SIDE ONLY, like `skills`.
+/* ── The intelligence map's projections (ADR-056 U16 → U17) ──────────────
+   The map is not just Skills: it is the CONFIGURATION — which intelligence
+   runs which work — and the allocation of work across it. ONE dataset,
+   THREE PROJECTIONS of a single persistent tile field (substrate · team ·
+   allocation); presence of `intelligence` on the track's registry visual
+   is what turns the third projection on, so a second client without the
+   data keeps the two-way lattice. TRACK-SIDE ONLY, like `skills`.
+
+   ⚠ U16's STACK view (four layers: tools/Skills/connectors/models) was
+   DELETED in U17 by owner ruling: it restated the row's own brief and the
+   four blocks in the panel foot. Its content lives on in the brief, the
+   blocks and the tools directory row — do not restore it from memory.
 
    Numbers policy, pinned by the registry test and rules/proof.md: SHARES,
    RATIOS AND REACH FRACTIONS ONLY — never currency, never a per-seat cost
@@ -169,29 +174,16 @@ export interface CaseSkillEntry {
    derivation from the client's usage snapshots lives in the content
    module's comments, not on the surface. */
 
-/** One layer of the configuration stack, top of stack first. */
-export interface CaseStackLayer {
-  /** Layer name, ≤14 chars — "Tools" | "Skills" | "Connectors" | "Models". */
-  name: string;
-  /** The count as it reads, e.g. "4" or "47+" — must AGREE with any count
-   *  already published for the same thing (one variant per claim). */
-  count: string;
-  /** One line, ≤60 chars — truncates against the band's width. */
-  gloss: string;
-  /** Chips, each ≤14 chars. Connector chips are CATEGORIES, never vendor
-   *  names — the vendor register is the client deck's claim and the
-   *  landing genericises (rules/proof.md). Tool chips are the published
-   *  codenames. Hidden on short viewports, so nothing load-bearing. */
-  items?: readonly string[];
-}
-
-/** One rung of the allocation ladder, lightest tier first. GENERIC
- *  capability names by owner ruling (2026-08-03) — never model families:
- *  the landing stays model-silent and survives model churn. */
+/** One rung of the allocation ladder, lightest tier first — and, since
+ *  U17, one COLUMN of the allocation projection: the Skills whose team
+ *  leans on this tier regroup underneath it, and the reach/draw pair
+ *  renders in the column head. GENERIC capability names by owner ruling
+ *  (2026-08-03) — never model families: the landing stays model-silent
+ *  and survives model churn. */
 export interface CaseModelTier {
   /** "Fast" | "Everyday" | "Deep" | "Frontier", ≤10 chars. */
   name: string;
-  /** ≤24 chars, e.g. "the daily driver". */
+  /** ≤20 chars — the column head clamps it to two lines at ~87px. */
   note?: string;
   /** Share of active seats that touched the tier, 0–100 (rounded). */
   reach: number;
@@ -212,9 +204,8 @@ export interface CaseAllocationRead {
 
 /** The map's higher-level dataset — see the block comment above. */
 export interface CaseIntelligence {
-  /** Exactly four layers, top of stack first. */
-  stack: readonly CaseStackLayer[];
-  /** Exactly four tiers, lightest first. */
+  /** Exactly four tiers, lightest first. Also the allocation projection's
+   *  four columns. */
   tiers: readonly CaseModelTier[];
   /** Two or three exemplars. */
   reads: readonly CaseAllocationRead[];
@@ -227,14 +218,27 @@ export interface CaseIntelligence {
   };
 }
 
-/** One team's consumption band on the lattice's team axis (the gradient —
- *  owner: "cluster the type of teams or skills based on the work and token
- *  consumption"). Four steps, same fill scale as the lifecycle tiles so
- *  one legend serves both. */
+/** One team's place in the consumption picture (the gradient — owner:
+ *  "cluster the type of teams or skills based on the work and token
+ *  consumption"). Two independent joins off one row:
+ *
+ *   · `band` paints the team-axis mark AND, in the allocation projection,
+ *     each of the team's tiles — four steps on the same gold scale as the
+ *     lifecycle fills, so one legend serves both.
+ *   · `tier` decides WHICH COLUMN the team's tiles fly to in allocation.
+ */
 export interface CaseTeamDraw {
   /** Must match a team that appears in `skills`. */
   team: string;
   band: "light" | "steady" | "deep" | "intensive";
+  /**
+   * The tier this team LEANS ON — the one carrying its dominant draw in
+   * the usage snapshots. Must name one of the case's `CaseModelTier`s;
+   * membership is pinned by `cases-registry.test.ts` rather than by the
+   * type, because tier names are per-case data (the same pattern as a
+   * skill's `engine` naming a registry group).
+   */
+  tier: string;
 }
 
 /** A beat's evidence plate. Discriminated like `ArcSection` (ADR-052). */

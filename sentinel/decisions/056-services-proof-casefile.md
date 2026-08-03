@@ -1821,3 +1821,124 @@ captures at 1440×800 and 2017×1269 across all three views plus both lattice
 axes, and light theme on stack and allocation: `scrollHeight − clientHeight`
 = 0 on the plate, the rows grid, the stack grid, the allocation grid, the
 ladder and the reads column, in every combination.
+
+## Update 17 — one field, three projections, and the tiles morph (2026-08-03, owner)
+
+**Owner review of U16, three notes:** the STACK view "is kind of a copy of
+the text and the four text blocks in the bottom-right panel — let's not do
+that"; switching projections should MORPH — "I want the same artifacts, which
+are the skills in those squares, to morph, not just shift positions into new
+configurations... not as a gimmick, but in a way that fits how we're building
+this Intelligence Map, the way it's clustered, maybe transforming into a heat
+map"; and the whole thing has to intrigue a stranger, because "skills, that's
+an overview... that doesn't say much in of itself. Our approach in that
+intelligence layer, that intelligence map, makes it so cool."
+
+Two more at plan review: the tiles "say nothing" on entry, and the click
+detail should not be a pop-up but a panel that "slides inwards" from the
+right, plate height, slightly transparent.
+
+### Stack, deleted
+
+It restated the row's own brief and the four blocks in the panel foot. The
+tool count lives on the tools directory row, the 47+ on the blocks, the
+connector categories on the client deck. Recorded here so it is not restored
+from memory.
+
+### One persistent field
+
+The 47 tiles are now flat children of ONE supergrid whose template changes
+per projection, with per-tile cells from `skillsFieldLayout.ts` as pure
+integer math. That is what makes the morph possible: nested per-row
+containers forced a remount on every regroup, and you cannot fly an element
+that React just replaced.
+
+- **SUBSTRATE** — 5 shape rows. **TEAM** — 14 team rows plus the draw band.
+- **ALLOCATION** — the tiles regroup under the tier their team leans on and
+  shrink to heat cells, fill crossfading from lifecycle to consumption; the
+  column heads carry the reach-against-draw pair. Cluster masses are 0 / 35 /
+  10 / 2, and **the lopsidedness is the argument made physical**: the Skills
+  mass sits on Everyday while the consumption mass (draw 59 + 21) sits on
+  Deep and Frontier. Fast holds no Skills at all and says so — instant
+  answers are ambient, every seat, no single workflow. An empty column is
+  the honest reading, and the cluster counts are deliberately NOT printed
+  (35 would become a published claim the one-variant law then owns).
+
+`CaseTeamDraw` gained `tier`; `band` and `tier` are two independent joins off
+one row (band paints, tier places). Membership is pinned by the registry test
+rather than the type, the same pattern as a skill's `engine`.
+
+### The morph, and why this is not the FLIP that was rejected
+
+ADR-031 carries "no FLIP" as a guardrail, from ADR-030's retired
+`ServicesExitPills`. That one flew chips ACROSS THE VIEWPORT between two
+unrelated surfaces and read as detached ornament. This is intra-container:
+the same artifacts reconfiguring inside one field — which is exactly what the
+ordinal's "identity, not position, like an atomic number" contract already
+described. The rejection stands for what it rejected.
+
+The mechanism, and its laws:
+
+- **Two one-shot measurements, both click-driven.** Prev rects come from the
+  click handler (by any layout effect the old geometry is gone — a function
+  component has no `getSnapshotBeforeUpdate`); new rects from a layout effect,
+  so the inverted transforms are inline before the first paint and there is
+  never a flash at the destination.
+- **Rects are relative to the FIELD**, not the viewport: the plate's ancestor
+  translates during the casefile's arrival, and relative rects cancel it.
+- **`data-morph` is imperative**, never rendered — a re-render mid-flight
+  must not clobber it. `will-change` is scoped to that attribute, because 47
+  permanent promotions would roughly triple this surface's ~14-layer budget.
+- **Zero at rest by construction**: the transition runs to computed `none`,
+  and the rest state is pure grid layout rather than a stored end-transform.
+  A mid-flight resize still lands correct. The smoke asserts it.
+- **Child order is invariant** — 47 tiles, then one chrome node keyed by
+  projection. Interleaving would make React MOVE tile nodes, and
+  `insertBefore` on a connected node cancels a running transition.
+- Stagger is one custom property (`(ordinal − 1)/46 × 120ms`), so there are
+  no per-tile JS timers. Max flight 570ms. Text fades per tile so no symbol
+  smears through the scale. Reduced motion skips the measurement entirely.
+
+### The name register, and the slide panel
+
+The tiles carry a symbol, not a name, so the plate was mute to a first-time
+reader. 47 readable names cannot fit a 144px stage, so the head gained a
+REGISTER that names the lit tile and **defaults to Skill 01 on arrival** —
+the field is never nameless, and sweeping it now reads as the instrument
+naming what the hand crosses. The register's team/status tail yields before
+the name truncates (a high flex-shrink factor), because the name is what the
+reader came for and the foot repeats the tail.
+
+The popover became a panel that slides in from the plate's right edge at
+stage height, semi-transparent so the lattice stays legible behind it. It
+lives INSIDE the stage, which is what makes it simple: the plate's
+`overflow: hidden` and the case's iris would trap anything trying to escape
+(the film lightbox portals for exactly that reason), so this never tries.
+Rest state is unmounted, so zero-at-rest holds trivially.
+
+### What the measurements caught
+
+- **The panel's copy ran over its own tier line at 800h.** Six clamped lines
+  plus a bottom-anchored close button do not fit a 144px panel. The close
+  moved INTO the top line, the tier line drops ≤900h, the body clamps to
+  three, and `min-height: 0` is what actually lets flex shrink it — without
+  that the clamp is advisory.
+- **The name register truncated to "EMPLOYER…"** because the legend would not
+  yield. Fixed by shrink priority, not by cutting the legend.
+- A test-harness bug worth recording: the persistence assertion stamped the
+  tiles BEFORE the plate had mounted and then read 0 of 47, blaming the
+  feature for the harness being early. Wait for the field, and assert the
+  stamp took.
+
+### Verified
+
+tsc, ESLint clean on the new files, `cases-registry` 25/25, the new
+`skills-field-layout` suite 7/7 (every Skill placed exactly once per
+projection, every placement inside its declared template, tier clustering
+correct, nav rows matching the geometry row-for-row), full desktop
+services-ring smoke 10/10 + mobile skip — now walking all three projections
+with a settle-await, zero-at-rest, tile persistence, the name register and
+the panel open/close. Headed captures at 1440×800 and 2017×1269 in both
+themes across every projection plus a mid-flight frame: 47 tiles, zero
+escaped the stage, zero overflow on the plate, the field, the rail or the
+panel in any combination.

@@ -241,95 +241,128 @@ inherited its ambient-cover role.
   context register and the provenance line — three-line tiles plus both
   overrun the band. It keeps BOTH description lines at 720p, unlike the tools
   foot, because a block's sentence is the only place its claim is explained.
-- **The registry plate is the INTELLIGENCE MAP when the track carries a
-  portfolio (ADR-056 U13 → U16).** `skills` on the TRACK registry visual
-  renders `SkillsBrowserPlate`; `intelligence` promotes it from a Skills
-  lattice to the MAP — the configuration, not just the encoded judgment.
-  Absent, the plate is the lattice alone, which is what a second client
-  would get. THREE PROJECTIONS OF ONE DATASET, tabbed:
-  - **SKILLS** — the periodic table (below). Substrate/team is its
-    SUB-FILTER and renders on this view only, with its lifecycle legend.
-  - **STACK** — four layers, top first: tools · Skills · connectors ·
-    models. Deliberately the quietest view; an inventory that tries to be
-    a chart is the overwhelm this plate exists not to be.
-  - **ALLOCATION** — the litmus: four capability tiers, TWO bars each,
-    REACH against DRAW. ⚠ Never reduce it to one bar — the pair IS the
-    argument, because the gap between them is the finding. The reads
-    column carries the why; without it this is a usage dashboard.
+- **The registry plate is the INTELLIGENCE MAP: ONE PERSISTENT TILE FIELD,
+  THREE PROJECTIONS (ADR-056 U13 → U17).** `skills` renders the field;
+  `intelligence` + `teamDraw` add the third projection (absent, a second
+  client gets the two-way field). The projections are SUBSTRATE (5 shape
+  rows) · TEAM (14 rows + draw band) · ALLOCATION (the tiles regroup under
+  the tier their team leans on, as heat cells, under reach/draw column
+  heads). U16's STACK view was DELETED — it restated the row's brief and
+  the panel's four blocks. Do not restore it.
+  - **THE 47 TILES ARE THE SAME DOM NODES IN EVERY PROJECTION.** Flat
+    children of one supergrid, keyed by name, in ordinal order, ALWAYS
+    FIRST, with one chrome node keyed by projection after them. Nest them
+    in per-row containers again and React remounts on every regroup —
+    which kills the morph, because you cannot fly an element that was just
+    replaced. Child order is invariant for the same reason: interleaving
+    makes React MOVE tile nodes, and `insertBefore` on a connected node
+    cancels a running transition.
+  - **Placement is PURE INTEGER MATH** in `skillsFieldLayout.ts`, never a
+    measurement. Its constants (SUB_COLS 14, TEAM_COLS 7, ALLOC_MICRO 7,
+    ALLOC_ROWS 6) are SHARED WITH THE CSS `repeat()` counts. A placement
+    outside a declared template does not error — it creates an implicit
+    track and silently deforms the lattice. `skills-field-layout.test.ts`
+    is the guard; change the constants in both places or not at all.
+  - **The nav model comes out of the same function** (`navRows`), so an
+    arrow key always lands on the tile that looks like the neighbour.
+- ⚠ **THE MORPH'S LAWS (ADR-056 U17).** This is NOT the FLIP ADR-031
+  rejected: that one flew chips ACROSS THE VIEWPORT between two surfaces
+  and read as detached ornament. This is intra-container, which is what the
+  ordinal's "identity, not position, like an atomic number" already meant.
+  - **Two one-shot measurements, both click-driven.** Prev rects in the
+    CLICK HANDLER (by any layout effect the old geometry is gone — no
+    `getSnapshotBeforeUpdate` in a function component); new rects in a
+    LAYOUT effect so the inversion is inline before first paint.
+  - **Rects are relative to the FIELD.** The plate's ancestor translates
+    during the casefile's arrival; viewport rects would bake that in.
+  - **`data-morph` is imperative**, never rendered — a re-render mid-flight
+    would clobber it. `will-change` is scoped to it: 47 permanent
+    promotions would roughly triple the ~14-layer budget.
+  - **Zero at rest by construction** — the transition ends on computed
+    `none`, never a stored matrix, so even a mid-flight resize lands
+    correct. The smoke asserts it (excluding the lit tile's hover lift).
+  - Click-driven only. ADR-021 sanctions the click-driven slide and bans
+    the wall clock; never put this on a scroll clock, which `--svc-proof-
+browse` already owns inside the dwell.
+- **THE PLATE IS NEVER NAMELESS.** The tiles carry a symbol, not a name, so
+  the head's NAME REGISTER names the lit tile and DEFAULTS TO SKILL 01 on
+  arrival — an empty register is the "it doesn't say anything" defect the
+  owner reported, and the smoke pins it. The register's team/status tail
+  yields before the name truncates; never let the legend win that space.
+- **The detail SLIDES IN from the right, it does not pop up** (owner,
+  2026-08-03). Stage height, semi-transparent so the field stays legible
+  behind it, INSIDE the stage — the plate's `overflow: hidden` and the
+  case's iris would trap anything trying to escape (which is why the film
+  lightbox portals), so this never tries. Rest state is unmounted.
+  ⚠ At 800h the panel IS the 144px stage: the close lives in the top line,
+  the tier line drops ≤900h, the body clamps to three, and `min-height: 0`
+  is what lets flex shrink it — without that the clamp is advisory and the
+  copy runs over the line below.
 - ⚠ **THE MAP'S NUMBERS ARE SHARES, AND ITS TIERS ARE GENERIC** (owner,
   2026-08-03). Both are pinned by `cases-registry.test.ts`:
   - **No currency, no per-seat cost, ever.** The per-person-per-month band
     is a client-deck claim; restating it here breaks the one-variant rule
-    AND the envelope. Everything on this plate is a share, a ratio or a
-    reach fraction.
+    AND the envelope. Everything on this plate is a share or a ratio.
   - **No model family names** (Opus/Sonnet/Haiku/Fable/GPT/Gemini…). The
     tiers are Fast · Everyday · Deep · Frontier so the landing stays
     model-silent: it neither restates the `claude-workshop` deck's model
     guidance nor goes stale at the next release. A regex guard catches it.
-  - **Connectors are CATEGORIES** (boards · mail · docs · design ·
-    commerce · transcripts). The named register with its live/in-progress
-    gates belongs to the deck; the landing genericises, as the U14
-    summaries already do ("ledger extract", "two analytics sources").
+  - **`band` and `tier` are two independent joins** off one `CaseTeamDraw`
+    row: band paints (the team mark, and the allocation fills), tier
+    places (which column the team's tiles fly to). Tier membership is
+    pinned by the test, not the type — the `engine` → group-name pattern.
+  - **DO NOT PRINT THE CLUSTER COUNTS.** The 0 / 35 / 10 / 2 masses are
+    the argument and they are VISIBLE; printing 35 makes it a published
+    claim the one-variant law then owns forever. The empty Fast column
+    says why it is empty instead of showing a zero.
   - Figures are ROUNDED from the client's usage snapshots by owner ruling;
     the derivation and the casefile-team → snapshot-team mapping live in
     the content module's comments, never on the surface.
-  - The Skills layer's count must AGREE with the listed Skills, and the
-    team gradient is ALL-OR-NONE: a hole in a scale a reader is reading
-    across is worse than no scale.
-  - **One tile = one Skill**, carrying its ORDINAL and its SYMBOL. The
-    ordinal is registry order and is STABLE ACROSS AXES — identity, not
-    position, like an atomic number. The symbol comes from
-    `skillSymbol.ts` with a short override list; the registry test pins
-    UNIQUENESS and a 2–4 character width, so a new Skill that collides
-    fails a test instead of shadowing an existing mark.
-  - **Two axes, one lattice.** `shape` = 5 rows × up to 14; `team` = 14
-    rows × up to 7. Row order is registry order for shapes and FIRST
-    APPEARANCE for teams, so a copy edit cannot reshuffle the lattice.
-  - **The team axis DEGRADES below 900h; it does not clip.** 14 rows in the
-    240px box leaves ~12.5px a row, which cannot hold an 11px symbol, so
-    the marks go and the lattice thins to fill-only cells. The count comes
-    DOWN to the 8.5px chrome floor rather than off, and the gradient band
-    goes entirely — at 9px rows it would set the row height.
-  - **Cell fill is LIFECYCLE and rows sort most-shipped-first**, so a row's
-    solid head is what runs today. ⚠ The ramp STOPS AT 0.62: `--dawn-rgb`
-    is the ink and flips per theme while `--gold-rgb` does not, so a
-    near-solid flood puts CREAM ON GOLD in dark mode. Shipped earns its
-    extra step from the border.
-  - **Ghost slots are load-bearing.** Each row renders `max − n` invisible
-    spacers so every row shares one track and a tile means the same width
-    everywhere. Same class of contract: the rows are ONE grid with
-    `.fl-skills__row` at `display: contents`.
-  - **The popover opens INSIDE the plate.** It cannot escape — `.fl-plate`
-    is `overflow: hidden` and `.fl-case` carries the iris `clip-path`, so
-    a clipped ancestor is the containing block even for `position: fixed`
-    (this is why the film lightbox portals). Clamped to the stage, flipping
-    below the tile when there is no room above, positioned in a LAYOUT
-    effect because the height depends on the summary's wrap.
-- ⚠ **FIT TRAPS ON THIS PLATE, every one of them shipped in a first cut**
-  (ADR-056 U15–U16). Measure; do not eyeball:
+  - **Two bars per tier head, never one** — the pair IS the argument,
+    because the gap between reach and draw is the finding.
+- **One tile = one Skill**, carrying its ORDINAL and its SYMBOL. The
+  ordinal is registry order and is STABLE ACROSS PROJECTIONS — identity,
+  not position. The symbol comes from `skillSymbol.ts` with a short
+  override list; the registry test pins UNIQUENESS and a 2–4 character
+  width, so a new Skill that collides fails a test instead of shadowing an
+  existing mark.
+- **Cell fill is LIFECYCLE on substrate and team, CONSUMPTION on
+  allocation**, and rows sort most-shipped-first. ⚠ The ramp STOPS AT 0.62:
+  `--dawn-rgb` is the ink and flips per theme while `--gold-rgb` does not,
+  so a near-solid flood puts CREAM ON GOLD in dark mode. Shipped earns its
+  extra step from the border. Fill rules must cover the legend swatches too
+  or the key renders as empty outlines.
+- **The team projection DEGRADES below 900h; it does not clip.** 14 rows in
+  the 240px box leaves ~12.5px a row, which cannot hold an 11px symbol, so
+  the marks go and the field thins to fill-only cells. The count comes DOWN
+  to the 8.5px chrome floor rather than off; the band goes entirely (at 9px
+  rows it would set the row height).
+- ⚠ **FIT TRAPS ON THIS PLATE, every one shipped in a first cut** (U15–U17).
+  Measure; do not eyeball:
   - **A grid row is as tall as its TALLEST item, and that was the COUNT.** A
     default line box on 10px mono is 15px against a 9px tile, which put the
     team lattice 46px over its stage at 1440×800 and 121px at 2017×1269.
     `line-height: 1` on every mono label sharing a row with a sized element
     is load-bearing, not tidiness.
   - **`.fl-plate` measures 0 while an inner grid overflows** — the plate's
-    own `overflow: hidden` swallows it. `.fl-skills__rows`, `__stack`,
-    `__alloc`, `__ladder` and `__reads` are all in the measured set, and
-    the smoke walks EVERY VIEW × both axes. A guard that only sees the
-    default state is not a guard, and the default is reliably what fits.
+    own `overflow: hidden` swallows it. `.fl-skills__field`, `__rail` and
+    `__panel` are all in the measured set, and the smoke walks EVERY
+    PROJECTION. A guard that only sees the default state is not a guard,
+    and the default is reliably what fits.
+  - **MEASURE ONLY AFTER THE MORPH SETTLES.** A rect read mid-flight is a
+    transformed box, not a laid-out one. Await the absence of
+    `.fl-skills__field[data-morph]`, never a bare timeout — and wait for
+    the field to EXIST before stamping or measuring it, or the harness
+    blames the feature for its own earliness.
   - **A budget looser than the box ships silent truncation.** A 24-char
     tier note truncated at 20; the fix was tracking down (the U9 lever) AND
     the guard tightened to the real ceiling.
-  - **Chips beside a `1fr` track lose and get sliced mid-word** ("DESIGN" →
-    "DE"). They take a line of their own at full width. Half a label is a
-    defect, not a compromise.
-  - **A legend swatch with no fill rule decodes nothing.** Shipped twice
-    now — once keyed on `data-fill`, once on `data-kind`. Check the legend
-    renders its scale, not four empty boxes.
+  - **Chips beside a `1fr` track lose and get sliced mid-word.** Half a
+    label is a defect, not a compromise — give them their own line.
   - **The box is not one size — 690×240 at 1440×800, 862×429 at 2017×1269**
-    (stage 144px and 313px). Per-axis and per-view `clamp()` metrics: the
-    `svh` middle terms bind at 800h and the ceilings are headroom for the
-    tall end. Never buy presence by raising the `svh` COEFFICIENTS — those
+    (stage 144px and 313px). Per-projection `clamp()` metrics: the `svh`
+    middle terms bind at 800h and the ceilings are headroom for the tall
+    end. Never buy presence by raising the `svh` COEFFICIENTS — those
     bind at 800h, where this surface has no room. Check both ends.
   - The exemplar `rows` stay in the data unrendered (the beat draws them;
     the sharing guard asserts them shared). ⚠ A per-group SECOND LINE is

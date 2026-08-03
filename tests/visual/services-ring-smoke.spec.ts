@@ -337,7 +337,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         // grid can overflow its stage while `.fl-plate` still measures 0,
         // because the plate's own `overflow: hidden` swallows it. That is
         // exactly how the team axis shipped 46px over its stage for a pass.
-        const boxes = [".fl-brief", ".fl-panel__foot", ".fl-plate", ".fl-skills__rows"] as const;
+        const boxes = [".fl-brief", ".fl-panel__foot", ".fl-plate", ".fl-skills__field"] as const;
         const file = document.querySelector<HTMLElement>(".fl-row[aria-selected='true']");
         const out: { box: string; over: number; row: string }[] = [];
         for (const sel of boxes) {
@@ -360,12 +360,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         if (o.over > 1) clipped.push(`${o.row} — ${o.box} clips ${o.over}px`);
       }
     }
-    // EVERY VIEW, and both axes within the lattice (ADR-056 U15 → U16). The
-    // default state was the only one measured when the plate gained a second
-    // grouping, and `team` — 14 rows where `shape` has 5 — was the one that
-    // did not fit. The map then gained two more views on top of that. A
-    // guard that only ever sees the default state is not a guard, and the
-    // default is reliably the state that fits.
+    // EVERY PROJECTION (ADR-056 U15 → U17). The default state was the only
+    // one measured when the plate gained a second grouping, and `team` — 14
+    // rows where `substrate` has 5 — was the one that did not fit. The map
+    // then gained a third projection on top of that. A guard that only ever
+    // sees the default state is not a guard, and the default is reliably
+    // the state that fits.
     await page.locator(".fl-row").first().click();
     await page.waitForTimeout(350);
 
@@ -374,11 +374,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const out: { box: string; over: number }[] = [];
         for (const sel of [
           ".fl-plate",
-          ".fl-skills__rows",
-          ".fl-skills__stack",
-          ".fl-skills__alloc",
-          ".fl-skills__ladder",
-          ".fl-skills__reads",
+          ".fl-skills__field",
+          ".fl-skills__rail",
+          ".fl-skills__panel",
         ]) {
           const el = document.querySelector<HTMLElement>(sel);
           if (el) out.push({ box: sel, over: el.scrollHeight - el.clientHeight });
@@ -386,29 +384,100 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         return out;
       });
 
-    for (const view of ["Skills", "Stack", "Allocation"]) {
-      const tab = page.locator(`.fl-skills__viewbtn:has-text("${view}")`);
+    /* THE MORPH MUST SETTLE BEFORE ANYTHING IS MEASURED. The tiles fly for
+       450ms plus a ≤120ms stagger, and a rect read mid-flight is a
+       transformed box, not a laid-out one. Await the component's own
+       signal rather than a bare timeout. */
+    const settleMorph = async () => {
+      await page.waitForFunction(() => !document.querySelector(".fl-skills__field[data-morph]"), {
+        timeout: 4000,
+      });
+      await page.waitForTimeout(140);
+    };
+
+    // The field is ONE set of persistent tiles across every projection —
+    // that is the whole feature, and a silent remount is its failure mode.
+    // Stamp them now and count the survivors at the end.
+    //
+    // ⚠ WAIT FOR THE FIELD FIRST. Stamping before the plate mounts marks
+    // nothing, and the survivor count then reads 0/47 — a red test that
+    // blames the feature for the harness being early.
+    await page.waitForSelector(".fl-skills__tile", { timeout: 10_000 });
+    const stampedAtStart = await page.evaluate(() => {
+      const tiles = document.querySelectorAll<HTMLElement>(".fl-skills__tile");
+      tiles.forEach((t) => {
+        t.dataset.u17 = "1";
+      });
+      return tiles.length;
+    });
+    expect(stampedAtStart, "no tiles to stamp — the map plate never mounted").toBeGreaterThan(0);
+
+    for (const proj of ["Substrate", "Team", "Allocation"]) {
+      const tab = page.locator(`.fl-skills__viewbtn:has-text("${proj}")`);
       if (!(await tab.count())) continue;
       await tab.click();
-      await page.waitForTimeout(300);
-
-      if (view === "Skills") {
-        for (const axis of ["Substrate", "Team"]) {
-          const btn = page.locator(`.fl-skills__axbtn:has-text("${axis}")`);
-          if (!(await btn.count())) continue;
-          await btn.click();
-          await page.waitForTimeout(300);
-          for (const o of await measureBoxes()) {
-            if (o.over > 1) clipped.push(`view "${view}" / ${axis} — ${o.box} clips ${o.over}px`);
-          }
-        }
-        continue;
-      }
+      await settleMorph();
 
       for (const o of await measureBoxes()) {
-        if (o.over > 1) clipped.push(`view "${view}" — ${o.box} clips ${o.over}px`);
+        if (o.over > 1) clipped.push(`projection "${proj}" — ${o.box} clips ${o.over}px`);
+      }
+
+      // ZERO AT REST. The morph ends on computed `none`, never a settled
+      // matrix — a residual transform here is the drift bug this surface
+      // has banned since the panels' arrival ladder. The lit tile carries
+      // the hover lift by design, so it is excluded by selector.
+      const residual = await page.evaluate(
+        () =>
+          [...document.querySelectorAll(".fl-skills__tile:not([data-lit])")].filter((t) => {
+            const tr = getComputedStyle(t).transform;
+            return tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
+          }).length
+      );
+      if (residual > 0) {
+        clipped.push(`projection "${proj}" — ${residual} tiles hold a residual transform`);
       }
     }
+
+    const persisted = await page.evaluate(() => ({
+      stamped: document.querySelectorAll(".fl-skills__tile[data-u17]").length,
+      total: document.querySelectorAll(".fl-skills__tile").length,
+    }));
+    expect(
+      persisted.stamped,
+      `the tile field remounted across projections (${persisted.stamped} of ${persisted.total} survived) — the morph would swap, not fly`
+    ).toBe(persisted.total);
+
+    // THE PLATE IS NEVER NAMELESS (ADR-056 U17). The tiles carry a symbol,
+    // not a name, so an empty register is the "it doesn't say anything"
+    // regression the owner reported.
+    const register = await page.evaluate(() =>
+      document.querySelector(".fl-skills__name")?.textContent?.trim()
+    );
+    expect(register?.length ?? 0, "the name register is empty on arrival").toBeGreaterThan(3);
+
+    // A tile click SLIDES THE PANEL IN, inside the plate; Escape closes it.
+    await page.locator(".fl-skills__tile").nth(4).click();
+    await page.waitForTimeout(360);
+    const panel = await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(".fl-skills__panel");
+      const plate = document.querySelector<HTMLElement>(".fl-plate");
+      if (!el || !plate) return null;
+      const r = el.getBoundingClientRect();
+      const p = plate.getBoundingClientRect();
+      return {
+        visible: r.width > 40 && r.height > 40,
+        inside: r.right <= p.right + 1 && r.left >= p.left - 1,
+        named: (el.querySelector(".fl-skills__panel-name")?.textContent ?? "").length,
+      };
+    });
+    expect(panel, "a tile click opened no panel").not.toBeNull();
+    expect(panel?.visible, "the panel opened with no box").toBe(true);
+    expect(panel?.inside, "the panel escaped the plate").toBe(true);
+    expect(panel?.named ?? 0, "the panel opened without naming its Skill").toBeGreaterThan(0);
+
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(240);
+    expect(await page.locator(".fl-skills__panel").count(), "Escape left the panel open").toBe(0);
 
     expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);
   });

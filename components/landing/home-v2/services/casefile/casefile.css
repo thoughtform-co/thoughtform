@@ -1093,12 +1093,18 @@
   border: 1px solid rgba(var(--gold-rgb), 0.3);
 }
 
-/* ── The SKILLS LATTICE (ADR-056 U13 → U14 → U15) ─────────────────────────
-   The Intelligence Map plate as a periodic table of the client's Skills:
-   every Skill is a TILE carrying its ordinal and its symbol, rows group by
-   substrate OR by team, and the detail opens in a panel OVER the lattice.
-   U14's permanent dossier is gone — it spent half of a 690×240 box on one
-   record while the map that shows all 47 got the other half.
+/* ── THE INTELLIGENCE MAP FIELD (ADR-056 U13 → U17) ───────────────────────
+   One persistent field of 47 tiles, three projections, and a FLIP morph
+   between them. The tiles are flat children of ONE supergrid whose
+   template changes per projection; their cells come from
+   `skillsFieldLayout.ts` as pure integer math, so nothing here measures
+   anything and a resize reflows natively.
+
+   ⚠ THE repeat() COUNTS BELOW ARE SHARED CONSTANTS. SUB_COLS 14, TEAM_COLS
+   7, ALLOC_MICRO 7 and ALLOC_ROWS 6 live in the layout module too. A
+   placement outside a declared template does not error — it creates an
+   implicit track and silently deforms the lattice, which is what
+   `tests/lib/skills-field-layout.test.ts` exists to catch.
 
    ⚠ FOURTH pointer-events opt-in on the casefile host (rules/proof.md) —
    safe only because the host is `visibility: hidden` until
@@ -1111,87 +1117,135 @@
   min-height: 0;
 }
 
-/* Tile metrics PER AXIS. `shape` is 5 rows of up to 14; `team` is 14 rows
-   of up to 7, so its tiles run wider and shorter. The `svh` middle terms
-   bind at 800h and the ceilings are headroom for tall viewports — the U14
-   lesson: this box is 690×240 at 1440×800 but 862×429 at 2017×1269, so a
-   fixed size strands the lattice at one end or clips it at the other. */
-.fl-skills[data-axis="shape"] {
+/* Tile metrics per projection. The `svh` middle terms bind at 800h and the
+   ceilings are headroom for tall viewports — the U14 lesson: this box is
+   690×240 at 1440×800 but 862×429 at 2017×1269, so a fixed size strands
+   the field at one end or clips it at the other. NEVER raise an `svh`
+   COEFFICIENT to buy presence; that is the lever that bites at 800h. */
+.fl-skills[data-proj="substrate"] {
   --fl-tile-h: clamp(18px, 2.9svh, 44px);
-  --fl-tile-w: clamp(32px, 3.3vw, 54px);
   --fl-tile-gap: 3px;
+  --fl-row-gap: clamp(3px, 0.7svh, 14px);
 }
-.fl-skills[data-axis="team"] {
+.fl-skills[data-proj="team"] {
   --fl-tile-h: clamp(9px, 1.35svh, 20px);
-  --fl-tile-w: clamp(56px, 6.2vw, 104px);
   --fl-tile-gap: 3px;
+  --fl-row-gap: clamp(1px, 0.35svh, 5px);
 }
-/* ROW GAP IS PER AXIS, and the team axis is the tight one: 14 rows against
-   a stage that is 144px at 1440×800 and 313px at 2017×1269. The shape axis
-   has five rows in the same space and can afford to breathe. Both were
-   measured, not guessed — a shared gap put the team lattice 46px and 121px
-   over its stage respectively, which the plate's own `overflow: hidden`
-   swallowed in silence. */
-.fl-skills[data-axis="shape"] .fl-skills__rows {
-  row-gap: clamp(3px, 0.7svh, 14px);
+.fl-skills[data-proj="allocation"] {
+  --fl-tile-h: clamp(9px, 1.15svh, 14px);
+  --fl-tile-gap: 2px;
+  --fl-row-gap: 2px;
 }
-.fl-skills[data-axis="team"] .fl-skills__rows {
-  row-gap: clamp(1px, 0.35svh, 5px);
-}
-/* Tall viewports get a bigger shape lattice, but only there: the `svh`
-   term below is what binds at 800h, where there is no slack at all. */
 @media (min-height: 1000px) {
-  .fl-skills[data-axis="shape"] {
+  .fl-skills[data-proj="substrate"] {
     --fl-tile-h: clamp(30px, 3.7svh, 56px);
-  }
-  .fl-skills[data-axis="shape"] .fl-skills__rows {
-    row-gap: clamp(8px, 1.1svh, 20px);
+    --fl-row-gap: clamp(8px, 1.1svh, 20px);
   }
 }
 
+/* ── Head: projection tabs, the name register, one legend ─────────────── */
 .fl-skills__head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   padding-bottom: clamp(6px, 0.9svh, 10px);
   border-bottom: 1px dotted rgba(var(--gold-rgb), 0.14);
 }
-.fl-skills__axis {
+.fl-skills__views {
   display: flex;
   gap: 3px;
   flex: none;
 }
-.fl-skills__axbtn {
+.fl-skills__viewbtn {
   appearance: none;
-  border: 1px solid transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
   background: transparent;
-  padding: 2px 7px;
+  padding: 2px 8px 3px;
   cursor: pointer;
   font-family: var(--fl-mono);
   font-size: 8.5px;
+  line-height: 1;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.42);
+  transition: color 0.14s ease-out;
 }
-.fl-skills__axbtn[data-on] {
+.fl-skills__viewbtn:hover {
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+.fl-skills__viewbtn[data-on] {
   color: var(--gold);
-  border-color: rgba(var(--gold-rgb), 0.4);
+  border-bottom-color: rgba(var(--gold-rgb), 0.55);
 }
-.fl-skills__axbtn:focus-visible {
+.fl-skills__viewbtn:focus-visible {
   outline: 1px solid rgba(var(--gold-rgb), 0.6);
   outline-offset: 1px;
 }
-/* The fill scale is the lattice's legend — CHROME, at the chrome floor.
-   Without it the maturity gradient is decoration a reader cannot decode. */
+
+/* THE NAME REGISTER. The tiles carry a symbol, not a name, so without
+   this the field is mute to anyone seeing it for the first time. It is lit
+   on arrival (Skill 01) and streams as the pointer sweeps. Truncates
+   before it ever wraps — the head is a single line by contract. */
+.fl-skills__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--fl-mono);
+  line-height: 1;
+}
+.fl-skills__name-ord {
+  flex: none;
+  font-size: 8.5px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(var(--gold-rgb), 0.7);
+}
+/* CONTENT — the Skill's name at the directory reading size, never chrome. */
+.fl-skills__name-txt {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+/* The META YIELDS FIRST. A high shrink factor makes the team/status tail
+   collapse before the NAME truncates — the name is the thing a first-time
+   reader came for, and the foot and the panel both repeat the tail. */
+.fl-skills__name-meta {
+  flex: 0 100 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: normal;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb), 0.38);
+}
+
+/* The fill scale is the field's legend, and it is content: without it the
+   gradient is decoration a reader cannot decode. */
 .fl-skills__key {
   display: flex;
   align-items: center;
   gap: 9px;
+  flex: none;
   min-width: 0;
   overflow: hidden;
   font-family: var(--fl-mono);
   font-size: 8.5px;
+  line-height: 1;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1208,9 +1262,16 @@
   flex: none;
   border: 1px solid rgba(var(--gold-rgb), 0.4);
 }
-/* The allocation legend keys on `data-kind`, and a swatch with no fill is
-   an empty box that decodes nothing — the same defect the lifecycle legend
-   shipped with once. Alphas match the bars exactly. */
+.fl-skills__key-sw[data-fill="build"] {
+  background: rgba(var(--gold-rgb), 0.2);
+}
+.fl-skills__key-sw[data-fill="use"] {
+  background: rgba(var(--gold-rgb), 0.42);
+}
+.fl-skills__key-sw[data-fill="ship"] {
+  background: rgba(var(--gold-rgb), 0.62);
+  border-color: rgba(var(--gold-rgb), 0.85);
+}
 .fl-skills__key-sw[data-kind="reach"] {
   background: rgba(var(--gold-rgb), 0.28);
 }
@@ -1218,33 +1279,47 @@
   background: rgba(var(--gold-rgb), 0.62);
 }
 
+/* ── The stage and the field ──────────────────────────────────────────── */
 .fl-skills__stage {
   position: relative;
   flex: 1;
   min-height: 0;
   padding-top: clamp(6px, 1.2svh, 14px);
+  overflow: hidden;
 }
-/* ONE GRID FOR EVERY ROW (the rows are `display: contents`), so the label
-   column is sized once and every track starts on the same x. Give each row
-   its own grid and the labels size independently — at which point the
-   tracks no longer start together and the lattice stops being comparable,
-   which is the entire point of it. */
-.fl-skills__rows {
+.fl-skills__field {
   height: 100%;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 18px;
   align-content: center;
   align-items: center;
-  column-gap: 9px;
+  column-gap: var(--fl-tile-gap);
+  row-gap: var(--fl-row-gap);
 }
-.fl-skills__row {
-  display: contents;
+/* SUBSTRATE — label · 14 tile tracks · count. */
+.fl-skills__field[data-proj="substrate"] {
+  grid-template-columns: auto repeat(14, minmax(0, 1fr)) 18px;
+  grid-template-rows: repeat(5, var(--fl-tile-h));
 }
+/* TEAM — label · 7 tile tracks · count · band. */
+.fl-skills__field[data-proj="team"] {
+  grid-template-columns: auto repeat(7, minmax(0, 1fr)) 18px 10px;
+  grid-template-rows: repeat(14, var(--fl-tile-h));
+}
+/* ALLOCATION — four tier columns of 7 micro-tracks, 8px gutters between,
+   then the litmus rail. Head row + six cell rows (Everyday needs five). */
+.fl-skills__field[data-proj="allocation"] {
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr)) 8px repeat(7, minmax(0, 1fr)) 8px
+    repeat(7, minmax(0, 1fr)) 8px repeat(7, minmax(0, 1fr))
+    clamp(216px, 42%, 300px);
+  grid-template-rows: auto repeat(6, var(--fl-tile-h));
+  column-gap: 2px;
+}
+
 /* ⚠ `line-height: 1` HERE IS LOAD-BEARING, on this and on the count. Each
    grid row is as tall as its TALLEST item, and a default line box on 10px
    mono is 15px — taller than a 9px team tile, which silently set the team
-   lattice's row height and put it 46px over its stage. The tile must be
-   what sizes the row. */
+   lattice's row height and put it 46px over its stage (U15). */
 .fl-skills__row-name {
   font-family: var(--fl-mono);
   font-size: 8.5px;
@@ -1254,27 +1329,39 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding-right: 6px;
   color: rgba(var(--dawn-rgb), 0.45);
-  transition: color 0.14s ease-out;
 }
-.fl-skills__row[data-on] .fl-skills__row-name {
-  color: var(--gold);
+.fl-skills__row-count {
+  font-family: var(--fl-mono);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding-left: 6px;
+  color: rgba(var(--dawn-rgb), 0.45);
 }
-.fl-skills__track {
-  display: flex;
-  gap: var(--fl-tile-gap);
-  min-width: 0;
+/* THE GRADIENT: a team's draw band, on the team projection only. Same
+   four-step gold scale as the lifecycle fills, so one legend serves both. */
+.fl-skills__band {
+  width: 10px;
+  height: 10px;
+  justify-self: end;
+  border: 1px solid rgba(var(--gold-rgb), 0.3);
+}
+.fl-skills__band[data-band="steady"] {
+  background: rgba(var(--gold-rgb), 0.2);
+}
+.fl-skills__band[data-band="deep"] {
+  background: rgba(var(--gold-rgb), 0.42);
+}
+.fl-skills__band[data-band="intensive"] {
+  background: rgba(var(--gold-rgb), 0.62);
+  border-color: rgba(var(--gold-rgb), 0.85);
 }
 
-/* ONE TILE = ONE SKILL. `flex: 1 1 0` over a track PADDED WITH GHOSTS to
-   the widest row is what makes a tile mean the same width in every row
-   without measuring anything (see SkillsBrowserPlate). */
-.fl-skills__tile,
-.fl-skills__ghost {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: var(--fl-tile-w);
-}
+/* ── The tile — one per Skill, persistent across every projection ─────── */
 .fl-skills__tile {
   position: relative;
   appearance: none;
@@ -1289,29 +1376,44 @@
   background: transparent;
   color: rgba(var(--dawn-rgb), 0.82);
   font-family: var(--fl-mono);
+  /* Top-left origin: the FLIP's scale math is computed from that corner. */
+  transform-origin: 0 0;
   transition:
     background-color 0.14s ease-out,
     border-color 0.14s ease-out,
     transform 0.14s ease-out;
 }
-/* LIFECYCLE IS THE FILL, and rows sort most-shipped-first: a row's solid
-   head is what runs today, its hollow tail what does not yet.
-
-   ⚠ THE RAMP STOPS AT 0.62 ON PURPOSE. `--dawn-rgb` is the INK and it
-   flips per theme (cream in dark, 17/15/9 in light) while `--gold-rgb`
-   does not, so a near-solid gold flood puts CREAM ON GOLD in dark mode.
-   At 0.62 the symbol reads in both themes off one token; Shipped earns its
-   extra step from the border instead. */
-.fl-skills__tile[data-fill="build"],
-.fl-skills__key-sw[data-fill="build"] {
+/* LIFECYCLE IS THE FILL on substrate and team, and rows sort
+   most-shipped-first, so a row's solid head is what runs today.
+   ⚠ THE RAMP STOPS AT 0.62: `--dawn-rgb` is the ink and flips per theme
+   while `--gold-rgb` does not, so a near-solid flood puts CREAM ON GOLD in
+   dark mode. Shipped earns its extra step from the border. */
+.fl-skills__tile[data-fill="build"] {
   background: rgba(var(--gold-rgb), 0.2);
 }
-.fl-skills__tile[data-fill="use"],
-.fl-skills__key-sw[data-fill="use"] {
+.fl-skills__tile[data-fill="use"] {
   background: rgba(var(--gold-rgb), 0.42);
 }
-.fl-skills__tile[data-fill="ship"],
-.fl-skills__key-sw[data-fill="ship"] {
+.fl-skills__tile[data-fill="ship"] {
+  background: rgba(var(--gold-rgb), 0.62);
+  border-color: rgba(var(--gold-rgb), 0.85);
+}
+/* IN ALLOCATION THE FILL BECOMES CONSUMPTION — the same tiles, re-inked
+   from lifecycle to the team's draw band. The crossfade rides the morph
+   transition, so the heat map arrives with the flight. */
+.fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="light"] {
+  background: transparent;
+  border-color: rgba(var(--gold-rgb), 0.3);
+}
+.fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="steady"] {
+  background: rgba(var(--gold-rgb), 0.2);
+  border-color: rgba(var(--gold-rgb), 0.4);
+}
+.fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="deep"] {
+  background: rgba(var(--gold-rgb), 0.42);
+  border-color: rgba(var(--gold-rgb), 0.5);
+}
+.fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="intensive"] {
   background: rgba(var(--gold-rgb), 0.62);
   border-color: rgba(var(--gold-rgb), 0.85);
 }
@@ -1345,388 +1447,96 @@
   letter-spacing: 0.02em;
   margin-top: 3px;
 }
-/* The COUNT is content — the figure the foot's 47+ decomposes into, at the
-   end of the row a reader can count for themselves. */
-.fl-skills__row-count {
-  font-family: var(--fl-mono);
-  font-size: 10px;
-  line-height: 1;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  color: rgba(var(--dawn-rgb), 0.45);
-  transition: color 0.14s ease-out;
-}
-.fl-skills__row[data-on] .fl-skills__row-count {
-  color: var(--gold);
+/* Heat cells are too small for type; the name register and the aria-label
+   carry identity there. Same call the team axis already makes at ≤900h. */
+.fl-skills[data-proj="allocation"] .fl-skills__ord,
+.fl-skills[data-proj="allocation"] .fl-skills__sym {
+  opacity: 0;
 }
 
-/* THE TEAM AXIS DEGRADES BELOW 900h RATHER THAN CLIPPING (ADR-056 U15).
-   14 rows in the 240px box at 1440×800 leaves ~12.5px a row, which cannot
-   hold an 11px symbol. So the marks go and the lattice thins to fill-only
-   cells — still every Skill, still weighted, still clickable, with the
-   panel carrying the identity. Dropping the bottom rows instead would be
-   exactly the silent clip this surface bans and the smoke catches. */
-@media (max-height: 900px) {
-  .fl-skills[data-axis="team"] {
-    --fl-tile-h: 9px;
-    --fl-tile-gap: 2px;
-  }
-  .fl-skills[data-axis="team"] .fl-skills__rows {
-    row-gap: 1px;
-  }
-  .fl-skills[data-axis="team"] .fl-skills__ord,
-  .fl-skills[data-axis="team"] .fl-skills__sym {
-    display: none;
-  }
-  /* The count comes DOWN to the chrome floor rather than off: at 9px rows
-     a 10px figure is the tallest item again. 8.5px is the floor and this
-     sits on it — never below, and never hidden, because the printed count
-     is what a reader checks the row against. */
-  .fl-skills[data-axis="team"] .fl-skills__row-count {
-    font-size: 8.5px;
-  }
+/* ── THE MORPH ────────────────────────────────────────────────────────────
+   The tiles fly between projections on a FLIP: JS inverts the geometry
+   difference into a transform before paint, then clears it and lets CSS
+   play the difference out. Click-driven only (ADR-021 sanctions the
+   click-driven slide; a wall clock is what it bans).
+
+   `will-change` is scoped to the flight — 47 permanent promotions would
+   roughly triple this surface's ~14-layer budget. The stagger rides a
+   single custom property, so there are no per-tile JS timers. */
+.fl-skills__field[data-morph] .fl-skills__tile {
+  transition:
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 450ms ease-out,
+    border-color 450ms ease-out;
+  transition-delay: var(--fl-fly-delay, 0ms);
+  will-change: transform;
+  /* The hover lift must not fight a flight in progress. */
+  pointer-events: none;
+}
+/* Text leaves as its own tile lifts off and returns when it lands, so the
+   symbol never smears through the scale. */
+.fl-skills__field[data-morph] .fl-skills__ord,
+.fl-skills__field[data-morph] .fl-skills__sym {
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  transition-delay: var(--fl-fly-delay, 0ms);
+}
+.fl-skills__ord,
+.fl-skills__sym {
+  transition: opacity 160ms ease-out 40ms;
 }
 
-/* ── The panel, over the lattice ────────────────────────────────────────
-   Absolutely positioned INSIDE the stage and clamped to it by the
-   component. It cannot escape: the plate is `overflow: hidden` and
-   `.fl-case` carries the iris `clip-path`, so a clipped ancestor becomes
-   the containing block even for `position: fixed` — anything that must
-   get out has to portal, like the film lightbox. Grammar is ADR-006's
-   focus overlay at landing scope: `modalFocusIn` on the CONTENT, radius 0,
-   the mandated three-part shadow. */
-.fl-skills__pop {
-  position: absolute;
-  z-index: 6;
-  width: min(300px, 100%);
-  padding: 9px 11px 11px;
-  background: rgba(var(--void-deep-rgb), 0.97);
-  border: 1px solid rgba(var(--gold-rgb), 0.45);
-  box-shadow:
-    0 0 0 1px rgba(var(--dawn-rgb), 0.05),
-    0 0 40px rgba(var(--gold-rgb), 0.1),
-    0 18px 44px rgba(0, 0, 0, 0.6);
-  animation: modalFocusIn 0.18s ease-out;
-}
-.fl-skills__pop-top {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.fl-skills__pop-engine {
-  color: var(--gold);
-}
-.fl-skills__pop-status {
-  color: rgba(var(--dawn-rgb), 0.5);
-}
-.fl-skills__pop-status[data-fill="use"],
-.fl-skills__pop-status[data-fill="ship"] {
-  color: rgba(var(--gold-rgb), 0.85);
-}
-.fl-skills__pop-ord {
-  margin-left: auto;
-  color: rgba(var(--dawn-rgb), 0.35);
-  font-variant-numeric: tabular-nums;
-}
-.fl-skills__pop-name {
-  margin: 7px 0 0;
-  font-family: var(--fl-mono);
-  font-size: clamp(12px, 0.95vw, 15px);
-  font-weight: 400;
-  line-height: 1.2;
-  color: var(--dawn);
-}
-.fl-skills__pop-team {
-  margin: 4px 0 0;
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.42);
-}
-/* CONTENT — the brief's own size, never a chrome size. */
-.fl-skills__pop-body {
-  margin: 8px 0 0;
-  font-size: calc(var(--fl-copy) * 0.88);
-  line-height: 1.45;
-  color: rgba(var(--dawn-rgb), 0.82);
-}
-
-/* The readout pins to the plate FOOT (margin-top auto) so it sits in the
-   same optical slot every plate kind reserves for one. It NAMES WHAT THE
-   HAND IS ON: the tiles carry a symbol, not a name, so this line is what
-   makes the lattice readable by sweeping it rather than by clicking. */
-.fl-skills__readout {
-  margin: auto 0 0;
-  padding-top: clamp(6px, 1svh, 11px);
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  border-top: 1px dotted rgba(var(--gold-rgb), 0.14);
-  font-family: var(--fl-mono);
-  text-transform: uppercase;
-}
-/* Both ends TRUNCATE: a Skill name is up to 30 characters and a team up to
-   28, and this line must never wrap — it is height-boxed like everything
-   else on this surface. */
-/* THE LEADER ABSORBS THE SLACK, not the type: `flex: 1 1 12px` on the rule
-   against `0 1 auto` on both labels means a Skill name is only truncated
-   once the row genuinely runs out, instead of being clipped while a dotted
-   line takes half the width. */
-.fl-skills__readout-team {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  color: rgba(var(--dawn-rgb), 0.72);
-}
-.fl-skills__readout-ld {
-  flex: 1 1 12px;
-  min-width: 12px;
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.25);
-  transform: translateY(-3px);
-}
-.fl-skills__readout-status {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 8.5px;
-  letter-spacing: 0.18em;
-  color: rgba(var(--gold-rgb), 0.8);
-}
-
-/* ── The map's VIEW TABS and the team gradient (ADR-056 U16) ──────────────
-   The lattice became one of three projections of a single dataset: SKILLS
-   (the periodic table), STACK (the configuration as layers) and ALLOCATION
-   (reach against draw). The tabs are the coarse control and lead the head;
-   the substrate/team toggle is a sub-filter of the lattice ALONE and only
-   renders on that view, together with the one legend that decodes it.
-
-   Metric discipline is U15's and does not change: `svh` middle terms bind
-   at 800h and the ceilings are headroom for tall viewports only. Never
-   raise an `svh` COEFFICIENT to buy presence — that is the one lever that
-   bites at 1440x800, where the stage is 144px. */
-.fl-skills__views {
-  display: flex;
-  gap: 3px;
-  flex: none;
-  margin-right: auto;
-}
-.fl-skills__viewbtn {
-  appearance: none;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  background: transparent;
-  padding: 2px 8px 3px;
-  cursor: pointer;
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  line-height: 1;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.42);
-  transition: color 0.14s ease-out;
-}
-.fl-skills__viewbtn:hover {
-  color: rgba(var(--dawn-rgb), 0.72);
-}
-.fl-skills__viewbtn[data-on] {
-  color: var(--gold);
-  border-bottom-color: rgba(var(--gold-rgb), 0.55);
-}
-.fl-skills__viewbtn:focus-visible {
-  outline: 1px solid rgba(var(--gold-rgb), 0.6);
-  outline-offset: 1px;
-}
-/* The axis toggle stops being the leftmost control once tabs exist. */
-.fl-skills__views ~ .fl-skills__axis {
-  margin-right: 0;
-}
-
-/* THE GRADIENT: one team's draw band, on the team axis only. Four steps on
-   the SAME fill scale as the lifecycle tiles, so the plate never asks a
-   reader to learn two colour languages. */
-.fl-skills__band {
-  width: 10px;
-  height: 10px;
-  flex: none;
-  justify-self: end;
-  border: 1px solid rgba(var(--gold-rgb), 0.3);
-}
-.fl-skills__band[data-band="steady"] {
-  background: rgba(var(--gold-rgb), 0.2);
-}
-.fl-skills__band[data-band="deep"] {
-  background: rgba(var(--gold-rgb), 0.42);
-}
-.fl-skills__band[data-band="intensive"] {
-  background: rgba(var(--gold-rgb), 0.62);
-  border-color: rgba(var(--gold-rgb), 0.85);
-}
-/* The team axis grows a fourth column for it. */
-.fl-skills[data-axis="team"] .fl-skills__rows {
-  grid-template-columns: auto minmax(0, 1fr) 18px 10px;
-}
-
-/* ── STACK: the configuration, layer by layer ──────────────────────────
-   The quietest view on purpose. It is an inventory, and an inventory that
-   tries to be a chart is exactly the overwhelm this plate avoids. */
-.fl-skills__stack {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: repeat(4, minmax(0, 1fr));
-  align-content: center;
-  gap: clamp(4px, 0.9svh, 14px);
-  padding-top: clamp(6px, 1.2svh, 14px);
-}
-.fl-skills__layer {
-  display: grid;
-  grid-template-columns: clamp(38px, 4vw, 62px) minmax(0, 1fr);
-  align-items: center;
-  column-gap: clamp(8px, 1vw, 14px);
-  min-height: 0;
-  padding-bottom: clamp(3px, 0.6svh, 8px);
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.14);
-}
-.fl-skills__layer:last-child {
-  border-bottom: 0;
-}
-/* The count is the only display type on this view. */
-.fl-skills__layer-count {
-  font-family: var(--fl-mono);
-  font-size: clamp(15px, 1.5svh, 24px);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  color: var(--gold);
-}
-.fl-skills__layer-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-.fl-skills__layer-name {
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  line-height: 1;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.5);
-}
-/* CONTENT, so it reads at the copy size and truncates rather than shrinks. */
-.fl-skills__layer-gloss {
-  font-size: calc(var(--fl-copy) * 0.84);
-  line-height: 1.3;
-  color: rgba(var(--dawn-rgb), 0.78);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-/* Own line, full width, single row — no chip is ever half-rendered. */
-.fl-skills__layer-items {
-  display: flex;
-  gap: 4px;
-  margin-top: 2px;
-  min-width: 0;
-  overflow: hidden;
-}
-.fl-skills__layer-chip {
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  line-height: 1;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  padding: 3px 6px;
-  border: 1px solid rgba(var(--gold-rgb), 0.28);
-  color: rgba(var(--dawn-rgb), 0.6);
-}
-
-/* ── ALLOCATION: reach against draw, and why ───────────────────────────
-   TWO BARS PER RUNG is the whole argument. One bar would be a usage chart;
-   the pair makes the inversion visible — reach mass at the top, draw mass
-   at the bottom — and the reads column says why that is correct rather
-   than wasteful. */
-.fl-skills__alloc {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 55% minmax(0, 1fr);
-  column-gap: clamp(12px, 1.5vw, 24px);
-  padding-top: clamp(6px, 1.2svh, 14px);
-}
-.fl-skills__ladder {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(4px, 0.9svh, 12px);
-  min-height: 0;
-  padding-right: clamp(10px, 1.2vw, 18px);
-  border-right: 1px dotted rgba(var(--gold-rgb), 0.18);
-}
-.fl-skills__rung {
-  display: grid;
-  /* Sized to the longest NOTE, not the longest name: "reasoning-heavy
-     work" is 20 characters and was the one that truncated. */
-  grid-template-columns: clamp(80px, 8.6vw, 126px) minmax(0, 1fr);
-  align-items: center;
-  column-gap: 9px;
-}
-.fl-skills__rung-head {
+/* ── ALLOCATION: the tier column heads ────────────────────────────────── */
+.fl-skills__chead {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  padding-bottom: 4px;
+  align-self: end;
 }
-.fl-skills__rung-name {
+.fl-skills__chead-name {
   font-family: var(--fl-mono);
   font-size: 10px;
   line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.8);
-}
-.fl-skills__rung-note {
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  line-height: 1;
-  /* Tracking, not size, is what buys the last few characters here — the
-     ADR-056 U9 lever. 0.08em cost this column ~14px on a 20-char note. */
-  letter-spacing: 0.03em;
-  color: rgba(var(--dawn-rgb), 0.38);
-  overflow: hidden;
   white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Two clamped lines: "reasoning-heavy" fills an ~87px head on one, and a
+   3-line note would push the cells past the stage. */
+.fl-skills__chead-note {
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  color: rgba(var(--dawn-rgb), 0.38);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+/* TWO BARS PER HEAD, never one: the pair IS the argument, because the gap
+   between reach and draw is the finding. */
 .fl-skills__bars {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
+  margin-top: 2px;
 }
 .fl-skills__bar-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px;
+  grid-template-columns: minmax(0, 1fr) 22px;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
 }
-/* Scaled by percentage width — no measurement, no canvas, and no
-   wall-clock motion (ADR-021). The track is the dotted rule behind it. */
 .fl-skills__bar {
   position: relative;
-  height: clamp(5px, 0.85svh, 9px);
+  height: 5px;
   border-bottom: 1px dotted rgba(var(--gold-rgb), 0.2);
 }
 .fl-skills__bar::before {
@@ -1736,7 +1546,6 @@
   width: var(--fl-bar, 0%);
   background: rgba(var(--gold-rgb), 0.28);
 }
-/* DRAW is the loud one: it is the number that surprises. */
 .fl-skills__bar[data-kind="draw"]::before {
   background: rgba(var(--gold-rgb), 0.62);
 }
@@ -1747,41 +1556,31 @@
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  color: rgba(var(--dawn-rgb), 0.55);
+  color: rgba(var(--dawn-rgb), 0.5);
 }
 .fl-skills__bar-row:last-child .fl-skills__bar-val {
   color: var(--gold);
 }
-.fl-skills__trend {
-  margin: clamp(3px, 0.7svh, 9px) 0 0;
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  line-height: 1;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.38);
-  white-space: nowrap;
-  overflow: hidden;
-}
-.fl-skills__trend-pt {
-  color: rgba(var(--gold-rgb), 0.8);
-}
-.fl-skills__trend-pt i {
-  font-style: normal;
-  margin-right: 4px;
-  color: rgba(var(--dawn-rgb), 0.35);
+/* The empty tier says why it is empty. CONTENT, at the reading floor. */
+.fl-skills__cnote {
+  margin: 0;
+  align-self: start;
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: rgba(var(--dawn-rgb), 0.45);
 }
 
-.fl-skills__reads {
+/* ── ALLOCATION: the litmus rail ──────────────────────────────────────── */
+.fl-skills__rail {
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: clamp(6px, 1.2svh, 16px);
   min-height: 0;
   overflow: hidden;
+  padding-left: clamp(12px, 1.5vw, 22px);
+  margin-left: clamp(10px, 1.2vw, 18px);
+  border-left: 1px dotted rgba(var(--gold-rgb), 0.18);
 }
 .fl-skills__read-top {
   display: flex;
@@ -1821,29 +1620,248 @@
   -webkit-line-clamp: 3;
   overflow: hidden;
 }
+.fl-skills__trend {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.38);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.fl-skills__trend-pt {
+  color: rgba(var(--gold-rgb), 0.8);
+}
+.fl-skills__trend-pt i {
+  font-style: normal;
+  margin-right: 4px;
+  color: rgba(var(--dawn-rgb), 0.35);
+}
 
-/* SHORT VIEWPORTS drop the decoration, never the argument. The chips and
-   the trend line are the two things that carry no claim of their own. */
+/* ── THE SLIDE PANEL (owner, 2026-08-03: "there shouldn't be a pop-up.
+   They should slide a panel on the right side inwards... the same height,
+   but it just slides inwards, and it can be a bit transparent") ─────────
+   It lives INSIDE the stage, which is what makes it simple: the plate's
+   `overflow: hidden` and the case's iris `clip-path` would trap anything
+   that tried to escape (the film lightbox portals to `document.body` for
+   exactly that reason), so this never tries. Rest state is UNMOUNTED, so
+   the zero-at-rest law holds trivially. */
+.fl-skills__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  width: min(300px, 46%);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px 12px;
+  /* A bit transparent, not fully: the lattice stays legible behind it, so
+     the panel reads as a drawer over the map rather than a new screen. */
+  background: rgba(var(--void-deep-rgb), 0.88);
+  border-left: 1px solid rgba(var(--gold-rgb), 0.45);
+  box-shadow: -18px 0 44px rgba(0, 0, 0, 0.45);
+  animation: flPanelIn 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* Same silent-clip contract as every other box here: the panel is the
+     stage's height and its copy has to fit, not spill over the tier line. */
+  overflow: hidden;
+}
+/* The blur samples the backdrop every frame, so it waits for the settled
+   gate exactly like the other plates' glass (ADR-056 U4). */
+@supports (backdrop-filter: blur(6px)) {
+  .services-stage[data-proof-settled] .fl-skills__panel {
+    backdrop-filter: blur(6px);
+  }
+}
+@keyframes flPanelIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.fl-skills__panel-top {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.fl-skills__panel-engine {
+  color: var(--gold);
+}
+.fl-skills__panel-status {
+  color: rgba(var(--dawn-rgb), 0.5);
+}
+.fl-skills__panel-status[data-fill="use"],
+.fl-skills__panel-status[data-fill="ship"] {
+  color: rgba(var(--gold-rgb), 0.85);
+}
+.fl-skills__panel-ord {
+  margin-left: auto;
+  color: rgba(var(--dawn-rgb), 0.35);
+  font-variant-numeric: tabular-nums;
+}
+.fl-skills__panel-name {
+  margin: 8px 0 0;
+  font-family: var(--fl-mono);
+  font-size: clamp(12px, 0.95vw, 15px);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--dawn);
+}
+.fl-skills__panel-team {
+  margin: 4px 0 0;
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.42);
+}
+/* CONTENT — the brief's own size, never a chrome size. */
+.fl-skills__panel-body {
+  margin: 9px 0 0;
+  /* `min-height: 0` lets flex actually shrink it — without it the clamp is
+     advisory and the copy runs over the tier line below. */
+  min-height: 0;
+  font-size: calc(var(--fl-copy) * 0.86);
+  line-height: 1.45;
+  color: rgba(var(--dawn-rgb), 0.82);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}
+.fl-skills__panel-tier {
+  margin: 8px 0 0;
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--gold-rgb), 0.75);
+}
+/* IN the top line, not below the copy: the panel is the stage's 144px at
+   800h and a bottom-anchored button costs a line the summary needs. */
+.fl-skills__panel-close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 0 0 8px;
+  cursor: pointer;
+  font-family: var(--fl-mono);
+  font-size: 10px;
+  line-height: 1;
+  color: rgba(var(--dawn-rgb), 0.45);
+  transition: color 0.14s ease-out;
+}
+.fl-skills__panel-close:hover {
+  color: var(--gold);
+}
+.fl-skills__panel-close:focus-visible {
+  outline: 1px solid rgba(var(--gold-rgb), 0.6);
+  outline-offset: 1px;
+}
+
+/* ── The foot readout ─────────────────────────────────────────────────── */
+.fl-skills__readout {
+  margin: auto 0 0;
+  padding-top: clamp(6px, 1svh, 11px);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  border-top: 1px dotted rgba(var(--gold-rgb), 0.14);
+  font-family: var(--fl-mono);
+  text-transform: uppercase;
+}
+/* The leader absorbs the slack, not the type. */
+.fl-skills__readout-team {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+.fl-skills__readout-ld {
+  flex: 1 1 12px;
+  min-width: 12px;
+  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.25);
+  transform: translateY(-3px);
+}
+.fl-skills__readout-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  color: rgba(var(--gold-rgb), 0.8);
+}
+
+/* ── Short-viewport rungs ─────────────────────────────────────────────── */
+/* THE TEAM PROJECTION DEGRADES BELOW 900h RATHER THAN CLIPPING: 14 rows in
+   a 240px box leaves ~12.5px a row, which cannot hold an 11px symbol. The
+   marks go and the lattice thins to fill-only cells; every Skill is still
+   there, still weighted, still clickable, with the name register carrying
+   identity. Dropping rows instead would be the silent clip this surface
+   bans and the smoke catches. */
 @media (max-height: 900px) {
-  .fl-skills__layer-items,
+  .fl-skills[data-proj="team"] {
+    --fl-tile-h: 9px;
+    --fl-tile-gap: 2px;
+    --fl-row-gap: 1px;
+  }
+  .fl-skills[data-proj="team"] .fl-skills__ord,
+  .fl-skills[data-proj="team"] .fl-skills__sym {
+    opacity: 0;
+  }
+  /* The count comes DOWN to the chrome floor rather than off: at 9px rows
+     a 10px figure is the tallest item again. */
+  .fl-skills[data-proj="team"] .fl-skills__row-count {
+    font-size: 8.5px;
+  }
+  /* The band would set the row height at 9px rows. */
+  .fl-skills[data-proj="team"] .fl-skills__band {
+    display: none;
+  }
+  .fl-skills__field[data-proj="team"] {
+    grid-template-columns: auto repeat(7, minmax(0, 1fr)) 18px;
+  }
   .fl-skills__trend {
     display: none;
   }
-  /* At 9px team rows the band would be the tallest thing in the row and
-     would set the row height — the U15 line-box trap, in another shape. */
-  .fl-skills[data-axis="team"] .fl-skills__band {
+  /* THE PANEL IS THE STAGE'S 144px HERE. Measured: six clamped lines plus
+     the tier line ran the summary straight over it. The summary is the
+     point of the panel, so the tier line goes and the copy clamps — the
+     name register and the foot still carry the same facts. */
+  .fl-skills__panel-tier {
     display: none;
   }
-  .fl-skills[data-axis="team"] .fl-skills__rows {
-    grid-template-columns: auto minmax(0, 1fr) 18px;
+  .fl-skills__panel-body {
+    -webkit-line-clamp: 3;
   }
 }
-/* THE READS COLUMN IS THE TIGHT ONE at 800h: three entries of a head plus
-   two clamped lines against a 144px stage. Measured at 8px over before this
-   rung. Density comes out of leading and gap, never out of the type — the
-   why is CONTENT and stays above the 10.5px floor (0.8 × --fl-copy ≈ 12px). */
+/* The rail is the tight column at 800h: three reads of a head plus two
+   clamped lines against a 144px stage. Density comes out of leading and
+   gap, never out of the type — the why is CONTENT and stays above the
+   10.5px floor (0.8 × --fl-copy ≈ 12px). */
 @media (max-height: 800px) {
-  .fl-skills__reads {
+  .fl-skills__rail {
     gap: 4px;
   }
   .fl-skills__read-why {
@@ -1851,6 +1869,19 @@
     font-size: calc(var(--fl-copy) * 0.8);
     line-height: 1.32;
     -webkit-line-clamp: 2;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .fl-skills__field[data-morph] .fl-skills__tile,
+  .fl-skills__tile,
+  .fl-skills__ord,
+  .fl-skills__sym {
+    transition: none;
+  }
+  .fl-skills__panel {
+    animation: none;
   }
 }
 

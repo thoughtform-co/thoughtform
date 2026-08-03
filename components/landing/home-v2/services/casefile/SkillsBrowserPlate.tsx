@@ -9,43 +9,49 @@ import type {
   CaseTeamDraw,
 } from "@/lib/cases/types";
 
-import { IntelligenceAllocationView } from "./IntelligenceAllocationView";
-import { IntelligenceStackView } from "./IntelligenceStackView";
 import { skillSymbol } from "./skillSymbol";
+import {
+  ALLOC_MICRO,
+  countColumn,
+  projectField,
+  type PlacedSkill,
+  type Projection,
+} from "./skillsFieldLayout";
 
 /**
- * SkillsBrowserPlate — the Intelligence Map plate as a LATTICE (ADR-056 U15;
- * owner: "maybe we don't need the right panel ... visualize them across
- * substrate / team like we had it in aether, and when you click on them a
- * panel appears above it that shows the content ... like the periodic table
- * of Mendeleev but not exactly").
+ * SkillsBrowserPlate — the Intelligence Map as ONE PERSISTENT FIELD that
+ * morphs between three projections (ADR-056 U17; owner: "I want the same
+ * artifacts, which are the skills in those squares, to morph, not just
+ * shift positions into new configurations... in a way that fits how we're
+ * building this Intelligence Map, the way it's clustered, maybe
+ * transforming into a heat map").
  *
- * U14 split the plate into a map and a permanent dossier. The dossier spent
- * half of a 690×240 box on ONE record, so the map — the part that shows all
- * 47 — got 290px of it. This gives the whole box back to the lattice and
- * makes the detail transient: click a tile, a panel opens over the lattice.
+ * THREE PROJECTIONS OF ONE DATASET, on one selector:
+ *   · SUBSTRATE — 5 rows by shape of work. The default.
+ *   · TEAM — 14 rows, each carrying its consumption band.
+ *   · ALLOCATION — the tiles regroup under the four capability tiers their
+ *     team leans on and shrink to heat cells; the column heads carry the
+ *     reach-against-draw pair. The clusters are deliberately lopsided: the
+ *     Skills mass sits on Everyday while the consumption mass sits on Deep
+ *     and Frontier, and that gap IS the argument.
  *
- * EVERY SKILL IS A TILE with its ordinal and a symbol (`skillSymbol`), so the
- * portfolio reads as a table of elements rather than a bar of anonymous
- * cells. The ordinal is the Skill's index in registry order and is STABLE
- * ACROSS AXES — it is the tile's identity, the way an atomic number is.
+ * THE MORPH IS THE POINT, and it is why the DOM is flat. All 47 tiles are
+ * direct children of one supergrid, keyed by name, in ordinal order, in
+ * every projection — React never remounts them, so the same elements can
+ * fly. `skillsFieldLayout` says which grid cell each lands in; a FLIP
+ * inverts the difference and lets CSS play it back.
  *
- * TWO AXES, ONE LATTICE. `shape` gives 5 rows × up to 14 (tall tiles);
- * `team` gives 14 rows × up to 7 (short, wide tiles). Same markup, same
- * ghost-padded tracks, different reflow.
+ * ⚠ CHILD ORDER IS INVARIANT: 47 tiles, then one chrome node. If chrome
+ * ever interleaved with tiles per projection, React would MOVE tile nodes
+ * to satisfy order, and `insertBefore` on a connected node cancels a
+ * running transition — the morph would die mid-flight. Grid placement
+ * ignores DOM order, so the chrome still paints where the math puts it.
  *
- * ⚠ THE TEAM AXIS DEGRADES BELOW 900h, deliberately: 14 rows in the 240px
- * box at 1440×800 leaves ~12.5px a row, which cannot hold an 11px symbol.
- * Below that breakpoint the team view drops to thin fill-only cells (CSS
- * does it — see casefile.css) rather than clipping its bottom rows, which
- * this surface's no-silent-clipping contract forbids and the smoke enforces.
- *
- * ⚠ THE POPOVER STAYS INSIDE THE PLATE. It cannot escape: `.fl-plate` is
- * `overflow: hidden` and `.fl-case` carries the iris `clip-path`, and a
- * clipped ancestor becomes the containing block even for `position: fixed`
- * (the film lightbox portals to `document.body` for exactly this reason —
- * rules/proof.md). So it is absolutely positioned within the stage and
- * CLAMPED to it, flipping below the tile when there is no room above.
+ * ⚠ THIS IS NOT THE FLIP ADR-031 REJECTED. That one (`ServicesExitPills`)
+ * flew chips ACROSS THE VIEWPORT between two unrelated surfaces and read
+ * as detached ornament. This is intra-container: the same artifacts
+ * reconfiguring inside one field, which is exactly what the ordinal's
+ * "identity, not position, like an atomic number" contract describes.
  *
  * POINTER EVENTS: `.fl-skills` is the FOURTH opt-in on the casefile host,
  * safe because the host is `visibility: hidden` until `data-proof-live`.
@@ -53,33 +59,11 @@ import { skillSymbol } from "./skillSymbol";
 interface SkillsBrowserPlateProps {
   groups: readonly CaseRegistryGroup[];
   skills: readonly CaseSkillEntry[];
-  /** Presence turns the VIEW TABS on (ADR-056 U16). Absent = the lattice
-   *  alone, which is what a second client without the data would get. */
+  /** Presence turns the ALLOCATION projection on. Absent = the two-way
+   *  lattice, which is what a second client without the data would get. */
   intelligence?: CaseIntelligence;
-  /** Per-team consumption bands for the team axis. */
   teamDraw?: readonly CaseTeamDraw[];
 }
-
-type Axis = "shape" | "team";
-
-/** The three projections of ONE dataset (ADR-056 U16). The lattice leads —
- *  the encoded-judgment portfolio is the richest read and the owner's
- *  default — with the configuration and the allocation one click away. */
-type View = "skills" | "stack" | "allocation";
-
-const VIEW_LABEL: Record<View, string> = {
-  skills: "Skills",
-  stack: "Stack",
-  allocation: "Allocation",
-};
-
-/** Most-shipped-first: a row's solid head is what runs today. */
-const STATUS_RANK: Record<string, number> = {
-  Shipped: 0,
-  "In use": 1,
-  "In build": 2,
-  Scoped: 3,
-};
 
 const STATUS_FILL: Record<string, string> = {
   Shipped: "ship",
@@ -88,12 +72,31 @@ const STATUS_FILL: Record<string, string> = {
   Scoped: "scoped",
 };
 
-/** Gap between the tile and the panel, and the stage's inner margin. */
-const POP_GAP = 7;
+const PROJECTION_LABEL: Record<Projection, string> = {
+  substrate: "Substrate",
+  team: "Team",
+  allocation: "Allocation",
+};
 
-interface Placed {
-  skill: CaseSkillEntry;
-  ordinal: number;
+/** Flight duration, stagger spread, and the cushion before we call it
+ *  settled. Max flight = 450 + 120 = 570ms; the timer adds 60ms of slack
+ *  so the class comes off after the last tile has actually landed. */
+const FLY_MS = 450;
+const STAGGER_MS = 120;
+const SETTLE_MS = FLY_MS + STAGGER_MS + 60;
+
+interface Rect {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
+  );
 }
 
 export function SkillsBrowserPlate({
@@ -102,49 +105,63 @@ export function SkillsBrowserPlate({
   intelligence,
   teamDraw,
 }: SkillsBrowserPlateProps) {
-  const [view, setView] = useState<View>("skills");
-  const [axis, setAxis] = useState<Axis>("shape");
-  const [selected, setSelected] = useState<Placed | null>(null);
-  const [hovered, setHovered] = useState<Placed | null>(null);
+  const canAllocate = Boolean(intelligence?.tiers.length && teamDraw?.length);
+  const projections: Projection[] = canAllocate
+    ? ["substrate", "team", "allocation"]
+    : ["substrate", "team"];
+
+  const [projection, setProjection] = useState<Projection>("substrate");
+  const [selected, setSelected] = useState<PlacedSkill | null>(null);
+  const [hovered, setHovered] = useState<PlacedSkill | null>(null);
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const popRef = useRef<HTMLDivElement>(null);
-  /** The tile that opened the panel — focus returns here on close. */
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const anchorRef = useRef<HTMLButtonElement | null>(null);
+  /** Tile rects captured at click, RELATIVE to the field. */
+  const prevRectsRef = useRef<Map<string, Rect>>(new Map());
+  const settleTimerRef = useRef<number | null>(null);
 
-  /** Ordinal is registry order and never changes with the axis. */
-  const placed = useMemo<Placed[]>(
+  /** Ordinal is registry order and never changes with the projection. */
+  const placed = useMemo<PlacedSkill[]>(
     () => skills.map((skill, i) => ({ skill, ordinal: i + 1 })),
     [skills]
   );
 
-  const rows = useMemo(() => {
-    const order =
-      axis === "shape"
-        ? groups.map((g) => g.name)
-        : // Team order is FIRST APPEARANCE in the registry, which keeps the
-          // lattice stable rather than reshuffling on a copy edit.
-          [...new Set(skills.map((s) => s.team))];
+  const layout = useMemo(
+    () =>
+      projectField({
+        placed,
+        groups,
+        teamDraw,
+        tiers: intelligence?.tiers,
+        projection,
+      }),
+    [placed, groups, teamDraw, intelligence, projection]
+  );
 
-    return order
-      .map((name) => ({
-        name,
-        group: groups.find((g) => g.name === name),
-        items: placed
-          .filter((p) => (axis === "shape" ? p.skill.engine : p.skill.team) === name)
-          .sort((a, b) => (STATUS_RANK[a.skill.status] ?? 9) - (STATUS_RANK[b.skill.status] ?? 9)),
-      }))
-      .filter((r) => r.items.length > 0);
-  }, [axis, groups, skills, placed]);
+  /** Which nav row and cell a skill sits in — the arrow-key model. */
+  const navIndex = useMemo(() => {
+    const m = new Map<string, { row: number; cell: number }>();
+    layout.navRows.forEach((row, r) =>
+      row.forEach((p, c) => m.set(p.skill.name, { row: r, cell: c }))
+    );
+    return m;
+  }, [layout]);
 
-  /** The widest row sets the shared track — see the ghost contract below. */
-  const slots = useMemo(() => rows.reduce((n, r) => Math.max(n, r.items.length), 0), [rows]);
-
-  /** Team → consumption band, for the team axis's gradient column. */
   const bandByTeam = useMemo(
     () => new Map((teamDraw ?? []).map((t) => [t.team, t.band])),
     [teamDraw]
   );
+  const tierByTeam = useMemo(
+    () => new Map((teamDraw ?? []).map((t) => [t.team, t.tier])),
+    [teamDraw]
+  );
+
+  /* THE PLATE IS NEVER NAMELESS (owner: "when you just enter that part of
+     the proof, it doesn't say anything"). With no pointer and nothing
+     picked, the register names the first Skill. */
+  const active = hovered ?? selected ?? placed[0] ?? null;
 
   const close = useCallback((restoreFocus = true) => {
     setSelected(null);
@@ -152,32 +169,105 @@ export function SkillsBrowserPlate({
     anchorRef.current = null;
   }, []);
 
-  /* POSITION AFTER PAINT, not at click time: the panel's height depends on
-     the summary's wrap, so clamping needs its measured box. A layout effect
-     writes the offsets before the browser paints, so it never flashes at the
-     wrong place. */
+  /* ── The morph ─────────────────────────────────────────────────────────
+     Two one-shot measurements, both click-driven — nothing here runs per
+     frame on a surface that sits over live WebGL. */
+
+  const startMorph = (next: Projection) => {
+    if (next === projection) return;
+    close(false);
+
+    if (prefersReducedMotion()) {
+      prevRectsRef.current.clear();
+      setProjection(next);
+      return;
+    }
+
+    const field = fieldRef.current;
+    if (!field) {
+      setProjection(next);
+      return;
+    }
+
+    /* An interrupted flight is captured MID-TRANSFORM, because
+       getBoundingClientRect includes transforms — so a second click
+       retargets from wherever the tiles currently are, for free. */
+    if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
+
+    const fieldRect = field.getBoundingClientRect();
+    const prev = new Map<string, Rect>();
+    field.querySelectorAll<HTMLElement>("[data-fl-skill]").forEach((el) => {
+      const r = el.getBoundingClientRect();
+      prev.set(el.dataset.flSkill ?? "", {
+        // Relative to the field: the plate's ancestor translates during the
+        // casefile's arrival, and relative rects cancel that out.
+        left: r.left - fieldRect.left,
+        top: r.top - fieldRect.top,
+        width: r.width,
+        height: r.height,
+      });
+    });
+    prevRectsRef.current = prev;
+    setProjection(next);
+  };
+
+  /* Invert BEFORE paint, so the first painted frame still shows the old
+     geometry and there is never a flash at the destination. */
   useLayoutEffect(() => {
-    const pop = popRef.current;
-    const stage = stageRef.current;
-    const tile = anchorRef.current;
-    if (!selected || !pop || !stage || !tile) return;
+    const field = fieldRef.current;
+    const prev = prevRectsRef.current;
+    if (!field || prev.size === 0) return;
 
-    const sb = stage.getBoundingClientRect();
-    const tb = tile.getBoundingClientRect();
-    const w = pop.offsetWidth;
-    const h = pop.offsetHeight;
+    const fieldRect = field.getBoundingClientRect();
+    const tiles = Array.from(field.querySelectorAll<HTMLElement>("[data-fl-skill]"));
 
-    const left = Math.max(0, Math.min(tb.left - sb.left + tb.width / 2 - w / 2, sb.width - w));
-    const above = tb.top - sb.top - h - POP_GAP;
-    const below = tb.bottom - sb.top + POP_GAP;
-    const top = above >= 0 ? above : Math.min(below, Math.max(0, sb.height - h));
+    for (const el of tiles) {
+      const before = prev.get(el.dataset.flSkill ?? "");
+      if (!before) continue;
+      const r = el.getBoundingClientRect();
+      const left = r.left - fieldRect.left;
+      const top = r.top - fieldRect.top;
+      const dx = before.left - left;
+      const dy = before.top - top;
+      const sx = r.width > 0 ? before.width / r.width : 1;
+      const sy = r.height > 0 ? before.height / r.height : 1;
+      el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+    }
 
-    pop.style.left = `${Math.round(left)}px`;
-    pop.style.top = `${Math.round(top)}px`;
-  }, [selected]);
+    // Imperative, never rendered: a re-render mid-flight must not clobber it.
+    field.dataset.morph = "1";
+    prevRectsRef.current = new Map();
 
-  /* Escape closes; so does a pointer landing anywhere that is not the panel
-     or its tile. Bound only while open. */
+    let raf2 = 0;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        // Play: the transition runs from the inverted matrix to computed
+        // `none`. The rest state is pure grid layout, never a stored
+        // transform, so zero-at-rest holds even across a mid-flight resize.
+        for (const el of tiles) el.style.transform = "";
+      });
+    });
+
+    settleTimerRef.current = window.setTimeout(() => {
+      delete field.dataset.morph;
+      for (const el of tiles) el.style.transform = "";
+      settleTimerRef.current = null;
+    }, SETTLE_MS);
+
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
+    };
+  }, [projection]);
+
+  useEffect(
+    () => () => {
+      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
+    },
+    []
+  );
+
+  /* Escape closes the panel; so does a pointer landing outside it. */
   useEffect(() => {
     if (!selected) return;
     const onKey = (e: KeyboardEvent) => {
@@ -188,7 +278,7 @@ export function SkillsBrowserPlate({
     };
     const onPointer = (e: PointerEvent) => {
       const t = e.target as Node;
-      if (popRef.current?.contains(t) || anchorRef.current?.contains(t)) return;
+      if (panelRef.current?.contains(t) || anchorRef.current?.contains(t)) return;
       close(false);
     };
     document.addEventListener("keydown", onKey);
@@ -200,25 +290,29 @@ export function SkillsBrowserPlate({
   }, [selected, close]);
 
   const focusTile = (name: string) => {
-    stageRef.current
+    fieldRef.current
       ?.querySelector<HTMLButtonElement>(`[data-fl-skill="${CSS.escape(name)}"]`)
       ?.focus();
   };
 
-  /* ROVING TABINDEX: one tab stop for the lattice, arrows to walk it. */
-  const onTileKeyDown = (e: React.KeyboardEvent, rowIdx: number, cellIdx: number) => {
-    const row = rows[rowIdx];
-    if (!row) return;
-    let next: Placed | undefined;
+  /* ROVING TABINDEX over the nav rows, which are the VISUAL rows — the
+     same chunking the geometry uses, so an arrow always lands on the tile
+     that looks like the neighbour. */
+  const onTileKeyDown = (e: React.KeyboardEvent, name: string) => {
+    const at = navIndex.get(name);
+    if (!at) return;
+    const { navRows } = layout;
+    const row = navRows[at.row];
+    let next: PlacedSkill | undefined;
 
-    if (e.key === "ArrowLeft") next = row.items[cellIdx - 1];
-    else if (e.key === "ArrowRight") next = row.items[cellIdx + 1];
+    if (e.key === "ArrowLeft") next = row[at.cell - 1];
+    else if (e.key === "ArrowRight") next = row[at.cell + 1];
     else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       const step = e.key === "ArrowUp" ? -1 : 1;
-      const target = rows[(rowIdx + step + rows.length) % rows.length];
-      next = target?.items[Math.min(cellIdx, (target?.items.length ?? 1) - 1)];
-    } else if (e.key === "Home") next = row.items[0];
-    else if (e.key === "End") next = row.items[row.items.length - 1];
+      const target = navRows[(at.row + step + navRows.length) % navRows.length];
+      next = target?.[Math.min(at.cell, (target?.length ?? 1) - 1)];
+    } else if (e.key === "Home") next = row[0];
+    else if (e.key === "End") next = row[row.length - 1];
     else return;
 
     e.preventDefault();
@@ -227,219 +321,294 @@ export function SkillsBrowserPlate({
     focusTile(next.skill.name);
   };
 
-  const active = hovered ?? selected;
-  const activeGroup = groups.find((g) => g.name === active?.skill.engine);
+  if (!active) return null;
+
+  const tabTarget = active.skill.name;
+  const activeTier = tierByTeam.get(active.skill.team);
+  const activeGroup = groups.find((g) => g.name === active.skill.engine);
 
   return (
-    <div className="fl-plate fl-plate--registry fl-skills" data-axis={axis} data-view={view}>
+    <div className="fl-plate fl-plate--registry fl-skills" data-proj={projection}>
       <div className="fl-skills__head">
-        {/* VIEW TABS lead the head — they are the coarser control, and the
-            axis toggle below is a sub-filter of the lattice only (owner:
-            "substrate/team is a subcategory, a subfilter"). */}
-        {intelligence ? (
-          <span className="fl-skills__views" role="tablist" aria-label="Intelligence map view">
-            {(["skills", "stack", "allocation"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                role="tab"
-                className="fl-skills__viewbtn"
-                data-on={view === v || undefined}
-                aria-selected={view === v}
-                onClick={() => {
-                  setView(v);
-                  setSelected(null);
-                  anchorRef.current = null;
-                }}
-              >
-                {VIEW_LABEL[v]}
-              </button>
-            ))}
-          </span>
-        ) : null}
+        <span className="fl-skills__views" role="tablist" aria-label="Intelligence map projection">
+          {projections.map((p) => (
+            <button
+              key={p}
+              type="button"
+              role="tab"
+              className="fl-skills__viewbtn"
+              data-on={projection === p || undefined}
+              aria-selected={projection === p}
+              onClick={() => startMorph(p)}
+            >
+              {PROJECTION_LABEL[p]}
+            </button>
+          ))}
+        </span>
 
-        {/* Per-view right-hand chrome. Each view gets the ONE legend that
-            decodes it and nothing else; carrying all three at once is the
-            overwhelm this plate is trying not to be. */}
-        {view === "skills" ? (
-          <>
-            <span className="fl-skills__axis" role="group" aria-label="Group the lattice by">
-              {(["shape", "team"] as const).map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  className="fl-skills__axbtn"
-                  data-on={axis === a || undefined}
-                  aria-pressed={axis === a}
-                  onClick={() => {
-                    setAxis(a);
-                    setSelected(null);
-                    anchorRef.current = null;
-                  }}
-                >
-                  {a === "shape" ? "Substrate" : "Team"}
-                </button>
-              ))}
-            </span>
-            <span className="fl-skills__key" aria-hidden="true">
-              {(["Shipped", "In use", "In build", "Scoped"] as const).map((s) => (
+        {/* THE NAME REGISTER. The tiles carry a symbol, not a name, so
+            without this the field says nothing to a first-time reader.
+            It is lit on arrival and streams as the hand sweeps. */}
+        <span className="fl-skills__name" aria-live="polite">
+          <b className="fl-skills__name-ord">{String(active.ordinal).padStart(2, "0")}</b>
+          <span className="fl-skills__name-txt">{active.skill.name}</span>
+          <i className="fl-skills__name-meta">
+            {active.skill.team} · {active.skill.status}
+          </i>
+        </span>
+
+        <span className="fl-skills__key" aria-hidden="true">
+          {projection === "allocation"
+            ? (["reach", "draw"] as const).map((k) => (
+                <span key={k} className="fl-skills__key-item">
+                  <i className="fl-skills__key-sw" data-kind={k} />
+                  {k === "reach" ? "Reach" : "Draw"}
+                </span>
+              ))
+            : (["Shipped", "In use", "In build", "Scoped"] as const).map((s) => (
                 <span key={s} className="fl-skills__key-item">
                   <i className="fl-skills__key-sw" data-fill={STATUS_FILL[s]} />
                   {s}
                 </span>
               ))}
-            </span>
-          </>
-        ) : null}
-        {view === "allocation" ? (
-          <span className="fl-skills__key" aria-hidden="true">
-            <span className="fl-skills__key-item">
-              <i className="fl-skills__key-sw" data-kind="reach" />
-              Reach
-            </span>
-            <span className="fl-skills__key-item">
-              <i className="fl-skills__key-sw" data-kind="draw" />
-              Draw
-            </span>
-          </span>
+        </span>
+      </div>
+
+      <div className="fl-skills__stage" ref={stageRef} onMouseLeave={() => setHovered(null)}>
+        <div
+          className="fl-skills__field"
+          ref={fieldRef}
+          data-proj={projection}
+          role="group"
+          aria-label={
+            projection === "substrate"
+              ? "Skills by shape of work"
+              : projection === "team"
+                ? "Skills by team"
+                : "Skills by the tier their team leans on"
+          }
+        >
+          {/* THE 47, ALWAYS FIRST AND ALWAYS IN ORDINAL ORDER. */}
+          {placed.map((p) => {
+            const at = layout.tiles.get(p.skill.name);
+            const band = bandByTeam.get(p.skill.team);
+            return (
+              <button
+                key={p.skill.name}
+                type="button"
+                className="fl-skills__tile"
+                data-fl-skill={p.skill.name}
+                data-fill={STATUS_FILL[p.skill.status] ?? "scoped"}
+                data-band={band}
+                data-on={p.skill.name === selected?.skill.name || undefined}
+                data-lit={p.skill.name === active.skill.name || undefined}
+                aria-expanded={p.skill.name === selected?.skill.name}
+                aria-label={`${p.ordinal}. ${p.skill.name}. ${p.skill.engine}, ${p.skill.team}, ${p.skill.status}${
+                  projection === "allocation" && tierByTeam.get(p.skill.team)
+                    ? `, ${tierByTeam.get(p.skill.team)} tier`
+                    : ""
+                }.`}
+                tabIndex={p.skill.name === tabTarget ? 0 : -1}
+                style={{
+                  gridRow: at?.row,
+                  gridColumn: at?.column,
+                  // One property carries the whole stagger — no JS timers.
+                  ["--fl-fly-delay" as string]: `${Math.round(
+                    ((p.ordinal - 1) / Math.max(1, placed.length - 1)) * STAGGER_MS
+                  )}ms`,
+                }}
+                onMouseEnter={() => setHovered(p)}
+                onFocus={() => setHovered(p)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // A rect measured mid-transform would anchor nothing.
+                  if (fieldRef.current?.dataset.morph) return;
+                  if (selected?.skill.name === p.skill.name) {
+                    close();
+                    return;
+                  }
+                  anchorRef.current = e.currentTarget;
+                  setSelected(p);
+                }}
+                onKeyDown={(e) => onTileKeyDown(e, p.skill.name)}
+              >
+                <span className="fl-skills__ord">{p.ordinal}</span>
+                <span className="fl-skills__sym">{skillSymbol(p.skill.name)}</span>
+              </button>
+            );
+          })}
+
+          {/* CHROME, one node keyed by projection so it swaps atomically
+              while the tiles persist. `display: contents` lets its
+              children take grid cells of their own. */}
+          <div className="fl-skills__chrome" key={projection} style={{ display: "contents" }}>
+            {projection === "allocation"
+              ? layout.chrome.map((head) => (
+                  <div
+                    className="fl-skills__chead"
+                    key={head.key}
+                    style={{ gridRow: 1, gridColumn: `${head.column} / span ${head.span ?? 1}` }}
+                  >
+                    <span className="fl-skills__chead-name">{head.label}</span>
+                    {head.tier?.note ? (
+                      <span className="fl-skills__chead-note">{head.tier.note}</span>
+                    ) : null}
+                    <span className="fl-skills__bars">
+                      {(
+                        [
+                          ["reach", head.tier?.reach ?? 0],
+                          ["draw", head.tier?.draw ?? 0],
+                        ] as const
+                      ).map(([kind, value]) => (
+                        <span className="fl-skills__bar-row" key={kind}>
+                          <i
+                            className="fl-skills__bar"
+                            data-kind={kind}
+                            style={{ ["--fl-bar" as string]: `${value}%` }}
+                            aria-hidden="true"
+                          />
+                          <b className="fl-skills__bar-val">{value}%</b>
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                ))
+              : layout.chrome.map((row) => (
+                  <span key={row.key} style={{ display: "contents" }}>
+                    <span
+                      className="fl-skills__row-name"
+                      style={{ gridRow: row.row, gridColumn: 1 }}
+                      aria-hidden="true"
+                    >
+                      {row.label}
+                    </span>
+                    <span
+                      className="fl-skills__row-count"
+                      style={{ gridRow: row.row, gridColumn: countColumn(projection) }}
+                      aria-hidden="true"
+                    >
+                      {row.count}
+                    </span>
+                    {projection === "team" ? (
+                      <i
+                        className="fl-skills__band"
+                        data-band={row.band}
+                        style={{ gridRow: row.row, gridColumn: countColumn(projection) + 1 }}
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                  </span>
+                ))}
+
+            {/* The empty tier's note, and the litmus rail. */}
+            {projection === "allocation" ? (
+              <>
+                {layout.chrome
+                  .filter((h) => !placed.some((p) => tierByTeam.get(p.skill.team) === h.label))
+                  .map((h) => (
+                    <p
+                      className="fl-skills__cnote"
+                      key={`note-${h.key}`}
+                      style={{ gridRow: 2, gridColumn: `${h.column} / span ${h.span ?? 1}` }}
+                    >
+                      Ambient. Every seat, no single workflow.
+                    </p>
+                  ))}
+                <div
+                  className="fl-skills__rail"
+                  style={{ gridColumn: 4 * (ALLOC_MICRO + 1), gridRow: "1 / -1" }}
+                >
+                  {intelligence?.reads.map((read) => (
+                    <div className="fl-skills__read" key={read.team}>
+                      <span className="fl-skills__read-top">
+                        <span className="fl-skills__read-team">{read.team}</span>
+                        <span className="fl-skills__read-lens">{read.lens}</span>
+                      </span>
+                      <p className="fl-skills__read-why">{read.why}</p>
+                    </div>
+                  ))}
+                  {intelligence?.trend ? (
+                    <p className="fl-skills__trend">
+                      <span className="fl-skills__trend-label">{intelligence.trend.label}</span>
+                      {intelligence.trend.points.map((pt) => (
+                        <span className="fl-skills__trend-pt" key={pt.stamp}>
+                          <i>{pt.stamp}</i>
+                          {pt.value}
+                        </span>
+                      ))}
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        {/* THE SLIDE PANEL (owner: "there shouldn't be a pop-up. They
+            should slide a panel on the right side inwards... the same
+            height, but it just slides inwards, and it can be a bit
+            transparent"). It lives INSIDE the stage, so the plate's
+            `overflow: hidden` and the case's iris never fight it. */}
+        {selected ? (
+          <div
+            className="fl-skills__panel"
+            ref={panelRef}
+            data-open="1"
+            role="dialog"
+            aria-label={selected.skill.name}
+          >
+            <p className="fl-skills__panel-top">
+              <span className="fl-skills__panel-engine">{selected.skill.engine}</span>
+              <span
+                className="fl-skills__panel-status"
+                data-fill={STATUS_FILL[selected.skill.status] ?? "scoped"}
+              >
+                {selected.skill.status}
+              </span>
+              <span className="fl-skills__panel-ord">
+                {String(selected.ordinal).padStart(2, "0")} / {skills.length}
+              </span>
+              {/* The close sits IN the top line: at 800h the panel is the
+                  stage's 144px and a bottom-anchored button costs a line
+                  the summary needs more. */}
+              <button
+                type="button"
+                className="fl-skills__panel-close"
+                aria-label="Close"
+                onClick={() => close()}
+              >
+                ✕
+              </button>
+            </p>
+            <h4 className="fl-skills__panel-name">{selected.skill.name}</h4>
+            <p className="fl-skills__panel-team">{selected.skill.team}</p>
+            {selected.skill.summary ? (
+              <p className="fl-skills__panel-body">{selected.skill.summary}</p>
+            ) : null}
+            {tierByTeam.get(selected.skill.team) ? (
+              <p className="fl-skills__panel-tier">
+                Runs on the {tierByTeam.get(selected.skill.team)} tier
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
-      {view === "stack" ? <IntelligenceStackView layers={intelligence!.stack} /> : null}
-      {view === "allocation" ? <IntelligenceAllocationView intelligence={intelligence!} /> : null}
-
-      {/* Conditionally MOUNTED, not `hidden`: the attribute's `display:
-          none` loses to any `display` rule on the element, and this stage
-          carries one. Losing the lattice's hover state on a view switch is
-          the intended behaviour anyway — the selection is cleared with it. */}
-      {view === "skills" ? (
-        <div className="fl-skills__stage" ref={stageRef} onMouseLeave={() => setHovered(null)}>
-          <div
-            className="fl-skills__rows"
-            role="group"
-            aria-label={axis === "shape" ? "Skills by shape of work" : "Skills by team"}
-            style={{ ["--fl-sk-slots" as string]: slots }}
-          >
-            {rows.map((row, rowIdx) => (
-              <div
-                key={row.name}
-                className="fl-skills__row"
-                data-on={
-                  row.name === (axis === "shape" ? active?.skill.engine : active?.skill.team) ||
-                  undefined
-                }
-              >
-                <span className="fl-skills__row-name">{row.name}</span>
-                <span className="fl-skills__track">
-                  {row.items.map((p, cellIdx) => (
-                    <button
-                      key={p.skill.name}
-                      type="button"
-                      className="fl-skills__tile"
-                      data-fl-skill={p.skill.name}
-                      data-fill={STATUS_FILL[p.skill.status] ?? "scoped"}
-                      data-on={p.skill.name === selected?.skill.name || undefined}
-                      data-lit={p.skill.name === active?.skill.name || undefined}
-                      aria-expanded={p.skill.name === selected?.skill.name}
-                      aria-label={`${p.ordinal}. ${p.skill.name}. ${p.skill.engine}, ${p.skill.team}, ${p.skill.status}.`}
-                      tabIndex={
-                        p.skill.name === (active?.skill.name ?? rows[0]?.items[0]?.skill.name)
-                          ? 0
-                          : -1
-                      }
-                      onMouseEnter={() => setHovered(p)}
-                      onFocus={() => setHovered(p)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (selected?.skill.name === p.skill.name) {
-                          close();
-                          return;
-                        }
-                        anchorRef.current = e.currentTarget;
-                        setSelected(p);
-                      }}
-                      onKeyDown={(e) => onTileKeyDown(e, rowIdx, cellIdx)}
-                    >
-                      <span className="fl-skills__ord">{p.ordinal}</span>
-                      <span className="fl-skills__sym">{skillSymbol(p.skill.name)}</span>
-                    </button>
-                  ))}
-                  {/* Inert spacers to the widest row, so one tile means one
-                    width in every row without measuring anything. */}
-                  {Array.from({ length: Math.max(0, slots - row.items.length) }, (_, i) => (
-                    <i key={`ghost-${i}`} className="fl-skills__ghost" aria-hidden="true" />
-                  ))}
-                </span>
-                <span className="fl-skills__row-count">{row.items.length}</span>
-                {/* THE GRADIENT (owner: "cluster the type of teams based on
-                  the work and token consumption"). Team axis only — a
-                  shape has no consumption of its own, only the teams
-                  running it do. Hidden by CSS below 900h, where the team
-                  rows are 9px fill-only cells. */}
-                {axis === "team" ? (
-                  <i
-                    className="fl-skills__band"
-                    data-band={bandByTeam.get(row.name) ?? undefined}
-                    title={`${row.name} — ${bandByTeam.get(row.name) ?? "unrated"} draw`}
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </div>
-            ))}
-          </div>
-
-          {selected ? (
-            <div
-              className="fl-skills__pop"
-              ref={popRef}
-              role="dialog"
-              aria-label={selected.skill.name}
-            >
-              <p className="fl-skills__pop-top">
-                <span className="fl-skills__pop-engine">{selected.skill.engine}</span>
-                <span
-                  className="fl-skills__pop-status"
-                  data-fill={STATUS_FILL[selected.skill.status] ?? "scoped"}
-                >
-                  {selected.skill.status}
-                </span>
-                <span className="fl-skills__pop-ord">
-                  {String(selected.ordinal).padStart(2, "0")} / {skills.length}
-                </span>
-              </p>
-              <h4 className="fl-skills__pop-name">{selected.skill.name}</h4>
-              <p className="fl-skills__pop-team">{selected.skill.team}</p>
-              {selected.skill.summary ? (
-                <p className="fl-skills__pop-body">{selected.skill.summary}</p>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* The foot names what the hand is on, so the lattice can be READ by
-          sweeping it — the tiles carry a symbol, not a name. On the other
-          two views it rests on the claim that view exists to make, which
-          is why ALLOCATION closes on the map's whole thesis. */}
       <p className="fl-skills__readout">
         <span className="fl-skills__readout-team">
-          {view === "stack"
-            ? "One configuration, four layers"
-            : view === "allocation"
-              ? "The work decides the model"
-              : active
-                ? `${String(active.ordinal).padStart(2, "0")} · ${active.skill.name}`
-                : `${skills.length} Skills · ${groups.length} shapes · ${new Set(skills.map((s) => s.team)).size} teams`}
+          {projection === "allocation"
+            ? "The work decides the model"
+            : `${skills.length} Skills · ${groups.length} shapes · ${new Set(skills.map((s) => s.team)).size} teams`}
         </span>
         <i className="fl-skills__readout-ld" aria-hidden="true" />
         <span className="fl-skills__readout-status">
-          {view === "stack"
-            ? "Models · connectors · Skills · tools"
-            : view === "allocation"
-              ? "Reach is not draw"
-              : active
-                ? active.skill.team
-                : (activeGroup?.gloss ?? "")}
+          {projection === "allocation"
+            ? "Reach is not draw"
+            : projection === "team"
+              ? activeTier
+                ? `${activeTier} tier`
+                : ""
+              : (activeGroup?.gloss ?? "")}
         </span>
       </p>
     </div>

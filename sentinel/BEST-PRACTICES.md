@@ -1043,6 +1043,49 @@ Neither has a cheap automated form, so they belong on the eyeball pass:
   guard to the measured ceiling, and buy the characters back with tracking
   rather than size.
 
+### You cannot animate an element React just replaced
+
+Any "the same objects rearrange" motion — FLIP, shared-element, morph — needs
+the same DOM nodes on both sides of the state change. Nesting the animated
+items inside per-group containers guarantees the opposite: change the
+grouping and React unmounts the containers with everything in them, so the
+"morph" is really a mount, and it either snaps or crossfades.
+
+Keep the animated items as **flat children of one stable parent, keyed by
+identity, in a constant order**, and let layout (grid placement, transforms)
+do the grouping. Two corollaries learned with it (ADR-056 U17):
+
+- **Child order is part of the contract.** If chrome interleaves with the
+  animated items and the chrome changes per state, React reorders real nodes
+  to satisfy it — and `insertBefore` on a connected element cancels its
+  running transition.
+- **End on `none`, not on a stored matrix.** Animate the inverted transform
+  back to nothing, so the rest state is pure layout. Then zero-at-rest is
+  structural rather than a value you have to keep correct, and a resize
+  mid-flight still lands right.
+
+### `min-height: 0` is what makes a flex child actually shrink
+
+A `-webkit-line-clamp` (or any `overflow: hidden`) on a flex item is advisory
+until the item can shrink below its content size. Flex items default to
+`min-height: auto`, so the clamp renders, the item refuses to shrink, and the
+copy runs straight over whatever sits below it inside a fixed-height parent.
+The same applies to `min-width: 0` in a row.
+
+If a clamp "isn't working", check the min-size before touching the line count.
+
+### Wait for the thing to exist before you measure it
+
+A harness that queries too early doesn't error, it measures nothing — and
+then reports that as a finding. An assertion counting stamped elements read
+`0 of 47` and blamed the feature for a remount that never happened, because
+the stamp ran before the component mounted.
+
+Two habits close it: `waitForSelector` (or await the component's own settle
+signal) before the first read, and assert the setup took — if you stamp N
+elements, assert N > 0 immediately, so a red test names the harness rather
+than the code.
+
 ---
 
 ## ✅ Quick Checklist
