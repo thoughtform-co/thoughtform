@@ -5,24 +5,24 @@ import { createPortal } from "react-dom";
 
 import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
 
-import { APPROACH_MARKS } from "./clusters";
+import { JOURNEY_MARKS } from "./clusters";
 import { MarkRow } from "./MarkRow";
 import { useJourneyMarks, useScrollReadouts } from "./useJourneyMarks";
 
 /**
- * The rail instruments (ADR-059) — the APPROACH row of marks in the
- * TOP-LEFT corner, plus the right rail's telemetry. The destinations are
- * the bottom-right corner and live in `SettingsCluster`, sharing that
- * corner's row with the theme switch (Update 2).
+ * The rail instruments (ADR-059) — the JOURNEY row of marks in the TOP-LEFT
+ * corner, plus the right rail's telemetry. `contact` is the bottom-right
+ * corner and lives in `SettingsCluster`, between the theme switch and the
+ * session mark (Update 3).
  *
  * Ported from `/test/hud-instruments-lab` route `r4` after three rounds
  * there. What survived and what did not is the useful part:
  *
- *   - the clusters MERGED into one top-left row for a day (Update 1), when
- *     the bottom-right became the settings corner, and split again once
- *     the destinations and the controls were made to share it as one row
- *     (Update 2). Grouping-by-corner carries the approach/destination
- *     split; only state moves.
+ *   - the split between the corners moved twice. It was approach vs.
+ *     destinations, then one merged row (U1), then both again (U2), and is
+ *     now the journey vs. the exit (U3) — Home · Thesis · Arc · Proof ·
+ *     Services · About here, `contact` and the controls there. Only state
+ *     moves; which corner a mark sits in is structure.
  *   - the left rail's STATION ROSTER was tried and NOT taken. The ladder
  *     stays a ladder; this row is the left side's whole contribution.
  *   - the corner REGISTER (`cBr`) is dropped, because it printed
@@ -122,8 +122,8 @@ export function RailInstruments({
         // room for one, and a word printed at one corner's end and not the
         // other's made the two rows read as different kinds of object. The
         // frame now prints no zone anywhere — the marks are the instrument.
-        <div className="rin-cl rin-cl--approach" aria-hidden="true">
-          <MarkRow marks={APPROACH_MARKS} activeIdx={activeIdx} seat={seat} />
+        <div className="rin-cl rin-cl--journey" aria-hidden="true">
+          <MarkRow marks={JOURNEY_MARKS} activeIdx={activeIdx} seat={seat} />
         </div>,
         hosts.cornerTl
       )}

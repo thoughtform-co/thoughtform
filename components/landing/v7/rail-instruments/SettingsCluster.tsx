@@ -5,24 +5,24 @@ import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 
-import { DESTINATION_MARKS } from "./clusters";
+import { EXIT_MARKS } from "./clusters";
 import { RAIL_INSTRUMENTS } from "./flags";
 import { MarkRow } from "./MarkRow";
 import { useJourneyMarks } from "./useJourneyMarks";
 import { ThemeToggleButton } from "../LightModeToggle";
 
 /**
- * The BOTTOM-RIGHT corner — the DESTINATIONS and the settings, one row
- * (ADR-059 Update 2; Update 1 had settings here alone).
+ * The BOTTOM-RIGHT corner — the EXIT and the settings, one row (ADR-059
+ * Update 3; U1 had settings here alone, U2 gave it five destination marks).
  *
- * The four corners each carry one idea: journey top-left, nav top-right,
- * brand bottom-left, settings bottom-right. This corner turned out to hold
- * two without conflict once they were made ONE FLEX ROW — marks outboard,
- * ending on the right rail's track line as the exact 180° mirror of the
- * approach row, and the controls inboard where a zone label would have sat.
- * §2's "the corner cannot hold both" was measured against a glyph row that
- * still carried LABELS (~36px against a ~26px strip); Update 1 dropped
- * those, and a bare 16px glyph row fits beside a control on the same line.
+ * Reading order is the owner's: theme switch · Contact · session mark. The
+ * journey's other six sections went to the top-left, so this corner is now
+ * where you LEAVE — the last section, bracketed by the two controls.
+ *
+ * §2's "the corner cannot hold both a cluster and a control" was measured
+ * against a glyph row that still carried LABELS (~36px against a ~26px
+ * strip); U1 dropped those, and a bare 16px glyph row fits beside a control
+ * on the same line with room over.
  *
  * ⚠ ITS OWN FIXED OVERLAY, OUTSIDE `.hud` — the ADR-058 constraint, and it
  * has not gone away just because the corner's contents changed. `.hud__rail`
@@ -104,19 +104,19 @@ function SessionMark() {
 }
 
 /**
- * The destination half of the row.
+ * The exit marks — one, `contact`.
  *
  * Gated on `RAIL_INSTRUMENTS` rather than on `SETTINGS_CLUSTER`: these are
  * journey marks, and flipping the instruments off must take them with it
  * while leaving the theme switch — the site's only theme affordance —
  * exactly where it was. That is the whole reason the two flags are separate.
  */
-function DestinationMarks() {
+function ExitMarks() {
   const { activeIdx, seat } = useJourneyMarks(true);
 
   return (
     <span className="rin-settings__row" aria-hidden="true">
-      <MarkRow marks={DESTINATION_MARKS} activeIdx={activeIdx} seat={seat} />
+      <MarkRow marks={EXIT_MARKS} activeIdx={activeIdx} seat={seat} />
     </span>
   );
 }
@@ -124,15 +124,17 @@ function DestinationMarks() {
 export function SettingsCluster() {
   return (
     <div className="rin-settings" data-rin-settings>
-      {/* Controls INBOARD, marks OUTBOARD — so the last mark lands on the
-          right rail's track line and the row mirrors the approach corner.
-          DOM order is that reading order; nothing here is focusable except
-          the controls, which come first in the tab order as a result. */}
-      <span className="rin-settings__ctl">
-        <SessionMark />
-        <ThemeToggleButton />
-      </span>
-      {RAIL_INSTRUMENTS && <DestinationMarks />}
+      {/* Theme switch · Contact · session (ADR-059 U3, owner). The switch
+          LEADS the row and the session mark closes it, so the two controls
+          bracket the mark rather than clustering at one end.
+
+          ⚠ DOM order is reading order, which makes it TAB order too: the
+          switch is reached before the session link. The mark between them
+          is `aria-hidden` and takes no pointer events, so it does not sit
+          in that path — see the `pointer-events` note in the sheet. */}
+      <ThemeToggleButton />
+      {RAIL_INSTRUMENTS && <ExitMarks />}
+      <SessionMark />
     </div>
   );
 }

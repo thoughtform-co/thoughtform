@@ -2,13 +2,13 @@
 
 import type { ReactElement } from "react";
 
-import type { JourneyMark } from "./clusters";
+import { markState, type JourneyMark } from "./clusters";
 import { SECTION_GLYPHS } from "./sectionGlyphs";
 
 /**
  * One row of journey marks — the shared body of BOTH corners (ADR-059).
  *
- * The approach row (top-left, in `RailInstruments`) and the destination row
+ * The journey row (top-left, in `RailInstruments`) and the exit row
  * (bottom-right, in `SettingsCluster`) are the same instrument seen from
  * two ends of the frame, so they are one component rather than two that
  * happen to agree. Update 1 merged the clusters partly because keeping two
@@ -20,10 +20,11 @@ import { SECTION_GLYPHS } from "./sectionGlyphs";
  * drawing with no per-glyph rules.
  */
 
-export type MarkState = "ahead" | "passed" | "here";
-
-export const stateFor = (seat: number, active: number): MarkState =>
-  active === seat ? "here" : active > seat ? "passed" : "ahead";
+/**
+ * ⚠ `markState` lives in `clusters.ts`, not here — it is pure logic over a
+ * `JourneyMark` and that module imports no react, so the "exactly one mark
+ * is gold" invariant can be unit-pinned without a DOM.
+ */
 
 /**
  * ⚠ NO LABEL, deliberately — unlike the lab, which prints one under every
@@ -32,7 +33,7 @@ export const stateFor = (seat: number, active: number): MarkState =>
  * Two reasons, and the second is the load-bearing one. The label band sits
  * at y 64–76, which on this page is occupied: measured collisions with
  * `services-masthead__desig` ("SVC / TITLE · 01") and the corridor's
- * `home-v2-stack-label__num`. Above the approach row is unavailable — the
+ * `home-v2-stack-label__num`. Above the journey row is unavailable — the
  * corner's curtain inset saturates at 0px — so there is nowhere for it to
  * go.
  *
@@ -65,7 +66,7 @@ export function MarkRow({
               lights the wrong glyph. */}
           <span
             className="rin-mark"
-            data-state={stateFor(mark.idx, mark.clock === "beat" ? activeIdx : seat)}
+            data-state={markState(mark, activeIdx, seat)}
             data-mark={mark.id}
           >
             {SECTION_GLYPHS[mark.id] ?? null}

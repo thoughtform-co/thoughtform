@@ -2,16 +2,15 @@
    RAIL INSTRUMENTS · ADR-059
    ═══════════════════════════════════════════════════════════════════════
 
-   The APPROACH as a row of marks in the TOP-LEFT corner, the right rail's
-   telemetry, and the DESTINATIONS sharing the bottom-right corner with the
-   settings controls. Ported from `/test/hud-instruments-lab` route `r4`;
-   the lab keeps its own `hil-`-scoped sheet for the routes that were NOT
-   taken.
+   The JOURNEY as a row of marks in the TOP-LEFT corner, the right rail's
+   telemetry, and the EXIT sharing the bottom-right corner with the settings
+   controls. Ported from `/test/hud-instruments-lab` route `r4`; the lab
+   keeps its own `hil-`-scoped sheet for the routes that were NOT taken.
 
    The four corners each carry one idea: journey / nav / brand / settings.
-   The journey's two halves sit at opposite ends of that scheme — approach
-   top-left, destinations bottom-right — so which corner a mark stands in
-   says what kind of section it is, and only state moves.
+   The journey runs top-left — Home · Thesis · Arc · Proof · Services ·
+   About — and the bottom-right is where you leave: `contact`, bracketed by
+   the theme switch and the session mark. Only state moves.
 
    Shape law: radius 0; diamonds, never circles; hairlines only; gold is
    WAYFINDING — it marks where you are and nothing else; no italics.
@@ -71,7 +70,7 @@
    corner point. The row's TOP edge sits on the margin line rather than
    straddling it: the corner's curtain inset saturates at 0px, so a row
    centred on that line would lose its upper half at rest. */
-.rin-cl--approach {
+.rin-cl--journey {
   top: 0;
   left: calc(var(--hud-rail-guide-inset) - var(--rin-half));
 }
@@ -97,7 +96,7 @@
 }
 
 /* ⚠ NO `.rin-cl__zone` RULE, and no zone label to hang one on (owner,
-   2026-08-03). It sat at the approach row's inboard end and the
+   2026-08-03). It sat at the journey row's inboard end and the
    bottom-right had nowhere to put its counterpart — the settings controls
    own that terminus — so one corner was captioned and the other was not,
    and the two stopped reading as one instrument. The lab still prints one
@@ -175,11 +174,14 @@
   pointer-events: none;
 }
 
-/* ── BOTTOM-RIGHT: THE DESTINATIONS + SETTINGS (ADR-059 Update 2) ────────
-   One row, marks OUTBOARD and controls INBOARD — the 180° mirror of the
-   approach corner, with the controls standing where that row's zone label
-   sits. §2 ruled the corner could not hold a cluster and a control; that
-   was measured against a glyph row that still carried LABELS (~36px into a
+/* ── BOTTOM-RIGHT: THE EXIT + SETTINGS (ADR-059 Update 3) ────────────────
+   One row: theme switch · `contact` · session mark. The two controls
+   BRACKET the mark rather than clustering at one end, which is the owner's
+   ordering and why the gap here is uniform — this reads as one run of
+   three, not as two groups.
+
+   §2 ruled the corner could not hold a cluster and a control; that was
+   measured against a glyph row that still carried LABELS (~36px into a
    ~26px strip). Update 1 dropped the labels, and a bare 16px glyph row sits
    beside a control on one line with room to spare.
 
@@ -201,28 +203,29 @@
   height: var(--hud-corner-zone);
   display: flex;
   align-items: center;
-  /* Controls to marks. Wider than the gap BETWEEN controls, so the row
-     reads as two groups rather than one run of four things. */
-  gap: clamp(12px, 1.3vw, 20px);
+  /* One uniform gap — the row is a run of three, not two groups. */
+  gap: clamp(10px, 1.1vw, 16px);
   z-index: 60;
   pointer-events: none;
 }
-/* ⚠ Only the CONTROLS take pointer events. The marks are informational —
-   `aria-hidden`, and the nav corner remains the single navigation — so a
-   blanket `.rin-settings > *` would hand five inert glyphs a hit box in the
-   corner of every page. */
-.rin-settings__ctl {
-  display: flex;
-  align-items: center;
-  gap: clamp(8px, 0.9vw, 14px);
+/* ⚠ Only the CONTROLS take pointer events, named individually. The mark
+   between them is informational — `aria-hidden`, and the nav corner remains
+   the single navigation — so a blanket `.rin-settings > *` would hand an
+   inert glyph a 16px hit box in the corner of every page, sitting in the
+   gap between the two things that ARE clickable. */
+.rin-settings > .theme-toggle,
+.rin-settings > .rin-session {
   pointer-events: auto;
 }
 
-/* With the marks drawn, the row reaches OUT to the frame line the `--br`
-   bracket used to hold, so the last mark's centre lands on the right rail's
-   track — mirroring the approach row's first mark on the left. Gated on the
-   instruments' own attribute, so flipping them off returns the controls to
-   the ADR-058 slot along with the bracket.
+/* With the mark drawn, the row reaches OUT to the frame line the `--br`
+   bracket used to hold, so the LAST item's centre lands on the right rail's
+   track — mirroring the journey row's first mark on the left. For a visitor
+   that last item is the `contact` mark and the mirror is exact; for a
+   signed-in owner the session button closes the row instead and overhangs
+   the line by half a control. Gated on the instruments' own attribute, so
+   flipping them off returns the controls to the ADR-058 slot along with the
+   bracket.
 
    ⚠ Above 960 ONLY, because the marks stop there and a 36px control centred
    on the track line would overhang the viewport at the small end of
@@ -351,7 +354,7 @@ html[data-rail-instruments] .hud__corner--tl {
   }
 }
 @media (max-width: 960px) {
-  .rin-cl--approach,
+  .rin-cl--journey,
   .rin-settings__row {
     display: none;
   }

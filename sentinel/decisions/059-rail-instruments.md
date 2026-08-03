@@ -1,6 +1,6 @@
 # ADR-059: Rail instruments — the journey's sections as corner marks
 
-**Status:** Accepted · 2026-08-02 — **read Update 2 first; it is the live arrangement**
+**Status:** Accepted · 2026-08-02 — **read Update 3 first; it is the live roster. Update 2 is the live geometry**
 **Flags:** `RAIL_INSTRUMENTS`, `SETTINGS_CLUSTER` (`components/landing/v7/rail-instruments/flags.ts`), both default ON
 **Extends:** ADR-058 — the toggle keeps its slot below 960px and moves outboard onto the frame line above it
 **Lab:** `/test/hud-instruments-lab`, route `r4` + `rTelemetry` + `rName`
@@ -306,6 +306,81 @@ The glyphs themselves — §4's open question — are untouched here. The lab
 still prints all ten in ONE labelled row, which is deliberately not
 production's shape: that row exists to judge the drawings side by side, and
 the geometry was settled on the live frame.
+
+## Update 3 — the roster is sections, not beats (2026-08-03, owner)
+
+> _"top left … Home · Thesis · Arc · Proof · Services · About. bottom right
+> … Light Mode / Dark mode switch (move this to the beginning) · Contact ·
+> Login icon. I think this is a clean harmonization."_
+
+Top-left is the journey as a reader would list it; bottom-right is where
+you leave, with the two controls bracketing the mark.
+
+### The Arc is ONE mark, and it has to be a beat RANGE
+
+⚠ **Thesis and Arc cannot share a clock.** `thesis` is `kind: "corridor"`,
+and `READOUT_SECTIONS` collapses EVERY corridor entry into the single `arc`
+row — so on the row clock the readout seat _during the thesis beat_ IS
+`arc`. A row-clocked Arc mark beside a beat-clocked Thesis mark puts two
+marks in `here` at once, and gold is wayfinding: one mark, or the frame is
+lying about where you are.
+
+So `ARC_MARK` carries `idxEnd` and spans navigate…build on the BEAT clock.
+That also fixes a quieter bug in the same breath: `sectionReadout` falls
+back to seat 0 for an id it does not know, and `hero` is not a readout row
+— so a row-clocked Arc would have been gold on the hero too.
+
+`markState` moved to `clusters.ts` (react-free) so the invariant is
+unit-pinned rather than eyeballed: `tests/lib/rail-instrument-marks.test.ts`
+walks every manifest index against both `proofOwnsServices` values and
+asserts at most one mark is ever `here`. That test is the guard on this
+whole scheme — the two clocks throw nothing when confused.
+
+### ⚠ `practice` has NO mark, and that is a hole
+
+Not an oversight — the owner's roster omits it, on the understanding that
+proof replaced it. **It did not: proof replaced `#continuum`** (ADR-054),
+and when ADR-056 dissolved the proof station into the top of `#services`,
+`#practice` inherited its job as the opaque station that kills the corridor
+ambient. It is still a full screen of real content and still a readout row.
+
+Until that section is actually removed, **no mark is gold while it holds
+the viewport.** Pinned as an explicit expectation in the test above so it
+reads as a known state rather than a surprise. Removing the section means
+retargeting the ambient kill to `#contact` first — the ADR-030 seam-cut
+bug class, where the gate and the fade envelope must key off the same rect.
+
+### The bottom-right order
+
+Theme switch · `contact` · session mark, with a uniform gap: one run of
+three, not two groups. The controls take `pointer-events` individually
+rather than through a wrapper — the mark now sits BETWEEN them, and a
+blanket `> *` would hand an inert glyph a hit box in the middle of the two
+things that are clickable.
+
+The outboard anchor is unchanged, so for a visitor the `contact` mark's
+centre still lands on the right rail's track (measured +1px, against −1px
+for the journey row's first mark on the left). For a signed-in owner the
+session button closes the row instead and overhangs the line by half a
+control — owner-only, and accepted.
+
+### The Arc's glyph
+
+Three chevrons — a SEQUENCE, not a loop. The Arc is a flywheel and a loop
+is what it means, but the shape law bans circles, every other mark in the
+set is straight-line, and a closed cycle with an arrowhead is exactly the
+detail the v2 silhouettes proved dies at 16px. Three chevrons say "a run of
+three", which is what a reader actually scrolls. Open to the same judgement
+as the rest of the set (§4).
+
+`navigate` / `encode` / `build` and `practice` keep their drawings but are
+UNSEATED. They are still real beats and a real station, so a roster change
+does not have to re-draw them — and `encode`'s bracket vocabulary is what
+the session mark borrows.
+
+The lab now renders `LAB_MARKS`, which is exactly both corners
+concatenated, and shares `markState` — so it can no longer disagree with
+production about which mark is lit.
 
 ## Rollback
 

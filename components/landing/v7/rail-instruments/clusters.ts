@@ -2,32 +2,30 @@
  * The journey's sections as marks, split across the two working corners.
  *
  * ⚠ SHARED BY PRODUCTION AND THE LAB, which is why it lives here rather
- * than under `/test`. `RailInstruments` renders it on the landing page and
- * `/test/hud-instruments-lab` renders it against a synthetic runway; a copy
- * in each would drift the moment a section is added, and the drift would
- * show up as the lab quietly disagreeing with the site it exists to judge.
- * Nothing in this file may import react, three, or anything under `app/`.
+ * than under `/test`. `RailInstruments` renders the top-left row and
+ * `SettingsCluster` the bottom-right; `/test/hud-instruments-lab` renders
+ * both against a synthetic runway. A copy in each would drift the moment a
+ * section is added, and the drift would show up as the lab quietly
+ * disagreeing with the site it exists to judge. Nothing in this file may
+ * import react, three, or anything under `app/`.
  *
- * ⚠ TWO CLUSTERS AGAIN (owner, 2026-08-03 — ADR-059 Update 2). Update 1
- * merged them into one top-left row because the bottom-right had become the
- * settings corner and the two could not share it. They share it now: the
- * destinations and the SETTINGS CONTROLS are one flex row, marks outboard
- * on the rail's track line, controls inboard where the zone label was. So
- * grouping-by-corner carries the approach/destination split again — the
- * strong signal U1 gave up and called its acknowledged cost.
+ * ⚠ THE ROSTER IS SECTIONS, NOT BEATS (owner, 2026-08-03 — ADR-059 U3).
+ * Top-left is the journey as a reader experiences it — Home · Thesis · Arc ·
+ * Proof · Services · About — with the Arc as ONE mark rather than its three
+ * corridor beats. Bottom-right is the exit and the controls: the theme
+ * switch, Contact, and a session mark only an allowlisted user ever sees.
  *
- * The frame still reads by corner: journey top-left, nav top-right, brand
- * bottom-left, settings bottom-right. The bottom-right just carries the
- * destinations WITH its settings rather than instead of them.
+ * `practice` carries NO mark (owner, same day). It is still a station in
+ * `MANIFEST_ENTRIES` and still a readout row, so nothing here breaks — but
+ * nothing lights gold while it holds the viewport. That is a known hole,
+ * pending the section's own removal.
  *
  * ⚠ TWO CLOCKS, and they are not interchangeable. The Arc's beats only
  * exist on the MANIFEST index (`READOUT_SECTIONS` collapses all four to a
  * single `arc` row), and `proof` only exists on the READOUT index (the
  * casefile has no manifest entry at all — ADR-056). So each mark declares
  * which one resolves it. Feeding a row-clock mark the beat index, or the
- * reverse, silently lights the wrong glyph — it does not throw. The split
- * falls on that seam by construction: the approach is beat-clocked, the
- * destinations are row-clocked.
+ * reverse, silently lights the wrong glyph — it does not throw.
  */
 
 import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
@@ -42,8 +40,37 @@ export interface JourneyMark {
   clock: "beat" | "row";
   /** Into `MANIFEST_ENTRIES` when `beat`, into `READOUT_SECTIONS` when `row`. */
   idx: number;
+  /**
+   * Inclusive END of a beat RANGE — a mark that stands for several beats.
+   *
+   * Only `arc` uses it, and it is what stops the Arc double-lighting with
+   * Thesis. See `ARC_MARK` for why that pair cannot share a clock.
+   */
+  idxEnd?: number;
   /** A rule opens a new group before this mark. */
   ruleBefore?: boolean;
+}
+
+export type MarkState = "ahead" | "passed" | "here";
+
+/**
+ * A mark's state against the two clocks.
+ *
+ * A mark may stand for a RANGE of beats (`idxEnd`) — the Arc does, covering
+ * navigate…build — so `here` is containment rather than equality and
+ * `passed` is measured from the range's END. With no `idxEnd` the range is
+ * one seat wide and this is the plain three-way compare it replaced.
+ *
+ * Kept here rather than beside the component that calls it so that the
+ * "exactly ONE mark is gold at every position" invariant can be pinned
+ * without a DOM — see `tests/lib/rail-instrument-marks.test.ts`. That is
+ * the invariant the Arc's range exists to protect.
+ */
+export function markState(mark: JourneyMark, activeIdx: number, seat: number): MarkState {
+  const active = mark.clock === "beat" ? activeIdx : seat;
+  const end = mark.idxEnd ?? mark.idx;
+  if (active >= mark.idx && active <= end) return "here";
+  return active > end ? "passed" : "ahead";
 }
 
 /**
@@ -80,62 +107,76 @@ const row = (id: string, ruleBefore = false): JourneyMark => ({
 });
 
 /**
- * TOP-LEFT — the approach: how you arrive at the argument.
+ * The Arc as ONE mark — a BEAT RANGE, and it has to be.
  *
- * Per-BEAT, because the Arc's four beats ARE the approach — collapsing them
- * to one `arc` mark would leave the corner saying almost nothing about the
- * longest part of the page.
+ * ⚠ THESIS AND ARC CANNOT SHARE A CLOCK. `thesis` is `kind: "corridor"` in
+ * `MANIFEST_ENTRIES`, and `READOUT_SECTIONS` collapses EVERY corridor entry
+ * into the single `arc` row — so on the row clock, the readout seat during
+ * the thesis beat IS `arc`. A row-clocked Arc mark beside a beat-clocked
+ * Thesis mark puts TWO marks in `here` at once, and gold is wayfinding: it
+ * marks where you are and nothing else.
+ *
+ * Ranging it over navigate…build on the BEAT clock keeps the two disjoint.
+ * It also fixes a second, quieter bug: `sectionReadout` falls back to seat 0
+ * for an id it does not know, and `hero` is not a readout row — so a
+ * row-clocked Arc would light gold on the hero as well.
+ *
+ * The name comes from the readout row rather than a literal, so renaming
+ * the Arc anywhere renames it here.
  */
-export const APPROACH_MARKS: readonly JourneyMark[] = [
-  beat("hero", "Hero"),
-  beat("thesis", "Thesis"),
-  beat("navigate", "Navigate"),
-  beat("encode", "Encode"),
-  beat("build", "Build"),
-];
+const ARC_MARK: JourneyMark = {
+  id: "arc",
+  name: READOUT_SECTIONS[rowIdx("arc")].label,
+  clock: "beat",
+  idx: beatIdx("navigate"),
+  idxEnd: beatIdx("build"),
+};
 
 /**
- * BOTTOM-RIGHT — the destinations: the record, the offer, and the way out.
+ * TOP-LEFT — the journey, as a reader would list it.
  *
- * This is `READOUT_SECTIONS` minus its leading `arc` row, which is exactly
- * the set the approach does not carry. Row-level is the right granularity
- * (none of these have beats) and it is also the only index that HAS
- * `proof`: the casefile is a readout row with no manifest entry at all
- * (ADR-056), so a beat-clocked list could not have held it.
- *
- * The rule splits what is on the record from where you are going.
+ * Home and Thesis are per-beat because neither is a readout row of its own
+ * (`hero` is skipped entirely; `thesis` collapses into `arc`). Everything
+ * past the Arc is row-level, because none of those sections have beats and
+ * because that is the only index `proof` appears on.
  *
  * ⚠ The mockup's roster is not this site's. It carried three sections that
- * do not exist (HERALDING / TRANSMISSIONS / CONSTELLATION, which between
- * them replace `practice`); if they are ever built they join here and
- * nothing else has to change.
+ * do not exist (HERALDING / TRANSMISSIONS / CONSTELLATION); if they are
+ * ever built they join here and nothing else has to change.
  */
-export const DESTINATION_MARKS: readonly JourneyMark[] = [
+export const JOURNEY_MARKS: readonly JourneyMark[] = [
+  beat("hero", "Home"),
+  beat("thesis", "Thesis"),
+  ARC_MARK,
   row("proof"),
   row("services"),
   row("about"),
-  // record │ destination
-  row("practice", true),
-  row("contact"),
 ];
 
 /**
- * The full roster in journey order — the LAB's row, not production's.
+ * BOTTOM-RIGHT — the exit.
  *
- * `/test/hud-instruments-lab` prints all ten with labels in one cluster
- * because the open question there is the GLYPHS (ADR-059 §4: whether these
- * read as instrument geometry or as app icons), and ten of them side by
- * side with their names under them is the way to judge that. The geometry
- * question was settled across rounds 1–3 and again in Update 2, and it is
+ * One mark. The theme switch leads the row and the session mark closes it;
+ * both are controls and live in `SettingsCluster`, not here, because this
+ * file may not import react.
+ */
+export const EXIT_MARKS: readonly JourneyMark[] = [row("contact")];
+
+/**
+ * Both corners in journey order — the LAB's row.
+ *
+ * The lab prints them as ONE labelled cluster because the open question
+ * there is the GLYPHS (ADR-059 §4: whether these read as instrument
+ * geometry or as app icons), and the whole set side by side with their
+ * names under them is the way to judge that. The geometry question is
  * settled on the live frame, not here.
  *
- * The rule between the two halves is what the lab's single row keeps of the
- * corner split.
+ * The rule is where the frame's corner split falls.
  */
-export const JOURNEY_MARKS: readonly JourneyMark[] = [
-  ...APPROACH_MARKS,
-  { ...DESTINATION_MARKS[0], ruleBefore: true },
-  ...DESTINATION_MARKS.slice(1),
+export const LAB_MARKS: readonly JourneyMark[] = [
+  ...JOURNEY_MARKS,
+  { ...EXIT_MARKS[0], ruleBefore: true },
+  ...EXIT_MARKS.slice(1),
 ];
 
 /**
@@ -144,13 +185,12 @@ export const JOURNEY_MARKS: readonly JourneyMark[] = [
  * Production prints NO zone. The bottom-right never had room for one — the
  * settings controls occupy that corner's inboard terminus, and a word
  * wedged between a glyph row and a theme switch labels neither — so a word
- * at the approach row's end and nothing at the destination row's made the
- * two read as different kinds of object rather than one instrument seen
- * from both ends.
+ * at one row's end and nothing at the other's made the two read as
+ * different kinds of object rather than one instrument seen from both ends.
  *
  * The lab keeps it for the same reason it keeps per-mark labels: its row is
  * scaffolding for judging the drawings, not a copy of the frame.
  */
 export const CLUSTER_ZONES = {
-  approach: "Approach",
+  journey: "Journey",
 } as const;

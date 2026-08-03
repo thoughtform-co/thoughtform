@@ -49,12 +49,19 @@ function Mark({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Keyed by cluster mark id — the five manifest beats plus the five readout
- * rows. A missing key renders nothing rather than throwing: a new readout row
- * should light up an unglyphed seat, not blank the page.
+ * Keyed by section id. A missing key renders nothing rather than throwing:
+ * a new readout row should light up an unglyphed seat, not blank the page.
+ *
+ * ⚠ NOT EVERY KEY IS SEATED. The live roster (ADR-059 U3) is `hero` ·
+ * `thesis` · `arc` · `proof` · `services` · `about` top-left and `contact`
+ * bottom-right. `navigate` / `encode` / `build` are drawn but unseated —
+ * the Arc took one mark for all three — and so is `practice`. They are kept
+ * because they are still real beats and a real station, so a roster change
+ * does not have to re-draw them; `encode`'s bracket vocabulary is also what
+ * the settings corner's session mark borrows.
  */
 export const SECTION_GLYPHS: Readonly<Record<string, ReactElement>> = {
-  // ── Approach ──────────────────────────────────────────────────────────
+  // ── The journey, top-left ─────────────────────────────────────────────
   /** A reticle — the window, sighted. */
   hero: (
     <Mark>
@@ -68,7 +75,24 @@ export const SECTION_GLYPHS: Readonly<Record<string, ReactElement>> = {
       <path d="M2 13h4l2.5-7 3.5 12 3-9.5 2 4.5h5" />
     </Mark>
   ),
-  /** A compass needle. */
+  /**
+   * Three chevrons — the Arc's three beats as one advance.
+   *
+   * ⚠ A SEQUENCE, NOT A LOOP, and that is a compromise worth knowing about.
+   * The Arc is a flywheel (navigate → encode → build → navigate), and a
+   * loop is what it means — but the shape law bans circles, every other
+   * mark in this set is straight-line, and a closed cycle with an arrowhead
+   * is exactly the kind of detail the v2 silhouettes proved dies at this
+   * size. Three chevrons say "a run of three", which is at least what a
+   * reader actually scrolls. Open for the same judgement as the rest of the
+   * set.
+   */
+  arc: (
+    <Mark>
+      <path d="M4 7l4 5-4 5M10 7l4 5-4 5M16 7l4 5-4 5" />
+    </Mark>
+  ),
+  /** A compass needle. Unseated since U3 — the Arc carries all three beats. */
   navigate: (
     <Mark>
       <path d="M12 3l4.5 14.5L12 14l-4.5 3.5Z" />

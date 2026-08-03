@@ -7,11 +7,11 @@
  * with the journey's own state.
  *
  * What it mounts when ON:
- *   - the APPROACH row, top-left — the five corridor beats as marks,
- *     replacing that corner's bracket;
- *   - the DESTINATION row, bottom-right — the five remaining sections,
- *     replacing that corner's bracket and sharing its line with the
- *     settings controls (ADR-059 Update 2);
+ *   - the JOURNEY row, top-left — Home · Thesis · Arc · Proof · Services ·
+ *     About, replacing that corner's bracket;
+ *   - the EXIT mark, bottom-right — `contact`, replacing that corner's
+ *     bracket and sharing its line with the settings controls, which
+ *     bracket it (ADR-059 Update 3);
  *   - the right rail's TELEMETRY (bearing / sector / local) and the active
  *     section's name set vertically.
  *
@@ -24,15 +24,15 @@
  * `data-rail-instruments` is never set, and every selector keyed on it goes
  * unmatched — both bracket suppressions, both widened clips, and the
  * bottom-right row's outboard anchor, which returns the theme switch to its
- * ADR-058 slot. The destination marks are gated on THIS flag inside
- * `SettingsCluster` for that reason: they are journey marks, and turning
- * the instruments off must take them without taking the theme switch.
+ * ADR-058 slot. The exit mark is gated on THIS flag inside
+ * `SettingsCluster` for that reason: it is a journey mark, and turning the
+ * instruments off must take it without taking the theme switch.
  */
 export const RAIL_INSTRUMENTS = true;
 
 /**
  * The bottom-right corner carries SETTINGS (ADR-059 Update 1, reshaped by
- * Update 2 — it now carries the destination marks too).
+ * Updates 2–3 — it now carries the `contact` mark between them).
  *
  * `SettingsCluster` replaces the standalone `LightModeToggle` on the
  * landing route, carrying the theme switch plus a session mark that only an
