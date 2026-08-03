@@ -9,9 +9,9 @@
  * What it mounts when ON:
  *   - the JOURNEY row, top-left — Home · Thesis · Arc · Proof · Services ·
  *     About, replacing that corner's bracket;
- *   - the EXIT mark, bottom-right — `contact`, replacing that corner's
- *     bracket and sharing its line with the settings controls, which
- *     bracket it (ADR-059 Update 3);
+ *   - the EXIT mark, bottom-right — `contact`, inboard of the settings
+ *     controls, which replace that corner's bracket (ADR-059 Update 3;
+ *     the theme switch is the outboard anchor and stays last);
  *   - the right rail's TELEMETRY (bearing / sector / local) and the active
  *     section's name set vertically.
  *

@@ -310,8 +310,10 @@ the geometry was settled on the live frame.
 ## Update 3 — the roster is sections, not beats (2026-08-03, owner)
 
 > _"top left … Home · Thesis · Arc · Proof · Services · About. bottom right
-> … Light Mode / Dark mode switch (move this to the beginning) · Contact ·
-> Login icon. I think this is a clean harmonization."_
+> … Light Mode / Dark mode switch · Contact · Login icon. I think this is a
+> clean harmonization."_ — then, on seeing it: _"the light mode dark mode
+> switch should be the farthest to the right, all new icons we add should
+> be LEFT of it."_
 
 Top-left is the journey as a reader would list it; bottom-right is where
 you leave, with the two controls bracketing the mark.
@@ -350,19 +352,37 @@ reads as a known state rather than a surprise. Removing the section means
 retargeting the ambient kill to `#contact` first — the ADR-030 seam-cut
 bug class, where the gate and the fade envelope must key off the same rect.
 
-### The bottom-right order
+### The bottom-right order, and the rule behind it
 
-Theme switch · `contact` · session mark, with a uniform gap: one run of
-three, not two groups. The controls take `pointer-events` individually
-rather than through a wrapper — the mark now sits BETWEEN them, and a
-blanket `> *` would hand an inert glyph a hit box in the middle of the two
-things that are clickable.
+`contact` · session mark · **theme switch**. Marks inboard, controls
+outboard, one group gap between them.
 
-The outboard anchor is unchanged, so for a visitor the `contact` mark's
-centre still lands on the right rail's track (measured +1px, against −1px
-for the journey row's first mark on the left). For a signed-in owner the
-session button closes the row instead and overhangs the line by half a
-control — owner-only, and accepted.
+⚠ **THE THEME SWITCH IS THE ANCHOR AND STAYS LAST** (owner, 2026-08-03):
+_"the light mode dark mode switch should be the farthest to the right, all
+new icons we add should be LEFT of it."_ A standing rule for this corner,
+not a property of this arrangement. It is the only control here on every
+viewport and the one that predates the instruments, so it is the fixed
+point a reader learns.
+
+It shipped the other way round for one pass — switch leading, controls
+bracketing the mark — and the owner read the dim `ahead` glyph beside it as
+**a greyed-out disabled control**. That is what the group gap is for: a
+mark flush against a button is a button. The wrapper came back with it, so
+`pointer-events` is granted to the control GROUP rather than to each
+control individually.
+
+**The anchor is FLUSH on the frame line, not centred on the track.** The
+switch's 36px box lands exactly on the line the `--br` bracket held —
+measured 0.0px delta at 1440×900 — and fills the corner zone the bracket
+occupied (36px against 37.5px). §2's exact centre-on-track mirror holds
+where both terminals are MARKS; here the terminal is a button, and putting
+its centre on the line would hang half of it outboard of the frame.
+`--rin-half` is a glyph's half-width and has no meaning for a control.
+
+A side benefit worth keeping: the anchor no longer depends on auth state.
+While the session mark closed the row it was the terminal element for the
+owner and the `contact` mark for everyone else, so the corner measured
+differently depending on who was looking at it.
 
 ### The Arc's glyph
 

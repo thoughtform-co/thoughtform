@@ -15,9 +15,10 @@ import { ThemeToggleButton } from "../LightModeToggle";
  * The BOTTOM-RIGHT corner — the EXIT and the settings, one row (ADR-059
  * Update 3; U1 had settings here alone, U2 gave it five destination marks).
  *
- * Reading order is the owner's: theme switch · Contact · session mark. The
- * journey's other six sections went to the top-left, so this corner is now
- * where you LEAVE — the last section, bracketed by the two controls.
+ * Reading order: Contact · session mark · theme switch. The journey's other
+ * six sections went to the top-left, so this corner is where you LEAVE —
+ * the last section, then the controls, with the switch anchoring the frame
+ * line. New icons join to the LEFT of the switch; see the note in the JSX.
  *
  * §2's "the corner cannot hold both a cluster and a control" was measured
  * against a glyph row that still carried LABELS (~36px against a ~26px
@@ -124,17 +125,24 @@ function ExitMarks() {
 export function SettingsCluster() {
   return (
     <div className="rin-settings" data-rin-settings>
-      {/* Theme switch · Contact · session (ADR-059 U3, owner). The switch
-          LEADS the row and the session mark closes it, so the two controls
-          bracket the mark rather than clustering at one end.
+      {/* ⚠ THE THEME SWITCH IS THE ANCHOR, AND IT STAYS LAST (owner,
+          2026-08-03): it holds the frame line at the outboard end, and
+          ANYTHING ADDED TO THIS CORNER GOES TO ITS LEFT. That is a standing
+          rule, not this arrangement's detail — the switch is the one
+          control here that predates the instruments and the only one on
+          every viewport, so it is the fixed point a reader learns.
 
-          ⚠ DOM order is reading order, which makes it TAB order too: the
-          switch is reached before the session link. The mark between them
-          is `aria-hidden` and takes no pointer events, so it does not sit
-          in that path — see the `pointer-events` note in the sheet. */}
-      <ThemeToggleButton />
+          Marks inboard, controls outboard, one group gap between them. The
+          gap is doing real work: a dim `ahead` glyph immediately beside a
+          control reads as a DISABLED control (owner spotted it in the U3
+          arrangement, where the switch led the row and the mark sat flush
+          against it). Grouping is what says these are different kinds of
+          object. */}
       {RAIL_INSTRUMENTS && <ExitMarks />}
-      <SessionMark />
+      <span className="rin-settings__ctl">
+        <SessionMark />
+        <ThemeToggleButton />
+      </span>
     </div>
   );
 }

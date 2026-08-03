@@ -616,13 +616,14 @@ export function LandingPage({
           leaf — a subscription here would re-render LandingPage and
           orphan the nested roots above (same rationale as
           CelestialEditorGate). */}
-      {/* Bottom-right (ADR-059 U1, reshaped by U2–U3): the theme switch,
-          the journey's `contact` mark and a session mark that only an
-          allowlisted signed-in user ever sees — one line, controls
-          bracketing the mark. Replaces the standalone `LightModeToggle` on
-          this route; `/arcs` still mounts that directly, having no cluster
-          to join. The auth and journey subscriptions both live in the
-          cluster's own leaves, never here. */}
+      {/* Bottom-right (ADR-059 U1, reshaped by U2–U3): the journey's
+          `contact` mark, then a session mark only an allowlisted signed-in
+          user ever sees, then the theme switch — one line, with the switch
+          anchoring the frame line and new icons joining to its LEFT.
+          Replaces the standalone `LightModeToggle` on this route; `/arcs`
+          still mounts that directly, having no cluster to join. The auth
+          and journey subscriptions both live in the cluster's own leaves,
+          never here. */}
       {THEME_TOGGLE && <SettingsCluster />}
       {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} />}
       {/* Auth-gated admin editor. Its `useAuth` subscription lives

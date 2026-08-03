@@ -9,8 +9,8 @@
 
    The four corners each carry one idea: journey / nav / brand / settings.
    The journey runs top-left — Home · Thesis · Arc · Proof · Services ·
-   About — and the bottom-right is where you leave: `contact`, bracketed by
-   the theme switch and the session mark. Only state moves.
+   About — and the bottom-right is where you leave: `contact`, then the
+   session mark and the theme switch. Only state moves.
 
    Shape law: radius 0; diamonds, never circles; hairlines only; gold is
    WAYFINDING — it marks where you are and nothing else; no italics.
@@ -175,10 +175,18 @@
 }
 
 /* ── BOTTOM-RIGHT: THE EXIT + SETTINGS (ADR-059 Update 3) ────────────────
-   One row: theme switch · `contact` · session mark. The two controls
-   BRACKET the mark rather than clustering at one end, which is the owner's
-   ordering and why the gap here is uniform — this reads as one run of
-   three, not as two groups.
+   One row: `contact` · session mark · theme switch. Marks INBOARD,
+   controls OUTBOARD, one group gap between them.
+
+   ⚠ THE THEME SWITCH IS THE ANCHOR AND STAYS LAST (owner, 2026-08-03).
+   Anything added to this corner goes to its LEFT. It is the only control
+   here on every viewport and the one that predates the instruments, so it
+   is the fixed point — do not reorder it to lead the row.
+
+   The group gap is not decoration. With the switch leading (the shape this
+   replaces) the dim `ahead` glyph sat flush against it and read as a
+   DISABLED CONTROL. Grouping is what says these are different kinds of
+   object.
 
    §2 ruled the corner could not hold a cluster and a control; that was
    measured against a glyph row that still carried LABELS (~36px into a
@@ -203,38 +211,42 @@
   height: var(--hud-corner-zone);
   display: flex;
   align-items: center;
-  /* One uniform gap — the row is a run of three, not two groups. */
-  gap: clamp(10px, 1.1vw, 16px);
+  /* Marks to controls — wider than the gap BETWEEN controls, so the row
+     reads as two groups rather than one run of three things. */
+  gap: clamp(12px, 1.3vw, 20px);
   z-index: 60;
   pointer-events: none;
 }
-/* ⚠ Only the CONTROLS take pointer events, named individually. The mark
-   between them is informational — `aria-hidden`, and the nav corner remains
-   the single navigation — so a blanket `.rin-settings > *` would hand an
-   inert glyph a 16px hit box in the corner of every page, sitting in the
-   gap between the two things that ARE clickable. */
-.rin-settings > .theme-toggle,
-.rin-settings > .rin-session {
+/* ⚠ Only the CONTROL GROUP takes pointer events. The mark is
+   informational — `aria-hidden`, and the nav corner remains the single
+   navigation — so a blanket `.rin-settings > *` would hand an inert glyph a
+   16px hit box in the corner of every page. */
+.rin-settings__ctl {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 14px);
   pointer-events: auto;
 }
 
 /* With the mark drawn, the row reaches OUT to the frame line the `--br`
-   bracket used to hold, so the LAST item's centre lands on the right rail's
-   track — mirroring the journey row's first mark on the left. For a visitor
-   that last item is the `contact` mark and the mirror is exact; for a
-   signed-in owner the session button closes the row instead and overhangs
-   the line by half a control. Gated on the instruments' own attribute, so
-   flipping them off returns the controls to the ADR-058 slot along with the
-   bracket.
+   bracket used to hold: the theme switch's box lands FLUSH on it, filling
+   the corner zone the bracket occupied (36px control against a 28–45px
+   zone). Gated on the instruments' own attribute, so flipping them off
+   returns the controls to the ADR-058 slot along with the bracket.
 
-   ⚠ Above 960 ONLY, because the marks stop there and a 36px control centred
-   on the track line would overhang the viewport at the small end of
-   `--hud-margin` (16px at the narrowest — the button's own half is 18px).
-   The corner's bracket comes back at that gate too, and the two must not
-   land on each other. */
+   ⚠ FLUSH, NOT CENTRED — this corner's mirror of the journey row is the
+   frame LINE, not the track centre. Putting a 36px control's centre on the
+   track would hang half of it outboard of the frame, and `--rin-half` is a
+   glyph's half-width, meaningless for a control. The exact centre-on-track
+   mirror holds where both terminals are marks; here the terminal is a
+   button and it butts up to the line instead.
+
+   ⚠ Above 960 ONLY, because the marks stop there and the `--br` bracket
+   comes back at that gate — a control flush on the frame line would sit
+   inside it. Below, the ADR-058 slot keeps it clear. */
 @media (min-width: 961px) {
   html[data-rail-instruments] .rin-settings {
-    right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) - var(--rin-half));
+    right: calc(var(--hud-margin) + var(--hud-rail-guide-inset));
   }
 }
 
