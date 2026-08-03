@@ -139,11 +139,17 @@ export const JOURNEY_MARKS: readonly JourneyMark[] = [
 ];
 
 /**
- * Printed at the approach row's inboard end.
+ * ⚠ THE LAB'S ZONE LABEL, and nowhere else's (owner, 2026-08-03).
  *
- * The bottom-right has NO zone label: the settings controls occupy that
- * corner's inboard terminus, and a word wedged between a glyph row and a
- * theme switch labels neither.
+ * Production prints NO zone. The bottom-right never had room for one — the
+ * settings controls occupy that corner's inboard terminus, and a word
+ * wedged between a glyph row and a theme switch labels neither — so a word
+ * at the approach row's end and nothing at the destination row's made the
+ * two read as different kinds of object rather than one instrument seen
+ * from both ends.
+ *
+ * The lab keeps it for the same reason it keeps per-mark labels: its row is
+ * scaffolding for judging the drawings, not a copy of the frame.
  */
 export const CLUSTER_ZONES = {
   approach: "Approach",

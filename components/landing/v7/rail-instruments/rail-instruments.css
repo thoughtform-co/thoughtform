@@ -96,23 +96,12 @@
   background: rgba(var(--dawn-rgb), 0.18);
 }
 
-.rin-cl__zone {
-  position: absolute;
-  top: 50%;
-  translate: 0 -50%;
-  font-family: var(--rin-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.3);
-  white-space: nowrap;
-}
-/* The zone label sits at the row's INBOARD end — never above it. Above a
-   corner is unreachable at rest: the curtain inset saturates at 0px. The
-   bottom-right has none; its inboard terminus is the settings controls. */
-.rin-cl--approach .rin-cl__zone {
-  left: calc(100% + 16px);
-}
+/* ⚠ NO `.rin-cl__zone` RULE, and no zone label to hang one on (owner,
+   2026-08-03). It sat at the approach row's inboard end and the
+   bottom-right had nowhere to put its counterpart — the settings controls
+   own that terminus — so one corner was captioned and the other was not,
+   and the two stopped reading as one instrument. The lab still prints one
+   under `.hil-cl__zone`, in its own sheet. */
 
 /* ── The marks ──────────────────────────────────────────────────────────
    `currentColor` on the SVG means the state colours the drawing and the

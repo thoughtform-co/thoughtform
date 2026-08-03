@@ -234,9 +234,16 @@ practice · contact`, right-anchored so the LAST MARK'S CENTRE lands on the
 right rail's track — the exact 180° mirror of the approach row's first mark
 on the left rail's track. Measured at 1440×900 and 1280×720: **+1px on the
 right, −1px on the left**, the two rails' 2px tracks being what that pixel
-is. The controls take the inboard end, where the approach row prints its
-zone label; the bottom-right prints none, because a word wedged between a
-glyph row and a theme switch labels neither.
+is. The controls take the inboard end — the seat the approach row's zone
+label used to hold at the other corner.
+
+**And that label is now gone from both** (owner, same day). The
+bottom-right could never have a counterpart: the controls own its inboard
+terminus, and a word wedged between a glyph row and a theme switch labels
+neither. Captioning one corner and not the other made the two rows read as
+different kinds of object rather than one instrument seen from both ends,
+so the frame prints no zone anywhere. `CLUSTER_ZONES` survives for the lab
+only, which keeps it for the same reason it keeps per-mark labels.
 
 ONE flex row rather than two anchored boxes is load-bearing: the session
 mark is present only for an allowlisted signed-in user, so the control

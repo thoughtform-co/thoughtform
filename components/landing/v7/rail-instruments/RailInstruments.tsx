@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 
 import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
 
-import { APPROACH_MARKS, CLUSTER_ZONES } from "./clusters";
+import { APPROACH_MARKS } from "./clusters";
 import { MarkRow } from "./MarkRow";
 import { useJourneyMarks, useScrollReadouts } from "./useJourneyMarks";
 
@@ -118,8 +118,11 @@ export function RailInstruments({
   return (
     <>
       {createPortal(
+        // ⚠ NO ZONE LABEL (owner, 2026-08-03). The bottom-right never had
+        // room for one, and a word printed at one corner's end and not the
+        // other's made the two rows read as different kinds of object. The
+        // frame now prints no zone anywhere — the marks are the instrument.
         <div className="rin-cl rin-cl--approach" aria-hidden="true">
-          <span className="rin-cl__zone">{CLUSTER_ZONES.approach}</span>
           <MarkRow marks={APPROACH_MARKS} activeIdx={activeIdx} seat={seat} />
         </div>,
         hosts.cornerTl
