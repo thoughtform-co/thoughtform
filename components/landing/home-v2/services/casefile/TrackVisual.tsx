@@ -4,6 +4,7 @@ import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData"
 import type { CaseTrackVisual } from "@/lib/cases/types";
 
 import { FilmsPlate } from "./FilmsPlate";
+import { IntelligenceMapPlate } from "./IntelligenceMapPlate";
 import { SignalChart } from "./SignalChart";
 import { SkillsBrowserPlate } from "./SkillsBrowserPlate";
 import { StillsPlate } from "./StillsPlate";
@@ -61,6 +62,16 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
           </ul>
           {visual.tail ? <p className="fl-plate__foot">{visual.tail}</p> : null}
         </div>
+      );
+
+    case "intelligence-map":
+      return (
+        <IntelligenceMapPlate
+          configurations={visual.configurations}
+          skills={visual.skills}
+          groups={visual.groups}
+          intelligence={visual.intelligence}
+        />
       );
 
     case "registry": {

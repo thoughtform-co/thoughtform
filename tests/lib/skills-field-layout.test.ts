@@ -21,12 +21,17 @@ import { CASES } from "@/lib/cases/registry";
  * These are the guards for that.
  */
 
-/** The live map track — the only registry visual carrying a portfolio. */
+/** The live map track — the only case visual carrying the Skill portfolio. */
 const mapTrack = CASES.flatMap((c) => c.casefile.tracks).find(
-  (t) => t.visual.kind === "registry" && t.visual.skills?.length
+  (t) =>
+    (t.visual.kind === "registry" || t.visual.kind === "intelligence-map") &&
+    t.visual.skills?.length
 );
 
-const visual = mapTrack?.visual.kind === "registry" ? mapTrack.visual : null;
+const visual =
+  mapTrack?.visual.kind === "registry" || mapTrack?.visual.kind === "intelligence-map"
+    ? mapTrack.visual
+    : null;
 const skills = visual?.skills ?? [];
 const placed: PlacedSkill[] = skills.map((skill, i) => ({ skill, ordinal: i + 1 }));
 

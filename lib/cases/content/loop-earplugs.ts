@@ -1,4 +1,10 @@
-import type { CaseDef, CaseIntelligence, CaseSkillEntry, CaseTeamDraw } from "../types";
+import type {
+  CaseDef,
+  CaseIntelligence,
+  CaseSkillEntry,
+  CaseTeamDraw,
+  CaseWorkConfiguration,
+} from "../types";
 
 /**
  * Loop Earplugs — the flagship case (ADR-054), rendered as the casefile at
@@ -40,7 +46,8 @@ import type { CaseDef, CaseIntelligence, CaseSkillEntry, CaseTeamDraw } from "..
  * appears here or may be added — see `.claude/rules/proof.md`. Loop staff
  * are first-name only. Tool codenames are in scope for a case study
  * (published precedent: PROJECT_CASES); they stay OUT of general service
- * copy (`services/serviceDesignations.ts`).
+ * copy (`services/serviceDesignations.ts`). The work-configuration records
+ * below are stricter: broad public roles only, with no personal names.
  */
 
 /* ── Evidence, hoisted so both surfaces read the same rows ───────────── */
@@ -194,6 +201,7 @@ const TOOL_IDS = ["mimir", "vesper", "babylon", "heimdall"] as const;
 const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   // Judgment — 12
   {
+    id: "nda-pre-check",
     name: "NDA Pre-Check",
     team: "Legal",
     engine: "Judgment",
@@ -202,6 +210,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Clause-by-clause review encoded. Routine deviations get caught and handled, novel ones route to Legal. Four more pre-checks build on its shape.",
   },
   {
+    id: "legal-risk-methodology",
     name: "Legal Risk Methodology",
     team: "Legal",
     engine: "Judgment",
@@ -210,6 +219,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Loop's risk methodology as substrate, starting with AI and data privacy. The engine every Legal pre-check calls into.",
   },
   {
+    id: "spa-pre-check",
     name: "SPA Pre-Check",
     team: "Legal",
     engine: "Judgment",
@@ -217,6 +227,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
     summary: "The NDA pre-check's judgment shape, applied to shareholder purchase agreements.",
   },
   {
+    id: "product-ideation",
     name: "Product Ideation",
     team: "Product Management",
     engine: "Judgment",
@@ -225,6 +236,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Pressure-tests a raw idea against the portfolio, the mission, the value spaces and the roadmap before anyone builds a case for it.",
   },
   {
+    id: "risk-management",
     name: "Risk Management",
     team: "Program Management & Product",
     engine: "Judgment",
@@ -233,6 +245,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Standardises how a risk gets described, finds the gaps, and surfaces the reasoning behind a decision rather than only its outcome.",
   },
   {
+    id: "brr-generator",
     name: "BRR Generator",
     team: "Product Engineering",
     engine: "Judgment",
@@ -241,6 +254,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Turns intake into a business requirements review on the engineering team's own standard template.",
   },
   {
+    id: "onboarding-pops-processes",
     name: "Onboarding & POps Processes",
     team: "People Ops",
     engine: "Judgment",
@@ -249,6 +263,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Encodes how People Ops reasons about edge cases, not just the happy path. Reasoning first, automation second.",
   },
   {
+    id: "partnership-inbox-filter",
     name: "Partnership Inbox Filter",
     team: "Brand & Partnerships",
     engine: "Judgment",
@@ -257,6 +272,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Classifies an inbound partnership request by tier and drafts the response that tier warrants, with its reasoning attached.",
   },
   {
+    id: "cost-feasibility-portfolio",
     name: "Cost / Feasibility / Portfolio",
     team: "Manufacturing Programs",
     engine: "Judgment",
@@ -265,6 +281,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Manufacturing-side triage on cost, feasibility and portfolio fit. Shares its judgment engine with the design-side checks.",
   },
   {
+    id: "ux-foundations-evaluation",
     name: "UX Foundations Evaluation",
     team: "Product Design & UX",
     engine: "Judgment",
@@ -273,6 +290,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Reads a concept and returns its alignment against Loop's six UX pillars, naming what fails rather than scoring it out of ten.",
   },
   {
+    id: "concept-triage-engine",
     name: "Concept Triage Engine",
     team: "Product Design & UX",
     engine: "Judgment",
@@ -281,6 +299,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Three checks on one engine: cost, feasibility, portfolio fit. Four design questions answered as a single architectural move.",
   },
   {
+    id: "loop-creative-strategy",
     name: "Loop Creative Strategy",
     team: "Performance",
     engine: "Judgment",
@@ -290,6 +309,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   },
   // Voice — 7
   {
+    id: "employer-branding-tov",
     name: "Employer Branding TOV",
     team: "Talent Acquisition",
     engine: "Voice",
@@ -298,6 +318,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Employer-facing tone for job posts, outreach and candidate comms. Pairs with the internal People voice on the other side of the door.",
   },
   {
+    id: "people-team-voice",
     name: "People-team Voice",
     team: "People Ops",
     engine: "Voice",
@@ -306,6 +327,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "The internal register, encoded from the team's own tone-of-voice doc. Playbook pages first, then emails and decks.",
   },
   {
+    id: "founder-tone-of-voice",
     name: "Founder Tone of Voice",
     team: "Brand & Partnerships",
     engine: "Voice",
@@ -314,6 +336,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "The founder's voice encoded, used for stage prep and for ongoing founder-led communication.",
   },
   {
+    id: "paid-social-tov",
     name: "Paid Social TOV",
     team: "Brand & Partnerships",
     engine: "Voice",
@@ -322,6 +345,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Paid-social copy rules encoded, so a campaign draft arrives on-brand and human review starts from something real.",
   },
   {
+    id: "loop-paid-social",
     name: "Loop Paid Social",
     team: "Studio",
     engine: "Voice",
@@ -330,6 +354,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Grounded in the real ad archive across every product, angle, season and collab. Writes primary text, headlines and descriptions in Loop's voice.",
   },
   {
+    id: "loop-crm",
     name: "Loop CRM",
     team: "Studio",
     engine: "Voice",
@@ -338,6 +363,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Lifecycle communication end to end: onboarding, retention, escalation, win-back, loyalty, with the privacy guardrails encoded in, not bolted on.",
   },
   {
+    id: "loop-marketplace",
     name: "Loop Marketplace",
     team: "Studio",
     engine: "Voice",
@@ -347,6 +373,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   },
   // Validation — 9
   {
+    id: "tracker-compliance-checker",
     name: "Tracker Compliance Checker",
     team: "Legal",
     engine: "Validation",
@@ -355,6 +382,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Drives a browser across the Loop webshops every week and reports every consent violation it finds, checked against policy.",
   },
   {
+    id: "interview-debrief",
     name: "Interview Debrief",
     team: "Talent Acquisition",
     engine: "Validation",
@@ -363,6 +391,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Turns panel notes into a debrief scored against Loop's hiring bars. A fixed rubric, which is what makes it a validation shape.",
   },
   {
+    id: "gl-reconciliations",
     name: "GL Reconciliations",
     team: "Finance & Accounting",
     engine: "Validation",
@@ -371,6 +400,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Takes the ledger extract through its reconciliation checks and flags the anomalies for a human to judge.",
   },
   {
+    id: "belgian-vat-return",
     name: "Belgian VAT Return",
     team: "Finance & Accounting",
     engine: "Validation",
@@ -379,6 +409,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Turns the ledger extract into the VAT return, replacing the manual spreadsheet lookups the boxes used to need.",
   },
   {
+    id: "quality-auditor",
     name: "Quality Auditor",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
@@ -387,6 +418,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Scores support tickets against the team's own scorecard, compares AI answers to human ones, and reports the outliers.",
   },
   {
+    id: "fraud-detection",
     name: "Fraud Detection",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
@@ -395,6 +427,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Pattern analysis over orders: odd addresses, bot activity, suspicious refunds. The output is a flag list, not a verdict.",
   },
   {
+    id: "invoice-processor",
     name: "Invoice Processor",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
@@ -403,6 +436,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Reads supplier invoices across every template, cross-checks them against the vendor master, POs and prior invoices, and catches scam patterns.",
   },
   {
+    id: "supplier-qa-audit",
     name: "Supplier QA Audit",
     team: "Manufacturing Programs",
     engine: "Validation",
@@ -411,6 +445,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Scores supplier quality reports against Loop's bars, alongside the warehousing team's own quality work.",
   },
   {
+    id: "localization",
     name: "Localization",
     team: "Studio",
     engine: "Validation",
@@ -420,6 +455,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   },
   // Stakeholder — 5
   {
+    id: "candidate-screening-brief",
     name: "Candidate Screening Brief",
     team: "Talent Acquisition",
     engine: "Stakeholder",
@@ -428,6 +464,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Structures intake notes into one screening brief a hiring manager can read in a single pass.",
   },
   {
+    id: "program-status-updates",
     name: "Program Status Updates",
     team: "Program Management & Product",
     engine: "Stakeholder",
@@ -436,6 +473,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Reads transcripts, checks the risk board, reviews the roadmap, and drafts the cross-team status digest from all three.",
   },
   {
+    id: "market-scan-brief",
     name: "Market Scan Brief",
     team: "Strategic Insights",
     engine: "Stakeholder",
@@ -444,6 +482,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Structures competitive and category signals into a standing brief the insights team refreshes weekly.",
   },
   {
+    id: "survey-synthesis",
     name: "Survey Synthesis",
     team: "Strategic Insights",
     engine: "Stakeholder",
@@ -452,6 +491,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Turns raw survey exports into themed readouts, each carrying quoted evidence and a note on how confident it is.",
   },
   {
+    id: "feedback-summarizer",
     name: "Feedback Summarizer",
     team: "Studio",
     engine: "Stakeholder",
@@ -461,6 +501,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   },
   // Pattern — 14
   {
+    id: "variance-commentary",
     name: "Variance Commentary",
     team: "Finance & Accounting",
     engine: "Pattern",
@@ -469,6 +510,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Month-end variance templates encoded. It drafts the commentary and Finance reviews it, and it sounds like the person who used to write it.",
   },
   {
+    id: "mec-tracker",
     name: "MEC Tracker",
     team: "Finance & Accounting",
     engine: "Pattern",
@@ -477,6 +519,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "The month-end close carried forward as a live project: it surfaces blockers as they appear and drafts the status note.",
   },
   {
+    id: "vsme-sustainability-reporting",
     name: "VSME Sustainability Reporting",
     team: "Program Management & Product",
     engine: "Pattern",
@@ -485,6 +528,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Structured inputs into the voluntary SME reporting template. Credible disclosures without a dedicated reporting function.",
   },
   {
+    id: "daily-brief",
     name: "Daily Brief",
     team: "Product Engineering",
     engine: "Pattern",
@@ -493,6 +537,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Pulls mail, transcripts and boards into one morning brief for engineering. The multi-source briefing pattern other teams now reuse.",
   },
   {
+    id: "dashboard-consolidation",
     name: "Dashboard Consolidation",
     team: "Warehousing & Customer Ops",
     engine: "Pattern",
@@ -501,6 +546,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Harmonises two analytics sources into a single exec-ready readout, on the same briefing pattern.",
   },
   {
+    id: "sop-generator",
     name: "SOP Generator",
     team: "People Ops",
     engine: "Pattern",
@@ -509,6 +555,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Reverse-engineered from Loop's good SOPs: it asks the question flow that elicits a complete one, then drafts it for review.",
   },
   {
+    id: "360-marketing-agent",
     name: "360 Marketing Agent",
     team: "Brand & Partnerships",
     engine: "Pattern",
@@ -517,6 +564,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "A marketing assistant lifted out of one person's private chatbot into a shared Skill that can be versioned and used across teams.",
   },
   {
+    id: "trend-scraper",
     name: "Trend Scraper",
     team: "Strategic Insights",
     engine: "Pattern",
@@ -525,6 +573,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Pulls external trend signals into a digest the team routes on into its briefing and calendar work.",
   },
   {
+    id: "lead-time-calculator",
     name: "Lead Time Calculator",
     team: "Manufacturing Programs",
     engine: "Pattern",
@@ -533,6 +582,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Encodes lead-time rules across suppliers and lanes, so programme dates stay honest in a planning conversation.",
   },
   {
+    id: "cmf-file-generator",
     name: "CMF File Generator",
     team: "Product Design & UX",
     engine: "Pattern",
@@ -541,6 +591,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Workbook in, manufacturer-ready colour-material-finish PDF with renders out. Wired into Vesper end to end.",
   },
   {
+    id: "loop-packaging-system",
     name: "Loop Packaging System",
     team: "Product Design & UX",
     engine: "Pattern",
@@ -549,6 +600,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Artwork and workbook in, supplier-ready PDFs with info-box overlays and the creative intent brief out. Promotes the whole folder EVT to MP.",
   },
   {
+    id: "product-review-analysis",
     name: "Product Review Analysis",
     team: "Product Design & UX",
     engine: "Pattern",
@@ -557,6 +609,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Scrapes and structures marketplace reviews, surfacing themes and request patterns across markets.",
   },
   {
+    id: "asset-brief-generator",
     name: "Asset Brief Generator",
     team: "Studio",
     engine: "Pattern",
@@ -565,12 +618,355 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
       "Drafts a studio brief from campaign inputs, so a producer starts from a complete spec instead of a blank document.",
   },
   {
+    id: "genai-prompting",
     name: "GenAI Prompting",
     team: "Studio",
     engine: "Pattern",
     status: "In use",
     summary:
       "How Loop gets useful work out of AI image and video tools: which models want a story, which want keywords, and how one idea becomes a slate.",
+  },
+];
+
+/**
+ * Eight public, source-backed work configurations. These are the persistent
+ * atoms of the Intelligence Map; the 47 Skills above are one substrate they
+ * may inherit, not the map itself.
+ *
+ * Allocation is deliberately explicit on every row. NDA review is backed by
+ * work-level usage evidence, the firmware audit by a same-work capability
+ * comparison, and the other six are labelled as function signals. Nothing
+ * here claims per-Skill token telemetry, which the source system does not
+ * contain. People, vendors, model families, costs and source URLs stay out.
+ */
+const LOOP_WORK_CONFIGURATIONS: readonly CaseWorkConfiguration[] = [
+  {
+    id: "review-nda",
+    work: "Review an NDA",
+    mapLabel: "NDA review",
+    publicFunction: "Legal & Risk",
+    shape: "Judgment",
+    lifecycle: "In build",
+    linkedSkillIds: ["nda-pre-check", "legal-risk-methodology"],
+    summary:
+      "A clause-by-clause pre-check applies encoded risk judgment, routes novel deviations to Legal and leaves the final decision with a reviewer.",
+    ownerRole: "Legal reviewer",
+    humanCheckpoint: "Reviews every pre-check and decides how novel deviations are handled.",
+    allocationTier: "Deep",
+    allocationBasis: "work-evidenced",
+    facets: {
+      human: {
+        state: "Inside the loop",
+        detail: "A legal reviewer owns the final decision on every agreement.",
+      },
+      model: {
+        state: "Deep",
+        detail: "Long, nuanced documents make the reasoning the work.",
+      },
+      skill: {
+        state: "Encoded",
+        detail: "The NDA pre-check inherits the shared legal-risk method.",
+      },
+      context: {
+        state: "Agreement + standard",
+        detail: "The agreement is read against the approved review standard.",
+      },
+      execution: {
+        state: "Guided pre-check",
+        detail: "Routine deviations are surfaced; novel ones route to Legal.",
+      },
+      eval: {
+        state: "In build",
+        detail: "Real agreement clauses are the proving cases.",
+      },
+    },
+  },
+  {
+    id: "audit-firmware-release",
+    work: "Audit a firmware release",
+    mapLabel: "Release audit",
+    publicFunction: "Product & Engineering",
+    shape: "Judgment",
+    lifecycle: "Evaluated",
+    linkedSkillIds: [],
+    summary:
+      "A repository-wide release audit reads code, tests, build variants and history before an engineering reviewer judges architecture and release risk.",
+    ownerRole: "Engineering reviewer",
+    humanCheckpoint: "Sets the release bar and judges architectural and release-risk findings.",
+    allocationTier: "Frontier",
+    allocationBasis: "work-evaluated",
+    facets: {
+      human: {
+        state: "Above + edge",
+        detail: "Engineering sets the release bar and judges consequential findings.",
+      },
+      model: {
+        state: "Frontier",
+        detail: "The strongest tier proved more exhaustive on the same audit.",
+      },
+      skill: {
+        state: "No linked Skill",
+        detail: "Repository conventions, tests and build evidence form the substrate.",
+      },
+      context: {
+        state: "Repository + tests",
+        detail: "Code, test infrastructure, build variants and history are read together.",
+      },
+      execution: {
+        state: "Repository audit",
+        detail: "The audit spans architecture, release paths and test coverage.",
+      },
+      eval: {
+        state: "Compared",
+        detail: "The same audit was compared across two capability tiers.",
+      },
+    },
+  },
+  {
+    id: "pressure-test-product-idea",
+    work: "Pressure-test a product idea",
+    mapLabel: "Idea test",
+    publicFunction: "Product & Engineering",
+    shape: "Judgment",
+    lifecycle: "In build",
+    linkedSkillIds: ["product-ideation", "ux-foundations-evaluation"],
+    summary:
+      "A raw idea is tested against portfolio fit, the roadmap and experience principles before a product lead decides whether it advances.",
+    ownerRole: "Product lead",
+    humanCheckpoint: "Owns portfolio fit and decides whether the idea advances.",
+    allocationTier: "Everyday",
+    allocationBasis: "function-signal",
+    facets: {
+      human: {
+        state: "Above + edge",
+        detail: "Product sets the quality bar and decides what advances.",
+      },
+      model: {
+        state: "Everyday",
+        detail: "A provisional function-level placement, not a per-work measure.",
+      },
+      skill: {
+        state: "Encoded",
+        detail: "Product ideation and experience principles provide the judgment layer.",
+      },
+      context: {
+        state: "Portfolio + roadmap",
+        detail: "The idea is read against the current portfolio and roadmap.",
+      },
+      execution: {
+        state: "Structured review",
+        detail: "The configuration produces a reasoned pressure test, not a score.",
+      },
+      eval: {
+        state: "In build",
+        detail: "The review pattern is still being established on real ideas.",
+      },
+    },
+  },
+  {
+    id: "prepare-supplier-packaging",
+    work: "Prepare supplier-ready packaging",
+    mapLabel: "Packaging",
+    publicFunction: "Design & Production",
+    shape: "Pattern",
+    lifecycle: "In use",
+    linkedSkillIds: ["loop-packaging-system", "cmf-file-generator"],
+    summary:
+      "Approved artwork and a structured workbook become supplier-ready files, with design retaining the gate on exceptions and final handoff.",
+    ownerRole: "Design reviewer",
+    humanCheckpoint: "Approves exceptions and the supplier-ready handoff.",
+    allocationTier: "Deep",
+    allocationBasis: "function-signal",
+    facets: {
+      human: {
+        state: "At the edge",
+        detail: "Design approves exceptions and the final production handoff.",
+      },
+      model: {
+        state: "Deep",
+        detail: "A provisional function-level placement, not a per-work measure.",
+      },
+      skill: {
+        state: "Encoded",
+        detail: "Packaging and colour-material-finish methods are maintained substrate.",
+      },
+      context: {
+        state: "Artwork + workbook",
+        detail: "Approved source artwork and structured product data ground the output.",
+      },
+      execution: {
+        state: "Production workflow",
+        detail: "The workflow assembles supplier-ready files and the handoff brief.",
+      },
+      eval: {
+        state: "In use",
+        detail: "The complete output is checked before supplier handoff.",
+      },
+    },
+  },
+  {
+    id: "produce-paid-social-copy",
+    work: "Produce paid-social copy",
+    mapLabel: "Social copy",
+    publicFunction: "Creative & Brand",
+    shape: "Voice",
+    lifecycle: "In use",
+    linkedSkillIds: ["loop-creative-strategy", "paid-social-tov", "loop-paid-social"],
+    summary:
+      "Campaign inputs inherit the creative strategy, approved voice and real ad archive before Brand judges the final copy.",
+    ownerRole: "Brand lead",
+    humanCheckpoint: "Sets the voice and approves campaign copy before release.",
+    allocationTier: "Everyday",
+    allocationBasis: "function-signal",
+    facets: {
+      human: {
+        state: "Above + edge",
+        detail: "Brand sets the voice and approves consequential campaign choices.",
+      },
+      model: {
+        state: "Everyday",
+        detail: "A provisional function-level placement, not a per-work measure.",
+      },
+      skill: {
+        state: "Encoded",
+        detail: "Creative strategy, paid-social voice and generation rules work together.",
+      },
+      context: {
+        state: "Campaign + archive",
+        detail: "The brief is grounded in approved campaign inputs and real ads.",
+      },
+      execution: {
+        state: "Campaign workflow",
+        detail: "The configuration drafts the primary copy set for review.",
+      },
+      eval: {
+        state: "In use",
+        detail: "Human review checks voice, fit and campaign readiness.",
+      },
+    },
+  },
+  {
+    id: "review-supplier-invoices",
+    work: "Review supplier invoices",
+    mapLabel: "Invoice check",
+    publicFunction: "Operations",
+    shape: "Validation",
+    lifecycle: "In use",
+    linkedSkillIds: ["invoice-processor", "fraud-detection"],
+    summary:
+      "Supplier invoices are checked against trusted records and suspicious patterns; Operations judges mismatches before any action follows.",
+    ownerRole: "Operations reviewer",
+    humanCheckpoint: "Judges mismatches and suspicious patterns before action.",
+    allocationTier: "Everyday",
+    allocationBasis: "function-signal",
+    facets: {
+      human: {
+        state: "Inside the loop",
+        detail: "Operations reviews every flagged mismatch before action.",
+      },
+      model: {
+        state: "Everyday",
+        detail: "A provisional function-level placement, not a per-work measure.",
+      },
+      skill: {
+        state: "Encoded",
+        detail: "Invoice validation and suspicious-pattern checks share the work.",
+      },
+      context: {
+        state: "Invoice + records",
+        detail: "Invoices are checked against supplier, order and prior-invoice records.",
+      },
+      execution: {
+        state: "Validation workflow",
+        detail: "The configuration extracts, cross-checks and flags; it does not decide.",
+      },
+      eval: {
+        state: "In use",
+        detail: "Flagged mismatches are judged by the operations reviewer.",
+      },
+    },
+  },
+  {
+    id: "reconcile-general-ledger",
+    work: "Reconcile the general ledger",
+    mapLabel: "Ledger check",
+    publicFunction: "Finance",
+    shape: "Validation",
+    lifecycle: "In build",
+    linkedSkillIds: ["gl-reconciliations", "mec-tracker"],
+    summary:
+      "The ledger extract runs through reconciliation and close checks, surfacing anomalies for Finance to judge and resolve.",
+    ownerRole: "Finance reviewer",
+    humanCheckpoint: "Reviews anomalies and owns the final reconciliation.",
+    allocationTier: "Everyday",
+    allocationBasis: "function-signal",
+    facets: {
+      human: {
+        state: "Inside the loop",
+        detail: "Finance reviews anomalies and owns the final reconciliation.",
+      },
+      model: {
+        state: "Everyday",
+        detail: "A provisional function-level placement, not a per-work measure.",
+      },
+      skill: {
+        state: "Encoded",
+        detail: "Reconciliation checks and the close tracker carry the method.",
+      },
+      context: {
+        state: "Ledger + close rules",
+        detail: "The current ledger extract is grounded in approved close rules.",
+      },
+      execution: {
+        state: "Reconciliation flow",
+        detail: "Checks surface exceptions and draft the close status for review.",
+      },
+      eval: {
+        state: "In build",
+        detail: "Real close cases are establishing the validation set.",
+      },
+    },
+  },
+  {
+    id: "prepare-cross-team-status",
+    work: "Prepare a cross-team status digest",
+    mapLabel: "Status digest",
+    publicFunction: "People & Programs",
+    shape: "Stakeholder",
+    lifecycle: "In build",
+    linkedSkillIds: ["program-status-updates", "risk-management"],
+    summary:
+      "Transcripts, risks and roadmap changes become a concise status digest while a program lead owns the framing and exceptions.",
+    ownerRole: "Program lead",
+    humanCheckpoint: "Sets the readout and corrects consequential gaps or exceptions.",
+    allocationTier: "Everyday",
+    allocationBasis: "function-signal",
+    facets: {
+      human: {
+        state: "Above + edge",
+        detail: "Programs sets the readout and corrects consequential exceptions.",
+      },
+      model: {
+        state: "Everyday",
+        detail: "A provisional function-level placement, not a per-work measure.",
+      },
+      skill: {
+        state: "Encoded",
+        detail: "Status framing and risk reasoning provide the shared method.",
+      },
+      context: {
+        state: "Transcripts + plans",
+        detail: "Meeting records, risks and roadmap changes are read together.",
+      },
+      execution: {
+        state: "Multi-source brief",
+        detail: "The configuration synthesises a concise cross-team readout.",
+      },
+      eval: {
+        state: "In build",
+        detail: "The program team reviews each digest against the live situation.",
+      },
+    },
   },
 ];
 
@@ -643,14 +1039,6 @@ const LOOP_INTELLIGENCE: CaseIntelligence = {
       why: "Twenty-three people at a light draw each. Breadth is the shape here, not depth.",
     },
   ],
-  trend: {
-    label: "Frontier share of draw",
-    points: [
-      { stamp: "May", value: "0%" },
-      { stamp: "Jun", value: "3%" },
-      { stamp: "Jul", value: "21%" },
-    ],
-  },
 };
 
 /**
@@ -935,28 +1323,24 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         icon: "dir",
         preview: "Preview — 01_intelligence-map/",
         vizLabel: "Map — work to intelligence",
-        // The ONLY `registry` track, and the reference-equality guard finds
-        // the first one — so this is what keeps the beat/casefile plate
-        // sharing live now that the skill-layer row is gone.
+        // The work-first map keeps the beat's registry groups and rows by
+        // reference, while adding the configurations used only by the
+        // casefile surface.
         //
-        // `skills` makes the plate a BROWSER (ADR-056 U13): engine tabs
-        // carrying the group counts, clickable chips for the selected
-        // engine, a provenance line for the selected skill. The casefile
-        // stops rendering MAP_ROWS visually — the browser shows the real
-        // portfolio, which is what the exemplars stood in for — but the
-        // rows STAY here because the beat still renders them and the
-        // sharing guard still asserts them shared.
+        // `configurations` is the persistent work field. `skills` is its
+        // fixed substrate reservoir, linked by stable ids; MAP_ROWS stays
+        // because the beat still renders the exemplars and the sharing guard
+        // still asserts that the beat and casefile use one source.
         //
-        // `intelligence` + `teamDraw` make it the MAP (ADR-056 U16): the
-        // lattice becomes one of three views, alongside the configuration
-        // stack and the allocation ladder. The row's name finally means
-        // what it says — the map is the models, the connectors, the Skills
-        // and the tools, not the Skills alone.
+        // `intelligence` preserves the rounded reach/draw evidence while the
+        // work records carry their explicit allocation tier and evidence
+        // basis. No renderer infers a work tier from team consumption.
         visual: {
-          kind: "registry",
+          kind: "intelligence-map",
           groups: MAP_GROUPS,
           rows: MAP_ROWS,
           skills: LOOP_SKILLS,
+          configurations: LOOP_WORK_CONFIGURATIONS,
           intelligence: LOOP_INTELLIGENCE,
           teamDraw: LOOP_TEAM_DRAW,
         },

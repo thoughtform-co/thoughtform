@@ -22,6 +22,7 @@ component you can edit in isolation.
 - [ADR-050: Card face + in-canvas drawer](../sentinel/decisions/050-services-card-face.md) — the tight face, the drawer, the promotion
 - [ADR-025: Services hologram stage](../sentinel/decisions/025-services-hologram-stage.md) — the oscillation history; read before redesigning this surface again
 - [ADR-044: Services masthead](../sentinel/decisions/044-services-masthead.md) · [ADR-047: About deck flip](../sentinel/decisions/047-about-deck-flip-stage.md) — the beat before and the beat after
+- [ADR-061: Intelligence Map work configurations](../sentinel/decisions/061-intelligence-map-work-configurations.md) — Accepted contract for the Proof field mounted at the front of this stage
 
 ## The card is ONE object
 
@@ -42,17 +43,40 @@ rect — the drawer is not a linear extension of the card's.
 Changing the card's shape or state model touches **six** files in lockstep.
 Change one alone and the surface is incoherent, not merely imperfect:
 
-| File                          | Owns                                                    |
-| ----------------------------- | ------------------------------------------------------- |
-| `unifiedServicesInstrument.ts` | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`) |
-| `CorridorArmillary.tsx`       | mounts the ring; passes `faceVariant` / `openDrawer`     |
-| `ServicesStage.tsx`           | owns open state; the production `openPlateRef` writer    |
-| `ServicesRingHitAreas.tsx`    | every hit target + the sr-only copy of baked text        |
-| `ServicesDesignationLayer.tsx` | callout occlusion against each published card rect      |
+| File                            | Owns                                                                                   |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `unifiedServicesInstrument.ts`  | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`)                                |
+| `CorridorArmillary.tsx`         | mounts the ring; passes `faceVariant` / `openDrawer`                                   |
+| `ServicesStage.tsx`             | owns open state; the production `openPlateRef` writer                                  |
+| `ServicesRingHitAreas.tsx`      | every hit target + the sr-only copy of baked text                                      |
+| `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                     |
 | `BrandmarkPhysicsCoreActor.tsx` | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27) |
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.
+
+## The Proof map allocates work configurations
+
+The Intelligence Map inside `ServicesCasefile` has exactly three projections:
+**CONFIGURATION · TEAM · ALLOCATION**. The persistent moving atom is a work
+configuration, keyed by a stable non-display id. The canonical 47 Skills are a
+fixed reference reservoir: selection may highlight them, but they do not
+regroup and SUBSTRATE is not a tab. Never restore STACK or ship a renamed
+Skills inventory as the map.
+
+Allocation communicates rounded aggregate evidence through generic Fast ·
+Everyday · Deep · Frontier lanes, reach/draw cohorts and qualitative bands. It
+is not live telemetry and must never attach token counts, cost or causal usage
+shares to a Skill. Visible and hidden browser data carry no personal names or
+identifying initials, vendor/model names, currency, internal links or private
+board/doc/repo identifiers. Private sources are authoring inputs only.
+
+Keep the field on the DOM seam: pure deterministic layout, one bounded
+click-driven intra-field FLIP, no second canvas/force graph, no runtime private
+fetch and no Three/R3F/Drei import. The desktop detail is the existing
+stage-contained slide-in focus surface; mobile uses grouped in-flow rows and
+detail rather than squeezing the desktop field. Full contracts and verification
+live in ADR-061 and `.claude/rules/proof.md`.
 
 ## Traps specific to this surface
 

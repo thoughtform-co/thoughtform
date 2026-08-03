@@ -269,7 +269,7 @@ describe("cases registry (ADR-054)", () => {
         const v = t.visual;
         if (v.kind === "log") expect(v.rows.length).toBeGreaterThan(0);
         if (v.kind === "register") expect(v.rows.length).toBeGreaterThan(0);
-        if (v.kind === "registry") {
+        if (v.kind === "registry" || v.kind === "intelligence-map") {
           expect(v.rows.length).toBeGreaterThan(0);
           expect(v.groups.length).toBeGreaterThan(0);
           // WEIGHTS ARE ALL-OR-NONE (ADR-056 U12). The tabs print every
@@ -415,11 +415,14 @@ describe("cases registry (ADR-054)", () => {
       }
       const beatReg = c.beats.find((b) => b.visual.kind === "registry")?.visual;
       if (beatReg?.kind === "registry") {
-        const trackReg = c.casefile.tracks.find((t) => t.visual.kind === "registry")?.visual;
-        expect(trackReg?.kind, `${c.slug}: no casefile row shares the beat's registry plate`).toBe(
-          "registry"
-        );
-        if (trackReg?.kind === "registry") {
+        const trackReg = c.casefile.tracks.find(
+          (t) => t.visual.kind === "registry" || t.visual.kind === "intelligence-map"
+        )?.visual;
+        expect(
+          trackReg?.kind === "registry" || trackReg?.kind === "intelligence-map",
+          `${c.slug}: no casefile row shares the beat's registry plate`
+        ).toBe(true);
+        if (trackReg?.kind === "registry" || trackReg?.kind === "intelligence-map") {
           expect(trackReg.rows).toBe(beatReg.rows);
           expect(trackReg.groups).toBe(beatReg.groups);
         }
@@ -481,7 +484,10 @@ describe("cases registry (ADR-054)", () => {
         for (const b of t.blocks ?? []) {
           if (b.stat && /skills?/i.test(b.title)) note(b.stat, `${t.id} block "${b.title}"`);
         }
-        if (t.visual.kind === "registry" && t.visual.groups.some((g) => g.count)) {
+        if (
+          (t.visual.kind === "registry" || t.visual.kind === "intelligence-map") &&
+          t.visual.groups.some((g) => g.count)
+        ) {
           const sum = t.visual.groups.reduce((n, g) => n + (Number(g.count) || 0), 0);
           note(String(sum), `${t.id} map plate (sum of shape counts)`);
         }
@@ -508,7 +514,7 @@ describe("cases registry (ADR-054)", () => {
 
     for (const c of CASES) {
       for (const t of c.casefile.tracks) {
-        if (t.visual.kind !== "registry") continue;
+        if (t.visual.kind !== "registry" && t.visual.kind !== "intelligence-map") continue;
         const { intelligence, teamDraw, skills } = t.visual;
         const where = `${c.slug}/${t.id}`;
 
@@ -600,6 +606,205 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
+  it("the Loop Intelligence Map is work-first, stable and referentially complete", () => {
+    const loop = getCase("loop-earplugs");
+    const visual = loop?.casefile.tracks.find((t) => t.id === "ai-transformation")?.visual;
+    expect(visual?.kind).toBe("intelligence-map");
+    if (!visual || visual.kind !== "intelligence-map") {
+      throw new Error("Loop's lead track must use the work-first intelligence-map visual");
+    }
+
+    expect(visual.skills).toHaveLength(47);
+    const skillIds = visual.skills.map((skill) => skill.id);
+    expect(new Set(skillIds).size).toBe(47);
+    for (const id of skillIds) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+
+    expect(visual.configurations).toHaveLength(8);
+    const configurationIds = visual.configurations.map((configuration) => configuration.id);
+    expect(new Set(configurationIds).size).toBe(8);
+    for (const id of configurationIds) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    const mapLabels = visual.configurations.map((configuration) => configuration.mapLabel);
+    expect(new Set(mapLabels).size).toBe(8);
+    for (const label of mapLabels) {
+      expect(label.length, `compact map label "${label}"`).toBeLessThanOrEqual(16);
+    }
+
+    expect(
+      visual.configurations.map(({ work, mapLabel, publicFunction, shape, allocationTier }) => ({
+        work,
+        mapLabel,
+        publicFunction,
+        shape,
+        allocationTier,
+      }))
+    ).toEqual([
+      {
+        work: "Review an NDA",
+        mapLabel: "NDA review",
+        publicFunction: "Legal & Risk",
+        shape: "Judgment",
+        allocationTier: "Deep",
+      },
+      {
+        work: "Audit a firmware release",
+        mapLabel: "Release audit",
+        publicFunction: "Product & Engineering",
+        shape: "Judgment",
+        allocationTier: "Frontier",
+      },
+      {
+        work: "Pressure-test a product idea",
+        mapLabel: "Idea test",
+        publicFunction: "Product & Engineering",
+        shape: "Judgment",
+        allocationTier: "Everyday",
+      },
+      {
+        work: "Prepare supplier-ready packaging",
+        mapLabel: "Packaging",
+        publicFunction: "Design & Production",
+        shape: "Pattern",
+        allocationTier: "Deep",
+      },
+      {
+        work: "Produce paid-social copy",
+        mapLabel: "Social copy",
+        publicFunction: "Creative & Brand",
+        shape: "Voice",
+        allocationTier: "Everyday",
+      },
+      {
+        work: "Review supplier invoices",
+        mapLabel: "Invoice check",
+        publicFunction: "Operations",
+        shape: "Validation",
+        allocationTier: "Everyday",
+      },
+      {
+        work: "Reconcile the general ledger",
+        mapLabel: "Ledger check",
+        publicFunction: "Finance",
+        shape: "Validation",
+        allocationTier: "Everyday",
+      },
+      {
+        work: "Prepare a cross-team status digest",
+        mapLabel: "Status digest",
+        publicFunction: "People & Programs",
+        shape: "Stakeholder",
+        allocationTier: "Everyday",
+      },
+    ]);
+
+    expect(new Set(visual.configurations.map((configuration) => configuration.shape))).toEqual(
+      new Set(["Judgment", "Voice", "Validation", "Stakeholder", "Pattern"])
+    );
+
+    const knownSkills = new Set(skillIds);
+    for (const configuration of visual.configurations) {
+      for (const skillId of configuration.linkedSkillIds) {
+        expect(
+          knownSkills.has(skillId),
+          `${configuration.id} links unknown Skill "${skillId}"`
+        ).toBe(true);
+      }
+      expect(Object.keys(configuration.facets).sort()).toEqual([
+        "context",
+        "eval",
+        "execution",
+        "human",
+        "model",
+        "skill",
+      ]);
+      for (const facet of Object.values(configuration.facets)) {
+        expect(facet.state.length, `${configuration.id} facet state`).toBeGreaterThan(0);
+        expect(facet.detail.length, `${configuration.id} facet detail`).toBeGreaterThan(0);
+      }
+    }
+
+    const firmware = visual.configurations.find(
+      (configuration) => configuration.id === "audit-firmware-release"
+    );
+    expect(firmware?.linkedSkillIds).toEqual([]);
+    for (const configuration of visual.configurations) {
+      if (configuration.id === "audit-firmware-release") continue;
+      expect(
+        configuration.linkedSkillIds.length,
+        `${configuration.id} should expose its inherited Skill substrate`
+      ).toBeGreaterThan(0);
+    }
+
+    expect(
+      visual.intelligence.tiers.map(({ name, reach, draw }) => ({ name, reach, draw }))
+    ).toEqual([
+      { name: "Fast", reach: 90, draw: 1 },
+      { name: "Everyday", reach: 90, draw: 19 },
+      { name: "Deep", reach: 60, draw: 59 },
+      { name: "Frontier", reach: 25, draw: 21 },
+    ]);
+    expect("trend" in visual.intelligence).toBe(false);
+  });
+
+  it("keeps allocation evidence explicit and the public configuration data anonymous", () => {
+    const loop = getCase("loop-earplugs");
+    const visual = loop?.casefile.tracks.find((t) => t.visual.kind === "intelligence-map")?.visual;
+    if (!visual || visual.kind !== "intelligence-map") {
+      throw new Error("Loop's work configurations are missing");
+    }
+
+    const ALLOCATION_TIERS = new Set(["Fast", "Everyday", "Deep", "Frontier"]);
+    const OWNER_ROLES = new Set([
+      "Legal reviewer",
+      "Engineering reviewer",
+      "Product lead",
+      "Design reviewer",
+      "Brand lead",
+      "Operations reviewer",
+      "Finance reviewer",
+      "Program lead",
+    ]);
+
+    for (const configuration of visual.configurations) {
+      expect(
+        Object.hasOwn(configuration, "allocationTier"),
+        `${configuration.id} must declare its tier; renderers may not infer one`
+      ).toBe(true);
+      expect(ALLOCATION_TIERS.has(configuration.allocationTier)).toBe(true);
+      expect(OWNER_ROLES.has(configuration.ownerRole), `${configuration.id} owner role`).toBe(true);
+    }
+
+    expect(
+      visual.configurations.map(({ id, allocationBasis }) => ({ id, allocationBasis }))
+    ).toEqual([
+      { id: "review-nda", allocationBasis: "work-evidenced" },
+      { id: "audit-firmware-release", allocationBasis: "work-evaluated" },
+      { id: "pressure-test-product-idea", allocationBasis: "function-signal" },
+      { id: "prepare-supplier-packaging", allocationBasis: "function-signal" },
+      { id: "produce-paid-social-copy", allocationBasis: "function-signal" },
+      { id: "review-supplier-invoices", allocationBasis: "function-signal" },
+      { id: "reconcile-general-ledger", allocationBasis: "function-signal" },
+      { id: "prepare-cross-team-status", allocationBasis: "function-signal" },
+    ]);
+
+    const banned: readonly [RegExp, string][] = [
+      [/[€$£]|\b(?:USD|EUR)\b/i, "money"],
+      [/https?:\/\/|monday\.com|notion\.com|github\.com/i, "source URL"],
+      [
+        /\b(?:claude|opus|sonnet|haiku|fable|gpt|gemini|llama|mistral|openai|anthropic)\b/i,
+        "vendor or model family",
+      ],
+      [/\b(?:aether|supabase|figma|slack)\b/i, "private system or vendor"],
+      [/\b(?:Vince|Astrid|Nathan|Koen|Olga|Helen|Damien|Robert|Toby|Maud)\b/, "personal name"],
+    ];
+    const offenders: string[] = [];
+    scanStrings(visual.configurations, "configurations", (value, path) => {
+      for (const [pattern, label] of banned) {
+        if (pattern.test(value)) offenders.push(`${path}: ${label}`);
+      }
+    });
+    expect(offenders).toEqual([]);
+  });
+
   it("every Skill's lattice symbol is unique within its plate (ADR-056 U15)", () => {
     // The lattice reads as a periodic table, and its tiles carry a SYMBOL
     // rather than a name. Two Skills under one mark is not a cosmetic clash:
@@ -608,7 +813,11 @@ describe("cases registry (ADR-054)", () => {
     // future author their new Skill needs an override.
     for (const c of CASES) {
       for (const t of c.casefile.tracks) {
-        if (t.visual.kind !== "registry" || !t.visual.skills?.length) continue;
+        if (
+          (t.visual.kind !== "registry" && t.visual.kind !== "intelligence-map") ||
+          !t.visual.skills?.length
+        )
+          continue;
         const byMark = new Map<string, string[]>();
         for (const s of t.visual.skills) {
           const mark = skillSymbol(s.name);

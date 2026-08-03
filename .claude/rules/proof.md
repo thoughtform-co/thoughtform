@@ -16,6 +16,7 @@ inherited its ambient-cover role.
 **Read first**
 
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
+- [ADR-061: Intelligence Map work configurations](../sentinel/decisions/061-intelligence-map-work-configurations.md) — Accepted Cycle B contract for the map atom, projections, evidence and privacy
 - [ADR-054](../sentinel/decisions/054-proof-station-client-cases.md) — superseded on placement; its content model and confidentiality envelope are still live
 - [ADR-029](../sentinel/decisions/029-services-card-ring.md) / [ADR-050](../sentinel/decisions/050-services-card-face.md) — the ring the casefile now holds back
 - [ADR-044](../sentinel/decisions/044-services-masthead.md) — the reveal protocol and the type standard
@@ -241,102 +242,82 @@ inherited its ambient-cover role.
   context register and the provenance line — three-line tiles plus both
   overrun the band. It keeps BOTH description lines at 720p, unlike the tools
   foot, because a block's sentence is the only place its claim is explained.
-- **The registry plate is the INTELLIGENCE MAP: ONE PERSISTENT TILE FIELD,
-  THREE PROJECTIONS (ADR-056 U13 → U17).** `skills` renders the field;
-  `intelligence` + `teamDraw` add the third projection (absent, a second
-  client gets the two-way field). The projections are SUBSTRATE (5 shape
-  rows) · TEAM (14 rows + draw band) · ALLOCATION (the tiles regroup under
-  the tier their team leans on, as heat cells, under reach/draw column
-  heads). U16's STACK view was DELETED — it restated the row's brief and
-  the panel's four blocks. Do not restore it.
-  - **THE 47 TILES ARE THE SAME DOM NODES IN EVERY PROJECTION.** Flat
-    children of one supergrid, keyed by name, in ordinal order, ALWAYS
-    FIRST, with one chrome node keyed by projection after them. Nest them
-    in per-row containers again and React remounts on every regroup —
-    which kills the morph, because you cannot fly an element that was just
-    replaced. Child order is invariant for the same reason: interleaving
-    makes React MOVE tile nodes, and `insertBefore` on a connected node
-    cancels a running transition.
-  - **Placement is PURE INTEGER MATH** in `skillsFieldLayout.ts`, never a
-    measurement. Its constants (SUB_COLS 14, TEAM_COLS 7, ALLOC_MICRO 7,
-    ALLOC_ROWS 6) are SHARED WITH THE CSS `repeat()` counts. A placement
-    outside a declared template does not error — it creates an implicit
-    track and silently deforms the lattice. `skills-field-layout.test.ts`
-    is the guard; change the constants in both places or not at all.
-  - **The nav model comes out of the same function** (`navRows`), so an
-    arrow key always lands on the tile that looks like the neighbour.
-- ⚠ **THE MORPH'S LAWS (ADR-056 U17).** This is NOT the FLIP ADR-031
-  rejected: that one flew chips ACROSS THE VIEWPORT between two surfaces
-  and read as detached ornament. This is intra-container, which is what the
-  ordinal's "identity, not position, like an atomic number" already meant.
-  - **Two one-shot measurements, both click-driven.** Prev rects in the
-    CLICK HANDLER (by any layout effect the old geometry is gone — no
-    `getSnapshotBeforeUpdate` in a function component); new rects in a
-    LAYOUT effect so the inversion is inline before first paint.
-  - **Rects are relative to the FIELD.** The plate's ancestor translates
-    during the casefile's arrival; viewport rects would bake that in.
-  - **`data-morph` is imperative**, never rendered — a re-render mid-flight
-    would clobber it. `will-change` is scoped to it: 47 permanent
-    promotions would roughly triple the ~14-layer budget.
-  - **Zero at rest by construction** — the transition ends on computed
-    `none`, never a stored matrix, so even a mid-flight resize lands
-    correct. The smoke asserts it (excluding the lit tile's hover lift).
-  - Click-driven only. ADR-021 sanctions the click-driven slide and bans
-    the wall clock; never put this on a scroll clock, which `--svc-proof-
-browse` already owns inside the dwell.
-- **THE PLATE IS NEVER NAMELESS.** The tiles carry a symbol, not a name, so
-  the head's NAME REGISTER names the lit tile and DEFAULTS TO SKILL 01 on
-  arrival — an empty register is the "it doesn't say anything" defect the
-  owner reported, and the smoke pins it. The register's team/status tail
-  yields before the name truncates; never let the legend win that space.
-- **The detail SLIDES IN from the right, it does not pop up** (owner,
-  2026-08-03). Stage height, semi-transparent so the field stays legible
-  behind it, INSIDE the stage — the plate's `overflow: hidden` and the
-  case's iris would trap anything trying to escape (which is why the film
-  lightbox portals), so this never tries. Rest state is unmounted.
-  ⚠ At 800h the panel IS the 144px stage: the close lives in the top line,
-  the tier line drops ≤900h, the body clamps to three, and `min-height: 0`
-  is what lets flex shrink it — without that the clamp is advisory and the
-  copy runs over the line below.
-- ⚠ **THE MAP'S NUMBERS ARE SHARES, AND ITS TIERS ARE GENERIC** (owner,
-  2026-08-03). Both are pinned by `cases-registry.test.ts`:
-  - **No currency, no per-seat cost, ever.** The per-person-per-month band
-    is a client-deck claim; restating it here breaks the one-variant rule
-    AND the envelope. Everything on this plate is a share or a ratio.
-  - **No model family names** (Opus/Sonnet/Haiku/Fable/GPT/Gemini…). The
-    tiers are Fast · Everyday · Deep · Frontier so the landing stays
-    model-silent: it neither restates the `claude-workshop` deck's model
-    guidance nor goes stale at the next release. A regex guard catches it.
-  - **`band` and `tier` are two independent joins** off one `CaseTeamDraw`
-    row: band paints (the team mark, and the allocation fills), tier
-    places (which column the team's tiles fly to). Tier membership is
-    pinned by the test, not the type — the `engine` → group-name pattern.
-  - **DO NOT PRINT THE CLUSTER COUNTS.** The 0 / 35 / 10 / 2 masses are
-    the argument and they are VISIBLE; printing 35 makes it a published
-    claim the one-variant law then owns forever. The empty Fast column
-    says why it is empty instead of showing a zero.
-  - Figures are ROUNDED from the client's usage snapshots by owner ruling;
-    the derivation and the casefile-team → snapshot-team mapping live in
-    the content module's comments, never on the surface.
-  - **Two bars per tier head, never one** — the pair IS the argument,
-    because the gap between reach and draw is the finding.
-- **One tile = one Skill**, carrying its ORDINAL and its SYMBOL. The
-  ordinal is registry order and is STABLE ACROSS PROJECTIONS — identity,
-  not position. The symbol comes from `skillSymbol.ts` with a short
-  override list; the registry test pins UNIQUENESS and a 2–4 character
-  width, so a new Skill that collides fails a test instead of shadowing an
-  existing mark.
-- **Cell fill is LIFECYCLE on substrate and team, CONSUMPTION on
-  allocation**, and rows sort most-shipped-first. ⚠ The ramp STOPS AT 0.62:
-  `--dawn-rgb` is the ink and flips per theme while `--gold-rgb` does not,
-  so a near-solid flood puts CREAM ON GOLD in dark mode. Shipped earns its
-  extra step from the border. Fill rules must cover the legend swatches too
-  or the key renders as empty outlines.
-- **The team projection DEGRADES below 900h; it does not clip.** 14 rows in
-  the 240px box leaves ~12.5px a row, which cannot hold an 11px symbol, so
-  the marks go and the field thins to fill-only cells. The count comes DOWN
-  to the 8.5px chrome floor rather than off; the band goes entirely (at 9px
-  rows it would set the row height).
+- **The registry plate is the INTELLIGENCE MAP: ONE PERSISTENT WORK-
+  CONFIGURATION FIELD, THREE PROJECTIONS (ADR-061, Accepted).** The exact
+  tabs are CONFIGURATION · TEAM · ALLOCATION. SUBSTRATE is no longer a
+  projection: the canonical 47 Skills are a FIXED RESERVOIR referenced by
+  the work configurations. U16's STACK view stays deleted.
+  - **THE MOVING ATOM IS A WORK CONFIGURATION, NEVER A SKILL.** It is a
+    repeatable kind of work plus its public configuration: outcome, functional
+    team, referenced Skills, artifact category, generic tool/connector
+    categories, generic capability lane and aggregate evidence state. A Skill
+    may support several configurations; a configuration may reference several
+    Skills. Do not relabel the 47-Skill lattice and call that the redesign.
+  - **CONFIGURATION explains composition.** TEAM regroups the SAME work
+    nodes by public functional team. ALLOCATION regroups those SAME nodes by
+    Fast · Everyday · Deep · Frontier. Projection changes placement and
+    emphasis, never the underlying fact.
+  - **THE RESERVOIR DOES NOT MORPH.** Selection may highlight referenced
+    Skills and compact layouts may summarize it, but the Skills remain a
+    stable source set. Its `47+` count is a Skills count and may never be used
+    as the work-configuration total.
+  - **Stable identity is an id, not copy.** Work nodes are flat children of
+    one stable parent, keyed by a non-display id and kept in invariant order.
+    Nesting them in projection-specific containers remounts them and turns the
+    morph into a crossfade. Legacy `SkillsBrowserPlate` / `skillsFieldLayout`
+    names do not preserve the old conceptual model.
+  - **Placement is PURE DETERMINISTIC MATH**, never measured placement. The
+    layout's declared tracks and the CSS `repeat()` counts move together, and
+    keyboard `navRows` come from that same result. An implicit grid track is a
+    layout bug, not graceful overflow.
+- ⚠ **THE MORPH'S LAWS (ADR-056 U17 + ADR-061).** ADR-031 still rejects
+  viewport-crossing shared-element flights; this is the same work artifacts
+  reconfiguring inside one bounded field.
+  - **Two one-shot measurements, both click-driven.** Old rects come from the
+    click handler; destination rects come from a layout effect before paint.
+  - **Rects are relative to the FIELD.** The casefile's own arrival transform
+    must cancel out rather than leak into a viewport-space measurement.
+  - **`data-morph` is imperative** and `will-change` exists only during the
+    flight. A re-render may not clobber the marker or permanently promote all
+    nodes.
+  - **Zero at rest by construction.** The transition ends on computed `none`;
+    interrupted projection changes begin from the currently painted rect.
+  - Projection chrome may crossfade; work nodes may not. The Skill reservoir
+    may highlight links, but it does not join the FLIP.
+  - Click-driven only. No scroll-driven regrouping, ambient pulse, random
+    jitter, force simulation or spring overshoot. Reduced motion swaps the
+    deterministic layout immediately.
+- **THE PLATE IS NEVER NAMELESS.** A compact node cannot carry its full
+  anatomy, so the head register names the selected WORK CONFIGURATION and
+  defaults to configuration 01 on arrival. The work label wins truncation
+  priority over legend or status chrome.
+- **Compact node, focused detail.** The node carries a stable mark, short work
+  identity and at most one projection signal. Selection slides a stage-height,
+  semi-transparent detail surface in from the right with work/outcome, team,
+  Skill references, artifact, generic tool/connector categories, capability
+  lane and evidence state. It stays INSIDE the stage, closes before a
+  projection morph, and follows ADR-006's labelled-dialog, Escape/outside-
+  dismiss and focus-return grammar. At 800h, preserve the existing clamp and
+  `min-height: 0` discipline; detail must yield before the field clips.
+- ⚠ **ALLOCATION IS AGGREGATE EVIDENCE, NOT PER-SKILL TOKEN TELEMETRY.**
+  - Lifecycle and draw are separate semantics. “Shipped” never means “high
+    consumption.”
+  - A work configuration may carry a qualitative draw band. Numeric reach or
+    draw is shown only at the honest lane/team/snapshot aggregation level.
+  - No Skill tile, label, tooltip, ARIA string or hidden prop receives tokens,
+    cost, share of spend or a causal usage claim.
+  - Figures are rounded from a dated snapshot and may be mass, density, band,
+    share or ratio — never live telemetry. Absence is not automatically zero.
+  - **Two bars per tier head, never one** when the reach/draw argument is
+    shown; one bar degrades it into an unexplained usage chart.
+- **Cell fill changes meaning only with an explicit legend.** Configuration
+  and Team may encode lifecycle/evidence; Allocation may encode an aggregate
+  draw band. The ramp still stops at 0.62 so dawn ink stays legible in both
+  themes, and fill rules must cover legend swatches as well as nodes.
+- **Compact-height and mobile layouts DEGRADE DELIBERATELY; they do not clip.**
+  Below the desktop fit envelope, use grouped compact rows/cards, a summarized
+  fixed reservoir and in-flow/full-width detail. Keep all three projections
+  available but skip FLIP. Do not squeeze the desktop heat field into a phone.
 - ⚠ **FIT TRAPS ON THIS PLATE, every one shipped in a first cut** (U15–U17).
   Measure; do not eyeball:
   - **A grid row is as tall as its TALLEST item, and that was the COUNT.** A
@@ -442,6 +423,12 @@ test to relax:
 - **No internal links.** No board links, no repo links, no private repo
   names.
 - **First names only** for client staff, in quotes and anywhere else.
+- **The Intelligence Map is stricter: NO personal names or identifying
+  initials at all.** No person-level ownership may travel in visible copy,
+  hidden props, `data-*`, ARIA text, analytics or browser-delivered data.
+  Vendors and model families are generic capability lanes; tools and
+  connectors are public categories. Currency, exact per-Skill/person/workflow
+  tokens and internal board/doc/repo identifiers are equally out of scope.
 - Tool **codenames are in scope** for a case study (published precedent:
   `PROJECT_CASES`) but stay OUT of general service copy
   (`services/serviceDesignations.ts`).
@@ -461,11 +448,11 @@ test to relax:
   (the Intelligence Map foot). The wording is the only thing keeping them
   apart; do not harmonise it, and never write a phrasing that lends one
   number the other's meaning.
-- **The Intelligence Map plate SUMS its counts on screen**, so the Skills
-  total is arithmetic a reader can check — a second variant anywhere in the
-  case is a visible contradiction, not a stale string. One guard enforces
-  agreement across every stat, readout, block and the plate's own sum,
-  pinning no literal, so raising the count stays a content edit.
+- **The Intelligence Map's fixed reservoir and moving field count DIFFERENT
+  UNITS.** The reservoir's Skills total remains arithmetic a reader can check;
+  the work-configuration total must be labelled separately and may never
+  borrow the `47+` claim. Guards enforce agreement within each unit across
+  stats, readouts, blocks and the map without harmonising the two.
 
 ## Verifying
 

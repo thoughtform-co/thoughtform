@@ -333,11 +333,15 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       await page.waitForTimeout(350);
 
       const overflow = await page.evaluate(() => {
-        // `.fl-skills__rows` earns its place here (ADR-056 U15): the lattice
-        // grid can overflow its stage while `.fl-plate` still measures 0,
-        // because the plate's own `overflow: hidden` swallows it. That is
-        // exactly how the team axis shipped 46px over its stage for a pass.
-        const boxes = [".fl-brief", ".fl-panel__foot", ".fl-plate", ".fl-skills__field"] as const;
+        // The inner map field earns its place here (ADR-061): absolute work
+        // nodes can overflow their stage while `.fl-plate` still reports 0,
+        // because the plate's own `overflow: hidden` swallows the evidence.
+        const boxes = [
+          ".fl-brief",
+          ".fl-panel__foot",
+          ".fl-plate",
+          ".fl-intel-map__field",
+        ] as const;
         const file = document.querySelector<HTMLElement>(".fl-row[aria-selected='true']");
         const out: { box: string; over: number; row: string }[] = [];
         for (const sel of boxes) {
@@ -360,24 +364,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         if (o.over > 1) clipped.push(`${o.row} — ${o.box} clips ${o.over}px`);
       }
     }
-    // EVERY PROJECTION (ADR-056 U15 → U17). The default state was the only
-    // one measured when the plate gained a second grouping, and `team` — 14
-    // rows where `substrate` has 5 — was the one that did not fit. The map
-    // then gained a third projection on top of that. A guard that only ever
-    // sees the default state is not a guard, and the default is reliably
-    // the state that fits.
+    // EVERY PROJECTION (ADR-061). The work objects persist while their
+    // configuration, public-function, and allocation geometries change. A
+    // guard that only sees the default geometry is not a map guard.
     await page.locator(".fl-row").first().click();
     await page.waitForTimeout(350);
 
     const measureBoxes = () =>
       page.evaluate(() => {
         const out: { box: string; over: number }[] = [];
-        for (const sel of [
-          ".fl-plate",
-          ".fl-skills__field",
-          ".fl-skills__rail",
-          ".fl-skills__panel",
-        ]) {
+        for (const sel of [".fl-plate", ".fl-intel-map__field", ".fl-intel-map__stage"]) {
           const el = document.querySelector<HTMLElement>(sel);
           if (el) out.push({ box: sel, over: el.scrollHeight - el.clientHeight });
         }
@@ -389,34 +385,36 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        transformed box, not a laid-out one. Await the component's own
        signal rather than a bare timeout. */
     const settleMorph = async () => {
-      await page.waitForFunction(() => !document.querySelector(".fl-skills__field[data-morph]"), {
-        timeout: 4000,
-      });
+      await page.waitForFunction(
+        () => !document.querySelector(".fl-intel-map__field[data-morph]"),
+        { timeout: 4000 }
+      );
       await page.waitForTimeout(140);
     };
 
-    // The field is ONE set of persistent tiles across every projection —
+    // The field is ONE set of persistent work nodes across every projection —
     // that is the whole feature, and a silent remount is its failure mode.
     // Stamp them now and count the survivors at the end.
     //
     // ⚠ WAIT FOR THE FIELD FIRST. Stamping before the plate mounts marks
-    // nothing, and the survivor count then reads 0/47 — a red test that
+    // nothing, and the survivor count then reads 0/8 — a red test that
     // blames the feature for the harness being early.
-    await page.waitForSelector(".fl-skills__tile", { timeout: 10_000 });
+    await page.waitForSelector(".fl-intel-map__node", { timeout: 10_000 });
     const stampedAtStart = await page.evaluate(() => {
-      const tiles = document.querySelectorAll<HTMLElement>(".fl-skills__tile");
-      tiles.forEach((t) => {
-        t.dataset.u17 = "1";
+      const nodes = document.querySelectorAll<HTMLElement>(".fl-intel-map__node");
+      nodes.forEach((node) => {
+        node.dataset.adr061 = "1";
       });
-      return tiles.length;
+      return nodes.length;
     });
-    expect(stampedAtStart, "no tiles to stamp — the map plate never mounted").toBeGreaterThan(0);
+    expect(stampedAtStart, "no work nodes to stamp — the map plate never mounted").toBe(8);
 
-    for (const proj of ["Substrate", "Team", "Allocation"]) {
-      const tab = page.locator(`.fl-skills__viewbtn:has-text("${proj}")`);
-      if (!(await tab.count())) continue;
+    for (const proj of ["Configuration", "Team", "Allocation"]) {
+      const tab = page.getByRole("tab", { name: proj, exact: true });
+      await expect(tab, `the ${proj} projection tab is missing`).toHaveCount(1);
       await tab.click();
       await settleMorph();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
 
       for (const o of await measureBoxes()) {
         if (o.over > 1) clipped.push(`projection "${proj}" — ${o.box} clips ${o.over}px`);
@@ -424,11 +422,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
       // ZERO AT REST. The morph ends on computed `none`, never a settled
       // matrix — a residual transform here is the drift bug this surface
-      // has banned since the panels' arrival ladder. The lit tile carries
+      // has banned since the panels' arrival ladder. The active node carries
       // the hover lift by design, so it is excluded by selector.
       const residual = await page.evaluate(
         () =>
-          [...document.querySelectorAll(".fl-skills__tile:not([data-lit])")].filter((t) => {
+          [...document.querySelectorAll(".fl-intel-map__node:not([data-active])")].filter((t) => {
             const tr = getComputedStyle(t).transform;
             return tr !== "none" && tr !== "matrix(1, 0, 0, 1, 0, 0)";
           }).length
@@ -439,27 +437,33 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     }
 
     const persisted = await page.evaluate(() => ({
-      stamped: document.querySelectorAll(".fl-skills__tile[data-u17]").length,
-      total: document.querySelectorAll(".fl-skills__tile").length,
+      stamped: document.querySelectorAll(".fl-intel-map__node[data-adr061]").length,
+      total: document.querySelectorAll(".fl-intel-map__node").length,
+      identities: [...document.querySelectorAll<HTMLElement>(".fl-intel-map__node")].map(
+        (node) => node.dataset.persistentId
+      ),
     }));
+    expect(new Set(persisted.identities).size, "work-node IDs are not stable and unique").toBe(8);
     expect(
       persisted.stamped,
-      `the tile field remounted across projections (${persisted.stamped} of ${persisted.total} survived) — the morph would swap, not fly`
+      `the work field remounted across projections (${persisted.stamped} of ${persisted.total} survived) — the morph would swap, not fly`
     ).toBe(persisted.total);
 
-    // THE PLATE IS NEVER NAMELESS (ADR-056 U17). The tiles carry a symbol,
+    // THE PLATE IS NEVER NAMELESS (ADR-061). The nodes carry a signature,
     // not a name, so an empty register is the "it doesn't say anything"
     // regression the owner reported.
     const register = await page.evaluate(() =>
-      document.querySelector(".fl-skills__name")?.textContent?.trim()
+      document.querySelector(".fl-intel-map__register")?.textContent?.trim()
     );
     expect(register?.length ?? 0, "the name register is empty on arrival").toBeGreaterThan(3);
 
-    // A tile click SLIDES THE PANEL IN, inside the plate; Escape closes it.
-    await page.locator(".fl-skills__tile").nth(4).click();
+    // A work node click opens its inward detail rail; Escape closes it.
+    const selectedNode = page.locator(".fl-intel-map__node").nth(4);
+    const selectedId = await selectedNode.getAttribute("data-persistent-id");
+    await selectedNode.click();
     await page.waitForTimeout(360);
     const panel = await page.evaluate(() => {
-      const el = document.querySelector<HTMLElement>(".fl-skills__panel");
+      const el = document.querySelector<HTMLElement>(".fl-intel-map__inspector");
       const plate = document.querySelector<HTMLElement>(".fl-plate");
       if (!el || !plate) return null;
       const r = el.getBoundingClientRect();
@@ -467,17 +471,66 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       return {
         visible: r.width > 40 && r.height > 40,
         inside: r.right <= p.right + 1 && r.left >= p.left - 1,
-        named: (el.querySelector(".fl-skills__panel-name")?.textContent ?? "").length,
+        named: (el.querySelector("h4")?.textContent ?? "").length,
       };
     });
-    expect(panel, "a tile click opened no panel").not.toBeNull();
+    expect(panel, "a work-node click opened no inspector").not.toBeNull();
     expect(panel?.visible, "the panel opened with no box").toBe(true);
     expect(panel?.inside, "the panel escaped the plate").toBe(true);
-    expect(panel?.named ?? 0, "the panel opened without naming its Skill").toBeGreaterThan(0);
+    expect(panel?.named ?? 0, "the panel opened without naming its work").toBeGreaterThan(0);
 
     await page.keyboard.press("Escape");
     await page.waitForTimeout(240);
-    expect(await page.locator(".fl-skills__panel").count(), "Escape left the panel open").toBe(0);
+    expect(
+      await page.locator(".fl-intel-map__inspector").count(),
+      "Escape left the inspector open"
+    ).toBe(0);
+
+    // Allocation focus reconfigures rather than replacing the eight work
+    // objects. A second click restores the complete field; Fast remains an
+    // intentional empty tier rather than disappearing from the model.
+    await page.getByRole("tab", { name: "Allocation", exact: true }).click();
+    await settleMorph();
+    const everyday = page.locator(".fl-intel-map__anchor--tier", { hasText: "Everyday" });
+    await expect(everyday).toHaveAttribute("aria-pressed", "false");
+    await everyday.click();
+    await settleMorph();
+    await expect(everyday).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".fl-intel-map__field")).toHaveAttribute(
+      "data-focus-tier",
+      "Everyday"
+    );
+    expect(await page.locator(".fl-intel-map__node[data-adr061]").count()).toBe(8);
+    await everyday.click();
+    await settleMorph();
+    await expect(page.locator(".fl-intel-map__field")).not.toHaveAttribute("data-focus-tier");
+    await expect(
+      page.locator(".fl-intel-map__anchor--tier[data-empty]", { hasText: "Fast" })
+    ).toHaveCount(1);
+
+    // Selection identity survives expansion. The expanded seam is a body
+    // portal, gives focus to its close control, closes on Escape, and
+    // returns focus to its trigger.
+    const identityNode = page.locator(`.fl-intel-map__node[data-persistent-id="${selectedId}"]`);
+    await identityNode.click();
+    const expand = page.getByRole("button", { name: "Expand map", exact: true });
+    await expand.focus();
+    await expand.click();
+    const overlay = page.locator("body > .fl-map-overlay");
+    const dialog = page.getByRole("dialog", { name: "Intelligence Map" });
+    await expect(overlay).toHaveCount(1);
+    await expect(dialog).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close map" })).toBeFocused();
+    await expect(dialog.locator(".fl-intel-map__node[data-selected]")).toHaveAttribute(
+      "data-persistent-id",
+      selectedId ?? ""
+    );
+    await page.keyboard.press("Escape");
+    await expect(overlay, "the first Escape should close the inner inspector").toHaveCount(1);
+    await expect(dialog.locator(".fl-intel-map__inspector")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(overlay).toHaveCount(0);
+    await expect(expand).toBeFocused();
 
     expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);
   });
@@ -798,6 +851,208 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     const size = await canvases.first().evaluate((c: HTMLCanvasElement) => [c.width, c.height]);
     expect(size[0]).toBeGreaterThan(400); // not the 300x150 default buffer
     expect(size[1]).toBeGreaterThan(200);
+  });
+
+  test("mobile: the ADR-061 map becomes a readable grouped list and full-screen dialog", async ({
+    page,
+  }) => {
+    test.skip(isDesktopViewport(page), "the authored list projection is <=960px");
+    test.setTimeout(60_000);
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 15_000 });
+    await page.evaluate(() => {
+      document.querySelector(".fl-case")?.scrollIntoView({ behavior: "instant" });
+    });
+
+    const map = page.locator('.fl-intel-map[data-mode="preview"]');
+    await expect(map).toBeVisible({ timeout: 15_000 });
+    await expect(map.locator(".fl-intel-map__canvas")).toBeHidden();
+    await expect(map.locator(".fl-intel-map__mobile-list")).toBeVisible();
+
+    const expectedGroups = new Map([
+      ["Configuration", 5],
+      ["Team", 7],
+      ["Allocation", 4],
+    ]);
+    let compactLabels: string[] = [];
+
+    for (const [projection, groupCount] of expectedGroups) {
+      const tab = map.getByRole("tab", { name: projection, exact: true });
+      // The fixed HUD occupies the top strip. `scrollIntoViewIfNeeded()`
+      // considers a tab geometrically visible even when that strip is over
+      // it, so centre the touch target before driving the semantic tab.
+      await tab.evaluate((element) => element.scrollIntoView({ block: "center" }));
+      await tab.click();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
+      await expect(map).toHaveAttribute("data-proj", projection.toLowerCase());
+      await expect(map.locator(".fl-intel-map__field")).not.toHaveAttribute("data-morph", "1");
+      await expect(map.locator(".fl-intel-map__mobile-group")).toHaveCount(groupCount);
+
+      const rows = map.locator(".fl-intel-map__mobile-group button");
+      await expect(rows, `${projection} must contain all eight work configurations`).toHaveCount(8);
+      const labels = await rows.locator(":scope > span").allTextContents();
+      expect(labels.every((label) => label.trim().length > 3)).toBe(true);
+      expect(new Set(labels).size, `${projection} repeats a work configuration`).toBe(8);
+      compactLabels = labels;
+
+      for (let index = 0; index < 8; index++) {
+        await expect(rows.nth(index)).toBeVisible();
+      }
+    }
+
+    // Fast remains a named, intentionally empty group in the list rather
+    // than being omitted because no maintained workflow is allocated there.
+    const fastGroup = map.locator(".fl-intel-map__mobile-group", { hasText: "Fast" });
+    await expect(fastGroup).toContainText("Ambient intelligence");
+    await expect(fastGroup.locator("button")).toHaveCount(0);
+
+    // Every touch target in this instrument clears the WCAG-sized 44px bar.
+    const targets = map.locator(
+      ".fl-intel-map__tab, .fl-intel-map__expand, .fl-intel-map__mobile-group button, .fl-intel-map__mobile-reservoir summary"
+    );
+    const undersizedTargets = await targets.evaluateAll((elements) =>
+      elements.flatMap((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.height < 43.5 ? [`${element.tagName}.${element.className}:${rect.height}`] : [];
+      })
+    );
+    expect(undersizedTargets, `mobile targets below 44px: ${undersizedTargets.join(", ")}`).toEqual(
+      []
+    );
+
+    const horizontalOverflow = async (selector: string) =>
+      page.locator(selector).evaluate((element) => element.scrollWidth - element.clientWidth);
+    expect(await horizontalOverflow('.fl-intel-map[data-mode="preview"]')).toBeLessThanOrEqual(1);
+
+    // The 47 Skills stay a disclosure reservoir: present and fully named,
+    // but subordinate to the eight pieces of work.
+    const reservoir = map.locator(".fl-intel-map__mobile-reservoir");
+    const reservoirSummary = reservoir.locator("summary");
+    await expect(reservoirSummary).toContainText("47 Skills");
+    await reservoirSummary.click();
+    await expect(reservoir).toHaveAttribute("open", "");
+    await expect(reservoir.locator("p")).toHaveCount(5);
+    await expect(reservoir).toContainText("NDA Pre-Check");
+
+    // A row opens the full six-facet anatomy in the flow. Escape answers
+    // that inner state without changing the selected projection.
+    const firstRow = map.locator(".fl-intel-map__mobile-group button").first();
+    const selectedWork = (await firstRow.locator(":scope > span").textContent())?.trim() ?? "";
+    await firstRow.click();
+    let inspector = map.getByRole("region", {
+      name: `${selectedWork} configuration detail`,
+    });
+    await expect(inspector).toBeVisible();
+
+    // A mobile row is itself part of the detail control: a second tap
+    // toggles it closed, and switching rows cannot return focus to the old
+    // selection through the stage's outside-pointer handler.
+    await firstRow.click();
+    await expect(inspector).toHaveCount(0);
+    await firstRow.click();
+    await expect(inspector).toBeVisible();
+    const secondRow = map.locator(".fl-intel-map__mobile-group button").nth(1);
+    const secondWork = (await secondRow.locator(":scope > span").textContent())?.trim() ?? "";
+    await secondRow.click();
+    inspector = map.getByRole("region", {
+      name: `${secondWork} configuration detail`,
+    });
+    await expect(inspector).toBeVisible();
+    await expect(firstRow).not.toBeFocused();
+    await expect(inspector.locator(".fl-intel-map__anatomy dt")).toHaveCount(6);
+    await expect(inspector).toContainText("Human checkpoint");
+    await expect(inspector).toContainText("Owner role");
+    await expect(inspector).toContainText("Allocation");
+    await expect(inspector).toContainText("Encoded Skills");
+    await inspector.getByRole("button", { name: "Close configuration detail" }).focus();
+    await page.keyboard.press("Escape");
+    await expect(inspector).toHaveCount(0);
+    await expect(secondRow).toBeFocused();
+    await expect(map).toHaveAttribute("data-proj", "allocation");
+
+    // The lazy expanded seam is a true viewport dialog, not a squeezed
+    // desktop field. It carries the exact same Allocation list data.
+    const expand = map.getByRole("button", { name: "Expand map", exact: true });
+    await expand.focus();
+    await expect(expand).toBeFocused();
+    await expand.click();
+    const overlay = page.locator("body > .fl-map-overlay");
+    const dialog = page.getByRole("dialog", { name: "Intelligence Map" });
+    await expect(overlay).toHaveCount(1);
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator(".fl-intel-map__canvas")).toBeHidden();
+    const dialogRows = dialog.locator(".fl-intel-map__mobile-group button");
+    await expect(dialogRows).toHaveCount(8);
+    const expandedLabels = await dialogRows.locator(":scope > span").allTextContents();
+    expect(expandedLabels).toEqual(compactLabels);
+
+    // Expanded inspection returns focus to the visible mobile row, never to
+    // the desktop node that remains mounted but hidden at this breakpoint.
+    const expandedFirstRow = dialogRows.first();
+    await expandedFirstRow.click();
+    const expandedInspector = dialog.getByRole("region", {
+      name: `${expandedLabels[0]?.trim()} configuration detail`,
+    });
+    await expect(expandedInspector).toBeVisible();
+    await expandedInspector.getByRole("button", { name: "Close configuration detail" }).focus();
+    await page.keyboard.press("Escape");
+    await expect(expandedInspector).toHaveCount(0);
+    await expect(expandedFirstRow).toBeFocused();
+
+    // The body-portalled dialog owns the whole tab sequence. Exercising the
+    // final visible stop catches accidental inclusion of tabindex=-1 nodes.
+    await dialog.evaluate((element) => {
+      const selector = [
+        "button:not([disabled]):not([tabindex='-1'])",
+        "[href]:not([tabindex='-1'])",
+        "input:not([disabled]):not([tabindex='-1'])",
+        "select:not([disabled]):not([tabindex='-1'])",
+        "textarea:not([disabled]):not([tabindex='-1'])",
+        "summary:not([tabindex='-1'])",
+        "[tabindex]:not([tabindex='-1'])",
+      ].join(",");
+      const visible = Array.from(element.querySelectorAll<HTMLElement>(selector)).filter(
+        (candidate) => candidate.getClientRects().length > 0
+      );
+      visible.at(-1)?.focus();
+    });
+    await page.keyboard.press("Tab");
+    expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+
+    // ADR-006 opens the frame with a short scale/focus animation. Geometry
+    // is a settled-state assertion, not a sample from that entrance.
+    await page.waitForTimeout(400);
+    const frameGeometry = await overlay.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const frame = element.querySelector<HTMLElement>("[role='dialog']");
+      const frameRect = frame?.getBoundingClientRect();
+      return {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        frameWidth: frameRect?.width ?? 0,
+        frameHeight: frameRect?.height ?? 0,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        visualViewportHeight: window.visualViewport?.height ?? window.innerHeight,
+        overflow: (frame?.scrollWidth ?? 0) - (frame?.clientWidth ?? 0),
+      };
+    });
+    expect(frameGeometry.left).toBeLessThanOrEqual(1);
+    expect(frameGeometry.top).toBeLessThanOrEqual(1);
+    expect(frameGeometry.width).toBeGreaterThanOrEqual(frameGeometry.viewportWidth - 2);
+    expect(frameGeometry.height).toBeGreaterThanOrEqual(frameGeometry.viewportHeight - 2);
+    expect(frameGeometry.frameWidth).toBeGreaterThanOrEqual(frameGeometry.viewportWidth * 0.97);
+    expect(frameGeometry.frameHeight).toBeGreaterThanOrEqual(
+      frameGeometry.visualViewportHeight - 2
+    );
+    expect(frameGeometry.overflow).toBeLessThanOrEqual(1);
+
+    await page.keyboard.press("Escape");
+    await expect(overlay).toHaveCount(0);
+    await expect(expand).toBeFocused();
   });
 
   test("mobile/tablet: the plate accordion is untouched by ring mode", async ({ page }) => {

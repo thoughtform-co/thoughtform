@@ -366,6 +366,125 @@ html[data-theme="light"] .fl-skills__readout-status {
   color: var(--gold);
 }
 
+/* ADR-061 work-configuration field. The dark recipe relies on luminous
+   cream/gold marks over near-black; those same low alphas nearly disappear
+   as ink on parchment. Lift only the information-bearing map chrome here;
+   the surrounding casefile remains unframed. */
+html[data-theme="light"] .fl-intel-map {
+  --fl-map-line: rgba(var(--dawn-rgb), 0.16);
+  --fl-map-gold-line: rgba(var(--gold-rgb), 0.54);
+  background:
+    linear-gradient(90deg, transparent 49.9%, rgba(var(--dawn-rgb), 0.045) 50%, transparent 50.1%),
+    rgba(var(--void-deep-rgb), 0.24);
+}
+
+html[data-theme="light"] .fl-intel-map__tab,
+html[data-theme="light"] .fl-intel-map__register i,
+html[data-theme="light"] .fl-intel-map__decoder p,
+html[data-theme="light"] .fl-intel-map__anchor-note,
+html[data-theme="light"] .fl-intel-map__readout {
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+
+html[data-theme="light"] .fl-intel-map__register,
+html[data-theme="light"] .fl-intel-map__node,
+html[data-theme="light"] .fl-intel-map__skill-group {
+  color: rgba(var(--dawn-rgb), 0.78);
+}
+
+html[data-theme="light"] .fl-intel-map__facet-key i,
+html[data-theme="light"] .fl-intel-map__anchor,
+html[data-theme="light"] .fl-intel-map__node-ord,
+html[data-theme="light"] .fl-intel-map__skill-group em {
+  color: rgba(var(--dawn-rgb), 0.68);
+}
+
+html[data-theme="light"] .fl-intel-map__anchor::after,
+html[data-theme="light"] .fl-intel-map__reservoir {
+  border-color: rgba(var(--gold-rgb), 0.52);
+}
+
+html[data-theme="light"] .fl-intel-map__node,
+html[data-theme="light"] .fl-intel-map__anchor--tier {
+  border-color: rgba(var(--dawn-rgb), 0.3);
+  background: rgba(var(--void-deep-rgb), 0.62);
+}
+
+html[data-theme="light"] .fl-intel-map__node {
+  box-shadow: inset 2px 0 0 rgba(var(--gold-rgb), 0.68);
+}
+
+html[data-theme="light"] .fl-intel-map__node[data-fill="use"],
+html[data-theme="light"] .fl-intel-map__node[data-fill="evaluated"] {
+  background:
+    linear-gradient(90deg, rgba(var(--gold-rgb), 0.17), transparent 65%),
+    rgba(var(--void-deep-rgb), 0.68);
+}
+
+html[data-theme="light"] .fl-intel-map__node:hover,
+html[data-theme="light"] .fl-intel-map__node:focus-visible,
+html[data-theme="light"] .fl-intel-map__node[data-active],
+html[data-theme="light"] .fl-intel-map__node[data-selected] {
+  color: var(--dawn);
+  border-color: rgba(var(--gold-rgb), 0.92);
+  background: rgba(var(--gold-rgb), 0.24);
+}
+
+html[data-theme="light"] .fl-intel-map__signature i,
+html[data-theme="light"] .fl-intel-map__pips i {
+  border-color: rgba(var(--dawn-rgb), 0.46);
+}
+
+html[data-theme="light"] .fl-intel-map__signature i[data-facet="skill"] {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+html[data-theme="light"] .fl-intel-map__signature i[data-facet="execution"] {
+  background: rgba(var(--dawn-rgb), 0.56);
+}
+
+html[data-theme="light"] .fl-intel-map__links path {
+  stroke: rgba(var(--gold-rgb), 0.62);
+}
+
+html[data-theme="light"] .fl-intel-map__reservoir {
+  background: rgba(var(--void-deep-rgb), 0.72);
+}
+
+html[data-theme="light"] .fl-intel-map__meters i,
+html[data-theme="light"] .fl-intel-map__mobile-group h4 em {
+  color: rgba(var(--dawn-rgb), 0.66);
+}
+
+html[data-theme="light"] .fl-intel-map__tab[data-on],
+html[data-theme="light"] .fl-intel-map__expand,
+html[data-theme="light"] .fl-intel-map__mobile-group h4,
+html[data-theme="light"] .fl-intel-map__anchor-count {
+  color: rgba(var(--dawn-rgb), 0.78);
+}
+
+html[data-theme="light"] .fl-intel-map__tab[data-on] {
+  background: rgba(var(--gold-rgb), 0.24);
+}
+
+html[data-theme="light"] .fl-intel-map__mobile-group h4 i {
+  color: rgba(var(--dawn-rgb), 0.58);
+}
+
+html[data-theme="light"] .fl-intel-map__meters i > span {
+  border-color: rgba(var(--dawn-rgb), 0.32);
+}
+
+html[data-theme="light"] .fl-map-overlay__frame {
+  border-color: rgba(var(--dawn-rgb), 0.38);
+  background: rgba(var(--void-deep-rgb), 0.96);
+  box-shadow:
+    0 0 0 1px rgba(var(--dawn-rgb), 0.08),
+    0 0 60px rgba(var(--gold-rgb), 0.12),
+    0 30px 80px rgba(17, 15, 9, 0.24);
+}
+
 /* ── PHOTOGRAPHY reads as PRINT on parchment (owner, 2026-08-02) ──────────
    The DOM twin of the WebGL bake's parchment-print LUT
    (`buildParchmentToneLut`, ServicesCardRing): sepia(0.55) saturate(0.88)

@@ -127,6 +127,8 @@ export interface CaseRegistryRow {
  * status only.
  */
 export interface CaseSkillEntry {
+  /** Stable machine identity. Display-name edits must not break joins. */
+  id: string;
   /** Display name, ≤30 chars (the dossier heading and the cell's label). */
   name: string;
   /** The client team whose judgment it encodes. */
@@ -152,6 +154,56 @@ export interface CaseSkillEntry {
    * silently, so the ceiling is pinned by `cases-registry.test.ts`.
    */
   summary?: string;
+}
+
+/** The five public work shapes that organise both Skills and configurations. */
+export type CaseWorkShape = "Judgment" | "Voice" | "Validation" | "Stakeholder" | "Pattern";
+
+/** Generic capability tiers. Public case content never names a model family. */
+export type CaseCapabilityTier = "Fast" | "Everyday" | "Deep" | "Frontier";
+
+/**
+ * How confidently a work configuration can be placed on the allocation map.
+ * This keeps a measured or compared work decision distinct from a broader
+ * function-level signal; no tier may be inferred from a team or linked Skill.
+ */
+export type CaseAllocationBasis = "work-evidenced" | "work-evaluated" | "function-signal";
+
+/** One categorical mark in the six-part configuration signature. */
+export interface CaseConfigurationFacet {
+  /** Short public state rendered beside the facet label. */
+  state: string;
+  /** Sanitised explanation for the inspector. */
+  detail: string;
+}
+
+/**
+ * One piece of work and the public-safe intelligence configuration that runs
+ * it. The six fields are deliberately fixed so every node answers the same
+ * questions: HUMAN · MODEL · SKILL · CONTEXT · EXECUTION · EVAL.
+ */
+export interface CaseWorkConfiguration {
+  id: string;
+  work: string;
+  /** Compact field identity; the register and inspector always use `work`. */
+  mapLabel: string;
+  publicFunction: string;
+  shape: CaseWorkShape;
+  lifecycle: "In use" | "In build" | "Evaluated";
+  linkedSkillIds: readonly CaseSkillEntry["id"][];
+  summary: string;
+  ownerRole: string;
+  humanCheckpoint: string;
+  allocationTier: CaseCapabilityTier;
+  allocationBasis: CaseAllocationBasis;
+  facets: {
+    human: CaseConfigurationFacet;
+    model: CaseConfigurationFacet;
+    skill: CaseConfigurationFacet;
+    context: CaseConfigurationFacet;
+    execution: CaseConfigurationFacet;
+    eval: CaseConfigurationFacet;
+  };
 }
 
 /* ── The intelligence map's projections (ADR-056 U16 → U17) ──────────────
@@ -379,14 +431,28 @@ export type CaseTrackVisual =
        */
       skills?: readonly CaseSkillEntry[];
       /**
-       * The map's higher-level views (ADR-056 U16). Presence turns the
-       * plate's view tabs on: SKILLS (the lattice) · STACK (the four
-       * layers of the configuration) · ALLOCATION (reach vs draw, and why
-       * the deep work earns the deep tier). Also track-side only.
+       * Legacy Skill-field allocation data (ADR-056 U17). Presence enables
+       * its Substrate · Team · Allocation projections. New work-first maps
+       * use the dedicated `intelligence-map` kind below.
        */
       intelligence?: CaseIntelligence;
       /** Per-team consumption bands for the lattice's TEAM axis. */
       teamDraw?: readonly CaseTeamDraw[];
+      footer?: string;
+    }
+  /**
+   * Work-first intelligence map. Configuration nodes are the persistent
+   * field; Skills remain a linked substrate reservoir. Kept separate from
+   * `registry` so skill-only cases retain their current API.
+   */
+  | {
+      kind: "intelligence-map";
+      groups: readonly CaseRegistryGroup[];
+      rows: readonly CaseRegistryRow[];
+      skills: readonly CaseSkillEntry[];
+      configurations: readonly CaseWorkConfiguration[];
+      intelligence: CaseIntelligence;
+      teamDraw: readonly CaseTeamDraw[];
       footer?: string;
     }
   /** References production tools BY ID — `PROJECT_CASES` stays canonical. */

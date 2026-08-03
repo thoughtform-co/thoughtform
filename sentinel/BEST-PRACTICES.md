@@ -892,6 +892,28 @@ When content scrolls inside a non-rectangular shape, clip content at a **horizon
 
 ---
 
+### A broad `font: inherit` reset can silently defeat component type rules
+
+`font` is a shorthand, and a selector such as `.instrument button` is more
+specific than a component class such as `.instrument__tier`. Setting
+`font: inherit` on the broad selector therefore resets the tier's authored
+size and line-height back to the parent even when the component rule appears
+later. In a clipped control this presents as mysterious ellipsis and vertical
+overflow, not as an obvious cascade bug.
+
+In a scoped button reset, inherit only the property the surface actually
+needs—usually `font-family`—and let each control own its size, weight, and
+line-height. When a compact label clips despite having enough measured width,
+inspect the computed font shorthand and selector specificity before changing
+the layout.
+
+**Why it matters:** the Intelligence Map's 8.5px allocation labels computed at
+16px because `.fl-intel-map button { font: inherit; }` outranked the tier
+class. Expanding anchors hid the symptom at large viewports but could not fix
+the compact surface; narrowing the reset did.
+
+---
+
 ### Use CSS Variables for Geometry Tokens
 
 Non-rectangular shapes should define geometry as variables:
@@ -1133,4 +1155,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-07-06_
+_Last updated: 2026-08-03_
