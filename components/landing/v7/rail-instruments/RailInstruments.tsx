@@ -1,27 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
 
-import { CLUSTER_ZONES, JOURNEY_MARKS } from "./clusters";
-import { SECTION_GLYPHS } from "./sectionGlyphs";
+import { APPROACH_MARKS, CLUSTER_ZONES } from "./clusters";
+import { MarkRow } from "./MarkRow";
 import { useJourneyMarks, useScrollReadouts } from "./useJourneyMarks";
 
 /**
- * The rail instruments (ADR-059) — the whole journey as one row of marks in
- * the TOP-LEFT corner, plus the right rail's telemetry. Settings is the
- * bottom-right corner and lives in `SettingsCluster`.
+ * The rail instruments (ADR-059) — the APPROACH row of marks in the
+ * TOP-LEFT corner, plus the right rail's telemetry. The destinations are
+ * the bottom-right corner and live in `SettingsCluster`, sharing that
+ * corner's row with the theme switch (Update 2).
  *
  * Ported from `/test/hud-instruments-lab` route `r4` after three rounds
  * there. What survived and what did not is the useful part:
  *
- *   - it was TWO clusters, approach top-left and destinations bottom-right,
- *     with grouping-by-corner carrying the meaning. The bottom-right became
- *     the settings corner (owner, 2026-08-02), so they merged into one row
- *     and the grouping survives as rules inside it — a weaker signal, and
- *     the acknowledged cost of the four-corner scheme.
+ *   - the clusters MERGED into one top-left row for a day (Update 1), when
+ *     the bottom-right became the settings corner, and split again once
+ *     the destinations and the controls were made to share it as one row
+ *     (Update 2). Grouping-by-corner carries the approach/destination
+ *     split; only state moves.
  *   - the left rail's STATION ROSTER was tried and NOT taken. The ladder
  *     stays a ladder; this row is the left side's whole contribution.
  *   - the corner REGISTER (`cBr`) is dropped, because it printed
@@ -56,33 +57,6 @@ import { useJourneyMarks, useScrollReadouts } from "./useJourneyMarks";
 interface Hosts {
   cornerTl: HTMLElement;
   right: HTMLElement;
-}
-
-type MarkState = "ahead" | "passed" | "here";
-
-const stateFor = (seat: number, active: number): MarkState =>
-  active === seat ? "here" : active > seat ? "passed" : "ahead";
-
-/**
- * ⚠ NO LABEL, deliberately — unlike the lab, which prints one under every
- * mark for its `nExplain` scaffolding.
- *
- * Two reasons, and the second is the load-bearing one. The label band sits
- * at y 64–76, which on this page is occupied: measured collisions with
- * `services-masthead__desig` ("SVC / TITLE · 01") and the corridor's
- * `home-v2-stack-label__num`. Above the row is unavailable — the corner's
- * curtain inset saturates at 0px — so there is nowhere for it to go.
- *
- * And it would be the THIRD place the active section is named, after the
- * ADR-055 nav corner and the right rail's vertical name. The gold mark says
- * where you are; something else already says what it is called.
- */
-function Mark({ id, state }: { id: string; state: MarkState }): ReactElement {
-  return (
-    <span className="rin-mark" data-state={state} data-mark={id}>
-      {SECTION_GLYPHS[id] ?? null}
-    </span>
-  );
 }
 
 /** Tick fractions on the 13-rung ladder the telemetry seats against. */
@@ -144,22 +118,9 @@ export function RailInstruments({
   return (
     <>
       {createPortal(
-        <div className="rin-cl rin-cl--journey" aria-hidden="true">
-          <span className="rin-cl__zone">{CLUSTER_ZONES.journey}</span>
-          <span className="rin-cl__row">
-            {JOURNEY_MARKS.map((mark) => (
-              <span key={mark.id} className="rin-cl__seat">
-                {mark.ruleBefore && <i className="rin-cl__rule" />}
-                {/* Two clocks, one row — see the note in `clusters.ts`.
-                    The Arc's beats exist only on the manifest index; `proof`
-                    exists only on the readout index. */}
-                <Mark
-                  id={mark.id}
-                  state={stateFor(mark.idx, mark.clock === "beat" ? activeIdx : seat)}
-                />
-              </span>
-            ))}
-          </span>
+        <div className="rin-cl rin-cl--approach" aria-hidden="true">
+          <span className="rin-cl__zone">{CLUSTER_ZONES.approach}</span>
+          <MarkRow marks={APPROACH_MARKS} activeIdx={activeIdx} seat={seat} />
         </div>,
         hosts.cornerTl
       )}

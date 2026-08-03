@@ -1,15 +1,17 @@
 # ADR-059: Rail instruments — the journey's sections as corner marks
 
-**Status:** Accepted · 2026-08-02 — **read Update 1 first; it reshapes §2 and reverses §3**
+**Status:** Accepted · 2026-08-02 — **read Update 2 first; it is the live arrangement**
 **Flags:** `RAIL_INSTRUMENTS`, `SETTINGS_CLUSTER` (`components/landing/v7/rail-instruments/flags.ts`), both default ON
-**Extends:** ADR-058 — the toggle's slot is unchanged, but it now shares it with a session mark
+**Extends:** ADR-058 — the toggle keeps its slot below 960px and moves outboard onto the frame line above it
 **Lab:** `/test/hud-instruments-lab`, route `r4` + `rTelemetry` + `rName`
 
-> ⚠ §2 and §3 below describe the TWO-CLUSTER arrangement that held for a few
-> hours on 2026-08-02. Update 1 merged the clusters into one row and made the
-> bottom-right the settings corner. Both sections are kept because the
-> geometry they work out — the 180° rotation, why the corner cannot hold a
-> symmetric cluster and a control — is what forced the four-corner scheme.
+> ⚠ **§2's geometry is live again; §3 is not.** Update 1 merged the two
+> clusters into one top-left row for a day; Update 2 split them back apart
+> and put the destinations and the settings controls on ONE LINE in the
+> bottom-right, which is the thing §2 concluded was impossible. Read §2 for
+> the 180° rotation (still exact), then Update 2 for why its "the corner
+> cannot hold both" no longer binds. §3's bottom-left toggle move never
+> came back.
 
 ## Context
 
@@ -202,15 +204,116 @@ destination marks held that corner. `THEME_TOGGLE_DOCKS_LEFT` is deleted;
 the settings cluster sits inboard of the bottom-right bracket rather than
 replacing it, so that corner keeps its frame.
 
+## Update 2 — the corner holds both (2026-08-03, owner)
+
+> _"we need to move some [glyphs] to the bottom right corner and also fold
+> the light mode / dark mode in there; so remove the bottom right corner
+> and then move some glyphs there."_
+
+The clusters are two again — approach top-left, destinations bottom-right —
+and the bottom-right corner carries the DESTINATION MARKS AND THE SETTINGS
+CONTROLS ON ONE LINE. Both working corners now suppress their bracket.
+
+### Why §2's ruling no longer binds
+
+§2 measured a ~26px strip against a "~36px glyph-plus-label row" and
+concluded the corner could not hold a cluster and a control. **The labels
+are what did not fit.** Update 1 dropped them from production for an
+unrelated reason (the y 64–76 collision with the services masthead), and
+what is left is a 16px glyph row, which sits beside a 36px control on the
+same line with room over.
+
+That is the whole unlock, and it is worth stating plainly because the
+original ruling was correct when it was made and reads as a permanent
+constraint. It was a constraint on a row that no longer exists.
+
+### One flex row, marks outboard
+
+Reading left to right: `[session] [theme] ┃ proof · services · about │
+practice · contact`, right-anchored so the LAST MARK'S CENTRE lands on the
+right rail's track — the exact 180° mirror of the approach row's first mark
+on the left rail's track. Measured at 1440×900 and 1280×720: **+1px on the
+right, −1px on the left**, the two rails' 2px tracks being what that pixel
+is. The controls take the inboard end, where the approach row prints its
+zone label; the bottom-right prints none, because a word wedged between a
+glyph row and a theme switch labels neither.
+
+ONE flex row rather than two anchored boxes is load-bearing: the session
+mark is present only for an allowlisted signed-in user, so the control
+group's width is not knowable at author time. Two boxes would need that
+width as a constant, and the constant would be wrong for every visitor who
+is not the owner.
+
+Gap back to §2's 22px from Update 1's 18px — that tightening paid for ten
+marks and two rules in one row (404px), and five marks run 168px.
+
+### The controls move outboard, but only above 960
+
+`.rin-settings` keeps ADR-058's expression as its BASE and shifts to the
+frame line under `html[data-rail-instruments]` at `min-width: 961px`.
+
+Both halves of that are forced, not stylistic:
+
+- **The gate is 960** because the marks stop there (the `.hud__rail` gate
+  takes the telemetry with it and the corner brackets come back). A control
+  alone on the track line would then sit inside the returning `--br`
+  bracket, and at the small end of `--hud-margin` (16px) a 36px button
+  centred on that line overhangs the viewport by 2px. Below the gate the
+  row is the ADR-058 slot again, 11px clear of the bracket — measured.
+- **The base stays byte-identical to `.theme-toggle-overlay`**, which
+  `/arcs` still mounts. That page keeps its `--br` bracket and has no row to
+  put beside the control, so it has nothing to reach out for. The two
+  surfaces diverge above 960 for a reason a reader can see on screen, and
+  converge below it.
+
+### The marks carry the curtain clip; the control does not
+
+The marks must be UNCOVERED by the hero exactly as the frame chrome is —
+five glyphs sitting on screen one would break the ADR-031 U16 reveal — and
+the toggle beside them must not, because settings has to work on the first
+screen. They are in the same fixed overlay, so `.rin-settings__row` carries
+its own copy of `.hud__corner--br`'s clip expression and the controls sit
+outside it.
+
+⚠ `height: 100%` on that row is what makes the copy exact. The expression
+assumes a box `--hud-corner-zone` tall on the bottom margin line; let the
+row shrink-wrap its 16px glyphs and the reveal lands ~14px of scroll late.
+Verified at rest: inset `78.03px` against `--hud-margin` 40.5 +
+`--hud-corner-zone` 37.53 at 1440×900, with the row 37.5px tall — fully
+covered at `--hero-lift: 0`, the toggle unclipped beside it.
+
+### A second reader of the bus, deliberately
+
+`SettingsCluster` calls `useJourneyMarks` itself rather than taking a value
+from `RailInstruments`. They are siblings under `LandingPage`, and the only
+place to hold state between them is `LandingPage` — which owns the
+`dangerouslySetInnerHTML` body and must not re-render. The hook is a pure
+reader (one attribute-filtered `MutationObserver`, one gated passive
+listener); ADR-002 bans new scroll WRITERS, and this adds none.
+
+`MarkRow` is now shared by both corners, so the two rows cannot drift.
+
+### What is NOT settled
+
+The glyphs themselves — §4's open question — are untouched here. The lab
+still prints all ten in ONE labelled row, which is deliberately not
+production's shape: that row exists to judge the drawings side by side, and
+the geometry was settled on the live frame.
+
 ## Rollback
 
-`RAIL_INSTRUMENTS = false` drops the journey row and the telemetry: nothing
-mounts, no host is created, `data-rail-instruments` is never set and every
-selector keyed on it is unmatched — including the bracket suppression and
-both widened clips, so the frame returns byte-identically.
+`RAIL_INSTRUMENTS = false` drops both mark rows and the telemetry: no host
+is created, `data-rail-instruments` is never set and every selector keyed on
+it is unmatched — BOTH bracket suppressions, both widened clips, and the
+bottom-right row's outboard anchor, which returns the theme switch to its
+ADR-058 slot. The frame comes back byte-identically.
+
+The destination marks are gated on that flag INSIDE `SettingsCluster` for
+exactly this reason: they are journey marks, and the switch beside them is
+not.
 
 `SETTINGS_CLUSTER` is separate and must be flipped separately. It is not
 gated by the flag above, because the theme switch is a shipped control that
-predates these instruments — turning the journey row off must not take the
+predates these instruments — turning the journey marks off must not take the
 site's only theme affordance with it. Flipping it back means restoring
 `<LightModeToggle />` in `LandingPage`.

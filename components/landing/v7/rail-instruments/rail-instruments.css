@@ -2,12 +2,16 @@
    RAIL INSTRUMENTS · ADR-059
    ═══════════════════════════════════════════════════════════════════════
 
-   The whole journey as one row of marks in the TOP-LEFT corner, the right
-   rail's telemetry, and SETTINGS bottom-right. Ported from
-   `/test/hud-instruments-lab` route `r4`; the lab keeps its own
-   `hil-`-scoped sheet for the routes that were NOT taken.
+   The APPROACH as a row of marks in the TOP-LEFT corner, the right rail's
+   telemetry, and the DESTINATIONS sharing the bottom-right corner with the
+   settings controls. Ported from `/test/hud-instruments-lab` route `r4`;
+   the lab keeps its own `hil-`-scoped sheet for the routes that were NOT
+   taken.
 
    The four corners each carry one idea: journey / nav / brand / settings.
+   The journey's two halves sit at opposite ends of that scheme — approach
+   top-left, destinations bottom-right — so which corner a mark stands in
+   says what kind of section it is, and only state moves.
 
    Shape law: radius 0; diamonds, never circles; hairlines only; gold is
    WAYFINDING — it marks where you are and nothing else; no italics.
@@ -53,12 +57,12 @@
   pointer-events: none;
 }
 
-/* ── THE ROW IS THE CORNER ──────────────────────────────────────────────
-   It replaces the bracket it stands in for, and its FIRST mark is centred
-   on the left rail's track — the same line the ticks hang off
-   and the diamond rides. `--hud-rail-guide-inset` is the anchor rather
-   than a measured pixel, so the assembly stays rigid if that token ever
-   leaves 0. */
+/* ── A ROW IS A CORNER ──────────────────────────────────────────────────
+   Each row replaces the bracket it stands in for, and its TERMINAL mark is
+   centred on its rail's track — the same line the ticks hang off and the
+   diamond rides. `--hud-rail-guide-inset` is the anchor rather than a
+   measured pixel, so both assemblies stay rigid if that token ever leaves
+   0. The two corners are an exact 180° rotation of each other. */
 .rin-cl {
   position: absolute;
 }
@@ -67,7 +71,7 @@
    corner point. The row's TOP edge sits on the margin line rather than
    straddling it: the corner's curtain inset saturates at 0px, so a row
    centred on that line would lose its upper half at rest. */
-.rin-cl--journey {
+.rin-cl--approach {
   top: 0;
   left: calc(var(--hud-rail-guide-inset) - var(--rin-half));
 }
@@ -75,9 +79,10 @@
 .rin-cl__row {
   display: flex;
   align-items: center;
-  /* 18px, not the two-cluster 22px: the row carries ten marks and two
-     rules now, and at 22px it ran 404px across the top of the frame. */
-  gap: 18px;
+  /* 22px — the two-cluster value, restored with the two clusters. Update 1
+     tightened it to 18px because ONE row of ten marks and two rules ran
+     404px across the top of the frame; five marks run 168px and do not. */
+  gap: 22px;
 }
 /* The seat wrapper exists only to pair a rule with its mark in JSX — it
    must not become a flex item or the gaps double up. */
@@ -102,9 +107,10 @@
   color: rgba(var(--dawn-rgb), 0.3);
   white-space: nowrap;
 }
-/* The zone label sits at the row's OUTBOARD end — never above it. Above a
-   corner is unreachable at rest: the curtain inset saturates at 0px. */
-.rin-cl--journey .rin-cl__zone {
+/* The zone label sits at the row's INBOARD end — never above it. Above a
+   corner is unreachable at rest: the curtain inset saturates at 0px. The
+   bottom-right has none; its inboard terminus is the settings controls. */
+.rin-cl--approach .rin-cl__zone {
   left: calc(100% + 16px);
 }
 
@@ -180,19 +186,25 @@
   pointer-events: none;
 }
 
-/* ── SETTINGS, bottom-right (ADR-059 Update 1) ──────────────────────────
-   The four corners each carry one idea: journey top-left, nav top-right,
-   brand bottom-left, settings bottom-right.
+/* ── BOTTOM-RIGHT: THE DESTINATIONS + SETTINGS (ADR-059 Update 2) ────────
+   One row, marks OUTBOARD and controls INBOARD — the 180° mirror of the
+   approach corner, with the controls standing where that row's zone label
+   sits. §2 ruled the corner could not hold a cluster and a control; that
+   was measured against a glyph row that still carried LABELS (~36px into a
+   ~26px strip). Update 1 dropped the labels, and a bare 16px glyph row sits
+   beside a control on one line with room to spare.
 
    ⚠ Its own fixed overlay OUTSIDE `.hud`, at the `.hud-nav-overlay` z 60
-   precedent — the ADR-058 constraint, unchanged by the corner's new
-   contents. `.hud__rail` and `.hud__corner--*` carry the hero-curtain
-   `clip-path`, so anything hosted in them is invisible for the whole hero
-   and pops in as the curtain lifts. Settings has to work on screen one.
+   precedent — the ADR-058 constraint, unchanged by the corner's contents.
+   `.hud__rail` and `.hud__corner--*` carry the hero-curtain `clip-path`, so
+   anything hosted in them is invisible for the whole hero and pops in as
+   the curtain lifts. Settings has to work on screen one.
 
-   The offset is ADR-058's original expression, restored: inboard of the
+   The DEFAULT offset is ADR-058's original expression — inboard of the
    `--br` bracket, on the bottom margin line, pairing with the ADR-043
-   wordmark at the other end of the same band. */
+   wordmark at the other end of the band. It is what the controls fall back
+   to wherever the marks are not drawn, and it is byte-identical to
+   `.theme-toggle-overlay`, which `/arcs` still mounts. */
 .rin-settings {
   position: fixed;
   right: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
@@ -200,12 +212,64 @@
   height: var(--hud-corner-zone);
   display: flex;
   align-items: center;
-  gap: clamp(8px, 0.9vw, 14px);
+  /* Controls to marks. Wider than the gap BETWEEN controls, so the row
+     reads as two groups rather than one run of four things. */
+  gap: clamp(12px, 1.3vw, 20px);
   z-index: 60;
   pointer-events: none;
 }
-.rin-settings > * {
+/* ⚠ Only the CONTROLS take pointer events. The marks are informational —
+   `aria-hidden`, and the nav corner remains the single navigation — so a
+   blanket `.rin-settings > *` would hand five inert glyphs a hit box in the
+   corner of every page. */
+.rin-settings__ctl {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 14px);
   pointer-events: auto;
+}
+
+/* With the marks drawn, the row reaches OUT to the frame line the `--br`
+   bracket used to hold, so the last mark's centre lands on the right rail's
+   track — mirroring the approach row's first mark on the left. Gated on the
+   instruments' own attribute, so flipping them off returns the controls to
+   the ADR-058 slot along with the bracket.
+
+   ⚠ Above 960 ONLY, because the marks stop there and a 36px control centred
+   on the track line would overhang the viewport at the small end of
+   `--hud-margin` (16px at the narrowest — the button's own half is 18px).
+   The corner's bracket comes back at that gate too, and the two must not
+   land on each other. */
+@media (min-width: 961px) {
+  html[data-rail-instruments] .rin-settings {
+    right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) - var(--rin-half));
+  }
+}
+
+/* The marks' own curtain clip.
+   ⚠ COPIED VERBATIM from `.hud__corner--br` in `landing.css` — the marks
+   must be UNCOVERED by the hero exactly as the frame chrome is, while the
+   control beside them stays visible on screen one. `height: 100%` is what
+   makes the copy exact: the expression assumes a box that is
+   `--hud-corner-zone` tall sitting on the bottom margin line, which is the
+   corner's box and now this one's too. Let it shrink-wrap the 16px glyphs
+   and the reveal lands ~14px of scroll late. */
+.rin-settings__row {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  pointer-events: none;
+  clip-path: inset(
+    max(
+        0px,
+        calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100dvh)
+      ) -340px -340px -340px
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .rin-settings__row {
+    clip-path: none;
+  }
 }
 
 /* The session mark — same 36px hit box as the theme control beside it, so
@@ -233,11 +297,16 @@
   }
 }
 
-/* ── The bracket the journey row stands in for ──────────────────────────
-   ⚠ ONLY the top-left. The bottom-right bracket STAYS: the settings
-   cluster sits inboard of it rather than replacing it, exactly as the
-   toggle always did, so that corner keeps its frame. */
-html[data-rail-instruments] .hud__corner--tl {
+/* ── The brackets the rows stand in for ─────────────────────────────────
+   BOTH working corners now (Update 2 — the bottom-right kept its bracket
+   for the day it held settings alone). The rows ARE the corner marks; a
+   bracket behind one reads as two marks for the same corner, and the
+   `--br` one draws straight through the terminal glyph besides.
+
+   The bottom-LEFT keeps its bracket — that corner is the ADR-043 wordmark
+   and has no row to replace it. */
+html[data-rail-instruments] .hud__corner--tl,
+html[data-rail-instruments] .hud__corner--br {
   border: 0;
 }
 
@@ -247,10 +316,12 @@ html[data-rail-instruments] .hud__corner--tl {
    changes the reveal. Only the SIDES open up.
 
    Production ships −100px on the rail (sized for the 21px tick overhang
-   and the diamond) and 0 on the TL corner's left. The dock row reaches
-   ~130px inboard of the rail and the approach row's first mark sits half
-   a mark outboard of its corner — at the shipped values both were sliced
-   with no error, which reads as a layout mistake rather than a clip. */
+   and the diamond) and 0 on the TL corner's left. The telemetry's key +
+   leader + value run well past the rail's own 62px box, and the approach
+   row's first mark sits half a mark outboard of its corner — at the
+   shipped values both were sliced with no error, which reads as a layout
+   mistake rather than a clip. (The bottom-right row carries its own copy
+   of this, on `.rin-settings__row` above.) */
 html[data-rail-instruments] .hud__rail {
   clip-path: inset(
     max(
@@ -273,28 +344,36 @@ html[data-rail-instruments] .hud__corner--tl {
 
 /* ── Responsive — key off the PRODUCTION gates, never invent new ones ────
    ≤960 `.hud__rail { display: none }` takes the telemetry and the vertical
-   name with it for free. The journey row lives in the TL CORNER, and the
-   corner brackets survive on mobile, so that one has to be said out loud.
-   ≤1100 drops the vertical name, alongside the bearing labels and the
-   manifest that already go at that width.
+   name with it for free. Both mark rows live in CORNERS — one in the TL
+   corner box, one in the settings overlay — and the corner brackets survive
+   on mobile, so both have to be said out loud. ≤1100 drops the vertical
+   name, alongside the bearing labels and the manifest that already go at
+   that width.
 
-   ⚠ SETTINGS IS NEVER GATED. It is the only control in the frame besides
-   the nav corner, it is `position: fixed` and owes nothing to the rails,
-   and a theme switch that disappears on a phone is a bug rather than a
-   simplification. */
+   ⚠ SETTINGS IS NEVER GATED — only the marks beside it are. It is the only
+   control in the frame besides the nav corner, it is `position: fixed` and
+   owes nothing to the rails, and a theme switch that disappears on a phone
+   is a bug rather than a simplification. Losing the marks re-anchors the
+   row to the ADR-058 slot (see the `min-width: 961px` block above), which
+   is also what keeps the control clear of the bracket coming back. */
 @media (max-width: 1100px) {
   .rin-vertname {
     display: none;
   }
 }
 @media (max-width: 960px) {
-  .rin-cl--journey {
+  .rin-cl--approach,
+  .rin-settings__row {
     display: none;
   }
-  /* The row is gone, so its bracket comes back. Only the TL one is ever
-     suppressed — the BR bracket was never replaced. */
+  /* The rows are gone, so their brackets come back. The BL bracket is not
+     listed because it was never suppressed. */
   html[data-rail-instruments] .hud__corner--tl {
     border-top: 2px solid var(--hud-rail-line);
     border-left: 2px solid var(--hud-rail-line);
+  }
+  html[data-rail-instruments] .hud__corner--br {
+    border-bottom: 2px solid var(--hud-rail-line);
+    border-right: 2px solid var(--hud-rail-line);
   }
 }

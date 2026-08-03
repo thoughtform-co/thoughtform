@@ -19,10 +19,13 @@ import { journeyRef, subscribeJourney } from "../journeyRef";
  * judge. Only the CLOCK differs — production reads the real `<html>` bus,
  * this reads the synthetic runway's `journeyRef`.
  *
- * It was two clusters (approach top-left, destinations bottom-right) until
- * the bottom-right corner became SETTINGS (owner, 2026-08-02). The
- * grouping survives as rules inside the row rather than as distance across
- * the frame.
+ * ⚠ AND THE LAB'S ROW IS NOT PRODUCTION'S SHAPE. Production splits the
+ * roster across two corners — approach top-left, destinations bottom-right
+ * (ADR-059 Update 2) — and prints no labels at all. This keeps all ten in
+ * one labelled row on purpose: the open question here is the GLYPHS (§4 —
+ * whether they read as instrument geometry or as app icons), and ten of
+ * them side by side with their names under them is how that gets judged.
+ * The geometry was settled on the live frame, not here.
  *
  * Informational only — `pointer-events: none` on the host, `aria-hidden`
  * throughout. The nav corner remains the single navigation.
@@ -54,7 +57,7 @@ export function JourneyCluster() {
   // no box the row lands on the corner's own origin, off the viewport edge.
   return (
     <div className="hil-cl hil-cl--journey" aria-hidden="true">
-      <span className="hil-cl__zone">{CLUSTER_ZONES.journey}</span>
+      <span className="hil-cl__zone">{CLUSTER_ZONES.approach}</span>
       <span className="hil-cl__row">
         {JOURNEY_MARKS.map((mark) => (
           <Fragment key={mark.id}>

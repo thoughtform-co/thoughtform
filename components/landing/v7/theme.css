@@ -46,16 +46,20 @@
    hero and then pop in.
 
    ⚠ THIS OVERLAY IS NOW `/arcs` ONLY (ADR-059 Update 1). The landing page
-   mounts `SettingsCluster` instead, which owns its own overlay in the same
-   slot and carries the theme switch plus a session mark. The geometry
-   below and `.rin-settings` are deliberately the SAME expression — if one
-   moves, move both, or the two public surfaces put the same control in
-   two different places.
+   mounts `SettingsCluster` instead, which owns its own overlay carrying the
+   theme switch, a session mark and the journey's destination marks. The
+   geometry below is `.rin-settings`'s BASE expression, byte-identical — if
+   one moves, move both.
 
-   (It briefly moved to the bottom-LEFT earlier the same day, when the
-   journey's destination marks held this corner. They have since merged
-   into the top-left row and the corner became settings, so the original
-   right-hand placement is restored.)
+   The landing's cluster then shifts OUTBOARD of this slot above 960px, onto
+   the frame line its `--br` bracket used to hold (ADR-059 Update 2). That
+   divergence is the marks: this page keeps its bracket and has no row to
+   put beside the control, so there is nothing to reach out for. Below 960
+   the two are in the same place again.
+
+   (It briefly moved to the bottom-LEFT on 2026-08-02, when the destination
+   marks held that corner alone. They share it now, so the original
+   right-hand placement stands.)
    ═══════════════════════════════════════════════════════════════════ */
 .theme-toggle-overlay {
   position: fixed;
