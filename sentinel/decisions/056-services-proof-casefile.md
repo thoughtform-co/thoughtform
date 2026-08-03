@@ -1512,3 +1512,312 @@ tsc, ESLint, 440+ unit tests, the full desktop services-ring smoke (10/10
 - mobile skip) including the new browse/spy/click-pin assertions and the
   remapped interleave, plus headed captures of both themes at rows 1/3/4,
   the ring's new front card, and the docked light-mode wordmark.
+
+## Update 14 — the map splits from the dossier, and the Skills speak (2026-08-03, owner)
+
+**Owner brief:** the Intelligence Map's plate "is just like a list" where the
+aether `/claude-adoption` original was a weighted donut whose chips open. Make
+the Skills clickable and show their content — but as a SPLIT rather than the
+source's pop-up: "left: an overview of the different skills, right: the
+content". And: "don't make it boring. I know that's the intelligence map, it's
+inherently abstract, but I think you can do something good with it."
+
+### What was actually wrong
+
+U13's tab strip was not merely plain, it was SMALL. The plate box measures
+**690×240 at 1440×800** and the strip plus one engine's chips used the top
+~150px of it, leaving the rest empty over a live WebGL bed. It also showed one
+shape at a time: 12 of 47 Skills on arrival, the other 35 behind a click that
+told a reader nothing about what they would get. A taxonomy selector, not a
+map.
+
+### The map (left, 45%)
+
+Five rows, one per shape, **one cell per Skill** — all 47 on screen at once,
+and the row length IS the count. U13's "the browser makes the counts countable
+by eye" contract therefore got STRONGER rather than being traded away: the
+printed figure sits at the end of the row a reader can count against it, and
+the five still sum to the foot's 47+.
+
+Two decisions that carry the whole read:
+
+- **Cell fill is LIFECYCLE, and rows sort most-shipped-first.** The solid left
+  mass of every row is what runs today; the hollow tail is what does not yet.
+  Validation reading 3 solid / 3 half / 3 hollow is the portfolio's maturity
+  legible without a single click, which is the claim this beat exists to make.
+- **Rows, not columns.** Columns were tried first and died on the label:
+  "STAKEHOLDER" has no legible slot at 8.5px in the ~52px a fifth of the map
+  affords, and sideways type is banned here (ADR-059 took the vertical section
+  name off the rail for the same reason). Rows give the shape names their full
+  width at the left and still weight the bars.
+
+**Uniform cells with NO measurement.** Every row renders `max − n` invisible
+GHOST slots after its real cells, so all five share one 14-slot flex track and
+a cell means the same width in every row. The alternatives were a
+`ResizeObserver` (a per-frame measurement this surface must not take), a
+percentage height needing a definite parent, or `calc()` in an `<integer>`
+grid-line position. Ghosts are inert markup and cost nothing. The five rows
+are ONE grid with the row elements at `display: contents` — five separate row
+grids each sized their own label column and the bars stopped being comparable,
+which is the entire point of the map.
+
+### The dossier (right, 55%)
+
+Shape, lifecycle, name, team, and what the Skill does. **Hover previews, click
+pins**, so sweeping the map flickers the whole portfolio past the reader —
+that is the answer to "don't make it boring", and it comes from the source
+(aether's chips do the same) rather than from invention. `Skill nn / 47` and
+the shape's team spread hold U13's provenance slot at the foot.
+
+Keyboard is a ROVING TABINDEX with arrows walking rows and columns: 47
+sequential tab stops inside a scroll-pinned stage is not navigation.
+
+### `summary` — U13's exclusion, reversed by the owner
+
+U13 recorded per-skill body copy as deliberately withheld ("internal workflow
+detail"). That was right for a chip and wrong for a dossier: a clickable map
+that answers with a team name and a status is a worse plate than the tab strip
+it replaced. All 47 now carry a `summary`.
+
+**Rewritten from the client's cards, never pasted.** What still does not
+travel: per-skill OWNERS, version markers, workshop dates, and the internal
+vendor stack a Skill happens to read from (the ERP, the support desk, the
+analytics vendors, the chatbot one was ported off) — a public page does not
+need a client's procurement list. Tool CODENAMES do travel; they are in scope
+for a case study. New guards: ≤150 chars (four clamped lines at the dossier's
+~40-character measure, three at ≤800h), ALL-OR-NONE across a plate, and the
+owner-pair scan now reads `summary` too — a pasted line is exactly where
+"Olga + Vince" would come back in. The envelope's existing string sweep walks
+the new field for free, which is how 47 new sentences of client copy shipped
+without a separate review pass.
+
+### Verified
+
+tsc, ESLint, the registry test (23/23, including the confidentiality sweep
+over all 47 summaries), the full desktop services-ring smoke (10/10 + mobile
+skip) — including U11's four-row clip guard, which measures `.fl-plate` and so
+measures this plate. Headed captures at 1440×800 in BOTH themes at the settled
+dwell (`--svc-proof-in` 1.0, `data-proof-settled` 1, browse channel in row
+one's quarter): 47 cells + 23 ghosts, `scrollHeight − clientHeight` = 0 in
+each. Light needs no override — the plate is entirely token-driven.
+
+**The plate box is NOT a fixed 690×240 — check the tall end too.** At
+2017×1269 (the owner's own pane) it measures **862×429**, and the first cut's
+ceilings (15px cell, 19px row gap) left the five rows stranded in the middle
+of it with ~250px of air: the exact defect this update set out to fix,
+reappearing one viewport up. The ceilings are now 18px and 30px. That is safe
+BY CONSTRUCTION rather than by luck — at 800h the `clamp()` middle term binds
+(1.9svh = 15.2px, 1.8svh = 14.4px) and the ceilings are inert, so raising them
+cannot move the verified viewport; re-running U11's clip guard confirms it.
+Do not "fix" the remaining air by raising the `svh` coefficients instead:
+those DO bind at 800h and would clip there, which is the one place this
+surface has no room.
+
+Interaction proven in the real page, not only under Playwright: a browser
+click at the cell's own coordinates hit-tests to `.fl-skills__cell` (the
+fourth pointer-events opt-in), pins it, takes focus, lights its row, swaps the
+gloss, and repopulates the dossier.
+
+## Update 15 — the lattice: a periodic table of the client's Skills (2026-08-03, owner)
+
+**Owner brief, on seeing U14:** "maybe we don't need the right panel? Maybe we
+can visualize them across substrate / team like we had it in aether, and then
+when you click on them, a panel appears above it that shows the content. And
+then maybe we can visualize the raster like the Elemental Table of Mendeleev
+but not exactly."
+
+U14's permanent dossier was the thing to cut. It spent half of a 690×240 box
+on ONE record, so the map — the half that shows all 47 — got 290px. The
+detail is now TRANSIENT and the lattice gets the whole plate.
+
+### Every Skill is a tile
+
+A tile carries its ORDINAL and a SYMBOL (`skillSymbol.ts`). The ordinal is the
+Skill's index in registry order and is stable across axes — it is the tile's
+identity the way an atomic number is, not its position. The symbol is derived
+(a leading acronym stands alone, so "NDA Pre-Check" is NDA and not NP;
+otherwise the initials of the significant words) with a two-entry override
+list, because a periodic table's symbols are curated. `cases-registry.test.ts`
+pins UNIQUENESS and a 2–4 character width: `Loop Packaging System` and `Loop
+Paid Social` both derived LPS, and `Localization` derived a bare "L" that read
+as a bullet. A future Skill that collides fails a test instead of silently
+shadowing an existing mark.
+
+### Two axes, one lattice
+
+`shape` is 5 rows × up to 14; `team` is 14 rows × up to 7. Same markup, same
+ghost-padded tracks (U14's contract, unchanged and still what makes a tile
+mean one width in every row), different reflow. Row order is registry order
+for shapes and FIRST APPEARANCE for teams, so a copy edit cannot reshuffle the
+lattice.
+
+**The team axis degrades below 900h rather than clipping** (owner's call, from
+the three options costed): 14 rows in the 240px box leaves ~12.5px a row,
+which cannot hold an 11px symbol, so below the breakpoint the marks go and the
+lattice thins to fill-only cells. Every Skill is still there, still weighted,
+still clickable, with the panel carrying the identity. The count comes DOWN to
+the 8.5px chrome floor rather than off — the printed figure is what a reader
+checks the row against.
+
+### The panel opens over the lattice
+
+It cannot escape the plate: `.fl-plate` is `overflow: hidden` and `.fl-case`
+carries the iris `clip-path`, so a clipped ancestor becomes the containing
+block even for `position: fixed` — which is why the film lightbox portals to
+`document.body`. So it is absolutely positioned in the stage, CLAMPED to it,
+and flips below the tile when there is no room above. Positioning runs in a
+LAYOUT effect, not at click time: the panel's height depends on the summary's
+wrap, so clamping needs its measured box, and a layout effect writes the
+offsets before paint so it never flashes at the wrong place.
+
+### Three fit bugs the old guard could not see
+
+Measured, not eyeballed, and all three shipped invisible in the first cut:
+
+1. **The row height was set by the COUNT's line box, not the tile.** A default
+   line box on 10px mono is 15px; a team tile is 9px. Every grid row took the
+   taller of the two, which put the team lattice 46px over its stage at
+   1440×800 and 121px over at 2017×1269. `line-height: 1` on the row name and
+   the count is load-bearing, not tidiness.
+2. **Row gap has to be per axis.** Five rows can breathe where fourteen
+   cannot; one shared gap cannot serve both.
+3. **`.fl-plate` measures 0 while the lattice overflows.** The plate's own
+   `overflow: hidden` swallows the grid's overflow, so U11's clip guard —
+   which measures `.fl-plate` — reported clean through all of the above.
+
+So the guard grew two ways: `.fl-skills__rows` joined the measured boxes, and
+the test now walks BOTH AXES. A guard that only ever sees the default state is
+not a guard, and the default axis was the one that fit.
+
+Two smaller ones, caught in capture: the legend swatches rendered empty (the
+fill rules were scoped to `.fl-skills__tile` alone), and the foot line
+truncated at "5 shapes ·" because the dotted leader was taking the slack the
+type needed.
+
+### The fill ramp stops at 0.62, on purpose
+
+`--dawn-rgb` is the INK and it flips per theme (cream in dark, 17/15/9 in
+light) while `--gold-rgb` does not. A near-solid gold flood therefore puts
+CREAM ON GOLD in dark mode. At 0.62 the symbol reads on every step in both
+themes off ONE token, and Shipped earns its extra step from the border
+instead. Verified in light: symbols legible on all four fills.
+
+### Verified
+
+tsc, ESLint (the two new files clean; the four warnings in
+`ServicesCasefile.tsx` predate this), the registry test 24/24 including the
+new symbol guard, and the full desktop services-ring smoke 10/10 + mobile
+skip with the widened clip guard. Headed captures at 1440×800 and 2017×1269,
+both axes, plus light: 47 tiles + 23 ghosts on `shape`, 47 + 51 on `team`,
+`scrollHeight − clientHeight` = 0 on the plate AND the rows grid in all four
+combinations, and the panel measured inside the stage on both axes.
+
+## Update 16 — the plate becomes the intelligence map (2026-08-03, owner)
+
+**Owner brief, stepping back from U15:** "the thing that we're building is the
+intelligence map. It's not just skills. It's also the model, the connectors it
+has access to, the tools we build on top of it... we can use different tabs,
+but also different types of visualizations, all connected to the same data...
+substrate/team is a subcategory, a subfilter. We also need higher-level filters
+based on how we're building that map and configuration." With the warning that
+carries the whole design: "there's a risk of creating something that's too
+overwhelming that isn't clear."
+
+The row has been called `01_INTELLIGENCE-MAP/` since U10 while showing a
+Skills registry. This closes that gap: the plate now shows the CONFIGURATION —
+what runs the work, what it reaches, what encodes the judgment, what was built
+on top — and the allocation of work across it.
+
+### Three projections of one dataset
+
+View tabs lead the head; the substrate/team toggle drops to what it always
+was, a sub-filter of the lattice alone, and only renders on that view.
+
+- **SKILLS** — U15's periodic table, unchanged, plus the team axis's new
+  consumption band (below).
+- **STACK** — four layers, top of stack first: tools, Skills, connectors,
+  models. Deliberately the quietest view: an inventory that tries to be a
+  chart is exactly the overwhelm the brief warned about. One count at display
+  size per layer, one gloss, chips on their own line.
+- **ALLOCATION** — the litmus. Four capability tiers with TWO bars each,
+  REACH against DRAW. The inversion is the whole picture: the light tiers sit
+  on nearly every seat and carry almost none of the consumption; the deep
+  tiers reach far fewer seats and carry almost all of it. Beside it, three
+  reads that say _why_ — the client's own argument that nuanced documents and
+  firmware earn the deep tier, and that the cost is therefore the work rather
+  than waste.
+
+One bar per rung would have made this a usage chart. The pair is the argument,
+because the gap between the two is the finding.
+
+### Two policy calls, both the owner's
+
+**Generic capability tiers, never model families.** Fast / Everyday / Deep /
+Frontier. The client's own post names the models; this page does not. That
+keeps the landing model-silent — it neither publishes a second variant of the
+model guidance already on the `claude-workshop` deck nor goes stale at the
+next release. A regex guard in the registry test pins it.
+
+**Connectors stay CATEGORIES.** Boards, mail, docs, design, commerce,
+transcripts. The named connector register (with its live / in-progress / not-
+yet gates) belongs to the client deck; the landing genericises, exactly as the
+U14 summaries already do with "ledger extract" and "two analytics sources".
+
+### The numbers, and what may never travel
+
+Every figure is read from the client's own May/June/July usage snapshots and
+then ROUNDED — the owner's ruling: "it doesn't have to be the exact numbers,
+it's more to illustrate our case." The derivation, including the casefile-team
+to snapshot-team mapping, lives in the content module's comments where the
+next editor will find it.
+
+What cannot appear, now guarded: currency of any kind, any per-seat cost (the
+per-person-per-month band is a deck claim), any model family name, any client
+staff name. The confidentiality scan already walks every string in `CASES`, so
+the new fields were covered the moment they existed — **verified by injecting
+a currency string into a `why` and watching the envelope test go red**, which
+is the only way to know a scan reaches a new field rather than assuming it.
+
+### Guards
+
+New in `cases-registry.test.ts`: exactly four stack layers and four tiers; the
+draw shares sum to ~100; the Skills layer's count must AGREE with the listed
+Skills rather than introduce a variant; the model-family regex; reads bounded
+at two or three with teams that exist in the data; and the gradient is
+ALL-OR-NONE — every team with Skills carries a band, because a hole in a scale
+a reader is reading across is worse than no scale.
+
+The smoke's clip walk generalises again: **three views × both lattice axes**,
+measuring the two new inner grids alongside `.fl-plate` and
+`.fl-skills__rows`. U15's lesson stated once more, because it caught two more
+bugs this pass: the default state is reliably the state that fits.
+
+### What the guards caught, and what only the eye caught
+
+Caught by the tests: a 62-character gloss against a 60 ceiling (first run),
+and the reads column 8px over its stage at 800h — fixed by spending leading
+and gap, never type, which stays above the 10.5px content floor.
+
+Caught only in capture, and worth naming because tests would not have:
+
+- **Chips sliced mid-word.** Beside the gloss they competed with a `1fr`
+  track and lost, so "DESIGN" rendered as "DE" and two of four tools simply
+  vanished. They now take a line of their own at full width. A chip is a
+  label; half a label is a defect, not a compromise.
+- **The allocation legend rendered as empty outlines** — the fill rules were
+  keyed on `data-fill` and this legend uses `data-kind`. The identical defect
+  the lifecycle legend shipped with one update ago.
+- **A tier note truncating at 20 characters against a 24-character budget.**
+  Fixed on both ends: tracking down (the U9 lever — 0.08em cost that column
+  ~14px) and the guard tightened to 20, because a budget looser than the box
+  is how this surface keeps shipping silent truncation.
+
+### Verified
+
+tsc, ESLint clean on all touched files, registry test 25/25 including the new
+map guards and the deliberate red-then-green envelope proof, full desktop
+services-ring smoke 10/10 + mobile skip with the three-view clip walk. Headed
+captures at 1440×800 and 2017×1269 across all three views plus both lattice
+axes, and light theme on stack and allocation: `scrollHeight − clientHeight`
+= 0 on the plate, the rows grid, the stack grid, the allocation grid, the
+ladder and the reads column, in every combination.

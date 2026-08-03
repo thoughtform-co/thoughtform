@@ -127,7 +127,7 @@ export interface CaseRegistryRow {
  * status only.
  */
 export interface CaseSkillEntry {
-  /** Display name, ≤30 chars (chips render at the 10.5px reading size). */
+  /** Display name, ≤30 chars (the dossier heading and the cell's label). */
   name: string;
   /** The client team whose judgment it encodes. */
   team: string;
@@ -135,6 +135,106 @@ export interface CaseSkillEntry {
   engine: string;
   /** Exec-honest lifecycle: "In use" | "Shipped" | "In build" | "Scoped". */
   status: string;
+  /**
+   * What the Skill does, in one or two sentences — the dossier's body
+   * (ADR-056 U14). U13 held this back deliberately ("per-skill body copy,
+   * internal workflow detail"); the owner reversed that when the plate
+   * split into map + dossier, because a map you can click that answers
+   * with four words is a worse plate than the tab strip it replaced.
+   *
+   * ⚠ REWRITTEN FROM the client's own copy, never pasted: the source
+   * carries owner names, version markers, workshop dates and the internal
+   * vendor stack, none of which travel. What travels is what the Skill
+   * does. All-or-none within a plate, so no cell answers with a blank.
+   *
+   * ≤150 chars — four clamped lines at `--fl-copy * 0.92` against the
+   * dossier's ~40-character measure, THREE at ≤800h. The box clips
+   * silently, so the ceiling is pinned by `cases-registry.test.ts`.
+   */
+  summary?: string;
+}
+
+/* ── The intelligence map's higher-level views (ADR-056 U16) ─────────────
+   The map is not just Skills: it is the CONFIGURATION — the models, the
+   connectors they reach, the Skills encoding judgment, the tools built on
+   top — and the allocation of work across it. One dataset, three
+   projections; presence of `intelligence` on the track's registry visual
+   is what turns the view tabs on, so a second client without the data
+   keeps the plain lattice. TRACK-SIDE ONLY, like `skills`.
+
+   Numbers policy, pinned by the registry test and rules/proof.md: SHARES,
+   RATIOS AND REACH FRACTIONS ONLY — never currency, never a per-seat cost
+   (the €/month band is a deck-page claim), never client staff names. All
+   figures are rounded/illustrative by owner ruling (2026-08-03); the
+   derivation from the client's usage snapshots lives in the content
+   module's comments, not on the surface. */
+
+/** One layer of the configuration stack, top of stack first. */
+export interface CaseStackLayer {
+  /** Layer name, ≤14 chars — "Tools" | "Skills" | "Connectors" | "Models". */
+  name: string;
+  /** The count as it reads, e.g. "4" or "47+" — must AGREE with any count
+   *  already published for the same thing (one variant per claim). */
+  count: string;
+  /** One line, ≤60 chars — truncates against the band's width. */
+  gloss: string;
+  /** Chips, each ≤14 chars. Connector chips are CATEGORIES, never vendor
+   *  names — the vendor register is the client deck's claim and the
+   *  landing genericises (rules/proof.md). Tool chips are the published
+   *  codenames. Hidden on short viewports, so nothing load-bearing. */
+  items?: readonly string[];
+}
+
+/** One rung of the allocation ladder, lightest tier first. GENERIC
+ *  capability names by owner ruling (2026-08-03) — never model families:
+ *  the landing stays model-silent and survives model churn. */
+export interface CaseModelTier {
+  /** "Fast" | "Everyday" | "Deep" | "Frontier", ≤10 chars. */
+  name: string;
+  /** ≤24 chars, e.g. "the daily driver". */
+  note?: string;
+  /** Share of active seats that touched the tier, 0–100 (rounded). */
+  reach: number;
+  /** Share of consumption, 0–100 (rounded; the four sum to ~100). */
+  draw: number;
+}
+
+/** One litmus exemplar — the "token cost = justified by the work" read. */
+export interface CaseAllocationRead {
+  /** One of the published team names (must exist in `skills`). */
+  team: string;
+  /** ≤16 chars — "Chat-led" | "Code-led" | "Widest spread". */
+  lens: string;
+  /** ≤80 chars — the justification, two clamped lines at the reads
+   *  column's ~40-char measure. */
+  why: string;
+}
+
+/** The map's higher-level dataset — see the block comment above. */
+export interface CaseIntelligence {
+  /** Exactly four layers, top of stack first. */
+  stack: readonly CaseStackLayer[];
+  /** Exactly four tiers, lightest first. */
+  tiers: readonly CaseModelTier[];
+  /** Two or three exemplars. */
+  reads: readonly CaseAllocationRead[];
+  /** Optional trend, oldest point first, e.g. frontier share of draw
+   *  across three months. Dropped ≤800h, so never load-bearing. */
+  trend?: {
+    /** ≤32 chars. */
+    label: string;
+    points: readonly { stamp: string; value: string }[];
+  };
+}
+
+/** One team's consumption band on the lattice's team axis (the gradient —
+ *  owner: "cluster the type of teams or skills based on the work and token
+ *  consumption"). Four steps, same fill scale as the lifecycle tiles so
+ *  one legend serves both. */
+export interface CaseTeamDraw {
+  /** Must match a team that appears in `skills`. */
+  team: string;
+  band: "light" | "steady" | "deep" | "intensive";
 }
 
 /** A beat's evidence plate. Discriminated like `ArcSection` (ADR-052). */
@@ -269,11 +369,20 @@ export type CaseTrackVisual =
        * The browsable portfolio (ADR-056 U13). TRACK-SIDE ONLY — the beat's
        * registry stays name + gloss + exemplar rows, so this field does not
        * exist on `CaseVisual`. When present the casefile plate renders the
-       * skills browser (engine tabs + chips + a provenance line) INSTEAD of
-       * the exemplar rows; `rows` stays in the data because the beat still
-       * renders it and the plate-sharing guard still asserts it shared.
+       * skills lattice INSTEAD of the exemplar rows; `rows` stays in the
+       * data because the beat still renders it and the plate-sharing guard
+       * still asserts it shared.
        */
       skills?: readonly CaseSkillEntry[];
+      /**
+       * The map's higher-level views (ADR-056 U16). Presence turns the
+       * plate's view tabs on: SKILLS (the lattice) · STACK (the four
+       * layers of the configuration) · ALLOCATION (reach vs draw, and why
+       * the deep work earns the deep tier). Also track-side only.
+       */
+      intelligence?: CaseIntelligence;
+      /** Per-team consumption bands for the lattice's TEAM axis. */
+      teamDraw?: readonly CaseTeamDraw[];
       footer?: string;
     }
   /** References production tools BY ID — `PROJECT_CASES` stays canonical. */

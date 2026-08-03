@@ -999,6 +999,50 @@ Two corollaries learned the same day:
   separate fields — a regex for the joined phrase can never match. Pin the
   half that carries the meaning.
 
+### A clipping parent measures 0 while its child overflows
+
+`scrollHeight - clientHeight` on an `overflow: hidden` box reports its own
+overflow, not its descendants'. An inner grid that exceeds its track is
+clipped by the parent and the parent measures clean, so an overflow guard
+pointed at the outer box passes while content is being cut.
+
+This shipped twice on the same surface. A skills lattice sat 46px over its
+stage at 1440×800 and 121px at 2017×1269 with `.fl-plate` reporting 0 both
+times, because the plate's own `overflow: hidden` swallowed the grid's
+overflow (ADR-056 U15–U16).
+
+**Measure every box that owns a layout, not just the outermost one.** When a
+component gains an inner grid or a new view, that box joins the measured set
+in the same commit.
+
+### A guard that only sees the default state is not a guard
+
+A surface with an axis toggle, a view tab, or a mode gets tested in whatever
+state it mounts in — and the default is reliably the state that fits, because
+it is the one that was designed first and looked at most.
+
+The same casefile plate passed its clip guard through a lattice axis that
+overflowed by 46px and, one update later, two whole views that had never been
+measured. Both were found by capture, not by the suite.
+
+**Iterate the states in the test.** Walk every view × every axis and assert on
+each; the loop costs a few seconds and is the only thing standing between a
+non-default state and a silent regression.
+
+### Two more that only a capture will catch
+
+Neither has a cheap automated form, so they belong on the eyeball pass:
+
+- **A legend swatch with no fill rule decodes nothing.** Fill rules scoped to
+  the marks (`.thing[data-fill]`) leave the legend's swatches as empty boxes.
+  Shipped twice on one surface — once keyed on `data-fill`, once on
+  `data-kind`. Look at the legend, not just the chart.
+- **A budget looser than the box ships silent truncation.** A 24-character
+  ceiling on a field whose column holds 20 passes every test and truncates on
+  screen. When a guard and a box disagree, the box is right — tighten the
+  guard to the measured ceiling, and buy the characters back with tracking
+  rather than size.
+
 ---
 
 ## ✅ Quick Checklist

@@ -1,4 +1,4 @@
-import type { CaseDef, CaseSkillEntry } from "../types";
+import type { CaseDef, CaseIntelligence, CaseSkillEntry, CaseTeamDraw } from "../types";
 
 /**
  * Loop Earplugs — the flagship case (ADR-054), rendered as the casefile at
@@ -177,184 +177,532 @@ const TOOL_IDS = ["mimir", "vesper", "babylon", "heimdall"] as const;
  * test asserts each group's `count` equals its skill-list length here, so
  * the two can never drift apart.
  *
- * What deliberately does NOT come across from the source: per-skill OWNERS
- * (client staff names), per-skill body copy (internal workflow detail),
+ * `summary` is the ONE field that is not verbatim (ADR-056 U14). U13 held
+ * per-skill body copy back as "internal workflow detail"; the owner
+ * reversed that when the plate became a map plus a dossier, because a
+ * clickable map that answers with a team name and a status is a worse
+ * plate than the tab strip it replaced. Each line is REWRITTEN from the
+ * source card so that what survives is what the Skill DOES.
+ *
+ * What still does NOT come across: per-skill OWNERS (client staff names,
+ * caught by the registry test's owner-pair guard), version markers,
+ * workshop dates, the internal vendor stack a Skill happens to read from,
  * and the four untagged registry cards (the suppressed 51-card
- * denominator — see NUMBERS at the top of this file).
+ * denominator — see NUMBERS at the top of this file). Tool CODENAMES do
+ * travel: they are in scope for a case study (rules/proof.md).
  */
 const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   // Judgment — 12
-  { name: "NDA Pre-Check", team: "Legal", engine: "Judgment", status: "In build" },
-  { name: "Legal Risk Methodology", team: "Legal", engine: "Judgment", status: "In build" },
-  { name: "SPA Pre-Check", team: "Legal", engine: "Judgment", status: "Scoped" },
-  { name: "Product Ideation", team: "Product Management", engine: "Judgment", status: "In build" },
+  {
+    name: "NDA Pre-Check",
+    team: "Legal",
+    engine: "Judgment",
+    status: "In build",
+    summary:
+      "Clause-by-clause review encoded. Routine deviations get caught and handled, novel ones route to Legal. Four more pre-checks build on its shape.",
+  },
+  {
+    name: "Legal Risk Methodology",
+    team: "Legal",
+    engine: "Judgment",
+    status: "In build",
+    summary:
+      "Loop's risk methodology as substrate, starting with AI and data privacy. The engine every Legal pre-check calls into.",
+  },
+  {
+    name: "SPA Pre-Check",
+    team: "Legal",
+    engine: "Judgment",
+    status: "Scoped",
+    summary: "The NDA pre-check's judgment shape, applied to shareholder purchase agreements.",
+  },
+  {
+    name: "Product Ideation",
+    team: "Product Management",
+    engine: "Judgment",
+    status: "In build",
+    summary:
+      "Pressure-tests a raw idea against the portfolio, the mission, the value spaces and the roadmap before anyone builds a case for it.",
+  },
   {
     name: "Risk Management",
     team: "Program Management & Product",
     engine: "Judgment",
     status: "In build",
+    summary:
+      "Standardises how a risk gets described, finds the gaps, and surfaces the reasoning behind a decision rather than only its outcome.",
   },
-  { name: "BRR Generator", team: "Product Engineering", engine: "Judgment", status: "In use" },
+  {
+    name: "BRR Generator",
+    team: "Product Engineering",
+    engine: "Judgment",
+    status: "In use",
+    summary:
+      "Turns intake into a business requirements review on the engineering team's own standard template.",
+  },
   {
     name: "Onboarding & POps Processes",
     team: "People Ops",
     engine: "Judgment",
     status: "In build",
+    summary:
+      "Encodes how People Ops reasons about edge cases, not just the happy path. Reasoning first, automation second.",
   },
   {
     name: "Partnership Inbox Filter",
     team: "Brand & Partnerships",
     engine: "Judgment",
     status: "In build",
+    summary:
+      "Classifies an inbound partnership request by tier and drafts the response that tier warrants, with its reasoning attached.",
   },
   {
     name: "Cost / Feasibility / Portfolio",
     team: "Manufacturing Programs",
     engine: "Judgment",
     status: "In build",
+    summary:
+      "Manufacturing-side triage on cost, feasibility and portfolio fit. Shares its judgment engine with the design-side checks.",
   },
   {
     name: "UX Foundations Evaluation",
     team: "Product Design & UX",
     engine: "Judgment",
     status: "In build",
+    summary:
+      "Reads a concept and returns its alignment against Loop's six UX pillars, naming what fails rather than scoring it out of ten.",
   },
   {
     name: "Concept Triage Engine",
     team: "Product Design & UX",
     engine: "Judgment",
     status: "In build",
+    summary:
+      "Three checks on one engine: cost, feasibility, portfolio fit. Four design questions answered as a single architectural move.",
   },
-  { name: "Loop Creative Strategy", team: "Performance", engine: "Judgment", status: "In use" },
+  {
+    name: "Loop Creative Strategy",
+    team: "Performance",
+    engine: "Judgment",
+    status: "In use",
+    summary:
+      "The creative-strategy substrate: desire axes, awareness stage and transformation arc, applied to every review, ad and brief. Mímir composes off it.",
+  },
   // Voice — 7
   {
     name: "Employer Branding TOV",
     team: "Talent Acquisition",
     engine: "Voice",
     status: "In build",
+    summary:
+      "Employer-facing tone for job posts, outreach and candidate comms. Pairs with the internal People voice on the other side of the door.",
   },
-  { name: "People-team Voice", team: "People Ops", engine: "Voice", status: "In use" },
+  {
+    name: "People-team Voice",
+    team: "People Ops",
+    engine: "Voice",
+    status: "In use",
+    summary:
+      "The internal register, encoded from the team's own tone-of-voice doc. Playbook pages first, then emails and decks.",
+  },
   {
     name: "Founder Tone of Voice",
     team: "Brand & Partnerships",
     engine: "Voice",
     status: "In use",
+    summary:
+      "The founder's voice encoded, used for stage prep and for ongoing founder-led communication.",
   },
-  { name: "Paid Social TOV", team: "Brand & Partnerships", engine: "Voice", status: "In build" },
-  { name: "Loop Paid Social", team: "Studio", engine: "Voice", status: "In use" },
-  { name: "Loop CRM", team: "Studio", engine: "Voice", status: "Shipped" },
-  { name: "Loop Marketplace", team: "Studio", engine: "Voice", status: "Shipped" },
+  {
+    name: "Paid Social TOV",
+    team: "Brand & Partnerships",
+    engine: "Voice",
+    status: "In build",
+    summary:
+      "Paid-social copy rules encoded, so a campaign draft arrives on-brand and human review starts from something real.",
+  },
+  {
+    name: "Loop Paid Social",
+    team: "Studio",
+    engine: "Voice",
+    status: "In use",
+    summary:
+      "Grounded in the real ad archive across every product, angle, season and collab. Writes primary text, headlines and descriptions in Loop's voice.",
+  },
+  {
+    name: "Loop CRM",
+    team: "Studio",
+    engine: "Voice",
+    status: "Shipped",
+    summary:
+      "Lifecycle communication end to end: onboarding, retention, escalation, win-back, loyalty, with the privacy guardrails encoded in, not bolted on.",
+  },
+  {
+    name: "Loop Marketplace",
+    team: "Studio",
+    engine: "Voice",
+    status: "Shipped",
+    summary:
+      "Amazon listing copy: titles, SEO descriptions, bullets, A+ modules, image text. Adapts the base copy for collabs, bundles and new colourways.",
+  },
   // Validation — 9
-  { name: "Tracker Compliance Checker", team: "Legal", engine: "Validation", status: "In use" },
-  { name: "Interview Debrief", team: "Talent Acquisition", engine: "Validation", status: "Scoped" },
+  {
+    name: "Tracker Compliance Checker",
+    team: "Legal",
+    engine: "Validation",
+    status: "In use",
+    summary:
+      "Drives a browser across the Loop webshops every week and reports every consent violation it finds, checked against policy.",
+  },
+  {
+    name: "Interview Debrief",
+    team: "Talent Acquisition",
+    engine: "Validation",
+    status: "Scoped",
+    summary:
+      "Turns panel notes into a debrief scored against Loop's hiring bars. A fixed rubric, which is what makes it a validation shape.",
+  },
   {
     name: "GL Reconciliations",
     team: "Finance & Accounting",
     engine: "Validation",
     status: "In build",
+    summary:
+      "Takes the ledger extract through its reconciliation checks and flags the anomalies for a human to judge.",
   },
   {
     name: "Belgian VAT Return",
     team: "Finance & Accounting",
     engine: "Validation",
     status: "Scoped",
+    summary:
+      "Turns the ledger extract into the VAT return, replacing the manual spreadsheet lookups the boxes used to need.",
   },
   {
     name: "Quality Auditor",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
     status: "In use",
+    summary:
+      "Scores support tickets against the team's own scorecard, compares AI answers to human ones, and reports the outliers.",
   },
   {
     name: "Fraud Detection",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
     status: "In build",
+    summary:
+      "Pattern analysis over orders: odd addresses, bot activity, suspicious refunds. The output is a flag list, not a verdict.",
   },
   {
     name: "Invoice Processor",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
     status: "In use",
+    summary:
+      "Reads supplier invoices across every template, cross-checks them against the vendor master, POs and prior invoices, and catches scam patterns.",
   },
   {
     name: "Supplier QA Audit",
     team: "Manufacturing Programs",
     engine: "Validation",
     status: "Scoped",
+    summary:
+      "Scores supplier quality reports against Loop's bars, alongside the warehousing team's own quality work.",
   },
-  { name: "Localization", team: "Studio", engine: "Validation", status: "In build" },
+  {
+    name: "Localization",
+    team: "Studio",
+    engine: "Validation",
+    status: "In build",
+    summary:
+      "Checks locale copy against the approved translations, so a market launch never ships a sentence nobody signed off.",
+  },
   // Stakeholder — 5
   {
     name: "Candidate Screening Brief",
     team: "Talent Acquisition",
     engine: "Stakeholder",
     status: "Scoped",
+    summary:
+      "Structures intake notes into one screening brief a hiring manager can read in a single pass.",
   },
   {
     name: "Program Status Updates",
     team: "Program Management & Product",
     engine: "Stakeholder",
     status: "In build",
+    summary:
+      "Reads transcripts, checks the risk board, reviews the roadmap, and drafts the cross-team status digest from all three.",
   },
   {
     name: "Market Scan Brief",
     team: "Strategic Insights",
     engine: "Stakeholder",
     status: "In build",
+    summary:
+      "Structures competitive and category signals into a standing brief the insights team refreshes weekly.",
   },
-  { name: "Survey Synthesis", team: "Strategic Insights", engine: "Stakeholder", status: "Scoped" },
-  { name: "Feedback Summarizer", team: "Studio", engine: "Stakeholder", status: "In use" },
+  {
+    name: "Survey Synthesis",
+    team: "Strategic Insights",
+    engine: "Stakeholder",
+    status: "Scoped",
+    summary:
+      "Turns raw survey exports into themed readouts, each carrying quoted evidence and a note on how confident it is.",
+  },
+  {
+    name: "Feedback Summarizer",
+    team: "Studio",
+    engine: "Stakeholder",
+    status: "In use",
+    summary:
+      "Turns a sprawling creative feedback thread into a structured summary stakeholders can act on without re-reading it.",
+  },
   // Pattern — 14
   {
     name: "Variance Commentary",
     team: "Finance & Accounting",
     engine: "Pattern",
     status: "In use",
+    summary:
+      "Month-end variance templates encoded. It drafts the commentary and Finance reviews it, and it sounds like the person who used to write it.",
   },
-  { name: "MEC Tracker", team: "Finance & Accounting", engine: "Pattern", status: "In use" },
+  {
+    name: "MEC Tracker",
+    team: "Finance & Accounting",
+    engine: "Pattern",
+    status: "In use",
+    summary:
+      "The month-end close carried forward as a live project: it surfaces blockers as they appear and drafts the status note.",
+  },
   {
     name: "VSME Sustainability Reporting",
     team: "Program Management & Product",
     engine: "Pattern",
     status: "Scoped",
+    summary:
+      "Structured inputs into the voluntary SME reporting template. Credible disclosures without a dedicated reporting function.",
   },
-  { name: "Daily Brief", team: "Product Engineering", engine: "Pattern", status: "In use" },
+  {
+    name: "Daily Brief",
+    team: "Product Engineering",
+    engine: "Pattern",
+    status: "In use",
+    summary:
+      "Pulls mail, transcripts and boards into one morning brief for engineering. The multi-source briefing pattern other teams now reuse.",
+  },
   {
     name: "Dashboard Consolidation",
     team: "Warehousing & Customer Ops",
     engine: "Pattern",
     status: "In use",
+    summary:
+      "Harmonises two analytics sources into a single exec-ready readout, on the same briefing pattern.",
   },
-  { name: "SOP Generator", team: "People Ops", engine: "Pattern", status: "In build" },
+  {
+    name: "SOP Generator",
+    team: "People Ops",
+    engine: "Pattern",
+    status: "In build",
+    summary:
+      "Reverse-engineered from Loop's good SOPs: it asks the question flow that elicits a complete one, then drafts it for review.",
+  },
   {
     name: "360 Marketing Agent",
     team: "Brand & Partnerships",
     engine: "Pattern",
     status: "In build",
+    summary:
+      "A marketing assistant lifted out of one person's private chatbot into a shared Skill that can be versioned and used across teams.",
   },
-  { name: "Trend Scraper", team: "Strategic Insights", engine: "Pattern", status: "In build" },
+  {
+    name: "Trend Scraper",
+    team: "Strategic Insights",
+    engine: "Pattern",
+    status: "In build",
+    summary:
+      "Pulls external trend signals into a digest the team routes on into its briefing and calendar work.",
+  },
   {
     name: "Lead Time Calculator",
     team: "Manufacturing Programs",
     engine: "Pattern",
     status: "In use",
+    summary:
+      "Encodes lead-time rules across suppliers and lanes, so programme dates stay honest in a planning conversation.",
   },
-  { name: "CMF File Generator", team: "Product Design & UX", engine: "Pattern", status: "In use" },
+  {
+    name: "CMF File Generator",
+    team: "Product Design & UX",
+    engine: "Pattern",
+    status: "In use",
+    summary:
+      "Workbook in, manufacturer-ready colour-material-finish PDF with renders out. Wired into Vesper end to end.",
+  },
   {
     name: "Loop Packaging System",
     team: "Product Design & UX",
     engine: "Pattern",
     status: "In use",
+    summary:
+      "Artwork and workbook in, supplier-ready PDFs with info-box overlays and the creative intent brief out. Promotes the whole folder EVT to MP.",
   },
   {
     name: "Product Review Analysis",
     team: "Product Design & UX",
     engine: "Pattern",
     status: "In build",
+    summary:
+      "Scrapes and structures marketplace reviews, surfacing themes and request patterns across markets.",
   },
-  { name: "Asset Brief Generator", team: "Studio", engine: "Pattern", status: "In build" },
-  { name: "GenAI Prompting", team: "Studio", engine: "Pattern", status: "In use" },
+  {
+    name: "Asset Brief Generator",
+    team: "Studio",
+    engine: "Pattern",
+    status: "In build",
+    summary:
+      "Drafts a studio brief from campaign inputs, so a producer starts from a complete spec instead of a blank document.",
+  },
+  {
+    name: "GenAI Prompting",
+    team: "Studio",
+    engine: "Pattern",
+    status: "In use",
+    summary:
+      "How Loop gets useful work out of AI image and video tools: which models want a story, which want keywords, and how one idea becomes a slate.",
+  },
+];
+
+/* ── THE MAP'S HIGHER-LEVEL VIEWS (ADR-056 U16) ──────────────────────────
+ * Owner, 2026-08-03: "the thing we're building is the intelligence map.
+ * It's not just skills. It's also the model, the connectors it has access
+ * to, the tools we build on top of it... substrate/team is a subcategory,
+ * a subfilter. We also need higher-level filters based on how we're
+ * building that map and configuration."
+ *
+ * DERIVATION. Everything below is read from the client's own usage
+ * snapshots (May, June and July 2026) on the adoption board, and then
+ * ROUNDED. The owner's ruling: "it doesn't have to be the exact numbers,
+ * it's more to illustrate our case." What the snapshots actually showed,
+ * for whoever refreshes this:
+ *   · Consumption share by model family moved May → July as the work got
+ *     deeper, with the frontier family arriving from nothing to about a
+ *     fifth of the draw in three months.
+ *   · The inversion is the finding: the light families are on nearly every
+ *     seat and carry almost none of the draw; the deep families are on far
+ *     fewer seats and carry almost all of it.
+ *   · Per-team, firmware/hardware work is the deepest draw per seat in the
+ *     company on a handful of seats; Legal is the largest chat-led draw
+ *     because the documents are long and the reasoning IS the work;
+ *     the Studio is the widest spread at a light per-seat draw.
+ *
+ * WHAT MAY NEVER TRAVEL HERE (pinned by the registry test):
+ *   · Currency of any kind, and any per-seat cost. The €/month band is a
+ *     client-deck claim and must not be restated on the landing.
+ *   · MODEL FAMILY NAMES. The tiers are generic capability names by owner
+ *     ruling — the landing stays model-silent, which both avoids a second
+ *     variant of the deck's model advice and survives model churn.
+ *   · VENDOR NAMES for connectors. The categories below are the landing's
+ *     register; the named connector list belongs to the client deck.
+ */
+const LOOP_INTELLIGENCE: CaseIntelligence = {
+  /* Top of the stack first — the reading order is "what they got" down to
+     "what it runs on". Counts AGREE with the published figures elsewhere
+     in this file (4 tools, 47+ Skills) rather than introducing variants. */
+  stack: [
+    {
+      name: "Tools",
+      count: "4",
+      gloss: "Built in-house, owned by the teams that use them.",
+      items: ["Mímir", "Vesper", "Babylon", "Heimdall"],
+    },
+    {
+      name: "Skills",
+      count: "47+",
+      gloss: "Encoded judgment. Versioned, team-owned, model-portable.",
+      items: ["5 shapes", "14 teams"],
+    },
+    {
+      name: "Connectors",
+      count: "6",
+      gloss: "Where the work already lives, reached without copy-paste.",
+      items: ["Boards", "Mail", "Docs", "Design", "Commerce", "Transcripts"],
+    },
+    {
+      name: "Models",
+      count: "4",
+      gloss: "One ladder, from instant answers to the hardest builds.",
+      items: ["Fast", "Everyday", "Deep", "Frontier"],
+    },
+  ],
+  /* THE INVERSION IS THE PICTURE. Reach runs high at the top and falls;
+     draw does the opposite. A reader who only looks at seats concludes the
+     light tiers are the system; the draw column is what corrects them. */
+  tiers: [
+    { name: "Fast", note: "instant answers", reach: 90, draw: 1 },
+    { name: "Everyday", note: "the daily driver", reach: 90, draw: 19 },
+    { name: "Deep", note: "reasoning-heavy work", reach: 60, draw: 59 },
+    { name: "Frontier", note: "the hardest builds", reach: 25, draw: 21 },
+  ],
+  /* The litmus, in three lines: the map has to explain WHY a team's draw
+     looks the way it does, or it is just a usage dashboard. */
+  reads: [
+    {
+      team: "Legal",
+      lens: "Chat-led",
+      why: "Long, nuanced documents. The reasoning is the work, so the deep tier earns it.",
+    },
+    {
+      team: "Product Engineering",
+      lens: "Code-led",
+      why: "Firmware is deeper than any page of code. The frontier tier, and the draw to match.",
+    },
+    {
+      team: "Studio",
+      lens: "Widest spread",
+      why: "Twenty-three people at a light draw each. Breadth is the shape here, not depth.",
+    },
+  ],
+  trend: {
+    label: "Frontier share of draw",
+    points: [
+      { stamp: "May", value: "0%" },
+      { stamp: "Jun", value: "3%" },
+      { stamp: "Jul", value: "21%" },
+    ],
+  },
+};
+
+/**
+ * Per-team consumption bands for the lattice's TEAM axis — the gradient the
+ * owner asked for ("cluster the type of teams or skills based on the work
+ * and token consumption").
+ *
+ * MAPPING. The casefile's team names are the client's own org labels and do
+ * not match the usage snapshot's team rows one-for-one. The joins used:
+ * Product Engineering ← the engineering and hardware rows (the two deepest
+ * in the company); Performance and Strategic Insights ← the analytics and
+ * performance rows; Warehousing & Customer Ops ← the support and
+ * fulfilment rows. Where a casefile team has no snapshot row of its own it
+ * takes the band of its department, which is why so many sit at "light" —
+ * that is the true shape, and flattening it would lose the point.
+ */
+const LOOP_TEAM_DRAW: readonly CaseTeamDraw[] = [
+  { team: "Product Engineering", band: "intensive" },
+  { team: "Legal", band: "deep" },
+  { team: "Performance", band: "deep" },
+  { team: "Studio", band: "steady" },
+  { team: "Product Design & UX", band: "steady" },
+  { team: "Brand & Partnerships", band: "steady" },
+  { team: "Manufacturing Programs", band: "steady" },
+  { team: "Warehousing & Customer Ops", band: "steady" },
+  { team: "Finance & Accounting", band: "light" },
+  { team: "Program Management & Product", band: "light" },
+  { team: "People Ops", band: "light" },
+  { team: "Strategic Insights", band: "light" },
+  { team: "Talent Acquisition", band: "light" },
+  { team: "Product Management", band: "light" },
 ];
 
 /**
@@ -600,11 +948,19 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // portfolio, which is what the exemplars stood in for — but the
         // rows STAY here because the beat still renders them and the
         // sharing guard still asserts them shared.
+        //
+        // `intelligence` + `teamDraw` make it the MAP (ADR-056 U16): the
+        // lattice becomes one of three views, alongside the configuration
+        // stack and the allocation ladder. The row's name finally means
+        // what it says — the map is the models, the connectors, the Skills
+        // and the tools, not the Skills alone.
         visual: {
           kind: "registry",
           groups: MAP_GROUPS,
           rows: MAP_ROWS,
           skills: LOOP_SKILLS,
+          intelligence: LOOP_INTELLIGENCE,
+          teamDraw: LOOP_TEAM_DRAW,
         },
         // FOUR BLOCKS, not three readouts (owner, 2026-08-02). The readout
         // trio could only say things that reduce to a number, so the two

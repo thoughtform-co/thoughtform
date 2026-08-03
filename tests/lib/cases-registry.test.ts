@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { skillSymbol } from "@/components/landing/home-v2/services/casefile/skillSymbol";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
 import type { CaseSegment } from "@/lib/cases/types";
@@ -292,13 +293,14 @@ describe("cases registry (ADR-054)", () => {
           if (v.skills?.length) {
             const groupNames = new Set(v.groups.map((g) => g.name));
             const STATUSES = new Set(["In use", "Shipped", "In build", "Scoped"]);
+            const summarised = v.skills.some((s) => Boolean(s.summary));
             for (const s of v.skills) {
               expect(
                 groupNames.has(s.engine),
                 `${c.slug}/${t.id} skill "${s.name}" engine "${s.engine}"`
               ).toBe(true);
-              // Chips render nowrap at the 10.5px reading size against the
-              // plate's inner width; 30ch is the measured ceiling.
+              // The name heads the dossier and labels its cell; 30ch is the
+              // measured ceiling against the plate's inner width.
               expect(s.name.length, `${c.slug}/${t.id} skill "${s.name}"`).toBeLessThanOrEqual(30);
               expect(s.team.length, `${c.slug}/${t.id} skill "${s.name}" team`).toBeGreaterThan(0);
               expect(
@@ -306,11 +308,26 @@ describe("cases registry (ADR-054)", () => {
                 `${c.slug}/${t.id} skill "${s.name}" status "${s.status}"`
               ).toBe(true);
               // The source data carries per-skill client OWNERS; those must
-              // never travel ("Toby + Maud" is the shape to catch).
+              // never travel ("Toby + Maud" is the shape to catch). The
+              // SUMMARY is rewritten from the same cards, so it is scanned
+              // for the same shape — that is where a pasted line would
+              // smuggle one back in.
               expect(
-                /\s\+\s/.test(s.name) || /\s\+\s/.test(s.team),
+                /\s\+\s/.test(s.name) || /\s\+\s/.test(s.team) || /\s\+\s/.test(s.summary ?? ""),
                 `${c.slug}/${t.id} skill "${s.name}" smells like an owner pair`
               ).toBe(false);
+              // ALL-OR-NONE (ADR-056 U14): the dossier answers every cell or
+              // the map is a promise it breaks on the 47th click.
+              expect(
+                Boolean(s.summary),
+                `${c.slug}/${t.id} skill "${s.name}" has no summary but its siblings do`
+              ).toBe(summarised);
+              // Four clamped lines at the dossier's ~40-character measure,
+              // three at ≤800h. The box clips silently; this is the guard.
+              expect(
+                (s.summary ?? "").length,
+                `${c.slug}/${t.id} skill "${s.name}" summary`
+              ).toBeLessThanOrEqual(150);
             }
             for (const g of v.groups) {
               if (!g.count) continue;
@@ -475,6 +492,145 @@ describe("cases registry (ADR-054)", () => {
           .map(([n, where]) => `${n} (${where.join(", ")})`)
           .join(" vs ")}`
       ).toHaveLength(1);
+    }
+  });
+
+  it("the intelligence map's higher-level views hold their shape (ADR-056 U16)", () => {
+    // The map is the CONFIGURATION, not just the Skills: four stack layers,
+    // four capability tiers, and the reads that say why the deep draw is the
+    // work rather than waste. These budgets are box budgets — every string
+    // here renders into a box that clips silently.
+    const BANDS = new Set(["light", "steady", "deep", "intensive"]);
+
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        if (t.visual.kind !== "registry") continue;
+        const { intelligence, teamDraw, skills } = t.visual;
+        const where = `${c.slug}/${t.id}`;
+
+        if (intelligence) {
+          const { stack, tiers, reads, trend } = intelligence;
+
+          // FOUR LAYERS, top of stack first. The grid reserves four rows.
+          expect(stack.length, `${where} stack layers`).toBe(4);
+          for (const l of stack) {
+            expect(l.name.length, `${where} layer "${l.name}"`).toBeLessThanOrEqual(14);
+            expect(l.gloss.length, `${where} layer "${l.name}" gloss`).toBeLessThanOrEqual(60);
+            for (const item of l.items ?? []) {
+              expect(item.length, `${where} chip "${item}"`).toBeLessThanOrEqual(14);
+            }
+          }
+          // The Skills layer must AGREE with the count published elsewhere
+          // in the case rather than introducing a second variant of it.
+          const skillsLayer = stack.find((l) => /skills/i.test(l.name));
+          if (skillsLayer && skills?.length) {
+            expect(
+              skillsLayer.count,
+              `${where} stack prints "${skillsLayer.count}" Skills against ${skills.length} listed`
+            ).toBe(`${skills.length}+`);
+          }
+
+          // FOUR TIERS, and the draw column is a share of one whole.
+          expect(tiers.length, `${where} tiers`).toBe(4);
+          const drawSum = tiers.reduce((n, t2) => n + t2.draw, 0);
+          expect(
+            drawSum,
+            `${where} draw shares sum to ${drawSum}, not ~100`
+          ).toBeGreaterThanOrEqual(96);
+          expect(drawSum, `${where} draw shares sum to ${drawSum}, not ~100`).toBeLessThanOrEqual(
+            104
+          );
+          for (const tier of tiers) {
+            expect(tier.name.length, `${where} tier "${tier.name}"`).toBeLessThanOrEqual(10);
+            // 20, not 24: the note's column is sized to the longest one and
+            // "reasoning-heavy work" already fills it. A budget looser than
+            // the box is how this surface keeps shipping silent truncation.
+            expect(
+              (tier.note ?? "").length,
+              `${where} tier "${tier.name}" note`
+            ).toBeLessThanOrEqual(20);
+            for (const [k, v] of [
+              ["reach", tier.reach],
+              ["draw", tier.draw],
+            ] as const) {
+              expect(v, `${where} tier "${tier.name}" ${k}`).toBeGreaterThanOrEqual(0);
+              expect(v, `${where} tier "${tier.name}" ${k}`).toBeLessThanOrEqual(100);
+            }
+          }
+          // ⚠ MODEL FAMILY NAMES NEVER TRAVEL (owner ruling, 2026-08-03).
+          // The tiers are generic capability names so the landing stays
+          // model-silent: it neither restates the client deck's model
+          // guidance nor goes stale on the next release.
+          const MODELS = /\b(opus|sonnet|haiku|fable|gpt|gemini|llama|mistral)\b/i;
+          for (const tier of tiers) {
+            expect(
+              MODELS.test(`${tier.name} ${tier.note ?? ""}`),
+              `${where} tier "${tier.name}" names a model family`
+            ).toBe(false);
+          }
+
+          // The reads carry the justification; without them this is a usage
+          // dashboard rather than a map.
+          expect(reads.length, `${where} reads`).toBeGreaterThanOrEqual(2);
+          expect(reads.length, `${where} reads`).toBeLessThanOrEqual(3);
+          const teams = new Set((skills ?? []).map((s) => s.team));
+          for (const r of reads) {
+            expect(r.lens.length, `${where} read "${r.team}" lens`).toBeLessThanOrEqual(16);
+            expect(r.why.length, `${where} read "${r.team}" why`).toBeLessThanOrEqual(90);
+            if (teams.size) {
+              expect(teams.has(r.team), `${where} read names team "${r.team}"`).toBe(true);
+            }
+          }
+
+          if (trend) {
+            expect(trend.label.length, `${where} trend label`).toBeLessThanOrEqual(32);
+            expect(trend.points.length, `${where} trend points`).toBeGreaterThanOrEqual(2);
+          }
+        }
+
+        // THE GRADIENT IS ALL-OR-NONE across the teams that have Skills: a
+        // row with no band is a hole in a scale a reader is reading across.
+        if (teamDraw?.length && skills?.length) {
+          const banded = new Set(teamDraw.map((t2) => t2.team));
+          for (const t2 of teamDraw) {
+            expect(BANDS.has(t2.band), `${where} band "${t2.band}" for ${t2.team}`).toBe(true);
+          }
+          for (const team of new Set(skills.map((s) => s.team))) {
+            expect(banded.has(team), `${where} team "${team}" has Skills but no draw band`).toBe(
+              true
+            );
+          }
+        }
+      }
+    }
+  });
+
+  it("every Skill's lattice symbol is unique within its plate (ADR-056 U15)", () => {
+    // The lattice reads as a periodic table, and its tiles carry a SYMBOL
+    // rather than a name. Two Skills under one mark is not a cosmetic clash:
+    // the tile stops identifying the thing it opens. `skillSymbol` derives
+    // most of them and hand-sets the rest, so this is the guard that tells a
+    // future author their new Skill needs an override.
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        if (t.visual.kind !== "registry" || !t.visual.skills?.length) continue;
+        const byMark = new Map<string, string[]>();
+        for (const s of t.visual.skills) {
+          const mark = skillSymbol(s.name);
+          // One character reads as a bullet, not a mark; four is the widest
+          // the tile holds at the 11px symbol size.
+          expect(mark.length, `${c.slug}/${t.id} "${s.name}" -> "${mark}"`).toBeGreaterThanOrEqual(
+            2
+          );
+          expect(mark.length, `${c.slug}/${t.id} "${s.name}" -> "${mark}"`).toBeLessThanOrEqual(4);
+          byMark.set(mark, [...(byMark.get(mark) ?? []), s.name]);
+        }
+        const clashes = [...byMark].filter(([, names]) => names.length > 1);
+        expect(
+          clashes.map(([m, names]) => `${m}: ${names.join(" | ")}`),
+          `${c.slug}/${t.id} symbol collision — add an override in skillSymbol.ts`
+        ).toEqual([]);
+      }
     }
   });
 

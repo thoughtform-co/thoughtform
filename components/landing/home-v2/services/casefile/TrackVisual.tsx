@@ -75,7 +75,17 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
          asserts them shared. The name+gloss fallback below serves a future
          case's plain registry. */
       if (visual.skills?.length) {
-        return <SkillsBrowserPlate groups={visual.groups} skills={visual.skills} />;
+        /* `intelligence` promotes the lattice to the full MAP (ADR-056
+           U16) — three views over one dataset. Absent, the plate is the
+           lattice alone, which is what a second client would get. */
+        return (
+          <SkillsBrowserPlate
+            groups={visual.groups}
+            skills={visual.skills}
+            intelligence={visual.intelligence}
+            teamDraw={visual.teamDraw}
+          />
+        );
       }
       return (
         <div className="fl-plate fl-plate--registry">

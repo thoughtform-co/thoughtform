@@ -333,7 +333,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       await page.waitForTimeout(350);
 
       const overflow = await page.evaluate(() => {
-        const boxes = [".fl-brief", ".fl-panel__foot", ".fl-plate"] as const;
+        // `.fl-skills__rows` earns its place here (ADR-056 U15): the lattice
+        // grid can overflow its stage while `.fl-plate` still measures 0,
+        // because the plate's own `overflow: hidden` swallows it. That is
+        // exactly how the team axis shipped 46px over its stage for a pass.
+        const boxes = [".fl-brief", ".fl-panel__foot", ".fl-plate", ".fl-skills__rows"] as const;
         const file = document.querySelector<HTMLElement>(".fl-row[aria-selected='true']");
         const out: { box: string; over: number; row: string }[] = [];
         for (const sel of boxes) {
@@ -356,6 +360,56 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         if (o.over > 1) clipped.push(`${o.row} — ${o.box} clips ${o.over}px`);
       }
     }
+    // EVERY VIEW, and both axes within the lattice (ADR-056 U15 → U16). The
+    // default state was the only one measured when the plate gained a second
+    // grouping, and `team` — 14 rows where `shape` has 5 — was the one that
+    // did not fit. The map then gained two more views on top of that. A
+    // guard that only ever sees the default state is not a guard, and the
+    // default is reliably the state that fits.
+    await page.locator(".fl-row").first().click();
+    await page.waitForTimeout(350);
+
+    const measureBoxes = () =>
+      page.evaluate(() => {
+        const out: { box: string; over: number }[] = [];
+        for (const sel of [
+          ".fl-plate",
+          ".fl-skills__rows",
+          ".fl-skills__stack",
+          ".fl-skills__alloc",
+          ".fl-skills__ladder",
+          ".fl-skills__reads",
+        ]) {
+          const el = document.querySelector<HTMLElement>(sel);
+          if (el) out.push({ box: sel, over: el.scrollHeight - el.clientHeight });
+        }
+        return out;
+      });
+
+    for (const view of ["Skills", "Stack", "Allocation"]) {
+      const tab = page.locator(`.fl-skills__viewbtn:has-text("${view}")`);
+      if (!(await tab.count())) continue;
+      await tab.click();
+      await page.waitForTimeout(300);
+
+      if (view === "Skills") {
+        for (const axis of ["Substrate", "Team"]) {
+          const btn = page.locator(`.fl-skills__axbtn:has-text("${axis}")`);
+          if (!(await btn.count())) continue;
+          await btn.click();
+          await page.waitForTimeout(300);
+          for (const o of await measureBoxes()) {
+            if (o.over > 1) clipped.push(`view "${view}" / ${axis} — ${o.box} clips ${o.over}px`);
+          }
+        }
+        continue;
+      }
+
+      for (const o of await measureBoxes()) {
+        if (o.over > 1) clipped.push(`view "${view}" — ${o.box} clips ${o.over}px`);
+      }
+    }
+
     expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);
   });
 
