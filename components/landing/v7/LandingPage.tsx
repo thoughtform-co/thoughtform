@@ -13,6 +13,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
+import { HeroThemeGlitch } from "./HeroThemeGlitch";
 import { RailInstruments } from "./rail-instruments/RailInstruments";
 import { SettingsCluster } from "./rail-instruments/SettingsCluster";
 import { RAIL_INSTRUMENTS } from "./rail-instruments/flags";
@@ -625,6 +626,12 @@ export function LandingPage({
           and journey subscriptions both live in the cluster's own leaves,
           never here. */}
       {THEME_TOGGLE && <SettingsCluster />}
+      {/* The hero key visual's theme swap plays a glitch (ADR-060). A leaf
+          by the same law as the toggle above: it subscribes to the theme
+          store IMPERATIVELY and synchronously, so the canvas covering the
+          outgoing plate is drawn in the same task as the flip — before the
+          browser paints the new one. It owns no state here. */}
+      {THEME_TOGGLE && <HeroThemeGlitch containerRef={rootRef} />}
       {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} />}
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve
