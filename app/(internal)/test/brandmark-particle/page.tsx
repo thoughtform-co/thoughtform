@@ -1,23 +1,23 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleField";
 import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 
 /**
- * /test/brandmark-particle — dev preview for the brandmark particle
+ * /test/brandmark-particle â€” dev preview for the brandmark particle
  * artifact engine (ADR-011 / ADR-012 / ADR-013).
  *
  * Mounts the shared particle canvas and writes a single
  * `BrandmarkTransform` into `brandmarkJourneyStore` driven by the
- * controls panel. This is the lab — tune here, copy the numbers into
+ * controls panel. This is the lab â€” tune here, copy the numbers into
  * the keyframe `parked` attrs in `lib/brandmark/journey.ts`.
  *
- * Internal route — blocked from production by `middleware.ts`.
+ * Internal route â€” blocked from production by `proxy.ts`.
  */
 
 export default function BrandmarkParticlePreviewPage() {
-  // Engine controls (UI state — fed into the journey store on change).
+  // Engine controls (UI state â€” fed into the journey store on change).
   const [density, setDensity] = useState(1);
   const [dispersion, setDispersion] = useState(0);
   const [opacity, setOpacity] = useState(1);
@@ -211,7 +211,7 @@ export default function BrandmarkParticlePreviewPage() {
           }}
         >
           Drives the single `BrandmarkTransform` in `brandmarkJourneyStore` directly. Rotation Y
-          uses the 2D squash shader (ADR-013) — at +/-90deg the brandmark collapses to a vertical
+          uses the 2D squash shader (ADR-013) â€” at +/-90deg the brandmark collapses to a vertical
           strip.
         </p>
       </div>

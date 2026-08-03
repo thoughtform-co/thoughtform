@@ -133,7 +133,7 @@ Example: "optimize the front-end design", "make this component responsive", "des
 
 - `(marketing)` — public-facing pages (the landing page).
 - `(admin)` — tools gated by `AdminGate` + `useAuth` (admin login, astrogation, orrery).
-- `(internal)` — dev-only routes blocked by `middleware.ts` in production (test pages, archive).
+- `(internal)` — dev-only routes blocked by `proxy.ts` in production (test pages, archive). `proxy.ts` is the Next 16 rename of `middleware.ts` — same lifecycle, same `config` matcher.
 - New public pages go in `(marketing)`. New admin tools go in `(admin)` with `AdminGate`. New dev/test pages go in `(internal)`.
 
 ## Design System Patterns

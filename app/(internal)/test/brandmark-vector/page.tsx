@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -11,14 +11,14 @@ import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 void _BrandmarkAtmosphereCanvas;
 
 /**
- * /test/brandmark-vector — dev preview for the vector-first brandmark
+ * /test/brandmark-vector â€” dev preview for the vector-first brandmark
  * model (successor to ADR-013).
  *
  * Mounts both painters side-by-side:
  *
- *   - `BrandmarkVectorActor`     — the crisp inline SVG actor that
+ *   - `BrandmarkVectorActor`     â€” the crisp inline SVG actor that
  *                                  owns the brandmark shape end-to-end.
- *   - `BrandmarkParticleCanvas`  — the atmosphere field (soft radial
+ *   - `BrandmarkParticleCanvas`  â€” the atmosphere field (soft radial
  *                                  dots + additive blending) that
  *                                  paints luminous dust around the
  *                                  vector mark.
@@ -26,10 +26,10 @@ void _BrandmarkAtmosphereCanvas;
  * Both read the single `BrandmarkTransform` in `brandmarkJourneyStore`.
  * Sliders below drive the transform directly so you can scrub
  * density, dispersion, shapeBlend, opacity, rotation, and rect
- * independently — useful when tuning the substrate atmosphere or
+ * independently â€” useful when tuning the substrate atmosphere or
  * the transit exhaust amplitude.
  *
- * Internal route — blocked from production by `middleware.ts`.
+ * Internal route â€” blocked from production by `proxy.ts`.
  */
 export default function BrandmarkVectorPreviewPage() {
   // Engine controls.
@@ -42,7 +42,7 @@ export default function BrandmarkVectorPreviewPage() {
   const [rectX, setRectX] = useState(50);
   const [rectY, setRectY] = useState(50);
 
-  // Synthetic scrubbable journey — moves the rect through five
+  // Synthetic scrubbable journey â€” moves the rect through five
   // keyframe-like positions on a 0..1 timeline. Useful for sanity-
   // checking that the vector actor + atmosphere both lerp smoothly
   // through the full journey without scrolling the real page.
@@ -62,9 +62,9 @@ export default function BrandmarkVectorPreviewPage() {
       const vh = window.innerHeight;
 
       if (synthEnabledRef.current) {
-        // Synthetic five-station journey: sigil (small, top) → miss
-        // (small, mid-upper) → substrate (large, mid) → rail (tiny,
-        // lower-mid) → orbit (small, bottom). Lerps along the 0..1
+        // Synthetic five-station journey: sigil (small, top) â†’ miss
+        // (small, mid-upper) â†’ substrate (large, mid) â†’ rail (tiny,
+        // lower-mid) â†’ orbit (small, bottom). Lerps along the 0..1
         // timeline.
         const stations = [
           { x: 0.5, y: 0.3, size: 220, blend: 0, density: 0 },
@@ -208,7 +208,7 @@ export default function BrandmarkVectorPreviewPage() {
 
         <SectionLabel>Shape</SectionLabel>
         <ControlSlider
-          label="Shape blend (full → ring)"
+          label="Shape blend (full â†’ ring)"
           value={shapeBlend}
           min={0}
           max={1}
@@ -309,8 +309,8 @@ export default function BrandmarkVectorPreviewPage() {
         >
           Vector-first model: <strong style={{ color: "var(--dawn)" }}>BrandmarkVectorActor</strong>{" "}
           paints the brandmark as inline SVG; the particle canvas paints atmospheric grain (soft
-          radial dots + additive blending). Shape blend crossfades full→ring topology of the vector
-          mark itself.
+          radial dots + additive blending). Shape blend crossfades fullâ†’ring topology of the
+          vector mark itself.
         </p>
       </div>
     </main>

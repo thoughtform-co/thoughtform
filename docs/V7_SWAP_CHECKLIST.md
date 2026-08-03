@@ -1,6 +1,6 @@
-# V7 Homepage Swap Checklist
+﻿# V7 Homepage Swap Checklist
 
-**Status: EXECUTED** — The V7 prototype is now the production homepage at `/`.
+**Status: EXECUTED** â€” The V7 prototype is now the production homepage at `/`.
 
 ## Current File Locations (post-restructure)
 
@@ -16,20 +16,20 @@
 
 ## Original Changes (historical reference)
 
-1. `app/page.tsx` (now `app/(marketing)/page.tsx`) — Renders V7 content directly via server fetch
-2. `app/v7-parse.ts` (now `lib/v7-parse.ts`) — Server-side utility that reads and parses the prototype HTML/CSS at build time
-3. `app/V7Runtime.tsx` — Replaced by hooks in `components/landing/v7/hooks/` (useLandingScroll, useRevealMotion, useSigilChoreography)
-4. `app/v7/page.tsx` — Removed (redirect no longer needed)
-5. `app/archive/current-home/page.tsx` (now under `app/(internal)/`) — Previous NavigationCockpitV2 homepage
-6. `app/archive/layout.tsx` (now under `app/(internal)/`) — Auth gate
+1. `app/page.tsx` (now `app/(marketing)/page.tsx`) â€” Renders V7 content directly via server fetch
+2. `app/v7-parse.ts` (now `lib/v7-parse.ts`) â€” Server-side utility that reads and parses the prototype HTML/CSS at build time
+3. `app/V7Runtime.tsx` â€” Replaced by hooks in `components/landing/v7/hooks/` (useLandingScroll, useRevealMotion, useSigilChoreography)
+4. `app/v7/page.tsx` â€” Removed (redirect no longer needed)
+5. `app/archive/current-home/page.tsx` (now under `app/(internal)/`) â€” Previous NavigationCockpitV2 homepage
+6. `app/archive/layout.tsx` (now under `app/(internal)/`) â€” Auth gate
 
 ## Archive Access
 
-The previous homepage is available at `/archive/current-home`, gated behind the `(internal)` route group. In development mode, it is open to all logged-in users. In production, internal routes are blocked by `middleware.ts` (rewritten to 404).
+The previous homepage is available at `/archive/current-home`, gated behind the `(internal)` route group. In development mode, it is open to all logged-in users. In production, internal routes are blocked by `proxy.ts` (rewritten to 404).
 
 ## Content Parity
 
-- [ ] All stations populated with final copy (hero, corridor, services, about, proof, practice, contact — the live ADR-054 funnel; `definition`/`products`/`continuum` are retired)
+- [ ] All stations populated with final copy (hero, corridor, services, about, proof, practice, contact â€” the live ADR-054 funnel; `definition`/`products`/`continuum` are retired)
 - [ ] Practice section tabs working (Adopt / Encode / Build with receipt case studies)
 - [ ] Services section cards rendering with inline SVG sigils
 - [ ] Products section cells linking to Astrolabe, Atlas, Sigil, Sybil

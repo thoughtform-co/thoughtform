@@ -1,20 +1,20 @@
-# ADR-037: Supabase RLS trust boundary — "authenticated" is not "admin"
+﻿# ADR-037: Supabase RLS trust boundary â€” "authenticated" is not "admin"
 
-**Status:** Proposed (needs two owner actions — see Decision)
+**Status:** Proposed (needs two owner actions â€” see Decision)
 **Date:** 2026-07-14
 **Context:** Phase 2 security pass of the cleanup plan (file-level review; live
-policies not queried — no Supabase CLI wiring in this environment).
+policies not queried â€” no Supabase CLI wiring in this environment).
 
 ## Context
 
 The app's admin model is **single allowlisted admin**: client components check
 `isAllowedUserEmail` (`NEXT_PUBLIC_ALLOWED_EMAIL`), the `(admin)` layout
 redirects unauthenticated visitors, and API routes enforce the same allowlist
-server-side via `lib/auth-server.ts` `isAuthorized()` (Bearer token → Supabase
-user → email allowlist).
+server-side via `lib/auth-server.ts` `isAuthorized()` (Bearer token â†’ Supabase
+user â†’ email allowlist).
 
 The **database policies do not encode that model**. Most write policies grant
-`to authenticated ... (true)` — i.e. _any_ Supabase account, not the one
+`to authenticated ... (true)` â€” i.e. _any_ Supabase account, not the one
 admin. The DB is reachable directly with the public anon key, bypassing every
 app-layer check. Whether this is exploitable hinges on one dashboard setting:
 **are public signups (email/magic-link) enabled on the Supabase project?**
@@ -33,14 +33,14 @@ directly to the tables below.
   goes through `/api/ui-component-presets` with a Bearer token (server-side
   allowlist). **No code change needed.**
 
-### Intentional public READ (landing content — keep)
+### Intentional public READ (landing content â€” keep)
 
 `shape_presets`, `manifesto_voices`, `service_sigils`, `celestial_designs`,
 `celestial_slots`, `particle_config`, and the legacy `pages` / `sections` /
-`elements` / `design_log`: public `SELECT (true)` is deliberate — the landing
+`elements` / `design_log`: public `SELECT (true)` is deliberate â€” the landing
 page renders from these anonymously. **Keep all public-read policies.**
 
-### Gap class A — any-authenticated WRITE on admin-owned content
+### Gap class A â€” any-authenticated WRITE on admin-owned content
 
 | Table                                                 | Where                                                                   | Write policy                                              |
 | ----------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -53,27 +53,27 @@ page renders from these anonymously. **Keep all public-read policies.**
 
 Under open signups these are **defacement-grade gaps** (e.g. the
 `particle_config.default` row and `celestial_slots` drive live landing
-visuals). Under closed signups they are acceptable but fragile — one
+visuals). Under closed signups they are acceptable but fragile â€” one
 dashboard toggle away from open.
 
 Same pattern likely applies to the unflagged survey satellites
 (`survey_annotations`, `survey_segments`, `survey_collections`,
 `survey_style_signatures`, `assistant_chat`, `forge_documents` uses
-per-user) — sweep them when applying the fix.
+per-user) â€” sweep them when applying the fix.
 
 Note: `pages`/`sections`/`elements`/`design_log` are **legacy page-editor
 tables**; the only code touching them is `lib/queries.ts`, which nothing
 imports (editor archived per ADR-004). Candidate for dropping outright in a
 later phase instead of tightening.
 
-### Gap class B — anonymous INSERT
+### Gap class B â€” anonymous INSERT
 
 `brandmark_presets` (20260622): `anon INSERT ... WITH CHECK (true)` +
 `anon SELECT`. Deliberate share-slug feature for the brandmark labs
 (`/test/brandmark-physics-core`, `/test/brandmark-reflective`), with sensible
-constraints (slug format, label ≤ 120 chars, settings ≤ 8 KB, no anon
-UPDATE/DELETE). The lab routes are blocked in production by `middleware.ts`,
-**but the DB endpoint itself is publicly writable with the anon key** —
+constraints (slug format, label â‰¤ 120 chars, settings â‰¤ 8 KB, no anon
+UPDATE/DELETE). The lab routes are blocked in production by `proxy.ts`,
+**but the DB endpoint itself is publicly writable with the anon key** â€”
 an unauthenticated junk-insert vector (storage/spam, not takeover).
 Acceptable for a lab feature if signup-independent junk is tolerable;
 tightening options in the draft migration (commented out).
@@ -95,7 +95,7 @@ tightening options in the draft migration (commented out).
 
 ## Consequences
 
-- No live behavior changes from this ADR alone — it documents and stages.
+- No live behavior changes from this ADR alone â€” it documents and stages.
 - After applying: admin tools keep working (the admin's JWT carries the
   allowlisted email); any other authenticated account loses write access at
   the DB layer, closing the gap regardless of the signups toggle.

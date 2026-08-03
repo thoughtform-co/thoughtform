@@ -1,14 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Defense-in-depth middleware for route protection.
+ * Defense-in-depth route protection.
  *
  * Route group layouts handle the primary auth gating client-side.
- * This middleware adds server-level enforcement:
+ * This adds server-level enforcement:
  *   - /test/* and /archive/* are blocked entirely in production (404).
  *   - /orrery and /astrogation are allowed through (auth checked by layout + page).
  *   - /admin is public (login page).
  *   - Everything else passes through.
+ *
+ * ⚠ THIS IS THE FILE FORMERLY KNOWN AS `middleware.ts`. Next 16 renamed the
+ * convention — same request lifecycle, same edge runtime, same `config`
+ * matcher, but the file must be `proxy.ts` and the export `proxy` or the
+ * build warns and (eventually) stops running it. Comments elsewhere still
+ * say "middleware-blocked"; that is this.
  */
 
 const INTERNAL_ROUTES = ["/test", "/archive"];
@@ -17,7 +23,7 @@ function isInternalRoute(pathname: string): boolean {
   return INTERNAL_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (process.env.NODE_ENV === "production" && isInternalRoute(pathname)) {

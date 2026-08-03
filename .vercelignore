@@ -1,7 +1,7 @@
 # Lab-only / unreferenced heavy assets — excluded from the Vercel deploy
 # (2026-07-14 perf pass, ~33 MB). The files STAY in public/ so dev labs
 # keep working locally; the routes that reference them are (internal)
-# test pages, which middleware blocks in production anyway.
+# test pages, which `proxy.ts` blocks in production anyway.
 #
 # Verified before listing (grep app/ components/ lib/ prototypes):
 # - gateway-hero.png      -> (internal) /test/gateway + /test/key-visual-portal only

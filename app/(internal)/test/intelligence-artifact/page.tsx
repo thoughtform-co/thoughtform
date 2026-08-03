@@ -1,7 +1,7 @@
-import { IntelligenceArtifactScene } from "@/components/landing/intelligence-artifact";
+﻿import { IntelligenceArtifactScene } from "@/components/landing/intelligence-artifact";
 
 /**
- * /test/intelligence-artifact — internal lab for the intelligence-layer
+ * /test/intelligence-artifact â€” internal lab for the intelligence-layer
  * artifact.
  *
  * The artifact is a low-angle topographic deck with a central
@@ -13,7 +13,7 @@ import { IntelligenceArtifactScene } from "@/components/landing/intelligence-art
  *   - Encoded judgment -> central substrate sphere + brandmark cloud.
  *   - Headless surfaces -> raised pylons + endpoint diamonds.
  *
- * Internal-only: production blocks `/test/*` via `middleware.ts`.
+ * Internal-only: production blocks `/test/*` via `proxy.ts`.
  * Iteration is intended to happen here before any landing-page
  * integration.
  */

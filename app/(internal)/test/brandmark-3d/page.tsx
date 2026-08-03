@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 /**
- * /test/brandmark-3d — dev lab for the extruded-3D brandmark
- * (procedural matcap, no scene lights — fits the corridor's
+ * /test/brandmark-3d â€” dev lab for the extruded-3D brandmark
+ * (procedural matcap, no scene lights â€” fits the corridor's
  * all-unlit aesthetic).
  *
  * Goal: dial in the dimensional read of the brandmark before
@@ -11,16 +11,16 @@
  *
  *   - Geometry: depth, bevel thickness/size/segments, curve
  *     tessellation, include-slivers toggle (the hairline radial
- *     ticks extrude into fragile blades — off by default).
- *   - Matcap: core / mid / edge colour stops (hot core → brand
- *     gold body → deep bronze rim) + stop positions. Regenerates
+ *     ticks extrude into fragile blades â€” off by default).
+ *   - Matcap: core / mid / edge colour stops (hot core â†’ brand
+ *     gold body â†’ deep bronze rim) + stop positions. Regenerates
  *     the procedural texture on every change.
  *   - Motion: auto-rotate speed (Y) + pointer-parallax tilt.
  *   - Context: faint wireframe icosphere behind the mark to preview
  *     the in-intelligence-layer read; toggle a flat-SVG overlay for
  *     direct before/after comparison.
  *
- * Internal route — blocked from production by `middleware.ts`.
+ * Internal route â€” blocked from production by `proxy.ts`.
  * Mirrors the control-panel pattern from /test/brandmark-vector.
  */
 
@@ -79,7 +79,7 @@ const DEFAULTS = {
   cutawayOffset: 0,
   cutawayFlip: false,
 
-  // Motion — auto-rotate off by default; middle-mouse drag rotates
+  // Motion â€” auto-rotate off by default; middle-mouse drag rotates
   // the mark manually (see Brandmark3D drag handlers). Slide the
   // Auto-rotate slider to >0 if you want continuous spin.
   autoRotate: 0,
@@ -140,7 +140,7 @@ export default function Brandmark3DPreviewPage() {
   const [showFlatCompare, setShowFlatCompare] = useState<boolean>(DEFAULTS.showFlatCompare);
   const [background, setBackground] = useState<Background>(DEFAULTS.background);
 
-  // Per-section resets — re-seed only the controls in that section.
+  // Per-section resets â€” re-seed only the controls in that section.
   // `useCallback` is just for tidiness; React state setters are stable
   // so identity here doesn't actually matter for re-renders.
   const resetGeometry = useCallback(() => {
@@ -152,7 +152,7 @@ export default function Brandmark3DPreviewPage() {
     setIncludeSlivers(DEFAULTS.includeSlivers);
   }, []);
 
-  // Apply a named matcap preset — sets stops + style in one go. The
+  // Apply a named matcap preset â€” sets stops + style in one go. The
   // colour pickers below remain live overrides afterwards.
   const applyMatcapPreset = useCallback((name: MatcapPresetName) => {
     const p = MATCAP_PRESETS[name];
@@ -238,7 +238,7 @@ export default function Brandmark3DPreviewPage() {
         gl={{ alpha: true, antialias: true, premultipliedAlpha: false }}
         style={{ position: "absolute", inset: 0, pointerEvents: "auto" }}
         onCreated={({ scene, gl, camera }) => {
-          // Debug surface — internal route only; lets us introspect
+          // Debug surface â€” internal route only; lets us introspect
           // the live scene from devtools or the IDE browser CDP.
           if (typeof window !== "undefined") {
             (window as unknown as Record<string, unknown>).__BRANDMARK_SCENE = scene;

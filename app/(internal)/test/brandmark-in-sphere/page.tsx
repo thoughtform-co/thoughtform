@@ -1,21 +1,21 @@
-"use client";
+﻿"use client";
 
 /**
- * /test/brandmark-in-sphere — designer lab for the brandmark
+ * /test/brandmark-in-sphere â€” designer lab for the brandmark
  * particle look that sits at the centre of the Navigate substrate
  * sphere (the Navigate beat in `home-v2`).
  *
  * Renders the REAL `ShellSubstrateGyro` instrument frozen + fully
  * revealed (via the freeze harness in `SubstrateSphereStage`) and
  * lets the designer swap the centre brandmark painter between four
- * approaches — including a fully tunable `LabBrandmarkCloud` that
+ * approaches â€” including a fully tunable `LabBrandmarkCloud` that
  * exposes density, sprite style, motion, and brandmark<->sphere
  * morph as live controls.
  *
  * The point of this lab is the COMPOSITION read: any change to the
  * centre mark is judged inside the real sphere, not in isolation.
  *
- * Internal route — blocked from production by `middleware.ts`. The
+ * Internal route â€” blocked from production by `proxy.ts`. The
  * inline control panel mirrors the visual language of the existing
  * `/test/brandmark-physics-core` and `/test/brandmark-3d` labs.
  */
@@ -44,7 +44,7 @@ import {
 } from "./LabBrandmarkCloud";
 import { SubstrateSphereStage } from "./SubstrateSphereStage";
 
-// ── System (centre-mark painter) ────────────────────────────────────
+// â”€â”€ System (centre-mark painter) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type System = "static-cloud" | "physics-core" | "extruded-3d" | "none";
 
@@ -52,7 +52,7 @@ const SYSTEMS: readonly { id: System; label: string }[] = [
   { id: "static-cloud", label: "Static cloud (configurable)" },
   { id: "physics-core", label: "Physics core (GPGPU, current production)" },
   { id: "extruded-3d", label: "3D extruded mesh" },
-  { id: "none", label: "Hidden — sphere only" },
+  { id: "none", label: "Hidden â€” sphere only" },
 ];
 
 type Background = "dark" | "void" | "test";
@@ -61,8 +61,8 @@ const DEFAULTS = {
   // System
   system: "static-cloud" as System,
 
-  // Centre group — world half-extent (the wrapping group is scaled
-  // by 2 × this, matching the production
+  // Centre group â€” world half-extent (the wrapping group is scaled
+  // by 2 Ã— this, matching the production
   // `BrandmarkPhysicsCoreActor` convention).
   worldHalfExtent: 0.34,
 
@@ -100,7 +100,7 @@ const DEFAULTS = {
   extrudedMatcapPreset: "gold" as MatcapPresetName,
   extrudedAutoRotate: 0.18,
 
-  // Sphere — gyroLabStore patches
+  // Sphere â€” gyroLabStore patches
   sphereShow: true,
   sphereRingCount: 3,
   sphereGlobeRadius: 0.72,
@@ -118,11 +118,11 @@ const DEFAULTS = {
 } satisfies Record<string, unknown>;
 
 export default function BrandmarkInSpherePage() {
-  // ── System ─────────────────────────────────────────────────────────
+  // â”€â”€ System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [system, setSystem] = useState<System>(DEFAULTS.system);
   const [worldHalfExtent, setWorldHalfExtent] = useState(DEFAULTS.worldHalfExtent);
 
-  // ── Static cloud state ─────────────────────────────────────────────
+  // â”€â”€ Static cloud state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [cloudCount, setCloudCount] = useState(DEFAULTS.cloudCount);
   const [cloudDensity, setCloudDensity] = useState(DEFAULTS.cloudDensity);
   const [cloudPointSize, setCloudPointSize] = useState(DEFAULTS.cloudPointSize);
@@ -138,7 +138,7 @@ export default function BrandmarkInSpherePage() {
   const [cloudSpinRate, setCloudSpinRate] = useState(DEFAULTS.cloudSpinRate);
   const [cloudBlend, setCloudBlend] = useState<LabBlendMode>(DEFAULTS.cloudBlend);
 
-  // ── Physics core state ─────────────────────────────────────────────
+  // â”€â”€ Physics core state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [coreCount, setCoreCount] = useState(DEFAULTS.coreCount);
   const [coreIgnite, setCoreIgnite] = useState(DEFAULTS.coreIgnite);
   const [corePointSize, setCorePointSize] = useState(DEFAULTS.corePointSize);
@@ -150,7 +150,7 @@ export default function BrandmarkInSpherePage() {
   const [coreThickness, setCoreThickness] = useState(DEFAULTS.coreThickness);
   const [corePaused, setCorePaused] = useState(DEFAULTS.corePaused);
 
-  // ── 3D extruded state ──────────────────────────────────────────────
+  // â”€â”€ 3D extruded state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [extrudedDepth, setExtrudedDepth] = useState(DEFAULTS.extrudedDepth);
   const [extrudedBevelSize, setExtrudedBevelSize] = useState(DEFAULTS.extrudedBevelSize);
   const [extrudedMatcapPreset, setExtrudedMatcapPreset] = useState<MatcapPresetName>(
@@ -158,7 +158,7 @@ export default function BrandmarkInSpherePage() {
   );
   const [extrudedAutoRotate, setExtrudedAutoRotate] = useState(DEFAULTS.extrudedAutoRotate);
 
-  // ── Sphere state (writes through gyroLabStore) ─────────────────────
+  // â”€â”€ Sphere state (writes through gyroLabStore) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [sphereShow, setSphereShow] = useState(DEFAULTS.sphereShow);
   const [sphereRingCount, setSphereRingCount] = useState(DEFAULTS.sphereRingCount);
   const [sphereGlobeRadius, setSphereGlobeRadius] = useState(DEFAULTS.sphereGlobeRadius);
@@ -169,12 +169,12 @@ export default function BrandmarkInSpherePage() {
   const [sphereShowParticles, setSphereShowParticles] = useState(DEFAULTS.sphereShowParticles);
   const [sphereIdleSpeed, setSphereIdleSpeed] = useState(DEFAULTS.sphereIdleSpeed);
 
-  // ── Camera + background ────────────────────────────────────────────
+  // â”€â”€ Camera + background â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [cameraDistance, setCameraDistance] = useState(DEFAULTS.cameraDistance);
   const [cameraFov, setCameraFov] = useState(DEFAULTS.cameraFov);
   const [background, setBackground] = useState<Background>(DEFAULTS.background);
 
-  // ── Sphere → gyroLabStore sync ─────────────────────────────────────
+  // â”€â”€ Sphere â†’ gyroLabStore sync â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // The sphere reads its tuning knobs from the store every frame
   // (subscribes to changes inside `ShellSubstrateGyro`). We keep the
   // panel state local to React and patch the store on change.
@@ -196,7 +196,7 @@ export default function BrandmarkInSpherePage() {
     sphereIdleSpeed,
   ]);
 
-  // ── Resets ─────────────────────────────────────────────────────────
+  // â”€â”€ Resets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const resetCenterScale = useCallback(() => {
     setWorldHalfExtent(DEFAULTS.worldHalfExtent);
   }, []);
@@ -290,15 +290,15 @@ export default function BrandmarkInSpherePage() {
         frameloop="always"
         style={{ position: "absolute", inset: 0, pointerEvents: "auto" }}
       >
-        {/* Real Navigate substrate sphere — frozen + revealed. The
+        {/* Real Navigate substrate sphere â€” frozen + revealed. The
             stage component patches the depth-gateway store on mount
             and snaps the motion follower every frame so the sphere
             sits at full reveal regardless of scroll. */}
         <SubstrateSphereStage showSphere={sphereShow} reducedMotion={false} />
 
-        {/* Centre brandmark group — every system samples the cloud
+        {/* Centre brandmark group â€” every system samples the cloud
             in normalised [-0.5, 0.5] space; the wrapper scales by
-            `2 × worldHalfExtent` so the mark lands at the same world
+            `2 Ã— worldHalfExtent` so the mark lands at the same world
             scale the production `BrandmarkPhysicsCoreActor` uses. */}
         <group scale={worldHalfExtent * 2}>
           {system === "static-cloud" && (
@@ -360,7 +360,7 @@ export default function BrandmarkInSpherePage() {
         </group>
       </Canvas>
 
-      {/* ── Control panel ─────────────────────────────────────── */}
+      {/* â”€â”€ Control panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={panelContainerStyle}>
         <h1 style={panelTitleStyle}>Brandmark in Sphere</h1>
         <p style={panelSubtitleStyle}>
@@ -397,7 +397,7 @@ export default function BrandmarkInSpherePage() {
 
         {system === "static-cloud" && (
           <>
-            <SectionLabel>Cloud — sprite + topology</SectionLabel>
+            <SectionLabel>Cloud â€” sprite + topology</SectionLabel>
             <div style={{ marginBottom: 10 }}>
               {SPRITE_STYLES.map((s) => (
                 <RadioRow
@@ -434,7 +434,7 @@ export default function BrandmarkInSpherePage() {
               onChange={setCloudSphereMorph}
             />
 
-            <SectionLabel>Cloud — density + size</SectionLabel>
+            <SectionLabel>Cloud â€” density + size</SectionLabel>
             <ControlSlider
               label="Particle count"
               value={cloudCount}
@@ -460,7 +460,7 @@ export default function BrandmarkInSpherePage() {
               onChange={setCloudPointSize}
             />
 
-            <SectionLabel>Cloud — colour</SectionLabel>
+            <SectionLabel>Cloud â€” colour</SectionLabel>
             <ColorRow label="Body" value={cloudColor} onChange={setCloudColor} />
             <ColorRow label="Accent" value={cloudAccent} onChange={setCloudAccent} />
             <ControlSlider
@@ -484,7 +484,7 @@ export default function BrandmarkInSpherePage() {
               />
             </div>
 
-            <SectionLabel>Cloud — motion</SectionLabel>
+            <SectionLabel>Cloud â€” motion</SectionLabel>
             <ControlSlider
               label="Twinkle (alpha jitter)"
               value={cloudTwinkle}
@@ -736,18 +736,18 @@ export default function BrandmarkInSpherePage() {
 
         <p style={panelFooterStyle}>
           The substrate sphere is the real `ShellSubstrateGyro` instrument from production, frozen
-          at the Navigate park. Production paths are unaffected — both stores reset on unmount.
+          at the Navigate park. Production paths are unaffected â€” both stores reset on unmount.
         </p>
       </div>
     </main>
   );
 }
 
-// ── Panel primitives ──────────────────────────────────────────────────
+// â”€â”€ Panel primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
 // Mirror the inline styling pattern the existing brandmark labs use
 // (`/test/brandmark-physics-core`, `/test/brandmark-3d`). The labs
-// intentionally inline these primitives instead of factoring them out —
+// intentionally inline these primitives instead of factoring them out â€”
 // keeps each lab self-contained.
 
 interface ControlSliderProps {
@@ -930,7 +930,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ── Static panel styles ──────────────────────────────────────────────
+// â”€â”€ Static panel styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const panelContainerStyle: React.CSSProperties = {
   position: "fixed",

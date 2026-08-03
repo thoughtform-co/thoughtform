@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * /test/brandmark-physics-core — dev lab for the GPGPU-driven 3D
+ * /test/brandmark-physics-core â€” dev lab for the GPGPU-driven 3D
  * particle core that replaces the corridor brandmark on entry
  * (ADR-023).
  *
@@ -9,15 +9,15 @@
  *   - Dial the assemble envelope (force coefficients at ignite=0
  *     vs ignite=1) until the burst-into-focus reads right.
  *   - Tune the parked #services CENTERPIECE look (clean-field thinning,
- *     dot scale + crispness, gentle 3D drift) — "Centerpiece view" snaps
+ *     dot scale + crispness, gentle 3D drift) â€” "Centerpiece view" snaps
  *     to the production parked state so you start from the real mark.
  *   - Save a tuning combo to Supabase and get a short shareable id
- *     (load it back by pasting the id) — see `brandmark_presets`.
+ *     (load it back by pasting the id) â€” see `brandmark_presets`.
  *   - Compare against the flat SVG (toggle the bottom-left chip).
  *   - Inspect against the wireframe icosphere context that wraps
  *     the core in the production scene.
  *
- * Internal route only — blocked from production by `middleware.ts`.
+ * Internal route only â€” blocked from production by `proxy.ts`.
  */
 
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -38,7 +38,7 @@ const DEFAULTS = {
   // Particles
   count: BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   scatterRadius: 0.55,
-  // (BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 3600 — dense enough that the
+  // (BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 3600 â€” dense enough that the
   //  Services centerpiece reads as a fine, evenly-spread field; still well
   //  under the gimbal's 9600-dot shell so the brandmark stays the lighter
   //  bright core, not the heaviest element in the composition.)
@@ -51,15 +51,15 @@ const DEFAULTS = {
   accentColor: "#e9c97a",
   opacity: 0.78,
 
-  // Particle BASIS — where each particle LIVES (independent of how it
+  // Particle BASIS â€” where each particle LIVES (independent of how it
   // DRAWS). `dome-fill` is the legacy filled silhouette; the new bases
   // light up oriented primitives (dash / bracket / scan) by giving each
   // particle a contour tangent in `aAngle`.
   basis: "dome-fill" as BrandmarkBasis,
   gridSnap: 1 / 32, // edge-lattice cell size in normalised units
 
-  // Particle SHAPE — how each particle draws inside its point sprite.
-  shape: "dot" as BrandmarkCoreShape, // dot · dither · voxel · glyph · dash · cell · bracket · scan
+  // Particle SHAPE â€” how each particle draws inside its point sprite.
+  shape: "dot" as BrandmarkCoreShape, // dot Â· dither Â· voxel Â· glyph Â· dash Â· cell Â· bracket Â· scan
   glyph: "plus" as BrandmarkCoreGlyph, // symbol when shape = glyph
   shapeStroke: 0.12, // glyph stroke / voxel gap / weight / dash width
   primitiveAspect: 2.4, // length:width for oriented primitives (dash / scan)
@@ -67,12 +67,12 @@ const DEFAULTS = {
   freezeMotion: false, // freeze sim wobble + fragment pulse (independent of cleanField)
   blending: "additive" as BrandmarkCoreBlending, // additive glow vs flat retro field
 
-  // Centerpiece (Services parked state — cleanField 0 = corridor, 1 = parked)
+  // Centerpiece (Services parked state â€” cleanField 0 = corridor, 1 = parked)
   cleanField: 0,
   depth: 1,
   // Cover-in morph (ADR-023 morph rev.). 0 = particles collapsed at the model
   // origin (rect centre), 1 = particles at full home positions. The corridor
-  // actor ramps this 0 → 1 across the substrate-wrap band to drive the SVG →
+  // actor ramps this 0 â†’ 1 across the substrate-wrap band to drive the SVG â†’
   // particle handoff as a geometric inflation. Lab default 1 (full silhouette)
   // so the parked centerpiece + the byte-identical "Luminous Dust" preset are
   // unchanged. Drag the slider down to scrub through the inflation.
@@ -81,7 +81,7 @@ const DEFAULTS = {
   cleanFieldKeep: 0.65, // surviving particle fraction at clean=1 (spacing)
   cleanFieldDotScale: 0.5, // dot-size mult at clean=1 (fineness)
   cleanFieldEdge: 0.4, // dot falloff inner edge at clean=1 (crispness)
-  // Centerpiece drift — lab replica of the actor's gentle 3D tilt (× cleanField)
+  // Centerpiece drift â€” lab replica of the actor's gentle 3D tilt (Ã— cleanField)
   driftAmpX: 0.16,
   driftAmpY: 0.21,
   driftPeriodX: 17,
@@ -92,12 +92,12 @@ const DEFAULTS = {
   reducedMotion: false,
   paused: false,
 
-  // Forces — OFF (ignite=0)
+  // Forces â€” OFF (ignite=0)
   offReturn: 0.4,
   offFlow: 0.06,
   offTurb: 0.32,
 
-  // Forces — ON (ignite=1)
+  // Forces â€” ON (ignite=1)
   onReturn: 6.0,
   onFlow: 0.012,
   onTurb: 0.012,
@@ -140,11 +140,11 @@ const ALL_SHAPE_VALUES: ReadonlyArray<BrandmarkCoreShape> = [
 
 const GLYPH_OPTIONS: { value: BrandmarkCoreGlyph; label: string }[] = [
   { value: "plus", label: "+" },
-  { value: "cross", label: "✕" },
-  { value: "square", label: "▢" },
-  { value: "ring", label: "◦" },
-  { value: "diamond", label: "◇" },
-  { value: "asterisk", label: "✳" },
+  { value: "cross", label: "âœ•" },
+  { value: "square", label: "â–¢" },
+  { value: "ring", label: "â—¦" },
+  { value: "diamond", label: "â—‡" },
+  { value: "asterisk", label: "âœ³" },
 ];
 
 const ALL_GLYPH_VALUES: ReadonlyArray<BrandmarkCoreGlyph> = [
@@ -180,16 +180,16 @@ const ALL_BASIS_VALUES: ReadonlyArray<BrandmarkBasis> = [
  *  read as a genuine style shift rather than a single slider tweak.
  *  Five presets cover the design space we're exploring:
  *
- *   - `Luminous Dust` — the legacy soft-halo additive cloud (today's
+ *   - `Luminous Dust` â€” the legacy soft-halo additive cloud (today's
  *     production look). Equivalent to "reset render".
- *   - `Vector Trace` — particles ON the SVG contour with oriented short
+ *   - `Vector Trace` â€” particles ON the SVG contour with oriented short
  *     dashes (tangent-aligned). Tactical drafting feel; pairs with
  *     Normal blending so the dashes read crisp.
- *   - `Raster Field` — dome-fill quantised to a lattice with hard outlined
+ *   - `Raster Field` â€” dome-fill quantised to a lattice with hard outlined
  *     cells. HORSE 2026 / halftone look.
- *   - `Wire Artifact` — model-wire basis (contours fan into the depth
+ *   - `Wire Artifact` â€” model-wire basis (contours fan into the depth
  *     plane) with oriented dashes; reads as a wireframe 3D object.
- *   - `HUD Glyph` — dome-fill with plus / cross glyphs. The closest to
+ *   - `HUD Glyph` â€” dome-fill with plus / cross glyphs. The closest to
  *     the Shift5 reticle grid: legible glyphs over the brandmark area. */
 interface VisualPreset {
   id: string;
@@ -224,7 +224,7 @@ const VISUAL_PRESETS: ReadonlyArray<VisualPreset> = [
   {
     id: "luminous-dust",
     label: "Luminous Dust",
-    description: "Soft halo · additive · the legacy production look. Breathing motion.",
+    description: "Soft halo Â· additive Â· the legacy production look. Breathing motion.",
     apply: {
       basis: "dome-fill",
       shape: "dot",
@@ -247,7 +247,7 @@ const VISUAL_PRESETS: ReadonlyArray<VisualPreset> = [
   {
     id: "vector-trace",
     label: "Vector Trace",
-    description: "Particles ON the contour · tangent-aligned dashes · normal blending · static.",
+    description: "Particles ON the contour Â· tangent-aligned dashes Â· normal blending Â· static.",
     apply: {
       basis: "svg-outline",
       shape: "dash",
@@ -270,7 +270,7 @@ const VISUAL_PRESETS: ReadonlyArray<VisualPreset> = [
   {
     id: "raster-field",
     label: "Raster Field",
-    description: "Filled silhouette snapped to a lattice · outlined cells · static raster.",
+    description: "Filled silhouette snapped to a lattice Â· outlined cells Â· static raster.",
     apply: {
       basis: "edge-lattice",
       shape: "cell",
@@ -293,7 +293,7 @@ const VISUAL_PRESETS: ReadonlyArray<VisualPreset> = [
   {
     id: "wire-artifact",
     label: "Wire Artifact",
-    description: "Contours fan into depth · oriented dashes · wireframe 3D object · static.",
+    description: "Contours fan into depth Â· oriented dashes Â· wireframe 3D object Â· static.",
     apply: {
       basis: "model-wire",
       shape: "dash",
@@ -316,7 +316,7 @@ const VISUAL_PRESETS: ReadonlyArray<VisualPreset> = [
   {
     id: "hud-glyph",
     label: "HUD Glyph",
-    description: "Filled silhouette · plus/cross glyphs · additive HUD reticle field · static.",
+    description: "Filled silhouette Â· plus/cross glyphs Â· additive HUD reticle field Â· static.",
     apply: {
       basis: "dome-fill",
       shape: "glyph",
@@ -380,7 +380,7 @@ export default function BrandmarkPhysicsCorePage() {
   // Tracks whether the on-mount ?preset=<slug> auto-load has fired so React
   // strict mode's effect double-invocation in dev doesn't load the same
   // preset twice. A ref (not state) so the strict-mode second run sees the
-  // value the first run set — `useEffect` cleanup doesn't reset refs.
+  // value the first run set â€” `useEffect` cleanup doesn't reset refs.
   const initialUrlLoadHandled = useRef(false);
 
   const [ignite, setIgnite] = useState(DEFAULTS.ignite);
@@ -405,7 +405,7 @@ export default function BrandmarkPhysicsCorePage() {
   const [reticleScale, setReticleScale] = useState(DEFAULTS.reticleScale);
 
   // Bumping `simEpoch` re-mounts the core, which re-runs the volume
-  // sample + sim build — the cleanest way to "replay" the assemble
+  // sample + sim build â€” the cleanest way to "replay" the assemble
   // envelope without state surgery.
   const [simEpoch, setSimEpoch] = useState(0);
   const replay = useCallback(() => setSimEpoch((n) => n + 1), []);
@@ -512,7 +512,7 @@ export default function BrandmarkPhysicsCorePage() {
     setOpacity(0.9); // CENTER_OPACITY (decoupled centerpiece opacity)
     setPointSize(4.0); // CORE_POINT_SIZE_3D
     setCount(6000); // BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP
-    setCorridorKeep(0.27); // ≈ CORRIDOR_DRAW_TARGET / count (corridor stays calm)
+    setCorridorKeep(0.27); // â‰ˆ CORRIDOR_DRAW_TARGET / count (corridor stays calm)
     setCleanFieldKeep(0.66); // CENTER_FIELD_KEEP_PARKED
     setCleanFieldDotScale(0.44); // CENTER_DOT_SCALE_PARKED (2026-07-15 refine)
     setCleanFieldEdge(0.4);
@@ -522,7 +522,7 @@ export default function BrandmarkPhysicsCorePage() {
   // Keys map 1:1 to the production constants (see the panel's "production map"
   // note), so a shared id translates straight into the real centerpiece tune.
   // Schema v2 adds `basis`, `gridSnap`, `primitiveAspect`, `lineJitter`, and
-  // `activePreset` — v1 presets still load (missing fields fall back to defaults).
+  // `activePreset` â€” v1 presets still load (missing fields fall back to defaults).
   const buildSettings = useCallback(
     () => ({
       v: 2,
@@ -605,7 +605,7 @@ export default function BrandmarkPhysicsCorePage() {
     setOpacity(num("opacity", DEFAULTS.opacity));
     setColor(str("color", DEFAULTS.color));
     setAccentColor(str("accentColor", DEFAULTS.accentColor));
-    // Basis (v2) — gracefully defaults to "dome-fill" for v1 presets that
+    // Basis (v2) â€” gracefully defaults to "dome-fill" for v1 presets that
     // never wrote one, preserving their visual intent (filled silhouette).
     const basisVal = str("basis", DEFAULTS.basis) as BrandmarkBasis;
     setBasis(
@@ -619,7 +619,7 @@ export default function BrandmarkPhysicsCorePage() {
     setShapeStroke(num("shapeStroke", DEFAULTS.shapeStroke));
     setPrimitiveAspect(num("primitiveAspect", DEFAULTS.primitiveAspect));
     setLineJitter(num("lineJitter", DEFAULTS.lineJitter));
-    // freezeMotion (v2). Missing on v1 presets → default false (legacy
+    // freezeMotion (v2). Missing on v1 presets â†’ default false (legacy
     // "Luminous Dust" breathing motion). Boolean cast so JSON `false` and
     // `undefined` both produce the right result.
     setFreezeMotion(
@@ -654,7 +654,7 @@ export default function BrandmarkPhysicsCorePage() {
 
   // Reflect a loaded / saved slug in the address bar so a refresh re-loads
   // and the URL itself is shareable. `replaceState` (not `pushState`) keeps
-  // the browser back-stack clean — bouncing between presets shouldn't fill
+  // the browser back-stack clean â€” bouncing between presets shouldn't fill
   // up history.
   const writePresetToUrl = useCallback((slug: string): void => {
     if (typeof window === "undefined") return;
@@ -668,7 +668,7 @@ export default function BrandmarkPhysicsCorePage() {
       return;
     }
     setPresetBusy(true);
-    setPresetStatus("Saving…");
+    setPresetStatus("Savingâ€¦");
     const settings = buildSettings();
     const label = presetLabel.trim().slice(0, 120);
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -681,11 +681,11 @@ export default function BrandmarkPhysicsCorePage() {
         setPresetSlug(slug);
         setLoadSlug(slug);
         writePresetToUrl(slug);
-        setPresetStatus(`Saved — share this id: ${slug}`);
+        setPresetStatus(`Saved â€” share this id: ${slug}`);
         setPresetBusy(false);
         return;
       }
-      if (error.code === "23505") continue; // slug collision → retry
+      if (error.code === "23505") continue; // slug collision â†’ retry
       setPresetStatus(`Save failed: ${error.message}`);
       setPresetBusy(false);
       return;
@@ -706,7 +706,7 @@ export default function BrandmarkPhysicsCorePage() {
         return;
       }
       setPresetBusy(true);
-      setPresetStatus(`Loading ${slug}…`);
+      setPresetStatus(`Loading ${slug}â€¦`);
       const { data, error } = await supabase
         .from("brandmark_presets")
         .select("settings,label")
@@ -740,7 +740,7 @@ export default function BrandmarkPhysicsCorePage() {
   // (the user has the input + Load button for explicit reloads).
   //
   // `handleLoadPreset` eventually writes state (busy / status / loadSlug /
-  // preset settings) via an async Supabase fetch — the `react-hooks/
+  // preset settings) via an async Supabase fetch â€” the `react-hooks/
   // set-state-in-effect` rule flags this conservatively because it can't
   // see across the promise boundary, but this is exactly the "subscribe to
   // an external system" pattern the rule's docs OK. The cascading-render
@@ -919,7 +919,7 @@ export default function BrandmarkPhysicsCorePage() {
           </button>
         </div>
 
-        <SectionLabel>Presets · save / share</SectionLabel>
+        <SectionLabel>Presets Â· save / share</SectionLabel>
         <button type="button" onClick={setCenterpieceView} style={primaryResetButtonStyle}>
           Centerpiece view (parked #services)
         </button>
@@ -947,7 +947,7 @@ export default function BrandmarkPhysicsCorePage() {
           disabled={presetBusy}
           style={{ ...primaryResetButtonStyle, opacity: presetBusy ? 0.5 : 1 }}
         >
-          Save → share id
+          Save â†’ share id
         </button>
         {presetSlug ? (
           <div
@@ -1007,8 +1007,8 @@ export default function BrandmarkPhysicsCorePage() {
             value={loadSlug}
             onChange={(e) => setLoadSlug(e.target.value)}
             onKeyDown={(e) => {
-              // Enter loads — no need to round-trip through the button. Also
-              // accept the most common "I just hit space by mistake" → trim
+              // Enter loads â€” no need to round-trip through the button. Also
+              // accept the most common "I just hit space by mistake" â†’ trim
               // in handleLoadPreset, so leading whitespace doesn't fail the
               // 23505 slug regex.
               if (e.key === "Enter") {
@@ -1016,7 +1016,7 @@ export default function BrandmarkPhysicsCorePage() {
                 if (!presetBusy) handleLoadPreset(loadSlug);
               }
             }}
-            placeholder="Paste id…"
+            placeholder="Paste idâ€¦"
             style={{
               flex: "1 1 auto",
               minWidth: 0,
@@ -1119,8 +1119,8 @@ export default function BrandmarkPhysicsCorePage() {
         >
           Count is the shared budget. Corridor keep thins it back down at clean field 0 so the
           corridor stays calm while the centerpiece (clean field 1, Keep slider) draws densely.
-          Prod: count 6000, corridor keep ≈ 0.27 (≈1600 drawn). &gt; 4096 uses a 128×128 sim texture
-          (~4× compute).
+          Prod: count 6000, corridor keep â‰ˆ 0.27 (â‰ˆ1600 drawn). &gt; 4096 uses a 128Ã—128 sim
+          texture (~4Ã— compute).
         </div>
         <ControlSlider
           label="Scatter radius"
@@ -1210,7 +1210,7 @@ export default function BrandmarkPhysicsCorePage() {
           }}
         >
           {VISUAL_PRESETS.find((p) => p.id === activePreset)?.description ??
-            "Custom · loaded from a shared id or hand-tuned."}
+            "Custom Â· loaded from a shared id or hand-tuned."}
         </div>
 
         <SectionLabel>Particle basis (where particles live)</SectionLabel>
@@ -1356,7 +1356,7 @@ export default function BrandmarkPhysicsCorePage() {
 
         <SectionLabel>Centerpiece (Services parked)</SectionLabel>
         <ControlSlider
-          label="Clean field (0 corridor · 1 parked)"
+          label="Clean field (0 corridor Â· 1 parked)"
           value={cleanField}
           min={0}
           max={1}
@@ -1364,7 +1364,7 @@ export default function BrandmarkPhysicsCorePage() {
           onChange={setCleanField}
         />
         <ControlSlider
-          label="Cover morph (0 collapsed · 1 full)"
+          label="Cover morph (0 collapsed Â· 1 full)"
           value={coverMorph}
           min={0}
           max={1}
@@ -1372,7 +1372,7 @@ export default function BrandmarkPhysicsCorePage() {
           onChange={setCoverMorph}
         />
         <ControlSlider
-          label="Depth (0 flat · 1 dome)"
+          label="Depth (0 flat Â· 1 dome)"
           value={depth}
           min={0}
           max={1}
@@ -1380,7 +1380,7 @@ export default function BrandmarkPhysicsCorePage() {
           onChange={setDepth}
         />
         <ControlSlider
-          label="Keep — particle fraction (spacing)"
+          label="Keep â€” particle fraction (spacing)"
           value={cleanFieldKeep}
           min={0.4}
           max={1}
@@ -1412,18 +1412,18 @@ export default function BrandmarkPhysicsCorePage() {
             lineHeight: 1.5,
           }}
         >
-          Clean field → 1 is the parked #services look: thinned (Keep), fine uniform dots (Dot
+          Clean field â†’ 1 is the parked #services look: thinned (Keep), fine uniform dots (Dot
           scale), crisp (Dot crispness), no per-particle pulse, sim turbulence damped to 0 (wobble
           kill); Depth keeps the 3D dome and the drift below tilts it; background dim = the Opacity
-          slider. Production map → count: COUNT_DESKTOP · Keep: CLEAN_FIELD_KEEP · Dot scale: clean
-          dot mult · Dot crispness: clean falloff · Opacity: CENTER_OPACITY · Point size:
-          CORE_POINT_SIZE_3D · Tilt: CENTER_DRIFT_*.
+          slider. Production map â†’ count: COUNT_DESKTOP Â· Keep: CLEAN_FIELD_KEEP Â· Dot scale:
+          clean dot mult Â· Dot crispness: clean falloff Â· Opacity: CENTER_OPACITY Â· Point size:
+          CORE_POINT_SIZE_3D Â· Tilt: CENTER_DRIFT_*.
         </div>
         <button type="button" onClick={resetRender} style={resetButtonStyle}>
           Reset render
         </button>
 
-        <SectionLabel>Centerpiece drift (× clean field)</SectionLabel>
+        <SectionLabel>Centerpiece drift (Ã— clean field)</SectionLabel>
         <ControlSlider
           label="Tilt amp X (rad)"
           value={driftAmpX}
@@ -1469,7 +1469,7 @@ export default function BrandmarkPhysicsCorePage() {
           actor. Tilt scales with clean field, so it&apos;s flat in the corridor (cleanField = 0).
         </div>
 
-        <SectionLabel>Forces · ignite=0 (dispersed)</SectionLabel>
+        <SectionLabel>Forces Â· ignite=0 (dispersed)</SectionLabel>
         <ControlSlider
           label="Return strength"
           value={offReturn}
@@ -1495,7 +1495,7 @@ export default function BrandmarkPhysicsCorePage() {
           onChange={setOffTurb}
         />
 
-        <SectionLabel>Forces · ignite=1 (assembled)</SectionLabel>
+        <SectionLabel>Forces Â· ignite=1 (assembled)</SectionLabel>
         <ControlSlider
           label="Return strength"
           value={onReturn}
@@ -1616,7 +1616,7 @@ interface CenterpieceDriftRigProps {
 /** Lab replica of the actor's centerpiece gentle 3D drift: a slow sinusoidal
  *  X / Y tilt scaled by `cleanField` (the lab's stand-in for the production
  *  `recT`). Mirrors `CENTER_DRIFT_*` in `BrandmarkPhysicsCoreActor`. At
- *  cleanField = 0 (corridor) the tilt is 0 → flat, like production. */
+ *  cleanField = 0 (corridor) the tilt is 0 â†’ flat, like production. */
 function CenterpieceDriftRig({
   scale,
   cleanField,
@@ -1863,7 +1863,7 @@ interface ChoiceRowProps<T extends string> {
   onChange: (v: T) => void;
 }
 
-/** Compact segmented button group — used for the shape / symbol / blending
+/** Compact segmented button group â€” used for the shape / symbol / blending
  *  switches (more legible than a stack of radios for short enumerations). */
 function ChoiceRow<T extends string>({ label, value, options, onChange }: ChoiceRowProps<T>) {
   return (
@@ -1912,7 +1912,7 @@ function ChoiceRow<T extends string>({ label, value, options, onChange }: Choice
 }
 
 /** Retro-futuristic focus-reticle overlay (corner brackets + registration ticks
- *  + mono labels) framing the centred mark — the look from the Benjamin /
+ *  + mono labels) framing the centred mark â€” the look from the Benjamin /
  *  HORSE 2026 references. Lab-only presentation; never mounted in production. */
 function ReticleOverlay({ scale }: { scale: number }) {
   const side = 46 * scale; // vmin
@@ -2024,10 +2024,10 @@ function ReticleOverlay({ scale }: { scale: number }) {
       />
 
       {/* mono labels */}
-      <div style={{ ...label, top: -18, left: 2 }}>Brandmark · Core</div>
-      <div style={{ ...label, top: -18, right: 2, color: "rgba(202,165,84,0.8)" }}>TF—023</div>
-      <div style={{ ...label, bottom: -18, left: 2 }}>Lat 0.000 · Lon 0.000</div>
-      <div style={{ ...label, bottom: -18, right: 2 }}>Scan ▮▮▯</div>
+      <div style={{ ...label, top: -18, left: 2 }}>Brandmark Â· Core</div>
+      <div style={{ ...label, top: -18, right: 2, color: "rgba(202,165,84,0.8)" }}>TFâ€”023</div>
+      <div style={{ ...label, bottom: -18, left: 2 }}>Lat 0.000 Â· Lon 0.000</div>
+      <div style={{ ...label, bottom: -18, right: 2 }}>Scan â–®â–®â–¯</div>
     </div>
   );
 }
@@ -2060,7 +2060,7 @@ const primaryResetButtonStyle: React.CSSProperties = {
 
 // Compact micro-button used inside the "preset slug" chip for the
 // `id` / `url` copy actions. Sized to read as a hint inside the chip,
-// not as a primary action — the chip itself is the affordance.
+// not as a primary action â€” the chip itself is the affordance.
 const presetMicroButtonStyle: React.CSSProperties = {
   background: "transparent",
   border: "1px solid rgba(202,165,84,0.4)",

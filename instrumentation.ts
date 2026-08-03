@@ -12,7 +12,7 @@
  */
 export async function register(): Promise<void> {
   // The env doctor reads process.env and logs — nodejs runtime only.
-  // The edge runtime (middleware) has no need for it and its logger
+  // The edge runtime (`proxy.ts`) has no need for it and its logger
   // pulls in nodejs-flavored modules.
   if (process.env.NEXT_RUNTIME === "edge") return;
 

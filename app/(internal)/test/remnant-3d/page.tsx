@@ -1,20 +1,20 @@
-"use client";
+﻿"use client";
 
 /**
- * /test/remnant-3d — dev lab for the Gateway key visual rebuilt as 3D geometry.
+ * /test/remnant-3d â€” dev lab for the Gateway key visual rebuilt as 3D geometry.
  *
  * The question this lab exists to answer: how far can the remnant structure be
  * orbited before the reconstruction stops holding up? Roughly half the object is
  * never observed in the source plate, so past some angle the viewer is looking at
  * invented geometry. ADR-027 measured ~2.5 degrees for the depth-relief treatment
  * on this same plate; real geometry should do better, but the number has to be
- * measured rather than assumed — hence the orbit readout and the A/B overlay.
+ * measured rather than assumed â€” hence the orbit readout and the A/B overlay.
  *
  * Controls: ribbon (plies, fray), spine (spar length / bend / rise), material,
  * and a plate overlay that composites `plate-2560.webp` over the render at the
  * reference camera so silhouette drift is directly visible.
  *
- * Internal route — blocked from production by `middleware.ts`.
+ * Internal route â€” blocked from production by `proxy.ts`.
  * Control-panel pattern mirrors /test/brandmark-3d.
  */
 
@@ -28,7 +28,7 @@ const PLATE = "/gateway-motion/gateway-v1b/plate-2560.webp";
 
 /**
  * The reference camera. Azimuth 0 is the viewpoint the plate was reconstructed
- * from — the only angle where every visible surface is evidence rather than
+ * from â€” the only angle where every visible surface is evidence rather than
  * inference.
  */
 // Remnant3D normalizes itself to a unit bounding sphere, so this distance is
@@ -80,7 +80,7 @@ export default function RemnantLabPage() {
   );
 
   // Orbit is driven by sliders, not OrbitControls, so the azimuth readout is an
-  // exact number that can be recorded — the whole point of the lab.
+  // exact number that can be recorded â€” the whole point of the lab.
   const camera = useMemo(() => {
     const az = (v.azimuth * Math.PI) / 180;
     const el = (v.elevation * Math.PI) / 180;
@@ -180,7 +180,7 @@ export default function RemnantLabPage() {
           />
           <p className="rl__note">
             Overlay composites the source plate over the render. Walk azimuth out until the
-            silhouette separates — that angle is the reconstruction&rsquo;s useful range.
+            silhouette separates â€” that angle is the reconstruction&rsquo;s useful range.
           </p>
         </Section>
 
@@ -392,7 +392,7 @@ export default function RemnantLabPage() {
 /**
  * Drives the camera imperatively.
  *
- * R3F applies `<Canvas camera={...}>` only on the FIRST render — later changes to
+ * R3F applies `<Canvas camera={...}>` only on the FIRST render â€” later changes to
  * that prop are ignored. Without this the azimuth slider moves the readout but
  * not the camera, and the orbit measurement this lab exists for reads as "the
  * silhouette never changes", which is exactly the wrong conclusion.

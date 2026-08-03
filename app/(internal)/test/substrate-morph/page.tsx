@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * /test/substrate-morph — dev preview for the substrate-sphere morph
+ * /test/substrate-morph â€” dev preview for the substrate-sphere morph
  * point cloud (ADR-017).
  *
  * Mounts a minimal R3F canvas with `<SubstrateMorphPoints>` alone +
@@ -11,7 +11,7 @@
  * (slider = 1) without scrolling the real intelligence-layer
  * section.
  *
- * Internal route — blocked from production by `middleware.ts`.
+ * Internal route â€” blocked from production by `proxy.ts`.
  */
 
 import { Canvas } from "@react-three/fiber";
@@ -32,7 +32,7 @@ export default function SubstrateMorphPreviewPage() {
 
   // Force particle mode on the journey store so SubstrateMorphPoints
   // mounts with the brandmark-shape painter active. Drive the
-  // transform's substrateMorph slider directly each tick — this
+  // transform's substrateMorph slider directly each tick â€” this
   // mirrors what the production journey hook does inside the
   // substrate scroll window.
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function SubstrateMorphPreviewPage() {
         fontFamily: "var(--font-pp-neue-montreal, ui-sans-serif), sans-serif",
       }}
     >
-      {/* Synthetic intelligence-layer DOM scaffold — the painter
+      {/* Synthetic intelligence-layer DOM scaffold â€” the painter
           queries `#intelligence-layer .ilayer__brandmark-anchor` to
           compute the brandmark target. We mock both selectors so
           un-projection works without the full landing page. */}
@@ -106,7 +106,7 @@ export default function SubstrateMorphPreviewPage() {
 
       {/* R3F canvas sized to the viewport. The morph mesh lives
           inside the same rotation group the production scene uses
-          (CAMERA_TILT) so the screen→world un-projection math
+          (CAMERA_TILT) so the screenâ†’world un-projection math
           matches production exactly. */}
       <Canvas
         camera={{
