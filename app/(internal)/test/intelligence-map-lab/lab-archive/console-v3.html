@@ -1,0 +1,1415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Thoughtform — Intelligence Architecture Console v3</title>
+<style>
+  :root {
+    --bg: #060704;
+    --panel: #090a07;
+    --panel-2: #0d0e0a;
+    --panel-3: #11120d;
+    --ink: #e9e2d3;
+    --muted: #827b70;
+    --faint: #37352f;
+    --line: rgba(211, 169, 65, .18);
+    --line-2: rgba(211, 169, 65, .38);
+    --line-3: rgba(211, 169, 65, .72);
+    --amber: #d3a941;
+    --amber-hot: #f0c95f;
+    --amber-deep: #7e5a18;
+    --red: #7d3f35;
+    --red-hot: #b95f47;
+    --cream: #d8cfbc;
+    --grid: rgba(211, 169, 65, .035);
+    --scan: rgba(240, 201, 95, .08);
+    --sans: Arial, Helvetica, sans-serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
+  body {
+    overflow-x: hidden;
+    font-family: var(--sans);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(120deg, transparent 0 64%, rgba(211,169,65,.026) 64% 65%, transparent 65% 100%);
+    background-size: 28px 28px, 28px 28px, 100% 100%;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(255,255,255,.018) 3px 4px);
+    mix-blend-mode: soft-light;
+    opacity: .55;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 101;
+    pointer-events: none;
+    opacity: .07;
+    background-image: radial-gradient(rgba(255,255,255,.7) .3px, transparent .3px);
+    background-size: 5px 5px;
+    mix-blend-mode: screen;
+  }
+
+  button { color: inherit; font: inherit; }
+  .mono { font-family: var(--mono); text-transform: uppercase; }
+
+  .shell {
+    min-height: 100vh;
+    padding: 30px 54px 46px;
+    position: relative;
+  }
+
+  .topbar {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font: 9px/1 var(--mono);
+    letter-spacing: .16em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .topbar__modes { display: flex; gap: 16px; align-items: center; }
+  .topbar__modes span { opacity: .55; }
+  .topbar__modes span.active { color: var(--amber); opacity: 1; }
+  .topbar__proof { color: var(--ink); letter-spacing: .24em; }
+
+  .frame-rail {
+    position: fixed;
+    top: 98px;
+    bottom: 70px;
+    width: 20px;
+    border-left: 1px solid var(--muted);
+    opacity: .65;
+    pointer-events: none;
+  }
+  .frame-rail.left { left: 44px; }
+  .frame-rail.right { right: 44px; transform: scaleX(-1); }
+  .frame-rail::before,
+  .frame-rail::after,
+  .frame-rail i {
+    content: "";
+    position: absolute;
+    left: -8px;
+    width: 8px;
+    border-top: 1px solid var(--muted);
+  }
+  .frame-rail::before { top: 0; }
+  .frame-rail::after { bottom: 0; }
+  .frame-rail i.major { left: -18px; width: 18px; }
+
+  .workspace {
+    width: min(1480px, calc(100vw - 144px));
+    margin: 48px auto 0;
+    display: grid;
+    grid-template-columns: minmax(350px, .78fr) minmax(760px, 1.82fr);
+    gap: 50px;
+    align-items: stretch;
+  }
+
+  .project-panel {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: 2px;
+  }
+  .eyebrow,
+  .meta,
+  .metric-label,
+  .section-label,
+  .directory,
+  .project-footer,
+  .console-kicker,
+  .console-title,
+  .console-status,
+  .target-strip,
+  .range-rail,
+  .field-footer,
+  .view-label,
+  .lens-control,
+  .module-code,
+  .engine-code,
+  .team-count,
+  .allocation-ledger,
+  .work-record__code,
+  .work-record__status,
+  .work-meta-grid dt,
+  .work-question,
+  .config-contract,
+  .config-work__code,
+  .config-work__bar,
+  .trace-note,
+  .estate-summary,
+  .auto-readout {
+    font-family: var(--mono);
+    text-transform: uppercase;
+  }
+
+  .eyebrow {
+    color: var(--amber);
+    font-size: 11px;
+    letter-spacing: .12em;
+    font-weight: 700;
+    padding-bottom: 13px;
+    border-bottom: 1px dotted var(--line-2);
+  }
+  .eyebrow .ghost { color: var(--muted); margin-left: 24px; font-weight: 400; }
+
+  h1 {
+    margin: 32px 0 5px;
+    font-size: clamp(38px, 3.2vw, 52px);
+    line-height: .92;
+    letter-spacing: -.055em;
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: .12em;
+    margin-bottom: 23px;
+  }
+  .project-copy {
+    max-width: 520px;
+    color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+    font-size: 16px;
+    line-height: 1.58;
+    margin: 0 0 27px;
+  }
+  .highlight {
+    color: var(--ink);
+    background: linear-gradient(transparent 18%, rgba(211,169,65,.62) 18% 87%, transparent 87%);
+    padding: 0 2px;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+    margin-bottom: 22px;
+  }
+  .metric {
+    min-height: 96px;
+    padding: 13px 13px 11px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .metric-value {
+    font: 700 18px/1 var(--mono);
+    letter-spacing: .02em;
+    margin-bottom: 5px;
+  }
+  .metric-label {
+    color: var(--amber);
+    font-size: 8px;
+    letter-spacing: .09em;
+    margin-bottom: 7px;
+  }
+  .metric-copy { color: var(--muted); font-size: 10.5px; line-height: 1.42; }
+
+  .directory-wrap { margin-top: auto; }
+  .section-label {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 8px;
+    letter-spacing: .1em;
+    margin: 0 0 7px;
+  }
+  .directory { list-style: none; padding: 0; margin: 0; font-size: 9px; letter-spacing: .055em; }
+  .directory li {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    align-items: center;
+    min-height: 31px;
+    padding: 0 9px;
+    border-top: 1px dotted var(--line);
+    color: var(--muted);
+  }
+  .directory li:last-child { border-bottom: 1px dotted var(--line); }
+  .directory li.active { color: #171207; background: var(--amber); font-weight: 700; }
+  .directory-count { font-size: 7px; }
+  .project-footer { margin-top: 38px; color: var(--muted); font-size: 7px; letter-spacing: .12em; }
+  .project-footer strong { color: var(--amber); font-weight: 500; }
+
+  .console {
+    min-width: 0;
+    height: min(790px, calc(100vh - 142px));
+    min-height: 680px;
+    display: grid;
+    grid-template-rows: 76px 1fr 34px;
+    border: 1px solid var(--line-2);
+    background: rgba(7,8,5,.92);
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  }
+  .console::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid rgba(240,201,95,.05);
+    clip-path: inherit;
+    z-index: 40;
+  }
+
+  .console-header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    position: relative;
+    z-index: 35;
+    background: rgba(9,10,7,.95);
+  }
+  .console-kicker { color: var(--muted); font-size: 8px; letter-spacing: .13em; margin-bottom: 8px; }
+  .console-title { font-size: 13px; letter-spacing: .075em; font-weight: 700; }
+  .console-title span { color: var(--amber); font-size: 8px; margin-left: 10px; font-weight: 500; }
+  .console-status { color: var(--muted); font-size: 7px; letter-spacing: .1em; line-height: 1.65; text-align: right; }
+  .console-status strong { color: var(--amber); font-weight: 500; }
+
+  .field {
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+    background-image:
+      linear-gradient(rgba(211,169,65,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(211,169,65,.03) 1px, transparent 1px),
+      linear-gradient(90deg, transparent 49.95%, rgba(211,169,65,.035) 50%, transparent 50.05%),
+      linear-gradient(transparent 49.95%, rgba(211,169,65,.035) 50%, transparent 50.05%);
+    background-size: 25px 25px, 25px 25px, 100% 100%, 100% 100%;
+    isolation: isolate;
+  }
+  .field::before {
+    content: "";
+    position: absolute;
+    left: -25%;
+    right: -25%;
+    top: -9%;
+    height: 9%;
+    z-index: 25;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, rgba(240,201,95,.11), transparent);
+    opacity: 0;
+  }
+  .field.transitioning::before { animation: scanSweep .85s cubic-bezier(.2,.78,.2,1); }
+  @keyframes scanSweep {
+    0% { transform: translateY(0); opacity: 0; }
+    12% { opacity: .7; }
+    100% { transform: translateY(1250%); opacity: 0; }
+  }
+
+  .target-strip {
+    position: absolute;
+    left: 18px;
+    top: 14px;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    height: 28px;
+    padding: 0 10px 0 7px;
+    border-left: 3px solid var(--amber);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 7px;
+    letter-spacing: .1em;
+    background: rgba(8,9,6,.83);
+    pointer-events: none;
+  }
+  .target-strip strong { color: var(--ink); font-weight: 500; }
+  .target-strip em { color: var(--amber); font-style: normal; }
+
+  .auto-readout {
+    position: absolute;
+    right: 176px;
+    top: 18px;
+    z-index: 30;
+    color: var(--red-hot);
+    font-size: 6px;
+    letter-spacing: .12em;
+    opacity: 0;
+    transition: opacity .2s ease;
+    pointer-events: none;
+  }
+  .field.auto-running .auto-readout { opacity: .9; }
+
+  .range-rail {
+    position: absolute;
+    top: 70px;
+    bottom: 55px;
+    right: 10px;
+    z-index: 32;
+    width: 142px;
+    display: grid;
+    align-content: center;
+    gap: 0;
+  }
+  .range-rail::before {
+    content: "";
+    position: absolute;
+    top: 24px;
+    bottom: 24px;
+    right: 8px;
+    border-right: 1px solid var(--line-2);
+  }
+  .range-button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    min-height: 66px;
+    padding: 0 22px 0 0;
+    cursor: pointer;
+    text-align: right;
+    position: relative;
+    font: inherit;
+    text-transform: uppercase;
+  }
+  .range-button::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 31px;
+    width: 18px;
+    border-top: 1px solid var(--line-2);
+    transition: width .25s ease, border-color .25s ease;
+  }
+  .range-button::after {
+    content: "";
+    position: absolute;
+    right: 4px;
+    top: 27px;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--line-2);
+    background: var(--panel);
+    transform: rotate(45deg);
+    transition: background .25s ease, border-color .25s ease, transform .45s ease;
+  }
+  .range-button b { display: block; font-size: 7px; letter-spacing: .08em; font-weight: 500; }
+  .range-button span { display: block; color: var(--faint); font-size: 6px; letter-spacing: .07em; margin-top: 4px; }
+  .range-button.active { color: var(--amber); }
+  .range-button.active span { color: var(--muted); }
+  .range-button.active::before { width: 30px; border-color: var(--amber); }
+  .range-button.active::after { background: var(--amber); border-color: var(--amber); transform: rotate(225deg); }
+
+  .field-footer {
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    color: var(--muted);
+    font-size: 7px;
+    letter-spacing: .09em;
+    position: relative;
+    z-index: 35;
+    background: rgba(9,10,7,.96);
+  }
+  .field-footer strong { color: var(--amber); font-weight: 500; }
+
+  .view {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    opacity: 0;
+    transform: translateX(22px);
+    pointer-events: none;
+    transition: opacity .46s ease, transform .62s cubic-bezier(.2,.74,.2,1);
+  }
+  .view.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+  .view-label {
+    position: absolute;
+    left: 18px;
+    bottom: 13px;
+    z-index: 8;
+    color: var(--muted);
+    font-size: 7px;
+    letter-spacing: .1em;
+  }
+  .view-label strong { color: var(--amber); font-weight: 500; }
+
+  .cut-panel {
+    position: relative;
+    background: rgba(10,11,8,.91);
+    border: 1px solid var(--line-2);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  .cut-panel::before,
+  .cut-panel::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+  .cut-panel::before {
+    left: 0;
+    top: 12px;
+    width: 32px;
+    border-top: 2px solid var(--amber);
+  }
+  .cut-panel::after {
+    right: 0;
+    bottom: 12px;
+    width: 24px;
+    border-top: 1px solid var(--red);
+  }
+
+  /* RANGE 01 — WORK */
+  .work-stage {
+    position: absolute;
+    left: 44px;
+    right: 170px;
+    top: 74px;
+    bottom: 54px;
+    display: grid;
+    grid-template-columns: minmax(520px, 1.65fr) minmax(210px, .72fr);
+    gap: 28px;
+    align-items: center;
+  }
+  .work-record {
+    min-height: 350px;
+    padding: 22px 24px 18px;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+  }
+  .work-record__code {
+    color: var(--amber);
+    font-size: 8px;
+    letter-spacing: .14em;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 13px;
+    border-bottom: 1px dotted var(--line-2);
+  }
+  .work-record__code span:last-child { color: var(--muted); }
+  .work-record h2 {
+    margin: 22px 0 8px;
+    font-size: clamp(27px, 2.55vw, 42px);
+    letter-spacing: -.045em;
+    line-height: .95;
+  }
+  .work-record__lede { color: var(--muted); font-size: 13px; line-height: 1.45; max-width: 600px; }
+  .work-meta-grid {
+    margin: 24px 0 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+  .work-meta-grid > div {
+    min-height: 72px;
+    padding: 11px 12px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .work-meta-grid dt { color: var(--amber); font-size: 7px; letter-spacing: .1em; margin-bottom: 7px; }
+  .work-meta-grid dd { margin: 0; color: var(--ink); font-size: 11px; line-height: 1.35; }
+  .work-record__status {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    color: var(--muted);
+    font-size: 7px;
+    letter-spacing: .1em;
+  }
+  .work-record__status strong { color: var(--amber); font-weight: 500; }
+
+  .work-question {
+    min-height: 260px;
+    padding: 22px 18px;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 8px;
+    letter-spacing: .1em;
+    line-height: 1.65;
+  }
+  .work-question__top { color: var(--amber); }
+  .work-question__prompt { color: var(--ink); font-size: 13px; line-height: 1.55; letter-spacing: .04em; }
+  .work-question__prompt::after {
+    content: "_";
+    color: var(--amber-hot);
+    animation: cursor 1s steps(2,end) infinite;
+  }
+  @keyframes cursor { 50% { opacity: 0; } }
+  .work-question__scale {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 5px;
+  }
+  .work-question__scale span {
+    height: 12px;
+    border: 1px solid var(--line-2);
+    background: rgba(211,169,65,.025);
+  }
+  .work-question__scale span:nth-child(-n+2) { background: rgba(211,169,65,.28); border-color: var(--amber); }
+
+  /* RANGE 02 — CONFIGURATION */
+  .config-stage {
+    position: absolute;
+    left: 24px;
+    right: 166px;
+    top: 64px;
+    bottom: 42px;
+  }
+  .config-wires {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .wire-base { fill: none; stroke: var(--line-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .wire-active { fill: none; stroke: var(--amber); stroke-width: 1.25; vector-effect: non-scaling-stroke; stroke-dasharray: 6 7; animation: wireFlow 7s linear infinite; }
+  .wire-red { fill: none; stroke: rgba(125,63,53,.55); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  @keyframes wireFlow { to { stroke-dashoffset: -130; } }
+  .wire-junction { fill: var(--panel); stroke: var(--amber); stroke-width: 1; }
+
+  .config-work {
+    position: absolute;
+    left: 1%;
+    top: 34%;
+    width: 24%;
+    min-height: 178px;
+    z-index: 4;
+    padding: 16px;
+  }
+  .config-work__code { color: var(--amber); font-size: 7px; letter-spacing: .12em; padding-bottom: 10px; border-bottom: 1px dotted var(--line-2); }
+  .config-work h3 { margin: 15px 0 8px; font-size: 20px; letter-spacing: -.025em; }
+  .config-work p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+  .config-work__bar { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 6.5px; letter-spacing: .08em; }
+  .config-work__bar strong { color: var(--amber); font-weight: 500; }
+
+  .module-card {
+    position: absolute;
+    width: 25.5%;
+    min-height: 106px;
+    z-index: 5;
+    padding: 13px 14px 11px;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+  }
+  .module-card:hover { border-color: var(--amber); background: rgba(211,169,65,.07); transform: translateY(-2px); }
+  .module-card[data-slot="person"] { left: 34%; top: 6%; }
+  .module-card[data-slot="model"] { left: 62%; top: 6%; }
+  .module-card[data-slot="skill"] { left: 34%; top: 38%; }
+  .module-card[data-slot="context"] { left: 62%; top: 38%; }
+  .module-card[data-slot="execution"] { left: 34%; top: 70%; }
+  .module-card[data-slot="eval"] { left: 62%; top: 70%; }
+  .module-code { color: var(--amber); font-size: 6.5px; letter-spacing: .12em; margin-bottom: 9px; }
+  .module-value { font: 700 11px/1.15 var(--mono); letter-spacing: .025em; margin-bottom: 7px; }
+  .module-note { color: var(--muted); font-size: 8.5px; line-height: 1.35; }
+  .module-role { position: absolute; right: 10px; top: 10px; color: var(--faint); font: 6px/1 var(--mono); letter-spacing: .08em; }
+  .module-card[data-slot="skill"] { border-color: var(--amber); background: rgba(211,169,65,.06); }
+
+  .config-contract {
+    position: absolute;
+    right: 0;
+    top: 19%;
+    width: 10.5%;
+    min-height: 60%;
+    z-index: 4;
+    padding: 12px 9px;
+    border-left: 2px solid var(--red);
+    background: rgba(12,11,8,.9);
+    color: var(--muted);
+    font-size: 6px;
+    letter-spacing: .08em;
+  }
+  .config-contract h4 { margin: 0 0 15px; color: var(--amber); font-size: 6.5px; letter-spacing: .12em; font-weight: 500; }
+  .contract-step { padding: 9px 0; border-top: 1px dotted var(--line); }
+  .contract-step strong { display: block; color: var(--ink); font-size: 7px; font-weight: 500; margin-bottom: 4px; }
+  .contract-step.active strong { color: var(--amber); }
+  .contract-step.active { border-left: 2px solid var(--amber); padding-left: 7px; }
+
+  /* RANGE 03 — SHARED LAYER */
+  .shared-stage {
+    position: absolute;
+    left: 20px;
+    right: 158px;
+    top: 54px;
+    bottom: 38px;
+  }
+  .shared-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .shared-svg text { font-family: var(--mono); text-transform: uppercase; }
+  .engine-box { fill: rgba(10,11,8,.92); stroke: var(--line-2); stroke-width: 1; }
+  .engine-box.voice { stroke: var(--amber); fill: rgba(211,169,65,.07); }
+  .engine-rail { fill: none; stroke: var(--line-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .engine-rail.active { stroke: var(--amber); stroke-width: 1.2; }
+  .engine-code { fill: var(--amber); font-size: 8px; letter-spacing: .11em; }
+  .engine-count { fill: var(--ink); font-size: 16px; font-weight: 700; }
+  .engine-desc { fill: var(--muted); font-size: 6.5px; letter-spacing: .06em; }
+  .skill-box { fill: rgba(10,11,8,.94); stroke: var(--line-2); stroke-width: 1; }
+  .skill-box.selected { stroke: var(--amber); fill: rgba(211,169,65,.095); }
+  .skill-title { fill: var(--ink); font-size: 7.5px; letter-spacing: .035em; }
+  .skill-team { fill: var(--muted); font-size: 5.8px; letter-spacing: .075em; }
+  .skill-trace { fill: none; stroke: rgba(125,63,53,.38); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .skill-trace.primary { stroke: var(--amber); stroke-width: 1.35; stroke-dasharray: 5 7; animation: wireFlow 7s linear infinite; }
+  .skill-trace.secondary { stroke: rgba(211,169,65,.45); stroke-dasharray: 2 6; }
+  .junction { fill: var(--panel); stroke: var(--line-2); stroke-width: 1; }
+  .junction.active { fill: var(--amber); stroke: var(--amber); }
+  .junction.secondary { fill: var(--panel); stroke: var(--amber); }
+  .shared-header { fill: var(--muted); font-size: 6.5px; letter-spacing: .1em; }
+  .shared-header.accent { fill: var(--amber); }
+  .trace-note {
+    position: absolute;
+    right: 12px;
+    bottom: 7px;
+    width: 220px;
+    min-height: 84px;
+    padding: 12px;
+    z-index: 8;
+    color: var(--muted);
+    font-size: 6.5px;
+    line-height: 1.55;
+    letter-spacing: .08em;
+  }
+  .trace-note strong { display: block; color: var(--amber); font-size: 7px; margin-bottom: 7px; font-weight: 500; }
+
+  /* RANGE 04 — ESTATE */
+  .estate-stage {
+    position: absolute;
+    left: 24px;
+    right: 160px;
+    top: 60px;
+    bottom: 43px;
+  }
+  .lens-control {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 7px;
+    letter-spacing: .1em;
+  }
+  .lens-control button {
+    appearance: none;
+    border: 1px solid var(--line-2);
+    background: rgba(9,10,7,.92);
+    color: var(--muted);
+    padding: 7px 9px;
+    cursor: pointer;
+    font: inherit;
+    text-transform: uppercase;
+  }
+  .lens-control button.active { color: #171207; background: var(--amber); border-color: var(--amber); font-weight: 700; }
+  .estate-summary {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9;
+    color: var(--muted);
+    font-size: 7px;
+    letter-spacing: .1em;
+    line-height: 1.55;
+  }
+  .estate-summary strong { color: var(--amber); font-weight: 500; }
+  .estate-lens {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 46px;
+    bottom: 0;
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: opacity .35s ease, transform .45s ease;
+  }
+  .estate-lens.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  .team-grid {
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0,1fr));
+    grid-auto-rows: minmax(75px, 1fr);
+    grid-auto-flow: dense;
+    gap: 7px;
+  }
+  .team-tile {
+    position: relative;
+    border: 1px solid var(--line-2);
+    background: rgba(10,11,8,.91);
+    padding: 11px 10px 9px;
+    overflow: hidden;
+    min-height: 0;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .team-tile:hover { border-color: var(--amber); background: rgba(211,169,65,.055); }
+  .team-tile.selected { border-color: var(--amber); background: rgba(211,169,65,.095); }
+  .team-tile.selected::before { content: "TARGET DOMAIN"; position: absolute; right: 8px; top: 7px; color: var(--amber); font: 5.5px/1 var(--mono); letter-spacing: .1em; }
+  .team-name { font: 700 9px/1.15 var(--mono); letter-spacing: .035em; max-width: 78%; }
+  .team-count { color: var(--amber); font-size: 6.5px; letter-spacing: .1em; margin-top: 7px; }
+  .team-sample { color: var(--muted); font-size: 7.5px; line-height: 1.35; margin-top: 8px; max-width: 95%; }
+  .team-index { position: absolute; right: 8px; bottom: 7px; color: var(--faint); font: 6px/1 var(--mono); }
+
+  .allocation-intro {
+    display: grid;
+    grid-template-columns: 1.4fr .8fr;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .allocation-principle,
+  .allocation-disclaimer {
+    border: 1px solid var(--line);
+    background: rgba(10,11,8,.82);
+    min-height: 56px;
+    padding: 10px 12px;
+    font: 7px/1.55 var(--mono);
+    letter-spacing: .075em;
+    text-transform: uppercase;
+  }
+  .allocation-principle { color: var(--ink); border-left: 3px solid var(--amber); }
+  .allocation-principle strong { color: var(--amber); font-weight: 500; }
+  .allocation-disclaimer { color: var(--muted); border-left: 3px solid var(--red); }
+
+  .allocation-ledger {
+    border-top: 1px solid var(--line-2);
+    border-left: 1px solid var(--line-2);
+    font-size: 6.5px;
+    letter-spacing: .06em;
+  }
+  .ledger-row {
+    display: grid;
+    grid-template-columns: 1.55fr 1.25fr .78fr 1.05fr 1.65fr;
+    min-height: 53px;
+  }
+  .ledger-row > div {
+    min-width: 0;
+    border-right: 1px solid var(--line-2);
+    border-bottom: 1px solid var(--line-2);
+    padding: 9px 9px;
+    display: flex;
+    align-items: center;
+  }
+  .ledger-row.header { min-height: 28px; color: var(--amber); background: rgba(211,169,65,.035); }
+  .ledger-row.header > div { padding-block: 6px; }
+  .ledger-row.data { color: var(--muted); background: rgba(9,10,7,.7); transition: background .2s ease; }
+  .ledger-row.data:hover { background: rgba(211,169,65,.045); }
+  .ledger-row.data.selected { color: var(--ink); background: rgba(211,169,65,.09); box-shadow: inset 3px 0 0 var(--amber); }
+  .ledger-work { color: var(--ink); font-weight: 700; letter-spacing: .03em; }
+  .ledger-tier { color: var(--amber); }
+  .load-cell { display: grid !important; grid-template-columns: 1fr 27px; gap: 8px; }
+  .load-track { height: 7px; border: 1px solid var(--line-2); position: relative; width: 100%; }
+  .load-track i { display: block; height: 100%; width: var(--load); background: var(--amber); }
+  .load-cell span { color: var(--muted); font-size: 5.5px; }
+  .ledger-why { line-height: 1.35; }
+
+  .brand-mark {
+    position: fixed;
+    left: 58px;
+    bottom: 24px;
+    font-family: Georgia, serif;
+    font-size: 19px;
+    line-height: .76;
+    letter-spacing: -.08em;
+  }
+  .brand-mark i { color: var(--amber); font-style: normal; }
+
+  .theme-chip {
+    position: fixed;
+    right: 62px;
+    bottom: 24px;
+    min-width: 42px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-2);
+    background: var(--panel);
+    color: var(--amber);
+    font: 8px/1 var(--mono);
+    letter-spacing: .1em;
+    cursor: pointer;
+  }
+
+  body[data-theme="paper"] {
+    --bg: #e9e1d4;
+    --panel: #eee6da;
+    --panel-2: #e5dbcb;
+    --panel-3: #ddd0bd;
+    --ink: #191711;
+    --muted: #6d675c;
+    --faint: #b5aa98;
+    --line: rgba(132,93,24,.2);
+    --line-2: rgba(132,93,24,.42);
+    --line-3: rgba(132,93,24,.7);
+    --amber: #a9791d;
+    --amber-hot: #845b11;
+    --amber-deep: #c6983c;
+    --red: #85493c;
+    --red-hot: #9d4f3e;
+    --cream: #211e17;
+    --grid: rgba(132,93,24,.05);
+    --scan: rgba(132,93,24,.08);
+  }
+  body[data-theme="paper"] .console,
+  body[data-theme="paper"] .console-header,
+  body[data-theme="paper"] .field-footer,
+  body[data-theme="paper"] .target-strip,
+  body[data-theme="paper"] .lens-control button,
+  body[data-theme="paper"] .cut-panel,
+  body[data-theme="paper"] .team-tile,
+  body[data-theme="paper"] .allocation-principle,
+  body[data-theme="paper"] .allocation-disclaimer,
+  body[data-theme="paper"] .ledger-row.data { background: rgba(238,230,218,.94); }
+  body[data-theme="paper"] .engine-box,
+  body[data-theme="paper"] .skill-box { fill: rgba(238,230,218,.96); }
+  body[data-theme="paper"] .engine-box.voice,
+  body[data-theme="paper"] .skill-box.selected { fill: rgba(169,121,29,.11); }
+
+  @media (max-width: 1220px) {
+    .shell { padding-inline: 28px; }
+    .frame-rail { display: none; }
+    .workspace { width: 100%; grid-template-columns: 1fr; margin-top: 28px; }
+    .directory-wrap { margin-top: 18px; }
+    .console { height: 780px; }
+    .brand-mark { position: absolute; left: 30px; bottom: 18px; }
+    .theme-chip { right: 30px; }
+  }
+  @media (max-width: 760px) {
+    .shell { padding: 18px 12px 68px; }
+    .workspace { gap: 26px; }
+    .project-copy { font-size: 14px; }
+    .metrics { grid-template-columns: 1fr; }
+    .console { min-height: 720px; height: 76vh; }
+    .console-status { display: none; }
+    .range-rail { right: -38px; transform: scale(.82); transform-origin: right center; }
+    .work-stage { left: 18px; right: 88px; grid-template-columns: 1fr; overflow: auto; }
+    .work-question { min-height: 180px; }
+    .config-stage, .shared-stage, .estate-stage { right: 86px; }
+    .module-card { width: 45%; }
+    .module-card[data-slot="person"], .module-card[data-slot="skill"], .module-card[data-slot="execution"] { left: 29%; }
+    .module-card[data-slot="model"], .module-card[data-slot="context"], .module-card[data-slot="eval"] { left: 76%; }
+    .config-contract { display: none; }
+    .team-grid { grid-template-columns: repeat(3,1fr); overflow: auto; }
+    .ledger-row { grid-template-columns: 1.35fr 1fr .7fr 1fr; }
+    .ledger-row > div:last-child { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body data-theme="terminal">
+<div class="shell">
+  <header class="topbar">
+    <div class="topbar__modes"><span>◇</span><span>⌁</span><span>≫</span><span class="active">▱</span><span>⠿</span><span>+/-</span></div>
+    <div class="topbar__proof">PROOF / INTELLIGENCE ARCHITECTURE</div>
+  </header>
+
+  <div class="frame-rail left" aria-hidden="true">
+    <i style="top:8%"></i><i class="major" style="top:33%"></i><i style="top:59%"></i><i class="major" style="top:84%"></i>
+  </div>
+  <div class="frame-rail right" aria-hidden="true">
+    <i style="top:8%"></i><i class="major" style="top:33%"></i><i style="top:59%"></i><i class="major" style="top:84%"></i>
+  </div>
+
+  <main class="workspace">
+    <aside class="project-panel">
+      <div class="eyebrow">01 LOOP EARPLUGS <span class="ghost">+ ARCHIVE</span></div>
+      <h1>INTELLIGENCE<br>MAP.</h1>
+      <div class="meta">INTELLIGENCE ARCHITECTURE · COMPANY-WIDE · 2024 — ACTIVE</div>
+      <p class="project-copy">
+        Workshops across fourteen teams mapped forty-seven Skills into a <span class="highlight">work-to-intelligence architecture</span>. Each piece of work is connected to the model, encoded judgment, context, tools, evals and owner it needs—so usage and token cost can be read against the work and outcomes they support.
+      </p>
+
+      <section class="metrics" aria-label="Project metrics">
+        <div class="metric">
+          <div class="metric-value">47</div>
+          <div class="metric-label">SKILLS TAGGED</div>
+          <div class="metric-copy">Reusable capability made visible as part of the estate.</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">14</div>
+          <div class="metric-label">TEAMS MAPPED</div>
+          <div class="metric-copy">The same layer can be read by ownership or allocation.</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">05</div>
+          <div class="metric-label">SHARED ENGINES</div>
+          <div class="metric-copy">Recurring shapes reveal where knowledge can travel.</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">DOMAIN-OWNED</div>
+          <div class="metric-label">STANDARD + MAINTENANCE</div>
+          <div class="metric-copy">The people closest to the work retain authority over quality.</div>
+        </div>
+      </section>
+
+      <div class="directory-wrap">
+        <div class="section-label"><span>DIRECTORY · /LOOP-EARPLUGS/</span><span>4 ITEMS</span></div>
+        <ul class="directory">
+          <li class="active"><span>□</span><span>01_INTELLIGENCE-MAP/</span><span class="directory-count">47 → 05</span></li>
+          <li><span>□</span><span>02_AI-FLUENCY-STUDIO/</span><span class="directory-count">LIVE WORK</span></li>
+          <li><span>□</span><span>03_AI-ABOVE-THE-LINE/</span><span class="directory-count">2 FILMS</span></li>
+          <li><span>□</span><span>04_SOFTWARE-FOR-FEW/</span><span class="directory-count">4 TOOLS</span></li>
+        </ul>
+      </div>
+
+      <div class="project-footer">◆ 01 · NAVIGATE · NAV-01 · <strong>ON RECORD</strong></div>
+    </aside>
+
+    <section class="console" aria-label="Work-to-intelligence architecture console">
+      <header class="console-header">
+        <div>
+          <div class="console-kicker">PREVIEW · 01_INTELLIGENCE-MAP/</div>
+          <div class="console-title">WORK-TO-INTELLIGENCE CONSOLE <span>SEMANTIC RANGE / LIVE</span></div>
+        </div>
+        <div class="console-status" id="consoleStatus"></div>
+      </header>
+
+      <div class="field" id="field" data-range="0" data-lens="team">
+        <div class="target-strip"><em>TARGET</em><strong>W-017 / BRAND COPY CHECK</strong><span>WORK IS THE UNIT</span></div>
+        <div class="auto-readout">AUTO TRACE / MOVE POINTER TO TAKE CONTROL</div>
+
+        <nav class="range-rail" aria-label="Semantic range">
+          <button class="range-button active" data-range="0"><b>01 WORK</b><span>WHAT MUST LAND</span></button>
+          <button class="range-button" data-range="1"><b>02 CONFIGURATION</b><span>WHAT RUNS IT</span></button>
+          <button class="range-button" data-range="2"><b>03 SHARED LAYER</b><span>WHAT TRAVELS</span></button>
+          <button class="range-button" data-range="3"><b>04 ESTATE</b><span>WHERE IT GOES</span></button>
+        </nav>
+
+        <section class="view active" data-view="0" aria-label="Work record">
+          <div class="work-stage">
+            <article class="work-record cut-panel">
+              <div class="work-record__code"><span>W-017 / WORK RECORD</span><span>STATUS / ACTIVE</span></div>
+              <div>
+                <h2>BRAND COPY CHECK</h2>
+                <div class="work-record__lede">Review campaign copy before release without flattening the voice that makes the brand distinct.</div>
+              </div>
+              <dl class="work-meta-grid">
+                <div><dt>OUTCOME</dt><dd>Channel-ready copy the team can publish with confidence.</dd></div>
+                <div><dt>QUALITY BAR</dt><dd>On-brand, claim-safe and appropriate to audience and channel.</dd></div>
+                <div><dt>OUTCOME OWNER</dt><dd>Creative + Brand</dd></div>
+                <div><dt>HUMAN POSITION</dt><dd>Above the loop for taste; at the edge for exceptions.</dd></div>
+              </dl>
+              <div class="work-record__status"><span>PROOF / <strong>REAL CASES</strong></span><span>DELEGATION / <strong>SHARED</strong></span><span>RENEWAL / <strong>WHEN THE FRONTIER MOVES</strong></span></div>
+            </article>
+
+            <aside class="work-question cut-panel">
+              <div class="work-question__top">NAVIGATION QUESTION / 01</div>
+              <div class="work-question__prompt">What intelligence does this work need to clear the bar?</div>
+              <div>
+                <div style="margin-bottom:9px">SEMANTIC RANGE / DECOMPOSE</div>
+                <div class="work-question__scale" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+              </div>
+            </aside>
+          </div>
+          <div class="view-label"><strong>SCROLL OUT</strong> TO DECOMPOSE THE WORK INTO ITS INTELLIGENCE CONFIGURATION</div>
+        </section>
+
+        <section class="view" data-view="1" aria-label="Intelligence configuration">
+          <div class="config-stage">
+            <svg class="config-wires" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
+              <path class="wire-active" d="M 248 282 H 302 V 81 H 341" />
+              <path class="wire-base" d="M 248 282 H 302 V 81 H 621" />
+              <path class="wire-active" d="M 248 282 H 302 V 261 H 341" />
+              <path class="wire-base" d="M 248 282 H 302 V 261 H 621" />
+              <path class="wire-base" d="M 248 282 H 302 V 441 H 341" />
+              <path class="wire-active" d="M 248 282 H 302 V 441 H 621" />
+              <path class="wire-red" d="M 886 81 H 910 V 480" />
+              <rect class="wire-junction" x="297" y="277" width="10" height="10" transform="rotate(45 302 282)" />
+              <rect class="wire-junction" x="337" y="77" width="8" height="8" transform="rotate(45 341 81)" />
+              <rect class="wire-junction" x="337" y="257" width="8" height="8" transform="rotate(45 341 261)" />
+              <rect class="wire-junction" x="617" y="437" width="8" height="8" transform="rotate(45 621 441)" />
+            </svg>
+
+            <article class="config-work cut-panel">
+              <div class="config-work__code">W-017 / UNIT OF WORK</div>
+              <h3>BRAND COPY CHECK</h3>
+              <p>The work stays stable while the intelligence around it can change.</p>
+              <div class="config-work__bar">BAR / <strong>ON-BRAND · CLAIM-SAFE · CHANNEL-READY</strong></div>
+            </article>
+
+            <article class="module-card cut-panel" data-slot="person">
+              <div class="module-role">SETS THE BAR</div>
+              <div class="module-code">H / PERSON</div>
+              <div class="module-value">CREATIVE LEAD</div>
+              <div class="module-note">Final taste, exceptions and accountability.</div>
+            </article>
+            <article class="module-card cut-panel" data-slot="model">
+              <div class="module-role">GENERAL CAPABILITY</div>
+              <div class="module-code">M / MODEL</div>
+              <div class="module-value">CAPABLE GENERAL MODEL</div>
+              <div class="module-note">Generation, comparison and review.</div>
+            </article>
+            <article class="module-card cut-panel" data-slot="skill">
+              <div class="module-role">ENCODED JUDGMENT</div>
+              <div class="module-code">S / SKILL</div>
+              <div class="module-value">BRAND COPY / V3</div>
+              <div class="module-note">Voice, examples, claim gates and what good looks like.</div>
+            </article>
+            <article class="module-card cut-panel" data-slot="context">
+              <div class="module-role">LOCAL GROUNDING</div>
+              <div class="module-code">C / CONTEXT</div>
+              <div class="module-value">CAMPAIGN + CHANNEL</div>
+              <div class="module-note">Audience, format, source copy and current brief.</div>
+            </article>
+            <article class="module-card cut-panel" data-slot="execution">
+              <div class="module-role">RETRIEVE + CHECK</div>
+              <div class="module-code">X / TOOLS</div>
+              <div class="module-value">CLAIMS REGISTRY</div>
+              <div class="module-note">Authoritative claims and source trace.</div>
+            </article>
+            <article class="module-card cut-panel" data-slot="eval">
+              <div class="module-role">PROOF</div>
+              <div class="module-code">E / EVALS</div>
+              <div class="module-value">REAL CASE LIBRARY</div>
+              <div class="module-note">Accepted examples, hard cases and regressions.</div>
+            </article>
+
+            <aside class="config-contract">
+              <h4>OPERATING CONTRACT</h4>
+              <div class="contract-step"><strong>PERSON-LED</strong>AI supports; person carries the judgment.</div>
+              <div class="contract-step active"><strong>SHARED</strong>AI handles the repeatable middle; person owns consequential calls.</div>
+              <div class="contract-step"><strong>SYSTEM-LED</strong>Stable work runs; person handles exceptions.</div>
+              <div class="contract-step"><strong>OWNER</strong>Creative + Brand</div>
+            </aside>
+          </div>
+          <div class="view-label"><strong>SCROLL OUT</strong> TO TRACE WHICH PARTS OF THIS CONFIGURATION RECUR ACROSS TEAMS</div>
+        </section>
+
+        <section class="view" data-view="2" aria-label="Shared capability layer">
+          <div class="shared-stage">
+            <svg class="shared-svg" viewBox="0 0 1000 590" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Skills connected to five shared capability engines">
+              <text x="22" y="23" class="shared-header accent">SHARED CAPABILITY / SUBSTRATE TRACE</text>
+              <text x="978" y="23" class="shared-header" text-anchor="end">47 SKILLS / 14 TEAMS / 05 ENGINES</text>
+
+              <!-- Engine rails -->
+              <g>
+                <path class="engine-rail" d="M 205 202 H 968" />
+                <path class="engine-rail active" d="M 205 282 H 968" />
+                <path class="engine-rail active" d="M 205 362 H 968" />
+                <path class="engine-rail active" d="M 205 442 H 968" />
+                <path class="engine-rail" d="M 205 522 H 968" />
+              </g>
+
+              <!-- Engine labels -->
+              <g transform="translate(22 174)">
+                <path class="engine-box" d="M0 0 H168 L180 12 V56 H12 L0 44 Z" />
+                <text x="12" y="17" class="engine-code">PATTERN</text><text x="151" y="18" class="engine-count" text-anchor="end">14</text>
+                <text x="12" y="35" class="engine-desc">STRUCTURED OUTPUTS</text><text x="12" y="47" class="engine-desc">FROM RECURRING INPUTS</text>
+              </g>
+              <g transform="translate(22 254)">
+                <path class="engine-box voice" d="M0 0 H168 L180 12 V56 H12 L0 44 Z" />
+                <text x="12" y="17" class="engine-code">JUDGMENT</text><text x="151" y="18" class="engine-count" text-anchor="end">12</text>
+                <text x="12" y="35" class="engine-desc">SENIOR CALLS</text><text x="12" y="47" class="engine-desc">ACROSS VARIED INPUTS</text>
+              </g>
+              <g transform="translate(22 334)">
+                <path class="engine-box voice" d="M0 0 H168 L180 12 V56 H12 L0 44 Z" />
+                <text x="12" y="17" class="engine-code">VOICE</text><text x="151" y="18" class="engine-count" text-anchor="end">07</text>
+                <text x="12" y="35" class="engine-desc">WRITES IN A SPECIFIC</text><text x="12" y="47" class="engine-desc">LOOP VOICE</text>
+              </g>
+              <g transform="translate(22 414)">
+                <path class="engine-box voice" d="M0 0 H168 L180 12 V56 H12 L0 44 Z" />
+                <text x="12" y="17" class="engine-code">VALIDATION</text><text x="151" y="18" class="engine-count" text-anchor="end">09</text>
+                <text x="12" y="35" class="engine-desc">CHECKS THE RESULT</text><text x="12" y="47" class="engine-desc">AGAINST REAL CASES</text>
+              </g>
+              <g transform="translate(22 494)">
+                <path class="engine-box" d="M0 0 H168 L180 12 V56 H12 L0 44 Z" />
+                <text x="12" y="17" class="engine-code">STAKEHOLDER</text><text x="151" y="18" class="engine-count" text-anchor="end">05</text>
+                <text x="12" y="35" class="engine-desc">FRAMES INFORMATION</text><text x="12" y="47" class="engine-desc">FOR A SPECIFIC READER</text>
+              </g>
+
+              <!-- Skill cards -->
+              <g transform="translate(226 66)">
+                <path class="skill-box selected" d="M0 0 H118 L130 12 V57 H12 L0 45 Z" />
+                <text x="11" y="22" class="skill-title">BRAND COPY</text><text x="11" y="34" class="skill-title">CHECK</text><text x="11" y="49" class="skill-team">STUDIO / TARGET</text>
+              </g>
+              <g transform="translate(372 66)">
+                <path class="skill-box" d="M0 0 H118 L130 12 V57 H12 L0 45 Z" />
+                <text x="11" y="22" class="skill-title">NDA PRE-CHECK</text><text x="11" y="49" class="skill-team">LEGAL</text>
+              </g>
+              <g transform="translate(518 66)">
+                <path class="skill-box" d="M0 0 H118 L130 12 V57 H12 L0 45 Z" />
+                <text x="11" y="20" class="skill-title">EMPLOYER</text><text x="11" y="32" class="skill-title">BRANDING TOV</text><text x="11" y="49" class="skill-team">TALENT ACQUISITION</text>
+              </g>
+              <g transform="translate(664 66)">
+                <path class="skill-box" d="M0 0 H118 L130 12 V57 H12 L0 45 Z" />
+                <text x="11" y="20" class="skill-title">VARIANCE</text><text x="11" y="32" class="skill-title">COMMENTARY</text><text x="11" y="49" class="skill-team">FINANCE</text>
+              </g>
+              <g transform="translate(810 66)">
+                <path class="skill-box" d="M0 0 H118 L130 12 V57 H12 L0 45 Z" />
+                <text x="11" y="22" class="skill-title">DAILY BRIEF</text><text x="11" y="49" class="skill-team">CUSTOMER OPS</text>
+              </g>
+
+              <!-- Vertical traces -->
+              <path class="skill-trace primary" d="M291 123 V442" />
+              <path class="skill-trace secondary" d="M437 123 V442" />
+              <path class="skill-trace" d="M583 123 V522" />
+              <path class="skill-trace" d="M729 123 V522" />
+              <path class="skill-trace" d="M875 123 V522" />
+
+              <!-- Junctions: selected work -->
+              <rect x="285" y="276" width="12" height="12" class="junction secondary" transform="rotate(45 291 282)" />
+              <rect x="285" y="356" width="12" height="12" class="junction active" transform="rotate(45 291 362)" />
+              <rect x="285" y="436" width="12" height="12" class="junction secondary" transform="rotate(45 291 442)" />
+              <!-- NDA -->
+              <rect x="432" y="277" width="10" height="10" class="junction" transform="rotate(45 437 282)" />
+              <rect x="432" y="437" width="10" height="10" class="junction" transform="rotate(45 437 442)" />
+              <!-- Employer branding -->
+              <rect x="578" y="357" width="10" height="10" class="junction" transform="rotate(45 583 362)" />
+              <rect x="578" y="517" width="10" height="10" class="junction" transform="rotate(45 583 522)" />
+              <!-- Variance -->
+              <rect x="724" y="197" width="10" height="10" class="junction" transform="rotate(45 729 202)" />
+              <rect x="724" y="517" width="10" height="10" class="junction" transform="rotate(45 729 522)" />
+              <!-- Daily brief -->
+              <rect x="870" y="197" width="10" height="10" class="junction" transform="rotate(45 875 202)" />
+              <rect x="870" y="517" width="10" height="10" class="junction" transform="rotate(45 875 522)" />
+
+              <text x="291" y="149" class="shared-header accent" text-anchor="middle">PRIMARY / VOICE</text>
+              <text x="291" y="161" class="shared-header" text-anchor="middle">SUPPORT / JUDGMENT + VALIDATION</text>
+            </svg>
+            <aside class="trace-note cut-panel"><strong>TRANSFER / NOT CENTRALISATION</strong>One encoded pattern can travel across teams. The domain owner still decides what good means and keeps the standard current.</aside>
+          </div>
+          <div class="view-label"><strong>SCROLL OUT</strong> TO READ OWNERSHIP, CAPABILITY AND CONSUMPTION ACROSS THE ESTATE</div>
+        </section>
+
+        <section class="view" data-view="3" aria-label="Company-wide estate">
+          <div class="estate-stage">
+            <div class="estate-summary" id="estateSummary"><strong>ESTATE / TEAM OWNERSHIP</strong><br>47 SKILLS · 14 TEAMS · 05 SHARED ENGINES</div>
+            <div class="lens-control" aria-label="Estate lens">
+              <button class="active" data-lens="team">BY TEAM</button>
+              <button data-lens="allocation">BY ALLOCATION</button>
+            </div>
+
+            <div class="estate-lens active" data-estate-lens="team">
+              <div class="team-grid" id="teamGrid"></div>
+            </div>
+
+            <div class="estate-lens" data-estate-lens="allocation">
+              <div class="allocation-intro">
+                <div class="allocation-principle"><strong>TOKENS ARE THE METER.</strong> THE CONFIGURATION EXPLAINS WHY THE INTELLIGENCE WAS NEEDED.</div>
+                <div class="allocation-disclaimer">ILLUSTRATIVE RELATIVE LOAD / CONNECT LIVE TOKEN TELEMETRY FOR PRODUCTION.</div>
+              </div>
+              <div class="allocation-ledger" id="allocationLedger"></div>
+            </div>
+          </div>
+          <div class="view-label"><strong>L</strong> TO CHANGE THE LENS · USAGE IS A DIAGNOSTIC, NOT THE UNIT OF VALUE</div>
+        </section>
+      </div>
+
+      <footer class="field-footer">
+        <span>47 SKILLS · 14 TEAMS · 05 SHARED ENGINES · 01 SELECTED WORK RECORD</span>
+        <span><strong>WORK NEVER DISAPPEARS</strong> · SCROLL RANGE · L LENS · T THEME</span>
+      </footer>
+    </section>
+  </main>
+
+  <div class="brand-mark">THOUGHT<br><i>+</i>FORM</div>
+  <button class="theme-chip" id="themeChip" aria-label="Toggle theme" title="Toggle theme">T</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const field = document.getElementById("field");
+  const consoleStatus = document.getElementById("consoleStatus");
+  const rangeButtons = Array.from(document.querySelectorAll(".range-button"));
+  const views = Array.from(document.querySelectorAll(".view"));
+  const lensButtons = Array.from(document.querySelectorAll(".lens-control button[data-lens]"));
+  const estateLenses = Array.from(document.querySelectorAll("[data-estate-lens]"));
+  const estateSummary = document.getElementById("estateSummary");
+  const params = new URLSearchParams(location.search);
+
+  const rangeNames = ["WORK", "CONFIGURATION", "SHARED LAYER", "ESTATE"];
+  const rangeQuestions = ["WHAT MUST LAND", "WHAT RUNS IT", "WHAT TRAVELS", "WHERE IT GOES"];
+  const state = {
+    range: Math.max(0, Math.min(3, Number(params.get("range") || 0))),
+    lens: params.get("lens") === "allocation" ? "allocation" : "team",
+    wheelAccum: 0,
+    wheelLock: false,
+    autoplay: params.get("autoplay") !== "0" && !params.has("range"),
+    autoplayCancelled: false,
+    timers: []
+  };
+
+  const teams = [
+    { name: "STUDIO", count: 7, sample: "Loop Creative Strategy · GenAI Prompting", span: "2 / span 2", selected: true },
+    { name: "PRODUCT DESIGN & UX", count: 5, sample: "Loop Packaging System · UX Foundations Evaluation", span: "2 / span 1" },
+    { name: "LEGAL", count: 4, sample: "NDA Pre-Check · Legal Risk Methodology", span: "1 / span 1" },
+    { name: "FINANCE & ACCOUNTING", count: 4, sample: "Variance Commentary · MEC Tracker", span: "1 / span 1" },
+    { name: "WAREHOUSING & CUSTOMER OPS", count: 4, sample: "Daily Brief · BRR Generator", span: "2 / span 1" },
+    { name: "BRAND & PARTNERSHIPS", count: 4, sample: "Partnership Inbox Filter", span: "1 / span 1" },
+    { name: "TALENT ACQUISITION", count: 3, sample: "Employer Branding TOV · Interview Debrief", span: "1 / span 1" },
+    { name: "PROGRAM MANAGEMENT & PR", count: 3, sample: "Program Status Updates · Risk Management", span: "1 / span 1" },
+    { name: "PEOPLE OPS", count: 3, sample: "Onboarding & POPs Process", span: "1 / span 1" },
+    { name: "STRATEGIC INSIGHTS", count: 3, sample: "Trend Scraper · Survey Synthesis", span: "1 / span 1" },
+    { name: "MANUFACTURING PROGRAMS", count: 3, sample: "Lead Time Calculator · Supplier QA Audit", span: "1 / span 1" },
+    { name: "PRODUCT ENGINEERING", count: 2, sample: "VSME Sustainability Report", span: "1 / span 1" },
+    { name: "PRODUCT MANAGEMENT", count: 1, sample: "Product Ideation", span: "1 / span 1" },
+    { name: "PERFORMANCE", count: 1, sample: "Product Review Analysis", span: "1 / span 1" }
+  ];
+
+  const allocationRows = [
+    { work: "BRAND COPY CHECK", team: "STUDIO", tier: "EVERYDAY", load: 46, loadLabel: "MID", why: "VOICE + CLAIMS + CHANNEL CONTEXT", selected: true },
+    { work: "NDA PRE-CHECK", team: "LEGAL", tier: "DEEP", load: 84, loadLabel: "HIGH", why: "NUANCED RISK / NON-STANDARD CLAUSES" },
+    { work: "FIRMWARE RELEASE AUDIT", team: "PRODUCT ENGINEERING", tier: "FRONTIER", load: 94, loadLabel: "HIGH", why: "REPO + LOGS / HARDWARE COMPLEXITY" },
+    { work: "INVOICE CHECK", team: "FINANCE & ACCOUNTING", tier: "FAST", load: 24, loadLabel: "LOW", why: "BOUNDED MATCHING / ESCALATE EXCEPTIONS" },
+    { work: "DAILY BRIEF", team: "CUSTOMER OPS", tier: "FAST", load: 29, loadLabel: "LOW", why: "RECURRING INPUT / STRUCTURED OUTPUT" },
+    { work: "PRODUCT IDEATION", team: "PRODUCT MANAGEMENT", tier: "DEEP", load: 59, loadLabel: "MID", why: "AMBIGUITY / SENIOR JUDGMENT" }
+  ];
+
+  function buildTeamGrid() {
+    const grid = document.getElementById("teamGrid");
+    grid.innerHTML = teams.map((team, index) => {
+      const [colSpan, rowSpan] = team.span.split(" / span ");
+      return `<article class="team-tile${team.selected ? " selected" : ""}" style="grid-column:span ${colSpan};grid-row:span ${rowSpan}">
+        <div class="team-name">${team.name}</div>
+        <div class="team-count">${String(team.count).padStart(2, "0")} SKILLS</div>
+        <div class="team-sample">${team.sample}</div>
+        <div class="team-index">T-${String(index + 1).padStart(2, "0")}</div>
+      </article>`;
+    }).join("");
+  }
+
+  function buildAllocationLedger() {
+    const ledger = document.getElementById("allocationLedger");
+    const header = `<div class="ledger-row header"><div>WORK</div><div>TEAM</div><div>CONFIG</div><div>RELATIVE LOAD</div><div>WHY THIS INTELLIGENCE</div></div>`;
+    const rows = allocationRows.map(row => `<div class="ledger-row data${row.selected ? " selected" : ""}">
+      <div class="ledger-work">${row.work}</div>
+      <div>${row.team}</div>
+      <div class="ledger-tier">${row.tier}</div>
+      <div class="load-cell"><div class="load-track"><i style="--load:${row.load}%"></i></div><span>${row.loadLabel}</span></div>
+      <div class="ledger-why">${row.why}</div>
+    </div>`).join("");
+    ledger.innerHTML = header + rows;
+  }
+
+  function flash() {
+    field.classList.remove("transitioning");
+    void field.offsetWidth;
+    field.classList.add("transitioning");
+    setTimeout(() => field.classList.remove("transitioning"), 900);
+  }
+
+  function updateStatus() {
+    consoleStatus.innerHTML = `RANGE <strong>0${state.range + 1} / ${rangeNames[state.range]}</strong><br>` +
+      `TARGET <strong>W-017 / BRAND COPY CHECK</strong><br>` +
+      (state.range === 3 ? `LENS <strong>${state.lens === "team" ? "TEAM OWNERSHIP" : "ALLOCATION"}</strong>` : `QUESTION <strong>${rangeQuestions[state.range]}</strong>`);
+  }
+
+  function updateView(options) {
+    rangeButtons.forEach((button, index) => button.classList.toggle("active", index === state.range));
+    views.forEach((view, index) => view.classList.toggle("active", index === state.range));
+    field.dataset.range = String(state.range);
+    updateStatus();
+    updateLens();
+    if (!(options && options.noFlash)) flash();
+  }
+
+  function updateLens() {
+    lensButtons.forEach(button => button.classList.toggle("active", button.dataset.lens === state.lens));
+    estateLenses.forEach(lens => lens.classList.toggle("active", lens.dataset.estateLens === state.lens));
+    field.dataset.lens = state.lens;
+    if (state.lens === "team") {
+      estateSummary.innerHTML = `<strong>ESTATE / TEAM OWNERSHIP</strong><br>47 SKILLS · 14 TEAMS · 05 SHARED ENGINES`;
+    } else {
+      estateSummary.innerHTML = `<strong>ESTATE / INTELLIGENCE ALLOCATION</strong><br>CAPABILITY + RELATIVE LOAD + RATIONALE`;
+    }
+    updateStatus();
+  }
+
+  function setRange(next, options) {
+    const value = Math.max(0, Math.min(3, Number(next)));
+    if (!(options && options.auto)) cancelAutoplay();
+    if (value === state.range) return;
+    state.range = value;
+    updateView();
+  }
+
+  function setLens(next, options) {
+    if (!(options && options.auto)) cancelAutoplay();
+    state.lens = next === "allocation" ? "allocation" : "team";
+    if (state.range !== 3) state.range = 3;
+    flash();
+    rangeButtons.forEach((button, index) => button.classList.toggle("active", index === state.range));
+    views.forEach((view, index) => view.classList.toggle("active", index === state.range));
+    updateLens();
+  }
+
+  function cancelAutoplay() {
+    if (!state.autoplay || state.autoplayCancelled) return;
+    state.autoplayCancelled = true;
+    state.timers.forEach(clearTimeout);
+    state.timers = [];
+    field.classList.remove("auto-running");
+  }
+
+  function autoAfter(delay, fn) {
+    const timer = setTimeout(() => { if (!state.autoplayCancelled) fn(); }, delay);
+    state.timers.push(timer);
+  }
+
+  function runAutoplay() {
+    if (!state.autoplay || state.autoplayCancelled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    field.classList.add("auto-running");
+    autoAfter(3200, () => setRange(1, { auto: true }));
+    autoAfter(6500, () => setRange(2, { auto: true }));
+    autoAfter(9800, () => setRange(3, { auto: true }));
+    autoAfter(12400, () => setLens("allocation", { auto: true }));
+    autoAfter(15300, () => field.classList.remove("auto-running"));
+  }
+
+  rangeButtons.forEach(button => button.addEventListener("click", () => setRange(button.dataset.range)));
+  lensButtons.forEach(button => button.addEventListener("click", () => setLens(button.dataset.lens)));
+
+  field.addEventListener("wheel", event => {
+    event.preventDefault();
+    cancelAutoplay();
+    if (state.wheelLock) return;
+    state.wheelAccum += event.deltaY;
+    if (Math.abs(state.wheelAccum) < 70) return;
+    const direction = state.wheelAccum > 0 ? 1 : -1;
+    state.wheelAccum = 0;
+    state.wheelLock = true;
+    setRange(state.range + direction);
+    setTimeout(() => { state.wheelLock = false; }, 620);
+  }, { passive: false });
+
+  document.addEventListener("keydown", event => {
+    cancelAutoplay();
+    if (/^[1-4]$/.test(event.key)) setRange(Number(event.key) - 1);
+    if (event.key === "+" || event.key === "=") setRange(state.range - 1);
+    if (event.key === "-" || event.key === "_") setRange(state.range + 1);
+    if (event.key.toLowerCase() === "l") setLens(state.lens === "team" ? "allocation" : "team");
+    if (event.key.toLowerCase() === "t") document.getElementById("themeChip").click();
+  });
+
+  ["pointerdown", "pointermove", "touchstart"].forEach(type => field.addEventListener(type, cancelAutoplay, { passive: true, once: type === "pointermove" }));
+
+  document.getElementById("themeChip").addEventListener("click", () => {
+    cancelAutoplay();
+    document.body.dataset.theme = document.body.dataset.theme === "paper" ? "terminal" : "paper";
+  });
+
+  buildTeamGrid();
+  buildAllocationLedger();
+  updateView({ noFlash: true });
+  if (state.autoplay) state.timers.push(setTimeout(runAutoplay, 1200));
+})();
+</script>
+</body>
+</html>
