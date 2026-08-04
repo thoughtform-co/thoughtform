@@ -501,8 +501,22 @@ html[data-theme="light"] .svc-plate__band-im,
 html[data-theme="light"] .voidwalker__orbit__portrait img {
   filter: sepia(0.55) saturate(0.88) brightness(1.1) contrast(0.9);
 }
-html[data-theme="light"] .fl-tooltab__name {
+/* The two evidence switchers — the tool gallery's quarters and the film
+   plate's two-entry rail (2026-08-04) — share one grammar, so they share the
+   inactive-label lift. */
+html[data-theme="light"] .fl-tooltab__name,
+html[data-theme="light"] .fl-filmtab__name {
   color: rgba(var(--dawn-rgb), 0.65);
+}
+/* The film rail's ordinal is gold chrome at α 0.45, which is most of nothing
+   as ink-adjacent gold on parchment. Gold tops out near 3.2:1 here even at
+   full, so the ordinal takes a lift and the ACTIVE entry runs at full — the
+   underline is the wayfinding mark, this only keeps its label present. */
+html[data-theme="light"] .fl-filmtab__ord {
+  color: rgba(var(--gold-rgb), 0.72);
+}
+html[data-theme="light"] .fl-filmtab[data-on] .fl-filmtab__ord {
+  color: var(--gold);
 }
 
 /* Gold tops out near 3.2:1 on parchment even at full strength, so the

@@ -28,14 +28,21 @@ import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from 
  *   ("Briefing Agent"), because a visitor cannot be expected to know the
  *   codenames; the codename rides above as chrome with the ordinal. Owner:
  *   "don't just use the internal naming."
- * · THE SHOT IS ARCHITECTURE, NOT A THUMBNAIL. It fills its half of the
- *   plate to the box edges (cover, top-anchored — dashboards lead with
- *   their header), and the walkthrough affordance is a full-width bar FUSED
- *   to its bottom edge rather than a pill floated over it. The whole frame
- *   is one button: a ~350x200 target instead of a 130x26 one.
- * · ONE GRID. The body splits 50/50 with no gap and the tabs are quarters of
- *   the same rail. The proof claims now live in the casefile's left register,
- *   leaving this instrument to use the full panel height.
+ * · THE SHOT IS ARCHITECTURE, NOT A THUMBNAIL. It bleeds to the column's
+ *   edges (cover, top-anchored — dashboards lead with their header), and the
+ *   walkthrough affordance is a full-width bar FUSED to its bottom edge
+ *   rather than a pill floated over it. The whole frame is one button: a
+ *   ~350x200 target instead of a 130x26 one.
+ * · THE CROP IS BOUNDED (owner, 2026-08-04). The image used to take the whole
+ *   column height, which above the 760px rung is a tall narrow window over a
+ *   wide screenshot — it cropped away most of every capture. It now carries a
+ *   16:10 window (`.fl-shot__img`), so the crop is a deliberate top strip;
+ *   `contain` stays rejected ("plastered on"). The height the bound gives back
+ *   goes to the walkthrough bar and, at tall viewports, the surfaces line.
+ * · ONE GRID. The body splits 0.9/1.1 with no gap — the shot side takes the
+ *   surplus, because the brief column is type and the shot is a picture — and
+ *   the tabs are quarters of the same rail. The proof claims now live in the
+ *   casefile's left register, leaving this instrument the full panel height.
  *
  * CONTROLLED, NOT SELF-CONTAINED: `activeIdx` is owned by `TrackPanel`. The
  * panel is keyed per track upstream, so the gallery resets to tool 01 on a
@@ -135,45 +142,56 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
           </span>
         </div>
 
-        {active.walkthrough ? (
-          <button
-            type="button"
-            className="fl-shot"
-            aria-haspopup="dialog"
-            aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}`}
-            onClick={(e) => {
-              returnFocusRef.current = e.currentTarget;
-              setWatching(true);
-            }}
-          >
-            <Image
-              key={active.id}
-              className="fl-shot__img"
-              src={active.image.src}
-              alt={active.image.alt}
-              width={active.image.width}
-              height={active.image.height}
-              sizes="480px"
-            />
-            <span className="fl-shot__bar" aria-hidden="true">
-              <i className="fl-shot__cue" />
-              Watch walkthrough
-              <b>{active.walkthrough.duration}</b>
-            </span>
-          </button>
-        ) : (
-          <div className="fl-shot" data-static>
-            <Image
-              key={active.id}
-              className="fl-shot__img"
-              src={active.image.src}
-              alt={active.image.alt}
-              width={active.image.width}
-              height={active.image.height}
-              sizes="480px"
-            />
-          </div>
-        )}
+        <div className="fl-shotcol">
+          {active.walkthrough ? (
+            <button
+              type="button"
+              className="fl-shot"
+              aria-haspopup="dialog"
+              aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}`}
+              onClick={(e) => {
+                returnFocusRef.current = e.currentTarget;
+                setWatching(true);
+              }}
+            >
+              <Image
+                key={active.id}
+                className="fl-shot__img"
+                src={active.image.src}
+                alt={active.image.alt}
+                width={active.image.width}
+                height={active.image.height}
+                sizes="480px"
+              />
+              <span className="fl-shot__bar" aria-hidden="true">
+                <i className="fl-shot__cue" />
+                Watch walkthrough
+                <b>{active.walkthrough.duration}</b>
+              </span>
+            </button>
+          ) : (
+            <div className="fl-shot" data-static>
+              <Image
+                key={active.id}
+                className="fl-shot__img"
+                src={active.image.src}
+                alt={active.image.alt}
+                width={active.image.width}
+                height={active.image.height}
+                sizes="480px"
+              />
+            </div>
+          )}
+          {/* THE SURFACES LINE — where the tool actually runs, straight off
+              `ProjectCase.surfaces`. It exists because the bounded shot
+              leaves real height under the walkthrough bar (160px at 720p,
+              450px at 2017x1269), and it sits on the column's bottom rail
+              opposite the identity column's meta line. Printed OUTSIDE the
+              button on purpose: inside, it would either be swallowed by the
+              control's accessible name or have to be `aria-hidden`, and this
+              is content. */}
+          <p className="fl-shotcap">{active.surfaces.join(" · ")}</p>
+        </div>
       </div>
 
       {watching && active.walkthrough ? (

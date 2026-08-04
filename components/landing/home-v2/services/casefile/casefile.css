@@ -2130,13 +2130,21 @@
   color: var(--dawn);
 }
 
-/* Body: identity column | screenshot, split down the middle, NO gap — the
-   shot frame's own left border is the seam. */
+/* Body: identity column | screenshot, NO gap — the shot column's own left
+   border is the seam.
+
+   0.9 / 1.1, NOT 50/50 (owner, 2026-08-04). The two halves are not the same
+   kind of thing: the left is type, which reads fine at ~40 characters a line,
+   and the right is a wide UI capture, which loses information at every pixel
+   taken off its width. The surplus goes to the picture. `minmax(0, …)` on
+   both tracks is load-bearing — a `1fr` track has an `auto` minimum, and the
+   shot's intrinsic width would blow the grid open instead of the column
+   bounding the image. */
 .fl-toolbody {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
 }
 
 .fl-toolid {
@@ -2167,8 +2175,15 @@
 }
 /* The `shift` sentence — the abstract of what the tool changed. Reads at
    the brief column's own size; it appears HERE and nowhere else in the
-   panel. The clamp is a belt for a longer future sentence, sized so the
-   longest today (185 chars) fits uncut at 1440 and above. */
+   panel.
+   SIX LINES, not five (2026-08-04). The clamp is a belt against a longer
+   future sentence, and it has to clear the column the rebalance leaves: the
+   longest sentence today (185 chars) landed on EXACTLY five lines at
+   1440×800 and 2017×1269 in a 0.9fr column, i.e. one character from silent
+   truncation. The sixth line costs nothing — after the window bound this
+   column has 150px+ to spare at every reference — and it is the honest lever
+   here, because taking the width back off the shot is what this pass exists
+   to stop. */
 .fl-toolid__desc {
   margin: 0;
   font-size: var(--fl-copy);
@@ -2176,8 +2191,8 @@
   color: rgba(var(--dawn-rgb), 0.68);
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
-  line-clamp: 5;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
   overflow: hidden;
 }
 .fl-toolid__meta {
@@ -2192,12 +2207,28 @@
   text-overflow: ellipsis;
 }
 
-/* The screenshot half. ONE BUTTON — image and watch bar fused into a frame
-   that bleeds to the viz box edges (top under the tabs, right and bottom to
-   the border). Cover, top-anchored: dashboards lead with their header, and
-   a letterboxed `contain` was the "plastered on" read. The whole frame is
-   the walkthrough trigger — a ~350×200 target instead of a floating
-   130×26 pill. */
+/* The screenshot half. The COLUMN owns the seam border; the button inside it
+   is image + watch bar, fused, and it keeps the OPAQUE ground to itself.
+   THE COLUMN'S OWN GROUND STAYS THE PLATE'S GLASS — with the window bounded
+   there is real height under the bar at 2017×1269, and near-black over that
+   height reads as a hole where the same air on the identity column reads as
+   air (that column has run `margin-top: auto` on its meta line since U9).
+   Same grammar both sides: content at the top, a dim mono line on the bottom
+   rail, the plate's bed between. */
+.fl-shotcol {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid rgba(var(--gold-rgb), 0.22);
+}
+
+/* ONE BUTTON — image and watch bar fused into a frame that bleeds to the
+   column's edges (top under the tabs, right to the border). Cover,
+   top-anchored: dashboards lead with their header, and a letterboxed
+   `contain` was the "plastered on" read. The whole frame is the walkthrough
+   trigger — a ~350×200 target instead of a floating 130×26 pill. */
 .fl-shot {
   appearance: none;
   margin: 0;
@@ -2208,10 +2239,10 @@
   pointer-events: auto;
   min-width: 0;
   min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-left: 1px solid rgba(var(--gold-rgb), 0.22);
   text-align: left;
 }
 .fl-shot[data-static] {
@@ -2222,20 +2253,30 @@
   outline: 1px solid var(--gold);
   outline-offset: -2px;
 }
+/* THE CROP IS A BOUNDED TOP STRIP (owner, 2026-08-04). `flex: 1 1 0` let the
+   image take the whole column height, and above the 760px rung that is a tall
+   narrow window over a 16:10 screenshot — `cover` then cropped away most of
+   every capture. `cover` and the top anchor STAY (a `contain` letterbox was
+   ruled out as "plastered on"); the window is what gets bounded, so the crop
+   is the header strip a dashboard leads with and nothing more. The height
+   this gives back goes to the watch bar and the surfaces line below. */
 .fl-shot__img {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 0 0 auto;
   width: 100%;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
   object-position: center top;
   display: block;
 }
+/* The bar takes the first share of the height the bounded window gives back:
+   its rule stays fused to the image's bottom edge and the band around the
+   label breathes with the panel instead of the image growing into a crop. */
 .fl-shot__bar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px var(--fl-shot-px);
+  padding: clamp(9px, 1.5svh, 16px) var(--fl-shot-px);
   border-top: 1px solid rgba(var(--gold-rgb), 0.3);
   background: rgba(var(--void-rgb), 0.88);
   font-family: var(--fl-mono);
@@ -2263,6 +2304,33 @@
   border-style: solid;
   border-width: 4px 0 4px 7px;
   border-color: transparent transparent transparent currentColor;
+}
+
+/* SURFACES — where the tool actually runs, printed from
+   `ProjectCase.surfaces` and seated on the column's BOTTOM RAIL
+   (`margin-top: auto`), the mirror of `.fl-toolid__meta` on the identity
+   column. It exists because bounding the window frees 160–450px under the
+   watch bar, and a column anchored at both ends reads as composed where the
+   same column trailing off reads as unfinished. Two lines is the ceiling —
+   the longest roster is six entries, which is one line at 1440 and two at
+   1280. Chrome-grade mono at the 10px control floor: this is metadata, not
+   the copy the brief column owns. */
+.fl-shotcap {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  margin: auto 0 0;
+  /* Bottom padding matches `.fl-toolid`'s, so this line and the identity
+     column's meta line share one bottom rail. */
+  padding: 10px var(--fl-shot-px) clamp(10px, 1.6svh, 14px);
+  font-family: var(--fl-mono);
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fl-ink-dim);
+  overflow: hidden;
 }
 
 /* ── Capability tiles (the tool-gallery foot) ─────────────────────────── */
@@ -2418,13 +2486,19 @@
   }
 }
 /* Step 3 (=<760h, the 720p laptop): the foot drops to ~110px, so the
-   cap descriptions hold one line — and the identity column gets a WIDER
-   text share (58/42), because the 185-char shift needs ~44 chars a line to
-   hold inside its 5-line clamp. The shot narrows rather than the sentence
-   truncating. */
+   cap descriptions hold one line — and the identity column still gets a
+   wider text share than the 0.9/1.1 base, because 720p is where the type is
+   largest relative to its column and the shift sentence has the least room.
+   RETUNED FROM 1.4fr/1fr TO PARITY (2026-08-04). The old rung took the
+   shot down to 254px at 1280×720 — a 158px window, which is the "undersized"
+   half of the same complaint the bounded crop fixes. 50/50 keeps the
+   sentence inside its clamp (38 characters a line, measured) and hands the
+   shot back 51px. The ruling that the shot narrows rather than the sentence
+   truncating still holds; the sentence just needs less of a subsidy now that
+   it has a sixth line. */
 @media (max-height: 760px) {
   .fl-toolbody {
-    grid-template-columns: 1.4fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .fl-toolid {
     padding-top: 8px;
@@ -2562,54 +2636,181 @@
   object-fit: cover;
 }
 
-/* ══ Films — poster-first, the element arrives on click ════════════════ */
+/* ══ Films — ONE film at panel scale, poster-first ══════════════════════
+   THE PLATE WAS TWO STAMPS IN A TALL BOX (owner, 2026-08-04). Both posters
+   side by side resolved to ~390x220 each inside a ~500px-tall panel, and the
+   owner read that frame/content mismatch as "cropped". The panel now spends
+   its box on ONE film — measured 565×318 at 1280×720, 640×360 at 1440×800 and
+   814×458 at 2017×1269, the whole frame, uncropped — with the second an entry
+   away on a selector rail, and a meta bar fused under the frame so the plate
+   is never nameless.
 
-.fl-films {
-  list-style: none;
-  margin: 0;
-  padding: clamp(12px, 2vw, 24px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: clamp(10px, 1.4vw, 22px);
-  height: 100%;
-  min-height: 0;
+   THE U8 LAW IS UNTOUCHED — 16:9 + `contain` + `flex: 0 0 auto` on
+   `.fl-film` below. A poster is never cropped on this surface; the only
+   thing that changed is how many frames there are and how big.
+
+   The plate manages its own insets per zone, so padding is 0 here: the rail
+   sits on the plate's text rails and the stage owns the air around the
+   frame. */
+.fl-plate--films {
+  padding: 0;
+  gap: 0;
+
+  /* THE FRAME IS HEIGHT-BOUND, NOT JUST WIDTH-BOUND. A 16:9 box told only to
+     fill the panel width will outgrow the stage on any viewport where the
+     panel is wider than 16/9 of what the rail leaves, and the plate's own
+     `overflow: hidden` would swallow the proof rather than report it. This is
+     the ceiling on the frame's HEIGHT; the stage converts it to a max-width
+     through the ratio, so the frame grows with the box and then stops,
+     centred, rather than clipping. Measured: 350px of frame + bar in a 410px
+     stage at 1280×720 (the binding composition) and 491px in 829px at
+     2017×1269, where the panel width is the binding term. */
+  --fl-film-h: clamp(230px, 49svh, 470px);
 }
-.fl-filmcell {
+
+/* The selector rail — `.fl-tooltabs` at two entries (ADR-056 U9's quarters
+   grammar). Deliberately not a new switch idiom: the tool gallery one rung
+   down already taught this surface that an ordinal line is chrome and the
+   mono name is the label. It is a pointer opt-in on the same argument as
+   those tabs — `.fl-case` is `visibility: hidden` until `[data-proof-live]`,
+   and hidden subtrees do not hit-test, so the departed casefile cannot eat
+   ring clicks. */
+.fl-filmtabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 0 0 auto;
+  padding-top: clamp(10px, 1.4svh, 14px);
+  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.22);
+}
+.fl-filmtab {
+  appearance: none;
+  margin: 0 0 -1px;
+  border: 0;
+  /* Sits ON the container hairline; the active rule replaces it. */
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 12px 8px var(--fl-shot-px);
+  text-align: left;
+  transition: border-color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+/* The first entry's text sits on the plate text rail, like the frame below. */
+.fl-filmtab:first-child {
+  padding-left: var(--fl-plate-px);
+}
+.fl-filmtab[data-on] {
+  border-bottom-color: var(--gold);
+}
+.fl-filmtab:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+.fl-filmtab__ord {
+  font-family: var(--fl-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--gold-rgb), 0.45);
+  white-space: nowrap;
+  transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-filmtab[data-on] .fl-filmtab__ord {
+  color: rgba(var(--gold-rgb), 0.85);
+}
+/* Same 10.5px reading floor as the tool switcher — the film's own name is
+   the label, and it never goes below the control floor. */
+.fl-filmtab__name {
+  font-family: var(--fl-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.42);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-filmtab:hover .fl-filmtab__name {
+  color: rgba(var(--dawn-rgb), 0.78);
+}
+.fl-filmtab[data-on] .fl-filmtab__name {
+  color: var(--dawn);
+}
+
+/* The stage centres the frame group in whatever the rail leaves. Air on all
+   four sides is deliberate at tall viewports: the frame is at its height
+   ceiling there, and symmetric air reads as a viewer rather than as a tile
+   that failed to fill. */
+.fl-filmstage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 2.2svh, 30px) var(--fl-plate-px);
+}
+.fl-filmframe {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  flex: 1 1 0;
-  max-width: 52%;
-}
-.fl-filmcell__label {
-  margin-top: 7px;
-  font-family: var(--fl-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--dawn);
-}
-.fl-filmcell__meta {
-  font-family: var(--fl-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--fl-ink-dim);
+  width: 100%;
+  /* The ratio converts the height ceiling into the width bound; whichever
+     of the two is smaller governs. */
+  max-width: calc(var(--fl-film-h) * 16 / 9);
 }
 
-/* The tile IS the button — there is no separate frame element. It carries
-   the 16:9 box, the border and the backdrop, and it is the interactive
-   opt-in: third and last on this surface after `.fl-tabs__tab` and
-   `.fl-row`. Safe because `.fl-case` is `visibility: hidden` until
-   `[data-proof-live]`, and hidden subtrees do not hit-test — which is what
-   stops the departed casefile eating ring clicks.
+/* The meta bar, FUSED to the frame's bottom edge — the `.fl-shot__bar`
+   grammar (no gap, shared side rules, the frame's own border as the seam):
+   what is on screen on the left, its format and duration on the right, both
+   printed from the film record. */
+.fl-filmmeta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px var(--fl-shot-px);
+  border: 1px solid rgba(var(--gold-rgb), 0.28);
+  border-top: 0;
+  background: rgba(var(--void-rgb), 0.8);
+  font-family: var(--fl-mono);
+  text-transform: uppercase;
+}
+.fl-filmmeta__label {
+  min-width: 0;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--dawn);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fl-filmmeta__spec {
+  margin-left: auto;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--fl-ink-dim);
+  white-space: nowrap;
+}
+
+/* The frame IS the button — there is no separate tile element. It carries
+   the 16:9 box, the border and the backdrop, and it is a pointer opt-in on
+   this surface alongside `.fl-tabs__tab`, `.fl-row`, the tool tabs, the shot
+   frame and the rail above. Safe because `.fl-case` is `visibility: hidden`
+   until `[data-proof-live]`, and hidden subtrees do not hit-test — which is
+   what stops the departed casefile eating ring clicks.
 
    `flex: 0 0 auto`, NOT `1 1 auto` (2026-07-30): growing to fill the column
    overrode `aspect-ratio`, so the box stopped being 16:9 and the poster got
-   cropped — the crop the owner saw. The ratio governs now and the cell
-   top-aligns; `contain` on the poster is the belt, so any future box shape
-   letterboxes against the plate instead of cutting the frame. */
+   cropped — the crop the owner saw. The ratio governs now and the group
+   bounds the height instead; `contain` on the poster is the belt, so any
+   future box shape letterboxes against the plate instead of cutting the
+   frame. */
 .fl-film {
   appearance: none;
   margin: 0;
@@ -2632,14 +2833,17 @@
   object-fit: contain;
 }
 
-/* Play cue — the brand's diamond, not a rounded media glyph. */
+/* Play cue — the brand's diamond, not a rounded media glyph. It scales with
+   the panel now that there is ONE frame: 26px was proportionate on a 390px
+   tile and disappears on an 814px one. */
 .fl-film__cue {
+  --fl-cue: clamp(26px, 3.6svh, 40px);
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 26px;
-  height: 26px;
-  margin: -13px 0 0 -13px;
+  width: var(--fl-cue);
+  height: var(--fl-cue);
+  margin: calc(var(--fl-cue) / -2) 0 0 calc(var(--fl-cue) / -2);
   transform: rotate(45deg);
   border: 1px solid rgba(var(--gold-rgb), 0.85);
   background: rgba(var(--void-rgb), 0.45);
@@ -3044,17 +3248,45 @@
     max-height: none;
   }
 
-  .fl-films {
-    height: auto;
-    padding: 12px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    gap: 16px;
+  /* The film rail keeps the 44px interaction floor and the frame runs the
+     full document width — the height ceiling is a desktop-panel concern. */
+  .fl-filmtabs {
+    padding-top: 0;
   }
-  .fl-filmcell {
-    width: 100%;
+  .fl-filmtab,
+  .fl-filmtab:first-child {
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+  /* Wrap rather than ellipsize, exactly like the tool switcher: half a film
+     name is a defect, not a compromise. */
+  .fl-filmtab__name {
+    font-size: 10px;
+    line-height: 1.25;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .fl-filmstage {
+    padding: 12px;
+  }
+  .fl-filmframe {
     max-width: none;
+  }
+  /* Same rule for the meta bar — at 430px the label and the spec cannot share
+     a line, so the spec takes its own instead of slicing the name. */
+  .fl-filmmeta {
+    flex-wrap: wrap;
+    gap: 2px 12px;
+  }
+  .fl-filmmeta__label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .fl-filmmeta__spec {
+    margin-left: 0;
   }
 
   .fl-tooltabs {
@@ -3100,8 +3332,11 @@
     overflow: visible;
     text-overflow: clip;
   }
-  .fl-shot {
-    min-height: clamp(220px, 70vw, 360px);
+  /* The column stacks under the identity block, so the seam moves from its
+     left edge to its top one. The image keeps its bounded window here too —
+     on a phone the column is wide and short, which is the shape the window
+     was cut for. */
+  .fl-shotcol {
     border-top: 1px solid rgba(var(--gold-rgb), 0.22);
     border-left: 0;
   }
@@ -3110,6 +3345,9 @@
     padding: 10px 12px;
     font-size: 9.5px;
     letter-spacing: 0.1em;
+  }
+  .fl-shotcap {
+    padding: 10px 12px 14px;
   }
   .fl-shot__bar b {
     letter-spacing: 0.06em;
