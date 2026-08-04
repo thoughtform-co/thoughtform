@@ -12,6 +12,7 @@ import {
 
 import { ClientTabs } from "./ClientTabs";
 import { Directory } from "./Directory";
+import { TrackProofRegister } from "./TrackProofRegister";
 import { TrackPanel } from "./TrackPanel";
 
 /**
@@ -67,6 +68,10 @@ const REVEAL_AT = 0.45;
 const REARM_BELOW = 0.05;
 /** Park band at the top of the viewport, in viewport heights. */
 const PIN_BAND = 0.02;
+/** The only tier in which scroll owns directory selection. Re-read inside
+ * the long-lived observer so a desktop→mobile resize cannot apply a stale
+ * browse value after the surface has become static. */
+const ENHANCED_MEDIA_QUERY = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
 
 /* ── The row scrollspy (ADR-056 U13) ───────────────────────────────────
    The browse band gives each directory row an equal quarter of
@@ -145,9 +150,7 @@ export function ServicesCasefile() {
       setTrackId(id);
       const root = rootRef.current;
       if (!root || SERVICES_PROOF_RUNWAY_VH === 0) return;
-      const enhanced = window.matchMedia(
-        "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
-      ).matches;
+      const enhanced = window.matchMedia(ENHANCED_MEDIA_QUERY).matches;
       if (!enhanced) return;
       const runway = root.closest<HTMLElement>(".services-stage-root");
       if (!runway) return;
@@ -167,9 +170,7 @@ export function ServicesCasefile() {
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const enhanced = window.matchMedia(
-      "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
-    ).matches;
+    const enhanced = window.matchMedia(ENHANCED_MEDIA_QUERY).matches;
     if (!enhanced) return;
 
     const targets = Array.from(root.querySelectorAll<HTMLElement>("[data-fl-text]"));
@@ -239,7 +240,13 @@ export function ServicesCasefile() {
        (unlike the clock's fail-open): a bare mount has no browse channel
        and must keep its clicked/default row, not snap to the last band. */
     const driveRow = () => {
-      const rawBrowse = Number.parseFloat(root.style.getPropertyValue("--svc-proof-browse"));
+      // The observer can outlive the media tier in which it was installed.
+      // Static/mobile/reduced-motion mode is state-owned, even during the
+      // resize mutation that removes the inline browse channel.
+      if (!window.matchMedia(ENHANCED_MEDIA_QUERY).matches) return;
+      const browseValue = root.style.getPropertyValue("--svc-proof-browse").trim();
+      if (!browseValue) return;
+      const rawBrowse = Number.parseFloat(browseValue);
       if (!Number.isFinite(rawBrowse)) return;
       const rawOut = Number.parseFloat(root.style.getPropertyValue("--svc-proof-out"));
       if (Number.isFinite(rawOut) && rawOut > BROWSE_FREEZE_OUT) return;
@@ -384,9 +391,10 @@ export function ServicesCasefile() {
           <span>{track.project}</span>
           <b className="fl-brief__dot">.</b>
         </h3>
-        <p className="fl-brief__class" data-fl-text={file.classLine}>
-          {file.classLine}
-        </p>
+        {/* Per-track metadata swaps immediately with the heading and body.
+            It must not join the destructive decode target list, which is
+            cached once per client while directory rows change in place. */}
+        <p className="fl-brief__class">{track.classification ?? file.classLine}</p>
         {/* The `Log.001 >` operator-quote line that followed the body was
             removed with the chrome (owner, 2026-07-29) — the brief ends on
             its own paragraph.
@@ -395,10 +403,14 @@ export function ServicesCasefile() {
             has to serve all eight rows, so it can only ever describe the
             engagement; a row that owns the largest piece of the work needs to
             make its own claim. Same optional-with-fallback idiom as `stamp`.
-            Safe here and NOT for `classLine` because this is not a decode
-            target — see `CaseTrack.brief`. */}
+            The brief and classification both switch immediately and stay
+            outside the per-client decode target list. */}
         <p className="fl-brief__body">{(track.brief ?? file.brief).map(renderSegment)}</p>
       </div>
+
+      {/* Evidence stays in the reading column, leaving the right panel as
+          one uninterrupted visual instrument. */}
+      <TrackProofRegister track={track} />
 
       {/* ── Left column · directory ─────────────────────────────────── */}
       <Directory

@@ -3,8 +3,8 @@
  *
  * Eight persistent work nodes move between three projections. This module
  * owns their final boxes so the React layer can FLIP the same DOM nodes,
- * position SVG hairlines, and derive keyboard rows without measuring or
- * maintaining a second layout model.
+ * position the work-shape anchors, and derive keyboard rows without measuring
+ * or maintaining a second layout model.
  *
  * Coordinates are normalized top-left boxes in the inclusive 0..1 field
  * space. Multiply x/width by the field width and y/height by its height.

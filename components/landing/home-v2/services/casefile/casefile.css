@@ -174,6 +174,20 @@
   --fl-body-top: calc(var(--fl-sec) + clamp(16px, 2.6svh, 38px));
   --fl-split-end: var(--fl-t11);
   --fl-viz-split: calc(var(--fl-t7) - var(--fl-body-top));
+  /* The right instrument owns the otherwise empty rail below t11 and starts
+     directly under the section rule. The left narrative keeps its authored
+     tick seams, while the evidence surface uses the full available desktop
+     height — essential at 720p once the map reserves readable detail. */
+  --fl-panel-top: calc(var(--fl-sec) + clamp(7px, 1svh, 11px));
+  --fl-panel-end: calc(var(--fl-rail-top) + var(--fl-rail-h));
+  /* The left column is one vertical instrument. Keep its seams as shared
+     tokens so the brief, proof register and directory cannot drift when a
+     tall viewport gives the copy more room than the original tick split
+     anticipated. */
+  --fl-left-seam: var(--fl-t6);
+  --fl-proof-top-gap: clamp(9px, 1.3svh, 14px);
+  --fl-proof-h: clamp(76px, 12svh, 144px);
+  --fl-directory-gap: clamp(7px, 0.9svh, 11px);
   /* How far the corner marks sit OUTBOARD of the content box they register.
      On the corner they cut through the designation labels, which start and
      end on the band edges; outboard is also what the production survey
@@ -583,7 +597,7 @@
   left: 0;
   width: var(--fl-col-l);
   top: var(--fl-body-top);
-  height: calc(var(--fl-t6) - var(--fl-body-top) - clamp(8px, 1.1svh, 14px));
+  height: calc(var(--fl-left-seam) - var(--fl-body-top) - clamp(8px, 1.1svh, 14px));
   overflow: hidden;
   z-index: 2;
 }
@@ -602,7 +616,7 @@
   white-space: nowrap;
   /* No gap: the gold full stop is part of the wordmark, not a sibling. */
   gap: 0;
-  font-family: var(--fl-mono);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-weight: 700;
   font-size: clamp(18px, 1.66vw, 24px);
   letter-spacing: 0.02em;
@@ -619,8 +633,9 @@
 .fl-brief__class {
   margin: clamp(5px, 0.7svh, 8px) 0 0;
   font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.22em;
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
 }
@@ -631,6 +646,28 @@
   line-height: 1.52;
   color: rgba(var(--dawn-rgb), 0.7);
 }
+
+/* At the 720p binding the longest supplied summary needs one final line.
+   Recover it from leading and the paragraph gap, never from the reading
+   size. */
+@media (min-width: 961px) and (max-height: 760px) {
+  .fl-brief__body {
+    margin-top: 9px;
+    line-height: 1.48;
+  }
+}
+
+/* A tall casefile should not pin its second reading surface halfway down the
+   viewport. Pull the register up behind the natural summary and spend that
+   recovered height on two fully readable description lines. The directory
+   still owns everything below the shared seam. */
+@media (min-width: 1200px) and (min-height: 931px) {
+  .fl-case {
+    --fl-left-seam: min(var(--fl-t6), calc(var(--fl-body-top) + clamp(214px, 18svh, 228px)));
+    --fl-proof-h: clamp(196px, 16svh, 216px);
+  }
+}
+
 /* Emphasis is UPRIGHT gold on a soft wash — the brand's only marker. */
 .fl-brief__body em {
   font-style: normal;
@@ -646,12 +683,111 @@
 
 /* ══ Left column · directory ═══════════════════════════════════════════ */
 
+.fl-proof-register {
+  position: absolute;
+  left: 0;
+  width: var(--fl-col-l);
+  top: calc(var(--fl-left-seam) + var(--fl-proof-top-gap));
+  height: var(--fl-proof-h);
+  overflow: hidden;
+  z-index: 2;
+}
+
+.fl-proof-register__list {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  list-style: none;
+  border-top: 1px solid rgba(var(--gold-rgb), 0.24);
+  border-left: 1px solid rgba(var(--gold-rgb), 0.12);
+}
+
+.fl-proof-register__item {
+  min-width: 0;
+  padding: clamp(5px, 0.8svh, 10px) clamp(7px, 0.8vw, 12px);
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  overflow: hidden;
+  border-right: 1px solid rgba(var(--gold-rgb), 0.12);
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.12);
+}
+
+.fl-proof-register__value,
+.fl-proof-register__label {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--fl-mono);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.fl-proof-register__value {
+  color: var(--dawn);
+  font-size: clamp(12px, 1vw, 16px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.fl-proof-register__value[data-wide] {
+  font-size: clamp(10.5px, 0.82vw, 13px);
+  letter-spacing: 0;
+}
+
+.fl-proof-register__label {
+  color: rgba(var(--gold-rgb), 0.76);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.fl-proof-register__description {
+  margin: 2px 0 0;
+  color: rgba(var(--dawn-rgb), 0.56);
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-size: 11.5px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+@media (max-height: 930px) and (min-width: 961px) {
+  .fl-proof-register__description {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
 .fl-dir {
   position: absolute;
   left: 0;
   width: var(--fl-col-l);
-  top: calc(var(--fl-t6) + clamp(9px, 1.3svh, 14px));
-  height: calc(var(--fl-split-end) - var(--fl-t6) - clamp(9px, 1.3svh, 14px));
+  top: calc(
+    var(--fl-left-seam) + var(--fl-proof-top-gap) + var(--fl-proof-h) + var(--fl-directory-gap)
+  );
+  height: calc(
+    var(--fl-split-end) - var(--fl-left-seam) - var(--fl-proof-top-gap) - var(--fl-proof-h) -
+      var(--fl-directory-gap)
+  );
   overflow: hidden;
   z-index: 2;
 }
@@ -660,16 +796,17 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding-bottom: 6px;
+  min-height: 20px;
+  padding-bottom: 5px;
   font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.24em;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.3);
 }
 .fl-dir__head .fl-desig {
-  font-size: 8.5px;
-  letter-spacing: 0.24em;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
   color: rgba(var(--dawn-rgb), 0.3);
 }
 .fl-dir__count {
@@ -702,12 +839,13 @@
   /* Tightened from clamp(4px, 0.6svh, 8px) for the eight-row directory
      (2026-07-30). The 10.5px type stays — the owner's 2026-07-29 pass made
      this a primary reading surface, so density comes out of the padding. */
+  min-height: clamp(24px, 3.2svh, 31px);
   padding: clamp(3px, 0.45svh, 7px) 8px;
   text-align: left;
   font-family: var(--fl-mono);
   /* 10.5px, up from 9.5 (owner type pass, 2026-07-29) — the directory is a
      primary reading surface, not micro-chrome. */
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.7);
@@ -737,8 +875,8 @@
 }
 
 .fl-row__meta {
-  font-size: 8.5px;
-  letter-spacing: 0.14em;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
   color: var(--fl-ink-dim);
 }
 
@@ -762,8 +900,8 @@
   position: absolute;
   left: var(--fl-col-r);
   right: 0;
-  top: var(--fl-body-top);
-  height: calc(var(--fl-split-end) - var(--fl-body-top));
+  top: var(--fl-panel-top);
+  height: calc(var(--fl-panel-end) - var(--fl-panel-top));
   z-index: 2;
 }
 .fl-panel:focus-visible {
@@ -784,7 +922,7 @@
 .fl-desig--r {
   color: rgba(var(--dawn-rgb), 0.28);
   letter-spacing: 0.16em;
-  font-size: 8.5px;
+  font-size: 9.5px;
 }
 
 .fl-panel__viz {
@@ -792,7 +930,8 @@
   left: 0;
   right: 0;
   top: 24px;
-  height: calc(var(--fl-viz-split) - 40px);
+  bottom: 0;
+  height: auto;
   overflow: hidden;
   border: 1px solid rgba(var(--gold-rgb), 0.2);
   background: rgba(var(--void-deep-rgb), 0.4);
@@ -1959,7 +2098,7 @@
 }
 .fl-tooltab__code {
   font-family: var(--fl-mono);
-  font-size: 8.5px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(var(--gold-rgb), 0.45);
@@ -2012,7 +2151,7 @@
 }
 .fl-toolid__kicker {
   font-family: var(--fl-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold);
@@ -2044,7 +2183,7 @@
 .fl-toolid__meta {
   margin-top: auto;
   font-family: var(--fl-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
@@ -2367,12 +2506,20 @@
     line-clamp: 2;
   }
 }
-/* Narrow: a ~121px quarter at 1280. 9px + minimal tracking holds the
-   longest name with ~3px margin; still above the 8.5px chrome floor. */
+/* Narrow desktop: preserve the functional names rather than ellipsizing
+   them. A little tab inset and neutral tracking buys the final word while
+   keeping the label on the 10px control floor. */
 @media (max-width: 1360px) {
+  .fl-tooltab {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+  .fl-tooltab:first-child {
+    padding-left: var(--fl-plate-px);
+  }
   .fl-tooltab__name {
-    font-size: 9px;
-    letter-spacing: 0.01em;
+    font-size: 10px;
+    letter-spacing: 0;
   }
 }
 
@@ -2389,17 +2536,20 @@
 .fl-stills {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: flex;
+  padding: clamp(12px, 2vw, 24px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: center;
-  align-items: stretch;
+  align-items: center;
   gap: clamp(8px, 1.1vw, 18px);
   height: 100%;
   min-height: 0;
 }
 .fl-still {
   position: relative;
-  height: 100%;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
   min-height: 0;
   aspect-ratio: 4 / 5;
   overflow: hidden;
@@ -2417,9 +2567,10 @@
 .fl-films {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: clamp(12px, 2vw, 24px);
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: clamp(10px, 1.4vw, 22px);
   height: 100%;
   min-height: 0;
@@ -2434,14 +2585,14 @@
 .fl-filmcell__label {
   margin-top: 7px;
   font-family: var(--fl-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--dawn);
 }
 .fl-filmcell__meta {
   font-family: var(--fl-mono);
-  font-size: 8.5px;
+  font-size: 9.5px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
@@ -2780,6 +2931,7 @@
     gap: 16px;
   }
   .fl-brief,
+  .fl-proof-register,
   .fl-dir,
   .fl-panel {
     position: static;
@@ -2787,30 +2939,180 @@
     height: auto;
     overflow: visible;
   }
-  .fl-dir {
+  .fl-proof-register {
     margin-top: 24px;
+  }
+  .fl-dir {
+    margin-top: 20px;
   }
   .fl-panel {
     margin-top: 28px;
   }
   .fl-panel__head,
-  .fl-panel__viz,
-  .fl-panel__foot {
+  .fl-panel__viz {
     position: static;
     height: auto;
   }
   .fl-panel__viz {
-    /* The plates have no intrinsic height once the column stops driving
-       them; give the signal chart its aspect back. */
-    aspect-ratio: 700 / 292;
     margin-top: 10px;
   }
-  .fl-panel__foot {
-    margin-top: 22px;
+  /* The signal drawing is the only plate whose geometry is an authored
+     ratio. Media and tool instruments establish their own flowing height. */
+  .fl-panel__viz[data-kind="signal"] {
+    aspect-ratio: 700 / 292;
+  }
+  .fl-proof-register__list {
+    height: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .fl-proof-register__item {
+    min-height: 96px;
+    padding: 12px;
+  }
+  .fl-proof-register__value {
+    font-size: 16px;
+  }
+  .fl-proof-register__label {
+    font-size: 10.5px;
+  }
+  .fl-proof-register__description {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 3px 0 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    font-size: 13px;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
   .fl-ctx {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+}
+
+/* Reduced-motion can select the static document composition on desktop too.
+   Give intrinsically flowing instruments a useful canvas in that path; the
+   mobile rules below deliberately remove this floor again. */
+@media (prefers-reduced-motion: reduce) and (min-width: 961px) {
+  .fl-panel__viz[data-kind="stills"],
+  .fl-panel__viz[data-kind="films"],
+  .fl-panel__viz[data-kind="tools"] {
+    min-height: clamp(360px, 50svh, 520px);
+  }
+}
+
+/* Mobile is a readable case document, not a miniaturized desktop panel.
+   Each evidence kind gets its own natural flow and all directory targets
+   retain the 44px interaction floor. */
+@media (max-width: 960px) {
+  .fl-row {
+    min-height: 44px;
+  }
+
+  .fl-panel__viz[data-kind="stills"],
+  .fl-panel__viz[data-kind="films"],
+  .fl-panel__viz[data-kind="tools"] {
+    aspect-ratio: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .fl-plate--stills,
+  .fl-plate--films,
+  .fl-plate--tools {
+    height: auto;
+    overflow: visible;
+  }
+  .fl-plate--stills,
+  .fl-plate--films {
+    padding: 0;
+  }
+
+  .fl-stills {
+    height: auto;
+    padding: 12px clamp(12px, 5vw, 20px);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+  }
+  .fl-still {
+    max-height: none;
+  }
+
+  .fl-films {
+    height: auto;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+  }
+  .fl-filmcell {
+    width: 100%;
+    max-width: none;
+  }
+
+  .fl-tooltabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-top: 0;
+  }
+  .fl-tooltab,
+  .fl-tooltab:first-child {
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+  .fl-tooltab__code {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+  .fl-tooltab__name {
+    font-size: 10px;
+    line-height: 1.25;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .fl-toolbody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fl-toolid {
+    min-height: auto;
+    overflow: visible;
+    gap: 8px;
+    padding: 14px 12px 16px;
+  }
+  .fl-toolid__desc {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+  }
+  .fl-toolid__meta {
+    margin-top: 2px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .fl-shot {
+    min-height: clamp(220px, 70vw, 360px);
+    border-top: 1px solid rgba(var(--gold-rgb), 0.22);
+    border-left: 0;
+  }
+  .fl-shot__bar {
+    gap: 6px;
+    padding: 10px 12px;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+  }
+  .fl-shot__bar b {
+    letter-spacing: 0.06em;
   }
 }
 
@@ -2832,9 +3134,7 @@
   min-height: 0;
   padding: 0;
   gap: 0;
-  background:
-    linear-gradient(90deg, transparent 49.9%, rgba(var(--gold-rgb), 0.025) 50%, transparent 50.1%),
-    rgba(var(--void-deep-rgb), 0.18);
+  background: rgba(var(--void-deep-rgb), 0.18);
   font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
 }
 
@@ -2870,7 +3170,7 @@
   border: 1px solid transparent;
   background: transparent;
   color: rgba(var(--dawn-rgb), 0.42);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -2882,13 +3182,13 @@
 
 .fl-intel-map[data-mode="preview"] .fl-intel-map__tab {
   padding-inline: 5px;
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
 .fl-intel-map[data-mode="preview"] .fl-intel-map__expand {
   padding-inline: 6px;
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -3220,15 +3520,19 @@
 }
 
 .fl-intel-map__node[data-fill="use"] {
-  background:
-    linear-gradient(90deg, rgba(var(--gold-rgb), 0.16), transparent 65%),
-    rgba(var(--void-deep-rgb), 0.72);
+  background: rgba(var(--gold-rgb), 0.1);
+  box-shadow: inset 3px 0 0 rgba(var(--gold-rgb), 0.66);
 }
 
 .fl-intel-map__node[data-fill="evaluated"] {
-  background:
-    repeating-linear-gradient(-45deg, rgba(var(--gold-rgb), 0.08) 0 2px, transparent 2px 5px),
-    rgba(var(--void-deep-rgb), 0.72);
+  border-color: rgba(var(--gold-rgb), 0.48);
+  background: rgba(var(--dawn-rgb), 0.045);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.fl-intel-map__node[data-fill="build"] {
+  border-style: dashed;
+  background: rgba(var(--void-deep-rgb), 0.72);
 }
 
 .fl-intel-map__node[data-condensed] {
@@ -3316,21 +3620,6 @@
 .fl-intel-map__signature i[data-facet="eval"] {
   border-color: var(--gold);
   box-shadow: inset 0 0 0 1px rgba(var(--void-rgb), 0.65);
-}
-
-.fl-intel-map__links {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.fl-intel-map__links path {
-  fill: none;
-  stroke: rgba(var(--gold-rgb), 0.28);
-  stroke-width: 0.75;
-  vector-effect: non-scaling-stroke;
 }
 
 .fl-intel-map__reservoir {
@@ -3501,7 +3790,7 @@
 .fl-intel-map__inspector h4 {
   margin: 0;
   color: var(--dawn);
-  font-family: var(--font-serif, Georgia, serif);
+  font-family: var(--font-pp-neue-montreal);
   font-size: clamp(14px, 1.1vw, 18px);
   font-weight: 400;
   line-height: 1.05;
@@ -3522,7 +3811,7 @@
 
 .fl-intel-map__inspector-summary {
   color: rgba(var(--dawn-rgb), 0.6);
-  font-family: var(--font-sans, Arial, sans-serif);
+  font-family: var(--font-pp-neue-montreal);
   font-size: 9px;
   line-height: 1.35;
 }
@@ -3571,7 +3860,7 @@
 
 .fl-intel-map__anatomy dd span {
   color: rgba(var(--dawn-rgb), 0.42);
-  font-family: var(--font-sans, Arial, sans-serif);
+  font-family: var(--font-pp-neue-montreal);
   font-size: 8px;
   line-height: 1.25;
 }
@@ -3765,6 +4054,504 @@
   line-height: 1.35;
 }
 
+/* U18 harmonisation: one full-height instrument, one taxonomy and one
+   reserved detail console. These late declarations intentionally replace the
+   former stage-overlay inspector without changing the stable field or FLIP
+   geometry. */
+.fl-intel-map {
+  --fl-map-detail-h: clamp(196px, 29svh, 224px);
+  background: rgba(var(--void-deep-rgb), 0.28);
+}
+
+/* The configuration field is an instrument of lines, fills and marks. Keep
+   image layers out of every descendant and pseudo-element so a theme or a
+   future generic button treatment cannot quietly reintroduce gradients. */
+.fl-intel-map,
+.fl-intel-map::before,
+.fl-intel-map::after,
+.fl-intel-map *,
+.fl-intel-map *::before,
+.fl-intel-map *::after {
+  background-image: none;
+}
+
+.fl-intel-map button {
+  font-family: var(--font-pt-mono);
+}
+
+.fl-intel-map__head {
+  min-height: 36px;
+  padding: 4px clamp(10px, 1.2vw, 16px);
+}
+
+.fl-intel-map__tab,
+.fl-intel-map__expand,
+.fl-intel-map[data-mode="preview"] .fl-intel-map__tab,
+.fl-intel-map[data-mode="preview"] .fl-intel-map__expand {
+  min-height: 28px;
+  padding: 5px 7px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.fl-intel-map__register,
+.fl-intel-map[data-mode="preview"] .fl-intel-map__register {
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1.15;
+}
+
+.fl-intel-map__register i {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.fl-intel-map__decoder {
+  min-height: 36px;
+  gap: 10px;
+  padding: 5px clamp(10px, 1.2vw, 16px);
+}
+
+.fl-intel-map__facet-key {
+  gap: 5px;
+}
+
+.fl-intel-map__facet-key i {
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+}
+
+.fl-intel-map__facet-key i + i::before {
+  margin-right: 5px;
+}
+
+.fl-intel-map__decoder p {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 10.5px;
+  line-height: 1.3;
+  letter-spacing: 0.015em;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.fl-intel-map__stage {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--fl-map-detail-h);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fl-intel-map__canvas {
+  position: relative;
+  inset: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fl-intel-map__field,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__field {
+  inset: 0 0 34px;
+}
+
+.fl-intel-map__anchor {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+}
+
+.fl-intel-map__anchor--tier {
+  padding: 4px 6px;
+  font-size: 10px;
+}
+
+.fl-intel-map__anchor-note {
+  font-size: 9.5px;
+  letter-spacing: 0.025em;
+}
+
+.fl-intel-map__meters {
+  width: 72px;
+}
+
+.fl-intel-map__meters i {
+  grid-template-columns: 8px minmax(0, 1fr) 27px;
+  font-size: 9px;
+}
+
+.fl-intel-map__node {
+  padding: 2px 5px 2px 16px;
+  background-image: none;
+  box-shadow: inset 2px 0 0 rgba(var(--gold-rgb), 0.14);
+}
+
+.fl-intel-map__node:hover,
+.fl-intel-map__node:focus-visible,
+.fl-intel-map__node[data-active] {
+  background-image: none;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.fl-intel-map__node[data-selected] {
+  background-image: none;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.fl-intel-map__node-ord {
+  left: 4px;
+  font-size: 9px;
+}
+
+.fl-intel-map__node-work {
+  font-size: 11.5px;
+  line-height: 1.1;
+}
+
+.fl-intel-map[data-mode="preview"] .fl-intel-map__node {
+  padding-left: 5px;
+}
+
+.fl-intel-map[data-mode="preview"] .fl-intel-map__signature {
+  grid-template-columns: repeat(6, 2px);
+  gap: 1px;
+}
+
+.fl-intel-map[data-mode="preview"] .fl-intel-map__signature i {
+  width: 2px;
+  height: 3px;
+}
+
+.fl-intel-map__reservoir {
+  min-height: 34px;
+  padding: 5px clamp(10px, 1.2vw, 16px);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(12px, 1.5vw, 20px);
+  background: rgba(var(--void-deep-rgb), 0.72);
+}
+
+.fl-intel-map__reservoir-label {
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-pt-mono);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fl-intel-map__reservoir-label b {
+  color: rgba(var(--gold-rgb), 0.78);
+  font-weight: 400;
+}
+
+.fl-intel-map__reservoir-label span {
+  color: rgba(var(--dawn-rgb), 0.42);
+}
+
+.fl-intel-map__skill-runs {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px;
+}
+
+.fl-intel-map__skill-group {
+  min-width: 0;
+  display: block;
+  color: inherit;
+  font-size: inherit;
+}
+
+.fl-intel-map__pips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+.fl-intel-map__pips i {
+  width: 4px;
+  height: 4px;
+}
+
+.fl-intel-map__detail-slot {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(var(--gold-rgb), 0.32);
+  background: rgba(var(--void-deep-rgb), 0.74);
+}
+
+.fl-intel-map__detail-slot[data-empty] {
+  display: grid;
+  place-items: center start;
+}
+
+.fl-intel-map__detail-prompt {
+  margin: 0;
+  padding: 12px clamp(10px, 1.2vw, 16px);
+  display: grid;
+  gap: 5px;
+  font-family: var(--font-pt-mono);
+  text-transform: uppercase;
+}
+
+.fl-intel-map__detail-prompt span {
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.fl-intel-map__detail-prompt b {
+  color: rgba(var(--dawn-rgb), 0.48);
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+}
+
+.fl-intel-map__inspector.fl-intel-map__detail {
+  position: relative;
+  inset: auto;
+  width: auto;
+  height: 100%;
+  padding: 8px clamp(10px, 1.2vw, 16px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+  gap: clamp(10px, 1.2vw, 16px);
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: flMapChromeIn 120ms var(--ease-out, ease-out) both;
+}
+
+.fl-intel-map__detail-identity,
+.fl-intel-map__detail-facets,
+.fl-intel-map__detail-evidence {
+  min-width: 0;
+  min-height: 0;
+}
+
+.fl-intel-map__detail-index,
+.fl-intel-map__inspector-top {
+  margin: 0 0 5px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.fl-intel-map__inspector-top button {
+  width: 26px;
+  height: 26px;
+  font-family: var(--font-pt-mono);
+  font-size: 15px;
+}
+
+.fl-intel-map__inspector h4 {
+  margin: 0;
+  overflow: visible;
+  color: var(--dawn);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.08;
+  display: block;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+
+.fl-intel-map__inspector-function {
+  margin-top: 4px;
+  font-family: var(--font-pt-mono);
+  font-size: 9.5px;
+  line-height: 1.2;
+}
+
+.fl-intel-map__inspector-summary {
+  margin-top: 5px;
+  overflow: visible;
+  color: rgba(var(--dawn-rgb), 0.62);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 12px;
+  line-height: 1.35;
+  display: block;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+
+.fl-intel-map__anatomy.fl-intel-map__detail-facets {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(min-content, 1fr));
+  border-top: 1px solid rgba(var(--gold-rgb), 0.18);
+  border-left: 1px solid rgba(var(--gold-rgb), 0.12);
+}
+
+.fl-intel-map__anatomy.fl-intel-map__detail-facets div {
+  padding: 4px;
+  overflow: visible;
+}
+
+.fl-intel-map__anatomy dt {
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.09em;
+}
+
+.fl-intel-map__anatomy dd {
+  margin-top: 3px;
+}
+
+.fl-intel-map__anatomy dd b {
+  overflow: visible;
+  color: rgba(var(--dawn-rgb), 0.8);
+  font-family: var(--font-pt-mono);
+  font-size: 12px;
+  line-height: 1.25;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(min-content, 1fr));
+  gap: 0 10px;
+  border-top: 1px solid rgba(var(--gold-rgb), 0.18);
+}
+
+.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p:nth-child(1),
+.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p:nth-child(4) {
+  grid-column: span 2;
+}
+
+.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p {
+  min-width: 0;
+  margin: 0;
+  padding: 4px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 3px;
+  align-items: start;
+  overflow: visible;
+  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.12);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+}
+
+.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence b {
+  overflow: visible;
+  color: rgba(var(--dawn-rgb), 0.76);
+  font-family: var(--font-pt-mono);
+  font-size: 12px;
+  line-height: 1.25;
+  display: block;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+
+.fl-intel-map__readout,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__readout {
+  min-height: 24px;
+  padding: 5px clamp(10px, 1.2vw, 16px);
+  font-size: 9.5px;
+}
+
+.fl-intel-map[data-mode="expanded"] {
+  --fl-map-detail-h: clamp(240px, 32svh, 320px);
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__head {
+  min-height: 44px;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__tab,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__expand,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__register,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__facet-key i,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__decoder p {
+  font-size: 10.5px;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__field {
+  bottom: 40px;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__reservoir {
+  min-height: 40px;
+  padding: 7px clamp(14px, 1.8vw, 26px);
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__reservoir-label {
+  font-size: 10px;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__skill-group {
+  font-size: inherit;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector.fl-intel-map__detail {
+  position: relative;
+  inset: auto;
+  width: auto;
+  height: 100%;
+  padding: 16px clamp(18px, 2vw, 28px);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: clamp(18px, 2vw, 30px);
+  border: 0;
+  box-shadow: none;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector h4 {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(24px, 2vw, 32px);
+  line-height: 1.08;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-summary {
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dt,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-foot p,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-function,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-top {
+  font-size: 10px;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd b,
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-foot b {
+  font-size: 12px;
+}
+
+.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd span {
+  margin-top: 3px;
+  color: rgba(var(--dawn-rgb), 0.5);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 14px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
 /* Body portal. The variables are redeclared because this element is outside
    `.fl-case`, and therefore outside the casefile token scope. */
 .fl-map-overlay {
@@ -3829,13 +4616,13 @@
 .fl-map-overlay__head p span,
 .fl-map-overlay__provenance {
   color: rgba(var(--dawn-rgb), 0.4);
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 0.15em;
 }
 
 .fl-map-overlay__head p b {
   color: var(--dawn);
-  font-family: var(--font-serif, Georgia, serif);
+  font-family: var(--font-pt-mono);
   font-size: clamp(18px, 1.6vw, 27px);
   font-weight: 400;
   letter-spacing: 0.015em;
@@ -3856,7 +4643,7 @@
   background: transparent;
   color: var(--gold);
   font-family: var(--fl-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   transition:
@@ -3911,8 +4698,8 @@
   .fl-intel-map[data-mode="preview"] .fl-intel-map__expand {
     min-height: 44px;
     padding: 8px 10px;
-    font-size: 9px;
-    letter-spacing: 0.14em;
+    font-size: 10px;
+    letter-spacing: 0.1em;
   }
 
   .fl-intel-map__register {
@@ -3920,7 +4707,7 @@
     grid-row: 2;
     padding-top: 8px;
     border-top: 1px dotted rgba(var(--gold-rgb), 0.14);
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .fl-intel-map[data-mode="preview"] .fl-intel-map__register {
@@ -3952,10 +4739,11 @@
   }
 
   .fl-intel-map__facet-key i {
-    font-size: 8px;
+    font-size: 9.5px;
   }
 
   .fl-intel-map__stage {
+    display: block;
     overflow: visible;
   }
 
@@ -3981,7 +4769,7 @@
     justify-content: space-between;
     gap: 12px;
     color: rgba(var(--gold-rgb), 0.74);
-    font-size: 9px;
+    font-size: 10.5px;
     font-weight: 400;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -3995,7 +4783,7 @@
   .fl-intel-map__mobile-group h4 em {
     margin-left: auto;
     color: rgba(var(--dawn-rgb), 0.46);
-    font-size: 7px;
+    font-size: 9px;
     font-style: normal;
     letter-spacing: 0.06em;
   }
@@ -4044,7 +4832,7 @@
 
   .fl-intel-map__mobile-group button i {
     color: rgba(var(--dawn-rgb), 0.38);
-    font-size: 8px;
+    font-size: 10px;
     font-style: normal;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -4054,8 +4842,8 @@
     margin: 0;
     padding: 0 12px 14px;
     color: rgba(var(--dawn-rgb), 0.42);
-    font-family: var(--font-sans, Arial, sans-serif);
-    font-size: 11px;
+    font-family: var(--font-pp-neue-montreal);
+    font-size: 12px;
     line-height: 1.4;
   }
 
@@ -4070,7 +4858,7 @@
     align-items: center;
     cursor: pointer;
     color: var(--gold);
-    font-size: 9px;
+    font-size: 10.5px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -4086,7 +4874,7 @@
 
   .fl-intel-map__mobile-reservoir p b {
     color: rgba(var(--gold-rgb), 0.65);
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 400;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -4094,8 +4882,8 @@
 
   .fl-intel-map__mobile-reservoir p span {
     color: rgba(var(--dawn-rgb), 0.58);
-    font-family: var(--font-sans, Arial, sans-serif);
-    font-size: 11px;
+    font-family: var(--font-pp-neue-montreal);
+    font-size: 12.5px;
     line-height: 1.45;
   }
 
@@ -4114,8 +4902,26 @@
     box-shadow: none;
   }
 
+  .fl-intel-map__detail-slot {
+    position: relative;
+    overflow: visible;
+  }
+
+  .fl-intel-map__detail-slot[data-empty] {
+    display: none;
+  }
+
+  .fl-intel-map__inspector.fl-intel-map__detail,
+  .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector.fl-intel-map__detail {
+    display: block;
+    width: auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
   .fl-intel-map__inspector-top {
-    font-size: 8px;
+    font-size: 9.5px;
   }
 
   .fl-intel-map__inspector-top button {
@@ -4125,37 +4931,91 @@
 
   .fl-intel-map__inspector h4,
   .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector h4 {
-    font-size: clamp(22px, 7vw, 34px);
+    overflow: visible;
+    font-size: clamp(24px, 7vw, 34px);
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 
   .fl-intel-map__inspector-summary,
   .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-summary {
-    font-size: 13px;
+    overflow: visible;
+    font-size: 14px;
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 
-  .fl-intel-map__anatomy {
-    grid-template-columns: 1fr;
+  .fl-intel-map__anatomy,
+  .fl-intel-map__anatomy.fl-intel-map__detail-facets,
+  .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy.fl-intel-map__detail-facets {
+    height: auto;
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+  }
+
+  .fl-intel-map__anatomy.fl-intel-map__detail-facets > div,
+  .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy.fl-intel-map__detail-facets > div {
+    min-height: 0;
+    padding: 10px 0;
+    overflow: visible;
   }
 
   .fl-intel-map__anatomy dd b,
   .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd b {
-    font-size: 10px;
+    overflow: visible;
+    font-size: 12px;
+    white-space: normal;
+    text-overflow: clip;
   }
 
   .fl-intel-map__anatomy dd span,
   .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd span {
-    font-size: 12px;
+    overflow: visible;
+    font-size: 14px;
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 
-  .fl-intel-map__inspector-foot p {
-    grid-template-columns: 12ch minmax(0, 1fr);
-    font-size: 9px;
+  .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence,
+  .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence {
+    height: auto;
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+  }
+
+  .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p,
+  .fl-intel-map[data-mode="expanded"]
+    .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence
+    p {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-column: auto;
+    font-size: 10px;
+    overflow: visible;
+  }
+
+  .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence b,
+  .fl-intel-map[data-mode="expanded"]
+    .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence
+    b {
+    overflow: visible;
+    font-size: 12px;
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 
   .fl-intel-map__readout {
     min-height: 38px;
     padding: 9px 12px;
-    font-size: 8px;
+    font-size: 9.5px;
   }
 
   .fl-map-overlay {

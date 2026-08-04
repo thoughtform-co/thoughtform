@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { skillSymbol } from "@/components/landing/home-v2/services/casefile/skillSymbol";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
+import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
 import type { CaseSegment } from "@/lib/cases/types";
 
@@ -151,12 +152,11 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("every track carries a full panel (a readouts OR blocks foot, context, source)", () => {
+  it("every track carries one proof register plus its context and source", () => {
     for (const c of CASES) {
       for (const t of c.casefile.tracks) {
-        // EXACTLY ONE FOOT (ADR-056 U12). The panel has one slot below the
-        // plate, so carrying both is not a richer row — it is a row whose
-        // rendered half is decided by a branch order in the renderer.
+        // EXACTLY ONE PROOF MODEL. Legacy readouts normalize into the same
+        // register; carrying both leaves renderer precedence ambiguous.
         expect(
           Boolean(t.readouts) !== Boolean(t.blocks),
           `${c.slug}/${t.id} must carry readouts OR blocks, not both or neither`
@@ -166,29 +166,26 @@ describe("cases registry (ADR-054)", () => {
           expect(t.readouts.length).toBeLessThanOrEqual(4);
         }
         if (t.blocks) {
-          // The grid is 2×2 and the foot is `overflow: hidden` — a fifth
-          // tile does not wrap to a third row, it silently disappears.
+          // The left proof register is exactly 2×2.
           expect(t.blocks.length, `${c.slug}/${t.id} blocks`).toBe(4);
           for (const b of t.blocks) {
-            // Mono caps, `white-space: nowrap` with an ellipsis, against a
-            // half-rail of ~330px. It truncates rather than wrapping, so the
-            // ceiling is the guard.
-            expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeLessThanOrEqual(26);
-            // Two clamped lines, ONE at ≤760h.
+            // Values can be figures, formats, or operating properties. They
+            // remain a single display line in the half-column register.
+            expect(b.value.length, `${c.slug}/${t.id} block "${b.title}" value`).toBeGreaterThan(0);
+            expect(
+              b.value.length,
+              `${c.slug}/${t.id} block "${b.title}" value`
+            ).toBeLessThanOrEqual(16);
+            // Labels may take two compact mono lines in the left register.
+            expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeLessThanOrEqual(40);
+            // Supporting copy is visible in taller and full-flow layouts.
             expect(b.desc.length, `${c.slug}/${t.id} block "${b.title}" desc`).toBeLessThanOrEqual(
               95
             );
-            // The figure prints at display size on one line.
-            if (b.stat) {
-              expect(
-                b.stat.length,
-                `${c.slug}/${t.id} block "${b.title}" stat`
-              ).toBeLessThanOrEqual(4);
-            }
           }
         }
-        // The readouts kind IS the readouts — a blocks foot there would
-        // leave the row with no plate at all.
+        // The readouts kind IS the readouts — blocks there would leave the
+        // row with no visual plate at all.
         if (t.visual.kind === "readouts") {
           expect(t.readouts, `${c.slug}/${t.id} solo plate needs readouts`).toBeDefined();
         }
@@ -201,6 +198,12 @@ describe("cases registry (ADR-054)", () => {
         // ~290px against a ~340px column.
         expect(t.project.length, `${c.slug}/${t.id} project`).toBeGreaterThan(0);
         expect(t.project.length, `${c.slug}/${t.id} project`).toBeLessThanOrEqual(20);
+        if (t.classification) {
+          expect(
+            t.classification.length,
+            `${c.slug}/${t.id} track classification`
+          ).toBeLessThanOrEqual(64);
+        }
         for (const row of t.context) {
           // The dotted leader needs a non-wrapping value, so a long one runs
           // into the next column of the three-up register.
@@ -216,14 +219,10 @@ describe("cases registry (ADR-054)", () => {
     // only on short viewports, which is why it survived three passes: it
     // looks perfect at 1920x1080, where this copy gets authored.
     //
-    // The budget was ~195 chars at 1280x720 (the binding viewport) until the
-    // 2026-08-01 tick move took the brief box from 154px to 199px there. The
-    // box now takes 364 characters of representative prose before it clips
-    // (measured at 1280x720 / 1366x768 / 1440x800 — 364 / 366 / 366, so 720p
-    // still binds); 330 is that ceiling with a line of margin, because wrap
-    // points move with the words. This was a comment-and-measurement
-    // convention before — pinning it is the point of ADR-056 U11's test line.
-    const BRIEF_MAX = 330;
+    // The harmonized left column gives the summary more vertical room before
+    // the compact proof register. The longest approved summary is the Studio
+    // account; 420 keeps a guardrail without forcing editorial truncation.
+    const BRIEF_MAX = 420;
     const len = (segs: readonly CaseSegment[]) =>
       segs.map((s) => (typeof s === "string" ? s : s.em)).join("").length;
     for (const c of CASES) {
@@ -431,15 +430,14 @@ describe("cases registry (ADR-054)", () => {
   });
 
   it("the handoff's superseded readouts never came along", () => {
-    // The `Thoughtform Prime` design handoff printed 15+ teams / 20+ Skills /
-    // 90% of paid social. Those predate the ADR-054 numbers doctrine (22 / 47+
-    // / 4 / 5 → 130+), and "90% of paid social" is a near-variant of the "95%
-    // of briefings" claim already published on the ai-keynote arc page.
+    // The `Thoughtform Prime` design handoff carried older team, Skill, and
+    // paid-social figures. The current registry pins one set of claims.
     const offenders: string[] = [];
     scanStrings(CASES, "cases", (value, path) => {
       if (/\b15\+\s*teams\b/i.test(value)) offenders.push(`${path}: superseded team count`);
       if (/\b20\+\s*skills\b/i.test(value)) offenders.push(`${path}: superseded skill count`);
       if (/\b90\s*%/.test(value)) offenders.push(`${path}: duplicate paid-social claim`);
+      if (/\b95\s*%/.test(value)) offenders.push(`${path}: superseded paid-social claim`);
       // 42 → 47+ (2026-08-02, ADR-056 U12). The Intelligence Map plate now
       // SUMS its per-shape counts on screen, so a surviving 42 is a variant
       // the reader can check against the plate beside it. Both registers are
@@ -456,9 +454,63 @@ describe("cases registry (ADR-054)", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("publishes one canonical Studio adoption figure across Proof and the AI keynote", () => {
+    const loop = getCase("loop-earplugs");
+    const studio = loop?.casefile.tracks.find((track) => track.id === "studio");
+    expect(studio?.blocks?.find((block) => /paid-social briefings/i.test(block.title))?.value).toBe(
+      "97%"
+    );
+
+    const percentages = new Set<string>();
+    const collect = (root: unknown, path: string) => {
+      scanStrings(root, path, (value) => {
+        for (const match of value.matchAll(/\b(?:90|95|97)\s*%/g)) {
+          percentages.add(match[0].replace(/\s/g, ""));
+        }
+      });
+    };
+    collect(loop, "loop case");
+    collect(AI_KEYNOTE_ARC, "AI keynote");
+    expect([...percentages]).toEqual(["97%"]);
+  });
+
+  it("harmonizes all four Loop tracks around four proof blocks", () => {
+    const loop = getCase("loop-earplugs");
+    expect(loop?.casefile.tracks).toHaveLength(4);
+    for (const track of loop?.casefile.tracks ?? []) {
+      expect(track.blocks, track.id).toHaveLength(4);
+      expect(track.readouts, track.id).toBeUndefined();
+    }
+
+    expect(loop?.casefile.tracks.map((track) => track.meta)).toEqual([
+      "5 → 130+",
+      "500 ADS/MO",
+      "2 FILMS",
+      "4 TOOLS",
+    ]);
+    expect(
+      loop?.casefile.tracks.map((track) => track.classification ?? loop.casefile.classLine)
+    ).toEqual([
+      loop?.casefile.classLine,
+      "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
+      "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
+      "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
+    ]);
+    expect(
+      loop?.casefile.tracks
+        .find((track) => track.id === "tooling")
+        ?.blocks?.map((block) => block.title)
+    ).toEqual([
+      "Generation platform · live",
+      "Briefing orchestration · live",
+      "Briefing intelligence · live",
+      "Localization pipeline · live",
+    ]);
+  });
+
   it("one Skills total across the case, and the map plate sums to it", () => {
     // THE PLATE MAKES THE ARITHMETIC CHECKABLE (ADR-056 U12). The weighted
-    // registry prints a count per shape; the foot prints the total. A reader
+    // registry prints a count per shape; the proof register prints the total. A reader
     // can add the first up and compare, so any second variant of the total
     // anywhere in the case is not a stale string — it is a visible
     // contradiction. Six printings drifted from one source before this guard
@@ -482,7 +534,7 @@ describe("cases registry (ADR-054)", () => {
           if (/skills?/i.test(r.label)) note(r.value, `${t.id} readout "${r.label}"`);
         }
         for (const b of t.blocks ?? []) {
-          if (b.stat && /skills?/i.test(b.title)) note(b.stat, `${t.id} block "${b.title}"`);
+          if (/skills?/i.test(b.title)) note(b.value, `${t.id} block "${b.title}"`);
         }
         if (
           (t.visual.kind === "registry" || t.visual.kind === "intelligence-map") &&

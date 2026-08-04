@@ -34,13 +34,11 @@ import type {
  *     registry's card count including untagged and scoped placeholders;
  *     printing both invites arithmetic that reconciles to neither.)
  *   · 4 tools = PROJECT_CASES / CASE_TOTAL.
- * "95% of briefings ship with AI" is deliberately ABSENT: it is already
- * published on the ai-keynote arc page (`lib/arcs/content/ai-keynote.ts`),
- * and a second variant of the same claim on a second surface drifts. The
- * Build beat's "days to minutes" line carries that story without a
- * percentage. The `Thoughtform Prime` design handoff printed 15+ teams /
- * 20+ Skills / 90% of paid social — those predate this doctrine and are
- * pinned OUT by `tests/lib/cases-registry.test.ts`.
+ *   · 97% of paid-social briefings involve AI = the latest Studio figure.
+ *     It is intentionally identical here and on the AI keynote arc, with a
+ *     parity guard in `tests/lib/cases-registry.test.ts`. Earlier proposal
+ *     and arc variants are superseded. The `Thoughtform Prime` design
+ *     handoff's older team and Skill totals remain pinned out there too.
  *
  * CONFIDENTIALITY. No spend, commit, contract value, or per-seat figure
  * appears here or may be added — see `.claude/rules/proof.md`. Loop staff
@@ -1344,12 +1342,9 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           intelligence: LOOP_INTELLIGENCE,
           teamDraw: LOOP_TEAM_DRAW,
         },
-        // FOUR BLOCKS, not three readouts (owner, 2026-08-02). The readout
-        // trio could only say things that reduce to a number, so the two
-        // claims that matter most here — that the layer is one system, and
-        // that the teams own it — had no way to appear. The 2×2 grammar is
-        // the tool gallery's, and the fourth block deliberately carries no
-        // figure at all.
+        // Four proof blocks in the left-column register. `value` is textual,
+        // so the fourth claim can name the operating property rather than
+        // inventing a second count.
         //
         // This QUALIFIES the July "system numbers, not artifact counts"
         // ruling rather than discarding it: that ruling protected a row
@@ -1365,24 +1360,23 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // not harmonise the wording.
         blocks: [
           {
-            stat: "47+",
+            value: "47+",
             title: "Skills in active use",
             desc: "Reusable methods, standards and review logic encoded for AI.",
           },
           {
-            stat: "14",
+            value: "14",
             title: "Teams using the layer",
             desc: "Across creative, legal, finance, product, programs and operations.",
           },
           {
-            stat: "1",
+            value: "1",
             title: "Shared intelligence layer",
             desc: "One system for authoring, testing, versioning, ownership and reuse.",
           },
           {
-            // No `stat`. The claim is a property of the layer, not a count
-            // of it, and inventing "14" here twice would say less.
-            title: "Domain-owned",
+            value: "DOMAIN-OWNED",
+            title: "Teams maintain the layer",
             desc: "The teams that know the work maintain the Skills and extend them after handoff.",
           },
         ],
@@ -1432,9 +1426,28 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         preview: "Preview — 02_ai-fluency-studio/",
         vizLabel: "Viz — performance evidence",
         visual: { kind: "stills", shots: STUDIO_SHOTS },
-        readouts: [
-          { value: "500", label: "ads a month with AI in the chain" },
-          { value: "2-3×", label: "faster than the agencies replaced" },
+        classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
+        blocks: [
+          {
+            value: "97%",
+            title: "Paid-social briefings involve AI",
+            desc: "AI is part of the default process, not a specialist add-on.",
+          },
+          {
+            value: "3/3",
+            title: "Featured campaigns above ROAS target",
+            desc: "ROAS of 2.7, 5.33 and 6.14 against a benchmark of 2.",
+          },
+          {
+            value: "2–3×",
+            title: "Faster than former agency workflows",
+            desc: "More iterations in less time, without lowering the craft bar.",
+          },
+          {
+            value: "SELF-SUFFICIENT",
+            title: "Studio owns the workflow",
+            desc: "The team briefs, creates, reviews and ships without specialist dependency.",
+          },
         ],
         context: [
           { k: "Phase", v: "Build" },
@@ -1443,6 +1456,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         ],
         source: "Source — studio production line · rev 2026.07",
         stamp: { ord: "02", phase: "Build", ref: "BLD-01" },
+        brief: [
+          "Creative Technology embedded inside Studio to turn AI from a specialist service into ",
+          { em: "a capability the creative team owns" },
+          ". Live briefs, reusable workflows and clear ethical lines moved the team from receiving AI output to briefing, steering and judging it themselves. Paid social now moves faster, creating more time and budget for the live-action craft AI should not replace.",
+        ],
       },
       {
         id: "atl-films",
@@ -1453,9 +1471,28 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         preview: "Preview — 03_ai-above-the-line/",
         vizLabel: "Viz — the films",
         visual: { kind: "films", films: ATL_FILMS },
-        readouts: [
-          { value: "2", label: "films fully AI-produced" },
-          { value: "1", label: "crew shared with live action" },
+        classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
+        blocks: [
+          {
+            value: "2 × 30 SEC",
+            title: "AI-produced ATL films",
+            desc: "Two narrative master films built for top-of-funnel paid media.",
+          },
+          {
+            value: "6 DISCIPLINES",
+            title: "One craft standard",
+            desc: "CD, AD, production, edit, color and sound matched live action.",
+          },
+          {
+            value: "YOUTUBE + CTV",
+            title: "Paid media distribution",
+            desc: "The campaign reached YouTube and connected TV in the US.",
+          },
+          {
+            value: "2 + 2",
+            title: "AI beside live action",
+            desc: "Two AI films launched alongside two traditionally produced spots.",
+          },
         ],
         context: [
           { k: "Phase", v: "Build" },
@@ -1464,20 +1501,43 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         ],
         source: "Source — creative archive · rev 2026.07",
         stamp: { ord: "03", phase: "Build", ref: "BLD-02" },
+        brief: [
+          "Two ATL films were produced with generative image and video models, ",
+          { em: "using the same creative team and quality bar as Loop’s live-action work" },
+          ". The project took relatable, acquisition-minded stories into paid media on YouTube and connected TV—expanding the formats Loop could test without treating AI as a replacement for live action.",
+        ],
       },
       {
         id: "tooling",
         file: "04_SOFTWARE-FOR-FEW/",
         meta: "4 TOOLS",
-        project: "Software for few",
+        project: "Software for Few",
         icon: "dir",
         preview: "Preview — 04_software-for-few/",
         vizLabel: "Fleet — in production",
         visual: { kind: "tools", toolIds: TOOL_IDS },
-        readouts: [
-          { value: "04", label: "production tools" },
-          { value: "47+", label: "Skills they stand on" },
-          { value: "Days → min", label: "briefing synthesis" },
+        classification: "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
+        blocks: [
+          {
+            value: "MULTI-MODEL",
+            title: "Generation platform · live",
+            desc: "Image, video, product references and cost visibility in one internal tool.",
+          },
+          {
+            value: "MONDAY → FIGMA",
+            title: "Briefing orchestration · live",
+            desc: "High-volume paid-social briefs move directly into the production flow.",
+          },
+          {
+            value: "3 SIGNALS",
+            title: "Briefing intelligence · live",
+            desc: "Competitor ads, social listening and performance data converge in one interface.",
+          },
+          {
+            value: "4 STEPS",
+            title: "Localization pipeline · live",
+            desc: "Transcribe, translate, review and dub approved video in one flow.",
+          },
         ],
         context: [
           { k: "Built with", v: "The workflow owner" },
@@ -1486,6 +1546,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         ],
         source: "Source — fleet registry · rev 2026.07",
         stamp: { ord: "04", phase: "Build", ref: "BLD-03" },
+        brief: [
+          "AI made software worth building for workflows ",
+          { em: "a conventional product roadmap would ignore" },
+          ". Four internal tools grew from live bottlenecks in generation, orchestration, briefing intelligence and localization. Each is built for the few people who need it—and designed so those teams can keep extending it.",
+        ],
       },
       /* Rows 05–08 (workshop rollout · governance · metrics · mission
          report) were TRIMMED here 2026-08-02 (owner) — see the ORDER note

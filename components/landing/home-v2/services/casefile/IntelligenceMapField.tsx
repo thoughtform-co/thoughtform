@@ -3,7 +3,6 @@
 import {
   useCallback,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -24,6 +23,12 @@ import {
   type MapMode,
   type MapProjection,
 } from "./configurationFieldLayout";
+import {
+  IntelligenceMapDetail,
+  INTELLIGENCE_MAP_BASIS_LABEL,
+  INTELLIGENCE_MAP_FACET_LABEL,
+  INTELLIGENCE_MAP_FACETS,
+} from "./IntelligenceMapDetail";
 import { usePersistentFieldMorph } from "./usePersistentFieldMorph";
 
 const PROJECTIONS: readonly MapProjection[] = ["configuration", "team", "allocation"];
@@ -34,24 +39,6 @@ const PROJECTION_LABEL: Record<MapProjection, string> = {
   allocation: "Allocation",
 };
 
-const FACETS = ["human", "model", "skill", "context", "execution", "eval"] as const;
-type FacetKey = (typeof FACETS)[number];
-
-const FACET_LABEL: Record<FacetKey, string> = {
-  human: "Human",
-  model: "Model",
-  skill: "Skill",
-  context: "Context",
-  execution: "Execution",
-  eval: "Eval",
-};
-
-const BASIS_LABEL: Record<CaseWorkConfiguration["allocationBasis"], string> = {
-  "work-evidenced": "Work evidence",
-  "work-evaluated": "Work evaluation",
-  "function-signal": "Function signal",
-};
-
 const LIFECYCLE_FILL: Record<CaseWorkConfiguration["lifecycle"], string> = {
   "In use": "use",
   "In build": "build",
@@ -59,14 +46,6 @@ const LIFECYCLE_FILL: Record<CaseWorkConfiguration["lifecycle"], string> = {
 };
 
 const MORPH_STAGGER_MS = 120;
-
-interface RelationshipLine {
-  id: string;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
 
 export interface IntelligenceMapFieldProps {
   configurations: readonly CaseWorkConfiguration[];
@@ -104,7 +83,7 @@ function configurationAriaLabel(configuration: CaseWorkConfiguration): string {
     configuration.publicFunction,
     `${configuration.shape} work`,
     `${configuration.allocationTier} capability tier`,
-    BASIS_LABEL[configuration.allocationBasis],
+    INTELLIGENCE_MAP_BASIS_LABEL[configuration.allocationBasis],
     configuration.lifecycle,
   ].join(". ");
 }
@@ -125,17 +104,14 @@ export function IntelligenceMapField({
 }: IntelligenceMapFieldProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [keyboardId, setKeyboardId] = useState(configurations[0]?.id ?? "");
-  const [relationshipLines, setRelationshipLines] = useState<RelationshipLine[]>([]);
 
   const instanceId = useId();
   const panelId = `${instanceId}-panel`;
   const inspectorId = `${instanceId}-inspector`;
 
-  const canvasRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef(new Map<MapProjection, HTMLButtonElement>());
   const nodeRefs = useRef(new Map<string, HTMLButtonElement>());
   const mobileNodeRefs = useRef(new Map<string, HTMLButtonElement>());
-  const skillRefs = useRef(new Map<string, HTMLElement>());
 
   const layoutInput = useMemo(
     () =>
@@ -288,47 +264,6 @@ export function IntelligenceMapField({
     [focusNode, layout.navRows]
   );
 
-  const measureRelationships = useCallback(() => {
-    const canvas = canvasRef.current;
-    const node = selectedId ? nodeRefs.current.get(selectedId) : null;
-    if (!canvas || !node || !selected) {
-      setRelationshipLines([]);
-      return;
-    }
-
-    const canvasRect = canvas.getBoundingClientRect();
-    const nodeRect = node.getBoundingClientRect();
-    const x1 = nodeRect.left - canvasRect.left + nodeRect.width / 2;
-    const y1 = nodeRect.bottom - canvasRect.top;
-
-    setRelationshipLines(
-      selected.linkedSkillIds.flatMap((skillId) => {
-        const pip = skillRefs.current.get(skillId);
-        if (!pip) return [];
-        const pipRect = pip.getBoundingClientRect();
-        return {
-          id: skillId,
-          x1,
-          y1,
-          x2: pipRect.left - canvasRect.left + pipRect.width / 2,
-          y2: pipRect.top - canvasRect.top + pipRect.height / 2,
-        };
-      })
-    );
-  }, [selected, selectedId]);
-
-  useLayoutEffect(() => {
-    const firstFrame = requestAnimationFrame(measureRelationships);
-    const settled = window.setTimeout(measureRelationships, 650);
-    const observer = new ResizeObserver(measureRelationships);
-    if (canvasRef.current) observer.observe(canvasRef.current);
-    return () => {
-      cancelAnimationFrame(firstFrame);
-      window.clearTimeout(settled);
-      observer.disconnect();
-    };
-  }, [layoutKey, measureRelationships]);
-
   const mobileGroups = useMemo(
     () =>
       layout.anchors.map((anchor) => ({
@@ -405,11 +340,14 @@ export function IntelligenceMapField({
 
       <div className="fl-intel-map__decoder">
         <span className="fl-intel-map__facet-key" aria-label="Configuration signature">
-          {FACETS.map((facet) => (
-            <i key={facet}>{FACET_LABEL[facet]}</i>
+          {INTELLIGENCE_MAP_FACETS.map((facet) => (
+            <i key={facet}>{INTELLIGENCE_MAP_FACET_LABEL[facet]}</i>
           ))}
         </span>
-        <p>Each node is work: what it inherits, what runs it, and where judgment remains.</p>
+        <p>
+          Each node is a piece of work. Its signature shows what it inherits, what runs it, and
+          where people still hold judgment.
+        </p>
       </div>
 
       <div
@@ -426,7 +364,7 @@ export function IntelligenceMapField({
           closeInspector();
         }}
       >
-        <div className="fl-intel-map__canvas" ref={canvasRef}>
+        <div className="fl-intel-map__canvas">
           <div
             className="fl-intel-map__field"
             ref={fieldRef}
@@ -548,12 +486,12 @@ export function IntelligenceMapField({
                   </span>
                   <span className="fl-intel-map__node-work">{configuration.mapLabel}</span>
                   <span className="fl-intel-map__signature" aria-hidden="true">
-                    {FACETS.map((facet) => (
+                    {INTELLIGENCE_MAP_FACETS.map((facet) => (
                       <i
                         key={facet}
                         data-facet={facet}
                         data-state={configuration.facets[facet].state}
-                        title={`${FACET_LABEL[facet]}: ${configuration.facets[facet].state}`}
+                        title={`${INTELLIGENCE_MAP_FACET_LABEL[facet]}: ${configuration.facets[facet].state}`}
                       />
                     ))}
                   </span>
@@ -562,44 +500,38 @@ export function IntelligenceMapField({
             })}
           </div>
 
-          <svg className="fl-intel-map__links" aria-hidden="true" width="100%" height="100%">
-            {relationshipLines.map((line) => {
-              const bend = line.y1 + Math.max(10, (line.y2 - line.y1) * 0.45);
-              return (
-                <path
-                  key={line.id}
-                  d={`M ${line.x1} ${line.y1} C ${line.x1} ${bend}, ${line.x2} ${bend}, ${line.x2} ${line.y2}`}
-                />
-              );
-            })}
-          </svg>
-
           <div
             className="fl-intel-map__reservoir"
             aria-label={`${skills.length} encoded Skills grouped by five work shapes`}
           >
-            {groups.map((group) => {
-              const groupSkills = skills.filter((skill) => skill.engine === group.name);
-              return (
-                <span className="fl-intel-map__skill-group" key={group.name}>
-                  <b>{group.name}</b>
-                  <span className="fl-intel-map__pips" aria-hidden="true">
-                    {groupSkills.map((skill) => (
-                      <i
-                        key={skill.id}
-                        ref={(element) => {
-                          if (element) skillRefs.current.set(skill.id, element);
-                          else skillRefs.current.delete(skill.id);
-                        }}
-                        data-linked={linkedSkillIds.has(skill.id) || undefined}
-                        title={skill.name}
-                      />
-                    ))}
+            <p className="fl-intel-map__reservoir-label">
+              <b>Encoded substrate</b>
+              <span>
+                {skills.length} Skills / {groups.length} shapes
+              </span>
+            </p>
+            <div className="fl-intel-map__skill-runs" aria-hidden="true">
+              {groups.map((group) => {
+                const groupSkills = skills.filter((skill) => skill.engine === group.name);
+                return (
+                  <span
+                    className="fl-intel-map__skill-group"
+                    key={group.name}
+                    data-shape={group.name}
+                  >
+                    <span className="fl-intel-map__pips">
+                      {groupSkills.map((skill) => (
+                        <i
+                          key={skill.id}
+                          data-skill-id={skill.id}
+                          data-linked={linkedSkillIds.has(skill.id) || undefined}
+                        />
+                      ))}
+                    </span>
                   </span>
-                  <em>{groupSkills.length}</em>
-                </span>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -663,70 +595,28 @@ export function IntelligenceMapField({
           </details>
         </div>
 
-        {selected ? (
-          <aside
-            className="fl-intel-map__inspector"
-            id={inspectorId}
-            role="region"
-            aria-label={`${selected.work} configuration detail`}
-          >
-            <p className="fl-intel-map__inspector-top">
-              <span>{selected.shape}</span>
-              <i>{selected.lifecycle}</i>
-              <b>
-                {String(ordinalById.get(selected.id) ?? 1).padStart(2, "0")} /{" "}
-                {configurations.length}
-              </b>
-              <button
-                type="button"
-                onClick={closeInspector}
-                aria-label="Close configuration detail"
-              >
-                ×
-              </button>
+        <div
+          className="fl-intel-map__detail-slot"
+          data-empty={!selected || undefined}
+          aria-live="polite"
+        >
+          {selected ? (
+            <IntelligenceMapDetail
+              configuration={selected}
+              linkedSkills={linkedSkills}
+              mode={mode}
+              ordinal={ordinalById.get(selected.id) ?? 1}
+              total={configurations.length}
+              id={inspectorId}
+              onClose={closeInspector}
+            />
+          ) : (
+            <p className="fl-intel-map__detail-prompt">
+              <span>Select work</span>
+              <b>Inspect its configuration, human checkpoint and encoded substrate.</b>
             </p>
-            <h4>{selected.work}</h4>
-            <p className="fl-intel-map__inspector-function">{selected.publicFunction}</p>
-            <p className="fl-intel-map__inspector-summary">{selected.summary}</p>
-
-            <dl className="fl-intel-map__anatomy">
-              {FACETS.map((facet) => (
-                <div key={facet}>
-                  <dt>{FACET_LABEL[facet]}</dt>
-                  <dd>
-                    <b>{selected.facets[facet].state}</b>
-                    <span>{selected.facets[facet].detail}</span>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-
-            <div className="fl-intel-map__inspector-foot">
-              <p>
-                <span>Human checkpoint</span>
-                <b>{selected.humanCheckpoint}</b>
-              </p>
-              <p>
-                <span>Owner role</span>
-                <b>{selected.ownerRole}</b>
-              </p>
-              <p>
-                <span>Allocation</span>
-                <b>
-                  {selected.allocationTier} · {BASIS_LABEL[selected.allocationBasis]}
-                </b>
-              </p>
-              <p>
-                <span>Encoded Skills</span>
-                <b>
-                  {linkedSkills.length
-                    ? linkedSkills.map((skill) => skill.name).join(" · ")
-                    : "No encoded Skill · repository context + tests"}
-                </b>
-              </p>
-            </div>
-          </aside>
-        ) : null}
+          )}
+        </div>
       </div>
 
       <p className="fl-intel-map__readout">

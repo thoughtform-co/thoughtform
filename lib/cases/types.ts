@@ -209,15 +209,15 @@ export interface CaseWorkConfiguration {
 /* ── The intelligence map's projections (ADR-056 U16 → U17) ──────────────
    The map is not just Skills: it is the CONFIGURATION — which intelligence
    runs which work — and the allocation of work across it. ONE dataset,
-   THREE PROJECTIONS of a single persistent tile field (substrate · team ·
+   THREE PROJECTIONS of a single persistent tile field (configuration · team ·
    allocation); presence of `intelligence` on the track's registry visual
    is what turns the third projection on, so a second client without the
    data keeps the two-way lattice. TRACK-SIDE ONLY, like `skills`.
 
    ⚠ U16's STACK view (four layers: tools/Skills/connectors/models) was
    DELETED in U17 by owner ruling: it restated the row's own brief and the
-   four blocks in the panel foot. Its content lives on in the brief, the
-   blocks and the tools directory row — do not restore it from memory.
+   four proof claims. Its content lives on in the brief, the left proof
+   register and the tools directory row — do not restore it from memory.
 
    Numbers policy, pinned by the registry test and rules/proof.md: SHARES,
    RATIOS AND REACH FRACTIONS ONLY — never currency, never a per-seat cost
@@ -226,10 +226,9 @@ export interface CaseWorkConfiguration {
    derivation from the client's usage snapshots lives in the content
    module's comments, not on the surface. */
 
-/** One rung of the allocation ladder, lightest tier first — and, since
- *  U17, one COLUMN of the allocation projection: the Skills whose team
- *  leans on this tier regroup underneath it, and the reach/draw pair
- *  renders in the column head. GENERIC capability names by owner ruling
+/** One rung of the allocation ladder, lightest tier first. The configurations
+ *  assigned to it regroup around its attractor, and the reach/draw pair
+ *  renders in that anchor. GENERIC capability names by owner ruling
  *  (2026-08-03) — never model families: the landing stays model-silent
  *  and survives model churn. */
 export interface CaseModelTier {
@@ -364,35 +363,27 @@ export interface CaseSignalPoint {
   label: string;
 }
 
-/** One readout tile under a track's plate. */
+/** Legacy compact proof claim, normalized into the left proof register. */
 export interface CaseReadout {
   value: string;
   label: string;
 }
 
 /**
- * One achievement tile in a track's 2×2 foot (ADR-056 U12) — the same
- * grammar the tool gallery's capability tiles use, with an OPTIONAL figure.
- * That option is the whole point: a readout row can only say things that
- * reduce to a number, and the claims worth making about an engagement do
- * not all reduce to one. A block with no `stat` is not a lesser block.
+ * One proof tile in a track's left-column 2×2 register. Every tile follows
+ * one hierarchy: display value → small-caps label → supporting sentence.
+ * `value` is deliberately textual rather than numeric: proof can be a count,
+ * a ratio, a format, or an operating property such as `DOMAIN-OWNED`.
  *
- * BUDGETS, pinned by `cases-registry.test.ts` and measured against the
- * t7→t11 foot band, which is ~160px at 1280×720 and ~180px at 1440×800:
- *   · `stat` ≤4 chars — it prints at display size on one line.
- *   · `title` ≤26 chars — mono caps, `white-space: nowrap` with an ellipsis,
- *     against a half-rail of ~330px. It does not wrap; it truncates.
- *   · `desc` ≤95 chars — two clamped lines, ONE on short viewports, so the
- *     first ~40 characters must carry the sentence.
- * Exactly four blocks: the grid is 2×2 and a fifth silently falls out of
- * the box.
- *
- * A track carries `blocks` OR `readouts`, never both — the foot has one
- * slot. The either/or is pinned, not conventional.
+ * BUDGETS are pinned by `cases-registry.test.ts`:
+ *   · `value` ≤16 chars — one display line in the half-column;
+ *   · `title` ≤40 chars — one or two compact mono lines;
+ *   · `desc` ≤95 chars — available on taller and full-flow layouts.
+ * Exactly four blocks: the proof register is a 2×2 composition.
  */
 export interface CaseBlock {
-  /** The figure, when the claim has one, e.g. "47+". Absent = a text tile. */
-  stat?: string;
+  /** Display claim, e.g. "47+", "2 × 30 SEC", or "DOMAIN-OWNED". */
+  value: string;
   title: string;
   desc: string;
 }
@@ -493,28 +484,27 @@ export interface CaseTrack {
   vizLabel: string;
   visual: CaseTrackVisual;
   /**
-   * Two to four readout tiles under the plate. OPTIONAL since ADR-056 U12,
-   * and exactly one of `readouts` / `blocks` is present — a track whose foot
-   * is blocks has no readouts at all, rather than an empty array the next
-   * author would read as an invitation to fill it.
+   * Track-specific metadata under the selected project title. Rendered as
+   * immediate text rather than a destructive decode target so it can change
+   * safely with the directory selection. Falls back to the casefile-level
+   * `classLine` when absent.
+   */
+  classification?: string;
+  /**
+   * Two to four legacy readout claims. Renderers normalize these into the
+   * same left proof register used by `blocks`. Exactly one of `readouts` or
+   * `blocks` is present; new authored tracks should prefer `blocks`.
    */
   readouts?: readonly CaseReadout[];
   /**
-   * The 2×2 achievement foot, replacing `readouts` on this track. Four
-   * tiles; see `CaseBlock` for the budgets and the either/or law.
-   *
-   * ⚠ A blocks foot DROPS the context register and the provenance line —
-   * three-line tiles plus both would overrun the band at 1440×800. That is
-   * the tool gallery's precedent ("while a tool is in view the foot is the
-   * capabilities and NOTHING else"), and it means `context` / `source`
-   * below are carried but unrendered on such a track. They stay in the data
-   * because they are the row's provenance whether or not the foot has room.
+   * The preferred 2×2 left-column proof register. Four tiles; see
+   * `CaseBlock` for the budgets and the either/or law.
    */
   blocks?: readonly CaseBlock[];
   /** Dotted-leader rows. Values stay ≤20 chars — the leader needs a
    *  non-wrapping value, so a long one runs into the next column. */
   context: readonly { k: string; v: string }[];
-  /** Mono provenance line at the foot of the panel. */
+  /** Mono provenance retained with the track even when the shell omits it. */
   source: string;
   /**
    * This row's own brief paragraph, replacing the casefile's standing one
@@ -522,13 +512,9 @@ export interface CaseTrack {
    * rows without one keep `CaseCasefile.brief`, which has to serve all of
    * them and therefore cannot be specific to any.
    *
-   * ⚠ SAME SILENT HEIGHT BOX as the casefile brief — `.fl-brief` is boxed
-   * against the `--fl-t6` seam with `overflow: hidden` and no scrollbar, so
-   * an overlong brief just loses its tail, and only on short viewports.
-   * The U11 tick move raised the budget to roughly 330 characters at
-   * 1280x720 (from ~195); `cases-registry.test.ts` pins that ceiling.
-   * Measure at 1280x720 after any edit — the taller viewports will not tell
-   * you.
+   * The harmonized left column budgets 420 characters before the proof
+   * register. `cases-registry.test.ts` pins the content ceiling; compact
+   * viewport tests pin the rendered box.
    *
    * NOT a decode target, which is why this is safe where a per-track
    * `classLine` is not: the reveal caches its `data-fl-text` nodes once per

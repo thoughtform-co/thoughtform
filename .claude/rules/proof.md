@@ -16,7 +16,7 @@ inherited its ambient-cover role.
 **Read first**
 
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
-- [ADR-061: Intelligence Map work configurations](../sentinel/decisions/061-intelligence-map-work-configurations.md) — Accepted Cycle B contract for the map atom, projections, evidence and privacy
+- [ADR-061: Intelligence Map work configurations](../sentinel/decisions/061-intelligence-map-work-configurations.md) — proposed harmonization contract for the map atom, projections, evidence and privacy; do not mark accepted before its verification gates pass
 - [ADR-054](../sentinel/decisions/054-proof-station-client-cases.md) — superseded on placement; its content model and confidentiality envelope are still live
 - [ADR-029](../sentinel/decisions/029-services-card-ring.md) / [ADR-050](../sentinel/decisions/050-services-card-face.md) — the ring the casefile now holds back
 - [ADR-044](../sentinel/decisions/044-services-masthead.md) — the reveal protocol and the type standard
@@ -119,40 +119,31 @@ inherited its ambient-cover role.
   at every laptop viewport (U11 — it nearly shipped that way). `--fl-tabs-h`
   lives on `.fl-case` for the same floor; scoped to `.fl-tabs` it resolves to
   nothing there and collapses every zone to `top: 0`.
-- **THE TYPE LAW IS SURFACE-WIDE, not a tools-row rule.** Content reads at
-  `--fl-copy` or, in mono, never below the **10.5px** directory reading size;
-  **8.5px is the CHROME floor** and chrome means ordinals, kickers, team/tag
-  labels, designations and the provenance line — things that LABEL content
-  rather than being it. Update 9 wrote the law and applied it to the tool
-  gallery only, so the registry plate and the shared foot sat at 8.5–9.5px
-  for two more passes; U11 finished the job (`.fl-readout__k`, `.fl-reg__row`,
-  `.fl-reg__gloss`, `.fl-ctx__v`). When a box will not take the size, spend
-  PADDING and LEADING — the Update 5 lever, and what the `≤760h` registry
-  rung does. Never take the type back below the floor.
+- **THE TYPE LAW IS SURFACE-WIDE, not a tools-row rule.** Decorative ordinal
+  and pip metadata may use 9px. Tabs, decoder and anchors start at 10px;
+  directory rows and work-node identities start at 11px; readable compact
+  copy starts at 12px. A selected work title starts at 17px; expanded detail
+  starts at 24px title / 14px body. PT Mono owns instrument chrome and PP Neue
+  Montreal owns titles and prose. When a box will not take the size, spend
+  padding, leading or content density — never shrink important labels or swap
+  in a serif display face.
 - **A track can carry its OWN brief (`CaseTrack.brief`, U11).** Optional, with
   `track.brief ?? file.brief` in the renderer; the casefile-level brief has to
-  serve all four rows, so it can only ever describe the engagement. ⚠ Do NOT
-  make `classLine` per-track the same way: it is a `data-fl-text` decode
-  target and the decode caches its nodes once per CLIENT (dep `[def.slug]`),
-  so a track-reactive target goes stale on the first row switch. `brief` is
-  safe precisely because it is not decoded.
+  serve all four rows, so it can only ever describe the engagement. Optional
+  `CaseTrack.classification` follows the same fallback law, but both reactive
+  fields render immediately and never carry `data-fl-text`: the destructive
+  decoder caches targets once per client and would strand stale metadata after
+  the first directory switch.
 - **The tools row is a CONTROLLED gallery on ONE grid (ADR-056 Update 9,
-  third pass).** `TrackPanel` owns `toolIdx` — not the plate — because the
-  panel FOOT follows the tool in view. The body splits 50/50 with no gap,
-  the tabs are quarters of the same rail, and the foot's 2×2 capability
-  tiles sit on the same split (`--fl-plate-px` / `--fl-shot-px` are the
-  shared text rails — measured aligned to 0.1px). The FUNCTIONAL NAME is
-  the tab label; the codename is chrome (a visitor cannot know "Mímir").
-  While a tool is in view the foot is the capabilities and NOTHING else —
-  mode/team/year live on the identity meta line, the `shift` sentence
-  beside the shot, status in the panel head. Content reads at `--fl-copy`
-  (the brief column's own size); 8.5–10px mono is CHROME ONLY. The
-  responsive ladder (≤930h / ≤800h / ≤760h) is measured against the worst
-  tool (Heimdall's 2-line lead over a 179-char shift) and never drops copy
-  below the 10.5px directory reading size — at ≤760h the TEXT COLUMN WIDENS
-  (58/42) instead of the sentence truncating. Tab-name overflow is a
-  TRACKING problem, not a size problem (0.05em cost 12px on a 146px
-  quarter). The shot BLEEDS to the viz box edges (cover, top-anchored;
+  third pass).** `TrackPanel` owns `toolIdx` and the right panel gives the
+  gallery its full height; no capability foot follows the selected tool.
+  Track-level proof lives in the shared left register. The gallery body splits
+  50/50 with no gap and the tabs are quarters of the same rail. The FUNCTIONAL
+  NAME is the tab label; the codename is chrome (a visitor cannot know
+  "Mímir"). Mode/team/year live on the identity meta line, the `shift`
+  sentence beside the shot, status in the panel head. At ≤760h the TEXT COLUMN
+  WIDENS instead of the sentence truncating. The shot BLEEDS to the viz box
+  edges (cover, top-anchored;
   `contain`'s letterbox was the "plastered on" read) and the whole frame is
   the walkthrough button, with the bar fused to its bottom edge and the
   duration printed from `walkthrough.duration`.
@@ -222,28 +213,26 @@ inherited its ambient-cover role.
 - **The directory holds FOUR rows (owner, 2026-08-02) — the projects,
   one browse-band quarter each.** The rollout/governance/metrics/report
   rows were trimmed in U13; where each one's content still lives is
-  documented at the trim site in `loop-earplugs.ts`, so nothing gets
-  restored from muscle memory. The brief/directory seam stays `--fl-t6`
-  (the four rows leave air, which is fine; clipping was the eight-row
-  problem). ⚠ Adding a row now also RESHAPES THE BROWSE BAND — the spy
+  documented at the trim site in `loop-earplugs.ts`, so nothing gets restored
+  from muscle memory. The lower-left band now contains the proof register
+  first and the directory beneath it; the four rows do not reclaim that proof
+  space. ⚠ Adding a row still RESHAPES THE BROWSE BAND — the spy
   divides it per row, so a fifth row changes every band edge and the
   smoke's band-fraction targets. Measure at 1280×720 / 1440×800 /
   1920×1080; the 10.5px row type is owner-set — take density out of
   padding, never type.
-- **A track's foot is `readouts` OR `blocks`, never both (ADR-056 U12).**
-  `blocks` is the 2×2 achievement grid — four `{ stat?, title, desc }` tiles
-  reusing the tool gallery's `.fl-caps` / `.fl-cap` grammar, so the responsive
-  ladder and the light-theme rows live in ONE place; do not clone it into a
-  `.fl-blocks`. The optional `stat` is the point of the shape: a readout row
-  can only say things that reduce to a number. Pinned at four tiles, stat ≤4,
-  title ≤26, desc ≤95. Two rules that were measured, not chosen: the figure's
-  row is RESERVED even on a tile with no figure (left to flow, the fourth tile
-  pulled its title 27px up and read as broken), and a blocks foot DROPS the
-  context register and the provenance line — three-line tiles plus both
-  overrun the band. It keeps BOTH description lines at 720p, unlike the tools
-  foot, because a block's sentence is the only place its claim is explained.
+- **Proof is ONE LEFT-COLUMN 2×2 REGISTER.** New tracks carry exactly four
+  `CaseBlock` records shaped `{ value, title, desc }`; `value` is required and
+  textual, so a count, ratio, format or operating property has the same
+  hierarchy. Budgets are value ≤16, title ≤40 and description ≤95. Legacy
+  `readouts` remain a compatibility input normalized into this register, and a
+  track carries one model or the other, never both. On compact-height desktop
+  the value and label remain visible while description density may reduce;
+  taller desktop and full-flow mobile expose the supporting sentence. The
+  right panel has no generic foot: its visual owns the full panel beneath the
+  designation rail.
 - **The registry plate is the INTELLIGENCE MAP: ONE PERSISTENT WORK-
-  CONFIGURATION FIELD, THREE PROJECTIONS (ADR-061, Accepted).** The exact
+  CONFIGURATION FIELD, THREE PROJECTIONS (ADR-061).** The exact
   tabs are CONFIGURATION · TEAM · ALLOCATION. SUBSTRATE is no longer a
   projection: the canonical 47 Skills are a FIXED RESERVOIR referenced by
   the work configurations. U16's STACK view stays deleted.
@@ -257,10 +246,14 @@ inherited its ambient-cover role.
     nodes by public functional team. ALLOCATION regroups those SAME nodes by
     Fast · Everyday · Deep · Frontier. Projection changes placement and
     emphasis, never the underlying fact.
-  - **THE RESERVOIR DOES NOT MORPH.** Selection may highlight referenced
-    Skills and compact layouts may summarize it, but the Skills remain a
-    stable source set. Its `47+` count is a Skills count and may never be used
-    as the work-configuration total.
+  - **THE RESERVOIR DOES NOT MORPH.** Desktop renders one bus labelled
+    `ENCODED SUBSTRATE · 47 SKILLS / 5 SHAPES` with all 47 stable pips in five
+    unlabelled runs. Selection may highlight referenced Skills and compact
+    layouts may summarize it, but the Skills remain a stable source set. Its
+    `47+` count is a Skills count and may never be used as the
+    work-configuration total. The five shape labels appear once, as the
+    Configuration view's vertical anchors; a labelled bottom repetition is a
+    duplicate taxonomy.
   - **Stable identity is an id, not copy.** Work nodes are flat children of
     one stable parent, keyed by a non-display id and kept in invariant order.
     Nesting them in projection-specific containers remounts them and turns the
@@ -284,6 +277,8 @@ inherited its ambient-cover role.
     interrupted projection changes begin from the currently painted rect.
   - Projection chrome may crossfade; work nodes may not. The Skill reservoir
     may highlight links, but it does not join the FLIP.
+  - Selection survives every projection change and overlay expansion. A tab
+    click changes placement, not identity or detail state.
   - Click-driven only. No scroll-driven regrouping, ambient pulse, random
     jitter, force simulation or spring overshoot. Reduced motion swaps the
     deterministic layout immediately.
@@ -291,14 +286,17 @@ inherited its ambient-cover role.
   anatomy, so the head register names the selected WORK CONFIGURATION and
   defaults to configuration 01 on arrival. The work label wins truncation
   priority over legend or status chrome.
-- **Compact node, focused detail.** The node carries a stable mark, short work
-  identity and at most one projection signal. Selection slides a stage-height,
-  semi-transparent detail surface in from the right with work/outcome, team,
-  Skill references, artifact, generic tool/connector categories, capability
-  lane and evidence state. It stays INSIDE the stage, closes before a
-  projection morph, and follows ADR-006's labelled-dialog, Escape/outside-
-  dismiss and focus-return grammar. At 800h, preserve the existing clamp and
-  `min-height: 0` discipline; detail must yield before the field clips.
+- **Compact node, reserved detail console.** The node carries a stable mark,
+  short work identity and at most one projection signal. A non-overlapping
+  lower console reserves its height even before selection, so detail never
+  covers the field or introduces an internal scrollbar. Compact mode shows
+  work/function/lifecycle/summary, six facet STATES, human checkpoint,
+  allocation basis, broad owner and linked Skill names. The shared expanded
+  detail component adds the facet PROSE inside the lazy ADR-006 body portal,
+  with focus trap, scroll lock, Escape/backdrop dismissal and focus return.
+- **Relationships are state, not geometry.** Linked pips light and the detail
+  names the Skills. Do not restore an SVG, `ResizeObserver`, node-to-pip rect
+  reads or a post-morph measurement loop.
 - ⚠ **ALLOCATION IS AGGREGATE EVIDENCE, NOT PER-SKILL TOKEN TELEMETRY.**
   - Lifecycle and draw are separate semantics. “Shipped” never means “high
     consumption.”
@@ -310,10 +308,12 @@ inherited its ambient-cover role.
     share or ratio — never live telemetry. Absence is not automatically zero.
   - **Two bars per tier head, never one** when the reach/draw argument is
     shown; one bar degrades it into an unexplained usage chart.
-- **Cell fill changes meaning only with an explicit legend.** Configuration
-  and Team may encode lifecycle/evidence; Allocation may encode an aggregate
-  draw band. The ramp still stops at 0.62 so dawn ink stays legible in both
-  themes, and fill rules must cover legend swatches as well as nodes.
+- **The map is FLAT instrument grammar.** Configuration and Team may encode
+  lifecycle/evidence and Allocation may encode an aggregate draw band, but
+  the treatment is solid fill, border, tick or categorical mark with an
+  explicit legend. Map nodes, states, console and reservoir use no CSS
+  gradients or hatch fills; computed `background-image` must remain `none` in
+  both themes.
 - **Compact-height and mobile layouts DEGRADE DELIBERATELY; they do not clip.**
   Below the desktop fit envelope, use grouped compact rows/cards, a summarized
   fixed reservoir and in-flow/full-width detail. Keep all three projections
@@ -326,13 +326,12 @@ inherited its ambient-cover role.
     `line-height: 1` on every mono label sharing a row with a sized element
     is load-bearing, not tidiness.
   - **`.fl-plate` measures 0 while an inner grid overflows** — the plate's
-    own `overflow: hidden` swallows it. `.fl-skills__field`, `__rail` and
-    `__panel` are all in the measured set, and the smoke walks EVERY
-    PROJECTION. A guard that only sees the default state is not a guard,
-    and the default is reliably what fits.
+    own `overflow: hidden` swallows it. The field, substrate bus and reserved
+    detail console are all in the measured set, and the smoke walks EVERY
+    PROJECTION. A guard that only sees the default state is not a guard.
   - **MEASURE ONLY AFTER THE MORPH SETTLES.** A rect read mid-flight is a
     transformed box, not a laid-out one. Await the absence of
-    `.fl-skills__field[data-morph]`, never a bare timeout — and wait for
+    `.fl-intel-map__field[data-morph]`, never a bare timeout — and wait for
     the field to EXIST before stamping or measuring it, or the harness
     blames the feature for its own earliness.
   - **A budget looser than the box ships silent truncation.** A 24-char
@@ -340,15 +339,14 @@ inherited its ambient-cover role.
     the guard tightened to the real ceiling.
   - **Chips beside a `1fr` track lose and get sliced mid-word.** Half a
     label is a defect, not a compromise — give them their own line.
-  - **The box is not one size — 690×240 at 1440×800, 862×429 at 2017×1269**
-    (stage 144px and 313px). Per-projection `clamp()` metrics: the `svh`
-    middle terms bind at 800h and the ceilings are headroom for the tall
-    end. Never buy presence by raising the `svh` COEFFICIENTS — those
-    bind at 800h, where this surface has no room. Check both ends.
+  - **The box is not one size.** The right visual now owns the whole panel,
+    but the 1280×720 casefile remains the binding composition while 2017×1269
+    exposes over-expansion and weak hierarchy. Per-projection `clamp()`
+    metrics need both ends; never tune only the tall reference.
   - The exemplar `rows` stay in the data unrendered (the beat draws them;
-    the sharing guard asserts them shared). ⚠ A per-group SECOND LINE is
-    still not available on the fallback plate: two named Skills per shape
-    clipped 59px at 1440×820.
+    the sharing guard asserts them shared). Skill names belong in selected
+    detail, not as a second line under each pip run; that would recreate the
+    duplicate taxonomy and overflow the bus.
 - **The beats and the casefile SHARE their plates.** Hoisted consts in the
   content module, asserted reference-equal by the registry test. Re-typing a
   plate inline is how the two surfaces drift.
@@ -357,21 +355,12 @@ inherited its ambient-cover role.
   three-up register. Pinned by the registry test. ⚠ The guard bounds the
   VALUE only — `Unit of done` + a 20-char value still ran off the panel edge
   at 1440. Keep the KEY short too, and measure.
-- **PLATE, BRIEF AND FOOT BOXES CLIP SILENTLY, and only on short viewports.**
-  All three are `overflow: hidden` with no scrollbar; `.fl-brief` is
-  height-boxed against `--fl-t6`, `.fl-panel__foot` against the viz rule.
-  **The foot was the worst of them and went unnoticed for four passes**
-  (`GOVERNANCE.MD` cut its source line by 24px at 1280×720 and 17px at
-  1440×800) because every measurement until U11 sampled ROW ONE ONLY — walk
-  ALL FOUR, the plate kinds and foot shapes differ per row. There is a test
-  now (see Verifying); it is the guard, not your eye. Budgets after the U11
-  move: the brief takes 364 chars at 1280×720 and is PINNED at 330 by the
-  registry test; the registry plate still takes FIVE groups plus THREE rows,
-  and a fourth has its tag sliced at 1440 — and since U12 each of those five
-  groups carries a weight line, which is the whole of the remaining slack (see
-  the weighted-plate contract above). The blocks foot runs 10px inside its
-  band at 1280×720 and 26px at 1440×800. Author at 1280×720 or you will not
-  see the defect — 1920×1080 shows none of this.
+- **BRIEF, PROOF REGISTER, DIRECTORY AND VISUAL CAN STILL CLIP SILENTLY on
+  short viewports.** Walk all four tracks at 1280×720 as well as taller
+  references. The brief content ceiling is 420 characters; the proof register
+  must retain all four values and labels; the directory keeps four readable
+  rows; the right visual fills its panel without covering or internally
+  scrolling its map console. A 1920×1080-only pass proves none of this.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
   strings fails the registry test.
@@ -432,20 +421,26 @@ test to relax:
 - Tool **codenames are in scope** for a case study (published precedent:
   `PROJECT_CASES`) but stay OUT of general service copy
   (`services/serviceDesignations.ts`).
-- Where sources disagree on a number, print the **smaller, exec-facing**
-  one and never show the other. Do not publish a second variant of a claim
-  that already appears on another surface — check `lib/arcs/content/**`
-  first. The `Thoughtform Prime` handoff's 15+ teams / 20+ Skills / 90 % of
-  paid social are superseded and pinned OUT by the registry test, and so are
+- Where sources disagree on a number, resolve which source is authoritative
+  and publish one figure everywhere. The latest Studio evidence makes **97%**
+  canonical in Proof and the AI keynote; 90% and 95% are superseded, and a
+  parity test must fail if either returns. Check `lib/arcs/content/**` before
+  changing a case figure. The `Thoughtform Prime` handoff's 15+ teams / 20+
+  Skills are also superseded and pinned OUT by the registry test, as are
   **42 / "forty-two" Skills** (superseded by 47+, 2026-08-02) and the label
   **"teams mapped"**, which claimed the 14-set's meaning with the 22-set's
   value. `lib/arcs/**` has its OWN copy of the 42 pins in
   `arcs-registry.test.ts` — the casefile's scanner walks `CASES` and
   `PROJECT_CASES` only, so an unlisted deck page is where a superseded claim
   survives unnoticed. Sweep both, in one commit.
+- **Tool lifecycle is one contract.** The four Software for Few proof labels
+  remain `LIVE` while all four canonical `PROJECT_CASES` records remain
+  Production. If a capability lifecycle changes, update both sources and the
+  parity guard in the same change; never let a proof label become a second
+  status registry.
 - **Two team counts are published and they are DIFFERENT SETS.** 22 =
   teams BRIEFED (rollout log, governance row). 14 = teams USING THE LAYER
-  (the Intelligence Map foot). The wording is the only thing keeping them
+  (the Intelligence Map proof register). The wording is the only thing keeping them
   apart; do not harmonise it, and never write a phrasing that lends one
   number the other's meaning.
 - **The Intelligence Map's fixed reservoir and moving field count DIFFERENT

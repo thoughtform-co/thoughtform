@@ -290,7 +290,7 @@ export function useServicesStageScroll(
       inV: number,
       outV: number,
       settled = false,
-      browse = 1
+      browse?: number
     ) => {
       const host = proofHost(stage);
       if (host) {
@@ -302,10 +302,18 @@ export function useServicesStageScroll(
           host.style.setProperty("--svc-proof-out", outV.toFixed(4));
           currentProofOut = outV;
         }
-        // The browse channel (ADR-056 U13). Same host, same observer, same
-        // deadband — the casefile's row scrollspy is one more reader of the
-        // style mutations it already watches, not a new listener.
-        if (Math.abs(browse - currentProofBrowse) >= WRITE_EPS) {
+        // The browse channel (ADR-056 U13) exists ONLY when scroll owns row
+        // selection. In static/mobile/reduced-motion mode its absence is the
+        // contract: the casefile then keeps its default or clicked row. A
+        // default of `1` here used to select the final directory row on the
+        // mutation that made the static casefile live, and a desktop→mobile
+        // resize left the same stale inline value behind.
+        if (browse === undefined) {
+          if (host.style.getPropertyValue("--svc-proof-browse")) {
+            host.style.removeProperty("--svc-proof-browse");
+          }
+          currentProofBrowse = -1;
+        } else if (Math.abs(browse - currentProofBrowse) >= WRITE_EPS) {
           host.style.setProperty("--svc-proof-browse", browse.toFixed(4));
           currentProofBrowse = browse;
         }
@@ -364,6 +372,7 @@ export function useServicesStageScroll(
         // it never gates the accordion below it.
         // Resolved, released, and LIVE — here the casefile is static flow
         // content above the accordion, so it must stay hit-testable.
+        // No browse argument: static flow has no scroll-owned row selector.
         setProof(stage, 1, 0, true);
         servicesRingProgressRef.current.progress = 0;
         servicesRingProgressRef.current.proofRelease = 1;
@@ -480,6 +489,7 @@ export function useServicesStageScroll(
       currentExit = -1;
       currentProofIn = -1;
       currentProofOut = -1;
+      currentProofBrowse = -1;
       currentProofLive = null;
       currentProofSettled = null;
       write();

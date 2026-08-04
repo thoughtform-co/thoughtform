@@ -33,13 +33,11 @@ import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from 
  *   their header), and the walkthrough affordance is a full-width bar FUSED
  *   to its bottom edge rather than a pill floated over it. The whole frame
  *   is one button: a ~350x200 target instead of a 130x26 one.
- * · ONE GRID. The body splits 50/50 with no gap; the tabs are quarters of
- *   the same rail; the capability tiles in the panel foot (TrackPanel) sit
- *   on the same 50% split. The misalignment complaint was three stacked
- *   zones each with a private grid.
+ * · ONE GRID. The body splits 50/50 with no gap and the tabs are quarters of
+ *   the same rail. The proof claims now live in the casefile's left register,
+ *   leaving this instrument to use the full panel height.
  *
- * CONTROLLED, NOT SELF-CONTAINED: `activeIdx` is owned by `TrackPanel`
- * because the panel foot's capability tiles follow the tool in view. The
+ * CONTROLLED, NOT SELF-CONTAINED: `activeIdx` is owned by `TrackPanel`. The
  * panel is keyed per track upstream, so the gallery resets to tool 01 on a
  * row change for free.
  */

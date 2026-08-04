@@ -9,12 +9,10 @@ import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from 
  * FilmsPlate — the above-the-line films as poster tiles, playing in a
  * lightbox.
  *
- * WHY A LIGHTBOX AND NOT INLINE (owner, 2026-07-30). The plate rect is a
- * fixed, short band off the HUD rail (~690 x 240 at 1440x800), so two 16:9
- * films side by side land at ~310px wide. That is a thumbnail, not a film —
- * and the height constraint was also fighting the tile's own aspect ratio and
- * cropping the poster. The tiles are uncropped 16:9 posters now and the film
- * opens over the page at its true shape.
+ * WHY A LIGHTBOX AND NOT INLINE. The full-height instrument gives both films
+ * a legible uncropped poster, while the focus overlay remains the right place
+ * for playback: it preserves the authored 16:9 frame and removes the casefile
+ * chrome from the viewing experience.
  *
  * NO `<video>` UNTIL A CLICK. The tile is a `next/image` poster, so a row
  * nobody opens costs zero video bytes and zero compositor layers (the beat's

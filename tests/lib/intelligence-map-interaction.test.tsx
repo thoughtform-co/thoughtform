@@ -44,6 +44,28 @@ function FieldHarness() {
   );
 }
 
+function PreviewFieldHarness() {
+  const [projection, setProjection] = useState<MapProjection>("configuration");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focusedTier, setFocusedTier] = useState<AllocationTierName | null>(null);
+
+  return (
+    <IntelligenceMapField
+      configurations={visual.configurations}
+      skills={visual.skills}
+      groups={visual.groups}
+      intelligence={visual.intelligence}
+      mode="preview"
+      projection={projection}
+      selectedId={selectedId}
+      focusedTier={focusedTier}
+      onProjectionChange={setProjection}
+      onSelectedIdChange={setSelectedId}
+      onFocusedTierChange={setFocusedTier}
+    />
+  );
+}
+
 function OverlayHarness() {
   const [open, setOpen] = useState(true);
   const [projection, setProjection] = useState<MapProjection>("configuration");
@@ -82,6 +104,11 @@ describe("Loop intelligence-map interaction (ADR-061)", () => {
       screen.getByRole("region", { name: "Review an NDA configuration detail" })
     ).toBeInTheDocument();
     expect(screen.getByText(/Deep · Work evidence/)).toBeInTheDocument();
+    expect(container.querySelector(".fl-intel-map__detail")).toHaveAttribute(
+      "data-detail-mode",
+      "expanded"
+    );
+    expect(screen.getByText("Long, nuanced documents make the reasoning the work.")).toBeVisible();
     expect(container.querySelectorAll(".fl-intel-map__reservoir [data-linked]")).toHaveLength(2);
 
     for (const projection of ["Team", "Allocation"]) {
@@ -127,6 +154,45 @@ describe("Loop intelligence-map interaction (ADR-061)", () => {
         container.querySelectorAll<HTMLElement>(".fl-intel-map__anchor--tier[data-empty]")
       ).some((anchor) => anchor.textContent?.includes("Fast"))
     ).toBe(true);
+  });
+
+  it("keeps one stable substrate bus and reserves a concise compact detail console", () => {
+    const { container } = render(<PreviewFieldHarness />);
+    const detailSlot = container.querySelector<HTMLElement>(".fl-intel-map__detail-slot")!;
+    const pips = Array.from(
+      container.querySelectorAll<HTMLElement>(".fl-intel-map__reservoir [data-skill-id]")
+    );
+    const pipsById = new Map(pips.map((pip) => [pip.dataset.skillId, pip] as const));
+
+    expect(detailSlot).toHaveAttribute("data-empty");
+    expect(detailSlot).toHaveTextContent(/Select work/i);
+    expect(pips).toHaveLength(47);
+    expect(pipsById.size).toBe(47);
+    expect(container.querySelectorAll(".fl-intel-map__skill-group")).toHaveLength(5);
+    expect(container.querySelector(".fl-intel-map__reservoir-label")).toHaveTextContent(
+      /Encoded substrate\s*47 Skills \/ 5 shapes/
+    );
+    expect(container.querySelector(".fl-intel-map__links")).not.toBeInTheDocument();
+
+    fireEvent.click(container.querySelector('[data-config-id="review-nda"]')!);
+
+    expect(container.querySelector(".fl-intel-map__detail-slot")).toBe(detailSlot);
+    expect(detailSlot).not.toHaveAttribute("data-empty");
+    expect(container.querySelector(".fl-intel-map__detail")).toHaveAttribute(
+      "data-detail-mode",
+      "preview"
+    );
+    expect(screen.getByText("Inside the loop")).toBeVisible();
+    expect(
+      screen.queryByText("Long, nuanced documents make the reasoning the work.")
+    ).not.toBeInTheDocument();
+    expect(detailSlot).toHaveTextContent(/NDA Pre-Check/);
+    expect(detailSlot).toHaveTextContent(/Legal Risk Methodology/);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Team" }));
+    for (const [id, initial] of pipsById) {
+      expect(container.querySelector(`[data-skill-id="${id}"]`)).toBe(initial);
+    }
   });
 
   it("portals the expanded map, traps focus, locks scroll, and dismisses on Escape", async () => {

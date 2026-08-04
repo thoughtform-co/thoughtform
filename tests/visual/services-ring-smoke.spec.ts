@@ -256,6 +256,398 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".services-stage")).toHaveAttribute("data-proof-live", "1");
   });
 
+  test("desktop: the harmonised casefile fits its three reference viewports", async ({ page }) => {
+    test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
+    test.setTimeout(90_000);
+
+    const viewports = [
+      { width: 1280, height: 720 },
+      { width: 1440, height: 800 },
+      { width: 2017, height: 1269 },
+    ] as const;
+
+    for (const viewport of viewports) {
+      const label = `${viewport.width}x${viewport.height}`;
+      await page.setViewportSize(viewport);
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".services-stage", { timeout: 15_000 });
+      expect(await scrollCasefileDwell(page, 0.1), `${label}: casefile runway missing`).toBe(true);
+      await page.waitForTimeout(1200);
+      await expect(page.locator('.fl-intel-map[data-mode="preview"]')).toBeVisible();
+
+      const geometry = await page.evaluate(() => {
+        const casefile = document.querySelector<HTMLElement>(".fl-case");
+        const brief = document.querySelector<HTMLElement>(".fl-brief");
+        const proof = document.querySelector<HTMLElement>(".fl-proof-register");
+        const directory = document.querySelector<HTMLElement>(".fl-dir");
+        const panel = document.querySelector<HTMLElement>(".fl-panel");
+        const visual = document.querySelector<HTMLElement>(".fl-panel__viz");
+        const map = document.querySelector<HTMLElement>(".fl-intel-map");
+        if (!casefile || !brief || !proof || !directory || !panel || !visual || !map) return null;
+
+        const c = casefile.getBoundingClientRect();
+        const b = brief.getBoundingClientRect();
+        const p = proof.getBoundingClientRect();
+        const d = directory.getBoundingClientRect();
+        const pn = panel.getBoundingClientRect();
+        const v = visual.getBoundingClientRect();
+        const m = map.getBoundingClientRect();
+        const inside = (inner: DOMRect, outer: DOMRect) =>
+          inner.left >= outer.left - 1 &&
+          inner.right <= outer.right + 1 &&
+          inner.top >= outer.top - 1 &&
+          inner.bottom <= outer.bottom + 1;
+
+        return {
+          proofItems: proof.querySelectorAll(".fl-proof-register__item").length,
+          proofInside: inside(p, c),
+          directoryInside: inside(d, c),
+          panelInside: inside(pn, c),
+          visualInside: inside(v, pn),
+          mapInside: inside(m, v),
+          briefBeforeProof: b.bottom <= p.top + 1,
+          proofBeforeDirectory: p.bottom <= d.top + 1,
+          leftAligned: Math.abs(p.left - d.left) <= 1 && Math.abs(p.width - d.width) <= 1,
+          proofOverflow: proof.scrollHeight - proof.clientHeight,
+          proofOverflowX: proof.scrollWidth - proof.clientWidth,
+          directoryOverflow: directory.scrollHeight - directory.clientHeight,
+          directoryOverflowX: directory.scrollWidth - directory.clientWidth,
+          visualOverflowY: visual.scrollHeight - visual.clientHeight,
+          visualOverflowX: visual.scrollWidth - visual.clientWidth,
+          visualBottomDelta: Math.abs(v.bottom - pn.bottom),
+          visualHeightRatio: v.height / Math.max(1, pn.height),
+          mapHeightRatio: m.height / Math.max(1, v.height),
+        };
+      });
+
+      expect(geometry, `${label}: harmonised casefile zones are missing`).not.toBeNull();
+      expect(geometry?.proofItems, `${label}: proof register is not four-up`).toBe(4);
+      expect(geometry?.proofInside, `${label}: proof register escaped the casefile`).toBe(true);
+      expect(geometry?.directoryInside, `${label}: directory escaped the casefile`).toBe(true);
+      expect(geometry?.panelInside, `${label}: right panel escaped the casefile`).toBe(true);
+      expect(geometry?.visualInside, `${label}: visual escaped the right panel`).toBe(true);
+      expect(geometry?.mapInside, `${label}: map escaped the visual frame`).toBe(true);
+      expect(geometry?.briefBeforeProof, `${label}: brief overlaps the proof register`).toBe(true);
+      expect(
+        geometry?.proofBeforeDirectory,
+        `${label}: proof register overlaps the directory`
+      ).toBe(true);
+      expect(geometry?.leftAligned, `${label}: proof register and directory rails drift`).toBe(
+        true
+      );
+      expect(geometry?.proofOverflow, `${label}: proof register clips`).toBeLessThanOrEqual(1);
+      expect(
+        geometry?.proofOverflowX,
+        `${label}: proof register clips horizontally`
+      ).toBeLessThanOrEqual(1);
+      expect(geometry?.directoryOverflow, `${label}: directory clips`).toBeLessThanOrEqual(1);
+      expect(
+        geometry?.directoryOverflowX,
+        `${label}: directory clips horizontally`
+      ).toBeLessThanOrEqual(1);
+      expect(geometry?.visualOverflowY, `${label}: visual clips vertically`).toBeLessThanOrEqual(1);
+      expect(geometry?.visualOverflowX, `${label}: visual clips horizontally`).toBeLessThanOrEqual(
+        1
+      );
+      expect(
+        geometry?.visualBottomDelta,
+        `${label}: visual does not fill the panel`
+      ).toBeLessThanOrEqual(1.5);
+      expect(
+        geometry?.visualHeightRatio ?? 0,
+        `${label}: visual retained a footer band`
+      ).toBeGreaterThan(0.9);
+      expect(
+        geometry?.mapHeightRatio ?? 0,
+        `${label}: map does not fill the visual`
+      ).toBeGreaterThan(0.98);
+
+      const nodeContent = await page.evaluate(() => {
+        const field = document.querySelector<HTMLElement>(".fl-intel-map__field");
+        if (!field) return null;
+        const fieldRect = field.getBoundingClientRect();
+        const inside = (inner: DOMRect, outer: DOMRect) =>
+          inner.left >= outer.left - 1 &&
+          inner.right <= outer.right + 1 &&
+          inner.top >= outer.top - 1 &&
+          inner.bottom <= outer.bottom + 1;
+        const nodes = [...field.querySelectorAll<HTMLElement>(".fl-intel-map__node")];
+        const issues = nodes.flatMap((node, index) => {
+          const work = node.querySelector<HTMLElement>(".fl-intel-map__node-work");
+          const id = node.dataset.persistentId ?? `node-${index + 1}`;
+          if (!work) return [`${id}:missing-work-label`];
+          const nodeRect = node.getBoundingClientRect();
+          const workRect = work.getBoundingClientRect();
+          const failures: string[] = [];
+          if (!work.textContent?.trim()) failures.push(`${id}:empty-work-label`);
+          if (!inside(nodeRect, fieldRect)) failures.push(`${id}:outside-field`);
+          if (!inside(workRect, nodeRect)) failures.push(`${id}:work-label-outside-node`);
+          if (work.scrollWidth - work.clientWidth > 1) failures.push(`${id}:work-label-clips-x`);
+          if (work.scrollHeight - work.clientHeight > 1) failures.push(`${id}:work-label-clips-y`);
+          return failures;
+        });
+        return { count: nodes.length, issues };
+      });
+      expect(nodeContent, `${label}: map field is missing`).not.toBeNull();
+      expect(nodeContent?.count, `${label}: map lost work nodes`).toBe(8);
+      expect(
+        nodeContent?.issues,
+        `${label}: map node content clips or escapes: ${nodeContent?.issues.join(", ")}`
+      ).toEqual([]);
+
+      // The short reference is the content stress case, so exercise every
+      // configuration there (including the three-Skill and no-Skill rows).
+      // The larger references sample the known longest work identity.
+      const nodeIndices = viewport.width === 1280 ? [...Array(8).keys()] : [2];
+      for (const nodeIndex of nodeIndices) {
+        const node = page.locator(".fl-intel-map__node").nth(nodeIndex);
+        const selectedId = await node.getAttribute("data-persistent-id");
+        await node.click();
+        await page.waitForTimeout(140);
+        const detail = await page.evaluate(() => {
+          const field = document.querySelector<HTMLElement>(".fl-intel-map__field");
+          const inspector = document.querySelector<HTMLElement>(".fl-intel-map__inspector");
+          const slot = document.querySelector<HTMLElement>(".fl-intel-map__detail-slot");
+          if (!field || !inspector || !slot) return null;
+          const f = field.getBoundingClientRect();
+          const i = inspector.getBoundingClientRect();
+          const overlapWidth = Math.min(f.right, i.right) - Math.max(f.left, i.left);
+          const overlapHeight = Math.min(f.bottom, i.bottom) - Math.max(f.top, i.top);
+          const required = [
+            ...inspector.querySelectorAll<HTMLElement>(
+              [
+                ".fl-intel-map__detail-identity h4",
+                ".fl-intel-map__inspector-function",
+                ".fl-intel-map__inspector-summary",
+                ".fl-intel-map__detail-facets dt",
+                ".fl-intel-map__detail-facets dd b",
+                ".fl-intel-map__detail-evidence p > span",
+                ".fl-intel-map__detail-evidence p > b",
+              ].join(",")
+            ),
+          ];
+          const structural = [
+            ...inspector.querySelectorAll<HTMLElement>(
+              ".fl-intel-map__detail-facets > div, .fl-intel-map__detail-evidence > p"
+            ),
+          ];
+          const describe = (element: HTMLElement) => {
+            const text = element.textContent?.replace(/\s+/g, " ").trim() ?? "";
+            return `${element.tagName.toLowerCase()}.${element.className || "-"}:${text.slice(0, 36)}`;
+          };
+          const clipped = required.flatMap((element) => {
+            const r = element.getBoundingClientRect();
+            const issues: string[] = [];
+            if (!element.textContent?.trim()) issues.push(`${describe(element)}:empty`);
+            if (r.top < i.top - 1 || r.bottom > i.bottom + 1) {
+              issues.push(`${describe(element)}:outside-console`);
+            }
+            if (element.scrollHeight - element.clientHeight > 1) {
+              issues.push(`${describe(element)}:clips-y`);
+            }
+            if (element.scrollWidth - element.clientWidth > 1) {
+              issues.push(`${describe(element)}:clips-x`);
+            }
+            return issues;
+          });
+          const structuralClipping = structural.flatMap((element) => {
+            const issues: string[] = [];
+            if (element.scrollHeight - element.clientHeight > 1) {
+              issues.push(`${describe(element)}:clips-y`);
+            }
+            if (element.scrollWidth - element.clientWidth > 1) {
+              issues.push(`${describe(element)}:clips-x`);
+            }
+            return issues;
+          });
+          const minFont = (selector: string) => {
+            const elements = [...document.querySelectorAll<HTMLElement>(selector)];
+            return elements.length
+              ? Math.min(
+                  ...elements.map((element) =>
+                    Number.parseFloat(getComputedStyle(element).fontSize)
+                  )
+                )
+              : 0;
+          };
+          return {
+            selectedId: inspector.dataset.selectedId,
+            overlapsField: overlapWidth > 1 && overlapHeight > 1,
+            scrollY: inspector.scrollHeight - inspector.clientHeight,
+            scrollX: inspector.scrollWidth - inspector.clientWidth,
+            slotScrollY: slot.scrollHeight - slot.clientHeight,
+            slotHeight: slot.getBoundingClientRect().height,
+            mode: inspector.dataset.detailMode,
+            requiredCount: required.length,
+            facetStates: inspector.querySelectorAll(".fl-intel-map__detail-facets dd b").length,
+            evidenceRows: inspector.querySelectorAll(".fl-intel-map__detail-evidence > p").length,
+            nodeFont: minFont(".fl-intel-map__node"),
+            controlFont: minFont(".fl-intel-map__tab, .fl-intel-map__expand"),
+            titleFont: minFont(".fl-intel-map__detail-identity h4"),
+            readableFont: minFont(
+              ".fl-intel-map__inspector-summary, .fl-intel-map__detail-facets dd b, .fl-intel-map__detail-evidence p > b"
+            ),
+            labelFont: minFont(
+              ".fl-intel-map__detail-facets dt, .fl-intel-map__detail-evidence p > span"
+            ),
+            clipped,
+            structuralClipping,
+          };
+        });
+        const selectionLabel = `${label}/${selectedId ?? nodeIndex}`;
+        expect(detail, `${selectionLabel}: selection opened no detail console`).not.toBeNull();
+        expect(detail?.selectedId).toBe(selectedId);
+        expect(detail?.overlapsField, `${selectionLabel}: field and detail console overlap`).toBe(
+          false
+        );
+        expect(
+          detail?.scrollY,
+          `${selectionLabel}: compact detail scrolls vertically`
+        ).toBeLessThanOrEqual(1);
+        expect(
+          detail?.scrollX,
+          `${selectionLabel}: compact detail scrolls horizontally`
+        ).toBeLessThanOrEqual(1);
+        expect(
+          detail?.slotScrollY,
+          `${selectionLabel}: reserved detail slot clips`
+        ).toBeLessThanOrEqual(1);
+        expect(
+          detail?.slotHeight ?? 0,
+          `${selectionLabel}: reserved detail slot collapsed`
+        ).toBeGreaterThan(80);
+        expect(detail?.mode).toBe("preview");
+        expect(detail?.requiredCount, `${selectionLabel}: compact evidence is incomplete`).toBe(23);
+        expect(detail?.facetStates).toBe(6);
+        expect(detail?.evidenceRows).toBe(4);
+        expect(
+          detail?.nodeFont ?? 0,
+          `${selectionLabel}: map node type fell below 11px`
+        ).toBeGreaterThanOrEqual(11);
+        expect(
+          detail?.controlFont ?? 0,
+          `${selectionLabel}: map controls fell below 10px`
+        ).toBeGreaterThanOrEqual(10);
+        expect(
+          detail?.titleFont ?? 0,
+          `${selectionLabel}: selected title fell below 17px`
+        ).toBeGreaterThanOrEqual(17);
+        expect(
+          detail?.readableFont ?? 0,
+          `${selectionLabel}: compact readable copy fell below 12px`
+        ).toBeGreaterThanOrEqual(12);
+        expect(
+          detail?.labelFont ?? 0,
+          `${selectionLabel}: compact labels fell below 10px`
+        ).toBeGreaterThanOrEqual(10);
+        expect(
+          detail?.clipped,
+          `${selectionLabel}: required compact content clips: ${detail?.clipped.join(", ")}`
+        ).toEqual([]);
+        expect(
+          detail?.structuralClipping,
+          `${selectionLabel}: compact evidence cells clip: ${detail?.structuralClipping.join(", ")}`
+        ).toEqual([]);
+      }
+
+      if (viewport.height > 930) {
+        const tallProof = await page.evaluate(() => {
+          const briefBody = document.querySelector<HTMLElement>(".fl-brief__body");
+          const proof = document.querySelector<HTMLElement>(".fl-proof-register");
+          if (!briefBody || !proof) return null;
+          const proofRect = proof.getBoundingClientRect();
+          const descriptions = [
+            ...proof.querySelectorAll<HTMLElement>(".fl-proof-register__description"),
+          ];
+          return {
+            count: descriptions.length,
+            summaryGap: proofRect.top - briefBody.getBoundingClientRect().bottom,
+            clipped: descriptions.flatMap((description, index) => {
+              const rect = description.getBoundingClientRect();
+              const item = description.closest<HTMLElement>(".fl-proof-register__item");
+              const itemRect = item?.getBoundingClientRect();
+              const issues: string[] = [];
+              if (description.scrollHeight - description.clientHeight > 1) {
+                issues.push(`description-${index + 1}:clips-y`);
+              }
+              if (description.scrollWidth - description.clientWidth > 1) {
+                issues.push(`description-${index + 1}:clips-x`);
+              }
+              if (itemRect && (rect.top < itemRect.top - 1 || rect.bottom > itemRect.bottom + 1)) {
+                issues.push(`description-${index + 1}:outside-item`);
+              }
+              return issues;
+            }),
+          };
+        });
+        expect(tallProof, `${label}: tall proof register is missing`).not.toBeNull();
+        expect(tallProof?.count).toBe(4);
+        expect(
+          tallProof?.summaryGap ?? Number.POSITIVE_INFINITY,
+          `${label}: dead space reopened between summary and proof register`
+        ).toBeLessThan(80);
+        expect(
+          tallProof?.clipped,
+          `${label}: tall proof descriptions clip: ${tallProof?.clipped.join(", ")}`
+        ).toEqual([]);
+      }
+
+      if (viewport.width === 1280) {
+        await page.locator(".fl-row").nth(1).click();
+        await page.waitForTimeout(220);
+        const studioBrief = await page.evaluate(() => {
+          const brief = document.querySelector<HTMLElement>(".fl-brief");
+          const body = document.querySelector<HTMLElement>(".fl-brief__body");
+          if (!brief || !body) return null;
+          const briefRect = brief.getBoundingClientRect();
+          const bodyRect = body.getBoundingClientRect();
+          return {
+            briefOverflow: brief.scrollHeight - brief.clientHeight,
+            bodyOverflow: body.scrollHeight - body.clientHeight,
+            bodyInside:
+              bodyRect.top >= briefRect.top - 1 && bodyRect.bottom <= briefRect.bottom + 1,
+          };
+        });
+        expect(studioBrief, `${label}: Studio brief is missing`).not.toBeNull();
+        expect(studioBrief?.briefOverflow, `${label}: Studio brief clips`).toBeLessThanOrEqual(1);
+        expect(studioBrief?.bodyOverflow, `${label}: Studio summary clips`).toBeLessThanOrEqual(1);
+        expect(studioBrief?.bodyInside, `${label}: Studio summary escaped its brief`).toBe(true);
+
+        const toolsRow = page.locator(".fl-row").nth(3);
+        await toolsRow.click();
+        await expect(toolsRow).toHaveAttribute("aria-selected", "true");
+        await page.waitForTimeout(350);
+        const toolNames = page.locator(".fl-tooltab__name");
+        await expect(toolNames).toHaveCount(4);
+        const toolTabs = await toolNames.evaluateAll((names) => {
+          return {
+            count: names.length,
+            clipped: names.flatMap((name, index) => {
+              const issues: string[] = [];
+              const element = name as HTMLElement;
+              if (element.scrollWidth - element.clientWidth > 1)
+                issues.push(`tool-${index + 1}:clips-x`);
+              if (element.scrollHeight - element.clientHeight > 1)
+                issues.push(`tool-${index + 1}:clips-y`);
+              return issues;
+            }),
+            minFont: names.length
+              ? Math.min(...names.map((name) => Number.parseFloat(getComputedStyle(name).fontSize)))
+              : 0,
+          };
+        });
+        expect(toolTabs.count, `${label}: tool switcher is incomplete`).toBe(4);
+        expect(toolTabs.minFont, `${label}: tool labels fell below 10px`).toBeGreaterThanOrEqual(
+          10
+        );
+        expect(
+          toolTabs.clipped,
+          `${label}: tool labels clip: ${toolTabs.clipped.join(", ")}`
+        ).toEqual([]);
+      }
+    }
+  });
+
   test("desktop: no casefile box clips its content, on any row (ADR-056 U11)", async ({ page }) => {
     test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
 
@@ -316,13 +708,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       `the tab strip starts ${(-geom!.stripClearance).toFixed(1)}px above the rail box`
     ).toBeGreaterThanOrEqual(0);
 
-    // EVERY ROW, not just the one that opens. The plate kinds differ per row
-    // — the skills browser, stills, films, tools — and only the tools plate
-    // had any height handling before U11. These three boxes are all
-    // `overflow: hidden` with no scrollbar, so they clip SILENTLY: the
-    // `SOURCE — ADOPTION BOARD` line was already being cut by 24px at
-    // 1280x720 and 4px here, and nobody could see it. Four rows since the
-    // U13 directory trim (the rollout/governance/metrics/report rows left).
+    // EVERY ROW, not just the one that opens. The harmonised shell keeps the
+    // proof register and directory in the left column while each visual owns
+    // the complete right panel. These boxes clip silently, so measure all
+    // four project shapes rather than trusting the default map row.
     const rowCount = await page.locator(".fl-row").count();
     expect(rowCount, "the directory holds four rows").toBe(4);
 
@@ -334,11 +723,13 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
       const overflow = await page.evaluate(() => {
         // The inner map field earns its place here (ADR-061): absolute work
-        // nodes can overflow their stage while `.fl-plate` still reports 0,
-        // because the plate's own `overflow: hidden` swallows the evidence.
+        // nodes can overflow their stage while the enclosing visual still
+        // reports 0, because its own `overflow: hidden` swallows the evidence.
         const boxes = [
           ".fl-brief",
-          ".fl-panel__foot",
+          ".fl-proof-register",
+          ".fl-dir",
+          ".fl-panel__viz",
           ".fl-plate",
           ".fl-intel-map__field",
         ] as const;
@@ -346,8 +737,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const out: { box: string; over: number; row: string }[] = [];
         for (const sel of boxes) {
           const el = document.querySelector<HTMLElement>(sel);
-          // `.fl-plate` is absent on the metrics row — the readouts ARE its
-          // plate — so a missing box is a shape, not a failure.
+          // Visual-specific inner plates may be absent by design; the shared
+          // brief/register/directory/panel boxes are always present.
           if (!el) continue;
           out.push({
             box: sel,
@@ -373,7 +764,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     const measureBoxes = () =>
       page.evaluate(() => {
         const out: { box: string; over: number }[] = [];
-        for (const sel of [".fl-plate", ".fl-intel-map__field", ".fl-intel-map__stage"]) {
+        for (const sel of [
+          ".fl-proof-register",
+          ".fl-dir",
+          ".fl-panel__viz",
+          ".fl-plate",
+          ".fl-intel-map__field",
+          ".fl-intel-map__stage",
+        ]) {
           const el = document.querySelector<HTMLElement>(sel);
           if (el) out.push({ box: sel, over: el.scrollHeight - el.clientHeight });
         }
@@ -449,6 +847,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       `the work field remounted across projections (${persisted.stamped} of ${persisted.total} survived) — the morph would swap, not fly`
     ).toBe(persisted.total);
 
+    // The structural taxonomy assertions below target Configuration, not
+    // whichever projection happened to be last in the persistence walk.
+    await page.getByRole("tab", { name: "Configuration", exact: true }).click();
+    await settleMorph();
+
     // THE PLATE IS NEVER NAMELESS (ADR-061). The nodes carry a signature,
     // not a name, so an empty register is the "it doesn't say anything"
     // regression the owner reported.
@@ -457,7 +860,77 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     );
     expect(register?.length ?? 0, "the name register is empty on arrival").toBeGreaterThan(3);
 
-    // A work node click opens its inward detail rail; Escape closes it.
+    // ONE TAXONOMY, ONE SUBSTRATE BUS. Shape names live only on the five
+    // configuration anchors; the reservoir carries 47 persistent diamonds
+    // without repeating those labels or reviving relationship curves.
+    const mapStructure = await page.evaluate(() => {
+      const field = document.querySelector<HTMLElement>(".fl-intel-map__field");
+      const reservoir = document.querySelector<HTMLElement>(".fl-intel-map__reservoir");
+      const shapeLabels = field
+        ? [...field.querySelectorAll<HTMLElement>(".fl-intel-map__anchor-name")]
+            .filter((label) => label.getClientRects().length > 0)
+            .map((label) => label.textContent?.trim() ?? "")
+        : [];
+      const pips = [
+        ...document.querySelectorAll<HTMLElement>(".fl-intel-map__reservoir [data-skill-id]"),
+      ];
+      return {
+        shapeLabels,
+        reservoirLabel: reservoir
+          ? [...reservoir.querySelectorAll<HTMLElement>(".fl-intel-map__reservoir-label > *")].map(
+              (part) => part.textContent?.trim() ?? ""
+            )
+          : [],
+        pips: pips.length,
+        pipIds: pips.map((pip) => pip.dataset.skillId),
+        relationshipLayers: document.querySelectorAll(".fl-intel-map__links").length,
+      };
+    });
+    expect(mapStructure.shapeLabels).toEqual([
+      "Judgment",
+      "Voice",
+      "Validation",
+      "Stakeholder",
+      "Pattern",
+    ]);
+    expect(mapStructure.reservoirLabel).toEqual(["Encoded substrate", "47 Skills / 5 shapes"]);
+    expect(mapStructure.pips).toBe(47);
+    expect(new Set(mapStructure.pipIds).size).toBe(47);
+    expect(mapStructure.relationshipLayers).toBe(0);
+
+    // Flat fills are a semantic contract in both theme cascades. Dark is the
+    // attribute-less default; light is the only explicit theme attribute.
+    const backgroundImages = await page.evaluate(() => {
+      const root = document.documentElement;
+      const previousTheme = root.getAttribute("data-theme");
+      const results: string[] = [];
+      for (const theme of ["dark", "light"] as const) {
+        if (theme === "light") root.setAttribute("data-theme", "light");
+        else root.removeAttribute("data-theme");
+        const elements = [
+          document.querySelector<HTMLElement>(".fl-intel-map"),
+          document.querySelector<HTMLElement>(".fl-intel-map__reservoir"),
+          document.querySelector<HTMLElement>(".fl-intel-map__detail-slot"),
+          ...document.querySelectorAll<HTMLElement>(".fl-intel-map__node"),
+        ].filter((element): element is HTMLElement => Boolean(element));
+        for (const element of elements) {
+          const image = getComputedStyle(element).backgroundImage;
+          if (image !== "none") results.push(`${theme}:${element.className}:${image}`);
+        }
+      }
+      if (previousTheme) root.setAttribute("data-theme", previousTheme);
+      else root.removeAttribute("data-theme");
+      return results;
+    });
+    expect(
+      backgroundImages,
+      `map elements still use gradients: ${backgroundImages.join(", ")}`
+    ).toEqual([]);
+
+    // A work node click fills the reserved lower detail console. The field
+    // and console remain separate reading zones; compact detail never needs
+    // an internal scrollbar. Escape clears the detail without collapsing its
+    // reserved slot.
     const selectedNode = page.locator(".fl-intel-map__node").nth(4);
     const selectedId = await selectedNode.getAttribute("data-persistent-id");
     await selectedNode.click();
@@ -465,18 +938,35 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     const panel = await page.evaluate(() => {
       const el = document.querySelector<HTMLElement>(".fl-intel-map__inspector");
       const plate = document.querySelector<HTMLElement>(".fl-plate");
-      if (!el || !plate) return null;
+      const field = document.querySelector<HTMLElement>(".fl-intel-map__field");
+      const slot = document.querySelector<HTMLElement>(".fl-intel-map__detail-slot");
+      if (!el || !plate || !field || !slot) return null;
       const r = el.getBoundingClientRect();
       const p = plate.getBoundingClientRect();
+      const f = field.getBoundingClientRect();
+      const overlapWidth = Math.min(r.right, f.right) - Math.max(r.left, f.left);
+      const overlapHeight = Math.min(r.bottom, f.bottom) - Math.max(r.top, f.top);
       return {
         visible: r.width > 40 && r.height > 40,
         inside: r.right <= p.right + 1 && r.left >= p.left - 1,
+        overlapsField: overlapWidth > 1 && overlapHeight > 1,
+        scrollY: el.scrollHeight - el.clientHeight,
+        scrollX: el.scrollWidth - el.clientWidth,
+        mode: el.dataset.detailMode,
+        slotHeight: slot.getBoundingClientRect().height,
         named: (el.querySelector("h4")?.textContent ?? "").length,
       };
     });
     expect(panel, "a work-node click opened no inspector").not.toBeNull();
     expect(panel?.visible, "the panel opened with no box").toBe(true);
     expect(panel?.inside, "the panel escaped the plate").toBe(true);
+    expect(panel?.overlapsField, "the detail console overlaps the work field").toBe(false);
+    expect(panel?.scrollY, "the compact detail console scrolls vertically").toBeLessThanOrEqual(1);
+    expect(panel?.scrollX, "the compact detail console scrolls horizontally").toBeLessThanOrEqual(
+      1
+    );
+    expect(panel?.mode).toBe("preview");
+    expect(panel?.slotHeight ?? 0, "the reserved detail slot collapsed").toBeGreaterThan(80);
     expect(panel?.named ?? 0, "the panel opened without naming its work").toBeGreaterThan(0);
 
     await page.keyboard.press("Escape");
@@ -485,6 +975,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       await page.locator(".fl-intel-map__inspector").count(),
       "Escape left the inspector open"
     ).toBe(0);
+    await expect(page.locator(".fl-intel-map__detail-slot")).toHaveAttribute("data-empty", "true");
 
     // Allocation focus reconfigures rather than replacing the eight work
     // objects. A second click restores the complete field; Fast remains an
@@ -935,8 +1426,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(reservoir.locator("p")).toHaveCount(5);
     await expect(reservoir).toContainText("NDA Pre-Check");
 
-    // A row opens the full six-facet anatomy in the flow. Escape answers
-    // that inner state without changing the selected projection.
+    // A row opens the compact six-state anatomy in the flow. Explanatory
+    // facet prose is reserved for the expanded overlay; Escape answers this
+    // inner state without changing the selected projection.
     const firstRow = map.locator(".fl-intel-map__mobile-group button").first();
     const selectedWork = (await firstRow.locator(":scope > span").textContent())?.trim() ?? "";
     await firstRow.click();
@@ -965,6 +1457,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(inspector).toContainText("Owner role");
     await expect(inspector).toContainText("Allocation");
     await expect(inspector).toContainText("Encoded Skills");
+    await expect(inspector.locator(".fl-intel-map__anatomy dd > span")).toHaveCount(0);
     await inspector.getByRole("button", { name: "Close configuration detail" }).focus();
     await page.keyboard.press("Escape");
     await expect(inspector).toHaveCount(0);
@@ -995,6 +1488,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       name: `${expandedLabels[0]?.trim()} configuration detail`,
     });
     await expect(expandedInspector).toBeVisible();
+    await expect(expandedInspector).toHaveAttribute("data-detail-mode", "expanded");
+    await expect(expandedInspector.locator(".fl-intel-map__anatomy dd > span")).toHaveCount(6);
     await expandedInspector.getByRole("button", { name: "Close configuration detail" }).focus();
     await page.keyboard.press("Escape");
     await expect(expandedInspector).toHaveCount(0);

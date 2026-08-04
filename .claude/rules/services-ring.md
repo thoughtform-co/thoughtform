@@ -21,6 +21,7 @@ component you can edit in isolation.
 - [ADR-050: Card face + in-canvas drawer](../sentinel/decisions/050-services-card-face.md) — the tight face, the drawer, the promotion
 - [ADR-025: Services hologram stage](../sentinel/decisions/025-services-hologram-stage.md) — the oscillation history; read before redesigning this surface again
 - [ADR-044: Services masthead](../sentinel/decisions/044-services-masthead.md) · [ADR-047: About deck flip](../sentinel/decisions/047-about-deck-flip-stage.md) — the beat before and the beat after
+- [ADR-061: Intelligence Map work configurations](../sentinel/decisions/061-intelligence-map-work-configurations.md) — proposed harmonization contract for the Proof field mounted at the front of this stage; do not mark accepted before verification
 
 ## The card is ONE object
 
@@ -53,6 +54,47 @@ Change one alone and the surface is incoherent, not merely imperfect:
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.
+
+## The Proof map allocates work configurations
+
+`ServicesCasefile` uses one evidence hierarchy. The left column carries the
+selected project's identity, summary, exactly four proof points and the
+directory. New proof points are `CaseBlock { value, title, desc }`; `value` is
+required and textual. Legacy `readouts` normalize into that same 2×2 register.
+The right panel has no generic footer: the selected visual owns its full height
+beneath the designation rail.
+
+The Intelligence Map has exactly three projections: **CONFIGURATION · TEAM ·
+ALLOCATION**. The persistent moving atom is a work configuration, keyed by a
+stable non-display id, and selection survives projection and overlay changes.
+Configuration uses one vertical set of five work-shape anchors. The canonical
+47 Skills form one fixed bus labelled `ENCODED SUBSTRATE · 47 SKILLS / 5
+SHAPES`, with 47 persistent pips in five unlabelled runs. Do not restore a
+bottom shape legend, SUBSTRATE tab, STACK view or renamed Skills inventory.
+
+Compact detail occupies a reserved, non-overlapping lower console: identity,
+summary and six facet states plus checkpoint, allocation basis, broad owner and
+linked Skill names. Expanded detail reuses the component and adds facet prose
+inside the lazy ADR-006 portal. Linked pips plus those names are the complete
+relationship treatment. No relationship SVG, ResizeObserver or node-to-pip
+measurement loop is allowed.
+
+Allocation communicates rounded aggregate evidence through generic Fast ·
+Everyday · Deep · Frontier lanes, reach/draw cohorts and qualitative bands. It
+is not live telemetry and must never attach token counts, cost or causal usage
+shares to a Skill. Visible and hidden browser data carry no personal names or
+identifying initials, vendor/model names, currency, internal links or private
+board/doc/repo identifiers. Private sources are authoring inputs only.
+
+Keep the field on the DOM seam: pure deterministic layout, one bounded
+click-driven intra-field FLIP, no second canvas/force graph, no runtime private
+fetch and no Three/R3F/Drei import. Its instrument grammar is flat: solid
+surfaces, one-pixel rules and categorical marks, with no map gradient or hatch
+fill. Mobile uses grouped in-flow rows and detail rather than squeezing the
+desktop field. `97%` stays canonical across Proof and the AI keynote, and all
+four Software for Few capability labels remain live while their canonical tool
+records remain Production. Full accepted contracts and verification evidence live
+in ADR-061 and `.claude/rules/proof.md`.
 
 ## Traps specific to this surface
 

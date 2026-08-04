@@ -85,11 +85,11 @@ export const AI_KEYNOTE_ARC: ArcDef = {
     {
       id: "proof-studio",
       kind: "cards",
-      ariaLabel: "Loop Studio — 95% of briefings done with AI",
+      ariaLabel: "Loop Studio — 97% of briefings done with AI",
       columns: 3,
       head: {
         eyebrow: "Loop Studio · AI in production",
-        title: { pre: "95% of briefings done", em: "with AI." },
+        title: { pre: "97% of briefings done", em: "with AI." },
         sub: "Loop has spearheaded AI adoption in Studio, using AI everywhere we can where it makes sense — concepting, copy, post, performance. Three recent cuts, all paid out.",
       },
       cards: [

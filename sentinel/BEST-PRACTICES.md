@@ -1096,6 +1096,25 @@ The same applies to `min-width: 0` in a row.
 
 If a clamp "isn't working", check the min-size before touching the line count.
 
+### Reserve geometry for persistent in-panel detail
+
+If selecting an item reveals detail inside a dense instrument, give that detail
+an explicit region in the base layout. Do not float it over the field, and do
+not let the selected state change the instrument's height. A non-scrolling box
+can still be broken when its children are clipped, so verification must compare
+the important children's rendered bounds or `scrollHeight` as well as the
+console's own dimensions.
+
+Keep compact and expanded disclosure separate: the reserved console carries
+the readable states and decisions needed in context; explanatory prose belongs
+in the focus overlay. On mobile, override the same compound selectors used by
+desktop before assuming that `overflow: visible` or a one-column grid won the
+cascade.
+
+**Why it matters:** a field can pass overlap and scrollbar checks while hiding
+half of its required content. Reserving space prevents layout jumps; measuring
+the content prevents silent truncation.
+
 ### Wait for the thing to exist before you measure it
 
 A harness that queries too early doesn't error, it measures nothing — and

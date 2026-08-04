@@ -1,6 +1,6 @@
 # ADR-061: The Intelligence Map is a field of work configurations
 
-**Status:** Accepted · 2026-08-03
+**Status:** Accepted · 2026-08-04
 **Surfaces:** `components/landing/home-v2/services/casefile/**`,
 `lib/cases/**`, `components/landing/home-v2/services/casefile/casefile.css`,
 `components/landing/v7/theme.css`,
@@ -31,11 +31,13 @@ count to one Skill. The surface must communicate the shape of the system
 without pretending to be live telemetry or publishing the client's private
 operating record.
 
-The field is physically compact. At 1440×800 the visualization is about
-690×240 and the active stage about 144px high; at 2017×1269 the same surface
-is about 862×429 with a 313px stage. Putting every component and every label
-into that box would turn the most important idea on the page into an
-unreadable systems diagram.
+The first work-configuration implementation preserved the casefile's generic
+right-hand evidence foot. That left the visual with roughly half the panel's
+height and forced selection detail over the field. The resulting 8.5px labels,
+scrolling inspector, duplicate shape legend and relationship curves made the
+map harder to read than the concept it was meant to clarify. The casefile now
+needs one shared evidence hierarchy on the left and one uninterrupted visual
+instrument on the right.
 
 ## Decision
 
@@ -70,7 +72,9 @@ Skill.”
 
 The canonical 47-Skill set remains visible evidence that judgment has been
 encoded. It is a fixed **reservoir** referenced by work configurations; it is
-not the moving field and it is not a fourth tab.
+not the moving field and it is not a fourth tab. In the desktop instrument it
+is one thin bus labelled `ENCODED SUBSTRATE · 47 SKILLS / 5 SHAPES`, with all
+47 stable pips present in five spaced but unlabelled runs.
 
 The reservoir keeps stable identities across the whole instrument. Selection
 may highlight the Skills a configuration draws on, and the detail surface may
@@ -78,9 +82,13 @@ name them, but changing projection does not regroup the reservoir. Its count
 is a Skills count; a work-configuration count is a different measure and must
 never borrow the `47+` claim.
 
-On a constrained surface the reservoir may compress into a labelled summary
-and reveal its members on demand. Compression may change presentation, never
-the underlying set or its role in the model.
+The five work-shape names appear once, as the Configuration projection's
+vertical anchors. They are not repeated under the bus. Selection lights only
+the inherited pips and names those Skills in detail; no relationship SVG or
+node-to-pip geometry measurement is part of the contract. On a constrained
+surface the reservoir may compress into a labelled summary and reveal its
+members on demand. Compression may change presentation, never the underlying
+set or its role in the model.
 
 ### 3. Exactly three projections
 
@@ -88,9 +96,10 @@ The tabs are **CONFIGURATION · TEAM · ALLOCATION**, in that order. All three
 are projections of the same work-configuration nodes:
 
 - **CONFIGURATION** is the default explanatory view. It groups the work by its
-  work shape and exposes the selected node's six-part anatomy and Skill
-  references against the fixed reservoir. It answers “what has been configured
-  to do the work?” without becoming a layer inventory.
+  work shape against one vertical taxonomy and exposes the selected node's
+  six-part anatomy and Skill references against the fixed reservoir. It answers
+  “what has been configured to do the work?” without becoming a layer inventory
+  or repeating those shape labels in a legend.
 - **TEAM** regroups those same nodes under public functional teams. It answers
   “where is the configuration operated and maintained?” Personal ownership is
   deliberately absent.
@@ -128,29 +137,56 @@ The map may communicate the **spirit** of usage and allocation through mass,
 density, bands and relative bars. It must not reproduce monthly, per-seat or
 person-level source tables.
 
-### 5. Compact field, focused overlay
+The surrounding casefile uses one canonical proof model. Every authored track
+has four `CaseBlock` records in a left-column 2×2 register. `CaseBlock.value`
+is required and textual, because proof values include counts, ratios, formats
+and properties such as `DOMAIN-OWNED`; `title` and `desc` supply the label and
+support. Legacy `readouts` may be normalized into this register but do not
+create a second panel region.
+
+Cross-surface figures and lifecycle labels are parity contracts. `97%` is the
+canonical Studio adoption figure in both Proof and the AI keynote. Software
+for Few's four capability labels remain `LIVE` while the canonical tool
+registry marks all four Production; a future lifecycle change updates both
+sources together.
+
+### 5. One reading column, one full-height instrument
+
+The casefile has one stable hierarchy:
+
+- the left column carries selected project identity, classification, summary,
+  the four-block proof register and the directory;
+- the right panel carries its designation rail and one visual occupying all
+  remaining height; there is no generic evidence foot beneath it;
+- the Intelligence Map subdivides that visual into controls, decoder, field,
+  substrate bus, reserved lower detail console and footer.
 
 The field teaches the system in two layers:
 
 1. A compact node carries a stable mark, a short work identity and at most one
    projection-specific signal. The head register always names the selected
    work configuration, so the plate is never an unexplained field of symbols.
-2. Selection opens an inward detail rail with the configuration anatomy: work
-   and outcome, public function, six facets, referenced Skills, broad owner
-   role, human checkpoint, capability lane and evidence basis.
+2. The compact lower console always reserves its height. With no selection it
+   presents a short prompt. With a selection it shows the work identity,
+   function, lifecycle, summary, the six facet **states**, referenced Skill
+   names, broad owner role, human checkpoint, capability lane and evidence
+   basis. It never overlays the field and never gains an internal scrollbar.
 3. `EXPAND MAP` click-loads the same controlled field inside a body-portalled
-   ADR-006 focus overlay. Projection, selection and allocation focus survive
-   the seam. The overlay traps focus, locks scroll, dismisses through backdrop
-   or Escape and returns focus to its trigger.
+   ADR-006 focus overlay. It reuses the detail component in expanded mode and
+   adds the explanatory prose for each facet. Projection, selection and
+   allocation focus survive the seam. The overlay traps focus, locks scroll,
+   dismisses through backdrop or Escape and returns focus to its trigger.
 
-Desktop keeps ADR-056 U17's stage-contained, semi-transparent panel sliding
-in from the right. The compact rail does not portal through the casefile iris.
-The expanded instrument does portal because the casefile clips and translates;
-ADR-006 supplies its labelled dialog, restrained glass/border, managed focus,
-focus return and fixed-centre placement. The selected work identity persists
-across projection changes, so the visitor can see the same configuration from
-three directions. Escape unwinds the innermost state first: detail, focused
-allocation tier, then expanded overlay.
+The selected work identity persists across projection changes and overlay
+expansion, so the visitor can inspect one configuration from three directions.
+A projection change never closes selection. Escape unwinds the innermost
+transient state without using projection change as an implicit reset.
+
+The visual treatment is flat instrument grammar: solid surfaces, one-pixel
+rules, direct labels and categorical marks. Map nodes, lifecycle states,
+console and reservoir use no CSS gradients, hatched fills, serif display face
+or decorative relationship curves. Gold marks active state; it does not add a
+second ornamental layer.
 
 ### 6. One deterministic persistent-node morph
 
@@ -174,9 +210,9 @@ The ADR-056 U17 motion laws remain:
 - reduced motion skips measurement and swaps layout immediately.
 
 The fixed Skill reservoir may highlight links to the current selection, but it
-does not join the FLIP. Any relationship lines are derived from the same layout
-result, sit behind the DOM nodes and settle with them; they are not a second
-animation system.
+does not join the FLIP. Linked state plus named Skills in the detail component
+is the complete relationship treatment. No relationship SVG, ResizeObserver,
+node-to-pip rect read or post-morph measurement is allowed.
 
 ### 7. Nothing private travels
 
@@ -209,11 +245,10 @@ DOM/CSS plus a pure layout kernel:
 - no runtime Monday/Notion/API fetch and no polling;
 - at most the two one-shot rect reads for a click-driven morph;
 - no permanent layer promotion; `will-change` is flight-scoped;
-- detail content mounts on selection and glass/blur follows the casefile's
-  settled-state gate;
-- relationship geometry, if shipped, is recomputed only for selection, layout
-  changes and actual container resizes; it never runs in an animation frame or
-  feeds measurements back into the layout.
+- the compact detail slot remains mounted to reserve geometry; selected content
+  swaps within it and glass/blur follows the casefile's settled-state gate;
+- no relationship geometry or measurement loop exists. Only the bounded FLIP's
+  click and destination rect reads are permitted.
 
 The implementation must preserve the landing First Load seam: the anonymous
 route must not acquire the corridor's heavy WebGL dependencies through a map
@@ -227,8 +262,8 @@ labels disappear. They render the same curated data as an in-flow instrument:
 - the three projection controls remain available;
 - work configurations become grouped compact rows/cards for the selected
   projection, without FLIP;
-- the fixed reservoir becomes a `47 Skills · 5 substrate engines` summary with
-  an on-demand disclosure;
+- the fixed reservoir becomes a `47 Skills · 5 shapes` summary with an
+  on-demand disclosure;
 - selected detail expands in flow or as an accessible full-width sheet, with
   focus return and Escape/back dismissal;
 - Allocation keeps generic lane and aggregate evidence semantics, never a
@@ -287,12 +322,21 @@ the durable decision.
   function-level signal.
 - The fixed reservoir count and the work-configuration count need independent
   labels and guards.
-- The compact field can stay intriguing because the overlay carries detail;
-  adding another tile label is no longer the default answer to missing context.
+- The compact field stays concise because the overlay carries explanatory
+  depth; adding another tile label is no longer the default answer to missing
+  context.
+- The left proof register is the only cross-track evidence surface. The right
+  panel no longer reserves a generic footer, so every track visual owns its
+  full height.
+- The compact detail console and expanded overlay share one detail component;
+  compact mode exposes states and decisions, expanded mode adds facet prose.
+- The five vertical work-shape anchors and the 47-pip bus are the only taxonomy
+  and substrate treatments. A duplicate shape legend or relationship layer is
+  a regression.
 
 ## Verification
 
-The following acceptance gates are green:
+Acceptance requires all of the following gates:
 
 1. Registry tests pin stable unique configuration ids, valid Skill references,
    the exact three projection names and separate Skill/configuration totals.
@@ -308,25 +352,40 @@ The following acceptance gates are green:
    remount, zero residual transform and no clipping at 1280×720, 1440×800 and
    the tall reference viewport in both themes.
 5. Detail selection, projection-persistent identity, outside/Escape dismissal,
-   tier-focus reset, overlay focus trap and focus return are exercised; reduced
-   motion performs an immediate swap.
+   tier-focus reset, overlay focus trap and focus return are exercised. The
+   compact console does not overlap or scroll, while expanded detail contains
+   the facet prose; reduced motion performs an immediate swap.
 6. Mobile verifies all three grouped fallbacks, reservoir disclosure and
    in-flow/full-width detail without horizontal overflow.
-7. The production bundle confirms the DOM map introduced no Three/R3F/Drei or
+7. Visual assertions prove one vertical shape taxonomy, one 47-pip bus, no
+   relationship SVG and no computed gradient on nodes or lifecycle states.
+8. Registry tests pin required `CaseBlock.value`, four blocks per Loop track,
+   97% Proof/keynote parity, all-live Software for Few labels and the existing
+   privacy/count contracts.
+9. The production bundle confirms the DOM map introduced no Three/R3F/Drei or
    graph dependency and no request is made to a private source at runtime.
 
-### Acceptance record · 2026-08-03
+### Acceptance record · 2026-08-04
 
-- Typecheck and production build pass. Full ESLint exits with zero errors; its
-  313 warnings are the repository's existing warning baseline.
-- All 39 unit files pass (503 tests), including registry confidentiality,
-  deterministic geometry, persistent identity, reduced motion, focus trap,
-  focus return and mobile row semantics.
-- Desktop Services + corridor smoke passes 19 tests with the two mobile-only
-  cases skipped. The dedicated iPhone 14 map smoke passes separately.
-- Dark/light viewport inspection at 1280×720, 2017×1269 and 390×844 confirms
-  zero node, tier, meter, anchor or field clipping/overlap/overflow. Expanded
-  and mobile focus surfaces preserve the same eight configurations.
-- The expanded overlay is click-loaded as its own 3,333-byte raw production
-  chunk. The map paths contain no Three/R3F/Drei, Supabase, charting or runtime
-  private-source fetch.
+- Registry, layout and interaction coverage passed in the full Vitest run: 40
+  files and 509 tests. This includes stable ids, Skill resolution, privacy
+  guards, the four-track proof schema, 97% parity, all-live tool labels,
+  projection identity, allocation focus, overlay focus/scroll behavior and
+  responsive browse ownership.
+- Desktop Playwright passed at 1280×720, 1440×800 and 2017×1269. The binding
+  viewport exercises all eight compact details and verifies child visibility,
+  10px controls, 11px nodes, 12px readable content, 17px selected titles,
+  non-overlap, no internal scroll, full-height visuals, Studio summary fit,
+  complete tool labels and fully visible tall proof descriptions.
+- The combined desktop Services-ring and corridor run passed 20 tests with the
+  two mobile-only tests skipped by project design. The existing iPhone 14 map
+  smoke also remained green after the safe fallback CSS changes.
+- Computed-style assertions passed in both themes: five shape anchors, exactly
+  47 unique pips, no relationship SVG and no map gradient. Static scans found
+  no stale `CaseBlock.stat`, `ResizeObserver`, heavy visualization import,
+  private URL or currency surface in the map paths.
+- `npm run typecheck`, Prettier and `git diff --check` passed. ESLint completed
+  with zero errors and the repository's existing 313-warning baseline. A fresh
+  production build compiled, typechecked and generated all 89 pages. Bundle
+  analysis kept the expanded map as a 1.3 kB gzip async chunk outside the
+  landing's initial graph, with no Three/R3F/Supabase/charting regression.

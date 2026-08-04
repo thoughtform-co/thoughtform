@@ -17,8 +17,8 @@ import { ToolGallery } from "./ToolGallery";
  * is a compile error until a branch exists here, which is what stops a new
  * plate silently rendering as a hole.
  *
- * `readouts` renders NOTHING — for that kind the readout block itself is the
- * plate, and `TrackPanel` promotes it instead.
+ * `readouts` renders nothing: compatibility readouts are normalized into the
+ * left-column proof register by `TrackProofRegister`.
  *
  * Rows are keyed by INDEX throughout. These are fixed, ordered lists that
  * never reorder or splice, and their content is not guaranteed unique — a
@@ -37,8 +37,7 @@ function resolveTools(toolIds: readonly string[]) {
 
 interface TrackVisualProps {
   visual: CaseTrackVisual;
-  /** Selected tool, for the `tools` branch only. Owned by `TrackPanel` so the
-   *  panel foot can read the same selection; ignored by every other kind. */
+  /** Selected tool, for the controlled `tools` branch only. */
   toolIdx?: number;
   onToolIdx?: (idx: number) => void;
 }
@@ -139,8 +138,8 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
       );
 
     case "tools":
-      /* The only CONTROLLED branch. `TrackPanel` owns the selected index
-         because the panel FOOT follows the tool in view — see ToolGallery. */
+      /* The only CONTROLLED branch. `TrackPanel` owns the selected index so
+         the tab rail and full-height tool instrument change as one surface. */
       return (
         <ToolGallery
           tools={resolveTools(visual.toolIds)}
