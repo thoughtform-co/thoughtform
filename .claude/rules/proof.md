@@ -16,7 +16,7 @@ inherited its ambient-cover role.
 **Read first**
 
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
-- [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — the LIVE Intelligence Map. Read its §Outstanding first: sheets 02/03, the EXPAND control and the smoke coverage are a known first cut
+- [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — the LIVE Intelligence Map. Update 1 fitted sheets 02/03, built the EXPAND overlay and closed the missing coverage
 - [ADR-061](../sentinel/decisions/061-intelligence-map-work-configurations.md) — SUPERSEDED by ADR-062 on the atom, the drawing and the projections; its placement, evidence semantics and privacy envelope still stand
 - [ADR-054](../sentinel/decisions/054-proof-station-client-cases.md) — superseded on placement; its content model and confidentiality envelope are still live
 - [ADR-029](../sentinel/decisions/029-services-card-ring.md) / [ADR-050](../sentinel/decisions/050-services-card-face.md) — the ring the casefile now holds back
@@ -270,23 +270,78 @@ inherited its ambient-cover role.
     own label size in AUTHORING UNITS, tuned so all three land at the same
     rendered size. Changing a crop changes that sheet's rendered type —
     re-measure with a headed Playwright run, never by eye.
-  - **The parts index is NOT on sheet 01 at panel size.** 27 rows at a
-    readable size need ~700 units of height in a crop that has 570. It lives
-    in the hover card, the mobile fallback, and the expanded view.
+  - **The parts index is NOT on sheet 01 at panel size.** 35 lines need ~800
+    units of height in a crop that has 570. It lives in the hover card, the
+    mobile fallback, and the EXPAND overlay — which is what that control is
+    for. It letters at the SHEET'S OWN TYPE: the first cut scaled it to 0.78
+    and rendered the rows at 9.0px, under the reading floor, on a column
+    whose whole job is to name every module. Spend height, never type.
   - **Back-row district plaques hang ABOVE their plate.** The rows leave ~18
-    screen-units of gap; a plaque needs 25.
+    screen-units of gap; a plaque needs 40. Their width DERIVES from the
+    sheet's type size — a hard-coded plaque hangs off its name the moment a
+    crop is re-tuned.
 - **Keys bind on the PLATE, not `document`** — the corridor has its own key
   handling, and React's synthetic events reach the plate from whatever
   descendant has focus. Arrival gates on `data-proof-settled`, not
   `data-proof-live`: a drawing that stages itself while the ladder is still
   travelling reads as a demo rather than a record.
-- ⚠ **Sheets 02 and 03 are NOT YET FITTED to the panel, and neither is the
-  EXPAND control.** They carry more annotation than 611×390 holds at legible
-  type. The agreed shape (owner, 2026-08-05) is reduced panel views plus an
-  EXPAND opening the full authored drawing, index included;
-  `useDialogShell` is already extracted from `MediaLightbox` for it. Read
-  ADR-062 §Outstanding before touching this — it also lists the missing
-  smoke coverage and the absent `map-projection` unit test.
+- **TWO DETAIL LEVELS, ONE STATE, ONE COMPONENT (ADR-062 U1).** The casefile
+  panel and the EXPAND overlay both render `MapSurface` at
+  `detail: "panel" | "full"` over ONE sheet and selection. Never fork them:
+  the overlay exists _because_ the panel suppresses annotation, and the
+  moment they have separate markup the suppression stops being a decision
+  and becomes a drift. Expanding lands on the sheet you were reading, and
+  closing hands back the sheet you left the overlay on.
+  - **EXPAND buys ROOM, not magnification.** At 1280×720 it is worth ~1.4×
+    of scale — nowhere near enough to make a suppressed sentence readable by
+    zooming. What it buys is 118 characters across the sheet against the
+    panel's 83, so the reduction is a question of WHAT IS DRAWN. The `full`
+    crops are therefore WIDER in authoring units and letter SMALLER; a
+    `full` crop that letters larger has turned the overlay into the zoom
+    ladder ADR-062 closed.
+  - **What the panel drops, and only this:** the rail's second line, the
+    seat note, the entry title and "why this lane" on sheet 02; the ratchet
+    prose and the long subtitle on sheet 03; the parts index on sheet 01.
+    The draw meter's `Never a price.` caption STAYS on the panel — a
+    confidentiality line is not annotation to be reduced away.
+  - **It PORTALS to `document.body` and reuses `useDialogShell`** — the same
+    two reasons `MediaLightbox` documents (a clipped ancestor becomes the
+    containing block even for `fixed`; `overflow: hidden` on `<html>` is not
+    a scroll lock). Focus returns to the EXPAND control ONE FRAME LATE.
+  - ⚠ Its inner root keeps the `.fl-imap` class (every colour routes through
+    a custom property declared there, and the light rows select on it), and
+    `.fl-imap--full .fl-imap__svg` must force `opacity: 1` — the arrival
+    gate is `[data-proof-settled]` on the services stage, which the portal
+    is outside of.
+- ⚠ **NOTHING IS LETTERED ON A UNIT PLATE, and that is arithmetic.** A plate
+  face is `2·(A + B)` units wide and a value like `Component + supplier
+facts` is wider than the whole plate — so the values live on the LABEL
+  RAIL, in the halves' own left-then-right order, and the plate carries the
+  material language alone. The first cut lettered them and they crossed the
+  centre line on every module, at both detail levels, because the collision
+  is arithmetic and not a matter of scale.
+- ⚠ **THE PROVENANCE STAMP IS AN OBSTACLE IN THE DRAWING, and a moving one.**
+  `.fl-imap__stamp` is DOM chrome pinned bottom-right in SCREEN pixels over
+  an SVG that scales, so its bite out of the sheet GROWS as the console
+  shrinks — 1280×720 is the binding case and 1920 hides it entirely. Sheet
+  03's annotation band is budgeted against `stampBox()`, not placed by eye;
+  the first cut printed the derived reuse sentence, the sheet's whole
+  argument, straight through the words "illustrative record". The stamp
+  cannot simply move: the tab tail holds the projection note and the EXPAND
+  control, all three sheets use their top-right for counts, and the foot is
+  already two lines squeezed into 611px.
+- **FIT IS ASSERTED, NOT REVIEWED.** SVG `<text>` does not wrap, does not
+  ellipsise and does not report overflow — a label past its crop simply
+  vanishes with nothing on screen to say so. So every annotation is placed
+  and wrapped against `MONO_ADVANCE` (0.68 em — PT Mono's advance plus the
+  0.08em tracking, confirmed by measurement), `tests/lib/map-projection.test.ts`
+  re-checks those placements arithmetically, and the smoke walks all three
+  sheets at BOTH detail levels measuring real glyph boxes. Neither half is
+  sufficient: the arithmetic cannot see a CSS change, and the smoke cannot
+  tell you which constant to move.
+  - ⚠ `preserveAspectRatio="xMidYMid meet"` scales by the MINIMUM of the two
+    box ratios. `box.width / viewBox.width` over-reports the board sheet by
+    16 % and will tell you a 10.5px label is 12.5px.
 - **The beats and the casefile SHARE their plates.** Hoisted consts in the
   content module, asserted reference-equal by the registry test. Re-typing a
   plate inline is how the two surfaces drift.
@@ -297,10 +352,18 @@ inherited its ambient-cover role.
   at 1440. Keep the KEY short too, and measure.
 - **BRIEF, PROOF REGISTER, DIRECTORY AND VISUAL CAN STILL CLIP SILENTLY on
   short viewports.** Walk all four tracks at 1280×720 as well as taller
-  references. The brief content ceiling is 420 characters; the proof register
-  must retain all four values and labels; the directory keeps four readable
-  rows; the right visual fills its panel without covering or internally
-  scrolling its map console. A 1920×1080-only pass proves none of this.
+  references. The proof register must retain all four values and labels; the
+  directory keeps four readable rows; the right visual fills its panel
+  without covering or internally scrolling its map console. A 1920×1080-only
+  pass proves none of this.
+  ⚠ **THE BRIEF HAS TWO NUMBERS AND BOTH ARE TRUE.** `BRIEF_MAX` in
+  `cases-registry.test.ts` is **420** — a guardrail set where it does not
+  force editorial truncation on the longest approved summary. The BOX at
+  1280×720 is about **330** (ADR-056 U11, measured). So the test passing is
+  not proof that the copy fits: anything between 330 and 420 clips its tail
+  at the binding viewport, silently, because `.fl-brief` is boxed against the
+  `--fl-t6` seam with `overflow: hidden` and NO scrollbar. Between those two
+  numbers, measure — do not cite the guard.
 - **No italics.** Emphasis is `CaseTitle.em` (upright gold) or a
   `CaseSegment` `{ em }` (the gold-wash marker). Markup smuggled into copy
   strings fails the registry test.

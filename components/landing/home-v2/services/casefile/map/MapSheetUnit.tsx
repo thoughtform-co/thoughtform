@@ -4,13 +4,17 @@ import type { CaseMapWork } from "@/lib/cases/types";
 
 import {
   MASS_BAND,
+  type MapDetail,
   SEAT,
   UNIT,
+  UNIT_RAIL_LABELS,
+  charsIn,
   curve,
   diamond,
   isPersonLed,
   iso,
   poly,
+  sheetView,
   wrapLines,
 } from "./mapProjection";
 import type { SheetData } from "./sheetTypes";
@@ -29,16 +33,28 @@ import type { SheetData } from "./sheetTypes";
  * distance between the owner and the machine, and a dimension line with end
  * ticks is the correct technical-drawing primitive for a distance.
  *
- * LABEL DISCIPLINE. The rail asks the question, the plate answers it.
- * Provenance is carried by the drawing — hatched green is yours, open dots
- * are rented, blue dashed is the adjacent domain — and is NEVER also
- * written down. The prototype's rail used to repeat "encoded here / yours"
- * under a plate that was already hatched green, which is an admission that
- * the material language is not working.
+ * LABEL DISCIPLINE. The rail asks the question AND names the answer; the
+ * plate answers in MATERIAL — hatched green is encoded here, open dots are
+ * rented, blue-grey dashed is the adjacent domain we query but do not own.
+ * Provenance is therefore carried by the drawing and never also written
+ * down. The prototype's rail used to repeat "encoded here / yours" under a
+ * plate that was already hatched green, which is an admission that the
+ * material language is not working.
+ *
+ * ⚠ NOTHING IS LETTERED ON A PLATE, and that is arithmetic (see
+ * `UNIT_RAIL_LABELS`): the values are wider than the plate they would sit
+ * on, at every detail level. The first cut lettered them and they crossed
+ * the centre line on every module.
+ *
+ * WHAT THE PANEL DROPS. The rail's second line, the seat's note, the entry
+ * title and the "why this lane" block are `full`-only. They are not
+ * decoration — they are the sentences a reader wants once they have
+ * decided to read, which is what the EXPAND control is for.
  */
 
 interface Props extends SheetData {
   work: CaseMapWork;
+  detail: MapDetail;
 }
 
 interface PlateDef {
@@ -47,16 +63,24 @@ interface PlateDef {
   note: string;
   owned?: boolean;
   graph?: boolean;
-  one?: string;
-  L?: readonly [string, string];
-  R?: readonly [string, string];
+  /** Rail copy: one line for the owner plate, two for a split plate. */
+  answers: string[];
+  /** A split plate letters no words but draws two materials. */
+  split: boolean;
 }
 
-export function MapSheetUnit({ districts, work }: Props) {
+export function MapSheetUnit({ districts, work, detail }: Props) {
   const person = isPersonLed(work);
   const c = work.cfg;
   const district = districts.find((d) => d.id === work.dist);
-  const { cx: CX, A, B, thickness: TH, plateY, railX } = UNIT;
+  const CROP = sheetView("unit", detail);
+  const TYPE = CROP.type;
+  const full = detail === "full";
+  const { cx: CX, A, B, thickness: TH, plateY, railX, railText, left } = UNIT;
+
+  /** Every rail line wraps against the crop's own right margin. */
+  const railChars = charsIn(UNIT.right - railText, TYPE);
+  const line = (label: string, value: string) => `${label} · ${value}`;
 
   const plates: PlateDef[] = [
     {
@@ -64,29 +88,45 @@ export function MapSheetUnit({ districts, work }: Props) {
       title: "Who owns it",
       note: "Answers for the outcome",
       owned: true,
-      one: person ? "The person" : (c?.p[0] ?? ""),
+      split: false,
+      answers: [person ? "The person" : (c?.p[0] ?? "")],
     },
     {
       cy: plateY[1],
       title: "What runs it",
       note: "Neither half runs without the other",
-      L: ["Skill", person ? "Not bound" : (c?.s[0] ?? "")],
-      R: ["Model", person ? "Not bound" : (c?.m[0] ?? "")],
+      split: true,
+      answers: person
+        ? ["Not bound to a Skill", "No lane"]
+        : [
+            line(UNIT_RAIL_LABELS.skill, c?.s[0] ?? ""),
+            line(UNIT_RAIL_LABELS.model, c?.m[0] ?? ""),
+          ],
     },
     {
       cy: plateY[2],
       title: "What it inherits",
       note: "Facts are queried / method is encoded",
       graph: true,
-      L: ["Context", person ? "Held by the person" : (c?.c[0] ?? "")],
-      R: ["Graph facts", person ? "Not bound" : (c?.g[0] ?? "")],
+      split: true,
+      answers: person
+        ? ["Context held by the person", "No graph"]
+        : [
+            line(UNIT_RAIL_LABELS.context, c?.c[0] ?? ""),
+            line(UNIT_RAIL_LABELS.graph, c?.g[0] ?? ""),
+          ],
     },
     {
       cy: plateY[3],
       title: "What it can reach",
       note: "Without connectors the best setup is inert",
-      L: ["Connectors", person ? "Not bound" : (c?.k[0] ?? "")],
-      R: ["Surfaces", person ? "Not bound" : (c?.u[0] ?? "")],
+      split: true,
+      answers: person
+        ? ["Nothing bound", "No surface"]
+        : [
+            line(UNIT_RAIL_LABELS.connectors, c?.k[0] ?? ""),
+            line(UNIT_RAIL_LABELS.surfaces, c?.u[0] ?? ""),
+          ],
     },
   ];
 
@@ -97,27 +137,34 @@ export function MapSheetUnit({ districts, work }: Props) {
 
   return (
     <g>
-      <text className="fl-imap__t fl-imap__t--gold" x={56} y={66}>
+      <text className="fl-imap__t fl-imap__t--gold" x={left} y={66}>
         Sheet 02 / the unit — the configuration
       </text>
-      <text className="fl-imap__t" x={56} y={80}>
-        One module taken apart. Height is authority, not importance.
+      <text className="fl-imap__t" x={left} y={84}>
+        {full
+          ? "One module taken apart. Height is authority, not importance."
+          : "Height is authority, not importance."}
       </text>
-      <text className="fl-imap__t fl-imap__t--ink" x={1104} y={66} textAnchor="end">
+      <text className="fl-imap__t fl-imap__t--ink" x={UNIT.right} y={66} textAnchor="end">
         {`${work.id} / ${work.title}`}
       </text>
-      <text className="fl-imap__t fl-imap__t--faint" x={1104} y={80} textAnchor="end">
+      <text className="fl-imap__t fl-imap__t--faint" x={UNIT.right} y={84} textAnchor="end">
         {`${district?.name ?? ""} / ${person ? "Person-led" : "Configured"}`}
       </text>
 
-      <line className="fl-imap__axis" x1={CX} y1={126} x2={CX} y2={576} />
+      <line className="fl-imap__axis" x1={CX} y1={UNIT.axis.top} x2={CX} y2={UNIT.axis.bottom} />
 
-      {/* The work enters off-axis and curves onto the assembly. */}
+      {/* The work enters off-axis and curves onto the assembly. The panel
+          prints the id alone — the header already names the module, and the
+          full title here runs into the first plate's leading vertex. */}
       <g>
-        <path className="fl-imap__hair2" d={curve(UNIT.entry, [CX - 4, 132])} />
-        <path className="fl-imap__own fl-imap__own--hot" d={diamond(UNIT.entry[0], UNIT.entry[1], 9)} />
+        <path className="fl-imap__hair2" d={curve(UNIT.entry, [CX - 4, UNIT.axis.top])} />
+        <path
+          className="fl-imap__own fl-imap__own--hot"
+          d={diamond(UNIT.entry[0], UNIT.entry[1], 9)}
+        />
         <text className="fl-imap__t fl-imap__t--ink" x={UNIT.entry[0] + 16} y={UNIT.entry[1] + 3}>
-          {`${work.id} ${work.title}`}
+          {full ? `${work.id} ${work.title}` : work.id}
         </text>
       </g>
 
@@ -126,10 +173,11 @@ export function MapSheetUnit({ districts, work }: Props) {
         const q2 = iso(CX, p.cy, A, -B);
         const q3 = iso(CX, p.cy, -A, -B);
         const q4 = iso(CX, p.cy, -A, B);
-        const split = Boolean(p.L && p.R);
         const s1 = iso(CX, p.cy, 0, B);
         const s2 = iso(CX, p.cy, 0, -B);
         const leaderY = q2[1];
+        /* The rail block: question, then one wrapped line per answer. */
+        const railLines = p.answers.flatMap((a) => wrapLines(a, railChars));
 
         return (
           <g key={p.title}>
@@ -147,7 +195,7 @@ export function MapSheetUnit({ districts, work }: Props) {
               points={poly([q1, q2, q3, q4])}
             />
 
-            {split ? (
+            {p.split ? (
               <>
                 <line
                   className="fl-imap__hair2 fl-imap__dash"
@@ -166,7 +214,14 @@ export function MapSheetUnit({ districts, work }: Props) {
                   const e1 = iso(CX, p.cy, -A * f, B);
                   const e2 = iso(CX, p.cy, -A * f, -B);
                   return (
-                    <line className="fl-imap__hatch" key={k} x1={e1[0]} y1={e1[1]} x2={e2[0]} y2={e2[1]} />
+                    <line
+                      className="fl-imap__hatch"
+                      key={k}
+                      x1={e1[0]}
+                      y1={e1[1]}
+                      x2={e2[0]}
+                      y2={e2[1]}
+                    />
                   );
                 })}
                 {/* RIGHT HALF — rented, or the adjacent domain in its own
@@ -192,79 +247,59 @@ export function MapSheetUnit({ districts, work }: Props) {
                     );
                   })
                 )}
-                <text
-                  className="fl-imap__t fl-imap__t--grn"
-                  x={iso(CX, p.cy, -A * 0.55, 0)[0]}
-                  y={iso(CX, p.cy, -A * 0.55, 0)[1] - 2}
-                  textAnchor="middle"
-                >
-                  {p.L?.[0]}
-                </text>
-                <text
-                  className="fl-imap__t fl-imap__t--ink"
-                  x={iso(CX, p.cy, -A * 0.55, 0)[0]}
-                  y={iso(CX, p.cy, -A * 0.55, 0)[1] + 10}
-                  textAnchor="middle"
-                >
-                  {p.L?.[1]}
-                </text>
-                <text
-                  className={`fl-imap__t ${p.graph ? "fl-imap__t--gr" : "fl-imap__t--gold"}`}
-                  x={iso(CX, p.cy, A * 0.55, 0)[0]}
-                  y={iso(CX, p.cy, A * 0.55, 0)[1] - 2}
-                  textAnchor="middle"
-                >
-                  {p.R?.[0]}
-                </text>
-                <text
-                  className="fl-imap__t fl-imap__t--ink"
-                  x={iso(CX, p.cy, A * 0.55, 0)[0]}
-                  y={iso(CX, p.cy, A * 0.55, 0)[1] + 10}
-                  textAnchor="middle"
-                >
-                  {p.R?.[1]}
-                </text>
               </>
             ) : (
               <>
                 <circle
                   className="fl-imap__rent"
                   cx={iso(CX, p.cy, 0, 0)[0]}
-                  cy={iso(CX, p.cy, 0, 0)[1] - 10}
+                  cy={iso(CX, p.cy, 0, 0)[1] - 4}
                   r={6}
                 />
                 <circle
                   className="fl-imap__rent-core"
                   cx={iso(CX, p.cy, 0, 0)[0]}
-                  cy={iso(CX, p.cy, 0, 0)[1] - 10}
+                  cy={iso(CX, p.cy, 0, 0)[1] - 4}
                   r={2.2}
                 />
-                <text
-                  className="fl-imap__t fl-imap__t--ink"
-                  x={iso(CX, p.cy, 0, 0)[0]}
-                  y={iso(CX, p.cy, 0, 0)[1] + 10}
-                  textAnchor="middle"
-                >
-                  {p.one}
-                </text>
               </>
             )}
 
-            {/* Leader to the bracketed label rail. ⚠ The two label lines sit
-                26 units apart, not the prototype's 13: the casefile crop
-                renders type at roughly double the prototype's unit size, and
-                at 13 the question and its answer overlapped. */}
-            <path className="fl-imap__leader" d={`M ${q2[0] + 6} ${leaderY} L ${railX - 8} ${leaderY}`} />
+            {/* Leader to the bracketed label rail. The bracket wraps the
+                whole block, so it grows with the wrapped answer rather than
+                spanning a fixed 44 units the copy can outrun. */}
+            <path
+              className="fl-imap__leader"
+              d={`M ${q2[0] + 6} ${leaderY} L ${railX - 8} ${leaderY}`}
+            />
             <path
               className="fl-imap__brk"
-              d={`M ${railX} ${leaderY - 10} L ${railX - 7} ${leaderY - 10} L ${railX - 7} ${leaderY + 34} L ${railX} ${leaderY + 34}`}
+              d={`M ${railX} ${leaderY - 16} L ${railX - 7} ${leaderY - 16} L ${railX - 7} ${
+                leaderY + 4 + railLines.length * 16
+              } L ${railX} ${leaderY + 4 + railLines.length * 16}`}
             />
-            <text className="fl-imap__t fl-imap__t--gold" x={railX + 12} y={leaderY + 4}>
+            <text className="fl-imap__t fl-imap__t--gold" x={railText} y={leaderY - 4}>
               {p.title}
             </text>
-            <text className="fl-imap__t" x={railX + 12} y={leaderY + 26}>
-              {p.note}
-            </text>
+            {railLines.map((l, i) => (
+              <text
+                className="fl-imap__t fl-imap__t--ink"
+                key={`${p.title}-${i}`}
+                x={railText}
+                y={leaderY + 14 + i * 16}
+              >
+                {l}
+              </text>
+            ))}
+            {full ? (
+              <text
+                className="fl-imap__t fl-imap__t--faint"
+                x={railText}
+                y={leaderY + 18 + railLines.length * 16}
+              >
+                {p.note}
+              </text>
+            ) : null}
           </g>
         );
       })}
@@ -273,7 +308,13 @@ export function MapSheetUnit({ districts, work }: Props) {
       <g>
         {seat.depth > 0 ? (
           <>
-            <line className="fl-imap__dim" x1={UNIT.dimX} y1={dimTop} x2={UNIT.dimX} y2={dimBottom} />
+            <line
+              className="fl-imap__dim"
+              x1={UNIT.dimX}
+              y1={dimTop}
+              x2={UNIT.dimX}
+              y2={dimBottom}
+            />
             {[dimTop, dimBottom].map((yy) => (
               <line
                 className="fl-imap__dim"
@@ -300,40 +341,69 @@ export function MapSheetUnit({ districts, work }: Props) {
             />
           </>
         ) : null}
-        <text className="fl-imap__t fl-imap__t--gold" x={56} y={dimMid - 12}>
+        <text className="fl-imap__t fl-imap__t--gold" x={left} y={dimMid - 14}>
           Decides alone
         </text>
-        <text className="fl-imap__t fl-imap__t--ink" x={56} y={dimMid}>
+        <text className="fl-imap__t fl-imap__t--ink" x={left} y={dimMid + 4}>
           {seat.label}
         </text>
-        {wrapLines(seat.note, 22).map((line, i) => (
-          <text className="fl-imap__t fl-imap__t--faint" key={i} x={56} y={dimMid + 13 + i * 11}>
-            {line}
-          </text>
-        ))}
+        {full
+          ? wrapLines(seat.note, charsIn(UNIT.dimX - left - 14, TYPE)).map((l, i) => (
+              <text
+                className="fl-imap__t fl-imap__t--faint"
+                key={i}
+                x={left}
+                y={dimMid + 24 + i * 15}
+              >
+                {l}
+              </text>
+            ))
+          : null}
       </g>
 
       {/* The gate, and who answers for it. */}
       <g>
         {person ? (
           <>
-            <circle className="fl-imap__rent" cx={CX} cy={594} r={10} />
-            <circle className="fl-imap__rent-core" cx={CX} cy={594} r={3.4} />
-            <text className="fl-imap__t fl-imap__t--ink" x={CX + 22} y={590}>
+            <circle
+              className="fl-imap__rent"
+              cx={UNIT.gate.x1 + 6}
+              cy={UNIT.gate.top + 16}
+              r={10}
+            />
+            <circle
+              className="fl-imap__rent-core"
+              cx={UNIT.gate.x1 + 6}
+              cy={UNIT.gate.top + 16}
+              r={3.4}
+            />
+            <text className="fl-imap__t fl-imap__t--gold" x={CX + 6} y={UNIT.gate.top + 12}>
               No gate / live judgment
             </text>
-            <text className="fl-imap__t fl-imap__t--faint" x={CX + 22} y={602}>
+            <text className="fl-imap__t fl-imap__t--ink" x={CX + 6} y={UNIT.gate.top + 30}>
               The standard is still moving
             </text>
           </>
         ) : (
           <>
-            <line className="fl-imap__gate" x1={UNIT.gate.x1} y1={UNIT.gate.top} x2={UNIT.gate.x1} y2={UNIT.gate.bottom} />
-            <line className="fl-imap__gate" x1={UNIT.gate.x2} y1={UNIT.gate.top} x2={UNIT.gate.x2} y2={UNIT.gate.bottom} />
-            <text className="fl-imap__t fl-imap__t--gold" x={CX + 6} y={590}>
+            <line
+              className="fl-imap__gate"
+              x1={UNIT.gate.x1}
+              y1={UNIT.gate.top}
+              x2={UNIT.gate.x1}
+              y2={UNIT.gate.bottom}
+            />
+            <line
+              className="fl-imap__gate"
+              x1={UNIT.gate.x2}
+              y1={UNIT.gate.top}
+              x2={UNIT.gate.x2}
+              y2={UNIT.gate.bottom}
+            />
+            <text className="fl-imap__t fl-imap__t--gold" x={CX + 6} y={UNIT.gate.top + 12}>
               The gate
             </text>
-            <text className="fl-imap__t fl-imap__t--ink" x={CX + 6} y={602}>
+            <text className="fl-imap__t fl-imap__t--ink" x={CX + 6} y={UNIT.gate.top + 30}>
               {work.evals}
             </text>
           </>
@@ -341,10 +411,11 @@ export function MapSheetUnit({ districts, work }: Props) {
       </g>
 
       {/* The draw meter. Read against the workload, NEVER a price — the
-          label says so on the surface because this is the one reading a
-          reader is most likely to try to convert into money. */}
+          label says so ON THE PANEL TOO, because this is the one reading a
+          reader is most likely to try to convert into money, and a
+          confidentiality caption is not annotation to be reduced away. */}
       <g>
-        <text className="fl-imap__t fl-imap__t--gold" x={56} y={604}>
+        <text className="fl-imap__t fl-imap__t--gold" x={left} y={UNIT.meterY}>
           Draw / mass per run
         </text>
         {Array.from({ length: 5 }, (_, k) => (
@@ -352,39 +423,44 @@ export function MapSheetUnit({ districts, work }: Props) {
             className="fl-imap__dm"
             data-on={k < work.mass ? "" : undefined}
             key={k}
-            x={56 + k * 22}
-            y={612}
+            x={left + k * 22}
+            y={UNIT.meterY + 8}
             width={17}
             height={11}
           />
         ))}
-        <text className="fl-imap__t fl-imap__t--ink" x={176} y={621}>
+        <text className="fl-imap__t fl-imap__t--ink" x={left + 122} y={UNIT.meterY + 20}>
           {`${MASS_BAND[work.mass]} / ${work.vol} vol`}
         </text>
-        <text className="fl-imap__t fl-imap__t--faint" x={56} y={642}>
+        <text className="fl-imap__t fl-imap__t--faint" x={left} y={UNIT.meterY + 38}>
           Read against the workload. Never a price.
         </text>
       </g>
 
-      {!person && c ? (
+      {/* Why this lane — expanded only. It is the sentence that keeps the
+          lane from reading as a default, and it needs a column the panel
+          does not have. */}
+      {full && !person && c ? (
         <g>
-          <path className="fl-imap__brk" d="M 700 588 L 693 588 L 693 664 L 700 664" />
-          <text className="fl-imap__t fl-imap__t--gold" x={712} y={598}>
+          <path
+            className="fl-imap__brk"
+            d={`M ${railX} ${UNIT.meterY - 12} L ${railX - 7} ${UNIT.meterY - 12} L ${railX - 7} ${
+              UNIT.meterY + 44
+            } L ${railX} ${UNIT.meterY + 44}`}
+          />
+          <text className="fl-imap__t fl-imap__t--gold" x={railText} y={UNIT.meterY - 2}>
             Why this lane
           </text>
-          {wrapLines(c.why, 54).map((line, i) => (
-            <text className="fl-imap__t fl-imap__t--faint" key={`w${i}`} x={712} y={612 + i * 12}>
-              {line}
+          {wrapLines(c.why, railChars).map((l, i) => (
+            <text
+              className="fl-imap__t fl-imap__t--faint"
+              key={`w${i}`}
+              x={railText}
+              y={UNIT.meterY + 14 + i * 15}
+            >
+              {l}
             </text>
           ))}
-          {wrapLines(c.s[1], 54).map((line, i) => {
-            const offset = 612 + wrapLines(c.why, 54).length * 12 + 14;
-            return (
-              <text className="fl-imap__t fl-imap__t--ink" key={`s${i}`} x={712} y={offset + i * 12}>
-                {line}
-              </text>
-            );
-          })}
         </g>
       ) : null}
     </g>

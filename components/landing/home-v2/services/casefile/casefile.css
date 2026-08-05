@@ -3481,6 +3481,39 @@
   font: 8.5px/1 var(--font-mono, monospace);
   letter-spacing: 0.13em;
   text-transform: uppercase;
+  /* The note yields first: it is the projection caption, and the EXPAND
+     control has to stay reachable at every reference width. */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ── The tab strip's tail control ────────────────────────────────────
+   EXPAND on the panel, CLOSE on the overlay. 10px is the chrome floor
+   for a control (rules/proof.md's type law) and this is one. */
+.fl-imap__action {
+  appearance: none;
+  flex: none;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--imap-line);
+  padding: 9px 15px 8px;
+  color: var(--gold);
+  font: 400 10px/1.4 var(--font-mono, monospace);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.22s ease;
+}
+
+.fl-imap__action:hover {
+  background: rgba(var(--gold-rgb), 0.1);
+}
+
+.fl-imap__action:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -3px;
 }
 
 /* ── The canvas ──────────────────────────────────────────────────────── */
@@ -3912,6 +3945,53 @@
   }
 }
 
+/* ── The EXPAND overlay (ADR-062 Outstanding 1) ──────────────────────
+   The panel's reduced reading, opened at the size the drawing was
+   authored for. It PORTALS to `document.body` — `.fl-case` carries the
+   iris `clip-path`, a translating arrival ladder and an `overflow:
+   hidden` plate, and a clipped or transformed ancestor becomes the
+   containing block even for `position: fixed`.
+
+   The scrim mirrors `.fl-lightbox`'s measurements rather than inventing a
+   second modal look; the frame differs because a drawing wants the whole
+   window and a film wants its own aspect. */
+.fl-imap-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 2.4vw, 40px);
+  background: rgba(var(--void-rgb), 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* The portal escapes `.fl-case`'s `pointer-events: none`, so this must
+     take the pointer explicitly. */
+  pointer-events: auto;
+  animation: flLightboxIn 0.22s ease-out;
+}
+
+.fl-imap-scrim:focus {
+  outline: none;
+}
+
+.fl-imap--full {
+  width: min(1600px, 100%);
+  height: min(920px, 100%);
+  border: 1px solid var(--imap-line-2);
+  background: rgba(var(--void-deep-rgb), 0.96);
+  animation: modalFocusIn 0.3s ease-out;
+}
+
+/* ⚠ ARRIVAL IS A CASEFILE GATE, AND THE OVERLAY IS NOT IN THE CASEFILE.
+   `.fl-imap__svg` rests at `opacity: 0` until `[data-proof-settled]`, an
+   attribute on the services stage — which the portal is outside of. Without
+   this row the expanded drawing renders as an empty box. */
+.fl-imap--full .fl-imap__svg {
+  opacity: 1;
+}
+
 /* ── Below the desktop gate ──────────────────────────────────────────
    The isometric is too dense under ~980px, so the drawing is dropped for
    a DELIBERATE FALLBACK — not a squeezed graph. The parts index is the
@@ -3938,6 +4018,16 @@
     min-height: 0;
     overflow-y: auto;
     padding: 12px 14px 14px;
+    /* ⚠ THE FOOT IS A SIBLING, AND IT COMES FIRST IN THE DOM. The panel
+       and the expanded overlay share one `MapSurface`, which emits
+       tabs → canvas → foot; the fallback list is the plate's own child
+       after it. With the canvas and tabs hidden here, source order would
+       put the sheet's summary line ABOVE the index it summarises. */
+    order: 1;
+  }
+
+  .fl-imap__foot {
+    order: 2;
   }
 
   .fl-imap__list-head {

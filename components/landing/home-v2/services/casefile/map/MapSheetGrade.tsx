@@ -5,7 +5,9 @@ import type { CaseMapShapeKey } from "@/lib/cases/types";
 import type { MapHover } from "./MapHoverCard";
 import {
   UG,
+  type MapDetail,
   type MapTotals,
+  charsIn,
   districtShapes,
   districtTrenched,
   districtsTapping,
@@ -13,6 +15,8 @@ import {
   pad2,
   placeRisers,
   poly,
+  sheetView,
+  wrapLines,
 } from "./mapProjection";
 import type { SheetData } from "./sheetTypes";
 
@@ -34,12 +38,25 @@ import type { SheetData } from "./sheetTypes";
  * that already existed. The reuse figure derived from that distinction is
  * the budget argument made visible, and the only number in the whole case
  * that improves over time rather than accumulating.
+ *
+ * ⚠ A MAIN IS LABELLED AT BOTH ENDS, one line each (ADR-062 Outstanding 1).
+ * The first cut stacked the name and its counts at the LEFT end, 20 units
+ * apart on a 30-unit stride, so every pair of mains collided. The strata
+ * cannot be spread far enough to stack two lines — the deepest riser would
+ * then run through the annotation band — so the counts moved to the far
+ * end of their own main instead, where there is nothing but margin.
  */
+
+/** The sheet's argument, restored by EXPAND. Hoisted so the projection
+ *  test wraps and places the EXACT string the sheet draws. */
+export const RATCHET =
+  "Not a loop that closes — a ratchet. Each new stream starts closer to done, which is why the fifth workflow in a team costs less to configure than the first.";
 
 interface Props extends SheetData {
   totals: MapTotals;
   litMain: CaseMapShapeKey | null;
   litDistrict: string | null;
+  detail: MapDetail;
   onLitMain: (key: CaseMapShapeKey | null) => void;
   onLitDistrict: (id: string | null) => void;
   onHover: (hover: MapHover | null) => void;
@@ -52,11 +69,15 @@ export function MapSheetGrade({
   totals,
   litMain,
   litDistrict,
+  detail,
   onLitMain,
   onLitDistrict,
   onHover,
 }: Props) {
   const placed = placeRisers(districts);
+  const CROP = sheetView("grade", detail);
+  const full = detail === "full";
+  const noteChars = charsIn(UG.right - UG.left, CROP.type);
 
   /** A district is lit when it taps the hovered main, or is itself hovered. */
   const districtLit = (id: string) => {
@@ -64,8 +85,7 @@ export function MapSheetGrade({
     if (litMain) return districtShapes(shapes, works, id).includes(litMain);
     return false;
   };
-  const districtDimmed = (id: string) =>
-    Boolean((litMain || litDistrict) && !districtLit(id));
+  const districtDimmed = (id: string) => Boolean((litMain || litDistrict) && !districtLit(id));
 
   const mainLit = (key: CaseMapShapeKey) => {
     if (litMain) return litMain === key;
@@ -75,16 +95,18 @@ export function MapSheetGrade({
 
   return (
     <g>
-      <text className="fl-imap__t fl-imap__t--gold" x={56} y={66}>
+      <text className="fl-imap__t fl-imap__t--gold" x={UG.left} y={66}>
         Sheet 03 / below grade — the substrate
       </text>
-      <text className="fl-imap__t" x={56} y={80}>
-        The same board, one level down. What every district drops into.
+      <text className="fl-imap__t" x={UG.left} y={84}>
+        {full
+          ? "The same board, one level down. What every district drops into."
+          : "What every district drops into."}
       </text>
-      <text className="fl-imap__t fl-imap__t--faint" x={1104} y={66} textAnchor="end">
+      <text className="fl-imap__t fl-imap__t--faint" x={UG.right} y={66} textAnchor="end">
         {`${pad2(totals.mains)} mains / ${totals.skills} skills / ${totals.taps} taps`}
       </text>
-      <text className="fl-imap__t fl-imap__t--faint" x={1104} y={80} textAnchor="end">
+      <text className="fl-imap__t fl-imap__t--faint" x={UG.right} y={84} textAnchor="end">
         Encoded once, tapped by many
       </text>
 
@@ -137,13 +159,17 @@ export function MapSheetGrade({
               x2={m2[0] + 2}
               y2={m2[1] + 2.2}
             />
-            {/* ⚠ 20 units apart, not the prototype's 11 — same reason as the
-                unit sheet's rail: the crop renders type at roughly double
-                the prototype's unit size. */}
-            <text className="fl-imap__t fl-imap__t--gold" x={m1[0] - 14} y={m1[1] - 6} textAnchor="end">
+            {/* ONE LINE PER END. The name reads into the main from the
+                left; the counts read out of it to the right. */}
+            <text
+              className="fl-imap__t fl-imap__t--gold"
+              x={m1[0] - 14}
+              y={m1[1] - 4}
+              textAnchor="end"
+            >
               {s.label}
             </text>
-            <text className="fl-imap__t fl-imap__t--faint" x={m1[0] - 14} y={m1[1] + 14} textAnchor="end">
+            <text className="fl-imap__t fl-imap__t--faint" x={m2[0] + 14} y={m2[1] - 4}>
               {`${s.skills} skills / ${tapping.length} districts`}
             </text>
             {/* A hover band, because a 1px line is not a pointer target. */}
@@ -219,7 +245,12 @@ export function MapSheetGrade({
                 <circle className="fl-imap__tap" key={k} cx={head[0]} cy={ty} r={2.8} />
               );
             })}
-            <text className="fl-imap__t fl-imap__t--gold" x={centre[0]} y={centre[1] + 3} textAnchor="middle">
+            <text
+              className="fl-imap__t fl-imap__t--gold"
+              x={centre[0]}
+              y={centre[1] + 3}
+              textAnchor="middle"
+            >
               {p.district.ab}
             </text>
             <rect
@@ -233,27 +264,42 @@ export function MapSheetGrade({
         );
       })}
 
-      {/* The annotation. The two marks are shown beside the sentences that
-          state the claim — not a notation key, which the drawing does not
-          have and must never grow. The figure is DERIVED. */}
+      {/* The annotation, BELOW the deepest riser. The two marks are shown
+          beside the sentences that state the claim — not a notation key,
+          which the drawing does not have and must never grow. The figure is
+          DERIVED, and it is the one number in the case that improves rather
+          than accumulates, so it stays on the panel. The ratchet prose is
+          what EXPAND restores. */}
       <g className="fl-imap__note">
-        <rect className="fl-imap__tap fl-imap__tap--first" x={56} y={590} width={8} height={8} />
-        <text className="fl-imap__t fl-imap__t--ink" x={72} y={598}>
+        <rect
+          className="fl-imap__tap fl-imap__tap--first"
+          x={UG.left}
+          y={UG.noteY - 8}
+          width={8}
+          height={8}
+        />
+        <text className="fl-imap__t fl-imap__t--ink" x={UG.left + 16} y={UG.noteY}>
           Trenched the main — this district paid to encode the shape
         </text>
-        <circle className="fl-imap__tap" cx={60} cy={614} r={2.8} />
-        <text className="fl-imap__t" x={72} y={618}>
+        <circle className="fl-imap__tap" cx={UG.left + 4} cy={UG.noteY + 18} r={2.8} />
+        <text className="fl-imap__t" x={UG.left + 16} y={UG.noteY + 22}>
           Tapped an existing main — inherited it, added nothing to the bill
         </text>
-        <text className="fl-imap__t fl-imap__t--gold" x={56} y={646}>
+        <text className="fl-imap__t fl-imap__t--gold" x={UG.left} y={UG.noteY + 46}>
           {`${totals.reused} of ${totals.configured} configured streams tapped a main that already existed.`}
         </text>
-        <text className="fl-imap__t fl-imap__t--faint" x={56} y={662}>
-          Not a loop that closes — a ratchet. Each new stream starts closer to done, which is why
-        </text>
-        <text className="fl-imap__t fl-imap__t--faint" x={56} y={675}>
-          the fifth workflow in a team costs less to configure than the first.
-        </text>
+        {full
+          ? wrapLines(RATCHET, noteChars).map((l, i) => (
+              <text
+                className="fl-imap__t fl-imap__t--faint"
+                key={i}
+                x={UG.left}
+                y={UG.noteY + 66 + i * 16}
+              >
+                {l}
+              </text>
+            ))
+          : null}
       </g>
     </g>
   );
