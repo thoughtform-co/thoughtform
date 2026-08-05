@@ -162,48 +162,109 @@ export type CaseWorkShape = "Judgment" | "Voice" | "Validation" | "Stakeholder" 
 /** Generic capability tiers. Public case content never names a model family. */
 export type CaseCapabilityTier = "Fast" | "Everyday" | "Deep" | "Frontier";
 
-/**
- * How confidently a work configuration can be placed on the allocation map.
- * This keeps a measured or compared work decision distinct from a broader
- * function-level signal; no tier may be inferred from a team or linked Skill.
- */
-export type CaseAllocationBasis = "work-evidenced" | "work-evaluated" | "function-signal";
+/* ── The work-to-intelligence map's record (ADR-062) ─────────────────────
+   The map is drawn as a city in three sheets — the board (every work stream
+   as a module on its team's district plate), the unit (one module exploded
+   into its configuration), and below grade (the shared substrate as mains,
+   each district dropping a riser to tap what it uses). Everything renders
+   from the three arrays below; nothing is hard-coded in geometry except the
+   district grid, and every published total is DERIVED from them.
 
-/** One categorical mark in the six-part configuration signature. */
-export interface CaseConfigurationFacet {
-  /** Short public state rendered beside the facet label. */
-  state: string;
-  /** Sanitised explanation for the inspector. */
-  detail: string;
+   ⚠ ADR-061's work-configuration field — `CaseWorkConfiguration`, its six
+   categorical facets and the allocation basis — was deleted, not amended.
+   The atom is a work stream with a drawn configuration, not a tile with a
+   facet signature. Do not restore the facet shape from memory.
+
+   Confidentiality is unchanged and enforced by `cases-registry.test.ts`:
+   generic capability lanes only, role titles rather than people, no vendor
+   or model family, no currency in any form. */
+
+/** Lowercase routing key for a shape of judgment; `label` carries the public
+ *  spelling, so the five shapes stay ONE taxonomy shared with the Skills. */
+export type CaseMapShapeKey = "voice" | "judgment" | "validation" | "stakeholder" | "pattern";
+
+/**
+ * One shape of judgment, drawn below grade as a main. `first` names the work
+ * stream that PAID to encode it — every stream after that taps a main which
+ * already existed, which is the whole economic argument of the third sheet.
+ */
+export interface CaseMapShape {
+  key: CaseMapShapeKey;
+  label: CaseWorkShape;
+  /** Skills tagged to this shape. The five sum to the case's Skills total. */
+  skills: number;
+  /** `CaseMapWork["id"]` of the stream that trenched this main. */
+  first: string;
+  /** What the shape means, ≤44 chars — read in the hover card. */
+  gloss: string;
+}
+
+/** A team, drawn as a district plate on the board. */
+export interface CaseMapDistrict {
+  /** Three-letter routing id, e.g. "CRE". */
+  id: string;
+  /** Plaque name on the board, e.g. "CREATIVE + STUDIO". */
+  name: string;
+  /** Abbreviation for the below-grade footprint, where there is no room. */
+  ab: string;
 }
 
 /**
- * One piece of work and the public-safe intelligence configuration that runs
- * it. The six fields are deliberately fixed so every node answers the same
- * questions: HUMAN · MODEL · SKILL · CONTEXT · EXECUTION · EVAL.
+ * A work stream's intelligence configuration — the four questions the seat is
+ * chartered on, plus why this lane. Each pair is `[name, note]`; the drawing
+ * renders the name and the hover card the note, so provenance is carried by
+ * the material language and never also written down (ADR-062, the v11 → v13
+ * lesson).
  */
-export interface CaseWorkConfiguration {
+export interface CaseMapConfiguration {
+  /** Owner role + what that seat actually owns. */
+  p: readonly [string, string];
+  /** Skill name + what it is composed of. */
+  s: readonly [string, string];
+  /** Capability lane + the verbs it runs. */
+  m: readonly [string, string];
+  /** Context name + what it carries. */
+  c: readonly [string, string];
+  /** Graph node + what it holds. Drawn in the adjacent-domain hand. */
+  g: readonly [string, string];
+  /** Systems it acts on. */
+  k: readonly [string, ...string[]];
+  /** Where it is met. */
+  u: readonly [string, ...string[]];
+  /** Who answers for the gate once it runs. */
+  o: string;
+  /** Why this lane and not a lighter one. One sentence. */
+  why: string;
+}
+
+/**
+ * One work stream — a module on the board, and the subject of sheet 02.
+ *
+ * `lane === null` is PERSON-LED work, and it stays on every sheet by design:
+ * a map that only shows what was configured shows what was built and hides
+ * what was not. The negative space is what leadership reads.
+ */
+export interface CaseMapWork {
+  /** Stable, non-display id, e.g. "W-017". */
   id: string;
-  work: string;
-  /** Compact field identity; the register and inspector always use `work`. */
-  mapLabel: string;
-  publicFunction: string;
-  shape: CaseWorkShape;
-  lifecycle: "In use" | "In build" | "Evaluated";
-  linkedSkillIds: readonly CaseSkillEntry["id"][];
-  summary: string;
-  ownerRole: string;
-  humanCheckpoint: string;
-  allocationTier: CaseCapabilityTier;
-  allocationBasis: CaseAllocationBasis;
-  facets: {
-    human: CaseConfigurationFacet;
-    model: CaseConfigurationFacet;
-    skill: CaseConfigurationFacet;
-    context: CaseConfigurationFacet;
-    execution: CaseConfigurationFacet;
-    eval: CaseConfigurationFacet;
-  };
+  title: string;
+  /** `CaseMapDistrict["id"]`. */
+  dist: string;
+  /** Generic capability lane; `null` ⇔ person-led ⇔ `cfg === null`. */
+  lane: CaseCapabilityTier | null;
+  /** Shapes of judgment this stream draws on. */
+  shapes: readonly CaseMapShapeKey[];
+  /** How much it decides alone — drawn as a dimension, because it is a
+   *  distance between the owner and the machine, not another component. */
+  seat: "ABOVE" | "EDGE" | "INSIDE" | "PERSON";
+  vol: "LOW" | "MID" | "HIGH";
+  /** Draw meter cells, 0–5. Read against the workload, NEVER a price. */
+  mass: 0 | 1 | 2 | 3 | 4 | 5;
+  /** What good looks like for this stream. */
+  bar: string;
+  /** The gate it leaves through. */
+  evals: string;
+  cfg: CaseMapConfiguration | null;
 }
 
 /* ── The intelligence map's projections (ADR-056 U16 → U17) ──────────────
@@ -432,18 +493,27 @@ export type CaseTrackVisual =
       footer?: string;
     }
   /**
-   * Work-first intelligence map. Configuration nodes are the persistent
-   * field; Skills remain a linked substrate reservoir. Kept separate from
-   * `registry` so skill-only cases retain their current API.
+   * The work-to-intelligence map, drawn as a city in three sheets (ADR-062).
+   * Kept separate from `registry` so skill-only cases retain their API.
+   *
+   * ⚠ `groups` and `rows` must be the SAME OBJECTS the ENCODE beat carries —
+   * the registry test asserts reference identity, which is what stops the two
+   * surfaces drifting. `groups[].count` also sums to the case's canonical
+   * Skills total, so it stays the arithmetic a reader can check.
    */
   | {
       kind: "intelligence-map";
       groups: readonly CaseRegistryGroup[];
       rows: readonly CaseRegistryRow[];
       skills: readonly CaseSkillEntry[];
-      configurations: readonly CaseWorkConfiguration[];
-      intelligence: CaseIntelligence;
-      teamDraw: readonly CaseTeamDraw[];
+      /** The five mains, below grade. */
+      shapes: readonly CaseMapShape[];
+      /** The district plates, in board order. */
+      districts: readonly CaseMapDistrict[];
+      /** Every module on the board, configured and person-led alike. */
+      works: readonly CaseMapWork[];
+      /** Draw against the approved envelope — a STATUS, never an amount. */
+      envelope: "WITHIN" | "AT" | "OVER";
       footer?: string;
     }
   /** References production tools BY ID — `PROJECT_CASES` stays canonical. */

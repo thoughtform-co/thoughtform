@@ -1,9 +1,9 @@
 import type {
   CaseDef,
-  CaseIntelligence,
+  CaseMapDistrict,
+  CaseMapShape,
+  CaseMapWork,
   CaseSkillEntry,
-  CaseTeamDraw,
-  CaseWorkConfiguration,
 } from "../types";
 
 /**
@@ -627,466 +627,699 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
 ];
 
 /**
- * Eight public, source-backed work configurations. These are the persistent
- * atoms of the Intelligence Map; the 47 Skills above are one substrate they
- * may inherit, not the map itself.
+ * THE MAP'S RECORD (ADR-062) — five shapes, eight districts, 27 work streams.
  *
- * Allocation is deliberately explicit on every row. NDA review is backed by
- * work-level usage evidence, the firmware audit by a same-work capability
- * comparison, and the other six are labelled as function signals. Nothing
- * here claims per-Skill token telemetry, which the source system does not
- * contain. People, vendors, model families, costs and source URLs stay out.
+ * Everything the three sheets draw comes from these three arrays. Nothing is
+ * hard-coded in geometry except the district grid, and every published total
+ * is DERIVED (`lib/.../mapProjection.ts`): 27 modules, 24 configured, 3
+ * person-led, 47 Skills, the tap counts, and the 19-of-24 reuse figure. The
+ * prototype hard-coded three of those; a hard-coded total is a number that
+ * goes stale the first time a row is edited.
+ *
+ * PROVENANCE. Districts are Loop's own department structure; work streams are
+ * an abstraction over shipped Skills and Tools. This is a dated public
+ * abstraction stamped `NORMALISED SIGNAL / ILLUSTRATIVE RECORD` on the
+ * surface, not live telemetry — see ADR-062 and `.claude/rules/proof.md`.
+ *
+ * ⚠ DISTRICTS ARE NOT TEAMS. Eight districts are DEPARTMENTS, the
+ * organisational structure the work sits in. They are a different unit from
+ * both published team counts — 22 teams BRIEFED and 14 teams USING THE LAYER
+ * — and no copy may lend one number another's meaning. Pinned by
+ * `cases-registry.test.ts`.
+ *
+ * CASE. Stored in the case module's sentence case; the drawing uppercases in
+ * CSS. Storing shouted strings would bake one design's typography into the
+ * content, which is what `MAP_GROUPS` above already avoids.
  */
-const LOOP_WORK_CONFIGURATIONS: readonly CaseWorkConfiguration[] = [
+const MAP_SHAPES: readonly CaseMapShape[] = [
   {
-    id: "review-nda",
-    work: "Review an NDA",
-    mapLabel: "NDA review",
-    publicFunction: "Legal & Risk",
-    shape: "Judgment",
-    lifecycle: "In build",
-    linkedSkillIds: ["nda-pre-check", "legal-risk-methodology"],
-    summary:
-      "A clause-by-clause pre-check applies encoded risk judgment, routes novel deviations to Legal and leaves the final decision with a reviewer.",
-    ownerRole: "Legal reviewer",
-    humanCheckpoint: "Reviews every pre-check and decides how novel deviations are handled.",
-    allocationTier: "Deep",
-    allocationBasis: "work-evidenced",
-    facets: {
-      human: {
-        state: "Inside the loop",
-        detail: "A legal reviewer owns the final decision on every agreement.",
-      },
-      model: {
-        state: "Deep",
-        detail: "Long, nuanced documents make the reasoning the work.",
-      },
-      skill: {
-        state: "Encoded",
-        detail: "The NDA pre-check inherits the shared legal-risk method.",
-      },
-      context: {
-        state: "Agreement + standard",
-        detail: "The agreement is read against the approved review standard.",
-      },
-      execution: {
-        state: "Guided pre-check",
-        detail: "Routine deviations are surfaced; novel ones route to Legal.",
-      },
-      eval: {
-        state: "In build",
-        detail: "Real agreement clauses are the proving cases.",
-      },
-    },
+    key: "voice",
+    label: "Voice",
+    skills: 7,
+    first: "W-017",
+    gloss: "How the organisation sounds in context",
   },
   {
-    id: "audit-firmware-release",
-    work: "Audit a firmware release",
-    mapLabel: "Release audit",
-    publicFunction: "Product & Engineering",
-    shape: "Judgment",
-    lifecycle: "Evaluated",
-    linkedSkillIds: [],
-    summary:
-      "A repository-wide release audit reads code, tests, build variants and history before an engineering reviewer judges architecture and release risk.",
-    ownerRole: "Engineering reviewer",
-    humanCheckpoint: "Sets the release bar and judges architectural and release-risk findings.",
-    allocationTier: "Frontier",
-    allocationBasis: "work-evaluated",
-    facets: {
-      human: {
-        state: "Above + edge",
-        detail: "Engineering sets the release bar and judges consequential findings.",
-      },
-      model: {
-        state: "Frontier",
-        detail: "The strongest tier proved more exhaustive on the same audit.",
-      },
-      skill: {
-        state: "No linked Skill",
-        detail: "Repository conventions, tests and build evidence form the substrate.",
-      },
-      context: {
-        state: "Repository + tests",
-        detail: "Code, test infrastructure, build variants and history are read together.",
-      },
-      execution: {
-        state: "Repository audit",
-        detail: "The audit spans architecture, release paths and test coverage.",
-      },
-      eval: {
-        state: "Compared",
-        detail: "The same audit was compared across two capability tiers.",
-      },
-    },
+    key: "judgment",
+    label: "Judgment",
+    skills: 12,
+    first: "W-004",
+    gloss: "What good means under ambiguity",
   },
   {
-    id: "pressure-test-product-idea",
-    work: "Pressure-test a product idea",
-    mapLabel: "Idea test",
-    publicFunction: "Product & Engineering",
-    shape: "Judgment",
-    lifecycle: "In build",
-    linkedSkillIds: ["product-ideation", "ux-foundations-evaluation"],
-    summary:
-      "A raw idea is tested against portfolio fit, the roadmap and experience principles before a product lead decides whether it advances.",
-    ownerRole: "Product lead",
-    humanCheckpoint: "Owns portfolio fit and decides whether the idea advances.",
-    allocationTier: "Everyday",
-    allocationBasis: "function-signal",
-    facets: {
-      human: {
-        state: "Above + edge",
-        detail: "Product sets the quality bar and decides what advances.",
-      },
-      model: {
-        state: "Everyday",
-        detail: "A provisional function-level placement, not a per-work measure.",
-      },
-      skill: {
-        state: "Encoded",
-        detail: "Product ideation and experience principles provide the judgment layer.",
-      },
-      context: {
-        state: "Portfolio + roadmap",
-        detail: "The idea is read against the current portfolio and roadmap.",
-      },
-      execution: {
-        state: "Structured review",
-        detail: "The configuration produces a reasoned pressure test, not a score.",
-      },
-      eval: {
-        state: "In build",
-        detail: "The review pattern is still being established on real ideas.",
-      },
-    },
+    key: "validation",
+    label: "Validation",
+    skills: 9,
+    first: "W-011",
+    gloss: "Cases that make failure visible",
   },
   {
-    id: "prepare-supplier-packaging",
-    work: "Prepare supplier-ready packaging",
-    mapLabel: "Packaging",
-    publicFunction: "Design & Production",
-    shape: "Pattern",
-    lifecycle: "In use",
-    linkedSkillIds: ["loop-packaging-system", "cmf-file-generator"],
-    summary:
-      "Approved artwork and a structured workbook become supplier-ready files, with design retaining the gate on exceptions and final handoff.",
-    ownerRole: "Design reviewer",
-    humanCheckpoint: "Approves exceptions and the supplier-ready handoff.",
-    allocationTier: "Deep",
-    allocationBasis: "function-signal",
-    facets: {
-      human: {
-        state: "At the edge",
-        detail: "Design approves exceptions and the final production handoff.",
-      },
-      model: {
-        state: "Deep",
-        detail: "A provisional function-level placement, not a per-work measure.",
-      },
-      skill: {
-        state: "Encoded",
-        detail: "Packaging and colour-material-finish methods are maintained substrate.",
-      },
-      context: {
-        state: "Artwork + workbook",
-        detail: "Approved source artwork and structured product data ground the output.",
-      },
-      execution: {
-        state: "Production workflow",
-        detail: "The workflow assembles supplier-ready files and the handoff brief.",
-      },
-      eval: {
-        state: "In use",
-        detail: "The complete output is checked before supplier handoff.",
-      },
-    },
+    key: "stakeholder",
+    label: "Stakeholder",
+    skills: 5,
+    first: "W-046",
+    gloss: "Framing for a specific reader",
   },
   {
-    id: "produce-paid-social-copy",
-    work: "Produce paid-social copy",
-    mapLabel: "Social copy",
-    publicFunction: "Creative & Brand",
-    shape: "Voice",
-    lifecycle: "In use",
-    linkedSkillIds: ["loop-creative-strategy", "paid-social-tov", "loop-paid-social"],
-    summary:
-      "Campaign inputs inherit the creative strategy, approved voice and real ad archive before Brand judges the final copy.",
-    ownerRole: "Brand lead",
-    humanCheckpoint: "Sets the voice and approves campaign copy before release.",
-    allocationTier: "Everyday",
-    allocationBasis: "function-signal",
-    facets: {
-      human: {
-        state: "Above + edge",
-        detail: "Brand sets the voice and approves consequential campaign choices.",
-      },
-      model: {
-        state: "Everyday",
-        detail: "A provisional function-level placement, not a per-work measure.",
-      },
-      skill: {
-        state: "Encoded",
-        detail: "Creative strategy, paid-social voice and generation rules work together.",
-      },
-      context: {
-        state: "Campaign + archive",
-        detail: "The brief is grounded in approved campaign inputs and real ads.",
-      },
-      execution: {
-        state: "Campaign workflow",
-        detail: "The configuration drafts the primary copy set for review.",
-      },
-      eval: {
-        state: "In use",
-        detail: "Human review checks voice, fit and campaign readiness.",
-      },
-    },
-  },
-  {
-    id: "review-supplier-invoices",
-    work: "Review supplier invoices",
-    mapLabel: "Invoice check",
-    publicFunction: "Operations",
-    shape: "Validation",
-    lifecycle: "In use",
-    linkedSkillIds: ["invoice-processor", "fraud-detection"],
-    summary:
-      "Supplier invoices are checked against trusted records and suspicious patterns; Operations judges mismatches before any action follows.",
-    ownerRole: "Operations reviewer",
-    humanCheckpoint: "Judges mismatches and suspicious patterns before action.",
-    allocationTier: "Everyday",
-    allocationBasis: "function-signal",
-    facets: {
-      human: {
-        state: "Inside the loop",
-        detail: "Operations reviews every flagged mismatch before action.",
-      },
-      model: {
-        state: "Everyday",
-        detail: "A provisional function-level placement, not a per-work measure.",
-      },
-      skill: {
-        state: "Encoded",
-        detail: "Invoice validation and suspicious-pattern checks share the work.",
-      },
-      context: {
-        state: "Invoice + records",
-        detail: "Invoices are checked against supplier, order and prior-invoice records.",
-      },
-      execution: {
-        state: "Validation workflow",
-        detail: "The configuration extracts, cross-checks and flags; it does not decide.",
-      },
-      eval: {
-        state: "In use",
-        detail: "Flagged mismatches are judged by the operations reviewer.",
-      },
-    },
-  },
-  {
-    id: "reconcile-general-ledger",
-    work: "Reconcile the general ledger",
-    mapLabel: "Ledger check",
-    publicFunction: "Finance",
-    shape: "Validation",
-    lifecycle: "In build",
-    linkedSkillIds: ["gl-reconciliations", "mec-tracker"],
-    summary:
-      "The ledger extract runs through reconciliation and close checks, surfacing anomalies for Finance to judge and resolve.",
-    ownerRole: "Finance reviewer",
-    humanCheckpoint: "Reviews anomalies and owns the final reconciliation.",
-    allocationTier: "Everyday",
-    allocationBasis: "function-signal",
-    facets: {
-      human: {
-        state: "Inside the loop",
-        detail: "Finance reviews anomalies and owns the final reconciliation.",
-      },
-      model: {
-        state: "Everyday",
-        detail: "A provisional function-level placement, not a per-work measure.",
-      },
-      skill: {
-        state: "Encoded",
-        detail: "Reconciliation checks and the close tracker carry the method.",
-      },
-      context: {
-        state: "Ledger + close rules",
-        detail: "The current ledger extract is grounded in approved close rules.",
-      },
-      execution: {
-        state: "Reconciliation flow",
-        detail: "Checks surface exceptions and draft the close status for review.",
-      },
-      eval: {
-        state: "In build",
-        detail: "Real close cases are establishing the validation set.",
-      },
-    },
-  },
-  {
-    id: "prepare-cross-team-status",
-    work: "Prepare a cross-team status digest",
-    mapLabel: "Status digest",
-    publicFunction: "People & Programs",
-    shape: "Stakeholder",
-    lifecycle: "In build",
-    linkedSkillIds: ["program-status-updates", "risk-management"],
-    summary:
-      "Transcripts, risks and roadmap changes become a concise status digest while a program lead owns the framing and exceptions.",
-    ownerRole: "Program lead",
-    humanCheckpoint: "Sets the readout and corrects consequential gaps or exceptions.",
-    allocationTier: "Everyday",
-    allocationBasis: "function-signal",
-    facets: {
-      human: {
-        state: "Above + edge",
-        detail: "Programs sets the readout and corrects consequential exceptions.",
-      },
-      model: {
-        state: "Everyday",
-        detail: "A provisional function-level placement, not a per-work measure.",
-      },
-      skill: {
-        state: "Encoded",
-        detail: "Status framing and risk reasoning provide the shared method.",
-      },
-      context: {
-        state: "Transcripts + plans",
-        detail: "Meeting records, risks and roadmap changes are read together.",
-      },
-      execution: {
-        state: "Multi-source brief",
-        detail: "The configuration synthesises a concise cross-team readout.",
-      },
-      eval: {
-        state: "In build",
-        detail: "The program team reviews each digest against the live situation.",
-      },
-    },
+    key: "pattern",
+    label: "Pattern",
+    skills: 14,
+    first: "W-041",
+    gloss: "Recurring shapes / structured output",
   },
 ];
 
-/* ── THE MAP'S HIGHER-LEVEL VIEWS (ADR-056 U16) ──────────────────────────
- * Owner, 2026-08-03: "the thing we're building is the intelligence map.
- * It's not just skills. It's also the model, the connectors it has access
- * to, the tools we build on top of it... substrate/team is a subcategory,
- * a subfilter. We also need higher-level filters based on how we're
- * building that map and configuration."
- *
- * DERIVATION. Everything below is read from the client's own usage
- * snapshots (May, June and July 2026) on the adoption board, and then
- * ROUNDED. The owner's ruling: "it doesn't have to be the exact numbers,
- * it's more to illustrate our case." What the snapshots actually showed,
- * for whoever refreshes this:
- *   · Consumption share by model family moved May → July as the work got
- *     deeper, with the frontier family arriving from nothing to about a
- *     fifth of the draw in three months.
- *   · The inversion is the finding: the light families are on nearly every
- *     seat and carry almost none of the draw; the deep families are on far
- *     fewer seats and carry almost all of it.
- *   · Per-team, firmware/hardware work is the deepest draw per seat in the
- *     company on a handful of seats; Legal is the largest chat-led draw
- *     because the documents are long and the reasoning IS the work;
- *     the Studio is the widest spread at a light per-seat draw.
- *
- * WHAT MAY NEVER TRAVEL HERE (pinned by the registry test):
- *   · Currency of any kind, and any per-seat cost. The €/month band is a
- *     client-deck claim and must not be restated on the landing.
- *   · MODEL FAMILY NAMES. The tiers are generic capability names by owner
- *     ruling — the landing stays model-silent, which both avoids a second
- *     variant of the deck's model advice and survives model churn.
- *   · VENDOR NAMES for connectors. The categories below are the landing's
- *     register; the named connector list belongs to the client deck.
- */
-const LOOP_INTELLIGENCE: CaseIntelligence = {
-  /* THE INVERSION IS THE PICTURE, and since U17 it is also the LAYOUT:
-     these four are the allocation projection's columns, and the Skills
-     regroup underneath the tier their team leans on. Reach runs high at
-     the top and falls; draw does the opposite. A reader who only looks at
-     seats concludes the light tiers are the system; the draw figure is
-     what corrects them.
-
-     (U16's STACK view — tools/Skills/connectors/models as four layers —
-     was deleted here by owner ruling: it restated the row's brief and the
-     panel's four blocks. The tool count lives on the tools row, the 47+
-     on the blocks, the connectors on the client deck.) */
-  tiers: [
-    { name: "Fast", note: "instant answers", reach: 90, draw: 1 },
-    { name: "Everyday", note: "the daily driver", reach: 90, draw: 19 },
-    { name: "Deep", note: "reasoning-heavy", reach: 60, draw: 59 },
-    { name: "Frontier", note: "the hardest builds", reach: 25, draw: 21 },
-  ],
-  /* The litmus, in three lines: the map has to explain WHY a team's draw
-     looks the way it does, or it is just a usage dashboard. */
-  reads: [
-    {
-      team: "Legal",
-      lens: "Chat-led",
-      why: "Long, nuanced documents. The reasoning is the work, so the deep tier earns it.",
-    },
-    {
-      team: "Product Engineering",
-      lens: "Code-led",
-      why: "Firmware is deeper than any page of code. The frontier tier, and the draw to match.",
-    },
-    {
-      team: "Studio",
-      lens: "Widest spread",
-      why: "Twenty-three people at a light draw each. Breadth is the shape here, not depth.",
-    },
-  ],
-};
+/* Board order. The grid seats four columns × two rows, so the eight are also
+   the board's painting order once sorted far-to-near by (a + b). */
+const MAP_DISTRICTS: readonly CaseMapDistrict[] = [
+  { id: "CRE", name: "Creative + Studio", ab: "Creative" },
+  { id: "ECM", name: "Ecomm + Marketplace", ab: "Ecomm" },
+  { id: "LEG", name: "Legal + Risk", ab: "Legal" },
+  { id: "FIN", name: "Finance", ab: "Finance" },
+  { id: "DES", name: "Product Design", ab: "Design" },
+  { id: "ENG", name: "Engineering", ab: "Engineering" },
+  { id: "PRG", name: "Programs + People", ab: "Programs" },
+  { id: "OPS", name: "Operations", ab: "Ops" },
+];
 
 /**
- * Per-team consumption, two joins off one row — the gradient the owner
- * asked for ("cluster the type of teams or skills based on the work and
- * token consumption").
+ * The 27 modules. Six chip slots per district plate is the geometric ceiling
+ * — Creative's five is the current worst case, and a seventh row would fall
+ * off its plate rather than clip, so the registry test guards it.
  *
- * `band` paints the team-axis mark and the allocation projection's tile
- * fills. `tier` (ADR-056 U17) decides which allocation COLUMN a team's
- * tiles fly to: the tier carrying that team's dominant draw.
- *
- * MAPPING. The casefile's team names are the client's own org labels and do
- * not match the usage snapshot's team rows one-for-one. The joins used:
- * Product Engineering ← the engineering and hardware rows (the two deepest
- * in the company); Performance and Strategic Insights ← the analytics and
- * performance rows; Warehousing & Customer Ops ← the support and
- * fulfilment rows. Where a casefile team has no snapshot row of its own it
- * takes the band of its department, which is why so many sit at "light" —
- * that is the true shape, and flattening it would lose the point.
- *
- * THE TIER LEANS, and why the result is lopsided on purpose:
- *   · Frontier — Product Engineering alone (2 Skills). Firmware is the
- *     deepest work in the company and draws accordingly.
- *   · Deep — Legal (4), Product Design & UX (5), Performance (1) = 10.
- *     Long nuanced documents, build-heavy design tooling, deep per-seat
- *     analytics work.
- *   · Everyday — the remaining ten teams = 35 Skills.
- *   · Fast — NONE. Instant answers are ambient: every seat touches that
- *     tier and no single workflow leans on it, so the column renders its
- *     note instead of tiles. An empty column is the honest reading.
- * 0 / 35 / 10 / 2 sums to 47. THE LOPSIDEDNESS IS THE ARGUMENT: the Skills
- * mass sits on Everyday while the consumption mass (draw 59 + 21) sits on
- * Deep and Frontier. Do not print these cluster counts on the surface —
- * 35 would become a published claim the one-variant law then owns.
+ * `lane: null` is person-led work and carries `cfg: null`. Three of the 27
+ * stay that way on purpose: concept ideation, the board narrative and
+ * supplier terms. A map that only showed configured work would show what was
+ * built and hide what was not, and the negative space is what leadership
+ * reads.
  */
-const LOOP_TEAM_DRAW: readonly CaseTeamDraw[] = [
-  { team: "Product Engineering", band: "intensive", tier: "Frontier" },
-  { team: "Legal", band: "deep", tier: "Deep" },
-  { team: "Performance", band: "deep", tier: "Deep" },
-  { team: "Product Design & UX", band: "steady", tier: "Deep" },
-  { team: "Studio", band: "steady", tier: "Everyday" },
-  { team: "Brand & Partnerships", band: "steady", tier: "Everyday" },
-  { team: "Manufacturing Programs", band: "steady", tier: "Everyday" },
-  { team: "Warehousing & Customer Ops", band: "steady", tier: "Everyday" },
-  { team: "Finance & Accounting", band: "light", tier: "Everyday" },
-  { team: "Program Management & Product", band: "light", tier: "Everyday" },
-  { team: "People Ops", band: "light", tier: "Everyday" },
-  { team: "Strategic Insights", band: "light", tier: "Everyday" },
-  { team: "Talent Acquisition", band: "light", tier: "Everyday" },
-  { team: "Product Management", band: "light", tier: "Everyday" },
+const MAP_WORKS: readonly CaseMapWork[] = [
+  /* ── Creative + Studio ────────────────────────────────────────────── */
+  {
+    id: "W-017",
+    title: "Campaign copy",
+    dist: "CRE",
+    lane: "Everyday",
+    shapes: ["judgment", "voice", "validation"],
+    seat: "ABOVE",
+    vol: "HIGH",
+    mass: 4,
+    bar: "On-brand / claim-safe / channel-ready",
+    evals: "Accepted examples + edge cases",
+    cfg: {
+      p: ["Creative lead", "Sets the bar / owns final taste"],
+      s: ["Brand voice", "Voice rules · claim gates · rejected examples"],
+      m: ["Everyday lane", "Generate / critique / revise"],
+      c: ["Campaign brief", "Channel / audience / offer"],
+      g: ["Product + claim facts", "Approved claims, SKU attributes"],
+      k: ["Claims registry", "Briefing board"],
+      u: ["Chat + brief tool"],
+      o: "Creative lead",
+      why: "High volume, bounded stakes. The Skill carries the judgment, so the lane only has to write.",
+    },
+  },
+  {
+    id: "W-021",
+    title: "Creative briefing",
+    dist: "CRE",
+    lane: "Deep",
+    shapes: ["judgment", "pattern", "stakeholder"],
+    seat: "ABOVE",
+    vol: "MID",
+    mass: 4,
+    bar: "A brief the team can build from",
+    evals: "Briefs that shipped + briefs that stalled",
+    cfg: {
+      p: ["Strategy lead", "Owns the angle"],
+      s: ["Briefing intelligence", "Signal priority · brief shape · stall cases"],
+      m: ["Deep lane", "Synthesise / contrast"],
+      c: ["Insight corpus", "Reviews / performance / competitors"],
+      g: ["Campaign + audience facts", "Past campaigns, segments, results"],
+      k: ["Insight store", "Ad library"],
+      u: ["Brief tool"],
+      o: "Strategy lead",
+      why: "Synthesis across unlike sources. A lighter lane flattens the contrast that makes a brief useful.",
+    },
+  },
+  {
+    id: "W-029",
+    title: "Asset declination",
+    dist: "CRE",
+    lane: "Fast",
+    shapes: ["pattern", "validation"],
+    seat: "EDGE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "Every format correct at first export",
+    evals: "Format cases + crop failures",
+    cfg: {
+      p: ["Studio designer", "Handles exceptions"],
+      s: ["Format system", "Format matrix · safe areas · rejected exports"],
+      m: ["Fast lane", "Match / flag / resize"],
+      c: ["Master artwork", "Grids and safe areas"],
+      g: ["Asset + channel facts", "Spec per placement"],
+      k: ["Design file API", "Asset store"],
+      u: ["Design tool plugin"],
+      o: "Studio lead",
+      why: "Verifiable output at volume. A heavier lane buys nothing a check cannot already catch.",
+    },
+  },
+  {
+    id: "W-034",
+    title: "Brand voice QA",
+    dist: "CRE",
+    lane: "Everyday",
+    shapes: ["voice", "validation"],
+    seat: "EDGE",
+    vol: "MID",
+    mass: 2,
+    bar: "Off-voice copy caught before release",
+    evals: "Voice passes + known drifts",
+    cfg: {
+      p: ["Brand editor", "Owns the standard"],
+      s: ["Brand voice", "Tone tests · drift markers · scored cases"],
+      m: ["Everyday lane", "Score / explain"],
+      c: ["Voice corpus", "Approved and rejected copy"],
+      g: ["Claim + term facts", "Banned terms, trademarks"],
+      k: ["Copy registry"],
+      u: ["Chat + review queue"],
+      o: "Brand editor",
+      why: "A bounded check against an encoded standard. The standard does the work, not the lane.",
+    },
+  },
+  {
+    id: "W-040",
+    title: "Concept ideation",
+    dist: "CRE",
+    lane: null,
+    shapes: ["judgment", "voice"],
+    seat: "PERSON",
+    vol: "LOW",
+    mass: 0,
+    bar: "An idea the room has not had yet",
+    evals: "Not encoded / live judgment",
+    cfg: null,
+  },
+
+  /* ── Ecomm + Marketplace ──────────────────────────────────────────── */
+  {
+    id: "W-051",
+    title: "Listing build",
+    dist: "ECM",
+    lane: "Everyday",
+    shapes: ["pattern", "voice", "validation"],
+    seat: "EDGE",
+    vol: "HIGH",
+    mass: 2,
+    bar: "Complete, compliant, searchable",
+    evals: "Live listings + rejections",
+    cfg: {
+      p: ["Marketplace lead", "Owns the listing"],
+      s: ["Listing system", "Field rules · term bank · rejection cases"],
+      m: ["Everyday lane", "Draft / check / fill"],
+      c: ["Product record", "Specs / claims / assets"],
+      g: ["Product master", "SKU tree, variants, markets"],
+      k: ["Catalogue API", "Seller console"],
+      u: ["Listing console"],
+      o: "Marketplace lead",
+      why: "Structured output against a known schema, at volume. Stable work belongs off the frontier.",
+    },
+  },
+  {
+    id: "W-056",
+    title: "Marketplace SEO",
+    dist: "ECM",
+    lane: "Everyday",
+    shapes: ["pattern", "voice"],
+    seat: "EDGE",
+    vol: "MID",
+    mass: 2,
+    bar: "Ranks without reading like a robot",
+    evals: "Ranked pages + penalised phrasing",
+    cfg: {
+      p: ["SEO specialist", "Owns the keyword call"],
+      s: ["SEO system", "Term weighting · banned phrasing · ranked cases"],
+      m: ["Everyday lane", "Expand / rank / rewrite"],
+      c: ["Search corpus", "Queries and competitor pages"],
+      g: ["Product + market facts", "Category tree per market"],
+      k: ["Search data API"],
+      u: ["Listing console"],
+      o: "SEO specialist",
+      why: "Repeated pattern work with a measurable outcome. The encoded term bank is the asset.",
+    },
+  },
+  {
+    id: "W-062",
+    title: "Ad variant sets",
+    dist: "ECM",
+    lane: "Fast",
+    shapes: ["pattern", "voice"],
+    seat: "ABOVE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "Genuinely different, not reworded",
+    evals: "Sets that diverged + sets that collapsed",
+    cfg: {
+      p: ["Performance lead", "Picks what runs"],
+      s: ["Variant system", "Angle spread · collapse tests · divergent sets"],
+      m: ["Fast lane", "Diverge / draft"],
+      c: ["Winning creative", "Past performance"],
+      g: ["Campaign facts", "Placements and results"],
+      k: ["Ad library", "Briefing board"],
+      u: ["Chat + ad tool"],
+      o: "Performance lead",
+      why: "High-volume generation under a diversity test the Skill enforces. Light mass per run.",
+    },
+  },
+  {
+    id: "W-068",
+    title: "Account health",
+    dist: "ECM",
+    lane: "Fast",
+    shapes: ["validation", "pattern"],
+    seat: "EDGE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "Nothing breaks quietly",
+    evals: "Alerts that mattered + false alarms",
+    cfg: {
+      p: ["Marketplace lead", "Owns escalation"],
+      s: ["Health watch", "Thresholds · escalation logic · false alarms"],
+      m: ["Fast lane", "Watch / flag / explain"],
+      c: ["Account history", "Metrics and policy notices"],
+      g: ["Account facts", "Policy state per marketplace"],
+      k: ["Marketplace API", "Alert channel"],
+      u: ["Scheduled agent"],
+      o: "Marketplace lead",
+      why: "Deterministic monitoring against an encoded threshold. The cheapest lane that clears the bar.",
+    },
+  },
+
+  /* ── Legal + Risk ─────────────────────────────────────────────────── */
+  {
+    id: "W-004",
+    title: "NDA review",
+    dist: "LEG",
+    lane: "Deep",
+    shapes: ["judgment", "pattern", "validation"],
+    seat: "INSIDE",
+    vol: "LOW",
+    mass: 5,
+    bar: "Nuanced risk review / escalate non-standard",
+    evals: "Clause cases + unacceptable failures",
+    cfg: {
+      p: ["Legal reviewer", "Owns consequential judgment"],
+      s: ["NDA pre-check", "Clause policy · escalation triggers · never-accept cases"],
+      m: ["Deep lane", "Clause reasoning / contradictions"],
+      c: ["Legal corpus", "Playbook and precedent"],
+      g: ["Counterparty facts", "Entities, prior agreements"],
+      k: ["Document store", "Redline tool"],
+      u: ["Chat + review queue"],
+      o: "General counsel",
+      why: "Low volume, consequential calls. Clause reasoning fails quietly on lighter lanes.",
+    },
+  },
+  {
+    id: "W-009",
+    title: "Contract redline",
+    dist: "LEG",
+    lane: "Deep",
+    shapes: ["judgment", "pattern"],
+    seat: "INSIDE",
+    vol: "LOW",
+    mass: 5,
+    bar: "Positions held, deviations named",
+    evals: "Redlines accepted + overruled",
+    cfg: {
+      p: ["Legal reviewer", "Signs the position"],
+      s: ["Redline playbook", "Fallback ladder · red lines · overruled cases"],
+      m: ["Deep lane", "Compare / propose"],
+      c: ["Contract library", "Standard terms"],
+      g: ["Counterparty facts", "Entity graph, obligations"],
+      k: ["Document store", "Clause diff"],
+      u: ["Review queue"],
+      o: "General counsel",
+      why: "Negotiation logic across long documents. The lane must hold a whole contract in view.",
+    },
+  },
+  {
+    id: "W-014",
+    title: "Compliance sweep",
+    dist: "LEG",
+    lane: "Fast",
+    shapes: ["validation", "pattern"],
+    seat: "EDGE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "A clean, dated, repeatable record",
+    evals: "Known violations + false positives",
+    cfg: {
+      p: ["Privacy lead", "Owns the finding"],
+      s: ["Compliance checker", "Consent rules · tracker classes · false positives"],
+      m: ["Fast lane", "Sweep / diff / report"],
+      c: ["Policy set", "Consent policy and vendor list"],
+      g: ["Vendor + region facts", "Processors, legal bases"],
+      k: ["Site crawler", "Report channel"],
+      u: ["Scheduled agent"],
+      o: "Privacy lead",
+      why: "Mechanical, verifiable, weekly. The checking is encoded, so the lane stays light.",
+    },
+  },
+
+  /* ── Finance ──────────────────────────────────────────────────────── */
+  {
+    id: "W-041",
+    title: "Ledger control",
+    dist: "FIN",
+    lane: "Fast",
+    shapes: ["pattern", "validation"],
+    seat: "EDGE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "Surface anomalies / keep a traceable path",
+    evals: "Matches + exceptions + false positives",
+    cfg: {
+      p: ["Finance reviewer", "Owns exceptions"],
+      s: ["Ledger control", "Matching logic · anomaly patterns · false positives"],
+      m: ["Fast lane", "Match / flag / explain"],
+      c: ["Entry history", "Entries and counterparties"],
+      g: ["Vendor + entity facts", "Supplier master, cost centres"],
+      k: ["Accounting API", "Bank feed"],
+      u: ["Scheduled agent"],
+      o: "Finance lead",
+      why: "High volume, verifiable output. A heavier lane would buy nothing here.",
+    },
+  },
+  {
+    id: "W-045",
+    title: "Invoice matching",
+    dist: "FIN",
+    lane: "Fast",
+    shapes: ["pattern"],
+    seat: "EDGE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "Every line reconciled or named",
+    evals: "Matched sets + unresolvable cases",
+    cfg: {
+      p: ["Finance analyst", "Resolves the remainder"],
+      s: ["Reconciliation", "Match rules · tolerances · unresolvable cases"],
+      m: ["Fast lane", "Match / reconcile"],
+      c: ["Export history", "Statements and invoices"],
+      g: ["Vendor facts", "Aliases, payment terms"],
+      k: ["Accounting API", "Mailbox"],
+      u: ["Scheduled agent"],
+      o: "Finance lead",
+      why: "Deterministic work at scale. Encoded tolerances remove the judgment from the run.",
+    },
+  },
+  {
+    id: "W-049",
+    title: "Spend forecast",
+    dist: "FIN",
+    lane: "Deep",
+    shapes: ["judgment", "stakeholder", "validation"],
+    seat: "ABOVE",
+    vol: "LOW",
+    mass: 4,
+    bar: "A number leadership can act on",
+    evals: "Forecasts against what landed",
+    cfg: {
+      p: ["Finance lead", "Owns the call"],
+      s: ["Forecast method", "Driver definitions · scenario rules · variance cases"],
+      m: ["Deep lane", "Model / explain"],
+      c: ["Actuals", "History and commitments"],
+      g: ["Entity + commitment facts", "Contracts, headcount, run rate"],
+      k: ["Finance warehouse"],
+      u: ["Chat + board report"],
+      o: "Finance lead",
+      why: "Reasoning over uncertain drivers. The explanation matters as much as the number.",
+    },
+  },
+
+  /* ── Product Design ───────────────────────────────────────────────── */
+  {
+    id: "W-011",
+    title: "Packaging system",
+    dist: "DES",
+    lane: "Everyday",
+    shapes: ["judgment", "validation", "pattern"],
+    seat: "EDGE",
+    vol: "MID",
+    mass: 2,
+    bar: "Claim-safe / production-ready",
+    evals: "Packs + production edge cases",
+    cfg: {
+      p: ["Design reviewer", "Handles exceptions"],
+      s: ["Packaging system", "Claim + format rules · process · accept/reject packs"],
+      m: ["Everyday lane", "Bounded checks"],
+      c: ["Source files", "Production rules"],
+      g: ["SKU + market facts", "Mandatory marks per region"],
+      k: ["Design file API", "Claims registry"],
+      u: ["Design tool plugin"],
+      o: "Design lead",
+      why: "Bounded checks against an encoded standard. Stable work moves off the frontier.",
+    },
+  },
+  {
+    id: "W-016",
+    title: "Dieline review",
+    dist: "DES",
+    lane: "Everyday",
+    shapes: ["validation", "pattern"],
+    seat: "EDGE",
+    vol: "MID",
+    mass: 2,
+    bar: "Nothing reaches print broken",
+    evals: "Approved dielines + print failures",
+    cfg: {
+      p: ["Packaging engineer", "Owns print release"],
+      s: ["Dieline check", "Structure rules · bleed logic · print failures"],
+      m: ["Everyday lane", "Inspect / flag"],
+      c: ["Structural library", "Dielines and materials"],
+      g: ["Material facts", "Substrates, suppliers"],
+      k: ["File check", "Supplier portal"],
+      u: ["Review queue"],
+      o: "Design lead",
+      why: "Geometric verification against fixed rules. The check is encoded, the lane is cheap.",
+    },
+  },
+  {
+    id: "W-022",
+    title: "CMF spec check",
+    dist: "DES",
+    lane: "Deep",
+    shapes: ["judgment", "validation"],
+    seat: "INSIDE",
+    vol: "LOW",
+    mass: 4,
+    bar: "Material calls the factory can hold",
+    evals: "Specs that held + specs that drifted",
+    cfg: {
+      p: ["Industrial designer", "Owns the material call"],
+      s: ["CMF standard", "Tolerance bands · finish logic · drift cases"],
+      m: ["Deep lane", "Compare / reason"],
+      c: ["Material library", "Supplier specs and samples"],
+      g: ["Supplier + material facts", "Capabilities, certifications"],
+      k: ["Spec system", "Supplier portal"],
+      u: ["Chat + spec tool"],
+      o: "Design lead",
+      why: "Physical consequence and subtle trade-offs. Worth a heavier lane per run.",
+    },
+  },
+
+  /* ── Engineering ──────────────────────────────────────────────────── */
+  {
+    id: "W-026",
+    title: "Release audit",
+    dist: "ENG",
+    lane: "Frontier",
+    shapes: ["judgment", "pattern", "validation"],
+    seat: "INSIDE",
+    vol: "LOW",
+    mass: 5,
+    bar: "Surface release risk / trace the evidence",
+    evals: "Known failures + release baselines",
+    cfg: {
+      p: ["Engineering reviewer", "Signs off / owns risk"],
+      s: ["Release audit", "Repo conventions · failure logic · release baselines"],
+      m: ["Frontier lane", "Repo-scale reasoning"],
+      c: ["Repo + logs", "Hardware history and tests"],
+      g: ["Component facts", "Bill of materials, revisions"],
+      k: ["Code + test runner", "Issue tracker"],
+      u: ["CLI + review queue"],
+      o: "VP technology",
+      why: "The newest and most consequential work runs on the strongest lane.",
+    },
+  },
+  {
+    id: "W-031",
+    title: "Risk register",
+    dist: "ENG",
+    lane: "Deep",
+    shapes: ["judgment", "validation"],
+    seat: "INSIDE",
+    vol: "LOW",
+    mass: 4,
+    bar: "Risks named before they arrive",
+    evals: "Registered risks + missed ones",
+    cfg: {
+      p: ["Electronics lead", "Owns the register"],
+      s: ["Risk method", "Severity logic · mitigation shapes · missed-risk cases"],
+      m: ["Deep lane", "Assess / rank"],
+      c: ["Test history", "Failures and field returns"],
+      g: ["Component + supplier facts", "Lead times, failure rates"],
+      k: ["Test systems", "Issue tracker"],
+      u: ["Chat + register"],
+      o: "VP technology",
+      why: "Judgment under incomplete evidence. The lane has to reason, not retrieve.",
+    },
+  },
+  {
+    id: "W-037",
+    title: "Weekly reporting",
+    dist: "ENG",
+    lane: "Fast",
+    shapes: ["pattern", "stakeholder"],
+    seat: "ABOVE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "Reliable readout / correct emphasis",
+    evals: "Weekly cycles + known omissions",
+    cfg: {
+      p: ["Electronics lead", "Corrects emphasis"],
+      s: ["Status digest", "Editorial priority · omission checks · reader framing"],
+      m: ["Fast lane", "Summarise / structure"],
+      c: ["Project records", "Updates and test results"],
+      g: ["Programme facts", "Milestones, owners"],
+      k: ["Project board", "Chat channel"],
+      u: ["Scheduled agent"],
+      o: "Engineering lead",
+      why: "A reliable readout, weekly. Encoded emphasis keeps it off heavier lanes.",
+    },
+  },
+
+  /* ── Programs + People ────────────────────────────────────────────── */
+  {
+    id: "W-046",
+    title: "Status digest",
+    dist: "PRG",
+    lane: "Fast",
+    shapes: ["voice", "stakeholder", "pattern"],
+    seat: "ABOVE",
+    vol: "HIGH",
+    mass: 1,
+    bar: "One readout the exec team can act on",
+    evals: "Weekly cycles + distortions",
+    cfg: {
+      p: ["Program lead", "Corrects emphasis"],
+      s: ["Status digest", "Editorial priority · omission checks · reader framing"],
+      m: ["Fast lane", "Summarise / structure"],
+      c: ["Project records", "Updates and decisions"],
+      g: ["Programme facts", "Milestones, owners, dependencies"],
+      k: ["Project board", "Chat channel"],
+      u: ["Scheduled agent"],
+      o: "Program director",
+      why: "High volume, light mass. The Skill holds the emphasis, so the lane only has to structure.",
+    },
+  },
+  {
+    id: "W-052",
+    title: "Candidate screening",
+    dist: "PRG",
+    lane: "Everyday",
+    shapes: ["judgment", "pattern", "validation"],
+    seat: "INSIDE",
+    vol: "MID",
+    mass: 3,
+    bar: "Consistent evidence / no unsupported inference",
+    evals: "Role cases + fairness failures",
+    cfg: {
+      p: ["Talent reviewer", "Owns decision / fairness"],
+      s: ["Screening brief", "Role criteria · evidence rules · fairness failures"],
+      m: ["Everyday lane", "Evidence summarisation"],
+      c: ["Role + evidence", "Application and interview"],
+      g: ["Role + org facts", "Levels, team structure"],
+      k: ["Applicant tracking", "Record store"],
+      u: ["Review queue"],
+      o: "People lead",
+      why: "Summarisation under guardrails. The consequential call stays at the seat.",
+    },
+  },
+  {
+    id: "W-057",
+    title: "Capacity planning",
+    dist: "PRG",
+    lane: "Deep",
+    shapes: ["judgment", "stakeholder"],
+    seat: "ABOVE",
+    vol: "LOW",
+    mass: 3,
+    bar: "A plan the teams recognise as real",
+    evals: "Plans that held + plans that slipped",
+    cfg: {
+      p: ["Program lead", "Owns the commitment"],
+      s: ["Capacity method", "Load rules · trade-off logic · slipped-plan cases"],
+      m: ["Deep lane", "Model / explain"],
+      c: ["Delivery history", "Throughput and commitments"],
+      g: ["Org + programme facts", "Headcount, skills, allocations"],
+      k: ["Project board", "People system"],
+      u: ["Chat + planning board"],
+      o: "Program director",
+      why: "Trade-offs across competing claims. The lane has to argue, not just tabulate.",
+    },
+  },
+  {
+    id: "W-058",
+    title: "Board narrative",
+    dist: "PRG",
+    lane: null,
+    shapes: ["voice", "judgment", "stakeholder"],
+    seat: "PERSON",
+    vol: "LOW",
+    mass: 0,
+    bar: "One argument the room can act on",
+    evals: "Not encoded / live judgment",
+    cfg: null,
+  },
+
+  /* ── Operations ───────────────────────────────────────────────────── */
+  {
+    id: "W-063",
+    title: "Supplier terms",
+    dist: "OPS",
+    lane: null,
+    shapes: ["judgment", "stakeholder"],
+    seat: "PERSON",
+    vol: "LOW",
+    mass: 0,
+    bar: "Terms the relationship can carry",
+    evals: "Not encoded / live judgment",
+    cfg: null,
+  },
+  {
+    id: "W-069",
+    title: "Demand planning",
+    dist: "OPS",
+    lane: "Deep",
+    shapes: ["judgment", "pattern"],
+    seat: "ABOVE",
+    vol: "MID",
+    mass: 3,
+    bar: "Stock where it is needed, when",
+    evals: "Forecasts against what sold",
+    cfg: {
+      p: ["Supply lead", "Owns the order"],
+      s: ["Demand method", "Seasonality rules · lead-time logic · forecast cases"],
+      m: ["Deep lane", "Model / explain"],
+      c: ["Sales history", "Sell-through and lead times"],
+      g: ["SKU + supplier facts", "Order minimums, lead times, channels"],
+      k: ["Planning system", "Resource planning"],
+      u: ["Chat + planning board"],
+      o: "VP operations",
+      why: "Pattern plus judgment under uncertainty. Worth reasoning depth per run.",
+    },
+  },
 ];
 
 /**
@@ -1316,68 +1549,69 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // together — the registry test normalises one against the other.
         id: "ai-transformation",
         file: "01_INTELLIGENCE-MAP/",
-        meta: "5 → 130+",
+        meta: "27 → 47",
         project: "Intelligence Map",
         icon: "dir",
         preview: "Preview — 01_intelligence-map/",
         vizLabel: "Map — work to intelligence",
-        // The work-first map keeps the beat's registry groups and rows by
-        // reference, while adding the configurations used only by the
-        // casefile surface.
+        // The city (ADR-062) keeps the beat's registry groups and rows BY
+        // REFERENCE and adds the three arrays only the casefile draws.
         //
-        // `configurations` is the persistent work field. `skills` is its
-        // fixed substrate reservoir, linked by stable ids; MAP_ROWS stays
-        // because the beat still renders the exemplars and the sharing guard
-        // still asserts that the beat and casefile use one source.
-        //
-        // `intelligence` preserves the rounded reach/draw evidence while the
-        // work records carry their explicit allocation tier and evidence
-        // basis. No renderer infers a work tier from team consumption.
+        // MAP_ROWS stays because the beat still renders the exemplars and
+        // the sharing guard still asserts that both surfaces use one source.
+        // MAP_GROUPS carries the Skills arithmetic the plate sums on screen,
+        // and MAP_SHAPES carries the same five counts for the mains below
+        // grade — the registry test asserts the two agree, so they cannot
+        // drift into two different portfolios.
         visual: {
           kind: "intelligence-map",
           groups: MAP_GROUPS,
           rows: MAP_ROWS,
           skills: LOOP_SKILLS,
-          configurations: LOOP_WORK_CONFIGURATIONS,
-          intelligence: LOOP_INTELLIGENCE,
-          teamDraw: LOOP_TEAM_DRAW,
+          shapes: MAP_SHAPES,
+          districts: MAP_DISTRICTS,
+          works: MAP_WORKS,
+          envelope: "WITHIN",
         },
-        // Four proof blocks in the left-column register. `value` is textual,
-        // so the fourth claim can name the operating property rather than
-        // inventing a second count.
+        // Four proof blocks in the left-column register, and each one is a
+        // reading the drawing beside it can be checked against (ADR-062,
+        // PRD §10): 27 modules on the board, 47 Skills summed by the five
+        // mains, the reuse figure below grade, and the envelope in the
+        // chrome. `value` is textual so the fourth can name a status rather
+        // than invent a count.
         //
-        // This QUALIFIES the July "system numbers, not artifact counts"
-        // ruling rather than discarding it: that ruling protected a row
-        // claiming a TRANSFORMATION from being evidenced by an inventory.
-        // The row now claims THE MAP, and the size of what is mapped is the
-        // evidence for it. The two numbers that left (21 days, 05 shapes)
-        // are not lost — 21 days still prints on the rollout and governance
-        // rows, and the five shapes ARE the plate above.
+        // ⚠ "14 TEAMS USING THE LAYER" LEFT THIS PANEL with ADR-062, by
+        // owner ruling — a deliberate removal, not an erosion. It was the
+        // second of the two published team counts (22 BRIEFED / 14 USING);
+        // 22 still prints on the ENCODE beat's rollout log, so the pair no
+        // longer appears together and nothing has to keep them apart here.
+        // The map publishes DISTRICTS, which are departments and a THIRD
+        // unit again — never write copy that lets a district count read as
+        // a team count (pinned by `cases-registry.test.ts`).
         //
-        // ⚠ "14 teams" is a DIFFERENT SET from the 22 in the rollout log and
-        // the governance row (see NUMBERS at the top of this file). The
-        // titles are what keep them apart: USING THE LAYER vs BRIEFED. Do
-        // not harmonise the wording.
+        // "47" and not "47+" on this panel specifically: the mains below
+        // grade print the same total as arithmetic a reader can add up, so
+        // a hedge beside an exact sum reads as two different numbers.
         blocks: [
           {
-            value: "47+",
-            title: "Skills in active use",
-            desc: "Reusable methods, standards and review logic encoded for AI.",
+            value: "27",
+            title: "Work streams",
+            desc: "Modules on the board. Person-led work included.",
           },
           {
-            value: "14",
-            title: "Teams using the layer",
-            desc: "Across creative, legal, finance, product, programs and operations.",
+            value: "47",
+            title: "Skills encoded",
+            desc: "Judgment made reusable and kept to one standard.",
           },
           {
-            value: "1",
-            title: "Shared intelligence layer",
-            desc: "One system for authoring, testing, versioning, ownership and reuse.",
+            value: "19/24",
+            title: "Tapped a main",
+            desc: "Configured streams that reused encoding, not built it.",
           },
           {
-            value: "DOMAIN-OWNED",
-            title: "Teams maintain the layer",
-            desc: "The teams that know the work maintain the Skills and extend them after handoff.",
+            value: "WITHIN",
+            title: "Draw envelope",
+            desc: "Relative draw against workload. Never a price.",
           },
         ],
         context: [
@@ -1409,12 +1643,24 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // lede and the `5 → 130+` stat's detail — one duration, three
         // surfaces, deliberately identical.
         //
-        // 300 chars against the ~330 the U11 tick move bought at 1280x720
-        // (the binding viewport; it was ~195 before). Re-measure THERE.
+        // 299 chars against the ~330 the U11 tick move bought at 1280x720
+        // (the binding viewport; the test's 420 is a looser guardrail, NOT
+        // the box). Re-measure THERE.
+        //
+        // ⚠ PRD §10's lede is 390 chars and would clip ~90 of them silently.
+        // It was written for the standalone mockup, whose brief column had a
+        // whole viewport; `.fl-brief` is height-boxed against `--fl-t6` with
+        // no scrollbar. What was cut is the five-question enumeration —
+        // "what runs it, what it inherits, what it can reach, how much it
+        // decides alone, who owns it" — because sheet 02's own label rail
+        // asks those five on screen. Cutting it removes a restatement, which
+        // is the same discipline that stripped the rail's provenance labels
+        // between v11 and v13; the acceptance criterion "no clipped text"
+        // outranks copy fidelity when the two conflict.
         brief: [
-          "Over eighteen months, Loop's scattered AI experiments became a ",
-          { em: "shared intelligence layer" },
-          ": domain knowledge encoded as versioned Skills, connected to tools and agents, and mapped to the workflows they support. The result is one maintained system for reuse, evaluation and ownership across the company.",
+          "Every piece of work at Loop, and ",
+          { em: "how much intelligence runs in it" },
+          ". The board lays out the estate: work streams as modules, clustered by the team that owns them. Open one and it comes apart into its configuration. Below grade runs the shared substrate — encoded once for one team, tapped by the next.",
         ],
       },
       {

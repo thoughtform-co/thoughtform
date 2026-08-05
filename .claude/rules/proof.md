@@ -16,7 +16,8 @@ inherited its ambient-cover role.
 **Read first**
 
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
-- [ADR-061: Intelligence Map work configurations](../sentinel/decisions/061-intelligence-map-work-configurations.md) — proposed harmonization contract for the map atom, projections, evidence and privacy; do not mark accepted before its verification gates pass
+- [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — the LIVE Intelligence Map. Read its §Outstanding first: sheets 02/03, the EXPAND control and the smoke coverage are a known first cut
+- [ADR-061](../sentinel/decisions/061-intelligence-map-work-configurations.md) — SUPERSEDED by ADR-062 on the atom, the drawing and the projections; its placement, evidence semantics and privacy envelope still stand
 - [ADR-054](../sentinel/decisions/054-proof-station-client-cases.md) — superseded on placement; its content model and confidentiality envelope are still live
 - [ADR-029](../sentinel/decisions/029-services-card-ring.md) / [ADR-050](../sentinel/decisions/050-services-card-face.md) — the ring the casefile now holds back
 - [ADR-044](../sentinel/decisions/044-services-masthead.md) — the reveal protocol and the type standard
@@ -75,10 +76,13 @@ inherited its ambient-cover role.
   `CorridorArmillary`) so the cards ARRIVE MOVING on their ADR-029 fly-in —
   never as a master-opacity crossfade. Do not add a second gate — add a
   factor to one of these.
-- **The host is `pointer-events: none`.** Exactly FOUR opt-ins: the tabs,
-  the directory rows, `.fl-film` and `.fl-skills` (the U13 browser).
-  `.svc-ring-hits__hit` is at z 4 and the casefile at z 6,
-  so an `auto` host silently swallows every card click once the ring lands.
+- **The host is `pointer-events: none`.** Exactly FIVE opt-ins: the tabs,
+  the directory rows, `.fl-film`, `.fl-skills` (the U13 browser) and
+  `.fl-imap` (the ADR-062 map). `.svc-ring-hits__hit` is at z 4 and the
+  casefile at z 6, so an `auto` host silently swallows every card click once
+  the ring lands. Each opt-in is safe only because the host is
+  `visibility: hidden` until `data-proof-live` — keep them scoped to the
+  element, never lifted.
 - **The band offset is `--instrument-inset` ALONE** (ADR-048 addendum,
   owner 2026-07-29 — the casefile sits on the INSTRUMENT band, the 1440px
   breakout tier, no longer on the 1200px text band). The stage box is
@@ -231,122 +235,58 @@ inherited its ambient-cover role.
   taller desktop and full-flow mobile expose the supporting sentence. The
   right panel has no generic foot: its visual owns the full panel beneath the
   designation rail.
-- **The registry plate is the INTELLIGENCE MAP: ONE PERSISTENT WORK-
-  CONFIGURATION FIELD, THREE PROJECTIONS (ADR-061).** The exact
-  tabs are CONFIGURATION · TEAM · ALLOCATION. SUBSTRATE is no longer a
-  projection: the canonical 47 Skills are a FIXED RESERVOIR referenced by
-  the work configurations. U16's STACK view stays deleted.
-  - **THE MOVING ATOM IS A WORK CONFIGURATION, NEVER A SKILL.** It is a
-    repeatable kind of work plus its public configuration: outcome, functional
-    team, referenced Skills, artifact category, generic tool/connector
-    categories, generic capability lane and aggregate evidence state. A Skill
-    may support several configurations; a configuration may reference several
-    Skills. Do not relabel the 47-Skill lattice and call that the redesign.
-  - **CONFIGURATION explains composition.** TEAM regroups the SAME work
-    nodes by public functional team. ALLOCATION regroups those SAME nodes by
-    Fast · Everyday · Deep · Frontier. Projection changes placement and
-    emphasis, never the underlying fact.
-  - **THE RESERVOIR DOES NOT MORPH.** Desktop renders one bus labelled
-    `ENCODED SUBSTRATE · 47 SKILLS / 5 SHAPES` with all 47 stable pips in five
-    unlabelled runs. Selection may highlight referenced Skills and compact
-    layouts may summarize it, but the Skills remain a stable source set. Its
-    `47+` count is a Skills count and may never be used as the
-    work-configuration total. The five shape labels appear once, as the
-    Configuration view's vertical anchors; a labelled bottom repetition is a
-    duplicate taxonomy.
-  - **Stable identity is an id, not copy.** Work nodes are flat children of
-    one stable parent, keyed by a non-display id and kept in invariant order.
-    Nesting them in projection-specific containers remounts them and turns the
-    morph into a crossfade. Legacy `SkillsBrowserPlate` / `skillsFieldLayout`
-    names do not preserve the old conceptual model.
-  - **Placement is PURE DETERMINISTIC MATH**, never measured placement. The
-    layout's declared tracks and the CSS `repeat()` counts move together, and
-    keyboard `navRows` come from that same result. An implicit grid track is a
-    layout bug, not graceful overflow.
-- ⚠ **THE MORPH'S LAWS (ADR-056 U17 + ADR-061).** ADR-031 still rejects
-  viewport-crossing shared-element flights; this is the same work artifacts
-  reconfiguring inside one bounded field.
-  - **Two one-shot measurements, both click-driven.** Old rects come from the
-    click handler; destination rects come from a layout effect before paint.
-  - **Rects are relative to the FIELD.** The casefile's own arrival transform
-    must cancel out rather than leak into a viewport-space measurement.
-  - **`data-morph` is imperative** and `will-change` exists only during the
-    flight. A re-render may not clobber the marker or permanently promote all
-    nodes.
-  - **Zero at rest by construction.** The transition ends on computed `none`;
-    interrupted projection changes begin from the currently painted rect.
-  - Projection chrome may crossfade; work nodes may not. The Skill reservoir
-    may highlight links, but it does not join the FLIP.
-  - Selection survives every projection change and overlay expansion. A tab
-    click changes placement, not identity or detail state.
-  - Click-driven only. No scroll-driven regrouping, ambient pulse, random
-    jitter, force simulation or spring overshoot. Reduced motion swaps the
-    deterministic layout immediately.
-- **THE PLATE IS NEVER NAMELESS.** A compact node cannot carry its full
-  anatomy, so the head register names the selected WORK CONFIGURATION and
-  defaults to configuration 01 on arrival. The work label wins truncation
-  priority over legend or status chrome.
-- **Compact node, reserved detail console.** The node carries a stable mark,
-  short work identity and at most one projection signal. A non-overlapping
-  lower console reserves its height even before selection, so detail never
-  covers the field or introduces an internal scrollbar. Compact mode shows
-  work/function/lifecycle/summary, six facet STATES, human checkpoint,
-  allocation basis, broad owner and linked Skill names. The shared expanded
-  detail component adds the facet PROSE inside the lazy ADR-006 body portal,
-  with focus trap, scroll lock, Escape/backdrop dismissal and focus return.
-- **Relationships are state, not geometry.** Linked pips light and the detail
-  names the Skills. Do not restore an SVG, `ResizeObserver`, node-to-pip rect
-  reads or a post-morph measurement loop.
-- ⚠ **ALLOCATION IS AGGREGATE EVIDENCE, NOT PER-SKILL TOKEN TELEMETRY.**
-  - Lifecycle and draw are separate semantics. “Shipped” never means “high
-    consumption.”
-  - A work configuration may carry a qualitative draw band. Numeric reach or
-    draw is shown only at the honest lane/team/snapshot aggregation level.
-  - No Skill tile, label, tooltip, ARIA string or hidden prop receives tokens,
-    cost, share of spend or a causal usage claim.
-  - Figures are rounded from a dated snapshot and may be mass, density, band,
-    share or ratio — never live telemetry. Absence is not automatically zero.
-  - **Two bars per tier head, never one** when the reach/draw argument is
-    shown; one bar degrades it into an unexplained usage chart.
-- **The map is FLAT instrument grammar.** Configuration and Team may encode
-  lifecycle/evidence and Allocation may encode an aggregate draw band, but
-  the treatment is solid fill, border, tick or categorical mark with an
-  explicit legend. Map nodes, states, console and reservoir use no CSS
-  gradients or hatch fills; computed `background-image` must remain `none` in
-  both themes.
-- **Compact-height and mobile layouts DEGRADE DELIBERATELY; they do not clip.**
-  Below the desktop fit envelope, use grouped compact rows/cards, a summarized
-  fixed reservoir and in-flow/full-width detail. Keep all three projections
-  available but skip FLIP. Do not squeeze the desktop heat field into a phone.
-- ⚠ **FIT TRAPS ON THIS PLATE, every one shipped in a first cut** (U15–U17).
-  Measure; do not eyeball:
-  - **A grid row is as tall as its TALLEST item, and that was the COUNT.** A
-    default line box on 10px mono is 15px against a 9px tile, which put the
-    team lattice 46px over its stage at 1440×800 and 121px at 2017×1269.
-    `line-height: 1` on every mono label sharing a row with a sized element
-    is load-bearing, not tidiness.
-  - **`.fl-plate` measures 0 while an inner grid overflows** — the plate's
-    own `overflow: hidden` swallows it. The field, substrate bus and reserved
-    detail console are all in the measured set, and the smoke walks EVERY
-    PROJECTION. A guard that only sees the default state is not a guard.
-  - **MEASURE ONLY AFTER THE MORPH SETTLES.** A rect read mid-flight is a
-    transformed box, not a laid-out one. Await the absence of
-    `.fl-intel-map__field[data-morph]`, never a bare timeout — and wait for
-    the field to EXIST before stamping or measuring it, or the harness
-    blames the feature for its own earliness.
-  - **A budget looser than the box ships silent truncation.** A 24-char
-    tier note truncated at 20; the fix was tracking down (the U9 lever) AND
-    the guard tightened to the real ceiling.
-  - **Chips beside a `1fr` track lose and get sliced mid-word.** Half a
-    label is a defect, not a compromise — give them their own line.
-  - **The box is not one size.** The right visual now owns the whole panel,
-    but the 1280×720 casefile remains the binding composition while 2017×1269
-    exposes over-expansion and weak hierarchy. Per-projection `clamp()`
-    metrics need both ends; never tune only the tall reference.
-  - The exemplar `rows` stay in the data unrendered (the beat draws them;
-    the sharing guard asserts them shared). Skill names belong in selected
-    detail, not as a second line under each pip run; that would recreate the
-    duplicate taxonomy and overflow the bus.
+- **The `01_INTELLIGENCE-MAP/` row is THE CITY (ADR-062).** Three sheets —
+  **board · unit · below grade** — in ONE isometric, drawn from `MAP_SHAPES`
+  (5), `MAP_DISTRICTS` (8) and `MAP_WORKS` (27; 24 configured, 3 person-led)
+  in `lib/cases/content/loop-earplugs.ts`. ADR-061's morphing
+  work-configuration field, its six facets and its CONFIGURATION · TEAM ·
+  ALLOCATION projections are DELETED — if you are here from an old comment
+  expecting a tile field, a persistent-node FLIP or a reach/draw ladder,
+  none of it exists.
+  - **Closed, do not re-open:** no sphere (the Arc owns the cosmos), no zoom
+    ladder (a ladder implies a lesson; this is a record), no radial ring
+    (altitude carries the relation, not radius), NO LEGEND (the drawing
+    carries provenance — hatched green is Loop's own, open cream is rented,
+    blue-grey dashed is the adjacent domain, gold is wayfinding), and ONE
+    projection across all three sheets.
+  - **Person-led work stays on every sheet.** A map that only shows what was
+    configured shows what was built and hides what was not.
+  - **EVERY TOTAL IS DERIVED** (`map/mapProjection.ts`), never authored. The
+    prototype hard-coded three; `19 of 24` is
+    `configured.length − shapes.length`, because each shape is trenched
+    exactly once by its `first`.
+  - **`MAP_SHAPES`' Skill counts must equal `MAP_GROUPS`' counts.** One
+    portfolio described by two arrays is how a surface ends up publishing two
+    totals a reader can subtract. Guarded.
+  - ⚠ **DISTRICTS ARE DEPARTMENTS** — a THIRD unit alongside 22 teams
+    BRIEFED and 14 teams USING THE LAYER. Never write copy that lets a
+    district count read as a team count; a guard fails on "8 teams".
+- ⚠ **AUTHOR THIS SURFACE AT 1280×720.** The viz box is **611×390** there
+  (688×444 at 1440×800) against the ~950px console the drawing was designed
+  for. Fitting the full 1160×700 authoring space in rendered every label at
+  **6.8px** — below the 8.5px chrome floor — while looking correct at 1920.
+  Three consequences, all measured:
+  - **Each sheet crops its own viewBox** (`SHEET_VIEWBOX`) and carries its
+    own label size in AUTHORING UNITS, tuned so all three land at the same
+    rendered size. Changing a crop changes that sheet's rendered type —
+    re-measure with a headed Playwright run, never by eye.
+  - **The parts index is NOT on sheet 01 at panel size.** 27 rows at a
+    readable size need ~700 units of height in a crop that has 570. It lives
+    in the hover card, the mobile fallback, and the expanded view.
+  - **Back-row district plaques hang ABOVE their plate.** The rows leave ~18
+    screen-units of gap; a plaque needs 25.
+- **Keys bind on the PLATE, not `document`** — the corridor has its own key
+  handling, and React's synthetic events reach the plate from whatever
+  descendant has focus. Arrival gates on `data-proof-settled`, not
+  `data-proof-live`: a drawing that stages itself while the ladder is still
+  travelling reads as a demo rather than a record.
+- ⚠ **Sheets 02 and 03 are NOT YET FITTED to the panel, and neither is the
+  EXPAND control.** They carry more annotation than 611×390 holds at legible
+  type. The agreed shape (owner, 2026-08-05) is reduced panel views plus an
+  EXPAND opening the full authored drawing, index included;
+  `useDialogShell` is already extracted from `MediaLightbox` for it. Read
+  ADR-062 §Outstanding before touching this — it also lists the missing
+  smoke coverage and the absent `map-projection` unit test.
 - **The beats and the casefile SHARE their plates.** Hoisted consts in the
   content module, asserted reference-equal by the registry test. Re-typing a
   plate inline is how the two surfaces drift.

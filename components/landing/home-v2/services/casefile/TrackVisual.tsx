@@ -64,12 +64,16 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
       );
 
     case "intelligence-map":
+      /* The city (ADR-062). `groups`/`rows`/`skills` stay on the visual for
+         the beat-sharing and count-agreement guards; the DRAWING reads only
+         the three map arrays, so the Skills reservoir is evidence the plate
+         sums rather than geometry it has to place. */
       return (
         <IntelligenceMapPlate
-          configurations={visual.configurations}
-          skills={visual.skills}
-          groups={visual.groups}
-          intelligence={visual.intelligence}
+          shapes={visual.shapes}
+          districts={visual.districts}
+          works={visual.works}
+          envelope={visual.envelope}
         />
       );
 

@@ -77,7 +77,22 @@ export function useCloseOnCasefileFold(
   }, [rootRef, active]);
 }
 
-export function MediaLightbox({ src, label, meta, onClose }: MediaLightboxProps) {
+/**
+ * The measured modal shell: focus in, Escape out, and a REAL scroll lock.
+ *
+ * Extracted so the expanded map (ADR-062) reuses it rather than becoming the
+ * second hand-written lightbox `rules/proof.md` forbids. Two traps are baked
+ * in here and cost a measurement each:
+ *
+ *   · `overflow: hidden` on `<html>` IS NOT A SCROLL LOCK — the page still
+ *     scrolled 739px. Non-passive `wheel`/`touchmove` `preventDefault` is
+ *     what actually holds it.
+ *   · Escape listens in the CAPTURE phase, because the corridor has its own
+ *     Escape handlers and the innermost dialog has to answer first.
+ *
+ * Returns the ref to put on the dialog element.
+ */
+export function useDialogShell(onClose: () => void) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -87,8 +102,6 @@ export function MediaLightbox({ src, label, meta, onClose }: MediaLightboxProps)
   useEffect(() => {
     dialogRef.current?.focus();
 
-    // Capture phase: the corridor has its own Escape handlers, and this
-    // dialog is the innermost thing on screen, so it answers first.
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
@@ -116,6 +129,12 @@ export function MediaLightbox({ src, label, meta, onClose }: MediaLightboxProps)
       window.removeEventListener("touchmove", block);
     };
   }, [close]);
+
+  return { dialogRef, close };
+}
+
+export function MediaLightbox({ src, label, meta, onClose }: MediaLightboxProps) {
+  const { dialogRef, close } = useDialogShell(onClose);
 
   return createPortal(
     <div

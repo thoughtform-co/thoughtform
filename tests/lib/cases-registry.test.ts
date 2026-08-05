@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { skillSymbol } from "@/components/landing/home-v2/services/casefile/skillSymbol";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
+import { BOARD_CHIP_SLOTS } from "@/components/landing/home-v2/services/casefile/map/mapProjection";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
 import type { CaseSegment } from "@/lib/cases/types";
 
@@ -21,6 +22,9 @@ import type { CaseSegment } from "@/lib/cases/types";
  *     an editorial rule: the failure it prevents is publishing a client's
  *     spend on a public marketing page.
  */
+/** Model families never travel to a public surface (owner, 2026-08-03). */
+const MODEL_FAMILIES = /\b(opus|sonnet|haiku|fable|gpt|gemini|llama|mistral|claude)\b/i;
+
 describe("cases registry (ADR-054)", () => {
   it("slugs are unique and kebab-case", () => {
     const slugs = caseSlugs();
@@ -482,8 +486,11 @@ describe("cases registry (ADR-054)", () => {
       expect(track.readouts, track.id).toBeUndefined();
     }
 
+    // `27 → 47` replaced `5 → 130+` with ADR-062: the row's meta now names
+    // the two counts the drawing itself publishes — modules on the board and
+    // Skills on the mains — so the directory agrees with the sheet it opens.
     expect(loop?.casefile.tracks.map((track) => track.meta)).toEqual([
-      "5 → 130+",
+      "27 → 47",
       "500 ADS/MO",
       "2 FILMS",
       "4 TOOLS",
@@ -553,41 +560,35 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("the intelligence map's projections hold their shape (ADR-056 U16 → U17)", () => {
-    // The map is the CONFIGURATION, not just the Skills: four capability
-    // tiers that double as the allocation projection's columns, and the
-    // reads that say why the deep draw is the work rather than waste.
-    // These budgets are box budgets — every string here renders into a box
-    // that clips silently.
-    //
-    // (U16's four-layer STACK view and its guards were deleted in U17 by
-    // owner ruling — it restated the row's brief and the panel's blocks.)
+  it("the dormant registry plate's allocation evidence still holds its shape", () => {
+    // ⚠ THIS GUARDS A DORMANT PATH. `intelligence`/`teamDraw` moved OFF the
+    // intelligence-map visual with ADR-062 — the city draws shapes,
+    // districts and works, not reach/draw tiers. They survive as optional
+    // fields on `registry`, which is what a SECOND client's row would use
+    // (`SkillsBrowserPlate`). No track carries them today, so this loop is
+    // expected to find nothing; it exists so the dormant API cannot rot
+    // silently before someone reaches for it.
     const BANDS = new Set(["light", "steady", "deep", "intensive"]);
 
     for (const c of CASES) {
       for (const t of c.casefile.tracks) {
-        if (t.visual.kind !== "registry" && t.visual.kind !== "intelligence-map") continue;
+        if (t.visual.kind !== "registry") continue;
         const { intelligence, teamDraw, skills } = t.visual;
         const where = `${c.slug}/${t.id}`;
 
         if (intelligence) {
           const { tiers, reads, trend } = intelligence;
 
-          // FOUR TIERS, and the draw column is a share of one whole.
           expect(tiers.length, `${where} tiers`).toBe(4);
           const drawSum = tiers.reduce((n, t2) => n + t2.draw, 0);
-          expect(
-            drawSum,
-            `${where} draw shares sum to ${drawSum}, not ~100`
-          ).toBeGreaterThanOrEqual(96);
+          expect(drawSum, `${where} draw shares sum to ${drawSum}, not ~100`).toBeGreaterThanOrEqual(
+            96
+          );
           expect(drawSum, `${where} draw shares sum to ${drawSum}, not ~100`).toBeLessThanOrEqual(
             104
           );
           for (const tier of tiers) {
             expect(tier.name.length, `${where} tier "${tier.name}"`).toBeLessThanOrEqual(10);
-            // 20, not 24: the note's column is sized to the longest one and
-            // "reasoning-heavy work" already fills it. A budget looser than
-            // the box is how this surface keeps shipping silent truncation.
             expect(
               (tier.note ?? "").length,
               `${where} tier "${tier.name}" note`
@@ -599,21 +600,12 @@ describe("cases registry (ADR-054)", () => {
               expect(v, `${where} tier "${tier.name}" ${k}`).toBeGreaterThanOrEqual(0);
               expect(v, `${where} tier "${tier.name}" ${k}`).toBeLessThanOrEqual(100);
             }
-          }
-          // ⚠ MODEL FAMILY NAMES NEVER TRAVEL (owner ruling, 2026-08-03).
-          // The tiers are generic capability names so the landing stays
-          // model-silent: it neither restates the client deck's model
-          // guidance nor goes stale on the next release.
-          const MODELS = /\b(opus|sonnet|haiku|fable|gpt|gemini|llama|mistral)\b/i;
-          for (const tier of tiers) {
             expect(
-              MODELS.test(`${tier.name} ${tier.note ?? ""}`),
+              MODEL_FAMILIES.test(`${tier.name} ${tier.note ?? ""}`),
               `${where} tier "${tier.name}" names a model family`
             ).toBe(false);
           }
 
-          // The reads carry the justification; without them this is a usage
-          // dashboard rather than a map.
           expect(reads.length, `${where} reads`).toBeGreaterThanOrEqual(2);
           expect(reads.length, `${where} reads`).toBeLessThanOrEqual(3);
           const teams = new Set((skills ?? []).map((s) => s.team));
@@ -631,20 +623,15 @@ describe("cases registry (ADR-054)", () => {
           }
         }
 
-        // THE GRADIENT IS ALL-OR-NONE across the teams that have Skills: a
-        // row with no band is a hole in a scale a reader is reading across.
         if (teamDraw?.length && skills?.length) {
           const banded = new Set(teamDraw.map((t2) => t2.team));
-          // Every team's tier must name a real column, or its Skills fly to
-          // a column that does not exist and silently vanish from the
-          // allocation projection (ADR-056 U17).
           const tierNames = new Set((intelligence?.tiers ?? []).map((t2) => t2.name));
           for (const t2 of teamDraw) {
             expect(BANDS.has(t2.band), `${where} band "${t2.band}" for ${t2.team}`).toBe(true);
             if (tierNames.size) {
               expect(
                 tierNames.has(t2.tier),
-                `${where} team "${t2.team}" leans on tier "${t2.tier}", which is not one of ${[...tierNames].join(" / ")}`
+                `${where} team "${t2.team}" leans on tier "${t2.tier}"`
               ).toBe(true);
             }
           }
@@ -658,205 +645,174 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("the Loop Intelligence Map is work-first, stable and referentially complete", () => {
+  it("the Loop work-to-intelligence map is a complete, drawable record (ADR-062)", () => {
     const loop = getCase("loop-earplugs");
     const visual = loop?.casefile.tracks.find((t) => t.id === "ai-transformation")?.visual;
     expect(visual?.kind).toBe("intelligence-map");
     if (!visual || visual.kind !== "intelligence-map") {
-      throw new Error("Loop's lead track must use the work-first intelligence-map visual");
+      throw new Error("Loop's lead track must use the intelligence-map visual");
     }
 
-    expect(visual.skills).toHaveLength(47);
-    const skillIds = visual.skills.map((skill) => skill.id);
+    const { shapes, districts, works, skills, groups } = visual;
+
+    // The Skills reservoir is unchanged by the redraw.
+    expect(skills).toHaveLength(47);
+    const skillIds = skills.map((s) => s.id);
     expect(new Set(skillIds).size).toBe(47);
     for (const id of skillIds) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 
-    expect(visual.configurations).toHaveLength(8);
-    const configurationIds = visual.configurations.map((configuration) => configuration.id);
-    expect(new Set(configurationIds).size).toBe(8);
-    for (const id of configurationIds) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
-    const mapLabels = visual.configurations.map((configuration) => configuration.mapLabel);
-    expect(new Set(mapLabels).size).toBe(8);
-    for (const label of mapLabels) {
-      expect(label.length, `compact map label "${label}"`).toBeLessThanOrEqual(16);
+    // FIVE MAINS, and their Skill counts are the SAME arithmetic the plate
+    // prints. Two arrays describing one portfolio is exactly how a surface
+    // ends up publishing two totals a reader can subtract.
+    expect(shapes).toHaveLength(5);
+    expect([...shapes].map((s) => s.key).sort()).toEqual([
+      "judgment",
+      "pattern",
+      "stakeholder",
+      "validation",
+      "voice",
+    ]);
+    const shapeSkills = shapes.reduce((n, s) => n + s.skills, 0);
+    const groupCount = groups.reduce((n, g) => n + (Number(g.count) || 0), 0);
+    expect(
+      shapeSkills,
+      `the mains sum to ${shapeSkills} but the plate's groups sum to ${groupCount}`
+    ).toBe(groupCount);
+
+    // EIGHT DISTRICTS, and they seat on a 4x2 grid.
+    expect(districts).toHaveLength(8);
+    expect(new Set(districts.map((d) => d.id)).size).toBe(8);
+    expect(new Set(districts.map((d) => d.name)).size).toBe(8);
+
+    // 27 MODULES: 24 configured, 3 person-led. Person-led work stays on the
+    // map — the negative space is what leadership reads, so a redraw that
+    // quietly dropped it would invert the map's meaning.
+    expect(works).toHaveLength(27);
+    expect(new Set(works.map((w) => w.id)).size).toBe(27);
+    const configured = works.filter((w) => w.lane !== null);
+    expect(configured).toHaveLength(24);
+    expect(works.length - configured.length).toBe(3);
+
+    const districtIds = new Set(districts.map((d) => d.id));
+    const shapeKeys = new Set(shapes.map((s) => s.key));
+    for (const w of works) {
+      expect(districtIds.has(w.dist), `${w.id} sits in unknown district "${w.dist}"`).toBe(true);
+      expect(w.shapes.length, `${w.id} taps no shape`).toBeGreaterThan(0);
+      for (const k of w.shapes) {
+        expect(shapeKeys.has(k), `${w.id} taps unknown shape "${k}"`).toBe(true);
+      }
+      // `cfg` and `lane` are the SAME fact told twice; the drawing branches
+      // on one and the hover card on the other.
+      expect(
+        (w.cfg === null) === (w.lane === null),
+        `${w.id} disagrees with itself about being person-led`
+      ).toBe(true);
     }
 
-    expect(
-      visual.configurations.map(({ work, mapLabel, publicFunction, shape, allocationTier }) => ({
-        work,
-        mapLabel,
-        publicFunction,
-        shape,
-        allocationTier,
-      }))
-    ).toEqual([
-      {
-        work: "Review an NDA",
-        mapLabel: "NDA review",
-        publicFunction: "Legal & Risk",
-        shape: "Judgment",
-        allocationTier: "Deep",
-      },
-      {
-        work: "Audit a firmware release",
-        mapLabel: "Release audit",
-        publicFunction: "Product & Engineering",
-        shape: "Judgment",
-        allocationTier: "Frontier",
-      },
-      {
-        work: "Pressure-test a product idea",
-        mapLabel: "Idea test",
-        publicFunction: "Product & Engineering",
-        shape: "Judgment",
-        allocationTier: "Everyday",
-      },
-      {
-        work: "Prepare supplier-ready packaging",
-        mapLabel: "Packaging",
-        publicFunction: "Design & Production",
-        shape: "Pattern",
-        allocationTier: "Deep",
-      },
-      {
-        work: "Produce paid-social copy",
-        mapLabel: "Social copy",
-        publicFunction: "Creative & Brand",
-        shape: "Voice",
-        allocationTier: "Everyday",
-      },
-      {
-        work: "Review supplier invoices",
-        mapLabel: "Invoice check",
-        publicFunction: "Operations",
-        shape: "Validation",
-        allocationTier: "Everyday",
-      },
-      {
-        work: "Reconcile the general ledger",
-        mapLabel: "Ledger check",
-        publicFunction: "Finance",
-        shape: "Validation",
-        allocationTier: "Everyday",
-      },
-      {
-        work: "Prepare a cross-team status digest",
-        mapLabel: "Status digest",
-        publicFunction: "People & Programs",
-        shape: "Stakeholder",
-        allocationTier: "Everyday",
-      },
-    ]);
+    // SIX CHIP SLOTS PER DISTRICT is a geometric ceiling, not a style
+    // choice: a seventh module falls off its plate rather than clipping, so
+    // nothing on screen would tell you it happened.
+    for (const d of districts) {
+      const n = works.filter((w) => w.dist === d.id).length;
+      expect(n, `${d.name} seats ${n} modules on a ${BOARD_CHIP_SLOTS}-slot plate`).toBeLessThanOrEqual(
+        BOARD_CHIP_SLOTS
+      );
+    }
 
-    expect(new Set(visual.configurations.map((configuration) => configuration.shape))).toEqual(
-      new Set(["Judgment", "Voice", "Validation", "Stakeholder", "Pattern"])
-    );
+    // EACH MAIN IS TRENCHED EXACTLY ONCE, by a CONFIGURED stream. This is
+    // what makes the reuse figure arithmetic rather than an assertion:
+    // 24 configured minus 5 trenched is the 19 the sheet prints. The
+    // renderer's lookup falls back to the first work on a miss, so a typo
+    // here would draw a plausible wrong answer rather than throwing.
+    expect(new Set(shapes.map((s) => s.first)).size).toBe(5);
+    for (const s of shapes) {
+      const first = works.find((w) => w.id === s.first);
+      expect(first, `shape "${s.key}" was trenched by unknown work "${s.first}"`).toBeTruthy();
+      expect(first?.lane, `shape "${s.key}" was trenched by person-led work`).not.toBeNull();
+      expect(
+        first?.shapes.includes(s.key),
+        `${s.first} trenched "${s.key}" without tapping it`
+      ).toBe(true);
+    }
+    expect(configured.length - shapes.length).toBe(19);
+  });
 
-    const knownSkills = new Set(skillIds);
-    for (const configuration of visual.configurations) {
-      for (const skillId of configuration.linkedSkillIds) {
+  it("districts are never published as teams (ADR-062)", () => {
+    // THREE COUNTS, THREE UNITS. 22 teams BRIEFED, 14 teams USING THE LAYER,
+    // and now 8 DISTRICTS — which are departments. The wording is the only
+    // thing keeping them apart, and the failure mode is a phrase that lends
+    // one number another's meaning ("8 teams"), which is what the older
+    // "22 teams mapped" pin already caught once.
+    const loop = getCase("loop-earplugs");
+    const visual = loop?.casefile.tracks.find((t) => t.id === "ai-transformation")?.visual;
+    if (!visual || visual.kind !== "intelligence-map") return;
+
+    const n = visual.districts.length;
+    const banned = new RegExp(`\\b${n}\\+?\\s+teams?\\b`, "i");
+    for (const c of CASES) {
+      const prose = JSON.stringify(c);
+      expect(
+        banned.test(prose),
+        `${c.slug} publishes "${n} teams" — ${n} is the DISTRICT count, a different unit`
+      ).toBe(false);
+    }
+  });
+
+  it("keeps the map's configuration copy anonymous and price-free (ADR-062)", () => {
+    const loop = getCase("loop-earplugs");
+    const visual = loop?.casefile.tracks.find((t) => t.id === "ai-transformation")?.visual;
+    if (!visual || visual.kind !== "intelligence-map") {
+      throw new Error("Loop's lead track must use the intelligence-map visual");
+    }
+
+    // Every string the drawing or the hover card can render.
+    const strings: string[] = [];
+    for (const s of visual.shapes) strings.push(s.label, s.gloss);
+    for (const d of visual.districts) strings.push(d.name, d.ab);
+    for (const w of visual.works) {
+      strings.push(w.title, w.bar, w.evals, w.lane ?? "", w.vol, w.seat);
+      if (w.cfg) {
+        strings.push(...w.cfg.p, ...w.cfg.s, ...w.cfg.m, ...w.cfg.c, ...w.cfg.g);
+        strings.push(...w.cfg.k, ...w.cfg.u, w.cfg.o, w.cfg.why);
+      }
+    }
+    const blob = strings.join(" | ");
+
+    // The confidentiality envelope, applied to the map's own copy. Each of
+    // these is an editorial rule that only a machine can hold: a person
+    // reviewing 27 records will not catch the one vendor name.
+    for (const [label, re] of [
+      ["money", /[€$£¥]|\b(USD|EUR|GBP)\b|\b\d{1,3}(,\d{3})+\b/],
+      ["a source URL", /\b(monday|notion|github|figma)\.com\b/i],
+      ["a model family", MODEL_FAMILIES],
+      ["a vendor or private system", /\b(openai|anthropic|supabase|slack|aether|salesforce)\b/i],
+      [
+        "a personal name",
+        /\b(Vince|Astrid|Nathan|Koen|Olga|Helen|Damien|Robert|Toby|Maud)\b/,
+      ],
+    ] as const) {
+      expect(re.test(blob), `the map's copy names ${label}`).toBe(false);
+    }
+
+    // Roles, not people. The set is open — v13 introduced thirteen more than
+    // ADR-061's eight — so this checks the SHAPE of a role rather than
+    // pinning a list that a content edit would have to come here to change.
+    for (const w of visual.works) {
+      if (!w.cfg) continue;
+      for (const role of [w.cfg.p[0], w.cfg.o]) {
+        expect(role.length, `role "${role}" on ${w.id}`).toBeLessThanOrEqual(28);
         expect(
-          knownSkills.has(skillId),
-          `${configuration.id} links unknown Skill "${skillId}"`
+          /^[A-Z][A-Za-z+ /-]*$/.test(role),
+          `role "${role}" on ${w.id} does not read as a role title`
         ).toBe(true);
       }
-      expect(Object.keys(configuration.facets).sort()).toEqual([
-        "context",
-        "eval",
-        "execution",
-        "human",
-        "model",
-        "skill",
-      ]);
-      for (const facet of Object.values(configuration.facets)) {
-        expect(facet.state.length, `${configuration.id} facet state`).toBeGreaterThan(0);
-        expect(facet.detail.length, `${configuration.id} facet detail`).toBeGreaterThan(0);
-      }
-    }
-
-    const firmware = visual.configurations.find(
-      (configuration) => configuration.id === "audit-firmware-release"
-    );
-    expect(firmware?.linkedSkillIds).toEqual([]);
-    for (const configuration of visual.configurations) {
-      if (configuration.id === "audit-firmware-release") continue;
+      // The lane is generic capability language, never a product.
       expect(
-        configuration.linkedSkillIds.length,
-        `${configuration.id} should expose its inherited Skill substrate`
-      ).toBeGreaterThan(0);
-    }
-
-    expect(
-      visual.intelligence.tiers.map(({ name, reach, draw }) => ({ name, reach, draw }))
-    ).toEqual([
-      { name: "Fast", reach: 90, draw: 1 },
-      { name: "Everyday", reach: 90, draw: 19 },
-      { name: "Deep", reach: 60, draw: 59 },
-      { name: "Frontier", reach: 25, draw: 21 },
-    ]);
-    expect("trend" in visual.intelligence).toBe(false);
-  });
-
-  it("keeps allocation evidence explicit and the public configuration data anonymous", () => {
-    const loop = getCase("loop-earplugs");
-    const visual = loop?.casefile.tracks.find((t) => t.visual.kind === "intelligence-map")?.visual;
-    if (!visual || visual.kind !== "intelligence-map") {
-      throw new Error("Loop's work configurations are missing");
-    }
-
-    const ALLOCATION_TIERS = new Set(["Fast", "Everyday", "Deep", "Frontier"]);
-    const OWNER_ROLES = new Set([
-      "Legal reviewer",
-      "Engineering reviewer",
-      "Product lead",
-      "Design reviewer",
-      "Brand lead",
-      "Operations reviewer",
-      "Finance reviewer",
-      "Program lead",
-    ]);
-
-    for (const configuration of visual.configurations) {
-      expect(
-        Object.hasOwn(configuration, "allocationTier"),
-        `${configuration.id} must declare its tier; renderers may not infer one`
+        ["Fast", "Everyday", "Deep", "Frontier"].includes(w.lane ?? ""),
+        `${w.id} runs on non-generic lane "${w.lane}"`
       ).toBe(true);
-      expect(ALLOCATION_TIERS.has(configuration.allocationTier)).toBe(true);
-      expect(OWNER_ROLES.has(configuration.ownerRole), `${configuration.id} owner role`).toBe(true);
     }
-
-    expect(
-      visual.configurations.map(({ id, allocationBasis }) => ({ id, allocationBasis }))
-    ).toEqual([
-      { id: "review-nda", allocationBasis: "work-evidenced" },
-      { id: "audit-firmware-release", allocationBasis: "work-evaluated" },
-      { id: "pressure-test-product-idea", allocationBasis: "function-signal" },
-      { id: "prepare-supplier-packaging", allocationBasis: "function-signal" },
-      { id: "produce-paid-social-copy", allocationBasis: "function-signal" },
-      { id: "review-supplier-invoices", allocationBasis: "function-signal" },
-      { id: "reconcile-general-ledger", allocationBasis: "function-signal" },
-      { id: "prepare-cross-team-status", allocationBasis: "function-signal" },
-    ]);
-
-    const banned: readonly [RegExp, string][] = [
-      [/[€$£]|\b(?:USD|EUR)\b/i, "money"],
-      [/https?:\/\/|monday\.com|notion\.com|github\.com/i, "source URL"],
-      [
-        /\b(?:claude|opus|sonnet|haiku|fable|gpt|gemini|llama|mistral|openai|anthropic)\b/i,
-        "vendor or model family",
-      ],
-      [/\b(?:aether|supabase|figma|slack)\b/i, "private system or vendor"],
-      [/\b(?:Vince|Astrid|Nathan|Koen|Olga|Helen|Damien|Robert|Toby|Maud)\b/, "personal name"],
-    ];
-    const offenders: string[] = [];
-    scanStrings(visual.configurations, "configurations", (value, path) => {
-      for (const [pattern, label] of banned) {
-        if (pattern.test(value)) offenders.push(`${path}: ${label}`);
-      }
-    });
-    expect(offenders).toEqual([]);
   });
-
   it("every Skill's lattice symbol is unique within its plate (ADR-056 U15)", () => {
     // The lattice reads as a periodic table, and its tiles carry a SYMBOL
     // rather than a name. Two Skills under one mark is not a cosmetic clash:

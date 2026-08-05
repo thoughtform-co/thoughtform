@@ -3354,1984 +3354,651 @@
   }
 }
 
-/* == Intelligence Map: work-configuration field (ADR-061) ==============
-   Eight work configurations are the only moving atoms. The 47 Skill marks
-   below them are a fixed evidence reservoir. This distinction is structural,
-   not decorative: changing projection never moves or remounts a Skill. */
-.fl-intel-map-shell {
-  height: 100%;
-  min-height: 0;
-  pointer-events: auto;
-}
+/* == The work-to-intelligence map: a city in three sheets (ADR-062) ======
+   Sheet 01 is the board, sheet 02 one unit's cutaway, sheet 03 the mains
+   under the street — ONE isometric across all three, which is what makes
+   the set read as one hand.
 
-.fl-intel-map {
-  --fl-map-line: rgba(var(--dawn-rgb), 0.13);
-  --fl-map-gold-line: rgba(var(--gold-rgb), 0.32);
-  position: relative;
-  height: 100%;
-  min-height: 0;
+   THE DRAWING CARRIES PROVENANCE, so there is no legend and none may be
+   added: hatched green is Loop's own, an open cream outline is rented,
+   blue-grey dashed is the adjacent domain we query but do not own, and
+   gold is wayfinding. If a mark needs a key, the mark is wrong.
+
+   Every colour below routes through a token or a local var declared on
+   `.fl-imap`, because the flip swaps `--dawn-rgb` and `--void-rgb`
+   wholesale — a raw hex here is a decision to own the light variant by
+   hand, and the light rows live in `components/landing/v7/theme.css`. */
+.fl-plate--imap {
+  /* The map owns its own edges: the tab rail is flush to the viz box, the
+     way the directory rows are flush to theirs. */
   padding: 0;
-  gap: 0;
-  background: rgba(var(--void-deep-rgb), 0.18);
-  font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
 }
 
-.fl-intel-map button {
-  border-radius: 0;
-  font-family: inherit;
-}
+.fl-imap {
+  /* ⚠ THE FIFTH POINTER OPT-IN on the casefile host (rules/proof.md).
+     Safe only because the host is `visibility: hidden` until
+     `data-proof-live`; scoped to the map and NEVER lifted to the host,
+     which sits at z 6 over `.svc-ring-hits__hit` at z 4. */
+  pointer-events: auto;
 
-.fl-intel-map__head {
-  flex: none;
-  min-height: 30px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(8px, 1.1vw, 16px);
-  padding: 4px clamp(9px, 1.2vw, 16px);
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.18);
-}
-
-.fl-intel-map__tabs {
   display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.fl-intel-map__tab,
-.fl-intel-map__expand {
-  appearance: none;
-  min-height: 24px;
-  margin: 0;
-  padding: 4px 7px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  background: transparent;
-  color: rgba(var(--dawn-rgb), 0.42);
-  font-size: 10px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  transition:
-    color 120ms ease,
-    border-color 120ms ease,
-    background 120ms ease;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__tab {
-  padding-inline: 5px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__expand {
-  padding-inline: 6px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-}
-
-.fl-intel-map__tab:hover,
-.fl-intel-map__tab:focus-visible,
-.fl-intel-map__tab[data-on] {
-  color: var(--gold);
-  border-color: rgba(var(--gold-rgb), 0.3);
-  background: rgba(var(--gold-rgb), 0.065);
-}
-
-.fl-intel-map__tab:focus-visible,
-.fl-intel-map__expand:focus-visible,
-.fl-intel-map__node:focus-visible,
-.fl-intel-map__anchor--tier:focus-visible,
-.fl-intel-map__mobile-group button:focus-visible,
-.fl-intel-map__mobile-reservoir summary:focus-visible,
-.fl-intel-map__inspector button:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 2px;
-}
-
-.fl-intel-map__register {
-  min-width: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 8px;
-  color: rgba(var(--dawn-rgb), 0.68);
-  font-size: 8.5px;
-  line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.fl-intel-map__register b {
-  color: var(--gold);
-  font-weight: 400;
-}
-
-.fl-intel-map__register span,
-.fl-intel-map__register i {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__register {
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 5px;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__register i {
-  display: none;
-}
-
-.fl-intel-map__register i {
-  color: rgba(var(--dawn-rgb), 0.3);
-  font-size: 7.5px;
-  font-style: normal;
-  letter-spacing: 0.14em;
-}
-
-.fl-intel-map__expand {
-  color: var(--gold);
-  border-color: rgba(var(--gold-rgb), 0.38);
-  white-space: nowrap;
-}
-
-.fl-intel-map__expand:hover,
-.fl-intel-map__expand:focus-visible {
-  border-color: var(--gold);
-  background: rgba(var(--gold-rgb), 0.13);
-}
-
-.fl-intel-map__decoder {
-  flex: none;
-  min-height: 25px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  padding: 4px clamp(9px, 1.2vw, 16px);
-  border-bottom: 1px solid rgba(var(--dawn-rgb), 0.07);
-}
-
-.fl-intel-map__facet-key {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.fl-intel-map__facet-key i {
-  color: rgba(var(--gold-rgb), 0.68);
-  font-size: 8.5px;
-  font-style: normal;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.fl-intel-map__facet-key i + i::before {
-  content: "/";
-  margin-right: 6px;
-  color: rgba(var(--dawn-rgb), 0.16);
-}
-
-.fl-intel-map__decoder p {
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  color: rgba(var(--dawn-rgb), 0.42);
-  font-size: 8.5px;
-  line-height: 1.25;
-  letter-spacing: 0.04em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fl-intel-map__stage {
-  position: relative;
-  flex: 1 1 auto;
+  flex-direction: column;
+  height: 100%;
   min-height: 0;
-  overflow: hidden;
-  isolation: isolate;
+
+  --imap-line: rgba(var(--gold-rgb), 0.16);
+  --imap-line-2: rgba(var(--gold-rgb), 0.34);
+  --imap-ink: rgba(var(--dawn-rgb), 0.86);
+  --imap-txt: rgba(var(--dawn-rgb), 0.7);
+  --imap-mute: rgba(var(--dawn-rgb), 0.36);
+  --imap-faint: rgba(var(--dawn-rgb), 0.25);
+  --imap-face: rgba(var(--void-deep-rgb), 0.62);
+  --imap-plate: rgba(var(--void-deep-rgb), 0.9);
+  --imap-slab: rgba(var(--void-deep-rgb), 0.94);
+  /* The knowledge graph's hand. No token exists for it because nothing
+     else on the site draws an adjacent domain; the light pair is in
+     theme.css. */
+  --imap-graph: #93a3cc;
+  --imap-graph-fill: rgba(111, 127, 168, 0.16);
+  --imap-graph-line: rgba(147, 163, 204, 0.44);
+  --imap-green-hot: #86ab6d;
 }
 
-.fl-intel-map__canvas {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.fl-intel-map__field {
-  position: absolute;
-  inset: 0 0 30px;
-  z-index: 2;
-}
-
-.fl-intel-map__anchor,
-.fl-intel-map__node {
-  position: absolute;
-  box-sizing: border-box;
-}
-
-.fl-intel-map__anchor {
+/* ── The sheet tabs ──────────────────────────────────────────────────
+   Top-left of the canvas, never a right-hand rail: a right rail collides
+   with the drawing on every one of the three sheets. */
+.fl-imap__tabs {
   display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow: hidden;
-  color: rgba(var(--dawn-rgb), 0.34);
-  font-size: 8.5px;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  pointer-events: none;
-  animation: flMapChromeIn 120ms ease-out both;
+  flex: none;
+  align-items: stretch;
+  border-bottom: 1px solid var(--imap-line);
 }
 
-.fl-intel-map__anchor::after {
+.fl-imap__tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--imap-line);
+  padding: 9px 16px 8px;
+  text-align: left;
+  color: var(--imap-mute);
+  font: 400 9.5px/1.5 var(--font-mono, monospace);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  transition:
+    color 0.22s ease,
+    background 0.22s ease;
+}
+
+.fl-imap__tab u,
+.fl-imap__tab s {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.fl-imap__tab s {
+  color: var(--imap-faint);
+  margin-top: 4px;
+  font-size: 8.5px;
+}
+
+.fl-imap__tab:hover {
+  color: var(--imap-ink);
+}
+
+.fl-imap__tab[data-on] {
+  color: var(--gold);
+  background: rgba(var(--gold-rgb), 0.07);
+}
+
+.fl-imap__tab[data-on]::before {
   content: "";
-  flex: 1;
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.2);
-}
-
-.fl-intel-map__anchor-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fl-intel-map__anchor-count {
-  order: 3;
-  color: rgba(var(--gold-rgb), 0.65);
-}
-
-.fl-intel-map__anchor--tier {
-  appearance: none;
-  margin: 0;
-  padding: 3px 5px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  align-content: center;
-  gap: 2px 5px;
-  cursor: pointer;
-  pointer-events: auto;
-  border: 1px solid rgba(var(--gold-rgb), 0.2);
-  background: rgba(var(--void-deep-rgb), 0.5);
-  font-size: 8.5px;
-  line-height: 1;
-  text-align: left;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    color 120ms ease;
-}
-
-.fl-intel-map__anchor--tier::after {
-  content: none;
-}
-
-.fl-intel-map__anchor--tier:hover,
-.fl-intel-map__anchor--tier:focus-visible,
-.fl-intel-map__anchor--tier[data-focused] {
-  border-color: rgba(var(--gold-rgb), 0.68);
-  background: rgba(var(--gold-rgb), 0.09);
-  color: var(--gold);
-}
-
-.fl-intel-map__anchor--tier[data-empty] {
-  border-style: dashed;
-  opacity: 0.62;
-}
-
-.fl-intel-map__anchor-note {
-  min-width: 0;
-  overflow: hidden;
-  color: rgba(var(--dawn-rgb), 0.3);
-  font-size: 8.5px;
-  font-style: normal;
-  letter-spacing: 0.05em;
-  text-overflow: ellipsis;
-  text-transform: none;
-  white-space: nowrap;
-}
-
-.fl-intel-map__meters {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  width: 68px;
-  display: grid;
-  gap: 2px;
-}
-
-.fl-intel-map__meters i {
-  min-width: 0;
-  height: 9px;
-  display: grid;
-  grid-template-columns: 7px minmax(0, 1fr) 26px;
-  align-items: center;
-  gap: 2px;
-  color: rgba(var(--dawn-rgb), 0.38);
-  font-size: 8.5px;
-  font-style: normal;
-  line-height: 1;
-}
-
-.fl-intel-map__meters em,
-.fl-intel-map__meters strong {
-  font: inherit;
-  font-style: normal;
-  font-weight: 400;
-}
-
-.fl-intel-map__meters i > span {
-  position: relative;
-  display: block;
+  position: absolute;
+  inset: 0 0 auto;
   height: 2px;
-  overflow: hidden;
-  border: 1px solid rgba(var(--gold-rgb), 0.24);
-}
-
-.fl-intel-map__meters i > span b {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--fl-map-meter, 0%);
-  background: rgba(var(--gold-rgb), 0.78);
-}
-
-.fl-intel-map__meters i[data-kind="draw"] > span b {
   background: var(--gold);
 }
 
-.fl-intel-map__node {
-  appearance: none;
-  margin: 0;
-  padding: 2px 3px 2px 15px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: minmax(0, 1fr);
-  align-items: center;
-  gap: 2px;
-  cursor: pointer;
-  transform-origin: left top;
-  overflow: hidden;
-  border: 1px solid rgba(var(--gold-rgb), 0.24);
-  background: rgba(var(--void-deep-rgb), 0.76);
-  color: rgba(var(--dawn-rgb), 0.7);
-  text-align: left;
-  box-shadow: inset 2px 0 0 rgba(var(--gold-rgb), 0.1);
-  transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    box-shadow 120ms ease,
-    color 120ms ease;
-}
-
-.fl-intel-map__field[data-morph] .fl-intel-map__node {
-  z-index: 4;
-  will-change: transform;
-  transition:
-    transform 450ms cubic-bezier(0.22, 0.61, 0.36, 1) var(--fl-map-delay, 0ms),
-    border-color 120ms ease,
-    background 120ms ease,
-    box-shadow 120ms ease,
-    color 120ms ease;
-}
-
-.fl-intel-map__node:hover,
-.fl-intel-map__node:focus-visible,
-.fl-intel-map__node[data-active] {
-  z-index: 5;
-  border-color: rgba(var(--gold-rgb), 0.7);
-  background: rgba(var(--gold-rgb), 0.11);
-  color: var(--dawn);
-  box-shadow:
-    inset 2px 0 0 var(--gold),
-    0 8px 24px rgba(0, 0, 0, 0.4);
-}
-
-.fl-intel-map__node[data-selected] {
-  z-index: 6;
-  border-color: var(--gold);
-  background: rgba(var(--gold-rgb), 0.18);
-}
-
-.fl-intel-map__node[data-fill="use"] {
-  background: rgba(var(--gold-rgb), 0.1);
-  box-shadow: inset 3px 0 0 rgba(var(--gold-rgb), 0.66);
-}
-
-.fl-intel-map__node[data-fill="evaluated"] {
-  border-color: rgba(var(--gold-rgb), 0.48);
-  background: rgba(var(--dawn-rgb), 0.045);
-  box-shadow: inset 3px 0 0 var(--gold);
-}
-
-.fl-intel-map__node[data-fill="build"] {
-  border-style: dashed;
-  background: rgba(var(--void-deep-rgb), 0.72);
-}
-
-.fl-intel-map__node[data-condensed] {
-  padding-left: 14px;
-  opacity: 0.58;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__node,
-.fl-intel-map[data-mode="preview"] .fl-intel-map__node[data-condensed] {
-  padding-block: 0;
-  padding-left: 4px;
-}
-
-.fl-intel-map[data-mode="preview"][data-proj="allocation"] .fl-intel-map__node-work {
-  line-height: 1;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__node-ord,
-.fl-intel-map[data-mode="preview"][data-proj="allocation"] .fl-intel-map__anchor-note {
-  display: none;
-}
-
-.fl-intel-map__node-ord {
-  position: absolute;
-  left: 3px;
-  top: 50%;
+.fl-imap__tab[data-on] s {
   color: rgba(var(--gold-rgb), 0.62);
-  font-size: 6px;
-  font-weight: 400;
-  line-height: 1;
-  transform: translateY(-50%);
 }
 
-.fl-intel-map__node-work {
-  min-width: 0;
-  overflow: hidden;
-  font-size: 10.5px;
-  line-height: 1.1;
-  letter-spacing: 0.015em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.fl-imap__tab:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -3px;
 }
 
-.fl-intel-map__signature {
-  display: grid;
-  grid-template-columns: repeat(6, 3px);
-  gap: 1px;
-  align-items: center;
-}
-
-.fl-intel-map__signature i {
-  display: block;
-  width: 3px;
-  height: 3px;
-  border: 1px solid rgba(var(--gold-rgb), 0.42);
-  background: transparent;
-}
-
-.fl-intel-map__signature i[data-facet="human"] {
-  transform: rotate(45deg) scale(0.78);
-}
-
-.fl-intel-map__signature i[data-facet="model"] {
-  border-color: rgba(var(--dawn-rgb), 0.5);
-}
-
-.fl-intel-map__signature i[data-facet="skill"] {
-  background: rgba(var(--gold-rgb), 0.62);
-}
-
-.fl-intel-map__signature i[data-state="No linked Skill"] {
-  border-style: dashed;
-  background: transparent;
-  opacity: 0.5;
-}
-
-.fl-intel-map__signature i[data-facet="context"] {
-  border-top-color: transparent;
-}
-
-.fl-intel-map__signature i[data-facet="execution"] {
-  background: rgba(var(--dawn-rgb), 0.28);
-}
-
-.fl-intel-map__signature i[data-facet="eval"] {
-  border-color: var(--gold);
-  box-shadow: inset 0 0 0 1px rgba(var(--void-rgb), 0.65);
-}
-
-.fl-intel-map__reservoir {
-  position: absolute;
-  z-index: 3;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  min-height: 28px;
-  padding: 4px clamp(8px, 1vw, 14px);
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-  align-items: center;
-  border-top: 1px dotted rgba(var(--gold-rgb), 0.22);
-  background: rgba(var(--void-deep-rgb), 0.78);
-}
-
-.fl-intel-map__skill-group {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 4px;
-  color: rgba(var(--dawn-rgb), 0.28);
-  font-size: 8.5px;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.fl-intel-map__skill-group b {
-  min-width: 0;
-  overflow: hidden;
-  font-weight: 400;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fl-intel-map__skill-group em {
-  color: rgba(var(--gold-rgb), 0.58);
-  font-style: normal;
-}
-
-.fl-intel-map__pips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-}
-
-.fl-intel-map__pips i {
-  display: block;
-  width: 4px;
-  height: 4px;
-  border: 1px solid rgba(var(--dawn-rgb), 0.2);
-  transform: rotate(45deg) scale(0.72);
-  transition:
-    background 120ms ease,
-    border-color 120ms ease,
-    box-shadow 120ms ease;
-}
-
-.fl-intel-map__pips i[data-linked] {
-  border-color: var(--gold);
-  background: var(--gold);
-  box-shadow: 0 0 6px rgba(var(--gold-rgb), 0.55);
-}
-
-.fl-intel-map__mobile-list {
-  display: none;
-}
-
-.fl-intel-map__readout {
-  flex: none;
-  min-height: 20px;
-  margin: 0;
-  padding: 4px clamp(9px, 1.2vw, 16px);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-top: 1px dotted rgba(var(--gold-rgb), 0.16);
-  color: rgba(var(--dawn-rgb), 0.34);
-  font-size: 7px;
-  line-height: 1;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.fl-intel-map__readout i {
+.fl-imap__tabs-note {
   flex: 1;
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.17);
-}
-
-.fl-intel-map__readout b {
-  color: rgba(var(--gold-rgb), 0.78);
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-@keyframes flMapChromeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Compact detail uses the existing inward rail principle. It is deliberately
-   scrollable at the smallest desktop reference: nothing is removed merely to
-   make the plate look calm. The expanded instrument gives the same anatomy
-   enough room to read without scrolling. */
-.fl-intel-map__inspector {
-  position: absolute;
-  z-index: 12;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(53%, 370px);
-  padding: 9px 11px 12px;
-  overflow: auto;
-  scrollbar-width: thin;
-  border-left: 1px solid rgba(var(--gold-rgb), 0.48);
-  background: rgba(var(--void-deep-rgb), 0.94);
-  box-shadow: -18px 0 40px rgba(0, 0, 0, 0.38);
-  color: var(--dawn);
-  animation: flMapInspectorIn 180ms ease-out both;
-}
-
-.fl-intel-map__inspector-top {
-  margin: 0 0 6px;
-  display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  color: rgba(var(--gold-rgb), 0.7);
-  font-size: 6.8px;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.fl-intel-map__inspector-top i {
-  color: rgba(var(--dawn-rgb), 0.45);
-  font-style: normal;
-}
-
-.fl-intel-map__inspector-top b {
-  justify-self: end;
-  color: rgba(var(--dawn-rgb), 0.28);
-  font-weight: 400;
-}
-
-.fl-intel-map__inspector-top button {
-  appearance: none;
-  width: 22px;
-  height: 22px;
-  margin: 0;
-  padding: 0;
-  cursor: pointer;
-  border: 1px solid rgba(var(--gold-rgb), 0.25);
-  background: transparent;
-  color: var(--gold);
-  font-size: 15px;
-  line-height: 1;
-}
-
-.fl-intel-map__inspector h4 {
-  margin: 0;
-  color: var(--dawn);
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(14px, 1.1vw, 18px);
-  font-weight: 400;
-  line-height: 1.05;
-}
-
-.fl-intel-map__inspector-function,
-.fl-intel-map__inspector-summary {
-  margin: 4px 0 0;
-}
-
-.fl-intel-map__inspector-function {
-  color: var(--gold);
-  font-size: 7px;
-  line-height: 1.2;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.fl-intel-map__inspector-summary {
-  color: rgba(var(--dawn-rgb), 0.6);
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 9px;
-  line-height: 1.35;
-}
-
-.fl-intel-map__anatomy {
-  margin: 9px 0 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px dotted rgba(var(--gold-rgb), 0.18);
-  border-left: 1px dotted rgba(var(--gold-rgb), 0.12);
-}
-
-.fl-intel-map__anatomy div {
-  min-width: 0;
-  padding: 6px;
-  border-right: 1px dotted rgba(var(--gold-rgb), 0.12);
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.12);
-}
-
-.fl-intel-map__anatomy dt {
-  color: rgba(var(--gold-rgb), 0.62);
-  font-size: 6.5px;
+  justify-content: flex-end;
+  padding: 0 15px;
+  color: var(--imap-faint);
+  font: 8.5px/1 var(--font-mono, monospace);
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-.fl-intel-map__anatomy dd {
-  min-width: 0;
-  margin: 3px 0 0;
-  display: grid;
-  gap: 2px;
+/* ── The canvas ──────────────────────────────────────────────────────── */
+.fl-imap__canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.fl-intel-map__anatomy dd b,
-.fl-intel-map__anatomy dd span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.fl-intel-map__anatomy dd b {
-  color: rgba(var(--dawn-rgb), 0.78);
-  font-size: 7.5px;
-  font-weight: 400;
-  line-height: 1.2;
-}
-
-.fl-intel-map__anatomy dd span {
-  color: rgba(var(--dawn-rgb), 0.42);
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 8px;
-  line-height: 1.25;
-}
-
-.fl-intel-map__inspector-foot {
-  margin-top: 8px;
-  display: grid;
-  gap: 5px;
-}
-
-.fl-intel-map__inspector-foot p {
-  margin: 0;
-  display: grid;
-  grid-template-columns: 10ch minmax(0, 1fr);
-  gap: 8px;
-  align-items: baseline;
-  color: rgba(var(--dawn-rgb), 0.4);
-  font-size: 6.8px;
-  line-height: 1.25;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.fl-intel-map__inspector-foot b {
-  color: rgba(var(--dawn-rgb), 0.7);
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  text-transform: none;
-}
-
-.fl-intel-map__loading {
+.fl-imap__svg {
   position: absolute;
   inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  background: rgba(var(--void-deep-rgb), 0.82);
-  color: var(--gold);
-  font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
-  font-size: 9px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  width: 100%;
+  height: 100%;
 }
 
-@keyframes flMapInspectorIn {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* The expanded field is the same DOM instrument at a larger layout mode.
-   Labels gain room; identities, projection, selection and tier focus remain. */
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__head {
-  min-height: 42px;
-  padding: 7px clamp(14px, 1.8vw, 26px);
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__tab,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__expand {
-  min-height: 32px;
-  padding-inline: 10px;
-  font-size: 9px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__register {
-  font-size: 10px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__decoder {
-  min-height: 38px;
-  padding: 6px clamp(14px, 1.8vw, 26px);
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__facet-key i,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__decoder p {
-  font-size: 9px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__field {
-  bottom: 54px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__node {
-  padding: 8px 9px 8px 29px;
-  gap: 10px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__node-ord {
-  left: 9px;
-  font-size: 8px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__node-work {
-  font-size: clamp(10.5px, 0.8vw, 12px);
-  line-height: 1.2;
-  white-space: normal;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__signature {
-  grid-template-columns: repeat(6, 6px);
-  gap: 3px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__signature i {
-  width: 6px;
-  height: 6px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anchor {
-  font-size: 8.5px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anchor--tier {
-  padding: 6px 8px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anchor-note {
-  font-size: 7.5px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__meters {
-  width: 82px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__reservoir {
-  min-height: 52px;
-  padding: 8px clamp(14px, 1.8vw, 26px);
-  gap: 18px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__skill-group {
-  gap: 7px;
-  font-size: 8px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__pips {
-  gap: 4px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__pips i {
-  width: 6px;
-  height: 6px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__readout {
-  min-height: 30px;
-  padding: 7px clamp(14px, 1.8vw, 26px);
-  font-size: 8.5px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector {
-  top: 18px;
-  right: 18px;
-  bottom: 18px;
-  width: min(35%, 430px);
-  padding: clamp(14px, 1.4vw, 22px);
-  border: 1px dashed rgba(var(--dawn-rgb), 0.28);
-  box-shadow:
-    0 0 0 1px rgba(var(--dawn-rgb), 0.05),
-    0 0 60px rgba(var(--gold-rgb), 0.1),
-    0 30px 80px rgba(0, 0, 0, 0.6);
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-top,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-function,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dt,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-foot p {
-  font-size: 8px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector h4 {
-  font-size: clamp(23px, 2vw, 34px);
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-summary {
-  font-size: clamp(12px, 0.9vw, 14px);
-  line-height: 1.5;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd b {
-  font-size: 9px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd span {
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-/* U18 harmonisation: one full-height instrument, one taxonomy and one
-   reserved detail console. These late declarations intentionally replace the
-   former stage-overlay inspector without changing the stable field or FLIP
-   geometry. */
-.fl-intel-map {
-  --fl-map-detail-h: clamp(196px, 29svh, 224px);
-  background: rgba(var(--void-deep-rgb), 0.28);
-}
-
-/* The configuration field is an instrument of lines, fills and marks. Keep
-   image layers out of every descendant and pseudo-element so a theme or a
-   future generic button treatment cannot quietly reintroduce gradients. */
-.fl-intel-map,
-.fl-intel-map::before,
-.fl-intel-map::after,
-.fl-intel-map *,
-.fl-intel-map *::before,
-.fl-intel-map *::after {
-  background-image: none;
-}
-
-.fl-intel-map button {
-  font-family: var(--font-pt-mono);
-}
-
-.fl-intel-map__head {
-  min-height: 36px;
-  padding: 4px clamp(10px, 1.2vw, 16px);
-}
-
-.fl-intel-map__tab,
-.fl-intel-map__expand,
-.fl-intel-map[data-mode="preview"] .fl-intel-map__tab,
-.fl-intel-map[data-mode="preview"] .fl-intel-map__expand {
-  min-height: 28px;
-  padding: 5px 7px;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-}
-
-.fl-intel-map__register,
-.fl-intel-map[data-mode="preview"] .fl-intel-map__register {
-  gap: 6px;
-  font-size: 10px;
-  line-height: 1.15;
-}
-
-.fl-intel-map__register i {
-  font-size: 9px;
-  letter-spacing: 0.1em;
-}
-
-.fl-intel-map__decoder {
-  min-height: 36px;
-  gap: 10px;
-  padding: 5px clamp(10px, 1.2vw, 16px);
-}
-
-.fl-intel-map__facet-key {
-  gap: 5px;
-}
-
-.fl-intel-map__facet-key i {
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-}
-
-.fl-intel-map__facet-key i + i::before {
-  margin-right: 5px;
-}
-
-.fl-intel-map__decoder p {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 10.5px;
-  line-height: 1.3;
-  letter-spacing: 0.015em;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-.fl-intel-map__stage {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) var(--fl-map-detail-h);
-  min-height: 0;
-  overflow: hidden;
-}
-
-.fl-intel-map__canvas {
-  position: relative;
-  inset: auto;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.fl-intel-map__field,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__field {
-  inset: 0 0 34px;
-}
-
-.fl-intel-map__anchor {
-  font-size: 10px;
-  letter-spacing: 0.09em;
-}
-
-.fl-intel-map__anchor--tier {
-  padding: 4px 6px;
-  font-size: 10px;
-}
-
-.fl-intel-map__anchor-note {
-  font-size: 9.5px;
-  letter-spacing: 0.025em;
-}
-
-.fl-intel-map__meters {
-  width: 72px;
-}
-
-.fl-intel-map__meters i {
-  grid-template-columns: 8px minmax(0, 1fr) 27px;
-  font-size: 9px;
-}
-
-.fl-intel-map__node {
-  padding: 2px 5px 2px 16px;
-  background-image: none;
-  box-shadow: inset 2px 0 0 rgba(var(--gold-rgb), 0.14);
-}
-
-.fl-intel-map__node:hover,
-.fl-intel-map__node:focus-visible,
-.fl-intel-map__node[data-active] {
-  background-image: none;
-  box-shadow: inset 3px 0 0 var(--gold);
-}
-
-.fl-intel-map__node[data-selected] {
-  background-image: none;
-  box-shadow: inset 3px 0 0 var(--gold);
-}
-
-.fl-intel-map__node-ord {
-  left: 4px;
-  font-size: 9px;
-}
-
-.fl-intel-map__node-work {
-  font-size: 11.5px;
-  line-height: 1.1;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__node {
-  padding-left: 5px;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__signature {
-  grid-template-columns: repeat(6, 2px);
-  gap: 1px;
-}
-
-.fl-intel-map[data-mode="preview"] .fl-intel-map__signature i {
-  width: 2px;
-  height: 3px;
-}
-
-.fl-intel-map__reservoir {
-  min-height: 34px;
-  padding: 5px clamp(10px, 1.2vw, 16px);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: clamp(12px, 1.5vw, 20px);
-  background: rgba(var(--void-deep-rgb), 0.72);
-}
-
-.fl-intel-map__reservoir-label {
-  min-width: 0;
+.fl-imap__stamp {
+  position: absolute;
+  right: 12px;
+  bottom: 9px;
   margin: 0;
+  z-index: 2;
+  color: rgba(160, 90, 60, 0.72);
+  font: 8.5px/1 var(--font-mono, monospace);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.fl-imap__foot {
+  flex: none;
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-family: var(--font-pt-mono);
-  font-size: 9.5px;
-  line-height: 1;
-  letter-spacing: 0.08em;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 7px 15px;
+  border-top: 1px solid var(--imap-line);
+  color: var(--imap-faint);
+  font: 8.5px/1 var(--font-mono, monospace);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-.fl-intel-map__reservoir-label b {
-  color: rgba(var(--gold-rgb), 0.78);
-  font-weight: 400;
-}
-
-.fl-intel-map__reservoir-label span {
-  color: rgba(var(--dawn-rgb), 0.42);
-}
-
-.fl-intel-map__skill-runs {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: center;
-  gap: 8px;
-}
-
-.fl-intel-map__skill-group {
-  min-width: 0;
-  display: block;
-  color: inherit;
-  font-size: inherit;
-}
-
-.fl-intel-map__pips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 3px;
-}
-
-.fl-intel-map__pips i {
-  width: 4px;
-  height: 4px;
-}
-
-.fl-intel-map__detail-slot {
-  position: relative;
-  min-height: 0;
   overflow: hidden;
-  border-top: 1px solid rgba(var(--gold-rgb), 0.32);
-  background: rgba(var(--void-deep-rgb), 0.74);
 }
 
-.fl-intel-map__detail-slot[data-empty] {
-  display: grid;
-  place-items: center start;
-}
-
-.fl-intel-map__detail-prompt {
-  margin: 0;
-  padding: 12px clamp(10px, 1.2vw, 16px);
-  display: grid;
-  gap: 5px;
-  font-family: var(--font-pt-mono);
-  text-transform: uppercase;
-}
-
-.fl-intel-map__detail-prompt span {
+.fl-imap__foot b {
   color: var(--gold);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-}
-
-.fl-intel-map__detail-prompt b {
-  color: rgba(var(--dawn-rgb), 0.48);
-  font-size: 10.5px;
   font-weight: 400;
-  line-height: 1.35;
-  letter-spacing: 0.04em;
 }
 
-.fl-intel-map__inspector.fl-intel-map__detail {
-  position: relative;
-  inset: auto;
-  width: auto;
-  height: 100%;
-  padding: 8px clamp(10px, 1.2vw, 16px);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
-  gap: clamp(10px, 1.2vw, 16px);
-  overflow: hidden;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  animation: flMapChromeIn 120ms var(--ease-out, ease-out) both;
+/* ── Shared drawing hands ────────────────────────────────────────────
+   `--imap-type` is in USER UNITS and is set PER SHEET by the component
+   (see SHEET_VIEWBOX), because the three crops are different sizes and the
+   same unit value renders at a different pixel size on each. The fallback
+   here only matters if the inline style is missing. */
+.fl-imap__svg {
+  --imap-type: 15;
 }
 
-.fl-intel-map__detail-identity,
-.fl-intel-map__detail-facets,
-.fl-intel-map__detail-evidence {
-  min-width: 0;
-  min-height: 0;
-}
-
-.fl-intel-map__detail-index,
-.fl-intel-map__inspector-top {
-  margin: 0 0 5px;
-  font-size: 9px;
+.fl-imap__t {
+  font-family: var(--font-mono, monospace);
+  font-size: calc(var(--imap-type) * 1px);
+  fill: var(--imap-mute);
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+  user-select: none;
 }
 
-.fl-intel-map__inspector-top button {
-  width: 26px;
-  height: 26px;
-  font-family: var(--font-pt-mono);
-  font-size: 15px;
+.fl-imap__t--gold {
+  fill: var(--gold);
+}
+.fl-imap__t--ink {
+  fill: var(--imap-ink);
+}
+.fl-imap__t--faint {
+  fill: var(--imap-faint);
+}
+.fl-imap__t--grn {
+  fill: var(--imap-green-hot);
+}
+.fl-imap__t--gr {
+  fill: var(--imap-graph);
 }
 
-.fl-intel-map__inspector h4 {
-  margin: 0;
-  overflow: visible;
-  color: var(--dawn);
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 17px;
-  font-weight: 500;
-  line-height: 1.08;
-  display: block;
-  overflow-wrap: anywhere;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
+.fl-imap__hair {
+  stroke: var(--imap-line);
+  stroke-width: 1;
+  fill: none;
+}
+.fl-imap__hair2 {
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+  fill: none;
+}
+.fl-imap__dash {
+  stroke-dasharray: 2 4;
 }
 
-.fl-intel-map__inspector-function {
-  margin-top: 4px;
-  font-family: var(--font-pt-mono);
-  font-size: 9.5px;
-  line-height: 1.2;
+/* Loop's own. */
+.fl-imap__own {
+  fill: var(--atreides-light);
+}
+.fl-imap__own--hot {
+  fill: var(--imap-green-hot);
+}
+/* Rented or external — an open outline, never a fill. */
+.fl-imap__rent {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.8);
+  stroke-width: 1;
+}
+.fl-imap__rent-core {
+  fill: rgba(var(--dawn-rgb), 0.8);
 }
 
-.fl-intel-map__inspector-summary {
-  margin-top: 5px;
-  overflow: visible;
-  color: rgba(var(--dawn-rgb), 0.62);
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 12px;
-  line-height: 1.35;
-  display: block;
-  overflow-wrap: anywhere;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
+.fl-imap__junction {
+  fill: var(--gold);
+  opacity: 0.75;
 }
 
-.fl-intel-map__anatomy.fl-intel-map__detail-facets {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(min-content, 1fr));
-  border-top: 1px solid rgba(var(--gold-rgb), 0.18);
-  border-left: 1px solid rgba(var(--gold-rgb), 0.12);
+/* ── Sheet 01, the board ─────────────────────────────────────────────── */
+.fl-imap__board-face {
+  fill: var(--imap-face);
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+}
+.fl-imap__board-grid {
+  stroke: rgba(var(--gold-rgb), 0.1);
+  stroke-width: 1;
+  fill: none;
+}
+.fl-imap__bus {
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+  fill: none;
+}
+.fl-imap__bus--shadow {
+  opacity: 0.45;
+}
+.fl-imap__trace {
+  stroke: rgba(var(--gold-rgb), 0.3);
+  stroke-width: 1;
+  fill: none;
+}
+.fl-imap__dist-top {
+  fill: var(--imap-slab);
+  stroke: rgba(var(--gold-rgb), 0.4);
+  stroke-width: 1;
+}
+.fl-imap__dist-side {
+  fill: var(--imap-plate);
+  stroke: var(--imap-line);
+  stroke-width: 1;
 }
 
-.fl-intel-map__anatomy.fl-intel-map__detail-facets div {
-  padding: 4px;
-  overflow: visible;
+.fl-imap__chip {
+  cursor: pointer;
+}
+.fl-imap__chip-top {
+  fill: rgba(var(--atreides-mid-rgb), 0.62);
+  stroke: rgba(134, 171, 109, 0.62);
+  stroke-width: 1;
+}
+.fl-imap__chip[data-person] .fl-imap__chip-top {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.62);
+}
+.fl-imap__chip-side {
+  fill: var(--imap-slab);
+  stroke: rgba(134, 171, 109, 0.3);
+  stroke-width: 1;
+}
+.fl-imap__chip-hit {
+  fill: transparent;
+}
+.fl-imap__chip:hover .fl-imap__chip-top,
+.fl-imap__chip[data-lit] .fl-imap__chip-top {
+  fill: var(--gold);
+  stroke: var(--gold-hot, var(--gold));
+}
+.fl-imap__chip[data-on] .fl-imap__chip-top {
+  fill: var(--gold-hot, var(--gold));
+  stroke: var(--gold-hot, var(--gold));
 }
 
-.fl-intel-map__anatomy dt {
-  font-size: 10px;
-  line-height: 1;
-  letter-spacing: 0.09em;
+/* Plaques ride in their own layer above every plate — see the component. */
+.fl-imap__plaque rect {
+  fill: rgba(var(--void-deep-rgb), 0.9);
 }
 
-.fl-intel-map__anatomy dd {
-  margin-top: 3px;
+.fl-imap__ix {
+  cursor: pointer;
 }
-
-.fl-intel-map__anatomy dd b {
-  overflow: visible;
-  color: rgba(var(--dawn-rgb), 0.8);
-  font-family: var(--font-pt-mono);
-  font-size: 12px;
-  line-height: 1.25;
-  text-overflow: clip;
-  white-space: normal;
-  overflow-wrap: anywhere;
+.fl-imap__ix-hit {
+  fill: transparent;
 }
-
-.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(min-content, 1fr));
-  gap: 0 10px;
-  border-top: 1px solid rgba(var(--gold-rgb), 0.18);
+.fl-imap__ix:hover .fl-imap__ix-hit,
+.fl-imap__ix[data-lit] .fl-imap__ix-hit {
+  fill: rgba(var(--gold-rgb), 0.1);
 }
-
-.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p:nth-child(1),
-.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p:nth-child(4) {
-  grid-column: span 2;
+.fl-imap__ix[data-on] .fl-imap__ix-hit {
+  fill: rgba(var(--gold-rgb), 0.16);
 }
-
-.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p {
-  min-width: 0;
-  margin: 0;
-  padding: 4px 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 3px;
-  align-items: start;
-  overflow: visible;
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.12);
-  font-size: 10px;
-  line-height: 1.2;
-  letter-spacing: 0.06em;
-}
-
-.fl-intel-map__inspector-foot.fl-intel-map__detail-evidence b {
-  overflow: visible;
-  color: rgba(var(--dawn-rgb), 0.76);
-  font-family: var(--font-pt-mono);
-  font-size: 12px;
-  line-height: 1.25;
-  display: block;
-  overflow-wrap: anywhere;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-}
-
-.fl-intel-map__readout,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__readout {
-  min-height: 24px;
-  padding: 5px clamp(10px, 1.2vw, 16px);
-  font-size: 9.5px;
-}
-
-.fl-intel-map[data-mode="expanded"] {
-  --fl-map-detail-h: clamp(240px, 32svh, 320px);
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__head {
-  min-height: 44px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__tab,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__expand,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__register,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__facet-key i,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__decoder p {
-  font-size: 10.5px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__field {
-  bottom: 40px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__reservoir {
-  min-height: 40px;
-  padding: 7px clamp(14px, 1.8vw, 26px);
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__reservoir-label {
-  font-size: 10px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__skill-group {
-  font-size: inherit;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector.fl-intel-map__detail {
-  position: relative;
-  inset: auto;
-  width: auto;
-  height: 100%;
-  padding: 16px clamp(18px, 2vw, 28px);
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: clamp(18px, 2vw, 30px);
-  border: 0;
-  box-shadow: none;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector h4 {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(24px, 2vw, 32px);
-  line-height: 1.08;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-summary {
-  font-size: 14px;
-  line-height: 1.45;
-  -webkit-line-clamp: 5;
-  line-clamp: 5;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dt,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-foot p,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-function,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-top {
-  font-size: 10px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd b,
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-foot b {
-  font-size: 12px;
-}
-
-.fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd span {
-  margin-top: 3px;
-  color: rgba(var(--dawn-rgb), 0.5);
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 14px;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-}
-
-/* Body portal. The variables are redeclared because this element is outside
-   `.fl-case`, and therefore outside the casefile token scope. */
-.fl-map-overlay {
-  --fl-mono: var(--font-pt-mono, ui-monospace, monospace);
-  --fl-copy: 14px;
-  --fl-ink-dim: rgba(var(--dawn-rgb), 0.4);
-  position: fixed;
-  inset: 0;
-  z-index: 220;
-  padding: clamp(18px, 3vw, 52px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  background: rgba(var(--void-rgb), 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  animation: flLightboxIn 0.22s ease-out;
-}
-
-.fl-map-overlay__frame {
-  width: min(1440px, 100%);
-  height: min(860px, calc(100dvh - clamp(36px, 6vw, 104px)));
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px dashed rgba(var(--dawn-rgb), 0.3);
-  background: rgba(var(--void-deep-rgb), 0.93);
-  box-shadow:
-    0 0 0 1px rgba(var(--dawn-rgb), 0.05),
-    0 0 60px rgba(var(--gold-rgb), 0.1),
-    0 30px 80px rgba(0, 0, 0, 0.6);
-  animation: modalFocusIn 0.3s ease-out;
-}
-
-.fl-map-overlay__frame:focus {
+.fl-imap__ix:focus-visible {
   outline: none;
 }
-
-.fl-map-overlay__head {
-  flex: none;
-  min-height: 54px;
-  padding: 8px clamp(14px, 1.8vw, 26px);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 18px;
-  border-bottom: 1px solid rgba(var(--gold-rgb), 0.18);
-  font-family: var(--fl-mono);
-  text-transform: uppercase;
+.fl-imap__ix:focus-visible .fl-imap__ix-hit {
+  fill: rgba(var(--gold-rgb), 0.16);
+  stroke: var(--gold);
+  stroke-width: 1;
 }
 
-.fl-map-overlay__head p {
-  min-width: 0;
-  margin: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
+/* ── Sheet 02, the unit ──────────────────────────────────────────────── */
+.fl-imap__plate-top {
+  fill: rgba(var(--void-deep-rgb), 0.8);
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+}
+.fl-imap__plate-top[data-owned] {
+  fill: rgba(var(--atreides-mid-rgb), 0.26);
+  stroke: rgba(134, 171, 109, 0.46);
+}
+.fl-imap__plate-side {
+  fill: var(--imap-plate);
+  stroke: var(--imap-line);
+  stroke-width: 1;
+}
+.fl-imap__axis {
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+.fl-imap__half--own {
+  fill: rgba(var(--atreides-mid-rgb), 0.32);
+  stroke: rgba(134, 171, 109, 0.38);
+}
+.fl-imap__half--graph {
+  fill: var(--imap-graph-fill);
+  stroke: var(--imap-graph-line);
+  stroke-dasharray: 3 3;
+}
+.fl-imap__hatch {
+  stroke: rgba(134, 171, 109, 0.22);
+  stroke-width: 1;
+}
+.fl-imap__dot {
+  fill: rgba(var(--dawn-rgb), 0.3);
+}
+.fl-imap__dot--graph {
+  fill: var(--imap-graph-line);
+}
+.fl-imap__leader {
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+  fill: none;
+}
+.fl-imap__brk {
+  stroke: var(--gold);
+  stroke-width: 1;
+  fill: none;
+}
+.fl-imap__gate {
+  stroke: var(--gold);
+  stroke-width: 1.2;
+}
+.fl-imap__dim {
+  stroke: var(--gold);
+  stroke-width: 1;
+  fill: none;
+  opacity: 0.8;
+}
+.fl-imap__dm {
+  fill: none;
+  stroke: var(--imap-line-2);
+}
+.fl-imap__dm[data-on] {
+  fill: var(--gold);
+  opacity: 0.68;
+  stroke: none;
 }
 
-.fl-map-overlay__head p span,
-.fl-map-overlay__provenance {
-  color: rgba(var(--dawn-rgb), 0.4);
-  font-size: 9.5px;
-  letter-spacing: 0.15em;
+/* ── Sheet 03, below grade ───────────────────────────────────────────── */
+.fl-imap__ghost {
+  fill: rgba(var(--void-deep-rgb), 0.42);
+  stroke: var(--imap-line);
+  stroke-width: 1;
+  opacity: 0.5;
 }
-
-.fl-map-overlay__head p b {
-  color: var(--dawn);
-  font-family: var(--font-pt-mono);
-  font-size: clamp(18px, 1.6vw, 27px);
-  font-weight: 400;
-  letter-spacing: 0.015em;
-  text-transform: none;
+.fl-imap__footprint {
+  fill: rgba(var(--gold-rgb), 0.06);
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
 }
-
-.fl-map-overlay__provenance {
-  white-space: nowrap;
-}
-
-.fl-map-overlay__close {
-  appearance: none;
-  min-height: 34px;
-  margin: 0;
-  padding: 6px 12px;
-  cursor: pointer;
-  border: 1px solid rgba(var(--gold-rgb), 0.38);
-  background: transparent;
-  color: var(--gold);
-  font-family: var(--fl-mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.fl-imap__riser {
+  stroke: rgba(var(--gold-rgb), 0.24);
+  stroke-width: 1;
+  fill: none;
   transition:
-    background 120ms ease,
-    border-color 120ms ease;
+    stroke 0.18s ease,
+    opacity 0.18s ease;
+}
+.fl-imap__riser[data-lit] {
+  stroke: var(--gold-hot, var(--gold));
+  opacity: 1;
+}
+.fl-imap__main {
+  stroke: var(--gold);
+  fill: none;
+  opacity: 0.55;
+  transition:
+    opacity 0.18s ease,
+    stroke 0.18s ease;
+}
+.fl-imap__main--shadow {
+  stroke-width: 1;
+  opacity: 0.22;
+}
+.fl-imap__main[data-lit] {
+  opacity: 1;
+  stroke: var(--gold-hot, var(--gold));
+}
+.fl-imap__main[data-dim] {
+  opacity: 0.18;
+}
+.fl-imap__main-g {
+  cursor: pointer;
+}
+.fl-imap__main-hit,
+.fl-imap__riser-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.fl-imap__tap {
+  fill: var(--gold);
+  opacity: 0.8;
+}
+.fl-imap__tap--first {
+  fill: none;
+  stroke: var(--imap-green-hot);
+  stroke-width: 1.4;
+}
+.fl-imap__riser-g {
+  transition: opacity 0.18s ease;
+}
+.fl-imap__riser-g[data-dim] {
+  opacity: 0.26;
 }
 
-.fl-map-overlay__close:hover,
-.fl-map-overlay__close:focus-visible {
-  border-color: var(--gold);
-  background: rgba(var(--gold-rgb), 0.14);
+/* ── The hover card ──────────────────────────────────────────────────
+   Per-stream detail lives here rather than on the drawing; it is what
+   lets the board stay a board at 27 modules. `pointer-events: none` is
+   load-bearing — it follows the cursor and must never intercept the
+   hover that spawned it. */
+.fl-imap__card {
+  position: absolute;
+  z-index: 20;
+  width: 254px;
+  padding: 10px 11px 9px;
+  border: 1px solid var(--gold);
+  background: rgba(var(--void-deep-rgb), 0.97);
+  font: 8.5px/1.5 var(--font-mono, monospace);
+  letter-spacing: 0.06em;
+  color: var(--imap-mute);
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.16s ease;
 }
 
-.fl-map-overlay__close:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 2px;
+.fl-imap__card[data-on] {
+  opacity: 1;
 }
 
-.fl-map-overlay__frame > .fl-intel-map {
-  flex: 1 1 auto;
-  min-height: 0;
+.fl-imap__card h6 {
+  margin: 0 0 2px;
+  font: 400 11.5px/1.15 var(--font-mono, monospace);
+  color: var(--imap-ink);
+  letter-spacing: 0.03em;
 }
 
-/* Mobile is an authored list projection, never a scaled-down graph. */
-@media (max-width: 960px) {
-  .fl-panel__viz[data-kind="intelligence-map"] {
-    aspect-ratio: auto;
-    overflow: visible;
-  }
-
-  .fl-intel-map-shell,
-  .fl-intel-map {
-    height: auto;
-    min-height: 0;
-  }
-
-  .fl-intel-map__head {
-    grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 0;
-    padding: 10px 12px;
-  }
-
-  .fl-intel-map__tabs {
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .fl-intel-map__tab,
-  .fl-intel-map__expand,
-  .fl-intel-map[data-mode="preview"] .fl-intel-map__tab,
-  .fl-intel-map[data-mode="preview"] .fl-intel-map__expand {
-    min-height: 44px;
-    padding: 8px 10px;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-  }
-
-  .fl-intel-map__register {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    padding-top: 8px;
-    border-top: 1px dotted rgba(var(--gold-rgb), 0.14);
-    font-size: 10px;
-  }
-
-  .fl-intel-map[data-mode="preview"] .fl-intel-map__register {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 8px;
-  }
-
-  .fl-intel-map[data-mode="preview"] .fl-intel-map__register i {
-    display: block;
-  }
-
-  .fl-intel-map__decoder {
-    padding: 9px 12px;
-    grid-template-columns: 1fr;
-    gap: 7px;
-  }
-
-  .fl-intel-map__decoder p {
-    overflow: visible;
-    font-size: 10px;
-    line-height: 1.4;
-    text-overflow: clip;
-    white-space: normal;
-  }
-
-  .fl-intel-map__facet-key {
-    gap: 4px;
-    overflow-x: auto;
-  }
-
-  .fl-intel-map__facet-key i {
-    font-size: 9.5px;
-  }
-
-  .fl-intel-map__stage {
-    display: block;
-    overflow: visible;
-  }
-
-  .fl-intel-map__canvas {
-    display: none;
-  }
-
-  .fl-intel-map__mobile-list {
-    display: grid;
-    gap: 0;
-  }
-
-  .fl-intel-map__mobile-group {
-    border-bottom: 1px dotted rgba(var(--gold-rgb), 0.16);
-  }
-
-  .fl-intel-map__mobile-group h4 {
-    min-height: 38px;
-    margin: 0;
-    padding: 9px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    color: rgba(var(--gold-rgb), 0.74);
-    font-size: 10.5px;
-    font-weight: 400;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  .fl-intel-map__mobile-group h4 i {
-    color: rgba(var(--dawn-rgb), 0.3);
-    font-style: normal;
-  }
-
-  .fl-intel-map__mobile-group h4 em {
-    margin-left: auto;
-    color: rgba(var(--dawn-rgb), 0.46);
-    font-size: 9px;
-    font-style: normal;
-    letter-spacing: 0.06em;
-  }
-
-  .fl-intel-map__mobile-group > div {
-    display: grid;
-  }
-
-  .fl-intel-map__mobile-group button {
-    appearance: none;
-    position: relative;
-    min-height: 52px;
-    margin: 0;
-    padding: 8px 12px 8px 22px;
-    display: grid;
-    align-content: center;
-    gap: 4px;
-    cursor: pointer;
-    border: 0;
-    border-top: 1px solid rgba(var(--dawn-rgb), 0.06);
-    background: transparent;
-    color: rgba(var(--dawn-rgb), 0.76);
-    text-align: left;
-  }
-
-  .fl-intel-map__mobile-group button::before {
-    content: "";
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    margin-left: -14px;
-    border: 1px solid rgba(var(--gold-rgb), 0.5);
-    transform: rotate(45deg);
-  }
-
-  .fl-intel-map__mobile-group button:hover,
-  .fl-intel-map__mobile-group button[data-selected] {
-    background: rgba(var(--gold-rgb), 0.09);
-    color: var(--dawn);
-  }
-
-  .fl-intel-map__mobile-group button span {
-    font-size: 12px;
-    line-height: 1.25;
-  }
-
-  .fl-intel-map__mobile-group button i {
-    color: rgba(var(--dawn-rgb), 0.38);
-    font-size: 10px;
-    font-style: normal;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .fl-intel-map__mobile-group > p {
-    margin: 0;
-    padding: 0 12px 14px;
-    color: rgba(var(--dawn-rgb), 0.42);
-    font-family: var(--font-pp-neue-montreal);
-    font-size: 12px;
-    line-height: 1.4;
-  }
-
-  .fl-intel-map__mobile-reservoir {
-    border-bottom: 1px solid rgba(var(--gold-rgb), 0.18);
-  }
-
-  .fl-intel-map__mobile-reservoir summary {
-    min-height: 48px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    color: var(--gold);
-    font-size: 10.5px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .fl-intel-map__mobile-reservoir p {
-    margin: 0;
-    padding: 10px 12px;
-    display: grid;
-    grid-template-columns: 12ch minmax(0, 1fr);
-    gap: 12px;
-    border-top: 1px dotted rgba(var(--gold-rgb), 0.12);
-  }
-
-  .fl-intel-map__mobile-reservoir p b {
-    color: rgba(var(--gold-rgb), 0.65);
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .fl-intel-map__mobile-reservoir p span {
-    color: rgba(var(--dawn-rgb), 0.58);
-    font-family: var(--font-pp-neue-montreal);
-    font-size: 12.5px;
-    line-height: 1.45;
-  }
-
-  .fl-intel-map__inspector,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector {
-    position: relative;
-    inset: auto;
-    width: auto;
-    max-height: none;
-    margin: 0;
-    padding: 16px 12px 20px;
-    overflow: visible;
-    border: 0;
-    border-top: 1px solid rgba(var(--gold-rgb), 0.45);
-    background: rgba(var(--gold-rgb), 0.055);
-    box-shadow: none;
-  }
-
-  .fl-intel-map__detail-slot {
-    position: relative;
-    overflow: visible;
-  }
-
-  .fl-intel-map__detail-slot[data-empty] {
-    display: none;
-  }
-
-  .fl-intel-map__inspector.fl-intel-map__detail,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector.fl-intel-map__detail {
-    display: block;
-    width: auto;
-    height: auto;
-    max-height: none;
-    overflow: visible;
-  }
-
-  .fl-intel-map__inspector-top {
-    font-size: 9.5px;
-  }
-
-  .fl-intel-map__inspector-top button {
-    width: 44px;
-    height: 44px;
-  }
-
-  .fl-intel-map__inspector h4,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector h4 {
-    overflow: visible;
-    font-size: clamp(24px, 7vw, 34px);
-    display: block;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-  }
-
-  .fl-intel-map__inspector-summary,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-summary {
-    overflow: visible;
-    font-size: 14px;
-    display: block;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-  }
-
-  .fl-intel-map__anatomy,
-  .fl-intel-map__anatomy.fl-intel-map__detail-facets,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy.fl-intel-map__detail-facets {
-    height: auto;
-    overflow: visible;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-    grid-auto-rows: auto;
-  }
-
-  .fl-intel-map__anatomy.fl-intel-map__detail-facets > div,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy.fl-intel-map__detail-facets > div {
-    min-height: 0;
-    padding: 10px 0;
-    overflow: visible;
-  }
-
-  .fl-intel-map__anatomy dd b,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd b {
-    overflow: visible;
-    font-size: 12px;
-    white-space: normal;
-    text-overflow: clip;
-  }
-
-  .fl-intel-map__anatomy dd span,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__anatomy dd span {
-    overflow: visible;
-    font-size: 14px;
-    display: block;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-  }
-
-  .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence,
-  .fl-intel-map[data-mode="expanded"] .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence {
-    height: auto;
-    overflow: visible;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-    grid-auto-rows: auto;
-  }
-
-  .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence p,
-  .fl-intel-map[data-mode="expanded"]
-    .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence
-    p {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    grid-column: auto;
-    font-size: 10px;
-    overflow: visible;
-  }
-
-  .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence b,
-  .fl-intel-map[data-mode="expanded"]
-    .fl-intel-map__inspector-foot.fl-intel-map__detail-evidence
-    b {
-    overflow: visible;
-    font-size: 12px;
-    display: block;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-  }
-
-  .fl-intel-map__readout {
-    min-height: 38px;
-    padding: 9px 12px;
-    font-size: 9.5px;
-  }
-
-  .fl-map-overlay {
-    padding: 0;
-    align-items: stretch;
-  }
-
-  .fl-map-overlay__frame {
-    width: 100%;
-    height: 100dvh;
-    max-height: none;
-    overflow-y: auto;
-    border: 0;
-  }
-
-  .fl-map-overlay__head {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    min-height: 62px;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px;
-    background: rgba(var(--void-deep-rgb), 0.97);
-  }
-
-  .fl-map-overlay__provenance {
-    display: none;
-  }
-
-  .fl-map-overlay__close {
-    min-height: 44px;
-  }
-
-  .fl-map-overlay__frame > .fl-intel-map {
-    flex: none;
-    height: auto;
-  }
+.fl-imap__card-sub {
+  color: var(--gold);
+  margin-bottom: 7px;
 }
 
-@media (max-width: 520px) {
-  .fl-intel-map__head {
-    grid-template-columns: 1fr;
-  }
+.fl-imap__card-row {
+  display: grid;
+  grid-template-columns: 66px 1fr;
+  gap: 7px;
+  padding: 2.5px 0;
+  border-top: 1px dotted var(--imap-line);
+}
 
-  .fl-intel-map__expand {
-    grid-row: 2;
-    width: 100%;
-  }
+.fl-imap__card-row span {
+  color: var(--imap-faint);
+}
 
-  .fl-intel-map__register {
-    grid-row: 3;
-  }
+.fl-imap__card-row b {
+  color: var(--imap-ink);
+  font-weight: 400;
+}
 
-  .fl-intel-map__facet-key {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    justify-content: start;
-    row-gap: 5px;
-  }
+/* ── Arrival ─────────────────────────────────────────────────────────
+   Gated on `data-proof-settled`, NOT `data-proof-live`: `live` turns on
+   while the casefile ladder is still travelling, and a drawing that
+   stages itself during the arrival reads as a demo rather than a record.
+   `settled` fires ~80px into the dwell, once the stage is parked. */
+.fl-imap__svg {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
 
-  .fl-intel-map__facet-key i + i::before {
-    content: none;
-  }
-
-  .fl-map-overlay__head p span {
-    display: none;
-  }
+[data-proof-settled] .fl-imap__svg {
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fl-intel-map__field[data-morph] .fl-intel-map__node,
-  .fl-intel-map__node,
-  .fl-intel-map__anchor,
-  .fl-intel-map__pips i,
-  .fl-intel-map__inspector,
-  .fl-map-overlay,
-  .fl-map-overlay__frame {
-    animation: none;
+  .fl-imap__svg,
+  .fl-imap__card,
+  .fl-imap__riser,
+  .fl-imap__main,
+  .fl-imap__riser-g,
+  .fl-imap__tab {
     transition: none;
+  }
+  .fl-imap__svg {
+    opacity: 1;
+  }
+}
+
+/* ── Below the desktop gate ──────────────────────────────────────────
+   The isometric is too dense under ~980px, so the drawing is dropped for
+   a DELIBERATE FALLBACK — not a squeezed graph. The parts index is the
+   part that survives, as in-flow DOM rows, because it is the reading
+   that never needed the projection: districts group their work streams,
+   each row still names its lane and whether it is person-led.
+
+   ⚠ The index inside the SVG cannot serve this — hiding the canvas hides
+   it too. That is why `.fl-imap__list` is a separate DOM tree rather
+   than a restyle of the drawing. */
+.fl-imap__list {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .fl-imap__canvas,
+  .fl-imap__tabs {
+    display: none;
+  }
+
+  .fl-imap__list {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px 14px 14px;
+  }
+
+  .fl-imap__list-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--gold);
+    font: 9px/1 var(--font-mono, monospace);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--imap-line);
+  }
+
+  .fl-imap__list-group {
+    margin-top: 14px;
+  }
+
+  .fl-imap__list-group > h4 {
+    margin: 0 0 6px;
+    color: var(--gold);
+    font: 400 10px/1.3 var(--font-mono, monospace);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .fl-imap__list-row {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 0;
+    border-top: 1px dotted var(--imap-line);
+    /* 10.5px is the directory reading size and this is content, not
+       chrome — the row NAMES the work (rules/proof.md type law). */
+    font: 10.5px/1.35 var(--font-mono, monospace);
+    color: var(--imap-ink);
+  }
+
+  .fl-imap__list-row > i {
+    font-style: normal;
+    color: var(--imap-green-hot);
+  }
+
+  .fl-imap__list-row[data-person] > i {
+    color: var(--imap-mute);
+  }
+
+  .fl-imap__list-row > em {
+    font-style: normal;
+    color: var(--imap-faint);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .fl-imap__list-foot {
+    margin: 16px 0 0;
+    color: var(--imap-faint);
+    font: 9px/1.5 var(--font-mono, monospace);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 }

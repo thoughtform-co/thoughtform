@@ -366,125 +366,78 @@ html[data-theme="light"] .fl-skills__readout-status {
   color: var(--gold);
 }
 
-/* ADR-061 work-configuration field. The dark recipe relies on luminous
-   cream/gold marks over near-black; those same low alphas nearly disappear
-   as ink on parchment. Lift only the information-bearing map chrome here;
-   the surrounding casefile remains unframed. */
-html[data-theme="light"] .fl-intel-map {
-  --fl-map-line: rgba(var(--dawn-rgb), 0.16);
-  --fl-map-gold-line: rgba(var(--gold-rgb), 0.54);
-  background: rgba(var(--void-deep-rgb), 0.24);
+/* ── The work-to-intelligence map (ADR-062) ───────────────────────────────
+   Most of the drawing flips for free: it paints in `--dawn-rgb` and
+   `--void-deep-rgb`, which swap wholesale. Three things do not, and they
+   are the three that carry MEANING rather than surface.
+
+   1. THE PROVENANCE HANDS ARE LITERAL HEXES, because they are hues rather
+      than ramp positions — green is Loop's own, blue-grey is the adjacent
+      domain we query. Both were picked to glow on near-black and both give
+      most of their contrast away as ink on parchment, so each gets a
+      darker step here. The MEANING must survive the flip even though the
+      value cannot.
+   2. THE READ-ME ALPHAS. `--imap-mute` (0.36) and `--imap-faint` (0.25)
+      are comfortable as cream on near-black and thin as ink on parchment
+      (theme.css's opening note measured 0.28 at 1.86:1). Lifted here, and
+      lifted UNEQUALLY so the drawing keeps its hierarchy — flattening
+      both to ink would lose the difference between a label and its note.
+   3. THE STAMP. `rgba(160, 90, 60, …)` is a rust that reads as a rubber
+      stamp on near-black; on parchment it needs to go darker, not lighter,
+      or it reads as a highlight rather than an overprint. */
+html[data-theme="light"] .fl-imap {
+  --imap-mute: rgba(var(--dawn-rgb), 0.62);
+  --imap-faint: rgba(var(--dawn-rgb), 0.46);
+  --imap-ink: rgba(var(--dawn-rgb), 0.92);
+  --imap-txt: rgba(var(--dawn-rgb), 0.78);
+  /* The board and its slabs are ground, not ink: on parchment they read as
+     a lighter tint of the page rather than a darker plate. */
+  --imap-face: rgba(var(--void-deep-rgb), 0.5);
+  --imap-plate: rgba(var(--void-deep-rgb), 0.72);
+  --imap-slab: rgba(var(--void-deep-rgb), 0.82);
+  --imap-graph: #4a5a80;
+  --imap-graph-fill: rgba(74, 90, 128, 0.14);
+  --imap-graph-line: rgba(74, 90, 128, 0.5);
+  --imap-green-hot: #4a6238;
+  /* Gold hairlines carry the drawing's structure and gold tops out ~3.2:1
+     on parchment, so the rules go UP here rather than down. */
+  --imap-line: rgba(var(--gold-rgb), 0.3);
+  --imap-line-2: rgba(var(--gold-rgb), 0.52);
 }
 
-html[data-theme="light"] .fl-intel-map__tab,
-html[data-theme="light"] .fl-intel-map__register i,
-html[data-theme="light"] .fl-intel-map__decoder p,
-html[data-theme="light"] .fl-intel-map__anchor-note,
-html[data-theme="light"] .fl-intel-map__readout {
-  color: rgba(var(--dawn-rgb), 0.62);
+html[data-theme="light"] .fl-imap__stamp {
+  color: rgba(122, 62, 38, 0.78);
 }
 
-html[data-theme="light"] .fl-intel-map__register,
-html[data-theme="light"] .fl-intel-map__node,
-html[data-theme="light"] .fl-intel-map__skill-group {
-  color: rgba(var(--dawn-rgb), 0.78);
+/* The two owned fills are hatch over parchment, so they need more alpha to
+   register at all — a 0.26 green wash simply disappears as ink. */
+html[data-theme="light"] .fl-imap__chip-top {
+  fill: rgba(var(--atreides-rgb), 0.42);
+  stroke: rgba(74, 98, 56, 0.7);
+}
+html[data-theme="light"] .fl-imap__chip-side {
+  fill: rgba(var(--void-deep-rgb), 0.86);
+  stroke: rgba(74, 98, 56, 0.34);
+}
+html[data-theme="light"] .fl-imap__plate-top[data-owned] {
+  fill: rgba(var(--atreides-rgb), 0.2);
+  stroke: rgba(74, 98, 56, 0.52);
+}
+html[data-theme="light"] .fl-imap__half--own {
+  fill: rgba(var(--atreides-rgb), 0.24);
+  stroke: rgba(74, 98, 56, 0.46);
+}
+html[data-theme="light"] .fl-imap__hatch {
+  stroke: rgba(74, 98, 56, 0.3);
+}
+html[data-theme="light"] .fl-imap__dot {
+  fill: rgba(var(--dawn-rgb), 0.42);
 }
 
-html[data-theme="light"] .fl-intel-map__facet-key i,
-html[data-theme="light"] .fl-intel-map__anchor,
-html[data-theme="light"] .fl-intel-map__node-ord,
-html[data-theme="light"] .fl-intel-map__skill-group em {
-  color: rgba(var(--dawn-rgb), 0.68);
-}
-
-html[data-theme="light"] .fl-intel-map__anchor::after,
-html[data-theme="light"] .fl-intel-map__reservoir {
-  border-color: rgba(var(--gold-rgb), 0.52);
-}
-
-html[data-theme="light"] .fl-intel-map__node,
-html[data-theme="light"] .fl-intel-map__anchor--tier {
-  border-color: rgba(var(--dawn-rgb), 0.3);
-  background: rgba(var(--void-deep-rgb), 0.62);
-}
-
-html[data-theme="light"] .fl-intel-map__node {
-  box-shadow: inset 2px 0 0 rgba(var(--gold-rgb), 0.68);
-}
-
-html[data-theme="light"] .fl-intel-map__node[data-fill="use"],
-html[data-theme="light"] .fl-intel-map__node[data-fill="evaluated"] {
-  background: rgba(var(--gold-rgb), 0.14);
-  box-shadow: inset 3px 0 0 rgba(var(--gold-rgb), 0.82);
-}
-
-html[data-theme="light"] .fl-intel-map__node:hover,
-html[data-theme="light"] .fl-intel-map__node:focus-visible,
-html[data-theme="light"] .fl-intel-map__node[data-active],
-html[data-theme="light"] .fl-intel-map__node[data-selected] {
-  color: var(--dawn);
-  border-color: rgba(var(--gold-rgb), 0.92);
-  background: rgba(var(--gold-rgb), 0.24);
-}
-
-html[data-theme="light"] .fl-intel-map__signature i,
-html[data-theme="light"] .fl-intel-map__pips i {
-  border-color: rgba(var(--dawn-rgb), 0.46);
-}
-
-html[data-theme="light"] .fl-intel-map__signature i[data-facet="skill"] {
-  border-color: var(--gold);
-  background: var(--gold);
-}
-
-html[data-theme="light"] .fl-intel-map__signature i[data-facet="execution"] {
-  background: rgba(var(--dawn-rgb), 0.56);
-}
-
-html[data-theme="light"] .fl-intel-map__reservoir {
-  background: rgba(var(--void-deep-rgb), 0.72);
-}
-
-html[data-theme="light"] .fl-intel-map__detail-slot {
-  background: rgba(var(--void-deep-rgb), 0.72);
-}
-
-html[data-theme="light"] .fl-intel-map__reservoir-label span,
-html[data-theme="light"] .fl-intel-map__detail-prompt b {
-  color: rgba(var(--dawn-rgb), 0.64);
-}
-
-html[data-theme="light"] .fl-intel-map__meters i,
-html[data-theme="light"] .fl-intel-map__mobile-group h4 em {
-  color: rgba(var(--dawn-rgb), 0.66);
-}
-
-html[data-theme="light"] .fl-intel-map__tab[data-on],
-html[data-theme="light"] .fl-intel-map__expand,
-html[data-theme="light"] .fl-intel-map__mobile-group h4,
-html[data-theme="light"] .fl-intel-map__anchor-count {
-  color: rgba(var(--dawn-rgb), 0.78);
-}
-
-html[data-theme="light"] .fl-intel-map__tab[data-on] {
-  background: rgba(var(--gold-rgb), 0.24);
-}
-
-html[data-theme="light"] .fl-intel-map__mobile-group h4 i {
-  color: rgba(var(--dawn-rgb), 0.58);
-}
-
-html[data-theme="light"] .fl-intel-map__meters i > span {
-  border-color: rgba(var(--dawn-rgb), 0.32);
-}
-
-html[data-theme="light"] .fl-map-overlay__frame {
-  border-color: rgba(var(--dawn-rgb), 0.38);
-  background: rgba(var(--void-deep-rgb), 0.96);
-  box-shadow:
-    0 0 0 1px rgba(var(--dawn-rgb), 0.08),
-    0 0 60px rgba(var(--gold-rgb), 0.12),
-    0 30px 80px rgba(17, 15, 9, 0.24);
+/* The hover card is a plate over the drawing: on parchment it has to be
+   the PAGE colour, not a tint of it, or the drawing shows through. */
+html[data-theme="light"] .fl-imap__card {
+  background: rgba(var(--void-rgb), 0.98);
 }
 
 /* ── PHOTOGRAPHY reads as PRINT on parchment (owner, 2026-08-02) ──────────
