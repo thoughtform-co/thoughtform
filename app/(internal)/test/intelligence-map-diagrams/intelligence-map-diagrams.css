@@ -1,0 +1,447 @@
+/**
+ * Lab layer for /test/intelligence-map-diagrams. Loads AFTER the production
+ * sheets. Three carries are mandatory or the page breaks (proven in the
+ * intelligence-map-lab): --hero-lift on the bed (rails clip away without a
+ * scroll writer), the stage offset by --hud-content-inset (the pinned stage
+ * reproduced as offsets, not padding), and the two .fl-case un-hides (the
+ * casefile ships visibility:hidden until the corridor publishes
+ * data-proof-live, which never happens here).
+ *
+ * Type floors (casefile law): 9px decorative metadata · 10px chrome/labels ·
+ * 11px identities · flat instrument grammar — no gradients, no italics.
+ */
+
+.imd-lab {
+  --hero-lift: 1;
+  position: relative;
+  min-height: 100svh;
+  background: var(--void, #0a0908);
+  overflow: hidden;
+}
+
+.imd-lab__stage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--hud-content-inset, 0px);
+  right: var(--hud-content-inset, 0px);
+  z-index: 20;
+}
+
+.imd-lab .fl-case {
+  visibility: visible;
+}
+.imd-lab .fl-case .fl-panel {
+  pointer-events: auto;
+}
+
+/* Dev strip — lab chrome, not part of the instrument. */
+.imd-lab__strip {
+  position: fixed;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 12px;
+  border: 1px solid rgba(var(--gold-rgb), 0.28);
+  background: rgba(var(--void-rgb), 0.85);
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--dawn-rgb), 0.55);
+  text-transform: uppercase;
+}
+.imd-lab__strip-name {
+  color: rgba(var(--gold-rgb), 0.9);
+}
+.imd-lab__strip-spacer {
+  width: 10px;
+}
+.imd-lab__strip button {
+  border: 1px solid rgba(var(--dawn-rgb), 0.25);
+  background: transparent;
+  color: rgba(var(--dawn-rgb), 0.7);
+  font: inherit;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.imd-lab__strip button:hover {
+  border-color: rgba(var(--gold-rgb), 0.7);
+  color: var(--dawn, #ebe3d6);
+}
+
+/* ------------------------------------------------------------------ */
+/* The instrument fills the real .fl-panel__viz box.                   */
+/* ------------------------------------------------------------------ */
+
+.imd {
+  --imd-hair: rgba(var(--dawn-rgb), 0.12);
+  --imd-hair-gold: rgba(var(--gold-rgb), 0.3);
+  --imd-dim: rgba(var(--dawn-rgb), 0.48);
+  --imd-ink: rgba(var(--dawn-rgb), 0.92);
+  --imd-gold: rgba(var(--gold-rgb), 0.92);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-pt-mono, monospace);
+  text-transform: uppercase;
+  color: var(--imd-dim);
+}
+.imd i,
+.imd em {
+  font-style: normal;
+}
+
+.imd__head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--imd-hair);
+}
+.imd__tabs {
+  display: flex;
+  gap: 4px;
+}
+.imd__tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--imd-dim);
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+.imd__tab b {
+  color: inherit;
+  font-weight: 400;
+}
+.imd__tab i {
+  color: rgba(var(--dawn-rgb), 0.34);
+}
+.imd__tab:hover {
+  color: var(--imd-ink);
+}
+.imd__tab.is-on {
+  color: var(--imd-gold);
+  border-color: rgba(var(--gold-rgb), 0.4);
+}
+.imd__tab.is-on b {
+  color: var(--imd-gold);
+}
+.imd__sel {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.imd__sel b {
+  color: var(--imd-gold);
+  font-weight: 400;
+}
+
+.imd__stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.imd__foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 24px;
+  padding: 0 12px;
+  border-top: 1px solid var(--imd-hair);
+  font-size: 9px;
+  letter-spacing: 0.11em;
+}
+.imd__foot b {
+  color: rgba(var(--gold-rgb), 0.6);
+  font-weight: 400;
+}
+.imd__hint {
+  color: rgba(var(--dawn-rgb), 0.36);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* 01 · plan view                                                      */
+/* ------------------------------------------------------------------ */
+
+.imd-plan {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px 10px;
+}
+.imd-plan__line {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 9px;
+  letter-spacing: 0.11em;
+  padding-bottom: 7px;
+}
+.imd-plan__line b {
+  color: var(--imd-gold);
+  font-weight: 400;
+}
+.imd-plan__line-r {
+  color: rgba(var(--dawn-rgb), 0.36);
+  white-space: nowrap;
+}
+/* Balanced masonry: multicol packs short plates instead of row-height waste.
+   Density comes out of padding, never out of type (11px identities hold). */
+.imd-plan__grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  columns: 3;
+  column-gap: 7px;
+}
+
+.imd-plate {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  break-inside: avoid;
+  margin-bottom: 7px;
+  border: 1px solid var(--imd-hair);
+  padding: 5px 7px 6px;
+  background: rgba(var(--void-deep-rgb), 0.3);
+}
+.imd-plate::before,
+.imd-plate::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  pointer-events: none;
+}
+.imd-plate::before {
+  left: -1px;
+  top: -1px;
+  border-left: 1px solid var(--imd-hair-gold);
+  border-top: 1px solid var(--imd-hair-gold);
+}
+.imd-plate::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 1px solid var(--imd-hair-gold);
+  border-bottom: 1px solid var(--imd-hair-gold);
+}
+.imd-plate__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.imd-plate__team {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  color: var(--imd-gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.imd-plate__count {
+  font-size: 9px;
+  color: rgba(var(--dawn-rgb), 0.34);
+  white-space: nowrap;
+}
+.imd-plate__streams {
+  display: grid;
+}
+.imd-stream {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  display: grid;
+  grid-template-columns: 11px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  min-height: 19px;
+  padding: 0 1px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--imd-ink);
+  text-align: left;
+  cursor: pointer;
+  border-top: 1px dotted rgba(var(--dawn-rgb), 0.1);
+}
+.imd-stream:hover {
+  background: rgba(var(--gold-rgb), 0.08);
+}
+.imd-stream.is-sel {
+  background: rgba(var(--gold-rgb), 0.12);
+}
+.imd-stream__mark {
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(var(--gold-rgb), 0.75);
+  transform: rotate(45deg);
+  justify-self: center;
+}
+.imd-stream.is-sel .imd-stream__mark {
+  background: var(--imd-gold);
+}
+.imd-stream__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.imd-stream__meta {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: rgba(var(--dawn-rgb), 0.34);
+}
+.imd-plate__engines {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dotted rgba(var(--dawn-rgb), 0.1);
+}
+.imd-plate__engines i {
+  width: 12px;
+  height: 4px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.18);
+}
+.imd-plate__engines i.is-on {
+  border-color: rgba(var(--gold-rgb), 0.55);
+  background: rgba(var(--gold-rgb), 0.55);
+}
+
+/* ------------------------------------------------------------------ */
+/* SVG levels (02 section · 03 braid)                                  */
+/* ------------------------------------------------------------------ */
+
+.imd-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.imd-svg text {
+  user-select: none;
+}
+.imd-t {
+  font-family: var(--font-pt-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  fill: var(--imd-dim);
+}
+.imd-t--ink {
+  fill: var(--imd-ink);
+  font-size: 11px;
+}
+.imd-t--gold {
+  fill: var(--imd-gold);
+  font-size: 11px;
+}
+.imd-t--dim {
+  fill: rgba(var(--dawn-rgb), 0.44);
+  font-size: 10px;
+}
+.imd-t--team {
+  fill: var(--imd-dim);
+  font-size: 10px;
+}
+
+.imd-hair {
+  stroke: var(--imd-hair);
+  stroke-width: 1;
+  fill: none;
+}
+.imd-line {
+  stroke: rgba(var(--gold-rgb), 0.6);
+  stroke-width: 1;
+  fill: none;
+}
+.imd-plate-line {
+  stroke: rgba(var(--dawn-rgb), 0.4);
+  stroke-width: 1;
+  fill: rgba(var(--void-deep-rgb), 0.35);
+}
+.imd-gate {
+  stroke: var(--imd-gold);
+  stroke-width: 1;
+}
+
+.imd-rail {
+  stroke: rgba(var(--dawn-rgb), 0.3);
+  stroke-width: 1;
+}
+.imd-channel.is-lit .imd-rail {
+  stroke: rgba(var(--gold-rgb), 0.8);
+}
+.imd-channel.is-lit .imd-t--gold {
+  fill: var(--gold, #caa554);
+}
+.imd-channel.is-dim {
+  opacity: 0.32;
+}
+.imd-channel rect {
+  cursor: pointer;
+}
+
+.imd-strand__line {
+  stroke: rgba(var(--dawn-rgb), 0.34);
+  stroke-width: 1;
+  fill: none;
+}
+.imd-strand__hit {
+  stroke: transparent;
+  stroke-width: 12;
+  fill: none;
+  cursor: pointer;
+}
+.imd-strand__end {
+  stroke: rgba(var(--dawn-rgb), 0.34);
+  stroke-width: 1;
+  fill: none;
+}
+.imd-tick {
+  fill: rgba(var(--gold-rgb), 0.8);
+}
+.imd-strand.is-lit .imd-strand__line,
+.imd-strand.is-lit .imd-strand__end {
+  stroke: rgba(var(--gold-rgb), 0.9);
+}
+.imd-strand.is-lit .imd-t--team {
+  fill: var(--imd-gold);
+}
+.imd-strand.is-lit .imd-tick {
+  fill: var(--gold, #caa554);
+}
+.imd-strand.is-dim {
+  opacity: 0.22;
+}
+
+/* Light theme: the tokens flip through theme.css; only the lab scrims need help. */
+:root[data-theme="light"] .imd-lab {
+  background: var(--void, #ece3d6);
+}
+:root[data-theme="light"] .imd-lab__strip {
+  background: rgba(var(--void-rgb), 0.9);
+}
