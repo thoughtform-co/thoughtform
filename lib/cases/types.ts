@@ -267,6 +267,34 @@ export interface CaseMapWork {
   cfg: CaseMapConfiguration | null;
 }
 
+/**
+ * A CHAIN — one run of work as it crosses departments.
+ *
+ * The reason the map is cross-functional rather than six good team-level
+ * views. A campaign runs brief to on-visual copy to declination to listing;
+ * several of those steps already have encoded Skills, owned by different
+ * departments, built at different times, with a person carrying the context
+ * across every handoff. That they form a chain is only visible from the
+ * accumulated record — no team sees the crossing from inside.
+ *
+ * Ordered, and named, rather than a `next` pointer on each work stream: a
+ * pointer records that two things touch, and what this has to publish is the
+ * RUN, with a name a reader can hold and a note saying what it is.
+ *
+ * ⚠ A chain may pass THROUGH person-led work. That is not a gap in the
+ * record — it is the handoff the person is carrying, drawn.
+ */
+export interface CaseMapChain {
+  /** Stable, non-display id. */
+  id: string;
+  /** What the run is called, e.g. "Campaign chain". */
+  label: string;
+  /** One sentence on what crosses, ≤120 chars. */
+  note: string;
+  /** `CaseMapWork["id"]`s in the order the work moves through them. */
+  steps: readonly [string, string, ...string[]];
+}
+
 /* ── The intelligence map's projections (ADR-056 U16 → U17) ──────────────
    The map is not just Skills: it is the CONFIGURATION — which intelligence
    runs which work — and the allocation of work across it. ONE dataset,
@@ -512,6 +540,9 @@ export type CaseTrackVisual =
       districts: readonly CaseMapDistrict[];
       /** Every module on the board, configured and person-led alike. */
       works: readonly CaseMapWork[];
+      /** Runs of work that cross departments. Optional — the city's three
+       *  sheets do not draw them; the BOARD archetype's sheet 01 does. */
+      chains?: readonly CaseMapChain[];
       /** Draw against the approved envelope — a STATUS, never an amount. */
       envelope: "WITHIN" | "AT" | "OVER";
       footer?: string;

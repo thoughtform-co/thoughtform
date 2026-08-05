@@ -1,0 +1,223 @@
+/* == /test/intelligence-map-lab =========================================
+   LAB CHROME ONLY. Not one production rule is redeclared here — the map
+   under study renders inside the real `.fl-case → .fl-panel →
+   .fl-panel__viz → .fl-plate--imap.fl-imap` chain, so every colour, type
+   size, gate and transition arrives from `casefile.css` untouched. What
+   this sheet does is undo POSITIONING that production derives from
+   scroll-driven custom properties which do not exist on a static route,
+   and then get out of the way. */
+
+/* ⚠ NO LIGHT-MODE OVERRIDE HERE, AND THAT IS THE POINT. ADR-058's flip
+   SWAPS `--dawn-rgb` and `--void-rgb` wholesale: in light, `--void-rgb` IS
+   the paper and `--dawn-rgb` IS the ink. So this one rule is correct in both
+   themes, and the `html[data-theme="light"]` override this file used to
+   carry inverted it back — parchment text on a near-black page, with the
+   open marks on sheet 03 gone entirely.
+
+   `html[data-theme="light"] .fl-panel__viz` also drops its fill and its
+   border in production (theme.css): the light casefile is type on paper over
+   a faded bed, not a white box pasted on an instrument. The lab inherits
+   that, which is why the page background has to be right. */
+.imlab {
+  min-height: 100vh;
+  background: rgb(var(--void-rgb, 10 9 8));
+  color: rgba(var(--dawn-rgb), 0.8);
+  font-family: var(--font-mono, monospace);
+  padding: 18px 20px 40px;
+}
+
+/* ── The control bar ─────────────────────────────────────────────────── */
+.imlab__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 22px;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.22);
+}
+
+.imlab__bar h1 {
+  margin: 0 12px 0 0;
+  font: 400 13px/1.2 var(--font-mono, monospace);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.imlab__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.imlab__group > span {
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.imlab__group > div {
+  display: flex;
+  gap: 4px;
+}
+
+.imlab button,
+.imlab select {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(var(--gold-rgb), 0.25);
+  color: inherit;
+  padding: 5px 10px;
+  font: 400 10px/1.3 var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.imlab button:hover,
+.imlab select:hover {
+  border-color: rgba(var(--gold-rgb), 0.6);
+}
+
+.imlab button[data-on] {
+  background: rgba(var(--gold-rgb), 0.16);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.imlab__remeasure {
+  margin-left: auto;
+}
+
+/* ── The body: the console beside its readout ────────────────────────── */
+.imlab__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+
+/* ⚠ POSITIONING ONLY. Production seats `.fl-case` absolutely inside a
+   scroll-pinned stage, `.fl-panel` against `--fl-col-r` / `--fl-panel-top`,
+   and `.fl-panel__viz` against the panel's own box — none of which exist on
+   a static route, so all three would collapse to zero height. Everything
+   else about them is left alone, and the viz box is pinned to the MEASURED
+   console sizes rather than a convenient round number. */
+.imlab__stage.fl-case {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  width: calc(var(--imlab-w) + 2px);
+  visibility: visible;
+  opacity: 1;
+  clip-path: none;
+  transform: none;
+  will-change: auto;
+}
+
+.imlab__panel.fl-panel {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  height: auto;
+}
+
+/* ⚠ THE CANVAS IS PINNED, NOT THE VIZ BOX. `MAP_REFERENCE_BOX` names the
+   canvas — the box left after the tab strip and the foot, measured here at
+   78px of chrome — and `stampBox()` converts the provenance stamp against
+   that same box. Pinning the outer box would have measured the drawing
+   against a console it never had; the +2 is the viz box's own border. */
+.imlab__viz.fl-panel__viz {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  width: calc(var(--imlab-w) + 2px);
+  height: auto;
+}
+
+.imlab__viz .fl-imap__canvas {
+  flex: none;
+  height: var(--imlab-h);
+}
+
+/* The expanded reading is the same drawing in a bigger box. The overlay's
+   own frame rules size against the viewport, which the lab is not. */
+.imlab__viz .fl-imap--full {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  animation: none;
+}
+
+/* ── The readout ─────────────────────────────────────────────────────── */
+.imlab__read {
+  flex: 1;
+  min-width: 300px;
+  max-width: 460px;
+  border: 1px solid rgba(var(--gold-rgb), 0.22);
+  padding: 14px 16px 16px;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.imlab__read[data-bad] {
+  border-color: rgba(190, 90, 60, 0.8);
+}
+
+.imlab__read h2 {
+  margin: 14px 0 6px;
+  font: 400 9px/1.2 var(--font-mono, monospace);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.imlab__read h2:first-child {
+  margin-top: 0;
+}
+
+.imlab__read h2[data-bad] {
+  color: rgb(214, 116, 84);
+}
+
+.imlab__row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px;
+  padding: 2px 0;
+  border-top: 1px dotted rgba(var(--gold-rgb), 0.16);
+}
+
+.imlab__row span {
+  opacity: 0.5;
+}
+
+.imlab__row b {
+  font-weight: 400;
+}
+
+.imlab__read ul {
+  margin: 0;
+  padding-left: 16px;
+  color: rgb(214, 116, 84);
+}
+
+.imlab__read p {
+  margin: 0;
+  opacity: 0.55;
+}
+
+.imlab__note {
+  margin-top: 16px !important;
+  font-size: 9px;
+  opacity: 0.4 !important;
+  line-height: 1.55;
+}

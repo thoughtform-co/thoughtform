@@ -17,6 +17,10 @@ inherited its ambient-cover role.
 
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
 - [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — the LIVE Intelligence Map. Update 1 fitted sheets 02/03, built the EXPAND overlay and closed the missing coverage
+- **`/test/intelligence-map-lab`** — look-dev for an ORTHOGRAPHIC alternative to
+  the city, beside the city. Nothing on the landing changed; the lab mounts
+  the shipped `MapSurface` as its `city` variant so the comparison is against
+  the real thing. See §The BOARD archetype below
 - [ADR-061](../sentinel/decisions/061-intelligence-map-work-configurations.md) — SUPERSEDED by ADR-062 on the atom, the drawing and the projections; its placement, evidence semantics and privacy envelope still stand
 - [ADR-054](../sentinel/decisions/054-proof-station-client-cases.md) — superseded on placement; its content model and confidentiality envelope are still live
 - [ADR-029](../sentinel/decisions/029-services-card-ring.md) / [ADR-050](../sentinel/decisions/050-services-card-face.md) — the ring the casefile now holds back
@@ -403,6 +407,65 @@ facts` is wider than the whole plate — so the values live on the LABEL
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
+
+## The BOARD archetype (look-dev, `/test/intelligence-map-lab`)
+
+An ORTHOGRAPHIC alternative to ADR-062's isometric, built beside it after the
+owner's read that the city is too chaotic to carry this offering. **Nothing on
+the landing moved** — `MapSurface`, the three city sheets and
+`IntelligenceMapPlate` are untouched, and their 26 projection cases and 12
+smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
+
+- **THE MEASUREMENT THAT SETTLES IT: LABEL-ON-LABEL OVERLAP, which nothing
+  else on this surface checks.** `map-projection.test.ts` and the smoke assert
+  crop containment and stamp clearance — the city passes both — while its
+  district plaques letter through the plates and through each other **10–13
+  times per sheet at every viewport, in both themes**. That is the owner's
+  complaint, and it was invisible to every existing guard. The lab's readout
+  compares every pair of glyph boxes; the board measures **0**.
+- **Why the isometric is the cost centre, and it is arithmetic.** No label has
+  a baseline (every plate edge runs at ±30°, so a label floats or skews); a
+  label's position depends on the WHOLE SCENE rather than its own object
+  (which is why the plaques had to hang ABOVE their plates); and depth eats
+  width — a plate of face-width W occupies W + depth in a 611px console.
+- **ADR-062 chose one isometric because a plan/section/services set "broke
+  projection consistency". The CHROME carries that instead** — one bezel, one
+  type ladder, one mark vocabulary, one colour law — which costs nothing in
+  drawing space. The board's three sheets share ONE authoring space, ONE crop
+  and ONE type size, so the city's per-sheet type tuning cannot drift.
+- **Sheets are told apart by their OPERATION, not their vocabulary:** 01
+  PLACEMENT locates and crosses, 02 ELEVATION dissects, 03 PLANE tabulates.
+  That is what lets all three share the box-and-run primitive without a reader
+  confusing them, and it is the answer to "if level 2 uses nodes, level 1
+  cannot".
+- **Measured at the binding viewport:** type renders at **11.0px** (the type
+  law's identity floor; the city sits at 10.2–10.7), sheet 01 names **73**
+  labels in the panel against the city's 21 — the estate is readable without
+  EXPAND — and every sheet is 0 clipped / 0 under-stamp / 0 collisions /
+  0 scroll at 1280×720, 1440×800, 1920×1080 and expanded, dark and light, plus
+  all 27 subjects on sheet 02 at both detail levels.
+- **`CaseMapChain` is new content** (`MAP_CHAINS`, optional on the
+  `intelligence-map` visual). Sheet 01 draws the runs; the city ignores them.
+  A chain may pass THROUGH person-led work — that is the handoff the person is
+  carrying, drawn, not a gap.
+- **Fit is asserted in `tests/lib/board-projection.test.ts`** (29 cases), on the
+  same constants the sheets draw from. Four defects it caught that a visual
+  review would not have: `Gate · ` in front of the longest gate is 555 units
+  against a 540-unit rule; the longest rail value is 26 characters, which sets
+  where the tier stack sits; `bar` runs to 46 characters and WRAPS TO THREE
+  LINES; and a 22-unit header spacing against a 23.4-unit line box is a real
+  overlap.
+- ⚠ **The lab pins the CANVAS, not the viz box** — `MAP_REFERENCE_BOX` names
+  the canvas and `stampBox()` converts against it; the chrome takes 78px.
+- ⚠ **No light-mode override in the lab's own CSS.** ADR-058's flip SWAPS
+  `--dawn-rgb` and `--void-rgb`, so in light `--void-rgb` IS the paper — one
+  rule is correct in both themes, and the override this file first carried
+  inverted it back to ink-on-black with sheet 03's open marks gone.
+- ⚠ **The in-app Browser pane cannot screenshot it** (the pane must be
+  displayed to composite, and rAF stalls when it is not — the readout's own
+  hook never fires). Drive the controls and measure via `javascript_tool`,
+  and shoot with a headless Playwright script. Unlike the landing, real
+  scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
 ## Confidentiality envelope
 

@@ -1,5 +1,6 @@
 import type {
   CaseDef,
+  CaseMapChain,
   CaseMapDistrict,
   CaseMapShape,
   CaseMapWork,
@@ -1323,6 +1324,38 @@ const MAP_WORKS: readonly CaseMapWork[] = [
 ];
 
 /**
+ * THE CHAINS — work as it crosses departments.
+ *
+ * Sheet 01 of the city clusters modules by department and seats them all on
+ * one bus. Clustering is not crossing, and crossing is the reason the map is
+ * cross-functional rather than six good team-level views: one configuration
+ * improves one department's work, and the transformation happens where the
+ * work connects.
+ *
+ * Both runs below are drawn from work streams already on record; nothing here
+ * is a new claim about the engagement, only an ordering of existing rows.
+ *
+ * ⚠ The second run passes THROUGH person-led work, and that is the point
+ * rather than a gap. Supplier terms are not encoded, so the handoff between
+ * an approved artwork pack and a matched invoice is carried by a person —
+ * which is exactly what a map that hides person-led work cannot show.
+ */
+const MAP_CHAINS: readonly CaseMapChain[] = [
+  {
+    id: "C-01",
+    label: "Campaign chain",
+    note: "Brief to on-visual copy to declination to listing. Four encoded steps, two departments, one person carrying the context across every handoff.",
+    steps: ["W-021", "W-017", "W-029", "W-051"],
+  },
+  {
+    id: "C-02",
+    label: "Pack-to-ledger chain",
+    note: "An artwork pack becomes a supplier commitment becomes a matched invoice. Three departments, and the middle step is not encoded at all.",
+    steps: ["W-011", "W-063", "W-045"],
+  },
+];
+
+/**
  * Three paid-social cuts, reused verbatim from the ai-keynote arc page
  * (`lib/arcs/content/ai-keynote.ts`) — same files, same alt text, so the two
  * surfaces cannot end up describing the same ad differently.
@@ -1571,6 +1604,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           shapes: MAP_SHAPES,
           districts: MAP_DISTRICTS,
           works: MAP_WORKS,
+          chains: MAP_CHAINS,
           envelope: "WITHIN",
         },
         // Four proof blocks in the left-column register, and each one is a

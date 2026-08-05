@@ -1,0 +1,199 @@
+/* == The BOARD archetype ================================================
+   A look-dev alternative to ADR-062's isometric city, drawn orthographically.
+
+   IT REUSES THE MAP'S CHROME AND ITS PALETTE. The root still carries
+   `.fl-imap`, so the tab strip, the canvas, the stamp, the foot, the arrival
+   gate and — crucially — the fourteen local custom properties all come from
+   `casefile.css` unchanged. That is what makes this an alternative DRAWING
+   rather than an alternative surface, and it is also why almost no light-mode
+   rows are needed here: every colour below routes through a token or one of
+   those locals, and the light pairs already live in `v7/theme.css`.
+
+   THE DRAWING CARRIES PROVENANCE, so there is no legend and none may be
+   added: hatched green is Loop's own, open dots are rented, blue-grey dashed
+   is the adjacent domain, gold is wayfinding. Same material language as the
+   city — only the projection changed. */
+
+/* ── Sheet 01, placement ──────────────────────────────────────────────
+   The primitive is A BOX WITH TEXT INSIDE IT. That is the whole argument
+   for this archetype: a label bounded by its own cell cannot collide with
+   the drawing, so overlap stops being something a test has to catch and
+   becomes something the layout cannot express. */
+.fl-imap__b-reg-box {
+  fill: var(--imap-face);
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+}
+
+.fl-imap__b-reg-head {
+  fill: var(--imap-slab);
+  stroke: var(--imap-line-2);
+  stroke-width: 1;
+}
+
+.fl-imap__b-hit {
+  fill: transparent;
+}
+
+.fl-imap__b-cell {
+  cursor: pointer;
+}
+
+.fl-imap__b-cell-box {
+  fill: transparent;
+  stroke: var(--imap-line);
+  stroke-width: 1;
+  transition:
+    fill 0.16s ease,
+    stroke 0.16s ease;
+}
+
+/* PERSON-LED WORK DRAWS HOLLOW, and it is on screen at rest. A map that
+   showed only what was configured would show what was built and hide what
+   was not; the negative space is what leadership reads. */
+.fl-imap__b-cell[data-person] .fl-imap__b-cell-box {
+  stroke: rgba(var(--dawn-rgb), 0.22);
+  stroke-dasharray: 3 3;
+}
+
+.fl-imap__b-cell[data-person] .fl-imap__t--ink {
+  fill: var(--imap-mute);
+}
+
+.fl-imap__b-cell:hover .fl-imap__b-cell-box,
+.fl-imap__b-cell[data-lit] .fl-imap__b-cell-box {
+  fill: rgba(var(--gold-rgb), 0.1);
+  stroke: var(--gold);
+}
+
+.fl-imap__b-cell[data-on] .fl-imap__b-cell-box {
+  fill: rgba(var(--gold-rgb), 0.18);
+  stroke: var(--gold-hot, var(--gold));
+}
+
+.fl-imap__b-cell:focus-visible {
+  outline: none;
+}
+
+.fl-imap__b-cell:focus-visible .fl-imap__b-cell-box {
+  fill: rgba(var(--gold-rgb), 0.18);
+  stroke: var(--gold);
+  stroke-width: 1.4;
+}
+
+/* The runs. Right-angled, in the gutter — a curve would read as a
+   relationship diagram, which is the grammar sheet 02 owns. */
+.fl-imap__b-run {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.4;
+  opacity: 0.8;
+}
+
+.fl-imap__b-run-pip {
+  fill: var(--gold);
+}
+
+/* ── Sheet 02, elevation ──────────────────────────────────────────────
+   HEIGHT IS AUTHORITY. The person's bar is the only tier drawn in gold,
+   because the seat above the loop is the one thing on this sheet that is
+   not a component. */
+.fl-imap__b-tier {
+  fill: var(--imap-plate);
+  stroke: var(--imap-line);
+  stroke-width: 1;
+}
+
+.fl-imap__b-tier--person {
+  fill: rgba(var(--gold-rgb), 0.07);
+  stroke: var(--gold);
+}
+
+.fl-imap__b-tier--work {
+  fill: var(--imap-face);
+  stroke: var(--imap-line-2);
+}
+
+/* The mutual tie across the pair's divider: the Skill needs the model and
+   the model needs the Skill, so it is drawn both ways or not at all. */
+.fl-imap__b-tie {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1;
+}
+
+.fl-imap__b-tie-head {
+  fill: var(--gold);
+  stroke: none;
+}
+
+/* Person-led work has no gate, and the open circle says so. */
+.fl-imap__b-open-gate {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.45);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+/* ── Sheet 03, plane ──────────────────────────────────────────────────
+   Five shapes against eight departments. The BLANK cells are drawn as
+   nothing, on purpose: a grid that fills them in has hidden the one thing
+   it exists to show. */
+.fl-imap__b-grid {
+  stroke: var(--imap-line);
+  stroke-width: 1;
+}
+
+.fl-imap__b-grid[data-head] {
+  stroke: var(--imap-line-2);
+}
+
+.fl-imap__b-row,
+.fl-imap__b-col {
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+
+.fl-imap__b-row[data-dim],
+.fl-imap__b-col[data-dim] {
+  opacity: 0.3;
+}
+
+.fl-imap__b-row[data-lit] .fl-imap__b-mark--tap,
+.fl-imap__b-col[data-lit] .fl-imap__b-mark--tap {
+  stroke: var(--gold-hot, var(--gold));
+}
+
+/* Filled = the department that PAID to encode this shape, exactly once per
+   row. Open = a department that inherited it. That distinction is the whole
+   economic argument of the sheet, and it is derived from the record rather
+   than authored. */
+.fl-imap__b-mark--first {
+  fill: var(--gold);
+  stroke: none;
+}
+
+.fl-imap__b-mark--tap {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.62);
+  stroke-width: 1.2;
+  transition: stroke 0.18s ease;
+}
+
+/* ── The notes column ─────────────────────────────────────────────────
+   Expanded only. EXPAND buys ROOM, never magnification: the crop is wider
+   in authoring units AND letters smaller, so the annotation the panel
+   suppressed arrives at the same rendered size rather than the same
+   annotation arriving bigger. */
+.fl-imap__b-notes {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-imap__b-cell-box,
+  .fl-imap__b-row,
+  .fl-imap__b-col,
+  .fl-imap__b-mark--tap {
+    transition: none;
+  }
+}
