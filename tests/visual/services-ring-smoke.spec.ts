@@ -112,7 +112,7 @@ async function scrollCasefileDwell(page: Page, progress: number): Promise<boolea
 function readPda() {
   const host = document.querySelector<HTMLElement>(".fl-pda");
   const svg = host?.querySelector<SVGSVGElement>(".fl-pda__svg");
-  const field = host?.querySelector<HTMLElement>(".fl-pda__field");
+  const field = host?.querySelector<HTMLElement>(".fl-con__field");
   if (!host || !svg || !field) return null;
   const vb = svg.viewBox.baseVal;
   const box = svg.getBoundingClientRect();
@@ -487,8 +487,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // reading "CONFIGURATI…" is the rail outgrowing its box.
       const rail = await page.evaluate(() => {
         const el = document.querySelector<HTMLElement>(".fl-pda__depth");
-        const field = document.querySelector<HTMLElement>(".fl-pda__field");
-        const consoleEl = document.querySelector<HTMLElement>(".fl-pda__console");
+        const field = document.querySelector<HTMLElement>(".fl-con__field");
+        const consoleEl = document.querySelector<HTMLElement>(".fl-con__console");
         if (!el || !field || !consoleEl) return null;
         const r = el.getBoundingClientRect();
         const stns = [...el.querySelectorAll<HTMLElement>(".fl-pda__stn")];
@@ -535,7 +535,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // wheel event over the real element behaves.
       await page.locator(".fl-pda__stn").first().click();
       await page.waitForTimeout(400);
-      const fieldBox = (await page.locator(".fl-pda__field").boundingBox())!;
+      const fieldBox = (await page.locator(".fl-con__field").boundingBox())!;
       await page.mouse.move(fieldBox.x + fieldBox.width / 2, fieldBox.y + fieldBox.height / 2);
 
       const heldY = await page.evaluate(() => window.scrollY);
@@ -582,11 +582,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // the height they cost was the only place the drawing's type could
       // come from.
       expect(
-        await page.locator(".fl-pda__head").count(),
+        await page.locator(".fl-con__console > .fl-pda__head, .fl-con__head").count(),
         `${label}: the console grew a title bar back`
       ).toBe(0);
       expect(
-        await page.locator(".fl-pda__foot h5").count(),
+        await page.locator(".fl-con__foot h5").count(),
         `${label}: the foot is printing the reading's name twice`
       ).toBe(0);
 
@@ -594,12 +594,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // that stream, and the foot's SENTENCE changes with the reading.
       await page.locator(".fl-pda__stn").first().click();
       await page.waitForTimeout(300);
-      const workFoot = await page.locator(".fl-pda__foot p").innerText();
+      const workFoot = await page.locator(".fl-con__foot p").innerText();
       await page.locator(".fl-pda-hit").first().click({ force: true });
       await page.waitForTimeout(700);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "2");
       expect(
-        await page.locator(".fl-pda__foot p").innerText(),
+        await page.locator(".fl-con__foot p").innerText(),
         `${label}: the foot did not follow the reading`
       ).not.toBe(workFoot);
 
@@ -607,7 +607,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // floor rather than the instrument one.
       expect(
         await page.evaluate(() =>
-          Number.parseFloat(getComputedStyle(document.querySelector(".fl-pda__foot p")!).fontSize)
+          Number.parseFloat(getComputedStyle(document.querySelector(".fl-con__foot p")!).fontSize)
         ),
         `${label}: the foot sentence fell below the readable floor`
       ).toBeGreaterThanOrEqual(11.9);
@@ -794,10 +794,42 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(rowCount, "the directory holds four rows").toBe(4);
 
     const clipped: string[] = [];
+    const unframed: string[] = [];
     for (let i = 0; i < rowCount; i++) {
       const row = page.locator(".fl-row").nth(i);
       await row.click();
       await page.waitForTimeout(350);
+
+      // ── EVERY ROW IS THE SAME INSTRUMENT (ADR-064) ─────────────────
+      // The four plates share one console frame, so the panel reads as one
+      // device that changes what it displays rather than four boxes in the
+      // same slot. A plate that renders without it is the regression this
+      // catches — and it would look merely "plain" rather than broken.
+      const frame = await page.evaluate(() => {
+        const kind = document.querySelector<HTMLElement>(".fl-panel__viz")?.dataset.kind ?? "?";
+        const con = document.querySelector<HTMLElement>(".fl-con__console");
+        const plate = document.querySelector<HTMLElement>(".fl-plate");
+        if (!con || !plate) return { kind, ok: false, why: "no console frame" };
+        const c = con.getBoundingClientRect();
+        const p = plate.getBoundingClientRect();
+        // It fills the plate less its bezel gap, on all four sides.
+        const inset = Math.min(
+          c.top - p.top,
+          p.bottom - c.bottom,
+          c.left - p.left,
+          p.right - c.right
+        );
+        if (!(inset >= 0 && inset < 40)) return { kind, ok: false, why: `bezel inset ${inset}` };
+        // ⚠ AND IT NEVER FILTERS THE EVIDENCE. `casefile.css` prohibits it and
+        // ADR-056 U5 is the ruling: these are the client's ads, films and
+        // captures, and the gold lives in the chrome (ADR-064).
+        const filtered = [...document.querySelectorAll<HTMLElement>(".fl-plate img")]
+          .map((im) => getComputedStyle(im).filter)
+          .filter((f) => f && f !== "none");
+        if (filtered.length) return { kind, ok: false, why: `img filter ${filtered[0]}` };
+        return { kind, ok: true, why: "" };
+      });
+      if (!frame.ok) unframed.push(`${frame.kind} — ${frame.why}`);
 
       const overflow = await page.evaluate(() => {
         // The inner map field earns its place here (ADR-061): absolute work
@@ -813,7 +845,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           // absolutely positioned inside it, so a crop that outgrows the
           // console reports 0 on `.fl-plate`, whose own `overflow: hidden`
           // swallows the evidence.
-          ".fl-pda__field",
+          ".fl-con__field",
         ] as const;
         const file = document.querySelector<HTMLElement>(".fl-row[aria-selected='true']");
         const out: { box: string; over: number; row: string }[] = [];
@@ -838,6 +870,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       }
     }
     expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);
+    expect(unframed, `rows without the console frame:\n${unframed.join("\n")}`).toEqual([]);
   });
 
   test("desktop: ring mode retires the racks; cards expose their CTA", async ({ page }) => {
@@ -1213,7 +1246,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);
 
       const worst = await page.evaluate(() => {
-        const consoleEl = document.querySelector<HTMLElement>(".fl-pda__console");
+        const consoleEl = document.querySelector<HTMLElement>(".fl-con__console");
         const svg = document.querySelector<SVGSVGElement>(".fl-pda__svg");
         if (!consoleEl || !svg) return null;
 
@@ -1285,6 +1318,82 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       for (const l of worst!.lines) {
         expect(l.ratio, `view ${view}: ${l.name} is ${l.ratio}:1`).toBeGreaterThanOrEqual(3);
       }
+    }
+
+    // ── AND THE OTHER THREE ROWS, ON THE SAME GROUND (ADR-064) ────────
+    // The console frame put every plate on the map's parchment, which is
+    // what turned ADR-058's "known cost" into a visible one: a tab ordinal
+    // measured 1.25:1 beside a map that had just been fixed to 4.79. Walking
+    // the rows here is what stops the four drifting apart again.
+    for (let i = 0; i < 4; i++) {
+      await page.locator(".fl-row").nth(i).click();
+      await page.waitForTimeout(600);
+
+      const row = await page.evaluate(() => {
+        const cons = document.querySelector<HTMLElement>(".fl-con__console");
+        if (!cons) return null;
+        const parse = (c: string) => {
+          const m = String(c).match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          const p = m[1].split(",").map((v) => Number.parseFloat(v));
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        };
+        const lin = (v: number) => {
+          const s = v / 255;
+          return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        type C = { r: number; g: number; b: number; a: number };
+        const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+        const ratio = (fg: C, bg: C) => {
+          const f =
+            fg.a >= 1
+              ? fg
+              : {
+                  r: fg.a * fg.r + (1 - fg.a) * bg.r,
+                  g: fg.a * fg.g + (1 - fg.a) * bg.g,
+                  b: fg.a * fg.b + (1 - fg.a) * bg.b,
+                  a: 1,
+                };
+          const [hi, lo] = [lum(f), lum(bg)].sort((x, y) => y - x);
+          return (hi + 0.05) / (lo + 0.05);
+        };
+        const ground = parse(getComputedStyle(cons).backgroundColor);
+        if (!ground) return null;
+
+        let low = { ratio: 99, text: "", color: "" };
+        const walk = (el: Element) => {
+          for (const node of Array.from(el.childNodes)) {
+            if (node.nodeType === 3 && node.textContent?.trim()) {
+              const cs = getComputedStyle(el as Element);
+              // A label on its own opaque bed is judged against THAT bed —
+              // the tools plate's watch bar is a real surface, not a tint.
+              const own = parse(cs.backgroundColor);
+              const bed = own && own.a > 0.85 ? own : ground;
+              const c = parse(cs.color);
+              if (c) {
+                const r = ratio(c, bed);
+                if (r < low.ratio)
+                  low = {
+                    ratio: Number(r.toFixed(2)),
+                    text: node.textContent.trim().slice(0, 24),
+                    color: cs.color,
+                  };
+              }
+            } else if (node.nodeType === 1) {
+              walk(node as Element);
+            }
+          }
+        };
+        walk(cons);
+        const kind = document.querySelector<HTMLElement>(".fl-panel__viz")?.dataset.kind ?? "?";
+        return { kind, low };
+      });
+
+      expect(row, `row ${i}: no console`).not.toBeNull();
+      expect(
+        row!.low.ratio,
+        `row ${i} (${row!.kind}): "${row!.low.text}" is ${row!.low.ratio}:1 in ${row!.low.color}`
+      ).toBeGreaterThanOrEqual(4.5);
     }
   });
 

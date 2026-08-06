@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import type { CaseFilm } from "@/lib/cases/types";
 
 import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from "./MediaLightbox";
+import { ConsoleFrame } from "./console/ConsoleFrame";
 
 /**
  * FilmsPlate — ONE above-the-line film at panel scale, the other one rail
@@ -67,42 +68,46 @@ export function FilmsPlate({ films }: { films: readonly CaseFilm[] }) {
   const total = String(films.length).padStart(2, "0");
 
   return (
-    <div className="fl-plate fl-plate--films" ref={rootRef}>
-      <div className="fl-filmtabs" role="tablist" aria-label="Above-the-line films" ref={railRef}>
-        {films.map((film, i) => (
-          <button
-            key={film.src}
-            type="button"
-            role="tab"
-            className="fl-filmtab"
-            data-on={i === activeIdx || undefined}
-            aria-selected={i === activeIdx}
-            tabIndex={i === activeIdx ? 0 : -1}
-            onClick={() => setActiveIdx(i)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowRight") {
-                e.preventDefault();
-                move(i + 1);
-              } else if (e.key === "ArrowLeft") {
-                e.preventDefault();
-                move(i - 1);
-              } else if (e.key === "Home") {
-                e.preventDefault();
-                move(0);
-              } else if (e.key === "End") {
-                e.preventDefault();
-                move(films.length - 1);
-              }
-            }}
-          >
-            <span className="fl-filmtab__ord">
-              {String(i + 1).padStart(2, "0")} / {total}
-            </span>
-            <span className="fl-filmtab__name">{film.label}</span>
-          </button>
-        ))}
-      </div>
-
+    <ConsoleFrame
+      className="fl-plate fl-plate--films"
+      rootRef={rootRef}
+      rail={
+        <div className="fl-filmtabs" role="tablist" aria-label="Above-the-line films" ref={railRef}>
+          {films.map((film, i) => (
+            <button
+              key={film.src}
+              type="button"
+              role="tab"
+              className="fl-filmtab"
+              data-on={i === activeIdx || undefined}
+              aria-selected={i === activeIdx}
+              tabIndex={i === activeIdx ? 0 : -1}
+              onClick={() => setActiveIdx(i)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight") {
+                  e.preventDefault();
+                  move(i + 1);
+                } else if (e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  move(i - 1);
+                } else if (e.key === "Home") {
+                  e.preventDefault();
+                  move(0);
+                } else if (e.key === "End") {
+                  e.preventDefault();
+                  move(films.length - 1);
+                }
+              }}
+            >
+              <span className="fl-filmtab__ord">
+                {String(i + 1).padStart(2, "0")} / {total}
+              </span>
+              <span className="fl-filmtab__name">{film.label}</span>
+            </button>
+          ))}
+        </div>
+      }
+    >
       <div className="fl-filmstage">
         <div className="fl-filmframe">
           <button
@@ -141,6 +146,6 @@ export function FilmsPlate({ films }: { films: readonly CaseFilm[] }) {
       {open ? (
         <MediaLightbox src={open.src} label={open.label} meta={open.meta} onClose={close} />
       ) : null}
-    </div>
+    </ConsoleFrame>
   );
 }

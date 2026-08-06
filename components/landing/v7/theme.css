@@ -499,22 +499,64 @@ html[data-theme="light"] .fl-imap__card {
    leaving a gold FILL luminous — the ink printed on it carries the contrast —
    does not apply here, because nothing on this console prints ink on gold any
    more. Its gold marks stand alone, so they have to carry their own. */
-html[data-theme="light"] .fl-pda {
-  /* Line work that carries the drawing: 3:1. */
-  --pda-amb: var(--gold-line);
-  --pda-dim: rgba(138, 107, 32, 0.88);
+/* The FRAME's share, so all four evidence plates flip together (ADR-064). */
+html[data-theme="light"] .fl-con {
+  /* Line work that carries a drawing: 3:1. */
+  --con-dim: rgba(138, 107, 32, 0.88);
   /* Frame and divider hairlines are decorative, so they sit under the 3:1
      component target on purpose — visible, not structural. */
-  --pda-hair2: rgba(138, 107, 32, 0.7);
-  --pda-hair: rgba(138, 107, 32, 0.5);
+  --con-hair2: rgba(138, 107, 32, 0.7);
+  --con-hair: rgba(138, 107, 32, 0.5);
   /* The neutral ramp, re-alpha'd for a ground it now recedes INTO. */
-  --pda-txt2: rgba(var(--dawn-rgb), 0.72);
+  --con-txt2: rgba(var(--dawn-rgb), 0.72);
+}
+
+/* ── The other three plates' gold TEXT (ADR-064) ─────────────────────────
+   ADR-058 accepted a known cost — "gold as SMALL TEXT is now 1.8:1 — the
+   mono chrome … If it needs solving, the fix is a SECOND token for
+   gold-as-text" — and ADR-063 U2 built that token. The console frame is
+   what makes it need solving HERE: these plates now sit on the map's own
+   parchment ground, so a tab ordinal at 1.25:1 is no longer an isolated
+   dim label, it is the same instrument reading two different ways.
+
+   Measured on `--con-void` (#e4dac9) before: `.fl-tooltab__code` 1.25 /
+   1.55, `.fl-filmtab__ord` 1.45 / 1.68, `.fl-toolid__kicker` 1.68,
+   `.fl-shot__bar` 1.83. All gold-as-text; none of it is a fill.
+
+   ⚠ THE DIM STATES GO TO INK, NOT TO A DIMMER GOLD. `rgba(gold, .45)` on
+   parchment cannot reach 4.5:1 at any alpha — the hue is too light to spend.
+   An inactive tab is quiet because it is INK AT LOW STRENGTH, which is the
+   same move the map's `--pda-txt3` makes. This is a two-plate sweep, not a
+   sitewide one: the other sites ADR-058 named still stand. */
+html[data-theme="light"] .fl-tooltab__code {
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+
+html[data-theme="light"] .fl-tooltab[data-on] .fl-tooltab__code,
+html[data-theme="light"] .fl-toolid__kicker,
+html[data-theme="light"] .fl-shot__bar {
+  color: var(--gold-ink);
+}
+
+html[data-theme="light"] .fl-shot__bar b {
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+
+/* ...and the MAP's own vocabulary, which no other plate paints in. */
+html[data-theme="light"] .fl-pda {
+  --pda-amb: var(--gold-line);
   --pda-txt3: rgba(var(--dawn-rgb), 0.62);
   /* Provenance green: the mark keeps the hue, the ink takes the light step
      the token system already carries for exactly this. */
   --pda-grn: var(--atreides-light);
   --pda-grnh: #3f5a2e;
   --pda-grn-ink: var(--atreides-light);
+  /* ⚠ THE GLOWS GO OUT, they do not darken. A halo is additive: on
+     near-black it reads as a lit mark, on parchment it is a pale smudge
+     around a dark bronze one. The fill carries the signal there. */
+  --pda-spine-glow: none;
+  --pda-mark-glow: none;
+  --pda-sweep: rgba(138, 107, 32, 0.5);
 }
 
 /* ── PHOTOGRAPHY reads as PRINT on parchment (owner, 2026-08-02) ──────────
@@ -539,14 +581,18 @@ html[data-theme="light"] .fl-filmtab__name {
   color: rgba(var(--dawn-rgb), 0.65);
 }
 /* The film rail's ordinal is gold chrome at α 0.45, which is most of nothing
-   as ink-adjacent gold on parchment. Gold tops out near 3.2:1 here even at
-   full, so the ordinal takes a lift and the ACTIVE entry runs at full — the
-   underline is the wayfinding mark, this only keeps its label present. */
+   as ink-adjacent gold on parchment.
+   ⚠ THIS BLOCK'S ORIGINAL REASONING IS NOW OBSOLETE, and its own words say
+   why: "gold tops out near 3.2:1 here even at full" — so it settled for
+   α 0.72 and full `--gold`, measured 1.45:1 and 1.68:1. That ceiling was
+   `--gold`'s, not gold's. `--gold-ink` (ADR-063 U2) is the same hue with the
+   lightness the role needs, and the inactive state goes to INK because no
+   alpha of a light hue reaches the floor (ADR-064). */
 html[data-theme="light"] .fl-filmtab__ord {
-  color: rgba(var(--gold-rgb), 0.72);
+  color: rgba(var(--dawn-rgb), 0.62);
 }
 html[data-theme="light"] .fl-filmtab[data-on] .fl-filmtab__ord {
-  color: var(--gold);
+  color: var(--gold-ink);
 }
 
 /* Gold tops out near 3.2:1 on parchment even at full strength, so the

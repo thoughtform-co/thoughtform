@@ -39,11 +39,24 @@
   padding: 0;
 }
 
+/* ⚠ THE BOX AND THE CHROME LEFT THIS FILE (ADR-064). The orbit ring, the
+   outer bezel, the chamfered console, the scanline, the body well, the foot
+   box and the arrival fade are `console/console.css` now, shared with the
+   other three evidence plates. What stayed is the MAP'S OWN VOCABULARY: its
+   reading rail, its SVG field, its arrival grammar, its greens, its stream
+   index. If you came here looking for `--pda-ch` or `.fl-pda__console`, they
+   are `--con-ch` and `.fl-con__console`. */
 .fl-pda {
-  --pda-void: rgb(var(--void-deep-rgb));
-  --pda-hair: rgba(var(--gold-rgb), 0.13);
-  --pda-hair2: rgba(var(--gold-rgb), 0.24);
-  --pda-dim: rgba(var(--gold-rgb), 0.42);
+  /* The four the frame also paints in. ALIASED rather than re-declared, so
+     there is one source per value and the light block only has to override
+     one of them. */
+  --pda-void: var(--con-void);
+  --pda-hair: var(--con-hair);
+  --pda-hair2: var(--con-hair2);
+  --pda-dim: var(--con-dim);
+  --pda-txt: var(--con-txt);
+  --pda-txt2: var(--con-txt2);
+
   --pda-amb: rgba(var(--gold-rgb), 0.78);
   /* ⚠ THE LIT GOLD IS ONE SIGNAL, whatever it paints — a gauge square, a
      hovered outline, a stream id, the rail's travelling segment. It takes
@@ -59,110 +72,16 @@
      reason gold is. The provenance hue survives the mode change almost
      unchanged as a MARK; as 9px type on parchment it measured 2.16:1. */
   --pda-grn-ink: #7e9f66;
-  --pda-txt: rgba(var(--dawn-rgb), 0.92);
-  --pda-txt2: rgba(var(--dawn-rgb), 0.56);
   --pda-txt3: rgba(var(--dawn-rgb), 0.38);
 
-  /* The chamfer, and the outer frame's offset from the plate edge. */
-  --pda-ch: clamp(14px, 2.6cqw, 22px);
-  --pda-gap: clamp(6px, 1.2cqw, 12px);
-
-  position: relative;
-  height: 100%;
-  min-height: 0;
-  container-type: inline-size;
-  /* ⚠ AN AUTO ISLAND ON A `pointer-events: none` HOST, and it stays scoped
-     here — the casefile sits at z 6 over the ring's hit areas at z 4, so an
-     `auto` host silently swallows every card click once the ring lands
-     (`.claude/rules/proof.md`). Safe only because the host is
-     `visibility: hidden` until `data-proof-live`. */
-  pointer-events: auto;
-  font-family: var(--font-mono, monospace);
-}
-
-/* The orbit ring. It reads as bleeding past the plate, and it does — but the
-   bleed lives in the SVG's own VIEWBOX, not in layout.
-   ⚠ THE ELEMENT MUST NOT OVERHANG ITS BOX. Drawn at `inset: -8%` it looked
-   identical and added 41px to `.fl-plate`'s scroll height, which the casefile
-   smoke reads as a clipping box — `overflow: hidden` hides the pixels and
-   reports the overflow anyway. The crop below is v18's own: its rig was
-   840x1050 inside a 1160x1230 orbit space, offset 160/90. */
-.fl-pda__orbit {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0.5;
-  z-index: 0;
-}
-
-.fl-pda__orbit ellipse {
-  fill: none;
-  stroke: var(--pda-dim);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.fl-pda__outer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  border: 1px solid var(--pda-hair2);
-  clip-path: polygon(
-    0 calc(var(--pda-ch) + 4px),
-    calc(var(--pda-ch) + 4px) 0,
-    100% 0,
-    100% calc(100% - (var(--pda-ch) + 4px)),
-    calc(100% - (var(--pda-ch) + 4px)) 100%,
-    0 100%
-  );
-}
-
-/* The console. Chamfered TOP-LEFT and BOTTOM-RIGHT — the same asymmetric
-   diagonal the services card cuts, so the two objects are one family. */
-.fl-pda__console {
-  position: absolute;
-  inset: var(--pda-gap);
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--pda-hair2);
-  background:
-    radial-gradient(130% 62% at 50% -6%, rgba(var(--gold-rgb), 0.07), transparent 62%),
-    var(--pda-void);
-  clip-path: polygon(
-    0 var(--pda-ch),
-    var(--pda-ch) 0,
-    100% 0,
-    100% calc(100% - var(--pda-ch)),
-    calc(100% - var(--pda-ch)) 100%,
-    0 100%
-  );
-}
-
-.fl-pda__console::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9;
-  background: repeating-linear-gradient(
-    180deg,
-    rgba(var(--dawn-rgb), 0.014) 0 1px,
-    transparent 1px 3px
-  );
-}
-
-/* ── The body ───────────────────────────────────────────────────────────── */
-.fl-pda__mid {
-  position: relative;
-  z-index: 3;
-  flex: 1;
-  min-height: 0;
-  display: flex;
+  /* ⚠ THE LIT GLOWS ARE ADDITIVE, so they only mean something on a dark
+     ground. On parchment a pale halo around a dark bronze mark reads as a
+     smudge, not as "lit" — so light switches them OFF rather than darkening
+     them, and the mark's own fill carries the signal there. These were the
+     last raw v18 golds bypassing the ADR-063 U2 ramp. */
+  --pda-spine-glow: 0 0 9px rgba(240, 200, 106, 0.55);
+  --pda-mark-glow: 0 0 10px rgba(240, 200, 106, 0.5);
+  --pda-sweep: rgba(240, 200, 106, 0.55);
 }
 
 /* THE READING RAIL IS THE NAVIGATION. Three readings, direct access, any
@@ -206,7 +125,7 @@
   width: calc(100% / 3);
   height: 1px;
   background: var(--pda-hot);
-  box-shadow: 0 0 9px rgba(240, 200, 106, 0.55);
+  box-shadow: var(--pda-spine-glow);
   transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
@@ -304,19 +223,12 @@
 .fl-pda__stn[data-on] > i {
   border-color: var(--pda-hot);
   background: var(--pda-hot);
-  box-shadow: 0 0 10px rgba(240, 200, 106, 0.5);
+  box-shadow: var(--pda-mark-glow);
 }
 
 .fl-pda__stn:focus-visible {
   outline: 1px solid var(--pda-hot);
   outline-offset: -3px;
-}
-
-.fl-pda__field {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .fl-pda__svg {
@@ -340,31 +252,11 @@
 }
 
 /* ── The foot ───────────────────────────────────────────────────────────
-   ONE SENTENCE, centred, changing with the reading — what the reader is
-   looking at MEANS. Its title line went with the head (ADR-063 U1): the lit
-   tab two rows up already reads "01 WORK", so printing "01 · THE WORK" here
-   was the same words twice.
-
-   ⚠ THIS IS PROSE, NOT CHROME, so it answers to the 12px readable-copy floor
-   rather than the 8.5px instrument one. It was 10px. */
-.fl-pda__foot {
-  position: relative;
-  z-index: 4;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(10px, 1.7cqw, 17px) clamp(16px, 4cqw, 40px);
-  border-top: 1px solid var(--pda-hair);
-  text-align: center;
-}
-
-.fl-pda__foot p {
-  margin: 0;
-  max-width: 640px;
-  font: 400 clamp(12px, 2cqw, 13.5px) / 1.5 var(--font-sans, sans-serif);
-  color: var(--pda-txt);
-}
+   The BOX is `.fl-con__foot` (console.css). What is map-specific is that
+   this row has one at all: ONE SENTENCE, changing with the reading, saying
+   what the reader is looking AT. Its title line went with the head
+   (ADR-063 U1) — the lit tab two rows up already reads "01 WORK", so
+   printing "01 · THE WORK" beneath it was the same words twice. */
 
 /* ── Motion ─────────────────────────────────────────────────────────────
    ⚠ ONE CLOCK PER VIEW CHANGE, and NONE on a hover. Re-running the arrival
@@ -381,7 +273,7 @@
   inset: 0;
   z-index: 5;
   pointer-events: none;
-  background-image: linear-gradient(90deg, transparent, rgba(240, 200, 106, 0.55), transparent);
+  background-image: linear-gradient(90deg, transparent, var(--pda-sweep), transparent);
   background-size: 100% 2px;
   background-repeat: no-repeat;
   animation: flPdaScan 0.62s ease-out both;
@@ -503,23 +395,6 @@
   }
 }
 
-/* ── Arrival ────────────────────────────────────────────────────────────
-   Gated on `data-proof-settled`, NOT `data-proof-live`: `live` turns on while
-   the casefile ladder is still travelling, and an instrument that boots
-   itself during the arrival reads as a demo rather than as a record. */
-.fl-pda__console,
-.fl-pda__orbit,
-.fl-pda__outer {
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-[data-proof-settled] .fl-pda__console,
-[data-proof-settled] .fl-pda__orbit,
-[data-proof-settled] .fl-pda__outer {
-  opacity: 1;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .fl-pda__scan {
     display: none;
@@ -539,12 +414,6 @@
   .fl-pda__spine {
     transition: none;
   }
-  .fl-pda__console,
-  .fl-pda__orbit,
-  .fl-pda__outer {
-    transition: none;
-    opacity: 1;
-  }
 }
 
 /* ── Below the desktop gate ─────────────────────────────────────────────
@@ -555,9 +424,11 @@
 }
 
 @media (max-width: 980px) {
-  .fl-pda__orbit,
-  .fl-pda__outer,
-  .fl-pda__console {
+  /* ⚠ THE MAP IS THE ONE PLATE THAT HIDES ITS CONSOLE rather than letting
+     the frame unwrap it, because it has a DELIBERATE substitute below: the
+     index is the reading that never needed the projection. A plate without
+     one must let `console.css` unwrap, or its content goes with the chrome. */
+  .fl-pda .fl-con__console {
     display: none;
   }
 

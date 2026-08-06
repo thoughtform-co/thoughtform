@@ -1,0 +1,262 @@
+/* == THE CONSOLE FRAME ==================================================
+   The casefile's right panel is ONE INSTRUMENT that changes what it
+   displays, not four boxes that happen to sit in the same slot (ADR-064).
+
+   This is the chrome the Intelligence Map arrived with in ADR-063 — an orbit
+   ring behind, a chamfered outer frame, a chamfered opaque console with a
+   scanline over it — lifted OUT of `map/pda/pda.css` unchanged and given to
+   every evidence plate. The map's own vocabulary (its reading rail, its SVG
+   field, its greens, its arrival grammar) stayed behind; only the box moved.
+
+   ⚠ THE FRAME IS A BEZEL THE CONTENT BLEEDS INTO, NEVER A LETTERBOX.
+   ADR-056 U9 ruled the tools shot "is architecture — it BLEEDS to the viz
+   box edges", because a letterboxed `contain` read as "plastered on". That
+   still holds; the edge it bleeds to is now the CONSOLE's inner edge rather
+   than the panel's. A plate that centres its content inside this frame with
+   air on four sides has misread it.
+
+   ⚠ IT DOES NOT FILTER ITS CONTENT, AND MAY NOT LEARN TO. The gold lives in
+   the chrome; the evidence keeps the colour it was made in (ADR-056 U5,
+   owner — the stills are the client's ads and the films are their
+   commercials). `casefile.css` states the prohibition; this file is the
+   reason it is now safe to ignore the temptation, because the frame is what
+   makes the four rows agree.
+
+   ── Contracts ──────────────────────────────────────────────────────────
+   · ZERO OVERFLOW. `overflow: hidden` hides pixels but still REPORTS
+     `scrollHeight − clientHeight`, and the casefile smoke reads any non-zero
+     as a clipping box. The orbit ring reads as bleeding past the plate and
+     does — but the bleed lives in the SVG's own VIEWBOX, never in layout.
+   · A DEFINITE HEIGHT FROM THE PARENT. `height: 100%` on a percentage
+     chain; the console is `position: absolute; inset: var(--con-gap)`, so an
+     auto-height parent collapses it to nothing.
+   · `clip-path` ON THE CONSOLE MAKES IT THE CONTAINING BLOCK FOR `fixed`
+     DESCENDANTS. Anything that must escape this surface has to portal to
+     `document.body` — which is why `MediaLightbox` already does, and why
+     that is now load-bearing for three plates instead of one.
+   · A POINTER ISLAND on a `pointer-events: none` host. The casefile sits at
+     z 6 over the ring's hit areas at z 4, so this stays scoped to the plate
+     and never lifts to the host. Safe only because the host is
+     `visibility: hidden` until `data-proof-live`. */
+
+.fl-con {
+  /* The frame's share of the palette. The map keeps its own drawing
+     vocabulary (greens, the ink steps, `--pda-amb`) and ALIASES the four it
+     shares onto these, so there is one source per value rather than two
+     that have to be kept in step. */
+  --con-void: rgb(var(--void-deep-rgb));
+  --con-hair: rgba(var(--gold-rgb), 0.13);
+  --con-hair2: rgba(var(--gold-rgb), 0.24);
+  --con-dim: rgba(var(--gold-rgb), 0.42);
+  --con-txt: rgba(var(--dawn-rgb), 0.92);
+  --con-txt2: rgba(var(--dawn-rgb), 0.56);
+
+  /* The chamfer, and the outer frame's offset from the plate edge. Both are
+     `cqw`, so a plate mounted in a narrower column gets a proportionally
+     smaller chamfer for free — but ONLY because `container-type` is below. */
+  --con-ch: clamp(14px, 2.6cqw, 22px);
+  --con-gap: clamp(6px, 1.2cqw, 12px);
+
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  container-type: inline-size;
+  pointer-events: auto;
+  font-family: var(--font-mono, monospace);
+}
+
+/* The orbit ring. ⚠ THE ELEMENT MUST NOT OVERHANG ITS BOX. Drawn at
+   `inset: -8%` it looked identical and added 41px to `.fl-plate`'s scroll
+   height, which the smoke reads as a clipping box. The crop is v18's own:
+   its rig was 840x1050 inside a 1160x1230 orbit space, offset 160/90. */
+.fl-con__orbit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.fl-con__orbit ellipse {
+  fill: none;
+  stroke: var(--con-dim);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.fl-con__outer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border: 1px solid var(--con-hair2);
+  clip-path: polygon(
+    0 calc(var(--con-ch) + 4px),
+    calc(var(--con-ch) + 4px) 0,
+    100% 0,
+    100% calc(100% - (var(--con-ch) + 4px)),
+    calc(100% - (var(--con-ch) + 4px)) 100%,
+    0 100%
+  );
+}
+
+/* The console. Chamfered TOP-LEFT and BOTTOM-RIGHT — the same asymmetric
+   diagonal the services card cuts, so the two objects are one family. */
+.fl-con__console {
+  position: absolute;
+  inset: var(--con-gap);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--con-hair2);
+  background:
+    radial-gradient(130% 62% at 50% -6%, rgba(var(--gold-rgb), 0.07), transparent 62%),
+    var(--con-void);
+  clip-path: polygon(
+    0 var(--con-ch),
+    var(--con-ch) 0,
+    100% 0,
+    100% calc(100% - var(--con-ch)),
+    calc(100% - var(--con-ch)) 100%,
+    0 100%
+  );
+}
+
+.fl-con__console::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(var(--dawn-rgb), 0.014) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* ── The body well ───────────────────────────────────────────────────────
+   Two layers on purpose. `__mid` is `position: relative; z-index: 3`, so it
+   establishes a stacking context and anything the plate paints at a higher
+   z INSIDE it is still trapped BELOW the rail and foot (both z 4). The map's
+   scan sweep depends on exactly that. Collapsing these into one element
+   floats the sweep over the rail. */
+.fl-con__mid {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* The content slot. A flex COLUMN so a plate's own `flex: 1 1 auto` body
+   fills it; absolutely-positioned children (the map's SVG and sweep) are
+   unaffected by that, which is why the map could adopt it unchanged. */
+.fl-con__field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── The foot ────────────────────────────────────────────────────────────
+   A centred caption bar, and OPTIONAL. ADR-056's "the right panel has no
+   generic foot" still binds: the map prints a sentence that changes with the
+   reading, which is evidence; a row with nothing to say leaves this out
+   rather than printing chrome. */
+.fl-con__foot {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 1.7cqw, 17px) clamp(16px, 4cqw, 40px);
+  border-top: 1px solid var(--con-hair);
+  text-align: center;
+}
+
+.fl-con__foot p {
+  margin: 0;
+  max-width: 640px;
+  font: 400 clamp(12px, 2cqw, 13.5px) / 1.5 var(--font-sans, sans-serif);
+  color: var(--con-txt);
+}
+
+/* ── Arrival ─────────────────────────────────────────────────────────────
+   Gated on `data-proof-settled`, NOT `data-proof-live`: `live` turns on while
+   the casefile ladder is still travelling, and an instrument that boots
+   itself during the arrival reads as a demo rather than as a record. */
+.fl-con__console,
+.fl-con__orbit,
+.fl-con__outer {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+[data-proof-settled] .fl-con__console,
+[data-proof-settled] .fl-con__orbit,
+[data-proof-settled] .fl-con__outer {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-con__console,
+  .fl-con__orbit,
+  .fl-con__outer {
+    transition: none;
+    opacity: 1;
+  }
+}
+
+/* ── Below the desktop gate ──────────────────────────────────────────────
+   ⚠ THE CONSOLE UNWRAPS, IT DOES NOT HIDE. Hiding it would take the plate's
+   CONTENT with it — three of the four plates have no fallback of their own
+   and simply render into this slot. So the chrome goes and the box becomes
+   ordinary flow, which is what the mobile plate rules in casefile.css
+   already expect (`height: auto; overflow: visible`).
+
+   A plate that DOES have a deliberate small-screen substitute (the map's
+   stream index) hides the console itself, in its own sheet. */
+@media (max-width: 980px) {
+  .fl-con {
+    container-type: normal;
+    height: auto;
+  }
+
+  .fl-con__orbit,
+  .fl-con__outer {
+    display: none;
+  }
+
+  .fl-con__console {
+    position: static;
+    inset: auto;
+    height: auto;
+    border: 0;
+    background: none;
+    clip-path: none;
+    opacity: 1;
+  }
+
+  .fl-con__console::after {
+    display: none;
+  }
+
+  .fl-con__mid,
+  .fl-con__field {
+    display: block;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .fl-con__foot {
+    padding: 12px 14px 14px;
+  }
+}

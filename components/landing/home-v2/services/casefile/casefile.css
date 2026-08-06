@@ -2606,11 +2606,25 @@
    NO duotone. The tool strip's `.fl-tool__shot` used to carry a gold duotone
    as a thumbnail treatment; it retired with the strip (Update 9) and every
    plate now renders its media in natural colour, with the gold living in the
-   frame. Do not reintroduce a filter on content imagery. */
+   frame. Do not reintroduce a filter on content imagery — and since ADR-064
+   that FRAME is a real console around every plate, which is what answers
+   "make the rows feel uniform" without touching the evidence. */
+
+/* ⚠ ZERO, because the console frame supplies the outer inset now (ADR-064).
+   This was the one plate still carrying `.fl-plate`'s base padding AND its
+   own; keeping both would inset the ads three times over. `--films` and
+   `--tools` already zeroed theirs. */
+.fl-plate--stills {
+  padding: 0;
+}
+
 .fl-stills {
   list-style: none;
   margin: 0;
   padding: clamp(12px, 2vw, 24px);
+  /* A flex item of `.fl-con__field` now, so it claims the well rather than
+     relying on a percentage height against a block parent. */
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: center;

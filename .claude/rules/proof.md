@@ -81,13 +81,14 @@ inherited its ambient-cover role.
   `CorridorArmillary`) so the cards ARRIVE MOVING on their ADR-029 fly-in —
   never as a master-opacity crossfade. Do not add a second gate — add a
   factor to one of these.
-- **The host is `pointer-events: none`.** Exactly FIVE opt-ins: the tabs,
-  the directory rows, `.fl-film`, `.fl-skills` (the U13 browser) and
-  `.fl-imap` (the ADR-062 map). `.svc-ring-hits__hit` is at z 4 and the
-  casefile at z 6, so an `auto` host silently swallows every card click once
-  the ring lands. Each opt-in is safe only because the host is
-  `visibility: hidden` until `data-proof-live` — keep them scoped to the
-  element, never lifted.
+- **The host is `pointer-events: none`.** The opt-ins are the tabs, the
+  directory rows, `.fl-film`, `.fl-skills` (the U13 browser) and — since
+  ADR-064 — **`.fl-con`, the console frame every evidence plate sits in**,
+  which subsumes the old per-plate `.fl-pda` / `.fl-imap` island rather than
+  adding three more. `.svc-ring-hits__hit` is at z 4 and the casefile at z 6,
+  so an `auto` host silently swallows every card click once the ring lands.
+  Each opt-in is safe only because the host is `visibility: hidden` until
+  `data-proof-live` — keep them scoped to the PLATE, never lifted to the host.
 - **The band offset is `--instrument-inset` ALONE** (ADR-048 addendum,
   owner 2026-07-29 — the casefile sits on the INSTRUMENT band, the 1440px
   breakout tier, no longer on the 1200px text band). The stage box is
@@ -408,6 +409,49 @@ facts` is wider than the whole plate — so the values live on the LABEL
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
+
+## One console frame, four plates (ADR-064, live)
+
+Every evidence plate renders inside `ConsoleFrame` (`casefile/console/**`) —
+orbit ring, chamfered outer bezel, chamfered opaque console, scanline. The
+panel is ONE instrument that changes what it displays, not four boxes sharing
+a slot.
+
+- **The frame is a BEZEL THE CONTENT BLEEDS INTO, never a letterbox.**
+  ADR-056 U9's _"the shot BLEEDS to the viz box edges"_ still binds; the edge
+  is now the CONSOLE's inner edge. A plate that centres its content with air
+  on four sides has misread it. Measured: the tools shot still reaches the
+  right wall (1px = the border) and the rail's underside.
+- ⚠ **NO FILTER ON THE EVIDENCE, AND THE FRAME IS WHY.** The owner's ask was
+  "a filter like in services so everything feels uniform"; the answer is that
+  the uniformity is the chrome. ADR-056 U5 (owner) stands unamended — the
+  stills are Loop's ads, the films their commercials. The tools duotone was a
+  NORMALIZING move for arbitrary screenshot colour; on authored photography it
+  destroys intended colour instead. Smoke-asserted: no `filter` on any
+  `.fl-plate img`, on any row.
+- **Each plate keeps its own interior.** The rails are NOT unified — the tools
+  rail's two-line `01 · MÍMIR` / `BRIEFING AGENT` is an ADR-056 U9 owner
+  ruling. `rail` and `foot` are slots rendered as DIRECT flex children of the
+  console, because the map's rail is `flex: 0 0 clamp(32px, 7%, 44px)` — a
+  percentage of the console's height that any wrapper would resolve to zero.
+- **The foot stays OPTIONAL.** ADR-056's "no generic foot" binds: the map
+  prints a sentence that changes with the reading; the other three print
+  nothing.
+- ⚠ **BELOW 980px THE CONSOLE UNWRAPS, IT DOES NOT HIDE.** Hiding it takes the
+  plate's CONTENT with it — three of the four have no substitute. Only the map
+  hides its own console, because it has the stream index to put there.
+- ⚠ **`clip-path` MAKES THE CONSOLE THE CONTAINING BLOCK FOR `fixed`
+  DESCENDANTS.** `MediaLightbox` already portals to `document.body`; that is
+  now load-bearing for three plates instead of one.
+- **`.fl-plate--stills` is `padding: 0`** like films and tools. It was the one
+  plate carrying the base padding AND its own; the frame's gap is the outer
+  inset now.
+- **Light contrast is guarded on ALL FOUR ROWS.** Putting the plates on the
+  map's parchment ground turned ADR-058's accepted "gold as small text is
+  1.8:1" into a visible defect — measured 1.25:1 on a tab ordinal beside a map
+  at 4.79:1. Fixed with the ADR-063 U2 ramp on those two plates only; the
+  other sites ADR-058 named are still a sweep. ⚠ Dim states go to INK, not to
+  a dimmer gold: no alpha of a light hue reaches the floor.
 
 ## The reading rail, and the wheel (ADR-063, live)
 

@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SERVICES_SCROLL_OWNED_MEDIA } from "@/components/landing/home-v2/unifiedServicesInstrument";
 import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
 
+import { ConsoleFrame } from "../../console/ConsoleFrame";
+
 import { VIEW_BOX, ViewConfiguration, ViewSubstrate, ViewWork } from "./PdaViews";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
 import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
@@ -13,10 +15,15 @@ import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
  * THE WORK-TO-INTELLIGENCE MAP, as a held instrument.
  *
  * A faithful port of the owner's `thoughtform-intelligence-map-v18.html` into
- * the casefile's right panel. The chrome is the point as much as the drawing:
- * an orbit ring behind, a chamfered outer frame, a chamfered console with a
- * gold badge in its head, a depth rail down the left, a scan sweep on every
- * view change, and a centred foot that says what the reader is looking at.
+ * the casefile's right panel: a reading rail across the top, a scan sweep on
+ * every view change, and a centred foot that says what the reader is looking
+ * at.
+ *
+ * ⚠ THE CHROME IS NOT HERE ANY MORE (ADR-064). The orbit ring, the chamfered
+ * bezel, the console and its scanline are `ConsoleFrame`, shared with the
+ * three other evidence plates so the panel reads as ONE instrument that
+ * changes what it displays. This file owns the map's own vocabulary and
+ * hands the frame three slots: `rail`, `foot`, and a small-screen `fallback`.
  *
  * ── Three readings, direct access, any order ─────────────────────────────
  * The rail is the navigation, and since 2026-08-06 (owner) it runs
@@ -177,43 +184,24 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
   ];
 
   return (
-    <div
+    <ConsoleFrame
       className="fl-plate fl-plate--pda fl-pda"
       data-view={view}
       data-envelope={envelope.toLowerCase()}
       onKeyDown={onKeyDown}
-      ref={rootRef}
-    >
-      {/* The rig: an orbit ring behind the device, and a second frame around
-          it. Both bleed past the plate's edges and are clipped by it, which
-          is what makes the console read as an object sitting IN something
-          rather than as a box drawn on the page. */}
-      {/* v18's rig is 840x1050 inside a 1160x1230 orbit space at offset
-          160/90 — so the crop IS the bleed, and the element itself never
-          overhangs its box. */}
-      <svg
-        className="fl-pda__orbit"
-        viewBox="160 90 840 1050"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <ellipse cx="580" cy="615" rx="410" ry="600" />
-        <ellipse cx="580" cy="615" rx="560" ry="470" />
-      </svg>
-      <i className="fl-pda__outer" aria-hidden="true" />
-
-      <div className="fl-pda__console">
-        {/* ⚠ NO HEAD. The badge said "Intelligence map" beside a left column
-            already headed INTELLIGENCE MAP, and the meta said "Loop Earplugs"
-            beside a tab, a directory path and a masthead that all say it
-            (owner, 2026-08-06). The rail takes the console's top edge and the
-            drawing takes the height back — which is the ONLY reason the type
-            below could grow at all. Do not reinstate a title bar here without
-            re-measuring the drawing's rendered type. */}
-        {/* The reading rail, across the top of the console. `__spine` is the
-            lit segment: one element, translated to the active station in CSS
-            off `data-view`, so the marker TRAVELS to the reading rather than
-            three markers taking turns. */}
+      rootRef={rootRef}
+      /* ⚠ NO HEAD. The badge said "Intelligence map" beside a left column
+         already headed INTELLIGENCE MAP, and the meta said "Loop Earplugs"
+         beside a tab, a directory path and a masthead that all say it
+         (owner, 2026-08-06). The rail takes the console's top edge and the
+         drawing takes the height back — which is the ONLY reason the type
+         below could grow at all. Do not reinstate a title bar here without
+         re-measuring the drawing's rendered type. */
+      rail={
+        /* The reading rail, across the top of the console. `__spine` is the
+           lit segment: one element, translated to the active station in CSS
+           off `data-view`, so the marker TRAVELS to the reading rather than
+           three markers taking turns. */
         <nav className="fl-pda__depth" aria-label="Map readings">
           {STATIONS.map((s) => (
             <button
@@ -231,86 +219,74 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
           ))}
           <i className="fl-pda__spine" aria-hidden="true" />
         </nav>
-
-        <div className="fl-pda__mid">
-          <div className="fl-pda__field">
-            {/* The sweep. Keyed on the view tick so it plays once per change
-                and never on a hover repaint. */}
-            <i className="fl-pda__scan" key={viewTick} aria-hidden="true" />
-            <svg
-              className="fl-pda__svg"
-              viewBox={VIEW_BOX[view]}
-              preserveAspectRatio="xMidYMid meet"
-              role="group"
-              /* The reading's title is no longer PRINTED (the rail names it),
+      }
+      /* ⚠ THE FOOT IS THE SENTENCE ALONE. Its title said "01 · THE WORK"
+         directly under a lit tab reading "01 WORK" (owner, 2026-08-06) — the
+         rail already names the reading, so the foot only has to say what the
+         reading MEANS. `foot.title` is still the accessible name of the
+         drawing; it is simply not printed twice. */
+      foot={<p>{foot.body}</p>}
+      /* Below the desktop gate the drawing is dropped for a DELIBERATE
+         fallback — the reading that never needed the projection. */
+      fallback={
+        <div className="fl-pda__list">
+          <div className="fl-pda__list-head">
+            <span>Index · streams by team</span>
+            <span>{`${shown.length} / ${totals.modules}`}</span>
+          </div>
+          {districts.map((d) => {
+            const rows = shown.filter((w) => w.team === d.id);
+            if (!rows.length) return null;
+            return (
+              <section className="fl-pda__list-group" key={d.id}>
+                <h4>{d.name}</h4>
+                {rows.map((w) => (
+                  <div
+                    className="fl-pda__list-row"
+                    key={w.id}
+                    data-person={w.configured ? undefined : ""}
+                  >
+                    <i aria-hidden="true">{w.configured ? "◆" : "○"}</i>
+                    <span>{w.title}</span>
+                    <em>{w.lane}</em>
+                  </div>
+                ))}
+              </section>
+            );
+          })}
+          <p className="fl-pda__list-foot">{foot.body}</p>
+        </div>
+      }
+    >
+      {/* The sweep. Keyed on the view tick so it plays once per change and
+          never on a hover repaint. */}
+      <i className="fl-pda__scan" key={viewTick} aria-hidden="true" />
+      <svg
+        className="fl-pda__svg"
+        viewBox={VIEW_BOX[view]}
+        preserveAspectRatio="xMidYMid meet"
+        role="group"
+        /* The reading's title is no longer PRINTED (the rail names it),
                  so it lands here instead — a screen reader still hears which
                  of the three drawings it is in. */
-              aria-label={`Work-to-intelligence map — ${foot.title}`}
-            >
-              {view === 1 ? (
-                <ViewWork
-                  works={shown}
-                  hover={hover}
-                  onHover={hoverWork}
-                  onOpen={open}
-                  still={still}
-                />
-              ) : null}
-              {view === 2 && selected ? (
-                <ViewConfiguration work={selected} lit={lit} onLit={hoverPart} still={still} />
-              ) : null}
-              {view === 3 ? (
-                <ViewSubstrate
-                  teams={cross.teams}
-                  shapes={cross.shapes}
-                  lit={lit}
-                  onLit={hoverPart}
-                  still={still}
-                />
-              ) : null}
-            </svg>
-          </div>
-        </div>
-
-        {/* ⚠ THE FOOT IS THE SENTENCE ALONE. Its title said "01 · THE WORK"
-            directly under a lit tab reading "01 WORK" (owner, 2026-08-06) —
-            the rail already names the reading, so the foot only has to say
-            what the reading MEANS. `foot.title` is still the accessible name
-            of the drawing; it is simply not printed twice. */}
-        <div className="fl-pda__foot">
-          <p>{foot.body}</p>
-        </div>
-      </div>
-
-      {/* Below the desktop gate the drawing is dropped for a DELIBERATE
-          fallback — the reading that never needed the projection. */}
-      <div className="fl-pda__list">
-        <div className="fl-pda__list-head">
-          <span>Index · streams by team</span>
-          <span>{`${shown.length} / ${totals.modules}`}</span>
-        </div>
-        {districts.map((d) => {
-          const rows = shown.filter((w) => w.team === d.id);
-          if (!rows.length) return null;
-          return (
-            <section className="fl-pda__list-group" key={d.id}>
-              <h4>{d.name}</h4>
-              {rows.map((w) => (
-                <div
-                  className="fl-pda__list-row"
-                  key={w.id}
-                  data-person={w.configured ? undefined : ""}
-                >
-                  <i aria-hidden="true">{w.configured ? "◆" : "○"}</i>
-                  <span>{w.title}</span>
-                  <em>{w.lane}</em>
-                </div>
-              ))}
-            </section>
-          );
-        })}
-        <p className="fl-pda__list-foot">{foot.body}</p>
-      </div>
-    </div>
+        aria-label={`Work-to-intelligence map — ${foot.title}`}
+      >
+        {view === 1 ? (
+          <ViewWork works={shown} hover={hover} onHover={hoverWork} onOpen={open} still={still} />
+        ) : null}
+        {view === 2 && selected ? (
+          <ViewConfiguration work={selected} lit={lit} onLit={hoverPart} still={still} />
+        ) : null}
+        {view === 3 ? (
+          <ViewSubstrate
+            teams={cross.teams}
+            shapes={cross.shapes}
+            lit={lit}
+            onLit={hoverPart}
+            still={still}
+          />
+        ) : null}
+      </svg>
+    </ConsoleFrame>
   );
 }

@@ -6,6 +6,7 @@ import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/services/services.css";
 import "@/components/landing/home-v2/services/casefile/casefile.css";
+import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/landing/home-v2/about/about-stage.css";
 // Theme sheet LAST (ADR-058): its `html[data-theme="light"]` cascade has

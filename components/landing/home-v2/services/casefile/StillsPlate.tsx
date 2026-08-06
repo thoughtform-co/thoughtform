@@ -2,6 +2,8 @@ import Image from "next/image";
 
 import type { CaseImage } from "@/lib/cases/types";
 
+import { ConsoleFrame } from "./console/ConsoleFrame";
+
 /**
  * StillsPlate — shipped work, shown whole.
  *
@@ -9,10 +11,19 @@ import type { CaseImage } from "@/lib/cases/types";
  * Their authored proportions remain intact; the frame never invents a
  * landscape crop merely to consume horizontal space.
  *
- * NATURAL COLOUR — no duotone. The `tools` plate filters its shots because
- * those are dark UI captures sitting on a photo bar; these are the creative
- * itself. Same split the arcs rule states: content media renders in natural
- * colour, the gold is card and chrome treatment only.
+ * ⚠ NATURAL COLOUR — no duotone, and the console frame is WHY that holds
+ * (ADR-064). The owner's ask was "a filter so everything feels uniform"; the
+ * answer is that the uniformity comes from the chrome, not from recolouring
+ * the evidence. These are Loop's actual ads. The `tools` recipe existed to
+ * NORMALIZE dark UI captures — `grayscale(1)` collapses arbitrary vendor
+ * colour to luminance so heterogeneous screenshots agree — which on authored
+ * photography does the opposite: it destroys intended colour instead of
+ * unifying accidental colour. Same split the arcs rule states: content media
+ * renders in natural colour, the gold is card and chrome treatment only.
+ *
+ * NO RAIL, NO FOOT. Three tiles need no navigation, and ADR-056's "the right
+ * panel has no generic foot" means a row with nothing to say prints nothing.
+ * The frame is the whole of what this row gained.
  *
  * SIZING. `sizes` is a fixed ~200px because each of the three columns remains
  * compact even though the instrument itself is taller — so Next serves a
@@ -22,7 +33,7 @@ import type { CaseImage } from "@/lib/cases/types";
  */
 export function StillsPlate({ shots }: { shots: readonly CaseImage[] }) {
   return (
-    <div className="fl-plate fl-plate--stills">
+    <ConsoleFrame className="fl-plate fl-plate--stills">
       <ul className="fl-stills">
         {shots.map((shot) => (
           <li className="fl-still" key={shot.src}>
@@ -37,6 +48,6 @@ export function StillsPlate({ shots }: { shots: readonly CaseImage[] }) {
           </li>
         ))}
       </ul>
-    </div>
+    </ConsoleFrame>
   );
 }

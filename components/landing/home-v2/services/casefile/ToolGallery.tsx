@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import type { ProjectCase } from "@/components/landing/v7/tools-cards/toolCardData";
 
 import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from "./MediaLightbox";
+import { ConsoleFrame } from "./console/ConsoleFrame";
 
 /**
  * ToolGallery — the four production tools, one in view, at panel scale.
@@ -93,42 +94,46 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
   if (!active) return null;
 
   return (
-    <div className="fl-plate fl-plate--tools" ref={rootRef}>
-      <div className="fl-tooltabs" role="tablist" aria-label="Production tools" ref={tabsRef}>
-        {tools.map((tool, i) => (
-          <button
-            key={tool.id}
-            type="button"
-            role="tab"
-            className="fl-tooltab"
-            data-on={i === activeIdx || undefined}
-            aria-selected={i === activeIdx}
-            tabIndex={i === activeIdx ? 0 : -1}
-            onClick={() => onActive(i)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowRight") {
-                e.preventDefault();
-                move(i + 1);
-              } else if (e.key === "ArrowLeft") {
-                e.preventDefault();
-                move(i - 1);
-              } else if (e.key === "Home") {
-                e.preventDefault();
-                move(0);
-              } else if (e.key === "End") {
-                e.preventDefault();
-                move(tools.length - 1);
-              }
-            }}
-          >
-            <span className="fl-tooltab__code">
-              {tool.index} · {tool.codename}
-            </span>
-            <span className="fl-tooltab__name">{titleText(tool)}</span>
-          </button>
-        ))}
-      </div>
-
+    <ConsoleFrame
+      className="fl-plate fl-plate--tools"
+      rootRef={rootRef}
+      rail={
+        <div className="fl-tooltabs" role="tablist" aria-label="Production tools" ref={tabsRef}>
+          {tools.map((tool, i) => (
+            <button
+              key={tool.id}
+              type="button"
+              role="tab"
+              className="fl-tooltab"
+              data-on={i === activeIdx || undefined}
+              aria-selected={i === activeIdx}
+              tabIndex={i === activeIdx ? 0 : -1}
+              onClick={() => onActive(i)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight") {
+                  e.preventDefault();
+                  move(i + 1);
+                } else if (e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  move(i - 1);
+                } else if (e.key === "Home") {
+                  e.preventDefault();
+                  move(0);
+                } else if (e.key === "End") {
+                  e.preventDefault();
+                  move(tools.length - 1);
+                }
+              }}
+            >
+              <span className="fl-tooltab__code">
+                {tool.index} · {tool.codename}
+              </span>
+              <span className="fl-tooltab__name">{titleText(tool)}</span>
+            </button>
+          ))}
+        </div>
+      }
+    >
       <div className="fl-toolbody">
         <div className="fl-toolid">
           <span className="fl-toolid__kicker">{active.tagline}</span>
@@ -202,6 +207,6 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
           onClose={close}
         />
       ) : null}
-    </div>
+    </ConsoleFrame>
   );
 }
