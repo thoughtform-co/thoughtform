@@ -579,10 +579,11 @@ export interface CaseTrack {
    *  reflows everything under it. */
   project: string;
   icon: "doc" | "dir";
-  /** Panel head, left slot. */
+  /** Panel head — the ONLY designation. A right-slot label was removed
+   *  2026-08-06 (owner): it restated the masthead, the directory row and the
+   *  brief on every row. If a panel needs a second designation, the question
+   *  is what the first one failed to say. */
   preview: string;
-  /** Panel head, right slot. */
-  vizLabel: string;
   visual: CaseTrackVisual;
   /**
    * Track-specific metadata under the selected project title. Rendered as

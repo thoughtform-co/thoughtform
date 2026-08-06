@@ -35,7 +35,8 @@ export const VH = 850;
  *
  *   01  meet 0.418 → 0.449   (+7 %)
  *   02  meet 0.418 → 0.607   (+45 %)
- *   03  meet 0.418 → 0.495   (+18 %)
+ *   03  meet 0.418 → 0.563   (+35 %, after 2026-08-06 dropped its two
+ *                                section rules — see ViewSubstrate)
  *
  * ⚠ 02's content runs to x=797, SEVENTEEN UNITS PAST the 780 authoring
  * width — its crop is 800 wide for that reason, and narrowing it back to 780
@@ -49,7 +50,7 @@ export const VH = 850;
 export const VIEW_BOX: Record<1 | 2 | 3, string> = {
   1: "0 10 780 792",
   2: "0 112 800 586",
-  3: "0 24 780 718",
+  3: "0 82 780 632",
 };
 
 /**
@@ -64,7 +65,6 @@ export const VIEW_BOX: Record<1 | 2 | 3, string> = {
  *   label                 longest live string     was   now   of measure
  *   02 chrome             DECIDES ALONE            8    10      52 %
  *   02 autonomy value     BOUNDED                  9    10.5    32 %
- *   03 section rules      THE TEAMS THAT RUN…      8.5  11      26 %
  *   03 team meta          20 STREAMS               7.5   9.5    75 %
  *   03 shape meta         14 SKILLS · 22 TEAMS     8.5   9       88 %
  *   03 trenched-by        TRENCHED BY CRE          8     9.5    70 %
@@ -81,7 +81,6 @@ export const VIEW_BOX: Record<1 | 2 | 3, string> = {
 const T = {
   cfgLabel: 10,
   cfgValue: 10.5,
-  secLabel: 11,
   teamMeta: 9.5,
   shapeMeta: 9,
   shapeTrench: 9.5,
@@ -363,14 +362,21 @@ export function ViewSubstrate({
 
   return (
     <>
-      <g className={still ? undefined : "fl-pda-in"}>
-        <text x="12" y="46" fontSize={T.secLabel} letterSpacing=".22em" fill="var(--pda-txt3)">
-          THE TEAMS THAT RUN THE WORK
-        </text>
-        <text x="12" y={SY + 96} fontSize={T.secLabel} letterSpacing=".22em" fill="var(--pda-txt3)">
-          THE SHAPES THEY ALL DRAW ON
-        </text>
-      </g>
+      {/* ⚠ NO SECTION RULES (owner, 2026-08-06). This reading carried "THE
+          TEAMS THAT RUN THE WORK" over the top row and "THE SHAPES THEY ALL
+          DRAW ON" under the bottom one. The foot already says it in a
+          sentence — "Five shapes recur across the estate. One team pays to
+          encode each. Every team after that draws on it for nothing." — and
+          the brief beside it says it again. They were a matched PAIR naming
+          the two rows, so they leave together; keeping one would label half a
+          symmetric drawing.
+
+          What that bought is the reason to do it: the crop tightened from 718
+          authoring units to 632, and this reading is HEIGHT-BOUND, so the
+          MEASURED type went 4.46–5.45px to 5.06–5.63px at 1280x720, and
+          7.21–8.02 to 8.20–9.11 at 1920 — where it now clears the 8.5px floor
+          for the first time. A label that explains a drawing is competing with
+          the drawing for the same currency. */}
 
       {/* The crossing. */}
       {edges.map((e, n) => {

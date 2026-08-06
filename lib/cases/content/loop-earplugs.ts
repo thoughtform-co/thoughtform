@@ -1586,7 +1586,6 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "Intelligence Map",
         icon: "dir",
         preview: "Preview — 01_intelligence-map/",
-        vizLabel: "Map — work to intelligence",
         // The city (ADR-062) keeps the beat's registry groups and rows BY
         // REFERENCE and adds the three arrays only the casefile draws.
         //
@@ -1704,7 +1703,6 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "AI Fluency Studio",
         icon: "dir",
         preview: "Preview — 02_ai-fluency-studio/",
-        vizLabel: "Viz — performance evidence",
         visual: { kind: "stills", shots: STUDIO_SHOTS },
         classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
         blocks: [
@@ -1749,7 +1747,6 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "AI Above-the-Line",
         icon: "dir",
         preview: "Preview — 03_ai-above-the-line/",
-        vizLabel: "Viz — the films",
         visual: { kind: "films", films: ATL_FILMS },
         classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
         blocks: [
@@ -1794,7 +1791,6 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "Software for Few",
         icon: "dir",
         preview: "Preview — 04_software-for-few/",
-        vizLabel: "Fleet — in production",
         visual: { kind: "tools", toolIds: TOOL_IDS },
         classification: "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
         blocks: [

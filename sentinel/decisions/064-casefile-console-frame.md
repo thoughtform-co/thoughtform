@@ -149,6 +149,40 @@ parchment it is a pale smudge around a dark bronze mark rather than a lit one.
   and 1360×800 — zero overflow at every rung.
 - Mobile unwrap verified at 900×900 and 430×932.
 
+## Update 1 — the panel stops labelling itself (2026-08-06, owner)
+
+Same pass, one more removal, and the same currency: **a label that explains a
+drawing is competing with the drawing for space.**
+
+**The panel head's right slot is gone**, along with `CaseTrack.vizLabel`. It
+printed a second designation on every row — `Map — work to intelligence` beside
+a masthead reading INTELLIGENCE MAP and a brief opening _"Every piece of work
+at Loop, and how much intelligence runs in it"_; `Viz — the films` over a row
+called `03_AI-ABOVE-THE-LINE/` showing films. The path on the left is the one
+that says something the reader cannot already see. The field went with it
+rather than staying as content nothing renders.
+
+**Reading 03 lost its two section rules** — `THE TEAMS THAT RUN THE WORK` and
+`THE SHAPES THEY ALL DRAW ON`. Its foot already says it in a sentence (_"Five
+shapes recur across the estate. One team pays to encode each. Every team after
+that draws on it for nothing."_) and the brief beside it says it again.
+
+⚠ **They were a matched PAIR naming the two rows, so they leave together.**
+Keeping one would label half a symmetric drawing — and of the two, the one the
+owner named is the more useful, so the choice was both or neither.
+
+The gain is the argument. 03 is HEIGHT-BOUND, so the crop tightened from 718
+authoring units to 632 and the type moved:
+
+| viewport  | before      | after       |
+| --------- | ----------- | ----------- |
+| 1280×720  | 4.46–5.45px | 5.06–5.63px |
+| 1920×1080 | 7.21–8.02px | 8.20–9.11px |
+
+At 1920 this reading now **clears the 8.5px floor for the first time**. Zero
+collisions and zero clipped labels at all three viewports; `T.secLabel` went
+with the labels it sized, and `pda-viewbox.test.ts` re-pins the new bounds.
+
 ### Left open
 
 The stills row now reads as three portrait tiles centred in a tall console

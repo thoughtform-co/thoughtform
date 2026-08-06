@@ -41,7 +41,9 @@ describe("the readings' crops", () => {
   const CONTENT = {
     1: { x: 12, y: 22, right: 12 + 3 * 192 + 176, bottom: 22 + 4 * 158 + 136 },
     2: { x: 8, y: 126, right: 797, bottom: 686 },
-    3: { x: 10, y: 36, right: 766, bottom: 730 },
+    // 03 lost its two section rules 2026-08-06 (owner) — the foot already
+    // said it — and the crop tightened from 718 units to 632 behind them.
+    3: { x: 10, y: 93, right: 766, bottom: 702 },
   } as const;
 
   for (const v of [1, 2, 3] as const) {

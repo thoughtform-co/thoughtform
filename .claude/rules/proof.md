@@ -446,6 +446,19 @@ a slot.
 - **`.fl-plate--stills` is `padding: 0`** like films and tools. It was the one
   plate carrying the base padding AND its own; the frame's gap is the outer
   inset now.
+- ⚠ **THE PANEL HEAD HAS ONE DESIGNATION, NOT TWO** (owner, 2026-08-06,
+  ADR-064 U1). The right slot and `CaseTrack.vizLabel` are DELETED — they
+  restated the masthead, the directory row and the brief on every row. The
+  path on the left stays. If a panel seems to need a second designation, the
+  question is what the first one failed to say.
+- ⚠ **READING 03 HAS NO SECTION RULES.** `THE TEAMS THAT RUN THE WORK` and
+  `THE SHAPES THEY ALL DRAW ON` are deleted — the foot says it in a sentence.
+  They were a matched PAIR naming the two rows, so they left together;
+  labelling half a symmetric drawing is worse than labelling neither. That
+  bought the crop 718 → 632 units and the type 4.46–5.45 → **5.06–5.63px** at
+  1280×720 (8.20–9.11 at 1920, where it clears the 8.5px floor for the first
+  time). A label that explains a drawing competes with it for the same
+  currency.
 - **Light contrast is guarded on ALL FOUR ROWS.** Putting the plates on the
   map's parchment ground turned ADR-058's accepted "gold as small text is
   1.8:1" into a visible defect — measured 1.25:1 on a tab ordinal beside a map
