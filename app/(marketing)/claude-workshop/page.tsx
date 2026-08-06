@@ -8,6 +8,7 @@ import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/services/services.css";
 import "@/components/landing/home-v2/services/casefile/casefile.css";
+import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 // about-stage.css / continuum-stage.css are deliberately NOT imported:
 // this page mounts neither pinned stage (ADR-053 — #about is the static
 // voidwalker here, #continuum is removed).

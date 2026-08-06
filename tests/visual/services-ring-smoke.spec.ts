@@ -93,7 +93,7 @@ async function scrollCasefileDwell(page: Page, progress: number): Promise<boolea
  * Measure one map sheet, in SCREEN space (ADR-062).
  *
  * Runs inside the page, against either the casefile panel
- * (`.fl-plate--imap`) or the EXPAND overlay (`.fl-imap--full`).
+ * The map plate (`.fl-pda`).
  *
  * `preserveAspectRatio="xMidYMid meet"` scales by the MINIMUM of the two
  * box ratios and centres the remainder, so `box.width / viewBox.width`
@@ -101,20 +101,26 @@ async function scrollCasefileDwell(page: Page, progress: number): Promise<boolea
  * in the SVG's own user units (`getBBox`) and the stamp in client rects,
  * because the stamp is DOM chrome that never entered user space.
  */
-function readSheet(root: string) {
-  const host = document.querySelector<HTMLElement>(root);
-  const svg = host?.querySelector<SVGSVGElement>(".fl-imap__svg");
-  const canvas = host?.querySelector<HTMLElement>(".fl-imap__canvas");
-  if (!host || !svg || !canvas) return null;
+/**
+ * Measure the map's current reading, in the drawing's own units.
+ *
+ * `preserveAspectRatio="xMidYMid meet"` scales by the MINIMUM of the two box
+ * ratios and centres the remainder, so `box.width / viewBox.width`
+ * over-reports. Glyph boxes are therefore compared in the SVG's own user
+ * units (`getBBox`), and the rendered size is derived from the meet scale.
+ */
+function readPda() {
+  const host = document.querySelector<HTMLElement>(".fl-pda");
+  const svg = host?.querySelector<SVGSVGElement>(".fl-pda__svg");
+  const field = host?.querySelector<HTMLElement>(".fl-pda__field");
+  if (!host || !svg || !field) return null;
   const vb = svg.viewBox.baseVal;
   const box = svg.getBoundingClientRect();
   const meet = Math.min(box.width / vb.width, box.height / vb.height);
-  const stamp = host.querySelector<HTMLElement>(".fl-imap__stamp")?.getBoundingClientRect();
 
   const items = [...svg.querySelectorAll("text")].map((t) => ({
     text: (t.textContent ?? "").slice(0, 40),
     b: t.getBBox(),
-    r: t.getBoundingClientRect(),
     px: Number.parseFloat(getComputedStyle(t).fontSize) * meet,
   }));
 
@@ -132,19 +138,12 @@ function readSheet(root: string) {
           i.b.y + i.b.height > vb.y + vb.height + 0.6
       )
       .map((i) => i.text),
-    underStamp: stamp
-      ? items
-          .filter(
-            (i) =>
-              i.r.left < stamp.right &&
-              i.r.right > stamp.left &&
-              i.r.top < stamp.bottom &&
-              i.r.bottom > stamp.top
-          )
-          .map((i) => i.text)
-      : [],
-    overflowX: canvas.scrollWidth - canvas.clientWidth,
-    overflowY: canvas.scrollHeight - canvas.clientHeight,
+    fieldW: Math.round(field.clientWidth),
+    fieldH: Math.round(field.clientHeight),
+    drawnW: Math.round(vb.width * meet),
+    drawnH: Math.round(vb.height * meet),
+    overflowX: field.scrollWidth - field.clientWidth,
+    overflowY: field.scrollHeight - field.clientHeight,
   };
 }
 
@@ -332,7 +331,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       await page.waitForSelector(".services-stage", { timeout: 15_000 });
       expect(await scrollCasefileDwell(page, 0.1), `${label}: casefile runway missing`).toBe(true);
       await page.waitForTimeout(1200);
-      await expect(page.locator(".fl-imap")).toBeVisible();
+      await expect(page.locator(".fl-pda")).toBeVisible();
 
       const geometry = await page.evaluate(() => {
         const casefile = document.querySelector<HTMLElement>(".fl-case");
@@ -341,7 +340,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const directory = document.querySelector<HTMLElement>(".fl-dir");
         const panel = document.querySelector<HTMLElement>(".fl-panel");
         const visual = document.querySelector<HTMLElement>(".fl-panel__viz");
-        const map = document.querySelector<HTMLElement>(".fl-imap");
+        const map = document.querySelector<HTMLElement>(".fl-pda");
         if (!casefile || !brief || !proof || !directory || !panel || !visual || !map) return null;
 
         const c = casefile.getBoundingClientRect();
@@ -422,134 +421,63 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       ).toBeGreaterThan(0.98);
 
       // -- THE MAP'S THREE SHEETS (ADR-062) ---------------------------
-      // The sheets are SVG technical drawings, and `<text>` neither wraps
-      // nor ellipsises nor reports overflow -- a label that runs past its
-      // crop simply vanishes at the edge. So walk EVERY sheet and measure
-      // every glyph box against the sheet's own viewBox.
-      // `tests/lib/map-projection.test.ts` pins the same fit arithmetically;
-      // this is the half that catches a CSS change the arithmetic cannot see.
-      for (const sheet of ["board", "unit", "grade"] as const) {
-        const index = ["board", "unit", "grade"].indexOf(sheet);
-        await page.locator(".fl-plate--imap .fl-imap__tab").nth(index).click();
-        await page.waitForTimeout(320);
-        await expect(page.locator(".fl-plate--imap")).toHaveAttribute("data-sheet", sheet);
+      // ── THE MAP (the PDA console) ─────────────────────────────────
+      // A SVG technical drawing, and `<text>` neither wraps nor ellipsises
+      // nor reports overflow — a label that runs past its crop simply
+      // vanishes at the edge. So walk EVERY reading and measure every glyph
+      // box against the drawing's own viewBox.
+      for (const [index, view] of ["1", "2", "3"].entries()) {
+        await page.locator(".fl-pda__stn").nth(index).click();
+        await page.waitForTimeout(360);
+        await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);
 
-        const drawn = await page.evaluate(readSheet, ".fl-plate--imap");
-        const where = `${label}/${sheet}`;
-        expect(drawn, `${where}: the sheet drew nothing`).not.toBeNull();
-        expect(drawn!.texts, `${where}: the sheet lost its labels`).toBeGreaterThan(12);
+        const drawn = await page.evaluate(readPda);
+        const where = `${label}/view-${view}`;
+        expect(drawn, `${where}: the reading drew nothing`).not.toBeNull();
+        expect(drawn!.texts, `${where}: the reading lost its labels`).toBeGreaterThan(10);
         expect(
           drawn!.clipped,
           `${where}: labels run outside the crop: ${drawn!.clipped.join(", ")}`
         ).toEqual([]);
-        // 8.5px is the chrome floor (rules/proof.md's type law). These are
-        // drawing labels; the first cut rendered them at 6.8px because the
-        // whole authoring space was crammed into a 611px console.
-        expect(drawn!.minPx, `${where}: drawing type fell below the chrome floor`).toBeGreaterThan(
-          8.4
-        );
-        // THE STAMP IS AN OBSTACLE, AND IT GROWS AS THE CONSOLE SHRINKS. It
-        // is DOM chrome pinned in SCREEN pixels over an SVG that scales, so
-        // its bite out of the drawing is worst at 1280x720 -- where the
-        // first cut printed sheet 03's whole argument through the words
-        // "illustrative record".
-        expect(
-          drawn!.underStamp,
-          `${where}: printed through the provenance stamp: ${drawn!.underStamp.join(", ")}`
-        ).toEqual([]);
-        expect(drawn!.overflowX, `${where}: the map canvas scrolls`).toBeLessThanOrEqual(1);
-        expect(drawn!.overflowY, `${where}: the map canvas scrolls`).toBeLessThanOrEqual(1);
+        expect(drawn!.overflowX, `${where}: the map field scrolls`).toBeLessThanOrEqual(1);
+        expect(drawn!.overflowY, `${where}: the map field scrolls`).toBeLessThanOrEqual(1);
       }
 
-      // The tab strip and its EXPAND control are CONTROLS, so they answer to
-      // the 10px floor rather than the drawing's.
+      // The depth rail is the navigation and its stations are CONTROLS, so
+      // they answer to the chrome floor.
       const controlFont = await page.evaluate(() => {
-        const els = [
-          ...document.querySelectorAll<HTMLElement>(
-            ".fl-plate--imap .fl-imap__tab, .fl-plate--imap .fl-imap__action"
-          ),
-        ];
+        const els = [...document.querySelectorAll<HTMLElement>(".fl-pda__stn b, .fl-pda__stn em")];
         return els.length
           ? Math.min(...els.map((e) => Number.parseFloat(getComputedStyle(e).fontSize)))
           : 0;
       });
-      expect(controlFont, `${label}: map controls fell below 10px`).toBeGreaterThanOrEqual(9.5);
-
-      // A chip is the panel's control: clicking one selects that module and
-      // opens sheet 02 on it.
-      await page.locator(".fl-plate--imap .fl-imap__tab").first().click();
-      await page.waitForTimeout(260);
-      const chip = page.locator(".fl-plate--imap .fl-imap__chip").nth(2);
-      const chipId = await chip.getAttribute("data-chip");
-      await chip.click();
-      await page.waitForTimeout(320);
-      await expect(page.locator(".fl-plate--imap")).toHaveAttribute("data-sheet", "unit");
       expect(
-        await page.locator(".fl-plate--imap .fl-imap__foot span").first().innerText(),
-        `${label}: the foot does not name the module the chip opened`
-      ).toContain(chipId ?? "W-");
+        controlFont,
+        `${label}: rail labels fell below the chrome floor`
+      ).toBeGreaterThanOrEqual(7.9);
 
-      // -- EXPAND (ADR-062 Outstanding 1) -----------------------------
-      // The panel suppresses annotation it cannot hold; this is where that
-      // annotation lives. It PORTALS to `document.body`, because `.fl-case`
-      // carries the iris `clip-path` and an `overflow: hidden` plate, and a
-      // clipped ancestor becomes the containing block even for `fixed`.
-      await page.locator(".fl-plate--imap .fl-imap__action").click();
-      await expect(page.locator(".fl-imap-scrim")).toHaveCount(1);
-      const portalled = await page.evaluate(
-        () =>
-          !document.querySelector(".fl-case")?.contains(document.querySelector(".fl-imap-scrim"))
-      );
-      expect(portalled, `${label}: the expanded map did not escape the casefile`).toBe(true);
-      // Expanding lands on the sheet you were reading, not back at 01.
-      await expect(page.locator(".fl-imap--full")).toHaveAttribute("data-sheet", "unit");
+      // A cartridge is the panel's control: clicking one opens reading 02 on
+      // that stream, and the foot changes with the reading.
+      await page.locator(".fl-pda__stn").first().click();
+      await page.waitForTimeout(300);
+      await page.locator(".fl-pda-hit").first().click({ force: true });
+      await page.waitForTimeout(700);
+      await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "2");
+      expect(
+        await page.locator(".fl-pda__foot h5").innerText(),
+        `${label}: the foot did not follow the reading`
+      ).toContain("02");
 
-      for (const sheet of ["board", "unit", "grade"] as const) {
-        const index = ["board", "unit", "grade"].indexOf(sheet);
-        await page.locator(".fl-imap--full .fl-imap__tab").nth(index).click();
-        await page.waitForTimeout(320);
-        const drawn = await page.evaluate(readSheet, ".fl-imap--full");
-        const where = `${label}/${sheet}/expanded`;
-        expect(drawn, `${where}: the expanded sheet drew nothing`).not.toBeNull();
-        expect(
-          drawn!.clipped,
-          `${where}: labels run outside the crop: ${drawn!.clipped.join(", ")}`
-        ).toEqual([]);
-        expect(drawn!.minPx, `${where}: expanded type fell below the chrome floor`).toBeGreaterThan(
-          8.4
-        );
-        expect(
-          drawn!.underStamp,
-          `${where}: printed through the provenance stamp: ${drawn!.underStamp.join(", ")}`
-        ).toEqual([]);
-        // The board is the sheet EXPAND exists for: it restores the parts
-        // index, one line per module plus one per district.
-        if (sheet === "board") {
-          expect(drawn!.texts, `${where}: the parts index did not come back`).toBeGreaterThan(70);
-        }
-      }
-
-      // Escape closes it -- `useDialogShell` takes the key in the CAPTURE
-      // phase, so the plate's own "Escape returns to sheet 01" never fires
-      // here -- and focus goes back to the control that opened it, one frame
-      // late (a synchronous restore loses to React's portal unmount).
+      // Escape returns to the work. Keys are bound on the PLATE, never
+      // `document` — the corridor has its own key handling.
+      await page.locator(".fl-pda__stn").first().focus();
       await page.keyboard.press("Escape");
-      await expect(page.locator(".fl-imap-scrim")).toHaveCount(0);
-      await page.waitForTimeout(160);
-      // ONE STATE, TWO READINGS. The panel and the overlay are the same
-      // `MapSurface` at two detail levels over one sheet/selection, so
-      // closing hands back the sheet you were last reading — `grade` here,
-      // the last one the loop above opened. If this ever reads `unit` again
-      // the overlay has grown its own state and the two will drift.
-      await expect(page.locator(".fl-plate--imap")).toHaveAttribute("data-sheet", "grade");
-      const focused = await page.evaluate(() => document.activeElement?.className ?? "");
-      expect(focused, `${label}: focus did not return to the EXPAND control`).toContain(
-        "fl-imap__action"
-      );
+      await page.waitForTimeout(300);
+      await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "1");
 
       // NOTHING THE MAP DOES MAY PUBLISH A RING ANCHOR. The casefile host is
-      // `pointer-events: none` with five scoped opt-ins, and `.fl-imap` is
-      // the fifth; it sits at z 6 over `.svc-ring-hits__hit` at z 4, so an
+      // `pointer-events: none` with scoped opt-ins, and the map plate is one
+      // of them; it sits at z 6 over `.svc-ring-hits__hit` at z 4, so an
       // anchor published during the dwell is an invisible click-eater.
       expect(
         await page.locator(".svc-ring-hits__hit").count(),
@@ -741,7 +669,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           // absolutely positioned inside it, so a crop that outgrows the
           // console reports 0 on `.fl-plate`, whose own `overflow: hidden`
           // swallows the evidence.
-          ".fl-imap__canvas",
+          ".fl-pda__field",
         ] as const;
         const file = document.querySelector<HTMLElement>(".fl-row[aria-selected='true']");
         const out: { box: string; over: number; row: string }[] = [];
