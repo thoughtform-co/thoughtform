@@ -1,0 +1,178 @@
+/* == CASEFILE TYPE LAB ==================================================
+   Look-dev for swapping the casefile's SANS ROLE to Alte Haas Grotesk (the
+   Alien: Romulus title face the owner brought in).
+
+   Everything here is lab-owned. No production selector is redefined except
+   through `--ctl-sans`, which is a lab variable the production rules never
+   mention — the swap works by re-pointing the FAMILY the sans role already
+   resolves, not by overriding the rules that use it. */
+
+/* ⚠ TTF, AND THAT IS A LAB DECISION. These are the raw 144 kB files the
+   owner dropped in; the house faces are all woff2 at ~52 kB. `/test/*` is
+   blocked in production by `proxy.ts` so nothing ships from here — but if
+   this face is adopted, CONVERT FIRST. `landing-performance` treats
+   `public/fonts/**` as a watched surface for exactly this reason: two TTFs
+   is +290 kB on a route whose whole font budget is currently 280. */
+@font-face {
+  font-family: "Alte Haas Grotesk";
+  src: url("/fonts/AlteHaasGroteskRegular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alte Haas Grotesk";
+  src: url("/fonts/AlteHaasGroteskBold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ⚠ MEASURED: ALTE HAAS SETS WIDER, AND IT COSTS A LINE. At the same pixel
+   size it wraps the brief one line longer than PP Neue Montreal — 6 lines
+   where the house face takes 5. That is free at 1280×720 and 1440×800, where
+   the box absorbs it, and NOT free at 1920×1080, which is the box's worst
+   case (202px, because `.fl-brief` hangs off the non-monotonic `--fl-t6`
+   seam): the Studio and ATL briefs both go 19px over — the same 19px ADR-067
+   just paid off for the house face.
+
+   The compensation is **0.95×** — 15.4px against `--fl-copy`'s 16.2px —
+   which returns both rows to five lines with zero overflow. Probed at
+   1, 0.97, 0.95, 0.94, 0.92 and 0.90; 0.97 fixes Studio but not ATL.
+
+   So if this face is adopted, `--fl-copy` needs a per-face factor, NOT a
+   straight swap. Left un-applied here on purpose: the lab is for judging the
+   face, and pre-compensating it would hide the cost being judged. */
+.ctl-root {
+  --ctl-sans: "Alte Haas Grotesk", "PP Neue Montreal", system-ui, sans-serif;
+
+  position: relative;
+  min-height: 100svh;
+  background: var(--void);
+  overflow: hidden;
+}
+
+/* The injected HUD paints the rails and their tick ladders. It must not
+   catch the pointer — the casefile's own opt-ins sit above it. */
+.ctl-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ctl-hud .hud {
+  pointer-events: none;
+}
+
+/* `.stations`' content box, reproduced. The casefile resolves
+   `--instrument-inset` against this, not against the viewport. */
+.ctl-stationbox {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--hud-content-inset, 0px);
+}
+
+/* The stage the casefile expects as its positioning parent. In production
+   this is the pinned services runway; parked, it is simply the box. */
+.ctl-stage {
+  position: relative;
+  height: 100%;
+}
+
+/* ── THE SWAP ────────────────────────────────────────────────────────────
+   Two scopes, because "the text on the left" and "does it hold up
+   everywhere" are different questions and the answer to one does not
+   settle the other.
+
+   ⚠ MONO IS NOT TOUCHED, AT EITHER SCOPE. The directory rows, the register
+   claims, the class line, the rail and the tools chrome are PT Mono because
+   they are instrument chrome whose widths are MEASURED — ADR-067 pins the
+   register claim at ≤27 characters off PT Mono's advance at 13px, and the
+   rail's four-station rung exists because a 22-character label needs 136px.
+   Re-pointing those at a proportional face would invalidate every one of
+   those numbers and would not be a type study. */
+
+/* LEFT COLUMN — the brief's heading and its paragraph, which is what the
+   owner pointed at. The register and directory beneath them are mono. */
+.ctl-root[data-lab-face="left"] .fl-brief__title,
+.ctl-root[data-lab-face="left"] .fl-brief__body {
+  font-family: var(--ctl-sans);
+}
+
+/* WHOLE CASEFILE — every sans role on the surface, so the left column can be
+   judged against the console foot and the plates it sits beside. */
+.ctl-root[data-lab-face="all"] .fl-brief__title,
+.ctl-root[data-lab-face="all"] .fl-brief__body,
+.ctl-root[data-lab-face="all"] .fl-proof-register__description,
+.ctl-root[data-lab-face="all"] .fl-con__foot p,
+.ctl-root[data-lab-face="all"] .fl-cap__d,
+.ctl-root[data-lab-face="all"] .fl-cmp__name,
+.ctl-root[data-lab-face="all"] .fl-cmp__claim,
+.ctl-root[data-lab-face="all"] .fl-cmp__desc {
+  font-family: var(--ctl-sans);
+}
+
+/* ── The console ─────────────────────────────────────────────────────────
+   Bottom-CENTRE. The bottom-left corner belongs to the ADR-043 wordmark dock
+   and the bottom-right to the settings cluster; landing on either buries the
+   very chrome the lab exists to judge against. */
+.ctl-console {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--gold-30);
+  background: rgba(var(--void-rgb), 0.86);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ctl-console__title {
+  color: var(--gold);
+}
+
+.ctl-console__btn {
+  appearance: none;
+  border: 1px solid var(--dawn-15);
+  background: transparent;
+  padding: 5px 10px;
+  cursor: pointer;
+  color: var(--dawn-50);
+  font: inherit;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.ctl-console__btn:hover {
+  color: var(--dawn);
+  border-color: var(--gold-30);
+}
+
+.ctl-console__btn[data-on] {
+  color: var(--void);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.ctl-console__btn:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.ctl-console__note {
+  margin-left: 4px;
+  color: var(--dawn-30);
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
