@@ -59,10 +59,11 @@ Change one alone and the surface is incoherent, not merely imperfect:
 
 `ServicesCasefile` uses one evidence hierarchy. The left column carries the
 selected project's identity, summary, exactly four proof points and the
-directory. New proof points are `CaseBlock { value, title, desc }`; `value` is
-required and textual. Legacy `readouts` normalize into that same 2×2 register.
-The right panel has no generic footer: the selected visual owns its full height
-beneath the designation rail.
+directory. New proof points are `CaseBlock { title, desc }` — a CLAIM and its
+evidence; the display figure was deleted in ADR-067 because across four rows
+its values carried nine different grammars. Legacy `readouts` normalize into
+that same 2×2 register. The right panel has no generic footer: the selected
+visual owns its full height beneath the designation rail.
 
 The Intelligence Map has exactly three projections: **CONFIGURATION · TEAM ·
 ALLOCATION**. The persistent moving atom is a work configuration, keyed by a

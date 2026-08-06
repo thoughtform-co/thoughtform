@@ -71,12 +71,6 @@ function titleText(tool: ProjectCase): string {
   return tool.title.map((s) => s.text).join("");
 }
 
-/** "Performance · Creative Strategy" -> "Performance". The full strings run
- *  to 38 chars; every surface here prints the department only. */
-function dept(tool: ProjectCase): string {
-  return tool.team.split("·")[0].trim();
-}
-
 export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
   const [watching, setWatching] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -119,20 +113,17 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
          sentence that follows it. The lead is DAWN at weight 500, not gold
          — gold as small text measures ~1.8:1 on the parchment ground
          (ADR-058), and a foot is the last place to spend that. */
+      /* ⚠ THE FOOT IS THE SENTENCE ALONE (owner, 2026-08-06). The
+         `MÍMIR · INVENT · PERFORMANCE · 2025` provenance line that sat under
+         it is deleted as clutter — it was four pieces of metadata a reader of
+         a case study never asked for, printed at chrome size under the one
+         sentence that explains the tool. The codename now survives only as
+         the lightbox's label, which is the one place it is doing work. */
       foot={
         <div className="fl-toolfoot">
           <p>
             <b>{active.subline}</b> {active.shift}
           </p>
-          {/* PROVENANCE, not a label. The codename was taken off the rail
-              because a visitor cannot know "Mímir"; it survives here, at
-              chrome size, beside the mode, department and year — which is
-              what a case record is for. The `surfaces` line that used to sit
-              opposite it is gone: capability 3 ("Headless substrate") names
-              the same six surfaces in a sentence that also explains them. */}
-          <span className="fl-toolfoot__meta">
-            {active.codename} · {active.mode} · {dept(active)} · {active.year}
-          </span>
         </div>
       }
     >

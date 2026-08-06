@@ -69,13 +69,25 @@
      smaller chamfer for free — but ONLY because `container-type` is below. */
   --con-ch: clamp(14px, 2.6cqw, 22px);
   --con-gap: clamp(6px, 1.2cqw, 12px);
+  /* The tab plate's own cut — the CHROME rung of the corner ladder, because a
+     tab is a plate on the machine, not a housing. Declared here rather than
+     on the station so the travelling spine can read it too. */
+  --stn-ch: clamp(6px, 1.4cqw, 11px);
 
   position: relative;
   height: 100%;
   min-height: 0;
   container-type: inline-size;
   pointer-events: auto;
-  font-family: var(--font-mono, monospace);
+  /* ⚠ PT MONO, NOT `--font-mono`. That token resolves to IBM Plex Mono
+     (`app/styles/variables.css`), and this console arrived with it from the
+     v18 PDA port — so the casefile was rendering THREE families at once: PP
+     Neue Montreal for prose, PT Mono for its own chrome, and IBM Plex Mono
+     for everything that merely inherited from here. Two of them are a house
+     decision; the third was a leak. Declared with its own fallback rather
+     than `--fl-mono`, because the console is also mounted outside `.fl-case`
+     by the map's expanded overlay. */
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
 }
 
 /* The orbit ring. ⚠ THE ELEMENT MUST NOT OVERHANG ITS BOX. Drawn at
@@ -196,23 +208,45 @@
 
 /* The lit segment. ⚠ ONE ELEMENT, positioned off `--rail-i` / `--rail-n`,
    never one marker per station: a marker that travels points into the field;
-   markers that take turns are a selected tab. */
+   markers that take turns are a selected tab.
+
+   ⚠ IT CAPS THE PLATE NOW, it does not underline it (2026-08-06). The
+   stations became plates welded to the console, so the rail's bottom edge is
+   where the active plate JOINS the body — a lit line there would re-draw the
+   seam the weld exists to remove, and the two rules would have fought for the
+   same pixel. On top it reads as the lit edge of the open drawer, and the
+   travel is unchanged.
+
+   The `inset` clip stops it at the plate's chamfer. Width stays a full
+   station pitch so `translateX(--rail-i × 100%)` still lands exactly. */
 .fl-con__spine {
   position: absolute;
   left: 0;
-  bottom: -1px;
+  top: 0;
   width: calc(100% / var(--rail-n, 3));
   height: 1px;
   background: var(--con-hot);
   box-shadow: var(--con-spine-glow);
+  clip-path: inset(0 var(--stn-ch) 0 0);
   transform: translateX(calc(var(--rail-i, 0) * 100%));
   transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
+/* ⚠ A STATION IS A PLATE, NOT A CELL (owner, 2026-08-06 — "look at more retro
+   terminal interfaces where it has a bit of a notch… right now it just feels
+   very traditional"). Each one is a chamfered plate seated on the console:
+   its TOP-RIGHT corner is cut, which is the corner law's diagonal (ADR-065)
+   at the CHROME rung — small, because a tab is not a housing.
+
+   The precedent is already in the repo twice: the handoff dock cuts both top
+   corners (`handoff-lab.css`) and the directory's own folder glyph cuts its
+   leading one (`.fl-row__glyph`).
+
+   Under rule 5 the asymmetry is EARNED: the cut corner is the free one, and
+   the bottom edge is where the plate meets the machine. */
 .fl-con__stn {
   position: relative;
   appearance: none;
-  background: transparent;
   border: 0;
   padding: 0 clamp(5px, 1.3cqw, 14px);
   flex: 1 1 0;
@@ -224,13 +258,25 @@
   cursor: pointer;
   pointer-events: auto;
   color: var(--con-txt2);
+  /* Recessed: the plate sits BELOW the console's own face until it is
+     selected, so the rail reads as a row of keys rather than a divided bar. */
+  background: linear-gradient(180deg, rgba(var(--dawn-rgb), 0.028), transparent 62%);
+  clip-path: polygon(0 0, calc(100% - var(--stn-ch)) 0, 100% var(--stn-ch), 100% 100%, 0 100%);
   transition:
     color 0.3s ease,
     background 0.3s ease;
 }
 
-.fl-con__stn + .fl-con__stn {
-  border-left: 1px solid var(--con-hair);
+/* The seam between plates. It stops short of the chamfer so the cut corner
+   reads as a shoulder rather than a broken divider. */
+.fl-con__stn + .fl-con__stn::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--con-hair);
 }
 
 /* ⚠ THE LAST STATION SITS UNDER THE CHAMFER, and the clearance is arithmetic
@@ -270,7 +316,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 clamp(10px, 1.75cqw, 11.5px) / 1 var(--font-mono, monospace);
+  font: 400 clamp(10px, 1.75cqw, 11.5px) / 1 var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: inherit;
@@ -318,9 +364,26 @@
    The lit signal rides the MARKS, which is what gold is for here: the diamond
    fills, the wash lifts, the spine travels. The label just goes to full
    strength. One rule, correct in both themes, no `[data-theme]` override. */
+/* ⚠ THE ACTIVE PLATE IS WELDED TO THE CONSOLE. It is filled, it carries a
+   hairline along its own top and cut edges, and — the part that does the
+   work — its `::after` covers the rail's bottom border so the plate and the
+   body below it become one surface. That is the whole retro-terminal read:
+   the open drawer of the machine, not a highlighted cell in a strip. */
 .fl-con__stn[data-on] {
   color: var(--con-txt);
-  background: linear-gradient(180deg, rgba(var(--gold-rgb), 0.13), rgba(var(--gold-rgb), 0.02) 78%);
+  background:
+    linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.035) 78%),
+    var(--con-void);
+}
+
+.fl-con__stn[data-on]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--con-void);
 }
 
 .fl-con__stn[data-on] > i {
@@ -400,10 +463,18 @@
    the owner's "the font feels a bit different from the rest", and it was
    invisible to review because a fallback sans looks like a font choice. The
    token is `--font-pp-neue-montreal` (landing.css). */
+/* ⚠ ONE TOKEN WITH THE LEFT COLUMN'S PARAGRAPH (owner, 2026-08-06 — "the copy
+   in the right panel at the bottom should have the same font size as the
+   paragraph on the left panel"). `--fl-copy` is what `.fl-brief__body` reads,
+   so the two columns cannot drift again; the previous `clamp(12.5px, 2.1cqw,
+   15px)` was a second scale that happened to land 1.2px short of it.
+   ⚠ It is a `cqw`-free value on purpose — the brief sizes off the VIEWPORT
+   and this box sizes off its container, so any container-relative clamp here
+   re-introduces the drift the token exists to remove. */
 .fl-con__foot p {
   margin: 0;
   max-width: 640px;
-  font: 400 clamp(12.5px, 2.1cqw, 15px) / 1.45
+  font: 400 var(--fl-copy, 15px) / 1.45
     var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   letter-spacing: 0.008em;
   color: rgba(var(--dawn-rgb), 0.88);

@@ -1715,24 +1715,20 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // a hedge beside an exact sum reads as two different numbers.
         blocks: [
           {
-            value: "27",
-            title: "Work streams",
-            desc: "Modules on the board. Person-led work included.",
+            title: "Every stream on one board",
+            desc: "Twenty-seven modules, including the work deliberately left person-led.",
           },
           {
-            value: "47",
-            title: "Skills encoded",
-            desc: "Judgment made reusable and kept to one standard.",
+            title: "47 Skills encoded",
+            desc: "Judgment made reusable, and kept to one standard.",
           },
           {
-            value: "19/24",
-            title: "Tapped a main",
-            desc: "Configured streams that reused encoding, not built it.",
+            title: "Reuse beats rebuilding",
+            desc: "Nineteen of twenty-four configured streams drew on a shape already paid for.",
           },
           {
-            value: "WITHIN",
-            title: "Draw envelope",
-            desc: "Relative draw against workload. Never a price.",
+            title: "Draw stays within envelope",
+            desc: "Relative draw measured against workload. Never a price.",
           },
         ],
         context: [
@@ -1795,24 +1791,20 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
         blocks: [
           {
-            value: "97%",
-            title: "Paid-social briefings involve AI",
-            desc: "AI is part of the default process, not a specialist add-on.",
+            title: "97% of briefings involve AI",
+            desc: "In paid social, AI is the default process rather than a specialist add-on.",
           },
           {
-            value: "3/3",
-            title: "Featured campaigns above ROAS target",
-            desc: "ROAS of 2.7, 5.33 and 6.14 against a benchmark of 2.",
+            title: "Campaigns beat their target",
+            desc: "Three of three, at a return on ad spend of 2.7, 5.33 and 6.14 against a target of 2.",
           },
           {
-            value: "2–3×",
-            title: "Faster than former agency workflows",
-            desc: "More iterations in less time, without lowering the craft bar.",
+            title: "Two to three times faster",
+            desc: "More iterations in less time than the former agency route, at the same craft bar.",
           },
           {
-            value: "SELF-SUFFICIENT",
-            title: "Studio owns the workflow",
-            desc: "The team briefs, creates, reviews and ships without specialist dependency.",
+            title: "The studio owns the work",
+            desc: "The team briefs, creates, reviews and ships without a specialist in the loop.",
           },
         ],
         context: [
@@ -1825,7 +1817,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         brief: [
           "Creative Technology embedded inside Studio to turn AI from a specialist service into ",
           { em: "a capability the creative team owns" },
-          ". Live briefs, reusable workflows and clear ethical lines moved the team from receiving AI output to briefing, steering and judging it themselves. Paid social now moves faster, creating more time and budget for the live-action craft AI should not replace.",
+          ". Live briefs, reusable workflows and clear ethical lines moved the team from receiving AI output to briefing and judging it. Paid social moves faster, buying back time for the live-action craft AI should not replace.",
         ],
       },
       {
@@ -1839,24 +1831,20 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
         blocks: [
           {
-            value: "2 × 30 SEC",
-            title: "AI-produced ATL films",
-            desc: "Two narrative master films built for top-of-funnel paid media.",
+            title: "Two 30-second masters",
+            desc: "Narrative films produced with AI and built for top-of-funnel paid media.",
           },
           {
-            value: "6 DISCIPLINES",
             title: "One craft standard",
-            desc: "CD, AD, production, edit, color and sound matched live action.",
+            desc: "Direction, art direction, production, edit, colour and sound matched live action.",
           },
           {
-            value: "YOUTUBE + CTV",
-            title: "Paid media distribution",
-            desc: "The campaign reached YouTube and connected TV in the US.",
+            title: "Ran on YouTube and CTV",
+            desc: "The campaign reached connected TV and YouTube as paid media in the US.",
           },
           {
-            value: "2 + 2",
-            title: "AI beside live action",
-            desc: "Two AI films launched alongside two traditionally produced spots.",
+            title: "Ran beside live action",
+            desc: "The two AI films ran alongside two traditionally produced spots.",
           },
         ],
         context: [
@@ -1883,24 +1871,20 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         classification: "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
         blocks: [
           {
-            value: "MULTI-MODEL",
-            title: "Generation platform · live",
+            title: "Generation platform",
             desc: "Image, video, product references and cost visibility in one internal tool.",
           },
           {
-            value: "MONDAY → FIGMA",
-            title: "Briefing orchestration · live",
-            desc: "High-volume paid-social briefs move directly into the production flow.",
+            title: "Briefing orchestration",
+            desc: "High-volume paid-social briefs move straight into the production flow.",
           },
           {
-            value: "3 SIGNALS",
-            title: "Briefing intelligence · live",
-            desc: "Competitor ads, social listening and performance data converge in one interface.",
+            title: "Briefing intelligence",
+            desc: "Competitor ads, social listening and performance data meet in one interface.",
           },
           {
-            value: "4 STEPS",
-            title: "Localization pipeline · live",
-            desc: "Transcribe, translate, review and dub approved video in one flow.",
+            title: "Localization pipeline",
+            desc: "Transcribe, translate, review and dub approved video in a single flow.",
           },
         ],
         context: [

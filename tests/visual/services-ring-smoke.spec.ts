@@ -333,9 +333,17 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
     test.setTimeout(90_000);
 
+    // ⚠ 1920×1080 EARNS ITS PLACE, and its absence was a real gap. The
+    // `.fl-brief` box hangs off the `--fl-t6` tick seam, which is NOT
+    // monotonic in viewport height — measured 199px at 1280×720, 221px at
+    // 1440×800 and only 202px at 1920×1080, while `--band-copy` is at its
+    // 18px ceiling there. So the commonest desktop size is the WORST case,
+    // and it sat in the gap between 1440 and 2017: the Studio brief clipped
+    // 19px there, in both themes, for as long as anyone had looked.
     const viewports = [
       { width: 1280, height: 720 },
       { width: 1440, height: 800 },
+      { width: 1920, height: 1080 },
       { width: 2017, height: 1269 },
     ] as const;
 
@@ -628,6 +636,36 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         `${label}: a ring anchor published during the casefile dwell`
       ).toBe(0);
 
+      // ⚠ THE CLAIM READS AT EVERY VIEWPORT, unlike its sentence. The tile is
+      // two tiers now — a claim, then the evidence — and below 931h the
+      // evidence is sr-only because the register box is 86px against the
+      // 182px two full tiers need. What must NEVER be reduced is the claim
+      // itself: it carries the tile's whole meaning, including the figure
+      // that used to sit above it. Its predecessor was a 9.5px gold label
+      // that clipped 5-9px on every row at these heights, silently.
+      const claims = await page.evaluate(() => {
+        const list = [...document.querySelectorAll<HTMLElement>(".fl-proof-register__claim")];
+        return {
+          count: list.length,
+          minFont: list.length
+            ? Math.min(...list.map((c) => Number.parseFloat(getComputedStyle(c).fontSize)))
+            : 0,
+          clipped: list.flatMap((c, i) =>
+            c.scrollHeight - c.clientHeight > 1 || c.scrollWidth - c.clientWidth > 1
+              ? [`claim-${i + 1}`]
+              : []
+          ),
+        };
+      });
+      expect(claims.count, `${label}: the proof register is not four claims`).toBe(4);
+      expect(
+        claims.minFont,
+        `${label}: a proof claim fell below the 10px control floor`
+      ).toBeGreaterThanOrEqual(10);
+      expect(claims.clipped, `${label}: proof claims clip: ${claims.clipped.join(", ")}`).toEqual(
+        []
+      );
+
       if (viewport.height > 930) {
         const tallProof = await page.evaluate(() => {
           const briefBody = document.querySelector<HTMLElement>(".fl-brief__body");
@@ -889,6 +927,59 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           return { kind, ok: false, why: "context row has no foot" };
         if (foot && !(foot.textContent ?? "").trim())
           return { kind, ok: false, why: "empty foot printed" };
+
+        // ── TWO FAMILIES, AND EACH DOES ITS OWN JOB ────────────────────
+        // ⚠ THIS IS THE GUARD THAT WOULD HAVE CAUGHT THE LAST TWO FONT
+        // BUGS. `--font-sans` was declared nowhere, so the foot rendered in
+        // the browser's default; `--font-mono` resolves to IBM Plex Mono, so
+        // the console's whole subtree inherited a THIRD family and four
+        // lines of body copy set in monospace beside a sans foot. Both were
+        // invisible to review — a fallback face just looks like a choice.
+        //
+        // The type law: PT Mono owns instrument chrome, PP Neue Montreal
+        // owns titles and prose. So the assertion is per-ROLE, not just
+        // "no third family" — a sentence in mono passes a family count.
+        const HOUSE = ["PT Mono", "PP Neue Montreal"];
+        const famOf = (el: Element) =>
+          getComputedStyle(el).fontFamily.split(",")[0].replace(/["']/g, "").trim();
+        const foreign: string[] = [];
+        document.querySelectorAll(".fl-case *").forEach((el) => {
+          if (!(el instanceof HTMLElement)) return; // the map's SVG is its own pass
+          const own = [...el.childNodes]
+            .filter((n) => n.nodeType === 3)
+            .map((n) => n.textContent ?? "")
+            .join("")
+            .trim();
+          if (!own) return;
+          const fam = famOf(el);
+          if (!HOUSE.includes(fam)) foreign.push(`${el.className || el.tagName}:${fam}`);
+        });
+        if (foreign.length) return { kind, ok: false, why: `foreign face ${foreign[0]}` };
+
+        // Prose is SANS, by selector — the ones that inherited mono.
+        for (const sel of [
+          ".fl-con__foot p",
+          ".fl-cap__d",
+          ".fl-cmp__desc",
+          ".fl-proof-register__description",
+        ]) {
+          const el = document.querySelector(sel);
+          if (el && famOf(el) !== "PP Neue Montreal")
+            return { kind, ok: false, why: `${sel} is ${famOf(el)}, not sans` };
+        }
+
+        // ── NO ARC CROSSES THE CONSOLE'S TOP OR BOTTOM EDGE ────────────
+        // The orbit ellipses map linearly onto `.fl-con`
+        // (`preserveAspectRatio="none"`), so an `ry` over half the viewBox
+        // height gets cropped and re-enters as two short diagonal stubs in
+        // the bezel gap — which at four stations landed on the tab dividers
+        // and read as lines coming out of the tabs. `ry < 525` is the bound,
+        // and it holds at every viewport because both sides scale with H.
+        const strayArc = [...document.querySelectorAll(".fl-con__orbit ellipse")]
+          .map((e) => Number(e.getAttribute("ry")))
+          .find((ry) => !(ry < 525));
+        if (strayArc)
+          return { kind, ok: false, why: `orbit ry ${strayArc} crops through the console edge` };
 
         return { kind, ok: true, why: "" };
       });

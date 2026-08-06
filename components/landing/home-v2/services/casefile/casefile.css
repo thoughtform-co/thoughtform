@@ -517,10 +517,14 @@
   top: var(--fl-sec);
   background: var(--fl-ret-rule-x);
 }
+/* ⚠ `--fl-left-seam`, NOT the raw tick. The register hangs off the seam, and
+   above 1200×931 the seam is pulled UP off `--fl-t6` — so pinning this rule
+   to the tick left the register floating below its own rule at exactly the
+   viewports where there was most room to notice. */
 .fl-rule--brief {
   left: 0;
   width: var(--fl-col-l);
-  top: var(--fl-t6);
+  top: var(--fl-left-seam);
   background: repeating-linear-gradient(
     to right,
     rgba(var(--gold-rgb), 0.5) 0 1.5px,
@@ -716,34 +720,26 @@
   border-bottom: 1px solid rgba(var(--gold-rgb), 0.12);
 }
 
-.fl-proof-register__value,
-.fl-proof-register__label {
+/* THE CLAIM. Mono caps at the directory's own reading size — this is the
+   proof point itself, not a label for something else, so it takes the tier
+   the deleted figure used to hold. Two lines, because 30 characters does not
+   fit one line in a half-column at this size and a claim that ellipsises is
+   not a claim.
+
+   ⚠ IT WAS 9.5px, WHICH IS BELOW THE CONTROL FLOOR AND WAS CLIPPING. The old
+   `__label` sat under a display figure at 9.5px mono gold, clamped to two
+   lines, and lost 5–9px on every row at laptop heights — the owner's "the
+   text is too small" and a silent clip in the same rule. */
+.fl-proof-register__claim {
   min-width: 0;
   overflow: hidden;
   font-family: var(--fl-mono);
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-}
-
-.fl-proof-register__value {
   color: var(--dawn);
-  font-size: clamp(12px, 1vw, 16px);
+  font-size: clamp(11.5px, 0.92vw, 13px);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: 0.025em;
-  white-space: nowrap;
-}
-
-.fl-proof-register__value[data-wide] {
-  font-size: clamp(10.5px, 0.82vw, 13px);
-  letter-spacing: 0;
-}
-
-.fl-proof-register__label {
-  color: rgba(var(--gold-rgb), 0.76);
-  font-size: 9.5px;
-  line-height: 1.2;
-  letter-spacing: 0.08em;
+  line-height: 1.25;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -751,18 +747,33 @@
 }
 
 .fl-proof-register__description {
-  margin: 2px 0 0;
-  color: rgba(var(--dawn-rgb), 0.56);
-  font-family: var(--font-pp-neue-montreal, sans-serif);
-  font-size: 11.5px;
-  line-height: 1.35;
+  margin: 3px 0 0;
+  color: rgba(var(--dawn-rgb), 0.6);
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  font-size: clamp(11.5px, 0.9vw, 13px);
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   overflow: hidden;
 }
 
+/* ⚠ BELOW 931px HEIGHT THE TILE IS THE CLAIM ALONE, and the arithmetic is
+   why. Measured at 1280×720: the register box is 86px, a tile 43px — and a
+   claim (2 lines, 29px) plus its sentence (3 lines, 48px) plus padding needs
+   91px per tile, 182px for the grid. The box cannot grow into it either: from
+   the register's top to the foot there are 242px, and the directory below
+   needs ~110 of them for four rows and a head. It is 55px short at best.
+
+   So the content reduces — but what REMAINS is now the point. The old rung
+   hid this same sentence and left a display figure over a 9.5px gold label
+   that clipped on every row; the tile now keeps a 12px claim that carries its
+   own figure ("97% of briefings involve AI"), which is the whole reason the
+   figure tier could be deleted. Above 931h the sentence returns.
+
+   It stays in the accessibility tree — a screen reader gets both tiers at
+   every viewport. */
 @media (max-height: 930px) and (min-width: 961px) {
   .fl-proof-register__description {
     position: absolute;
@@ -977,106 +988,19 @@
   top: 26px;
 }
 
-/* ── Readouts ─────────────────────────────────────────────────────────── */
+/* ⚠ THREE FAMILIES WERE DELETED HERE (2026-08-06), all confirmed to have no
+   renderer anywhere in the repo:
 
-.fl-readouts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: 0 clamp(16px, 2vw, 26px);
-}
-.fl-readout__v {
-  display: block;
-  font-family: var(--fl-mono);
-  font-weight: 700;
-  font-size: clamp(22px, 2.2vw, 31px);
-  line-height: 1;
-  color: var(--dawn);
-}
-/* Long values ("5 → 130+", "Days → min") drop a step rather than wrapping
-   mid-figure. */
-.fl-readout__v[data-wide] {
-  font-size: clamp(16px, 1.5vw, 22px);
-}
-/* CONTENT, not chrome — these captions are what the big figure above them
-   MEANS, and at the 8.5px house floor they were the exact mistake ADR-056 U9
-   named out loud while fixing only the tool gallery. 10.5px is the directory's
-   reading size, the floor for anything a visitor is expected to read
-   (2026-08-01, U11). The tick move paid for it. */
-.fl-readout__k {
-  display: block;
-  margin-top: 9px;
-  font-family: var(--fl-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--fl-ink-dim);
-  line-height: 1.6;
-}
-.fl-readouts[data-solo] {
-  gap: clamp(20px, 3svh, 34px) clamp(16px, 2vw, 26px);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.fl-readouts[data-solo] .fl-readout__v {
-  font-size: clamp(28px, 3vw, 44px);
-}
+     `.fl-readouts` / `.fl-readout__v` / `.fl-readout__k` — the pre-U13
+       three-up figure register. `TrackProofRegister` normalises `readouts`
+       into `.fl-proof-register__*` and has since it was written.
+     `.fl-ctx*` and `.fl-source` — a context table and a provenance line that
+       no component has ever emitted on this surface.
 
-/* ── Context register ─────────────────────────────────────────────────── */
-
-.fl-ctx {
-  list-style: none;
-  margin: clamp(16px, 2.6svh, 28px) 0 0;
-  padding: calc(clamp(12px, 1.8svh, 18px) + 1px) 0 0;
-  background: var(--fl-ret-rule-x) top left / 100% 1px no-repeat;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0 24px;
-}
-/* The dotted leader only works with a non-wrapping value, so an overlong
-   value cannot reflow — it would run into the next column. Clip instead; the
-   registry test caps context values at 20 characters so this never fires. */
-.fl-ctx__row {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  min-width: 0;
-  overflow: hidden;
-  font-family: var(--fl-mono);
-  text-transform: uppercase;
-}
-/* The leader KEY stays chrome-ish — it labels the value rather than saying
-   anything — but 8.5px against a 10px value read as a different register
-   entirely, so it takes half a step. */
-.fl-ctx__k {
-  flex: none;
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  color: rgba(var(--dawn-rgb), 0.3);
-}
-.fl-ctx__ld {
-  flex: 1;
-  border-bottom: 1px dotted rgba(var(--gold-rgb), 0.25);
-  transform: translateY(-3px);
-}
-.fl-ctx__v {
-  flex: none;
-  /* The value IS content — the period, the scope, the unit of done. */
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: rgba(var(--dawn-rgb), 0.7);
-  white-space: nowrap;
-}
-
-.fl-source {
-  margin: clamp(14px, 2.2svh, 22px) 0 0;
-  font-family: var(--fl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.3);
-}
+   ⚠ THE DATA STAYS. `CaseTrack.context` and `.source` are still authored and
+   still pinned non-empty by the registry test; `types.ts` documents `source`
+   as retained even when the shell omits it. Only the styling for renderers
+   that do not exist is gone. */
 
 /* ══ Evidence plates ═══════════════════════════════════════════════════ */
 
@@ -2283,17 +2207,10 @@
   font-weight: 500;
   color: var(--dawn);
 }
-.fl-toolfoot__meta {
-  font-family: var(--fl-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--fl-ink-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
+/* ⚠ `.fl-toolfoot__meta` is DELETED (owner, 2026-08-06). It printed
+   `MÍMIR · INVENT · PERFORMANCE · 2025` under the one sentence that explains
+   the tool — four pieces of metadata a reader of a case study never asked
+   for. The codename survives only as the lightbox's label now. */
 
 /* ── Capability tiles (the tool-gallery foot) ─────────────────────────── */
 
@@ -2327,7 +2244,7 @@
 .fl-cap__t {
   display: block;
   font-family: var(--fl-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2336,6 +2253,12 @@
   text-overflow: ellipsis;
   color: var(--dawn);
 }
+/* ⚠ SANS, DECLARED. This is a SENTENCE, and the type law is explicit — PT
+   Mono owns instrument chrome, PP Neue Montreal owns titles and prose. It
+   declared no family at all, so it inherited the console's mono and rendered
+   four lines of body copy in a monospace face beside a foot that was already
+   sans. That is the owner's "the fonts are inconsistent"; the console's own
+   leak (IBM Plex, above) is why there were three of them rather than two. */
 .fl-cap__d {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -2343,6 +2266,7 @@
   line-clamp: 2;
   overflow: hidden;
   margin-top: 2px;
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   font-size: var(--fl-copy);
   line-height: 1.4;
   color: rgba(var(--dawn-rgb), 0.6);
@@ -2393,8 +2317,9 @@
 .fl-caps--blocks .fl-cap__d {
   grid-row: 3;
 }
-/* Same register as `.fl-readout__v`, a step smaller: this figure shares its
-   tile with a title and a sentence, where a readout owns its column. */
+/* The blocks foot's optional figure. A step below a display readout, because
+   it shares its tile with a title and a sentence. (`.fl-caps--blocks` is a
+   second-client path — the Loop rows all use `.fl-caps--tool`.) */
 .fl-cap__n {
   grid-row: 1;
   display: block;
@@ -2664,11 +2589,13 @@
   color: var(--fl-ink-dim);
 }
 
-/* The category name, at the panel's own title register. Sans, because it is
-   a NAME rather than a readout — the mono chrome around it is what makes
-   that legible. */
+/* The category name, at the panel's own title register. ⚠ SANS, DECLARED —
+   it is a NAME, and like `.fl-cap__d` it declared no family at all and so
+   inherited the console's mono. The mono kicker above it is what makes the
+   switch legible. */
 .fl-cmp__name {
   margin: 0;
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   font-size: clamp(15px, 1.25vw, 19px);
   font-weight: 500;
   line-height: 1.15;
@@ -2679,6 +2606,7 @@
    marks are what mark this as the category speaking in its own voice. */
 .fl-cmp__claim {
   margin: 0;
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   font-size: var(--fl-copy);
   line-height: 1.35;
   color: rgba(var(--dawn-rgb), 0.88);
@@ -2696,6 +2624,7 @@
   -webkit-line-clamp: 6;
   line-clamp: 6;
   overflow: hidden;
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   font-size: calc(var(--fl-copy) * 0.92);
   line-height: 1.45;
   color: rgba(var(--dawn-rgb), 0.62);
@@ -3202,31 +3131,22 @@
     grid-template-rows: none;
   }
   .fl-proof-register__item {
-    min-height: 96px;
+    min-height: 0;
     padding: 12px;
   }
-  .fl-proof-register__value {
-    font-size: 16px;
-  }
-  .fl-proof-register__label {
-    font-size: 10.5px;
-  }
-  .fl-proof-register__description {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: 0;
-    margin: 3px 0 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
+  .fl-proof-register__claim {
     font-size: 13px;
     -webkit-line-clamp: unset;
     line-clamp: unset;
   }
-  .fl-ctx {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  /* Nothing clamps below the gate — the column is ordinary flow here, so
+     height is free and a clamp only truncates. */
+  .fl-proof-register__description {
+    margin: 4px 0 0;
+    overflow: visible;
+    font-size: 13.5px;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 }
 
@@ -3377,11 +3297,6 @@
     overflow: visible;
     -webkit-line-clamp: unset;
     line-clamp: unset;
-  }
-  .fl-toolfoot__meta {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
   }
 }
 

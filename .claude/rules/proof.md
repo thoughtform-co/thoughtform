@@ -232,15 +232,14 @@ inherited its ambient-cover role.
   1920×1080; the 10.5px row type is owner-set — take density out of
   padding, never type.
 - **Proof is ONE LEFT-COLUMN 2×2 REGISTER.** New tracks carry exactly four
-  `CaseBlock` records shaped `{ value, title, desc }`; `value` is required and
-  textual, so a count, ratio, format or operating property has the same
-  hierarchy. Budgets are value ≤16, title ≤40 and description ≤95. Legacy
+  `CaseBlock` records shaped `{ title, desc }` — a CLAIM and its evidence.
+  Budgets are title ≤27 and description ≤95 (see ADR-067 above for why 27 is
+  measured rather than round, and why the `value` figure was deleted). Legacy
   `readouts` remain a compatibility input normalized into this register, and a
   track carries one model or the other, never both. On compact-height desktop
-  the value and label remain visible while description density may reduce;
-  taller desktop and full-flow mobile expose the supporting sentence. The
-  right panel has no generic foot: its visual owns the full panel beneath the
-  designation rail.
+  the CLAIM remains visible while the sentence goes sr-only; taller desktop and
+  full-flow mobile expose both. The right panel has no generic foot: its visual
+  owns the full panel beneath the designation rail.
 - **The `01_INTELLIGENCE-MAP/` row is THE CITY (ADR-062).** Three sheets —
   **board · unit · below grade** — in ONE isometric, drawn from `MAP_SHAPES`
   (5), `MAP_DISTRICTS` (8) and `MAP_WORKS` (27; 24 configured, 3 person-led)
@@ -409,6 +408,57 @@ facts` is wider than the whole plate — so the values live on the LABEL
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
+
+## One type ladder, four claims, tab plates (ADR-067, live)
+
+- **TWO FAMILIES, BY ROLE.** PT Mono owns instrument chrome; PP Neue Montreal
+  owns titles and prose. ⚠ **`--font-mono` IS IBM PLEX MONO**
+  (`app/styles/variables.css`), NOT the casefile's `--fl-mono` (PT Mono) — the
+  console carried it from the v18 port, so every descendant that declared no
+  family inherited a THIRD face, including four lines of body copy in
+  `.fl-cap__d`. Anything whose content is a sentence must declare
+  `--font-pp-neue-montreal` **explicitly**; inheriting is how this recurs.
+  Same class of bug as ADR-066's `--font-sans`, which was declared nowhere.
+  ⚠ **The guard is per-ROLE, not per-family** — a sentence in mono passes any
+  "no third family" count, so the smoke asserts both halves.
+- **`.fl-con__foot p` reads `--fl-copy`**, the same token as `.fl-brief__body`
+  (owner). One token, so the two columns cannot drift.
+- **THE PROOF REGISTER IS FOUR CLAIMS — `CaseBlock` is `{ title, desc }`.**
+  The display figure is deleted: across four rows its sixteen values carried
+  NINE grammars, and row one's `27`/`47` restated the directory's own
+  `27 → 47`. A row's headline count belongs on its directory `meta`.
+  ⚠ `title` ≤**27** chars, MEASURED: at 1920×1080 the half-column is ~234px at
+  13px mono / .045em ≈ 8.4px an advance, so 28 characters wrap — and a wrapped
+  claim steals a line from its own sentence.
+- ⚠ **BELOW 931h THE TILE IS THE CLAIM ALONE, and it is arithmetic.** At
+  1280×720 the register box is 86px and two full tiers need 182px; the column
+  has 242px total and the directory needs ~110. The claim carries its own
+  figure, which is what makes the reduction honest — the previous rung hid the
+  same sentence and left a 9.5px label that clipped on every row.
+- **TOOL LIFECYCLE HAS ONE REGISTRY, and the proof register is not it.** The
+  `· live` suffix left the tools claims; `PROJECT_CASES[].status` is canonical
+  and the guard checks it there. A proof claim may not restate it.
+- **A STATION IS A CHAMFERED PLATE** — top-right cut at the chrome rung, active
+  filled and WELDED to the console (an `::after` covers the rail's bottom
+  border). ⚠ **The lit spine moved to the plate's TOP**: it used to sit at
+  `bottom: -1px`, the exact pixel the weld occupies, and would have re-drawn
+  the seam the weld removes. Its `inset` clip stops it at the chamfer while
+  its width stays a full station pitch, so the `--rail-i` translate still lands.
+- ⚠ **AN ORBIT ARC MAY LEAVE THE BOX SIDEWAYS, NEVER THROUGH THE TOP OR
+  BOTTOM.** `ry < 525` and `rx ≥ 420`, and both hold at every viewport because
+  each side scales with the box. Ellipse 1 was `ry 600` — a 302.8px radius
+  against a 265px half-box — so it cropped and re-entered as two 14px stubs at
+  30.8° in the bezel gap, landing on the tab dividers at four stations. That
+  was the owner's "two diagonal lines coming out of the tabs". ⚠ It was NOT
+  the chamfers: a `clip-path` cuts a border, it never strokes one.
+- **1920×1080 IS A REFERENCE VIEWPORT NOW**, and it is the worst case:
+  `.fl-brief` hangs off the `--fl-t6` seam, which is NOT monotonic in viewport
+  height — 199px at 1280×720, 221px at 1440×800, **202px** at 1920×1080 with
+  `--band-copy` at its 18px ceiling.
+- ⚠ **STILL OPEN: the map's SVG renders in `--font-mono` (IBM Plex)** while
+  `MONO_ADVANCE` is documented as PT Mono's advance and every label placement
+  derives from it. Either the constant or the font is wrong. Its own pass — the
+  fix moves every label on all three readings.
 
 ## One rail, one foot, and the Studio's sheets (ADR-066, live)
 

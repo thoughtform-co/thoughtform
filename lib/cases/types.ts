@@ -459,20 +459,29 @@ export interface CaseReadout {
 }
 
 /**
- * One proof tile in a track's left-column 2×2 register. Every tile follows
- * one hierarchy: display value → small-caps label → supporting sentence.
- * `value` is deliberately textual rather than numeric: proof can be a count,
- * a ratio, a format, or an operating property such as `DOMAIN-OWNED`.
+ * One proof tile in a track's left-column 2×2 register. TWO TIERS: the claim,
+ * then one sentence of evidence for it.
+ *
+ * ⚠ THE DISPLAY FIGURE IS GONE (owner, 2026-08-06), and the reason is that it
+ * could never be one thing. Across the four Loop rows the sixteen `value`
+ * fields carried NINE grammars — bare counts (`27`), a percentage (`97%`),
+ * ratios (`19/24`), a multiplier (`2–3×`), format specs (`2 × 30 SEC`),
+ * channel pairs (`YOUTUBE + CTV`), arrow pipelines (`MONDAY → FIGMA`),
+ * arithmetic (`2 + 2`) and status words (`WITHIN`) — because a figure slot
+ * only works if every project has a figure, and they do not. Row one's `27`
+ * and `47` also restated the directory row's own `27 → 47` two boxes away.
+ *
+ * The counts did not disappear with it: a row's headline number lives on its
+ * DIRECTORY META, which is where a count belongs, and the rest read inside
+ * the sentences.
  *
  * BUDGETS are pinned by `cases-registry.test.ts`:
- *   · `value` ≤16 chars — one display line in the half-column;
- *   · `title` ≤40 chars — one or two compact mono lines;
- *   · `desc` ≤95 chars — available on taller and full-flow layouts.
+ *   · `title` ≤30 chars — the claim, one line at reading size;
+ *   · `desc` ≤95 chars — the evidence, two lines.
  * Exactly four blocks: the proof register is a 2×2 composition.
  */
 export interface CaseBlock {
-  /** Display claim, e.g. "47+", "2 × 30 SEC", or "DOMAIN-OWNED". */
-  value: string;
+  /** The claim, e.g. "97% of briefings involve AI". */
   title: string;
   desc: string;
 }

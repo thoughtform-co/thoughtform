@@ -173,16 +173,21 @@ describe("cases registry (ADR-054)", () => {
           // The left proof register is exactly 2×2.
           expect(t.blocks.length, `${c.slug}/${t.id} blocks`).toBe(4);
           for (const b of t.blocks) {
-            // Values can be figures, formats, or operating properties. They
-            // remain a single display line in the half-column register.
-            expect(b.value.length, `${c.slug}/${t.id} block "${b.title}" value`).toBeGreaterThan(0);
-            expect(
-              b.value.length,
-              `${c.slug}/${t.id} block "${b.title}" value`
-            ).toBeLessThanOrEqual(16);
-            // Labels may take two compact mono lines in the left register.
-            expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeLessThanOrEqual(40);
-            // Supporting copy is visible in taller and full-flow layouts.
+            // THE CLAIM, and it is the tile's whole headline now — the
+            // display figure that used to lead it is deleted (2026-08-06,
+            // owner), because across four rows its sixteen values carried
+            // nine different grammars.
+            //
+            // ⚠ 27 IS MEASURED, NOT ROUND. At 1920×1080 the register's
+            // half-column is ~234px and the claim sets at 13px mono with
+            // .045em tracking — ~8.4px an advance, so 28 characters wrap. A
+            // wrapped claim steals a line from its own sentence: the map
+            // row's third tile did exactly that and clipped its description
+            // by 14px while the other fifteen fit.
+            expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeGreaterThan(0);
+            expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeLessThanOrEqual(27);
+            // The evidence for the claim. Visible at every viewport now that
+            // the figure's display line is free.
             expect(b.desc.length, `${c.slug}/${t.id} block "${b.title}" desc`).toBeLessThanOrEqual(
               95
             );
@@ -517,9 +522,14 @@ describe("cases registry (ADR-054)", () => {
   it("publishes one canonical Studio adoption figure across Proof and the AI keynote", () => {
     const loop = getCase("loop-earplugs");
     const studio = loop?.casefile.tracks.find((track) => track.id === "studio");
-    expect(studio?.blocks?.find((block) => /paid-social briefings/i.test(block.title))?.value).toBe(
-      "97%"
-    );
+    // ⚠ THE FIGURE IS IN THE CLAIM NOW, not in a display slot beside it —
+    // `CaseBlock.value` was deleted 2026-08-06. The guard follows it there
+    // rather than lapsing: the one canonical adoption figure still has to be
+    // present on this row, it just reads as a sentence.
+    expect(
+      studio?.blocks?.some((block) => /\b97\s*%/.test(block.title)),
+      "the Studio register must still publish 97% as a claim"
+    ).toBe(true);
 
     const percentages = new Set<string>();
     const collect = (root: unknown, path: string) => {
@@ -564,11 +574,30 @@ describe("cases registry (ADR-054)", () => {
         .find((track) => track.id === "tooling")
         ?.blocks?.map((block) => block.title)
     ).toEqual([
-      "Generation platform · live",
-      "Briefing orchestration · live",
-      "Briefing intelligence · live",
-      "Localization pipeline · live",
+      "Generation platform",
+      "Briefing orchestration",
+      "Briefing intelligence",
+      "Localization pipeline",
     ]);
+  });
+
+  it("tool lifecycle has ONE registry, and the proof register is not it", () => {
+    // ⚠ THE `· live` SUFFIX LEFT THESE FOUR CLAIMS (2026-08-06). It was a
+    // second status registry — `.claude/rules/proof.md` names exactly that as
+    // the thing to avoid — kept in step by hand with `PROJECT_CASES`, where
+    // the lifecycle actually lives. Removing it is what makes the rule true
+    // rather than merely asserted, so the guard moves to the canonical
+    // source and the proof labels are freed to be claims.
+    for (const tool of PROJECT_CASES) {
+      expect(tool.status, `${tool.id} lifecycle`).toBe("Production");
+    }
+    const tooling = getCase("loop-earplugs")?.casefile.tracks.find((t) => t.id === "tooling");
+    for (const block of tooling?.blocks ?? []) {
+      expect(
+        block.title,
+        `"${block.title}" restates a lifecycle the tool registry owns`
+      ).not.toMatch(/\b(live|production|shipped|wip)\b/i);
+    }
   });
 
   it("one Skills total across the case, and the map plate sums to it", () => {
@@ -596,8 +625,11 @@ describe("cases registry (ADR-054)", () => {
         for (const r of t.readouts ?? []) {
           if (/skills?/i.test(r.label)) note(r.value, `${t.id} readout "${r.label}"`);
         }
+        // The claim carries its own figure since `CaseBlock.value` was
+        // deleted, so the total is read out of the title itself — `47 Skills
+        // encoded` still has to agree with the map plate's sum.
         for (const b of t.blocks ?? []) {
-          if (/skills?/i.test(b.title)) note(b.value, `${t.id} block "${b.title}"`);
+          if (/skills?/i.test(b.title)) note(b.title, `${t.id} block "${b.title}"`);
         }
         if (
           (t.visual.kind === "registry" || t.visual.kind === "intelligence-map") &&

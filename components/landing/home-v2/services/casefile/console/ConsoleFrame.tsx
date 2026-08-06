@@ -81,7 +81,23 @@ export function ConsoleFrame({
         preserveAspectRatio="none"
         aria-hidden="true"
       >
-        <ellipse cx="580" cy="615" rx="410" ry="600" />
+        {/* ⚠ AN ARC MAY LEAVE THIS BOX SIDEWAYS, NEVER THROUGH THE TOP OR
+            BOTTOM — and the bound is arithmetic, so it holds at every
+            viewport. With `preserveAspectRatio="none"` the ellipses map
+            linearly onto `.fl-con`, so the screen radii are
+            `RX = rx·W/840` and `RY = ry·H/1050` against a half-box of `W/2`
+            and `H/2`. Staying inside vertically is therefore `ry < 525` at
+            ANY height, and exiting sideways is `rx ≥ 420` at any width.
+
+            The first ellipse used to be `rx 410 ry 600`: 600 overshot the top
+            by 38px, so the arc was cropped, re-entered at the top edge, and
+            was swallowed again by the opaque console 7px below — leaving two
+            14px stubs at 30.8° in the gap band. At four stations they landed
+            on the tab dividers (measured: one straddling x=154, the other
+            2.8px off x=447), which is why they read as diagonals coming out
+            of the tabs. The second ellipse always satisfied both bounds,
+            which is why only one pair ever appeared. */}
+        <ellipse cx="580" cy="615" rx="470" ry="500" />
         <ellipse cx="580" cy="615" rx="560" ry="470" />
       </svg>
       <i className="fl-con__outer" aria-hidden="true" />
