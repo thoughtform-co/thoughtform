@@ -5,9 +5,30 @@
    ⚠ THE PALETTE ROUTES THROUGH TOKENS, and v18's literals are the DARK end
    of each. ADR-058's flip swaps `--dawn-rgb` and `--void-rgb` wholesale, so a
    raw hex here is a decision to own the light variant by hand — which is
-   exactly the bug that shipped in the lab's first light pass. Gold is
-   theme-invariant by owner decision, so `--pda-hot` and the green marks stay
-   literal; everything that carries ink or ground does not.
+   exactly the bug that shipped in the lab's first light pass.
+
+   ⚠ GOLD IS SPLIT BY ROLE, and only the MARK is theme-invariant (ADR-063 U2).
+   Measured on the parchment ground, one gold serving every job put this
+   console at 1.15:1 as text and 1.07–1.49:1 as line work — the drawing was
+   there and unreadable. A saturated yellow is inherently LIGHT, so it has
+   almost nowhere to go on a light ground; the fix is the role ramp ADR-058
+   prescribed (`--gold-line` / `--gold-ink` / `--gold-ink-lit`), not a
+   re-darkened `--gold`, which would take the FILLS down with it.
+
+     --pda-hot       MARK  a fill, a pip, the lit rail segment. Stays
+                           literal in both modes: the ink printed ON a gold
+                           fill is what carries contrast, not the fill.
+     --pda-ink       TEXT  gold set as small type.
+     --pda-ink-lit   TEXT  the same in a LIT state. ⚠ On the dark side that
+                           is BRIGHTER than `--pda-ink`; on parchment it is
+                           DARKER. "More contrast against this ground" is the
+                           invariant; the direction belongs to the ground.
+     --pda-amb/-dim  LINE  strokes that carry the drawing.
+
+   Alphas are role-split for the same reason and it is the same mistake in a
+   different token: an alpha tuned to recede toward BLACK recedes toward
+   PARCHMENT after the flip, which is invisible rather than quiet. The light
+   steps live in theme.css beside ADR-058's other per-theme blocks.
 
    THE DRAWING CARRIES PROVENANCE — no legend, and none may be added. A filled
    gauge is a configuration on record, a crossed one is person-led, green is
@@ -24,9 +45,20 @@
   --pda-hair2: rgba(var(--gold-rgb), 0.24);
   --pda-dim: rgba(var(--gold-rgb), 0.42);
   --pda-amb: rgba(var(--gold-rgb), 0.78);
-  --pda-hot: #f0c86a;
+  /* ⚠ THE LIT GOLD IS ONE SIGNAL, whatever it paints — a gauge square, a
+     hovered outline, a stream id, the rail's travelling segment. It takes
+     the ramp's LIT step, which is byte-equal to v18's #f0c86a on the dark
+     side and goes DARKER on parchment. Nothing on this console prints ink
+     ON a gold fill any more (the badge that did was deleted in U1), so
+     there is no fill left that can afford to stay luminous. */
+  --pda-hot: var(--gold-ink-lit);
+  --pda-ink: var(--gold-ink);
   --pda-grn: #7e9f66;
   --pda-grnh: #b9e39d;
+  /* Green as TEXT ("trenched by"), split from green as a mark for the same
+     reason gold is. The provenance hue survives the mode change almost
+     unchanged as a MARK; as 9px type on parchment it measured 2.16:1. */
+  --pda-grn-ink: #7e9f66;
   --pda-txt: rgba(var(--dawn-rgb), 0.92);
   --pda-txt2: rgba(var(--dawn-rgb), 0.56);
   --pda-txt3: rgba(var(--dawn-rgb), 0.38);

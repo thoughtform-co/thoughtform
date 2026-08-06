@@ -38,6 +38,46 @@
      flip, where --void becomes parchment and would land ~3:1 on the
      darkened gold. Light value lives in theme.css. */
   --gold-contrast: #0a0908;
+
+  /* ─── GOLD BY ROLE (ADR-063 U2) ───
+     THE SECOND TOKEN ADR-058 PRESCRIBED, and the reason it has to exist:
+     `--gold` is ONE value serving three jobs, and a saturated yellow
+     cannot carry all three across a ground flip. A yellow at full chroma
+     is inherently LIGHT — that is the hue, not a choice — so on parchment
+     it has almost nowhere to go: `--gold` measures 1.8:1 as text there
+     and `#f0c86a` measures 1.15:1. ADR-058 accepted that cost and wrote
+     down the fix: a second token, never a re-darkening of `--gold`, which
+     would take the FILLS down with it (ink on a gold fill is 8.2:1 today
+     and the darkened value put it at 4.7:1).
+
+     So the hue is the brand and the LIGHTNESS is the role:
+
+       MARK   `--gold`            a fill, a pip, a lit segment. The ink
+                                  printed ON it carries the contrast
+                                  (`--gold-contrast`), so the fill itself
+                                  is free to stay luminous in both modes.
+       LINE   `--gold-line`       a hairline, an outline, a stroke that
+                                  carries meaning. Target 3:1.
+       INK    `--gold-ink`        gold set as small text. Target 4.5:1.
+       INK+   `--gold-ink-lit`    the same, in a LIT or active state.
+
+     ⚠ THE EMPHASIS DIRECTION INVERTS WITH THE GROUND. On the dark side
+     `-lit` is BRIGHTER than `--gold-ink`; on parchment it is DARKER. That
+     is not an inconsistency — "more contrast against this ground" is the
+     invariant, and which direction that lies in is a property of the
+     ground, not of the brand.
+
+     These three are byte-equal to today's shipped values HERE, so
+     adopting them on a dark surface is a no-op. The light steps live in
+     theme.css and are measured against the darkest light ground
+     (`--surface-1`, #ddd2c0), which is the worst case for dark type.
+
+     WebGL golds are exempt and always were: they are light emitters, not
+     type (owner, 2026-08-01). */
+  --gold-line: #caa554;
+  --gold-ink: #caa554;
+  --gold-ink-lit: #f0c86a;
+
   --alert: #ff6b35;
 
   /* ─── RGB TRIPLES (ADR-058) ───

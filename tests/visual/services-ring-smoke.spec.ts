@@ -1187,6 +1187,107 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(aboutStatic.voidwalker).not.toBe("none");
   });
 
+  test("light: the map console's palette carries its contrast (ADR-063 U2)", async ({ page }) => {
+    test.skip(!isDesktopViewport(page), "the console is desktop-only (≥981px)");
+
+    // THE FAILURE THIS PINS. The console is a port of a drawing authored on
+    // near-black, and gold, green and every recessive alpha carried straight
+    // over to parchment where they mean something else — measured at 1.15:1
+    // (gold as text), 1.24:1 (line work) and 2.38:1 for the 80 metadata
+    // labels on reading 01. The drawing was on screen and unreadable, and no
+    // guard on this surface looked at colour at all.
+    //
+    // A saturated yellow is inherently LIGHT, so it cannot be made to carry
+    // contrast on a light ground by tweaking it — hence the role ramp
+    // (`--gold-line` / `--gold-ink` / `--gold-ink-lit`), which is the fix
+    // ADR-058 wrote down and declined to take at the time.
+    await page.goto("/?theme=light", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 20_000 });
+    expect(await scrollCasefileDwell(page, 0.1), "casefile runway missing").toBe(true);
+    await page.waitForTimeout(900);
+    await expect(page.locator(".fl-pda")).toBeVisible();
+
+    for (const [index, view] of ["1", "2", "3"].entries()) {
+      await page.locator(".fl-pda__stn").nth(index).click();
+      await page.waitForTimeout(400);
+      await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);
+
+      const worst = await page.evaluate(() => {
+        const consoleEl = document.querySelector<HTMLElement>(".fl-pda__console");
+        const svg = document.querySelector<SVGSVGElement>(".fl-pda__svg");
+        if (!consoleEl || !svg) return null;
+
+        const parse = (c: string) => {
+          const m = c.match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          const p = m[1].split(",").map((v) => Number.parseFloat(v));
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        };
+        const lin = (v: number) => {
+          const s = v / 255;
+          return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        type C = { r: number; g: number; b: number; a: number };
+        const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+        // Alpha tokens are COMPOSITED before measuring: an alpha tuned to
+        // recede toward black recedes toward parchment after the flip, and
+        // judging the raw value would miss exactly that.
+        const ratio = (fg: C, bg: C) => {
+          const f =
+            fg.a >= 1
+              ? fg
+              : {
+                  r: fg.a * fg.r + (1 - fg.a) * bg.r,
+                  g: fg.a * fg.g + (1 - fg.a) * bg.g,
+                  b: fg.a * fg.b + (1 - fg.a) * bg.b,
+                  a: 1,
+                };
+          const [hi, lo] = [lum(f), lum(bg)].sort((x, y) => y - x);
+          return (hi + 0.05) / (lo + 0.05);
+        };
+
+        const ground = parse(getComputedStyle(consoleEl).backgroundColor);
+        if (!ground) return null;
+
+        let low = { ratio: 99, text: "", fill: "" };
+        for (const t of svg.querySelectorAll("text")) {
+          const c = parse(getComputedStyle(t).fill);
+          if (!c) continue;
+          const r = ratio(c, ground);
+          if (r < low.ratio)
+            low = {
+              ratio: Number(r.toFixed(2)),
+              text: (t.textContent ?? "").slice(0, 24),
+              fill: getComputedStyle(t).fill,
+            };
+        }
+
+        // Line work that carries the drawing answers to the 3:1 component
+        // target; the frame/divider hairlines are decorative and exempt.
+        const host = getComputedStyle(document.querySelector<HTMLElement>(".fl-pda")!);
+        const lines = ["--pda-amb", "--pda-dim"].map((name) => {
+          const probe = document.createElement("span");
+          probe.style.color = host.getPropertyValue(name).trim();
+          document.body.appendChild(probe);
+          const c = parse(getComputedStyle(probe).color);
+          probe.remove();
+          return { name, ratio: c ? Number(ratio(c, ground).toFixed(2)) : 0 };
+        });
+
+        return { low, lines };
+      });
+
+      expect(worst, `view ${view}: no console`).not.toBeNull();
+      expect(
+        worst!.low.ratio,
+        `view ${view}: "${worst!.low.text}" is ${worst!.low.ratio}:1 in ${worst!.low.fill}`
+      ).toBeGreaterThanOrEqual(4.5);
+      for (const l of worst!.lines) {
+        expect(l.ratio, `view ${view}: ${l.name} is ${l.ratio}:1`).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
   test("reduced motion keeps the accordion and mounts no ring overlays", async ({ browser }) => {
     const context = await browser.newContext({
       reducedMotion: "reduce",

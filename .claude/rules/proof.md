@@ -483,12 +483,33 @@ The right panel is the PDA console (`map/pda/**`), three readings:
     retired the ring's wheel-snap hijack on this same stage. The ring's
     "wheel scrolls natively" smoke case must keep passing.
 - **The active label is INK, not gold, and that is a THEME decision.**
-  `--pda-hot` (#f0c86a) is the dark end of the gold ramp; ADR-058's flip
-  makes the console's ground parchment, where gold-as-TEXT measures
-  ~1.1:1 — measured, invisible. The lit signal rides the MARKS (diamond
-  fill, wash, travelling spine) and the label just goes to full strength.
-  One rule, both themes, no `[data-theme]` override. ⚠ The foot title and
-  the drawing itself still fail this way in light — pre-existing, unfixed.
+  `--pda-hot` is the LIT step of the gold ramp; ADR-058's flip makes the
+  console's ground parchment, where gold-as-TEXT measured ~1.1:1 — invisible.
+  The lit signal rides the MARKS (diamond fill, wash, travelling spine) and
+  the label just goes to full strength. One rule, both themes, no
+  `[data-theme]` override.
+- ⚠ **GOLD IS SPLIT BY ROLE, AND HUE IS THE BRAND WHILE LIGHTNESS IS THE
+  ROLE (ADR-063 U2).** A saturated yellow is inherently HIGH-LUMINANCE, so
+  one gold cannot serve marks, lines and text across a ground flip — the
+  console measured 1.15:1 (gold as text), 1.24:1 (line work) and 2.38:1 for
+  80 of 97 labels on reading 01. The ramp is `--gold` (MARK) → `--gold-line`
+  (3:1) → `--gold-ink` (4.5:1) → `--gold-ink-lit`, all byte-equal to shipped
+  values in DARK so adoption is a no-op there. ⚠ **NEVER re-darken `--gold`
+  itself** — ADR-058 measured that and it breaks the FILLS (ink on gold
+  8.2:1 → 4.7:1). ⚠ **The emphasis direction INVERTS with the ground**: on
+  dark `-lit` is brighter, on parchment it is darker. "More contrast against
+  this ground" is the invariant.
+- ⚠ **AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP.** `rgba(ink, .38)`
+  recedes toward BLACK in dark and toward PARCHMENT in light — same number,
+  quiet becomes invisible. The console's neutral ramp is re-derived per theme
+  in theme.css and lifted UNEQUALLY so the drawing keeps its hierarchy.
+- **Colour is now GUARDED**, by a light-theme smoke case that composites every
+  alpha before measuring and walks all three readings (4.5:1 glyphs, 3:1 line
+  work). Nothing on this surface looked at colour before. ⚠ Still open:
+  `--pda-txt3` is **2.93:1 in DARK** (the same 80 labels) — owner's call,
+  ~0.52 alpha would fix it; and the sites ADR-058 named (`4 ITEMS`,
+  `ON RECORD`, the contact email) are still on `--gold` at 1.8:1 — the ramp
+  exists for them, adopting it is a sweep with its own verification.
 
 ## The BOARD archetype (look-dev, `/test/intelligence-map-lab`)
 

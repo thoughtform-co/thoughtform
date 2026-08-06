@@ -207,7 +207,7 @@ export function ViewConfiguration({
           textAnchor="middle"
           fontSize={T.cfgLabel}
           letterSpacing=".22em"
-          fill="var(--pda-amb)"
+          fill="var(--pda-ink)"
         >
           WHO OWNS IT
         </text>
@@ -462,7 +462,7 @@ export function ViewSubstrate({
               textAnchor="middle"
               fontSize={T.shapeTrench}
               letterSpacing=".14em"
-              fill="var(--pda-grn)"
+              fill="var(--pda-grn-ink)"
             >
               {`TRENCHED BY ${s.trenchedBy}`}
             </text>

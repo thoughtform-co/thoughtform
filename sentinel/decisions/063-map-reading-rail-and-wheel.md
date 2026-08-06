@@ -264,6 +264,106 @@ So the remaining options are all design calls, and they are the owner's:
 Reading 03 is the same story with a different wall: its shape modules are
 already at 89 % of their measure, so its type is capped by the module box.
 
+## Update 2 — gold gets the second token ADR-058 asked for (2026-08-06, owner)
+
+Owner, on the light-mode console: "is there a way of making the yellow a bit
+more legible in a brand system best practices kinda way". Measured, the yellow
+was the visible half of a whole-palette failure.
+
+### What the audit found
+
+Against the console's parchment ground (#e4dac9), in light:
+
+| token                                | measured | target |
+| ------------------------------------ | -------- | ------ |
+| `--pda-hot` as text                  | 1.15:1   | 4.5:1  |
+| `--pda-amb` as text                  | 1.49:1   | 4.5:1  |
+| `--pda-dim` as line                  | 1.24:1   | 3:1    |
+| `--pda-hair2` as line                | 1.13:1   | 3:1    |
+| `--pda-grn` as text                  | 2.16:1   | 4.5:1  |
+| `--pda-grnh` as mark                 | 1.04:1   | 3:1    |
+| `--pda-txt3` (80 of 97 labels on 01) | 2.38:1   | 4.5:1  |
+
+The drawing was on screen and unreadable, and **no guard on this surface
+looked at colour at all** — the smoke measured glyph geometry and the unit
+test measured arithmetic.
+
+### Why it is not a tweak
+
+Two different defects wearing the same symptom:
+
+1. **The literal hues.** Gold and green were chosen to glow on near-black. A
+   saturated yellow is inherently HIGH-LUMINANCE — that is the hue, not a
+   choice — so on parchment it has almost nowhere to go. No amount of nudging
+   #f0c86a makes it carry 4.5:1 on #e4dac9 while still being yellow.
+2. **The alphas, which invert their own meaning.** `rgba(ink, .38)` recedes
+   toward BLACK in dark and toward PARCHMENT in light. The same number, the
+   opposite result: quiet becomes invisible.
+
+### The decision: hue is the brand, lightness is the role
+
+ADR-058 measured a re-darkened `--gold` and rejected it for good reasons — it
+fixes text and breaks fills (ink on gold 8.2:1 → 4.7:1), reads olive-drab at
+display size, and desynced the DOM from the WebGL golds. It also wrote down
+the alternative in as many words: _"If it needs solving, the fix is a SECOND
+token for gold-as-text, NOT re-darkening this one."_ This is that token, as a
+small ramp:
+
+| role | token            | dark    | light   | target |
+| ---- | ---------------- | ------- | ------- | ------ |
+| MARK | `--gold`         | #caa554 | #caa554 | —      |
+| LINE | `--gold-line`    | #caa554 | #8a6b20 | 3:1    |
+| INK  | `--gold-ink`     | #caa554 | #6e5216 | 4.5:1  |
+| INK+ | `--gold-ink-lit` | #f0c86a | #5c4411 | 4.5:1  |
+
+All three are byte-equal to shipped values in dark, so **adopting them on a
+dark surface is a no-op** — and they are opt-in, so adding them changed
+nothing until a surface consumed them. Light steps are measured against
+`--surface-1` (#ddd2c0), the darkest light ground and therefore the worst case
+for dark type.
+
+⚠ **THE EMPHASIS DIRECTION INVERTS WITH THE GROUND.** On the dark side `-lit`
+is BRIGHTER than `--gold-ink`; on parchment it is DARKER. That is not an
+inconsistency — "more contrast against this ground" is the invariant, and
+which direction that lies in belongs to the ground, not to the brand.
+
+### What the console adopted
+
+`--pda-hot` now reads `var(--gold-ink-lit)` directly, so the lit signal takes
+the ramp's lit step in both modes with no override to maintain. The usual
+argument for leaving a gold FILL luminous — the ink printed on it carries the
+contrast — **does not apply here, because U1 deleted the badge and nothing on
+this console prints ink on gold any more.** Its gold marks stand alone, so
+they carry their own.
+
+The rest is a per-theme block in theme.css beside ADR-058's others: line work
+to the `--gold-line` steps, green to `--atreides-light` (the light green the
+token system already carried), and the neutral alphas re-derived for a ground
+they now recede INTO — lifted UNEQUALLY so the drawing keeps its hierarchy.
+
+### Result
+
+Every glyph on all three readings clears 4.5:1 (lowest 4.79), and the line
+work clears 3:1 (3.02 / 3.61). Only the two decorative frame hairlines sit
+below the component target, deliberately and documented. Dark is unchanged:
+the lit gold still resolves to `rgb(240, 200, 106)`.
+
+One deliberate dark-side change: `WHO OWNS IT` was reaching for `--pda-amb` —
+a LINE token — to paint text, which is the exact confusion the split fixes. It
+now takes `--pda-ink` and goes 5.58:1 → 8.8:1.
+
+**Guarded** by a new light-theme smoke case that composites every alpha before
+measuring, walks all three readings, and asserts 4.5:1 on glyphs and 3:1 on
+line work.
+
+⚠ **Still open, and now measured:** `--pda-txt3` is 2.93:1 in DARK — the same
+80 labels. It is left alone because that hierarchy is what the owner has been
+reviewing and approving on the dark surface; lifting the alpha to ~0.52 would
+put it at ~4.6:1. Owner's call. The other sites ADR-058 named as gold-as-text
+regressions (`4 ITEMS`, `IN BUILD`, `ON RECORD`, the contact email) are still
+on `--gold` at 1.8:1 — the ramp now exists for them, but adopting it there is
+a sweep with its own verification pass, not part of this change.
+
 ## Notes
 
 ### 5. ADR-062 is stale on the drawing

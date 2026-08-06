@@ -236,6 +236,34 @@ html[data-theme="light"] {
      variables.css), so swapping a site to it is a no-op there, and
      resolves to ink here (~4.9:1). */
   --gold-contrast: #110f09;
+
+  /* ── BLOCK 7 — GOLD BY ROLE (ADR-063 U2) ──────────────────────────
+     The light steps of the ramp declared in variables.css. Same hue
+     (41–43°, measured against `--gold`'s 41.2°), different lightness,
+     because the ROLE is what changes — not the brand.
+
+     Measured against `--surface-1` (#ddd2c0), the DARKEST light ground,
+     which is the worst case for dark type. Against the map console's
+     ground (#e4dac9) and the page ground (#ece3d6) every step has more:
+
+       --gold-line     #8a6b20   3.6:1   (target 3:1, non-text)
+       --gold-ink      #6e5216   4.9:1   (target 4.5:1, small text)
+       --gold-ink-lit  #5c4411   6.2:1   (a lit state = MORE contrast)
+
+     ⚠ `--gold` ITSELF IS UNTOUCHED, deliberately. ADR-058 measured the
+     re-darkening and rejected it: it fixes text and breaks fills (ink on
+     gold 8.2:1 → 4.7:1) and reads olive-drab at display size. These
+     tokens exist so a SITE can pick the step its role needs, which is
+     the fix ADR-058 asked for in as many words.
+
+     ⚠ AND THEY ARE OPT-IN. Adding them changes nothing on its own; a
+     surface adopts them by consuming them. Today the map console does
+     (`.fl-pda`, below). The other sites ADR-058 named as regressions —
+     `4 ITEMS`, `IN BUILD`, `ON RECORD`, the contact email — are still on
+     `--gold` at 1.8:1 and are a sweep, not an oversight. */
+  --gold-line: #8a6b20;
+  --gold-ink: #6e5216;
+  --gold-ink-lit: #5c4411;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -438,6 +466,55 @@ html[data-theme="light"] .fl-imap__dot {
    the PAGE colour, not a tint of it, or the drawing shows through. */
 html[data-theme="light"] .fl-imap__card {
   background: rgba(var(--void-rgb), 0.98);
+}
+
+/* ── The map CONSOLE, by role (ADR-063 U2) ────────────────────────────────
+   The PDA is a port of a drawing authored entirely on near-black, and it
+   arrived with one gold and one set of alphas doing every job. Measured on
+   its parchment ground (#e4dac9) the whole recessive half of that palette
+   was gone:
+
+     --pda-hot   as text    1.15:1     --pda-txt3  (80 of 97 labels)  2.38:1
+     --pda-amb   as text    1.49:1     --pda-txt2                     3.98:1
+     --pda-dim   as line    1.24:1     --pda-grn   as text            2.16:1
+     --pda-hair2 as line    1.13:1     --pda-grnh  as mark            1.04:1
+
+   Two different mistakes, and they need different fixes.
+
+   1. THE LITERAL HUES. Gold and green were picked to glow on near-black.
+      Both are HIGH-LUMINANCE by nature — that is what makes them read
+      there — so on parchment they have almost nowhere to go. Each takes a
+      darker step at the SAME hue (`--gold-line`/`--gold-ink`/`--gold-ink-lit`
+      from the ramp; `--atreides-light` for green), so the MEANING survives
+      the flip even though the value cannot.
+   2. THE ALPHAS, WHICH INVERT THEIR OWN MEANING. `rgba(ink, .38)` recedes
+      toward BLACK in dark and toward PARCHMENT in light. Same number,
+      opposite result: quiet becomes invisible. Lifted here, and lifted
+      UNEQUALLY so the drawing keeps its hierarchy — flattening them to one
+      value would lose the difference between a label and its metadata.
+
+   ⚠ `--pda-hot` IS NOT IN THIS BLOCK, and not because it is exempt: it reads
+   `var(--gold-ink-lit)` directly in pda.css, so it takes the ramp's LIT step
+   in both modes with no override to keep in step. The usual argument for
+   leaving a gold FILL luminous — the ink printed on it carries the contrast —
+   does not apply here, because nothing on this console prints ink on gold any
+   more. Its gold marks stand alone, so they have to carry their own. */
+html[data-theme="light"] .fl-pda {
+  /* Line work that carries the drawing: 3:1. */
+  --pda-amb: var(--gold-line);
+  --pda-dim: rgba(138, 107, 32, 0.88);
+  /* Frame and divider hairlines are decorative, so they sit under the 3:1
+     component target on purpose — visible, not structural. */
+  --pda-hair2: rgba(138, 107, 32, 0.7);
+  --pda-hair: rgba(138, 107, 32, 0.5);
+  /* The neutral ramp, re-alpha'd for a ground it now recedes INTO. */
+  --pda-txt2: rgba(var(--dawn-rgb), 0.72);
+  --pda-txt3: rgba(var(--dawn-rgb), 0.62);
+  /* Provenance green: the mark keeps the hue, the ink takes the light step
+     the token system already carries for exactly this. */
+  --pda-grn: var(--atreides-light);
+  --pda-grnh: #3f5a2e;
+  --pda-grn-ink: var(--atreides-light);
 }
 
 /* ── PHOTOGRAPHY reads as PRINT on parchment (owner, 2026-08-02) ──────────
