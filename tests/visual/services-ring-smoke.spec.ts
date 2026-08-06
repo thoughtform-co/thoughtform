@@ -124,9 +124,24 @@ function readPda() {
     px: Number.parseFloat(getComputedStyle(t).fontSize) * meet,
   }));
 
+  // Every PAIR of glyph boxes. 0.5 units of tolerance so boxes that merely
+  // touch — adjacent columns of a rail, a label sitting on a divider — are
+  // not reported; a real collision is glyphs printing through glyphs.
+  const overlaps: string[] = [];
+  for (let i = 0; i < items.length; i++) {
+    for (let j = i + 1; j < items.length; j++) {
+      const a = items[i].b;
+      const b = items[j].b;
+      const ox = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+      const oy = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+      if (ox > 0.5 && oy > 0.5) overlaps.push(`"${items[i].text}" x "${items[j].text}"`);
+    }
+  }
+
   return {
     texts: items.length,
-    minPx: items.length ? Math.min(...items.map((i) => i.px)) : 0,
+    minPx: Number((items.length ? Math.min(...items.map((i) => i.px)) : 0).toFixed(2)),
+    overlaps,
     // 0.6 units of tolerance for sub-pixel bbox rounding; a real clip is a
     // whole glyph or more.
     clipped: items
@@ -441,6 +456,29 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         ).toEqual([]);
         expect(drawn!.overflowX, `${where}: the map field scrolls`).toBeLessThanOrEqual(1);
         expect(drawn!.overflowY, `${where}: the map field scrolls`).toBeLessThanOrEqual(1);
+
+        // ── LABEL ON LABEL (ADR-063 U1) ────────────────────────────
+        // Containment is not legibility. Every guard on this surface
+        // asked whether a label was inside the crop; none asked whether
+        // two labels were inside EACH OTHER — and when the type grew,
+        // two pairs collided (a wrapped cartridge title onto its own
+        // second line and onto the lane rail, and 02's DECIDES ALONE
+        // onto its value) while every existing assertion stayed green.
+        expect(drawn!.overlaps, `${where}: labels overlap: ${drawn!.overlaps.join(" | ")}`).toEqual(
+          []
+        );
+
+        // ── AND THE TYPE IS ACTUALLY BIGGER ────────────────────────
+        // A floor under what the reader sees, not under the authored
+        // unit — `xMidYMid meet` scales by the MINIMUM of the two box
+        // ratios, so an authored size says nothing about rendered size.
+        // These are the measured values less a little headroom; the
+        // drawing is height-bound, so a regression here means either a
+        // crop grew or the console lost height to new chrome.
+        expect(
+          drawn!.minPx,
+          `${where}: rendered type fell to ${drawn!.minPx}px`
+        ).toBeGreaterThanOrEqual(4.3);
       }
 
       // The reading rail is the navigation and its stations are CONTROLS, so
@@ -539,17 +577,40 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       expect(await scrollCasefileDwell(page, 0.1), `${label}: casefile runway missing`).toBe(true);
       await page.waitForTimeout(600);
 
+      // The console carries NO TITLE BAR and NO REPEATED HEADING (ADR-063
+      // U1). Both said what the left column and the lit tab already say, and
+      // the height they cost was the only place the drawing's type could
+      // come from.
+      expect(
+        await page.locator(".fl-pda__head").count(),
+        `${label}: the console grew a title bar back`
+      ).toBe(0);
+      expect(
+        await page.locator(".fl-pda__foot h5").count(),
+        `${label}: the foot is printing the reading's name twice`
+      ).toBe(0);
+
       // A cartridge is the panel's control: clicking one opens reading 02 on
-      // that stream, and the foot changes with the reading.
+      // that stream, and the foot's SENTENCE changes with the reading.
       await page.locator(".fl-pda__stn").first().click();
       await page.waitForTimeout(300);
+      const workFoot = await page.locator(".fl-pda__foot p").innerText();
       await page.locator(".fl-pda-hit").first().click({ force: true });
       await page.waitForTimeout(700);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "2");
       expect(
-        await page.locator(".fl-pda__foot h5").innerText(),
+        await page.locator(".fl-pda__foot p").innerText(),
         `${label}: the foot did not follow the reading`
-      ).toContain("02");
+      ).not.toBe(workFoot);
+
+      // ...and that sentence is PROSE, so it answers to the readable-copy
+      // floor rather than the instrument one.
+      expect(
+        await page.evaluate(() =>
+          Number.parseFloat(getComputedStyle(document.querySelector(".fl-pda__foot p")!).fontSize)
+        ),
+        `${label}: the foot sentence fell below the readable floor`
+      ).toBeGreaterThanOrEqual(11.9);
 
       // Escape returns to the work. Keys are bound on the PLATE, never
       // `document` — the corridor has its own key handling.

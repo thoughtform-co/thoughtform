@@ -13,8 +13,79 @@ import type { PdaShape, PdaTeam, PdaWork } from "./pdaRecord";
  * a different drawing.
  */
 
+/** The AUTHORING space every coordinate below is expressed in. It is NOT what
+ *  gets rendered any more — each reading crops its own viewBox (`VIEW_BOX`)
+ *  — but it is the frame the owner drew in, so the numbers stay readable
+ *  against it. */
 export const VW = 780;
 export const VH = 850;
+
+/**
+ * EACH READING CROPS ITS OWN VIEWBOX (ADR-063 U1).
+ *
+ * `xMidYMid meet` scales by the MINIMUM of the two box ratios, and the field
+ * is landscape while this authoring space is portrait — so the drawing has
+ * always been HEIGHT-BOUND, and every authored unit of empty vertical margin
+ * was a direct tax on rendered type. Measured against the live `getBBox()`
+ * of each reading, the waste was: 82 units on 01, **288 on 02** (a third of
+ * its box) and 132 on 03.
+ *
+ * Cropping to what each reading actually draws costs nothing — no authored
+ * coordinate moves, the drawings are identical — and buys, at 1280x720:
+ *
+ *   01  meet 0.418 → 0.449   (+7 %)
+ *   02  meet 0.418 → 0.607   (+45 %)
+ *   03  meet 0.418 → 0.495   (+18 %)
+ *
+ * ⚠ 02's content runs to x=797, SEVENTEEN UNITS PAST the 780 authoring
+ * width — its crop is 800 wide for that reason, and narrowing it back to 780
+ * clips the right-hand modules. Nothing on screen says so; `<text>` past a
+ * crop simply vanishes.
+ *
+ * ⚠ RE-MEASURE AFTER ANY GEOMETRY CHANGE. These are bounds, not opinions:
+ * `tests/lib/pda-viewbox.test.ts` re-checks them against the drawings'
+ * declared extents, and the smoke measures real glyph boxes against them.
+ */
+export const VIEW_BOX: Record<1 | 2 | 3, string> = {
+  1: "0 10 780 792",
+  2: "0 112 800 586",
+  3: "0 24 780 718",
+};
+
+/**
+ * LABEL TYPE, sized from each box's MEASURED slack (ADR-063 U1).
+ *
+ * The owner's ask was to grow the type "without making it too big", so these
+ * are derived, not chosen. The measure is the label's own box (or the pitch
+ * to its neighbour, for the centred rows) against its LONGEST live string at
+ * PT Mono's advance plus that label's own tracking. Every one below lands
+ * under 90 % of its measure:
+ *
+ *   label                 longest live string     was   now   of measure
+ *   02 chrome             DECIDES ALONE            8    10      52 %
+ *   02 autonomy value     BOUNDED                  9    10.5    32 %
+ *   03 section rules      THE TEAMS THAT RUN…      8.5  11      26 %
+ *   03 team meta          20 STREAMS               7.5   9.5    75 %
+ *   03 shape meta         14 SKILLS · 22 TEAMS     8.5   9       88 %
+ *   03 trenched-by        TRENCHED BY CRE          8     9.5    70 %
+ *
+ * ⚠ THE SHAPE META IS THE BINDING ONE at 88 % of a 150-unit pitch — it is
+ * centred, so its neighbours close from both sides. Do not round it up to
+ * match the row beneath it; they are different measures.
+ *
+ * ⚠ `Module`'s label is NOT here: it derives from the module's own height
+ * (`h * 0.19`, pdaGlyphs) and 03's shape modules are already near their
+ * wall — "Stakeholder" fills 89 % of the 87 units between the divider and
+ * the module's right edge. That box, not this table, is 03's ceiling.
+ */
+const T = {
+  cfgLabel: 10,
+  cfgValue: 10.5,
+  secLabel: 11,
+  teamMeta: 9.5,
+  shapeMeta: 9,
+  shapeTrench: 9.5,
+} as const;
 
 /* ── 01 · the work ──────────────────────────────────────────────────────
    Four across, five down. Twenty cartridges is a shape, not a budget — the
@@ -119,7 +190,7 @@ export function ViewConfiguration({
           stroke="var(--pda-hair2)"
           strokeDasharray="4 7"
         />
-        <text x="20" y="308" fontSize="8" letterSpacing=".22em" fill="var(--pda-txt3)">
+        <text x="20" y="308" fontSize={T.cfgLabel} letterSpacing=".22em" fill="var(--pda-txt3)">
           THE CONFIGURATION
         </text>
       </g>
@@ -134,7 +205,7 @@ export function ViewConfiguration({
           x={CX}
           y="134"
           textAnchor="middle"
-          fontSize="8.5"
+          fontSize={T.cfgLabel}
           letterSpacing=".22em"
           fill="var(--pda-amb)"
         >
@@ -155,10 +226,14 @@ export function ViewConfiguration({
           fill="var(--pda-void)"
           stroke="var(--pda-dim)"
         />
-        <text x={CX + 16} y="236" fontSize="8" letterSpacing=".2em" fill="var(--pda-txt3)">
+        {/* ⚠ 18 UNITS OF PITCH, not v18's 13. The label/value pair grew from
+            8/9 to 10/10.5 and MEASURED, 13 left them overlapping by 1.8
+            units — a line box is taller than its font size, so a pitch that
+            worked at 8 is a collision at 10. */}
+        <text x={CX + 16} y="234" fontSize={T.cfgLabel} letterSpacing=".2em" fill="var(--pda-txt3)">
           DECIDES ALONE
         </text>
-        <text x={CX + 16} y="249" fontSize="9" letterSpacing=".2em" fill="var(--pda-hot)">
+        <text x={CX + 16} y="252" fontSize={T.cfgValue} letterSpacing=".2em" fill="var(--pda-hot)">
           {work.autonomy}
         </text>
       </g>
@@ -224,7 +299,7 @@ export function ViewConfiguration({
           x={CX}
           y="662"
           textAnchor="middle"
-          fontSize="8"
+          fontSize={T.cfgLabel}
           letterSpacing=".22em"
           fill="var(--pda-txt3)"
         >
@@ -289,10 +364,10 @@ export function ViewSubstrate({
   return (
     <>
       <g className={still ? undefined : "fl-pda-in"}>
-        <text x="12" y="46" fontSize="8.5" letterSpacing=".22em" fill="var(--pda-txt3)">
+        <text x="12" y="46" fontSize={T.secLabel} letterSpacing=".22em" fill="var(--pda-txt3)">
           THE TEAMS THAT RUN THE WORK
         </text>
-        <text x="12" y={SY + 96} fontSize="8.5" letterSpacing=".22em" fill="var(--pda-txt3)">
+        <text x="12" y={SY + 96} fontSize={T.secLabel} letterSpacing=".22em" fill="var(--pda-txt3)">
           THE SHAPES THEY ALL DRAW ON
         </text>
       </g>
@@ -349,7 +424,7 @@ export function ViewSubstrate({
               x={TXs(i)}
               y={TY + 42}
               textAnchor="middle"
-              fontSize="7.5"
+              fontSize={T.teamMeta}
               letterSpacing=".14em"
               fill="var(--pda-txt3)"
             >
@@ -375,7 +450,7 @@ export function ViewSubstrate({
               x={SXs(j)}
               y={SY + 48}
               textAnchor="middle"
-              fontSize="8.5"
+              fontSize={T.shapeMeta}
               letterSpacing=".14em"
               fill="var(--pda-txt3)"
             >
@@ -385,7 +460,7 @@ export function ViewSubstrate({
               x={SXs(j)}
               y={SY + 64}
               textAnchor="middle"
-              fontSize="8"
+              fontSize={T.shapeTrench}
               letterSpacing=".14em"
               fill="var(--pda-grn)"
             >

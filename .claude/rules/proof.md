@@ -419,19 +419,45 @@ The right panel is the PDA console (`map/pda/**`), three readings:
   strip: diamonds, ordinals, mono caps and a hairline spine, with ONE lit
   segment that TRAVELS along that spine to the reading it opened (keyed off
   `data-view` in CSS — do not give each station its own marker).
-- ⚠ **THE RAIL'S HEIGHT IS THE DRAWING'S HEIGHT.** The field binds on
-  HEIGHT at every desktop viewport: the drawings are authored `780×850`
-  PORTRAIT into a landscape field, and `xMidYMid meet` scales by the
-  minimum ratio — so ~200px of width letterboxes at 1280×720 while every
-  pixel of height scales the type. The rail's 27px cost the drawing 7.3 %
-  of its scale and returned width that was already surplus. Do not grow it
-  without re-measuring rendered SVG type.
-- ⚠ **THE DRAWING'S TYPE IS BELOW THE 8.5px FLOOR AND NO GUARD CATCHES
-  IT.** Measured 2.92–5.25px at 1280×720, 4.76–8.56px at 1920×1080. The
-  smoke asserts glyph CONTAINMENT and the rail's DOM font size — neither is
-  rendered SVG type size. The headroom is in the drawing's ASPECT (a ~1.5:1
-  authoring space roughly doubles the meet scale for free), never in
-  shaving this strip. Open follow-up, deliberately not folded into ADR-063.
+- ⚠ **THE CONSOLE HAS NO HEAD AND THE FOOT HAS NO TITLE** (owner,
+  2026-08-06, ADR-063 U1). The badge said "Intelligence map" beside a column
+  headed INTELLIGENCE MAP; the meta said "Loop Earplugs" beside a tab, a path
+  and a masthead that say it; the foot title said "01 · THE WORK" under a lit
+  tab reading "01 WORK". **Everything removed was HEIGHT, and height is the
+  only currency the drawing spends** — that is what paid for both the 10px
+  tabs and the bigger drawing. Smoke-asserted absent. The reading's title
+  lives on in the SVG's `aria-label`. ⚠ The SNAPSHOT DATE went with the head
+  and now appears nowhere; it was the one non-redundant piece.
+- ⚠ **EVERY SIZE ON THIS SURFACE IS DERIVED FROM A MEASURE, and the measures
+  differ within one box.** `CART_TYPE` (pdaGlyphs) and `T` (PdaViews) carry
+  the tables. The cartridge title is anchored to the LEFT WALL ALONE (157
+  units); its metadata rows are PAIRS pinned to opposite walls sharing 151
+  BETWEEN THEM, so growing either closes the gap in the middle. `Module`'s
+  label derives from its own height and is 03's ceiling. Never round one to
+  match its neighbour — they are different measures.
+- **Each reading CROPS ITS OWN VIEWBOX** (`VIEW_BOX`), because the field is
+  landscape and the authoring space portrait, so the drawing is HEIGHT-BOUND
+  and empty vertical margin is a direct tax on type. Measured waste was 82 /
+  288 / 132 units. ⚠ 02's content runs to **x=797, past the 780 authoring
+  width** — its crop is 800 wide and a 780 crop silently clips its right-hand
+  modules.
+- ⚠ **LABEL-ON-LABEL OVERLAP IS THE MEASUREMENT THAT CATCHES WHAT NOTHING
+  ELSE DOES.** Every other guard asks whether a label is inside the CROP;
+  none asked whether two labels were inside EACH OTHER. Growing the type
+  produced two real collisions with every assertion green — a wrapped
+  cartridge title onto its own second line and onto the lane rail, and 02's
+  `DECIDES ALONE` onto its value (a line box is taller than its font size, so
+  v18's 13-unit pitch became a collision at 10). `readPda` now compares every
+  pair of glyph boxes at 3 viewports × 3 readings. Sizes are chosen so
+  NOTHING WRAPS: a two-line title at ~5px is worse than one line at ~5px.
+- ⚠ **THE DRAWINGS STILL MISS THE 8.5px FLOOR ON 01 AND 03, AND NO FURTHER
+  TUNING LEVER EXISTS.** Now 4.49–5.16 (01), 6.07–9.91 (02), 4.46–5.45 (03)
+  at 1280×720 — up from 3.14–5.64. The smoke holds a floor under RENDERED
+  type (4.3px), not the authored unit. The remaining gap is **density**: 20
+  cartridges 4-across need ~136px each for an 8.5px title, which fits the
+  594px width but makes the grid ~540px tall against 355px of field — 1.5×,
+  which no crop or font constant closes. ADR-063 §Outstanding lists the four
+  options; all are owner design calls. Do not "fix" this by shrinking chrome.
 - **THE CONSOLE OWNS THE WHEEL, AND THE RELEASE IS THE WHOLE SAFETY
   ARGUMENT.** Over the plate, scroll changes the READING instead of the
   directory row. At the last reading in the direction of travel the wheel

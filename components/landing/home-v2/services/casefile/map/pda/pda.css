@@ -124,57 +124,6 @@
   );
 }
 
-/* ── The head ───────────────────────────────────────────────────────────
-   ⚠ ITS HEIGHT IS A CLAMP, and v18's flat 62px is the ceiling. The panel is
-   912px tall on a tall screen and 465px on a 720p laptop; a fixed head and
-   foot take a third of the short one before the drawing gets any. */
-.fl-pda__head {
-  position: relative;
-  z-index: 4;
-  flex: 0 0 clamp(38px, 7.5%, 62px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--pda-hair);
-}
-
-.fl-pda__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--pda-hot);
-  color: #171208;
-  font: 400 clamp(8.5px, 1.5cqw, 10px) / 1 var(--font-mono, monospace);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.fl-pda__badge s {
-  text-decoration: none;
-  font-size: 0.8em;
-}
-
-.fl-pda__meta {
-  display: flex;
-  align-items: center;
-  gap: clamp(8px, 2cqw, 18px);
-  font: 400 8.5px/1 var(--font-mono, monospace);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--pda-txt3);
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.fl-pda__meta em {
-  font-style: normal;
-  color: var(--pda-amb);
-}
-
 /* ── The body ───────────────────────────────────────────────────────────── */
 .fl-pda__mid {
   position: relative;
@@ -195,14 +144,21 @@
    ⚠ ITS HEIGHT IS THE DRAWING'S HEIGHT. The field binds on HEIGHT at every
    desktop viewport (the drawing is authored 780x850 PORTRAIT into a landscape
    box, so it letterboxes ~200px of width at 1280x720 and scales off height
-   alone). This rail's 26px costs the drawing ~7 % of its rendered type and
-   returns ~53px of width that was already surplus. Measured, do not grow it
-   without re-measuring the SVG's rendered type — and see ADR-063 for why the
-   real headroom is in the drawing's aspect, not in this strip. */
+   alone). The rail is only this tall because the HEAD WAS DELETED to pay for
+   it (ADR-063 U1) — 38px of title bar bought 36px of rail plus height back
+   for the drawing. Measured; do not grow it without re-measuring the SVG's
+   rendered type, and see ADR-063 for why the real headroom is the drawing's
+   aspect rather than this strip.
+
+   It sits on the console's top edge, so its top-left corner is CUT by the
+   console's chamfer. That is the chamfer working: the first station's ground
+   follows the console's own diagonal. Its content clears the cut because the
+   cut is `--pda-ch` wide at y=0 and gone by y=`--pda-ch`, while the stations
+   centre their content ~50px in. */
 .fl-pda__depth {
   position: relative;
   z-index: 4;
-  flex: 0 0 clamp(26px, 5.2%, 34px);
+  flex: 0 0 clamp(32px, 7%, 44px);
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid var(--pda-hair2);
@@ -266,24 +222,27 @@
     box-shadow 0.3s ease;
 }
 
-/* ⚠ The name is the LABEL FLOOR on this surface — the smoke asserts 7.9px on
-   these two, and the type law puts instrument chrome at 8px. It ellipsises
-   rather than wrapping: a station is one line tall, and a wrapped name would
-   push the diamond off centre rather than showing anything useful. */
+/* ⚠ THESE ARE TABS, and the type law starts tabs at 10px — the first cut
+   rendered them at 8.55px, which is the DECORATIVE floor, not the control
+   one. The head's deletion is what paid for it. It ellipsises rather than
+   wrapping: a station is one line tall, and a wrapped name would push the
+   diamond off centre rather than showing anything useful. */
 .fl-pda__stn > b {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 clamp(8px, 1.4cqw, 9.5px) / 1 var(--font-mono, monospace);
-  letter-spacing: 0.2em;
+  font: 400 clamp(10px, 1.75cqw, 11.5px) / 1 var(--font-mono, monospace);
+  letter-spacing: 0.16em;
   color: inherit;
 }
 
+/* An ordinal is decorative metadata, so it may sit at the 9px floor the type
+   law allows it — it is a position marker, not a label to be read. */
 .fl-pda__stn > em {
   flex: 0 0 auto;
-  font: 400 8px/1 var(--font-mono, monospace);
-  letter-spacing: 0.16em;
+  font: 400 9px/1 var(--font-mono, monospace);
+  letter-spacing: 0.14em;
   font-style: normal;
   opacity: 0.72;
   color: inherit;
@@ -349,36 +308,30 @@
 }
 
 /* ── The foot ───────────────────────────────────────────────────────────
-   The owner's ask: the drawing carries its own provenance, but nothing on
-   the panel said what the reader was looking AT. A title and one sentence,
-   centred, changing with the reading. */
+   ONE SENTENCE, centred, changing with the reading — what the reader is
+   looking at MEANS. Its title line went with the head (ADR-063 U1): the lit
+   tab two rows up already reads "01 WORK", so printing "01 · THE WORK" here
+   was the same words twice.
+
+   ⚠ THIS IS PROSE, NOT CHROME, so it answers to the 12px readable-copy floor
+   rather than the 8.5px instrument one. It was 10px. */
 .fl-pda__foot {
   position: relative;
   z-index: 4;
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(5px, 1cqw, 10px);
-  padding: clamp(9px, 1.6cqw, 16px) clamp(16px, 5cqw, 46px);
+  padding: clamp(10px, 1.7cqw, 17px) clamp(16px, 4cqw, 40px);
   border-top: 1px solid var(--pda-hair);
   text-align: center;
 }
 
-.fl-pda__foot h5 {
-  margin: 0;
-  font: 400 clamp(9px, 1.4cqw, 10px) / 1 var(--font-mono, monospace);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--pda-hot);
-}
-
 .fl-pda__foot p {
   margin: 0;
-  max-width: 604px;
-  font: 400 clamp(10px, 1.6cqw, 11.5px) / 1.55 var(--font-sans, sans-serif);
-  color: var(--pda-txt2);
+  max-width: 640px;
+  font: 400 clamp(12px, 2cqw, 13.5px) / 1.5 var(--font-sans, sans-serif);
+  color: var(--pda-txt);
 }
 
 /* ── Motion ─────────────────────────────────────────────────────────────

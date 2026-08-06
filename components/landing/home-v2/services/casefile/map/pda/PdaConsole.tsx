@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SERVICES_SCROLL_OWNED_MEDIA } from "@/components/landing/home-v2/unifiedServicesInstrument";
 import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
 
-import { VH, VW, ViewConfiguration, ViewSubstrate, ViewWork } from "./PdaViews";
+import { VIEW_BOX, ViewConfiguration, ViewSubstrate, ViewWork } from "./PdaViews";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
 import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
 
@@ -65,11 +65,9 @@ interface Props {
   works: readonly CaseMapWork[];
   /** Draw against the approved envelope — a STATUS, never an amount. */
   envelope: "WITHIN" | "AT" | "OVER";
-  /** The snapshot date printed in the head. */
-  snap?: string;
 }
 
-export function PdaConsole({ shapes, districts, works, envelope, snap = "08·2026" }: Props) {
+export function PdaConsole({ shapes, districts, works, envelope }: Props) {
   const shown = useMemo(() => selectWorks(districts, works), [districts, works]);
   const totals = useMemo(() => pdaTotals(shapes, districts, works), [shapes, districts, works]);
   const cross = useMemo(
@@ -205,18 +203,13 @@ export function PdaConsole({ shapes, districts, works, envelope, snap = "08·202
       <i className="fl-pda__outer" aria-hidden="true" />
 
       <div className="fl-pda__console">
-        <div className="fl-pda__head">
-          <span className="fl-pda__badge">
-            <s aria-hidden="true">◆</s>Intelligence map
-          </span>
-          <span className="fl-pda__meta">
-            <span>Loop Earplugs</span>
-            <span>
-              Snap <em>{snap}</em>
-            </span>
-          </span>
-        </div>
-
+        {/* ⚠ NO HEAD. The badge said "Intelligence map" beside a left column
+            already headed INTELLIGENCE MAP, and the meta said "Loop Earplugs"
+            beside a tab, a directory path and a masthead that all say it
+            (owner, 2026-08-06). The rail takes the console's top edge and the
+            drawing takes the height back — which is the ONLY reason the type
+            below could grow at all. Do not reinstate a title bar here without
+            re-measuring the drawing's rendered type. */}
         {/* The reading rail, across the top of the console. `__spine` is the
             lit segment: one element, translated to the active station in CSS
             off `data-view`, so the marker TRAVELS to the reading rather than
@@ -246,10 +239,13 @@ export function PdaConsole({ shapes, districts, works, envelope, snap = "08·202
             <i className="fl-pda__scan" key={viewTick} aria-hidden="true" />
             <svg
               className="fl-pda__svg"
-              viewBox={`0 0 ${VW} ${VH}`}
+              viewBox={VIEW_BOX[view]}
               preserveAspectRatio="xMidYMid meet"
               role="group"
-              aria-label={`Work-to-intelligence map, reading ${view}`}
+              /* The reading's title is no longer PRINTED (the rail names it),
+                 so it lands here instead — a screen reader still hears which
+                 of the three drawings it is in. */
+              aria-label={`Work-to-intelligence map — ${foot.title}`}
             >
               {view === 1 ? (
                 <ViewWork
@@ -276,8 +272,12 @@ export function PdaConsole({ shapes, districts, works, envelope, snap = "08·202
           </div>
         </div>
 
+        {/* ⚠ THE FOOT IS THE SENTENCE ALONE. Its title said "01 · THE WORK"
+            directly under a lit tab reading "01 WORK" (owner, 2026-08-06) —
+            the rail already names the reading, so the foot only has to say
+            what the reading MEANS. `foot.title` is still the accessible name
+            of the drawing; it is simply not printed twice. */}
         <div className="fl-pda__foot">
-          <h5>{foot.title}</h5>
           <p>{foot.body}</p>
         </div>
       </div>

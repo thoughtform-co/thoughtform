@@ -34,6 +34,47 @@ const CART: Record<GlyphState, [string, string, string]> = {
   hot: ["var(--pda-hot)", "rgba(240, 200, 106, 0.1)", "var(--pda-hot)"],
 };
 
+/**
+ * THE CARTRIDGE'S TYPE, sized from the box's MEASURED SLACK (ADR-063 U1).
+ *
+ * The owner's ask was to grow the type "without making it too big", so these
+ * are derived, not chosen. PT Mono's advance plus this drawing's tracking is
+ * ~0.68 em (`MONO_ADVANCE`, the same figure the map projection uses), the
+ * cartridge is 176 units wide and its text inset is 13 left / 12 right — so
+ * a line has **151 units** of measure. Against the longest string in each
+ * role, that gives the ceiling before it touches the far wall:
+ *
+ *   role        longest             chars  measure  ceiling  was   now
+ *   title       CANDIDATE SCREENING   19      157      12.2   9.5   11.5
+ *   team + id   CRE ... W-017        3+5      151      18.4   8.5   11
+ *   lane        EVERYDAY / BOUNDED   8+7      151      13.2   7.5   10
+ *
+ * ⚠ THE TITLE'S MEASURE IS NOT THE OTHER TWO. It is anchored to the LEFT
+ * wall alone, so it runs to the cartridge edge less breathing room (157),
+ * while the metadata rows are PAIRS pinned to opposite walls and share one
+ * 151-unit measure between them — growing either closes the gap in the
+ * middle. Both collisions are arithmetic, not a matter of scale.
+ *
+ * ⚠ 11.5 IS CHOSEN SO NOTHING WRAPS. A first cut at 12 put the longest of
+ * the twenty onto a second line, and MEASURED, the two lines then overlapped
+ * each other by 1.6–1.9 units and ran into the lane rail at 1440. A wrapped
+ * two-line title at ~5px is worse than a one-line title at ~5px anyway, so
+ * the size buys single lines rather than a taller stack.
+ *
+ * ⚠ THE WRAP MEASURE MUST TRACK THE TITLE SIZE. It is a CHARACTER count
+ * derived from the box width, so a hard-coded one silently stops matching
+ * the type the moment the size moves — which is how a title ends up running
+ * out through the cartridge wall with nothing on screen to say so.
+ */
+export const MONO_ADVANCE = 0.68;
+export const CART_TYPE = { title: 11.5, code: 11, lane: 10 } as const;
+/** The LEFT-anchored title's measure: the cartridge less its inset and a
+ *  6-unit wall clearance. Wider than the paired rows' 151 on purpose. */
+const cartTitleMeasure = (w: number) => w - 19;
+/** Characters per title line at the current title size. */
+export const cartTitleChars = (w: number) =>
+  Math.floor(cartTitleMeasure(w) / (CART_TYPE.title * MONO_ADVANCE));
+
 /** Greedy wrap to a character measure, capped at two lines. */
 export function wrapLines(text: string, per: number, max = 2): string[] {
   const out: string[] = [];
@@ -94,7 +135,7 @@ export function Cartridge({
       <text
         x={x + 13 * k}
         y={y + 21 * k}
-        fontSize={8.5 * k}
+        fontSize={CART_TYPE.code * k}
         letterSpacing=".2em"
         fill="var(--pda-txt3)"
       >
@@ -104,7 +145,7 @@ export function Cartridge({
         x={x + w - 12 * k}
         y={y + 21 * k}
         textAnchor="end"
-        fontSize={8.5 * k}
+        fontSize={CART_TYPE.code * k}
         letterSpacing=".16em"
         fill={state === "hot" ? "var(--pda-hot)" : "var(--pda-txt3)"}
       >
@@ -150,12 +191,12 @@ export function Cartridge({
         );
       })}
 
-      {wrapLines(work.title, Math.floor(w / (6.1 * k))).map((line, i) => (
+      {wrapLines(work.title, cartTitleChars(w)).map((line, i) => (
         <text
           key={line}
           x={x + 13 * k}
-          y={y + 92 * k + i * 12.5 * k}
-          fontSize={9.5 * k}
+          y={y + 92 * k + i * 14 * k}
+          fontSize={CART_TYPE.title * k}
           letterSpacing=".08em"
           fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
         >
@@ -166,7 +207,7 @@ export function Cartridge({
       <text
         x={x + 13 * k}
         y={y + 119 * k}
-        fontSize={7.5 * k}
+        fontSize={CART_TYPE.lane * k}
         letterSpacing=".16em"
         fill="var(--pda-txt3)"
       >
@@ -177,7 +218,7 @@ export function Cartridge({
           x={x + w - 12 * k}
           y={y + 119 * k}
           textAnchor="end"
-          fontSize={7.5 * k}
+          fontSize={CART_TYPE.lane * k}
           letterSpacing=".16em"
           fill="var(--pda-txt3)"
         >
@@ -217,7 +258,7 @@ export function Module({
   const c = h * 0.34;
   const k = hot ? "var(--pda-hot)" : "var(--pda-amb)";
   const fill = hot ? "rgba(240, 200, 106, 0.12)" : "rgba(192, 154, 70, 0.05)";
-  const fs = h * 0.175;
+  const fs = h * 0.19;
   const gx = flip ? x1 - h / 2 : x0 + h / 2;
   const dv = flip ? x1 - h : x0 + h;
   const body = flip

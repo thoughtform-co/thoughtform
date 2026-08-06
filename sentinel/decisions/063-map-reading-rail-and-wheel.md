@@ -89,6 +89,12 @@ instrument with three states that hands the wheel back at both ends.
 
 ### The rail's height is the drawing's height, and the drawing is already small
 
+> ⚠ **Superseded by Update 1 on every number below.** The head was deleted to
+> pay for the rail, the readings now crop their own viewBoxes and the type was
+> re-derived, so the "after" column here is a snapshot of the first cut, not
+> of what ships. The _reasoning_ — height is the binding dimension — is what
+> carried into U1 and still holds.
+
 The field **binds on HEIGHT at every desktop viewport**. The three
 drawings are authored `780×850` **portrait** into a landscape field
 (`541×357` at 1280×720), and `preserveAspectRatio="xMidYMid meet"` scales
@@ -141,6 +147,122 @@ column of vertical chrome.
 - Full suite: `npm run verify` (564 unit tests) + the 12-case desktop
   smoke.
 - Both themes shot at 1280/1440/1920 and read by eye.
+
+## Update 1 — the console pays for its own legibility (2026-08-06, owner)
+
+The rail shipped and the owner read the panel back: the drawing's type is too
+small, the console repeats itself, and the repetition is where the space is.
+Three asks, and they turn out to be one change — **everything removed is
+height, and height is the only currency the drawing spends.**
+
+### What was removed, and why it was redundant
+
+| removed                    | already said by                                  |
+| -------------------------- | ------------------------------------------------ |
+| `◆ INTELLIGENCE MAP` badge | the left column's masthead, `INTELLIGENCE MAP.`  |
+| `LOOP EARPLUGS`            | the client tab, the directory path, the casefile |
+| `SNAP 08·2026`             | nothing — see the note below                     |
+| foot title `01 · THE WORK` | the lit tab two rows up, `01 WORK`               |
+
+⚠ **The snapshot date now appears nowhere on the panel.** It was the one piece
+of the head that was not redundant. Removing it was the instruction and it is
+carried out; if provenance should stay, the foot row has horizontal room for a
+right-aligned mark at no height cost.
+
+The reading's title is not lost for assistive tech — `foot.title` moved to the
+drawing's `aria-label`. It is simply not printed twice.
+
+### Where the height went
+
+At 1280×720, measured. The head was 38px + 1px border; the foot's title and
+its gap were ~16px. Of that ~55px, the rail took 6 (26px → 32px, which is what
+lifted the tabs from 8.55px to the type law's 10px floor) and **the drawing took
+the rest**.
+
+### Type, sized from measured slack rather than by eye
+
+The owner asked to grow the type "without making it too big", so every size
+below is derived from its box against its longest live string, at PT Mono's
+advance plus that label's own tracking, and written down at the site:
+
+- `CART_TYPE` (pdaGlyphs) — the cartridge. Title 9.5 → **11.5**, code
+  8.5 → **11**, lane 7.5 → **10**. ⚠ The title's measure is NOT the metadata
+  rows': it is anchored to the left wall alone (157 units) while the metadata
+  rows are PAIRS pinned to opposite walls sharing 151 between them.
+- `T` (PdaViews) — 02's chrome and 03's plate metadata, 26–88 % of measure.
+- `Module`'s label derives from its own height (`h * 0.19`). 03's shape
+  modules are the ceiling there: "Stakeholder" fills 89 % of the 87 units
+  between the divider and the module wall.
+
+### And the crops, which cost nothing at all
+
+`xMidYMid meet` scales by the MINIMUM of the two box ratios, and the field is
+landscape while the authoring space is portrait — so the drawing has always
+been HEIGHT-bound, and every authored unit of empty vertical margin was a
+direct tax on rendered type. Measured against each reading's live `getBBox()`,
+the waste was 82 units on 01, **288 on 02** (a third of its box) and 132 on 03.
+`VIEW_BOX` crops each reading to what it draws. No authored coordinate moves.
+
+⚠ 02's content runs to x=797, **seventeen units past** the 780 authoring
+width, so its crop is 800 wide. A 780 crop clips its right-hand modules and
+nothing on screen says so.
+
+### Result, at the binding viewport
+
+| reading | before (ADR-063) | after       | at 1920     |
+| ------- | ---------------- | ----------- | ----------- |
+| 01      | 3.14–3.97px      | 4.49–5.16px | 7.52–8.65px |
+| 02      | 3.35–5.64px      | 6.07–9.91px | 10.2–16.6px |
+| 03      | 3.14–4.18px      | 4.46–5.45px | 7.21–8.82px |
+| tabs    | 8.55px           | 10.7px      | 11.5px      |
+| foot    | 10px             | 12.2px      | 13.5px      |
+
+The chrome now meets the type law (tabs ≥10px, prose ≥12px). **The drawings do
+not, and 01 and 03 cannot from here** — see Outstanding.
+
+### The measurement that caught what nothing else did
+
+Growing the type produced two real collisions that every existing guard stayed
+green through, because they all asked whether a label was inside the CROP and
+none asked whether two labels were inside EACH OTHER:
+
+- a cartridge title at 12 wrapped to a second line, and the two lines
+  overlapped by 1.6–1.9 units — and at 1440 the second line ran into the lane
+  rail. Fixed by sizing the title so nothing wraps (11.5), not by re-spacing:
+  a wrapped two-line title at ~5px is worse than one line at ~5px.
+- 02's `DECIDES ALONE` printed through its value. A line box is taller than
+  its font size, so v18's 13-unit pitch that worked at 8 is a collision at 10.
+  Now 18.
+
+Both are now asserted: `readPda` compares every pair of glyph boxes, at three
+viewports × three readings, and the smoke also holds a floor under RENDERED
+type (4.3px) rather than under the authored unit.
+
+## Outstanding — 01 and 03 need a density decision, not a tuning one
+
+The arithmetic, so the next person does not re-derive it:
+
+Reading 01 shows 20 cartridges 4-across in a 594×355 field. For a 19-character
+title to letter at the surface's 8.5px floor, its cartridge must be ~136px
+wide; four of those fit (544 ≤ 594), but the cartridge's own proportions make
+it ~108px tall, and **five rows of that is 540px against 355px of field**. The
+grid is roughly 1.5× too tall for the box it is in. No crop, viewBox or font
+constant closes a 1.5× gap — every one of those levers is now spent.
+
+So the remaining options are all design calls, and they are the owner's:
+
+1. **Flatten the cartridge** — drop the vent hatching and the gauge row so a
+   cartridge is a compact record rather than a card. Cheapest in pixels,
+   changes the drawing's character most.
+2. **Show fewer at once** — 12–15 cartridges with the rest reachable, instead
+   of 20 at a glance. Preserves the object, loses "the estate at a glance",
+   which is the reading's whole argument.
+3. **Give the panel more height** — the casefile's left column sets it today.
+4. **Accept ~5px at 1280×720** as a small-laptop degradation, given 01 reaches
+   7.5–8.7px at 1920 where the panel is 840×596.
+
+Reading 03 is the same story with a different wall: its shape modules are
+already at 89 % of their measure, so its type is capped by the module box.
 
 ## Notes
 
