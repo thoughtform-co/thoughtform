@@ -197,3 +197,19 @@ export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 3.2 : 0;
  * (band-fraction targeting). One constant, three readers, zero drift.
  */
 export const SERVICES_PROOF_BROWSE_FRAC = 0.625;
+
+/**
+ * The only tier in which SCROLL OWNS THIS BEAT — the stage is pinned, the
+ * browse band selects the directory row, and the casefile's own instruments
+ * may take the wheel off the page.
+ *
+ * Below it (`isInert` in `useServicesStageScroll`) the casefile is static
+ * flow content: there is no browse channel, and anything that swallowed a
+ * wheel event there would be breaking ordinary page scrolling over ordinary
+ * DOM. Two readers hold that gate — `ServicesCasefile`'s row scrollspy and
+ * the map console's wheel reader (ADR-063) — and they must answer the same
+ * question, so they read the same string. Re-read it INSIDE long-lived
+ * listeners: a desktop→mobile resize must not let a stale tier apply.
+ */
+export const SERVICES_SCROLL_OWNED_MEDIA =
+  "(min-width: 961px) and (prefers-reduced-motion: no-preference)";

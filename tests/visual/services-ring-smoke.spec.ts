@@ -443,18 +443,101 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         expect(drawn!.overflowY, `${where}: the map field scrolls`).toBeLessThanOrEqual(1);
       }
 
-      // The depth rail is the navigation and its stations are CONTROLS, so
-      // they answer to the chrome floor.
-      const controlFont = await page.evaluate(() => {
-        const els = [...document.querySelectorAll<HTMLElement>(".fl-pda__stn b, .fl-pda__stn em")];
-        return els.length
-          ? Math.min(...els.map((e) => Number.parseFloat(getComputedStyle(e).fontSize)))
-          : 0;
+      // The reading rail is the navigation and its stations are CONTROLS, so
+      // they answer to the chrome floor. It runs HORIZONTALLY across the top
+      // of the console (ADR-063) and its names must not ellipsise — a station
+      // reading "CONFIGURATI…" is the rail outgrowing its box.
+      const rail = await page.evaluate(() => {
+        const el = document.querySelector<HTMLElement>(".fl-pda__depth");
+        const field = document.querySelector<HTMLElement>(".fl-pda__field");
+        const consoleEl = document.querySelector<HTMLElement>(".fl-pda__console");
+        if (!el || !field || !consoleEl) return null;
+        const r = el.getBoundingClientRect();
+        const stns = [...el.querySelectorAll<HTMLElement>(".fl-pda__stn")];
+        return {
+          horizontal: r.width > r.height * 3,
+          aboveField: r.bottom <= field.getBoundingClientRect().top + 1,
+          spansConsole: r.width / consoleEl.getBoundingClientRect().width,
+          truncated: stns
+            .map((s) => s.querySelector("b"))
+            .filter((b): b is HTMLElement => Boolean(b))
+            .filter((b) => b.scrollWidth > b.clientWidth + 1)
+            .map((b) => b.textContent ?? ""),
+          minFont: Math.min(
+            ...stns.flatMap((s) =>
+              [...s.querySelectorAll<HTMLElement>("b, em")].map((e) =>
+                Number.parseFloat(getComputedStyle(e).fontSize)
+              )
+            )
+          ),
+        };
       });
+      expect(rail, `${label}: the reading rail is missing`).not.toBeNull();
+      expect(rail!.horizontal, `${label}: the reading rail is not horizontal`).toBe(true);
+      expect(rail!.aboveField, `${label}: the reading rail is not above the drawing`).toBe(true);
       expect(
-        controlFont,
+        rail!.spansConsole,
+        `${label}: the reading rail does not span the console`
+      ).toBeGreaterThan(0.98);
+      expect(
+        rail!.truncated,
+        `${label}: station names ellipsised: ${rail!.truncated.join(", ")}`
+      ).toEqual([]);
+      expect(
+        rail!.minFont,
         `${label}: rail labels fell below the chrome floor`
       ).toBeGreaterThanOrEqual(7.9);
+
+      // ── THE WHEEL, AND ITS RELEASE (ADR-063) ──────────────────────
+      // Over the console, scroll changes the READING and the page holds.
+      // At the last reading in the direction of travel the wheel goes back
+      // to the page — this beat is scroll-pinned, so a console that kept it
+      // would be a trap on the whole document. The unit test pins the
+      // arithmetic (`tests/lib/pda-wheel.test.ts`); this pins that a real
+      // wheel event over the real element behaves.
+      await page.locator(".fl-pda__stn").first().click();
+      await page.waitForTimeout(400);
+      const fieldBox = (await page.locator(".fl-pda__field").boundingBox())!;
+      await page.mouse.move(fieldBox.x + fieldBox.width / 2, fieldBox.y + fieldBox.height / 2);
+
+      const heldY = await page.evaluate(() => window.scrollY);
+      const heldRow = await page.evaluate(
+        () => document.querySelector(".fl-row[aria-selected='true']")?.textContent ?? ""
+      );
+      await page.mouse.wheel(0, 140);
+      await page.waitForTimeout(620);
+      await expect(
+        page.locator(".fl-pda"),
+        `${label}: the wheel did not change the reading`
+      ).toHaveAttribute("data-view", "2");
+      await page.mouse.wheel(0, 140);
+      await page.waitForTimeout(620);
+      await expect(
+        page.locator(".fl-pda"),
+        `${label}: the wheel did not reach the last reading`
+      ).toHaveAttribute("data-view", "3");
+      expect(
+        Math.abs((await page.evaluate(() => window.scrollY)) - heldY),
+        `${label}: the page scrolled while the readings changed`
+      ).toBeLessThanOrEqual(2);
+      expect(
+        await page.evaluate(
+          () => document.querySelector(".fl-row[aria-selected='true']")?.textContent ?? ""
+        ),
+        `${label}: the directory row changed under the console`
+      ).toBe(heldRow);
+
+      // THE RELEASE. Past the last reading the page moves again.
+      await page.mouse.wheel(0, 240);
+      await page.waitForTimeout(600);
+      expect(
+        await page.evaluate(() => window.scrollY),
+        `${label}: RELEASE FAILED — the console traps the page at its last reading`
+      ).toBeGreaterThan(heldY + 2);
+
+      // Back to the map's row and its first reading for the checks below.
+      expect(await scrollCasefileDwell(page, 0.1), `${label}: casefile runway missing`).toBe(true);
+      await page.waitForTimeout(600);
 
       // A cartridge is the panel's control: clicking one opens reading 02 on
       // that stream, and the foot changes with the reading.

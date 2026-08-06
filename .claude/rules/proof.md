@@ -16,7 +16,8 @@ inherited its ambient-cover role.
 **Read first**
 
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
-- [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — the LIVE Intelligence Map. Update 1 fitted sheets 02/03, built the EXPAND overlay and closed the missing coverage
+- [ADR-063: The map's reading rail and its wheel](../sentinel/decisions/063-map-reading-rail-and-wheel.md) — the rail is HORIZONTAL across the top of the console, and the console OWNS THE WHEEL while the pointer is on it (releasing at both ends). See §The reading rail below
+- ⚠ [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — **STALE ON THE DRAWING.** Commit 0965318 replaced the isometric city with the PDA console (`map/pda/**`) in the casefile's right panel and shipped without an ADR. ADR-062's placement, evidence semantics and confidentiality envelope still bind; its atom, sheets, crops and EXPAND overlay describe `map/MapSurface.tsx`, which is still on disk and still passes its projection test but is **NOT what the landing renders**
 - **`/test/intelligence-map-lab`** — look-dev for an ORTHOGRAPHIC alternative to
   the city, beside the city. Nothing on the landing changed; the lab mounts
   the shipped `MapSurface` as its `city` variant so the comparison is against
@@ -407,6 +408,61 @@ facts` is wider than the whole plate — so the values live on the LABEL
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
+
+## The reading rail, and the wheel (ADR-063, live)
+
+The right panel is the PDA console (`map/pda/**`), three readings:
+**01 THE WORK · 02 THE CONFIGURATION · 03 THE SUBSTRATE**.
+
+- **The rail is HORIZONTAL, across the top of the console** (owner,
+  2026-08-06), three equal stations under the head. Still not a web tab
+  strip: diamonds, ordinals, mono caps and a hairline spine, with ONE lit
+  segment that TRAVELS along that spine to the reading it opened (keyed off
+  `data-view` in CSS — do not give each station its own marker).
+- ⚠ **THE RAIL'S HEIGHT IS THE DRAWING'S HEIGHT.** The field binds on
+  HEIGHT at every desktop viewport: the drawings are authored `780×850`
+  PORTRAIT into a landscape field, and `xMidYMid meet` scales by the
+  minimum ratio — so ~200px of width letterboxes at 1280×720 while every
+  pixel of height scales the type. The rail's 27px cost the drawing 7.3 %
+  of its scale and returned width that was already surplus. Do not grow it
+  without re-measuring rendered SVG type.
+- ⚠ **THE DRAWING'S TYPE IS BELOW THE 8.5px FLOOR AND NO GUARD CATCHES
+  IT.** Measured 2.92–5.25px at 1280×720, 4.76–8.56px at 1920×1080. The
+  smoke asserts glyph CONTAINMENT and the rail's DOM font size — neither is
+  rendered SVG type size. The headroom is in the drawing's ASPECT (a ~1.5:1
+  authoring space roughly doubles the meet scale for free), never in
+  shaving this strip. Open follow-up, deliberately not folded into ADR-063.
+- **THE CONSOLE OWNS THE WHEEL, AND THE RELEASE IS THE WHOLE SAFETY
+  ARGUMENT.** Over the plate, scroll changes the READING instead of the
+  directory row. At the last reading in the direction of travel the wheel
+  is handed straight back — no capture, no `preventDefault`. `#services` is
+  pinned across a 3.2-viewport dwell, so a console that kept the wheel
+  would be a trap on the whole document. Both directions are smoke-asserted
+  at three viewports; never weaken one without the other.
+  - The decision is `map/pda/pdaWheel.ts` — PURE, unit-pinned
+    (`tests/lib/pda-wheel.test.ts`). Keep it that way: a gesture reducer
+    written inline is a gesture reducer nobody can check.
+  - **A NATIVE, NON-PASSIVE listener.** React registers `wheel` as passive
+    on its root container, so an `onWheel` prop cannot `preventDefault` —
+    the page scrolls anyway AND the reading changes.
+  - **Two gates, re-read PER EVENT**: `SERVICES_SCROLL_OWNED_MEDIA` (below
+    it the casefile is static flow content with no browse channel, and
+    swallowing a wheel there breaks ordinary page scrolling) and
+    `data-proof-settled` (during the arrival the reader is scrolling INTO
+    the beat). The media constant lives in `unifiedServicesInstrument.ts`
+    so this and the row scrollspy answer the same question from one string.
+  - One step per GESTURE: 90px threshold, 470ms lockout (under the 620ms
+    sweep) during which the wheel stays captured but changes nothing.
+  - ⚠ This narrows, but does not overturn, the **2026-07-15 ruling** that
+    retired the ring's wheel-snap hijack on this same stage. The ring's
+    "wheel scrolls natively" smoke case must keep passing.
+- **The active label is INK, not gold, and that is a THEME decision.**
+  `--pda-hot` (#f0c86a) is the dark end of the gold ramp; ADR-058's flip
+  makes the console's ground parchment, where gold-as-TEXT measures
+  ~1.1:1 — measured, invisible. The lit signal rides the MARKS (diamond
+  fill, wash, travelling spine) and the label just goes to full strength.
+  One rule, both themes, no `[data-theme]` override. ⚠ The foot title and
+  the drawing itself still fail this way in light — pre-existing, unfixed.
 
 ## The BOARD archetype (look-dev, `/test/intelligence-map-lab`)
 

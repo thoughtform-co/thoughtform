@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { SERVICES_SCROLL_OWNED_MEDIA } from "@/components/landing/home-v2/unifiedServicesInstrument";
 import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
 
 import { VH, VW, ViewConfiguration, ViewSubstrate, ViewWork } from "./PdaViews";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
+import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
 
 /**
  * THE WORK-TO-INTELLIGENCE MAP, as a held instrument.
@@ -17,9 +19,27 @@ import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaR
  * view change, and a centred foot that says what the reader is looking at.
  *
  * ── Three readings, direct access, any order ─────────────────────────────
- * The rail is the navigation. It is not a tab strip: a tab strip is a web
- * control, and this is an instrument changing what it displays. `1` `2` `3`
- * select and `Escape` returns to the work.
+ * The rail is the navigation, and since 2026-08-06 (owner) it runs
+ * HORIZONTALLY across the top of the console instead of down its left edge.
+ * It is still not a tab strip: the stations keep their ordinals, diamonds and
+ * hairline spine, and the lit segment travels along that spine to the reading
+ * it opened — a marker pointing into the field, not a selected tab. `1` `2`
+ * `3` select and `Escape` returns to the work.
+ *
+ * ⚠ The move is paid for in HEIGHT, and the field binds on height (ADR-063):
+ * the drawing is authored 780x850 PORTRAIT into a landscape box, so it
+ * letterboxes ~200px of width at 1280x720 while every pixel of height scales
+ * the type. The rail's ~27px costs the drawing ~7 % of its scale and buys it
+ * nothing back, because the ~53px of width it returns was already surplus.
+ * Do not spend more height here without re-measuring the rendered type.
+ *
+ * ── The wheel, while the pointer is on the console ───────────────────────
+ * Scroll changes the READING here rather than the directory row underneath
+ * (owner, 2026-08-06). The decision is `pdaWheel.ts` — pure and tested — and
+ * the contract that makes it safe is the RELEASE: at the last reading in the
+ * direction of travel the wheel is handed straight back to the page. This
+ * beat is scroll-pinned, so an instrument that kept it would be a trap on the
+ * whole document.
  *
  * ── Two clocks, and only one of them replays ─────────────────────────────
  * A VIEW CHANGE runs the entrance — the scan sweeps, cartridges pop in, wires
@@ -95,6 +115,48 @@ export function PdaConsole({ shapes, districts, works, envelope, snap = "08·202
     setLit(k);
   }, []);
 
+  /* ── The wheel ─────────────────────────────────────────────────────────
+     A NATIVE, NON-PASSIVE listener on the plate. React registers `wheel` as
+     passive on its root container, so an `onWheel` prop cannot
+     `preventDefault` — the page would scroll anyway and the reading would
+     change on top of it.
+
+     Two gates, both re-read per event because both can change under a
+     long-lived listener: the tier in which scroll owns this beat at all (a
+     resize to mobile makes the casefile static flow content, where swallowing
+     a wheel event would break ordinary page scrolling), and `data-proof-settled`
+     on the stage — while the arrival ladder is still travelling the reader is
+     scrolling INTO the beat, and an instrument that grabbed the wheel there
+     would stop them at its threshold. */
+  const rootRef = useRef<HTMLDivElement>(null);
+  const wheelRef = useRef<PdaWheelState>(PDA_WHEEL_REST);
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (!window.matchMedia(SERVICES_SCROLL_OWNED_MEDIA).matches) return;
+      if (!el.closest("[data-proof-settled]")) return;
+
+      const r = pdaWheelStep(wheelRef.current, {
+        deltaY: e.deltaY,
+        deltaMode: e.deltaMode,
+        at: e.timeStamp,
+        view: viewRef.current,
+        pageHeight: window.innerHeight,
+      });
+      wheelRef.current = r.state;
+      if (r.capture) e.preventDefault();
+      if (r.next) go(r.next);
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [go]);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     const next = e.key === "1" ? 1 : e.key === "2" ? 2 : e.key === "3" ? 3 : null;
     if (next) {
@@ -122,6 +184,7 @@ export function PdaConsole({ shapes, districts, works, envelope, snap = "08·202
       data-view={view}
       data-envelope={envelope.toLowerCase()}
       onKeyDown={onKeyDown}
+      ref={rootRef}
     >
       {/* The rig: an orbit ring behind the device, and a second frame around
           it. Both bleed past the plate's edges and are clipped by it, which
@@ -154,25 +217,29 @@ export function PdaConsole({ shapes, districts, works, envelope, snap = "08·202
           </span>
         </div>
 
-        <div className="fl-pda__mid">
-          <nav className="fl-pda__depth" aria-label="Map readings">
-            <i className="fl-pda__spine" aria-hidden="true" />
-            {STATIONS.map((s) => (
-              <button
-                className="fl-pda__stn"
-                key={s.v}
-                type="button"
-                data-on={view === s.v ? "" : undefined}
-                aria-current={view === s.v ? "true" : undefined}
-                onClick={() => go(s.v)}
-              >
-                <i aria-hidden="true" />
-                <b>{s.name}</b>
-                <em>{s.ord}</em>
-              </button>
-            ))}
-          </nav>
+        {/* The reading rail, across the top of the console. `__spine` is the
+            lit segment: one element, translated to the active station in CSS
+            off `data-view`, so the marker TRAVELS to the reading rather than
+            three markers taking turns. */}
+        <nav className="fl-pda__depth" aria-label="Map readings">
+          {STATIONS.map((s) => (
+            <button
+              className="fl-pda__stn"
+              key={s.v}
+              type="button"
+              data-on={view === s.v ? "" : undefined}
+              aria-current={view === s.v ? "true" : undefined}
+              onClick={() => go(s.v)}
+            >
+              <i aria-hidden="true" />
+              <em>{s.ord}</em>
+              <b>{s.name}</b>
+            </button>
+          ))}
+          <i className="fl-pda__spine" aria-hidden="true" />
+        </nav>
 
+        <div className="fl-pda__mid">
           <div className="fl-pda__field">
             {/* The sweep. Keyed on the view tick so it plays once per change
                 and never on a hover repaint. */}

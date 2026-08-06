@@ -184,23 +184,50 @@
   display: flex;
 }
 
-/* THE DEPTH RAIL IS THE NAVIGATION. Three readings, direct access, any order
-   — a ladder would imply a lesson, and this is a record. */
+/* THE READING RAIL IS THE NAVIGATION. Three readings, direct access, any
+   order — a ladder would imply a lesson, and this is a record.
+
+   HORIZONTAL, ACROSS THE TOP OF THE CONSOLE since 2026-08-06 (owner). It is
+   still not a web tab strip: the stations keep their ordinals, their diamonds
+   and the hairline spine, and the LIT SEGMENT TRAVELS along that spine to the
+   reading it opened — a marker pointing down into the field.
+
+   ⚠ ITS HEIGHT IS THE DRAWING'S HEIGHT. The field binds on HEIGHT at every
+   desktop viewport (the drawing is authored 780x850 PORTRAIT into a landscape
+   box, so it letterboxes ~200px of width at 1280x720 and scales off height
+   alone). This rail's 26px costs the drawing ~7 % of its rendered type and
+   returns ~53px of width that was already surplus. Measured, do not grow it
+   without re-measuring the SVG's rendered type — and see ADR-063 for why the
+   real headroom is in the drawing's aspect, not in this strip. */
 .fl-pda__depth {
   position: relative;
-  flex: 0 0 clamp(44px, 9%, 58px);
+  z-index: 4;
+  flex: 0 0 clamp(26px, 5.2%, 34px);
   display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--pda-hair);
+  align-items: stretch;
+  border-bottom: 1px solid var(--pda-hair2);
 }
 
+/* The lit segment. One element on the spine, translated in thirds off
+   `data-view`, so the marker moves to the reading instead of three markers
+   taking turns. */
 .fl-pda__spine {
   position: absolute;
-  left: 48%;
-  top: 8%;
-  bottom: 8%;
-  width: 1px;
-  background: var(--pda-hair2);
+  left: 0;
+  bottom: -1px;
+  width: calc(100% / 3);
+  height: 1px;
+  background: var(--pda-hot);
+  box-shadow: 0 0 9px rgba(240, 200, 106, 0.55);
+  transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.fl-pda[data-view="2"] .fl-pda__spine {
+  transform: translateX(100%);
+}
+
+.fl-pda[data-view="3"] .fl-pda__spine {
+  transform: translateX(200%);
 }
 
 .fl-pda__stn {
@@ -208,20 +235,28 @@
   appearance: none;
   background: transparent;
   border: 0;
-  padding: 0;
-  flex: 1;
-  min-height: 0;
+  padding: 0 clamp(5px, 1.3cqw, 14px);
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 0.9cqw, 9px);
   cursor: pointer;
-  color: var(--pda-txt3);
+  color: var(--pda-txt2);
+  transition:
+    color 0.3s ease,
+    background 0.3s ease;
+}
+
+.fl-pda__stn + .fl-pda__stn {
+  border-left: 1px solid var(--pda-hair);
 }
 
 .fl-pda__stn > i {
-  position: absolute;
-  left: 48%;
-  top: 50%;
-  width: 13px;
-  height: 13px;
-  margin: -6.5px 0 0 -6.5px;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
   border: 1px solid var(--pda-dim);
   background: var(--pda-void);
   transform: rotate(45deg);
@@ -231,39 +266,48 @@
     box-shadow 0.3s ease;
 }
 
-/* The name reads DOWNWARD from just below the diamond, and it is bounded by
-   its own station — anchored without a bound, the longest of the three ran
-   into the one above it. */
+/* ⚠ The name is the LABEL FLOOR on this surface — the smoke asserts 7.9px on
+   these two, and the type law puts instrument chrome at 8px. It ellipsises
+   rather than wrapping: a station is one line tall, and a wrapped name would
+   push the diamond off centre rather than showing anything useful. */
 .fl-pda__stn > b {
-  position: absolute;
-  left: calc(48% - 5px);
-  top: calc(50% + 15px);
-  max-height: calc(50% - 22px);
+  min-width: 0;
   overflow: hidden;
-  font: 400 8px/1 var(--font-mono, monospace);
-  letter-spacing: 0.24em;
-  writing-mode: vertical-rl;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  font: 400 clamp(8px, 1.4cqw, 9.5px) / 1 var(--font-mono, monospace);
+  letter-spacing: 0.2em;
   color: inherit;
 }
 
 .fl-pda__stn > em {
-  position: absolute;
-  left: calc(48% - 3px);
-  top: 50%;
-  margin-top: -27px;
+  flex: 0 0 auto;
   font: 400 8px/1 var(--font-mono, monospace);
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   font-style: normal;
+  opacity: 0.72;
   color: inherit;
 }
 
 .fl-pda__stn:hover {
-  color: var(--pda-txt2);
+  color: var(--pda-txt);
 }
 
+/* ⚠ THE ACTIVE LABEL IS INK, NOT GOLD, and that is a THEME decision.
+   `--pda-hot` (#f0c86a) is the DARK end of the gold ramp; ADR-058's flip
+   turns the console's ground to parchment (#e4dac9) and leaves gold literal,
+   so gold-as-TEXT lands near 1.1:1 there — measured, and invisible. The lit
+   signal is carried by the marks instead, which is what gold is FOR on this
+   surface: the diamond fills, the wash lifts, the spine segment travels. The
+   label just goes to full strength. One rule, correct in both themes, and no
+   `[data-theme]` override to keep in step (`.claude/skills/theme-parity`). */
 .fl-pda__stn[data-on] {
-  color: var(--pda-hot);
+  color: var(--pda-txt);
+  background: linear-gradient(180deg, rgba(var(--gold-rgb), 0.13), rgba(var(--gold-rgb), 0.02) 78%);
+}
+
+.fl-pda__stn[data-on] > em {
+  opacity: 1;
 }
 
 .fl-pda__stn[data-on] > i {
@@ -274,7 +318,7 @@
 
 .fl-pda__stn:focus-visible {
   outline: 1px solid var(--pda-hot);
-  outline-offset: -4px;
+  outline-offset: -3px;
 }
 
 .fl-pda__field {
@@ -506,6 +550,9 @@
   .fl-pda-wire {
     animation: none;
     stroke-dashoffset: 0;
+  }
+  .fl-pda__spine {
+    transition: none;
   }
   .fl-pda__console,
   .fl-pda__orbit,

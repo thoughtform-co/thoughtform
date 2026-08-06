@@ -8,6 +8,7 @@ import type { CaseSegment } from "@/lib/cases/types";
 import {
   SERVICES_PROOF_BROWSE_FRAC,
   SERVICES_PROOF_RUNWAY_VH,
+  SERVICES_SCROLL_OWNED_MEDIA,
 } from "@/components/landing/home-v2/unifiedServicesInstrument";
 
 import { ClientTabs } from "./ClientTabs";
@@ -68,10 +69,11 @@ const REVEAL_AT = 0.45;
 const REARM_BELOW = 0.05;
 /** Park band at the top of the viewport, in viewport heights. */
 const PIN_BAND = 0.02;
-/** The only tier in which scroll owns directory selection. Re-read inside
- * the long-lived observer so a desktop→mobile resize cannot apply a stale
- * browse value after the surface has become static. */
-const ENHANCED_MEDIA_QUERY = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
+/** The only tier in which scroll owns directory selection. Shared with the
+ * map console's wheel reader (ADR-063) — same question, one string. Re-read
+ * inside the long-lived observer so a desktop→mobile resize cannot apply a
+ * stale browse value after the surface has become static. */
+const ENHANCED_MEDIA_QUERY = SERVICES_SCROLL_OWNED_MEDIA;
 
 /* ── The row scrollspy (ADR-056 U13) ───────────────────────────────────
    The browse band gives each directory row an equal quarter of
