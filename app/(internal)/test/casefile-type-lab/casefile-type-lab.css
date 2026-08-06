@@ -1,17 +1,32 @@
 /* == CASEFILE TYPE LAB ==================================================
-   Look-dev for the casefile's TYPE PAIRING. Alte Haas Grotesk is the
-   Alien: Romulus title face the owner brought in.
+   A BAKE-OFF. Five complete pairings — a chrome face and a prose face each —
+   judged on the real casefile, against the real HUD rail, on either type
+   ladder. Two independent axes: `data-lab-face` and `data-lab-ladder`.
 
-   THE ARRANGEMENT UNDER TEST (owner, 2026-08-06): every HEADING — including
-   the client tabs and the directory — in PT Mono, and every PARAGRAPH in
-   Alte Haas. Which means PP Neue Montreal leaves this surface entirely: its
-   display role goes to the mono, its prose role to the Haas.
+     HOUSE  PT Mono        + PP Neue Montreal    the control
+     HAAS   PT Mono        + Alte Haas Grotesk   the owner's candidate
+     SPACE  Space Mono     + Space Grotesk       Microgramma/Eurostile descent
+     PLEX   IBM Plex Mono  + Geist               already in the bundle
+     B612   B612 Mono      + B612                Airbus cockpit research
+
+   Constraints this set satisfies (owner, 2026-08-06): OPEN LICENCE ONLY, both
+   roles replaceable, retro character in the chrome and neutral clarity in the
+   prose, and no serifs anywhere.
+
+   ⚠ THE MOST PERIOD-CORRECT ALIEN FACE IS EXCLUDED BY THAT LAST RULE, and it
+   is worth recording once so it stops being re-litigated: the MU/TH/UR 6000
+   screen font is an optically stretched **Berthold City** — a SLAB SERIF.
+   Related: Alte Haas is NOT the Alien: Romulus face. It is Yann Le Coroller,
+   2007, a letterpress-era Helvetica simulation. What the films actually set is
+   Helvetica Black (1979 titles) and Neue Helvetica (the Romulus logo), so a
+   Helvetica interpretation lands on the target by a different route — the
+   provenance story was wrong, the eye was not.
 
    ⚠ NOTHING HERE SHIPS. `/test/*` is blocked in production by `proxy.ts`,
    and every rule below is scoped to `.ctl-root`. The production sheets are
-   imported unmodified; the lab re-points FAMILIES through its own variables
-   rather than redefining the rules that use them, so what you are judging is
-   the real component with a different face — not a copy of it. */
+   imported unmodified; the lab re-points FAMILIES through the tokens those
+   sheets already read rather than redefining the rules themselves, so what you
+   are judging is the real component with a different face — not a copy of it. */
 
 /* Converted from the owner's TTFs with fontTools: 141 kB → 48 kB each, a 66 %
    saving, which puts them in line with the house faces (PP Neue is 52 kB).
@@ -35,6 +50,97 @@
   font-display: swap;
 }
 
+/* ── THE BAKE-OFF CANDIDATES ─────────────────────────────────────────────
+   All SIL Open Font License, all latin-subsetted and woff2'd locally with
+   fontTools (`.scratch/build-faces.py`): 1343 kB of source TTF → **169 kB**,
+   an 87 % saving, for FOUR complete alternative pairings. The incumbent
+   pairing alone ships 332 kB, because those hand-placed files were never
+   subsetted — see the plan's Track B.
+
+   ⚠ THE SUBSET RANGE IS NOT PLAIN "LATIN". It carries the marks this UI
+   renders — `·` in every designation, `→` in `27 → 47`, the dashes and
+   geometric shapes — because coverage fails SILENTLY: a missing character
+   swaps face mid-string with nothing thrown and nothing a width measurement
+   can see. Verified after subsetting: all ten files, zero missing marks.
+   Alte Haas is the one face on this page that fails that check — it has 264
+   glyphs and **no `→` or `←`** — which is safe only because no arrow
+   currently sits in the six prose selectors.
+
+   IBM Plex Mono needs no `@font-face`: it is already loaded app-wide by
+   `next/font/google` in `app/layout.tsx` and reachable as
+   `var(--font-ibm-plex-mono)`. */
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("/fonts/SpaceMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Mono";
+  src: url("/fonts/SpaceMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "B612 Mono";
+  src: url("/fonts/B612Mono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "B612 Mono";
+  src: url("/fonts/B612Mono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "B612";
+  src: url("/fonts/B612-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "B612";
+  src: url("/fonts/B612-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ⚠ MEASURED: ALTE HAAS SETS WIDER, AND IT COSTS A LINE. At the same pixel
    size it wraps the brief one line longer than PP Neue Montreal — 6 lines
    where the house face takes 5. That is free at 1280×720 and 1440×800, where
@@ -51,13 +157,65 @@
    straight swap. Left un-applied here on purpose: the lab is for judging the
    face, and pre-compensating it would hide the cost being judged. */
 .ctl-root {
-  --ctl-sans: "Alte Haas Grotesk", "PP Neue Montreal", system-ui, sans-serif;
-  --ctl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-
   position: relative;
   min-height: 100svh;
   background: var(--void);
   overflow: hidden;
+}
+
+/* ══ THE FACES ═════════════════════════════════════════════════════════════
+   Each face declares TWO stacks and then re-points the THREE TOKENS the
+   casefile's own rules already read. That is the whole mechanism — no
+   per-face selector lists, because the production CSS has already sorted
+   every string into a role and this just changes what the role resolves to.
+
+   ⚠ `--fl-mono` NEEDS NO OVERRIDE, and that is the elegant part.
+   `casefile.css:105` declares it as `var(--font-pt-mono, …)` on `.fl-case`;
+   a `var()` resolves against the element it is declared on, and
+   `--font-pt-mono` INHERITS down from `.ctl-root`. So re-pointing the parent
+   token carries all 40 `--fl-mono` sites with it, for free.
+
+   The three tokens:
+     --font-pt-mono           → instrument chrome (40 `--fl-mono` + 3 direct)
+     --font-pp-neue-montreal  → titles and prose
+     --font-mono              → the Intelligence Map's SVG labels (see below)
+
+   ⚠ `--font-mono` IS THE MAP PLATE, AND RE-POINTING IT HERE IS DELIBERATE.
+   The map draws its 12 `.fl-imap__*` label sites through `--font-mono`, which
+   resolves app-wide to IBM Plex Mono — a logged open defect, and the reason a
+   candidate mono would otherwise not appear on the casefile's LEAD row at all.
+   Scoped to `.ctl-root`, so production keeps its defect until that fix gets
+   the label re-measurement it needs. On the PLEX face this is a no-op by
+   construction: the map was already rendering the face being tested.
+   ⚠ Resolved while researching this: PT Mono and IBM Plex Mono BOTH measure
+   exactly 0.600 em, so `MONO_ADVANCE = 0.68` was never wrong for either. The
+   map's leak is a house-style bug, not the geometry bug ADR-067 suspected. */
+
+.ctl-root[data-lab-face="house"] {
+  --ctl-mono: "PT Mono", ui-monospace, monospace;
+  --ctl-sans: "PP Neue Montreal", system-ui, sans-serif;
+}
+.ctl-root[data-lab-face="haas"] {
+  --ctl-mono: "PT Mono", ui-monospace, monospace;
+  --ctl-sans: "Alte Haas Grotesk", "PP Neue Montreal", system-ui, sans-serif;
+}
+.ctl-root[data-lab-face="space"] {
+  --ctl-mono: "Space Mono", ui-monospace, monospace;
+  --ctl-sans: "Space Grotesk", system-ui, sans-serif;
+}
+.ctl-root[data-lab-face="plex"] {
+  --ctl-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+  --ctl-sans: "Geist", system-ui, sans-serif;
+}
+.ctl-root[data-lab-face="b612"] {
+  --ctl-mono: "B612 Mono", ui-monospace, monospace;
+  --ctl-sans: "B612", system-ui, sans-serif;
+}
+
+.ctl-root[data-lab-face] {
+  --font-pt-mono: var(--ctl-mono);
+  --font-pp-neue-montreal: var(--ctl-sans);
+  --font-mono: var(--ctl-mono);
 }
 
 /* The injected HUD paints the rails and their tick ladders. It must not
@@ -87,88 +245,96 @@
   height: 100%;
 }
 
-/* ── THE ARRANGEMENTS ────────────────────────────────────────────────────
-   Three, in the order the question was asked, so each step is separable:
+/* ── THE TWO EXPLICIT ROLE RULES ─────────────────────────────────────────
+   Everything else follows from the token re-point above. These two exist
+   because production assigns them the SANS, and every candidate arrangement
+   except the control wants them in the MONO — the display title and the
+   comparison sheet's category names are the only two strings on this surface
+   that were ever a proportional face in a display role.
 
-     house    — what ships today. PP Neue Montreal for headings AND prose.
-     prose    — Haas on the paragraphs only; headings still PP Neue. This is
-                the step that isolates the +7.8 % width cost.
-     pairing  — the arrangement under test. Headings PT Mono, prose Haas,
-                PP Neue gone from the surface.
-
-   ⚠ THE MONO ROLE IS NOT NEGOTIABLE IN EITHER DIRECTION. The directory
-   rows, register claims, class line, rail and tools chrome were ALREADY
-   PT Mono and stay exactly as they are — ADR-067 pins the register claim at
-   ≤27 characters off PT Mono's advance at 13px, and the rail's four-station
-   rung exists because a 22-character label needs 136px. What `pairing`
-   changes is the two headings that were NOT mono, so the surface ends with
-   one display face instead of two. */
-
-/* THE PROSE. Six selectors, and they are the same six ADR-067 named as the
-   sans role — so this list is the definition of "paragraph" on this
-   surface, not a guess at it. */
-.ctl-root[data-lab-face="prose"] .fl-brief__body,
-.ctl-root[data-lab-face="prose"] .fl-proof-register__description,
-.ctl-root[data-lab-face="prose"] .fl-con__foot p,
-.ctl-root[data-lab-face="prose"] .fl-cap__d,
-.ctl-root[data-lab-face="prose"] .fl-cmp__claim,
-.ctl-root[data-lab-face="prose"] .fl-cmp__desc,
-.ctl-root[data-lab-face="pairing"] .fl-brief__body,
-.ctl-root[data-lab-face="pairing"] .fl-proof-register__description,
-.ctl-root[data-lab-face="pairing"] .fl-con__foot p,
-.ctl-root[data-lab-face="pairing"] .fl-cap__d,
-.ctl-root[data-lab-face="pairing"] .fl-cmp__claim,
-.ctl-root[data-lab-face="pairing"] .fl-cmp__desc {
-  font-family: var(--ctl-sans);
-}
-
-/* THE HEADINGS. Only two on this surface were ever PP Neue — the brief's
-   project title and the comparison sheet's category names. Everything else
-   the owner listed (tabs, directory) is already mono and needs no rule,
-   which is itself the finding: the surface was two-thirds of the way to
-   this pairing already. */
-.ctl-root[data-lab-face="pairing"] .fl-brief__title,
-.ctl-root[data-lab-face="pairing"] .fl-cmp__name {
+   `house` is excluded so the control stays byte-identical to production. */
+.ctl-root[data-lab-face]:not([data-lab-face="house"]) .fl-brief__title,
+.ctl-root[data-lab-face]:not([data-lab-face="house"]) .fl-cmp__name {
   font-family: var(--ctl-mono);
 }
 
 /* ⚠ MONO IS WIDER PER CHARACTER, so a display line set in it needs its
    tracking back. PP Neue's `.02em` on a 24px title is generous for a
    proportional face and cramped for a monospaced one, where every glyph
-   already carries its own side bearings. Pulled to 0 and the size eased a
-   step so `INTELLIGENCE MAP.` holds one line at the narrow column. */
-.ctl-root[data-lab-face="pairing"] .fl-brief__title {
+   already carries its own side bearings. The ladder sets `.04em` and its own
+   clamp; this is the `as-is` path only. */
+.ctl-root[data-lab-ladder="as-is"]:not([data-lab-face="house"]) .fl-brief__title {
   font-size: clamp(16px, 1.44vw, 21px);
   letter-spacing: 0;
 }
 
-/* ── THE WIDTH COMPENSATION, AND IT IS MEASURED ──────────────────────────
-   Alte Haas sets ~7.8 % wider than PP Neue at body size, so the brief wraps
-   a line longer. Free at 1280×720 and 1440×800; NOT free at 1920×1080,
-   which is the box's worst case — 202px, because `.fl-brief` hangs off the
-   non-monotonic `--fl-t6` seam — where the Studio and ATL briefs both spill.
+/* ── THE PER-FACE WIDTH FACTOR, AND IT IS MEASURED ───────────────────────
+   ⚠ WIDTH IS THE SWAP COST, NOT SIZE. Alte Haas matches PP Neue on x-height
+   (0.517 vs 0.510) and still costs the brief a whole line at 1920×1080 —
+   which is the box's WORST case, 202px, because `.fl-brief` hangs off the
+   non-monotonic `--fl-t6` seam. `.fl-brief` is `overflow: hidden` with no
+   scrollbar, so that failure has NO SYMPTOM. Every face therefore carries its
+   own factor, probed rather than guessed.
 
-   Each arrangement carries its own MINIMUM, probed at 1 / 0.98 / 0.97 /
-   0.96 / 0.95:
-
-     prose    0.95×  — 0.97 fixes Studio, not ATL.
-     pairing  0.96×  — 3px cheaper, because the mono title runs a size step
-                       smaller and hands that back to the paragraph.
-
-   ⚠ THE FACTOR IS NOT A STYLE CHOICE — it is what stops a silent clip, and
-   `.fl-brief` is `overflow: hidden` with no scrollbar, so the failure has
-   no symptom. If the face is adopted, `--fl-copy` needs a per-face factor
-   in production too; a straight family swap re-opens exactly this.
-
-   ⚠ GATED ON `as-is`. The harmonised ladder moves this compensation onto
-   `--fl-copy` itself so every prose consumer carries it; leaving the
-   per-consumer rule live as well would apply 0.96 twice to the brief. */
-.ctl-root[data-lab-ladder="as-is"][data-lab-face="prose"] .fl-brief__body {
-  font-size: calc(var(--fl-copy) * 0.95);
+   ⚠ IT GOES ON `--fl-copy`, DECLARED ON `.fl-case` — not on `.ctl-root`
+   (a `var()` inside a custom property resolves against the element it is
+   declared on, and `--fl-copy` lives on `.fl-case`; declared higher it is
+   guaranteed-invalid and font-size silently inherits 16px), and not on a
+   single consumer (that is what split the brief from the console foot). */
+/* PROBED, not predicted: each factor is the LARGEST of
+   1 / .99 / .98 / .97 / .96 / .95 / .94 / .93 / .92 / .90 / .88 that clips
+   nothing, across four rows × three viewports. Largest rather than smallest,
+   because the factor is a correction — over-correcting throws away reading
+   size the box could have held. */
+.ctl-root[data-lab-face] .fl-case {
+  --ctl-copy-k: 1;
+}
+.ctl-root[data-lab-face="haas"] .fl-case {
+  --ctl-copy-k: 0.96;
+}
+.ctl-root[data-lab-face="space"] .fl-case {
+  --ctl-copy-k: 0.96;
+}
+.ctl-root[data-lab-face="plex"] .fl-case {
+  --ctl-copy-k: 0.96;
 }
 
-.ctl-root[data-lab-ladder="as-is"][data-lab-face="pairing"] .fl-brief__body {
-  font-size: calc(var(--fl-copy) * 0.96);
+/* ⚠ B612 IS THE ONE FACE NO FACTOR FIXES, AND THE REASON IS THE POINT OF THE
+   WHOLE EXERCISE. Its x-height is 0.550 em against PP Neue's 0.510 — the
+   largest here — which is exactly what makes it legible on a vibrating,
+   glare-lit flight deck, and exactly what will not fit a FIXED 97px register
+   tile. Probed to 0.78: below ~0.88 the caption rung hits its `max(12px, …)`
+   floor and stops shrinking altogether, so one Studio-row sentence keeps
+   clipping 9px at 1920×1080 no matter how small the factor goes. Going under
+   the floor to hide it would break the type law's 12px for readable compact
+   copy — trading a visible defect for an unreadable one.
+
+   0.92 is therefore chosen on PRINCIPLE, not fitted to the failure: it is the
+   x-height-equalising value (0.510 / 0.550 = 0.927), so B612 is judged at the
+   size where its lowercase matches the incumbent's optically. The residual is
+   recorded rather than papered over — it is a real cost of a real face, on one
+   row at one viewport, and hiding it would make the bake-off useless.
+   ⚠ B612 Mono's 0.65 em advance also clips two four-station rail labels at
+   1280×720. That one is arithmetic (ADR-066), unrelated to prose, and no copy
+   factor touches it. */
+.ctl-root[data-lab-face="b612"] .fl-case {
+  --ctl-copy-k: 0.92;
+}
+
+/* ⚠ ALTE HAAS IS A DISPLAY FACE AND NEEDS A FLOOR. An `H` is a rectilinear
+   shape: PP Neue draws it with 12 points and zero curves, PT Mono the same,
+   **Alte Haas with 111 points and 29 curve segments** — every corner rounded,
+   every stem edge wobbling. Below ~14px those radii fall under one device
+   pixel and read as noise rather than as charm. The prose role runs down to
+   `.fl-proof-register__description`, which the ladder sets from a `max(12px,
+   …)` rung — well inside the damage. Nothing else on this page needs this.
+   ⚠ It is also the ONLY face here missing `→` and `←` (264 glyphs total), and
+   the only one whose licence is a dafont category tag rather than a licence
+   file. Both worth settling before it carries prose on a commercial site. */
+.ctl-root[data-lab-face="haas"] .fl-proof-register__description,
+.ctl-root[data-lab-face="haas"] .fl-cmp__desc,
+.ctl-root[data-lab-face="haas"] .fl-cap__d {
+  font-size: max(14px, var(--tl-caption, 13px));
 }
 
 /* ══ THE LADDER ════════════════════════════════════════════════════════════
@@ -251,9 +417,11 @@
      from the console foot (14.9) — the exact drift ADR-067 closed by giving
      both columns one token. Re-point `--fl-copy` and every consumer moves
      together: brief, foot, fact copy, comparison claim. */
-  .ctl-root[data-lab-ladder="harmonised"][data-lab-face="pairing"] .fl-case,
-  .ctl-root[data-lab-ladder="harmonised"][data-lab-face="prose"] .fl-case {
-    --fl-copy: calc(var(--band-copy) * 0.9 * 0.96);
+  /* The factor applies in BOTH ladder modes — it compensates the FACE, not
+     the scale, so gating it on the ladder would have made every `as-is`
+     reading a measurement of the wrong thing. */
+  .ctl-root[data-lab-face] .fl-case {
+    --fl-copy: calc(var(--band-copy) * 0.9 * var(--ctl-copy-k, 1));
   }
 
   /* ⚠ THE CAPTION RUNG IS DECLARED ON `.fl-case`, NOT ON `.ctl-root`, AND
@@ -265,13 +433,19 @@
      on the surface rendered at 16px and read as a size increase rather than
      as a broken variable. Same trap `--fl-tabs-h` documents.
 
-     THE FLOOR IS IN THE OPEN. A bare `×0.85` reads 10.6px at 1280, under the
-     type law's 12px for readable compact copy; a bare `×0.9` reads 14.0px at
-     1920, which lands the register's third line 0.8px from the edge of a
-     FIXED 97px tile and truncates a live sentence with no symptom. `max()` is
-     what makes both ends legal. */
+     THE FLOOR IS IN THE OPEN. A bare fraction reads 10.6px at 1280, under the
+     type law's 12px for readable compact copy; too generous a one lands the
+     register's third line past the edge of a FIXED 97px tile and truncates a
+     live sentence with no symptom. `max()` is what makes both ends legal.
+
+     ⚠ 0.81, NOT 0.85 — AND THE BAKE-OFF IS WHAT CAUGHT IT. 0.85 was set while
+     `--fl-copy` still carried Alte Haas's 0.96 compensation on every face, so
+     it was silently tuned against 15.55px rather than the real 16.2px. The
+     moment each face got its OWN factor, every face without one truncated its
+     register sentences by 2px at 1920. A constant derived under one face's
+     correction is not a constant. */
   .ctl-root[data-lab-ladder="harmonised"] .fl-case {
-    --tl-caption: max(12px, calc(var(--fl-copy) * 0.85));
+    --tl-caption: max(12px, calc(var(--fl-copy) * 0.81));
   }
 
   /* ── THE LABEL VOICE — 9.5px, .16em, 400 ────────────────────────────────

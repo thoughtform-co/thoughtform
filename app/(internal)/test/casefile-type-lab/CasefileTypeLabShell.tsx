@@ -1,26 +1,64 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { ServicesCasefile } from "@/components/landing/home-v2/services/casefile/ServicesCasefile";
 
 /**
- * The three arrangements, in the order the question was asked so each step
- * is separable — `prose` isolates the width cost, `pairing` adds the
- * heading change on top of it.
+ * The FACE axis — five complete pairings, chrome face and prose face.
+ *
+ * ⚠ THE LABELS ARE CODENAMES ON PURPOSE. The console is one line pinned to
+ * the bottom of the viewport, and it was ALREADY wrapping to two rows at
+ * three options — measured 925px wide at 1849px, with `Mono + Haas` alone
+ * costing 94px. Five descriptive labels do not fit at 1280. So the button
+ * carries four characters and the note line, which already existed, carries
+ * the two real family names.
  */
-type Scope = "house" | "prose" | "pairing";
+type Face = "house" | "haas" | "space" | "plex" | "b612";
 
-const SCOPES: readonly { id: Scope; label: string; note: string }[] = [
-  { id: "house", label: "House", note: "PP Neue Montreal, headings and prose — what ships today" },
-  { id: "prose", label: "Haas prose", note: "paragraphs in Haas, headings still PP Neue" },
-  { id: "pairing", label: "Mono + Haas", note: "headings PT Mono, prose Haas — no PP Neue left" },
+const FACES: readonly { id: Face; code: string; mono: string; sans: string; note: string }[] = [
+  {
+    id: "house",
+    code: "HOUSE",
+    mono: "PT Mono",
+    sans: "PP Neue Montreal",
+    note: "what ships today — the control",
+  },
+  {
+    id: "haas",
+    code: "HAAS",
+    mono: "PT Mono",
+    sans: "Alte Haas Grotesk",
+    note: "letterpress Helvetica · floored at 14px · no → in its cmap",
+  },
+  {
+    id: "space",
+    code: "SPACE",
+    mono: "Space Mono",
+    sans: "Space Grotesk",
+    note: "Colophon, drawn from Microgramma/Eurostile · display-brief, prove it at 10px",
+  },
+  {
+    id: "plex",
+    code: "PLEX",
+    mono: "IBM Plex Mono",
+    sans: "Geist",
+    note: "already in the bundle · 0.600em, same as PT Mono · matches the map plate",
+  },
+  {
+    id: "b612",
+    code: "B612",
+    mono: "B612 Mono",
+    sans: "B612",
+    note: "Airbus cockpit legibility research · 0.65em, the widest cell here",
+  },
 ];
 
 /**
- * The SECOND, independent axis. Family and ladder are separate questions —
- * the surface can carry three faces on one ladder or one face on seven
- * ladders, and only judging them apart tells you which complaint is which.
+ * The SCALE axis, independent of the face. Family and ladder answer different
+ * halves of "the fonts are inconsistent" — the surface can carry five faces on
+ * one ladder or one face on seven ladders, and only judging them apart tells
+ * you which complaint is which.
  */
 type Ladder = "as-is" | "harmonised";
 
@@ -52,7 +90,7 @@ const STAGE_STYLE = {
 } as CSSProperties;
 
 export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
-  const [scope, setScope] = useState<Scope>("pairing");
+  const [face, setFace] = useState<Face>("house");
   const [ladder, setLadder] = useState<Ladder>("harmonised");
   const hudRef = useRef<HTMLDivElement>(null);
 
@@ -86,8 +124,37 @@ export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
     };
   }, []);
 
+  /**
+   * Number keys switch faces, `0` toggles the scale. Comparing type means
+   * flicking between two states repeatedly and watching ONE line — aiming a
+   * pointer at a 17px target between each look is how you lose the comparison.
+   *
+   * ⚠ Bound on `window`, not on the casefile: the surface's own plate handlers
+   * (`.claude/rules/proof.md` — "keys bind on the PLATE, not `document`") own
+   * arrows and Escape, and this must not shadow them. Digits are unclaimed.
+   * Guarded on modifiers and on typing targets so it stays inert in a field.
+   */
+  const onKey = useCallback((e: KeyboardEvent) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === "0") {
+      setLadder((l) => (l === "as-is" ? "harmonised" : "as-is"));
+      return;
+    }
+    const i = Number(e.key);
+    if (Number.isInteger(i) && i >= 1 && i <= FACES.length) setFace(FACES[i - 1].id);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onKey]);
+
+  const activeFace = FACES.find((f) => f.id === face);
+
   return (
-    <div className="ctl-root" data-lab-face={scope} data-lab-ladder={ladder}>
+    <div className="ctl-root" data-lab-face={face} data-lab-ladder={ladder}>
       {/* The real parse-injected HUD. It is here for the RAIL: the casefile's
           `--fl-t*` ladder is measured off `.hud__rail`'s live box, so without
           it every box in the left column resolves against nothing. */}
@@ -109,17 +176,17 @@ export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
 
       <div className="ctl-console" role="group" aria-label="Type lab controls">
         <span className="ctl-console__title">Face</span>
-        {SCOPES.map((s) => (
+        {FACES.map((f, i) => (
           <button
-            key={s.id}
+            key={f.id}
             type="button"
             className="ctl-console__btn"
-            data-on={scope === s.id || undefined}
-            aria-pressed={scope === s.id}
-            title={s.note}
-            onClick={() => setScope(s.id)}
+            data-on={face === f.id || undefined}
+            aria-pressed={face === f.id}
+            title={`${i + 1} · ${f.mono} + ${f.sans} — ${f.note}`}
+            onClick={() => setFace(f.id)}
           >
-            {s.label}
+            {f.code}
           </button>
         ))}
         <span className="ctl-console__rule" aria-hidden="true" />
@@ -131,13 +198,15 @@ export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
             className="ctl-console__btn"
             data-on={ladder === l.id || undefined}
             aria-pressed={ladder === l.id}
-            title={l.note}
+            title={`0 · ${l.note}`}
             onClick={() => setLadder(l.id)}
           >
             {l.label}
           </button>
         ))}
-        <span className="ctl-console__note">{LADDERS.find((l) => l.id === ladder)?.note}</span>
+        <span className="ctl-console__note">
+          {activeFace ? `${activeFace.mono} + ${activeFace.sans} — ${activeFace.note}` : ""}
+        </span>
       </div>
     </div>
   );
