@@ -18,6 +18,22 @@ const SCOPES: readonly { id: Scope; label: string; note: string }[] = [
 ];
 
 /**
+ * The SECOND, independent axis. Family and ladder are separate questions —
+ * the surface can carry three faces on one ladder or one face on seven
+ * ladders, and only judging them apart tells you which complaint is which.
+ */
+type Ladder = "as-is" | "harmonised";
+
+const LADDERS: readonly { id: Ladder; label: string; note: string }[] = [
+  { id: "as-is", label: "As-is", note: "7 mono sizes · 6 tracking values · 700 doing five jobs" },
+  {
+    id: "harmonised",
+    label: "Ladder",
+    note: "4 rungs at ×1.26 · weight only on display · label .16em / text .06em",
+  },
+];
+
+/**
  * ⚠ THE CASEFILE'S ARRIVAL IS PARKED, NOT DISABLED. `.fl-case` is
  * `visibility: hidden` until `.services-stage[data-proof-live]`, and every
  * panel travels on `--ci-off` against `--svc-proof-in` / `--svc-proof-out`.
@@ -37,6 +53,7 @@ const STAGE_STYLE = {
 
 export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
   const [scope, setScope] = useState<Scope>("pairing");
+  const [ladder, setLadder] = useState<Ladder>("harmonised");
   const hudRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -70,7 +87,7 @@ export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
   }, []);
 
   return (
-    <div className="ctl-root" data-lab-face={scope}>
+    <div className="ctl-root" data-lab-face={scope} data-lab-ladder={ladder}>
       {/* The real parse-injected HUD. It is here for the RAIL: the casefile's
           `--fl-t*` ladder is measured off `.hud__rail`'s live box, so without
           it every box in the left column resolves against nothing. */}
@@ -91,7 +108,7 @@ export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
       </div>
 
       <div className="ctl-console" role="group" aria-label="Type lab controls">
-        <span className="ctl-console__title">Sans role</span>
+        <span className="ctl-console__title">Face</span>
         {SCOPES.map((s) => (
           <button
             key={s.id}
@@ -105,7 +122,22 @@ export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
             {s.label}
           </button>
         ))}
-        <span className="ctl-console__note">{SCOPES.find((s) => s.id === scope)?.note}</span>
+        <span className="ctl-console__rule" aria-hidden="true" />
+        <span className="ctl-console__title">Scale</span>
+        {LADDERS.map((l) => (
+          <button
+            key={l.id}
+            type="button"
+            className="ctl-console__btn"
+            data-on={ladder === l.id || undefined}
+            aria-pressed={ladder === l.id}
+            title={l.note}
+            onClick={() => setLadder(l.id)}
+          >
+            {l.label}
+          </button>
+        ))}
+        <span className="ctl-console__note">{LADDERS.find((l) => l.id === ladder)?.note}</span>
       </div>
     </div>
   );

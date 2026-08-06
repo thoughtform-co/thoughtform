@@ -158,13 +158,230 @@
    ⚠ THE FACTOR IS NOT A STYLE CHOICE — it is what stops a silent clip, and
    `.fl-brief` is `overflow: hidden` with no scrollbar, so the failure has
    no symptom. If the face is adopted, `--fl-copy` needs a per-face factor
-   in production too; a straight family swap re-opens exactly this. */
-.ctl-root[data-lab-face="prose"] .fl-brief__body {
+   in production too; a straight family swap re-opens exactly this.
+
+   ⚠ GATED ON `as-is`. The harmonised ladder moves this compensation onto
+   `--fl-copy` itself so every prose consumer carries it; leaving the
+   per-consumer rule live as well would apply 0.96 twice to the brief. */
+.ctl-root[data-lab-ladder="as-is"][data-lab-face="prose"] .fl-brief__body {
   font-size: calc(var(--fl-copy) * 0.95);
 }
 
-.ctl-root[data-lab-face="pairing"] .fl-brief__body {
+.ctl-root[data-lab-ladder="as-is"][data-lab-face="pairing"] .fl-brief__body {
   font-size: calc(var(--fl-copy) * 0.96);
+}
+
+/* ══ THE LADDER ════════════════════════════════════════════════════════════
+   The SECOND axis, independent of the face. `data-lab-ladder="as-is"` leaves
+   every size, weight and tracking exactly as it ships; `"harmonised"` puts
+   the whole surface on one scale.
+
+   ── WHAT IS WRONG TODAY, MEASURED AT 1440×800 ──
+   Mono runs SEVEN sizes (9 · 9.5 · 9.5 · 10 · 11.5 · 13 · 15 · 20.7), SIX
+   tracking values (.045 · .06 · .10 · .16 · .20 · .22em) and TWO weights.
+   Sans runs THREE sizes (12.96 · 14.31 · 14.9), three leadings and three
+   alphas. Nobody can see 9 against 9.5 against 10 — but everyone feels the
+   surface is not square, and that is the whole complaint.
+
+   ── THE THREE LAWS ──
+   1. FOUR RUNGS, one ratio. 9.5 · 12 · 15 · 19 is a ×1.26 modular scale, and
+      it is NATIVE to this surface rather than imposed on it: `.fl-tabs__tab`
+      already sets `clamp(12px, 1.05vw, 15px)` and `.fl-cap__t` already sets
+      12px/.06em. Every clamp below has its CEILING on one rung and its FLOOR
+      on the rung beneath, so the ladder holds while the viewport moves.
+   2. WEIGHT IS SPENT ONCE. PT Mono renders at 400 everywhere except the
+      display rung. A phosphor display cannot do semibold — it does
+      brightness — so state travels on colour, alpha, fill and rule. Today 700
+      marks the active tab, the title, the claims, the count, the selected row
+      AND its meta: five different meanings on one signal, which is why the
+      surface reads shouty. Every one of those still reads unambiguously
+      without it (gold + underline, gold, full-strength dawn over a .6
+      sentence, gold, ink on a lit plate).
+   3. TWO TRACKING VOICES, by role. A LABEL names the instrument and is
+      SCANNED — 9.5px, .16em. TEXT is read — .06em, whatever its rung. That
+      one split replaces six ad-hoc values, and it is the same shape as the
+      family law already in force (mono = chrome, sans = prose).
+
+   ⚠ ONE DEROGATION, and it is arithmetic, not taste: the rail keeps `.16em`.
+   Its stations are the only strings on this surface set on a plate you PRESS,
+   and ADR-066 hid the diamond at `data-n="4"` because a 22-character label
+   was 14px wider than its quarter. Tracking is what makes a pressable label
+   read as a control, so it stays; only the clamp CEILING joins the ladder.
+
+   ⚠ DESKTOP ONLY. Below 980px the console unwraps and the left column becomes
+   ordinary flow with its own rungs (casefile.css ~3125). Every rule here is
+   (0,3,0)+ and would silently beat that path. */
+.ctl-root[data-lab-ladder="harmonised"] {
+  /* 9.5 · 12 · 15 · 19 — ratio 1.26. Ceiling on the rung, floor one below. */
+  --tl-label: 9.5px;
+  --tl-item: clamp(11px, 0.85vw, 12px);
+  --tl-head: clamp(12px, 1.05vw, 15px);
+  --tl-display: clamp(15px, 1.32vw, 19px);
+
+  --tl-track-label: 0.16em;
+  --tl-track-text: 0.06em;
+  /* ⚠ THE DISPLAY RUNG TAKES LESS, and it is measured, not taste. At `.06em`
+     the longest title — `AI ABOVE THE LINE.`, 18 characters and `nowrap` —
+     runs 2px past `.fl-brief` at 1280×720, which is `overflow: hidden` with
+     no scrollbar. `.04em` gives it 4px back. It also happens to be correct
+     optically: caps need less tracking as they get bigger, which is the same
+     curve the label voice sits at the other end of. */
+  --tl-track-display: 0.04em;
+
+  /* Prose: ONE leading, ONE tracking and TWO alphas for the whole surface.
+     The brief and the foot were 0 and .008em — 0.11px apart, which is nobody's
+     idea of a difference but is still two numbers for one role.
+
+     ⚠ IT RESOLVES TO 0, AND THE 0.008em SIDE LOST ON A MEASUREMENT. Taking
+     the foot's value the other way overflowed `.fl-brief` by 2px at 1280 on
+     the ATL row — not from the paragraph but from the gold-wash `<em>`, which
+     carries `padding: 0 2px` with `box-decoration-break: clone`, so tracking
+     compounds against a marker that is already at the column edge. `.008em`
+     is an Arc CAPTION value: it lifts type off live WebGL. A console is
+     opaque and this is a column of body copy. */
+  --tl-lead: 1.45;
+  --tl-track-prose: 0;
+  --tl-prose: rgba(var(--dawn-rgb), 0.88);
+  --tl-prose-2: rgba(var(--dawn-rgb), 0.6);
+}
+
+@media (min-width: 981px) {
+  /* ⚠ THE HAAS COMPENSATION BELONGS ON THE TOKEN, NOT ON ONE CONSUMER.
+     Applying 0.96 to `.fl-brief__body` alone is what split the brief (14.31)
+     from the console foot (14.9) — the exact drift ADR-067 closed by giving
+     both columns one token. Re-point `--fl-copy` and every consumer moves
+     together: brief, foot, fact copy, comparison claim. */
+  .ctl-root[data-lab-ladder="harmonised"][data-lab-face="pairing"] .fl-case,
+  .ctl-root[data-lab-ladder="harmonised"][data-lab-face="prose"] .fl-case {
+    --fl-copy: calc(var(--band-copy) * 0.9 * 0.96);
+  }
+
+  /* ⚠ THE CAPTION RUNG IS DECLARED ON `.fl-case`, NOT ON `.ctl-root`, AND
+     THAT IS NOT TIDINESS. A `var()` inside a custom property resolves against
+     the element the property is DECLARED on — and `--fl-copy` lives on
+     `.fl-case`. Declared up on `.ctl-root` the reference is unresolvable, the
+     whole declaration becomes guaranteed-invalid, and `font-size` silently
+     falls back to the INHERITED 16px. Which is what happened: every caption
+     on the surface rendered at 16px and read as a size increase rather than
+     as a broken variable. Same trap `--fl-tabs-h` documents.
+
+     THE FLOOR IS IN THE OPEN. A bare `×0.85` reads 10.6px at 1280, under the
+     type law's 12px for readable compact copy; a bare `×0.9` reads 14.0px at
+     1920, which lands the register's third line 0.8px from the edge of a
+     FIXED 97px tile and truncates a live sentence with no symptom. `max()` is
+     what makes both ends legal. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-case {
+    --tl-caption: max(12px, calc(var(--fl-copy) * 0.85));
+  }
+
+  /* ── THE LABEL VOICE — 9.5px, .16em, 400 ────────────────────────────────
+     Everything that names the instrument rather than naming a thing. Six
+     rules collapse into one; the `.22em` on `.fl-desig` and the `.20em` on
+     `.fl-tele` / `.fl-tabs__archive` were the loudest of the six. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-desig,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-desig--r,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-brief__class,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-row__meta,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-tabs__archive,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-tabs__ix,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-tele {
+    font-size: var(--tl-label);
+    letter-spacing: var(--tl-track-label);
+    font-weight: 400;
+  }
+
+  /* ── THE TEXT VOICE — .06em, 400, on its rung ───────────────────────────
+     ITEM: the things you select and read. The claim comes down from 13 and
+     the rows go up from 11.5, so the register and the directory finally
+     letter at one size — they are peers, and reading them as peers is what
+     stops the left column looking assembled from parts. The ≤27-character
+     claim budget only gets SAFER: 12px/.06em fits more per line than
+     13px/.045em did. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-row,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-proof-register__claim,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-cap__t {
+    font-size: var(--tl-item);
+    letter-spacing: var(--tl-track-text);
+    font-weight: 400;
+  }
+
+  /* HEAD: the client you have open, and the comparison's two category names.
+     `.fl-cmp__name` was `clamp(15px, 1.25vw, 19px)` — the DISPLAY rung, twice
+     over, competing with the one line that has to lead the surface. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-tabs__tab,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-cmp__name {
+    font-size: var(--tl-head);
+    letter-spacing: var(--tl-track-text);
+    font-weight: 400;
+  }
+
+  /* DISPLAY: one string on the surface, and the ONLY place weight is spent. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-brief__title {
+    font-size: var(--tl-display);
+    letter-spacing: var(--tl-track-display);
+    font-weight: 700;
+  }
+  .ctl-root[data-lab-ladder="harmonised"] .fl-brief__dot {
+    font-weight: 700;
+  }
+
+  /* ── WEIGHT COMES OFF THE FOUR STATE MARKERS ────────────────────────────
+     Each already carries its state in a stronger channel, so the bold was
+     always a second marker for a signal that was not ambiguous. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-tabs__tab[data-on],
+  .ctl-root[data-lab-ladder="harmonised"] .fl-dir__count,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-row[data-on],
+  .ctl-root[data-lab-ladder="harmonised"] .fl-row[data-on] .fl-row__meta {
+    font-weight: 400;
+  }
+
+  /* ── THE RAIL — the derogation, and it is arithmetic ────────────────────
+     `.16em` stays: a station is the only string on this surface set on a
+     plate you PRESS, and tracking is what makes a pressable label read as a
+     control rather than as text. Only the clamp CEILING joins the ITEM rung,
+     and only where there is room for it.
+
+     ⚠ `:not([data-n="4"])` IS LOAD-BEARING, NOT TIDINESS. ADR-066 gives four
+     stations their own measured rung — `clamp(10px, 1.55cqw, 10.5px)` at
+     `letter-spacing: 0`, because a 22-character label is 14px wider than its
+     quarter of the console. That rule is `.fl-con__rail[data-n="4"]
+     .fl-con__stn > b` = (0,3,1), the SAME specificity as a `.ctl-root[attr]
+     .fl-con__stn > b` here — and the lab sheet loads last, so the unscoped
+     version silently won and re-broke the tools row at 1280 and 1440. Caught
+     by measurement; it looks identical to a rail that simply got wider. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-con__rail:not([data-n="4"]) .fl-con__stn > b {
+    font-size: clamp(10px, 1.75cqw, 12px);
+  }
+
+  /* ── THE SANS LADDER — two rungs, one leading, two alphas ───────────────
+     The split is by ROLE, not by box: BODY is the primary read of its
+     container, CAPTION is text subordinate to a label directly above it. That
+     line already matches the alphas in force (.88 on the foot and the
+     comparison claim, .6/.62 on the three captions) — the only two elements
+     that were on the wrong side of it are `.fl-brief__body`, a primary
+     paragraph sitting at .7, and `.fl-cap__d`, a caption sitting at full body
+     size.
+
+     Leading was 1.52 / 1.45 / 1.40 / 1.35 across four rules for one role.
+     1.45 is the Arc caption card's, which the foot already carries; adopting
+     it in the brief also hands ~7px back to the box that clips at 1920. */
+  .ctl-root[data-lab-ladder="harmonised"] .fl-brief__body,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-con__foot p,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-cmp__claim {
+    font-size: var(--fl-copy);
+    line-height: var(--tl-lead);
+    letter-spacing: var(--tl-track-prose);
+    color: var(--tl-prose);
+  }
+
+  .ctl-root[data-lab-ladder="harmonised"] .fl-proof-register__description,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-cmp__desc,
+  .ctl-root[data-lab-ladder="harmonised"] .fl-cap__d {
+    font-size: var(--tl-caption);
+    line-height: var(--tl-lead);
+    letter-spacing: var(--tl-track-prose);
+    color: var(--tl-prose-2);
+  }
 }
 
 /* ── The console ─────────────────────────────────────────────────────────
@@ -222,6 +439,15 @@
 .ctl-console__btn:focus-visible {
   outline: 1px solid var(--gold);
   outline-offset: 2px;
+}
+
+/* Two independent axes on one bar, so the divider has to read as a divider
+   and not as a gap between buttons. */
+.ctl-console__rule {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 4px;
+  background: var(--dawn-15);
 }
 
 .ctl-console__note {

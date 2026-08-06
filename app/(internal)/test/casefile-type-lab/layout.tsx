@@ -8,7 +8,14 @@ import type { ReactNode } from "react";
  * to see it in place of PP Neue Montreal on the second section's left column.
  * This lab is the safe place to judge that: it mounts the REAL
  * `ServicesCasefile` against the REAL parse-injected HUD rail, parked at its
- * end state, with one lab-owned switch that re-points the SANS ROLE.
+ * end state, with lab-owned switches over the type.
+ *
+ * ⚠ TWO INDEPENDENT AXES, AND KEEPING THEM APART IS THE POINT. `data-lab-face`
+ * chooses the FAMILIES; `data-lab-ladder` chooses the SCALE. The surface can
+ * carry three faces on one ladder or one face on seven ladders, and only
+ * judging them separately tells you which complaint is which — "the fonts are
+ * inconsistent" turned out to be mostly the second axis: 13 distinct mono
+ * (size/weight/tracking) combinations against the ladder's 5.
  *
  * ⚠ IT DOES NOT FORK THE CASEFILE. `/test/field-log-lab` did, and
  * `.claude/rules/proof.md` now has to warn that it is "a STALE FORK on the
