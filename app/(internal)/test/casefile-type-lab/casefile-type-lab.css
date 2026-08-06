@@ -1,21 +1,27 @@
 /* == CASEFILE TYPE LAB ==================================================
-   Look-dev for swapping the casefile's SANS ROLE to Alte Haas Grotesk (the
-   Alien: Romulus title face the owner brought in).
+   Look-dev for the casefile's TYPE PAIRING. Alte Haas Grotesk is the
+   Alien: Romulus title face the owner brought in.
 
-   Everything here is lab-owned. No production selector is redefined except
-   through `--ctl-sans`, which is a lab variable the production rules never
-   mention — the swap works by re-pointing the FAMILY the sans role already
-   resolves, not by overriding the rules that use it. */
+   THE ARRANGEMENT UNDER TEST (owner, 2026-08-06): every HEADING — including
+   the client tabs and the directory — in PT Mono, and every PARAGRAPH in
+   Alte Haas. Which means PP Neue Montreal leaves this surface entirely: its
+   display role goes to the mono, its prose role to the Haas.
 
-/* ⚠ TTF, AND THAT IS A LAB DECISION. These are the raw 144 kB files the
-   owner dropped in; the house faces are all woff2 at ~52 kB. `/test/*` is
-   blocked in production by `proxy.ts` so nothing ships from here — but if
-   this face is adopted, CONVERT FIRST. `landing-performance` treats
-   `public/fonts/**` as a watched surface for exactly this reason: two TTFs
-   is +290 kB on a route whose whole font budget is currently 280. */
+   ⚠ NOTHING HERE SHIPS. `/test/*` is blocked in production by `proxy.ts`,
+   and every rule below is scoped to `.ctl-root`. The production sheets are
+   imported unmodified; the lab re-points FAMILIES through its own variables
+   rather than redefining the rules that use them, so what you are judging is
+   the real component with a different face — not a copy of it. */
+
+/* Converted from the owner's TTFs with fontTools: 141 kB → 48 kB each, a 66 %
+   saving, which puts them in line with the house faces (PP Neue is 52 kB).
+   The TTFs stay in `public/fonts/` as the supplied originals; only these are
+   loaded. If this pairing is adopted, `landing-performance` treats
+   `public/fonts/**` as a watched surface — 95 kB for the pair is the number
+   that matters, not the 290 kB the raw TTFs would have cost. */
 @font-face {
   font-family: "Alte Haas Grotesk";
-  src: url("/fonts/AlteHaasGroteskRegular.ttf") format("truetype");
+  src: url("/fonts/AlteHaasGroteskRegular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -23,7 +29,7 @@
 
 @font-face {
   font-family: "Alte Haas Grotesk";
-  src: url("/fonts/AlteHaasGroteskBold.ttf") format("truetype");
+  src: url("/fonts/AlteHaasGroteskBold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -46,6 +52,7 @@
    face, and pre-compensating it would hide the cost being judged. */
 .ctl-root {
   --ctl-sans: "Alte Haas Grotesk", "PP Neue Montreal", system-ui, sans-serif;
+  --ctl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
 
   position: relative;
   min-height: 100svh;
@@ -80,37 +87,84 @@
   height: 100%;
 }
 
-/* ── THE SWAP ────────────────────────────────────────────────────────────
-   Two scopes, because "the text on the left" and "does it hold up
-   everywhere" are different questions and the answer to one does not
-   settle the other.
+/* ── THE ARRANGEMENTS ────────────────────────────────────────────────────
+   Three, in the order the question was asked, so each step is separable:
 
-   ⚠ MONO IS NOT TOUCHED, AT EITHER SCOPE. The directory rows, the register
-   claims, the class line, the rail and the tools chrome are PT Mono because
-   they are instrument chrome whose widths are MEASURED — ADR-067 pins the
-   register claim at ≤27 characters off PT Mono's advance at 13px, and the
-   rail's four-station rung exists because a 22-character label needs 136px.
-   Re-pointing those at a proportional face would invalidate every one of
-   those numbers and would not be a type study. */
+     house    — what ships today. PP Neue Montreal for headings AND prose.
+     prose    — Haas on the paragraphs only; headings still PP Neue. This is
+                the step that isolates the +7.8 % width cost.
+     pairing  — the arrangement under test. Headings PT Mono, prose Haas,
+                PP Neue gone from the surface.
 
-/* LEFT COLUMN — the brief's heading and its paragraph, which is what the
-   owner pointed at. The register and directory beneath them are mono. */
-.ctl-root[data-lab-face="left"] .fl-brief__title,
-.ctl-root[data-lab-face="left"] .fl-brief__body {
+   ⚠ THE MONO ROLE IS NOT NEGOTIABLE IN EITHER DIRECTION. The directory
+   rows, register claims, class line, rail and tools chrome were ALREADY
+   PT Mono and stay exactly as they are — ADR-067 pins the register claim at
+   ≤27 characters off PT Mono's advance at 13px, and the rail's four-station
+   rung exists because a 22-character label needs 136px. What `pairing`
+   changes is the two headings that were NOT mono, so the surface ends with
+   one display face instead of two. */
+
+/* THE PROSE. Six selectors, and they are the same six ADR-067 named as the
+   sans role — so this list is the definition of "paragraph" on this
+   surface, not a guess at it. */
+.ctl-root[data-lab-face="prose"] .fl-brief__body,
+.ctl-root[data-lab-face="prose"] .fl-proof-register__description,
+.ctl-root[data-lab-face="prose"] .fl-con__foot p,
+.ctl-root[data-lab-face="prose"] .fl-cap__d,
+.ctl-root[data-lab-face="prose"] .fl-cmp__claim,
+.ctl-root[data-lab-face="prose"] .fl-cmp__desc,
+.ctl-root[data-lab-face="pairing"] .fl-brief__body,
+.ctl-root[data-lab-face="pairing"] .fl-proof-register__description,
+.ctl-root[data-lab-face="pairing"] .fl-con__foot p,
+.ctl-root[data-lab-face="pairing"] .fl-cap__d,
+.ctl-root[data-lab-face="pairing"] .fl-cmp__claim,
+.ctl-root[data-lab-face="pairing"] .fl-cmp__desc {
   font-family: var(--ctl-sans);
 }
 
-/* WHOLE CASEFILE — every sans role on the surface, so the left column can be
-   judged against the console foot and the plates it sits beside. */
-.ctl-root[data-lab-face="all"] .fl-brief__title,
-.ctl-root[data-lab-face="all"] .fl-brief__body,
-.ctl-root[data-lab-face="all"] .fl-proof-register__description,
-.ctl-root[data-lab-face="all"] .fl-con__foot p,
-.ctl-root[data-lab-face="all"] .fl-cap__d,
-.ctl-root[data-lab-face="all"] .fl-cmp__name,
-.ctl-root[data-lab-face="all"] .fl-cmp__claim,
-.ctl-root[data-lab-face="all"] .fl-cmp__desc {
-  font-family: var(--ctl-sans);
+/* THE HEADINGS. Only two on this surface were ever PP Neue — the brief's
+   project title and the comparison sheet's category names. Everything else
+   the owner listed (tabs, directory) is already mono and needs no rule,
+   which is itself the finding: the surface was two-thirds of the way to
+   this pairing already. */
+.ctl-root[data-lab-face="pairing"] .fl-brief__title,
+.ctl-root[data-lab-face="pairing"] .fl-cmp__name {
+  font-family: var(--ctl-mono);
+}
+
+/* ⚠ MONO IS WIDER PER CHARACTER, so a display line set in it needs its
+   tracking back. PP Neue's `.02em` on a 24px title is generous for a
+   proportional face and cramped for a monospaced one, where every glyph
+   already carries its own side bearings. Pulled to 0 and the size eased a
+   step so `INTELLIGENCE MAP.` holds one line at the narrow column. */
+.ctl-root[data-lab-face="pairing"] .fl-brief__title {
+  font-size: clamp(16px, 1.44vw, 21px);
+  letter-spacing: 0;
+}
+
+/* ── THE WIDTH COMPENSATION, AND IT IS MEASURED ──────────────────────────
+   Alte Haas sets ~7.8 % wider than PP Neue at body size, so the brief wraps
+   a line longer. Free at 1280×720 and 1440×800; NOT free at 1920×1080,
+   which is the box's worst case — 202px, because `.fl-brief` hangs off the
+   non-monotonic `--fl-t6` seam — where the Studio and ATL briefs both spill.
+
+   Each arrangement carries its own MINIMUM, probed at 1 / 0.98 / 0.97 /
+   0.96 / 0.95:
+
+     prose    0.95×  — 0.97 fixes Studio, not ATL.
+     pairing  0.96×  — 3px cheaper, because the mono title runs a size step
+                       smaller and hands that back to the paragraph.
+
+   ⚠ THE FACTOR IS NOT A STYLE CHOICE — it is what stops a silent clip, and
+   `.fl-brief` is `overflow: hidden` with no scrollbar, so the failure has
+   no symptom. If the face is adopted, `--fl-copy` needs a per-face factor
+   in production too; a straight family swap re-opens exactly this. */
+.ctl-root[data-lab-face="prose"] .fl-brief__body {
+  font-size: calc(var(--fl-copy) * 0.95);
+}
+
+.ctl-root[data-lab-face="pairing"] .fl-brief__body {
+  font-size: calc(var(--fl-copy) * 0.96);
 }
 
 /* ── The console ─────────────────────────────────────────────────────────

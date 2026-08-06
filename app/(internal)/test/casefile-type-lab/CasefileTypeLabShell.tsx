@@ -4,13 +4,17 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { ServicesCasefile } from "@/components/landing/home-v2/services/casefile/ServicesCasefile";
 
-/** Which subtree the sans role is re-pointed in. */
-type Scope = "off" | "left" | "all";
+/**
+ * The three arrangements, in the order the question was asked so each step
+ * is separable — `prose` isolates the width cost, `pairing` adds the
+ * heading change on top of it.
+ */
+type Scope = "house" | "prose" | "pairing";
 
 const SCOPES: readonly { id: Scope; label: string; note: string }[] = [
-  { id: "off", label: "House", note: "PP Neue Montreal — what ships today" },
-  { id: "left", label: "Left column", note: "the brief's heading and paragraph" },
-  { id: "all", label: "Whole casefile", note: "every sans role, both columns" },
+  { id: "house", label: "House", note: "PP Neue Montreal, headings and prose — what ships today" },
+  { id: "prose", label: "Haas prose", note: "paragraphs in Haas, headings still PP Neue" },
+  { id: "pairing", label: "Mono + Haas", note: "headings PT Mono, prose Haas — no PP Neue left" },
 ];
 
 /**
@@ -32,7 +36,7 @@ const STAGE_STYLE = {
 } as CSSProperties;
 
 export function CasefileTypeLabShell({ hudHtml }: { hudHtml: string }) {
-  const [scope, setScope] = useState<Scope>("left");
+  const [scope, setScope] = useState<Scope>("pairing");
   const hudRef = useRef<HTMLDivElement>(null);
 
   /**
