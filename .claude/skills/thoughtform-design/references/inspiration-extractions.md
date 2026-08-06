@@ -1,6 +1,14 @@
 # Inspiration Extractions
 
-Patterns decomposed from reference screenshots and mapped to Thoughtform grammar. This file grows over time.
+Patterns decomposed from reference screenshots and mapped to Thoughtform grammar.
+
+**This is the hand-curated seed set, not the library.** The full pool — every reference in
+`_01_GENERAL REFERENCES`, distilled the same way — lives in the substrate vault and is reached with
+`vault_search { query: "…", rack: "design" }`. Query there first; it is larger, it is searchable by
+style facet, and it points at the original images.
+
+What stays here is the promoted tier: a decomposition earns a place in this file once a session has
+proven it load-bearing for Thoughtform work. Add sparingly, and by that test alone.
 
 ---
 

@@ -7,6 +7,16 @@ description: Thoughtform.co-specific design overrides. Canonical skill lives at 
 
 The canonical Thoughtform design skill is installed globally at `~/.cursor/skills/thoughtform-design/SKILL.md`. This project-level file provides only the Thoughtform.co-specific delta.
 
+## Reaching for inspiration — query, don't ask
+
+Before improvising a treatment or asking Vince to upload screenshots, query the compiled reference
+pool via the `substrate-vault` MCP server: `vault_search { query: "…", rack: "design" }` (add
+`lane: "groundtruth"` for his own product interfaces). Notes carry layout, patterns mapped to the
+navigation grammar, a style-facet enum line, what to adopt and what to avoid; `vault_read` gives the
+`original:` Drive path when the pixels themselves are the answer. Full contract in the global skill.
+**These are distillations, not swatches** — colors come back as roles projected onto tokens, never
+as hex to lift.
+
 ## Key references (global skill)
 
 - **Product appendix:** `references/products/thoughtform-co.md` — repo-specific file paths and conventions
