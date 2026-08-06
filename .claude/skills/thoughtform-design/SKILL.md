@@ -24,6 +24,26 @@ The canonical Thoughtform design skill is installed globally at `~/.cursor/skill
 - `components/landing/v7/BrandmarkActor.tsx` — single persistent HUD / sigil / practice brandmark overlay
 - `public/prototypes/v7/landing-v7-motion.html` — HTML prototype parsed at build time
 
+## The corner law (ADR-065) — SUPERSEDES the global skill's one-line shape law
+
+The global skill says only _"corner brackets/chamfers for frames"_, which names
+the vocabulary and answers none of _which_, _where_ or _how deep_. The full rule
+is [ADR-065](../../../sentinel/decisions/065-corner-law.md), summarised in
+[DESIGN.md](../../../DESIGN.md#the-corner-law-adr-065):
+
+- **Chamfer** = a machined housing · **Notch** (one corner) = oriented or
+  connected · **Bracket** (additive L) = framed but not a device.
+- One grammar per object. **The diagonal is TR + BL** — TL+BR only as the
+  mirrored back of a flipped object.
+- Depth ladder: seed `16px` · plate `26px` · chrome `0`.
+- **The children of a chamfered box are square** — variation is hierarchy, not
+  a second decorative style.
+- Asymmetry is earned: a single notch points at what the object connects to, or
+  marks the edge the mechanism does not use.
+
+⚠ The global `references/identity-system.md` has not been updated; treat this
+file as the source until it is.
+
 ## Thoughtform.co-specific rules
 
 - Dev server runs on **port 3003** exclusively

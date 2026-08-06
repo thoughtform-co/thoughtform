@@ -121,6 +121,35 @@ Gold and green never swap roles. No additional accent colors.
 Zero border-radius everywhere — this is shape law. Diamonds (45-degree rotated
 squares) replace all circles. Corner brackets and chamfers provide framing.
 
+### The corner law (ADR-065)
+
+Three grammars, each answering a different question, and one rule each:
+
+- **Chamfer** — subtractive, the silhouette follows the cut. Says _a machined
+  housing you are looking into_. Consoles, plates, cards.
+- **Notch** — ONE corner, asymmetric. Says _this object is oriented, or it
+  plugs in_. A card in a set; anything connected.
+- **Bracket** — additive L, the box stays rectangular. Says _framed and
+  observed, but not itself a device_. HUD corners, portraits.
+
+1. **One grammar per object** — never chamfer and bracket the same box.
+2. **The diagonal is TOP-RIGHT + BOTTOM-LEFT.** TL+BR is legal only as the
+   mirrored back of a physically flipped object.
+3. **Depth is a ladder, by role:** seed `16px` (collapsed/small) · plate
+   `26px` (a card or a console) · chrome `0` (tabs, rows, chips, tiles).
+   Responsive expressions of the plate rung are fine —
+   `clamp(14px, 2.6cqw, 22px)` is one.
+4. **The children of a chamfered box are square.** Once the housing is
+   machined, what sits inside it is flat stock. This is what keeps a surface
+   from reading as a sheet of identical stickers: the variation is hierarchy,
+   not a second decorative style.
+5. **Asymmetry is earned.** A single notch appears only where the corner does
+   work — it points at what the object connects to, or it marks the edge the
+   mechanism does not use. Otherwise: the symmetric pair, or square.
+
+Full record, including the inventory that produced it:
+[ADR-065](sentinel/decisions/065-corner-law.md).
+
 The spatial system uses an 8px grid. On fixed canvases (slides, proposals),
 margin = 5% of the short edge and the content grid is 9 rows x 17 columns.
 On scroll-driven surfaces, fluid `clamp()` tokens replace fixed margins and

@@ -5,6 +5,7 @@ import type { CaseFilm } from "@/lib/cases/types";
 
 import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from "./MediaLightbox";
 import { ConsoleFrame } from "./console/ConsoleFrame";
+import { ConsoleRail } from "./console/ConsoleRail";
 
 /**
  * FilmsPlate — ONE above-the-line film at panel scale, the other one rail
@@ -23,10 +24,10 @@ import { ConsoleFrame } from "./console/ConsoleFrame";
  * only the number of frames changed. See the `.fl-film` comment in
  * casefile.css.
  *
- * THE RAIL IS THE HOUSE QUARTERS GRAMMAR — `.fl-filmtabs` is `.fl-tooltabs`
- * at two entries: ordinal line as chrome, mono name as the label, roving
- * tabindex, gold underline for the active entry. A film selector that invented
- * its own switch would be the fourth control idiom on one surface.
+ * THE RAIL IS THE HOUSE GRAMMAR — `ConsoleRail`, shared with every other
+ * evidence plate (2026-08-06). It lost its `01 / 02` ordinal with every other
+ * ordinal on this surface: two entries do not need to be counted, and the
+ * travelling spine says which one is open.
  *
  * NO `<video>` UNTIL A CLICK. The frame is a `next/image` poster, so a row
  * nobody opens costs zero video bytes and zero compositor layers (the beat's
@@ -41,7 +42,6 @@ export function FilmsPlate({ films }: { films: readonly CaseFilm[] }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [openSrc, setOpenSrc] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const railRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const open = films.find((f) => f.src === openSrc) ?? null;
@@ -56,56 +56,19 @@ export function FilmsPlate({ films }: { films: readonly CaseFilm[] }) {
 
   useCloseOnCasefileFold(rootRef, open !== null, close);
 
-  // Roving tab index, the same keyboard grammar as the tool gallery's rail.
-  const move = (i: number) => {
-    if (i < 0 || i >= films.length) return;
-    setActiveIdx(i);
-    railRef.current?.querySelectorAll<HTMLButtonElement>("[role='tab']")[i]?.focus();
-  };
-
   if (!active) return null;
-
-  const total = String(films.length).padStart(2, "0");
 
   return (
     <ConsoleFrame
       className="fl-plate fl-plate--films"
       rootRef={rootRef}
       rail={
-        <div className="fl-filmtabs" role="tablist" aria-label="Above-the-line films" ref={railRef}>
-          {films.map((film, i) => (
-            <button
-              key={film.src}
-              type="button"
-              role="tab"
-              className="fl-filmtab"
-              data-on={i === activeIdx || undefined}
-              aria-selected={i === activeIdx}
-              tabIndex={i === activeIdx ? 0 : -1}
-              onClick={() => setActiveIdx(i)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowRight") {
-                  e.preventDefault();
-                  move(i + 1);
-                } else if (e.key === "ArrowLeft") {
-                  e.preventDefault();
-                  move(i - 1);
-                } else if (e.key === "Home") {
-                  e.preventDefault();
-                  move(0);
-                } else if (e.key === "End") {
-                  e.preventDefault();
-                  move(films.length - 1);
-                }
-              }}
-            >
-              <span className="fl-filmtab__ord">
-                {String(i + 1).padStart(2, "0")} / {total}
-              </span>
-              <span className="fl-filmtab__name">{film.label}</span>
-            </button>
-          ))}
-        </div>
+        <ConsoleRail
+          stations={films.map((f) => ({ id: f.src, name: f.label }))}
+          activeIdx={activeIdx}
+          onActive={setActiveIdx}
+          label="Above-the-line films"
+        />
       }
     >
       <div className="fl-filmstage">

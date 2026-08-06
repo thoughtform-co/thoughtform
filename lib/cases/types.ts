@@ -489,6 +489,57 @@ export interface CaseFilm {
   meta: string;
 }
 
+/* ── Sheets: one row, several things to show (2026-08-06, owner) ─────────
+   A row whose evidence is not all one kind. The Studio row is the case that
+   forced it: it showed the ads and nothing else, when the work was equally
+   the RULE the studio drew for when AI may make an image and the LIMIT it
+   refuses to cross. Output, rule, limit — three sheets on the shared
+   `ConsoleRail`, which is what makes this cheap: the rail already exists, and
+   a sheet's `foot` lands in the console foot the map has always used.
+
+   ⚠ A SHEET IS NOT A SECOND DIRECTORY. The rows are the engagement's bodies
+   of work; sheets are facets of ONE body of work. If a sheet would read as a
+   separate project, it wants a row. ────────────────────────────────────── */
+
+/** One column of a two-column comparison sheet. */
+export interface CaseCompareColumn {
+  /** Small-caps verdict above the name, e.g. "AI SUITABLE". */
+  kicker: string;
+  /** The name of the category, e.g. "Illustrative". */
+  name: string;
+  /** The category in its own voice — one quoted sentence. */
+  claim: string;
+  /** What the category is, in one or two sentences. */
+  desc: string;
+  /** Three exemplars. Short noun phrases, never sentences. */
+  examples: readonly string[];
+}
+
+/** One titled fact on a sheet. Same shape as `ProjectCase.capabilities`, and
+ *  it renders through the same `.fl-caps` grammar. */
+export interface CaseFact {
+  title: string;
+  desc: string;
+}
+
+export type CaseSheetBody =
+  | { kind: "stills"; shots: readonly CaseImage[] }
+  /** Exactly two columns — a comparison with three sides is a table. */
+  | { kind: "compare"; columns: readonly CaseCompareColumn[] }
+  /** Exactly four tiles — the 2×2 the register and the tools plate both use. */
+  | { kind: "facts"; facts: readonly CaseFact[] };
+
+export interface CaseSheet {
+  /** Stable key and DOM id fragment. */
+  id: string;
+  /** The rail's label. The FUNCTION, in mono caps, no ordinal. */
+  label: string;
+  /** The console foot's sentence for this sheet. Optional: a sheet with
+   *  nothing to add omits it and costs no height (ADR-064 U2). */
+  foot?: string;
+  body: CaseSheetBody;
+}
+
 /**
  * A track's evidence plate. The three shared kinds are the `CaseVisual`
  * objects the beats already carry; `signal`, `register` and `readouts` exist
@@ -555,6 +606,8 @@ export type CaseTrackVisual =
    *  duotone on `tools` is a UI-capture treatment, not a content one). */
   | { kind: "stills"; shots: readonly CaseImage[] }
   | { kind: "films"; films: readonly CaseFilm[] }
+  /** Several sheets on one row, switched on the shared console rail. */
+  | { kind: "sheets"; sheets: readonly CaseSheet[] }
   /** The readout block IS the plate. Used by the metrics row. */
   | { kind: "readouts" };
 

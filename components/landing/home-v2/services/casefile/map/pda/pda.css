@@ -64,7 +64,9 @@
      side and goes DARKER on parchment. Nothing on this console prints ink
      ON a gold fill any more (the badge that did was deleted in U1), so
      there is no fill left that can afford to stay luminous. */
-  --pda-hot: var(--gold-ink-lit);
+  /* Aliased onto the frame's own lit step since the rail moved to
+     `console.css` — one source, one value, one light override. */
+  --pda-hot: var(--con-hot);
   --pda-ink: var(--gold-ink);
   --pda-grn: #7e9f66;
   --pda-grnh: #b9e39d;
@@ -74,162 +76,26 @@
   --pda-grn-ink: #7e9f66;
   --pda-txt3: rgba(var(--dawn-rgb), 0.38);
 
-  /* ⚠ THE LIT GLOWS ARE ADDITIVE, so they only mean something on a dark
-     ground. On parchment a pale halo around a dark bronze mark reads as a
-     smudge, not as "lit" — so light switches them OFF rather than darkening
-     them, and the mark's own fill carries the signal there. These were the
-     last raw v18 golds bypassing the ADR-063 U2 ramp. */
-  --pda-spine-glow: 0 0 9px rgba(240, 200, 106, 0.55);
-  --pda-mark-glow: 0 0 10px rgba(240, 200, 106, 0.5);
+  /* ⚠ THE LIT GLOW IS ADDITIVE, so it only means something on a dark ground.
+     On parchment a pale halo around a dark bronze mark reads as a smudge,
+     not as "lit" — so light switches it OFF rather than darkening it. The
+     rail's two glows moved to `console.css` with the rail; this is the
+     sweep's own, and it is the last raw v18 gold on this sheet. */
   --pda-sweep: rgba(240, 200, 106, 0.55);
 }
 
-/* THE READING RAIL IS THE NAVIGATION. Three readings, direct access, any
-   order — a ladder would imply a lesson, and this is a record.
+/* ⚠ THE READING RAIL LEFT THIS FILE (2026-08-06, owner). It is
+   `.fl-con__rail` / `__stn` / `__spine` in `console/console.css` now, shared
+   with the other three evidence plates so the panel switches on ONE strip.
+   Its look is unchanged — diamonds, mono caps, a hairline spine, one lit
+   segment travelling to the reading it opened — but it lost its ORDINALS
+   with every other ordinal on this surface, and it is a `role="tablist"`
+   with roving tabindex rather than a `<nav>`. "Not a web tab strip" was
+   always a statement about the LOOK, which is preserved exactly.
 
-   HORIZONTAL, ACROSS THE TOP OF THE CONSOLE since 2026-08-06 (owner). It is
-   still not a web tab strip: the stations keep their ordinals, their diamonds
-   and the hairline spine, and the LIT SEGMENT TRAVELS along that spine to the
-   reading it opened — a marker pointing down into the field.
-
-   ⚠ ITS HEIGHT IS THE DRAWING'S HEIGHT. The field binds on HEIGHT at every
-   desktop viewport (the drawing is authored 780x850 PORTRAIT into a landscape
-   box, so it letterboxes ~200px of width at 1280x720 and scales off height
-   alone). The rail is only this tall because the HEAD WAS DELETED to pay for
-   it (ADR-063 U1) — 38px of title bar bought 36px of rail plus height back
-   for the drawing. Measured; do not grow it without re-measuring the SVG's
-   rendered type, and see ADR-063 for why the real headroom is the drawing's
-   aspect rather than this strip.
-
-   It sits on the console's top edge, so its top-left corner is CUT by the
-   console's chamfer. That is the chamfer working: the first station's ground
-   follows the console's own diagonal. Its content clears the cut because the
-   cut is `--pda-ch` wide at y=0 and gone by y=`--pda-ch`, while the stations
-   centre their content ~50px in. */
-.fl-pda__depth {
-  position: relative;
-  z-index: 4;
-  flex: 0 0 clamp(32px, 7%, 44px);
-  display: flex;
-  align-items: stretch;
-  border-bottom: 1px solid var(--pda-hair2);
-}
-
-/* The lit segment. One element on the spine, translated in thirds off
-   `data-view`, so the marker moves to the reading instead of three markers
-   taking turns. */
-.fl-pda__spine {
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  width: calc(100% / 3);
-  height: 1px;
-  background: var(--pda-hot);
-  box-shadow: var(--pda-spine-glow);
-  transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.25, 1);
-}
-
-.fl-pda[data-view="2"] .fl-pda__spine {
-  transform: translateX(100%);
-}
-
-.fl-pda[data-view="3"] .fl-pda__spine {
-  transform: translateX(200%);
-}
-
-.fl-pda__stn {
-  position: relative;
-  appearance: none;
-  background: transparent;
-  border: 0;
-  padding: 0 clamp(5px, 1.3cqw, 14px);
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(4px, 0.9cqw, 9px);
-  cursor: pointer;
-  color: var(--pda-txt2);
-  transition:
-    color 0.3s ease,
-    background 0.3s ease;
-}
-
-.fl-pda__stn + .fl-pda__stn {
-  border-left: 1px solid var(--pda-hair);
-}
-
-.fl-pda__stn > i {
-  flex: 0 0 auto;
-  width: 9px;
-  height: 9px;
-  border: 1px solid var(--pda-dim);
-  background: var(--pda-void);
-  transform: rotate(45deg);
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-/* ⚠ THESE ARE TABS, and the type law starts tabs at 10px — the first cut
-   rendered them at 8.55px, which is the DECORATIVE floor, not the control
-   one. The head's deletion is what paid for it. It ellipsises rather than
-   wrapping: a station is one line tall, and a wrapped name would push the
-   diamond off centre rather than showing anything useful. */
-.fl-pda__stn > b {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font: 400 clamp(10px, 1.75cqw, 11.5px) / 1 var(--font-mono, monospace);
-  letter-spacing: 0.16em;
-  color: inherit;
-}
-
-/* An ordinal is decorative metadata, so it may sit at the 9px floor the type
-   law allows it — it is a position marker, not a label to be read. */
-.fl-pda__stn > em {
-  flex: 0 0 auto;
-  font: 400 9px/1 var(--font-mono, monospace);
-  letter-spacing: 0.14em;
-  font-style: normal;
-  opacity: 0.72;
-  color: inherit;
-}
-
-.fl-pda__stn:hover {
-  color: var(--pda-txt);
-}
-
-/* ⚠ THE ACTIVE LABEL IS INK, NOT GOLD, and that is a THEME decision.
-   `--pda-hot` (#f0c86a) is the DARK end of the gold ramp; ADR-058's flip
-   turns the console's ground to parchment (#e4dac9) and leaves gold literal,
-   so gold-as-TEXT lands near 1.1:1 there — measured, and invisible. The lit
-   signal is carried by the marks instead, which is what gold is FOR on this
-   surface: the diamond fills, the wash lifts, the spine segment travels. The
-   label just goes to full strength. One rule, correct in both themes, and no
-   `[data-theme]` override to keep in step (`.claude/skills/theme-parity`). */
-.fl-pda__stn[data-on] {
-  color: var(--pda-txt);
-  background: linear-gradient(180deg, rgba(var(--gold-rgb), 0.13), rgba(var(--gold-rgb), 0.02) 78%);
-}
-
-.fl-pda__stn[data-on] > em {
-  opacity: 1;
-}
-
-.fl-pda__stn[data-on] > i {
-  border-color: var(--pda-hot);
-  background: var(--pda-hot);
-  box-shadow: var(--pda-mark-glow);
-}
-
-.fl-pda__stn:focus-visible {
-  outline: 1px solid var(--pda-hot);
-  outline-offset: -3px;
-}
+   `data-view` still rides the plate root: it is the map's own state, and the
+   smoke reads it. The spine no longer keys off it — one rail cannot, since
+   the other plates count stations rather than readings. */
 
 .fl-pda__svg {
   position: absolute;
@@ -491,9 +357,11 @@
     color: var(--pda-txt3);
   }
 
+  /* ⚠ `--font-sans` does not exist in this app — see the note on
+     `.fl-con__foot p`. This asked for it and got the browser default. */
   .fl-pda__list-foot {
     margin: 16px 0 0;
-    font: 9.5px/1.5 var(--font-sans, sans-serif);
+    font: 9.5px/1.5 var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
     color: var(--pda-txt3);
   }
 }

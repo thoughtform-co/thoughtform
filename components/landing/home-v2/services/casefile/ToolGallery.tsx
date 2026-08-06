@@ -5,45 +5,55 @@ import type { ProjectCase } from "@/components/landing/v7/tools-cards/toolCardDa
 
 import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from "./MediaLightbox";
 import { ConsoleFrame } from "./console/ConsoleFrame";
+import { ConsoleRail } from "./console/ConsoleRail";
 
 /**
  * ToolGallery — the four production tools, one in view, at panel scale.
  *
- * STRUCTURE (owner, 2026-07-31, third pass — "take a step back and fix it
- * properly"):
+ * STRUCTURE (owner, 2026-08-06 — "move the text to the bottom, and between
+ * the thumbnail and the text put a few blocks"):
  *
- *   ┌ tabs ──────────────────────────────────────────────┐
- *   │ 01 · MÍMIR   02 · VESPER   03 · BABYLON   04 · …   │  codename = chrome
- *   │ BRIEFING AGENT   AI IMAGE & VIDEO SUITE   …        │  NAME = the label
- *   ├───────────────────────────┬────────────────────────┤
- *   │ BRAND INTELLIGENCE        │                        │
- *   │ Loop's own knowledge,     │   screenshot, BLED to  │
- *   │ structured.               │   the box edges        │
- *   │ Mímir unifies customer…   │                        │
- *   │ MÍMIR · INVENT · 2025     │ ▶ WATCH WALKTHROUGH 1:20│  ← the frame IS
- *   └───────────────────────────┴────────────────────────┘     the button
+ *   ┌ rail ──────────────────────────────────────────────┐
+ *   │ ◆ BRIEFING AGENT   ◇ AI IMAGE & VIDEO SUITE   …    │  the FUNCTION only
+ *   ├────────────────────────────────────────────────────┤
+ *   │                                                    │
+ *   │        the capture, FULL WIDTH, bled to the         │
+ *   │        console's own inner edges                    │
+ *   │ ▶ WATCH WALKTHROUGH ··························· 1:20│  ← the frame IS
+ *   ├────────────────────────────────────────────────────┤     the button
+ *   │ PERMISSIONED GRAPH      │ PROACTIVE BRIEFING        │
+ *   │ Customer voice, paid…   │ Relevant insights surface…│
+ *   │ HEADLESS SUBSTRATE      │ SHARED BI LAYER           │
+ *   ├─ foot ─────────────────────────────────────────────┤
+ *   │  Loop's own knowledge, structured. Mímir unifies…   │
+ *   │        MÍMIR · INVENT · PERFORMANCE · 2025          │
+ *   └────────────────────────────────────────────────────┘
  *
- * Three decisions carried in markup:
+ * Four decisions carried in markup:
  *
- * · THE FUNCTIONAL NAME LEADS. The tabs' strong line is what the tool IS
- *   ("Briefing Agent"), because a visitor cannot be expected to know the
- *   codenames; the codename rides above as chrome with the ordinal. Owner:
- *   "don't just use the internal naming."
- * · THE SHOT IS ARCHITECTURE, NOT A THUMBNAIL. It bleeds to the column's
- *   edges (cover, top-anchored — dashboards lead with their header), and the
- *   walkthrough affordance is a full-width bar FUSED to its bottom edge
- *   rather than a pill floated over it. The whole frame is one button: a
- *   ~350x200 target instead of a 130x26 one.
- * · THE CROP IS BOUNDED (owner, 2026-08-04). The image used to take the whole
- *   column height, which above the 760px rung is a tall narrow window over a
- *   wide screenshot — it cropped away most of every capture. It now carries a
- *   16:10 window (`.fl-shot__img`), so the crop is a deliberate top strip;
- *   `contain` stays rejected ("plastered on"). The height the bound gives back
- *   goes to the walkthrough bar and, at tall viewports, the surfaces line.
- * · ONE GRID. The body splits 0.9/1.1 with no gap — the shot side takes the
- *   surplus, because the brief column is type and the shot is a picture — and
- *   the tabs are quarters of the same rail. The proof claims now live in the
- *   casefile's left register, leaving this instrument the full panel height.
+ * · THE FUNCTIONAL NAME IS THE WHOLE LABEL (owner, 2026-08-06). The rail says
+ *   what the tool IS ("Briefing Agent") and nothing else — the `01 · MÍMIR`
+ *   chrome line above it is gone, along with every other ordinal on this
+ *   surface. That keeps the half of ADR-056 U9 that mattered ("don't just use
+ *   the internal naming") and drops the half that put internal naming back one
+ *   line higher. The codename survives as provenance, not as a label.
+ * · CONTEXT LIVES AT THE BOTTOM, and that is now the rule for every plate that
+ *   has any. The left identity column is gone: it took half the width from the
+ *   one thing a reader came to see. The subline and the `shift` sentence are
+ *   the console FOOT, exactly as the map's reading sentence has been.
+ * · THE SHOT IS ARCHITECTURE, NOT A THUMBNAIL. Full width now, bleeding to the
+ *   console's inner edges (cover, top-anchored — dashboards lead with their
+ *   header; a `contain` letterbox was the "plastered on" read), with the
+ *   walkthrough affordance a full-width bar FUSED to its bottom edge. The whole
+ *   frame is one button.
+ *   ⚠ THE 16:10 BOUND IS GONE, and its reasoning inverts rather than lapsing.
+ *   ADR-056 U9 bounded the window because a HALF-WIDTH column made it tall and
+ *   narrow over a wide capture, cropping away most of it. Full width makes it
+ *   wide and short, which is the shape `cover` + a top anchor wants; the image
+ *   takes whatever the facts and the foot leave, over a floor.
+ * · THE FACTS SIT BETWEEN THEM. Four capability blocks, straight off
+ *   `ProjectCase.capabilities` — a capture shows a tool running and says
+ *   nothing about what it does.
  *
  * CONTROLLED, NOT SELF-CONTAINED: `activeIdx` is owned by `TrackPanel`. The
  * panel is keyed per track upstream, so the gallery resets to tool 01 on a
@@ -70,7 +80,6 @@ function dept(tool: ProjectCase): string {
 export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
   const [watching, setWatching] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const active = tools[activeIdx] ?? tools[0];
@@ -84,13 +93,6 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
 
   useCloseOnCasefileFold(rootRef, watching, close);
 
-  // Roving tab index, same keyboard grammar as the client tabs above.
-  const move = (i: number) => {
-    if (i < 0 || i >= tools.length) return;
-    onActive(i);
-    tabsRef.current?.querySelectorAll<HTMLButtonElement>("[role='tab']")[i]?.focus();
-  };
-
   if (!active) return null;
 
   return (
@@ -98,105 +100,102 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
       className="fl-plate fl-plate--tools"
       rootRef={rootRef}
       rail={
-        <div className="fl-tooltabs" role="tablist" aria-label="Production tools" ref={tabsRef}>
-          {tools.map((tool, i) => (
-            <button
-              key={tool.id}
-              type="button"
-              role="tab"
-              className="fl-tooltab"
-              data-on={i === activeIdx || undefined}
-              aria-selected={i === activeIdx}
-              tabIndex={i === activeIdx ? 0 : -1}
-              onClick={() => onActive(i)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowRight") {
-                  e.preventDefault();
-                  move(i + 1);
-                } else if (e.key === "ArrowLeft") {
-                  e.preventDefault();
-                  move(i - 1);
-                } else if (e.key === "Home") {
-                  e.preventDefault();
-                  move(0);
-                } else if (e.key === "End") {
-                  e.preventDefault();
-                  move(tools.length - 1);
-                }
-              }}
-            >
-              <span className="fl-tooltab__code">
-                {tool.index} · {tool.codename}
-              </span>
-              <span className="fl-tooltab__name">{titleText(tool)}</span>
-            </button>
-          ))}
+        <ConsoleRail
+          stations={tools.map((t) => ({ id: t.id, name: titleText(t) }))}
+          activeIdx={activeIdx}
+          onActive={onActive}
+          label="Production tools"
+        />
+      }
+      /* ⚠ CONTEXT GOES TO THE FOOT, ON EVERY PLATE THAT HAS ANY (owner,
+         2026-08-06). The map already printed its sentence here; the tools
+         plate spent half its width on a left text column instead, which
+         halved the capture. Moving it down is what lets the shot run the
+         full panel — and the sentence inherits the foot's own centred sans
+         for free, so the two rows finally read in one voice.
+
+         SUBLINE THEN SHIFT, in ONE paragraph. Two stacked blocks cost a
+         line box and read as two claims; the subline is the lead of the
+         sentence that follows it. The lead is DAWN at weight 500, not gold
+         — gold as small text measures ~1.8:1 on the parchment ground
+         (ADR-058), and a foot is the last place to spend that. */
+      foot={
+        <div className="fl-toolfoot">
+          <p>
+            <b>{active.subline}</b> {active.shift}
+          </p>
+          {/* PROVENANCE, not a label. The codename was taken off the rail
+              because a visitor cannot know "Mímir"; it survives here, at
+              chrome size, beside the mode, department and year — which is
+              what a case record is for. The `surfaces` line that used to sit
+              opposite it is gone: capability 3 ("Headless substrate") names
+              the same six surfaces in a sentence that also explains them. */}
+          <span className="fl-toolfoot__meta">
+            {active.codename} · {active.mode} · {dept(active)} · {active.year}
+          </span>
         </div>
       }
     >
       <div className="fl-toolbody">
-        <div className="fl-toolid">
-          <span className="fl-toolid__kicker">{active.tagline}</span>
-          <p className="fl-toolid__lead">{active.subline}</p>
-          {/* The `shift` sentence — the one-line abstract of what the tool
-              changed. It reads HERE, at the brief column's own copy size,
-              and nowhere else in the panel. */}
-          <p className="fl-toolid__desc">{active.shift}</p>
-          <span className="fl-toolid__meta">
-            {active.codename} · {active.mode} · {dept(active)} · {active.year}
-          </span>
-        </div>
+        {active.walkthrough ? (
+          <button
+            type="button"
+            className="fl-shot"
+            aria-haspopup="dialog"
+            aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}`}
+            onClick={(e) => {
+              returnFocusRef.current = e.currentTarget;
+              setWatching(true);
+            }}
+          >
+            <span className="fl-shot__frame">
+              <Image
+                key={active.id}
+                className="fl-shot__img"
+                src={active.image.src}
+                alt={active.image.alt}
+                width={active.image.width}
+                height={active.image.height}
+                sizes="(min-width: 1800px) 900px, 640px"
+              />
+            </span>
+            <span className="fl-shot__bar" aria-hidden="true">
+              <i className="fl-shot__cue" />
+              Watch walkthrough
+              <b>{active.walkthrough.duration}</b>
+            </span>
+          </button>
+        ) : (
+          <div className="fl-shot" data-static>
+            <span className="fl-shot__frame">
+              <Image
+                key={active.id}
+                className="fl-shot__img"
+                src={active.image.src}
+                alt={active.image.alt}
+                width={active.image.width}
+                height={active.image.height}
+                sizes="(min-width: 1800px) 900px, 640px"
+              />
+            </span>
+          </div>
+        )}
 
-        <div className="fl-shotcol">
-          {active.walkthrough ? (
-            <button
-              type="button"
-              className="fl-shot"
-              aria-haspopup="dialog"
-              aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}`}
-              onClick={(e) => {
-                returnFocusRef.current = e.currentTarget;
-                setWatching(true);
-              }}
-            >
-              <Image
-                key={active.id}
-                className="fl-shot__img"
-                src={active.image.src}
-                alt={active.image.alt}
-                width={active.image.width}
-                height={active.image.height}
-                sizes="480px"
-              />
-              <span className="fl-shot__bar" aria-hidden="true">
-                <i className="fl-shot__cue" />
-                Watch walkthrough
-                <b>{active.walkthrough.duration}</b>
-              </span>
-            </button>
-          ) : (
-            <div className="fl-shot" data-static>
-              <Image
-                key={active.id}
-                className="fl-shot__img"
-                src={active.image.src}
-                alt={active.image.alt}
-                width={active.image.width}
-                height={active.image.height}
-                sizes="480px"
-              />
-            </div>
-          )}
-          {/* THE SURFACES LINE — where the tool actually runs, straight off
-              `ProjectCase.surfaces`. It exists because the bounded shot
-              leaves real height under the walkthrough bar (160px at 720p,
-              450px at 2017x1269), and it sits on the column's bottom rail
-              opposite the identity column's meta line. Printed OUTSIDE the
-              button on purpose: inside, it would either be swallowed by the
-              control's accessible name or have to be `aria-hidden`, and this
-              is content. */}
-          <p className="fl-shotcap">{active.surfaces.join(" · ")}</p>
-        </div>
+        {/* THE FACTS, between the capture and the sentence (owner,
+            2026-08-06 — "a few blocks like we have on our shards repo").
+            `ProjectCase.capabilities` is a pinned 4-tuple and this is where
+            it was always meant to read: a screenshot shows a tool running
+            and says nothing about what it does, and the foot's sentence is
+            one claim, not four. `.fl-caps` is the tools foot's own grammar,
+            revived — the CSS never left, only its renderer did. */}
+        <ul className="fl-caps fl-caps--tool">
+          {active.capabilities.map((c, i) => (
+            <li className="fl-cap" key={i}>
+              <span className="fl-cap__t">{c.title}</span>
+              <span className="fl-cap__d">{c.desc}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {watching && active.walkthrough ? (

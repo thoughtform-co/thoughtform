@@ -357,6 +357,62 @@ describe("cases registry (ADR-054)", () => {
             expect(film.label.length).toBeGreaterThan(0);
           }
         }
+        if (v.kind === "sheets") {
+          // A ONE-SHEET ROW IS A PLATE WITH A RAIL ON IT — the rail costs
+          // ~32px of the console and switches nothing. If a row has one
+          // thing to show, it uses that thing's own plate kind.
+          expect(v.sheets.length, `${c.slug}/${t.id} sheets`).toBeGreaterThan(1);
+          for (const s of v.sheets) {
+            // The rail's own label. Mono caps, one line, no ordinal — the
+            // 4-station type rung starts ellipsising past ~22 characters.
+            expect(s.label.length, `${c.slug}/${t.id}/${s.id} label`).toBeGreaterThan(0);
+            expect(s.label.length, `${c.slug}/${t.id}/${s.id} label`).toBeLessThanOrEqual(22);
+            const b = s.body;
+            if (b.kind === "stills") {
+              expect(b.shots.length).toBeGreaterThan(0);
+              for (const shot of b.shots) expect(shot.alt.length).toBeGreaterThan(0);
+            }
+            if (b.kind === "compare") {
+              // ⚠ EXACTLY TWO, and this is a design rule rather than a data
+              // shape: the sheet exists to draw ONE line. Three columns is a
+              // table, and a table is a different argument.
+              expect(b.columns.length, `${c.slug}/${t.id}/${s.id} columns`).toBe(2);
+              for (const col of b.columns) {
+                expect(col.name.length).toBeGreaterThan(0);
+                expect(col.claim.length).toBeGreaterThan(0);
+                // Both columns show the same number of exemplars — an
+                // asymmetric pair reads as a preference, not a boundary.
+                expect(col.examples.length, `${c.slug}/${t.id}/${s.id} "${col.name}"`).toBe(3);
+                for (const ex of col.examples) {
+                  // Noun phrases on a 10.5px mono leader, never sentences.
+                  expect(
+                    ex.length,
+                    `${c.slug}/${t.id}/${s.id} example "${ex}"`
+                  ).toBeLessThanOrEqual(34);
+                }
+                expect(
+                  col.desc.length,
+                  `${c.slug}/${t.id}/${s.id} "${col.name}" desc`
+                ).toBeLessThanOrEqual(180);
+              }
+            }
+            if (b.kind === "facts") {
+              // The `.fl-caps` 2×2, the same grid the tools plate uses — so
+              // the same budgets, for the same reason: the title is `nowrap`
+              // and the description clamps to two lines.
+              expect(b.facts.length, `${c.slug}/${t.id}/${s.id} facts`).toBe(4);
+              for (const f of b.facts) {
+                expect(f.title.length, `${c.slug}/${t.id} fact "${f.title}"`).toBeLessThanOrEqual(
+                  24
+                );
+                expect(
+                  f.desc.length,
+                  `${c.slug}/${t.id} fact "${f.title}" desc`
+                ).toBeLessThanOrEqual(95);
+              }
+            }
+          }
+        }
       }
     }
   });
@@ -581,9 +637,10 @@ describe("cases registry (ADR-054)", () => {
 
           expect(tiers.length, `${where} tiers`).toBe(4);
           const drawSum = tiers.reduce((n, t2) => n + t2.draw, 0);
-          expect(drawSum, `${where} draw shares sum to ${drawSum}, not ~100`).toBeGreaterThanOrEqual(
-            96
-          );
+          expect(
+            drawSum,
+            `${where} draw shares sum to ${drawSum}, not ~100`
+          ).toBeGreaterThanOrEqual(96);
           expect(drawSum, `${where} draw shares sum to ${drawSum}, not ~100`).toBeLessThanOrEqual(
             104
           );
@@ -714,9 +771,10 @@ describe("cases registry (ADR-054)", () => {
     // nothing on screen would tell you it happened.
     for (const d of districts) {
       const n = works.filter((w) => w.dist === d.id).length;
-      expect(n, `${d.name} seats ${n} modules on a ${BOARD_CHIP_SLOTS}-slot plate`).toBeLessThanOrEqual(
-        BOARD_CHIP_SLOTS
-      );
+      expect(
+        n,
+        `${d.name} seats ${n} modules on a ${BOARD_CHIP_SLOTS}-slot plate`
+      ).toBeLessThanOrEqual(BOARD_CHIP_SLOTS);
     }
 
     // EACH MAIN IS TRENCHED EXACTLY ONCE, by a CONFIGURED stream. This is
@@ -786,10 +844,7 @@ describe("cases registry (ADR-054)", () => {
       ["a source URL", /\b(monday|notion|github|figma)\.com\b/i],
       ["a model family", MODEL_FAMILIES],
       ["a vendor or private system", /\b(openai|anthropic|supabase|slack|aether|salesforce)\b/i],
-      [
-        "a personal name",
-        /\b(Vince|Astrid|Nathan|Koen|Olga|Helen|Damien|Robert|Toby|Maud)\b/,
-      ],
+      ["a personal name", /\b(Vince|Astrid|Nathan|Koen|Olga|Helen|Damien|Robert|Toby|Maud)\b/],
     ] as const) {
       expect(re.test(blob), `the map's copy names ${label}`).toBe(false);
     }

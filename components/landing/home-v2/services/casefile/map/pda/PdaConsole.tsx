@@ -6,6 +6,7 @@ import { SERVICES_SCROLL_OWNED_MEDIA } from "@/components/landing/home-v2/unifie
 import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
 
 import { ConsoleFrame } from "../../console/ConsoleFrame";
+import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 
 import { VIEW_BOX, ViewConfiguration, ViewSubstrate, ViewWork } from "./PdaViews";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
@@ -28,10 +29,17 @@ import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
  * ── Three readings, direct access, any order ─────────────────────────────
  * The rail is the navigation, and since 2026-08-06 (owner) it runs
  * HORIZONTALLY across the top of the console instead of down its left edge.
- * It is still not a tab strip: the stations keep their ordinals, diamonds and
- * hairline spine, and the lit segment travels along that spine to the reading
- * it opened — a marker pointing into the field, not a selected tab. `1` `2`
- * `3` select and `Escape` returns to the work.
+ * It is still not a tab strip to look at: diamonds and a hairline spine, with
+ * the lit segment travelling to the reading it opened — a marker pointing into
+ * the field, not a selected tab. `1` `2` `3` select and `Escape` returns to
+ * the work.
+ *
+ * ⚠ THE RAIL IS NOT THIS FILE'S ANY MORE, and it lost its ORDINALS. It is
+ * `ConsoleRail`, shared with the three other evidence plates, because the
+ * owner's "all the tabs should be styled the same" resolved in this rail's
+ * favour — it was the most designed of the four. `01 WORK` is now `WORK`: the
+ * spine carries order positionally, and the reading's full title survives as
+ * the SVG's accessible name.
  *
  * ⚠ The move is paid for in HEIGHT, and the field binds on height (ADR-063):
  * the drawing is authored 780x850 PORTRAIT into a landscape box, so it
@@ -177,10 +185,15 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
 
   const foot = footCopy(view, totals, shown.length);
 
-  const STATIONS: readonly { v: PdaView; name: string; ord: string }[] = [
-    { v: 1, name: "WORK", ord: "01" },
-    { v: 2, name: "CONFIGURATION", ord: "02" },
-    { v: 3, name: "SUBSTRATE", ord: "03" },
+  /* ⚠ NO ORDINALS (owner, 2026-08-06). `01 WORK` became `WORK` when every
+     other ordinal on the surface went — the rail's travelling spine already
+     says which of three this is, positionally, which is the only reason the
+     numeral was affordable to lose. The reading's full title survives as the
+     SVG's accessible name. */
+  const STATIONS: readonly ConsoleStation[] = [
+    { id: "work", name: "WORK" },
+    { id: "configuration", name: "CONFIGURATION" },
+    { id: "substrate", name: "SUBSTRATE" },
   ];
 
   return (
@@ -198,27 +211,15 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
          below could grow at all. Do not reinstate a title bar here without
          re-measuring the drawing's rendered type. */
       rail={
-        /* The reading rail, across the top of the console. `__spine` is the
-           lit segment: one element, translated to the active station in CSS
-           off `data-view`, so the marker TRAVELS to the reading rather than
-           three markers taking turns. */
-        <nav className="fl-pda__depth" aria-label="Map readings">
-          {STATIONS.map((s) => (
-            <button
-              className="fl-pda__stn"
-              key={s.v}
-              type="button"
-              data-on={view === s.v ? "" : undefined}
-              aria-current={view === s.v ? "true" : undefined}
-              onClick={() => go(s.v)}
-            >
-              <i aria-hidden="true" />
-              <em>{s.ord}</em>
-              <b>{s.name}</b>
-            </button>
-          ))}
-          <i className="fl-pda__spine" aria-hidden="true" />
-        </nav>
+        /* SHARED WITH EVERY OTHER PLATE now (2026-08-06). This rail's own
+           grammar became the house grammar rather than the map keeping a
+           private one — see `console/ConsoleRail.tsx`. */
+        <ConsoleRail
+          stations={STATIONS}
+          activeIdx={view - 1}
+          onActive={(i) => go((i + 1) as PdaView)}
+          label="Map readings"
+        />
       }
       /* ⚠ THE FOOT IS THE SENTENCE ALONE. Its title said "01 · THE WORK"
          directly under a lit tab reading "01 WORK" (owner, 2026-08-06) — the

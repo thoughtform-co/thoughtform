@@ -191,3 +191,64 @@ with real air above and below. That is ADR-056 U5's own choice
 portraits across a landscape box"_) and the frame did not cause it — but the
 frame makes it legible as a decision rather than as an accident, and it is
 worth an owner look now that the box has edges.
+
+## Update 2 — the line is AUTHORED vs CAPTURED, and the rails do unify (2026-08-06, owner)
+
+Two of this ADR's decisions are amended by the owner, one week on. Both
+amendments are the ADR's own reasoning followed one step further, which is
+worth saying plainly rather than filing as a reversal.
+
+### Decision 1, amended: the tool capture takes the filter after all
+
+Decision 1 answered _"add a filter like in services"_ with **no filter**, and
+drew the line at **chrome vs evidence**. Its supporting argument was sharper
+than its conclusion:
+
+> The tools duotone was a **normalizing** move: `grayscale(1)` collapses
+> arbitrary screenshot UI colour to luminance, then `sepia` re-tints that
+> neutral into the gold family… Applied to authored photography it does the
+> opposite.
+
+That argument does not put a UI screenshot on the same side of the line as a
+commercial. The line is **AUTHORED vs CAPTURED**:
+
+- **Authored** — the stills (Loop's ads) and the films (their commercials).
+  Intended colour, left alone. ADR-056 U5 stands unamended for both.
+- **Captured** — the four tool screenshots. Arbitrary UI colour from four
+  unrelated products, which is precisely the case the recipe normalizes.
+
+So `.fl-shot__img` carries the services chain verbatim (plus the halftone dot
+veil, lifting on hover), in both themes. The owner's separate ask is what
+forced the question: _"I don't want Software for Few to look the same as Above
+the Line — yes, for both we have a video preview, but they are different
+things."_ They read as the same object while both are a poster in a frame, and
+the difference is what each row is CLAIMING.
+
+⚠ **The smoke asserts BOTH halves** — this image filtered, every other plate
+image not. Narrowing the blanket ban alone would have tested strictly less
+than the ban it replaced: it could not distinguish a deliberate exception from
+a treatment that silently stopped applying.
+
+⚠ Three renderers now carry one recipe: `.svc-plate__pbg` (services.css),
+`.fl-shot__img` (casefile.css) and `buildGoldToneLut` (the WebGL card face).
+Move them together.
+
+### Decision 2, amended: the rails ARE unified now
+
+Decision 2 said _"the rails are deliberately NOT unified"_, and gave one
+reason: the tools rail's two-line `01 · MÍMIR` over `BRIEFING AGENT` was an
+ADR-056 U9 owner ruling. The owner has now removed that line — _"I only want
+briefing agent, AI image and video suite, etc., and all the tabs should be
+styled the same"_ — which removes the reason with it.
+
+`ConsoleRail` is the map's rail, generalised to N stations, on all four
+plates. See ADR-066.
+
+### The panel head's designation, and the foot
+
+U1 deleted the head's right slot. The tools plate now also moves its identity
+column into the **foot**, so ADR-056's _"the right panel has no generic foot"_
+gains its final shape: **the foot is where context goes on any plate that has
+any**, and a plate with nothing to say still omits it and costs no height. The
+generic foot it banned was chrome that said the same thing on every row; a
+sentence that changes with what is displayed is the opposite of that.

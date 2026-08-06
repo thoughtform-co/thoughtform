@@ -1387,6 +1387,94 @@ const STUDIO_SHOTS = [
   },
 ] as const;
 
+/**
+ * THE STUDIO ROW IS THREE SHEETS: the output, the rule, the limit
+ * (owner, 2026-08-06 — "it's not just the ads, it's also the framework for
+ * how we use AI, illustrative versus representative").
+ *
+ * The row showed only what the studio SHIPPED. Half of the engagement was
+ * deciding what AI may and may not make, and that half is the part a reader
+ * of a public case actually has to trust. Source: the AI in Studio deck,
+ * April 2026 — the imagery policy and the synthetic-creator position.
+ *
+ * ⚠ GENERICISED ON PURPOSE, and the omissions are not stylistic. The deck
+ * names a partner brand in four of its six examples, names three competitor
+ * products by name, names an external placement vendor, and frames one risk
+ * around revenue share. None of that is ours to publish on a landing page —
+ * so the examples are the categories, the tools are "synthetic-creator
+ * tools", and the financial risk is stated as the deck itself states it
+ * ("the channel that depends most on audience trust"). The argument survives
+ * every cut; it never depended on the names.
+ */
+const STUDIO_SHEETS = [
+  {
+    id: "ads",
+    label: "THE ADS",
+    /* Shared BY REFERENCE with the beat and the keynote arc — re-typing this
+       array is how three surfaces start describing the same ad differently. */
+    body: { kind: "stills", shots: STUDIO_SHOTS },
+    foot: "Live campaign assets, not mockups. Generated, art-directed, designed and curated inside the studio.",
+  },
+  {
+    id: "line",
+    label: "THE LINE",
+    body: {
+      kind: "compare",
+      columns: [
+        {
+          kicker: "AI SUITABLE",
+          name: "Illustrative",
+          claim: "Imagine this scenario.",
+          desc: "Shows a context where the product makes sense. Non-descript people in non-descript places — visual shorthand, the way stock photography always was.",
+          examples: [
+            "Paid-social use-case ads",
+            "Crowd and venue scenes",
+            "Generic scenario illustrations",
+          ],
+        },
+        {
+          kicker: "REAL PHOTOGRAPHY",
+          name: "Representative",
+          claim: "This is who we are. These are our people.",
+          desc: "Makes an identity claim about the brand and its relationship with a culture. Requires authenticity — especially when entering a market for the first time.",
+          examples: [
+            "Lifestyle product photography",
+            "Partnership and athlete imagery",
+            "Market-expansion brand imagery",
+          ],
+        },
+      ],
+    },
+    foot: "If an image makes an identity claim it requires real photography; if it illustrates a scenario, AI is appropriate. The line is drawn on the image's function, never on the channel it runs in.",
+  },
+  {
+    id: "red-line",
+    label: "THE RED LINE",
+    body: {
+      kind: "facts",
+      facts: [
+        {
+          title: "Credibility collapse",
+          desc: "A person recommending the brand who does not exist. Social proof stops being proof.",
+        },
+        {
+          title: "Public backlash",
+          desc: "Audiences watch for this. The conversation moves from the product to the deception.",
+        },
+        {
+          title: "Revenue exposure",
+          desc: "The channel that depends most on audience trust is the one a backlash reaches first.",
+        },
+        {
+          title: "Creator relationships",
+          desc: "The creators who stay loyal through growth are the first ones lost when trust breaks.",
+        },
+      ],
+    },
+    foot: "AI makes the creator pipeline more efficient — briefing, editing, localization. It does not replace the creators in it.",
+  },
+] as const;
+
 /** Both above-the-line films, self-hosted. CSP is `media-src 'self' blob:`
  *  (`lib/security/headers.mjs`), so these can never be served from a bucket
  *  — a remote src would be blocked the moment CSP leaves report-only. */
@@ -1703,7 +1791,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "AI Fluency Studio",
         icon: "dir",
         preview: "Preview — 02_ai-fluency-studio/",
-        visual: { kind: "stills", shots: STUDIO_SHOTS },
+        visual: { kind: "sheets", sheets: STUDIO_SHEETS },
         classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
         blocks: [
           {

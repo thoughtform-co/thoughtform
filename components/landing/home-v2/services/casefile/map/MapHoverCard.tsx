@@ -1,6 +1,11 @@
 "use client";
 
-import type { CaseMapDistrict, CaseMapShape, CaseMapShapeKey, CaseMapWork } from "@/lib/cases/types";
+import type {
+  CaseMapDistrict,
+  CaseMapShape,
+  CaseMapShapeKey,
+  CaseMapWork,
+} from "@/lib/cases/types";
 
 import { MASS_BAND, SEAT, isPersonLed, orderShapes, trenchedBy } from "./mapProjection";
 
@@ -71,9 +76,7 @@ export function MapHoverCard({ hover, at, shapes, works, districts }: Props) {
           k="Draw"
           v={isPersonLed(w) ? "Nil / no draw on record" : `${MASS_BAND[w.mass]} / ${w.vol} volume`}
         />
-        {trenched.length ? (
-          <Row k="Trenched" v={trenched.map((s) => s.label).join(" / ")} />
-        ) : null}
+        {trenched.length ? <Row k="Trenched" v={trenched.map((s) => s.label).join(" / ")} /> : null}
       </>
     );
   } else if (hover?.kind === "main") {

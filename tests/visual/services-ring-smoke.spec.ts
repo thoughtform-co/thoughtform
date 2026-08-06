@@ -442,7 +442,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // vanishes at the edge. So walk EVERY reading and measure every glyph
       // box against the drawing's own viewBox.
       for (const [index, view] of ["1", "2", "3"].entries()) {
-        await page.locator(".fl-pda__stn").nth(index).click();
+        await page.locator(".fl-con__stn").nth(index).click();
         await page.waitForTimeout(360);
         await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);
 
@@ -486,12 +486,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // of the console (ADR-063) and its names must not ellipsise — a station
       // reading "CONFIGURATI…" is the rail outgrowing its box.
       const rail = await page.evaluate(() => {
-        const el = document.querySelector<HTMLElement>(".fl-pda__depth");
+        const el = document.querySelector<HTMLElement>(".fl-con__rail");
         const field = document.querySelector<HTMLElement>(".fl-con__field");
         const consoleEl = document.querySelector<HTMLElement>(".fl-con__console");
         if (!el || !field || !consoleEl) return null;
         const r = el.getBoundingClientRect();
-        const stns = [...el.querySelectorAll<HTMLElement>(".fl-pda__stn")];
+        const stns = [...el.querySelectorAll<HTMLElement>(".fl-con__stn")];
         return {
           horizontal: r.width > r.height * 3,
           aboveField: r.bottom <= field.getBoundingClientRect().top + 1,
@@ -503,7 +503,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             .map((b) => b.textContent ?? ""),
           minFont: Math.min(
             ...stns.flatMap((s) =>
-              [...s.querySelectorAll<HTMLElement>("b, em")].map((e) =>
+              [...s.querySelectorAll<HTMLElement>("b")].map((e) =>
                 Number.parseFloat(getComputedStyle(e).fontSize)
               )
             )
@@ -533,7 +533,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // would be a trap on the whole document. The unit test pins the
       // arithmetic (`tests/lib/pda-wheel.test.ts`); this pins that a real
       // wheel event over the real element behaves.
-      await page.locator(".fl-pda__stn").first().click();
+      await page.locator(".fl-con__stn").first().click();
       await page.waitForTimeout(400);
       const fieldBox = (await page.locator(".fl-con__field").boundingBox())!;
       await page.mouse.move(fieldBox.x + fieldBox.width / 2, fieldBox.y + fieldBox.height / 2);
@@ -592,7 +592,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
       // A cartridge is the panel's control: clicking one opens reading 02 on
       // that stream, and the foot's SENTENCE changes with the reading.
-      await page.locator(".fl-pda__stn").first().click();
+      await page.locator(".fl-con__stn").first().click();
       await page.waitForTimeout(300);
       const workFoot = await page.locator(".fl-con__foot p").innerText();
       await page.locator(".fl-pda-hit").first().click({ force: true });
@@ -614,7 +614,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
       // Escape returns to the work. Keys are bound on the PLATE, never
       // `document` — the corridor has its own key handling.
-      await page.locator(".fl-pda__stn").first().focus();
+      await page.locator(".fl-con__stn").first().focus();
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "1");
@@ -695,7 +695,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         await toolsRow.click();
         await expect(toolsRow).toHaveAttribute("aria-selected", "true");
         await page.waitForTimeout(350);
-        const toolNames = page.locator(".fl-tooltab__name");
+        const toolNames = page.locator(".fl-con__stn > b");
         await expect(toolNames).toHaveCount(4);
         const toolTabs = await toolNames.evaluateAll((names) => {
           return {
@@ -820,13 +820,76 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           p.right - c.right
         );
         if (!(inset >= 0 && inset < 40)) return { kind, ok: false, why: `bezel inset ${inset}` };
-        // ⚠ AND IT NEVER FILTERS THE EVIDENCE. `casefile.css` prohibits it and
-        // ADR-056 U5 is the ruling: these are the client's ads, films and
-        // captures, and the gold lives in the chrome (ADR-064).
+        // ⚠ AND IT NEVER FILTERS THE AUTHORED EVIDENCE. ADR-056 U5 is the
+        // ruling and ADR-064 U2 draws the line where it belongs: AUTHORED vs
+        // CAPTURED. The stills are Loop's ads and the films their
+        // commercials — intended colour, left alone. The tool captures are
+        // arbitrary screenshot UI, which is what the duotone was built to
+        // normalize, and they carry it.
+        //
+        // BOTH HALVES ARE ASSERTED. A narrowed ban alone would test less than
+        // the blanket one it replaces: it could not tell a deliberate
+        // exception from a treatment that silently stopped applying.
         const filtered = [...document.querySelectorAll<HTMLElement>(".fl-plate img")]
+          .filter((im) => !im.classList.contains("fl-shot__img"))
           .map((im) => getComputedStyle(im).filter)
           .filter((f) => f && f !== "none");
         if (filtered.length) return { kind, ok: false, why: `img filter ${filtered[0]}` };
+
+        const shot = document.querySelector<HTMLElement>(".fl-shot__img");
+        if (shot) {
+          const f = getComputedStyle(shot).filter;
+          if (!f || f === "none") return { kind, ok: false, why: "tool capture is unfiltered" };
+          const veil = document.querySelector<HTMLElement>(".fl-shot__frame");
+          if (!veil) return { kind, ok: false, why: "tool capture has no veil frame" };
+
+          // ⚠ THE WALKTHROUGH BAR SURVIVES THE SQUEEZE, and nothing else
+          // catches this. `.fl-shot` is `overflow: hidden`, which makes a flex
+          // item's automatic minimum resolve to ZERO rather than to its
+          // content — so when the facts grew a line it shrank below its own
+          // contents and sliced the bar in half, with every box still
+          // reporting zero overflow. The bar is the only affordance saying the
+          // capture opens; losing it costs the plate its interaction.
+          const frame = document.querySelector<HTMLElement>(".fl-shot");
+          const bar = document.querySelector<HTMLElement>(".fl-shot__bar");
+          if (frame && bar) {
+            const cut = bar.getBoundingClientRect().bottom - frame.getBoundingClientRect().bottom;
+            if (cut > 1) return { kind, ok: false, why: `walkthrough bar clipped ${cut}px` };
+          }
+        }
+
+        // ── ONE RAIL, AND NO ORDINALS ANYWHERE (ADR-066) ───────────────
+        // Every row switches on the same strip: `.fl-con__rail`, with ONE
+        // travelling `.fl-con__spine` and never a marker per station. And
+        // the label is the FUNCTION alone — the tools rail's `01 · MÍMIR`
+        // chrome line, the films rail's `01 / 02` and the map's `01 02 03`
+        // all left together (owner, 2026-08-06), so a bare ordinal
+        // reappearing anywhere on this surface is the regression.
+        const rail = document.querySelector<HTMLElement>(".fl-con__rail");
+        if (!rail) return { kind, ok: false, why: "no shared rail" };
+        const stns = [...rail.querySelectorAll<HTMLElement>(".fl-con__stn")];
+        if (stns.length < 2) return { kind, ok: false, why: `rail has ${stns.length} stations` };
+        const spines = rail.querySelectorAll(".fl-con__spine").length;
+        if (spines !== 1) return { kind, ok: false, why: `${spines} spines, expected 1` };
+        if (rail.getAttribute("role") !== "tablist")
+          return { kind, ok: false, why: "rail is not a tablist" };
+        const ordinal = stns
+          .map((s) => (s.textContent ?? "").trim())
+          .find((t) => /^\s*\d{1,2}\b/.test(t) || /\b\d{1,2}\s*\/\s*\d{1,2}\b/.test(t));
+        if (ordinal) return { kind, ok: false, why: `station carries an ordinal: "${ordinal}"` };
+        const lit = stns.filter((s) => s.dataset.on !== undefined).length;
+        if (lit !== 1) return { kind, ok: false, why: `${lit} stations lit, expected 1` };
+
+        // ── CONTEXT LIVES IN THE FOOT ──────────────────────────────────
+        // The map and the tools row both print a sentence there; the films
+        // row has nothing to add and prints nothing, which is ADR-056's
+        // "no GENERIC foot" working rather than a gap.
+        const foot = document.querySelector<HTMLElement>(".fl-con__foot");
+        if ((kind === "tools" || kind === "intelligence-map") && !foot)
+          return { kind, ok: false, why: "context row has no foot" };
+        if (foot && !(foot.textContent ?? "").trim())
+          return { kind, ok: false, why: "empty foot printed" };
+
         return { kind, ok: true, why: "" };
       });
       if (!frame.ok) unframed.push(`${frame.kind} — ${frame.why}`);
@@ -1241,7 +1304,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".fl-pda")).toBeVisible();
 
     for (const [index, view] of ["1", "2", "3"].entries()) {
-      await page.locator(".fl-pda__stn").nth(index).click();
+      await page.locator(".fl-con__stn").nth(index).click();
       await page.waitForTimeout(400);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);
 

@@ -410,6 +410,68 @@ facts` is wider than the whole plate — so the values live on the LABEL
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
 
+## One rail, one foot, and the Studio's sheets (ADR-066, live)
+
+- **EVERY PLATE SWITCHES ON `ConsoleRail`** (`casefile/console/ConsoleRail.tsx`)
+  — ADR-063's reading rail generalised to N stations. Diamonds, mono caps, a
+  hairline spine, ONE lit segment travelling off `--rail-i` / `--rail-n`. It is
+  a `role="tablist"` with roving tabindex; _"not a web tab strip"_ was always
+  about the LOOK, which is preserved.
+- ⚠ **NO ORDINAL ANYWHERE ON THIS SURFACE.** The tools' `01 · MÍMIR`, the
+  films' `01 / 02` and the map's `01 02 03` left together (owner, 2026-08-06) —
+  the spine carries order positionally, and keeping the numeral on one rail
+  would be the inconsistency in a new place. **The label is the FUNCTION
+  alone.** Smoke-asserted per row. The codename survives as PROVENANCE on the
+  tools foot, never as a label.
+- ⚠ **AT `data-n="4"` THE DIAMOND IS HIDDEN, AND IT IS ARITHMETIC.** Measured at
+  1280×720: a quarter of the 594.5px console is 146.6px, leaving 122px after
+  padding, diamond and gap; `AI IMAGE & VIDEO SUITE` and
+  `STUDIO PM ORCHESTRATOR` need 136px at the 10px control floor. The shortfall
+  is 14px and the diamond plus gap is 12.7 — the mark costs what the fourth
+  label lacks. Padding buys 5, the gap 1.7, tracking 4.4, a 6px diamond 3;
+  none is enough, and below 10px is the DECORATIVE floor. **Do not restore it
+  by eye.**
+- **THE FOOT IS WHERE CONTEXT GOES**, on every plate that has any. ADR-056's
+  "no GENERIC foot" is finished rather than weakened: the banned foot was
+  chrome repeating itself on every row; a sentence that changes with what is
+  displayed is the opposite, and a plate with nothing to say still omits it.
+- **The tools plate is ONE COLUMN — capture → facts → foot.** The left identity
+  column is deleted. ⚠ ADR-056 U9's 16:10 bound is gone and its own reasoning
+  is why: it existed because a HALF-WIDTH column made the window tall and
+  narrow over a wide capture. Full width inverts that. `surfaces` and `tagline`
+  are deleted as duplicates of capability 3 and of the foot.
+- ⚠ **`--font-sans` IS DECLARED NOWHERE IN THIS APP.** `.fl-con__foot p` asked
+  for it and rendered in the browser's default sans — that was the owner's
+  "the font feels a bit different from the rest". The token is
+  `--font-pp-neue-montreal`. The foot now carries the Arc caption card's
+  spacing, leading and alpha (`.008em` / 1.45 / `dawn .88`) one size step
+  below it, and NO text-shadow (the Arc's lifts it off live WebGL; a console is
+  opaque).
+- **A ROW CAN CARRY SHEETS** (`CaseSheet`, `kind: "sheets"`). The Studio row is
+  three: the output, the rule, the limit. It adds almost nothing — the rail,
+  the foot, `.fl-stills` and `.fl-caps` all already existed; only the
+  two-column comparison is new markup.
+  ⚠ **A SHEET IS NOT A SECOND DIRECTORY.** Rows are bodies of work, sheets are
+  facets of one. A sheet that reads as a separate project wants a ROW — and a
+  row reshapes the browse band. Pinned: >1 sheet, exactly 2 compare columns,
+  exactly 4 facts.
+  ⚠ **The comparison's two columns are typographically identical on purpose** —
+  two legitimate categories with one boundary, not a preferred option beside a
+  fallback. A gold wash on the AI column turned a policy into a recommendation.
+- ⚠ **A CLAMP IS A BELT AGAINST FUTURE COPY, NEVER A LAYOUT LEVER.** Two
+  `-webkit-line-clamp` rungs in this pass truncated LIVE copy while their boxes
+  had 68px and 150px of unspent height — and every overflow assertion stayed
+  green, because a clamp truncating text IS its "fitting" behaviour. If today's
+  copy hits the clamp, the clamp is wrong. Order of sacrifice on the tools
+  plate: a screenshot loses pixels before a sentence loses meaning.
+- ⚠ **TWO PRE-EXISTING LEFT-COLUMN CLIPS ARE OPEN** (ADR-066 §Left open):
+  `.fl-brief` loses 19px on the Studio row at **1920×1080** (the box is
+  _smaller_ there than at 1440×800 — it hangs off the non-monotonic `--fl-t6`
+  seam, and the smoke's viewports are 1280/1440/**2017**, so 1920 is a gap),
+  and `.fl-proof-register__label` clips 5–9px on every row at laptop heights.
+  Adding 1920×1080 to the smoke's reference viewports is the durable half of
+  either fix.
+
 ## One console frame, four plates (ADR-064, live)
 
 Every evidence plate renders inside `ConsoleFrame` (`casefile/console/**`) —
@@ -422,21 +484,28 @@ a slot.
   is now the CONSOLE's inner edge. A plate that centres its content with air
   on four sides has misread it. Measured: the tools shot still reaches the
   right wall (1px = the border) and the rail's underside.
-- ⚠ **NO FILTER ON THE EVIDENCE, AND THE FRAME IS WHY.** The owner's ask was
-  "a filter like in services so everything feels uniform"; the answer is that
-  the uniformity is the chrome. ADR-056 U5 (owner) stands unamended — the
-  stills are Loop's ads, the films their commercials. The tools duotone was a
-  NORMALIZING move for arbitrary screenshot colour; on authored photography it
-  destroys intended colour instead. Smoke-asserted: no `filter` on any
-  `.fl-plate img`, on any row.
-- **Each plate keeps its own interior.** The rails are NOT unified — the tools
-  rail's two-line `01 · MÍMIR` / `BRIEFING AGENT` is an ADR-056 U9 owner
-  ruling. `rail` and `foot` are slots rendered as DIRECT flex children of the
-  console, because the map's rail is `flex: 0 0 clamp(32px, 7%, 44px)` — a
-  percentage of the console's height that any wrapper would resolve to zero.
-- **The foot stays OPTIONAL.** ADR-056's "no generic foot" binds: the map
-  prints a sentence that changes with the reading; the other three print
-  nothing.
+- ⚠ **NO FILTER ON THE _AUTHORED_ EVIDENCE — the line is AUTHORED vs CAPTURED**
+  (ADR-064 U2, owner, 2026-08-06). ADR-056 U5 stands unamended for the stills
+  (Loop's ads) and the films (their commercials): intended colour, left alone.
+  The four TOOL CAPTURES are arbitrary screenshot UI, which is exactly what the
+  duotone was built to NORMALIZE — `.fl-shot__img` carries the services chain
+  plus the halftone dot veil, in both themes. "Chrome vs evidence" was the
+  earlier line and it put a UI capture on the same side as a commercial.
+  ⚠ **The smoke asserts BOTH halves** — this image filtered, every other plate
+  image not. A narrowed ban alone tests strictly less than the blanket one it
+  replaces: it cannot tell a deliberate exception from a treatment that
+  silently stopped applying.
+  ⚠ One recipe, three renderers: `.svc-plate__pbg`, `.fl-shot__img` and
+  `buildGoldToneLut`. Move them together.
+- ⚠ **"THE RAILS ARE NOT UNIFIED" IS SUPERSEDED (ADR-066).** Its stated reason
+  was the tools rail's two-line `01 · MÍMIR` / `BRIEFING AGENT`, and the owner
+  deleted that line on 2026-08-06 — see §One rail above. What still binds:
+  `rail` and `foot` are slots rendered as DIRECT flex children of the console,
+  because the rail is `flex: 0 0 clamp(32px, 7%, 44px)` — a percentage of the
+  console's height that any wrapper would resolve to zero.
+- **The foot is OPTIONAL, and it is the CONTEXT slot** (ADR-066): the map and
+  the tools row print a sentence that changes with what is displayed; the films
+  row has nothing to add and prints nothing.
 - ⚠ **BELOW 980px THE CONSOLE UNWRAPS, IT DOES NOT HIDE.** Hiding it takes the
   plate's CONTENT with it — three of the four have no substitute. Only the map
   hides its own console, because it has the stream index to put there.
@@ -469,13 +538,19 @@ a slot.
 ## The reading rail, and the wheel (ADR-063, live)
 
 The right panel is the PDA console (`map/pda/**`), three readings:
-**01 THE WORK · 02 THE CONFIGURATION · 03 THE SUBSTRATE**.
+**THE WORK · THE CONFIGURATION · THE SUBSTRATE**.
 
 - **The rail is HORIZONTAL, across the top of the console** (owner,
-  2026-08-06), three equal stations under the head. Still not a web tab
-  strip: diamonds, ordinals, mono caps and a hairline spine, with ONE lit
-  segment that TRAVELS along that spine to the reading it opened (keyed off
-  `data-view` in CSS — do not give each station its own marker).
+  2026-08-06), three equal stations. Still not a web tab strip: diamonds, mono
+  caps and a hairline spine, with ONE lit segment that TRAVELS along that spine
+  to the reading it opened — do not give each station its own marker.
+- ⚠ **THE RAIL LEFT THIS FILE'S SURFACE (ADR-066).** It is `ConsoleRail` in
+  `casefile/console/`, shared with all four plates, and it **lost its
+  `01 02 03`** with every other ordinal on the surface. The reading's full
+  title survives as the SVG's accessible name. The spine now keys off
+  `--rail-i` / `--rail-n` rather than `data-view`, because one rail cannot
+  count readings when the other plates count stations; `data-view` still rides
+  the plate root as the map's own state, and the smoke reads it.
 - ⚠ **THE CONSOLE HAS NO HEAD AND THE FOOT HAS NO TITLE** (owner,
   2026-08-06, ADR-063 U1). The badge said "Intelligence map" beside a column
   headed INTELLIGENCE MAP; the meta said "Loop Earplugs" beside a tab, a path

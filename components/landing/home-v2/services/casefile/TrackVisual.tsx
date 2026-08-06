@@ -5,6 +5,7 @@ import type { CaseTrackVisual } from "@/lib/cases/types";
 
 import { FilmsPlate } from "./FilmsPlate";
 import { IntelligenceMapPlate } from "./IntelligenceMapPlate";
+import { SheetsPlate } from "./SheetsPlate";
 import { SignalChart } from "./SignalChart";
 import { SkillsBrowserPlate } from "./SkillsBrowserPlate";
 import { StillsPlate } from "./StillsPlate";
@@ -157,6 +158,9 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
 
     case "films":
       return <FilmsPlate films={visual.films} />;
+
+    case "sheets":
+      return <SheetsPlate sheets={visual.sheets} />;
 
     case "readouts":
       return null;

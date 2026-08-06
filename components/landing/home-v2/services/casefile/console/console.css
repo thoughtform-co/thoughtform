@@ -51,6 +51,19 @@
   --con-txt: rgba(var(--dawn-rgb), 0.92);
   --con-txt2: rgba(var(--dawn-rgb), 0.56);
 
+  /* ⚠ THE LIT SIGNAL IS ONE VALUE, and it takes the ramp's LIT step in BOTH
+     modes with no override to keep in step (ADR-063 U2). A saturated gold is
+     inherently high-luminance, so on the parchment ground it has almost
+     nowhere to go as text — which is why the label just goes to full strength
+     and the MARKS carry "lit": the diamond fill, the wash, the travelling
+     spine. The map aliases `--pda-hot` onto this so there is one source. */
+  --con-hot: var(--gold-ink-lit);
+  /* ⚠ THE GLOWS ARE ADDITIVE, so they only mean anything on a dark ground; on
+     parchment a pale halo around a dark bronze mark is a smudge, not a lit
+     one. Light switches them OFF rather than darkening them (theme.css). */
+  --con-spine-glow: 0 0 9px rgba(240, 200, 106, 0.55);
+  --con-mark-glow: 0 0 10px rgba(240, 200, 106, 0.5);
+
   /* The chamfer, and the outer frame's offset from the plate edge. Both are
      `cqw`, so a plate mounted in a narrower column gets a proportionally
      smaller chamfer for free — but ONLY because `container-type` is below. */
@@ -93,17 +106,27 @@
   pointer-events: none;
   border: 1px solid var(--con-hair2);
   clip-path: polygon(
-    0 calc(var(--con-ch) + 4px),
-    calc(var(--con-ch) + 4px) 0,
-    100% 0,
-    100% calc(100% - (var(--con-ch) + 4px)),
-    calc(100% - (var(--con-ch) + 4px)) 100%,
-    0 100%
+    0 0,
+    calc(100% - (var(--con-ch) + 4px)) 0,
+    100% calc(var(--con-ch) + 4px),
+    100% 100%,
+    calc(var(--con-ch) + 4px) 100%,
+    0 calc(100% - (var(--con-ch) + 4px))
   );
 }
 
-/* The console. Chamfered TOP-LEFT and BOTTOM-RIGHT — the same asymmetric
-   diagonal the services card cuts, so the two objects are one family. */
+/* The console. Chamfered TOP-RIGHT and BOTTOM-LEFT — the house diagonal
+   (ADR-065).
+
+   ⚠ IT USED TO CUT THE OTHER ONE, and its own comment claimed otherwise:
+   "the same asymmetric diagonal the services card cuts, so the two objects
+   are one family". They were not one family. Every card-family object in the
+   system cuts TR+BL — the services plate shell, the WebGL card slab and its
+   extruded glass, the arc cards, the arc-cases layout — and this console cut
+   TL+BR, which is the MIRRORED form reserved for the back of a physically
+   flipped object (the ADR-047 portrait). A comment asserting a relationship
+   the geometry contradicts is worse than no comment; the owner read the
+   result as "not super consistent" without being able to name it. */
 .fl-con__console {
   position: absolute;
   inset: var(--con-gap);
@@ -116,12 +139,12 @@
     radial-gradient(130% 62% at 50% -6%, rgba(var(--gold-rgb), 0.07), transparent 62%),
     var(--con-void);
   clip-path: polygon(
-    0 var(--con-ch),
-    var(--con-ch) 0,
-    100% 0,
-    100% calc(100% - var(--con-ch)),
-    calc(100% - var(--con-ch)) 100%,
-    0 100%
+    0 0,
+    calc(100% - var(--con-ch)) 0,
+    100% var(--con-ch),
+    100% 100%,
+    var(--con-ch) 100%,
+    0 calc(100% - var(--con-ch))
   );
 }
 
@@ -136,6 +159,179 @@
     rgba(var(--dawn-rgb), 0.014) 0 1px,
     transparent 1px 3px
   );
+}
+
+/* ── The reading rail ────────────────────────────────────────────────────
+   ONE STRIP FOR ALL FOUR PLATES (2026-08-06, owner). This is ADR-063's map
+   rail, lifted here and generalised to N stations: diamonds, mono caps, a
+   hairline spine, and ONE lit segment that TRAVELS to the station it opened.
+   The tools and films rails it replaces were already byte-identical to each
+   other; what kept them out of this grammar was the two-line `01 · MÍMIR`
+   tab, and that line is gone.
+
+   ⚠ THE LABEL IS THE FUNCTION ALONE. No ordinal anywhere on this surface —
+   not the tools' codename line, not the films' `01 / 02`, not the map's
+   `01 02 03`. The spine already carries order positionally, which is the
+   whole reason the numeral could go.
+
+   ⚠ ITS HEIGHT IS THE DRAWING'S HEIGHT on the map row, which binds on HEIGHT
+   at every desktop viewport. The rail is only this tall because ADR-063 U1
+   deleted the head to pay for it. Do not grow it without re-measuring the
+   map's rendered type.
+
+   It sits on the console's top edge, so one end is CUT by the chamfer. That
+   is the chamfer working — the end station's ground follows the console's own
+   diagonal — and the stations clear it because the cut is `--con-ch` wide at
+   y=0 and gone by y=`--con-ch`, while a station centres its content well
+   inside that. ⚠ WHICH end is cut follows the corner law (ADR-065): TR+BL, so
+   it is the LAST station, not the first. */
+.fl-con__rail {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 clamp(32px, 7%, 44px);
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--con-hair2);
+}
+
+/* The lit segment. ⚠ ONE ELEMENT, positioned off `--rail-i` / `--rail-n`,
+   never one marker per station: a marker that travels points into the field;
+   markers that take turns are a selected tab. */
+.fl-con__spine {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: calc(100% / var(--rail-n, 3));
+  height: 1px;
+  background: var(--con-hot);
+  box-shadow: var(--con-spine-glow);
+  transform: translateX(calc(var(--rail-i, 0) * 100%));
+  transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.fl-con__stn {
+  position: relative;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0 clamp(5px, 1.3cqw, 14px);
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 0.9cqw, 9px);
+  cursor: pointer;
+  pointer-events: auto;
+  color: var(--con-txt2);
+  transition:
+    color 0.3s ease,
+    background 0.3s ease;
+}
+
+.fl-con__stn + .fl-con__stn {
+  border-left: 1px solid var(--con-hair);
+}
+
+/* ⚠ THE LAST STATION SITS UNDER THE CHAMFER, and the clearance is arithmetic
+   rather than taste. The console cuts TR+BL (ADR-065), so the rail's own
+   top-right corner is missing a `--con-ch` triangle: at height y the right
+   boundary is `100% − (ch − y)`. The label's top edge sits ~11px down at the
+   32px rung against a 22px chamfer, which leaves a 10px inset clearing it by
+   about −1px — i.e. not clearing it. The extra inset here is what buys it,
+   and it is on the LAST station because that is the corner the law cuts. */
+.fl-con__stn:last-of-type {
+  padding-right: calc(clamp(5px, 1.3cqw, 14px) + 9px);
+}
+
+.fl-con__rail[data-n="4"] .fl-con__stn:last-of-type {
+  padding-right: calc(clamp(4px, 0.9cqw, 10px) + 9px);
+}
+
+.fl-con__stn > i {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--con-dim);
+  background: var(--con-void);
+  transform: rotate(45deg);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* ⚠ THESE ARE TABS, and the type law starts a tab at 10px — 8.5px is the
+   DECORATIVE floor, not the control one. It ellipsises rather than wrapping:
+   a station is one line tall, and a wrapped name pushes the diamond off
+   centre rather than showing anything useful. */
+.fl-con__stn > b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 clamp(10px, 1.75cqw, 11.5px) / 1 var(--font-mono, monospace);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+/* ⚠ THE TYPE RUNG IS THE STATION COUNT, because the width available to a
+   label is the console divided by it. Three centred stations can afford the
+   map's 11.5px at `.16em`; four cannot. */
+.fl-con__rail[data-n="4"] .fl-con__stn {
+  gap: clamp(3px, 0.6cqw, 7px);
+  padding: 0 clamp(4px, 0.9cqw, 10px);
+}
+
+.fl-con__rail[data-n="4"] .fl-con__stn > b {
+  font-size: clamp(10px, 1.55cqw, 10.5px);
+  letter-spacing: 0;
+}
+
+/* ⚠ AT FOUR STATIONS THE DIAMOND GOES, AND THE ARITHMETIC IS WHY — this is
+   not a taste call and it must not be reverted by eye.
+   Measured at 1280×720, the binding viewport: a quarter of the 594.5px
+   console is 146.6px; padding takes 11.0, the diamond 9.0 of flow and the gap
+   3.7, leaving 122px. `AI IMAGE & VIDEO SUITE` and `STUDIO PM ORCHESTRATOR`
+   are 22 characters, which at the 10px control floor need 132–136px. The
+   shortfall is 14px and the diamond plus its gap is 12.7 — the mark costs
+   almost exactly what the fourth label lacks.
+   Every other lever was measured and is not enough: padding to 3px buys 5,
+   the gap buys 1.7, dropping tracking buys 4.4, and a 6px diamond buys 3.
+   Below 10px is the DECORATIVE floor, not the control one, and shortening a
+   client's tool name to fit our rail is not a layout fix.
+   So the mark at four stations is the SPINE — which is the marker ADR-063
+   names as the rail's own ("one lit segment that TRAVELS"), where the
+   per-station diamond is a second one. The lit wash and the full-strength
+   label still carry the state. */
+.fl-con__rail[data-n="4"] .fl-con__stn > i {
+  display: none;
+}
+
+.fl-con__stn:hover {
+  color: var(--con-txt);
+}
+
+/* ⚠ THE ACTIVE LABEL IS INK, NOT GOLD, and that is a THEME decision. Gold as
+   small text lands near 1.1:1 on the parchment ground — measured, invisible.
+   The lit signal rides the MARKS, which is what gold is for here: the diamond
+   fills, the wash lifts, the spine travels. The label just goes to full
+   strength. One rule, correct in both themes, no `[data-theme]` override. */
+.fl-con__stn[data-on] {
+  color: var(--con-txt);
+  background: linear-gradient(180deg, rgba(var(--gold-rgb), 0.13), rgba(var(--gold-rgb), 0.02) 78%);
+}
+
+.fl-con__stn[data-on] > i {
+  border-color: var(--con-hot);
+  background: var(--con-hot);
+  box-shadow: var(--con-mark-glow);
+}
+
+.fl-con__stn:focus-visible {
+  outline: 1px solid var(--con-hot);
+  outline-offset: -3px;
 }
 
 /* ── The body well ───────────────────────────────────────────────────────
@@ -166,10 +362,24 @@
 }
 
 /* ── The foot ────────────────────────────────────────────────────────────
-   A centred caption bar, and OPTIONAL. ADR-056's "the right panel has no
-   generic foot" still binds: the map prints a sentence that changes with the
-   reading, which is evidence; a row with nothing to say leaves this out
-   rather than printing chrome. */
+   THIS IS WHERE CONTEXT GOES, on every plate that has any (owner,
+   2026-08-06). ADR-056's "no GENERIC foot" still binds and is the point: a
+   row prints a sentence that changes with what it is showing, or it prints
+   nothing and costs no height. What changed is that the tools row stopped
+   spending half its width on a left text column and put its sentence here,
+   where the map's already was.
+
+   ⚠ THE TYPE IS THE ARC CAPTION CARD'S, one step down (owner: "the same type
+   of font and colour as in our Arc… of course, the Arc there, the fonts can
+   be a bit bigger"). The family was never the difference — both surfaces are
+   PP Neue Montreal. The difference was spacing, leading, alpha and size:
+   the Arc caption runs `clamp(16px, 1.3vw, 20px)` / 1.45 / `.008em` at
+   `dawn .88`, and this ran 12-13.5px / 1.5 / 0 tracking at a dimmer step.
+   Matched here except for size, which stays deliberately below the Arc's.
+
+   NO TEXT-SHADOW. The Arc caption carries one because it floats over live
+   WebGL and needs lifting off it; this sits on an opaque console, where the
+   same shadow is a smudge with nothing to do. */
 .fl-con__foot {
   position: relative;
   z-index: 4;
@@ -182,11 +392,21 @@
   text-align: center;
 }
 
+/* ⚠ `--font-sans` IS DECLARED NOWHERE IN THIS APP, and this rule used to ask
+   for it. `var(--font-sans, sans-serif)` therefore resolved to the browser's
+   DEFAULT sans on every viewport — so the one paragraph the panel sets in a
+   body face was the one thing on the surface not in PP Neue Montreal, while
+   `.fl-case`'s own inherited family was overridden by this shorthand. That is
+   the owner's "the font feels a bit different from the rest", and it was
+   invisible to review because a fallback sans looks like a font choice. The
+   token is `--font-pp-neue-montreal` (landing.css). */
 .fl-con__foot p {
   margin: 0;
   max-width: 640px;
-  font: 400 clamp(12px, 2cqw, 13.5px) / 1.5 var(--font-sans, sans-serif);
-  color: var(--con-txt);
+  font: 400 clamp(12.5px, 2.1cqw, 15px) / 1.45
+    var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  letter-spacing: 0.008em;
+  color: rgba(var(--dawn-rgb), 0.88);
 }
 
 /* ── Arrival ─────────────────────────────────────────────────────────────
@@ -254,6 +474,32 @@
     display: block;
     min-height: 0;
     overflow: visible;
+  }
+
+  /* The rail survives the unwrap — it is the plate's only way to reach the
+     other sheets. It wraps instead of squeezing, keeps a 44px touch target,
+     and drops the spine, which has no row to travel along once entries wrap. */
+  .fl-con__rail {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--con-hair);
+  }
+
+  .fl-con__stn {
+    flex: 1 1 45%;
+    min-height: 44px;
+    justify-content: flex-start;
+    padding: 8px 12px;
+  }
+
+  .fl-con__stn > b {
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.25;
+  }
+
+  .fl-con__spine {
+    display: none;
   }
 
   .fl-con__foot {

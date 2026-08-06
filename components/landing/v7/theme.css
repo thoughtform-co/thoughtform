@@ -509,31 +509,36 @@ html[data-theme="light"] .fl-con {
   --con-hair: rgba(138, 107, 32, 0.5);
   /* The neutral ramp, re-alpha'd for a ground it now recedes INTO. */
   --con-txt2: rgba(var(--dawn-rgb), 0.72);
+  /* ⚠ THE GLOWS GO OUT, they do not darken. A halo is additive: on
+     near-black it reads as a lit mark, on parchment it is a pale smudge
+     around a dark bronze one. The rail's diamond fill carries the signal
+     there. (These lived on `.fl-pda` until the rail became shared.) */
+  --con-spine-glow: none;
+  --con-mark-glow: none;
 }
 
-/* ── The other three plates' gold TEXT (ADR-064) ─────────────────────────
+/* ── The plates' gold TEXT (ADR-064) ─────────────────────────────────────
    ADR-058 accepted a known cost — "gold as SMALL TEXT is now 1.8:1 — the
    mono chrome … If it needs solving, the fix is a SECOND token for
    gold-as-text" — and ADR-063 U2 built that token. The console frame is
    what makes it need solving HERE: these plates now sit on the map's own
-   parchment ground, so a tab ordinal at 1.25:1 is no longer an isolated
-   dim label, it is the same instrument reading two different ways.
+   parchment ground, so a label at 1.25:1 is no longer an isolated dim
+   label, it is the same instrument reading two different ways.
 
    Measured on `--con-void` (#e4dac9) before: `.fl-tooltab__code` 1.25 /
    1.55, `.fl-filmtab__ord` 1.45 / 1.68, `.fl-toolid__kicker` 1.68,
-   `.fl-shot__bar` 1.83. All gold-as-text; none of it is a fill.
+   `.fl-shot__bar` 1.83. All gold-as-text; none of it was a fill.
+
+   ⚠ TWO OF THOSE FOUR SITES NO LONGER EXIST. The tools and films rails
+   became `ConsoleRail`, whose label is INK in both themes by construction
+   (console.css) and whose ordinals were deleted outright — so the ramp's
+   job here shrank to the shot bar. The rule the measurements bought still
+   stands and is why the shared rail was written that way:
 
    ⚠ THE DIM STATES GO TO INK, NOT TO A DIMMER GOLD. `rgba(gold, .45)` on
    parchment cannot reach 4.5:1 at any alpha — the hue is too light to spend.
-   An inactive tab is quiet because it is INK AT LOW STRENGTH, which is the
-   same move the map's `--pda-txt3` makes. This is a two-plate sweep, not a
-   sitewide one: the other sites ADR-058 named still stand. */
-html[data-theme="light"] .fl-tooltab__code {
-  color: rgba(var(--dawn-rgb), 0.62);
-}
-
-html[data-theme="light"] .fl-tooltab[data-on] .fl-tooltab__code,
-html[data-theme="light"] .fl-toolid__kicker,
+   An inactive station is quiet because it is INK AT LOW STRENGTH, which is
+   the same move the map's `--pda-txt3` makes. */
 html[data-theme="light"] .fl-shot__bar {
   color: var(--gold-ink);
 }
@@ -551,11 +556,6 @@ html[data-theme="light"] .fl-pda {
   --pda-grn: var(--atreides-light);
   --pda-grnh: #3f5a2e;
   --pda-grn-ink: var(--atreides-light);
-  /* ⚠ THE GLOWS GO OUT, they do not darken. A halo is additive: on
-     near-black it reads as a lit mark, on parchment it is a pale smudge
-     around a dark bronze one. The fill carries the signal there. */
-  --pda-spine-glow: none;
-  --pda-mark-glow: none;
   --pda-sweep: rgba(138, 107, 32, 0.5);
 }
 
@@ -570,7 +570,13 @@ html[data-theme="light"] .fl-pda {
    numbers in lockstep — they are one recipe in two renderers. */
 html[data-theme="light"] .svc-plate__pbg,
 html[data-theme="light"] .svc-plate__band-im,
-html[data-theme="light"] .voidwalker__orbit__portrait img {
+html[data-theme="light"] .voidwalker__orbit__portrait img,
+/* ⚠ AND THE CASEFILE'S TOOL CAPTURE, WHICH IS THE ONE EXCEPTION TO THE
+   NO-FILTER RULE ON THAT SURFACE (ADR-064 U2, owner). It takes the same
+   parchment-print chain as everything else here because it is the same
+   decision: a UI screenshot is arbitrary colour to be NORMALIZED, where the
+   casefile's stills and films are authored colour to be left alone. */
+html[data-theme="light"] .fl-shot__img {
   filter: sepia(0.55) saturate(0.88) brightness(1.1) contrast(0.9);
 }
 /* The two evidence switchers — the tool gallery's quarters and the film
