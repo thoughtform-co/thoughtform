@@ -142,7 +142,10 @@ Three grammars, each answering a different question, and one rule each:
 4. **The children of a chamfered box are square.** Once the housing is
    machined, what sits inside it is flat stock. This is what keeps a surface
    from reading as a sheet of identical stickers: the variation is hierarchy,
-   not a second decorative style.
+   not a second decorative style. _One exception (ADR-065 Update 1): a
+   uniform SET of device cards inside a housing may carry a single notch on
+   the lawful diagonal — all cards the same corner, one nesting level deep,
+   card scale. A lone notched child stays banned._
 5. **Asymmetry is earned.** A single notch appears only where the corner does
    work — it points at what the object connects to, or it marks the edge the
    mechanism does not use. Otherwise: the symmetric pair, or square.

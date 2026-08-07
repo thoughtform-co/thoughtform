@@ -54,6 +54,52 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-07 — Casefile: glyphed index register + tool dossier + Vesper wireframe (ADR-068)
+
+Owner redesign from `proof-page-blocks-left.html` (canonical; `thoughtform-
+proof-panel-v2.html` superseded). Cycle B: ADR-068 opened with the shape,
+prior art (056/059/063/064/065/066/067) and the mockup→law override table;
+ADR-065 Update 1 (notched seated sets) and ADR-066 Update 1 (diamond back
+under short handles; one-column layout superseded) resolve the contradictions
+in their owning ADRs; `.claude/rules/proof.md` register + tools sections
+rewritten.
+
+- **The IA ruling:** left column = the PROGRAM's achievements (uniform
+  glyph+claim+sentence index on all four rows, non-interactive); right panel
+  = the TOOL (dossier field: header → route → bay → detail 2×2 → foot). The
+  Software register's tool-describing blocks became program claims; the
+  per-tool content moved to `ProjectCase.tab/route/detail`.
+- **Measured, not ported:** tall register rung at 1070h (a DIRECTORY
+  constraint — the plan's 1000h clipped it 36px; the old 931h rung had the
+  same latent defect); rungs must TILE (999/1070 printed sentences into a
+  128px box); route viewBox 560×66 with 1440×800 binding (SVG height rides
+  field WIDTH); capture floor `clamp(70px, 9svh, 180px)`; `data-n=4` diamond
+  restored (handles 68–106px vs 122.9 available — the input changed, not the
+  math); green ramp extension measured composited in light (own 4.80, gold
+  4.91, NOW stroke 4.90; step outline lifted to α .5 = 3.33:1).
+- **The contact-sheet check fired before anything rendered:** `ownership`
+  read as `gap`'s sibling in one visible set (the ADR-059 failure mode);
+  redrawn as an open vessel. Glyph anti-patterns mechanized in
+  `tests/lib/proof-glyphs.test.ts`.
+- **Fixed in passing (pre-existing):** desktop-width PRM collapsed the
+  console to HEIGHT 0 on every plate — console.css's unwrap gate keyed on
+  width alone while casefile.css's static-flow gate includes PRM; the gates
+  are now the same pair, with a PRM smoke assertion.
+- **Factual corrections:** babylon/heimdall `year` 2025 → 2026 (repo first
+  commits).
+- Verification per commit: `npm run verify` green (589), services-ring smoke
+  green (12) with new assertions (glyphs, sr-only rung, route type floor +
+  PT Mono, BL-notch clip-path signature, per-tool filter split, PRM console
+  height, light-theme green samples); measured walks at 5 desktop viewports
+  - mobile; ring suite untouched and green.
+- **Open, recorded in ADR-068:** the mobile route wants a different DRAWING
+  (arithmetic: ~335px of glyphs vs ~312px column); mímir/babylon/heimdall
+  wireframes; `--pda-grnh` → `var(--atreides-ink)` re-point candidate; the
+  aether keynote's tools-count inconsistency (outside this repo); desktop
+  PRM renders the whole casefile in a ~271px column (pre-existing — the
+  unwrap fix made the console visible there, the column width is its own
+  pass).
+
 ### 2026-07-17 (latest 3) — Services ring: arrival remap so it turns at the park (ADR-029 update)
 
 Owner, third pass on the same seam: entering #services still had a trailing

@@ -237,3 +237,23 @@ of this pass's scope:
 
 The durable half of either fix is the same: **add 1920×1080 to the smoke's
 reference viewports.**
+
+## Update 1 (2026-08-07, with ADR-068) — the diamond returns, and the facts move
+
+- **`data-n="4"` shows its diamond again.** The hide was real arithmetic —
+  22-char labels needed 136px against 122.9 available — and this ADR's own
+  escape hatch ("shortening a client's tool name is not a layout fix") is now
+  satisfied the only lawful way: the OWNER renamed the rail to short handles
+  (`ProjectCase.tab`, ≤14 chars) and the full functional name moved to the
+  plate header as the designation. The handles measure 68–106px; tracking is
+  back at .16em. The input changed, not the math.
+- **The one-column capture → four facts → foot layout is superseded by
+  ADR-068's dossier field** (header → route → bay → detail 2×2 → foot). The
+  facts now come from `ProjectCase.detail`; `capabilities` stays canonical for
+  the Arc card and `ToolCardConsole`. The FOOT and its context law are
+  unchanged. The order of sacrifice stands — the capture floor dropped to
+  `clamp(70px, 9svh, 180px)` to pay for the route and the detail plates.
+- **§Left open, half resolved:** the `.fl-proof-register__label` clip is GONE —
+  ADR-068's index register retired the class, and the claims measure 0 clips
+  at every reference viewport including 1920×1080. The `.fl-brief` Studio-row
+  clip at 1920×1080 remains open (editorial, client copy).

@@ -15,6 +15,7 @@ inherited its ambient-cover role.
 
 **Read first**
 
+- [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
 - [ADR-063: The map's reading rail and its wheel](../sentinel/decisions/063-map-reading-rail-and-wheel.md) — the rail is HORIZONTAL across the top of the console, and the console OWNS THE WHEEL while the pointer is on it (releasing at both ends). See §The reading rail below
 - ⚠ [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — **STALE ON THE DRAWING.** Commit 0965318 replaced the isometric city with the PDA console (`map/pda/**`) in the casefile's right panel and shipped without an ADR. ADR-062's placement, evidence semantics and confidentiality envelope still bind; its atom, sheets, crops and EXPAND overlay describe `map/MapSurface.tsx`, which is still on disk and still passes its projection test but is **NOT what the landing renders**
@@ -144,19 +145,17 @@ inherited its ambient-cover role.
   fields render immediately and never carry `data-fl-text`: the destructive
   decoder caches targets once per client and would strand stale metadata after
   the first directory switch.
-- **The tools row is a CONTROLLED gallery on ONE grid (ADR-056 Update 9,
-  third pass).** `TrackPanel` owns `toolIdx` and the right panel gives the
-  gallery its full height; no capability foot follows the selected tool.
-  Track-level proof lives in the shared left register. The gallery body splits
-  50/50 with no gap and the tabs are quarters of the same rail. The FUNCTIONAL
-  NAME is the tab label; the codename is chrome (a visitor cannot know
-  "Mímir"). Mode/team/year live on the identity meta line, the `shift`
-  sentence beside the shot, status in the panel head. At ≤760h the TEXT COLUMN
-  WIDENS instead of the sentence truncating. The shot BLEEDS to the viz box
-  edges (cover, top-anchored;
-  `contain`'s letterbox was the "plastered on" read) and the whole frame is
-  the walkthrough button, with the bar fused to its bottom edge and the
-  duration printed from `walkthrough.duration`.
+- **The tools row is the DOSSIER FIELD (ADR-068 — supersedes ADR-056 U9's
+  gallery grid and ADR-066's one-column layout):** header → route → bay →
+  detail 2×2 → foot, all inside ConsoleFrame. `TrackPanel` still owns
+  `toolIdx`. The RAIL navigates with SHORT HANDLES (`ProjectCase.tab`, ≤14
+  chars) and the plate HEADER designates (full functional name +
+  `IN SERVICE {year} —`) — one designation, split by role (refines ADR-064
+  U1). The codename is chrome (lightbox label only — a visitor cannot know
+  "Mímir"). The shot still BLEEDS to its box edges and the whole frame is
+  still the ONE walkthrough button with the bar fused to its bottom edge; the
+  RUN plate on it is DECORATIVE (aria-hidden, pointer-events none). See §The
+  tool dossier below for the route/detail/wireframe contracts.
 - **One lightbox, `MediaLightbox`, shared by the films and the walkthroughs.**
   Do not hand-write a second — its portal, scroll lock and focus restore each
   cost a measurement to get right (Update 8).
@@ -231,15 +230,20 @@ inherited its ambient-cover role.
   smoke's band-fraction targets. Measure at 1280×720 / 1440×800 /
   1920×1080; the 10.5px row type is owner-set — take density out of
   padding, never type.
-- **Proof is ONE LEFT-COLUMN 2×2 REGISTER.** New tracks carry exactly four
-  `CaseBlock` records shaped `{ title, desc }` — a CLAIM and its evidence.
-  Budgets are title ≤27 and description ≤95 (see ADR-067 above for why 27 is
-  measured rather than round, and why the `value` figure was deleted). Legacy
-  `readouts` remain a compatibility input normalized into this register, and a
-  track carries one model or the other, never both. On compact-height desktop
-  the CLAIM remains visible while the sentence goes sr-only; taller desktop and
-  full-flow mobile expose both. The right panel has no generic foot: its visual
-  owns the full panel beneath the designation rail.
+- **Proof is ONE LEFT-COLUMN GLYPHED INDEX (ADR-068) — rows, not boxes.** New
+  tracks carry exactly four `CaseBlock` records shaped `{ glyph?, title, desc }`
+  — a pixel-glyph KEY, a CLAIM and its evidence. Budgets are title ≤27 and
+  description ≤95 (see ADR-067 for why 27 is measured rather than round, and
+  why the `value` figure was deleted). The register is NON-INTERACTIVE: the
+  browse band owns row selection, the rail owns tool selection. Class names
+  (`fl-proof-register__list/__item/__claim/__description/__glyph`) are
+  load-bearing for four smoke assertions — rename any and the smoke fails.
+  Below 1070h the CLAIM + glyph remain while the sentence goes sr-only; at
+  ≥1070h both show (⚠ the two rungs must TILE — 1069.98/1070; an integer gap
+  printed full sentences into a 128px box, 116px of silent clip). Legacy
+  `readouts` remain a compatibility input normalized into the same markup.
+  The right panel has no generic foot: its visual owns the full panel beneath
+  the designation rail.
 - **The `01_INTELLIGENCE-MAP/` row is THE CITY (ADR-062).** Three sheets —
   **board · unit · below grade** — in ONE isometric, drawn from `MAP_SHAPES`
   (5), `MAP_DISTRICTS` (8) and `MAP_WORKS` (27; 24 configured, 3 person-led)
@@ -409,6 +413,81 @@ facts` is wider than the whole plate — so the values live on the LABEL
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
 
+## The glyphed index and the tool dossier (ADR-068, live)
+
+The register and the tools plate contracts, on top of the two bullets above.
+
+- **GLYPHS ARE KEYS IN CONTENT, DRAWINGS IN THE RENDERER.** `CaseBlock.glyph`
+  is a string into `PROOF_GLYPHS` (`casefile/proofGlyphData.ts`, import-free);
+  `ProofGlyph.tsx` renders rect-only SVG (no text nodes — invisible to the
+  smoke's font-family walk by design). The drawings follow the particle-icon
+  grammar (`thoughtform-design/references/particle-icon-grammar.md`): skeleton
+  dawn .85 + signal gold + drift dawn .28 displaced exactly ONE axis unit,
+  ≤16 sk+sig pixels, 7×7 grid at INTEGER cell multiples (14px compact / 21px
+  tall — never 24). `tests/lib/proof-glyphs.test.ts` mechanizes the
+  anti-patterns; the registry pins key validity + per-track uniqueness.
+  ⚠ **Adding a glyph means re-running the CONTACT SHEET** (all 16 in one
+  screenshot, judged without labels) — it caught `ownership` reading as
+  `gap`'s sibling inside one visible set, the exact failure ADR-059 retired
+  an icon set for. Keys per track: tooling `gap collapse ownership substrate`
+  · map `board encode reuse envelope` · studio `field threshold cadence
+holdfast` · atl `masters level broadcast parallel`.
+- **LEFT = THE PROGRAM, RIGHT = THE TOOL.** The Software register's four
+  claims speak for the fleet (the gap · the collapse · the ownership · the
+  shared substrate); the per-tool one-liners live on the detail plates. The
+  registry pins the four titles literally — a rewording updates the pin in the
+  same commit, and titles may not match `/skills?/i`, `/%/, or
+`/(live|production|shipped|wip)/i` (three separate guards).
+- **THE ROUTE (`RouteDiagram.tsx`) IS DATA-DRAWN** from `ProjectCase.route`
+  (`before` 3–5 steps ≤12 chars · `now` ≤10 · metas ≤44, registry-pinned).
+  ⚠ **viewBox `0 0 560 66`; the binding viewport is 1440×800, NOT 720p** —
+  rendered SVG height rides the field's WIDTH while the height budget rides
+  viewport height (72 units overran by 3px at 1440×800). Text must render
+  ≥8.5px; every `<text>` takes `var(--fl-mono)` (⚠ never `--font-mono` = IBM
+  Plex). ⚠ The ≤760h rung crops caption+meta bands via `margin: -2.143%`
+  (exactly 12/560 — a % margin resolves against the same width the height
+  derives from); `display:none` on SVG groups frees zero pixels. Entrance is
+  click-keyed (`key={toolId}`), reduced-motion static, zero-at-rest.
+  ⚠ THE MOBILE ROUTE IS AN OPEN DESIGN CALL: five 12-char labels at the 8.5px
+  floor need ~335px of glyphs against a ~312px column — it wants a DIFFERENT
+  drawing (vertical chain), not tuning; the SVG's aria-label carries the route
+  in words meanwhile.
+- **THE BAY IS CHROME AROUND THE UNTOUCHED WALKTHROUGH.** `.fl-shot` stays
+  the one button; RUN is a decorative SVG plate (aria-hidden, pointer-events
+  none, chamfered TR+BL); the top line prints `FEED` / `WALKTHROUGH ·
+{duration}` — ⚠ NO `T-01` ids (ordinals in costume; a bay-scoped `/\bT-\d/`
+  smoke scan enforces it, durations excluded).
+- **DETAIL PLATES:** `ProjectCase.detail`, exactly 4, `q` pinned to the
+  four-union, answers ≤32 chars, `accent: "own" | "gold"`. Single BL notch
+  (ADR-065 Update 1 — a uniform seated SET, one nesting level, card scale
+  `clamp(9px, 1.7cqw, 13px)`). ⚠ The inner layer is OPAQUE ground + wash —
+  translucent-over-edge floods the plate with the edge colour. Wraps 1×4
+  under 480px. `own` = `--atreides-light` border / `--fl-own-wash` ground /
+  `--atreides-ink` value; `gold` value = `--gold` dark, `--gold-ink` light.
+- **GREEN RIDES THE RAMP (ADR-063 discipline):** `--atreides-light` = line,
+  `--atreides-ink` = text (dark `#7a9e6a`, light `#3f5a2e` — the PDA's own
+  light green-mark value), `--fl-own-wash` = ground. Light-theme composited
+  floors are smoke-sampled on this row (4.5:1 text / 3:1 line). The route's
+  step outline carries α .5 (3.33:1) deliberately — line work the reader
+  counts.
+- **WIREFRAMES ARE AUTHORED EVIDENCE (ADR-064 U2 extended).** A tool in
+  `TOOL_WIREFRAMES` (`casefile/wireframes/`) renders its drawn UI abstraction
+  instead of the capture: NO `<img>`, NO duotone — the filter law is PER-TOOL
+  and the smoke asserts both branches (capture tools filtered, wireframe tools
+  img-free and unfiltered). Vesper ships first (session view). ⚠ The draw
+  readout is a METER, never a currency figure ("Never a price."). ⚠ The
+  drawing sits UNDER the halftone veil and the RUN plate (z<2) and the middle
+  ~98×40 is covered — nothing load-bearing dead-centre. Mímir/Babylon/Heimdall
+  keep captures until their wireframes are authored against this contract.
+- **PRM UNWRAPS THE CONSOLE TOO.** console.css's unwrap gate is
+  `(max-width: 980px), (prefers-reduced-motion: reduce)` — the SAME pair as
+  casefile.css's static-flow gate. Width-only left desktop-PRM visitors an
+  absolute console in an auto-height parent = HEIGHT 0 on every plate
+  (measured). Never let the two gates drift apart again; the PRM smoke case
+  asserts a visible console with real height.
+- `babylon.year` / `heimdall.year` are **2026** (first commits 2026-02);
+  mimir/vesper 2025. The header prints them as `IN SERVICE {year} —`.
+
 ## One type ladder, four claims, tab plates (ADR-067, live)
 
 - **TWO FAMILIES, BY ROLE.** PT Mono owns instrument chrome; PP Neue Montreal
@@ -430,11 +509,18 @@ facts` is wider than the whole plate — so the values live on the LABEL
   ⚠ `title` ≤**27** chars, MEASURED: at 1920×1080 the half-column is ~234px at
   13px mono / .045em ≈ 8.4px an advance, so 28 characters wrap — and a wrapped
   claim steals a line from its own sentence.
-- ⚠ **BELOW 931h THE TILE IS THE CLAIM ALONE, and it is arithmetic.** At
-  1280×720 the register box is 86px and two full tiers need 182px; the column
-  has 242px total and the directory needs ~110. The claim carries its own
-  figure, which is what makes the reduction honest — the previous rung hid the
-  same sentence and left a 9.5px label that clipped on every row.
+- ⚠ **BELOW 1070h THE ROW IS GLYPH + CLAIM ALONE, and it is arithmetic
+  (ADR-068, retunes this ADR's 931h rung).** At 1280×720 the register box is
+  86px and four index rows fit at ≈21.6px each; four TWO-LINE rows need
+  259.5px and the directory needs 144, which the seam→tick-11 band only
+  affords at 1070h (the plan's 1000h clipped the directory by 36px — and the
+  old 931h rung had the same latent defect, ~21px at 960h). Tall rung:
+  `--fl-proof-h: clamp(264px, 24svh, 300px)` (27svh clipped the directory by
+  11px at 1920×1080). ⚠ `align-items: center` on the rows, never `baseline` —
+  grid synthesizes a replaced element's baseline from its bottom edge and the
+  glyph grows every row. The list is `grid-auto-rows: 1fr` so hairlines sit at
+  the same heights on every file; `1fr` = `minmax(auto, 1fr)`, so a row still
+  overflows loudly rather than truncating.
 - **TOOL LIFECYCLE HAS ONE REGISTRY, and the proof register is not it.** The
   `· live` suffix left the tools claims; `PROJECT_CASES[].status` is canonical
   and the guard checks it there. A proof claim may not restate it.
@@ -473,23 +559,24 @@ facts` is wider than the whole plate — so the values live on the LABEL
   would be the inconsistency in a new place. **The label is the FUNCTION
   alone.** Smoke-asserted per row. The codename survives as PROVENANCE on the
   tools foot, never as a label.
-- ⚠ **AT `data-n="4"` THE DIAMOND IS HIDDEN, AND IT IS ARITHMETIC.** Measured at
-  1280×720: a quarter of the 594.5px console is 146.6px, leaving 122px after
-  padding, diamond and gap; `AI IMAGE & VIDEO SUITE` and
-  `STUDIO PM ORCHESTRATOR` need 136px at the 10px control floor. The shortfall
-  is 14px and the diamond plus gap is 12.7 — the mark costs what the fourth
-  label lacks. Padding buys 5, the gap 1.7, tracking 4.4, a 6px diamond 3;
-  none is enough, and below 10px is the DECORATIVE floor. **Do not restore it
-  by eye.**
+- ⚠ **THE `data-n="4"` DIAMOND IS BACK (ADR-068, supersedes the hide).** The
+  hide was real arithmetic — 22-char labels needed 136px against 122.9
+  available — but the OWNER renamed the rail to short handles
+  (`ProjectCase.tab`: BRIEFING AGENT · IMAGE & VIDEO · UGC DUBBER · STUDIO PM,
+  68–106px at 10px/.16em) and the full name moved to the plate header. The
+  input changed, not the math; the arithmetic comment lives on in console.css
+  beside the restored rule. The 10px control floor still binds.
 - **THE FOOT IS WHERE CONTEXT GOES**, on every plate that has any. ADR-056's
   "no GENERIC foot" is finished rather than weakened: the banned foot was
   chrome repeating itself on every row; a sentence that changes with what is
   displayed is the opposite, and a plate with nothing to say still omits it.
-- **The tools plate is ONE COLUMN — capture → facts → foot.** The left identity
-  column is deleted. ⚠ ADR-056 U9's 16:10 bound is gone and its own reasoning
-  is why: it existed because a HALF-WIDTH column made the window tall and
-  narrow over a wide capture. Full width inverts that. `surfaces` and `tagline`
-  are deleted as duplicates of capability 3 and of the foot.
+- ⚠ **"ONE COLUMN — capture → facts → foot" IS SUPERSEDED (ADR-068).** The
+  tools plate is the dossier field now (header → route → bay → detail 2×2 →
+  foot); the facts render from `ProjectCase.detail`, and `capabilities` stays
+  canonical for the Arc card + ToolCardConsole (unrendered here). What still
+  binds from this pass: the deleted identity column stays deleted, `surfaces`
+  and `tagline` stay deleted, and the ORDER OF SACRIFICE is unchanged — the
+  capture floor (now `clamp(70px, 9svh, 180px)`) pays before any sentence.
 - ⚠ **`--font-sans` IS DECLARED NOWHERE IN THIS APP.** `.fl-con__foot p` asked
   for it and rendered in the browser's default sans — that was the owner's
   "the font feels a bit different from the rest". The token is

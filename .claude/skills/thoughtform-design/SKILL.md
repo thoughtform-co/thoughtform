@@ -47,7 +47,10 @@ is [ADR-065](../../../sentinel/decisions/065-corner-law.md), summarised in
   mirrored back of a flipped object.
 - Depth ladder: seed `16px` · plate `26px` · chrome `0`.
 - **The children of a chamfered box are square** — variation is hierarchy, not
-  a second decorative style.
+  a second decorative style. One exception (ADR-065 U1): a uniform SET of
+  device cards may carry a single notch on the lawful diagonal — same corner
+  on every card, one nesting level, card scale. A lone notched child stays
+  banned.
 - Asymmetry is earned: a single notch points at what the object connects to, or
   marks the edge the mechanism does not use.
 

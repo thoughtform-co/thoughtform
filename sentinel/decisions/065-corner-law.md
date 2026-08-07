@@ -150,3 +150,23 @@ TR + BL, and the false comment is replaced with the record above.
   one is the one that was never being asked.
 - ⚠ The comment that lied is the durable lesson. Assert relationships that a
   reader can check, or do not assert them.
+
+## Update 1 (2026-08-07, with ADR-068) — a notched SET inside a chamfered housing
+
+Rule 4 said the children of a chamfered box are square. The tool dossier
+(ADR-068) seats a 2×2 SET of Q&A detail plates inside the chamfered console,
+each carrying a single notch — so the rule gains its one exception, stated
+narrowly:
+
+**A uniform set of device cards inside a chamfered housing may carry a single
+notch on the lawful diagonal — all cards the SAME corner, one nesting level
+deep at most, at card scale (`clamp(9px, 1.7cqw, 13px)` — the seed rung scaled
+to the card, never the plate rung).** The set reads as cards seated in the
+housing; uniformity across the set is rule 2's one-grammar-per-object applied
+to the set as the object. A LONE notched child inside a housing remains
+banned — that is a second grammar, not a seated set.
+
+The dossier's plates take **BL** (the mockup drew TL and was flipped to the
+lawful diagonal). The route diagram's step marks are symmetric TR+BL chamfer
+pairs in SVG line work — ordinary rule-1 housings at drawing scale, no
+exception needed.
