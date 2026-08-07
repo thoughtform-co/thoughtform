@@ -330,30 +330,35 @@
   padding: 0 clamp(4px, 0.9cqw, 10px);
 }
 
+/* ⚠ THE TRACKING IS BACK AT THE RAIL'S STANDARD `.16em` (2026-08-07,
+   ADR-068). It was zeroed to buy 4.4px toward a 14px shortfall that no
+   longer exists — see the diamond note below. The size rung stays: the
+   available width per station is still a quarter of the console.
+
+   Re-measured with the new labels at 1280×720: `1.55cqw` of the 611px
+   container resolves to 9.47, so the clamp holds at its 10px floor and
+   `BRIEFING AGENT` — the longest of the four handles at 14 characters —
+   needs 14 × (0.60 + 0.16)em × 10px = 106.4px against 122.7px available.
+   At 1440×800 it is 111.7 against ~139. Both clear with headroom. */
 .fl-con__rail[data-n="4"] .fl-con__stn > b {
   font-size: clamp(10px, 1.55cqw, 10.5px);
-  letter-spacing: 0;
 }
 
-/* ⚠ AT FOUR STATIONS THE DIAMOND GOES, AND THE ARITHMETIC IS WHY — this is
-   not a taste call and it must not be reverted by eye.
-   Measured at 1280×720, the binding viewport: a quarter of the 594.5px
-   console is 146.6px; padding takes 11.0, the diamond 9.0 of flow and the gap
-   3.7, leaving 122px. `AI IMAGE & VIDEO SUITE` and `STUDIO PM ORCHESTRATOR`
-   are 22 characters, which at the 10px control floor need 132–136px. The
-   shortfall is 14px and the diamond plus its gap is 12.7 — the mark costs
-   almost exactly what the fourth label lacks.
-   Every other lever was measured and is not enough: padding to 3px buys 5,
-   the gap buys 1.7, dropping tracking buys 4.4, and a 6px diamond buys 3.
-   Below 10px is the DECORATIVE floor, not the control one, and shortening a
-   client's tool name to fit our rail is not a layout fix.
-   So the mark at four stations is the SPINE — which is the marker ADR-063
-   names as the rail's own ("one lit segment that TRAVELS"), where the
-   per-station diamond is a second one. The lit wash and the full-strength
-   label still carry the state. */
-.fl-con__rail[data-n="4"] .fl-con__stn > i {
-  display: none;
-}
+/* ⚠ THE DIAMOND IS BACK AT FOUR STATIONS, AND THE OLD ARITHMETIC WAS RIGHT —
+   IT IS THE INPUT THAT CHANGED (owner, 2026-08-07, ADR-068).
+   The measurement ADR-066 recorded still holds exactly as written: a quarter
+   of the 594.5px console is 146.6px, padding takes 11.0, the diamond 9.0 of
+   flow and the gap 3.7, leaving ~122.7 — and `AI IMAGE & VIDEO SUITE` /
+   `STUDIO PM ORCHESTRATOR` at 22 characters needed 132–136px. Every lever
+   was measured and none of them closed a 14px gap, so the mark went.
+   ADR-066 named its own escape hatch in the same breath ("shortening a
+   CLIENT's tool name to fit our rail is not a layout fix") and the OWNER
+   took it: the four handles are now `ProjectCase.tab` — BRIEFING AGENT ·
+   IMAGE & VIDEO · UGC DUBBER · STUDIO PM — and the full functional name
+   moved one row down to the plate header, where it is read rather than
+   scanned. Fourteen characters, not twenty-two. The shortfall is gone, so
+   the mark that paid for it comes back and the rail is one grammar again at
+   two, three and four stations. Smoke-asserted VISIBLE at `data-n="4"`. */
 
 .fl-con__stn:hover {
   color: var(--con-txt);

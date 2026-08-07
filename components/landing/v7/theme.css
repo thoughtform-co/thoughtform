@@ -553,6 +553,77 @@ html[data-theme="light"] .fl-shot__bar b {
   color: rgba(var(--dawn-rgb), 0.72);
 }
 
+/* ── The tools plate's new field, on parchment (ADR-068) ─────────────────
+   ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP, and this block is
+   nothing but that law applied four times. `rgba(ink, .34)` recedes toward
+   BLACK in dark and toward PARCHMENT in light — the same number goes from
+   quiet to invisible. MEASURED on `--con-void` (#e4dac9): α 0.34 is 1.92:1
+   and α 0.60 is exactly 4.50:1, which is why every recessive step here
+   lands at 0.66 rather than somewhere rounder. The casefile smoke walks
+   every text node inside the console at 4.5:1, so these are guarded. */
+html[data-theme="light"] .fl-tool__hd,
+html[data-theme="light"] .fl-bay__top,
+html[data-theme="light"] .fl-detail__q {
+  color: rgba(var(--dawn-rgb), 0.66);
+}
+
+/* The duration readouts. Gold as small text is ~1.8:1 on parchment at ANY
+   alpha — the hue is too light to spend — so the value takes the ramp's INK
+   step instead of a stronger gold (ADR-063 U2). */
+html[data-theme="light"] .fl-bay__top em {
+  color: var(--gold-ink);
+}
+
+/* WHAT RUNS IT is the one detail row gold marks, and it is TEXT. Same ramp,
+   same reason; the `own` row needs no override because `--atreides-ink` is
+   already re-derived per theme (5.3:1 on parchment). */
+html[data-theme="light"] .fl-detail__plate[data-accent="gold"] {
+  --dt-value: var(--gold-ink);
+}
+
+/* The route drawing's own palette. SVG `fill` escapes the smoke's text walk
+   (it reads `color`), so this is re-derived by the same hand that does the
+   map's `--pda-*` set rather than left to an alpha that means the opposite
+   thing here. Line work answers to 3:1, glyphs to 4.5:1. */
+html[data-theme="light"] .fl-route {
+  --rt-cap: rgba(var(--dawn-rgb), 0.66);
+  --rt-meta: rgba(var(--dawn-rgb), 0.66);
+  --rt-meta2: rgba(var(--dawn-rgb), 0.78);
+  --rt-label: rgba(var(--dawn-rgb), 0.82);
+  /* ⚠ 0.5, NOT 0.3, AND IT IS MEASURED. The step outlines are the LINE WORK
+     THAT CARRIES THE DRAWING — the reader is counting those boxes — so they
+     answer to the 3:1 component target, not to the hairline exemption. α 0.3
+     measures 1.94:1 on `--con-void` (#e4dac9) and α 0.5 measures 3.2:1. The
+     ECHO behind each box stays faint on purpose: it is a repetition mark,
+     not a box. */
+  --rt-line: rgba(var(--dawn-rgb), 0.5);
+  --rt-line2: rgba(var(--dawn-rgb), 0.2);
+}
+/* The chevrons are line work, not a fill — the ramp's 3:1 step. */
+html[data-theme="light"] .fl-route .rt-chev {
+  stroke: var(--gold-line);
+}
+/* The RUN plate is a MARK on an opaque bed: its ground stays a gold wash and
+   its label takes the ink step so the one word on it is readable. */
+html[data-theme="light"] .fl-run text {
+  fill: var(--gold-ink);
+}
+html[data-theme="light"] .fl-run__bg {
+  fill: rgba(var(--void-deep-rgb), 0.86);
+  stroke: var(--gold-line);
+}
+/* The bay's transport marks and corner brackets — line work again. */
+html[data-theme="light"] .fl-shot__chevs svg[data-on] path {
+  fill: var(--gold-line);
+  stroke: var(--gold-line);
+}
+html[data-theme="light"] .fl-shot__chevs path {
+  stroke: rgba(var(--dawn-rgb), 0.3);
+}
+html[data-theme="light"] .fl-bay__br {
+  border-color: rgba(138, 107, 32, 0.55);
+}
+
 /* ...and the MAP's own vocabulary, which no other plate paints in. */
 html[data-theme="light"] .fl-pda {
   --pda-amb: var(--gold-line);

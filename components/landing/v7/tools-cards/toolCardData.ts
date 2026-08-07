@@ -267,7 +267,13 @@ export const PROJECT_CASES: ProjectCase[] = [
     subline: "Top-performing UGC, dubbed at scale.",
     team: "Performance · Localization & Expansion",
     status: "Production",
-    year: 2025,
+    /* 2026, not 2025 — a factual correction (2026-08-07). Babylon's first
+       commit is 2026-02-03; the 2025 here was carried over from the seed
+       set. Mímir and Vesper stay 2025 (Vesper's first commit is
+       2025-10-25, and Mímir's capability entered service under Heimdall's
+       chain in 2025). The plate header prints this as `IN SERVICE …`, so a
+       wrong year is a wrong claim on a client's record. */
+    year: 2026,
     mode: "INVENT",
     challenge:
       "UGC localization had to scale across 30+ markets without turning every language into another agency handoff, Figma copy-paste loop, and reviewer queue.",
@@ -328,7 +334,9 @@ export const PROJECT_CASES: ProjectCase[] = [
     subline: "Everything around the creative work, in one tool.",
     team: "Studio · Project Management",
     status: "Production",
-    year: 2025,
+    /* 2026 — same correction as Babylon above; Heimdall's first commit is
+       2026-02-10. */
+    year: 2026,
     mode: "REPAIR",
     challenge:
       "Built for the project managers around the creative team, collapsing the manual workflow that lives around the design work itself: briefings flow from Monday into Figma, copy gets extracted for proofreaders, and assets sync back through Frontify.",

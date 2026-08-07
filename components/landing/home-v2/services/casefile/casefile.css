@@ -2212,10 +2212,30 @@
    carry a pseudo-element, and the veil must stop at the watch bar's top edge
    rather than covering it — so the image gets one wrapper and the wrapper
    owns the treatment's second half. */
+/* ⚠ THE FLOOR CAME DOWN, AND IT IS ARITHMETIC (2026-08-07, ADR-068). The
+   plate gained a header, a route diagram and a 2×2 detail grid, and the
+   capture is the SACRIFICIAL element by standing order (ADR-066: a
+   screenshot loses pixels before a sentence loses meaning).
+
+   Measured field heights are 333.5 / 374.2 / 545.6px at 1280×720 /
+   1440×800 / 1920×1080. The fixed stack (header + route + bay chrome +
+   detail + three gaps) takes ~222 / ~292 / ~344 there, so the capture is
+   handed ~111 / ~91 / ~211px. ⚠ 1440×800 IS THE BINDING CASE, NOT 720p —
+   the route's height is a function of the field's WIDTH (`height: auto` on
+   a fixed viewBox) while the field grows with HEIGHT, so the squeeze lands
+   on the owner's own laptop rather than where anyone would look for it.
+
+   `clamp(70px, 9svh, 180px)` resolves to 70 / 72 / 97.2 — under all three
+   with 41 / 19 / 113px of slack. It stays a FLOOR rather than a size:
+   its whole job is to make an overrun visible to the smoke instead of
+   silently deleting the evidence, which is why `.fl-shot` still refuses
+   `min-height: 0` above. The old value was `clamp(110px, 19svh, 240px)`
+   (152px at 1440×800) plus a ≤760h rung at `clamp(96px, 16svh, 200px)`;
+   the rung is deleted because this clamp already lands below it there. */
 .fl-shot__frame {
   position: relative;
   flex: 1 1 0;
-  min-height: clamp(110px, 19svh, 240px);
+  min-height: clamp(70px, 9svh, 180px);
   min-width: 0;
   display: flex;
   overflow: hidden;
@@ -2310,6 +2330,34 @@
   border-color: transparent transparent transparent currentColor;
 }
 
+/* The transport marks (ADR-068, the owner's bay). Five chevrons with the
+   first lit — a position readout on the machine, not a control: the bar is
+   `aria-hidden` and the whole frame is the button. They sit LEFT of the play
+   cue so the bar reads left-to-right as position → action → duration. */
+.fl-shot__chevs {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 2px;
+}
+.fl-shot__chevs svg {
+  display: block;
+  width: 13px;
+  height: 7px;
+  overflow: visible;
+}
+.fl-shot__chevs path {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.18);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.fl-shot__chevs svg[data-on] path {
+  fill: var(--gold);
+  stroke: var(--gold);
+}
+
 /* ⚠ THE SURFACES LINE IS DELETED (2026-08-06). It printed
    `ProjectCase.surfaces` — "WEB APP · MCP SERVER · CLAUDE · CURSOR · SLACK ·
    CHATGPT" — one rail below capability 3, "Headless substrate: the same
@@ -2318,33 +2366,471 @@
    also says what they mean. ADR-064 U1's argument, applied again: a panel
    that labels itself twice is spending height on nothing. */
 
-/* ── The tool's own facts (ADR-056 U9's tiles, re-sited) ─────────────────
-   Between the capture and the foot, which is where the owner put them and
-   where they answer the question the capture raises. The rails are SYMMETRIC
-   — the odd/even split those tiles carried aligned them to a 50/50 plate
-   that no longer exists — and there is NO reserved figure row: a capability
-   has a title and a sentence, never a number (that is `--blocks`). */
-.fl-caps--tool {
+/* ⚠ `.fl-caps--tool` IS RETIRED AS A STYLE HOOK (2026-08-07, ADR-068).
+   The tools plate's four capability tiles were replaced by `route` +
+   `detail`, so its renderer is gone from `ToolGallery`; the DATA is
+   untouched and still canonical for the Arc orbit card and
+   `ToolCardConsole`. Its ONLY other client was `SheetsPlate`, which composes
+   `.fl-caps .fl-caps--tool .fl-caps--sheet` — so the rules moved verbatim to
+   `.fl-caps--sheet` (same declarations, same specificity, same cascade
+   position) and the class is now inert in that markup rather than a shared
+   base with one member. See ToolGallery's header comment for why sixteen
+   tiles behind one rail answered nothing.
+
+   ══ THE TOOL PLATE'S FIELD (ADR-068) ══════════════════════════════════
+   header → route → bay → detail, inside the console's existing rail / field
+   / foot. Everything below is height-budgeted against ONE measurement set,
+   restated here because every clamp in this block spends from it:
+
+     field   333.5 / 374.2 / 545.6 px   at 1280×720 / 1440×800 / 1920×1080
+     header   24.7 /  25.5 /  26.5
+     route    48.3 /  79.8 / 101.3   (the ≤760h rung crops two bands)
+     bay top  24.5 /  27.2 /  30
+     bar      37.6 /  40   /  48
+     detail   72.8 /  95.1 / 107.6
+     gaps     2 × 7.2 / 8 / 10.8
+
+   ⚠ THE CAPTURE TAKES WHAT IS LEFT AND NOTHING ELSE DOES. Order of
+   sacrifice is fixed (ADR-066): a screenshot loses pixels before a sentence
+   loses meaning. If a block below needs height, it takes it from the
+   capture — and `.fl-shot__frame`'s floor is what turns "too much" into a
+   visible overflow rather than a silently deleted screenshot. */
+
+/* ── The header: the NAME, and one fact ──────────────────────────────────
+   The rail carries the HANDLE (`tab`, ≤14 chars); this carries the full
+   functional name, which is what bought the rail its diamond back — see
+   `console.css`. ⚠ NO ID, NO ORDINAL, NO CODENAME: the mockup's `T-01` is
+   an ordinal in costume and ADR-066 retired the whole family.
+
+   The 34px gold tick under the rule is the casefile's own header mark
+   (the mockup's `.hdD::before`), on `--gold-line` rather than `--gold` so
+   the one hairline is legible in both grounds — the ramp's non-text step is
+   byte-equal to `--gold` in dark, so this is a no-op there (ADR-063 U2). */
+.fl-tool__hd {
+  position: relative;
   flex: 0 0 auto;
-  padding: clamp(9px, 1.5svh, 15px) 0 clamp(2px, 0.6svh, 6px);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 var(--fl-shot-px) clamp(6px, 1svh, 9px);
+  border-bottom: 1px solid rgba(var(--dawn-rgb), 0.08);
+  font-family: var(--fl-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.34);
 }
-/* ⚠ THREE LINES, NOT THE INHERITED TWO. The `.fl-cap__d` budget is ≤95
-   characters and this grid's column is ~280px, where 95 characters is 2.4
-   lines — so a two-line clamp ellipsises the longest capability on EVERY
-   tool, at every viewport, while the capture above has the slack to pay for
-   it. The clamp is a belt against future copy; if today's copy hits it, it is
-   wrong. */
-.fl-caps--tool .fl-cap__d {
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+.fl-tool__hd::before {
+  content: "";
+  position: absolute;
+  left: var(--fl-shot-px);
+  bottom: -1px;
+  width: 34px;
+  height: 1px;
+  background: var(--gold-line, var(--gold));
 }
-.fl-caps--tool .fl-cap:nth-child(odd) {
-  padding-left: calc(var(--fl-plate-px) + 1px);
-  padding-right: clamp(10px, 1.2vw, 16px);
+/* MUST HOLD ONE LINE. The longest name is `Studio PM Orchestrator` — 22
+   characters at 11px / .16em ≈ 186px against a ~440px slot once the meta
+   takes its share, so there is no wrap risk today; the ellipsis is the belt
+   against a longer tool arriving. */
+.fl-tool__hd b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--dawn);
 }
-.fl-caps--tool .fl-cap:nth-child(even) {
-  padding-left: clamp(10px, 1.2vw, 16px);
-  padding-right: calc(var(--fl-plate-px) + 1px);
+.fl-tool__since {
+  flex: none;
+  white-space: nowrap;
+}
+/* The year is PROVENANCE — the same green that marks Loop's own everywhere
+   on this surface. `<s>` because it is a value beside its label, matching
+   the mockup's meta grammar; the site sets no line-through. */
+.fl-tool__since s {
+  margin-left: 8px;
+  text-decoration: none;
+  color: var(--atreides-ink);
+}
+
+/* ── The route ───────────────────────────────────────────────────────────
+   Geometry, type and the three measurements that set them live in
+   `RouteDiagram.tsx`. This sheet owns only the box, the palette and the
+   arrival.
+
+   ⚠ `--fl-mono`, NEVER `--font-mono` — the latter is IBM Plex Mono
+   (ADR-067), and an SVG `<text>` that declares no family inherits whatever
+   the console leaked. The smoke asserts this explicitly because SVG text is
+   invisible to the HTMLElement family walk that catches every other case. */
+.fl-route {
+  flex: 0 0 auto;
+  padding: clamp(5px, 0.8svh, 9px) var(--fl-shot-px) 0;
+  /* The ≤760h crop below pulls the SVG's own bands out of view; without this
+     they would simply paint over the neighbours. */
+  overflow: hidden;
+
+  /* The drawing's palette, re-derived per theme (theme.css). ⚠ AN ALPHA
+     INVERTS ITS OWN MEANING ACROSS THE FLIP — `rgba(ink, .34)` recedes
+     toward black in dark and toward parchment in light, so the same number
+     goes from quiet to invisible. Same law, and the same fix, as `.fl-pda`. */
+  --rt-cap: rgba(var(--dawn-rgb), 0.34);
+  --rt-meta: rgba(var(--dawn-rgb), 0.34);
+  --rt-meta2: rgba(var(--dawn-rgb), 0.52);
+  --rt-label: rgba(var(--dawn-rgb), 0.56);
+  --rt-line: rgba(var(--dawn-rgb), 0.16);
+  --rt-line2: rgba(var(--dawn-rgb), 0.08);
+}
+.fl-route svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.fl-route text {
+  font-family: var(--fl-mono);
+}
+.fl-route .rt-t-cap {
+  letter-spacing: 0.18em;
+  fill: var(--rt-cap);
+}
+.fl-route .rt-t-own {
+  fill: var(--atreides-ink);
+}
+.fl-route .rt-t-step {
+  letter-spacing: 0.04em;
+  fill: var(--rt-label);
+}
+.fl-route .rt-t-now {
+  letter-spacing: 0.16em;
+  fill: var(--atreides-ink);
+}
+.fl-route .rt-t-meta {
+  letter-spacing: 0.12em;
+  fill: var(--rt-meta);
+}
+.fl-route .rt-t-meta2 {
+  fill: var(--rt-meta2);
+}
+.fl-route .rt-box,
+.fl-route .rt-echo,
+.fl-route .rt-chev,
+.fl-route .rt-now,
+.fl-route .rt-now-echo {
+  fill: none;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fl-route .rt-box {
+  stroke: var(--rt-line);
+}
+.fl-route .rt-echo {
+  stroke: var(--rt-line2);
+}
+.fl-route .rt-chev {
+  stroke: var(--gold);
+}
+.fl-route .rt-now,
+.fl-route .rt-now-echo {
+  stroke: var(--atreides-light);
+}
+.fl-route .rt-now {
+  fill: rgba(var(--atreides-rgb), 0.12);
+}
+
+/* ⚠ ARRIVAL IS CLICK-DRIVEN AND ZERO-AT-REST (ADR-021). The SVG is keyed on
+   the tool id, so a station click remounts it and these replay; there is no
+   clock, no writer and no wall-clock loop. Every keyframe ends on
+   `transform: none` because the boxes are placed against a fixed viewBox —
+   a residual transform here is a drift bug, not a flourish. */
+.fl-route .rt-pop {
+  opacity: 0;
+  animation: fl-rt-pop 0.42s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+}
+.fl-route .rt-seat {
+  animation: fl-rt-seat 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+  animation-delay: 580ms;
+}
+@keyframes fl-rt-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fl-rt-seat {
+  0% {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── The bay ─────────────────────────────────────────────────────────────
+   A housing around the capture, not a second frame around a frame. The
+   walls carry the FEED line, four corner brackets and the transport marks;
+   the capture inside still bleeds to those walls (ADR-064's bezel rule,
+   one level in).
+
+   ⚠ THE BAY IS THE FLEX ITEM NOW, and it must not take `min-height: 0` for
+   the same reason `.fl-shot` refuses it: an `overflow: hidden` flex item
+   with a zero automatic minimum shrinks BELOW its own contents, and the
+   first thing to disappear is the walkthrough bar — sliced in half, with
+   every box still reporting zero overflow. */
+.fl-bay {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  margin: clamp(7px, 1svh, 11px) var(--fl-shot-px) 0;
+  border: 1px solid rgba(var(--gold-rgb), 0.15);
+  background: var(--void-deep-canon);
+}
+
+/* The FEED line. ⚠ NO `T-01`: the mockup printed a tool id here and that is
+   an ordinal wearing a costume (ADR-066). What the line is FOR is saying
+   that the box below is a feed and how long the recording runs. */
+.fl-bay__top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: clamp(20px, 3.4svh, 30px);
+  padding: 0 11px;
+  border-bottom: 1px solid rgba(var(--dawn-rgb), 0.08);
+  font-family: var(--fl-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb), 0.34);
+}
+.fl-bay__top em {
+  font-style: normal;
+  color: var(--gold-40);
+}
+
+/* The four corner brackets — FRAMED BUT NOT A DEVICE (ADR-065's third
+   grammar). They sit ON the border, one pixel outboard, so they read as
+   registration marks on the housing rather than as a second rule. */
+.fl-bay__br {
+  position: absolute;
+  z-index: 2;
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+  border: 1px solid var(--gold-40);
+}
+.fl-bay__br--tl {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.fl-bay__br--tr {
+  top: -1px;
+  right: -1px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.fl-bay__br--bl {
+  bottom: -1px;
+  left: -1px;
+  border-right: 0;
+  border-top: 0;
+}
+.fl-bay__br--br {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/* The RUN plate. ⚠ DECORATION — `aria-hidden`, no pointer: the FRAME is the
+   button and a second interactive element inside it is not a control, it is
+   a bug. Its ground lights on the BUTTON's hover, which is why the rule is
+   `.fl-shot:hover .fl-run__bg` and not a `:hover` of its own. */
+.fl-run {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(70px, 15cqw, 98px);
+  pointer-events: none;
+}
+.fl-run svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.fl-run__bg {
+  fill: rgba(var(--void-deep-rgb), 0.86);
+  stroke: var(--gold);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: fill var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-run text {
+  font-family: var(--fl-mono);
+  fill: var(--gold-ink-lit);
+}
+.fl-shot:hover .fl-run__bg,
+.fl-shot:focus-visible .fl-run__bg {
+  fill: rgba(var(--gold-rgb), 0.1);
+}
+
+/* ── The detail: four fixed questions, four answers ──────────────────────
+   A comparison instrument, not a fact list — the same four questions on
+   every tool, so running down the rail reads four answers to ONE question.
+   `ToolDetailFact`'s union pins that mechanically.
+
+   THE PLATE IS TWO LAYERS, and it has to be: a `clip-path` cuts a border,
+   it never strokes one (ADR-067's own finding), so a notched box with an
+   outline is an outer layer painting the edge colour and an inner layer
+   inset by 1px painting the ground, each clipped to its own polygon.
+
+   ⚠ ONE NOTCH, ON THE BOTTOM-LEFT. One notch says ORIENTED / CONNECTED
+   (ADR-065) — which is what a plate reading off the instrument above it is
+   — and BL is the house diagonal's lower end. The mockup notched TOP-LEFT;
+   that is the mirrored form, the same defect the console frame carried. */
+.fl-detail {
+  --dt-notch: clamp(9px, 1.7cqw, 13px);
+  --dt-edge: rgba(var(--dawn-rgb), 0.08);
+  --dt-ground: rgba(var(--dawn-rgb), 0.035);
+  --dt-rule: rgba(var(--dawn-rgb), 0.08);
+  --dt-value: var(--dawn);
+
+  flex: 0 0 auto;
+  list-style: none;
+  margin: clamp(7px, 1svh, 11px) var(--fl-shot-px) 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(6px, 1svh, 10px);
+}
+.fl-detail__plate {
+  min-width: 0;
+  padding: 1px;
+  background: var(--dt-edge);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--dt-notch) 100%, 0 calc(100% - var(--dt-notch)));
+}
+/* ⚠ THE INNER GROUND IS OPAQUE, AND THE BUG IT FIXES IS VISIBLE FROM ACROSS
+   THE ROOM. The outer layer paints the EDGE colour across the whole plate,
+   so a translucent inner ground composites over THAT rather than over the
+   console — and on the `own` plates, whose edge is a solid green, the whole
+   tile came out solid green with the answer sunk into it. The wash rides on
+   the console's own ground instead: `--con-void` flips with the theme, so
+   one rule is correct in both. */
+.fl-detail__in {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(5px, 0.9svh, 9px) clamp(9px, 1.6cqw, 14px);
+  background-color: var(--con-void);
+  background-image: linear-gradient(var(--dt-ground), var(--dt-ground));
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 100%,
+    calc(var(--dt-notch) - 1px) 100%,
+    0 calc(100% - (var(--dt-notch) - 1px))
+  );
+}
+.fl-detail__q {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--fl-mono);
+  font-size: 8.5px;
+  line-height: 1.1;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.34);
+}
+/* THE RULE FALLS TO THE BOTTOM. `margin: auto 0 …` is what pushes it, so the
+   label sits on the plate's top rail and the answer reads under the line
+   however tall the plate ends up — which is the mockup's whole gesture and
+   the reason the four plates stay legible when the grid re-flows. */
+.fl-detail__rule {
+  flex: 0 0 1px;
+  margin: auto 0 clamp(5px, 0.8svh, 8px);
+  background: var(--dt-rule);
+}
+.fl-detail__a {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--fl-mono);
+  font-size: 9.5px;
+  line-height: 1.1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dt-value);
+}
+
+/* `own` — the provenance mark. Green says Loop's own everywhere on this
+   surface, and WHO IT SERVES is the one row where that is the argument. */
+.fl-detail__plate[data-accent="own"] {
+  --dt-edge: var(--atreides-light);
+  --dt-ground: var(--fl-own-wash);
+  --dt-rule: var(--atreides-light);
+  --dt-value: var(--atreides-ink);
+}
+/* `gold` — WHAT RUNS IT. Gold is wayfinding: it marks the value, never the
+   plate. ⚠ In light it takes the ramp's INK step (theme.css) — `--gold` as
+   small text measures ~1.8:1 on parchment. */
+.fl-detail__plate[data-accent="gold"] {
+  --dt-value: var(--gold);
+}
+
+/* Seat from alternating sides, staggered AFTER the route (delays are inline,
+   780ms + 55 per plate). Same law as the route: click-driven, and zero at
+   rest — these plates are grid children and a residual transform would put
+   them off their own rails. */
+.fl-detail__plate {
+  animation: fl-dt-seat 0.44s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+.fl-detail__plate:nth-child(even) {
+  --dt-sx: 14px;
+}
+@keyframes fl-dt-seat {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(var(--dt-sx, -14px)));
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-route .rt-pop,
+  .fl-route .rt-seat,
+  .fl-detail__plate {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ── The tool's foot ─────────────────────────────────────────────────────
@@ -2539,23 +3025,47 @@
    is ADR-056 U9's own finding, which its second pass measured and its first
    pass got wrong in the same direction. */
 @media (max-height: 760px) {
-  .fl-caps--tool {
-    padding-top: clamp(7px, 1.1svh, 11px);
-  }
   .fl-toolfoot p {
     -webkit-line-clamp: 3;
     line-clamp: 3;
   }
-  /* ⚠ THE CAPTURE PAYS, and the arithmetic says exactly how much. Measured at
-     1280×720: the console is 448, the rail takes 32 and the foot 98, leaving
-     318 for the body — which wants 175 for the capture (a 137px floor plus a
-     38px bar) and 162 for three lines of facts. Nineteen over.
-     It comes off the FLOOR, because the order of sacrifice on this plate is
-     fixed: a screenshot loses a strip of pixels before a sentence loses its
-     meaning. 16svh is 115px here, which buys 22 — the bar clears with 3 to
-     spare and the capture is still the header strip a dashboard leads with. */
-  .fl-shot__frame {
-    min-height: clamp(96px, 16svh, 200px);
+
+  /* ── THE ROUTE CROPS ITS CAPTION AND META BANDS (ADR-068) ─────────────
+     ⚠ AND IT IS A CROP, NOT A HIDE, BECAUSE THE SVG'S HEIGHT IS ITS WIDTH.
+     `width: 100%; height: auto` on a fixed viewBox means `display: none` on
+     the two text bands frees exactly zero pixels — the box is still
+     `width × 66/560`. So the bands are hidden AND the SVG is pulled in by
+     the height they occupy.
+
+     The margins are PERCENTAGES on purpose. A percentage margin resolves
+     against the containing block's WIDTH, which is the same quantity the
+     SVG's height is derived from — so `12/560 = 2.143%` crops exactly the
+     caption band (units 0…12) and exactly the meta band (54…66) at EVERY
+     viewport, with no second constant to keep in step. Both bands are named
+     in `RouteDiagram.tsx`; these two numbers are the only place they are
+     duplicated. Measured: the route drops 66.8px to 42.5px at 1280×720,
+     which is what pays for the capture's floor there.
+
+     What is lost is two lines of chrome; the route's own claim — n boxes
+     collapsing into one — is the part that stays. ⚠ NOT lost below 980px:
+     the console unwraps there and height stops costing anything, so the
+     ≤960 block restores both bands. */
+  .fl-route svg {
+    margin-top: -2.143%;
+    margin-bottom: -2.143%;
+  }
+  .fl-route .rt-cap,
+  .fl-route .rt-meta {
+    display: none;
+  }
+
+  /* The detail plates give up PADDING, never type: 8.5 / 9.5px are already
+     the chrome and control floors. */
+  .fl-detail__in {
+    padding: 4px 9px;
+  }
+  .fl-detail__rule {
+    margin-bottom: 4px;
   }
 }
 
@@ -2712,6 +3222,19 @@
   align-content: center;
   padding: clamp(12px, 2.2svh, 26px) 0;
   gap: clamp(12px, 2.6svh, 30px) 0;
+}
+/* SYMMETRIC RAILS. These lived on `.fl-caps--tool` until 2026-08-07 and moved
+   here with the tools plate's own renderer (ADR-068) — `.fl-caps`'s base
+   rails are ASYMMETRIC because they were cut for a 50/50 plate that had a
+   shot on the right, and a sheet has no shot. Same values as before, one
+   client instead of two. */
+.fl-caps--sheet .fl-cap:nth-child(odd) {
+  padding-left: calc(var(--fl-plate-px) + 1px);
+  padding-right: clamp(10px, 1.2vw, 16px);
+}
+.fl-caps--sheet .fl-cap:nth-child(even) {
+  padding-left: clamp(10px, 1.2vw, 16px);
+  padding-right: calc(var(--fl-plate-px) + 1px);
 }
 /* No capture above this grid, so there is nothing competing for the height —
    the clamp is a pure belt here and can sit well clear of today's copy. */
@@ -3428,6 +3951,11 @@
   /* The plate was already one column here; below the gate it simply stops
      competing for height, so the capture takes its own aspect back and
      nothing clamps. */
+  .fl-bay {
+    flex: 0 0 auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
   .fl-shot {
     flex: 0 0 auto;
   }
@@ -3448,11 +3976,39 @@
   .fl-shot__bar b {
     letter-spacing: 0.06em;
   }
-  .fl-caps--tool {
+
+  /* ── The new field, unwrapped (ADR-068) ────────────────────────────────
+     Height is free below the gate, so nothing crops and nothing clamps —
+     the ≤760h route crop in particular MUST be undone here, because a phone
+     in landscape satisfies both queries and would lose the two meta lines
+     for no gain (the console has already stopped competing for height).
+     The gutters go to 0: the console's own padding is the inset now. */
+  .fl-tool__hd,
+  .fl-route {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .fl-route svg {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  .fl-route .rt-cap,
+  .fl-route .rt-meta {
+    display: initial;
+  }
+  .fl-detail {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* The sheets foot keeps the flat rails it has always had below the gate —
+     they were written on `.fl-caps--tool`, whose only remaining client is
+     this plate (ADR-068). Same values, one selector. */
+  .fl-caps--sheet {
     padding: 14px 0 4px;
   }
-  .fl-caps--tool .fl-cap:nth-child(odd),
-  .fl-caps--tool .fl-cap:nth-child(even) {
+  .fl-caps--sheet .fl-cap:nth-child(odd),
+  .fl-caps--sheet .fl-cap:nth-child(even) {
     padding-left: 12px;
     padding-right: 12px;
   }
@@ -3472,6 +4028,18 @@
     overflow: visible;
     -webkit-line-clamp: unset;
     line-clamp: unset;
+  }
+}
+
+/* ⚠ 2×2 SURVIVES TO 480px, THEN THE ANSWER WINS (ADR-068). Measured at
+   430px: a detail column is ~193px and the longest answer
+   (`ENCODED SKILL · EVERYDAY LANE`, 29 chars at 9.5px / .14em ≈ 199px)
+   ellipsises on every tool — and an ellipsised answer is the one thing on
+   this plate a reader came for. One column, four rows; the plate is in
+   ordinary flow here, so the height costs nothing. */
+@media (max-width: 480px) {
+  .fl-detail {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

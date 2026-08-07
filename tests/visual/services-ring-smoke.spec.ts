@@ -827,12 +827,17 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const toolsRow = page.locator(".fl-row").nth(3);
         await toolsRow.click();
         await expect(toolsRow).toHaveAttribute("aria-selected", "true");
-        await page.waitForTimeout(350);
+        // The plate's entrance is click-driven and staggers out to ~1.35s
+        // (route steps → chevrons → NOW module → detail plates), and it is
+        // 0-at-rest by contract — so everything below is measured AFTER it,
+        // never during.
+        await page.waitForTimeout(1800);
         const toolNames = page.locator(".fl-con__stn > b");
         await expect(toolNames).toHaveCount(4);
         const toolTabs = await toolNames.evaluateAll((names) => {
           return {
             count: names.length,
+            text: names.map((n) => (n.textContent ?? "").trim()),
             clipped: names.flatMap((name, index) => {
               const issues: string[] = [];
               const element = name as HTMLElement;
@@ -855,6 +860,199 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           toolTabs.clipped,
           `${label}: tool labels clip: ${toolTabs.clipped.join(", ")}`
         ).toEqual([]);
+        // ⚠ THE STATIONS CARRY THE SHORT HANDLES (ADR-068). The full
+        // functional name moved to the plate header, and that rename is what
+        // paid for the diamond below — so if these drift back to
+        // `AI IMAGE & VIDEO SUITE` the rail is 14px short again.
+        expect(toolTabs.text, `${label}: the rail is not printing the handles`).toEqual([
+          "BRIEFING AGENT",
+          "IMAGE & VIDEO",
+          "UGC DUBBER",
+          "STUDIO PM",
+        ]);
+
+        // ⚠ AND THE DIAMOND IS BACK AT FOUR STATIONS. ADR-066 hid it because
+        // 22-character labels needed 136px against 122.9 available; ADR-068
+        // renamed the labels instead, so the mark returns and the rail is one
+        // grammar at two, three and four stations. This assertion is the
+        // inverse of the one it replaces — do not "fix" it back.
+        const diamonds = await page.evaluate(() => {
+          const rail = document.querySelector<HTMLElement>(".fl-con__rail");
+          const stns = [...document.querySelectorAll<HTMLElement>(".fl-con__stn")];
+          return {
+            n: rail?.dataset.n ?? "?",
+            shown: stns.filter((s) => {
+              const i = s.querySelector("i");
+              if (!i) return false;
+              return getComputedStyle(i).display !== "none" && i.getBoundingClientRect().width > 2;
+            }).length,
+          };
+        });
+        expect(diamonds.n, `${label}: the tools rail is not at four stations`).toBe("4");
+        expect(diamonds.shown, `${label}: station diamonds are hidden at data-n="4"`).toBe(4);
+
+        // ── THE HEADER NAMES THE TOOL, AND DATES IT ────────────────────
+        const hd = await page.evaluate(() => {
+          const el = document.querySelector<HTMLElement>(".fl-tool__hd");
+          if (!el) return null;
+          return {
+            name: el.querySelector("b")?.textContent?.trim() ?? "",
+            text: (el.textContent ?? "").trim(),
+            clipsX:
+              (el.querySelector("b") as HTMLElement | null)!.scrollWidth -
+              (el.querySelector("b") as HTMLElement | null)!.clientWidth,
+          };
+        });
+        expect(hd, `${label}: the tools plate has no header`).not.toBeNull();
+        expect(hd!.name, `${label}: the header does not print the full name`).toBe(
+          "Briefing Agent"
+        );
+        expect(hd!.text, `${label}: the header does not date the tool`).toContain("IN SERVICE");
+        expect(hd!.clipsX, `${label}: the header name clips`).toBeLessThanOrEqual(1);
+
+        // ── THE ROUTE FITS, AND IT LETTERS ─────────────────────────────
+        // ⚠ SVG IS INVISIBLE TO THE HTMLElement FAMILY WALK that guards every
+        // other label on this surface, and an SVG `<text>` that is too small
+        // or in the wrong face reports nothing at all — it just renders. So
+        // the family is asserted explicitly (⚠ `--fl-mono` is PT Mono;
+        // `--font-mono` is IBM Plex, ADR-067) and the RENDERED size is derived
+        // from the viewBox scale rather than read off `font-size`, which is in
+        // user units and means nothing on its own.
+        const route = await page.evaluate(() => {
+          const host = document.querySelector<HTMLElement>(".fl-route");
+          const svg = host?.querySelector("svg");
+          const field = document.querySelector<HTMLElement>(".fl-con__field");
+          if (!host || !svg || !field) return null;
+          const vb = svg.viewBox.baseVal;
+          const box = svg.getBoundingClientRect();
+          const meet = Math.min(box.width / vb.width, box.height / vb.height);
+          const items = [...svg.querySelectorAll("text")].map((t) => ({
+            s: (t.textContent ?? "").slice(0, 30),
+            px: Number.parseFloat(getComputedStyle(t).fontSize) * meet,
+            fam: getComputedStyle(t).fontFamily.split(",")[0].replace(/["']/g, "").trim(),
+            b: t.getBBox(),
+          }));
+          const h = host.getBoundingClientRect();
+          const f = field.getBoundingClientRect();
+          return {
+            texts: items.length,
+            minPx: Number(Math.min(...items.map((i) => i.px)).toFixed(2)),
+            smallest: items.reduce((a, b) => (a.px <= b.px ? a : b)).s,
+            fams: [...new Set(items.map((i) => i.fam))],
+            // ⚠ FIT IS ASSERTED, NOT REVIEWED (rules/proof.md): a glyph past
+            // the crop does not wrap, ellipsise or report — it vanishes.
+            outside: items
+              .filter(
+                (i) =>
+                  i.b.x < -0.6 ||
+                  i.b.x + i.b.width > vb.width + 0.6 ||
+                  i.b.y < -0.6 ||
+                  i.b.y + i.b.height > vb.height + 0.6
+              )
+              .map((i) => i.s),
+            inField:
+              h.top >= f.top - 1 &&
+              h.bottom <= f.bottom + 1 &&
+              h.left >= f.left - 1 &&
+              h.right <= f.right + 1,
+            fieldOverflow: field.scrollHeight - field.clientHeight,
+          };
+        });
+        expect(route, `${label}: the tools plate has no route diagram`).not.toBeNull();
+        expect(route!.texts, `${label}: the route drew no labels`).toBeGreaterThanOrEqual(8);
+        expect(route!.fams, `${label}: the route is not set in PT Mono`).toEqual(["PT Mono"]);
+        expect(
+          route!.minPx,
+          `${label}: route label "${route!.smallest}" renders at ${route!.minPx}px`
+        ).toBeGreaterThanOrEqual(8.5);
+        expect(
+          route!.outside,
+          `${label}: route glyphs outside the viewBox: ${route!.outside.join(", ")}`
+        ).toEqual([]);
+        expect(route!.inField, `${label}: the route escaped the console field`).toBe(true);
+        expect(route!.fieldOverflow, `${label}: the tools field clips`).toBeLessThanOrEqual(1);
+
+        // ── FOUR NOTCHED PLATES, AND THE NOTCH IS ON THE LAWFUL CORNER ──
+        // ADR-065: one notch says ORIENTED / CONNECTED, and the diagonal is
+        // TR + BL. The signature is therefore a polygon with a SQUARE
+        // top-right corner and NO square bottom-left one. The mockup notched
+        // TOP-LEFT, which is the mirrored form; this is what catches a
+        // revert to it.
+        const detail = await page.evaluate(() => {
+          const plates = [...document.querySelectorAll<HTMLElement>(".fl-detail__plate")];
+          return plates.map((p) => {
+            const clip = getComputedStyle(p).clipPath;
+            const pts =
+              clip.startsWith("polygon(") && clip.endsWith(")")
+                ? clip
+                    .slice(8, -1)
+                    .split(",")
+                    .map((s) => s.trim())
+                : [];
+            return {
+              q: p.querySelector(".fl-detail__q")?.textContent ?? "",
+              clip,
+              squareTR: pts.some((s) => /^100%\s+0(px|%)$/.test(s)),
+              squareBL: pts.some((s) => /^0(px|%)\s+100%$/.test(s)),
+              clipsA:
+                (p.querySelector(".fl-detail__a") as HTMLElement | null)!.scrollWidth -
+                (p.querySelector(".fl-detail__a") as HTMLElement | null)!.clientWidth,
+            };
+          });
+        });
+        expect(detail.length, `${label}: the detail grid is not four plates`).toBe(4);
+        expect(
+          detail.map((d) => d.q),
+          `${label}: the detail plates ask the wrong questions`
+        ).toEqual(["WHO IT SERVES", "WHAT IT REPLACED", "WHAT RUNS IT", "WHERE IT RUNS"]);
+        for (const d of detail) {
+          expect(d.clip, `${label}: "${d.q}" is not clipped at all`).not.toBe("none");
+          expect(d.squareTR, `${label}: "${d.q}" lost its square top-right corner`).toBe(true);
+          expect(d.squareBL, `${label}: "${d.q}" is notched on the wrong corner — ${d.clip}`).toBe(
+            false
+          );
+          expect(d.clipsA, `${label}: "${d.q}" clips its answer`).toBeLessThanOrEqual(1);
+        }
+
+        // ── NO ORDINALS IN COSTUME, ANYWHERE IN THE FIELD ──────────────
+        // ADR-066 retired every ordinal on this surface and the mockup put
+        // one back as a tool id (`T-01`) on the bay's FEED line. The DURATION
+        // readouts are excluded on purpose — `1:20` is a length, not a
+        // position — so the scan reads LABEL text only, plus a blanket
+        // `T-\d` over the whole bay.
+        const ordinals = await page.evaluate(() => {
+          const ownText = (el: Element) =>
+            [...el.childNodes]
+              .filter((n) => n.nodeType === 3)
+              .map((n) => n.textContent ?? "")
+              .join("")
+              .trim();
+          const labels: string[] = [];
+          document
+            .querySelectorAll(".fl-con__stn")
+            .forEach((s) => labels.push((s.textContent ?? "").trim()));
+          document
+            .querySelectorAll(".fl-bay__top span, .fl-shot__bar")
+            .forEach((s) => labels.push(ownText(s)));
+          const bay = document.querySelector(".fl-bay");
+          return {
+            offenders: labels.filter((t) => t && (/^\s*\d{1,2}\b/.test(t) || /\bT-\d/.test(t))),
+            bayId: /\bT-\d/.test(bay?.textContent ?? ""),
+          };
+        });
+        expect(
+          ordinals.offenders,
+          `${label}: an ordinal came back: ${ordinals.offenders.join(" | ")}`
+        ).toEqual([]);
+        expect(ordinals.bayId, `${label}: the bay printed a tool id`).toBe(false);
+
+        // ⚠ AND THE CAPABILITY TILES ARE GONE FROM THIS PLATE (ADR-068).
+        // `capabilities` stays in the data for the Arc card; what must not
+        // come back is the sixteen-tile foot behind a four-station rail.
+        expect(
+          await page.locator(".fl-plate--tools .fl-caps").count(),
+          `${label}: the capability tiles came back to the tools plate`
+        ).toBe(0);
       }
     }
   });
@@ -1644,6 +1842,105 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         `row ${i} (${row!.kind}): "${row!.low.text}" is ${row!.low.ratio}:1 in ${row!.low.color}`
       ).toBeGreaterThanOrEqual(4.5);
     }
+
+    // ── THE TOOLS PLATE'S ACCENTS, ON THEIR OWN BEDS (ADR-068) ────────
+    // The walk above judges every label against the CONSOLE's ground, which
+    // is right for chrome and wrong for the three marks that carry the
+    // plate's argument: the `own` answer sits on a green wash, the NOW
+    // module is line work rather than text, and the `gold` answer must have
+    // taken the ramp's INK step (`--gold` as small text is ~1.8:1 here — no
+    // alpha of a light hue reaches the floor, ADR-064).
+    await page.locator(".fl-row").nth(3).click();
+    await page.waitForTimeout(1800);
+
+    const accents = await page.evaluate(() => {
+      const parse = (c: string) => {
+        const m = String(c).match(/rgba?\(([^)]+)\)/);
+        if (!m) return null;
+        const p = m[1].split(",").map((v) => Number.parseFloat(v));
+        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+      };
+      const lin = (v: number) => {
+        const s = v / 255;
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      type C = { r: number; g: number; b: number; a: number };
+      const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+      const over = (fg: C, bg: C): C =>
+        fg.a >= 1
+          ? fg
+          : {
+              r: fg.a * fg.r + (1 - fg.a) * bg.r,
+              g: fg.a * fg.g + (1 - fg.a) * bg.g,
+              b: fg.a * fg.b + (1 - fg.a) * bg.b,
+              a: 1,
+            };
+      const ratio = (fg: C, bg: C) => {
+        const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
+        return Number(((hi + 0.05) / (lo + 0.05)).toFixed(2));
+      };
+      // A custom property's VALUE is a token chain (`var(--fl-own-wash)`),
+      // so it is resolved the only way CSS resolves one: by feeding it to a
+      // real declaration and reading the computed result back.
+      const resolve = (token: string) => {
+        const probe = document.createElement("span");
+        probe.style.color = token;
+        document.body.appendChild(probe);
+        const c = parse(getComputedStyle(probe).color);
+        probe.remove();
+        return c;
+      };
+
+      const cons = document.querySelector<HTMLElement>(".fl-con__console");
+      const ownPlate = document.querySelector<HTMLElement>('.fl-detail__plate[data-accent="own"]');
+      const goldPlate = document.querySelector<HTMLElement>(
+        '.fl-detail__plate[data-accent="gold"]'
+      );
+      const now = document.querySelector<SVGPathElement>(".fl-route .rt-now");
+      if (!cons || !ownPlate || !goldPlate || !now) return null;
+
+      const ground = parse(getComputedStyle(cons).backgroundColor)!;
+
+      const bedOf = (plate: HTMLElement) => {
+        const inner = plate.querySelector<HTMLElement>(".fl-detail__in")!;
+        const base = parse(getComputedStyle(inner).backgroundColor) ?? ground;
+        const wash = resolve(getComputedStyle(plate).getPropertyValue("--dt-ground").trim());
+        return wash ? over(wash, base) : base;
+      };
+      const valueOf = (plate: HTMLElement) =>
+        parse(getComputedStyle(plate.querySelector(".fl-detail__a")!).color)!;
+
+      const ownBed = bedOf(ownPlate);
+      const goldBed = bedOf(goldPlate);
+      return {
+        own: {
+          ratio: ratio(valueOf(ownPlate), ownBed),
+          color: getComputedStyle(ownPlate.querySelector(".fl-detail__a")!).color,
+        },
+        gold: {
+          ratio: ratio(valueOf(goldPlate), goldBed),
+          color: getComputedStyle(goldPlate.querySelector(".fl-detail__a")!).color,
+        },
+        nowStroke: {
+          ratio: ratio(parse(getComputedStyle(now).stroke)!, ground),
+          color: getComputedStyle(now).stroke,
+        },
+      };
+    });
+
+    expect(accents, "the tools plate's accents are missing").not.toBeNull();
+    expect(
+      accents!.own.ratio,
+      `the own answer is ${accents!.own.ratio}:1 on its wash (${accents!.own.color})`
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      accents!.gold.ratio,
+      `the gold answer is ${accents!.gold.ratio}:1 (${accents!.gold.color}) — it must take --gold-ink in light`
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      accents!.nowStroke.ratio,
+      `the NOW module stroke is ${accents!.nowStroke.ratio}:1 (${accents!.nowStroke.color})`
+    ).toBeGreaterThanOrEqual(3);
   });
 
   test("reduced motion keeps the accordion and mounts no ring overlays", async ({ browser }) => {
