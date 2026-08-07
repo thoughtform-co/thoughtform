@@ -519,8 +519,17 @@
    already expect (`height: auto; overflow: visible`).
 
    A plate that DOES have a deliberate small-screen substitute (the map's
-   stream index) hides the console itself, in its own sheet. */
-@media (max-width: 980px) {
+   stream index) hides the console itself, in its own sheet.
+
+   ⚠ REDUCED MOTION IS PART OF THIS GATE (2026-08-07). casefile.css puts
+   the whole casefile into static flow at `(max-width: 960px), (prefers-
+   reduced-motion: reduce)` — so a DESKTOP-width PRM visitor gets flow
+   plates too, and a console still holding `position: absolute; inset`
+   inside an auto-height parent resolves to HEIGHT 0. Measured before the
+   fix: .fl-con was 0px tall on all four plates at 1440×800 PRM, with the
+   field overflowing an invisible box by up to 326px. The two conditions
+   must stay a pair with casefile.css's static-flow gate. */
+@media (max-width: 980px), (prefers-reduced-motion: reduce) {
   .fl-con {
     container-type: normal;
     height: auto;

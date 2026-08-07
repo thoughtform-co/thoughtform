@@ -1964,6 +1964,32 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       () => document.getElementById("about")?.getAttribute("data-about-mode") ?? null
     );
     expect(aboutMode).toBeNull();
+
+    // PRM at DESKTOP WIDTH unwraps the console too (2026-08-07). casefile.css
+    // puts the casefile into static flow on `(max-width: 960px), (prefers-
+    // reduced-motion: reduce)`; console.css's unwrap gate must stay the same
+    // pair, or an absolute-positioned console inside an auto-height parent
+    // resolves to HEIGHT 0 — measured on all four plates before the fix.
+    // The flow casefile renders ONE selected panel; the map may hide its
+    // console (it has the stream index). Whatever console is visible must
+    // have real height and a non-overflowing field — before the fix it
+    // resolved to 0px tall with the field overflowing the invisible box.
+    const consoles = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(".fl-con"))
+        .filter((el) => getComputedStyle(el).display !== "none")
+        .map((el) => {
+          const field = el.querySelector(".fl-con__field");
+          return {
+            height: el.getBoundingClientRect().height,
+            fieldOverflow: field ? field.scrollHeight - field.clientHeight : 0,
+          };
+        });
+    });
+    expect(consoles.length).toBeGreaterThanOrEqual(1);
+    for (const con of consoles) {
+      expect(con.height).toBeGreaterThan(150);
+      expect(con.fieldOverflow).toBeLessThanOrEqual(1);
+    }
     await context.close();
   });
 });
