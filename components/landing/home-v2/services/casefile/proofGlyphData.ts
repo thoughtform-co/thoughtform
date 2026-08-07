@@ -86,24 +86,27 @@ export const PROOF_GLYPHS: Record<string, ProofGlyph> = {
     dr: [[2, 1]],
   },
 
-  /* ownership — a frame's four brackets closed around a held anchor */
+  /* ownership — an open vessel holding the anchor (frame + anchor).
+     Redrawn 2026-08-07: the first cut was four corner brackets around a
+     centre — a sibling of `gap` two rows up in the SAME register, which
+     is the ADR-059 failure mode (marks told apart only by their labels).
+     The vessel is open at the top: held by the team, not caged. */
   ownership: {
     sk: [
-      [1, 1],
-      [2, 1],
       [1, 2],
-      [5, 1],
-      [4, 1],
-      [5, 2],
-      [1, 5],
+      [1, 3],
       [1, 4],
+      [1, 5],
       [2, 5],
+      [3, 5],
+      [4, 5],
       [5, 5],
       [5, 4],
-      [4, 5],
+      [5, 3],
+      [5, 2],
     ],
     sig: [[3, 3]],
-    dr: [[2, 2]],
+    dr: [[5, 1]],
   },
 
   /* substrate — one anchor radiating four axes out to four terminals */
