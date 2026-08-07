@@ -441,9 +441,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(page.locator(".services-stage")).toHaveAttribute("data-proof-live", "1");
   });
 
-  test("desktop: the harmonised casefile fits its three reference viewports", async ({ page }) => {
+  test("desktop: the harmonised casefile fits its reference viewports", async ({ page }) => {
     test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
-    test.setTimeout(90_000);
+    test.setTimeout(300_000);
 
     // ⚠ 1920×1080 EARNS ITS PLACE, and its absence was a real gap. The
     // `.fl-brief` box hangs off the `--fl-t6` tick seam, which is NOT
@@ -452,11 +452,22 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // 18px ceiling there. So the commonest desktop size is the WORST case,
     // and it sat in the gap between 1440 and 2017: the Studio brief clipped
     // 19px there, in both themes, for as long as anyone had looked.
+    //
+    // ⚠ 2560×1330 EARNS ITS PLACE THE SAME WAY (2026-08-07, owner's own
+    // window). It is where the tools plate's capture ran to 434px unbounded
+    // — and, more importantly, it is the WIDE end of the axis that hid the
+    // detail-grid crop: the route's rendered height rides the field's WIDTH
+    // while the field rides viewport HEIGHT, so wide-and-short is the
+    // binding shape and nothing in this file used to be wide at all.
+    // 1920×800 is the short end of that same axis and is the worst case
+    // measured (44px of overrun before the fix).
     const viewports = [
       { width: 1280, height: 720 },
       { width: 1440, height: 800 },
+      { width: 1920, height: 800 },
       { width: 1920, height: 1080 },
       { width: 2017, height: 1269 },
+      { width: 2560, height: 1330 },
     ] as const;
 
     for (const viewport of viewports) {
@@ -915,8 +926,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         ).toEqual([]);
       }
 
+      // ⚠ ROW 3 IS THE STUDIO SINCE 2026-08-07 (owner reordered the
+      // directory: map · tools · studio · films). Row indices in this file
+      // are the DIRECTORY's order, so they all moved with it.
       if (viewport.width === 1280) {
-        await page.locator(".fl-row").nth(1).click();
+        await page.locator(".fl-row").nth(2).click();
         await page.waitForTimeout(220);
         const studioBrief = await page.evaluate(() => {
           const brief = document.querySelector<HTMLElement>(".fl-brief");
@@ -935,8 +949,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         expect(studioBrief?.briefOverflow, `${label}: Studio brief clips`).toBeLessThanOrEqual(1);
         expect(studioBrief?.bodyOverflow, `${label}: Studio summary clips`).toBeLessThanOrEqual(1);
         expect(studioBrief?.bodyInside, `${label}: Studio summary escaped its brief`).toBe(true);
+      }
 
-        const toolsRow = page.locator(".fl-row").nth(3);
+      // ══ THE TOOLS ROW, AT EVERY VIEWPORT ══════════════════════════════
+      // ⚠ THIS BLOCK USED TO RUN AT 1280 ALONE, AND THAT WAS THE WHOLE HOLE
+      // (2026-08-07). The tools field overran its console by 35.7px at
+      // 1800–2560 × 800 with `.fl-detail` pushed clean out of an
+      // `overflow: hidden` box — 1.8 % of the first plate still visible at
+      // 1920×720 — while every assertion in the file stayed green, because
+      // the only two places the tools row was ever measured were 1280 wide
+      // (narrow ⇒ short route) and 1440×800 (the LAST width that fits:
+      // 1500×800 clears, 1600×800 overruns by 12.7). Nothing here was ever
+      // both wide and short. It runs at all six viewports now.
+      {
+        // Row 2 is Software for Few since 2026-08-07 (owner).
+        const toolsRow = page.locator(".fl-row").nth(1);
         await toolsRow.click();
         await expect(toolsRow).toHaveAttribute("aria-selected", "true");
         // The plate's entrance is click-driven and staggers out to ~1.35s
@@ -1003,24 +1030,48 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         expect(diamonds.n, `${label}: the tools rail is not at four stations`).toBe("4");
         expect(diamonds.shown, `${label}: station diamonds are hidden at data-n="4"`).toBe(4);
 
-        // ── THE HEADER NAMES THE TOOL, AND DATES IT ────────────────────
-        const hd = await page.evaluate(() => {
-          const el = document.querySelector<HTMLElement>(".fl-tool__hd");
-          if (!el) return null;
+        // ── NO DESIGNATION STUTTER, AND THE DATE SURVIVES ──────────────
+        // ⚠ THE PLATE HEADER IS DELETED (owner, 2026-08-07). It printed the
+        // full functional name one row under a rail station carrying the
+        // same string verbatim on two of the four tools — the owner's "we
+        // have the briefing agent title underneath the briefing agent tab".
+        // The rail is the designation; the full name survives in the
+        // walkthrough button's accessible name, which is asserted here so
+        // deleting the header cannot quietly cost the plate its only
+        // machine-readable identity. `IN SERVICE {year} —` moved to the
+        // bay's FEED line, the one band that survives every short-viewport
+        // rung (the route's caption row is CROPPED at ≤760h).
+        const desig = await page.evaluate(() => {
+          const bay = document.querySelector<HTMLElement>(".fl-bay__top");
+          const shot = document.querySelector<HTMLElement>(".fl-shot");
           return {
-            name: el.querySelector("b")?.textContent?.trim() ?? "",
-            text: (el.textContent ?? "").trim(),
-            clipsX:
-              (el.querySelector("b") as HTMLElement | null)!.scrollWidth -
-              (el.querySelector("b") as HTMLElement | null)!.clientWidth,
+            header: Boolean(document.querySelector(".fl-tool__hd")),
+            bayText: (bay?.textContent ?? "").replace(/\s+/g, " ").trim(),
+            bayClipsX: bay ? bay.scrollWidth - bay.clientWidth : 99,
+            aria: shot?.getAttribute("aria-label") ?? "",
           };
         });
-        expect(hd, `${label}: the tools plate has no header`).not.toBeNull();
-        expect(hd!.name, `${label}: the header does not print the full name`).toBe(
+        expect(desig.header, `${label}: the designation stutter came back`).toBe(false);
+        expect(desig.bayText, `${label}: the bay lost IN SERVICE`).toContain("IN SERVICE");
+        expect(desig.bayText, `${label}: the bay lost the year`).toMatch(/IN SERVICE\s+20\d{2}/);
+        expect(desig.bayText, `${label}: the FEED line clips`).toContain("WALKTHROUGH");
+        expect(desig.bayClipsX, `${label}: the FEED line clips horizontally`).toBeLessThanOrEqual(
+          1
+        );
+        expect(desig.aria, `${label}: the tool's full name left the a11y tree`).toContain(
           "Briefing Agent"
         );
-        expect(hd!.text, `${label}: the header does not date the tool`).toContain("IN SERVICE");
-        expect(hd!.clipsX, `${label}: the header name clips`).toBeLessThanOrEqual(1);
+
+        // ── AND NO FOOT ON THIS PLATE (owner, 2026-08-07) ──────────────
+        // ADR-066's law is unchanged — "a plate with nothing to say still
+        // omits it" — and the owner ruled that the tools plate says nothing
+        // there. The map row still REQUIRES a foot (asserted in the
+        // box-clipping sweep below), so this is the two halves of one law
+        // rather than the law being weakened.
+        expect(
+          await page.locator(".fl-con__foot").count(),
+          `${label}: the tools plate printed a foot`
+        ).toBe(0);
 
         // ── THE ROUTE FITS, AND IT LETTERS ─────────────────────────────
         // ⚠ SVG IS INVISIBLE TO THE HTMLElement FAMILY WALK that guards every
@@ -1124,6 +1175,72 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             false
           );
           expect(d.clipsA, `${label}: "${d.q}" clips its answer`).toBeLessThanOrEqual(1);
+        }
+
+        // ══ THE DETAIL GRID IS INSIDE THE FIELD, AND IT IS SEEN ═════════
+        // ⚠ THE ASSERTION THAT CANNOT MISS THIS AGAIN, and it is deliberately
+        // NOT another overflow read. `scrollHeight − clientHeight` is a real
+        // measure but it is a PROXY: it says the box has more content than
+        // room, not that a particular thing is on screen. Two ways it lies,
+        // both hit while fixing this pass:
+        //   · a `justify-content: center` column with negative free space
+        //     overflows SYMMETRICALLY, so half the overrun goes off the TOP
+        //     under the rail — measured 30.6px of that at 2560×900 with the
+        //     field reporting 0 and `.fl-detail` still ending inside it;
+        //   · an intermediate `overflow: hidden` ancestor swallows the
+        //     evidence and reports 0 on the box actually being measured.
+        // So this measures GEOMETRY instead: the grid's bottom against the
+        // field's VISIBLE bottom, and the visible AREA of every plate after
+        // intersecting it with each clipping ancestor. A plate cropped to a
+        // sliver — 258px² of 13,985 at 1920×720 before the fix — fails here
+        // whatever any scroll metric says.
+        const fit = await page.evaluate(() => {
+          const field = document.querySelector<HTMLElement>(".fl-con__field");
+          const grid = document.querySelector<HTMLElement>(".fl-detail");
+          const plates = [...document.querySelectorAll<HTMLElement>(".fl-detail__plate")];
+          if (!field || !grid || plates.length !== 4) return null;
+          const f = field.getBoundingClientRect();
+          const g = grid.getBoundingClientRect();
+          /* The box actually painted: the element's rect intersected with
+             every ancestor that clips (`overflow` or a `clip-path`). */
+          const visible = (el: HTMLElement) => {
+            const b = el.getBoundingClientRect();
+            let [t, l, r, bo] = [b.top, b.left, b.right, b.bottom];
+            for (let p = el.parentElement; p; p = p.parentElement) {
+              const cs = getComputedStyle(p);
+              if (cs.overflow === "visible" && cs.clipPath === "none") continue;
+              const pb = p.getBoundingClientRect();
+              t = Math.max(t, pb.top);
+              l = Math.max(l, pb.left);
+              r = Math.min(r, pb.right);
+              bo = Math.min(bo, pb.bottom);
+            }
+            return Math.max(0, r - l) * Math.max(0, bo - t);
+          };
+          return {
+            below: Number((g.bottom - f.bottom).toFixed(1)),
+            above: Number((f.top - g.top).toFixed(1)),
+            ratios: plates.map((p) => {
+              const b = p.getBoundingClientRect();
+              const full = Math.max(1, b.width * b.height);
+              return Number((visible(p) / full).toFixed(3));
+            }),
+          };
+        });
+        expect(fit, `${label}: the detail grid is missing`).not.toBeNull();
+        expect(
+          fit!.below,
+          `${label}: the detail grid runs ${fit!.below}px past the field's bottom`
+        ).toBeLessThanOrEqual(1);
+        expect(
+          fit!.above,
+          `${label}: the detail grid runs ${fit!.above}px above the field's top`
+        ).toBeLessThanOrEqual(1);
+        for (const [i, ratio] of fit!.ratios.entries()) {
+          expect(
+            ratio,
+            `${label}: detail plate ${i + 1} paints ${(ratio * 100).toFixed(1)}% of its own box`
+          ).toBeGreaterThanOrEqual(0.99);
         }
 
         // ── NO ORDINALS IN COSTUME, ANYWHERE IN THE FIELD ──────────────
@@ -1358,13 +1475,20 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const lit = stns.filter((s) => s.dataset.on !== undefined).length;
         if (lit !== 1) return { kind, ok: false, why: `${lit} stations lit, expected 1` };
 
-        // ── CONTEXT LIVES IN THE FOOT ──────────────────────────────────
-        // The map and the tools row both print a sentence there; the films
-        // row has nothing to add and prints nothing, which is ADR-056's
-        // "no GENERIC foot" working rather than a gap.
+        // ── CONTEXT LIVES IN THE FOOT, AND ONLY WHERE THERE IS ANY ─────
+        // ⚠ BOTH HALVES, AND THE TOOLS ROW SWAPPED SIDES ON 2026-08-07.
+        // ADR-066: "the FOOT is where context goes… a plate with nothing to
+        // say still omits it." The map still REQUIRES one — that half is
+        // what stops the law being read as "feet are optional decoration".
+        // The owner ruled the tools row has nothing to say there (its
+        // sentence restated the route and the four detail plates, for ~90px
+        // of a field whose detail grid was being cropped away), so it joins
+        // the films row and must print NOTHING.
         const foot = document.querySelector<HTMLElement>(".fl-con__foot");
-        if ((kind === "tools" || kind === "intelligence-map") && !foot)
-          return { kind, ok: false, why: "context row has no foot" };
+        if (kind === "intelligence-map" && !foot)
+          return { kind, ok: false, why: "the map row lost its context foot" };
+        if (kind === "tools" && foot)
+          return { kind, ok: false, why: "the tools plate printed a foot" };
         if (foot && !(foot.textContent ?? "").trim())
           return { kind, ok: false, why: "empty foot printed" };
 
@@ -1408,18 +1532,45 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             return { kind, ok: false, why: `${sel} is ${famOf(el)}, not sans` };
         }
 
-        // ── NO ARC CROSSES THE CONSOLE'S TOP OR BOTTOM EDGE ────────────
-        // The orbit ellipses map linearly onto `.fl-con`
-        // (`preserveAspectRatio="none"`), so an `ry` over half the viewBox
-        // height gets cropped and re-enters as two short diagonal stubs in
-        // the bezel gap — which at four stations landed on the tab dividers
-        // and read as lines coming out of the tabs. `ry < 525` is the bound,
-        // and it holds at every viewport because both sides scale with H.
-        const strayArc = [...document.querySelectorAll(".fl-con__orbit ellipse")]
-          .map((e) => Number(e.getAttribute("ry")))
-          .find((ry) => !(ry < 525));
-        if (strayArc)
-          return { kind, ok: false, why: `orbit ry ${strayArc} crops through the console edge` };
+        // ── ONE PANEL, ONE HAIRLINE, TWO NOTCHES (owner, 2026-08-07) ───
+        // ⚠ THIS REPLACES THE ORBIT-ARC BOUND. There is no ring to bound any
+        // more: the ellipses and the `.fl-con__outer` bezel are deleted, and
+        // `ry < 525` guarded a shape that no longer exists. What has to hold
+        // instead is that they stay deleted — three concentric outlines
+        // around a screenshot is the read the owner rejected — and that the
+        // one surviving box is the mockup's `.panel`.
+        if (document.querySelector(".fl-con__orbit"))
+          return { kind, ok: false, why: "the orbit ring came back" };
+        if (document.querySelector(".fl-con__outer"))
+          return { kind, ok: false, why: "the outer bezel came back" };
+
+        // ⚠ THE NOTCH IS TOP-LEFT + BOTTOM-RIGHT, AND THAT IS AN OWNER
+        // OVERRIDE OF ADR-065 (recorded in ADR-065 U2). It is the exact
+        // mirror of the diagonal the law prescribes, so it can only be
+        // asserted — a reviewer reading the corner law would "fix" it back.
+        // Signature: the polygon has a square TOP-RIGHT and a square
+        // BOTTOM-LEFT, and neither a square TL nor a square BR.
+        const clip = getComputedStyle(con).clipPath;
+        const pts = clip.startsWith("polygon(")
+          ? clip
+              .slice(8, -1)
+              .split(",")
+              .map((s) => s.trim())
+          : [];
+        const square = (re: RegExp) => pts.some((p) => re.test(p));
+        if (!pts.length) return { kind, ok: false, why: "the panel is not chamfered at all" };
+        if (square(/^0(px|%)\s+0(px|%)$/))
+          return { kind, ok: false, why: `the panel kept a square top-left — ${clip}` };
+        if (!square(/^100%\s+0(px|%)$/))
+          return { kind, ok: false, why: `the panel notched top-RIGHT — ${clip}` };
+        if (!square(/^0(px|%)\s+100%$/))
+          return { kind, ok: false, why: `the panel notched bottom-LEFT — ${clip}` };
+
+        // One hairline, and it is the dawn edge rather than the gold one the
+        // double bezel used (`--con-edge`, the mockup's `--dawn-08`).
+        const bw = Number.parseFloat(getComputedStyle(con).borderTopWidth);
+        if (!(bw > 0 && bw <= 1.5))
+          return { kind, ok: false, why: `panel border is ${bw}px, expected one hairline` };
 
         return { kind, ok: true, why: "" };
       });
@@ -1470,12 +1621,13 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // The loop above walks each row on its DEFAULT tool, which is the capture
     // — so the drawing needs its own visit, and 1440×800 is where it needs
     // it. `.fl-shot__frame` is the plate's flex-sacrificial element and it is
-    // SHORTEST here (86.4px on the capture branch, 108px on vesper's, whose
-    // foot sentence runs a line shorter): the route's height is a function of
-    // the field's WIDTH while the field grows with HEIGHT, so the squeeze
-    // lands on the owner's own laptop rather than at 720p where one would
-    // look for it. Every span in the drawing is a fraction of that box.
-    await page.locator(".fl-row").nth(3).click();
+    // SHORTEST here (173px since the 2026-08-07 pass gave the field the
+    // foot's ~90px and the header's ~26px back): the route's height is a
+    // function of the field's WIDTH while the field grows with HEIGHT, so
+    // the squeeze lands on the owner's own laptop rather than at 720p where
+    // one would look for it. Every span in the drawing is a fraction of that
+    // box. Row 2 is Software for Few since 2026-08-07.
+    await page.locator(".fl-row").nth(1).click();
     await page.waitForTimeout(400);
     await page.locator(".fl-con__stn").nth(1).click();
     await page.waitForTimeout(1200);
@@ -2019,7 +2171,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // module is line work rather than text, and the `gold` answer must have
     // taken the ramp's INK step (`--gold` as small text is ~1.8:1 here — no
     // alpha of a light hue reaches the floor, ADR-064).
-    await page.locator(".fl-row").nth(3).click();
+    // Row 2 is Software for Few since 2026-08-07 (owner).
+    await page.locator(".fl-row").nth(1).click();
     await page.waitForTimeout(1800);
 
     const accents = await page.evaluate(() => {

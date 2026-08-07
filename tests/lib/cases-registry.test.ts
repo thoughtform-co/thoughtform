@@ -556,19 +556,28 @@ describe("cases registry (ADR-054)", () => {
     // `27 → 47` replaced `5 → 130+` with ADR-062: the row's meta now names
     // the two counts the drawing itself publishes — modules on the board and
     // Skills on the mains — so the directory agrees with the sheet it opens.
+    //
+    // ⚠ THE ORDER IS THE DIRECTORY, AND SOFTWARE FOR FEW IS 02 (owner,
+    // 2026-08-07). The map still leads (it is the default panel and the
+    // engagement itself); the four tools are the hardest evidence the
+    // mapping produced something a team now runs, so they read before the
+    // two creative-output rows. Two arrays move together with a reorder —
+    // this one and the classification below — and so do `file`, `preview`
+    // and `stamp.ord` in the content module. `stamp.ref` deliberately does
+    // NOT: a ref identifies the record, not the row's position.
     expect(loop?.casefile.tracks.map((track) => track.meta)).toEqual([
       "27 → 47",
+      "4 TOOLS",
       "500 ADS/MO",
       "2 FILMS",
-      "4 TOOLS",
     ]);
     expect(
       loop?.casefile.tracks.map((track) => track.classification ?? loop.casefile.classLine)
     ).toEqual([
       loop?.casefile.classLine,
+      "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
       "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
       "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
-      "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
     ]);
     // ⚠ THE TOOLING REGISTER IS PROGRAM-LEVEL NOW (2026-08-07). The four
     // tool-describing claims — "Generation platform" and its three siblings

@@ -1650,7 +1650,22 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
 
        Row one's plate mounts WITH the casefile: a media row here puts its
        bytes on page load — that cost 23.6 kB while the studio led, and
-       the pure-DOM browser plate keeps that win. */
+       the pure-DOM browser plate keeps that win.
+
+       SOFTWARE FOR FEW MOVES TO 02 (owner, 2026-08-07). The map says what
+       the eighteen months WERE; the four tools are the hardest single piece
+       of evidence that the mapping produced something a team now runs, so
+       they read second and the two creative-output rows follow. Row one is
+       untouched — it is still the default panel and still the pure-DOM
+       plate that keeps the load win above.
+
+       ⚠ THE ORDINAL IN `file` AND IN `stamp.ord` IS THE ROW'S POSITION, so
+       both move with a reorder and the registry test's pinned `meta` /
+       `classification` arrays move with them. `stamp.ref` does NOT — a ref
+       is the record's own identifier (BLD-01 is the studio's wherever the
+       studio sits), and renumbering refs on a reorder is how a reference
+       stops being one. Track `id`s do not churn either (precedent:
+       `transformation` → `workshop-rollout`). */
     tracks: [
       {
         // NOT `transformation` — that id belonged to the (now trimmed)
@@ -1785,100 +1800,12 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         ],
       },
       {
-        id: "studio",
-        file: "02_AI-FLUENCY-STUDIO/",
-        meta: "500 ADS/MO",
-        project: "AI Fluency Studio",
-        icon: "dir",
-        preview: "Preview — 02_ai-fluency-studio/",
-        visual: { kind: "sheets", sheets: STUDIO_SHEETS },
-        classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
-        blocks: [
-          {
-            glyph: "field",
-            title: "97% of briefings involve AI",
-            desc: "In paid social, AI is the default process rather than a specialist add-on.",
-          },
-          {
-            glyph: "threshold",
-            title: "Campaigns beat their target",
-            desc: "Three of three, at a return on ad spend of 2.7, 5.33 and 6.14 against a target of 2.",
-          },
-          {
-            glyph: "cadence",
-            title: "Two to three times faster",
-            desc: "More iterations in less time than the former agency route, at the same craft bar.",
-          },
-          {
-            glyph: "holdfast",
-            title: "The studio owns the work",
-            desc: "The team briefs, creates, reviews and ships without a specialist in the loop.",
-          },
-        ],
-        context: [
-          { k: "Phase", v: "Build" },
-          { k: "Surface", v: "Production platform" },
-          { k: "Owner", v: "The studio" },
-        ],
-        source: "Source — studio production line · rev 2026.07",
-        stamp: { ord: "02", phase: "Build", ref: "BLD-01" },
-        brief: [
-          "Creative Technology embedded inside Studio to turn AI from a specialist service into ",
-          { em: "a capability the creative team owns" },
-          ". Live briefs, reusable workflows and clear ethical lines moved the team from receiving AI output to briefing and judging it. Paid social moves faster, buying back time for the live-action craft AI should not replace.",
-        ],
-      },
-      {
-        id: "atl-films",
-        file: "03_AI-ABOVE-THE-LINE/",
-        meta: "2 FILMS",
-        project: "AI Above-the-Line",
-        icon: "dir",
-        preview: "Preview — 03_ai-above-the-line/",
-        visual: { kind: "films", films: ATL_FILMS },
-        classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
-        blocks: [
-          {
-            glyph: "masters",
-            title: "Two 30-second masters",
-            desc: "Narrative films produced with AI and built for top-of-funnel paid media.",
-          },
-          {
-            glyph: "level",
-            title: "One craft standard",
-            desc: "Direction, art direction, production, edit, colour and sound matched live action.",
-          },
-          {
-            glyph: "broadcast",
-            title: "Ran on YouTube and CTV",
-            desc: "The campaign reached connected TV and YouTube as paid media in the US.",
-          },
-          {
-            glyph: "parallel",
-            title: "Ran beside live action",
-            desc: "The two AI films ran alongside two traditionally produced spots.",
-          },
-        ],
-        context: [
-          { k: "Phase", v: "Build" },
-          { k: "Format", v: "Above-the-line" },
-          { k: "Owner", v: "The creative team" },
-        ],
-        source: "Source — creative archive · rev 2026.07",
-        stamp: { ord: "03", phase: "Build", ref: "BLD-02" },
-        brief: [
-          "Two ATL films were produced with generative image and video models, ",
-          { em: "using the same creative team and quality bar as Loop’s live-action work" },
-          ". The project took relatable, acquisition-minded stories into paid media on YouTube and connected TV—expanding the formats Loop could test without treating AI as a replacement for live action.",
-        ],
-      },
-      {
         id: "tooling",
-        file: "04_SOFTWARE-FOR-FEW/",
+        file: "02_SOFTWARE-FOR-FEW/",
         meta: "4 TOOLS",
         project: "Software for Few",
         icon: "dir",
-        preview: "Preview — 04_software-for-few/",
+        preview: "Preview — 02_software-for-few/",
         visual: { kind: "tools", toolIds: TOOL_IDS },
         classification: "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
         /* THE FOUR TOOL-DESCRIBING BLOCKS WERE REPLACED HERE 2026-08-07
@@ -1927,11 +1854,99 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { k: "Cadence", v: "Daily" },
         ],
         source: "Source — fleet registry · rev 2026.07",
-        stamp: { ord: "04", phase: "Build", ref: "BLD-03" },
+        stamp: { ord: "02", phase: "Build", ref: "BLD-03" },
         brief: [
           "AI made software worth building for workflows ",
           { em: "a conventional product roadmap would ignore" },
           ". Four internal tools grew from live bottlenecks in generation, orchestration, briefing intelligence and localization. Each is built for the few people who need it—and designed so those teams can keep extending it.",
+        ],
+      },
+      {
+        id: "studio",
+        file: "03_AI-FLUENCY-STUDIO/",
+        meta: "500 ADS/MO",
+        project: "AI Fluency Studio",
+        icon: "dir",
+        preview: "Preview — 03_ai-fluency-studio/",
+        visual: { kind: "sheets", sheets: STUDIO_SHEETS },
+        classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
+        blocks: [
+          {
+            glyph: "field",
+            title: "97% of briefings involve AI",
+            desc: "In paid social, AI is the default process rather than a specialist add-on.",
+          },
+          {
+            glyph: "threshold",
+            title: "Campaigns beat their target",
+            desc: "Three of three, at a return on ad spend of 2.7, 5.33 and 6.14 against a target of 2.",
+          },
+          {
+            glyph: "cadence",
+            title: "Two to three times faster",
+            desc: "More iterations in less time than the former agency route, at the same craft bar.",
+          },
+          {
+            glyph: "holdfast",
+            title: "The studio owns the work",
+            desc: "The team briefs, creates, reviews and ships without a specialist in the loop.",
+          },
+        ],
+        context: [
+          { k: "Phase", v: "Build" },
+          { k: "Surface", v: "Production platform" },
+          { k: "Owner", v: "The studio" },
+        ],
+        source: "Source — studio production line · rev 2026.07",
+        stamp: { ord: "03", phase: "Build", ref: "BLD-01" },
+        brief: [
+          "Creative Technology embedded inside Studio to turn AI from a specialist service into ",
+          { em: "a capability the creative team owns" },
+          ". Live briefs, reusable workflows and clear ethical lines moved the team from receiving AI output to briefing and judging it. Paid social moves faster, buying back time for the live-action craft AI should not replace.",
+        ],
+      },
+      {
+        id: "atl-films",
+        file: "04_AI-ABOVE-THE-LINE/",
+        meta: "2 FILMS",
+        project: "AI Above-the-Line",
+        icon: "dir",
+        preview: "Preview — 04_ai-above-the-line/",
+        visual: { kind: "films", films: ATL_FILMS },
+        classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
+        blocks: [
+          {
+            glyph: "masters",
+            title: "Two 30-second masters",
+            desc: "Narrative films produced with AI and built for top-of-funnel paid media.",
+          },
+          {
+            glyph: "level",
+            title: "One craft standard",
+            desc: "Direction, art direction, production, edit, colour and sound matched live action.",
+          },
+          {
+            glyph: "broadcast",
+            title: "Ran on YouTube and CTV",
+            desc: "The campaign reached connected TV and YouTube as paid media in the US.",
+          },
+          {
+            glyph: "parallel",
+            title: "Ran beside live action",
+            desc: "The two AI films ran alongside two traditionally produced spots.",
+          },
+        ],
+        context: [
+          { k: "Phase", v: "Build" },
+          { k: "Format", v: "Above-the-line" },
+          { k: "Owner", v: "The creative team" },
+        ],
+        source: "Source — creative archive · rev 2026.07",
+        stamp: { ord: "04", phase: "Build", ref: "BLD-02" },
+        brief: [
+          "Two ATL films were produced with generative image and video models, ",
+          { em: "using the same creative team and quality bar as Loop’s live-action work" },
+          ". The project took relatable, acquisition-minded stories into paid media on YouTube and connected TV—expanding the formats Loop could test without treating AI as a replacement for live action.",
         ],
       },
       /* Rows 05–08 (workshop rollout · governance · metrics · mission

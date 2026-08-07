@@ -4,12 +4,16 @@ import type { HTMLAttributes, ReactNode, RefObject } from "react";
  * THE CONSOLE FRAME — the casefile's right panel as ONE INSTRUMENT.
  *
  * Four directory rows, four kinds of evidence, one held device that changes
- * what it displays (ADR-064). The chrome is the Intelligence Map's, lifted
- * out of `map/pda/PdaConsole.tsx` unchanged: an orbit ring behind, a
- * chamfered outer frame, a chamfered opaque console with a scanline over it.
- * Both frames bleed past the plate's edges and are clipped by it, which is
- * what makes the console read as an object sitting IN something rather than
- * as a box drawn on the page.
+ * what it displays (ADR-064).
+ *
+ * ⚠ THE CHROME IS ONE PANEL NOW (owner, 2026-08-07 — "super clean with a
+ * notch in the top-left"). The orbit ring and the outer bezel are DELETED:
+ * the owner's mockup panel (`proof-page-blocks-left.html`, `.panel`) is a
+ * single chamfered box — one hairline, one radial gold glow off the top
+ * edge, one scanline, one opaque ground — and the three-line stack of
+ * ellipse + bezel + console was reading as decoration around the evidence
+ * rather than as the housing of it. What is left is that panel, in
+ * `console.css`; the plates below are untouched.
  *
  * ── What it does NOT do ─────────────────────────────────────────────────
  * It does not touch the content. Each plate keeps its own interior — the
@@ -72,36 +76,14 @@ export function ConsoleFrame({
 }: Props) {
   return (
     <div className={className ? `fl-con ${className}` : "fl-con"} ref={rootRef} {...rest}>
-      {/* v18's rig is 840x1050 inside a 1160x1230 orbit space at offset
-          160/90 — so the crop IS the bleed, and the element itself never
-          overhangs its box. */}
-      <svg
-        className="fl-con__orbit"
-        viewBox="160 90 840 1050"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        {/* ⚠ AN ARC MAY LEAVE THIS BOX SIDEWAYS, NEVER THROUGH THE TOP OR
-            BOTTOM — and the bound is arithmetic, so it holds at every
-            viewport. With `preserveAspectRatio="none"` the ellipses map
-            linearly onto `.fl-con`, so the screen radii are
-            `RX = rx·W/840` and `RY = ry·H/1050` against a half-box of `W/2`
-            and `H/2`. Staying inside vertically is therefore `ry < 525` at
-            ANY height, and exiting sideways is `rx ≥ 420` at any width.
-
-            The first ellipse used to be `rx 410 ry 600`: 600 overshot the top
-            by 38px, so the arc was cropped, re-entered at the top edge, and
-            was swallowed again by the opaque console 7px below — leaving two
-            14px stubs at 30.8° in the gap band. At four stations they landed
-            on the tab dividers (measured: one straddling x=154, the other
-            2.8px off x=447), which is why they read as diagonals coming out
-            of the tabs. The second ellipse always satisfied both bounds,
-            which is why only one pair ever appeared. */}
-        <ellipse cx="580" cy="615" rx="470" ry="500" />
-        <ellipse cx="580" cy="615" rx="560" ry="470" />
-      </svg>
-      <i className="fl-con__outer" aria-hidden="true" />
-
+      {/* ⚠ THE ORBIT SVG AND THE `.fl-con__outer` BEZEL ARE DELETED (owner,
+          2026-08-07). They were v18's rig — two ellipses in an 840×1050
+          viewBox behind a second chamfered frame — and ADR-067 spent a whole
+          pass proving `ry < 525` / `rx ≥ 420` so the arcs would stop cropping
+          through the console's top edge. That bound is now moot rather than
+          wrong: there is no ring to bound. If a future pass wants ambient
+          arcs back, the arithmetic is in ADR-064 / ADR-067 and in the smoke
+          case that used to read `ry` off these ellipses. */}
       <div className="fl-con__console">
         {rail}
         <div className="fl-con__mid">

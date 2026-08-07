@@ -513,6 +513,14 @@ html[data-theme="light"] .fl-con {
      component target on purpose — visible, not structural. */
   --con-hair2: rgba(138, 107, 32, 0.7);
   --con-hair: rgba(138, 107, 32, 0.5);
+  /* ⚠ THE PANEL'S OUTLINE IS RE-DERIVED, NOT INHERITED (2026-08-07). The
+     mockup's `--dawn-08` is a light hairline on near-black; the flip turns
+     `--dawn-rgb` into the INK, so the identical 0.08 becomes a dark hairline
+     on parchment — and dark-on-light at the same alpha reads weaker, which
+     is the law this surface keeps relearning. 0.16 lands it at the same
+     apparent weight; it is still the decorative rung, deliberately under the
+     3:1 component target. */
+  --con-edge: rgba(var(--dawn-rgb), 0.16);
   /* The neutral ramp, re-alpha'd for a ground it now recedes INTO. */
   --con-txt2: rgba(var(--dawn-rgb), 0.72);
   /* ⚠ THE GLOWS GO OUT, they do not darken. A halo is additive: on
@@ -561,7 +569,10 @@ html[data-theme="light"] .fl-shot__bar b {
    and α 0.60 is exactly 4.50:1, which is why every recessive step here
    lands at 0.66 rather than somewhere rounder. The casefile smoke walks
    every text node inside the console at 4.5:1, so these are guarded. */
-html[data-theme="light"] .fl-tool__hd,
+/* ⚠ `.fl-tool__hd` LEFT THIS SELECTOR LIST (2026-08-07) — the tools plate's
+   header is deleted (owner). `.fl-bay__top` now carries its `IN SERVICE
+   {year} —` fact, and it was already in this block at the same alpha, so
+   the fact keeps its light-theme value with no second rule. */
 html[data-theme="light"] .fl-bay__top,
 html[data-theme="light"] .fl-detail__q {
   color: rgba(var(--dawn-rgb), 0.66);

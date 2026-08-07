@@ -2,11 +2,17 @@
    The casefile's right panel is ONE INSTRUMENT that changes what it
    displays, not four boxes that happen to sit in the same slot (ADR-064).
 
-   This is the chrome the Intelligence Map arrived with in ADR-063 — an orbit
-   ring behind, a chamfered outer frame, a chamfered opaque console with a
-   scanline over it — lifted OUT of `map/pda/pda.css` unchanged and given to
-   every evidence plate. The map's own vocabulary (its reading rail, its SVG
-   field, its greens, its arrival grammar) stayed behind; only the box moved.
+   ⚠ IT IS THE OWNER'S MOCKUP PANEL NOW (2026-08-07 — "super clean with a
+   notch in the top-left"). `proof-page-blocks-left.html`'s `.panel` is ONE
+   box: a single dawn-08 hairline, chamfers on TWO corners, a faint radial
+   gold glow hung off the top edge, a scanline, an opaque `--s0` ground.
+   Everything the console carried on top of that — the orbit ellipses and
+   the `.fl-con__outer` bezel, both lifted from ADR-063's v18 PDA port — is
+   DELETED, chrome and markup together. Three concentric outlines around a
+   screenshot read as decoration; one reads as a housing.
+
+   The map's own vocabulary (its reading rail, its SVG field, its greens, its
+   arrival grammar) still lives in `pda.css`; only the box is here.
 
    ⚠ THE FRAME IS A BEZEL THE CONTENT BLEEDS INTO, NEVER A LETTERBOX.
    ADR-056 U9 ruled the tools shot "is architecture — it BLEEDS to the viz
@@ -25,8 +31,13 @@
    ── Contracts ──────────────────────────────────────────────────────────
    · ZERO OVERFLOW. `overflow: hidden` hides pixels but still REPORTS
      `scrollHeight − clientHeight`, and the casefile smoke reads any non-zero
-     as a clipping box. The orbit ring reads as bleeding past the plate and
-     does — but the bleed lives in the SVG's own VIEWBOX, never in layout.
+     as a clipping box. ⚠ REPORTING IT IS NOT THE SAME AS BEING ASSERTED —
+     the tools row overflowed this box by 36px at 1800×800 and every existing
+     assertion stayed green, because the sweep ran at ONE viewport (1440×800)
+     and the tools-row block ran at ONE width (1280). The smoke now measures
+     `.fl-detail`'s bottom against the field's VISIBLE bottom and the visible
+     AREA of all four plates, at every tested viewport — a geometric check
+     that does not depend on the overflow surfacing in `scrollHeight`.
    · A DEFINITE HEIGHT FROM THE PARENT. `height: 100%` on a percentage
      chain; the console is `position: absolute; inset: var(--con-gap)`, so an
      auto-height parent collapses it to nothing.
@@ -51,6 +62,18 @@
   --con-txt: rgba(var(--dawn-rgb), 0.92);
   --con-txt2: rgba(var(--dawn-rgb), 0.56);
 
+  /* ⚠ THE PANEL'S OWN EDGE IS DAWN, NOT GOLD (owner's mockup, 2026-08-07).
+     `.panel` there is `1px solid var(--dawn-08)` — a neutral hairline that
+     describes the box without competing with the gold the drawing inside it
+     spends on wayfinding. It replaces `--con-hair2` on the console's border
+     ONLY; the rail's dividers and the station seams keep the gold hairlines,
+     because those are marks ON the machine rather than its outline. */
+  --con-edge: rgba(var(--dawn-rgb), 0.08);
+  /* The top glow, `radial-gradient(128% 58% at 50% -8%, gold-05, transparent
+     62%)` in the mockup. Hung off the panel's TOP EDGE, so the chamfer reads
+     as a lit shoulder rather than as a cut in a flat rectangle. */
+  --con-glow: rgba(var(--gold-rgb), 0.05);
+
   /* ⚠ THE LIT SIGNAL IS ONE VALUE, and it takes the ramp's LIT step in BOTH
      modes with no override to keep in step (ADR-063 U2). A saturated gold is
      inherently high-luminance, so on the parchment ground it has almost
@@ -64,11 +87,16 @@
   --con-spine-glow: 0 0 9px rgba(240, 200, 106, 0.55);
   --con-mark-glow: 0 0 10px rgba(240, 200, 106, 0.5);
 
-  /* The chamfer, and the outer frame's offset from the plate edge. Both are
-     `cqw`, so a plate mounted in a narrower column gets a proportionally
-     smaller chamfer for free — but ONLY because `container-type` is below. */
+  /* The chamfer, and the panel's offset from the plate edge. Both are `cqw`,
+     so a plate mounted in a narrower column gets a proportionally smaller
+     chamfer for free — but ONLY because `container-type` is below. The cap is
+     the mockup's flat 22px, which is what a full-width panel resolves to.
+     ⚠ THE GAP CAME DOWN 12 → 7 with the outer bezel (2026-08-07): it used to
+     be the BAND BETWEEN two frames and is now just the panel's clearance
+     inside the plate's registration box, which wants to read as a seat rather
+     than as a second margin. */
   --con-ch: clamp(14px, 2.6cqw, 22px);
-  --con-gap: clamp(6px, 1.2cqw, 12px);
+  --con-gap: clamp(4px, 0.7cqw, 7px);
   /* The tab plate's own cut — the CHROME rung of the corner ladder, because a
      tab is a plate on the machine, not a housing. Declared here rather than
      on the station so the travelling spine can read it too. */
@@ -90,55 +118,27 @@
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
 }
 
-/* The orbit ring. ⚠ THE ELEMENT MUST NOT OVERHANG ITS BOX. Drawn at
-   `inset: -8%` it looked identical and added 41px to `.fl-plate`'s scroll
-   height, which the smoke reads as a clipping box. The crop is v18's own:
-   its rig was 840x1050 inside a 1160x1230 orbit space, offset 160/90. */
-.fl-con__orbit {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0.5;
-  z-index: 0;
-}
+/* ⚠ `.fl-con__orbit` AND `.fl-con__outer` ARE DELETED (owner, 2026-08-07).
+   Two ellipses in an 840×1050 viewBox and a second chamfered frame 4px
+   outboard of the console's own — the whole v18 rig ADR-063 ported. The
+   markup went with them in `ConsoleFrame.tsx`; the `ry < 525` / `rx ≥ 420`
+   arithmetic ADR-067 derived is recorded there and in ADR-064 if ambient
+   arcs ever come back. */
 
-.fl-con__orbit ellipse {
-  fill: none;
-  stroke: var(--con-dim);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
+/* THE PANEL. One box, the owner's mockup verbatim.
 
-.fl-con__outer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  border: 1px solid var(--con-hair2);
-  clip-path: polygon(
-    0 0,
-    calc(100% - (var(--con-ch) + 4px)) 0,
-    100% calc(var(--con-ch) + 4px),
-    100% 100%,
-    calc(var(--con-ch) + 4px) 100%,
-    0 calc(100% - (var(--con-ch) + 4px))
-  );
-}
+   ⚠ CHAMFERED TOP-LEFT AND BOTTOM-RIGHT — AND THAT IS AN OWNER OVERRIDE OF
+   ADR-065's CORNER LAW (2026-08-07; ADR-065 U2 records it). The law's
+   diagonal is TR+BL and this console is the object the law was WRITTEN
+   against: ADR-065 corrected it from TL+BR to TR+BL because every other
+   card-family object cuts the house diagonal. The owner drew the mockup
+   after that correction and asked for the notch in the top-left by name, so
+   the mirrored form is deliberate here and nowhere else. Its children — the
+   stations, the detail plates, the bay — keep their own grammars unchanged.
 
-/* The console. Chamfered TOP-RIGHT and BOTTOM-LEFT — the house diagonal
-   (ADR-065).
-
-   ⚠ IT USED TO CUT THE OTHER ONE, and its own comment claimed otherwise:
-   "the same asymmetric diagonal the services card cuts, so the two objects
-   are one family". They were not one family. Every card-family object in the
-   system cuts TR+BL — the services plate shell, the WebGL card slab and its
-   extruded glass, the arc cards, the arc-cases layout — and this console cut
-   TL+BR, which is the MIRRORED form reserved for the back of a physically
-   flipped object (the ADR-047 portrait). A comment asserting a relationship
-   the geometry contradicts is worse than no comment; the owner read the
-   result as "not super consistent" without being able to name it. */
+   Read the polygon as a path: start on the left wall one chamfer down, cut
+   up to the top-left shoulder, run the top edge, down the right wall to the
+   bottom-right shoulder, cut in to the bottom edge, run back, close. */
 .fl-con__console {
   position: absolute;
   inset: var(--con-gap);
@@ -146,17 +146,16 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--con-hair2);
+  border: 1px solid var(--con-edge);
   background:
-    radial-gradient(130% 62% at 50% -6%, rgba(var(--gold-rgb), 0.07), transparent 62%),
-    var(--con-void);
+    radial-gradient(128% 58% at 50% -8%, var(--con-glow), transparent 62%), var(--con-void);
   clip-path: polygon(
-    0 0,
-    calc(100% - var(--con-ch)) 0,
-    100% var(--con-ch),
-    100% 100%,
-    var(--con-ch) 100%,
-    0 calc(100% - var(--con-ch))
+    0 var(--con-ch),
+    var(--con-ch) 0,
+    100% 0,
+    100% calc(100% - var(--con-ch)),
+    calc(100% - var(--con-ch)) 100%,
+    0 100%
   );
 }
 
@@ -195,8 +194,9 @@
    is the chamfer working — the end station's ground follows the console's own
    diagonal — and the stations clear it because the cut is `--con-ch` wide at
    y=0 and gone by y=`--con-ch`, while a station centres its content well
-   inside that. ⚠ WHICH end is cut follows the corner law (ADR-065): TR+BL, so
-   it is the LAST station, not the first. */
+   inside that. ⚠ WHICH end is cut FLIPPED on 2026-08-07: the panel now cuts
+   TL+BR (owner override, see the panel rule above), so the bite is out of the
+   FIRST station, not the last. The clearance arithmetic moved with it. */
 .fl-con__rail {
   position: relative;
   z-index: 4;
@@ -279,19 +279,35 @@
   background: var(--con-hair);
 }
 
-/* ⚠ THE LAST STATION SITS UNDER THE CHAMFER, and the clearance is arithmetic
-   rather than taste. The console cuts TR+BL (ADR-065), so the rail's own
-   top-right corner is missing a `--con-ch` triangle: at height y the right
-   boundary is `100% − (ch − y)`. The label's top edge sits ~11px down at the
-   32px rung against a 22px chamfer, which leaves a 10px inset clearing it by
-   about −1px — i.e. not clearing it. The extra inset here is what buys it,
-   and it is on the LAST station because that is the corner the law cuts. */
-.fl-con__stn:last-of-type {
-  padding-right: calc(clamp(5px, 1.3cqw, 14px) + 9px);
+/* ⚠ THE FIRST STATION SITS UNDER THE CHAMFER NOW, and the clearance is the
+   SAME arithmetic mirrored (2026-08-07). The panel cuts TL+BR (owner
+   override), so the rail's own top-LEFT corner is missing a `--con-ch`
+   triangle: at height y the left boundary is `ch − y`. The label's top edge
+   sits ~11px down at the 32px rung against a 22px chamfer, which leaves a
+   10px inset clearing it by about −1px — i.e. not clearing it. The extra
+   inset here is what buys it, and it is on the FIRST station because that is
+   the corner the override cuts.
+
+   RE-MEASURED AFTER THE FLIP, on the four-station tools rail at 1280×720 /
+   1440×800 / 1920×1080 / 2560×1330. `--con-ch` resolves to 15.9 / 17.9 / 22
+   / 22px; the diamond's top edge sits 10.4 / 12.2 / 16.1 / 16.1px below the
+   console's, so the chamfer's left boundary there is 5.5 / 5.7 / 5.9 / 5.9.
+   The diamond starts at 22.6 / 29.2 / 50.1 / 50.0 — clearing by 17.1 / 23.5
+   / 44.2 / 44.1. The 3- and 2-station rails centre their content and start
+   at 71–126px, so they were never close.
+
+   ⚠ IT IS COMFORTABLE NOW, AND THE 9px STAYS ANYWAY. The binding case for
+   the original last-station rule was a SHORT console (the rail's `clamp(32px,
+   7%, 44px)` at its 32px rung) against a full 22px chamfer, where the
+   boundary rises to ~10px — and that case is exactly the wide-and-short
+   shape this pass just added to the smoke. Dropping the inset because
+   today's four viewports clear without it is how the −1px comes back. */
+.fl-con__stn:first-of-type {
+  padding-left: calc(clamp(5px, 1.3cqw, 14px) + 9px);
 }
 
-.fl-con__rail[data-n="4"] .fl-con__stn:last-of-type {
-  padding-right: calc(clamp(4px, 0.9cqw, 10px) + 9px);
+.fl-con__rail[data-n="4"] .fl-con__stn:first-of-type {
+  padding-left: calc(clamp(4px, 0.9cqw, 10px) + 9px);
 }
 
 .fl-con__stn > i {
@@ -489,23 +505,17 @@
    Gated on `data-proof-settled`, NOT `data-proof-live`: `live` turns on while
    the casefile ladder is still travelling, and an instrument that boots
    itself during the arrival reads as a demo rather than as a record. */
-.fl-con__console,
-.fl-con__orbit,
-.fl-con__outer {
+.fl-con__console {
   opacity: 0;
   transition: opacity 0.5s ease;
 }
 
-[data-proof-settled] .fl-con__console,
-[data-proof-settled] .fl-con__orbit,
-[data-proof-settled] .fl-con__outer {
+[data-proof-settled] .fl-con__console {
   opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fl-con__console,
-  .fl-con__orbit,
-  .fl-con__outer {
+  .fl-con__console {
     transition: none;
     opacity: 1;
   }
@@ -533,11 +543,6 @@
   .fl-con {
     container-type: normal;
     height: auto;
-  }
-
-  .fl-con__orbit,
-  .fl-con__outer {
-    display: none;
   }
 
   .fl-con__console {
