@@ -280,3 +280,50 @@ contrast samples, PRM console height. Register measured at
 1280×720 / 1440×800 / 1440×900 / 1920×1080 / 2017×1269 + 430×932; field stack
 measured on all four tools × three viewports; overflow sweep 0 everywhere.
 The ring suite is untouched and green — the runway split held.
+
+## Update 1 (2026-08-07, owner feedback on the live build) — the dossier breathes
+
+Six changes from the owner's first live review, same day:
+
+1. **The console is the mockup's panel, verbatim** — one dawn-08 hairline,
+   chamfers **TL+BR** (an owner override of ADR-065's diagonal; ADR-065 U2
+   records it), the gold glow hung off the top edge, scanline, opaque ground.
+   The orbit ellipses and the `.fl-con__outer` bezel — the v18 rig ADR-063
+   ported — are deleted, markup and chrome. Three concentric outlines around
+   a screenshot read as decoration; one reads as a housing. ADR-067's
+   `ry < 525` arc arithmetic survives as a record in console comments should
+   ambient arcs ever return.
+2. **Row order: the software row moves to 02** (map → tooling → studio →
+   atl). Files, `stamp.ord`, the registry's pinned meta/classification arrays
+   and the smoke's row-click branches moved together. `stamp.ref` (BLD-03)
+   deliberately NOT renumbered pending an owner call — a ref identifies the
+   record, not the position.
+3. **The panel sits higher and runs taller** (viz top toward the designation
+   rail, `--con-gap` 12→7 now that it is a seat rather than a band between
+   two frames). Structurally capped at ~20px of pure geometry — the section
+   rule above and the HUD cluster below are hard bounds; the real height came
+   from deletions (foot ~100px, header ~26px). Field at 1440×800: 374 → 480.
+4. **The tools foot is removed** — ADR-066's law finished, not weakened: a
+   plate with nothing to say omits the foot, and the owner ruled this plate
+   says nothing there. The smoke asserts the foot ABSENT on tools, required
+   on the map.
+5. **The designation stutter is gone.** No title line under the tab that
+   names the same tool. `IN SERVICE {year} —` lives on the bay's FEED line —
+   the one home that survives every height rung (the route captions crop at
+   ≤760h, so they cannot carry it).
+6. **The wide-short crop, mechanism and guard.** Decision 4 recorded that the
+   route's height rides the field's WIDTH; the field's height rides viewport
+   HEIGHT — and no smoke viewport was ever BOTH wide and short, so
+   1600–2560px windows at ≤860h overflowed the detail plates out of the
+   `overflow: hidden` field (up to 44px) with every assertion green. Worse,
+   the first fix draft surfaced the truly silent variant: a CENTRED column
+   with negative free space overflows SYMMETRICALLY — half under the rail,
+   `scrollHeight − clientHeight` reporting ZERO. Hence `justify-content:
+safe center`, a capture ceiling on `.fl-bay`'s `max-height` (⚠ never a
+   definite flex-basis on the frame — that freezes the enclosing column's
+   min-content and made the overrun WORSE, measured), and a **geometric
+   guard**: `.fl-detail` inside the field's visible box and all four plates
+   ≥99% painted, at six viewports — 1280×720 · 1440×800 · **1920×800** ·
+   1920×1080 · 2017×1269 · **2560×1330**. The lesson for every future
+   assertion on this surface: reported overflow is not visible truth; measure
+   geometry against the visible box.

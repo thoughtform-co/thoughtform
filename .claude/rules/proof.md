@@ -146,16 +146,17 @@ inherited its ambient-cover role.
   decoder caches targets once per client and would strand stale metadata after
   the first directory switch.
 - **The tools row is the DOSSIER FIELD (ADR-068 — supersedes ADR-056 U9's
-  gallery grid and ADR-066's one-column layout):** header → route → bay →
-  detail 2×2 → foot, all inside ConsoleFrame. `TrackPanel` still owns
+  gallery grid and ADR-066's one-column layout):** route → bay → detail 2×2,
+  all inside ConsoleFrame — NO header line (it stuttered the active tab; ADR-068
+  U1) and NO foot (owner ruling, same update). `TrackPanel` still owns
   `toolIdx`. The RAIL navigates with SHORT HANDLES (`ProjectCase.tab`, ≤14
-  chars) and the plate HEADER designates (full functional name +
-  `IN SERVICE {year} —`) — one designation, split by role (refines ADR-064
-  U1). The codename is chrome (lightbox label only — a visitor cannot know
-  "Mímir"). The shot still BLEEDS to its box edges and the whole frame is
-  still the ONE walkthrough button with the bar fused to its bottom edge; the
-  RUN plate on it is DECORATIVE (aria-hidden, pointer-events none). See §The
-  tool dossier below for the route/detail/wireframe contracts.
+  chars); `IN SERVICE {year} —` rides the bay's FEED line — the one home
+  every height rung keeps. The codename is chrome (lightbox label only — a
+  visitor cannot know "Mímir"). The shot still BLEEDS to its box edges and
+  the whole frame is still the ONE walkthrough button with the bar fused to
+  its bottom edge; the RUN plate on it is DECORATIVE (aria-hidden,
+  pointer-events none). See §The tool dossier below for the
+  route/detail/wireframe contracts.
 - **One lightbox, `MediaLightbox`, shared by the films and the walkthroughs.**
   Do not hand-write a second — its portal, scroll lock and focus restore each
   cost a measurement to get right (Update 8).
@@ -212,13 +213,17 @@ inherited its ambient-cover role.
   for the plate-sharing guard, which keys on PLATE KIND since 2026-07-31
   (`transformation` → `workshop-rollout` proved that a string-keyed guard
   does not fail on a rename, it silently stops guarding).
-- **Row order IS the directory, and row one is the DEFAULT PANEL.** The
-  INTELLIGENCE MAP leads and the mission report closes the file (owner,
-  2026-07-31, renamed from "AI Transformation" 2026-08-02; the studio led
-  until then, which presented an output as the engagement). Two consequences when reordering: the first row's plate
-  mounts with the casefile, so a media row there puts its bytes on page load
-  — that cost 23.6 kB while the studio led and a pure-DOM plate gives it
-  back — and row one is what every reader judges the case on.
+- **Row order IS the directory, and row one is the DEFAULT PANEL.** Since
+  2026-08-07 (owner) the order is map → **software** → studio → atl: the
+  INTELLIGENCE MAP leads, `02_SOFTWARE-FOR-FEW/` follows it, the films close
+  the file. Two consequences when reordering: the first row's plate mounts
+  with the casefile, so a media row there puts its bytes on page load — that
+  cost 23.6 kB while the studio led and a pure-DOM plate gives it back — and
+  row one is what every reader judges the case on. The registry pins the
+  meta AND classification arrays in order, and the smoke's row-click branches
+  are index-addressed — all three move with any reorder, in one commit.
+  `stamp.ref` does NOT renumber with position (a ref identifies the record);
+  `stamp.ord` does.
 - **The directory holds FOUR rows (owner, 2026-08-02) — the projects,
   one browse-band quarter each.** The rollout/governance/metrics/report
   rows were trimmed in U13; where each one's content still lives is
@@ -454,9 +459,15 @@ holdfast` · atl `masters level broadcast parallel`.
   in words meanwhile.
 - **THE BAY IS CHROME AROUND THE UNTOUCHED WALKTHROUGH.** `.fl-shot` stays
   the one button; RUN is a decorative SVG plate (aria-hidden, pointer-events
-  none, chamfered TR+BL); the top line prints `FEED` / `WALKTHROUGH ·
-{duration}` — ⚠ NO `T-01` ids (ordinals in costume; a bay-scoped `/\bT-\d/`
-  smoke scan enforces it, durations excluded).
+  none, chamfered TR+BL); the top line prints `FEED · IN SERVICE {year} —` /
+  `WALKTHROUGH · {duration}` — ⚠ NO `T-01` ids (ordinals in costume; a
+  bay-scoped `/\bT-\d/` smoke scan enforces it, durations excluded).
+  ⚠ **CROPPING IS GUARDED GEOMETRICALLY, not by scrollHeight** (ADR-068 U1):
+  the smoke asserts `.fl-detail` inside the field's VISIBLE box and all four
+  plates ≥99% painted, at SIX viewports incl. the wide-short band (1920×800,
+  2560×1330) — reported overflow missed both the one-sided crop (assertions
+  never ran wide-and-short) and the centred column's SYMMETRIC overflow,
+  which reports zero. `justify-content: safe center` on the field stack.
 - **DETAIL PLATES:** `ProjectCase.detail`, exactly 4, `q` pinned to the
   four-union, answers ≤32 chars, `accent: "own" | "gold"`. Single BL notch
   (ADR-065 Update 1 — a uniform seated SET, one nesting level, card scale
@@ -530,13 +541,13 @@ holdfast` · atl `masters level broadcast parallel`.
   `bottom: -1px`, the exact pixel the weld occupies, and would have re-drawn
   the seam the weld removes. Its `inset` clip stops it at the chamfer while
   its width stays a full station pitch, so the `--rail-i` translate still lands.
-- ⚠ **AN ORBIT ARC MAY LEAVE THE BOX SIDEWAYS, NEVER THROUGH THE TOP OR
-  BOTTOM.** `ry < 525` and `rx ≥ 420`, and both hold at every viewport because
-  each side scales with the box. Ellipse 1 was `ry 600` — a 302.8px radius
-  against a 265px half-box — so it cropped and re-entered as two 14px stubs at
-  30.8° in the bezel gap, landing on the tab dividers at four stations. That
-  was the owner's "two diagonal lines coming out of the tabs". ⚠ It was NOT
-  the chamfers: a `clip-path` cuts a border, it never strokes one.
+- ⚠ **THE ORBIT ARCS ARE DELETED (ADR-068 U1, owner 2026-08-07)** — the
+  console is the mockup's one-box panel now (single dawn-08 hairline, TL+BR
+  chamfers by owner override of ADR-065, top glow, scanline; no ellipses, no
+  outer bezel). The `ry < 525` / `rx ≥ 420` arithmetic this bullet carried
+  survives as a record in console.css comments should ambient arcs ever
+  return; the "two diagonal lines" incident it solved cannot recur on a
+  surface with no arcs.
 - **1920×1080 IS A REFERENCE VIEWPORT NOW**, and it is the worst case:
   `.fl-brief` hangs off the `--fl-t6` seam, which is NOT monotonic in viewport
   height — 199px at 1280×720, 221px at 1440×800, **202px** at 1920×1080 with
@@ -571,12 +582,20 @@ holdfast` · atl `masters level broadcast parallel`.
   chrome repeating itself on every row; a sentence that changes with what is
   displayed is the opposite, and a plate with nothing to say still omits it.
 - ⚠ **"ONE COLUMN — capture → facts → foot" IS SUPERSEDED (ADR-068).** The
-  tools plate is the dossier field now (header → route → bay → detail 2×2 →
-  foot); the facts render from `ProjectCase.detail`, and `capabilities` stays
-  canonical for the Arc card + ToolCardConsole (unrendered here). What still
-  binds from this pass: the deleted identity column stays deleted, `surfaces`
-  and `tagline` stay deleted, and the ORDER OF SACRIFICE is unchanged — the
-  capture floor (now `clamp(70px, 9svh, 180px)`) pays before any sentence.
+  tools plate is the dossier field now (route → bay → detail 2×2 — the
+  header line and the foot were BOTH removed in ADR-068 U1: the header
+  stuttered the active tab, and the owner ruled this plate says nothing in
+  the foot — this ADR's "a plate with nothing to say still omits it",
+  finished). `IN SERVICE {year} —` lives on the bay's FEED line, the one home
+  every height rung keeps. The facts render from `ProjectCase.detail`;
+  `capabilities` stays canonical for the Arc card + ToolCardConsole
+  (unrendered here). What still binds: the deleted identity column stays
+  deleted, `surfaces`/`tagline` stay deleted, and the ORDER OF SACRIFICE is
+  unchanged in BOTH directions — the capture shrinks first
+  (`clamp(70px, 9svh, 180px)` floor) and STOPS GROWING first (the ceiling is
+  `.fl-bay`'s `max-height`; ⚠ never a definite flex-basis on the frame — it
+  freezes the enclosing column's min-content and worsens the overrun,
+  measured).
 - ⚠ **`--font-sans` IS DECLARED NOWHERE IN THIS APP.** `.fl-con__foot p` asked
   for it and rendered in the browser's default sans — that was the owner's
   "the font feels a bit different from the rest". The token is
@@ -612,7 +631,9 @@ holdfast` · atl `masters level broadcast parallel`.
 ## One console frame, four plates (ADR-064, live)
 
 Every evidence plate renders inside `ConsoleFrame` (`casefile/console/**`) —
-orbit ring, chamfered outer bezel, chamfered opaque console, scanline. The
+since ADR-068 U1 the frame is the owner's mockup panel: ONE dawn-08 hairline,
+chamfers TL+BR (owner override, ADR-065 U2), the gold glow off the top edge,
+scanline, opaque ground; the orbit ring and outer bezel are deleted. The
 panel is ONE instrument that changes what it displays, not four boxes sharing
 a slot.
 

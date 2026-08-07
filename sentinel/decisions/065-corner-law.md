@@ -170,3 +170,20 @@ The dossier's plates take **BL** (the mockup drew TL and was flipped to the
 lawful diagonal). The route diagram's step marks are symmetric TR+BL chamfer
 pairs in SVG line work — ordinary rule-1 housings at drawing scale, no
 exception needed.
+
+## Update 2 (2026-08-07, owner override) — the proof console carries TL+BR
+
+The owner's canonical mockup (`proof-page-blocks-left.html`, drawn AFTER this
+law and after Decision 3's correction) chamfers the proof panel **top-left +
+bottom-right**, and the owner confirmed it on the live build: _"a super clean
+right panel with a notch in the top-left corner. I want you to replicate
+that."_ So the casefile console — the very object Decision 3 corrected to
+TR+BL — now carries TL+BR **as the standing owner exception**, recorded here
+rather than smuggled.
+
+The law is otherwise unchanged: TR+BL remains the diagonal for everything
+else, and the TL+BR clause ("the mirrored back of a flipped object") gains
+this one enumerated sibling. Consequence handled with it: the TL cut bites
+the rail's FIRST station instead of the last, so the clearance inset moved
+from `:last-of-type` to `:first-of-type` — same arithmetic, mirrored,
+measured at four viewports.
