@@ -2833,6 +2833,569 @@
   }
 }
 
+/* ══ THE BAY'S AUTHORED WIREFRAMES (ADR-068 Decision 5) ═══════════════════
+   A tool in `TOOL_WIREFRAMES` draws its interface into `.fl-shot__frame`
+   instead of mounting its capture. Everything AROUND it is untouched — the
+   bay, the FEED line, the brackets, the RUN plate, the halftone veil and
+   the button — because what changes is the evidence, not the housing.
+
+   ⚠ NO FILTER HERE, EVER. ADR-064 U2's line is AUTHORED vs CAPTURED: the
+   duotone is the recipe for arbitrary screenshot colour, and this drawing
+   is already in the surface's own vocabulary. `.fl-shot__img` keeps the
+   chain; a wireframe must compute `filter: none`, and the smoke asserts
+   both halves per tool.
+
+   ── THE BOX, AND WHY EVERY SPAN BELOW IS A CONTAINER UNIT ──────────────
+   `.fl-shot__frame` is the plate's flex-SACRIFICIAL element (ADR-066: a
+   screenshot loses pixels before a sentence loses meaning), measured at
+   **564.5×105.3 / 639.9×86.4 / 809.3×205.7** px at 1280×720 / 1440×800 /
+   1920×1080. That is 5.4:1 → 7.4:1 → 2.5:1 — no single authored aspect
+   survives it, which is why this is DOM rather than an SVG viewBox (and
+   why a viewBox would letterbox against ADR-064's bleed law).
+
+   `.fl-wire__in` is therefore a SIZE container and every dimension below is
+   `cqw` / `cqh` / a percentage of its own row. ⚠ `.fl-con` is only an
+   `inline-size` container — `cqh` resolves against the VIEWPORT there, so
+   the local size container is what makes the vertical rhythm mean anything
+   at all. The vertical ladder, in `cqh`, is the whole layout:
+
+     chrome    0 … 15        the title bar, the nav lozenge, the draw meter
+     gallery  19 … 50        the session rail + one generation row
+     composer 47 … 97        the floating plate, overlapping the row by 3
+
+   ── THE TWO OBSTACLES ──────────────────────────────────────────────────
+   The veil (`.fl-shot__frame::after`, tree order) and the RUN plate
+   (`.fl-run`, z 2, ~98×40 dead centre) both paint OVER this drawing, which
+   carries no z-index of its own. Nothing load-bearing is centred: the
+   composer's content sits at its two ends and only bar-work crosses the
+   middle. ══════════════════════════════════════════════════════════════ */
+.fl-wire {
+  position: absolute;
+  inset: 0;
+  /* The FRAME is the button (ADR-068). A drawing that took a pointer would
+     be a second control inside one, which is the `.fl-run` bug written a
+     different way. */
+  pointer-events: none;
+}
+
+.fl-wire__in {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP — the same law as
+     `.fl-route` and `.fl-pda`. `rgba(ink, .15)` recedes toward BLACK in
+     dark and toward PARCHMENT in light, so every step here is re-derived
+     in theme.css rather than left to a number that means the opposite
+     thing on the other ground. */
+  --w-hair: rgba(var(--dawn-rgb), 0.15);
+  --w-hair2: rgba(var(--dawn-rgb), 0.09);
+  --w-fill: rgba(var(--dawn-rgb), 0.13);
+  --w-fill2: rgba(var(--dawn-rgb), 0.2);
+  --w-card: rgba(var(--dawn-rgb), 0.03);
+  /* The micro-labels. Mid of the .3–.5 band the drawing is authored in:
+     clearly above the plate's own chrome (α .34) without competing with
+     the answers below it. 3.6:1 composited on `--void-deep-canon`. */
+  --w-lbl-ink: rgba(var(--dawn-rgb), 0.44);
+  /* GOLD IS THE ONLY SIGNAL COLOUR, and green is deliberately absent:
+     green is PROVENANCE on this surface and nothing drawn here is Loop's
+     own — it is the tool's own interface. */
+  --w-mark: var(--gold);
+  --w-lit: rgba(var(--gold-rgb), 0.2);
+  --w-gen: rgba(var(--gold-rgb), 0.16);
+  /* The output tiles' ground — "generated" said with a wash, because a
+     wireframe that renders imagery is a mockup, and a mockup of someone
+     else's pictures is a screenshot again. */
+  --w-tile-a: rgba(var(--gold-rgb), 0.15);
+  --w-tile-b: rgba(var(--dawn-rgb), 0.05);
+  --w-tile-c: rgba(var(--gold-rgb), 0.07);
+  /* The composer's opaque plate. `--void-rgb` flips with the theme and is
+     the lighter of the pair on either side — but in DARK it is only 5
+     levels off the bay's ground (10,9,8 against 5,4,3), which is not a
+     plate, it is a border. The lift is what makes it float; in light the
+     8-level step from the parchment already reads, so the lift goes to
+     transparent there rather than dirtying the paper. */
+  --w-plate: rgb(var(--void-rgb));
+  --w-plate-lift: rgba(var(--dawn-rgb), 0.05);
+}
+
+/* ⚠ PT MONO, NEVER `--font-mono` (ADR-067 — that token is IBM Plex). The
+   floor is 8.6px, not 8.5: `1.3cqw` renders 7.3 / 8.3 / 10.5 at the three
+   boxes, so the clamp's LOW end is what ships at both laptop viewports and
+   0.1px is the whole margin over the chrome floor. Do not trade it for a
+   fifth label — four is the budget, and three (`ENHANCE`, `PRODUCT
+   LIBRARY`, `DRAW`) is the fallback if a box ever cannot afford four. */
+.fl-wire__lbl {
+  flex: none;
+  font-family: var(--fl-mono);
+  font-size: clamp(8.6px, 1.3cqw, 10px);
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--w-lbl-ink);
+}
+
+/* ── 1 · The top chrome ────────────────────────────────────────────────── */
+/* ⚠ THE TWO BANDS ARE CAPPED IN `cqw`, AND THE CAP IS FOR THE UNWRAPPED
+   COLUMN. Above the gate the bay is a wide short strip and a pure `cqh`
+   ladder is right; below it the frame takes `aspect-ratio: 16 / 10` and the
+   SAME fractions balloon — measured at 900px wide (476×297.5): a 45px chrome
+   band around an 8.6px label and a 149px composer around three 40px rows,
+   both of which read as a blown-up wireframe rather than an app. The `cqw`
+   term binds only there. */
+.fl-wire__chrome {
+  position: relative;
+  flex: 0 0 min(15cqh, 4.5cqw);
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  padding: 0 1.6cqw;
+  border-bottom: 1px solid var(--w-hair2);
+}
+/* ⚠ `align-self: stretch` IS LOAD-BEARING ON BOTH CLUSTERS, and its absence
+   is a silent collapse. The strip centres its items, so a cluster's height
+   would be its CONTENT — and every bar, pill and meter below sizes as a
+   PERCENTAGE of it, which against an auto height computes to zero. Marks
+   simply would not paint, with no overflow and nothing in the box model to
+   say why. */
+.fl-wire__ttl {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 0.7cqw;
+}
+.fl-wire__ttl-bar {
+  width: 4.4cqw;
+  height: 20%;
+  background: var(--w-fill2);
+}
+.fl-wire__ttl-pill {
+  width: 2.4cqw;
+  height: 34%;
+  border: 1px solid var(--w-hair);
+  border-radius: 999px;
+}
+/* Absolutely centred on the BOX, not on what is left after the two
+   clusters — a nav that drifts with its neighbours is not a nav. */
+.fl-wire__nav {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45cqw;
+  width: 6.4cqw;
+  height: 46%;
+  border: 1px solid var(--w-hair);
+  border-radius: 999px;
+}
+.fl-wire__nav i {
+  width: max(1.2px, 0.22cqw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--w-fill2);
+}
+/* ⚠ THE DRAW READOUT IS A METER, NEVER A FIGURE (ADR-068 D5). The tool
+   prints USD; this page may not — the map's `Never a price.` line and the
+   casefile's confidentiality envelope (rules/proof.md). A partial fill says
+   what the app's readout says without publishing a number, and it is the
+   one deliberate divergence from the interface being drawn. */
+.fl-wire__draw {
+  margin-left: auto;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 0.7cqw;
+}
+.fl-wire__meter {
+  display: block;
+  width: 4.4cqw;
+  height: 32%;
+  border: 1px solid var(--w-hair);
+}
+.fl-wire__meter b {
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--w-mark);
+}
+
+/* ── 2 + 3 · The session rail and the generation row ───────────────────── */
+.fl-wire__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 1.4cqw;
+  padding: 4cqh 1.6cqw 2cqh;
+}
+/* ⚠ THE RAIL IS THIN ON PURPOSE, AND IT IS ARITHMETIC. The app's rail is
+   ~7% of a ~1400px window; 7% of this box is 45px of empty column against
+   an 11px thumbnail, because the bay is three times wider relative to its
+   height than the window being drawn. The drawing keeps the app's ORDER
+   and adjacency, not its ratios — so the rail is exactly as wide as its
+   own squares and spans the full band (it clears the composer, which is
+   inset 16% each side, so it costs the gallery nothing). */
+/* ⚠ THE RAIL IS SIZED FROM ITS WIDTH, NOT ITS HEIGHT, AND THAT ORDER IS THE
+   POINT. A `flex: 0 0 auto` column whose squares take `height: %` of the
+   rail and their width from an aspect ratio is circular — the rail's main
+   size (width) would have to be known before its cross size (height), and
+   a browser resolving that during intrinsic sizing collapses the column to
+   nothing. Fixed width in, height out. */
+.fl-wire__rail {
+  flex: 0 0 1.9cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5cqh;
+}
+.fl-wire__rail > i {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--w-hair);
+}
+.fl-wire__new svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--w-fill2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fl-wire__sess {
+  background: var(--w-hair2);
+}
+/* The active session — ring-marked with a corner dot, gold, because gold is
+   the signal colour and this is the only "you are here" in the drawing. */
+.fl-wire__sess[data-on] {
+  border-color: var(--w-mark);
+}
+.fl-wire__sess[data-on]::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 26%;
+  height: 26%;
+  background: var(--w-mark);
+}
+
+/* The gallery is padded off the composer's ceiling so the three bands read
+   as three at 86px — the row's own content stops where the plate begins.
+   ⚠ THIS PADDING IS THE DOCK'S HEIGHT, DERIVED. The ladder is: the body's
+   content ends at 98cqh, the dock's top is at `97cqh − height`, and the
+   overlap is 3cqh — so the padding is `dockHeight − 2cqh` and NOTHING ELSE
+   keeps the row off the plate. The `min()` is repeated rather than lifted
+   to a custom property on purpose: container units inside a custom property
+   declared on the container ITSELF resolve against the wrong box. Move one
+   and move the other. */
+.fl-wire__gal {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 1cqw;
+  padding-bottom: calc(min(50cqh, 15cqw) - 2cqh);
+}
+.fl-wire__card {
+  flex: 0 0 26%;
+  min-width: 0;
+  display: flex;
+  gap: 0.5cqw;
+  padding: 0.4cqw 0.5cqw;
+  border: 1px solid var(--w-hair);
+  background: var(--w-card);
+}
+.fl-wire__lines {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: min(9%, 0.55cqw);
+}
+/* ⚠ THE CARD'S OWN METRICS ARE CAPPED IN `cqw` FOR THE SAME REASON THE TWO
+   BANDS ARE — and here the failure was not merely ugly. At 900px wide the
+   card stretches to 193px, so a `52%` reference square became 97px wide
+   inside a 110px card, the lines column was squeezed to ~10px, and its two
+   meta bars SHRANK TO ZERO — invisible, with every box still reporting no
+   overflow. A prompt card's type does not grow with the window. */
+.fl-wire__lines > i {
+  display: block;
+  height: max(1.2px, min(8%, 0.5cqw));
+  background: var(--w-fill);
+}
+.fl-wire__lines > i:nth-of-type(1) {
+  width: 90%;
+}
+.fl-wire__lines > i:nth-of-type(2) {
+  width: 64%;
+}
+.fl-wire__lines > i:nth-of-type(3) {
+  width: 80%;
+}
+.fl-wire__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3cqw;
+  height: max(1.6px, min(11%, 0.7cqw));
+  margin-top: 7%;
+}
+.fl-wire__dot {
+  height: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--w-fill2);
+}
+.fl-wire__mb {
+  height: 46%;
+  background: var(--w-fill);
+}
+.fl-wire__meta b:nth-child(3) {
+  width: 26%;
+}
+.fl-wire__meta b:nth-child(4) {
+  width: 15%;
+}
+.fl-wire__cardref {
+  flex: none;
+  align-self: flex-end;
+  height: min(52%, 4cqw);
+  aspect-ratio: 1;
+  border: 1px solid var(--w-hair);
+  background: var(--w-hair2);
+}
+
+/* The outputs. HEIGHT-BOUND at ~4:5 and left-aligned after the card, with
+   the rest of the row empty — which is what a two-output generation row
+   actually looks like. Filling the width would be inventing evidence. */
+.fl-wire__tile {
+  position: relative;
+  flex: none;
+  height: 100%;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--w-hair);
+  background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
+}
+.fl-wire__acts {
+  position: absolute;
+  top: 8%;
+  right: 8%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.14cqw;
+}
+.fl-wire__acts i {
+  display: block;
+  width: max(1.2px, 0.24cqw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--w-fill2);
+}
+/* The video mark STRADDLES the tile's top edge — a badge on the object, not
+   a label beside it. */
+.fl-wire__clip {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 54%;
+  height: 17%;
+  border: 1px solid var(--w-hair);
+  border-radius: 999px;
+  background: var(--w-plate);
+}
+
+/* ── 4 + 5 · The floating composer and the mode bar ────────────────────── */
+/* Bottom-centre and deliberately NOT full-bleed — the inset is what says
+   "floating". It overlaps the band above by 3cqh: enough to read as a plate
+   over the row, not enough to eat it. */
+.fl-wire__dock {
+  position: absolute;
+  left: 50%;
+  bottom: 3cqh;
+  transform: translateX(-50%);
+  width: 68%;
+  /* ⚠ IN LOCKSTEP WITH `.fl-wire__gal`'s padding — see the note there. */
+  height: min(50cqh, 15cqw);
+  display: flex;
+  align-items: stretch;
+  gap: 0.8cqw;
+}
+.fl-wire__comp {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: min(2.6cqh, 0.8cqw);
+  padding: min(2cqh, 0.6cqw) 0.8cqw;
+  border: 1px solid var(--w-hair);
+  border-radius: 2px;
+  background-color: var(--w-plate);
+  background-image: linear-gradient(var(--w-plate-lift), var(--w-plate-lift));
+}
+/* Three equal rows, so the composer's height ladder is one division rather
+   than three tuned numbers. ⚠ At the binding box a row is ~11.1px against
+   an 8.6px label whose glyph box is 9.6px — there is no slack here for a
+   taller control, which is why the MODEL chip takes the row's full height
+   rather than padding its own. */
+.fl-wire__row {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.7cqw;
+}
+.fl-wire__thumb {
+  flex: none;
+  height: 88%;
+  aspect-ratio: 1;
+  border: 1px solid var(--w-hair);
+  background: var(--w-hair2);
+}
+.fl-wire__thumb--add {
+  border-style: dashed;
+  background: none;
+}
+.fl-wire__say {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 22%;
+  background: var(--w-fill);
+}
+/* The enhancer's glitch-morph, abstracted: the tail of the prompt breaks
+   into offset blocks under the wand. Unequal heights are the whole read —
+   an even run of ticks is a progress bar, not a scramble. */
+.fl-wire__scram {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.18cqw;
+  height: 34%;
+}
+.fl-wire__scram b {
+  display: block;
+  width: max(1.3px, 0.28cqw);
+  height: 100%;
+  background: var(--w-fill2);
+}
+.fl-wire__scram b:nth-child(2) {
+  height: 58%;
+}
+.fl-wire__scram b:nth-child(4) {
+  height: 74%;
+}
+.fl-wire__scram b:nth-child(5) {
+  height: 44%;
+}
+.fl-wire__wand {
+  flex: none;
+  display: block;
+  height: 62%;
+  aspect-ratio: 1;
+  fill: var(--w-mark);
+}
+/* The MODEL pill takes the ROW's height, not its own padding — see the row
+   note above: at 11.1px there is no room for vertical padding under an
+   8.6px line, and a pill whose glyphs poke through its own border is worse
+   than no pill. */
+.fl-wire__chip {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 0.45cqw;
+  border: 1px solid var(--w-hair);
+}
+.fl-wire__dia {
+  flex: none;
+  display: block;
+  height: 52%;
+  aspect-ratio: 1;
+  fill: none;
+  stroke: var(--w-fill2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fl-wire__ratio {
+  flex: none;
+  width: 2.6cqw;
+  height: 62%;
+  border: 1px solid var(--w-hair);
+}
+/* ⚠ THE HOUSE DIAGONAL — TOP-RIGHT AND BOTTOM-LEFT (ADR-065). Every
+   chamfered object on this surface cuts the same way; the mirrored form is
+   reserved for the back of a physically flipped object.
+   `preserveAspectRatio="none"` because this is a PLATE that fills its slot,
+   and `non-scaling-stroke` is what keeps the hairline a hairline while the
+   box stretches. */
+.fl-wire__gen {
+  flex: none;
+  display: block;
+  margin-left: auto;
+  width: 8.4cqw;
+  height: 100%;
+}
+.fl-wire__gen path {
+  fill: var(--w-gen);
+  stroke: var(--w-mark);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fl-wire__modes {
+  flex: 0 0 3.4%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--w-hair);
+}
+.fl-wire__modes i {
+  flex: 1 1 0;
+  display: block;
+}
+.fl-wire__modes i + i {
+  border-top: 1px solid var(--w-hair2);
+}
+.fl-wire__modes i[data-on] {
+  background: var(--w-lit);
+}
+
+/* ⚠ BELOW THE UNWRAP GATE THE DRAWING NEEDS AN INTRINSIC RATIO, AND THE BUG
+   IT PREVENTS IS SILENT. `.fl-shot__frame` becomes `flex: 0 0 auto;
+   min-height: 0` there (the ≤960 block below), so a frame whose ONLY child
+   is absolutely positioned resolves to HEIGHT 0 — the capture is fine
+   because `.fl-shot__img` takes `aspect-ratio: 16 / 10` in the same block,
+   and this is the same rule for the same reason. Declared here, after that
+   block's own gate would be too late to read, so it lives with the drawing
+   it belongs to and wins on source order.
+
+   ⚠ 960, NOT 980: casefile.css's static-flow gate is `(max-width: 960px),
+   (prefers-reduced-motion: reduce)` while console.css unwraps at 980 —
+   between them, and under desktop reduced motion, `.fl-shot__frame` still
+   carries its `flex: 1 1 0` + `min-height` clamp, so the absolute drawing
+   fills a real box and needs nothing. Match the block that changes the
+   FRAME, not the one that changes the console. */
+@media (max-width: 960px) {
+  .fl-wire {
+    position: relative;
+    inset: auto;
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
+
 /* ── The tool's foot ─────────────────────────────────────────────────────
    The console foot's own box and type (console.css); this is only what the
    tools row puts IN it. Subline and shift in ONE paragraph — the subline is

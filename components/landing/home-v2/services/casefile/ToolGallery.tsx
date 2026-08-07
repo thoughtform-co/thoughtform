@@ -7,6 +7,7 @@ import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from 
 import { RouteDiagram } from "./RouteDiagram";
 import { ConsoleFrame } from "./console/ConsoleFrame";
 import { ConsoleRail } from "./console/ConsoleRail";
+import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
 
 /**
  * ToolGallery — the four production tools, one in view, at panel scale.
@@ -62,12 +63,20 @@ import { ConsoleRail } from "./console/ConsoleRail";
  *   count. See `RouteDiagram.tsx` for the geometry and its three binding
  *   measurements.
  * · THE BAY IS CHROME AROUND THE SAME ONE BUTTON. `.fl-shot` is unchanged —
- *   still the whole frame as the walkthrough trigger, still the duotone +
- *   halftone veil (ADR-064 U2), still bleeding to its box edges. What the
- *   bay adds is a housing: a FEED line, four corner brackets and the
- *   transport marks. ⚠ The RUN plate over the capture is DECORATION
- *   (`aria-hidden`, `pointer-events: none`) — a second interactive element
- *   inside a button is not a control, it is a bug.
+ *   still the whole frame as the walkthrough trigger, still the halftone
+ *   veil (ADR-064 U2), still bleeding to its box edges. What the bay adds
+ *   is a housing: a FEED line, four corner brackets and the transport
+ *   marks. ⚠ The RUN plate over the capture is DECORATION (`aria-hidden`,
+ *   `pointer-events: none`) — a second interactive element inside a button
+ *   is not a control, it is a bug.
+ * · WHAT THE FRAME HOLDS IS PER TOOL (ADR-068 D5). `TOOL_WIREFRAMES` maps a
+ *   tool to an AUTHORED drawing of its interface; a tool absent from it
+ *   renders its duotoned capture. Only the inner element swaps — the veil,
+ *   the RUN plate, the bay and the button are the same on both branches,
+ *   because what changes is the evidence, not the housing. ⚠ The drawing
+ *   takes NO filter and mounts NO `<img>`: ADR-064 U2's line is AUTHORED vs
+ *   CAPTURED, and the duotone is the recipe for arbitrary screenshot
+ *   colour. The smoke asserts both halves, per tool.
  * · THE FACTS ARE A COMPARISON INSTRUMENT NOW. Four fixed questions, the
  *   same four on every tool, so running down the rail reads four answers to
  *   one question instead of four unrelated claims. `ToolDetailFact` pins
@@ -112,17 +121,26 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
 
   if (!active) return null;
 
+  /* AUTHORED or CAPTURED, per tool (ADR-068 D5). Absent ⇒ the capture. */
+  const Wireframe = TOOL_WIREFRAMES[active.id];
+
   const capture = (
     <span className="fl-shot__frame">
-      <Image
-        key={active.id}
-        className="fl-shot__img"
-        src={active.image.src}
-        alt={active.image.alt}
-        width={active.image.width}
-        height={active.image.height}
-        sizes="(min-width: 1800px) 900px, 640px"
-      />
+      {Wireframe ? (
+        /* Keyed with the tool so a station switch remounts the drawing
+           rather than reconciling one tool's geometry onto another's. */
+        <Wireframe key={active.id} />
+      ) : (
+        <Image
+          key={active.id}
+          className="fl-shot__img"
+          src={active.image.src}
+          alt={active.image.alt}
+          width={active.image.width}
+          height={active.image.height}
+          sizes="(min-width: 1800px) 900px, 640px"
+        />
+      )}
       {/* ⚠ DECORATION, NOT A CONTROL. The FRAME is the button; this plate is
           the machine's own RUN key drawn over the feed, so it is
           `aria-hidden` and takes no pointer. Its ground lights on the
@@ -211,7 +229,18 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
               type="button"
               className="fl-shot"
               aria-haspopup="dialog"
-              aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}`}
+              /* ⚠ ONE LABEL, AND IT STAYS THE ACTION. The drawing is
+                 `aria-hidden`, so the wireframe branch appends the one
+                 clause that says what the bay is showing — WITHOUT the
+                 codename (ADR-066 keeps that off every label on this
+                 surface) and without restating the tool's name, which the
+                 first half of this string already carries. On the capture
+                 branch nothing is appended: the image's `alt` never
+                 reached the a11y tree anyway, because an `aria-label` on a
+                 button overrides its contents. */
+              aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}${
+                Wireframe ? ". Session interface, drawn." : ""
+              }`}
               onClick={(e) => {
                 returnFocusRef.current = e.currentTarget;
                 setWatching(true);

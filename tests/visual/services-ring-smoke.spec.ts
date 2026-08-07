@@ -162,6 +162,118 @@ function readPda() {
   };
 }
 
+/**
+ * Read the tool bay's inner element — the CAPTURE or the WIREFRAME (ADR-068
+ * D5). One reader for both branches, because the assertion that matters is
+ * the PAIR: a capture tool must be filtered and a wireframe tool must have
+ * no img and no filter. ADR-064 U2's own note applies twice over here — a
+ * one-sided check cannot tell a deliberate exception from a treatment that
+ * has silently stopped applying, and now the exception is per tool.
+ *
+ * `collapsed` earns its place: the drawing is percentage-sized inside a size
+ * container, and a mark whose parent lost its definite cross size computes
+ * to ZERO — it paints nothing, reports no overflow, and looks like a design
+ * choice. Two of them shipped that way in authoring, at 900px wide.
+ */
+function readToolBay() {
+  const frame = document.querySelector<HTMLElement>(".fl-shot__frame");
+  const shot = document.querySelector<HTMLElement>(".fl-shot");
+  const bar = document.querySelector<HTMLElement>(".fl-shot__bar");
+  if (!frame || !shot) return null;
+  const f = frame.getBoundingClientRect();
+  const wire = frame.querySelector<HTMLElement>(".fl-wire");
+  const img = frame.querySelector<HTMLImageElement>("img");
+  const w = wire?.getBoundingClientRect();
+  const bearing = wire
+    ? [...wire.querySelectorAll("*")].filter((el) =>
+        [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? "").trim())
+      )
+    : [];
+  return {
+    imgs: frame.querySelectorAll("img").length,
+    imgFilter: img ? getComputedStyle(img).filter : null,
+    // ⚠ THE OTHER HALF, UNCHANGED: no OTHER plate image on this surface may
+    // carry a filter. The stills are Loop's ads and the films their
+    // commercials — intended colour, left alone (ADR-056 U5).
+    otherFiltered: [...document.querySelectorAll<HTMLElement>(".fl-plate img")]
+      .filter((im) => !im.classList.contains("fl-shot__img"))
+      .map((im) => `${im.className}:${getComputedStyle(im).filter}`)
+      .filter((s) => !s.endsWith(":none")),
+    hasWire: Boolean(wire),
+    wireFilter: wire ? getComputedStyle(wire).filter : null,
+    // The bleed law, measured: the drawing reaches all four console walls.
+    fill:
+      wire && w
+        ? Math.max(
+            Math.abs(w.top - f.top),
+            Math.abs(w.left - f.left),
+            Math.abs(w.right - f.right),
+            Math.abs(w.bottom - f.bottom)
+          )
+        : null,
+    labels: bearing.map((el) => {
+      const cs = getComputedStyle(el);
+      return {
+        t: (el.textContent ?? "").trim(),
+        px: Number.parseFloat(cs.fontSize),
+        fam: cs.fontFamily.split(",")[0].replace(/["']/g, "").trim(),
+      };
+    }),
+    collapsed: wire
+      ? [...wire.querySelectorAll("*")]
+          .filter((el) => {
+            const b = el.getBoundingClientRect();
+            return b.width < 0.4 || b.height < 0.4;
+          })
+          .map((el) => String(el.getAttribute("class") ?? el.tagName))
+      : [],
+    overflowY: frame.scrollHeight - frame.clientHeight,
+    overflowX: frame.scrollWidth - frame.clientWidth,
+    barCut: bar ? bar.getBoundingClientRect().bottom - shot.getBoundingClientRect().bottom : null,
+  };
+}
+
+/** The four assertions a wireframe branch owes, at any viewport. */
+function expectWireframeBay(bay: ReturnType<typeof readToolBay>, label: string) {
+  expect(bay, `${label}: no tool bay`).not.toBeNull();
+  expect(bay!.hasWire, `${label}: vesper did not draw its wireframe`).toBe(true);
+  // AUTHORED evidence: no capture, and no duotone over our own hand.
+  expect(bay!.imgs, `${label}: the wireframe branch mounted an <img>`).toBe(0);
+  expect(bay!.wireFilter, `${label}: the wireframe is filtered — it is AUTHORED`).toBe("none");
+  expect(
+    bay!.otherFiltered,
+    `${label}: another plate image is filtered: ${bay!.otherFiltered.join(", ")}`
+  ).toEqual([]);
+  // ADR-064's bleed law: a bezel the content bleeds into, never a letterbox.
+  expect(bay!.fill ?? 99, `${label}: the drawing does not fill the bay`).toBeLessThanOrEqual(1);
+  expect(
+    bay!.collapsed,
+    `${label}: wireframe marks collapsed to zero: ${bay!.collapsed.join(", ")}`
+  ).toEqual([]);
+  expect(bay!.overflowY, `${label}: the bay clips vertically`).toBeLessThanOrEqual(1);
+  expect(bay!.overflowX, `${label}: the bay clips horizontally`).toBeLessThanOrEqual(1);
+
+  // ⚠ FOUR MICRO-LABELS, AND NOT ONE NUMBER AMONG THEM. The real tool prints
+  // a USD draw figure; this page may not (the map's `Never a price.` line and
+  // the casefile's confidentiality envelope). The readout is a METER — the
+  // one deliberate divergence from the interface being drawn — so a digit or
+  // a currency glyph appearing anywhere in this drawing is the regression.
+  expect(
+    bay!.labels.length,
+    `${label}: the wireframe letters ${bay!.labels.length} elements, budget is 4`
+  ).toBeLessThanOrEqual(4);
+  expect(
+    bay!.labels.length,
+    `${label}: the wireframe lost its micro-labels`
+  ).toBeGreaterThanOrEqual(3);
+  for (const l of bay!.labels) {
+    expect(l.fam, `${label}: "${l.t}" is set in ${l.fam}, not PT Mono`).toBe("PT Mono");
+    expect(l.px, `${label}: "${l.t}" renders at ${l.px}px`).toBeGreaterThanOrEqual(8);
+    expect(l.t, `${label}: "${l.t}" carries a currency glyph`).not.toMatch(/[$€£]/);
+    expect(l.t, `${label}: "${l.t}" carries a figure`).not.toMatch(/\d/);
+  }
+}
+
 function isDesktopViewport(page: Page): boolean {
   return (page.viewportSize()?.width ?? 0) >= 961;
 }
@@ -1053,6 +1165,41 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           await page.locator(".fl-plate--tools .fl-caps").count(),
           `${label}: the capability tiles came back to the tools plate`
         ).toBe(0);
+
+        // ── THE FILTER LAW IS PER TOOL NOW (ADR-068 D5) ────────────────
+        // ADR-064 U2 drew the line at AUTHORED vs CAPTURED and a wireframe
+        // is authored evidence, so the both-halves assertion narrows to the
+        // TOOL: station 1 (mímir) is a capture and must be filtered, station
+        // 2 (vesper) is a drawing and must have neither an img nor a filter.
+        // Walking BACK is the third case and not a formality — the branch
+        // swapping clean is the whole risk in a keyed conditional render.
+        const captureBay = await page.evaluate(readToolBay);
+        expect(captureBay, `${label}: no tool bay`).not.toBeNull();
+        expect(captureBay!.imgs, `${label}: the capture branch mounted no image`).toBe(1);
+        expect(captureBay!.hasWire, `${label}: a capture tool drew a wireframe`).toBe(false);
+        expect(captureBay!.imgFilter, `${label}: the tool capture lost its duotone`).not.toBe(
+          "none"
+        );
+        expect(
+          captureBay!.otherFiltered,
+          `${label}: another plate image is filtered: ${captureBay!.otherFiltered.join(", ")}`
+        ).toEqual([]);
+
+        await page.locator(".fl-con__stn").nth(1).click();
+        await page.waitForTimeout(900);
+        expectWireframeBay(await page.evaluate(readToolBay), `${label} vesper`);
+
+        await page.locator(".fl-con__stn").nth(0).click();
+        await page.waitForTimeout(900);
+        const backBay = await page.evaluate(readToolBay);
+        expect(backBay!.hasWire, `${label}: the wireframe survived the swap back`).toBe(false);
+        expect(backBay!.imgs, `${label}: the capture did not come back`).toBe(1);
+        expect(backBay!.imgFilter, `${label}: the capture came back unfiltered`).not.toBe("none");
+        // The bar is the only affordance saying the capture opens; the swap
+        // must not cost it (the same squeeze `.fl-shot` has failed before).
+        expect(backBay!.barCut ?? 99, `${label}: the walkthrough bar clipped`).toBeLessThanOrEqual(
+          1
+        );
       }
     }
   });
@@ -1318,6 +1465,28 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     }
     expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);
     expect(unframed, `rows without the console frame:\n${unframed.join("\n")}`).toEqual([]);
+
+    // ── AND THE WIREFRAME AT THE BINDING BOX (ADR-068 D5) ────────────────
+    // The loop above walks each row on its DEFAULT tool, which is the capture
+    // — so the drawing needs its own visit, and 1440×800 is where it needs
+    // it. `.fl-shot__frame` is the plate's flex-sacrificial element and it is
+    // SHORTEST here (86.4px on the capture branch, 108px on vesper's, whose
+    // foot sentence runs a line shorter): the route's height is a function of
+    // the field's WIDTH while the field grows with HEIGHT, so the squeeze
+    // lands on the owner's own laptop rather than at 720p where one would
+    // look for it. Every span in the drawing is a fraction of that box.
+    await page.locator(".fl-row").nth(3).click();
+    await page.waitForTimeout(400);
+    await page.locator(".fl-con__stn").nth(1).click();
+    await page.waitForTimeout(1200);
+    expectWireframeBay(await page.evaluate(readToolBay), "1440x800 vesper");
+    expect(
+      await page.evaluate(() => {
+        const f = document.querySelector<HTMLElement>(".fl-con__field");
+        return f ? f.scrollHeight - f.clientHeight : 99;
+      }),
+      "1440x800 vesper: the console field clips"
+    ).toBeLessThanOrEqual(1);
   });
 
   test("desktop: ring mode retires the racks; cards expose their CTA", async ({ page }) => {
@@ -1941,6 +2110,97 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       accents!.nowStroke.ratio,
       `the NOW module stroke is ${accents!.nowStroke.ratio}:1 (${accents!.nowStroke.color})`
     ).toBeGreaterThanOrEqual(3);
+
+    // ── AND THE AUTHORED WIREFRAME, ON THE SAME PARCHMENT (ADR-068 D5) ─
+    // The row walk above reads each row on its DEFAULT tool, so the drawing
+    // is never on screen for it. Its own colour law is the one this surface
+    // keeps relearning: AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP.
+    // `rgba(ink, .44)` is a quiet label on near-black and 2.4:1 on
+    // parchment; the whole `--w-*` set is re-derived in theme.css and this
+    // is what holds it there. The LABELS are asserted at the 4.5:1 glyph
+    // floor; the hairlines and washes answer to a wash target (≥1.5) because
+    // they are the drawing's texture, not its reading.
+    await page.locator(".fl-con__stn").nth(1).click();
+    await page.waitForTimeout(1100);
+
+    const wireLight = await page.evaluate(() => {
+      const parse = (c: string) => {
+        const m = String(c).match(/rgba?\(([^)]+)\)/);
+        if (!m) return null;
+        const p = m[1].split(",").map((v) => Number.parseFloat(v));
+        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+      };
+      const lin = (v: number) => {
+        const s = v / 255;
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      type C = { r: number; g: number; b: number; a: number };
+      const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+      const over = (fg: C, bg: C): C =>
+        fg.a >= 1
+          ? fg
+          : {
+              r: fg.a * fg.r + (1 - fg.a) * bg.r,
+              g: fg.a * fg.g + (1 - fg.a) * bg.g,
+              b: fg.a * fg.b + (1 - fg.a) * bg.b,
+              a: 1,
+            };
+      const ratio = (fg: C, bg: C) => {
+        const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
+        return Number(((hi + 0.05) / (lo + 0.05)).toFixed(2));
+      };
+      const resolve = (token: string) => {
+        const probe = document.createElement("span");
+        probe.style.color = token;
+        document.body.appendChild(probe);
+        const c = parse(getComputedStyle(probe).color);
+        probe.remove();
+        return c;
+      };
+      const wire = document.querySelector<HTMLElement>(".fl-wire");
+      const inner = document.querySelector<HTMLElement>(".fl-wire__in");
+      const shot = document.querySelector<HTMLElement>(".fl-shot");
+      if (!wire || !inner || !shot) return null;
+      // The drawing's ground is the BAY, not the console — the same value in
+      // both themes, but read it rather than assume it.
+      const bay = parse(getComputedStyle(shot).backgroundColor)!;
+      const plate = resolve(getComputedStyle(inner).getPropertyValue("--w-plate").trim());
+      // A label on the composer is judged against the composer's own plate.
+      const bedOf = (el: Element) =>
+        el.closest(".fl-wire__comp") && plate ? over(plate, bay) : bay;
+      return {
+        labels: [...wire.querySelectorAll("*")]
+          .filter((el) =>
+            [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? "").trim())
+          )
+          .map((el) => ({
+            t: (el.textContent ?? "").trim(),
+            ratio: ratio(parse(getComputedStyle(el).color)!, bedOf(el)),
+            color: getComputedStyle(el).color,
+          })),
+        lines: ["--w-hair", "--w-hair2", "--w-mark"].map((name) => {
+          const c = resolve(getComputedStyle(inner).getPropertyValue(name).trim());
+          return { name, ratio: c ? ratio(c, bay) : 0 };
+        }),
+      };
+    });
+
+    expect(wireLight, "the vesper wireframe is missing in light").not.toBeNull();
+    expect(
+      wireLight!.labels.map((l) => l.t),
+      "the wireframe lost a micro-label in light"
+    ).toContain("DRAW");
+    for (const l of wireLight!.labels) {
+      expect(
+        l.ratio,
+        `wireframe label "${l.t}" is ${l.ratio}:1 (${l.color})`
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const l of wireLight!.lines) {
+      expect(l.ratio, `wireframe ${l.name} is ${l.ratio}:1 on parchment`).toBeGreaterThanOrEqual(
+        1.5
+      );
+    }
   });
 
   test("reduced motion keeps the accordion and mounts no ring overlays", async ({ browser }) => {

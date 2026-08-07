@@ -624,6 +624,45 @@ html[data-theme="light"] .fl-bay__br {
   border-color: rgba(138, 107, 32, 0.55);
 }
 
+/* ── The bay's AUTHORED WIREFRAME, on parchment (ADR-068 D5) ──────────────
+   The same law as `.fl-route` two blocks up, applied to a whole drawing:
+   AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP. Every step below is
+   re-derived rather than inherited, because `rgba(ink, .15)` recedes toward
+   BLACK in dark and toward PARCHMENT in light — the identical number goes
+   from quiet to absent.
+
+   MEASURED on the bay's ground, `--void-deep-canon` (#e4dac9 in light, the
+   same value `--con-void` resolves to, so the console walk and this drawing
+   composite against one colour):
+
+     hairline   α .15 → 1.37:1   ·   α .30 → 1.96:1   (line work, ≥1.5 target)
+     label      α .44 → 2.4:1    ·   α .70 → 6.2:1    (glyphs, 4.5:1 floor)
+     `--gold`   as a fill        → 1.68:1  ⇒ the ramp's LINE step instead
+
+   ⚠ THE GOLD SIGNAL TAKES `--gold-line`, NOT `--gold`. A saturated yellow
+   is inherently high-luminance, so on parchment the mark is a smudge at
+   1.68:1 where the ramp's 3:1 step measures 3.66 (ADR-063 U2). ⚠ And never
+   re-darken `--gold` itself — that breaks the fills everywhere else. */
+html[data-theme="light"] .fl-wire__in {
+  --w-hair: rgba(var(--dawn-rgb), 0.3);
+  --w-hair2: rgba(var(--dawn-rgb), 0.2);
+  --w-fill: rgba(var(--dawn-rgb), 0.26);
+  --w-fill2: rgba(var(--dawn-rgb), 0.38);
+  --w-card: rgba(var(--dawn-rgb), 0.055);
+  --w-lbl-ink: rgba(var(--dawn-rgb), 0.7);
+  --w-mark: var(--gold-line);
+  --w-lit: rgba(var(--gold-rgb), 0.3);
+  --w-gen: rgba(var(--gold-rgb), 0.24);
+  --w-tile-a: rgba(138, 107, 32, 0.16);
+  --w-tile-b: rgba(var(--dawn-rgb), 0.06);
+  --w-tile-c: rgba(138, 107, 32, 0.08);
+  /* ⚠ THE PLATE'S LIFT INVERTS, SO IT GOES AWAY. In dark it is dawn at 5%
+     over near-black and it is what makes the composer FLOAT; the same
+     declaration in light is INK over paper, i.e. a smudge — and the
+     parchment plate is already 8 levels off the bay's ground without it. */
+  --w-plate-lift: transparent;
+}
+
 /* ...and the MAP's own vocabulary, which no other plate paints in. */
 html[data-theme="light"] .fl-pda {
   --pda-amb: var(--gold-line);
