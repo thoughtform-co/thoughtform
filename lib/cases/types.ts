@@ -479,11 +479,24 @@ export interface CaseReadout {
  *   · `title` ≤30 chars — the claim, one line at reading size;
  *   · `desc` ≤95 chars — the evidence, two lines.
  * Exactly four blocks: the proof register is a 2×2 composition.
+ *
+ * `glyph` came back in the other direction (2026-08-07): what the deleted
+ * figure slot actually wanted was a MARK, not a number — one per claim, so
+ * the four tiles read as a register of instruments rather than a paragraph
+ * grid. It is a KEY, never a drawing: the pixel sets live in the renderer's
+ * registry (`components/landing/home-v2/services/casefile/proofGlyphData.ts`,
+ * `PROOF_GLYPHS`), because this module's header contract is ZERO IMPORTS and
+ * a drawing is component-layer data. The registry test pins that every key
+ * present here resolves there, so a typo fails a test rather than rendering
+ * an empty cell.
  */
 export interface CaseBlock {
   /** The claim, e.g. "97% of briefings involve AI". */
   title: string;
   desc: string;
+  /** A `PROOF_GLYPHS` key — the mark drawn beside the claim. Optional so a
+   *  second client's track can carry claims before its glyphs are drawn. */
+  glyph?: string;
 }
 
 /** One film on a `films` plate. Poster-first by contract: the plate renders

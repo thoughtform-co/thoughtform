@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PROOF_GLYPHS } from "@/components/landing/home-v2/services/casefile/proofGlyphData";
 import { skillSymbol } from "@/components/landing/home-v2/services/casefile/skillSymbol";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
@@ -569,16 +570,59 @@ describe("cases registry (ADR-054)", () => {
       "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
       "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
     ]);
+    // ⚠ THE TOOLING REGISTER IS PROGRAM-LEVEL NOW (2026-08-07). The four
+    // tool-describing claims — "Generation platform" and its three siblings
+    // — were one tile per tool, which is what the RIGHT PANEL does with a
+    // capture beside it; the register was restating the gallery two boxes
+    // away. These four say the thing only the register can say. The literal
+    // pin stays because the ORDER is the argument: gap → collapse →
+    // ownership → substrate is why-it-exists, what-it-changed, who-holds-it,
+    // what-it-shares.
     expect(
       loop?.casefile.tracks
         .find((track) => track.id === "tooling")
         ?.blocks?.map((block) => block.title)
     ).toEqual([
-      "Generation platform",
-      "Briefing orchestration",
-      "Briefing intelligence",
-      "Localization pipeline",
+      "Too specific to buy",
+      "Rebuilt, not accelerated",
+      "Owned by the teams",
+      "One substrate, four tools",
     ]);
+  });
+
+  it("every proof claim carries a glyph, and every glyph key resolves", () => {
+    // The mark is data in `lib/cases/**` and a drawing in the component
+    // layer, which is the only way the content module keeps its zero-import
+    // contract. That split has one failure mode — a key that resolves to
+    // nothing renders an empty cell and says so nowhere — so it is pinned
+    // here rather than trusted to review.
+    const keys = new Set(Object.keys(PROOF_GLYPHS));
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        for (const b of t.blocks ?? []) {
+          if (b.glyph === undefined) continue;
+          expect(b.glyph.length, `${c.slug}/${t.id} block "${b.title}" glyph`).toBeGreaterThan(0);
+          expect(
+            keys.has(b.glyph),
+            `${c.slug}/${t.id} block "${b.title}" names glyph "${b.glyph}", which is not in PROOF_GLYPHS`
+          ).toBe(true);
+        }
+      }
+    }
+
+    // All four Loop tracks are drawn. A register with three marks and one
+    // blank tile reads as a rendering bug, so the rule is all-or-none per
+    // track and Loop is the track set that has them.
+    const loop = getCase("loop-earplugs");
+    for (const t of loop?.casefile.tracks ?? []) {
+      const glyphs = (t.blocks ?? []).map((b) => b.glyph);
+      expect(glyphs.filter(Boolean), `${t.id} glyphs`).toHaveLength(4);
+      // One mark per claim WITHIN a row: two tiles under one glyph would put
+      // two different claims behind one drawing, which is the register's
+      // whole grammar collapsing. Across rows a repeat would be legitimate,
+      // so the uniqueness is scoped to the track.
+      expect(new Set(glyphs).size, `${t.id} glyphs are not unique`).toBe(4);
+    }
   });
 
   it("tool lifecycle has ONE registry, and the proof register is not it", () => {
@@ -993,6 +1037,77 @@ describe("cases registry (ADR-054)", () => {
       // The register's dotted leader needs a non-wrapping value; the panel
       // shows the DEPARTMENT only for exactly this reason.
       expect(c.team.split("·")[0].trim().length, `${c.id} team`).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it("PROJECT_CASES rail handles fit four stations on one console", () => {
+    // ⚠ 14 IS ARITHMETIC, NOT TASTE (ADR-066). A quarter of the 594.5px
+    // console at 1280×720 is 146.6px, leaving ~122px after padding, diamond
+    // and gap — about fourteen characters at the 10px control floor. The
+    // fifteenth character is what costs the rail its diamond, and that is a
+    // mark the surface cannot buy back below the decorative floor.
+    const tabs = PROJECT_CASES.map((c) => c.tab);
+    for (const c of PROJECT_CASES) {
+      expect(c.tab.length, `${c.id} tab "${c.tab}"`).toBeGreaterThan(0);
+      expect(c.tab.length, `${c.id} tab "${c.tab}"`).toBeLessThanOrEqual(14);
+    }
+    // A rail with two identical handles cannot say which station is lit.
+    expect(new Set(tabs).size, `tab handles collide: ${tabs.join(" · ")}`).toBe(tabs.length);
+  });
+
+  it("PROJECT_CASES route steps fit the plate's spine", () => {
+    // The before-state is a sequence a reader COUNTS, so the count has a
+    // floor and a ceiling: below three there is no route to collapse, above
+    // five the cells stop being readable across the plate's width. Each cell
+    // is one mono line — a step past its budget wraps and drops the row.
+    for (const c of PROJECT_CASES) {
+      const { before, now, beforeMeta, nowMeta } = c.route;
+      expect(before.length, `${c.id} route.before`).toBeGreaterThanOrEqual(3);
+      expect(before.length, `${c.id} route.before`).toBeLessThanOrEqual(5);
+      for (const step of before) {
+        expect(step.length, `${c.id} route step "${step}"`).toBeGreaterThan(0);
+        expect(step.length, `${c.id} route step "${step}"`).toBeLessThanOrEqual(12);
+      }
+      expect(now.length, `${c.id} route.now "${now}"`).toBeGreaterThan(0);
+      expect(now.length, `${c.id} route.now "${now}"`).toBeLessThanOrEqual(10);
+      for (const [k, v] of [
+        ["beforeMeta", beforeMeta],
+        ["nowMeta", nowMeta],
+      ] as const) {
+        expect(v.length, `${c.id} route.${k} "${v}"`).toBeGreaterThan(0);
+        expect(v.length, `${c.id} route.${k} "${v}"`).toBeLessThanOrEqual(44);
+      }
+    }
+  });
+
+  it("PROJECT_CASES detail plates ask the SAME four questions, in order", () => {
+    // The plate is a comparison instrument: a reader stepping the rail must
+    // land on the same four questions every time, or the four tools stop
+    // being comparable and become four brochures. Pinning the tuple's ORDER
+    // is what makes that mechanical — the type's union alone would let a
+    // tool answer them in any sequence.
+    const QUESTIONS = [
+      "WHO IT SERVES",
+      "WHAT IT REPLACED",
+      "WHAT RUNS IT",
+      "WHERE IT RUNS",
+    ] as const;
+    const ACCENTS = new Set(["own", "gold"]);
+    for (const c of PROJECT_CASES) {
+      expect(c.detail, `${c.id} detail`).toHaveLength(4);
+      expect(
+        c.detail.map((fact) => fact.q),
+        `${c.id} detail questions`
+      ).toEqual([...QUESTIONS]);
+      for (const fact of c.detail) {
+        // One mono line in the answer column. Past this the answer clamps,
+        // and a clamp truncating LIVE copy is the clamp being wrong.
+        expect(fact.a.length, `${c.id} "${fact.q}" answer`).toBeGreaterThan(0);
+        expect(fact.a.length, `${c.id} "${fact.q}" answer "${fact.a}"`).toBeLessThanOrEqual(32);
+        if (fact.accent !== undefined) {
+          expect(ACCENTS.has(fact.accent), `${c.id} "${fact.q}" accent`).toBe(true);
+        }
+      }
     }
   });
 });

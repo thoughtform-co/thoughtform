@@ -21,6 +21,24 @@ export interface CaseCapability {
   desc: string;
 }
 
+/**
+ * One row of the casefile detail plate — a fixed question and this tool's
+ * answer (2026-08-07). FOUR ROWS, IN ORDER, AND THE SAME FOUR ON EVERY TOOL:
+ * the plate is a comparison instrument, so a reader running down the rail
+ * reads four answers to one question, not four different questions. The
+ * union is what makes that mechanical rather than a convention.
+ *
+ * `accent` marks the one or two answers that carry the argument on a given
+ * tool — `own` for who owns the work, `gold` for what runs it. Absent means
+ * plain ink; it is emphasis, never a category.
+ */
+export interface ToolDetailFact {
+  q: "WHO IT SERVES" | "WHAT IT REPLACED" | "WHAT RUNS IT" | "WHERE IT RUNS";
+  /** ≤32 chars — one mono line against the plate's answer column. */
+  a: string;
+  accent?: "own" | "gold";
+}
+
 /** One headline metric per case (ADR-033) — folded in from the retired
  *  `build-cases/buildCaseData.ts` triplets so PROJECT_CASES is the single
  *  canonical case module. Rendered on the arc orbit card's caption row. */
@@ -43,7 +61,48 @@ export interface ProjectCase {
   mode: CaseMode;
   challenge: string;
   shift: string;
+  /**
+   * The four capability tiles. STILL CANONICAL for the Arc orbit card and
+   * `ToolCardConsole` — this field did not move and must not be trimmed to
+   * match the casefile. It is simply no longer what the casefile's tool
+   * plate renders: ADR-068 replaced the capability foot with the `route` +
+   * `detail` pair below, because four capability tiles per tool put sixteen
+   * tiles behind one rail and none of them answered the reader's actual
+   * question, which is what the tool is FOR.
+   */
   capabilities: [CaseCapability, CaseCapability, CaseCapability, CaseCapability];
+  /**
+   * The casefile rail's handle for this tool — the FUNCTION, mono caps, no
+   * ordinal (ADR-066: no ordinal survives anywhere on that surface).
+   *
+   * ≤14 chars, and it is arithmetic, not taste: at four stations a quarter
+   * of the 594.5px console leaves ~122px after padding and gap, which is
+   * ~14 characters at the 10px control floor. A fifteenth character is what
+   * costs the rail its diamond.
+   */
+  tab: string;
+  /**
+   * The BEFORE → NOW route, drawn as the plate's spine. Not prose: the
+   * before-state is a sequence of steps a reader can count, and the whole
+   * claim of a Software-for-Few tool is that the count collapses to one.
+   */
+  route: {
+    /** 3–5 steps in the order the work used to move, each ≤12 chars — one
+     *  mono cell on the route rail; a longer step wraps and breaks the row. */
+    before: readonly string[];
+    /** What the steps collapsed INTO, ≤10 chars — it sits in a single
+     *  terminal cell the same width as one `before` step. */
+    now: string;
+    /** The cost of the old route, ≤44 chars — one mono line under the rail. */
+    beforeMeta: string;
+    /** What the new route buys, ≤44 chars — same line, opposite side. */
+    nowMeta: string;
+  };
+  /**
+   * Exactly four question/answer rows for the plate — see `ToolDetailFact`.
+   * The tuple pins the count; the test pins the questions and their order.
+   */
+  detail: readonly [ToolDetailFact, ToolDetailFact, ToolDetailFact, ToolDetailFact];
   /** Headline metric for the arc orbit card (optional — cards without one
    *  simply omit the caption row's right slot). */
   metric?: CaseMetric;
@@ -97,6 +156,19 @@ export const PROJECT_CASES: ProjectCase[] = [
         desc: "Expanded from Creative Strategy into Insights and Product Marketing use cases.",
       },
     ],
+    tab: "BRIEFING AGENT",
+    route: {
+      before: ["REDDIT", "AD LIBRARY", "PERFORMANCE", "REVIEW NOTES", "PERSONAS"],
+      now: "ONE BRIEF",
+      beforeMeta: "FIVE SOURCES · BY HAND · EVERY CYCLE",
+      nowMeta: "ONE SURFACE · WHILE THE BRIEF IS WRITTEN",
+    },
+    detail: [
+      { q: "WHO IT SERVES", a: "STRATEGY · BRAND · PMM", accent: "own" },
+      { q: "WHAT IT REPLACED", a: "MANUAL SOURCE DIGGING" },
+      { q: "WHAT RUNS IT", a: "ENCODED SKILL · DEEP LANE", accent: "gold" },
+      { q: "WHERE IT RUNS", a: "WEB · MCP · SLACK · IDE" },
+    ],
     metric: { value: "4+", label: "Intelligence sources" },
     stack: ["Next.js", "Supabase", "Gemini", "Claude Skills", "MCP", "Slack"],
     surfaces: ["Web app", "MCP server", "Claude", "Cursor", "Slack", "ChatGPT"],
@@ -144,6 +216,23 @@ export const PROJECT_CASES: ProjectCase[] = [
         title: "Headless REST + MCP",
         desc: "Same Skill behind Claude.ai and the in-product enhance button.",
       },
+    ],
+    tab: "IMAGE & VIDEO",
+    route: {
+      before: ["PICK A TOOL", "PROMPT", "GENERATE", "EXPORT", "ANIMATE"],
+      now: "ONE CANVAS",
+      beforeMeta: "THREE TOOLS · COST INVISIBLE",
+      nowMeta: "ONE CANVAS · DRAW VISIBLE PER RUN",
+    },
+    /* ⚠ WHERE IT RUNS DELIBERATELY OMITS REST AND MCP. The headless lane is
+       WIP in the Vesper repo; `surfaces` above still lists it because that
+       field feeds the Arc card's roadmap read, but a casefile plate is a
+       record of what runs today. Do not harmonise the two. */
+    detail: [
+      { q: "WHO IT SERVES", a: "STUDIO · PRODUCT DESIGN", accent: "own" },
+      { q: "WHAT IT REPLACED", a: "A LICENSED CANVAS" },
+      { q: "WHAT RUNS IT", a: "MULTI-MODEL ROUTER", accent: "gold" },
+      { q: "WHERE IT RUNS", a: "ONE CANVAS · MANY SURFACES" },
     ],
     metric: { value: "0%", label: "Margin vs. Krea" },
     stack: [
@@ -202,6 +291,19 @@ export const PROJECT_CASES: ProjectCase[] = [
         desc: "Share-link review, no Figma seat needed.",
       },
     ],
+    tab: "UGC DUBBER",
+    route: {
+      before: ["TRANSCRIBE", "TRANSLATE", "DUB", "CAPTION", "QA"],
+      now: "ONE REVIEW",
+      beforeMeta: "FIVE HANDOFFS · THIRTY-PLUS MARKETS",
+      nowMeta: "ONE FLOW · THE REVIEW STEP KEPT",
+    },
+    detail: [
+      { q: "WHO IT SERVES", a: "LOCALIZATION & EXPANSION", accent: "own" },
+      { q: "WHAT IT REPLACED", a: "A FIVE-STEP HANDOFF" },
+      { q: "WHAT RUNS IT", a: "ENCODED SKILL · FAST LANE", accent: "gold" },
+      { q: "WHERE IT RUNS", a: "WEB · SHARE LINKS · CONNECTOR" },
+    ],
     metric: { value: "30+", label: "Languages supported" },
     stack: ["Next.js", "Supabase", "Anthropic", "Gemini"],
     surfaces: ["Web app", "Share-link review"],
@@ -253,6 +355,22 @@ export const PROJECT_CASES: ProjectCase[] = [
         title: "Briefing splits",
         desc: "Turns revenue projections and use-case splits into clear briefing assignments.",
       },
+    ],
+    tab: "STUDIO PM",
+    route: {
+      before: ["READ BOARD", "FIND FILE", "CREATE PAGE", "PASTE"],
+      now: "ONE ROUTE",
+      beforeMeta: "RE-ENTRY ON EVERY BRIEF",
+      nowMeta: "BOARD TO CANVAS · NOTHING RETYPED",
+    },
+    /* ⚠ HEIMDALL HAS NO MCP SERVER — never claim one here. Its surfaces are
+       the board connector, the canvas plugin and the asset system; the
+       encoded Skill runs inside that chain, not behind a headless endpoint. */
+    detail: [
+      { q: "WHO IT SERVES", a: "STUDIO PROJECT MANAGEMENT", accent: "own" },
+      { q: "WHAT IT REPLACED", a: "MANUAL BRIEF RE-ENTRY" },
+      { q: "WHAT RUNS IT", a: "ENCODED SKILL · EVERYDAY LANE", accent: "gold" },
+      { q: "WHERE IT RUNS", a: "BOARD → CANVAS → FRONTIFY" },
     ],
     metric: { value: "8+", label: "Integrations" },
     stack: ["Next.js", "Supabase", "Vercel KV", "Monday", "Figma", "Frontify", "Meta", "Anthropic"],

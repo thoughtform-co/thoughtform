@@ -1715,18 +1715,22 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // a hedge beside an exact sum reads as two different numbers.
         blocks: [
           {
+            glyph: "board",
             title: "Every stream on one board",
             desc: "Twenty-seven modules, including the work deliberately left person-led.",
           },
           {
+            glyph: "encode",
             title: "47 Skills encoded",
             desc: "Judgment made reusable, and kept to one standard.",
           },
           {
+            glyph: "reuse",
             title: "Reuse beats rebuilding",
             desc: "Nineteen of twenty-four configured streams drew on a shape already paid for.",
           },
           {
+            glyph: "envelope",
             title: "Draw stays within envelope",
             desc: "Relative draw measured against workload. Never a price.",
           },
@@ -1791,18 +1795,22 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
         blocks: [
           {
+            glyph: "field",
             title: "97% of briefings involve AI",
             desc: "In paid social, AI is the default process rather than a specialist add-on.",
           },
           {
+            glyph: "threshold",
             title: "Campaigns beat their target",
             desc: "Three of three, at a return on ad spend of 2.7, 5.33 and 6.14 against a target of 2.",
           },
           {
+            glyph: "cadence",
             title: "Two to three times faster",
             desc: "More iterations in less time than the former agency route, at the same craft bar.",
           },
           {
+            glyph: "holdfast",
             title: "The studio owns the work",
             desc: "The team briefs, creates, reviews and ships without a specialist in the loop.",
           },
@@ -1831,18 +1839,22 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
         blocks: [
           {
+            glyph: "masters",
             title: "Two 30-second masters",
             desc: "Narrative films produced with AI and built for top-of-funnel paid media.",
           },
           {
+            glyph: "level",
             title: "One craft standard",
             desc: "Direction, art direction, production, edit, colour and sound matched live action.",
           },
           {
+            glyph: "broadcast",
             title: "Ran on YouTube and CTV",
             desc: "The campaign reached connected TV and YouTube as paid media in the US.",
           },
           {
+            glyph: "parallel",
             title: "Ran beside live action",
             desc: "The two AI films ran alongside two traditionally produced spots.",
           },
@@ -1869,22 +1881,44 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         preview: "Preview — 04_software-for-few/",
         visual: { kind: "tools", toolIds: TOOL_IDS },
         classification: "AI-ASSISTED DEVELOPMENT · INTERNAL TOOLS · ACTIVE",
+        /* THE FOUR TOOL-DESCRIBING BLOCKS WERE REPLACED HERE 2026-08-07
+           (owner). "Generation platform · Briefing orchestration · Briefing
+           intelligence · Localization pipeline" named the four tools one
+           tile each — which is what the RIGHT PANEL does, better, with a
+           capture beside it. The register was restating the gallery two
+           boxes away, exactly the way row one's `27`/`47` restated its own
+           directory meta before ADR-067 deleted the figure.
+
+           Where that content still lives, so nothing is restored from
+           muscle memory:
+           · each tool's one-line description is the right panel's DETAIL
+             PLATE (`ProjectCase.tab` / `route` / `detail`);
+           · the full four-capability breakdown stays in `PROJECT_CASES`,
+             which remains canonical for the Arc card and ToolCardConsole.
+
+           What replaces them is PROGRAM-LEVEL: four claims about the fleet
+           as a whole, which is the only thing this register can say that
+           the panel beside it cannot. */
         blocks: [
           {
-            title: "Generation platform",
-            desc: "Image, video, product references and cost visibility in one internal tool.",
+            glyph: "gap",
+            title: "Too specific to buy",
+            desc: "Four tools in the gap between generic SaaS and an agency build no headcount could justify.",
           },
           {
-            title: "Briefing orchestration",
-            desc: "High-volume paid-social briefs move straight into the production flow.",
+            glyph: "collapse",
+            title: "Rebuilt, not accelerated",
+            desc: "Five sources become one surface, five handoffs one flow — and nothing is retyped in between.",
           },
           {
-            title: "Briefing intelligence",
-            desc: "Competitor ads, social listening and performance data meet in one interface.",
+            glyph: "ownership",
+            title: "Owned by the teams",
+            desc: "Built with the workflow owner; localization now product-manages its own tool end to end.",
           },
           {
-            title: "Localization pipeline",
-            desc: "Transcribe, translate, review and dub approved video in a single flow.",
+            glyph: "substrate",
+            title: "One substrate, four tools",
+            desc: "The engines share their encoded judgment — one tool was even extracted from another.",
           },
         ],
         context: [
