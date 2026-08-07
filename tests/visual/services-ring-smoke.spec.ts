@@ -636,13 +636,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         `${label}: a ring anchor published during the casefile dwell`
       ).toBe(0);
 
-      // ⚠ THE CLAIM READS AT EVERY VIEWPORT, unlike its sentence. The tile is
-      // two tiers now — a claim, then the evidence — and below 931h the
-      // evidence is sr-only because the register box is 86px against the
-      // 182px two full tiers need. What must NEVER be reduced is the claim
-      // itself: it carries the tile's whole meaning, including the figure
-      // that used to sit above it. Its predecessor was a 9.5px gold label
-      // that clipped 5-9px on every row at these heights, silently.
+      // ⚠ THE CLAIM READS AT EVERY VIEWPORT, unlike its sentence. The register
+      // is a GLYPHED INDEX now (ADR-068) — mark, claim, sentence, one row each
+      // — and below 1070h the sentence is sr-only because the register box is
+      // 86px at 720p against the 211px four two-line rows need. What must
+      // NEVER be reduced is the claim itself: it carries the row's whole
+      // meaning, including the figure that used to sit above it. Its
+      // predecessor was a 9.5px gold label that clipped 5-9px on every row at
+      // these heights, silently.
       const claims = await page.evaluate(() => {
         const list = [...document.querySelectorAll<HTMLElement>(".fl-proof-register__claim")];
         return {
@@ -666,7 +667,97 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         []
       );
 
-      if (viewport.height > 930) {
+      // ── EVERY ROW CARRIES ITS MARK (ADR-068) ──────────────────────
+      // The mark is what makes this an INDEX rather than a list, and it is
+      // the one part with no text to fall back on: a missing `glyph` key,
+      // a renamed drawing or a `PROOF_GLYPHS` entry that stopped resolving
+      // all render as an empty gutter that reviews as "a bit plain". The
+      // box is measured because size comes from CSS, not attributes — 14px
+      // (2px cells) on the compact rung, 21px (3px cells) on the tall one,
+      // and never a fractional cell in between.
+      const marks = await page.evaluate(() => {
+        const spans = [...document.querySelectorAll<HTMLElement>(".fl-proof-register__glyph")];
+        return {
+          count: spans.length,
+          svgs: spans.filter((s) => s.querySelectorAll("svg.fl-proof-glyph").length === 1).length,
+          hidden: spans.filter(
+            (s) =>
+              s.getAttribute("aria-hidden") === "true" &&
+              s.querySelector("svg")?.getAttribute("aria-hidden") === "true"
+          ).length,
+          boxes: spans.map((s) => {
+            const r = s.querySelector("svg")?.getBoundingClientRect();
+            return r ? `${Math.round(r.width)}x${Math.round(r.height)}` : "none";
+          }),
+          offGrid: spans.flatMap((s, i) => {
+            const r = s.querySelector("svg")?.getBoundingClientRect();
+            if (!r) return [`mark-${i + 1}:missing`];
+            const bad = r.width < 14 || r.width > 21 || r.height < 14 || r.height > 21;
+            return bad ? [`mark-${i + 1}:${r.width}x${r.height}`] : [];
+          }),
+          // The drawing itself: pixels, never type. A `<text>` node here
+          // would also walk into the font guard below with an SVG family.
+          rects: spans.map((s) => s.querySelectorAll("rect").length),
+          texts: spans.reduce((n, s) => n + s.querySelectorAll("text").length, 0),
+        };
+      });
+      expect(marks.count, `${label}: the index is not four marks`).toBe(4);
+      expect(marks.svgs, `${label}: a register row rendered no glyph drawing`).toBe(4);
+      expect(marks.hidden, `${label}: a register mark is exposed to the a11y tree`).toBe(4);
+      expect(
+        marks.offGrid,
+        `${label}: marks off the 14-21px ladder: ${marks.offGrid.join(", ")} (all: ${marks.boxes.join(" ")})`
+      ).toEqual([]);
+      expect(
+        Math.min(...marks.rects),
+        `${label}: a mark drew fewer than 9 pixels`
+      ).toBeGreaterThanOrEqual(9);
+      expect(marks.texts, `${label}: a mark printed type instead of pixels`).toBe(0);
+
+      // ⚠ THE COMPACT RUNG IS ASSERTED, NOT ASSUMED. Below 1070h the
+      // sentence is present for a reader and absent for the eye — and the
+      // failure mode is silent in both directions. A rung that stops
+      // applying prints four full sentences into an 86px box (measured
+      // during the ADR-068 build: 116px of clip at 1069h, from a media pair
+      // that left a gap between `max-height` and `min-height`); a rung that
+      // over-applies takes the evidence away from a viewport with room for
+      // it. Only the CLIP is checked, never `display: none` — the sentence
+      // has to stay in the accessibility tree.
+      if (viewport.height <= 1069) {
+        const srOnly = await page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>(".fl-proof-register__description")].map(
+            (d) => {
+              const cs = getComputedStyle(d);
+              const r = d.getBoundingClientRect();
+              return {
+                position: cs.position,
+                clip: cs.clip,
+                display: cs.display,
+                w: Math.round(r.width),
+                h: Math.round(r.height),
+                text: (d.textContent ?? "").trim().length,
+              };
+            }
+          )
+        );
+        expect(srOnly.length, `${label}: the compact rung lost its sentences`).toBe(4);
+        const notClipped = srOnly.flatMap((d, i) =>
+          d.position !== "absolute" ||
+          !d.clip.startsWith("rect(") ||
+          d.w > 1 ||
+          d.h > 1 ||
+          d.display === "none" ||
+          d.text === 0
+            ? [`description-${i + 1}: ${d.position}/${d.clip}/${d.w}x${d.h}/${d.display}`]
+            : []
+        );
+        expect(
+          notClipped,
+          `${label}: the compact rung is not the sr-only clip: ${notClipped.join(" | ")}`
+        ).toEqual([]);
+      }
+
+      if (viewport.height > 1069) {
         const tallProof = await page.evaluate(() => {
           const briefBody = document.querySelector<HTMLElement>(".fl-brief__body");
           const proof = document.querySelector<HTMLElement>(".fl-proof-register");
@@ -698,6 +789,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         });
         expect(tallProof, `${label}: tall proof register is missing`).not.toBeNull();
         expect(tallProof?.count).toBe(4);
+        // The seam pull-up moved with the index (ADR-068) and the gap held:
+        // re-measured 25.9px at 1920x1080 and 39.5px at 2017x1269, against
+        // the same 80px bound. The bound is what the pull-up exists to
+        // defend — it is not a fit check, so it does not track the reading.
         expect(
           tallProof?.summaryGap ?? Number.POSITIVE_INFINITY,
           `${label}: dead space reopened between summary and proof register`

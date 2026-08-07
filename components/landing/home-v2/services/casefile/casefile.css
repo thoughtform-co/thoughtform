@@ -518,9 +518,10 @@
   background: var(--fl-ret-rule-x);
 }
 /* ⚠ `--fl-left-seam`, NOT the raw tick. The register hangs off the seam, and
-   above 1200×931 the seam is pulled UP off `--fl-t6` — so pinning this rule
-   to the tick left the register floating below its own rule at exactly the
-   viewports where there was most room to notice. */
+   above 1200×1070 (931 until 2026-08-07 — see the index's TALL RUNG) the seam
+   is pulled UP off `--fl-t6` — so pinning this rule to the tick left the
+   register floating below its own rule at exactly the viewports where there
+   was most room to notice. */
 .fl-rule--brief {
   left: 0;
   width: var(--fl-col-l);
@@ -661,16 +662,12 @@
   }
 }
 
-/* A tall casefile should not pin its second reading surface halfway down the
-   viewport. Pull the register up behind the natural summary and spend that
-   recovered height on two fully readable description lines. The directory
-   still owns everything below the shared seam. */
-@media (min-width: 1200px) and (min-height: 931px) {
-  .fl-case {
-    --fl-left-seam: min(var(--fl-t6), calc(var(--fl-body-top) + clamp(214px, 18svh, 228px)));
-    --fl-proof-h: clamp(196px, 16svh, 216px);
-  }
-}
+/* ⚠ THE TALL RUNG MOVED (2026-08-07). `--fl-left-seam`'s pull-up used to be
+   declared here, beside the brief it shortens. It now lives with the proof
+   index's own tall rung further down this file, because the seam and
+   `--fl-proof-h` are ONE decision — the seam exists to hand the register the
+   height, and splitting them across two media blocks is how one gets retuned
+   without the other. Search `TALL RUNG`. */
 
 /* Emphasis is UPRIGHT gold on a soft wash — the brand's only marker. */
 .fl-brief__body em {
@@ -685,7 +682,30 @@
 /* `.fl-brief__log` / `.fl-brief__lx` (the `Log.001 >` operator quote) were
    removed with the header chrome (owner, 2026-07-29). */
 
-/* ══ Left column · directory ═══════════════════════════════════════════ */
+/* ══ Left column · the proof INDEX ═════════════════════════════════════
+   ROWS, NOT BOXES (owner, 2026-08-07, ADR-068).
+
+   This was a 2×2 grid of bordered plates, each carrying a claim over its
+   sentence. What it actually did was RESTATE THE RIGHT PANEL: the console is
+   the one instrument on this surface, and four little framed things beside it
+   read as a second one — a competition four quarter-sized tiles lose every
+   time. The two columns have opposite jobs. THE LEFT LISTS; THE RIGHT OPENS
+   ONE. An index does that. A grid of plates does not.
+
+   So an item is now one ROW — `mark · claim · sentence` — separated by
+   hairlines, one grammar four times over. The half-column cost the claim its
+   line as well: 27 characters at 11.8px mono is ~205px against ~190px of tile,
+   so the longest claims wrapped, and a wrapped claim steals the line its own
+   sentence needed. At full column width nothing wraps at any viewport.
+
+   NON-INTERACTIVE, and that is the point of the reduction. The variant's lit
+   row was a SELECTOR; here the DIRECTORY below selects. No hover, no active
+   state, no cursor change, no gold inset bar — a row that lights under the
+   pointer promises a click this surface will not honour.
+
+   The hairline vocabulary is the register's own, unchanged: the opening rule
+   at gold .24, the internal rules at gold .12. Five of them for four rows.
+   ═══════════════════════════════════════════════════════════════════════ */
 
 .fl-proof-register {
   position: absolute;
@@ -695,42 +715,97 @@
   height: var(--fl-proof-h);
   overflow: hidden;
   z-index: 2;
+
+  /* The mark's box, and the gutter derives from it (+4px of air) so the two
+     can never disagree when a rung resizes one. INTEGER MULTIPLES OF SEVEN
+     ONLY — the drawing is a 7×7 lattice, so 14px is 2px cells and 21px is
+     3px cells. A fractional cell turns a pixel drawing into a blur, which is
+     exactly the thing this mark is not. */
+  --fl-glyph: 14px;
 }
 
+/* ⚠ THE ROWS SHARE THE BOX EQUALLY, AND THAT IS SO BROWSING DOES NOT REFLOW
+   THE INDEX. The box is sized for the WORST row — the Software file's four
+   sentences all wrap to two lines, 259.5px against the map file's 186.8 — so
+   natural row heights would drop the hairlines 73px up the column the moment
+   you clicked a different directory row, three times out of four. Equal
+   tracks put every hairline at the same y on all four files, and the register
+   reads as one instrument that changes what it lists.
+
+   `1fr` is `minmax(auto, 1fr)`, so a track can never shrink under its own
+   content: if a row outgrows its share the register overflows and the smoke's
+   sweep fails, rather than the sentence silently losing a line. */
 .fl-proof-register__list {
   height: 100%;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   list-style: none;
-  border-top: 1px solid rgba(var(--gold-rgb), 0.24);
-  border-left: 1px solid rgba(var(--gold-rgb), 0.12);
 }
 
+/* ⚠ THE MARK IS `center`-SEATED, NOT `baseline`-SEATED, AND IT IS THE COMPACT
+   BUDGET THAT DECIDES IT. A replaced element has no baseline, so grid
+   SYNTHESIZES one from its bottom border edge — which hangs a 14px mark from
+   the claim's baseline, 10.7px down its 14.7px line box, and grows every row
+   to 18.0px for a 14.7px line. That is +3.3px a row, +13px over four, out of
+   the 6px of slack the 720p box has. Centred on the claim's line box the mark
+   costs nothing (14 against 14.7) and lands 0.8px off its cap centre, which
+   is inside the ink. */
 .fl-proof-register__item {
   min-width: 0;
-  padding: clamp(5px, 0.8svh, 10px) clamp(7px, 0.8vw, 12px);
   display: grid;
-  align-content: start;
-  gap: 3px;
+  grid-template-columns: calc(var(--fl-glyph) + 4px) minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: center;
+  /* The entry is centred in whatever share of the box its track gets — the
+     row is a band, not a block that hangs from a rule. */
+  align-content: center;
+  padding: 2px 0;
   overflow: hidden;
-  border-right: 1px solid rgba(var(--gold-rgb), 0.12);
+  border-top: 1px solid rgba(var(--gold-rgb), 0.12);
+}
+.fl-proof-register__item:first-child {
+  border-top-color: rgba(var(--gold-rgb), 0.24);
+}
+.fl-proof-register__item:last-child {
   border-bottom: 1px solid rgba(var(--gold-rgb), 0.12);
+}
+
+/* The gutter holds its width whether or not a mark lands in it: a track can
+   carry legacy `readouts`, which have no glyph key, and the claims of a
+   glyphless track still have to sit on the same rail as a glyphed one.
+
+   In the COMPACT rung it sits in the claim's row, where a 14px mark is
+   shorter than the 14.7px line beside it and therefore free. The TALL rung
+   spans it across both rows instead — see there for the 19px that buys. */
+.fl-proof-register__glyph {
+  align-self: center;
+  display: block;
+  min-width: 0;
+}
+
+.fl-proof-glyph {
+  display: block;
+  width: var(--fl-glyph);
+  height: var(--fl-glyph);
 }
 
 /* THE CLAIM. Mono caps at the directory's own reading size — this is the
    proof point itself, not a label for something else, so it takes the tier
-   the deleted figure used to hold. Two lines, because 30 characters does not
-   fit one line in a half-column at this size and a claim that ellipsises is
-   not a claim.
+   the deleted figure used to hold.
+
+   The two-line clamp survives as a BELT AGAINST FUTURE COPY, never as a
+   layout lever (ADR-066): at the index's full column width no authored claim
+   comes near a second line, and if one ever does the clamp is the wrong fix —
+   the 27-character budget is.
 
    ⚠ IT WAS 9.5px, WHICH IS BELOW THE CONTROL FLOOR AND WAS CLIPPING. The old
    `__label` sat under a display figure at 9.5px mono gold, clamped to two
    lines, and lost 5–9px on every row at laptop heights — the owner's "the
    text is too small" and a silent clip in the same rule. */
 .fl-proof-register__claim {
+  grid-column: 2;
   min-width: 0;
   overflow: hidden;
   font-family: var(--fl-mono);
@@ -746,7 +821,11 @@
   line-clamp: 2;
 }
 
+/* The evidence sits UNDER its claim, in the claim's column — the mark reads
+   for the whole row, so the gutter stays empty beneath it rather than the
+   sentence running back under the drawing. */
 .fl-proof-register__description {
+  grid-column: 2;
   margin: 3px 0 0;
   color: rgba(var(--dawn-rgb), 0.6);
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
@@ -754,27 +833,49 @@
   line-height: 1.4;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
 }
 
-/* ⚠ BELOW 931px HEIGHT THE TILE IS THE CLAIM ALONE, and the arithmetic is
-   why. Measured at 1280×720: the register box is 86px, a tile 43px — and a
-   claim (2 lines, 29px) plus its sentence (3 lines, 48px) plus padding needs
-   91px per tile, 182px for the grid. The box cannot grow into it either: from
-   the register's top to the foot there are 242px, and the directory below
-   needs ~110 of them for four rows and a head. It is 55px short at best.
+/* ⚠ COMPACT RUNG — BELOW 1070px HEIGHT THE ROW IS MARK + CLAIM ALONE, and the
+   arithmetic is why, re-measured for the index (owner redesign 2026-08-07).
 
-   So the content reduces — but what REMAINS is now the point. The old rung
-   hid this same sentence and left a display figure over a 9.5px gold label
-   that clipped on every row; the tile now keeps a 12px claim that carries its
-   own figure ("97% of briefings involve AI"), which is the whole reason the
-   figure tier could be deleted. Above 931h the sentence returns.
+   At 1280×720 the register box is 86.4px (`--fl-proof-h` is 12svh there). One
+   row costs: the claim's line box 14.7px (11.8px mono × 1.25), the 14px mark
+   beside it in a gutter it does not outgrow, 2px of padding at each edge and a
+   1px hairline ⇒ 19.7px. Four of those plus the closing hairline is 79.9px,
+   which fits 86.4 with 6.5px to spare. Add the sentence back and a row is
+   14.7 + 3 + two lines of 16.5 = 50.7 before padding: four rows come to 211px
+   against 86.4, and the box cannot grow into it either — from the register's
+   top to tick 11 there are 242px and the directory below needs ~144 of them
+   for four rows and a head.
+
+   The index is what made the reduction cheap. The 2×2 rung hid the same
+   sentence and left a bare tile; a row that keeps its MARK still reads as an
+   entry in a list, and the claim carries its own figure ("97% of briefings
+   involve AI") — which is the whole reason the figure tier could be deleted.
+
+   ⚠ 931–1069h RENDERS COMPACT AND THAT IS MEASURED, NOT ROUNDED. The old rung
+   opened at 931 and the plan for this one said 1000; both are too low, and by
+   the same arithmetic. A two-line row is 259.5px for four, the directory's
+   four rows and head need 144px, and the band from the seam to tick 11 is
+   399px at 1030h, 412px at 1050h, 425px at 1070h — the first height where the
+   index and a whole directory both fit. Below it the index would eat the
+   directory, and the directory is the one box in this column a reader has to
+   be able to use. No reference viewport lands in the band (720 / 800 / 900
+   compact, 1080 / 1269 tall).
+
+   ⚠ THE TWO RUNGS MUST TILE THE HEIGHT AXIS WITH NO GAP, and the .98 is that
+   guard. A viewport that matches NEITHER prints full sentences into a compact
+   box: measured 116px of clip at 1069h while this was being built, from an
+   integer 999/1070 pair. Fractional viewport heights are ordinary (a 1080px
+   panel at 110% scaling is 981.8), so the bound is fractional too — move both
+   numbers together or not at all.
 
    It stays in the accessibility tree — a screen reader gets both tiers at
    every viewport. */
-@media (max-height: 930px) and (min-width: 961px) {
+@media (max-height: 1069.98px) and (min-width: 961px) {
   .fl-proof-register__description {
     position: absolute;
     width: 1px;
@@ -787,6 +888,72 @@
     border: 0;
   }
 }
+
+/* ⚠ TALL RUNG — the seam pull-up and the register's height are ONE decision,
+   so they are declared together (they used to sit ~90 lines apart, beside the
+   brief, which is how one gets retuned without the other).
+
+   A tall casefile should not pin its second reading surface halfway down the
+   viewport: the seam comes up behind the natural summary, and the height that
+   buys goes into the index's second tier. The two gaps are pinned at 8px and
+   7px rather than left on their svh clamps (14 and 9.7 at 1080) — 8px of the
+   band, spent where it does something.
+
+   THE HEIGHT IS BOUNDED FROM BOTH SIDES AT 1920×1080, and 264 is the only
+   place it can sit. Four rows of mark + claim + two sentence lines measure
+   259.5px, so the floor cannot go under 260. The band from the register's top
+   to tick 11 is 431.6px there, and the directory's four rows and head need
+   144, so the ceiling is 280. 24svh reaches the floor's 264 only past 1100h
+   and the 300px cap lands at 1250 — the register grows on a tall display
+   without ever taking the directory's four rows. (The plan proposed
+   27svh/291.6px at 1080; measured, that clips the directory by 11px.)
+
+   The mark goes to 21px (3px cells) with the gutter following it, and the
+   sentence takes TWO lines — the 95-character budget wraps to exactly two at
+   this column width, verified against all sixteen authored descriptions at
+   1920×1080 and 2017×1269. A clamp that truncates live copy is a bug
+   (ADR-066), so if a third line ever appears the copy budget is what moves. */
+@media (min-width: 1200px) and (min-height: 1070px) {
+  .fl-case {
+    --fl-left-seam: min(var(--fl-t6), calc(var(--fl-body-top) + clamp(214px, 18svh, 228px)));
+    --fl-proof-h: clamp(264px, 24svh, 300px);
+    --fl-proof-top-gap: 8px;
+    --fl-directory-gap: 7px;
+  }
+  .fl-proof-register {
+    --fl-glyph: 21px;
+  }
+  .fl-proof-register__item {
+    padding: 4px 0;
+  }
+  /* ⚠ THE MARK SPANS THE ENTRY HERE, AND THAT IS 19px OF THIS BUDGET. Left in
+     the claim's row a 21px mark makes a 16.25px line box 21px tall — 4.75px a
+     row, four rows, for nothing a reader can see. The gutter serves the WHOLE
+     entry, so the mark may hang past the claim's line into the sentence's.
+     Measured: 278.5px of rows without the span against 259.5 with it, which
+     is also what puts this rung's floor at 1070h instead of 1080.
+
+     ⚠ `span 2`, NOT `1 / -1`: there is no `grid-template-rows` on the item, so
+     the EXPLICIT grid has no rows and line −1 resolves back to line 1 — the
+     span silently collapses and the 19px comes straight back.
+
+     ⚠ AND ONLY WHERE A SENTENCE ACTUALLY OCCUPIES ROW 2. Spanning into an
+     EMPTY implicit track makes Chromium hand that track half the mark's
+     height (measured: a 7px phantom row at 1920×900 with the sentence
+     sr-only), which is the opposite of what the span is for. A legacy
+     `readouts` track carries no sentence — hence `:has`. */
+  .fl-proof-register__item:has(.fl-proof-register__description) .fl-proof-register__glyph {
+    grid-row: 1 / span 2;
+    align-self: start;
+    /* Optical, never layout: `start` lands the mark on the claim's LINE BOX
+       top, 2.7px above its cap. A transform moves no box. */
+    transform: translateY(2px);
+  }
+}
+
+/* ══ Left column · directory ═══════════════════════════════════════════
+   It takes what the index leaves, and its four rows plus head need 144px of
+   it — the ceiling on `--fl-proof-h` above is that number, measured. ══════ */
 
 .fl-dir {
   position: absolute;
@@ -3125,14 +3292,22 @@
   .fl-panel__viz[data-kind="signal"] {
     aspect-ratio: 700 / 292;
   }
+  /* The index needs nothing unwrapping — it is a single column of rows on
+     the desktop too, so only the height cap and the density change. (The old
+     `grid-template-columns: 1fr` / `grid-template-rows: none` resets here
+     were undoing the 2×2 that no longer exists.) */
+  .fl-proof-register {
+    --fl-glyph: 21px;
+  }
   .fl-proof-register__list {
     height: auto;
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
   }
   .fl-proof-register__item {
     min-height: 0;
-    padding: 12px;
+    /* Vertical only: a row is not a tile here either, and its mark sits on
+       the same left rail as the brief and the directory. */
+    padding: 12px 0;
+    column-gap: 12px;
   }
   .fl-proof-register__claim {
     font-size: 13px;
