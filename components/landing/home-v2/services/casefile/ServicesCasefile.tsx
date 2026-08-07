@@ -319,10 +319,10 @@ export function ServicesCasefile() {
           REMOVED (owner, 2026-07-29) — the band above the tab strip stays
           clean, and the tab row is the instrument's first line. The tabs
           wrapper is therefore now the arrival ladder's first rung (--ci-off
-          0.07, which also makes it the LAST to leave on the departure LIFO —
-          the 0.56 mirror constant in casefile.css comes from the foot and is
-          unaffected). The foot's telemetry line still prints logCode/state,
-          so no data went orphan with the chrome. */}
+          0.07, which also makes it the LAST to leave on the departure LIFO).
+          The foot's telemetry line (stamp/logCode/state) was removed
+          2026-08-07 (owner) — the data stays in the content model,
+          unrendered. */}
       <div data-fl-panel style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}>
         <ClientTabs
           tabs={CASEFILE_TABS}
@@ -335,33 +335,9 @@ export function ServicesCasefile() {
       {/* ── Connection grammar — the corridor caption card's own reticle
              marks and dashed runs (ADR-056; variant E of the lab). ────── */}
       <i
-        className="fl-rule fl-rule--section"
-        data-fl-panel
-        style={{ "--ci-off": 0.1 } as CSSProperties}
-        aria-hidden="true"
-      />
-      <i
         className="fl-split"
         data-fl-panel
         style={{ "--ci-off": 0.14 } as CSSProperties}
-        aria-hidden="true"
-      />
-      <i
-        className="fl-rule fl-rule--brief"
-        data-fl-panel
-        style={{ "--ci-off": 0.14 } as CSSProperties}
-        aria-hidden="true"
-      />
-      <i
-        className="fl-rule fl-rule--viz"
-        data-fl-panel
-        style={{ "--ci-off": 0.14 } as CSSProperties}
-        aria-hidden="true"
-      />
-      <i
-        className="fl-ret fl-ret--tr"
-        data-fl-panel
-        style={{ "--ci-off": 0.18, "--fl-dx": "30px" } as CSSProperties}
         aria-hidden="true"
       />
       <i
@@ -425,21 +401,6 @@ export function ServicesCasefile() {
 
       {/* ── Right column ────────────────────────────────────────────── */}
       <TrackPanel key={`${def.slug}-${track.id}`} track={track} id={panelId} labelledBy={rowId} />
-
-      {/* ── Foot ────────────────────────────────────────────────────── */}
-      <div
-        className="fl-foot"
-        data-fl-panel
-        style={{ "--ci-off": 0.56, "--fl-dy": "28px" } as CSSProperties}
-      >
-        <span className="fl-tele">
-          <i className="fl-diamond" aria-hidden="true" />
-          {track.stamp
-            ? `${track.stamp.ord} · ${track.stamp.phase} · ${track.stamp.ref} · `
-            : `00 · Field log · ${file.logCode} · `}
-          <b>{file.state}</b>
-        </span>
-      </div>
     </section>
   );
 }

@@ -116,29 +116,14 @@
   --fl-rail-h: calc(100svh - var(--fl-rail-top) - var(--fl-rail-bot));
 
   /* Tick heights, absolute from the stage top. Names are the ladder index,
-     so `--fl-t7` really is the 8th tick.
-
-     THE WHOLE INSTRUMENT SITS ONE TICK HIGHER since 2026-08-01 (ADR-056 U11).
-     It used to open on t2 and split the right column on t8 — which left a
-     full DEAD TICK above the tab strip (155px of empty band at 1440x800
-     against a rail that starts at 99) while the panel foot below was ALREADY
-     CLIPPING its source line by 24px at 1280x720. The band above was the only
-     place the height could come from: every zone here is absolutely
-     positioned against this ladder, so bigger type was impossible without
-     moving it. t2 -> t1 and t8 -> t7 buy the foot ~50px at 1440x800 and ~68
-     at 1920x1080. Both targets are real ticks (`lib/v7-parse/hudTicks.ts`
-     declares 8.33% and 58.33%), so the alignment law holds.
-
-     Accepted cost, owner-approved: the viz rule LEAVES the labelled
-     bearing-5 major at 66.67%. The section rule gains the top of the ladder
-     in exchange. */
-  --fl-t1: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.08333);
+     so `--fl-t6` really is the 7th tick. Only the seams that still draw keep
+     their ticks (t1/t7 left with the deleted section and viz rules,
+     2026-08-07). */
   /* The brief/directory seam. Moved t7 -> t6 (2026-07-30) when the directory
      went to eight rows: at t7 the list needed 231px and had 190, and it was
      ALREADY clipping METRICS.DAT by 14px at 1440x800 with seven. The brief
      body was trimmed to match — the seam is one line, both sides move. */
   --fl-t6: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.5);
-  --fl-t7: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.58333);
   --fl-t11: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.91667);
 
   /* The tab strip's height, hoisted here from `.fl-tabs` (2026-08-01) because
@@ -149,51 +134,26 @@
      carry the client name at display size. */
   --fl-tabs-h: 44px;
 
-  /* THE SECTION ANCHOR — t1, floored so the strip can never run off the top.
-     The tab strip hangs ABOVE this line (its box bottom IS the rule, so the
-     active underline lands on the ladder), so the anchor has to sit at least
-     the strip's own height below the rail top.
-
-     THE FLOOR CARRIES NO CLEARANCE TERM, and that is measured, not lazy. The
-     plan drafted `+ 10px` of breathing room; at 1440x800 the raw tick clears
-     the rail top by only 6.1px, so the floor won and the section rule landed
-     4px OFF the ladder — and the same at 1366x768 (5.9px off) and 1280x720
-     (9.0px off), i.e. at every laptop including the one this was reported
-     from. `.claude/rules/proof.md` names that drift the one way this design
-     fails silently, and the tick alignment is the entire justification for
-     moving here. A padding constant is not worth the law.
-
-     At 0 the tick wins at every viewport down to 720p (clearing by 1.1px at
-     1280x720, 6.1px at 1440x800, 24px at 1920x1080) and the floor engages
-     only below a ~528px rail box, where it seats the strip flush to the rail
-     top rather than over it. It also hands the plate back the 4-9px the tick
-     move had cost it, which is what clears the last three clipping rows. */
-  --fl-sec: max(var(--fl-t1), calc(var(--fl-rail-top) + var(--fl-tabs-h)));
+  /* THE SECTION ANCHOR — the tab strip seats FLUSH to the rail top (owner,
+     2026-08-07): its box top is `--fl-rail-top` exactly, so the anchor (its
+     bottom, where the active underline lands) sits one strip-height below.
+     The t1 term is gone WITH the section rule it aligned: the dashed
+     `fl-rule--section` was deleted this pass, so there is no longer a
+     full-width line whose tick alignment the t1 anchor was buying — the
+     ladder law survives on the seams that still draw (t6, t11). */
+  --fl-sec: calc(var(--fl-rail-top) + var(--fl-tabs-h));
 
   /* Where the two columns start reading, and where they stop. */
   --fl-body-top: calc(var(--fl-sec) + clamp(16px, 2.6svh, 38px));
   --fl-split-end: var(--fl-t11);
-  --fl-viz-split: calc(var(--fl-t7) - var(--fl-body-top));
-  /* The right instrument owns the otherwise empty rail below t11 and starts
-     directly under the section rule. The left narrative keeps its authored
-     tick seams, while the evidence surface uses the full available desktop
-     height — essential at 720p once the map reserves readable detail.
-
-     ⚠ THE PANEL IS BOUNDED FROM BOTH ENDS AND THE ARITHMETIC IS SHORT
-     (owner asked for "more height, sitting higher", 2026-08-07). The CEILING
-     is the section rule: `--fl-sec` is tick 1, the tab strip hangs ABOVE it,
-     and the rule runs the full band width — a panel crossing it reads as a
-     mistake. The FLOOR is the rail's own bottom, and below that sits the
-     bottom-right HUD cluster (Contact · session · theme), which at 1330h
-     starts 14px under it. So the geometry can only give back the clearances:
-     11 → 7px here and 24 → 21px under the designation (`.fl-panel__viz`),
-     plus 2 × 5px from the console's own bezel gap (`--con-gap`, console.css)
-     — measured 17.4px at 2560×1330 and 24.2px at 1920×800.
-
-     THE REST OF THE HEIGHT CAME FROM INSIDE: the tools plate's foot (~100px)
-     and its header (~26px) are deleted, which is ~126px handed straight to
-     the field. That is what the owner is actually looking at. */
-  --fl-panel-top: calc(var(--fl-sec) + clamp(3px, 0.5svh, 7px));
+  /* ⚠ THE PANEL SPANS THE RAIL BOX EXACTLY (owner, 2026-08-07): top at the
+     rail's own top, bottom at its LAST TICK — `--fl-rail-top + --fl-rail-h`
+     is where `.hud__rail`'s box ends, and the bottom-right HUD cluster
+     (Contact · session · theme) lives in `--fl-rail-bot` BELOW that line, so
+     stopping at the tick is what keeps the console off the glyphs. An
+     earlier draft ran to `100svh - hud-margin` and put the panel's foot
+     under that cluster. */
+  --fl-panel-top: var(--fl-rail-top);
   --fl-panel-end: calc(var(--fl-rail-top) + var(--fl-rail-h));
   /* The left column is one vertical instrument. Keep its seams as shared
      tokens so the brief, proof register and directory cannot drift when a
@@ -265,11 +225,6 @@
     to bottom,
     rgba(var(--gold-rgb), 0.8) 0 1.5px,
     transparent 1.5px 5px
-  );
-  --fl-ret-rule-x: repeating-linear-gradient(
-    to right,
-    rgba(var(--dawn-alt-rgb), 0.24) 0 1px,
-    transparent 1px 6px
   );
   --fl-ret-rule-y: repeating-linear-gradient(
     to bottom,
@@ -385,7 +340,6 @@
    `left`/`right`, but carry a centring margin, not a transform — so the tear
    is safe). The rules and the split are 1px hairlines where a lateral tear
    reads as a break rather than a glitch, so they take the flicker only. */
-.fl-case .fl-rule[data-fl-panel],
 .fl-case .fl-split[data-fl-panel] {
   transform: none;
 }
@@ -412,8 +366,8 @@
    the tab strip (off --fl-rail-top) was REMOVED 2026-07-29 (owner) — the
    band above the tabs stays clean and the tab row is the instrument's
    first line. `.fl-desig` survives as the designation base for the brief,
-   directory and panel heads; `.fl-diamond` survives for the foot's
-   telemetry line. */
+   directory and panel heads. (`.fl-diamond` left with the foot's telemetry
+   line, 2026-08-07.) */
 
 .fl-desig {
   font-family: var(--fl-mono);
@@ -423,25 +377,16 @@
   color: var(--fl-ink-dim);
 }
 
-.fl-diamond {
-  width: 5px;
-  height: 5px;
-  flex: none;
-  background: var(--gold);
-  transform: rotate(45deg);
-}
-
 /* ── Client tabs ───────────────────────────────────────────────────────
    The strip's BOX BOTTOM is the section rule, so the active tab's underline
    (`::after` at `bottom: -1px`) lands on the rule itself rather than near
    it. The underline is the one solid gold mark on the plane — it carries
    STATE, where everything else here is structure. ═══════════════════════ */
 
-/* The strip's BOTTOM seats on the section anchor, where `.fl-rule--section`
-   runs, so the active tab's underline lands on the ladder. Height and top are
-   one var so they can never drift apart — `--fl-tabs-h` is declared on
-   `.fl-case` (see THE SECTION ANCHOR) because the anchor's floor is derived
-   from it. */
+/* The strip's TOP seats flush on the rail top (owner, 2026-08-07): the box
+   spans `--fl-rail-top` to the section anchor. Height and top are one var so
+   they can never drift apart — `--fl-tabs-h` is declared on `.fl-case` (see
+   THE SECTION ANCHOR) because the anchor is derived from it. */
 .fl-tabs {
   position: absolute;
   left: 0;
@@ -521,43 +466,9 @@
    pair registers it without framing it — the same reason the production
    survey chrome marks one diagonal (`.proof__mark--origin` / `--close`). ══ */
 
-.fl-rule {
-  position: absolute;
-  height: 1px;
-  z-index: 1;
-}
-.fl-rule--section {
-  left: 0;
-  right: 0;
-  top: var(--fl-sec);
-  background: var(--fl-ret-rule-x);
-}
-/* ⚠ `--fl-left-seam`, NOT the raw tick. The register hangs off the seam, and
-   above 1200×1070 (931 until 2026-08-07 — see the index's TALL RUNG) the seam
-   is pulled UP off `--fl-t6` — so pinning this rule to the tick left the
-   register floating below its own rule at exactly the viewports where there
-   was most room to notice. */
-.fl-rule--brief {
-  left: 0;
-  width: var(--fl-col-l);
-  top: var(--fl-left-seam);
-  background: repeating-linear-gradient(
-    to right,
-    rgba(var(--gold-rgb), 0.5) 0 1.5px,
-    transparent 1.5px 7px
-  );
-}
-.fl-rule--viz {
-  left: var(--fl-col-r);
-  right: 0;
-  top: var(--fl-t7);
-  background: repeating-linear-gradient(
-    to right,
-    rgba(var(--gold-rgb), 0.5) 0 1.5px,
-    transparent 1.5px 7px
-  );
-}
-
+/* The horizontal rules (`fl-rule--section/--brief/--viz`) were REMOVED
+   2026-08-07 (owner) — the dotted lines over the panels read as noise once
+   the console became the one framed object. The vertical split survives. */
 .fl-split {
   position: absolute;
   left: var(--fl-col-split);
@@ -1102,78 +1013,22 @@
   outline-offset: 8px;
 }
 
-.fl-panel__head {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-}
-.fl-desig--r {
-  color: rgba(var(--dawn-rgb), 0.28);
-  letter-spacing: 0.16em;
-  font-size: 9.5px;
-}
 
-/* ⚠ THE DESIGNATION GAP IS A CLAMP NOW, NOT A FLAT 24px (2026-08-07). The
-   head is one 9.5px mono line at `top: 0`; 24px left 11px of dead band under
-   it at every height. The clamp keeps the line's own clearance and hands the
-   rest to the instrument — 3px at 720p, 3px at 1330. Measured against
-   `.fl-panel__head`'s live box, not against the type size: the line box is
-   taller than the font. */
 .fl-panel__viz {
   position: absolute;
   left: 0;
   right: 0;
-  top: clamp(16px, 2.1svh, 21px);
+  top: 0;
   bottom: 0;
   height: auto;
   overflow: hidden;
-  border: 1px solid rgba(var(--gold-rgb), 0.2);
-  background: rgba(var(--void-deep-rgb), 0.4);
 }
 
-/* FROSTED GLASS (owner, 2026-07-30). The plate floats over a live WebGL bed
-   — the parked mark, its orbits and the substrate shell all read straight
-   through the 0.4 scrim, and the sparse surface bed in particular used to
-   crawl behind the evidence. A backdrop blur separates the two planes
-   without an opaque cover (which ADR-056 forbids: the iris exists to REVEAL
-   that bed).
-   GATED ON `[data-proof-settled]`, NOT `[data-proof-live]`. `backdrop-filter`
-   re-snapshots its backdrop every frame the element moves, and this is a
-   `[data-fl-panel]` — it TRANSLATES through the whole arrival, which happens
-   inside dissipate-approach, already the GPU-bound outlier. Measured on the
-   prod build: blurring through the arrival cost +2.4ms avg at 9px and +3.7ms
-   at 6px (radius is NOT the driver — the snapshot is), and took frames over
-   33ms from 3% to 13-16% of that window. `data-proof-settled` turns on ~80px
-   into the dwell, once the ladder has stopped travelling, so the cost lands
-   in casefile-dwell where the headroom is. The plate keeps its scrim either
-   way, so the unsupported / not-yet-settled path is the previous look rather
-   than a hole — nothing pops except the blur itself, during the settle hold
-   where nothing else is moving. */
 @supports (backdrop-filter: blur(2px)) {
-  .services-stage[data-proof-settled] .fl-panel__viz,
   .services-stage[data-proof-settled] .fl-film {
     backdrop-filter: blur(7px);
     background: var(--fl-glass);
   }
-}
-
-.fl-panel__foot {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(var(--fl-viz-split) + 20px);
-  bottom: 0;
-  overflow: hidden;
-}
-/* The metrics row has no evidence plate — the readouts ARE the plate, so the
-   foot claims the whole column instead of the band below the viz rule. */
-.fl-panel[data-solo] .fl-panel__foot {
-  top: 26px;
 }
 
 /* ⚠ THREE FAMILIES WERE DELETED HERE (2026-08-06), all confirmed to have no
@@ -2234,35 +2089,6 @@
   padding: var(--tf-edge) var(--tf-x);
 }
 
-/* The route and the bay travel together — the mockup's `.stack`: it takes
-   the height the detail leaves and CENTRES the pair inside it, so the
-   surplus a capped capture no longer eats arrives as air above the route
-   and below the bay rather than as one dead band.
-
-   ⚠ NO `min-height: 0` HERE, for exactly the reason `.fl-shot` and `.fl-bay`
-   refuse it. A zero automatic minimum lets this box shrink below its own
-   contents, and with `justify-content: center` the children then hang out of
-   BOTH ends. Its natural `auto` minimum is route + gap + the bay's own
-   floor, which is the order of sacrifice already written down: the capture
-   pays, and when it has paid everything the plate overflows loudly.
-
-   ⚠ `safe center`, NOT `center`. The bay GROWS into this box first, so
-   centring only has anything to do once `--tf-bay` has capped it — but on a
-   field short enough to overrun the floor, plain `center` would push half
-   the overrun off the TOP, under the rail, where nothing measures it
-   (`scrollHeight − clientHeight` reads 0 and `.fl-detail` still ends inside
-   the field: measured 30.6px of invisible overrun at 2560×900 during this
-   pass). `safe` falls back to `start` exactly then, so every overrun lands
-   at the bottom where the field reports it. An engine that does not know the
-   keyword drops the declaration and gets `normal` — which is that same
-   start-aligned fallback, so the failure mode degrades correctly. */
-.fl-toolstack {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: safe center;
-  gap: var(--tf-gap);
-}
 
 /* ONE BUTTON — image and watch bar fused into a frame that bleeds to the
    CONSOLE's own inner edges. Cover, top-anchored: dashboards lead with their
@@ -2551,129 +2377,6 @@
    it; the rail's own lit spine is the plate's mark now.
    `.fl-tool__hd`'s light-theme alpha in `theme.css` went too. */
 
-/* ── The route ───────────────────────────────────────────────────────────
-   Geometry, type and the three measurements that set them live in
-   `RouteDiagram.tsx`. This sheet owns only the box, the palette and the
-   arrival.
-
-   ⚠ `--fl-mono`, NEVER `--font-mono` — the latter is IBM Plex Mono
-   (ADR-067), and an SVG `<text>` that declares no family inherits whatever
-   the console leaked. The smoke asserts this explicitly because SVG text is
-   invisible to the HTMLElement family walk that catches every other case. */
-/* ⚠ ITS OWN PADDING IS GONE (2026-08-07). The gutter and the vertical rhythm
-   are the field's now (`.fl-toolbody`'s `--tf-x` / `--tf-edge` / `--tf-gap`),
-   so a block that also carried a private inset was adding one ladder to
-   another — which is half of what "cramped" was measuring. */
-.fl-route {
-  flex: 0 0 auto;
-  /* The ≤760h crop below pulls the SVG's own bands out of view; without this
-     they would simply paint over the neighbours. */
-  overflow: hidden;
-
-  /* The drawing's palette, re-derived per theme (theme.css). ⚠ AN ALPHA
-     INVERTS ITS OWN MEANING ACROSS THE FLIP — `rgba(ink, .34)` recedes
-     toward black in dark and toward parchment in light, so the same number
-     goes from quiet to invisible. Same law, and the same fix, as `.fl-pda`. */
-  --rt-cap: rgba(var(--dawn-rgb), 0.34);
-  --rt-meta: rgba(var(--dawn-rgb), 0.34);
-  --rt-meta2: rgba(var(--dawn-rgb), 0.52);
-  --rt-label: rgba(var(--dawn-rgb), 0.56);
-  --rt-line: rgba(var(--dawn-rgb), 0.16);
-  --rt-line2: rgba(var(--dawn-rgb), 0.08);
-}
-.fl-route svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-.fl-route text {
-  font-family: var(--fl-mono);
-}
-.fl-route .rt-t-cap {
-  letter-spacing: 0.18em;
-  fill: var(--rt-cap);
-}
-.fl-route .rt-t-own {
-  fill: var(--atreides-ink);
-}
-.fl-route .rt-t-step {
-  letter-spacing: 0.04em;
-  fill: var(--rt-label);
-}
-.fl-route .rt-t-now {
-  letter-spacing: 0.16em;
-  fill: var(--atreides-ink);
-}
-.fl-route .rt-t-meta {
-  letter-spacing: 0.12em;
-  fill: var(--rt-meta);
-}
-.fl-route .rt-t-meta2 {
-  fill: var(--rt-meta2);
-}
-.fl-route .rt-box,
-.fl-route .rt-echo,
-.fl-route .rt-chev,
-.fl-route .rt-now,
-.fl-route .rt-now-echo {
-  fill: none;
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.fl-route .rt-box {
-  stroke: var(--rt-line);
-}
-.fl-route .rt-echo {
-  stroke: var(--rt-line2);
-}
-.fl-route .rt-chev {
-  stroke: var(--gold);
-}
-.fl-route .rt-now,
-.fl-route .rt-now-echo {
-  stroke: var(--atreides-light);
-}
-.fl-route .rt-now {
-  fill: rgba(var(--atreides-rgb), 0.12);
-}
-
-/* ⚠ ARRIVAL IS CLICK-DRIVEN AND ZERO-AT-REST (ADR-021). The SVG is keyed on
-   the tool id, so a station click remounts it and these replay; there is no
-   clock, no writer and no wall-clock loop. Every keyframe ends on
-   `transform: none` because the boxes are placed against a fixed viewBox —
-   a residual transform here is a drift bug, not a flourish. */
-.fl-route .rt-pop {
-  opacity: 0;
-  animation: fl-rt-pop 0.42s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
-}
-.fl-route .rt-seat {
-  animation: fl-rt-seat 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both;
-  animation-delay: 580ms;
-}
-@keyframes fl-rt-pop {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes fl-rt-seat {
-  0% {
-    opacity: 0;
-    transform: translateX(22px);
-  }
-  55% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
 
 /* ── The bay ─────────────────────────────────────────────────────────────
    A housing around the capture, not a second frame around a frame. The
@@ -2829,12 +2532,16 @@
   --dt-rule: rgba(var(--dawn-rgb), 0.08);
   --dt-value: var(--dawn);
 
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Equal-height rows: once detail grows into the freed space (flex: 1 1
+     auto), 1fr divides it evenly among the two rows of plates. */
+  grid-auto-rows: 1fr;
   /* The mockup's 12px between plates, on the same svh ramp as the rest of
      the ladder. Its outer gutter and its distance from the bay are the
      field's now (`.fl-toolbody`). */
@@ -2947,8 +2654,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fl-route .rt-pop,
-  .fl-route .rt-seat,
   .fl-detail__plate {
     animation: none;
     opacity: 1;
@@ -3693,35 +3398,6 @@
    meaning. This is ADR-056 U9's own finding, which its second pass measured
    and its first pass got wrong in the same direction. */
 @media (max-height: 760px) {
-  /* ── THE ROUTE CROPS ITS CAPTION AND META BANDS (ADR-068) ─────────────
-     ⚠ AND IT IS A CROP, NOT A HIDE, BECAUSE THE SVG'S HEIGHT IS ITS WIDTH.
-     `width: 100%; height: auto` on a fixed viewBox means `display: none` on
-     the two text bands frees exactly zero pixels — the box is still
-     `width × 66/560`. So the bands are hidden AND the SVG is pulled in by
-     the height they occupy.
-
-     The margins are PERCENTAGES on purpose. A percentage margin resolves
-     against the containing block's WIDTH, which is the same quantity the
-     SVG's height is derived from — so `12/560 = 2.143%` crops exactly the
-     caption band (units 0…12) and exactly the meta band (54…66) at EVERY
-     viewport, with no second constant to keep in step. Both bands are named
-     in `RouteDiagram.tsx`; these two numbers are the only place they are
-     duplicated. Measured: the route drops 66.8px to 42.5px at 1280×720,
-     which is what pays for the capture's floor there.
-
-     What is lost is two lines of chrome; the route's own claim — n boxes
-     collapsing into one — is the part that stays. ⚠ NOT lost below 980px:
-     the console unwraps there and height stops costing anything, so the
-     ≤960 block restores both bands. */
-  .fl-route svg {
-    margin-top: -2.143%;
-    margin-bottom: -2.143%;
-  }
-  .fl-route .rt-cap,
-  .fl-route .rt-meta {
-    display: none;
-  }
-
   /* The detail plates give up PADDING, never type: 8.5 / 9.5px are already
      the chrome and control floors. ⚠ THE OVERRIDE IS GONE (2026-08-07) —
      `--tf-*`'s svh ramp already lands the inner padding at 8.3 / 11 here,
@@ -4363,35 +4039,10 @@
   transition: transform 1.5s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-/* ══ Foot row ══════════════════════════════════════════════════════════
-   Under the column split, NOT under the rail's last tick: the HUD's
-   bottom-left wordmark lockup (ADR-043) owns that corner and the two
-   collide. ═══════════════════════════════════════════════════════════ */
-
-.fl-foot {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(var(--fl-split-end) + clamp(26px, 3.6svh, 40px));
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 3;
-}
-.fl-tele {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--fl-mono);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--fl-ink-dim);
-}
-.fl-tele b {
-  font-weight: 400;
-  color: var(--gold);
-}
+/* The foot row (`.fl-foot` — the `02 · BUILD · BLD-03 · ON RECORD` telemetry
+   line under the column split) was REMOVED 2026-08-07 (owner) with the rest
+   of the declutter pass. `CaseTrack.stamp` / `CaseFile.logCode` / `state`
+   stay in the content model — nothing else renders them today. */
 
 /* Reduced motion — the resolved state IS the design; the reveal is a
    convenience for judging arrival. */
@@ -4435,10 +4086,8 @@
   }
   /* The absolute registration grammar is a desktop composition; stacked,
      it is noise. */
-  .fl-rule,
   .fl-split,
-  .fl-ret,
-  .fl-foot {
+  .fl-ret {
     display: none;
   }
   .fl-tabs {
@@ -4655,25 +4304,11 @@
     display: block;
     padding: 0;
   }
-  .fl-toolstack {
-    display: block;
-  }
-  .fl-route {
-    margin-top: 14px;
-  }
   .fl-bay {
     margin-top: 14px;
   }
   .fl-detail {
     margin-top: 14px;
-  }
-  .fl-route svg {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-  .fl-route .rt-cap,
-  .fl-route .rt-meta {
-    display: initial;
   }
 
   /* The sheets foot keeps the flat rails it has always had below the gate —

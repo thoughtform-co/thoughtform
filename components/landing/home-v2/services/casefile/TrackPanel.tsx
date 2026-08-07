@@ -29,23 +29,6 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
   return (
     <div className="fl-panel" id={id} role="tabpanel" aria-labelledby={labelledBy} tabIndex={0}>
       <div
-        className="fl-panel__head"
-        data-fl-panel
-        style={{ "--ci-off": 0.4, "--fl-dx": "48px" } as CSSProperties}
-      >
-        {/* ⚠ ONE DESIGNATION, NOT TWO (owner, 2026-08-06). The right slot
-            carried a second label — "Map — work to intelligence" beside a
-            masthead reading INTELLIGENCE MAP and a brief whose first line is
-            "Every piece of work at Loop, and how much intelligence runs in
-            it". Same on every row: "Viz — the films" over a directory row
-            called `03_AI-ABOVE-THE-LINE/` showing films. The path on the left
-            is the one that says something the reader cannot already see.
-            `CaseTrack.vizLabel` went with it rather than staying as content
-            nothing renders. */}
-        <span className="fl-desig">{track.preview}</span>
-      </div>
-
-      <div
         className="fl-panel__viz"
         data-fl-zone="plate"
         data-fl-panel

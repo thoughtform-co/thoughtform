@@ -1073,68 +1073,6 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           `${label}: the tools plate printed a foot`
         ).toBe(0);
 
-        // ── THE ROUTE FITS, AND IT LETTERS ─────────────────────────────
-        // ⚠ SVG IS INVISIBLE TO THE HTMLElement FAMILY WALK that guards every
-        // other label on this surface, and an SVG `<text>` that is too small
-        // or in the wrong face reports nothing at all — it just renders. So
-        // the family is asserted explicitly (⚠ `--fl-mono` is PT Mono;
-        // `--font-mono` is IBM Plex, ADR-067) and the RENDERED size is derived
-        // from the viewBox scale rather than read off `font-size`, which is in
-        // user units and means nothing on its own.
-        const route = await page.evaluate(() => {
-          const host = document.querySelector<HTMLElement>(".fl-route");
-          const svg = host?.querySelector("svg");
-          const field = document.querySelector<HTMLElement>(".fl-con__field");
-          if (!host || !svg || !field) return null;
-          const vb = svg.viewBox.baseVal;
-          const box = svg.getBoundingClientRect();
-          const meet = Math.min(box.width / vb.width, box.height / vb.height);
-          const items = [...svg.querySelectorAll("text")].map((t) => ({
-            s: (t.textContent ?? "").slice(0, 30),
-            px: Number.parseFloat(getComputedStyle(t).fontSize) * meet,
-            fam: getComputedStyle(t).fontFamily.split(",")[0].replace(/["']/g, "").trim(),
-            b: t.getBBox(),
-          }));
-          const h = host.getBoundingClientRect();
-          const f = field.getBoundingClientRect();
-          return {
-            texts: items.length,
-            minPx: Number(Math.min(...items.map((i) => i.px)).toFixed(2)),
-            smallest: items.reduce((a, b) => (a.px <= b.px ? a : b)).s,
-            fams: [...new Set(items.map((i) => i.fam))],
-            // ⚠ FIT IS ASSERTED, NOT REVIEWED (rules/proof.md): a glyph past
-            // the crop does not wrap, ellipsise or report — it vanishes.
-            outside: items
-              .filter(
-                (i) =>
-                  i.b.x < -0.6 ||
-                  i.b.x + i.b.width > vb.width + 0.6 ||
-                  i.b.y < -0.6 ||
-                  i.b.y + i.b.height > vb.height + 0.6
-              )
-              .map((i) => i.s),
-            inField:
-              h.top >= f.top - 1 &&
-              h.bottom <= f.bottom + 1 &&
-              h.left >= f.left - 1 &&
-              h.right <= f.right + 1,
-            fieldOverflow: field.scrollHeight - field.clientHeight,
-          };
-        });
-        expect(route, `${label}: the tools plate has no route diagram`).not.toBeNull();
-        expect(route!.texts, `${label}: the route drew no labels`).toBeGreaterThanOrEqual(8);
-        expect(route!.fams, `${label}: the route is not set in PT Mono`).toEqual(["PT Mono"]);
-        expect(
-          route!.minPx,
-          `${label}: route label "${route!.smallest}" renders at ${route!.minPx}px`
-        ).toBeGreaterThanOrEqual(8.5);
-        expect(
-          route!.outside,
-          `${label}: route glyphs outside the viewBox: ${route!.outside.join(", ")}`
-        ).toEqual([]);
-        expect(route!.inField, `${label}: the route escaped the console field`).toBe(true);
-        expect(route!.fieldOverflow, `${label}: the tools field clips`).toBeLessThanOrEqual(1);
-
         // ── FOUR NOTCHED PLATES, AND THE NOTCH IS ON THE LAWFUL CORNER ──
         // ADR-065: one notch says ORIENTED / CONNECTED, and the diagonal is
         // TR + BL. The signature is therefore a polygon with a SQUARE
@@ -1338,48 +1276,39 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(await scrollCasefileDwell(page, 0.1)).toBe(true);
     await page.waitForTimeout(1400);
 
-    // THE ALIGNMENT LAW — both section rules land on the HUD rail's own tick
-    // ladder. This is what makes the composition read as bolted into the
-    // frame rather than floating in front of it, and `.claude/rules/proof.md`
-    // names tick drift the one way this design fails silently. It is measured
-    // against the LIVE rail box rather than recomputed from the tick formula,
-    // so a divergence between `.hud__rail` and `hudTicks.ts` fails here too.
-    //
-    // It nearly shipped broken: `--fl-sec`'s floor carried a 10px clearance
-    // term, which beat the raw tick at every laptop viewport and put the
-    // section rule 4-9px off the ladder.
-    //
-    // The strip hangs ABOVE the section rule, so the second assertion is the
-    // floor's actual job: never cross the top of the rail box.
+    // THE ALIGNMENT LAW — the instrument spans the HUD rail's own box
+    // (owner, 2026-08-07): the tab strip seats FLUSH on the rail top and the
+    // right panel's bottom stops at the rail's last tick, never running into
+    // the `--fl-rail-bot` band where the bottom-right HUD cluster lives. The
+    // dashed section/viz rules (and their tick assertions) left with the
+    // 2026-08-07 declutter pass. Measured against the LIVE rail box, so a
+    // divergence between `.hud__rail` and this file's mirrored geometry
+    // fails here.
     const geom = await page.evaluate(() => {
       const rail = document.querySelector<HTMLElement>(".hud__rail");
-      const sec = document.querySelector<HTMLElement>(".fl-rule--section");
-      const viz = document.querySelector<HTMLElement>(".fl-rule--viz");
       const tabs = document.querySelector<HTMLElement>(".fl-tabs");
-      if (!rail || !sec || !viz || !tabs) return null;
-      const ticks = [...document.querySelectorAll(".hud__rail__tick")].map(
-        (t) => t.getBoundingClientRect().top
-      );
-      if (!ticks.length) return null;
-      const offTick = (y: number) => Math.min(...ticks.map((t) => Math.abs(t - y)));
+      const panel = document.querySelector<HTMLElement>(".fl-panel");
+      if (!rail || !tabs || !panel) return null;
+      const r = rail.getBoundingClientRect();
       return {
-        sec: offTick(sec.getBoundingClientRect().top),
-        viz: offTick(viz.getBoundingClientRect().top),
-        stripClearance: tabs.getBoundingClientRect().top - rail.getBoundingClientRect().top,
+        stripClearance: tabs.getBoundingClientRect().top - r.top,
+        panelTopOff: Math.abs(panel.getBoundingClientRect().top - r.top),
+        panelOverrun: panel.getBoundingClientRect().bottom - r.bottom,
       };
     });
     expect(geom, "the casefile and the HUD rail must both be mounted").not.toBeNull();
     expect(
-      geom!.sec,
-      `the section rule is ${geom!.sec.toFixed(1)}px off the tick ladder`
+      Math.abs(geom!.stripClearance),
+      `the tab strip is ${geom!.stripClearance.toFixed(1)}px off the rail top`
     ).toBeLessThan(1.5);
-    expect(geom!.viz, `the viz rule is ${geom!.viz.toFixed(1)}px off the tick ladder`).toBeLessThan(
-      1.5
-    );
     expect(
-      geom!.stripClearance,
-      `the tab strip starts ${(-geom!.stripClearance).toFixed(1)}px above the rail box`
-    ).toBeGreaterThanOrEqual(0);
+      geom!.panelTopOff,
+      `the panel top is ${geom!.panelTopOff.toFixed(1)}px off the rail top`
+    ).toBeLessThan(1.5);
+    expect(
+      geom!.panelOverrun,
+      `the panel runs ${geom!.panelOverrun.toFixed(1)}px past the rail's last tick`
+    ).toBeLessThanOrEqual(1.5);
 
     // EVERY ROW, not just the one that opens. The harmonised shell keeps the
     // proof register and directory in the left column while each visual owns
@@ -2218,8 +2147,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       const goldPlate = document.querySelector<HTMLElement>(
         '.fl-detail__plate[data-accent="gold"]'
       );
-      const now = document.querySelector<SVGPathElement>(".fl-route .rt-now");
-      if (!cons || !ownPlate || !goldPlate || !now) return null;
+      if (!cons || !ownPlate || !goldPlate) return null;
 
       const ground = parse(getComputedStyle(cons).backgroundColor)!;
 
@@ -2243,10 +2171,6 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           ratio: ratio(valueOf(goldPlate), goldBed),
           color: getComputedStyle(goldPlate.querySelector(".fl-detail__a")!).color,
         },
-        nowStroke: {
-          ratio: ratio(parse(getComputedStyle(now).stroke)!, ground),
-          color: getComputedStyle(now).stroke,
-        },
       };
     });
 
@@ -2259,10 +2183,6 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       accents!.gold.ratio,
       `the gold answer is ${accents!.gold.ratio}:1 (${accents!.gold.color}) — it must take --gold-ink in light`
     ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      accents!.nowStroke.ratio,
-      `the NOW module stroke is ${accents!.nowStroke.ratio}:1 (${accents!.nowStroke.color})`
-    ).toBeGreaterThanOrEqual(3);
 
     // ── AND THE AUTHORED WIREFRAME, ON THE SAME PARCHMENT (ADR-068 D5) ─
     // The row walk above reads each row on its DEFAULT tool, so the drawing

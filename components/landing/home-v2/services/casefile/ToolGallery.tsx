@@ -4,7 +4,6 @@ import { useCallback, useRef, useState } from "react";
 import type { ProjectCase } from "@/components/landing/v7/tools-cards/toolCardData";
 
 import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from "./MediaLightbox";
-import { RouteDiagram } from "./RouteDiagram";
 import { ConsoleFrame } from "./console/ConsoleFrame";
 import { ConsoleRail } from "./console/ConsoleRail";
 import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
@@ -12,17 +11,11 @@ import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
 /**
  * ToolGallery — the four production tools, one in view, at panel scale.
  *
- * STRUCTURE (owner's field template — ADR-068, de-cramped 2026-08-07 pm):
+ * STRUCTURE (owner's field template — ADR-068):
  *
  *   ┌ rail ──────────────────────────────────────────────┐
  *   │ ◆ BRIEFING AGENT  ◇ IMAGE & VIDEO  ◇ UGC DUBBER  … │  the HANDLE
  *   ├────────────────────────────────────────────────────┤
- *   │                                                     │  ← air
- *   │ THE ROUTE BEFORE                     THE ROUTE NOW  │
- *   │ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐  ›››  ┌════════════┐      │  ← RouteDiagram
- *   │ └──┘ └──┘ └──┘ └──┘ └──┘       └ ONE BRIEF ═┘      │
- *   │ FIVE SOURCES · BY HAND      ONE SURFACE · WHILE …   │
- *   │                                                     │  ← air
  *   │ ┌ FEED · IN SERVICE 2025 ── WALKTHROUGH · 1:20 ─┐  │
  *   │ ⌐                  ┌ RUN ┐                      ¬  │  ← the bay wraps
  *   │        the capture, bled to the bay's walls         │    the ONE button
@@ -87,10 +80,6 @@ import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
  * ordinal in costume and ADR-066 retired the whole family. The codename
  * survives as the lightbox's label, which is the one place it is doing work.
  *
- * · THE ROUTE IS THE ARGUMENT. A Software-for-Few tool's claim is that a
- *   route a reader can COUNT collapses to one module, so the plate draws the
- *   count. See `RouteDiagram.tsx` for the geometry and its three binding
- *   measurements.
  * · THE BAY IS CHROME AROUND THE SAME ONE BUTTON. `.fl-shot` is unchanged —
  *   still the whole frame as the walkthrough trigger, still the halftone
  *   veil (ADR-064 U2), still bleeding to its box edges. What the bay adds
@@ -209,86 +198,76 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
          plate joins the films. `subline` / `shift` are untouched data. */
     >
       <div className="fl-toolbody">
-        {/* THE STACK — route and bay, CENTRED in what the detail leaves
-            (the mockup's `.stack`). It is what spends the freed height on
-            AIR rather than on bigger content: at 2560×1330 the field has
-            ~200px more than the drawing wants, and `space-evenly` on the
-            body plus this centring put it between the blocks instead of
-            into a taller screenshot. */}
-        <div className="fl-toolstack">
-          <RouteDiagram route={active.route} toolId={active.id} />
+        {/* THE BAY — a housing around the capture, not a second frame
+            around a frame. Its walls carry the FEED line and the transport
+            marks; the capture inside still bleeds to those walls
+            (ADR-064). */}
+        <div className="fl-bay">
+          <span className="fl-bay__br fl-bay__br--tl" aria-hidden="true" />
+          <span className="fl-bay__br fl-bay__br--tr" aria-hidden="true" />
+          <span className="fl-bay__br fl-bay__br--bl" aria-hidden="true" />
+          <span className="fl-bay__br fl-bay__br--br" aria-hidden="true" />
 
-          {/* THE BAY — a housing around the capture, not a second frame
-              around a frame. Its walls carry the FEED line and the transport
-              marks; the capture inside still bleeds to those walls
-              (ADR-064). */}
-          <div className="fl-bay">
-            <span className="fl-bay__br fl-bay__br--tl" aria-hidden="true" />
-            <span className="fl-bay__br fl-bay__br--tr" aria-hidden="true" />
-            <span className="fl-bay__br fl-bay__br--bl" aria-hidden="true" />
-            <span className="fl-bay__br fl-bay__br--br" aria-hidden="true" />
-
-            {/* ⚠ `IN SERVICE {year} —` LIVES HERE, AND THIS IS ITS ONLY HOME
-                (owner, 2026-08-07). Still no ordinal, no id, no codename:
-                the mockup's `T-01` stays retired (ADR-066), and the smoke's
-                bay-scoped `/\bT-\d/` scan plus its leading-ordinal scan both
-                still run over this line. A four-digit year mid-string trips
-                neither. */}
-            <div className="fl-bay__top" aria-hidden="true">
-              <span>
-                FEED · IN SERVICE <em>{active.year} —</em>
-              </span>
-              {active.walkthrough ? (
-                <span>
-                  WALKTHROUGH · <em>{active.walkthrough.duration}</em>
-                </span>
-              ) : (
-                <span>NO WALKTHROUGH</span>
-              )}
-            </div>
-
+          {/* ⚠ `IN SERVICE {year} —` LIVES HERE, AND THIS IS ITS ONLY HOME
+              (owner, 2026-08-07). Still no ordinal, no id, no codename:
+              the mockup's `T-01` stays retired (ADR-066), and the smoke's
+              bay-scoped `/\bT-\d/` scan plus its leading-ordinal scan both
+              still run over this line. A four-digit year mid-string trips
+              neither. */}
+          <div className="fl-bay__top" aria-hidden="true">
+            <span>
+              FEED · IN SERVICE <em>{active.year} —</em>
+            </span>
             {active.walkthrough ? (
-              <button
-                type="button"
-                className="fl-shot"
-                aria-haspopup="dialog"
-                /* ⚠ ONE LABEL, AND IT STAYS THE ACTION. The drawing is
-                   `aria-hidden`, so the wireframe branch appends the one
-                   clause that says what the bay is showing — WITHOUT the
-                   codename (ADR-066 keeps that off every label on this
-                   surface) and without restating the tool's name, which the
-                   first half of this string already carries. On the capture
-                   branch nothing is appended: the image's `alt` never
-                   reached the a11y tree anyway, because an `aria-label` on a
-                   button overrides its contents. */
-                aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}${
-                  Wireframe ? ". Session interface, drawn." : ""
-                }`}
-                onClick={(e) => {
-                  returnFocusRef.current = e.currentTarget;
-                  setWatching(true);
-                }}
-              >
-                {capture}
-                <span className="fl-shot__bar" aria-hidden="true">
-                  <i className="fl-shot__chevs">
-                    {CHEVRONS.map((i) => (
-                      <svg key={i} viewBox="0 0 17 9" data-on={i === 0 || undefined}>
-                        <path d="M0,0 H11 L17,4.5 L11,9 H0 Z" />
-                      </svg>
-                    ))}
-                  </i>
-                  <i className="fl-shot__cue" />
-                  Watch walkthrough
-                  <b>{active.walkthrough.duration}</b>
-                </span>
-              </button>
+              <span>
+                WALKTHROUGH · <em>{active.walkthrough.duration}</em>
+              </span>
             ) : (
-              <div className="fl-shot" data-static>
-                {capture}
-              </div>
+              <span>NO WALKTHROUGH</span>
             )}
           </div>
+
+          {active.walkthrough ? (
+            <button
+              type="button"
+              className="fl-shot"
+              aria-haspopup="dialog"
+              /* ⚠ ONE LABEL, AND IT STAYS THE ACTION. The drawing is
+                 `aria-hidden`, so the wireframe branch appends the one
+                 clause that says what the bay is showing — WITHOUT the
+                 codename (ADR-066 keeps that off every label on this
+                 surface) and without restating the tool's name, which the
+                 first half of this string already carries. On the capture
+                 branch nothing is appended: the image's `alt` never
+                 reached the a11y tree anyway, because an `aria-label` on a
+                 button overrides its contents. */
+              aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}${
+                Wireframe ? ". Session interface, drawn." : ""
+              }`}
+              onClick={(e) => {
+                returnFocusRef.current = e.currentTarget;
+                setWatching(true);
+              }}
+            >
+              {capture}
+              <span className="fl-shot__bar" aria-hidden="true">
+                <i className="fl-shot__chevs">
+                  {CHEVRONS.map((i) => (
+                    <svg key={i} viewBox="0 0 17 9" data-on={i === 0 || undefined}>
+                      <path d="M0,0 H11 L17,4.5 L11,9 H0 Z" />
+                    </svg>
+                  ))}
+                </i>
+                <i className="fl-shot__cue" />
+                Watch walkthrough
+                <b>{active.walkthrough.duration}</b>
+              </span>
+            </button>
+          ) : (
+            <div className="fl-shot" data-static>
+              {capture}
+            </div>
+          )}
         </div>
 
         {/* THE DETAIL — four fixed questions, this tool's four answers.
