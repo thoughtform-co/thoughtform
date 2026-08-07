@@ -213,6 +213,12 @@ html[data-theme="light"] {
      robustness argument that raised them (0.42→0.55 / 0.16→0.28) is
      symmetric across modes. THESE TWO ARE THE RAILS: latent night. */
   --atreides-light: #4a6238;
+  /* Ink step of the provenance green — the same value the PDA console
+     already uses for its light-mode green mark (--pda-grnh, below);
+     5.3:1 on --surface-1 parchment. */
+  --atreides-ink: #3f5a2e;
+  /* Own-plate wash: parchment needs a stronger lift than void. */
+  --fl-own-wash: rgba(74, 98, 56, 0.12);
   --gold-05: rgba(202, 165, 84, 0.05);
   --hud-rail-line: rgba(17, 15, 9, 0.55);
   --hud-rail-line-soft: rgba(17, 15, 9, 0.28);
