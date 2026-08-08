@@ -982,6 +982,57 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
+## The CONFIGURATION lab (look-dev, `/test/intelligence-config-lab`)
+
+Four archetypes for READING 02's drawing, beside the shipped ADR-069 reading,
+after the owner's verdict that the morph is right while the drawing still
+reads as four-modules-plus-core (2026-08-08, two CP2077 reference boards:
+different SHAPES per configuration part, motherboards/nodes/retrofuturism,
+substrate as skill clusters). **Nothing on the landing changed**; no ADR until
+a direction wins (the BOARD-archetype precedent).
+
+- **The five variants** (`app/(internal)/test/intelligence-config-lab/`):
+  `shipped` mounts the real `ViewConfiguration`; `die` = the work docked in a
+  pin-grid socket, parts as package types, the substrate as the ground plane
+  below a grade rule — **with the 47 `skillSymbol` marks' first render
+  anywhere**; `chain` = inherits IN → work + skill/lane twin → GATE aperture
+  → surfaces OUT, patch-bay substrate, MAP_CHAINS neighbours lettered at the
+  edges; `section` = vertical cutaway with the five shapes as literal strata
+  below grade; `schematic` = symbol-per-part nets with five power rails.
+- **Every variant keeps a socketed, cartridge-shaped home for the work**
+  (176×136 × k) — the ADR-069 flight docks the reading-01 cartridge, and a
+  variant whose core cannot receive it breaks the loved morph on promotion.
+- **The chrome is REAL**: `ConsoleFrame` + `ConsoleRail` + the `--pda-*`
+  palette, mounted outside `.fl-case` (the expanded-overlay precedent,
+  console.css). The lab supplies only a definite-height housing pinned to
+  MEASURED production boxes (613×541 / 690×601 / 864×818 — re-pin with
+  `node scripts/capture-config-lab.mjs --measure`) and the forced
+  `data-proof-settled` arrival gate.
+- ⚠ **THE LAB PAGE IS MECHANICALLY UNGUARDED** — the registry test walks
+  `CASES`/`PROJECT_CASES` objects, never component code. So every variant
+  declares everything it letters via a pure `lettering()`, and
+  `tests/lib/config-lab-fit.test.ts` walks those declarations for ALL 27
+  works × 4 variants: fit vs measure (advance = `0.6 + tracking`), the Die's
+  cluster rows, and the registry's own envelope regexes. It caught the real
+  ceiling on day one: the longest live `bar` is **46 characters** (W-052),
+  not the 37 a sampled read suggested.
+- ⚠ **Nothing letters under fs 7.5 in a 1000-wide crop** — the binding meet
+  is 0.603 (field 603px at 1280×720), so fs 7 renders 4.22px, under the 4.3
+  floor. Caught by the capture gates, not the eye.
+- **`scripts/capture-config-lab.mjs`** runs the matrix (5 variants × 5
+  subjects × 2 themes at p1280 + a p1920 sweep), waits on the readout's
+  `data-*` mirror (never a sleep), gates on 0 collisions / 0 clipped /
+  minPx ≥ 4.3 / no overflow, and writes the stills to
+  `docs/design/intelligence-config-lab/`. ⚠ `reducedMotion` must stay
+  `"no-preference"` — PRM trips the console unwrap pair and hides the
+  console entirely. `--measure` scrolls the REAL landing into the dwell
+  (`.home-v2-stage` first — the corridor is lazy and inflates layout late)
+  and prints the production `.fl-con` boxes; the console frame is shared
+  chrome, so whichever row the browse band selected, the box is the same.
+- **Person-led stays honest on every variant**: fallback answers, crossed
+  gauge, empty meter (with `Never a price.` wherever a meter appears), and
+  the tapped shapes still lit — the negative space is a reading.
+
 ## Confidentiality envelope
 
 This is client work on a public page. `tests/lib/cases-registry.test.ts`

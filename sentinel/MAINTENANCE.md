@@ -54,6 +54,27 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-08 — The CONFIGURATION lab: four archetypes beside the shipped reading
+
+Owner verdict on ADR-069: the morph is right, the drawing still reads as
+four-modules-plus-core — "go crazy". New look-dev route
+`/test/intelligence-config-lab` (BOARD-archetype precedent: live record, real
+console chrome, measured not reviewed, NO ADR until a direction wins; nothing
+on the landing changed). `.claude/rules/proof.md` gains §The CONFIGURATION lab.
+
+- Five variants: `shipped` (the real `ViewConfiguration`) beside `die`
+  (motherboard; the 47 `skillSymbol` marks' first render, clustered per shape
+  on the ground plane), `chain` (signal path with a physical gate aperture +
+  MAP_CHAINS neighbours), `section` (cutaway; shapes as strata below grade),
+  `schematic` (symbol-per-part nets + power rails). Every variant keeps a
+  socketed cartridge home so the ADR-069 flight survives promotion.
+- `tests/lib/config-lab-fit.test.ts` (fit + envelope over ALL 27 works × 4
+  variants — the lab page is outside the registry scanner's reach) and
+  `scripts/capture-config-lab.mjs` (55-sample matrix, dark+light, gates:
+  0 collisions / 0 clipped / minPx ≥ 4.3; `--measure` pins the housing from
+  production). Two real ceilings caught same-day: `bar` runs to 46 chars
+  (W-052), and fs 7 renders 4.22px at the binding meet — under the floor.
+
 ### 2026-08-08 — Map console: the selection morph + the answered configuration (ADR-069)
 
 Owner ask off two Cyberpunk 2077 reference boards: clicking a workstream should
