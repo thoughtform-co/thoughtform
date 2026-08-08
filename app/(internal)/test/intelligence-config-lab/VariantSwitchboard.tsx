@@ -55,7 +55,14 @@ const FS = { chrome: 7.5, tag: 7.5, name: 8, value: 8.5, sym: 7.4 } as const;
 /** Chip value lines wrap at this measure (120-wide package, 8u inset). */
 const CHIP_CHARS = Math.floor(104 / adv(FS.name, 0.08));
 
-const CARRIER = { x: 400, y: 240, w: 300, h: 230, ch: 16 } as const;
+/* ⚠ ONE FRAME (owner, 2026-08-08): the work chip IS the cartridge, grown —
+   no carrier housing around it. The bright plate is painted on the
+   cartridge's OWN notched silhouette and the pin nibs hang off its edges,
+   so the centre reads as a single component, not a box in a box. */
+const CHIP = { x: 409, y: 247, w: 281.6, h: 217.6, k: 1.6 } as const;
+const CHIP_NOTCH = 14 * CHIP.k;
+const CHIP_R = CHIP.x + CHIP.w;
+const CHIP_B = CHIP.y + CHIP.h;
 
 /** The five bus bars + banks, staggered like the reference's BLADES rows. */
 const BARS: Record<
@@ -460,19 +467,16 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
   const led = !pda.configured;
   const wire = led ? "var(--pda-txt3)" : "var(--pda-amb)";
 
-  /* Carrier pin nibs, all four edges. */
+  /* Pin nibs, hung directly off the chip's edges. The top and left runs
+     start clear of the notch. */
   const nibs: ReactNode[] = [];
-  for (let x = 420; x <= 680; x += 20) {
-    nibs.push(<line key={`t${x}`} x1={x} y1={CARRIER.y - 8} x2={x} y2={CARRIER.y} />);
-    nibs.push(
-      <line key={`b${x}`} x1={x} y1={CARRIER.y + CARRIER.h} x2={x} y2={CARRIER.y + CARRIER.h + 8} />
-    );
+  for (let x = 449; x <= 669; x += 20) {
+    nibs.push(<line key={`t${x}`} x1={x} y1={CHIP.y - 8} x2={x} y2={CHIP.y} />);
+    nibs.push(<line key={`b${x}`} x1={x} y1={CHIP_B} x2={x} y2={CHIP_B + 8} />);
   }
-  for (let y = 262; y <= 448; y += 19) {
-    nibs.push(<line key={`l${y}`} x1={CARRIER.x - 8} y1={y} x2={CARRIER.x} y2={y} />);
-    nibs.push(
-      <line key={`r${y}`} x1={CARRIER.x + CARRIER.w} y1={y} x2={CARRIER.x + CARRIER.w + 8} y2={y} />
-    );
+  for (let y = 286; y <= 450; y += 19) {
+    nibs.push(<line key={`l${y}`} x1={CHIP.x - 8} y1={y} x2={CHIP.x} y2={y} />);
+    nibs.push(<line key={`r${y}`} x1={CHIP_R} y1={y} x2={CHIP_R + 8} y2={y} />);
   }
 
   const chev = (i: number) => {
@@ -511,14 +515,14 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
       />
       <Ribbon
         pts={route(
-          bend(1000, 120, 700, 176, "h", 22),
+          bend(1000, 120, 716, 176, "h", 22),
           [
-            [700, 176],
-            [690, 186],
+            [716, 176],
+            [706, 186],
           ],
           [
-            [690, 186],
-            [690, 760],
+            [706, 186],
+            [706, 760],
           ]
         )}
         n={6}
@@ -586,9 +590,9 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         WHO OWNS IT
       </text>
       <Plate cx={500} cy={64} w={240} h={44} hot label={pda.owner} />
-      <line x1="500" y1="90" x2="500" y2="238" stroke="var(--pda-dim)" />
+      <line x1="500" y1="90" x2="500" y2="243" stroke="var(--pda-dim)" />
       <path d="M496,94 L500,90 L504,94" fill="none" stroke="var(--pda-dim)" />
-      <path d="M496,234 L500,238 L504,234" fill="none" stroke="var(--pda-dim)" />
+      <path d="M496,239 L500,243 L504,239" fill="none" stroke="var(--pda-dim)" />
       <text x="512" y="146" fontSize={FS.chrome} letterSpacing=".22em" fill="var(--pda-txt3)">
         DECIDES ALONE
       </text>
@@ -617,7 +621,7 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
       <Ribbon
         pts={[
           [338, 320],
-          [400, 320],
+          [CHIP.x, 320],
         ]}
         n={8}
         pitch={3.5}
@@ -627,13 +631,13 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
       />
       {/* inherits in, bottom-left — runs arrive PERPENDICULAR to the pin
           edge and stop a nib short, so the fringe carries the last step. */}
-      <Ribbon pts={bend(270, 513, 450, 478, "h", 16)} n={5} stroke={wire} dashed={led} />
+      <Ribbon pts={bend(270, 513, 450, 473, "h", 16)} n={5} stroke={wire} dashed={led} />
       <Ribbon
         pts={[
           [390, 556],
-          [390, 492],
-          [404, 478],
-          [500, 478],
+          [390, 487],
+          [404, 473],
+          [500, 473],
         ]}
         n={5}
         stroke="var(--pda-txt3)"
@@ -641,7 +645,7 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         dashed
       />
       {/* reach out, top-right — and OFF the board */}
-      <Ribbon pts={bend(650, 240, 760, 173, "v", 16)} n={4} stroke={wire} dashed={led} />
+      <Ribbon pts={bend(650, CHIP.y, 760, 173, "v", 16)} n={4} stroke={wire} dashed={led} />
       <Ribbon
         pts={[
           [820, 130],
@@ -652,10 +656,10 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         opacity={0.35}
         dashed={led}
       />
-      {/* the output run: carrier → gate → junction → system + surface */}
+      {/* the output run: chip → gate → junction → system + surface */}
       <Ribbon
         pts={[
-          [700, 400],
+          [CHIP_R, 400],
           [796, 400],
         ]}
         n={8}
@@ -687,7 +691,7 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         const tapped = taps(work, s.key);
         const b = BARS[s.key];
         const entry: Pt = b.enter === "l" ? [b.x, b.y + 9] : ([b.x + b.w, b.y + 9] as Pt);
-        const pts = route(bend(b.drop, CARRIER.y + CARRIER.h, entry[0], b.lane, "v", 14), [
+        const pts = route(bend(b.drop, CHIP_B, entry[0], b.lane, "v", 14), [
           [entry[0], b.lane] as Pt,
           entry,
         ]);
@@ -720,24 +724,25 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
       <PartChip x={760} y={130} tag="SYSTEM" value={c.system} glyph={GLYPHS.port} led={led} />
       <PartChip x={840} y={470} tag="SURFACE" value={c.surface} glyph={GLYPHS.aperture} led={led} />
 
-      {/* ── Tier 1: the one bright object ────────────────────────────── */}
+      {/* ── Tier 1: the one bright object — ONE frame. The plate fill is
+          painted on the cartridge's own silhouette; the cartridge draws the
+          only outline. */}
       <g stroke="var(--pda-hot)" opacity={led ? 0.35 : 0.55}>
         {nibs}
       </g>
       <path
-        d={`M${CARRIER.x},${CARRIER.y} H${CARRIER.x + CARRIER.w - CARRIER.ch} L${CARRIER.x + CARRIER.w},${CARRIER.y + CARRIER.ch} V${CARRIER.y + CARRIER.h} H${CARRIER.x + CARRIER.ch} L${CARRIER.x},${CARRIER.y + CARRIER.h - CARRIER.ch} Z`}
+        d={`M${CHIP.x + CHIP_NOTCH},${CHIP.y} H${CHIP_R} V${CHIP_B} H${CHIP.x} V${CHIP.y + CHIP_NOTCH} Z`}
         fill={led ? "rgba(var(--dawn-rgb), 0.04)" : "rgba(var(--dawn-rgb), 0.09)"}
-        stroke={led ? "var(--pda-txt3)" : "var(--pda-hot)"}
-        strokeWidth="1.2"
+        stroke="none"
       />
       <Cartridge
-        x={425}
-        y={258.5}
-        w={250}
-        h={193}
+        x={CHIP.x}
+        y={CHIP.y}
+        w={CHIP.w}
+        h={CHIP.h}
         state={led ? "led" : "hot"}
         work={pda}
-        k={1.42}
+        k={CHIP.k}
       />
 
       {/* ── Tier 3: the bus bars and their banks ─────────────────────── */}
