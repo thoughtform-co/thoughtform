@@ -462,9 +462,17 @@ holdfast` · atl `masters level broadcast parallel`.
   plates ≥99% painted, at SIX viewports incl. the wide-short band (1920×800,
   2560×1330) — reported overflow missed both the one-sided crop (assertions
   never ran wide-and-short) and the centred column's SYMMETRIC overflow,
-  which reports zero. The bay's ceiling is `--tf-bay: clamp(250px, 44svh,
-560px)` (raised 2026-08-08 — zero dead air below ~1150h, the ceiling's
-  surplus on big monitors is the deliberate "stops growing first" remnant).
+  which reports zero. ⚠ **THE BAY HAS NO CEILING (ADR-068 U4, owner
+  2026-08-08 — the reference boards' law: content fills the housing).**
+  `--tf-bay: none`; the evidence fills what the blocks leave at EVERY
+  height and the panel's air is `--tf-gap` alone — a bitten cap pooled the
+  surplus as void between the watch bar and the floor-seated blocks.
+  ADR-066's order of sacrifice keeps its SHRINK half (the frame's
+  `clamp(70px, 9svh, 180px)` floor); "stops growing first" is retired with
+  the captures it protected against. Tall-bay safety lives in the DRAWINGS
+  (vesper's row is cqw-capped at `min(100%, 42cqw)` — height-driven 4/5
+  tiles overflow the row past that; mímir's brief column is carded so it
+  reads as paper, not a hole).
 - **DETAIL PLATES (ADR-068 U2, owner 2026-08-08):** the 2×2 renders
   `ProjectCase.capabilities` — title + one-sentence claim, the SAME
   canonical array the Arc card tiles print, so a copy edit lands on both

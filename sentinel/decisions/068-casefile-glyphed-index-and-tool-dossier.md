@@ -514,3 +514,52 @@ keyed per row upstream. The wireframe keeps its `key={active.id}` remount.
 - Fit script (real scrolls, six viewports × four stations): 0 collapsed
   elements, 0 frame overflow, labels ≥8.6px, bar uncut everywhere; light
   probe 6.18–6.45:1 on all fourteen labels.
+
+## Update 4 — the ceiling goes: content fills the housing (2026-08-08, owner)
+
+Owner: _"look at the spacing of the right panel? Isn't there a way of
+harmonizing this? Please look at our references for some good spacing"_ —
+the Panels/Interfaces reference boards (Cyberpunk civil screens et al.),
+whose one consistent law is that a panel's content FILLS its housing: the
+largest band absorbs the surplus, footers pin to edges, and air only ever
+lives inside a content region's own canvas.
+
+U3's raised ceiling still violated that law: any svh cap that bites pools
+the surplus as unstructured void between the watch bar and the floor-seated
+blocks — and the bay's want rises FASTER than the viewport (the field grows
+~1:1 with height while the blocks stay ~constant), so no fraction clears
+every height. `--tf-bay` is `none` now; the evidence fills what the blocks
+leave and the panel's only air is `--tf-gap`, measured at all seven probe
+viewports (pool = 15.1/16.8/22.7/26 — the gap token's own ramp — with bays
+reaching 506/679/739 at 1080p/1269/1330).
+
+Both of the ceiling's reasons were already dead: the captures it stopped
+from dominating are authored drawings now, and the wide-short overrun died
+with the route. ADR-066's order of sacrifice keeps its shrink half (the
+frame's floor); "stops growing first" is retired. The `max-height:
+var(--tf-bay, none)` hook stays in the rule — a future cap belongs on the
+BAY, never the frame.
+
+Tall-bay safety moved into the drawings, where the references put it:
+
+- **Vesper's row is cqw-capped** — `min(100%, 42cqw)` on the tiles and the
+  prompt card. Height-driven 4/5 tiles in an uncapped bay grow their WIDTH
+  with the band: at a ~680px bay the row needed ~840px against an 818px
+  frame, overflow by construction at exactly the heights the old ceiling
+  used to stop. Past the cap the row top-aligns and the band's lower ground
+  reads as the session CANVAS — the real app's own read. The clip pill got
+  the same treatment (`min(54%, 15cqw)` × `min(17%, 3cqw)`) — a %-pill on a
+  344px tile was a blob.
+- **Mímir's brief column is carded** like its two neighbours (`--w-card`
+  ground + hairline): borderless it read as a HOLE between two panels once
+  the column ran tall; bounded it reads as the composer's paper. Three
+  panels, three grounds — the owner's own spec, finished.
+- Babylon and Heimdall needed nothing: their feet are `margin-top: auto`
+  (rows top, action bottom), the script card and the dot-grid canvas are
+  bounded grounds, and the portrait screen's extra height reads as a
+  modern phone ratio.
+
+Verification: pool = gap at every station × seven viewports (incl.
+2000×1080, the owner's report shape); 0 collapsed elements, 0 frame
+overflow on all four drawings up to the 739px bay; the six-viewport
+harmonised smoke, the 1440×800 clip walk and the light walk all green.

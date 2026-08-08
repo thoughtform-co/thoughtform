@@ -2052,21 +2052,23 @@
   --tf-edge: clamp(8px, 1.5svh, 22px);
   /* Bay → detail. Mockup `.stack` gap: 26. */
   --tf-gap: clamp(8px, 2.1svh, 26px);
-  /* THE BAY'S CEILING — the evidence's, plus its own ~55–80px of chrome
-     (FEED line + watch bar + borders). RAISED 2026-08-08 (owner: "increase
-     the height of that wireframe … we have more space") — the route band
-     left in e3b3386 and the capability blocks went content-height in U2,
-     so the bay's WANTS rose to ~249 / 272 / ~300 / 458 / 619 / 680 at
-     720p / 1440×800 / 1920×800 / 1080p / 2017×1269 / 2560×1330 while the
-     old 36svh/460 ceiling (259/288/288/389/457/460) had started biting at
-     laptop-wide-short and pooled the surplus as dead air between bay and
-     blocks (`margin-top: auto` absorbs a bitten cap). 44svh/560 clears the
-     bite everywhere below ~1150h and still stops the bay first on big
-     monitors (~60/120px of air at 1269/1330 — the deliberate remnant of
-     "stops growing first", ADR-066). A ceiling raise has NO clipping
-     failure mode: max-height only limits growth; the shrink chain and the
-     frame's floor below are untouched. */
-  --tf-bay: clamp(250px, 44svh, 560px);
+  /* ⚠ THE BAY HAS NO CEILING ANY MORE (owner, 2026-08-08 — "look at the
+     spacing of the right panel… harmonizing"; the reference boards'
+     spacing law is CONTENT FILLS THE HOUSING). Any svh cap that binds
+     pools the surplus as unstructured void between the watch bar and the
+     floor-seated blocks (`margin-top: auto` absorbs a bitten cap), and the
+     bay's want rises FASTER than the viewport (the field grows ~1:1 with
+     height while the blocks stay ~constant), so no single fraction clears
+     every height. The evidence fills what the blocks leave instead, and
+     the surplus lives INSIDE the drawings' own canvases — vesper's session
+     ground, heimdall's dot grid, mímir's columns — which is the reference
+     read. The two reasons the ceiling existed are both dead: the captures
+     it stopped from dominating are drawn wireframes now (their internal
+     cqw caps keep proportion), and the wide-short overrun died with the
+     route band. ADR-066's order of sacrifice keeps its SHRINK half (the
+     frame's floor below); the "stops growing first" half is retired with
+     this token — the field's own tick-ladder geometry is the ceiling. */
+  --tf-bay: none;
 }
 
 /* Body: ONE COLUMN — bay, detail (owner, 2026-08-07 — the header and the
@@ -2154,17 +2156,12 @@
 /* ⚠ THE FLOOR IS A GUARD, NOT A SIZE. `clamp(70px, 9svh, 180px)` exists to
    make an overrun visible to the smoke instead of silently deleting the
    evidence, which is why `.fl-shot` still refuses `min-height: 0` above.
-   Since the route band left (e3b3386) and the blocks went content-height
-   (ADR-068 U2), the frame's NATURAL height is far above it — measured
-   2026-08-08, evidence + bay at the six reference viewports:
-
-     1280×720    frame 246.5   bay 310.6   detail 145.9   air = gap
-     1440×800    frame 270.1   bay 339.3   detail 167.9   air = gap
-     1920×800    frame 280.9   bay 350.1   detail 138.8   air = gap
-     1920×1080   frame 395.2   bay 475.2   detail 198.9   air ~31 + gap
-     2017×1269   frame 478.4   bay 558.4*  detail 205.4   air ~121 + gap
-     2560×1330   frame 480.0   bay 560.0*  detail 205.4   air ~179 + gap
-                                  * = the --tf-bay ceiling binding
+   Since the route band left (e3b3386), the blocks went content-height
+   (ADR-068 U2) and the bay's ceiling was retired (the no-ceiling pass,
+   2026-08-08), the frame's NATURAL height is far above it — measured at
+   the six reference viewports: 246.5 / 270.1 / ~281 / 395→506 / 679 / 739
+   with air = the gap alone everywhere (the bay fills what the blocks
+   leave; the surplus lives INSIDE the drawings' own canvases).
 
    The floor only binds in degenerate sub-720 windows now — correct: at a
    genuinely short window the frame gives way FIRST (ADR-066's order of
@@ -2317,14 +2314,13 @@
    2560×1330):
 
      field    493 / 548 / 530 / 760 / 949 / 1010 px
-     bay      310.6 / 339.3 / 350.1 / 475.2 / 558.4* / 560*   (*ceiling)
-       ├ FEED  ~24–30
-       ├ evidence 246.5 / 270.1 / 280.9 / 395.2 / 478.4 / 480
-       └ bar   ~38–48
-     detail   145.9 / 167.9 / 138.8 / 198.9 / 205.4 / 205.4  (content-height,
-              seated at the field's floor by `margin-top: auto`)
-     air      = the gap alone below ~1150h; ~31 / ~121 / ~179 of surplus at
-              the three tall viewports — the ceiling's deliberate remnant
+     bay      310.6 / 339.3 / 350.1* / 506 / 679 / 739   (*vesper 350.1;
+              the other stations 312 — per-station detail heights differ)
+       └ FEED ~24–30 · evidence (the rest) · bar ~38–48
+     detail   145.9 / 167.9 / ~139–177 / 198.9 / 205.4 / 205.4
+              (content-height, seated at the field's floor)
+     air      = `--tf-gap` ALONE, at every viewport and station — the bay is
+              uncapped (2026-08-08) and fills what the blocks leave
 
    The detail grid ends inside the field at every viewport (−10.8 … −19.9,
    the field's own inset) and nothing overruns.
@@ -2357,16 +2353,17 @@
    first thing to disappear is the walkthrough bar — sliced in half, with
    every box still reporting zero overflow.
 
-   ⚠ IT STILL GROWS, AND IT IS WHERE THE EVIDENCE'S CEILING LIVES NOW
-   (2026-08-07). `flex: 1 1 auto` is load-bearing twice over: it is what lets
-   the evidence take the field's surplus at all, and — because the frame's
-   basis stays 0 — it is what keeps the automatic-minimum chain resolving to
-   the frame's floor rather than to its hypothetical size. `max-height` is
-   the whole cap: the bay freezes at `--tf-bay`, the surplus past it becomes
-   air above the bottom-seated detail grid (`margin-top: auto`), and no dead
-   band of `--void-deep-canon` can open under the watch bar (which is what
-   capping the FRAME instead would do — `.fl-shot` would keep growing under
-   a frozen frame). */
+   ⚠ IT GROWS WITHOUT A CEILING NOW (2026-08-08 — `--tf-bay: none`; the
+   reference boards' law is CONTENT FILLS THE HOUSING, and a bitten cap
+   pooled the surplus as void above the floor-seated blocks). `flex: 1 1
+   auto` is load-bearing twice over: it is what lets the evidence take the
+   field's surplus at all, and — because the frame's basis stays 0 — it is
+   what keeps the automatic-minimum chain resolving to the frame's floor
+   rather than to its hypothetical size. The `max-height: var(--tf-bay,
+   none)` hook STAYS in the rule: it is the one declaration a future cap
+   needs, and capping the BAY rather than the frame is still the only safe
+   shape (capping the FRAME opens a dead band of `--void-deep-canon` under
+   the watch bar — `.fl-shot` keeps growing under a frozen frame). */
 .fl-bay {
   position: relative;
   flex: 1 1 auto;
@@ -2465,8 +2462,8 @@
    that as wasted real estate once real sentences went in. The grid now
    takes what its copy needs (`flex: 0 0 auto`) and pins itself to the
    field's BOTTOM edge (`margin-top: auto`), so every freed pixel goes to
-   the capture above it — `.fl-bay` is the `flex: 1 1 auto` element with
-   the `--tf-bay` ceiling.
+   the evidence above it — `.fl-bay` is the uncapped `flex: 1 1 auto`
+   element (the ceiling retired 2026-08-08).
 
    THE PLATE IS TWO LAYERS, and it has to be: a `clip-path` cuts a border,
    it never strokes one (ADR-067's own finding), so a notched box with an
@@ -2877,9 +2874,19 @@
   gap: 1cqw;
   padding-bottom: calc(min(50cqh, 15cqw) - 2cqh);
 }
+/* ⚠ THE ROW'S HEIGHT IS CQW-CAPPED, AND IT IS ARITHMETIC (2026-08-08, the
+   no-ceiling pass). The tiles are height-driven (`aspect-ratio: 4/5`), so
+   in an uncapped bay their WIDTH grows with the band: at a ~680px bay the
+   pair plus the card needed ~840px against an 818px frame — overflow by
+   construction, at exactly the heights the old `--tf-bay` used to stop.
+   `min(100%, 42cqw)` pins the row once the band passes ~2/5 of the frame's
+   width; past it the items top-align and the band's lower ground reads as
+   the CANVAS — the real app's own read, and the reference law's ("the
+   surplus lives inside a content region"). */
 .fl-wire--vesper .fl-wire__card {
   flex: 0 0 26%;
   min-width: 0;
+  max-height: 42cqw;
   display: flex;
   gap: 0.5cqw;
   padding: 0.4cqw 0.5cqw;
@@ -2952,7 +2959,7 @@
 .fl-wire--vesper .fl-wire__tile {
   position: relative;
   flex: none;
-  height: 100%;
+  height: min(100%, 42cqw);
   aspect-ratio: 4 / 5;
   border: 1px solid var(--w-hair);
   background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
@@ -2980,8 +2987,10 @@
   left: 50%;
   top: 0;
   transform: translate(-50%, -50%);
-  width: 54%;
-  height: 17%;
+  /* cqw-capped like the row itself — a %-sized pill on a 344px tile is a
+     blob, not a clip (measured at the 2560 uncapped bay). */
+  width: min(54%, 15cqw);
+  height: min(17%, 3cqw);
   border: 1px solid var(--w-hair);
   border-radius: 999px;
   background: var(--w-plate);
@@ -3272,13 +3281,19 @@
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
+/* Bounded like its two neighbours (2026-08-08, the no-ceiling pass): with
+   the bay uncapped the column runs tall, and a borderless middle read as a
+   HOLE between two carded panels rather than as paper. Three panels, three
+   grounds — the owner's own "three panels" spec, finished. */
 .fl-wire--mimir .fl-wire__mi-brief {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: min(3.2cqh, 16px);
-  padding: min(2cqh, 8px) min(1.6cqw, 14px) 0;
+  padding: min(2cqh, 8px) min(1.6cqw, 14px);
+  border: 1px solid var(--w-hair2);
+  background: var(--w-card);
 }
 .fl-wire--mimir .fl-wire__mi-sec {
   display: flex;
