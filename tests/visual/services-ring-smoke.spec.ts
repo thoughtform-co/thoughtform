@@ -752,16 +752,85 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // that stream (the plate's own `data-view` is the state signal).
       await page.locator(".fl-con__stn").first().click();
       await page.waitForTimeout(300);
+
+      /* ⚠ EVERY CARTRIDGE TAKES A CLICK WHERE A READER CLICKS — the middle of
+         the card. A person-led body is `fill: none`, and an unfilled SVG path
+         hit-tests on its STROKE alone, so all three person-led streams reached
+         the bare `<svg>` and did nothing while the keyboard path worked. No
+         assertion here could see it: `data-view` was checked on the first
+         cartridge, which is configured. Hit-test every one. */
+      const unreachable = await page.evaluate(() =>
+        [...document.querySelectorAll(".fl-pda-hit")]
+          .map((h, i) => {
+            const b = h.getBoundingClientRect();
+            const el = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
+            return el && (el === h || h.contains(el))
+              ? null
+              : (h.getAttribute("aria-label") ?? `#${i}`);
+          })
+          .filter(Boolean)
+      );
+      expect(
+        unreachable,
+        `${label}: these cartridges cannot be opened by clicking their centre`
+      ).toEqual([]);
+      /* The cartridge names its own stream and its own lane in its accessible
+         name — read them from the record rather than pinning a title, so a
+         reorder of the directory moves this assertion with it. */
+      const opened = (await page.locator(".fl-pda-hit").first().getAttribute("aria-label")) ?? "";
+      const [openedTitle, openedLane] = [
+        opened.split(",")[0]?.trim() ?? "",
+        opened.match(/,\s*([A-Z-]+) lane/)?.[1] ?? "",
+      ];
       await page.locator(".fl-pda-hit").first().click({ force: true });
-      await page.waitForTimeout(700);
+      // The flight is 420ms and the readout arrives at 700.
+      await page.waitForTimeout(800);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "2");
+
+      // ⚠ IT OPENS ON THE STREAM THAT WAS CLICKED, and the core is that same
+      // cartridge grown — which is the object the flight carries across. A
+      // configuration showing some other record would still satisfy
+      // `data-view`, so the title is the check that means anything.
+      expect(openedTitle, `${label}: the grid's first cartridge has no name`).toBeTruthy();
+      expect(
+        await page.locator(".fl-pda__svg").getByText(openedTitle, { exact: true }).count(),
+        `${label}: the configuration opened on a different stream`
+      ).toBeGreaterThan(0);
+
+      // ...and it ANSWERS (ADR-069). The four modules printed the same four
+      // questions for all twenty-seven streams until the record's own values
+      // reached the drawing; the lane is the one every configured stream has.
+      if (openedLane && openedLane !== "PERSON-LED") {
+        expect(
+          await page.locator(".fl-pda__svg").getByText(`${openedLane} LANE`).count(),
+          `${label}: the configuration printed no lane for a ${openedLane} stream`
+        ).toBeGreaterThan(0);
+      }
+
+      // The readout carries a whole sentence — the one string on this drawing
+      // longer than a label, and the reason `k` and `evals` have a home at all.
+      const longestLine = await page.evaluate(() =>
+        Math.max(
+          ...[...document.querySelectorAll(".fl-pda__svg text")].map(
+            (t) => (t.textContent ?? "").length
+          )
+        )
+      );
+      expect(longestLine, `${label}: the configuration's readout is missing`).toBeGreaterThan(40);
 
       // Escape returns to the work. Keys are bound on the PLATE, never
       // `document` — the corridor has its own key handling.
       await page.locator(".fl-con__stn").first().focus();
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "1");
+
+      // The record the reader opened stays marked on the grid, so the flight
+      // has somewhere legible to land and to leave from.
+      expect(
+        await page.locator(".fl-pda-hit").first().locator("line[stroke*='pda-hot']").count(),
+        `${label}: the open record is not marked on the grid`
+      ).toBeGreaterThan(0);
 
       // NOTHING THE MAP DOES MAY PUBLISH A RING ANCHOR. The casefile host is
       // `pointer-events: none` with scoped opt-ins, and the map plate is one

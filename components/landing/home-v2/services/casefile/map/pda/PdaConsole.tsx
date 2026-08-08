@@ -8,7 +8,16 @@ import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/typ
 import { ConsoleFrame } from "../../console/ConsoleFrame";
 import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 
-import { VIEW_BOX, ViewConfiguration, ViewSubstrate, ViewWork } from "./PdaViews";
+import {
+  CORE_RECT,
+  type PdaEntry,
+  VIEW_BOX,
+  ViewConfiguration,
+  ViewSubstrate,
+  ViewWork,
+  gridRect,
+} from "./PdaViews";
+import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
 import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
 
@@ -64,6 +73,27 @@ import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
  * when it is set, and `viewTick` is what re-keys the sweep so it plays once
  * per change rather than once per render.
  *
+ * ── One object survives the view change, and it FLIES ─────────────────────
+ * The selected work is the persistent object on this surface: reading 01 draws
+ * it as a cartridge in the grid, reading 02 draws it as the core, and the core
+ * IS that cartridge at `CORE_K`. So a change between those two readings does
+ * not replace it — it moves, from the home it had to the home it is getting,
+ * while everything else re-rasters around it on the sweep. That is what makes
+ * three readings read as ONE display switching rather than three pictures, and
+ * it is why the readings can stay terminal display-switching (owner) instead
+ * of becoming a zoom: the field never scales, one object travels across it.
+ *
+ * `entry` is which of the three gestures the selection takes on the transition
+ * just committed — `flight` between 01 and 02, `bloom` arriving from a reading
+ * that had no home for it, `raster` otherwise. It is STATE, not a ref, because
+ * it has to survive hover repaints: an object mid-flight whose class was gated
+ * on `still` would snap the moment the pointer entered it.
+ *
+ * ⚠ ONE RECT READ PER TRANSITION, at the click, before the state changes —
+ * `pdaFlight` does the rest arithmetically. No rAF, no measurement after the
+ * fact, and an interrupted flight falls back to the raster rather than reading
+ * the painted pose (ADR-061's bound on this surface).
+ *
  * ── Keys are bound on the PLATE, never `document` ────────────────────────
  * The corridor has its own key handling, and React's synthetic events reach
  * this node from whatever descendant has focus.
@@ -98,25 +128,100 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
   const [viewTick, setViewTick] = useState(0);
   /** True once the reader has moved the pointer inside the current view. */
   const [still, setStill] = useState(false);
+  /** How the selection enters the reading just opened. */
+  const [entry, setEntry] = useState<PdaEntry>({ kind: "raster" });
+  /**
+   * True once the configuration has been shown at all. Until then nothing
+   * marks a selection: the rest state is `shown[0]`, and lighting a record the
+   * reader has not asked for claims they left it open.
+   */
+  const [hasOpened, setHasOpened] = useState(false);
 
   const selected = shown.find((w) => w.id === selectedId) ?? shown[0];
 
-  const go = useCallback((next: PdaView) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+  /** When the last flight began, so an interrupted one can decline to fly. */
+  const flightAtRef = useRef(-Infinity);
+  /* ⚠ THESE MIRRORS KEEP THE WHEEL LISTENER STABLE, and that is the whole
+     reason they are refs. `go` sits in the native listener's dependency array;
+     threading `view` or `selectedId` through it as values would tear the
+     non-passive `wheel` listener down and re-add it on every reading change and
+     every selection — on the one control whose contract is that it releases the
+     page cleanly (ADR-063). `viewRef` predates this; `selRef` joins it for the
+     flight, which needs to know which record is open without re-subscribing. */
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const selRef = useRef(selectedId);
+  selRef.current = selectedId;
+
+  /**
+   * THE FLAVOUR, decided once per transition.
+   *
+   * A flight needs a home in BOTH readings, which only 01 and 02 have for a
+   * work. Everything else is the reading's own entrance, except an arrival on
+   * 01 from the substrate, where the record blooms in place so the reader can
+   * find where they were.
+   *
+   * ⚠ The guards are all cheap and all necessary: an in-flight interrupt would
+   * compute its start pose from a rect the object has not reached, and a
+   * collapsed box is what the desktop gate leaves behind (`display: none`),
+   * where the arithmetic would divide by zero.
+   */
+  const entryFor = useCallback(
+    (from: PdaView, to: PdaView, id: string): PdaEntry => {
+      const flies = (from === 1 && to === 2) || (from === 2 && to === 1);
+      if (!flies) return from === 3 && to === 1 ? { kind: "bloom" } : { kind: "raster" };
+
+      const now = performance.now();
+      if (now - flightAtRef.current < PDA_FLIGHT_GUARD_MS) return { kind: "raster" };
+
+      const el = svgRef.current;
+      if (!el) return { kind: "raster" };
+      const i = shown.findIndex((w) => w.id === id);
+      if (i < 0) return { kind: "raster" };
+
+      const box = el.getBoundingClientRect();
+      const slot = gridRect(i);
+      const vars =
+        from === 1
+          ? pdaFlight(box, VIEW_BOX[1], slot, VIEW_BOX[2], CORE_RECT)
+          : pdaFlight(box, VIEW_BOX[2], CORE_RECT, VIEW_BOX[1], slot);
+      if (!vars) return { kind: "raster" };
+
+      flightAtRef.current = now;
+      return { kind: "flight", ...vars };
+    },
+    [shown]
+  );
+
+  const enter = useCallback((next: PdaView, next_entry: PdaEntry) => {
     setView(next);
+    setEntry(next_entry);
+    if (next === 2) setHasOpened(true);
     setHover(null);
     setLit(null);
     setStill(false);
     setViewTick((t) => t + 1);
   }, []);
 
-  const open = useCallback((id: string) => {
-    setSelectedId(id);
-    setHover(null);
-    setLit(null);
-    setStill(false);
-    setView(2);
-    setViewTick((t) => t + 1);
-  }, []);
+  const go = useCallback(
+    (next: PdaView) => {
+      enter(next, entryFor(viewRef.current, next, selRef.current));
+    },
+    [enter, entryFor]
+  );
+
+  const open = useCallback(
+    (id: string) => {
+      /* The rect read happens HERE, before anything changes — the outgoing
+         reading is still on screen and its crop is still the one in the
+         attribute. */
+      const gesture = entryFor(viewRef.current, 2, id);
+      setSelectedId(id);
+      enter(2, gesture);
+    },
+    [enter, entryFor]
+  );
 
   /* A hover repaints WITHOUT replaying the entrance. */
   const hoverWork = useCallback((id: string | null) => {
@@ -143,8 +248,6 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
      would stop them at its threshold. */
   const rootRef = useRef<HTMLDivElement>(null);
   const wheelRef = useRef<PdaWheelState>(PDA_WHEEL_REST);
-  const viewRef = useRef(view);
-  viewRef.current = view;
 
   useEffect(() => {
     const el = rootRef.current;
@@ -262,7 +365,11 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
       {/* The sweep. Keyed on the view tick so it plays once per change and
           never on a hover repaint. */}
       <i className="fl-pda__scan" key={viewTick} aria-hidden="true" />
+      {/* ⚠ ONE SVG FOR ALL THREE READINGS, and the flight depends on it: the
+          box is the same before and after the crop swaps, so a single rect read
+          serves both sides of the mapping. */}
       <svg
+        ref={svgRef}
         className="fl-pda__svg"
         viewBox={VIEW_BOX[view]}
         preserveAspectRatio="xMidYMid meet"
@@ -273,10 +380,25 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
         aria-label={`Work-to-intelligence map — ${foot.title}`}
       >
         {view === 1 ? (
-          <ViewWork works={shown} hover={hover} onHover={hoverWork} onOpen={open} still={still} />
+          <ViewWork
+            works={shown}
+            hover={hover}
+            onHover={hoverWork}
+            onOpen={open}
+            still={still}
+            selId={selectedId}
+            showSel={hasOpened}
+            entry={entry}
+          />
         ) : null}
         {view === 2 && selected ? (
-          <ViewConfiguration work={selected} lit={lit} onLit={hoverPart} still={still} />
+          <ViewConfiguration
+            work={selected}
+            lit={lit}
+            onLit={hoverPart}
+            still={still}
+            entry={entry}
+          />
         ) : null}
         {view === 3 ? (
           <ViewSubstrate

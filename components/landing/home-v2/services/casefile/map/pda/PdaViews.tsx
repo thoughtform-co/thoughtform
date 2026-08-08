@@ -2,7 +2,9 @@
 
 import type { CaseMapShapeKey } from "@/lib/cases/types";
 
-import { Cartridge, Module, Pads, Plate, Port } from "./pdaGlyphs";
+import { PDA_FLIGHT_MS } from "./pdaFlight";
+import type { FlightRect, FlightVars } from "./pdaFlight";
+import { Cartridge, Module, Pads, Plate, Port, moduleAnswerChars, wrapLines } from "./pdaGlyphs";
 import type { PdaShape, PdaTeam, PdaWork } from "./pdaRecord";
 
 /**
@@ -81,10 +83,35 @@ export const VIEW_BOX: Record<1 | 2 | 3, string> = {
 const T = {
   cfgLabel: 10,
   cfgValue: 10.5,
+  /* The readout runs from the boundary's left edge to its right, less the
+     mark and a wall: 738 units, which is 108 characters at this size. The
+     longest live sentence is 96 (W-021's), i.e. 89 % — the same margin the
+     shape meta above runs at. */
+  cfgReadout: 10,
   teamMeta: 9.5,
   shapeMeta: 9,
   shapeTrench: 9.5,
 } as const;
+
+/**
+ * HOW THE SELECTION ENTERS a reading it has just been shown in.
+ *
+ * `flight` is the morph — the object travels from the home it had in the
+ * outgoing reading (`pdaFlight.ts` computes the pose). `bloom` is the existing
+ * gesture for arriving from a reading that had no home for it. `raster` is
+ * everything else, which is the drawing's own staggered entrance.
+ */
+export type PdaEntry = { kind: "raster" } | { kind: "bloom" } | ({ kind: "flight" } & FlightVars);
+
+/** The start pose as inline custom properties. `flPdaDock` reads these. */
+function dockVars(entry: PdaEntry): React.CSSProperties | undefined {
+  if (entry.kind !== "flight") return undefined;
+  return {
+    "--dx": `${entry.dx}px`,
+    "--dy": `${entry.dy}px`,
+    "--dk": entry.dk,
+  } as React.CSSProperties;
+}
 
 /* ── 01 · the work ──────────────────────────────────────────────────────
    Four across, five down. Twenty cartridges is a shape, not a budget — the
@@ -92,6 +119,25 @@ const T = {
    many of the record it is showing. */
 const GX = (i: number) => 12 + (i % 4) * 192;
 const GY = (i: number) => 22 + Math.floor(i / 4) * 158;
+const CARD_W = 176;
+const CARD_H = 136;
+
+/** Slot `i`'s box, in the authoring space. The flight's source and its
+ *  destination are the same object, so both homes are published. */
+export const gridRect = (i: number): FlightRect => ({
+  x: GX(i),
+  y: GY(i),
+  w: CARD_W,
+  h: CARD_H,
+});
+
+/**
+ * A cartridge that flies gets a HEAD START. The grid paints in document order,
+ * so a returning record crosses cartridges drawn after it; letting them begin
+ * a breath later keeps the travel legible without reordering the DOM, which
+ * would reorder the tab sequence with it.
+ */
+const RASTER_LEAD_MS = 90;
 
 export function ViewWork({
   works,
@@ -99,45 +145,76 @@ export function ViewWork({
   onHover,
   onOpen,
   still,
+  selId,
+  showSel,
+  entry,
 }: {
   works: readonly PdaWork[];
   hover: string | null;
   onHover: (id: string | null) => void;
   onOpen: (id: string) => void;
   still: boolean;
+  /** The record the reader has open, if they have opened one. */
+  selId: string;
+  showSel: boolean;
+  entry: PdaEntry;
 }) {
   return (
     <>
-      {works.map((w, i) => (
-        <g
-          className={`fl-pda-hit${still ? "" : " fl-pda-in"}`}
-          key={w.id}
-          style={still ? undefined : { animationDelay: `${i * 22}ms` }}
-          role="button"
-          tabIndex={0}
-          aria-label={`${w.title}, ${w.configured ? `${w.lane} lane` : "person-led"}`}
-          onClick={() => onOpen(w.id)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onOpen(w.id);
+      {works.map((w, i) => {
+        const isSel = showSel && w.id === selId;
+        /* The selected record carries the transition; everything else rasters.
+           ⚠ The flight is NOT gated on `still` — see pda.css. */
+        const flies = isSel && entry.kind === "flight";
+        const blooms = isSel && entry.kind === "bloom" && !still;
+        const cls = flies
+          ? "fl-pda-hit fl-pda-dock"
+          : blooms
+            ? "fl-pda-hit fl-pda-bloom"
+            : `fl-pda-hit${still ? "" : " fl-pda-in"}`;
+
+        return (
+          <g
+            className={cls}
+            key={w.id}
+            style={
+              flies
+                ? dockVars(entry)
+                : still || blooms
+                  ? undefined
+                  : {
+                      animationDelay: `${(entry.kind === "flight" ? RASTER_LEAD_MS : 0) + i * 22}ms`,
+                    }
             }
-          }}
-          onMouseEnter={() => onHover(w.id)}
-          onMouseLeave={() => onHover(null)}
-          onFocus={() => onHover(w.id)}
-          onBlur={() => onHover(null)}
-        >
-          <Cartridge
-            x={GX(i)}
-            y={GY(i)}
-            w={176}
-            h={136}
-            state={hover === w.id ? "hot" : w.configured ? "cfg" : "led"}
-            work={w}
-          />
-        </g>
-      ))}
+            role="button"
+            tabIndex={0}
+            aria-label={`${w.title}, ${w.configured ? `${w.lane} lane` : "person-led"}${
+              isSel ? ", open" : ""
+            }`}
+            onClick={() => onOpen(w.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpen(w.id);
+              }
+            }}
+            onMouseEnter={() => onHover(w.id)}
+            onMouseLeave={() => onHover(null)}
+            onFocus={() => onHover(w.id)}
+            onBlur={() => onHover(null)}
+          >
+            <Cartridge
+              x={GX(i)}
+              y={GY(i)}
+              w={CARD_W}
+              h={CARD_H}
+              state={hover === w.id ? "hot" : w.configured ? "cfg" : "led"}
+              work={w}
+              sel={isSel}
+            />
+          </g>
+        );
+      })}
     </>
   );
 }
@@ -157,25 +234,113 @@ const LX = 131;
 const RX = 649;
 const PY: [number, number] = [CY - 52, CY + 52];
 
+/** The core's box, and the flight's other home. */
+export const CORE_RECT: FlightRect = { x: CX - CW / 2, y: CY - CH / 2, w: CW, h: CH };
+
+/**
+ * THE READOUT, in the band the boundary's foot and the draw meter leave.
+ *
+ * It starts past its own mark and runs to the boundary's right edge, so the
+ * line belongs to the box it describes. 738 units at size 10 is 108
+ * characters; the longest live sentence is 96, and the guard measures the rest.
+ */
+const READOUT = { x: 30, right: 768, y: 596 } as const;
+export const readoutMeasure = () => READOUT.right - READOUT.x;
+export const READOUT_TYPE = T.cfgReadout;
+
+/**
+ * THE FOUR QUESTIONS, AND WHERE THEIR ANSWERS COME FROM.
+ *
+ * The questions were the whole of this reading until 2026-08-08: four generic
+ * labels that read identically for all twenty-seven streams, while the record
+ * held nine authored pairs per configuration that nothing drew. `answers`
+ * picks the names and `note` the sentence behind them — the drawing letters
+ * the name, the readout carries the note.
+ *
+ * ⚠ WHAT IT IS HELD TO ANSWERS WITH THE BAR, wrapped. `evals` runs to 41
+ * characters ("BRIEFS THAT SHIPPED + BRIEFS THAT STALLED"), which is 142 % of
+ * the module's measure — it cannot be lettered there at any legible size, so
+ * it goes to the note beside the seat that answers for the gate.
+ */
 const PARTS = [
-  { k: "runs", title: "WHAT RUNS IT", x: LX, y: PY[0], flip: false },
-  { k: "rch", title: "WHAT IT CAN REACH", x: LX, y: PY[1], flip: false },
-  { k: "inh", title: "WHAT IT INHERITS", x: RX, y: PY[0], flip: true },
-  { k: "gat", title: "WHAT IT IS HELD TO", x: RX, y: PY[1], flip: true },
+  {
+    k: "runs",
+    title: "WHAT RUNS IT",
+    x: LX,
+    y: PY[0],
+    flip: false,
+    lines: (w: PdaWork) => [w.cfg.skill, w.cfg.laneRun],
+    note: (w: PdaWork) => w.cfg.runsNote,
+  },
+  {
+    k: "rch",
+    title: "WHAT IT CAN REACH",
+    x: LX,
+    y: PY[1],
+    flip: false,
+    lines: (w: PdaWork) => [w.cfg.system, w.cfg.surface],
+    note: (w: PdaWork) => w.cfg.rchNote,
+  },
+  {
+    k: "inh",
+    title: "WHAT IT INHERITS",
+    x: RX,
+    y: PY[0],
+    flip: true,
+    lines: (w: PdaWork) => [w.cfg.context, w.cfg.graph],
+    note: (w: PdaWork) => w.cfg.inhNote,
+  },
+  {
+    k: "gat",
+    title: "WHAT IT IS HELD TO",
+    x: RX,
+    y: PY[1],
+    flip: true,
+    lines: (w: PdaWork) => wrapLines(w.cfg.bar, moduleAnswerChars(MW, MH)),
+    note: (w: PdaWork) => w.cfg.gatNote,
+  },
 ] as const;
+
+/** The module dimensions the answers are measured against. */
+export const MODULE_BOX = { w: MW, h: MH } as const;
+
+/**
+ * What reading 02 letters for one work, for the fit guard.
+ *
+ * Exported so the arithmetic measures the LINES THE DRAWING DRAWS rather than
+ * a second reading of the record — a guard that re-derives its own inputs
+ * cannot notice the drawing pointing at the wrong field.
+ */
+export function configurationLines(work: PdaWork) {
+  return PARTS.map((p) => ({
+    k: p.k,
+    head: p.title,
+    lines: p.lines(work) as readonly string[],
+    note: p.note(work),
+  }));
+}
 
 export function ViewConfiguration({
   work,
   lit,
   onLit,
   still,
+  entry,
 }: {
   work: PdaWork;
   lit: string | null;
   onLit: (k: string | null) => void;
   still: boolean;
+  entry: PdaEntry;
 }) {
   const cls = (base: string) => (still ? base : `${base} fl-pda-in`);
+  const flies = entry.kind === "flight";
+  /* The rest state is why this lane and not a lighter one; a hovered module
+     hands its own note to the same line. The readout is the ONE reactive
+     string in the drawing, and it carries no `data-fl-text`: the casefile's
+     decoder caches its targets once per client and would strand a stale
+     sentence after the first directory switch. */
+  const note = PARTS.find((p) => p.k === lit)?.note(work) ?? work.cfg.why;
 
   return (
     <>
@@ -237,8 +402,22 @@ export function ViewConfiguration({
         </text>
       </g>
 
+      {/* The ports come up on the core's walls BEFORE the modules travel into
+          them — a receptacle that appears after its plug has seated is a
+          receptacle nothing seated into. */}
+      {PARTS.map((p, i) => (
+        <g
+          className={still ? undefined : "fl-pda-in"}
+          key={`port-${p.k}`}
+          style={still ? undefined : { animationDelay: `${380 + i * 60}ms` }}
+        >
+          <Port x={p.flip ? CX + CW / 2 : CX - CW / 2} y={p.y} hot={lit === p.k} />
+        </g>
+      ))}
+
       {/* The modules seat inboard; the core body is drawn OVER the tongues,
-          which is what sells the seat. */}
+          which is what sells the seat. Each carries the record's own answers
+          now, so the four questions have four different shapes per stream. */}
       {PARTS.map((p, i) => (
         <g
           className={cls("fl-pda-hit fl-pda-seat")}
@@ -248,12 +427,22 @@ export function ViewConfiguration({
               ? undefined
               : ({
                   "--sx": `${p.flip ? 36 : -36}px`,
-                  animationDelay: `${300 + i * 80}ms`,
+                  animationDelay: `${520 + i * 80}ms`,
                 } as React.CSSProperties)
           }
+          /* Focusable for the same reason the cartridges are: the readout's
+             note is the only per-stream copy on this drawing that is not
+             lettered anywhere, so a hover-only module would put it out of
+             reach of the keyboard entirely. The `<text>` nodes stay the
+             accessible content — no `aria-label` here, which would override
+             them. */
+          tabIndex={0}
           onMouseEnter={() => onLit(p.k)}
           onMouseLeave={() => onLit(null)}
+          onFocus={() => onLit(p.k)}
+          onBlur={() => onLit(null)}
         >
+          <Pads cx={p.x} y={p.y - MH / 2} lit={lit === p.k} />
           <Module
             cx={p.x}
             cy={p.y}
@@ -263,14 +452,23 @@ export function ViewConfiguration({
             label={p.title}
             flip={p.flip}
             plug
+            answers={p.lines(work)}
           />
         </g>
       ))}
 
-      <g className={still ? undefined : "fl-pda-bloom"}>
+      {/* ⚠ THE CORE IS THE OBJECT THAT SURVIVED THE VIEW CHANGE, and this
+          group holds the cartridge ALONE — the flight measures its start pose
+          against this group's own box, so a child reaching past the
+          cartridge's path would move the origin under it. The fringe below is
+          a sibling for that reason. */}
+      <g
+        className={flies ? "fl-pda-dock" : still ? undefined : "fl-pda-bloom"}
+        style={dockVars(entry)}
+      >
         <Cartridge
-          x={CX - CW / 2}
-          y={CY - CH / 2}
+          x={CORE_RECT.x}
+          y={CORE_RECT.y}
           w={CW}
           h={CH}
           state="hot"
@@ -279,15 +477,35 @@ export function ViewConfiguration({
         />
       </g>
 
-      {PARTS.map((p, i) => (
-        <g
-          className={still ? undefined : "fl-pda-in"}
-          key={`port-${p.k}`}
-          style={still ? undefined : { animationDelay: `${520 + i * 80}ms` }}
+      {/* The core's own fringe, lighting up once it has landed. */}
+      <g
+        className={still ? undefined : "fl-pda-in"}
+        style={still ? undefined : { animationDelay: `${PDA_FLIGHT_MS}ms` }}
+      >
+        <Pads cx={CX} y={CORE_RECT.y} n={13} pitch={16} len={6} />
+        <Pads cx={CX} y={CORE_RECT.y + CH} n={13} pitch={16} len={6} down />
+      </g>
+
+      {/* THE READOUT — one line, and the only copy on this surface that
+          answers to the pointer. */}
+      <g
+        className={still ? undefined : "fl-pda-in"}
+        style={still ? undefined : { animationDelay: "700ms" }}
+      >
+        <path
+          d={`M13,${READOUT.y - 5.5} H21 L25,${READOUT.y - 1} L21,${READOUT.y + 3.5} H13 Z`}
+          fill="var(--pda-hot)"
+        />
+        <text
+          x={READOUT.x}
+          y={READOUT.y}
+          fontSize={T.cfgReadout}
+          letterSpacing=".08em"
+          fill="var(--pda-txt2)"
         >
-          <Port x={p.flip ? CX + CW / 2 : CX - CW / 2} y={p.y} hot={lit === p.k} />
-        </g>
-      ))}
+          {note}
+        </text>
+      </g>
 
       {/* Draw per run. Read against the workload, NEVER a price. */}
       <g

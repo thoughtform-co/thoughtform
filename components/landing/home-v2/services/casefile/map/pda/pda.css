@@ -205,6 +205,46 @@
   }
 }
 
+/* ── THE FLIGHT ─────────────────────────────────────────────────────────
+   The selected record travels between its two homes. Reading 01 draws it as a
+   cartridge in the grid and reading 02 draws it as the core — the SAME object
+   at `CORE_K` — so a reading change does not have to replace it: it moves.
+   Everything else re-rasters around it on the sweep, which is what makes the
+   readings read as one display switching rather than three pictures.
+
+   `--dx/--dy/--dk` are computed at transition time from ONE rect read
+   (`pdaFlight.ts`, unit-pinned) and describe the object's OUTGOING pose in the
+   INCOMING reading's user units — so the animation starts exactly where the
+   reader last saw it, at the size they last saw it, and lands home.
+
+   ⚠ THE FRAME IS `fl-pda-bloom`'S: `fill-box` with a centred origin, one
+   convention for both. The docking group must therefore contain the cartridge
+   ALONE — a child that reaches outside its path box moves the bbox, and with
+   it the origin the whole flight is measured from. The core's pad fringe is a
+   sibling for exactly that reason.
+
+   ⚠ NOT GATED ON `still`, unlike every other class on this sheet. An element
+   arriving under a stationary pointer fires `mouseenter` on the next move, and
+   a hover that stripped this class mid-flight would snap the object across the
+   panel. The flavour is decided once per transition and held in state.
+
+   ⚠ THE DURATION IS ALSO IN `pdaFlight.ts` (`PDA_FLIGHT_MS`), which derives
+   the interrupt guard from it. Move both. */
+.fl-pda-dock {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: flPdaDock 0.42s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+
+@keyframes flPdaDock {
+  from {
+    transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--dk, 1));
+  }
+  to {
+    transform: none;
+  }
+}
+
 /* The modules SEAT — they travel inboard and stop, which is what makes the
    configuration read as assembled rather than as four boxes near a fifth. */
 .fl-pda-seat {
@@ -267,6 +307,7 @@
   }
   .fl-pda-in,
   .fl-pda-bloom,
+  .fl-pda-dock,
   .fl-pda-seat,
   .fl-pda-latch {
     animation: none;

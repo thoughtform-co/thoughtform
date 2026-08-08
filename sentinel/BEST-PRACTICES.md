@@ -1065,6 +1065,32 @@ Neither has a cheap automated form, so they belong on the eyeball pass:
   guard to the measured ceiling, and buy the characters back with tracking
   rather than size.
 
+### An unfilled SVG shape is only clickable on its stroke
+
+`pointer-events` defaults to `visiblePainted`, and for the INTERIOR of a shape
+that means the pointer only hits it when `fill` has an actual value other than
+`none`. So an outline-only glyph — a hollow card, an open state, a "not
+configured" variant — swallows nothing: a click in the middle of it passes
+through to whatever is behind, usually the bare `<svg>`.
+
+Measured on the map console (ADR-069): the three PERSON-LED cartridges are
+`fill: none` by design — the record, not an omission — and all three could not
+be opened by clicking where a reader clicks, the middle of the card. It shipped
+and survived because the **keyboard path was unaffected** (`Enter` on a focused
+node worked) and the smoke clicked the FIRST cartridge, which is filled.
+
+Two things follow:
+
+- **Give an interactive group its own hit rect**, sized to the shape's extremes,
+  `fill="transparent"`. Matching the extremes matters when anything measures the
+  group's `getBBox` — a larger rect moves the box, and with it a `fill-box`
+  transform origin.
+- **Hit-test every instance, not one.** `document.elementFromPoint` at each
+  element's own centre, asserting the element (or a descendant) is what comes
+  back, is a two-line loop and the only check that sees this. A state-based
+  assertion on one representative instance cannot: the representative is
+  reliably the filled one.
+
 ### You cannot animate an element React just replaced
 
 Any "the same objects rearrange" motion — FLIP, shared-element, morph — needs

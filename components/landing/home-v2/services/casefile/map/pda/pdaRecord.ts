@@ -45,6 +45,111 @@ export interface PdaWork {
   draw: number;
   band: string;
   owner: string;
+  /** What reading 02 actually prints. */
+  cfg: PdaAnswers;
+}
+
+/**
+ * THE FOUR ANSWERS, and the note behind each.
+ *
+ * Reading 02 asked four questions and printed no answers — every authored
+ * value in `CaseMapConfiguration` was dropped by this projection, so the
+ * configuration read the same for all twenty-seven streams. These are those
+ * values, NAMES ONLY: the drawing letters the name and the readout carries the
+ * note, which is the same division ADR-062 settled for the city (the material
+ * language carries provenance; a value is never written down twice).
+ *
+ * ⚠ ONE ELEMENT, NOT THE JOIN, for what a stream can reach. `k` runs to 35
+ * characters joined ("Planning system · Resource planning") against a
+ * 151-unit measure, which is 121 % — it cannot be lettered in the module at
+ * any size that clears the floor. The full join is in `rchNote`, where it has
+ * 108 characters of room, so nothing is lost: it moves to the hover.
+ *
+ * ⚠ NO PAIR MARK between the Skill and its lane. They ARE an interdependent
+ * pair — the owner's ruling — but this surface has NO LEGEND by law, and a
+ * glyph a reader cannot resolve is worse than the two lines standing together
+ * inside one module. Considered and rejected, 2026-08-08.
+ */
+export interface PdaAnswers {
+  /** WHAT RUNS IT — the Skill, then the lane it runs on. */
+  skill: string;
+  laneRun: string;
+  runsNote: string;
+  /** WHAT IT CAN REACH — the first system it acts on, then where it is met. */
+  system: string;
+  surface: string;
+  rchNote: string;
+  /** WHAT IT INHERITS — the context it carries, then the facts it draws on. */
+  context: string;
+  graph: string;
+  inhNote: string;
+  /** WHAT IT IS HELD TO — the bar itself, which is the only honest answer. */
+  bar: string;
+  gatNote: string;
+  /** The readout's rest state: why this lane and not a lighter one. */
+  why: string;
+}
+
+/**
+ * PERSON-LED WORK STILL ANSWERS ALL FOUR.
+ *
+ * The negative space is the reading leadership takes, so the modules print
+ * what is NOT bound rather than emptying out — the same copy the city's unit
+ * sheet uses, so the two surfaces cannot drift into describing the same
+ * absence differently.
+ */
+const PERSON = {
+  skill: "Not bound to a Skill",
+  laneRun: "No lane",
+  runsNote: "The person does the work",
+  system: "Nothing bound",
+  surface: "No surface",
+  rchNote: "Nothing bound",
+  context: "Context held by the person",
+  graph: "No graph",
+  inhNote: "Context held by the person",
+} as const;
+
+/** The drawing is uppercase throughout; the record stores sentence case. */
+const up = (s: string) => s.toUpperCase();
+
+function answers(work: CaseMapWork): PdaAnswers {
+  const c = work.cfg;
+  if (!c) {
+    return {
+      skill: up(PERSON.skill),
+      laneRun: up(PERSON.laneRun),
+      runsNote: up(PERSON.runsNote),
+      system: up(PERSON.system),
+      surface: up(PERSON.surface),
+      rchNote: up(PERSON.rchNote),
+      context: up(PERSON.context),
+      graph: up(PERSON.graph),
+      inhNote: up(PERSON.inhNote),
+      bar: up(work.bar),
+      gatNote: up(work.evals),
+      /* No lane was chosen, so there is no "why this lane" to print. The bar
+         is what the person is holding themselves to, which is the reading. */
+      why: up(work.bar),
+    };
+  }
+  return {
+    skill: up(c.s[0]),
+    laneRun: up(c.m[0]),
+    runsNote: up(`${c.s[1]} — ${c.m[1]}`),
+    system: up(c.k[0]),
+    surface: up(c.u[0]),
+    rchNote: up(`${c.k.join(" · ")} · ${c.u.join(" · ")}`),
+    context: up(c.c[0]),
+    graph: up(c.g[0]),
+    inhNote: up(`${c.c[1]} · ${c.g[1]}`),
+    bar: up(work.bar),
+    /* Who answers for the gate, and how it is checked. `o` is not always the
+       seat that sets the bar (`p[0]`, on the plate above), so it belongs
+       here rather than being assumed from the owner. */
+    gatNote: up(`${c.o} — ${work.evals}`),
+    why: up(c.why),
+  };
 }
 
 /**
@@ -91,14 +196,16 @@ export function selectWorks(
   return works
     .filter((w) => picked.has(w.id))
     .map((w) =>
-      toPda(
+      toPdaWork(
         w,
         districts.find((d) => d.id === w.dist)
       )
     );
 }
 
-function toPda(work: CaseMapWork, district: CaseMapDistrict | undefined): PdaWork {
+/** One record, projected onto what the drawing letters. Exported so the fit
+ *  guard can measure ALL twenty-seven, not just the twenty on the grid. */
+export function toPdaWork(work: CaseMapWork, district: CaseMapDistrict | undefined): PdaWork {
   const person = isPersonLed(work);
   return {
     id: work.id,
@@ -112,6 +219,7 @@ function toPda(work: CaseMapWork, district: CaseMapDistrict | undefined): PdaWor
     draw: work.mass,
     band: MASS_BAND[work.mass].toUpperCase(),
     owner: (work.cfg?.p[0] ?? "The person does the work").toUpperCase(),
+    cfg: answers(work),
   };
 }
 

@@ -16,6 +16,7 @@ inherited its ambient-cover role.
 **Read first**
 
 - [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
+- [ADR-069: The selection morph and the answered configuration](../sentinel/decisions/069-pda-selection-morph-and-answered-configuration.md) — the selected work is the PERSISTENT OBJECT and FLIES between its two homes (1 ↔ 2); reading 02 prints the record's own answers with one reactive readout. See §The selection morph below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
 - [ADR-063: The map's reading rail and its wheel](../sentinel/decisions/063-map-reading-rail-and-wheel.md) — the rail is HORIZONTAL across the top of the console, and the console OWNS THE WHEEL while the pointer is on it (releasing at both ends). See §The reading rail below
 - ⚠ [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — **STALE ON THE DRAWING.** Commit 0965318 replaced the isometric city with the PDA console (`map/pda/**`) in the casefile's right panel and shipped without an ADR. ADR-062's placement, evidence semantics and confidentiality envelope still bind; its atom, sheets, crops and EXPAND overlay describe `map/MapSurface.tsx`, which is still on disk and still passes its projection test but is **NOT what the landing renders**
@@ -736,6 +737,81 @@ a slot.
   at 4.79:1. Fixed with the ADR-063 U2 ramp on those two plates only; the
   other sites ADR-058 named are still a sweep. ⚠ Dim states go to INK, not to
   a dimmer gold: no alpha of a light hue reaches the floor.
+
+## The selection morph, and the answered configuration (ADR-069, live)
+
+- **THE SELECTED WORK IS THE PERSISTENT OBJECT, AND IT FLIES.** Reading 01
+  draws it as a cartridge in the grid, reading 02 as the core — the SAME glyph
+  at `CORE_K` — so a 1 ↔ 2 change MOVES it rather than replacing it, while
+  everything else re-rasters on the existing sweep. That is what keeps the
+  readings **terminal display-switching, not zoom** (owner): the field never
+  scales and no `viewBox` is tweened. Flavours: flight on 1 ↔ 2 by any trigger
+  (including the default `shown[0]` from the rail or the wheel), bloom on
+  3 → 2 and on 3 → 1 once a record has been opened, raster otherwise.
+- **The math is `pdaFlight.ts` — PURE, unit-pinned** (`tests/lib/pda-flight.test.ts`).
+  ONE `getBoundingClientRect` per transition, taken in `open()`/`go()` BEFORE
+  the state changes, while the outgoing crop is still in the attribute. Two
+  invariants are asserted because the casefile moves this subtree as it
+  arrives: the box's x/y never enter the arithmetic (the proof ladder's
+  translate is invisible), and a uniform ancestor scale cancels out of both the
+  deltas and `dk`. The test resolves the start pose back to screen pixels and
+  compares it with where the source WAS — twenty slots × both directions × four
+  field sizes. No rAF, no wall-clock, no post-hoc measurement (ADR-061's bound).
+- ⚠ **THE DOCK CLASS IS NOT GATED ON `still`**, unlike everything else on this
+  sheet. An element arriving under a stationary pointer fires `mouseenter` on
+  the next move, and a hover that stripped the class mid-flight would snap the
+  object across the panel. `entry` is STATE, decided once per transition.
+- ⚠ **THE DOCKING GROUP HOLDS THE CARTRIDGE ALONE.** `fill-box` + a centred
+  origin means the flight measures itself against that group's own box; the
+  Cartridge's path touches all four extremes so the box IS the rect, with no
+  measurement. A child reaching past it moves the origin — which is why the
+  core's pad fringe is a SIBLING.
+- ⚠ **Three bails, all cheap:** an interrupt inside `PDA_FLIGHT_GUARD_MS`
+  rasters (its start pose would come from a rect the object has not reached, and
+  reading the painted pose costs a `getComputedStyle` this surface may not
+  spend); a zero-size box rasters (the desktop gate leaves `display: none`); a
+  degenerate rect rasters. The wheel cannot interrupt its own flight — the
+  470 ms lockout outlasts the 420 ms travel, and `PDA_FLIGHT_MS` is duplicated
+  in `pda.css`'s `flPdaDock`, so **move both**.
+- **READING 02 ANSWERS NOW: the drawing letters the NAME, the readout carries
+  the SENTENCE** — ADR-062's division, where provenance rides the material
+  language and is never written down twice. runs = Skill / lane · rch =
+  `k[0]` / surface · inh = context / graph · gat = **the bar, wrapped**. The
+  readout rests on `why` and swaps to the hovered module's note.
+  ⚠ **`evals` (41 chars = 142 % of measure) and `k` joined (35 = 121 %) CANNOT
+  be lettered in a module** at any size that clears the floor — that is why gat
+  answers with the bar and the module shows `k[0]`. Nothing is lost; it moves to
+  the hover. ⚠ **NO PAIR MARK** between Skill and lane: they are an
+  interdependent pair (owner, 2026-08-05) but this surface has NO LEGEND, and a
+  `⇄` would also break the mono advance the whole fit table rests on.
+  Considered and rejected.
+- **The answer measure is `w − h − 11 − 6` = 151** at 224×56, and **size 8 is
+  the largest with room left** — the graph node ("COMPONENT + SUPPLIER FACTS",
+  26 chars) is at 93.6 %; 8.5 is at 99.5 % and 9 is over. The header keeps the
+  module label's `.14em` (advance **0.74**, a different measure) at 7.5, SMALLER
+  than its answer: the question is chrome, the answer is the record.
+  ⚠ **Vertical clearance is measured against the LINE BOX (~1.3 em), never the
+  font size** — 20 units of pitch clears by 8, the naive 12 clears by under 2.
+  Same mistake the DECIDES ALONE pair paid for one size up. `MONO_LINE_BOX` and
+  the baseline functions are exported so the guard checks the arithmetic.
+- **PERSON-LED WORK ANSWERS ALL FOUR**, printing what is NOT bound — the city's
+  unit-sheet copy, so one absence is never described two ways. Its readout rests
+  on the **bar** (no lane was chosen, so there is no "why this lane").
+  "CONTEXT HELD BY THE PERSON" is 26 chars, i.e. the same ceiling as the graph
+  node.
+- **The open record lights its own CUT EDGE**, and only once reading 02 has been
+  shown. The notch is where a cartridge is keyed, so it reads as latched rather
+  than as a fifth gauge state, and it gives the return flight somewhere to land.
+  Nothing is marked at rest: `shown[0]` is a default, not a choice the reader made.
+- ⚠ **EVERY CARTRIDGE MUST TAKE A CLICK AT ITS CENTRE, and this was broken.**
+  A person-led body is `fill: none` and an unfilled SVG path hit-tests on its
+  STROKE alone, so all three person-led streams reached the bare `<svg>` and did
+  nothing — on a surface whose whole argument is that the negative space is a
+  reading. It survived because the keyboard path worked and the smoke clicked
+  `.fl-pda-hit` FIRST, which is configured and filled. The fix is a transparent
+  hit rect matching the path's extremes (so the flight's origin does not move);
+  the guard hit-tests all twenty with `elementFromPoint`. **A new glyph state
+  with no fill re-arms this.**
 
 ## The reading rail, and the wheel (ADR-063, live)
 

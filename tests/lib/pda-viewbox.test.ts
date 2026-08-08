@@ -1,13 +1,30 @@
 import { describe, expect, it } from "vitest";
 
-import { VIEW_BOX } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+import {
+  MODULE_BOX,
+  READOUT_TYPE,
+  VIEW_BOX,
+  configurationLines,
+  readoutMeasure,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import {
   CART_TYPE,
+  MODULE_TYPE,
   MONO_ADVANCE,
+  MONO_LINE_BOX,
   cartTitleChars,
+  moduleAnswerBaselines,
+  moduleAnswerChars,
+  moduleAnswerMeasure,
+  moduleHeadBaseline,
   wrapLines,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
-import { PDA_SHOWN } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
+import {
+  PDA_SHOWN,
+  type PdaWork,
+  toPdaWork,
+} from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
+import type { CaseMapDistrict, CaseMapWork } from "@/lib/cases/types";
 import { getCase } from "@/lib/cases/registry";
 
 /**
@@ -25,13 +42,35 @@ function box(v: 1 | 2 | 3) {
   return { x, y, w, h, right: x + w, bottom: y + h };
 }
 
-/** Live work titles — the drawing letters these, so they set the measure. */
-function workTitles(): string[] {
+function mapVisual() {
   const visual = getCase("loop-earplugs")?.casefile.tracks.find(
     (t) => t.visual.kind === "intelligence-map"
   )?.visual;
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
-  return visual.works.map((w) => w.title.toUpperCase());
+  return visual;
+}
+
+/** Live work titles — the drawing letters these, so they set the measure. */
+function workTitles(): string[] {
+  return mapVisual().works.map((w) => w.title.toUpperCase());
+}
+
+/**
+ * ALL TWENTY-SEVEN, projected the way the drawing projects them.
+ *
+ * Reading 01 shows twenty, but reading 02 will letter ANY of them — the reader
+ * chooses — so the fit guard has to walk the whole record. The seven the grid
+ * leaves out are exactly where an over-long string would hide.
+ */
+function allWorks(): PdaWork[] {
+  const visual = mapVisual();
+  const districts: readonly CaseMapDistrict[] = visual.districts;
+  return visual.works.map((w: CaseMapWork) =>
+    toPdaWork(
+      w,
+      districts.find((d) => d.id === w.dist)
+    )
+  );
 }
 
 describe("the readings' crops", () => {
@@ -110,5 +149,180 @@ describe("the cartridge's type fits its box", () => {
     // larger than its title is a record about ids.
     expect(CART_TYPE.title).toBeGreaterThan(CART_TYPE.code);
     expect(CART_TYPE.code).toBeGreaterThan(CART_TYPE.lane);
+  });
+});
+
+describe("the configuration's answers fit their modules", () => {
+  /* ⚠ THE MODULE IS THE TIGHT BOX ON THIS SURFACE, and its measure is
+     arithmetic: the divider sits a full `h` from the inboard edge (the gauge
+     needs the room), the text is inset 11 past it, and the cartridge title's
+     own 6-unit wall clearance applies — so 224x56 letters into 151 units.
+     A `<text>` past that runs through the module wall with nothing on screen
+     to say so, exactly like a label past a crop. */
+  const MEASURE = moduleAnswerMeasure(MODULE_BOX.w, MODULE_BOX.h);
+  const PER = moduleAnswerChars(MODULE_BOX.w, MODULE_BOX.h);
+
+  it("the measure is the one the drawing is built on", () => {
+    expect(MEASURE).toBe(151);
+    expect(PER).toBe(27);
+  });
+
+  it("every answer line on every stream fits one line", () => {
+    const works = allWorks();
+    expect(works.length).toBeGreaterThanOrEqual(PDA_SHOWN);
+    for (const w of works) {
+      for (const part of configurationLines(w)) {
+        expect(part.lines.length, `${w.id} ${part.k} answers with nothing`).toBeGreaterThan(0);
+        // Two is the module's whole capacity — a third line would land on the
+        // contact row below it.
+        expect(
+          part.lines.length,
+          `${w.id} ${part.k} wants ${part.lines.length} lines`
+        ).toBeLessThanOrEqual(2);
+        for (const line of part.lines) {
+          const width = line.length * MODULE_TYPE.answer * MONO_ADVANCE;
+          expect(
+            width,
+            `${w.id} ${part.k}: "${line}" runs past the module wall`
+          ).toBeLessThanOrEqual(MEASURE);
+        }
+      }
+    }
+  });
+
+  it("the bar wraps rather than truncating — no word is dropped", () => {
+    /* `wrapLines` SLICES at its cap, so a bar that wanted three lines would
+       lose its tail silently and every fit assertion above would still pass.
+       Rejoining is the only check that sees it. The longest live bar is 46
+       characters ("CONSISTENT EVIDENCE / NO UNSUPPORTED INFERENCE"). */
+    for (const w of allWorks()) {
+      const lines = wrapLines(w.cfg.bar, PER);
+      expect(lines.join(" "), `${w.id}'s bar lost its tail at ${PER} characters`).toBe(w.cfg.bar);
+    }
+  });
+
+  it("the question fits above its answer, at its own tracking", () => {
+    // The header keeps the module label's .14em, so its advance is 0.74 —
+    // NOT the answers' 0.68. Different tracking is a different measure.
+    const HEAD_ADVANCE = 0.74;
+    for (const part of configurationLines(allWorks()[0])) {
+      const width = part.head.length * MODULE_TYPE.head * HEAD_ADVANCE;
+      expect(width, `"${part.head}" runs past the module wall`).toBeLessThanOrEqual(MEASURE);
+    }
+  });
+
+  it("the stacked lines clear each other's LINE BOXES, not their font sizes", () => {
+    /* ⚠ THE MEASUREMENT THAT THE SMOKE CANNOT MAKE FOR YOU. The overlap sweep
+       compares rendered glyph boxes at a 0.5-unit tolerance, so a pitch that
+       leaves one unit passes today and fails on a font metric change. A line
+       box is ~1.3 em, and the pair whose 13 units became a collision at size
+       10 (PdaViews) is the precedent. Ask for a whole line box of daylight. */
+    const y0 = 0;
+    const h = MODULE_BOX.h;
+    const box = MODULE_TYPE.answer * MONO_LINE_BOX;
+    const [a, b] = moduleAnswerBaselines(y0, h, 2);
+    const head = moduleHeadBaseline(y0, h);
+
+    // Ascent is the bulk of a line box; descent is the rest.
+    const top = (baseline: number, size: number) => baseline - size * MONO_LINE_BOX * 0.79;
+    const bottom = (baseline: number, size: number) => baseline + size * MONO_LINE_BOX * 0.21;
+
+    expect(
+      top(a, MODULE_TYPE.answer) - bottom(head, MODULE_TYPE.head),
+      "the first answer sits in the question's descender"
+    ).toBeGreaterThan(1);
+    expect(
+      top(b, MODULE_TYPE.answer) - bottom(a, MODULE_TYPE.answer),
+      "the two answers share a line box"
+    ).toBeGreaterThan(box * 0.5);
+    expect(bottom(b, MODULE_TYPE.answer), "the last answer runs into the contact row").toBeLessThan(
+      h - 3
+    );
+    expect(
+      top(head, MODULE_TYPE.head),
+      "the question runs out of the module's top edge"
+    ).toBeGreaterThan(0);
+    /* One centred answer stays inside the same walls. */
+    const [only] = moduleAnswerBaselines(y0, h, 1);
+    expect(top(only, MODULE_TYPE.answer)).toBeGreaterThan(bottom(head, MODULE_TYPE.head) + 1);
+    expect(bottom(only, MODULE_TYPE.answer)).toBeLessThan(h - 3);
+  });
+
+  it("the answer outranks the question that asked it", () => {
+    // The question is chrome and repeats on every stream; the answer is the
+    // record. A configuration whose labels letter larger than its values is a
+    // configuration about labels.
+    expect(MODULE_TYPE.answer).toBeGreaterThan(MODULE_TYPE.head);
+  });
+});
+
+describe("the readout holds a whole sentence", () => {
+  const MEASURE = readoutMeasure();
+
+  it("every rest state and every hover note fits one line", () => {
+    /* One line is the point: a status line that wraps is not a status line,
+       and there is no room under it — the draw meter is 66 units below. */
+    for (const w of allWorks()) {
+      const strings = [
+        [`${w.id} rest`, w.cfg.why] as const,
+        ...configurationLines(w).map((p) => [`${w.id} ${p.k}`, p.note] as const),
+      ];
+      for (const [label, s] of strings) {
+        const width = s.length * READOUT_TYPE * MONO_ADVANCE;
+        expect(width, `${label}: "${s}" runs past the readout's measure`).toBeLessThanOrEqual(
+          MEASURE
+        );
+      }
+    }
+  });
+
+  it("carries what the modules could not", () => {
+    /* The two strings that drove the split. `k` joined runs to 121 % of a
+       module's measure and `evals` to 142 %, so the module letters one element
+       and the bar while the readout takes the whole of both. If these ever fit
+       the module, the split is worth revisiting; until then it is arithmetic. */
+    const worst = (pick: (w: PdaWork) => string) =>
+      Math.max(...allWorks().map((w) => pick(w).length));
+    const moduleChars = Math.floor(
+      moduleAnswerMeasure(MODULE_BOX.w, MODULE_BOX.h) / (MODULE_TYPE.answer * MONO_ADVANCE)
+    );
+    expect(worst((w) => w.cfg.rchNote)).toBeGreaterThan(moduleChars);
+    expect(worst((w) => w.cfg.gatNote)).toBeGreaterThan(moduleChars);
+    expect(worst((w) => w.cfg.why)).toBeGreaterThan(moduleChars);
+  });
+
+  it("is the largest type in the configuration's chrome", () => {
+    // It is the only prose on the reading, and prose loses to nothing here.
+    expect(READOUT_TYPE).toBeGreaterThanOrEqual(MODULE_TYPE.answer);
+  });
+});
+
+describe("person-led work answers all four questions", () => {
+  it("prints what is not bound rather than emptying out", () => {
+    /* The negative space is the reading leadership takes (ADR-062), so a
+       stream with no configuration still fills its modules. An empty module
+       would read as a drawing that failed to load. */
+    const person = allWorks().filter((w) => !w.configured);
+    expect(person.length, "the record lost its person-led work").toBe(3);
+    for (const w of person) {
+      for (const part of configurationLines(w)) {
+        for (const line of part.lines) {
+          expect(line.length, `${w.id} ${part.k} is blank`).toBeGreaterThan(0);
+          expect(
+            line.length * MODULE_TYPE.answer * MONO_ADVANCE,
+            `${w.id} ${part.k}: "${line}" runs past the module wall`
+          ).toBeLessThanOrEqual(moduleAnswerMeasure(MODULE_BOX.w, MODULE_BOX.h));
+        }
+      }
+      expect(w.cfg.why.length, `${w.id} has no rest state`).toBeGreaterThan(0);
+    }
+  });
+
+  it("never claims a lane it does not run on", () => {
+    for (const w of allWorks()) {
+      if (w.configured) continue;
+      expect(w.cfg.laneRun).toBe("NO LANE");
+      expect(w.cfg.skill).toContain("NOT BOUND");
+    }
   });
 });

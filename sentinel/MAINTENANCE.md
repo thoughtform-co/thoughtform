@@ -54,6 +54,33 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-08 — Map console: the selection morph + the answered configuration (ADR-069)
+
+Owner ask off two Cyberpunk 2077 reference boards: clicking a workstream should
+MORPH into its configuration, and the configuration should say something about
+the stream it is showing. Cycle B — ADR-069 opened with the flight's arithmetic,
+the flavour table, the fit table and the rejected pair mark; `.claude/rules/proof.md`
+gains §The selection morph; CLAUDE.md's map entry rewritten.
+
+- **The system rule:** the selected work is the PERSISTENT OBJECT. Reading 01
+  draws it as a cartridge, reading 02 as the core (the same glyph at `CORE_K`),
+  so 1 ↔ 2 MOVES it while everything else re-rasters. That is what let the
+  readings stay terminal display-switching rather than becoming the zoom ladder
+  ADR-062 closed — the field never scales, no `viewBox` is tweened.
+- **New pure module `pdaFlight.ts`** + 16 cases, off ONE rect read per
+  transition. Both invariants asserted: the box's x/y never enter the
+  arithmetic, and a uniform ancestor scale cancels out.
+- **Reading 02 prints the record.** Nine authored pairs per configuration were
+  being dropped by the projection; four now letter as answers and the rest ride
+  a reactive readout. `evals` (142 % of measure) and joined `k` (121 %) are
+  arithmetically unletterable in a module, which is why the gate answers with
+  the bar. 21 fit cases over all 27 streams.
+- **Cycle A rows 3, 5 and 6 fired.** Row 3: an unfilled SVG shape is only
+  clickable on its STROKE — all three person-led cartridges could not be opened
+  by clicking their centre, which no existing guard could see (the keyboard path
+  worked and the smoke clicked the filled first one). Pattern added to
+  BEST-PRACTICES; the smoke now hit-tests all twenty with `elementFromPoint`.
+
 ### 2026-08-07 — Casefile: glyphed index register + tool dossier + Vesper wireframe (ADR-068)
 
 Owner redesign from `proof-page-blocks-left.html` (canonical; `thoughtform-
