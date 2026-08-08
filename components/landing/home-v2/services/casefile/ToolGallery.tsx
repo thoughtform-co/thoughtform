@@ -17,14 +17,14 @@ import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
  *   │ ◆ BRIEFING AGENT  ◇ IMAGE & VIDEO  ◇ UGC DUBBER  … │  the HANDLE
  *   ├────────────────────────────────────────────────────┤
  *   │ ┌ FEED · IN SERVICE 2025 ── WALKTHROUGH · 1:20 ─┐  │
- *   │ ⌐                  ┌ RUN ┐                      ¬  │  ← the bay wraps
- *   │        the capture, bled to the bay's walls         │    the ONE button
- *   │ ⌐ ››››› ▶ WATCH WALKTHROUGH ················ 1:20 ¬ │
+ *   │ ⌐                                               ¬  │  ← the bay wraps
+ *   │       the authored wireframe, bled to the walls     │    the ONE button
+ *   │ ⌐ ▶ WATCH WALKTHROUGH ····················· 1:20 ¬ │
  *   │                                                     │  ← air
  *   │ ┌─────────────────┐ ┌─────────────────┐            │
- *   │ │ WHO IT SERVES   │ │ WHAT IT REPLACED│            │  ← 2×2 notched
- *   │ │ ───────────────  │ │ ─────────────── │            │    Q&A plates
- *   │ └ STRATEGY · BRAND┘ └ MANUAL DIGGING  ┘            │
+ *   │ │ PERMISSIONED …  │ │ PROACTIVE …     │            │  ← 2×2 notched
+ *   │ │ ───────────────  │ │ ─────────────── │            │    capability
+ *   │ └ one-line claim  ┘ └ one-line claim  ┘            │    blocks
  *   └────────────────────────────────────────────────────┘
  *
  * ── The 2026-08-07 evening pass (owner) ─────────────────────────────────
@@ -59,13 +59,14 @@ import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
  *
  * ── What this replaced, and why ─────────────────────────────────────────
  *
- * ⚠ THE FOUR CAPABILITY TILES ARE GONE FROM THIS PLATE (owner, 2026-08-07).
- * They were four claims per tool behind a four-station rail — SIXTEEN tiles
- * a reader would have to walk to compare anything — and none of them
- * answered the question a case-study reader actually arrives with, which is
- * what the tool is FOR and who has it. `ProjectCase.capabilities` is
- * untouched and still canonical for the Arc orbit card and
- * `ToolCardConsole`; what changed is what the CASEFILE renders.
+ * ⚠ THE 2×2 RENDERS `capabilities` NOW (ADR-068 U2, owner 2026-08-08). The
+ * 08-07 pass had deleted the capability tiles from this plate and seated a
+ * WHO/WHAT Q&A register in the grid instead; the owner then filled the
+ * blocks with the portfolio site's capability copy — title + one-sentence
+ * claim — and the Q&A register (`ToolDetailFact`, `ProjectCase.detail`)
+ * left with its guards. What did NOT come back is the `.fl-caps` form:
+ * sixteen tiles behind a four-station rail, which the smoke still bans on
+ * this plate. One canonical array now feeds the Arc card AND this grid.
  *
  * ⚠ THE RAIL CARRIES THE HANDLE, THE PLATE CARRIES THE NAME. The stations
  * print `ProjectCase.tab` (≤14 chars) and the plate header prints the full
@@ -83,22 +84,26 @@ import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
  * · THE BAY IS CHROME AROUND THE SAME ONE BUTTON. `.fl-shot` is unchanged —
  *   still the whole frame as the walkthrough trigger, still the halftone
  *   veil (ADR-064 U2), still bleeding to its box edges. What the bay adds
- *   is a housing: a FEED line, four corner brackets and the transport
- *   marks. ⚠ The RUN plate over the capture is DECORATION (`aria-hidden`,
- *   `pointer-events: none`) — a second interactive element inside a button
- *   is not a control, it is a bug.
- * · WHAT THE FRAME HOLDS IS PER TOOL (ADR-068 D5). `TOOL_WIREFRAMES` maps a
- *   tool to an AUTHORED drawing of its interface; a tool absent from it
- *   renders its duotoned capture. Only the inner element swaps — the veil,
- *   the RUN plate, the bay and the button are the same on both branches,
- *   because what changes is the evidence, not the housing. ⚠ The drawing
+ *   is a housing: a FEED line and four corner brackets.
+ *   ⚠ THE RUN PLATE AND THE TRANSPORT CHEVRONS ARE DELETED (owner,
+ *   2026-08-08 — "we don't need the Run button. I just think we need a
+ *   super clear, minimalistic walkthrough button"). The fused bottom bar
+ *   IS that button now: play cue, WATCH WALKTHROUGH, duration — nothing
+ *   else. Deleting the plate also freed the frame's dead centre for the
+ *   wireframes, which used to author around a ~98×40 covered middle.
+ * · WHAT THE FRAME HOLDS IS PER TOOL (ADR-068 D5; ALL FOUR drawn since U3).
+ *   `TOOL_WIREFRAMES` maps a tool to an AUTHORED drawing of its interface;
+ *   a tool absent from it renders its duotoned capture (dormant today).
+ *   Only the inner element swaps — the veil, the bay and the button are the
+ *   same on both branches, because what changes is the evidence, not the
+ *   housing. ⚠ The drawing
  *   takes NO filter and mounts NO `<img>`: ADR-064 U2's line is AUTHORED vs
  *   CAPTURED, and the duotone is the recipe for arbitrary screenshot
  *   colour. The smoke asserts both halves, per tool.
- * · THE FACTS ARE A COMPARISON INSTRUMENT NOW. Four fixed questions, the
- *   same four on every tool, so running down the rail reads four answers to
- *   one question instead of four unrelated claims. `ToolDetailFact` pins
- *   that mechanically.
+ * · THE BLOCKS ARE THE TOOL'S OWN FOUR CLAIMS (ADR-068 U2). Not a fixed
+ *   questionnaire any more — each tool leads with what it actually does,
+ *   the way the portfolio site presents it. The registry pins the shape
+ *   (exactly four, title ≤24, desc ≤95) rather than the questions.
  *
  * CONTROLLED, NOT SELF-CONTAINED: `activeIdx` is owned by `TrackPanel`. The
  * panel is keyed per track upstream, so the gallery resets to tool 01 on a
@@ -115,11 +120,6 @@ interface ToolGalleryProps {
 function titleText(tool: ProjectCase): string {
   return tool.title.map((s) => s.text).join("");
 }
-
-/** The transport marks on the watch bar — five chevrons, the first lit.
- *  Decorative: the bar already carries the duration and the whole frame is
- *  the control. */
-const CHEVRONS = [0, 1, 2, 3, 4];
 
 export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
   const [watching, setWatching] = useState(false);
@@ -159,21 +159,6 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
           sizes="(min-width: 1800px) 900px, 640px"
         />
       )}
-      {/* ⚠ DECORATION, NOT A CONTROL. The FRAME is the button; this plate is
-          the machine's own RUN key drawn over the feed, so it is
-          `aria-hidden` and takes no pointer. Its ground lights on the
-          BUTTON's hover, which is why the rule lives on `.fl-shot:hover`. */}
-      <span className="fl-run" aria-hidden="true">
-        <svg viewBox="0 0 98 40" preserveAspectRatio="xMidYMid meet">
-          {/* TR + BL, the house diagonal (ADR-065). The mockup drew a
-              right-pointing arrow tab; an arrow is a direction, and this is a
-              key on a housing. */}
-          <path className="fl-run__bg" d="M1,1 H85 L97,13 V39 H13 L1,27 Z" />
-          <text x="49" y="24.5" textAnchor="middle" fontSize="10" letterSpacing="3">
-            RUN
-          </text>
-        </svg>
-      </span>
     </span>
   );
 
@@ -242,7 +227,7 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
                  reached the a11y tree anyway, because an `aria-label` on a
                  button overrides its contents. */
               aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}${
-                Wireframe ? ". Session interface, drawn." : ""
+                Wireframe ? ". Interface, drawn." : ""
               }`}
               onClick={(e) => {
                 returnFocusRef.current = e.currentTarget;
@@ -250,14 +235,11 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
               }}
             >
               {capture}
+              {/* THE ONE CLEAR AFFORDANCE (owner, 2026-08-08): play cue,
+                  action, duration. The five transport chevrons left with the
+                  RUN plate — decoration reads as controls on a bar whose
+                  whole job is to be unmistakably one button. */}
               <span className="fl-shot__bar" aria-hidden="true">
-                <i className="fl-shot__chevs">
-                  {CHEVRONS.map((i) => (
-                    <svg key={i} viewBox="0 0 17 9" data-on={i === 0 || undefined}>
-                      <path d="M0,0 H11 L17,4.5 L11,9 H0 Z" />
-                    </svg>
-                  ))}
-                </i>
                 <i className="fl-shot__cue" />
                 Watch walkthrough
                 <b>{active.walkthrough.duration}</b>
@@ -270,23 +252,33 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
           )}
         </div>
 
-        {/* THE DETAIL — four fixed questions, this tool's four answers.
-            Notched on the BOTTOM-LEFT alone: one notch says ORIENTED /
-            CONNECTED (ADR-065), which is what a plate reading off the
-            instrument above it is. Keyed with the tool so the seat replays
-            on a switch. */}
-        <ul className="fl-detail" key={active.id}>
-          {active.detail.map((d, i) => (
+        {/* THE DETAIL — the tool's four capability blocks (ADR-068 U2,
+            owner 2026-08-08): title + one-sentence claim, straight from
+            `ProjectCase.capabilities`, the same canonical four the Arc card
+            tiles print. No accents: four claims, one voice. Notched on the
+            BOTTOM-LEFT alone: one notch says ORIENTED / CONNECTED
+            (ADR-065), which is what a plate reading off the instrument
+            above it is.
+            ⚠ THE BLOCKS SEAT ONCE, ON ROW ARRIVAL — never on a station
+            switch (owner, 2026-08-08: "four frames that should already be
+            there"). TrackPanel is keyed per ROW upstream, so this list
+            mounts exactly once per row and the seat plays then; the ul
+            carries NO tool key and the plates are keyed BY POSITION, so a
+            station switch swaps title/desc text in place with zero motion.
+            Capabilities are registry-pinned at exactly four, which is what
+            makes index keys safe. The WIREFRAME keeps its `key={active.id}`
+            — that remount is deliberate. */}
+        <ul className="fl-detail">
+          {active.capabilities.map((cap, i) => (
             <li
               className="fl-detail__plate"
-              data-accent={d.accent}
-              style={{ animationDelay: `${780 + i * 55}ms` }}
-              key={d.q}
+              style={{ animationDelay: `${120 + i * 55}ms` }}
+              key={i}
             >
               <span className="fl-detail__in">
-                <span className="fl-detail__q">{d.q}</span>
+                <span className="fl-detail__t">{cap.title}</span>
                 <i className="fl-detail__rule" aria-hidden="true" />
-                <span className="fl-detail__a">{d.a}</span>
+                <span className="fl-detail__d">{cap.desc}</span>
               </span>
             </li>
           ))}

@@ -1407,13 +1407,17 @@ const STUDIO_SHOTS = [
  * every cut; it never depended on the names.
  */
 const STUDIO_SHEETS = [
+  /* ⚠ THE SHEET FEET ARE GONE (owner, 2026-08-08 — the console prints no
+     foot on any plate now). The three sentences the sheets printed — the
+     live-assets line, the identity-claim/function line and the
+     creator-pipeline line — live in git; the LINE sheet's argument is
+     still carried by its own two columns. */
   {
     id: "ads",
     label: "THE ADS",
     /* Shared BY REFERENCE with the beat and the keynote arc — re-typing this
        array is how three surfaces start describing the same ad differently. */
     body: { kind: "stills", shots: STUDIO_SHOTS },
-    foot: "Live campaign assets, not mockups. Generated, art-directed, designed and curated inside the studio.",
   },
   {
     id: "line",
@@ -1445,7 +1449,6 @@ const STUDIO_SHEETS = [
         },
       ],
     },
-    foot: "If an image makes an identity claim it requires real photography; if it illustrates a scenario, AI is appropriate. The line is drawn on the image's function, never on the channel it runs in.",
   },
   {
     id: "red-line",
@@ -1471,7 +1474,6 @@ const STUDIO_SHEETS = [
         },
       ],
     },
-    foot: "AI makes the creator pipeline more efficient — briefing, editing, localization. It does not replace the creators in it.",
   },
 ] as const;
 

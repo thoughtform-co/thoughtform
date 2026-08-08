@@ -233,10 +233,32 @@ function readToolBay() {
   };
 }
 
-/** The four assertions a wireframe branch owes, at any viewport. */
-function expectWireframeBay(bay: ReturnType<typeof readToolBay>, label: string) {
+/**
+ * Station order = PROJECT_CASES order (the tab-handle pin below guards it).
+ * A LITERAL table, not an import — the spec's own precedent: importing the
+ * React components to read their labels would drag .tsx into the spec, and
+ * a drifted literal fails loudly against the rendered text.
+ * `kind` keeps the capture half of the filter law EXECUTABLE while no
+ * station exercises it (ADR-068 U3: all four are drawn; a fifth tool
+ * without a drawing renders its duotoned capture and flips its row here).
+ */
+const WIREFRAME_STATIONS = [
+  { idx: 0, id: "mimir", kind: "wire", labels: ["INSIGHTS", "BRIEFING", "REFERENCE"] },
+  { idx: 1, id: "vesper", kind: "wire", labels: ["DRAW", "PRODUCT LIBRARY", "ENHANCE", "MODEL"] },
+  { idx: 2, id: "babylon", kind: "wire", labels: ["ORIGINAL", "TRANSLATION", "SYNC"] },
+  { idx: 3, id: "heimdall", kind: "wire", labels: ["BRIEFINGS", "SYNC", "TEMPLATE"] },
+] as const;
+
+/** The assertions a wireframe branch owes, at any viewport. Pass the
+ *  station's expected label set to pin it exactly (sorted-array equality —
+ *  set equality would hide a duplicated label within one tool). */
+function expectWireframeBay(
+  bay: ReturnType<typeof readToolBay>,
+  label: string,
+  expectedLabels?: readonly string[]
+) {
   expect(bay, `${label}: no tool bay`).not.toBeNull();
-  expect(bay!.hasWire, `${label}: vesper did not draw its wireframe`).toBe(true);
+  expect(bay!.hasWire, `${label}: the tool did not draw its wireframe`).toBe(true);
   // AUTHORED evidence: no capture, and no duotone over our own hand.
   expect(bay!.imgs, `${label}: the wireframe branch mounted an <img>`).toBe(0);
   expect(bay!.wireFilter, `${label}: the wireframe is filtered — it is AUTHORED`).toBe("none");
@@ -271,6 +293,11 @@ function expectWireframeBay(bay: ReturnType<typeof readToolBay>, label: string) 
     expect(l.px, `${label}: "${l.t}" renders at ${l.px}px`).toBeGreaterThanOrEqual(8);
     expect(l.t, `${label}: "${l.t}" carries a currency glyph`).not.toMatch(/[$€£]/);
     expect(l.t, `${label}: "${l.t}" carries a figure`).not.toMatch(/\d/);
+  }
+  if (expectedLabels) {
+    expect(bay!.labels.map((l) => l.t).sort(), `${label}: the drawing's label set drifted`).toEqual(
+      [...expectedLabels].sort()
+    );
   }
 }
 
@@ -708,40 +735,26 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       expect(await scrollCasefileDwell(page, 0.1), `${label}: casefile runway missing`).toBe(true);
       await page.waitForTimeout(600);
 
-      // The console carries NO TITLE BAR and NO REPEATED HEADING (ADR-063
-      // U1). Both said what the left column and the lit tab already say, and
-      // the height they cost was the only place the drawing's type could
-      // come from.
+      // The console carries NO TITLE BAR, NO REPEATED HEADING (ADR-063 U1)
+      // and — since the owner's 2026-08-08 declutter — NO FOOT either. The
+      // reading's sentence survives only on the small-screen fallback list;
+      // on the console the drawing takes the height.
       expect(
         await page.locator(".fl-con__console > .fl-pda__head, .fl-con__head").count(),
         `${label}: the console grew a title bar back`
       ).toBe(0);
       expect(
-        await page.locator(".fl-con__foot h5").count(),
-        `${label}: the foot is printing the reading's name twice`
+        await page.locator(".fl-con__foot").count(),
+        `${label}: the map console printed a foot again`
       ).toBe(0);
 
       // A cartridge is the panel's control: clicking one opens reading 02 on
-      // that stream, and the foot's SENTENCE changes with the reading.
+      // that stream (the plate's own `data-view` is the state signal).
       await page.locator(".fl-con__stn").first().click();
       await page.waitForTimeout(300);
-      const workFoot = await page.locator(".fl-con__foot p").innerText();
       await page.locator(".fl-pda-hit").first().click({ force: true });
       await page.waitForTimeout(700);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "2");
-      expect(
-        await page.locator(".fl-con__foot p").innerText(),
-        `${label}: the foot did not follow the reading`
-      ).not.toBe(workFoot);
-
-      // ...and that sentence is PROSE, so it answers to the readable-copy
-      // floor rather than the instrument one.
-      expect(
-        await page.evaluate(() =>
-          Number.parseFloat(getComputedStyle(document.querySelector(".fl-con__foot p")!).fontSize)
-        ),
-        `${label}: the foot sentence fell below the readable floor`
-      ).toBeGreaterThanOrEqual(11.9);
 
       // Escape returns to the work. Keys are bound on the PLATE, never
       // `document` — the corridor has its own key handling.
@@ -966,11 +979,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const toolsRow = page.locator(".fl-row").nth(1);
         await toolsRow.click();
         await expect(toolsRow).toHaveAttribute("aria-selected", "true");
-        // The plate's entrance is click-driven and staggers out to ~1.35s
-        // (route steps → chevrons → NOW module → detail plates), and it is
-        // 0-at-rest by contract — so everything below is measured AFTER it,
-        // never during.
-        await page.waitForTimeout(1800);
+        // The arrival seat is the only entrance left (~0.7s: the blocks'
+        // 120+55i ladder — the route entrance died with e3b3386 and station
+        // switches are motionless since ADR-068 U3), 0-at-rest by contract —
+        // so everything below is measured AFTER it, never during.
+        await page.waitForTimeout(1100);
         const toolNames = page.locator(".fl-con__stn > b");
         await expect(toolNames).toHaveCount(4);
         const toolTabs = await toolNames.evaluateAll((names) => {
@@ -1064,21 +1077,22 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
         // ── AND NO FOOT ON THIS PLATE (owner, 2026-08-07) ──────────────
         // ADR-066's law is unchanged — "a plate with nothing to say still
-        // omits it" — and the owner ruled that the tools plate says nothing
-        // there. The map row still REQUIRES a foot (asserted in the
-        // box-clipping sweep below), so this is the two halves of one law
-        // rather than the law being weakened.
+        // omits it" — and since the owner's 2026-08-08 declutter EVERY
+        // plate says nothing there (the box-clipping sweep asserts the
+        // absence row by row).
         expect(
           await page.locator(".fl-con__foot").count(),
           `${label}: the tools plate printed a foot`
         ).toBe(0);
 
-        // ── FOUR NOTCHED PLATES, AND THE NOTCH IS ON THE LAWFUL CORNER ──
-        // ADR-065: one notch says ORIENTED / CONNECTED, and the diagonal is
-        // TR + BL. The signature is therefore a polygon with a SQUARE
-        // top-right corner and NO square bottom-left one. The mockup notched
-        // TOP-LEFT, which is the mirrored form; this is what catches a
-        // revert to it.
+        // ── FOUR NOTCHED CAPABILITY BLOCKS (ADR-068 U2) ─────────────────
+        // Title + one-sentence claim per plate, read from the tool's own
+        // canonical `capabilities`. The notch law is unchanged (ADR-065:
+        // one notch says ORIENTED / CONNECTED, the diagonal is TR + BL —
+        // square top-right, NO square bottom-left). The TITLE is the one
+        // nowrap line, so it carries the horizontal-clip check; the
+        // SENTENCE wraps by design and answers to the prose floor and the
+        // painted-plate geometry below instead.
         const detail = await page.evaluate(() => {
           const plates = [...document.querySelectorAll<HTMLElement>(".fl-detail__plate")];
           return plates.map((p) => {
@@ -1090,29 +1104,38 @@ test.describe("Services card ring smoke (ADR-029)", () => {
                     .split(",")
                     .map((s) => s.trim())
                 : [];
+            const t = p.querySelector<HTMLElement>(".fl-detail__t");
+            const d = p.querySelector<HTMLElement>(".fl-detail__d");
             return {
-              q: p.querySelector(".fl-detail__q")?.textContent ?? "",
+              title: (t?.textContent ?? "").trim(),
+              desc: (d?.textContent ?? "").trim(),
               clip,
               squareTR: pts.some((s) => /^100%\s+0(px|%)$/.test(s)),
               squareBL: pts.some((s) => /^0(px|%)\s+100%$/.test(s)),
-              clipsA:
-                (p.querySelector(".fl-detail__a") as HTMLElement | null)!.scrollWidth -
-                (p.querySelector(".fl-detail__a") as HTMLElement | null)!.clientWidth,
+              clipsT: t ? t.scrollWidth - t.clientWidth : 99,
+              descPx: d ? Number.parseFloat(getComputedStyle(d).fontSize) : 0,
             };
           });
         });
         expect(detail.length, `${label}: the detail grid is not four plates`).toBe(4);
         expect(
-          detail.map((d) => d.q),
-          `${label}: the detail plates ask the wrong questions`
-        ).toEqual(["WHO IT SERVES", "WHAT IT REPLACED", "WHAT RUNS IT", "WHERE IT RUNS"]);
+          new Set(detail.map((d) => d.title)).size,
+          `${label}: the capability titles collide`
+        ).toBe(4);
         for (const d of detail) {
-          expect(d.clip, `${label}: "${d.q}" is not clipped at all`).not.toBe("none");
-          expect(d.squareTR, `${label}: "${d.q}" lost its square top-right corner`).toBe(true);
-          expect(d.squareBL, `${label}: "${d.q}" is notched on the wrong corner — ${d.clip}`).toBe(
-            false
-          );
-          expect(d.clipsA, `${label}: "${d.q}" clips its answer`).toBeLessThanOrEqual(1);
+          expect(d.title, `${label}: a block lost its title`).not.toBe("");
+          expect(d.desc, `${label}: "${d.title}" lost its sentence`).not.toBe("");
+          expect(d.clip, `${label}: "${d.title}" is not clipped at all`).not.toBe("none");
+          expect(d.squareTR, `${label}: "${d.title}" lost its square top-right corner`).toBe(true);
+          expect(
+            d.squareBL,
+            `${label}: "${d.title}" is notched on the wrong corner — ${d.clip}`
+          ).toBe(false);
+          expect(d.clipsT, `${label}: "${d.title}" clips its title`).toBeLessThanOrEqual(1);
+          expect(
+            d.descPx,
+            `${label}: "${d.title}" sentence fell below the readable floor`
+          ).toBeGreaterThanOrEqual(11.9);
         }
 
         // ══ THE DETAIL GRID IS INSIDE THE FIELD, AND IT IS SEEN ═════════
@@ -1213,47 +1236,56 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         ).toEqual([]);
         expect(ordinals.bayId, `${label}: the bay printed a tool id`).toBe(false);
 
-        // ⚠ AND THE CAPABILITY TILES ARE GONE FROM THIS PLATE (ADR-068).
-        // `capabilities` stays in the data for the Arc card; what must not
-        // come back is the sixteen-tile foot behind a four-station rail.
+        // ⚠ THE `.fl-caps` TILE FORM STAYS BANNED ON THIS PLATE (ADR-068).
+        // The capability COPY is back — the detail blocks above print it —
+        // but what must not come back is the FORM: the sixteen-tile foot
+        // band behind a four-station rail.
         expect(
           await page.locator(".fl-plate--tools .fl-caps").count(),
           `${label}: the capability tiles came back to the tools plate`
         ).toBe(0);
 
-        // ── THE FILTER LAW IS PER TOOL NOW (ADR-068 D5) ────────────────
-        // ADR-064 U2 drew the line at AUTHORED vs CAPTURED and a wireframe
-        // is authored evidence, so the both-halves assertion narrows to the
-        // TOOL: station 1 (mímir) is a capture and must be filtered, station
-        // 2 (vesper) is a drawing and must have neither an img nor a filter.
-        // Walking BACK is the third case and not a formality — the branch
-        // swapping clean is the whole risk in a keyed conditional render.
-        const captureBay = await page.evaluate(readToolBay);
-        expect(captureBay, `${label}: no tool bay`).not.toBeNull();
-        expect(captureBay!.imgs, `${label}: the capture branch mounted no image`).toBe(1);
-        expect(captureBay!.hasWire, `${label}: a capture tool drew a wireframe`).toBe(false);
-        expect(captureBay!.imgFilter, `${label}: the tool capture lost its duotone`).not.toBe(
-          "none"
-        );
-        expect(
-          captureBay!.otherFiltered,
-          `${label}: another plate image is filtered: ${captureBay!.otherFiltered.join(", ")}`
-        ).toEqual([]);
-
-        await page.locator(".fl-con__stn").nth(1).click();
-        await page.waitForTimeout(900);
-        expectWireframeBay(await page.evaluate(readToolBay), `${label} vesper`);
+        // ── THE FILTER LAW IS PER TOOL (ADR-068 D5, all four drawn in U3) ─
+        // ADR-064 U2 drew the line at AUTHORED vs CAPTURED. Every station is
+        // a wireframe now — no img, no filter, its own exact label set — and
+        // the capture half of the law stays EXECUTABLE behind `kind`, for
+        // the fifth tool that ships before its drawing. The walk ends back
+        // at station 0: drawing↔drawing branch swaps are still keyed
+        // conditional renders, and swapping clean is still the risk.
+        for (const stn of WIREFRAME_STATIONS) {
+          if (stn.idx > 0) {
+            await page.locator(".fl-con__stn").nth(stn.idx).click();
+            await page.waitForTimeout(700);
+          }
+          const bay = await page.evaluate(readToolBay);
+          if (stn.kind === "wire") {
+            expectWireframeBay(bay, `${label} ${stn.id}`, stn.labels);
+          } else {
+            expect(bay, `${label} ${stn.id}: no tool bay`).not.toBeNull();
+            expect(bay!.imgs, `${label} ${stn.id}: the capture branch mounted no image`).toBe(1);
+            expect(bay!.hasWire, `${label} ${stn.id}: a capture tool drew a wireframe`).toBe(false);
+            expect(bay!.imgFilter, `${label} ${stn.id}: the capture lost its duotone`).not.toBe(
+              "none"
+            );
+            expect(
+              bay!.otherFiltered,
+              `${label} ${stn.id}: another plate image is filtered: ${bay!.otherFiltered.join(", ")}`
+            ).toEqual([]);
+          }
+          // The bar is the one affordance on every branch; no station's
+          // evidence may squeeze it (the failure `.fl-shot` has had before).
+          expect(
+            bay!.barCut ?? 99,
+            `${label} ${stn.id}: the walkthrough bar clipped`
+          ).toBeLessThanOrEqual(1);
+        }
 
         await page.locator(".fl-con__stn").nth(0).click();
-        await page.waitForTimeout(900);
-        const backBay = await page.evaluate(readToolBay);
-        expect(backBay!.hasWire, `${label}: the wireframe survived the swap back`).toBe(false);
-        expect(backBay!.imgs, `${label}: the capture did not come back`).toBe(1);
-        expect(backBay!.imgFilter, `${label}: the capture came back unfiltered`).not.toBe("none");
-        // The bar is the only affordance saying the capture opens; the swap
-        // must not cost it (the same squeeze `.fl-shot` has failed before).
-        expect(backBay!.barCut ?? 99, `${label}: the walkthrough bar clipped`).toBeLessThanOrEqual(
-          1
+        await page.waitForTimeout(700);
+        expectWireframeBay(
+          await page.evaluate(readToolBay),
+          `${label} ${WIREFRAME_STATIONS[0].id} (walked back)`,
+          WIREFRAME_STATIONS[0].labels
         );
       }
     }
@@ -1360,26 +1392,29 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           .filter((f) => f && f !== "none");
         if (filtered.length) return { kind, ok: false, why: `img filter ${filtered[0]}` };
 
+        // The capture half is DORMANT since ADR-068 U3 (all four tools are
+        // drawn) but stays executable: a fifth tool without a drawing
+        // renders `.fl-shot__img` and this branch judges it again.
         const shot = document.querySelector<HTMLElement>(".fl-shot__img");
         if (shot) {
           const f = getComputedStyle(shot).filter;
           if (!f || f === "none") return { kind, ok: false, why: "tool capture is unfiltered" };
           const veil = document.querySelector<HTMLElement>(".fl-shot__frame");
           if (!veil) return { kind, ok: false, why: "tool capture has no veil frame" };
+        }
 
-          // ⚠ THE WALKTHROUGH BAR SURVIVES THE SQUEEZE, and nothing else
-          // catches this. `.fl-shot` is `overflow: hidden`, which makes a flex
-          // item's automatic minimum resolve to ZERO rather than to its
-          // content — so when the facts grew a line it shrank below its own
-          // contents and sliced the bar in half, with every box still
-          // reporting zero overflow. The bar is the only affordance saying the
-          // capture opens; losing it costs the plate its interaction.
-          const frame = document.querySelector<HTMLElement>(".fl-shot");
-          const bar = document.querySelector<HTMLElement>(".fl-shot__bar");
-          if (frame && bar) {
-            const cut = bar.getBoundingClientRect().bottom - frame.getBoundingClientRect().bottom;
-            if (cut > 1) return { kind, ok: false, why: `walkthrough bar clipped ${cut}px` };
-          }
+        // ⚠ THE WALKTHROUGH BAR SURVIVES THE SQUEEZE ON EVERY BRANCH, and
+        // nothing else catches this. `.fl-shot` is `overflow: hidden`, which
+        // makes a flex item's automatic minimum resolve to ZERO rather than
+        // to its content — so when the facts grew a line it shrank below its
+        // own contents and sliced the bar in half, with every box still
+        // reporting zero overflow. The bar is the ONE affordance saying the
+        // walkthrough opens; losing it costs the plate its interaction.
+        const shotFrame = document.querySelector<HTMLElement>(".fl-shot");
+        const bar = document.querySelector<HTMLElement>(".fl-shot__bar");
+        if (shotFrame && bar) {
+          const cut = bar.getBoundingClientRect().bottom - shotFrame.getBoundingClientRect().bottom;
+          if (cut > 1) return { kind, ok: false, why: `walkthrough bar clipped ${cut}px` };
         }
 
         // ── ONE RAIL, AND NO ORDINALS ANYWHERE (ADR-066) ───────────────
@@ -1404,22 +1439,15 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const lit = stns.filter((s) => s.dataset.on !== undefined).length;
         if (lit !== 1) return { kind, ok: false, why: `${lit} stations lit, expected 1` };
 
-        // ── CONTEXT LIVES IN THE FOOT, AND ONLY WHERE THERE IS ANY ─────
-        // ⚠ BOTH HALVES, AND THE TOOLS ROW SWAPPED SIDES ON 2026-08-07.
-        // ADR-066: "the FOOT is where context goes… a plate with nothing to
-        // say still omits it." The map still REQUIRES one — that half is
-        // what stops the law being read as "feet are optional decoration".
-        // The owner ruled the tools row has nothing to say there (its
-        // sentence restated the route and the four detail plates, for ~90px
-        // of a field whose detail grid was being cropped away), so it joins
-        // the films row and must print NOTHING.
+        // ── NO PLATE PRINTS A FOOT (owner, 2026-08-08) ─────────────────
+        // The declutter took the last two — the map's reading sentence and
+        // the Studio sheets' captions — after the tools row (08-07) and the
+        // films (which never had one). ADR-066's law survives as its limit
+        // case: today NO plate has anything to say there, and this sweep is
+        // what keeps a foot from drifting back one row at a time. The
+        // ConsoleFrame slot itself stays, as the context mechanism.
         const foot = document.querySelector<HTMLElement>(".fl-con__foot");
-        if (kind === "intelligence-map" && !foot)
-          return { kind, ok: false, why: "the map row lost its context foot" };
-        if (kind === "tools" && foot)
-          return { kind, ok: false, why: "the tools plate printed a foot" };
-        if (foot && !(foot.textContent ?? "").trim())
-          return { kind, ok: false, why: "empty foot printed" };
+        if (foot) return { kind, ok: false, why: "a console foot came back on this row" };
 
         // ── TWO FAMILIES, AND EACH DOES ITS OWN JOB ────────────────────
         // ⚠ THIS IS THE GUARD THAT WOULD HAVE CAUGHT THE LAST TWO FONT
@@ -1450,8 +1478,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         if (foreign.length) return { kind, ok: false, why: `foreign face ${foreign[0]}` };
 
         // Prose is SANS, by selector — the ones that inherited mono.
+        // (`.fl-con__foot p` left the list with the feet, 2026-08-08;
+        // `.fl-detail__d` joined with the capability sentences.)
         for (const sel of [
-          ".fl-con__foot p",
+          ".fl-detail__d",
           ".fl-cap__d",
           ".fl-cmp__desc",
           ".fl-proof-register__description",
@@ -1546,28 +1576,27 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);
     expect(unframed, `rows without the console frame:\n${unframed.join("\n")}`).toEqual([]);
 
-    // ── AND THE WIREFRAME AT THE BINDING BOX (ADR-068 D5) ────────────────
-    // The loop above walks each row on its DEFAULT tool, which is the capture
-    // — so the drawing needs its own visit, and 1440×800 is where it needs
-    // it. `.fl-shot__frame` is the plate's flex-sacrificial element and it is
-    // SHORTEST here (173px since the 2026-08-07 pass gave the field the
-    // foot's ~90px and the header's ~26px back): the route's height is a
-    // function of the field's WIDTH while the field grows with HEIGHT, so
-    // the squeeze lands on the owner's own laptop rather than at 720p where
-    // one would look for it. Every span in the drawing is a fraction of that
-    // box. Row 2 is Software for Few since 2026-08-07.
+    // ── AND ALL FOUR WIREFRAMES AT THE BINDING BOX (ADR-068 U3) ──────────
+    // The row walk above reads the tools row on its default station only, so
+    // the other three drawings need their own visit — and 1440×800 is where
+    // the frame is at its proportional tightest on the owner's own laptop.
+    // Every span in every drawing is a fraction of that box.
+    // Row 2 is Software for Few since 2026-08-07.
     await page.locator(".fl-row").nth(1).click();
     await page.waitForTimeout(400);
-    await page.locator(".fl-con__stn").nth(1).click();
-    await page.waitForTimeout(1200);
-    expectWireframeBay(await page.evaluate(readToolBay), "1440x800 vesper");
-    expect(
-      await page.evaluate(() => {
-        const f = document.querySelector<HTMLElement>(".fl-con__field");
-        return f ? f.scrollHeight - f.clientHeight : 99;
-      }),
-      "1440x800 vesper: the console field clips"
-    ).toBeLessThanOrEqual(1);
+    for (const stn of WIREFRAME_STATIONS) {
+      await page.locator(".fl-con__stn").nth(stn.idx).click();
+      await page.waitForTimeout(700);
+      if (stn.kind !== "wire") continue;
+      expectWireframeBay(await page.evaluate(readToolBay), `1440x800 ${stn.id}`, stn.labels);
+      expect(
+        await page.evaluate(() => {
+          const f = document.querySelector<HTMLElement>(".fl-con__field");
+          return f ? f.scrollHeight - f.clientHeight : 99;
+        }),
+        `1440x800 ${stn.id}: the console field clips`
+      ).toBeLessThanOrEqual(1);
+    }
   });
 
   test("desktop: ring mode retires the racks; cards expose their CTA", async ({ page }) => {
@@ -1919,6 +1948,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
   test("light: the map console's palette carries its contrast (ADR-063 U2)", async ({ page }) => {
     test.skip(!isDesktopViewport(page), "the console is desktop-only (≥981px)");
+    // The wireframe walk at the end visits all four stations now (~+3.5s).
+    test.setTimeout(60_000);
 
     // THE FAILURE THIS PINS. The console is a port of a drawing authored on
     // near-black, and gold, green and every recessive alpha carried straight
@@ -2093,186 +2124,114 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       ).toBeGreaterThanOrEqual(4.5);
     }
 
-    // ── THE TOOLS PLATE'S ACCENTS, ON THEIR OWN BEDS (ADR-068) ────────
-    // The walk above judges every label against the CONSOLE's ground, which
-    // is right for chrome and wrong for the three marks that carry the
-    // plate's argument: the `own` answer sits on a green wash, the NOW
-    // module is line work rather than text, and the `gold` answer must have
-    // taken the ramp's INK step (`--gold` as small text is ~1.8:1 here — no
-    // alpha of a light hue reaches the floor, ADR-064).
-    // Row 2 is Software for Few since 2026-08-07 (owner).
+    // ── THE TOOLS ROW, ON THE SAME PARCHMENT ──────────────────────────
+    // (The accent-bed sampling that lived here left with the accents: the
+    // ADR-068 U2 capability blocks are plain ink on the console's own
+    // ground, which the row walk above already judges. Row 2 is Software
+    // for Few since 2026-08-07 (owner) — the click stays because the
+    // wireframe check below needs the tools plate on screen.)
     await page.locator(".fl-row").nth(1).click();
     await page.waitForTimeout(1800);
 
-    const accents = await page.evaluate(() => {
-      const parse = (c: string) => {
-        const m = String(c).match(/rgba?\(([^)]+)\)/);
-        if (!m) return null;
-        const p = m[1].split(",").map((v) => Number.parseFloat(v));
-        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
-      };
-      const lin = (v: number) => {
-        const s = v / 255;
-        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-      };
-      type C = { r: number; g: number; b: number; a: number };
-      const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
-      const over = (fg: C, bg: C): C =>
-        fg.a >= 1
-          ? fg
-          : {
-              r: fg.a * fg.r + (1 - fg.a) * bg.r,
-              g: fg.a * fg.g + (1 - fg.a) * bg.g,
-              b: fg.a * fg.b + (1 - fg.a) * bg.b,
-              a: 1,
-            };
-      const ratio = (fg: C, bg: C) => {
-        const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
-        return Number(((hi + 0.05) / (lo + 0.05)).toFixed(2));
-      };
-      // A custom property's VALUE is a token chain (`var(--fl-own-wash)`),
-      // so it is resolved the only way CSS resolves one: by feeding it to a
-      // real declaration and reading the computed result back.
-      const resolve = (token: string) => {
-        const probe = document.createElement("span");
-        probe.style.color = token;
-        document.body.appendChild(probe);
-        const c = parse(getComputedStyle(probe).color);
-        probe.remove();
-        return c;
-      };
-
-      const cons = document.querySelector<HTMLElement>(".fl-con__console");
-      const ownPlate = document.querySelector<HTMLElement>('.fl-detail__plate[data-accent="own"]');
-      const goldPlate = document.querySelector<HTMLElement>(
-        '.fl-detail__plate[data-accent="gold"]'
-      );
-      if (!cons || !ownPlate || !goldPlate) return null;
-
-      const ground = parse(getComputedStyle(cons).backgroundColor)!;
-
-      const bedOf = (plate: HTMLElement) => {
-        const inner = plate.querySelector<HTMLElement>(".fl-detail__in")!;
-        const base = parse(getComputedStyle(inner).backgroundColor) ?? ground;
-        const wash = resolve(getComputedStyle(plate).getPropertyValue("--dt-ground").trim());
-        return wash ? over(wash, base) : base;
-      };
-      const valueOf = (plate: HTMLElement) =>
-        parse(getComputedStyle(plate.querySelector(".fl-detail__a")!).color)!;
-
-      const ownBed = bedOf(ownPlate);
-      const goldBed = bedOf(goldPlate);
-      return {
-        own: {
-          ratio: ratio(valueOf(ownPlate), ownBed),
-          color: getComputedStyle(ownPlate.querySelector(".fl-detail__a")!).color,
-        },
-        gold: {
-          ratio: ratio(valueOf(goldPlate), goldBed),
-          color: getComputedStyle(goldPlate.querySelector(".fl-detail__a")!).color,
-        },
-      };
-    });
-
-    expect(accents, "the tools plate's accents are missing").not.toBeNull();
-    expect(
-      accents!.own.ratio,
-      `the own answer is ${accents!.own.ratio}:1 on its wash (${accents!.own.color})`
-    ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      accents!.gold.ratio,
-      `the gold answer is ${accents!.gold.ratio}:1 (${accents!.gold.color}) — it must take --gold-ink in light`
-    ).toBeGreaterThanOrEqual(4.5);
-
-    // ── AND THE AUTHORED WIREFRAME, ON THE SAME PARCHMENT (ADR-068 D5) ─
-    // The row walk above reads each row on its DEFAULT tool, so the drawing
-    // is never on screen for it. Its own colour law is the one this surface
-    // keeps relearning: AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP.
+    // ── AND ALL FOUR AUTHORED WIREFRAMES, ON THE SAME PARCHMENT (ADR-068
+    // U3) ─ The row walk above reads each row on its default station only.
+    // The drawings' own colour law is the one this surface keeps
+    // relearning: AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP.
     // `rgba(ink, .44)` is a quiet label on near-black and 2.4:1 on
     // parchment; the whole `--w-*` set is re-derived in theme.css and this
     // is what holds it there. The LABELS are asserted at the 4.5:1 glyph
-    // floor; the hairlines and washes answer to a wash target (≥1.5) because
-    // they are the drawing's texture, not its reading.
-    await page.locator(".fl-con__stn").nth(1).click();
-    await page.waitForTimeout(1100);
+    // floor against their OWN OPAQUE BED (the nearest ancestor with a
+    // solid ground, composited over the bay — no per-tool selector, so a
+    // new drawing's plate is judged automatically); the hairlines answer
+    // to a wash target (≥1.5) because they are texture, not reading.
+    for (const stn of WIREFRAME_STATIONS) {
+      if (stn.kind !== "wire") continue;
+      await page.locator(".fl-con__stn").nth(stn.idx).click();
+      await page.waitForTimeout(800);
 
-    const wireLight = await page.evaluate(() => {
-      const parse = (c: string) => {
-        const m = String(c).match(/rgba?\(([^)]+)\)/);
-        if (!m) return null;
-        const p = m[1].split(",").map((v) => Number.parseFloat(v));
-        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
-      };
-      const lin = (v: number) => {
-        const s = v / 255;
-        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-      };
-      type C = { r: number; g: number; b: number; a: number };
-      const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
-      const over = (fg: C, bg: C): C =>
-        fg.a >= 1
-          ? fg
-          : {
-              r: fg.a * fg.r + (1 - fg.a) * bg.r,
-              g: fg.a * fg.g + (1 - fg.a) * bg.g,
-              b: fg.a * fg.b + (1 - fg.a) * bg.b,
-              a: 1,
-            };
-      const ratio = (fg: C, bg: C) => {
-        const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
-        return Number(((hi + 0.05) / (lo + 0.05)).toFixed(2));
-      };
-      const resolve = (token: string) => {
-        const probe = document.createElement("span");
-        probe.style.color = token;
-        document.body.appendChild(probe);
-        const c = parse(getComputedStyle(probe).color);
-        probe.remove();
-        return c;
-      };
-      const wire = document.querySelector<HTMLElement>(".fl-wire");
-      const inner = document.querySelector<HTMLElement>(".fl-wire__in");
-      const shot = document.querySelector<HTMLElement>(".fl-shot");
-      if (!wire || !inner || !shot) return null;
-      // The drawing's ground is the BAY, not the console — the same value in
-      // both themes, but read it rather than assume it.
-      const bay = parse(getComputedStyle(shot).backgroundColor)!;
-      const plate = resolve(getComputedStyle(inner).getPropertyValue("--w-plate").trim());
-      // A label on the composer is judged against the composer's own plate.
-      const bedOf = (el: Element) =>
-        el.closest(".fl-wire__comp") && plate ? over(plate, bay) : bay;
-      return {
-        labels: [...wire.querySelectorAll("*")]
-          .filter((el) =>
-            [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? "").trim())
-          )
-          .map((el) => ({
-            t: (el.textContent ?? "").trim(),
-            ratio: ratio(parse(getComputedStyle(el).color)!, bedOf(el)),
-            color: getComputedStyle(el).color,
-          })),
-        lines: ["--w-hair", "--w-hair2", "--w-mark"].map((name) => {
-          const c = resolve(getComputedStyle(inner).getPropertyValue(name).trim());
-          return { name, ratio: c ? ratio(c, bay) : 0 };
-        }),
-      };
-    });
+      const wireLight = await page.evaluate(() => {
+        const parse = (c: string) => {
+          const m = String(c).match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          const p = m[1].split(",").map((v) => Number.parseFloat(v));
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        };
+        const lin = (v: number) => {
+          const s = v / 255;
+          return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        type C = { r: number; g: number; b: number; a: number };
+        const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+        const over = (fg: C, bg: C): C =>
+          fg.a >= 1
+            ? fg
+            : {
+                r: fg.a * fg.r + (1 - fg.a) * bg.r,
+                g: fg.a * fg.g + (1 - fg.a) * bg.g,
+                b: fg.a * fg.b + (1 - fg.a) * bg.b,
+                a: 1,
+              };
+        const ratio = (fg: C, bg: C) => {
+          const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
+          return Number(((hi + 0.05) / (lo + 0.05)).toFixed(2));
+        };
+        const resolve = (token: string) => {
+          const probe = document.createElement("span");
+          probe.style.color = token;
+          document.body.appendChild(probe);
+          const c = parse(getComputedStyle(probe).color);
+          probe.remove();
+          return c;
+        };
+        const wire = document.querySelector<HTMLElement>(".fl-wire");
+        const inner = document.querySelector<HTMLElement>(".fl-wire__in");
+        const shot = document.querySelector<HTMLElement>(".fl-shot");
+        if (!wire || !inner || !shot) return null;
+        // The drawing's ground is the BAY, not the console — the same value
+        // in both themes, but read it rather than assume it.
+        const bay = parse(getComputedStyle(shot).backgroundColor)!;
+        // A label on an opaque plate is judged against THAT plate: walk the
+        // ancestors to the first solid ground and composite it over the bay.
+        const bedOf = (el: Element) => {
+          for (let p = el.parentElement; p && p !== shot; p = p.parentElement) {
+            const bg = parse(getComputedStyle(p).backgroundColor);
+            if (bg && bg.a >= 0.85) return over(bg, bay);
+          }
+          return bay;
+        };
+        return {
+          labels: [...wire.querySelectorAll("*")]
+            .filter((el) =>
+              [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? "").trim())
+            )
+            .map((el) => ({
+              t: (el.textContent ?? "").trim(),
+              ratio: ratio(parse(getComputedStyle(el).color)!, bedOf(el)),
+              color: getComputedStyle(el).color,
+            })),
+          lines: ["--w-hair", "--w-hair2", "--w-mark"].map((name) => {
+            const c = resolve(getComputedStyle(inner).getPropertyValue(name).trim());
+            return { name, ratio: c ? ratio(c, bay) : 0 };
+          }),
+        };
+      });
 
-    expect(wireLight, "the vesper wireframe is missing in light").not.toBeNull();
-    expect(
-      wireLight!.labels.map((l) => l.t),
-      "the wireframe lost a micro-label in light"
-    ).toContain("DRAW");
-    for (const l of wireLight!.labels) {
+      expect(wireLight, `${stn.id}: the wireframe is missing in light`).not.toBeNull();
       expect(
-        l.ratio,
-        `wireframe label "${l.t}" is ${l.ratio}:1 (${l.color})`
-      ).toBeGreaterThanOrEqual(4.5);
-    }
-    for (const l of wireLight!.lines) {
-      expect(l.ratio, `wireframe ${l.name} is ${l.ratio}:1 on parchment`).toBeGreaterThanOrEqual(
-        1.5
-      );
+        wireLight!.labels.map((l) => l.t).sort(),
+        `${stn.id}: the drawing's label set drifted in light`
+      ).toEqual([...stn.labels].sort());
+      for (const l of wireLight!.labels) {
+        expect(
+          l.ratio,
+          `${stn.id} label "${l.t}" is ${l.ratio}:1 (${l.color})`
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+      for (const l of wireLight!.lines) {
+        expect(l.ratio, `${stn.id} ${l.name} is ${l.ratio}:1 on parchment`).toBeGreaterThanOrEqual(
+          1.5
+        );
+      }
     }
   });
 

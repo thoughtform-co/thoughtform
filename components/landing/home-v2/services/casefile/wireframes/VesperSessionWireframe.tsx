@@ -47,12 +47,11 @@
  *    is 45px of empty column in a box this wide); the drawing keeps the
  *    app's ORDER and adjacency, not its ratios.
  *
- * ── THE TWO OBSTACLES IN THE BOX ────────────────────────────────────────
- * The halftone veil (`.fl-shot__frame::after`) and the RUN plate (`.fl-run`,
- * z 2, ~98×40 dead centre) are siblings that paint OVER this drawing — it
- * carries no z-index and sits under both by tree order. So nothing
- * load-bearing is centred: the composer's own content lives at its LEFT and
- * RIGHT ends and only bar-work crosses the middle.
+ * ── THE ONE OBSTACLE IN THE BOX ─────────────────────────────────────────
+ * The halftone veil (`.fl-shot__frame::after`) paints OVER this drawing —
+ * it carries no z-index and sits under it by tree order. (The RUN plate,
+ * which used to cover ~98×40 dead centre at z 2, was deleted with the
+ * owner's 2026-08-08 walkthrough-bar ruling — the centre is usable now.)
  *
  * ── THE ONE DELIBERATE DIVERGENCE FROM THE REAL UI ──────────────────────
  * ⚠ THE DRAW READOUT IS A METER, NEVER A FIGURE. The tool prints USD; this
@@ -82,7 +81,13 @@
  */
 export function VesperSessionWireframe() {
   return (
-    <div className="fl-wire" aria-hidden="true">
+    /* ⚠ THE ROOT CARRIES THE TOOL MODIFIER (2026-08-08, four-wireframe
+       pass). Every vesper element rule in casefile.css is scoped
+       `.fl-wire--vesper .fl-wire__…`, because names like `__row`/`__card`
+       are generic-sounding but vesper-specific in their values — an
+       unscoped rule is a trap for the next tool's drawing. Only
+       `.fl-wire`, `.fl-wire__in` and `.fl-wire__lbl` are shared. */
+    <div className="fl-wire fl-wire--vesper" aria-hidden="true">
       <div className="fl-wire__in">
         {/* ── 1 · TOP CHROME ────────────────────────────────────────────
             Title bar left, the collapsed nav lozenge centred, the draw
@@ -146,7 +151,10 @@ export function VesperSessionWireframe() {
             {/* The outputs. A faint gold-tinged ground says GENERATED
                 without drawing an image — a wireframe that renders
                 imagery is a mockup, and a mockup of someone else's
-                pictures is a screenshot again. */}
+                pictures is a screenshot again. The second tile is MID-RUN:
+                the app's signature is an asymptotic progress BAR (never a
+                spinner, never 100%), so its abstraction is a part-filled
+                bar riding the tile's lower edge (owner, 2026-08-08). */}
             <span className="fl-wire__tile">
               <b className="fl-wire__acts">
                 <i />
@@ -154,8 +162,11 @@ export function VesperSessionWireframe() {
                 <i />
               </b>
             </span>
-            <span className="fl-wire__tile">
+            <span className="fl-wire__tile" data-generating="">
               <b className="fl-wire__clip" />
+              <b className="fl-wire__prog">
+                <i />
+              </b>
             </span>
           </div>
         </div>
@@ -167,14 +178,9 @@ export function VesperSessionWireframe() {
             read as floating, not enough to eat the row. */}
         <div className="fl-wire__dock">
           <div className="fl-wire__comp">
-            {/* ⚠ THE LABEL LEADS, AND THAT IS THE RUN PLATE'S DOING. Drawn
-                after the squares it ran 27px UNDER the RUN key at 1280×720
-                — measured — because the key is centred on the FRAME while
-                the composer is inset 16% each side, so the row's content
-                reaches the middle before the plate ends. Leading, it clears
-                the key at every reference viewport and at the unwrapped
-                column, and label-then-items is this surface's own grammar
-                anyway. */}
+            {/* THE LABEL LEADS. It used to be forced (trailing, it ran 27px
+                under the since-deleted RUN key at 1280×720); it stays by
+                choice — label-then-items is this surface's own grammar. */}
             <span className="fl-wire__row">
               <span className="fl-wire__lbl">PRODUCT LIBRARY</span>
               <i className="fl-wire__thumb" />

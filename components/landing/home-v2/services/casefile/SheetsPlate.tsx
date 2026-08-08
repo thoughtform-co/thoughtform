@@ -16,11 +16,16 @@ import { ConsoleRail } from "./console/ConsoleRail";
  * make an image and the LIMIT it refuses to cross (owner, 2026-08-06 —
  * "it's not just the ads"). Output, rule, limit.
  *
- * ⚠ IT ADDS ALMOST NOTHING. The rail is `ConsoleRail`, the foot is the
- * console's own, and two of the three bodies reuse grammars that already
- * exist — `.fl-stills` from the stills plate and `.fl-caps` from the tools
- * plate. Only the two-column comparison is new markup. A sheet kind that
- * needs a whole plate of its own is probably a ROW, not a sheet.
+ * ⚠ IT ADDS ALMOST NOTHING. The rail is `ConsoleRail`, and two of the
+ * three bodies reuse grammars that already exist — `.fl-stills` from the
+ * stills plate and `.fl-caps` from the tools plate. Only the two-column
+ * comparison is new markup. A sheet kind that needs a whole plate of its
+ * own is probably a ROW, not a sheet.
+ *
+ * ⚠ NO FOOT (owner, 2026-08-08 — "remove the text at the bottom of the
+ * right panel"). The per-sheet foot sentence left with the map's on the
+ * same ruling; `CaseSheet.foot` is deleted, and the sheets' bodies carry
+ * their own argument. Git holds the three sentences it printed.
  *
  * ⚠ A SHEET IS NOT A SECOND DIRECTORY. The directory rows are the
  * engagement's bodies of work; sheets are facets of ONE of them. If a sheet
@@ -46,7 +51,6 @@ export function SheetsPlate({ sheets }: { sheets: readonly CaseSheet[] }) {
           label="Studio sheets"
         />
       }
-      foot={sheet.foot ? <p>{sheet.foot}</p> : undefined}
     >
       <SheetBody sheet={sheet} />
     </ConsoleFrame>

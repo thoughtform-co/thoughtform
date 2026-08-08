@@ -1013,7 +1013,6 @@
   outline-offset: 8px;
 }
 
-
 .fl-panel__viz {
   position: absolute;
   left: 0;
@@ -2051,22 +2050,29 @@
   --tf-x: clamp(14px, 1.6cqw, 24px);
   /* The field's top and bottom inset. Mockup: 22. */
   --tf-edge: clamp(8px, 1.5svh, 22px);
-  /* Route → bay → detail. Mockup `.stack` gap: 26. */
+  /* Bay → detail. Mockup `.stack` gap: 26. */
   --tf-gap: clamp(8px, 2.1svh, 26px);
-  /* THE BAY'S CEILING — the capture's, plus its own ~64–80px of chrome (FEED
-     line + watch bar + borders). Deliberately loose: it must NOT bite at
-     720p/800p/1080p, where the field has no surplus and the bay is already
-     smaller than this; it starts to bind around 1280h and hard-caps at
-     1440p+, which is the brief ("shrinks first at 720p, stops growing first
-     at 1440p+"). Resolves to 259 / 288 / 389 / 460 / 460 at 720 / 800 /
-     1080 / 1330 / 1440 against bays that actually want 242 / 242 / 366 /
-     573 / 670. */
-  --tf-bay: clamp(230px, 36svh, 460px);
+  /* THE BAY'S CEILING — the evidence's, plus its own ~55–80px of chrome
+     (FEED line + watch bar + borders). RAISED 2026-08-08 (owner: "increase
+     the height of that wireframe … we have more space") — the route band
+     left in e3b3386 and the capability blocks went content-height in U2,
+     so the bay's WANTS rose to ~249 / 272 / ~300 / 458 / 619 / 680 at
+     720p / 1440×800 / 1920×800 / 1080p / 2017×1269 / 2560×1330 while the
+     old 36svh/460 ceiling (259/288/288/389/457/460) had started biting at
+     laptop-wide-short and pooled the surplus as dead air between bay and
+     blocks (`margin-top: auto` absorbs a bitten cap). 44svh/560 clears the
+     bite everywhere below ~1150h and still stops the bay first on big
+     monitors (~60/120px of air at 1269/1330 — the deliberate remnant of
+     "stops growing first", ADR-066). A ceiling raise has NO clipping
+     failure mode: max-height only limits growth; the shrink chain and the
+     frame's floor below are untouched. */
+  --tf-bay: clamp(250px, 44svh, 560px);
 }
 
-/* Body: ONE COLUMN — route, bay, detail (owner, 2026-08-07 — the header and
-   the foot are deleted; see `ToolGallery.tsx`). The identity column that
-   used to take the left half went in the 2026-08-06 pass.
+/* Body: ONE COLUMN — bay, detail (owner, 2026-08-07 — the header and the
+   foot are deleted, see `ToolGallery.tsx`; the route band followed in the
+   e3b3386 declutter). The identity column that used to take the left half
+   went in the 2026-08-06 pass.
 
    ⚠ THE AIR IS DISTRIBUTED BY THE STACK, NOT BY THE BODY, and that choice
    is about the OVERFLOW direction rather than about taste. A
@@ -2088,7 +2094,6 @@
   gap: var(--tf-gap);
   padding: var(--tf-edge) var(--tf-x);
 }
-
 
 /* ONE BUTTON — image and watch bar fused into a frame that bleeds to the
    CONSOLE's own inner edges. Cover, top-anchored: dashboards lead with their
@@ -2146,52 +2151,42 @@
    carry a pseudo-element, and the veil must stop at the watch bar's top edge
    rather than covering it — so the image gets one wrapper and the wrapper
    owns the treatment's second half. */
-/* ⚠ THE FLOOR CAME DOWN, AND IT IS ARITHMETIC (2026-08-07, ADR-068). The
-   plate gained a header, a route diagram and a 2×2 detail grid, and the
-   capture is the SACRIFICIAL element by standing order (ADR-066: a
-   screenshot loses pixels before a sentence loses meaning).
+/* ⚠ THE FLOOR IS A GUARD, NOT A SIZE. `clamp(70px, 9svh, 180px)` exists to
+   make an overrun visible to the smoke instead of silently deleting the
+   evidence, which is why `.fl-shot` still refuses `min-height: 0` above.
+   Since the route band left (e3b3386) and the blocks went content-height
+   (ADR-068 U2), the frame's NATURAL height is far above it — measured
+   2026-08-08, evidence + bay at the six reference viewports:
 
-   Measured field heights are 333.5 / 374.2 / 545.6px at 1280×720 /
-   1440×800 / 1920×1080. The fixed stack (header + route + bay chrome +
-   detail + three gaps) takes ~222 / ~292 / ~344 there, so the capture is
-   handed ~111 / ~91 / ~211px. ⚠ 1440×800 IS THE BINDING CASE, NOT 720p —
-   the route's height is a function of the field's WIDTH (`height: auto` on
-   a fixed viewBox) while the field grows with HEIGHT, so the squeeze lands
-   on the owner's own laptop rather than where anyone would look for it.
+     1280×720    frame 246.5   bay 310.6   detail 145.9   air = gap
+     1440×800    frame 270.1   bay 339.3   detail 167.9   air = gap
+     1920×800    frame 280.9   bay 350.1   detail 138.8   air = gap
+     1920×1080   frame 395.2   bay 475.2   detail 198.9   air ~31 + gap
+     2017×1269   frame 478.4   bay 558.4*  detail 205.4   air ~121 + gap
+     2560×1330   frame 480.0   bay 560.0*  detail 205.4   air ~179 + gap
+                                  * = the --tf-bay ceiling binding
 
-   `clamp(70px, 9svh, 180px)` resolves to 70 / 72 / 97.2 — under all three
-   with 41 / 19 / 113px of slack. It stays a FLOOR rather than a size:
-   its whole job is to make an overrun visible to the smoke instead of
-   silently deleting the evidence, which is why `.fl-shot` still refuses
-   `min-height: 0` above. The old value was `clamp(110px, 19svh, 240px)`
-   (152px at 1440×800) plus a ≤760h rung at `clamp(96px, 16svh, 200px)`;
-   the rung is deleted because this clamp already lands below it there.
+   The floor only binds in degenerate sub-720 windows now — correct: at a
+   genuinely short window the frame gives way FIRST (ADR-066's order of
+   sacrifice) down to the floor, and past that the overflow lands at the
+   field's bottom where the geometric guard sees it.
 
    ⚠ THE ZERO BASIS IS NOT INCIDENTAL — IT IS WHAT MAKES THE PLATE SHRINK AT
    ALL. Chrome sizes a COLUMN flex container's min-content to the sum of its
    items' HYPOTHETICAL main sizes, so a definite `flex-basis` here freezes
-   every ancestor (`.fl-shot`, `.fl-bay`, `.fl-toolstack`) at that size and
-   the field overruns instead. With basis 0 the automatic minimum resolves to
-   this `min-height` and the whole chain gives way in the right order. The
-   capture's CEILING therefore lives on `.fl-bay`'s `max-height`
+   every ancestor (`.fl-shot`, `.fl-bay`) at that size and the field
+   overruns instead. With basis 0 the automatic minimum resolves to this
+   `min-height` and the whole chain gives way in the right order. The
+   evidence's CEILING therefore lives on `.fl-bay`'s `max-height`
    (`--tf-bay`), not here.
 
    ⚠ WHY A CEILING EXISTS AT ALL (2026-08-07). Unbounded, this was the only
    growing item in the field, so every pixel a taller viewport handed the
-   console went into the screenshot: 434px of capture at 2560×1330 — the
+   console went into the evidence: 434px of capture at 2560×1330 — the
    owner's "HUGE" — and at wide-and-SHORT viewports an overrun that pushed
-   `.fl-detail` clean out of the field (measured 35.7px past the bottom at
-   1800–2560 × 800, with the first plate keeping 1.8 % of its area at
-   1920×720).
-
-   ⚠ THE OVERRUN'S DIRECTION IS COUNTER-INTUITIVE AND IT IS WHY NOBODY SAW
-   IT: the route's rendered height is `fieldWidth × 66/560` (`height: auto`
-   on a fixed viewBox, RouteDiagram measurement 2) while the field's height
-   comes from viewport HEIGHT — and the panel's width saturates at the
-   instrument band's 1440 cap around 1800px of viewport. So the binding case
-   is WIDE AND SHORT, and the smoke measured the tools row at 1280 wide and
-   at 1440×800 — the last width that still fits (1500×800 clears, 1600×800
-   overruns by 12.7). */
+   `.fl-detail` clean out of the field. The wide-short trap itself died
+   with the route (its height rode the field's WIDTH); the ceiling stays
+   because "stops growing first" is the standing order. */
 .fl-shot__frame {
   position: relative;
   flex: 1 1 0;
@@ -2290,33 +2285,11 @@
   border-color: transparent transparent transparent currentColor;
 }
 
-/* The transport marks (ADR-068, the owner's bay). Five chevrons with the
-   first lit — a position readout on the machine, not a control: the bar is
-   `aria-hidden` and the whole frame is the button. They sit LEFT of the play
-   cue so the bar reads left-to-right as position → action → duration. */
-.fl-shot__chevs {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  margin-right: 2px;
-}
-.fl-shot__chevs svg {
-  display: block;
-  width: 13px;
-  height: 7px;
-  overflow: visible;
-}
-.fl-shot__chevs path {
-  fill: none;
-  stroke: rgba(var(--dawn-rgb), 0.18);
-  stroke-width: 1.4;
-  vector-effect: non-scaling-stroke;
-}
-.fl-shot__chevs svg[data-on] path {
-  fill: var(--gold);
-  stroke: var(--gold);
-}
+/* ⚠ THE TRANSPORT CHEVRONS ARE DELETED (owner, 2026-08-08 — "a super clear,
+   minimalistic walkthrough button"). Five position marks ahead of the play
+   cue read as controls on a bar whose whole job is to be ONE unmistakable
+   button; the bar is cue → action → duration now, nothing else. The RUN
+   plate left on the same ruling — see the wireframe region header. */
 
 /* ⚠ THE SURFACES LINE IS DELETED (2026-08-06). It printed
    `ProjectCase.surfaces` — "WEB APP · MCP SERVER · CLAUDE · CURSOR · SLACK ·
@@ -2337,34 +2310,29 @@
    base with one member. See ToolGallery's header comment for why sixteen
    tiles behind one rail answered nothing.
 
-   ══ THE TOOL PLATE'S FIELD (ADR-068, de-cramped 2026-08-07) ═══════════
-   route → bay → detail, inside the console's rail and field. NO header and
-   NO foot any more (owner) — the two blocks the 2026-08-07 morning pass had
-   put there. Height budget, MEASURED on the shipped build at
-   1280×720 / 1440×800 / 1920×1080 / 2560×1330:
+   ══ THE TOOL PLATE'S FIELD (ADR-068 U3, re-measured 2026-08-08) ════════
+   bay → detail, inside the console's rail and field. NO header, NO foot,
+   and — since e3b3386 — NO route band. Height budget, MEASURED at the six
+   reference viewports (720p / 1440×800 / 1920×800 / 1080p / 2017×1269 /
+   2560×1330):
 
-     field     431.2 / 480.2 / 663.4 / 891.3 px   (was 333.5 / 374.2 /
-                545.6 / 774.6 — the foot's ~90–100 and the header's ~26 came
-                back, plus 17–24 of panel geometry)
-     `--tf-edge`  10.8 /  12  /  16.2 /  19.9     top AND bottom
-     route         43  /  76.5 /  96.6 /  96.6    (≤760h crops two bands)
-     `--tf-gap`   15.1 /  16.8 /  22.7 /  26      + 56.6 of surplus air at
-                                                  1330, split by the stack
-     bay         241.9 / 242.3 / 366   / 460      capped by `--tf-bay`
-       ├ FEED     24.5 /  27.2 /  30   /  30
-       ├ capture 177.8 / 173.1 / 286   / 380      what is left
-       └ bar      37.6 /  40   /  48   /  48
-     detail       94.5 / 103.9 / 123.1 / 129.6
+     field    493 / 548 / 530 / 760 / 949 / 1010 px
+     bay      310.6 / 339.3 / 350.1 / 475.2 / 558.4* / 560*   (*ceiling)
+       ├ FEED  ~24–30
+       ├ evidence 246.5 / 270.1 / 280.9 / 395.2 / 478.4 / 480
+       └ bar   ~38–48
+     detail   145.9 / 167.9 / 138.8 / 198.9 / 205.4 / 205.4  (content-height,
+              seated at the field's floor by `margin-top: auto`)
+     air      = the gap alone below ~1150h; ~31 / ~121 / ~179 of surplus at
+              the three tall viewports — the ceiling's deliberate remnant
 
-   Slack at the bottom is exactly `--tf-edge` at all four, i.e. the grid ends
-   on the field's own inset and nothing overruns.
+   The detail grid ends inside the field at every viewport (−10.8 … −19.9,
+   the field's own inset) and nothing overruns.
 
-   ⚠ THE CAPTURE IS STILL THE ONLY SACRIFICIAL BLOCK (ADR-066) — a
-   screenshot loses pixels before a sentence loses meaning — but it is now
-   sacrificial in BOTH directions: it shrinks first when the field is short
-   (136px at 1920×800, the tightest measured) and it stops growing first when
-   the field is tall. What the cap leaves over becomes AIR, centred around
-   the route+bay pair by `.fl-toolstack`.
+   ⚠ THE EVIDENCE IS STILL THE ONLY SACRIFICIAL BLOCK (ADR-066) — a drawing
+   loses pixels before a sentence loses meaning — in BOTH directions: it
+   shrinks first when the field is short and stops growing first when the
+   field is tall (`--tf-bay`).
 
    ⚠ THE HEADER IS DELETED, AND THE `.fl-tool__hd` / `.fl-tool__since` RULES
    WITH IT (owner, 2026-08-07 — "we have the briefing agent title underneath
@@ -2376,7 +2344,6 @@
    CROPPED OUT at ≤760h. The 34px gold tick that hung off its rule went with
    it; the rail's own lit spine is the plate's mark now.
    `.fl-tool__hd`'s light-theme alpha in `theme.css` went too. */
-
 
 /* ── The bay ─────────────────────────────────────────────────────────────
    A housing around the capture, not a second frame around a frame. The
@@ -2390,15 +2357,16 @@
    first thing to disappear is the walkthrough bar — sliced in half, with
    every box still reporting zero overflow.
 
-   ⚠ IT STILL GROWS, AND IT IS WHERE THE CAPTURE'S CEILING LIVES NOW
+   ⚠ IT STILL GROWS, AND IT IS WHERE THE EVIDENCE'S CEILING LIVES NOW
    (2026-08-07). `flex: 1 1 auto` is load-bearing twice over: it is what lets
-   the capture take the field's surplus at all, and — because the frame's
+   the evidence take the field's surplus at all, and — because the frame's
    basis stays 0 — it is what keeps the automatic-minimum chain resolving to
    the frame's floor rather than to its hypothetical size. `max-height` is
    the whole cap: the bay freezes at `--tf-bay`, the surplus past it becomes
-   air in `.fl-toolstack`, and no dead band of `--void-deep-canon` can open
-   under the watch bar (which is what capping the FRAME instead would do —
-   `.fl-shot` would keep growing under a frozen frame). */
+   air above the bottom-seated detail grid (`margin-top: auto`), and no dead
+   band of `--void-deep-canon` can open under the watch bar (which is what
+   capping the FRAME instead would do — `.fl-shot` would keep growing under
+   a frozen frame). */
 .fl-bay {
   position: relative;
   flex: 1 1 auto;
@@ -2477,44 +2445,28 @@
   border-top: 0;
 }
 
-/* The RUN plate. ⚠ DECORATION — `aria-hidden`, no pointer: the FRAME is the
-   button and a second interactive element inside it is not a control, it is
-   a bug. Its ground lights on the BUTTON's hover, which is why the rule is
-   `.fl-shot:hover .fl-run__bg` and not a `:hover` of its own. */
-.fl-run {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: clamp(70px, 15cqw, 98px);
-  pointer-events: none;
-}
-.fl-run svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.fl-run__bg {
-  fill: rgba(var(--void-deep-rgb), 0.86);
-  stroke: var(--gold);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  transition: fill var(--duration-normal, 120ms) var(--ease-out, ease);
-}
-.fl-run text {
-  font-family: var(--fl-mono);
-  fill: var(--gold-ink-lit);
-}
-.fl-shot:hover .fl-run__bg,
-.fl-shot:focus-visible .fl-run__bg {
-  fill: rgba(var(--gold-rgb), 0.1);
-}
+/* ⚠ THE RUN PLATE IS DELETED (owner, 2026-08-08). It was a decorative key
+   centred over the feed — never a control — and it cost the wireframes
+   their dead centre (~98×40 covered at z 2, plus a PRM defect where its
+   98px minimum spanned 41% of the unwrapped column). The bar below the
+   frame is the one affordance now; hover feedback rides `.fl-shot__bar`
+   alone. */
 
-/* ── The detail: four fixed questions, four answers ──────────────────────
-   A comparison instrument, not a fact list — the same four questions on
-   every tool, so running down the rail reads four answers to ONE question.
-   `ToolDetailFact`'s union pins that mechanically.
+/* ── The detail: the tool's four capability blocks ───────────────────────
+   ADR-068 U2 (owner, 2026-08-08 — "fill the blocks with the copy from my
+   other site; make them a bit less high"). Each plate is a capability
+   TITLE over its one-sentence CLAIM, read from `ProjectCase.capabilities`
+   — the same canonical four the Arc card tiles print. The WHO/WHAT Q&A
+   register (`ProjectCase.detail`) is deleted, and with it the accent
+   variants: four claims, one voice.
+
+   CONTENT-HEIGHT, NOT FIELD-FILLING. The old grid flexed into everything
+   the bay left and pushed its rule to the plate's floor — the owner read
+   that as wasted real estate once real sentences went in. The grid now
+   takes what its copy needs (`flex: 0 0 auto`) and pins itself to the
+   field's BOTTOM edge (`margin-top: auto`), so every freed pixel goes to
+   the capture above it — `.fl-bay` is the `flex: 1 1 auto` element with
+   the `--tf-bay` ceiling.
 
    THE PLATE IS TWO LAYERS, and it has to be: a `clip-path` cuts a border,
    it never strokes one (ADR-067's own finding), so a notched box with an
@@ -2530,17 +2482,16 @@
   --dt-edge: rgba(var(--dawn-rgb), 0.08);
   --dt-ground: rgba(var(--dawn-rgb), 0.035);
   --dt-rule: rgba(var(--dawn-rgb), 0.08);
-  --dt-value: var(--dawn);
 
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
+  margin: auto 0 0;
   list-style: none;
-  margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* Equal-height rows: once detail grows into the freed space (flex: 1 1
-     auto), 1fr divides it evenly among the two rows of plates. */
+  /* With an auto-height grid, `1fr` = minmax(auto, 1fr) sizes BOTH rows to
+     the tallest plate, so the four hairline rules sit level on every tool
+     while the grid as a whole stays as short as its copy allows. */
   grid-auto-rows: 1fr;
   /* The mockup's 12px between plates, on the same svh ramp as the rest of
      the ladder. Its outer gutter and its distance from the bay are the
@@ -2580,59 +2531,50 @@
     0 calc(100% - (var(--dt-notch) - 1px))
   );
 }
-.fl-detail__q {
+/* THE TITLE IS THE CLAIM'S NAME — full-strength ink at the control rung,
+   one line, ellipsised (the registry's 24-char pin is what makes the
+   ellipsis a belt rather than a lever). */
+.fl-detail__t {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--fl-mono);
-  font-size: 8.5px;
-  line-height: 1.1;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.34);
-}
-/* THE RULE FALLS TO THE BOTTOM. `margin: auto 0 …` is what pushes it, so the
-   label sits on the plate's top rail and the answer reads under the line
-   however tall the plate ends up — which is the mockup's whole gesture and
-   the reason the four plates stay legible when the grid re-flows. */
-.fl-detail__rule {
-  flex: 0 0 1px;
-  margin: auto 0 clamp(5px, 0.8svh, 8px);
-  background: var(--dt-rule);
-}
-.fl-detail__a {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--fl-mono);
-  font-size: 9.5px;
-  line-height: 1.1;
+  font-size: clamp(9px, 1.35cqw, 10.5px);
+  line-height: 1.2;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--dt-value);
+  color: var(--dawn);
+}
+/* THE RULE SITS UNDER THE TITLE now — fixed margins, no `auto` push. The
+   auto-push was the tall-plate gesture (label on the top rail, answer on
+   the floor); a content-height plate reads title → line → sentence. */
+.fl-detail__rule {
+  flex: 0 0 1px;
+  margin: clamp(4px, 0.7svh, 7px) 0 clamp(5px, 0.8svh, 8px);
+  background: var(--dt-rule);
+}
+/* THE SENTENCE IS PROSE (ADR-067: its content is a sentence, so it declares
+   the prose family EXPLICITLY — inheriting is how a third face gets in).
+   It WRAPS — never clamp it (a clamp truncating live copy is the clamp
+   being wrong); the 95-char registry pin plus the geometric plate-painted
+   smoke assertions are the fit guards. `max(12px, …)` holds the readable
+   floor where the band token ramps below it at short viewports. */
+.fl-detail__d {
+  display: block;
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
+  font-size: max(12px, calc(var(--fl-copy) * 0.84));
+  line-height: 1.4;
+  letter-spacing: 0.008em;
+  color: rgba(var(--dawn-rgb), 0.82);
 }
 
-/* `own` — the provenance mark. Green says Loop's own everywhere on this
-   surface, and WHO IT SERVES is the one row where that is the argument. */
-.fl-detail__plate[data-accent="own"] {
-  --dt-edge: var(--atreides-light);
-  --dt-ground: var(--fl-own-wash);
-  --dt-rule: var(--atreides-light);
-  --dt-value: var(--atreides-ink);
-}
-/* `gold` — WHAT RUNS IT. Gold is wayfinding: it marks the value, never the
-   plate. ⚠ In light it takes the ramp's INK step (theme.css) — `--gold` as
-   small text measures ~1.8:1 on parchment. */
-.fl-detail__plate[data-accent="gold"] {
-  --dt-value: var(--gold);
-}
-
-/* Seat from alternating sides, staggered AFTER the route (delays are inline,
-   780ms + 55 per plate). Same law as the route: click-driven, and zero at
-   rest — these plates are grid children and a residual transform would put
-   them off their own rails. */
+/* Seat from alternating sides, ON ROW ARRIVAL ONLY (owner, 2026-08-08).
+   Delays are inline, 120ms + 55 per plate — the old 780ms head start was
+   budgeted after a route entrance deleted in e3b3386. The list is keyed by
+   POSITION in ToolGallery, so a station switch never remounts these and
+   the seat cannot replay; zero at rest still binds — the plates are grid
+   children and a residual transform would put them off their own rails. */
 .fl-detail__plate {
   animation: fl-dt-seat 0.44s cubic-bezier(0.22, 0.9, 0.3, 1) both;
 }
@@ -2664,8 +2606,8 @@
 /* ══ THE BAY'S AUTHORED WIREFRAMES (ADR-068 Decision 5) ═══════════════════
    A tool in `TOOL_WIREFRAMES` draws its interface into `.fl-shot__frame`
    instead of mounting its capture. Everything AROUND it is untouched — the
-   bay, the FEED line, the brackets, the RUN plate, the halftone veil and
-   the button — because what changes is the evidence, not the housing.
+   bay, the FEED line, the brackets, the halftone veil and the button —
+   because what changes is the evidence, not the housing.
 
    ⚠ NO FILTER HERE, EVER. ADR-064 U2's line is AUTHORED vs CAPTURED: the
    duotone is the recipe for arbitrary screenshot colour, and this drawing
@@ -2691,18 +2633,17 @@
      gallery  19 … 50        the session rail + one generation row
      composer 47 … 97        the floating plate, overlapping the row by 3
 
-   ── THE TWO OBSTACLES ──────────────────────────────────────────────────
-   The veil (`.fl-shot__frame::after`, tree order) and the RUN plate
-   (`.fl-run`, z 2, ~98×40 dead centre) both paint OVER this drawing, which
-   carries no z-index of its own. Nothing load-bearing is centred: the
-   composer's content sits at its two ends and only bar-work crosses the
-   middle. ══════════════════════════════════════════════════════════════ */
+   ── THE ONE OBSTACLE ───────────────────────────────────────────────────
+   The veil (`.fl-shot__frame::after`, tree order) paints OVER these
+   drawings, which carry no z-index of their own. (The RUN plate that used
+   to cover ~98×40 dead centre at z 2 was deleted 2026-08-08 — the centre
+   is authorable now.) ══════════════════════════════════════════════════ */
 .fl-wire {
   position: absolute;
   inset: 0;
   /* The FRAME is the button (ADR-068). A drawing that took a pointer would
-     be a second control inside one, which is the `.fl-run` bug written a
-     different way. */
+     be a second control inside one — the same bug the deleted RUN key
+     would have been had it taken one. */
   pointer-events: none;
 }
 
@@ -2715,10 +2656,10 @@
   overflow: hidden;
 
   /* ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP — the same law as
-     `.fl-route` and `.fl-pda`. `rgba(ink, .15)` recedes toward BLACK in
-     dark and toward PARCHMENT in light, so every step here is re-derived
-     in theme.css rather than left to a number that means the opposite
-     thing on the other ground. */
+     `.fl-pda`. `rgba(ink, .15)` recedes toward BLACK in dark and toward
+     PARCHMENT in light, so every step here is re-derived in theme.css
+     rather than left to a number that means the opposite thing on the
+     other ground. */
   --w-hair: rgba(var(--dawn-rgb), 0.15);
   --w-hair2: rgba(var(--dawn-rgb), 0.09);
   --w-fill: rgba(var(--dawn-rgb), 0.13);
@@ -2775,7 +2716,7 @@
    band around an 8.6px label and a 149px composer around three 40px rows,
    both of which read as a blown-up wireframe rather than an app. The `cqw`
    term binds only there. */
-.fl-wire__chrome {
+.fl-wire--vesper .fl-wire__chrome {
   position: relative;
   flex: 0 0 min(15cqh, 4.5cqw);
   display: flex;
@@ -2790,18 +2731,18 @@
    PERCENTAGE of it, which against an auto height computes to zero. Marks
    simply would not paint, with no overflow and nothing in the box model to
    say why. */
-.fl-wire__ttl {
+.fl-wire--vesper .fl-wire__ttl {
   align-self: stretch;
   display: flex;
   align-items: center;
   gap: 0.7cqw;
 }
-.fl-wire__ttl-bar {
+.fl-wire--vesper .fl-wire__ttl-bar {
   width: 4.4cqw;
   height: 20%;
   background: var(--w-fill2);
 }
-.fl-wire__ttl-pill {
+.fl-wire--vesper .fl-wire__ttl-pill {
   width: 2.4cqw;
   height: 34%;
   border: 1px solid var(--w-hair);
@@ -2809,7 +2750,7 @@
 }
 /* Absolutely centred on the BOX, not on what is left after the two
    clusters — a nav that drifts with its neighbours is not a nav. */
-.fl-wire__nav {
+.fl-wire--vesper .fl-wire__nav {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -2823,7 +2764,7 @@
   border: 1px solid var(--w-hair);
   border-radius: 999px;
 }
-.fl-wire__nav i {
+.fl-wire--vesper .fl-wire__nav i {
   width: max(1.2px, 0.22cqw);
   aspect-ratio: 1;
   border-radius: 50%;
@@ -2834,20 +2775,20 @@
    casefile's confidentiality envelope (rules/proof.md). A partial fill says
    what the app's readout says without publishing a number, and it is the
    one deliberate divergence from the interface being drawn. */
-.fl-wire__draw {
+.fl-wire--vesper .fl-wire__draw {
   margin-left: auto;
   align-self: stretch;
   display: flex;
   align-items: center;
   gap: 0.7cqw;
 }
-.fl-wire__meter {
+.fl-wire--vesper .fl-wire__meter {
   display: block;
   width: 4.4cqw;
   height: 32%;
   border: 1px solid var(--w-hair);
 }
-.fl-wire__meter b {
+.fl-wire--vesper .fl-wire__meter b {
   display: block;
   width: 40%;
   height: 100%;
@@ -2855,7 +2796,7 @@
 }
 
 /* ── 2 + 3 · The session rail and the generation row ───────────────────── */
-.fl-wire__body {
+.fl-wire--vesper .fl-wire__body {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -2876,7 +2817,7 @@
    size (width) would have to be known before its cross size (height), and
    a browser resolving that during intrinsic sizing collapses the column to
    nothing. Fixed width in, height out. */
-.fl-wire__rail {
+.fl-wire--vesper .fl-wire__rail {
   flex: 0 0 1.9cqw;
   display: flex;
   flex-direction: column;
@@ -2884,7 +2825,7 @@
   justify-content: center;
   gap: 5cqh;
 }
-.fl-wire__rail > i {
+.fl-wire--vesper .fl-wire__rail > i {
   position: relative;
   flex: none;
   display: block;
@@ -2892,7 +2833,7 @@
   aspect-ratio: 1;
   border: 1px solid var(--w-hair);
 }
-.fl-wire__new svg {
+.fl-wire--vesper .fl-wire__new svg {
   display: block;
   width: 100%;
   height: 100%;
@@ -2901,15 +2842,15 @@
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.fl-wire__sess {
+.fl-wire--vesper .fl-wire__sess {
   background: var(--w-hair2);
 }
 /* The active session — ring-marked with a corner dot, gold, because gold is
    the signal colour and this is the only "you are here" in the drawing. */
-.fl-wire__sess[data-on] {
+.fl-wire--vesper .fl-wire__sess[data-on] {
   border-color: var(--w-mark);
 }
-.fl-wire__sess[data-on]::after {
+.fl-wire--vesper .fl-wire__sess[data-on]::after {
   content: "";
   position: absolute;
   top: -1px;
@@ -2928,7 +2869,7 @@
    to a custom property on purpose: container units inside a custom property
    declared on the container ITSELF resolve against the wrong box. Move one
    and move the other. */
-.fl-wire__gal {
+.fl-wire--vesper .fl-wire__gal {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -2936,7 +2877,7 @@
   gap: 1cqw;
   padding-bottom: calc(min(50cqh, 15cqw) - 2cqh);
 }
-.fl-wire__card {
+.fl-wire--vesper .fl-wire__card {
   flex: 0 0 26%;
   min-width: 0;
   display: flex;
@@ -2945,7 +2886,7 @@
   border: 1px solid var(--w-hair);
   background: var(--w-card);
 }
-.fl-wire__lines {
+.fl-wire--vesper .fl-wire__lines {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -2959,44 +2900,44 @@
    inside a 110px card, the lines column was squeezed to ~10px, and its two
    meta bars SHRANK TO ZERO — invisible, with every box still reporting no
    overflow. A prompt card's type does not grow with the window. */
-.fl-wire__lines > i {
+.fl-wire--vesper .fl-wire__lines > i {
   display: block;
   height: max(1.2px, min(8%, 0.5cqw));
   background: var(--w-fill);
 }
-.fl-wire__lines > i:nth-of-type(1) {
+.fl-wire--vesper .fl-wire__lines > i:nth-of-type(1) {
   width: 90%;
 }
-.fl-wire__lines > i:nth-of-type(2) {
+.fl-wire--vesper .fl-wire__lines > i:nth-of-type(2) {
   width: 64%;
 }
-.fl-wire__lines > i:nth-of-type(3) {
+.fl-wire--vesper .fl-wire__lines > i:nth-of-type(3) {
   width: 80%;
 }
-.fl-wire__meta {
+.fl-wire--vesper .fl-wire__meta {
   display: flex;
   align-items: center;
   gap: 0.3cqw;
   height: max(1.6px, min(11%, 0.7cqw));
   margin-top: 7%;
 }
-.fl-wire__dot {
+.fl-wire--vesper .fl-wire__dot {
   height: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--w-fill2);
 }
-.fl-wire__mb {
+.fl-wire--vesper .fl-wire__mb {
   height: 46%;
   background: var(--w-fill);
 }
-.fl-wire__meta b:nth-child(3) {
+.fl-wire--vesper .fl-wire__meta b:nth-child(3) {
   width: 26%;
 }
-.fl-wire__meta b:nth-child(4) {
+.fl-wire--vesper .fl-wire__meta b:nth-child(4) {
   width: 15%;
 }
-.fl-wire__cardref {
+.fl-wire--vesper .fl-wire__cardref {
   flex: none;
   align-self: flex-end;
   height: min(52%, 4cqw);
@@ -3008,7 +2949,7 @@
 /* The outputs. HEIGHT-BOUND at ~4:5 and left-aligned after the card, with
    the rest of the row empty — which is what a two-output generation row
    actually looks like. Filling the width would be inventing evidence. */
-.fl-wire__tile {
+.fl-wire--vesper .fl-wire__tile {
   position: relative;
   flex: none;
   height: 100%;
@@ -3016,7 +2957,7 @@
   border: 1px solid var(--w-hair);
   background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
 }
-.fl-wire__acts {
+.fl-wire--vesper .fl-wire__acts {
   position: absolute;
   top: 8%;
   right: 8%;
@@ -3025,7 +2966,7 @@
   align-items: center;
   gap: 0.14cqw;
 }
-.fl-wire__acts i {
+.fl-wire--vesper .fl-wire__acts i {
   display: block;
   width: max(1.2px, 0.24cqw);
   aspect-ratio: 1;
@@ -3034,7 +2975,7 @@
 }
 /* The video mark STRADDLES the tile's top edge — a badge on the object, not
    a label beside it. */
-.fl-wire__clip {
+.fl-wire--vesper .fl-wire__clip {
   position: absolute;
   left: 50%;
   top: 0;
@@ -3045,12 +2986,33 @@
   border-radius: 999px;
   background: var(--w-plate);
 }
+/* The mid-run readout (owner, 2026-08-08). Vesper's own progress is an
+   asymptotic BAR — never a spinner, never 100% — so its abstraction is a
+   part-filled track under the tile's clip pill. ⚠ It sits in the tile's
+   UPPER band on purpose: the composer plate floats over the gallery's
+   lower half, and a bar at the tile's bottom edge is a bar nobody sees.
+   STATIC like everything here (ADR-021): the fill sits at ~2/3, the
+   asymptote's plateau, and says "being generated" without a clock. */
+.fl-wire--vesper .fl-wire__prog {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 16%;
+  height: 3px;
+  background: var(--w-hair2);
+}
+.fl-wire--vesper .fl-wire__prog i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 66%;
+  background: var(--w-mark);
+}
 
 /* ── 4 + 5 · The floating composer and the mode bar ────────────────────── */
 /* Bottom-centre and deliberately NOT full-bleed — the inset is what says
    "floating". It overlaps the band above by 3cqh: enough to read as a plate
    over the row, not enough to eat it. */
-.fl-wire__dock {
+.fl-wire--vesper .fl-wire__dock {
   position: absolute;
   left: 50%;
   bottom: 3cqh;
@@ -3062,7 +3024,7 @@
   align-items: stretch;
   gap: 0.8cqw;
 }
-.fl-wire__comp {
+.fl-wire--vesper .fl-wire__comp {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -3079,25 +3041,25 @@
    an 8.6px label whose glyph box is 9.6px — there is no slack here for a
    taller control, which is why the MODEL chip takes the row's full height
    rather than padding its own. */
-.fl-wire__row {
+.fl-wire--vesper .fl-wire__row {
   flex: 1 1 0;
   min-height: 0;
   display: flex;
   align-items: center;
   gap: 0.7cqw;
 }
-.fl-wire__thumb {
+.fl-wire--vesper .fl-wire__thumb {
   flex: none;
   height: 88%;
   aspect-ratio: 1;
   border: 1px solid var(--w-hair);
   background: var(--w-hair2);
 }
-.fl-wire__thumb--add {
+.fl-wire--vesper .fl-wire__thumb--add {
   border-style: dashed;
   background: none;
 }
-.fl-wire__say {
+.fl-wire--vesper .fl-wire__say {
   flex: 1 1 auto;
   min-width: 0;
   height: 22%;
@@ -3106,29 +3068,29 @@
 /* The enhancer's glitch-morph, abstracted: the tail of the prompt breaks
    into offset blocks under the wand. Unequal heights are the whole read —
    an even run of ticks is a progress bar, not a scramble. */
-.fl-wire__scram {
+.fl-wire--vesper .fl-wire__scram {
   flex: none;
   display: flex;
   align-items: center;
   gap: 0.18cqw;
   height: 34%;
 }
-.fl-wire__scram b {
+.fl-wire--vesper .fl-wire__scram b {
   display: block;
   width: max(1.3px, 0.28cqw);
   height: 100%;
   background: var(--w-fill2);
 }
-.fl-wire__scram b:nth-child(2) {
+.fl-wire--vesper .fl-wire__scram b:nth-child(2) {
   height: 58%;
 }
-.fl-wire__scram b:nth-child(4) {
+.fl-wire--vesper .fl-wire__scram b:nth-child(4) {
   height: 74%;
 }
-.fl-wire__scram b:nth-child(5) {
+.fl-wire--vesper .fl-wire__scram b:nth-child(5) {
   height: 44%;
 }
-.fl-wire__wand {
+.fl-wire--vesper .fl-wire__wand {
   flex: none;
   display: block;
   height: 62%;
@@ -3139,14 +3101,14 @@
    note above: at 11.1px there is no room for vertical padding under an
    8.6px line, and a pill whose glyphs poke through its own border is worse
    than no pill. */
-.fl-wire__chip {
+.fl-wire--vesper .fl-wire__chip {
   display: inline-flex;
   align-items: center;
   height: 100%;
   padding: 0 0.45cqw;
   border: 1px solid var(--w-hair);
 }
-.fl-wire__dia {
+.fl-wire--vesper .fl-wire__dia {
   flex: none;
   display: block;
   height: 52%;
@@ -3156,7 +3118,7 @@
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.fl-wire__ratio {
+.fl-wire--vesper .fl-wire__ratio {
   flex: none;
   width: 2.6cqw;
   height: 62%;
@@ -3168,34 +3130,577 @@
    `preserveAspectRatio="none"` because this is a PLATE that fills its slot,
    and `non-scaling-stroke` is what keeps the hairline a hairline while the
    box stretches. */
-.fl-wire__gen {
+.fl-wire--vesper .fl-wire__gen {
   flex: none;
   display: block;
   margin-left: auto;
   width: 8.4cqw;
   height: 100%;
 }
-.fl-wire__gen path {
+.fl-wire--vesper .fl-wire__gen path {
   fill: var(--w-gen);
   stroke: var(--w-mark);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.fl-wire__modes {
+.fl-wire--vesper .fl-wire__modes {
   flex: 0 0 3.4%;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--w-hair);
 }
-.fl-wire__modes i {
+.fl-wire--vesper .fl-wire__modes i {
   flex: 1 1 0;
   display: block;
 }
-.fl-wire__modes i + i {
+.fl-wire--vesper .fl-wire__modes i + i {
   border-top: 1px solid var(--w-hair2);
 }
-.fl-wire__modes i[data-on] {
+.fl-wire--vesper .fl-wire__modes i[data-on] {
   background: var(--w-lit);
+}
+
+/* ── MÍMIR: insights → briefing → reference (ADR-068 U3) ─────────────────
+   Three panels against the owner's own archetype. The rail and the ref
+   column are quiet card grounds; the brief is BORDERLESS like the app's
+   composer — its kicker dots are the drawing's gold. Sizing is cqw-capped
+   the same way vesper's ladder is: a pure-cqh band collapses silently at
+   the unwrapped 16:10 box (the vesper lesson, kept). */
+.fl-wire--mimir .fl-wire__mi-chrome {
+  flex: 0 0 min(13cqh, 4.2cqw);
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+  padding: 0 1.6cqw;
+  border-bottom: 1px solid var(--w-hair2);
+}
+.fl-wire--mimir .fl-wire__mi-ttl {
+  width: 14%;
+  height: min(2.6cqh, 5px);
+  background: var(--w-fill);
+}
+.fl-wire--mimir .fl-wire__mi-seg {
+  margin-left: auto;
+  display: flex;
+  border: 1px solid var(--w-hair);
+}
+.fl-wire--mimir .fl-wire__mi-seg i {
+  width: min(5cqw, 26px);
+  height: min(4.6cqh, 10px);
+}
+.fl-wire--mimir .fl-wire__mi-seg i[data-on] {
+  background: var(--w-lit);
+}
+.fl-wire--mimir .fl-wire__mi-send {
+  width: min(9.5cqw, 52px);
+  height: auto;
+}
+.fl-wire--mimir .fl-wire__mi-send path {
+  fill: var(--w-gen);
+  stroke: var(--w-mark);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fl-wire--mimir .fl-wire__mi-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 1.4cqw;
+  padding: 2.6cqh 1.6cqw 2.2cqh;
+}
+.fl-wire--mimir .fl-wire__mi-rail,
+.fl-wire--mimir .fl-wire__mi-ref {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8cqh;
+  padding: min(2cqh, 8px) min(1cqw, 8px);
+  border: 1px solid var(--w-hair2);
+  background: var(--w-card);
+}
+.fl-wire--mimir .fl-wire__mi-rail {
+  flex: 0 0 26%;
+}
+.fl-wire--mimir .fl-wire__mi-card {
+  display: flex;
+  flex-direction: column;
+  gap: min(1.4cqh, 4px);
+  padding: min(1.6cqh, 6px) min(0.9cqw, 7px);
+  border: 1px solid var(--w-hair);
+  background: var(--w-plate-lift);
+}
+.fl-wire--mimir .fl-wire__mi-card i {
+  height: min(1.8cqh, 3px);
+  background: var(--w-fill);
+}
+.fl-wire--mimir .fl-wire__mi-card i:nth-child(2) {
+  width: 72%;
+}
+.fl-wire--mimir .fl-wire__mi-card b {
+  display: flex;
+  gap: min(0.6cqw, 5px);
+  margin-top: min(0.6cqh, 2px);
+}
+.fl-wire--mimir .fl-wire__mi-card u {
+  width: min(2.2cqw, 12px);
+  height: min(1.4cqh, 3px);
+  background: var(--w-fill2);
+}
+/* The dashed add-row — the app's "+ add more sources". */
+.fl-wire--mimir .fl-wire__mi-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: min(1.2cqh, 5px) 0;
+  border: 1px dashed var(--w-hair);
+}
+.fl-wire--mimir .fl-wire__mi-add svg {
+  width: min(2.4cqw, 11px);
+  height: min(2.4cqw, 11px);
+  stroke: var(--w-lbl-ink);
+  stroke-width: 1.2;
+  fill: none;
+}
+.fl-wire--mimir .fl-wire__mi-gen {
+  margin-top: auto;
+  width: 78%;
+  align-self: center;
+  height: auto;
+}
+.fl-wire--mimir .fl-wire__mi-gen path {
+  fill: var(--w-gen);
+  stroke: var(--w-mark);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fl-wire--mimir .fl-wire__mi-brief {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: min(3.2cqh, 16px);
+  padding: min(2cqh, 8px) min(1.6cqw, 14px) 0;
+}
+.fl-wire--mimir .fl-wire__mi-sec {
+  display: flex;
+  flex-direction: column;
+  gap: min(1.6cqh, 5px);
+}
+.fl-wire--mimir .fl-wire__mi-kick {
+  display: flex;
+  align-items: center;
+  gap: min(0.8cqw, 6px);
+  margin-bottom: min(0.6cqh, 2px);
+}
+.fl-wire--mimir .fl-wire__mi-dot {
+  width: 3px;
+  height: 3px;
+  background: var(--w-mark);
+}
+.fl-wire--mimir .fl-wire__mi-kbar {
+  width: min(6cqw, 34px);
+  height: min(1.6cqh, 3px);
+  background: var(--w-fill2);
+}
+.fl-wire--mimir .fl-wire__mi-line {
+  height: min(1.8cqh, 3px);
+  background: var(--w-fill);
+}
+.fl-wire--mimir .fl-wire__mi-line--short {
+  width: 56%;
+}
+.fl-wire--mimir .fl-wire__mi-line--mid {
+  width: 78%;
+}
+.fl-wire--mimir .fl-wire__mi-checks {
+  display: flex;
+  gap: min(1.2cqw, 9px);
+  margin-top: min(0.8cqh, 3px);
+}
+.fl-wire--mimir .fl-wire__mi-checks i {
+  position: relative;
+  width: min(2.6cqw, 12px);
+  height: min(2.6cqw, 12px);
+  border: 1px solid var(--w-hair);
+}
+.fl-wire--mimir .fl-wire__mi-checks i[data-on] {
+  border-color: var(--w-mark);
+}
+.fl-wire--mimir .fl-wire__mi-checks i[data-on]::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--w-mark);
+}
+.fl-wire--mimir .fl-wire__mi-ref {
+  flex: 0 0 24%;
+}
+.fl-wire--mimir .fl-wire__mi-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--w-hair);
+  background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
+}
+.fl-wire--mimir .fl-wire__mi-frame svg {
+  width: 34%;
+  max-width: 44px;
+  stroke: var(--w-lbl-ink);
+  stroke-width: 1.1;
+  fill: none;
+}
+.fl-wire--mimir .fl-wire__mi-cap {
+  height: min(1.8cqh, 3px);
+  width: 62%;
+  background: var(--w-fill);
+}
+
+/* ── BABYLON: the script beside the portrait player (ADR-068 U3) ─────────
+   Two columns of paired bars under their labels, four rows led by a mono
+   TICK (the timecode's shadow — a mark, never digits), the gold SYNC plate
+   at the foot, and a 9:16-ish screen whose width DERIVES from its height
+   (aspect-ratio, so no ratio is ever lettered). */
+.fl-wire--babylon .fl-wire__ba-chrome {
+  flex: 0 0 min(13cqh, 4.2cqw);
+  display: flex;
+  align-items: center;
+  padding: 0 1.6cqw;
+  border-bottom: 1px solid var(--w-hair2);
+}
+.fl-wire--babylon .fl-wire__ba-ttl {
+  width: 17%;
+  height: min(2.6cqh, 5px);
+  background: var(--w-fill);
+}
+/* The pipeline: four chamfer-cornered chips, hairline connectors, three
+   done. The machine mid-run, in one glance. */
+.fl-wire--babylon .fl-wire__ba-pipe {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+.fl-wire--babylon .fl-wire__ba-pipe i {
+  width: min(4.6cqw, 24px);
+  height: min(4.6cqh, 10px);
+  border: 1px solid var(--w-hair);
+  clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px));
+}
+.fl-wire--babylon .fl-wire__ba-pipe i[data-on] {
+  background: var(--w-lit);
+  border-color: var(--w-mark);
+}
+.fl-wire--babylon .fl-wire__ba-pipe b {
+  width: min(1.6cqw, 10px);
+  height: 1px;
+  background: var(--w-hair);
+}
+.fl-wire--babylon .fl-wire__ba-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 1.6cqw;
+  padding: 2.6cqh 1.6cqw 2.2cqh;
+}
+.fl-wire--babylon .fl-wire__ba-script {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: min(2.2cqh, 9px);
+  padding: min(2cqh, 8px) min(1cqw, 9px);
+  border: 1px solid var(--w-hair2);
+  background: var(--w-card);
+}
+.fl-wire--babylon .fl-wire__ba-head {
+  display: grid;
+  grid-template-columns: min(4.2cqw, 24px) 1fr 1fr;
+  gap: min(1.2cqw, 10px);
+  margin-bottom: min(0.8cqh, 3px);
+}
+.fl-wire--babylon .fl-wire__ba-head .fl-wire__lbl:first-child {
+  grid-column: 2;
+}
+.fl-wire--babylon .fl-wire__ba-row {
+  display: grid;
+  grid-template-columns: min(4.2cqw, 24px) 1fr 1fr;
+  gap: min(1.2cqw, 10px);
+  align-items: center;
+  padding: min(1.2cqh, 5px) min(0.6cqw, 5px);
+}
+.fl-wire--babylon .fl-wire__ba-row[data-on] {
+  background: var(--w-plate-lift);
+  outline: 1px solid var(--w-hair2);
+}
+.fl-wire--babylon .fl-wire__ba-tick {
+  width: 70%;
+  height: min(1.4cqh, 3px);
+  background: var(--w-fill2);
+}
+.fl-wire--babylon .fl-wire__ba-src,
+.fl-wire--babylon .fl-wire__ba-dst {
+  height: min(1.8cqh, 3px);
+  background: var(--w-fill);
+}
+.fl-wire--babylon .fl-wire__ba-src--mid {
+  width: 74%;
+}
+.fl-wire--babylon .fl-wire__ba-src--short {
+  width: 52%;
+}
+.fl-wire--babylon .fl-wire__ba-dst {
+  background: var(--w-fill2);
+}
+.fl-wire--babylon .fl-wire__ba-dst--long {
+  width: 92%;
+}
+.fl-wire--babylon .fl-wire__ba-dst--short {
+  width: 60%;
+}
+.fl-wire--babylon .fl-wire__ba-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: min(1cqw, 8px);
+}
+.fl-wire--babylon .fl-wire__ba-sync {
+  width: min(11cqw, 58px);
+  height: auto;
+}
+.fl-wire--babylon .fl-wire__ba-sync path {
+  fill: var(--w-gen);
+  stroke: var(--w-mark);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* ⚠ THE COLUMN CARRIES THE PORTRAIT READ, NOT AN `aspect-ratio`. An
+   aspect-ratio'd screen with indefinite height contributes an intrinsic
+   width the row cannot shrink (`flex: 0 0 auto` column) — measured 46px
+   past the frame at 1440×800. The column's WIDTH derives from the frame's
+   height instead (47cqh ≈ 9/16 of the body band) and the screen simply
+   fills it. */
+.fl-wire--babylon .fl-wire__ba-video {
+  flex: 0 0 min(47cqh, 24%);
+  display: flex;
+  flex-direction: column;
+  gap: min(1.4cqh, 6px);
+}
+.fl-wire--babylon .fl-wire__ba-tabs {
+  display: flex;
+  gap: 2px;
+  align-self: stretch;
+}
+.fl-wire--babylon .fl-wire__ba-tabs i {
+  flex: 1 1 0;
+  height: min(3.4cqh, 8px);
+  border: 1px solid var(--w-hair2);
+}
+.fl-wire--babylon .fl-wire__ba-tabs i[data-on] {
+  background: var(--w-lit);
+  border-color: var(--w-hair);
+}
+.fl-wire--babylon .fl-wire__ba-screen {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--w-hair);
+  background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
+}
+/* The house play cue, scaled to the screen. */
+.fl-wire--babylon .fl-wire__ba-play {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: min(1.6cqh, 5px) 0 min(1.6cqh, 5px) min(2.4cqh, 8px);
+  border-color: transparent transparent transparent var(--w-mark);
+}
+.fl-wire--babylon .fl-wire__ba-capline {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 12%;
+  height: min(1.6cqh, 3px);
+  background: var(--w-fill2);
+}
+
+/* ── HEIMDALL: the plugin panel over the canvas (ADR-068 U3) ─────────────
+   The panel is the drawing's one OPAQUE plate (the composer's move); the
+   canvas says "design tool" with a dot grid and carries the generated
+   template — reference, briefing, copy — as three quiet columns. */
+.fl-wire--heimdall .fl-wire__he-chrome {
+  flex: 0 0 min(13cqh, 4.2cqw);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.6cqw;
+  border-bottom: 1px solid var(--w-hair2);
+}
+.fl-wire--heimdall .fl-wire__he-ttl {
+  width: 14%;
+  height: min(2.6cqh, 5px);
+  background: var(--w-fill);
+}
+.fl-wire--heimdall .fl-wire__he-zoom {
+  width: min(6cqw, 30px);
+  height: min(4cqh, 9px);
+  border: 1px solid var(--w-hair2);
+  border-radius: 999px;
+}
+.fl-wire--heimdall .fl-wire__he-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 1.8cqw;
+  padding: 2.6cqh 1.6cqw 2.2cqh;
+}
+/* The plugin panel — opaque, floating, the resident's own window. */
+.fl-wire--heimdall .fl-wire__he-panel {
+  flex: 0 0 30%;
+  display: flex;
+  flex-direction: column;
+  gap: min(1.8cqh, 7px);
+  padding: min(2cqh, 9px) min(1cqw, 9px);
+  border: 1px solid var(--w-hair);
+  background: var(--w-plate);
+  background-image: linear-gradient(var(--w-plate-lift), var(--w-plate-lift));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+.fl-wire--heimdall .fl-wire__he-row {
+  display: flex;
+  align-items: center;
+  gap: min(0.9cqw, 7px);
+  padding: min(1.1cqh, 4px) min(0.5cqw, 4px);
+}
+.fl-wire--heimdall .fl-wire__he-row[data-on] {
+  background: var(--w-lit);
+}
+.fl-wire--heimdall .fl-wire__he-box {
+  position: relative;
+  flex: none;
+  width: min(2.4cqw, 10px);
+  height: min(2.4cqw, 10px);
+  border: 1px solid var(--w-hair);
+}
+.fl-wire--heimdall .fl-wire__he-box[data-on] {
+  border-color: var(--w-mark);
+}
+.fl-wire--heimdall .fl-wire__he-box[data-on]::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--w-mark);
+}
+.fl-wire--heimdall .fl-wire__he-name {
+  flex: 1 1 auto;
+  height: min(1.8cqh, 3px);
+  background: var(--w-fill);
+}
+.fl-wire--heimdall .fl-wire__he-name--short {
+  flex-grow: 0.55;
+}
+.fl-wire--heimdall .fl-wire__he-name--mid {
+  flex-grow: 0.8;
+}
+/* The status tick — the app's colored row edge, moved to the free edge. */
+.fl-wire--heimdall .fl-wire__he-status {
+  flex: none;
+  margin-left: auto;
+  width: 2px;
+  height: min(2.6cqh, 8px);
+  background: var(--w-hair);
+}
+.fl-wire--heimdall .fl-wire__he-status[data-on] {
+  background: var(--w-mark);
+}
+.fl-wire--heimdall .fl-wire__he-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: min(1cqw, 8px);
+}
+.fl-wire--heimdall .fl-wire__he-sync {
+  width: min(11cqw, 58px);
+  height: auto;
+}
+.fl-wire--heimdall .fl-wire__he-sync path {
+  fill: var(--w-gen);
+  stroke: var(--w-mark);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* The canvas — a dot grid is the one universal "design surface" read. */
+.fl-wire--heimdall .fl-wire__he-canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.6cqw;
+  padding: min(3cqh, 14px) min(1.6cqw, 14px);
+  border: 1px solid var(--w-hair2);
+  background-image: radial-gradient(var(--w-hair2) 1px, transparent 1px);
+  background-size: min(3cqw, 18px) min(3cqw, 18px);
+}
+.fl-wire--heimdall .fl-wire__he-col {
+  display: flex;
+  flex-direction: column;
+  gap: min(1.4cqh, 5px);
+  padding: min(1.6cqh, 7px) min(0.8cqw, 7px);
+  border: 1px solid var(--w-hair);
+  background: var(--w-card);
+}
+.fl-wire--heimdall .fl-wire__he-col--ref {
+  flex: 0 0 18%;
+  aspect-ratio: 4 / 5;
+  align-items: center;
+  justify-content: center;
+}
+.fl-wire--heimdall .fl-wire__he-col--ref svg {
+  width: 44%;
+  max-width: 34px;
+  stroke: var(--w-lbl-ink);
+  stroke-width: 1.1;
+  fill: none;
+}
+.fl-wire--heimdall .fl-wire__he-col--brief {
+  flex: 0 0 30%;
+}
+.fl-wire--heimdall .fl-wire__he-col--copy {
+  flex: 0 0 26%;
+  gap: min(1.8cqh, 8px);
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.fl-wire--heimdall .fl-wire__he-var {
+  display: flex;
+  flex-direction: column;
+  gap: min(1.2cqh, 4px);
+  padding: min(1.4cqh, 6px) min(0.8cqw, 7px);
+  border: 1px solid var(--w-hair);
+  background: var(--w-card);
+}
+.fl-wire--heimdall .fl-wire__he-hd {
+  height: min(2.4cqh, 5px);
+  background: var(--w-fill2);
+}
+.fl-wire--heimdall .fl-wire__he-line {
+  height: min(1.6cqh, 3px);
+  background: var(--w-fill);
+}
+.fl-wire--heimdall .fl-wire__he-line--short {
+  width: 58%;
+}
+.fl-wire--heimdall .fl-wire__he-line--mid {
+  width: 78%;
+}
+.fl-wire--heimdall .fl-wire__he-cap {
+  position: absolute;
+  left: min(1.6cqw, 14px);
+  bottom: min(1.6cqh, 8px);
 }
 
 /* ⚠ BELOW THE UNWRAP GATE THE DRAWING NEEDS AN INTRINSIC RATIO, AND THE BUG
@@ -3398,14 +3903,17 @@
    meaning. This is ADR-056 U9's own finding, which its second pass measured
    and its first pass got wrong in the same direction. */
 @media (max-height: 760px) {
-  /* The detail plates give up PADDING, never type: 8.5 / 9.5px are already
-     the chrome and control floors. ⚠ THE OVERRIDE IS GONE (2026-08-07) —
-     `--tf-*`'s svh ramp already lands the inner padding at 8.3 / 11 here,
-     and a flat rung on top of a ramp is the second ladder this pass exists
-     to remove. The rule's own bottom margin keeps its rung: it is a single
-     line box, not a ramp. */
+  /* The detail plates give up AIR, never type: the title's clamp floor and
+     the sentence's 12px readable floor both hold here (ADR-068 U2 — the
+     blocks carry prose now). `--tf-*`'s svh ramp already compresses the
+     inner padding; the rule's margins are the one flat rung kept, because
+     a single line box is not a ramp. */
   .fl-detail__rule {
+    margin-top: 3px;
     margin-bottom: 4px;
+  }
+  .fl-detail__d {
+    line-height: 1.32;
   }
 }
 

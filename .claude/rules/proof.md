@@ -146,17 +146,18 @@ inherited its ambient-cover role.
   decoder caches targets once per client and would strand stale metadata after
   the first directory switch.
 - **The tools row is the DOSSIER FIELD (ADR-068 — supersedes ADR-056 U9's
-  gallery grid and ADR-066's one-column layout):** route → bay → detail 2×2,
-  all inside ConsoleFrame — NO header line (it stuttered the active tab; ADR-068
-  U1) and NO foot (owner ruling, same update). `TrackPanel` still owns
-  `toolIdx`. The RAIL navigates with SHORT HANDLES (`ProjectCase.tab`, ≤14
-  chars); `IN SERVICE {year} —` rides the bay's FEED line — the one home
-  every height rung keeps. The codename is chrome (lightbox label only — a
-  visitor cannot know "Mímir"). The shot still BLEEDS to its box edges and
-  the whole frame is still the ONE walkthrough button with the bar fused to
-  its bottom edge; the RUN plate on it is DECORATIVE (aria-hidden,
-  pointer-events none). See §The tool dossier below for the
-  route/detail/wireframe contracts.
+  gallery grid and ADR-066's one-column layout):** route → bay → capability
+  blocks 2×2, all inside ConsoleFrame — NO header line (it stuttered the
+  active tab; ADR-068 U1) and NO foot (owner ruling, same update). The 2×2
+  renders `ProjectCase.capabilities` since ADR-068 U2 (the Q&A `detail`
+  field is deleted). `TrackPanel` still owns `toolIdx`. The RAIL navigates
+  with SHORT HANDLES (`ProjectCase.tab`, ≤14 chars); `IN SERVICE {year} —`
+  rides the bay's FEED line — the one home every height rung keeps. The
+  codename is chrome (lightbox label only — a visitor cannot know "Mímir").
+  The evidence still BLEEDS to its box edges and the whole frame is still
+  the ONE walkthrough button with the simplified bar fused to its bottom
+  edge (U3 — the RUN plate and the transport chevrons are deleted). See
+  §The tool dossier below for the wireframe contracts.
 - **One lightbox, `MediaLightbox`, shared by the films and the walkthroughs.**
   Do not hand-write a second — its portal, scroll lock and focus restore each
   cost a measurement to get right (Update 8).
@@ -443,59 +444,84 @@ holdfast` · atl `masters level broadcast parallel`.
   registry pins the four titles literally — a rewording updates the pin in the
   same commit, and titles may not match `/skills?/i`, `/%/, or
 `/(live|production|shipped|wip)/i` (three separate guards).
-- **THE ROUTE (`RouteDiagram.tsx`) IS DATA-DRAWN** from `ProjectCase.route`
-  (`before` 3–5 steps ≤12 chars · `now` ≤10 · metas ≤44, registry-pinned).
-  ⚠ **viewBox `0 0 560 66`; the binding viewport is 1440×800, NOT 720p** —
-  rendered SVG height rides the field's WIDTH while the height budget rides
-  viewport height (72 units overran by 3px at 1440×800). Text must render
-  ≥8.5px; every `<text>` takes `var(--fl-mono)` (⚠ never `--font-mono` = IBM
-  Plex). ⚠ The ≤760h rung crops caption+meta bands via `margin: -2.143%`
-  (exactly 12/560 — a % margin resolves against the same width the height
-  derives from); `display:none` on SVG groups frees zero pixels. Entrance is
-  click-keyed (`key={toolId}`), reduced-motion static, zero-at-rest.
-  ⚠ THE MOBILE ROUTE IS AN OPEN DESIGN CALL: five 12-char labels at the 8.5px
-  floor need ~335px of glyphs against a ~312px column — it wants a DIFFERENT
-  drawing (vertical chain), not tuning; the SVG's aria-label carries the route
-  in words meanwhile.
+- ⚠ **THE ROUTE DIAGRAM IS DELETED** (the e3b3386 declutter, 2026-08-07; its
+  orphan file and CSS removed 2026-08-08, ADR-068 U3). `ProjectCase.route`
+  DATA and its registry pins stay — held for a future drawing (the mobile
+  vertical chain ADR-068 named). If a route returns it is a NEW drawing
+  against the current field, not a remount.
 - **THE BAY IS CHROME AROUND THE UNTOUCHED WALKTHROUGH.** `.fl-shot` stays
-  the one button; RUN is a decorative SVG plate (aria-hidden, pointer-events
-  none, chamfered TR+BL); the top line prints `FEED · IN SERVICE {year} —` /
+  the one button; the top line prints `FEED · IN SERVICE {year} —` /
   `WALKTHROUGH · {duration}` — ⚠ NO `T-01` ids (ordinals in costume; a
   bay-scoped `/\bT-\d/` smoke scan enforces it, durations excluded).
+  ⚠ **THE RUN PLATE AND THE TRANSPORT CHEVRONS ARE DELETED (owner,
+  2026-08-08, ADR-068 U3)** — the fused bottom bar IS the one affordance
+  (cue → "Watch walkthrough" → duration), smoke-pinned uncut on every
+  station, and the frame's dead centre is authorable now.
   ⚠ **CROPPING IS GUARDED GEOMETRICALLY, not by scrollHeight** (ADR-068 U1):
   the smoke asserts `.fl-detail` inside the field's VISIBLE box and all four
   plates ≥99% painted, at SIX viewports incl. the wide-short band (1920×800,
   2560×1330) — reported overflow missed both the one-sided crop (assertions
   never ran wide-and-short) and the centred column's SYMMETRIC overflow,
-  which reports zero. `justify-content: safe center` on the field stack.
-- **DETAIL PLATES:** `ProjectCase.detail`, exactly 4, `q` pinned to the
-  four-union, answers ≤32 chars, `accent: "own" | "gold"`. Single BL notch
-  (ADR-065 Update 1 — a uniform seated SET, one nesting level, card scale
-  `clamp(9px, 1.7cqw, 13px)`). ⚠ The inner layer is OPAQUE ground + wash —
-  translucent-over-edge floods the plate with the edge colour. Wraps 1×4
-  under 480px. `own` = `--atreides-light` border / `--fl-own-wash` ground /
-  `--atreides-ink` value; `gold` value = `--gold` dark, `--gold-ink` light.
+  which reports zero. The bay's ceiling is `--tf-bay: clamp(250px, 44svh,
+560px)` (raised 2026-08-08 — zero dead air below ~1150h, the ceiling's
+  surplus on big monitors is the deliberate "stops growing first" remnant).
+- **DETAIL PLATES (ADR-068 U2, owner 2026-08-08):** the 2×2 renders
+  `ProjectCase.capabilities` — title + one-sentence claim, the SAME
+  canonical array the Arc card tiles print, so a copy edit lands on both
+  surfaces at once. `ToolDetailFact` / `ProjectCase.detail` and the
+  `own`/`gold` accents are DELETED with their guards; the capability guard
+  is the shape pin now (exactly 4, title ≤24 — one mono line in the Arc
+  tile, the tighter home — desc ≤95, ≤3 wrapped lines at the block's 12px
+  floor). Markup is `.fl-detail__t` (nowrap mono caps, full `--dawn`) and
+  `.fl-detail__d` (the sentence — declares PP Neue Montreal EXPLICITLY per
+  ADR-067, WRAPS, never clamps; it is on the smoke's prose-role list). The
+  grid is CONTENT-HEIGHT, seated at the field's floor (`margin-top: auto` —
+  the evidence above absorbs the freed height), with `grid-auto-rows: 1fr`
+  equalising the two rows to the tallest plate. Single BL notch (ADR-065
+  Update 1). ⚠ The inner layer is OPAQUE ground — translucent-over-edge
+  floods the plate with the edge colour. Wraps 1×4 under 480px.
+  ⚠ **THE BLOCKS SEAT ONCE, ON ROW ARRIVAL (U3, owner 2026-08-08)** — the ul
+  carries NO tool key and the plates are keyed BY POSITION, so a station
+  switch swaps text in place with zero motion ("four frames that should
+  already be there"); the seat's stagger is 120+55i ms (the old 780 was
+  budgeted after the deleted route entrance). The WIREFRAME keeps its
+  `key={active.id}` remount on purpose.
 - **GREEN RIDES THE RAMP (ADR-063 discipline):** `--atreides-light` = line,
   `--atreides-ink` = text (dark `#7a9e6a`, light `#3f5a2e` — the PDA's own
-  light green-mark value), `--fl-own-wash` = ground. Light-theme composited
-  floors are smoke-sampled on this row (4.5:1 text / 3:1 line). The route's
-  step outline carries α .5 (3.33:1) deliberately — line work the reader
-  counts.
-- **WIREFRAMES ARE AUTHORED EVIDENCE (ADR-064 U2 extended).** A tool in
-  `TOOL_WIREFRAMES` (`casefile/wireframes/`) renders its drawn UI abstraction
-  instead of the capture: NO `<img>`, NO duotone — the filter law is PER-TOOL
-  and the smoke asserts both branches (capture tools filtered, wireframe tools
-  img-free and unfiltered). Vesper ships first (session view). ⚠ The draw
-  readout is a METER, never a currency figure ("Never a price."). ⚠ The
-  drawing sits UNDER the halftone veil and the RUN plate (z<2) and the middle
-  ~98×40 is covered — nothing load-bearing dead-centre. Mímir/Babylon/Heimdall
-  keep captures until their wireframes are authored against this contract.
-- **PRM UNWRAPS THE CONSOLE TOO.** console.css's unwrap gate is
-  `(max-width: 980px), (prefers-reduced-motion: reduce)` — the SAME pair as
-  casefile.css's static-flow gate. Width-only left desktop-PRM visitors an
-  absolute console in an auto-height parent = HEIGHT 0 on every plate
-  (measured). Never let the two gates drift apart again; the PRM smoke case
-  asserts a visible console with real height.
+  light green-mark value). The route's step outline carries α .5 (3.33:1)
+  deliberately — line work the reader counts. (`--fl-own-wash` and the
+  own/gold plate sampling left with the detail accents, ADR-068 U2.)
+- **WIREFRAMES ARE AUTHORED EVIDENCE — ALL FOUR TOOLS ARE DRAWN (ADR-064 U2
+  extended; ADR-068 U3, owner 2026-08-08).** Every tool in `TOOL_WIREFRAMES`
+  (`casefile/wireframes/`) renders its drawn UI abstraction: NO `<img>`, NO
+  duotone. Per-tool contracts: mímir = insights | briefing | reference
+  (`INSIGHTS · BRIEFING · REFERENCE`), vesper = session canvas + composer
+  (`DRAW · PRODUCT LIBRARY · ENHANCE · MODEL`; the draw readout is a METER,
+  never a currency figure — "Never a price."; the generating tile's progress
+  is a part-filled STATIC bar), babylon = script table | portrait player
+  (`ORIGINAL · TRANSLATION · SYNC`; ⚠ the portrait read comes from the
+  COLUMN's height-derived width, never an `aspect-ratio` on the screen — an
+  intrinsic ratio overflows the row), heimdall = plugin panel | canvas
+  template (`BRIEFINGS · SYNC · TEMPLATE`). The smoke's `WIREFRAME_STATIONS`
+  table pins each label set EXACTLY (sorted-array equality) — ≤4 labels, PT
+  Mono ≥8px, NO DIGITS, no currency, in dark and light (labels ≥4.5:1 on
+  their own opaque bed, hairlines ≥1.5:1). Element rules are scoped
+  `.fl-wire--{tool}`; only `.fl-wire`, `.fl-wire__in` (the size container +
+  `--w-*` tokens) and `.fl-wire__lbl` are shared, and a new `--w-*` token
+  lands in casefile.css AND theme.css in one commit. ⚠ The capture branch is
+  DORMANT, not deleted: a fifth tool without a drawing renders its duotoned
+  capture and the smoke's `kind` field re-arms that half of the filter law.
+  ⚠ The one obstacle over a drawing is the halftone veil (the RUN plate is
+  gone); nothing else paints over the frame.
+- **PRM UNWRAPS THE CONSOLE TOO — THREE GATES, ONE PAIR.** console.css's
+  unwrap gate is `(max-width: 980px), (prefers-reduced-motion: reduce)` —
+  the SAME pair as casefile.css's static-flow gate AND (since 2026-08-08)
+  pda.css's map fallback gate. Width-only anywhere in that trio leaves
+  desktop-PRM visitors a collapsed box: the plates measured HEIGHT 0 before
+  ADR-068 U1, and the map's console measured 90px (rail alone, its drawing
+  collapsed in the unwrapped field) once the U2 foot removal unmasked it.
+  Never let the gates drift; the PRM smoke case asserts a visible plate with
+  real height.
 - `babylon.year` / `heimdall.year` are **2026** (first commits 2026-02);
   mimir/vesper 2025. The header prints them as `IN SERVICE {year} —`.
 
@@ -535,12 +561,16 @@ holdfast` · atl `masters level broadcast parallel`.
 - **TOOL LIFECYCLE HAS ONE REGISTRY, and the proof register is not it.** The
   `· live` suffix left the tools claims; `PROJECT_CASES[].status` is canonical
   and the guard checks it there. A proof claim may not restate it.
-- **A STATION IS A CHAMFERED PLATE** — top-right cut at the chrome rung, active
-  filled and WELDED to the console (an `::after` covers the rail's bottom
-  border). ⚠ **The lit spine moved to the plate's TOP**: it used to sit at
-  `bottom: -1px`, the exact pixel the weld occupies, and would have re-drawn
-  the seam the weld removes. Its `inset` clip stops it at the chamfer while
-  its width stays a full station pitch, so the `--rail-i` translate still lands.
+- **A STATION IS A NOTCHED PLATE, cut TOP-LEFT** (ADR-067 U1, owner
+  2026-08-08 — flipped from the 08-06 top-right so the plates share the
+  console's own TL+BR override; the seam between plates starts below the
+  notch for free, clipped by the owning station's own `clip-path`). The
+  active plate is filled and **UNDERLINED, not welded**: the lit spine is
+  back at `bottom: -1px` on the rail's border row, and the weld `::after`
+  is DELETED — the two rules wanted the same pixel (this ADR's documented
+  conflict) and the owner's underline resolved it by deletion. The spine
+  carries no chamfer clip any more (the bottom edge is square); its width
+  stays a full station pitch, so the `--rail-i` translate still lands.
 - ⚠ **THE ORBIT ARCS ARE DELETED (ADR-068 U1, owner 2026-08-07)** — the
   console is the mockup's one-box panel now (single dawn-08 hairline, TL+BR
   chamfers by owner override of ADR-065, top glow, scanline; no ellipses, no
@@ -577,21 +607,26 @@ holdfast` · atl `masters level broadcast parallel`.
   68–106px at 10px/.16em) and the full name moved to the plate header. The
   input changed, not the math; the arithmetic comment lives on in console.css
   beside the restored rule. The 10px control floor still binds.
-- **THE FOOT IS WHERE CONTEXT GOES**, on every plate that has any. ADR-056's
-  "no GENERIC foot" is finished rather than weakened: the banned foot was
-  chrome repeating itself on every row; a sentence that changes with what is
-  displayed is the opposite, and a plate with nothing to say still omits it.
+- ⚠ **"THE FOOT IS WHERE CONTEXT GOES" IS AT ITS LIMIT CASE: NO PLATE PRINTS
+  ONE (owner, 2026-08-08, ADR-068 U2).** The map's reading sentence and the
+  Studio sheets' captions were the last two and both were removed; the tools
+  row lost its in ADR-068 U1 and the films never had one. `CaseSheet.foot`
+  is deleted; `footCopy` survives for the map's small-screen fallback list
+  and the SVG's accessible name. The smoke's box-clipping sweep asserts the
+  absence on EVERY row — that is what stops a foot drifting back one row at
+  a time. `ConsoleFrame`'s optional slot and its CSS stay, as the context
+  mechanism rather than an invitation.
 - ⚠ **"ONE COLUMN — capture → facts → foot" IS SUPERSEDED (ADR-068).** The
-  tools plate is the dossier field now (route → bay → detail 2×2 — the
-  header line and the foot were BOTH removed in ADR-068 U1: the header
+  tools plate is the dossier field now (route → bay → capability blocks —
+  the header line and the foot were BOTH removed in ADR-068 U1: the header
   stuttered the active tab, and the owner ruled this plate says nothing in
   the foot — this ADR's "a plate with nothing to say still omits it",
   finished). `IN SERVICE {year} —` lives on the bay's FEED line, the one home
-  every height rung keeps. The facts render from `ProjectCase.detail`;
-  `capabilities` stays canonical for the Arc card + ToolCardConsole
-  (unrendered here). What still binds: the deleted identity column stays
-  deleted, `surfaces`/`tagline` stay deleted, and the ORDER OF SACRIFICE is
-  unchanged in BOTH directions — the capture shrinks first
+  every height rung keeps. The blocks render `ProjectCase.capabilities`
+  (ADR-068 U2 — one canonical array shared with the Arc card;
+  `ProjectCase.detail` is deleted). What still binds: the deleted identity
+  column stays deleted, `surfaces`/`tagline` stay deleted, and the ORDER OF
+  SACRIFICE is unchanged in BOTH directions — the capture shrinks first
   (`clamp(70px, 9svh, 180px)` floor) and STOPS GROWING first (the ceiling is
   `.fl-bay`'s `max-height`; ⚠ never a definite flex-basis on the frame — it
   freezes the enclosing column's min-content and worsens the overrun,
@@ -661,9 +696,10 @@ a slot.
   `rail` and `foot` are slots rendered as DIRECT flex children of the console,
   because the rail is `flex: 0 0 clamp(32px, 7%, 44px)` — a percentage of the
   console's height that any wrapper would resolve to zero.
-- **The foot is OPTIONAL, and it is the CONTEXT slot** (ADR-066): the map and
-  the tools row print a sentence that changes with what is displayed; the films
-  row has nothing to add and prints nothing.
+- **The foot is OPTIONAL, and it is the CONTEXT slot** (ADR-066) — and since
+  ADR-068 U2 (owner, 2026-08-08) NO plate passes one: the map's sentence and
+  the sheets' captions were the last two. The slot and its CSS stay as the
+  mechanism; the smoke asserts the absence on every row.
 - ⚠ **BELOW 980px THE CONSOLE UNWRAPS, IT DOES NOT HIDE.** Hiding it takes the
   plate's CONTENT with it — three of the four have no substitute. Only the map
   hides its own console, because it has the stream index to put there.
@@ -709,15 +745,17 @@ The right panel is the PDA console (`map/pda/**`), three readings:
   `--rail-i` / `--rail-n` rather than `data-view`, because one rail cannot
   count readings when the other plates count stations; `data-view` still rides
   the plate root as the map's own state, and the smoke reads it.
-- ⚠ **THE CONSOLE HAS NO HEAD AND THE FOOT HAS NO TITLE** (owner,
-  2026-08-06, ADR-063 U1). The badge said "Intelligence map" beside a column
+- ⚠ **THE CONSOLE HAS NO HEAD AND — since 2026-08-08 — NO FOOT AT ALL**
+  (ADR-063 U1 took the head and the foot's title; ADR-068 U2 took the foot's
+  sentence too, owner). The badge said "Intelligence map" beside a column
   headed INTELLIGENCE MAP; the meta said "Loop Earplugs" beside a tab, a path
   and a masthead that say it; the foot title said "01 · THE WORK" under a lit
   tab reading "01 WORK". **Everything removed was HEIGHT, and height is the
   only currency the drawing spends** — that is what paid for both the 10px
   tabs and the bigger drawing. Smoke-asserted absent. The reading's title
-  lives on in the SVG's `aria-label`. ⚠ The SNAPSHOT DATE went with the head
-  and now appears nowhere; it was the one non-redundant piece.
+  lives on in the SVG's `aria-label`, and `footCopy`'s sentence survives on
+  the small-screen fallback list alone. ⚠ The SNAPSHOT DATE went with the
+  head and now appears nowhere; it was the one non-redundant piece.
 - ⚠ **EVERY SIZE ON THIS SURFACE IS DERIVED FROM A MEASURE, and the measures
   differ within one box.** `CART_TYPE` (pdaGlyphs) and `T` (PdaViews) carry
   the tables. The cartridge title is anchored to the LEFT WALL ALONE (157

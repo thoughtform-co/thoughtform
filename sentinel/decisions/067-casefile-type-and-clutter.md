@@ -200,3 +200,34 @@ and every label placement is computed from it. Either the constant or the font
 is wrong. Deliberately deferred (owner): changing the drawing's face moves
 every measured label on all three readings and needs its own re-measurement
 pass, and the DOM fix above was the visible half of the complaint.
+
+## Update 1 — the underline returns, the notch flips left (2026-08-08, owner)
+
+Owner: _"the notch on the tabs of the right panel should only be on the left
+side, not on the right side. The underline should be at the bottom of the tab,
+not at the top."_ Two of Decision 3's rulings reverse; the plate model itself
+stands.
+
+- **The station's cut is TOP-LEFT now, not top-right.** The 08-06 cut took
+  ADR-065's diagonal; the day after, ADR-068 U1 put the console itself on the
+  owner's TL+BR override — which left the plates and their housing cut in
+  opposite directions. The flip makes them agree, and the directory's folder
+  glyph already cuts its leading corner. Mechanically it is the mirrored
+  `polygon()`; the seam between plates now starts below the notch for free,
+  because the owning station's own clip-path clips its seam pseudo-element's
+  top `--stn-ch`.
+- **The lit spine underlines the active plate again** (`bottom: -1px`, on the
+  rail's border row) — and **the weld is deleted with it**. Decision 3 moved
+  the spine to the top because the weld `::after` and a lit rule would have
+  fought for that pixel; the owner's underline resolves the conflict the other
+  way, by deletion. The active plate now reads as the selected key over a lit
+  sill rather than a surface merged with the body. The spine's chamfer clip
+  (`inset(0 var(--stn-ch) 0 0)`) went with the move: the bottom edge is
+  square, so there is nothing to stop short of.
+- **Verification:** measured live at 1440×800 on the four-station tools rail
+  and the three-station map rail, dark and light — cut resolves TL
+  (`polygon(9.67px 0 …)`), spine bottom flush with the rail's border box,
+  active `::after` computes `none`, and the underline travels with a station
+  click. The smoke's rail assertions (one spine per rail, label = function
+  alone, diamond visible at `data-n="4"`) never pinned the spine's edge or the
+  cut's corner, so they hold unchanged.

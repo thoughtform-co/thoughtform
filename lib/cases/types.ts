@@ -516,8 +516,9 @@ export interface CaseFilm {
    forced it: it showed the ads and nothing else, when the work was equally
    the RULE the studio drew for when AI may make an image and the LIMIT it
    refuses to cross. Output, rule, limit — three sheets on the shared
-   `ConsoleRail`, which is what makes this cheap: the rail already exists, and
-   a sheet's `foot` lands in the console foot the map has always used.
+   `ConsoleRail`, which is what makes this cheap: the rail already exists.
+   (The per-sheet `foot` sentence was removed with the console feet — owner,
+   2026-08-08; git holds the copy.)
 
    ⚠ A SHEET IS NOT A SECOND DIRECTORY. The rows are the engagement's bodies
    of work; sheets are facets of ONE body of work. If a sheet would read as a
@@ -556,9 +557,6 @@ export interface CaseSheet {
   id: string;
   /** The rail's label. The FUNCTION, in mono caps, no ordinal. */
   label: string;
-  /** The console foot's sentence for this sheet. Optional: a sheet with
-   *  nothing to add omits it and costs no height (ADR-064 U2). */
-  foot?: string;
   body: CaseSheetBody;
 }
 

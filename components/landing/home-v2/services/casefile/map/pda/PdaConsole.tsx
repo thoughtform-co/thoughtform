@@ -16,15 +16,15 @@ import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
  * THE WORK-TO-INTELLIGENCE MAP, as a held instrument.
  *
  * A faithful port of the owner's `thoughtform-intelligence-map-v18.html` into
- * the casefile's right panel: a reading rail across the top, a scan sweep on
- * every view change, and a centred foot that says what the reader is looking
- * at.
+ * the casefile's right panel: a reading rail across the top and a scan sweep
+ * on every view change. (The centred foot the port carried is gone — owner,
+ * 2026-08-08; the drawing owns that height now.)
  *
  * ⚠ THE CHROME IS NOT HERE ANY MORE (ADR-064). The orbit ring, the chamfered
  * bezel, the console and its scanline are `ConsoleFrame`, shared with the
  * three other evidence plates so the panel reads as ONE instrument that
  * changes what it displays. This file owns the map's own vocabulary and
- * hands the frame three slots: `rail`, `foot`, and a small-screen `fallback`.
+ * hands the frame two slots: `rail` and a small-screen `fallback`.
  *
  * ── Three readings, direct access, any order ─────────────────────────────
  * The rail is the navigation, and since 2026-08-06 (owner) it runs
@@ -221,12 +221,12 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
           label="Map readings"
         />
       }
-      /* ⚠ THE FOOT IS THE SENTENCE ALONE. Its title said "01 · THE WORK"
-         directly under a lit tab reading "01 WORK" (owner, 2026-08-06) — the
-         rail already names the reading, so the foot only has to say what the
-         reading MEANS. `foot.title` is still the accessible name of the
-         drawing; it is simply not printed twice. */
-      foot={<p>{foot.body}</p>}
+      /* ⚠ NO FOOT (owner, 2026-08-08 — "remove the text at the bottom of
+         the right panel"). The 08-06 pass had already reduced it to the
+         sentence alone; this pass removes the sentence too, and the drawing
+         takes the height. `footCopy` still runs: `foot.title` is the SVG's
+         accessible name and `foot.body` survives on the small-screen
+         fallback list, where there is no drawing to say it. */
       /* Below the desktop gate the drawing is dropped for a DELIBERATE
          fallback — the reading that never needed the projection. */
       fallback={

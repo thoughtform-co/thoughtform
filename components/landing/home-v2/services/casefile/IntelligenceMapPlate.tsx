@@ -7,9 +7,9 @@ import { PdaConsole } from "./map/pda/PdaConsole";
 /**
  * THE WORK-TO-INTELLIGENCE MAP.
  *
- * The casefile's right panel is a held instrument — a console with an orbit
- * ring behind it, a chamfered frame, a gold badge in its head, a depth rail
- * down its left side and a foot that says what the reader is looking at.
+ * The casefile's right panel is a held instrument — a chamfered console
+ * frame around the drawing (the orbit ring, head badge and foot sentence
+ * have all since been decluttered away — ADR-068 U1/U2).
  * Three readings, direct access, any order:
  *
  *   01 THE WORK           twenty cartridges, four across

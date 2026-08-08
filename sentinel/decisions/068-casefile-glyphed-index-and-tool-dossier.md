@@ -327,3 +327,190 @@ safe center`, a capture ceiling on `.fl-bay`'s `max-height` (⚠ never a
    1920×1080 · 2017×1269 · **2560×1330**. The lesson for every future
    assertion on this surface: reported overflow is not visible truth; measure
    geometry against the visible box.
+
+## Update 2 — the blocks fill with the portfolio's copy, and the last feet go (2026-08-08, owner)
+
+Owner: _"fill in the blocks of the right panel with the copy which I took
+from my other site; feel free to make those blocks a bit less high so we
+don't waste real estate; let's also remove the text at the bottom of the
+right panel in the intelligence map section and AI fluency in studio."_
+
+### The 2×2 renders `capabilities` now — the Q&A register is deleted
+
+The WHO/WHAT question grid lasted one day against real content. The owner's
+portfolio site presents each tool as four titled claims, and those four are
+what the blocks now print — which is exactly `ProjectCase.capabilities`, the
+array the Arc card tiles already render. So the casefile reads the SAME
+canonical array instead of growing a twin:
+
+- **`ToolDetailFact` and `ProjectCase.detail` are deleted**, with their
+  registry guards (the q-union pin, the ≤32 answer budget, the accent set).
+  The capability guard is the blocks' shape pin now: exactly four, title ≤24
+  (one mono line in the TIGHTER home, the Arc tile), desc ≤95 (≤3 wrapped
+  lines at the casefile block's 12px floor).
+- **Copy synced to the site where it differed** — Mímir's proactive-briefing
+  sentence takes the site wording; Heimdall's iterator sentence likewise;
+  Babylon replaces `30+ markets` / `Auto-verification` with **Proofreader
+  integration** and **Localization roadmap** (site: "Broader localization
+  roadmap", compressed to the 24-char tile line; the 30+ claim survives in
+  `metric` and the challenge). ⚠ This changes the ARC CARD's Babylon tiles
+  too — one array, two homes, deliberately.
+- **The accents are gone with the questions** (`data-accent`, the `own`
+  green wash, the gold value). Four claims, one voice, plain ink. The
+  orphaned `--fl-own-wash` declarations left `landing.css`/`theme.css`, and
+  the light-theme smoke's accent-bed sampling left with them. ⚠ The green
+  ramp itself (`--atreides-*`) is untouched — the route drawing and the map
+  still ride it.
+- **Markup**: `.fl-detail__q`/`.fl-detail__a` became `.fl-detail__t`
+  (title — nowrap mono caps, full-strength `--dawn`, no light override
+  needed) and `.fl-detail__d` (the sentence — PP Neue Montreal declared
+  EXPLICITLY per ADR-067, `max(12px, --fl-copy·0.84)`, wraps, never
+  clamped). The smoke's prose-role selector list swapped accordingly.
+
+### The blocks are content-height, seated at the field's floor
+
+The old grid flexed into everything the bay left and pushed each rule to its
+plate's floor — with real sentences in the blocks, that emptiness is what
+the owner read as wasted real estate. Now `.fl-detail` is `flex: 0 0 auto`
+with `margin-top: auto` (seated at the field's bottom edge), and
+`grid-auto-rows: 1fr` on an auto-height grid equalises both rows to the
+tallest plate so the hairlines stay level per tool. The capture absorbs
+every freed pixel (`.fl-bay` keeps the U1 ceiling). Measured: grid 167.9px
+at 1440×800 and 145.9px at 1280×720 against the ~230px+ it used to take;
+titles unclipped and sentences ≥12px on all four tools at both, and the six
+U1 reference viewports still pass the geometric guard.
+
+### No plate prints a foot any more
+
+The map's reading sentence and the Studio sheets' per-sheet captions were
+the last two console feet, and the owner removed both. The films never had
+one; the tools row lost its in U1. Consequences:
+
+- `PdaConsole` passes no `foot`; `footCopy` STAYS — `foot.title` is the
+  SVG's accessible name and `foot.body` still prints on the small-screen
+  fallback list, where there is no drawing to say it.
+- `CaseSheet.foot` is deleted (type + the three sentences in
+  `loop-earplugs.ts`; the trim note at the site says what went). The LINE
+  sheet's argument still reads from its own two columns.
+- The box-clipping sweep now asserts **no `.fl-con__foot` on ANY row** — the
+  one-per-row require/forbid split is history, and the sweep is what stops a
+  foot drifting back one row at a time. `ConsoleFrame`'s slot and its CSS
+  stay: the context MECHANISM outlives its current zero users.
+- ADR-066's "the foot is where context goes" survives as its limit case:
+  today no plate has anything to say there.
+
+### Verification
+
+- `cases-registry` re-pinned (34 passing); full unit suite 588 passing;
+  typecheck clean.
+- The three edited smoke cases pass live: the six-viewport harmonised fit
+  (blocks + feet + geometry), the dwell walk (map foot absence + reading
+  clicks), and the light-theme palette walk (accent sampling removed, row-2
+  click kept for the wireframe branch).
+- Measured by hand at 1440×800 and 1280×720, dark and light: four filled
+  blocks per tool, no foot on any of the four rows.
+
+## Update 3 — all four tools drawn, the bay grows, the RUN key goes (2026-08-08, owner)
+
+Owner: _"we created a wireframe mockup of our image & video generation tool…
+I think we can also do it for the other platforms. While we're at it, increase
+the height of that wireframe and the thumbnail — we moved the four blocks to
+the bottom anyway. We don't need the Run button. I just think we need a super
+clear, minimalistic walkthrough button… I don't want that delay when you click
+on a tab."_ Each product repo was surveyed and the owner supplied screenshots;
+each drawing is an archetype abstraction, not a miniature.
+
+### Recorded first: the route diagram died in e3b3386, without an ADR
+
+The 2026-08-07 evening declutter (`e3b3386`, "the casefile spans the rail
+box") deleted `RouteDiagram` from the render path and its CSS wholesale; no
+decision record captured it. Recorded here post-hoc: the tools plate is
+**bay → capability blocks**, nothing else. This pass deleted the orphan
+component file and the orphan `.fl-route` light rules; `ProjectCase.route`
+DATA and its registry pins stay, held for a future drawing (the mobile
+vertical chain §Open already names). D4's route contracts are history.
+
+### Three new wireframes, one scoping law
+
+`TOOL_WIREFRAMES` covers all four ids. Per-tool archetypes (each file's
+header carries the full contract):
+
+- **Mímir** — evidence in, brief taking shape, visual out: INSIGHTS rail
+  (nugget cards, dashed add-row, gold GENERATE plate at the foot) · BRIEFING
+  column (kicker-dot section grammar + a FORMATS checkbox row) · REFERENCE
+  frame (image mark, caption). Labels `INSIGHTS · BRIEFING · REFERENCE`.
+- **Babylon** — the script beside the portrait player: pipeline chips
+  (three lit, one hollow — mid-run), four segment rows of paired bars led by
+  a timecode-shadow tick, gold SYNC plate; a 9:16-ish screen with source
+  tabs, the house play cue and a caption line. Labels `ORIGINAL ·
+TRANSLATION · SYNC`. ⚠ The portrait read comes from the COLUMN's
+  height-derived width (`flex-basis: min(47cqh, 24%)`) — an `aspect-ratio`
+  on the screen contributes an intrinsic width the row cannot shrink,
+  measured 46px past the frame.
+- **Heimdall** — a resident, not an app: the plugin PANEL (the drawing's one
+  opaque plate — briefing rows with checkbox, name bar and status tick, one
+  lit; gold SYNC plate) over a dot-grid CANVAS carrying the generated
+  template (reference frame · briefing column · two variation cards).
+  Labels `BRIEFINGS · SYNC · TEMPLATE`.
+- **Vesper (retuned)** — the ladder now lives in a ~187–480px box (was
+  86–206) and the generating tile carries the app's signature: a part-filled
+  STATIC progress bar (asymptotic, never 100%) in the tile's UPPER band —
+  at the bottom edge the floating composer covers it.
+
+Scoping: every element rule is `.fl-wire--{tool} .fl-wire__…`; only
+`.fl-wire`, `.fl-wire__in` (the size container + the shared `--w-*` set) and
+`.fl-wire__lbl` are shared. Names like `__row` are generic-sounding but
+tool-specific in their values — the modifier is what stops the next drawing
+inheriting the composer. The ≤960 `aspect-ratio: 16/10` rung serves all four.
+
+### The bay's ceiling: 36svh/460 → 44svh/560
+
+The route's death and U2's content-height blocks raised the bay's wants to
+~249/272/~300/458/619/680 across the six reference viewports while the old
+ceiling pooled the surplus as dead air (`margin-top: auto` absorbs a bitten
+cap). Measured after: evidence 246.5/270.1/280.9/395.2/478.4/480 with air =
+the gap alone below ~1150h; the ~120–180px of surplus at 2017×1269/2560×1330
+is the deliberate "stops growing first" remnant (ADR-066). A ceiling raise
+has no clipping failure mode; the frame's `clamp(70px, 9svh, 180px)` floor
+is untouched (raising it would invert the sacrificial order).
+
+### The RUN key and the transport chevrons are deleted
+
+The bar under the frame is the ONE affordance now — cue → "Watch
+walkthrough" → duration — smoke-pinned uncut on every station. Deleting the
+plate freed the frame's dead centre for the drawings and killed the open PRM
+defect (its 98px minimum spanned 41% of the unwrapped column). The aria
+clause generalises to ". Interface, drawn." on every wireframe branch.
+
+### The blocks render instantly on a station switch
+
+The ul lost its tool key; the plates are keyed by position (capabilities are
+registry-pinned at exactly four, so index keys cannot misalign); the seat
+stagger is 120+55i ms and plays exactly once per ROW arrival — TrackPanel is
+keyed per row upstream. The wireframe keeps its `key={active.id}` remount.
+
+### The smoke, restructured — and the gate-drift bug the foot removal unmasked
+
+- `WIREFRAME_STATIONS` (a literal table: id · kind · exact label set) drives
+  the six-viewport walk (all four stations + a walk-back to station 0),
+  the 1440×800 binding-box walk, and the light walk (labels ≥4.5:1 against
+  their own opaque bed — the generic ancestor walk replaced the vesper
+  `.fl-wire__comp` special case; hairlines ≥1.5:1; label sets pinned as
+  sorted arrays). The CAPTURE half of the filter law is dormant behind
+  `kind` — executable the day a fifth tool ships before its drawing.
+- ⚠ **pda.css's map-fallback gate was width-only** (`max-width: 980px`)
+  while console.css and casefile.css gate on the width+PRM pair — so at
+  desktop reduced-motion the map's console unwrapped but kept its drawing,
+  which collapsed to a 90px rail-only box; U2's foot removal unmasked it
+  (the foot's height had carried the PRM assertion). The gate now carries
+  the same pair, the index fallback is the deliberate PRM reading, and the
+  smoke case passes on the fallback's real height.
+
+### Verification
+
+- `npm` typecheck clean; registry suite re-pinned (the route pin's comment
+  records the renderer deletion); full desktop smoke 12/12, mobile + tablet
+  6/6 (20 desktop-only skips).
+- Fit script (real scrolls, six viewports × four stations): 0 collapsed
+  elements, 0 frame overflow, labels ≥8.6px, bar uncut everywhere; light
+  probe 6.18–6.45:1 on all fourteen labels.

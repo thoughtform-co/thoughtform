@@ -84,11 +84,6 @@
   --atreides-ink: #7a9e6a;
   --atreides-30: rgba(var(--atreides-mid-rgb), 0.3);
   --atreides-15: rgba(var(--atreides-mid-rgb), 0.15);
-  /* Own-plate ground for the casefile detail plates (ADR-068) — the
-     "Loop's own" wash behind a green-marked plate. Rides --atreides-rgb;
-     light lifts the alpha in theme.css (an alpha inverts its meaning
-     across the ground flip, ADR-063). */
-  --fl-own-wash: rgba(var(--atreides-rgb), 0.1);
   /* RGB triples for the one-off atreides alphas (ADR-058) — see the
      block in variables.css for why these exist. */
   --atreides-rgb: 91, 122, 78;

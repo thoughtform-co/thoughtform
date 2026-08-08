@@ -35,8 +35,10 @@ import type { HTMLAttributes, ReactNode, RefObject } from "react";
  * which an intermediate auto-height wrapper would resolve to nothing.
  *
  * The foot is optional and stays that way: ADR-056's "the right panel has no
- * generic foot" binds. The map prints a sentence that changes with the
- * reading; a row with nothing to say prints nothing.
+ * generic foot" binds. ⚠ As of the owner's 2026-08-08 declutter NO plate
+ * prints one — the map's reading sentence and the Studio sheets' captions
+ * left last (the smoke asserts the absence on every row). The slot survives
+ * as the frame's context mechanism, not as an invitation.
  */
 
 interface Props extends HTMLAttributes<HTMLDivElement> {

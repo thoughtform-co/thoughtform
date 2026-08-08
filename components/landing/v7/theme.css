@@ -217,8 +217,6 @@ html[data-theme="light"] {
      already uses for its light-mode green mark (--pda-grnh, below);
      5.3:1 on --surface-1 parchment. */
   --atreides-ink: #3f5a2e;
-  /* Own-plate wash: parchment needs a stronger lift than void. */
-  --fl-own-wash: rgba(74, 98, 56, 0.12);
   --gold-05: rgba(202, 165, 84, 0.05);
   --hud-rail-line: rgba(17, 15, 9, 0.55);
   --hud-rail-line-soft: rgba(17, 15, 9, 0.28);
@@ -572,9 +570,11 @@ html[data-theme="light"] .fl-shot__bar b {
 /* ⚠ `.fl-tool__hd` LEFT THIS SELECTOR LIST (2026-08-07) — the tools plate's
    header is deleted (owner). `.fl-bay__top` now carries its `IN SERVICE
    {year} —` fact, and it was already in this block at the same alpha, so
-   the fact keeps its light-theme value with no second rule. */
-html[data-theme="light"] .fl-bay__top,
-html[data-theme="light"] .fl-detail__q {
+   the fact keeps its light-theme value with no second rule. (`.fl-detail__q`
+   left too, 2026-08-08 — the ADR-068 U2 capability blocks letter their
+   titles in full-strength `--dawn`, which the flip re-derives by itself,
+   and the accent variants are deleted with the Q&A register.) */
+html[data-theme="light"] .fl-bay__top {
   color: rgba(var(--dawn-rgb), 0.66);
 }
 
@@ -585,58 +585,16 @@ html[data-theme="light"] .fl-bay__top em {
   color: var(--gold-ink);
 }
 
-/* WHAT RUNS IT is the one detail row gold marks, and it is TEXT. Same ramp,
-   same reason; the `own` row needs no override because `--atreides-ink` is
-   already re-derived per theme (5.3:1 on parchment). */
-html[data-theme="light"] .fl-detail__plate[data-accent="gold"] {
-  --dt-value: var(--gold-ink);
-}
-
-/* The route drawing's own palette. SVG `fill` escapes the smoke's text walk
-   (it reads `color`), so this is re-derived by the same hand that does the
-   map's `--pda-*` set rather than left to an alpha that means the opposite
-   thing here. Line work answers to 3:1, glyphs to 4.5:1. */
-html[data-theme="light"] .fl-route {
-  --rt-cap: rgba(var(--dawn-rgb), 0.66);
-  --rt-meta: rgba(var(--dawn-rgb), 0.66);
-  --rt-meta2: rgba(var(--dawn-rgb), 0.78);
-  --rt-label: rgba(var(--dawn-rgb), 0.82);
-  /* ⚠ 0.5, NOT 0.3, AND IT IS MEASURED. The step outlines are the LINE WORK
-     THAT CARRIES THE DRAWING — the reader is counting those boxes — so they
-     answer to the 3:1 component target, not to the hairline exemption. α 0.3
-     measures 1.94:1 on `--con-void` (#e4dac9) and α 0.5 measures 3.2:1. The
-     ECHO behind each box stays faint on purpose: it is a repetition mark,
-     not a box. */
-  --rt-line: rgba(var(--dawn-rgb), 0.5);
-  --rt-line2: rgba(var(--dawn-rgb), 0.2);
-}
-/* The chevrons are line work, not a fill — the ramp's 3:1 step. */
-html[data-theme="light"] .fl-route .rt-chev {
-  stroke: var(--gold-line);
-}
-/* The RUN plate is a MARK on an opaque bed: its ground stays a gold wash and
-   its label takes the ink step so the one word on it is readable. */
-html[data-theme="light"] .fl-run text {
-  fill: var(--gold-ink);
-}
-html[data-theme="light"] .fl-run__bg {
-  fill: rgba(var(--void-deep-rgb), 0.86);
-  stroke: var(--gold-line);
-}
-/* The bay's transport marks and corner brackets — line work again. */
-html[data-theme="light"] .fl-shot__chevs svg[data-on] path {
-  fill: var(--gold-line);
-  stroke: var(--gold-line);
-}
-html[data-theme="light"] .fl-shot__chevs path {
-  stroke: rgba(var(--dawn-rgb), 0.3);
-}
+/* (The `.fl-route` palette and the RUN-plate / transport-chevron light rules
+   left with their elements — the route drawing in the 08-07 declutter
+   (e3b3386), the RUN key and chevrons on the owner's 2026-08-08 ruling. The
+   bay's corner brackets are the surviving line work here.) */
 html[data-theme="light"] .fl-bay__br {
   border-color: rgba(138, 107, 32, 0.55);
 }
 
-/* ── The bay's AUTHORED WIREFRAME, on parchment (ADR-068 D5) ──────────────
-   The same law as `.fl-route` two blocks up, applied to a whole drawing:
+/* ── The bay's AUTHORED WIREFRAMES, on parchment (ADR-068 D5) ─────────────
+   The same law as the map's `--pda-*` set, applied to whole drawings:
    AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP. Every step below is
    re-derived rather than inherited, because `rgba(ink, .15)` recedes toward
    BLACK in dark and toward PARCHMENT in light — the identical number goes

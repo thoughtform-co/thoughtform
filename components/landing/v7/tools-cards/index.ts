@@ -1,11 +1,5 @@
 export { PROJECT_CASES, CASE_TOTAL } from "./toolCardData";
-export type {
-  CaseCapability,
-  CaseMode,
-  ProjectCase,
-  TitleSegment,
-  ToolDetailFact,
-} from "./toolCardData";
+export type { CaseCapability, CaseMode, ProjectCase, TitleSegment } from "./toolCardData";
 export {
   BarcodeStrip,
   CaseImage,

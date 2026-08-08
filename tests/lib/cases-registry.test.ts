@@ -1030,10 +1030,13 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("PROJECT_CASES capability copy fits the casefile's foot tiles", () => {
-    // Four tiles across a ~690px foot band. The title is a single mono line
-    // and the desc is clamped to two — copy far past these silently loses its
-    // tail to the clamp, which reads as a truncation bug.
+  it("PROJECT_CASES capability copy fits both of its homes", () => {
+    // ONE canonical array, TWO renderers (ADR-068 U2): the Arc card's tile
+    // band and the casefile's detail 2×2. The title is a single mono line in
+    // both — the Arc tile at ~160px is the tighter home, which is where 24
+    // comes from — and the sentence budget is 95 so the casefile block stays
+    // ≤3 wrapped lines at its 12px floor. Copy past either silently clips or
+    // reflows the grid, which reads as a bug.
     for (const c of PROJECT_CASES) {
       expect(c.capabilities).toHaveLength(4);
       for (const cap of c.capabilities) {
@@ -1065,6 +1068,10 @@ describe("cases registry (ADR-054)", () => {
   });
 
   it("PROJECT_CASES route steps fit the plate's spine", () => {
+    // ⚠ The renderer (RouteDiagram) was deleted in the 08-07 declutter
+    // (e3b3386) and its orphan file removed 2026-08-08 — the DATA is held
+    // for a future route drawing (ADR-068 named a vertical chain as the
+    // likely mobile shape), so these budgets keep guarding it.
     // The before-state is a sequence a reader COUNTS, so the count has a
     // floor and a ceiling: below three there is no route to collapse, above
     // five the cells stop being readable across the plate's width. Each cell
@@ -1089,36 +1096,10 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
-  it("PROJECT_CASES detail plates ask the SAME four questions, in order", () => {
-    // The plate is a comparison instrument: a reader stepping the rail must
-    // land on the same four questions every time, or the four tools stop
-    // being comparable and become four brochures. Pinning the tuple's ORDER
-    // is what makes that mechanical — the type's union alone would let a
-    // tool answer them in any sequence.
-    const QUESTIONS = [
-      "WHO IT SERVES",
-      "WHAT IT REPLACED",
-      "WHAT RUNS IT",
-      "WHERE IT RUNS",
-    ] as const;
-    const ACCENTS = new Set(["own", "gold"]);
-    for (const c of PROJECT_CASES) {
-      expect(c.detail, `${c.id} detail`).toHaveLength(4);
-      expect(
-        c.detail.map((fact) => fact.q),
-        `${c.id} detail questions`
-      ).toEqual([...QUESTIONS]);
-      for (const fact of c.detail) {
-        // One mono line in the answer column. Past this the answer clamps,
-        // and a clamp truncating LIVE copy is the clamp being wrong.
-        expect(fact.a.length, `${c.id} "${fact.q}" answer`).toBeGreaterThan(0);
-        expect(fact.a.length, `${c.id} "${fact.q}" answer "${fact.a}"`).toBeLessThanOrEqual(32);
-        if (fact.accent !== undefined) {
-          expect(ACCENTS.has(fact.accent), `${c.id} "${fact.q}" accent`).toBe(true);
-        }
-      }
-    }
-  });
+  // The "detail plates ask the SAME four questions" guard left with the
+  // field it pinned: ADR-068 U2 (owner, 2026-08-08) filled the 2×2 with the
+  // portfolio site's capability blocks and deleted `ProjectCase.detail` —
+  // the capability guard above is the blocks' shape pin now.
 });
 
 /** Walk every string in a value, reporting its dotted path. */

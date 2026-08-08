@@ -21,24 +21,6 @@ export interface CaseCapability {
   desc: string;
 }
 
-/**
- * One row of the casefile detail plate — a fixed question and this tool's
- * answer (2026-08-07). FOUR ROWS, IN ORDER, AND THE SAME FOUR ON EVERY TOOL:
- * the plate is a comparison instrument, so a reader running down the rail
- * reads four answers to one question, not four different questions. The
- * union is what makes that mechanical rather than a convention.
- *
- * `accent` marks the one or two answers that carry the argument on a given
- * tool — `own` for who owns the work, `gold` for what runs it. Absent means
- * plain ink; it is emphasis, never a category.
- */
-export interface ToolDetailFact {
-  q: "WHO IT SERVES" | "WHAT IT REPLACED" | "WHAT RUNS IT" | "WHERE IT RUNS";
-  /** ≤32 chars — one mono line against the plate's answer column. */
-  a: string;
-  accent?: "own" | "gold";
-}
-
 /** One headline metric per case (ADR-033) — folded in from the retired
  *  `build-cases/buildCaseData.ts` triplets so PROJECT_CASES is the single
  *  canonical case module. Rendered on the arc orbit card's caption row. */
@@ -62,13 +44,15 @@ export interface ProjectCase {
   challenge: string;
   shift: string;
   /**
-   * The four capability tiles. STILL CANONICAL for the Arc orbit card and
-   * `ToolCardConsole` — this field did not move and must not be trimmed to
-   * match the casefile. It is simply no longer what the casefile's tool
-   * plate renders: ADR-068 replaced the capability foot with the `route` +
-   * `detail` pair below, because four capability tiles per tool put sixteen
-   * tiles behind one rail and none of them answered the reader's actual
-   * question, which is what the tool is FOR.
+   * The four capability blocks — ONE canonical set per tool, and since
+   * ADR-068 U2 (owner, 2026-08-08) it renders in BOTH homes: the Arc orbit
+   * card / `ToolCardConsole` tiles AND the casefile's detail 2×2, which now
+   * prints title + claim instead of the retired WHO/WHAT Q&A register
+   * (`ToolDetailFact` and the `detail` field are deleted — the owner filled
+   * the blocks with the portfolio site's capability copy instead). Both
+   * surfaces read THIS array, so a copy edit lands everywhere at once; the
+   * registry pins title ≤24 (one mono line on the ARC tile, the tighter of
+   * the two homes) and desc ≤95.
    */
   capabilities: [CaseCapability, CaseCapability, CaseCapability, CaseCapability];
   /**
@@ -98,11 +82,6 @@ export interface ProjectCase {
     /** What the new route buys, ≤44 chars — same line, opposite side. */
     nowMeta: string;
   };
-  /**
-   * Exactly four question/answer rows for the plate — see `ToolDetailFact`.
-   * The tuple pins the count; the test pins the questions and their order.
-   */
-  detail: readonly [ToolDetailFact, ToolDetailFact, ToolDetailFact, ToolDetailFact];
   /** Headline metric for the arc orbit card (optional — cards without one
    *  simply omit the caption row's right slot). */
   metric?: CaseMetric;
@@ -145,7 +124,7 @@ export const PROJECT_CASES: ProjectCase[] = [
       },
       {
         title: "Proactive briefing",
-        desc: "Relevant insights surface while strategists compose, not after another search pass.",
+        desc: "Relevant insights surface while strategists compose the brief, not after another search pass.",
       },
       {
         title: "Headless substrate",
@@ -163,12 +142,6 @@ export const PROJECT_CASES: ProjectCase[] = [
       beforeMeta: "FIVE SOURCES · BY HAND · EVERY CYCLE",
       nowMeta: "ONE SURFACE · WHILE THE BRIEF IS WRITTEN",
     },
-    detail: [
-      { q: "WHO IT SERVES", a: "STRATEGY · BRAND · PMM", accent: "own" },
-      { q: "WHAT IT REPLACED", a: "MANUAL SOURCE DIGGING" },
-      { q: "WHAT RUNS IT", a: "ENCODED SKILL · DEEP LANE", accent: "gold" },
-      { q: "WHERE IT RUNS", a: "WEB · MCP · SLACK · IDE" },
-    ],
     metric: { value: "4+", label: "Intelligence sources" },
     stack: ["Next.js", "Supabase", "Gemini", "Claude Skills", "MCP", "Slack"],
     surfaces: ["Web app", "MCP server", "Claude", "Cursor", "Slack", "ChatGPT"],
@@ -224,16 +197,6 @@ export const PROJECT_CASES: ProjectCase[] = [
       beforeMeta: "THREE TOOLS · COST INVISIBLE",
       nowMeta: "ONE CANVAS · DRAW VISIBLE PER RUN",
     },
-    /* ⚠ WHERE IT RUNS DELIBERATELY OMITS REST AND MCP. The headless lane is
-       WIP in the Vesper repo; `surfaces` above still lists it because that
-       field feeds the Arc card's roadmap read, but a casefile plate is a
-       record of what runs today. Do not harmonise the two. */
-    detail: [
-      { q: "WHO IT SERVES", a: "STUDIO · PRODUCT DESIGN", accent: "own" },
-      { q: "WHAT IT REPLACED", a: "A LICENSED CANVAS" },
-      { q: "WHAT RUNS IT", a: "MULTI-MODEL ROUTER", accent: "gold" },
-      { q: "WHERE IT RUNS", a: "ONE CANVAS · MANY SURFACES" },
-    ],
     metric: { value: "0%", label: "Margin vs. Krea" },
     stack: [
       "Next.js",
@@ -279,14 +242,21 @@ export const PROJECT_CASES: ProjectCase[] = [
       "UGC localization had to scale across 30+ markets without turning every language into another agency handoff, Figma copy-paste loop, and reviewer queue.",
     shift:
       "Transcribe, translate, dub, and Gemini-verify in one pipeline so reviewers only judge the rows where culture matters.",
+    /* Synced to the portfolio site's four blocks (owner, 2026-08-08 —
+       ADR-068 U2). "30+ markets" and "Auto-verification" left with the sync;
+       the 30+ claim survives in `metric` and the challenge, and the Gemini
+       verify step still reads in `shift`. ⚠ "Localization roadmap" is the
+       site's "Broader localization roadmap" compressed to the registry's
+       24-char one-line tile budget — the site's own title wraps the Arc
+       card's tile grid. */
     capabilities: [
       {
-        title: "30+ markets",
-        desc: "Linear scale-out across languages, not reviewers.",
+        title: "Proofreader integration",
+        desc: "Integrates proofreading in the loop without giving access to the full system.",
       },
       {
-        title: "Auto-verification",
-        desc: "Gemini cross-check against on-screen captions.",
+        title: "Localization roadmap",
+        desc: "Expanding to other use-cases such as exporting PDP copy from Figma in bulk.",
       },
       {
         title: "Custom review module",
@@ -304,12 +274,6 @@ export const PROJECT_CASES: ProjectCase[] = [
       beforeMeta: "FIVE HANDOFFS · THIRTY-PLUS MARKETS",
       nowMeta: "ONE FLOW · THE REVIEW STEP KEPT",
     },
-    detail: [
-      { q: "WHO IT SERVES", a: "LOCALIZATION & EXPANSION", accent: "own" },
-      { q: "WHAT IT REPLACED", a: "A FIVE-STEP HANDOFF" },
-      { q: "WHAT RUNS IT", a: "ENCODED SKILL · FAST LANE", accent: "gold" },
-      { q: "WHERE IT RUNS", a: "WEB · SHARE LINKS · CONNECTOR" },
-    ],
     metric: { value: "30+", label: "Languages supported" },
     stack: ["Next.js", "Supabase", "Anthropic", "Gemini"],
     surfaces: ["Web app", "Share-link review"],
@@ -353,7 +317,7 @@ export const PROJECT_CASES: ProjectCase[] = [
       },
       {
         title: "Iterator plugin",
-        desc: "Spins up variants from the best-performing ads.",
+        desc: "A prototype that quickly spins up variants from the best-performing ads.",
       },
       {
         /* Shortened from "Briefing split orchestrator" (2026-07-31): at 27
@@ -371,15 +335,10 @@ export const PROJECT_CASES: ProjectCase[] = [
       beforeMeta: "RE-ENTRY ON EVERY BRIEF",
       nowMeta: "BOARD TO CANVAS · NOTHING RETYPED",
     },
-    /* ⚠ HEIMDALL HAS NO MCP SERVER — never claim one here. Its surfaces are
-       the board connector, the canvas plugin and the asset system; the
-       encoded Skill runs inside that chain, not behind a headless endpoint. */
-    detail: [
-      { q: "WHO IT SERVES", a: "STUDIO PROJECT MANAGEMENT", accent: "own" },
-      { q: "WHAT IT REPLACED", a: "MANUAL BRIEF RE-ENTRY" },
-      { q: "WHAT RUNS IT", a: "ENCODED SKILL · EVERYDAY LANE", accent: "gold" },
-      { q: "WHERE IT RUNS", a: "BOARD → CANVAS → FRONTIFY" },
-    ],
+    /* ⚠ HEIMDALL HAS NO MCP SERVER — never claim one anywhere on this
+       record. Its surfaces are the board connector, the canvas plugin and
+       the asset system; the encoded Skill runs inside that chain, not
+       behind a headless endpoint. */
     metric: { value: "8+", label: "Integrations" },
     stack: ["Next.js", "Supabase", "Vercel KV", "Monday", "Figma", "Frontify", "Meta", "Anthropic"],
     surfaces: ["Web app", "Figma plugin", "Iterator plugin", "GPT Actions API"],

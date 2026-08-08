@@ -210,37 +210,38 @@
    never one marker per station: a marker that travels points into the field;
    markers that take turns are a selected tab.
 
-   ⚠ IT CAPS THE PLATE NOW, it does not underline it (2026-08-06). The
-   stations became plates welded to the console, so the rail's bottom edge is
-   where the active plate JOINS the body — a lit line there would re-draw the
-   seam the weld exists to remove, and the two rules would have fought for the
-   same pixel. On top it reads as the lit edge of the open drawer, and the
-   travel is unchanged.
-
-   The `inset` clip stops it at the plate's chamfer. Width stays a full
-   station pitch so `translateX(--rail-i × 100%)` still lands exactly. */
+   ⚠ IT UNDERLINES THE PLATE AGAIN (owner, 2026-08-08 — reverses the
+   2026-08-06 cap). The 08-06 conflict — the weld and a lit rule fighting
+   for the border pixel — is resolved by DELETION, not coexistence: the
+   active plate's weld `::after` is gone, and the spine sits ON the border
+   row (`bottom: -1px`), replacing the hairline segment under the active
+   plate. One rule owns that pixel now. The bottom edge carries no chamfer
+   (the notch is top-LEFT since the same ruling), so the old `inset` clip
+   went with the move. Width stays a full station pitch so
+   `translateX(--rail-i × 100%)` still lands exactly. */
 .fl-con__spine {
   position: absolute;
   left: 0;
-  top: 0;
+  bottom: -1px;
   width: calc(100% / var(--rail-n, 3));
   height: 1px;
   background: var(--con-hot);
   box-shadow: var(--con-spine-glow);
-  clip-path: inset(0 var(--stn-ch) 0 0);
   transform: translateX(calc(var(--rail-i, 0) * 100%));
   transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
 /* ⚠ A STATION IS A PLATE, NOT A CELL (owner, 2026-08-06 — "look at more retro
    terminal interfaces where it has a bit of a notch… right now it just feels
-   very traditional"). Each one is a chamfered plate seated on the console:
-   its TOP-RIGHT corner is cut, which is the corner law's diagonal (ADR-065)
-   at the CHROME rung — small, because a tab is not a housing.
+   very traditional"). Each one is a notched plate seated on the console.
 
-   The precedent is already in the repo twice: the handoff dock cuts both top
-   corners (`handoff-lab.css`) and the directory's own folder glyph cuts its
-   leading one (`.fl-row__glyph`).
+   ⚠ THE CUT FLIPPED TO THE TOP-LEFT (owner, 2026-08-08 — "the notch should
+   only be on the left side, not on the right"). The 08-06 cut was top-right,
+   the ADR-065 diagonal; the flip puts the plates on the SAME orientation as
+   the console's own TL+BR override (ADR-068 U1), so plate and housing agree.
+   Still the chrome rung — small, because a tab is not a housing. The
+   directory's folder glyph (`.fl-row__glyph`) cuts its leading corner the
+   same way, so the leading-cut precedent already existed.
 
    Under rule 5 the asymmetry is EARNED: the cut corner is the free one, and
    the bottom edge is where the plate meets the machine. */
@@ -261,14 +262,17 @@
   /* Recessed: the plate sits BELOW the console's own face until it is
      selected, so the rail reads as a row of keys rather than a divided bar. */
   background: linear-gradient(180deg, rgba(var(--dawn-rgb), 0.028), transparent 62%);
-  clip-path: polygon(0 0, calc(100% - var(--stn-ch)) 0, 100% var(--stn-ch), 100% 100%, 0 100%);
+  clip-path: polygon(var(--stn-ch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--stn-ch));
   transition:
     color 0.3s ease,
     background 0.3s ease;
 }
 
-/* The seam between plates. It stops short of the chamfer so the cut corner
-   reads as a shoulder rather than a broken divider. */
+/* The seam between plates. The owning station's TOP-LEFT cut clips this
+   pseudo-element's own top `--stn-ch` (a clip-path clips descendants and
+   pseudos too), so the divider starts below the notch and the cut corner
+   reads as a shoulder rather than a broken divider — automatic since the
+   2026-08-08 flip, where the top-right cut needed nothing here. */
 .fl-con__stn + .fl-con__stn::before {
   content: "";
   position: absolute;
@@ -385,26 +389,17 @@
    The lit signal rides the MARKS, which is what gold is for here: the diamond
    fills, the wash lifts, the spine travels. The label just goes to full
    strength. One rule, correct in both themes, no `[data-theme]` override. */
-/* ⚠ THE ACTIVE PLATE IS WELDED TO THE CONSOLE. It is filled, it carries a
-   hairline along its own top and cut edges, and — the part that does the
-   work — its `::after` covers the rail's bottom border so the plate and the
-   body below it become one surface. That is the whole retro-terminal read:
-   the open drawer of the machine, not a highlighted cell in a strip. */
+/* ⚠ THE WELD IS DELETED (owner, 2026-08-08). The active plate is filled and
+   UNDERLINED: the travelling spine sits on the border row beneath it, so the
+   plate reads as the selected key over a lit sill rather than a surface
+   merged with the body. The old `::after` (void over the rail's border) and
+   the returned underline wanted the same pixel — ADR-067's documented
+   conflict — so the weld went when the underline came back. */
 .fl-con__stn[data-on] {
   color: var(--con-txt);
   background:
     linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.035) 78%),
     var(--con-void);
-}
-
-.fl-con__stn[data-on]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: var(--con-void);
 }
 
 .fl-con__stn[data-on] > i {
