@@ -11,6 +11,11 @@ import { chainLettering } from "@/app/(internal)/test/intelligence-config-lab/Va
 import { sectionLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSection";
 import { schematicLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSchematic";
 import {
+  switchboardBankFits,
+  switchboardLettering,
+} from "@/app/(internal)/test/intelligence-config-lab/VariantSwitchboard";
+import { offsetPolyline, ribbonPaths } from "@/app/(internal)/test/intelligence-config-lab/ribbon";
+import {
   type IclRecord,
   type LetterSpec,
   specWidth,
@@ -51,6 +56,7 @@ const VARIANTS = [
   ["chain", chainLettering],
   ["section", sectionLettering],
   ["schematic", schematicLettering],
+  ["switchboard", switchboardLettering],
 ] as const;
 
 const allSpecs = (): { variant: string; workId: string; spec: LetterSpec }[] => {
@@ -85,6 +91,56 @@ describe("intelligence-config lab · fit", () => {
         `die cluster ${row.key} — ${row.width.toFixed(1)}u of symbols against ${row.measure}u of rail`
       ).toBe(true);
     }
+  });
+
+  it("the Switchboard's banks fit their corners of the board", () => {
+    for (const row of switchboardBankFits(record)) {
+      expect(
+        row.width <= row.measure,
+        `switchboard bank ${row.key} — widest row ${row.width.toFixed(1)}u against ${row.measure}u of room`
+      ).toBe(true);
+    }
+  });
+
+  it("ribbon offsets stay parallel and re-intersect at bends", () => {
+    // A straight run offsets to a straight parallel run.
+    const straight = offsetPolyline(
+      [
+        [0, 0],
+        [100, 0],
+      ],
+      5
+    );
+    expect(straight).toEqual([
+      [0, 5],
+      [100, 5],
+    ]);
+    // An H→V corner keeps the conductor count and the corner point sits at
+    // the intersection of the two shifted segments (constant pitch).
+    const cornered = offsetPolyline(
+      [
+        [0, 0],
+        [50, 0],
+        [50, 60],
+      ],
+      4
+    );
+    expect(cornered).toHaveLength(3);
+    expect(cornered[1][0]).toBeCloseTo(46, 5);
+    expect(cornered[1][1]).toBeCloseTo(4, 5);
+    // n conductors → n paths.
+    expect(
+      ribbonPaths(
+        [
+          [0, 0],
+          [40, 0],
+          [52, 12],
+          [52, 80],
+        ],
+        6,
+        3.5
+      )
+    ).toHaveLength(6);
   });
 
   it("no variant letters below the micro rung", () => {

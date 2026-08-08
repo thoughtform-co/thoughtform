@@ -25,6 +25,7 @@ import { DIE_VIEWBOX, VariantDie } from "./VariantDie";
 import { CHAIN_VIEWBOX, VariantChain } from "./VariantChain";
 import { SECTION_VIEWBOX, VariantSection } from "./VariantSection";
 import { SCHEMATIC_VIEWBOX, VariantSchematic } from "./VariantSchematic";
+import { SWITCHBOARD_VIEWBOX, VariantSwitchboard } from "./VariantSwitchboard";
 import { ICL_VARIANTS, type IclRecord, type IclVariantId, iclVariant } from "./variants";
 
 /**
@@ -95,7 +96,7 @@ interface Props {
 }
 
 export function ConfigLabShell({ shapes, districts, works, chains, skills, envelope }: Props) {
-  const [variantId, setVariantId] = useState<IclVariantId>("die");
+  const [variantId, setVariantId] = useState<IclVariantId>("switchboard");
   const [workId, setWorkId] = useState("W-017");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [preset, setPreset] = useState<Preset>(PRESETS[0]);
@@ -181,7 +182,9 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
           ? CHAIN_VIEWBOX
           : variantId === "section"
             ? SECTION_VIEWBOX
-            : SCHEMATIC_VIEWBOX;
+            : variantId === "switchboard"
+              ? SWITCHBOARD_VIEWBOX
+              : SCHEMATIC_VIEWBOX;
 
   const bad = report.clipped.length + report.collisions.length + report.smallControls.length;
 
@@ -308,6 +311,8 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
                     <VariantChain pda={pda} work={work} record={record} />
                   ) : variantId === "section" ? (
                     <VariantSection pda={pda} work={work} record={record} />
+                  ) : variantId === "switchboard" ? (
+                    <VariantSwitchboard pda={pda} work={work} record={record} />
                   ) : (
                     <VariantSchematic pda={pda} work={work} record={record} />
                   )}

@@ -991,14 +991,24 @@ different SHAPES per configuration part, motherboards/nodes/retrofuturism,
 substrate as skill clusters). **Nothing on the landing changed**; no ADR until
 a direction wins (the BOARD-archetype precedent).
 
-- **The five variants** (`app/(internal)/test/intelligence-config-lab/`):
+- **The six variants** (`app/(internal)/test/intelligence-config-lab/`):
   `shipped` mounts the real `ViewConfiguration`; `die` = the work docked in a
   pin-grid socket, parts as package types, the substrate as the ground plane
   below a grade rule — **with the 47 `skillSymbol` marks' first render
   anywhere**; `chain` = inherits IN → work + skill/lane twin → GATE aperture
   → surfaces OUT, patch-bay substrate, MAP_CHAINS neighbours lettered at the
   edges; `section` = vertical cutaway with the five shapes as literal strata
-  below grade; `schematic` = symbol-per-part nets with five power rails.
+  below grade; `schematic` = symbol-per-part nets with five power rails;
+  `switchboard` = **the wire-first one, built after the owner read the first
+  four as safe iterations of the shipped layout** — it adopts the reference's
+  COMPOSITION: multi-conductor ribbons carry ~two-thirds of the ink
+  (`ribbon.ts`, pure offset-polyline geometry with 45° bends, unit-tested),
+  the record's own cascade drawn three tiers deep (work chip → shape bus
+  bars inline on the runs → terminal skill-mark banks), ONE bright object,
+  staggered asymmetric placement, ghost routing + unlettered ornament
+  behind, reach runs exiting the crop, and NO question-header skeleton (the
+  part chips carry tiny function tags instead). Person-led flips every
+  ribbon to the dashed hand — the whole board hand-carried.
 - **Every variant keeps a socketed, cartridge-shaped home for the work**
   (176×136 × k) — the ADR-069 flight docks the reading-01 cartridge, and a
   variant whose core cannot receive it breaks the loved morph on promotion.

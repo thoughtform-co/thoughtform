@@ -30,7 +30,7 @@ import type { PdaWork } from "@/components/landing/home-v2/services/casefile/map
 
 /* ── The variant registry (field-log-lab's 4-field contract) ───────────── */
 
-export type IclVariantId = "shipped" | "die" | "chain" | "section" | "schematic";
+export type IclVariantId = "shipped" | "die" | "chain" | "section" | "schematic" | "switchboard";
 
 export interface IclVariantDef {
   id: IclVariantId;
@@ -40,6 +40,14 @@ export interface IclVariantDef {
 }
 
 export const ICL_VARIANTS: readonly IclVariantDef[] = [
+  {
+    id: "switchboard",
+    label: "The Switchboard",
+    thesis:
+      "The wiring is the picture: multi-conductor ribbons carry two-thirds of the ink, the record's own cascade is drawn three tiers deep (the work chip → shape bus bars inline on the runs → terminal banks of skill marks), one bright object, staggered placement, and the reach runs leave the board.",
+    provenance:
+      "The reference's COMPOSITION, not its parts catalog — after the owner's read that the first four archetypes were safe iterations of the shipped layout.",
+  },
   {
     id: "shipped",
     label: "Shipped (ADR-069)",
