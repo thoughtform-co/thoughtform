@@ -163,7 +163,9 @@ behind a build-time const — same rationale as `CelestialEditorGate`.
 
 In light mode the control still has to read over the dark hero raster for the
 first viewport, so it carries a parchment chip backplate — structural, with no
-scroll coupling and no new writer.
+scroll coupling and no new writer. ⚠ **BOTH HALVES OF THAT ARE REVERSED:**
+Update 2 gave light mode a LIGHT hero plate, and Update 3 deletes the chip
+that the dark one required.
 
 ### 7. Scope: public routes only, dark default
 
@@ -373,7 +375,9 @@ Two things that existed _because_ of §5 move with it:
   viewport. The rule the gate encoded still holds; the answer changed.
 - **The toggle's parchment chip is now parchment on parchment.** Kept — it
   still separates the control from the artwork — but its comment no longer
-  claims a dark backing.
+  claims a dark backing. ⚠ **DELETED BY UPDATE 3.** "Parchment on parchment"
+  was the tell and it was written down here a week before anyone read it as
+  one: a backplate whose whole job was contrast, on a ground it now matches.
 
 **A bug heals for free:** the top-right nav readout has no light
 accommodation at all and had been printing ink over the dark hero. It is
@@ -431,6 +435,91 @@ navigations lose the hoisted nav-time preload.
 
 The flip is still the **hard cut** of §2. The glitch (ADR-060) is a canvas
 laid over an already-flipped hero, not a transition of the flip itself.
+
+## Update 3 — the glyph is a sun and a moon, and the chip is gone (2026-08-09, owner)
+
+Two changes to the same control, and the second is why the first became
+visible.
+
+### The parchment chip is DELETED
+
+§6's backplate and Update 2's "kept — parchment on parchment" are both
+reversed. It read as a stray frame around the glyph.
+
+The premise had already been pulled out from under it. The chip existed
+because §5 said the key visual stays a dark artifact in light mode, so the
+control had to carry its own ground to survive the first viewport. Update 2
+reversed exactly that — light mode serves `Gateway_v2-light.webp`, a LIGHT
+plate — and the chip was solving a problem the page no longer had for six
+days before anyone looked at it.
+
+⚠ **This is the seam that breaks if a dark plate ever returns to light
+mode.** The rule §6 encoded still holds; only its answer changed. Re-adding
+a ground here means re-checking the premise first, not restoring the CSS.
+
+### The glyph: a sun and a crescent, rasterised
+
+`ThemeGlyph` was a procedurally placed pixel constellation ported from
+Sigil's `ParticleIcon` — a sparse dot ring for light, a denser ring plus an
+outer scatter and a solid core for night. **At 18px the two states were not
+tellable apart**, which is the only job this control has. It is now the
+conventional pair every visitor already knows: a sun with eight rays, and a
+crescent moon at −30°.
+
+⚠ **A DELIBERATE DEPARTURE from the particle-icon grammar**
+(`.claude/skills/thoughtform-design/references/particle-icon-grammar.md`).
+That grammar bans curved constructions, caps an icon at 16 skeleton+signal
+pixels, and asks every icon to carry a drift pixel. The old glyph obeyed all
+three and failed to communicate; these two obey none of them. Scoped to this
+one control — a binary system switch whose job is instant recognition, not a
+nav icon that earns its meaning from a set. The grammar's exemption note
+points here.
+
+What still holds, so it is not a free-for-all:
+
+- **SQUARES ONLY.** No `<circle>`, no arc, no `border-radius` — both discs
+  are rasterised into grid cells, so the shape law survives as GEOMETRY even
+  though the silhouette reads round.
+- **The rects paint `currentColor`**, which is what lets `.theme-toggle`'s
+  own CSS keep owning hover / focus / theme colour with no prop plumbing,
+  and means the glyph cannot drift from the tokens.
+- **The glyph shows the theme you would GET**, not the one you are in — the
+  aria-label says so explicitly.
+
+### Three things that were measured, not chosen
+
+- **THE CRESCENT IS AUTHORED BY THICKNESS**, `t = R − BITE_R + BITE_D` =
+  **6.00 cells** exactly. Driving it from the bite's centre offset is how the
+  first cuts came out as fat blobs with a notch: the bite has to overlap the
+  main disc enough to carve the CENTRE out, and thickness is the only number
+  that says whether it does. Move a radius, re-derive `t`.
+- **THE GRID HAD TO GET FINER — 3px → 1px.** On the old 3px grid (6 cells)
+  and on a 2px one (9 cells), a TILTED crescent rasterises with a horizontal
+  spur at the lower horn and reads as a boot. Only an untilted "C" survived,
+  and a vertical C in HUD chrome reads as a bracket. At 1px the tilt is
+  clean, so the moon can sit at its conventional −30°.
+- **THE SUN'S RAYS ARE SPOKES, NOT BLOCKS.** Square ray blocks read as a
+  ring of dots around a disc; a one-cell spoke swept along the radius reads
+  as a ray. The gap between core and spokes is deliberate.
+
+### The two traps in the code
+
+- ⚠ **`dropOrphans` IS MOON-ONLY, BY NECESSITY.** It drops cells joined to
+  the rest of the shape at a corner alone — one cell on the moon (111 → 110).
+  Run it on the sun and it takes **102 → 90, deleting all four diagonal
+  spokes**, because a 1-cell diagonal run touches its own neighbours only at
+  corners. The asymmetry is load-bearing; "tidying" it symmetrical silently
+  costs half the rays.
+- **`toRuns` merges each row's consecutive cells into one rect** — the moon
+  is 110 cells in **18** rects, the sun 102 in **30**. Both shapes are
+  constant, so they are built once at module scope, not per render.
+
+⚠ A known property of the raster, recorded so it is not rediscovered as a
+bug: `Math.round` breaks ties upward, so the sun's LEFT spoke fuses to the
+core while the right keeps its gap, and the top and bottom spokes sit on
+adjacent columns (8 and 9). Visible only if you go looking at 1px cells;
+correcting it means moving `SUN_RAY_IN` or biasing the rounding, and that
+re-opens the whole shape.
 
 ## Rollback
 

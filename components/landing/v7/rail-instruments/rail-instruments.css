@@ -196,6 +196,11 @@
    to wherever the marks are not drawn, and it is byte-identical to
    `.theme-toggle-overlay`, which `/arcs` still mounts. */
 .rin-settings {
+  /* The theme switch's box. HALF of it is the centring offset in the >960
+     rule below, so it has to be a variable rather than a literal 36 — and
+     it has to track the coarse-pointer growth, or the centre drifts 4px on
+     every tablet. */
+  --rin-ctl: 36px;
   position: fixed;
   right: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
   bottom: max(var(--hud-margin), var(--safe-bottom, 0px));
@@ -219,25 +224,40 @@
   pointer-events: auto;
 }
 
-/* With the mark drawn, the row reaches OUT to the frame line the `--br`
-   bracket used to hold: the theme switch's box lands FLUSH on it, filling
-   the corner zone the bracket occupied (36px control against a 28–45px
-   zone). Gated on the instruments' own attribute, so flipping them off
-   returns the controls to the ADR-058 slot along with the bracket.
+/* With the mark drawn, the row reaches OUT to the right rail, filling the
+   corner zone the `--br` bracket used to hold (36px control against a
+   28–45px zone). Gated on the instruments' own attribute, so flipping them
+   off returns the controls to the ADR-058 slot along with the bracket.
 
-   ⚠ FLUSH, NOT CENTRED — this corner's mirror of the journey row is the
-   frame LINE, not the track centre. Putting a 36px control's centre on the
-   track would hang half of it outboard of the frame, and `--rin-half` is a
-   glyph's half-width, meaningless for a control. The exact centre-on-track
-   mirror holds where both terminals are marks; here the terminal is a
-   button and it butts up to the line instead.
+   ⚠ CENTRED ON THE TRACK — reverses this block's own "FLUSH, NOT CENTRED"
+   ruling (owner, 2026-08-09). Flush meant the control's right EDGE sat on
+   the track, which put its centre — and therefore the glyph the reader
+   actually sees — 17px inboard of the rail at 1440. Once the light-mode
+   chip went (see theme.css) there was no box left to butt against, so the
+   offset stopped reading as an edge alignment and started reading as a
+   misalignment.
+
+   The old objection was that centring "hangs half the control outboard of
+   the frame". Measured, it does not clear anything the rail does not
+   already cross: the track is 2px at the row's right edge, its MINOR ticks
+   run 7px outboard of that and its MAJORS 21px, so a centred 36px control
+   stops 4px inside the major ticks' own extent. The frame line is not the
+   rail's outer bound; the majors are.
+
+   `+ 1px` is half the 2px track — it moves the target from the track's
+   inboard edge to its centre line. `--rin-ctl` carries the coarse-pointer
+   growth so the centre holds on touch.
 
    ⚠ Above 960 ONLY, because the marks stop there and the `--br` bracket
-   comes back at that gate — a control flush on the frame line would sit
-   inside it. Below, the ADR-058 slot keeps it clear. */
+   comes back at that gate. Below, the ADR-058 slot keeps it clear. */
 @media (min-width: 961px) {
   html[data-rail-instruments] .rin-settings {
-    right: calc(var(--hud-margin) + var(--hud-rail-guide-inset));
+    right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) + 1px - var(--rin-ctl) / 2);
+  }
+}
+@media (pointer: coarse) {
+  .rin-settings {
+    --rin-ctl: 44px;
   }
 }
 

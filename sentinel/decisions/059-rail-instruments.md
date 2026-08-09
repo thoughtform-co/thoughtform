@@ -1,8 +1,8 @@
 # ADR-059: Rail instruments — the journey's sections as corner marks
 
-**Status:** Accepted · 2026-08-02 — **read Update 3 first; it is the live roster. Update 2 is the live geometry**
+**Status:** Accepted · 2026-08-02 — **read Update 3 first; it is the live roster. Update 2 is the live geometry, as amended by Update 4 (the theme switch centres on the track)**
 **Flags:** `RAIL_INSTRUMENTS`, `SETTINGS_CLUSTER` (`components/landing/v7/rail-instruments/flags.ts`), both default ON
-**Extends:** ADR-058 — the toggle keeps its slot below 960px and moves outboard onto the frame line above it
+**Extends:** ADR-058 — the toggle keeps its slot below 960px and moves outboard onto the rail above it
 **Lab:** `/test/hud-instruments-lab`, route `r4` + `rTelemetry` + `rName`
 
 > ⚠ **§2's geometry is live again; §3 is not.** Update 1 merged the two
@@ -371,13 +371,20 @@ mark flush against a button is a button. The wrapper came back with it, so
 `pointer-events` is granted to the control GROUP rather than to each
 control individually.
 
-**The anchor is FLUSH on the frame line, not centred on the track.** The
-switch's 36px box lands exactly on the line the `--br` bracket held —
-measured 0.0px delta at 1440×900 — and fills the corner zone the bracket
-occupied (36px against 37.5px). §2's exact centre-on-track mirror holds
-where both terminals are MARKS; here the terminal is a button, and putting
-its centre on the line would hang half of it outboard of the frame.
-`--rin-half` is a glyph's half-width and has no meaning for a control.
+⚠ **REVERSED BY UPDATE 4 — the anchor is CENTRED on the track now.** The
+ruling as it shipped, kept for its reasoning: _the anchor is FLUSH on the
+frame line, not centred on the track._ The switch's 36px box lands exactly
+on the line the `--br` bracket held — measured 0.0px delta at 1440×900 —
+and fills the corner zone the bracket occupied (36px against 37.5px). §2's
+exact centre-on-track mirror holds where both terminals are MARKS; here the
+terminal is a button, and putting its centre on the line would hang half of
+it outboard of the frame. `--rin-half` is a glyph's half-width and has no
+meaning for a control.
+
+What survives that: `--rin-half` is still meaningless for a control, and
+the offset is still written from the control's own box rather than from a
+glyph constant. What did not: "outboard of the frame" assumed the frame
+line is the rail's outer bound, and the ticks are. See Update 4.
 
 A side benefit worth keeping: the anchor no longer depends on auth state.
 While the session mark closed the row it was the terminal element for the
@@ -424,6 +431,57 @@ the session mark borrows.
 The lab now renders `LAB_MARKS`, which is exactly both corners
 concatenated, and shares `markState` — so it can no longer disagree with
 production about which mark is lit.
+
+## Update 4 — the anchor centres on the track (2026-08-09, owner)
+
+Update 3's `**The anchor is FLUSH on the frame line, not centred on the
+track.**` is reversed. The theme switch's 36px box now sits with its CENTRE
+on the right rail's track centre line, above 960 as before.
+
+### Why flush stopped reading as alignment
+
+Flush aligned the control's right EDGE with the track. That put the
+control's centre — and therefore the GLYPH, which is the only part of this
+object a reader actually sees — 17px inboard of the rail. It was legible as
+an edge alignment for as long as the control had a visible edge to align:
+in light mode the ADR-058 parchment chip drew a box, and the box's side lined
+up with the line. ADR-058 Update 3 deletes that chip (its own premise had
+been reversed by ADR-058 Update 2), and with no box left to butt against,
+the same 17px reads as a glyph that missed the rail.
+
+### The old objection, measured
+
+The ruling's stated reason was that centring "would hang half of it outboard
+of the frame". It does hang outboard, and that turns out to clear nothing
+the rail does not already cross. At the row's right edge:
+
+| element                  | extent outboard of `--hud-rail-guide-inset` |
+| ------------------------ | ------------------------------------------- |
+| track                    | 2px (`.hud__rail__track`)                   |
+| minor ticks              | 7px (`.hud__rail__tick`)                    |
+| major ticks              | 21px (`.hud__rail__tick--major`)            |
+| centred 36px control     | **17px**                                    |
+
+So the control stops 4px INSIDE the major ticks' own extent. The frame line
+is not the rail's outer bound — the majors are, and they have been since
+ADR-031. The objection was reasoning from the wrong edge.
+
+### The two numbers in the rule
+
+`right: calc(var(--hud-margin) + var(--hud-rail-guide-inset) + 1px - var(--rin-ctl) / 2)`
+
+- **`+ 1px`** is half the 2px track. It moves the target from the track's
+  inboard edge to its centre LINE. Without it the glyph is a pixel off, which
+  is exactly the class of error this update exists to fix.
+- **`--rin-ctl`** is the control's own box (36px, 44px under
+  `pointer: coarse`), declared on `.rin-settings` so the halving tracks the
+  coarse-pointer growth. ⚠ A literal `18px` here is correct on desktop and
+  drifts the centre 4px on every touch device — the failure would appear
+  only on hardware the author is not looking at.
+
+The `min-width: 961px` gate is unchanged, and so is the reason for it: below
+that the marks stop, the `--br` bracket returns, and the ADR-058 slot keeps
+the control clear of it.
 
 ## Rollback
 

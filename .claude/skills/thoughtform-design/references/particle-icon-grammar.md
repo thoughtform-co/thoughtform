@@ -96,6 +96,22 @@ Icons are classified by primary navigational role. Taxonomy guides which primiti
 - Map each primitive to a Navigation UI Grammar concept.
 - Keep GRID = 3 and square pixels only.
 
+### The one standing exemption
+
+`ThemeGlyph` (`components/landing/v7/ThemeGlyph.tsx`) — the light/dark switch's
+sun and crescent — breaks the curve ban, the 16-pixel cap and the drift rule at
+once. Granted by the owner, 2026-08-09, and recorded in **ADR-058 Update 3**.
+
+The reason is worth carrying: its previous cut obeyed all three rules and its
+two states were not tellable apart at 18px. This grammar earns an icon its
+meaning from the SET it belongs to; a binary system switch has no set and has
+to be recognised on sight, so it borrows the silhouettes every reader already
+knows. Square pixels survive — both discs are rasterised into cells, never
+drawn with `<circle>`.
+
+Not a precedent for nav icons. A second exemption is a sign the grammar needs
+revisiting, not a second waiver.
+
 ---
 
 ## When to Use This Reference

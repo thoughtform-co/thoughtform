@@ -105,17 +105,19 @@
   }
 }
 
-/* In light mode the toggle still has to read over the DARK hero raster
-   for the first viewport (the key visual stays a dark artifact — owner,
-   2026-08-01). A parchment chip solves that structurally, with no scroll
-   coupling and no new writer. Zero radius, no box-shadow (chrome law). */
-html[data-theme="light"] .theme-toggle {
-  background: rgba(236, 227, 214, 0.92);
-  border: 1px solid var(--dawn-15);
-}
-html[data-theme="light"] .theme-toggle:hover {
-  border-color: var(--gold-40);
-}
+/* ⚠ THE LIGHT-MODE PARCHMENT CHIP IS DELETED (owner, 2026-08-09) — it read
+   as a stray frame around the glyph, and its premise had already been
+   reversed underneath it.
+
+   It existed because "the key visual stays a dark artifact in light mode"
+   (owner, 2026-08-01), so the toggle had to carry its own ground to be
+   legible over the hero raster on screen one. ADR-058 Update 2 reversed
+   exactly that: light mode now serves `Gateway_v2-light.webp`, a LIGHT
+   plate, so the ink glyph reads on the hero unaided and the chip was
+   solving a problem the page no longer had.
+
+   Re-adding a ground here means re-checking that premise first: if a dark
+   plate ever comes back to light mode, this is the seam that breaks. */
 
 /* ═══════════════════════════════════════════════════════════════════
    BLOCK 1 — global token overrides
