@@ -7,18 +7,10 @@ import {
   Plate,
   wrapLines,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
-import type { CaseMapShape, CaseMapShapeKey } from "@/lib/cases/types";
+import type { CaseMapShape } from "@/lib/cases/types";
 
 import { type Pt, bend, ribbonPaths, route } from "./ribbon";
-import {
-  type IclRecord,
-  type IclVariantProps,
-  type LetterSpec,
-  adv,
-  shapeSymbols,
-  skillsTotal,
-  taps,
-} from "./variants";
+import { type IclRecord, type IclVariantProps, type LetterSpec, adv, taps } from "./variants";
 
 /**
  * THE SWITCHBOARD — the wiring IS the picture.
@@ -50,7 +42,7 @@ export const SWITCHBOARD_VIEWBOX = "0 0 1000 760";
 
 /* ⚠ NOTHING UNDER 7.5 in a 1000-wide crop (meet 0.603 → 4.52px); the
    symbol cells' 7.4 clears at 4.46. */
-const FS = { chrome: 7.5, tag: 7.5, name: 8, value: 8.5, sym: 7.4 } as const;
+const FS = { chrome: 7.5, tag: 7.5, name: 8, value: 8.5 } as const;
 
 /** Chip value lines wrap at this measure (120-wide package, 8u inset). */
 const CHIP_CHARS = Math.floor(104 / adv(FS.name, 0.08));
@@ -64,92 +56,74 @@ const CHIP_NOTCH = 14 * CHIP.k;
 const CHIP_R = CHIP.x + CHIP.w;
 const CHIP_B = CHIP.y + CHIP.h;
 
-/** The five bus bars + banks, staggered like the reference's BLADES rows. */
-const BARS: Record<
-  CaseMapShapeKey,
-  {
-    x: number;
-    y: number;
-    w: number;
-    bank: { x: number; y: number; perRow: number };
-    drop: number;
-    lane: number;
-    enter: "l" | "r";
-  }
-> = {
-  validation: {
-    x: 770,
-    y: 566,
-    w: 150,
-    bank: { x: 774, y: 592, perRow: 5 },
-    drop: 585,
-    lane: 575,
-    enter: "l",
-  },
-  voice: {
-    x: 80,
-    y: 640,
-    w: 150,
-    bank: { x: 84, y: 666, perRow: 4 },
-    drop: 445,
-    lane: 649,
-    enter: "r",
-  },
-  judgment: {
-    x: 560,
-    y: 636,
-    w: 150,
-    bank: { x: 720, y: 628, perRow: 6 },
-    drop: 515,
-    lane: 645,
-    enter: "l",
-  },
-  stakeholder: {
-    x: 300,
-    y: 700,
-    w: 150,
-    bank: { x: 304, y: 724, perRow: 5 },
-    drop: 480,
-    lane: 709,
-    enter: "r",
-  },
-  pattern: {
-    x: 600,
-    y: 700,
-    w: 150,
-    bank: { x: 760, y: 684, perRow: 7 },
-    drop: 550,
-    lane: 709,
-    enter: "l",
-  },
+/**
+ * THE SUBSTRATE ROW — only the shapes this work DRAWS ON (owner,
+ * 2026-08-08: "remove voice and stakeholder", on a record that taps
+ * neither, and the terminal symbol banks with them).
+ *
+ * The ghosted loom of untapped shapes and the 47 skill-mark cells are both
+ * gone: reading 03 is where the whole estate lives, and this reading is
+ * about ONE configuration. The bar still carries its shape's own skill
+ * count, so the substrate's depth survives the simplification.
+ *
+ * ⚠ SLOTS ARE AUTHORED PER COUNT, not per shape key. Keeping a fixed home
+ * per shape put all three of W-004's bars in one corner and left the other
+ * half empty; deriving the row from HOW MANY there are keeps it balanced at
+ * one, two or three. The trade is that a shape has no constant position
+ * across works — which reading 02 can afford, being about one work.
+ *
+ * Every trunk is routed by hand against the part chips' boxes (GRAPH sits
+ * at 330–450 × 556–642 and is what the leftward runs have to clear). The
+ * readout measures TEXT collisions only, so ribbon-versus-box is checked
+ * here in the geometry, not by the guard.
+ */
+const BAR_W = 150;
+const BAR_H = 18;
+
+interface BarSlot {
+  x: number;
+  y: number;
+  /** Where the trunk leaves the chip's bottom edge. */
+  drop: number;
+  /** The horizontal lane it crosses on, below every box it passes. */
+  lane: number;
+}
+
+/** ⚠ Every `drop` lands ON a bottom nib (449 + 20k), so a trunk leaves the
+ *  chip through a pin rather than out of its blank edge. */
+const BAR_SLOTS: Record<1 | 2 | 3, readonly BarSlot[]> = {
+  1: [{ x: 420, y: 676, drop: 549, lane: 660 }],
+  2: [
+    { x: 220, y: 690, drop: 449, lane: 676 },
+    { x: 600, y: 656, drop: 649, lane: 640 },
+  ],
+  3: [
+    { x: 180, y: 700, drop: 449, lane: 690 },
+    { x: 440, y: 660, drop: 569, lane: 650 },
+    { x: 700, y: 700, drop: 669, lane: 682 },
+  ],
 };
 
-const symCellW = (sym: string) => sym.length * adv(FS.sym, 0.08) + 8;
-const SYM_GAP = 5;
+/** The most bars the row can seat. The record's own maximum is three;
+ *  `config-lab-fit` fails loudly if a work ever taps more. */
+export const SWITCHBOARD_MAX_BARS = 3;
 
-/** Widest bank row vs the room its corner of the board affords. */
-export function switchboardBankFits(record: IclRecord) {
-  const ROOM: Record<CaseMapShapeKey, number> = {
-    validation: 150,
-    voice: 150,
-    judgment: 170,
-    stakeholder: 150,
-    pattern: 200,
-  };
-  return record.shapes.map((s) => {
-    const syms = shapeSymbols(record.skills, s);
-    const per = BARS[s.key].bank.perRow;
-    let widest = 0;
-    for (let r = 0; r * per < syms.length; r += 1) {
-      const row = syms.slice(r * per, (r + 1) * per);
-      widest = Math.max(
-        widest,
-        row.reduce((w, sym) => w + symCellW(sym) + SYM_GAP, -SYM_GAP)
-      );
-    }
-    return { key: s.key, width: widest, measure: ROOM[s.key] };
-  });
-}
+const barSlots = (n: number): readonly BarSlot[] =>
+  BAR_SLOTS[Math.min(SWITCHBOARD_MAX_BARS, Math.max(1, n)) as 1 | 2 | 3];
+
+/** The shapes this configuration draws on, in the record's own order. */
+export const tappedShapes = (
+  work: IclVariantProps["work"],
+  record: IclRecord
+): readonly CaseMapShape[] => record.shapes.filter((s) => taps(work, s.key));
+
+/**
+ * Both numbers DERIVED, and the estate's own total stays out of it: the row
+ * draws three of five shapes, so printing `47 SKILLS` beside three bars that
+ * sum to 35 would publish two totals a reader can subtract.
+ */
+export const substrateReach = (work: IclVariantProps["work"], record: IclRecord) =>
+  `DRAWS ON ${tappedShapes(work, record).length} OF ${record.shapes.length} SHAPES`;
 
 /** Every string the switchboard letters, with its measure. Chip values are
  *  emitted PER WRAPPED LINE; a third line gets measure 0 so it fails loudly
@@ -180,7 +154,7 @@ export function switchboardLettering(
     { slot: "sb.why", text: c.why, fs: FS.name, track: 0.08, measure: 620 },
     {
       slot: "sb.caption",
-      text: `${skillsTotal(record.shapes)} SKILLS · ${record.shapes.length} SHAPES`,
+      text: substrateReach(work, record),
       fs: FS.chrome,
       track: 0.08,
       measure: 300,
@@ -204,13 +178,13 @@ export function switchboardLettering(
   chip("graph", "GRAPH", c.graph);
   chip("system", "SYSTEM", c.system);
   chip("surface", "SURFACE", c.surface);
-  for (const s of record.shapes) {
+  for (const s of tappedShapes(work, record)) {
     specs.push({
       slot: `sb.bus.${s.key}`,
       text: `${s.label.toUpperCase()} · ${s.skills}`,
       fs: FS.name,
       track: 0.08,
-      measure: 134,
+      measure: BAR_W - 16,
     });
   }
   return specs;
@@ -304,92 +278,38 @@ function PartChip({
   );
 }
 
-function BusBar({
-  shape,
-  tapped,
-  led,
-  record,
-}: {
-  shape: CaseMapShape;
-  tapped: boolean;
-  led: boolean;
-  record: IclRecord;
-}) {
-  const b = BARS[shape.key];
-  const syms = shapeSymbols(record.skills, shape);
-  const stroke = tapped && !led ? "var(--pda-grn)" : "var(--pda-amb)";
-
-  const cells: ReactNode[] = [];
-  let cx = b.bank.x;
-  let row = 0;
-  syms.forEach((sym, i) => {
-    if (i > 0 && i % b.bank.perRow === 0) {
-      row += 1;
-      cx = b.bank.x;
-    }
-    const w = symCellW(sym);
-    const cy = b.bank.y + row * 17;
-    cells.push(
-      <g key={`${sym}-${i}`}>
-        <rect
-          x={cx}
-          y={cy}
-          width={w}
-          height="15"
-          fill="var(--pda-void)"
-          stroke={tapped && !led ? "var(--pda-grn)" : "var(--pda-txt3)"}
-          strokeWidth="1"
-          opacity={tapped ? 0.85 : 0.7}
-        />
-        <text
-          x={cx + w / 2}
-          y={cy + 10.1}
-          textAnchor="middle"
-          fontSize={FS.sym}
-          letterSpacing=".08em"
-          fill={tapped && !led ? "var(--pda-grn-ink)" : "var(--pda-txt3)"}
-        >
-          {sym}
-        </text>
-      </g>
-    );
-    cx += w + SYM_GAP;
-  });
-
-  /* The bar → bank feeder stub. */
-  const stub: Pt[] =
-    b.bank.y > b.y + 18
-      ? [
-          [b.x + b.w / 2, b.y + 18],
-          [b.x + b.w / 2, b.bank.y],
-        ]
-      : [
-          [b.x + b.w, b.y + 9],
-          [b.bank.x - 4, b.y + 9],
-        ];
-
+/** A shape of judgment, as a labelled bus bar inline on its trunk. */
+function BusBar({ shape, slot, led }: { shape: CaseMapShape; slot: BarSlot; led: boolean }) {
+  const stroke = led ? "var(--pda-txt3)" : "var(--pda-grn)";
   return (
-    <g opacity={tapped ? 1 : 0.38}>
-      <rect x={b.x} y={b.y} width={b.w} height="18" fill="var(--pda-void)" stroke={stroke} />
+    <g>
+      <rect
+        x={slot.x}
+        y={slot.y}
+        width={BAR_W}
+        height={BAR_H}
+        fill="var(--pda-void)"
+        stroke={stroke}
+        strokeDasharray={led ? "5 4" : undefined}
+      />
+      {/* The bar's own underline — the reference's distribution rail. */}
       <line
-        x1={b.x + 4}
-        y1={b.y + 18}
-        x2={b.x + b.w - 4}
-        y2={b.y + 18}
+        x1={slot.x + 4}
+        y1={slot.y + BAR_H}
+        x2={slot.x + BAR_W - 4}
+        y2={slot.y + BAR_H}
         stroke={stroke}
         opacity="0.4"
       />
       <text
-        x={b.x + 8}
-        y={b.y + 12.6}
+        x={slot.x + 8}
+        y={slot.y + 12.6}
         fontSize={FS.name}
         letterSpacing=".08em"
         fill="var(--pda-txt)"
       >
         {`${shape.label.toUpperCase()} · ${shape.skills}`}
       </text>
-      <Ribbon pts={stub} n={3} pitch={3.5} stroke={stroke} opacity={0.5} dashed={led} />
-      {cells}
     </g>
   );
 }
@@ -466,6 +386,8 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
   const c = pda.cfg;
   const led = !pda.configured;
   const wire = led ? "var(--pda-txt3)" : "var(--pda-amb)";
+  const drawn = tappedShapes(work, record).slice(0, SWITCHBOARD_MAX_BARS);
+  const slots = barSlots(drawn.length);
 
   /* Pin nibs, hung directly off the chip's edges. The top and left runs
      start clear of the notch. */
@@ -629,33 +551,34 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         opacity={0.8}
         dashed={led}
       />
-      {/* inherits in, bottom-left — runs arrive PERPENDICULAR to the pin
-          edge and stop a nib short, so the fringe carries the last step. */}
-      <Ribbon pts={bend(270, 513, 450, 473, "h", 16)} n={5} stroke={wire} dashed={led} />
+      {/* inherits in, bottom-left. ⚠ THE RUNS TURN UP INTO THE PIN ROW and
+          land ON a nib (449 + 20k) — the first cut ran them HORIZONTALLY
+          along the nib tips at y 473, and five conductors crossing a row of
+          pins at 45° read as a hatch patch rather than as a connection. */}
       <Ribbon
-        pts={[
-          [390, 556],
-          [390, 487],
-          [404, 473],
-          [500, 473],
-        ]}
+        pts={route(bend(270, 513, 469, 496, "h", 14), [
+          [469, 496],
+          [469, CHIP_B],
+        ])}
+        n={5}
+        stroke={wire}
+        dashed={led}
+      />
+      <Ribbon
+        pts={route(bend(390, 556, 549, 496, "v", 14), [
+          [549, 496],
+          [549, CHIP_B],
+        ])}
         n={5}
         stroke="var(--pda-txt3)"
         opacity={0.7}
         dashed
       />
-      {/* reach out, top-right — and OFF the board */}
-      <Ribbon pts={bend(650, CHIP.y, 760, 173, "v", 16)} n={4} stroke={wire} dashed={led} />
-      <Ribbon
-        pts={[
-          [820, 130],
-          [820, 0],
-        ]}
-        n={4}
-        stroke={wire}
-        opacity={0.35}
-        dashed={led}
-      />
+      {/* reach out, top-right. ⚠ NOTHING LEAVES THE SYSTEM CHIP UPWARD
+          (owner, 2026-08-08) — the off-board continuation is deleted; a
+          system a stream acts on is a terminus on this reading, not a
+          transit. */}
+      <Ribbon pts={bend(649, CHIP.y, 760, 173, "v", 16)} n={4} stroke={wire} dashed={led} />
       {/* the output run: chip → gate → junction → system + surface */}
       <Ribbon
         pts={[
@@ -685,25 +608,23 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         {c.gatNote.split(" — ")[0]}
       </text>
 
-      {/* substrate trunks — the whole estate is WIRED; the streams this
-          work draws on run live, the rest sit ghosted in the loom. */}
-      {record.shapes.map((s) => {
-        const tapped = taps(work, s.key);
-        const b = BARS[s.key];
-        const entry: Pt = b.enter === "l" ? [b.x, b.y + 9] : ([b.x + b.w, b.y + 9] as Pt);
-        const pts = route(bend(b.drop, CHIP_B, entry[0], b.lane, "v", 14), [
-          [entry[0], b.lane] as Pt,
-          entry,
+      {/* substrate trunks — one per shape this configuration draws on. */}
+      {drawn.map((s, i) => {
+        const slot = slots[i];
+        const cx = slot.x + BAR_W / 2;
+        const pts = route(bend(slot.drop, CHIP_B, cx, slot.lane, "v", 14), [
+          [cx, slot.lane] as Pt,
+          [cx, slot.y] as Pt,
         ]);
         return (
           <Ribbon
             key={s.key}
             pts={pts}
-            n={tapped ? 3 : 2}
+            n={3}
             pitch={3.5}
-            stroke={tapped ? (led ? "var(--pda-txt3)" : "var(--pda-grn)") : "var(--pda-dim)"}
-            opacity={tapped ? 0.55 : 0.14}
-            dashed={led && tapped}
+            stroke={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
+            opacity={0.55}
+            dashed={led}
           />
         );
       })}
@@ -745,9 +666,9 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         k={CHIP.k}
       />
 
-      {/* ── Tier 3: the bus bars and their banks ─────────────────────── */}
-      {record.shapes.map((s) => (
-        <BusBar key={s.key} shape={s} tapped={taps(work, s.key)} led={led} record={record} />
+      {/* ── Tier 3: the bus bars ─────────────────────────────────────── */}
+      {drawn.map((s, i) => (
+        <BusBar key={s.key} shape={s} slot={slots[i]} led={led} />
       ))}
 
       {/* The specification note + the derived totals. */}
@@ -769,7 +690,7 @@ export function VariantSwitchboard({ pda, work, record }: IclVariantProps) {
         letterSpacing=".08em"
         fill="var(--pda-txt3)"
       >
-        {`${skillsTotal(record.shapes)} SKILLS · ${record.shapes.length} SHAPES`}
+        {substrateReach(work, record)}
       </text>
     </>
   );

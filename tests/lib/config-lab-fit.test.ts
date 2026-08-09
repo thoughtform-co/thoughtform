@@ -11,8 +11,9 @@ import { chainLettering } from "@/app/(internal)/test/intelligence-config-lab/Va
 import { sectionLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSection";
 import { schematicLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSchematic";
 import {
-  switchboardBankFits,
+  SWITCHBOARD_MAX_BARS,
   switchboardLettering,
+  tappedShapes,
 } from "@/app/(internal)/test/intelligence-config-lab/VariantSwitchboard";
 import { offsetPolyline, ribbonPaths } from "@/app/(internal)/test/intelligence-config-lab/ribbon";
 import {
@@ -93,11 +94,15 @@ describe("intelligence-config lab · fit", () => {
     }
   });
 
-  it("the Switchboard's banks fit their corners of the board", () => {
-    for (const row of switchboardBankFits(record)) {
+  /* The Switchboard's substrate row draws ONLY the shapes a work taps, and
+     its slots are authored per count — so a work that tapped a fourth shape
+     would silently lose a bar. The record's own maximum is three. */
+  it("no work taps more shapes than the Switchboard's row can seat", () => {
+    for (const work of record.works) {
+      const n = tappedShapes(work, record).length;
       expect(
-        row.width <= row.measure,
-        `switchboard bank ${row.key} — widest row ${row.width.toFixed(1)}u against ${row.measure}u of room`
+        n >= 1 && n <= SWITCHBOARD_MAX_BARS,
+        `${work.id} taps ${n} shapes; the row seats 1–${SWITCHBOARD_MAX_BARS}`
       ).toBe(true);
     }
   });
