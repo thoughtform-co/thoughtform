@@ -247,21 +247,41 @@ const WIREFRAME_STATIONS = [
     idx: 0,
     id: "mimir",
     kind: "wire",
-    labels: ["ADS DATA", "REVIEWS", "REDDIT", "BLOGS", "GENERATE BRIEFINGS"],
+    labels: [
+      "INPUT",
+      "ADS DATA",
+      "REVIEWS",
+      "REDDIT",
+      "BLOGS",
+      "GENERATE BRIEFINGS",
+      "BRIEFING",
+      "AD",
+    ],
   },
   { idx: 1, id: "vesper", kind: "wire", labels: ["PROMPT", "ENHANCE PROMPT", "GENERATE"] },
   {
     idx: 2,
     id: "babylon",
     kind: "wire",
+    // The four transcript rows are REAL segments from a Loop UGC job
+    // (EN → JA), chosen digit-free and currency-free — every cell is a
+    // pinned label here, verbatim.
     labels: [
       "TRANSCRIBE",
       "TRANSLATE",
       "DUB",
       "APPROVE",
+      "UPLOAD",
       "ORIGINAL",
       "TRANSLATION",
-      "SEND TO FRONTIFY",
+      "here's what you need to know.",
+      "これをチェックしてほしい。",
+      "Loop Quiet for focus,",
+      "集中にはLoop Quiet",
+      "They are reusable",
+      "Loopは再利用可能",
+      "so you can find your perfect fit.",
+      "完璧なフィットを見つけられる",
     ],
   },
   { idx: 3, id: "heimdall", kind: "wire", labels: ["BRIEFINGS", "SYNC", "TEMPLATE"] },
@@ -293,16 +313,18 @@ function expectWireframeBay(
   expect(bay!.overflowY, `${label}: the bay clips vertically`).toBeLessThanOrEqual(1);
   expect(bay!.overflowX, `${label}: the bay clips horizontally`).toBeLessThanOrEqual(1);
 
-  // ⚠ SEVEN LETTERED ELEMENTS IS THE BUDGET, AND NOT ONE NUMBER AMONG THEM
-  // (ADR-068 U5 — babylon's flow rail set the ceiling; the pinned per-tool
-  // sets below are the real guard, this band is the coarse fence). The
-  // tools print USD figures; this page may not (the map's `Never a price.`
-  // line and the casefile's confidentiality envelope), so a digit or a
-  // currency glyph appearing anywhere in a drawing is the regression.
+  // ⚠ FIFTEEN LETTERED ELEMENTS IS THE BUDGET, AND NOT ONE NUMBER AMONG
+  // THEM (ADR-068 U6 — babylon letters its four REAL transcript rows, so
+  // its 7 chrome labels + 8 cells set the ceiling; the pinned per-tool
+  // sets are the real guard, this band is the coarse fence). The tools
+  // print USD figures; this page may not (the map's `Never a price.` line
+  // and the casefile's confidentiality envelope), so a digit or a
+  // currency glyph appearing anywhere in a drawing is the regression —
+  // which is also why the transcript lines are CHOSEN digit-free.
   expect(
     bay!.labels.length,
-    `${label}: the wireframe letters ${bay!.labels.length} elements, budget is 7`
-  ).toBeLessThanOrEqual(7);
+    `${label}: the wireframe letters ${bay!.labels.length} elements, budget is 15`
+  ).toBeLessThanOrEqual(15);
   expect(
     bay!.labels.length,
     `${label}: the wireframe lost its micro-labels`

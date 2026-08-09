@@ -693,3 +693,62 @@ the frame veil untouched. Verified by close-up probe on the landing at
 plate, the card grounds) and is absent across all three CTA plates, in
 both themes; the six-viewport walk and the light contrast walk re-run
 green (the 8.2:1 ink-on-gold figure now holds unattenuated).
+
+## Update 6 — the review pass: three panels, a centred composer, the lettered transcript (2026-08-09, owner)
+
+Owner notes on the live page, one per drawing:
+
+- **Mímir is THREE lettered panels again — `INPUT | BRIEFING | AD`**, each
+  headed by a neutral micro-label ("there should be a panel in the middle
+  called Briefing… add clear labels to each of these three panels").
+  U3's kicker-dot brief grammar is resurrected NEUTRAL — its dots and
+  checked square were gold in U3, and the one-gold-CTA law keeps them
+  quiet now. The input rail trims to `clamp(150px, 28%, 190px)` and the
+  AD panel takes `clamp(130px, 26%, 220px)` ("slightly thinner so we
+  have more space for the new middle panel"). ⚠ The ad column carries
+  the portrait read as a DEFINITE flex basis — the babylon video
+  column's move, in `%` rather than `cqh`; never an `aspect-ratio` on
+  the frame.
+- **Vesper's three components centre as ONE composition** ("the prompt
+  bar should be higher… aligned vertically centered"). The U5 absolute
+  float and the gal/dock LOCKSTEP PADDING PAIR ARE RETIRED: a `__main`
+  column centres [row, dock] as a group, the dock in flow right under
+  the row (width 68%, left-aligned with it). ⚠ The tile's height is
+  cqh-DEFINITE now (`min(56cqh, 42cqw)`) — `100%` of a content-sized row
+  is indefinite and resolves to nothing. The ENHANCE PROMPT plate is
+  SQUARE-CORNERED ("the enhance prompt button is missing corners" — the
+  clip-path was cutting the border's corner segments away); the corner
+  law prefers it anyway — the children of a chamfered surface are
+  square, and the one cut object in the row is the gold CTA.
+- **Babylon's flow IS the feature**: taller chrome (`min(17cqh,
+5.4cqw)`), flow labels above the micro-chrome floor at
+  `clamp(10px, 1.55cqw, 13px)` — the surface's ONE deliberate size
+  exception — bigger checks, longer links, and the CTA recopied to just
+  `UPLOAD` and WELDED to the chain's end as its fifth station (the
+  `margin-left: auto` float is gone; a fifth link runs into the plate).
+  The segments table letters the REAL transcript — four EN → JA rows
+  from a Loop UGC job, prose-cased, no tracking, nowrap + hidden
+  overflow, PT Mono through `--fl-mono` (CJK glyphs fall through the
+  stack to the system mono; the computed family still leads PT Mono,
+  which is what the smoke's family walk reads). ⚠ EVERY CELL IS A PINNED
+  SMOKE LABEL NOW, verbatim — and the lines are CHOSEN digit-free and
+  currency-free, because the per-label digit/currency bans and the bay's
+  ordinal scan read this text; a segment quoting sizes, counts or prices
+  may not be lettered on this page (the envelope).
+
+The label budget rises 7 → **15** (babylon's 7 chrome labels + 8 cells
+set the ceiling; the pinned per-tool sets stay the real guard). The sets:
+mímir 8 (`INPUT · ADS DATA · REVIEWS · REDDIT · BLOGS · GENERATE
+BRIEFINGS · BRIEFING · AD`), vesper 3 (unchanged), babylon 15, heimdall 3
+(untouched).
+
+### Verification
+
+- `npm run verify` clean (618 unit tests, typecheck, lint). The
+  six-viewport harmonised walk, the 1440×800 clip walk and the light
+  contrast walk all green on the new pins — the Japanese cells assert
+  verbatim through the sorted-array equality and letter ≥8.6px.
+- Captures at 1440×800 × both themes: the three mímir panels letter, the
+  vesper composition centres with the composer directly under the row,
+  the babylon chain reads first with UPLOAD ending it clean above the
+  veil.

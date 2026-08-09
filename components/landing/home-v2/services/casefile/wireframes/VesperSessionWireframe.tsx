@@ -2,19 +2,22 @@
  * VesperSessionWireframe — the image & video suite's session view, DRAWN.
  *
  * The bay's first AUTHORED wireframe (ADR-068 Decision 5), recomposed by
- * ADR-068 U5 (owner, 2026-08-09) around THREE components and nothing else:
- * the prompt, the generated image, and the composer that makes it.
+ * ADR-068 U5 (owner, 2026-08-09) around THREE components and nothing else —
+ * the prompt, the generated image, and the composer that makes it — and
+ * re-seated by U6 (same day): the three centre as ONE composition, the
+ * prompt bar in flow right under the row rather than pinned to the floor
+ * of an uncapped bay.
  *
  *   ┌ chrome ───────────────────────────────────────────────────────┐
  *   │ ▬ ▭                                                           │
  *   ├───────────────────────────────────────────────────────────────┤
- *   │ ⊞ │ ┌ PROMPT ──────┐  ┌──────────┐                            │
+ *   │ ⊞ │                                                           │
+ *   │ ▫ │ ┌ PROMPT ──────┐  ┌──────────┐                            │
  *   │ ▫ │ │ ▬▬▬▬  ▬▬     │  │   ◠ ▨    │   ← the generation row     │
  *   │ ▫ │ │ ▬▬▬   ·· ▬   │  │ (image)  │                            │
- *   │ ▫ │ └──────────────┘  └──────────┘                            │
- *   │        ┌ composer ───────────────────────────────┐            │
- *   │        │ [▭ input....] [✦ ENHANCE PROMPT][GENERATE]           │
- *   │        └─────────────────────────────────────────┘            │
+ *   │   │ └──────────────┘  └──────────┘                            │
+ *   │   │ [▭ input......] [✦ ENHANCE PROMPT] [GENERATE]             │
+ *   │   │                                                           │
  *   └───────────────────────────────────────────────────────────────┘
  *
  * ── WHAT THE BOX IS, AND WHY EVERY NUMBER BELOW IS A PERCENTAGE ─────────
@@ -41,7 +44,7 @@
  * rides above it at z 1 (U5 punch-through: the redrawn tools carry the
  * veil on `.fl-wire__in::after`; the frame's own veil stands down).
  *
- * ── THE RULES THIS DRAWING KEEPS (D5 as amended by U5) ──────────────────
+ * ── THE RULES THIS DRAWING KEEPS (D5 as amended by U5/U6) ───────────────
  * · NO FILTER, NO `<img>`. ADR-064 U2's line is AUTHORED vs CAPTURED and a
  *   wireframe is authored evidence.
  * · THREE LETTERED ELEMENTS AND THAT IS THIS DRAWING'S SET (`PROMPT`,
@@ -52,8 +55,10 @@
  *   figure clause is dormant with the meter — the digit ban survives it).
  * · TWO SIGNAL COLOURS (U5): the ENHANCE PROMPT plate is green — the
  *   operational flow, the tool's own `genai-prompting` rewrite — and
- *   exactly ONE solid gold plate, GENERATE. The image glyph keeps the
- *   gold mark: the made thing. The session rail's lit square went neutral.
+ *   exactly ONE solid gold plate, GENERATE. The enhance plate is
+ *   SQUARE-CORNERED since U6 (the clipped border read as missing
+ *   corners; the one cut object in the row is the CTA). The image glyph
+ *   keeps the gold mark: the made thing.
  * · STATIC. No keyframes of its own (ADR-021); the bay's entrance is the
  *   only motion this box has ever had.
  * · `aria-hidden`. The frame is the button and its label is the action; the
@@ -78,7 +83,7 @@ export function VesperSessionWireframe() {
           </span>
         </div>
 
-        {/* ── 2 · THE SESSION RAIL AND THE GENERATION ROW ── */}
+        {/* ── 2 · THE SESSION RAIL AND THE CENTRED COMPOSITION ── */}
         <div className="fl-wire__body">
           <div className="fl-wire__rail">
             <i className="fl-wire__new">
@@ -91,61 +96,63 @@ export function VesperSessionWireframe() {
             <i className="fl-wire__sess" />
           </div>
 
-          <div className="fl-wire__gal">
-            {/* The prompt card — what was asked for, beside what came
-                back. The label LEADS (ADR-068 lesson a); bars of unequal
-                length are the request, the meta row its marks. */}
-            <div className="fl-wire__card">
-              <span className="fl-wire__lines">
-                <span className="fl-wire__lbl">PROMPT</span>
-                <i />
-                <i />
-                <i />
-                <span className="fl-wire__meta">
-                  <b className="fl-wire__dot" />
-                  <b className="fl-wire__dot" />
-                  <b className="fl-wire__mb" />
-                  <b className="fl-wire__mb" />
+          {/* The card, the image and the composer centre as ONE group
+              (U6, owner: "the prompt bar should be higher… aligned
+              vertically centered"). */}
+          <div className="fl-wire__main">
+            <div className="fl-wire__gal">
+              {/* The prompt card — what was asked for, beside what came
+                  back. The label LEADS (ADR-068 lesson a); bars of unequal
+                  length are the request, the meta row its marks. */}
+              <div className="fl-wire__card">
+                <span className="fl-wire__lines">
+                  <span className="fl-wire__lbl">PROMPT</span>
+                  <i />
+                  <i />
+                  <i />
+                  <span className="fl-wire__meta">
+                    <b className="fl-wire__dot" />
+                    <b className="fl-wire__dot" />
+                    <b className="fl-wire__mb" />
+                    <b className="fl-wire__mb" />
+                  </span>
                 </span>
+              </div>
+
+              {/* The generated image — the horizon-and-sun mark in the
+                  gold signal, on the gold-tinged GENERATED ground. */}
+              <span className="fl-wire__tile">
+                <svg
+                  className="fl-wire__tileglyph"
+                  viewBox="0 0 24 24"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  <circle cx="15.5" cy="8" r="2.6" />
+                  <path d="M2,19 L9.5,11 L14,15.5 L17.5,12.5 L22,17" />
+                </svg>
               </span>
             </div>
 
-            {/* The generated image — the horizon-and-sun mark in the gold
-                signal, on the gold-tinged GENERATED ground. A wireframe
-                that renders imagery is a mockup, and a mockup of someone
-                else's pictures is a screenshot again. */}
-            <span className="fl-wire__tile">
-              <svg
-                className="fl-wire__tileglyph"
-                viewBox="0 0 24 24"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <circle cx="15.5" cy="8" r="2.6" />
-                <path d="M2,19 L9.5,11 L14,15.5 L17.5,12.5 L22,17" />
-              </svg>
-            </span>
-          </div>
-        </div>
-
-        {/* ── 3 · THE FLOATING COMPOSER — one row, the whole loop ──
-            Bottom-centre and deliberately NOT full-bleed: the composer
-            floats over the canvas in the real app, and the inset is what
-            says so. Input → the green ENHANCE PROMPT (the tool's own
-            prompt rewrite) → the gold GENERATE. */}
-        <div className="fl-wire__dock">
-          <div className="fl-wire__comp">
-            <i className="fl-wire__say">
-              <b />
-            </i>
-            <span className="fl-wire__enh">
-              <svg className="fl-wire__wand" viewBox="0 0 12 12">
-                <path d="M6,0 L7.15,4.85 L12,6 L7.15,7.15 L6,12 L4.85,7.15 L0,6 L4.85,4.85 Z" />
-              </svg>
-              <span className="fl-wire__lbl fl-wire__lbl--grn">ENHANCE PROMPT</span>
-            </span>
-            <span className="fl-wire__cta">
-              <span className="fl-wire__lbl">GENERATE</span>
-            </span>
+            {/* ── 3 · THE COMPOSER — one row, the whole loop, in flow
+                right under the generation row (U6). Input → the green
+                ENHANCE PROMPT (the tool's own prompt rewrite) → the gold
+                GENERATE. */}
+            <div className="fl-wire__dock">
+              <div className="fl-wire__comp">
+                <i className="fl-wire__say">
+                  <b />
+                </i>
+                <span className="fl-wire__enh">
+                  <svg className="fl-wire__wand" viewBox="0 0 12 12">
+                    <path d="M6,0 L7.15,4.85 L12,6 L7.15,7.15 L6,12 L4.85,7.15 L0,6 L4.85,4.85 Z" />
+                  </svg>
+                  <span className="fl-wire__lbl fl-wire__lbl--grn">ENHANCE PROMPT</span>
+                </span>
+                <span className="fl-wire__cta">
+                  <span className="fl-wire__lbl">GENERATE</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -2636,13 +2636,13 @@
    `cqw` / `cqh` / a percentage of its own row. ⚠ `.fl-con` is only an
    `inline-size` container — `cqh` resolves against the VIEWPORT there, so
    the local size container is what makes the vertical rhythm mean anything
-   at all. The vertical ladder, in `cqh` (vesper's, post-U5):
+   at all. The vertical ladder (vesper's, post-U6):
 
      chrome    0 … 15        the title bar
-     gallery   the band      the session rail + the prompt card + the image
-     composer  bottom band   the floating plate — min(13cqh, 5cqw) tall,
-                             seated 3cqh off the floor, one row: input →
-                             ENHANCE PROMPT → GENERATE
+     the group, CENTRED      the prompt card + the image, with the
+                             composer (min(13cqh, 5cqw) tall) in flow
+                             right under them — one composition,
+                             vertically centred in the band (owner U6)
 
    ── THE ONE OBSTACLE ───────────────────────────────────────────────────
    The veil paints OVER these drawings — EXCEPT THE CTA (U5 punch-through,
@@ -2917,23 +2917,26 @@
   background: var(--w-fill2);
 }
 
-/* The gallery is padded off the composer's ceiling so the bands read as
-   bands — the row's own content stops where the plate begins.
-   ⚠ THIS PADDING IS THE DOCK'S HEIGHT, DERIVED. The ladder is: the body's
-   content ends at 98cqh, the dock's top is at `97cqh − height`, and the
-   overlap is 3cqh — so the padding is `dockHeight − 2cqh` and NOTHING ELSE
-   keeps the row off the plate. The `min()` is repeated rather than lifted
-   to a custom property on purpose: container units inside a custom property
-   declared on the container ITSELF resolve against the wrong box. Move one
-   and move the other (the dock is `min(13cqh, 5cqw)` since U5's one-row
-   composer). */
-.fl-wire--vesper .fl-wire__gal {
+/* U6 (owner: "the prompt bar should be higher… aligned vertically
+   centered"): the card, the image and the composer read as ONE group,
+   centred in the band — the U5 absolute float and the gal/dock lockstep
+   padding pair are RETIRED with it. */
+.fl-wire--vesper .fl-wire__main {
   flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: min(2.6cqh, 12px);
+}
+/* The generation row — content-sized since U6; the dock sits in flow
+   right under it. */
+.fl-wire--vesper .fl-wire__gal {
+  flex: none;
   min-width: 0;
   display: flex;
   align-items: stretch;
   gap: 1cqw;
-  padding-bottom: calc(min(13cqh, 5cqw) - 2cqh);
 }
 /* ⚠ THE ROW'S HEIGHT IS CQW-CAPPED, AND IT IS ARITHMETIC (2026-08-08, the
    no-ceiling pass). The tiles are height-driven (`aspect-ratio: 4/5`), so
@@ -3009,11 +3012,12 @@
    the rest of the row empty — which is what a generation row actually
    looks like. Filling the width would be inventing evidence. (U5: ONE
    tile — the mid-run twin, its clip pill and its progress bar left with
-   the clutter cut.) */
+   the clutter cut. U6: the height is cqh-DEFINITE — `100%` of the now
+   content-sized row is indefinite and resolves to nothing.) */
 .fl-wire--vesper .fl-wire__tile {
   position: relative;
   flex: none;
-  height: min(100%, 42cqw);
+  height: min(56cqh, 42cqw);
   aspect-ratio: 4 / 5;
   display: flex;
   align-items: center;
@@ -3032,22 +3036,18 @@
   fill: none;
 }
 
-/* ── 4 · The floating composer (U5: ONE row, no mode bar) ──────────────── */
-/* Bottom-centre and deliberately NOT full-bleed — the inset is what says
-   "floating". It overlaps the band above by 3cqh: enough to read as a plate
-   over the row, not enough to eat it. */
+/* ── 4 · The composer (U6: in flow, right under the row) ───────────────── */
+/* ⚠ EVERY ANCESTOR BETWEEN THE CTA AND `.fl-wire__in` STAYS TRANSFORM-,
+   FILTER- AND Z-FREE (U5 punch-through). The dock's old `translateX(-50%)`
+   centering made it a STACKING CONTEXT — a transform always does — which
+   trapped the CTA's z 1 inside it, and GENERATE probed dotted while the
+   other plates punched clean. In flow since U6 (owner: "the prompt bar
+   should be higher"), left-aligned with the row, it cannot re-grow a
+   context by accident either. */
 .fl-wire--vesper .fl-wire__dock {
-  position: absolute;
-  /* ⚠ CENTRED BY INSETS, NEVER BY TRANSFORM (U5 punch-through). The old
-     `left: 50%` + `translateX(-50%)` made the dock a STACKING CONTEXT —
-     a transform always does — which trapped the CTA's z 1 inside it, so
-     the whole composer painted under the relocated veil and GENERATE
-     came out dotted while mímir's and babylon's plates punched clean.
-     `left/right: 16%` is byte-identical geometry for a 68% width. */
-  left: 16%;
-  right: 16%;
-  bottom: 3cqh;
-  /* ⚠ IN LOCKSTEP WITH `.fl-wire__gal`'s padding — see the note there. */
+  flex: none;
+  align-self: flex-start;
+  width: 68%;
   height: min(13cqh, 5cqw);
   display: flex;
   align-items: stretch;
@@ -3084,9 +3084,10 @@
   background: var(--w-fill2);
 }
 /* The enhancer — GREEN, the operational flow (U5): the tool's own
-   genai-prompting rewrite. Wand + label on a washed plate with the same
-   house cut as the CTA beside it (border segments at the cut corners go
-   with the clip — the ba-pipe chips' accepted look). */
+   genai-prompting rewrite. SQUARE-CORNERED since U6 (owner: the clipped
+   border read as missing corners) — the corner law prefers it anyway:
+   the children of a chamfered surface are square, and the one cut object
+   in the row is the gold CTA. */
 .fl-wire--vesper .fl-wire__enh {
   flex: none;
   display: inline-flex;
@@ -3096,7 +3097,6 @@
   padding: 0 max(6px, 0.8cqw);
   border: 1px solid var(--w-green);
   background: var(--w-green-soft);
-  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
 }
 .fl-wire--vesper .fl-wire__wand {
   flex: none;
@@ -3152,10 +3152,11 @@
    CTA's fit: `GENERATE BRIEFINGS` is 18 mono characters ≈ 124px at the
    8.6px label floor (advance 0.6em + 0.2em tracking ≈ 6.9px/char), plus
    the plate's and the rail's padding ≈ 153px. 26% of the binding 564.5px
-   frame is 147 — too tight — so the rail floors at 150px, and caps at 200
-   so the big boxes do not spend half the drawing on the inputs. */
+   frame is 147 — too tight — so the rail floors at 150px. U6 trims the
+   fraction and the cap (28% / 190px) so the middle BRIEFING panel owns
+   the centre — the owner's "more space for the new middle panel". */
 .fl-wire--mimir .fl-wire__mi-rail {
-  flex: 0 0 clamp(150px, 30%, 200px);
+  flex: 0 0 clamp(150px, 28%, 190px);
   display: flex;
   flex-direction: column;
   gap: min(2.2cqh, 9px);
@@ -3193,27 +3194,90 @@
   height: max(14px, min(6cqh, 18px));
 }
 
-/* ── the ad region ── */
-.fl-wire--mimir .fl-wire__mi-ad {
+/* ── BRIEFING: the middle panel, back by owner ruling (U6) ──────────────
+   U3's kicker-dot grammar resurrected NEUTRAL: a section is a dot + a
+   short kicker bar, then body bars; the one checklist row is FORMATS.
+   The dots and the checked square were gold in U3 — they went neutral
+   with the one-gold-CTA law (U5): the only bright object is the plate. */
+.fl-wire--mimir .fl-wire__mi-brief {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  align-items: stretch;
-  justify-content: center;
+  flex-direction: column;
+  gap: min(3cqh, 14px);
+  padding: min(2cqh, 8px) min(1.4cqw, 12px);
+  border: 1px solid var(--w-hair2);
+  background: var(--w-card);
 }
-/* ⚠ THE FRAME'S WIDTH IS HEIGHT-DERIVED — `66cqh`, capped by the region —
-   never an `aspect-ratio`: an aspect-ratio'd box with indefinite height
-   contributes an intrinsic width the row cannot shrink (the babylon trap,
-   ADR-068 U3, measured 46px past the frame). The `%` term is what keeps
-   the tall uncapped bays (679/739px) from growing a poster. */
+.fl-wire--mimir .fl-wire__mi-sec {
+  display: flex;
+  flex-direction: column;
+  gap: min(1.6cqh, 5px);
+}
+.fl-wire--mimir .fl-wire__mi-kick {
+  display: flex;
+  align-items: center;
+  gap: min(0.8cqw, 6px);
+  margin-bottom: min(0.6cqh, 2px);
+}
+.fl-wire--mimir .fl-wire__mi-dot {
+  width: 3px;
+  height: 3px;
+  background: var(--w-fill2);
+}
+.fl-wire--mimir .fl-wire__mi-kbar {
+  width: min(6cqw, 34px);
+  height: min(1.6cqh, 3px);
+  background: var(--w-fill2);
+}
+.fl-wire--mimir .fl-wire__mi-line {
+  height: min(1.8cqh, 3px);
+  background: var(--w-fill);
+}
+.fl-wire--mimir .fl-wire__mi-line--short {
+  width: 56%;
+}
+.fl-wire--mimir .fl-wire__mi-line--mid {
+  width: 78%;
+}
+.fl-wire--mimir .fl-wire__mi-checks {
+  display: flex;
+  gap: min(1.2cqw, 9px);
+  margin-top: min(0.8cqh, 3px);
+}
+.fl-wire--mimir .fl-wire__mi-checks i {
+  position: relative;
+  width: min(2.6cqw, 12px);
+  height: min(2.6cqw, 12px);
+  border: 1px solid var(--w-hair);
+}
+.fl-wire--mimir .fl-wire__mi-checks i[data-on]::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--w-fill2);
+}
+
+/* ── AD: the output panel, slightly thinner (U6) ────────────────────────
+   ⚠ THE COLUMN CARRIES THE PORTRAIT READ AS A DEFINITE BASIS — the
+   babylon video column's move, in % rather than cqh. Never an
+   `aspect-ratio` on the frame: with indefinite height it contributes an
+   intrinsic width the row cannot shrink (ADR-068 U3, measured). */
+.fl-wire--mimir .fl-wire__mi-ad {
+  flex: 0 0 clamp(130px, 26%, 220px);
+  display: flex;
+  flex-direction: column;
+  gap: min(1.8cqh, 8px);
+  padding: min(2cqh, 8px) min(1cqw, 8px);
+  border: 1px solid var(--w-hair2);
+  background: var(--w-card);
+}
 .fl-wire--mimir .fl-wire__mi-adframe {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: min(1.6cqh, 7px);
-  width: min(64%, 66cqh);
-  padding: min(2cqh, 10px) min(1.4cqw, 12px);
-  border: 1px solid var(--w-hair2);
-  background: var(--w-card);
 }
 .fl-wire--mimir .fl-wire__mi-adimg {
   flex: 1 1 auto;
@@ -3256,8 +3320,12 @@
    shadow — a mark, never digits), and a 9:16-ish screen whose width
    derives from its COLUMN's height. The U3 title bar, unlabelled pipe
    chips and SYNC foot are DELETED. */
+/* U6 (owner): THE FLOW IS THE FEATURE and it reads like one — a taller
+   chrome band, larger flow type, bigger checks, longer links, and the
+   gold CTA WELDED to the chain's end as its fifth station rather than
+   floated off to the right. */
 .fl-wire--babylon .fl-wire__ba-chrome {
-  flex: 0 0 min(13cqh, 4.2cqw);
+  flex: 0 0 min(17cqh, 5.4cqw);
   display: flex;
   align-items: center;
   padding: 0 1.6cqw;
@@ -3270,32 +3338,42 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: max(3px, 0.8cqw);
+  gap: max(4px, 0.9cqw);
 }
 .fl-wire--babylon .fl-wire__ba-step {
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: max(2px, 0.4cqw);
+  gap: max(3px, 0.5cqw);
+}
+/* ⚠ THE ONE SIZE EXCEPTION on this surface (U6): the flow's labels rise
+   above the micro-chrome floor because the pipeline is the drawing's
+   whole argument. Fit at the binding 564.5px frame, at the 10px floor:
+   29 step characters + 5 marks-equivalent + 5 links + UPLOAD ≈ 455px. */
+.fl-wire--babylon .fl-wire__ba-step .fl-wire__lbl {
+  font-size: clamp(10px, 1.55cqw, 13px);
 }
 .fl-wire--babylon .fl-wire__ba-mark {
   flex: none;
   display: block;
-  height: max(6px, min(2.4cqh, 8px));
+  height: max(8px, min(3cqh, 11px));
   aspect-ratio: 1;
   fill: none;
   stroke: var(--w-green);
-  stroke-width: 1.2;
+  stroke-width: 1.3;
 }
 .fl-wire--babylon .fl-wire__ba-link {
   flex: none;
-  width: min(1.6cqw, 10px);
+  width: min(2cqw, 14px);
   height: 1px;
   background: var(--w-green);
 }
 .fl-wire--babylon .fl-wire__ba-chrome .fl-wire__cta {
-  margin-left: auto;
-  height: 68%;
+  height: max(16px, 62%);
+}
+/* The chain's fifth station letters at the chain's own size. */
+.fl-wire--babylon .fl-wire__ba-chrome .fl-wire__cta .fl-wire__lbl {
+  font-size: clamp(10px, 1.55cqw, 13px);
 }
 .fl-wire--babylon .fl-wire__ba-body {
   flex: 1 1 auto;
@@ -3309,7 +3387,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: min(2.2cqh, 9px);
+  gap: min(1.8cqh, 8px);
   padding: min(2cqh, 8px) min(1cqw, 9px);
   border: 1px solid var(--w-hair2);
   background: var(--w-card);
@@ -3339,25 +3417,25 @@
   height: min(1.4cqh, 3px);
   background: var(--w-fill2);
 }
+/* U6 (owner): REAL SEGMENTS, not bars — the tool's own EN → JA job. Cells
+   are prose-cased transcript text, PT Mono through `--fl-mono` (CJK
+   glyphs fall through the stack to the system mono; the computed family
+   still leads with PT Mono, which is what the smoke's family walk
+   reads). No tracking and no uppercase — this is CONTENT, not chrome —
+   and nowrap + hidden overflow so a long segment can never reflow the
+   table. ⚠ Every string is a pinned smoke label now: digit-free and
+   currency-free lines only (the envelope — a segment quoting sizes,
+   counts or prices may not be lettered). */
 .fl-wire--babylon .fl-wire__ba-src,
 .fl-wire--babylon .fl-wire__ba-dst {
-  height: min(1.8cqh, 3px);
-  background: var(--w-fill);
-}
-.fl-wire--babylon .fl-wire__ba-src--mid {
-  width: 74%;
-}
-.fl-wire--babylon .fl-wire__ba-src--short {
-  width: 52%;
-}
-.fl-wire--babylon .fl-wire__ba-dst {
-  background: var(--w-fill2);
-}
-.fl-wire--babylon .fl-wire__ba-dst--long {
-  width: 92%;
-}
-.fl-wire--babylon .fl-wire__ba-dst--short {
-  width: 60%;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--fl-mono);
+  font-size: clamp(8.6px, 1.15cqw, 10px);
+  font-weight: 400;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--w-lbl-ink);
 }
 /* (U5: the SYNC foot plate is deleted — the gold CTA ends the chrome's
    flow line instead, gated visually on the checked APPROVE beside it.) */

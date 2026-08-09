@@ -502,7 +502,7 @@ holdfast` · atl `masters level broadcast parallel`.
   deliberately — line work the reader counts. (`--fl-own-wash` and the
   own/gold plate sampling left with the detail accents, ADR-068 U2.)
 - **WIREFRAMES ARE AUTHORED EVIDENCE — ALL FOUR TOOLS ARE DRAWN, THREE
-  REDRAWN LETTERED (ADR-064 U2 extended; ADR-068 U3 + U5, owner
+  REDRAWN LETTERED (ADR-064 U2 extended; ADR-068 U3 + U5 + U6, owner
   2026-08-09).** Every tool in `TOOL_WIREFRAMES` (`casefile/wireframes/`)
   renders its drawn UI abstraction: NO `<img>`, NO duotone. U5's grammar:
   **GREEN IS THE FLOW, GOLD IS THE MAKE** — each redrawn drawing letters
@@ -510,25 +510,33 @@ holdfast` · atl `masters level broadcast parallel`.
   gold `--w-cta` plate, whose text sits on an INNER `.fl-wire__lbl` span
   (⚠ the light walk's `bedOf()` starts at the PARENT — text on the plate
   span itself would be judged against the bay, not the gold). Per-tool
-  contracts: mímir = briefing inputs | the ad (`ADS DATA · REVIEWS ·
-REDDIT · BLOGS · GENERATE BRIEFINGS`; ⚠ the rail's basis floors at 150px
-  for the CTA's own 18-char fit, and the ad frame's width is HEIGHT-DERIVED
-  `min(64%, 66cqh)`), vesper = prompt card | image tile | one-row composer
-  (`PROMPT · ENHANCE PROMPT · GENERATE`; the DRAW meter, nav lozenge,
-  PRODUCT LIBRARY and MODEL rows are DELETED — the meter-never-a-figure
-  clause is dormant, the digit ban survives it; the gal/dock lockstep pair
-  is `min(13cqh, 5cqw)`, still repeated never tokenized), babylon = green
-  lettered flow + gold CTA over script table | portrait player
-  (`TRANSCRIBE · TRANSLATE · DUB · APPROVE · ORIGINAL · TRANSLATION ·
-SEND TO FRONTIFY`; ⚠ the flow's connectors are 1px DIVS, never svg
-  lines — a stroked single-axis path reports a 0-height rect to the
-  collapse guard; the portrait read still comes from the COLUMN's
-  height-derived width, never an `aspect-ratio` on the screen), heimdall =
-  plugin panel | canvas template (`BRIEFINGS · SYNC · TEMPLATE`, untouched
-  on the D5 gold-only grammar). The smoke's `WIREFRAME_STATIONS` table
-  pins each label set EXACTLY (sorted-array equality; the smoke counts
-  EVERY text-bearing element) — ≤7 lettered elements (U5), PT Mono ≥8px,
-  NO DIGITS, no currency, in dark and light (labels ≥4.5:1 composited on
+  contracts (U6): mímir = THREE lettered panels `INPUT | BRIEFING | AD`
+  (8 labels: the headers, the four green source titles, the CTA; the
+  brief's kicker-dot grammar is back NEUTRAL; ⚠ the rail floors at 150px
+  for the CTA's 18-char fit and the AD panel carries the portrait read as
+  a DEFINITE basis `clamp(130px, 26%, 220px)` — never an aspect-ratio),
+  vesper = prompt card | image tile | one-row composer CENTRED AS ONE
+  GROUP (`PROMPT · ENHANCE PROMPT · GENERATE`; the dock sits IN FLOW
+  under the row — the U5 float and the gal/dock lockstep pair are
+  retired, and ⚠ the tile's height is cqh-definite `min(56cqh, 42cqw)`
+  because `100%` of a content-sized row resolves to nothing; the enhance
+  plate is SQUARE-CORNERED — the one cut object in the row is the CTA;
+  the DRAW meter, nav, PRODUCT LIBRARY and MODEL rows stay deleted, the
+  meter clause dormant, the digit ban surviving), babylon = the PROMINENT
+  green chain `TRANSCRIBE → TRANSLATE → DUB → APPROVE → [UPLOAD]` over
+  the REAL segments table | portrait player — the flow letters at
+  `clamp(10px, 1.55cqw, 13px)`, the surface's ONE size exception, the
+  gold UPLOAD is WELDED to the chain's end, and the table's four EN → JA
+  transcript rows are lettered verbatim (15 labels total; ⚠ every cell is
+  a pinned smoke label, so lines are CHOSEN digit-free and currency-free;
+  ⚠ the connectors are 1px DIVS, never svg lines — a stroked single-axis
+  path reports a 0-height rect to the collapse guard; the portrait read
+  still comes from the COLUMN's height-derived width), heimdall = plugin
+  panel | canvas template (`BRIEFINGS · SYNC · TEMPLATE`, untouched on
+  the D5 gold-only grammar). The smoke's `WIREFRAME_STATIONS` table pins
+  each label set EXACTLY (sorted-array equality; the smoke counts EVERY
+  text-bearing element) — ≤15 lettered elements (U6), PT Mono ≥8px, NO
+  DIGITS, no currency, in dark and light (labels ≥4.5:1 composited on
   their own opaque bed incl. ink-on-gold ≈8.2:1; hairlines ≥1.5:1 with
   `--w-green` in the probe). Element rules are scoped `.fl-wire--{tool}`;
   only `.fl-wire`, `.fl-wire__in` (the size container + `--w-*` tokens),
@@ -544,8 +552,10 @@ SEND TO FRONTIFY`; ⚠ the flow's connectors are 1px DIVS, never svg
   identical veil paints on `.fl-wire__in::after` (two recipes + a hover
   pair, pinned in lockstep), and `.fl-wire__cta` carries z 1 — the
   drawings' ONE sanctioned z-index, forced by `.fl-wire__in`'s
-  containment stacking context. Heimdall stays fully veiled; nothing else
-  paints over the frame.
+  containment stacking context; ⚠ every ancestor between a CTA and the
+  size container stays transform-, filter- and z-free (vesper's old
+  `translateX(-50%)` dock trapped the CTA under the veil). Heimdall stays
+  fully veiled; nothing else paints over the frame.
 - **PRM UNWRAPS THE CONSOLE TOO — THREE GATES, ONE PAIR.** console.css's
   unwrap gate is `(max-width: 980px), (prefers-reduced-motion: reduce)` —
   the SAME pair as casefile.css's static-flow gate AND (since 2026-08-08)
