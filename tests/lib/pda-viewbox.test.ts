@@ -1,27 +1,24 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  MODULE_BOX,
-  READOUT_TYPE,
-  VIEW_BOX,
-  configurationLines,
-  readoutMeasure,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+  CONFIG_MAX_BARS,
+  configSpecWidth,
+  configurationLettering,
+  drawnShapes,
+  substrateReach,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
+import { VIEW_BOX } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import {
   CART_TYPE,
-  MODULE_TYPE,
   MONO_ADVANCE,
-  MONO_LINE_BOX,
   cartTitleChars,
-  moduleAnswerBaselines,
-  moduleAnswerChars,
-  moduleAnswerMeasure,
-  moduleHeadBaseline,
   wrapLines,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
 import {
   PDA_SHOWN,
+  type PdaShape,
   type PdaWork,
+  crossing,
   toPdaWork,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import type { CaseMapDistrict, CaseMapWork } from "@/lib/cases/types";
@@ -73,13 +70,24 @@ function allWorks(): PdaWork[] {
   );
 }
 
+/** The five shapes with their derived counts — what reading 02 draws bars
+ *  from, and the same projection `PdaConsole` hands it. */
+function allShapes(): readonly PdaShape[] {
+  const v = mapVisual();
+  return crossing(v.shapes, v.districts, v.works, []).shapes;
+}
+
 describe("the readings' crops", () => {
   /* Declared extents, from each view's own geometry. 01 is the 4x5 grid
-     (`GX`/`GY` + the 176x136 cartridge); 02 runs from the owner plate down
-     past the draw meter; 03 from its top rule to the bottom section label. */
+     (`GX`/`GY` + the 176x136 cartridge); 03 from its top rule to the bottom
+     section label. */
   const CONTENT = {
     1: { x: 12, y: 22, right: 12 + 3 * 192 + 176, bottom: 22 + 4 * 158 + 136 },
-    2: { x: 8, y: 126, right: 797, bottom: 686 },
+    /* 02 is the SWITCHBOARD since 2026-08-09. Its lettered content spans the
+       chrome's own left edge to the right-aligned chrome, and from the top
+       chrome's line box down through the readout's. The ghost ribbons run off
+       all four edges DELIBERATELY and are not content. */
+    2: { x: 60, y: 28, right: 962, bottom: 755 },
     // 03 lost its two section rules 2026-08-06 (owner) — the foot already
     // said it — and the crop tightened from 718 units to 632 behind them.
     3: { x: 10, y: 93, right: 766, bottom: 702 },
@@ -105,11 +113,16 @@ describe("the readings' crops", () => {
     });
   }
 
-  it("reading 02 is cropped WIDER than the authoring space, because it draws past it", () => {
-    // Its content runs to x=797 against a 780-unit authoring width. A crop of
-    // 780 clips the right-hand modules, silently — SVG text past a crop just
-    // vanishes.
-    expect(box(2).right).toBeGreaterThanOrEqual(797);
+  it("reading 02's crop is TIGHT — the type it buys is the whole reason", () => {
+    /* The switchboard is authored in 1000x760 and cropped onto what it draws.
+       At the binding field (603x493, the real console at 1280x720) that is
+       worth 10 % of rendered type over the full authoring box — the difference
+       between this reading sitting on the smoke's 4.3px floor and sitting
+       comfortably above it. */
+    const b = box(2);
+    const meet = Math.min(603 / b.w, 493 / b.h);
+    expect(7.5 * meet, "the smallest rung fell under the smoke's floor").toBeGreaterThan(4.6);
+    expect(b.w, "the crop grew back toward the authoring width").toBeLessThanOrEqual(920);
   });
 });
 
@@ -152,168 +165,147 @@ describe("the cartridge's type fits its box", () => {
   });
 });
 
-describe("the configuration's answers fit their modules", () => {
-  /* ⚠ THE MODULE IS THE TIGHT BOX ON THIS SURFACE, and its measure is
-     arithmetic: the divider sits a full `h` from the inboard edge (the gauge
-     needs the room), the text is inset 11 past it, and the cartridge title's
-     own 6-unit wall clearance applies — so 224x56 letters into 151 units.
-     A `<text>` past that runs through the module wall with nothing on screen
-     to say so, exactly like a label past a crop. */
-  const MEASURE = moduleAnswerMeasure(MODULE_BOX.w, MODULE_BOX.h);
-  const PER = moduleAnswerChars(MODULE_BOX.w, MODULE_BOX.h);
-
-  it("the measure is the one the drawing is built on", () => {
-    expect(MEASURE).toBe(151);
-    expect(PER).toBe(27);
-  });
-
-  it("every answer line on every stream fits one line", () => {
+/**
+ * READING 02 IS THE SWITCHBOARD (2026-08-09).
+ *
+ * It declares every string it letters together with the measure that string
+ * has to fit (`configurationLettering`), so this guard measures THE DRAWING'S
+ * OWN INPUTS rather than re-deriving them — a guard that re-derives cannot
+ * notice the drawing pointing at the wrong field. Package values wrap to two
+ * lines and a third is declared with a ZERO measure, so a tail the wrapper
+ * would slice off fails here loudly instead of vanishing on screen.
+ */
+describe("the configuration letters into its boxes", () => {
+  it("every string on every stream fits its measure", () => {
+    const shapes = allShapes();
     const works = allWorks();
     expect(works.length).toBeGreaterThanOrEqual(PDA_SHOWN);
     for (const w of works) {
-      for (const part of configurationLines(w)) {
-        expect(part.lines.length, `${w.id} ${part.k} answers with nothing`).toBeGreaterThan(0);
-        // Two is the module's whole capacity — a third line would land on the
-        // contact row below it.
+      const specs = configurationLettering(w, shapes);
+      expect(specs.length, `${w.id} letters nothing`).toBeGreaterThan(20);
+      for (const spec of specs) {
+        expect(spec.text.length, `${w.id} ${spec.slot} is blank`).toBeGreaterThan(0);
         expect(
-          part.lines.length,
-          `${w.id} ${part.k} wants ${part.lines.length} lines`
-        ).toBeLessThanOrEqual(2);
-        for (const line of part.lines) {
-          const width = line.length * MODULE_TYPE.answer * MONO_ADVANCE;
-          expect(
-            width,
-            `${w.id} ${part.k}: "${line}" runs past the module wall`
-          ).toBeLessThanOrEqual(MEASURE);
-        }
+          configSpecWidth(spec),
+          `${w.id} ${spec.slot}: "${spec.text}" runs past its ${spec.measure}u measure`
+        ).toBeLessThanOrEqual(spec.measure);
       }
     }
   });
 
-  it("the bar wraps rather than truncating — no word is dropped", () => {
-    /* `wrapLines` SLICES at its cap, so a bar that wanted three lines would
-       lose its tail silently and every fit assertion above would still pass.
-       Rejoining is the only check that sees it. The longest live bar is 46
-       characters ("CONSISTENT EVIDENCE / NO UNSUPPORTED INFERENCE"). */
+  it("nothing letters under the drawing's own floor", () => {
+    /* The binding field is 603x493 against a 910-wide crop, so the meet is
+       0.663 and 7 units would render 4.64px. The smoke's floor is 4.3, but
+       this reading answers the offer and should not carry the surface's
+       smallest type — so the drawing's own floor is 7.5. */
+    for (const spec of configurationLettering(allWorks()[0], allShapes())) {
+      expect(spec.fs, `${spec.slot} letters at ${spec.fs}`).toBeGreaterThanOrEqual(7.5);
+    }
+  });
+
+  it("the readout outranks the board it explains", () => {
+    // It is the only prose on the reading, and prose loses to nothing here.
+    const specs = configurationLettering(allWorks()[0], allShapes());
+    const readout = specs.find((s) => s.slot === "readout.rest")!.fs;
+    const values = specs.filter((s) => /\.L\d$/.test(s.slot)).map((s) => s.fs);
+    expect(readout).toBeGreaterThan(Math.max(...values));
+  });
+
+  it("the substrate row draws one bar per tap, and never more than it seats", () => {
+    /* ⚠ SLOTS ARE AUTHORED PER COUNT. A stream that tapped a fourth shape
+       would silently lose a bar, so the record's own maximum is pinned here
+       rather than discovered on screen. */
+    const shapes = allShapes();
     for (const w of allWorks()) {
-      const lines = wrapLines(w.cfg.bar, PER);
-      expect(lines.join(" "), `${w.id}'s bar lost its tail at ${PER} characters`).toBe(w.cfg.bar);
+      const n = drawnShapes(w, shapes).length;
+      expect(n, `${w.id} taps nothing`).toBeGreaterThanOrEqual(1);
+      expect(n, `${w.id} taps ${n} shapes; the row seats ${CONFIG_MAX_BARS}`).toBeLessThanOrEqual(
+        CONFIG_MAX_BARS
+      );
+      const bars = configurationLettering(w, shapes).filter((s) => s.slot.startsWith("bus."));
+      expect(bars.length, `${w.id} draws ${bars.length} bars for ${n} taps`).toBe(n);
     }
   });
 
-  it("the question fits above its answer, at its own tracking", () => {
-    // The header keeps the module label's .14em, so its advance is 0.74 —
-    // NOT the answers' 0.68. Different tracking is a different measure.
-    const HEAD_ADVANCE = 0.74;
-    for (const part of configurationLines(allWorks()[0])) {
-      const width = part.head.length * MODULE_TYPE.head * HEAD_ADVANCE;
-      expect(width, `"${part.head}" runs past the module wall`).toBeLessThanOrEqual(MEASURE);
+  it("the reach caption counts shapes, never the reservoir's Skills", () => {
+    /* Three bars reading 12, 9 and 14 sum to 35, so a caption claiming the
+       estate's 47 beside them would publish two totals a reader can subtract.
+       Reading 03 owns the reservoir; this one owns what the stream reaches. */
+    const shapes = allShapes();
+    for (const w of allWorks()) {
+      const caption = substrateReach(w, shapes);
+      expect(caption).toMatch(/^DRAWS ON [1-3] OF 5 SHAPES$/);
+      expect(caption, "the reservoir total leaked onto reading 02").not.toMatch(/\b47\b/);
     }
   });
 
-  it("the stacked lines clear each other's LINE BOXES, not their font sizes", () => {
-    /* ⚠ THE MEASUREMENT THAT THE SMOKE CANNOT MAKE FOR YOU. The overlap sweep
-       compares rendered glyph boxes at a 0.5-unit tolerance, so a pitch that
-       leaves one unit passes today and fails on a font metric change. A line
-       box is ~1.3 em, and the pair whose 13 units became a collision at size
-       10 (PdaViews) is the precedent. Ask for a whole line box of daylight. */
-    const y0 = 0;
-    const h = MODULE_BOX.h;
-    const box = MODULE_TYPE.answer * MONO_LINE_BOX;
-    const [a, b] = moduleAnswerBaselines(y0, h, 2);
-    const head = moduleHeadBaseline(y0, h);
-
-    // Ascent is the bulk of a line box; descent is the rest.
-    const top = (baseline: number, size: number) => baseline - size * MONO_LINE_BOX * 0.79;
-    const bottom = (baseline: number, size: number) => baseline + size * MONO_LINE_BOX * 0.21;
-
-    expect(
-      top(a, MODULE_TYPE.answer) - bottom(head, MODULE_TYPE.head),
-      "the first answer sits in the question's descender"
-    ).toBeGreaterThan(1);
-    expect(
-      top(b, MODULE_TYPE.answer) - bottom(a, MODULE_TYPE.answer),
-      "the two answers share a line box"
-    ).toBeGreaterThan(box * 0.5);
-    expect(bottom(b, MODULE_TYPE.answer), "the last answer runs into the contact row").toBeLessThan(
-      h - 3
-    );
-    expect(
-      top(head, MODULE_TYPE.head),
-      "the question runs out of the module's top edge"
-    ).toBeGreaterThan(0);
-    /* One centred answer stays inside the same walls. */
-    const [only] = moduleAnswerBaselines(y0, h, 1);
-    expect(top(only, MODULE_TYPE.answer)).toBeGreaterThan(bottom(head, MODULE_TYPE.head) + 1);
-    expect(bottom(only, MODULE_TYPE.answer)).toBeLessThan(h - 3);
-  });
-
-  it("the answer outranks the question that asked it", () => {
-    // The question is chrome and repeats on every stream; the answer is the
-    // record. A configuration whose labels letter larger than its values is a
-    // configuration about labels.
-    expect(MODULE_TYPE.answer).toBeGreaterThan(MODULE_TYPE.head);
+  it("no package value wants a third line", () => {
+    /* `wrapLines` SLICES at its cap, so a value that wanted three lines would
+       lose its tail silently and every fit assertion above would still pass.
+       The third line is declared with a zero measure for exactly that reason:
+       this is the assertion that sees it. */
+    const shapes = allShapes();
+    for (const w of allWorks()) {
+      for (const spec of configurationLettering(w, shapes)) {
+        expect(
+          spec.measure,
+          `${w.id} ${spec.slot} wants a third line: "${spec.text}"`
+        ).toBeGreaterThan(0);
+      }
+    }
   });
 });
 
 describe("the readout holds a whole sentence", () => {
-  const MEASURE = readoutMeasure();
-
   it("every rest state and every hover note fits one line", () => {
     /* One line is the point: a status line that wraps is not a status line,
-       and there is no room under it — the draw meter is 66 units below. */
+       and the substrate row sits directly above it. */
+    const shapes = allShapes();
     for (const w of allWorks()) {
-      const strings = [
-        [`${w.id} rest`, w.cfg.why] as const,
-        ...configurationLines(w).map((p) => [`${w.id} ${p.k}`, p.note] as const),
-      ];
-      for (const [label, s] of strings) {
-        const width = s.length * READOUT_TYPE * MONO_ADVANCE;
-        expect(width, `${label}: "${s}" runs past the readout's measure`).toBeLessThanOrEqual(
-          MEASURE
-        );
+      const notes = configurationLettering(w, shapes).filter((s) => s.slot.startsWith("readout."));
+      expect(notes.length, `${w.id} has no readout states`).toBe(5);
+      for (const spec of notes) {
+        expect(
+          configSpecWidth(spec),
+          `${w.id} ${spec.slot}: "${spec.text}" runs past the readout's measure`
+        ).toBeLessThanOrEqual(spec.measure);
       }
     }
   });
 
-  it("carries what the modules could not", () => {
-    /* The two strings that drove the split. `k` joined runs to 121 % of a
-       module's measure and `evals` to 142 %, so the module letters one element
-       and the bar while the readout takes the whole of both. If these ever fit
-       the module, the split is worth revisiting; until then it is arithmetic. */
+  it("carries what the board could not", () => {
+    /* The strings that drove the split: `k` joined and `evals` cannot be
+       lettered in a 104-unit package at any legible size, so the packages
+       letter ONE element and the readout takes the whole of both. If these
+       ever fit a package, the split is worth revisiting; until then it is
+       arithmetic. */
     const worst = (pick: (w: PdaWork) => string) =>
       Math.max(...allWorks().map((w) => pick(w).length));
-    const moduleChars = Math.floor(
-      moduleAnswerMeasure(MODULE_BOX.w, MODULE_BOX.h) / (MODULE_TYPE.answer * MONO_ADVANCE)
-    );
-    expect(worst((w) => w.cfg.rchNote)).toBeGreaterThan(moduleChars);
-    expect(worst((w) => w.cfg.gatNote)).toBeGreaterThan(moduleChars);
-    expect(worst((w) => w.cfg.why)).toBeGreaterThan(moduleChars);
-  });
-
-  it("is the largest type in the configuration's chrome", () => {
-    // It is the only prose on the reading, and prose loses to nothing here.
-    expect(READOUT_TYPE).toBeGreaterThanOrEqual(MODULE_TYPE.answer);
+    const packageChars = Math.floor(104 / (8 * MONO_ADVANCE));
+    expect(worst((w) => w.cfg.rchNote)).toBeGreaterThan(packageChars);
+    expect(worst((w) => w.cfg.gatNote)).toBeGreaterThan(packageChars);
+    expect(worst((w) => w.cfg.why)).toBeGreaterThan(packageChars);
   });
 });
 
 describe("person-led work answers all four questions", () => {
   it("prints what is not bound rather than emptying out", () => {
     /* The negative space is the reading leadership takes (ADR-062), so a
-       stream with no configuration still fills its modules. An empty module
-       would read as a drawing that failed to load. */
+       stream with no configuration still fills every package — an empty one
+       would read as a drawing that failed to load — and its bars still draw,
+       because a person-led stream draws on the same shapes by hand. */
+    const shapes = allShapes();
     const person = allWorks().filter((w) => !w.configured);
     expect(person.length, "the record lost its person-led work").toBe(3);
     for (const w of person) {
-      for (const part of configurationLines(w)) {
-        for (const line of part.lines) {
-          expect(line.length, `${w.id} ${part.k} is blank`).toBeGreaterThan(0);
-          expect(
-            line.length * MODULE_TYPE.answer * MONO_ADVANCE,
-            `${w.id} ${part.k}: "${line}" runs past the module wall`
-          ).toBeLessThanOrEqual(moduleAnswerMeasure(MODULE_BOX.w, MODULE_BOX.h));
-        }
+      for (const spec of configurationLettering(w, shapes)) {
+        expect(spec.text.length, `${w.id} ${spec.slot} is blank`).toBeGreaterThan(0);
+        expect(
+          configSpecWidth(spec),
+          `${w.id} ${spec.slot}: "${spec.text}" runs past its measure`
+        ).toBeLessThanOrEqual(spec.measure);
       }
+      expect(drawnShapes(w, shapes).length, `${w.id} draws no substrate`).toBeGreaterThanOrEqual(1);
       expect(w.cfg.why.length, `${w.id} has no rest state`).toBeGreaterThan(0);
     }
   });

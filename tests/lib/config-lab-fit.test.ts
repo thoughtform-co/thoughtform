@@ -11,12 +11,6 @@ import { chainLettering } from "@/app/(internal)/test/intelligence-config-lab/Va
 import { sectionLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSection";
 import { schematicLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSchematic";
 import {
-  SWITCHBOARD_MAX_BARS,
-  switchboardLettering,
-  tappedShapes,
-} from "@/app/(internal)/test/intelligence-config-lab/VariantSwitchboard";
-import { offsetPolyline, ribbonPaths } from "@/app/(internal)/test/intelligence-config-lab/ribbon";
-import {
   type IclRecord,
   type LetterSpec,
   specWidth,
@@ -57,7 +51,6 @@ const VARIANTS = [
   ["chain", chainLettering],
   ["section", sectionLettering],
   ["schematic", schematicLettering],
-  ["switchboard", switchboardLettering],
 ] as const;
 
 const allSpecs = (): { variant: string; workId: string; spec: LetterSpec }[] => {
@@ -92,60 +85,6 @@ describe("intelligence-config lab · fit", () => {
         `die cluster ${row.key} — ${row.width.toFixed(1)}u of symbols against ${row.measure}u of rail`
       ).toBe(true);
     }
-  });
-
-  /* The Switchboard's substrate row draws ONLY the shapes a work taps, and
-     its slots are authored per count — so a work that tapped a fourth shape
-     would silently lose a bar. The record's own maximum is three. */
-  it("no work taps more shapes than the Switchboard's row can seat", () => {
-    for (const work of record.works) {
-      const n = tappedShapes(work, record).length;
-      expect(
-        n >= 1 && n <= SWITCHBOARD_MAX_BARS,
-        `${work.id} taps ${n} shapes; the row seats 1–${SWITCHBOARD_MAX_BARS}`
-      ).toBe(true);
-    }
-  });
-
-  it("ribbon offsets stay parallel and re-intersect at bends", () => {
-    // A straight run offsets to a straight parallel run.
-    const straight = offsetPolyline(
-      [
-        [0, 0],
-        [100, 0],
-      ],
-      5
-    );
-    expect(straight).toEqual([
-      [0, 5],
-      [100, 5],
-    ]);
-    // An H→V corner keeps the conductor count and the corner point sits at
-    // the intersection of the two shifted segments (constant pitch).
-    const cornered = offsetPolyline(
-      [
-        [0, 0],
-        [50, 0],
-        [50, 60],
-      ],
-      4
-    );
-    expect(cornered).toHaveLength(3);
-    expect(cornered[1][0]).toBeCloseTo(46, 5);
-    expect(cornered[1][1]).toBeCloseTo(4, 5);
-    // n conductors → n paths.
-    expect(
-      ribbonPaths(
-        [
-          [0, 0],
-          [40, 0],
-          [52, 12],
-          [52, 80],
-        ],
-        6,
-        3.5
-      )
-    ).toHaveLength(6);
   });
 
   it("no variant letters below the micro rung", () => {

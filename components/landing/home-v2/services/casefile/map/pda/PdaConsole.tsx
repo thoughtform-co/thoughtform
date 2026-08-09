@@ -8,15 +8,9 @@ import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/typ
 import { ConsoleFrame } from "../../console/ConsoleFrame";
 import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 
-import {
-  CORE_RECT,
-  type PdaEntry,
-  VIEW_BOX,
-  ViewConfiguration,
-  ViewSubstrate,
-  ViewWork,
-  gridRect,
-} from "./PdaViews";
+import { CORE_RECT, ViewConfiguration } from "./PdaConfiguration";
+import type { PdaEntry } from "./PdaEntry";
+import { VIEW_BOX, ViewSubstrate, ViewWork, gridRect } from "./PdaViews";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
 import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
@@ -394,6 +388,10 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
         {view === 2 && selected ? (
           <ViewConfiguration
             work={selected}
+            /* The five shapes, with their derived Skill counts — the same
+               projection reading 03 crosses. The drawing draws a bar for the
+               ones THIS stream taps and leaves the estate to 03. */
+            shapes={cross.shapes}
             lit={lit}
             onLit={hoverPart}
             still={still}

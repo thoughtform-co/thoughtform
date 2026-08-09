@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { CORE_RECT } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import {
-  CORE_RECT,
   VIEW_BOX,
   gridRect,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";

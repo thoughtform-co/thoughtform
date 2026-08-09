@@ -32,7 +32,7 @@ const has = (flag) => args.includes(flag);
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/intelligence-config-lab");
-const VARIANTS = argOf("--v", "shipped,die,chain,section,schematic,switchboard").split(",");
+const VARIANTS = argOf("--v", "shipped,die,chain,section,schematic").split(",");
 const SUBJECTS = argOf("--w", "W-017,W-004,W-026,W-040,W-063").split(",");
 const THEMES = argOf("--themes", "dark,light").split(",");
 

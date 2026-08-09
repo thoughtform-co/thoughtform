@@ -30,7 +30,7 @@ import type { PdaWork } from "@/components/landing/home-v2/services/casefile/map
 
 /* ── The variant registry (field-log-lab's 4-field contract) ───────────── */
 
-export type IclVariantId = "shipped" | "die" | "chain" | "section" | "schematic" | "switchboard";
+export type IclVariantId = "shipped" | "die" | "chain" | "section" | "schematic";
 
 export interface IclVariantDef {
   id: IclVariantId;
@@ -41,19 +41,12 @@ export interface IclVariantDef {
 
 export const ICL_VARIANTS: readonly IclVariantDef[] = [
   {
-    id: "switchboard",
-    label: "The Switchboard",
-    thesis:
-      "The wiring is the picture: multi-conductor ribbons carry most of the ink, every run lands on a pin, and the substrate appears as labelled bus bars inline on their own trunks — only the shapes this configuration actually draws on. One bright object, staggered placement, nothing drawn that the record does not connect.",
-    provenance:
-      "The reference's COMPOSITION, not its parts catalog — after the owner's read that the first four archetypes were safe iterations of the shipped layout.",
-  },
-  {
     id: "shipped",
-    label: "Shipped (ADR-069)",
+    label: "Shipped (the Switchboard)",
     thesis:
-      "The baseline: core cartridge, four seated modules, one readout. Every experiment is judged against the real thing, not a copy.",
-    provenance: "PdaViews.ViewConfiguration, mounted from production at crop 0 112 800 586.",
+      "The baseline, and it is the SWITCHBOARD now — promoted out of this lab on 2026-08-09. Every experiment beside it is judged against the real thing, mounted from production, not against a copy.",
+    provenance:
+      "PdaConfiguration.ViewConfiguration, mounted from production at its own crop. The lab's local copy is deleted: two drawings claiming to be the same one is how a lab goes stale.",
   },
   {
     id: "die",

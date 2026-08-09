@@ -15,6 +15,7 @@ inherited its ambient-cover role.
 
 **Read first**
 
+- [ADR-070: The configuration is a switchboard](../sentinel/decisions/070-configuration-is-a-switchboard.md) — reading 02's DRAWING, promoted out of the config lab 2026-08-09. The wiring is the picture; ONE frame, ONE bright object; only what the record connects is drawn. See §The switchboard below
 - [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
 - [ADR-069: The selection morph and the answered configuration](../sentinel/decisions/069-pda-selection-morph-and-answered-configuration.md) — the selected work is the PERSISTENT OBJECT and FLIES between its two homes (1 ↔ 2); reading 02 prints the record's own answers with one reactive readout. See §The selection morph below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
@@ -982,6 +983,55 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
+## The switchboard (ADR-070, live — reading 02's drawing)
+
+- **THE WIRING IS THE PICTURE.** Multi-conductor ribbons (`ribbon.ts` — pure
+  offset-polyline geometry, 45° bends, unit-pinned) carry most of the ink and
+  **every run lands on a pin** of the chip's nib rows (449 + 20k along the
+  bottom edge). ⚠ **RIBBON-VERSUS-BOX IS HAND-CHECKED** — the fit guard and
+  the smoke both measure TEXT, so neither can see a conductor crossing a
+  package. The first cut ran the inherit ribbons horizontally ALONG the nib
+  tips and five conductors crossing a pin row at 45° read as a hatch patch.
+- **ONE FRAME, ONE BRIGHT OBJECT.** The chip IS the reading-01 cartridge at
+  `CORE_K` (1.6): the lit plate is painted on the cartridge's own notched
+  silhouette, the nibs are a SIBLING (the dock's `fill-box` origin must stay
+  the cartridge's own), and there is NO carrier housing — that read as a box
+  in a box. Hierarchy is VALUE, not position.
+- **A DIFFERENT SILHOUETTE PER PART, and no question headers.** Six packages
+  with drawn glyphs and tiny function tags: SKILL + LANE marry at a junction
+  block and enter as one trunk; CONTEXT + GRAPH turn up into the pin row (the
+  graph in the adjacent-domain dashed hand); SYSTEM + SURFACE take the output,
+  which passes through the GATE aperture carrying the bar.
+- ⚠ **ONLY WHAT THE RECORD CONNECTS IS DRAWN (owner).** One bus bar per shape
+  the stream TAPS and nothing else — the 47 skill-mark cells and the ghosted
+  loom of untapped shapes are both deleted, because reading 03 owns the
+  estate. Slots are authored PER COUNT (1–3), not per shape key: a fixed home
+  per shape put all three of a record's bars in one corner. **A fourth tap
+  would silently lose a bar** — `CONFIG_MAX_BARS` is asserted against the
+  record. And NOTHING LEAVES THE SYSTEM CHIP UPWARD; a system a stream acts
+  on is a terminus here, not a transit.
+- ⚠ **THE CAPTION COUNTS SHAPES, NEVER SKILLS.** `DRAWS ON n OF 5 SHAPES`,
+  both derived. Three bars reading 12, 9 and 14 sum to 35, so `47 SKILLS`
+  beside them would publish two totals a reader can subtract. Pinned.
+- **THE CROP IS TIGHT AND THAT IS THE TYPE.** `CONFIG_VIEWBOX` is
+  `56 20 910 740` — the content box, not the 1000×760 authoring space — which
+  buys 10 % of rendered type at the binding field: **4.97px measured on the
+  landing** against the smoke's 4.3 floor. The drawing's own floor is fs 7.5.
+  The ghost ribbons run off all four edges deliberately.
+- **ADR-069 SURVIVES INTACT**: the flight docks the cartridge (`CORE_RECT` is
+  the chip), the readout is ONE reactive line resting on why-this-lane, and
+  hovering either half of a pair lights both because they are one answer.
+- **The guard measures the DRAWING'S OWN declaration.** Every lettered string
+  is in `configurationLettering` with the measure it must fit, walked for all
+  27 streams by `pda-viewbox`; a package's third wrapped line is declared with
+  a ZERO measure so a sliced tail fails loudly. A lettered string missing from
+  that list is a defect in the drawing, not a gap in the guard.
+- ⚠ **VERIFYING: SCROLL IS THE ROW SELECTOR.** The browse band's first quarter
+  is the map; 0.35 of the dwell lands on the Studio row's SHEETS and a script
+  waiting for `.fl-pda__svg` there finds nothing.
+  `scripts/capture-map-readings.mjs` defaults to `--at 0.09` and runs HEADED
+  (the corridor is WebGL; headless leaves the canvas dead).
+
 ## The CONFIGURATION lab (look-dev, `/test/intelligence-config-lab`)
 
 Four archetypes for READING 02's drawing, beside the shipped ADR-069 reading,
@@ -991,8 +1041,13 @@ different SHAPES per configuration part, motherboards/nodes/retrofuturism,
 substrate as skill clusters). **Nothing on the landing changed**; no ADR until
 a direction wins (the BOARD-archetype precedent).
 
-- **The six variants** (`app/(internal)/test/intelligence-config-lab/`):
-  `shipped` mounts the real `ViewConfiguration`; `die` = the work docked in a
+⚠ **THE SWITCHBOARD WON AND IS ON THE LANDING (ADR-070, 2026-08-09).** The
+lab's local copy is DELETED and `shipped` mounts the production module, so the
+four archetypes below are judged against the real thing. The lab's purpose is
+served; keep it for the next question, not as a museum.
+
+- **The five variants** (`app/(internal)/test/intelligence-config-lab/`):
+  `shipped` mounts the real `ViewConfiguration` (the switchboard); `die` = the work docked in a
   pin-grid socket, parts as package types, the substrate as the ground plane
   below a grade rule — **with the 47 `skillSymbol` marks' first render
   anywhere**; `chain` = inherits IN → work + skill/lane twin → GATE aperture

@@ -45,6 +45,10 @@ export interface PdaWork {
   draw: number;
   band: string;
   owner: string;
+  /** The shapes of judgment this stream draws on. Reading 02's substrate row
+   *  draws ONE BAR PER TAP and nothing else, so this is what decides how many
+   *  bars it seats — the estate's other shapes belong to reading 03. */
+  taps: readonly CaseMapShapeKey[];
   /** What reading 02 actually prints. */
   cfg: PdaAnswers;
 }
@@ -219,6 +223,7 @@ export function toPdaWork(work: CaseMapWork, district: CaseMapDistrict | undefin
     draw: work.mass,
     band: MASS_BAND[work.mass].toUpperCase(),
     owner: (work.cfg?.p[0] ?? "The person does the work").toUpperCase(),
+    taps: work.shapes,
     cfg: answers(work),
   };
 }

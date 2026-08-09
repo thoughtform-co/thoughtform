@@ -54,6 +54,30 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-09 — Reading 02 is a switchboard, on the landing (ADR-070)
+
+The owner picked the config lab's fifth archetype and asked for it in
+production. Cycle B — ADR-070 opened; `.claude/rules/proof.md` gains §The
+switchboard and its lab section is re-pointed; CLAUDE.md's map entry updated.
+
+- **The lesson worth keeping** is why the first four archetypes failed: each
+  kept the shipped reading's skeleton, mined the reference as a PARTS CATALOG
+  rather than for its COMPOSITION, and let the fit guards drive layout
+  (symmetric grids are easy to prove collision-free). Guards police a drawing;
+  they never compose it.
+- `PdaConfiguration.tsx` + `ribbon.ts` are production now; the old
+  `ViewConfiguration`, `Module`'s answers mode and the `MODULE_TYPE` /
+  `moduleAnswer*` helpers are DELETED. `PdaEntry` moved to its own module
+  (reading 02 supplies reading 01's crop — one shared type, no cycle).
+- ADR-069's morph, answers and readout all survive; `CORE_RECT` is the chip and
+  the two rects are now EXACTLY similar (176×136 × 1.6).
+- Measured on the landing at 1280×720: meet 0.662, 31 labels, minPx **4.97**,
+  0 clipped. The tight crop (`56 20 910 740`, the content box rather than the
+  authoring space) is what bought that. Smoke 21/31, verify 618.
+- ⚠ New verification trap: the browse band's first quarter is the map row, so
+  0.35 of the dwell lands on the Studio SHEETS — `capture-map-readings.mjs`
+  defaults to `--at 0.09` and runs headed.
+
 ### 2026-08-08 — The CONFIGURATION lab: four archetypes beside the shipped reading
 
 Owner verdict on ADR-069: the morph is right, the drawing still reads as

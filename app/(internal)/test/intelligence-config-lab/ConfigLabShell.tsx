@@ -7,10 +7,9 @@ import {
   type ConsoleStation,
 } from "@/components/landing/home-v2/services/casefile/console/ConsoleRail";
 import { ConsoleFrame } from "@/components/landing/home-v2/services/casefile/console/ConsoleFrame";
-import {
-  VIEW_BOX,
-  ViewConfiguration,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+import { ViewConfiguration } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
+import { crossing } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
+import { VIEW_BOX } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import { toPdaWork } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import type {
   CaseMapChain,
@@ -25,7 +24,6 @@ import { DIE_VIEWBOX, VariantDie } from "./VariantDie";
 import { CHAIN_VIEWBOX, VariantChain } from "./VariantChain";
 import { SECTION_VIEWBOX, VariantSection } from "./VariantSection";
 import { SCHEMATIC_VIEWBOX, VariantSchematic } from "./VariantSchematic";
-import { SWITCHBOARD_VIEWBOX, VariantSwitchboard } from "./VariantSwitchboard";
 import { ICL_VARIANTS, type IclRecord, type IclVariantId, iclVariant } from "./variants";
 
 /**
@@ -96,7 +94,7 @@ interface Props {
 }
 
 export function ConfigLabShell({ shapes, districts, works, chains, skills, envelope }: Props) {
-  const [variantId, setVariantId] = useState<IclVariantId>("switchboard");
+  const [variantId, setVariantId] = useState<IclVariantId>("shipped");
   const [workId, setWorkId] = useState("W-017");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [preset, setPreset] = useState<Preset>(PRESETS[0]);
@@ -119,6 +117,9 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
     [work, districts]
   );
   const def = iclVariant(variantId);
+  /* The shipped reading draws a bar per shape the stream taps, so it needs the
+     same crossing projection `PdaConsole` hands it in production. */
+  const cross = useMemo(() => crossing(shapes, districts, works, []), [shapes, districts, works]);
 
   // Adopt deep-linked state AFTER mount (SSR renders the defaults; reading
   // location in the initialiser would mismatch hydration). The URL is the
@@ -182,9 +183,7 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
           ? CHAIN_VIEWBOX
           : variantId === "section"
             ? SECTION_VIEWBOX
-            : variantId === "switchboard"
-              ? SWITCHBOARD_VIEWBOX
-              : SCHEMATIC_VIEWBOX;
+            : SCHEMATIC_VIEWBOX;
 
   const bad = report.clipped.length + report.collisions.length + report.smallControls.length;
 
@@ -300,6 +299,7 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
                   {variantId === "shipped" ? (
                     <ViewConfiguration
                       work={pda}
+                      shapes={cross.shapes}
                       lit={lit}
                       onLit={setLit}
                       still
@@ -311,8 +311,6 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
                     <VariantChain pda={pda} work={work} record={record} />
                   ) : variantId === "section" ? (
                     <VariantSection pda={pda} work={work} record={record} />
-                  ) : variantId === "switchboard" ? (
-                    <VariantSwitchboard pda={pda} work={work} record={record} />
                   ) : (
                     <VariantSchematic pda={pda} work={work} record={record} />
                   )}

@@ -53,6 +53,23 @@ export function offsetPolyline(pts: readonly Pt[], o: number): Pt[] {
 export const ribbonOffsets = (n: number, pitch: number): number[] =>
   Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * pitch);
 
+/**
+ * The polyline's own length — what a draw-on needs for `--l`.
+ *
+ * ⚠ The BASE path's length is used for every conductor in a ribbon. The
+ * offset copies differ by a few units at the corners, and `stroke-dasharray`
+ * only has to be at least the path's length for the reveal to be complete —
+ * so one number per ribbon is correct and eight `getTotalLength()` reads per
+ * ribbon (on a surface that is allowed two rect reads in total) are not.
+ */
+export const polylineLength = (pts: readonly Pt[]): number => {
+  let n = 0;
+  for (let i = 1; i < pts.length; i += 1) {
+    n += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  }
+  return Math.ceil(n);
+};
+
 const toPath = (pts: readonly Pt[]) => `M${pts.map(([x, y]) => `${r2(x)},${r2(y)}`).join(" L")}`;
 
 /** The n conductor paths of one ribbon along the base polyline. */
