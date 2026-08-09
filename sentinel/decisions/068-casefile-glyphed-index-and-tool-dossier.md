@@ -667,3 +667,29 @@ and there the frame keeps its flex box (the rung's own 960-not-980 note).
   and the hairline probe with `--w-green`), and the PRM case.
 - Headless element captures at 1440×800, all four stations × both themes,
   plus the 900px probe above; heimdall's drawing verified untouched.
+
+**The punch-through (same day, owner: "let the CTA punch through the
+halftone veil").** The make-moment leaves the glass. Mechanism, because the
+obvious move does not work: `.fl-wire__in`'s layout containment
+(`container-type: size`) makes it a STACKING CONTEXT, so no z-index inside
+the drawing can climb over a veil painted by the frame. For the three
+redrawn tools the frame's veil therefore `content: none`s itself
+(`.fl-shot__frame:has(.fl-wire--{tool})::after`), an IDENTICAL veil paints
+on `.fl-wire__in::after` — same recipe, same 0.34 → 0.16 hover lift, the
+two recipes and the hover pair pinned in lockstep by comments — and
+`.fl-wire__cta` carries `z-index: 1`, the drawings' ONE sanctioned
+z-index (it binds on a flex item without `position`) — which only works
+if NO ancestor between the CTA and `.fl-wire__in` creates a stacking
+context of its own. ⚠ VESPER'S DOCK DID: its `translateX(-50%)` centering
+made the dock a stacking context (a transform always does), trapping the
+CTA's z 1 inside it — the whole composer painted under the relocated veil
+and GENERATE probed dotted while mímir's and babylon's plates punched
+clean. The dock centres by INSETS now (`left/right: 16%`, byte-identical
+geometry for a 68% width); any future ancestor between a CTA and the size
+container must stay transform-, filter- and z-index-free. Every other
+mark stays under the glass; heimdall and the dormant capture branch keep
+the frame veil untouched. Verified by close-up probe on the landing at
+2× DPR: the veil's dot pattern modulates neighbouring marks (the enhance
+plate, the card grounds) and is absent across all three CTA plates, in
+both themes; the six-viewport walk and the light contrast walk re-run
+green (the 8.2:1 ink-on-gold figure now holds unattenuated).

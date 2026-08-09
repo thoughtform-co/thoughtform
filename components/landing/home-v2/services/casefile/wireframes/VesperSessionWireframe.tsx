@@ -37,8 +37,9 @@
  *    ORDER and adjacency, never its window ratios (ADR-068 D5 lesson b).
  *
  * ── THE ONE OBSTACLE IN THE BOX ─────────────────────────────────────────
- * The halftone veil (`.fl-shot__frame::after`) paints OVER this drawing —
- * it carries no z-index and sits under it by tree order.
+ * The halftone veil paints OVER this drawing — except the gold CTA, which
+ * rides above it at z 1 (U5 punch-through: the redrawn tools carry the
+ * veil on `.fl-wire__in::after`; the frame's own veil stands down).
  *
  * ── THE RULES THIS DRAWING KEEPS (D5 as amended by U5) ──────────────────
  * · NO FILTER, NO `<img>`. ADR-064 U2's line is AUTHORED vs CAPTURED and a

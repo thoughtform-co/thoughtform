@@ -2244,6 +2244,18 @@
 .fl-shot:focus-visible .fl-shot__frame::after {
   opacity: 0.16;
 }
+
+/* U5's PUNCH-THROUGH (owner, 2026-08-09): when one of the three REDRAWN
+   drawings mounts, the veil moves INTO the drawing (`.fl-wire__in::after`,
+   beside the U5 grammar rules) so the gold CTA can rise above it —
+   `.fl-wire__in`'s layout containment makes it a stacking context, so
+   nothing inside it can climb over a veil painted by the FRAME. Heimdall
+   and the dormant capture branch keep this frame veil untouched. */
+.fl-shot__frame:has(.fl-wire--mimir)::after,
+.fl-shot__frame:has(.fl-wire--vesper)::after,
+.fl-shot__frame:has(.fl-wire--babylon)::after {
+  content: none;
+}
 /* The bar takes the first share of the height the bounded window gives back:
    its rule stays fused to the image's bottom edge and the band around the
    label breathes with the panel instead of the image growing into a crop. */
@@ -2633,10 +2645,12 @@
                              ENHANCE PROMPT → GENERATE
 
    ── THE ONE OBSTACLE ───────────────────────────────────────────────────
-   The veil (`.fl-shot__frame::after`, tree order) paints OVER these
-   drawings, which carry no z-index of their own. (The RUN plate that used
-   to cover ~98×40 dead centre at z 2 was deleted 2026-08-08 — the centre
-   is authorable now.) ══════════════════════════════════════════════════ */
+   The veil paints OVER these drawings — EXCEPT THE CTA (U5 punch-through,
+   owner 2026-08-09): for the three redrawn tools the frame's veil yields
+   to a relocated copy inside `.fl-wire__in`, and the gold CTA rides above
+   it at z 1 — the drawings' ONE sanctioned z-index. Heimdall stays fully
+   under the frame's veil. (The RUN plate that used to cover ~98×40 dead
+   centre at z 2 was deleted 2026-08-08 — the centre is authorable.) ═════ */
 .fl-wire {
   position: absolute;
   inset: 0;
@@ -2747,6 +2761,12 @@
   justify-content: center;
   padding: 0 max(7px, 0.9cqw);
   background: var(--w-cta);
+  /* THE ONE z-index IN THE DRAWINGS — the documented exception to the
+     no-z-index law (U5 punch-through, owner 2026-08-09): the CTA rides
+     above the relocated veil below. z-index binds on a flex item without
+     `position`, and it resolves in `.fl-wire__in`'s stacking context — no
+     ancestor between them creates one. */
+  z-index: 1;
   /* The house diagonal — TR + BL (ADR-065), the ba-pipe chips' own cut,
      as a clip-path because this plate is DOM (the text needs a bed the
      contrast walk can read; an svg fill is invisible to it). */
@@ -2756,6 +2776,36 @@
 .fl-wire--vesper .fl-wire__cta .fl-wire__lbl,
 .fl-wire--babylon .fl-wire__cta .fl-wire__lbl {
   color: var(--w-cta-ink);
+}
+
+/* The veil, RELOCATED (U5 punch-through) — the same recipe as
+   `.fl-shot__frame::after`, which `content: none`s itself for these three
+   tools via `:has`. Painted INSIDE the size container so the CTA can sit
+   ABOVE it at z 1 while every other mark stays under the glass. ⚠ Move
+   this recipe and the frame's together, and keep the hover pair below in
+   lockstep with `.fl-shot:hover .fl-shot__frame::after`. */
+.fl-wire--mimir .fl-wire__in::after,
+.fl-wire--vesper .fl-wire__in::after,
+.fl-wire--babylon .fl-wire__in::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgb(var(--void-deep-rgb));
+  -webkit-mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  mask-image: radial-gradient(circle, #000 1.05px, transparent 1.2px);
+  -webkit-mask-size: 4px 4px;
+  mask-size: 4px 4px;
+  opacity: 0.34;
+  transition: opacity var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.fl-shot:hover .fl-wire--mimir .fl-wire__in::after,
+.fl-shot:hover .fl-wire--vesper .fl-wire__in::after,
+.fl-shot:hover .fl-wire--babylon .fl-wire__in::after,
+.fl-shot:focus-visible .fl-wire--mimir .fl-wire__in::after,
+.fl-shot:focus-visible .fl-wire--vesper .fl-wire__in::after,
+.fl-shot:focus-visible .fl-wire--babylon .fl-wire__in::after {
+  opacity: 0.16;
 }
 
 /* ── 1 · The top chrome ────────────────────────────────────────────────── */
@@ -2988,10 +3038,15 @@
    over the row, not enough to eat it. */
 .fl-wire--vesper .fl-wire__dock {
   position: absolute;
-  left: 50%;
+  /* ⚠ CENTRED BY INSETS, NEVER BY TRANSFORM (U5 punch-through). The old
+     `left: 50%` + `translateX(-50%)` made the dock a STACKING CONTEXT —
+     a transform always does — which trapped the CTA's z 1 inside it, so
+     the whole composer painted under the relocated veil and GENERATE
+     came out dotted while mímir's and babylon's plates punched clean.
+     `left/right: 16%` is byte-identical geometry for a 68% width. */
+  left: 16%;
+  right: 16%;
   bottom: 3cqh;
-  transform: translateX(-50%);
-  width: 68%;
   /* ⚠ IN LOCKSTEP WITH `.fl-wire__gal`'s padding — see the note there. */
   height: min(13cqh, 5cqw);
   display: flex;

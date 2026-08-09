@@ -538,8 +538,14 @@ SEND TO FRONTIFY`; ⚠ the flow's connectors are 1px DIVS, never svg
   in one commit. ⚠ The capture branch is DORMANT, not deleted: a fifth
   tool without a drawing renders its duotoned capture and the smoke's
   `kind` field re-arms that half of the filter law. ⚠ The one obstacle
-  over a drawing is the halftone veil (the RUN plate is gone); nothing
-  else paints over the frame.
+  over a drawing is the halftone veil (the RUN plate is gone) — and since
+  the U5 punch-through THE CTA RIDES ABOVE IT: the frame's veil
+  `content: none`s itself via `:has` for the three redrawn tools, an
+  identical veil paints on `.fl-wire__in::after` (two recipes + a hover
+  pair, pinned in lockstep), and `.fl-wire__cta` carries z 1 — the
+  drawings' ONE sanctioned z-index, forced by `.fl-wire__in`'s
+  containment stacking context. Heimdall stays fully veiled; nothing else
+  paints over the frame.
 - **PRM UNWRAPS THE CONSOLE TOO — THREE GATES, ONE PAIR.** console.css's
   unwrap gate is `(max-width: 980px), (prefers-reduced-motion: reduce)` —
   the SAME pair as casefile.css's static-flow gate AND (since 2026-08-08)
