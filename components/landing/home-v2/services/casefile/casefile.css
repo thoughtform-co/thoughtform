@@ -2917,10 +2917,17 @@
   background: var(--w-fill2);
 }
 
-/* U6 (owner: "the prompt bar should be higher… aligned vertically
-   centered"): the card, the image and the composer read as ONE group,
-   centred in the band — the U5 absolute float and the gal/dock lockstep
-   padding pair are RETIRED with it. */
+/* U6 (owner, two passes): the card, the image and the composer read as
+   ONE group, centred in the band — the U5 absolute float and the
+   gal/dock lockstep padding pair are RETIRED with it. The second pass
+   centres the group HORIZONTALLY too ("we have so much real estate…
+   just put it more in the middle") and biases it HIGH: the bottom
+   padding shrinks the centering box, so the composition sits above the
+   frame's midline instead of dead on it.
+   ⚠ Centring happens on the CONTENT (gal's justify + the dock's
+   align-self), never via `align-items: center` on this column — that
+   would shrink-to-fit the row and the card's 34% basis would resolve
+   against nothing. */
 .fl-wire--vesper .fl-wire__main {
   flex: 1 1 auto;
   min-width: 0;
@@ -2928,6 +2935,7 @@
   flex-direction: column;
   justify-content: center;
   gap: min(2.6cqh, 12px);
+  padding-bottom: 10cqh;
 }
 /* The generation row — content-sized since U6; the dock sits in flow
    right under it. */
@@ -2936,6 +2944,7 @@
   min-width: 0;
   display: flex;
   align-items: stretch;
+  justify-content: center;
   gap: 1cqw;
 }
 /* ⚠ THE ROW'S HEIGHT IS CQW-CAPPED, AND IT IS ARITHMETIC (2026-08-08, the
@@ -3046,7 +3055,7 @@
    context by accident either. */
 .fl-wire--vesper .fl-wire__dock {
   flex: none;
-  align-self: flex-start;
+  align-self: center;
   width: 68%;
   height: min(13cqh, 5cqw);
   display: flex;
@@ -3077,11 +3086,21 @@
   border: 1px solid var(--w-hair);
   background: var(--w-card);
 }
+/* The placeholder prompt — CONTENT, not chrome (the babylon cells' move):
+   prose-cased PT Mono, no tracking, nowrap + hidden overflow. ⚠ A pinned
+   smoke label — keep it short, digit-free and currency-free. ⚠ The host
+   is an `<i>`, whose UA italic the bars never exposed — text does, and
+   NO ITALICS is a brand law: `font-style: normal` is load-bearing. */
 .fl-wire--vesper .fl-wire__say b {
-  display: block;
-  width: 38%;
-  height: max(2px, 26%);
-  background: var(--w-fill2);
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--fl-mono);
+  font-size: clamp(8.6px, 1.15cqw, 10px);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--w-lbl-ink);
 }
 /* The enhancer — GREEN, the operational flow (U5): the tool's own
    genai-prompting rewrite. SQUARE-CORNERED since U6 (owner: the clipped

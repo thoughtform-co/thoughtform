@@ -258,7 +258,14 @@ const WIREFRAME_STATIONS = [
       "AD",
     ],
   },
-  { idx: 1, id: "vesper", kind: "wire", labels: ["PROMPT", "ENHANCE PROMPT", "GENERATE"] },
+  {
+    idx: 1,
+    id: "vesper",
+    kind: "wire",
+    // The composer's placeholder prompt is content, pinned like babylon's
+    // transcript cells — short, digit-free, currency-free.
+    labels: ["PROMPT", "ENHANCE PROMPT", "GENERATE", "Loop Switch, golden hour"],
+  },
   {
     idx: 2,
     id: "babylon",

@@ -752,3 +752,16 @@ BRIEFINGS · BRIEFING · AD`), vesper 3 (unchanged), babylon 15, heimdall 3
   vesper composition centres with the composer directly under the row,
   the babylon chain reads first with UPLOAD ending it clean above the
   veil.
+
+**Same-day follow-up (owner: "center the image and video-like wireframes
+more… that prompt bar again can be a bit higher, and maybe you can add a
+placeholder prompt").** Vesper's group centres HORIZONTALLY too —
+`justify-content: center` on the row and `align-self: center` on the
+dock. ⚠ Never `align-items: center` on the `__main` column for this: it
+would shrink-to-fit the row and the card's 34% basis would resolve
+against nothing. And it sits ABOVE the frame's midline —
+`padding-bottom: 10cqh` shrinks the centering box, so the composition
+rides high instead of dead-centre. The input letters a placeholder
+prompt, `Loop Switch, golden hour` — content like babylon's cells,
+prose-cased PT Mono, and a FOURTH pinned vesper label, chosen short,
+digit-free and currency-free.

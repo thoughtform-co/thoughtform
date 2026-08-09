@@ -516,46 +516,51 @@ holdfast` · atl `masters level broadcast parallel`.
   for the CTA's 18-char fit and the AD panel carries the portrait read as
   a DEFINITE basis `clamp(130px, 26%, 220px)` — never an aspect-ratio),
   vesper = prompt card | image tile | one-row composer CENTRED AS ONE
-  GROUP (`PROMPT · ENHANCE PROMPT · GENERATE`; the dock sits IN FLOW
-  under the row — the U5 float and the gal/dock lockstep pair are
-  retired, and ⚠ the tile's height is cqh-definite `min(56cqh, 42cqw)`
-  because `100%` of a content-sized row resolves to nothing; the enhance
-  plate is SQUARE-CORNERED — the one cut object in the row is the CTA;
-  the DRAW meter, nav, PRODUCT LIBRARY and MODEL rows stay deleted, the
-  meter clause dormant, the digit ban surviving), babylon = the PROMINENT
-  green chain `TRANSCRIBE → TRANSLATE → DUB → APPROVE → [UPLOAD]` over
-  the REAL segments table | portrait player — the flow letters at
-  `clamp(10px, 1.55cqw, 13px)`, the surface's ONE size exception, the
-  gold UPLOAD is WELDED to the chain's end, and the table's four EN → JA
-  transcript rows are lettered verbatim (15 labels total; ⚠ every cell is
-  a pinned smoke label, so lines are CHOSEN digit-free and currency-free;
-  ⚠ the connectors are 1px DIVS, never svg lines — a stroked single-axis
-  path reports a 0-height rect to the collapse guard; the portrait read
-  still comes from the COLUMN's height-derived width), heimdall = plugin
-  panel | canvas template (`BRIEFINGS · SYNC · TEMPLATE`, untouched on
-  the D5 gold-only grammar). The smoke's `WIREFRAME_STATIONS` table pins
-  each label set EXACTLY (sorted-array equality; the smoke counts EVERY
-  text-bearing element) — ≤15 lettered elements (U6), PT Mono ≥8px, NO
-  DIGITS, no currency, in dark and light (labels ≥4.5:1 composited on
-  their own opaque bed incl. ink-on-gold ≈8.2:1; hairlines ≥1.5:1 with
-  `--w-green` in the probe). Element rules are scoped `.fl-wire--{tool}`;
-  only `.fl-wire`, `.fl-wire__in` (the size container + `--w-*` tokens),
-  `.fl-wire__lbl` and the U5 grammar pair (`.fl-wire__cta` /
-  `.fl-wire__lbl--grn`, grouped-but-scoped to the three redrawn tools) are
-  cross-tool, and a new `--w-*` token lands in casefile.css AND theme.css
-  in one commit. ⚠ The capture branch is DORMANT, not deleted: a fifth
-  tool without a drawing renders its duotoned capture and the smoke's
-  `kind` field re-arms that half of the filter law. ⚠ The one obstacle
-  over a drawing is the halftone veil (the RUN plate is gone) — and since
-  the U5 punch-through THE CTA RIDES ABOVE IT: the frame's veil
-  `content: none`s itself via `:has` for the three redrawn tools, an
-  identical veil paints on `.fl-wire__in::after` (two recipes + a hover
-  pair, pinned in lockstep), and `.fl-wire__cta` carries z 1 — the
-  drawings' ONE sanctioned z-index, forced by `.fl-wire__in`'s
-  containment stacking context; ⚠ every ancestor between a CTA and the
-  size container stays transform-, filter- and z-free (vesper's old
-  `translateX(-50%)` dock trapped the CTA under the veil). Heimdall stays
-  fully veiled; nothing else paints over the frame.
+  GROUP in the frame, biased high (`PROMPT · ENHANCE PROMPT · GENERATE`
+  - the lettered placeholder `Loop Switch, golden hour` — content like
+    babylon's cells, digit-free; the dock sits IN FLOW under the row — the
+    U5 float and the gal/dock lockstep pair are retired, ⚠ the tile's
+    height is cqh-definite `min(56cqh, 42cqw)` because `100%` of a
+    content-sized row resolves to nothing, and ⚠ centring rides the
+    CONTENT — gal `justify-content` + dock `align-self`, never
+    `align-items: center` on the column, whose shrink-to-fit row would
+    strand the card's 34% basis; the enhance plate is SQUARE-CORNERED —
+    the one cut object in the row is the CTA; the DRAW meter, nav, PRODUCT
+    LIBRARY and MODEL rows stay deleted, the meter clause dormant, the
+    digit ban surviving), babylon = the PROMINENT
+    green chain `TRANSCRIBE → TRANSLATE → DUB → APPROVE → [UPLOAD]` over
+    the REAL segments table | portrait player — the flow letters at
+    `clamp(10px, 1.55cqw, 13px)`, the surface's ONE size exception, the
+    gold UPLOAD is WELDED to the chain's end, and the table's four EN → JA
+    transcript rows are lettered verbatim (15 labels total; ⚠ every cell is
+    a pinned smoke label, so lines are CHOSEN digit-free and currency-free;
+    ⚠ the connectors are 1px DIVS, never svg lines — a stroked single-axis
+    path reports a 0-height rect to the collapse guard; the portrait read
+    still comes from the COLUMN's height-derived width), heimdall = plugin
+    panel | canvas template (`BRIEFINGS · SYNC · TEMPLATE`, untouched on
+    the D5 gold-only grammar). The smoke's `WIREFRAME_STATIONS` table pins
+    each label set EXACTLY (sorted-array equality; the smoke counts EVERY
+    text-bearing element) — ≤15 lettered elements (U6), PT Mono ≥8px, NO
+    DIGITS, no currency, in dark and light (labels ≥4.5:1 composited on
+    their own opaque bed incl. ink-on-gold ≈8.2:1; hairlines ≥1.5:1 with
+    `--w-green` in the probe). Element rules are scoped `.fl-wire--{tool}`;
+    only `.fl-wire`, `.fl-wire__in` (the size container + `--w-*` tokens),
+    `.fl-wire__lbl` and the U5 grammar pair (`.fl-wire__cta` /
+    `.fl-wire__lbl--grn`, grouped-but-scoped to the three redrawn tools) are
+    cross-tool, and a new `--w-*` token lands in casefile.css AND theme.css
+    in one commit. ⚠ The capture branch is DORMANT, not deleted: a fifth
+    tool without a drawing renders its duotoned capture and the smoke's
+    `kind` field re-arms that half of the filter law. ⚠ The one obstacle
+    over a drawing is the halftone veil (the RUN plate is gone) — and since
+    the U5 punch-through THE CTA RIDES ABOVE IT: the frame's veil
+    `content: none`s itself via `:has` for the three redrawn tools, an
+    identical veil paints on `.fl-wire__in::after` (two recipes + a hover
+    pair, pinned in lockstep), and `.fl-wire__cta` carries z 1 — the
+    drawings' ONE sanctioned z-index, forced by `.fl-wire__in`'s
+    containment stacking context; ⚠ every ancestor between a CTA and the
+    size container stays transform-, filter- and z-free (vesper's old
+    `translateX(-50%)` dock trapped the CTA under the veil). Heimdall stays
+    fully veiled; nothing else paints over the frame.
 - **PRM UNWRAPS THE CONSOLE TOO — THREE GATES, ONE PAIR.** console.css's
   unwrap gate is `(max-width: 980px), (prefers-reduced-motion: reduce)` —
   the SAME pair as casefile.css's static-flow gate AND (since 2026-08-08)

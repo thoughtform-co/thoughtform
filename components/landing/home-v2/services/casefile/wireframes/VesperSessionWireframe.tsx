@@ -4,9 +4,10 @@
  * The bay's first AUTHORED wireframe (ADR-068 Decision 5), recomposed by
  * ADR-068 U5 (owner, 2026-08-09) around THREE components and nothing else —
  * the prompt, the generated image, and the composer that makes it — and
- * re-seated by U6 (same day): the three centre as ONE composition, the
- * prompt bar in flow right under the row rather than pinned to the floor
- * of an uncapped bay.
+ * re-seated by U6 (same day, two passes): the three centre as ONE
+ * composition — horizontally AND vertically, biased a little high — with
+ * the prompt bar in flow right under the row rather than pinned to the
+ * floor of an uncapped bay, and a lettered placeholder prompt in it.
  *
  *   ┌ chrome ───────────────────────────────────────────────────────┐
  *   │ ▬ ▭                                                           │
@@ -47,9 +48,11 @@
  * ── THE RULES THIS DRAWING KEEPS (D5 as amended by U5/U6) ───────────────
  * · NO FILTER, NO `<img>`. ADR-064 U2's line is AUTHORED vs CAPTURED and a
  *   wireframe is authored evidence.
- * · THREE LETTERED ELEMENTS AND THAT IS THIS DRAWING'S SET (`PROMPT`,
- *   `ENHANCE PROMPT`, `GENERATE`) — the smoke pins every text-bearing
- *   element by sorted-array equality. PT Mono ≥8.6px, NO DIGITS anywhere.
+ * · FOUR LETTERED ELEMENTS AND THAT IS THIS DRAWING'S SET (`PROMPT`,
+ *   `ENHANCE PROMPT`, `GENERATE`, and the composer's placeholder prompt
+ *   `Loop Switch, golden hour` — content, prose-cased, digit-free) — the
+ *   smoke pins every text-bearing element by sorted-array equality.
+ *   PT Mono ≥8.6px, NO DIGITS anywhere.
  *   The U3 draw meter, nav lozenge, PRODUCT LIBRARY row, MODEL row and
  *   mode bar are DELETED (owner: cut the clutter; D5's meter-never-a-
  *   figure clause is dormant with the meter — the digit ban survives it).
@@ -136,11 +139,13 @@ export function VesperSessionWireframe() {
             {/* ── 3 · THE COMPOSER — one row, the whole loop, in flow
                 right under the generation row (U6). Input → the green
                 ENHANCE PROMPT (the tool's own prompt rewrite) → the gold
-                GENERATE. */}
+                GENERATE. The placeholder prompt is a PINNED smoke label
+                (every text-bearing element is) — short, digit-free,
+                product + light like the tool's own usage. */}
             <div className="fl-wire__dock">
               <div className="fl-wire__comp">
                 <i className="fl-wire__say">
-                  <b />
+                  <b>Loop Switch, golden hour</b>
                 </i>
                 <span className="fl-wire__enh">
                   <svg className="fl-wire__wand" viewBox="0 0 12 12">
