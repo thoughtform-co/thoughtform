@@ -563,3 +563,107 @@ Verification: pool = gap at every station × seven viewports (incl.
 2000×1080, the owner's report shape); 0 collapsed elements, 0 frame
 overflow on all four drawings up to the 739px bay; the six-viewport
 harmonised smoke, the 1440×800 clip walk and the light walk all green.
+
+## Update 5 — the lettered wireframes: green flow, one gold CTA (2026-08-09, owner)
+
+Owner: _"each tool has an important feature or element that I feel we can
+visually highlight with both our tensor gold and atreides green colors…
+The wireframe should immediately convey the most important feature. Cut
+any clutter"_ — with a per-tool spec: Mímir's Briefing Inputs titled by
+source plus the tool's own Generate button; Vesper's three components
+(prompt card, generated image, a prompt bar with ENHANCE PROMPT and
+GENERATE); Babylon's TRANSCRIBE → TRANSLATE → DUB → APPROVE flow with one
+SEND TO FRONTIFY CTA; Heimdall untouched.
+
+**The grammar.** GREEN IS THE FLOW, GOLD IS THE MAKE (owner pick from
+three offered mappings): each redrawn drawing letters its operational rail
+in the atreides ink and carries exactly ONE solid gold CTA plate —
+near-black ink on `--gold`, ≈8.2:1 on either theme's ground, because
+gold-as-TEXT is 1.68:1 on parchment and may not letter (ADR-063 U2). The
+ink is a LITERAL (`#110f09`): the flipped `--dawn-rgb`/`--void-rgb`
+triples would invert into parchment-on-gold on one side. This REVERSES
+D5's "gold is the only signal colour, green stays provenance" for the
+three redrawn tools — the green here is the tool's own live rail, not
+Loop provenance; heimdall keeps D5 verbatim. New tokens on `.fl-wire__in`,
+both theme files in one commit: `--w-green` (line), `--w-green-ink`
+(text), `--w-green-soft` (wash), `--w-cta`, `--w-cta-ink`. The old gold
+accents in the three redrawn drawings went NEUTRAL (mímir's lit seg cell,
+vesper's lit session square, babylon's lit tab and play cue) so the CTA is
+the one bright object; vesper's image glyph keeps `--w-mark` — the made
+thing.
+
+**The drawings.**
+
+- **Mímir** is two regions now (the U3 brief and REFERENCE columns are
+  DELETED, with the send plate): the inputs rail — four titled source
+  cards, green labels leading (`ADS DATA · REVIEWS · REDDIT · BLOGS`, the
+  tool's evidence estate: Loop Ads + the Meta library, reviews, social
+  listening, trends) — with gold `GENERATE BRIEFINGS` at its foot, and the
+  AD the pipeline produces on the right (image mark, two headline bars, a
+  textless CTA chip on a carded frame). ⚠ The rail's basis is
+  `clamp(150px, 30%, 200px)` — the pixel floor is the CTA's own fit: 18
+  mono characters ≈ 124px at the 8.6px label floor plus padding ≈ 153px,
+  against 147px from the old 26%. ⚠ The ad frame's width is HEIGHT-DERIVED
+  (`min(64%, 66cqh)`) — the U3 babylon trap, kept out of a second drawing.
+- **Vesper** is the owner's three components plus the slim chrome and the
+  thin session rail: the PROMPT card (label leads), ONE image tile with
+  the horizon-and-sun mark in gold, and a one-row composer — bordered
+  input field with a typed run, green ENHANCE PROMPT plate (wand + label;
+  the tool's own genai-prompting rewrite), gold GENERATE. DELETED: the nav
+  lozenge, the DRAW meter (D5's meter-never-a-figure clause is DORMANT
+  with it — the smoke's digit/currency ban survives), the PRODUCT LIBRARY
+  row, the MODEL row, the mode bar, the mid-run twin tile with its clip
+  pill and progress bar, and the card's reference square. The gal/dock
+  lockstep pair retunes to `min(13cqh, 5cqw)` — still repeated, never
+  tokenized.
+- **Babylon**'s chrome line IS the pipeline now: four green lettered
+  steps, each carrying a drawn check, joined by green 1px DIV links —
+  ⚠ never svg lines; a stroked single-axis path reports a 0-height client
+  rect and trips the smoke's collapse guard — ending at gold
+  `SEND TO FRONTIFY` (the real screen's send action, gated on approval,
+  told left-to-right). The U3 title bar, unlabelled pipe chips and SYNC
+  foot plate are DELETED. The script table (`ORIGINAL · TRANSLATION` + 4
+  ticked rows) and the height-derived portrait player survive
+  byte-identical below it.
+- **Heimdall** is byte-identical, still on the D5 grammar.
+
+**The label contract.** The smoke counts EVERY text-bearing element in a
+drawing and pins each tool's set by sorted-array equality; the budget
+rises 4 → 7 (babylon's count is the ceiling; the band is the coarse fence,
+the sets are the guard): mímir 5, vesper 3, babylon 7, heimdall 3. ⚠ THE
+CTA'S TEXT SITS ON AN INNER `.fl-wire__lbl` SPAN — the light walk's
+`bedOf()` starts at the PARENT, so the plate's opaque gold is the bed the
+ink is judged against; text on the plate span itself would silently be
+judged against the bay. `--w-green` joined the light hairline probe
+(#4a6238 ≈ 4.9:1 on the parchment bay).
+
+**Scoping-law footnote.** The two U5 grammar rules (`.fl-wire__cta` and
+the `.fl-wire__lbl--grn` colour) are GROUPED-BUT-SCOPED: their selectors
+enumerate the three redrawn tools rather than minting a fourth shared
+class, so heimdall cannot inherit either rule.
+
+**Below the 960 gate** the lettered chrome gets two safeties inside the
+existing rung: babylon's chrome may WRAP (its flow + CTA measure ~446px at
+the label floor; the CTA takes a PIXEL height there — a % of an
+auto-height flex line is auto) and mímir's rail trades its pixel floor for
+`clamp(146px, 42%, 200px)`. ⚠ Both are DORMANT today, like the rung they
+live in: probed at 900×720 (2026-08-09), the unwrapped casefile mounts
+ONLY the map's console — 0 `.fl-wire`, 0 `.fl-shot` in the DOM — so the
+narrow-width safeties arm only if the unwrapped tools plate ever regains
+its bay. Desktop PRM is the case the drawings actually serve unwrapped,
+and there the frame keeps its flex box (the rung's own 960-not-980 note).
+
+### Verification
+
+- `npm run verify` clean — lint (pre-existing warnings only), typecheck,
+  618 unit tests across 45 files; no unit test touches the wireframes
+  (grep-verified — the smoke is the sole guard).
+- Full `services-ring-smoke` run: **21 passed, 31 skipped (the standing
+  desktop-only skips), 0 failed** — including the six-viewport harmonised
+  walk (labels pinned per station, ≤7 budget, PT Mono ≥8px, no
+  digits/currency, 0 collapsed elements, bleed ≤1, plates ≥99% painted),
+  the 1440×800 clip walk, the light contrast walk (every label ≥4.5:1
+  composited on its bed — the CTA ink judged against its own gold plate —
+  and the hairline probe with `--w-green`), and the PRM case.
+- Headless element captures at 1440×800, all four stations × both themes,
+  plus the 900px probe above; heimdall's drawing verified untouched.

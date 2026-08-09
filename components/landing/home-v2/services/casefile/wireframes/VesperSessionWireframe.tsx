@@ -1,79 +1,58 @@
 /**
  * VesperSessionWireframe — the image & video suite's session view, DRAWN.
  *
- * The bay's first AUTHORED wireframe (ADR-068 Decision 5). It replaces the
- * duotoned screenshot for this one tool: a capture of a generation canvas is
- * the walkthrough's FACE, and what the plate is arguing is that the canvas
- * has a SHAPE — one session rail, one generation row, one composer that
- * carries the whole loop. A drawing can say that at 86px tall; a screenshot
- * cannot.
+ * The bay's first AUTHORED wireframe (ADR-068 Decision 5), recomposed by
+ * ADR-068 U5 (owner, 2026-08-09) around THREE components and nothing else:
+ * the prompt, the generated image, and the composer that makes it.
  *
  *   ┌ chrome ───────────────────────────────────────────────────────┐
- *   │ ▬ ▭            ( ··· )                    [▓▓░░░░] DRAW       │
+ *   │ ▬ ▭                                                           │
  *   ├───────────────────────────────────────────────────────────────┤
- *   │ ⊞ │ ┌ prompt ─────┐  ┌──┐ ┌──┐                                │
- *   │ ▫ │ │ ▬▬▬▬  ▬▬    │  │  ⋮│ │▭ │   ← the generation row        │
- *   │ ▫ │ │ ▬▬▬   ·· ▬  │  └──┘ └──┘                                │
- *   │ ▫ │ └─────────────┘                                           │
- *   │        ┌ composer ────────────────────────────────┐ ┌─┐       │
- *   │        │ ▫ ▫ ⊹  PRODUCT LIBRARY                   │ │▨│       │
- *   │        │ ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▓▒▓▒▓ ✦ ENHANCE         │ │ │       │
- *   │        │ [MODEL] ◇ ▭                    [GENERATE]│ │ │       │
- *   │        └──────────────────────────────────────────┘ └─┘       │
+ *   │ ⊞ │ ┌ PROMPT ──────┐  ┌──────────┐                            │
+ *   │ ▫ │ │ ▬▬▬▬  ▬▬     │  │   ◠ ▨    │   ← the generation row     │
+ *   │ ▫ │ │ ▬▬▬   ·· ▬   │  │ (image)  │                            │
+ *   │ ▫ │ └──────────────┘  └──────────┘                            │
+ *   │        ┌ composer ───────────────────────────────┐            │
+ *   │        │ [▭ input....] [✦ ENHANCE PROMPT][GENERATE]           │
+ *   │        └─────────────────────────────────────────┘            │
  *   └───────────────────────────────────────────────────────────────┘
  *
  * ── WHAT THE BOX IS, AND WHY EVERY NUMBER BELOW IS A PERCENTAGE ─────────
  *
  * `.fl-shot__frame` is the flex-SACRIFICIAL element of the tools plate: it
- * takes the height the header, route, bay chrome, detail grid and foot
- * leave. Measured (commit 4) at 1280×720 / 1440×800 / 1920×1080 it is
- * **564.5×105.3 · 639.9×86.4 · 809.3×205.7** — a wide, SHORT strip, ~7.4:1
- * at the binding viewport. So:
+ * takes the height everything else leaves (246.5 → 739px tall across the
+ * reference viewports since the U4 no-ceiling pass). So:
  *
  * 1. THE DRAWING IS DOM, NOT AN SVG VIEWBOX. A viewBox has ONE aspect and
- *    would letterbox or crop across a 5.4:1 → 2.5:1 spread, and ADR-064's
- *    bleed law forbids a letterbox in this frame. Divs reflow; a viewBox
- *    does not. Only the four MARKS (the new-session plus, the enhancer
- *    wand, the model diamond, the GENERATE plate) are inline SVG, because
- *    each is a shape rather than a box.
+ *    would letterbox or crop across that spread, and ADR-064's bleed law
+ *    forbids a letterbox in this frame. Divs reflow; a viewBox does not.
+ *    Only the MARKS (the new-session plus, the enhancer wand, the image
+ *    glyph) are inline SVG, because each is a shape rather than a box.
  * 2. `.fl-wire__in` IS A SIZE CONTAINER, so every span below is `cqw`/`cqh`
- *    of the BAY and the whole drawing scales with it — one set of numbers
- *    for three viewports and the unwrapped column. ⚠ `.fl-con` is only an
- *    `inline-size` container, so `cqh` there would silently fall back to
- *    the viewport; the size container here is what makes the vertical
+ *    of the BAY and the whole drawing scales with it. ⚠ `.fl-con` is only
+ *    an `inline-size` container, so `cqh` there would silently fall back
+ *    to the viewport; the size container here is what makes the vertical
  *    rhythm mean anything.
- * 3. THREE BANDS AND NO MORE at 86px — chrome, gallery, composer. The
- *    session rail and the mode bar are deliberately THIN (a literal 7% rail
- *    is 45px of empty column in a box this wide); the drawing keeps the
- *    app's ORDER and adjacency, not its ratios.
+ * 3. The session rail is deliberately THIN — the drawing keeps the app's
+ *    ORDER and adjacency, never its window ratios (ADR-068 D5 lesson b).
  *
  * ── THE ONE OBSTACLE IN THE BOX ─────────────────────────────────────────
  * The halftone veil (`.fl-shot__frame::after`) paints OVER this drawing —
- * it carries no z-index and sits under it by tree order. (The RUN plate,
- * which used to cover ~98×40 dead centre at z 2, was deleted with the
- * owner's 2026-08-08 walkthrough-bar ruling — the centre is usable now.)
+ * it carries no z-index and sits under it by tree order.
  *
- * ── THE ONE DELIBERATE DIVERGENCE FROM THE REAL UI ──────────────────────
- * ⚠ THE DRAW READOUT IS A METER, NEVER A FIGURE. The tool prints USD; this
- * page may not — the map's `Never a price.` line, the casefile's
- * confidentiality envelope (rules/proof.md). A partial gold fill says the
- * same thing the app's readout says (a run costs something, and you can see
- * it) without publishing a number. Recorded in ADR-068 D5.
- *
- * ── THE RULES THIS DRAWING KEEPS ────────────────────────────────────────
+ * ── THE RULES THIS DRAWING KEEPS (D5 as amended by U5) ──────────────────
  * · NO FILTER, NO `<img>`. ADR-064 U2's line is AUTHORED vs CAPTURED and a
- *   wireframe is authored evidence; the duotone is the recipe for arbitrary
- *   screenshot colour, and there is none here to normalize.
- * · FOUR MICRO-LABELS, AND THAT IS THE BUDGET (`DRAW`, `PRODUCT LIBRARY`,
- *   `ENHANCE`, `MODEL`). PT Mono via `--fl-mono`, floored at 8.6px so the
- *   binding 86px box still clears the 8.5px chrome floor. Everything else
- *   is unlabelled geometry — a wireframe that letters its own parts is a
- *   diagram, and a diagram competes with the plate's route for the same
- *   reading.
- * · GOLD IS THE ONLY SIGNAL COLOUR — the draw fill, the active session
- *   mark, the enhancer wand, the GENERATE plate, the lit mode cell. GREEN
- *   IS NOT USED: green is PROVENANCE on this surface ("Loop's own") and
- *   nothing in this drawing is ours — it is the tool's own interface.
+ *   wireframe is authored evidence.
+ * · THREE LETTERED ELEMENTS AND THAT IS THIS DRAWING'S SET (`PROMPT`,
+ *   `ENHANCE PROMPT`, `GENERATE`) — the smoke pins every text-bearing
+ *   element by sorted-array equality. PT Mono ≥8.6px, NO DIGITS anywhere.
+ *   The U3 draw meter, nav lozenge, PRODUCT LIBRARY row, MODEL row and
+ *   mode bar are DELETED (owner: cut the clutter; D5's meter-never-a-
+ *   figure clause is dormant with the meter — the digit ban survives it).
+ * · TWO SIGNAL COLOURS (U5): the ENHANCE PROMPT plate is green — the
+ *   operational flow, the tool's own `genai-prompting` rewrite — and
+ *   exactly ONE solid gold plate, GENERATE. The image glyph keeps the
+ *   gold mark: the made thing. The session rail's lit square went neutral.
  * · STATIC. No keyframes of its own (ADR-021); the bay's entrance is the
  *   only motion this box has ever had.
  * · `aria-hidden`. The frame is the button and its label is the action; the
@@ -83,39 +62,22 @@ export function VesperSessionWireframe() {
   return (
     /* ⚠ THE ROOT CARRIES THE TOOL MODIFIER (2026-08-08, four-wireframe
        pass). Every vesper element rule in casefile.css is scoped
-       `.fl-wire--vesper .fl-wire__…`, because names like `__row`/`__card`
+       `.fl-wire--vesper .fl-wire__…`, because names like `__card`/`__say`
        are generic-sounding but vesper-specific in their values — an
        unscoped rule is a trap for the next tool's drawing. Only
-       `.fl-wire`, `.fl-wire__in` and `.fl-wire__lbl` are shared. */
+       `.fl-wire`, `.fl-wire__in`, `.fl-wire__lbl` and the U5 grammar pair
+       are shared. */
     <div className="fl-wire fl-wire--vesper" aria-hidden="true">
       <div className="fl-wire__in">
-        {/* ── 1 · TOP CHROME ────────────────────────────────────────────
-            Title bar left, the collapsed nav lozenge centred, the draw
-            readout right. The readout is the only gold in this band. */}
+        {/* ── 1 · TOP CHROME — the title cluster alone (U5) ── */}
         <div className="fl-wire__chrome">
           <span className="fl-wire__ttl">
             <i className="fl-wire__ttl-bar" />
             <i className="fl-wire__ttl-pill" />
           </span>
-
-          <span className="fl-wire__nav">
-            <i />
-            <i />
-            <i />
-          </span>
-
-          <span className="fl-wire__draw">
-            <i className="fl-wire__meter">
-              <b />
-            </i>
-            <span className="fl-wire__lbl">DRAW</span>
-          </span>
         </div>
 
-        {/* ── 2 + 3 · THE SESSION RAIL AND THE GENERATION ROW ───────────
-            The rail spans the full band (it clears the composer, which is
-            inset 16% each side), while the gallery is padded off the
-            composer's ceiling so the three bands read as three. */}
+        {/* ── 2 · THE SESSION RAIL AND THE GENERATION ROW ── */}
         <div className="fl-wire__body">
           <div className="fl-wire__rail">
             <i className="fl-wire__new">
@@ -130,11 +92,11 @@ export function VesperSessionWireframe() {
 
           <div className="fl-wire__gal">
             {/* The prompt card — what was asked for, beside what came
-                back. Bars of unequal length are the request; the meta row
-                is its two marks and its settings; the square is the
-                reference image it was given. */}
+                back. The label LEADS (ADR-068 lesson a); bars of unequal
+                length are the request, the meta row its marks. */}
             <div className="fl-wire__card">
               <span className="fl-wire__lines">
+                <span className="fl-wire__lbl">PROMPT</span>
                 <i />
                 <i />
                 <i />
@@ -145,87 +107,44 @@ export function VesperSessionWireframe() {
                   <b className="fl-wire__mb" />
                 </span>
               </span>
-              <i className="fl-wire__cardref" />
             </div>
 
-            {/* The outputs. A faint gold-tinged ground says GENERATED
-                without drawing an image — a wireframe that renders
-                imagery is a mockup, and a mockup of someone else's
-                pictures is a screenshot again. The second tile is MID-RUN:
-                the app's signature is an asymptotic progress BAR (never a
-                spinner, never 100%), so its abstraction is a part-filled
-                bar riding the tile's lower edge (owner, 2026-08-08). */}
+            {/* The generated image — the horizon-and-sun mark in the gold
+                signal, on the gold-tinged GENERATED ground. A wireframe
+                that renders imagery is a mockup, and a mockup of someone
+                else's pictures is a screenshot again. */}
             <span className="fl-wire__tile">
-              <b className="fl-wire__acts">
-                <i />
-                <i />
-                <i />
-              </b>
-            </span>
-            <span className="fl-wire__tile" data-generating="">
-              <b className="fl-wire__clip" />
-              <b className="fl-wire__prog">
-                <i />
-              </b>
+              <svg
+                className="fl-wire__tileglyph"
+                viewBox="0 0 24 24"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <circle cx="15.5" cy="8" r="2.6" />
+                <path d="M2,19 L9.5,11 L14,15.5 L17.5,12.5 L22,17" />
+              </svg>
             </span>
           </div>
         </div>
 
-        {/* ── 4 + 5 · THE FLOATING COMPOSER AND THE MODE BAR ────────────
+        {/* ── 3 · THE FLOATING COMPOSER — one row, the whole loop ──
             Bottom-centre and deliberately NOT full-bleed: the composer
-            floats over the gallery in the real app, and the inset is what
-            says so. It overlaps the band above it by 3cqh — enough to
-            read as floating, not enough to eat the row. */}
+            floats over the canvas in the real app, and the inset is what
+            says so. Input → the green ENHANCE PROMPT (the tool's own
+            prompt rewrite) → the gold GENERATE. */}
         <div className="fl-wire__dock">
           <div className="fl-wire__comp">
-            {/* THE LABEL LEADS. It used to be forced (trailing, it ran 27px
-                under the since-deleted RUN key at 1280×720); it stays by
-                choice — label-then-items is this surface's own grammar. */}
-            <span className="fl-wire__row">
-              <span className="fl-wire__lbl">PRODUCT LIBRARY</span>
-              <i className="fl-wire__thumb" />
-              <i className="fl-wire__thumb" />
-              <i className="fl-wire__thumb fl-wire__thumb--add" />
-            </span>
-
-            {/* The prompt bar, with the enhancer's glitch-morph
-                abstracted: the tail of the line breaks into offset
-                blocks under the wand. */}
-            <span className="fl-wire__row">
-              <i className="fl-wire__say" />
-              <i className="fl-wire__scram">
-                <b />
-                <b />
-                <b />
-                <b />
-                <b />
-              </i>
+            <i className="fl-wire__say">
+              <b />
+            </i>
+            <span className="fl-wire__enh">
               <svg className="fl-wire__wand" viewBox="0 0 12 12">
                 <path d="M6,0 L7.15,4.85 L12,6 L7.15,7.15 L6,12 L4.85,7.15 L0,6 L4.85,4.85 Z" />
               </svg>
-              <span className="fl-wire__lbl">ENHANCE</span>
+              <span className="fl-wire__lbl fl-wire__lbl--grn">ENHANCE PROMPT</span>
             </span>
-
-            {/* ⚠ THE GENERATE PLATE CUTS TOP-RIGHT AND BOTTOM-LEFT —
-                the house diagonal (ADR-065). Every chamfered object on
-                this surface cuts the same way; one box cutting the other
-                is the inconsistency a reader can see and not name. */}
-            <span className="fl-wire__row">
-              <span className="fl-wire__lbl fl-wire__chip">MODEL</span>
-              <svg className="fl-wire__dia" viewBox="0 0 12 12">
-                <path d="M6,0.9 L11.1,6 L6,11.1 L0.9,6 Z" />
-              </svg>
-              <i className="fl-wire__ratio" />
-              <svg className="fl-wire__gen" viewBox="0 0 68 14" preserveAspectRatio="none">
-                <path d="M0,0 H62 L68,6 V14 H6 L0,8 Z" />
-              </svg>
+            <span className="fl-wire__cta">
+              <span className="fl-wire__lbl">GENERATE</span>
             </span>
-          </div>
-
-          <div className="fl-wire__modes">
-            <i data-on="" />
-            <i />
-            <i />
           </div>
         </div>
       </div>

@@ -243,9 +243,27 @@ function readToolBay() {
  * without a drawing renders its duotoned capture and flips its row here).
  */
 const WIREFRAME_STATIONS = [
-  { idx: 0, id: "mimir", kind: "wire", labels: ["INSIGHTS", "BRIEFING", "REFERENCE"] },
-  { idx: 1, id: "vesper", kind: "wire", labels: ["DRAW", "PRODUCT LIBRARY", "ENHANCE", "MODEL"] },
-  { idx: 2, id: "babylon", kind: "wire", labels: ["ORIGINAL", "TRANSLATION", "SYNC"] },
+  {
+    idx: 0,
+    id: "mimir",
+    kind: "wire",
+    labels: ["ADS DATA", "REVIEWS", "REDDIT", "BLOGS", "GENERATE BRIEFINGS"],
+  },
+  { idx: 1, id: "vesper", kind: "wire", labels: ["PROMPT", "ENHANCE PROMPT", "GENERATE"] },
+  {
+    idx: 2,
+    id: "babylon",
+    kind: "wire",
+    labels: [
+      "TRANSCRIBE",
+      "TRANSLATE",
+      "DUB",
+      "APPROVE",
+      "ORIGINAL",
+      "TRANSLATION",
+      "SEND TO FRONTIFY",
+    ],
+  },
   { idx: 3, id: "heimdall", kind: "wire", labels: ["BRIEFINGS", "SYNC", "TEMPLATE"] },
 ] as const;
 
@@ -275,15 +293,16 @@ function expectWireframeBay(
   expect(bay!.overflowY, `${label}: the bay clips vertically`).toBeLessThanOrEqual(1);
   expect(bay!.overflowX, `${label}: the bay clips horizontally`).toBeLessThanOrEqual(1);
 
-  // ⚠ FOUR MICRO-LABELS, AND NOT ONE NUMBER AMONG THEM. The real tool prints
-  // a USD draw figure; this page may not (the map's `Never a price.` line and
-  // the casefile's confidentiality envelope). The readout is a METER — the
-  // one deliberate divergence from the interface being drawn — so a digit or
-  // a currency glyph appearing anywhere in this drawing is the regression.
+  // ⚠ SEVEN LETTERED ELEMENTS IS THE BUDGET, AND NOT ONE NUMBER AMONG THEM
+  // (ADR-068 U5 — babylon's flow rail set the ceiling; the pinned per-tool
+  // sets below are the real guard, this band is the coarse fence). The
+  // tools print USD figures; this page may not (the map's `Never a price.`
+  // line and the casefile's confidentiality envelope), so a digit or a
+  // currency glyph appearing anywhere in a drawing is the regression.
   expect(
     bay!.labels.length,
-    `${label}: the wireframe letters ${bay!.labels.length} elements, budget is 4`
-  ).toBeLessThanOrEqual(4);
+    `${label}: the wireframe letters ${bay!.labels.length} elements, budget is 7`
+  ).toBeLessThanOrEqual(7);
   expect(
     bay!.labels.length,
     `${label}: the wireframe lost its micro-labels`
@@ -2278,7 +2297,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
               ratio: ratio(parse(getComputedStyle(el).color)!, bedOf(el)),
               color: getComputedStyle(el).color,
             })),
-          lines: ["--w-hair", "--w-hair2", "--w-mark"].map((name) => {
+          lines: ["--w-hair", "--w-hair2", "--w-mark", "--w-green"].map((name) => {
             const c = resolve(getComputedStyle(inner).getPropertyValue(name).trim());
             return { name, ratio: c ? ratio(c, bay) : 0 };
           }),

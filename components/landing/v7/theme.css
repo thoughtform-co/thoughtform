@@ -625,6 +625,16 @@ html[data-theme="light"] .fl-wire__in {
   --w-tile-a: rgba(138, 107, 32, 0.16);
   --w-tile-b: rgba(var(--dawn-rgb), 0.06);
   --w-tile-c: rgba(138, 107, 32, 0.08);
+  /* U5's two signal roles (green flow / gold make). The atreides pair
+     carries its own light steps (`--atreides-light` #4a6238 = 4.9:1 line,
+     `--atreides-ink` #3f5a2e = 5.6:1 text on this parchment), the wash
+     rides the flipped `--atreides-rgb` triple, and the CTA ink is the same
+     near-black literal as dark — ink on gold ≈ 8.2:1 on either ground. */
+  --w-green: var(--atreides-light);
+  --w-green-ink: var(--atreides-ink);
+  --w-green-soft: rgba(var(--atreides-rgb), 0.16);
+  --w-cta: var(--gold);
+  --w-cta-ink: #110f09;
   /* ⚠ THE PLATE'S LIFT INVERTS, SO IT GOES AWAY. In dark it is dawn at 5%
      over near-black and it is what makes the composer FLOAT; the same
      declaration in light is INK over paper, i.e. a smudge — and the

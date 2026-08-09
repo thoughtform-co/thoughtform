@@ -501,28 +501,45 @@ holdfast` · atl `masters level broadcast parallel`.
   light green-mark value). The route's step outline carries α .5 (3.33:1)
   deliberately — line work the reader counts. (`--fl-own-wash` and the
   own/gold plate sampling left with the detail accents, ADR-068 U2.)
-- **WIREFRAMES ARE AUTHORED EVIDENCE — ALL FOUR TOOLS ARE DRAWN (ADR-064 U2
-  extended; ADR-068 U3, owner 2026-08-08).** Every tool in `TOOL_WIREFRAMES`
-  (`casefile/wireframes/`) renders its drawn UI abstraction: NO `<img>`, NO
-  duotone. Per-tool contracts: mímir = insights | briefing | reference
-  (`INSIGHTS · BRIEFING · REFERENCE`), vesper = session canvas + composer
-  (`DRAW · PRODUCT LIBRARY · ENHANCE · MODEL`; the draw readout is a METER,
-  never a currency figure — "Never a price."; the generating tile's progress
-  is a part-filled STATIC bar), babylon = script table | portrait player
-  (`ORIGINAL · TRANSLATION · SYNC`; ⚠ the portrait read comes from the
-  COLUMN's height-derived width, never an `aspect-ratio` on the screen — an
-  intrinsic ratio overflows the row), heimdall = plugin panel | canvas
-  template (`BRIEFINGS · SYNC · TEMPLATE`). The smoke's `WIREFRAME_STATIONS`
-  table pins each label set EXACTLY (sorted-array equality) — ≤4 labels, PT
-  Mono ≥8px, NO DIGITS, no currency, in dark and light (labels ≥4.5:1 on
-  their own opaque bed, hairlines ≥1.5:1). Element rules are scoped
-  `.fl-wire--{tool}`; only `.fl-wire`, `.fl-wire__in` (the size container +
-  `--w-*` tokens) and `.fl-wire__lbl` are shared, and a new `--w-*` token
-  lands in casefile.css AND theme.css in one commit. ⚠ The capture branch is
-  DORMANT, not deleted: a fifth tool without a drawing renders its duotoned
-  capture and the smoke's `kind` field re-arms that half of the filter law.
-  ⚠ The one obstacle over a drawing is the halftone veil (the RUN plate is
-  gone); nothing else paints over the frame.
+- **WIREFRAMES ARE AUTHORED EVIDENCE — ALL FOUR TOOLS ARE DRAWN, THREE
+  REDRAWN LETTERED (ADR-064 U2 extended; ADR-068 U3 + U5, owner
+  2026-08-09).** Every tool in `TOOL_WIREFRAMES` (`casefile/wireframes/`)
+  renders its drawn UI abstraction: NO `<img>`, NO duotone. U5's grammar:
+  **GREEN IS THE FLOW, GOLD IS THE MAKE** — each redrawn drawing letters
+  its operational rail in `--w-green-ink` and carries exactly ONE solid
+  gold `--w-cta` plate, whose text sits on an INNER `.fl-wire__lbl` span
+  (⚠ the light walk's `bedOf()` starts at the PARENT — text on the plate
+  span itself would be judged against the bay, not the gold). Per-tool
+  contracts: mímir = briefing inputs | the ad (`ADS DATA · REVIEWS ·
+REDDIT · BLOGS · GENERATE BRIEFINGS`; ⚠ the rail's basis floors at 150px
+  for the CTA's own 18-char fit, and the ad frame's width is HEIGHT-DERIVED
+  `min(64%, 66cqh)`), vesper = prompt card | image tile | one-row composer
+  (`PROMPT · ENHANCE PROMPT · GENERATE`; the DRAW meter, nav lozenge,
+  PRODUCT LIBRARY and MODEL rows are DELETED — the meter-never-a-figure
+  clause is dormant, the digit ban survives it; the gal/dock lockstep pair
+  is `min(13cqh, 5cqw)`, still repeated never tokenized), babylon = green
+  lettered flow + gold CTA over script table | portrait player
+  (`TRANSCRIBE · TRANSLATE · DUB · APPROVE · ORIGINAL · TRANSLATION ·
+SEND TO FRONTIFY`; ⚠ the flow's connectors are 1px DIVS, never svg
+  lines — a stroked single-axis path reports a 0-height rect to the
+  collapse guard; the portrait read still comes from the COLUMN's
+  height-derived width, never an `aspect-ratio` on the screen), heimdall =
+  plugin panel | canvas template (`BRIEFINGS · SYNC · TEMPLATE`, untouched
+  on the D5 gold-only grammar). The smoke's `WIREFRAME_STATIONS` table
+  pins each label set EXACTLY (sorted-array equality; the smoke counts
+  EVERY text-bearing element) — ≤7 lettered elements (U5), PT Mono ≥8px,
+  NO DIGITS, no currency, in dark and light (labels ≥4.5:1 composited on
+  their own opaque bed incl. ink-on-gold ≈8.2:1; hairlines ≥1.5:1 with
+  `--w-green` in the probe). Element rules are scoped `.fl-wire--{tool}`;
+  only `.fl-wire`, `.fl-wire__in` (the size container + `--w-*` tokens),
+  `.fl-wire__lbl` and the U5 grammar pair (`.fl-wire__cta` /
+  `.fl-wire__lbl--grn`, grouped-but-scoped to the three redrawn tools) are
+  cross-tool, and a new `--w-*` token lands in casefile.css AND theme.css
+  in one commit. ⚠ The capture branch is DORMANT, not deleted: a fifth
+  tool without a drawing renders its duotoned capture and the smoke's
+  `kind` field re-arms that half of the filter law. ⚠ The one obstacle
+  over a drawing is the halftone veil (the RUN plate is gone); nothing
+  else paints over the frame.
 - **PRM UNWRAPS THE CONSOLE TOO — THREE GATES, ONE PAIR.** console.css's
   unwrap gate is `(max-width: 980px), (prefers-reduced-motion: reduce)` —
   the SAME pair as casefile.css's static-flow gate AND (since 2026-08-08)

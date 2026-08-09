@@ -2624,11 +2624,13 @@
    `cqw` / `cqh` / a percentage of its own row. ⚠ `.fl-con` is only an
    `inline-size` container — `cqh` resolves against the VIEWPORT there, so
    the local size container is what makes the vertical rhythm mean anything
-   at all. The vertical ladder, in `cqh`, is the whole layout:
+   at all. The vertical ladder, in `cqh` (vesper's, post-U5):
 
-     chrome    0 … 15        the title bar, the nav lozenge, the draw meter
-     gallery  19 … 50        the session rail + one generation row
-     composer 47 … 97        the floating plate, overlapping the row by 3
+     chrome    0 … 15        the title bar
+     gallery   the band      the session rail + the prompt card + the image
+     composer  bottom band   the floating plate — min(13cqh, 5cqw) tall,
+                             seated 3cqh off the floor, one row: input →
+                             ENHANCE PROMPT → GENERATE
 
    ── THE ONE OBSTACLE ───────────────────────────────────────────────────
    The veil (`.fl-shot__frame::after`, tree order) paints OVER these
@@ -2666,12 +2668,24 @@
      clearly above the plate's own chrome (α .34) without competing with
      the answers below it. 3.6:1 composited on `--void-deep-canon`. */
   --w-lbl-ink: rgba(var(--dawn-rgb), 0.44);
-  /* GOLD IS THE ONLY SIGNAL COLOUR, and green is deliberately absent:
-     green is PROVENANCE on this surface and nothing drawn here is Loop's
-     own — it is the tool's own interface. */
+  /* TWO SIGNAL COLOURS SINCE ADR-068 U5 (owner, 2026-08-09 — reverses D5's
+     gold-only clause for the three REDRAWN tools; heimdall keeps D5): GOLD
+     is the one MAKE moment per drawing — exactly one solid `--w-cta` plate —
+     and GREEN is the operational flow (source titles, pipeline steps, the
+     enhancer). Green here is the tool's own live rail, not provenance. */
   --w-mark: var(--gold);
   --w-lit: rgba(var(--gold-rgb), 0.2);
   --w-gen: rgba(var(--gold-rgb), 0.16);
+  --w-green: var(--atreides-light);
+  --w-green-ink: var(--atreides-ink);
+  --w-green-soft: rgba(var(--atreides-rgb), 0.14);
+  /* The CTA plate: solid gold with near-black ink — the one pairing that
+     letters on BOTH grounds (ink on gold ≈ 8.2:1; gold-as-TEXT is 1.68:1
+     on parchment and may not letter, ADR-063 U2). The ink is a LITERAL:
+     `--dawn-rgb`/`--void-rgb` flip with the theme, and either would invert
+     into parchment-on-gold on one side of the flip. */
+  --w-cta: var(--gold);
+  --w-cta-ink: #110f09;
   /* The output tiles' ground — "generated" said with a wash, because a
      wireframe that renders imagery is a mockup, and a mockup of someone
      else's pictures is a screenshot again. */
@@ -2691,9 +2705,11 @@
 /* ⚠ PT MONO, NEVER `--font-mono` (ADR-067 — that token is IBM Plex). The
    floor is 8.6px, not 8.5: `1.3cqw` renders 7.3 / 8.3 / 10.5 at the three
    boxes, so the clamp's LOW end is what ships at both laptop viewports and
-   0.1px is the whole margin over the chrome floor. Do not trade it for a
-   fifth label — four is the budget, and three (`ENHANCE`, `PRODUCT
-   LIBRARY`, `DRAW`) is the fallback if a box ever cannot afford four. */
+   0.1px is the whole margin over the chrome floor. SEVEN lettered elements
+   is the budget (ADR-068 U5 — babylon's flow rail set it; the smoke counts
+   EVERY text-bearing element in the drawing and pins each tool's set by
+   sorted-array equality), and every one is nowrap at this size — a label
+   that wraps is a label the box cannot afford. */
 .fl-wire__lbl {
   flex: none;
   font-family: var(--fl-mono);
@@ -2703,6 +2719,43 @@
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--w-lbl-ink);
+}
+
+/* ── The U5 highlight grammar (owner, 2026-08-09) ────────────────────────
+   GREEN IS THE FLOW, GOLD IS THE MAKE. Each redrawn drawing letters its
+   operational rail (Mímir's sources, Babylon's pipeline, Vesper's
+   enhancer) in the atreides ink, and carries exactly ONE solid gold CTA
+   plate — the tool's "make" moment. Grouped-but-scoped on purpose: the
+   selectors enumerate the three redrawn tools rather than minting a fourth
+   shared class, so heimdall — which keeps the D5 gold-only grammar —
+   cannot inherit either rule (recorded in ADR-068 U5).
+   ⚠ THE CTA'S TEXT SITS ON AN INNER `.fl-wire__lbl` SPAN. The light
+   smoke's `bedOf()` starts at the PARENT, so the plate's opaque gold is
+   the bed the ink is composited against (≈8.2:1); text directly on the
+   plate span would be judged against the bay instead. */
+.fl-wire--mimir .fl-wire__lbl--grn,
+.fl-wire--vesper .fl-wire__lbl--grn,
+.fl-wire--babylon .fl-wire__lbl--grn {
+  color: var(--w-green-ink);
+}
+.fl-wire--mimir .fl-wire__cta,
+.fl-wire--vesper .fl-wire__cta,
+.fl-wire--babylon .fl-wire__cta {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 max(7px, 0.9cqw);
+  background: var(--w-cta);
+  /* The house diagonal — TR + BL (ADR-065), the ba-pipe chips' own cut,
+     as a clip-path because this plate is DOM (the text needs a bed the
+     contrast walk can read; an svg fill is invisible to it). */
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.fl-wire--mimir .fl-wire__cta .fl-wire__lbl,
+.fl-wire--vesper .fl-wire__cta .fl-wire__lbl,
+.fl-wire--babylon .fl-wire__cta .fl-wire__lbl {
+  color: var(--w-cta-ink);
 }
 
 /* ── 1 · The top chrome ────────────────────────────────────────────────── */
@@ -2745,52 +2798,9 @@
   border: 1px solid var(--w-hair);
   border-radius: 999px;
 }
-/* Absolutely centred on the BOX, not on what is left after the two
-   clusters — a nav that drifts with its neighbours is not a nav. */
-.fl-wire--vesper .fl-wire__nav {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45cqw;
-  width: 6.4cqw;
-  height: 46%;
-  border: 1px solid var(--w-hair);
-  border-radius: 999px;
-}
-.fl-wire--vesper .fl-wire__nav i {
-  width: max(1.2px, 0.22cqw);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--w-fill2);
-}
-/* ⚠ THE DRAW READOUT IS A METER, NEVER A FIGURE (ADR-068 D5). The tool
-   prints USD; this page may not — the map's `Never a price.` line and the
-   casefile's confidentiality envelope (rules/proof.md). A partial fill says
-   what the app's readout says without publishing a number, and it is the
-   one deliberate divergence from the interface being drawn. */
-.fl-wire--vesper .fl-wire__draw {
-  margin-left: auto;
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  gap: 0.7cqw;
-}
-.fl-wire--vesper .fl-wire__meter {
-  display: block;
-  width: 4.4cqw;
-  height: 32%;
-  border: 1px solid var(--w-hair);
-}
-.fl-wire--vesper .fl-wire__meter b {
-  display: block;
-  width: 40%;
-  height: 100%;
-  background: var(--w-mark);
-}
+/* (U5, owner 2026-08-09: the nav lozenge and the DRAW meter are DELETED
+   with the clutter cut — D5's meter-never-a-figure clause is dormant with
+   the meter; the smoke's digit/currency ban survives it.) */
 
 /* ── 2 + 3 · The session rail and the generation row ───────────────────── */
 .fl-wire--vesper .fl-wire__body {
@@ -2842,10 +2852,10 @@
 .fl-wire--vesper .fl-wire__sess {
   background: var(--w-hair2);
 }
-/* The active session — ring-marked with a corner dot, gold, because gold is
-   the signal colour and this is the only "you are here" in the drawing. */
+/* The active session — ring-marked with a corner dot. NEUTRAL since U5:
+   the one gold object in this drawing is the GENERATE plate. */
 .fl-wire--vesper .fl-wire__sess[data-on] {
-  border-color: var(--w-mark);
+  border-color: var(--w-hair);
 }
 .fl-wire--vesper .fl-wire__sess[data-on]::after {
   content: "";
@@ -2854,25 +2864,26 @@
   right: -1px;
   width: 26%;
   height: 26%;
-  background: var(--w-mark);
+  background: var(--w-fill2);
 }
 
-/* The gallery is padded off the composer's ceiling so the three bands read
-   as three at 86px — the row's own content stops where the plate begins.
+/* The gallery is padded off the composer's ceiling so the bands read as
+   bands — the row's own content stops where the plate begins.
    ⚠ THIS PADDING IS THE DOCK'S HEIGHT, DERIVED. The ladder is: the body's
    content ends at 98cqh, the dock's top is at `97cqh − height`, and the
    overlap is 3cqh — so the padding is `dockHeight − 2cqh` and NOTHING ELSE
    keeps the row off the plate. The `min()` is repeated rather than lifted
    to a custom property on purpose: container units inside a custom property
    declared on the container ITSELF resolve against the wrong box. Move one
-   and move the other. */
+   and move the other (the dock is `min(13cqh, 5cqw)` since U5's one-row
+   composer). */
 .fl-wire--vesper .fl-wire__gal {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: stretch;
   gap: 1cqw;
-  padding-bottom: calc(min(50cqh, 15cqw) - 2cqh);
+  padding-bottom: calc(min(13cqh, 5cqw) - 2cqh);
 }
 /* ⚠ THE ROW'S HEIGHT IS CQW-CAPPED, AND IT IS ARITHMETIC (2026-08-08, the
    no-ceiling pass). The tiles are height-driven (`aspect-ratio: 4/5`), so
@@ -2884,7 +2895,7 @@
    the CANVAS — the real app's own read, and the reference law's ("the
    surplus lives inside a content region"). */
 .fl-wire--vesper .fl-wire__card {
-  flex: 0 0 26%;
+  flex: 0 0 34%;
   min-width: 0;
   max-height: 42cqw;
   display: flex;
@@ -2944,80 +2955,34 @@
 .fl-wire--vesper .fl-wire__meta b:nth-child(4) {
   width: 15%;
 }
-.fl-wire--vesper .fl-wire__cardref {
-  flex: none;
-  align-self: flex-end;
-  height: min(52%, 4cqw);
-  aspect-ratio: 1;
-  border: 1px solid var(--w-hair);
-  background: var(--w-hair2);
-}
-
-/* The outputs. HEIGHT-BOUND at ~4:5 and left-aligned after the card, with
-   the rest of the row empty — which is what a two-output generation row
-   actually looks like. Filling the width would be inventing evidence. */
+/* The output. HEIGHT-BOUND at ~4:5 and left-aligned after the card, with
+   the rest of the row empty — which is what a generation row actually
+   looks like. Filling the width would be inventing evidence. (U5: ONE
+   tile — the mid-run twin, its clip pill and its progress bar left with
+   the clutter cut.) */
 .fl-wire--vesper .fl-wire__tile {
   position: relative;
   flex: none;
   height: min(100%, 42cqw);
   aspect-ratio: 4 / 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--w-hair);
   background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
 }
-.fl-wire--vesper .fl-wire__acts {
-  position: absolute;
-  top: 8%;
-  right: 8%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.14cqw;
-}
-.fl-wire--vesper .fl-wire__acts i {
-  display: block;
-  width: max(1.2px, 0.24cqw);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--w-fill2);
-}
-/* The video mark STRADDLES the tile's top edge — a badge on the object, not
-   a label beside it. */
-.fl-wire--vesper .fl-wire__clip {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translate(-50%, -50%);
-  /* cqw-capped like the row itself — a %-sized pill on a 344px tile is a
-     blob, not a clip (measured at the 2560 uncapped bay). */
-  width: min(54%, 15cqw);
-  height: min(17%, 3cqw);
-  border: 1px solid var(--w-hair);
-  border-radius: 999px;
-  background: var(--w-plate);
-}
-/* The mid-run readout (owner, 2026-08-08). Vesper's own progress is an
-   asymptotic BAR — never a spinner, never 100% — so its abstraction is a
-   part-filled track under the tile's clip pill. ⚠ It sits in the tile's
-   UPPER band on purpose: the composer plate floats over the gallery's
-   lower half, and a bar at the tile's bottom edge is a bar nobody sees.
-   STATIC like everything here (ADR-021): the fill sits at ~2/3, the
-   asymptote's plateau, and says "being generated" without a clock. */
-.fl-wire--vesper .fl-wire__prog {
-  position: absolute;
-  left: 12%;
-  right: 12%;
-  top: 16%;
-  height: 3px;
-  background: var(--w-hair2);
-}
-.fl-wire--vesper .fl-wire__prog i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 66%;
-  background: var(--w-mark);
+/* The image mark, in the GOLD signal — the made thing (U5). The same
+   horizon-and-sun as mímir's ad frame; the vocabulary for "an image" is
+   one glyph. */
+.fl-wire--vesper .fl-wire__tileglyph {
+  width: 34%;
+  max-width: 44px;
+  stroke: var(--w-mark);
+  stroke-width: 1.1;
+  fill: none;
 }
 
-/* ── 4 + 5 · The floating composer and the mode bar ────────────────────── */
+/* ── 4 · The floating composer (U5: ONE row, no mode bar) ──────────────── */
 /* Bottom-centre and deliberately NOT full-bleed — the inset is what says
    "floating". It overlaps the band above by 3cqh: enough to read as a plate
    over the row, not enough to eat it. */
@@ -3028,7 +2993,7 @@
   transform: translateX(-50%);
   width: 68%;
   /* ⚠ IN LOCKSTEP WITH `.fl-wire__gal`'s padding — see the note there. */
-  height: min(50cqh, 15cqw);
+  height: min(13cqh, 5cqw);
   display: flex;
   align-items: stretch;
   gap: 0.8cqw;
@@ -3037,144 +3002,64 @@
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: min(2.6cqh, 0.8cqw);
-  padding: min(2cqh, 0.6cqw) 0.8cqw;
+  align-items: center;
+  gap: 0.7cqw;
+  padding: 0 0.8cqw;
   border: 1px solid var(--w-hair);
   border-radius: 2px;
   background-color: var(--w-plate);
   background-image: linear-gradient(var(--w-plate-lift), var(--w-plate-lift));
 }
-/* Three equal rows, so the composer's height ladder is one division rather
-   than three tuned numbers. ⚠ At the binding box a row is ~11.1px against
-   an 8.6px label whose glyph box is 9.6px — there is no slack here for a
-   taller control, which is why the MODEL chip takes the row's full height
-   rather than padding its own. */
-.fl-wire--vesper .fl-wire__row {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.7cqw;
-}
-.fl-wire--vesper .fl-wire__thumb {
-  flex: none;
-  height: 88%;
-  aspect-ratio: 1;
-  border: 1px solid var(--w-hair);
-  background: var(--w-hair2);
-}
-.fl-wire--vesper .fl-wire__thumb--add {
-  border-style: dashed;
-  background: none;
-}
+/* The input field — bordered, with a short typed run inside. The field is
+   what makes the row read as a PROMPT BAR rather than three chips. */
 .fl-wire--vesper .fl-wire__say {
   flex: 1 1 auto;
   min-width: 0;
-  height: 22%;
-  background: var(--w-fill);
-}
-/* The enhancer's glitch-morph, abstracted: the tail of the prompt breaks
-   into offset blocks under the wand. Unequal heights are the whole read —
-   an even run of ticks is a progress bar, not a scramble. */
-.fl-wire--vesper .fl-wire__scram {
-  flex: none;
+  height: 52%;
   display: flex;
   align-items: center;
-  gap: 0.18cqw;
-  height: 34%;
+  padding: 0 max(4px, 0.5cqw);
+  border: 1px solid var(--w-hair);
+  background: var(--w-card);
 }
-.fl-wire--vesper .fl-wire__scram b {
+.fl-wire--vesper .fl-wire__say b {
   display: block;
-  width: max(1.3px, 0.28cqw);
-  height: 100%;
+  width: 38%;
+  height: max(2px, 26%);
   background: var(--w-fill2);
 }
-.fl-wire--vesper .fl-wire__scram b:nth-child(2) {
-  height: 58%;
-}
-.fl-wire--vesper .fl-wire__scram b:nth-child(4) {
-  height: 74%;
-}
-.fl-wire--vesper .fl-wire__scram b:nth-child(5) {
-  height: 44%;
+/* The enhancer — GREEN, the operational flow (U5): the tool's own
+   genai-prompting rewrite. Wand + label on a washed plate with the same
+   house cut as the CTA beside it (border segments at the cut corners go
+   with the clip — the ba-pipe chips' accepted look). */
+.fl-wire--vesper .fl-wire__enh {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: max(3px, 0.5cqw);
+  height: 72%;
+  padding: 0 max(6px, 0.8cqw);
+  border: 1px solid var(--w-green);
+  background: var(--w-green-soft);
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
 }
 .fl-wire--vesper .fl-wire__wand {
   flex: none;
   display: block;
-  height: 62%;
+  height: 58%;
   aspect-ratio: 1;
-  fill: var(--w-mark);
+  fill: var(--w-green-ink);
 }
-/* The MODEL pill takes the ROW's height, not its own padding — see the row
-   note above: at 11.1px there is no room for vertical padding under an
-   8.6px line, and a pill whose glyphs poke through its own border is worse
-   than no pill. */
-.fl-wire--vesper .fl-wire__chip {
-  display: inline-flex;
-  align-items: center;
-  height: 100%;
-  padding: 0 0.45cqw;
-  border: 1px solid var(--w-hair);
-}
-.fl-wire--vesper .fl-wire__dia {
-  flex: none;
-  display: block;
-  height: 52%;
-  aspect-ratio: 1;
-  fill: none;
-  stroke: var(--w-fill2);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.fl-wire--vesper .fl-wire__ratio {
-  flex: none;
-  width: 2.6cqw;
-  height: 62%;
-  border: 1px solid var(--w-hair);
-}
-/* ⚠ THE HOUSE DIAGONAL — TOP-RIGHT AND BOTTOM-LEFT (ADR-065). Every
-   chamfered object on this surface cuts the same way; the mirrored form is
-   reserved for the back of a physically flipped object.
-   `preserveAspectRatio="none"` because this is a PLATE that fills its slot,
-   and `non-scaling-stroke` is what keeps the hairline a hairline while the
-   box stretches. */
-.fl-wire--vesper .fl-wire__gen {
-  flex: none;
-  display: block;
-  margin-left: auto;
-  width: 8.4cqw;
-  height: 100%;
-}
-.fl-wire--vesper .fl-wire__gen path {
-  fill: var(--w-gen);
-  stroke: var(--w-mark);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.fl-wire--vesper .fl-wire__modes {
-  flex: 0 0 3.4%;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--w-hair);
-}
-.fl-wire--vesper .fl-wire__modes i {
-  flex: 1 1 0;
-  display: block;
-}
-.fl-wire--vesper .fl-wire__modes i + i {
-  border-top: 1px solid var(--w-hair2);
-}
-.fl-wire--vesper .fl-wire__modes i[data-on] {
-  background: var(--w-lit);
+.fl-wire--vesper .fl-wire__comp .fl-wire__cta {
+  height: 72%;
 }
 
-/* ── MÍMIR: insights → briefing → reference (ADR-068 U3) ─────────────────
-   Three panels against the owner's own archetype. The rail and the ref
-   column are quiet card grounds; the brief is BORDERLESS like the app's
-   composer — its kicker dots are the drawing's gold. Sizing is cqw-capped
-   the same way vesper's ladder is: a pure-cqh band collapses silently at
-   the unwrapped 16:10 box (the vesper lesson, kept). */
+/* ── MÍMIR: briefing inputs → the ad (ADR-068 U5) ────────────────────────
+   Two regions against the owner's own spec (2026-08-09): four titled
+   source cards and the gold CTA on the left, the ad the pipeline produces
+   on the right. The U3 brief and reference columns are DELETED. Sizing
+   stays cqw-capped the same way vesper's ladder is: a pure-cqh band
+   collapses silently at the unwrapped 16:10 box (the vesper lesson). */
 .fl-wire--mimir .fl-wire__mi-chrome {
   flex: 0 0 min(13cqh, 4.2cqw);
   display: flex;
@@ -3197,18 +3082,9 @@
   width: min(5cqw, 26px);
   height: min(4.6cqh, 10px);
 }
+/* Neutral since U5 — the CTA is the drawing's one gold object. */
 .fl-wire--mimir .fl-wire__mi-seg i[data-on] {
-  background: var(--w-lit);
-}
-.fl-wire--mimir .fl-wire__mi-send {
-  width: min(9.5cqw, 52px);
-  height: auto;
-}
-.fl-wire--mimir .fl-wire__mi-send path {
-  fill: var(--w-gen);
-  stroke: var(--w-mark);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
+  background: var(--w-fill);
 }
 .fl-wire--mimir .fl-wire__mi-body {
   flex: 1 1 auto;
@@ -3217,19 +3093,25 @@
   gap: 1.4cqw;
   padding: 2.6cqh 1.6cqw 2.2cqh;
 }
-.fl-wire--mimir .fl-wire__mi-rail,
-.fl-wire--mimir .fl-wire__mi-ref {
+/* ⚠ THE RAIL'S BASIS IS A CLAMP WITH A PIXEL FLOOR, and the floor is the
+   CTA's fit: `GENERATE BRIEFINGS` is 18 mono characters ≈ 124px at the
+   8.6px label floor (advance 0.6em + 0.2em tracking ≈ 6.9px/char), plus
+   the plate's and the rail's padding ≈ 153px. 26% of the binding 564.5px
+   frame is 147 — too tight — so the rail floors at 150px, and caps at 200
+   so the big boxes do not spend half the drawing on the inputs. */
+.fl-wire--mimir .fl-wire__mi-rail {
+  flex: 0 0 clamp(150px, 30%, 200px);
   display: flex;
   flex-direction: column;
-  gap: 1.8cqh;
+  gap: min(2.2cqh, 9px);
   padding: min(2cqh, 8px) min(1cqw, 8px);
   border: 1px solid var(--w-hair2);
   background: var(--w-card);
 }
-.fl-wire--mimir .fl-wire__mi-rail {
-  flex: 0 0 26%;
-}
-.fl-wire--mimir .fl-wire__mi-card {
+/* A titled source card — the green label LEADS its card (ADR-068 lesson
+   a), two quiet content bars under it. Second-bar widths vary per card so
+   the stack reads as four different sources, not one repeated row. */
+.fl-wire--mimir .fl-wire__mi-src {
   display: flex;
   flex-direction: column;
   gap: min(1.4cqh, 4px);
@@ -3237,119 +3119,48 @@
   border: 1px solid var(--w-hair);
   background: var(--w-plate-lift);
 }
-.fl-wire--mimir .fl-wire__mi-card i {
+.fl-wire--mimir .fl-wire__mi-src i {
   height: min(1.8cqh, 3px);
   background: var(--w-fill);
 }
-.fl-wire--mimir .fl-wire__mi-card i:nth-child(2) {
-  width: 72%;
+.fl-wire--mimir .fl-wire__mi-src i:last-of-type {
+  width: 64%;
 }
-.fl-wire--mimir .fl-wire__mi-card b {
-  display: flex;
-  gap: min(0.6cqw, 5px);
-  margin-top: min(0.6cqh, 2px);
-}
-.fl-wire--mimir .fl-wire__mi-card u {
-  width: min(2.2cqw, 12px);
-  height: min(1.4cqh, 3px);
-  background: var(--w-fill2);
-}
-/* The dashed add-row — the app's "+ add more sources". */
-.fl-wire--mimir .fl-wire__mi-add {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: min(1.2cqh, 5px) 0;
-  border: 1px dashed var(--w-hair);
-}
-.fl-wire--mimir .fl-wire__mi-add svg {
-  width: min(2.4cqw, 11px);
-  height: min(2.4cqw, 11px);
-  stroke: var(--w-lbl-ink);
-  stroke-width: 1.2;
-  fill: none;
-}
-.fl-wire--mimir .fl-wire__mi-gen {
-  margin-top: auto;
+.fl-wire--mimir .fl-wire__mi-src:nth-of-type(2) i:last-of-type {
   width: 78%;
-  align-self: center;
-  height: auto;
 }
-.fl-wire--mimir .fl-wire__mi-gen path {
-  fill: var(--w-gen);
-  stroke: var(--w-mark);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
+.fl-wire--mimir .fl-wire__mi-src:nth-of-type(4) i:last-of-type {
+  width: 52%;
 }
-/* Bounded like its two neighbours (2026-08-08, the no-ceiling pass): with
-   the bay uncapped the column runs tall, and a borderless middle read as a
-   HOLE between two carded panels rather than as paper. Three panels, three
-   grounds — the owner's own "three panels" spec, finished. */
-.fl-wire--mimir .fl-wire__mi-brief {
+.fl-wire--mimir .fl-wire__mi-rail .fl-wire__cta {
+  margin-top: auto;
+  width: 100%;
+  height: max(14px, min(6cqh, 18px));
+}
+
+/* ── the ad region ── */
+.fl-wire--mimir .fl-wire__mi-ad {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+/* ⚠ THE FRAME'S WIDTH IS HEIGHT-DERIVED — `66cqh`, capped by the region —
+   never an `aspect-ratio`: an aspect-ratio'd box with indefinite height
+   contributes an intrinsic width the row cannot shrink (the babylon trap,
+   ADR-068 U3, measured 46px past the frame). The `%` term is what keeps
+   the tall uncapped bays (679/739px) from growing a poster. */
+.fl-wire--mimir .fl-wire__mi-adframe {
+  display: flex;
   flex-direction: column;
-  gap: min(3.2cqh, 16px);
-  padding: min(2cqh, 8px) min(1.6cqw, 14px);
+  gap: min(1.6cqh, 7px);
+  width: min(64%, 66cqh);
+  padding: min(2cqh, 10px) min(1.4cqw, 12px);
   border: 1px solid var(--w-hair2);
   background: var(--w-card);
 }
-.fl-wire--mimir .fl-wire__mi-sec {
-  display: flex;
-  flex-direction: column;
-  gap: min(1.6cqh, 5px);
-}
-.fl-wire--mimir .fl-wire__mi-kick {
-  display: flex;
-  align-items: center;
-  gap: min(0.8cqw, 6px);
-  margin-bottom: min(0.6cqh, 2px);
-}
-.fl-wire--mimir .fl-wire__mi-dot {
-  width: 3px;
-  height: 3px;
-  background: var(--w-mark);
-}
-.fl-wire--mimir .fl-wire__mi-kbar {
-  width: min(6cqw, 34px);
-  height: min(1.6cqh, 3px);
-  background: var(--w-fill2);
-}
-.fl-wire--mimir .fl-wire__mi-line {
-  height: min(1.8cqh, 3px);
-  background: var(--w-fill);
-}
-.fl-wire--mimir .fl-wire__mi-line--short {
-  width: 56%;
-}
-.fl-wire--mimir .fl-wire__mi-line--mid {
-  width: 78%;
-}
-.fl-wire--mimir .fl-wire__mi-checks {
-  display: flex;
-  gap: min(1.2cqw, 9px);
-  margin-top: min(0.8cqh, 3px);
-}
-.fl-wire--mimir .fl-wire__mi-checks i {
-  position: relative;
-  width: min(2.6cqw, 12px);
-  height: min(2.6cqw, 12px);
-  border: 1px solid var(--w-hair);
-}
-.fl-wire--mimir .fl-wire__mi-checks i[data-on] {
-  border-color: var(--w-mark);
-}
-.fl-wire--mimir .fl-wire__mi-checks i[data-on]::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  background: var(--w-mark);
-}
-.fl-wire--mimir .fl-wire__mi-ref {
-  flex: 0 0 24%;
-}
-.fl-wire--mimir .fl-wire__mi-frame {
+.fl-wire--mimir .fl-wire__mi-adimg {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -3358,24 +3169,38 @@
   border: 1px solid var(--w-hair);
   background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
 }
-.fl-wire--mimir .fl-wire__mi-frame svg {
-  width: 34%;
-  max-width: 44px;
+.fl-wire--mimir .fl-wire__mi-adimg svg {
+  width: 30%;
+  max-width: 52px;
   stroke: var(--w-lbl-ink);
   stroke-width: 1.1;
   fill: none;
 }
-.fl-wire--mimir .fl-wire__mi-cap {
-  height: min(1.8cqh, 3px);
+/* The ad's text zone: headline, subline, a textless CTA chip. */
+.fl-wire--mimir .fl-wire__mi-adhead {
+  height: min(1.8cqh, 4px);
+  background: var(--w-fill2);
+}
+.fl-wire--mimir .fl-wire__mi-adhead--short {
   width: 62%;
   background: var(--w-fill);
 }
+.fl-wire--mimir .fl-wire__mi-adcta {
+  width: 34%;
+  height: max(6px, min(3.4cqh, 9px));
+  margin-top: min(0.8cqh, 4px);
+  border: 1px solid var(--w-hair);
+  background: var(--w-fill);
+}
 
-/* ── BABYLON: the script beside the portrait player (ADR-068 U3) ─────────
-   Two columns of paired bars under their labels, four rows led by a mono
-   TICK (the timecode's shadow — a mark, never digits), the gold SYNC plate
-   at the foot, and a 9:16-ish screen whose width DERIVES from its height
-   (aspect-ratio, so no ratio is ever lettered). */
+/* ── BABYLON: the flow over the script and the player (ADR-068 U5) ───────
+   The chrome line IS the pipeline now — four green lettered steps, each
+   checked, joined by green hairline links, ending at the one gold CTA.
+   Below it, U3's working adjacency survives: two columns of paired bars
+   under their labels, four rows led by a mono TICK (the timecode's
+   shadow — a mark, never digits), and a 9:16-ish screen whose width
+   derives from its COLUMN's height. The U3 title bar, unlabelled pipe
+   chips and SYNC foot are DELETED. */
 .fl-wire--babylon .fl-wire__ba-chrome {
   flex: 0 0 min(13cqh, 4.2cqw);
   display: flex;
@@ -3383,32 +3208,39 @@
   padding: 0 1.6cqw;
   border-bottom: 1px solid var(--w-hair2);
 }
-.fl-wire--babylon .fl-wire__ba-ttl {
-  width: 17%;
-  height: min(2.6cqh, 5px);
-  background: var(--w-fill);
-}
-/* The pipeline: four chamfer-cornered chips, hairline connectors, three
-   done. The machine mid-run, in one glance. */
-.fl-wire--babylon .fl-wire__ba-pipe {
-  margin-left: auto;
+/* The flow: each step is a green check + a green label; the links are
+   DIVS, never svg lines — a stroked single-axis path reports a 0-height
+   client rect and trips the smoke's collapse guard. */
+.fl-wire--babylon .fl-wire__ba-flow {
+  min-width: 0;
   display: flex;
   align-items: center;
+  gap: max(3px, 0.8cqw);
 }
-.fl-wire--babylon .fl-wire__ba-pipe i {
-  width: min(4.6cqw, 24px);
-  height: min(4.6cqh, 10px);
-  border: 1px solid var(--w-hair);
-  clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px));
+.fl-wire--babylon .fl-wire__ba-step {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: max(2px, 0.4cqw);
 }
-.fl-wire--babylon .fl-wire__ba-pipe i[data-on] {
-  background: var(--w-lit);
-  border-color: var(--w-mark);
+.fl-wire--babylon .fl-wire__ba-mark {
+  flex: none;
+  display: block;
+  height: max(6px, min(2.4cqh, 8px));
+  aspect-ratio: 1;
+  fill: none;
+  stroke: var(--w-green);
+  stroke-width: 1.2;
 }
-.fl-wire--babylon .fl-wire__ba-pipe b {
+.fl-wire--babylon .fl-wire__ba-link {
+  flex: none;
   width: min(1.6cqw, 10px);
   height: 1px;
-  background: var(--w-hair);
+  background: var(--w-green);
+}
+.fl-wire--babylon .fl-wire__ba-chrome .fl-wire__cta {
+  margin-left: auto;
+  height: 68%;
 }
 .fl-wire--babylon .fl-wire__ba-body {
   flex: 1 1 auto;
@@ -3472,22 +3304,8 @@
 .fl-wire--babylon .fl-wire__ba-dst--short {
   width: 60%;
 }
-.fl-wire--babylon .fl-wire__ba-foot {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: min(1cqw, 8px);
-}
-.fl-wire--babylon .fl-wire__ba-sync {
-  width: min(11cqw, 58px);
-  height: auto;
-}
-.fl-wire--babylon .fl-wire__ba-sync path {
-  fill: var(--w-gen);
-  stroke: var(--w-mark);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
+/* (U5: the SYNC foot plate is deleted — the gold CTA ends the chrome's
+   flow line instead, gated visually on the checked APPROVE beside it.) */
 /* ⚠ THE COLUMN CARRIES THE PORTRAIT READ, NOT AN `aspect-ratio`. An
    aspect-ratio'd screen with indefinite height contributes an intrinsic
    width the row cannot shrink (`flex: 0 0 auto` column) — measured 46px
@@ -3510,8 +3328,9 @@
   height: min(3.4cqh, 8px);
   border: 1px solid var(--w-hair2);
 }
+/* Neutral since U5 — the CTA is the drawing's one gold object. */
 .fl-wire--babylon .fl-wire__ba-tabs i[data-on] {
-  background: var(--w-lit);
+  background: var(--w-fill);
   border-color: var(--w-hair);
 }
 .fl-wire--babylon .fl-wire__ba-screen {
@@ -3524,13 +3343,14 @@
   border: 1px solid var(--w-hair);
   background: linear-gradient(158deg, var(--w-tile-a), var(--w-tile-b) 58%, var(--w-tile-c));
 }
-/* The house play cue, scaled to the screen. */
+/* The house play cue, scaled to the screen — line-work neutral since U5
+   (the drawing's one gold object is the CTA). */
 .fl-wire--babylon .fl-wire__ba-play {
   width: 0;
   height: 0;
   border-style: solid;
   border-width: min(1.6cqh, 5px) 0 min(1.6cqh, 5px) min(2.4cqh, 8px);
-  border-color: transparent transparent transparent var(--w-mark);
+  border-color: transparent transparent transparent var(--w-lbl-ink);
 }
 .fl-wire--babylon .fl-wire__ba-capline {
   position: absolute;
@@ -3741,6 +3561,29 @@
     width: 100%;
     height: auto;
     aspect-ratio: 16 / 10;
+  }
+  /* U5's lettered chrome needs width the unwrapped column may not have:
+     babylon's flow + CTA measure ~446px at the 8.6px floor and mímir's
+     GENERATE BRIEFINGS floors its rail at 150px. Below the gate the flow
+     may wrap to a second chrome line (the band grows, the body gives — so
+     the CTA takes a PIXEL height here, a % of an auto-height line is
+     auto), and the rail trades its pixel floor for a fraction so the ad
+     keeps a column on phone widths. ⚠ DORMANT like the rung above it:
+     probed at 900×720 (2026-08-09), the unwrapped casefile mounts only
+     the MAP's console — no `.fl-wire` in the DOM — so these arm only if
+     the unwrapped tools plate ever regains its bay (ADR-068 U5). */
+  .fl-wire--babylon .fl-wire__ba-chrome {
+    flex-basis: auto;
+    flex-wrap: wrap;
+    row-gap: 3px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .fl-wire--babylon .fl-wire__ba-chrome .fl-wire__cta {
+    height: 16px;
+  }
+  .fl-wire--mimir .fl-wire__mi-rail {
+    flex-basis: clamp(146px, 42%, 200px);
   }
 }
 

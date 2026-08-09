@@ -1,148 +1,100 @@
 /**
  * MimirBriefingWireframe — the Briefing Agent's create-ads workspace, drawn
- * (ADR-068 U3, owner 2026-08-08: "make a super simple version of it… really
- * think about the archetype").
+ * (ADR-068 U5, owner 2026-08-09: "in the Briefing Inputs a few clear titles
+ * with source of input ADS DATA, REVIEWS, REDDIT, BLOGS… and on the right
+ * side a clear wireframe of an ad").
  *
- *   ┌ ttl ─────────── ◻◻ studio/ugc ───────────── send ┐   chrome
- *   │ INSIGHTS      │ BRIEFING                │ REFERENCE│
- *   │ ┌ nugget ───┐ │ ● ▬▬                    │ ┌──────┐ │
- *   │ ├ nugget ───┤ │   ═══════ ══════        │ │  ▨   │ │
- *   │ ├ nugget ───┤ │ ● ▬▬                    │ │      │ │
- *   │ ┆ add more  ┆ │   ═════ ════════        │ └──────┘ │
- *   │ [ GENERATE ]  │ ● ▬▬  ☐ ☐ ☐             │  caption │
- *   └───────────────┴─────────────────────────┴──────────┘
+ *   ┌ ttl ─────────────────────────────────── ◻◻ studio/ugc ┐   chrome
+ *   │ ┌ ADS DATA ──┐ │        ┌ the ad ────┐                │
+ *   │ ├ REVIEWS ───┤ │        │    ◠  ▨    │                │
+ *   │ ├ REDDIT ────┤ │        │  (image)   │                │
+ *   │ ├ BLOGS ─────┤ │        │ ▬▬▬▬▬▬▬▬   │                │
+ *   │ │            │ │        │ ▬▬▬▬▬      │                │
+ *   │ [ GENERATE   ] │        │ [cta]      │                │
+ *   │ [  BRIEFINGS ] │        └────────────┘                │
+ *   └────────────────┴───────────────────────────────────────┘
  *
- * THE ARCHETYPE (owner's own three panels): evidence goes IN on the left,
- * the brief takes shape in the middle, the reference image sits on the
- * right. The real app is a focused two-column workspace (left
- * `BriefingSourceRail`, centre `BriefingComposer` with References inline at
- * its bottom); the owner's abstraction promotes the reference to a third
- * panel, which is the drawing's whole argument — inputs → brief → visual.
+ * THE ARCHETYPE (owner, U5 — supersedes U3's three panels): evidence
+ * sources IN on the left — four titled cards naming the tool's evidence
+ * estate (ads data = Loop Ads + the Meta library; reviews; reddit = social
+ * listening; blogs = trends) — the gold GENERATE BRIEFINGS plate at the
+ * rail's foot exactly where the app's own CTA lives, and on the right the
+ * AD the pipeline exists to produce: one portrait card with the image mark,
+ * two headline bars and a CTA chip. The U3 brief and reference columns are
+ * DELETED — inputs → the button → the ad is the whole story.
  *
- * What each panel keeps from the real UI, and nothing more:
- * · INSIGHTS — the nugget-card stack (two bars + meta dots each), the
- *   dashed "+ add more sources" row, and the one gold action: the GENERATE
- *   plate at the rail's foot, exactly where the app's own CTA lives.
- * · BRIEFING — the kicker-dot section grammar (IDEA / WHY / … render as a
- *   gold dot + a short kicker bar), two body bars per section, and the
- *   FORMATS checkbox row. Borderless, like the app's composer.
- * · REFERENCE — one portrait frame with the image mark, a caption bar.
- * · CHROME — title bar left; the STUDIO/UGC segmented pill (two cells, one
- *   lit — the app's one visible mode switch); the send plate right (the
- *   "Save & send to Monday" primary, drawn as the house chamfer plate).
- *
- * THE RULES THIS DRAWING KEEPS (the ADR-068 D5 contract, verbatim law):
+ * THE RULES THIS DRAWING KEEPS (ADR-068 D5 as amended by U5):
  * · NO `<img>`, NO filter — authored evidence, smoke-asserted per tool.
- * · THREE MICRO-LABELS AND THAT IS THE BUDGET (`INSIGHTS`, `BRIEFING`,
- *   `REFERENCE`) — PT Mono via `.fl-wire__lbl`, ≥8.6px. NO DIGITS anywhere
- *   (the bay's ordinal scan reads this text).
- * · GOLD IS THE ONLY SIGNAL COLOUR: the kicker dots, the lit segment cell,
- *   the GENERATE plate, the send plate. Green stays provenance.
+ * · FIVE LETTERED ELEMENTS AND THAT IS THIS DRAWING'S SET (`ADS DATA`,
+ *   `REVIEWS`, `REDDIT`, `BLOGS`, `GENERATE BRIEFINGS`) — the smoke pins
+ *   every text-bearing element by sorted-array equality. PT Mono ≥8.6px,
+ *   NO DIGITS anywhere (the bay's ordinal scan reads this text).
+ * · TWO SIGNAL COLOURS (U5): green ink on the source titles — the
+ *   operational flow — and exactly ONE solid gold plate, the CTA. The seg
+ *   pill's lit cell went neutral with the same ruling.
+ * · THE AD FRAME'S WIDTH IS HEIGHT-DERIVED (`min(64%, 66cqh)`) — never an
+ *   `aspect-ratio` on a flex row (the babylon trap, ADR-068 U3).
  * · STATIC (ADR-021), `aria-hidden` (the frame is the button), and every
- *   element rule is scoped `.fl-wire--mimir` — `.fl-wire__in` and
- *   `.fl-wire__lbl` are the only shared classes.
+ *   element rule is scoped `.fl-wire--mimir` — `.fl-wire__in`,
+ *   `.fl-wire__lbl` and the U5 grammar pair are the only shared classes.
  */
 export function MimirBriefingWireframe() {
   return (
     <div className="fl-wire fl-wire--mimir" aria-hidden="true">
       <div className="fl-wire__in">
-        {/* ── chrome: title · mode pill · send ── */}
+        {/* ── chrome: title · mode pill ── */}
         <div className="fl-wire__mi-chrome">
           <i className="fl-wire__mi-ttl" />
           <span className="fl-wire__mi-seg">
             <i data-on="" />
             <i />
           </span>
-          <svg className="fl-wire__mi-send" viewBox="0 0 68 14" preserveAspectRatio="none">
-            <path d="M0,0 H62 L68,6 V14 H6 L0,8 Z" />
-          </svg>
         </div>
 
         <div className="fl-wire__mi-body">
-          {/* ── the insights rail: evidence in ── */}
+          {/* ── Briefing Inputs: four titled sources, then the button ── */}
           <div className="fl-wire__mi-rail">
-            <span className="fl-wire__lbl">INSIGHTS</span>
-            <span className="fl-wire__mi-card">
+            <span className="fl-wire__mi-src">
+              <span className="fl-wire__lbl fl-wire__lbl--grn">ADS DATA</span>
               <i />
               <i />
-              <b>
-                <u />
-                <u />
-              </b>
             </span>
-            <span className="fl-wire__mi-card">
+            <span className="fl-wire__mi-src">
+              <span className="fl-wire__lbl fl-wire__lbl--grn">REVIEWS</span>
               <i />
               <i />
-              <b>
-                <u />
-                <u />
-              </b>
             </span>
-            <span className="fl-wire__mi-card">
+            <span className="fl-wire__mi-src">
+              <span className="fl-wire__lbl fl-wire__lbl--grn">REDDIT</span>
               <i />
               <i />
-              <b>
-                <u />
-                <u />
-              </b>
             </span>
-            <span className="fl-wire__mi-add">
-              <svg viewBox="0 0 12 12">
-                <path d="M6,3.4 V8.6 M3.4,6 H8.6" />
-              </svg>
+            <span className="fl-wire__mi-src">
+              <span className="fl-wire__lbl fl-wire__lbl--grn">BLOGS</span>
+              <i />
+              <i />
             </span>
-            {/* The rail's one action, at its foot like the app's own CTA. */}
-            <svg className="fl-wire__mi-gen" viewBox="0 0 68 14" preserveAspectRatio="none">
-              <path d="M0,0 H62 L68,6 V14 H6 L0,8 Z" />
-            </svg>
-          </div>
-
-          {/* ── the brief: kicker-dot sections taking shape ── */}
-          <div className="fl-wire__mi-brief">
-            <span className="fl-wire__lbl">BRIEFING</span>
-            <span className="fl-wire__mi-sec">
-              <b className="fl-wire__mi-kick">
-                <i className="fl-wire__mi-dot" />
-                <i className="fl-wire__mi-kbar" />
-              </b>
-              <i className="fl-wire__mi-line" />
-              <i className="fl-wire__mi-line fl-wire__mi-line--short" />
-            </span>
-            <span className="fl-wire__mi-sec">
-              <b className="fl-wire__mi-kick">
-                <i className="fl-wire__mi-dot" />
-                <i className="fl-wire__mi-kbar" />
-              </b>
-              <i className="fl-wire__mi-line fl-wire__mi-line--mid" />
-              <i className="fl-wire__mi-line" />
-            </span>
-            <span className="fl-wire__mi-sec">
-              <b className="fl-wire__mi-kick">
-                <i className="fl-wire__mi-dot" />
-                <i className="fl-wire__mi-kbar" />
-              </b>
-              {/* FORMATS: the one checklist section — three boxes, first
-                  ticked (a filled inner square, not a glyph). */}
-              <b className="fl-wire__mi-checks">
-                <i data-on="" />
-                <i />
-                <i />
-              </b>
+            {/* The ONE gold object: the app's own CTA, at the rail's foot. */}
+            <span className="fl-wire__cta">
+              <span className="fl-wire__lbl">GENERATE BRIEFINGS</span>
             </span>
           </div>
 
-          {/* ── the reference: the visual the brief points at ── */}
-          <div className="fl-wire__mi-ref">
-            <span className="fl-wire__lbl">REFERENCE</span>
-            <span className="fl-wire__mi-frame">
-              {/* The image mark — a horizon and a sun, the oldest
-                  placeholder there is. Line work, not a picture. */}
-              <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
-                <circle cx="15.5" cy="8" r="2.6" />
-                <path d="M2,19 L9.5,11 L14,15.5 L17.5,12.5 L22,17" />
-              </svg>
+          {/* ── the ad the briefing becomes ── */}
+          <div className="fl-wire__mi-ad">
+            <span className="fl-wire__mi-adframe">
+              <span className="fl-wire__mi-adimg">
+                {/* The image mark — a horizon and a sun, the oldest
+                    placeholder there is. Line work, not a picture. */}
+                <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+                  <circle cx="15.5" cy="8" r="2.6" />
+                  <path d="M2,19 L9.5,11 L14,15.5 L17.5,12.5 L22,17" />
+                </svg>
+              </span>
+              <i className="fl-wire__mi-adhead" />
+              <i className="fl-wire__mi-adhead fl-wire__mi-adhead--short" />
+              <i className="fl-wire__mi-adcta" />
             </span>
-            <i className="fl-wire__mi-cap" />
           </div>
         </div>
       </div>
