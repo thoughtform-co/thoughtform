@@ -635,6 +635,9 @@ html[data-theme="light"] .fl-wire__in {
   --w-green-soft: rgba(var(--atreides-rgb), 0.16);
   --w-cta: var(--gold);
   --w-cta-ink: #110f09;
+  /* Gold as TEXT: the ramp's ink step (#6e5216, 4.9:1 on this parchment) —
+     raw `--gold` letters at 1.68:1 here and may not. */
+  --w-gold-ink: var(--gold-ink);
   /* ⚠ THE PLATE'S LIFT INVERTS, SO IT GOES AWAY. In dark it is dawn at 5%
      over near-black and it is what makes the composer FLOAT; the same
      declaration in light is INK over paper, i.e. a smudge — and the

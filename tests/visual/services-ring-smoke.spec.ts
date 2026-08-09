@@ -263,8 +263,9 @@ const WIREFRAME_STATIONS = [
     id: "vesper",
     kind: "wire",
     // The composer's placeholder prompt is content, pinned like babylon's
-    // transcript cells — short, digit-free, currency-free.
-    labels: ["PROMPT", "ENHANCE PROMPT", "GENERATE", "Loop Switch, golden hour"],
+    // transcript cells — short, digit-free, currency-free. NANO BANANA is
+    // the card's model tag, gold TEXT on the ramp's ink step.
+    labels: ["PROMPT", "ENHANCE PROMPT", "GENERATE", "Loop Switch, golden hour", "NANO BANANA"],
   },
   {
     idx: 2,

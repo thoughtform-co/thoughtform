@@ -758,10 +758,27 @@ more… that prompt bar again can be a bit higher, and maybe you can add a
 placeholder prompt").** Vesper's group centres HORIZONTALLY too —
 `justify-content: center` on the row and `align-self: center` on the
 dock. ⚠ Never `align-items: center` on the `__main` column for this: it
-would shrink-to-fit the row and the card's 34% basis would resolve
-against nothing. And it sits ABOVE the frame's midline —
-`padding-bottom: 10cqh` shrinks the centering box, so the composition
-rides high instead of dead-centre. The input letters a placeholder
-prompt, `Loop Switch, golden hour` — content like babylon's cells,
-prose-cased PT Mono, and a FOURTH pinned vesper label, chosen short,
-digit-free and currency-free.
+would shrink-to-fit the row and the card's % basis would resolve
+against nothing. And it sits ABOVE the frame's midline — the column's
+`padding-bottom` shrinks the centering box, so the composition rides
+high instead of dead-centre. The input letters a placeholder prompt,
+`Loop Switch, golden hour` — content like babylon's cells, prose-cased
+PT Mono, and a FOURTH pinned vesper label, chosen short, digit-free and
+currency-free. ⚠ The input host is an `<i>`, whose UA italic the old
+bars never exposed — text does, and NO ITALICS is a brand law:
+`font-style: normal` is load-bearing on the placeholder rule.
+
+**Second follow-up (owner: "make it a bit larger, the elements… the
+prompt bar, make it higher. It's too flat. INCREASE THE HEIGHT… add to
+the prompt panel somewhere at the bottom in Tensor Gold the name of the
+model nano banana").** The scale pass: card `40%`, tile
+`min(58cqh, 46cqw)`, dock `min(18cqh, 6.5cqw, 52px)` — ⚠ the px term is
+the WIDE-SHORT guard: 18cqh at a ~350px bay is 63px and the group
+overflows the frame's ≤1px guard — and the high-bias padding drops
+10cqh → 6cqh to afford the taller group at the binding 246.5px bay
+(~6px slack, arithmetic in the rule comments). The card's foot letters
+`NANO BANANA` — a FIFTH pinned vesper label — in the gold TEXT role:
+new token `--w-gold-ink` (`--gold` dark / `--gold-ink` light, both
+theme files in one commit), because raw gold letters at 1.68:1 on
+parchment and may not (ADR-063 U2); `margin-top: auto` seats the tag at
+the card's bottom edge.

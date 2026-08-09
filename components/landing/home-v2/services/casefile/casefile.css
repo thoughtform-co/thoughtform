@@ -2700,6 +2700,10 @@
      into parchment-on-gold on one side of the flip. */
   --w-cta: var(--gold);
   --w-cta-ink: #110f09;
+  /* Gold as TEXT rides the ramp (ADR-063 U2): raw `--gold` is 1.68:1 on
+     the light bay and may not letter, so the light side takes the ramp's
+     4.5:1 ink step. Vesper's NANO BANANA model tag is the first user. */
+  --w-gold-ink: var(--gold);
   /* The output tiles' ground — "generated" said with a wash, because a
      wireframe that renders imagery is a mockup, and a mockup of someone
      else's pictures is a screenshot again. */
@@ -2935,7 +2939,10 @@
   flex-direction: column;
   justify-content: center;
   gap: min(2.6cqh, 12px);
-  padding-bottom: 10cqh;
+  /* 6cqh, down from the first pass's 10: the scale pass grew the tile and
+     the dock, and the binding 246.5px bay affords the group + this bias
+     with ~6px of slack — 10cqh overflowed it (the ≤1px frame guard). */
+  padding-bottom: 6cqh;
 }
 /* The generation row — content-sized since U6; the dock sits in flow
    right under it. */
@@ -2957,9 +2964,9 @@
    the CANVAS — the real app's own read, and the reference law's ("the
    surplus lives inside a content region"). */
 .fl-wire--vesper .fl-wire__card {
-  flex: 0 0 34%;
+  flex: 0 0 40%;
   min-width: 0;
-  max-height: 42cqw;
+  max-height: 46cqw;
   display: flex;
   gap: 0.5cqw;
   padding: 0.4cqw 0.5cqw;
@@ -3026,7 +3033,7 @@
 .fl-wire--vesper .fl-wire__tile {
   position: relative;
   flex: none;
-  height: min(56cqh, 42cqw);
+  height: min(58cqh, 46cqw);
   aspect-ratio: 4 / 5;
   display: flex;
   align-items: center;
@@ -3057,7 +3064,10 @@
   flex: none;
   align-self: center;
   width: 68%;
-  height: min(13cqh, 5cqw);
+  /* U6 scale pass (owner: "INCREASE THE HEIGHT… it's too flat"): ~52px at
+     the reference bays. The px term is the wide-short guard — 18cqh at a
+     ~350px bay is 63px and the group overflows the ≤1px frame guard. */
+  height: min(18cqh, 6.5cqw, 52px);
   display: flex;
   align-items: stretch;
   gap: 0.8cqw;
@@ -3086,6 +3096,15 @@
   border: 1px solid var(--w-hair);
   background: var(--w-card);
 }
+/* The model tag — the card's foot, in the gold TEXT step (U6, owner:
+   "add to the prompt panel somewhere at the bottom in Tensor Gold the
+   name of the model"). `margin-top: auto` seats it at the card's bottom
+   edge against the centred stack above it. */
+.fl-wire--vesper .fl-wire__model {
+  margin-top: auto;
+  color: var(--w-gold-ink);
+}
+
 /* The placeholder prompt — CONTENT, not chrome (the babylon cells' move):
    prose-cased PT Mono, no tracking, nowrap + hidden overflow. ⚠ A pinned
    smoke label — keep it short, digit-free and currency-free. ⚠ The host

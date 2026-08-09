@@ -48,11 +48,13 @@
  * ── THE RULES THIS DRAWING KEEPS (D5 as amended by U5/U6) ───────────────
  * · NO FILTER, NO `<img>`. ADR-064 U2's line is AUTHORED vs CAPTURED and a
  *   wireframe is authored evidence.
- * · FOUR LETTERED ELEMENTS AND THAT IS THIS DRAWING'S SET (`PROMPT`,
- *   `ENHANCE PROMPT`, `GENERATE`, and the composer's placeholder prompt
- *   `Loop Switch, golden hour` — content, prose-cased, digit-free) — the
- *   smoke pins every text-bearing element by sorted-array equality.
- *   PT Mono ≥8.6px, NO DIGITS anywhere.
+ * · FIVE LETTERED ELEMENTS AND THAT IS THIS DRAWING'S SET (`PROMPT`,
+ *   `ENHANCE PROMPT`, `GENERATE`, the composer's placeholder prompt
+ *   `Loop Switch, golden hour` — content, prose-cased, digit-free — and
+ *   the card's `NANO BANANA` model tag, gold TEXT on the ramp's ink step
+ *   because raw gold fails the light walk at 1.68:1) — the smoke pins
+ *   every text-bearing element by sorted-array equality. PT Mono ≥8.6px,
+ *   NO DIGITS anywhere.
  *   The U3 draw meter, nav lozenge, PRODUCT LIBRARY row, MODEL row and
  *   mode bar are DELETED (owner: cut the clutter; D5's meter-never-a-
  *   figure clause is dormant with the meter — the digit ban survives it).
@@ -119,6 +121,9 @@ export function VesperSessionWireframe() {
                     <b className="fl-wire__mb" />
                     <b className="fl-wire__mb" />
                   </span>
+                  {/* The model tag, at the card's foot — gold TEXT on the
+                      ramp's ink step (raw gold fails the light walk). */}
+                  <span className="fl-wire__lbl fl-wire__model">NANO BANANA</span>
                 </span>
               </div>
 
