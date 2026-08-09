@@ -525,13 +525,18 @@ GENERATE`, the lettered placeholder `Loop Switch, golden hour`, and
   retired, ⚠ the tile's height is cqh-definite `min(58cqh, 46cqw)`
   because `100%` of a content-sized row resolves to nothing, ⚠ the dock
   is `min(18cqh, 6.5cqw, 52px)` with the px term as the wide-short
-  overflow guard, and ⚠ centring rides the CONTENT — gal
+  overflow guard, ⚠ the dock's WIDTH is the row's width DERIVED —
+  `max(68%, calc(40% + 1cqw + min(46.4cqh, 36.8cqw)))`, a triplet that
+  moves with the card basis, the gal gap and the tile height, floored at
+  68% so the binding bay never squeezes the input under the lettered
+  placeholder — and ⚠ centring rides the CONTENT — gal
   `justify-content` and dock `align-self`, never `align-items: center`
   on the column, whose shrink-to-fit row would strand the card's 40%
-  basis; the enhance plate is SQUARE-CORNERED — the one cut object in
-  the row is the CTA; the DRAW meter, nav, PRODUCT LIBRARY and MODEL
-  rows stay deleted, the meter clause dormant, the digit ban
-  surviving), babylon = the PROMINENT
+  basis; the composer row is fully SQUARE — vesper's CTA dropped the
+  chamfer with the enhance plate (mímir's and babylon's plates keep the
+  house cut, and the punch-through z 1 is untouched); the DRAW meter,
+  nav, PRODUCT LIBRARY and MODEL rows stay deleted, the meter clause
+  dormant, the digit ban surviving), babylon = the PROMINENT
   green chain `TRANSCRIBE → TRANSLATE → DUB → APPROVE → [UPLOAD]` over
   the REAL segments table | portrait player — the flow letters at
   `clamp(10px, 1.55cqw, 13px)`, the surface's ONE size exception, the

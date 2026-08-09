@@ -782,3 +782,17 @@ new token `--w-gold-ink` (`--gold` dark / `--gold-ink` light, both
 theme files in one commit), because raw gold letters at 1.68:1 on
 parchment and may not (ADR-063 U2); `margin-top: auto` seats the tag at
 the card's bottom edge.
+
+**Third follow-up (owner: "the generate button doesn't need the notches…
+increase the width of the prompt bar so it aligns nicely with the two
+panels above… a bit more breathing room").** Vesper's CTA drops the
+chamfer (`clip-path: none`, scoped — mímir's and babylon's plates keep
+the house cut; the punch-through z 1 is untouched, clip and stacking
+being independent), so the composer row is fully SQUARE. ⚠ THE BAR'S
+WIDTH IS THE ROW'S WIDTH, DERIVED:
+`max(68%, calc(40% + 1cqw + min(46.4cqh, 36.8cqw)))` — card basis + gal
+gap + tile height × 4/5, a TRIPLET that moves with those three rules
+(comment-pinned at the rule); the 68% floor is the binding-bay guard,
+where the derived row (~331px) would squeeze the input under the
+placeholder's ~132px and clip the lettered prompt. Composer gap/padding
+take cqw terms with px floors for the same reason.
