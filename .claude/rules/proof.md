@@ -1071,10 +1071,15 @@ never substituting a different drawing.
   is a SIBLING of the dock group (the dock's `fill-box` origin stays the
   cartridge's own, and the entrance style must never re-evaluate
   mid-flight).
-- **The owner above, on ONE DASHED HAIRLINE — never a bundle (U5).** The
+- **The owner above, on ONE DASHED LINE — never a bundle (U5).** The
   seat is AUTHORITY, not data, so its relation to the card is
   _answerable-to_ rather than _feeds-into_, and the contrast with the three
-  nodes' thick bundles is the reading. ⚠ The arrowed dimension (U4) and the
+  nodes' thick bundles is the reading. ⚠ **IT TAKES THE PLATE'S GREEN AT
+  FULL WEIGHT (U6)** — drawn in `--pda-dim` at 0.75 the owner read it as
+  ABSENT ("why does WHO OWNS IT not have a connector?"). **A line quiet
+  enough to be missed is not a subtle connection, it is a missing one**: the
+  DASH carries the grammar distinction, the value never had to carry it too.
+  ⚠ The arrowed dimension (U4) and the
   floating `DECIDES ALONE · WIDE` line (U5) are both DELETED — the autonomy
   is the plate's own RIGHT COLUMN now, which is why the plate is 400 wide
   (wider than the card): worst seat 212u beside `DECIDES ALONE` 106.6u in a
@@ -1122,10 +1127,16 @@ never substituting a different drawing.
   ⚠ The trade is named: short-wide fields (603×493 at 1280×720) letterbox
   HORIZONTALLY instead at meet 0.541, which is why the drawing's own floor
   is **10** — 7.5 renders 3.89px and fails the smoke's 4.3 outright.
+- ⚠ **THE BOARD IS INSET 24 FROM THE CROP, AND THE WIDTHS ARE ONE CHAIN
+  (U6).** The side nodes sat at x 36 against a crop starting at 36 — flush
+  against the wall, no margin at all. The 828 crop reads
+  `24 | 234 | 24 | 264 | 24 | 234 | 24`, and `CHIP.x` IS
+  `LEFT_X + NODE_W + GUTTER`: change a node width or the margin without
+  moving it and the nodes go straight back on the wall.
 - **ONE SUB-CARD SIZE ACROSS ALL SIX (U4).** The side nodes stack their pair
   VERTICALLY at full node width; the wide base seats its pair side by side —
-  sized so every sub-card is the same 242×130 with the same 222-unit measure
-  and the same fs 12, every value on ONE line. That is what answers "what it
+  sized so every sub-card is the same 232×130 with the same 212-unit measure
+  and the same fs 11.5, every value on ONE line. That is what answers "what it
   inherits is too big": its 640-wide node held 316-wide cards with one short
   line while the side halves forced three-line wraps at fs 10.
 - ⚠ **THE BINDING NUMBER IS A WORD, NOT A STRING.** `wrapLines` breaks on

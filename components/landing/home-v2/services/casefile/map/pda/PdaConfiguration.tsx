@@ -59,8 +59,11 @@ export const CONFIG_VIEWBOX = "36 48 828 912";
 /** The chip, and the flight's second home. `CORE_K` × the 176×136 cartridge,
  *  so the two rects are EXACTLY similar and one uniform scale carries the
  *  morph without the object changing proportion on the way. */
-export const CORE_K = 1.6;
-const CHIP = { x: 309, y: 365, w: 176 * CORE_K, h: 136 * CORE_K } as const;
+export const CORE_K = 1.5;
+/** ⚠ `x` IS `LEFT_X + NODE_W + GUTTER` — the board is one width chain and
+ *  the card is its middle link. Moving the margin or a node width without
+ *  moving this puts the side nodes back on the crop's wall. */
+const CHIP = { x: 318, y: 365, w: 176 * CORE_K, h: 136 * CORE_K } as const;
 export const CORE_RECT: FlightRect = { ...CHIP };
 
 const CHIP_R = CHIP.x + CHIP.w;
@@ -95,7 +98,7 @@ const MID = CHIP.x + CHIP.w / 2;
  * what forced fs 10 and three-line wraps; stacked, a sub-card gets the
  * WHOLE node width and every value in the record letters on ONE line at 12.
  */
-const FS = { chrome: 10, tag: 11, head: 14, value: 12, owner: 13, bar: 12 } as const;
+const FS = { chrome: 10, tag: 11, head: 14, value: 11.5, owner: 13, bar: 12 } as const;
 
 /** PT Mono's advance plus the tracking — the model `MONO_ADVANCE` evaluates
  *  at .08em, kept general because this drawing letters at five sizes. */
@@ -114,7 +117,7 @@ const adv = (fs: number, track: number) => fs * (0.6 + track);
    250x108 card with the same 230-unit measure and the same type. The base
    node's old 640 width gave it 316-wide cards holding one short line, which
    is exactly the disproportion that was called out. */
-const SUB_W = 242;
+const SUB_W = 232;
 const SUB_H = 130;
 const SUB_GAP = 6;
 const SUB_PAD = 10;
@@ -440,8 +443,15 @@ const OWNER_W = 400;
 const OWNER_H = 106;
 const OWNER_Y = 170;
 
-const LEFT_X = 36;
-const RIGHT_X = CHIP_R + 29;
+/** ⚠ THE BOARD IS INSET 24 FROM THE CROP ON BOTH SIDES (U6, owner: the side
+ *  nodes were "too close to the border of the frame"). They sat at x 36 with
+ *  the crop starting at 36 — flush against the wall, with no margin at all.
+ *  The 828 crop now reads 24 | 234 | 24 | 264 | 24 | 234 | 24, and the whole
+ *  chain has to move together. */
+const BOARD_INSET = 24;
+const GUTTER = 24;
+const LEFT_X = 36 + BOARD_INSET;
+const RIGHT_X = CHIP_R + GUTTER;
 /** The side pair is TALLER than the card and centred on it — the card keeps
  *  the hierarchy by VALUE (it is the one lit object), never by footprint. */
 const NODE_Y = CHIP_CY - NODE_H / 2;
@@ -553,22 +563,33 @@ export function ViewConfiguration({
         </text>
       </g>
 
-      {/* ── The seat's own connector: a single dashed hairline, NOT a bundle
-              (owner: "not with the lines like we do with the rest, but with
-              other lines"). ADR-070's law is the reason it reads right —
-              the seat is AUTHORITY, not data, so it is answerable-to rather
-              than feeding-into, and one quiet line says that where eight
-              solid conductors would say the opposite. ────────────────── */}
-      <g className={inCls} style={at(T.owner + 80)}>
+      {/* ── The seat's own connector: a dashed line in the PLATE'S OWN
+              GREEN, NOT a bundle (owner: "not with the lines like we do
+              with the rest, but with other lines"). ADR-070's law is why it
+              reads right — the seat is AUTHORITY, not data, so it is
+              answerable-to rather than feeding-into, and one dashed line
+              says that where eight solid conductors would say the opposite.
+              ⚠ IT TAKES THE PLATE'S COLOUR AND FULL WEIGHT (U6). The first
+              cut drew it in `--pda-dim` at 0.75 and the owner read it as
+              ABSENT — "why does WHO OWNS IT not have a connector?". A line
+              quiet enough to be missed is not a subtle connection, it is a
+              missing one; the DASH carries the distinction, the value does
+              not have to. It ends on a tick at the card's edge so the
+              contact is drawn rather than implied. ───────────────────── */}
+      <g
+        className={inCls}
+        style={at(T.owner + 80)}
+        stroke={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
+      >
         <line
           x1={MID}
           y1={OWNER_Y + OWNER_H}
           x2={MID}
           y2={CHIP.y}
-          stroke="var(--pda-dim)"
-          strokeDasharray="3 4"
-          opacity="0.75"
+          strokeDasharray="6 5"
+          opacity="0.95"
         />
+        <line x1={MID - 9} y1={CHIP.y} x2={MID + 9} y2={CHIP.y} opacity="0.95" />
       </g>
 
       {/* ── The bundles. Green carries the encoded runs; amber carries what

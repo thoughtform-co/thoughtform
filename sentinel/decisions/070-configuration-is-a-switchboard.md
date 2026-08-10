@@ -481,3 +481,36 @@ integrate it a bit more subtly."_
 `npm run verify` 615 green, the three casefile smoke cases green, headed
 captures at 1780×1270 dark + light (meet 1.013, 27 labels, minPx 10.13, 0
 clipped).
+
+---
+
+## Update 6 — the board gets a margin, and the seat's line gets its weight (2026-08-10, owner)
+
+Two defects on the U5 board: _"WHAT RUNS IT and WHAT IT CAN REACH is too
+close to the border of the frame"_ and _"why does WHO OWNS IT not have a
+connector to the CAMPAIGN COPY node?"_
+
+- **The side nodes sat ON the crop's wall.** `LEFT_X` was 36 and the crop
+  starts at x 36 — zero margin, on both sides. The board is inset **24**
+  each side now and the 828 crop reads as one width chain:
+  `24 | 234 | 24 | 264 | 24 | 234 | 24`. ⚠ The chain has to move together —
+  `CHIP.x` IS `LEFT_X + NODE_W + GUTTER`, and a node width or margin changed
+  without it puts the nodes straight back on the wall. The card gives up the
+  width (CORE_K 1.6 → 1.5) because the margin is not negotiable and the
+  sub-card measure is fixed by the record's longest word.
+- **The connector existed and could not be seen.** It was drawn in
+  `--pda-dim` at 0.75 opacity — technically present, read as absent. That is
+  the whole lesson: **a line quiet enough to be missed is not a subtle
+  connection, it is a missing one.** The DASH is what distinguishes the
+  seat's grammar from the nodes' bundles; the VALUE never had to carry that
+  distinction too. It now takes the plate's own green at full weight, with a
+  contact tick where it meets the card, so the connection is drawn rather
+  than implied. Person-led keeps the dashed `--pda-txt3` hand.
+- Values letter at **11.5** (from 12) — the narrower sub-card measure (212)
+  against the 26-char worst, still one line for every value in the record.
+
+### Verification
+
+`npm run verify` 615 green, the three casefile smoke cases green, headed
+captures at 1780×1270 dark + light (meet 1.013, 27 labels, minPx 10.13, 0
+clipped).

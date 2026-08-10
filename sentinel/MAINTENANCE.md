@@ -54,6 +54,24 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-10 (sixth pass) — The board gets a margin; the seat's line gets its weight (ADR-070 U6)
+
+Two owner defects on the U5 board. Cycle A rows 3 and 4.
+
+- **The side nodes sat ON the crop's wall** (`LEFT_X` 36, crop x 36 — zero
+  margin). Inset 24 each side; the 828 crop is now one width chain
+  `24|234|24|264|24|234|24` and ⚠ `CHIP.x` IS `LEFT_X + NODE_W + GUTTER`,
+  so the chain moves together or the nodes return to the wall. The card
+  pays the width (CORE_K 1.6 → 1.5); the sub-card measure is fixed by the
+  record's longest word and the margin is not negotiable.
+- **The seat connector existed and could not be seen** — `--pda-dim` at
+  0.75, read as absent. **Class of lesson: a line quiet enough to be missed
+  is not a subtle connection, it is a missing one.** The DASH already
+  carried the grammar distinction from the nodes' bundles; the VALUE did
+  not have to as well. It takes the plate's green at full weight with a
+  contact tick at the card.
+- Verified: 615 units, three casefile smokes, captures both themes.
+
 ### 2026-08-10 (fifth pass) — The seat's own connector and column (ADR-070 U5)
 
 Owner: connect WHO OWNS IT to the card, but not with the nodes' bundles,
