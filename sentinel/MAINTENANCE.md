@@ -54,6 +54,22 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-10 (eighth pass) — The top-left chrome goes (ADR-070 U8)
+
+Owner: remove THE CONFIGURATION and W-017 so the owner plate can breathe and
+move up. Both restated something already on the panel — the lit rail station
+above it, and the id the cartridge prints on its own face (still visible
+there). Plate 170 → 72.
+
+⚠ **Lifting one anchor opened a ~250-unit dead band**: the base is pinned to
+the crop floor and the plate to its ceiling, so the middle stretched. Closed
+by dropping the card to 335 and raising `SUB_H` 130 → 158 — sub-card height
+is the board's vertical ballast. Waste guard re-checked (39 of 40 spare).
+Cycle A rows 3 and 4.
+
+Verified: 615 units, three casefile smokes, captures both themes (26 labels,
+0 clipped).
+
 ### 2026-08-10 (seventh pass) — The seat says what it owns (ADR-070 U7)
 
 Owner: "the who owns it should have multiple lines". `CaseMapConfiguration.p`

@@ -552,3 +552,38 @@ nothing on the surface and nothing in the guards ever asked where it went.
 `npm run verify` 615 green, the three casefile smoke cases green, headed
 captures at 1780×1270 dark + light (28 labels, meet 1.013, minPx 10.13, 0
 clipped).
+
+---
+
+## Update 8 — the top-left chrome goes, and the board opens on the plate (2026-08-10, owner)
+
+_"Remove THE CONFIGURATION and W-017 so the WHO OWNS IT panel has a bit
+more breathing room and can move upward."_
+
+Both were saying something the panel already said, which is the same
+argument that took the console's head and foot in ADR-063 U1:
+
+- **`THE CONFIGURATION`** restated the lit rail station sitting directly
+  above the panel.
+- **The designator** restated the stream id the cartridge prints on its own
+  face — `W-017` is still on screen, in the card's top-right, where it
+  belongs to the object it names.
+
+Everything removed was HEIGHT, and height is the only currency this drawing
+spends. The owner plate moves **170 → 72**, clearing the crop's top edge by
+24 — the same margin the sides use since U6.
+
+⚠ **THE CHAIN MOVES TOGETHER, VERTICALLY TOO.** Lifting the plate alone
+opened a ~250-unit dead band between the card and the base, because the base
+is pinned to the crop's floor and the plate to its ceiling. The card drops
+to 335 and **`SUB_H` goes 130 → 158**: sub-card height is this board's
+vertical ballast, and every 10 units there lifts the base 14 and the side
+nodes 20. That is what closes the drop without moving either anchor — and it
+keeps the ≤40-unit waste guard satisfied (content 72…945 against a 912 crop,
+39 spare).
+
+### Verification
+
+`npm run verify` 615 green, the three casefile smoke cases green, headed
+captures at 1780×1270 dark + light — 26 labels (from 28), meet 1.013, minPx
+10.13, 0 clipped.

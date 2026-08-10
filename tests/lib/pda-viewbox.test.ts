@@ -75,7 +75,10 @@ describe("the readings' crops", () => {
        from the chrome's own left edge (40) and the left node (36) across to
        the right node's outer wall (864), and from the chrome's line box down
        through the base node's floor (990). */
-    2: { x: 40, y: 60, right: 840, bottom: 945 },
+    /* Since U8 the board opens on the OWNER PLATE — the top-left chrome is
+       deleted, so the first content is the plate's own top edge at 72 and
+       the leftmost is the left node's wall at 60. */
+    2: { x: 60, y: 72, right: 840, bottom: 945 },
     // 03 lost its two section rules 2026-08-06 (owner) — the foot already
     // said it — and the crop tightened from 718 units to 632 behind them.
     3: { x: 10, y: 93, right: 766, bottom: 702 },

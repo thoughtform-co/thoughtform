@@ -63,7 +63,7 @@ export const CORE_K = 1.5;
 /** ⚠ `x` IS `LEFT_X + NODE_W + GUTTER` — the board is one width chain and
  *  the card is its middle link. Moving the margin or a node width without
  *  moving this puts the side nodes back on the crop's wall. */
-const CHIP = { x: 318, y: 365, w: 176 * CORE_K, h: 136 * CORE_K } as const;
+const CHIP = { x: 318, y: 335, w: 176 * CORE_K, h: 136 * CORE_K } as const;
 export const CORE_RECT: FlightRect = { ...CHIP };
 
 const CHIP_R = CHIP.x + CHIP.w;
@@ -118,7 +118,11 @@ const adv = (fs: number, track: number) => fs * (0.6 + track);
    node's old 640 width gave it 316-wide cards holding one short line, which
    is exactly the disproportion that was called out. */
 const SUB_W = 232;
-const SUB_H = 130;
+/** ⚠ SUB-CARD HEIGHT IS THE BOARD'S VERTICAL BALLAST (U8). The base is
+ *  pinned to the crop's floor and the owner to its ceiling, so the only way
+ *  to close the drop between the card and the base is to grow the cards
+ *  themselves — every 10 units here lifts the base 14 and the side nodes 20. */
+const SUB_H = 158;
 const SUB_GAP = 6;
 const SUB_PAD = 10;
 /** Header band above the first sub-card. */
@@ -174,8 +178,12 @@ const inheritsPair = (w: PdaWork): Pair => [
 export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
   const c = work.cfg;
   const specs: ConfigLetterSpec[] = [
-    { slot: "chrome", text: "THE CONFIGURATION", fs: FS.chrome, track: 0.22, measure: 360 },
-    { slot: "designator", text: work.id, fs: FS.tag, track: 0.08, measure: 140 },
+    /* ⚠ NO TOP-LEFT CHROME (U8, owner). `THE CONFIGURATION` restated the lit
+       rail station directly above it, and the designator restated the stream
+       id the cartridge already prints on its own face — the same
+       said-twice-in-one-box argument that took the console's head and foot
+       in ADR-063 U1. Everything removed was HEIGHT, and height is what the
+       owner plate wanted. */
     /* ⚠ THE OWNER PLATE IS TWO COLUMNS, and the two share its measure (U5).
        The seat reads left, what it decides alone reads right — the floating
        DECIDES ALONE line between the plate and the card is deleted as
@@ -457,7 +465,11 @@ const T = {
 const OWNER_W = 400;
 /** Three rows since U7: the label pair, the seat, and what the seat owns. */
 const OWNER_H = 124;
-const OWNER_Y = 170;
+/** ⚠ THE BOARD OPENS HERE NOW (U8) — 170 → 72, the height the deleted
+ *  top-left chrome was holding. 24 clears the crop's own top edge by the
+ *  same margin the sides use; the rest of the chain moved down-page with it
+ *  so the content still spans the crop (the ≤40-unit waste guard). */
+const OWNER_Y = 72;
 
 /** ⚠ THE BOARD IS INSET 24 FROM THE CROP ON BOTH SIDES (U6, owner: the side
  *  nodes were "too close to the border of the frame"). They sat at x 36 with
@@ -514,16 +526,12 @@ export function ViewConfiguration({
 
   return (
     <>
-      {/* ── Chrome. The draw meter and NEVER A PRICE are DELETED (owner) —
-              the reading is the configuration, not a gauge. ───────────── */}
-      <g className={inCls}>
-        <text x="40" y="66" fontSize={FS.chrome} letterSpacing=".22em" fill="var(--pda-txt3)">
-          THE CONFIGURATION
-        </text>
-        <text x="40" y="90" fontSize={FS.tag} letterSpacing=".08em" fill="var(--pda-txt2)">
-          {work.id}
-        </text>
-      </g>
+      {/* ⚠ THE TOP-LEFT CHROME IS DELETED (U8, owner) — with the draw meter
+          and NEVER A PRICE before it (U4). `THE CONFIGURATION` restated the
+          lit rail station immediately above the panel, and the designator
+          restated the stream id the cartridge prints on its own face. The
+          board opens on the owner plate now, and everything removed was
+          HEIGHT the plate wanted. */}
 
       {/* ── The owner, in the green plate law, seated over the card and
               carrying what it decides alone in its own right column (U5).

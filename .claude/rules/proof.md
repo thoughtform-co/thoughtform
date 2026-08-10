@@ -1122,11 +1122,19 @@ never substituting a different drawing.
   moves together or the flight lands wrong by half the letterbox at tall
   consoles; `YMid` was the "space above WHO OWNS IT" complaint.
 - ⚠ **WHAT THE OWNER DELETED STAYS DELETED, AND BOTH GUARDS SAY SO.** The
-  substrate bars (U2); the readout sentence (U3); and in U4 the DRAW PER RUN
+  substrate bars (U2); the readout sentence (U3); in U4 the DRAW PER RUN
   meter with NEVER A PRICE, the `DRAWS ON n OF m` caption (with
   `substrateReach` / `drawnShapes` / `CONFIG_MAX_BARS`), the corner brackets,
   the pad clusters, the vias, the registration crosses, and the arrowed
-  DECIDES-ALONE dimension with its pin ticks. `pda-viewbox` asserts no such
+  DECIDES-ALONE dimension with its pin ticks; and in U8 the top-left
+  `THE CONFIGURATION` + designator (the rail station and the cartridge's own
+  id, said twice). The board opens on the OWNER PLATE at y 72.
+- ⚠ **THE VERTICAL CHAIN MOVES TOGETHER TOO (U8).** The base is pinned to
+  the crop's floor and the plate to its ceiling, so lifting the plate alone
+  opens a dead band in the middle. `SUB_H` is the board's BALLAST — every 10
+  units there lifts the base 14 and the side nodes 20 — and the card's `y`
+  is the third term. Re-check the ≤40-unit waste guard after moving any of
+  the three. `pda-viewbox` asserts no such
   slot is declared and the smoke asserts none renders — the smoke's U3
   caption-PRESENCE assertion was inverted rather than dropped.
 - ⚠ **THE CROP'S ASPECT IS THE CONTRACT (U4) — IT IS WHY THE PANEL FILLS.**
