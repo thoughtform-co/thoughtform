@@ -17,6 +17,9 @@ build
 coverage
 playwright-report/
 test-results/
+# Local visual-test baselines: platform-suffixed (-win32) PNGs that would pin
+# CI to this machine's rendering, and the theme/rail work keeps staling them.
+tests/visual/*-snapshots/
 
 # Misc
 .DS_Store
