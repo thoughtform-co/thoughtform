@@ -54,6 +54,33 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-10 — The switchboard simplified: radial runs, shaped parts, legible tags (ADR-070 U1)
+
+Owner review of the shipped reading-02 drawing against the CP2077 reference
+and their own v19 mockup (elements, never verbatim). Cycle A rows 1, 4, 6 —
+ADR-070 gains Update 1; proof.md's switchboard section and CLAUDE.md's map
+entry carry the new contracts.
+
+- **The promotion pass took the reference's RIBBONS but not its ORDER.** The
+  fix is compositional: every run centre-out, junction boxes deleted, the
+  doubled SYSTEM wiring collapsed into one trunk through one gate forking at
+  x 926, ghost ribbons deleted, ornament trimmed.
+- **A part is a housing, not a square** — six drawn silhouettes at 176 wide
+  replace the 120×86 rects; corner glyphs deleted with the room they no
+  longer earn.
+- **The type is derived, not chosen**: tags 7.5 → 10 in `--pda-txt2` (the
+  owner's "utterly unacceptable" fix), values 8 → 10 wrapped, the 46-char
+  bar WRAPS in the gate channel instead of shrinking, readout 10 → 11
+  (forced by the outranking guard).
+- **Two conductor-versus-content collisions caught on capture, zero by
+  guards**: a riser through the bar text (fork moved past the whole 700–930
+  text channel) and a landing band grazing the lane chevron (nib 305 → 286).
+  The hand-check law is the durable lesson — re-read it before rewiring.
+- Verified: `npm run verify` 618 green (fit walk of all 27 streams at the
+  new sizes; the ADR-069 flight untouched), three casefile smoke cases,
+  headed captures at 1280×720 + 1440×800 in both themes, hover pair + readout
+  swap confirmed.
+
 ### 2026-08-10 — Vesper station: brackets off, composition up, ENHANCE de-plated (ADR-068 U7)
 
 Three owner notes on the live IMAGE & VIDEO station. Cycle A rows 4 and 6 —

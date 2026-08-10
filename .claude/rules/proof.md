@@ -1067,11 +1067,28 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   silhouette, the nibs are a SIBLING (the dock's `fill-box` origin must stay
   the cartridge's own), and there is NO carrier housing — that read as a box
   in a box. Hierarchy is VALUE, not position.
-- **A DIFFERENT SILHOUETTE PER PART, and no question headers.** Six packages
-  with drawn glyphs and tiny function tags: SKILL + LANE marry at a junction
-  block and enter as one trunk; CONTEXT + GRAPH turn up into the pin row (the
-  graph in the adjacent-domain dashed hand); SYSTEM + SURFACE take the output,
-  which passes through the GATE aperture carrying the bar.
+- **A PART IS A HOUSING, NOT A SQUARE (U1, owner 2026-08-10 — "just simple
+  squares" / tags "completely and utterly unacceptable").** Six drawn
+  silhouettes, 176 wide (the cartridge's width), the glyph vocabulary scaled
+  up to BE the block: SKILL = notched plate + encoded hatch band; LANE =
+  chevron bar feeding the chip; CONTEXT = housing with sheet echoes above;
+  GRAPH = dashed hand + dashed inset; SYSTEM = port with a bottom plug the
+  output riser enters; SURFACE = two open brackets. The corner glyphs and
+  the junction blocks are DELETED. Tags are fs 10 `--pda-txt2` headers — one
+  ink across all six — and values letter at 10, wrapping to two lines.
+  Person-led keeps every silhouette, dashed txt3. Still NO question headers:
+  the tag is a function name, and v19's question-headed nodes were
+  deliberately not taken.
+- **EVERY RUN IS CENTRE-OUT (U1).** One bundle per part; the pair reads by
+  ADJACENT pin bands (286/324) + shared hover, not a junction box. ONE
+  output trunk passes THROUGH the gate and forks at x 926 — up to SYSTEM,
+  down to SURFACE — so everything the stream reaches passes the bar, drawn.
+  The ghost ribbons are deleted; the ornament trimmed (10 vias, 2 clusters).
+  ⚠ **THE BAR WRAPS IN THE 700–930 CHANNEL at value size** (the 46-char
+  worst cannot letter on one line right of the chip), and BOTH risers stay
+  right of x 930 — the first cut rose at 750 and sliced the bar and the
+  seat, the conductor-through-text collision no guard measures. ⚠ Every
+  substrate drop is ≥ 549: the graph housing owns x 360–536.
 - ⚠ **ONLY WHAT THE RECORD CONNECTS IS DRAWN (owner).** One bus bar per shape
   the stream TAPS and nothing else — the 47 skill-mark cells and the ghosted
   loom of untapped shapes are both deleted, because reading 03 owns the
@@ -1086,8 +1103,10 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
 - **THE CROP IS TIGHT AND THAT IS THE TYPE.** `CONFIG_VIEWBOX` is
   `56 20 910 740` — the content box, not the 1000×760 authoring space — which
   buys 10 % of rendered type at the binding field: **4.97px measured on the
-  landing** against the smoke's 4.3 floor. The drawing's own floor is fs 7.5.
-  The ghost ribbons run off all four edges deliberately.
+  landing** against the smoke's 4.3 floor — and since U1 that floor is the
+  CHROME's; the tags render ~6.6px and values ~6.6px at the binding field.
+  The drawing's own floor is fs 7.5; the trimmed via field still runs to the
+  crop's edge.
 - **ADR-069 SURVIVES INTACT**: the flight docks the cartridge (`CORE_RECT` is
   the chip), the readout is ONE reactive line resting on why-this-lane, and
   hovering either half of a pair lights both because they are one answer.

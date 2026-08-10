@@ -143,3 +143,118 @@ deliberately; a wire that leaves the board is the point.
 - The four lab archetypes stay on the route as the alternatives beside the
   shipped drawing. They are look-dev, not dead code — but if a second
   direction ever wins, delete the losers rather than keeping five.
+
+---
+
+## Update 1 — the simplified board: radial runs, shaped parts, legible tags (2026-08-10, owner)
+
+Owner review of the shipped switchboard against a new reference screenshot
+(the CP2077 character screen — the central chip with trace bundles fanning
+out radially) and their own `thoughtform-intelligence-map-v19.html` mockup,
+with the instruction that v19 is a source of ELEMENTS, never a verbatim
+install. Three complaints, quoted: _"there's too much going on"_; the skill
+and lane parts are _"just simple squares… with the simplified version we
+have more real estate, so we can make it a bit more unique"_; the function
+tags are _"gray font… too small, which is completely and utterly
+unacceptable."_
+
+### What the reference actually has that the first cut did not
+
+The promotion pass took the reference's RIBBONS but not its ORDER. The
+shipped board wired the chip from all four sides — a junction block west, a
+doubled SYSTEM connection (top pins AND the gate fan), ghost bundles
+crossing the whole field — so the reading had the reference's ink without
+its radial calm. The simplification is compositional, not cosmetic:
+
+- **EVERY RUN IS CENTRE-OUT.** Six part bundles, one per part, each leaving
+  a chip pin row for its own housing. The two junction blocks are deleted —
+  the Skill and its lane still read as the interdependent pair by landing on
+  ADJACENT pin bands (286/324) and lighting together on hover.
+- **ONE OUTPUT, ONE GATE.** The doubled SYSTEM wiring is deleted: a single
+  8-conductor trunk leaves the right pin row, passes THROUGH the gate
+  aperture, and forks at x 926 — up into the SYSTEM port's plug, down onto
+  the SURFACE aperture. Everything the stream reaches passes the bar, which
+  is now drawn as well as claimed.
+- **THE GHOST RIBBONS ARE DELETED**, and the ornament is trimmed (16 → 10
+  vias, 3 → 2 pad clusters; the six vias that went sat inside the owner
+  plate, the graph block, the bar band or a live channel).
+- **THE OWNER DOCKS ON A FACING PIN SEAM** (v19's device): plate directly
+  above the chip, five pins down, the chip's own nibs up, never touching.
+  The long arrowed wire is gone, and DECIDES ALONE · {autonomy} shares one
+  baseline beside the seam.
+
+### A part is a housing, not a square
+
+The six 120×86 rects with 16×16 corner glyphs become six drawn silhouettes,
+176 wide (the cartridge's own width — the family rhyme), the glyph
+vocabulary scaled up to BE the block; the corner glyphs are deleted with
+the room they no longer earn:
+
+| part    | silhouette                                       |
+| ------- | ------------------------------------------------ |
+| SKILL   | notched plate (TL cut) + the encoded hatch band  |
+| LANE    | chevron bar, point feeding the chip              |
+| CONTEXT | housing with offset sheet echoes above it        |
+| GRAPH   | dashed hand + dashed inset (the adjacent domain) |
+| SYSTEM  | port with a pinned plug on the board-facing edge |
+| SURFACE | two open brackets — a frame people look through  |
+
+Person-led keeps every silhouette (shape carries role even unbound) and
+goes dashed `--pda-txt3`; the negative space stays a reading.
+
+### The type, derived not chosen
+
+Probed against the record's own worst strings (2026-08-10):
+
+- **Tags 7.5 → 10, `--pda-txt3` → `--pda-txt2`** — the "utterly
+  unacceptable" fix. One ink across all six so the tags read as a system;
+  hot still overrides on hover. Worst tag `SURFACE` = 57.4u of 70.
+- **Values 8 → 10**, wrapping to two lines in the 150-unit housing measure
+  (worst: `COMPONENT + SUPPLIER FACTS`, 26 chars). The zero-measure third
+  line stays the loud-failure guard.
+- **The bar 8 → 10, WRAPPED in the gate channel.** The 46-char worst
+  (`CONSISTENT EVIDENCE / NO UNSUPPORTED INFERENCE`) cannot letter at 10 on
+  one line anywhere right of the chip — 313u against the 230u channel — and
+  shrinking it back to 8 was the type complaint in miniature. It wraps like
+  a package value; `BAR_MEASURE`/`BAR_CHARS` derive from the channel.
+- **The readout 10 → 11** — forced by the `pda-viewbox` guard that the
+  readout outranks every value it explains; the 96-char worst why letters
+  718u of 760.
+
+### Two collisions the guards cannot see, caught on capture
+
+Both are conductor-versus-content, and both reaffirm the ADR's hand-check
+law (the fit guard and the smoke measure TEXT):
+
+1. **The first fork rose at x 750 and sliced through the bar and the
+   seat.** Any riser between x 700 and 924 crosses a 33-char bar line, so
+   the fork moved past the whole text channel: risers at 936/940, and the
+   bar's measure is derived from that clearance (700–930).
+2. **The skill bundle's landing band grazed the lane chevron's diagonal.**
+   Landing on nib 305 put the band's lower conductors within a unit of the
+   chevron's top-right cut; it lands on 286 now, 4.25 units clear.
+
+The substrate drops moved with the new bottom band: every drop is ≥ 549
+since the GRAPH housing owns x 360–536, and `BAR_SLOTS` is retuned so no
+lane crosses a housing (lanes 644–690, all below the graph's 624 bottom).
+
+### Verification
+
+- `npm run verify` clean — 618 tests, including `pda-viewbox`'s fit walk of
+  all 27 streams at the new sizes and `pda-flight` (CORE_RECT untouched, so
+  the ADR-069 morph is byte-identical).
+- The three casefile smoke cases green (fit, clip, light-contrast — the
+  latter carries the label-on-label overlap comparisons).
+- Headed captures at 1280×720 + 1440×800, dark and light: 31 labels, 0
+  clipped, minPx 4.97 at the binding field — now the CHROME's floor; the
+  tags render ~6.6px, up from 5.0. Hover lights the SKILL+LANE pair and
+  swaps the readout. The morph stills at 150/300 ms dock as before.
+
+### Still true
+
+ONE frame, one bright object; only what the record connects; the caption
+counts shapes; nothing leaves the system chip upward; slots per count with
+`CONFIG_MAX_BARS` pinned; no question headers — the tags are function
+names, not questions. The v19 mockup's question-headed nodes were
+deliberately NOT taken: the tag-as-header answers the legibility complaint
+without reopening the header skeleton this ADR closed.
