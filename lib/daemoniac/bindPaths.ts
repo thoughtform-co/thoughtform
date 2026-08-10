@@ -11,9 +11,7 @@
 // performs the ritual: contain → structure → bind → name → orient.
 // ═══════════════════════════════════════════════════════════════════
 
-import { createSeededRandom, hashString } from "@/lib/particle-geometry/rng";
-
-import { primitiveD, primitiveLength, primitivePoint, primitiveTangent } from "./primitives";
+import { primitiveD, primitiveLength, primitivePoint } from "./primitives";
 import { PLATE_CANVAS, type BindComposition, type MarkPrimitive } from "./types";
 
 export interface BindPath {
@@ -30,37 +28,50 @@ export function compositionPaths(c: BindComposition): BindPath[] {
     .map((m) => ({ d: primitiveD(m), weight: m.weight, role: m.role, order: m.order }));
 }
 
-/** `ShapeSample`-shaped so a painter is a near line-for-line adaptation
- *  of `ServicesBrandmarkField`. `home` is normalized to [-0.5, 0.5]
- *  over the PLATE canvas so particle and plate renderings register
- *  pixel-for-pixel in overlay. */
+/** `home` is normalized to [-0.5, 0.5] over the PLATE canvas so
+ *  particle and plate renderings register pixel-for-pixel in overlay.
+ *  `tone` is per-particle ink strength — stroke weight expressed as
+ *  intensity, never as scatter (owner, 2026-08-10: the gaussian spray
+ *  read as sloppy/low-res; a bind in particles is a STIPPLE — points
+ *  exactly on the stroke, evenly spaced, nothing else). */
 export interface BindSample {
   home: Float32Array;
-  seed: Float32Array;
+  tone: Float32Array;
   rank: Float32Array;
   count: number;
 }
 
-/** Below this many particles per unit of stroke, the drawing reads as
- *  dust — furniture drops out of the sampling first (it stays on the
- *  SVG plate). */
-const MIN_DENSITY = 0.55;
+/** One point every N authoring units — the stipple pitch. Points read
+ *  as deliberate marks, not dust; the count DERIVES from total stroke
+ *  length at this pitch (budget is a ceiling, not a target). */
+export const SAMPLE_SPACING = 2.2;
 
-export function sampleBind(c: BindComposition, count: number, seedKey: string): BindSample {
+/** Ink strength per stroke weight — hierarchy through tone. */
+export function toneFor(weight: MarkPrimitive["weight"]): number {
+  if (weight >= 1) return 0.95;
+  if (weight >= 0.7) return 0.75;
+  if (weight >= 0.5) return 0.58;
+  return 0.42;
+}
+
+export function sampleBind(c: BindComposition, budget: number): BindSample {
   let marks = [...c.marks].sort((a, b) => a.order - b.order);
   let lens = marks.map(primitiveLength);
   let total = lens.reduce((s, l) => s + l, 0);
 
-  if (total > 0 && count / total < MIN_DENSITY) {
+  // If the pitch wants more points than the budget allows, furniture
+  // drops out of the sampling first (it stays on the SVG plate).
+  if (total > 0 && Math.round(total / SAMPLE_SPACING) > budget) {
     const kept = marks.map((m, i) => ({ m, l: lens[i] })).filter(({ m }) => m.role !== "furniture");
     marks = kept.map(({ m }) => m);
     lens = kept.map(({ l }) => l);
     total = lens.reduce((s, l) => s + l, 0);
   }
-  if (total === 0 || count <= 0) {
+  const count = Math.min(budget, Math.max(1, Math.round(total / SAMPLE_SPACING)));
+  if (total === 0 || budget <= 0) {
     return {
       home: new Float32Array(0),
-      seed: new Float32Array(0),
+      tone: new Float32Array(0),
       rank: new Float32Array(0),
       count: 0,
     };
@@ -78,28 +89,23 @@ export function sampleBind(c: BindComposition, count: number, seedKey: string): 
   }
 
   const home = new Float32Array(count * 2);
-  const seed = new Float32Array(count * 2);
+  const tone = new Float32Array(count);
   const rank = new Float32Array(count);
-  const rng = createSeededRandom(hashString(seedKey));
   const norm = PLATE_CANVAS.width;
 
   let k = 0;
   marks.forEach((m, i) => {
     const n = alloc[i];
-    // Heavier strokes scatter wider — weight expressed with no second pass.
-    const sigma = 0.15 + 0.2 * m.weight;
+    const t0 = toneFor(m.weight);
     for (let j = 0; j < n; j++, k++) {
       const t = (j + 0.5) / n;
       const [x, y] = primitivePoint(m, t);
-      const [tx, ty] = primitiveTangent(m, t);
-      const off = rng.gaussian(0, sigma);
-      home[k * 2] = (x - ty * off) / norm;
-      home[k * 2 + 1] = (y + tx * off) / norm;
-      seed[k * 2] = rng.next() * Math.PI * 2;
-      seed[k * 2 + 1] = rng.next() * Math.PI * 2;
+      home[k * 2] = x / norm;
+      home[k * 2 + 1] = y / norm;
+      tone[k] = t0;
       rank[k] = k;
     }
   });
 
-  return { home, seed, rank, count: k };
+  return { home, tone, rank, count: k };
 }

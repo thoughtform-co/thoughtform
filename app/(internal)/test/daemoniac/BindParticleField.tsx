@@ -1,28 +1,33 @@
 "use client";
 
 // ═══════════════════════════════════════════════════════════════════
-// DAEMONIAC LAB — the particle inscription. A self-contained 2D-canvas
-// painter adapted from `ServicesBrandmarkField` (its own canvas — NOT a
-// fourth global painter mesh): sample once, breathe per-particle
-// sinusoids, IO rAF gate, PRM → static frames redrawn on change only.
+// DAEMONIAC LAB — the particle inscription, as a STIPPLE (owner,
+// 2026-08-10: the gaussian spray read as sloppy/low-res). Points sit
+// exactly on the stroke at an even pitch, snapped to the house pixel
+// grid (GRID = 3 device px — the ThoughtformSigil signature), with
+// stroke weight expressed as ink TONE, never scatter.
 //
-// The draw threshold IS the ritual: particles appear in rank order,
-// and rank is inscription order — contain → structure → bind → name →
-// orient. No swirl, no pulse (the motion law); the only ambient motion
-// is the house breathing jitter.
+// The ONLY motion is the inscription reveal itself (rank < progress ·
+// count), so there is no rAF loop and no IO gate — the canvas redraws
+// on state change alone. PRM needs no special path: a static drawing
+// is already still; the shell's replay button is what PRM skips.
 // ═══════════════════════════════════════════════════════════════════
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { sampleBind } from "@/lib/daemoniac/bindPaths";
 import type { BindComposition } from "@/lib/daemoniac/types";
 
-const COUNT_DESKTOP = 2200;
-const COUNT_MOBILE = 1000;
+const BUDGET_DESKTOP = 2600;
+const BUDGET_MOBILE = 1200;
 
-/** Resolve the plate ink to an "r, g, b" triple — the painter follows
- *  the same `--gold-line` role as the SVG plate, so the inscription
- *  deepens on parchment exactly like the drawn bind. */
+/** The house pixel grid, in device px. */
+const GRID = 3;
+const DOT = 2;
+
+/** Resolve the plate ink to an "r, g, b" triple — the stipple follows
+ *  the same `--gold-line` role as the SVG plate, so it deepens on
+ *  parchment exactly like the drawn bind. */
 function resolveInk(el: HTMLElement): string {
   const raw = getComputedStyle(el).getPropertyValue("--gold-line").trim();
   if (raw.startsWith("#") && (raw.length === 7 || raw.length === 4)) {
@@ -47,26 +52,25 @@ export interface BindParticleFieldProps {
 export function BindParticleField({ composition, progress, theme }: BindParticleFieldProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const progressRef = useRef(progress);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
 
   const sample = useMemo(() => {
     if (typeof document === "undefined") return null;
     const mobile = window.matchMedia?.("(max-width: 960px)").matches ?? false;
-    return sampleBind(composition, mobile ? COUNT_MOBILE : COUNT_DESKTOP, composition.record.id);
+    return sampleBind(composition, mobile ? BUDGET_MOBILE : BUDGET_DESKTOP);
   }, [composition]);
 
-  useEffect(() => {
-    const mql = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mql?.matches ?? false);
-    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mql?.addEventListener("change", onChange);
-    return () => mql?.removeEventListener("change", onChange);
-  }, []);
+  /* Tone tiers batched once per sample — ≤4 fillStyle changes a frame. */
+  const tiers = useMemo(() => {
+    if (!sample) return [];
+    const map = new Map<number, number[]>();
+    for (let i = 0; i < sample.count; i++) {
+      const t = sample.tone[i];
+      const arr = map.get(t);
+      if (arr) arr.push(i);
+      else map.set(t, [i]);
+    }
+    return [...map.entries()];
+  }, [sample]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -75,123 +79,39 @@ export function BindParticleField({ composition, progress, theme }: BindParticle
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let rafId = 0;
-    let disposed = false;
-    let inViewport = true;
-    let dpr = 1;
-    let width = 0;
-    let height = 0;
-    let halfPx = 0;
-    let cx = 0;
-    let cy = 0;
-    const ink = resolveInk(wrap);
-
-    const resize = () => {
+    const draw = () => {
       const rect = wrap.getBoundingClientRect();
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      width = Math.max(1, Math.round(rect.width * dpr));
-      height = Math.max(1, Math.round(rect.height * dpr));
-      canvas.width = width;
-      canvas.height = height;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      // home is normalized over the PLATE canvas, so full box = register
-      // with the SVG plate in overlay.
-      halfPx = (Math.min(rect.width, rect.height) * dpr) / 2;
-      cx = width / 2;
-      cy = height / 2;
-    };
-
-    const draw = (timeMs: number) => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round(rect.width * dpr));
+      const height = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+      }
       ctx.clearRect(0, 0, width, height);
-      const t = timeMs * 0.001;
-      ctx.fillStyle = `rgba(${ink}, 0.82)`;
-      const dot = Math.max(1.4, 1.6 * dpr);
-      const halfDot = dot * 0.5;
-      const { home, seed, count } = sample;
-      // rank is the identity by construction (inscription order).
-      const visible = Math.min(count, Math.floor(progressRef.current * count));
-      const jitter = 0.0035;
-      for (let i = 0; i < visible; i++) {
-        const px = home[i * 2] + jitter * Math.sin(t * 0.5 + seed[i * 2]);
-        const py = home[i * 2 + 1] + jitter * Math.cos(t * 0.4 + seed[i * 2 + 1]);
-        const x = cx + px * 2 * halfPx;
-        const y = cy + py * 2 * halfPx;
-        ctx.fillRect(x - halfDot, y - halfDot, dot, dot);
+      const ink = resolveInk(wrap);
+      const halfPx = Math.min(width, height) / 2;
+      const cx = width / 2;
+      const cy = height / 2;
+      const visible = Math.min(sample.count, Math.floor(progress * sample.count));
+      for (const [tone, indices] of tiers) {
+        ctx.fillStyle = `rgba(${ink}, ${tone})`;
+        for (const i of indices) {
+          if (i >= visible) continue;
+          const x = Math.round((cx + sample.home[i * 2] * 2 * halfPx) / GRID) * GRID;
+          const y = Math.round((cy + sample.home[i * 2 + 1] * 2 * halfPx) / GRID) * GRID;
+          ctx.fillRect(x, y, DOT, DOT);
+        }
       }
     };
 
-    const tick = (time: number) => {
-      rafId = 0;
-      if (disposed || !inViewport) return;
-      draw(time);
-      rafId = window.requestAnimationFrame(tick);
-    };
-
-    resize();
-    draw(0);
-
-    const onResize = () => {
-      resize();
-      draw(0);
-    };
-    const ro = new ResizeObserver(onResize);
+    draw();
+    const ro = new ResizeObserver(draw);
     ro.observe(wrap);
-
-    if (reducedMotion) {
-      return () => {
-        disposed = true;
-        ro.disconnect();
-      };
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          inViewport = entry.isIntersecting;
-          if (inViewport && !rafId && !disposed) {
-            rafId = window.requestAnimationFrame(tick);
-          } else if (!inViewport && rafId) {
-            window.cancelAnimationFrame(rafId);
-            rafId = 0;
-          }
-        }
-      },
-      { threshold: 0 }
-    );
-    io.observe(wrap);
-    rafId = window.requestAnimationFrame(tick);
-
-    return () => {
-      disposed = true;
-      io.disconnect();
-      ro.disconnect();
-      if (rafId) window.cancelAnimationFrame(rafId);
-    };
-  }, [sample, reducedMotion, theme]);
-
-  /* Under PRM there is no rAF loop — redraw the static frame when the
-     scrubber (or theme) moves. */
-  useEffect(() => {
-    if (!reducedMotion) return;
-    const canvas = canvasRef.current;
-    const wrap = wrapRef.current;
-    if (!canvas || !wrap || !sample || sample.count === 0) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const ink = resolveInk(wrap);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = `rgba(${ink}, 0.82)`;
-    const halfPx = (Math.min(canvas.width, canvas.height) / dpr) * (dpr / 2);
-    const dot = Math.max(1.4, 1.6 * dpr);
-    const visible = Math.min(sample.count, Math.floor(progress * sample.count));
-    for (let i = 0; i < visible; i++) {
-      const x = canvas.width / 2 + sample.home[i * 2] * 2 * halfPx;
-      const y = canvas.height / 2 + sample.home[i * 2 + 1] * 2 * halfPx;
-      ctx.fillRect(x - dot / 2, y - dot / 2, dot, dot);
-    }
-  }, [reducedMotion, sample, progress, theme]);
+    return () => ro.disconnect();
+  }, [sample, tiers, progress, theme]);
 
   return (
     <div ref={wrapRef} className="dae-field" aria-hidden="true">

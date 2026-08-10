@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 
 import { DEMO_FLEET, fourTools } from "@/app/(internal)/test/daemoniac/demoFleet";
-import { sampleBind } from "@/lib/daemoniac/bindPaths";
+import { SAMPLE_SPACING, sampleBind, toneFor } from "@/lib/daemoniac/bindPaths";
 import { composeBind } from "@/lib/daemoniac/composeBind";
 import { forgeGlyph, forgeIdeogram, GLYPH_BOX, type GlyphSpec } from "@/lib/daemoniac/glyphForge";
 import { primitiveD, primitiveLength, primitivePoint } from "@/lib/daemoniac/primitives";
@@ -195,35 +195,43 @@ describe("the apparatus — annotation budgets", () => {
   });
 });
 
-describe("sampleBind — the inscription contract", () => {
-  it("returns exactly the requested count, ranks in inscription order, homes in [-0.5, 0.5]", () => {
+describe("sampleBind — the stipple contract", () => {
+  it("count derives from stroke length at the pitch (budget is a ceiling), ranks in inscription order, homes in [-0.5, 0.5], tones from the weight ladder", () => {
+    // Tones ride a Float32Array — compare within float32 tolerance.
+    const TONE_LADDER = [0.95, 0.75, 0.58, 0.42];
+    const legalTones = { has: (t: number) => TONE_LADDER.some((l) => Math.abs(t - l) < 1e-3) };
     for (const r of RECORDS) {
       const c = composeBind(r);
-      const s = sampleBind(c, 2200, r.id);
-      expect(s.count).toBe(2200);
+      const s = sampleBind(c, 2600);
+      const total = c.marks.reduce((sum, m) => sum + primitiveLength(m), 0);
+      const wanted = Math.round(total / SAMPLE_SPACING);
+      expect(s.count).toBe(Math.min(2600, Math.max(1, wanted)));
       for (let i = 0; i < s.count; i++) {
         expect(s.rank[i]).toBe(i);
         expect(Math.abs(s.home[i * 2])).toBeLessThanOrEqual(0.5);
         expect(Math.abs(s.home[i * 2 + 1])).toBeLessThanOrEqual(0.5);
+        expect(legalTones.has(s.tone[i])).toBe(true);
       }
     }
   });
 
-  it("is deterministic per seed key", () => {
+  it("is deterministic — no randomness anywhere in the stipple", () => {
     const c = composeBind(RECORDS[0]);
-    const a = sampleBind(c, 1000, RECORDS[0].id);
-    const b = sampleBind(c, 1000, RECORDS[0].id);
+    const a = sampleBind(c, 1000);
+    const b = sampleBind(c, 1000);
     expect([...a.home]).toEqual([...b.home]);
-    expect([...a.seed]).toEqual([...b.seed]);
+    expect([...a.tone]).toEqual([...b.tone]);
+    expect(toneFor(1)).toBe(0.95);
+    expect(toneFor(0.3)).toBe(0.42);
   });
 
-  it("survives a starved budget by degrading, still exact", () => {
+  it("survives a starved budget by degrading furniture, still exact at the ceiling", () => {
     const dense = [...RECORDS].sort(
       (x, y) =>
         composeBind(y).marks.reduce((s, m) => s + primitiveLength(m), 0) -
         composeBind(x).marks.reduce((s, m) => s + primitiveLength(m), 0)
     )[0];
-    const s = sampleBind(composeBind(dense), 200, dense.id);
+    const s = sampleBind(composeBind(dense), 200);
     expect(s.count).toBe(200);
   });
 });

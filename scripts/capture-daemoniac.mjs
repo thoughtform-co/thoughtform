@@ -37,11 +37,15 @@ await shoot("daemoniac-03-wayfinder-void.png");
 await row("Mímir").click();
 await shoot("daemoniac-04-mimir-void.png");
 
-// 5 · The particle inscription mid-ritual (overlay, ~55%).
-await chip("OVERLAY").click();
+// 5 · The stipple, full inscription (Vesper — the owner's reference shot).
+await row("Vesper").click();
+await chip("PARTICLES").click();
 await page.waitForSelector(".dae-field__canvas");
+await shoot("daemoniac-05-vesper-stipple.png");
+
+// 5b · Mid-ritual (~55%).
 await page.locator(".dae-lab__scrub").fill("55");
-await shoot("daemoniac-05-mimir-overlay-55.png");
+await shoot("daemoniac-05b-vesper-stipple-55.png");
 
 // 6 · The specimen sheet on parchment — the alphabet as a tome page.
 await chip("SPECIMEN").click();

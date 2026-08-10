@@ -102,17 +102,23 @@ glyphs** — feature, not bug.
 - **Light theme IS the tome** — `--void` flips to parchment and the plate
   becomes the book page; dark is the ritual at night. No `[data-theme]`
   overrides anywhere in the lab.
-- **Particles:** `sampleBind` distributes the budget by arc length
-  (largest-remainder, exact), jitters perpendicular by `σ = 0.15 +
-0.2·weight` (weight reads in dust with no second pass), and sets **rank =
-  inscription order**: containment → gates → armature → spokes → crown →
-  seals → prime → ideogram → bearing. A painter drawing `rank <
-progress·count` performs the ritual: contain → structure → bind → name →
-  orient. Homes normalize over the PLATE canvas so particles register with
-  the SVG in overlay.
-- **Motion law:** inscription reveal + the house breathing jitter only. No
-  swirl, no pulse, no spinning rune-discs (the visual-grammar ban). PRM gets
-  static frames redrawn on state change, no rAF loop.
+- **Particles are a STIPPLE, never a spray** (owner, 2026-08-10 — the
+  gaussian scatter read as sloppy/low-res). `sampleBind` places points
+  EXACTLY on the stroke at one even pitch (`SAMPLE_SPACING` = 2.2 units;
+  the count DERIVES from total stroke length, the budget is only a
+  ceiling), with zero randomness anywhere. Stroke weight is expressed as
+  ink TONE (`toneFor`: 1 → 0.95 · 0.7 → 0.75 · 0.5 → 0.58 · 0.3 → 0.42),
+  never as scatter width. The painter snaps dots to the house pixel grid
+  (GRID = 3 device px, 2 px square dots — the ThoughtformSigil signature)
+  and batches by tone tier. **Rank = inscription order**: containment →
+  gates → armature → spokes → crown → seals → prime → ideogram → bearing;
+  drawing `rank < progress·count` performs the ritual. Homes normalize
+  over the PLATE canvas so the stipple registers with the SVG in overlay.
+- **Motion law:** the inscription reveal is the ONLY motion — the stipple
+  is otherwise still (no breathing, no swirl, no pulse, no spinning
+  rune-discs). Consequence: the painter has no rAF loop and no IO gate at
+  all; it redraws on state change, so PRM needs no special path — it just
+  skips the shell's replay animation.
 - Starved particle budgets drop `furniture` marks from sampling first; the
   SVG plate keeps them.
 
