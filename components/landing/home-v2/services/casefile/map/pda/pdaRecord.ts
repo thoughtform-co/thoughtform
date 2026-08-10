@@ -44,7 +44,18 @@ export interface PdaWork {
   /** Draw meter cells, 0–5. Read against the workload, NEVER a price. */
   draw: number;
   band: string;
+  /** The seat that owns the work — `cfg.p[0]`. */
   owner: string;
+  /**
+   * WHAT THAT SEAT ACTUALLY OWNS — `cfg.p[1]`, and it had no home on any
+   * drawing until 2026-08-10 (ADR-070 U7). The record has always carried the
+   * pair; reading 02 printed the role and dropped the half that says what the
+   * role is FOR, which is the half a reader cannot infer.
+   *
+   * `null` for person-led work: there is no configured seat to gloss, and the
+   * owner line already states the absence in full.
+   */
+  ownerNote: string | null;
   /** The shapes of judgment this stream draws on. Reading 02's substrate row
    *  draws ONE BAR PER TAP and nothing else, so this is what decides how many
    *  bars it seats — the estate's other shapes belong to reading 03. */
@@ -223,6 +234,7 @@ export function toPdaWork(work: CaseMapWork, district: CaseMapDistrict | undefin
     draw: work.mass,
     band: MASS_BAND[work.mass].toUpperCase(),
     owner: (work.cfg?.p[0] ?? "The person does the work").toUpperCase(),
+    ownerNote: work.cfg ? work.cfg.p[1].toUpperCase() : null,
     taps: work.shapes,
     cfg: answers(work),
   };

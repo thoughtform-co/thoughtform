@@ -54,6 +54,23 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-10 (seventh pass) — The seat says what it owns (ADR-070 U7)
+
+Owner: "the who owns it should have multiple lines". `CaseMapConfiguration.p`
+is documented as a PAIR — "Owner role + what that seat actually owns" — and
+every drawing since the projection was written took `p[0]` and dropped
+`p[1]`. Added as `PdaWork.ownerNote` (`string | null`; person-led has no
+configured seat to gloss), lettering one step down in neutral ink under the
+seat; plate 106 → 124 to hold the row.
+
+⚠ **Class of miss worth remembering: a content type that documents a field
+as a PAIR wants BOTH halves checked when a drawing is authored.** `p[1]`
+was invisible for four updates because nothing on the surface and no guard
+ever asked where it went. Cycle A rows 3 and 6.
+
+Verified: 615 units, three casefile smokes, captures both themes (28
+labels, 0 clipped).
+
 ### 2026-08-10 (sixth pass) — The board gets a margin; the seat's line gets its weight (ADR-070 U6)
 
 Two owner defects on the U5 board. Cycle A rows 3 and 4.

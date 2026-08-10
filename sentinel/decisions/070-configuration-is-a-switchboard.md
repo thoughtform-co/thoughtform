@@ -514,3 +514,41 @@ connector to the CAMPAIGN COPY node?"_
 `npm run verify` 615 green, the three casefile smoke cases green, headed
 captures at 1780×1270 dark + light (meet 1.013, 27 labels, minPx 10.13, 0
 clipped).
+
+---
+
+## Update 7 — the seat says what it owns (2026-08-10, owner)
+
+_"The who owns it should have multiple lines."_
+
+The record has always carried the pair. `CaseMapConfiguration.p` is
+`readonly [string, string]` — **"Owner role + what that seat actually
+owns"** — and every drawing since the projection was written took `p[0]`
+and dropped `p[1]` on the floor. So `Creative lead` printed and
+`Sets the bar / owns final taste` did not, which is the half a reader
+cannot infer from the role name.
+
+- **`PdaWork.ownerNote`** carries `p[1]`, and it is `string | null`:
+  person-led work has no configured seat to gloss, and its owner line
+  ("THE PERSON DOES THE WORK") already states the absence in full. The
+  spec is pushed conditionally so the "no blank string" guard stays
+  meaningful rather than being taught to tolerate an empty one.
+- It letters ONE STEP DOWN from the seat and in the neutral ink
+  (`--pda-txt2` at fs 10, against the seat's green 13): the seat is the
+  answer, this is what the answer is FOR. The plate grows 106 → 124 to
+  hold the third row; the seat connector shortens to match.
+- The measure is the plate's FULL inner width (360), not the left
+  column's — the note sits on its own row with nothing to its right.
+  Worst live note is 31 chars (`SETS THE BAR / OWNS FINAL TASTE`) =
+  210.8u, walked for all 27 streams by `pda-viewbox`.
+
+⚠ **The lesson is about the projection, not the drawing.** A field that a
+content type documents as a PAIR should be checked for both halves when
+the drawing is authored; `p[1]` was invisible for four updates because
+nothing on the surface and nothing in the guards ever asked where it went.
+
+### Verification
+
+`npm run verify` 615 green, the three casefile smoke cases green, headed
+captures at 1780×1270 dark + light (28 labels, meet 1.013, minPx 10.13, 0
+clipped).

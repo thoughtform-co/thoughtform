@@ -188,6 +188,21 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
     { slot: "autonomy", text: work.autonomy, fs: FS.bar, track: 0.08, measure: 118 },
   ];
 
+  /* THE SEAT'S SECOND LINE — what that seat actually owns (U7). It sits on
+     its own row with nothing to its right, so its measure is the plate's
+     full inner width rather than the left column's; the worst live note is
+     31 chars (`SETS THE BAR / OWNS FINAL TASTE`) = 210.8u at fs 10. Absent
+     for person-led, which has no configured seat to gloss. */
+  if (work.ownerNote) {
+    specs.push({
+      slot: "ownerNote",
+      text: work.ownerNote,
+      fs: FS.chrome,
+      track: 0.08,
+      measure: OWNER_W - 40,
+    });
+  }
+
   /* A node's question, then each sub-card's key and its wrapped value. Two
      lines fit the sub-card (the record needs one); a THIRD is declared with
      a zero measure so a tail the wrapper would slice off fails here loudly. */
@@ -440,7 +455,8 @@ const T = {
    two columns now (the seat, and what it decides alone), and authority
    spanning the machine is the read. */
 const OWNER_W = 400;
-const OWNER_H = 106;
+/** Three rows since U7: the label pair, the seat, and what the seat owns. */
+const OWNER_H = 124;
 const OWNER_Y = 170;
 
 /** ⚠ THE BOARD IS INSET 24 FROM THE CROP ON BOTH SIDES (U6, owner: the side
@@ -534,13 +550,28 @@ export function ViewConfiguration({
         </text>
         <text
           x={OWNER_X + 20}
-          y={OWNER_Y + 74}
+          y={OWNER_Y + 72}
           fontSize={FS.owner}
           letterSpacing=".08em"
           fill={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
         >
           {work.owner}
         </text>
+        {/* What that seat actually OWNS — the record's `p[1]`, which had no
+            home on any drawing until now. A gloss on the role, so it letters
+            one step down and in the neutral ink: the seat is the answer, this
+            is what the answer is for. */}
+        {work.ownerNote ? (
+          <text
+            x={OWNER_X + 20}
+            y={OWNER_Y + 98}
+            fontSize={FS.chrome}
+            letterSpacing=".08em"
+            fill="var(--pda-txt2)"
+          >
+            {work.ownerNote}
+          </text>
+        ) : null}
         <text
           x={OWNER_X + OWNER_W - 20}
           y={OWNER_Y + 36}
@@ -553,7 +584,7 @@ export function ViewConfiguration({
         </text>
         <text
           x={OWNER_X + OWNER_W - 20}
-          y={OWNER_Y + 74}
+          y={OWNER_Y + 72}
           textAnchor="end"
           fontSize={FS.bar}
           letterSpacing=".08em"

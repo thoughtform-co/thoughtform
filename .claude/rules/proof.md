@@ -1084,6 +1084,17 @@ never substituting a different drawing.
   is the plate's own RIGHT COLUMN now, which is why the plate is 400 wide
   (wider than the card): worst seat 212u beside `DECIDES ALONE` 106.6u in a
   360u measure, so the columns cannot meet.
+- ⚠ **THE PLATE HAS THREE ROWS, AND `p[1]` IS THE THIRD (U7).**
+  `CaseMapConfiguration.p` is documented as _"Owner role + what that seat
+  actually owns"_ and every drawing took `p[0]` and dropped the other half —
+  invisible for four updates because nothing on the surface and no guard
+  ever asked where it went. `PdaWork.ownerNote` carries it, `string | null`
+  (person-led has no seat to gloss and its owner line already states the
+  absence), lettering one step down in the neutral ink — the seat is the
+  answer, this is what the answer is FOR. Measure is the plate's FULL inner
+  width (360): the row has nothing to its right. **A content type that
+  documents a field as a PAIR wants both halves checked when a drawing is
+  authored.**
 - **THREE QUESTION NODES** — WHAT RUNS IT west · WHAT IT CAN REACH east ·
   WHAT IT INHERITS south. The question headers are BACK by the owner's own
   mockup (U2 supersedes this ADR's "no question headers"). k-labels are
