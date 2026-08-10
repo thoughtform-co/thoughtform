@@ -589,11 +589,10 @@ html[data-theme="light"] .fl-bay__top em {
 
 /* (The `.fl-route` palette and the RUN-plate / transport-chevron light rules
    left with their elements — the route drawing in the 08-07 declutter
-   (e3b3386), the RUN key and chevrons on the owner's 2026-08-08 ruling. The
-   bay's corner brackets are the surviving line work here.) */
-html[data-theme="light"] .fl-bay__br {
-  border-color: rgba(138, 107, 32, 0.55);
-}
+   (e3b3386), the RUN key and chevrons on the owner's 2026-08-08 ruling, and
+   the bay's four corner brackets on 2026-08-10. Nothing in the bay's own
+   chrome needs a light override now: the FEED line above and the wireframe
+   palette below both carry their own.) */
 
 /* ── The bay's AUTHORED WIREFRAMES, on parchment (ADR-068 D5) ─────────────
    The same law as the map's `--pda-*` set, applied to whole drawings:

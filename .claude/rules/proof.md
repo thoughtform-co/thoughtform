@@ -459,6 +459,13 @@ holdfast` · atl `masters level broadcast parallel`.
   2026-08-08, ADR-068 U3)** — the fused bottom bar IS the one affordance
   (cue → "Watch walkthrough" → duration), smoke-pinned uncut on every
   station, and the frame's dead centre is authorable now.
+  ⚠ **THE FOUR GOLD CORNER BRACKETS ARE DELETED TOO (owner, 2026-08-10,
+  ADR-068 U7)** — `.fl-bay__br*`, its four spans and its light override.
+  The bay is ALREADY framed (gold-15 border + FEED line + watch bar), and
+  since U5 gold buys exactly ONE thing per drawing: the CTA. Four gold-40
+  marks on that same box is the RUN-plate argument one object later.
+  ADR-065's bracket grammar is not repealed — this box just stopped being
+  "framed but not a device" when it grew a border and two chrome lines.
   ⚠ **CROPPING IS GUARDED GEOMETRICALLY, not by scrollHeight** (ADR-068 U1):
   the smoke asserts `.fl-detail` inside the field's VISIBLE box and all four
   plates ≥99% painted, at SIX viewports incl. the wide-short band (1920×800,
@@ -522,21 +529,37 @@ GENERATE`, the lettered placeholder `Loop Switch, golden hour`, and
   `--w-gold-ink`, `--gold` dark / `--gold-ink` light, because raw gold
   letters at 1.68:1 on parchment and may not; the dock sits IN FLOW
   under the row — the U5 float and the gal/dock lockstep pair are
-  retired, ⚠ the tile's height is cqh-definite `min(58cqh, 46cqw)`
+  retired, ⚠ the tile's height is cqh-definite `min(61cqh, 52cqw)`
   because `100%` of a content-sized row resolves to nothing, ⚠ the dock
-  is `min(18cqh, 6.5cqw, 52px)` with the px term as the wide-short
+  is `min(18cqh, 7.1cqw, 58px)` with the px term as the wide-short
   overflow guard, ⚠ the dock's WIDTH is the row's width DERIVED —
-  `max(68%, calc(40% + 1cqw + min(46.4cqh, 36.8cqw)))`, a triplet that
+  `max(68%, calc(44% + 1cqw + min(46.4cqh, 41.6cqw)))`, a triplet that
   moves with the card basis, the gal gap and the tile height, floored at
   68% so the binding bay never squeezes the input under the lettered
   placeholder — and ⚠ centring rides the CONTENT — gal
   `justify-content` and dock `align-self`, never `align-items: center`
-  on the column, whose shrink-to-fit row would strand the card's 40%
+  on the column, whose shrink-to-fit row would strand the card's 44%
   basis; the composer row is fully SQUARE — vesper's CTA dropped the
   chamfer with the enhance plate (mímir's and babylon's plates keep the
   house cut, and the punch-through z 1 is untouched); the DRAW meter,
   nav, PRODUCT LIBRARY and MODEL rows stay deleted, the meter clause
-  dormant, the digit ban surviving), babylon = the PROMINENT
+  dormant, the digit ban surviving;
+  ⚠ **U7 (owner, 2026-08-10) — THE `cqh` TERM IS THE SIZE AND THE `cqw`
+  CAP IS A GUARD.** The cap binds only below W/H ≈ 1.12 and the real bays
+  run 2.3–2.9, so raising it is a measured no-op; the tile's size is the
+  `cqh` coefficient, paid for out of `.fl-wire__main`'s bias padding
+  (6cqh → 2.5cqh) — the two are ONE budget. The dock's binding term was
+  the 52px HARD CAP, not a ratio. ⚠ 1280×720 is down to **2.3px of
+  slack**: anything that adds height takes it back out of that padding
+  in the same edit and is re-measured there.
+  ⚠ **ENHANCE PROMPT IS NOT A PLATE (U7)** — wand + label, no border, no
+  wash, `padding: 0`, the composer's `gap` doing the spacing. ONE framed
+  object in the row; only GENERATE commits. The light walk is untouched
+  BY ARITHMETIC: `bedOf()` takes the first ancestor at α ≥ .85 and
+  `--w-green-soft` was α .14/.16, so this was never the label's bed —
+  `.fl-wire__comp`'s opaque `--w-plate` was. `--w-green-soft` is now
+  DORMANT, not deleted (both theme files keep it: it is the green half of
+  the plate recipe a future drawing needs)), babylon = the PROMINENT
   green chain `TRANSCRIBE → TRANSLATE → DUB → APPROVE → [UPLOAD]` over
   the REAL segments table | portrait player — the flow letters at
   `clamp(10px, 1.55cqw, 13px)`, the surface's ONE size exception, the

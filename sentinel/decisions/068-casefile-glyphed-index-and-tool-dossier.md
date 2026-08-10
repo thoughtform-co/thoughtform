@@ -796,3 +796,111 @@ gap + tile height × 4/5, a TRIPLET that moves with those three rules
 where the derived row (~331px) would squeeze the input under the
 placeholder's ~132px and clip the lettered prompt. Composer gap/padding
 take cqw terms with px floors for the same reason.
+
+---
+
+## Update 7 — the bay loses its brackets, the composition grows, ENHANCE loses its plate (2026-08-10, owner)
+
+Three owner notes on the live vesper station, all subtractive-or-scale:
+_"remove the golden corners around the tool mockups"_, _"increase the size
+of the prompt bar and the prompt and image panels above it slightly and
+proportionally"_, _"enhance prompt shouldn't have a frame around it, just
+the symbol and text"_.
+
+### The bay's four corner brackets are DELETED
+
+`.fl-bay__br--{tl,tr,bl,br}`, their four spans in `ToolGallery.tsx` and the
+light override in theme.css all go. They were ADR-065's third grammar —
+_framed but not a device_ — sat one pixel outboard of the border as
+registration marks. Two reasons the owner is right:
+
+1. **The bay was already framed.** A gold-15 border on four sides, the FEED
+   line across the top, the watch bar across the bottom. The brackets
+   registered a housing nothing was doubting.
+2. **They spent the signal colour on chrome.** Since U5 the drawings spend
+   gold on exactly ONE thing per drawing — the CTA, the MAKE moment. Four
+   gold-40 marks at the corners of that same box is the argument that
+   already deleted the RUN plate (U3) and the ordinals (ADR-066), applied
+   one object later.
+
+ADR-065's bracket grammar is **not** repealed — it stays available for a
+framed-but-not-a-device object. This box stopped being one when it grew a
+full border and two chrome lines. Do not re-add brackets here without
+saying what the border fails to say.
+
+### The scale pass, and the term that actually binds
+
+⚠ **THE `cqw` CAPS ARE NOT THE SIZE — THE `cqh` TERM IS, AND THE FIRST CUT
+OF THIS UPDATE GOT IT BACKWARDS.** The tile is `min(N·cqh, M·cqw)`, so the
+`cqw` cap wins only when the frame's W/H drops below N/M — at the shipped
+58/46 that is **1.26**, and the real bays measure **W/H 2.3–2.9**. Raising
+46 → 52cqw therefore changed nothing at any viewport; it was measured as a
+no-op (tile 143.0px at 1280×720, before and after). The cap still earns the
+raise, but as a wide-short guard and for one real case: the tallest bay sits
+at W/H ≈ 1.25, where the old 46 would have clipped growth at 372px.
+
+So the size is the `cqh` coefficient, and it is **paid for out of the
+high-bias padding** — the two are ONE budget:
+
+| rule                    | was                                                  | now                                                  |
+| ----------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| `__card` basis          | `40%`                                                | `44%`                                                |
+| `__card` max-height     | `46cqw`                                              | `52cqw` (tile lockstep)                              |
+| `__tile` height         | `min(58cqh, 46cqw)`                                  | `min(61cqh, 52cqw)`                                  |
+| `__dock` height         | `min(18cqh, 6.5cqw, 52px)`                           | `min(18cqh, 7.1cqw, 58px)`                           |
+| `__dock` width triplet  | `max(68%, calc(40% + 1cqw + min(46.4cqh, 36.8cqw)))` | `max(68%, calc(44% + 1cqw + min(46.4cqh, 41.6cqw)))` |
+| `__main` padding-bottom | `6cqh`                                               | `2.5cqh`                                             |
+
+⚠ **WHICH OF THE DOCK'S THREE TERMS BINDS TELLS YOU WHAT TO MOVE.** At the
+reference bays the **52px hard cap** was binding, so the bar could not grow
+with the panels however the ratios were retuned — it goes to 58px. `6.5 →
+7.1cqw` is the only term the binding bay pays for; `18cqh` binds nowhere and
+is untouched.
+
+⚠ **THE BINDING BAY IS DOWN TO 2.3px OF SLACK** (from 4.5). Measured on the
+dev server with real scrolls at six viewports: the frame runs 246.5 →
+658.7px tall, the group clears it at all six, `scrollHeight` overflow is 0
+everywhere. But 1280×720 is now the whole margin this drawing has — anything
+that adds height must take it back out of `padding-bottom` in the same edit
+and be re-measured there. The bias stays at 2.5cqh rather than 0 so the
+group still sits above the midline (~16px at the tall bays); centred, a
+composition in a bay this wide reads as floating rather than seated.
+
+Net at the owner's viewport (1780×1000): card **+10%** wide, tile **+5%**
+tall, bar **+10%** tall — and the derived triplet keeps the bar's right edge
+on the row's, which is what the U6 third follow-up bought.
+
+### ENHANCE PROMPT is no longer a plate
+
+Border and green wash removed; the wand and the label carry it alone, with
+`padding: 0` so the composer's own `gap` is the spacing. U6 had already
+squared this plate off because its clipped border read as missing corners —
+a plate fighting its own geometry. The row now reads **input FIELD → bare
+action → gold CTA**, which is the honest hierarchy: only GENERATE commits.
+ONE framed object in the row, matching the one-cut-object rule the CTA
+already follows.
+
+⚠ **THE LIGHT WALK IS UNAFFECTED, AND THAT IS ARITHMETIC, NOT LUCK.** The
+smoke's `bedOf()` walks ancestors for the first background at **α ≥ .85**;
+`--w-green-soft` is α .14/.16, so this element was NEVER the label's bed —
+`.fl-wire__comp`'s opaque `--w-plate` was, and still is. The ENHANCE PROMPT
+ratio does not move, and no theme rule was needed.
+
+`--w-green-soft` is now **dormant, not deleted** — kept and paired in both
+theme files because it is the green half of the plate recipe a future
+drawing needs; deleting it would leave `--w-cta` as the only filled step and
+the next green plate would be authored against the wrong ground. Same
+posture as the smoke's dormant capture branch.
+
+### Verification
+
+- The three casefile smoke cases green: the six-viewport harmonised walk,
+  the clip walk on all four rows, and the light contrast walk (which
+  re-asserts vesper's five pinned labels and the ≥4.5:1 floor). Label sets
+  unchanged — this update letters nothing new.
+- `npx tsc --noEmit` clean; `npm run lint` 0 errors.
+- Direct measurement at 1280×720 / 1440×800 / 1780×1000 / 1920×1080 /
+  1920×800 / 2560×1330, real scrolls into the dwell, row pinned by click:
+  0 overflow, 0 scroll, 0 brackets, enhance border `0px` and background
+  `transparent` at every one.
+- Captures at 1780×1000 in both themes.

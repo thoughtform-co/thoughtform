@@ -188,10 +188,14 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
             marks; the capture inside still bleeds to those walls
             (ADR-064). */}
         <div className="fl-bay">
-          <span className="fl-bay__br fl-bay__br--tl" aria-hidden="true" />
-          <span className="fl-bay__br fl-bay__br--tr" aria-hidden="true" />
-          <span className="fl-bay__br fl-bay__br--bl" aria-hidden="true" />
-          <span className="fl-bay__br fl-bay__br--br" aria-hidden="true" />
+          {/* ⚠ THE FOUR GOLD CORNER BRACKETS ARE DELETED (owner, 2026-08-10).
+              ADR-065's third grammar — framed but not a device — but the bay
+              is ALREADY framed: it carries a full gold-15 border, the FEED
+              line and the watch bar. The brackets registered a housing that
+              was never in doubt, and four gold-40 marks at the corners of a
+              drawing whose whole gold budget is ONE CTA plate spent the
+              signal colour on chrome. The bay's border is the housing now.
+              (`.fl-bay__br*` and its light override left with them.) */}
 
           {/* ⚠ `IN SERVICE {year} —` LIVES HERE, AND THIS IS ITS ONLY HOME
               (owner, 2026-08-07). Still no ordinal, no id, no codename:

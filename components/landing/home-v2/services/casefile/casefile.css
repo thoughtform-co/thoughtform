@@ -2418,41 +2418,19 @@
   color: var(--gold-40);
 }
 
-/* The four corner brackets — FRAMED BUT NOT A DEVICE (ADR-065's third
-   grammar). They sit ON the border, one pixel outboard, so they read as
-   registration marks on the housing rather than as a second rule. */
-.fl-bay__br {
-  position: absolute;
-  z-index: 2;
-  width: 13px;
-  height: 13px;
-  pointer-events: none;
-  border: 1px solid var(--gold-40);
-}
-.fl-bay__br--tl {
-  top: -1px;
-  left: -1px;
-  border-right: 0;
-  border-bottom: 0;
-}
-.fl-bay__br--tr {
-  top: -1px;
-  right: -1px;
-  border-left: 0;
-  border-bottom: 0;
-}
-.fl-bay__br--bl {
-  bottom: -1px;
-  left: -1px;
-  border-right: 0;
-  border-top: 0;
-}
-.fl-bay__br--br {
-  bottom: -1px;
-  right: -1px;
-  border-left: 0;
-  border-top: 0;
-}
+/* ⚠ THE FOUR CORNER BRACKETS ARE DELETED (owner, 2026-08-10). They were
+   ADR-065's third grammar — framed but not a device — sat one pixel
+   outboard of the border as registration marks. Two reasons they went, and
+   both are about what the gold is FOR:
+   1. The bay is already framed. It carries a gold-15 border on all four
+      sides, the FEED line across the top and the watch bar across the
+      bottom. The brackets registered a housing nothing was doubting.
+   2. Since ADR-068 U5 the drawings spend gold on exactly ONE thing — the
+      single CTA plate, the MAKE moment. Four gold-40 marks at the corners
+      of that box are the signal colour spent on chrome, which is the
+      argument that deleted the RUN plate and the ordinals before them.
+   The border is the housing. Do not re-add brackets to this box without
+   answering what the border fails to say. */
 
 /* ⚠ THE RUN PLATE IS DELETED (owner, 2026-08-08). It was a decorative key
    centred over the feed — never a control — and it cost the wireframes
@@ -2692,6 +2670,13 @@
   --w-gen: rgba(var(--gold-rgb), 0.16);
   --w-green: var(--atreides-light);
   --w-green-ink: var(--atreides-ink);
+  /* ⚠ DORMANT SINCE 2026-08-10, NOT DEAD. The wash's only user was vesper's
+     ENHANCE PROMPT plate, and the owner took that frame off (U7). Kept —
+     paired in theme.css, named in ADR-068's grammar — because it is the
+     green half of the plate recipe a future drawing needs; deleting it
+     would leave `--w-cta` as the only filled step and the next green plate
+     would be authored from scratch against the wrong ground. Same posture
+     as the smoke's dormant capture branch. */
   --w-green-soft: rgba(var(--atreides-rgb), 0.14);
   /* The CTA plate: solid gold with near-black ink — the one pairing that
      letters on BOTH grounds (ink on gold ≈ 8.2:1; gold-as-TEXT is 1.68:1
@@ -2939,10 +2924,23 @@
   flex-direction: column;
   justify-content: center;
   gap: min(2.6cqh, 12px);
-  /* 6cqh, down from the first pass's 10: the scale pass grew the tile and
-     the dock, and the binding 246.5px bay affords the group + this bias
-     with ~6px of slack — 10cqh overflowed it (the ≤1px frame guard). */
-  padding-bottom: 6cqh;
+  /* THE HIGH BIAS IS THE BUDGET THE PANELS GROW OUT OF (U7, owner
+     2026-08-10). 6cqh, down from the first pass's 10, left the binding
+     246.5px bay ~1px of slack once U7 widened the bar — so a taller tile
+     had to be paid for, and this is the only line on the column with
+     anything to give. 2.5cqh keeps the group ABOVE the frame's midline
+     (~16px of bias at the tall bays, where the eye actually reads it)
+     while returning ~9px to the binding bay. ⚠ Do not take it to 0: at 0
+     the group centres, and a composition centred in a bay this wide reads
+     as floating rather than seated. Measure both ends after any change —
+     `padding-bottom` and the tile's `cqh` term are ONE budget.
+     MEASURED AFTER U7 (dev server, real scroll, six viewports): the frame
+     runs 246.5 → 658.7px tall and the group clears it at every one, but
+     the binding 1280×720 bay is down to **2.3px of slack** from 4.5 — it
+     is the whole margin this drawing has. Anything that adds height here
+     (a taller bar, a second row, a bigger label) must take it back out of
+     this padding in the same edit, and be re-measured at 1280×720. */
+  padding-bottom: 2.5cqh;
 }
 /* The generation row — content-sized since U6; the dock sits in flow
    right under it. */
@@ -2963,10 +2961,22 @@
    width; past it the items top-align and the band's lower ground reads as
    the CANVAS — the real app's own read, and the reference law's ("the
    surplus lives inside a content region"). */
+/* ⚠ THE U7 SCALE PASS GREW THE `cqw` CAPS, NOT THE `cqh` TERMS, AND THAT IS
+   THE WHOLE TRICK (owner, 2026-08-10: "increase the size of the prompt bar
+   and the prompt and image panels above it slightly and proportionally").
+   The two ends of the bay are bound by DIFFERENT terms: at the binding
+   246.5px bay the `cqh` term wins (tile 58cqh = 143px, with only ~7.6px of
+   slack left in the whole column), while at the reference bays the `cqw`
+   cap wins (46cqw, the tile's real ceiling everywhere the owner reads it).
+   So raising the `cqw` caps buys ~13% at every viewport that has the room
+   and costs EXACTLY ZERO at the one that does not. Growing the `cqh`
+   coefficients instead would have overflowed 1280×720 by ~9px. */
 .fl-wire--vesper .fl-wire__card {
-  flex: 0 0 40%;
+  flex: 0 0 44%;
   min-width: 0;
-  max-height: 46cqw;
+  /* In lockstep with the tile's cap below — the card stretches to the row,
+     so a cap left at 46 would clip it the moment the tile passed it. */
+  max-height: 52cqw;
   display: flex;
   gap: 0.5cqw;
   padding: 0.4cqw 0.5cqw;
@@ -3033,7 +3043,16 @@
 .fl-wire--vesper .fl-wire__tile {
   position: relative;
   flex: none;
-  height: min(58cqh, 46cqw);
+  /* ⚠ U7, AND MEASURE BEFORE YOU RETUNE EITHER TERM — THEY BIND AT
+     OPPOSITE ENDS AND ONLY ONE OF THEM IS EVER THE SIZE YOU SEE.
+     `52cqw` beats `58cqh` only when the frame's W/H drops under ~1.12; the
+     real bays run 2.3–2.9, so the `cqh` term is what sets this tile
+     everywhere except the wide-short guard band. (The cap still earns its
+     raise from 46: the tallest bay sits at W/H ≈ 1.25, where 46cqw would
+     have clipped the growth below at 372px.) So the panel's size is the
+     `cqh` coefficient, and it is paid for out of `.fl-wire__main`'s
+     bottom bias — see the note there. */
+  height: min(61cqh, 52cqw);
   aspect-ratio: 4 / 5;
   display: flex;
   align-items: center;
@@ -3071,11 +3090,17 @@
      The 68% floor is the BINDING-BAY guard: at 246.5px tall the derived
      row is ~331px and the placeholder needs ~132px of input — the floor
      keeps the field wide enough that the lettered prompt never clips. */
-  width: max(68%, calc(40% + 1cqw + min(46.4cqh, 36.8cqw)));
+  width: max(68%, calc(44% + 1cqw + min(46.4cqh, 41.6cqw)));
   /* U6 scale pass (owner: "INCREASE THE HEIGHT… it's too flat"): ~52px at
      the reference bays. The px term is the wide-short guard — 18cqh at a
-     ~350px bay is 63px and the group overflows the ≤1px frame guard. */
-  height: min(18cqh, 6.5cqw, 52px);
+     ~350px bay is 63px and the group overflows the ≤1px frame guard.
+     ⚠ U7 (owner, 2026-08-10) — WHICH OF THE THREE TERMS BINDS TELLS YOU
+     WHAT TO MOVE. At the reference bays the 52px HARD CAP was the binding
+     one, so the bar could not grow with the panels however the ratios were
+     retuned: it goes to 58px. 6.5 → 7.1cqw is the only term that costs the
+     binding bay anything (+3.2px against ~7.6px of slack), and 18cqh is
+     untouched because it binds nowhere. */
+  height: min(18cqh, 7.1cqw, 58px);
   display: flex;
   align-items: stretch;
   gap: 0.8cqw;
@@ -3133,19 +3158,28 @@
   color: var(--w-lbl-ink);
 }
 /* The enhancer — GREEN, the operational flow (U5): the tool's own
-   genai-prompting rewrite. SQUARE-CORNERED since U6 (owner: the clipped
-   border read as missing corners) — the corner law prefers it anyway:
-   the children of a chamfered surface are square, and the one cut object
-   in the row is the gold CTA. */
+   genai-prompting rewrite.
+   ⚠ IT IS NOT A PLATE ANY MORE (owner, 2026-08-10: "enhance prompt
+   shouldn't have a frame around it, just the symbol and text"). The border
+   and the green wash are gone; the wand and the label carry it alone. Two
+   things that makes RIGHT rather than merely smaller:
+   · ONE FRAMED OBJECT IN THE ROW. U6 had already squared this plate off
+     because its clipped border read as missing corners — a plate fighting
+     its own geometry. The row now reads input FIELD → bare action → gold
+     CTA, which is the actual hierarchy: only GENERATE commits anything.
+   · The light walk is UNAFFECTED, and that is arithmetic, not luck. The
+     smoke's `bedOf()` walks ancestors for the first background at α ≥ .85;
+     `--w-green-soft` is α .14/.16, so this element was NEVER the label's
+     bed — `.fl-wire__comp`'s opaque `--w-plate` was, and still is. The
+     ENHANCE PROMPT ratio does not move.
+   No padding: the composer's own `gap` is the spacing now, so the text sits
+   in the row rather than in a box that happens to be invisible. */
 .fl-wire--vesper .fl-wire__enh {
   flex: none;
   display: inline-flex;
   align-items: center;
   gap: max(3px, 0.5cqw);
   height: 72%;
-  padding: 0 max(8px, 1cqw);
-  border: 1px solid var(--w-green);
-  background: var(--w-green-soft);
 }
 .fl-wire--vesper .fl-wire__wand {
   flex: none;

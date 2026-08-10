@@ -54,6 +54,32 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-10 — Vesper station: brackets off, composition up, ENHANCE de-plated (ADR-068 U7)
+
+Three owner notes on the live IMAGE & VIDEO station. Cycle A rows 4 and 6 —
+ADR-068 gains Update 7; `.claude/rules/proof.md` and CLAUDE.md carry the new
+literals.
+
+- **The bay's four gold corner brackets deleted** (`.fl-bay__br*`, its spans
+  in `ToolGallery.tsx`, its light override). The box is already framed and
+  gold buys one thing per drawing. ADR-065's bracket grammar is intact — this
+  object stopped qualifying as "framed but not a device".
+- **The scale pass, and the lesson worth keeping.** The first cut raised the
+  tile's `cqw` cap and MEASURED AS A NO-OP: in `min(N·cqh, M·cqw)` the cap
+  binds only below W/H = N/M (1.26), and the real bays run 2.3–2.9. The size
+  is the `cqh` coefficient, and it is paid for out of `.fl-wire__main`'s bias
+  padding — one budget. Same class of error on the dock, where the binding
+  term was a 52px HARD CAP, not a ratio. **Read which term binds before
+  retuning any `min()` on this surface.**
+- **ENHANCE PROMPT lost its border and wash.** The light walk was unaffected
+  by arithmetic, not luck: `bedOf()` only counts an ancestor at α ≥ .85 and
+  the green wash is α .14/.16, so it was never the label's bed.
+- ⚠ **1280×720 is down to 2.3px of slack** (from 4.5) and is recorded as such
+  at the rule. The next height addition has to come back out of that padding.
+- Verified: the three casefile smoke cases green, typecheck clean, lint 0
+  errors, plus direct measurement at six viewports (real scrolls, row pinned
+  by click) and captures in both themes.
+
 ### 2026-08-09 — Reading 02 is a switchboard, on the landing (ADR-070)
 
 The owner picked the config lab's fifth archetype and asked for it in

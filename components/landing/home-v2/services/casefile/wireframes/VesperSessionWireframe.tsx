@@ -17,7 +17,7 @@
  *   │ ▫ │ │ ▬▬▬▬  ▬▬     │  │   ◠ ▨    │   ← the generation row     │
  *   │ ▫ │ │ ▬▬▬   ·· ▬   │  │ (image)  │                            │
  *   │   │ └──────────────┘  └──────────┘                            │
- *   │   │ [▭ input......] [✦ ENHANCE PROMPT] [GENERATE]             │
+ *   │   │ [▭ input.......]  ✦ ENHANCE PROMPT  [GENERATE]            │
  *   │   │                                                           │
  *   └───────────────────────────────────────────────────────────────┘
  *
@@ -58,12 +58,14 @@
  *   The U3 draw meter, nav lozenge, PRODUCT LIBRARY row, MODEL row and
  *   mode bar are DELETED (owner: cut the clutter; D5's meter-never-a-
  *   figure clause is dormant with the meter — the digit ban survives it).
- * · TWO SIGNAL COLOURS (U5): the ENHANCE PROMPT plate is green — the
- *   operational flow, the tool's own `genai-prompting` rewrite — and
- *   exactly ONE solid gold plate, GENERATE. The enhance plate is
- *   SQUARE-CORNERED since U6 (the clipped border read as missing
- *   corners; the one cut object in the row is the CTA). The image glyph
- *   keeps the gold mark: the made thing.
+ * · TWO SIGNAL COLOURS (U5): ENHANCE PROMPT is green — the operational
+ *   flow, the tool's own `genai-prompting` rewrite — and exactly ONE
+ *   solid gold plate, GENERATE. ⚠ ENHANCE PROMPT IS NO LONGER A PLATE AT
+ *   ALL (U7, owner 2026-08-10): wand + label, no border, no wash. U6 had
+ *   already squared it off because the clipped border read as missing
+ *   corners; the row is cleaner with ONE framed object in it, and the
+ *   hierarchy is honest — only GENERATE commits. The image glyph keeps
+ *   the gold mark: the made thing.
  * · STATIC. No keyframes of its own (ADR-021); the bay's entrance is the
  *   only motion this box has ever had.
  * · `aria-hidden`. The frame is the button and its label is the action; the
