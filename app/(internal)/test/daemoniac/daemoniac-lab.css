@@ -1,0 +1,249 @@
+/* ═══════════════════════════════════════════════════════════════════
+   DAEMONIAC LAB — personal-register look-dev chrome.
+   Everything rides the production tokens so the ground flips with the
+   theme: void = the ritual at night, parchment = the tome plate.
+   Zero border-radius, zero italics, PT Mono chrome.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dae-lab {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: var(--void);
+  color: var(--dawn);
+  font-family: var(--font-pt-mono);
+  overflow: hidden;
+}
+
+/* ── The rail ──────────────────────────────────────────────────── */
+
+.dae-lab__rail {
+  width: 280px;
+  flex: 0 0 280px;
+  padding: 24px 20px 40px;
+  border-right: 1px solid var(--dawn-08);
+  overflow-y: auto;
+}
+
+.dae-lab__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: var(--gold-ink);
+}
+
+.dae-lab__sub {
+  margin: 6px 0 18px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--dawn-rgb), 0.45);
+}
+
+.dae-lab__group {
+  margin-bottom: 18px;
+}
+
+.dae-lab__head {
+  margin: 0 0 8px;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: rgba(var(--dawn-rgb), 0.45);
+  border-bottom: 1px solid var(--dawn-08);
+  padding-bottom: 5px;
+}
+
+.dae-lab__row {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  margin: 0 0 2px;
+  background: none;
+  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-pt-mono);
+  color: rgba(var(--dawn-rgb), 0.68);
+}
+
+.dae-lab__row[data-active] {
+  border-color: var(--gold-line);
+  color: var(--dawn);
+}
+
+.dae-lab__row:hover {
+  border-color: var(--dawn-08);
+}
+
+.dae-lab__row-name {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.dae-lab__row-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.42);
+}
+
+.dae-lab__set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dae-lab__chip {
+  padding: 5px 9px;
+  background: none;
+  border: 1px solid var(--dawn-08);
+  cursor: pointer;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+
+.dae-lab__chip[data-active] {
+  border-color: var(--gold-line);
+  color: var(--dawn);
+}
+
+/* ── The stage ─────────────────────────────────────────────────── */
+
+.dae-lab__stage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 32px;
+}
+
+.dae-lab__plate {
+  position: relative;
+}
+
+.dae-lab__plate svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.dae-lab__pending {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+
+/* Overlay: the drawn plate recedes to an underpaint beneath the
+   particle inscription (the ServicesBrandmarkField fallback trick). */
+.dae-plate--under {
+  opacity: 0.18;
+}
+
+.dae-field {
+  position: absolute;
+  inset: 0;
+}
+
+.dae-field__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.dae-lab__scrub {
+  width: 100%;
+  margin: 2px 0 8px;
+  accent-color: var(--gold);
+}
+
+/* ── The specimen sheet ────────────────────────────────────────── */
+
+.dae-sheet {
+  width: min(720px, 100%);
+  border: 1px solid var(--dawn-08);
+  padding: 28px 32px 36px;
+  align-self: start;
+}
+
+.dae-sheet__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.5);
+  margin-bottom: 22px;
+}
+
+.dae-sheet__table {
+  margin-bottom: 26px;
+}
+
+.dae-sheet__title {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-align: center;
+  color: rgba(var(--dawn-rgb), 0.75);
+}
+
+.dae-sheet__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid var(--dawn-08);
+  border-left: 1px solid var(--dawn-08);
+}
+
+.dae-sheet__cell {
+  margin: 0;
+  padding: 10px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-right: 1px solid var(--dawn-08);
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.dae-sheet__fig {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--dawn-rgb), 0.45);
+}
+
+.dae-sheet__name {
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+
+.dae-sheet__strip {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* ── Plate ink (SVG text) ──────────────────────────────────────── */
+
+.dae-plate__note {
+  font-family: var(--font-pt-mono);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  fill: rgba(var(--dawn-rgb), 0.68);
+}
+
+.dae-plate__label {
+  font-family: var(--font-pt-mono);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  fill: rgba(var(--dawn-rgb), 0.5);
+}
