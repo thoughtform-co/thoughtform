@@ -832,7 +832,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         opened.match(/,\s*([A-Z-]+) lane/)?.[1] ?? "",
       ];
       await page.locator(".fl-pda-hit").first().click({ force: true });
-      // The flight is 420ms and the readout arrives at 700.
+      // The flight is 420ms and the foot caption arrives at 760.
       await page.waitForTimeout(800);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", "2");
 
@@ -856,8 +856,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         ).toBeGreaterThan(0);
       }
 
-      // The readout carries a whole sentence — the one string on this drawing
-      // longer than a label, and the reason `k` and `evals` have a home at all.
+      // ⚠ THE READOUT IS DELETED (ADR-070 U3, owner: "its eating up real
+      // estate") — this assertion is the old one INVERTED. No prose letters
+      // on the drawing any more: the longest string is a wrapped bar line or
+      // a one-line node value (≤ ~36 chars), and a sentence reappearing here
+      // is the readout drifting back.
       const longestLine = await page.evaluate(() =>
         Math.max(
           ...[...document.querySelectorAll(".fl-pda__svg text")].map(
@@ -865,7 +868,17 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           )
         )
       );
-      expect(longestLine, `${label}: the configuration's readout is missing`).toBeGreaterThan(40);
+      expect(longestLine, `${label}: prose crept back onto the configuration`).toBeLessThan(40);
+      // ...and the rest of the chrome the owner named on the live page stays
+      // deleted too (U4): the DRAW PER RUN meter with NEVER A PRICE, and the
+      // DRAWS ON n OF m caption. Each returning is a decision, not a drift.
+      expect(
+        await page
+          .locator(".fl-pda__svg")
+          .getByText(/DRAWS ON|NEVER A PRICE|DRAW PER RUN/)
+          .count(),
+        `${label}: deleted configuration chrome came back`
+      ).toBe(0);
 
       // Escape returns to the work. Keys are bound on the PLATE, never
       // `document` — the corridor has its own key handling.

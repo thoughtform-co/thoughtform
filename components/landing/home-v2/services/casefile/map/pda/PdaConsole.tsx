@@ -361,12 +361,21 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
       <i className="fl-pda__scan" key={viewTick} aria-hidden="true" />
       {/* ⚠ ONE SVG FOR ALL THREE READINGS, and the flight depends on it: the
           box is the same before and after the crop swaps, so a single rect read
-          serves both sides of the mapping. */}
+          serves both sides of the mapping.
+          ⚠ `xMidYMin`, NOT `xMidYMid` (ADR-070 U3, owner: "why do we have so
+          much space above WHO OWNS IT"). The console's field outgrows the
+          crop's aspect at tall viewports and `YMid` split the slack into a
+          floating void band ABOVE the drawing; `YMin` docks the drawing to
+          the rail and the slack collects below as ground clearance. At the
+          binding 1280×720 field the two are identical (no vertical slack).
+          ⚠ `fitCrop` in pdaFlight.ts HARDCODES this anchor — the attribute
+          and the arithmetic move together or the flight lands wrong by half
+          the letterbox. */}
       <svg
         ref={svgRef}
         className="fl-pda__svg"
         viewBox={VIEW_BOX[view]}
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="xMidYMin meet"
         role="group"
         /* The reading's title is no longer PRINTED (the rail names it),
                  so it lands here instead — a screen reader still hears which

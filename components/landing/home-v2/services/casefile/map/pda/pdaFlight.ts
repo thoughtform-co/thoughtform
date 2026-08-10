@@ -74,10 +74,16 @@ export function cropOf(viewBox: string): FlightRect {
   return { x, y, w, h };
 }
 
-/** `xMidYMid meet`: the minimum ratio, and the letterbox it leaves. */
+/** `xMidYMin meet`: the minimum ratio, horizontal slack centred, vertical
+ *  slack collected BELOW the drawing.
+ *  ⚠ THE ANCHOR IS DUPLICATED in `PdaConsole`'s `preserveAspectRatio` and
+ *  the two must move together: this arithmetic IS that attribute, and a
+ *  drift puts the flight's start pose off by half the letterbox at every
+ *  tall viewport (ADR-070 U3 — `YMid` → `YMin` so the drawing docks to the
+ *  rail instead of floating below a void band). */
 export function fitCrop(box: FlightBox, crop: FlightRect): { k: number; ox: number; oy: number } {
   const k = Math.min(box.width / crop.w, box.height / crop.h);
-  return { k, ox: (box.width - crop.w * k) / 2, oy: (box.height - crop.h * k) / 2 };
+  return { k, ox: (box.width - crop.w * k) / 2, oy: 0 };
 }
 
 /**

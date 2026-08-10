@@ -1053,68 +1053,98 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
-## The switchboard (ADR-070, live — reading 02's drawing)
+## The unit board (ADR-070 U2, live — reading 02's drawing)
 
-- **THE WIRING IS THE PICTURE.** Multi-conductor ribbons (`ribbon.ts` — pure
-  offset-polyline geometry, 45° bends, unit-pinned) carry most of the ink and
-  **every run lands on a pin** of the chip's nib rows (449 + 20k along the
-  bottom edge). ⚠ **RIBBON-VERSUS-BOX IS HAND-CHECKED** — the fit guard and
-  the smoke both measure TEXT, so neither can see a conductor crossing a
-  package. The first cut ran the inherit ribbons horizontally ALONG the nib
-  tips and five conductors crossing a pin row at 45° read as a hatch patch.
-- **ONE FRAME, ONE BRIGHT OBJECT.** The chip IS the reading-01 cartridge at
-  `CORE_K` (1.6): the lit plate is painted on the cartridge's own notched
-  silhouette, the nibs are a SIBLING (the dock's `fill-box` origin must stay
-  the cartridge's own), and there is NO carrier housing — that read as a box
-  in a box. Hierarchy is VALUE, not position.
-- **A PART IS A HOUSING, NOT A SQUARE (U1, owner 2026-08-10 — "just simple
-  squares" / tags "completely and utterly unacceptable").** Six drawn
-  silhouettes, 176 wide (the cartridge's width), the glyph vocabulary scaled
-  up to BE the block: SKILL = notched plate + encoded hatch band; LANE =
-  chevron bar feeding the chip; CONTEXT = housing with sheet echoes above;
-  GRAPH = dashed hand + dashed inset; SYSTEM = port with a bottom plug the
-  output riser enters; SURFACE = two open brackets. The corner glyphs and
-  the junction blocks are DELETED. Tags are fs 10 `--pda-txt2` headers — one
-  ink across all six — and values letter at 10, wrapping to two lines.
-  Person-led keeps every silhouette, dashed txt3. Still NO question headers:
-  the tag is a function name, and v19's question-headed nodes were
-  deliberately not taken.
-- **EVERY RUN IS CENTRE-OUT (U1).** One bundle per part; the pair reads by
-  ADJACENT pin bands (286/324) + shared hover, not a junction box. ONE
-  output trunk passes THROUGH the gate and forks at x 926 — up to SYSTEM,
-  down to SURFACE — so everything the stream reaches passes the bar, drawn.
-  The ghost ribbons are deleted; the ornament trimmed (10 vias, 2 clusters).
-  ⚠ **THE BAR WRAPS IN THE 700–930 CHANNEL at value size** (the 46-char
-  worst cannot letter on one line right of the chip), and BOTH risers stay
-  right of x 930 — the first cut rose at 750 and sliced the bar and the
-  seat, the conductor-through-text collision no guard measures. ⚠ Every
-  substrate drop is ≥ 549: the graph housing owns x 360–536.
-- ⚠ **ONLY WHAT THE RECORD CONNECTS IS DRAWN (owner).** One bus bar per shape
-  the stream TAPS and nothing else — the 47 skill-mark cells and the ghosted
-  loom of untapped shapes are both deleted, because reading 03 owns the
-  estate. Slots are authored PER COUNT (1–3), not per shape key: a fixed home
-  per shape put all three of a record's bars in one corner. **A fourth tap
-  would silently lose a bar** — `CONFIG_MAX_BARS` is asserted against the
-  record. And NOTHING LEAVES THE SYSTEM CHIP UPWARD; a system a stream acts
-  on is a terminus here, not a transit.
-- ⚠ **THE CAPTION COUNTS SHAPES, NEVER SKILLS.** `DRAWS ON n OF 5 SHAPES`,
-  both derived. Three bars reading 12, 9 and 14 sum to 35, so `47 SKILLS`
-  beside them would publish two totals a reader can subtract. Pinned.
-- **THE CROP IS TIGHT AND THAT IS THE TYPE.** `CONFIG_VIEWBOX` is
-  `56 20 910 740` — the content box, not the 1000×760 authoring space — which
-  buys 10 % of rendered type at the binding field: **4.97px measured on the
-  landing** against the smoke's 4.3 floor — and since U1 that floor is the
-  CHROME's; the tags render ~6.6px and values ~6.6px at the binding field.
-  The drawing's own floor is fs 7.5; the trimmed via field still runs to the
-  crop's edge.
-- **ADR-069 SURVIVES INTACT**: the flight docks the cartridge (`CORE_RECT` is
-  the chip), the readout is ONE reactive line resting on why-this-lane, and
-  hovering either half of a pair lights both because they are one answer.
-- **The guard measures the DRAWING'S OWN declaration.** Every lettered string
-  is in `configurationLettering` with the measure it must fit, walked for all
-  27 streams by `pda-viewbox`; a package's third wrapped line is declared with
-  a ZERO measure so a sliced tail fails loudly. A lettered string missing from
-  that list is a defect in the drawing, not a gap in the guard.
+⚠ **THE COMPOSITION IS THE OWNER'S `configuration-unit-mockup.html`**
+(2026-08-10), adapted — never re-imagined. U1's radial switchboard (six
+part housings, ribbons, gate, substrate bars) lasted ONE DAY: it decluttered
+this ADR's own skeleton instead of installing the owner's mockup, and the
+owner's verdict ("what you've created is just nothing") is on record in U2.
+**When the owner supplies a mockup, the mockup IS the composition** — "not
+verbatim" licenses adapting strings, measures, guards and shared chrome,
+never substituting a different drawing.
+
+- **ONE lit card, centre** — the ADR-069 cartridge at `CORE_K`, carrying
+  **THE BAR on its own face** (optional `bar` prop on the primitive;
+  reading 01 renders byte-identical). No gate device, no pin nibs, no
+  carrier housing. The card's bar block is the `gat` hover — its hit bed
+  is a SIBLING of the dock group (the dock's `fill-box` origin stays the
+  cartridge's own, and the entrance style must never re-evaluate
+  mid-flight).
+- **The owner above, on ONE DASHED HAIRLINE — never a bundle (U5).** The
+  seat is AUTHORITY, not data, so its relation to the card is
+  _answerable-to_ rather than _feeds-into_, and the contrast with the three
+  nodes' thick bundles is the reading. ⚠ The arrowed dimension (U4) and the
+  floating `DECIDES ALONE · WIDE` line (U5) are both DELETED — the autonomy
+  is the plate's own RIGHT COLUMN now, which is why the plate is 400 wide
+  (wider than the card): worst seat 212u beside `DECIDES ALONE` 106.6u in a
+  360u measure, so the columns cannot meet.
+- **THREE QUESTION NODES** — WHAT RUNS IT west · WHAT IT CAN REACH east ·
+  WHAT IT INHERITS south. The question headers are BACK by the owner's own
+  mockup (U2 supersedes this ADR's "no question headers"). k-labels are
+  SKILL/MODEL · CONNECTORS/SURFACES · CONTEXT/GRAPH FACTS at fs 10
+  `--pda-txt2`; material grounds per row: encoded green hatch (BELOW the
+  value's line box — the first cut ran it through the descenders), plain,
+  and the graph's dashed BLUE inset (`--pda-gph`/`--pda-gph-line`, light
+  overrides in theme.css — the city's adjacent-domain blue on the console).
+- ⚠ **THE ROWS STACK; THE MOCKUP'S HALVES CANNOT HOLD THE RECORD.** A
+  96-unit half wraps the 26-char worst onto three lines at any legible
+  size, so the two answers are full-width rows and every value letters ON
+  ONE LINE at fs 11 — 194.5u of the node's 196u measure, ceiling-tight,
+  walked for all 27 streams. The owner letters at .08em (the mockup's .16
+  overruns on the person-led seat); the readout at 11.5 is the outranking
+  guard's forced ceiling (750.7u of 760 on the worst why).
+- **THICK multi-conductor bundles are the connectors (U3** — the mockup's
+  thin gutter traces lasted one pass; owner: "restore the thick lines"):
+  one 8-wire bundle per side node, two 5-wire into the inherits node, 45°
+  jogs, lifted whole on hover. ⚠ **THE READOUT SENTENCE IS DELETED (U3,
+  owner)** — ADR-069's one-reactive-line contract is overruled; the notes
+  stay in the record, letter nowhere, and `pda-viewbox` + the smoke assert
+  the absence (prose ≥40 chars on this drawing = the readout drifting
+  back). The derived caption survives alone, bottom-right. ⚠ **THE SVG
+  ANCHORS `xMidYMin` AND `fitCrop` HARDCODES IT** (`oy: 0`) — the pair
+  moves together or the flight lands wrong by half the letterbox at tall
+  consoles; `YMid` was the "space above WHO OWNS IT" complaint.
+- ⚠ **WHAT THE OWNER DELETED STAYS DELETED, AND BOTH GUARDS SAY SO.** The
+  substrate bars (U2); the readout sentence (U3); and in U4 the DRAW PER RUN
+  meter with NEVER A PRICE, the `DRAWS ON n OF m` caption (with
+  `substrateReach` / `drawnShapes` / `CONFIG_MAX_BARS`), the corner brackets,
+  the pad clusters, the vias, the registration crosses, and the arrowed
+  DECIDES-ALONE dimension with its pin ticks. `pda-viewbox` asserts no such
+  slot is declared and the smoke asserts none renders — the smoke's U3
+  caption-PRESENCE assertion was inverted rather than dropped.
+- ⚠ **THE CROP'S ASPECT IS THE CONTRACT (U4) — IT IS WHY THE PANEL FILLS.**
+  `CONFIG_VIEWBOX` is `36 48 828 912` (0.908), PORTRAIT. The console's field
+  is portrait where this is read (839×958 = 0.876), and `meet` takes the
+  MINIMUM ratio — so the old LANDSCAPE crop (910×740) was width-bound there
+  and left **~283px of dead panel** that no element move could reach. Now
+  meet is **1.013** and the smallest type paints **10.13px** (was 5.55).
+  ⚠ The trade is named: short-wide fields (603×493 at 1280×720) letterbox
+  HORIZONTALLY instead at meet 0.541, which is why the drawing's own floor
+  is **10** — 7.5 renders 3.89px and fails the smoke's 4.3 outright.
+- **ONE SUB-CARD SIZE ACROSS ALL SIX (U4).** The side nodes stack their pair
+  VERTICALLY at full node width; the wide base seats its pair side by side —
+  sized so every sub-card is the same 242×130 with the same 222-unit measure
+  and the same fs 12, every value on ONE line. That is what answers "what it
+  inherits is too big": its 640-wide node held 316-wide cards with one short
+  line while the side halves forced three-line wraps at fs 10.
+- ⚠ **THE BINDING NUMBER IS A WORD, NOT A STRING.** `wrapLines` breaks on
+  spaces only, so the longest WORD sets a sub-card's minimum measure however
+  well the value wraps — and every per-line assertion passes while it
+  overflows, because each LINE is short. `RECONCILIATION` (14) is the
+  record's longest; sizing against `INTELLIGENCE` (12) put it through the
+  wall. `pda-viewbox` walks WORDS now, and caught it on its first run.
+- **ADR-069 SURVIVES INTACT**: the flight docks the cartridge (`CORE_RECT`
+  byte-identical), the readout is ONE reactive line resting on
+  why-this-lane, and a node is one answer — hovering it lights the pair.
+- **The guard measures the DRAWING'S OWN declaration.** Every lettered
+  string is in `configurationLettering` with the measure it must fit,
+  walked for all 27 streams by `pda-viewbox`; the bar's third wrapped line
+  is declared with a ZERO measure so a sliced tail fails loudly. A lettered
+  string missing from that list is a defect in the drawing, not a gap in
+  the guard. Conductor-versus-content stays HAND-CHECKED on capture — the
+  guards measure text, and both U1 collisions (a riser through the bar, a
+  hatch through the descenders) were invisible to every one of them.
 - ⚠ **VERIFYING: SCROLL IS THE ROW SELECTOR.** The browse band's first quarter
   is the map; 0.35 of the dwell lands on the Studio row's SHEETS and a script
   waiting for `.fl-pda__svg` there finds nothing.

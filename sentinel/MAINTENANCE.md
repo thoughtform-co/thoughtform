@@ -54,6 +54,93 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-10 (fifth pass) — The seat's own connector and column (ADR-070 U5)
+
+Owner: connect WHO OWNS IT to the card, but not with the nodes' bundles,
+and drop the floating DECIDES ALONE line as clutter. One dashed hairline
+(the seat is authority, not data — answerable-to, not feeds-into), and the
+autonomy becomes the plate's right column, plate widened to 400 to hold the
+pair without the columns meeting. Verified: 615 units, three smokes,
+captures both themes.
+
+### 2026-08-10 (fourth pass) — The crop goes portrait; the pairs stack (ADR-070 U4)
+
+The owner's "you're just not using the space at the bottom". Cycle A rows
+1, 2, 3, 6.
+
+- **The dead panel was the CROP's ASPECT, and U3 fixed the wrong half.** A
+  landscape crop (1.23) in a portrait field (0.876) is width-bound under
+  `meet`, so it left ~283px of letterbox OUTSIDE the drawing — unreachable
+  by moving elements. U3 read it as alignment and only moved the void from
+  top to bottom. Portrait crop (828×912): meet 1.013, minPx 5.55 → 10.13.
+  **Class of bug: when a drawing will not fill its box, check the two
+  ASPECTS before moving anything inside it.**
+- **One sub-card size across all six** — side nodes stack their pair
+  vertically, the wide base seats its in a row, sized to match. Answers
+  "what it inherits is too big" and lifts every value to one line at fs 12.
+- ⚠ **The fit guard now walks WORDS, not just lines, and found a real
+  defect the hour it was written**: `RECONCILIATION` (14) is longer than
+  the `INTELLIGENCE` (12) the sizing assumed, and `wrapLines` cannot break
+  it — every per-line assertion passed while it overflowed.
+- Deleted (all owner-named, absence guarded in unit AND smoke): draw meter
+  - NEVER A PRICE, DRAWS ON caption, corner brackets, pad clusters, vias,
+    crosses, the arrowed dimension and its ticks.
+- Verified: 615 units, three casefile smokes, captures at 1780×1270 dark +
+  light and 1280×720.
+
+### 2026-08-10 (third pass) — Thick bundles, no readout, the drawing docks to the rail (ADR-070 U3)
+
+Owner corrections on the U2 board, same day. Cycle A rows 4 and 6.
+
+- The mockup's thin gutter traces lasted one pass — the switchboard's
+  multi-conductor ribbon weight is the connection grammar (8-wire per side
+  node, two 5-wire south).
+- **The reactive readout is deleted** — ADR-069's one-line contract
+  overruled by the owner ("its eating up real estate"). The notes stay in
+  the record and letter nowhere; unit + smoke both assert the ABSENCE (the
+  smoke's old ≥40-char assertion inverted to <40 — prose returning IS the
+  readout drifting back).
+- **The "space above WHO OWNS IT" was the `YMid` anchor**: at tall consoles
+  the field outgrows the crop's aspect and the slack floated ABOVE the
+  drawing. `preserveAspectRatio` → `xMidYMin` WITH `fitCrop`'s `oy: 0` in
+  the same commit — ⚠ the attribute and the flight arithmetic are one
+  pair; a drift misplaces the flight by half the letterbox.
+- Verified: 616 units, three smoke cases, captures at 1440×800 + 1680×1250
+  (the tall case) + light.
+
+### 2026-08-10 (later) — The owner's unit board replaces the switchboard's composition (ADR-070 U2)
+
+**U1 misread the ask and lasted one day.** The owner had supplied their own
+unit mockup; U1 kept the switchboard's skeleton and decluttered it, and the
+owner's verdict ("what you've created is just nothing") forced the real
+pass hours later. Cycle A rows 1, 2, 6 — ADR-070 gains Update 2 with the
+reversal on record; proof.md's section is rewritten as §The unit board;
+CLAUDE.md follows.
+
+- **The mockup's composition installed whole**: one lit card carrying THE
+  BAR (new optional `bar` prop on the Cartridge primitive), the owner
+  joined by a measured DECIDES ALONE dimension, three question-headed
+  nodes (the "no question headers" ruling superseded by the owner's own
+  mockup), gutter traces + fan, quiet ornament. Gate, nibs, six housings,
+  multi-conductor ribbons and the substrate bars all deleted from this
+  reading; the caption alone counts shapes.
+- **The adaptation, not the transcription, is the work**: stacked rows
+  where the mockup's halves cannot hold the record's 26-char worst,
+  tracking cut where the person-led seat overruns, the readout forced to
+  11.5 by the outranking guard, the bar wrapped on the card, MODEL and
+  CONNECTORS as the owner's k-labels, new `--pda-gph*` blue in both theme
+  files.
+- **The durable lesson (also in memory): when the owner supplies a mockup,
+  the mockup IS the composition.** "Not verbatim" licenses adapting
+  strings, measures, guards and shared chrome — never substituting a
+  different drawing.
+- Verified: 618 units green (fit walk of all 27 at the one-line measures;
+  `CORE_RECT` byte-identical), three smoke cases incl. the light walk
+  measuring the new blue, headed captures both viewports both themes.
+  Two more capture-only catches: the hatch band through the value's
+  descenders, and nothing else — the emptier board leaves fewer places to
+  collide.
+
 ### 2026-08-10 — The switchboard simplified: radial runs, shaped parts, legible tags (ADR-070 U1)
 
 Owner review of the shipped reading-02 drawing against the CP2077 reference

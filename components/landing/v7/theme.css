@@ -655,6 +655,11 @@ html[data-theme="light"] .fl-pda {
   --pda-grn: var(--atreides-light);
   --pda-grnh: #3f5a2e;
   --pda-grn-ink: var(--atreides-light);
+  /* The adjacent domain's blue (ADR-070 U2). The dark side's #93a3cc is a
+     pale slate that vanishes on parchment, so the light step is the same
+     hue taken down to ink depth — text ≥4.5:1, the dashed inset ≥3:1. */
+  --pda-gph: #414e6d;
+  --pda-gph-line: rgba(65, 78, 109, 0.6);
   --pda-sweep: rgba(138, 107, 32, 0.5);
 }
 

@@ -74,6 +74,14 @@
      reason gold is. The provenance hue survives the mode change almost
      unchanged as a MARK; as 9px type on parchment it measured 2.16:1. */
   --pda-grn-ink: #7e9f66;
+  /* THE ADJACENT DOMAIN'S BLUE (ADR-070 U2, the owner's unit mockup) — the
+     graph facts row letters in it and its dashed inset draws in the line
+     step. The city already established blue-grey dashed as the adjacent
+     domain (ADR-062 provenance); this is that device on the console. Both
+     steps re-derive in theme.css for light — an alpha inverts its own
+     meaning across the flip. */
+  --pda-gph: #93a3cc;
+  --pda-gph-line: rgba(111, 127, 168, 0.5);
   --pda-txt3: rgba(var(--dawn-rgb), 0.38);
 
   /* ⚠ THE LIT GLOW IS ADDITIVE, so it only means something on a dark ground.

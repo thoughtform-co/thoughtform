@@ -150,6 +150,7 @@ export function Cartridge({
   work,
   k = 1,
   sel = false,
+  bar,
 }: {
   x: number;
   y: number;
@@ -160,6 +161,15 @@ export function Cartridge({
   k?: number;
   /** The record the reader has open. Lights the cut edge, nothing else. */
   sel?: boolean;
+  /**
+   * THE BAR, on the card (ADR-070 U2 — the owner's unit mockup letters the
+   * bar where the small cartridge letters lane · autonomy; the autonomy
+   * moved to the measured DECIDES ALONE dimension beside the card). Absolute
+   * sizes on purpose: the mockup's bar is chrome-small against the title in
+   * every k, so it does NOT ride `CART_TYPE × k`. Reading 01 passes nothing
+   * and renders byte-identical.
+   */
+  bar?: { label: string; lines: readonly string[] };
 }) {
   const nk = 14 * k;
   const [stroke, fill, mark] = CART[state];
@@ -280,27 +290,55 @@ export function Cartridge({
         </text>
       ))}
 
-      <text
-        x={x + 13 * k}
-        y={y + 119 * k}
-        fontSize={CART_TYPE.lane * k}
-        letterSpacing=".16em"
-        fill="var(--pda-txt3)"
-      >
-        {work.lane}
-      </text>
-      {work.configured ? (
-        <text
-          x={x + w - 12 * k}
-          y={y + 119 * k}
-          textAnchor="end"
-          fontSize={CART_TYPE.lane * k}
-          letterSpacing=".16em"
-          fill="var(--pda-txt3)"
-        >
-          {work.autonomy}
-        </text>
-      ) : null}
+      {bar ? (
+        <>
+          <text
+            x={x + 13 * k}
+            y={y + 108 * k}
+            fontSize="10"
+            letterSpacing=".22em"
+            fill="var(--pda-txt3)"
+          >
+            {bar.label}
+          </text>
+          {bar.lines.map((line, i) => (
+            <text
+              key={i}
+              x={x + 13 * k}
+              y={y + 119 * k + i * 17}
+              fontSize="10"
+              letterSpacing=".08em"
+              fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
+            >
+              {line}
+            </text>
+          ))}
+        </>
+      ) : (
+        <>
+          <text
+            x={x + 13 * k}
+            y={y + 119 * k}
+            fontSize={CART_TYPE.lane * k}
+            letterSpacing=".16em"
+            fill="var(--pda-txt3)"
+          >
+            {work.lane}
+          </text>
+          {work.configured ? (
+            <text
+              x={x + w - 12 * k}
+              y={y + 119 * k}
+              textAnchor="end"
+              fontSize={CART_TYPE.lane * k}
+              letterSpacing=".16em"
+              fill="var(--pda-txt3)"
+            >
+              {work.autonomy}
+            </text>
+          ) : null}
+        </>
+      )}
     </>
   );
 }

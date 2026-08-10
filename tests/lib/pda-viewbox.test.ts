@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  CONFIG_MAX_BARS,
   configSpecWidth,
   configurationLettering,
-  drawnShapes,
-  substrateReach,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import { VIEW_BOX } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import {
@@ -16,9 +13,7 @@ import {
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
 import {
   PDA_SHOWN,
-  type PdaShape,
   type PdaWork,
-  crossing,
   toPdaWork,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import type { CaseMapDistrict, CaseMapWork } from "@/lib/cases/types";
@@ -70,24 +65,17 @@ function allWorks(): PdaWork[] {
   );
 }
 
-/** The five shapes with their derived counts — what reading 02 draws bars
- *  from, and the same projection `PdaConsole` hands it. */
-function allShapes(): readonly PdaShape[] {
-  const v = mapVisual();
-  return crossing(v.shapes, v.districts, v.works, []).shapes;
-}
-
 describe("the readings' crops", () => {
   /* Declared extents, from each view's own geometry. 01 is the 4x5 grid
      (`GX`/`GY` + the 176x136 cartridge); 03 from its top rule to the bottom
      section label. */
   const CONTENT = {
     1: { x: 12, y: 22, right: 12 + 3 * 192 + 176, bottom: 22 + 4 * 158 + 136 },
-    /* 02 is the SWITCHBOARD since 2026-08-09. Its lettered content spans the
-       chrome's own left edge to the right-aligned chrome, and from the top
-       chrome's line box down through the readout's. The ghost ribbons run off
-       all four edges DELIBERATELY and are not content. */
-    2: { x: 60, y: 28, right: 962, bottom: 755 },
+    /* 02 is the owner's unit board, PORTRAIT since ADR-070 U4. Content runs
+       from the chrome's own left edge (40) and the left node (36) across to
+       the right node's outer wall (864), and from the chrome's line box down
+       through the base node's floor (990). */
+    2: { x: 36, y: 60, right: 864, bottom: 945 },
     // 03 lost its two section rules 2026-08-06 (owner) — the foot already
     // said it — and the crop tightened from 718 units to 632 behind them.
     3: { x: 10, y: 93, right: 766, bottom: 702 },
@@ -113,16 +101,21 @@ describe("the readings' crops", () => {
     });
   }
 
-  it("reading 02's crop is TIGHT — the type it buys is the whole reason", () => {
-    /* The switchboard is authored in 1000x760 and cropped onto what it draws.
-       At the binding field (603x493, the real console at 1280x720) that is
-       worth 10 % of rendered type over the full authoring box — the difference
-       between this reading sitting on the smoke's 4.3px floor and sitting
-       comfortably above it. */
+  it("reading 02's crop is PORTRAIT — it has to fill a portrait panel", () => {
+    /* ⚠ THE ASPECT IS THE CONTRACT (ADR-070 U4). The console's field is
+       PORTRAIT where this is read (792x948 = 0.835 at a tall window), and
+       `meet` scales by the minimum ratio — so a LANDSCAPE crop is
+       width-bound there and letterboxes the difference as dead panel below
+       the drawing. The old 910x740 (1.23) left 304px of it. Anything at or
+       under ~0.95 fills that field to within a few percent. */
     const b = box(2);
+    expect(b.w / b.h, "reading 02's crop went landscape again").toBeLessThanOrEqual(0.95);
+
+    /* The price of the portrait crop is meet at the SHORT-wide fields, where
+       the drawing is height-bound instead: 603x493 at 1280x720. The drawing's
+       own floor is 10 units, and it still has to clear the smoke's 4.3px. */
     const meet = Math.min(603 / b.w, 493 / b.h);
-    expect(7.5 * meet, "the smallest rung fell under the smoke's floor").toBeGreaterThan(4.6);
-    expect(b.w, "the crop grew back toward the authoring width").toBeLessThanOrEqual(920);
+    expect(10 * meet, "the smallest rung fell under the smoke's floor").toBeGreaterThan(4.6);
   });
 });
 
@@ -166,22 +159,22 @@ describe("the cartridge's type fits its box", () => {
 });
 
 /**
- * READING 02 IS THE SWITCHBOARD (2026-08-09).
+ * READING 02 IS THE OWNER'S UNIT BOARD, PORTRAIT (ADR-070 U4).
  *
  * It declares every string it letters together with the measure that string
  * has to fit (`configurationLettering`), so this guard measures THE DRAWING'S
  * OWN INPUTS rather than re-deriving them — a guard that re-derives cannot
- * notice the drawing pointing at the wrong field. Package values wrap to two
- * lines and a third is declared with a ZERO measure, so a tail the wrapper
- * would slice off fails here loudly instead of vanishing on screen.
+ * notice the drawing pointing at the wrong field. Sub-card values wrap to
+ * three lines and THE BAR to two; the line past each cap is declared with a
+ * ZERO measure, so a tail the wrapper would slice off fails here loudly
+ * instead of vanishing on screen.
  */
 describe("the configuration letters into its boxes", () => {
   it("every string on every stream fits its measure", () => {
-    const shapes = allShapes();
     const works = allWorks();
     expect(works.length).toBeGreaterThanOrEqual(PDA_SHOWN);
     for (const w of works) {
-      const specs = configurationLettering(w, shapes);
+      const specs = configurationLettering(w);
       expect(specs.length, `${w.id} letters nothing`).toBeGreaterThan(20);
       for (const spec of specs) {
         expect(spec.text.length, `${w.id} ${spec.slot} is blank`).toBeGreaterThan(0);
@@ -193,120 +186,87 @@ describe("the configuration letters into its boxes", () => {
     }
   });
 
+  it("no single WORD runs through a sub-card wall", () => {
+    /* ⚠ THE BINDING NUMBER IS A WORD, NOT A STRING — `wrapLines` breaks on
+       spaces only, so a word longer than the measure overflows however well
+       the whole value wraps, and every per-line assertion above still passes
+       because each LINE is short. INTELLIGENCE (12 chars) is the record's
+       longest and it is what fixes the value size at 11 and the node at 228. */
+    for (const w of allWorks()) {
+      for (const spec of configurationLettering(w)) {
+        if (spec.measure === 0) continue;
+        const longest = spec.text.split(" ").reduce((a, b) => (b.length > a.length ? b : a), "");
+        expect(
+          longest.length * spec.fs * (0.6 + spec.track),
+          `${w.id} ${spec.slot}: the word "${longest}" is wider than its ${spec.measure}u box`
+        ).toBeLessThanOrEqual(spec.measure);
+      }
+    }
+  });
+
   it("nothing letters under the drawing's own floor", () => {
-    /* The binding field is 603x493 against a 910-wide crop, so the meet is
-       0.663 and 7 units would render 4.64px. The smoke's floor is 4.3, but
-       this reading answers the offer and should not carry the surface's
-       smallest type — so the drawing's own floor is 7.5. */
-    for (const spec of configurationLettering(allWorks()[0], allShapes())) {
-      expect(spec.fs, `${spec.slot} letters at ${spec.fs}`).toBeGreaterThanOrEqual(7.5);
+    /* ⚠ THE FLOOR ROSE TO 10 WITH THE PORTRAIT CROP (ADR-070 U4). At the
+       short-wide field (603x493) a portrait crop is height-bound, so the meet
+       drops to ~0.52 — 7.5 units would render 3.89px and fail the smoke's
+       4.3px floor outright. 10 renders 5.19. */
+    for (const spec of configurationLettering(allWorks()[0])) {
+      expect(spec.fs, `${spec.slot} letters at ${spec.fs}`).toBeGreaterThanOrEqual(10);
     }
   });
 
-  it("the readout outranks the board it explains", () => {
-    // It is the only prose on the reading, and prose loses to nothing here.
-    const specs = configurationLettering(allWorks()[0], allShapes());
-    const readout = specs.find((s) => s.slot === "readout.rest")!.fs;
-    const values = specs.filter((s) => /\.L\d$/.test(s.slot)).map((s) => s.fs);
-    expect(readout).toBeGreaterThan(Math.max(...values));
-  });
-
-  it("the substrate row draws one bar per tap, and never more than it seats", () => {
-    /* ⚠ SLOTS ARE AUTHORED PER COUNT. A stream that tapped a fourth shape
-       would silently lose a bar, so the record's own maximum is pinned here
-       rather than discovered on screen. */
-    const shapes = allShapes();
+  it("no value wants a line past its cap", () => {
+    /* `wrapLines` SLICES at its cap, so a value that wanted one more line
+       would lose its tail silently and every fit assertion above would still
+       pass. The line past the cap is declared with a zero measure for exactly
+       that reason: this is the assertion that sees it. */
     for (const w of allWorks()) {
-      const n = drawnShapes(w, shapes).length;
-      expect(n, `${w.id} taps nothing`).toBeGreaterThanOrEqual(1);
-      expect(n, `${w.id} taps ${n} shapes; the row seats ${CONFIG_MAX_BARS}`).toBeLessThanOrEqual(
-        CONFIG_MAX_BARS
-      );
-      const bars = configurationLettering(w, shapes).filter((s) => s.slot.startsWith("bus."));
-      expect(bars.length, `${w.id} draws ${bars.length} bars for ${n} taps`).toBe(n);
-    }
-  });
-
-  it("the reach caption counts shapes, never the reservoir's Skills", () => {
-    /* Three bars reading 12, 9 and 14 sum to 35, so a caption claiming the
-       estate's 47 beside them would publish two totals a reader can subtract.
-       Reading 03 owns the reservoir; this one owns what the stream reaches. */
-    const shapes = allShapes();
-    for (const w of allWorks()) {
-      const caption = substrateReach(w, shapes);
-      expect(caption).toMatch(/^DRAWS ON [1-3] OF 5 SHAPES$/);
-      expect(caption, "the reservoir total leaked onto reading 02").not.toMatch(/\b47\b/);
-    }
-  });
-
-  it("no package value wants a third line", () => {
-    /* `wrapLines` SLICES at its cap, so a value that wanted three lines would
-       lose its tail silently and every fit assertion above would still pass.
-       The third line is declared with a zero measure for exactly that reason:
-       this is the assertion that sees it. */
-    const shapes = allShapes();
-    for (const w of allWorks()) {
-      for (const spec of configurationLettering(w, shapes)) {
+      for (const spec of configurationLettering(w)) {
         expect(
           spec.measure,
-          `${w.id} ${spec.slot} wants a third line: "${spec.text}"`
+          `${w.id} ${spec.slot} wants a line past the cap: "${spec.text}"`
         ).toBeGreaterThan(0);
       }
     }
   });
 });
 
-describe("the readout holds a whole sentence", () => {
-  it("every rest state and every hover note fits one line", () => {
-    /* One line is the point: a status line that wraps is not a status line,
-       and the substrate row sits directly above it. */
-    const shapes = allShapes();
+describe("what the owner deleted stays deleted", () => {
+  it("no readout, no draw meter, no derived caption", () => {
+    /* ⚠ ADR-070 U3/U4 (owner, quoted at the ADR): the reactive readout
+       sentence, the DRAW PER RUN meter with NEVER A PRICE, and the
+       DRAWS ON n OF m caption are all GONE. The notes stay in the RECORD; the
+       DRAWING declares no slot for any of them. Each returning is a
+       deliberate decision, not a drift. */
     for (const w of allWorks()) {
-      const notes = configurationLettering(w, shapes).filter((s) => s.slot.startsWith("readout."));
-      expect(notes.length, `${w.id} has no readout states`).toBe(5);
-      for (const spec of notes) {
-        expect(
-          configSpecWidth(spec),
-          `${w.id} ${spec.slot}: "${spec.text}" runs past the readout's measure`
-        ).toBeLessThanOrEqual(spec.measure);
-      }
+      const slots = configurationLettering(w).map((s) => s.slot);
+      const texts = configurationLettering(w).map((s) => s.text);
+      expect(
+        slots.some((s) => s.startsWith("readout.")),
+        `${w.id} letters a readout slot`
+      ).toBe(false);
+      expect(
+        texts.some((t) => /DRAW PER RUN|NEVER A PRICE|DRAWS ON/.test(t)),
+        `${w.id} letters a deleted chrome string`
+      ).toBe(false);
     }
-  });
-
-  it("carries what the board could not", () => {
-    /* The strings that drove the split: `k` joined and `evals` cannot be
-       lettered in a 104-unit package at any legible size, so the packages
-       letter ONE element and the readout takes the whole of both. If these
-       ever fit a package, the split is worth revisiting; until then it is
-       arithmetic. */
-    const worst = (pick: (w: PdaWork) => string) =>
-      Math.max(...allWorks().map((w) => pick(w).length));
-    const packageChars = Math.floor(104 / (8 * MONO_ADVANCE));
-    expect(worst((w) => w.cfg.rchNote)).toBeGreaterThan(packageChars);
-    expect(worst((w) => w.cfg.gatNote)).toBeGreaterThan(packageChars);
-    expect(worst((w) => w.cfg.why)).toBeGreaterThan(packageChars);
   });
 });
 
 describe("person-led work answers all four questions", () => {
   it("prints what is not bound rather than emptying out", () => {
     /* The negative space is the reading leadership takes (ADR-062), so a
-       stream with no configuration still fills every package — an empty one
-       would read as a drawing that failed to load — and its bars still draw,
-       because a person-led stream draws on the same shapes by hand. */
-    const shapes = allShapes();
+       stream with no configuration still fills every sub-card — an empty one
+       would read as a drawing that failed to load. */
     const person = allWorks().filter((w) => !w.configured);
     expect(person.length, "the record lost its person-led work").toBe(3);
     for (const w of person) {
-      for (const spec of configurationLettering(w, shapes)) {
+      for (const spec of configurationLettering(w)) {
         expect(spec.text.length, `${w.id} ${spec.slot} is blank`).toBeGreaterThan(0);
         expect(
           configSpecWidth(spec),
           `${w.id} ${spec.slot}: "${spec.text}" runs past its measure`
         ).toBeLessThanOrEqual(spec.measure);
       }
-      expect(drawnShapes(w, shapes).length, `${w.id} draws no substrate`).toBeGreaterThanOrEqual(1);
-      expect(w.cfg.why.length, `${w.id} has no rest state`).toBeGreaterThan(0);
     }
   });
 
