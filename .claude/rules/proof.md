@@ -1313,6 +1313,33 @@ Git history is the archive.
   by naming the model. `m[1]` (`Generate / critique / revise`) is the
   concrete thing the record already holds. `PdaAnswers.laneVerbs` is
   additive — production's reading 02 still letters `laneRun`.
+- ⚠ **`seated` DRAWS ITS OWN CARD (`SeatCard`) RATHER THAN MOUNTING
+  `Cartridge`** (owner, 2026-08-11: the centre card is "very sloppy … the
+  text at the bottom is hugging the bottom border"). `Cartridge` is
+  PRODUCTION's glyph, shared with reading 01's grid of twenty, and its
+  internal offsets are absolute multiples of `k`: at k 2 the title lands at
+  `+184` and its bar block bottoms out **3 units** off the floor with a
+  60-unit void above it. Fixing that inside `Cartridge` re-lays-out the other
+  reading, so the lab draws its own. ⚠ **THE SILHOUETTE IS WHAT MUST NOT
+  MOVE** — ADR-069's flight docks into this rect, so `SeatCard` keeps the box
+  exactly `176×136 × k` with the same `14k` top-left chamfer; only the
+  contents change. The state mark moves INTO the header row (it was floating
+  in a band of its own), the vents are dropped, and every baseline is derived
+  from the card's own top.
+  ⚠ **AND THE CARD'S THREE STRINGS ARE DECLARED NOW.** While the card was
+  `Cartridge`, its team code, stream id and title were lettered by a
+  production glyph and the lab's `lettering()` never saw them — the fit guard
+  was walking a drawing with three invisible labels in it. Any variant that
+  mounts a production glyph inherits that blind spot.
+- **THE BEZEL IS THE SERVICES CARDS' DEVICE, BROUGHT OVER** (owner: "a soft
+  touch, like in our services cards, subtle extra borders around the frame").
+  `ServicesCardRing` bakes its slab with a clear bezel margin plus a hairline
+  on the silhouette; here it is a second chamfered outline inset inside the
+  first, on the card and one step quieter on every node. ⚠ **THE INNER
+  CHAMFER LEG IS NOT `leg − inset`** — a 45° cut offset inward by `d` moves
+  its diagonal by `d√2` along the axes, so the naive value leaves the
+  diagonal visibly closer to the outer edge than the straight runs are, which
+  reads as a mistake rather than as a bezel.
 - ⚠ **`seated` IS ROUND TWO, NOT A PEER OF THE FIRST SEVEN.** The owner picked
   `tight` and gave three notes on it (2026-08-11): the card should be the
   biggest object, WHERE IT RUNS should come closer, and the dashed authority

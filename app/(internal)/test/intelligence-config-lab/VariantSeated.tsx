@@ -1,7 +1,5 @@
 "use client";
 
-import { Cartridge } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
-
 import {
   BarBlock,
   Cell,
@@ -104,24 +102,65 @@ const OWNER_PADY = 17;
  *  140→240 as a buttress that took the eye off the card. */
 const PYL = { y0: OWNER.y + OWNER.h, y1: CHIP.y, splay: 20, topW: 64, botW: 108 } as const;
 
+/* ── The card's own rhythm ──────────────────────────────────────────────
+   ⚠ SEATED DRAWS ITS OWN CARD RATHER THAN MOUNTING `Cartridge`, and that is
+   the only way to answer the owner's read of it (2026-08-11: "very sloppy …
+   the text at the bottom is hugging the bottom border, that is completely
+   unacceptable"). `Cartridge` is PRODUCTION's glyph, shared with reading 01's
+   grid of twenty, and its internal offsets are absolute multiples of `k` — at
+   k 2 the title lands at +184 and the bar block bottoms out 3 units off the
+   floor with a 60-unit void above it. Fixing that inside `Cartridge` would
+   re-lay-out the other reading.
+
+   ⚠ WHAT MUST NOT CHANGE IS THE SILHOUETTE. ADR-069's flight docks the
+   reading-01 cartridge into this rect, so `SeatCard` keeps the box EXACTLY
+   `176×136 × k` and the same top-left chamfer of `14k`. Only the contents
+   move.
+
+   The rhythm, top to bottom: a header row carrying the state mark, the team
+   and the id; a rule; the title; the bar. Every baseline is derived from the
+   card's own top so the block cannot drift onto its floor again. */
+const CARD_PAD = 24;
+const CARD = {
+  gaugeCx: 40,
+  gaugeCy: 34,
+  gaugeR: 13,
+  headBase: 40,
+  rule: 58,
+  titleBase: 116,
+  titleFs: 23,
+  barBase: 168,
+} as const;
+/** 304 units — the worst title in the record (`Candidate screening`, 19) is
+ *  297 at fs 23, so no title on this surface wraps. */
+const CARD_MEASURE = 176 * CHIP_K - CARD_PAD * 2;
+
 const CELL_PAD = 14;
 const CELL_PADY = 10;
 /** 204 units is 20 characters at fs 15 — the record's worst value takes two
  *  lines and `RECONCILIATION` (143u) clears the wall with 60 to spare. */
 const T: CellType = { keyFs: FS.key, valueFs: FS.v, measure: CELL_W - CELL_PAD * 2, cap: 2 };
-const BAR_MEASURE = CHIP.w - 26;
-/**
- * ⚠ THE BAR SITS IN A WINDOW ~8 UNITS WIDE, SO IT IS DERIVED FROM THE CARD
- * RATHER THAN TYPED. Above: the cartridge title letters 23 at k 2 with its
- * baseline at `CHIP.y + 184`, and the bar label has to clear its descenders.
- * Below: two lines plus a descender have to clear the card floor. At a
- * 15-unit bar that window was EMPTY and the capture caught the collision
- * (CAMPAIGN COPY × THE BAR); at 14 — the same rung as the key above it — it
- * reopens. Offsetting from `CHIP.y` is what stops it drifting shut the next
- * time the card moves.
- */
+const BAR_MEASURE = CARD_MEASURE;
 const BAR_FS = FS.key;
-const BAR_Y = CHIP.y + 206;
+
+/**
+ * THE BEZEL — the services cards' own device, brought over.
+ *
+ * `ServicesCardRing` bakes its slab with "a clear bezel margin around the
+ * content" plus a hairline on the silhouette (its `glint`), and that is the
+ * "subtle extra border" the owner asked for. Here it is a second chamfered
+ * outline inset inside the first, at low opacity.
+ *
+ * ⚠ THE INNER CHAMFER LEG IS NOT `leg − inset`. A 45° cut offset inward by
+ * `d` moves its diagonal by `d√2` along the axes, not by `d` — using the
+ * naive value leaves the diagonal visibly closer to the outer edge than the
+ * straight runs are, which is exactly the kind of not-quite-parallel that
+ * reads as a mistake rather than a bezel.
+ */
+const bezel = (x: number, y: number, w: number, h: number, d: number, leg: number) => {
+  const inner = leg - d * (Math.SQRT2 - 1);
+  return `M${x + d + inner},${y + d} H${x + w - d} V${y + h - d} H${x + d} V${y + d + inner} Z`;
+};
 
 export function seatedLettering(
   pda: IclVariantProps["pda"],
@@ -167,8 +206,114 @@ export function seatedLettering(
     ...groupSpecs("seated.runs", runs, FS.q, q, T),
     ...groupSpecs("seated.rch", rch, FS.q, q, T),
     ...groupSpecs("seated.whr", whr, FS.q, BASE_W - 36, T),
+    /* ⚠ THE CARD'S OWN THREE STRINGS ARE DECLARED HERE NOW. While the card
+       was `Cartridge`, its team code, stream id and title were lettered by a
+       production glyph and this variant's declaration never saw them — so the
+       lab's fit guard was walking a drawing with three invisible labels in it.
+       Drawing the card locally makes them this variant's responsibility. */
+    { slot: "seated.card.team", text: pda.teamAb, fs: FS.key, track: 0.2, measure: 120 },
+    { slot: "seated.card.id", text: pda.id, fs: FS.key, track: 0.16, measure: 120 },
+    {
+      slot: "seated.card.title",
+      text: pda.title,
+      fs: CARD.titleFs,
+      track: TRACK.v,
+      measure: CARD_MEASURE,
+    },
     ...barSpecs("seated.bar", pda.cfg.bar, BAR_FS, BAR_MEASURE),
   ];
+}
+
+/**
+ * The work, drawn on the cartridge's silhouette with the cartridge's contents
+ * laid out properly. The gauge is the state mark ADR-062 needs — a filled
+ * square where a configuration is on record, a cross where the work is
+ * deliberately person-led — and it moves INTO the header row rather than
+ * floating in a band of its own, which is what left the old card with a void
+ * above its title and its bar against the floor.
+ *
+ * ⚠ THE VENTS ARE DROPPED. They are `Cartridge`'s ornament and at k 2 they
+ * were three diagonal strokes in the middle of the card's clearest space.
+ */
+function SeatCard({ work, led }: { work: IclVariantProps["pda"]; led: boolean }) {
+  const stroke = led ? "var(--pda-txt3)" : "var(--pda-hot)";
+  const ink = led ? "var(--pda-txt3)" : "var(--pda-txt)";
+  const n = 14 * CHIP_K;
+  const gx = CHIP.x + CARD.gaugeCx;
+  const gy = CHIP.y + CARD.gaugeCy;
+  const r = CARD.gaugeR;
+  return (
+    <g>
+      <path
+        d={`M${CHIP.x + n},${CHIP.y} H${CHIP.x + CHIP.w} V${CHIP.y + CHIP.h} H${CHIP.x} V${CHIP.y + n} Z`}
+        fill={led ? "rgba(var(--dawn-rgb), 0.04)" : "rgba(240, 200, 106, 0.10)"}
+        stroke={stroke}
+        strokeDasharray={led ? "5 4" : undefined}
+      />
+      <path
+        d={bezel(CHIP.x, CHIP.y, CHIP.w, CHIP.h, 9, n)}
+        fill="none"
+        stroke={stroke}
+        opacity="0.3"
+      />
+
+      {/* The state mark, in the header row where it belongs. */}
+      <circle cx={gx} cy={gy} r={r} fill="none" stroke={stroke} strokeWidth="1.6" />
+      {led ? (
+        <g stroke={stroke} strokeWidth="1.6">
+          <line x1={gx - r * 0.5} y1={gy - r * 0.5} x2={gx + r * 0.5} y2={gy + r * 0.5} />
+          <line x1={gx + r * 0.5} y1={gy - r * 0.5} x2={gx - r * 0.5} y2={gy + r * 0.5} />
+        </g>
+      ) : (
+        <rect x={gx - 6} y={gy - 6} width={12} height={12} fill={stroke} />
+      )}
+
+      <text
+        x={gx + r + 12}
+        y={CHIP.y + CARD.headBase}
+        fontSize={FS.key}
+        letterSpacing=".2em"
+        fill="var(--pda-txt3)"
+      >
+        {work.teamAb}
+      </text>
+      <text
+        x={CHIP.x + CHIP.w - CARD_PAD}
+        y={CHIP.y + CARD.headBase}
+        textAnchor="end"
+        fontSize={FS.key}
+        letterSpacing=".16em"
+        fill={led ? "var(--pda-txt3)" : "var(--pda-hot)"}
+      >
+        {work.id}
+      </text>
+      <line
+        x1={CHIP.x + CARD_PAD}
+        y1={CHIP.y + CARD.rule}
+        x2={CHIP.x + CHIP.w - CARD_PAD}
+        y2={CHIP.y + CARD.rule}
+        stroke="var(--pda-hair2)"
+      />
+
+      <text
+        x={CHIP.x + CARD_PAD}
+        y={CHIP.y + CARD.titleBase}
+        fontSize={CARD.titleFs}
+        letterSpacing=".08em"
+        fill={ink}
+      >
+        {work.title}
+      </text>
+      <BarBlock
+        x={CHIP.x + CARD_PAD}
+        y={CHIP.y + CARD.barBase}
+        measure={BAR_MEASURE}
+        bar={work.cfg.bar}
+        fs={BAR_FS}
+        led={led}
+      />
+    </g>
+  );
 }
 
 export function VariantSeated({ pda }: IclVariantProps) {
@@ -192,6 +337,14 @@ export function VariantSeated({ pda }: IclVariantProps) {
           fill="var(--pda-void)"
           stroke={led ? "var(--pda-txt3)" : "var(--pda-amb)"}
           strokeDasharray={led ? "5 4" : undefined}
+        />
+        {/* The same bezel the card carries, one step quieter — the device is
+            only a device if every frame on the board shares it. */}
+        <path
+          d={bezel(x, y, w, h, 7, 14)}
+          fill="none"
+          stroke={led ? "var(--pda-txt3)" : "var(--pda-amb)"}
+          opacity="0.22"
         />
         <QLabel x={x + 20} y={y + 26} text={g.q} />
         <line x1={x + 1} y1={y + 42} x2={x + w - 1} y2={y + 42} stroke="var(--pda-hair2)" />
@@ -296,29 +449,7 @@ export function VariantSeated({ pda }: IclVariantProps) {
       {node(RIGHT_X, NODE_Y, NODE_W, NODE_H, 1, true)}
       {node(BASE_X, BASE_Y, BASE_W, BASE_H, 2, false)}
 
-      {/* ⚠ EMPTY `bar` PROP ON PURPOSE — it is what suppresses the
-          cartridge's native lane/autonomy row (omitting it prints the
-          autonomy a second time), while its own bar block is hardcoded at
-          `fontSize="10"` UNSCALED and cannot be made legible. The bar is
-          drawn below at the same 15 every other answer uses. */}
-      <Cartridge
-        x={CHIP.x}
-        y={CHIP.y}
-        w={CHIP.w}
-        h={CHIP.h}
-        state={led ? "led" : "hot"}
-        work={pda}
-        k={CHIP_K}
-        bar={{ label: "", lines: [] }}
-      />
-      <BarBlock
-        x={CHIP.x + 13 * CHIP_K}
-        y={BAR_Y}
-        measure={BAR_MEASURE}
-        bar={pda.cfg.bar}
-        fs={BAR_FS}
-        led={led}
-      />
+      <SeatCard work={pda} led={led} />
     </>
   );
 }
