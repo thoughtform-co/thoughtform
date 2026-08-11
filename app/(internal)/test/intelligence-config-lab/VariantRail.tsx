@@ -47,9 +47,12 @@ const CHIP = { x: 318, y: 200, w: 264, h: 204 } as const;
 const CHIP_R = CHIP.x + CHIP.w;
 const CHIP_B = CHIP.y + CHIP.h;
 
-/** The rail's own edge, and the field that starts after it. */
-const RAIL_X = 205;
-const FIELD_X = 225;
+/** The rail's own edge, and the field that starts after it.
+ *  ⚠ 240, not 205: at the owner's 13-unit key rung `KNOWLEDGE GRAPH` letters
+ *  159.9u, and a right-aligned key in a 145-wide rail ran off the board's
+ *  own inset. The rail is the one thing here that cannot be narrow. */
+const RAIL_X = 240;
+const FIELD_X = 260;
 const KEY_MEASURE = RAIL_X - BOARD.x0;
 const VAL_MEASURE = BOARD.x1 - FIELD_X;
 
@@ -70,8 +73,8 @@ export function railLettering(
   const specs: LetterSpec[] = [
     ...ownerSpecs("rail.owner", pda, {
       ownerFs: FS.owner,
-      measure: 300,
-      autoMeasure: 118,
+      measure: 280,
+      autoMeasure: 145,
       noteMeasure: OWNER.w - 40,
     }),
     ...barSpecs("rail.bar", pda.cfg.bar, FS.bar, BAR_MEASURE),
@@ -88,7 +91,7 @@ export function railLettering(
       specs.push({
         slot: `rail.${g.part}.${cell.key}.k`,
         text: cell.key,
-        fs: 11,
+        fs: FS.key,
         track: TRACK.key,
         measure: KEY_MEASURE,
       });

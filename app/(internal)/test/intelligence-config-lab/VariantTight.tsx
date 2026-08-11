@@ -29,14 +29,21 @@ import { type IclRecord, type IclVariantProps, type LetterSpec } from "./variant
  * cell height and the type ladder, so this variant answers the one question
  * the others cannot: how much of "cramped" was never layout at all.
  *
- * Sub-cards 158 → 94 (content height, two lines of 16), the question demoted
- * 14 → 11, the key 11 → 10, the value 11.5 → 16. The freed 128 units per side
- * node go to the drop, which is the cable the owner asked to keep.
+ * Sub-cards 158 → 94 (content height), the question 14 → 13, the key 11 → 13
+ * and the value 11.5 → 15. The freed 128 units per side node go to the drop,
+ * which is the cable the owner asked to keep.
  *
- * The owner plate widens 400 → 480 for one arithmetic reason: at fs 17 the
- * worst seat (`THE PERSON DOES THE WORK`, 24 chars) letters 277u, and inside
- * a 400 plate that meets `DECIDES ALONE`'s right column at 523. The columns
- * cannot meet — so the plate grows rather than the type shrinking.
+ * The owner plate widens 400 → 480 for one arithmetic reason: the worst seat
+ * (`THE PERSON DOES THE WORK`, 24 chars) letters 261u, and inside a 400 plate
+ * that meets `DECIDES ALONE`'s right column. The columns cannot meet — so the
+ * plate grows rather than the type shrinking.
+ *
+ * ⚠ ITS BAR IS STILL ILLEGIBLE, AND ONLY `seated` ESCAPES IT. Every variant
+ * here passes `bar` to `Cartridge`, which hardcodes `fontSize="10"` UNSCALED
+ * — so the bar renders 5.4px at the binding preset whatever `k` is, and it is
+ * what holds this drawing's minPx at 5.4 while `seated` reads 6.5. Fixing it
+ * means drawing the bar outside the cartridge (see `seated`) or adding a
+ * `barFs` prop to `Cartridge` on promotion.
  */
 
 export const TIGHT_VIEWBOX = "36 48 828 912";
@@ -65,9 +72,9 @@ const BASE_Y = BOARD.y1 - BASE_H;
 
 const OWNER = { x: 210, y: 72, w: 480, h: 96 } as const;
 
-/** Pad 12 each side of a 232 cell. At fs 16 that is 19 characters, so the
+/** Pad 12 each side of a 232 cell. At fs 15 that is 20 characters, so the
  *  record's worst value (25) takes two lines and its longest single word
- *  (`RECONCILIATION`, 152u) clears the wall. */
+ *  (`RECONCILIATION`, 143u) clears the wall. */
 const T: CellType = { keyFs: FS.key, valueFs: FS.v, measure: CELL_W - 24, cap: 2 };
 
 const BAR_MEASURE = CHIP.w - 26;
@@ -81,8 +88,8 @@ export function tightLettering(
   return [
     ...ownerSpecs("tight.owner", pda, {
       ownerFs: FS.owner,
-      measure: 300,
-      autoMeasure: 118,
+      measure: 280,
+      autoMeasure: 145,
       noteMeasure: OWNER.w - 40,
     }),
     ...groupSpecs("tight.runs", runs, FS.q, NODE_W - 32, T),

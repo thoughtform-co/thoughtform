@@ -16,6 +16,7 @@ import {
   type LetterSpec,
   specWidth,
 } from "@/app/(internal)/test/intelligence-config-lab/variants";
+import { FS_FLOOR } from "@/app/(internal)/test/intelligence-config-lab/configKit";
 
 /**
  * THE CONFIG LAB'S FIT + ENVELOPE GUARD.
@@ -114,16 +115,20 @@ describe("intelligence-config lab · fit", () => {
     }
   });
 
-  it("nothing letters under the production crop's own floor", () => {
-    /* ⚠ 10, NOT THE ARCHETYPES' 7.5. These seven draw in the PRODUCTION crop
-       (828 × 912, portrait), whose meet at the binding lab preset is 0.540 —
-       so 7.5 renders 4.05px against the capture gate's 4.3 floor, and 10
-       renders 5.4. The old rung was legal in a 1000-wide landscape crop and
-       is not legal here. */
+  it("nothing letters under the floor the owner set", () => {
+    /* ⚠ 12, AND IT IS AN OWNER RULING, NOT A ROUND NUMBER (2026-08-11). The
+       first round put the cell keys at 10 on the CP2077 tooltip's ~3×
+       label:value ratio — but that ratio was read off a panel rendered 1:1,
+       and here 10 authoring units is 5.4px at the binding preset and 8.3px at
+       1920, under the 8.5px chrome floor ADR-063 already records as this
+       surface's standing defect. The verdict on SKILL / MODEL / AGENT /
+       KNOWLEDGE GRAPH was "utterly illegible". A label nobody can read is not
+       a quiet label, it is an absent one. */
     for (const { variant, workId, spec } of allSpecs()) {
-      expect(spec.fs >= 10, `${variant} · ${workId} · ${spec.slot} letters at ${spec.fs}`).toBe(
-        true
-      );
+      expect(
+        spec.fs >= FS_FLOOR,
+        `${variant} · ${workId} · ${spec.slot} letters at ${spec.fs}, under the ${FS_FLOOR} floor`
+      ).toBe(true);
     }
   });
 });

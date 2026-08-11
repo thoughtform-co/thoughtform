@@ -1,12 +1,10 @@
 "use client";
 
-import {
-  Cartridge,
-  wrapLines,
-} from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
+import { Cartridge } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
 
 import {
   BOARD,
+  BarBlock,
   Cell,
   FS,
   type CellType,
@@ -14,7 +12,6 @@ import {
   OwnerPlate,
   QLabel,
   barSpecs,
-  charsFor,
   groupSpecs,
   groupsOf,
   ownerSpecs,
@@ -94,40 +91,51 @@ const NODE_Y = CHIP_CY - NODE_H / 2;
 const BASE_X = BOARD.mid - BASE_W / 2;
 const BASE_Y = 720;
 
-const OWNER = { x: 210, y: 160, w: 480, h: 110 } as const;
+const OWNER = { x: 210, y: 160, w: 480, h: 100 } as const;
 
 /**
- * The pylon: 70 units of structure between the plate's floor and the card's
- * ceiling, splaying from 140 to 240 so it reads as BEARING rather than
- * joining. ⚠ Its mass is the whole point — the first cut was 110→170 over 60
- * units and rendered as a small dark tab, which is the dashed hairline's
- * failure again in a different shape. A member that carries a plate has to
- * look like it could.
+ * The pylon — a NECK, not a buttress (owner, 2026-08-11: "make the creative
+ * lead card a bit more subtle; especially how it connects").
+ *
+ * ⚠ THIS SIZE IS THE THIRD ATTEMPT AND THE RANGE IS NOW KNOWN. 110→170 over
+ * 60 units read as a small dark tab — the dashed hairline's failure in a new
+ * shape. 140→240 read as a buttress and took the eye off the card, which is
+ * the thing the whole variant exists to make dominant. 64→108 with a shallow
+ * splay is the band between them: unmissable as a connection, quiet as an
+ * object. The fill drops with it (0.17 → 0.07) and the web lines go — at this
+ * width they were two hairlines inside a 64-unit box, which is clutter.
  */
 const PYL = {
   y0: OWNER.y + OWNER.h,
   y1: CHIP.y,
-  splay: 34,
-  topW: 140,
-  botW: 240,
+  splay: 20,
+  topW: 64,
+  botW: 108,
 } as const;
 
 /**
- * ⚠ THE PADDING IS 10, NOT 12, AND THE GUARD IS WHY. A bigger subject leaves
- * the side cells 197 wide; at the house pad of 12 the measure is 173, which
- * is 15 characters at fs 16 — and `BUDGET + COMMITMENT FACTS` (W-049) then
- * wraps to THREE lines, the third sliced off silently. Two units of padding
- * each side buys the sixteenth character (`COMMITMENT FACTS` is exactly 16),
- * which is the cheapest of the three ways out: the alternatives were
- * shrinking the card the owner asked to make biggest, or dropping the answer
- * to fs 15 after asking for it bigger. Padding is the one term nobody reads.
+ * The house pad, and it is back to 12 for a reason worth recording: this
+ * variant briefly ran at 10 because `BUDGET + COMMITMENT FACTS` (W-049)
+ * wrapped to a silently-sliced third line in a 173-unit measure at the old
+ * fs 16. When the owner's legibility ruling brought the ANSWER down to 15,
+ * the same measure became 16 characters and the workaround evaporated —
+ * `COMMITMENT FACTS` is exactly 16. A constant nudged to dodge one string is
+ * always worth re-testing after the thing that caused it moves.
  */
-const CELL_PAD = 10;
+const CELL_PAD = 12;
 const T: CellType = { keyFs: FS.key, valueFs: FS.v, measure: CELL_W - CELL_PAD * 2, cap: 2 };
-/** The base's own measure — 19 characters at fs 16, which is what puts every
+/** The base's own measure — 20 characters at fs 15, which is what puts every
  *  interface in the record on one line. */
 const TB: CellType = { keyFs: FS.key, valueFs: FS.v, measure: BASE_CELL_W - CELL_PAD * 2, cap: 2 };
 const BAR_MEASURE = CHIP.w - 26;
+/**
+ * ⚠ THE BAR'S BASELINE IS BOXED BETWEEN TWO THINGS. The cartridge's title
+ * letters 21.6 with its baseline at `y + 92k` = 512.5, so its descenders
+ * reach ~517; a 13-unit label's cap top must clear that, which floors this at
+ * ~527. And two lines at fs 12 bottom out 52 below it, which against the
+ * card's floor of 595 ceilings it at ~540. 534 is the middle of that band.
+ */
+const BAR_Y = 534;
 
 export function seatedLettering(
   pda: IclVariantProps["pda"],
@@ -138,8 +146,8 @@ export function seatedLettering(
   return [
     ...ownerSpecs("seated.owner", pda, {
       ownerFs: FS.owner,
-      measure: 300,
-      autoMeasure: 118,
+      measure: 280,
+      autoMeasure: 145,
       noteMeasure: OWNER.w - 40,
     }),
     ...groupSpecs("seated.runs", runs, FS.q, NODE_W - 32, T),
@@ -154,7 +162,6 @@ export function VariantSeated({ pda }: IclVariantProps) {
   const [runs, rch, whr] = groupsOf(pda);
   const wire = led ? "var(--pda-txt3)" : "var(--pda-amb)";
   const green = led ? "var(--pda-txt3)" : "var(--pda-grn)";
-  const barLines = wrapLines(pda.cfg.bar, charsFor(BAR_MEASURE, FS.bar));
 
   const l0 = BOARD.mid - PYL.topW / 2;
   const r0 = BOARD.mid + PYL.topW / 2;
@@ -212,19 +219,15 @@ export function VariantSeated({ pda }: IclVariantProps) {
       <g>
         <path
           d={`M${l0},${PYL.y0} H${r0} L${r1},${ys} V${PYL.y1} H${l1} V${ys} Z`}
-          fill={led ? "rgba(255, 255, 255, 0.04)" : "rgba(126, 159, 102, 0.17)"}
+          fill={led ? "rgba(255, 255, 255, 0.025)" : "rgba(126, 159, 102, 0.07)"}
           stroke={green}
           strokeDasharray={led ? "5 4" : undefined}
         />
-        <g stroke={green} opacity="0.45">
-          <line x1={BOARD.mid - 28} y1={PYL.y0 + 10} x2={BOARD.mid - 28} y2={PYL.y1 - 8} />
-          <line x1={BOARD.mid + 28} y1={PYL.y0 + 10} x2={BOARD.mid + 28} y2={PYL.y1 - 8} />
-        </g>
         {/* The fixings where the member meets the plate — the seam is made,
-            not assumed. */}
-        <g stroke={green} opacity="0.9">
-          <line x1={BOARD.mid - 44} y1={PYL.y0 - 5} x2={BOARD.mid - 44} y2={PYL.y0 + 5} />
-          <line x1={BOARD.mid + 44} y1={PYL.y0 - 5} x2={BOARD.mid + 44} y2={PYL.y0 + 5} />
+            not assumed. Two ticks are the whole detail at this width. */}
+        <g stroke={green} opacity="0.85">
+          <line x1={BOARD.mid - 20} y1={PYL.y0 - 4} x2={BOARD.mid - 20} y2={PYL.y0 + 4} />
+          <line x1={BOARD.mid + 20} y1={PYL.y0 - 4} x2={BOARD.mid + 20} y2={PYL.y0 + 4} />
         </g>
       </g>
 
@@ -271,6 +274,18 @@ export function VariantSeated({ pda }: IclVariantProps) {
       {node(RIGHT_X, NODE_Y, NODE_W, NODE_H, 1, true, CELL_W, T)}
       {node(BASE_X, BASE_Y, BASE_W, BASE_H, 2, false, BASE_CELL_W, TB)}
 
+      {/* ⚠ THE `bar` PROP IS PASSED EMPTY ON PURPOSE, AND THE BAR IS DRAWN
+          BELOW IT. `Cartridge` hardcodes its bar block at `fontSize="10"`
+          UNSCALED — `k` never reaches it — so on a k 1.875 card the title
+          letters 21.6 and the bar letters 10, i.e. 5.4px at the binding
+          preset. That is the same rung the owner just ruled illegible.
+          Passing the prop (rather than omitting it) is what SUPPRESSES the
+          cartridge's native lane/autonomy row; omitting it prints `WIDE` a
+          second time, which is the defect that cost `fused` its third step.
+          An empty label renders an empty `<text>`, which the readout's walk
+          skips — it counts non-empty nodes only.
+          ⚠ On promotion this wants a `barFs` prop on `Cartridge` instead;
+          production passes nothing today, so adding one is additive. */}
       <Cartridge
         x={CHIP.x}
         y={CHIP.y}
@@ -279,7 +294,15 @@ export function VariantSeated({ pda }: IclVariantProps) {
         state={led ? "led" : "hot"}
         work={pda}
         k={CHIP_K}
-        bar={{ label: "THE BAR", lines: barLines }}
+        bar={{ label: "", lines: [] }}
+      />
+      <BarBlock
+        x={CHIP.x + 13 * CHIP_K}
+        y={BAR_Y}
+        measure={BAR_MEASURE}
+        bar={pda.cfg.bar}
+        fs={FS.bar}
+        led={led}
       />
     </>
   );

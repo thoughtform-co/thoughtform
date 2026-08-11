@@ -43,24 +43,43 @@ import { adv, type LetterSpec } from "./variants";
    ⚠ NOTHING LETTERS UNDER 10 on this crop. The archetypes' 7.5 was legal in
    a 1000-wide landscape crop; it is not legal here — 7.5 × 0.540 = 4.05px,
    under the gate. */
+/**
+ * ⚠ **NOTHING LETTERS UNDER 12 (owner, 2026-08-11), AND 10 IS THE THING THAT
+ * WAS WRONG.** The first round put the keys at 10 on the CP2077 tooltip's
+ * ~3× label:value ratio. That ratio is real, but it was read off a panel
+ * rendered at 1:1 — here 10 authoring units is **5.4px** at the binding
+ * preset and **8.3px** at 1920, under the 8.5px chrome floor ADR-063 already
+ * records as this surface's standing defect. The owner's verdict on the keys
+ * — SKILL, MODEL, AGENT, KNOWLEDGE GRAPH — was "utterly illegible", and it
+ * is arithmetic, not taste.
+ *
+ * So the contrast is bought the other way round: the ANSWER comes down and
+ * the KEY comes up, until the ratio fits between a floor of 12 and whatever
+ * the measure affords. A label nobody can read is not a quiet label, it is
+ * an absent one — the same finding ADR-070 U6 made about the seat's dashed
+ * line, one type rung down.
+ */
 export const FS = {
-  /** The question. CHROME — it names the row, it is not the record. */
-  q: 11,
-  /** A cell's key. Tiny and dim, the reference's own ratio. */
-  key: 10,
+  /** The question — chrome, but it still has to be read. */
+  q: 13,
+  /** A cell's key. Dim, never small: this is the rung the owner ruled on. */
+  key: 13,
   /** The answer, where the measure is narrow (a two-line cell). */
-  v: 16,
+  v: 15,
   /** The answer, where the measure is wide enough for one line. */
   vWide: 18,
   /** The answer at its largest — a full-width row with nothing beside it. */
   vHero: 22,
   /** The seat. */
-  owner: 17,
+  owner: 16,
   /** The seat, fused to a card and sharing its measure. */
   ownerTight: 14,
   autonomy: 13,
   bar: 12,
 } as const;
+
+/** The floor the owner set. Asserted by `config-lab-fit`, not just intended. */
+export const FS_FLOOR = 12;
 
 export const TRACK = { key: 0.22, q: 0.14, v: 0.08 } as const;
 

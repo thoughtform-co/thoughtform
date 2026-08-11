@@ -84,13 +84,13 @@ export function satelliteLettering(
     text,
     fs: FS.q,
     track: 0.14,
-    measure: 300,
+    measure: 280,
   });
   return [
     ...ownerSpecs("sat.owner", pda, {
       ownerFs: FS.owner,
-      measure: 300,
-      autoMeasure: 118,
+      measure: 280,
+      autoMeasure: 145,
       noteMeasure: OWNER.w - 40,
     }),
     q("sat.runs.q", runs.q),

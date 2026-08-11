@@ -1239,10 +1239,33 @@ Git history is the archive.
 - ⚠ **AND THE LADDER IS INVERTED.** The shipped question header letters at 14,
   LARGER than the answer at 11.5 — against ADR-069's own words, _"the question
   is chrome, the answer is the record"_. Every variant demotes the question
-  (11) and promotes the answer (16–22); that swap alone is most of the fix.
-  The CP2077 reference runs the same ~3× label:value ratio inside a TIGHT
-  panel (`p2-045`'s `950` beside a tiny `ARMOR`) — hierarchy from size
-  contrast, never from panel size.
+  and promotes the answer; that swap alone is most of the fix.
+- ⚠ **BUT NOTHING LETTERS UNDER 12, AND 10 WAS THE MISTAKE (owner,
+  2026-08-11).** The first round put the keys at 10 on the CP2077 tooltip's
+  ~3× label:value ratio (`p2-045`'s `950` beside a tiny `ARMOR`). The ratio is
+  real, but it was read off a panel rendered 1:1 — here 10 authoring units is
+  **5.4px** at the binding preset and **8.3px** at 1920, under the 8.5px
+  chrome floor ADR-063 already records as this surface's standing defect. The
+  verdict on SKILL / MODEL / AGENT / KNOWLEDGE GRAPH was "utterly illegible",
+  and it is arithmetic rather than taste. So the contrast is bought the other
+  way round — the ANSWER comes down and the KEY comes up: **question 13 · key
+  13 · value 15 (18 where a row is wide, 22 where it is alone) · owner 16**,
+  with `FS_FLOOR = 12` asserted by `config-lab-fit`, not merely intended.
+  **A label nobody can read is not a quiet label, it is an absent one** — the
+  same finding ADR-070 U6 made about the seat's dashed line, one rung down.
+  ⚠ Raising the key rung widens `DECIDES ALONE` to 138.6u, so every owner
+  plate's right column went 118 → 145 and its left 300 → 280; the rail's
+  outboard key column went 145 → 180 or `KNOWLEDGE GRAPH` ran off the board.
+- ⚠ **`Cartridge` HARDCODES ITS BAR AT `fontSize="10"`, UNSCALED — `k` NEVER
+  REACHES IT.** That single block is what holds every variant's minPx at 5.4
+  no matter how big its card is; `seated` is the only one that escapes,
+  because it passes an EMPTY `bar` (which is what suppresses the cartridge's
+  native lane/autonomy row — omitting the prop prints `WIDE` twice, the defect
+  that cost `fused` its third step) and draws its own block at 12. Result:
+  **seated reads 6.5px / 10.0px against every other variant's 5.4 / 8.3**, and
+  is the first drawing on this surface to clear the 8.5px floor. On promotion
+  this wants a `barFs` prop on `Cartridge`; production passes nothing today,
+  so adding one is additive.
 - **The eight** (`variants.ts` + one file each): `shipped` mounts production;
   **tight** (the control — same seats and cables, only cell height and type
   move), **fused** (the seat welded to the card as one stepped object, the
