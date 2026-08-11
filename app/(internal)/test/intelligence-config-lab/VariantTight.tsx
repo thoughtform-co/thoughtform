@@ -88,8 +88,8 @@ export function tightLettering(
   return [
     ...ownerSpecs("tight.owner", pda, {
       ownerFs: FS.owner,
-      measure: 280,
-      autoMeasure: 145,
+      measure: 270,
+      autoMeasure: 160,
       noteMeasure: OWNER.w - 40,
     }),
     ...groupSpecs("tight.runs", runs, FS.q, NODE_W - 32, T),

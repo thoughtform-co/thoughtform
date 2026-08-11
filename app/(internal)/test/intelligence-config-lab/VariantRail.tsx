@@ -73,8 +73,8 @@ export function railLettering(
   const specs: LetterSpec[] = [
     ...ownerSpecs("rail.owner", pda, {
       ownerFs: FS.owner,
-      measure: 280,
-      autoMeasure: 145,
+      measure: 270,
+      autoMeasure: 160,
       noteMeasure: OWNER.w - 40,
     }),
     ...barSpecs("rail.bar", pda.cfg.bar, FS.bar, BAR_MEASURE),
@@ -189,9 +189,9 @@ export function VariantRail({ pda }: IclVariantProps) {
                     x={RAIL_X - 14}
                     y={base}
                     textAnchor="end"
-                    fontSize={11}
+                    fontSize={FS.key}
                     letterSpacing=".22em"
-                    fill="var(--pda-txt2)"
+                    fill="var(--pda-ink)"
                   >
                     {cell.key}
                   </text>

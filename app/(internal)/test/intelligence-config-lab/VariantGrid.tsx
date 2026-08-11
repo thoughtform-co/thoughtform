@@ -70,7 +70,7 @@ export function gridLettering(
       text: "WHO OWNS IT",
       fs: FS.key,
       track: TRACK.key,
-      measure: 280,
+      measure: 270,
     },
     { slot: "grid.owner", text: pda.owner, fs: FS.owner, track: TRACK.v, measure: 300 },
     {
@@ -78,14 +78,14 @@ export function gridLettering(
       text: "DECIDES ALONE",
       fs: FS.key,
       track: TRACK.key,
-      measure: 145,
+      measure: 160,
     },
     {
       slot: "grid.owner.autonomy",
       text: pda.autonomy,
       fs: FS.autonomy,
       track: TRACK.v,
-      measure: 145,
+      measure: 160,
     },
   ];
   if (pda.ownerNote) {

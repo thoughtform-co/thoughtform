@@ -98,9 +98,16 @@ const CELL_PADY = 10;
  *  lines and `RECONCILIATION` (143u) clears the wall with 60 to spare. */
 const T: CellType = { keyFs: FS.key, valueFs: FS.v, measure: CELL_W - CELL_PAD * 2, cap: 2 };
 const BAR_MEASURE = CHIP.w - 26;
-/** Boxed between the cartridge title's descenders (~491) and the card's floor
- *  minus two lines of 15 (~509). */
-const BAR_Y = 505;
+/**
+ * ⚠ THE BAR SITS IN A WINDOW ~6 UNITS WIDE, AND THE KEY RUNG GOING TO 14
+ * CLOSED IT. Above: the cartridge title letters 23 at k 2 with its baseline
+ * at 486, so the bar label has to clear its descenders. Below: two lines
+ * plus a descender have to clear the card floor at 574. At a 15-unit bar the
+ * window was empty and the capture caught the collision (CAMPAIGN COPY ×
+ * THE BAR). At 14 — the same rung as the key above it — it reopens to
+ * [505, 511]. */
+const BAR_FS = FS.key;
+const BAR_Y = 508;
 
 export function seatedLettering(
   pda: IclVariantProps["pda"],
@@ -146,7 +153,7 @@ export function seatedLettering(
     ...groupSpecs("seated.runs", runs, FS.q, q, T),
     ...groupSpecs("seated.rch", rch, FS.q, q, T),
     ...groupSpecs("seated.whr", whr, FS.q, BASE_W - 36, T),
-    ...barSpecs("seated.bar", pda.cfg.bar, FS.v, BAR_MEASURE),
+    ...barSpecs("seated.bar", pda.cfg.bar, BAR_FS, BAR_MEASURE),
   ];
 }
 
@@ -172,7 +179,7 @@ export function VariantSeated({ pda }: IclVariantProps) {
           stroke={led ? "var(--pda-txt3)" : "var(--pda-amb)"}
           strokeDasharray={led ? "5 4" : undefined}
         />
-        <QLabel x={x + 20} y={y + 34} text={g.q} />
+        <QLabel x={x + 20} y={y + 26} text={g.q} />
         <line x1={x + 1} y1={y + 42} x2={x + w - 1} y2={y + 42} stroke="var(--pda-hair2)" />
         {g.cells.map((c, i) => (
           <Cell
@@ -295,7 +302,7 @@ export function VariantSeated({ pda }: IclVariantProps) {
         y={BAR_Y}
         measure={BAR_MEASURE}
         bar={pda.cfg.bar}
-        fs={FS.v}
+        fs={BAR_FS}
         led={led}
       />
     </>

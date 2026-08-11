@@ -85,8 +85,8 @@ export function fusedLettering(
   return [
     ...ownerSpecs("fused.owner", pda, {
       ownerFs: FS.owner,
-      measure: 280,
-      autoMeasure: 145,
+      measure: 270,
+      autoMeasure: 160,
       noteMeasure: COLLAR.w - 40,
     }),
     ...groupSpecs("fused.runs", runs, FS.q, NODE_W - 32, T),

@@ -58,8 +58,10 @@ import { adv, type LetterSpec } from "./variants";
 export const FS = {
   /** The question — chrome, but it still has to be read. */
   q: 13,
-  /** A cell's key. Dim, never small: this is the rung the owner ruled on. */
-  key: 13,
+  /** A cell's key — Tensor gold, and one step up from the question it
+   *  sits under (owner, 2026-08-11: "the things we've changed to Tensor
+   *  Gold, we can make it a bit bigger"). */
+  key: 14,
   /** The answer, where the measure is narrow (a two-line cell). */
   v: 15,
   /** The answer, where the measure is wide enough for one line. */
@@ -592,6 +594,7 @@ export function QLabel({
         y={y}
         textAnchor={align === "end" ? "end" : undefined}
         fontSize={FS.q}
+        fontWeight={700}
         letterSpacing=".14em"
         fill="var(--pda-txt)"
       >

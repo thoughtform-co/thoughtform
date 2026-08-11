@@ -74,8 +74,8 @@ export function bandsLettering(
   return [
     ...ownerSpecs("bands.owner", pda, {
       ownerFs: FS.owner,
-      measure: 280,
-      autoMeasure: 145,
+      measure: 270,
+      autoMeasure: 160,
       noteMeasure: OWNER.w - 40,
     }),
     ...groups.flatMap((g) => groupSpecs(`bands.${g.part}`, g, FS.q, 360, T)),

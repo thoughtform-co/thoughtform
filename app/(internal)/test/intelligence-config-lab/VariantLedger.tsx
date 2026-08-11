@@ -100,10 +100,14 @@ export function ledgerLettering(
     ...barSpecs("ledger.bar", pda.cfg.bar, FS.bar, BAR_MEASURE),
   ];
   if (pda.ownerNote) {
+    /* ⚠ The note takes the BAR rung here, not the key rung. Ledger's left
+       column is 320 wide, so its measure is 280 — and the worst note
+       ("SETS THE BAR / OWNS FINAL TASTE", 31 chars) is 295u at fs 14. It is a
+       gloss on the seat rather than a key, and 12 is still the owner's floor. */
     specs.push({
       slot: "ledger.owner.note",
       text: pda.ownerNote,
-      fs: FS.key,
+      fs: FS.bar,
       track: TRACK.v,
       measure: OWNER_MEASURE,
     });
@@ -163,7 +167,7 @@ export function VariantLedger({ pda }: IclVariantProps) {
           <text
             x={OWNER.x + 20}
             y={OWNER.y + 38 + lineBox(FS.owner) + lineBox(FS.key)}
-            fontSize={FS.key}
+            fontSize={FS.bar}
             letterSpacing=".08em"
             fill="var(--pda-txt2)"
           >
