@@ -917,6 +917,12 @@ describe("cases registry (ADR-054)", () => {
       if (w.cfg) {
         strings.push(...w.cfg.p, ...w.cfg.s, ...w.cfg.m, ...w.cfg.c, ...w.cfg.g);
         strings.push(...w.cfg.k, ...w.cfg.u, w.cfg.o, w.cfg.why);
+        // ⚠ THE AGENT IS THE FIELD MOST LIKELY TO NAME A VENDOR, because the
+        // honest answer to "what runs it" often IS a product. Reading 02
+        // letters it, so it goes in the blob — the MODEL_FAMILIES pattern
+        // below is what keeps the run mode generic and the lane (`m`) the
+        // only place model class is answered.
+        strings.push(w.cfg.a);
       }
     }
     const blob = strings.join(" | ");

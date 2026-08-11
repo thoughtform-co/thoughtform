@@ -587,3 +587,91 @@ keeps the ≤40-unit waste guard satisfied (content 72…945 against a 912 crop,
 `npm run verify` 615 green, the three casefile smoke cases green, headed
 captures at 1780×1270 dark + light — 26 labels (from 28), meet 1.013, minPx
 10.13, 0 clipped.
+
+---
+
+## Update 9 — the three questions are re-slotted (2026-08-11, owner)
+
+_"WHAT IT CAN REACH — knowledge graph & connectors (MCP/API). WHERE IT RUNS
+— Agent & Interface."_ Then, asked how the four should seat: _"WHAT RUNS IT
+has Skill & Model. What it inherits we remove and replace with WHERE IT RUNS.
+What it can reach gets adapted to Knowledge Graph & Connectors."_
+
+**THE GEOMETRY DOES NOT MOVE.** Not one constant changed — same crop, same
+inset chain, same `SUB_H`, same `CORE_RECT`, same bundles. Only what each
+node ANSWERS:
+
+| node              | seat | was                   | is                           |
+| ----------------- | ---- | --------------------- | ---------------------------- |
+| WHAT RUNS IT      | west | Skill / Model         | Skill / Model — unchanged    |
+| WHAT IT CAN REACH | east | Connectors / Surfaces | Knowledge graph / Connectors |
+| WHERE IT RUNS     | base | _WHAT IT INHERITS_    | Agent / Interface            |
+
+### Two slots were wrong, and the drawing could not show it
+
+This is not a restyle of three right answers — it is a correction of two:
+
+- **A GRAPH IS REACHED, NOT INHERITED.** A knowledge graph is queried on
+  request through an MCP/API connector. CONTEXT is what the stream carries
+  in _before it asks anything_. Inheriting and reaching are different verbs,
+  and the graph was filed under the wrong one.
+- **AN INTERFACE IS WHERE A PERSON MEETS THE WORK**, not something the work
+  reaches. `u` sat beside the systems the stream acts on, which put a human
+  surface on the machine's side of the boundary.
+
+Consequently the graph leads its node and the connector follows: the graph
+is what the stream reaches FOR, the connector is the wire it reaches
+THROUGH. Drawing them in the other order made the wire the subject.
+
+### The agent had no source, and the fallback could not be a product
+
+Nothing in `CaseMapConfiguration` answered "agent" — all 24 authored `u`
+values are interfaces, so there was nothing to split. The field is new:
+`a: string`, authored per stream.
+
+⚠ **A SINGLE STRING, DELIBERATELY**, while every neighbour is a
+`[name, note]` pair. U7 is what a spare half costs — `p[1]` went unlettered
+on four consecutive drawings because nothing asked where it had gone. This
+one letters its name with no readout behind it, so there is no second half
+to strand.
+
+⚠ **`CLAUDE APP` CANNOT SHIP, AND THAT IS A GUARD, NOT A PREFERENCE.** The
+owner's chosen fallback was "Claude app"; `cases-registry`'s `MODEL_FAMILIES`
+pattern includes `claude`, and the map's envelope is stricter than the
+casefile's by design — the LANE (`m`) is the one place model class is
+answered, generically. So the non-tool vocabulary is run MODE:
+`Chat assistant` · `Scheduled agent` · `Editor plugin` · `Coding agent`.
+Tool CODENAMES stay in scope (published precedent: `PROJECT_CASES`, row 02
+of this same casefile), so Mímir and Vesper letter by name. The registry
+test now scans `cfg.a` — it is the field most likely to name a vendor,
+because the honest answer to "what runs it" often IS a product.
+
+⚠ **THE MAPPING IS AUTHORED AND WANTS THE OWNER'S EYE.** The record does not
+say which stream runs on which tool. Mímir on the two briefing streams is
+definitional; **Vesper on `W-062` Ad variant sets is the inferred one**. And
+**Babylon and Heimdall map to nothing** — the 27 streams contain no
+localisation/dubbing work and no studio PM work, which is itself a reading
+of the estate rather than a gap in the field.
+
+### Context now letters nowhere, and that is named
+
+CONTEXT is one of the owner's own five configuration fields. With the hover
+readout already deleted (U3), removing WHAT IT INHERITS leaves it in the
+record and off the drawing entirely. It stays on `PdaAnswers` because the
+city's unit sheet and the config lab's four archetypes still draw it, and it
+is called out in the header so it is a decision on the page rather than a
+loss nobody notices — exactly the failure `p[1]` had for four updates.
+
+**GREEN IS DOWN TO ONE BUNDLE.** The base's left conductor carried green
+while it fed WHAT IT INHERITS, because inherited context is encoded material
+Loop paid for. An agent and an interface are neither, so both base
+conductors are amber and the Skill's run is the only green left — one
+encoded thing on the board, and it is the judgment.
+
+### Verification
+
+`npx vitest run` 629 green across 46 files (the fit guard walks all 27
+streams against the new lettering; `cases-registry` now scans the agent).
+Typecheck clean. The three casefile smoke cases green. Headed captures at
+1280×720 dark + light and 1920×1080 dark: 26 labels, 0 clipped, minPx 5.41
+at the binding short-wide field and 8.33 at 1920.

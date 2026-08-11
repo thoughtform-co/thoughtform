@@ -30,6 +30,26 @@ import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
  * the drawing's own floor is **10** rather than 7.5 — at the worse meet, 10
  * renders 5.19px against the smoke's 4.3 (7.5 would render 3.89 and fail).
  *
+ * ⚠ THE THREE QUESTIONS WERE RE-SLOTTED IN U9 (owner, 2026-08-11), and the
+ * board's geometry did not move an inch — only what each node answers:
+ *   · WHAT RUNS IT      Skill / Model            unchanged
+ *   · WHAT IT CAN REACH Knowledge graph / Connectors   (was Connectors /
+ *                       Surfaces — the graph moved here OUT of INHERITS)
+ *   · WHERE IT RUNS     Agent / Interface        (replaces WHAT IT INHERITS;
+ *                       the interface moved here OUT of CAN REACH)
+ *
+ * The two moves fix two wrong slots rather than restyling three right ones.
+ * A knowledge graph is QUERIED through a connector on request, so it belongs
+ * with the reaching, not with the context a stream carries in before it asks
+ * anything. An interface is where a PERSON MEETS the work, so it belongs
+ * with the runtime, not among the systems the work acts on.
+ *
+ * ⚠ CONTEXT NO LONGER LETTERS ANYWHERE ON THIS READING. It is one of the
+ * owner's own five configuration fields, and with the hover readout already
+ * deleted (U3) removing WHAT IT INHERITS leaves it in the record and off the
+ * drawing. Named here so it is a decision on the page rather than a loss
+ * nobody notices — the same failure `p[1]` had for four updates (U7).
+ *
  * What the U4 pass changed, all owner (2026-08-10, third round):
  *   · THE DIMENSION LINE IS DELETED — the arrowed rule and its pin ticks
  *     ("the fucking ugly line with the arrows", "those small vertical ticks
@@ -166,13 +186,30 @@ const runsPair = (w: PdaWork): Pair => [
   ["SKILL", w.cfg.skill],
   ["MODEL", w.cfg.laneRun],
 ];
+/**
+ * ⚠ THE GRAPH LEADS AND THE CONNECTOR FOLLOWS (ADR-070 U9, owner).
+ *
+ * The knowledge graph is what the stream reaches FOR; the connector is the
+ * wire it reaches THROUGH — so the graph is the answer and the connector is
+ * how the answer arrives. It sat under WHAT IT INHERITS until now, which was
+ * wrong in a way the drawing could not show: a graph is queried on request
+ * through an MCP/API connector, while CONTEXT is what the stream carries in
+ * before it asks anything. Inheriting and reaching are different verbs.
+ */
 const reachPair = (w: PdaWork): Pair => [
+  ["KNOWLEDGE GRAPH", w.cfg.graph],
   ["CONNECTORS", w.cfg.system],
-  ["SURFACES", w.cfg.surface],
 ];
-const inheritsPair = (w: PdaWork): Pair => [
-  ["CONTEXT", w.cfg.context],
-  ["GRAPH FACTS", w.cfg.graph],
+/**
+ * WHERE IT RUNS — the base node, replacing WHAT IT INHERITS (ADR-070 U9,
+ * owner). The agent is the runtime that carries the Skill; the interface is
+ * where a person meets it. `surface` was drawn under CAN REACH until now,
+ * which put the place a human MEETS the work on the same side as the systems
+ * the work acts on.
+ */
+const whereRunsPair = (w: PdaWork): Pair => [
+  ["AGENT", w.cfg.agent],
+  ["INTERFACE", w.cfg.surface],
 ];
 
 export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
@@ -237,7 +274,7 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
   };
   node("WHAT RUNS IT", NODE_W, runsPair(work));
   node("WHAT IT CAN REACH", NODE_W, reachPair(work));
-  node("WHAT IT INHERITS", BASE_W, inheritsPair(work));
+  node("WHERE IT RUNS", BASE_W, whereRunsPair(work));
 
   specs.push({ slot: "bar.label", text: "THE BAR", fs: FS.tag, track: 0.22, measure: BAR_MEASURE });
   wrapLines(c.bar, BAR_CHARS, 3).forEach((line, i) =>
@@ -505,9 +542,11 @@ export function ViewConfiguration({
   const led = !work.configured;
   const wire = led ? "var(--pda-txt3)" : "var(--pda-amb)";
   /* ⚠ GREEN IS THE ENCODED RUN (owner: "you also removed the green lines").
-     The bundles that carry encoded material — the Skill, and the context the
-     stream inherits — letter in the provenance green; what the stream merely
-     REACHES stays amber. Person-led dashes everything. */
+     ONE bundle carries it since ADR-070 U9 — the Skill's. The context run
+     was the other, and context left the board with WHAT IT INHERITS; what
+     the stream REACHES and WHERE IT RUNS are both amber, because neither a
+     graph, a connector, an agent nor an interface is material Loop encoded.
+     Person-led dashes everything. */
   const green = led ? "var(--pda-txt3)" : "var(--pda-grn)";
   const c = work.cfg;
 
@@ -656,7 +695,14 @@ export function ViewConfiguration({
         draw={drawAt()}
       />
       {/* Two runs into the base, jogging out to its shoulders — the drop
-          that closes the board. */}
+          that closes the board.
+          ⚠ BOTH ARE AMBER SINCE ADR-070 U9. The left one carried GREEN while
+          the base was WHAT IT INHERITS, because the context a stream inherits
+          is encoded material Loop paid for. The base is WHERE IT RUNS now —
+          an agent and an interface, neither of them encoded — so green would
+          be claiming provenance for a runtime. The Skill's bundle is the only
+          green left on the board, which is exactly the reading: one encoded
+          thing, and it is the judgment. */}
       <Ribbon
         pts={[
           [MID - 44, CHIP_B],
@@ -665,8 +711,8 @@ export function ViewConfiguration({
           [MID - 74, BASE_Y],
         ]}
         n={6}
-        stroke={green}
-        opacity={op("inh")}
+        stroke={wire}
+        opacity={op("whr")}
         dashed={led}
         draw={drawAt()}
       />
@@ -679,7 +725,7 @@ export function ViewConfiguration({
         ]}
         n={6}
         stroke={wire}
-        opacity={op("inh")}
+        opacity={op("whr")}
         dashed={led}
         draw={drawAt()}
       />
@@ -705,7 +751,7 @@ export function ViewConfiguration({
           y={NODE_Y}
           q="WHAT IT CAN REACH"
           pair={reachPair(work)}
-          kinds={["plain", "plain"]}
+          kinds={["gph", "plain"]}
           seat="stack"
           part="rch"
           led={led}
@@ -717,13 +763,13 @@ export function ViewConfiguration({
         <QNode
           x={BASE_X}
           y={BASE_Y}
-          q="WHAT IT INHERITS"
-          pair={inheritsPair(work)}
-          kinds={["enc", "gph"]}
+          q="WHERE IT RUNS"
+          pair={whereRunsPair(work)}
+          kinds={["plain", "plain"]}
           seat="row"
-          part="inh"
+          part="whr"
           led={led}
-          hot={lit === "inh"}
+          hot={lit === "whr"}
           onLit={onLit}
         />
       </g>

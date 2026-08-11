@@ -223,6 +223,24 @@ export interface CaseMapConfiguration {
   s: readonly [string, string];
   /** Capability lane + the verbs it runs. */
   m: readonly [string, string];
+  /**
+   * THE AGENT THAT RUNS IT — reading 02's WHERE IT RUNS, paired with `u`.
+   * A shipped tool's codename where one carries the stream, otherwise the
+   * generic run mode (`Chat assistant`, `Scheduled agent`, `Editor plugin`,
+   * `Coding agent`).
+   *
+   * ⚠ A SINGLE STRING, DELIBERATELY, while every neighbour is a
+   * `[name, note]` pair. ADR-070 U7 is what a spare half costs: `p[1]` went
+   * unlettered on four consecutive drawings because nothing asked where it
+   * had gone. This one letters its name and has no readout behind it, so
+   * there is no second half to strand.
+   *
+   * ⚠ NEVER A MODEL OR VENDOR NAME. The map's envelope is stricter than the
+   * casefile's — `cases-registry` fails on any model family, and the LANE
+   * (`m`) is where model class is answered, generically. Tool CODENAMES are
+   * in scope (published precedent: PROJECT_CASES, row 02 of this casefile).
+   */
+  a: string;
   /** Context name + what it carries. */
   c: readonly [string, string];
   /** Graph node + what it holds. Drawn in the adjacent-domain hand. */

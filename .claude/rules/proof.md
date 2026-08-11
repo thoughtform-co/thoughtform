@@ -1095,14 +1095,47 @@ never substituting a different drawing.
   width (360): the row has nothing to its right. **A content type that
   documents a field as a PAIR wants both halves checked when a drawing is
   authored.**
-- **THREE QUESTION NODES** — WHAT RUNS IT west · WHAT IT CAN REACH east ·
-  WHAT IT INHERITS south. The question headers are BACK by the owner's own
-  mockup (U2 supersedes this ADR's "no question headers"). k-labels are
-  SKILL/MODEL · CONNECTORS/SURFACES · CONTEXT/GRAPH FACTS at fs 10
-  `--pda-txt2`; material grounds per row: encoded green hatch (BELOW the
-  value's line box — the first cut ran it through the descenders), plain,
-  and the graph's dashed BLUE inset (`--pda-gph`/`--pda-gph-line`, light
-  overrides in theme.css — the city's adjacent-domain blue on the console).
+- **THREE QUESTION NODES — RE-SLOTTED IN U9 (owner, 2026-08-11), GEOMETRY
+  UNTOUCHED.** WHAT RUNS IT west (SKILL/MODEL) · WHAT IT CAN REACH east
+  (**KNOWLEDGE GRAPH/CONNECTORS**) · **WHERE IT RUNS** south
+  (**AGENT/INTERFACE**), which REPLACES WHAT IT INHERITS. Not one constant
+  moved — same crop, inset chain, `SUB_H` and `CORE_RECT`; only what each
+  node answers. The question headers are BACK by the owner's own mockup (U2
+  supersedes this ADR's "no question headers"); k-labels at fs 10
+  `--pda-txt2`; material grounds: encoded green hatch on the SKILL card
+  (BELOW the value's line box — the first cut ran it through the
+  descenders), the graph's dashed BLUE inset now on the KNOWLEDGE GRAPH card
+  (`--pda-gph`/`--pda-gph-line`, light overrides in theme.css — the city's
+  adjacent-domain blue), everything else plain.
+  ⚠ **TWO SLOTS WERE WRONG, and this is a correction rather than a restyle:**
+  a graph is QUERIED through a connector on request (reached, not
+  inherited), and an interface is where a PERSON MEETS the work (not
+  something the work reaches). The graph LEADS its node and the connector
+  follows — the graph is what the stream reaches FOR, the connector the wire
+  it reaches THROUGH.
+  ⚠ **CONTEXT NOW LETTERS NOWHERE ON THIS READING.** It is one of the
+  owner's own five configuration fields; with the readout deleted (U3),
+  dropping WHAT IT INHERITS leaves it in the record and off the drawing. It
+  stays on `PdaAnswers` because the city's unit sheet and the config lab's
+  four archetypes still draw it. Named on purpose, so it is a decision
+  rather than a loss nobody notices.
+  ⚠ **GREEN IS DOWN TO ONE BUNDLE** — the Skill's. Both base conductors went
+  amber with the re-slot: an agent and an interface are not encoded material,
+  so green there would claim provenance for a runtime.
+- ⚠ **`CaseMapConfiguration.a` IS THE AGENT, A SINGLE STRING** (U9), while
+  every neighbour is a `[name, note]` pair — U7 is what a spare half costs.
+  ⚠ **THE FALLBACK MAY NOT BE A PRODUCT.** `cases-registry`'s
+  `MODEL_FAMILIES` includes `claude`, and the map's envelope is stricter
+  than the casefile's by design: the LANE (`m`) is the one place model class
+  is answered, generically. So the non-tool vocabulary is run MODE —
+  `Chat assistant` · `Scheduled agent` · `Editor plugin` · `Coding agent`.
+  Tool CODENAMES stay in scope (precedent: `PROJECT_CASES`), so Mímir and
+  Vesper letter by name. The registry test scans `cfg.a`: it is the field
+  most likely to name a vendor, because the honest answer to "what runs it"
+  often IS a product. ⚠ The mapping is AUTHORED and unverified by the record
+  — Mímir on the two briefing streams is definitional, **Vesper on `W-062`
+  is inferred**, and **Babylon and Heimdall map to no stream at all** (there
+  is no localisation or studio-PM work among the 27).
 - ⚠ **THE ROWS STACK; THE MOCKUP'S HALVES CANNOT HOLD THE RECORD.** A
   96-unit half wraps the 26-char worst onto three lines at any legible
   size, so the two answers are full-width rows and every value letters ON

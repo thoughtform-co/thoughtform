@@ -90,13 +90,35 @@ export interface PdaAnswers {
   skill: string;
   laneRun: string;
   runsNote: string;
-  /** WHAT IT CAN REACH — the first system it acts on, then where it is met. */
-  system: string;
-  surface: string;
-  rchNote: string;
-  /** WHAT IT INHERITS — the context it carries, then the facts it draws on. */
-  context: string;
+  /**
+   * WHAT IT CAN REACH — the knowledge graph it queries, then the first
+   * system it acts on (ADR-070 U9, owner).
+   *
+   * ⚠ THE GRAPH IS REACHED, NOT INHERITED, and that is the whole point of
+   * the re-slot: a graph is answered through a connector on request, while
+   * CONTEXT is what the stream carries in before it asks anything. Drawn in
+   * the adjacent-domain hand, beside the connector that gets to it.
+   */
   graph: string;
+  system: string;
+  rchNote: string;
+  /**
+   * WHERE IT RUNS — the agent that carries it, then the interface a person
+   * meets it on (ADR-070 U9, owner). `surface` is the record's `u`, which
+   * was drawn under CAN REACH until now: an interface is where the work is
+   * MET, never something the work reaches.
+   */
+  agent: string;
+  surface: string;
+  /**
+   * ⚠ CONTEXT IS RECORD-ONLY ON READING 02 SINCE ADR-070 U9. The owner
+   * replaced WHAT IT INHERITS with WHERE IT RUNS, and with the hover readout
+   * already deleted (U3) there is nowhere left on this reading that letters
+   * it. It stays on the projection because the city's unit sheet and the
+   * config lab's four archetypes still draw it — deleting it here would take
+   * those with it. `inhNote` is retained for the same reason.
+   */
+  context: string;
   inhNote: string;
   /** WHAT IT IS HELD TO — the bar itself, which is the only honest answer. */
   bar: string;
@@ -118,7 +140,11 @@ const PERSON = {
   laneRun: "No lane",
   runsNote: "The person does the work",
   system: "Nothing bound",
-  surface: "No surface",
+  /* WHERE IT RUNS, answered honestly: nowhere. The pair reads `No agent` /
+     `No interface` rather than emptying out, so the absence is a reading
+     instead of a drawing that failed to load. */
+  agent: "No agent",
+  surface: "No interface",
   rchNote: "Nothing bound",
   context: "Context held by the person",
   graph: "No graph",
@@ -136,6 +162,7 @@ function answers(work: CaseMapWork): PdaAnswers {
       laneRun: up(PERSON.laneRun),
       runsNote: up(PERSON.runsNote),
       system: up(PERSON.system),
+      agent: up(PERSON.agent),
       surface: up(PERSON.surface),
       rchNote: up(PERSON.rchNote),
       context: up(PERSON.context),
@@ -153,6 +180,7 @@ function answers(work: CaseMapWork): PdaAnswers {
     laneRun: up(c.m[0]),
     runsNote: up(`${c.s[1]} — ${c.m[1]}`),
     system: up(c.k[0]),
+    agent: up(c.a),
     surface: up(c.u[0]),
     rchNote: up(`${c.k.join(" · ")} · ${c.u.join(" · ")}`),
     context: up(c.c[0]),
