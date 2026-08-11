@@ -75,9 +75,9 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
     id: "tree",
     label: "3 · Containment",
     thesis:
-      "The hierarchy, drawn as one: a single encoded substrate branching into five patterns sized by what they hold, each carrying the departments that draw on it as its own leaves. Nothing crosses, because a department is repeated under every pattern it reaches instead of wired to it.",
+      "One substrate, five patterns inside it, and each pattern as tall as the Skills it holds — a core sample of one pip per Skill down its left edge, so the height is the count rather than a proportion of it. The departments that draw on a pattern are listed inside it. Nothing crosses anything, and nothing is drawn that says nothing.",
     provenance:
-      "Skill → pattern → reuse is a tree, and the record has always been one. Repetition instead of edges is the trade — thirty runs become thirty three-letter codes.",
+      "Round two. The branches went because every node hung off the same root — five lines saying the same thing five times, where nesting says it with no ink. The bodies went from empty hatch to their own Skills, which is what makes the height honest.",
   },
 ];
 

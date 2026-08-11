@@ -1626,8 +1626,28 @@ BOARD-archetype and config-lab precedent).
   the stack, a tap is a cell where a bus crosses a seam; the brief's own
   "below grade runs the shared substrate" taken literally), **table** (stop
   drawing the relation and tabulate it; the mass survives as a bar in the row
-  header), **tree** (Skill → pattern → reuse drawn as the tree it has always
-  been, departments REPEATED as leaves instead of wired as edges).
+  header), **tree** (containment — one substrate frame around five patterns,
+  departments REPEATED as codes inside each instead of wired as edges).
+- ⚠ **`tree` IS AT ROUND TWO, and the owner picked it** (2026-08-11). Round
+  one drew a trunk with five branches; three things were wrong and all three
+  are worth remembering because they generalise:
+  - **The branches carried no information.** Every node hung off the same
+    single root, and there is no case where a pattern is NOT in the
+    substrate — so five lines said nothing five times. **Nesting is the same
+    statement with no ink.**
+  - **The node bodies were empty.** Height was proportional to Skills and the
+    space under the gloss was blank hatch — the exact hole ADR-070 U14 had
+    just removed from reading 02. The height is now EXACTLY its contents: a
+    core sample of ONE PIP PER SKILL down the block's left edge, and the
+    block is `28 + skills × 8.9` tall because that is how tall its pips are.
+    A proportion you can also count.
+  - **The left third was dead**, holding a floating trunk plate and a spine.
+    The total is a header now and the blocks take the full width, which is
+    what gives the 38-character gloss 528 units instead of 352.
+- ⚠ **THE LAB'S CROP IS STATIC**, so at p1920 the drawing letterboxes ~65px
+  vertically. That is not a defect in the drawing — it is exactly what
+  ADR-070 U12 fixed for reading 02, and sharing 02's crop WIDTH is what makes
+  inheriting `configLayout`/`configExt` a copy rather than a re-fit.
 - ⚠ **`gloss` LETTERS NOWHERE IN PRODUCTION**, and all three directions give
   it a home — the same class of orphan as `cfg.p[1]` before ADR-070 U7. A
   148-wide module could never hold "HOW THE ORGANISATION SOUNDS IN CONTEXT"
