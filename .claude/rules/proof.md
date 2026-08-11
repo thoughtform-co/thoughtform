@@ -1070,8 +1070,32 @@ their traps; do not read their numbers as current.
   cuts (TL+BR, 12 deep)**, a 2px top rule each, and **8-wire hatched ribbon
   lanes** on all five docks. Gold is wayfinding; **green is the human and
   nothing else**.
-- ⚠ **THE CROP IS THE REFERENCE'S FRAME, NOT ITS STAGE.** `-22 -6 932 751` —
-  a uniform **26-unit inset** around content running `4…884 × 20…719`.
+- ⚠ **THE BOARD IS HEIGHT-ELASTIC (U12), AND ONE STATIC CROP CANNOT SERVE
+  THIS PANEL.** The console's field is capped at 850px wide but grows with
+  the viewport's height, so its aspect runs 1.24 (laptop) → 0.76 (2560×1440).
+  `meet` fits by the SMALLER ratio, so a landscape crop wastes height in a
+  portrait field and vice versa — **U4, U10 and U11 each picked one end and
+  letterboxed the other**, and U11 cost 270px of dead panel on the owner's own
+  monitor while every assertion stayed green. That is a GUARD defect: nothing
+  measured the drawing against the PANEL, only against its own crop.
+  `configLayout(configExt(fieldAspect))` is the fix — the crop's WIDTH never
+  moves, so the fit is width-bound and `meet` is `field.w / 932` at every
+  height, which means **growing the crop's height is free** and `minPx` is
+  byte-identical at every shape (7.76 / 8.74 / 10.94). The height goes to the
+  CABLES (78 %, R4's own grammar — a taller board is a longer run) and the
+  CELLS (22 %, air around the answers); ⚠ **the card is not in that list** —
+  its box is the flight's destination, so it re-centres in the band instead,
+  and ⚠ **the added cell air is SPLIT, not pooled**, or a taller module is
+  just a module with a hole under it. `CONFIG_EXT_MAX` 620 fills every desktop
+  shape; only a PORTRAIT desktop window reaches it, and there it letterboxes
+  on purpose because a 590-unit bus run is a gap with wires in it.
+  ⚠ **THE FLIGHT USES THE LIVE BOARD**, not `CONFIG_LAYOUT_0` — `PdaConsole`
+  hands one `configLayout` object to the attribute AND to `pdaFlight`.
+  ⚠ The `ResizeObserver` cannot feed back STRUCTURALLY: the SVG is absolutely
+  positioned, so CSS sets its box and a `viewBox` change cannot move it.
+- ⚠ **THE CROP'S WIDTH IS THE REFERENCE'S FRAME, NOT ITS STAGE.** At rest
+  `-22 -6 932 751` — a uniform **26-unit inset** around content running
+  `4…884 × 20…719`.
   Cropping to the stage measured better (meet 0.679 vs 0.647) and put the
   side modules **2.7px off the console wall**, which reads as clipped.
   ADR-064's bleed law is about a CAPTURE filling its bay; **a technical

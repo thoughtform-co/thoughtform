@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CONFIG_EXT_MAX,
+  CONFIG_INSET,
+  configExt,
+  configLayout,
   configSpecWidth,
   configurationLettering,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
@@ -147,8 +151,16 @@ describe("the readings' crops", () => {
        panel it fills; with the reference's frame inset restored it is 1.241.
        That is a +20 % / +9 % type lift bought by the ASPECT ALONE, before a
        single font size moved — and it is what paid for lifting the
-       reference's 6.5px chrome up to this surface's floor. The named cost is
-       unchanged from U10: more vertical letterbox on tall large monitors. */
+       reference's 6.5px chrome up to this surface's floor.
+
+       ⚠ THIS IS THE BOARD AT REST NOW (U12). U11 shipped this crop STATIC and
+       it cost 270px of dead panel at 845 x 950 — the third update in a row to
+       pick one viewport shape and letterbox the other. The crop's height is
+       measured from the field; `the configuration board fills the panel it is
+       given` is the guard that walks the shapes this one cannot see. What
+       stays asserted here is that the REST board is the landscape one, since
+       that is what the laptop gets and what every measure above derives
+       from. */
     const b = box(2);
     expect(b.w / b.h, "reading 02's crop went portrait again").toBeGreaterThanOrEqual(1.05);
 
@@ -162,6 +174,124 @@ describe("the readings' crops", () => {
     /* The binding short-wide field, where the drawing is height-bound. */
     const meet = Math.min(603 / b.w, 493 / b.h);
     expect(FS_FLOOR * meet, "the smallest rung fell under the smoke's floor").toBeGreaterThan(4.6);
+  });
+});
+
+/**
+ * READING 02'S BOARD IS HEIGHT-ELASTIC (ADR-070 U12).
+ *
+ * ⚠ THIS IS THE GUARD THE LAST THREE UPDATES DID NOT HAVE. U4, U10 and U11
+ * each chose a static crop, measured it at ONE viewport shape, and shipped a
+ * letterbox at the other end — U11's cost 270px of dead panel at 845 × 950,
+ * which no assertion on this surface could see because every one of them
+ * measured the drawing against its own crop rather than against the PANEL.
+ * The elastic path has to be walked at every shape the console takes.
+ */
+describe("the configuration board fills the panel it is given", () => {
+  /* Live console fields, measured on the landing. The last two are the tall
+     ones that were paying for the landscape crop. */
+  const FIELDS = [
+    { at: "1280x720", w: 603, h: 493 },
+    { at: "1440x800", w: 679, h: 548 },
+    { at: "1920x1080", w: 850, h: 760 },
+    { at: "1920x1200", w: 850, h: 880 },
+    { at: "the owner's", w: 845, h: 950 },
+    { at: "2560x1440", w: 850, h: 1120 },
+    { at: "1280x1440", w: 603, h: 1177 },
+  ] as const;
+
+  const crop = (ext: number) => {
+    const [x, y, w, h] = configLayout(ext).crop.split(" ").map(Number);
+    return { x, y, w, h, right: x + w, bottom: y + h };
+  };
+
+  it("the crop grows by exactly the height the board absorbs", () => {
+    /* The whole mechanism in one line: content is `699 + ext` tall, so the
+       crop is `751 + ext`. If these ever disagree the board is either
+       overflowing its crop or leaving a gap inside it. */
+    for (const ext of [0, 11, 82, 160, 297, CONFIG_EXT_MAX]) {
+      const c = crop(ext);
+      expect(c.h, `ext ${ext}: the crop and the chain disagree`).toBeCloseTo(751 + ext, 1);
+      expect(configLayout(ext).contentBottom, `ext ${ext}: content bottom drifted`).toBeCloseTo(
+        719 + ext,
+        6
+      );
+    }
+  });
+
+  it("nothing overlaps, and the inset holds, at every height", () => {
+    for (const ext of [0, 11, 82, 160, 297, CONFIG_EXT_MAX]) {
+      const l = configLayout(ext);
+      const c = crop(ext);
+      const where = `ext ${ext}`;
+
+      // The vertical chain stays in order, with real cable between the docks.
+      expect(l.core.y, `${where}: the card rode up into the seat`).toBeGreaterThan(128 + 20);
+      expect(l.base.y, `${where}: the base rode up into the card`).toBeGreaterThan(
+        l.core.y + l.core.h + 20
+      );
+      // The satellites are co-centred with the card, as the reference has them.
+      expect(l.left.y + l.left.h / 2, `${where}: the band lost its centre`).toBeCloseTo(
+        l.core.y + l.core.h / 2,
+        6
+      );
+      // A module always holds its own header and cells.
+      expect(34 + 2 * l.cellH, `${where}: the satellites overflow`).toBeLessThanOrEqual(l.satH);
+      expect(34 + l.cellH, `${where}: the base module overflows`).toBeLessThanOrEqual(l.baseH);
+
+      // The frame inset is uniform and unchanged — U11's finding, kept.
+      expect(4 - c.x, `${where}: the left inset moved`).toBe(CONFIG_INSET);
+      expect(c.right - 884, `${where}: the right inset moved`).toBe(CONFIG_INSET);
+      expect(20 - c.y, `${where}: the top inset moved`).toBe(CONFIG_INSET);
+      // ⚠ ONE PLACE, not six: the crop string is rounded to 2dp on purpose
+      // (it lands in the DOM and in the flight's arithmetic).
+      expect(c.bottom - l.contentBottom, `${where}: the bottom inset moved`).toBeCloseTo(
+        CONFIG_INSET,
+        1
+      );
+    }
+  });
+
+  it("every measured field fills, or names what it cannot", () => {
+    for (const f of FIELDS) {
+      const ext = configExt(f.h / f.w);
+      const c = crop(ext);
+      const meet = Math.min(f.w / c.w, f.h / c.h);
+      const slack = Math.round(f.h - c.h * meet);
+
+      /* ⚠ THE TYPE NEVER PAYS FOR THIS. The board stays WIDTH-bound by
+         construction, so `meet` is `field.w / crop.w` at every height and the
+         floor renders the same everywhere the clamp is not reached.
+         ⚠ RELATIVE, not exact: `configExt` rounds to whole authoring units,
+         which can leave the crop a unit tall and the fit a hair height-bound.
+         0.999 is the claim that matters — that the elasticity is free. */
+      expect(
+        meet / (f.w / c.w),
+        `${f.at}: the board went height-bound and shrank its type`
+      ).toBeGreaterThan(0.999);
+      expect(FS_FLOOR * meet, `${f.at}: the floor fell under the smoke's`).toBeGreaterThan(4.6);
+
+      if (ext < CONFIG_EXT_MAX) {
+        // Everything short of the clamp fills the panel outright.
+        expect(slack, `${f.at}: ${slack}px of dead panel under the board`).toBeLessThanOrEqual(2);
+      } else {
+        /* ⚠ ONE MEASURED SHAPE REACHES THE CLAMP — a PORTRAIT desktop window
+           — and there the board letterboxes on purpose, because a 590-unit
+           bus run is a gap with wires in it rather than a cable. The clamp
+           still has to be buying most of the trade: U11's static crop left
+           691px empty here and the elastic board leaves 290. */
+        const wasStatic = f.h - 751 * meet;
+        expect(slack, `${f.at}: the clamp is not buying enough`).toBeLessThan(wasStatic * 0.55);
+        expect(slack / f.h, `${f.at}: the clamp leaves the panel mostly empty`).toBeLessThan(0.28);
+      }
+    }
+  });
+
+  it("a short-wide field never compresses the reference's own board", () => {
+    // Below the reference proportions there is nothing to give back: the
+    // board is R4's at rest and only ever grows.
+    expect(configExt(0.4), "a wide field squeezed the chain").toBe(0);
+    expect(configLayout(configExt(0.4)).crop, "the rest crop moved").toBe(configLayout(0).crop);
   });
 });
 

@@ -18,31 +18,33 @@ import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
  * so the drawing can be diffed against the reference rather than argued
  * about.
  *
+ * ⚠ **THE BOARD IS HEIGHT-ELASTIC (U12), AND THAT IS THE POINT.** See
+ * `configLayout`. One static crop cannot serve this panel: the console's
+ * field is capped at 850px wide but grows with viewport height, so it is
+ * LANDSCAPE on a laptop (1.22) and PORTRAIT on a tall monitor (0.89 and
+ * below). `meet` fits by the smaller ratio, so whichever way the crop is
+ * drawn the other end letterboxes — U4 paid it horizontally, U10 and U11's
+ * first cut paid it vertically, and at 845 × 950 that was **270px of dead
+ * panel under the board**. The crop's HEIGHT is measured from the field now
+ * and the vertical chain absorbs the difference.
+ *
  * ⚠ **THE HANDOFF SAYS "RECREATE PIXEL-PERFECTLY" AND THE TYPE IS THE ONE
  * THING THAT CANNOT BE.** The prototype is authored at 1:1 in a 960-wide
- * frame; this console's field is 603 × 493 at 1280×720 and 850 × 760 at
- * 1920×1080, so `meet` scales the whole drawing to 0.68 / 0.96. The
- * reference's 8.5px field label lands at **5.6px** on a laptop — the size
- * the owner called "utterly illegible" one day earlier, and under the
- * 8.5px chrome floor ADR-063 records as this surface's standing defect.
- * So the reference's type RANKING is kept and its bottom rungs are lifted
- * to the floor: the ladder's range narrows, which is the cost, and every
- * rung renders LARGER than what shipped yesterday, which is the win.
+ * frame; this console's field is 603 × 493 at 1280×720, so `meet` scales the
+ * whole drawing to 0.65. The reference's 8.5px field label lands at
+ * **5.5px** — the size the owner called "utterly illegible" one day earlier,
+ * and under the 8.5px chrome floor ADR-063 records as this surface's
+ * standing defect. So the reference's type RANKING is kept and its bottom
+ * rungs are lifted to the floor: the ladder's range narrows, which is the
+ * cost, and it is bought back in ALPHA, which does not shrink with `meet`.
  *
- * ⚠ **THE CROP IS THE REFERENCE'S OWN FRAME, AND THAT IS WHY THE PANEL
- * FILLS.** `meet` takes the minimum of the two box ratios, so the crop's
- * aspect decides which axis letterboxes. Measured field aspects are 1.223
- * (1280×720), 1.239 (1440×800) and 1.118 (1920×1080); the R4 stage is
- * **1.194**, i.e. almost exactly the panel it has to fill. With the frame
- * inset restored (see `CONFIG_VIEWBOX`) the crop is 1.241 and the meet goes
- * 0.541 → **0.647** at the binding preset and 0.833 → **0.912** at 1920.
- * That is a **+20 % / +9 % type lift bought by the aspect alone**, before a
- * single font size changed — and it is what pays for the lifted bottom rungs.
- *
- * Rendered, at the smallest rung (12): **7.8px** at 1280×720 and **10.9px**
- * at 1920×1080, against 7.0 / 10.0 for the board this replaces. Every rung
- * on the ladder is larger than what shipped yesterday: the value goes
- * 8.1 → 9.1px and the title 12.4 → 14.2px at the binding preset.
+ * ⚠ **THE CROP'S WIDTH IS THE REFERENCE'S FRAME, NOT ITS STAGE.** The
+ * handoff draws a 960 × 880 frame and insets its stage 36px inside it, so
+ * its modules sit 40px off the frame wall. Cropping to the STAGE dropped
+ * that: measured on the live landing, the side modules landed **2.7px** off
+ * the console wall and read as clipped. ADR-064's "the frame is a bezel the
+ * content bleeds into" is about a CAPTURE filling its bay; a technical
+ * drawing whose outermost rule touches the wall has lost its margin.
  *
  * ⚠ **WHAT THE REFERENCE LETTERS THAT THIS DRAWING DOES NOT**, each for a
  * reason that is arithmetic or a standing law rather than taste:
@@ -70,49 +72,35 @@ import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
  * law (gold = wayfinding, green = the human) — is the reference's.
  *
  * ⚠ **THE CARD IS DRAWN HERE, NOT BY `Cartridge`**, and its SILHOUETTE may
- * not move: `CORE_RECT` is ADR-069's flight destination. The reference's
- * core is 300 × 224 (1.339) and the cartridge is 176 × 136 (1.294), which
- * are not similar — a uniform `dk` cannot carry a shape that changes
- * proportion — so the box is `176 × 136 × CORE_K` centred on the
- * reference's own core centre. It lands within a unit of the table
- * horizontally and 3.6 units vertically.
+ * not move: it is ADR-069's flight destination. The reference's core is
+ * 300 × 224 (1.339) and the cartridge is 176 × 136 (1.294), which are not
+ * similar — a uniform `dk` cannot carry a shape that changes proportion — so
+ * the box is `176 × 136 × CORE_K`, centred on the reference's own core
+ * centre at rest.
  */
 
-/**
- * THE REFERENCE'S STAGE PLUS ITS FRAME INSET, trimmed to what the drawing
- * actually reaches — a uniform **26 units** around content that runs
- * `4…884 × 20…719`.
- *
- * ⚠ THE INSET IS NOT PADDING, IT IS THE REFERENCE'S OWN FRAME. The handoff
- * draws a 960 × 880 frame and insets its stage 36px inside it, so its modules
- * sit 40px off the frame wall — 4.2 % of the width. Cropping to the STAGE
- * alone dropped that: measured on the live landing, the side modules landed
- * **2.7px** off the console wall and read as clipped rather than as bleeding.
- * ADR-064's "the frame is a bezel the content bleeds into" is about a
- * CAPTURE filling its bay; a technical drawing whose outermost rule touches
- * the wall has simply lost its margin.
- *
- * The inset costs type — it is width that no longer scales — and 26 is where
- * that stops being worth it: the drawing is width-bound at 0.647 and
- * height-bound at 0.657 at the binding preset, i.e. it fills the panel to
- * within one percent on BOTH axes, which is as close to no letterbox as a
- * single crop gets.
- *
- * `pda-viewbox` asserts the containment, the aspect and the inset itself, so
- * none of the three can drift back silently.
- */
-export const CONFIG_VIEWBOX = "-22 -6 932 751";
-
-/** The modules, verbatim from the handoff's position table. */
+/* ── The width chain, which never moves ─────────────────────────────────
+   Every x below is the handoff's own. The crop's width is the content's
+   `4…884` plus one inset each side; only the HEIGHT is measured. */
 const OWNER = { x: 232, y: 20, w: 424, h: 108 } as const;
-const LEFT = { x: 4, y: 192, w: 204, h: 218 } as const;
-const RIGHT = { x: 680, y: 192, w: 204, h: 218 } as const;
-const BASE = { x: 244, y: 532, w: 400, h: 128 } as const;
+const SAT_W = 204;
+const LEFT_X = 4;
+const RIGHT_X = 680;
+const BASE_X = 244;
+const BASE_W = 400;
+const CONTENT_L = 4;
+const CONTENT_R = 884;
+
+/** The uniform frame inset — see the header. */
+export const CONFIG_INSET = 26;
+const CROP_X = CONTENT_L - CONFIG_INSET;
+const CROP_W = CONTENT_R - CONTENT_L + CONFIG_INSET * 2;
+const CROP_Y = OWNER.y - CONFIG_INSET;
 
 /**
- * The card, and the flight's second home. `CORE_K` × the 176×136 cartridge,
- * so the two rects are EXACTLY similar and one uniform scale carries the
- * morph without the object changing proportion on the way.
+ * The card. `CORE_K` × the 176×136 cartridge, so the two rects are EXACTLY
+ * similar and one uniform scale carries the morph without the object changing
+ * proportion on the way.
  *
  * ⚠ `1.7` is chosen so the box matches the reference's 300-wide core to
  * within a unit; the reference's own 300 × 224 is not similar to the
@@ -121,19 +109,145 @@ const BASE = { x: 244, y: 532, w: 400, h: 128 } as const;
 export const CORE_K = 1.7;
 const CORE_W = 176 * CORE_K;
 const CORE_H = 136 * CORE_K;
-/** Centred on the reference core's centre (444, 300). */
-const CORE = { x: 444 - CORE_W / 2, y: 300 - CORE_H / 2, w: CORE_W, h: CORE_H } as const;
-export const CORE_RECT: FlightRect = { ...CORE };
-
-const CORE_R = CORE.x + CORE.w;
-const CORE_B = CORE.y + CORE.h;
-const CORE_CY = CORE.y + CORE.h / 2;
+const CORE_X = 444 - CORE_W / 2;
 
 /** The reference's 45° corner cut, 12 deep, on every satellite. */
 const CUT = 12;
 /** ⚠ The CARD's cut stays PROPORTIONAL to the cartridge's, so the object the
  *  flight carries keeps its silhouette all the way across. */
 const CORE_CUT = 14 * CORE_K;
+
+/* ── The module interior ────────────────────────────────────────────────
+   One padding, one header height, one cell height, so the two satellites and
+   the base share a rhythm. `CELL_H` seats a key line plus two wrapped value
+   lines; it is the one interior measure that grows with the board. */
+const PAD = 12;
+const CORE_PAD = 18;
+const HEAD_H = 34;
+const KEY_BASE = 24;
+const VAL_BASE = 44;
+
+/* The reference's own vertical chain, at rest. */
+const CELL_H0 = 87;
+const SAT_H0 = 218;
+const BASE_H0 = 128;
+const GAP1_0 = 56.4;
+const GAP2_0 = 116.4;
+const TAIL_0 = 59;
+const CONTENT_H0 = 699;
+
+/**
+ * ⚠ HOW THE EXTRA HEIGHT IS SPENT, and why it is spent HERE.
+ *
+ * The board is width-limited — the crop's width is the field's, so nothing
+ * can be drawn BIGGER. The only currency a tall panel offers is vertical
+ * distribution, and there are exactly two honest places for it: the cables,
+ * which are the reference's own grammar (modules connected by ribbon lanes,
+ * so a taller board is a longer run), and the cells, which is air around the
+ * answers rather than a pool of it under the last module.
+ *
+ * The card is NOT in this list: its box is the flight's destination and its
+ * proportion is fixed to the cartridge's. It re-centres in the band instead.
+ */
+const CELL_GROW = 0.09;
+const CELL_H_MAX = 130;
+const SHARE = { gap1: 0.28, gap2: 0.5, tail: 0.22 } as const;
+/**
+ * Past this the runs stop reading as cable and start reading as a gap.
+ *
+ * 620 is set from the tallest field this console actually takes on a
+ * DESKTOP: 2560×1440 gives 850 × 1120 and wants 477, so it fills exactly.
+ * The only measured shape that reaches the clamp is a PORTRAIT desktop
+ * window (1280×1440 wants 1068), and there the board letterboxes on purpose
+ * — a 590-unit bus run is not a cable, it is a gap with wires in it. That is
+ * the honest failure, and `pda-viewbox` names it rather than hiding it.
+ */
+export const CONFIG_EXT_MAX = 620;
+
+export interface ConfigLayout {
+  ext: number;
+  cellH: number;
+  satH: number;
+  baseH: number;
+  gap2: number;
+  core: FlightRect;
+  left: FlightRect;
+  right: FlightRect;
+  base: FlightRect;
+  contentBottom: number;
+  /** The bed's own vertical scale — its marks spread with the board rather
+   *  than bunching under the seat. */
+  bed: number;
+  crop: string;
+}
+
+/**
+ * THE BOARD AT ONE HEIGHT. Pure, so `pda-viewbox` can walk it.
+ *
+ * `ext` is extra authoring units of height, 0 at the reference. Everything is
+ * derived so that the content is exactly `CONTENT_H0 + ext` tall — which is
+ * what lets the crop be `751 + ext` and the letterbox be zero.
+ */
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+export function configLayout(ext: number): ConfigLayout {
+  const cellH = Math.min(CELL_H_MAX, CELL_H0 + CELL_GROW * ext);
+  const grow = cellH - CELL_H0;
+  const satH = SAT_H0 + grow * 2;
+  const baseH = BASE_H0 + grow;
+  const bandH = Math.max(CORE_H, satH);
+
+  /* What is left for the runs once the modules have taken their share. The
+     three gaps keep the reference's ratio between them. */
+  const runs = CONTENT_H0 + ext - OWNER.h - bandH - baseH;
+  const extra = runs - (GAP1_0 + GAP2_0 + TAIL_0);
+  const gap1 = GAP1_0 + SHARE.gap1 * extra;
+  const gap2 = GAP2_0 + SHARE.gap2 * extra;
+  const tail = TAIL_0 + SHARE.tail * extra;
+
+  const bandY = OWNER.y + OWNER.h + gap1;
+  const core = { x: CORE_X, y: bandY + (bandH - CORE_H) / 2, w: CORE_W, h: CORE_H };
+  const satY = bandY + (bandH - satH) / 2;
+  const baseY = bandY + bandH + gap2;
+  const contentBottom = baseY + baseH + tail;
+
+  return {
+    ext,
+    cellH,
+    satH,
+    baseH,
+    gap2,
+    core,
+    left: { x: LEFT_X, y: satY, w: SAT_W, h: satH },
+    right: { x: RIGHT_X, y: satY, w: SAT_W, h: satH },
+    base: { x: BASE_X, y: baseY, w: BASE_W, h: baseH },
+    contentBottom,
+    bed: (contentBottom - OWNER.y) / CONTENT_H0,
+    /* ⚠ ROUNDED, because this string lands in the DOM and in the flight's
+       arithmetic. The shares are fractions of a fraction, so an unrounded
+       height serialises as `1015.9999999999999`; two places is a thousandth
+       of a device pixel and keeps both readable. */
+    crop: `${CROP_X} ${CROP_Y} ${CROP_W} ${r2(contentBottom + CONFIG_INSET - CROP_Y)}`,
+  };
+}
+
+/**
+ * The extra height a field of this aspect can hold, free.
+ *
+ * ⚠ THE DRAWING STAYS WIDTH-BOUND BY CONSTRUCTION, which is the whole trick:
+ * `meet` is `field.w / CROP_W` either way, so growing the crop's height to
+ * exactly `CROP_W × aspect` costs NOTHING in rendered type and removes the
+ * letterbox instead. Measured fields: 603×493 → ext 11, 850×760 → 82,
+ * 845×950 → 297, 850×1120 → clamped.
+ */
+export const configExt = (fieldAspect: number) =>
+  Math.max(0, Math.min(CONFIG_EXT_MAX, Math.round(CROP_W * fieldAspect - (CONTENT_H0 + 52))));
+
+/** The board at rest — the reference's own proportions, and what every guard
+ *  and the lab measure against. */
+export const CONFIG_LAYOUT_0 = configLayout(0);
+export const CONFIG_VIEWBOX = CONFIG_LAYOUT_0.crop;
+export const CORE_RECT: FlightRect = CONFIG_LAYOUT_0.core;
 
 /**
  * THE TYPE LADDER — the reference's RANKING, with its bottom rungs lifted to
@@ -171,30 +285,19 @@ const FS = {
 /** PT Mono's advance plus the tracking. */
 const adv = (fs: number, track: number) => fs * (0.6 + track);
 /**
- * ⚠ THE BASELINE STEP IS NOT THE LINE BOX. `lineBox` is what a line OCCUPIES;
- * stepping consecutive baselines by it makes their glyph boxes abut, and
- * `getBBox` reports taller than 1.3 em — the lab's capture gate flagged real
- * collisions between the two wrapped lines of one value. 1.7 is the house
- * number, and the smoke's label-on-label walk is what holds it.
+ * ⚠ THE BASELINE STEP IS NOT THE LINE BOX. A line box is what a line
+ * OCCUPIES; stepping consecutive baselines by it makes their glyph boxes
+ * abut, and `getBBox` reports taller than 1.3 em — the lab's capture gate
+ * flagged real collisions between the two wrapped lines of one value. 1.7 is
+ * the house number, and the smoke's label-on-label walk is what holds it.
  */
 const STEP = FS.value * 1.7;
 const charsFor = (measure: number, fs: number) => Math.max(1, Math.floor(measure / adv(fs, 0.08)));
 
-/* ── The module interior ────────────────────────────────────────────────
-   One padding, one header height, one cell height, so the two satellites and
-   the base share a rhythm. `CELL_H` seats a key line plus two wrapped value
-   lines with 15 units under the descenders. */
-const PAD = 12;
-const CORE_PAD = 18;
-const HEAD_H = 34;
-const CELL_H = 87;
-const KEY_BASE = 24;
-const VAL_BASE = 44;
-
-const SAT_MEASURE = LEFT.w - PAD * 2;
-const BASE_COL = BASE.w / 2;
+const SAT_MEASURE = SAT_W - PAD * 2;
+const BASE_COL = BASE_W / 2;
 const BASE_MEASURE = BASE_COL - PAD * 2;
-const CORE_MEASURE = CORE.w - CORE_PAD * 2;
+const CORE_MEASURE = CORE_W - CORE_PAD * 2;
 /** The seat's two columns. The worst pair is the person-led owner line (252u)
  *  beside `DECIDES ALONE` (124.8u) — 367 of 388, so the columns cannot meet. */
 const OWNER_MEASURE = 250;
@@ -227,7 +330,10 @@ const METER_W = METER.cell * 4 + METER.gap * 3;
    `pda-viewbox` walks it for all twenty-seven streams: SVG `<text>` neither
    wraps nor reports overflow, so a value past its box vanishes at the edge
    with nothing on screen to say so. A lettered string missing from here is a
-   defect in the drawing, not a gap in the guard. */
+   defect in the drawing, not a gap in the guard.
+
+   ⚠ EVERY MEASURE HERE IS HORIZONTAL, and the width chain never moves — so
+   the fit is independent of `ext` and the guard walks it once. */
 export interface ConfigLetterSpec {
   slot: string;
   text: string;
@@ -334,7 +440,7 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
 
   for (const g of groups) {
     const measure = g.part === "whr" ? BASE_MEASURE : SAT_MEASURE;
-    const qMeasure = (g.part === "whr" ? BASE.w : LEFT.w) - PAD * 2;
+    const qMeasure = (g.part === "whr" ? BASE_W : SAT_W) - PAD * 2;
     specs.push({ slot: `${g.q}.q`, text: g.q, fs: FS.q, track: 0.14, measure: qMeasure });
     for (const cell of g.cells) {
       specs.push({
@@ -394,8 +500,7 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
  * same way, which is the argument the first override did not have.
  *
  * The cut line is the outline itself — the reference builds it from a rotated
- * cover square with one border, which is the CSS way of drawing exactly this
- * path.
+ * cover square with one border, which is the CSS way of drawing this path.
  */
 const housing = (x: number, y: number, w: number, h: number, c: number) =>
   `M${x + c},${y} H${x + w} V${y + h - c} L${x + w - c},${y + h} H${x} V${y + c} Z`;
@@ -426,8 +531,8 @@ function Ribbon({
   const len = draw === null ? 0 : polylineLength(pts);
   return (
     <g opacity={opacity}>
-      {/* ⚠ THE HATCH ARRIVES WITH ITS WIRES. It is a fill, so it cannot
-          draw on — and left ungated it painted at full strength while the
+      {/* ⚠ THE HATCH ARRIVES WITH ITS WIRES. It is a fill, so it cannot draw
+          on — and left ungated it painted at full strength while the
           conductors were still travelling, which read as empty bands landing
           before their cables. Same delay, so the band assembles as one. */}
       <g
@@ -518,13 +623,15 @@ function Cell({
  */
 function QNode({
   box,
+  cellH,
   g,
   stacked,
   led,
   hot,
   onLit,
 }: {
-  box: { x: number; y: number; w: number; h: number };
+  box: FlightRect;
+  cellH: number;
   g: GroupDef;
   stacked: boolean;
   led?: boolean;
@@ -564,11 +671,16 @@ function QNode({
       >
         {g.q}
       </text>
+      {/* ⚠ THE ADDED AIR IS SPLIT, NOT POOLED. R4's cells are top-aligned and
+          carry their slack at the bottom, so that bias is kept at rest; as the
+          board grows, half of each cell's new height goes ABOVE its content
+          instead of all of it below, which is the difference between a taller
+          module and a module with a hole under it. */}
       {g.cells.map((c, i) => (
         <Cell
           key={c.key}
           x={x + (stacked ? 0 : i * BASE_COL)}
-          y={y + HEAD_H + (stacked ? i * CELL_H : 0)}
+          y={y + HEAD_H + (cellH - CELL_H0) / 2 + (stacked ? i * cellH : 0)}
           cell={c}
           measure={measure}
           led={Boolean(led)}
@@ -615,33 +727,33 @@ function LaneMeter({ x, y, lane }: { x: number; y: number; lane: string }) {
  * where a configuration is on record, and a crossed square where the work is
  * deliberately person-led.
  *
- * ⚠ THE SILHOUETTE MAY NOT MOVE. `CORE_RECT` is the flight's destination and
- * the docking group must contain this card ALONE: `fill-box` means the
- * transform is measured against the group's own bbox, and a child reaching
- * past the rect moves the origin the whole flight is computed from.
+ * ⚠ THE SILHOUETTE MAY NOT MOVE. This box is the flight's destination and the
+ * docking group must contain this card ALONE: `fill-box` means the transform
+ * is measured against the group's own bbox, and a child reaching past the
+ * rect moves the origin the whole flight is computed from.
  */
-function SeatCard({ work, led }: { work: PdaWork; led: boolean }) {
+function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: boolean }) {
   const stroke = led ? "var(--pda-txt3)" : "var(--pda-hot)";
-  const d = housing(CORE.x, CORE.y, CORE.w, CORE.h, CORE_CUT);
-  const gx = CORE.x + CORE_PAD;
-  const gy = CORE.y + 14;
+  const d = housing(core.x, core.y, core.w, core.h, CORE_CUT);
+  const gx = core.x + CORE_PAD;
+  const gy = core.y + 14;
   /* ⚠ THE BAR BLOCK IS SEATED, NOT STACKED. The reference pins its meter to
      the card's floor and lets the slack fall where it lands; at this size
      that put a 55-unit hole in the middle of the one bright object. 120
      splits it — 39 units of air above the block and 39 below, measured
      against the title's descenders and the meter's cap. */
-  const barBase = CORE.y + 120;
-  const meterY = CORE.y + CORE.h - 22;
+  const barBase = core.y + 120;
+  const meterY = core.y + core.h - 22;
   return (
     <g>
       <path d={d} fill="var(--pda-void)" />
       <path d={d} fill={led ? "rgba(var(--dawn-rgb), 0.03)" : "rgba(240, 200, 106, 0.07)"} />
       <path d={d} fill="none" stroke={stroke} strokeDasharray={led ? "5 4" : undefined} />
       <line
-        x1={CORE.x + CORE_CUT}
-        y1={CORE.y + 1}
-        x2={CORE_R}
-        y2={CORE.y + 1}
+        x1={core.x + CORE_CUT}
+        y1={core.y + 1}
+        x2={core.x + core.w}
+        y2={core.y + 1}
         stroke={stroke}
         strokeWidth="2"
       />
@@ -667,7 +779,7 @@ function SeatCard({ work, led }: { work: PdaWork; led: boolean }) {
         {work.teamAb}
       </text>
       <text
-        x={CORE_R - CORE_PAD}
+        x={core.x + core.w - CORE_PAD}
         y={gy + 11}
         textAnchor="end"
         fontSize={FS.id}
@@ -679,7 +791,7 @@ function SeatCard({ work, led }: { work: PdaWork; led: boolean }) {
 
       <text
         x={gx}
-        y={CORE.y + 66}
+        y={core.y + 66}
         fontSize={FS.title}
         fontWeight={700}
         letterSpacing=".01em"
@@ -790,13 +902,14 @@ function OwnerPlate({ work, led }: { work: PdaWork; led: boolean }) {
  * survives this drawing's type lift unchanged while its LABELS did not — a
  * mark at .14 reads as texture at any scale, and a 4px letter reads as dirt.
  *
- * Every coordinate is the reference's own.
+ * ⚠ AND ITS MARKS SPREAD WITH THE BOARD. Every y is a FRACTION of the
+ * reference's own content height, so a taller board distributes the bed
+ * rather than bunching it under the seat and leaving the tail bare. The marks
+ * themselves never scale — a stretched via is a bug, not a bed.
  */
-function SubstrateBed() {
-  const vias =
-    "M40 160h3v3h-3zM90 300h3v3h-3zM150 452h3v3h-3zM240 706h3v3h-3zM420 480h3v3h-3z" +
-    "M520 150h3v3h-3zM640 140h3v3h-3zM760 150h3v3h-3zM856 600h3v3h-3zM300 716h3v3h-3z" +
-    "M660 700h3v3h-3zM560 480h3v3h-3zM220 150h3v3h-3zM360 150h3v3h-3z";
+function SubstrateBed({ layout }: { layout: ConfigLayout }) {
+  const s = layout.bed;
+  const at = (y: number) => OWNER.y + (y - OWNER.y) * s;
   const passives = [
     [56, 64],
     [806, 84],
@@ -805,6 +918,26 @@ function SubstrateBed() {
     [70, 688],
     [700, 700],
   ] as const;
+  const vias = [
+    [40, 160],
+    [90, 300],
+    [150, 452],
+    [240, 706],
+    [420, 480],
+    [520, 150],
+    [640, 140],
+    [760, 150],
+    [856, 600],
+    [300, 716],
+    [660, 700],
+    [560, 480],
+    [220, 150],
+    [360, 150],
+  ] as const;
+  /* The two meanders, from the reference — anchors on the board's own scale,
+     diagonal legs a fixed 40 so they stay at 45°. */
+  const m1 = `M20 ${at(140)}H180L220 ${at(140) + 40}V${at(400)}`;
+  const m2 = `M868 ${at(440)}V${at(560)}L820 ${at(560) + 48}H700`;
   return (
     /* ⚠ ONE GROUP OPACITY IS THE ALPHA CEILING — but it is set against the
        RENDERED drawing, not the reference's 1:1 canvas. `meet` is 0.647 at
@@ -816,28 +949,26 @@ function SubstrateBed() {
       {/* The ghost die — the card's own footprint, 20 units proud on every
           side. It is what the eye reads as the card's bezel. */}
       <rect
-        x={CORE.x - 20}
-        y={CORE.y - 20}
-        width={CORE.w + 40}
-        height={CORE.h + 40}
+        x={layout.core.x - 20}
+        y={layout.core.y - 20}
+        width={layout.core.w + 40}
+        height={layout.core.h + 40}
         fill="none"
         stroke="var(--pda-hair2)"
         strokeDasharray="4 5"
       />
-      <path
-        d="M20 140H180L220 180V400M868 440V560L820 610H700"
-        fill="none"
-        stroke="var(--pda-hair2)"
-      />
+      <path d={`${m1} ${m2}`} fill="none" stroke="var(--pda-hair2)" />
       <g fill="var(--pda-hair2)">
         {passives.map(([px, py]) => (
           <g key={`${px}-${py}`}>
-            <rect x={px} y={py} width={10} height={4} />
-            <rect x={px} y={py + 7} width={10} height={4} />
+            <rect x={px} y={at(py)} width={10} height={4} />
+            <rect x={px} y={at(py) + 7} width={10} height={4} />
           </g>
         ))}
+        {vias.map(([px, py]) => (
+          <rect key={`v${px}-${py}`} x={px} y={at(py)} width={3} height={3} opacity="0.7" />
+        ))}
       </g>
-      <path d={vias} fill="var(--pda-hair2)" opacity="0.7" />
     </g>
   );
 }
@@ -850,6 +981,7 @@ const T = { bed: 60, owner: 120, wire: 260, wireStep: 60, node: 380, nodeStep: 8
 
 export function ViewConfiguration({
   work,
+  layout,
   lit,
   onLit,
   still,
@@ -857,6 +989,9 @@ export function ViewConfiguration({
 }: {
   work: PdaWork;
   shapes: readonly PdaShape[];
+  /** The board at the field's measured height — `configLayout(configExt(…))`.
+   *  The console owns the measurement; this draws what it is handed. */
+  layout: ConfigLayout;
   lit: string | null;
   onLit: (k: string | null) => void;
   still: boolean;
@@ -869,6 +1004,9 @@ export function ViewConfiguration({
      on, reaches and runs in are all gold: none of them is a person. */
   const green = led ? "var(--pda-txt3)" : "var(--pda-grn)";
   const [runs, rch, whr] = groupsOf(work);
+  const { core, left, right, base, cellH, gap2 } = layout;
+  const coreB = core.y + core.h;
+  const coreCY = core.y + core.h / 2;
 
   /* Every animated group drops its class once the pointer has moved, so a
      hover repaints without replaying the entrance. The DOCK is the one
@@ -878,6 +1016,12 @@ export function ViewConfiguration({
   let wireN = 0;
   const drawAt = () => (still ? null : T.wire + wireN++ * T.wireStep);
   const op = (part: string) => (lit === part ? 0.95 : 0.62);
+
+  /* The buses keep the reference's shape as they lengthen: the 45° jog stays
+     28 units and the two straight runs share the growth in its own ratio. */
+  const run1 = 32.4 + 0.4 * (gap2 - GAP2_0);
+  const jogTop = coreB + run1;
+  const jogBot = jogTop + 28;
 
   return (
     <>
@@ -894,7 +1038,7 @@ export function ViewConfiguration({
       </defs>
 
       <g className={inCls} style={at(T.bed)}>
-        <SubstrateBed />
+        <SubstrateBed layout={layout} />
       </g>
 
       <g className={inCls} style={at(T.owner)}>
@@ -909,9 +1053,9 @@ export function ViewConfiguration({
       <Ribbon
         pts={[
           [444, OWNER.y + OWNER.h],
-          [444, CORE.y],
+          [444, core.y],
         ]}
-        hatch={[[430, OWNER.y + OWNER.h, 28, CORE.y - OWNER.y - OWNER.h]]}
+        hatch={[[430, OWNER.y + OWNER.h, 28, core.y - OWNER.y - OWNER.h]]}
         stroke={green}
         fill="fl-pda-hatch-vd"
         opacity={0.85}
@@ -920,10 +1064,10 @@ export function ViewConfiguration({
       />
       <Ribbon
         pts={[
-          [CORE.x, CORE_CY],
-          [LEFT.x + LEFT.w, CORE_CY],
+          [core.x, coreCY],
+          [left.x + left.w, coreCY],
         ]}
-        hatch={[[LEFT.x + LEFT.w, CORE_CY - 14, CORE.x - LEFT.x - LEFT.w, 28]]}
+        hatch={[[left.x + left.w, coreCY - 14, core.x - left.x - left.w, 28]]}
         stroke={wire}
         fill="fl-pda-hatch-au"
         opacity={op("runs")}
@@ -932,10 +1076,10 @@ export function ViewConfiguration({
       />
       <Ribbon
         pts={[
-          [CORE_R, CORE_CY],
-          [RIGHT.x, CORE_CY],
+          [core.x + core.w, coreCY],
+          [right.x, coreCY],
         ]}
-        hatch={[[CORE_R, CORE_CY - 14, RIGHT.x - CORE_R, 28]]}
+        hatch={[[core.x + core.w, coreCY - 14, right.x - core.x - core.w, 28]]}
         stroke={wire}
         fill="fl-pda-hatch-au"
         opacity={op("rch")}
@@ -951,14 +1095,14 @@ export function ViewConfiguration({
         <Ribbon
           key={from}
           pts={[
-            [from, CORE_B],
-            [from, 448],
-            [to, 476],
-            [to, BASE.y],
+            [from, coreB],
+            [from, jogTop],
+            [to, jogBot],
+            [to, base.y],
           ]}
           hatch={[
-            [from - 14, CORE_B, 28, 448 - CORE_B],
-            [to - 14, 476, 28, BASE.y - 476],
+            [from - 14, coreB, 28, run1],
+            [to - 14, jogBot, 28, base.y - jogBot],
           ]}
           stroke={wire}
           fill="fl-pda-hatch-au"
@@ -969,13 +1113,37 @@ export function ViewConfiguration({
       ))}
 
       <g className={inCls} style={at(T.node)}>
-        <QNode box={LEFT} g={runs} stacked led={led} hot={lit === "runs"} onLit={onLit} />
+        <QNode
+          box={left}
+          cellH={cellH}
+          g={runs}
+          stacked
+          led={led}
+          hot={lit === "runs"}
+          onLit={onLit}
+        />
       </g>
       <g className={inCls} style={at(T.node + T.nodeStep)}>
-        <QNode box={RIGHT} g={rch} stacked led={led} hot={lit === "rch"} onLit={onLit} />
+        <QNode
+          box={right}
+          cellH={cellH}
+          g={rch}
+          stacked
+          led={led}
+          hot={lit === "rch"}
+          onLit={onLit}
+        />
       </g>
       <g className={inCls} style={at(T.node + 2 * T.nodeStep)}>
-        <QNode box={BASE} g={whr} stacked={false} led={led} hot={lit === "whr"} onLit={onLit} />
+        <QNode
+          box={base}
+          cellH={cellH}
+          g={whr}
+          stacked={false}
+          led={led}
+          hot={lit === "whr"}
+          onLit={onLit}
+        />
       </g>
 
       {/* ── The one bright object. ⚠ THE DOCK GROUP HOLDS THE CARD ALONE:
@@ -993,15 +1161,15 @@ export function ViewConfiguration({
             : undefined
         }
       >
-        <SeatCard work={work} led={led} />
+        <SeatCard core={core} work={work} led={led} />
       </g>
       {/* The bar's hover bed — a SIBLING of the dock group on purpose: the
           listener re-renders on hover, and the dock's entrance style must
           never re-evaluate mid-flight. */}
       <rect
-        x={CORE.x}
-        y={CORE.y + 100}
-        width={CORE.w}
+        x={core.x}
+        y={core.y + 100}
+        width={core.w}
         height={100}
         fill="transparent"
         onMouseEnter={() => onLit("gat")}

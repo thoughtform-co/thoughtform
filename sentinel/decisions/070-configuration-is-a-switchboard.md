@@ -1019,3 +1019,135 @@ the argument the first override did not have.
 - The seven refinements at `/test/intelligence-config-lab` now draw in a crop
   production has left twice. They are the record of a finished round; the
   route's own header says so.
+
+## Update 12 — the board is height-elastic (2026-08-11, owner)
+
+The owner opened U11 on his own monitor and found a third of the console
+empty under the board: _"What's up with all that space at the bottom? Why are
+you cramming everything so much? You keep doing this."_
+
+He is right about the pattern, and it is worth naming precisely because it has
+now happened three updates in a row:
+
+| update | crop                 | chosen for  | letterboxed                          |
+| ------ | -------------------- | ----------- | ------------------------------------ |
+| U4     | `828 × 912` portrait | tall fields | **155–181px across** on every laptop |
+| U10    | `1000 × 912`         | laptops     | vertically on tall monitors          |
+| U11    | `932 × 751`          | laptops     | **270px down** at 845 × 950          |
+
+Each pass measured the drawing against ITS OWN CROP — clipping, overlap,
+rendered floor — and every one of those assertions was green while a third of
+the panel was blank. **Nothing on this surface measured the drawing against
+the PANEL.** That is the defect, and it is a guard defect rather than a taste
+one.
+
+### Why one crop can never do it
+
+The console's field is capped at 850px wide but grows with the viewport's
+height, so its aspect is not a constant — measured on the live landing:
+
+| viewport    | field      | w/h       |
+| ----------- | ---------- | --------- |
+| 1280×720    | 603 × 493  | 1.223     |
+| 1440×800    | 679 × 548  | 1.239     |
+| 1920×1080   | 850 × 760  | 1.118     |
+| the owner's | 845 × 950  | **0.889** |
+| 2560×1440   | 850 × 1120 | 0.759     |
+
+`meet` fits by the SMALLER ratio. A landscape crop in a portrait field is
+width-bound and wastes height; a portrait crop in a landscape field is
+height-bound and wastes width. **There is no static crop that fills both
+ends** — the previous three updates were arguing about which end to lose.
+
+### The mechanism, and why it is free
+
+The crop's WIDTH is the reference's frame and never moves, so the fit is
+width-bound and `meet` is `field.w / 932` **at every height**. That is the
+whole trick: growing the crop's height to exactly `932 × field.aspect` costs
+**nothing** in rendered type and removes the letterbox instead. Measured, and
+the numbers are identical to U11's on every rung:
+
+| field      | crop       | meet  | minPx | slack             |
+| ---------- | ---------- | ----- | ----- | ----------------- |
+| 603 × 493  | 932 × 763  | 0.646 | 7.76  | 0                 |
+| 679 × 548  | 932 × 751  | 0.728 | 8.74  | 1px               |
+| 850 × 760  | 932 × 833  | 0.912 | 10.94 | 0                 |
+| 850 × 927  | 932 × 1016 | 0.912 | 10.94 | **0** (was 270px) |
+| 850 × 1120 | 932 × 1228 | 0.912 | 10.94 | **0** (was 438px) |
+
+### Where the height goes, and why there
+
+The board is WIDTH-limited — the crop's width is the field's, so nothing can
+be drawn bigger. The only currency a tall panel offers is vertical
+distribution, and there are two honest places for it:
+
+- **the cables**, which are the reference's own grammar (modules joined by
+  ribbon lanes, so a taller board is a longer run), taking 78 % across the
+  three gaps in R4's own ratio; and
+- **the cells**, 22 %, as air around the answers rather than a pool of it
+  under the last module.
+
+⚠ **THE CARD IS NOT IN THAT LIST.** Its box is ADR-069's flight destination
+and its proportion is fixed to the cartridge's; it re-centres in the band
+instead. ⚠ **AND THE ADDED CELL AIR IS SPLIT, NOT POOLED** — R4's cells are
+top-aligned and carry their slack at the bottom, so that bias is kept at rest
+and half of each cell's new height goes ABOVE its content as the board grows.
+That is the difference between a taller module and a module with a hole under
+it.
+
+### The clamp, and the one shape that still letterboxes
+
+`CONFIG_EXT_MAX` is **620**, set from the tallest field this console takes on
+a desktop: 2560×1440 wants 477 and fills exactly. The only measured shape that
+reaches the clamp is a PORTRAIT desktop window (1280×1440 wants 1068), and
+there the board letterboxes on purpose — **a 590-unit bus run is not a cable,
+it is a gap with wires in it.** The guard names that case rather than hiding
+it, and holds the clamp to buying more than half the trade (691px of slack
+becomes 290px).
+
+### ⚠ The measurement, and why it cannot feed back
+
+One `ResizeObserver` on the SVG, publishing an aspect. It is safe
+STRUCTURALLY rather than by luck: the SVG is absolutely positioned to fill the
+plate, so its box is set by CSS and a `viewBox` change cannot move it. The
+3-unit quantiser is belt and braces against sub-pixel resize noise, not the
+thing that makes it safe. A translate is invisible to an aspect and a uniform
+scale cancels — the same two invariants ADR-069's flight already rests on,
+which is what makes this legal on a subtree the proof ladder moves as it
+arrives.
+
+⚠ **THE FLIGHT USES THE LIVE BOARD, NOT THE ONE AT REST.** Reading 02's crop
+and its card both move with the field's height, so a flight computed against
+`CONFIG_LAYOUT_0` would land the card where the laptop board would have put
+it. `PdaConsole` derives both from one `configLayout(ext)` and hands the same
+object to the attribute and to `pdaFlight`, so the two cannot drift.
+
+### The guard that was missing
+
+`the configuration board fills the panel it is given` walks seven measured
+field shapes and asserts, at each: the crop grows by exactly the height the
+chain absorbs; the vertical order never inverts and the band stays co-centred;
+a module always holds its own header and cells; the frame inset stays uniform
+at 26; **the fit stays width-bound, so the type never pays**; and the panel is
+filled to within 2px, or the clamp is reached and named. `configLayout` is
+pure for exactly this reason.
+
+### Verification
+
+- `npx vitest run` 635 green across 46 files (4 new).
+- `npx tsc --noEmit` clean; `eslint` 0 errors (the two `react-hooks/refs`
+  warnings on `PdaConsole` are byte-identical on `HEAD`).
+- `tests/visual/services-ring-smoke.spec.ts` — **21 passed / 31 skipped**,
+  unchanged.
+- Live captures at 1280×720, 1440×800, 1920×1080, 1920×1247 and 1920×1440,
+  dark and light: 0 clipped, 0 slack, and `minPx` identical to U11's at every
+  shape — 7.76 / 8.74 / 10.94.
+
+### Left open
+
+- The console's own height is what makes this necessary: it grows with the
+  viewport while all four evidence plates hold landscape-ish content. Capping
+  its aspect would solve this for the map AND the other three at once, but it
+  is `ConsoleFrame`'s geometry and belongs to its own pass.
+- Readings 01 and 03 are still static crops with the same latent defect, and
+  still letter at ~4.5–5.5px. They are the next place this bites.

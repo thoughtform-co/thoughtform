@@ -8,7 +8,7 @@ import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/typ
 import { ConsoleFrame } from "../../console/ConsoleFrame";
 import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 
-import { CORE_RECT, ViewConfiguration } from "./PdaConfiguration";
+import { ViewConfiguration, configExt, configLayout } from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
 import { VIEW_BOX, ViewSubstrate, ViewWork, gridRect } from "./PdaViews";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
@@ -136,6 +136,47 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   /** When the last flight began, so an interrupted one can decline to fly. */
   const flightAtRef = useRef(-Infinity);
+
+  /**
+   * ⚠ READING 02'S BOARD IS HEIGHT-ELASTIC, AND THIS IS THE ONE MEASUREMENT
+   * THAT MAKES IT SO (ADR-070 U12).
+   *
+   * The console's field is capped at 850px wide but grows with the viewport's
+   * height, so it is landscape on a laptop and portrait on a tall monitor.
+   * `meet` fits by the smaller ratio, so a single crop letterboxes at one end
+   * or the other — 270px of dead panel at 845 × 950, measured. The crop's
+   * height comes from the field now and the board's vertical chain absorbs
+   * the difference.
+   *
+   * ⚠ NO FEEDBACK LOOP, and that is structural rather than lucky: the SVG is
+   * absolutely positioned to fill the plate, so its box is set by CSS and a
+   * `viewBox` change cannot move it. The quantiser is belt and braces for
+   * sub-pixel resize noise, not the thing that makes this safe.
+   *
+   * ⚠ A TRANSLATE IS INVISIBLE HERE and a uniform scale cancels — the proof
+   * ladder moves this subtree as it arrives, and only the ASPECT is read.
+   */
+  const [ext, setExt] = useState(0);
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const read = () => {
+      const b = el.getBoundingClientRect();
+      if (!(b.width >= 1) || !(b.height >= 1)) return;
+      const next = configExt(b.height / b.width);
+      setExt((prev) => (Math.abs(next - prev) < 3 ? prev : next));
+    };
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /** The board at this field's height, and the crop that exactly contains it.
+   *  ⚠ ONE SOURCE for the attribute AND for the flight — they are the same
+   *  string by construction, so the two cannot drift. */
+  const layout2 = useMemo(() => configLayout(ext), [ext]);
+  const viewBox = view === 2 ? layout2.crop : VIEW_BOX[view];
   /* ⚠ THESE MIRRORS KEEP THE WHEEL LISTENER STABLE, and that is the whole
      reason they are refs. `go` sits in the native listener's dependency array;
      threading `view` or `selectedId` through it as values would tear the
@@ -176,16 +217,20 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
 
       const box = el.getBoundingClientRect();
       const slot = gridRect(i);
+      /* ⚠ THE FLIGHT USES THE LIVE BOARD, not the one at rest. Reading 02's
+         crop and its card both move with the field's height, so a flight
+         computed against `CONFIG_LAYOUT_0` would land the card wherever the
+         laptop board would have put it. */
       const vars =
         from === 1
-          ? pdaFlight(box, VIEW_BOX[1], slot, VIEW_BOX[2], CORE_RECT)
-          : pdaFlight(box, VIEW_BOX[2], CORE_RECT, VIEW_BOX[1], slot);
+          ? pdaFlight(box, VIEW_BOX[1], slot, layout2.crop, layout2.core)
+          : pdaFlight(box, layout2.crop, layout2.core, VIEW_BOX[1], slot);
       if (!vars) return { kind: "raster" };
 
       flightAtRef.current = now;
       return { kind: "flight", ...vars };
     },
-    [shown]
+    [shown, layout2]
   );
 
   const enter = useCallback((next: PdaView, next_entry: PdaEntry) => {
@@ -374,7 +419,7 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
       <svg
         ref={svgRef}
         className="fl-pda__svg"
-        viewBox={VIEW_BOX[view]}
+        viewBox={viewBox}
         preserveAspectRatio="xMidYMin meet"
         role="group"
         /* The reading's title is no longer PRINTED (the rail names it),
@@ -397,6 +442,7 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
         {view === 2 && selected ? (
           <ViewConfiguration
             work={selected}
+            layout={layout2}
             /* The five shapes, with their derived Skill counts — the same
                projection reading 03 crosses. The drawing draws a bar for the
                ones THIS stream taps and leaves the estate to 03. */
