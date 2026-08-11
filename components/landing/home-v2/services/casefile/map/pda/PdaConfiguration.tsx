@@ -91,11 +91,14 @@ const BASE_W = 400;
 const CONTENT_L = 4;
 const CONTENT_R = 884;
 
-/** The uniform frame inset — see the header. */
+/**
+ * The frame inset — see the header. ⚠ HORIZONTAL ONLY since U14: the width
+ * chain never moves, so the side margins are a fixed inset, while the
+ * vertical margin is DERIVED from what the block leaves and split in two.
+ */
 export const CONFIG_INSET = 26;
 const CROP_X = CONTENT_L - CONFIG_INSET;
 const CROP_W = CONTENT_R - CONTENT_L + CONFIG_INSET * 2;
-const CROP_Y = OWNER.y - CONFIG_INSET;
 
 /**
  * The card. `CORE_K` × the 176×136 cartridge, so the two rects are EXACTLY
@@ -133,8 +136,10 @@ const SAT_H0 = 218;
 const BASE_H0 = 128;
 const GAP1_0 = 56.4;
 const GAP2_0 = 116.4;
-const TAIL_0 = 59;
-const CONTENT_H0 = 699;
+/** The crop's height at rest — R4's stage plus its frame inset. */
+const CROP_H0 = 751;
+/** R4's stage, which is the space its bed is scattered across. */
+const R4_STAGE_H = 744;
 
 /**
  * ⚠ HOW THE EXTRA HEIGHT IS SPENT, and why it is spent HERE.
@@ -148,10 +153,19 @@ const CONTENT_H0 = 699;
  *
  * The card is NOT in this list: its box is the flight's destination and its
  * proportion is fixed to the cartridge's. It re-centres in the band instead.
+ *
+ * ⚠ AND THERE IS NO TAIL SHARE ANY MORE (U14, owner: _"move the nodes
+ * components a bit down so everything is nicely centered"_). U12 hung the
+ * remainder off the BOTTOM as bed tail, which is invisible — so the module
+ * block sat high with a bare band under it, 26 units of air above against
+ * 135 below at the owner's shape. **The margin is DERIVED and SPLIT now**:
+ * whatever the gaps and cells do not take is halved above and below the
+ * block, so the drawing is centred by construction rather than by a share
+ * that has to be tuned.
  */
 const CELL_GROW = 0.09;
 const CELL_H_MAX = 130;
-const SHARE = { gap1: 0.28, gap2: 0.5, tail: 0.22 } as const;
+const SHARE = { gap1: 0.26, gap2: 0.4 } as const;
 /**
  * Past this the runs stop reading as cable and start reading as a gap.
  *
@@ -174,19 +188,23 @@ export interface ConfigLayout {
   left: FlightRect;
   right: FlightRect;
   base: FlightRect;
-  contentBottom: number;
-  /** The bed's own vertical scale — its marks spread with the board rather
-   *  than bunching under the seat. */
-  bed: number;
+  /** The module block's floor — the base module's bottom edge, and the last
+   *  thing on the board a reader actually looks at. */
+  blockBottom: number;
+  /** Air above the block, and the same again below it. */
+  margin: number;
+  cropY: number;
+  cropH: number;
   crop: string;
 }
 
 /**
  * THE BOARD AT ONE HEIGHT. Pure, so `pda-viewbox` can walk it.
  *
- * `ext` is extra authoring units of height, 0 at the reference. Everything is
- * derived so that the content is exactly `CONTENT_H0 + ext` tall — which is
- * what lets the crop be `751 + ext` and the letterbox be zero.
+ * `ext` is extra authoring units of height, 0 at the reference. The crop is
+ * `CROP_H0 + ext`, the module block takes what the gaps and cells claim, and
+ * **the remainder is halved above and below it** — so the board is centred at
+ * every height by construction and there is no share left to mistune.
  */
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -197,19 +215,21 @@ export function configLayout(ext: number): ConfigLayout {
   const baseH = BASE_H0 + grow;
   const bandH = Math.max(CORE_H, satH);
 
-  /* What is left for the runs once the modules have taken their share. The
-     three gaps keep the reference's ratio between them. */
-  const runs = CONTENT_H0 + ext - OWNER.h - bandH - baseH;
-  const extra = runs - (GAP1_0 + GAP2_0 + TAIL_0);
-  const gap1 = GAP1_0 + SHARE.gap1 * extra;
-  const gap2 = GAP2_0 + SHARE.gap2 * extra;
-  const tail = TAIL_0 + SHARE.tail * extra;
+  const gap1 = GAP1_0 + SHARE.gap1 * ext;
+  const gap2 = GAP2_0 + SHARE.gap2 * ext;
 
   const bandY = OWNER.y + OWNER.h + gap1;
   const core = { x: CORE_X, y: bandY + (bandH - CORE_H) / 2, w: CORE_W, h: CORE_H };
   const satY = bandY + (bandH - satH) / 2;
   const baseY = bandY + bandH + gap2;
-  const contentBottom = baseY + baseH + tail;
+  const blockBottom = baseY + baseH;
+
+  /* ⚠ THE MARGIN IS WHAT IS LEFT, AND IT IS SPLIT. The block grows by ~0.93
+     of `ext` (0.66 from the gaps, the rest from the cells) against a crop
+     that grows by 1.0, so the air widens slowly and can never go negative. */
+  const cropH = CROP_H0 + ext;
+  const margin = (cropH - (blockBottom - OWNER.y)) / 2;
+  const cropY = OWNER.y - margin;
 
   return {
     ext,
@@ -221,13 +241,15 @@ export function configLayout(ext: number): ConfigLayout {
     left: { x: LEFT_X, y: satY, w: SAT_W, h: satH },
     right: { x: RIGHT_X, y: satY, w: SAT_W, h: satH },
     base: { x: BASE_X, y: baseY, w: BASE_W, h: baseH },
-    contentBottom,
-    bed: (contentBottom - OWNER.y) / CONTENT_H0,
+    blockBottom,
+    margin,
+    cropY,
+    cropH,
     /* ⚠ ROUNDED, because this string lands in the DOM and in the flight's
        arithmetic. The shares are fractions of a fraction, so an unrounded
-       height serialises as `1015.9999999999999`; two places is a thousandth
-       of a device pixel and keeps both readable. */
-    crop: `${CROP_X} ${CROP_Y} ${CROP_W} ${r2(contentBottom + CONFIG_INSET - CROP_Y)}`,
+       value serialises as `1015.9999999999999`; two places is a thousandth of
+       a device pixel and keeps both readable. */
+    crop: `${CROP_X} ${r2(cropY)} ${CROP_W} ${r2(cropH)}`,
   };
 }
 
@@ -241,7 +263,7 @@ export function configLayout(ext: number): ConfigLayout {
  * 845×950 → 297, 850×1120 → clamped.
  */
 export const configExt = (fieldAspect: number) =>
-  Math.max(0, Math.min(CONFIG_EXT_MAX, Math.round(CROP_W * fieldAspect - (CONTENT_H0 + 52))));
+  Math.max(0, Math.min(CONFIG_EXT_MAX, Math.round(CROP_W * fieldAspect - CROP_H0)));
 
 /** The board at rest — the reference's own proportions, and what every guard
  *  and the lab measure against. */
@@ -918,14 +940,17 @@ function OwnerPlate({ work, led }: { work: PdaWork; led: boolean }) {
  * survives this drawing's type lift unchanged while its LABELS did not — a
  * mark at .14 reads as texture at any scale, and a 4px letter reads as dirt.
  *
- * ⚠ AND ITS MARKS SPREAD WITH THE BOARD. Every y is a FRACTION of the
- * reference's own content height, so a taller board distributes the bed
- * rather than bunching it under the seat and leaving the tail bare. The marks
- * themselves never scale — a stretched via is a bug, not a bed.
+ * ⚠ AND IT SPANS THE WHOLE CROP, not the module block. R4 scatters its bed
+ * across its own 744-unit stage, so every y here is a FRACTION of that mapped
+ * onto the crop — which puts texture ABOVE the seat and below the base at
+ * every height, instead of leaving the head bare and pooling a tail under the
+ * board. The marks themselves never scale: a stretched via is a bug, not a
+ * bed. Anything that lands under a module is simply hidden — they are opaque,
+ * and R4's own note that the bed is "scattered clear of modules" is about
+ * where it READS, not about where it exists.
  */
 function SubstrateBed({ layout }: { layout: ConfigLayout }) {
-  const s = layout.bed;
-  const at = (y: number) => OWNER.y + (y - OWNER.y) * s;
+  const at = (y: number) => layout.cropY + (y / R4_STAGE_H) * layout.cropH;
   const passives = [
     [56, 64],
     [806, 84],

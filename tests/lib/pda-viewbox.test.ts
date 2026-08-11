@@ -86,12 +86,14 @@ describe("the readings' crops", () => {
   const CONTENT = {
     1: { x: 12, y: 22, right: 12 + 3 * 192 + 176, bottom: 22 + 4 * 158 + 136 },
     /* 02 is the R4 substrate field (ADR-070 U11), drawn in the handoff's own
-       888 x 744 stage coordinates. Content runs from the left module's wall
-       (4) and the seat's top edge (20) across to the right module's outer
-       wall (884) and down through the bed's lowest via (719) — the BED is
-       content here, which is what puts the bottom bound 59 units below the
-       base module. */
-    2: { x: 4, y: 20, right: 884, bottom: 719 },
+       888 x 744 stage coordinates. The bound content is the MODULE BLOCK —
+       the left module's wall (4) and the seat's top edge (20) across to the
+       right module's outer wall (884), down to the base module's floor.
+       ⚠ THE BED IS NOT IN THIS BOX and does not need to be: since U14 it is
+       mapped ACROSS the crop by construction, so it can no more escape the
+       crop than the crop can escape itself. What has to be asserted about it
+       is that it fills BOTH ends, which is what the centring test does. */
+    2: { x: 4, y: 20, right: 884, bottom: 660 },
     // 03 lost its two section rules 2026-08-06 (owner) — the foot already
     // said it — and the crop tightened from 718 units to 632 behind them.
     3: { x: 10, y: 93, right: 766, bottom: 702 },
@@ -121,15 +123,26 @@ describe("the readings' crops", () => {
       const b = box(v);
       const c = CONTENT[v];
       if (v === 2) {
-        const inset = [c.x - b.x, b.right - c.right, c.y - b.y, b.bottom - c.bottom];
-        for (const m of inset) {
-          expect(m, `reading 2's frame inset is uneven: ${inset.join("/")}`).toBe(inset[0]);
-        }
-        /* Big enough that the outermost module does not touch the console
-           wall (2.7px, measured, before the frame inset was restored); small
-           enough that the width it costs is not silently eating the type. */
-        expect(inset[0], `reading 2's inset is a letterbox now`).toBeGreaterThanOrEqual(18);
-        expect(inset[0], `reading 2's inset is a letterbox now`).toBeLessThanOrEqual(34);
+        /* ⚠ HORIZONTAL IS AN INSET, VERTICAL IS A CENTRING, and they are
+           different contracts. The width chain never moves, so the side
+           margins are the frame inset R4 draws — big enough that the outer
+           modules do not touch the console wall (2.7px, measured, before it
+           was restored) and small enough not to eat the type. */
+        const side = [c.x - b.x, b.right - c.right];
+        expect(side[0], `reading 2's frame inset is uneven: ${side.join("/")}`).toBe(side[1]);
+        expect(side[0], `reading 2's inset is a letterbox now`).toBeGreaterThanOrEqual(18);
+        expect(side[0], `reading 2's inset is a letterbox now`).toBeLessThanOrEqual(34);
+
+        /* ⚠ THE MODULE BLOCK IS CENTRED (U14, owner). U12 hung the leftover
+           height off the bottom as bed tail, which is invisible — 26 units of
+           air above the seat against 135 below the base at the owner's own
+           shape, and it read as the board sitting high in a panel with a hole
+           under it. The air is halved now, and this is the assertion that
+           says so. */
+        expect(c.y - b.y, `reading 2's block is not centred in its crop`).toBeCloseTo(
+          b.bottom - c.bottom,
+          1
+        );
         return;
       }
       expect(b.h - (c.bottom - c.y), `reading ${v} wastes vertical units`).toBeLessThanOrEqual(40);
@@ -205,17 +218,20 @@ describe("the configuration board fills the panel it is given", () => {
     return { x, y, w, h, right: x + w, bottom: y + h };
   };
 
-  it("the crop grows by exactly the height the board absorbs", () => {
-    /* The whole mechanism in one line: content is `699 + ext` tall, so the
-       crop is `751 + ext`. If these ever disagree the board is either
-       overflowing its crop or leaving a gap inside it. */
+  it("the crop grows by exactly the height the field offers", () => {
+    /* The whole mechanism in one line: the crop is `751 + ext`, and the block
+       plus its two margins is exactly that. If these ever disagree the board
+       is either overflowing its crop or leaving a gap inside it. */
     for (const ext of [0, 11, 82, 160, 297, CONFIG_EXT_MAX]) {
       const c = crop(ext);
+      const l = configLayout(ext);
       expect(c.h, `ext ${ext}: the crop and the chain disagree`).toBeCloseTo(751 + ext, 1);
-      expect(configLayout(ext).contentBottom, `ext ${ext}: content bottom drifted`).toBeCloseTo(
-        719 + ext,
-        6
-      );
+      expect(
+        l.margin * 2 + (l.blockBottom - 20),
+        `ext ${ext}: the block and its margins do not fill the crop`
+      ).toBeCloseTo(c.h, 1);
+      // Air, never a negative margin — the block may not outgrow its crop.
+      expect(l.margin, `ext ${ext}: the block overflows its crop`).toBeGreaterThan(20);
     }
   });
 
@@ -239,14 +255,15 @@ describe("the configuration board fills the panel it is given", () => {
       expect(34 + 2 * l.cellH, `${where}: the satellites overflow`).toBeLessThanOrEqual(l.satH);
       expect(34 + l.cellH, `${where}: the base module overflows`).toBeLessThanOrEqual(l.baseH);
 
-      // The frame inset is uniform and unchanged — U11's finding, kept.
+      // The SIDE inset is uniform and unchanged — U11's finding, kept.
       expect(4 - c.x, `${where}: the left inset moved`).toBe(CONFIG_INSET);
       expect(c.right - 884, `${where}: the right inset moved`).toBe(CONFIG_INSET);
-      expect(20 - c.y, `${where}: the top inset moved`).toBe(CONFIG_INSET);
+      // ...and the block is centred vertically at every height (U14).
       // ⚠ ONE PLACE, not six: the crop string is rounded to 2dp on purpose
       // (it lands in the DOM and in the flight's arithmetic).
-      expect(c.bottom - l.contentBottom, `${where}: the bottom inset moved`).toBeCloseTo(
-        CONFIG_INSET,
+      expect(20 - c.y, `${where}: the head air drifted`).toBeCloseTo(l.margin, 1);
+      expect(c.bottom - l.blockBottom, `${where}: the block is off-centre`).toBeCloseTo(
+        l.margin,
         1
       );
     }

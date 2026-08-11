@@ -1090,11 +1090,25 @@ their traps; do not read their numbers as current.
   moves, so the fit is width-bound and `meet` is `field.w / 932` at every
   height, which means **growing the crop's height is free** and `minPx` is
   byte-identical at every shape (7.76 / 8.74 / 10.94). The height goes to the
-  CABLES (78 %, R4's own grammar — a taller board is a longer run) and the
-  CELLS (22 %, air around the answers); ⚠ **the card is not in that list** —
-  its box is the flight's destination, so it re-centres in the band instead,
-  and ⚠ **the added cell air is SPLIT, not pooled**, or a taller module is
-  just a module with a hole under it. `CONFIG_EXT_MAX` 620 fills every desktop
+  CABLES (R4's own grammar — a taller board is a longer run) and the CELLS
+  (air around the answers); ⚠ **the card is not in that list** — its box is
+  the flight's destination, so it re-centres in the band instead, and ⚠ **the
+  added cell air is SPLIT, not pooled**, or a taller module is just a module
+  with a hole under it.
+  ⚠ **AND THERE IS NO TAIL SHARE (U14, owner).** U12 hung the remainder off
+  the bottom as bed, which is invisible — 26 units of air above the seat
+  against 135 below the base at the owner's shape, so the block sat high in a
+  panel with a hole under it. **The margin is DERIVED and SPLIT**: the module
+  block takes what the cables and cells claim and the rest is halved above and
+  below it, so the board is centred by construction at every height (55.5
+  units each side at rest, 72.6 at the owner's). The BED spans the CROP now
+  rather than trailing the block — R4's own 744-unit stage mapped onto it — so
+  there is texture above the seat as well as below the base. ⚠ **`CONFIG_INSET`
+  IS HORIZONTAL-ONLY**: the side margins are the fixed frame inset, the
+  vertical is derived, and `pda-viewbox` asserts them SEPARATELY (side by
+  equality with 26, vertical by top === bottom). Collapsing them back into one
+  "uniform inset" test is how the tail returns unnoticed.
+  `CONFIG_EXT_MAX` 620 fills every desktop
   shape; only a PORTRAIT desktop window reaches it, and there it letterboxes
   on purpose because a 590-unit bus run is a gap with wires in it.
   ⚠ **THE FLIGHT USES THE LIVE BOARD**, not `CONFIG_LAYOUT_0` — `PdaConsole`

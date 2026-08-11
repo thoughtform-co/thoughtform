@@ -1205,3 +1205,62 @@ construction.
 - Captured at 1920×1247 dark and 1280×720 light: crop and `minPx` unchanged
   (10.94 / 7.76), 0 clipped. The cut is geometry, not layout — no measure,
   crop or type size moves with it.
+
+## Update 14 — the module block is centred, not tailed (2026-08-11, owner)
+
+_"Can you move the nodes components a bit down so everything is nicely
+centered?"_
+
+U12 made the board height-elastic and gave the leftover height three shares:
+the cables, the cells, and a **tail** below the base module. The tail was the
+mistake. It is bed — decorative, sub-.14 alpha, effectively invisible — so
+every unit of it read as emptiness rather than as board. At the owner's shape
+that meant **26 units of air above the seat against 135 below the base**, and
+the whole block sat high in a panel with a hole under it.
+
+### The margin is derived and split, not shared
+
+The fix removes the tail share entirely and inverts the arithmetic. The crop's
+height is still the field's (`CROP_H0 + ext`). The MODULE BLOCK — seat, gap,
+band, gap, base — takes what the cables and cells claim. **Whatever is left is
+halved above and below it.**
+
+```
+blockH  = OWNER.h + gap1 + bandH + gap2 + baseH
+margin  = (cropH − blockH) / 2
+cropY   = OWNER.y − margin
+```
+
+That centres the board **by construction**, at every height, with no share
+left to mistune. At rest the margin is 55.5 units top and bottom, against
+U12's 26 / 85 — so even the laptop board moved down and gained air under the
+seat. The block grows by ~0.93 of `ext` against a crop that grows by 1.0, so
+the margin widens slowly (55.5 → 72.6 at the owner's shape) and can never go
+negative; the guard asserts it stays over 20.
+
+### ⚠ The bed spans the CROP now, not the block
+
+The tail existed because the bed had to live somewhere. R4 scatters its bed
+across its own 744-unit stage, so every bed `y` is a fraction of that mapped
+onto the crop — which puts texture ABOVE the seat and below the base at every
+height instead of leaving the head bare. Marks that land under a module are
+simply hidden; R4's own note that the bed is _"scattered clear of modules"_ is
+about where it READS, not about where it exists.
+
+⚠ **`CONFIG_INSET` IS HORIZONTAL-ONLY NOW.** The width chain never moves, so
+the side margins stay the fixed 26-unit frame inset U11 restored; the vertical
+margin is derived. Two different contracts on two axes, and `pda-viewbox`
+asserts them separately — the side inset by equality with 26, the vertical by
+`top === bottom`. Collapsing them back into one "uniform inset" test is how
+the tail would return unnoticed.
+
+### Verification
+
+- `npx tsc --noEmit` 0 errors; `eslint` 0 errors, 4 pre-existing warnings
+  (`CROP_Y` died with the fixed top and was removed).
+- `npx vitest run` 635 green. The centring is asserted at six `ext` values and
+  at every one of the seven measured field shapes.
+- `tests/visual/services-ring-smoke.spec.ts` — 21 passed / 31 skipped.
+- Captured at 1920×1247 and 1280×720, dark and light: crop and `minPx`
+  unchanged (10.94 / 7.76), 0 clipped. Like U13, this moves no measure — it
+  only decides where the leftover air goes.
