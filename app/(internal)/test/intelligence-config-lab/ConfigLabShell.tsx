@@ -20,11 +20,21 @@ import type {
 } from "@/lib/cases/types";
 
 import { useConfigFitReadout } from "./useFitReadout";
-import { DIE_VIEWBOX, VariantDie } from "./VariantDie";
-import { CHAIN_VIEWBOX, VariantChain } from "./VariantChain";
-import { SECTION_VIEWBOX, VariantSection } from "./VariantSection";
-import { SCHEMATIC_VIEWBOX, VariantSchematic } from "./VariantSchematic";
-import { ICL_VARIANTS, type IclRecord, type IclVariantId, iclVariant } from "./variants";
+import { TIGHT_VIEWBOX, VariantTight } from "./VariantTight";
+import { FUSED_VIEWBOX, VariantFused } from "./VariantFused";
+import { BANDS_VIEWBOX, VariantBands } from "./VariantBands";
+import { RAIL_VIEWBOX, VariantRail } from "./VariantRail";
+import { SATELLITE_VIEWBOX, VariantSatellite } from "./VariantSatellite";
+import { LEDGER_VIEWBOX, VariantLedger } from "./VariantLedger";
+import { GRID_VIEWBOX, VariantGrid } from "./VariantGrid";
+import { SEATED_VIEWBOX, VariantSeated } from "./VariantSeated";
+import {
+  ICL_VARIANTS,
+  type IclRecord,
+  type IclVariantId,
+  type IclVariantProps,
+  iclVariant,
+} from "./variants";
 
 /**
  * The lab shell — controls, the REAL console chrome, and the fit readout.
@@ -47,6 +57,33 @@ const STATIONS: readonly ConsoleStation[] = [
   { id: "configuration", name: "CONFIGURATION" },
   { id: "substrate", name: "SUBSTRATE" },
 ];
+
+/**
+ * ⚠ ONE MAP, NOT TWO TERNARY CHAINS. Until 2026-08-11 the crop and the mount
+ * were separate hand-written chains, each ending in a bare `else` — so an id
+ * that was registered but not added to both silently rendered the LAST
+ * variant instead of failing. That is survivable at five entries and a
+ * guaranteed mis-mount at eight. A `Record` keyed on the union makes the
+ * compiler the guard: add an id to `IclVariantId` and this will not build
+ * until the drawing exists.
+ *
+ * `shipped` is deliberately absent — it is production's `ViewConfiguration`
+ * with its own props (`lit` / `still` / `entry`), not an `IclVariantProps`
+ * drawing, and pretending otherwise is how a lab starts copying production.
+ */
+const DRAWINGS: Record<
+  Exclude<IclVariantId, "shipped">,
+  { vb: string; Component: React.ComponentType<IclVariantProps> }
+> = {
+  tight: { vb: TIGHT_VIEWBOX, Component: VariantTight },
+  fused: { vb: FUSED_VIEWBOX, Component: VariantFused },
+  bands: { vb: BANDS_VIEWBOX, Component: VariantBands },
+  rail: { vb: RAIL_VIEWBOX, Component: VariantRail },
+  satellite: { vb: SATELLITE_VIEWBOX, Component: VariantSatellite },
+  ledger: { vb: LEDGER_VIEWBOX, Component: VariantLedger },
+  grid: { vb: GRID_VIEWBOX, Component: VariantGrid },
+  seated: { vb: SEATED_VIEWBOX, Component: VariantSeated },
+};
 
 interface Preset {
   id: string;
@@ -174,16 +211,11 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
     preset.id,
   ]);
 
-  const vb =
-    variantId === "shipped"
-      ? VIEW_BOX[2]
-      : variantId === "die"
-        ? DIE_VIEWBOX
-        : variantId === "chain"
-          ? CHAIN_VIEWBOX
-          : variantId === "section"
-            ? SECTION_VIEWBOX
-            : SCHEMATIC_VIEWBOX;
+  /* Every refinement uses the production crop, so this resolves to the same
+     string as `shipped` today — kept per-variant because a future study may
+     legitimately re-crop, and the readout must measure the crop it drew in. */
+  const drawing = variantId === "shipped" ? null : DRAWINGS[variantId];
+  const vb = drawing ? drawing.vb : VIEW_BOX[2];
 
   const bad = report.clipped.length + report.collisions.length + report.smallControls.length;
 
@@ -260,21 +292,24 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
       </header>
 
       <div className="icl__body">
-        <div className="icl-stage">
+        {/* ⚠ THE PRESET VARS BELONG ON THE STAGE, NOT THE ARRIVAL. `.icl-stage`
+            is `width: var(--icl-w, 612px)`, and while the vars were declared
+            on its CHILD the stage always resolved to the 612px fallback — so
+            at p1440 (690) and p1920 (864) the housing overflowed and every
+            still was CROPPED. Custom properties inherit downward, so the
+            arrival still reads them from here. */}
+        <div
+          className="icl-stage"
+          style={
+            {
+              "--icl-w": `${preset.hw}px`,
+              "--icl-h": `${preset.hh}px`,
+            } as React.CSSProperties
+          }
+        >
           {/* The real ancestor chain: both proof gates forced on, then a
               definite-height housing — console.css's one requirement. */}
-          <div
-            className="icl-arrival"
-            data-proof-live=""
-            data-proof-settled=""
-            ref={frameRef}
-            style={
-              {
-                "--icl-w": `${preset.hw}px`,
-                "--icl-h": `${preset.hh}px`,
-              } as React.CSSProperties
-            }
-          >
+          <div className="icl-arrival" data-proof-live="" data-proof-settled="" ref={frameRef}>
             <div className="icl-housing">
               <ConsoleFrame
                 className="fl-plate fl-plate--pda fl-pda"
@@ -296,7 +331,9 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
                   role="img"
                   aria-label={`${def.label} — ${pda.title} configuration study`}
                 >
-                  {variantId === "shipped" ? (
+                  {drawing ? (
+                    <drawing.Component pda={pda} work={work} record={record} />
+                  ) : (
                     <ViewConfiguration
                       work={pda}
                       shapes={cross.shapes}
@@ -305,14 +342,6 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
                       still
                       entry={{ kind: "raster" }}
                     />
-                  ) : variantId === "die" ? (
-                    <VariantDie pda={pda} work={work} record={record} />
-                  ) : variantId === "chain" ? (
-                    <VariantChain pda={pda} work={work} record={record} />
-                  ) : variantId === "section" ? (
-                    <VariantSection pda={pda} work={work} record={record} />
-                  ) : (
-                    <VariantSchematic pda={pda} work={work} record={record} />
                   )}
                 </svg>
               </ConsoleFrame>

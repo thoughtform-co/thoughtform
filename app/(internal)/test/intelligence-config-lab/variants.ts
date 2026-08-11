@@ -2,23 +2,37 @@ import type {
   CaseMapChain,
   CaseMapDistrict,
   CaseMapShape,
-  CaseMapShapeKey,
   CaseMapWork,
   CaseSkillEntry,
 } from "@/lib/cases/types";
 
-import { skillSymbol } from "@/components/landing/home-v2/services/casefile/skillSymbol";
 import type { PdaWork } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 
 /**
  * /test/intelligence-config-lab — the variant contract and the shared kit.
  *
- * Five drawings of ONE work stream's intelligence configuration, judged side
- * by side in the real console chrome. `shipped` is the ADR-069 reading 02,
- * mounted from production; the other four are archetypes answering the
- * owner's brief (2026-08-08): different SHAPES per configuration part,
- * different ways of CONNECTING them, motherboards / nodes / retrofuturistic
- * instruments, and the substrate drawn as CLUSTERS of skills.
+ * Nine drawings of ONE work stream's intelligence configuration, judged side
+ * by side in the real console chrome. `shipped` is ADR-070's board, mounted
+ * from production; the other eight are QUALITY-OF-LIFE REFINEMENTS answering
+ * the owner's brief (2026-08-11): the board reads cramped, the panels can be
+ * smaller, the type must be bigger, WHO OWNS IT belongs to the centrepiece,
+ * and the cable stays.
+ *
+ * ⚠ `seated` IS THE SECOND ROUND, not a peer of the first seven — it is
+ * `tight` with the owner's notes ON `tight` applied (bigger card, the base
+ * brought up, the dashed hairline replaced by structure). Judge it against
+ * `tight`, not against the spread.
+ *
+ * ⚠ THE FOUR ARCHETYPES ARE RETIRED (die · chain · section · schematic).
+ * They answered a different question — what SHAPE the drawing should be — and
+ * the switchboard won it on 2026-08-09. ADR-070's own Left-open note said to
+ * delete the losers rather than keep five; git history is the archive.
+ *
+ * ⚠ ALL SEVEN USE THE PRODUCTION CROP `36 48 828 912`, not the archetypes'
+ * 1000×760. The comparison against `shipped` is only worth making if both are
+ * drawn in the same box, and promotion is then a copy rather than a re-fit.
+ * That also raises the floor: nothing here letters under 10 (at the binding
+ * preset the meet is 0.540, so 7.5 would render 4.05px against a 4.3 gate).
  *
  * ⚠ THE LAB PAGE IS MECHANICALLY UNGUARDED. `cases-registry.test.ts` walks
  * `CASES` + `PROJECT_CASES` objects, never component code — so every string a
@@ -30,7 +44,16 @@ import type { PdaWork } from "@/components/landing/home-v2/services/casefile/map
 
 /* ── The variant registry (field-log-lab's 4-field contract) ───────────── */
 
-export type IclVariantId = "shipped" | "die" | "chain" | "section" | "schematic";
+export type IclVariantId =
+  | "shipped"
+  | "tight"
+  | "fused"
+  | "bands"
+  | "rail"
+  | "satellite"
+  | "ledger"
+  | "grid"
+  | "seated";
 
 export interface IclVariantDef {
   id: IclVariantId;
@@ -42,43 +65,75 @@ export interface IclVariantDef {
 export const ICL_VARIANTS: readonly IclVariantDef[] = [
   {
     id: "shipped",
-    label: "Shipped (the Switchboard)",
+    label: "Shipped (the baseline)",
     thesis:
-      "The baseline, and it is the SWITCHBOARD now — promoted out of this lab on 2026-08-09. Every experiment beside it is judged against the real thing, mounted from production, not against a copy.",
+      "The board as it stands. Its answer cards are 158 units tall around an ink band of 51 — 68% dead space, six times over — while the value letters at 11.5 and the QUESTION letters at 14, larger than the answer it introduces. That is the cramping: small type in oversized boxes.",
     provenance:
       "PdaConfiguration.ViewConfiguration, mounted from production at its own crop. The lab's local copy is deleted: two drawings claiming to be the same one is how a lab goes stale.",
   },
   {
-    id: "die",
-    label: "The Die",
+    id: "tight",
+    label: "1 · Tight",
     thesis:
-      "The configuration as silicon: the work docked in a pin-grid socket, every part a different package — memory banks feed it, edge connectors leave the board, and the substrate is the ground plane below grade, clustered by shape.",
+      "THE CONTROL. Identical seats, identical cables, identical width chain — only the cell height (158 → 94) and the type ladder move. The question drops to 11, the key to 10, the answer rises to 16. Answers the one question the others cannot: how much of this was never layout at all.",
     provenance:
-      "CP2077 inventory chipset (mega-chip → packages → bus bars → component banks; value carries hierarchy). Symbols on the ground plane are the 47 Skills' first render.",
+      "CP2077's item tooltip runs a ~3× label:value ratio inside a tight panel. Hierarchy from size contrast, never from panel size.",
   },
   {
-    id: "chain",
-    label: "The Signal Chain",
+    id: "fused",
+    label: "2 · Fused",
     thesis:
-      "The configuration as a signal path: inherits IN on the left, the work and its skill + lane pair process in the middle, and the output physically passes through the gate before it reaches a surface. The substrate is a patch bay.",
+      "The seat is part of the machine it answers for. WHO OWNS IT becomes the head of the centrepiece — one stepped object, welded at a seam with contact ticks. The dashed authority line is DELETED: if the fusion reads, the line was never carrying the relation, the distance was.",
     provenance:
-      "Rack instrument / modular routing; MAP_CHAINS letter the upstream and downstream neighbours at the edges.",
+      "The owner's own note that WHO OWNS IT is integral to the centrepiece, taken literally. Socket-and-collar, not plate-and-wire.",
   },
   {
-    id: "section",
-    label: "The Cutaway",
+    id: "bands",
+    label: "3 · Bands",
     thesis:
-      "The configuration as a vertical section: authority above, the machine in the middle, and the five shapes as literal strata below grade — tapped ones trenched by risers. The bar is the bedplate the machine sits on.",
+      "Stop fighting a portrait crop. Three full-width rows instead of two tall side nodes: the measure goes 212 → 336, so EVERY value in the record letters on one line at 18. The cable becomes a backplane down the gutter, tapping left and right into each band.",
     provenance:
-      "Technical cutaway / geological section; MapSheetGrade's below-grade treatment, redrawn orthographic.",
+      "A portrait crop wants rows. The band rules break where the bus passes — a rule that crosses a conductor draws a short.",
   },
   {
-    id: "schematic",
-    label: "The Schematic",
+    id: "rail",
+    label: "4 · Rail",
     thesis:
-      "The configuration as a circuit diagram: every part its own drawn symbol, every relation an orthogonal net with a named run, and the substrate as five power rails along the bottom.",
+      "The plate carries the answer, the rail carries the question. Every key leaves its box and lines up on an outboard rail; what stays in the field is the ANSWER ALONE at fs 22, twice the shipped size. Six rows read as one list rather than six boxes.",
     provenance:
-      "CP2077 character sheet (a different silhouette per attribute) translated to flat schematic symbols in the house grammar.",
+      "The city's law — nothing is lettered on a unit plate — plus the security-systems board, where labels hang outside the frame they belong to.",
+  },
+  {
+    id: "satellite",
+    label: "5 · Satellite",
+    thesis:
+      "Less housing, more conductor — ADR-070's founding thesis, re-applied. No boxes at all: a pod is a hairline, a key and an answer. Everything saved goes to a k 2.0 centrepiece and to cables with real length, doglegged through channels of their own.",
+    provenance:
+      "The pods gave up 28 units of width so the wiring could have 44. The variant's argument, paid for in its only currency.",
+  },
+  {
+    id: "ledger",
+    label: "6 · Ledger",
+    thesis:
+      "A configuration is a record — read it as one column. Centrepiece and seat hold a tall left column; all six answers become one right-hand list of hairline rows in the order the questions are asked. Nothing is arranged around anything.",
+    provenance:
+      "CP2077's target-scan panel: small dim keys, large bright values, one reading order. The spine is both the column rule and the cable.",
+  },
+  {
+    id: "grid",
+    label: "7 · Grid",
+    thesis:
+      "Hairlines instead of boxes. A strict 2 × 3 modular grid, one question per row, rules as the only chrome. The largest type-to-chrome ratio on the board — and the centre rule IS the cable, because the grid needs a divider and the card needs a run.",
+    provenance:
+      "Swiss modular IA in the house palette. Everything six rectangles and their padding were costing, spent on air and type.",
+  },
+  {
+    id: "seated",
+    label: "8 · Seated",
+    thesis:
+      "TIGHT, WITH THE AUTHORITY MADE STRUCTURAL — the owner's three notes on Tight, answered. The card becomes the largest object on the board (k 1.5 → 1.875, the width chain re-derived around it), WHERE IT RUNS comes up to meet it (264 → 130 units of drop, margins derived rather than eyeballed), and the dashed hairline is replaced by a splayed, chamfered PYLON the card sits on.",
+    provenance:
+      "ADR-070 U5's law kept, not broken: the seat may never be a data bundle. The distinction moves from WEIGHT to MATERIAL — authority is structure, data is conductors. Nothing flows down a pylon; it bears load, so it survives being drawn thick.",
   },
 ];
 
@@ -126,104 +181,9 @@ export interface LetterSpec {
 
 export const specWidth = (s: LetterSpec) => s.text.length * adv(s.fs, s.track);
 
-/* ── Shared drawing helpers (pure) ─────────────────────────────────────── */
-
-/** Orthogonal H→V→H run, the PCB trace shape. */
-export const hvh = (x1: number, y1: number, x2: number, y2: number, midX: number) =>
-  `M${x1},${y1} H${midX} V${y2} H${x2}`;
-
-/** Orthogonal V→H→V run. */
-export const vhv = (x1: number, y1: number, x2: number, y2: number, midY: number) =>
-  `M${x1},${y1} V${midY} H${x2} V${y2}`;
-
-/** Parallel offsets for an n-line bundle at the given pitch. */
-export const bundleOffsets = (n: number, pitch: number): number[] =>
-  Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * pitch);
-
-/** 45° hatch ticks under a grade rule — hand-emitted lines, never a
- *  `<pattern>` (the instrument grammar is flat). */
-export const hatchTicks = (
-  x1: number,
-  x2: number,
-  y: number,
-  pitch = 18,
-  len = 7
-): { x1: number; y1: number; x2: number; y2: number }[] => {
-  const out: { x1: number; y1: number; x2: number; y2: number }[] = [];
-  for (let x = x1; x + len * 0.7 <= x2; x += pitch) {
-    out.push({ x1: x + len * 0.7, y1: y, x2: x, y2: y + len * 0.7 });
-  }
-  return out;
-};
-
-/* ── Record derivations (all totals derived, none authored) ────────────── */
-
-/** The Skills clustered under one shape — the substrate read. The cluster
- *  belongs to the SHAPE; a work reaches it transitively via `work.shapes`,
- *  and no variant may phrase it as the work's own skill list. */
-export const shapeSkills = (
-  skills: readonly CaseSkillEntry[],
-  shape: CaseMapShape
-): CaseSkillEntry[] => skills.filter((s) => s.engine === shape.label);
-
-/** The 2–4 char marks for one shape's cluster (skillSymbol is the guarded
- *  derivation the lattice uses; uniqueness is pinned by the registry test). */
-export const shapeSymbols = (skills: readonly CaseSkillEntry[], shape: CaseMapShape): string[] =>
-  shapeSkills(skills, shape).map((s) => skillSymbol(s.name));
-
-export const skillsTotal = (shapes: readonly CaseMapShape[]) =>
-  shapes.reduce((n, s) => n + s.skills, 0);
-
-/** `SUBSTRATE · 47 SKILLS · 5 SHAPES` — both numbers DERIVED, and the exact
- *  total (never `47+`): the clusters beneath it are arithmetic a reader can
- *  sum, and a hedge beside an exact sum reads as two different numbers. */
-export const substrateCaption = (shapes: readonly CaseMapShape[]) =>
-  `${skillsTotal(shapes)} SKILLS · ${shapes.length} SHAPES`;
-
-export interface ChainNeighbours {
-  from: { id: string; title: string } | null;
-  to: { id: string; title: string } | null;
-  /** Whether the work appears in any recorded chain at all. */
-  inChain: boolean;
-}
-
-/** Upstream/downstream neighbours from MAP_CHAINS — 7 of the 27 works appear
- *  in a chain; everything else gets the honest empty state. */
-export function chainNeighbours(
-  chains: readonly CaseMapChain[],
-  works: readonly CaseMapWork[],
-  workId: string
-): ChainNeighbours {
-  const byId = (id: string) => {
-    const w = works.find((x) => x.id === id);
-    return w ? { id: w.id, title: w.title.toUpperCase() } : null;
-  };
-  for (const c of chains) {
-    const i = c.steps.indexOf(workId);
-    if (i < 0) continue;
-    return {
-      from: i > 0 ? byId(c.steps[i - 1]) : null,
-      to: i < c.steps.length - 1 ? byId(c.steps[i + 1]) : null,
-      inChain: true,
-    };
-  }
-  return { from: null, to: null, inChain: false };
-}
-
-/** The edge lettering: a neighbour when there is one, the run's own end when
- *  the work heads or closes a chain, and the honest empty state otherwise. */
-export const neighbourLine = (
-  n: { id: string; title: string } | null,
-  edge: "in" | "out",
-  inChain: boolean
-) =>
-  n
-    ? `${n.id} · ${n.title}`
-    : !inChain
-      ? "NOT IN A RECORDED CHAIN"
-      : edge === "in"
-        ? "RUN STARTS HERE"
-        : "RUN ENDS HERE";
-
-/** Whether a work taps the given shape. */
-export const taps = (work: CaseMapWork, key: CaseMapShapeKey) => work.shapes.includes(key);
+/* The archetypes' drawing helpers (hvh / vhv / bundleOffsets / hatchTicks) and
+   their record derivations (shapeSkills / shapeSymbols / substrateCaption /
+   chainNeighbours / neighbourLine / taps) left with the four archetypes on
+   2026-08-11. The refinement set draws from `configKit.tsx` instead, which
+   holds the one thing all seven share: the content, the type ladder and the
+   ribbon wrapper. Git history is the archive. */

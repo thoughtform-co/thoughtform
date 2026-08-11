@@ -1216,83 +1216,137 @@ never substituting a different drawing.
 
 ## The CONFIGURATION lab (look-dev, `/test/intelligence-config-lab`)
 
-Four archetypes for READING 02's drawing, beside the shipped ADR-069 reading,
-after the owner's verdict that the morph is right while the drawing still
-reads as four-modules-plus-core (2026-08-08, two CP2077 reference boards:
-different SHAPES per configuration part, motherboards/nodes/retrofuturism,
-substrate as skill clusters). **Nothing on the landing changed**; no ADR until
+**Eight quality-of-life refinements of READING 02, beside the shipped board**
+(owner, 2026-08-11): the board reads cramped, the panels can be smaller, the
+type must be bigger, WHO OWNS IT belongs to the centrepiece, and the cable
+stays. Contents and panels are settled — this is an INFORMATION-ARCHITECTURE
+question, not a content one. **Nothing on the landing changed**; no ADR until
 a direction wins (the BOARD-archetype precedent).
 
-⚠ **THE SWITCHBOARD WON AND IS ON THE LANDING (ADR-070, 2026-08-09).** The
-lab's local copy is DELETED and `shipped` mounts the production module, so the
-four archetypes below are judged against the real thing. The lab's purpose is
-served; keep it for the next question, not as a museum.
+⚠ **THE FOUR ARCHETYPES ARE RETIRED** (die · chain · section · schematic).
+They answered a different question — what SHAPE the drawing should be — and
+the switchboard won it on 2026-08-09; ADR-070's own Left-open note said to
+delete the losers rather than keep five. Their `variants.ts` helpers
+(`hvh`/`vhv`/`bundleOffsets`/`hatchTicks`, `shapeSkills`/`shapeSymbols`/
+`substrateCaption`/`chainNeighbours`/`neighbourLine`/`taps`) went with them.
+Git history is the archive.
 
-- **The five variants** (`app/(internal)/test/intelligence-config-lab/`):
-  `shipped` mounts the real `ViewConfiguration` (the switchboard); `die` = the work docked in a
-  pin-grid socket, parts as package types, the substrate as the ground plane
-  below a grade rule — **with the 47 `skillSymbol` marks' first render
-  anywhere**; `chain` = inherits IN → work + skill/lane twin → GATE aperture
-  → surfaces OUT, patch-bay substrate, MAP_CHAINS neighbours lettered at the
-  edges; `section` = vertical cutaway with the five shapes as literal strata
-  below grade; `schematic` = symbol-per-part nets with five power rails;
-  `switchboard` = **the wire-first one and the lab's default, built after
-  the owner read the first four as safe iterations of the shipped layout** —
-  it adopts the reference's COMPOSITION: multi-conductor ribbons carry most
-  of the ink (`ribbon.ts`, pure offset-polyline geometry with 45° bends,
-  unit-tested), ONE bright object (the work chip is ONE frame — the
-  cartridge itself, no carrier housing), staggered placement, ghost routing
-  behind, and NO question-header skeleton (the part chips carry tiny
-  function tags instead). Person-led flips every ribbon to the dashed hand
-  — the whole board hand-carried.
-  ⚠ **THE SIMPLIFICATION PASS (owner, 2026-08-08) IS PART OF THE
-  ARCHETYPE**, not a tweak: the 47 skill-mark banks are DELETED, the
-  substrate row draws **only the shapes the work taps** (a ghosted loom of
-  untapped shapes is reading 03's job), and nothing leaves the system chip
-  upward — a system a stream acts on is a terminus here, not a transit.
-  Bar slots are authored PER COUNT (1–3) so the row stays balanced instead
-  of huddling wherever the tapped keys sat; `SWITCHBOARD_MAX_BARS` is
-  guarded, because a fourth tap would silently lose a bar. The caption is
-  `DRAWS ON n OF 5 SHAPES` — printing `47 SKILLS` beside three bars that sum
-  to 35 would publish two totals a reader can subtract.
-  ⚠ **EVERY RUN LANDS ON A PIN** (449 + 20k along the bottom edge). The
-  first cut ran the inherit ribbons horizontally ALONG the nib tips, and
-  five conductors crossing a pin row at 45° read as a hatch patch rather
-  than a connection — ribbon-versus-box is checked in the geometry by hand,
-  since the readout measures TEXT collisions only.
-- **Every variant keeps a socketed, cartridge-shaped home for the work**
-  (176×136 × k) — the ADR-069 flight docks the reading-01 cartridge, and a
-  variant whose core cannot receive it breaks the loved morph on promotion.
-- **The chrome is REAL**: `ConsoleFrame` + `ConsoleRail` + the `--pda-*`
-  palette, mounted outside `.fl-case` (the expanded-overlay precedent,
-  console.css). The lab supplies only a definite-height housing pinned to
-  MEASURED production boxes (613×541 / 690×601 / 864×818 — re-pin with
-  `node scripts/capture-config-lab.mjs --measure`) and the forced
-  `data-proof-settled` arrival gate.
+- ⚠ **THE COMPLAINT IS ARITHMETIC, AND IT IS NOT DENSITY.** A shipped answer
+  sub-card is `SUB_H = 158` units holding an ink band of **51** — a key
+  baseline at +26 and one value line at +62. That is **68 % dead space**, six
+  times over: ~640 of the crop's 912 vertical units spent on nothing while the
+  value letters at 11.5. "Cramped" is small type in oversized boxes.
+- ⚠ **AND THE LADDER IS INVERTED.** The shipped question header letters at 14,
+  LARGER than the answer at 11.5 — against ADR-069's own words, _"the question
+  is chrome, the answer is the record"_. Every variant demotes the question
+  (11) and promotes the answer (16–22); that swap alone is most of the fix.
+  The CP2077 reference runs the same ~3× label:value ratio inside a TIGHT
+  panel (`p2-045`'s `950` beside a tiny `ARMOR`) — hierarchy from size
+  contrast, never from panel size.
+- **The eight** (`variants.ts` + one file each): `shipped` mounts production;
+  **tight** (the control — same seats and cables, only cell height and type
+  move), **fused** (the seat welded to the card as one stepped object, the
+  dashed authority line deleted), **bands** (three full-width rows, measure
+  212 → 336 so every value letters on ONE line at 18, the cable a backplane
+  down the gutter), **rail** (keys on an outboard rail, the answer alone at
+  fs 22), **satellite** (no housings at all, a k 1.8 card and doglegged
+  cables), **ledger** (one right-hand column of rows, spine doubling as the
+  column rule), **grid** (2 × 3 modular, hairlines only, the centre rule IS
+  the cable).
+- ⚠ **`seated` IS ROUND TWO, NOT A PEER OF THE FIRST SEVEN.** The owner picked
+  `tight` and gave three notes on it (2026-08-11): the card should be the
+  biggest object, WHERE IT RUNS should come closer, and the dashed authority
+  hairline is "annoying" — the seat should read as integral. `seated` is
+  `tight` with those applied: k 1.5 → **1.875** with the width chain
+  re-derived (`24 | 199 | 26 | 330 | 26 | 199 | 24`), the base drop 264 → 130
+  with margins derived rather than eyeballed, and the hairline replaced by a
+  splayed chamfered **PYLON** drawn UNDER the cartridge. Judge it against
+  `tight`, not against the spread.
+  ⚠ **THE PYLON KEEPS ADR-070 U5's LAW RATHER THAN BREAKING IT.** The seat is
+  AUTHORITY, not data, and may never be one of the nodes' bundles — but a
+  dashed hairline was only ONE way to say that, and U6 already had to take it
+  from `--pda-dim` to full green because it read as absent. So the
+  distinction moves from WEIGHT to MATERIAL: **authority is structure, data
+  is conductors.** Nothing flows down a pylon; it bears load, which is why it
+  survives being drawn thick. ⚠ Mass is the point — the first cut (110→170
+  over 60 units) rendered as a small dark tab, i.e. the hairline's failure in
+  a new shape.
+  ⚠ Two departures it documents rather than hides: the side cells take
+  **pad 10, not 12** (a bigger subject leaves them 197 wide, and at pad 12
+  `BUDGET + COMMITMENT FACTS` wraps to a sliced third line — padding is the
+  cheapest of the three ways out, against shrinking the card or dropping the
+  answer to fs 15), and the base cells are **232 against the sides' 197**,
+  a deliberate exception to ADR-070 U4's one-size law: that law guards
+  against a 640-wide base holding one short line, and this is the opposite
+  case — matching 197 cost `CHAT + BRIEF TOOL` a wrap on a row with 340
+  units of unused board either side.
+- **ALL SEVEN USE THE PRODUCTION CROP** `36 48 828 912`, not the archetypes'
+  1000×760 — the comparison is only worth making in the same box, and
+  promotion is then a copy rather than a re-fit. ⚠ That RAISES THE FLOOR to
+  **fs 10**: the binding preset's meet is 0.540, so the archetypes' 7.5 would
+  render 4.05px against the capture gate's 4.3. `config-lab-fit` asserts 10.
+- **`configKit.tsx` holds what all seven share** — the type ladder (`FS`),
+  `groupsOf()` (the three questions and six answers, ONE source: a variant
+  that re-types them has become a content fork), `Cell`/`Field`/`OwnerPlate`/
+  `BarBlock`/`QLabel`, the spec emitters, and `Wire`. ⚠ `Ribbon` is
+  module-private to `PdaConfiguration.tsx`, so the ribbon wrapper is the ~30
+  lines every variant would otherwise re-write.
+- ⚠ **THE BASELINE STEP IS 1.7 em, NOT THE 1.3 em LINE BOX**, and the capture
+  gate is what proved it. `lineBox` is what a line OCCUPIES; stepping
+  consecutive baselines by it makes the glyph boxes abut, and `getBBox`
+  reports taller than 1.3 em — so the overlap walk flagged real collisions
+  between the two wrapped lines of one value and of THE BAR. 1.7 is the house
+  number: the shipped drawing steps values 20 at fs 11.5 (1.74×) and its bar
+  17 at fs 10 (1.70×). Clearance math keeps `lineBox`; anything stacking
+  baselines uses `step`.
+- ⚠ **ONE REGISTRY MAP, NOT TWO TERNARY CHAINS.** The crop and the mount were
+  separate hand-written chains each ending in a bare `else`, so an id
+  registered but not added to both silently rendered the LAST variant.
+  Survivable at five entries, a guaranteed mis-mount at eight — it is a
+  `Record` keyed on `IclVariantId` now, so the compiler is the guard.
+- ⚠ **THE PRESET VARS LIVE ON `.icl-stage`, NOT ON `.icl-arrival`.**
+  `.icl-stage` is `width: var(--icl-w, 612px)` and the vars were declared on
+  its CHILD, so the stage always resolved to the 612px fallback and the
+  housing overflowed at p1440 (690) and p1920 (864) — **every still at those
+  presets was cropped**, which is invisible to all six capture gates because
+  they measure inside the console.
+- ⚠ **A VARIANT MAY NOT REINTRODUCE A SAID-TWICE.** Withholding `Cartridge`'s
+  `bar` prop un-hides its native lane/autonomy row, so `fused`'s first cut
+  printed `WIDE` twice — once labelled `DECIDES ALONE` on the collar and once
+  bare on the card. This surface has removed a console head, a foot and a
+  designator for exactly that (ADR-063 U1, ADR-070 U8). Caught by eye on a
+  capture, not by a gate.
+- ⚠ **`Cartridge`'s `bar` block hardcodes `fontSize="10"` UNSCALED** — `k`
+  never reaches it. A variant that wants the bar larger must draw it itself.
 - ⚠ **THE LAB PAGE IS MECHANICALLY UNGUARDED** — the registry test walks
   `CASES`/`PROJECT_CASES` objects, never component code. So every variant
   declares everything it letters via a pure `lettering()`, and
   `tests/lib/config-lab-fit.test.ts` walks those declarations for ALL 27
-  works × 4 variants: fit vs measure (advance = `0.6 + tracking`), the Die's
-  cluster rows, and the registry's own envelope regexes. It caught the real
-  ceiling on day one: the longest live `bar` is **46 characters** (W-052),
-  not the 37 a sampled read suggested.
-- ⚠ **Nothing letters under fs 7.5 in a 1000-wide crop** — the binding meet
-  is 0.603 (field 603px at 1280×720), so fs 7 renders 4.22px, under the 4.3
-  floor. Caught by the capture gates, not the eye.
-- **`scripts/capture-config-lab.mjs`** runs the matrix (5 variants × 5
+  works × 7 variants: fit vs measure, the WORD walk (`wrapLines` breaks on
+  spaces only, so the longest word binds however well the value wraps), the
+  cap walk (a line past the cap is declared at measure 0 so a sliced tail
+  fails loudly), the fs floor, and the registry's own envelope regexes.
+  ⚠ **A VARIANT ABSENT FROM THE TEST'S `VARIANTS` TUPLE IS UNGUARDED ON BOTH
+  HALVES.** The guard earned its keep on its first run: `BUDGET + COMMITMENT
+FACTS` (W-049) wrapped to three lines in Satellite's 170-wide pod and the
+  third was being sliced silently — the pods went to 200 and the card to
+  k 1.8, so the answers kept their size.
+- **`scripts/capture-config-lab.mjs`** runs the matrix (8 variants × 5
   subjects × 2 themes at p1280 + a p1920 sweep), waits on the readout's
-  `data-*` mirror (never a sleep), gates on 0 collisions / 0 clipped /
-  minPx ≥ 4.3 / no overflow, and writes the stills to
-  `docs/design/intelligence-config-lab/`. ⚠ `reducedMotion` must stay
+  `data-*` mirror (never a sleep), and gates on 0 collisions / 0 clipped /
+  minPx ≥ 4.3 / no overflow / no page errors. ⚠ `reducedMotion` must stay
   `"no-preference"` — PRM trips the console unwrap pair and hides the
   console entirely. `--measure` scrolls the REAL landing into the dwell
   (`.home-v2-stage` first — the corridor is lazy and inflates layout late)
   and prints the production `.fl-con` boxes; the console frame is shared
   chrome, so whichever row the browse band selected, the box is the same.
-- **Person-led stays honest on every variant**: fallback answers, crossed
-  gauge, empty meter (with `Never a price.` wherever a meter appears), and
-  the tapped shapes still lit — the negative space is a reading.
+- **Person-led stays honest on every variant**: `led = !pda.configured` drives
+  the fallback answers and the crossed gauge — the negative space is a
+  reading. Capture `W-040` in every run; a re-seated layout breaks there
+  first.
+- ⚠ **TWO THINGS NO GATE CAN SEE**, both hand-checked on capture:
+  **cable-versus-box** collisions (every guard measures TEXT) and whether the
+  owner reads as part of the centrepiece, which is the brief.
 
 ## Confidentiality envelope
 

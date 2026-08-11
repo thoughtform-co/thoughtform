@@ -32,7 +32,9 @@ const has = (flag) => args.includes(flag);
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/intelligence-config-lab");
-const VARIANTS = argOf("--v", "shipped,die,chain,section,schematic").split(",");
+const VARIANTS = argOf("--v", "shipped,tight,fused,bands,rail,satellite,ledger,grid,seated").split(
+  ","
+);
 const SUBJECTS = argOf("--w", "W-017,W-004,W-026,W-040,W-063").split(",");
 const THEMES = argOf("--themes", "dark,light").split(",");
 
@@ -97,7 +99,9 @@ async function measureProduction(browser) {
           : null;
       return { con: rect(con), field: rect(field) };
     });
-    console.log(`${vp.id}  .fl-con ${JSON.stringify(boxes.con)}  .fl-con__field ${JSON.stringify(boxes.field)}`);
+    console.log(
+      `${vp.id}  .fl-con ${JSON.stringify(boxes.con)}  .fl-con__field ${JSON.stringify(boxes.field)}`
+    );
     await ctx.close();
   }
 }
@@ -110,8 +114,7 @@ async function run(browser) {
   /** p1280 for the full matrix; p1920 once per variant on the lead subject. */
   const samples = [];
   for (const v of VARIANTS)
-    for (const w of SUBJECTS)
-      for (const t of THEMES) samples.push({ v, w, t, preset: "p1280" });
+    for (const w of SUBJECTS) for (const t of THEMES) samples.push({ v, w, t, preset: "p1280" });
   for (const v of VARIANTS) samples.push({ v, w: SUBJECTS[0], t: "dark", preset: "p1920" });
 
   const ctx = await browser.newContext({
@@ -172,13 +175,40 @@ async function run(browser) {
   await ctx.close();
 
   // ── Report ──────────────────────────────────────────────────────────
-  const pad = (x, n) => String(x ?? "").padEnd(n).slice(0, n);
+  const pad = (x, n) =>
+    String(x ?? "")
+      .padEnd(n)
+      .slice(0, n);
   console.log(
-    [pad("variant", 10), pad("work", 6), pad("theme", 6), pad("preset", 7), pad("ok", 3), pad("texts", 6), pad("minPx", 6), pad("coll", 5), pad("clip", 5), pad("ovf", 4), "err"].join(" ")
+    [
+      pad("variant", 10),
+      pad("work", 6),
+      pad("theme", 6),
+      pad("preset", 7),
+      pad("ok", 3),
+      pad("texts", 6),
+      pad("minPx", 6),
+      pad("coll", 5),
+      pad("clip", 5),
+      pad("ovf", 4),
+      "err",
+    ].join(" ")
   );
   for (const r of rows) {
     console.log(
-      [pad(r.v, 10), pad(r.w, 6), pad(r.t, 6), pad(r.preset, 7), pad(r.settled ? "y" : "N", 3), pad(r.texts, 6), pad(r.minPx.toFixed(1), 6), pad(r.collisions, 5), pad(r.clipped, 5), pad(r.overflow, 4), r.errors].join(" ")
+      [
+        pad(r.v, 10),
+        pad(r.w, 6),
+        pad(r.t, 6),
+        pad(r.preset, 7),
+        pad(r.settled ? "y" : "N", 3),
+        pad(r.texts, 6),
+        pad(r.minPx.toFixed(1), 6),
+        pad(r.collisions, 5),
+        pad(r.clipped, 5),
+        pad(r.overflow, 4),
+        r.errors,
+      ].join(" ")
     );
   }
 

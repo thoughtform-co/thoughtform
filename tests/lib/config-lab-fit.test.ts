@@ -3,13 +3,14 @@ import { describe, expect, it } from "vitest";
 import { toPdaWork } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import { getCase } from "@/lib/cases/registry";
 
-import {
-  dieClusterFits,
-  dieLettering,
-} from "@/app/(internal)/test/intelligence-config-lab/VariantDie";
-import { chainLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantChain";
-import { sectionLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSection";
-import { schematicLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSchematic";
+import { tightLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantTight";
+import { fusedLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantFused";
+import { bandsLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantBands";
+import { railLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantRail";
+import { satelliteLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSatellite";
+import { ledgerLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantLedger";
+import { gridLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantGrid";
+import { seatedLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSeated";
 import {
   type IclRecord,
   type LetterSpec,
@@ -46,11 +47,17 @@ const record = (() => {
   } satisfies IclRecord;
 })();
 
+/** ⚠ A VARIANT ABSENT FROM HERE IS UNGUARDED ON BOTH HALVES — fit AND the
+ *  confidentiality envelope. Adding a drawing means adding a row. */
 const VARIANTS = [
-  ["die", dieLettering],
-  ["chain", chainLettering],
-  ["section", sectionLettering],
-  ["schematic", schematicLettering],
+  ["tight", tightLettering],
+  ["fused", fusedLettering],
+  ["bands", bandsLettering],
+  ["rail", railLettering],
+  ["satellite", satelliteLettering],
+  ["ledger", ledgerLettering],
+  ["grid", gridLettering],
+  ["seated", seatedLettering],
 ] as const;
 
 const allSpecs = (): { variant: string; workId: string; spec: LetterSpec }[] => {
@@ -68,7 +75,7 @@ const allSpecs = (): { variant: string; workId: string; spec: LetterSpec }[] => 
 };
 
 describe("intelligence-config lab · fit", () => {
-  it("every lettered string fits its measure — all 27 works × 4 variants", () => {
+  it("every lettered string fits its measure — all 27 works × 7 variants", () => {
     for (const { variant, workId, spec } of allSpecs()) {
       const w = specWidth(spec);
       expect(
@@ -78,18 +85,43 @@ describe("intelligence-config lab · fit", () => {
     }
   });
 
-  it("the Die's symbol clusters fit their rails (the density experiment's own guard)", () => {
-    for (const row of dieClusterFits(record)) {
+  it("no single WORD runs through a wall", () => {
+    /* ⚠ THE BINDING NUMBER IS A WORD, NOT A STRING. `wrapLines` breaks on
+       spaces only, so a word longer than its measure overflows however well
+       the value wraps — and every per-line assertion above still passes,
+       because each LINE is short. `RECONCILIATION` (14) is the record's
+       longest and it is what caps the value sizes here. */
+    for (const { variant, workId, spec } of allSpecs()) {
+      if (spec.measure === 0) continue;
+      const longest = spec.text.split(" ").reduce((a, b) => (b.length > a.length ? b : a), "");
       expect(
-        row.width <= row.measure,
-        `die cluster ${row.key} — ${row.width.toFixed(1)}u of symbols against ${row.measure}u of rail`
+        longest.length * spec.fs * (0.6 + spec.track) <= spec.measure,
+        `${variant} · ${workId} · ${spec.slot} — the word "${longest}" is wider than its ${spec.measure}u box`
       ).toBe(true);
     }
   });
 
-  it("no variant letters below the micro rung", () => {
+  it("no value wants a line past its cap", () => {
+    /* `wrapLines` SLICES at its cap, so a value that wanted one more line
+       would lose its tail silently and every fit assertion above would still
+       pass. The line past the cap is declared with a ZERO measure for exactly
+       that reason: this is the assertion that sees it. */
     for (const { variant, workId, spec } of allSpecs()) {
-      expect(spec.fs >= 7, `${variant} · ${workId} · ${spec.slot} letters at ${spec.fs}`).toBe(
+      expect(
+        spec.measure > 0,
+        `${variant} · ${workId} · ${spec.slot} wants a line past the cap: "${spec.text}"`
+      ).toBe(true);
+    }
+  });
+
+  it("nothing letters under the production crop's own floor", () => {
+    /* ⚠ 10, NOT THE ARCHETYPES' 7.5. These seven draw in the PRODUCTION crop
+       (828 × 912, portrait), whose meet at the binding lab preset is 0.540 —
+       so 7.5 renders 4.05px against the capture gate's 4.3 floor, and 10
+       renders 5.4. The old rung was legal in a 1000-wide landscape crop and
+       is not legal here. */
+    for (const { variant, workId, spec } of allSpecs()) {
+      expect(spec.fs >= 10, `${variant} · ${workId} · ${spec.slot} letters at ${spec.fs}`).toBe(
         true
       );
     }
