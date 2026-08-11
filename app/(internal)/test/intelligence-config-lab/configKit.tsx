@@ -36,13 +36,9 @@ import { adv, type LetterSpec } from "./variants";
  */
 
 /* ── The type ladder ────────────────────────────────────────────────────
-   One scale, applied at different strengths per variant. Values are in
-   AUTHORING UNITS; at the binding lab preset the production crop's meet is
-   0.540, so `fs 10` renders 5.4px against the capture gate's 4.3 floor.
-
-   ⚠ NOTHING LETTERS UNDER 10 on this crop. The archetypes' 7.5 was legal in
-   a 1000-wide landscape crop; it is not legal here — 7.5 × 0.540 = 4.05px,
-   under the gate. */
+   One scale, applied at different strengths per variant, in AUTHORING UNITS
+   — multiply by the preset's meet (0.540 at p1280, 0.833 at p1920) for
+   rendered pixels. */
 /**
  * ⚠ **NOTHING LETTERS UNDER 12 (owner, 2026-08-11), AND 10 IS THE THING THAT
  * WAS WRONG.** The first round put the keys at 10 on the CP2077 tooltip's
@@ -142,7 +138,14 @@ export const groupsOf = (w: PdaWork): readonly GroupDef[] => {
       part: "runs",
       cells: [
         { key: "SKILL", value: c.skill, kind: "enc" },
-        { key: "MODEL", value: c.laneRun, kind: "plain" },
+        /* ⚠ THE VERBS, NOT THE LANE (owner, 2026-08-11: "model — everyday
+           lane? What does everyday lane mean?"). The lane is a GENERIC
+           capability tier by law — the map's envelope forbids naming a model
+           family and `cases-registry` fails on one — so it cannot be made
+           concrete by naming the model. `m[1]` is the concrete thing the
+           record already holds. The tier survives in `laneRun` and in the
+           hover note; if it should letter here too, it is one line. */
+        { key: "MODEL", value: c.laneVerbs, kind: "plain" },
       ],
     },
     {
@@ -166,23 +169,25 @@ export const groupsOf = (w: PdaWork): readonly GroupDef[] => {
 
 /* ── Colour, by role and material ──────────────────────────────────────── */
 
-/** Person-led collapses every material to the quiet ink: the absence is the
- *  reading, and it may not borrow the provenance green. */
-export const valueInk = (kind: CellKind, led: boolean) =>
-  led
-    ? "var(--pda-txt3)"
-    : kind === "enc"
-      ? "var(--pda-grn)"
-      : kind === "gph"
-        ? "var(--pda-gph)"
-        : "var(--pda-txt)";
+/**
+ * ⚠ **ONE INK FOR EVERY ANSWER (owner, 2026-08-11).** The first round tinted
+ * the Skill green and the graph blue, carrying ADR-062's material grammar
+ * (hatched green = Loop's own, blue-grey = the adjacent domain) down onto the
+ * type. The owner's read: _"I don't know why brand voice skill is green while
+ * the rest isn't"_ — and he is right that it does not survive the move. On
+ * the CITY that grammar had a legend's worth of context and applied to
+ * SHAPES; here it lands on six words in a row with nothing to decode it, so
+ * it reads as emphasis rather than provenance. Colour now carries exactly one
+ * distinction on this drawing: gold for the question, ink for the answer.
+ *
+ * Person-led still collapses to the quiet ink — that is state, not material.
+ */
+export const valueInk = (_kind: CellKind, led: boolean) =>
+  led ? "var(--pda-txt3)" : "var(--pda-txt)";
 
-export const cellGround = (kind: CellKind) =>
-  kind === "enc"
-    ? "rgba(126, 159, 102, 0.07)"
-    : kind === "gph"
-      ? "rgba(111, 127, 168, 0.06)"
-      : "rgba(var(--dawn-rgb), 0.03)";
+/** ⚠ AND ONE GROUND. Same ruling: a green wash under one card and a blue one
+ *  under another is the same claim made in a second channel. */
+export const cellGround = (_kind: CellKind) => "rgba(var(--dawn-rgb), 0.03)";
 
 /* ── Lettering ─────────────────────────────────────────────────────────── */
 
@@ -371,13 +376,18 @@ export function Field({
           stroke="var(--pda-hair2)"
         />
       ) : null}
+      {/* ⚠ THE KEY IS TENSOR GOLD (owner, 2026-08-11) — `--pda-ink`, which is
+          `--gold-ink`, the 4.5:1 rung of ADR-063 U2's ramp. NEVER `--gold`
+          itself: that is the MARK rung and measures ~1.1:1 as small text on
+          the light theme's parchment. `--pda-ink` was declared in pda.css and
+          consumed by nothing until now; this is the slot it existed for. */}
       <text
         x={x}
         y={y + 20}
         textAnchor={anchor}
         fontSize={t.keyFs}
         letterSpacing=".22em"
-        fill="var(--pda-txt2)"
+        fill="var(--pda-ink)"
       >
         {cell.key}
       </text>
@@ -408,6 +418,7 @@ export function Cell({
   t,
   led,
   pad = 12,
+  padY = 2,
 }: {
   x: number;
   y: number;
@@ -417,36 +428,22 @@ export function Cell({
   t: CellType;
   led: boolean;
   pad?: number;
+  /** Top inset for the field. Breathing room is height, and height is the
+   *  one thing a content-sized cell has spare. */
+  padY?: number;
 }) {
-  const enc = cell.kind === "enc";
-  const gph = cell.kind === "gph";
-  const mat = led ? "var(--pda-txt3)" : enc ? "var(--pda-grn)" : "var(--pda-gph-line)";
+  /* ⚠ THE HATCH BAND AND THE DASHED INSET ARE DELETED (owner, 2026-08-11:
+     "those diagonal ticks, I do not want them. I want a clean separation
+     between skill and model"). They were ADR-062's material grammar — the
+     encoded green and the adjacent-domain blue — and they do not survive
+     being applied to a pair of stacked cards: at this size the ticks read as
+     a texture bug rather than as provenance. The separation they were doing
+     badly is now done properly, by the divider rule the node draws between
+     its two cells. */
   return (
     <g>
       <rect x={x} y={y} width={w} height={h} fill={cellGround(cell.kind)} stroke="none" />
-      {/* The encoded material — a hatch band on the card's FOOT, clear of the
-          last line's descenders (the first cut ran it through them). */}
-      {enc ? (
-        <g stroke={mat} opacity="0.5">
-          {Array.from({ length: Math.floor(w / 16) }, (_, j) => (
-            <line key={j} x1={x + 6 + j * 16} y1={y + h - 4} x2={x + 13 + j * 16} y2={y + h - 11} />
-          ))}
-        </g>
-      ) : null}
-      {/* The adjacent domain — the dashed inset. */}
-      {gph ? (
-        <rect
-          x={x + 4}
-          y={y + 4}
-          width={w - 8}
-          height={h - 8}
-          fill="none"
-          stroke={mat}
-          strokeDasharray="4 3"
-          opacity="0.7"
-        />
-      ) : null}
-      <Field x={x + pad} y={y + 2} cell={cell} t={t} led={led} />
+      <Field x={x + pad} y={y + padY} cell={cell} t={t} led={led} />
     </g>
   );
 }
@@ -462,6 +459,7 @@ export function OwnerPlate({
   ownerFs,
   led,
   note = true,
+  padY = 0,
 }: {
   x: number;
   y: number;
@@ -471,6 +469,9 @@ export function OwnerPlate({
   ownerFs: number;
   led: boolean;
   note?: boolean;
+  /** Pushes every line down inside the plate — the seat was sitting against
+   *  its own ceiling (owner, 2026-08-11). */
+  padY?: number;
 }) {
   return (
     <g>
@@ -480,12 +481,18 @@ export function OwnerPlate({
         stroke={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
         strokeDasharray={led ? "5 4" : undefined}
       />
-      <text x={x + 20} y={y + 30} fontSize={FS.key} letterSpacing=".22em" fill="var(--pda-txt2)">
+      <text
+        x={x + 20}
+        y={y + 30 + padY}
+        fontSize={FS.key}
+        letterSpacing=".22em"
+        fill="var(--pda-txt2)"
+      >
         WHO OWNS IT
       </text>
       <text
         x={x + 20}
-        y={y + 34 + lineBox(ownerFs)}
+        y={y + 34 + padY + lineBox(ownerFs)}
         fontSize={ownerFs}
         letterSpacing=".08em"
         fill={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
@@ -495,7 +502,7 @@ export function OwnerPlate({
       {note && work.ownerNote ? (
         <text
           x={x + 20}
-          y={y + 40 + lineBox(ownerFs) + lineBox(FS.key)}
+          y={y + 40 + padY + lineBox(ownerFs) + lineBox(FS.key)}
           fontSize={FS.key}
           letterSpacing=".08em"
           fill="var(--pda-txt2)"
@@ -505,7 +512,7 @@ export function OwnerPlate({
       ) : null}
       <text
         x={x + w - 20}
-        y={y + 30}
+        y={y + 30 + padY}
         textAnchor="end"
         fontSize={FS.key}
         letterSpacing=".22em"
@@ -515,7 +522,7 @@ export function OwnerPlate({
       </text>
       <text
         x={x + w - 20}
-        y={y + 34 + lineBox(ownerFs)}
+        y={y + 34 + padY + lineBox(ownerFs)}
         textAnchor="end"
         fontSize={FS.autonomy}
         letterSpacing=".08em"

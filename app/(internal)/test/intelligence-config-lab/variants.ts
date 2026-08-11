@@ -131,9 +131,9 @@ export const ICL_VARIANTS: readonly IclVariantDef[] = [
     id: "seated",
     label: "8 · Seated",
     thesis:
-      "TIGHT, WITH THE AUTHORITY MADE STRUCTURAL — the owner's three notes on Tight, answered. The card becomes the largest object on the board (k 1.5 → 1.875, the width chain re-derived around it), WHERE IT RUNS comes up to meet it (264 → 130 units of drop, margins derived rather than eyeballed), and the dashed hairline is replaced by a splayed, chamfered PYLON the card sits on.",
+      "THE BALANCED SWEEP. The crop goes 828 → 1000 wide, which is FREE — the fit is height-bound at every measured console, so the meet and every rendered type size are unchanged, and the 19–27% of field width that was horizontal LETTERBOX becomes 172 units of board. It buys gutters of 60 (from 26) so the cables can be seen, a k 2.0 card, and frames that stop cropping their own text. The card and both side nodes are exactly 272 tall, sharing one top and one bottom line.",
     provenance:
-      "ADR-070 U5's law kept, not broken: the seat may never be a data bundle. The distinction moves from WEIGHT to MATERIAL — authority is structure, data is conductors. Nothing flows down a pylon; it bears load, so it survives being drawn thick.",
+      "The seat is structure, not signal — a quiet neck the card sits on. Keys in Tensor gold, one ink for every answer, the hatch and the dashed inset replaced by a divider rule, and MODEL/AGENT answering in words a reader outside Loop can picture.",
   },
 ];
 

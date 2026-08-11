@@ -89,6 +89,20 @@ export interface PdaAnswers {
   /** WHAT RUNS IT — the Skill, then the lane it runs on. */
   skill: string;
   laneRun: string;
+  /**
+   * WHAT THE LANE ACTUALLY DOES — `m[1]`, the verbs.
+   *
+   * ⚠ ADDED BECAUSE `laneRun` IS INSIDER SHORTHAND. The owner's read of the
+   * drawing (2026-08-11): _"model — everyday lane? What does everyday lane
+   * mean?"_ — and nothing on the surface answers it. The lane is deliberately
+   * a GENERIC capability tier, because the map's envelope forbids naming a
+   * model family and `cases-registry` fails on one; so the tier cannot be
+   * made concrete by naming the model. The verbs can: `Generate / critique /
+   * revise` is what the reader can actually picture.
+   *
+   * Production's reading 02 still letters `laneRun` — this is additive.
+   */
+  laneVerbs: string;
   runsNote: string;
   /**
    * WHAT IT CAN REACH — the knowledge graph it queries, then the first
@@ -138,6 +152,7 @@ export interface PdaAnswers {
 const PERSON = {
   skill: "Not bound to a Skill",
   laneRun: "No lane",
+  laneVerbs: "Nothing runs it",
   runsNote: "The person does the work",
   system: "Nothing bound",
   /* WHERE IT RUNS, answered honestly: nowhere. The pair reads `No agent` /
@@ -160,6 +175,7 @@ function answers(work: CaseMapWork): PdaAnswers {
     return {
       skill: up(PERSON.skill),
       laneRun: up(PERSON.laneRun),
+      laneVerbs: up(PERSON.laneVerbs),
       runsNote: up(PERSON.runsNote),
       system: up(PERSON.system),
       agent: up(PERSON.agent),
@@ -178,6 +194,7 @@ function answers(work: CaseMapWork): PdaAnswers {
   return {
     skill: up(c.s[0]),
     laneRun: up(c.m[0]),
+    laneVerbs: up(c.m[1]),
     runsNote: up(`${c.s[1]} — ${c.m[1]}`),
     system: up(c.k[0]),
     agent: up(c.a),

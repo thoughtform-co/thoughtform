@@ -1129,13 +1129,19 @@ never substituting a different drawing.
   than the casefile's by design: the LANE (`m`) is the one place model class
   is answered, generically. So the non-tool vocabulary is run MODE —
   `Chat assistant` · `Scheduled agent` · `Editor plugin` · `Coding agent`.
-  Tool CODENAMES stay in scope (precedent: `PROJECT_CASES`), so Mímir and
-  Vesper letter by name. The registry test scans `cfg.a`: it is the field
-  most likely to name a vendor, because the honest answer to "what runs it"
-  often IS a product. ⚠ The mapping is AUTHORED and unverified by the record
-  — Mímir on the two briefing streams is definitional, **Vesper on `W-062`
-  is inferred**, and **Babylon and Heimdall map to no stream at all** (there
-  is no localisation or studio-PM work among the 27).
+  ⚠ **AND IT MAY NOT BE A CODENAME EITHER (owner, 2026-08-11).** The field
+  briefly carried `Mímir` and `Vesper` — publishable, since the tools row of
+  this same casefile prints them — and the verdict on seeing them on the MAP
+  was that _"no external-facing party knows what Mímir is"_. That is the
+  distinction: on the tools row a codename sits beside a screenshot and a
+  walkthrough that explain it; on the map it sits alone in a cell. **A
+  codename is PROVENANCE; this field has to be an ANSWER.** The shipped
+  tools' own public tab labels are what they are called here —
+  `Briefing agent` · `Image + video suite`. The registry test scans `cfg.a`:
+  it is the field most likely to name a vendor, because the honest answer to
+  "what runs it" often IS a product. ⚠ The mapping is still AUTHORED and
+  unverified by the record, and **the two remaining tools map to no stream at
+  all** (there is no localisation or studio-PM work among the 27).
 - ⚠ **THE ROWS STACK; THE MOCKUP'S HALVES CANNOT HOLD THE RECORD.** A
   96-unit half wraps the 26-char worst onto three lines at any legible
   size, so the two answers are full-width rows and every value letters ON
@@ -1276,6 +1282,37 @@ Git history is the archive.
   cables), **ledger** (one right-hand column of rows, spine doubling as the
   column rule), **grid** (2 × 3 modular, hairlines only, the centre rule IS
   the cable).
+- ⚠ **THE WASTED MARGINS ARE A LETTERBOX, NOT PADDING — AND THE WIDTH IS
+  FREE (owner, 2026-08-11: "we're not utilizing a lot of the real estate").**
+  `meet` scales by the MINIMUM of the two box ratios; the production crop is
+  PORTRAIT (828×912 = 0.908) and **every measured console field is LANDSCAPE**
+  — 603×493 (1.223), 679×548 (1.239), 850×760 (1.118). So the fit is
+  height-bound at all three and the drawing is letterboxed HORIZONTALLY by
+  **26 % / 27 % / 19 %** of the field. Widening the crop costs NOTHING while
+  it stays height-bound (the ceiling is 1020 at p1920, 1115 at p1280), so the
+  meet — and every rendered type size — is unchanged. `seated` takes 828 →
+  **1000** and spends the 172 free units on GUTTERS (26 → 60, so the cables
+  are visible) and on the card. ⚠ This is a LAB crop: ADR-070 U4 made
+  production portrait for a tall-window field of 839×958, which is not the
+  shape of any of the three measured desktop consoles — **promotion has to
+  re-check U4's case rather than assume it.**
+- ⚠ **ONE INK, GOLD KEYS, NO MATERIAL TINTS (owner, same pass).** The first
+  round tinted the Skill green and the graph blue (ADR-062's material
+  grammar) and hatched/dash-inset their grounds. On the CITY that grammar had
+  a legend's worth of context and applied to SHAPES; on six words in a row it
+  reads as emphasis, and the diagonal ticks read as a texture bug. All
+  answers now take one ink; the keys take **Tensor gold `--pda-ink`** — the
+  4.5:1 rung of ADR-063 U2's ramp, NEVER `--gold` itself (the MARK rung,
+  ~1.1:1 as small text on parchment). `--pda-ink` was declared in pda.css and
+  consumed by nothing until now. The separation the hatch was making badly is
+  a divider rule between the two cells.
+- ⚠ **`MODEL` ANSWERS WITH THE VERBS, NOT THE LANE.** _"Model — everyday
+  lane? What does everyday lane mean?"_ Nothing on the surface answers it,
+  and nothing can: the lane is a GENERIC capability tier because the
+  envelope forbids naming a model family, so the tier cannot be made concrete
+  by naming the model. `m[1]` (`Generate / critique / revise`) is the
+  concrete thing the record already holds. `PdaAnswers.laneVerbs` is
+  additive — production's reading 02 still letters `laneRun`.
 - ⚠ **`seated` IS ROUND TWO, NOT A PEER OF THE FIRST SEVEN.** The owner picked
   `tight` and gave three notes on it (2026-08-11): the card should be the
   biggest object, WHERE IT RUNS should come closer, and the dashed authority

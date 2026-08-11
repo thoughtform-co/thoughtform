@@ -225,9 +225,17 @@ export interface CaseMapConfiguration {
   m: readonly [string, string];
   /**
    * THE AGENT THAT RUNS IT — reading 02's WHERE IT RUNS, paired with `u`.
-   * A shipped tool's codename where one carries the stream, otherwise the
-   * generic run mode (`Chat assistant`, `Scheduled agent`, `Editor plugin`,
-   * `Coding agent`).
+   * What the runtime IS: `Briefing agent`, `Image + video suite`,
+   * `Chat assistant`, `Scheduled agent`, `Editor plugin`, `Coding agent`.
+   *
+   * ⚠ **NOT A CODENAME (owner, 2026-08-11).** This field briefly carried
+   * `Mímir` and `Vesper`, which are published on the tools row of this same
+   * casefile — but the verdict on seeing them here was that _"no
+   * external-facing party knows what Mímir is"_, and he is right: on the
+   * tools row a codename sits beside a screenshot and a walkthrough that
+   * explain it, while on the map it sits alone in a cell. A codename is
+   * PROVENANCE; this field has to be an ANSWER. The shipped tools' own
+   * public tab labels are what they are called here.
    *
    * ⚠ A SINGLE STRING, DELIBERATELY, while every neighbour is a
    * `[name, note]` pair. ADR-070 U7 is what a spare half costs: `p[1]` went
