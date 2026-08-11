@@ -1,166 +1,165 @@
 "use client";
 
-import type { ReactNode } from "react";
-
 import { PDA_FLIGHT_MS } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
-import { Cartridge, wrapLines } from "./pdaGlyphs";
+import { wrapLines } from "./pdaGlyphs";
 import type { PdaEntry } from "./PdaEntry";
 import type { PdaShape, PdaWork } from "./pdaRecord";
 import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
 
 /**
- * 02 · THE CONFIGURATION — the owner's unit board, PORTRAIT (ADR-070 U4).
+ * 02 · THE CONFIGURATION — the seated board (ADR-070 U10).
  *
- * ⚠ THE CROP IS THE WHOLE FIX, AND IT IS ARITHMETIC. The console's field is
- * PORTRAIT at the viewports this is read on — 792×948 (0.835) at a tall
- * window — while this drawing was cropped LANDSCAPE (910×740, 1.23). With
- * `meet` scaling by the minimum ratio, a landscape crop in a portrait field
- * is WIDTH-bound: it rendered 792×644 into 948 and left **304px of dead
- * panel** below the drawing, which is the owner's "you're just not using
- * the space at the bottom". No amount of moving elements fixes that — the
- * letterbox is outside the drawing. The crop is now 828×950 (0.872), so the
- * field is nearly filled at a tall window (~39px of slack), and the whole
- * composition is authored bigger to match.
+ * Promoted from `/test/intelligence-config-lab`'s `seated` variant after the
+ * owner picked it out of eight refinements and put it through three rounds of
+ * notes. What changed from U9, and why each one is arithmetic rather than
+ * taste:
  *
- * ⚠ THE TRADE, NAMED: a portrait crop in the SHORT-wide fields (603×493 at
- * 1280×720, 1.22) letterboxes HORIZONTALLY instead — ~173px, and the type
- * lands at 0.519 meet rather than 0.662. One `viewBox` cannot fill both
- * aspects; the tall window is where this is read, so it wins. That is why
- * the drawing's own floor is **10** rather than 7.5 — at the worse meet, 10
- * renders 5.19px against the smoke's 4.3 (7.5 would render 3.89 and fail).
+ * ⚠ **THE CROP IS WIDER, AND IT IS A MEASURED TRADE, NOT A FREEBIE.**
+ * `meet` scales by the MINIMUM of the two box ratios, so the crop's aspect
+ * decides which axis wastes. The console's field is capped at 850px wide but
+ * grows with viewport height, so it is LANDSCAPE on laptops and PORTRAIT on
+ * tall screens — measured on the live landing:
  *
- * ⚠ THE THREE QUESTIONS WERE RE-SLOTTED IN U9 (owner, 2026-08-11), and the
- * board's geometry did not move an inch — only what each node answers:
- *   · WHAT RUNS IT      Skill / Model            unchanged
- *   · WHAT IT CAN REACH Knowledge graph / Connectors   (was Connectors /
- *                       Surfaces — the graph moved here OUT of INHERITS)
- *   · WHERE IT RUNS     Agent / Interface        (replaces WHAT IT INHERITS;
- *                       the interface moved here OUT of CAN REACH)
+ *   viewport     field       aspect   828×912 waste    1000×912 waste
+ *   1280×720     603×493     1.223    155 across       62 across
+ *   1440×800     679×548     1.239    181 across       78 across
+ *   1920×1080    850×760     1.118    160 across       17 across
+ *   2560×1440    850×1120    0.759    184 down         345 down
+ *   1280×1440    603×1177    0.512    513 down         627 down
  *
- * The two moves fix two wrong slots rather than restyling three right ones.
- * A knowledge graph is QUERIED through a connector on request, so it belongs
- * with the reaching, not with the context a stream carries in before it asks
- * anything. An interface is where a PERSON MEETS the work, so it belongs
- * with the runtime, not among the systems the work acts on.
+ * One crop cannot fill both ends. U4 chose the portrait crop and paid on
+ * laptops; the owner's call (2026-08-11) is the other way — **the laptop and
+ * the 1920 reference win**, at the named cost of more vertical letterbox and
+ * ~17 % smaller type on tall large monitors. That is why `pda-viewbox`'s
+ * portrait assertion is now a LANDSCAPE one: the contract did not disappear,
+ * it inverted, and it is still asserted.
  *
- * ⚠ CONTEXT NO LONGER LETTERS ANYWHERE ON THIS READING. It is one of the
- * owner's own five configuration fields, and with the hover readout already
- * deleted (U3) removing WHAT IT INHERITS leaves it in the record and off the
- * drawing. Named here so it is a decision on the page rather than a loss
- * nobody notices — the same failure `p[1]` had for four updates (U7).
+ * ⚠ **NOTHING LETTERS UNDER 12.** U9's keys sat at 10, which is 5.4px at the
+ * binding preset and 8.3px at 1920 — under the 8.5px chrome floor ADR-063
+ * records as this surface's standing defect. The owner's verdict was "utterly
+ * illegible". The contrast is bought the other way round now: the ANSWER came
+ * down and the KEY came up. A label nobody can read is not a quiet label, it
+ * is an absent one.
  *
- * What the U4 pass changed, all owner (2026-08-10, third round):
- *   · THE DIMENSION LINE IS DELETED — the arrowed rule and its pin ticks
- *     ("the fucking ugly line with the arrows", "those small vertical ticks
- *     … they're ugly"). DECIDES ALONE is one quiet line right above the
- *     card instead.
- *   · SKILL AND MODEL ARE SEPARATE CARDS — every question node holds TWO
- *     sub-cards side by side, close but distinct, which is the owner's
- *     mockup's own device.
- *   · The question headers letter WHITE and the nodes are much taller.
- *   · DELETED: the draw meter and NEVER A PRICE, the DRAWS ON n OF m
- *     caption, the corner brackets, the pad clusters, the vias and the
- *     registration crosses. Every one of them was chrome the owner named.
+ * ⚠ **THE SEAT IS STRUCTURE, NOT SIGNAL.** ADR-070 U5's law — the seat is
+ * AUTHORITY, not data, so it may never be one of the nodes' bundles — is
+ * KEPT, but the distinction moves from WEIGHT to MATERIAL. U6 had already had
+ * to take the dashed hairline from `--pda-dim` to full green because it read
+ * as absent; the owner's verdict on it here was blunter. Nothing flows down a
+ * pylon: it bears load, which is why it survives being drawn thick.
  *
- * ⚠ WHAT SURVIVES EVERY REDRAW: `CORE_RECT` (the flight's second home),
- * every lettered string derived from the record, and person-led work
- * printing what is NOT bound rather than emptying out.
+ * ⚠ **THE CARD IS DRAWN HERE, NOT BY `Cartridge`.** `Cartridge`'s internal
+ * offsets are absolute multiples of `k`, so at k 2 its title landed at +184
+ * and its bar block bottomed out THREE units off the floor with a 60-unit
+ * void above it. That is the glyph's layout, and reading 01's grid of twenty
+ * still wants it — so this reading lays out its own contents on the same
+ * silhouette. **The silhouette is the part that may not move**: `CORE_RECT`
+ * stays exactly `176×136 × k` with the same `14k` chamfer, because ADR-069's
+ * flight docks into it.
+ *
+ * One ink for every answer, keys in Tensor gold, the hatch and the dashed
+ * inset replaced by a divider rule, and a bezel — the services cards' own
+ * device — on the card and every node.
  */
 
-/**
- * THE CROP — portrait, and tight on the content (56…990 vertical).
- * ⚠ Its ASPECT is load-bearing, not just its size: see the header. Changing
- * either dimension changes how much panel the drawing fills at a tall
- * window, which is the thing this update exists to fix.
- */
-export const CONFIG_VIEWBOX = "36 48 828 912";
+/* ⚠ 1000 WIDE. See the header: this is the owner's trade, and `pda-viewbox`
+   asserts the new aspect so it cannot drift back silently. */
+export const CONFIG_VIEWBOX = "0 48 1000 912";
+
+/** The board inside the crop. */
+const B = { x0: 30, x1: 970, y0: 72, y1: 945, mid: 500 } as const;
 
 /** The chip, and the flight's second home. `CORE_K` × the 176×136 cartridge,
  *  so the two rects are EXACTLY similar and one uniform scale carries the
  *  morph without the object changing proportion on the way. */
-export const CORE_K = 1.5;
-/** ⚠ `x` IS `LEFT_X + NODE_W + GUTTER` — the board is one width chain and
- *  the card is its middle link. Moving the margin or a node width without
- *  moving this puts the side nodes back on the crop's wall. */
-const CHIP = { x: 318, y: 335, w: 176 * CORE_K, h: 136 * CORE_K } as const;
+export const CORE_K = 2;
+/** ⚠ `x` IS `B.x0 + NODE_W + GUTTER` — the board is one width chain and the
+ *  card is its middle link: `30 | 234 | 60 | 352 | 60 | 234 | 30` = 1000. */
+const CHIP = { x: 324, y: 314, w: 176 * CORE_K, h: 136 * CORE_K } as const;
 export const CORE_RECT: FlightRect = { ...CHIP };
 
 const CHIP_R = CHIP.x + CHIP.w;
 const CHIP_B = CHIP.y + CHIP.h;
 const CHIP_CY = CHIP.y + CHIP.h / 2;
 
-/** The board's centre line — the owner plate, the card and the base all
- *  hang off it. */
-const MID = CHIP.x + CHIP.w / 2;
-
 /**
- * ⚠ NOTHING LETTERS UNDER 10 (see the crop note — the portrait crop costs
- * meet at the short-wide fields, and 10 is what clears the smoke's 4.3px
- * floor there). Against the record's own worst strings:
+ * ⚠ NOTHING LETTERS UNDER 12 (owner, 2026-08-11) — see the header. Against
+ * the record's own worst strings, at the measures below:
  *
  *   role     worst                            chars  measure  at fs
- *   value    CONTEXT HELD BY THE PERSON         26    230     12 → 212u, 1 line
- *   ⚠ word   RECONCILIATION                     14    230     12 → 114u ✓
- *   owner    THE PERSON DOES THE WORK           24    224     13 → 212u
- *   bar      CONSISTENT EVIDENCE / NO …         46    238     12 → 2 lines
- *
- * ⚠ THE BINDING NUMBER IS A SINGLE WORD, NOT A STRING, AND THE GUARD FOUND
- * IT. `wrapLines` breaks on spaces only, so the longest WORD sets a
- * sub-card's minimum measure however well the value wraps — and every
- * per-line assertion still passes while it overflows, because each LINE is
- * short. `RECONCILIATION` (14) is the record's longest; sizing against
- * `INTELLIGENCE` (12) put it through the wall. `pda-viewbox` walks words
- * now, not just lines.
- *
- * ⚠ AND THE STACK IS WHAT BOUGHT THE TYPE (U5, owner: "let's stack them
- * vertically"). Side-by-side sub-cards halve the node's measure, which is
- * what forced fs 10 and three-line wraps; stacked, a sub-card gets the
- * WHOLE node width and every value in the record letters on ONE line at 12.
+ *   value    GENERATE / CRITIQUE / REVISE       28    204     15 → 2 lines
+ *   ⚠ word   RECONCILIATION                     14    204     15 → 143u ✓
+ *   key      KNOWLEDGE GRAPH                    15    204     14 → 172u ✓
+ *   title    CANDIDATE SCREENING                19    304     23 → 297u ✓
+ *   owner    THE PERSON DOES THE WORK           24    270     16 → 261u ✓
+ *   decides  DECIDES ALONE                      13    160     14 → 149u ✓
  */
-const FS = { chrome: 10, tag: 11, head: 14, value: 11.5, owner: 13, bar: 12 } as const;
+const FS = { q: 13, key: 14, value: 15, owner: 16, autonomy: 13, bar: 14 } as const;
 
-/** PT Mono's advance plus the tracking — the model `MONO_ADVANCE` evaluates
- *  at .08em, kept general because this drawing letters at five sizes. */
+/** PT Mono's advance plus the tracking. */
 const adv = (fs: number, track: number) => fs * (0.6 + track);
+/** A line box is ~1.3 em, and every vertical CLEARANCE is measured against it
+ *  rather than the font size. */
+const lineBox = (fs: number) => fs * 1.3;
+/**
+ * ⚠ THE BASELINE STEP IS NOT THE LINE BOX. `lineBox` is what a line OCCUPIES;
+ * stepping consecutive baselines by it makes their glyph boxes abut, and
+ * `getBBox` reports taller than 1.3 em — the lab's capture gate flagged real
+ * collisions between the two wrapped lines of one value. 1.7 is the house
+ * number: the pre-U10 drawing stepped its values 20 at fs 11.5 (1.74×).
+ */
+const step = (fs: number) => fs * 1.7;
+const charsFor = (measure: number, fs: number) => Math.max(1, Math.floor(measure / adv(fs, 0.08)));
 
-/* ── The three question nodes ───────────────────────────────────────────
-   A node is a TL-cut housing with a white question header and TWO SEPARATE
-   sub-cards (owner: "model and skill are two separate cards; they should be
-   close to each other, but they are separate").
+/* ── The board's geometry ───────────────────────────────────────────────
+   `NODE_H` lands on 272 as well, so the card and both side nodes share one
+   top edge and one bottom edge. That alignment is the balance. */
+const NODE_W = 234;
+const CELL_W = 232;
+const GUTTER = 60;
+const CELL_H = 100;
+const CELL_GAP = 8;
+const HEAD_H = 52;
+/** The floor under the last cell. `WHAT RUNS IT` used to sit on its own
+ *  bottom edge (owner). */
+const NODE_FLOOR = 12;
+const NODE_H = HEAD_H + CELL_H * 2 + CELL_GAP + NODE_FLOOR;
+const BASE_W = CELL_W * 2 + CELL_GAP + 2;
+const BASE_H = HEAD_H + CELL_H + NODE_FLOOR;
 
-   ⚠ ONE SUB-CARD SIZE ACROSS ALL SIX, and it is what makes the board read as
-   proportionate (U5, owner: "what it inherits is too big… the text is so
-   small. Let's make it more proportionate"). The TALL side nodes stack their
-   pair VERTICALLY at full node width; the WIDE base node sits its pair side
-   by side — and the two arrangements are sized so every sub-card is the same
-   250x108 card with the same 230-unit measure and the same type. The base
-   node's old 640 width gave it 316-wide cards holding one short line, which
-   is exactly the disproportion that was called out. */
-const SUB_W = 232;
-/** ⚠ SUB-CARD HEIGHT IS THE BOARD'S VERTICAL BALLAST (U8). The base is
- *  pinned to the crop's floor and the owner to its ceiling, so the only way
- *  to close the drop between the card and the base is to grow the cards
- *  themselves — every 10 units here lifts the base 14 and the side nodes 20. */
-const SUB_H = 158;
-const SUB_GAP = 6;
-const SUB_PAD = 10;
-/** Header band above the first sub-card. */
-const HEAD_H = 58;
+const RIGHT_X = CHIP_R + GUTTER;
+const NODE_Y = CHIP.y;
+const BASE_X = B.mid - BASE_W / 2;
+const BASE_Y = 736;
 
-const NODE_W = SUB_W + 2;
-const NODE_H = HEAD_H + SUB_H * 2 + SUB_GAP + 4;
-const BASE_W = SUB_W * 2 + SUB_GAP + 2;
-const BASE_H = HEAD_H + SUB_H + 4;
+/** The seat, sized from its own ink: `OwnerPlate`'s three rows measure 62.3
+ *  units, which centres in 136 with 36.9 of air above and below. */
+const OWNER = { x: 240, y: 116, w: 520, h: 136 } as const;
+const OWNER_PADY = 17;
 
-/** Every sub-card letters into the same measure, whichever way it is seated. */
-const SUB_MEASURE = SUB_W - SUB_PAD * 2;
-const SUB_CHARS = Math.floor(SUB_MEASURE / adv(FS.value, 0.08));
+/** The neck. Three sizes were tried: 110→170 read as a small dark tab (the
+ *  hairline's failure in a new shape) and 140→240 as a buttress that took the
+ *  eye off the card. */
+const PYL = { y0: OWNER.y + OWNER.h, y1: CHIP.y, splay: 20, topW: 64, botW: 108 } as const;
 
-/** THE BAR letters on the card itself, wrapped — the 46-char worst cannot
- *  hold one line inside a 281.6-unit card. */
-const BAR_MEASURE = CHIP.w - 26;
-const BAR_CHARS = Math.floor(BAR_MEASURE / adv(FS.bar, 0.08));
+const CELL_PAD = 14;
+const CELL_PADY = 10;
+const CELL_MEASURE = CELL_W - CELL_PAD * 2;
+
+/* ── The card's own rhythm ────────────────────────────────────────────── */
+const CARD_PAD = 24;
+const CARD = {
+  gaugeCx: 40,
+  gaugeCy: 34,
+  gaugeR: 13,
+  headBase: 40,
+  rule: 58,
+  titleBase: 116,
+  titleFs: 23,
+  barBase: 168,
+} as const;
+const CARD_MEASURE = CHIP.w - CARD_PAD * 2;
 
 /* ── The fit declaration ────────────────────────────────────────────────
    Every string this drawing letters, with the measure it has to fit in.
@@ -179,124 +178,157 @@ export interface ConfigLetterSpec {
 
 export const configSpecWidth = (s: ConfigLetterSpec) => s.text.length * adv(s.fs, s.track);
 
-/** The two answers a question node holds, in the order they are drawn. */
-type Pair = readonly [readonly [string, string], readonly [string, string]];
+/** A cell: a key and its answer. */
+interface CellDef {
+  key: string;
+  value: string;
+}
+interface GroupDef {
+  q: string;
+  part: "runs" | "rch" | "whr";
+  cells: readonly [CellDef, CellDef];
+}
 
-const runsPair = (w: PdaWork): Pair => [
-  ["SKILL", w.cfg.skill],
-  ["MODEL", w.cfg.laneRun],
-];
 /**
- * ⚠ THE GRAPH LEADS AND THE CONNECTOR FOLLOWS (ADR-070 U9, owner).
+ * The three questions and their six answers — ADR-070 U9's slotting.
  *
- * The knowledge graph is what the stream reaches FOR; the connector is the
- * wire it reaches THROUGH — so the graph is the answer and the connector is
- * how the answer arrives. It sat under WHAT IT INHERITS until now, which was
- * wrong in a way the drawing could not show: a graph is queried on request
- * through an MCP/API connector, while CONTEXT is what the stream carries in
- * before it asks anything. Inheriting and reaching are different verbs.
+ * ⚠ `MODEL` ANSWERS WITH THE VERBS, NOT THE LANE (owner, 2026-08-11: "model —
+ * everyday lane? What does everyday lane mean?"). The lane is a GENERIC
+ * capability tier by law — the map's envelope forbids naming a model family
+ * and `cases-registry` fails on one — so it cannot be made concrete by naming
+ * the model. `m[1]` is the concrete thing the record already holds, and the
+ * tier survives in `laneRun` for anything that wants it.
  */
-const reachPair = (w: PdaWork): Pair => [
-  ["KNOWLEDGE GRAPH", w.cfg.graph],
-  ["CONNECTORS", w.cfg.system],
-];
-/**
- * WHERE IT RUNS — the base node, replacing WHAT IT INHERITS (ADR-070 U9,
- * owner). The agent is the runtime that carries the Skill; the interface is
- * where a person meets it. `surface` was drawn under CAN REACH until now,
- * which put the place a human MEETS the work on the same side as the systems
- * the work acts on.
- */
-const whereRunsPair = (w: PdaWork): Pair => [
-  ["AGENT", w.cfg.agent],
-  ["INTERFACE", w.cfg.surface],
-];
+const groupsOf = (w: PdaWork): readonly GroupDef[] => {
+  const c = w.cfg;
+  return [
+    {
+      q: "WHAT RUNS IT",
+      part: "runs",
+      cells: [
+        { key: "SKILL", value: c.skill },
+        { key: "MODEL", value: c.laneVerbs },
+      ],
+    },
+    {
+      q: "WHAT IT CAN REACH",
+      part: "rch",
+      cells: [
+        { key: "KNOWLEDGE GRAPH", value: c.graph },
+        { key: "CONNECTORS", value: c.system },
+      ],
+    },
+    {
+      q: "WHERE IT RUNS",
+      part: "whr",
+      cells: [
+        { key: "AGENT", value: c.agent },
+        { key: "INTERFACE", value: c.surface },
+      ],
+    },
+  ];
+};
+
+/** The wrapped lines a value takes. ⚠ `wrapLines` SLICES at its cap, so the
+ *  line PAST the cap is declared with a ZERO measure — a sliced tail then
+ *  fails the guard loudly instead of vanishing on screen. */
+function valueSpecs(slot: string, value: string, fs: number, measure: number): ConfigLetterSpec[] {
+  return wrapLines(value, charsFor(measure, fs), 3).map((line, i) => ({
+    slot: `${slot}.L${i}`,
+    text: line,
+    fs,
+    track: 0.08,
+    measure: i < 2 ? measure : 0,
+  }));
+}
+const valueLines = (value: string, fs: number, measure: number) =>
+  wrapLines(value, charsFor(measure, fs), 2);
 
 export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
-  const c = work.cfg;
+  const groups = groupsOf(work);
   const specs: ConfigLetterSpec[] = [
-    /* ⚠ NO TOP-LEFT CHROME (U8, owner). `THE CONFIGURATION` restated the lit
-       rail station directly above it, and the designator restated the stream
-       id the cartridge already prints on its own face — the same
-       said-twice-in-one-box argument that took the console's head and foot
-       in ADR-063 U1. Everything removed was HEIGHT, and height is what the
-       owner plate wanted. */
-    /* ⚠ THE OWNER PLATE IS TWO COLUMNS, and the two share its measure (U5).
-       The seat reads left, what it decides alone reads right — the floating
-       DECIDES ALONE line between the plate and the card is deleted as
-       clutter, and this is where it went. Worst case is the person-led seat
-       (24 chars at 13 = 212u) beside DECIDES ALONE (106.6u) inside the
-       plate's 360, so the columns cannot meet. */
-    { slot: "ownerLabel", text: "WHO OWNS IT", fs: FS.tag, track: 0.22, measure: 240 },
-    { slot: "owner", text: work.owner, fs: FS.owner, track: 0.08, measure: 240 },
-    { slot: "decides", text: "DECIDES ALONE", fs: FS.chrome, track: 0.22, measure: 118 },
-    { slot: "autonomy", text: work.autonomy, fs: FS.bar, track: 0.08, measure: 118 },
+    { slot: "ownerLabel", text: "WHO OWNS IT", fs: FS.key, track: 0.22, measure: 270 },
+    { slot: "owner", text: work.owner, fs: FS.owner, track: 0.08, measure: 270 },
+    { slot: "decides", text: "DECIDES ALONE", fs: FS.key, track: 0.22, measure: 160 },
+    { slot: "autonomy", text: work.autonomy, fs: FS.autonomy, track: 0.08, measure: 160 },
   ];
 
-  /* THE SEAT'S SECOND LINE — what that seat actually owns (U7). It sits on
-     its own row with nothing to its right, so its measure is the plate's
-     full inner width rather than the left column's; the worst live note is
-     31 chars (`SETS THE BAR / OWNS FINAL TASTE`) = 210.8u at fs 10. Absent
-     for person-led, which has no configured seat to gloss. */
+  /* THE SEAT'S SECOND LINE — what that seat actually owns (U7). Absent for
+     person-led, which has no configured seat to gloss. */
   if (work.ownerNote) {
     specs.push({
       slot: "ownerNote",
       text: work.ownerNote,
-      fs: FS.chrome,
+      fs: FS.key,
       track: 0.08,
-      measure: OWNER_W - 40,
+      measure: OWNER.w - 40,
     });
   }
 
-  /* A node's question, then each sub-card's key and its wrapped value. Two
-     lines fit the sub-card (the record needs one); a THIRD is declared with
-     a zero measure so a tail the wrapper would slice off fails here loudly. */
-  const node = (q: string, nodeW: number, pair: Pair) => {
-    specs.push({ slot: `${q}.q`, text: q, fs: FS.head, track: 0.14, measure: nodeW - 32 });
-    for (const [k, v] of pair) {
+  for (const g of groups) {
+    const qMeasure = (g.part === "whr" ? BASE_W : NODE_W) - 36;
+    specs.push({ slot: `${g.q}.q`, text: g.q, fs: FS.q, track: 0.14, measure: qMeasure });
+    for (const cell of g.cells) {
       specs.push({
-        slot: `${q}.${k}.k`,
-        text: k,
-        fs: FS.tag,
+        slot: `${g.q}.${cell.key}.k`,
+        text: cell.key,
+        fs: FS.key,
         track: 0.22,
-        measure: SUB_MEASURE,
+        measure: CELL_MEASURE,
       });
-      wrapLines(v, SUB_CHARS, 3).forEach((line, i) =>
-        specs.push({
-          slot: `${q}.${k}.L${i}`,
-          text: line,
-          fs: FS.value,
-          track: 0.08,
-          measure: i < 2 ? SUB_MEASURE : 0,
-        })
-      );
+      specs.push(...valueSpecs(`${g.q}.${cell.key}`, cell.value, FS.value, CELL_MEASURE));
     }
-  };
-  node("WHAT RUNS IT", NODE_W, runsPair(work));
-  node("WHAT IT CAN REACH", NODE_W, reachPair(work));
-  node("WHERE IT RUNS", BASE_W, whereRunsPair(work));
+  }
 
-  specs.push({ slot: "bar.label", text: "THE BAR", fs: FS.tag, track: 0.22, measure: BAR_MEASURE });
-  wrapLines(c.bar, BAR_CHARS, 3).forEach((line, i) =>
-    specs.push({
-      slot: `bar.L${i}`,
-      text: line,
-      fs: FS.bar,
-      track: 0.08,
-      measure: i < 2 ? BAR_MEASURE : 0,
-    })
-  );
+  /* ⚠ THE CARD'S OWN THREE STRINGS ARE DECLARED HERE. While the card was
+     `Cartridge` they were lettered by a shared glyph and this declaration
+     never saw them — the guard was walking a drawing with three invisible
+     labels in it. Any reading that mounts a production glyph inherits that
+     blind spot. */
+  specs.push({ slot: "card.team", text: work.teamAb, fs: FS.key, track: 0.2, measure: 120 });
+  specs.push({ slot: "card.id", text: work.id, fs: FS.key, track: 0.16, measure: 120 });
+  specs.push({
+    slot: "card.title",
+    text: work.title,
+    fs: CARD.titleFs,
+    track: 0.08,
+    measure: CARD_MEASURE,
+  });
+
+  specs.push({
+    slot: "bar.label",
+    text: "THE BAR",
+    fs: FS.key,
+    track: 0.22,
+    measure: CARD_MEASURE,
+  });
+  specs.push(...valueSpecs("bar", work.cfg.bar, FS.bar, CARD_MEASURE));
 
   return specs;
 }
 
 /* ── Sub-drawings ──────────────────────────────────────────────────────── */
 
+/**
+ * THE BEZEL — the services cards' own device. `ServicesCardRing` bakes its
+ * slab with a clear bezel margin plus a hairline on the silhouette; here it
+ * is a second chamfered outline inset inside the first.
+ *
+ * ⚠ THE INNER CHAMFER LEG IS NOT `leg − inset`. A 45° cut offset inward by
+ * `d` moves its diagonal by `d√2` along the axes, not by `d` — the naive
+ * value leaves the diagonal visibly closer to the outer edge than the
+ * straight runs are, which reads as a mistake rather than as a bezel.
+ */
+const bezel = (x: number, y: number, w: number, h: number, d: number, leg: number) => {
+  const inner = leg - d * (Math.SQRT2 - 1);
+  return `M${x + d + inner},${y + d} H${x + w - d} V${y + h - d} H${x + d} V${y + d + inner} Z`;
+};
+
 /** A multi-conductor bundle — the connection grammar (thick, not hairlines:
  *  owner, twice). Parallel conductors at constant pitch through 45° jogs. */
 function Ribbon({
   pts,
-  n,
+  n = 6,
   pitch = 4,
   stroke,
   opacity,
@@ -304,7 +336,7 @@ function Ribbon({
   draw,
 }: {
   pts: readonly Pt[];
-  n: number;
+  n?: number;
   pitch?: number;
   stroke: string;
   opacity: number;
@@ -333,150 +365,314 @@ function Ribbon({
   );
 }
 
-type SubKind = "enc" | "plain" | "gph";
+/**
+ * A key and its answer.
+ *
+ * ⚠ ONE INK FOR EVERY ANSWER, AND THE KEY IN TENSOR GOLD (owner). The Skill
+ * used to letter green and the graph blue, carrying ADR-062's material
+ * grammar down onto the type. On the CITY that grammar has a legend's worth
+ * of context and applies to SHAPES; here it lands on six words in a row with
+ * nothing to decode it, so it reads as emphasis rather than provenance.
+ * `--pda-ink` is `--gold-ink`, the 4.5:1 rung of ADR-063 U2's ramp — NEVER
+ * `--gold` itself, which is the MARK rung and measures ~1.1:1 as small text
+ * on the light theme's parchment.
+ */
+function Cell({ x, y, cell, led }: { x: number; y: number; cell: CellDef; led: boolean }) {
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={CELL_W}
+        height={CELL_H}
+        fill="rgba(var(--dawn-rgb), 0.03)"
+        stroke="none"
+      />
+      <text
+        x={x + CELL_PAD}
+        y={y + CELL_PADY + 20}
+        fontSize={FS.key}
+        letterSpacing=".22em"
+        fill="var(--pda-ink)"
+      >
+        {cell.key}
+      </text>
+      {valueLines(cell.value, FS.value, CELL_MEASURE).map((line, i) => (
+        <text
+          key={i}
+          x={x + CELL_PAD}
+          y={y + CELL_PADY + 20 + lineBox(FS.key) + step(FS.value) * (i + 0.72)}
+          fontSize={FS.value}
+          letterSpacing=".08em"
+          fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
+        >
+          {line}
+        </text>
+      ))}
+    </g>
+  );
+}
 
 /**
- * A question node: TL-cut housing, WHITE question header, and two separate
- * sub-cards. The material grounds are the mockup's — encoded green with a
- * hatch foot, plain, and the adjacent domain's dashed blue inset.
+ * A question node: a TL-cut housing, a BOLD question centred in its header
+ * band, a bezel, and two cells with a divider rule between them.
+ *
+ * ⚠ THE DIVIDER REPLACED A HATCH AND A DASHED INSET (owner: "those diagonal
+ * ticks, I do not want them. I want a clean separation between skill and
+ * model"). They were the material grammar again, and at this size the ticks
+ * read as a texture bug.
  */
 function QNode({
   x,
   y,
-  q,
-  pair,
-  kinds,
-  seat,
+  w,
+  h,
+  g,
+  stacked,
   led,
   hot,
-  part,
   onLit,
 }: {
   x: number;
   y: number;
-  q: string;
-  pair: Pair;
-  kinds: readonly [SubKind, SubKind];
-  /** How the pair is seated — see the note at the geometry constants. */
-  seat: "stack" | "row";
+  w: number;
+  h: number;
+  g: GroupDef;
+  stacked: boolean;
   led?: boolean;
   hot?: boolean;
-  part: string;
   onLit: (k: string | null) => void;
 }) {
   const stroke = hot ? "var(--pda-hot)" : led ? "var(--pda-txt3)" : "var(--pda-amb)";
-  const stacked = seat === "stack";
-  const w = stacked ? NODE_W : BASE_W;
-  const h = stacked ? NODE_H : BASE_H;
-
   return (
-    <g onMouseEnter={() => onLit(part)} onMouseLeave={() => onLit(null)}>
+    <g onMouseEnter={() => onLit(g.part)} onMouseLeave={() => onLit(null)}>
       <path
         d={`M${x + 14},${y} H${x + w} V${y + h} H${x} V${y + 14} Z`}
         fill="var(--pda-void)"
         stroke={stroke}
         strokeDasharray={led ? "5 4" : undefined}
       />
-      {/* The question, WHITE (owner) — it names the reading, so it outranks
-          the keys under it. */}
+      <path d={bezel(x, y, w, h, 7, 14)} fill="none" stroke={stroke} opacity="0.22" />
+      {/* ⚠ CENTRED IN ITS BAND, NOT ON ITS FLOOR. The band runs 0…42 to the
+          rule, so a cap block with no descenders centres at a baseline of
+          25.6 — it sat at 34 until the owner called it. */}
       <text
-        x={x + 18}
-        y={y + 36}
-        fontSize={FS.head}
+        x={x + 20}
+        y={y + 26}
+        fontSize={FS.q}
+        fontWeight={700}
         letterSpacing=".14em"
         fill={hot ? "var(--pda-hot)" : "var(--pda-txt)"}
       >
-        {q}
+        {g.q}
       </text>
-      <line x1={x + 1} y1={y + 50} x2={x + w - 1} y2={y + 50} stroke="var(--pda-hair2)" />
+      <line x1={x + 1} y1={y + 42} x2={x + w - 1} y2={y + 42} stroke="var(--pda-hair2)" />
+      {g.cells.map((c, i) => (
+        <Cell
+          key={c.key}
+          x={x + 1 + (stacked ? 0 : i * (CELL_W + CELL_GAP))}
+          y={y + HEAD_H + (stacked ? i * (CELL_H + CELL_GAP) : 0)}
+          cell={c}
+          led={Boolean(led)}
+        />
+      ))}
+      {stacked ? (
+        <line
+          x1={x + 1}
+          y1={y + HEAD_H + CELL_H + CELL_GAP / 2}
+          x2={x + w - 1}
+          y2={y + HEAD_H + CELL_H + CELL_GAP / 2}
+          stroke="var(--pda-hair2)"
+        />
+      ) : (
+        <line
+          x1={x + 1 + CELL_W + CELL_GAP / 2}
+          y1={y + HEAD_H}
+          x2={x + 1 + CELL_W + CELL_GAP / 2}
+          y2={y + HEAD_H + CELL_H}
+          stroke="var(--pda-hair2)"
+        />
+      )}
+    </g>
+  );
+}
 
-      {pair.map(([k, v], i) => {
-        const sx = x + 1 + (stacked ? 0 : i * (SUB_W + SUB_GAP));
-        const subY = y + HEAD_H + (stacked ? i * (SUB_H + SUB_GAP) : 0);
-        const subW = SUB_W;
-        const subH = SUB_H;
-        const kind = kinds[i];
-        const enc = kind === "enc";
-        const gph = kind === "gph";
-        const mat = led ? "var(--pda-txt3)" : enc ? "var(--pda-grn)" : "var(--pda-gph-line)";
-        return (
-          <g key={k}>
-            <rect
-              x={sx}
-              y={subY}
-              width={subW}
-              height={subH}
-              fill={
-                enc
-                  ? "rgba(126, 159, 102, 0.07)"
-                  : gph
-                    ? "rgba(111, 127, 168, 0.06)"
-                    : "rgba(var(--dawn-rgb), 0.03)"
-              }
-              stroke="none"
-            />
-            {/* The encoded material — the hatch band on the card's foot,
-                clear of the last line's descenders. */}
-            {enc ? (
-              <g stroke={mat} opacity="0.5">
-                {Array.from({ length: Math.floor(subW / 16) }, (_, j) => (
-                  <line
-                    key={j}
-                    x1={sx + 6 + j * 16}
-                    y1={subY + subH - 4}
-                    x2={sx + 13 + j * 16}
-                    y2={subY + subH - 11}
-                  />
-                ))}
-              </g>
-            ) : null}
-            {/* The adjacent domain — the dashed inset. */}
-            {gph ? (
-              <rect
-                x={sx + 4}
-                y={subY + 4}
-                width={subW - 8}
-                height={subH - 8}
-                fill="none"
-                stroke={mat}
-                strokeDasharray="4 3"
-                opacity="0.7"
-              />
-            ) : null}
-            <text
-              x={sx + SUB_PAD}
-              y={subY + 26}
-              fontSize={FS.tag}
-              letterSpacing=".22em"
-              fill={hot ? "var(--pda-hot)" : "var(--pda-txt2)"}
-            >
-              {k}
-            </text>
-            {wrapLines(v, SUB_CHARS, 3).map((line, li) => (
-              <text
-                key={li}
-                x={sx + SUB_PAD}
-                y={subY + 62 + li * 20}
-                fontSize={FS.value}
-                letterSpacing=".08em"
-                fill={
-                  hot
-                    ? "var(--pda-hot)"
-                    : led
-                      ? "var(--pda-txt3)"
-                      : enc
-                        ? "var(--pda-grn)"
-                        : gph
-                          ? "var(--pda-gph)"
-                          : "var(--pda-txt)"
-                }
-              >
-                {line}
-              </text>
-            ))}
-          </g>
-        );
-      })}
+/** THE BAR, drawn rather than passed to a glyph — the only way it letters
+ *  above the floor (`Cartridge` hardcodes its bar at 10, unscaled). */
+function BarBlock({ x, y, bar, led }: { x: number; y: number; bar: string; led: boolean }) {
+  return (
+    <g>
+      <text x={x} y={y} fontSize={FS.key} letterSpacing=".22em" fill="var(--pda-txt3)">
+        THE BAR
+      </text>
+      {valueLines(bar, FS.bar, CARD_MEASURE).map((line, i) => (
+        <text
+          key={i}
+          x={x}
+          y={y + lineBox(FS.key) + step(FS.bar) * (i + 0.72)}
+          fontSize={FS.bar}
+          letterSpacing=".08em"
+          fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
+        >
+          {line}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+/**
+ * The work, on the cartridge's silhouette with its contents laid out
+ * properly. The gauge is the state mark ADR-062 needs — a filled square where
+ * a configuration is on record, a cross where the work is deliberately
+ * person-led — and it sits IN the header row rather than floating in a band
+ * of its own, which is what left the old card with a void above its title and
+ * its bar against the floor.
+ *
+ * ⚠ THE SILHOUETTE MAY NOT MOVE. `CORE_RECT` is the flight's destination and
+ * the docking group must contain this card ALONE: `fill-box` means the
+ * transform is measured against the group's own bbox, and a child reaching
+ * past the rect moves the origin the whole flight is computed from.
+ */
+function SeatCard({ work, led }: { work: PdaWork; led: boolean }) {
+  const stroke = led ? "var(--pda-txt3)" : "var(--pda-hot)";
+  const n = 14 * CORE_K;
+  const gx = CHIP.x + CARD.gaugeCx;
+  const gy = CHIP.y + CARD.gaugeCy;
+  const r = CARD.gaugeR;
+  return (
+    <g>
+      <path
+        d={`M${CHIP.x + n},${CHIP.y} H${CHIP_R} V${CHIP_B} H${CHIP.x} V${CHIP.y + n} Z`}
+        fill={led ? "rgba(var(--dawn-rgb), 0.04)" : "rgba(240, 200, 106, 0.10)"}
+        stroke={stroke}
+        strokeDasharray={led ? "5 4" : undefined}
+      />
+      <path
+        d={bezel(CHIP.x, CHIP.y, CHIP.w, CHIP.h, 9, n)}
+        fill="none"
+        stroke={stroke}
+        opacity="0.3"
+      />
+
+      <circle cx={gx} cy={gy} r={r} fill="none" stroke={stroke} strokeWidth="1.6" />
+      {led ? (
+        <g stroke={stroke} strokeWidth="1.6">
+          <line x1={gx - r * 0.5} y1={gy - r * 0.5} x2={gx + r * 0.5} y2={gy + r * 0.5} />
+          <line x1={gx + r * 0.5} y1={gy - r * 0.5} x2={gx - r * 0.5} y2={gy + r * 0.5} />
+        </g>
+      ) : (
+        <rect x={gx - 6} y={gy - 6} width={12} height={12} fill={stroke} />
+      )}
+
+      <text
+        x={gx + r + 12}
+        y={CHIP.y + CARD.headBase}
+        fontSize={FS.key}
+        letterSpacing=".2em"
+        fill="var(--pda-txt3)"
+      >
+        {work.teamAb}
+      </text>
+      <text
+        x={CHIP_R - CARD_PAD}
+        y={CHIP.y + CARD.headBase}
+        textAnchor="end"
+        fontSize={FS.key}
+        letterSpacing=".16em"
+        fill={led ? "var(--pda-txt3)" : "var(--pda-hot)"}
+      >
+        {work.id}
+      </text>
+      <line
+        x1={CHIP.x + CARD_PAD}
+        y1={CHIP.y + CARD.rule}
+        x2={CHIP_R - CARD_PAD}
+        y2={CHIP.y + CARD.rule}
+        stroke="var(--pda-hair2)"
+      />
+      <text
+        x={CHIP.x + CARD_PAD}
+        y={CHIP.y + CARD.titleBase}
+        fontSize={CARD.titleFs}
+        letterSpacing=".08em"
+        fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
+      >
+        {work.title}
+      </text>
+      <BarBlock x={CHIP.x + CARD_PAD} y={CHIP.y + CARD.barBase} bar={work.cfg.bar} led={led} />
+    </g>
+  );
+}
+
+/** The seat. Sized from its own ink: three rows measuring 62.3 units, which
+ *  centre in 136 with 36.9 of air above and below. */
+function OwnerPlate({ work, led }: { work: PdaWork; led: boolean }) {
+  const green = led ? "var(--pda-txt3)" : "var(--pda-grn)";
+  const p = OWNER_PADY;
+  return (
+    <g>
+      <path
+        d={`M${OWNER.x + 14},${OWNER.y} H${OWNER.x + OWNER.w} V${OWNER.y + OWNER.h} H${OWNER.x} V${OWNER.y + 14} Z`}
+        fill={led ? "rgba(255, 255, 255, 0.02)" : "rgba(126, 159, 102, 0.09)"}
+        stroke={green}
+        strokeDasharray={led ? "5 4" : undefined}
+      />
+      <path
+        d={bezel(OWNER.x, OWNER.y, OWNER.w, OWNER.h, 7, 14)}
+        fill="none"
+        stroke={green}
+        opacity="0.22"
+      />
+      <text
+        x={OWNER.x + 20}
+        y={OWNER.y + 30 + p}
+        fontSize={FS.key}
+        letterSpacing=".22em"
+        fill="var(--pda-txt2)"
+      >
+        WHO OWNS IT
+      </text>
+      <text
+        x={OWNER.x + 20}
+        y={OWNER.y + 34 + p + lineBox(FS.owner)}
+        fontSize={FS.owner}
+        letterSpacing=".08em"
+        fill={green}
+      >
+        {work.owner}
+      </text>
+      {work.ownerNote ? (
+        <text
+          x={OWNER.x + 20}
+          y={OWNER.y + 40 + p + lineBox(FS.owner) + lineBox(FS.key)}
+          fontSize={FS.key}
+          letterSpacing=".08em"
+          fill="var(--pda-txt2)"
+        >
+          {work.ownerNote}
+        </text>
+      ) : null}
+      <text
+        x={OWNER.x + OWNER.w - 20}
+        y={OWNER.y + 30 + p}
+        textAnchor="end"
+        fontSize={FS.key}
+        letterSpacing=".22em"
+        fill="var(--pda-txt3)"
+      >
+        DECIDES ALONE
+      </text>
+      <text
+        x={OWNER.x + OWNER.w - 20}
+        y={OWNER.y + 34 + p + lineBox(FS.owner)}
+        textAnchor="end"
+        fontSize={FS.autonomy}
+        letterSpacing=".08em"
+        fill="var(--pda-hot)"
+      >
+        {work.autonomy}
+      </text>
     </g>
   );
 }
@@ -485,45 +681,7 @@ function QNode({
    reading 01 handed over); the owner seats, the bundles draw on under it,
    the nodes light, the base last — so the board assembles outward from the
    record rather than fading in as one picture. */
-const T = {
-  owner: 120,
-  wire: 260,
-  wireStep: 60,
-  node: 380,
-  nodeStep: 80,
-} as const;
-
-/* The board's three seats. The side pair flanks the card with a 30-unit
-   gutter each side — what the bundles need to read as RUNS rather than as
-   touching edges — and the base sits under the drop. */
-/* The owner plate — WIDER than the card and centred on it (U5): it carries
-   two columns now (the seat, and what it decides alone), and authority
-   spanning the machine is the read. */
-const OWNER_W = 400;
-/** Three rows since U7: the label pair, the seat, and what the seat owns. */
-const OWNER_H = 124;
-/** ⚠ THE BOARD OPENS HERE NOW (U8) — 170 → 72, the height the deleted
- *  top-left chrome was holding. 24 clears the crop's own top edge by the
- *  same margin the sides use; the rest of the chain moved down-page with it
- *  so the content still spans the crop (the ≤40-unit waste guard). */
-const OWNER_Y = 72;
-
-/** ⚠ THE BOARD IS INSET 24 FROM THE CROP ON BOTH SIDES (U6, owner: the side
- *  nodes were "too close to the border of the frame"). They sat at x 36 with
- *  the crop starting at 36 — flush against the wall, with no margin at all.
- *  The 828 crop now reads 24 | 234 | 24 | 264 | 24 | 234 | 24, and the whole
- *  chain has to move together. */
-const BOARD_INSET = 24;
-const GUTTER = 24;
-const LEFT_X = 36 + BOARD_INSET;
-const RIGHT_X = CHIP_R + GUTTER;
-/** The side pair is TALLER than the card and centred on it — the card keeps
- *  the hierarchy by VALUE (it is the one lit object), never by footprint. */
-const NODE_Y = CHIP_CY - NODE_H / 2;
-const BASE_X = MID - BASE_W / 2;
-const OWNER_X = MID - OWNER_W / 2;
-/** The base sits on the board's floor; the crop ends 15 units under it. */
-const BASE_Y = 945 - BASE_H;
+const T = { owner: 120, wire: 260, wireStep: 60, node: 380, nodeStep: 80 } as const;
 
 export function ViewConfiguration({
   work,
@@ -541,14 +699,12 @@ export function ViewConfiguration({
 }) {
   const led = !work.configured;
   const wire = led ? "var(--pda-txt3)" : "var(--pda-amb)";
-  /* ⚠ GREEN IS THE ENCODED RUN (owner: "you also removed the green lines").
-     ONE bundle carries it since ADR-070 U9 — the Skill's. The context run
-     was the other, and context left the board with WHAT IT INHERITS; what
-     the stream REACHES and WHERE IT RUNS are both amber, because neither a
-     graph, a connector, an agent nor an interface is material Loop encoded.
-     Person-led dashes everything. */
+  /* ⚠ GREEN IS THE ENCODED RUN, and ONE bundle carries it — the Skill's.
+     What the stream REACHES and WHERE IT RUNS are both amber, because
+     neither a graph, a connector, an agent nor an interface is material Loop
+     encoded. Person-led dashes everything. */
   const green = led ? "var(--pda-txt3)" : "var(--pda-grn)";
-  const c = work.cfg;
+  const [runs, rch, whr] = groupsOf(work);
 
   /* Every animated group drops its class once the pointer has moved, so a
      hover repaints without replaying the entrance. The DOCK is the one
@@ -557,125 +713,42 @@ export function ViewConfiguration({
   const at = (ms: number) => (still ? undefined : { animationDelay: `${ms}ms` });
   let wireN = 0;
   const drawAt = () => (still ? null : T.wire + wireN++ * T.wireStep);
-
-  const barLines = wrapLines(c.bar, BAR_CHARS);
-  /* Bundle opacity — lifted whole when its node is lit. With the readout
-     gone (U3) the hover's whole meaning is this cross-light. */
   const op = (part: string) => (lit === part ? 0.95 : 0.62);
+
+  const l0 = B.mid - PYL.topW / 2;
+  const r0 = B.mid + PYL.topW / 2;
+  const l1 = B.mid - PYL.botW / 2;
+  const r1 = B.mid + PYL.botW / 2;
+  const ys = PYL.y1 - PYL.splay;
 
   return (
     <>
-      {/* ⚠ THE TOP-LEFT CHROME IS DELETED (U8, owner) — with the draw meter
-          and NEVER A PRICE before it (U4). `THE CONFIGURATION` restated the
-          lit rail station immediately above the panel, and the designator
-          restated the stream id the cartridge prints on its own face. The
-          board opens on the owner plate now, and everything removed was
-          HEIGHT the plate wanted. */}
-
-      {/* ── The owner, in the green plate law, seated over the card and
-              carrying what it decides alone in its own right column (U5).
-              ⚠ THE ARROWED DIMENSION AND ITS TICKS ARE DELETED (U4), AND SO
-              IS THE FLOATING `DECIDES ALONE · WIDE` LINE BETWEEN PLATE AND
-              CARD (U5, owner: "clutter … integrate it a bit more subtly").
-              The plate is wider than the card on purpose: authority spans
-              the machine it answers for. ─────────────────────────────── */}
       <g className={inCls} style={at(T.owner)}>
+        <OwnerPlate work={work} led={led} />
+      </g>
+
+      {/* ── THE PYLON. Structure, not signal: the seat is AUTHORITY, not data
+              (ADR-070 U5), and that law is kept by MATERIAL rather than by
+              weight. Nothing flows down it; it bears load. Drawn BEFORE the
+              card so the card sits ON it. ───────────────────────────────── */}
+      <g className={inCls} style={at(T.owner + 80)}>
         <path
-          d={`M${OWNER_X + 14},${OWNER_Y} H${OWNER_X + OWNER_W} V${OWNER_Y + OWNER_H} H${OWNER_X} V${OWNER_Y + 14} Z`}
-          fill={led ? "rgba(255, 255, 255, 0.02)" : "rgba(126, 159, 102, 0.09)"}
-          stroke={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
+          d={`M${l0},${PYL.y0} H${r0} L${r1},${ys} V${PYL.y1} H${l1} V${ys} Z`}
+          fill={led ? "rgba(255, 255, 255, 0.025)" : "rgba(126, 159, 102, 0.07)"}
+          stroke={green}
           strokeDasharray={led ? "5 4" : undefined}
         />
-        <text
-          x={OWNER_X + 20}
-          y={OWNER_Y + 36}
-          fontSize={FS.tag}
-          letterSpacing=".22em"
-          fill="var(--pda-txt2)"
-        >
-          WHO OWNS IT
-        </text>
-        <text
-          x={OWNER_X + 20}
-          y={OWNER_Y + 72}
-          fontSize={FS.owner}
-          letterSpacing=".08em"
-          fill={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
-        >
-          {work.owner}
-        </text>
-        {/* What that seat actually OWNS — the record's `p[1]`, which had no
-            home on any drawing until now. A gloss on the role, so it letters
-            one step down and in the neutral ink: the seat is the answer, this
-            is what the answer is for. */}
-        {work.ownerNote ? (
-          <text
-            x={OWNER_X + 20}
-            y={OWNER_Y + 98}
-            fontSize={FS.chrome}
-            letterSpacing=".08em"
-            fill="var(--pda-txt2)"
-          >
-            {work.ownerNote}
-          </text>
-        ) : null}
-        <text
-          x={OWNER_X + OWNER_W - 20}
-          y={OWNER_Y + 36}
-          textAnchor="end"
-          fontSize={FS.chrome}
-          letterSpacing=".22em"
-          fill="var(--pda-txt3)"
-        >
-          DECIDES ALONE
-        </text>
-        <text
-          x={OWNER_X + OWNER_W - 20}
-          y={OWNER_Y + 72}
-          textAnchor="end"
-          fontSize={FS.bar}
-          letterSpacing=".08em"
-          fill="var(--pda-hot)"
-        >
-          {work.autonomy}
-        </text>
+        <g stroke={green} opacity="0.85">
+          <line x1={B.mid - 20} y1={PYL.y0 - 4} x2={B.mid - 20} y2={PYL.y0 + 4} />
+          <line x1={B.mid + 20} y1={PYL.y0 - 4} x2={B.mid + 20} y2={PYL.y0 + 4} />
+        </g>
       </g>
 
-      {/* ── The seat's own connector: a dashed line in the PLATE'S OWN
-              GREEN, NOT a bundle (owner: "not with the lines like we do
-              with the rest, but with other lines"). ADR-070's law is why it
-              reads right — the seat is AUTHORITY, not data, so it is
-              answerable-to rather than feeding-into, and one dashed line
-              says that where eight solid conductors would say the opposite.
-              ⚠ IT TAKES THE PLATE'S COLOUR AND FULL WEIGHT (U6). The first
-              cut drew it in `--pda-dim` at 0.75 and the owner read it as
-              ABSENT — "why does WHO OWNS IT not have a connector?". A line
-              quiet enough to be missed is not a subtle connection, it is a
-              missing one; the DASH carries the distinction, the value does
-              not have to. It ends on a tick at the card's edge so the
-              contact is drawn rather than implied. ───────────────────── */}
-      <g
-        className={inCls}
-        style={at(T.owner + 80)}
-        stroke={led ? "var(--pda-txt3)" : "var(--pda-grn)"}
-      >
-        <line
-          x1={MID}
-          y1={OWNER_Y + OWNER_H}
-          x2={MID}
-          y2={CHIP.y}
-          strokeDasharray="6 5"
-          opacity="0.95"
-        />
-        <line x1={MID - 9} y1={CHIP.y} x2={MID + 9} y2={CHIP.y} opacity="0.95" />
-      </g>
-
-      {/* ── The bundles. Green carries the encoded runs; amber carries what
-              the stream reaches. ─────────────────────────────────────── */}
+      {/* 60 units of gutter each side — the cables, with room to be seen. */}
       <Ribbon
         pts={[
           [CHIP.x, CHIP_CY],
-          [LEFT_X + NODE_W, CHIP_CY],
+          [B.x0 + NODE_W, CHIP_CY],
         ]}
         n={8}
         stroke={green}
@@ -694,23 +767,13 @@ export function ViewConfiguration({
         dashed={led}
         draw={drawAt()}
       />
-      {/* Two runs into the base, jogging out to its shoulders — the drop
-          that closes the board.
-          ⚠ BOTH ARE AMBER SINCE ADR-070 U9. The left one carried GREEN while
-          the base was WHAT IT INHERITS, because the context a stream inherits
-          is encoded material Loop paid for. The base is WHERE IT RUNS now —
-          an agent and an interface, neither of them encoded — so green would
-          be claiming provenance for a runtime. The Skill's bundle is the only
-          green left on the board, which is exactly the reading: one encoded
-          thing, and it is the judgment. */}
       <Ribbon
         pts={[
-          [MID - 44, CHIP_B],
-          [MID - 44, BASE_Y - 78],
-          [MID - 74, BASE_Y - 48],
-          [MID - 74, BASE_Y],
+          [B.mid - 48, CHIP_B],
+          [B.mid - 48, BASE_Y - 70],
+          [B.mid - 80, BASE_Y - 38],
+          [B.mid - 80, BASE_Y],
         ]}
-        n={6}
         stroke={wire}
         opacity={op("whr")}
         dashed={led}
@@ -718,28 +781,25 @@ export function ViewConfiguration({
       />
       <Ribbon
         pts={[
-          [MID + 44, CHIP_B],
-          [MID + 44, BASE_Y - 78],
-          [MID + 74, BASE_Y - 48],
-          [MID + 74, BASE_Y],
+          [B.mid + 48, CHIP_B],
+          [B.mid + 48, BASE_Y - 70],
+          [B.mid + 80, BASE_Y - 38],
+          [B.mid + 80, BASE_Y],
         ]}
-        n={6}
         stroke={wire}
         opacity={op("whr")}
         dashed={led}
         draw={drawAt()}
       />
 
-      {/* ── The three question nodes ─────────────────────────────────── */}
       <g className={inCls} style={at(T.node)}>
         <QNode
-          x={LEFT_X}
+          x={B.x0}
           y={NODE_Y}
-          q="WHAT RUNS IT"
-          pair={runsPair(work)}
-          kinds={["enc", "plain"]}
-          seat="stack"
-          part="runs"
+          w={NODE_W}
+          h={NODE_H}
+          g={runs}
+          stacked
           led={led}
           hot={lit === "runs"}
           onLit={onLit}
@@ -749,11 +809,10 @@ export function ViewConfiguration({
         <QNode
           x={RIGHT_X}
           y={NODE_Y}
-          q="WHAT IT CAN REACH"
-          pair={reachPair(work)}
-          kinds={["gph", "plain"]}
-          seat="stack"
-          part="rch"
+          w={NODE_W}
+          h={NODE_H}
+          g={rch}
+          stacked
           led={led}
           hot={lit === "rch"}
           onLit={onLit}
@@ -763,19 +822,19 @@ export function ViewConfiguration({
         <QNode
           x={BASE_X}
           y={BASE_Y}
-          q="WHERE IT RUNS"
-          pair={whereRunsPair(work)}
-          kinds={["plain", "plain"]}
-          seat="row"
-          part="whr"
+          w={BASE_W}
+          h={BASE_H}
+          g={whr}
+          stacked={false}
           led={led}
           hot={lit === "whr"}
           onLit={onLit}
         />
       </g>
 
-      {/* ── The one bright object: the card, carrying THE BAR on its face.
-              The dock's `fill-box` origin stays the cartridge's own. ──── */}
+      {/* ── The one bright object. ⚠ THE DOCK GROUP HOLDS THE CARD ALONE:
+              `fill-box` measures the transform against this group's own bbox,
+              so anything reaching past the rect moves the flight's origin. ── */}
       <g
         className={entry.kind === "flight" ? "fl-pda-dock" : still ? undefined : "fl-pda-bloom"}
         style={
@@ -788,30 +847,16 @@ export function ViewConfiguration({
             : undefined
         }
       >
-        <path
-          d={`M${CHIP.x + 14 * CORE_K},${CHIP.y} H${CHIP_R} V${CHIP_B} H${CHIP.x} V${CHIP.y + 14 * CORE_K} Z`}
-          fill={led ? "rgba(var(--dawn-rgb), 0.04)" : "rgba(var(--dawn-rgb), 0.09)"}
-          stroke="none"
-        />
-        <Cartridge
-          x={CHIP.x}
-          y={CHIP.y}
-          w={CHIP.w}
-          h={CHIP.h}
-          state={led ? "led" : "hot"}
-          work={work}
-          k={CORE_K}
-          bar={{ label: "THE BAR", lines: barLines }}
-        />
+        <SeatCard work={work} led={led} />
       </g>
       {/* The bar's hover bed — a SIBLING of the dock group on purpose: the
           listener re-renders on hover, and the dock's entrance style must
           never re-evaluate mid-flight. */}
       <rect
         x={CHIP.x}
-        y={CHIP.y + 150}
+        y={CHIP.y + CARD.barBase - 24}
         width={CHIP.w}
-        height={CHIP.h - 150}
+        height={CHIP.h - CARD.barBase + 24}
         fill="transparent"
         onMouseEnter={() => onLit("gat")}
         onMouseLeave={() => onLit(null)}

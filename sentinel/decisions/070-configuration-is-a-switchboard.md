@@ -675,3 +675,164 @@ streams against the new lettering; `cases-registry` now scans the agent).
 Typecheck clean. The three casefile smoke cases green. Headed captures at
 1280×720 dark + light and 1920×1080 dark: 26 labels, 0 clipped, minPx 5.41
 at the binding short-wide field and 8.33 at 1920.
+
+---
+
+## Update 10 — the seated board, promoted (2026-08-11, owner)
+
+Reading 02's drawing is replaced by the `seated` variant, picked out of eight
+refinements built at `/test/intelligence-config-lab` and put through three
+rounds of owner notes. The lab's local copy is deleted and its `shipped`
+entry mounts production, per the switchboard precedent — two drawings
+claiming to be the same one is how a lab goes stale.
+
+### What was actually wrong, in numbers
+
+The brief was "the board reads cramped". It was not density:
+
+- A U9 answer sub-card was **158 units tall around an ink band of 51** — a
+  key baseline at +26 and one value line at +62. **68 % dead space, six times
+  over**: ~640 of the crop's 912 vertical units spent on nothing, while the
+  value lettered at 11.5.
+- The ladder was **inverted**: the question header lettered at 14, LARGER
+  than the answer it introduced — against ADR-069's own words, _"the question
+  is chrome, the answer is the record"_.
+
+### ⚠ The crop's aspect INVERTED, and it is a measured trade
+
+U4 made the crop portrait because the console's field is portrait at a tall
+window. That is true, and it is not the whole picture. The field is **capped
+at 850px wide but grows with viewport height**, so it is LANDSCAPE on laptops
+and PORTRAIT on tall screens. Measured on the live landing:
+
+| viewport  | field    | aspect | 828×912 waste | 1000×912 waste |
+| --------- | -------- | ------ | ------------- | -------------- |
+| 1280×720  | 603×493  | 1.223  | 155 across    | 62 across      |
+| 1440×800  | 679×548  | 1.239  | 181 across    | 78 across      |
+| 1920×1080 | 850×760  | 1.118  | 160 across    | **17 across**  |
+| 2560×1440 | 850×1120 | 0.759  | **184 down**  | 345 down       |
+| 1280×1440 | 603×1177 | 0.512  | **513 down**  | 627 down       |
+
+**One crop cannot fill both ends.** U4 chose portrait and paid on laptops;
+the owner's call here is the other way — the laptop and the 1920 reference
+win, at the NAMED cost of more vertical letterbox and ~17 % smaller type on
+tall large monitors (meet 1.027 → 0.850 at 2560×1440).
+
+⚠ `pda-viewbox`'s aspect assertion did not disappear, it **inverted** — the
+crop must now be ≥ 1.05, and a second assertion bounds the cost at the tall
+field so the crop cannot keep widening at its expense. An aspect contract
+that is deleted rather than flipped is a contract nobody notices breaking.
+
+### ⚠ Nothing letters under 12
+
+U9's keys sat at 10, which is **5.4px at the binding preset and 8.3px at
+1920** — under the 8.5px chrome floor ADR-063 already records as this
+surface's standing defect. The owner's verdict on SKILL / MODEL / AGENT /
+KNOWLEDGE GRAPH was "utterly illegible", and it is arithmetic rather than
+taste. The contrast is bought the other way round now — the ANSWER came down
+and the KEY came up: **question 13 · key 14 · value 15 · owner 16 · bar 14**,
+with `FS_FLOOR = 12` asserted rather than intended.
+
+**A label nobody can read is not a quiet label, it is an absent one** — the
+same finding U6 made about the seat's dashed line, one type rung down.
+
+### The seat is STRUCTURE, and U5's law is kept by material
+
+U5 says the seat is AUTHORITY, not data, so it may never be one of the nodes'
+multi-conductor bundles. A dashed hairline was only ONE way to say that, and
+U6 had already had to take it from `--pda-dim` to full green because it read
+as absent. The distinction moves from **weight to MATERIAL**: authority is
+drawn as structure, data as conductors. Nothing flows down a pylon — it bears
+load, which is why it survives being drawn thick.
+
+⚠ Three sizes bracket the range: 110→170 over 60 units read as a small dark
+tab (the hairline's failure in a new shape), 140→240 as a buttress that took
+the eye off the card. **64→108 with a shallow splay** is the band between.
+
+### ⚠ The card is drawn here now, not by `Cartridge`
+
+`Cartridge`'s internal offsets are absolute multiples of `k`, so at k 2 its
+title landed at `+184` and its bar block bottomed out **three units** off the
+floor with a 60-unit void above it. That is the glyph's layout, not spacing —
+and reading 01's grid of twenty still wants it, so fixing it in place would
+re-lay-out the other reading. This reading lays out its own contents on the
+same silhouette: header row (state mark, team, id), rule, title, bar, and
+**41 units of margin** under the last descender.
+
+⚠ **THE SILHOUETTE IS WHAT MAY NOT MOVE.** `CORE_RECT` stays exactly
+`176×136 × k` with the same `14k` chamfer, because ADR-069's flight docks
+into it, and the docking group still holds the card ALONE — `fill-box`
+measures the transform against that group's own bbox. `CORE_K` 1.5 → 2 keeps
+the two rects exactly similar, so the morph is still one uniform scale.
+
+⚠ **AND THE CARD'S THREE STRINGS ARE DECLARED NOW.** While the card was
+`Cartridge`, its team code, stream id and title were lettered by a shared
+glyph and `configurationLettering` never saw them — the fit guard was walking
+a drawing with three invisible labels in it. **Any reading that mounts a
+production glyph inherits that blind spot.**
+
+### One ink, gold keys, a divider, a bezel
+
+- **One ink for every answer.** The Skill lettered green and the graph blue,
+  carrying ADR-062's material grammar onto the type. On the CITY that grammar
+  has a legend's worth of context and applies to SHAPES; here it lands on six
+  words in a row with nothing to decode it, so it reads as emphasis rather
+  than provenance.
+- **Keys in Tensor gold** — `--pda-ink`, which is `--gold-ink`, the 4.5:1
+  rung of ADR-063 U2's ramp. ⚠ NEVER `--gold` itself: that is the MARK rung
+  and measures ~1.1:1 as small text on the light theme's parchment.
+  `--pda-ink` was declared in pda.css and consumed by nothing until now.
+- **The hatch band and the dashed inset are deleted**, replaced by a divider
+  rule between the two cells. At this size the diagonal ticks read as a
+  texture bug rather than as material.
+- **The bezel** is the services cards' own device — `ServicesCardRing` bakes
+  its slab with a clear bezel margin plus a hairline on the silhouette — as a
+  second chamfered outline inset inside the first, on the card and one step
+  quieter on every node. ⚠ The inner chamfer leg is NOT `leg − inset`: a 45°
+  cut offset inward by `d` moves its diagonal by `d√2` along the axes, and the
+  naive value leaves the diagonal visibly closer to the outer edge than the
+  straight runs are.
+
+### `MODEL` and `AGENT` answer in words a reader can picture
+
+- **`MODEL` letters the verbs, not the lane.** Nothing on the surface explains
+  "everyday lane" and nothing can — the lane is a generic capability tier
+  because the envelope forbids naming a model family, so the tier cannot be
+  made concrete by naming the model. `m[1]` is the concrete thing the record
+  already holds. `PdaAnswers.laneVerbs` is additive; `laneRun` survives.
+- **`AGENT` may not be a codename.** The field carried `Mímir` and `Vesper` —
+  publishable, since the tools row of this same casefile prints them — but on
+  the tools row a codename sits beside a screenshot and a walkthrough that
+  explain it, and on the map it sits alone in a cell. **A codename is
+  PROVENANCE; this field has to be an ANSWER.** The shipped tools' own public
+  tab labels are what they are called here.
+
+### The geometry
+
+One width chain, `30 | 234 | 60 | 352 | 60 | 234 | 30` = 1000, and one
+vertical chain, owner 136 + neck 62 + card 272 + drop 150 + base 164 = 784
+against 873 of board, leaving 44.5 of margin top and bottom. `NODE_H` lands
+on 272 as well, so **the card and both side nodes share one top edge and one
+bottom edge** — that alignment is the balance. The gutters go 24 → **60**, so
+the cables have room to be seen.
+
+### Verification
+
+- `npx vitest run` 630 green across 46 files. `pda-viewbox` (17) walks all 27
+  streams against the new lettering including the card's three strings;
+  `pda-flight` (16) confirms the rects stay exactly similar at `CORE_K` 2.
+- `tests/visual/services-ring-smoke.spec.ts` green.
+- The live landing captured at 1920×1080: crop 1000×912, meet 0.833, 26
+  labels, 0 clipped, **minPx 10.83** — the first drawing on this surface to
+  clear the 8.5px chrome floor (it was 8.33). Morph frames at 150 ms and
+  300 ms confirm the dock.
+
+### Left open
+
+- Readings 01 and 03 still letter at ~4.5–5.5px and are untouched by this
+  pass. Reading 02 is now decisively the best-set reading on the surface,
+  which sharpens rather than answers that gap — and the two of them now use
+  different crops, so 01's own aspect deserves the same measurement U10 did.
+- The tall-monitor cost is accepted, not solved. If it ever needs solving,
+  the mechanism is a crop chosen from the field's measured aspect rather than
+  a constant — two layouts to maintain, which is why it was not done here.

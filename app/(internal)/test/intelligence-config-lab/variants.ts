@@ -11,28 +11,33 @@ import type { PdaWork } from "@/components/landing/home-v2/services/casefile/map
 /**
  * /test/intelligence-config-lab — the variant contract and the shared kit.
  *
- * Nine drawings of ONE work stream's intelligence configuration, judged side
- * by side in the real console chrome. `shipped` is ADR-070's board, mounted
- * from production; the other eight are QUALITY-OF-LIFE REFINEMENTS answering
- * the owner's brief (2026-08-11): the board reads cramped, the panels can be
- * smaller, the type must be bigger, WHO OWNS IT belongs to the centrepiece,
- * and the cable stays.
+ * Eight drawings of ONE work stream's intelligence configuration, judged side
+ * by side in the real console chrome. `shipped` is production's reading 02,
+ * mounted from `PdaConfiguration`; the other seven are the QUALITY-OF-LIFE
+ * REFINEMENTS built for the owner's brief (2026-08-11): the board reads
+ * cramped, the panels can be smaller, the type must be bigger, WHO OWNS IT
+ * belongs to the centrepiece, and the cable stays.
  *
- * ⚠ `seated` IS THE SECOND ROUND, not a peer of the first seven — it is
- * `tight` with the owner's notes ON `tight` applied (bigger card, the base
- * brought up, the dashed hairline replaced by structure). Judge it against
- * `tight`, not against the spread.
+ * ⚠ `seated` WON AND IS ON THE LANDING (ADR-070 U10, 2026-08-11), so its
+ * local copy is DELETED and `shipped` mounts it from production — the
+ * switchboard precedent, and the reason it exists: two drawings claiming to
+ * be the same one is how a lab goes stale. The seven below are judged against
+ * the real thing.
  *
- * ⚠ THE FOUR ARCHETYPES ARE RETIRED (die · chain · section · schematic).
+ * ⚠ THE FOUR ARCHETYPES ARE RETIRED TOO (die · chain · section · schematic).
  * They answered a different question — what SHAPE the drawing should be — and
  * the switchboard won it on 2026-08-09. ADR-070's own Left-open note said to
  * delete the losers rather than keep five; git history is the archive.
  *
- * ⚠ ALL SEVEN USE THE PRODUCTION CROP `36 48 828 912`, not the archetypes'
- * 1000×760. The comparison against `shipped` is only worth making if both are
- * drawn in the same box, and promotion is then a copy rather than a re-fit.
- * That also raises the floor: nothing here letters under 10 (at the binding
- * preset the meet is 0.540, so 7.5 would render 4.05px against a 4.3 gate).
+ * ⚠ THE SEVEN DRAW IN THE PRE-U10 CROP `36 48 828 912`, which production no
+ * longer uses — U10 took it to `0 48 1000 912` after measuring that every
+ * desktop console field is LANDSCAPE while that crop was portrait. They are
+ * the RECORD of a round that is finished, not live candidates; anything
+ * genuinely being weighed against production again should be re-cropped to
+ * match it, or the comparison is between two different boxes.
+ *
+ * ⚠ Their floor is the round-one 10. Production's is 12 (U10) — a rung these
+ * seven predate.
  *
  * ⚠ THE LAB PAGE IS MECHANICALLY UNGUARDED. `cases-registry.test.ts` walks
  * `CASES` + `PROJECT_CASES` objects, never component code — so every string a
@@ -52,8 +57,7 @@ export type IclVariantId =
   | "rail"
   | "satellite"
   | "ledger"
-  | "grid"
-  | "seated";
+  | "grid";
 
 export interface IclVariantDef {
   id: IclVariantId;
@@ -126,14 +130,6 @@ export const ICL_VARIANTS: readonly IclVariantDef[] = [
       "Hairlines instead of boxes. A strict 2 × 3 modular grid, one question per row, rules as the only chrome. The largest type-to-chrome ratio on the board — and the centre rule IS the cable, because the grid needs a divider and the card needs a run.",
     provenance:
       "Swiss modular IA in the house palette. Everything six rectangles and their padding were costing, spent on air and type.",
-  },
-  {
-    id: "seated",
-    label: "8 · Seated",
-    thesis:
-      "THE BALANCED SWEEP. The crop goes 828 → 1000 wide, which is FREE — the fit is height-bound at every measured console, so the meet and every rendered type size are unchanged, and the 19–27% of field width that was horizontal LETTERBOX becomes 172 units of board. It buys gutters of 60 (from 26) so the cables can be seen, a k 2.0 card, and frames that stop cropping their own text. The card and both side nodes are exactly 272 tall, sharing one top and one bottom line.",
-    provenance:
-      "The seat is structure, not signal — a quiet neck the card sits on. Keys in Tensor gold, one ink for every answer, the hatch and the dashed inset replaced by a divider rule, and MODEL/AGENT answering in words a reader outside Loop can picture.",
   },
 ];
 

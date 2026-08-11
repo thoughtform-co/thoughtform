@@ -1053,7 +1053,55 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
-## The unit board (ADR-070 U2, live — reading 02's drawing)
+## The unit board (reading 02's drawing — SEE U10 FIRST)
+
+⚠ **ADR-070 U10 (2026-08-11) PROMOTED THE `seated` BOARD, AND IT SUPERSEDES
+THE GEOMETRY, THE TYPE AND THE MATERIALS BELOW.** What still binds from U2–U9
+is the CONTENT — the three questions, the six answers, the seat, the bar,
+person-led answering all of them — and the flight contract. What changed:
+
+- **The crop is `0 48 1000 912`, LANDSCAPE**, and `pda-viewbox`'s aspect
+  assertion INVERTED with it (≥ 1.05, plus a bound on the tall field's type).
+  The console's field is capped at 850px wide but grows with viewport height,
+  so it is landscape on laptops (1.12–1.24) and portrait on tall screens
+  (0.42–0.81). One crop cannot fill both: U4 chose portrait and paid 155–181px
+  of horizontal letterbox on every laptop; U10 is the owner's call the other
+  way, at the named cost of more vertical letterbox and ~17 % smaller type at
+  2560×1440. ⚠ **An aspect contract that is deleted rather than flipped is a
+  contract nobody notices breaking.**
+- **Nothing letters under 12.** U9's keys at 10 rendered 5.4px / 8.3px, under
+  the 8.5px chrome floor; the owner ruled them illegible. Ladder: question 13
+  · key 14 · value 15 · owner 16 · bar 14. **A label nobody can read is not a
+  quiet label, it is an absent one.**
+- **The seat's dashed line is a PYLON.** U5's law is kept — the seat is
+  AUTHORITY, not data, so never a bundle — but the distinction moves from
+  WEIGHT to MATERIAL: authority is structure, data is conductors. Nothing
+  flows down a pylon; it bears load, so it survives being drawn thick.
+- ⚠ **The card is drawn by `SeatCard` in `PdaConfiguration`, NOT by
+  `Cartridge`.** `Cartridge`'s offsets are absolute multiples of `k`, so at
+  k 2 its title landed at +184 and its bar bottomed out THREE units off the
+  floor; reading 01's grid still wants that glyph, so fixing it in place would
+  re-lay-out the other reading. **The SILHOUETTE is what may not move** —
+  `CORE_RECT` stays `176×136 × k` (now k 2) with the same `14k` chamfer,
+  because ADR-069's flight docks into it and the dock group holds the card
+  alone. ⚠ **AND ITS THREE STRINGS ARE DECLARED NOW**: while the card was
+  `Cartridge`, its team code, id and title were lettered by a shared glyph and
+  `configurationLettering` never saw them — the guard was walking a drawing
+  with three invisible labels in it. **Any reading that mounts a production
+  glyph inherits that blind spot.**
+- **One ink for every answer, keys in Tensor gold (`--pda-ink`), the hatch and
+  the dashed inset replaced by a divider rule, and a bezel** (the services
+  cards' device) on the card and every node. ⚠ The bezel's inner chamfer leg
+  is NOT `leg − inset`: a 45° cut offset inward by `d` moves its diagonal by
+  `d√2`.
+- **`MODEL` letters the verbs (`m[1]`), not the lane** — the tier is generic
+  by law and cannot be made concrete by naming the model. **`AGENT` may not be
+  a codename**: on the tools row a codename sits beside a screenshot that
+  explains it; on the map it sits alone in a cell. A codename is provenance,
+  this field is an answer.
+
+Everything below is the U2–U9 record. Read it for the CONTENT rulings and the
+traps; do not read its numbers as current.
 
 ⚠ **THE COMPOSITION IS THE OWNER'S `configuration-unit-mockup.html`**
 (2026-08-10), adapted — never re-imagined. U1's radial switchboard (six
@@ -1222,7 +1270,11 @@ never substituting a different drawing.
 
 ## The CONFIGURATION lab (look-dev, `/test/intelligence-config-lab`)
 
-**Eight quality-of-life refinements of READING 02, beside the shipped board**
+**Seven quality-of-life refinements of READING 02, beside the shipped board**
+— the EIGHTH, `seated`, WON and is on the landing (ADR-070 U10), so its local
+copy is deleted and `shipped` mounts production. ⚠ The seven draw in the
+PRE-U10 crop and at the round-one floor of 10: they are the record of a
+finished round, not live candidates.
 (owner, 2026-08-11): the board reads cramped, the panels can be smaller, the
 type must be bigger, WHO OWNS IT belongs to the centrepiece, and the cable
 stays. Contents and panels are settled — this is an INFORMATION-ARCHITECTURE

@@ -29,6 +29,16 @@ import { getCase } from "@/lib/cases/registry";
  * constant to move.
  */
 
+/**
+ * ⚠ THE FLOOR THE OWNER SET (ADR-070 U10, 2026-08-11). U4's floor was 10,
+ * which is 5.4px at the binding preset and 8.3px at 1920 — under the 8.5px
+ * chrome floor ADR-063 already records as this surface's standing defect.
+ * The verdict on the keys was "utterly illegible", and it is arithmetic
+ * rather than taste: a label nobody can read is not a quiet label, it is an
+ * absent one.
+ */
+const FS_FLOOR = 12;
+
 function box(v: 1 | 2 | 3) {
   const [x, y, w, h] = VIEW_BOX[v].split(" ").map(Number);
   return { x, y, w, h, right: x + w, bottom: y + h };
@@ -104,21 +114,37 @@ describe("the readings' crops", () => {
     });
   }
 
-  it("reading 02's crop is PORTRAIT — it has to fill a portrait panel", () => {
-    /* ⚠ THE ASPECT IS THE CONTRACT (ADR-070 U4). The console's field is
-       PORTRAIT where this is read (792x948 = 0.835 at a tall window), and
-       `meet` scales by the minimum ratio — so a LANDSCAPE crop is
-       width-bound there and letterboxes the difference as dead panel below
-       the drawing. The old 910x740 (1.23) left 304px of it. Anything at or
-       under ~0.95 fills that field to within a few percent. */
-    const b = box(2);
-    expect(b.w / b.h, "reading 02's crop went landscape again").toBeLessThanOrEqual(0.95);
+  it("reading 02's crop is LANDSCAPE — it has to fill a laptop panel", () => {
+    /* ⚠ THE ASPECT IS STILL THE CONTRACT — IT INVERTED (ADR-070 U10, owner).
+       `meet` scales by the minimum ratio, so the crop's aspect decides which
+       axis wastes. The console's field is capped at 850px wide but grows with
+       viewport height, so it is LANDSCAPE on laptops and PORTRAIT on tall
+       screens. Measured on the live landing:
 
-    /* The price of the portrait crop is meet at the SHORT-wide fields, where
-       the drawing is height-bound instead: 603x493 at 1280x720. The drawing's
-       own floor is 10 units, and it still has to clear the smoke's 4.3px. */
+         viewport     field       aspect   828x912 waste   1000x912 waste
+         1280x720     603x493     1.223    155 across      62 across
+         1440x800     679x548     1.239    181 across      78 across
+         1920x1080    850x760     1.118    160 across      17 across
+         2560x1440    850x1120    0.759    184 down        345 down
+
+       One crop cannot fill both ends. U4 chose portrait and paid on laptops;
+       U10 is the owner's call the other way — the laptop and the 1920
+       reference win, at the named cost of more vertical letterbox and ~17 %
+       smaller type on tall large monitors. The contract did not disappear,
+       so neither does the assertion. */
+    const b = box(2);
+    expect(b.w / b.h, "reading 02's crop went portrait again").toBeGreaterThanOrEqual(1.05);
+
+    /* ⚠ AND THE COST AT THE OTHER END IS BOUNDED. At the tall field the fit
+       is WIDTH-bound, so a crop that keeps widening shrinks the type there
+       without limit. At 850x1120 the smallest rung has to stay over the
+       smoke's 4.3px floor with room to spare. */
+    const tall = Math.min(850 / b.w, 1120 / b.h);
+    expect(FS_FLOOR * tall, "the tall field's type fell toward the floor").toBeGreaterThan(9);
+
+    /* The binding short-wide field, where the drawing is height-bound. */
     const meet = Math.min(603 / b.w, 493 / b.h);
-    expect(10 * meet, "the smallest rung fell under the smoke's floor").toBeGreaterThan(4.6);
+    expect(FS_FLOOR * meet, "the smallest rung fell under the smoke's floor").toBeGreaterThan(4.6);
   });
 });
 
@@ -207,13 +233,12 @@ describe("the configuration letters into its boxes", () => {
     }
   });
 
-  it("nothing letters under the drawing's own floor", () => {
-    /* ⚠ THE FLOOR ROSE TO 10 WITH THE PORTRAIT CROP (ADR-070 U4). At the
-       short-wide field (603x493) a portrait crop is height-bound, so the meet
-       drops to ~0.52 — 7.5 units would render 3.89px and fail the smoke's
-       4.3px floor outright. 10 renders 5.19. */
+  it("nothing letters under the floor the owner set", () => {
+    /* ⚠ 12 SINCE U10 — see `FS_FLOOR`. U4's 10 rendered 5.4px at the binding
+       preset and 8.3px at 1920, under the 8.5px chrome floor; the owner ruled
+       the keys illegible and the ladder was rebuilt around this rung. */
     for (const spec of configurationLettering(allWorks()[0])) {
-      expect(spec.fs, `${spec.slot} letters at ${spec.fs}`).toBeGreaterThanOrEqual(10);
+      expect(spec.fs, `${spec.slot} letters at ${spec.fs}`).toBeGreaterThanOrEqual(FS_FLOOR);
     }
   });
 

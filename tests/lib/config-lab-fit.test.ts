@@ -10,7 +10,6 @@ import { railLettering } from "@/app/(internal)/test/intelligence-config-lab/Var
 import { satelliteLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSatellite";
 import { ledgerLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantLedger";
 import { gridLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantGrid";
-import { seatedLettering } from "@/app/(internal)/test/intelligence-config-lab/VariantSeated";
 import {
   type IclRecord,
   type LetterSpec,
@@ -58,7 +57,6 @@ const VARIANTS = [
   ["satellite", satelliteLettering],
   ["ledger", ledgerLettering],
   ["grid", gridLettering],
-  ["seated", seatedLettering],
 ] as const;
 
 const allSpecs = (): { variant: string; workId: string; spec: LetterSpec }[] => {

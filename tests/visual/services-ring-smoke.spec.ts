@@ -827,10 +827,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
          name — read them from the record rather than pinning a title, so a
          reorder of the directory moves this assertion with it. */
       const opened = (await page.locator(".fl-pda-hit").first().getAttribute("aria-label")) ?? "";
-      const [openedTitle, openedLane] = [
-        opened.split(",")[0]?.trim() ?? "",
-        opened.match(/,\s*([A-Z-]+) lane/)?.[1] ?? "",
-      ];
+      /* ⚠ Only the TITLE is read now. The lane came off the drawing in
+         ADR-070 U10, so pulling it out of the label here would be a value
+         nothing downstream could check. */
+      const openedTitle = opened.split(",")[0]?.trim() ?? "";
       await page.locator(".fl-pda-hit").first().click({ force: true });
       // The flight is 420ms and the foot caption arrives at 760.
       await page.waitForTimeout(800);
@@ -846,15 +846,41 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         `${label}: the configuration opened on a different stream`
       ).toBeGreaterThan(0);
 
-      // ...and it ANSWERS (ADR-069). The four modules printed the same four
-      // questions for all twenty-seven streams until the record's own values
-      // reached the drawing; the lane is the one every configured stream has.
-      if (openedLane && openedLane !== "PERSON-LED") {
-        expect(
-          await page.locator(".fl-pda__svg").getByText(`${openedLane} LANE`).count(),
-          `${label}: the configuration printed no lane for a ${openedLane} stream`
-        ).toBeGreaterThan(0);
-      }
+      // ...and it ANSWERS (ADR-069). The modules printed the same questions
+      // for all twenty-seven streams until the record's own values reached
+      // the drawing.
+      //
+      // ⚠ THE PROBE USED TO BE THE LANE, AND ADR-070 U10 TOOK THE LANE OFF
+      // THE DRAWING — `MODEL` letters the VERBS now, because "everyday lane"
+      // is a generic tier no reader can resolve and the envelope forbids
+      // naming the model that would make it concrete. So the check moves from
+      // "does this one string appear" to the thing it was standing in for:
+      // OPEN A SECOND STREAM AND THE ANSWERS MUST CHANGE. That is stronger —
+      // a template would satisfy any single-string probe for every record.
+      const answers = () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll(".fl-pda__svg text")]
+            .map((t) => (t.textContent ?? "").trim())
+            .join("|")
+        );
+      const firstAnswers = await answers();
+      await page.locator(".fl-con__stn").first().click();
+      await page.waitForTimeout(300);
+      await page.locator(".fl-pda-hit").nth(1).click({ force: true });
+      await page.waitForTimeout(800);
+      const secondAnswers = await answers();
+      expect(
+        firstAnswers === secondAnswers,
+        `${label}: two different streams drew the identical configuration`
+      ).toBe(false);
+      expect(firstAnswers.length, `${label}: the configuration letters nothing`).toBeGreaterThan(
+        60
+      );
+      // Back to the stream this case has been reasoning about.
+      await page.locator(".fl-con__stn").first().click();
+      await page.waitForTimeout(300);
+      await page.locator(".fl-pda-hit").first().click({ force: true });
+      await page.waitForTimeout(800);
 
       // ⚠ THE READOUT IS DELETED (ADR-070 U3, owner: "its eating up real
       // estate") — this assertion is the old one INVERTED. No prose letters

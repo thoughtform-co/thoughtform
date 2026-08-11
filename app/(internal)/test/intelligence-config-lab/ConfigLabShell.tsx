@@ -27,7 +27,6 @@ import { RAIL_VIEWBOX, VariantRail } from "./VariantRail";
 import { SATELLITE_VIEWBOX, VariantSatellite } from "./VariantSatellite";
 import { LEDGER_VIEWBOX, VariantLedger } from "./VariantLedger";
 import { GRID_VIEWBOX, VariantGrid } from "./VariantGrid";
-import { SEATED_VIEWBOX, VariantSeated } from "./VariantSeated";
 import {
   ICL_VARIANTS,
   type IclRecord,
@@ -82,7 +81,6 @@ const DRAWINGS: Record<
   satellite: { vb: SATELLITE_VIEWBOX, Component: VariantSatellite },
   ledger: { vb: LEDGER_VIEWBOX, Component: VariantLedger },
   grid: { vb: GRID_VIEWBOX, Component: VariantGrid },
-  seated: { vb: SEATED_VIEWBOX, Component: VariantSeated },
 };
 
 interface Preset {

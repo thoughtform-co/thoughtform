@@ -16,10 +16,15 @@ import type { ReactNode } from "react";
  * 2026-08-09; ADR-070's Left-open note said to delete the losers rather than
  * keep five. Git history is the archive.
  *
- * Eight refinements hang beside the shipped board, all drawn from the LIVE
- * record inside the REAL console chrome (`ConsoleFrame` + `ConsoleRail` +
- * the `--pda-*` palette) and — unlike the archetypes — in the PRODUCTION CROP,
- * so the comparison is like-for-like and promotion is a copy:
+ * ⚠ AND THE EIGHTH, `seated`, WON — it is on the landing as of ADR-070 U10,
+ * so its local copy is deleted and `shipped` mounts it from production.
+ *
+ * Seven refinements hang beside it, all drawn from the LIVE record inside the
+ * REAL console chrome (`ConsoleFrame` + `ConsoleRail` + the `--pda-*`
+ * palette). ⚠ They draw in the PRE-U10 crop `36 48 828 912`, which production
+ * no longer uses — they are the RECORD of a finished round, not live
+ * candidates, and anything genuinely weighed against production again wants
+ * re-cropping first or the comparison is between two different boxes:
  *
  *   tight      the control: same seats and cables, only cell height and the
  *              type ladder move
@@ -29,10 +34,6 @@ import type { ReactNode } from "react";
  *   satellite  no housings; a bigger card and doglegged cables
  *   ledger     one right-hand column of rows; spine doubles as column rule
  *   grid       2 × 3 modular, hairlines only, the centre rule IS the cable
- *   seated     ROUND TWO: `tight` with the owner's notes on it applied — a
- *              bigger card, the base brought up to meet it, and the dashed
- *              hairline replaced by a structural pylon. Judge against
- *              `tight`, not against the spread.
  *
  * ⚠ THIS IS A MEASURING INSTRUMENT, NOT A PICTURE (the imlab law). The
  * readout walks every glyph box live: label-on-label collisions, crop
@@ -48,9 +49,9 @@ import type { ReactNode } from "react";
  * parent `(internal)/test` layout.
  */
 export const metadata: Metadata = {
-  title: "Intelligence Configuration Lab — eight refinements (Internal)",
+  title: "Intelligence Configuration Lab — seven refinements (Internal)",
   description:
-    "Look-dev for the casefile map console's configuration reading: eight information-architecture refinements — tight, fused, bands, rail, satellite, ledger, grid, seated — beside the shipped board, at real console sizes.",
+    "Look-dev for the casefile map console's configuration reading: seven information-architecture refinements beside the shipped board, at real console sizes. The eighth, seated, won and is on the landing.",
   robots: { index: false, follow: false },
 };
 
