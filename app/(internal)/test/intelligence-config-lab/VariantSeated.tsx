@@ -74,7 +74,7 @@ const BASE_H = HEAD_H + CELL_H + FLOOR;
 /** k 2.0 — and `NODE_H` lands on 272 too, so the card and both side nodes
  *  share one top edge and one bottom edge. That alignment is the balance. */
 const CHIP_K = 2;
-const CHIP = { x: 324, y: 302, w: 176 * CHIP_K, h: 136 * CHIP_K } as const;
+const CHIP = { x: 324, y: 314, w: 176 * CHIP_K, h: 136 * CHIP_K } as const;
 const CHIP_R = CHIP.x + CHIP.w;
 const CHIP_B = CHIP.y + CHIP.h;
 const CHIP_CY = CHIP.y + CHIP.h / 2;
@@ -82,11 +82,23 @@ const CHIP_CY = CHIP.y + CHIP.h / 2;
 const RIGHT_X = CHIP_R + GUTTER;
 const NODE_Y = CHIP.y;
 const BASE_X = B.mid - BASE_W / 2;
-const BASE_Y = 724;
+const BASE_Y = 736;
 
-/** Taller, wider and inset — the seat had its text against its own ceiling. */
-const OWNER = { x: 240, y: 128, w: 520, h: 112 } as const;
-const OWNER_PADY = 8;
+/**
+ * The seat, sized from its own ink rather than by eye. `OwnerPlate` lays out
+ * three rows — the key, the seat, and what the seat owns — whose block
+ * measures 62.3 units from the key's cap top to the note's descender. At
+ * h 136 that centres with 36.9 of air above and below, and `OWNER_PADY` is
+ * the offset that puts it there rather than against the ceiling.
+ *
+ * ⚠ THE HEIGHT CAME OUT OF THE MARGINS, NOT OUT OF THE PYLON. The whole
+ * vertical chain re-derives around it: owner 136 + neck 62 + card 272 + drop
+ * 150 + base 164 = 784 against 873 of board, so the composition still sits
+ * on 44.5 units of margin top and bottom. Growing the plate without moving
+ * the chain would have eaten the neck instead.
+ */
+const OWNER = { x: 240, y: 116, w: 520, h: 136 } as const;
+const OWNER_PADY = 17;
 
 /** The neck. Third size, and the range is known: 110→170 read as a dark tab,
  *  140→240 as a buttress that took the eye off the card. */
@@ -99,15 +111,17 @@ const CELL_PADY = 10;
 const T: CellType = { keyFs: FS.key, valueFs: FS.v, measure: CELL_W - CELL_PAD * 2, cap: 2 };
 const BAR_MEASURE = CHIP.w - 26;
 /**
- * ⚠ THE BAR SITS IN A WINDOW ~6 UNITS WIDE, AND THE KEY RUNG GOING TO 14
- * CLOSED IT. Above: the cartridge title letters 23 at k 2 with its baseline
- * at 486, so the bar label has to clear its descenders. Below: two lines
- * plus a descender have to clear the card floor at 574. At a 15-unit bar the
- * window was empty and the capture caught the collision (CAMPAIGN COPY ×
- * THE BAR). At 14 — the same rung as the key above it — it reopens to
- * [505, 511]. */
+ * ⚠ THE BAR SITS IN A WINDOW ~8 UNITS WIDE, SO IT IS DERIVED FROM THE CARD
+ * RATHER THAN TYPED. Above: the cartridge title letters 23 at k 2 with its
+ * baseline at `CHIP.y + 184`, and the bar label has to clear its descenders.
+ * Below: two lines plus a descender have to clear the card floor. At a
+ * 15-unit bar that window was EMPTY and the capture caught the collision
+ * (CAMPAIGN COPY × THE BAR); at 14 — the same rung as the key above it — it
+ * reopens. Offsetting from `CHIP.y` is what stops it drifting shut the next
+ * time the card moves.
+ */
 const BAR_FS = FS.key;
-const BAR_Y = 508;
+const BAR_Y = CHIP.y + 206;
 
 export function seatedLettering(
   pda: IclVariantProps["pda"],
