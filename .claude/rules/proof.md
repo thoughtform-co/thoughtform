@@ -1601,6 +1601,74 @@ FACTS` (W-049) wrapped to three lines in Satellite's 170-wide pod and the
   **cable-versus-box** collisions (every guard measures TEXT) and whether the
   owner reads as part of the centrepiece, which is the brief.
 
+## The SUBSTRATE lab (look-dev, `/test/intelligence-substrate-lab`)
+
+**Three higher-level hierarchy drawings for READING 03, beside the shipped
+crossing** (2026-08-11, owner: the five shapes at the bottom _"don't have to
+look like the configuration cards — this is really more of a pattern"_).
+Nothing on the landing changed; no ADR until a direction wins (the
+BOARD-archetype and config-lab precedent).
+
+- ⚠ **THE DIAGNOSIS IS THAT A PATTERN IS DRAWN AS A MODULE.** Production
+  letters its five shapes with `Module` — the same notched-plate glyph as the
+  department `Plate` above it and the same family as reading 02's cards. On
+  this surface that silhouette means A THING THAT RUNS. Same shape reads as
+  same kind, and these are not the same kind.
+- ⚠ **AND NOTHING ABOUT THE HIERARCHY IS STRUCTURAL.** All five shapes are the
+  same 148×50 box while they hold 5 → 14 Skills and are drawn on by 3 → 8
+  departments; the magnitude exists only as a 9px text line. The thirty
+  crossing beziers are the rest of it — a reader has to TRACE A CURVE to
+  answer "who draws on Judgment?", the same failure that retired the
+  isometric city. The hierarchy on record is **Skill → pattern → reuse**, and
+  two of those three are currently text.
+- **The three** (`variants.ts` + one file each): **strata** (a pattern is a
+  SEAM — thickness is mass, eight department buses run straight down through
+  the stack, a tap is a cell where a bus crosses a seam; the brief's own
+  "below grade runs the shared substrate" taken literally), **table** (stop
+  drawing the relation and tabulate it; the mass survives as a bar in the row
+  header), **tree** (Skill → pattern → reuse drawn as the tree it has always
+  been, departments REPEATED as leaves instead of wired as edges).
+- ⚠ **`gloss` LETTERS NOWHERE IN PRODUCTION**, and all three directions give
+  it a home — the same class of orphan as `cfg.p[1]` before ADR-070 U7. A
+  148-wide module could never hold "HOW THE ORGANISATION SOUNDS IN CONTEXT"
+  (38 chars = 336u at the floor); a full-width seam or row header holds it on
+  one line.
+- **One crop for all three, and it is reading 02's WIDTH** (`932 × 762`). The
+  comparison is only worth making in the same box, and sharing 932 means a
+  promoted winner inherits ADR-070 U12's elastic treatment unchanged — the
+  crop's width never moves, so `meet` is `field.w / 932` and the height can be
+  measured from the field for free. Same `meet`, so the type ladder is
+  reading 02's and the floor is the same **12**.
+- **The harness is the CONFIGURATION lab's, imported not copied** —
+  `useFitReadout` and the `.icl*` chrome. Two copies of a measurement is how
+  one lab starts passing what the other would fail. Only the drawings and the
+  record slice are new. ⚠ The shell must pass `selectWorks(...)` into
+  `crossing(...)`: with `[]` every department reports **zero** streams, which
+  the config lab can afford because its drawing never asks and this one
+  letters on every head.
+- **`scripts/capture-substrate-lab.mjs`** runs 4 variants × 2 themes × 2
+  presets and gates on 0 collisions / 0 clipped / minPx ≥ 4.3 / no overflow /
+  no page errors. ⚠ `shipped` is INSIDE the gates on purpose — a lab whose
+  gates skip the baseline cannot tell you whether a direction is better or
+  merely differently broken.
+- Measured at p1280 / p1920: shipped 31 labels at **7.0 / 9.8px**; all three
+  directions **7.8 / 10.9px** while carrying MORE (strata 37, table 38, tree
+  52 labels).
+
+⚠ **AND THE LAB FOUND A LIVE DEFECT IN PRODUCTION'S READING 03.**
+`ViewSubstrate` letters `${s.skills} SKILLS · ${s.teams} TEAMS`, and for
+PATTERN — which all eight departments draw on — that renders **`8 TEAMS`**.
+That is the exact phrase `cases-registry`'s district guard names as its
+failure mode: 8 is the DEPARTMENT count, while 22 teams BRIEFED and 14 teams
+USING THE LAYER are different units and different sets. **It survives only
+because that guard does `JSON.stringify` over the CONTENT objects and this
+string is composed at render time in a component**, where no scanner reaches
+it — the same blind spot ADR-070 U10 found when the card's three strings were
+lettered by a shared glyph. No lab variant letters the word at all (the tap
+marks carry the count, which is the hierarchy argument anyway) and
+`substrate-lab-fit` fails on `/\bteams?\b/i`. **Production is still wrong
+until a direction ships or the line is fixed in place.**
+
 ## Confidentiality envelope
 
 This is client work on a public page. `tests/lib/cases-registry.test.ts`
