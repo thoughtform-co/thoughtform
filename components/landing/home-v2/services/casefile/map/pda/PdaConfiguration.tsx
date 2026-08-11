@@ -492,18 +492,32 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
 
 /**
  * A MODULE HOUSING — the R4 grammar: opaque fill, 1px border, a 2px top rule,
- * and TWO OPPOSED 45° CORNER CUTS (top-left + bottom-right).
+ * and TWO OPPOSED 45° CORNER CUTS.
  *
- * ⚠ THE DIAGONAL IS TL+BR, WHICH IS ADR-065'S MIRRORED CASE, and it is the
- * owner's for the second time: the console frame these plates sit in took the
- * same override in ADR-065 U2. So the drawing and its housing now cut the
- * same way, which is the argument the first override did not have.
+ * ⚠ THE DIAGONAL IS TR+BL (owner, 2026-08-11), which is ADR-065'S CANONICAL
+ * DIRECTION — so this drawing is back on the corner law rather than on its
+ * mirrored case. R4 draws TL+BR and that is the one place the reference is
+ * overruled by a standing rule instead of by arithmetic.
+ *
+ * ⚠ IT NOW CUTS OPPOSITE TO ITS OWN HOUSING. `ConsoleFrame` keeps the TL+BR
+ * override ADR-065 U2 gave it, so the plate and the console it sits in lean
+ * different ways. That was the whole argument for the TL+BR cut here, and the
+ * owner has overruled it; if the frame should follow, that is `console.css`
+ * and its own pass.
  *
  * The cut line is the outline itself — the reference builds it from a rotated
  * cover square with one border, which is the CSS way of drawing this path.
  */
 const housing = (x: number, y: number, w: number, h: number, c: number) =>
-  `M${x + c},${y} H${x + w} V${y + h - c} L${x + w - c},${y + h} H${x} V${y + c} Z`;
+  `M${x},${y} H${x + w - c} L${x + w},${y + c} V${y + h} H${x + c} L${x},${y + h - c} Z`;
+
+/**
+ * The header band's own outline. It shares the module's TOP corners and
+ * squares off at the bottom — ⚠ a band cut with the full `housing` puts a
+ * spurious 45° nick in the MIDDLE of the module, where no edge exists.
+ */
+const band = (x: number, y: number, w: number, h: number, c: number) =>
+  `M${x},${y} H${x + w - c} L${x + w},${y + c} V${y + h} H${x} Z`;
 
 /** A multi-conductor bundle — 8 parallel wires at 4 pitch behind a 45° hatch,
  *  the reference's one cable grammar on all five docks. */
@@ -657,9 +671,11 @@ function QNode({
         stroke={stroke}
         strokeDasharray={led ? "5 4" : undefined}
       />
-      {/* The header band, and the 2px top rule over it. */}
-      <path d={housing(x, y, w, HEAD_H, CUT)} fill="rgba(var(--dawn-rgb), 0.05)" />
-      <line x1={x + CUT} y1={y + 1} x2={x + w} y2={y + 1} stroke={stroke} strokeWidth="2" />
+      {/* The header band, and the 2px top rule over it. ⚠ The rule STOPS at
+          the cut: it runs to the corner the diagonal starts from, or it
+          overshoots into the notch. */}
+      <path d={band(x, y, w, HEAD_H, CUT)} fill="rgba(var(--dawn-rgb), 0.05)" />
+      <line x1={x} y1={y + 1} x2={x + w - CUT} y2={y + 1} stroke={stroke} strokeWidth="2" />
       <line x1={x} y1={y + HEAD_H} x2={x + w} y2={y + HEAD_H} stroke="var(--pda-hair)" />
       <text
         x={x + PAD}
@@ -750,9 +766,9 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
       <path d={d} fill={led ? "rgba(var(--dawn-rgb), 0.03)" : "rgba(240, 200, 106, 0.07)"} />
       <path d={d} fill="none" stroke={stroke} strokeDasharray={led ? "5 4" : undefined} />
       <line
-        x1={core.x + CORE_CUT}
+        x1={core.x}
         y1={core.y + 1}
-        x2={core.x + core.w}
+        x2={core.x + core.w - CORE_CUT}
         y2={core.y + 1}
         stroke={stroke}
         strokeWidth="2"
@@ -840,9 +856,9 @@ function OwnerPlate({ work, led }: { work: PdaWork; led: boolean }) {
       <path d={d} fill={led ? "rgba(var(--dawn-rgb), 0.03)" : "rgba(126, 159, 102, 0.07)"} />
       <path d={d} fill="none" stroke={green} strokeDasharray={led ? "5 4" : undefined} />
       <line
-        x1={OWNER.x + CUT}
+        x1={OWNER.x}
         y1={OWNER.y + 1}
-        x2={OWNER.x + OWNER.w}
+        x2={OWNER.x + OWNER.w - CUT}
         y2={OWNER.y + 1}
         stroke={green}
         strokeWidth="2"

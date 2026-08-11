@@ -7,7 +7,10 @@ import {
   type ConsoleStation,
 } from "@/components/landing/home-v2/services/casefile/console/ConsoleRail";
 import { ConsoleFrame } from "@/components/landing/home-v2/services/casefile/console/ConsoleFrame";
-import { ViewConfiguration } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
+import {
+  CONFIG_LAYOUT_0,
+  ViewConfiguration,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import { crossing } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import { VIEW_BOX } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import { toPdaWork } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
@@ -334,6 +337,13 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
                   ) : (
                     <ViewConfiguration
                       work={pda}
+                      /* ⚠ THE BOARD AT REST, deliberately. Production measures
+                         its field and grows the board into it (ADR-070 U12);
+                         the lab draws every variant at a FIXED preset so the
+                         comparison is between drawings rather than between
+                         window shapes. `CONFIG_LAYOUT_0.crop` is what `vb`
+                         resolves to here, so the two agree by construction. */
+                      layout={CONFIG_LAYOUT_0}
                       shapes={cross.shapes}
                       lit={lit}
                       onLit={setLit}

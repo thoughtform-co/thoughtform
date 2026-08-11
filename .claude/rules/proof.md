@@ -1067,7 +1067,15 @@ their traps; do not read their numbers as current.
   × 744 stage coordinates: owner `232,20,424×108` · left `4,192,204×218` ·
   right `680,192,204×218` · base `244,532,400×128`, card centred on
   `(444,300)`. Opaque modules on a faint PCB bed, **two opposed 45° corner
-  cuts (TL+BR, 12 deep)**, a 2px top rule each, and **8-wire hatched ribbon
+  cuts (**TR+BL** since U13, 12 deep — R4 draws TL+BR and the owner put the
+  drawing back on ADR-065's CANONICAL diagonal, the one place the reference is
+  overruled by a standing rule rather than by arithmetic; ⚠ `ConsoleFrame`
+  keeps its U2 TL+BR override, so the plate and its housing now lean OPPOSITE
+  ways — that mismatch was the whole argument for U11's cut, and if the frame
+  should follow it is `console.css` and its own pass. ⚠ Two things ride the
+  diagonal: the 2px top rule STOPS at the cut, and the header band needs its
+  own `band()` path or it gets a 45° nick mid-module where no edge exists)**,
+  a 2px top rule each, and **8-wire hatched ribbon
   lanes** on all five docks. Gold is wayfinding; **green is the human and
   nothing else**.
 - ⚠ **THE BOARD IS HEIGHT-ELASTIC (U12), AND ONE STATIC CROP CANNOT SERVE
