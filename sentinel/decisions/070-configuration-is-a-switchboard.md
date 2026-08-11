@@ -836,3 +836,186 @@ the cables have room to be seen.
 - The tall-monitor cost is accepted, not solved. If it ever needs solving,
   the mechanism is a crop chosen from the field's measured aspect rather than
   a constant — two layouts to maintain, which is why it was not done here.
+
+## Update 11 — the R4 substrate field (2026-08-11, owner)
+
+The owner delivered `design_handoff_intel_config_r4` — a **design handoff**,
+not a sketch: a README with a module position table, a chrome grammar, a
+token list and a data-binding map, plus `r4-substrate-field.html` as a
+pixel-exact prototype of one state (W-017). Its own words: _"High-fidelity.
+Colors, typography, spacing and geometry are final. Recreate pixel-perfectly;
+only the data varies per work unit."_ The brief with it: _"much cleaner, much
+more minimalistic … analyze it. Don't just implement it verbatim, but get it
+as close as possible."_
+
+So U10's seated board lasted one day. That is not churn — the seated board
+answered a question about INFORMATION ARCHITECTURE (how the six answers should
+be seated), and it settled it. R4 re-skins the same architecture: same five
+modules, same slotting, same seat above, same card at centre. What changed is
+the chrome, and it changed because the owner drew it.
+
+### What R4 is
+
+A dense motherboard. A faint live PCB bed — ghost die, meander traces, passive
+pairs, vias — under **opaque** modules with **two opposed 45° corner cuts**, a
+**2px top rule** each, and **8-wire hatched ribbon lanes** on all five docks.
+One role law: **gold is wayfinding, green is the human, and green is used
+nowhere else.** Zero border-radius; diamonds, never circles.
+
+### ⚠ The type is the one thing that could not be recreated verbatim
+
+The prototype is authored at 1:1 in a 960-wide frame. This console's field is
+**603 × 493** at 1280×720 and **850 × 760** at 1920×1080, so `meet` scales the
+whole drawing to 0.65–0.91. Verbatim, R4's rungs land at:
+
+| R4 rung            | authored | at 1280×720 | verdict                                                           |
+| ------------------ | -------- | ----------- | ----------------------------------------------------------------- |
+| core title         | 30       | 19.4px      | fine                                                              |
+| field value        | 11       | 7.1px       | under U10's floor                                                 |
+| field label        | 8.5      | 5.5px       | **the size the owner called "utterly illegible" one day earlier** |
+| header meta        | 7        | 4.5px       | at the smoke's own 4.3px floor                                    |
+| stamp / lane tag   | 6.5      | 4.2px       | **under it**                                                      |
+| passive designator | 6        | 3.9px       | under it                                                          |
+
+**A handoff authored at 1:1 cannot carry its type into a box that scales.**
+That is not a criticism of the handoff — it is the one fact a 1:1 prototype
+cannot encode. So R4's type **RANKING** is kept exactly (title much greater
+than value, then question, then label, then chrome — which is also ADR-069's
+own principle that the question is chrome and the answer is the record) and
+its bottom rungs are lifted to this surface's floor. The ladder's range
+narrows from 5x to 1.8x; that is the cost, and it is paid in **alpha instead
+of size**, the one hierarchy lever that does not shrink with `meet`.
+
+### The aspect paid for the lift, before a single font size moved
+
+`meet` takes the minimum of the two box ratios, so the crop's aspect decides
+which axis letterboxes. Measured field aspects: **1.223** (1280×720), 1.239
+(1440×800), **1.118** (1920×1080). R4's stage is **1.194** — almost exactly
+the panel it has to fill.
+
+| crop                  | aspect    | meet @1280 | meet @1920 |
+| --------------------- | --------- | ---------- | ---------- |
+| `828 x 912` (U4)      | 0.908     | 0.541      | 0.833      |
+| `1000 x 912` (U10)    | 1.096     | 0.541      | 0.833      |
+| **`932 x 751` (U11)** | **1.241** | **0.647**  | **0.912**  |
+
+**+20 % / +9 % of rendered type from the aspect alone.** Every rung is larger
+than what shipped yesterday: the floor 7.0 → 7.8px, the value 8.1 → 9.1px, the
+title 12.4 → 14.2px at the binding preset.
+
+### ⚠ The crop is the reference's FRAME, not its stage — and that cost a round
+
+The first cut cropped to R4's 888 × 744 **stage** and measured beautifully:
+meet 0.679, minPx 8.14. It also put the side modules **2.7px** off the console
+wall, which reads as clipped. R4 draws a 960 × 880 frame and insets its stage
+36px inside it, so its modules sit 40px off the wall — 4.2 % of the width —
+and **cropping to the stage silently deleted that margin.**
+
+ADR-064's _"the frame is a bezel the content bleeds into, never a letterbox"_
+is about a CAPTURE filling its bay. **A technical drawing whose outermost rule
+touches the wall has not bled, it has lost its margin.** The crop is now a
+uniform **26-unit inset** around content running `4…884 x 20…719`, which is
+where the two axes come out within one percent of each other at the binding
+preset — as close to no letterbox as a single crop gets. It costs 6 % of the
+type the flush crop had, and it is worth it.
+
+⚠ **`pda-viewbox`'s waste guard had to change its QUESTION, not relax.** It
+asserted vertical tightness because the drawing was HEIGHT-bound; reading 02
+is WIDTH-bound now, so height slack is free and asserting it would be
+measuring the wrong axis. Reading 02 asserts the INSET instead — all four
+margins equal, inside `[18, 34]`. Readings 01 and 03 keep the height rule.
+
+### ⚠ What R4 letters that this drawing does not
+
+Six removals, each forced by arithmetic or by a standing law. They are named
+here so putting any back is a decision rather than a rediscovery:
+
+| dropped              | why                                                                                                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| side stamps (5)      | invented designators (`S-03 · M-01 / REV C`) — ordinals in costume, which this surface has removed twice (ADR-066's no-ordinal law; ADR-068's bay-scoped `T-\d` scan) |
+| passive labels (6)   | same, and at 6 they render **3.9px**. The MARKS stay — the bed's texture never depended on the letters                                                                |
+| header metas (3)     | `RUNS` beside `WHAT RUNS IT` is the question said twice, and at a legible size the pair does not fit a 204-unit module (163.5 + 44.4 against 180)                     |
+| ribbon tags (4)      | `LANE 01–08` collides with the model LANE, a live record field; and a bundle is named by the module it enters                                                         |
+| satellite meters (2) | a 4-bar gauge beside a client's named Skill implies a measurement this case does not publish and R4 did not author                                                    |
+| `DRAW —` prefix      | on this record `draw` is WORKLOAD (`PdaWork.draw`), not capability. Using the word here would publish a wrong one                                                     |
+
+**Sub-floor decorative text is not texture on a surface that scales down; it
+is illegible text.** That is the owner's own U10 finding applied consistently,
+one layer quieter.
+
+### The one deleted thing that came back, re-pointed
+
+R4 restores a 4-cell meter, and U4 deleted one. **They measure different
+quantities.** U4's meter was DRAW PER RUN — workload — and needed a `NEVER A
+PRICE` caption to stay honest; that field still letters nowhere. This meter is
+the capability **LANE**: generic by law, already published, and with exactly
+four values (`Fast · Everyday · Deep · Frontier`), so the gauge **is** the
+record rather than a rating of it.
+
+It also closes U10's own loose end. The owner's _"model — everyday lane? What
+does everyday lane mean?"_ retired `laneRun` from the MODEL cell, and nothing
+replaced the tier anywhere. Four cells with two lit is the scale the bare word
+never had; the verbs stay in the module. `pda-viewbox` pins the label to the
+record's four lanes plus the honest absence, bans `DRAW` on it, requires
+person-led to read `NO LANE`, and asserts the record still spans all four
+rungs — **a ladder whose top rung nothing reaches is a scale the reader cannot
+calibrate.**
+
+### ⚠ The card keeps its silhouette, and R4's core is not similar to it
+
+R4's core is 300 × 224 (1.339); the cartridge is 176 × 136 (1.294). A uniform
+`dk` cannot carry a shape that changes proportion, so `CORE_RECT` stays
+`176 × 136 × CORE_K` — `CORE_K` **1.7**, centred on R4's own core centre
+(444, 300). It lands within a unit of the position table horizontally and 3.6
+units vertically. The card's corner cut also stays PROPORTIONAL (`14 × CORE_K`)
+where the satellites take R4's flat 12, so the object the flight carries keeps
+its silhouette the whole way across.
+
+### ⚠ TL+BR is ADR-065's mirrored case, and it is the owner's for the second time
+
+R4 cuts every module top-left **and** bottom-right. ADR-065's diagonal is
+TR+BL. The console frame these plates sit in already took the same override
+(ADR-065 U2), so the drawing and its housing now cut the same way — which is
+the argument the first override did not have.
+
+### Two things the render caught that no guard did
+
+- **Hairlines go sub-pixel.** At meet 0.647 a 1-unit rule paints 0.65 device px
+  and the browser pays the difference in alpha, so R4's ~.14 bed arrived at
+  ~.09 and vanished. The bed's group opacity is 0.85 for that reason: **an
+  alpha ceiling has to be set against the RENDERED drawing, not the
+  reference's 1:1 canvas.**
+- **The card had a 55-unit hole.** R4 pins its meter to the card floor and lets
+  the slack land where it may; at this size that put a void through the middle
+  of the one bright object. The bar block seats at +120, which splits it 39/39.
+
+### Verification
+
+- `npx vitest run` 631 green across 46 files. `pda-viewbox` (18) walks all 27
+  streams against the new lettering — fit, the WORD walk, the sliced-tail cap,
+  the floor, the inset and the new lane-ladder contract; `pda-flight` (16)
+  confirms the rects stay exactly similar at `CORE_K` 1.7.
+- `npx tsc --noEmit` and `eslint` clean.
+- `tests/visual/services-ring-smoke.spec.ts` — **21 passed / 31 skipped**,
+  unchanged. That covers the three-reading clip / label-on-label /
+  rendered-floor sweep, the two-stream answer comparison, the no-prose and
+  deleted-chrome checks, and the light-theme 4.5:1 walk over every glyph.
+- The live landing, dark and light: **1280×720** crop 932×751, meet 0.647, 28
+  labels, 0 clipped, **minPx 7.76**; **1920×1080** meet 0.912, **minPx 10.94**.
+  Morph frames at 150 ms and 300 ms confirm the dock.
+
+### Left open
+
+- The 1920×1080 field is 1.118 against this crop's 1.241, so ~75px collects
+  below the drawing as ground clearance. `xMidYMin` is what makes that read as
+  clearance rather than as a floating band (U3), and the bed runs into it — but
+  it is real slack, and it is the mirror of the horizontal slack U10 spent a
+  whole update removing. A crop chosen from the field's measured aspect is
+  still the only mechanism that solves both ends, and still two layouts.
+- Readings 01 and 03 are untouched and still letter at ~4.5–5.5px. Reading 02
+  is now decisively the best-set reading on the surface, and it is the third
+  crop on the panel — 01's own aspect has been owed the same measurement since
+  U10.
+- The seven refinements at `/test/intelligence-config-lab` now draw in a crop
+  production has left twice. They are the record of a finished round; the
+  route's own header says so.

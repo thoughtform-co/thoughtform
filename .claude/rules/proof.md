@@ -1053,9 +1053,77 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
-## The unit board (reading 02's drawing — SEE U10 FIRST)
+## Reading 02's drawing — SEE U11 FIRST
 
-⚠ **ADR-070 U10 (2026-08-11) PROMOTED THE `seated` BOARD, AND IT SUPERSEDES
+⚠ **ADR-070 U11 (2026-08-11) IS THE LIVE DRAWING: the R4 SUBSTRATE FIELD,
+built from the owner's `design_handoff_intel_config_r4`. It supersedes U10's
+geometry, type and materials, which superseded U2–U9's.** What binds from
+every earlier update is the CONTENT — the three questions, the six answers,
+the seat, the bar, person-led answering all of them — and the flight
+contract. The U10 and U2–U9 records below are kept for their RULINGS and
+their traps; do not read their numbers as current.
+
+- **The composition is the handoff's module table, verbatim**, in its own 888
+  × 744 stage coordinates: owner `232,20,424×108` · left `4,192,204×218` ·
+  right `680,192,204×218` · base `244,532,400×128`, card centred on
+  `(444,300)`. Opaque modules on a faint PCB bed, **two opposed 45° corner
+  cuts (TL+BR, 12 deep)**, a 2px top rule each, and **8-wire hatched ribbon
+  lanes** on all five docks. Gold is wayfinding; **green is the human and
+  nothing else**.
+- ⚠ **THE CROP IS THE REFERENCE'S FRAME, NOT ITS STAGE.** `-22 -6 932 751` —
+  a uniform **26-unit inset** around content running `4…884 × 20…719`.
+  Cropping to the stage measured better (meet 0.679 vs 0.647) and put the
+  side modules **2.7px off the console wall**, which reads as clipped.
+  ADR-064's bleed law is about a CAPTURE filling its bay; **a technical
+  drawing whose outermost rule touches the wall has lost its margin, not
+  bled**. The aspect (1.241 against measured field aspects 1.118–1.239) is
+  what buys the type: meet 0.541 → **0.647** at 1280×720 and 0.833 →
+  **0.912** at 1920×1080, i.e. **+20 % / +9 % before a font size moved**.
+- ⚠ **A 1:1 PROTOTYPE CANNOT CARRY ITS TYPE INTO A BOX THAT SCALES.** R4's
+  8.5 field label renders **5.5px** here — the size the owner called
+  "utterly illegible" one day earlier — and its 6.5 chrome renders 4.2px,
+  under the smoke's own 4.3 floor. So R4's **ranking** is kept and its bottom
+  rungs are lifted to the floor: title 22 · value 14 · owner 14 · question 13
+  · key 12.5 · chrome 12, floor **12**. The lost range is bought back in
+  **ALPHA, which does not shrink with `meet`**.
+- ⚠ **`pda-viewbox`'S WASTE GUARD CHANGED ITS QUESTION, NOT ITS STRICTNESS.**
+  It asserted vertical tightness because the drawing was HEIGHT-bound;
+  reading 02 is WIDTH-bound now, so height slack is free and asserting it
+  measures the wrong axis. Reading 02 asserts the INSET instead — four equal
+  margins inside `[18, 34]`. Readings 01 and 03 keep the height rule.
+- ⚠ **SIX LETTERED THINGS IN R4 ARE DELIBERATELY ABSENT**, each forced by
+  arithmetic or a standing law — the side stamps and passive designators
+  (invented ordinals in costume, and 3.9px), the header metas (`RUNS` beside
+  `WHAT RUNS IT`, and it does not fit at a legible size), the ribbon tags
+  (`LANE` collides with the model lane), the satellite meters (a gauge beside
+  a client's named Skill implies data this case does not publish) and the
+  `DRAW —` prefix (on this record `draw` is WORKLOAD). **The bed's MARKS
+  stay** — its texture never depended on the letters. Putting any back is a
+  decision; the ADR's table is the list.
+- **THE LANE LADDER IS THE ONE DELETED THING THAT RETURNED**, re-pointed. U4
+  deleted the DRAW PER RUN meter, which measured WORKLOAD and needed a NEVER
+  A PRICE caption; `PdaWork.draw` still letters nowhere. This meter is the
+  capability LANE — generic by law, already published, exactly four values —
+  so the gauge IS the record. It also answers U10's own loose end (_"what
+  does everyday lane mean?"_): four cells with two lit is the scale the bare
+  word never had. Guarded: the label must be one of the record's four lanes
+  or `NO LANE`, may not contain `DRAW`, must read `NO LANE` for person-led,
+  and the record must still span all four rungs.
+- ⚠ **`CORE_K` IS 1.7 AND R4's CORE IS NOT SIMILAR TO THE CARTRIDGE.** 300 ×
+  224 is 1.339, the cartridge is 1.294, and a uniform `dk` cannot carry a
+  shape that changes proportion — so `CORE_RECT` stays `176 × 136 × CORE_K`
+  centred on R4's own core centre. The card's cut stays PROPORTIONAL
+  (`14 × CORE_K`) where the satellites take R4's flat 12.
+- ⚠ **AN ALPHA CEILING IS SET AGAINST THE RENDERED DRAWING, NOT THE 1:1
+  CANVAS.** At meet 0.647 a 1-unit hairline paints 0.65 device px and the
+  browser pays the rest in alpha, so R4's ~.14 bed arrived at ~.09 and
+  vanished. The bed's group opacity is 0.85 for that reason.
+
+The U10 record follows. Read it for the rulings; its numbers are superseded.
+
+## The seated board (ADR-070 U10 — SUPERSEDED ON GEOMETRY BY U11)
+
+⚠ **U10 PROMOTED THE `seated` BOARD, AND IT SUPERSEDED
 THE GEOMETRY, THE TYPE AND THE MATERIALS BELOW.** What still binds from U2–U9
 is the CONTENT — the three questions, the six answers, the seat, the bar,
 person-led answering all of them — and the flight contract. What changed:

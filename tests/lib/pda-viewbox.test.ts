@@ -81,14 +81,13 @@ describe("the readings' crops", () => {
      section label. */
   const CONTENT = {
     1: { x: 12, y: 22, right: 12 + 3 * 192 + 176, bottom: 22 + 4 * 158 + 136 },
-    /* 02 is the owner's unit board, PORTRAIT since ADR-070 U4. Content runs
-       from the chrome's own left edge (40) and the left node (36) across to
-       the right node's outer wall (864), and from the chrome's line box down
-       through the base node's floor (990). */
-    /* Since U8 the board opens on the OWNER PLATE — the top-left chrome is
-       deleted, so the first content is the plate's own top edge at 72 and
-       the leftmost is the left node's wall at 60. */
-    2: { x: 60, y: 72, right: 840, bottom: 945 },
+    /* 02 is the R4 substrate field (ADR-070 U11), drawn in the handoff's own
+       888 x 744 stage coordinates. Content runs from the left module's wall
+       (4) and the seat's top edge (20) across to the right module's outer
+       wall (884) and down through the bed's lowest via (719) — the BED is
+       content here, which is what puts the bottom bound 59 units below the
+       base module. */
+    2: { x: 4, y: 20, right: 884, bottom: 719 },
     // 03 lost its two section rules 2026-08-06 (owner) — the foot already
     // said it — and the crop tightened from 718 units to 632 behind them.
     3: { x: 10, y: 93, right: 766, bottom: 702 },
@@ -104,34 +103,52 @@ describe("the readings' crops", () => {
       expect(b.bottom, `crop ends above the content`).toBeGreaterThanOrEqual(c.bottom);
     });
 
-    it(`reading ${v} does not waste height it could spend on type`, () => {
-      // The drawing is HEIGHT-BOUND at every desktop viewport, so slack here
-      // is a direct tax on rendered type. 40 units is breathing room; the
-      // pre-crop box wasted 82, 288 and 132.
+    it(`reading ${v} does not waste the axis it is bound on`, () => {
+      /* ⚠ THE BOUND AXIS INVERTED FOR 02 (ADR-070 U11), so the guard has to
+         ask a different question of it. Readings 01 and 03 are portrait
+         drawings in a landscape field, i.e. HEIGHT-bound, and vertical slack
+         there is a direct tax on rendered type — 40 units is breathing room,
+         and the pre-crop boxes wasted 82 and 132.
+
+         Reading 02's crop is now WIDER than the field's aspect, so it is
+         WIDTH-bound and vertical slack costs nothing. Asserting height there
+         would be measuring the free axis; what has to stay tight is the
+         INSET, which is deliberate and uniform — see `CONFIG_VIEWBOX`. */
       const b = box(v);
       const c = CONTENT[v];
+      if (v === 2) {
+        const inset = [c.x - b.x, b.right - c.right, c.y - b.y, b.bottom - c.bottom];
+        for (const m of inset) {
+          expect(m, `reading 2's frame inset is uneven: ${inset.join("/")}`).toBe(inset[0]);
+        }
+        /* Big enough that the outermost module does not touch the console
+           wall (2.7px, measured, before the frame inset was restored); small
+           enough that the width it costs is not silently eating the type. */
+        expect(inset[0], `reading 2's inset is a letterbox now`).toBeGreaterThanOrEqual(18);
+        expect(inset[0], `reading 2's inset is a letterbox now`).toBeLessThanOrEqual(34);
+        return;
+      }
       expect(b.h - (c.bottom - c.y), `reading ${v} wastes vertical units`).toBeLessThanOrEqual(40);
     });
   }
 
   it("reading 02's crop is LANDSCAPE — it has to fill a laptop panel", () => {
-    /* ⚠ THE ASPECT IS STILL THE CONTRACT — IT INVERTED (ADR-070 U10, owner).
-       `meet` scales by the minimum ratio, so the crop's aspect decides which
-       axis wastes. The console's field is capped at 850px wide but grows with
-       viewport height, so it is LANDSCAPE on laptops and PORTRAIT on tall
-       screens. Measured on the live landing:
+    /* ⚠ THE ASPECT IS THE CONTRACT, and matching it to the PANEL is what pays
+       for the type. `meet` scales by the minimum ratio, so the crop's aspect
+       decides which axis letterboxes. Measured field aspects on the live
+       landing: 1.223 (1280x720), 1.239 (1440x800), 1.118 (1920x1080).
 
-         viewport     field       aspect   828x912 waste   1000x912 waste
-         1280x720     603x493     1.223    155 across      62 across
-         1440x800     679x548     1.239    181 across      78 across
-         1920x1080    850x760     1.118    160 across      17 across
-         2560x1440    850x1120    0.759    184 down        345 down
+         crop            aspect   meet @1280   meet @1920
+         828 x 912       0.908      0.541        0.833     (U4, portrait)
+         1000 x 912      1.096      0.541        0.833     (U10)
+         932 x 751       1.241      0.647        0.912     (U11, the R4 frame)
 
-       One crop cannot fill both ends. U4 chose portrait and paid on laptops;
-       U10 is the owner's call the other way — the laptop and the 1920
-       reference win, at the named cost of more vertical letterbox and ~17 %
-       smaller type on tall large monitors. The contract did not disappear,
-       so neither does the assertion. */
+       U11 takes the R4 handoff's own stage, whose 1.194 is almost exactly the
+       panel it fills; with the reference's frame inset restored it is 1.241.
+       That is a +20 % / +9 % type lift bought by the ASPECT ALONE, before a
+       single font size moved — and it is what paid for lifting the
+       reference's 6.5px chrome up to this surface's floor. The named cost is
+       unchanged from U10: more vertical letterbox on tall large monitors. */
     const b = box(2);
     expect(b.w / b.h, "reading 02's crop went portrait again").toBeGreaterThanOrEqual(1.05);
 
@@ -188,7 +205,7 @@ describe("the cartridge's type fits its box", () => {
 });
 
 /**
- * READING 02 IS THE OWNER'S UNIT BOARD, PORTRAIT (ADR-070 U4).
+ * READING 02 IS THE R4 SUBSTRATE FIELD (ADR-070 U11).
  *
  * It declares every string it letters together with the measure that string
  * has to fit (`configurationLettering`), so this guard measures THE DRAWING'S
@@ -277,6 +294,33 @@ describe("what the owner deleted stays deleted", () => {
         `${w.id} letters a deleted chrome string`
       ).toBe(false);
     }
+  });
+
+  it("the card's meter is the LANE LADDER and nothing else", () => {
+    /* ⚠ THE ONE DELETED THING THE R4 HANDOFF BRINGS BACK (ADR-070 U11), and
+       it is a DIFFERENT QUANTITY wearing the same shape. U4 removed the meter
+       that measured WORKLOAD — `PdaWork.draw`, which needed a NEVER A PRICE
+       caption to stay honest and still letters nowhere. This one is the
+       capability LANE: generic by law, already published, and with exactly
+       four values, so the gauge IS the record rather than a rating of it.
+
+       The guard is that the tier can only ever be one of the record's own
+       four lanes, or the honest absence. An invented tier — or the word DRAW
+       creeping back onto it — fails here. */
+    const LANES = ["FAST TIER", "EVERYDAY TIER", "DEEP TIER", "FRONTIER TIER", "NO LANE"];
+    const seen = new Set<string>();
+    for (const w of allWorks()) {
+      const tier = configurationLettering(w).find((s) => s.slot === "card.tier");
+      expect(tier, `${w.id} draws no lane ladder`).toBeDefined();
+      expect(LANES, `${w.id} letters an invented tier: "${tier!.text}"`).toContain(tier!.text);
+      expect(tier!.text, `${w.id}'s tier reads as workload, not capability`).not.toMatch(/DRAW/);
+      seen.add(tier!.text);
+      // Person-led runs on no lane, and says so rather than lighting a cell.
+      if (!w.configured) expect(tier!.text, `${w.id} claims a lane`).toBe("NO LANE");
+    }
+    // All four lanes plus the absence are live in the record — a ladder whose
+    // top rung nothing reaches is a scale the reader cannot calibrate.
+    expect(seen.size, `the record no longer spans the lane ladder`).toBe(LANES.length);
   });
 });
 
