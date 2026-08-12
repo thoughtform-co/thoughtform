@@ -54,6 +54,50 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-12 — The pin grid, three elastic crops, one notch (ADR-070 U15, ADR-067 U2)
+
+Three owner asks in one session. Cycle A rows 1, 2, 3, 4 and 6.
+
+- **Reading 03 is the owner's PIN GRID.** Its `Module` cards cut `h × 0.34` on
+  BOTH left corners — 68 % of a 148×50 card's left edge — beside `Plate`'s flat
+  8 and `Cartridge`'s `14k`. ⚠ **Class of miss: the owner reported a corner and
+  the defect was a glyph vocabulary.** Three glyphs in one drawing carried
+  three corner grammars, two of them proportional to different things; nothing
+  guards a silhouette, so it took an owner's eye. The mockup he supplied turned
+  out to be the live record already drawn (30 taps, 5 cut, 10 empty), so the
+  promotion was a coordinate port.
+- ⚠ **A STRING COMPOSED AT RENDER TIME IS OUTSIDE EVERY CONTENT SCANNER.** The
+  old drawing printed **`8 TEAMS`** on the public page — the exact phrase
+  `cases-registry` bans — because that guard walks `CASES` with
+  `JSON.stringify` and the string was built in a component. Reading 03 had no
+  arithmetic guard at all; it has `substrateLettering` + `pda-substrate-fit`
+  now. The same blind spot bit ADR-070 U10 (the card's three strings lettered
+  by a shared glyph) and the substrate lab flagged this instance in writing
+  before it was fixed.
+- ⚠ **A FIX APPLIED TO THE READING THAT WAS COMPLAINED ABOUT IS NOT A FIX
+  APPLIED TO THE SURFACE.** U12/U14 made reading 02's crop elastic on
+  2026-08-11; readings 01 and 03 carried the identical dead-panel defect with
+  every assertion green — 117px horizontal on 01, **265px on 03 at the owner's
+  own viewport**, within 5px of the 270px that forced U12 the day before.
+  `pdaFit.ts` is the mechanism generalised.
+- ⚠ **DELETING A GUARD THAT FIGHTS A FIX IS HOW THE DEFECT RETURNS.**
+  `pda-viewbox`'s ≤40-unit waste rule was a static-crop assertion; it is
+  REPLACED by a both-axis centring contract plus a seven-field fill suite, not
+  dropped. And `pda-flight` walked a static `VIEW_BOX[1]` in eight places —
+  against an elastic reading 01 that goes **vacuous rather than red**, which is
+  worse than failing.
+- **The station notch is the leading plate's alone** (ADR-067 U2). WORK's cut
+  renders zero pixels — the console's chamfer subsumes it by ≥8px at every
+  clamp rung — so a universal rule was delivering exactly one visible thing: a
+  floating diagonal on every other tab. ⚠ Its corner had **no test in either
+  direction**, and ADR-067 U1's own text said so; it is pinned both ways now.
+
+Verified: `npm run verify` (lint, typecheck, 669 units), the desktop smoke
+(12 passed / 1 skipped — six-viewport map walk, box-clipping sweep, light
+contrast walk on all three readings), captures at 1280×720 and 1920×1247 in
+both themes (0 clipped, 0 label-on-label, minPx 7.76 / 10.94), and the
+substrate lab's four gates.
+
 ### 2026-08-10 (eighth pass) — The top-left chrome goes (ADR-070 U8)
 
 Owner: remove THE CONFIGURATION and W-017 so the owner plate can breathe and

@@ -1264,3 +1264,180 @@ the tail would return unnoticed.
 - Captured at 1920×1247 and 1280×720, dark and light: crop and `minPx`
   unchanged (10.94 / 7.76), 0 clipped. Like U13, this moves no measure — it
   only decides where the leftover air goes.
+
+## Update 15 — the substrate is a pin grid, and every reading fills its panel (2026-08-12, owner)
+
+Owner, on reading 03: _"the shape of the cards (especially the bottom ones
+with the really weird notch) isn't nice to look at… the entire purpose of this
+Substrate tab is to show the shared substrates between the different skills."_
+And on all three: _"make sure that the visualization of each tab is nicely
+centered like in Configuration instead of having that ridiculous white space
+in Substrate and even in Work."_
+
+Two changes, and they are one change: the new drawing is authored into the new
+crop.
+
+### The pin grid
+
+The composition is the owner's `Substrate Archetypes (Standalone).html`, frame
+**S3 — PIN GRID** (_"forms × teams in one socket · the whole substrate at a
+glance"_) — five patterns down, eight departments across, one mark per
+crossing.
+
+⚠ **THE MOCKUP IS THE LIVE RECORD ALREADY DRAWN.** Every mark in it resolves
+against `crossing()`: 30 taps, 5 cut, 10 empty sockets, rows of 3 · 7 · 7 · 5 ·
+8, columns in `MAP_DISTRICTS` order. So this is a coordinate port rather than a
+re-derivation, and the owner had already answered the hardest question — what
+the drawing is FOR — by drawing it from the data.
+
+**What it replaces had three defects, and the owner named all three in one
+sentence about a corner:**
+
+- **`Module`'s cut is `h × 0.34` on BOTH left corners.** On a 148 × 50 card
+  that is 17 units twice — **68 % of the left edge**, leaving a 16-unit stub,
+  plus a 19-unit bullseye and a divider hairline. Beside it sat `Plate`'s
+  single flat-8 cut and `Cartridge`'s `14k`: three glyphs, three corner
+  grammars, two of them proportional to different things. The wedge was the
+  visible end of an inconsistency.
+- **A pattern was drawn as a `Module`**, which on this surface is the
+  silhouette of A THING THAT RUNS. The substrate lab's founding diagnosis,
+  finally acted on.
+- **Answering "who draws on Judgment?" meant tracing a bezier** through 29
+  others — the same failure that retired ADR-062's isometric city. A cell is
+  read by position.
+
+⚠ **AND IT CARRIED A LIVE CONFIDENTIALITY DEFECT.** `{n} SKILLS · {n} TEAMS`
+rendered **8 TEAMS** for PATTERN — 8 is the DEPARTMENT count, while 22 briefed
+and 14 running the layer are different units AND different sets.
+`cases-registry` bans that exact phrase and never saw it: it walks content
+objects with `JSON.stringify`, and this was composed at render time inside a
+component. **The pin grid does not need the phrase at all** — a row's marks are
+its department count, countable in place.
+
+**Adaptations, each forced by a standing law or by arithmetic:**
+
+| In the mockup                       | Ships as                         | Why                                                                                                                                                                                                        |
+| ----------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SB-01`…`SB-05`                     | deleted                          | Ordinals in costume — ADR-066 removed every ordinal here, and U11 removed R4's own passive designators for the same reason                                                                                 |
+| the `TAPS / TRENCHED BY` legend     | deleted                          | NO LEGEND by law (ADR-062): the drawing carries provenance. Each row letters `CUT BY {ab}`, which decodes its own green mark in place                                                                      |
+| nothing for the `gloss`             | **added**, the row's second line | It lettered nowhere in production, and it is what makes a pattern mean something rather than a word with a count. At 38 chars it also SETS the identity gutter: 336 units of a 374 measure, the house 90 % |
+| the row counts                      | `{n} SKILLS` alone               | See the defect above                                                                                                                                                                                       |
+| socket = rect + gold corner diamond | a chamfered `housing`            | A socket is a machined housing (ADR-065), on the canonical TR+BL U13 settled; the diamond is R4's registration-mark family, deleted in U11                                                                 |
+
+The 47 is **not** lettered as a headline: the five row counts sum to it in
+plain sight and the proof register beside the panel already claims it. The lab
+keeps that rung for its own two drawings.
+
+### Every reading fills its panel
+
+U12 and U14 solved this for reading 02 alone. Readings 01 and 03 were carrying
+the identical defect the whole time, with every assertion green:
+
+| field                       | 01 waste             | 03 waste                 |
+| --------------------------- | -------------------- | ------------------------ |
+| 603 × 493 (1280×720)        | **117px horizontal** | 4px                      |
+| 850 × 760 (1920×1080)       | 102px horizontal     | 71px below               |
+| **845 × 950 (the owner's)** | **92px below**       | **265px below — 27.9 %** |
+| 850 × 1120 (2560×1440)      | 257px below          | 431px below              |
+
+265px is within 5px of the 270px that forced U12 in the first place. ⚠ **THE
+GENERAL LESSON IS THE ONE U12 ALREADY STATED, AND THIS UPDATE IS THE PROOF:** a
+fix applied to the reading that was complained about is not a fix applied to
+the surface. Nothing measured a drawing against the PANEL, so the same defect
+sat two tabs away for a day.
+
+`pdaFit.ts` is the mechanism, generalised and pure: make the crop's aspect
+EQUAL the field's and `meet` is unchanged, so growing a crop costs no type.
+`cropAround` is U14's split-margin law on both axes — and reading 02's "fixed
+26-unit side inset" turns out to be exactly what that split produces, so it is
+one rule rather than a special case. `configLayout` is refactored onto it,
+byte-identical at rest.
+
+Where each reading spends the extension:
+
+- **01** — the grid's gutters, on whichever axis the field offers, **capped**
+  at 56/62 (about a third of a card) so twenty cartridges stay a grid rather
+  than twenty aligned objects. The cards may not absorb it: `CARD_W/H` is
+  ADR-069's flight destination and the morph asserts similarity to 0.005.
+  ⚠ Width caps at the gutters' own ceiling and not a unit further, because
+  `xMidYMin` already centres a horizontal letterbox; HEIGHT keeps growing,
+  because a vertical one is anchored at the top.
+- **03** — its five bands, capped at 190. ⚠ Its clamp is **1200**, not 620:
+  reading 02 spends its extension on CONTENT (cable runs) so it must clamp
+  early, while here the row cap already protects the drawing and everything
+  past it is margin, which `cropAround` splits. Measured at 603 × 1177,
+  clamping at 620 puts the drawing 91px from the top and 426px from the bottom;
+  unclamped it is 258px from each. Same emptiness, and one of them looks like a
+  mistake.
+
+⚠ **THE BAND RULES ARE WHAT KEEP A TALL PANEL FROM READING AS EMPTY.** At the
+owner's shape a row runs 185 units against 64 units of ink, and without a
+boundary that air reads as a hole between two rows rather than as the height of
+one. Four internal hairlines for five bands — the socket's own walls close the
+set. At rest they are 112 apart and nearly invisible; they earn their ink
+exactly where the drawing stretches.
+
+⚠ **`gridRect` TAKES THE LIVE LAYOUT, AND IT IS NOT DEFAULTED.** A default
+argument is precisely how "the flight computed against the resting board" gets
+written. `PdaConsole` holds ONE aspect in state and derives three layouts from
+it; the flight uses both live boards.
+
+### Guards
+
+- **`pda-viewbox`'s ≤40-unit waste rule is gone**, and its replacement is
+  stricter rather than looser. That rule asked whether a crop was much taller
+  than its content, which was right while 01 and 03 were static — and which
+  would have FOUGHT this fix. It becomes a centring contract on both axes (the
+  margins are equal, and they are real), plus a new **`every reading fills the
+panel it is given`** suite over the seven measured fields, asserting no dead
+  panel on either axis and that elasticity never shrinks the drawing.
+  ⚠ Deleting a rule without replacing it is how U14's tail returned unnoticed;
+  this is the same trap one level up.
+- **`pda-flight` walked the static `VIEW_BOX[1]` in eight places.** Against an
+  elastic reading 01 that goes **vacuous rather than red** — still green, no
+  longer guarding the string production renders. It derives both boards per
+  field now, at five shapes including the owner's tall one.
+- **`pda-substrate-fit` is new, and reading 03 had no arithmetic guard at
+  all.** That is how an unpublishable string lived in it for months. Every
+  lettered string is declared through `substrateLettering`, walked for fit, for
+  the longest WORD, for the fs floor, and against the envelope — including
+  `/\bteams?\b/i`, which is what stops `8 TEAMS` returning.
+- The smoke's six-viewport map walk already covers the redraw's real risk
+  (`overlaps`, `clipped`, `minPx`), and its light walk covers the new marks.
+
+### Where the kit lives
+
+`Tap`, `DeptHead`, `housing`, the type ladder and the spec emitters moved from
+`app/(internal)/test/intelligence-substrate-lab/substrateKit` into
+`map/pda/substrateKit`, and the lab re-exports them. The lab authored them at
+reading 02's crop width precisely so a promoted winner would be a copy rather
+than a re-fit; production may not import from an internal route, and two copies
+of a measured drawing is how a lab starts passing what production would fail.
+`adv` / `specWidth` / `LetterSpec` moved the same way, into `map/pda/pdaLetters`
+— PT Mono's advance is a property of the font, not of a route, and a fit model
+only a lab can reach is a model production ships without.
+
+### Verification
+
+- `npm run verify` — lint, typecheck, **669 unit tests green**.
+- `tests/visual/services-ring-smoke.spec.ts --project=desktop` — 12 passed, 1
+  skipped, including the six-viewport map walk, the box-clipping sweep and the
+  light-theme contrast walk on all three readings.
+- `scripts/capture-map-readings.mjs` at **1280×720** and **1920×1247** (the
+  owner's own window), dark and light: 0 clipped, 0 label-on-label, `minPx`
+  7.76 / 10.94, and all three readings filling the panel top to bottom.
+- `scripts/capture-substrate-lab.mjs --v shipped` — 4 samples, gates passed, 36
+  labels at 7.8 / 10.9px against the old drawing's 5.8 / 6.1.
+
+### Left open
+
+- Reading 01's rendered type is still the standing density question ADR-063
+  §Outstanding records. Elasticity buys **zero** type by construction; it
+  removes dead panel, which is all it claims.
+- The substrate lab's three losing directions (strata · crossing table ·
+  containment) are still mounted beside a `shipped` baseline that is now the
+  pin grid. That comparison has served its purpose, and on the ADR-070
+  precedent the losers are a candidate for deletion — an owner call.
+- `Module`, `Pads` and the old crossing's `--l` dash constant left production's
+  reading 03 with the drawing. ⚠ `Module` is still used by the city sheets, so
+  check before deleting it from `pdaGlyphs`.

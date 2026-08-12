@@ -278,6 +278,13 @@ inherited its ambient-cover role.
   - ⚠ **DISTRICTS ARE DEPARTMENTS** — a THIRD unit alongside 22 teams
     BRIEFED and 14 teams USING THE LAYER. Never write copy that lets a
     district count read as a team count; a guard fails on "8 teams".
+    ⚠ **AND IT SHIPPED ANYWAY, FOR MONTHS** (fixed 2026-08-12, ADR-070 U15).
+    Reading 03 composed `${s.skills} SKILLS · ${s.teams} TEAMS` in a
+    component, which rendered **8 TEAMS** for PATTERN on the public page. The
+    registry guard walks `CASES` with `JSON.stringify` and never reached it.
+    **A string composed at render time is outside every content scanner** —
+    which is why a drawing declares what it letters (`substrateLettering` +
+    `pda-substrate-fit`, whose `/\bteams?\b/i` ban is the mechanical half).
 - ⚠ **AUTHOR THIS SURFACE AT 1280×720.** The viz box is **611×390** there
   (688×444 at 1440×800) against the ~950px console the drawing was designed
   for. Fitting the full 1160×700 authoring space in rendered every label at
@@ -808,14 +815,16 @@ a slot.
   restated the masthead, the directory row and the brief on every row. The
   path on the left stays. If a panel seems to need a second designation, the
   question is what the first one failed to say.
-- ⚠ **READING 03 HAS NO SECTION RULES.** `THE TEAMS THAT RUN THE WORK` and
-  `THE SHAPES THEY ALL DRAW ON` are deleted — the foot says it in a sentence.
-  They were a matched PAIR naming the two rows, so they left together;
-  labelling half a symmetric drawing is worse than labelling neither. That
-  bought the crop 718 → 632 units and the type 4.46–5.45 → **5.06–5.63px** at
-  1280×720 (8.20–9.11 at 1920, where it clears the 8.5px floor for the first
-  time). A label that explains a drawing competes with it for the same
-  currency.
+- ⚠ **READING 03 HAS NO SECTION RULES**, and the ruling outlived the drawing.
+  `THE TEAMS THAT RUN THE WORK` and `THE SHAPES THEY ALL DRAW ON` were a
+  matched PAIR naming the two rows of the CROSSING drawing, which ADR-070 U15
+  replaced with the pin grid — but the reason they went still binds: **a label
+  that explains a drawing competes with it for the same currency**, and
+  labelling half a symmetric drawing is worse than labelling neither. Deleting
+  them bought that crop 718 → 632 units; the pin grid letters no section head
+  either, and its `gloss` is content rather than a caption on the drawing.
+  (⚠ Its numbers are superseded — 03 renders 7.76px at 1280×720 now, not
+  5.06–5.63.)
 - **Light contrast is guarded on ALL FOUR ROWS.** Putting the plates on the
   map's parchment ground turned ADR-058's accepted "gold as small text is
   1.8:1" into a visible defect — measured 1.25:1 on a tab ordinal beside a map
@@ -947,13 +956,14 @@ The right panel is the PDA console (`map/pda/**`), three readings:
   v18's 13-unit pitch became a collision at 10). `readPda` now compares every
   pair of glyph boxes at 3 viewports × 3 readings. Sizes are chosen so
   NOTHING WRAPS: a two-line title at ~5px is worse than one line at ~5px.
-- ⚠ **THE DRAWINGS STILL MISS THE 8.5px FLOOR ON 01 AND 03, AND NO FURTHER
-  TUNING LEVER EXISTS.** Now 4.49–5.16 (01), 6.07–9.91 (02), 4.46–5.45 (03)
-  at 1280×720 — up from 3.14–5.64. The smoke holds a floor under RENDERED
-  type (4.3px), not the authored unit. The remaining gap is **density**: 20
-  cartridges 4-across need ~136px each for an 8.5px title, which fits the
-  594px width but makes the grid ~540px tall against 355px of field — 1.5×,
-  which no crop or font constant closes. ADR-063 §Outstanding lists the four
+- ⚠ **READING 01 STILL MISSES THE 8.5px FLOOR, AND NO CROP LEVER REMAINS.**
+  01 renders 6.22–7.16px at 1280×720 (9.60–11.03 at 1920). ⚠ **03 IS FIXED —
+  7.76px, and 10.94 at 1920** — but by its REDRAW (ADR-070 U15), not by the
+  crop: elasticity buys zero type by construction. The smoke holds a floor
+  under RENDERED type (4.3px), not the authored unit. 01's remaining gap is
+  **density**: 20 cartridges 4-across need ~136px each for an 8.5px title,
+  which fits the width but makes the grid ~1.5× the field's height, and no
+  crop or font constant closes that. ADR-063 §Outstanding lists the four
   options; all are owner design calls. Do not "fix" this by shrinking chrome.
 - **THE CONSOLE OWNS THE WHEEL, AND THE RELEASE IS THE WHOLE SAFETY
   ARGUMENT.** Over the plate, scroll changes the READING instead of the
@@ -1067,6 +1077,69 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
+## Reading 03's drawing, and the crop every reading shares (ADR-070 U15)
+
+**Reading 03 is the PIN GRID** (`map/pda/PdaSubstrate.tsx`, 2026-08-12) — the
+owner's `Substrate Archetypes` mockup, frame S3: five patterns down, eight
+departments across, one mark per crossing, in one chamfered socket.
+⚠ **THE MOCKUP IS THE LIVE RECORD ALREADY DRAWN** — 30 taps, 5 cut, 10 empty
+sockets, rows of 3 · 7 · 7 · 5 · 8 in `MAP_DISTRICTS` order — so a change to
+the record changes the drawing and both are guarded together.
+
+- **What went, and why it is not coming back.** The eight plates, the five
+  `Module` cards and the 30 crossing beziers. `Module`'s cut is `h × 0.34` on
+  BOTH left corners, i.e. **68 % of a 148×50 card's left edge** beside
+  `Plate`'s flat 8 and `Cartridge`'s `14k` — three glyphs, three corner
+  grammars. A pattern drawn as a `Module` also claims to be A THING THAT RUNS,
+  and answering "who draws on Judgment?" meant tracing one curve through 29.
+- ⚠ **THE UNIT IS DEPARTMENTS AND THE DRAWING MAY NOT SAY "TEAMS".** See the
+  directory bullet above — this is where `8 TEAMS` shipped.
+- **What it letters, and nothing else:** per row the name, the `gloss` (which
+  lettered nowhere before and which SETS the 374-unit identity gutter at 336
+  units — the house 90 %), `{n} SKILLS`, and `CUT BY {ab}`; per column the
+  department code and its stream count. **NO `SB-0n` designators** (ordinals in
+  costume) and **NO legend** (ADR-062 — `CUT BY` decodes its row's own green
+  mark in place). The 47 is not lettered: five row counts sum to it in sight,
+  and the proof register beside the panel already claims it.
+- **Declare anything new in `substrateLettering`.** `pda-substrate-fit` walks
+  it for fit, for the longest WORD, for the fs floor (12) and for the envelope.
+  A lettered string missing from that list is a defect in the drawing.
+- ⚠ **THE BAND RULES EARN THEIR INK ON TALL PANELS.** Four internal hairlines
+  for five bands; the socket's walls close the set. At rest the rows are 112
+  apart and the rules are nearly invisible, but a row runs 185 at the owner's
+  shape against 64 units of ink, and unbounded that air reads as a hole rather
+  than as the height of one band.
+
+**ALL THREE CROPS ARE ELASTIC** (`map/pda/pdaFit.ts`), which generalises U12
+and U14 from reading 02 to the surface. ⚠ **Readings 01 and 03 were carrying
+the identical defect while U12 was green** — 117px of dead width on 01 at
+1280×720, **265px of dead panel** on 03 at the owner's 845 × 950, within 5px of
+the 270px that forced U12. Nothing measured a drawing against the PANEL.
+
+- **The trick:** make the crop's aspect EQUAL the field's and `meet` is the
+  bound-axis ratio it already was, so **growing a crop is free**. ⚠ It buys
+  ZERO type — it removes dead panel and nothing else.
+- **`cropAround` is U14's split-margin law on both axes.** Reading 02's "fixed
+  26-unit side inset" is exactly what the split produces, so it is one rule.
+- **Where the extension goes, per reading:** 01 into its grid gutters (capped
+  56/62 — past that the grid stops being a grid), 03 into its five bands
+  (capped 190). ⚠ 03's clamp is **1200**, not 620: reading 02 spends its
+  extension on CONTENT and must clamp early, while everything past 03's row cap
+  is margin, which is split rather than pooled.
+- ⚠ **`gridRect` TAKES THE LIVE LAYOUT AND IS NOT DEFAULTED** — a default is
+  how "the flight computed against the resting board" gets written.
+  `PdaConsole` holds ONE aspect and derives three layouts; the flight uses both
+  live boards.
+- ⚠ **THE ≤40-UNIT WASTE GUARD IS GONE, REPLACED NOT DELETED.** It asserted a
+  static crop and would have fought this. `pda-viewbox` asserts centring on
+  both axes plus `every reading fills the panel it is given` over seven
+  measured fields. And `pda-flight` derives both boards per field: it walked
+  the static `VIEW_BOX[1]` in eight places, which against an elastic 01 goes
+  **vacuous rather than red**.
+- **The kit lives in production now** — `map/pda/substrateKit` (`Tap`,
+  `DeptHead`, `housing`, `FS`, the spec emitters) and `map/pda/pdaLetters`
+  (`adv` / `specWidth` / `LetterSpec`). The substrate lab re-exports both.
+
 ## Reading 02's drawing — SEE U11 FIRST
 
 ⚠ **ADR-070 U11 (2026-08-11) IS THE LIVE DRAWING: the R4 SUBSTRATE FIELD,
@@ -1130,7 +1203,9 @@ their traps; do not read their numbers as current.
   ⚠ The `ResizeObserver` cannot feed back STRUCTURALLY: the SVG is absolutely
   positioned, so CSS sets its box and a `viewBox` change cannot move it.
 - ⚠ **THE CROP'S WIDTH IS THE REFERENCE'S FRAME, NOT ITS STAGE.** At rest
-  `-22 -6 932 751` — a uniform **26-unit inset** around content running
+  `-22 -35.5 932 751` (⚠ the recorded `-22 -6` was the PRE-U14 value, when the
+  vertical margin was a hardcoded 26 rather than the derived split) — a uniform
+  **26-unit SIDE inset** around content running
   `4…884 × 20…719`.
   Cropping to the stage measured better (meet 0.679 vs 0.647) and put the
   side modules **2.7px off the console wall**, which reads as clipped.
