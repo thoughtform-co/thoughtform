@@ -187,3 +187,34 @@ this one enumerated sibling. Consequence handled with it: the TL cut bites
 the rail's FIRST station instead of the last, so the clearance inset moved
 from `:last-of-type` to `:first-of-type` — same arithmetic, mirrored,
 measured at four viewports.
+
+## Update 3 (2026-08-12, owner) — the seated set's LEADING member carries the cut
+
+Owner: _"fix the notch in the top left corner of the configuration and
+substrate tabs; ONLY the work tab should have that."_
+
+Update 1's exception licenses a uniform set of cards inside a chamfered
+housing to carry **the same** notch. The console's rail is exactly such a set
+— and it is the case where uniformity produces the wrong drawing, because the
+housing's own cut lands on one member of the set.
+
+Measured: the console removes every point where `x + y < --con-ch`
+(15.9 / 17.9 / 22px at 1280×720 / 1440×800 / 1920×1080) and a station removes
+`x + y < --stn-ch + 2` (10.6 / 11.6 / 13px). The leading plate's cut is
+**subsumed at every rung of both clamps**, with ≥ 8px of slack, so it paints
+nothing of its own. Uniformity therefore does not read as uniformity: it
+renders as one housing chamfer plus N−1 diagonals floating 185–581px along the
+rail, where no edge explains them. That is rule 5's decorative asymmetry
+arriving through a rule meant to prevent it.
+
+So the exception gains a clause:
+
+**Where the housing's own chamfer falls on one member of a seated set, the cut
+belongs to that member alone and the rest are square.** The set still reads as
+seated — the leading plate shares the housing's corner, which is what the
+notch was saying — and rule 5 is satisfied by construction, because the only
+cut left is the one a real edge produces.
+
+Applies to every `ConsoleRail` (map readings, tools, films, Studio sheets).
+Not a general repeal of Update 1: a set inside a housing whose chamfers fall
+on no member keeps the uniform notch.

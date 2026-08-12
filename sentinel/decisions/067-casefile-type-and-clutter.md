@@ -231,3 +231,49 @@ stands.
   click. The smoke's rail assertions (one spine per rail, label = function
   alone, diamond visible at `data-n="4"`) never pinned the spine's edge or the
   cut's corner, so they hold unchanged.
+
+## Update 2 — the cut is the leading plate's alone (2026-08-12, owner)
+
+Owner: _"fix the notch in the top left corner of the configuration and
+substrate tabs; ONLY the work tab should have that."_
+
+Decision 3 stated the cut over **each** station, and Update 1 flipped its
+direction without revisiting that scope. Both were half right, and the
+arithmetic says which half.
+
+⚠ **WORK's notch does not exist.** The console's TL chamfer removes every
+point where `x + y < --con-ch`; a station's removes `x + y < --stn-ch + 2`.
+With `--con-ch` at 15.9 / 17.9 / 22px against `--stn-ch` at 8.6 / 9.6 / 11px
+(1280×720 / 1440×800 / 1920×1080), the leading plate's cut is **subsumed by
+≥ 8px at every rung of both clamps** — it paints nothing. What the owner reads
+as WORK's notch is the housing's own, and the rule that produced it was
+delivering exactly one visible thing: a 9–11px diagonal on each of the other
+plates, 185–581px along the rail, where no edge explains it.
+
+So the scope follows the geometry: **`clip-path` moves to
+`.fl-con__stn:first-of-type`, and every trailing plate is square.** The
+leading plate keeps the cut it shares with the housing. ADR-065 Update 3
+records the corresponding clause in the law; nothing about the plate model,
+the recessed ground, the lit spine or the diamond changes.
+
+- ⚠ **THE SEAM'S SHOULDER IS DECLARED NOW.** Update 1 got it for free — a
+  clip-path clips pseudo-elements, so the owning station's cut trimmed the top
+  `--stn-ch` of its own `::before` divider. Square plates end that, so
+  `.fl-con__stn + .fl-con__stn::before` carries `top: var(--stn-ch)`
+  explicitly. Identical pixels; the read it protects (a row of seated keys,
+  not a divided bar) was never the notch's doing.
+- **This reaches every rail**, not just the map's three readings: the tools'
+  four, the films' two, the Studio sheets' three, and both labs. One strip,
+  one grammar (ADR-066) — a per-plate exception in shared chrome is the thing
+  that rule exists to prevent.
+- ⚠ **AND IT IS PINNED NOW, IN BOTH DIRECTIONS.** Update 1 closed by noting
+  the smoke _"never pinned … the cut's corner, so they hold unchanged"_ — which
+  is why a universal cut could ship, flip direction, and go unremarked for four
+  days. The rail sweep asserts the leading plate keeps a polygon, every
+  trailing plate computes `none`, and the seam's top inset is non-zero. A
+  one-sided assertion would not have caught this: the defect was extra notches,
+  not a missing one.
+- Below 980px / under `prefers-reduced-motion` the console drops its own
+  `clip-path` while the stations never did — a pre-existing artifact, now
+  narrowed to the single leading plate rather than every wrapped one. Named,
+  not chased.

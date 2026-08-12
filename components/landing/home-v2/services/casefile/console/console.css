@@ -244,7 +244,22 @@
    same way, so the leading-cut precedent already existed.
 
    Under rule 5 the asymmetry is EARNED: the cut corner is the free one, and
-   the bottom edge is where the plate meets the machine. */
+   the bottom edge is where the plate meets the machine.
+
+   ⚠ AND THE CUT IS THE LEADING PLATE'S ALONE NOW (owner, 2026-08-12 — "fix
+   the notch in the top left corner of the configuration and substrate tabs;
+   ONLY the work tab should have that"). It was on every station, and on the
+   FIRST one it renders nothing of its own: the console's TL chamfer removes
+   every point where `x + y < --con-ch` and the station's removes `x + y <
+   --stn-ch + 2`, so with `--con-ch` at 15.9 / 17.9 / 22px against `--stn-ch`
+   at 8.6 / 9.6 / 11px the leading cut is SUBSUMED, by ~8px at every rung of
+   both clamps. What the owner reads as WORK's notch is the housing's.
+
+   The other plates put that same cut 185–581px along the rail, where no edge
+   explains it — asymmetry that is decorative rather than earned, i.e. exactly
+   what rule 5 bans. So the rule follows the geometry: the leading plate shares
+   the housing's cut, and the rest are square. `:first-of-type` is the hook the
+   clearance inset below already uses. */
 .fl-con__stn {
   position: relative;
   appearance: none;
@@ -262,22 +277,27 @@
   /* Recessed: the plate sits BELOW the console's own face until it is
      selected, so the rail reads as a row of keys rather than a divided bar. */
   background: linear-gradient(180deg, rgba(var(--dawn-rgb), 0.028), transparent 62%);
-  clip-path: polygon(var(--stn-ch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--stn-ch));
   transition:
     color 0.3s ease,
     background 0.3s ease;
 }
 
-/* The seam between plates. The owning station's TOP-LEFT cut clips this
-   pseudo-element's own top `--stn-ch` (a clip-path clips descendants and
-   pseudos too), so the divider starts below the notch and the cut corner
-   reads as a shoulder rather than a broken divider — automatic since the
-   2026-08-08 flip, where the top-right cut needed nothing here. */
+.fl-con__stn:first-of-type {
+  clip-path: polygon(var(--stn-ch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--stn-ch));
+}
+
+/* The seam between plates, and its top `--stn-ch` is DECLARED now. Until
+   2026-08-12 the owning station's own top-left cut clipped this pseudo-element
+   for free (a clip-path clips descendants and pseudos too), so the divider
+   started below the notch and the corner read as a shoulder. The plates are
+   square from the second one on, so the inset that produced that read has to
+   be written down — the seam is what makes the rail a row of seated keys
+   rather than a divided bar, and it is unchanged to the pixel. */
 .fl-con__stn + .fl-con__stn::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0;
+  top: var(--stn-ch);
   bottom: 0;
   width: 1px;
   background: var(--con-hair);

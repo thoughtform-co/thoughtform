@@ -1596,6 +1596,40 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const lit = stns.filter((s) => s.dataset.on !== undefined).length;
         if (lit !== 1) return { kind, ok: false, why: `${lit} stations lit, expected 1` };
 
+        // ── ONE NOTCH PER RAIL, ON THE LEADING PLATE (owner, 2026-08-12) ──
+        // The top-left cut used to be on EVERY station, and on the FIRST one
+        // it renders nothing of its own: the console's own chamfer removes
+        // every point where `x + y < --con-ch` (15.9–22px) and the plate's
+        // removes `x + y < --stn-ch + 2` (10.6–13px), so the leading cut is
+        // subsumed by ~8px at every rung of both clamps. What it bought on
+        // the others was a 9–11px diagonal 185–581px along the rail with no
+        // edge to explain it — "only the work tab should have that".
+        //
+        // ⚠ NOTHING PINNED THE STATION'S CORNER IN EITHER DIRECTION BEFORE
+        // THIS. The rail assertions above measure geometry, labels and fonts;
+        // the corner flipped TR → TL in ADR-067 U1 and went universal without
+        // a test noticing. Assert BOTH halves — the leading plate keeps its
+        // cut, the rest are square — or the next drift is invisible too.
+        const cut = (s: HTMLElement) => getComputedStyle(s).clipPath;
+        if (!cut(stns[0]).startsWith("polygon("))
+          return { kind, ok: false, why: `the leading station lost its cut — ${cut(stns[0])}` };
+        const notched = stns.slice(1).filter((s) => cut(s).startsWith("polygon("));
+        if (notched.length)
+          return { kind, ok: false, why: `${notched.length} trailing station(s) still notched` };
+
+        // The seam's shoulder is DECLARED now. It used to be a free
+        // consequence of the owning plate's clip (a clip-path clips pseudos
+        // too); square plates mean the inset has to be written down, and a
+        // divider running to the rail's top edge turns a row of seated keys
+        // back into a divided bar.
+        const seamTop = Number.parseFloat(getComputedStyle(stns[1], "::before").top);
+        if (!(seamTop > 2))
+          return {
+            kind,
+            ok: false,
+            why: `the plate seam reaches the rail's top edge (${seamTop}px)`,
+          };
+
         // ── NO PLATE PRINTS A FOOT (owner, 2026-08-08) ─────────────────
         // The declutter took the last two — the map's reading sentence and
         // the Studio sheets' captions — after the tools row (08-07) and the

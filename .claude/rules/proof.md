@@ -641,10 +641,24 @@ GENERATE`, the lettered placeholder `Loop Switch, golden hour`, and
 - **TOOL LIFECYCLE HAS ONE REGISTRY, and the proof register is not it.** The
   `· live` suffix left the tools claims; `PROJECT_CASES[].status` is canonical
   and the guard checks it there. A proof claim may not restate it.
-- **A STATION IS A NOTCHED PLATE, cut TOP-LEFT** (ADR-067 U1, owner
-  2026-08-08 — flipped from the 08-06 top-right so the plates share the
-  console's own TL+BR override; the seam between plates starts below the
-  notch for free, clipped by the owning station's own `clip-path`). The
+- **A STATION IS A PLATE, AND ONLY THE LEADING ONE IS NOTCHED** (ADR-067 U2,
+  owner 2026-08-12 — _"only the work tab should have that"_; supersedes U1's
+  universal cut, keeps its TOP-LEFT direction). ⚠ **WORK's notch paints
+  nothing**: the console removes `x + y < --con-ch` (15.9–22px), a station
+  removes `x + y < --stn-ch + 2` (10.6–13px), so the leading cut is SUBSUMED
+  by ≥8px at every clamp rung and what reads as WORK's notch is the housing's.
+  The rule was therefore delivering exactly one visible thing — a diagonal
+  185–581px along the rail on each OTHER plate, with no edge to explain it.
+  `clip-path` is on `:first-of-type`; every trailing plate is square, on
+  **every** rail (map 3 · tools 4 · films 2 · sheets 3 · both labs).
+  ⚠ **The seam's shoulder is DECLARED now** — U1 got it free from the owning
+  plate's clip, so `.fl-con__stn + .fl-con__stn::before` carries
+  `top: var(--stn-ch)` explicitly; identical pixels, and the read it protects
+  (seated keys, not a divided bar) never came from the notch. ⚠ **Pinned in
+  BOTH directions** by the smoke's rail sweep (leading plate keeps a polygon ·
+  every trailing plate computes `none` · seam inset non-zero) — U1 shipped
+  unpinned and its own text says so, which is how a universal cut flipped
+  direction and went unremarked. The
   active plate is filled and **UNDERLINED, not welded**: the lit spine is
   back at `bottom: -1px` on the rail's border row, and the weld `::after`
   is DELETED — the two rules wanted the same pixel (this ADR's documented
