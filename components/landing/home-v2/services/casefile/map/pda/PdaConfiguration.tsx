@@ -1,5 +1,6 @@
 "use client";
 
+import { type FitSpec, cropAround, fitExt } from "./pdaFit";
 import { PDA_FLIGHT_MS } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
 import { wrapLines } from "./pdaGlyphs";
@@ -97,7 +98,6 @@ const CONTENT_R = 884;
  * vertical margin is DERIVED from what the block leaves and split in two.
  */
 export const CONFIG_INSET = 26;
-const CROP_X = CONTENT_L - CONFIG_INSET;
 const CROP_W = CONTENT_R - CONTENT_L + CONFIG_INSET * 2;
 
 /**
@@ -205,9 +205,13 @@ export interface ConfigLayout {
  * `CROP_H0 + ext`, the module block takes what the gaps and cells claim, and
  * **the remainder is halved above and below it** — so the board is centred at
  * every height by construction and there is no share left to mistune.
+ *
+ * ⚠ The split, the rounding and the ext arithmetic are `pdaFit`'s now
+ * (2026-08-12) — U12/U14 turned out to be the general case, and readings 01
+ * and 03 were carrying the same defect this fixed here. This board's OWN
+ * numbers are unchanged: `configLayout(0)` is byte-identical, which is what
+ * `pda-viewbox`'s elastic suite is for.
  */
-const r2 = (n: number) => Math.round(n * 100) / 100;
-
 export function configLayout(ext: number): ConfigLayout {
   const cellH = Math.min(CELL_H_MAX, CELL_H0 + CELL_GROW * ext);
   const grow = cellH - CELL_H0;
@@ -226,10 +230,14 @@ export function configLayout(ext: number): ConfigLayout {
 
   /* ⚠ THE MARGIN IS WHAT IS LEFT, AND IT IS SPLIT. The block grows by ~0.93
      of `ext` (0.66 from the gaps, the rest from the cells) against a crop
-     that grows by 1.0, so the air widens slowly and can never go negative. */
-  const cropH = CROP_H0 + ext;
-  const margin = (cropH - (blockBottom - OWNER.y)) / 2;
-  const cropY = OWNER.y - margin;
+     that grows by 1.0, so the air widens slowly and can never go negative.
+     ⚠ The horizontal margin is the SAME rule, not a special case: the crop is
+     the content plus two insets, so the split returns exactly `CONFIG_INSET`. */
+  const box = cropAround(
+    { x: CONTENT_L, y: OWNER.y, w: CONTENT_R - CONTENT_L, h: blockBottom - OWNER.y },
+    CROP_W,
+    CROP_H0 + ext
+  );
 
   return {
     ext,
@@ -242,14 +250,10 @@ export function configLayout(ext: number): ConfigLayout {
     right: { x: RIGHT_X, y: satY, w: SAT_W, h: satH },
     base: { x: BASE_X, y: baseY, w: BASE_W, h: baseH },
     blockBottom,
-    margin,
-    cropY,
-    cropH,
-    /* ⚠ ROUNDED, because this string lands in the DOM and in the flight's
-       arithmetic. The shares are fractions of a fraction, so an unrounded
-       value serialises as `1015.9999999999999`; two places is a thousandth of
-       a device pixel and keeps both readable. */
-    crop: `${CROP_X} ${r2(cropY)} ${CROP_W} ${r2(cropH)}`,
+    margin: box.marginY,
+    cropY: box.cropY,
+    cropH: box.cropH,
+    crop: box.crop,
   };
 }
 
@@ -261,9 +265,17 @@ export function configLayout(ext: number): ConfigLayout {
  * exactly `CROP_W × aspect` costs NOTHING in rendered type and removes the
  * letterbox instead. Measured fields: 603×493 → ext 11, 850×760 → 82,
  * 845×950 → 297, 850×1120 → clamped.
+ *
+ * ⚠ **THIS BOARD GROWS ON ONE AXIS ONLY** (`maxW: 0`), unlike readings 01 and
+ * 03. The width chain is the reference's module table verbatim and every x in
+ * it is a measured handoff coordinate — widening the crop would either stretch
+ * that table or float it in a wider margin, and the second is the dead panel
+ * this helper exists to remove. So a WIDER field than the reference
+ * letterboxes horizontally, on purpose, exactly as it did before U12.
  */
-export const configExt = (fieldAspect: number) =>
-  Math.max(0, Math.min(CONFIG_EXT_MAX, Math.round(CROP_W * fieldAspect - CROP_H0)));
+const CONFIG_FIT: FitSpec = { cropW: CROP_W, cropH: CROP_H0, maxW: 0, maxH: CONFIG_EXT_MAX };
+
+export const configExt = (fieldAspect: number) => fitExt(CONFIG_FIT, fieldAspect).extH;
 
 /** The board at rest — the reference's own proportions, and what every guard
  *  and the lab measure against. */

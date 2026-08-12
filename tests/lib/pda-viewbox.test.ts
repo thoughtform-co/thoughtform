@@ -8,7 +8,16 @@ import {
   configSpecWidth,
   configurationLettering,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
-import { VIEW_BOX } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+import {
+  VIEW_BOX,
+  WORK_LAYOUT_0,
+  workExt,
+  workLayout,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+import {
+  substrateExt,
+  substrateLayout,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
 import {
   CART_TYPE,
   MONO_ADVANCE,
@@ -80,11 +89,17 @@ function allWorks(): PdaWork[] {
 }
 
 describe("the readings' crops", () => {
-  /* Declared extents, from each view's own geometry. 01 is the 4x5 grid
-     (`GX`/`GY` + the 176x136 cartridge); 03 from its top rule to the bottom
-     section label. */
+  /* Declared extents, from each view's own geometry, AT REST. 01 is the 4x5
+     grid and 03 the pin grid's head band over its socket — both derived from
+     the layout rather than re-typed, because both are elastic now and a
+     literal would only be true at one field shape. */
   const CONTENT = {
-    1: { x: 12, y: 22, right: 12 + 3 * 192 + 176, bottom: 22 + 4 * 158 + 136 },
+    1: {
+      x: WORK_LAYOUT_0.block.x,
+      y: WORK_LAYOUT_0.block.y,
+      right: WORK_LAYOUT_0.block.x + WORK_LAYOUT_0.block.w,
+      bottom: WORK_LAYOUT_0.block.y + WORK_LAYOUT_0.block.h,
+    },
     /* 02 is the R4 substrate field (ADR-070 U11), drawn in the handoff's own
        888 x 744 stage coordinates. The bound content is the MODULE BLOCK —
        the left module's wall (4) and the seat's top edge (20) across to the
@@ -94,9 +109,10 @@ describe("the readings' crops", () => {
        crop than the crop can escape itself. What has to be asserted about it
        is that it fills BOTH ends, which is what the centring test does. */
     2: { x: 4, y: 20, right: 884, bottom: 660 },
-    // 03 lost its two section rules 2026-08-06 (owner) — the foot already
-    // said it — and the crop tightened from 718 units to 632 behind them.
-    3: { x: 10, y: 93, right: 766, bottom: 702 },
+    /* 03 is the PIN GRID (ADR-070 U15) — the identity gutter and the socket
+       under one head band, 26 in from every wall at rest. The old crossing
+       drawing's `10 / 93 / 766 / 702` went with it. */
+    3: { x: 26, y: 26, right: 906, bottom: 26 + 70 + 5 * 112 },
   } as const;
 
   for (const v of [1, 2, 3] as const) {
@@ -109,43 +125,53 @@ describe("the readings' crops", () => {
       expect(b.bottom, `crop ends above the content`).toBeGreaterThanOrEqual(c.bottom);
     });
 
-    it(`reading ${v} does not waste the axis it is bound on`, () => {
-      /* ⚠ THE BOUND AXIS INVERTED FOR 02 (ADR-070 U11), so the guard has to
-         ask a different question of it. Readings 01 and 03 are portrait
-         drawings in a landscape field, i.e. HEIGHT-bound, and vertical slack
-         there is a direct tax on rendered type — 40 units is breathing room,
-         and the pre-crop boxes wasted 82 and 132.
+    it(`reading ${v} is centred in its crop, on both axes`, () => {
+      /* ⚠ THIS REPLACES THE ≤40-UNIT WASTE RULE (ADR-070 U15), and it is a
+         stricter question rather than a looser one.
 
-         Reading 02's crop is now WIDER than the field's aspect, so it is
-         WIDTH-bound and vertical slack costs nothing. Asserting height there
-         would be measuring the free axis; what has to stay tight is the
-         INSET, which is deliberate and uniform — see `CONFIG_VIEWBOX`. */
+         The old rule asked whether a crop was much taller than its content,
+         which was the right question while 01 and 03 were STATIC portrait
+         drawings in a landscape field — vertical slack was a direct tax on
+         type. Every crop is derived from the field now (`pdaFit`), so a crop
+         is deliberately taller or wider than its content and the slack is
+         margin rather than waste. Keeping the old assertion would have fought
+         the fix; deleting it without a replacement is how the tail comes back
+         unnoticed, which is exactly the defect U14 found on reading 02.
+
+         So: the margin is what is LEFT and it is HALVED (U14's law, now
+         `cropAround`'s), which makes "centred" checkable on both axes at
+         once. ⚠ Equal margins are also what the side-inset contract asserts —
+         reading 02's 26-unit frame inset IS the split, since its crop is the
+         content plus two insets. One rule, three readings. */
       const b = box(v);
       const c = CONTENT[v];
-      if (v === 2) {
-        /* ⚠ HORIZONTAL IS AN INSET, VERTICAL IS A CENTRING, and they are
-           different contracts. The width chain never moves, so the side
-           margins are the frame inset R4 draws — big enough that the outer
-           modules do not touch the console wall (2.7px, measured, before it
-           was restored) and small enough not to eat the type. */
-        const side = [c.x - b.x, b.right - c.right];
-        expect(side[0], `reading 2's frame inset is uneven: ${side.join("/")}`).toBe(side[1]);
-        expect(side[0], `reading 2's inset is a letterbox now`).toBeGreaterThanOrEqual(18);
-        expect(side[0], `reading 2's inset is a letterbox now`).toBeLessThanOrEqual(34);
+      const left = c.x - b.x;
+      const right = b.right - c.right;
+      const top = c.y - b.y;
+      const bottom = b.bottom - c.bottom;
 
-        /* ⚠ THE MODULE BLOCK IS CENTRED (U14, owner). U12 hung the leftover
-           height off the bottom as bed tail, which is invisible — 26 units of
-           air above the seat against 135 below the base at the owner's own
-           shape, and it read as the board sitting high in a panel with a hole
-           under it. The air is halved now, and this is the assertion that
-           says so. */
-        expect(c.y - b.y, `reading 2's block is not centred in its crop`).toBeCloseTo(
-          b.bottom - c.bottom,
-          1
-        );
-        return;
+      expect(left, `reading ${v}'s side margins are uneven: ${left}/${right}`).toBeCloseTo(
+        right,
+        1
+      );
+      expect(top, `reading ${v}'s block is not centred: ${top}/${bottom}`).toBeCloseTo(bottom, 1);
+
+      /* And the margin is a real MARGIN: enough that the outermost rule does
+         not touch the console wall — 2.7px, measured on reading 02 before its
+         inset was restored, and it read as clipped rather than as bled.
+         ⚠ NO UPPER BOUND HERE, deliberately. A derived margin can be large at
+         REST and still be correct: reading 02's is 55.5 units, because its
+         block is 640 tall inside R4's own 751 stage. What stops a margin being
+         a letterbox is measuring it against the PANEL at the shapes the panel
+         actually takes, which is `every reading fills the panel it is given`
+         — asserting a resting number here would only re-measure the drawing
+         against itself, the exact blind spot U12 was written for. */
+      for (const [side, m] of [
+        ["left", left],
+        ["top", top],
+      ] as const) {
+        expect(m, `reading ${v}'s ${side} margin is gone`).toBeGreaterThanOrEqual(8);
       }
-      expect(b.h - (c.bottom - c.y), `reading ${v} wastes vertical units`).toBeLessThanOrEqual(40);
     });
   }
 
@@ -310,6 +336,101 @@ describe("the configuration board fills the panel it is given", () => {
     expect(configExt(0.4), "a wide field squeezed the chain").toBe(0);
     expect(configLayout(configExt(0.4)).crop, "the rest crop moved").toBe(configLayout(0).crop);
   });
+});
+
+/**
+ * ⚠ AND SO DO THE OTHER TWO (ADR-070 U15).
+ *
+ * The suite above was written for reading 02 alone, and readings 01 and 03
+ * were carrying the identical defect the whole time it was green: **117px of
+ * dead width** on 01 at 1280×720 and **265px of dead panel** on 03 at the
+ * owner's 845 × 950 — within 5px of the 270px that forced U12 in the first
+ * place. Nothing saw it, because every assertion on this surface measured a
+ * drawing against its own crop rather than against the PANEL.
+ *
+ * The claim is the same for all three and it is two lines: the crop fills the
+ * field on BOTH axes, and doing so costs no type.
+ */
+describe("every reading fills the panel it is given", () => {
+  const FIELDS = [
+    { at: "1280x720", w: 603, h: 493 },
+    { at: "1440x800", w: 679, h: 548 },
+    { at: "1920x1080", w: 850, h: 760 },
+    { at: "1920x1200", w: 850, h: 880 },
+    { at: "the owner's", w: 845, h: 950 },
+    { at: "2560x1440", w: 850, h: 1120 },
+    { at: "1280x1440", w: 603, h: 1177 },
+  ] as const;
+
+  const READINGS = [
+    { v: "01 the work", at: (a: number) => workLayout(workExt(a)).crop, rest: VIEW_BOX[1] },
+    {
+      v: "02 the configuration",
+      at: (a: number) => configLayout(configExt(a)).crop,
+      rest: VIEW_BOX[2],
+    },
+    {
+      v: "03 the substrate",
+      at: (a: number) => substrateLayout(substrateExt(a)).crop,
+      rest: VIEW_BOX[3],
+    },
+  ] as const;
+
+  const parse = (crop: string) => {
+    const [x, y, w, h] = crop.split(" ").map(Number);
+    return { x, y, w, h };
+  };
+  const meetOf = (f: { w: number; h: number }, c: { w: number; h: number }) =>
+    Math.min(f.w / c.w, f.h / c.h);
+
+  for (const r of READINGS) {
+    it(`${r.v} leaves no dead panel it could have filled`, () => {
+      for (const f of FIELDS) {
+        const c = parse(r.at(f.h / f.w));
+        const meet = meetOf(f, c);
+        const slackW = Math.round(f.w - c.w * meet);
+        const slackH = Math.round(f.h - c.h * meet);
+        /* ⚠ A CLAMPED READING LETTERBOXES ON PURPOSE, and only a PORTRAIT
+           desktop window reaches a clamp. What is asserted there is that the
+           clamp is still buying most of the trade against the resting crop —
+           the honest failure, bounded, rather than hidden. */
+        const still = parse(r.rest);
+        const wasStatic = Math.round(
+          Math.max(f.w - still.w * meetOf(f, still), f.h - still.h * meetOf(f, still))
+        );
+        const worst = Math.max(slackW, slackH);
+        if (worst > 2) {
+          expect(
+            worst,
+            `${r.v} @ ${f.at}: ${worst}px of dead panel, and the crop is not clamped`
+          ).toBeLessThan(Math.max(wasStatic * 0.55, 3));
+          expect(
+            worst / Math.max(f.w, f.h),
+            `${r.v} @ ${f.at}: the panel is mostly empty`
+          ).toBeLessThan(0.28);
+        }
+      }
+    });
+
+    it(`${r.v} never pays for it in type`, () => {
+      /* ⚠ THE POINT OF THE WHOLE MECHANISM. The crop's aspect is made equal to
+         the field's, so `meet` stays the bound-axis ratio it already had —
+         growing a crop is FREE. If a reading's elastic `meet` ever drops below
+         its resting one, the crop grew on the axis it was bound by and the
+         drawing just got smaller to fill a panel. */
+      for (const f of FIELDS) {
+        const live = meetOf(f, parse(r.at(f.h / f.w)));
+        const rest = meetOf(f, parse(r.rest));
+        expect(live / rest, `${r.v} @ ${f.at}: elasticity shrank the drawing`).toBeGreaterThan(
+          0.999
+        );
+        expect(
+          FS_FLOOR * live,
+          `${r.v} @ ${f.at}: the floor fell under the smoke's`
+        ).toBeGreaterThan(4.6);
+      }
+    });
+  }
 });
 
 describe("the cartridge's type fits its box", () => {

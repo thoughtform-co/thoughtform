@@ -155,27 +155,15 @@ export interface IclVariantProps {
   record: IclRecord;
 }
 
-/* ── Fit arithmetic — the same model pdaGlyphs documents ───────────────────
-   PT Mono's advance is ~0.6 em and TRACKING ADDS TO IT, so the factor is
-   `0.6 + track`: 0.68 at the value tracking (.08em), 0.74 at the header
-   tracking (.14em), 0.82 at the chrome tracking (.22em). `MONO_ADVANCE`
-   (0.68) is this formula evaluated at .08em. */
+/* ── Fit arithmetic ────────────────────────────────────────────────────────
+   ⚠ DECLARED IN PRODUCTION NOW (2026-08-12), and re-exported here so the seven
+   variants and `config-lab-fit` keep their import path. It moved because
+   reading 03's own drawing needs it: the advance is a property of PT Mono, not
+   of a lab route, and a model only a lab can reach is a model production ships
+   without. See `map/pda/pdaLetters`. */
 
-export const adv = (fs: number, track: number) => fs * (0.6 + track);
-
-/** One lettered string, declared so the fit test can measure the DRAWING'S
- *  OWN inputs rather than re-deriving its own. */
-export interface LetterSpec {
-  slot: string;
-  text: string;
-  fs: number;
-  /** Tracking in em — the advance model needs it, see `adv`. */
-  track: number;
-  /** The measure the text must fit, in authoring units. */
-  measure: number;
-}
-
-export const specWidth = (s: LetterSpec) => s.text.length * adv(s.fs, s.track);
+export { adv, specWidth } from "@/components/landing/home-v2/services/casefile/map/pda/pdaLetters";
+export type { LetterSpec } from "@/components/landing/home-v2/services/casefile/map/pda/pdaLetters";
 
 /* The archetypes' drawing helpers (hvh / vhv / bundleOffsets / hatchTicks) and
    their record derivations (shapeSkills / shapeSymbols / substrateCaption /

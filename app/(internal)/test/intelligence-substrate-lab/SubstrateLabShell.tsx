@@ -8,9 +8,10 @@ import {
   type ConsoleStation,
 } from "@/components/landing/home-v2/services/casefile/console/ConsoleRail";
 import {
-  VIEW_BOX,
+  SUBSTRATE_LAYOUT_0,
+  SUBSTRATE_VIEWBOX,
   ViewSubstrate,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
 import {
   crossing,
   selectWorks,
@@ -159,7 +160,7 @@ export function SubstrateLabShell({ shapes, districts, works, envelope }: Props)
   const { report, remeasure } = useConfigFitReadout(frameRef, [variantId, theme, preset.id]);
 
   const drawing = variantId === "shipped" ? null : DRAWINGS[variantId];
-  const vb = drawing ? drawing.vb : VIEW_BOX[3];
+  const vb = drawing ? drawing.vb : SUBSTRATE_VIEWBOX;
   const bad = report.clipped.length + report.collisions.length + report.smallControls.length;
 
   return (
@@ -254,6 +255,10 @@ export function SubstrateLabShell({ shapes, districts, works, envelope }: Props)
                       lit={lit}
                       onLit={setLit}
                       still
+                      /* The lab's housing is a fixed preset, so the baseline
+                         mounts at REST — the elastic treatment is production's
+                         answer to a field that moves, and the lab's does not. */
+                      layout={SUBSTRATE_LAYOUT_0}
                     />
                   )}
                 </svg>
