@@ -1,15 +1,5 @@
 import { FormField, isFormKey } from "./particleForms";
-import {
-  CARD_W,
-  FILL_PAD,
-  FS,
-  FormCard,
-  L,
-  R,
-  SUB_VIEWBOX,
-  cardSpecs,
-  type LetterSpec,
-} from "./substrateKit";
+import { FS, FormCard, L, R, SUB_VIEWBOX, cardSpecs, type LetterSpec } from "./substrateKit";
 import type { IslRecord, IslVariantProps } from "./variants";
 
 /**
@@ -34,35 +24,40 @@ import type { IslRecord, IslVariantProps } from "./variants";
 
 export const FIELD_VIEWBOX = SUB_VIEWBOX;
 
-const MEASURE = CARD_W - FILL_PAD * 2;
 const ETCH = "EACH FORM RENDERS ITS OWN TEST";
 const B_ETCH = 660;
 
 export function VariantField({ record }: IslVariantProps) {
   return (
     <>
-      <defs>
-        {record.shapes.map((s, i) => (
-          <clipPath key={s.key} id={`isl-fld-${s.key}`}>
-            <rect x={0} y={0} width={CARD_W - FILL_PAD * 2} height={430 - 52 - 46} data-i={i} />
-          </clipPath>
-        ))}
-      </defs>
-
       {record.shapes.map((s, i) => (
         <FormCard
           key={s.key}
           i={i}
           name={s.name}
           count={String(s.skills).padStart(2, "0")}
-          cut={`CUT BY ${s.trenchedBy}`}
+          cutBy={s.trenchedBy}
         >
           {(f) => (
-            <g transform={`translate(${f.x} ${f.y})`} clipPath={`url(#isl-fld-${s.key})`}>
-              {isFormKey(s.key) ? (
-                <FormField form={s.key} w={f.w} h={f.h} seed={11 + i * 11} k={1} p={16} />
-              ) : null}
-            </g>
+            <>
+              {/* ⚠ THE CLIP IS DERIVED FROM THE WINDOW IT CLIPS — a hardcoded
+                  box goes stale the moment the card's chrome moves, and a
+                  field that overruns its window paints over the foot.
+                  ⚠ AND IT IS IN THE GROUP'S OWN SPACE, AT THE ORIGIN. A
+                  `userSpaceOnUse` clip resolves in the coordinate system the
+                  referencing element establishes, so absolute coordinates here
+                  land at TWICE the translate and cut the field away almost
+                  entirely — which renders as a card that simply has no
+                  drawing in it. */}
+              <clipPath id={`isl-fld-${s.key}`}>
+                <rect x={0} y={0} width={f.w} height={f.h} />
+              </clipPath>
+              <g transform={`translate(${f.x} ${f.y})`} clipPath={`url(#isl-fld-${s.key})`}>
+                {isFormKey(s.key) ? (
+                  <FormField form={s.key} w={f.w} h={f.h} seed={11 + i * 11} k={1} p={16} />
+                ) : null}
+              </g>
+            </>
           )}
         </FormCard>
       ))}
@@ -83,7 +78,7 @@ export function VariantField({ record }: IslVariantProps) {
 
 export function fieldLettering(record: IslRecord): LetterSpec[] {
   return [
-    ...record.shapes.flatMap((s) => cardSpecs(s, MEASURE)),
+    ...record.shapes.flatMap((s) => cardSpecs(s)),
     { slot: "etch", text: ETCH, fs: FS.chrome, track: 0.26, measure: R - L },
   ];
 }

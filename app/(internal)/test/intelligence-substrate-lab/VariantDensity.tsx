@@ -1,6 +1,4 @@
 import {
-  CARD_W,
-  FILL_PAD,
   FS,
   FormCard,
   L,
@@ -34,7 +32,6 @@ import type { IslRecord, IslVariantProps } from "./variants";
 
 export const DENSITY_VIEWBOX = SUB_VIEWBOX;
 
-const MEASURE = CARD_W - FILL_PAD * 2;
 const ETCH = "FILL = SKILLS ENCODED ON THE FORM";
 const B_ETCH = 660;
 
@@ -67,7 +64,7 @@ export function VariantDensity({ record }: IslVariantProps) {
           i={i}
           name={s.name}
           count={String(s.skills).padStart(2, "0")}
-          cut={`CUT BY ${s.trenchedBy}`}
+          cutBy={s.trenchedBy}
         >
           {(f) => (
             <rect x={f.x} y={f.y} width={f.w} height={f.h} fill={`url(#isl-dens-${s.key})`} />
@@ -94,7 +91,7 @@ export function densityLettering(record: IslRecord): LetterSpec[] {
      a sixth number would be the drawing summarising itself. */
   void totalSkills;
   return [
-    ...record.shapes.flatMap((s) => cardSpecs(s, MEASURE)),
+    ...record.shapes.flatMap((s) => cardSpecs(s)),
     { slot: "etch", text: ETCH, fs: FS.chrome, track: 0.26, measure: R - L },
   ];
 }

@@ -7,6 +7,7 @@ import { wrapLines } from "./pdaGlyphs";
 import type { PdaEntry } from "./PdaEntry";
 import type { PdaShape, PdaWork } from "./pdaRecord";
 import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
+import { MODULE, band, housing } from "./substrateKit";
 
 /**
  * 02 · THE CONFIGURATION — the R4 substrate field (ADR-070 U11).
@@ -114,8 +115,10 @@ const CORE_W = 176 * CORE_K;
 const CORE_H = 136 * CORE_K;
 const CORE_X = 444 - CORE_W / 2;
 
-/** The reference's 45° corner cut, 12 deep, on every satellite. */
-const CUT = 12;
+/** The reference's 45° corner cut, 12 deep, on every satellite.
+ *  ⚠ FROM THE SHARED KIT since 2026-08-12 — reading 03's cards are the same
+ *  object, and two copies of a module's measures is how they stop being one. */
+const CUT = MODULE.cut;
 /** ⚠ The CARD's cut stays PROPORTIONAL to the cartridge's, so the object the
  *  flight carries keeps its silhouette all the way across. */
 const CORE_CUT = 14 * CORE_K;
@@ -124,9 +127,9 @@ const CORE_CUT = 14 * CORE_K;
    One padding, one header height, one cell height, so the two satellites and
    the base share a rhythm. `CELL_H` seats a key line plus two wrapped value
    lines; it is the one interior measure that grows with the board. */
-const PAD = 12;
+const PAD = MODULE.pad;
 const CORE_PAD = 18;
-const HEAD_H = 34;
+const HEAD_H = MODULE.head;
 const KEY_BASE = 24;
 const VAL_BASE = 44;
 
@@ -525,33 +528,23 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
 /* ── Sub-drawings ──────────────────────────────────────────────────────── */
 
 /**
- * A MODULE HOUSING — the R4 grammar: opaque fill, 1px border, a 2px top rule,
- * and TWO OPPOSED 45° CORNER CUTS.
+ * THE MODULE HOUSING AND ITS BAND ARE `substrateKit`'s NOW (2026-08-12).
  *
- * ⚠ THE DIAGONAL IS TR+BL (owner, 2026-08-11), which is ADR-065'S CANONICAL
- * DIRECTION — so this drawing is back on the corner law rather than on its
- * mirrored case. R4 draws TL+BR and that is the one place the reference is
- * overruled by a standing rule instead of by arithmetic.
+ * The R4 grammar — opaque fill, 1px border, a 2px top rule, and two opposed
+ * 45° corner cuts on ADR-065's canonical TR+BL diagonal (owner, U13; R4 draws
+ * TL+BR, and that is the one place the reference is overruled by a standing
+ * rule instead of by arithmetic).
  *
- * ⚠ IT NOW CUTS OPPOSITE TO ITS OWN HOUSING. `ConsoleFrame` keeps the TL+BR
+ * ⚠ IT CUTS OPPOSITE TO ITS OWN HOUSING. `ConsoleFrame` keeps the TL+BR
  * override ADR-065 U2 gave it, so the plate and the console it sits in lean
  * different ways. That was the whole argument for the TL+BR cut here, and the
  * owner has overruled it; if the frame should follow, that is `console.css`
  * and its own pass.
  *
- * The cut line is the outline itself — the reference builds it from a rotated
- * cover square with one border, which is the CSS way of drawing this path.
+ * ⚠ Both paths were declared identically here and in the kit. Reading 03's
+ * cards are meant to BE this object, so they share one definition rather than
+ * two that agree today.
  */
-const housing = (x: number, y: number, w: number, h: number, c: number) =>
-  `M${x},${y} H${x + w - c} L${x + w},${y + c} V${y + h} H${x + c} L${x},${y + h - c} Z`;
-
-/**
- * The header band's own outline. It shares the module's TOP corners and
- * squares off at the bottom — ⚠ a band cut with the full `housing` puts a
- * spurious 45° nick in the MIDDLE of the module, where no edge exists.
- */
-const band = (x: number, y: number, w: number, h: number, c: number) =>
-  `M${x},${y} H${x + w - c} L${x + w},${y + c} V${y + h} H${x} Z`;
 
 /** A multi-conductor bundle — 8 parallel wires at 4 pitch behind a 45° hatch,
  *  the reference's one cable grammar on all five docks. */

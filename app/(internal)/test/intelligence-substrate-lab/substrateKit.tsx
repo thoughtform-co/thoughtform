@@ -14,15 +14,22 @@
  */
 
 import type { LetterSpec as LetterSpecType } from "@/components/landing/home-v2/services/casefile/map/pda/pdaLetters";
-import { FS as FS_SHIPPED } from "@/components/landing/home-v2/services/casefile/map/pda/substrateKit";
+import {
+  FS as FS_SHIPPED,
+  MODULE,
+  band,
+  housing,
+} from "@/components/landing/home-v2/services/casefile/map/pda/substrateKit";
 
 export {
   DEPT_UNIT,
   DeptHead,
   FS_FLOOR,
+  MODULE,
   SubstrateHatch,
   Tap,
   TRACK,
+  band,
   byMass,
   deptSpecs,
   housing,
@@ -74,11 +81,25 @@ export const CARD_PITCH = W / CARDS;
 export const CARD_W = CARD_PITCH - 20;
 export const CARD_Y = 150;
 export const CARD_H = 430;
-/** The fill window, inset inside the card — the mockup's 14 / 52 / 46. */
-export const FILL_PAD = 14;
-export const FILL_TOP = 52;
-export const FILL_BOT = 46;
 export const cardX = (i: number) => L + CARD_PITCH * i + (CARD_PITCH - CARD_W) / 2;
+
+/**
+ * The foot — two cells in a row, reading 02's own key-over-value pair.
+ *
+ * ⚠ **THE PITCH IS MEASURED AGAINST THE LINE BOX, NEVER THE FONT SIZE**
+ * (ADR-069's law, and it cost a capture to relearn). Reading 02 steps its key
+ * to its value by 20 at 12.5 / 14 — half-sum of the line boxes is 17.2, so 20
+ * clears. This card's value is the `name` rung at 20, whose ascent alone is
+ * 20.8 units, so the same 22 put the numeral's cap 2.1 units INTO the key's
+ * descender on all five cards. 28 clears it by 3.9.
+ */
+const FOOT_H = 62;
+const KEY_BASE = 20;
+const VAL_BASE = 48;
+const CELLS = 2;
+const CELL_W = (CARD_W - MODULE.pad * 2) / CELLS;
+/** A cell's key and its answer, measured against its own column. */
+export const CARD_KEY_MEASURE = CELL_W - 4;
 
 export interface CardFill {
   /** The fill window in the card's own coordinates. */
@@ -89,103 +110,162 @@ export interface CardFill {
 }
 
 /**
- * ONE CARD — a top rule, a named header, a fill window, and a foot.
+ * ONE CARD — AND IT IS READING 02's MODULE (owner, 2026-08-12: _"more in line
+ * with the cards in configuration"_).
  *
- * ⚠ The corner cut is the mockup's TOP-RIGHT, which is also ADR-065's
- * canonical diagonal — the one place these two agree without an override.
+ * Every measure and every layer below is `QNode`'s, from the shared `MODULE`
+ * constants and the shared `housing` / `band` paths:
+ *
+ *   - opaque `--pda-void` ground, then a dawn-.03 lift — R4's density rule,
+ *     which is what makes a module pop off the bed and which inverts correctly
+ *     on the light flip
+ *   - a 1px `--pda-hair2` border on TWO OPPOSED 45° cuts, TR+BL
+ *   - a header band at dawn .05 on its own `band()` path, ⚠ never the full
+ *     housing — that puts a spurious nick mid-card where no edge exists
+ *   - the 2px top rule, ⚠ STOPPED at the cut or it overshoots into the notch
+ *   - a hairline closing the band, full width
+ *   - the label bold at `.14em`, at the module's own `pad` inset
+ *   - a foot of gold KEYS over ink VALUES — one ink for every answer, the key
+ *     in Tensor gold, because gold is wayfinding and a field label is how the
+ *     reader finds the field
+ *
+ * The mockup's own card had a single TR cut, an underlined header and a big
+ * gold numeral floating bottom-right. What survives of it is the composition:
+ * five tall cards in a row, a window in each, the count and the cutter at the
+ * foot. What changed is that it is now the same OBJECT as a configuration
+ * module rather than a card that resembles one.
  */
 export function FormCard({
   i,
   name,
   count,
-  cut,
+  cutBy,
   children,
 }: {
   i: number;
   name: string;
   count: string;
-  cut: string;
+  cutBy: string;
   children: (fill: CardFill) => React.ReactNode;
 }) {
   const x = cardX(i);
+  const y = CARD_Y;
+  const w = CARD_W;
+  const h = CARD_H;
+  const d = housing(x, y, w, h, MODULE.cut);
+  const footY = y + h - FOOT_H;
   const fill: CardFill = {
-    x: x + FILL_PAD,
-    y: CARD_Y + FILL_TOP,
-    w: CARD_W - FILL_PAD * 2,
-    h: CARD_H - FILL_TOP - FILL_BOT,
+    x: x + MODULE.pad,
+    y: y + MODULE.head + 10,
+    w: w - MODULE.pad * 2,
+    h: footY - (y + MODULE.head + 10),
   };
-  const c = 12;
+  const cell = (n: number) => x + MODULE.pad + CELL_W * n;
+
   return (
     <g>
-      <path
-        d={`M${x},${CARD_Y} H${x + CARD_W - c} L${x + CARD_W},${CARD_Y + c} V${CARD_Y + CARD_H} H${x} Z`}
-        fill="var(--pda-void)"
+      <path d={d} fill="var(--pda-void)" />
+      <path d={d} fill="rgba(var(--dawn-rgb), 0.03)" />
+      <path d={d} fill="none" stroke="var(--pda-hair2)" />
+
+      <path d={band(x, y, w, MODULE.head, MODULE.cut)} fill="rgba(var(--dawn-rgb), 0.05)" />
+      <line
+        x1={x}
+        y1={y + 1}
+        x2={x + w - MODULE.cut}
+        y2={y + 1}
         stroke="var(--pda-hair2)"
-      />
-      {/* The 2px top rule, stopped at the cut — the same rule reading 02's
-          modules carry, and it stops for the same reason. */}
-      <path
-        d={`M${x},${CARD_Y + 1} H${x + CARD_W - c}`}
-        stroke="var(--pda-amb)"
         strokeWidth="2"
-        opacity="0.55"
       />
+      <line x1={x} y1={y + MODULE.head} x2={x + w} y2={y + MODULE.head} stroke="var(--pda-hair)" />
       <text
-        x={x + FILL_PAD}
-        y={CARD_Y + 30}
+        x={x + MODULE.pad}
+        y={y + 23}
         fontSize={FS.key}
-        letterSpacing=".16em"
+        fontWeight={700}
+        letterSpacing=".14em"
         fill="var(--pda-txt)"
       >
         {name}
       </text>
-      <path
-        d={`M${x + FILL_PAD},${CARD_Y + 42} H${x + CARD_W - FILL_PAD}`}
-        stroke="var(--pda-hair)"
-      />
+
       {children(fill)}
+
+      <line x1={x} y1={footY} x2={x + w} y2={footY} stroke="var(--pda-hair)" />
       <text
-        x={x + FILL_PAD}
-        y={CARD_Y + CARD_H - 14}
+        x={cell(0)}
+        y={footY + KEY_BASE}
         fontSize={FS.chrome}
-        letterSpacing=".14em"
-        fill="var(--pda-grn-ink)"
-      >
-        {cut}
-      </text>
-      <text
-        x={x + CARD_W - FILL_PAD}
-        y={CARD_Y + CARD_H - 34}
-        textAnchor="end"
-        fontSize={FS.hero}
-        fontWeight={700}
-        letterSpacing=".04em"
+        letterSpacing=".18em"
         fill="var(--pda-ink)"
       >
+        SKILLS
+      </text>
+      <text
+        x={cell(0)}
+        y={footY + VAL_BASE}
+        fontSize={FS.name}
+        letterSpacing=".08em"
+        fill="var(--pda-txt)"
+      >
         {count}
+      </text>
+      <text
+        x={cell(1)}
+        y={footY + KEY_BASE}
+        fontSize={FS.chrome}
+        letterSpacing=".18em"
+        fill="var(--pda-ink)"
+      >
+        CUT BY
+      </text>
+      <text
+        x={cell(1)}
+        y={footY + VAL_BASE}
+        fontSize={FS.name}
+        letterSpacing=".08em"
+        fill="var(--pda-grn-ink)"
+      >
+        {cutBy}
       </text>
     </g>
   );
 }
 
 /** What a card letters, so both directions declare the same set. */
-export const cardSpecs = (
-  s: { key: string; name: string; skills: number; trenchedBy: string },
-  measure: number
-): LetterSpecType[] => [
-  { slot: `${s.key}.name`, text: s.name, fs: FS.key, track: 0.16, measure },
+export const cardSpecs = (s: {
+  key: string;
+  name: string;
+  skills: number;
+  trenchedBy: string;
+}): LetterSpecType[] => [
   {
-    slot: `${s.key}.count`,
-    text: String(s.skills).padStart(2, "0"),
-    fs: FS.hero,
-    track: 0.04,
-    measure,
+    slot: `${s.key}.name`,
+    text: s.name,
+    fs: FS.key,
+    track: 0.14,
+    measure: CARD_W - MODULE.pad * 2,
   },
   {
-    slot: `${s.key}.cut`,
-    text: `CUT BY ${s.trenchedBy}`,
+    slot: `${s.key}.k.skills`,
+    text: "SKILLS",
     fs: FS.chrome,
-    track: 0.14,
-    measure,
+    track: 0.18,
+    measure: CARD_KEY_MEASURE,
+  },
+  {
+    slot: `${s.key}.v.skills`,
+    text: String(s.skills).padStart(2, "0"),
+    fs: FS.name,
+    track: 0.08,
+    measure: CARD_KEY_MEASURE,
+  },
+  { slot: `${s.key}.k.cut`, text: "CUT BY", fs: FS.chrome, track: 0.18, measure: CARD_KEY_MEASURE },
+  {
+    slot: `${s.key}.v.cut`,
+    text: s.trenchedBy,
+    fs: FS.name,
+    track: 0.08,
+    measure: CARD_KEY_MEASURE,
   },
 ];

@@ -37,9 +37,39 @@ export const FS_FLOOR = 12;
 /** Track values, so a spec and its `<text>` cannot disagree. */
 export const TRACK = { name: 0.08, gloss: 0.08, key: 0.18, chrome: 0.14, code: 0.18 } as const;
 
-/** ADR-065's canonical diagonal, the cut reading 02 settled on in U13. */
+/**
+ * A MODULE HOUSING — ADR-065's canonical diagonal, the cut reading 02 settled
+ * on in U13: two opposed 45° corners, TR+BL.
+ *
+ * ⚠ **ONE DEFINITION FOR THE WHOLE MAP** (2026-08-12). This path and `band`
+ * were declared identically in `PdaConfiguration` and here, which is two
+ * copies of one grammar — and the readings are supposed to be the same
+ * instrument. Reading 02 imports them from here now, so a drawing that says it
+ * is "in line with the configuration" is in line with it in the code.
+ */
 export const housing = (x: number, y: number, w: number, h: number, c: number) =>
   `M${x},${y} H${x + w - c} L${x + w},${y + c} V${y + h} H${x + c} L${x},${y + h - c} Z`;
+
+/**
+ * The header band's own outline. It shares the module's TOP corners and
+ * squares off at the bottom — ⚠ a band cut with the full `housing` puts a
+ * spurious 45° nick in the MIDDLE of the module, where no edge exists.
+ */
+export const band = (x: number, y: number, w: number, h: number, c: number) =>
+  `M${x},${y} H${x + w - c} L${x + w},${y + c} V${y + h} H${x} Z`;
+
+/**
+ * THE MODULE'S OWN MEASURES, shared so a card on one reading cannot drift from
+ * a module on another. R4's numbers, via reading 02.
+ */
+export const MODULE = {
+  /** The 45° corner cut, on both opposed corners. */
+  cut: 12,
+  /** The header band's height. */
+  head: 34,
+  /** The interior inset every label hangs off. */
+  pad: 12,
+} as const;
 
 /** The hatch a seam or a mass bar fills with — R4's own 45° tile, which is
  *  what keeps this reading in the same hand as reading 02. */
