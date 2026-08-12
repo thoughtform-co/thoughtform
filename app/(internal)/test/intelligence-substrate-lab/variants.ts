@@ -37,7 +37,7 @@ import type {
 
 /* ── The variant registry (the field-log-lab 4-field contract) ──────────── */
 
-export type IslVariantId = "shipped" | "strata" | "table" | "tree";
+export type IslVariantId = "shipped" | "strata" | "table" | "tree" | "seals" | "density" | "field";
 
 export interface IslVariantDef {
   id: IslVariantId;
@@ -78,6 +78,30 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
       "One substrate, five patterns inside it, and each pattern as tall as the Skills it holds — a core sample of one pip per Skill down its left edge, so the height is the count rather than a proportion of it. The departments that draw on a pattern are listed inside it. Nothing crosses anything, and nothing is drawn that says nothing.",
     provenance:
       "Round two. The branches went because every node hung off the same root — five lines saying the same thing five times, where nesting says it with no ink. The bodies went from empty hatch to their own Skills, which is what makes the height honest.",
+  },
+  {
+    id: "seals",
+    label: "4 · Seals",
+    thesis:
+      "A pattern is a SIGIL, and what is inside the seal is the test it applies — a register of baselines for Voice, a threshold with a pass rate for Judgment, a lattice of present and absent cases for Validation. Five diamonds, each carrying its own field. It is the one direction that draws what a pattern IS rather than who touches it.",
+    provenance:
+      "The owner's `Substrate Archetypes` mockup, frame S1, with its own particle generators ported. ⚠ It does NOT draw the crossing — only the department that cut each pattern — which is a real cost against the shipped pin grid.",
+  },
+  {
+    id: "density",
+    label: "5 · Density cards",
+    thesis:
+      "Fill IS the mass. Five cards hatched at a pitch derived from their Skills, so Pattern's fourteen pack the window and Stakeholder's five leave it open — magnitude read as ink rather than as a number beside a name. The jailbreak-card read.",
+    provenance:
+      "The owner's mockup, frame S2. ⚠ The five hand-tuned pitches are all within 5 % of `78 / skills`, so the drawing derives it: a hand-tuned density stops being true the moment the record moves.",
+  },
+  {
+    id: "field",
+    label: "6 · Field cards",
+    thesis:
+      "The same card as 5, with the hatch replaced by the pattern's own particle field. Density says HOW MUCH and this says WHAT KIND. They share one component, so the comparison is about what a card should carry and nothing else.",
+    provenance:
+      "The owner's mockup, frame S4. Neither card direction draws the crossing; both trade the relation for character or for mass.",
   },
 ];
 

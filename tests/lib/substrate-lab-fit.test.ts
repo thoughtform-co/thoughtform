@@ -12,6 +12,9 @@ import {
 } from "@/app/(internal)/test/intelligence-substrate-lab/substrateKit";
 import { strataLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantStrata";
 import { tableLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantTable";
+import { densityLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantDensity";
+import { fieldLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantField";
+import { sealsLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantSeals";
 import { treeLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantTree";
 import type { IslRecord } from "@/app/(internal)/test/intelligence-substrate-lab/variants";
 
@@ -39,17 +42,28 @@ function record(): IslRecord {
   return { teams: cross.teams, shapes: cross.shapes };
 }
 
-const VARIANTS: readonly [string, (r: IslRecord) => LetterSpec[]][] = [
-  ["strata", strataLettering],
-  ["table", tableLettering],
-  ["tree", treeLettering],
+/**
+ * ⚠ THE THIRD FIELD IS THE FLOOR ON HOW MUCH A VARIANT LETTERS, and it is
+ * per-variant on purpose. A blanket ">20" was right while every direction was
+ * a table or a stack, but the owner's three card/sigil directions are
+ * deliberately sparse — a seal set NAMES five things and shows the rest.
+ * Keeping one number would have forced them to letter more than they mean to,
+ * which is the guard writing the drawing.
+ */
+const VARIANTS: readonly [string, (r: IslRecord) => LetterSpec[], number][] = [
+  ["strata", strataLettering, 20],
+  ["table", tableLettering, 20],
+  ["tree", treeLettering, 20],
+  ["seals", sealsLettering, 15],
+  ["density", densityLettering, 15],
+  ["field", fieldLettering, 15],
 ];
 
 describe("the substrate lab's drawings fit their boxes", () => {
-  for (const [name, lettering] of VARIANTS) {
+  for (const [name, lettering, minSpecs] of VARIANTS) {
     it(`${name}: every string fits the measure it declares`, () => {
       const specs = lettering(record());
-      expect(specs.length, `${name} letters nothing`).toBeGreaterThan(20);
+      expect(specs.length, `${name} letters nothing`).toBeGreaterThanOrEqual(minSpecs);
       for (const s of specs) {
         expect(s.text.length, `${name} ${s.slot} is blank`).toBeGreaterThan(0);
         expect(

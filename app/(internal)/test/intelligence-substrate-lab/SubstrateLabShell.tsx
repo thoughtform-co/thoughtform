@@ -19,6 +19,9 @@ import {
 import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
 
 import { useConfigFitReadout } from "../intelligence-config-lab/useFitReadout";
+import { DENSITY_VIEWBOX, VariantDensity } from "./VariantDensity";
+import { FIELD_VIEWBOX, VariantField } from "./VariantField";
+import { SEALS_VIEWBOX, VariantSeals } from "./VariantSeals";
 import { STRATA_VIEWBOX, VariantStrata } from "./VariantStrata";
 import { TABLE_VIEWBOX, VariantTable } from "./VariantTable";
 import { TREE_VIEWBOX, VariantTree } from "./VariantTree";
@@ -66,6 +69,9 @@ const DRAWINGS: Record<
   strata: { vb: STRATA_VIEWBOX, Component: VariantStrata },
   table: { vb: TABLE_VIEWBOX, Component: VariantTable },
   tree: { vb: TREE_VIEWBOX, Component: VariantTree },
+  seals: { vb: SEALS_VIEWBOX, Component: VariantSeals },
+  density: { vb: DENSITY_VIEWBOX, Component: VariantDensity },
+  field: { vb: FIELD_VIEWBOX, Component: VariantField },
 };
 
 interface Preset {

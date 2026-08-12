@@ -32,7 +32,7 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/intelligence-substrate-lab");
-const VARIANTS = argOf("--v", "shipped,strata,table,tree").split(",");
+const VARIANTS = argOf("--v", "shipped,strata,table,tree,seals,density,field").split(",");
 const THEMES = argOf("--themes", "dark,light").split(",");
 const PRESETS = argOf("--presets", "p1280,p1920").split(",");
 
