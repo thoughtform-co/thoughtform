@@ -302,8 +302,9 @@ export function ownerSpecs(
 }
 
 /** THE BAR, drawn by the variant rather than passed to `Cartridge`.
- *  ⚠ `Cartridge`'s own `bar` prop hardcodes `fontSize="10"` UNSCALED, so `k`
- *  never reaches it — a variant that wants the bar legible draws it itself. */
+ *  ⚠ THE REASON THIS EXISTS IS GONE (2026-08-13): `Cartridge`'s `bar` prop
+ *  hardcoded `fontSize="10"` UNSCALED, so `k` never reached it and a variant
+ *  that wanted a legible bar had to draw its own. The prop scales now. */
 export function barSpecs(slot: string, bar: string, fs: number, measure: number): LetterSpec[] {
   return [
     { slot: `${slot}.k`, text: "THE BAR", fs: FS.key, track: TRACK.key, measure },
@@ -536,7 +537,9 @@ export function OwnerPlate({
   );
 }
 
-/** THE BAR as its own block, at a size `Cartridge` cannot give it. */
+/** THE BAR as its own block, at a size `Cartridge` could not give it until
+ *  2026-08-13 — kept because the losing archetypes are a RECORD of what was
+ *  measured, and rewiring them onto the fixed prop would restate their numbers. */
 export function BarBlock({
   x,
   y,

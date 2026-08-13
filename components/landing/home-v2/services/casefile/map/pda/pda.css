@@ -69,6 +69,13 @@
   --pda-hot: var(--con-hot);
   --pda-ink: var(--gold-ink);
   --pda-grn: #7e9f66;
+  /* ⚠ DORMANT since 2026-08-13 (ADR-069 U1). This was the work cartridge's
+     CONFIGURED mark ink, and configured went green → gold in that pass: R4's
+     role law is that green is the human and nothing else, and the seat plate is
+     the green object here, so a green configured stream meant the SAME record
+     was green in reading 01 and gold in reading 02. Kept, not deleted — both
+     theme files carry a measured pair for it (5.3:1 on parchment, ADR-068) and
+     the next green MARK on this console should take it rather than invent one. */
   --pda-grnh: #b9e39d;
   /* Green as TEXT ("trenched by"), split from green as a mark for the same
      reason gold is. The provenance hue survives the mode change almost

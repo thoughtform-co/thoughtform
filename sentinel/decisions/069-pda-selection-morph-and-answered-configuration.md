@@ -1,8 +1,11 @@
 # ADR-069: The selection is the persistent object, and the configuration answers
 
-- **Status:** Accepted
-- **Date:** 2026-08-08
-- **Owner call:** yes (the reference boards + the two scope answers, this date)
+- **Status:** Accepted — ⚠ **see [Update 1](#update-1--the-object-the-flight-carried-was-two-drawings-2026-08-13-owner)
+  (2026-08-13): the persistent object was TWO DRAWINGS, and the card's interior
+  is now guarded as one at both scales**
+- **Date:** 2026-08-08 (U1 2026-08-13)
+- **Owner call:** yes (the reference boards + the two scope answers, this date;
+  U1's harmonisation + the drop-autonomy scope answer, 2026-08-13)
 - **Surface:** `components/landing/home-v2/services/casefile/map/pda/**`
 - **Builds on:** [ADR-063](063-map-reading-rail-and-wheel.md) (the three readings,
   the rail, the wheel — all unchanged), [ADR-064](064-casefile-console-frame.md)
@@ -275,3 +278,133 @@ confidentiality walk. `types.ts` keeps zero imports.
   number above uses 0.68 consistently and the smoke re-measures real glyph
   boxes, so the guard is honest either way; the fix moves every label on all
   three readings and is its own pass.
+
+---
+
+## Update 1 — the object the flight carried was two drawings (2026-08-13, owner)
+
+> _"So in the work tab in our proof section, when you click on intelligence map,
+> if you go to work the styling of the work cards should match the ones in
+> configuration. In configuration, at the center, you will see that the workflow
+> or work title is a bit higher. It looks a bit different, so please harmonize
+> the ones in work so it matches the middle campaign copy."_
+
+**This ADR's central claim was false in the one way nothing could see.** §1 says
+the selected work is a persistent object that MOVES rather than being replaced,
+and the flight arithmetic delivers exactly that — the rect travels, the scale is
+uniform, `pda-flight` pins it across twenty slots × two directions × four field
+sizes. But between 2026-08-10 and 2026-08-12, ADR-070 U2 → U13 redrew reading
+02's card five times on the owner's mockup and then on the R4 handoff, and
+reading 01's `Cartridge` kept v18's interior throughout. So the object arrived
+at its destination having changed:
+
+|            | reading 01 (before)                     | reading 02                           |
+| ---------- | --------------------------------------- | ------------------------------------ |
+| silhouette | notch, TOP-LEFT                         | chamfers, TR + BL                    |
+| state      | a 22-unit CIRCLE gauge, in its own band | R4's squared mark, in the header row |
+| configured | **green**                               | **gold**                             |
+| title      | 68 % down                               | 28 % down                            |
+| foot       | lane · autonomy, a pinned pair          | the four-cell lane meter             |
+
+**Why every guard stayed green.** `pda-flight` measures the two RECTS. A rect is
+a silhouette; it says nothing about what is drawn inside it. And each drawing's
+interior was measured only against ITSELF — `pda-viewbox` walked the cartridge
+against hardcoded `w - 19` / `w - 25` measures, and `configurationLettering`
+declared the seat's strings against R4's. **Two complete, passing guards, and
+nothing in between them.** The defect lived in the relationship, which is the
+one place a per-object test cannot look.
+
+### The decision: `CARD` is `SEAT` ÷ `CORE_K`, and a test holds the pair
+
+`pdaGlyphs` owns `CORE_K` and a new `CARD` block whose every value is the seat
+card's own divided by `CORE_K`; `PdaConfiguration` keeps `SEAT` in R4's authored
+integers. **Neither derives from the other at runtime** — R4's are integers and
+the grid's are 1/1.7 of them, so whichever way a multiply runs it lands one
+drawing on 17 significant digits for nothing. `tests/lib/pda-card.test.ts`
+asserts the RELATIONSHIP, rung by rung, plus one guard the pairwise walk cannot
+give: **a rung present on one card and absent on the other fails**, which is the
+form this drift actually took. `StateMark` and `LaneMeter` are single shared
+components for the same reason.
+
+### The title is the one measure that is deliberately NOT shared
+
+The owner named the title, and it is the one rung where parity is the wrong
+answer. The seat hangs its title 28 % down and fills everything beneath it with
+THE BAR. The owner's scope answer was **styling, not content** — no bar copy on
+the grid card — so seat parity would pool **80 units, 59 % of the card, into one
+hole**. This surface already has a rule for that and it is `configLayout`'s:
+**split the slack, don't pool it.** The header row and the foot sit at seat
+parity, the title takes the middle with equal air either side — baseline 71.75,
+so the title lifts from 68 % to **53 %** down. A card that DOES letter a bar
+takes `CARD.titleSeated` and gets seat parity, because then the space is not
+slack.
+
+**Proportional type parity is not available at 59 % of the size.** The seat's
+22-unit title ÷ `CORE_K` is 12.9 and `CART_TYPE.title` is capped at 11.5 so that
+none of the twenty titles wraps. Geometry scales; type is derived from each box's
+own measured slack. That gap is ADR-063 §Outstanding and it stays.
+
+### Two rulings that are not styling
+
+- **The corner is ADR-065's, not v18's.** A single notch IS lawful for a uniform
+  set inside a chamfered housing (ADR-065 U1) — but only "on the lawful
+  diagonal", and top-left never was one. The chamfer pair is what reading 02 has
+  carried since ADR-070 U13 put it back on the canonical diagonal. ⚠ The
+  selection now lights **both** diagonals: lighting one of a symmetric pair reads
+  as a rendering fault rather than as a latch.
+- **`cfg` went green → gold, and it is a ROLE fix.** R4's law is gold =
+  wayfinding, green = the human and nothing else (ADR-070 U11), and the seat
+  plate is the green object on this instrument. v18 painted _configured_ green,
+  so the same stream was green in one reading and gold in the other and **the
+  flight changed the object's colour in mid-air**. What green was carrying
+  survives twice over: solid gold against a dim DASHED body, and a squared mark
+  against a crossed one.
+
+### What came off the card
+
+The three vents (material language the seat does not speak), the divider (R4
+makes the gold key the separator), the circle gauge's whole band — **and
+`autonomy`**, on the owner's "drop it" answer. Reading 02 letters autonomy on the
+OWNER PLATE, which is where a person's latitude belongs; printed in both places
+it is this surface's said-twice defect. ⚠ **The foot is no longer a PAIR** — it
+is one left-anchored run, so what it can overflow is the far wall rather than a
+neighbour in the middle, and the guard's question changed with it rather than
+being deleted.
+
+### Fixed in passing
+
+**`Cartridge`'s `bar` hardcoded `fontSize="10"`, unscaled** — the recorded reason
+every config-lab variant's minPx stuck at 5.4px however large its card was
+(ADR-070 U8's open item, and the reason `seated` drew its own bar). It scales
+with `k` now. Production passes no bar, so the fix only reaches the labs, which
+is where the defect was measured; their quoted numbers are now a record rather
+than a render. **`cartTitleChars` was also missing `k`** — the measure scaled
+with the box while the divisor did not, so a card mounted at k 2 allowed 42
+characters where 21 fit.
+
+### Verification
+
+- `tests/lib/pda-card.test.ts` — 18 cases: ten rungs at 1/`CORE_K`, the title's
+  named divergence, the no-unpaired-rung walk, every live title on one line, wrap
+  capacity invariant under scale, the rank order, the header pair against the
+  mark's new left anchor, the foot's single run against the far wall, and the two
+  homes agreeing on the lane for all twenty-seven streams.
+- `tests/lib/pda-viewbox.test.ts` — the cartridge block MOVED OUT (its two
+  hardcoded measures were half the original problem); 25 cases still green.
+- `tests/lib/pda-flight.test.ts` — 18 cases unchanged, which is the point: the
+  silhouette did not move.
+- Measured on the live landing at the casefile beat, both readings, 1280×720 and
+  1920×1080 — fields 603×493 and 850×760, the numbers this ADR and ADR-070 cite.
+
+### Left open
+
+- **The card's interior is still unbalanced, and now differently.** §"Left open"
+  above recorded the 1.42× core as top-left-heavy with an empty lower middle;
+  that is fixed on the seat (the bar fills it) and traded on the grid (the title
+  is centred in slack rather than seated under the header). A reader comparing
+  the two side by side sees a title 25 points lower on the small card. Closing it
+  means content, and the owner's answer was that the grid card letters none.
+- **`--pda-void` under the wash means no state is `fill: none` any more**, so the
+  three-of-twenty click incident above can no longer happen the way it did. The
+  hit rect and its guard both stay: the invariant is what matters, not the two
+  ways it currently happens to hold.

@@ -30,12 +30,17 @@ import { type IclRecord, type IclVariantProps, type LetterSpec } from "./variant
  * the join is a join rather than an abutment.
  *
  * ⚠ THE BAR STAYS ON THE CARD'S FACE, and a capture caught why. A third step
- * below the card meant withholding `Cartridge`'s `bar` prop, which un-hides
- * its native lane/autonomy row — so `WIDE` printed twice, once labelled
+ * below the card meant withholding `Cartridge`'s `bar` prop, which un-hid its
+ * native lane/autonomy row — so `WIDE` printed twice, once labelled
  * `DECIDES ALONE` on the collar and once bare on the card. This surface has
  * removed a console head, a foot and a designator for exactly that
  * (ADR-063 U1, ADR-070 U8); a variant may not reintroduce it for a
  * composition. Two elements, one seam.
+ *
+ * ⚠ THE COLLISION ITSELF IS GONE (2026-08-13): the card's foot is the shared
+ * lane METER now and `autonomy` came off it entirely, so withholding `bar` no
+ * longer prints anything twice. The rule this variant was decided under still
+ * stands — it just no longer has this particular way of being broken.
  *
  * ⚠ THE DASHED AUTHORITY LINE IS DELETED HERE, AND THAT IS THE VARIANT. Every
  * other drawing on this surface says "answerable-to" with a dashed run; this

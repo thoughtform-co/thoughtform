@@ -38,12 +38,12 @@ import { type IclRecord, type IclVariantProps, type LetterSpec } from "./variant
  * that meets `DECIDES ALONE`'s right column. The columns cannot meet — so the
  * plate grows rather than the type shrinking.
  *
- * ⚠ ITS BAR IS STILL ILLEGIBLE, AND ONLY `seated` ESCAPES IT. Every variant
- * here passes `bar` to `Cartridge`, which hardcodes `fontSize="10"` UNSCALED
- * — so the bar renders 5.4px at the binding preset whatever `k` is, and it is
- * what holds this drawing's minPx at 5.4 while `seated` reads 6.5. Fixing it
- * means drawing the bar outside the cartridge (see `seated`) or adding a
- * `barFs` prop to `Cartridge` on promotion.
+ * ⚠ ITS BAR WAS ILLEGIBLE AND IS NOT ANY MORE (fixed 2026-08-13). `Cartridge`
+ * hardcoded `fontSize="10"` UNSCALED, so every variant that passed `bar` held
+ * its minPx at 5.4px whatever `k` was, while `seated` — which draws the bar
+ * itself — read 6.5. The bar scales with `k` now, so these numbers are the
+ * losing archetypes' RECORD rather than their current render; re-measure before
+ * quoting them. `seated`'s reason for drawing its own bar is gone with it.
  */
 
 export const TIGHT_VIEWBOX = "36 48 828 912";

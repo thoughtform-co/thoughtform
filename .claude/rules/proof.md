@@ -834,6 +834,59 @@ a slot.
 
 ## The selection morph, and the answered configuration (ADR-069, live)
 
+- ⚠ **THE CARD IS ONE DRAWING AT TWO SIZES, AND UNTIL 2026-08-13 IT WAS TWO**
+  (owner: _"the styling of the work cards should match the ones in
+  configuration"_). Reading 02 was redrawn on the R4 handoff (U11–U13) while
+  reading 01 kept v18's cartridge, so the object the flight claims to CARRY
+  changed its corners, its state mark, its colour and its title's height at the
+  instant of the swap. **Every guard was green**, because `pda-flight` measures
+  the two RECTS — a silhouette — and each interior was only ever measured
+  against itself. `CARD` (pdaGlyphs) is now `SEAT`'s own values ÷ `CORE_K`, rung
+  for rung, and **`tests/lib/pda-card.test.ts` holds the pair** — including a
+  guard that FAILS on a rung added to one card and not the other, which is the
+  form the drift actually took. What moved, and why each:
+  - the TL notch → **the TR + BL chamfer pair**. A single notch IS lawful for a
+    uniform set inside a chamfered housing (ADR-065 U1) but only "on the lawful
+    diagonal", and top-left never was one. ⚠ **The selection now lights BOTH
+    diagonals**: lighting one of a symmetric pair reads as a rendering fault
+    rather than as a latch.
+  - the circle gauge → R4's squared **`StateMark`, moved UP INTO THE HEADER
+    ROW**. The gauge floated in a band of its own that spent 37 % of the card on
+    one 22-unit circle, and **that band is what pinned the title at 68 % down** —
+    which is the thing the owner could see.
+  - the vents, and the divider → nothing. Material language the seat card does
+    not speak, and a rule between two blocks R4 separates with a gold key.
+  - the lane · autonomy pair → the shared **`LaneMeter`**, and **`autonomy` came
+    off the card with it** (owner). Reading 02 letters it on the OWNER PLATE,
+    where a person's latitude belongs; printed in both places it is this
+    surface's said-twice defect. ⚠ **The foot is no longer a PAIR** — it is one
+    left-anchored run, so what it can overflow is the far wall, not a neighbour
+    in the middle, and the guard's question changed with it.
+  - green `cfg` → **gold**. A ROLE fix, not a restyle: R4's law is gold =
+    wayfinding, green = the human and nothing else, and the seat plate is the
+    green object here. The same stream was green in the grid and gold in the
+    configuration, so **the flight changed its colour in mid-air**. What green
+    was carrying survives twice over — solid gold on a dim DASHED body, and a
+    squared mark against a crossed one.
+- ⚠ **THE TITLE'S BASELINE IS THE ONE MEASURE THE TWO DO NOT SHARE, and it is
+  arithmetic.** The seat hangs its title 28 % down and fills everything under it
+  with THE BAR; the grid letters no bar (owner — match the styling, not the
+  content), so seat parity would pool **80 units, 59 % of the card, into one
+  hole**. `configLayout`'s own rule applies: **SPLIT THE SLACK, DON'T POOL IT** —
+  header and foot stay at seat parity, the title takes the middle with equal air
+  either side (baseline 71.75, i.e. 68 % → **53 %** down). ⚠ **A card that DOES
+  letter a bar takes `CARD.titleSeated`** instead, because the space stops being
+  slack.
+- ⚠ **PROPORTIONAL TYPE PARITY IS NOT AVAILABLE AT 59 % OF THE SIZE.** The
+  seat's 22-unit title ÷ `CORE_K` is 12.9 and `CART_TYPE.title` is capped at 11.5
+  so that none of the twenty titles wraps. The geometry scales; the type is
+  derived from each box's own measured slack. That gap is ADR-063 §Outstanding
+  and it stays.
+- ⚠ **`Cartridge`'s BAR SCALES WITH `k` NOW.** It was `fontSize="10"`, hardcoded,
+  which is the recorded reason every config-lab variant's minPx stuck at 5.4px
+  however large its card was. Production passes no bar, so the fix only reaches
+  the labs — which is exactly where the defect was measured, and their quoted
+  numbers are now a RECORD rather than a render.
 - **THE SELECTED WORK IS THE PERSISTENT OBJECT, AND IT FLIES.** Reading 01
   draws it as a cartridge in the grid, reading 02 as the core — the SAME glyph
   at `CORE_K` — so a 1 ↔ 2 change MOVES it rather than replacing it, while
@@ -893,10 +946,12 @@ a slot.
   on the **bar** (no lane was chosen, so there is no "why this lane").
   "CONTEXT HELD BY THE PERSON" is 26 chars, i.e. the same ceiling as the graph
   node.
-- **The open record lights its own CUT EDGE**, and only once reading 02 has been
-  shown. The notch is where a cartridge is keyed, so it reads as latched rather
-  than as a fifth gauge state, and it gives the return flight somewhere to land.
-  Nothing is marked at rest: `shown[0]` is a default, not a choice the reader made.
+- **The open record lights its own CUT EDGES**, and only once reading 02 has been
+  shown. The chamfers are where a cartridge is keyed, so it reads as latched
+  rather than as a fourth state of the MARK, and it gives the return flight
+  somewhere to land. Nothing is marked at rest: `shown[0]` is a default, not a
+  choice the reader made. ⚠ **BOTH diagonals since the harmonisation** — the
+  silhouette has two, and lighting one of a symmetric pair reads as a bug.
 - ⚠ **EVERY CARTRIDGE MUST TAKE A CLICK AT ITS CENTRE, and this was broken.**
   A person-led body is `fill: none` and an unfilled SVG path hit-tests on its
   STROKE alone, so all three person-led streams reached the bare `<svg>` and did
@@ -905,7 +960,10 @@ a slot.
   `.fl-pda-hit` FIRST, which is configured and filled. The fix is a transparent
   hit rect matching the path's extremes (so the flight's origin does not move);
   the guard hit-tests all twenty with `elementFromPoint`. **A new glyph state
-  with no fill re-arms this.**
+  with no fill re-arms this.** ⚠ Since the harmonisation the card also paints an
+  opaque `--pda-void` base under its wash, so no state is `fill: none` any more
+  and the ORIGINAL cause is gone — but the rect stays and the guard stays: it is
+  the invariant that matters, not the two ways it currently happens to hold.
 
 ## The reading rail, and the wheel (ADR-063, live)
 

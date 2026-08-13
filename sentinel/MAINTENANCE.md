@@ -54,6 +54,51 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-13 — The persistent object was two drawings (ADR-069 U1, ADR-065 U4)
+
+One owner ask: the work cards should match the configuration's, _"the workflow or
+work title is a bit higher."_ Cycle A rows 1, 2, 3 and 6.
+
+- **The reported defect was the title's height. The actual defect was that
+  ADR-069's central claim had quietly become false.** That ADR says the selected
+  work is a PERSISTENT OBJECT that flies between readings 01 and 02 rather than
+  being replaced. Between 08-10 and 08-12, ADR-070 U2→U13 redrew reading 02's
+  card five times and reading 01's `Cartridge` kept v18's interior, so the object
+  arrived having changed its corners, its state glyph, its colour and its title's
+  height. The title was the symptom the owner could see; the circle gauge's own
+  band is what pinned it at 68 % down.
+- ⚠ **CLASS OF MISS: TWO COMPLETE, PASSING GUARDS AND NOTHING BETWEEN THEM.**
+  `pda-flight` pins the two RECTS across 20 slots × 2 directions × 4 field sizes
+  — but a rect is a SILHOUETTE and says nothing about the interior. `pda-viewbox`
+  walked the cartridge against hardcoded `w - 19` / `w - 25`, and
+  `configurationLettering` declared the seat's strings against R4's. Each drawing
+  was measured only against ITSELF, so the defect lived in the RELATIONSHIP,
+  which is the one place a per-object test cannot look. **Where a claim is that
+  two things are the same thing, something has to assert the pair.**
+  `tests/lib/pda-card.test.ts` does, rung for rung, and it includes the guard the
+  pairwise walk cannot give — **a rung present on one card and absent on the
+  other fails**, which is the form the drift actually took.
+- ⚠ **A DUPLICATED MEASURE IS THE SAME BUG AS A DUPLICATED DRAWING.** The
+  cartridge's guard had its own copy of the card's insets while the component
+  derived them from `CARD.pad`; both were "right" and neither would notice the
+  other moving. That block moved out of `pda-viewbox` entirely rather than being
+  re-typed with new numbers.
+- ⚠ **"ON THE LAWFUL DIAGONAL" WAS THE OPERATIVE CLAUSE, AND UNIFORMITY HID IT**
+  (ADR-065 U4). The twenty cartridges satisfied every clause of the notched-set
+  exception except that one, with a TOP-LEFT notch — and an internally consistent
+  set is exactly what the eye passes and what reading a rule's first clause
+  passes. It surfaced from the flight, not from a corner review.
+- ⚠ **A COLOUR CAN BE A ROLE VIOLATION RATHER THAN A PREFERENCE.** `cfg` was
+  green in the grid and gold on the seat; R4's law is green = the human and
+  nothing else, so the same stream was two colours and the flight was recolouring
+  its own cargo mid-air. What green was carrying survives twice over (dashed body,
+  crossed mark), which is why it could go.
+- Fixed in passing, both recorded-but-unfixed items: `Cartridge`'s bar was
+  `fontSize="10"` unscaled (the reason every config-lab variant's minPx stuck at
+  5.4px), and `cartTitleChars` was missing `k` (42 characters allowed where 21
+  fit). ⚠ Both were **written down in the labs as known** — a note is not a fix,
+  and the lab comments asserting them are now a record rather than a render.
+
 ### 2026-08-12 — The pin grid, three elastic crops, one notch (ADR-070 U15, ADR-067 U2)
 
 Three owner asks in one session. Cycle A rows 1, 2, 3, 4 and 6.

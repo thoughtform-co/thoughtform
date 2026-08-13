@@ -19,12 +19,6 @@ import {
   substrateLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
 import {
-  CART_TYPE,
-  MONO_ADVANCE,
-  cartTitleChars,
-  wrapLines,
-} from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
-import {
   PDA_SHOWN,
   type PdaWork,
   toPdaWork,
@@ -63,11 +57,6 @@ function mapVisual() {
   )?.visual;
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
   return visual;
-}
-
-/** Live work titles — the drawing letters these, so they set the measure. */
-function workTitles(): string[] {
-  return mapVisual().works.map((w) => w.title.toUpperCase());
 }
 
 /**
@@ -433,44 +422,12 @@ describe("every reading fills the panel it is given", () => {
   }
 });
 
-describe("the cartridge's type fits its box", () => {
-  /* 176-unit cartridge: the title is anchored to the left wall alone and runs
-     to `w - 19`; the metadata rows are PAIRS pinned to opposite walls and
-     share one `w - 25` measure between them. */
-  const W = 176;
-  const TITLE_MEASURE = W - 19;
-  const PAIR_MEASURE = W - 25;
-
-  it("every live title fits one line", () => {
-    const titles = workTitles();
-    expect(titles.length).toBeGreaterThanOrEqual(PDA_SHOWN);
-    for (const t of titles.slice(0, PDA_SHOWN)) {
-      const width = t.length * CART_TYPE.title * MONO_ADVANCE;
-      expect(width, `"${t}" runs past the cartridge wall`).toBeLessThanOrEqual(TITLE_MEASURE);
-      // ...and the wrapper agrees, so no title splits onto a second line.
-      // A wrapped title collided with its own second line and with the lane
-      // rail when this was 12 — measured, not supposed.
-      expect(wrapLines(t, cartTitleChars(W)), `"${t}" wrapped`).toHaveLength(1);
-    }
-  });
-
-  it("the metadata pairs leave a gap in the middle", () => {
-    // Worst case per row, from the live record's shapes.
-    const code = 3 * CART_TYPE.code * 0.8 + 5 * CART_TYPE.code * 0.76;
-    const lane = 8 * CART_TYPE.lane * 0.76 + 7 * CART_TYPE.lane * 0.76;
-    expect(code, "the team code and stream id meet in the middle").toBeLessThan(PAIR_MEASURE * 0.9);
-    expect(lane, "the lane and autonomy labels meet in the middle").toBeLessThan(
-      PAIR_MEASURE * 0.9
-    );
-  });
-
-  it("the title is the largest thing in the cartridge", () => {
-    // The name of the work outranks its metadata. A record whose id letters
-    // larger than its title is a record about ids.
-    expect(CART_TYPE.title).toBeGreaterThan(CART_TYPE.code);
-    expect(CART_TYPE.code).toBeGreaterThan(CART_TYPE.lane);
-  });
-});
+/* ⚠ THE CARTRIDGE'S OWN TYPE IS `tests/lib/pda-card.test.ts`' NOW
+   (2026-08-13). It used to be measured here against hardcoded `w - 19` and
+   `w - 25` measures while the drawing derived its own from `CARD.pad` — two
+   sets of numbers for one box, which is the same drift the harmonisation
+   fixed in the drawings themselves. That file walks the card at BOTH its
+   scales, so the grid and the seat cannot diverge again. */
 
 /**
  * READING 02 IS THE R4 SUBSTRATE FIELD (ADR-070 U11).

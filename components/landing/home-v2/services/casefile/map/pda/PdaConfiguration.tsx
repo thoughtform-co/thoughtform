@@ -3,7 +3,7 @@
 import { type FitSpec, cropAround, fitExt } from "./pdaFit";
 import { PDA_FLIGHT_MS } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
-import { wrapLines } from "./pdaGlyphs";
+import { CORE_K, LaneMeter, StateMark, laneLabel, meterLabelDx, wrapLines } from "./pdaGlyphs";
 import type { PdaEntry } from "./PdaEntry";
 import type { PdaShape, PdaWork } from "./pdaRecord";
 import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
@@ -106,11 +106,14 @@ const CROP_W = CONTENT_R - CONTENT_L + CONFIG_INSET * 2;
  * similar and one uniform scale carries the morph without the object changing
  * proportion on the way.
  *
- * ⚠ `1.7` is chosen so the box matches the reference's 300-wide core to
- * within a unit; the reference's own 300 × 224 is not similar to the
- * cartridge and cannot be used directly.
+ * ⚠ **`CORE_K` AND THE CARD'S INTERIOR LIVE IN `pdaGlyphs` NOW** (2026-08-13).
+ * The seat card is the grid's cartridge at this scale, and until the
+ * harmonisation the two were separate drawings that had drifted apart on
+ * corners, mark, colour and the title's height — so the flight was swapping the
+ * object it claimed to be carrying. `CARD` there is this card's geometry ÷
+ * `CORE_K`, and the mark and the lane meter are one component each.
  */
-export const CORE_K = 1.7;
+export { CORE_K };
 const CORE_W = 176 * CORE_K;
 const CORE_H = 136 * CORE_K;
 const CORE_X = 444 - CORE_W / 2;
@@ -119,16 +122,48 @@ const CORE_X = 444 - CORE_W / 2;
  *  ⚠ FROM THE SHARED KIT since 2026-08-12 — reading 03's cards are the same
  *  object, and two copies of a module's measures is how they stop being one. */
 const CUT = MODULE.cut;
-/** ⚠ The CARD's cut stays PROPORTIONAL to the cartridge's, so the object the
- *  flight carries keeps its silhouette all the way across. */
-const CORE_CUT = 14 * CORE_K;
+
+/**
+ * THE SEAT CARD'S INTERIOR, in R4's own authored units.
+ *
+ * ⚠ **EVERY VALUE HERE IS `pdaGlyphs`' `CARD` × `CORE_K`, AND
+ * `tests/lib/pda-card.test.ts` HOLDS THE PAIR.** Reading 01's grid card is this
+ * same drawing at 1, so a rung moved on one side without the other fails there
+ * rather than quietly making the flight swap its object again — which is the
+ * defect the 2026-08-13 harmonisation fixed.
+ *
+ * Both sides keep their EXACT numbers rather than one deriving from the other:
+ * R4's are authored integers and the grid's are 1/1.7 of them, so whichever way
+ * a multiply runs it lands one side on 17 significant digits for no gain. The
+ * test is the relationship; these are the drawing.
+ */
+export const SEAT = {
+  /** ⚠ Proportional to the cartridge's `14`, so the object the flight carries
+   *  keeps its silhouette all the way across. */
+  cut: 14 * CORE_K,
+  pad: 18,
+  /** The state mark's side, and its top off the card's own top. */
+  mark: 14,
+  markY: 14,
+  /** The header row's baseline, and the team code's offset past the mark. */
+  headBase: 25,
+  teamDx: 23,
+  /** R4's bright top rule. */
+  rule: 2,
+  titleBase: 66,
+  barLabel: 120,
+  barLine: 140,
+  /** The lane meter's top, up off the card's floor. */
+  footUp: 22,
+} as const;
+const CORE_CUT = SEAT.cut;
 
 /* ── The module interior ────────────────────────────────────────────────
    One padding, one header height, one cell height, so the two satellites and
    the base share a rhythm. `CELL_H` seats a key line plus two wrapped value
    lines; it is the one interior measure that grows with the board. */
 const PAD = MODULE.pad;
-const CORE_PAD = 18;
+const CORE_PAD = SEAT.pad;
 const HEAD_H = MODULE.head;
 const KEY_BASE = 24;
 const VAL_BASE = 44;
@@ -341,26 +376,17 @@ const OWNER_MEASURE = 250;
 const OWNER_RIGHT = 128;
 
 /**
- * THE LANE LADDER — four cells, filled to where this stream runs.
+ * ⚠ **THE LANE LADDER AND ITS VOCABULARY ARE `pdaGlyphs`' NOW** (2026-08-13) —
+ * reading 01's grid card letters the same foot, and two copies of a measured
+ * drawing is how they stop being one. `LaneMeter` there takes `k` (this card
+ * mounts it at `CORE_K`) and its font size as a prop, because each card letters
+ * at its own derived chrome rung.
  *
- * ⚠ THIS IS THE ONE THING THE OWNER DELETED THAT THE R4 HANDOFF BRINGS BACK,
- * and it is a different quantity wearing the same shape. ADR-070 U4 removed
- * the DRAW PER RUN meter, which measured WORKLOAD and needed a NEVER A PRICE
- * caption to stay honest; `PdaWork.draw` still carries that and still letters
- * nowhere. This meter is the capability LANE, which is generic by law, is
- * already published, and has exactly four values — so the gauge is the record
- * rather than a rating of it.
- *
- * It also answers the complaint that retired `laneRun` from the MODEL cell
- * (owner, 2026-08-11: _"model — everyday lane? What does everyday lane
- * mean?"_). Nothing on the surface placed the tier in a scale; four cells
- * with two lit is that scale, and the verbs stay in the module.
+ * What it means has not changed: it is the capability LANE, generic by law,
+ * already published, with exactly four values — so the gauge IS the record
+ * rather than a rating of it, and NOT the retired DRAW PER RUN meter that
+ * measured workload and needed a NEVER A PRICE caption to stay honest.
  */
-const LANES = ["FAST", "EVERYDAY", "DEEP", "FRONTIER"] as const;
-const laneStep = (lane: string) => LANES.indexOf(lane as (typeof LANES)[number]) + 1;
-const laneLabel = (lane: string) => (laneStep(lane) > 0 ? `${lane} TIER` : "NO LANE");
-const METER = { cell: 13, gap: 3, h: 4 } as const;
-const METER_W = METER.cell * 4 + METER.gap * 3;
 
 /* ── The fit declaration ────────────────────────────────────────────────
    Every string this drawing letters, with the measure it has to fit in.
@@ -510,7 +536,7 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
     text: laneLabel(work.lane),
     fs: FS.chrome,
     track: 0.2,
-    measure: CORE_MEASURE - METER_W - 12,
+    measure: CORE_MEASURE - meterLabelDx(CORE_K),
   });
 
   specs.push({
@@ -733,36 +759,6 @@ function QNode({
   );
 }
 
-/** The lane ladder and its label — see `LANES`. Four cells, lit to the tier
- *  this stream runs on; person-led lights none and says so. */
-function LaneMeter({ x, y, lane }: { x: number; y: number; lane: string }) {
-  const step = laneStep(lane);
-  return (
-    <g>
-      {[0, 1, 2, 3].map((i) => (
-        <rect
-          key={i}
-          x={x + i * (METER.cell + METER.gap)}
-          y={y}
-          width={METER.cell}
-          height={METER.h}
-          fill={i < step ? "var(--pda-amb)" : "none"}
-          stroke="var(--pda-hair2)"
-        />
-      ))}
-      <text
-        x={x + METER_W + 12}
-        y={y + METER.h / 2 + FS.chrome * 0.36}
-        fontSize={FS.chrome}
-        letterSpacing=".2em"
-        fill="var(--pda-ink)"
-      >
-        {laneLabel(lane)}
-      </text>
-    </g>
-  );
-}
-
 /**
  * THE WORK — the reference's core module, on the cartridge's silhouette.
  *
@@ -779,14 +775,15 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
   const stroke = led ? "var(--pda-txt3)" : "var(--pda-hot)";
   const d = housing(core.x, core.y, core.w, core.h, CORE_CUT);
   const gx = core.x + CORE_PAD;
-  const gy = core.y + 14;
+  const gy = core.y + SEAT.markY;
+  const headBase = core.y + SEAT.headBase;
   /* ⚠ THE BAR BLOCK IS SEATED, NOT STACKED. The reference pins its meter to
      the card's floor and lets the slack fall where it lands; at this size
      that put a 55-unit hole in the middle of the one bright object. 120
      splits it — 39 units of air above the block and 39 below, measured
      against the title's descenders and the meter's cap. */
-  const barBase = core.y + 120;
-  const meterY = core.y + core.h - 22;
+  const barBase = core.y + SEAT.barLabel;
+  const meterY = core.y + core.h - SEAT.footUp;
   return (
     <g>
       <path d={d} fill="var(--pda-void)" />
@@ -794,27 +791,20 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
       <path d={d} fill="none" stroke={stroke} strokeDasharray={led ? "5 4" : undefined} />
       <line
         x1={core.x}
-        y1={core.y + 1}
+        y1={core.y + SEAT.rule / 2}
         x2={core.x + core.w - CORE_CUT}
-        y2={core.y + 1}
+        y2={core.y + SEAT.rule / 2}
         stroke={stroke}
-        strokeWidth="2"
+        strokeWidth={SEAT.rule}
       />
 
-      {/* The state mark: the reference's 14-unit outline with a 5-unit fill. */}
-      <rect x={gx} y={gy} width={14} height={14} fill="none" stroke={stroke} />
-      {led ? (
-        <g stroke={stroke}>
-          <line x1={gx + 3} y1={gy + 3} x2={gx + 11} y2={gy + 11} />
-          <line x1={gx + 11} y1={gy + 3} x2={gx + 3} y2={gy + 11} />
-        </g>
-      ) : (
-        <rect x={gx + 4.5} y={gy + 4.5} width={5} height={5} fill={stroke} />
-      )}
+      {/* The state mark: the reference's 14-unit outline with a 5-unit fill.
+          ⚠ Shared with reading 01's grid card, which mounts it at 14 / CORE_K. */}
+      <StateMark x={gx} y={gy} side={SEAT.mark} led={led} stroke={stroke} />
 
       <text
-        x={gx + 23}
-        y={gy + 11}
+        x={gx + SEAT.teamDx}
+        y={headBase}
         fontSize={FS.chrome}
         letterSpacing=".24em"
         fill="var(--pda-txt2)"
@@ -823,7 +813,7 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
       </text>
       <text
         x={core.x + core.w - CORE_PAD}
-        y={gy + 11}
+        y={headBase}
         textAnchor="end"
         fontSize={FS.id}
         letterSpacing=".18em"
@@ -834,7 +824,7 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
 
       <text
         x={gx}
-        y={core.y + 66}
+        y={core.y + SEAT.titleBase}
         fontSize={FS.title}
         fontWeight={700}
         letterSpacing=".01em"
@@ -850,7 +840,7 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
         <text
           key={i}
           x={gx}
-          y={barBase + 20 + STEP * i}
+          y={core.y + SEAT.barLine + STEP * i}
           fontSize={FS.value}
           letterSpacing=".08em"
           fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
@@ -859,7 +849,7 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
         </text>
       ))}
 
-      <LaneMeter x={gx} y={meterY} lane={work.lane} />
+      <LaneMeter x={gx} y={meterY} lane={work.lane} fs={FS.chrome} k={CORE_K} />
     </g>
   );
 }

@@ -218,3 +218,35 @@ cut left is the one a real edge produces.
 Applies to every `ConsoleRail` (map readings, tools, films, Studio sheets).
 Not a general repeal of Update 1: a set inside a housing whose chamfers fall
 on no member keeps the uniform notch.
+
+## Update 4 (2026-08-13, with ADR-069 U1) — "on the lawful diagonal" was the operative clause
+
+Reading 01's twenty work cartridges were a textbook Update 1 set: a uniform grid
+of device cards inside the chamfered casefile console, each carrying **a single
+notch, all the same corner**. They satisfied every clause of the exception except
+the one that does the work — **the notch was TOP-LEFT**, which has never been a
+lawful diagonal for anything but the mirrored back of a flipped object, and since
+Update 2 for one enumerated console.
+
+The exception was read as licensing _a_ notch and was in fact licensing a notch
+**on the lawful diagonal**. Nothing caught it because the set was internally
+consistent, which is what the eye checks and what a reviewer reading the rule's
+first clause checks too.
+
+It surfaced from the other end entirely: ADR-069's flying object is the same card
+in two readings, and reading 02 had been moved onto the canonical TR+BL diagonal
+by ADR-070 U13. So the object **changed silhouette in mid-flight** — and that is
+what made the corner a measurable defect rather than a preference. The twenty
+cards now carry the TR+BL chamfer pair, which is rule 1's ordinary housing at
+drawing scale, so the exception is no longer invoked here at all.
+
+Two notes for the next object:
+
+- **The clause to check first is the DIAGONAL, not the count.** A set can be
+  perfectly uniform and still be wrong, and uniformity is the property that makes
+  the error invisible.
+- **A single notch means "oriented or connected".** Twenty identical cards in a
+  grid are not oriented toward anything and are connected to nothing, so on this
+  set the notch was never carrying the meaning the law assigns it — it was a
+  corner treatment. The chamfer pair says "machined housing", which is what a work
+  cartridge is.
