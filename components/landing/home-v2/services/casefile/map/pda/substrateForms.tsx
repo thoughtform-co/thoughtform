@@ -18,9 +18,22 @@ import type { ReactNode } from "react";
  * re-scatter the field on every React pass and make the capture gates
  * non-deterministic; `rng(seed)` is the mockup's own mulberry-style PRNG.
  *
- * ⚠ These are LAB drawings. Nothing here letters, so `substrate-lab-fit` has
- * nothing to walk — the fit guard covers each variant's `lettering()`, and the
- * capture script's collision/clip gates cover the marks.
+ * ⚠ **THESE SHIP.** They were lab drawings until reading 03 became the five
+ * pattern cards; the shipped drawing paints one field per card, so this file
+ * moved out of `app/(internal)/test/**` and the lab imports it from here. One
+ * painter, one behaviour — the same argument that deduped `housing` / `band`
+ * when reading 02 declared them a second time.
+ *
+ * ⚠ NOTHING HERE LETTERS, so no fit guard walks it. What covers these marks is
+ * the browser smoke's clip gate and the eye: a field is texture, and texture
+ * is the one thing on this surface no arithmetic can check.
+ *
+ * ⚠ **COUNTS ARE ABSOLUTE, NOT PER-AREA.** `voice` paints 260·k marks whether
+ * the box is 60 units tall or 500, so a card's field gets DENSER as the stack
+ * above it grows, not sparser. That is the right way round — the pattern with
+ * fourteen encodes has the least raw substrate left and should look worked —
+ * but it means `k` is a payload decision as much as a visual one: five cards
+ * at k 1 is roughly 1,300 nodes on the landing's proof surface.
  */
 
 export type FormKey = "voice" | "judgment" | "validation" | "stakeholder" | "pattern";

@@ -202,6 +202,8 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "nda-pre-check",
     name: "NDA Pre-Check",
+    short: "NDA Pre-Check",
+    flagship: true,
     team: "Legal",
     engine: "Judgment",
     status: "In build",
@@ -211,6 +213,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "legal-risk-methodology",
     name: "Legal Risk Methodology",
+    short: "Legal Risk",
     team: "Legal",
     engine: "Judgment",
     status: "In build",
@@ -220,6 +223,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "spa-pre-check",
     name: "SPA Pre-Check",
+    short: "SPA Pre-Check",
     team: "Legal",
     engine: "Judgment",
     status: "Scoped",
@@ -228,6 +232,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "product-ideation",
     name: "Product Ideation",
+    short: "Ideation",
     team: "Product Management",
     engine: "Judgment",
     status: "In build",
@@ -237,6 +242,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "risk-management",
     name: "Risk Management",
+    short: "Risk Mgmt",
     team: "Program Management & Product",
     engine: "Judgment",
     status: "In build",
@@ -246,6 +252,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "brr-generator",
     name: "BRR Generator",
+    short: "BRR Generator",
     team: "Product Engineering",
     engine: "Judgment",
     status: "In use",
@@ -255,6 +262,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "onboarding-pops-processes",
     name: "Onboarding & POps Processes",
+    short: "Onboarding",
     team: "People Ops",
     engine: "Judgment",
     status: "In build",
@@ -264,6 +272,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "partnership-inbox-filter",
     name: "Partnership Inbox Filter",
+    short: "Partner Inbox",
     team: "Brand & Partnerships",
     engine: "Judgment",
     status: "In build",
@@ -273,6 +282,10 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "cost-feasibility-portfolio",
     name: "Cost / Feasibility / Portfolio",
+    /* ⚠ NOT "Cost / Feas" — that is where a clip lands, not where a person
+       stops. The three-way name has no natural head, so the label takes the
+       middle term, which is the one the triage is actually about. */
+    short: "Feasibility",
     team: "Manufacturing Programs",
     engine: "Judgment",
     status: "In build",
@@ -282,6 +295,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "ux-foundations-evaluation",
     name: "UX Foundations Evaluation",
+    short: "UX Founds",
     team: "Product Design & UX",
     engine: "Judgment",
     status: "In build",
@@ -291,6 +305,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "concept-triage-engine",
     name: "Concept Triage Engine",
+    short: "Concept Triage",
     team: "Product Design & UX",
     engine: "Judgment",
     status: "In build",
@@ -300,6 +315,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "loop-creative-strategy",
     name: "Loop Creative Strategy",
+    short: "Creative Strat",
     team: "Performance",
     engine: "Judgment",
     status: "In use",
@@ -310,6 +326,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "employer-branding-tov",
     name: "Employer Branding TOV",
+    short: "Employer TOV",
     team: "Talent Acquisition",
     engine: "Voice",
     status: "In build",
@@ -319,6 +336,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "people-team-voice",
     name: "People-team Voice",
+    short: "People-team",
     team: "People Ops",
     engine: "Voice",
     status: "In use",
@@ -328,6 +346,8 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "founder-tone-of-voice",
     name: "Founder Tone of Voice",
+    short: "Founder TOV",
+    flagship: true,
     team: "Brand & Partnerships",
     engine: "Voice",
     status: "In use",
@@ -337,6 +357,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "paid-social-tov",
     name: "Paid Social TOV",
+    short: "Paid Soc TOV",
     team: "Brand & Partnerships",
     engine: "Voice",
     status: "In build",
@@ -346,6 +367,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "loop-paid-social",
     name: "Loop Paid Social",
+    short: "Paid Social",
     team: "Studio",
     engine: "Voice",
     status: "In use",
@@ -355,6 +377,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "loop-crm",
     name: "Loop CRM",
+    short: "Loop CRM",
     team: "Studio",
     engine: "Voice",
     status: "Shipped",
@@ -364,6 +387,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "loop-marketplace",
     name: "Loop Marketplace",
+    short: "Marketplace",
     team: "Studio",
     engine: "Voice",
     status: "Shipped",
@@ -374,6 +398,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "tracker-compliance-checker",
     name: "Tracker Compliance Checker",
+    short: "Tracker Check",
     team: "Legal",
     engine: "Validation",
     status: "In use",
@@ -383,6 +408,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "interview-debrief",
     name: "Interview Debrief",
+    short: "Debrief",
     team: "Talent Acquisition",
     engine: "Validation",
     status: "Scoped",
@@ -392,6 +418,10 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "gl-reconciliations",
     name: "GL Reconciliations",
+    /* "GL Recon" is what Finance says out loud, but written down it is
+       indistinguishable from a clip — and the reader of this drawing is not
+       in Finance. */
+    short: "GL Reconcile",
     team: "Finance & Accounting",
     engine: "Validation",
     status: "In build",
@@ -401,6 +431,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "belgian-vat-return",
     name: "Belgian VAT Return",
+    short: "VAT Return",
     team: "Finance & Accounting",
     engine: "Validation",
     status: "Scoped",
@@ -410,6 +441,8 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "quality-auditor",
     name: "Quality Auditor",
+    short: "Quality",
+    flagship: true,
     team: "Warehousing & Customer Ops",
     engine: "Validation",
     status: "In use",
@@ -419,6 +452,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "fraud-detection",
     name: "Fraud Detection",
+    short: "Fraud",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
     status: "In build",
@@ -428,6 +462,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "invoice-processor",
     name: "Invoice Processor",
+    short: "Invoices",
     team: "Warehousing & Customer Ops",
     engine: "Validation",
     status: "In use",
@@ -437,6 +472,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "supplier-qa-audit",
     name: "Supplier QA Audit",
+    short: "Supplier QA",
     team: "Manufacturing Programs",
     engine: "Validation",
     status: "Scoped",
@@ -446,6 +482,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "localization",
     name: "Localization",
+    short: "Localization",
     team: "Studio",
     engine: "Validation",
     status: "In build",
@@ -456,6 +493,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "candidate-screening-brief",
     name: "Candidate Screening Brief",
+    short: "Screening",
     team: "Talent Acquisition",
     engine: "Stakeholder",
     status: "Scoped",
@@ -465,6 +503,8 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "program-status-updates",
     name: "Program Status Updates",
+    short: "PRG Status",
+    flagship: true,
     team: "Program Management & Product",
     engine: "Stakeholder",
     status: "In build",
@@ -474,6 +514,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "market-scan-brief",
     name: "Market Scan Brief",
+    short: "Market Scan",
     team: "Strategic Insights",
     engine: "Stakeholder",
     status: "In build",
@@ -483,6 +524,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "survey-synthesis",
     name: "Survey Synthesis",
+    short: "Survey",
     team: "Strategic Insights",
     engine: "Stakeholder",
     status: "Scoped",
@@ -492,6 +534,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "feedback-summarizer",
     name: "Feedback Summarizer",
+    short: "Feedback",
     team: "Studio",
     engine: "Stakeholder",
     status: "In use",
@@ -502,6 +545,8 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "variance-commentary",
     name: "Variance Commentary",
+    short: "Variance",
+    flagship: true,
     team: "Finance & Accounting",
     engine: "Pattern",
     status: "In use",
@@ -511,6 +556,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "mec-tracker",
     name: "MEC Tracker",
+    short: "MEC Tracker",
     team: "Finance & Accounting",
     engine: "Pattern",
     status: "In use",
@@ -520,6 +566,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "vsme-sustainability-reporting",
     name: "VSME Sustainability Reporting",
+    short: "VSME Reporting",
     team: "Program Management & Product",
     engine: "Pattern",
     status: "Scoped",
@@ -529,6 +576,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "daily-brief",
     name: "Daily Brief",
+    short: "Daily Brief",
     team: "Product Engineering",
     engine: "Pattern",
     status: "In use",
@@ -538,6 +586,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "dashboard-consolidation",
     name: "Dashboard Consolidation",
+    short: "Dashboards",
     team: "Warehousing & Customer Ops",
     engine: "Pattern",
     status: "In use",
@@ -547,6 +596,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "sop-generator",
     name: "SOP Generator",
+    short: "SOP Generator",
     team: "People Ops",
     engine: "Pattern",
     status: "In build",
@@ -556,6 +606,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "360-marketing-agent",
     name: "360 Marketing Agent",
+    short: "360 Marketing",
     team: "Brand & Partnerships",
     engine: "Pattern",
     status: "In build",
@@ -565,6 +616,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "trend-scraper",
     name: "Trend Scraper",
+    short: "Trends",
     team: "Strategic Insights",
     engine: "Pattern",
     status: "In build",
@@ -574,6 +626,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "lead-time-calculator",
     name: "Lead Time Calculator",
+    short: "Lead Time",
     team: "Manufacturing Programs",
     engine: "Pattern",
     status: "In use",
@@ -583,6 +636,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "cmf-file-generator",
     name: "CMF File Generator",
+    short: "CMF Files",
     team: "Product Design & UX",
     engine: "Pattern",
     status: "In use",
@@ -592,6 +646,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "loop-packaging-system",
     name: "Loop Packaging System",
+    short: "Packaging",
     team: "Product Design & UX",
     engine: "Pattern",
     status: "In use",
@@ -601,6 +656,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "product-review-analysis",
     name: "Product Review Analysis",
+    short: "Reviews",
     team: "Product Design & UX",
     engine: "Pattern",
     status: "In build",
@@ -610,6 +666,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "asset-brief-generator",
     name: "Asset Brief Generator",
+    short: "Asset Briefs",
     team: "Studio",
     engine: "Pattern",
     status: "In build",
@@ -619,6 +676,7 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
   {
     id: "genai-prompting",
     name: "GenAI Prompting",
+    short: "GenAI",
     team: "Studio",
     engine: "Pattern",
     status: "In use",

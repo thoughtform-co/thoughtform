@@ -65,15 +65,22 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
       );
 
     case "intelligence-map":
-      /* The city (ADR-062). `groups`/`rows`/`skills` stay on the visual for
-         the beat-sharing and count-agreement guards; the DRAWING reads only
-         the three map arrays, so the Skills reservoir is evidence the plate
-         sums rather than geometry it has to place. */
+      /* The city (ADR-062). `groups`/`rows` stay on the visual for the
+         beat-sharing and count-agreement guards.
+
+         ⚠ `skills` IS DRAWN NOW. It was "evidence the plate sums rather
+         than geometry it has to place" while reading 03 was the pin
+         grid, which lettered aggregate counts only. The grid's five
+         rows are five CARDS of named Skills now, so the reservoir feeds
+         the drawing directly — and the count agreement the registry
+         test asserts is the thing a reader can now check by counting
+         plates on screen. */
       return (
         <IntelligenceMapPlate
           shapes={visual.shapes}
           districts={visual.districts}
           works={visual.works}
+          skills={visual.skills ?? []}
           envelope={visual.envelope}
         />
       );

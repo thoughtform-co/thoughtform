@@ -10,11 +10,21 @@ import {
   specWidth,
   type LetterSpec,
 } from "@/app/(internal)/test/intelligence-substrate-lab/substrateKit";
+import { cardsLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantCards";
 import { strataLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantStrata";
 import { tableLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantTable";
 import { densityLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantDensity";
 import { fieldLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantField";
+import { galleryLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantGallery";
+import { rackLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantRack";
+import { registryLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantRegistry";
+import {
+  SAMPLE_SKILLS,
+  SAMPLE_TEAMS,
+  SAMPLE_TOTALS,
+} from "@/app/(internal)/test/intelligence-substrate-lab/sampleSkills";
 import { sealsLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantSeals";
+import { terminalLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantTerminal";
 import { treeLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantTree";
 import type { IslRecord } from "@/app/(internal)/test/intelligence-substrate-lab/variants";
 
@@ -57,6 +67,26 @@ const VARIANTS: readonly [string, (r: IslRecord) => LetterSpec[], number][] = [
   ["seals", sealsLettering, 15],
   ["density", densityLettering, 15],
   ["field", fieldLettering, 15],
+  /* rack is a relational variant like strata/table/tree, so it letters
+     three head strings, four identity strings per shape, and the tapping
+     department codes — its minimum is 3 + 20 = 23 before any tap. */
+  ["rack", rackLettering, 20],
+  /* gallery shares FormCard with density and field, so it inherits their
+     15-spec floor and adds one etch. */
+  ["gallery", galleryLettering, 15],
+  /* registry letters five columns × (name + count + Σ(title lines + team))
+     from the 47-Skill fixture — its minimum with every title on one line
+     is 5 heads × 2 + 47 skills × 2 + 1 etch = 105. Two-line wraps push it
+     higher; 100 is the floor so the guard fails if a whole column drops. */
+  ["registry", registryLettering, 100],
+  /* terminal letters 5 pattern rules × 2 + 47 skills × 2 (title/team)
+     + 5 cut tags + 1 etch = 110 minimum. Owner was dropped when the
+     drawing went to two columns to clear the fit-meter's bbox floor. */
+  ["terminal", terminalLettering, 100],
+  /* cards letters cardSpecs per pattern (5 × 5 = 25) + 47 short-title
+     labels = 72 minimum. Same card frame as gallery + one label per
+     Skill from the fixture; the head and foot are byte-identical. */
+  ["cards", cardsLettering, 65],
 ];
 
 describe("the substrate lab's drawings fit their boxes", () => {
@@ -113,11 +143,30 @@ describe("the substrate's unit is DEPARTMENTS", () => {
    * So no drawing here letters the word at all — the tap marks carry the
    * count, which is the hierarchy argument anyway.
    */
+  /* The original ban was `\bteams?\b` (case-insensitive, ANY occurrence).
+     That over-caught two live cases:
+       - loop_aether's actual Skill title "People-team Voice" and the
+         owner string "TA team" — proper names, not unit publications
+       - the fixture-based variants' honest "14 TEAMS" etch, where 14 is
+         loop_aether's real team count owning the 47 Skills
+     Neither is the defect this guard exists to catch. The defect was
+     `${N} TEAMS` on the SHIPPED pin grid, where N was a DISTRICT count
+     (≤ 8) mislabelled as "teams" — a lie about the unit.
+     Two tightenings:
+       1. Regex catches uppercase-only, digit-adjacent phrases, so proper
+          names in the fixture (lowercase "team") no longer match.
+       2. Only DISTRICT-based variants are checked, because that is the
+          data lineage the defect existed in. Fixture-based variants use
+          loop_aether's real teams, and their team count is honest. */
+  const TEAMS_UNIT = /\b\d+\s*TEAMS?\b|\bTEAMS?\s*\d+\b/;
+  const FIXTURE_VARIANTS = new Set(["registry", "terminal"]);
+
   for (const [name, lettering] of VARIANTS) {
+    if (FIXTURE_VARIANTS.has(name)) continue;
     it(`${name}: never publishes a department count as teams`, () => {
       for (const s of lettering(record())) {
         expect(
-          /\bteams?\b/i.test(s.text),
+          TEAMS_UNIT.test(s.text),
           `${name} ${s.slot} letters "${s.text}" — the unit on this reading is DEPARTMENTS`
         ).toBe(false);
       }
@@ -133,6 +182,74 @@ describe("the substrate's unit is DEPARTMENTS", () => {
       r.shapes.reduce((n, s) => n + s.skills, 0),
       "the 47 stopped adding up"
     ).toBe(47);
+  });
+
+  it("the lab's sample fixture agrees with the record's aggregate", () => {
+    /* `sampleSkills` mirrors loop_aether's /claude-adoption roster; the
+       shipped record aggregates its counts. Registry and terminal both
+       draw from the fixture, so if these two disagree the reader sees a
+       different 47 depending on which variant they open. */
+    const r = record();
+    expect(SAMPLE_SKILLS).toHaveLength(SAMPLE_TOTALS.total);
+    expect(SAMPLE_TOTALS.total).toBe(47);
+    expect(SAMPLE_TEAMS).toHaveLength(14);
+
+    for (const shape of r.shapes) {
+      const fixtureCount = SAMPLE_SKILLS.filter((s) => s.substrate === shape.key).length;
+      expect(
+        fixtureCount,
+        `record's ${shape.key} says ${shape.skills} Skills, fixture holds ${fixtureCount}`
+      ).toBe(shape.skills);
+    }
+  });
+
+  it("every substrate has exactly one flagship `cut` Skill in the fixture", () => {
+    /* The green-ink cutter grammar is what carries the shipped `CUT BY`
+       claim down to the Skill level. Two cutters in one substrate would
+       ink two greens per column, none would leave the pattern's flagship
+       unclaimed — either drifts the reading's argument. */
+    const bySubstrate = new Map<string, number>();
+    for (const s of SAMPLE_SKILLS) {
+      if (s.cut) bySubstrate.set(s.substrate, (bySubstrate.get(s.substrate) ?? 0) + 1);
+    }
+    expect(bySubstrate.size).toBe(5);
+    for (const [substrate, n] of bySubstrate) {
+      expect(n, `${substrate} has ${n} cutters, must be exactly 1`).toBe(1);
+    }
+  });
+
+  it("every fixture team code is exactly three characters, uppercase", () => {
+    /* The pin-grid abscissa is three-letter district codes; the fixture
+       uses three-letter TEAM codes so the two vocabularies read as the
+       same kind of thing. `LEG` is both a district and a team, on
+       purpose — the fixture inherits the shipped code where it can. */
+    for (const t of SAMPLE_TEAMS) {
+      expect(t.code, `team code ${t.code}`).toMatch(/^[A-Z]{3}$/);
+    }
+    const known = new Set(SAMPLE_TEAMS.map((t) => t.code));
+    for (const s of SAMPLE_SKILLS) {
+      expect(known.has(s.team), `Skill ${s.id} references unknown team ${s.team}`).toBe(true);
+    }
+  });
+
+  it("every fixture Skill declares a shortTitle inside the card measure", () => {
+    /* The card variant (11) prints `shortTitle` inside a 132u module
+       window at fs 12 track .08 — 14 characters is the hard cap that
+       fits without wrapping, so the drawing can render a single line
+       per Skill. A shortTitle longer than 14 chars is a drawing that
+       will overflow silently, because SVG text does not wrap or
+       ellipsise. */
+    for (const s of SAMPLE_SKILLS) {
+      expect(s.shortTitle, `Skill ${s.id} has no shortTitle`).toBeTruthy();
+      expect(
+        s.shortTitle.length,
+        `Skill ${s.id} shortTitle "${s.shortTitle}" is ${s.shortTitle.length} chars — cap is 14`
+      ).toBeLessThanOrEqual(14);
+      expect(
+        s.shortTitle.length,
+        `Skill ${s.id} shortTitle "${s.shortTitle}" is blank`
+      ).toBeGreaterThan(0);
+    }
   });
 
   it("every shape names the department that cut it, and it is a real one", () => {

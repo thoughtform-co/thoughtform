@@ -37,7 +37,19 @@ import type {
 
 /* ── The variant registry (the field-log-lab 4-field contract) ──────────── */
 
-export type IslVariantId = "shipped" | "strata" | "table" | "tree" | "seals" | "density" | "field";
+export type IslVariantId =
+  | "shipped"
+  | "strata"
+  | "table"
+  | "tree"
+  | "seals"
+  | "density"
+  | "field"
+  | "rack"
+  | "gallery"
+  | "registry"
+  | "terminal"
+  | "cards";
 
 export interface IslVariantDef {
   id: IslVariantId;
@@ -51,9 +63,9 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
     id: "shipped",
     label: "Shipped (the baseline)",
     thesis:
-      "The crossing as it stands: eight department plates over five shape modules, joined by thirty bezier runs. Every shape is the same box whatever it holds, so magnitude lives in a 9px line — and the relation can only be read by tracing a curve.",
+      "⚠ THE BASELINE IS NOW DIRECTION 11, PROMOTED (2026-08-13). This is no longer the pin grid — the cards shipped, so the baseline and `11 · Cards` draw the same composition from different sources: this one from the Loop case's own `skills` reservoir, that one from the lab fixture. Compare them for drift, not for direction. The pin grid it replaced (five patterns × eight departments, one mark per crossing) is in git history and in ADR-070 U15; ⚠ THE 5 × 8 CROSSING IS NOT DRAWN ANYWHERE ON THE SITE NOW, by owner ruling — `crossing()` still projects it and its arithmetic is still guarded.",
     provenance:
-      "PdaViews.ViewSubstrate, mounted from production at its own crop. The lab keeps no copy: two drawings claiming to be the same one is how a lab goes stale.",
+      "PdaSubstrate.ViewSubstrate, ADR-070 U16 — mounted ELASTIC, at whatever layout the current preset's field asks for, exactly as the landing does. It mounted at rest until the promotion, which at p1280 drew a 430-unit card into a 763-unit crop and left 182px of dead panel: a preview of a drawing the site never served.",
   },
   {
     id: "strata",
@@ -102,6 +114,46 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
       "The same card as 5, with the hatch replaced by the pattern's own particle field. Density says HOW MUCH and this says WHAT KIND. They share one component, so the comparison is about what a card should carry and nothing else.",
     provenance:
       "The owner's mockup, frame S4. Neither card direction draws the crossing; both trade the relation for character or for mass.",
+  },
+  {
+    id: "rack",
+    label: "7 · Skill rack",
+    thesis:
+      "Round three, and the reading the owner's brief actually asks for: the SUBSTRATE across the SKILLS. The pin grid's identity gutter is kept verbatim (name · gloss · CUT BY {ab}), the tap matrix is replaced by ONE PIP PER ENCODED SKILL on a shared pitch — Pattern's 14 span the rack, Stakeholder's 5 stop a third of the way across, the mass argument is the length of the row you can count. The tapping departments letter under each rack in their pin-grid column positions, the cutter's code in green, so the crossing stays answerable by looking.",
+    provenance:
+      "The plan's own copy — 'these 7 skills are all Voice; these 14 are all Pattern — and they span departments' — drawn as five racks on a shared scale. The recommended winner.",
+  },
+  {
+    id: "gallery",
+    label: "8 · Gallery",
+    thesis:
+      "The field card, made concrete. S4's five module-cards (already the same object as reading 02's configuration module), and one pip per encoded Skill down the window's left rail — so the card that ships with the pattern's PHYSICS also ships with the pattern's COUNT. Foot stays SKILLS / CUT BY. Trades the same thing S1/S2/S4 traded (the crossing) for what neither the pin grid nor the rack carry (each test drawn as its own physics).",
+    provenance:
+      "The owner's mockup, frame S4, with a pip ladder added down each window. An evaluation method is a test you can count AND a test you can picture: this card carries both.",
+  },
+  {
+    id: "registry",
+    label: "9 · Registry",
+    thesis:
+      "Round three — the SPECIFIC SKILL, made visible. Five printed columns side by side, one per pattern, each headed by name + count. Under each head the pattern's Skills print vertically: title on top (wrapped to two lines where needed), team code below. Reads like the back-matter index of a book: mass IS how far the column runs, grouping IS the layout, team IS the code line. The pattern's flagship encode prints in green — the shipped surface's `CUT BY` grammar carried down from the district level to the Skill level.",
+    provenance:
+      "The owner's brief, taken directly: 'the specific skill should be visible.' A sibling of the shipped pin grid — same 47 Skills, drawn as an index instead of a crossing. Draws from `sampleSkills.ts`, the lab-local mirror of `/claude-adoption` (loop_aether) with 14 teams and 47 encoded titles.",
+  },
+  {
+    id: "terminal",
+    label: "10 · Terminal",
+    thesis:
+      "The opposite pole from the registry: ONE printed roster of 47 Skills, sorted pattern → team → title, five thin section rules marking the boundaries. Each row has title · team · owner in cold mono, cutter lines carry a small green ● CUT tag. No chart, no colour, no shape — the type IS the reading. Coldest register on the surface, the honest test of whether type alone can carry the substrate claim.",
+    provenance:
+      "The compiled-index / system-dump register — Thoughtform's newspaper-of-record voice at its coldest. Same fixture as `registry`; the difference is entirely one of composition, not of content.",
+  },
+  {
+    id: "cards",
+    label: "11 · Cards",
+    thesis:
+      "EXTRACTION. Each encoded Skill is a PLATE — a 16-unit slab with a 3-unit accent at its left edge — and the plates stack from the header down; fourteen of those accents are a bus, five are a short one, so the card claims \"these all draw on one thing\" instead of listing words under a heading. The pattern's physics field fills whatever the stack leaves, BELOW it: the plates are what has been encoded, the field is the material they came out of, and a five-Skill card showing more raw field than a fourteen is the drawing making its point. The foot prints what the substrate MEANS in the record's own gloss; the count is a numeral beside the name.",
+    provenance:
+      'Round three, second pass. The owner on the first: the foot\'s `SKILLS 07 · CUT BY CRE` was "meaningless text", and the labels were "a boring ass text list". The foot became the sentence. The list was first redrawn as an explicit tapped bus — and at meet 0.646 the 1-unit spine alpha\'d away and left a dash and a dot per row, i.e. bullets. The accent bar carries the same reading at a weight the meet cannot erase. Labels are the fixture\'s `shortTitle` shorthand, capped at 14 characters; the flagship encode takes green.',
   },
 ];
 

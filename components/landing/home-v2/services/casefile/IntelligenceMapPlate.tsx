@@ -1,6 +1,6 @@
 "use client";
 
-import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
+import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from "@/lib/cases/types";
 
 import { PdaConsole } from "./map/pda/PdaConsole";
 
@@ -14,7 +14,7 @@ import { PdaConsole } from "./map/pda/PdaConsole";
  *
  *   01 THE WORK           twenty cartridges, four across
  *   02 THE CONFIGURATION  one stream, with four modules seated into it
- *   03 THE SUBSTRATE      the teams, the shapes, and the crossing between
+ *   03 THE SUBSTRATE      five patterns, each a card of its named Skills
  *
  * Ported from the owner's `thoughtform-intelligence-map-v18.html`; every
  * coordinate in `map/pda/**` is his. The isometric city this replaces
@@ -37,9 +37,24 @@ interface Props {
   shapes: readonly CaseMapShape[];
   districts: readonly CaseMapDistrict[];
   works: readonly CaseMapWork[];
+  /**
+   * ⚠ THE SKILLS RESERVOIR IS GEOMETRY NOW, not just evidence the plate
+   * sums. Reading 03 letters one plate per named Skill, so this array
+   * stopped being something the registry row alone consumed — a missing
+   * `skills` prop is five empty cards, not a smaller number somewhere.
+   */
+  skills: readonly CaseSkillEntry[];
   envelope: "WITHIN" | "AT" | "OVER";
 }
 
-export function IntelligenceMapPlate({ shapes, districts, works, envelope }: Props) {
-  return <PdaConsole shapes={shapes} districts={districts} works={works} envelope={envelope} />;
+export function IntelligenceMapPlate({ shapes, districts, works, skills, envelope }: Props) {
+  return (
+    <PdaConsole
+      shapes={shapes}
+      districts={districts}
+      works={works}
+      skills={skills}
+      envelope={envelope}
+    />
+  );
 }

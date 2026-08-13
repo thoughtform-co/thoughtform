@@ -9,21 +9,27 @@ import {
 } from "@/components/landing/home-v2/services/casefile/console/ConsoleRail";
 import {
   SUBSTRATE_LAYOUT_0,
-  SUBSTRATE_VIEWBOX,
   ViewSubstrate,
+  substrateExt,
+  substrateLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
 import {
   crossing,
   selectWorks,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
-import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
+import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from "@/lib/cases/types";
 
 import { useConfigFitReadout } from "../intelligence-config-lab/useFitReadout";
+import { CARDS_VIEWBOX, VariantCards } from "./VariantCards";
 import { DENSITY_VIEWBOX, VariantDensity } from "./VariantDensity";
 import { FIELD_VIEWBOX, VariantField } from "./VariantField";
+import { GALLERY_VIEWBOX, VariantGallery } from "./VariantGallery";
+import { RACK_VIEWBOX, VariantRack } from "./VariantRack";
+import { REGISTRY_VIEWBOX, VariantRegistry } from "./VariantRegistry";
 import { SEALS_VIEWBOX, VariantSeals } from "./VariantSeals";
 import { STRATA_VIEWBOX, VariantStrata } from "./VariantStrata";
 import { TABLE_VIEWBOX, VariantTable } from "./VariantTable";
+import { TERMINAL_VIEWBOX, VariantTerminal } from "./VariantTerminal";
 import { TREE_VIEWBOX, VariantTree } from "./VariantTree";
 import {
   ISL_VARIANTS,
@@ -72,6 +78,11 @@ const DRAWINGS: Record<
   seals: { vb: SEALS_VIEWBOX, Component: VariantSeals },
   density: { vb: DENSITY_VIEWBOX, Component: VariantDensity },
   field: { vb: FIELD_VIEWBOX, Component: VariantField },
+  rack: { vb: RACK_VIEWBOX, Component: VariantRack },
+  gallery: { vb: GALLERY_VIEWBOX, Component: VariantGallery },
+  registry: { vb: REGISTRY_VIEWBOX, Component: VariantRegistry },
+  terminal: { vb: TERMINAL_VIEWBOX, Component: VariantTerminal },
+  cards: { vb: CARDS_VIEWBOX, Component: VariantCards },
 };
 
 interface Preset {
@@ -101,10 +112,12 @@ interface Props {
   shapes: readonly CaseMapShape[];
   districts: readonly CaseMapDistrict[];
   works: readonly CaseMapWork[];
+  /** The shipped baseline letters one plate per named Skill now. */
+  skills: readonly CaseSkillEntry[];
   envelope: "WITHIN" | "AT" | "OVER";
 }
 
-export function SubstrateLabShell({ shapes, districts, works, envelope }: Props) {
+export function SubstrateLabShell({ shapes, districts, works, skills, envelope }: Props) {
   const [variantId, setVariantId] = useState<IslVariantId>("shipped");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [preset, setPreset] = useState<Preset>(PRESETS[0]);
@@ -165,8 +178,35 @@ export function SubstrateLabShell({ shapes, districts, works, envelope }: Props)
 
   const { report, remeasure } = useConfigFitReadout(frameRef, [variantId, theme, preset.id]);
 
+  /**
+   * ⚠ THE BASELINE MOUNTS ELASTIC, EXACTLY AS PRODUCTION DOES.
+   *
+   * It used to mount at `SUBSTRATE_LAYOUT_0` on the argument that the lab's
+   * housing is a fixed preset and the elastic treatment answers a field that
+   * moves. That argument is wrong: a fixed preset is a field of a KNOWN
+   * shape, not an absent one, and production computes its layout from
+   * whatever shape the field happens to be. At p1280 the rest crop is
+   * 932 × 482 against a 602 × 493 field, so the cards rendered 311px tall in
+   * a 493px panel — 182px of dead bottom, and a preview of a drawing the
+   * site never serves.
+   */
+  const liveLayout = useMemo(
+    () =>
+      report.canvas.w > 0 && report.canvas.h > 0
+        ? substrateLayout(substrateExt(report.canvas.h / report.canvas.w))
+        : SUBSTRATE_LAYOUT_0,
+    [report.canvas.w, report.canvas.h]
+  );
+
+  /* Measure → layout → measure. It converges in two passes and cannot loop:
+     `canvas` is the console field, which CSS sizes from the preset, so a
+     `viewBox` change can no more move it here than it can in production. */
+  useEffect(() => {
+    remeasure();
+  }, [liveLayout.crop, remeasure]);
+
   const drawing = variantId === "shipped" ? null : DRAWINGS[variantId];
-  const vb = drawing ? drawing.vb : SUBSTRATE_VIEWBOX;
+  const vb = drawing ? drawing.vb : liveLayout.crop;
   const bad = report.clipped.length + report.collisions.length + report.smallControls.length;
 
   return (
@@ -256,15 +296,12 @@ export function SubstrateLabShell({ shapes, districts, works, envelope }: Props)
                     <drawing.Component record={record} />
                   ) : (
                     <ViewSubstrate
-                      teams={cross.teams}
                       shapes={cross.shapes}
+                      skills={skills}
                       lit={lit}
                       onLit={setLit}
                       still
-                      /* The lab's housing is a fixed preset, so the baseline
-                         mounts at REST — the elastic treatment is production's
-                         answer to a field that moves, and the lab's does not. */
-                      layout={SUBSTRATE_LAYOUT_0}
+                      layout={liveLayout}
                     />
                   )}
                 </svg>

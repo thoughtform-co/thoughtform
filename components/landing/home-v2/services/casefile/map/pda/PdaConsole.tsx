@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { SERVICES_SCROLL_OWNED_MEDIA } from "@/components/landing/home-v2/unifiedServicesInstrument";
-import type { CaseMapDistrict, CaseMapShape, CaseMapWork } from "@/lib/cases/types";
+import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from "@/lib/cases/types";
 
 import { ConsoleFrame } from "../../console/ConsoleFrame";
 import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
@@ -103,11 +103,13 @@ interface Props {
   shapes: readonly CaseMapShape[];
   districts: readonly CaseMapDistrict[];
   works: readonly CaseMapWork[];
+  /** Reading 03's atoms — one lettered plate per named Skill. */
+  skills: readonly CaseSkillEntry[];
   /** Draw against the approved envelope — a STATUS, never an amount. */
   envelope: "WITHIN" | "AT" | "OVER";
 }
 
-export function PdaConsole({ shapes, districts, works, envelope }: Props) {
+export function PdaConsole({ shapes, districts, works, skills, envelope }: Props) {
   const shown = useMemo(() => selectWorks(districts, works), [districts, works]);
   const totals = useMemo(() => pdaTotals(shapes, districts, works), [shapes, districts, works]);
   const cross = useMemo(
@@ -467,8 +469,8 @@ export function PdaConsole({ shapes, districts, works, envelope }: Props) {
         ) : null}
         {view === 3 ? (
           <ViewSubstrate
-            teams={cross.teams}
             shapes={cross.shapes}
+            skills={skills}
             lit={lit}
             onLit={hoverPart}
             still={still}

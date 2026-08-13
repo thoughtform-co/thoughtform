@@ -131,6 +131,33 @@ export interface CaseSkillEntry {
   id: string;
   /** Display name, ≤30 chars (the dossier heading and the cell's label). */
   name: string;
+  /**
+   * The card label — the client's own shorthand, ≤14 characters.
+   *
+   * ⚠ **AUTHORED, NEVER TRUNCATED.** The PDA's reading 03 letters one
+   * Skill per plate in a 132-unit window, which is 14 characters at the
+   * surface's fs floor; `name` runs to 30. Machine-clipping "Legal Risk
+   * Methodology" gives "Legal Risk Met", so the short form is written by
+   * hand from what people already say in Slack and on Monday — "Legal
+   * Risk", "VSME Reporting", "NDA Pre-Check". `name` stays the record's
+   * canonical form for surfaces with room to letter it.
+   *
+   * Required on every Skill, so the drawing has one field to walk and
+   * the fit guard has one field to measure. The ≤14 cap is pinned by
+   * `cases-registry.test.ts` and re-measured by `pda-substrate-fit`.
+   */
+  short: string;
+  /**
+   * The pattern's FIRST encode — the Skill that cut the substrate its
+   * siblings then reused. Exactly one per engine, five in total, and
+   * `cases-registry.test.ts` fails on a sixth or a missing one.
+   *
+   * This is the pin grid's `CUT BY` grammar carried down one level: that
+   * reading attributed a pattern to the DEPARTMENT that paid to open it,
+   * and reading 03 now names the Skill itself, so the green mark points
+   * at the same fact with a finer finger.
+   */
+  flagship?: true;
   /** The client team whose judgment it encodes. */
   team: string;
   /** Which shape of work runs it — must equal a group's `name`. */

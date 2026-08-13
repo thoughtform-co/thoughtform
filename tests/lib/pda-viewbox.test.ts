@@ -15,6 +15,7 @@ import {
   workLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import {
+  SUBSTRATE_LAYOUT_0,
   substrateExt,
   substrateLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
@@ -98,10 +99,13 @@ describe("the readings' crops", () => {
        crop than the crop can escape itself. What has to be asserted about it
        is that it fills BOTH ends, which is what the centring test does. */
     2: { x: 4, y: 20, right: 884, bottom: 660 },
-    /* 03 is the PIN GRID (ADR-070 U15) — the identity gutter and the socket
-       under one head band, 26 in from every wall at rest. The old crossing
-       drawing's `10 / 93 / 766 / 702` went with it. */
-    3: { x: 26, y: 26, right: 906, bottom: 26 + 70 + 5 * 112 },
+    /* 03 is the FIVE PATTERN CARDS — one row of module cards, 26 in from
+       every wall at rest. The pin grid's `26 / 26 / 906 / 656` went with it,
+       and the crossing drawing's `10 / 93 / 766 / 702` before that.
+       ⚠ THE BOTTOM IS DERIVED from the live layout, not typed: the card is
+       height-elastic, so a literal would be true at exactly one field shape
+       and this test walks four. */
+    3: { x: 26, y: 26, right: 906, bottom: 26 + SUBSTRATE_LAYOUT_0.cardH },
   } as const;
 
   for (const v of [1, 2, 3] as const) {

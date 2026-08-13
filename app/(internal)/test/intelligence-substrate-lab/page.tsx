@@ -35,6 +35,7 @@ export default function IntelligenceSubstrateLabRoute() {
       shapes={visual.shapes}
       districts={visual.districts}
       works={visual.works}
+      skills={visual.skills ?? []}
       envelope={visual.envelope}
     />
   );

@@ -1135,38 +1135,71 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
 
-## Reading 03's drawing, and the crop every reading shares (ADR-070 U15)
+## Reading 03's drawing, and the crop every reading shares (ADR-070 U16 / U15)
 
-**Reading 03 is the PIN GRID** (`map/pda/PdaSubstrate.tsx`, 2026-08-12) — the
-owner's `Substrate Archetypes` mockup, frame S3: five patterns down, eight
-departments across, one mark per crossing, in one chamfered socket.
-⚠ **THE MOCKUP IS THE LIVE RECORD ALREADY DRAWN** — 30 taps, 5 cut, 10 empty
-sockets, rows of 3 · 7 · 7 · 5 · 8 in `MAP_DISTRICTS` order — so a change to
-the record changes the drawing and both are guarded together.
+⚠ **ADR-070 U16 (2026-08-13) IS THE LIVE DRAWING: FIVE PATTERN CARDS, each a
+stack of its own named Skills over the pattern's physics field, gloss in the
+foot** (`map/pda/PdaSubstrate.tsx`). It supersedes U15's pin grid. What binds
+from U15 is the ELASTIC CROP machinery below, the lettering-declaration rule,
+and the envelope.
 
-- **What went, and why it is not coming back.** The eight plates, the five
-  `Module` cards and the 30 crossing beziers. `Module`'s cut is `h × 0.34` on
-  BOTH left corners, i.e. **68 % of a 148×50 card's left edge** beside
-  `Plate`'s flat 8 and `Cartridge`'s `14k` — three glyphs, three corner
-  grammars. A pattern drawn as a `Module` also claims to be A THING THAT RUNS,
-  and answering "who draws on Judgment?" meant tracing one curve through 29.
-- ⚠ **THE UNIT IS DEPARTMENTS AND THE DRAWING MAY NOT SAY "TEAMS".** See the
-  directory bullet above — this is where `8 TEAMS` shipped.
-- **What it letters, and nothing else:** per row the name, the `gloss` (which
-  lettered nowhere before and which SETS the 374-unit identity gutter at 336
-  units — the house 90 %), `{n} SKILLS`, and `CUT BY {ab}`; per column the
-  department code and its stream count. **NO `SB-0n` designators** (ordinals in
-  costume) and **NO legend** (ADR-062 — `CUT BY` decodes its row's own green
-  mark in place). The 47 is not lettered: five row counts sum to it in sight,
-  and the proof register beside the panel already claims it.
+- **One card per pattern, one PLATE per Skill** — a slab with an accent at its
+  left edge and the `short` label. Under the stack the raw field fills what is
+  left; the foot is the `gloss`. ⚠ **THE READING IS EXTRACTION**: the plates
+  are what has been encoded, the field is the material they came out of, so
+  Stakeholder's five showing more raw field than Pattern's fourteen is the
+  point rather than a hole.
+- ⚠ **THE 5 × 8 CROSSING IS NOT DRAWN ANYWHERE ON THE SITE NOW** (owner
+  ruling, taken explicitly). `crossing()` still projects it and its arithmetic
+  is still guarded; ADR-062's city still holds it in `map/**` but is not what
+  the landing renders. It cannot return inside a card — eight department codes
+  need ~196 units against a 132-unit window, and marks without codes need a
+  legend, which this surface bans. **If it returns it needs its own reading.**
+- ⚠ **THE LABEL IS `short`, AUTHORED ≤14 CHARS, NEVER `name` TRUNCATED.**
+  Clipping "Legal Risk Methodology" gives "Legal Risk Met" on a client page.
+  `pda-substrate-fit` fails a `short` that clips its `name` mid-word.
+- ⚠ **NO OWNER TRAVELS.** The source carries client staff names;
+  `CaseSkillEntry` has refused that field since ADR-056, and the team is not
+  lettered at all. The Skill NAMES are fine — `SkillsBrowserPlate` already
+  renders all 47 one casefile row away.
+- ⚠ **THE SPINE IS THE STACK'S LEFT EDGE, NOT A DRAWN LINE**, and **THE FOOT
+  SEPARATOR IS A BAND, NOT A HAIRLINE.** Same arithmetic both times: a 1-unit
+  rule paints under a device pixel at this meet and the browser pays the rest
+  in alpha. An explicit bus with a node per Skill rendered as a bulleted list.
+- ⚠ **THE FIRST ENCODE'S ACCENT GOES GREEN — ITS LABEL DOES NOT.**
+  `--pda-grn-ink` against siblings at `--pda-txt` makes the highlighted plate
+  the dimmest thing in the stack. One signal per object.
+- **`GLOSS_LINE_BOX` 17 and `GLOSS_PER` 16 are both load-bearing** — a
+  12-unit label's `getBBox` is 15.47 (em box, not ink), so a 15-unit pitch
+  overlaps by 0.47 against a 0.5 gate; and 16 chars measure 130.6 of the
+  132-unit window, which is the ceiling. The gloss is CENTRED in its band.
+- **Height is split between the plate pitch (18 → 26, bounded) and the
+  field.** All to the field and the plates stop being the subject; all to the
+  pitch and a taller plate is a plate with air under it.
 - **Declare anything new in `substrateLettering`.** `pda-substrate-fit` walks
-  it for fit, for the longest WORD, for the fs floor (12) and for the envelope.
-  A lettered string missing from that list is a defect in the drawing.
-- ⚠ **THE BAND RULES EARN THEIR INK ON TALL PANELS.** Four internal hairlines
-  for five bands; the socket's walls close the set. At rest the rows are 112
-  apart and the rules are nearly invisible, but a row runs 185 at the owner's
-  shape against 64 units of ink, and unbounded that air reads as a hole rather
-  than as the height of one band.
+  it for fit, for the longest WORD, for the fs floor and for the envelope. A
+  lettered string missing from that list is a defect in the drawing. It also
+  asserts every card's numeral equals its plates and that each pattern has
+  exactly ONE first encode.
+- ⚠ **THE `teams` BAN IS THE DIGIT-ADJACENT FORM ONLY** (`8 TEAMS`). It was
+  catching `People-team`, a client proper noun that already ships — a ban wide
+  enough to fail on correct content is a ban that gets deleted.
+- **`substrateForms` lives in production** (`map/pda/substrateForms`), the lab
+  re-exports it. Same rule as the kit move: production may not import from an
+  internal route.
+- ⚠ **THE CONSOLE'S REVEAL IS SCROLL-DRIVEN.** `scrollIntoView` leaves
+  `.fl-con__console` at `opacity: 0` with the SVG fully measurable — a
+  DOM-only check passes against a panel that paints nothing. Scroll in
+  incrementally until it lights before you shoot.
+
+**THE PIN GRID IT REPLACED (U15, for the record):** the owner's `Substrate
+Archetypes` frame S3 — five patterns down, eight departments across, one mark
+per crossing (30 taps, 5 cut, 10 empty, rows of 3 · 7 · 7 · 5 · 8 in
+`MAP_DISTRICTS` order). It was correct; it went because it answered a question
+about DEPARTMENTS on a surface whose subject is the SUBSTRATE, and would not
+say what is IN a pattern. ⚠ Its own predecessor's lesson still binds: a
+pattern drawn as a `Module` claims to be A THING THAT RUNS, and `8 TEAMS`
+shipped from a string composed at render time, outside every content scanner.
 
 **ALL THREE CROPS ARE ELASTIC** (`map/pda/pdaFit.ts`), which generalises U12
 and U14 from reading 02 to the surface. ⚠ **Readings 01 and 03 were carrying

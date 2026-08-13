@@ -311,6 +311,39 @@ describe("cases registry (ADR-054)", () => {
               // The name heads the dossier and labels its cell; 30ch is the
               // measured ceiling against the plate's inner width.
               expect(s.name.length, `${c.slug}/${t.id} skill "${s.name}"`).toBeLessThanOrEqual(30);
+              // THE SHORT LABEL IS AUTHORED (ADR-070 U16). The PDA's reading
+              // 03 letters one plate per Skill in a 132-unit window, which is
+              // 14 characters at the surface's fs floor. ⚠ THE CAP IS TYPED
+              // HERE AND NOWHERE ELSE — `pda-substrate-fit` re-measures every
+              // label against the REAL window through `substrateLettering`,
+              // so it never needs the number, and two files holding "14" is
+              // how one of them keeps an old ceiling after the other moves.
+              expect(
+                s.short.length,
+                `${c.slug}/${t.id} skill "${s.name}" has no short label`
+              ).toBeGreaterThan(0);
+              expect(
+                s.short.length,
+                `${c.slug}/${t.id} skill "${s.name}" short "${s.short}" is over 14`
+              ).toBeLessThanOrEqual(14);
+              expect(
+                s.short.trim(),
+                `${c.slug}/${t.id} skill "${s.name}" short "${s.short}" has loose whitespace`
+              ).toBe(s.short);
+              // ⚠ A CAP ALONE PASSES HAPPILY ON `name.slice(0, 14)` — "Legal
+              // Risk Met", which reads as a defect on screen and as a bug to
+              // the client whose Skill it is. ⚠ AND THE TEST IS THE WORD
+              // BOUNDARY, NOT THE PREFIX: "Legal Risk" for "Legal Risk
+              // Methodology" is exactly the shorthand people say, and dropping
+              // a trailing word is the natural way to write one of these. What
+              // no human writes is a label that stops in the MIDDLE of a word,
+              // which is the one thing `slice` reliably does.
+              if (s.short.length < s.name.length && s.name.startsWith(s.short)) {
+                expect(
+                  s.name[s.short.length],
+                  `${c.slug}/${t.id} skill "${s.name}" short "${s.short}" is clipped mid-word`
+                ).toBe(" ");
+              }
               expect(s.team.length, `${c.slug}/${t.id} skill "${s.name}" team`).toBeGreaterThan(0);
               expect(
                 STATUSES.has(s.status),
@@ -345,6 +378,15 @@ describe("cases registry (ADR-054)", () => {
                 chips,
                 `${c.slug}/${t.id} group "${g.name}" prints ${g.count} but lists ${chips}`
               ).toBe(Number(g.count));
+              // ONE FIRST ENCODE PER GROUP (ADR-070 U16) — the Skill that cut
+              // the substrate its siblings then reused. Two make two claims
+              // about which one opened it; none leaves the group's card with
+              // no green plate in it.
+              const first = v.skills.filter((s) => s.engine === g.name && s.flagship);
+              expect(
+                first.map((s) => s.name),
+                `${c.slug}/${t.id} group "${g.name}" has ${first.length} first encodes`
+              ).toHaveLength(1);
             }
           }
         }

@@ -54,6 +54,51 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-13 — The substrate is five stacks of named Skills (ADR-070 U16)
+
+One owner ask, twice: _"what I mainly want to convey is the patterns across the
+different skills"_, then _"(skills cut by 07, which is meaningless text) — just
+a one-sentence explanation of what each substrate means, and then the overview
+of the skills; I don't want a boring ass text list."_ Cycle B, then Cycle A rows
+1, 2, 3 and 6.
+
+- ⚠ **A CORRECT DRAWING CAN STILL BE THE WRONG DRAWING.** The pin grid (U15,
+  one day old) was right in every measurable way — every mark resolved against
+  `crossing()` — and it was replaced because it answered a question about
+  DEPARTMENTS on a surface whose subject is the SUBSTRATE. The question a reader
+  brings to this tab, _"what is in Judgment?"_, was the one thing it would not
+  say. **No guard can catch this class; only the owner can.**
+- ⚠ **THE 5 × 8 CROSSING LEAVES THE SITE, AND THAT WAS PUT TO THE OWNER
+  EXPLICITLY RATHER THAN ABSORBED.** A redraw that silently drops the only
+  rendering of a fact is a deletion in disguise. The record keeps it
+  (`crossing()`, still guarded); if it returns it needs its own reading.
+- ⚠ **THE SAME ARITHMETIC BIT TWICE IN ONE DRAWING: A 1-UNIT RULE PAINTS UNDER A
+  DEVICE PIXEL AT THIS MEET.** The first cut's explicit Skill bus rendered as a
+  bulleted list — the exact thing the owner had rejected — and the foot's
+  separator was invisible while the head's identical rule read fine (the head
+  has a band above it doing the work). U11's alpha ceiling, in a new costume.
+  Weight, not opacity, is the fix.
+- ⚠ **A HIGHLIGHT CAN RENDER AS DE-EMPHASIS.** Lettering the pattern's first
+  encode in `--pda-grn-ink` against siblings at `--pda-txt` made the one plate
+  the drawing points at the DIMMEST thing in the stack. The accent carries it;
+  one signal per object.
+- ⚠ **A BAN WIDE ENOUGH TO FAIL ON CORRECT CONTENT IS A BAN THAT GETS DELETED.**
+  `/\bteams?\b/i` was written for `8 TEAMS` and was catching `People-team`, a
+  client proper noun already shipping in the registry. Narrowed to the
+  digit-adjacent form it was written for, rather than waived.
+- ⚠ **A MACHINE-GENERATED LABEL IS CONTENT NOBODY AUTHORED.** The promotion
+  script clipped `name` to 14 and produced `Cost / Feas` and `GL Recon` on a
+  client page. `short` is authored, and `pda-substrate-fit` fails a `short` that
+  clips its `name` mid-word.
+- ⚠ **THE LAB WAS PREVIEWING A DRAWING THE SITE NEVER SERVES.** Its `shipped`
+  baseline mounted at rest while production mounts elastic — at p1280 a
+  430-unit card in a 763-unit crop. A look-dev route that does not mount what
+  production mounts is a second source of truth.
+- ⚠ **A DOM-ONLY CHECK PASSES AGAINST A PANEL THAT PAINTS NOTHING.** The
+  console's reveal is scroll-driven; `scrollIntoView` leaves
+  `.fl-con__console` at `opacity: 0` with the SVG fully measurable, hit-testable
+  and green on every assertion. Scroll in incrementally before you shoot.
+
 ### 2026-08-13 — The persistent object was two drawings (ADR-069 U1, ADR-065 U4)
 
 One owner ask: the work cards should match the configuration's, _"the workflow or

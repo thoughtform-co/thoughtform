@@ -1441,3 +1441,169 @@ only a lab can reach is a model production ships without.
 - `Module`, `Pads` and the old crossing's `--l` dash constant left production's
   reading 03 with the drawing. ⚠ `Module` is still used by the city sheets, so
   check before deleting it from `pdaGlyphs`.
+
+## Update 16 — the substrate is five stacks of named Skills (2026-08-13, owner)
+
+Owner, on the pin grid: _"what I mainly want to convey is the patterns across
+the different skills… I want a very clear visualization that evolves from Work
+and Configuration."_ And on the foot it shipped with: _"(skills cut by 07,
+which is meaningless text) — just a one-sentence explanation of what each
+substrate means, and then the overview of the skills; I don't want a boring
+ass text list."_
+
+**Reading 03 is now five pattern CARDS, each a stack of its own encoded
+Skills over the pattern's physics field, with the gloss in the foot.** One
+card per pattern; one PLATE per Skill — a slab with an accent at its left
+edge, `short` label, stacked from the header down; under the stack the raw
+field fills whatever is left; the foot says what the substrate MEANS.
+
+⚠ **THE READING IS EXTRACTION.** The plates are what has been encoded, the
+field is the material they came out of. Which is why Stakeholder's five
+showing more raw field than Pattern's fourteen is the drawing making its
+point rather than a hole in it — and it is the answer to the "boring ass text
+list": the list IS the mass, and the texture under it is the remainder.
+
+### What U15 got right, and the one thing it could not do
+
+The pin grid was correct and it stays correct — every mark in it resolved
+against `crossing()`. It is replaced because **it answered a question about
+DEPARTMENTS on a surface whose subject is the SUBSTRATE**, and the question a
+reader actually brings to this tab — _"what is in Judgment?"_ — was the one
+thing it would not say. A row of eight marks tells you the reach and never
+the contents.
+
+⚠ **THE 5 × 8 CROSSING IS GONE FROM THE SITE, AND THAT IS A DECISION, NOT AN
+OVERSIGHT** (owner, put to him explicitly and taken). 30 taps · 5 cut · 10
+empty appears nowhere else the landing renders; ADR-062's isometric city
+still holds it in `map/**` and is still tested, but it is not what ships. It
+cannot come back inside a card: eight department codes need ~196 units of
+lettering against a card's 132-unit window, and marks without codes need a
+legend, which this surface does not have by law. **If the crossing returns it
+needs its own reading, not a corner of this one.** `crossing()` still
+projects it and its arithmetic is still guarded, so the RECORD lost nothing —
+only the drawing stopped showing it.
+
+### Adaptations, each forced by a standing law or by arithmetic
+
+| Piece     | Ships as                                                   | Why                                                                                                                                                                    |
+| --------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| the label | `short`, authored ≤14 chars — never `name`                 | 132-unit window at the fs floor. ⚠ Clipping is not an option: "Legal Risk Methodology" truncates to **"Legal Risk Met"**, which is a machine artifact on a client page |
+| the count | a bare numeral beside the pattern name                     | `{n} SKILLS` was lawful, but a card of countable plates does not need the noun                                                                                         |
+| the foot  | the `gloss`, wrapped and CENTRED                           | it replaced `{n} SKILLS · CUT BY {ab}` — two numbers and a code, true and unreadable as a claim                                                                        |
+| `CUT BY`  | carried DOWN a level: the first encode's accent goes green | the green still points at the fact the pin grid pointed at, with a finer finger — at the Skill rather than at the row                                                  |
+| the card  | reading 02's module — shared `housing` / `band`, TR+BL     | head · body · foot, ADR-065's canonical diagonal. It is the same object as a configuration module, which is the evolution the owner asked for                          |
+
+The per-Skill OWNER does not travel. The source data carries client staff
+names and `CaseSkillEntry` has refused that field since ADR-056; the label is
+`short`, and the team is not lettered at all. ⚠ **The named Skills themselves
+are publishable because they already ship** — the same case's REGISTRY row
+renders all 47 by name in `SkillsBrowserPlate`, one casefile row away. This
+letters no new fact; it letters the same roster in the drawing that explains
+what groups it.
+
+### Two traps, both about a line that is too thin to exist
+
+- ⚠ **THE SPINE IS NOT DRAWN — IT IS THE STACK'S OWN LEFT EDGE.** The first
+  cut ran an explicit 1-unit bus down each card with a node per Skill. At this
+  surface's meet that paints under a device pixel, the browser pays the
+  remainder in alpha (U11's ceiling), and what survived was a dash and a dot
+  per row: **a bulleted list**, which is the exact thing the owner rejected.
+  Fourteen accent bars at plate weight carry the same reading at a weight the
+  meet cannot erase.
+- ⚠ **THE FOOT IS A BAND, NOT A HAIRLINE**, for the same arithmetic. The head's
+  identical 1-unit rule reads fine only because it has a band above it doing
+  the work. The foot fill is CLIPPED TO THE HOUSING so the BL chamfer is
+  inherited rather than re-derived by hand.
+
+### The vertical chain, and where the extension goes
+
+The width chain never moves: `SUB_CROP_W` is still **932**, five cards on a
+`W / 5` pitch, so `meet` is `field.w / 932` at every height and growing the
+crop is free (U12's law, unchanged). The elastic axis is height, and it is
+**split between the plate pitch and the field**:
+
+- all of it to the FIELD and the densest card is a short stack over a large
+  texture — the plates stop being the subject;
+- all of it to the PITCH and the labels stay the same size while the gaps grow,
+  which is U12's hole one level down: **a taller plate is a plate with air
+  under it**.
+
+So the pitch takes a bounded share (18 → 26, spacing rather than a gap) and
+the field takes the rest, because the field is the one element on the card
+that is texture and can absorb any amount of room honestly. `CARD_H_MAX` 1000
+is where the card is 1 : 6.4 and further extension buys only a taller
+texture; past it the remainder is margin, which `cropAround` splits (U14).
+
+Measured: 603×493 → card 710 · 850×760 → 781 · **845×950 (the owner's) → 996,
+a full fill** · 603×1177 → capped with 88 units of air at each end.
+
+### Two constants whose obvious value is wrong
+
+- **`GLOSS_LINE_BOX` is 17, not 15.** A 12-unit label's `getBBox` is **15.47**
+  units tall — the font's em box, ascender to descender, not its ink. At a
+  15-unit pitch consecutive gloss lines overlap by 0.47 and the smoke's
+  label-on-label gate fires above 0.5. ⚠ That is a 0.03-unit margin: not a
+  pass, a coin flip on a font metric. At 17 they clear by 1.53.
+- **`GLOSS_PER` is 16, not 15.** At fs 12 / .08 the advance is 8.16u, so 16
+  characters measure 130.6 against the 132-unit window — the ceiling, not a
+  round number. At 15 the Pattern gloss broke as `RECURRING / SHAPES / / …`,
+  stranding a slash alone on a line.
+
+⚠ **AND THE GLOSS IS CENTRED IN ITS BAND, NOT HUNG FROM THE TOP.** The five
+glosses wrap to two, three or four lines; a fixed first baseline leaves the
+two-line cards with a third of the foot empty under them — five feet at four
+different fills, reading as four different components.
+
+### One highlight, one signal
+
+⚠ **THE LABEL DOES NOT TAKE THE GREEN, THE ACCENT DOES.** Lettering the first
+encode in `--pda-grn-ink` (#7e9f66) against every sibling's `--pda-txt` (dawn
+at .92) makes the one plate the drawing means to point at **the dimmest thing
+in the stack** — the highlight rendering as de-emphasis. The accent carries
+the state at full weight against the others' .55, which is one signal per
+object rather than two saying it twice.
+
+### The data, and the kit
+
+- `CaseSkillEntry` gains **`short`** (authored, ≤14) and **`flagship?: true`**
+  (exactly one per engine, five in total). Both are content, both are walked.
+  Two shorts the promotion script produced were machine clips and were
+  re-authored by hand: `Cost / Feas` → **`Feasibility`**, `GL Recon` →
+  **`GL Reconcile`**.
+- `particleForms.tsx` moved out of the lab into **`map/pda/substrateForms`**
+  and the lab re-exports it — same rule as U15's kit move. Production may not
+  import from an internal route, and two copies of a measured drawing is how a
+  lab starts passing what production would fail.
+- The skills reservoir is threaded `TrackVisual → IntelligenceMapPlate →
+PdaConsole → ViewSubstrate`. ⚠ **`visual.skills` is GEOMETRY now, not
+  evidence** — it used to feed a count.
+
+### Guards
+
+- `pda-substrate-fit`'s crossing assertions become skill assertions: **every
+  card's numeral equals the plates under it**, **each pattern has exactly one
+  first encode**, and **no Skill label is a machine truncation** (a `short`
+  that clips its `name` mid-word fails; a whole-word shorthand passes).
+- ⚠ **The `/\bteams?\b/i` envelope ban is narrowed to the digit-adjacent form
+  it was written for** (`8 TEAMS`). It was catching `People-team`, a client's
+  own proper noun that already ships in the registry — a ban wide enough to
+  fail on correct content is a ban that gets deleted.
+- `pda-viewbox`'s `CONTENT[3]` derives its bottom from
+  `SUBSTRATE_LAYOUT_0.cardH` rather than the pin grid's constant.
+- The substrate lab's `shipped` baseline mounts **elastic**, at whatever the
+  preset's field asks for. It mounted at rest until this promotion, which at
+  p1280 drew a 430-unit card into a 763-unit crop: **a preview of a drawing
+  the site never serves**.
+
+### Verification
+
+- `npx vitest run` — 132 green across the two fit suites, full `tsc --noEmit`
+  clean.
+- On the live landing at 1280×720, reading 03, dark and light: crop
+  `0 0 932 763`, 70 lettered strings, `minPx` **7.76**, **0 clipped, 0
+  label-on-label at any overlap** (the gate fires above 0.5u; the worst
+  measured is 0.00).
+- ⚠ **The console's reveal is scroll-driven** — `scrollIntoView` leaves
+  `.fl-con__console` at `opacity: 0` with the SVG fully measurable, so a
+  DOM-only check passes against a panel that paints nothing. Scroll in
+  incrementally until it lights before you shoot.
