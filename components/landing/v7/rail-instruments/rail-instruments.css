@@ -217,7 +217,13 @@
    informational — `aria-hidden`, and the nav corner remains the single
    navigation — so a blanket `.rin-settings > *` would hand an inert glyph a
    16px hit box in the corner of every page. */
+/* `relative` is the SESSION PANEL's anchor, and it is on the GROUP rather
+   than on the button that opens it: right-aligned to the group, the panel's
+   edge lands on the same rail track the theme switch holds, instead of
+   stopping one control short of it. The panel is out of flow, so the row
+   itself is unchanged. */
 .rin-settings__ctl {
+  position: relative;
   display: flex;
   align-items: center;
   gap: clamp(8px, 0.9vw, 14px);
@@ -298,7 +304,8 @@
   transition: color var(--duration-normal, 120ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .rin-session:hover,
-.rin-session:focus-visible {
+.rin-session:focus-visible,
+.rin-session.is-open {
   color: var(--gold);
 }
 .rin-session:focus-visible {
@@ -310,6 +317,140 @@
     width: 44px;
     height: 44px;
   }
+}
+
+/* ── The session panel — name · ACTIVE · the two doors ──────────────────
+   The identity readout, folded into the mark that already named the
+   session (owner, 2026-08-14 — it was a `fixed top-5 right-…` overlay of
+   its own, sitting in the nav's corner).
+
+   ⚠ ITS GRAMMAR IS `.hud__nav__list`'s, DELIBERATELY: same ground, same
+   hairline, same blur, same opacity+slide on the instrument ease. That
+   drawer is the OTHER corner's press-to-open, and the frame has exactly
+   two — if they read differently they are two instruments rather than one
+   HUD. Only the direction differs (this corner opens UP, that one LEFT),
+   because that is where the room is.
+
+   ⚠ SQUARE, no chamfer. ADR-065's depth ladder puts chrome at 0; a
+   machined corner here would claim this is a device, and it is a drawer.
+
+   ⚠ ITS RIGHT EDGE IS THE CONTROL GROUP'S, WHICH IS 17px OUTBOARD OF THE
+   RAIL TRACK — and that is on purpose. The `min-width: 961px` rule above
+   centres the 36px control ON the track, so the group's box necessarily
+   overhangs it by half a control; measured at 1920, the track is 1860 and
+   this edge lands at 1877, which is 4px inside the rail's MAJOR ticks at
+   1881 — the exact clearance that rule computed to justify the control
+   hanging there. The alternative, an edge ON the track, cuts the panel off
+   through the middle of the theme switch. The frame line is not the rail's
+   outer bound; the majors are. */
+.rin-session__panel {
+  /* Re-derived rather than inherited in the light block below — the same
+     alpha reads WEAKER as dark-on-parchment than as light-on-void
+     (theme.css `--con-edge`, the law this surface keeps relearning). */
+  --rin-panel-edge: var(--dawn-08);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  min-width: 168px;
+  padding: 0 0 4px;
+  background: rgba(var(--void-deep-rgb), 0.94);
+  border: 1px solid var(--rin-panel-edge);
+  backdrop-filter: blur(10px);
+  font-family: var(--font-pt-mono);
+  opacity: 0;
+  transform: translateY(6px);
+  transform-origin: bottom right;
+  pointer-events: none;
+  transition:
+    opacity 220ms var(--m-ease-instr),
+    transform 260ms var(--m-ease-instr);
+}
+.rin-session__panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rin-session__panel {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Who, and that they are live. The dashed rule under it is the nav
+   drawer's head separator — same instrument, same joint. */
+.rin-session__who {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 6px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px dashed var(--dawn-15);
+  font-size: 10px;
+  letter-spacing: var(--track-wider);
+  text-transform: uppercase;
+}
+.rin-session__name {
+  color: var(--dawn);
+}
+/* The live word is GREEN, not gold. Gold in this frame is wayfinding — it
+   is what the row's own hover state says — and a session that is open is a
+   state, not a destination. `--atreides-ink` is the provenance green's TEXT
+   step (ADR-063's discipline), so it carries its own light value. */
+.rin-session__state {
+  font-size: 8px;
+  letter-spacing: var(--track-widest);
+  color: var(--atreides-ink);
+}
+
+/* The rows. `.hud__nav a`'s chevron-on-hover, at the drawer's own metrics
+   — the `>` is the site's pressable-row signature. */
+.rin-session__row {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 7px 14px 7px 26px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: var(--track-wider);
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--dawn-70);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 180ms var(--ease-out),
+    background 180ms var(--ease-out),
+    padding 180ms var(--ease-out);
+}
+.rin-session__row::before {
+  content: ">";
+  position: absolute;
+  left: 14px;
+  top: 7px;
+  color: var(--gold);
+  opacity: 0;
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+.rin-session__row:hover,
+.rin-session__row:focus-visible {
+  color: var(--dawn);
+  background: rgba(var(--gold-rgb), 0.05);
+  padding-left: 30px;
+}
+.rin-session__row:hover::before,
+.rin-session__row:focus-visible::before {
+  opacity: 1;
+  transform: translateX(2px);
+}
+.rin-session__row:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
 }
 
 /* ── The brackets the rows stand in for ─────────────────────────────────

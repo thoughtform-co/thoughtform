@@ -2460,10 +2460,16 @@
    outline is an outer layer painting the edge colour and an inner layer
    inset by 1px painting the ground, each clipped to its own polygon.
 
-   ⚠ ONE NOTCH, ON THE BOTTOM-LEFT. One notch says ORIENTED / CONNECTED
-   (ADR-065) — which is what a plate reading off the instrument above it is
-   — and BL is the house diagonal's lower end. The mockup notched TOP-LEFT;
-   that is the mirrored form, the same defect the console frame carried. */
+   ⚠ ONE NOTCH, ON THE BOTTOM-RIGHT (owner, 2026-08-14 — ADR-065 Update 5).
+   One notch says ORIENTED / CONNECTED (ADR-065), and the corner it takes is
+   the lower end of ITS HOUSING's diagonal. These plates are seated in the
+   casefile console, and that console is the law's one enumerated TL+BR
+   object (ADR-065 U2, owner) — so the lower end here is BR, not the
+   sitewide BL this block used to cut. A seated set that leans against its
+   own housing was the mismatch ADR-070 U13 named and paid for; at plate
+   scale, inside the very box that carries the exception, it is just wrong.
+   ⚠ This REVERSES ADR-065 U1's "the dossier's plates take BL" for this set
+   only. The sitewide diagonal is untouched. */
 .fl-detail {
   --dt-notch: clamp(9px, 1.7cqw, 13px);
   --dt-edge: rgba(var(--dawn-rgb), 0.08);
@@ -2489,7 +2495,13 @@
   min-width: 0;
   padding: 1px;
   background: var(--dt-edge);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--dt-notch) 100%, 0 calc(100% - var(--dt-notch)));
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--dt-notch)),
+    calc(100% - var(--dt-notch)) 100%,
+    0 100%
+  );
 }
 /* ⚠ THE INNER GROUND IS OPAQUE, AND THE BUG IT FIXES IS VISIBLE FROM ACROSS
    THE ROOM. The outer layer paints the EDGE colour across the whole plate,
@@ -2513,9 +2525,9 @@
   clip-path: polygon(
     0 0,
     100% 0,
-    100% 100%,
-    calc(var(--dt-notch) - 1px) 100%,
-    0 calc(100% - (var(--dt-notch) - 1px))
+    100% calc(100% - (var(--dt-notch) - 1px)),
+    calc(100% - (var(--dt-notch) - 1px)) 100%,
+    0 100%
   );
 }
 /* THE TITLE IS THE CLAIM'S NAME — full-strength ink at the control rung,

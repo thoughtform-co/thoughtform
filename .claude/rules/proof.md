@@ -501,9 +501,14 @@ holdfast` · atl `masters level broadcast parallel`.
   ADR-067, WRAPS, never clamps; it is on the smoke's prose-role list). The
   grid is CONTENT-HEIGHT, seated at the field's floor (`margin-top: auto` —
   the evidence above absorbs the freed height), with `grid-auto-rows: 1fr`
-  equalising the two rows to the tallest plate. Single BL notch (ADR-065
-  Update 1). ⚠ The inner layer is OPAQUE ground — translucent-over-edge
-  floods the plate with the edge colour. Wraps 1×4 under 480px.
+  equalising the two rows to the tallest plate. **Single BR notch** (ADR-065
+  U5, owner 2026-08-14 — a seated set takes ITS HOUSING's diagonal, and this
+  housing is the enumerated TL+BR console; supersedes U1's BL for this set
+  only). ⚠ Pinned from BOTH ENDS in the smoke — BR notched _and_ BL square;
+  the old one-sided `squareBL === false` verified the corner was BL rather
+  than that it was right. ⚠ The inner layer is OPAQUE ground —
+  translucent-over-edge floods the plate with the edge colour. Wraps 1×4
+  under 480px.
   ⚠ **THE BLOCKS SEAT ONCE, ON ROW ARRIVAL (U3, owner 2026-08-08)** — the ul
   carries NO tool key and the plates are keyed BY POSITION, so a station
   switch swaps text in place with zero motion ("four frames that should

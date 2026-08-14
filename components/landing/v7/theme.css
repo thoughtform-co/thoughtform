@@ -894,3 +894,18 @@ html[data-theme="light"] .hud__brand::after {
   background: url("/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual-Latent%20Night%29.svg")
     center / contain no-repeat;
 }
+
+/* ── The session panel's outline (bottom-right, ADR-059) ──────────────────
+   Same re-derivation as `--con-edge` above, and for the same reason: the
+   panel's dark-mode `--dawn-08` is a light hairline on near-black, and the
+   flip makes `--dawn-rgb` the INK, so the identical alpha becomes a dark
+   hairline on parchment — which reads WEAKER, not equal. 0.16 lands it at
+   the same apparent weight. Still the decorative rung, deliberately under
+   the 3:1 component target.
+
+   (`.hud__nav__list`, the other corner's drawer, is on the raw `--dawn-08`
+   and is a known-weak edge in light. It is a sweep, not an oversight — the
+   two panels share a grammar, not a declaration.) */
+html[data-theme="light"] .rin-session__panel {
+  --rin-panel-edge: rgba(var(--dawn-rgb), 0.16);
+}

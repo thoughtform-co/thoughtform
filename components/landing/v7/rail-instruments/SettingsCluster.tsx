@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
@@ -40,7 +41,7 @@ import { ThemeToggleButton } from "../LightModeToggle";
  * line) and the controls stay outside it. That expression is a COPY; if
  * `landing.css` retunes the curtain, retune it here too.
  *
- * ⚠ THE AUTH SUBSCRIPTION LIVES IN THE `SessionMark` LEAF, not here.
+ * ⚠ THE AUTH SUBSCRIPTION LIVES IN THE `SessionControl` LEAF, not here.
  * `useAuth` resolves asynchronously and re-renders whatever reads it; this
  * component is rendered by `LandingPage`, which owns a
  * `dangerouslySetInnerHTML` body with nested roots inside it. Reading auth
@@ -71,36 +72,122 @@ import { ThemeToggleButton } from "../LightModeToggle";
  * `CelestialEditorGate`: that gate opens an editing overlay that is useful
  * in local dev, whereas this is a link that works for nobody who is not
  * allowlisted anyway.
+ *
+ * ⚠ IT IS THE WHOLE SESSION NOW, not just the way back (owner,
+ * 2026-08-14). The identity readout — name · ACTIVE · log out — used to be
+ * a `fixed top-5 right-…` overlay of its own (`components/auth/UserStatus`,
+ * deleted with this change), which put a second, unrelated instrument in a
+ * corner ADR-059 had already assigned to the nav. Two overlays claiming one
+ * corner is the defect; the four-corner scheme already had a slot for this
+ * one, occupied by a mark that named the session without saying anything
+ * about it. So the mark keeps its glyph and its place and grows a panel.
+ *
+ * ⚠ THE GLYPH STAYS BARE AT REST. The name could letter beside it, and
+ * that is exactly what §2's "the corner cannot hold both a cluster and a
+ * control" measured and rejected — a labelled row needs ~36px against this
+ * strip's ~26px. Identity is not wayfinding; it is worth a press.
+ *
+ * The panel copies `.hud__nav__list`'s grammar (that drawer is the other
+ * corner's press-to-open, and two of them reading differently would be two
+ * instruments) and opens UPWARD, right-aligned to the control group rather
+ * than to this button — so its edge lands on the rail track the theme
+ * switch anchors, not somewhere in the middle of the row.
  */
-function SessionMark() {
-  const { user } = useAuth();
+function SessionControl() {
+  const { user, userName } = useAuth();
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // The closed panel is INERT, not merely invisible — otherwise its two
+  // rows sit in the tab order behind a shut panel. Toggled on the node, as
+  // `HudNav` does, so it does not depend on React's `inert` support.
+  useEffect(() => {
+    panelRef.current?.toggleAttribute("inert", !open);
+  }, [open]);
+
+  // Close on Escape, and on outside press while open (the `HudNav` drawer's
+  // contract). There is no wrapper element to test containment against —
+  // the button and the panel are siblings in the control group, because the
+  // panel anchors on that group — so both refs are tested.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      // Escape returns focus to the control that opened the panel;
+      // otherwise focus is stranded on a node that just went inert.
+      btnRef.current?.focus();
+    };
+    const onPointer = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
+    };
+  }, [open]);
+
   if (!isAllowedUserEmail(user?.email)) return null;
 
   return (
-    <Link
-      href="/admin"
-      className="rin-session"
-      aria-label="Admin tools — signed in"
-      title={`Signed in as ${user?.email ?? "admin"}`}
-    >
-      {/* Brackets closing on a diamond. Deliberately the `encode` glyph's
-          vocabulary — that mark is registration brackets around a lattice —
-          so the settings corner reads as the same instrument family as the
-          journey row rather than as a borrowed UI icon. */}
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        aria-hidden="true"
-        focusable="false"
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`rin-session${open ? " is-open" : ""}`}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label="Session"
+        title={`Signed in as ${user?.email ?? "admin"}`}
+        onClick={() => setOpen((v) => !v)}
       >
-        <path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" />
-        <path fill="currentColor" stroke="none" d="M12 8.4 15.6 12 12 15.6 8.4 12Z" />
-      </svg>
-    </Link>
+        {/* Brackets closing on a diamond. Deliberately the `encode` glyph's
+            vocabulary — that mark is registration brackets around a lattice —
+            so the settings corner reads as the same instrument family as the
+            journey row rather than as a borrowed UI icon. */}
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" />
+          <path fill="currentColor" stroke="none" d="M12 8.4 15.6 12 12 15.6 8.4 12Z" />
+        </svg>
+      </button>
+
+      <div ref={panelRef} className={`rin-session__panel${open ? " is-open" : ""}`}>
+        <p className="rin-session__who">
+          <span className="rin-session__name">{userName || "Navigator"}</span>
+          <span className="rin-session__state">Active</span>
+        </p>
+        <Link href="/admin" className="rin-session__row" onClick={() => setOpen(false)}>
+          Admin tools
+        </Link>
+        <button
+          type="button"
+          className="rin-session__row"
+          onClick={() => {
+            // Deferred import: keeps the Supabase client off the anonymous
+            // First Load JS (ADR-028 / the landing-performance doctrine).
+            // This row only renders for a signed-in session and only
+            // matters on click.
+            void import("@/lib/auth").then((m) => m.signOut());
+          }}
+        >
+          Log out
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -140,7 +227,7 @@ export function SettingsCluster() {
           object. */}
       {RAIL_INSTRUMENTS && <ExitMarks />}
       <span className="rin-settings__ctl">
-        <SessionMark />
+        <SessionControl />
         <ThemeToggleButton />
       </span>
     </div>

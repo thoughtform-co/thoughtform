@@ -106,8 +106,10 @@ Anonymous visitors resolve `user = null` immediately and **fetch zero supabase
 chunks and make zero `supabase.co` calls.** `lib/auth/authBridge.ts` is a
 dependency-free signal: the password sign-in path (`lib/auth.ts`) calls
 `notifyAuthSessionStarted()` because it has no reload, so `AuthProvider` would
-otherwise miss the fresh session. `UserStatus` (`components/auth/UserStatus.tsx`)
-defers its `signOut` import to click time.
+otherwise miss the fresh session. The session panel
+(`SessionControl` in `components/landing/v7/rail-instruments/SettingsCluster.tsx`
+— it absorbed the deleted global `UserStatus` overlay on 2026-08-14) defers its
+`signOut` import to click time.
 
 ---
 

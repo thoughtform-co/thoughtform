@@ -455,12 +455,12 @@ The ruling's stated reason was that centring "would hang half of it outboard
 of the frame". It does hang outboard, and that turns out to clear nothing
 the rail does not already cross. At the row's right edge:
 
-| element                  | extent outboard of `--hud-rail-guide-inset` |
-| ------------------------ | ------------------------------------------- |
-| track                    | 2px (`.hud__rail__track`)                   |
-| minor ticks              | 7px (`.hud__rail__tick`)                    |
-| major ticks              | 21px (`.hud__rail__tick--major`)            |
-| centred 36px control     | **17px**                                    |
+| element              | extent outboard of `--hud-rail-guide-inset` |
+| -------------------- | ------------------------------------------- |
+| track                | 2px (`.hud__rail__track`)                   |
+| minor ticks          | 7px (`.hud__rail__tick`)                    |
+| major ticks          | 21px (`.hud__rail__tick--major`)            |
+| centred 36px control | **17px**                                    |
 
 So the control stops 4px INSIDE the major ticks' own extent. The frame line
 is not the rail's outer bound — the majors are, and they have been since
@@ -482,6 +482,87 @@ ADR-031. The objection was reasoning from the wrong edge.
 The `min-width: 961px` gate is unchanged, and so is the reason for it: below
 that the marks stop, the `--br` bracket returns, and the ADR-058 slot keeps
 the control clear of it.
+
+## Update 5 — the session mark IS the session (2026-08-14, owner)
+
+The identity readout moves INTO the bottom-right corner's session mark, and
+the overlay that used to carry it is deleted.
+
+### What it was
+
+`components/auth/UserStatus.tsx` — a `fixed top-5 right-[clamp(48px,8vw,120px)]
+z-[1000]` div mounted from `components/Providers.tsx`, i.e. on EVERY route.
+It printed the signed-in user's name, the word `ACTIVE`, and a `▼`, and
+opened a hover dropdown holding one item: Log out. It predates the
+four-corner scheme by a long way; nothing in Update 1 was ever reconciled
+against it.
+
+So the frame had TWO overlays claiming the top-right: the nav (`HudNav`, the
+journey readout and the drawer, z 60) and this one at z 1000, sitting above
+it on a hard-coded offset that was tuned against neither. They did not
+collide, which is the only reason it survived four updates of this ADR.
+
+### What it is
+
+The corner already had the slot. Update 3 seated a **session mark** between
+the `contact` glyph and the theme switch — a bracketed diamond linking to
+`/admin`, which named the session and then said nothing else about it, with
+the user's email hidden in a `title`. It is now `SessionControl`: same glyph,
+same 36px box, same place, same allowlist gate, but it is a `button` that
+opens a panel holding the name, `ACTIVE`, `Admin tools` and `Log out`.
+
+Three things the fold had to keep:
+
+- **The glyph stays BARE at rest.** Lettering the name beside it is the
+  arrangement Update 2 §2 measured and rejected — a labelled row wants ~36px
+  against this strip's ~26px. Identity is not wayfinding; it is worth a
+  press. This is the same ruling as U1's "drop the labels", reached again.
+- **The switch is still the outboard anchor.** The control that grew is the
+  one already to its left. Update 3's standing rule is untouched.
+- **`signOut` is still deferred to click.** The old dropdown imported
+  `@/lib/auth` lazily to keep Supabase off the anonymous First Load JS; the
+  panel's row does the same. The `.claude/skills/landing-performance`
+  invariant names this component now.
+
+### The panel is the nav drawer, turned
+
+`.rin-session__panel` copies `.hud__nav__list`'s grammar deliberately: the
+same `rgba(var(--void-deep-rgb), 0.94)` ground, the same hairline, the same
+blur, the same opacity+slide on `--m-ease-instr`, the same dashed head rule
+and the same `>` chevron on hover. The frame has exactly two press-to-open
+panels, one per working corner, and two that read differently are two
+instruments rather than one HUD. Only the direction differs — this corner
+opens UP, that one opens LEFT, because that is where the room is.
+
+Square, not chamfered: ADR-065's depth ladder puts chrome at 0, and a
+machined corner would claim this is a device when it is a drawer.
+
+`ACTIVE` is `--atreides-ink`, the provenance green's TEXT step — not gold.
+Gold in this frame is wayfinding, which is what the row's own hover state
+already says; a session that is open is a state, not a destination.
+
+⚠ **The panel's edge is the CONTROL GROUP's, 17px outboard of the track.**
+That is Update 4's own arithmetic applied one level up: the group's box
+overhangs the track by half a control BECAUSE U4 centred the control on it.
+Measured at 1920 the track is 1860 and the panel's edge lands at 1877 — 4px
+inside the major ticks at 1881, the identical clearance U4 computed. An edge
+on the track instead would cut the panel off through the middle of the theme
+switch.
+
+### What it cost
+
+`/astrogation` and `/orrery` lose their floating log-out; they never had one
+of their own, they inherited the global overlay. Both are behind
+`(admin)/layout.tsx`, which routes an unauthorised session to `/admin`, and
+`/admin` has its own `SessionActiveShell` sign-out. Accepted: the way out of
+the tools is through the tools.
+
+The gate is unchanged, so a signed-in NON-allowlisted user now sees no
+session UI at all where they used to see the readout. `isAllowedUserEmail`
+resolves against a single `NEXT_PUBLIC_ALLOWED_EMAIL`, so that user does not
+exist; and Update 3's reason for the gate — a login affordance on a public
+page advertises the admin surface to everyone, for the benefit of one person
+who already knows — applies to a panel far more than it did to a glyph.
 
 ## Rollback
 

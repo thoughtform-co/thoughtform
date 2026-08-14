@@ -250,3 +250,52 @@ Two notes for the next object:
   set the notch was never carrying the meaning the law assigns it — it was a
   corner treatment. The chamfer pair says "machined housing", which is what a work
   cartridge is.
+
+## Update 5 (2026-08-14, owner) — a seated set takes ITS HOUSING's diagonal
+
+The tools plate's four capability blocks (`.fl-detail__plate`, ADR-068 U2) move
+their single notch from **bottom-left to bottom-right**. This **reverses Update
+1's own sentence** — _"the dossier's plates take BL"_ — for this set, and only
+for this set.
+
+The correction Update 1 made was real but incomplete. It flipped the mockup's
+TL notch because TL is not on the lawful diagonal, and reached for **BL as the
+lower end of the SITEWIDE diagonal**. The question it skipped is which diagonal
+a _seated_ set answers to. These plates are not free objects on the page: they
+are a uniform set nested one level inside the casefile console — and that
+console is the law's single enumerated **TL+BR** object (Update 2, owner). Its
+lower end is **BR**.
+
+So the set had been leaning against the box it sits in. That mismatch is not a
+new category of defect; it is the one ADR-070 U13 named explicitly when it put
+the R4 board on TR+BL inside the same TL+BR console and recorded the opposed
+lean as a known cost. There the cost was accepted because a full drawing on a
+728-unit stage answers to the standing rule. Here it should not be: the plates
+are at **plate scale, seated in the housing, with their notch ~13px from the
+console's own bottom-right chamfer** — close enough that the eye reads the two
+cuts as one relationship rather than as two objects obeying different laws.
+
+**The clause this adds.** Update 1's exception licenses a notch _"on the lawful
+diagonal"_, and Update 4 established that this clause is the operative one.
+Update 5 says which diagonal is lawful for a nested set:
+
+> For a uniform notched set seated inside a chamfered housing, the lawful
+> diagonal is **the housing's**. Sitewide that is TR+BL and nothing changes; it
+> differs only inside the enumerated TL+BR console, where the seated set takes
+> BR.
+
+This is deliberately narrow. It does not repeal rule 2, it does not extend the
+Update 2 exception to any new object, and it changes exactly one selector. The
+only sets it can reach are those nested inside an enumerated TL+BR housing,
+and there is one such housing.
+
+**Why nothing caught this.** The same shape as Update 4: the set was internally
+consistent and locally lawful, and the smoke pinned it that way — the assertion
+read `squareBL === false`, so it verified the notch was BL rather than verifying
+it was on the right corner at all. The guard now asserts the corner **from both
+ends** (BR notched _and_ BL square), which is what fails on a drift back and on
+a polygon that cuts two corners; a one-sided check passes both.
+
+⚠ Nothing else moved. The notch depth (`--dt-notch`, the seed rung at card
+scale), the two-layer construction, and the 1px inner inset are unchanged —
+the inner polygon is the outer one with `--dt-notch − 1px`, mirrored with it.

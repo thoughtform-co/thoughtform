@@ -54,6 +54,82 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-14 — A seated set takes its housing's diagonal (ADR-065 U5)
+
+One owner ask, one selector: _"Proof > 02_Software-for-few — make sure that the
+notch is in the bottom right corner not the bottom left."_ The tools plate's
+four capability blocks (`.fl-detail__plate`) now notch **BR**.
+
+- **It reverses a rule that named this exact set.** ADR-065 U1 wrote _"the
+  dossier's plates take BL"_, and the CSS carried a comment justifying it. So
+  this could not ship as a value change; it needed the law to say which diagonal
+  a NESTED set answers to. It answers to **its housing's** — and this housing is
+  the console, the law's one enumerated TL+BR object (U2). Sitewide TR+BL is
+  untouched; the new clause can only reach a set inside that one housing.
+- **U1's correction was right and incomplete.** It flipped the mockup's TL notch
+  because TL is unlawful, then reached for the SITEWIDE lower end without asking
+  whether a seated object inherits the diagonal of the box it sits in. ADR-070
+  U13 had already met the same question from the other side and paid the opposed
+  lean as a known cost — defensible for a full drawing on its own stage, not for
+  13px plates sitting ~13px from the console's own BR chamfer, where the eye
+  reads the two cuts as one relationship.
+- ⚠ **The guard verified the wrong thing, and it is the U4 shape again.** It
+  asserted `squareBL === false` — which confirms the notch is BL, not that it is
+  on the right corner. Now pinned from BOTH ENDS (BR notched _and_ BL square),
+  which is what fails on a drift back and on a two-notch polygon; the one-sided
+  check passed both. Dry-run against the live DOM plus those two counterfactuals
+  before trusting it, since a corner assertion that can only be satisfied one way
+  is indistinguishable from a vacuous one until you feed it the failure.
+- **Clipped CDP captures come back blank in the IDE webview** (`Page.captureScreenshot`
+  with a `clip`, `fromSurface` either way). To read a 13px corner, clone the node
+  into a fixed host at `transform: scale(3)` with `--dt-notch` pinned to its
+  computed px and shoot the full viewport — container-query units do not survive
+  the clone, which is why the depth has to be pinned and why this is only good for
+  reading POSITION.
+
+### 2026-08-14 — The session mark IS the session (ADR-059 U5)
+
+One owner ask, filed as a QOL change: _"as a logged in user I see vince active
+in the top right corner; this functionality should be folded into the icon LEFT
+of the light and dark mode icon in the bottom right corner."_ Cycle A rows 1
+and 3.
+
+- ⚠ **A "SMALL QOL CHANGE" NAMED A COMPONENT NOBODY HAD RECONCILED WITH THE
+  FRAME.** `components/auth/UserStatus` was a `fixed top-5 right-…; z-[1000]`
+  overlay mounted from `Providers`, i.e. on every route — a second, unrelated
+  instrument in the corner ADR-059 Update 1 had assigned to the nav, on a
+  hard-coded offset tuned against neither. It survived four updates of that ADR
+  because it never visibly collided. **An overlay outside the layout system
+  does not get audited by anything that audits the layout system.**
+- ⚠ **THE SLOT ALREADY EXISTED, AND FINDING IT WAS THE WHOLE DESIGN.** Update 3
+  had seated a session mark exactly where the owner pointed — it named the
+  session and then said nothing about it, with the email hidden in a `title`.
+  The fold is that mark growing a panel, not a new control. Read the corner's
+  own ADR before drawing anything for it.
+- ⚠ **THE GLYPH STAYS BARE AT REST, AND THAT IS A MEASUREMENT.** Lettering the
+  name beside the icon is the arrangement Update 2 §2 rejected on the numbers
+  (~36px of labelled row against a ~26px strip). The panel exists because
+  identity is worth a press and is not wayfinding.
+- ⚠ **A SECOND PRESS-TO-OPEN PANEL MUST BE THE FIRST ONE, TURNED.** The frame
+  has exactly two working corners; `.rin-session__panel` takes
+  `.hud__nav__list`'s ground, hairline, blur, ease, dashed head and `>`
+  chevron, and changes only its direction. Two panels that read differently are
+  two instruments rather than one HUD.
+- ⚠ **THE PANEL'S RIGHT EDGE IS UPDATE 4's ARITHMETIC ONE LEVEL UP.** Aligning
+  to the control GROUP puts it 17px outboard of the track — because U4 centred
+  the control ON the track, so the group's box necessarily overhangs by half a
+  control. It lands 4px inside the major ticks, the identical clearance U4
+  computed. Aligning to the track instead would cut the panel through the
+  middle of the theme switch.
+- ⚠ **DELETING A GLOBAL OVERLAY DELETES IT EVERYWHERE, INCLUDING WHERE NOBODY
+  ASKED.** `/astrogation` and `/orrery` had no log-out of their own; they
+  inherited this one. Named and accepted rather than discovered later — both
+  route back through `/admin`, which has `SessionActiveShell`.
+- The deferred `import("@/lib/auth")` moved WITH the button. The
+  landing-performance skill named `UserStatus` by path for that invariant, so
+  the skill was repointed in the same pass rather than left pointing at a
+  deleted file.
+
 ### 2026-08-13 — The substrate is five stacks of named Skills (ADR-070 U16)
 
 One owner ask, twice: _"what I mainly want to convey is the patterns across the

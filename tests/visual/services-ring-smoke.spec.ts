@@ -1244,12 +1244,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
         // ── FOUR NOTCHED CAPABILITY BLOCKS (ADR-068 U2) ─────────────────
         // Title + one-sentence claim per plate, read from the tool's own
-        // canonical `capabilities`. The notch law is unchanged (ADR-065:
-        // one notch says ORIENTED / CONNECTED, the diagonal is TR + BL —
-        // square top-right, NO square bottom-left). The TITLE is the one
-        // nowrap line, so it carries the horizontal-clip check; the
-        // SENTENCE wraps by design and answers to the prose floor and the
-        // painted-plate geometry below instead.
+        // canonical `capabilities`. One notch says ORIENTED / CONNECTED
+        // (ADR-065), and since Update 5 it is the BOTTOM-RIGHT — the lower
+        // end of THIS HOUSING's diagonal, the console being the law's one
+        // enumerated TL+BR object (U2). ⚠ The corner is asserted from BOTH
+        // ENDS: the notched corner missing is the defect this pins, but a
+        // polygon that notched two corners, or drifted back to BL, would
+        // satisfy a one-sided check. The TITLE is the one nowrap line, so
+        // it carries the horizontal-clip check; the SENTENCE wraps by
+        // design and answers to the prose floor and the painted-plate
+        // geometry below instead.
         const detail = await page.evaluate(() => {
           const plates = [...document.querySelectorAll<HTMLElement>(".fl-detail__plate")];
           return plates.map((p) => {
@@ -1269,6 +1273,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
               clip,
               squareTR: pts.some((s) => /^100%\s+0(px|%)$/.test(s)),
               squareBL: pts.some((s) => /^0(px|%)\s+100%$/.test(s)),
+              squareBR: pts.some((s) => /^100%\s+100%$/.test(s)),
               clipsT: t ? t.scrollWidth - t.clientWidth : 99,
               descPx: d ? Number.parseFloat(getComputedStyle(d).fontSize) : 0,
             };
@@ -1284,10 +1289,13 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           expect(d.desc, `${label}: "${d.title}" lost its sentence`).not.toBe("");
           expect(d.clip, `${label}: "${d.title}" is not clipped at all`).not.toBe("none");
           expect(d.squareTR, `${label}: "${d.title}" lost its square top-right corner`).toBe(true);
+          expect(d.squareBR, `${label}: "${d.title}" lost its bottom-right notch — ${d.clip}`).toBe(
+            false
+          );
           expect(
             d.squareBL,
-            `${label}: "${d.title}" is notched on the wrong corner — ${d.clip}`
-          ).toBe(false);
+            `${label}: "${d.title}" is notched on a second corner — ${d.clip}`
+          ).toBe(true);
           expect(d.clipsT, `${label}: "${d.title}" clips its title`).toBeLessThanOrEqual(1);
           expect(
             d.descPx,
