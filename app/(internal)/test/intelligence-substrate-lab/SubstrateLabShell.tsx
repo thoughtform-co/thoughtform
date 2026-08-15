@@ -20,12 +20,21 @@ import {
 import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from "@/lib/cases/types";
 
 import { useConfigFitReadout } from "../intelligence-config-lab/useFitReadout";
+import { BACKPLANE_VIEWBOX, VariantBackplane } from "./VariantBackplane";
+import { BUS_VIEWBOX, VariantBus } from "./VariantBus";
 import { CARDS_VIEWBOX, VariantCards } from "./VariantCards";
+import { CONSTELLATION_VIEWBOX, VariantConstellation } from "./VariantConstellation";
+import { CUTAWAY_VIEWBOX, VariantCutaway } from "./VariantCutaway";
 import { DENSITY_VIEWBOX, VariantDensity } from "./VariantDensity";
 import { FIELD_VIEWBOX, VariantField } from "./VariantField";
 import { GALLERY_VIEWBOX, VariantGallery } from "./VariantGallery";
+import { HAND_VIEWBOX, VariantHand } from "./VariantHand";
+import { LEAVES_VIEWBOX, VariantLeaves } from "./VariantLeaves";
+import { LOOM_VIEWBOX, VariantLoom } from "./VariantLoom";
+import { PILES_VIEWBOX, VariantPiles } from "./VariantPiles";
 import { RACK_VIEWBOX, VariantRack } from "./VariantRack";
 import { REGISTRY_VIEWBOX, VariantRegistry } from "./VariantRegistry";
+import { ROOTS_VIEWBOX, VariantRoots } from "./VariantRoots";
 import { SEALS_VIEWBOX, VariantSeals } from "./VariantSeals";
 import { STRATA_VIEWBOX, VariantStrata } from "./VariantStrata";
 import { TABLE_VIEWBOX, VariantTable } from "./VariantTable";
@@ -83,6 +92,15 @@ const DRAWINGS: Record<
   registry: { vb: REGISTRY_VIEWBOX, Component: VariantRegistry },
   terminal: { vb: TERMINAL_VIEWBOX, Component: VariantTerminal },
   cards: { vb: CARDS_VIEWBOX, Component: VariantCards },
+  backplane: { vb: BACKPLANE_VIEWBOX, Component: VariantBackplane },
+  bus: { vb: BUS_VIEWBOX, Component: VariantBus },
+  cutaway: { vb: CUTAWAY_VIEWBOX, Component: VariantCutaway },
+  hand: { vb: HAND_VIEWBOX, Component: VariantHand },
+  piles: { vb: PILES_VIEWBOX, Component: VariantPiles },
+  constellation: { vb: CONSTELLATION_VIEWBOX, Component: VariantConstellation },
+  loom: { vb: LOOM_VIEWBOX, Component: VariantLoom },
+  leaves: { vb: LEAVES_VIEWBOX, Component: VariantLeaves },
+  roots: { vb: ROOTS_VIEWBOX, Component: VariantRoots },
 };
 
 interface Preset {
@@ -122,6 +140,18 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [preset, setPreset] = useState<Preset>(PRESETS[0]);
   const [lit, setLit] = useState<string | null>(null);
+  /**
+   * The round-four directions (backplane/bus/cutaway) letter the SELECTED
+   * work as the drawing's centre of gravity. The other directions ignore
+   * this field; the shell always populates it from the reader's pick so a
+   * drawing does not have to guard for its absence.
+   *
+   * ⚠ The default is `shown[0]`, which is the first configured stream
+   * (`selectWorks` puts person-led work first within each district and then
+   * interleaves districts). That gives the drawings a lit, tapped example
+   * on first paint, which is what the site would open the reading on.
+   */
+  const [workId, setWorkId] = useState<string | null>(null);
 
   const frameRef = useRef<HTMLDivElement>(null);
 
@@ -134,7 +164,14 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
     () => crossing(shapes, districts, works, shown),
     [shapes, districts, works, shown]
   );
-  const record: IslRecord = useMemo(() => ({ teams: cross.teams, shapes: cross.shapes }), [cross]);
+  const selectedWork = useMemo(() => {
+    if (!workId) return shown[0];
+    return shown.find((w) => w.id === workId) ?? shown[0];
+  }, [shown, workId]);
+  const record: IslRecord = useMemo(
+    () => ({ teams: cross.teams, shapes: cross.shapes, skills, selectedWork }),
+    [cross, skills, selectedWork]
+  );
   const def = islVariant(variantId);
 
   /* Deep-linked state adopted AFTER mount — SSR renders the defaults, and
@@ -147,21 +184,28 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
     if (q.get("theme") === "light") setTheme("light");
     const p = PRESETS.find((x) => x.id === q.get("preset"));
     if (p) setPreset(p);
-  }, []);
+    const w = q.get("work");
+    if (w && shown.some((x) => x.id === w)) setWorkId(w);
+  }, [shown]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const commit = (next: {
     variantId?: IslVariantId;
     theme?: "dark" | "light";
     preset?: Preset;
+    workId?: string | null;
   }) => {
     if (next.variantId !== undefined) setVariantId(next.variantId);
     if (next.theme !== undefined) setTheme(next.theme);
     if (next.preset !== undefined) setPreset(next.preset);
+    if (next.workId !== undefined) setWorkId(next.workId);
     const url = new URL(window.location.href);
     url.searchParams.set("v", next.variantId ?? variantId);
     url.searchParams.set("theme", next.theme ?? theme);
     url.searchParams.set("preset", (next.preset ?? preset).id);
+    const nextWork = next.workId !== undefined ? next.workId : workId;
+    if (nextWork) url.searchParams.set("work", nextWork);
+    else url.searchParams.delete("work");
     window.history.replaceState(null, "", url.toString());
   };
 
@@ -254,6 +298,26 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
             </button>
           ))}
         </Group>
+
+        {/* WORK PICKER — the round-four directions letter the SELECTED work
+            as their drawing's subject. Other directions ignore it, so the
+            control appears in every state; changing it under `shipped` is a
+            no-op by design (the shipped drawing draws the estate). */}
+        <div className="icl__group">
+          <span>Selected work</span>
+          <div>
+            <select
+              value={selectedWork?.id ?? ""}
+              onChange={(e) => commit({ workId: e.currentTarget.value || null })}
+            >
+              {shown.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {`${w.id} · ${w.title}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         <button className="icl__remeasure" type="button" onClick={remeasure}>
           Re-measure

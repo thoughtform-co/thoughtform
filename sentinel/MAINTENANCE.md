@@ -54,6 +54,60 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-15 — The cartridge frame means WORKSTREAM; six new cluster-body directions (ADR-070 U17 rejected, U18 opened)
+
+Round four (2026-08-14) built three selected-work-aware substrate directions
+(`backplane` · `bus` · `cutaway`), promoted `backplane` to production, and
+rebuilt reading 03 around the R4 cartridge at `layout.core` with an identity
+flight between 02 ↔ 03. Owner's verdict the next morning: the cartridge
+frame means WORKSTREAM on this surface (reading 02 uses it for the seat
+card), so anchoring reading 03 on it made the substrate tab about the
+workstream again. Reading 03's subject is the shared layer beneath every
+workstream and its drawing may not depend on a selected work. Cycle A
+row 2 fired (revert of a shipped fix) plus row 6 (an architectural
+assumption changed).
+
+- **Production reverted cleanly to U16.** Four production-side files
+  (`PdaSubstrate.tsx`, `PdaConsole.tsx`, `tests/lib/pda-substrate-fit.test.ts`,
+  `tests/lib/pda-viewbox.test.ts`) rolled back to committed HEAD; the lab
+  shell's shipped branch re-points to U16's `ViewSubstrate` signature. The
+  three round-four variants stay in the lab as recorded losers, guarded by
+  `substrate-lab-fit` on their own.
+- **Round five explores six new estate-scoped directions**, sharing one
+  principle drawn from the CP2077 reference boards: a cluster is a PHYSICAL
+  BODY OF LIKE OBJECTS whose depth IS the count. `hand` (fanned deck),
+  `piles` (offset stacks), `constellation` (five nodes ring a total, wire
+  trunks braid), `loom` (5 chips × N wires each → one SUBSTRATE chip),
+  `leaves` (fore-edge combs), `roots` (five trunks on one bus).
+- **New mechanical guard: `MARK_COUNT_VARIANTS`.** Every round-five
+  variant exports `<name>MarkCount(record, key)`; the guard walks it and
+  asserts marks per cluster equals `record.shapes[k].skills`. A fan that
+  silently dropped a plate would fail the guard before it shipped — the
+  numeral could still say 07. This is the mechanical answer to the risk
+  that a MASS drawing lets its mass drift from its count.
+- **THREE FIT DEFECTS caught in-lab the hour they were written**, all filed
+  in ADR-070 U18 as generalisable: (1) a text-anchored-middle label's
+  measure is its label column, NOT the mass silhouette it labels; (2) an
+  edge-adjacent flagship label collides with the identity strip's count
+  column — push cluster spread inward; (3) a rightmost-column flagship
+  label extends past the crop's right edge — force the flagship side to
+  face the crop's centre.
+- ⚠ **CLASS OF LESSON WORTH KEEPING**: on this surface, chrome
+  silhouettes carry semantic weight. The cartridge is WORKSTREAM; a
+  module is A THING THAT RUNS; a diamond is a hub. A reading that borrows
+  a silhouette from a neighbouring reading borrows its meaning too —
+  which is what the round-four rejection reveals in one direction and
+  what round five's brand-new geometries (fans, piles, combs, roots) are
+  built to avoid.
+
+Verified: `npm run verify` — **781 unit tests green** across 49 files;
+`substrate-lab-fit` walks 110 checks including the six new mark-count
+assertions; `scripts/capture-substrate-lab.mjs --v hand,piles,constellation,loom,leaves,roots`
+produces 24 stills (dark/light × p1280/p1920) with 0 collisions, 0
+clipped, 0 overflow, `minPx ≥ 7.8`; a production reading 03 capture at
+1280×720 dark confirms the shipped U16 five-pattern-cards drawing is
+unchanged (28 texts, `minPx 7.76`, 0 clipped).
+
 ### 2026-08-14 — A seated set takes its housing's diagonal (ADR-065 U5)
 
 One owner ask, one selector: _"Proof > 02_Software-for-few — make sure that the

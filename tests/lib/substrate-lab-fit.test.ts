@@ -11,6 +11,33 @@ import {
   type LetterSpec,
 } from "@/app/(internal)/test/intelligence-substrate-lab/substrateKit";
 import { cardsLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantCards";
+import { backplaneLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantBackplane";
+import { busLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantBus";
+import {
+  constellationLettering,
+  constellationMarkCount,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantConstellation";
+import { cutawayLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantCutaway";
+import {
+  handLettering,
+  handMarkCount,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantHand";
+import {
+  leavesLettering,
+  leavesMarkCount,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantLeaves";
+import {
+  loomLettering,
+  loomMarkCount,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantLoom";
+import {
+  pilesLettering,
+  pilesMarkCount,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantPiles";
+import {
+  rootsLettering,
+  rootsMarkCount,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantRoots";
 import { strataLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantStrata";
 import { tableLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantTable";
 import { densityLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantDensity";
@@ -87,6 +114,55 @@ const VARIANTS: readonly [string, (r: IslRecord) => LetterSpec[], number][] = [
      labels = 72 minimum. Same card frame as gallery + one label per
      Skill from the fixture; the head and foot are byte-identical. */
   ["cards", cardsLettering, 65],
+  /* Round-four SELECTED-WORK-AWARE directions. They letter the record's
+     five patterns + a handful of REPRESENTATIVE plates per pattern, plus a
+     `+N MORE` per pattern with a remainder. Kept on record as rejected
+     directions (owner, 2026-08-14): the cartridge frame means WORKSTREAM
+     on this surface and may not anchor the substrate reading. */
+  /* backplane: 5 patterns × (name + count + 2 plates × 2) = 30, plus one
+     `+N MORE` per pattern that has one (all five, since PLATES_PER_BAY=2). */
+  ["backplane", backplaneLettering, 30],
+  /* bus: 5 × (name + count + 3 plates × 2) = 40, plus per-pattern `+N MORE`
+     (up to five when every pattern has a remainder — Voice with 7 has 4
+     more, etc.). */
+  ["bus", busLettering, 40],
+  /* cutaway: `bus`-shaped + one GRADE etch spec. */
+  ["cutaway", cutawayLettering, 41],
+  /* Round-five ESTATE-SCOPED cluster directions. Every one draws N marks
+     per pattern (one per encoded Skill) and letters ONLY the identity
+     block (name + count) + one flagship. Gloss is dropped: the 38-char
+     "HOW THE ORGANISATION SOUNDS IN CONTEXT" does not fit a 176-unit
+     column at a legible size, and the cluster's SHAPE is the more direct
+     answer to "what is a pattern" than a sentence beside it. */
+  /* hand · piles · leaves — name + count + flagship = 3 × 5 = 15. */
+  ["hand", handLettering, 15],
+  ["piles", pilesLettering, 15],
+  ["leaves", leavesLettering, 15],
+  /* constellation letters the hub total + label + (name + count +
+     flagship) × 5 = 2 + 15 = 17. */
+  ["constellation", constellationLettering, 17],
+  /* loom letters (name + count + flagship) × 5 + 3 substrate-chip
+     strings = 15 + 3 = 18. */
+  ["loom", loomLettering, 18],
+  /* roots letters (name + count + flagship) × 5 + 1 bus claim = 16. */
+  ["roots", rootsLettering, 16],
+];
+
+/**
+ * ⚠ ROUND-FIVE DIRECTIONS DRAW ONE MARK PER SKILL — the cluster's mass IS
+ * its count. Every variant exports a pure `markCount()` helper the guard
+ * walks, so a fan / pile / braid that drifted from `record.shapes[k].skills`
+ * would fail before it shipped. Absence from this table means the variant
+ * is not making a mass claim (rounds 1–4 letter the count instead of
+ * drawing it).
+ */
+const MARK_COUNT_VARIANTS: readonly [string, (r: IslRecord, key: string) => number][] = [
+  ["hand", handMarkCount],
+  ["piles", pilesMarkCount],
+  ["constellation", constellationMarkCount],
+  ["loom", loomMarkCount],
+  ["leaves", leavesMarkCount],
+  ["roots", rootsMarkCount],
 ];
 
 describe("the substrate lab's drawings fit their boxes", () => {
@@ -273,6 +349,36 @@ describe("the substrate lab keeps the map's envelope", () => {
       for (const s of lettering(record())) {
         expect(MONEY.test(s.text), `${name} ${s.slot} publishes money: "${s.text}"`).toBe(false);
         expect(MODELS.test(s.text), `${name} ${s.slot} names a model: "${s.text}"`).toBe(false);
+      }
+    });
+  }
+});
+
+describe("the round-five cluster drawings draw one mark per skill", () => {
+  /**
+   * ⚠ THE COUNT IS STRUCTURAL, NEVER TEXT. A hand-fanned five that
+   * silently drops a plate reads as five, not seven, and the reader
+   * cannot notice — the numeral could still say "07". The mark-count
+   * helper is the mechanical half: it walks the fixture the same way
+   * the drawing does, so the two cannot drift.
+   */
+  for (const [name, markCount] of MARK_COUNT_VARIANTS) {
+    it(`${name}: marks per pattern equal the record's Skill count`, () => {
+      const r = record();
+      const skillsFixture = SAMPLE_SKILLS;
+      for (const shape of r.shapes) {
+        const inFixture = skillsFixture.filter((s) => s.substrate === shape.key).length;
+        /* The fixture agrees with the record already (asserted above);
+           what THIS check adds is that the drawing's own mass claim
+           matches. A `markCount` helper that returned a rounded or
+           bucketed value would fail here. */
+        expect(
+          markCount(r, shape.key),
+          `${name} ${shape.key}: draws ${markCount(r, shape.key)} marks, record has ${shape.skills}`
+        ).toBe(shape.skills);
+        expect(markCount(r, shape.key), `${name} ${shape.key}: fixture and drawing disagree`).toBe(
+          inFixture
+        );
       }
     });
   }

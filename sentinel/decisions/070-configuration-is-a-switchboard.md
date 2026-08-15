@@ -1607,3 +1607,126 @@ PdaConsole → ViewSubstrate`. ⚠ **`visual.skills` is GEOMETRY now, not
   `.fl-con__console` at `opacity: 0` with the SVG fully measurable, so a
   DOM-only check passes against a panel that paints nothing. Scroll in
   incrementally until it lights before you shoot.
+
+## Update 17 — REJECTED. The cartridge frame means WORKSTREAM (2026-08-14, owner, same day)
+
+Built and rejected in one session. The direction was three selected-work-
+aware lab variants (`backplane`, `bus`, `cutaway`) plus a promotion of
+`backplane` to production: reading 03's card sat at `layout.core`, the
+five substrate patterns fanned around it as bays, and `02 ↔ 03` was a
+flight-identity so the card visibly stayed while the bays re-rastered.
+
+**The owner's verdict was that this made reading 03 about the workstream
+again**, not about the substrate. The cartridge frame is what reading 02
+draws the SELECTED WORK in; putting one at the core of reading 03 anchors
+the whole substrate reading on a single workstream, which is exactly the
+context the reading is supposed to widen out from. The rebrand walked
+back the same way U1's radial-switchboard did — a whole ADR update
+reverted the day it landed.
+
+⚠ **THE ROUND-FOUR LESSON, filed for the next attempt**: **on THIS surface
+the cartridge silhouette is a proper noun that means WORKSTREAM.** Reading
+02 uses it for the seat card; the flight in ADR-069 carries it between
+readings 01 and 02 because both readings ARE about that one work. Reading
+03 is scoped ONE step wider — the shared layer beneath every workstream —
+and its drawing may not depend on a selected work. The three lab variants
+survive as recorded losers (`backplane`, `bus`, `cutaway` in
+[`app/(internal)/test/intelligence-substrate-lab/`](<../../app/(internal)/test/intelligence-substrate-lab/SubstrateLabShell.tsx>)),
+guarded on their own, and the round-four directions are documented in
+[`variants.ts`](<../../app/(internal)/test/intelligence-substrate-lab/variants.ts>)
+so the reason each was tried and each was rejected is on the record.
+
+**Production stayed on U16 (five pattern cards).** No production file kept
+a U17 delta; the four production-side files (`PdaSubstrate.tsx`,
+`PdaConsole.tsx`, `tests/lib/pda-substrate-fit.test.ts`,
+`tests/lib/pda-viewbox.test.ts`) reverted cleanly to their U16 state.
+The `substrateExt` / `substrateLayout` / `SUBSTRATE_LAYOUT_0` /
+`SUBSTRATE_VIEWBOX` aliases and the `02 ↔ 03` flight branch are all rolled
+back — they were the wrong shape for a reading that must not depend on a
+selected work.
+
+## Update 18 — round five: cluster physics, estate-scoped (2026-08-15, owner)
+
+Six new directions built beside the round-one-through-four record: the
+CLUSTER-AS-BODY family. Each direction draws a pattern as a physical body
+of like objects whose depth IS the count — a fan, a pile, a braid, a
+node's wire trunk, a comb of leaves, a trunk of branches — with one
+exemplar pulled out and lettered while the rest stay silhouettes. All 47
+skills are present as MARKS (one mark per skill, so 14 is visibly heavier
+than 5); only two labels letter per cluster (the pattern's name and its
+flagship encode). The gloss does not letter on any of the six — a 38-
+character sentence does not fit a 176-unit column at a legible size, and
+the cluster's SHAPE is the more direct answer to "what is a pattern" than
+prose beside it.
+
+### The six directions
+
+| id              | label              | shape                                                       | reference                      |
+| --------------- | ------------------ | ----------------------------------------------------------- | ------------------------------ |
+| `hand`          | 15 · Hand          | fanned deck of plates from a root pivot                     | CP2077 attribute-of-the-kitsch |
+| `piles`         | 16 · Piles         | offset-stacked slabs at the crop's floor                    | CP2077 quest-log stack         |
+| `constellation` | 17 · Constellation | five nodes ring a central total, wire trunks braid          | CP2077 attribute wheel         |
+| `loom`          | 18 · Loom          | five chips braid one wire per skill into one SUBSTRATE chip | CP2077 citizens-database       |
+| `leaves`        | 19 · Leaves        | comb of hairline leaves on a fore-edge slab                 | CP2077 item cells              |
+| `roots`         | 20 · Roots         | five trunks rise from one shared bus, branches per skill    | CP2077 industrial monitors     |
+
+### Shared rules
+
+- One mark per encoded Skill (fan plate, stacked slab, wire, ribbon,
+  leaf, branch); the count is a numeral BUT the count is also DRAWN by
+  the mass, so a hand-typed 07 that disagreed with a drawn seven would
+  be caught by the `markCount` guard.
+- Flagship encode takes green (accent bar or wire) and letters its
+  `shortTitle` HORIZONTALLY — never rotated with the mass silhouettes.
+  That is the discipline the isometric city broke on (`getBBox` cannot
+  measure a rotated text at the tight tolerances the surface uses).
+- No workstream cartridge. No selected work. No team names on the
+  drawing.
+- TR+BL chamfers on housings, per ADR-065.
+- Every direction exports `<name>Lettering()` and `<name>MarkCount()`;
+  the guards walk both.
+
+### The lab is guarded, per direction
+
+- `substrate-lab-fit` extends the `VARIANTS` table with the six new
+  directions and their per-variant spec floors (15 – 18). Every
+  string walks fit, longest-word, fs-floor, teams-unit and envelope.
+- A new `MARK_COUNT_VARIANTS` table asserts that each cluster's marks
+  equal `record.shapes[k].skills` — a fan that dropped one plate would
+  fail here before it shipped.
+- `scripts/capture-substrate-lab.mjs` produced 24 stills: 6 directions
+  × 2 themes × 2 presets. Gates: 0 collisions, 0 clipped, 0 overflow,
+  `minPx ≥ 7.8`.
+
+### Caught in the guard the hour it was written
+
+- `hand`'s flagship label ("Founder TOV", 11 chars at fs 12 / .08 =
+  89.76u) ran past a naive PLATE_W + 20 = 68u measure. Fixed by
+  measuring the flagship label against the plate's LABEL COLUMN (120u
+  wide, since the label is text-anchored middle and extends past the
+  plate on both sides).
+- `leaves` collided its flagship label with the count numeral on the
+  two patterns where the flagship is the FIRST skill (Judgment,
+  Pattern) — the leftmost leaf at COMB_X + 8 put its label at ~x=306,
+  running back into the count column ending at ~x=274. Fixed by
+  moving the leaves' spread inset from 8 to 60 on each side, which
+  keeps the leftmost label inside the comb.
+- `roots`'s flagship label on the rightmost trunk clipped the crop's
+  right edge (14 chars past a stub end at cx+70 runs to 1006, past
+  R=906). Fixed by forcing the flagship's side to face the crop's
+  centre: left half of trunks put flagship on the RIGHT, right half
+  put flagship on the LEFT. Alternating branch stubs are unchanged
+  for non-flagship branches.
+
+### Left open
+
+- Production reading 03 is unchanged (U16 pattern cards). Round five
+  is a design surface with six candidates and no promotion; the owner
+  picks the winner and promotion is its own pass.
+- The `piles` direction's mass reads at its most subtle on the p1280
+  preset — the offset-stack differential between n=5 and n=14 is
+  70/56u, which is legible against a 22u slab but not dramatic. If
+  `piles` wins, the promotion pass has to choose between (a) taller
+  slabs (more visible mass, less identity-strip room) and (b) larger
+  SLAB_STEP (more dramatic depth, wider footprint). The lab lets
+  either be tried.

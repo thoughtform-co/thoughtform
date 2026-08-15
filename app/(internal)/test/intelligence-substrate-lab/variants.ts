@@ -1,7 +1,9 @@
 import type {
   PdaShape,
   PdaTeam,
+  PdaWork,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
+import type { CaseSkillEntry } from "@/lib/cases/types";
 
 /**
  * /test/intelligence-substrate-lab — the variant contract for READING 03.
@@ -49,7 +51,16 @@ export type IslVariantId =
   | "gallery"
   | "registry"
   | "terminal"
-  | "cards";
+  | "cards"
+  | "backplane"
+  | "bus"
+  | "cutaway"
+  | "hand"
+  | "piles"
+  | "constellation"
+  | "loom"
+  | "leaves"
+  | "roots";
 
 export interface IslVariantDef {
   id: IslVariantId;
@@ -155,16 +166,114 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
     provenance:
       'Round three, second pass. The owner on the first: the foot\'s `SKILLS 07 · CUT BY CRE` was "meaningless text", and the labels were "a boring ass text list". The foot became the sentence. The list was first redrawn as an explicit tapped bus — and at meet 0.646 the 1-unit spine alpha\'d away and left a dash and a dot per row, i.e. bullets. The accent bar carries the same reading at a weight the meet cannot erase. Labels are the fixture\'s `shortTitle` shorthand, capped at 14 characters; the flagship encode takes green.',
   },
+
+  /* ── Round four · the SELECTED-WORK-AWARE directions ─────────────────
+     Rounds one to three all showed the ESTATE. The reader arrives on this
+     reading having just opened one configuration, and reading 03 threw
+     that context away — the same 47 plates whichever work was selected.
+     The three directions below let the SELECTED work stay on screen, so
+     the substrate reads as "what THIS configuration is drawing on" rather
+     than as a static inventory beside the panel it was mounted on. */
+  {
+    id: "backplane",
+    label: "12 · Backplane (recommended)",
+    thesis:
+      "The selected configuration's card stays at the R4 core, and the five substrate patterns sit around it as bays — the same housing grammar reading 02 used for WHAT RUNS IT / WHAT IT REACHES / WHERE IT RUNS, now doubled to hold all five patterns. A bay the record TAPS lights and connects with a ribbon; a bay it does not draws its skills but stays dim, so the reader sees what the layer holds AND what this configuration paid for. Skills letter 2–3 representative plates per bay with an honest `+N more`; no legend, no team names, no ordinals. Continuous with reading 02 — same card, same silhouette, same crop width, same ribbon grammar.",
+    provenance:
+      "The evolution the owner asked for: 'a look and feel and design architecture that builds on top of the previous one.' The R4 handoff's five docks already prove the geometry; this reading swaps their content but keeps their language.",
+  },
+  {
+    id: "bus",
+    label: "13 · Unfolded bus",
+    thesis:
+      "The selected card holds the top-left, and five horizontal rails unfold to its right — one per pattern, tapped rails in gold, untapped rails in dim amber. Every rail seats a pattern name at its head and a strip of representative Skill labels, ending on `+N more`. Ranks strongly for SCANABILITY (five parallel lines, one type, no crossings), weaker on geometric continuity with the R4 board because the reading rearranges the layout rather than replacing modules with bays.",
+    provenance:
+      "The rack direction (round three) rotated by 90° with a selected card as its source. Where the rack asked 'how much', this asks 'what does THIS one draw on.'",
+  },
+  {
+    id: "cutaway",
+    label: "14 · Section cutaway",
+    thesis:
+      "The board lifts a fraction: reading 02's card floats at the top of the crop, and BELOW GRADE the five substrate patterns sit as horizontal strata. Vertical risers drop from the card to the strata the configuration TAPS; the strata each hold their representative Skill plates embedded in the layer, so the drawing reads as extraction from a real depth. Strongest substrate metaphor and the most literal 'below the estate'; least compact of the three.",
+    provenance:
+      "The strata direction (round one) with a selected source overhead. The section grammar comes from the shipped brief copy: 'below grade runs the shared substrate — encoded once for one team, tapped by the next.'",
+  },
+
+  /* ── Round five · cluster physics (estate-scoped, no cartridge) ────────
+     Round four anchored reading 03 on the cartridge frame and the owner's
+     verdict was that the frame MEANS a workstream on this surface (it does
+     — reading 02 draws the selected work in it). So round five drops the
+     cartridge, drops the selected-work dependency, and returns to the
+     estate-scoped reading. Every direction here derives from one shared
+     principle drawn from the reference boards: a cluster is a PHYSICAL
+     BODY OF LIKE OBJECTS whose depth IS the count — a fan, a pile, a
+     braid — with ONE exemplar pulled out and lettered, the rest kept as
+     silhouettes. All 47 skills are PRESENT as marks (one mark per skill,
+     so 14 is visibly heavier than 5), only two letter per cluster. Labels
+     stay horizontal (the isometric city died on skewed labels). */
+  {
+    id: "hand",
+    label: "15 · Hand",
+    thesis:
+      "A pattern is a FANNED DECK of plates from a root pivot — one plate per encoded Skill, the flagship pulled forward and lettered, the rest as silhouettes at their fan angle. Five hands across the crop, and the pattern with fourteen visibly holds a wider fan than the pattern with five. The count numeral sits at the root; the gloss reads under it. Nothing is skewed except the plate silhouettes — labels stay horizontal on unrotated foreground elements.",
+    provenance:
+      "The Cyberpunk 2077 attribute-of-the-kitsch reference: interfaces of Kitsch draw an option as a fan of layered cards from a corner pivot. On this surface the pivot is the pattern and the fan is its encoded skills. The reference is the composition, not the palette.",
+  },
+  {
+    id: "piles",
+    label: "16 · Piles",
+    thesis:
+      "A pattern is a PILE OF SLABS. Five piles at the crop's floor, one slab per encoded Skill, each slab offset three units up-and-right of the one under it — so a fourteen-pile visibly towers over a five-pile and the mass is drawn rather than counted. The top slab of every pile letters the flagship encode. The count and gloss sit above each pile's peak.",
+    provenance:
+      "The Cyberpunk 2077 to-do-list quest-log reference: a queue is drawn as a stack of dogeared slabs whose depth reads at a glance. Straight-on 2D, never isometric — a 3D pile of forty-seven slabs would need per-slab labels to disambiguate their edges, and no legible label lands on a 3u-tall visible strip.",
+  },
+  {
+    id: "constellation",
+    label: "17 · Constellation",
+    thesis:
+      "Five pattern nodes ring a central DIAMOND hub that letters the estate's total (47). Each node letters its pattern name, its count and its flagship, and its hub-to-node wire trunk carries ONE conductor per encoded Skill — so a Pattern node arrives with fourteen wires braided and a Stakeholder node with five, and the mass is the ribbon's cross-section. The claim the drawing makes is that everything is one substrate, distributed.",
+    provenance:
+      "The Cyberpunk 2077 attribute-wheel reference: five attributes ring a central level readout, each connected by a braided trunk whose weight suggests investment. Adopted for role rather than for palette; the trunk-per-skill mapping is what makes the count structural.",
+  },
+  {
+    id: "loom",
+    label: "18 · Loom",
+    thesis:
+      "Five pattern chips on the LEFT, one wire PER SKILL leaving each — 7 · 12 · 9 · 5 · 14 wires, forty-seven in total — braid across the crop into one wide SHARED LAYER chip on the right. The flagship wire per pattern runs green. The convergence is the drawing making the round-three claim structural: encoded once for one team, tapped by the next. There is no legend; the reader counts wires to answer 'how much of Judgment'.",
+    provenance:
+      "The Cyberpunk 2077 citizens-database reference: two chips joined by a fan of ribbon wires whose count is the connection's weight. The right chip labels its role in one word — SUBSTRATE — because the whole panel already says 'the substrate', and the second signal on it would be noise.",
+  },
+  {
+    id: "leaves",
+    label: "19 · Leaves",
+    thesis:
+      "Each pattern is a SLAB SEEN FORE-EDGE-ON — its long edge a comb of N hairline leaves poking out. Five combs stacked vertically across the crop, one leaf per encoded Skill, the flagship leaf extended and lettered, the rest silhouettes. The count reads as a large numeral beside each pattern's name; the gloss sits under it. A five-leaf comb reads visibly thinner than a fourteen-leaf.",
+    provenance:
+      "The Cyberpunk 2077 item-cells edges reference: an item's edge carries a comb of thin hairlines that read as record depth without being lettered. Ports well to a pattern-of-skills — a leaf is one encoded Skill on the edge of the shared substrate slab.",
+  },
+  {
+    id: "roots",
+    label: "20 · Roots",
+    thesis:
+      "One horizontal GRADE BUS runs at the crop's floor — the shared substrate. Five trunks rise from it, one per pattern, each carrying N branch stubs (7 · 12 · 9 · 5 · 14) alternating left and right. The flagship branch is extended and lettered. Taller trunks are heavier patterns; the shared bus is the 'one layer' claim drawn explicitly. Nothing crosses anything, and there is no legend.",
+    provenance:
+      "The Cyberpunk 2077 industrial monitors reference: a distribution bus at the base with modules rising above it. Adopted for role — the bus is the substrate, the trunks are patterns, the branches are the encoded skills — because the trunks-from-a-shared-bus mapping is exactly what the reading is arguing about the layer.",
+  },
 ];
 
 export const islVariant = (id: string | null): IslVariantDef =>
   ISL_VARIANTS.find((v) => v.id === id) ?? ISL_VARIANTS[0];
 
 /** What every variant receives — the same projection `PdaConsole` hands
- *  production's reading 03. */
+ *  production's reading 03. Skills are the full reservoir; `selectedWork`
+ *  is the record the reader arrived from (rounds 1–3 ignore both; round-four
+ *  directions letter them as the drawing's centre of gravity). Both are
+ *  optional so a fixture-only test can build an IslRecord without them. */
 export interface IslRecord {
   teams: readonly PdaTeam[];
   shapes: readonly PdaShape[];
+  skills?: readonly CaseSkillEntry[];
+  selectedWork?: PdaWork;
 }
 
 export interface IslVariantProps {

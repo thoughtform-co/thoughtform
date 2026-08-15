@@ -1871,8 +1871,55 @@ string is composed at render time in a component**, where no scanner reaches
 it — the same blind spot ADR-070 U10 found when the card's three strings were
 lettered by a shared glyph. No lab variant letters the word at all (the tap
 marks carry the count, which is the hierarchy argument anyway) and
-`substrate-lab-fit` fails on `/\bteams?\b/i`. **Production is still wrong
-until a direction ships or the line is fixed in place.**
+`substrate-lab-fit` fails on `/\bteams?\b/i`. (Superseded 2026-08-13 by
+U16's pattern cards, which letter the gloss instead of teams.)
+
+⚠ **ROUND FOUR IS REJECTED (2026-08-14), and the record survives as a
+warning.** The three variants `backplane` / `bus` / `cutaway` anchored
+reading 03 on the R4 CARTRIDGE at `layout.core` — the selected work stays,
+five substrate bays fan around it, `02 ↔ 03` becomes a flight-identity.
+Built and shot cleanly through the lab's gates; promoted to production;
+rolled back the same day. **On THIS surface the cartridge silhouette is
+a proper noun that means WORKSTREAM.** Reading 02 uses it for the seat
+card; the ADR-069 flight carries it between 01 and 02 because those two
+readings ARE about that one work. Reading 03 is scoped one step wider —
+the shared layer beneath every workstream — and its drawing may not
+depend on a selected work. See ADR-070 U17.
+
+⚠ **ROUND FIVE IS THE CLUSTER-AS-BODY FAMILY** (2026-08-15). Six
+estate-scoped directions where each pattern is a physical body of like
+objects whose depth IS the count, with one exemplar lettered:
+
+- `hand` — fanned deck of plates from a root pivot
+- `piles` — offset-stacked slabs at the crop's floor
+- `constellation` — five nodes ring a central total, wire trunks braid
+- `loom` — five chips braid one wire per skill into one SUBSTRATE chip
+- `leaves` — comb of hairline leaves on a fore-edge slab
+- `roots` — five trunks rise from one shared bus, branches per skill
+
+Shared rules: one mark per encoded Skill; flagship = green accent and
+lettered `shortTitle`; labels HORIZONTAL (never rotated); no cartridge,
+no selected work, no team names on the drawing; TR+BL chamfers. Every
+direction exports `<name>Lettering()` AND `<name>MarkCount()`, and
+`substrate-lab-fit` walks both — a fan that dropped a plate would fail
+the mark-count guard before it shipped. See ADR-070 U18.
+
+⚠ **THREE FIT DEFECTS CAUGHT THE HOUR ROUND FIVE WAS WRITTEN**, all worth
+carrying:
+
+- `hand`'s flagship label ("Founder TOV", 11 chars) ran past a naive
+  `PLATE_W + 20` measure. The label is text-anchored MIDDLE at the fan's
+  centre column, so it extends past the 48u plate on both sides — its
+  measure is the LABEL COLUMN (120u), not the plate.
+- `leaves` collided its flagship label with the count numeral where the
+  flagship is the FIRST skill in the pattern (Judgment, Pattern). The
+  leftmost leaf's label ran back into the count column. Fixed by inset
+  60u each side of the comb (was 8u), which keeps the leftmost label
+  inside the comb.
+- `roots`'s flagship label on rightmost trunks clipped the crop's right
+  edge. Fixed by forcing the flagship's side to face the crop's centre:
+  left half → flagship RIGHT, right half → flagship LEFT. Non-flagship
+  branches still alternate.
 
 ## Confidentiality envelope
 
