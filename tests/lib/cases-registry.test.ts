@@ -863,6 +863,27 @@ describe("cases registry (ADR-054)", () => {
       `the mains sum to ${shapeSkills} but the plate's groups sum to ${groupCount}`
     ).toBe(groupCount);
 
+    /* EVERY MAIN NAMES ITS EVAL METHOD, and the cap is MEASURED. The drawings
+       letter it as a key at fs 12 / track .14, where the advance is 8.88u, so
+       24 characters measure 213u — the widest key column any round-six
+       direction affords. A longer method does not wrap here, it vanishes:
+       SVG `<text>` neither wraps nor reports overflow. ⚠ And it must differ
+       from the gloss: the two are different registers (what the shape MEANS
+       vs what "good" is tested against), and a method that restates the
+       definition has quietly deleted one of them. */
+    for (const s of shapes) {
+      expect(s.evalMethod.length, `${s.key}'s eval method is blank`).toBeGreaterThan(0);
+      expect(
+        s.evalMethod.length,
+        `${s.key}'s eval method "${s.evalMethod}" is ${s.evalMethod.length} chars, over 24`
+      ).toBeLessThanOrEqual(24);
+      expect(
+        s.evalMethod.toLowerCase() === s.gloss.toLowerCase(),
+        `${s.key}'s eval method restates its gloss`
+      ).toBe(false);
+    }
+    expect(new Set(shapes.map((s) => s.evalMethod)).size, "two mains share one method").toBe(5);
+
     // EIGHT DISTRICTS, and they seat on a 4x2 grid.
     expect(districts).toHaveLength(8);
     expect(new Set(districts.map((d) => d.id)).size).toBe(8);
@@ -952,7 +973,12 @@ describe("cases registry (ADR-054)", () => {
 
     // Every string the drawing or the hover card can render.
     const strings: string[] = [];
-    for (const s of visual.shapes) strings.push(s.label, s.gloss);
+    // ⚠ `evalMethod` IS IN THE BLOB, and it has to be. It is the newest
+    // lettered field on this record and the one most likely to reach for a
+    // tool or a threshold ("scored above 0.8", "graded in <vendor>"), because
+    // the honest answer to "how is this checked" is often a product. A record
+    // field outside this scan is exactly how `8 TEAMS` reached the page.
+    for (const s of visual.shapes) strings.push(s.label, s.gloss, s.evalMethod);
     for (const d of visual.districts) strings.push(d.name, d.ab);
     for (const w of visual.works) {
       strings.push(w.title, w.bar, w.evals, w.lane ?? "", w.vol, w.seat);

@@ -138,13 +138,35 @@ function measure(root: HTMLElement): ConfigFitReport {
  * Re-measures after paint on every dependency change. Two frames, not one:
  * the first lands after React commits, and fonts or a theme flip can still
  * move a glyph box on the next.
+ *
+ * ⚠ `stamp` NAMES WHAT WAS MEASURED, AND IT EXISTS BECAUSE A CAPTURE SCRIPT
+ * CANNOT OTHERWISE TELL (2026-08-15). The substrate lab's script deep-links a
+ * variant and then waits for `data-minpx > 0` — but the page mounts on its
+ * DEFAULT variant, measures that, and adopts the `?v=` param a tick later, so
+ * both the URL check (the script set that URL itself) and the numeric check
+ * pass while the readout still holds the default's figures. Fast drawings win
+ * the race and nobody notices; `mosaic` and `grade` paint a particle field,
+ * lose it, and were gated against the shipped baseline's 70 labels at another
+ * preset's scale — reported as green.
+ *
+ * So the readout publishes the identity it measured, in the same setState as
+ * the numbers, and the script waits for THAT. Passing no stamp keeps the old
+ * behaviour (the configuration lab does), because a caller with one variant
+ * has no race to lose.
  */
-export function useConfigFitReadout(ref: React.RefObject<HTMLElement | null>, deps: unknown[]) {
-  const [report, setReport] = useState<ConfigFitReport>(EMPTY);
+export function useConfigFitReadout(
+  ref: React.RefObject<HTMLElement | null>,
+  deps: unknown[],
+  stamp?: string
+) {
+  const [state, setState] = useState<{ report: ConfigFitReport; stamp: string }>({
+    report: EMPTY,
+    stamp: "",
+  });
 
   const run = useCallback(() => {
-    if (ref.current) setReport(measure(ref.current));
-  }, [ref]);
+    if (ref.current) setState({ report: measure(ref.current), stamp: stamp ?? "" });
+  }, [ref, stamp]);
 
   useEffect(() => {
     let second = 0;
@@ -158,5 +180,5 @@ export function useConfigFitReadout(ref: React.RefObject<HTMLElement | null>, de
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, ...deps]);
 
-  return { report, remeasure: run };
+  return { report: state.report, measuredStamp: state.stamp, remeasure: run };
 }

@@ -60,7 +60,19 @@ export type IslVariantId =
   | "constellation"
   | "loom"
   | "leaves"
-  | "roots";
+  | "roots"
+  | "wheel"
+  | "mosaic"
+  | "gate"
+  | "runs"
+  | "grade"
+  | "facet"
+  | "tanks"
+  | "pinbank"
+  | "stack"
+  | "flasks"
+  | "cells"
+  | "vats";
 
 export interface IslVariantDef {
   id: IslVariantId;
@@ -258,6 +270,207 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
       "One horizontal GRADE BUS runs at the crop's floor — the shared substrate. Five trunks rise from it, one per pattern, each carrying N branch stubs (7 · 12 · 9 · 5 · 14) alternating left and right. The flagship branch is extended and lettered. Taller trunks are heavier patterns; the shared bus is the 'one layer' claim drawn explicitly. Nothing crosses anything, and there is no legend.",
     provenance:
       "The Cyberpunk 2077 industrial monitors reference: a distribution bus at the base with modules rising above it. Adopted for role — the bus is the substrate, the trunks are patterns, the branches are the encoded skills — because the trunks-from-a-shared-bus mapping is exactly what the reading is arguing about the layer.",
+  },
+
+  /* ── Round six · the definition leads ──────────────────────────────────
+     Twenty directions and none landed, and the captures say why in two
+     mechanical faults rather than in taste.
+
+     ⚠ THE INCUMBENT IS A ROW OF FIVE CARDS, WHICH IS READING 01's GRID AT
+     n=5. Production draws five `housing()` cards in a row; the owner's own
+     constraint — it cannot look like the work tab — is broken by the
+     PRIMITIVE, before a single string is placed. So round six bans the card
+     row outright, and with it round five's fan, pile, comb and hub.
+
+     ⚠ AND THE DEFINITION IS THE FOOTNOTE WHILE BEING THE ANSWER. Each card
+     buries its gloss in a 78-unit foot at the type floor, under a large
+     empty field, beneath fourteen Skill labels. The reference the owner
+     brought — Aether's substrate donut — letters that same sentence at wedge
+     scale, and that is the whole reason it reads. Same inverted ladder
+     ADR-070 found when a question lettered larger than its answer.
+
+     Round five went the other way: mass became the entire subject and the
+     definitions dropped to a line or vanished, so `constellation` says LESS
+     than the incumbent while using ~40 % of the panel.
+
+     THE LAW: the definition leads, mass modifies it, the Skills are texture.
+     Every direction fills the crop. Each letters its pattern's name, its
+     count, its gloss, its `evalMethod` — the record's new field, and the
+     first thing on this surface that answers the owner's own word for a
+     substrate — and ONE exemplar, the flagship encode, in green ACCENT with
+     the label left at full ink.
+
+     ⚠ Three of the five encode mass CONTINUOUSLY (angle, area, depth), which
+     round five's `markCount` guard cannot reach, so they export `mass()` and
+     the fit test asserts proportionality instead. A direction guarded by
+     neither is a direction whose magnitude nobody checked. */
+  {
+    id: "wheel",
+    label: "21 · Wheel",
+    thesis:
+      "The reference, ported honestly. One ring, five wedges, angle proportional to the Skill count, and a rim of ticks — one per encoded Skill, the flagship extended and green. The centre letters the estate's total. The five label blocks sit in the corners the circle leaves, each carrying name, count, the gloss at reading size and the eval method as a gold key. The claim is PROPORTION OF ONE WHOLE: not five things collected, one thing divided five ways.",
+    provenance:
+      "The owner's own reference — Aether's `/claude-adoption` substrate donut, where 47 Skills cluster into five wedges each carrying a name, a count and a one-line definition. Adapted rather than copied: the rim chips that name all 47 cannot letter at this panel's meet and carry the owner field the map's envelope refuses, so the roster becomes tick mass and the definition takes its place.",
+  },
+  {
+    id: "mosaic",
+    label: "22 · Mosaic",
+    thesis:
+      "The crop tiled into five blocks with NO gutters, area proportional to the Skill count, one TR+BL cut on the outer boundary alone — so it reads as one machined plate divided rather than five objects collected. That distinction is the whole direction: a gutter makes cards, and cards are the work tab. Each block letters its name and count large, its gloss under them, its eval method as a gold key, over its own physics field at low alpha. 100 % panel efficiency, which at 603 × 493 is the scarcest thing there is.",
+    provenance:
+      "The Cyberpunk 2077 industrial-monitor boards: one panel divided into labelled fields of unequal size, every field flush against its neighbour, the division itself carrying the hierarchy. Adopted for the division, not the density.",
+  },
+  {
+    id: "gate",
+    label: "23 · Gate",
+    thesis:
+      "A substrate is the TEST work is checked against, so the drawing is five gates. Each row: a run of marks entering from the left — one per encoded Skill, the flagship first and green — meeting a chamfered THRESHOLD plate whose face letters the eval method, with the gloss to its right as the criterion the plate enforces. The name and count ride the plate's head. Furthest of the five from readings 01 and 02, and the only one whose composition is an argument about evaluation rather than about quantity.",
+    provenance:
+      "The Cyberpunk 2077 sequence-procedure panel: a column of processes each terminating in a state box, read as pass/hold at a glance. Adopted for role — the gate is the eval method, the marks arriving are what has been encoded against it.",
+  },
+  {
+    id: "runs",
+    label: "24 · Runs",
+    thesis:
+      "Five full-width rows, ranked by mass. Name at the left, then the count, then a RUN OF CELLS across the width — one cell per encoded Skill, so fourteen against five is a length you can also count — and the gloss lettered in the space the run leaves, with the eval method as a gold key beneath the name. The calmest and most instrument-like of the five, and the one most likely to survive the binding viewport intact: nothing here is diagonal, radial or nested.",
+    provenance:
+      "The Cyberpunk 2077 resources monitor: parallel gauges on one baseline, each labelled at its head, magnitude read by length against a shared scale. The house's own ladder, one reading over.",
+  },
+  {
+    id: "grade",
+    label: "25 · Grade",
+    thesis:
+      "The only direction that draws the relation UPWARD to the other two readings without borrowing their silhouette. One rule across the upper third; above it a faint row of unlettered ticks — the work, present but not the subject; below it five strata whose DEPTH is the Skill count, each filled with its own physics field and lettering its name and gloss horizontally inside the band, the eval method at the right margin. The claim is that this is the ground the work stands on.",
+    provenance:
+      "Round one's `strata` re-cut: the seam idea survived, the eight department buses that cluttered it did not, and the gloss is promoted from caption to subject. The lineage is named rather than hidden — if this wins it wins as strata's second draft.",
+  },
+
+  /* ── Round six · b — the wheel, cut straight ────────────────────────────
+     The owner's read on 21: the claim is right, the circle is not (this brand
+     draws no round shapes but its brand marks), and the labels belong INSIDE
+     the wedges. ⚠ THE ENCODING HAD TO INVERT TO DELIVER THAT, and the
+     inversion is the design rather than a compromise — see the variant's own
+     file. Judge `facet` against `wheel`, not against the other four. */
+  {
+    id: "facet",
+    label: "26 · Facet",
+    thesis:
+      "The wheel with its circle cut away and its labels brought inside. The count is SPLIT between how wide a wedge is and how far it reaches — the angle goes as the square root of the Skill count and the radius is solved from it — so each wedge's area is exactly its count while angles run 50° to 84° and radii 312 to 440. Not one curve is drawn: two rays, a chord at the hub and a chord at the rim per wedge, with a chamfered plate at the centre carrying the estate's total. Each wedge letters its own name, definition, eval method and exemplar inside itself, horizontally.",
+    provenance:
+      "Direction 21 under the owner's three notes (2026-08-15): labels inside, less round, a bit asymmetrical. ⚠ Angle-as-count and inside labels are arithmetically incompatible here — a 36° wedge cannot hold `STAKEHOLDER` at any radius this crop affords. Putting the whole count in the RADIUS instead fixed the labels and produced an asterisk: five spikes round a hub, reading as separate points rather than one thing divided. Half the count in each term is what closes them back into a single figure, and area — what a reader actually reads in a pie — stays exact either way.",
+  },
+
+  /* ── Round seven · the instrument register ─────────────────────────────
+     ⚠ THE FAULT WAS NEVER THE GEOMETRY, IT WAS THE REGISTER (owner,
+     2026-08-15: the substrate _"just feels completely out of place"_ beside
+     the two settled readings).
+
+     Readings 01 and 02 are drawn as PARTS OF A DEVICE — 01 is a field of
+     cartridges, seated and latched and state-marked; 02 is a circuit board,
+     opaque modules on a PCB bed with hatched ribbon lanes. Both are panels
+     from the Cyberpunk industrial-monitor references, which is the hand this
+     whole console is drawn in. It is a PDA.
+
+     And every substrate direction through round six — pie, mosaic, bar rows,
+     strata, crossing table, containment, constellation, straight-edged donut
+     — is a CHART pasted into that machine. Chamfer a pie chart and it is
+     still a pie chart. That mismatch is what twenty-six drawings kept failing
+     to fix by adjusting proportion, because proportion was never the problem.
+
+     ⚠ AND THE RECORD'S OWN WORDS SAY WHAT THE SUBSTRATE IS IN A MACHINE:
+     teams DRAW ON it, work is a DRAW, the shapes are a RESERVOIR, the layer
+     is BELOW GRADE, the reading is EXTRACTION. Supply-side language start to
+     finish, while the drawings kept reaching for statistics.
+
+     THE LAW: draw the substrate as the machine's SUPPLY SIDE — the part of
+     the device the cartridges draw from. Squint test: does it look like a
+     panel off the same instrument as 01 and 02? Round six's CONTENT law is
+     untouched (the definition leads, the eval method is lettered, the
+     flagship takes a green mark and keeps its ink).
+
+     ⚠ ONE NUMBER SHAPES ALL THREE LAYOUTS. `KNOWN-FAILURE FIXTURES` measures
+     195.4u at fs 12 / .14 and a five-across column of this crop is ~176 —
+     **the eval method does not fit a five-across layout at any size this
+     surface allows.** That is what drove round six into corner blocks and
+     full-width rows, and it is why two of these three call out to a ledger
+     and the third abandons columns entirely. */
+  {
+    id: "tanks",
+    label: "27 · Tanks",
+    thesis:
+      "Five vessels standing on one manifold. Fill height is the encoded Skill count, the fill is the pattern's own physics field closed by a bright meniscus, and the wall carries a graduation of one mark per Skill — at a pitch shared by all five, which is what makes them one instrument rather than five differently-scaled pictures. The vessels letter nothing; the reading is called out to a ledger on leaders, which is the reference's own grammar. The claim is the record's own verb: this is what the work draws on.",
+    provenance:
+      "The Cyberpunk 2077 resources monitor — four vessels with hatched fill levels and a labelled call-out beneath — read literally instead of as a mood. The manifold and the risers are reading 02's `ribbonPaths`, so the supply is made of the same wiring as the configuration board.",
+  },
+  {
+    id: "pinbank",
+    label: "28 · Pinbank",
+    thesis:
+      "ONE housing, five banks, forty-seven pins. The substrate is a single component whose pins leave its edge in five groups, each group a shape of the one layer — and a ledger reads them off. ⚠ The only direction in seven rounds where the substrate is one OBJECT: every predecessor drew five things and then had to argue they were one. It letters no count anywhere, because the pins are the number.",
+    provenance:
+      "The Cyberpunk 2077 relay-driver / TLM-decoder panel: a vertical chip, numbered pin banks leaving one edge, a side table reading them off. The closest thing in the entire reference set to what this record actually is — and it sat unused for six rounds while the drawings reached for pies.",
+  },
+  {
+    id: "stack",
+    label: "29 · Stack",
+    thesis:
+      "The substrate in SECTION: one housing, five layers, thickness proportional to the encoded Skills, heaviest at the floor because a stack reads as bedrock. Each layer letters its own name, definition, eval method and exemplar at FULL PANEL WIDTH — which is what lets this one carry no ledger at all. The graduation runs down the inner edge at the stack's own shared unit, so the marks are the thickness, counted.",
+    provenance:
+      "⚠ REPLACES THE DIAMOND LATTICE, on arithmetic. The bio-monitor reference wanted five diamonds sized by area with the name INSIDE and the detail on an attached tab. The diamonds fit — `STAKEHOLDER` inside the smallest needs a half-diagonal of 87.8, putting a touching row of the three heaviest at 801 against 880 available. The TAB cannot be placed: a lattice means edge-touching, and two touching diamonds leave a clear gap of ZERO at their waist. Tabs in a column make it a third marks-plus-ledger; tabs in a block at the foot make it a card grid. The direction could not deliver the one thing that distinguished it.",
+  },
+
+  /* ── Round eight · the vessel rig ──────────────────────────────────────
+     The owner kept `tanks` and gave it two notes (2026-08-15):
+
+     1. **Make it as visual as the FIELD CARDS.** Direction 6's argument was
+        that each pattern renders its OWN TEST — sine baselines for Voice, a
+        threshold for Judgment, a lattice of present and absent cases for
+        Validation, reader nodes for Stakeholder, a repeating tiling for
+        Pattern — and `tanks` had shrunk that to a faint texture inside a small
+        fill box. Here the field IS the contents, clipped to the vessel's own
+        outline at the field cards' own weight.
+
+     2. ⚠ **THE SILHOUETTE MAY NOT BE THE WORK'S.** _"Skills are built on
+        workflows, but they're different — that's why I can't have them be the
+        same type of shape, like the square ones."_ A chamfered rectangle on
+        this surface IS A CARTRIDGE: reading 01 is twenty of them, reading 02
+        seats one at its centre. A substrate drawn in that outline claims to be
+        a workstream — the same class of error that got round four rejected. A
+        silhouette here is a proper noun.
+
+     ⚠ **AND THE VESSEL IS FULL, ITS HEIGHT THE COUNT.** `tanks` drew five
+     equal vessels at different fill levels, which reads as CAPACITY — a
+     quantity this record does not publish (U21 named it and let it stand as a
+     shared gauge). Sizing the vessel itself removes the implication AND gives
+     the field the whole body to paint in, which is what note 1 asked for.
+
+     ⚠ **ONE RIG, THREE OUTLINES** (`vesselRig.tsx`), the discipline `FormCard`
+     used for density against field: composition, ledger, manifold, graduation
+     and contents are identical across 30–32 and only `vesselPath` changes, so
+     the comparison is about the shape and nothing else. */
+  {
+    id: "flasks",
+    label: "30 · Flasks",
+    thesis:
+      "The vessel rig at a NECKED silhouette — a narrow mouth, a sloped shoulder, a wide body. The reading is what a reservoir looks like when you have to get material into it, and the neck gives each store a top that is unmistakably not a card's. Height is the encoded Skill count, the store is full, and the contents are the pattern's own test clipped to the flask.",
+    provenance:
+      "The CP2077 resources monitor's vessels, taken as an object rather than as a bar. The neck and shoulder are what carry it furthest from the cartridge outline that means WORKSTREAM everywhere else on this console.",
+  },
+  {
+    id: "cells",
+    label: "31 · Cells",
+    thesis:
+      "The vessel rig at a HEXAGONAL silhouette — widest at the waist, flat top and floor so it stands on the manifold. Nothing else on this surface is drawn this way, which is the whole point of the option: a cell reads as a stored charge rather than as a container, and the substrate is closer to charge than to liquid.",
+    provenance:
+      "The fuel-cell / battery-cell convention in the industrial-monitor register. Chosen as the outline that shares the least with a chamfered rectangle while still standing flat.",
+  },
+  {
+    id: "vats",
+    label: "32 · Vats",
+    thesis:
+      "The vessel rig at a TAPERED silhouette — a straight-sided vat, narrower at the mouth than at the floor. The quietest of the three: it changes the least about the composition and relies on the taper alone to say this is a store and not a card. If the neck and the hexagon both read as costume, this is the one that is left.",
+    provenance:
+      "The plainest reading of a supply vessel, kept in the set deliberately as the control — the same role `tight` played in the configuration lab's round two.",
   },
 ];
 

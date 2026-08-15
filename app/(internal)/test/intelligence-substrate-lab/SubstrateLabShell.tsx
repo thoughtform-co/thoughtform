@@ -23,23 +23,35 @@ import { useConfigFitReadout } from "../intelligence-config-lab/useFitReadout";
 import { BACKPLANE_VIEWBOX, VariantBackplane } from "./VariantBackplane";
 import { BUS_VIEWBOX, VariantBus } from "./VariantBus";
 import { CARDS_VIEWBOX, VariantCards } from "./VariantCards";
+import { CELLS_VIEWBOX, VariantCells } from "./VariantCells";
 import { CONSTELLATION_VIEWBOX, VariantConstellation } from "./VariantConstellation";
 import { CUTAWAY_VIEWBOX, VariantCutaway } from "./VariantCutaway";
 import { DENSITY_VIEWBOX, VariantDensity } from "./VariantDensity";
 import { FIELD_VIEWBOX, VariantField } from "./VariantField";
+import { FACET_VIEWBOX, VariantFacet } from "./VariantFacet";
+import { FLASKS_VIEWBOX, VariantFlasks } from "./VariantFlasks";
 import { GALLERY_VIEWBOX, VariantGallery } from "./VariantGallery";
+import { GATE_VIEWBOX, VariantGate } from "./VariantGate";
+import { GRADE_VIEWBOX, VariantGrade } from "./VariantGrade";
 import { HAND_VIEWBOX, VariantHand } from "./VariantHand";
 import { LEAVES_VIEWBOX, VariantLeaves } from "./VariantLeaves";
 import { LOOM_VIEWBOX, VariantLoom } from "./VariantLoom";
+import { MOSAIC_VIEWBOX, VariantMosaic } from "./VariantMosaic";
 import { PILES_VIEWBOX, VariantPiles } from "./VariantPiles";
+import { PINBANK_VIEWBOX, VariantPinbank } from "./VariantPinbank";
 import { RACK_VIEWBOX, VariantRack } from "./VariantRack";
 import { REGISTRY_VIEWBOX, VariantRegistry } from "./VariantRegistry";
 import { ROOTS_VIEWBOX, VariantRoots } from "./VariantRoots";
+import { RUNS_VIEWBOX, VariantRuns } from "./VariantRuns";
 import { SEALS_VIEWBOX, VariantSeals } from "./VariantSeals";
+import { STACK_VIEWBOX, VariantStack } from "./VariantStack";
 import { STRATA_VIEWBOX, VariantStrata } from "./VariantStrata";
 import { TABLE_VIEWBOX, VariantTable } from "./VariantTable";
+import { TANKS_VIEWBOX, VariantTanks } from "./VariantTanks";
 import { TERMINAL_VIEWBOX, VariantTerminal } from "./VariantTerminal";
 import { TREE_VIEWBOX, VariantTree } from "./VariantTree";
+import { VATS_VIEWBOX, VariantVats } from "./VariantVats";
+import { WHEEL_VIEWBOX, VariantWheel } from "./VariantWheel";
 import {
   ISL_VARIANTS,
   type IslRecord,
@@ -101,6 +113,18 @@ const DRAWINGS: Record<
   loom: { vb: LOOM_VIEWBOX, Component: VariantLoom },
   leaves: { vb: LEAVES_VIEWBOX, Component: VariantLeaves },
   roots: { vb: ROOTS_VIEWBOX, Component: VariantRoots },
+  wheel: { vb: WHEEL_VIEWBOX, Component: VariantWheel },
+  mosaic: { vb: MOSAIC_VIEWBOX, Component: VariantMosaic },
+  gate: { vb: GATE_VIEWBOX, Component: VariantGate },
+  runs: { vb: RUNS_VIEWBOX, Component: VariantRuns },
+  grade: { vb: GRADE_VIEWBOX, Component: VariantGrade },
+  facet: { vb: FACET_VIEWBOX, Component: VariantFacet },
+  tanks: { vb: TANKS_VIEWBOX, Component: VariantTanks },
+  pinbank: { vb: PINBANK_VIEWBOX, Component: VariantPinbank },
+  stack: { vb: STACK_VIEWBOX, Component: VariantStack },
+  flasks: { vb: FLASKS_VIEWBOX, Component: VariantFlasks },
+  cells: { vb: CELLS_VIEWBOX, Component: VariantCells },
+  vats: { vb: VATS_VIEWBOX, Component: VariantVats },
 };
 
 interface Preset {
@@ -220,7 +244,15 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
     };
   }, [theme]);
 
-  const { report, remeasure } = useConfigFitReadout(frameRef, [variantId, theme, preset.id]);
+  /* ⚠ WHAT THE READOUT MEASURED, PUBLISHED BESIDE THE NUMBERS. The capture
+     script waits on this rather than on `data-minpx > 0`, which the DEFAULT
+     variant's measurement satisfies just as well — see `useFitReadout`. */
+  const stamp = `${variantId}|${theme}|${preset.id}`;
+  const { report, measuredStamp, remeasure } = useConfigFitReadout(
+    frameRef,
+    [variantId, theme, preset.id],
+    stamp
+  );
 
   /**
    * ⚠ THE BASELINE MOUNTS ELASTIC, EXACTLY AS PRODUCTION DOES.
@@ -387,6 +419,7 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
           data-clipped={report.clipped.length}
           data-minpx={report.minPx.toFixed(2)}
           data-texts={report.texts}
+          data-stamp={measuredStamp}
           data-overflow={Math.max(report.overflowX, report.overflowY)}
         >
           <h2>Fit</h2>

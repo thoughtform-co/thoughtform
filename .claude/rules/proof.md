@@ -1904,6 +1904,194 @@ direction exports `<name>Lettering()` AND `<name>MarkCount()`, and
 `substrate-lab-fit` walks both — a fan that dropped a plate would fail
 the mark-count guard before it shipped. See ADR-070 U18.
 
+⚠ **ROUND SIX IS THE DEFINITION-LEADS FAMILY** (2026-08-15, owner). Five
+directions built on the owner's own reference — Aether's `/claude-adoption`
+substrate donut, where each wedge carries a **name, a count and a one-line
+definition**:
+
+- `wheel` — the reference ported; angle is the count, rim ticks are the
+  Skills, five label blocks in the corners the circle leaves
+- `mosaic` — the crop tiled with NO gutters, area is the count
+- `gate` — marks arrive at a chamfered threshold plate lettering the method
+- `runs` — five ranked rows, a run of cells across each
+- `grade` — the estate unsorted above a grade line, five strata by depth below
+- `facet` — the wheel cut straight, labels INSIDE the wedges (ADR-070 U20)
+
+⚠ **`facet` CHANGES WHAT THE DRAWING ENCODES, and judge it against `wheel`
+alone.** The owner's notes on 21 were: labels inside, less round, a bit
+asymmetrical. **Angle-as-count and inside labels are arithmetically
+incompatible** — `STAKEHOLDER` is 149.6u at fs 20 and its 36° wedge only
+reaches that width where ~20 units of depth remain against a block needing
+~105. So the count SPLITS: `θ ∝ √n`, radius solved so the quad's area
+`½·sin(θ)·(r² − R0²)` is exactly the count.
+
+- ⚠ **THE SPLIT IS WHAT MAKES IT A ROSETTE INSTEAD OF AN ASTERISK.** All the
+  count in the radius seated every label and read as five spikes round a hub —
+  separate points, not one thing divided, with the crop's bottom empty. Half in
+  each term gives 50°–84° angles and 312–440 radii: irregular, and still one
+  figure. `SPLIT` is the one dial; the area identity holds at every value.
+- ⚠ **THE AREA IS THE QUAD'S, NEVER THE SECTOR'S.** `½·θ·r²` is right only for
+  a wedge running to a point; these run to a chord at `R0`, and the sector
+  formula drifted the areas ~1.5 % apart. Guarding `r² − R0²` alone was
+  likewise correct while angles were equal and silently wrong once they varied.
+- ⚠ **SEATING IS SOLVED AND SEPARATELY GUARDED.** An axis-aligned block in a
+  rotated quad needs ~`(W+H)/√2` of radial thickness, so diagonal wedges fail
+  where screen-aligned ones do not. `seatBlock` walks the wedge's bbox trying
+  gloss wraps widest-to-narrowest and returns **null** rather than falling
+  back; `facetSeats` asserts all five. Nothing else asks this — a block drifted
+  through a rim chord letters cleanly, collides with nothing and sits inside
+  the crop.
+- ⚠ **A GROUP `transform` BREAKS THE CLIP GATE.** `getBBox()` reports a node's
+  box in its OWN user space, so a `translate(...)` around the drawing made all
+  27 labels report clipped on a drawing that clips none. The derived origin is
+  BAKED into every drawn coordinate; geometry and seating stay in shape space
+  with the hub at the origin, which is what lets the composition centre itself
+  from its own bbox (U14's law).
+- ⚠ Two traps worth carrying: a **4-unit search stride** stepped clean over
+  Voice's few-unit feasible band and reported "cannot seat" for a block that
+  fits — granularity is arithmetic here, not a perf knob; and **`FIT_EPS`
+  belongs on the DECLARED measure, never the seating width** (the block's
+  measure IS its widest line, so the guard's own recomputation lands 3e-14 the
+  other side — and Voice clears its wedge by under half a unit).
+- ⚠ **`facet` LETTERS NO COUNT**, alone in round six: the wedge's size is the
+  count and the rim ticks are there to be tallied. If the numeral returns, the
+  ticks come off — not both.
+
+⚠ **THE DIAGNOSIS IS MECHANICAL, AND IT INDICTS THE INCUMBENT'S PRIMITIVE.**
+Production's reading 03 is **five `housing()` cards in a row, which is reading
+01's grid at n = 5** — the owner's standing "it may not look like the work tab"
+is broken before a string is placed. And its gloss, which is the ANSWER to what
+a substrate is, sits in a 78-unit foot at the type floor under an empty field
+and fourteen Skill labels. Round five then over-corrected: mass became the
+whole subject and the definitions vanished, so `constellation` says LESS than
+the drawing it replaced while using ~40 % of the panel.
+**THE LAW: the definition leads, mass modifies it, the Skills are texture** —
+no card row, no fan/pile/comb/hub, every direction fills the crop.
+
+- ⚠ **THE RECORD NAMES ITS EVAL METHOD NOW.** `CaseMapShape.evalMethod`
+  (≤24 chars, MEASURED — 24 × 8.88u at fs 12 / .14 = 213u, the widest key
+  column any direction affords). The gloss says what the shape MEANS, this says
+  what "good" is CHECKED against — the owner's own word for a substrate, and
+  the thing that makes one inheritable. ⚠ **It is inside `cases-registry`'s
+  scanned blob**, because the honest answer to "how is this checked" is often a
+  product; and it is pinned **never equal to its own gloss**, since a method
+  that restates the definition has deleted one of the two.
+- **`roundSix.tsx` derives the five facts ONCE** — name · count · gloss ·
+  evalMethod · flagship — and every direction letters the same set through
+  `patternSpecs(record, measures)`. `measures` may be a FUNCTION, because
+  mosaic's blocks and grade's bands give each pattern a different column, and
+  one shared measure would check the narrowest against the widest budget.
+- ⚠ **THREE DIRECTIONS ENCODE MASS CONTINUOUSLY and `markCount` cannot reach
+  them.** `MASS_VARIANTS` divides angle / area / depth by the Skill count and
+  asserts one shared unit — it fails the moment a floor, a clamp or a
+  hand-tuned constant appears. ⚠ `mosaic` and `grade` export NO `markCount`
+  deliberately: mosaic draws no per-Skill mark, and grade's tick run is
+  UNGROUPED, so a per-pattern count would assert a grouping neither makes.
+- ⚠ **A GLOSS THAT WRAPPED PAST ITS CAP DECLARES ITS DROPPED TAIL AT MEASURE 0.** `wrapLines` slices quietly, so the tail vanishes from the drawing AND
+  from the spec list and every per-line assertion still passes. This is what
+  caught `gate` slicing `CONTEXT` off Voice's definition.
+- ⚠ **THE FLAGSHIP LEADS ITS RUN (`RoundSixPattern.ordered`).** The fixture's
+  order is alphabetical by team, so left alone the green mark lands wherever
+  the first encode happens to sit — the drawing then says "the fourth one is
+  special" where the record says "this one came first and the rest followed".
+- ⚠ **THE FLAGSHIP TAKES A GREEN MARK AND KEEPS ITS INK.** Lettering it in
+  `--pda-grn-ink` against siblings at `--pda-txt` makes the one thing the
+  drawing points at the DIMMEST thing on it — production learned this on the
+  plate stack and three round-five directions re-introduced it.
+
+⚠ **AND THE CAPTURE HARNESS WAS GATING AGAINST THE WRONG DRAWING**
+(fixed 2026-08-15; it predates round six). `capture-substrate-lab` waited on
+`location.search` — **which the script itself sets** — plus `data-minpx > 0`,
+and both are true from the first paint, before the page adopts `?v=`, with the
+DEFAULT variant's own measurement satisfying the numeric half. Fast drawings
+win that race; `mosaic` and `grade` paint a particle field, lose it, and were
+gated against the shipped baseline's **70 labels at another preset's scale**,
+reported green. The readout stamps the identity it measured (`data-stamp` =
+`variant|theme|preset`) in the same `setState` as the numbers and the script
+waits on THAT. `useConfigFitReadout`'s `stamp` argument is optional, so the
+config lab is untouched. **A wait condition a script can satisfy by itself is
+not a wait condition** — and the same shape of hole is worth checking in any
+other capture gate that waits on a number rather than on an identity.
+
+⚠ **ROUND SEVEN IS THE INSTRUMENT REGISTER, AND IT DIAGNOSES ALL SIX ROUNDS
+BEFORE IT** (2026-08-15, owner: the substrate _"just feels completely out of
+place"_). **Readings 01 and 02 are drawn as PARTS OF A DEVICE** — 01 a field of
+cartridges, 02 a circuit board with hatched ribbon lanes, both panels from the
+Cyberpunk industrial-monitor references. **Every substrate direction through
+round six is a CHART pasted into that machine** — table, tree, seams, pin grid,
+fans, piles, hub, comb, roots, donut, mosaic, ranked rows, strata, straight-edged
+donut. Chamfer a pie chart and it is still a pie chart: **proportion was never
+the problem**, which is why adjusting it never landed. ⚠ **And the record's own
+words say what the substrate is in a machine** — teams DRAW ON it, work is a
+DRAW, the shapes are a RESERVOIR, the layer is BELOW GRADE, the reading is
+EXTRACTION. **THE LAW: draw the substrate as the machine's SUPPLY SIDE.** Squint
+test: does it look like a panel off the same instrument as 01 and 02?
+
+- `tanks` — five vessels on one manifold; fill height is the count
+- `pinbank` — ONE housing, five banks, 47 pins; bank extent is the count
+- `stack` — one housing, five layers in section; thickness is the count
+
+- ⚠ **ONE NUMBER SHAPES EVERY LAYOUT HERE.** `KNOWN-FAILURE FIXTURES` measures
+  195.4u at fs 12 / .14 and a five-across column of this crop is ~176 — **the
+  eval method does not fit a five-across layout at any size this surface
+  allows.** That is what drove round six into corner blocks and full-width
+  rows; two of round seven call out to a ledger and the third abandons columns.
+- ⚠ **`pinbank` IS THE ONLY DIRECTION IN SEVEN ROUNDS WHERE THE SUBSTRATE IS
+  ONE OBJECT.** Every predecessor drew five things then argued they were one
+  layer. It letters no count: the pins are the number.
+- **All three share ONE graduation pitch** (one mark per encoded Skill at one
+  unit across all five) — what makes each a single instrument rather than five
+  differently-scaled pictures.
+- ⚠ **THE DIAMOND LATTICE WAS DESIGNED AND REJECTED ON ARITHMETIC.** Five
+  diamonds sized by area with the name INSIDE fit (`STAKEHOLDER` needs a
+  half-diagonal of 87.8 → a touching row of the three heaviest is 801 against
+  880). The attached TAB cannot be placed: a lattice means edge-touching, and
+  two touching diamonds leave a clear gap of **ZERO** at their waist. Tabs in a
+  column make it a third marks-plus-ledger; tabs at the foot make it a card
+  grid. `stack` replaced it — recorded because the diamonds themselves are
+  viable and will be proposed again.
+- ⚠ **A LAYER'S TEXT CENTRES IN ITS LAYER.** Top-anchored, `stack`'s heaviest
+  layer — the one whose thickness is the point — carried ~130 units of void
+  under four lines: ADR-070 U14's hole in a new place.
+- ⚠ **`tanks`' HEADROOM IS THE GAUGE, NOT A CLAIM.** All five vessels share one
+  scale whose maximum is the heaviest pattern; the empty part is the axis, not
+  unencoded capacity. Named because an implied datum is exactly what this
+  surface bans.
+
+⚠ **ROUND EIGHT IS THE VESSEL RIG — ONE COMPOSITION, THREE SILHOUETTES**
+(`vesselRig.tsx`; `flasks` · `cells` · `vats`). The owner kept `tanks` and gave
+it two notes:
+
+- **Make it as visual as the FIELD CARDS.** Direction 6's argument was that
+  each pattern renders its OWN TEST; `tanks` had shrunk that to a faint texture
+  in a small fill box. The field is the CONTENTS now — clipped to the vessel's
+  own outline, at the field cards' weight.
+- ⚠ **THE SILHOUETTE MAY NOT BE THE WORK'S.** _"Skills are built on workflows,
+  but they're different — that's why I can't have them be the same type of
+  shape, like the square ones."_ **A chamfered rectangle on this surface IS A
+  CARTRIDGE** (reading 01 is twenty; reading 02 seats one), so a substrate in
+  that outline claims to be a workstream — round four's error in a new place.
+  **A silhouette here is a proper noun.** All three outlines are straight-edged
+  and none is a rectangle: necked flask · waisted hexagon · tapered vat.
+
+- ⚠ **THE VESSEL IS FULL AND ITS HEIGHT IS THE COUNT.** `tanks` drew five equal
+  vessels at different LEVELS, which reads as capacity — a quantity this record
+  does not publish (U21 named it and let it stand as a shared gauge). Sizing
+  the vessel removes the implication AND gives the field the whole body.
+- ⚠ **THE VESSEL'S WIDTH IS BOUGHT FROM THE LEDGER.** At 76 wide the fields had
+  no character (a field card is ~120); taking the ledger 366 → 260 wraps every
+  definition to two lines and buys 20 units per store. The field is the subject
+  and a wrapped sentence costs the reading nothing.
+- ⚠ **NO TEXT INSIDE A TRANSLATED GROUP.** Each vessel draws in its own local
+  space so one path serves as outline, ground AND clip; `getBBox` reports in
+  that space, so a label there would defeat the capture's clip gate (the
+  `facet` lesson). Every string is absolute, in the ledger.
+- **One rig, three outlines** is `FormCard`'s discipline (density vs field):
+  composition, ledger, manifold, graduation and contents are identical and only
+  `vesselPath` changes, so the comparison is about the shape and nothing else.
+  ⚠ All three are still listed separately in every guard tuple — a silhouette
+  that grows its own strings later must be walked, not silently trusted.
+
 ⚠ **THREE FIT DEFECTS CAUGHT THE HOUR ROUND FIVE WAS WRITTEN**, all worth
 carrying:
 

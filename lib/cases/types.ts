@@ -224,6 +224,14 @@ export interface CaseMapShape {
   first: string;
   /** What the shape means, ≤44 chars — read in the hover card. */
   gloss: string;
+  /**
+   * How work on this shape is CHECKED — the eval method the Skills in it
+   * share, ≤24 chars. The gloss says what the shape means; this says what
+   * "good" is tested against, which is the thing that makes a substrate
+   * inheritable: a second team takes the method without taking anyone's
+   * judgment. Generic by law — a method, never a tool, a vendor or a score.
+   */
+  evalMethod: string;
 }
 
 /** A team, drawn as a district plate on the board. */

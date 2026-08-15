@@ -42,7 +42,56 @@ import { strataLettering } from "@/app/(internal)/test/intelligence-substrate-la
 import { tableLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantTable";
 import { densityLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantDensity";
 import { fieldLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantField";
+import {
+  facetLettering,
+  facetMarkCount,
+  facetMass,
+  facetSeats,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantFacet";
 import { galleryLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantGallery";
+import {
+  vesselLettering,
+  vesselMarkCount,
+  vesselMass,
+} from "@/app/(internal)/test/intelligence-substrate-lab/vesselRig";
+import {
+  pinbankLettering,
+  pinbankMarkCount,
+  pinbankMass,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantPinbank";
+import {
+  stackLettering,
+  stackMarkCount,
+  stackMass,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantStack";
+import {
+  tanksLettering,
+  tanksMarkCount,
+  tanksMass,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantTanks";
+import {
+  gateLettering,
+  gateMarkCount,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantGate";
+import {
+  gradeLettering,
+  gradeMass,
+  gradeTicks,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantGrade";
+import {
+  mosaicLettering,
+  mosaicMass,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantMosaic";
+import {
+  runsLettering,
+  runsMarkCount,
+  runsMass,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantRuns";
+import {
+  wheelLettering,
+  wheelMarkCount,
+  wheelMass,
+} from "@/app/(internal)/test/intelligence-substrate-lab/VariantWheel";
 import { rackLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantRack";
 import { registryLettering } from "@/app/(internal)/test/intelligence-substrate-lab/VariantRegistry";
 import {
@@ -146,6 +195,49 @@ const VARIANTS: readonly [string, (r: IslRecord) => LetterSpec[], number][] = [
   ["loom", loomLettering, 18],
   /* roots letters (name + count + flagship) × 5 + 1 bus claim = 16. */
   ["roots", rootsLettering, 16],
+
+  /* ── Round six · THE DEFINITION LEADS ──────────────────────────────────
+     Every direction letters the SAME five facts per pattern through the
+     shared `patternSpecs` — name · count · gloss · evalMethod · flagship —
+     which is why these floors are uniform where round five's were bespoke.
+     Round five dropped the gloss to buy room for mass and ended up saying
+     less than the drawing it was replacing; round six's whole premise is
+     that the definition is the subject, so a direction that letters fewer
+     than five per pattern has abandoned the round rather than economised.
+
+     5 facts × 5 patterns = 25, with the gloss on one line. */
+  ["runs", runsLettering, 25],
+  ["gate", gateLettering, 25],
+  ["grade", gradeLettering, 25],
+  /* mosaic's blocks are unequal, so its gloss may take two lines in the
+     narrow column and one in the wide — 25 is the floor either way. */
+  ["mosaic", mosaicLettering, 25],
+  /* wheel's blocks are 220u, which wraps every gloss to two lines: 6 × 5 =
+     30, plus the core's total and its label. */
+  ["wheel", wheelLettering, 32],
+  /* facet letters no COUNT — the wedge's size is the count, and a numeral
+     beside it would be the surface saying one thing twice. So 4 facts × 5 =
+     20, plus the core's total and its label. */
+  ["facet", facetLettering, 22],
+
+  /* ── Round seven · THE INSTRUMENT REGISTER ─────────────────────────────
+     Same five facts per pattern through `patternSpecs`, plus each drawing's
+     own chrome. `tanks` letters 5 facts × 5 + the manifold's claim = 26;
+     `pinbank` drops the count (its pins are the number) for 4 × 5 + three
+     strings on the housing = 23; `stack` keeps the count and letters two on
+     its head band = 27. */
+  ["tanks", tanksLettering, 26],
+  ["pinbank", pinbankLettering, 23],
+  ["stack", stackLettering, 27],
+
+  /* ── Round eight · the vessel rig ──────────────────────────────────────
+     ⚠ 30, 31 and 32 SHARE ONE LETTERING FUNCTION because they share one rig —
+     only `vesselPath` differs. Listing all three is not redundant: the tuple
+     is what makes each an ENTRY in the guard, so a silhouette that grew its
+     own strings later would be walked rather than silently trusted. */
+  ["flasks", vesselLettering, 26],
+  ["cells", vesselLettering, 26],
+  ["vats", vesselLettering, 26],
 ];
 
 /**
@@ -163,6 +255,60 @@ const MARK_COUNT_VARIANTS: readonly [string, (r: IslRecord, key: string) => numb
   ["loom", loomMarkCount],
   ["leaves", leavesMarkCount],
   ["roots", rootsMarkCount],
+  /* Round six — the three directions that still draw a countable mark per
+     Skill. `mosaic` and `grade` are absent on purpose and their files say
+     why: mosaic draws no per-Skill mark at all, and grade's tick run is
+     deliberately UNGROUPED, so a per-pattern count would assert a grouping
+     neither drawing makes and pass by measuring the fixture against itself. */
+  ["wheel", wheelMarkCount],
+  ["gate", gateMarkCount],
+  ["runs", runsMarkCount],
+  ["facet", facetMarkCount],
+  /* Round seven — every one of the three draws a countable mark per Skill:
+     a graduation on a vessel wall, a pin on a bank, a tick down a layer's
+     inner edge. That is the register's own habit: an instrument is read off
+     its marks. */
+  ["tanks", tanksMarkCount],
+  ["pinbank", pinbankMarkCount],
+  ["stack", stackMarkCount],
+  ["flasks", vesselMarkCount],
+  ["cells", vesselMarkCount],
+  ["vats", vesselMarkCount],
+];
+
+/**
+ * ⚠ THREE ROUND-SIX DIRECTIONS ENCODE MASS CONTINUOUSLY, AND `markCount`
+ * CANNOT REACH THEM. An angle, an area and a depth have no marks to tally, so
+ * the drawing could drift off the record — a wedge sized by rank instead of by
+ * count, a band given a minimum depth "to fit the label" — with every existing
+ * assertion green.
+ *
+ * The counterpart is proportionality: divide the magnitude by the Skill count
+ * and every pattern must land on the SAME unit. That is strictly what a
+ * continuous encoding promises, and it fails loudly the moment a floor, a
+ * clamp or a hand-tuned constant is introduced.
+ */
+const MASS_VARIANTS: readonly [string, (r: IslRecord, key: string) => number][] = [
+  ["wheel", wheelMass],
+  ["mosaic", mosaicMass],
+  ["grade", gradeMass],
+  ["runs", runsMass],
+  /* facet's radius varies while its angle does not, so `r² − R0²` IS the
+     wedge's area up to the shared ½·sin(θ). If a radius were ever hand-picked
+     to make a label fit, this is what would catch it. */
+  ["facet", facetMass],
+  /* Round seven — fill height, bank extent, layer thickness. ⚠ `pinbank`'s
+     bank is `n × PIN_PITCH` and NOT the span between its first and last pin,
+     which is `(n − 1) × PIN_PITCH` and not proportional to anything; this is
+     what would catch that slip. */
+  ["tanks", tanksMass],
+  ["pinbank", pinbankMass],
+  ["stack", stackMass],
+  /* Round eight — the VESSEL ITSELF is the magnitude now, not a level inside
+     it, which is what stops the empty part reading as unpublished capacity. */
+  ["flasks", vesselMass],
+  ["cells", vesselMass],
+  ["vats", vesselMass],
 ];
 
 describe("the substrate lab's drawings fit their boxes", () => {
@@ -379,6 +525,113 @@ describe("the round-five cluster drawings draw one mark per skill", () => {
         expect(markCount(r, shape.key), `${name} ${shape.key}: fixture and drawing disagree`).toBe(
           inFixture
         );
+      }
+    });
+  }
+});
+
+describe("the round-six drawings size their magnitudes by the record", () => {
+  for (const [name, mass] of MASS_VARIANTS) {
+    it(`${name}: every pattern lands on the same unit magnitude`, () => {
+      const r = record();
+      const units = r.shapes.map((s) => ({ key: s.key, unit: mass(r, s.key) / s.skills }));
+      for (const u of units) {
+        expect(u.unit, `${name} ${u.key} has no magnitude at all`).toBeGreaterThan(0);
+      }
+      /* 1 % covers float accumulation in the remainder-takes-the-rest term
+         and nothing else. A floor, a clamp or a hand-tuned constant moves a
+         unit by far more than that, which is exactly what this is for. */
+      const base = units[0].unit;
+      for (const u of units) {
+        expect(
+          Math.abs(u.unit - base) / base,
+          `${name} ${u.key}: ${u.unit.toFixed(2)} per Skill against ${base.toFixed(2)} — the magnitude is not the count`
+        ).toBeLessThan(0.01);
+      }
+    });
+  }
+
+  it("facet seats every label block inside its own wedge", () => {
+    /**
+     * ⚠ NOTHING ELSE ON THIS SURFACE ASKS THIS QUESTION. The fit guard checks
+     * a string against a MEASURE; the capture checks glyph boxes against the
+     * crop and against each other. A block that drifted out through its rim
+     * chord, or across a gap into the neighbouring wedge, would letter
+     * cleanly, collide with nothing and sit inside the crop — and would read
+     * as somebody else's label. `seatBlock` returns null when no radius along
+     * the bisector holds every line's BOTH ENDPOINTS, which is the honest
+     * failure; a drawing that fell back to "seat it anyway" would hide it.
+     */
+    for (const s of facetSeats(record())) {
+      expect(s.seated, `facet ${s.key}: no radius on the bisector holds its block`).toBe(true);
+    }
+  });
+
+  it("grade's tick run above the line is the whole estate", () => {
+    const r = record();
+    const total = r.shapes.reduce((n, s) => n + s.skills, 0);
+    /* ⚠ ASSERTED AGAINST THE SUM, NOT PER PATTERN. The run is deliberately
+       unsorted — that is the drawing's argument — so the only honest check is
+       that every encoded Skill is up there exactly once. */
+    expect(gradeTicks(r), "grade draws a run that is not the estate").toBe(total);
+  });
+});
+
+describe("round six letters the definition, not just the count", () => {
+  /**
+   * ⚠ THE FAULT THIS ROUND EXISTS TO FIX IS A RANKING, AND A RANKING IS
+   * INVISIBLE TO EVERY OTHER GUARD. Production letters its gloss at the type
+   * floor in a foot; round five letters no gloss at all. Both pass fit,
+   * envelope and mass. So the round's own law gets a mechanical form: every
+   * direction must letter each pattern's definition AND its eval method, and
+   * the definition may not letter smaller than the chrome around it.
+   */
+  const ROUND_SIX: readonly [string, (r: IslRecord) => LetterSpec[]][] = [
+    ["wheel", wheelLettering],
+    ["mosaic", mosaicLettering],
+    ["gate", gateLettering],
+    ["runs", runsLettering],
+    ["grade", gradeLettering],
+    ["facet", facetLettering],
+    ["tanks", tanksLettering],
+    ["pinbank", pinbankLettering],
+    ["stack", stackLettering],
+    ["flasks", vesselLettering],
+    ["cells", vesselLettering],
+    ["vats", vesselLettering],
+  ];
+
+  for (const [name, lettering] of ROUND_SIX) {
+    it(`${name}: every pattern letters its definition and its method`, () => {
+      const r = record();
+      const specs = lettering(r);
+      const slots = new Set(specs.map((s) => s.slot));
+      for (const shape of r.shapes) {
+        expect(slots.has(`${shape.key}.gloss.0`), `${name} drops ${shape.key}'s definition`).toBe(
+          true
+        );
+        expect(slots.has(`${shape.key}.eval`), `${name} drops ${shape.key}'s eval method`).toBe(
+          true
+        );
+        expect(
+          slots.has(`${shape.key}.gloss.sliced`),
+          `${name} ${shape.key}: the definition wraps past its cap and loses its tail`
+        ).toBe(false);
+      }
+    });
+
+    it(`${name}: the definition outranks the chrome around it`, () => {
+      const specs = lettering(record());
+      const gloss = specs.filter((s) => s.slot.includes(".gloss."));
+      const chrome = specs.filter((s) => s.slot.endsWith(".eval"));
+      expect(gloss.length, `${name} letters no definition`).toBeGreaterThan(0);
+      for (const g of gloss) {
+        for (const c of chrome) {
+          expect(
+            g.fs,
+            `${name}: the definition (${g.fs}) letters under the method (${c.fs}) — the ladder is inverted`
+          ).toBeGreaterThanOrEqual(c.fs);
+        }
       }
     });
   }

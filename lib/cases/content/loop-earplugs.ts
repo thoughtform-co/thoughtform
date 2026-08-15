@@ -709,6 +709,15 @@ const LOOP_SKILLS: readonly CaseSkillEntry[] = [
  * CASE. Stored in the case module's sentence case; the drawing uppercases in
  * CSS. Storing shouted strings would bake one design's typography into the
  * content, which is what `MAP_GROUPS` above already avoids.
+ *
+ * `evalMethod` says what "good" is tested against on this shape. The gloss
+ * already answers what the shape MEANS, and the two are deliberately
+ * different registers: the gloss is the definition a reader needs, the method
+ * is the thing that makes a substrate inheritable — a second team takes the
+ * method without taking anyone's judgment. ⚠ It is GENERIC by the map's
+ * envelope: a method, never a tool, a vendor, a threshold or a score. And
+ * ⚠ it is scanned by `cases-registry` like every other lettered string —
+ * a record field outside that scan is how `8 TEAMS` reached the public page.
  */
 const MAP_SHAPES: readonly CaseMapShape[] = [
   {
@@ -717,6 +726,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     skills: 7,
     first: "W-017",
     gloss: "How the organisation sounds in context",
+    evalMethod: "Side-by-side review",
   },
   {
     key: "judgment",
@@ -724,6 +734,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     skills: 12,
     first: "W-004",
     gloss: "What good means under ambiguity",
+    evalMethod: "Rubric-graded cases",
   },
   {
     key: "validation",
@@ -731,6 +742,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     skills: 9,
     first: "W-011",
     gloss: "Cases that make failure visible",
+    evalMethod: "Known-failure fixtures",
   },
   {
     key: "stakeholder",
@@ -738,6 +750,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     skills: 5,
     first: "W-046",
     gloss: "Framing for a specific reader",
+    evalMethod: "Reader sign-off",
   },
   {
     key: "pattern",
@@ -745,6 +758,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     skills: 14,
     first: "W-041",
     gloss: "Recurring shapes / structured output",
+    evalMethod: "Reference outputs",
   },
 ];
 

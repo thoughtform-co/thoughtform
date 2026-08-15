@@ -306,6 +306,8 @@ export interface PdaShape {
   name: string;
   skills: number;
   gloss: string;
+  /** What "good" is tested against on this shape — the shared eval method. */
+  evalMethod: string;
   /** Teams that draw on it. */
   teams: number;
   /** The team that paid to encode it. */
@@ -337,6 +339,7 @@ export function crossing(
       name: s.label.toUpperCase(),
       skills: s.skills,
       gloss: s.gloss.toUpperCase(),
+      evalMethod: s.evalMethod.toUpperCase(),
       teams: teams.filter((t) => t.taps.includes(s.key)).length,
       trenchedBy: teams.find((t) => t.trenched === s.key)?.ab ?? "—",
     })),

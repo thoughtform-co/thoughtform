@@ -74,9 +74,15 @@ for (const s of samples) {
         const read = document.querySelector(".icl-read");
         const svg = document.querySelector("svg.fl-pda__svg");
         if (!read || !svg) return false;
-        // The deep link must have been adopted before the sample counts.
-        const url = new URL(window.location.href);
-        if (url.searchParams.get("v") !== want.v) return false;
+        /* ⚠ WAIT ON WHAT WAS MEASURED, NEVER ON THE URL (2026-08-15). The old
+           check read `location.search` — which this script SET — so it was
+           true from the first paint, before the page adopts the param; and
+           `minpx > 0` is satisfied by the DEFAULT variant's own measurement.
+           Both passed while the readout still held `shipped`'s figures at
+           another preset's scale, so `mosaic` and `grade` were gated against
+           the baseline and reported green. The readout now stamps the
+           identity it measured, in the same setState as the numbers. */
+        if (read.getAttribute("data-stamp") !== `${want.v}|${want.t}|${want.preset}`) return false;
         const minpx = parseFloat(read.getAttribute("data-minpx") ?? "0");
         const texts = parseInt(read.getAttribute("data-texts") ?? "0", 10);
         return minpx > 0 && texts > 0;
