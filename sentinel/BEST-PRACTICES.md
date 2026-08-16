@@ -1065,6 +1065,53 @@ Neither has a cheap automated form, so they belong on the eyeball pass:
   guard to the measured ceiling, and buy the characters back with tracking
   rather than size.
 
+### A pass-through must not invent a default the callee already supplies
+
+A destructuring default fires on `undefined` **only**. So a wrapper that
+forwards an option and gives it a default of its own does not "fall back" to
+the callee's — it overrides it, on every call, with a value nobody chose.
+
+`substrateForms`' `validation` painter takes a lattice `p` and steps its grid
+loops by it (`for (let x = p; x < w; x += p)`), defaulting to 14. The substrate
+lab's `Field` wrapper documented the same option as "the field's own inset" —
+the wrong concept, a pitch is not an inset — and defaulted it to **0**, then
+forwarded it explicitly. `x += 0` never terminates.
+
+Three things made it expensive to find, and each generalises:
+
+- **It hung during render, so React never committed.** There is no drawing on
+  screen to say what happened and no error — the page is simply blank and
+  unresponsive, which reads as a dead server rather than a component fault.
+- **The state was in the URL.** The lab writes `?v=<variant>` on selection, so
+  a refresh re-entered the same hang. "Reloading doesn't help, I have to
+  restart the dev server" is what a caller reports, and it points away from the
+  component.
+- **Only 4 of 33 variants were affected**, because the rest passed an explicit
+  pitch. A caller-by-caller difference in one forwarded option is invisible in
+  review.
+
+**Two fixes, and take both.** Give the pass-through no default so the callee's
+own applies, and clamp at the point where a number becomes a loop step
+(`const g = p > 0 ? p : 14`) so no future caller can re-arm it. A value that
+controls iteration is not an ordinary option — validate it where it is used,
+not where it is passed.
+
+### A pure-arithmetic guard cannot tell you the drawing never mounted
+
+`substrate-lab-fit` was 217 green tests the whole time four of its drawings
+could not render. It walks each variant's declared `lettering()` — measures,
+word widths, type floor, envelope — and never mounts a component, which is
+exactly what makes it fast and exactly what it cannot see.
+
+The renderer-level gate existed too, and it also missed them: the capture
+script's default variant list was the seven from **round one**, so twenty-odd
+later directions were only ever gated when someone passed `--v` by hand.
+
+**A declaration guard and a render gate answer different questions, and a stale
+default list silently narrows the second one.** When a registry grows, the
+harness that walks it should default to the registry rather than to a list
+written when it was shorter.
+
 ### An unfilled SVG shape is only clickable on its stroke
 
 `pointer-events` defaults to `visiblePainted`, and for the INTERIOR of a shape

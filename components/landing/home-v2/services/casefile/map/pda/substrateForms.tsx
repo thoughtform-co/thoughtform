@@ -138,10 +138,19 @@ const PAINT: Record<FormKey, (o: Required<Pick<FieldOpts, "w" | "h">> & FieldOpt
   validation({ w, h, seed, p = 14 }) {
     const R = rng(seed);
     const out: Mark[] = [];
-    for (let x = p; x < w; x += p) out.push(line(`v${x}`, `M${x} 0V${h}`, dawn(0.05)));
-    for (let y = p; y < h; y += p) out.push(line(`h${y}`, `M0 ${y}H${w}`, dawn(0.05)));
-    for (let x = p; x < w; x += p) {
-      for (let y = p; y < h; y += p) {
+    /* ⚠ THE PITCH IS A LOOP STEP, AND THIS IS THE ONLY PAINTER WHERE A CALLER'S
+       NUMBER BECOMES ONE. A destructuring default only fires on `undefined`, so
+       a caller passing an explicit 0 — which the substrate lab's `Field` wrapper
+       did, by defaulting its own pass-through to 0 — steps `x += 0` and hangs
+       the render before React ever commits. The page then never mounts, so
+       there is no drawing on screen to say what happened, and the `?v=` the
+       shell writes into the URL means a refresh re-enters the same hang. Clamp
+       rather than trust: a bad pitch draws the default lattice, never a spin. */
+    const g = p > 0 ? p : 14;
+    for (let x = g; x < w; x += g) out.push(line(`v${x}`, `M${x} 0V${h}`, dawn(0.05)));
+    for (let y = g; y < h; y += g) out.push(line(`h${y}`, `M0 ${y}H${w}`, dawn(0.05)));
+    for (let x = g; x < w; x += g) {
+      for (let y = g; y < h; y += g) {
         const r = R();
         if (r < 0.72) {
           out.push(
@@ -151,8 +160,8 @@ const PAINT: Record<FormKey, (o: Required<Pick<FieldOpts, "w" | "h">> & FieldOpt
           out.push(
             sq(
               `d${x}-${y}`,
-              x - 0.6 + (R() - 0.5) * p * 0.8,
-              y - 0.6 + (R() - 0.5) * p * 0.8,
+              x - 0.6 + (R() - 0.5) * g * 0.8,
+              y - 0.6 + (R() - 0.5) * g * 0.8,
               1.2,
               dawn(0.12)
             )

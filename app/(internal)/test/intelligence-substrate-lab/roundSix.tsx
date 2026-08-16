@@ -239,7 +239,7 @@ export function Field({
   h,
   seed,
   k = 1,
-  p = 0,
+  p,
   opacity = 0.42,
   clip,
 }: {
@@ -250,7 +250,17 @@ export function Field({
   h: number;
   seed: number;
   k?: number;
-  /** The field's own inset, passed through to `FormField`. */
+  /**
+   * The LATTICE PITCH, passed through to `FormField` — `validation`'s only,
+   * and a loop STEP there.
+   *
+   * ⚠ LEAVE IT UNDEFINED TO GET THE PAINTER'S OWN DEFAULT. It used to default
+   * to 0 here, which is not "no inset" (the name it carried) but a zero step:
+   * `validation` hung on `x += 0` and mosaic / grade / tanks / stack never
+   * mounted at all. A pass-through must not invent a default the painter it
+   * forwards to would have supplied — `undefined` is the only value that lets
+   * the destructuring default fire.
+   */
   p?: number;
   opacity?: number;
   /** An optional silhouette, in the FIELD'S OWN space (origin at its
