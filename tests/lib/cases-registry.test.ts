@@ -884,6 +884,35 @@ describe("cases registry (ADR-054)", () => {
     }
     expect(new Set(shapes.map((s) => s.evalMethod)).size, "two mains share one method").toBe(5);
 
+    /* EVERY MAIN SAYS WHAT IT MEANS, AS A SENTENCE, and the cap is MEASURED.
+       Reading 03 letters this at fs 13 / track .08 in its narrowest region
+       (361u ≈ 40 characters a line) across three lines, the third reserved as
+       a belt — so 96 fills two and a bit. Past it the paragraph starts eating
+       the material it sits over, and `substrateLettering` declares the sliced
+       tail at measure 0 so it fails loudly rather than vanishing.
+       ⚠ It must differ from the gloss and be longer than it: `gloss` is a
+       definitional FRAGMENT sized for a 148-unit module, and a `meaning` that
+       restates it has given the reader the label twice instead of an
+       explanation once. */
+    for (const s of shapes) {
+      expect(s.meaning.length, `${s.key}'s meaning is blank`).toBeGreaterThan(0);
+      expect(
+        s.meaning.length,
+        `${s.key}'s meaning is ${s.meaning.length} chars, over 96`
+      ).toBeLessThanOrEqual(96);
+      expect(
+        s.meaning.toLowerCase() === s.gloss.toLowerCase(),
+        `${s.key}'s meaning restates its gloss`
+      ).toBe(false);
+      /* Prose, not a shouted fragment — the projection keeps this verbatim
+         while every other field is uppercased, so a SHOUTED meaning would
+         reach the page as the one thing that does not match its neighbours. */
+      expect(s.meaning, `${s.key}'s meaning is uppercased chrome, not prose`).not.toBe(
+        s.meaning.toUpperCase()
+      );
+    }
+    expect(new Set(shapes.map((s) => s.meaning)).size, "two mains share one meaning").toBe(5);
+
     // EIGHT DISTRICTS, and they seat on a 4x2 grid.
     expect(districts).toHaveLength(8);
     expect(new Set(districts.map((d) => d.id)).size).toBe(8);
@@ -978,7 +1007,11 @@ describe("cases registry (ADR-054)", () => {
     // tool or a threshold ("scored above 0.8", "graded in <vendor>"), because
     // the honest answer to "how is this checked" is often a product. A record
     // field outside this scan is exactly how `8 TEAMS` reached the page.
-    for (const s of visual.shapes) strings.push(s.label, s.gloss, s.evalMethod);
+    /* ⚠ `meaning` IS IN THE BLOB TOO, and it is the field with the most room
+       to go wrong: it is the only PROSE on the map, so it is the one place a
+       sentence can casually name a team, a tool or a number while every
+       fragment-length field stays clean. */
+    for (const s of visual.shapes) strings.push(s.label, s.gloss, s.evalMethod, s.meaning);
     for (const d of visual.districts) strings.push(d.name, d.ab);
     for (const w of visual.works) {
       strings.push(w.title, w.bar, w.evals, w.lane ?? "", w.vol, w.seat);

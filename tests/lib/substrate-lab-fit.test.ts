@@ -83,11 +83,6 @@ import {
   mosaicMass,
 } from "@/app/(internal)/test/intelligence-substrate-lab/VariantMosaic";
 import {
-  inlayLettering,
-  inlayMarkCount,
-  inlayMass,
-} from "@/app/(internal)/test/intelligence-substrate-lab/VariantInlay";
-import {
   runsLettering,
   runsMarkCount,
   runsMass,
@@ -243,23 +238,6 @@ const VARIANTS: readonly [string, (r: IslRecord) => LetterSpec[], number][] = [
   ["flasks", vesselLettering, 26],
   ["cells", vesselLettering, 26],
   ["vats", vesselLettering, 26],
-
-  /* ── Round nine · the owner's pick, given its material ──────────────────
-     ⚠ `inlay` IS THE ONE DIRECTION HERE THAT DOES NOT LETTER FIVE FACTS, and
-     the round-six floor above does not apply to it. The owner cut the drawing
-     to a title and one paragraph (2026-08-16): `gloss`, `evalMethod` and the
-     flagship's name are no longer drawn, on the grounds that five stacked
-     fragments is not something anybody reads.
-
-     So the floor is name + count + the paragraph's own lines — 3 × 5 = 15 with
-     every paragraph on one line, and the record's five all wrap to two in the
-     narrower column. 20 is the floor, which fails if a whole paragraph drops
-     while still allowing a shorter one to land on a single line.
-
-     ⚠ It letters its OWN specs rather than `patternSpecs`: the shared emitter
-     declares five facts, and declaring two strings this drawing does not paint
-     would be a guard walking text that is not on screen — which passes. */
-  ["inlay", inlayLettering, 20],
 ];
 
 /**
@@ -296,11 +274,6 @@ const MARK_COUNT_VARIANTS: readonly [string, (r: IslRecord, key: string) => numb
   ["flasks", vesselMarkCount],
   ["cells", vesselMarkCount],
   ["vats", vesselMarkCount],
-  /* Round nine — ⚠ `inlay` IS HERE AND ITS PARENT `mosaic` IS NOT, which is
-     the one mechanical difference between the two drawings. Mosaic carries its
-     claim in area alone; inlay adds the graduation that makes the area
-     countable, so it owes both this assertion and the mass one. */
-  ["inlay", inlayMarkCount],
 ];
 
 /**
@@ -336,10 +309,6 @@ const MASS_VARIANTS: readonly [string, (r: IslRecord, key: string) => number][] 
   ["flasks", vesselMass],
   ["cells", vesselMass],
   ["vats", vesselMass],
-  /* Round nine — the same area as mosaic, from the same function. Asserted
-     separately anyway: sharing a helper today is not a promise that a later
-     edit will not give this drawing blocks of its own. */
-  ["inlay", inlayMass],
 ];
 
 describe("the substrate lab's drawings fit their boxes", () => {

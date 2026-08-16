@@ -1142,7 +1142,63 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
 
 ## Reading 03's drawing, and the crop every reading shares (ADR-070 U16 / U15)
 
-⚠ **ADR-070 U16 (2026-08-13) IS THE LIVE DRAWING: FIVE PATTERN CARDS, each a
+⚠ **ADR-070 U23 (2026-08-16) IS THE LIVE DRAWING: ONE PLATE DIVIDED INTO FIVE
+REGIONS OF MATERIAL** (`PdaSubstrate.tsx`). It supersedes U16's pattern cards.
+`33 · inlay` won the substrate lab after thirty-two directions across eight
+rounds; its local copy is DELETED and the lab's `shipped` mounts production.
+
+- **The partition is DERIVED, area is the Skill count, and there are NO
+  GUTTERS.** Slice-and-dice over the mass ranking, one cut on the outer
+  boundary alone. ⚠ **A gutter is a statement about how many things there
+  are** — take them away and five rectangles become REGIONS of one surface,
+  which is the claim. Chamfering a region is banned: five machined housings
+  put the work tab back.
+- **Three lettered things per region** — name, count, and ONE PARAGRAPH.
+  ⚠ `gloss` and `evalMethod` letter NOWHERE on this reading now, and the 47
+  named Skill plates went with U16's stack (the graduation's ticks are
+  countable, not readable). Lettering fell ~71 → 20 strings. The roster still
+  ships in `SkillsBrowserPlate`, one casefile row away.
+- ⚠ **`CaseMapShape.meaning` IS NEW, ≤96 chars MEASURED, and the ONLY field the
+  projection does not uppercase.** `gloss` is a fragment sized for a 148-unit
+  module; a label cannot be rendered into an explanation. It is the map's only
+  prose, so `cases-registry` scans it and pins it distinct from its gloss,
+  longer than it, and not uppercase.
+- ⚠ **THE FLAGSHIP SURVIVES AS A MARK, NOT A NAME** — its tick runs longer and
+  takes green. The accent carries the signal; the label was dropped rather
+  than dimmed.
+- ⚠ **DENSITY IS PER UNIT AREA.** Particle painters emit a fixed count scaled
+  by `k`, so at one shared `k` the SMALLEST region reads as the densest
+  material — the count encoded a third time, backwards. `k` is the field's own
+  area against a reference, clamped.
+- ⚠ **THE DIVISION IS A GROUT AND THERE ARE NO INTERNAL RULES.** A 1-unit rule
+  paints 0.65 device px at this meet (U16's spine/separator arithmetic), which
+  is why the owner could not find a block's edge. Regions paint on a rect inset
+  by half a 4-unit channel so the PLATE shows between materials. **A grout is
+  not a gutter**; no rule goes back inside the channel.
+- ⚠ **`BOX_H0` IS 696 (crop 748), NOT THE LAB'S 710/762.** The elastic crop
+  must stay WIDTH-bound at the NARROWEST measured field (1440×800, aspect
+  0.807); the lab's 0.8176 is height-bound there by four thousandths and cost
+  9px of dead panel. **The ceiling on a width-bound elastic crop is the
+  narrowest field's aspect** — that generalises to any `pdaFit` reading with
+  `maxW: 0`. The extension goes ENTIRELY to the regions (all material, no hole
+  to make), and they stay proportional so area-is-the-count holds at every
+  height.
+
+**THE PATTERN CARDS IT REPLACED (U16, for the record):** five cards, each a
+stack of its named Skills over the pattern's physics, gloss in the foot. It was
+`housing()` five times in a row — reading 01's grid at n = 5 — which broke the
+owner's standing "it may not look like the work tab" before a string was
+placed. Its `short`-label rule, its no-owner rule and its band-not-hairline
+findings all still bind.
+
+⚠ **THE 5 × 8 CROSSING IS STILL NOT DRAWN ANYWHERE ON THE SITE** by owner
+ruling — `crossing()` still projects it and its arithmetic is still guarded,
+and it cannot return inside a region (eight department codes need ~196u, and
+marks without codes need a legend this surface bans).
+
+**THE SUPERSEDED U16 RECORD FOLLOWS.**
+
+⚠ **ADR-070 U16 (2026-08-13) WAS THE LIVE DRAWING: FIVE PATTERN CARDS, each a
 stack of its own named Skills over the pattern's physics field, gloss in the
 foot** (`map/pda/PdaSubstrate.tsx`). It supersedes U15's pin grid. What binds
 from U15 is the ELASTIC CROP machinery below, the lettering-declaration rule,

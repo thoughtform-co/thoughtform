@@ -3,11 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   CARDS,
   SUBSTRATE_LAYOUT_0,
-  cardGeometry,
+  paraOf,
+  regionGeometry,
   skillsOf,
+  substrateBlocks,
   substrateExt,
   substrateLayout,
   substrateLettering,
+  substrateRows,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
 import { specWidth } from "@/components/landing/home-v2/services/casefile/map/pda/pdaLetters";
 import {
@@ -50,15 +53,53 @@ function record() {
 describe("the substrate cards fit their boxes", () => {
   it("every string fits the measure it declares", () => {
     const specs = substrateLettering(record());
-    /* 5 names + 5 counts + ~14 gloss lines + 47 Skill labels. Under 65 means a
-       card stopped declaring its stack. */
-    expect(specs.length, "the drawing letters almost nothing").toBeGreaterThan(65);
+    /* ⚠ THE TOTAL FELL FROM ~71 TO ~20 AND THAT IS THE POINT (owner,
+       2026-08-16). The card stack lettered 47 Skill labels; the graduation
+       letters none of them — the ticks are countable, not readable. What is
+       left is name + count + the paragraph's own lines, so 3 × 5 = 15 is the
+       one-line minimum and the record's five all wrap to two.
+
+       ⚠ A TOTAL IS A COARSE NET, so the structural check below is the real
+       one: a magic number cannot tell you WHICH region stopped speaking. */
+    expect(specs.length, "the drawing letters almost nothing").toBeGreaterThan(17);
     for (const s of specs) {
       expect(s.text.length, `${s.slot} is blank`).toBeGreaterThan(0);
       expect(
         specWidth(s),
         `${s.slot}: "${s.text}" runs past its ${s.measure}u measure`
       ).toBeLessThanOrEqual(s.measure);
+    }
+  });
+
+  it("every region letters its name, its count and its paragraph", () => {
+    /* ⚠ WHAT A TOTAL CANNOT SEE. Five regions × three roles; a region that
+       lost one of them still leaves a plausible-looking count. The paragraph
+       is the newest of the three and the only prose on the console, so it is
+       also the one a future edit is most likely to drop back to a fragment. */
+    const r = record();
+    const specs = substrateLettering(r);
+    for (const s of r.shapes) {
+      const mine = specs.filter((x) => x.slot.startsWith(`${s.key}.`));
+      expect(
+        mine.some((x) => x.slot === `${s.key}.name`),
+        `${s.key} letters no name`
+      ).toBe(true);
+      expect(
+        mine.some((x) => x.slot === `${s.key}.count`),
+        `${s.key} letters no count`
+      ).toBe(true);
+      expect(
+        mine.filter((x) => x.slot.startsWith(`${s.key}.para.`)).length,
+        `${s.key} letters no paragraph`
+      ).toBeGreaterThan(0);
+      /* ⚠ AND THE SLICE SLOT MUST BE ABSENT. `substrateLettering` declares a
+         dropped tail at measure 0 precisely so it fails the fit assertion
+         above; asserting its absence here names the failure instead of
+         leaving it to a width error nobody reads. */
+      expect(
+        mine.some((x) => x.slot === `${s.key}.para.sliced`),
+        `${s.key}'s paragraph is too long and lost its tail`
+      ).toBe(false);
     }
   });
 
@@ -205,59 +246,113 @@ describe("the substrate cards hold the map's envelope", () => {
   });
 });
 
-describe("the cards are stacks, not holes", () => {
-  it("the densest card holds its stack, its field and its foot", () => {
-    /* Pattern's fourteen plates set every vertical minimum. If the stack ever
-       runs into the foot the labels do not move — they overlap the gloss, and
-       nothing but the eye sees it. */
+describe("the plate is one surface divided, and every region is material", () => {
+  const EXTS = [0, 80, 151, 366, 546, 1137];
+  const blocksAt = (ext: number) => {
     const r = record();
-    for (const ext of [0, 80, 151, 366, 546, 1137]) {
-      const l = substrateLayout({ extW: 0, extH: ext });
-      for (const [i, s] of r.shapes.entries()) {
-        const plates = skillsOf(r.skills, s.key).length;
-        const geo = cardGeometry(i, plates, l);
-        expect(geo.fieldY, `ext ${ext}, ${s.key}: the stack ran into the foot`).toBeLessThanOrEqual(
-          geo.footY - 8
+    const l = substrateLayout({ extW: 0, extH: ext });
+    return { r, l, blocks: substrateBlocks(substrateRows(r.shapes, r.skills), l.boxH) };
+  };
+
+  it("AREA IS THE COUNT, at every field shape", () => {
+    /* ⚠ THE ONE CLAIM THE DRAWING MAKES, and the only way to check a
+       continuous encoding: divide each region's area by its Skill count and
+       every pattern must land on the same unit. It fails the moment a floor, a
+       clamp or a hand-tuned constant is introduced — which is exactly what a
+       "just make Stakeholder a bit taller so the text fits" edit would be. */
+    for (const ext of EXTS) {
+      const { r, blocks } = blocksAt(ext);
+      const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
+      const units = blocks.map((b) => (b.w * b.h) / (counts.get(b.key) ?? 1));
+      for (const u of units) {
+        expect(u / units[0], `ext ${ext}: a region's area stopped being its count`).toBeCloseTo(
+          1,
+          2
         );
       }
     }
   });
 
-  it("the densest card always keeps some raw field", () => {
-    /* The card's whole reading is extraction — plates above, the material
-       they came out of below. A Pattern card with no field left is a list in
-       a box, which is the drawing this one replaced. */
-    const r = record();
-    const densest = r.shapes.reduce((a, b) => (b.skills > a.skills ? b : a));
-    const i = r.shapes.indexOf(densest);
-    for (const ext of [0, 366, 1137]) {
-      const l = substrateLayout({ extW: 0, extH: ext });
-      const geo = cardGeometry(i, densest.skills, l);
-      expect(geo.fieldH, `ext ${ext}: ${densest.key} has no substrate under it`).toBeGreaterThan(
-        24
-      );
+  it("every region keeps material under its paragraph", () => {
+    /* The reading is EXTRACTION — the definition and the tally over the stuff
+       they came out of. A region with no field left is a caption in a box.
+       ⚠ The binding case is the LIGHTEST pattern, not the heaviest: area is
+       the count, so the smallest region is the one whose fixed-height head and
+       graduation eat the largest share. */
+    for (const ext of EXTS) {
+      const { r, blocks } = blocksAt(ext);
+      const byKey = new Map(r.shapes.map((s) => [s.key as string, s]));
+      for (const b of blocks) {
+        const s = byKey.get(b.key);
+        if (!s) throw new Error(`no shape for ${b.key}`);
+        const geo = regionGeometry(b, paraOf(s.meaning, b).length);
+        expect(geo.fieldH, `ext ${ext}, ${b.key}: no material under the copy`).toBeGreaterThan(16);
+      }
     }
   });
 
-  it("the cards take the height before the margin does", () => {
-    /* ADR-070 U12's law: pooled air is a hole, split air is spacing. Up to the
-       cap, every unit the field offers goes into the cards and the margin does
-       not move. */
+  it("the graduation fits inside its own region", () => {
+    /* ⚠ ONE SHARED PITCH, so the run's length is the count and the widest run
+       is the heaviest pattern's. A tick past the wall does not wrap or clip
+       loudly — it paints over the grout and into the neighbour. */
+    const { r, blocks } = blocksAt(0);
+    const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
+    for (const b of blocks) {
+      const geo = regionGeometry(b, 2);
+      const n = counts.get(b.key) ?? 0;
+      expect(16 + n * 16, `${b.key}: ${n} ticks run past their region`).toBeLessThanOrEqual(geo.w);
+    }
+  });
+
+  it("the regions tile the plate — no overlap, and a grout between them", () => {
+    /* ⚠ THE PARTITION AND THE PAINTED RECTS ARE DIFFERENT BOXES, which is what
+       the grout IS. The blocks tile exactly (any gap is a seam of plate showing
+       mid-column); the painted rects must NOT touch, or the division the owner
+       could not find is back. */
+    for (const ext of EXTS) {
+      const { blocks } = blocksAt(ext);
+      const area = blocks.reduce((n, b) => n + b.w * b.h, 0);
+      const { l } = blocksAt(ext);
+      expect(area, `ext ${ext}: the blocks stopped tiling the plate`).toBeCloseTo(880 * l.boxH, 0);
+
+      for (const a of blocks) {
+        for (const b of blocks) {
+          if (a === b) continue;
+          const ga = regionGeometry(a, 2);
+          const gb = regionGeometry(b, 2);
+          const overlap =
+            ga.x < gb.x + gb.w && gb.x < ga.x + ga.w && ga.y < gb.y + gb.h && gb.y < ga.y + ga.h;
+          expect(overlap, `ext ${ext}: ${a.key} and ${b.key} touch — no grout between them`).toBe(
+            false
+          );
+        }
+      }
+    }
+  });
+
+  it("the regions take the height before the margin does", () => {
+    /* ADR-070 U12's law: pooled air is a hole, split air is spacing. Here the
+       whole extension goes to the regions, because everything below a region's
+       fixed head is MATERIAL and texture absorbs room honestly. */
     const rest = SUBSTRATE_LAYOUT_0;
     const owners = substrateLayout(substrateExt(950 / 845));
-    expect(owners.cardH, "the owner's field did not reach the cards").toBeGreaterThan(rest.cardH);
-    expect(owners.pitch, "the plates did not take their share").toBeGreaterThan(rest.pitch);
+    expect(owners.boxH, "the owner's field did not reach the plate").toBeGreaterThan(rest.boxH);
     expect(owners.marginY, "the height pooled as margin instead").toBeCloseTo(rest.marginY, 1);
   });
 
-  it("the plate pitch is bounded", () => {
-    /* Unbounded, a taller panel is a plate with air under it rather than a
-       taller plate — U12's hole in miniature. The field takes the remainder
-       because texture can absorb room honestly and a label cannot. */
-    for (const ext of [0, 366, 1137, 4000]) {
-      const l = substrateLayout({ extW: 0, extH: ext });
-      expect(l.pitch, `ext ${ext}: the stack went sparse`).toBeLessThanOrEqual(26);
-      expect(l.pitch, `ext ${ext}: the plates cannot hold their label`).toBeGreaterThanOrEqual(18);
-    }
+  it("the rest crop stays WIDTH-bound at the narrowest field there is", () => {
+    /* ⚠ THE WHOLE ELASTIC MECHANISM RESTS ON THIS. `fitExt` grows height when
+       the field is taller than the crop, and this reading forbids width growth,
+       so a crop even fractionally taller in aspect than some field goes
+       height-bound there and can never reach that panel's edges.
+
+       The lab's own 932 × 762 (aspect 0.8176) is height-bound at 1440×800
+       (0.8071) by four thousandths, which cost 9px of dead panel — measured,
+       not theorised. The narrowest measured field is the ceiling. */
+    const [, , cw, ch] = SUBSTRATE_LAYOUT_0.crop.split(" ").map(Number);
+    const NARROWEST = 548 / 679;
+    expect(ch / cw, "the rest crop is taller than the narrowest field").toBeLessThanOrEqual(
+      NARROWEST
+    );
   });
 });

@@ -52,7 +52,6 @@ import { TERMINAL_VIEWBOX, VariantTerminal } from "./VariantTerminal";
 import { TREE_VIEWBOX, VariantTree } from "./VariantTree";
 import { VATS_VIEWBOX, VariantVats } from "./VariantVats";
 import { WHEEL_VIEWBOX, VariantWheel } from "./VariantWheel";
-import { INLAY_VIEWBOX, VariantInlay } from "./VariantInlay";
 import {
   ISL_VARIANTS,
   type IslRecord,
@@ -126,7 +125,6 @@ const DRAWINGS: Record<
   flasks: { vb: FLASKS_VIEWBOX, Component: VariantFlasks },
   cells: { vb: CELLS_VIEWBOX, Component: VariantCells },
   vats: { vb: VATS_VIEWBOX, Component: VariantVats },
-  inlay: { vb: INLAY_VIEWBOX, Component: VariantInlay },
 };
 
 interface Preset {

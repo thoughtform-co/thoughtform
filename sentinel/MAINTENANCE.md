@@ -54,6 +54,30 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-16 — Reading 03 ships `33 · inlay`; the record learns to speak in sentences (ADR-070 U23)
+
+Production's reading 03 is one plate divided into five regions of material —
+area is the Skill count, no gutters, one outer cut — each lettering its name,
+its count and ONE PARAGRAPH, over its own physics field, with a graduation of
+one tick per encoded Skill at its base. It supersedes U16's pattern cards; the
+lab's local copy is deleted and `shipped` mounts production.
+
+`CaseMapShape.meaning` is a new record field (≤96 chars, measured) and the only
+one the projection does not uppercase — the map's first prose, scanned by
+`cases-registry`. The 47 named Skill plates went with the card stack; lettering
+fell ~71 → 20 strings.
+
+⚠ **Promotion was a copy of the drawing and a RE-FIT of the box.** The lab's
+crop (aspect 0.8176) is height-bound at the narrowest measured field (1440×800,
+0.8071) by four thousandths, which an elastic crop cannot afford — `fitExt` has
+no lever there when `maxW: 0`. `BOX_H0` is 696. **The ceiling on a width-bound
+elastic crop is the narrowest field's aspect**, which generalises to any future
+`pdaFit` reading.
+
+Verified: 891 unit tests, `pda-substrate-fit` rewritten for the new geometry,
+21 services-ring smoke cases, and captures on the REAL landing at 1280×720 and
+at the owner's 1920×1247 (no dead panel, minPx 10.94).
+
 ### 2026-08-16 — A pass-through default hung four substrate drawings; round nine (`33 · inlay`)
 
 `roundSix`'s `Field` wrapper defaulted its `p` to **0** and forwarded it

@@ -232,6 +232,26 @@ export interface CaseMapShape {
    * judgment. Generic by law — a method, never a tool, a vendor or a score.
    */
   evalMethod: string;
+  /**
+   * WHAT THE SHAPE MEANS, AS A SENTENCE — reading 03's only prose, ≤96 chars.
+   *
+   * ⚠ THIS IS NOT `gloss` REPHRASED, AND IT COULD NOT BE. `gloss` is a
+   * definitional FRAGMENT sized for a 148-unit module ("What good means under
+   * ambiguity"); it is a label, and no amount of rendering makes a label into
+   * an explanation. The owner cut reading 03's copy to a title plus one
+   * paragraph (2026-08-16), and the paragraph is what the reader is actually
+   * meant to READ — so it is authored as prose and stored in sentence case,
+   * unlike every other lettered field on this record.
+   *
+   * ⚠ 96 IS MEASURED. Reading 03's narrowest region is 361u wide at fs 13 /
+   * .08, i.e. ~40 characters a line, and the drawing gives the paragraph three
+   * lines with the third reserved as a belt. 96 fills two and a bit; past it a
+   * paragraph starts eating the material it sits over.
+   *
+   * ⚠ Generic by the map's envelope, exactly as `evalMethod` is: no person, no
+   * team count, no vendor, no figure. It is scanned by `cases-registry`.
+   */
+  meaning: string;
 }
 
 /** A team, drawn as a district plate on the board. */

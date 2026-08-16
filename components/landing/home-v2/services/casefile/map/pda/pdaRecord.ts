@@ -308,6 +308,15 @@ export interface PdaShape {
   gloss: string;
   /** What "good" is tested against on this shape — the shared eval method. */
   evalMethod: string;
+  /**
+   * The shape said as a SENTENCE — reading 03's paragraph, and the only prose
+   * on this console.
+   *
+   * ⚠ NOT UPPERCASED IN THE PROJECTION, alone among these fields. Every other
+   * string here is chrome and shouts; this one is meant to be read, and mono
+   * caps at 13 units is the least readable thing a paragraph can be.
+   */
+  meaning: string;
   /** Teams that draw on it. */
   teams: number;
   /** The team that paid to encode it. */
@@ -340,6 +349,9 @@ export function crossing(
       skills: s.skills,
       gloss: s.gloss.toUpperCase(),
       evalMethod: s.evalMethod.toUpperCase(),
+      /* ⚠ VERBATIM. The paragraph is prose and stays in the case module's own
+         sentence case — see `PdaShape.meaning`. */
+      meaning: s.meaning,
       teams: teams.filter((t) => t.taps.includes(s.key)).length,
       trenchedBy: teams.find((t) => t.trenched === s.key)?.ab ?? "—",
     })),

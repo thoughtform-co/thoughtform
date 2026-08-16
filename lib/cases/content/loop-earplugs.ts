@@ -727,6 +727,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     first: "W-017",
     gloss: "How the organisation sounds in context",
     evalMethod: "Side-by-side review",
+    meaning: "How the organisation sounds when it speaks, held steady across readers.",
   },
   {
     key: "judgment",
@@ -735,6 +736,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     first: "W-004",
     gloss: "What good means under ambiguity",
     evalMethod: "Rubric-graded cases",
+    meaning: "What good means when the inputs vary and the answer is not obvious.",
   },
   {
     key: "validation",
@@ -743,6 +745,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     first: "W-011",
     gloss: "Cases that make failure visible",
     evalMethod: "Known-failure fixtures",
+    meaning: "The bar output is checked against, and the cases that make a failure visible.",
   },
   {
     key: "stakeholder",
@@ -751,6 +754,7 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     first: "W-046",
     gloss: "Framing for a specific reader",
     evalMethod: "Reader sign-off",
+    meaning: "Who the work is for, and the framing that reader needs to act on it.",
   },
   {
     key: "pattern",
@@ -759,6 +763,8 @@ const MAP_SHAPES: readonly CaseMapShape[] = [
     first: "W-041",
     gloss: "Recurring shapes / structured output",
     evalMethod: "Reference outputs",
+    meaning:
+      "The shapes the work keeps returning to, so output arrives structured rather than improvised.",
   },
 ];
 

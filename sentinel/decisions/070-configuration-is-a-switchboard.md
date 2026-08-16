@@ -2143,3 +2143,134 @@ clipped, 0 overflow, 0 page errors; 30 labels each at minPx 7.8 (p1280) and
 - `vats` is in the set as the CONTROL — the plainest supply vessel, changing
   the least. If the neck and the hexagon both read as costume, it is what is
   left.
+
+---
+
+## Update 23 — reading 03 SHIPS: one plate divided, and the record learns to speak in sentences (2026-08-16, owner)
+
+**Status: Accepted.** `33 · inlay` is production's reading 03. Thirty-two
+directions across eight rounds preceded it; this is the first one promoted
+since U16's pattern cards, and the picker's `shipped` baseline now mounts it.
+
+### What the owner asked, in two notes
+
+1. Against `22 · mosaic`: the composition is right, the surface is too thin —
+   give it the texture of `8 · gallery` or `11 · cards`.
+2. Against the result: make the copy **SUPER SIMPLE**. Keep the substrate's
+   title, move it up, and put a paragraph under it that concisely explains what
+   it means.
+
+### The drawing
+
+ONE PLATE, DIVIDED. The crop is partitioned with no gutters, area proportional
+to the Skill count, one cut on the outer boundary alone — so Pattern's fourteen
+occupies nearly three times Stakeholder's five and no numeral does that work.
+Each region carries its name, its count, one sentence, and the pattern's own
+physics field filling everything below. A graduation of one tick per encoded
+Skill sits at each material's base, at one shared pitch across all five.
+
+⚠ **A GUTTER IS A STATEMENT ABOUT HOW MANY THINGS THERE ARE.** Take the gutters
+away and five rectangles stop being objects and become REGIONS of one surface,
+which is the claim this reading makes: one intelligence layer, five recurring
+shapes. That is why the partition is DERIVED (slice-and-dice over the mass
+ranking — hardcoding "pattern and judgment go left" mis-draws silently the
+moment a Skill moves between shapes) and why chamfering each region is banned.
+
+### What it cost, named rather than buried
+
+⚠ **THE 47 NAMED SKILL PLATES ARE GONE.** U16's stack lettered every Skill's
+`short`; the graduation letters none of them — the ticks are countable, not
+readable. The lettering total fell from ~71 strings to 20. Nothing is lost from
+the RECORD (`SkillsBrowserPlate` renders all 47 by name one casefile row away)
+and the drawing gains a sentence a reader can actually read. If the roster must
+return it needs its own reading, not a corner of this one.
+
+⚠ **`gloss` AND `evalMethod` LETTER NOWHERE ON THIS READING NOW.** `evalMethod`
+is the field U19 added to the record one round earlier, so dropping it is a
+deliberate reversal on this drawing and not an oversight — the round-six law
+that every direction letters five facts is what the owner overruled, on the
+grounds that five stacked fragments is not something anybody reads. Both fields
+stay on the record and in the scan.
+
+### `CaseMapShape.meaning` — the record learns prose
+
+⚠ **IT COULD NOT HAVE BEEN `gloss` REPHRASED.** `gloss` is a definitional
+FRAGMENT sized for a 148-unit module ("What good means under ambiguity"); it is
+a label, and no rendering makes a label into an explanation. `meaning` is a new
+field, ≤96 chars MEASURED (the narrowest region is 361u at fs 13 / .08 ≈ 40
+characters a line, over three lines with the third reserved as a belt).
+
+⚠ **IT IS THE ONLY FIELD THE PROJECTION DOES NOT UPPERCASE.** Every other
+string on this console is chrome and shouts; this one is meant to be read, and
+mono caps at 13 units is the least readable thing a paragraph can be.
+`cases-registry` scans it — it is the map's only prose, so it is the one place
+a sentence can casually name a team, a tool or a number while every
+fragment-length field stays clean — and pins it distinct from its own gloss,
+longer than it, and not uppercase.
+
+### Two things that are arithmetic, not taste
+
+⚠ **DENSITY IS PER UNIT AREA.** The particle painters emit a FIXED mark count
+scaled by `k`; the lattice painters tile. At one shared `k` the largest field
+(~123,000u) and the smallest (~15,000u) get the same 300 marks, so the SMALLEST
+region reads as the densest material — the drawing would encode the count a
+third time and do it backwards. `k` is the field's own area against a
+reference, clamped at both ends.
+
+⚠ **THE DIVISION IS A GROUT, AND THE INTERNAL HAIRLINES ARE DELETED.** The
+owner could not tell where a block started; the rules were not faint, they were
+SUB-PIXEL. A 1-unit rule paints 0.65 of a device pixel at this crop's meet and
+the browser pays the rest in alpha — the same arithmetic that made U16's stack
+spine and foot separator into bands. The regions paint on a rect inset by half
+a 4-unit channel, so the PLATE shows between two materials. **A grout is not a
+gutter**: a gutter is empty space between OBJECTS and is what makes five
+regions read as five cards; a grout belongs to the plate. No rule goes back
+inside the channel — a line in its own channel frames a card.
+
+### ⚠ The promotion was a copy of the DRAWING and a RE-FIT of the BOX
+
+The lab's crop is 932 × 762, aspect **0.8176**. The narrowest measured console
+field is 1440×800 → 679 × 548, aspect **0.8071**. A static crop can afford that
+four-thousandth overshoot; an elastic one cannot, because `fitExt` grows height
+when the field is taller than the crop and this reading forbids width growth —
+so at that one field the crop goes HEIGHT-bound and has no lever left. It cost
+9px of dead panel and `pda-viewbox` caught it on the first run.
+
+`BOX_H0` is **696** (crop 748), which clears the narrowest field with margin.
+The 14 units come off the regions as material. **The ceiling on a width-bound
+elastic crop is the narrowest field's aspect, not a round number** — that
+generalises to any future reading built on `pdaFit` with `maxW: 0`.
+
+The extension goes ENTIRELY to the regions, which is honest here where it would
+not be elsewhere: reading 02 must split its extension because a taller module
+with a fixed head is a module with a hole under it, and this plate has no hole
+to make — every region's head is fixed and everything below it is MATERIAL,
+which absorbs room without reading as air. The regions stay proportional, so
+area-is-the-count survives at every height, and the thinnest region's material
+— the tight case at rest — gains most.
+
+### Verification
+
+891 unit tests across 49 files, lint and typecheck clean. `pda-substrate-fit`
+rewritten for the new geometry (16 cases): area-is-the-count at six field
+shapes, every region keeps material, the graduation fits its region, the
+regions tile with no painted overlap, the rest crop stays width-bound at the
+narrowest field, and a per-region structural check that each letters a name, a
+count and a paragraph with no sliced tail. `cases-registry` pins `meaning`.
+Playwright: 21 services-ring smoke cases pass, including the light-theme
+contrast walk and the casefile clipping sweep. Captured on the REAL landing at
+1280×720 (meet 0.646, minPx 7.76, 0 clipped) and at the owner's 1920×1247
+(field 850 × 927, crop 932 × 1016, meet 0.912, minPx 10.94, no dead panel).
+
+### Left open
+
+- **The lab's `--v` default is still round one's seven.** Four drawings shipped
+  broken behind it (the `Field` pass-through hang, same day); making
+  `capture-substrate-lab` default to the registry is the durable fix and is not
+  done.
+- **Light-theme material reads quieter than dark** — the fields are visible but
+  fainter, which is ADR-063's alpha-inverts-across-the-flip. Tunable if the
+  owner wants the light fields lifted.
+- **The count numeral is kept** on each region's title line. Area and the
+  graduation already carry the count; the numeral is the only exact figure. A
+  one-line removal if it reads as saying it three times.
