@@ -72,7 +72,8 @@ export type IslVariantId =
   | "stack"
   | "flasks"
   | "cells"
-  | "vats";
+  | "vats"
+  | "inlay";
 
 export interface IslVariantDef {
   id: IslVariantId;
@@ -471,6 +472,43 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
       "The vessel rig at a TAPERED silhouette — a straight-sided vat, narrower at the mouth than at the floor. The quietest of the three: it changes the least about the composition and relies on the taper alone to say this is a store and not a card. If the neck and the hexagon both read as costume, this is the one that is left.",
     provenance:
       "The plainest reading of a supply vessel, kept in the set deliberately as the control — the same role `tight` played in the configuration lab's round two.",
+  },
+
+  /* ── Round nine · the owner's pick, given its material ──────────────────
+     ⚠ THE OWNER CHOSE 22 `mosaic` AND NAMED WHAT IT LACKS (2026-08-16): the
+     composition is right, it wants the texture of 8 `gallery` or 11 `cards`.
+     So this is not a new direction — it is mosaic with the two things those
+     card drawings have and it does not.
+
+     What was actually wrong with mosaic is measurable rather than a matter of
+     taste: its field is inset 16 units from the region and painted at α .34 in
+     whatever space the type leaves, so on the three smallest regions the
+     material is a smudge under a paragraph. The region reads as a tinted box.
+     `gallery` renders the same five physics at `k` 1 / `p` 14 filling a card
+     window and they read as five distinguishable MATERIALS, which is the whole
+     reason a physics field is on this reading at all.
+
+     ⚠ AND THE FIX IS ZONING, NOT ALPHA. Turning mosaic's field up behind its
+     own paragraph is the "dust on the type" failure `cards` already paid for.
+     The zones are derived from the type instead — an opaque head sized to one
+     line, an opaque foot sized to its own gloss wrap, and every unit between
+     them given to the material, bleeding wall to wall so two neighbouring
+     fields meet ON the hairline.
+
+     ⚠ IT ALSO ENCODES THE COUNT TWICE, ON PURPOSE, WHICH MOSAIC REFUSED TO DO.
+     Mosaic's file argues that area carries the claim alone. Area is a gestalt:
+     it shows that Pattern dwarfs Stakeholder and cannot show 14 against 5. The
+     graduation at each region's base is the tally that makes the gestalt
+     checkable, at one shared pitch so five runs stay comparable. That also
+     puts the drawing back inside `markCount`'s reach, which mosaic is
+     deliberately outside of. */
+  {
+    id: "inlay",
+    label: "33 · Inlay",
+    thesis:
+      "Mosaic's plate, with the material actually in it and the copy cut to the bone. The same derived partition — area is the Skill count, no gutters, one outer cut — but each region is now a title with ONE PARAGRAPH under it explaining what that substrate means, over the pattern's own physics filling the rest of the region wall to wall at the field cards' density. The gloss fragment, the eval method and the exemplar's name are gone; the exemplar survives as the one green tick in the graduation at the base of each material, which runs one tick per encoded Skill at a shared pitch across all five, so the area you see is also a number you can count.",
+    provenance:
+      "22 · Mosaic under two owner notes (2026-08-16): give it the texture of 8 · Gallery or 11 · Cards, then make the copy SUPER SIMPLE — title up, one concise paragraph beneath. The partition is IMPORTED from mosaic rather than re-typed, so the two cannot drift into publishing different areas for one record; gallery contributes the field density, cards the rule that the field sits beside the type and never behind it. ⚠ The paragraphs are LAB COPY: the record's `gloss` is a fragment sized for a 148-unit module, not a sentence, so promotion means a field on `CaseMapShape` exactly as `evalMethod` was.",
   },
 ];
 

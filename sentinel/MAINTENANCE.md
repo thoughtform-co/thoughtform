@@ -54,6 +54,29 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-16 — A pass-through default hung four substrate drawings; round nine (`33 · inlay`)
+
+`roundSix`'s `Field` wrapper defaulted its `p` to **0** and forwarded it
+explicitly. `p` is `validation`'s lattice PITCH and a **loop step** in that
+painter (`x += p`), and a destructuring default only fires on `undefined` — so
+`mosaic` · `grade` · `tanks` · `stack` spun during render and never mounted.
+Production was never affected: `PdaSubstrate` passes `p={14}`. Fixed at both
+ends — the painter clamps a non-positive pitch, the pass-through has no default.
+
+Two guard gaps it exposed, both captured in
+[BEST-PRACTICES.md](BEST-PRACTICES.md) (§Content Guards): `substrate-lab-fit`
+was 217 green tests throughout because it walks declared `lettering()` and never
+mounts a component; and `capture-substrate-lab`'s default `--v` list is still
+**round one's seven**, so later directions are only gated when named. Making
+that harness default to the registry is the durable half and is **not yet done**.
+
+Then round nine: `33 · inlay` — the owner picked 22 `mosaic`, asked for the
+texture of 8 `gallery` / 11 `cards`, then cut the copy to a title plus one
+paragraph. Partition IMPORTED from mosaic; density per unit area; the internal
+hairlines replaced by a grout channel (a 1-unit rule paints 0.65 device px at
+this meet). Contracts in [`.claude/rules/proof.md`](../.claude/rules/proof.md).
+No ADR — the lab precedent is that a direction earns one when it wins.
+
 ### 2026-08-15 — The cartridge frame means WORKSTREAM; six new cluster-body directions (ADR-070 U17 rejected, U18 opened)
 
 Round four (2026-08-14) built three selected-work-aware substrate directions

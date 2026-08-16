@@ -2092,6 +2092,56 @@ it two notes:
   ⚠ All three are still listed separately in every guard tuple — a silhouette
   that grows its own strings later must be walked, not silently trusted.
 
+⚠ **ROUND NINE IS `33 · inlay` — THE OWNER'S PICK, GIVEN ITS MATERIAL AND ITS
+COPY CUT** (2026-08-16, two notes on 22 `mosaic`: give it the texture of 8
+`gallery` or 11 `cards`; then make the copy SUPER SIMPLE — title up, one
+concise paragraph beneath).
+
+- ⚠ **THE PARTITION IS IMPORTED FROM `VariantMosaic`, NOT RE-TYPED**
+  (`mosaicBlocks`), so the two directions cannot drift into publishing
+  different areas for one record. **`VariantInlay`'s `BOX` must stay equal to
+  mosaic's** — the blocks come from there, and a frame that disagrees offsets
+  every region from its own ground. The two files move together.
+- **It letters THREE facts, not round six's five**, and it letters its OWN
+  specs rather than `patternSpecs`: `gloss`, `evalMethod` and the flagship's
+  NAME are no longer drawn. Calling the shared five-fact emitter would declare
+  two strings the drawing does not paint — a guard walking absent text, which
+  passes. Floor is 20 in `substrate-lab-fit`, not 25. ⚠ Dropping `evalMethod`
+  reverses ADR-070 U19 **on this drawing only**; the record keeps the field.
+- ⚠ **THE PARAGRAPHS ARE LAB COPY, and promotion has a cost.** `CaseMapShape`'s
+  `gloss` is a definitional FRAGMENT sized for a 148-unit module, not a
+  sentence. If this wins, the paragraphs become a record field exactly as
+  `evalMethod` did — and enter `cases-registry`'s scan with it.
+- ⚠ **THE FLAGSHIP SURVIVES AS A MARK, NOT A NAME** — its tick runs longer and
+  takes green. Round six's rule (the accent carries the signal, the label stays
+  at full ink) is satisfied by dropping the label, never by dimming it.
+- ⚠ **DENSITY IS PER UNIT AREA.** The particle painters emit a FIXED count
+  scaled by `k`, so at one shared `k` the largest field (~123,000u) and the
+  smallest (~15,000u) get the same 300 marks and the SMALLEST region reads as
+  the densest material — encoding the count a third time, backwards. `k` is the
+  field's own area against a reference, clamped.
+- ⚠ **THE DIVISION IS A GROUT, AND THE HAIRLINES ARE DELETED.** A 1-unit
+  internal rule paints 0.65 device px at the binding meet and the browser pays
+  the rest in alpha — the same arithmetic as U16's stack spine and foot
+  separator, and the reason the owner could not find a block's edges. The
+  regions paint on a rect inset by half a 4-unit channel, so the PLATE shows
+  between two materials. ⚠ **A grout is not a gutter**: a gutter is empty space
+  between OBJECTS and is what makes five regions read as five cards (mosaic
+  bans it at 20u and this inherits the ban); a grout belongs to the plate. **No
+  rule goes back inside the channel** — a line in its own channel frames a card.
+
+⚠ **AND A `Field` PASS-THROUGH ONCE HUNG FOUR DRAWINGS** (fixed 2026-08-16).
+`roundSix`'s `Field` defaulted its `p` to **0** and forwarded it explicitly;
+`p` is `validation`'s lattice PITCH and a **loop step** in that painter, and a
+destructuring default only fires on `undefined`. `mosaic` · `grade` · `tanks` ·
+`stack` never mounted — the hang is in render, so React never commits and there
+is nothing on screen to say so, and the shell's own `?v=` means a refresh
+re-enters it. Production was never affected (`PdaSubstrate` passes `p={14}`).
+`validation` clamps a non-positive pitch now; the pass-through has no default.
+⚠ **`substrate-lab-fit` was green throughout** — it walks declarations and never
+mounts anything — and `capture-substrate-lab`'s default `--v` list is still
+**round one's seven**, so later directions are ungated unless named explicitly.
+
 ⚠ **THREE FIT DEFECTS CAUGHT THE HOUR ROUND FIVE WAS WRITTEN**, all worth
 carrying:
 
