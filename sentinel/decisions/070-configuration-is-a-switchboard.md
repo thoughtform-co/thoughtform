@@ -2361,6 +2361,32 @@ carries 67 labels at 0.5u tolerance, and the light contrast walk holds because
 the labels reuse `--pda-txt` on the plate's own opaque ground. Captured on the
 REAL landing at 1280×720, at the owner's 1920×1247, and in light.
 
+### ⚠ Addendum, same day — the plate is SQUARE, there is no outer cut
+
+Owner: _"the blocks of substrate shouldn't have these notches, just normal
+corners."_ The plate carried a TR+BL chamfer pair from U23. Two things were
+wrong with it, and the second is the one a guard could have caught:
+
+1. **It read as a defect rather than as a housing.** The regions tile the plate
+   right up to its outer edge, so the cut landed INSIDE whichever two regions
+   hold those corners — Validation top-right, Judgment bottom-left. Three blocks
+   square and two notched is not a machined housing, it is an inconsistency, and
+   the eye finds it before it finds the grammar.
+2. ⚠ **IT TOOK AREA FROM EXACTLY TWO REGIONS, AND AREA IS THE COUNT.** Each
+   26-unit chamfer removes 338u² from one region's painted face — 0.3 % of
+   Validation. Small, but it fell on two named regions and on no others, which
+   is the kind of quiet asymmetry the area claim exists to forbid:
+   `substrateBlocks` computes full rects and the clip silently disagreed with
+   them.
+
+⚠ **AND ADR-065 ALREADY SAID SO: the children of a chamfered box are SQUARE.**
+The console frame is the machined housing here (its own TL+BR override) and this
+plate is its child. The cut was the exception all along, not the square corners.
+
+The top rule also runs the full width now — it used to stop at `W − OUTER_CUT`
+so it died into the diagonal, and against a square corner that leaves 26 units
+of bare edge reading as a broken line.
+
 ### Left open
 
 - **Fill fraction still varies across regions** (the head's fixed cost against a

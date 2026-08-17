@@ -7,7 +7,7 @@ import { wrapLines } from "./pdaGlyphs";
 import type { LetterSpec } from "./pdaLetters";
 import type { PdaShape } from "./pdaRecord";
 import { FormField, isFormKey } from "./substrateForms";
-import { FS, TRACK, housing } from "./substrateKit";
+import { FS, TRACK } from "./substrateKit";
 
 /**
  * 03 · THE SUBSTRATE — one plate divided into five regions of material, each
@@ -16,12 +16,12 @@ import { FS, TRACK, housing } from "./substrateKit";
  * ## The claim
  *
  * ONE PLATE, DIVIDED — not five cards collected. The crop is partitioned with
- * no gutters, area proportional to the Skill count, and the whole thing takes a
- * single outer cut, so Pattern's fourteen occupies nearly three times
- * Stakeholder's five. Each region is HEAD · PLATES · BED: its name and the
- * count, one sentence saying what that substrate MEANS, then every encoded
- * Skill as a named plate in two columns, all of it standing on the pattern's
- * own physics field.
+ * no gutters and area proportional to the Skill count, so Pattern's fourteen
+ * occupies nearly three times Stakeholder's five. Each region is HEAD · PLATES
+ * · BED: its name and the count, one sentence saying what that substrate MEANS,
+ * then every encoded Skill as a named plate in two columns, all of it standing
+ * on the pattern's own physics field. Every corner on this drawing is SQUARE —
+ * see the note on the outer cut.
  *
  * **The size difference is carried three ways, all derived from one number:**
  * the region's AREA is the gestalt, the plate run is the tally you can count,
@@ -32,9 +32,8 @@ import { FS, TRACK, housing } from "./substrateKit";
  * gutters away and the same five rectangles stop being objects and become
  * REGIONS of one surface, which is the claim this reading actually makes: one
  * intelligence layer, five recurring shapes. That is why the partition is
- * derived rather than authored, why there is one cut on the outer boundary
- * only, and why chamfering each region is banned — five machined housings would
- * undo the whole paragraph above.
+ * derived rather than authored, and why chamfering each region is banned — five
+ * machined housings would undo the whole paragraph above.
  *
  * ## What it replaces, and the trade that was wrong
  *
@@ -117,9 +116,27 @@ const W = R - L;
 
 export const CARDS = 5;
 
-/** The outer cut. Larger than a module's, because it reads at the scale of the
- *  whole panel rather than of one card. */
-const OUTER_CUT = 26;
+/* ── THE PLATE IS SQUARE — THERE IS NO OUTER CUT ─────────────────────────
+   (owner, 2026-08-17: the substrate blocks should have normal corners.)
+
+   It carried a TR+BL chamfer pair from U23. Two things were wrong with it, and
+   the second is the one a guard could have caught:
+
+   1. It read as a DEFECT rather than as a housing. The regions tile the plate
+      right up to its outer edge, so the cut landed INSIDE whichever two regions
+      hold those corners — Validation top-right, Judgment bottom-left. Three
+      blocks square and two notched is not a machined housing, it is an
+      inconsistency, and the eye finds it before it finds the grammar.
+   2. ⚠ IT TOOK AREA FROM EXACTLY TWO REGIONS, AND AREA IS THE COUNT. Each
+      26-unit chamfer removes 338u² from one region's painted face — 0.3 % of
+      Validation. Small, but it fell on two named regions and on no others,
+      which is the kind of quiet asymmetry the area claim exists to forbid:
+      `substrateBlocks` computes full rects and the clip silently disagreed.
+
+   ⚠ AND ADR-065 ALREADY SAID SO: the children of a chamfered box are SQUARE.
+   The console frame is the machined housing here (its own TL+BR override) and
+   this plate is its child. The cut was the exception, not the square corners. */
+
 /** A region's own text inset. */
 const PAD_IN = 16;
 
@@ -558,20 +575,19 @@ export function ViewSubstrate({
   const blocks = substrateBlocks(rows, layout.boxH);
   const byKey = new Map(shapes.map((s) => [s.key as string, s]));
   const counts = new Map(rows.map((r) => [r.key, r.n]));
-  const outer = housing(L, BOX_Y, W, layout.boxH, OUTER_CUT);
 
   return (
     <>
       <defs>
         <clipPath id="pda-sub-outer">
-          <path d={outer} />
+          <rect x={L} y={BOX_Y} width={W} height={layout.boxH} />
         </clipPath>
       </defs>
 
       {/* ONE PLATE under the whole drawing, so the regions divide a surface
           rather than each bringing their own — and so the grout has something
-          to show. */}
-      <path d={outer} fill="var(--pda-void)" />
+          to show. Square: see the note on the outer cut. */}
+      <rect x={L} y={BOX_Y} width={W} height={layout.boxH} fill="var(--pda-void)" />
 
       <g clipPath="url(#pda-sub-outer)">
         {blocks.map((b, i) => {
@@ -750,12 +766,16 @@ export function ViewSubstrate({
         })}
       </g>
 
-      {/* The one cut, stroked over the clip so the outer edge stays crisp. */}
-      <path d={outer} fill="none" stroke="var(--pda-hair2)" />
+      {/* The plate's own edge, stroked over the clip so it stays crisp. */}
+      <rect x={L} y={BOX_Y} width={W} height={layout.boxH} fill="none" stroke="var(--pda-hair2)" />
+      {/* ⚠ THE TOP RULE RUNS THE FULL WIDTH NOW. It used to stop at
+          `W − OUTER_CUT` so it died into the chamfer's diagonal; with the
+          corner square, stopping short leaves 26 units of bare edge at the
+          top-right that reads as a broken line. */}
       <line
         x1={L}
         y1={BOX_Y + 1}
-        x2={L + W - OUTER_CUT}
+        x2={L + W}
         y2={BOX_Y + 1}
         stroke="var(--pda-hair2)"
         strokeWidth="2"

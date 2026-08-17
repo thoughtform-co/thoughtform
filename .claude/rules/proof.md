@@ -1174,6 +1174,14 @@ copy is DELETED and the lab's `shipped` mounts production.
   which is the subject of this reading.
 - **`GROUT` is 10, the title's baseline 32** (both owner asks: the boxes sat too
   close, the title too high).
+- ⚠ **EVERY CORNER IS SQUARE — THERE IS NO OUTER CUT** (owner, same day). The
+  plate's TR+BL chamfer landed INSIDE the two regions holding those corners
+  (Validation TR, Judgment BL), so three blocks read square and two notched;
+  and it removed 338u² from those two alone, which is **area, and area is the
+  count**. ⚠ ADR-065 already covered it: **the children of a chamfered box are
+  square**, and the console frame is the housing this plate is a child of. The
+  top rule runs the FULL width now — stopping short of a square corner leaves
+  26 units of bare edge that reads as a broken line.
 
 - **The partition is DERIVED, area is the Skill count, and there are NO
   GUTTERS.** Slice-and-dice over the mass ranking, one cut on the outer
