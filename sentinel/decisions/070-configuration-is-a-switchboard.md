@@ -2274,3 +2274,99 @@ contrast walk and the casefile clipping sweep. Captured on the REAL landing at
 - **The count numeral is kept** on each region's title line. Area and the
   graduation already carry the count; the numeral is the only exact figure. A
   one-line removal if it reads as saying it three times.
+
+---
+
+## Update 24 — the Skills come back, and the size difference gets three reads (2026-08-17, owner)
+
+**Status: Accepted.** Reversal of U23's second half, one day later. The
+composition, the partition, the paragraph and the elastic crop all stand; the
+47 named Skill plates return and the tick graduation goes.
+
+### The read
+
+The owner's verdict on the shipped reading: 01 and 02 "feel super elegant",
+03 "feels off". Five complaints, one cause — the Skills are missing, the size
+difference between substrates does not read, the boxes are not "fully
+optimized", the padding between boxes is too tight, the title sits too close to
+the top.
+
+⚠ **U23 MADE TWO CHANGES AND ONLY ONE OF THEM WAS RIGHT.** Replacing the card
+row with a divided plate fixed the composition. Deleting the 47 named plates for
+a tick graduation — on the argument that the roster ships one casefile row away
+— did not. **The count survived that deletion; the DENSITY did not.** Readings
+01 and 02 are a field of cartridges and a board of modules, both thick with
+named parts. 03 became three strings over texture, which is exactly why it read
+as a different machine standing next to them.
+
+A tick is countable. A plate is countable AND readable, and it gives a region
+something to be full of.
+
+### What changed
+
+- **Every encoded Skill is a named plate again**, in two columns inside its
+  region: accent bar (green on the first encode, amber otherwise) + the record's
+  authored `short`. Lettering goes 20 → 67 strings.
+- **The graduation is deleted with their return.** Keeping both would encode the
+  Skill count a third time in marks alone, beside a numeral that already states
+  it. Its 26 units go to the body — which is what makes the lightest region's
+  arithmetic close.
+- **The count letters at the title's size** in gold. Size is now carried three
+  ways, all derived from one number: the region's AREA is the gestalt, the plate
+  run is the tally you can count, the numeral is the exact figure. Three reads
+  of one fact is not saying it three times when that fact is the subject.
+- **`GROUT` 4 → 10** and **the title's baseline 22 → 32**, both owner asks.
+- **The bed spans the whole body** rather than owning a band under the copy.
+
+### ⚠ The run is SEATED AT THE FLOOR, and the first cut was not
+
+Top-anchoring the plates under the paragraph shipped in the first capture and
+was wrong on sight: area is the count and the plate run is the count, but **the
+head is a FIXED cost**, so the heaviest regions carried a band of bare field
+beneath their plates (140 units under Pattern at rest) while the lightest was
+packed. Top-anchored, that band reads as a hole. Seated at the floor it reads as
+the material the plates settled out of, every region's plates land on one edge,
+and the reading is EXTRACTION rather than a list that ran short. The band still
+varies with region size, which is honest — more area is more of that substrate.
+
+### ⚠ Two columns, and it is not a preference
+
+Three columns fit the two wide regions and clip the three narrow ones: a
+14-character `short` measures 114.2u and a third column leaves 117.1u before the
+accent and its gap. A derived column count would therefore draw two different
+objects on one plate. One number everywhere.
+
+### ⚠ The lightest region is the binding case, by construction
+
+Area IS the count, so the region with the fewest Skills is also the smallest —
+while its head costs the same fixed 87 units as everyone else's. At rest
+Stakeholder has **56.7 units of body against a 54-unit run: 2.7 to spare.** It
+opens to 35.8 at 1920×1080 and 66.5 at the owner's own 1920×1247, so REST is the
+case to guard.
+
+⚠ **AND A THIRD PARAGRAPH LINE OVERFLOWS IT.** Every `meaning` wraps to two
+lines today; a third costs 18 units of head and puts the run through the floor
+— while every per-string assertion keeps passing, because each label still fits
+its own column. `pda-substrate-fit` walks the ACTUAL wrap for exactly this.
+
+### Verification
+
+892 unit tests across 49 files, lint and typecheck clean. `pda-substrate-fit`
+(17 cases) swaps U23's material and graduation assertions for: every region's
+plate run fits its body at every field shape, every label fits its own column,
+no two plates collide and the last column clears the wall, and every encoded
+Skill is declared (47, and the per-region count matches its numeral).
+Playwright: 21 services-ring smoke cases — the pairwise glyph-overlap walk now
+carries 67 labels at 0.5u tolerance, and the light contrast walk holds because
+the labels reuse `--pda-txt` on the plate's own opaque ground. Captured on the
+REAL landing at 1280×720, at the owner's 1920×1247, and in light.
+
+### Left open
+
+- **Fill fraction still varies across regions** (the head's fixed cost against a
+  count-proportional area). Seating the run at the floor makes it read as
+  material rather than as a hole, but the ratio itself is arithmetic and will
+  not go away without breaking area-is-the-count.
+- **The lab's `--v` default is still round one's seven** — unchanged from U23,
+  and still the durable fix for the class of defect that hid four broken
+  drawings.

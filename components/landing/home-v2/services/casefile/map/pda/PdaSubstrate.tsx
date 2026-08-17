@@ -11,18 +11,22 @@ import { FS, TRACK, housing } from "./substrateKit";
 
 /**
  * 03 · THE SUBSTRATE — one plate divided into five regions of material, each
- * a title, one paragraph, and the pattern's own physics.
+ * holding its own named Skills.
  *
  * ## The claim
  *
  * ONE PLATE, DIVIDED — not five cards collected. The crop is partitioned with
  * no gutters, area proportional to the Skill count, and the whole thing takes a
  * single outer cut, so Pattern's fourteen occupies nearly three times
- * Stakeholder's five and no numeral is doing that work. Each region letters its
- * name and one sentence saying what that substrate MEANS, over its own physics
- * field. A graduation of one tick per encoded Skill runs at the base of each
- * material, at one shared pitch across all five, so the area a reader sees is
- * also a number they can count.
+ * Stakeholder's five. Each region is HEAD · PLATES · BED: its name and the
+ * count, one sentence saying what that substrate MEANS, then every encoded
+ * Skill as a named plate in two columns, all of it standing on the pattern's
+ * own physics field.
+ *
+ * **The size difference is carried three ways, all derived from one number:**
+ * the region's AREA is the gestalt, the plate run is the tally you can count,
+ * and the numeral is the exact figure. That is not the surface saying one thing
+ * three times — the Skill count IS the subject of this reading.
  *
  * ⚠ **A GUTTER IS A STATEMENT ABOUT HOW MANY THINGS THERE ARE.** Take the
  * gutters away and the same five rectangles stop being objects and become
@@ -32,39 +36,47 @@ import { FS, TRACK, housing } from "./substrateKit";
  * only, and why chamfering each region is banned — five machined housings would
  * undo the whole paragraph above.
  *
- * ## What it replaces, and what that cost
+ * ## What it replaces, and the trade that was wrong
  *
- * ADR-070 U16's five pattern cards — a stack of named Skill plates over the
- * pattern's field, gloss in the foot. It was `housing()` five times in a row,
- * i.e. reading 01's grid at n = 5, which broke the owner's standing constraint
- * that this reading may not look like the work tab before a string was placed.
+ * ADR-070 U16's five pattern cards were `housing()` five times in a row — i.e.
+ * reading 01's grid at n = 5 — which broke the owner's standing constraint that
+ * this reading may not look like the work tab. U23 fixed the composition and
+ * ALSO deleted the 47 named Skill plates, replacing them with a tick
+ * graduation, on the argument that the roster ships one casefile row away.
  *
- * ⚠ **THE 47 NAMED SKILL PLATES WENT WITH IT**, and that is the real cost. The
- * stack lettered every Skill's `short`; the graduation letters none of them —
- * the ticks are countable, not readable. Nothing is lost from the RECORD (the
- * same case's registry row renders all 47 by name in `SkillsBrowserPlate`, one
- * casefile row away) and the drawing gains the thing it never had: a sentence
- * a reader can actually read. If the roster must return it needs its own
- * reading, not a corner of this one.
+ * ⚠ **THAT SECOND HALF WAS THE WRONG TRADE, AND U24 REVERSES IT** (owner,
+ * 2026-08-17). The count survived the deletion; the DENSITY did not. Readings
+ * 01 and 02 are a field of cartridges and a board of modules — both thick with
+ * named parts — and 03 became three strings over texture, which is precisely
+ * why it read as a different machine beside them. Ticks are countable; plates
+ * are countable AND readable, and they give a region something to be full of.
+ *
+ * ⚠ **THE GRADUATION IS DELETED WITH THEIR RETURN.** Keeping both would encode
+ * the Skill count a third time in marks alone, beside a numeral that already
+ * states it. Its 26 units go to the body, and that is what makes the lightest
+ * region's arithmetic close.
  *
  * ⚠ **THE 5 × 8 CROSSING REMAINS GONE** (owner, 2026-08-13). `crossing()` still
  * projects it and its arithmetic is still guarded; it cannot come back inside a
  * region, because eight department codes need ~196 units of lettering and marks
  * without codes need a legend, which this surface bans.
  *
- * ## The copy, cut to the bone
+ * ## The copy
  *
- * ⚠ **THREE LETTERED THINGS PER REGION, AND ONE OF THEM IS NEW** (owner,
- * 2026-08-16: make it SUPER SIMPLE — the title, moved up, with a paragraph
- * under it that concisely explains what it means). `gloss`, `evalMethod` and
- * the 47 Skill labels are no longer drawn. What replaces them is
- * `PdaShape.meaning` — the first prose on this console, stored in sentence case
- * because mono caps at 13 units is the least readable thing a paragraph can be.
+ * ⚠ **FOUR LETTERED THINGS PER REGION** — name, count, paragraph, and one label
+ * per Skill. `gloss` and `evalMethod` are still not drawn: the paragraph
+ * (`PdaShape.meaning`) replaced them in U23 and is the only prose on this
+ * console, stored in sentence case because mono caps at 13 units is the least
+ * readable thing a paragraph can be.
  *
- * ⚠ **THE FLAGSHIP SURVIVES AS A MARK, NOT A NAME.** Its tick runs longer and
- * takes green. The rule the card stack learned — the accent carries the signal,
- * the label stays at full ink — is satisfied here by dropping the label rather
- * than by dimming it.
+ * ⚠ **A SKILL'S LABEL IS `short`, AUTHORED AT ≤14 CHARS, NEVER `name` CLIPPED.**
+ * Truncating "Legal Risk Methodology" gives "Legal Risk Met" on a client page.
+ *
+ * ⚠ **THE FLAGSHIP TAKES THE ACCENT, NOT THE INK.** Its plate's accent bar goes
+ * green at full weight against its siblings' amber at .55; lettering it in
+ * `--pda-grn-ink` against every sibling's `--pda-txt` would make the one plate
+ * the drawing means to point at the DIMMEST thing in the run — the highlight
+ * rendered as de-emphasis. One signal per object.
  *
  * ## Two things that are arithmetic, not taste
  *
@@ -116,42 +128,79 @@ const PAD_IN = 16;
  *
  * ⚠ NOT A GUTTER. A gutter is empty space between OBJECTS and is what makes
  * five regions read as five cards; this drawing bans it. A grout belongs to
- * the plate and is what the eye reads as one surface divided. Four units is
- * ~2.6px at the binding preset and ~3.6px at 1920 — findable, and an order of
- * magnitude under the gutter it must not become.
+ * the plate and is what the eye reads as one surface divided.
+ *
+ * ⚠ 10, NOT 4 (owner, 2026-08-17: the boxes sat too close). Four units paints
+ * ~2.6px at the binding preset, which is findable but reads as a seam rather
+ * than as air; ten is ~6.5px there and ~9px at 1920. Still an order of
+ * magnitude under a gutter — mosaic's own banned value is 20 BETWEEN OBJECTS,
+ * and this channel belongs to the plate underneath.
  */
-const GROUT = 4;
+const GROUT = 10;
 
 /* ── The zones, all derived from the type ───────────────────────────────── */
 
-/** The title, near the region's own top edge. */
-const B_NAME = 22;
+/** The title's baseline. ⚠ 32, not 22 (owner, 2026-08-17: the title sat too
+ *  close to the top). The region's own top edge is already half a grout in from
+ *  the block, so this is the only lever on the head's top air. */
+const B_NAME = 32;
 /** The paragraph's first baseline, and its leading. */
-const B_PARA = 46;
+const B_PARA = 58;
+/**
+ * ⚠ 18, AND 17 IS A COIN FLIP ON A FONT METRIC. An fs-13 line box measures
+ * ~16.8 units — the em box, ascender to descender, not the ink — so a 17 pitch
+ * clears by 0.2 against the smoke's 0.5-unit overlap gate. This is the same
+ * arithmetic that made `GLOSS_LINE_BOX` 17 rather than 15 for fs 12.
+ */
 const PARA_STEP = 18;
 /**
  * ⚠ THREE, AND IT IS A BELT RATHER THAN A TARGET. Every `meaning` on the record
  * wraps to two lines in the NARROWER column; the third exists so a later edit
  * overflows into space that is there, and `substrateLettering` declares any
  * tail past it at measure 0 so a silent slice fails loudly instead.
+ *
+ * ⚠ AND A THIRD LINE OVERFLOWS THE LIGHTEST REGION. Stakeholder's body is 56.7
+ * units at rest against a 54-unit plate stack; a third paragraph line costs 18
+ * and puts the stack through the floor. `pda-substrate-fit` walks the ACTUAL
+ * wrap for exactly this reason.
  */
 const PARA_MAX = 3;
-/** Air under the last paragraph line, before the material starts. */
-const HEAD_PAD = 16;
+/** Air under the last paragraph line, before the plates start. */
+const HEAD_PAD = 11;
 
 /**
- * The graduation — ONE TICK PER ENCODED SKILL, at ONE PITCH ACROSS ALL FIVE.
+ * THE PLATE GRID — one named plate per encoded Skill, in two columns.
  *
- * ⚠ THE PITCH IS SHARED AND FIXED, never fitted to a region's width. A run
- * scaled to fill its own region would make five runs of identical length and
- * encode nothing. At 16 the heaviest pattern's fourteen measure 224 units
- * against the narrowest region's ~361 of usable width.
+ * ⚠ **THIS IS WHAT MAKES A REGION AN INSTRUMENT RATHER THAN A POSTER** (owner,
+ * 2026-08-17). U23 replaced the 47 named plates with a tick graduation on the
+ * argument that the roster lives one casefile row away. The count survived; the
+ * DENSITY did not. Readings 01 and 02 are a field of cartridges and a board of
+ * modules — both thick with named parts — and 03 became three strings over
+ * texture, which is why it read as a different machine.
+ *
+ * ⚠ **AND THE GRADUATION IS DELETED WITH ITS RETURN.** The plates are countable
+ * and readable; ticks are only countable. Keeping both would encode the Skill
+ * count a third time (area, plates, ticks) beside a numeral that already states
+ * it. Its 26 units go to the body, and that is what makes the lightest region's
+ * arithmetic close.
+ *
+ * ⚠ **TWO COLUMNS, NOT A DERIVED COUNT.** Three columns fit the two wide
+ * regions and not the three narrow ones (a 14-character `short` measures 114.2u
+ * and a third column leaves 117.1u before the accent and its gap), so a derived
+ * column count would draw two different objects on one plate. One number,
+ * everywhere.
  */
-const TICK_PITCH = 16;
-const TICK_H = 11;
-const TICK_FLAG_H = 18;
-/** What the run reserves at a region's base, ticks plus their air. */
-const TICK_BAND = 26;
+const PLATE_COLS = 2;
+const PLATE_PITCH = 18;
+const PLATE_H = 16;
+const PLATE_GAP = 12;
+/** The accent bar — amber, green on the pattern's first encode. */
+const ACCENT_W = 3;
+/** Accent → label, and the label's right margin inside its column. */
+const LABEL_GAP = 6;
+const LABEL_MARGIN = 6;
+/** Air under the plate stack, at the region's floor. */
+const BODY_PAD = 12;
 
 /**
  * ⚠ DENSITY IS PER UNIT AREA, AND AT A FIXED `k` IT IS NOT — see the header.
@@ -334,13 +383,65 @@ export const paraOf = (meaning: string, b: SubstrateBlock) =>
  *  tall as what it carries and every unit left over goes to the material. */
 export const headHeight = (paraLines: number) => B_PARA + (paraLines - 1) * PARA_STEP + HEAD_PAD;
 
-/** Where each zone of one region sits. Pure. */
-export function regionGeometry(b: SubstrateBlock, paraLines: number) {
+/**
+ * Where each zone of one region sits, and where its plates seat. Pure.
+ *
+ * ⚠ THE BED IS THE WHOLE BODY, not a zone under the plates. U23 gave the field
+ * its own band between the copy and the graduation, which meant the LIGHTEST
+ * region — smallest by construction, since area is the count — had the least
+ * room for it. Spanning the body puts the drawing on reading 02's register
+ * (opaque modules on a faint bed) and removes the tension entirely: the plates
+ * are objects ON the material rather than neighbours of it.
+ */
+export function regionGeometry(b: SubstrateBlock, paraLines: number, n = 0) {
   const r = innerOf(b);
   const headH = headHeight(paraLines);
   const bodyY = r.y + headH;
-  const tickBase = r.y + r.h - 12;
-  return { ...r, headH, bodyY, tickBase, fieldH: Math.max(0, tickBase - TICK_BAND - bodyY) };
+  const bodyH = Math.max(0, r.y + r.h - BODY_PAD - bodyY);
+  const colW = (r.w - PAD_IN * 2 - PLATE_GAP * (PLATE_COLS - 1)) / PLATE_COLS;
+  const rows = Math.ceil(n / PLATE_COLS);
+  const stackH = rows * PLATE_PITCH;
+  return {
+    ...r,
+    headH,
+    bodyY,
+    bodyH,
+    colW,
+    rows,
+    /** What the stack claims of the body. The rest is bed, showing ABOVE it. */
+    stackH,
+    /** The run's top edge — seated at the region's floor. See `plateAt`. */
+    stackTop: r.y + r.h - BODY_PAD - stackH,
+    /** The measure a `short` label has inside its column. */
+    labelMeasure: colW - ACCENT_W - LABEL_GAP - LABEL_MARGIN,
+  };
+}
+
+/**
+ * One plate's box, by index down the columns.
+ *
+ * ⚠ COLUMN-MAJOR: the run reads top-to-bottom then across, so a region's first
+ * encode is its first plate and the green accent lands where the eye starts.
+ *
+ * ⚠ **THE RUN IS SEATED AT THE REGION'S FLOOR, NOT HUNG FROM ITS HEAD.** Area
+ * is the count and the plate run is the count, but the head is a FIXED cost —
+ * so hanging the run under the paragraph leaves the heaviest regions with a
+ * band of bare field beneath their plates (140 units under Pattern at rest)
+ * while the lightest is packed. Top-anchored, that band reads as a hole; seated,
+ * it reads as the material the plates settled out of, every region's plates
+ * land on one edge, and the reading is EXTRACTION rather than a list that ran
+ * short. The band still varies with region size, which is honest — more area is
+ * more of that substrate.
+ */
+export function plateAt(geo: ReturnType<typeof regionGeometry>, k: number) {
+  const col = Math.floor(k / geo.rows);
+  const row = k % geo.rows;
+  return {
+    x: geo.x + PAD_IN + col * (geo.colW + PLATE_GAP),
+    y: geo.stackTop + row * PLATE_PITCH,
+    w: geo.colW,
+    h: PLATE_H,
+  };
 }
 
 /**
@@ -365,6 +466,7 @@ export function substrateLettering(record: {
     const b = blocks.get(s.key);
     if (!b) continue;
     const m = measureOf(b);
+    const n = counts.get(s.key) ?? 0;
 
     out.push({
       slot: `${s.key}.name`,
@@ -373,14 +475,20 @@ export function substrateLettering(record: {
       /* The count sits on the same line, right-aligned, so the name's measure
          is the region's column less that numeral's. */
       track: TRACK.name,
-      measure: m - 44,
+      measure: m - 56,
     });
+    /* ⚠ THE COUNT LETTERS AT THE TITLE'S SIZE (owner, 2026-08-17: the size
+       difference between substrates has to read). It is the reference's own
+       move — "PATTERN / 14 SKILLS" — and it is the third of three reads that
+       all derive from one number: the region's AREA is the gestalt, the plate
+       run is the tally, and this is the exact figure. Three reads of one fact
+       is not the surface saying it three times; the fact is the subject. */
     out.push({
       slot: `${s.key}.count`,
-      text: String(counts.get(s.key) ?? 0).padStart(2, "0"),
-      fs: FS.key,
+      text: String(n).padStart(2, "0"),
+      fs: FS.name,
       track: TRACK.key,
-      measure: 44,
+      measure: 56,
     });
 
     const lines = paraOf(s.meaning, b);
@@ -408,6 +516,22 @@ export function substrateLettering(record: {
         fs: FS.gloss,
         track: TRACK.gloss,
         measure: 0,
+      });
+    }
+
+    /* ⚠ THE 47 SKILL LABELS ARE THE LARGEST BLOCK OF LETTERING ON THIS CONSOLE,
+       and they are content the drawing did not author and cannot shorten. Each
+       is `short` — AUTHORED at ≤14 characters, never `name` truncated, because
+       clipping "Legal Risk Methodology" gives "Legal Risk Met" on a client
+       page. The measure is the plate's own column, not the region's. */
+    const geo = regionGeometry(b, lines.length, n);
+    for (const plate of skillsOf(record.skills, s.key)) {
+      out.push({
+        slot: `skill.${plate.id}`,
+        text: plate.short,
+        fs: FS.chrome,
+        track: TRACK.name,
+        measure: geo.labelMeasure,
       });
     }
   }
@@ -454,8 +578,8 @@ export function ViewSubstrate({
           const s = byKey.get(b.key);
           if (!s) return null;
           const paraLines = paraOf(s.meaning, b);
-          const geo = regionGeometry(b, paraLines.length);
           const plates = skillsOf(skills, b.key);
+          const geo = regionGeometry(b, paraLines.length, plates.length);
           const isLit = lit === b.key;
           const clipId = `pda-sub-${b.key}`;
 
@@ -487,22 +611,22 @@ export function ViewSubstrate({
                   coordinate system, so absolute coordinates land at twice the
                   translate. ⚠ `p` is passed EXPLICITLY: it is `validation`'s
                   lattice PITCH and a loop step in that painter. */}
-              {geo.fieldH > 16 && isFormKey(b.key) ? (
+              {geo.bodyH > 16 && isFormKey(b.key) ? (
                 <>
                   <clipPath id={clipId}>
-                    <rect x={0} y={0} width={geo.w} height={geo.fieldH} />
+                    <rect x={0} y={0} width={geo.w} height={geo.bodyH} />
                   </clipPath>
                   <g
                     transform={`translate(${geo.x} ${geo.bodyY})`}
                     clipPath={`url(#${clipId})`}
-                    opacity="0.55"
+                    opacity="0.5"
                   >
                     <FormField
                       form={b.key}
                       w={geo.w}
-                      h={geo.fieldH}
+                      h={geo.bodyH}
                       seed={13 + i * 7}
-                      k={densityFor(geo.w, geo.fieldH)}
+                      k={densityFor(geo.w, geo.bodyH)}
                       p={14}
                     />
                   </g>
@@ -529,11 +653,16 @@ export function ViewSubstrate({
               >
                 {s.name}
               </text>
+              {/* THE COUNT, at the title's own size. ⚠ The size difference
+                  between substrates has to READ (owner, 2026-08-17), and area
+                  alone is a gestalt — a reader sees that Pattern dwarfs
+                  Stakeholder and cannot see 14 against 5. This is the exact
+                  figure beside the tally the plates draw. */}
               <text
                 x={geo.x + geo.w - PAD_IN}
                 y={geo.y + B_NAME}
                 textAnchor="end"
-                fontSize={FS.key}
+                fontSize={FS.name}
                 letterSpacing=".18em"
                 fill="var(--pda-ink)"
               >
@@ -556,23 +685,50 @@ export function ViewSubstrate({
                 </text>
               ))}
 
-              {/* THE GRADUATION — the tally under the material it measures. The
-                  first encode runs longer and takes green; with the exemplar's
-                  name gone it is the only thing pointing at it, which is the
-                  accent doing its job unassisted. */}
+              {/* THE PLATES — one per encoded Skill, named, in two columns on
+                  the material they came out of. Fourteen of these ARE the mass;
+                  five of them are a short run, and that is the size difference
+                  a reader can count rather than estimate.
+
+                  ⚠ THE GROUND IS OPAQUE. The bed runs behind the whole body, so
+                  a translucent plate would let the field through its own label —
+                  the "dust on the type" the card stack paid for.
+
+                  ⚠ THE LABEL DOES NOT TAKE THE GREEN, THE ACCENT DOES.
+                  Lettering the first encode in `--pda-grn-ink` against every
+                  sibling's `--pda-txt` makes the one plate the drawing means to
+                  point at the DIMMEST thing in the run. One signal per object. */}
               {plates.map((plate, k) => {
+                const p = plateAt(geo, k);
                 const first = Boolean(plate.flagship);
-                const hgt = first ? TICK_FLAG_H : TICK_H;
                 return (
-                  <rect
-                    key={plate.id}
-                    x={geo.x + PAD_IN + k * TICK_PITCH}
-                    y={geo.tickBase - hgt}
-                    width={2}
-                    height={hgt}
-                    fill={first ? "var(--pda-grn)" : "var(--pda-amb)"}
-                    fillOpacity={first ? 1 : 0.6}
-                  />
+                  <g key={plate.id}>
+                    <rect x={p.x} y={p.y} width={p.w} height={p.h} fill="var(--pda-void)" />
+                    <rect
+                      x={p.x}
+                      y={p.y}
+                      width={p.w}
+                      height={p.h}
+                      fill="rgba(var(--dawn-rgb), 0.07)"
+                    />
+                    <rect
+                      x={p.x}
+                      y={p.y}
+                      width={ACCENT_W}
+                      height={p.h}
+                      fill={first ? "var(--pda-grn)" : "var(--pda-amb)"}
+                      fillOpacity={first ? 1 : 0.55}
+                    />
+                    <text
+                      x={p.x + ACCENT_W + LABEL_GAP}
+                      y={p.y + p.h - (p.h - 12) / 2 - 2}
+                      fontSize={FS.chrome}
+                      letterSpacing=".08em"
+                      fill="var(--pda-txt)"
+                    >
+                      {plate.short}
+                    </text>
+                  </g>
                 );
               })}
 

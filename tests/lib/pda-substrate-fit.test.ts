@@ -4,6 +4,7 @@ import {
   CARDS,
   SUBSTRATE_LAYOUT_0,
   paraOf,
+  plateAt,
   regionGeometry,
   skillsOf,
   substrateBlocks,
@@ -53,15 +54,15 @@ function record() {
 describe("the substrate cards fit their boxes", () => {
   it("every string fits the measure it declares", () => {
     const specs = substrateLettering(record());
-    /* ⚠ THE TOTAL FELL FROM ~71 TO ~20 AND THAT IS THE POINT (owner,
-       2026-08-16). The card stack lettered 47 Skill labels; the graduation
-       letters none of them — the ticks are countable, not readable. What is
-       left is name + count + the paragraph's own lines, so 3 × 5 = 15 is the
-       one-line minimum and the record's five all wrap to two.
+    /* ⚠ THE 47 SKILL LABELS ARE BACK (owner, 2026-08-17), so the total returns
+       to ~67: 5 names + 5 counts + ~10 paragraph lines + 47 plates. U23's tick
+       graduation was countable but not readable, and it left each region with
+       nothing to be full of — which is what made this reading feel unlike the
+       two beside it.
 
        ⚠ A TOTAL IS A COARSE NET, so the structural check below is the real
        one: a magic number cannot tell you WHICH region stopped speaking. */
-    expect(specs.length, "the drawing letters almost nothing").toBeGreaterThan(17);
+    expect(specs.length, "the drawing letters almost nothing").toBeGreaterThan(60);
     for (const s of specs) {
       expect(s.text.length, `${s.slot} is blank`).toBeGreaterThan(0);
       expect(
@@ -100,6 +101,20 @@ describe("the substrate cards fit their boxes", () => {
         mine.some((x) => x.slot === `${s.key}.para.sliced`),
         `${s.key}'s paragraph is too long and lost its tail`
       ).toBe(false);
+    }
+
+    /* ⚠ AND EVERY ENCODED SKILL IS DECLARED. The 47 labels are the largest
+       block of lettering on this console and they are content the drawing did
+       not author and cannot shorten — a region that quietly drew fewer plates
+       than its numeral claims would still pass every per-string check. */
+    const declared = specs.filter((x) => x.slot.startsWith("skill.")).length;
+    expect(declared, "the drawing stopped declaring its Skill plates").toBe(r.skills.length);
+    for (const s of r.shapes) {
+      const n = skillsOf(r.skills, s.key).length;
+      const mine = specs.filter((x) =>
+        skillsOf(r.skills, s.key).some((k) => x.slot === `skill.${k.id}`)
+      );
+      expect(mine.length, `${s.key} declares ${mine.length} plates for ${n} Skills`).toBe(n);
     }
   });
 
@@ -273,34 +288,76 @@ describe("the plate is one surface divided, and every region is material", () =>
     }
   });
 
-  it("every region keeps material under its paragraph", () => {
-    /* The reading is EXTRACTION — the definition and the tally over the stuff
-       they came out of. A region with no field left is a caption in a box.
-       ⚠ The binding case is the LIGHTEST pattern, not the heaviest: area is
-       the count, so the smallest region is the one whose fixed-height head and
-       graduation eat the largest share. */
+  it("every region's plate run fits its body, at every field shape", () => {
+    /* ⚠ **THE BINDING CASE IS THE LIGHTEST PATTERN, NOT THE HEAVIEST**, and it
+       is arithmetic rather than bad luck: area IS the count, so the region with
+       the fewest Skills is also the smallest, while its head costs the same
+       fixed 87 units as everyone else's. At rest Stakeholder has 56.7 units of
+       body against a 54-unit run — 2.7 to spare. It opens to 66.5 at the
+       owner's own viewport, so REST is the case to guard.
+
+       ⚠ AND THE WRAP IS WALKED, NOT ASSUMED. A `meaning` that grew to three
+       lines would cost 18 more units of head and put Stakeholder's run through
+       its floor — every per-string assertion would still pass, because each
+       label still fits its own column. This is the assertion that sees it. */
     for (const ext of EXTS) {
       const { r, blocks } = blocksAt(ext);
       const byKey = new Map(r.shapes.map((s) => [s.key as string, s]));
+      const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
       for (const b of blocks) {
         const s = byKey.get(b.key);
         if (!s) throw new Error(`no shape for ${b.key}`);
-        const geo = regionGeometry(b, paraOf(s.meaning, b).length);
-        expect(geo.fieldH, `ext ${ext}, ${b.key}: no material under the copy`).toBeGreaterThan(16);
+        const n = counts.get(b.key) ?? 0;
+        const geo = regionGeometry(b, paraOf(s.meaning, b).length, n);
+        expect(
+          geo.stackH,
+          `ext ${ext}, ${b.key}: ${n} plates in ${geo.rows} rows overrun their region's floor`
+        ).toBeLessThanOrEqual(geo.bodyH);
       }
     }
   });
 
-  it("the graduation fits inside its own region", () => {
-    /* ⚠ ONE SHARED PITCH, so the run's length is the count and the widest run
-       is the heaviest pattern's. A tick past the wall does not wrap or clip
-       loudly — it paints over the grout and into the neighbour. */
+  it("every plate's label fits its own column", () => {
+    /* ⚠ THE MEASURE IS THE COLUMN, NOT THE REGION. Two columns halve the width
+       a `short` has, and the narrow regions are ~155u against a 14-character
+       label's 114.2 — which is why the column count is TWO everywhere and not
+       derived per region: three columns fit the two wide regions and clip the
+       three narrow ones, i.e. two different objects on one plate. */
+    const { r, blocks } = blocksAt(0);
+    const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
+    const longest = r.skills.reduce((a, s) => (s.short.length > a.length ? s.short : a), "");
+    for (const b of blocks) {
+      const geo = regionGeometry(b, 2, counts.get(b.key) ?? 0);
+      expect(
+        longest.length * 12 * (0.6 + 0.08),
+        `${b.key}: "${longest}" runs past its ${geo.labelMeasure.toFixed(1)}u column`
+      ).toBeLessThanOrEqual(geo.labelMeasure);
+    }
+  });
+
+  it("the plate columns never collide with each other", () => {
+    /* Column-major, so a run reads top-to-bottom then across. Two plates that
+       touch fail the smoke's pairwise glyph walk with nothing on screen to say
+       which pair — this names them. */
     const { r, blocks } = blocksAt(0);
     const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
     for (const b of blocks) {
-      const geo = regionGeometry(b, 2);
       const n = counts.get(b.key) ?? 0;
-      expect(16 + n * 16, `${b.key}: ${n} ticks run past their region`).toBeLessThanOrEqual(geo.w);
+      const geo = regionGeometry(b, 2, n);
+      const boxes = Array.from({ length: n }, (_, k) => plateAt(geo, k));
+      for (let i = 0; i < boxes.length; i += 1) {
+        for (let j = i + 1; j < boxes.length; j += 1) {
+          const a = boxes[i];
+          const c = boxes[j];
+          const hit = a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h;
+          expect(hit, `${b.key}: plates ${i} and ${j} overlap`).toBe(false);
+        }
+      }
+      const last = boxes[boxes.length - 1];
+      expect(
+        last.x + last.w,
+        `${b.key}: the last column runs past the region's wall`
+      ).toBeLessThanOrEqual(geo.x + geo.w);
     }
   });
 

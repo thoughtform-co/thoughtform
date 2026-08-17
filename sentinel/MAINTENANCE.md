@@ -54,6 +54,33 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-17 — The Skills come back to reading 03; U23's second half reversed (ADR-070 U24)
+
+The owner's read one day after U23 shipped: 01 and 02 "feel super elegant", 03
+"feels off" — the Skills are missing, the size difference does not read, the
+boxes are not "fully optimized", the padding is tight, the title sits high.
+
+⚠ **U23 MADE TWO CHANGES AND ONLY ONE WAS RIGHT.** The divided plate fixed the
+composition. Deleting the 47 named Skill plates for a tick graduation did not:
+**the count survived, the DENSITY did not.** 01 is a field of cartridges and 02
+a board of modules, both thick with named parts; 03 became three strings over
+texture. A tick is countable, a plate is countable AND readable.
+
+The plates return in two columns per region, the graduation goes (its 26 units
+are what make the lightest region's arithmetic close), the count letters at the
+title's size, `GROUT` 4 → 10, title baseline 22 → 32. Lettering 20 → 67.
+
+⚠ **The run is SEATED AT THE FLOOR** — top-anchored shipped in the first capture
+and was wrong on sight: the head is a fixed cost against a count-proportional
+area, so the heaviest regions carried bare field UNDER their plates and it read
+as a hole. ⚠ **The lightest region is the binding case** (2.7u spare at rest)
+and **a third paragraph line overflows it** while every per-string assertion
+still passes — the guard walks the actual wrap.
+
+Verified: 892 unit tests, `pda-substrate-fit` re-pointed at the plate grid (17
+cases), 21 services-ring smoke cases with 67 labels through the pairwise overlap
+walk, and captures on the real landing at 1280×720, 1920×1247 and in light.
+
 ### 2026-08-16 — Reading 03 ships `33 · inlay`; the record learns to speak in sentences (ADR-070 U23)
 
 Production's reading 03 is one plate divided into five regions of material —

@@ -1142,10 +1142,38 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
 
 ## Reading 03's drawing, and the crop every reading shares (ADR-070 U16 / U15)
 
-⚠ **ADR-070 U23 (2026-08-16) IS THE LIVE DRAWING: ONE PLATE DIVIDED INTO FIVE
-REGIONS OF MATERIAL** (`PdaSubstrate.tsx`). It supersedes U16's pattern cards.
-`33 · inlay` won the substrate lab after thirty-two directions across eight
-rounds; its local copy is DELETED and the lab's `shipped` mounts production.
+⚠ **ADR-070 U24 (2026-08-17) IS THE LIVE DRAWING: ONE PLATE DIVIDED INTO FIVE
+REGIONS OF MATERIAL, EACH HOLDING ITS OWN NAMED SKILLS** (`PdaSubstrate.tsx`).
+U23 shipped the divided plate; U24 reverses its second half. `33 · inlay` won
+the substrate lab after thirty-two directions across eight rounds; its local
+copy is DELETED and the lab's `shipped` mounts production.
+
+- ⚠ **THE 47 NAMED SKILL PLATES ARE BACK AND THE GRADUATION IS GONE** (owner:
+  01 and 02 "feel super elegant", 03 "feels off"). U23 deleted them for a tick
+  run on the argument that the roster ships one casefile row away — **the count
+  survived that trade, the DENSITY did not.** 01 is a field of cartridges and 02
+  a board of modules, both thick with named parts; 03 became three strings over
+  texture. A tick is countable; a plate is countable AND readable.
+- **Four lettered things per region** — name, count, paragraph, one label per
+  Skill (`short`, authored ≤14, never `name` clipped). Lettering 20 → 67.
+- ⚠ **THE RUN IS SEATED AT THE REGION'S FLOOR.** Area is the count and the run
+  is the count, but the head is a FIXED cost — top-anchored, the heaviest
+  regions carry a band of bare field UNDER their plates (140u under Pattern)
+  while the lightest is packed, and that band reads as a hole. Seated, it reads
+  as the material the plates settled out of.
+- ⚠ **TWO COLUMNS, NOT A DERIVED COUNT.** Three fit the two wide regions and
+  clip the three narrow ones (a 14-char `short` is 114.2u; a third column leaves
+  117.1u before the accent), so a derived count draws two objects on one plate.
+- ⚠ **THE LIGHTEST REGION IS THE BINDING CASE, BY CONSTRUCTION** — area is the
+  count, so the fewest-Skills region is the smallest while its head costs the
+  same fixed 87u. Stakeholder has **2.7u of spare at rest** (66.5 at the owner's
+  viewport), and **a third paragraph line overflows it** while every per-string
+  assertion still passes. The guard walks the ACTUAL wrap.
+- **The count letters at the TITLE's size**, in gold: area is the gestalt, the
+  plate run the tally, the numeral the exact figure — three reads of one number,
+  which is the subject of this reading.
+- **`GROUT` is 10, the title's baseline 32** (both owner asks: the boxes sat too
+  close, the title too high).
 
 - **The partition is DERIVED, area is the Skill count, and there are NO
   GUTTERS.** Slice-and-dice over the mass ranking, one cut on the outer
@@ -1153,19 +1181,20 @@ rounds; its local copy is DELETED and the lab's `shipped` mounts production.
   are** — take them away and five rectangles become REGIONS of one surface,
   which is the claim. Chamfering a region is banned: five machined housings
   put the work tab back.
-- **Three lettered things per region** — name, count, and ONE PARAGRAPH.
-  ⚠ `gloss` and `evalMethod` letter NOWHERE on this reading now, and the 47
-  named Skill plates went with U16's stack (the graduation's ticks are
-  countable, not readable). Lettering fell ~71 → 20 strings. The roster still
-  ships in `SkillsBrowserPlate`, one casefile row away.
+- ⚠ **SUPERSEDED BY U24 ABOVE** — U23 lettered three things per region (name,
+  count, paragraph) and dropped the 47 Skill plates for a tick graduation. The
+  plates are back. `gloss` and `evalMethod` still letter NOWHERE on this
+  reading; the paragraph replaced them and that half stands.
 - ⚠ **`CaseMapShape.meaning` IS NEW, ≤96 chars MEASURED, and the ONLY field the
   projection does not uppercase.** `gloss` is a fragment sized for a 148-unit
   module; a label cannot be rendered into an explanation. It is the map's only
   prose, so `cases-registry` scans it and pins it distinct from its gloss,
   longer than it, and not uppercase.
-- ⚠ **THE FLAGSHIP SURVIVES AS A MARK, NOT A NAME** — its tick runs longer and
-  takes green. The accent carries the signal; the label was dropped rather
-  than dimmed.
+- ⚠ **THE FLAGSHIP TAKES THE ACCENT, NOT THE INK** — its plate's bar goes green
+  at full weight against its siblings' amber at .55. Lettering it in
+  `--pda-grn-ink` would make the one plate the drawing points at the DIMMEST
+  thing in the run. One signal per object. (U23 had it as a longer tick; the
+  ticks are gone.)
 - ⚠ **DENSITY IS PER UNIT AREA.** Particle painters emit a fixed count scaled
   by `k`, so at one shared `k` the SMALLEST region reads as the densest
   material — the count encoded a third time, backwards. `k` is the field's own
