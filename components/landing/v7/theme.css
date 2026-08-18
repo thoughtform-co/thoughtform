@@ -661,6 +661,13 @@ html[data-theme="light"] .fl-pda {
   --pda-gph: #414e6d;
   --pda-gph-line: rgba(65, 78, 109, 0.6);
   --pda-sweep: rgba(138, 107, 32, 0.5);
+  /* The carrier's hub. ⚠ Roughly double the dark side's alpha AND a darker
+     bronze, because parchment is already warm: the dark ramp's 202,165,84 at
+     .13 lands on cream as a tint nobody would call gold. `--gold-line` is the
+     step the token system already carries for gold that has to hold against
+     parchment, so the hub takes it rather than inventing a value. */
+  --pda-hub: rgba(138, 107, 32, 0.15);
+  --pda-hub-grain: rgba(138, 107, 32, 0.08);
 }
 
 /* ── PHOTOGRAPHY reads as PRINT on parchment (owner, 2026-08-02) ──────────

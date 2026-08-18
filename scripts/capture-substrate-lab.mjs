@@ -164,7 +164,31 @@ bad((r) => r.collisions > 0, "label-on-label collisions");
 bad((r) => r.clipped > 0, "labels clipped by their crop");
 bad((r) => r.settled && r.minPx < 4.3, "rendered type under the 4.3px floor");
 bad((r) => r.overflow > 1, "the field scrolls");
-bad((r) => r.settled && r.texts <= 10, "suspiciously few labels");
+/**
+ * ⚠ THE LABEL FLOOR ASKS "DID THIS DRAWING RENDER AT ALL", which is why it is
+ * a floor and not a range — a direction whose record failed to reach it paints
+ * a handsome empty frame and passes every other gate here.
+ *
+ * ⚠ THE CARRIER PIN MOVED FROM 9 TO 56 (ADR-070 U31). The dial letters every
+ * one of the 47 cells at rest, plus the five substrate names in the band, plus
+ * the resting brief (four wrapped lines) — 56 strings when the composition
+ * settles. The EXACT PIN survives the roster because a 48th cell would appear
+ * here as a 57th text without touching any other guard; a name added to the
+ * brief would show up the same way. Every future pass that wants to "just say
+ * how many" adds, it does not subtract — so a drift in either direction is
+ * caught. The direction the count actually rots in is UP.
+ *
+ * ⚠ THE OLD PIN WAS 9 (U28) AND IT WAS RIGHT FOR ITS DRAWING: one sentence,
+ * five nameplates, three hub strings. It survived U29 (band readout, same
+ * lettering) and U30 (filled hub, same lettering) unchanged. U31 lettered the
+ * roster and the count moved with it.
+ */
+const QUIET = { carrier: 56 };
+bad((r) => r.settled && !(r.v in QUIET) && r.texts <= 10, "suspiciously few labels");
+bad(
+  (r) => r.settled && r.v in QUIET && r.texts !== QUIET[r.v],
+  "a declared-quiet drawing changed its resting label count"
+);
 bad((r) => r.errors > 0, "page errors");
 
 console.log("");

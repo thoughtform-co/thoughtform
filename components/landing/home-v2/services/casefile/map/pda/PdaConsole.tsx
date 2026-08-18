@@ -10,7 +10,7 @@ import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 
 import { ViewConfiguration, configExt, configLayout } from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
-import { ViewSubstrate, substrateExt, substrateLayout } from "./PdaSubstrate";
+import { ViewSubstrate, estateFootprint, substrateExt, substrateLayout } from "./PdaSubstrate";
 import { ViewWork, gridRect, workExt, workLayout } from "./PdaViews";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
@@ -204,46 +204,73 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
   /**
    * THE FLAVOUR, decided once per transition.
    *
-   * A flight needs a home in BOTH readings, which only 01 and 02 have for a
-   * work. Everything else is the reading's own entrance, except an arrival on
-   * 01 from the substrate, where the record blooms in place so the reader can
-   * find where they were.
+   * The selected work is the persistent object on this instrument and it
+   * has THREE homes now (ADR-069 U2, 2026-08-17): reading 01's grid
+   * cartridge, reading 02's core seat card, and reading 03's estate
+   * footprint. A flight computes for any pair where both homes exist;
+   * everything else is the reading's own entrance.
    *
-   * ⚠ The guards are all cheap and all necessary: an in-flight interrupt would
-   * compute its start pose from a rect the object has not reached, and a
-   * collapsed box is what the desktop gate leaves behind (`display: none`),
-   * where the arithmetic would divide by zero.
+   * ⚠ **THE THIRD HOME COMES WITH THE SECTION PROMOTION** (ADR-070 U25):
+   * U24's divided plate had no home for the selected work, so 01 → 03 was
+   * always raster and 03 → 01 was a bloom in place. SECTION puts twenty
+   * ghost footprints at the top of reading 03; the selected one wears the
+   * lit-edge grammar and is the flight's third destination.
+   *
+   * ⚠ The guards are all cheap and all necessary: an in-flight interrupt
+   * would compute its start pose from a rect the object has not reached,
+   * and a collapsed box is what the desktop gate leaves behind
+   * (`display: none`), where the arithmetic would divide by zero.
    */
+  const rectFor = useCallback(
+    (
+      view: PdaView,
+      id: string
+    ): { crop: string; rect: { x: number; y: number; w: number; h: number } } | null => {
+      if (view === 1) {
+        const i = shown.findIndex((w) => w.id === id);
+        if (i < 0) return null;
+        return { crop: layout1.crop, rect: gridRect(i, layout1) };
+      }
+      if (view === 2) {
+        return { crop: layout2.crop, rect: layout2.core };
+      }
+      /* Reading 03's home is the estate footprint. `estateFootprint` walks
+         the same slot arithmetic the drawing paints, so the flight lands
+         on a real footprint rather than an interpolated one. */
+      const foot = estateFootprint(shown, id, 26, 26, 880);
+      if (!foot) return null;
+      return { crop: layout3.crop, rect: foot };
+    },
+    [shown, layout1, layout2, layout3]
+  );
+
   const entryFor = useCallback(
     (from: PdaView, to: PdaView, id: string): PdaEntry => {
-      const flies = (from === 1 && to === 2) || (from === 2 && to === 1);
-      if (!flies) return from === 3 && to === 1 ? { kind: "bloom" } : { kind: "raster" };
+      if (from === to) return { kind: "raster" };
 
       const now = performance.now();
       if (now - flightAtRef.current < PDA_FLIGHT_GUARD_MS) return { kind: "raster" };
 
       const el = svgRef.current;
       if (!el) return { kind: "raster" };
-      const i = shown.findIndex((w) => w.id === id);
-      if (i < 0) return { kind: "raster" };
+
+      const src = rectFor(from, id);
+      const dst = rectFor(to, id);
+      if (!src || !dst) {
+        /* ⚠ FALLBACK: a bloom in place when arriving on reading 01 from an
+           unpaired reading, so the record the reader last had open finds
+           itself again. Raster otherwise. */
+        return from === 3 && to === 1 ? { kind: "bloom" } : { kind: "raster" };
+      }
 
       const box = el.getBoundingClientRect();
-      const slot = gridRect(i, layout1);
-      /* ⚠ THE FLIGHT USES THE LIVE BOARDS, not the ones at rest — BOTH of
-         them since U15. Reading 02's crop and card move with the field's
-         height and reading 01's grid moves with its shape, so a flight
-         computed against either resting layout would land the card wherever
-         a laptop would have put it. */
-      const vars =
-        from === 1
-          ? pdaFlight(box, layout1.crop, slot, layout2.crop, layout2.core)
-          : pdaFlight(box, layout2.crop, layout2.core, layout1.crop, slot);
+      const vars = pdaFlight(box, src.crop, src.rect, dst.crop, dst.rect);
       if (!vars) return { kind: "raster" };
 
       flightAtRef.current = now;
       return { kind: "flight", ...vars };
     },
-    [shown, layout1, layout2]
+    [rectFor]
   );
 
   const enter = useCallback((next: PdaView, next_entry: PdaEntry) => {
@@ -471,10 +498,17 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
           <ViewSubstrate
             shapes={cross.shapes}
             skills={skills}
+            works={shown}
+            selectedId={selectedId}
+            showSel={hasOpened}
+            onOpen={open}
+            hover={hover}
+            onHover={hoverWork}
             lit={lit}
             onLit={hoverPart}
             still={still}
             layout={layout3}
+            entry={entry}
           />
         ) : null}
       </svg>

@@ -54,6 +54,92 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-08-17 (latest) — Skill facet candidate: a straight pie made of 47 Skills (ADR-070 U26, proposed)
+
+Owner rejected SECTION as the final visual direction and corrected the lab's
+`21 · Wheel`: keep a pie chart's part-to-whole read, reject the circle, and
+make the figure itself out of the Skills. Cycle B; no production promotion.
+
+- Added `37 · Skill facet`: one dodecagonal annulus made from 47 interactive
+  shards, five contiguous substrate runs, one equal angular step per Skill.
+- Existing `26 · Facet` supplied the straight-edge geometry lesson but not the
+  payload — it drew five large wedges and reduced Skills to rim ticks. The new
+  direction reverses that relationship.
+- Second owner correction: remove external labels and long copy. Each group
+  seats only NAME + COUNT inside its own shard run; the five leaders,
+  callouts and `meaning` paragraphs are deleted. Hover/focus turns the central
+  dodecagonal hub into the selected Skill's short name, substrate, team and
+  status. Five flagship outer chords carry green provenance.
+- The dodecagonal perimeter's 3.41% radial modulation is named and guarded; the
+  compared quantity remains exact as shard count / angular sweep.
+
+Verified: 928 unit tests across 49 files; typecheck and lint clean; browser fit
+readout at p1280 dark/light and p1920 dark reports 0 collisions, 0 clipping,
+0 overflow, minPx 7.76 / 10.94. SECTION remains the live reading until owner
+verdict on this candidate.
+
+### 2026-08-17 (later) — Reading 03 answers the click; the persistent object gets a third home (ADR-070 U25, ADR-069 U2)
+
+Owner: _"when you click on a work it becomes a configuration, and when you
+click configuration you go to substrate — but the substrate feels completely
+random. Reading 01 and 02 share the click, and 03 throws it away."_ Eight
+rounds of substrate-alone drawings had kept trying to fix a proportion
+problem that was never the problem: the record already carried the join
+(`PdaWork.taps`) and the site's brief promised the drawing out loud
+(_"below grade runs the shared substrate — encoded once for one team, tapped
+by the next"_). Cycle B (round nine as a proper capture cycle), then Cycle A
+rows 1, 2, 3, 5 and 6.
+
+- **The reported defect was random-feeling.** The actual defect was that
+  reading 03 SHARED NOTHING with the two above it — no click's context on
+  the surface, no persistent object across the transition, and the fit
+  guards measured every drawing against its own crop rather than against
+  the readings beside it.
+- **Round nine ran three candidates in the lab:** `34 · Section` (recommended,
+  estate band + gallery + strata + shaft), `35 · Manifold` (the
+  round-eight vessel rig with the estate band above), `36 · Control`
+  (U24's own partition with the estate band above, no conductors).
+  Captured at both themes and both presets; every gate green. Owner
+  verdict on the contact sheet: SECTION.
+- **Promotion:** `PdaSubstrate.tsx` rewritten as the SECTION drawing.
+  `estateBand.tsx` extracted as a shared production module (twenty ghost
+  cartridge footprints, five gallery lane markers). `sectionRig` /
+  `estateBand` in the lab folder deleted — the config lab's own precedent
+  (two copies of a measured drawing is how the lab starts passing what
+  production would fail).
+- **The proportional claim moved from AREA to BODY.** U24's `area is the
+count` was honest when the whole region was bed; SECTION's head is
+  fixed chrome (a fs 20 name with a two-line fs 13 paragraph beside it),
+  so `bodyPerSkill = (strataH − 5 × headH) / totalSkills` is the shared
+  unit — asserted at five field shapes. Every ext still goes to bodies.
+- **`entryFor` factored into `rectFor`.** The old code hard-coded 01↔02 as
+  the only flying pair and handled 03→01 as a bloom; the new code walks
+  any pair through a `rectFor` helper that returns the source or
+  destination rect for any reading. `pdaFlight` itself is unchanged.
+  `pda-flight` gained 12 tests covering 1↔3 and 2↔3 round trips at the
+  binding and tall viewports.
+- **Cycle A rows 1, 2, 3, 5, 6 fired.** Row 1: more than two iterations
+  (round nine's three-way capture is the honest tally, plus one coordinate
+  bug caught by the fit readout on the first take). Row 2: reverses U24's
+  reading-03 composition entirely (roster kept, partition replaced). Row 3:
+  a class of bug — SVG plate coordinates being strata-block-relative but
+  rendered as crop-space, invisible to per-string fit assertions because
+  the strings still fit their own measures. Row 5: `plateAt` now returns
+  crop-space coordinates and `pda-substrate-fit` walks the invariant. Row
+  6: reading 03's whole architectural assumption changed (it now depends
+  on the selected work through the estate band, without violating U17's
+  clause that the subject at rest is still the layer).
+
+Verified: 916 unit tests across 49 files (up from 892), Playwright capture
+gates green on shipped + manifold in both themes at p1280/p1920, lint and
+typecheck clean.
+
+Loose ends kept honest, both in ADR-070 U25 §Left open and here:
+
+- The bed's rest opacity is a lever; the owner may want to see the
+  selection's bed-lift on the real landing before we tune it.
+- The lab's default `--v` is still round one's seven, unchanged from U23.
+
 ### 2026-08-17 — The Skills come back to reading 03; U23's second half reversed (ADR-070 U24)
 
 The owner's read one day after U23 shipped: 01 and 02 "feel super elegant", 03

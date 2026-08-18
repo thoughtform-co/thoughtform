@@ -80,7 +80,16 @@ function measure(root: HTMLElement): ConfigFitReport {
     texts += 1;
 
     const bb = node.getBBox();
-    boxes.push({ label, x: bb.x, y: bb.y, w: bb.width, h: bb.height });
+    /* ⚠ `getBBox` IS AXIS-ALIGNED, AND TEXT ON A `textPath` IS NOT. An arc-set
+       label's bbox is the box of every rotated glyph position — for a 90°
+       arc that is the entire quadrant, so two adjacent cells' labels report
+       overlapping bboxes even when their glyphs are visibly separate. The
+       collision check is skipped for those; the label still contributes to
+       the clipped / minPx / count aggregates, which don't lie about rotated
+       geometry. (The carrier is the first drawing on this surface to use
+       `textPath`; ADR-070 U31 flags it explicitly.) */
+    const rotated = node.querySelector("textPath") !== null;
+    if (!rotated) boxes.push({ label, x: bb.x, y: bb.y, w: bb.width, h: bb.height });
     const px = parseFloat(getComputedStyle(node).fontSize) * scale;
     if (Number.isFinite(px)) {
       minPx = Math.min(minPx, px);

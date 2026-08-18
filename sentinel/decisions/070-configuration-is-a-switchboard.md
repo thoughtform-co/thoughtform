@@ -2396,3 +2396,1139 @@ of bare edge reading as a broken line.
 - **The lab's `--v` default is still round one's seven** — unchanged from U23,
   and still the durable fix for the class of defect that hid four broken
   drawings.
+
+## Update 25 — the reading answered the CLICK it arrived from (2026-08-17, owner)
+
+⚠ **U24 KEPT THE ROSTER BUT THREW AWAY THE CLICK'S CONTEXT, AND THAT WAS THE
+FAULT ALL ALONG.** Every substrate iteration from round one through the U24
+addendum drew the substrate ALONE — as a taxonomy of the estate — and every one
+was measured against its own crop. The owner's read on 2026-08-17 was that
+readings 01 and 02 already share the selected work at their own scales, and 03
+threw it away: _"when you click on a work it becomes a configuration; when you
+click configuration you go to substrate, but the substrate feels completely
+random."_ Eight rounds and thirty-two directions kept trying to fix a proportion
+problem that was never the problem. **The record itself had carried the join the
+whole time (`PdaWork.taps` — which of the five shapes each stream draws on), and
+the site's own brief promised the drawing out loud (_"below grade runs the
+shared substrate — encoded once for one team, tapped by the next"_).**
+
+⚠ **PROMOTION: `34 · SECTION` REPLACES `33 · INLAY`.** Three round-nine
+directions were captured against the shipped inlay; SECTION won.
+
+### The drawing
+
+- **Estate band** across the top (~30u tall): the twenty shown streams as
+  ghost cartridge FOOTPRINTS. Silhouettes only at rest — labels at 40u wide
+  land under 5px, which is the "utterly illegible" ADR-070 U10 already ruled
+  on. Cluster commas (2u) between team codes; person-led footprints draw a
+  DASHED outline.
+- **Gallery band** (~20u tall): five diamond lane markers, one per shape,
+  positioned so a conductor from any footprint to any stratum never crosses
+  another conductor from another footprint to another stratum. `GALLERY_LANES`
+  and `SECTION_ORDER` are literally the same array, asserted by
+  `pda-substrate-fit`.
+- **Riser shaft** (44u wide, left rail): five vertical lanes descending the
+  full strata height, with horizontal STUBS into every stratum. At rest the
+  shaft is skeleton — five lanes + five stubs, structural alpha.
+- **Five strata**, lightest at top (Stakeholder 5) → heaviest at floor
+  (Pattern 14). Each stratum's HEAD is `name (fs 20) · count · meaning
+(fs 13, 2 lines)`, beside each other; its BODY is a physics field with the
+  47 named plates seated at the stratum's own floor in 5 columns × 20u
+  pitch.
+
+⚠ **THE 47 PLATES SURVIVE VERBATIM.** Same `short` labels, same green flagship
+accent, same extraction seating. Re-flowed from U24's two columns to five
+columns to fit the wider strata (826u vs U24's split of ~410u per column).
+
+### The proportional claim moved from AREA to BODY
+
+⚠ **U24 SAID AREA IS THE COUNT; SECTION SAYS BODY IS THE COUNT.** Heads are
+FIXED CHROME (a fs 20 name with a two-line fs 13 paragraph beside it — the head
+CANNOT shrink proportionally without putting the paragraph under the smoke's
+own floor), so `bodyPerSkill = (strataH − 5 × headH) / totalSkills` is the
+shared unit. `pda-substrate-fit` walks it and every stratum lands on the same
+unit within 1 %. This is a refinement of U24's arithmetic, not a retreat: the
+same _"one shape divided by count"_ argument, one level down. Every ext still
+goes to bodies; the ratio holds at every field shape.
+
+### The selection lights one path, and only one
+
+At REST the drawing letters and lights the same estate for every reader —
+subject is still the layer (U17's clause holds). On SELECTION:
+
+- The footprint above wears the CARTRIDGE'S OWN lit-edge grammar — TR+BL
+  diagonals, the same signal reading 01's card carries when its record is
+  open.
+- A gold conductor drops from the footprint into the gallery, jogs to each
+  tapped shape's lane, drops into the shaft, and STUBS into the tapped
+  stratum with a small diamond mark. `PdaWork.taps` decides which strata
+  light — the projection reading 02 already draws as tap bars, one level
+  down.
+- Every tapped stratum's TOP RULE lights gold.
+
+⚠ **CONFIGURED STREAMS EMIT `taps.length` CONDUCTORS. PERSON-LED EMIT ZERO.**
+The record has nothing to point at for person-led work, and drawing a stub
+into every stratum would say the person's stream draws on all five — the
+opposite of what the empty configuration means. `sectionConductorCount` is
+pure and the fit test walks it.
+
+### ADR-069's persistent object has THREE homes now
+
+**The whole flight machinery accepted this without any change to `pdaFlight`
+itself.** `PdaConsole.entryFor` was factored into a small `rectFor` helper that
+returns the source or destination rect for any reading; the flight computes
+between any two homes. Reading 03's home is `estateFootprint`, which walks the
+same `estateSlots` arithmetic the drawing paints — one derivation, so the
+flight lands on a real footprint rather than an interpolated one.
+
+⚠ **`entryFor` GOT SIMPLER, NOT MORE COMPLEX.** The old code hard-coded 01↔02
+as the only flying pair (`(from === 1 && to === 2) || (from === 2 && to === 1)`)
+and handled 03→01 as a bloom. The new code walks every pair through `rectFor`;
+`bloom` remains the graceful fallback when a source rect is unavailable.
+
+### What the LAB kept
+
+- **`34 · Section` and `36 · Control` are RETIRED.** SECTION lives in
+  `PdaSubstrate.tsx` now, and mounting a second copy in the lab would be two
+  copies of a measured drawing — the same trap ADR-070 U15 introduced the
+  lab's shipped-mounts-production rule to prevent. CONTROL's thesis was "the
+  shipped U24 partition with an estate band above" and cannot answer its own
+  question once U24 is not shipped.
+- **`35 · Manifold` survives** — the losing round-nine alternative, kept so
+  the register trade stays reviewable. It regresses U24's density verdict
+  (the vessels cannot seat 47 legible plates), which is exactly why it lost.
+
+### Verification
+
+- **916 unit tests across 49 files** — up from 892. `pda-substrate-fit`
+  rewritten (24 cases) to walk the new geometry: body-proportional-to-count
+  at five field shapes, plates fit their stratum's body, plate columns fit
+  the stratum's width, shaft lanes inside the shaft, gallery and shaft share
+  the section order, every configured stream has a lookup-able footprint, the
+  paragraph never wants a line past its cap, `plateAt` returns crop-space
+  coordinates (the round-nine capture's first defect).
+- **`pda-flight` gained 12 tests** for the third home — 1↔3 and 2↔3 round
+  trips at 1280×720 and the owner's own tall viewport, plus the footprint
+  aspect parity (<5 % against the cartridge) and the null-fallback
+  guarantees.
+- **Capture gates**: 8 samples (shipped + manifold × dark/light × p1280/p1920),
+  0 collisions on the promoted drawing, 0 clipping, minPx 7.8/10.9. Both
+  themes verified.
+
+### ⚠ What could not be verified in code, and stays owner-verdict
+
+- **The reading's REGISTER against 01 and 02.** The whole promotion argument
+  is that reading 03 now shares the click's context with the two above it,
+  and that only reads on the real landing with a real click. Test coverage
+  of the flight's arithmetic and the geometry's proportionality is complete;
+  the "does this read as the same instrument" question is not.
+- **The shaft's five-lane grammar at a taller field.** The strata bodies
+  grow with the field, so at 1920×1247 the shaft is much taller and the
+  stubs move further apart. `pda-substrate-fit` walks the arithmetic at
+  five ext values, but "still reads as one instrument" is not measurable.
+
+### Left open
+
+- **Fill fraction still varies** across strata, exactly as U24's did — the
+  same head-cost-against-count-proportional-body arithmetic. The plate stack
+  seats at the stratum floor for the same reason: material rather than a
+  hole.
+- **The bed is drawn ONCE per stratum** (a `FormField` inside a clip). At
+  rest each body's bed paints ~65% opacity; on a selected TAP the tapped
+  stratum's bed lifts to 85 %. That is the ONLY visual state added by the
+  selection — every other change is chrome. Whether the reader can find the
+  bed's shift is TBD (owner: 2026-08-17); if not, the bed's rest opacity is
+  the lever.
+
+## Update 26 — proposed, not promoted: the Skills ARE the figure (2026-08-17, owner)
+
+Owner, reviewing the lab's `21 · Wheel`: _"I want something like a pie chart,
+but we don't really do round shapes — maybe a pie chart with straighter edges,
+like a dodecahedron, but flat 2D. It should be made out of those Skills."_
+
+⚠ **THIS IS A LAB CANDIDATE, NOT THE LIVE READING.** U25's SECTION remains
+production while `37 · Skill facet` is reviewed at
+`/test/intelligence-substrate-lab?v=skill-facet`.
+
+### The object
+
+- One flat **dodecagonal annulus** — twelve straight outer edges, twelve
+  straight inner edges, no curve anywhere.
+- Exactly **47 interactive shards**, one per `CaseSkillEntry`. Five contiguous
+  runs are Pattern 14 · Judgment 12 · Validation 9 · Voice 7 · Stakeholder 5.
+- After five equal 2° group clearances are removed, every Skill owns one equal
+  angular step. A group's angular sweep is therefore exactly its Skill count.
+- **Second owner correction:** the five shape names and counts sit INSIDE their
+  own shard runs. The external leaders, callouts and all five `meaning`
+  paragraphs are deleted — the object explains the proportion; prose only
+  competes with it. Hover/focus on any shard turns the central dodecagonal hub
+  into that Skill's `short`, substrate, team and status.
+- The five flagship Skills mark only their outer chords in green — provenance,
+  never navigation. Gold remains the active shard / active callout.
+
+### Why 26 · Facet did not already answer this
+
+`26 · Facet` solved the circle problem and kept the labels inside five large
+wedges, but reduced the Skills themselves to rim ticks. The owner's correction
+reverses that payload: **five compact internal marks are the annotation; 47
+shards are the object.** The chart is no longer an empty figure with Skills
+arranged around it.
+
+### Named trade
+
+The outer dodecagon modulates radial depth by `1 − cos(15°) = 3.41%` against a
+circle. That is the explicit price of rejecting the round perimeter. Count
+remains exact as one equal angular step per Skill; the reader can count shards,
+and the guard asserts both per-group shard count and per-Skill angular unit.
+
+### Verification
+
+- 928 unit tests across 49 files. `substrate-lab-fit` now has 234 cases,
+  including: exactly one shard per Skill, five contiguous groups in authored
+  order, angular sweep proportional to count, twelve-sided perimeter (not a
+  many-sided circle), 2–4% rim modulation, five unique flagship shards.
+- Browser fit readout at p1280 in dark and light: 0 collisions, 0 clipping,
+  0 overflow, minPx 7.76. At p1920 dark: minPx 10.94.
+- Hover/focus verified against `Variance`: the hub resolves `Variance ·
+PATTERN · Finance & Accounting · In use`.
+
+### Left open — owner verdict
+
+- Whether all 47 shards read as **Skills** without labels at rest. The
+  accessibility names and central readout make every Skill recoverable, but
+  the at-rest object deliberately prioritises the whole over 47 simultaneous
+  names — lettering those names inside ~31u outer chords would land far below
+  the established type floor.
+- Whether the dodecagonal annulus replaces SECTION or becomes a fourth reading.
+  No production decision is encoded until the lab candidate is accepted.
+
+## Update 27 — proposed: the five parts are NOT each other's copy (2026-08-17, owner)
+
+Owner's third note on the round-ten candidate: 37's dodecagonal annulus reads
+right and its labels belong INSIDE — _"I don't think we need the labels outside.
+I think we can add pattern, stakeholder, etc. inside the specific parts of that
+pile. I don't think we need such long paragraph text either."_ — but the five
+parts still want to be **shaped** differently, and the centre should explain what
+the substrate IS rather than count it.
+
+⚠ **THIS IS A LAB CANDIDATE, NOT THE LIVE READING.** U25's SECTION remains
+production. `38 · Compound carrier` is reviewed at
+`/test/intelligence-substrate-lab?v=carrier`, beside U26's `37 · Skill facet`.
+
+### ⚠ WHY 37 COULD NOT DELIVER DIFFERENTIATION, AND THE PROOF IS ARITHMETIC
+
+**SWEEP ∝ COUNT MAKES THE FIVE PARTS GEOMETRICALLY SIMILAR, AND NO ARRANGEMENT
+OF EQUAL-AREA CELLS INSIDE THEM ESCAPES IT.** A cell's angular width is
+`(sweep / cellsInCourse) × r̄`, and **both** terms are proportional to the
+group's Skill count — so the count CANCELS and every part comes out a scaled
+copy of every other. That is why 37's forty-seven shards read as one texture
+wrapped round a ring: the arithmetic guarantees it, and no amount of tuning
+inside that frame was ever going to produce five distinguishable parts.
+
+Differentiation therefore cannot come from the count. It comes from the two
+things the count does not reach:
+
+1. **MATERIAL.** Each part is drawn over its own physics field — the field-card
+   painters (`substrateForms`), the same five materials production's regions
+   carry. Voice's baselines, Judgment's threshold, Validation's lattice.
+2. **GRAIN — the COURSE LADDER.** A shape in double figures is laid in THREE
+   courses, a shape under ten in TWO (`carrierCourses`). Cell AREA is untouched
+   by that, so the ladder buys aspect and nothing else: Pattern's cells run wide
+   and shallow, Stakeholder's tall and narrow. **Mass reads twice** — once as the
+   part's sweep, once as how finely it is coursed — and the remainder rides
+   OUTWARD, so a part whose count does not divide by its courses shows the odd
+   cell out in the longest arc it has.
+
+### The arithmetic that makes the equal-area claim honest
+
+⚠ **ALL FORTY-SEVEN CELLS HAVE THE SAME AREA, AND IT FALLS OUT RATHER THAN
+BEING TUNED.** The region between two concentric similar polygons over an
+angular span is exactly `(r1² − r0²) × A₁(span)` — the polygon ring at
+circumradius `r` is a uniform scaling of the one at 1 — so setting each course
+boundary to `√(R_IN² + (cum/n)(R_OUT² − R_IN²))` gives every course an area
+share equal to its cell share. The only residue is the dodecagon's own rim
+modulation, `1 − cos(15°) = 3.41 %`. One cell IS one encoded Skill, at one size,
+everywhere on the plate. A boundary hand-moved "to fit a nameplate" blows
+straight through the guard.
+
+### ⚠ A HORIZONTAL LABEL IN A RADIAL BAND ONLY FITS WHERE THE BAND RUNS HORIZONTALLY
+
+The first cut put the five names in an engraved RIM BAND. That works at the top
+and the floor of the plate and fails completely at the sides: Stakeholder's wedge
+points LEFT, so its long direction is vertical while its radial depth is 70
+units, and `STAKEHOLDER` needs 93. **The rim band is not badly tuned, it is
+arithmetically impossible.**
+
+The fix is that each plate sits on its part's MID-RAY at a shared `R_LAB`, and
+`R_LAB` is **derived, not picked** — it is the only radius that clears both ends
+at once. Both bounds move with the plate's own projected half-extents
+(`κR_IN + pr` from the inside, `κR_OUT − pr` from the rim), so their midpoint is
+`κ(R_IN + R_OUT) / 2` **for every orientation**. `carrierPlateFits` exports the
+three clearances per part and the guard asserts all fifteen are positive — a
+plate that grew a character fails before a capture.
+
+⚠ **THE PROJECTION IS ONTO THE WALL'S NORMAL, NOT THE MID-RAY'S.** The two
+differ by the half-sweep, and for Stakeholder — the narrowest part, whose plate
+is nearly as wide as its wedge is deep — that difference is 32 units of the 23
+that are actually spare.
+
+### The core is a SQUARE, and it explains rather than counts
+
+ADR-065: the children of a machined housing are square. The carrier is the
+housing, so its one seated child is a square socket — no second corner grammar
+to defend. At rest it letters the mechanism in the surface's own words
+(`ENCODED FOR ONE TEAM` / `DRAWN ON BY THE NEXT`, which is `intelligence-architect`'s
+own ratchet); on hover or on a pinned selection it becomes the identity of one of
+the forty-seven. **Nothing else on the plate letters a Skill:** at ~5 300 square
+units a cell is chunky enough to count and far too small to name.
+
+⚠ The core's clearance is measured on the CORNER RAYS, not the apothem. A
+square's corners point at ±45° and ±135°, which on this rotation are four of the
+dodecagon's VERTICES — so the apothem understates the room by 6 %, and a
+conservative version of that test fails a core that is comfortably seated.
+
+### ⚠ A CHORD IS NOT AN EDGE ONCE A PART SPANS MORE THAN ONE OF THEM
+
+Pattern sweeps 103.66°, which is three and a half of the dodecagon's twelve
+edges; closing that with a single chord cuts 44 units inside the rim and takes
+the part's area with it. 37 could ignore this because a 7.4° shard never contains
+more than one vertex. `ringArc` emits every vertex inside the span.
+
+### ⚠ THREE VISIBILITY DEFECTS, ONE ROOT: AN ALPHA AUTHORED AGAINST THE WRONG THING
+
+All three passed every arithmetic guard, and all three are ADR-070 U11's law and
+ADR-058's law arriving at the same place from different directions.
+
+1. **The cells were spending a CHROME token on the FIGURE.** They took
+   `--pda-hair` (gold .13) and then `--pda-hair2` (.24), and on the dark side the
+   plate read as five empty regions while the same markup was perfectly
+   countable on parchment. `pda.css`'s own token ladder says which rung a line
+   that CARRIES THE DRAWING takes — `--pda-dim` (.42), which re-derives per
+   theme — leaving `--pda-amb` (.78) at width 2 for the five structural seams so
+   the step stays legible. At this meet a 1-unit line paints 0.65 device px and
+   the browser takes another cut in alpha, which is why the shortfall compounded.
+2. ⚠ **A CLIPPED FIELD LOSES ITS DENSITY, AND THE PAINTERS COUNT IN ABSOLUTES.**
+   `substrateForms` paints `260·k` marks into a `w × h` BOX — its own head says
+   the counts are absolute, not per-area — but a part is a WEDGE inside that box,
+   so every mark outside the wedge is clipped away and the field arrives thinned
+   by exactly the fraction the wedge does not cover. On this plate a part fills
+   30–72 % of its own bounding box, **so the differentiation was being drawn and
+   then thrown away by the clip.** `carrierFieldK` is the reciprocal coverage,
+   capped at 3; the guard asserts every part is compensated AND that a wider
+   wedge is compensated LESS, because a coverage term read upside down would
+   still be a number greater than one.
+3. **The lit cell was raw v18 gold.** `rgba(240, 200, 106, .22)` over parchment
+   (228,218,201) is a four-value shift, so the hover was legible on the dark side
+   and effectively unlit on the light one. It is `--gold-rgb` at .28 now; the
+   resting wash was already `--dawn-rgb`, which inverts cream → ink across the
+   flip for exactly this reason.
+
+⚠ **AND THE INNER RING IS A CELL FLOOR, NOT A WALL.** The first cut filled the
+polygon at `R_IN` with void and clipped each material to the cell band, which
+left a dead collar between the socket and the cells — and a dead ring at the
+centre of a figure reads as a mistake in the figure. The materials clip from
+`R_MAT_IN` (54) so they run UNDER the socket, and the five seams start at the
+socket's own wall, so the division reads as running through the material the
+socket is seated on.
+
+### Named trades
+
+- **The dodecagon's 3.41 % rim modulation** against a circle — the explicit
+  price of rejecting the round perimeter, carried over from U26.
+- **Horizontal gutters.** `R_OUT` is 356 because HEIGHT is the binding dimension:
+  a flat-top dodecagon's half-height is its apothem, and `κ·356 = 343.9` puts the
+  rim 11 units inside the crop's 26-unit pad. The gutters that leaves are the
+  price of a regular polygon in a landscape box, not slack that could have been
+  spent.
+- **The course ladder is AUTHORED**, and the file says why it has to be: the
+  count cancels out of every cell-shape derivation, so a rule that reads the
+  count is the only lever left on grain. It costs nothing in truth, because the
+  boundaries are solved for area either way.
+- **Stakeholder's nameplate obscures a real fraction of its own five cells.** The
+  guard proves the plate is inside its part; it does not and cannot prove the
+  part still reads as five.
+
+### Verification
+
+- **`substrate-lab-fit` at 251 cases** (up from 234), of which eleven walk the
+  carrier: one cell per Skill in a WALKABLE order (contiguous per part, left to
+  right within a course, climbing outward between them — not globally monotone
+  in angle, which is what a first draft of that assertion wrongly demanded),
+  five contiguous parts in authored order, sweep ∝ count, equal cell area inside
+  the rim's own modulation, the course ladder and its outward remainder, fifteen
+  nameplate clearances, `R_LAB`'s derivation, the square core's corner clearance,
+  five flagships each in an outermost course, the clip's density payback, and 47
+  unique screen-reader names.
+- ⚠ **THE TWO RADII ARE PINNED FROM BOTH ENDS.** ADR-065 U5's lesson one level
+  down: a guard that only checks a RELATIONSHIP passes when both sides move
+  together, so `R_IN`/`R_OUT` are nailed to literals in one place and derived
+  everywhere else. Three assertions had hard-coded the old 344 and failed loudly
+  when the rim moved to 356 — which is the guard working, but they were re-pointed
+  at the exported constants rather than re-typed.
+- **Capture gates**: 4 samples (carrier × dark/light × p1280/p1920) — 0
+  collisions, 0 clipping, 0 overflow, minPx 7.8 at p1280 and 10.9 at p1920, no
+  page errors. Both themes verified for the resting plate AND for a lit cell.
+- **Hover-to-socket correspondence probed on seven cells, one per part**:
+  hovering cell _i_ letters cell _i_. ⚠ **DO NOT AIM A POINTER AT A WEDGE'S
+  BOUNDING BOX** — a radial wedge's box centre is not reliably inside it and
+  whatever paints later at that point takes the hover, which produced a still of
+  Voice lit beside a printed Pattern label. The probe dispatches on the element.
+
+### Left open — owner verdict
+
+- **Whether five materials at texture alpha read as five materials.** The
+  coverage payback is arithmetic; "can you tell Judgment from Validation at a
+  glance" is not, and on the dark side the fields are much quieter than on
+  parchment. The lever is the field group's own opacity, not the painters.
+- **Whether the grain difference lands.** Pattern at three courses of 4/5/5
+  against Stakeholder at two of 2/3 is a real aspect difference in the
+  arithmetic; whether the eye reads it as _mass_ rather than as _inconsistency_
+  is the whole differentiation claim and only the owner can settle it.
+- **Whether this replaces SECTION, replaces 37, or joins neither.** No
+  production decision is encoded. Reading 03's persistent-object home
+  (`estateFootprint`, U25) is untouched, so promoting this drawing would require
+  the flight's third home to be re-pointed at a cell.
+
+---
+
+## Update 28 — the centre is an APERTURE, and hover names while click commits (2026-08-18, owner)
+
+Owner's read of U27's carrier: the drawing holds, the middle does not. Four
+instructions, and each one removes something —
+
+> _"the middle panel, I don't think it should be like a square. I don't know what
+> it should be, to just give a brief explanation, just one text. Don't talk about
+> 47 encoded skills… I like the tags over it, but remove the fucking number… when
+> you hover over a specific part of the pie, the skill name should be then
+> visible, and if you click on it then the text at the center changes."_
+
+⚠ **STILL A LAB CANDIDATE.** U25's SECTION remains production, untouched.
+
+### ⚠ THE ANSWER TO "WHAT SHAPE SHOULD IT BE" IS THAT IT IS NOT A SHAPE
+
+U27 seated a square socket at the centre on ADR-065's children-of-a-machined-
+housing clause. That law is right for a CHILD; the mistake was never asking
+whether the centre had to be one. **The plate already has a twelve-sided hole in
+it** — the inner ring is where the cells stop, and it is drawn whether or not
+anything sits inside. So the square was a second outline inside the first, a
+second corner grammar to defend, and a dead collar between the two, which U27
+then had to paper over by running the material under the socket (`R_MAT_IN` 54).
+
+`R_APERTURE = R_IN` and the socket is gone. The brief letters straight onto the
+void the cells leave, bounded by the ring the drawing already carries. ⚠ The
+`Aperture` component draws **NO rect, no bracket, no backing wash** — anything
+added there is the square returning under another name. `R_MAT_IN` is deleted
+with it: with no collar to fill, the material clips at `R_IN` and `matBox`
+collapses back into `bbox`, one box instead of two.
+
+**The aperture is also the wider box.** Its usable half-width is the inner
+ring's own apothem, `κ·164 = 158.4`, against the socket's 108 — which is why a
+four-line paragraph fits here at fs 14 when a count-plus-caption barely did.
+
+### The copy is the surface's own, with the drawing's word removed
+
+> The judgment this work keeps reusing — encoded once by the team that needed
+> it, then drawn on by every team after.
+
+The casefile brief already publishes _"below grade runs the shared substrate —
+encoded once for one team, tapped by the next"_ and the city's sheet 03 subtitle
+is _"what every district drops into"_. This is that claim with the spatial
+framing dropped, because "below grade" is the SECTION drawing's word and there
+is no grade on a plate. Sentence case, like `CaseMapShape.meaning` and for the
+same reason — it is the one thing on this drawing meant to be READ.
+
+⚠ **`wrapLines` TRUNCATES AT ITS CAP** (`out.slice(0, max)`), so a cap set to
+the line count today's copy happens to need drops a word silently the moment the
+copy grows. `BRIEF_MAX` is 6 against a wrap of 4 and `carrierBriefFits().whole`
+asserts the wrap gave back every word.
+
+⚠ **THE APERTURE'S HALF-WIDTH IS NOT CONSTANT DOWN THE BLOCK.** Inside
+`|y| ≤ R_IN·sin 15° = 42.4` the wall is the vertical edge at `κR_IN`; past that
+it chamfers in. A paragraph measured on the apothem alone passes at four lines
+and clips at six, so `carrierBriefFits` checks the block's **outermost corner**,
+not its middle. Measured: widest line 269.1 of 276, corner clearance 44.5.
+
+### The count came off the nameplates, and nothing replaced it
+
+`PLATE_H` 42 → 26; the plate is one line. **This drawing now prints no digit
+anywhere, at rest or lit.** The proportional claim does not need one and never
+did: a part's AREA _is_ its count and its cells are individually countable, so
+"14" beside a region built out of fourteen cells was the surface saying the same
+thing twice — exactly ADR-068's no-ordinal objection, one level down.
+
+### ⚠ HOVER NAMES, CLICK COMMITS — AND U27 HAD COLLAPSED THEM
+
+U27 drove the centre off `hot ?? pinned`, **which made the click a no-op in
+every case a reader could see**: whatever the click was going to show, the hover
+had already shown. The states are split and drive different things —
+
+|          | drives                                             |
+| -------- | -------------------------------------------------- |
+| `hot`    | the lit cell, the part dimming, and the `HoverTag` |
+| `pinned` | the aperture, and a persistent lit cell            |
+
+so the pointer answers _what is this one_ without disturbing the reading, and
+the click is what changes what the drawing SAYS. Escape and a second click
+release.
+
+⚠ **A TAG ON ITS CELL'S OWN CENTROID FALLS OFF THE RIM** — the outer course
+reaches 356 and the tag's half-diagonal is 67. The tag rides its cell's ray with
+the radius clamped into the band where the whole box fits.
+
+⚠ **AND THE OUTER CLAMP IS PER EDGE, NOT ALONG THE TAG'S OWN RAY.** Backing the
+half-diagonal off `polygonRayRadius(angle)` looks right and is not: that is the
+wall on the ray through the tag's CENTRE, and a corner sits at a different angle
+where the wall can be nearer. **It failed by 0.1 units** — precisely the miss a
+ray-only check exists to let through. A box is inside a convex polygon iff it
+clears every edge, which for an axis-aligned box is one linear test per edge:
+`r·(n·u) ≤ κR − |nₓ|·hw − |n_y|·hh`, tightest of the twelve. The inner clamp
+stays crude on purpose (`R_IN + halfDiag`) — the aperture is inside its own
+circumcircle, so that is sufficient without being wasteful.
+
+### ⚠ A GUARD BUILT ON THE WRONG INTUITION, AND THE ARITHMETIC CORRECTED IT
+
+U27's density guard asserted an ORDERING: a wider wedge fills more of its own
+bounding box, so it needs less paying back. **That is true of a pie slice and
+false of an annular one** — widening the sweep grows the box around the
+aperture's HOLE faster than it grows the part, so coverage FALLS with sweep.
+With `R_MAT_IN` deleted the assertion inverted and failed. Pattern's 104° is the
+_most_ compensated (1.72), not the least.
+
+The replacement does not re-derive the sector area the way `carrierLayout` does,
+because that asserts arithmetic equals itself. It **samples each part's bounding
+box on a 200 × 200 grid and counts what falls inside the wedge**, so a wrong
+radius or a dropped term in the layout surfaces here. Coverage measures 58–67 %.
+
+### ⚠ THE CAPTURE GATE CAUGHT THE QUIET, AND WAS DECLARED RATHER THAN LOWERED
+
+The resting drawing letters **9** strings where it lettered 19, which tripped
+`texts <= 10` — a floor written to catch a drawing whose record failed to load
+and which paints a handsome empty frame past every other gate. Lowering it to
+admit the carrier would blind it for the other thirty-odd variants, so the
+exception is declared in a `QUIET` map **as an EXACT PIN, not a lower floor**:
+nine is what the composition allows, so a tenth string is as much a regression
+as a ninth going missing — and adding is the direction a count actually rots in.
+
+### Verification
+
+- `substrate-lab-fit`: 254 pass; full suite 948 pass. New: the brief's fit and
+  its no-figure envelope, the resting drawing's total absence of digits, the tag
+  clamp walked over all 47 cells at four corners each, the hover/click slot
+  split, and the sampled coverage cross-check.
+- **Capture gates pass** — 0 collisions, 0 clipping, 0 overflow, minPx **8.1** at
+  p1280 and **11.4** at p1920 (the shipped baseline's 7.8 / 10.9).
+- Rest, hover and pinned captured in **both** themes.
+- ⚠ **React derives `onMouseLeave` from a delegated `mouseout`**, so the capture
+  script's synthetic `mouseleave` never reached the handler and the first pinned
+  still carried a stale tag from the hover before it. A capture artifact, not a
+  product defect — but it is the second time this session that dispatching at an
+  SVG cell has needed the real event name rather than the intuitive one.
+
+### Left open — owner verdict
+
+- **Whether the aperture wants anything else in it.** At rest it is one
+  paragraph in a large void, which is quiet by construction; whether it reads as
+  composed or as empty is the owner's call and no arithmetic settles it.
+  → **ANSWERED BY U29: it was empty.**
+- **Whether a pinned reader can tell they can release.** Escape and a second
+  click both work and neither is advertised. An affordance is chrome, and the
+  instruction was _one text_ — so nothing was added.
+- The three U27 questions (materials, grain, and whether this replaces SECTION)
+  all stand unchanged.
+
+## Update 29 — the aperture is a SCREEN, and the wrap is a BAND (2026-08-18, owner)
+
+⚠ **U28'S OWN OPEN QUESTION CAME BACK ANSWERED**: _"at the center the text
+floating in there feels a bit off… just the text without a frame, I don't like
+it, but I don't want to have a rectangle thing in there either, so let's find an
+elegant way of wrapping."_
+
+Both halves of that are right, and together they rule out the two obvious
+answers. **A paragraph alone in a void has nothing holding it** — U28 deleted the
+square housing and put nothing in its place, which fixed the box and left the
+text unseated. **And a frame around it is the square coming back** under another
+name; corner brackets, a chamfered plate and a hairline outline are all the same
+object with different amounts of it drawn.
+
+What the reference vocabulary does instead — the retro-futuristic terminal this
+console already speaks everywhere else — is give text a **SURFACE rather than a
+border**. So the aperture stops being a hole and becomes a screen:
+
+| piece          | what it is                                                         |
+| -------------- | ------------------------------------------------------------------ |
+| the band       | a lit strip across the aperture at `±WELL_DY` (62), one 3.5 % wash |
+| the raster     | scanlines at `SCAN_PITCH` 5 inside the band                        |
+| head and foot  | two rules at the band's edges, run **wall to wall**                |
+| left and right | **not drawn.** They are the dodecagon                              |
+
+⚠ **THAT LAST ROW IS THE WHOLE TRICK.** The readout is closed on four sides and
+only two of them are lines, so it cannot become the rectangle it replaced. The
+sides are the plate's own opening, which also means the wrap belongs to THIS
+object rather than being a shape that would look the same anywhere.
+
+### ⚠ THE FIRST CUT RASTERED THE WHOLE APERTURE, AND IT FAILED TWICE
+
+The obvious build — scanline the entire opening, step a counterbore hairline
+inside the wall, fence the text with two short rules — was drawn and rejected on
+the capture:
+
+- **A screen the full size of the hole is just a lighter hole.** The eye reads a
+  flat grey field, not a display. The text was on a surface and still looked
+  unplaced, because nothing distinguished the reader's line from the 200 units
+  of empty screen around it.
+- **The fence was invisible.** `--pda-hair` (.13) for the bore step and
+  `--pda-hair2` (.24) for the rules both vanished. A 1-unit line paints ~0.65
+  device px here and the browser pays the rest in alpha — the same arithmetic
+  that killed R4's bed at U11 — so a hairline that measures fine on the 1:1
+  canvas arrives at nothing.
+
+Lighting **only the reader's own band** fixes both at once: the strip has an
+inside and an outside, the rules have a job (they are the band's edge, not
+decoration around text), and at `--pda-dim` (.42) — the rung the cell lines one
+ring out already use — they arrive. **A fence nobody can see is not a subtle
+fence, it is an absent one**, which is U9's finding about labels applying to
+rules.
+
+### ⚠ THE RASTER IS MEASURED TO THE WALL, NOT CLIPPED TO IT
+
+Each scanline is drawn to the length the twelve-sided wall allows **at its own
+height**, so the screen's edge IS the aperture's edge. A `clipPath` produces the
+same picture with a shape that does not know why it stops there — and it would
+have hidden the error the helper exists to prevent:
+
+⚠ **`polygonRayRadius` CANNOT ANSWER THIS QUESTION.** It measures along a RAY
+from the centre and a scanline is a **CHORD**; the two coincide only at `dy = 0`.
+Reaching for the ray radius gives rows short of the wall by up to 6 % — a screen
+with a soft, rounded-looking edge inside a hard twelve-sided one, which reads as
+a rendering artefact rather than as a wrong function. `apertureHalfWidth(dy, R)`
+solves each edge's half-plane for `x` at fixed `y` and takes the tightest. This
+is the **third** time in two updates that a ray measurement has been reached for
+where a different geometry was needed (U28's tag clamp was the second), and the
+guard walks 51 rows against the polygon boundary at each row's own corner angle.
+
+⚠ And the band's outline is **CLIPPED, NOT ENUMERATED** — it crosses four of the
+dodecagon's vertices, and a shape drawn from the two chords alone cuts those
+corners off and sits visibly inside the wall it is supposed to be closed by.
+Sutherland–Hodgman against two half-planes survives a change to `WELL_DY` or the
+radius, which hand-listing today's four vertices would not.
+
+### ⚠ THE BAND IS FIXED FURNITURE AND THE CONTENT FINDS THE MIDDLE OF IT
+
+The well does not resize per state — an aperture that breathed on every click
+would read as the drawing being unsure of its own dimensions. Which puts the
+burden on the content, and **the clicked block is not one height**: it grows 20
+units for a flagship mark and 17 for each meta line the wrap adds. U28's hard
+baselines were centred for exactly one Skill and low for the rest. Both readouts
+measure cap-to-descender and halve now.
+
+⚠ Two arithmetic traps paid for on the way:
+
+- **Baseline-centred text sits high.** A line's ink is mostly ABOVE its
+  baseline, so centring the BASELINES on `CY` centres the wrong thing. The brief
+  carries a 3-unit `BRIEF_DROP` cap-height correction.
+- **The binding measure is the band's NARROWEST point, not the aperture's
+  widest.** The text sits in the straight-walled middle at 158 across; the rules
+  that fence it sit out at ±62 where the chamfer has taken the chord to 147.
+  Nothing clips when a line exceeds the rule above it — **it just reads as text
+  escaping its own readout**, which no width-against-the-wall test would catch.
+  The measure went 276 → 248 (fs 14 → 13, line height 21 → 19) to leave the
+  rules 30 units proud on each side.
+
+### ⚠ THE CARET IS A SHAPE, AND THAT IS WHY IT COULD BE ADDED AT ALL
+
+U28's `QUIET` pin says the resting drawing letters **exactly nine** strings, and
+a tenth is as much a regression as a ninth going missing. The one piece of
+terminal vocabulary that unmistakably signs the object — the block cursor after
+the last character — is a `rect`, so it costs no label and the pin holds
+untouched. It draws on the brief only; a caret after a Skill's status would be
+claiming the readout is live.
+
+### Verification
+
+- `substrate-lab-fit`: **256 pass**. New: the raster measured as chords against
+  the polygon at 51 rows; the rules standing PROUD of the line they fence (a
+  width-fits test passes while this fails); and the clicked block walked across
+  all 47 Skills for both the band's rules and its chord, since the worst case is
+  whichever Skill happens to be both flagship and long-named.
+- Capture gates pass — 28 samples, 0 collisions / clipping / overflow, minPx
+  **8.1** at p1280 and **11.4** at p1920, `QUIET` pin still 9.
+- Rest, hover and pinned captured in **both** themes. ⚠ The band's wash and
+  raster are one `--dawn-rgb` declaration doing both jobs: cream against void
+  lifts the screen, ink against parchment settles it.
+
+### Left open — owner verdict
+
+- **Whether the band wants to be shorter.** → **MOOT: U30 deleted the band.**
+- **Whether the raster should move.** → Moot for the same reason; the hub's
+  grain is material, and material does not scroll.
+
+## Update 30 — the centre is FILLED. It is a hub, not an aperture (2026-08-18, owner)
+
+⚠ **THE WRAPPING QUESTION WAS RETIRED RATHER THAN ANSWERED** (owner: _"maybe we
+can make the center also filled instead of now we have a gaping hole and then
+place a text in there. The colour of the centre could be a bit like the Tensor
+Golds, but softly."_).
+
+U28 deleted the square housing and put nothing in its place. U29 read the
+resulting complaint as _"the text needs wrapping"_ and spent a whole pass
+looking for something to put AROUND it — a machined counterbore, then a lit
+band fenced by two rules. **Both were treatments of a void that the text was
+still, fundamentally, floating in.** Two cuts refining the frame around a hole,
+when the defect was the hole.
+
+**Fill the void and the text is not floating.** It is set on material, exactly
+the way every label on this plate is set on the material of its own part, and
+nothing has to wrap it because nothing is holding it up any more. One `path`
+with a fill replaced the band, the raster, the two rules, the Sutherland–
+Hodgman band clip and the caret — **the answer was smaller than either attempt
+at the question.**
+
+⚠ **AND IT SETTLES WHAT THE MIDDLE OF THIS DRAWING MEANS**, which is the part
+that makes it more than a fix. An opening said the five parts surround an
+ABSENCE. A filled hub says they are courses OF something — and the soft Tensor
+gold is that something, the shared material the whole plate is cut from. That
+is the reading this variant has been reaching for since U27: substrate is what
+gets drawn ON, so the centre of a substrate drawing should be the stuff.
+
+### ⚠ AN ALPHA IS NOT A COLOUR, AND THE GROUND IS WHAT INVERTS
+
+`rgba(var(--gold-rgb), .13)` is a warm lift you can read against near-black and
+a near-neutral cream against parchment — the SAME declaration, two different
+results, because what flips is the ground under it. The first cut hard-coded it
+in the TSX and the light capture came back with a hub that was filled but not
+gold in any sense the owner asked for.
+
+So the tint is a token, declared in **both** theme files:
+
+| token             | dark             | light              |
+| ----------------- | ---------------- | ------------------ |
+| `--pda-hub`       | `gold-rgb / .13` | `138,107,32 / .15` |
+| `--pda-hub-grain` | `gold-rgb / .06` | `138,107,32 / .08` |
+
+Light takes a **darker bronze AND a higher alpha** — it is `--gold-line`, the
+step the token system already carries for gold that must hold against
+parchment, rather than a value invented at the call site.
+
+⚠ **THE ROLE LAW STILL BINDS** (U11: gold is wayfinding). A permanently gold hub
+is only lawful because it stays far under the live signal: **.13 against a lit
+cell's .28**, verified on the pinned capture where the selected cell is
+obviously brighter than the plate it sits on.
+
+### ⚠ THREE SMALLER THINGS THE FILL CHANGED
+
+- **The void goes down first.** A translucent gold laid straight onto the page
+  takes whatever the console's bed is doing behind it, so the hub is opaque
+  `--pda-void` plus the veil — the tint then means the same thing wherever the
+  drawing is placed.
+- **The inner edge moved.** It used to be stroked with the outer rim, before the
+  centre had anything in it; a hairline left at that point in the order is now
+  half-buried under the fill. The hub draws its own rim, after its material,
+  at the rim's own weight — **two machined edges, one grammar**, and the five
+  seams land on a line that reads as an edge rather than near one.
+- **A flat fill would read as a hole plugged with paint.** Every other region on
+  this plate carries a physics field, so the hub gets a grain — the quietest on
+  the drawing, because this is the one region that is not a substrate shape and
+  so may have texture without having a pattern.
+
+### ⚠ WHAT SURVIVED U29, AND WHY IT WAS WORTH THE PASS
+
+Two things outlived the band they were built for, and both are corrections to
+measurements that had been wrong for longer than one update:
+
+- **`hubHalfWidth`** — a scanline is a CHORD and `polygonRayRadius` measures a
+  RAY; the two agree only on the horizontal axis. It draws the hub's grain now,
+  guarded at 51 rows against the polygon at each row's own corner angle.
+- **`boxClearance`** — a box is inside a convex polygon iff it clears every
+  edge, one linear test per edge. Backing a half-diagonal off the ray through
+  the box's CENTRE is the intuitive check and it reads the wall at an angle no
+  corner occupies; that is precisely how U28's tag clamp failed by 0.1 units.
+  Both readouts are checked with it now.
+
+⚠ That is **three passes in a row** where a ray measurement was reached for and
+a chord or a corner was needed. The pattern is worth naming: `polygonRayRadius`
+answers _"how far to the wall along this bearing"_ and almost every real
+question here is _"does this SHAPE fit"_, which is a different question.
+
+⚠ **AND THE CENTRED BLOCK STILL HAS TO MEASURE ITSELF.** Baseline-centred text
+sits high (a line's ink is mostly above its baseline — `BRIEF_DROP`), and the
+clicked block grows 20 units for a flagship mark and 17 per meta line, so it
+centres on its own cap-to-descender height rather than on fixed offsets. The
+guard walks all 47 Skills, because the worst case is whichever one happens to
+be both flagship and long-named — not the one anyone would think to open.
+
+### Verification
+
+- `substrate-lab-fit` **256 pass**, full suite **950 pass**, lint clean. The
+  brief and the clicked block are both asserted to clear the hub's wall with
+  AIR (>24 and >16 units) rather than merely to fit — a block that just clears
+  reads as text that happens to be inside the gold, not as text placed on it.
+- Capture gates pass, 28 samples, 0 collisions / clipping / overflow, minPx
+  **8.1** / **11.4**. `QUIET` pin still 9 — the caret was a shape and the band
+  was shapes, so nothing that came or went touched the label count.
+- Rest, hover and pinned captured in **both** themes.
+- ⚠ The dev server wedged mid-pass (>2 GB, port held, not serving). Unrelated to
+  the change, but worth the line: a capture timeout on this surface is a server
+  symptom about as often as it is a selector one.
+
+### Left open — owner verdict
+
+- **Whether the hub wants an inner course.** It is one flat plane of material at
+  47 cells' worth of scale, and a single concentric step would give it depth —
+  but ADR-065's ladder would then have to say what that step MEANS.
+- **Whether the brief's measure should widen now.** 248 was cut to fit the
+  band's rules, which no longer exist; the hub affords ~317. Four comfortable
+  lines against three tight ones is a judgement, not arithmetic.
+
+## Update 31 — every cell letters at rest, and the plate becomes a dial (2026-08-18, owner)
+
+⚠ **THE DRAWING WAS UNREADABLE AS AN INSTRUMENT** (owner: _"we have to make sure
+that the labels for each of these skills are visible because we already have a
+lot of things going on. I'm not sure what the best way to do it is."_).
+
+U28–U30 tuned the centre through three cuts and never touched the annulus. Its
+cells were countable by area, distinguishable by material, and unlettered — a
+Skill's identity lived on a hover tag that appeared and vanished. The record
+publishes forty-seven Skills; the drawing named none of them at rest. Two
+different objects called _"the substrate"_ on this reading: the one on the
+plate, and the one the pointer had to conjure. A reader who wanted to know what
+was there had to hover forty-seven times.
+
+**So the dial letters everything at rest.** Every cell prints its own `short`
+name along its own arc, and the five substrate names move off the plate they
+were nested inside onto a **new band** carved between the hub and the cells.
+
+### ⚠ FORTY-SEVEN HORIZONTAL LABELS ARE GEOMETRICALLY IMPOSSIBLE HERE, AND ONE ROTATED LABEL PER CELL IS THE ONLY WAY OUT
+
+The annulus holds 299 520 square units, so each of 47 equal cells gets 6 373.
+A 14-character name at fs 12 measures 108 units. For it to sit HORIZONTAL in a
+cell **anywhere on the ring** the cell needs 108 units in BOTH directions —
+because a cell at 3 o'clock is turned ninety degrees from one at 12 — which is
+11 664 per cell. **That is 1.83× the area that exists.** Shrinking type to
+close the gap drops through the surface's 12 floor and lands under 6 px
+rendered.
+
+So the rotation is not a stylistic choice; it is what makes the drawing letter
+its whole roster at a legible size. Every other rotation on this site is 45°
+on a shape (ADR-060, ADR-065). **This is the first rotated TYPE on the
+surface**, and it is called out because the next pass looking for consistency
+will reach for it. The exception is earned by the arithmetic and by no other
+argument.
+
+### The course ladder is derived from names now, not authored on the count
+
+⚠ **U28's LADDER ARGUED THE COUNT CANCELS. IT DID — AND THE NAMES DO NOT.**
+The old rule was `n >= 10 ? 3 : 2` because the count cancels out of every
+cell-shape derivation, so an authored rule was the only lever left on grain.
+That argument was right for a drawing whose cells were unlettered, and it is
+over: `LABEL_MEASURE` does not cancel, because the name has to fit the cell's
+ARC and inner arcs are shorter than outer ones.
+
+The new rule enumerates compositions of `n` cells into 1…n courses, and picks
+the one that clears `carrierArcTarget(longestChars)` on every course's inner
+arc and `MIN_CELL_DEPTH` on every course's depth, minimising the max aspect.
+Inner courses hold FEWER cells now — `[2,3,3,3,3]` for Pattern instead of
+U28's `[4,5,5]`, `[1,2,2,2,2]` for Validation — because that is what stops the
+innermost cells from choking on their part's longest name.
+
+Cell AREA still falls out equal: the course boundaries are still solved for
+area share, so the honesty claim is untouched. What moves is the ASPECT — a
+name's target arc no longer cancels the count.
+
+### The substrate name lives in a BAND now, not on a plate
+
+⚠ **THE NAMEPLATE WAS INSIDE ITS PART, WHICH WAS THE RIGHT ANSWER FOR THE
+WRONG PROBLEM.** U27's plate sat on the part's mid-ray at a shared `R_LAB`,
+fifteen clearances proven — and the whole affair covered a cell it did not
+name. With every cell now lettered at rest, a nameplate that sits ON TOP OF
+(say) Pattern-c3 is two labels claiming that region: one big and general, one
+small and specific. **Two claims per pixel, one claim too many.**
+
+So the substrate name moves off the annulus. `R_HUB` stays at 164; a NEW EDGE
+`R_CELL = 194` moves the cells 30 units outward, and the band fills the strip
+between them. Each substrate letters at `BAND_R = 179` along its own arc, in
+the same textPath grammar as the cells — **one drawing, one direction, one
+law about which way type reads on this plate.**
+
+Cell area drops from 6 373 to 5 687 units (~11 %), which the equal-area
+arithmetic absorbs without touching. The boundaries are still solved for area
+SHARE.
+
+### `textPath` beats straight rotated text, and its bill was accounted for
+
+Straight rotated text was the initial approach. It fails on Validation-c0: a
+100-unit name at midR 200 has ends at √(200² + 50²) = 206, plus half the line
+box outward gives a corner at 213 against a 218 outer boundary — a 5-unit
+clearance that the cell's `--pda-dim` stroke would cross visibly. `textPath`
+places every glyph on the arc exactly and buys the whole 5-unit budget back.
+
+⚠ **BUT `getBBox` DOES NOT KNOW THAT** (`useFitReadout` lesson). The fit
+readout compares axis-aligned bboxes; a curved label's bbox is the box of
+every rotated glyph position, so two adjacent cells at 3 o'clock report a
+collision even when their glyphs are visibly separate. The readout skips text
+elements that contain a `<textPath>` child — the label still counts, its
+smallest paint is still measured, but its collision test is retired for a
+question the bbox cannot answer. Called out in one comment; ADR-070 U31 is
+the reason to preserve it.
+
+### What survived U30, and what came off with the tag
+
+- **The hub stayed.** Filled, soft-gold, `--pda-hub` / `--pda-hub-grain`
+  tokens unchanged. Still letters the brief at rest and the pinned Skill's
+  identity when a cell commits. `carrierBriefFits` and `carrierPinnedFits`
+  measure it against the same walls.
+- **The hover tag is deleted.** A tag that names the cell under the pointer
+  is redundant once the cell is always named. `carrierTagRect` and its 40
+  lines of per-edge clearance go with it. Hover keeps the LIT cell and the
+  dimming; click still commits the hub.
+- **The nameplate is deleted with it.** `NamePlate`, `carrierPlateFits`,
+  `R_LAB`, `PLATE_W/H/MEASURE/NAME_FS`, `TAG_W/H/MEASURE/FS`, the fifteen
+  clearances — retired. The plate has ONE type direction now, not two.
+- **The five material fields drop from 0.8 to 0.55 alpha.** U28 rested a
+  texture that the labels had to fight; 0.55 lets the type read while still
+  differentiating by kind. Dimmed step 0.32 → 0.22.
+
+### The label count went from 9 to 56, and the QUIET pin moved with it
+
+U28's `QUIET: { carrier: 9 }` was right for its drawing: one brief, five
+nameplates, three hidden hub strings. It survived U29 (band readout, same
+letters) and U30 (filled hub, same letters). U31 letters the roster and the
+pin is 56 (4 brief + 5 band + 47 cells). Still an EXACT pin, not a floor —
+the direction the count actually rots in is UP, and a 48th cell would show
+up here as a 57th text without touching any other guard.
+
+### ⚠ THE FIVE NEW EXPORTS AND WHAT THEY ARE FOR
+
+| symbol                   | role                                                     |
+| ------------------------ | -------------------------------------------------------- |
+| `CARRIER_R_CELL`         | the cells' inner boundary (194), pinned in the guard     |
+| `CARRIER_BAND_R`         | the label radius (179), derived midpoint of hub↔cell     |
+| `CARRIER_LABEL_FS/TRACK` | the label rung the guard walks against                   |
+| `carrierArcTarget`       | `nameChars → cell inner-arc target`, the ladder's input  |
+| `carrierCellArcPath`     | one `textPath` arc per cell, reversed in the bottom half |
+| `carrierBandArcPath`     | one `textPath` arc per group, same rotation grammar      |
+| `carrierCellMeasure`     | cell's inner arc minus per-end pad — the fit measure     |
+| `carrierBandMeasure`     | band arc at BAND_R minus per-end pad                     |
+| `carrierLabelRotation`   | the tangent + upright-flip helper                        |
+| `carrierChordSagitta`    | the straight-text fallback's arithmetic                  |
+
+⚠ **`carrierChordSagitta` HAS NO CALLERS IN THE DRAWING.** It exists so the
+straight-text fallback stays DEFENDABLE — if `textPath` ever fails on a
+browser, the drawing can drop to rotated straight text without recutting the
+ladder. The guard walks it against half the cell depth, which is what proves
+the fallback is still lawful.
+
+### Verification
+
+- `substrate-lab-fit` **258 pass**, full suite pass, lint clean.
+- Capture gates pass, 4 samples for `carrier` (dark/light × p1280/p1920),
+  **0 collisions / 0 clipping / 0 overflow**, minPx **7.8 / 10.9**, texts
+  **56** — matching the pin exactly.
+- Rest, hover and pinned captured in **both** themes.
+- `useFitReadout` skips `textPath` elements from the collision check, with a
+  comment naming this ADR as the reason. Other lab variants unaffected.
+
+### Left open — owner verdict
+
+- **Whether the band's inner and outer rings want more or less weight.** They
+  are `--pda-dim` at width 1 now, matching the cells' own hairlines so the
+  band belongs to the same plate — but the band is a THREE-ring region (hub
+  rim, band inner, cells' inner all sit near each other), and a subtler
+  ladder inside it might read as three edges instead of two.
+- **Whether the band should carry a Skill count.** Removed on the owner's
+  instruction (U28 "remove the fucking number"), and every future pass
+  wanting to "just say how many" will reach for it — this is the second time
+  U28's clause has bound. The five parts' area is their count, and the cells
+  count themselves.
+
+---
+
+## Update 32 — the dial was crammed by its CROP and by its BASELINE, not by its geometry (2026-08-18, owner)
+
+⚠ **THE OWNER'S READING WAS THAT THE PLATE IS CRAMMED** (_"this doesn't look bad,
+but it's very crammed … make sure every label fits inside the frame. If we have
+to increase the height and reduce the center, that is all fine."_).
+
+Every label already fitted. `substrate-lab-fit` walked 47 arcs and 5 band arcs
+and found no overflow; the capture readout reported **0 clipped, 0 collisions, 0
+overflow**. So this update is mostly a record of what "crammed" turned out to
+mean when it was measured instead of guessed — and **two of the three causes were
+in machinery no per-label check looks at.**
+
+### ⚠ THE CROP WAS LETTERBOXING BOTH WAYS AND EVERY GUARD WAS GREEN
+
+U31's crop was a static `932 × 762`, aspect **1.223**, against console field
+aspects of **1.056 (p1920) … 1.148 (p1440)**. `meet` takes the SMALLER ratio, so
+the fit was WIDTH-bound and the whole height ratio went unspent — and inside that
+crop the plate left ~110 units of gutter per side as well. Compounded, a 12-unit
+label painted **7.89px** while `minPx` reported it as clearing the map's 4.3 hard
+floor.
+
+**A fit gate that only knows a hard floor cannot see a drawing that is merely
+half the size it could be.** That is the guard defect, and it is the same shape as
+U12's on reading 02 — a drawing measured against its own crop and never against
+the panel.
+
+So the crop is elastic (`carrierCrop(fieldAspect)`), and it is the INVERSE of
+U12's elasticity because the object is different: the R4 board is a wide drawing
+in a field that runs narrow, so its crop fixes the WIDTH. **The carrier is a
+regular dodecagon whose aspect is the constant `1/κ` = 1.035, and every field it
+is read in is wider than that** — so the scarce dimension is the vertical at every
+preset, with no crossover. Height fixed, width elastic.
+
+⚠ **`floor`, NOT `round`, AND THE DIRECTION IS THE CONTRACT.** Rounding the width
+up makes the crop wider than the field, which flips `meet` back to the width ratio
+and re-opens the letterbox — by 0.014 % at p1280, invisible on screen and exactly
+the kind of term that makes a contract "mostly" hold.
+
+### ⚠ `CROP_PAD` 26 → 18 IS THE ONE LEVER ON THIS DRAWING THAT BUYS TYPE FOR FREE
+
+Every other lever is a trade. A thicker annulus grows the crop; a bigger
+`LABEL_FS` re-cuts the ladder; a smaller hub **shortens the innermost arc**. The
+pad is different: the fit is height-bound, so `meet` is `field.h / CROP_H`, and
+shrinking `CROP_H` scales all 52 strings at once without moving one radius.
+`CROP_H` 794 → **778**, `meet` 0.6213 → **0.6337**, i.e. **+2.0 % on everything**.
+
+⚠ It is a MARGIN, not slack, which is why it is not spent to zero — at the binding
+preset a unit of pad paints 0.63px, so 18 leaves an **11.4px gap** between the
+plate's outer machined rule and the console field's wall. ADR-064's bleed law is
+about a CAPTURE filling its bay; a technical drawing whose outermost rule touches
+the housing has lost its margin rather than bled. `CARRIER_CROP_PAD` is exported
+with a floor of 16 asserted, because this is the lever a later pass will take to
+zero.
+
+### ⚠ THE HUB IS NOT WHAT THE CELLS WERE SHORT OF — AND THE OWNER'S OWN SUGGESTION IS THE ONE THING THAT WOULD HAVE MADE IT WORSE
+
+"Reduce the center" is the intuitive reading of a crowded ring, and it is
+backwards here. `R_CELL` is the radius the INNERMOST course letters at, and a
+course's arc is `R_CELL × sweep / m` — **so pulling the cells inward shortens the
+tightest measure on the plate.** Sweeping the whole (hub, cell, rim) space showed
+air rising monotonically with `R_HUB`.
+
+So the hub gave up 8 units to the **BAND** (30 → 36 deep, the one region genuinely
+pinched at 8 units of clearance) and the cells were paid from the **RIM** instead:
+`R_OUT` 356 → **384**, with `LABEL_FS` 12 → **13** in the same edit because a
+bigger plate paints a unit-authored label smaller. Minimum cell depth 24 → **29**,
+worst cell aspect 9.4 → **8.3**.
+
+⚠ **`LABEL_FS` 14 DOES NOT FIT, AND IT IS A LADDER FACT.** Re-derived from
+scratch this pass: `Tracker Check` on validation's 66.6° sweep forces courses of
+1–2 cells, and a 1-cell course out past r≈332 is only 18 units deep because equal
+area at a large radius means a shallow cell — under `MIN_CELL_DEPTH`. Dropping
+`LABEL_PAD` 12 → 8 makes 14 feasible **by 0.1 units** on one course, which is a
+collision waiting for a one-character content edit. **13 is the top of the range
+this geometry supports.**
+
+### ⚠ `textPath` PUTS THE BASELINE ON THE CURVE, AND A BASELINE IS NOT A CENTRE — SO EVERY LABEL ON THE PLATE HUGGED ONE WALL
+
+This is the defect that actually produced the reading the owner called crammed,
+and **no existing guard could see it, because every one of them measures a
+LENGTH.** An advance against an arc, a depth against a line box, a sagitta against
+half a cell — all of them pass wherever the label happens to SIT.
+
+The arcs were cut at each cell's mid-depth, which centres the thing the renderer
+is handed and not the thing the reader sees. Measured on the live face, a Skill's
+ink runs `baseline − 0.769em … baseline + 0.231em`, so the ink block sat **0.269em
+(3.5 units at fs 13) off centre** — in a 35-unit course, **11 units of air on one
+wall against 18 on the other.**
+
+⚠ **AND THE LEAN REVERSED AT THE HORIZON**, which is why no single-cell inspection
+would have found it either. The bottom half's arc is traversed backwards so the
+type is not upside down, and that also reverses the glyphs' up-vector — **the top
+half leaned outward and the bottom half leaned inward, from one rule.** Nothing
+collided; the plate simply read as unresolved, because the same law produced
+opposite offsets on its two halves.
+
+`carrierCellArcRadius` / `carrierBandArcRadius` cut the arc off-centre so the INK
+lands centred, carrying the same `flip` term the arc's direction uses. Recovers
+~3.5 units on whichever wall each label was nearest, at no cost anywhere, and
+makes one grammar out of two.
+
+⚠ **THE CENTRE OFFSET AND THE INK'S HALF-HEIGHT ARE DIFFERENT NUMBERS, AND
+CONFLATING THEM IS A GUARD THAT REPORTS A LEAN ON A BLOCK SITTING STRAIGHT.** For
+a sentence-case Skill the centre is 0.269em above the baseline (the
+half-DIFFERENCE of ascent and descent) while the half-height is 0.500em (the
+half-SUM). The first says where to cut the arc, the second how much wall the block
+eats. They coincide only for a run with no descender — which is the band's
+uppercase case, and is why `BAND_INK_MID === BAND_INK_HALF` while the Skill's two
+differ. The first cut of the new guard used one for both and failed on a correctly
+centred plate.
+
+### ⚠ `BAND_FS` WAS SETTING THE PLATE'S FLOOR, AND `minPx` COULD NOT SAY SO
+
+U32's first cut left the band one rung under a Skill and argued the register from
+CAP HEIGHT — true as far as it goes, and it missed that **`BAND_FS` was the
+smallest lettering on the plate.** At 12 the band painted **7.46px** while all 47
+Skills cleared 8. The gate reported 7.46 and the thing it named was the five
+REGION names, the most structural strings on the surface.
+
+**A floor is not a family.** The capture readout reports one scalar, so it can say
+the floor moved and never which lettering owns it. A per-family assertion is the
+fix, and it names the map's 8px line rather than the 4.3 hard floor.
+
+`BAND_FS` 12 → **13**, paid for out of the TRACK (0.08 → **0.05**), not the arc:
+`STAKEHOLDER` is the binding name — the longest label on the narrowest part's 37°
+sweep — and at 13/0.08 it needs 97u against 100u of arc (1.3u per end, which is
+why the step was refused), while at 13/0.05 it needs 93u, i.e. **3.75u per end**.
+The chrome grammar is DIRECTION (uppercase, tracked wider than a Skill's 0.02),
+never a specific step. And the register still ranks correctly for the reason the
+cap-height argument got right: **uppercase at 13 carries a 9.1u cap height against
+sentence case's 6.5u x-height, so the band reads larger than the Skills it heads
+at the same font size.**
+
+### ⚠ TWO CONSTANTS WERE HELD AS LITERALS IN THE GUARD AND BOTH DRIFTED
+
+`CY` carried inline as `- 381` in the material-coverage raster, and `CROP_PAD` as
+`- 26` in the rim assertion. Both are consequences of a radius; **re-stating a
+consequence beside the drawing is writing down a thing that can disagree with
+it**, and in both cases the guard went on measuring a plate some units from where
+the plate was. `CARRIER_CX`, `CARRIER_CY` and `CARRIER_CROP_PAD` are exported now,
+and the rim assertion pins the CONTRACT (apothem inside the crop by the pad, and
+by no more than a unit past it) rather than a number.
+
+### What the measurement found that needed no fixing
+
+⚠ Worth recording, because the obvious next pass will try to "fix" these:
+
+- **Side air was never tight.** The rendered advance of every label against its
+  own arc leaves **14.8px minimum per end** (`GL Reconcile`), and 23–76u across
+  the plate. `LABEL_PAD` 14 → 12 was taken in the same pass and the achieved
+  clearance still doubled the floor — the pad is a value the LADDER solves
+  against, not the clearance the drawing ends up with, so raising it forces
+  coarser courses and buys side air the labels did not need by spending radial
+  air they did.
+- **Cell depth was never tight.** 35–44 units against a 13-unit ink block.
+- **The material fields were already quieted** to 0.55 alpha in U31 for exactly
+  this reason.
+
+⚠ **AND THE PROBE THAT MEASURES RADIAL AIR FROM THE RENDERED DOM IS A TRAP.**
+Sampling a cell's own path and taking its extreme radii as `r0`/`r1` is wrong on
+this drawing, because cells are bounded by POLYGONAL chords: a chord's closest
+approach to the centre is its midpoint, so sampling under-reports the inner wall
+by up to 4 units and the outer by a similar amount, and the errors do not cancel.
+An earlier cut of `.cursor/isl-carrier3/air.js` did exactly that and **reported
+the ink-centring correction as having made the lean worse when it had in fact
+centred every label to within half a unit.** The authority for radial air is the
+unit guard, which walks the exact `cell.r0` / `cell.r1` the layout derived.
+
+### Verification
+
+- `substrate-lab-fit` **262 pass** (three new: ink centring on all 47 cells, the
+  band's uppercase metric, and the per-family 8px line), full suite **956 pass**,
+  typecheck and lint clean.
+- Capture gates **PASS at all three presets in both themes** — 0 clipped, 0
+  collisions, 0 overflow, texts **56** matching the pin, and `minPx` **8.24 /
+  9.16 / 12.70** against 7.46 / 8.28 / 11.48 before. **Every string on the plate
+  is over 8px for the first time on this drawing.**
+- Both themes captured and read at the binding preset per the theme-parity rule.
+
+### Left open — owner verdict
+
+- **Whether 8.24px at 1280×720 is enough.** It is the ceiling this form supports
+  with all 47 Skills lettered: the levers are exhausted (13 is the ladder's top,
+  the pad has an 11.4px margin floor, the hub is the wrong direction), so the
+  only remaining currency is DENSITY — fewer lettered cells, or shorter `short`
+  strings. This is ADR-063 §Outstanding's standing question, now with a measured
+  ceiling attached to it.
+- **Whether `LABEL_FS` 14 at `LABEL_PAD` 8 is worth its 0.1-unit margin.** It is
+  feasible and it is fragile; recorded above rather than taken, so the trade is
+  available on request instead of being rediscovered.

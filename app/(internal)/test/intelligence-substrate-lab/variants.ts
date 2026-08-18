@@ -72,7 +72,10 @@ export type IslVariantId =
   | "stack"
   | "flasks"
   | "cells"
-  | "vats";
+  | "vats"
+  | "manifold"
+  | "skill-facet"
+  | "carrier";
 
 export interface IslVariantDef {
   id: IslVariantId;
@@ -86,9 +89,9 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
     id: "shipped",
     label: "Shipped (the baseline)",
     thesis:
-      "⚠ THE BASELINE IS NOW `33 · INLAY`, PROMOTED (2026-08-16). One plate divided into five regions of material — area is the Skill count, no gutters, one outer cut — each lettering its name and ONE PARAGRAPH saying what that substrate means, over its own physics field, with a graduation of one tick per encoded Skill at its base. ⚠ Its local copy is DELETED and this mounts production, the config lab's own precedent: two copies of a drawing is how one starts passing what the other would fail. `22 · Mosaic` is the direction it grew from — compare them for what texture and a grout bought. The card stack it replaced (ADR-070 U16, one named plate per Skill) is in git history; ⚠ THE 47 NAMED SKILLS went with it and now letter only in the registry row, one casefile row away.",
+      "⚠ THE BASELINE IS NOW `34 · SECTION`, PROMOTED (2026-08-17, ADR-070 U25). Twenty ghost cartridge footprints across the top — the ESTATE at footprint scale, with a lit-edge grammar on the reader's own open stream — over a five-lane gallery, then five strata below ordered lightest at top (Stakeholder) to heaviest at the floor (Pattern), each carrying its name, its count, one paragraph beside them and 47 named Skill plates seated at each stratum's own floor. A riser SHAFT on the left ties the estate to the strata: selection lights ONE PATH — footprint → gallery → shaft → tapped stratum — without moving anything the reader was looking at. ⚠ This replaces `33 · INLAY` (U24, one plate divided into five area-proportional regions) and its whole story — U24 kept the roster but threw away the click's context; SECTION resumes it. ⚠ ADR-069's persistent object has THREE homes now, not two: reading 01's grid cartridge, reading 02's core seat card, and this footprint. The 34/35/36 lab entries are RETIRED (34 promoted here, 36 held U24 which is not shipped any more); MANIFOLD survives below as the losing alternative.",
     provenance:
-      "PdaSubstrate.ViewSubstrate — mounted ELASTIC, at whatever layout the current preset's field asks for, exactly as the landing does. ⚠ Its rest crop is 932 × 748, NOT the lab's 762: the crop must stay width-bound at the narrowest measured field (1440×800, aspect 0.807) or it goes height-bound there and leaves dead panel — which the lab's own 0.8176 did, by four thousandths.",
+      "PdaSubstrate.ViewSubstrate — mounted ELASTIC, at whatever layout the current preset's field asks for, exactly as the landing does. ⚠ Its rest crop is 932 × 748, NOT the lab's 762: the crop must stay width-bound at the narrowest measured field (1440×800, aspect 0.807) or it goes height-bound there and leaves dead panel — which the lab's own 0.8176 did, by four thousandths. The BOX_H0 = 696 stays unchanged from U24, so the plate's outer footprint is byte-identical; only the plate's INTERIOR has moved.",
   },
   {
     id: "strata",
@@ -472,6 +475,70 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
     provenance:
       "The plainest reading of a supply vessel, kept in the set deliberately as the control — the same role `tight` played in the configuration lab's round two.",
   },
+
+  /* ── Round nine · THE ESTATE'S SUPPLY SIDE (owner, 2026-08-17) ─────────
+     Eight rounds have argued about what the substrate LOOKS like, and each
+     is a substrate drawn ALONE. The complaint that landed the direction is
+     that reading 03 arrives from a click and answers with the whole estate
+     as if the reader had never opened a stream: readings 01 and 02 share
+     the selected work, and 03 throws it away.
+
+     ⚠ THE RECORD ALREADY CARRIED THE JOIN. `CaseMapWork.shapes` says which
+     of the five shapes each stream draws on — projected to `PdaWork.taps`
+     — and no attempt has drawn "below grade" with the work above it, though
+     the brief says exactly that on the surface: _"below grade runs the
+     shared substrate — encoded once for one team, tapped by the next."_
+
+     THE LAW: the estate is present on this reading as GHOST FOOTPRINTS at
+     the top, and the substrate is drawn as the material the work stands on.
+     Selection lights ONE PATH — footprint → gallery → shaft → tapped
+     stratum — without re-anchoring the drawing on the click. There is no
+     legend, no team code, no ordinal: sources are the estate itself, which
+     is on screen.
+
+     ⚠ ONE STANDING RULING QUALIFIED, TWO KEPT. The 5 × 8 crossing stays
+     gone (`crossing()` still projects it, its arithmetic is still guarded;
+     it cannot come back inside this reading — team codes at gallery scale
+     need a legend, and a legend is banned). The cartridge silhouette still
+     means WORKSTREAM — which is why the estate band is unambiguously the
+     work, and the strata / vessels are unambiguously not. What is qualified
+     is U17's "reading 03 may not depend on a selected work": these three
+     directions are complete AT REST with no selection, and selection ONLY
+     ADDS LIGHT — the subject is still the layer.
+
+     ⚠ **34 · SECTION AND 36 · CONTROL ARE GONE FROM THE LAB** (2026-08-17,
+     ADR-070 U25). SECTION won the promotion — it IS the shipped baseline
+     now — so the direction lives in `PdaSubstrate.tsx`, the "shipped"
+     variant here mounts it, and a lab entry that redrew it would be two
+     copies of a measured drawing. CONTROL's whole thesis was "the shipped
+     U24 partition with an estate band above", and once U24 is not shipped
+     the direction cannot answer its own question. What lives here below is
+     35 · MANIFOLD — the round-nine ALTERNATIVE, kept so the register trade
+     stays reviewable. */
+  {
+    id: "manifold",
+    label: "35 · Manifold",
+    thesis:
+      "The estate band above, then five FULL VESSELS below — the round-eight vessel rig with a supply MANIFOLD drawn as the collection lane between the two. Height is the encoded Skill count, the contents are the pattern's own physics field clipped to the vessel outline, and the ledger names the five in a call-out beside the rig. ⚠ NAMED TRADE: the vessels cannot seat 47 legible plates at this crop, so the roster drops to graduation marks + the ledger. This regresses U24's density verdict — a region without a roster reads as three strings over texture, which is why the current shipped drawing brought the plates back. Included for register comparison, not as the favourite.",
+    provenance:
+      "Round eight's `vats` silhouette (2026-08-15, owner half-approved), lifted from a static rig into the section direction's arrival grammar. If SECTION's roster is what makes reading 03 read as an INSTRUMENT rather than a poster, this is what shows what it costs to trade that away. Its OWNER VERDICT (2026-08-17) was that dropping the roster is exactly what U24 taught the drawing not to do — so the direction stays as the LOSING one, and SECTION's roster is why it does not letter this alternative on the site.",
+  },
+  {
+    id: "skill-facet",
+    label: "37 · Skill facet",
+    thesis:
+      "The pie chart's immediate part-to-whole read, cut into the site's shape law. ONE flat dodecagonal annulus, no curves, made from exactly 47 interactive shards — one per encoded Skill. Five contiguous runs are Pattern 14 · Judgment 12 · Validation 09 · Voice 07 · Stakeholder 05, so the group's angular sweep is literally its Skill count. Each group seats only its NAME + COUNT inside its own shard run — no leaders, no external labels, no explanatory paragraphs. Hovering or focusing any shard turns the central dodecagonal hub into that Skill's name, substrate, team and status. The five first encodes mark only their outer chords in green. The Skills ARE the figure.",
+    provenance:
+      "Owner correction to 21 · Wheel (2026-08-17): something pie-like, but with straight edges — a flat dodecahedral read — and made out of the Skills. Second correction on the candidate: the group labels belong INSIDE their parts, and the long paragraph copy goes. Builds from 26 · Facet's useful straight-edge lesson but reverses its payload: Facet drew five large wedges and reduced Skills to rim ticks; this draws 47 equal angular shards and reduces the annotation to five compact internal marks. The dodecagonal perimeter modulates shard area by under 3.5 %, the named price of rejecting a circle; count remains exact as one equal angular step per Skill.",
+  },
+  {
+    id: "carrier",
+    label: "38 · Compound carrier",
+    thesis:
+      "37's part-to-whole read on a SOLID dodecagonal carrier, with five parts that are not each other's copy. Forty-seven cells, one per encoded Skill, ALL THE SAME AREA — the course boundaries are solved for area (`√(R_IN² + (cum/n)·span)`), so one cell IS one Skill at one size everywhere on the plate. ⚠ THE DIFFERENTIATION CANNOT COME FROM THE COUNT and the file proves why: a cell's angular width is `(sweep / cellsInCourse) × r̄`, both terms proportional to the count, so the count cancels and any equal-area packing makes the five parts geometrically similar — which is exactly why 37's forty-seven shards read as one texture wrapped round a ring. So it comes from two things the count does not reach: each part sits over its OWN MATERIAL (the field-card painters), and each part takes its own GRAIN — three courses for a shape in double figures, two under ten, remainder riding outward — so Pattern's cells run wide and shallow where Stakeholder's run tall and narrow, and mass reads twice. The name and count sit on a square opaque NAMEPLATE on the part's own mid-ray; the seated square core letters the mechanism at rest and one Skill's identity on hover or on a pinned click.",
+    provenance:
+      "Owner's third note on round ten (2026-08-17): the labels are inside now, the paragraphs are gone, but the five parts should be shaped differently and the centre should explain the mechanism rather than count it. ⚠ THE RIM BAND WAS TRIED FIRST AND IS ARITHMETICALLY IMPOSSIBLE — a horizontal label in a radial band only fits where the band runs horizontally, and Stakeholder's wedge points LEFT, giving it 70 units of radial depth for a name that needs 93. The plate's shared `R_LAB` is not a chosen radius: both bounds move with the plate's own projected half-extents, so the feasible interval's midpoint is `κ(R_IN + R_OUT)/2` at every orientation, and `carrierPlateFits` exports the fifteen clearances the guard asserts. The mechanism copy is the surface's own brief — encoded for one team, drawn on by the next — which is the sentence `intelligence-architect` calls the ratchet.",
+  },
 ];
 
 export const islVariant = (id: string | null): IslVariantDef =>
@@ -480,13 +547,24 @@ export const islVariant = (id: string | null): IslVariantDef =>
 /** What every variant receives — the same projection `PdaConsole` hands
  *  production's reading 03. Skills are the full reservoir; `selectedWork`
  *  is the record the reader arrived from (rounds 1–3 ignore both; round-four
- *  directions letter them as the drawing's centre of gravity). Both are
- *  optional so a fixture-only test can build an IslRecord without them. */
+ *  directions letter them as the drawing's centre of gravity; round-nine
+ *  directions carry `works` — the whole shown grid — as the estate band above
+ *  the substrate). All optional so a fixture-only test can build an
+ *  `IslRecord` without them. */
 export interface IslRecord {
   teams: readonly PdaTeam[];
   shapes: readonly PdaShape[];
   skills?: readonly CaseSkillEntry[];
   selectedWork?: PdaWork;
+  /**
+   * ⚠ ROUND NINE ADDITION — the projected estate, so the section, manifold
+   * and control directions can draw the twenty shown streams as ghost
+   * footprints at the top of the crop and light the selected one's path
+   * through the substrate. Absent for earlier directions (`SubstrateLabShell`
+   * always supplies it), so the fit test can still build a stripped-down
+   * record for the guards that predate the estate band.
+   */
+  works?: readonly PdaWork[];
 }
 
 export interface IslVariantProps {

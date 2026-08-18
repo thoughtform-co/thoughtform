@@ -2,17 +2,36 @@ import { describe, expect, it } from "vitest";
 
 import {
   CARDS,
+  ESTATE_BLOCK_H,
+  HEAD_H,
+  PLATE_COLS,
+  PLATE_PITCH,
+  SECTION_ORDER,
+  SHAFT_W,
+  SHAFT_X,
+  STRATA_H0,
+  STRATA_W,
+  STRATA_X,
+  SUB_CROP_W,
   SUBSTRATE_LAYOUT_0,
   paraOf,
   plateAt,
-  regionGeometry,
+  sectionColumns,
+  sectionConductorCount,
+  sectionStrata,
+  shaftLaneX,
   skillsOf,
-  substrateBlocks,
   substrateExt,
   substrateLayout,
   substrateLettering,
-  substrateRows,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
+import {
+  ESTATE_CELL_H,
+  ESTATE_CELL_W,
+  GALLERY_LANES,
+  estateSlots,
+  laneX,
+} from "@/components/landing/home-v2/services/casefile/map/pda/estateBand";
 import { specWidth } from "@/components/landing/home-v2/services/casefile/map/pda/pdaLetters";
 import {
   crossing,
@@ -22,23 +41,22 @@ import { FS_FLOOR } from "@/components/landing/home-v2/services/casefile/map/pda
 import { getCase } from "@/lib/cases/registry";
 
 /**
- * READING 03'S FIT AND ITS ENVELOPE.
+ * READING 03'S FIT AND ITS ENVELOPE — the SECTION drawing (ADR-070 U25).
  *
- * ⚠ **THIS READING HAD NO ARITHMETIC GUARD AT ALL UNTIL 2026-08-12**, and that
- * is how it shipped an unpublishable string. `cases-registry` walks `CASES`
- * and `PROJECT_CASES` objects with `JSON.stringify`; the drawing before last
- * composed `{n} SKILLS · {n} TEAMS` at render time inside a component, where
- * no scanner reaches — so for PATTERN it printed **8 TEAMS** on the public
- * page (8 is the DEPARTMENT count; 22 briefed and 14 running the layer are
- * different units and different sets).
+ * ⚠ **THE PROMOTION MOVED THE STRUCTURAL QUESTIONS FROM THE LAB TO HERE**
+ * (2026-08-17). U24's divided plate was the shipped drawing; SECTION is
+ * now, so its arithmetic — body-proportional-to-count, shaft lanes inside
+ * the shaft, plate columns inside the stratum — lives beside the drawing
+ * it walks. The lab keeps MANIFOLD as the losing round-nine alternative
+ * and its own fit guard walks that.
  *
  * ⚠ A LETTERED STRING MISSING FROM `substrateLettering` IS A DEFECT IN THE
- * DRAWING, not an economy in the guard. SVG `<text>` does not wrap, does not
- * ellipsise and does not report overflow — a label past its measure simply
- * vanishes, with nothing on screen to say so. That matters more on the cards
- * than it did on the pin grid: **47 of the ~71 lettered strings are Skill
- * labels**, so the great majority of this surface is now content the drawing
- * did not author and cannot shorten.
+ * DRAWING, not an economy in the guard. SVG `<text>` does not wrap, does
+ * not ellipsise and does not report overflow — a label past its measure
+ * simply vanishes, with nothing on screen to say so. That matters more on
+ * the strata than it did on the pin grid: **47 of the ~57 lettered strings
+ * are Skill labels**, so the great majority of this surface is content
+ * the drawing did not author and cannot shorten.
  */
 
 function record() {
@@ -48,21 +66,21 @@ function record() {
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
   const shown = selectWorks(visual.districts, visual.works);
   const cross = crossing(visual.shapes, visual.districts, visual.works, shown);
-  return { teams: cross.teams, shapes: cross.shapes, skills: visual.skills ?? [] };
+  return {
+    teams: cross.teams,
+    shapes: cross.shapes,
+    skills: visual.skills ?? [],
+    works: shown,
+  };
 }
 
-describe("the substrate cards fit their boxes", () => {
+describe("the substrate section fits its box", () => {
   it("every string fits the measure it declares", () => {
     const specs = substrateLettering(record());
-    /* ⚠ THE 47 SKILL LABELS ARE BACK (owner, 2026-08-17), so the total returns
-       to ~67: 5 names + 5 counts + ~10 paragraph lines + 47 plates. U23's tick
-       graduation was countable but not readable, and it left each region with
-       nothing to be full of — which is what made this reading feel unlike the
-       two beside it.
-
-       ⚠ A TOTAL IS A COARSE NET, so the structural check below is the real
-       one: a magic number cannot tell you WHICH region stopped speaking. */
-    expect(specs.length, "the drawing letters almost nothing").toBeGreaterThan(60);
+    /* Five names + five counts + up to ten paragraph lines + 47 Skill
+       plates = ~67 at rest. If a stratum drops a slot the total falls
+       loudly, so 55 is a floor the arithmetic cannot reach silently. */
+    expect(specs.length, "the drawing letters almost nothing").toBeGreaterThan(55);
     for (const s of specs) {
       expect(s.text.length, `${s.slot} is blank`).toBeGreaterThan(0);
       expect(
@@ -72,11 +90,11 @@ describe("the substrate cards fit their boxes", () => {
     }
   });
 
-  it("every region letters its name, its count and its paragraph", () => {
-    /* ⚠ WHAT A TOTAL CANNOT SEE. Five regions × three roles; a region that
-       lost one of them still leaves a plausible-looking count. The paragraph
-       is the newest of the three and the only prose on the console, so it is
-       also the one a future edit is most likely to drop back to a fragment. */
+  it("every stratum letters its name, its count and its paragraph", () => {
+    /* ⚠ WHAT A TOTAL CANNOT SEE. Five strata × three roles; a stratum that
+       lost one of them still leaves a plausible-looking count. The
+       paragraph is the only prose on the console, so it is also the one a
+       future edit is most likely to drop back to a fragment. */
     const r = record();
     const specs = substrateLettering(r);
     for (const s of r.shapes) {
@@ -93,10 +111,10 @@ describe("the substrate cards fit their boxes", () => {
         mine.filter((x) => x.slot.startsWith(`${s.key}.para.`)).length,
         `${s.key} letters no paragraph`
       ).toBeGreaterThan(0);
-      /* ⚠ AND THE SLICE SLOT MUST BE ABSENT. `substrateLettering` declares a
-         dropped tail at measure 0 precisely so it fails the fit assertion
-         above; asserting its absence here names the failure instead of
-         leaving it to a width error nobody reads. */
+      /* ⚠ AND THE SLICE SLOT MUST BE ABSENT. `substrateLettering` declares
+         a dropped tail at measure 0 precisely so it fails the fit
+         assertion above; asserting its absence here names the failure
+         instead of leaving it to a width error nobody reads. */
       expect(
         mine.some((x) => x.slot === `${s.key}.para.sliced`),
         `${s.key}'s paragraph is too long and lost its tail`
@@ -104,9 +122,10 @@ describe("the substrate cards fit their boxes", () => {
     }
 
     /* ⚠ AND EVERY ENCODED SKILL IS DECLARED. The 47 labels are the largest
-       block of lettering on this console and they are content the drawing did
-       not author and cannot shorten — a region that quietly drew fewer plates
-       than its numeral claims would still pass every per-string check. */
+       block of lettering on this console and they are content the drawing
+       did not author and cannot shorten — a stratum that quietly drew
+       fewer plates than its numeral claims would still pass every
+       per-string check. */
     const declared = specs.filter((x) => x.slot.startsWith("skill.")).length;
     expect(declared, "the drawing stopped declaring its Skill plates").toBe(r.skills.length);
     for (const s of r.shapes) {
@@ -119,10 +138,10 @@ describe("the substrate cards fit their boxes", () => {
   });
 
   it("no single WORD runs through a wall", () => {
-    /* ⚠ THE BINDING MEASURE IS A WORD, NOT A STRING (ADR-070 U6). The foot's
-       gloss is the only thing here that wraps, and every per-LINE assertion
-       keeps passing while the longest word overflows — `RECONCILIATION` is how
-       reading 02 found this. */
+    /* ⚠ THE BINDING MEASURE IS A WORD, NOT A STRING (ADR-070 U6). The
+       paragraph is the only thing here that wraps, and every per-LINE
+       assertion keeps passing while the longest word overflows —
+       `RECONCILIATION` is how reading 02 found this. */
     for (const s of substrateLettering(record())) {
       const longest = s.text.split(" ").reduce((a, b) => (b.length > a.length ? b : a), "");
       expect(
@@ -139,9 +158,9 @@ describe("the substrate cards fit their boxes", () => {
   });
 
   it("the type keeps its floor at every field shape", () => {
-    /* The elastic crop is width-bound by construction, so this should be flat
-       across the board — an assertion that it IS is what would catch a crop
-       that quietly started growing on the axis it is measured by. */
+    /* The elastic crop is width-bound by construction, so this should be
+       flat across the board — an assertion that it IS is what would catch
+       a crop that quietly started growing on the axis it is measured by. */
     for (const f of [
       { at: "1280x720", w: 603, h: 493 },
       { at: "1920x1080", w: 850, h: 760 },
@@ -159,9 +178,9 @@ describe("the substrate cards fit their boxes", () => {
   });
 });
 
-describe("the substrate cards hold the map's envelope", () => {
-  /* ⚠ THE MAP IS STRICTER THAN THE CASEFILE BY DESIGN. No personal names, no
-     currency, no model families — and on THIS reading, no team counts. */
+describe("the substrate section holds the map's envelope", () => {
+  /* ⚠ THE MAP IS STRICTER THAN THE CASEFILE BY DESIGN. No personal names,
+     no currency, no model families — and on THIS reading, no team counts. */
   const BANNED: readonly { label: string; re: RegExp }[] = [
     { label: "money", re: /[$€£¥]|\b(usd|eur|gbp)\b|\d{1,3}(,\d{3})+/i },
     {
@@ -180,22 +199,10 @@ describe("the substrate cards hold the map's envelope", () => {
     }
   });
 
-  /**
-   * ⚠ **THE TEAMS BAN IS TWO RULES NOW, AND NARROWING IT WAS NOT A WEAKENING.**
-   *
-   * The original defect was `8 TEAMS` — a DEPARTMENT count wearing the word,
-   * composed by the drawing itself. One blanket `/\bteams?\b/i` caught it, and
-   * it also catches `People-team`, which is a Loop team's PROPER NAME and the
-   * client's own shorthand for the Skill. That string already ships: the same
-   * case's registry row letters `People-team Voice` in full, one casefile row
-   * away.
-   *
-   * So the two halves are split by who wrote the string. Chrome the DRAWING
-   * composes may not contain the word at all — that is where the defect lives
-   * and the rule there is absolute. A Skill label is content from the record,
-   * and there the rule is the actual failure mode: a number next to the word.
-   */
   it("never publishes a count as teams, and never says the word in its own chrome", () => {
+    /* The same two-halves rule U24 introduced. `People-team` is a real
+       Skill name in the record and is content, not chrome — a Skill label
+       may contain the word; the drawing's own chrome may not. */
     const COUNTED = /\d\s*teams?\b|\bteams?\s*[:=]?\s*\d/i;
     for (const s of substrateLettering(record())) {
       expect(COUNTED.test(s.text), `${s.slot} publishes a count as teams: "${s.text}"`).toBe(false);
@@ -210,7 +217,7 @@ describe("the substrate cards hold the map's envelope", () => {
   it("still adds up to the record", () => {
     const r = record();
     expect(r.shapes, "the five shapes stopped being five").toHaveLength(5);
-    expect(r.shapes, "a card lost its column").toHaveLength(CARDS);
+    expect(r.shapes, "a stratum lost its column").toHaveLength(CARDS);
     expect(r.teams, "the eight departments stopped being eight").toHaveLength(8);
     expect(
       r.shapes.reduce((n, s) => n + s.skills, 0),
@@ -218,14 +225,10 @@ describe("the substrate cards hold the map's envelope", () => {
     ).toBe(47);
   });
 
-  /**
-   * ⚠ **THE COUNT IN THE HEADER IS NOW CHECKABLE BY COUNTING PLATES**, which is
-   * exactly why it has to be true. The pin grid lettered `{n} SKILLS` as an
-   * aggregate nobody on the page could verify; this drawing prints the numeral
-   * beside a stack a reader can count. Two sources — `CaseMapShape.skills` and
-   * the Skills reservoir — and the drawing letters the SECOND.
-   */
-  it("every card's numeral equals the plates under it", () => {
+  it("every stratum's numeral equals the plates under it", () => {
+    /* ⚠ THE COUNT IN THE HEADER IS CHECKABLE BY COUNTING PLATES. Two
+       sources — `CaseMapShape.skills` and the Skills reservoir — and the
+       drawing letters the SECOND. */
     const r = record();
     for (const s of r.shapes) {
       const plates = skillsOf(r.skills, s.key);
@@ -240,16 +243,9 @@ describe("the substrate cards hold the map's envelope", () => {
     ).toBe(r.skills.length);
   });
 
-  it("every plate the drawing letters carries a first-encode decision", () => {
-    /* The `CUT BY` grammar, carried down a level: one green accent per card,
-       and every card has one. ⚠ THIS ASSERTS THE DRAWING, NOT THE MODEL — that
-       `flagship` is unique per engine is a rule about `CaseSkillEntry` and
-       lives in `cases-registry`, along with the `short` label's cap and its
-       authored-not-clipped rule. Here the question is narrower and it is the
-       one the pin grid could not have asked: does every card this drawing
-       PUTS ON SCREEN have exactly one green plate in the stack it draws? A
-       pattern with no first encode is a card with no green in it, which reads
-       as five patterns of which one is unexplained. */
+  it("every stratum the drawing letters carries a first-encode decision", () => {
+    /* The `CUT BY` grammar, carried down a level: one green accent per
+       stratum, and every stratum has one. */
     const r = record();
     for (const s of r.shapes) {
       const first = skillsOf(r.skills, s.key).filter((k) => k.flagship);
@@ -261,155 +257,218 @@ describe("the substrate cards hold the map's envelope", () => {
   });
 });
 
-describe("the plate is one surface divided, and every region is material", () => {
-  const EXTS = [0, 80, 151, 366, 546, 1137];
-  const blocksAt = (ext: number) => {
-    const r = record();
-    const l = substrateLayout({ extW: 0, extH: ext });
-    return { r, l, blocks: substrateBlocks(substrateRows(r.shapes, r.skills), l.boxH) };
-  };
+describe("the section drawing is honest about its arithmetic", () => {
+  /**
+   * ⚠ **THE PROPORTIONAL CLAIM IS PER-BODY, NOT PER-REGION.** U24's area
+   * claim was that whole-region area equalled the count; SECTION's is
+   * that BODY equals the count, because heads are fixed chrome. Dividing
+   * body by skill count must give the same unit for every stratum, at
+   * every field shape.
+   */
+  const EXTS = [0, 80, 151, 366, 546];
 
-  it("AREA IS THE COUNT, at every field shape", () => {
-    /* ⚠ THE ONE CLAIM THE DRAWING MAKES, and the only way to check a
-       continuous encoding: divide each region's area by its Skill count and
-       every pattern must land on the same unit. It fails the moment a floor, a
-       clamp or a hand-tuned constant is introduced — which is exactly what a
-       "just make Stakeholder a bit taller so the text fits" edit would be. */
+  it("body height is proportional to skill count, at every field shape", () => {
     for (const ext of EXTS) {
-      const { r, blocks } = blocksAt(ext);
-      const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
-      const units = blocks.map((b) => (b.w * b.h) / (counts.get(b.key) ?? 1));
+      const r = record();
+      const layout = substrateLayout({ extW: 0, extH: ext });
+      const strata = sectionStrata(r.shapes, layout.strataH);
+      const units = strata.map((s) => ({ key: s.key, unit: s.bodyH / s.n }));
+      const base = units[0].unit;
       for (const u of units) {
-        expect(u / units[0], `ext ${ext}: a region's area stopped being its count`).toBeCloseTo(
-          1,
-          2
-        );
+        expect(
+          Math.abs(u.unit - base) / base,
+          `ext ${ext}, ${u.key}: unit ${u.unit.toFixed(2)} vs ${base.toFixed(2)} — the body stopped being the count`
+        ).toBeLessThan(0.01);
       }
     }
   });
 
-  it("every region's plate run fits its body, at every field shape", () => {
-    /* ⚠ **THE BINDING CASE IS THE LIGHTEST PATTERN, NOT THE HEAVIEST**, and it
-       is arithmetic rather than bad luck: area IS the count, so the region with
-       the fewest Skills is also the smallest, while its head costs the same
-       fixed 87 units as everyone else's. At rest Stakeholder has 56.7 units of
-       body against a 54-unit run — 2.7 to spare. It opens to 66.5 at the
-       owner's own viewport, so REST is the case to guard.
-
-       ⚠ AND THE WRAP IS WALKED, NOT ASSUMED. A `meaning` that grew to three
-       lines would cost 18 more units of head and put Stakeholder's run through
-       its floor — every per-string assertion would still pass, because each
-       label still fits its own column. This is the assertion that sees it. */
+  it("plates fit their stratum's body, at every field shape", () => {
+    /* ⚠ THE BINDING CASE IS THE LIGHTEST STRATUM, and it is arithmetic
+       rather than bad luck: body ∝ count, so the stratum with the fewest
+       Skills has the smallest body, while its head costs the same fixed
+       54 units as every other's. At rest Stakeholder has a body around
+       67u against a run of 20u (5 in one row); it opens comfortably to
+       80u at the owner's viewport. */
     for (const ext of EXTS) {
-      const { r, blocks } = blocksAt(ext);
-      const byKey = new Map(r.shapes.map((s) => [s.key as string, s]));
-      const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
-      for (const b of blocks) {
-        const s = byKey.get(b.key);
-        if (!s) throw new Error(`no shape for ${b.key}`);
-        const n = counts.get(b.key) ?? 0;
-        const geo = regionGeometry(b, paraOf(s.meaning, b).length, n);
+      const r = record();
+      const layout = substrateLayout({ extW: 0, extH: ext });
+      const strata = sectionStrata(r.shapes, layout.strataH);
+      for (const s of strata) {
+        const rows = Math.ceil(s.n / PLATE_COLS);
         expect(
-          geo.stackH,
-          `ext ${ext}, ${b.key}: ${n} plates in ${geo.rows} rows overrun their region's floor`
-        ).toBeLessThanOrEqual(geo.bodyH);
+          rows * PLATE_PITCH,
+          `ext ${ext}, ${s.key}: ${s.n} plates in ${rows} rows overrun ${s.bodyH.toFixed(1)}u`
+        ).toBeLessThanOrEqual(s.bodyH);
       }
     }
   });
 
   it("every plate's label fits its own column", () => {
-    /* ⚠ THE MEASURE IS THE COLUMN, NOT THE REGION. Two columns halve the width
-       a `short` has, and the narrow regions are ~155u against a 14-character
-       label's 114.2 — which is why the column count is TWO everywhere and not
-       derived per region: three columns fit the two wide regions and clip the
-       three narrow ones, i.e. two different objects on one plate. */
-    const { r, blocks } = blocksAt(0);
-    const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
+    /* ⚠ THE MEASURE IS THE COLUMN, NOT THE STRATUM. Five columns × the
+       narrow strata's ~161u pitch = 805u; each plate's label sits in that
+       column less the accent and its two gaps. The 14-character `short`
+       cap is enforced by `cases-registry`; this asserts the column can
+       hold it at fs 12. */
+    const r = record();
+    const { colW } = sectionColumns();
+    const labelMeasure = colW - 3 - 6 - 6;
     const longest = r.skills.reduce((a, s) => (s.short.length > a.length ? s.short : a), "");
-    for (const b of blocks) {
-      const geo = regionGeometry(b, 2, counts.get(b.key) ?? 0);
+    expect(
+      longest.length * 12 * (0.6 + 0.08),
+      `"${longest}" runs past its ${labelMeasure.toFixed(1)}u column`
+    ).toBeLessThanOrEqual(labelMeasure);
+  });
+
+  it("the plate columns fit the stratum's width", () => {
+    const { colW, colGap } = sectionColumns();
+    const total = PLATE_COLS * colW + (PLATE_COLS - 1) * colGap;
+    expect(total, "the plate columns run past the stratum's wall").toBeLessThanOrEqual(STRATA_W);
+  });
+
+  it("the strata block never overlaps the shaft", () => {
+    expect(STRATA_X, "the strata start left of the shaft's right wall").toBeGreaterThanOrEqual(
+      SHAFT_X + SHAFT_W
+    );
+    expect(STRATA_W, "the strata block collapsed").toBeGreaterThan(0);
+  });
+
+  it("the shaft's five lanes stay inside its housing", () => {
+    for (const k of SECTION_ORDER) {
+      const x = shaftLaneX(k);
+      expect(x, `${k} lane escaped the shaft (below)`).toBeGreaterThanOrEqual(SHAFT_X);
+      expect(x, `${k} lane escaped the shaft (above)`).toBeLessThanOrEqual(SHAFT_X + SHAFT_W);
+    }
+  });
+
+  it("configured streams emit exactly `taps.length` conductors; person-led emit zero", () => {
+    /* ⚠ THE CONDUCTOR MATH is the drawing's whole selection state. A
+       stream with three taps must draw exactly three; a person-led stream
+       must draw zero (the record has nothing to point at). */
+    const r = record();
+    for (const w of r.works) {
+      const expected = w.configured ? w.taps.length : 0;
       expect(
-        longest.length * 12 * (0.6 + 0.08),
-        `${b.key}: "${longest}" runs past its ${geo.labelMeasure.toFixed(1)}u column`
-      ).toBeLessThanOrEqual(geo.labelMeasure);
+        sectionConductorCount(w),
+        `${w.id}: draws ${sectionConductorCount(w)} conductors, record says ${expected}`
+      ).toBe(expected);
     }
   });
 
-  it("the plate columns never collide with each other", () => {
-    /* Column-major, so a run reads top-to-bottom then across. Two plates that
-       touch fail the smoke's pairwise glyph walk with nothing on screen to say
-       which pair — this names them. */
-    const { r, blocks } = blocksAt(0);
-    const counts = new Map(substrateRows(r.shapes, r.skills).map((x) => [x.key, x.n]));
-    for (const b of blocks) {
-      const n = counts.get(b.key) ?? 0;
-      const geo = regionGeometry(b, 2, n);
-      const boxes = Array.from({ length: n }, (_, k) => plateAt(geo, k));
-      for (let i = 0; i < boxes.length; i += 1) {
-        for (let j = i + 1; j < boxes.length; j += 1) {
-          const a = boxes[i];
-          const c = boxes[j];
-          const hit = a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h;
-          expect(hit, `${b.key}: plates ${i} and ${j} overlap`).toBe(false);
-        }
-      }
-      const last = boxes[boxes.length - 1];
+  it("shaft and gallery share the same lane order — conductors cannot cross", () => {
+    /* ⚠ LANES CANNOT CROSS IN THE GALLERY. `GALLERY_LANES` is ordered
+       left-to-right by shape; `SECTION_ORDER` is ordered top-to-bottom by
+       shape. Both have to be the SAME array or a conductor from a
+       configured footprint crosses one from a different footprint in the
+       gallery band — the routing pattern the isometric city collapsed
+       under (ADR-062). */
+    expect(GALLERY_LANES, "gallery and section orders diverged").toEqual(SECTION_ORDER);
+  });
+
+  it("the estate band's footprints tile the row and stay inside the plate", () => {
+    /* ⚠ THE THIRD HOME. Every configured stream must have a lookup-able
+       slot in the estate band, or the flight's third destination is
+       null. `estateSlots` is what the flight walks; the drawing paints
+       these same rectangles. */
+    const r = record();
+    const y0 = 26;
+    const bandLeft = 26;
+    const bandWidth = SUB_CROP_W - 52;
+    const slots = estateSlots(r.works, y0, bandLeft, bandWidth);
+    expect(slots.length, "the estate band lost footprints").toBe(r.works.length);
+    for (const s of slots) {
+      expect(s.y, `slot ${s.id} broke the band's top edge`).toBeGreaterThanOrEqual(y0);
+      expect(s.y + s.h, `slot ${s.id} broke the band's bottom edge`).toBeLessThanOrEqual(
+        y0 + ESTATE_CELL_H
+      );
+      expect(s.w, `slot ${s.id} lost its width`).toBe(ESTATE_CELL_W);
+    }
+    for (let i = 0; i < slots.length - 1; i += 1) {
       expect(
-        last.x + last.w,
-        `${b.key}: the last column runs past the region's wall`
-      ).toBeLessThanOrEqual(geo.x + geo.w);
+        slots[i + 1].x,
+        `slots ${i} and ${i + 1} overlap in the estate band`
+      ).toBeGreaterThanOrEqual(slots[i].x + slots[i].w);
     }
-  });
-
-  it("the regions tile the plate — no overlap, and a grout between them", () => {
-    /* ⚠ THE PARTITION AND THE PAINTED RECTS ARE DIFFERENT BOXES, which is what
-       the grout IS. The blocks tile exactly (any gap is a seam of plate showing
-       mid-column); the painted rects must NOT touch, or the division the owner
-       could not find is back. */
-    for (const ext of EXTS) {
-      const { blocks } = blocksAt(ext);
-      const area = blocks.reduce((n, b) => n + b.w * b.h, 0);
-      const { l } = blocksAt(ext);
-      expect(area, `ext ${ext}: the blocks stopped tiling the plate`).toBeCloseTo(880 * l.boxH, 0);
-
-      for (const a of blocks) {
-        for (const b of blocks) {
-          if (a === b) continue;
-          const ga = regionGeometry(a, 2);
-          const gb = regionGeometry(b, 2);
-          const overlap =
-            ga.x < gb.x + gb.w && gb.x < ga.x + ga.w && ga.y < gb.y + gb.h && gb.y < ga.y + ga.h;
-          expect(overlap, `ext ${ext}: ${a.key} and ${b.key} touch — no grout between them`).toBe(
-            false
-          );
-        }
-      }
-    }
-  });
-
-  it("the regions take the height before the margin does", () => {
-    /* ADR-070 U12's law: pooled air is a hole, split air is spacing. Here the
-       whole extension goes to the regions, because everything below a region's
-       fixed head is MATERIAL and texture absorbs room honestly. */
-    const rest = SUBSTRATE_LAYOUT_0;
-    const owners = substrateLayout(substrateExt(950 / 845));
-    expect(owners.boxH, "the owner's field did not reach the plate").toBeGreaterThan(rest.boxH);
-    expect(owners.marginY, "the height pooled as margin instead").toBeCloseTo(rest.marginY, 1);
+    /* No slot bleeds past the plate's inner wall. */
+    const last = slots[slots.length - 1];
+    expect(last.x + last.w, "the estate band bled past its own right wall").toBeLessThanOrEqual(
+      bandLeft + bandWidth
+    );
+    expect(slots[0].x, "the estate band bled past its own left wall").toBeGreaterThanOrEqual(
+      bandLeft
+    );
   });
 
   it("the rest crop stays WIDTH-bound at the narrowest field there is", () => {
-    /* ⚠ THE WHOLE ELASTIC MECHANISM RESTS ON THIS. `fitExt` grows height when
-       the field is taller than the crop, and this reading forbids width growth,
-       so a crop even fractionally taller in aspect than some field goes
-       height-bound there and can never reach that panel's edges.
-
-       The lab's own 932 × 762 (aspect 0.8176) is height-bound at 1440×800
-       (0.8071) by four thousandths, which cost 9px of dead panel — measured,
-       not theorised. The narrowest measured field is the ceiling. */
+    /* ⚠ THE WHOLE ELASTIC MECHANISM RESTS ON THIS. `fitExt` grows height
+       when the field is taller than the crop, and this reading forbids
+       width growth, so a crop even fractionally taller in aspect than
+       some field goes height-bound there and can never reach that
+       panel's edges.
+       The narrowest measured field is 1440×800, aspect 0.807. The rest
+       crop's aspect must sit at or under it. */
     const [, , cw, ch] = SUBSTRATE_LAYOUT_0.crop.split(" ").map(Number);
     const NARROWEST = 548 / 679;
     expect(ch / cw, "the rest crop is taller than the narrowest field").toBeLessThanOrEqual(
       NARROWEST
     );
+  });
+
+  it("the plate at rest holds the same content window as U24", () => {
+    /* ⚠ `BOX_H0` = 696 is unchanged — the outer plate is the same size
+       so the estate + strata block occupies exactly the same footprint
+       U24's five regions did. Rest strataH is boxH − ESTATE_BLOCK_H. */
+    expect(SUBSTRATE_LAYOUT_0.boxH, "the plate's own height moved").toBe(696);
+    expect(SUBSTRATE_LAYOUT_0.strataH, "the strata block's rest height moved").toBe(STRATA_H0);
+    expect(STRATA_H0, "STRATA_H0 diverged from the arithmetic").toBe(696 - ESTATE_BLOCK_H);
+  });
+
+  it("plate coordinates come out in crop space", () => {
+    /* ⚠ THE ROUND-NINE CAPTURE'S FIRST DEFECT was that plateAt returned
+       strata-block-relative Y and the drawing painted it as crop-Y — the
+       whole plate stack landed inside the estate band. `y0` is the strata
+       top in crop space; every returned Y must sit inside the strata
+       block. */
+    const r = record();
+    const layout = substrateLayout({ extW: 0, extH: 0 });
+    const strata = sectionStrata(r.shapes, layout.strataH);
+    const { colW, colGap } = sectionColumns();
+    const y0 = layout.strataTop;
+    for (const s of strata) {
+      for (let k = 0; k < s.n; k += 1) {
+        const p = plateAt(s, k, colW, colGap, y0);
+        expect(p.y, `${s.key} plate ${k} landed above the strata block`).toBeGreaterThanOrEqual(y0);
+        expect(p.y + p.h, `${s.key} plate ${k} landed under the strata block`).toBeLessThanOrEqual(
+          y0 + layout.strataH
+        );
+      }
+    }
+  });
+
+  it("the paragraph never wants a line past its cap", () => {
+    /* `wrapLines` SLICES at its cap, so a `meaning` that wanted three
+       lines would lose its tail from the drawing. `substrateLettering`
+       declares that tail with `.para.sliced` and a zero measure; this is
+       the assertion that ties them together. */
+    for (const shape of record().shapes) {
+      const lines = paraOf(shape.meaning);
+      const kept = lines.join(" ").length;
+      expect(kept, `${shape.key}'s paragraph "${shape.meaning}" wanted a third line`).toBe(
+        shape.meaning.length
+      );
+    }
+  });
+
+  it("laneX and shaftLaneX agree on the shape order", () => {
+    /* Both functions compute a lane x for a shape; the gallery band and
+       the shaft must agree on WHICH shape sits at which lane, or a
+       conductor from one lane in the gallery would drop into a different
+       lane in the shaft. */
+    const [w0, w1, w2, w3, w4] = SECTION_ORDER.map((k) => laneX(k, 26, SUB_CROP_W - 52));
+    const [s0, s1, s2, s3, s4] = SECTION_ORDER.map((k) => shaftLaneX(k));
+    /* Both orders are monotone left-to-right on their own axes, so their
+       shape indices align — asserted by comparing pairwise differences. */
+    expect(w0 < w1 && w1 < w2 && w2 < w3 && w3 < w4, "gallery lanes are not monotone").toBe(true);
+    expect(s0 < s1 && s1 < s2 && s2 < s3 && s3 < s4, "shaft lanes are not monotone").toBe(true);
   });
 });

@@ -23,6 +23,7 @@ import { useConfigFitReadout } from "../intelligence-config-lab/useFitReadout";
 import { BACKPLANE_VIEWBOX, VariantBackplane } from "./VariantBackplane";
 import { BUS_VIEWBOX, VariantBus } from "./VariantBus";
 import { CARDS_VIEWBOX, VariantCards } from "./VariantCards";
+import { CARRIER_VIEWBOX, carrierCrop, VariantCarrier } from "./VariantCarrier";
 import { CELLS_VIEWBOX, VariantCells } from "./VariantCells";
 import { CONSTELLATION_VIEWBOX, VariantConstellation } from "./VariantConstellation";
 import { CUTAWAY_VIEWBOX, VariantCutaway } from "./VariantCutaway";
@@ -36,6 +37,7 @@ import { GRADE_VIEWBOX, VariantGrade } from "./VariantGrade";
 import { HAND_VIEWBOX, VariantHand } from "./VariantHand";
 import { LEAVES_VIEWBOX, VariantLeaves } from "./VariantLeaves";
 import { LOOM_VIEWBOX, VariantLoom } from "./VariantLoom";
+import { MANIFOLD_VIEWBOX, VariantManifold } from "./VariantManifold";
 import { MOSAIC_VIEWBOX, VariantMosaic } from "./VariantMosaic";
 import { PILES_VIEWBOX, VariantPiles } from "./VariantPiles";
 import { PINBANK_VIEWBOX, VariantPinbank } from "./VariantPinbank";
@@ -44,6 +46,7 @@ import { REGISTRY_VIEWBOX, VariantRegistry } from "./VariantRegistry";
 import { ROOTS_VIEWBOX, VariantRoots } from "./VariantRoots";
 import { RUNS_VIEWBOX, VariantRuns } from "./VariantRuns";
 import { SEALS_VIEWBOX, VariantSeals } from "./VariantSeals";
+import { SKILL_FACET_VIEWBOX, VariantSkillFacet } from "./VariantSkillFacet";
 import { STACK_VIEWBOX, VariantStack } from "./VariantStack";
 import { STRATA_VIEWBOX, VariantStrata } from "./VariantStrata";
 import { TABLE_VIEWBOX, VariantTable } from "./VariantTable";
@@ -91,7 +94,17 @@ const STATIONS: readonly ConsoleStation[] = [
  */
 const DRAWINGS: Record<
   Exclude<IslVariantId, "shipped">,
-  { vb: string; Component: React.ComponentType<IslVariantProps> }
+  {
+    vb: string;
+    Component: React.ComponentType<IslVariantProps>;
+    /**
+     * An ELASTIC crop, given the field's aspect (`w / h`). Production's three
+     * readings are all elastic (ADR-070 U12/U14); a lab drawing that pins one
+     * static crop is judged in a box the site never serves, and letterboxes
+     * every preset whose aspect differs from the one it was authored at.
+     */
+    cropOf?: (fieldAspect: number) => string;
+  }
 > = {
   strata: { vb: STRATA_VIEWBOX, Component: VariantStrata },
   table: { vb: TABLE_VIEWBOX, Component: VariantTable },
@@ -125,6 +138,9 @@ const DRAWINGS: Record<
   flasks: { vb: FLASKS_VIEWBOX, Component: VariantFlasks },
   cells: { vb: CELLS_VIEWBOX, Component: VariantCells },
   vats: { vb: VATS_VIEWBOX, Component: VariantVats },
+  manifold: { vb: MANIFOLD_VIEWBOX, Component: VariantManifold },
+  "skill-facet": { vb: SKILL_FACET_VIEWBOX, Component: VariantSkillFacet },
+  carrier: { vb: CARRIER_VIEWBOX, Component: VariantCarrier, cropOf: carrierCrop },
 };
 
 interface Preset {
@@ -193,8 +209,8 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
     return shown.find((w) => w.id === workId) ?? shown[0];
   }, [shown, workId]);
   const record: IslRecord = useMemo(
-    () => ({ teams: cross.teams, shapes: cross.shapes, skills, selectedWork }),
-    [cross, skills, selectedWork]
+    () => ({ teams: cross.teams, shapes: cross.shapes, skills, selectedWork, works: shown }),
+    [cross, skills, selectedWork, shown]
   );
   const def = islVariant(variantId);
 
@@ -274,15 +290,25 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
     [report.canvas.w, report.canvas.h]
   );
 
+  const drawing = variantId === "shipped" ? null : DRAWINGS[variantId];
+  /* A drawing with its own elasticity answers the MEASURED field, exactly as
+     `liveLayout` does for the shipped reading. Falling back to `vb` before the
+     first measurement lands keeps the two-pass convergence below intact. */
+  const vb = drawing
+    ? drawing.cropOf && report.canvas.w > 0 && report.canvas.h > 0
+      ? drawing.cropOf(report.canvas.w / report.canvas.h)
+      : drawing.vb
+    : liveLayout.crop;
+
   /* Measure → layout → measure. It converges in two passes and cannot loop:
      `canvas` is the console field, which CSS sizes from the preset, so a
-     `viewBox` change can no more move it here than it can in production. */
+     `viewBox` change can no more move it here than it can in production.
+     ⚠ It is keyed on `vb`, not on `liveLayout.crop` — an elastic DRAWING has
+     the same feedback shape as the elastic reading, and keying only the latter
+     leaves the carrier measured against the crop it had before it resized. */
   useEffect(() => {
     remeasure();
-  }, [liveLayout.crop, remeasure]);
-
-  const drawing = variantId === "shipped" ? null : DRAWINGS[variantId];
-  const vb = drawing ? drawing.vb : liveLayout.crop;
+  }, [vb, remeasure]);
   const bad = report.clipped.length + report.collisions.length + report.smallControls.length;
 
   return (
@@ -394,10 +420,17 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
                     <ViewSubstrate
                       shapes={cross.shapes}
                       skills={skills}
+                      works={shown}
+                      selectedId={selectedWork?.id ?? null}
+                      showSel
+                      onOpen={(id) => setWorkId(id)}
+                      hover={null}
+                      onHover={() => {}}
                       lit={lit}
                       onLit={setLit}
                       still
                       layout={liveLayout}
+                      entry={{ kind: "raster" }}
                     />
                   )}
                 </svg>

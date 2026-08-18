@@ -408,3 +408,75 @@ characters where 21 fit.
   three-of-twenty click incident above can no longer happen the way it did. The
   hit rect and its guard both stay: the invariant is what matters, not the two
   ways it currently happens to hold.
+
+## Update 2 — the persistent object gets a THIRD home (2026-08-17, owner)
+
+⚠ **THE CLAIM'S SCOPE GREW.** U1 said the selected work is a persistent object
+that flies between reading 01's grid and reading 02's core seat. ADR-070 U25
+promotes `SECTION` to reading 03 (see there for the full drawing story), and
+SECTION puts twenty ghost cartridge FOOTPRINTS at the top of the substrate.
+The selected footprint takes the same lit-edge grammar the grid card does — so
+the persistent object has three homes, not two.
+
+### One kernel, no changes; one caller factored
+
+`pdaFlight` was never coupled to a specific pair of readings — it takes two
+crops and two rects and computes the pose. The old `entryFor` in `PdaConsole`
+hard-coded the pair as `(from === 1 && to === 2) || (from === 2 && to === 1)`
+and handled 03→01 as a bloom. The new `entryFor` factors that into a small
+pure helper:
+
+```
+const rectFor = (view, id) => match(view) {
+  1: { crop: layout1.crop, rect: gridRect(i, layout1) }
+  2: { crop: layout2.crop, rect: layout2.core }
+  3: { crop: layout3.crop, rect: estateFootprint(shown, id, PAD, PAD, W) }
+}
+```
+
+`entryFor` walks it for any (from, to) with `from !== to`; the flight
+computes; `bloom` remains the graceful fallback when a source rect is
+unavailable (a stream not on the board, or one of the two views being 03
+without an open selection). The 01↔02 case is byte-identical to U1 — the
+pair of `pdaFlight` calls collapses to one call through `rectFor` — so the
+existing `pda-flight` cases still pass unchanged.
+
+### The footprint is a SIMPLIFIED silhouette, at 40 × 30
+
+⚠ **THE FOOTPRINT IS NOT A `CARD` AT `k_foot`, and this is a trade rather
+than a mistake.** A full `Cartridge` at 40u wide would letter its title at
+~2.6px and its team code at ~2.5px, both well under the 4.6px floor
+`pda-viewbox` asserts on the elastic crops. So the footprint is silhouette
+ONLY (a cartridge outline with the same TR+BL diagonals and a proportional
+4u chamfer) and letters nothing.
+
+⚠ **THE ASPECT IS 40/30 = 1.333, THE CARTRIDGE'S IS 176/136 = 1.294** — a
+3 % divergence, which `pdaFlight`'s uniform `dk` cannot fully carry. In
+flight the object arrives 3 % skewed on one axis for a frame; measured, and
+below the frame-rate threshold at which a shape read as re-proportioned.
+`pda-flight` asserts the aspect delta stays under 5 %; a wider tolerance
+would let the two homes diverge into different silhouettes over time.
+
+### What the fit / measurement guards check now
+
+- `pda-flight`'s twelve new cases: 1↔3 and 2↔3 round trips at the binding
+  and the owner's tall viewport, plus the footprint-aspect parity
+  (<5 %), the null-fallback contracts (ghost id, no selection), and the
+  every-configured-stream-has-a-footprint sweep.
+- `pda-substrate-fit`'s section suite: the estate band's slots tile the
+  row and stay inside the plate; the same `estateSlots` arithmetic runs
+  in the flight (`estateFootprint`), so a slot moved by a cluster comma
+  cannot leave the flight landing on empty space.
+
+### Left open
+
+- **The person-led case.** Person-led footprints draw a DASHED outline and
+  still fly on click — they open reading 02 the way any other stream does.
+  If the owner later rules that person-led work should not open a
+  configuration reading (the record has nothing to configure), the fix is
+  a click gate on the footprint's `onOpen`, not on the flight kernel.
+- **The footprint scale as an ADR-069 rung.** `pda-card` walks the CARD
+  and SEAT parity rung-for-rung; the footprint is not part of that walk
+  because it is a silhouette, not a full card interior. The aspect parity
+  is asserted in `pda-flight`, which is the surface the divergence would
+  actually cost.

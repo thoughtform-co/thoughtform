@@ -58,6 +58,16 @@
   --pda-txt2: var(--con-txt2);
 
   --pda-amb: rgba(var(--gold-rgb), 0.78);
+  /* ⚠ THE HUB'S SOFT GOLD, AND IT IS A TOKEN BECAUSE AN ALPHA IS NOT A COLOUR
+     (ADR-070 U30). The carrier's core is a FILLED plate in soft Tensor gold,
+     and the same veil means opposite things across the flip: 202,165,84 over
+     near-black is a warm lift you can see at .13, while over parchment it is a
+     near-neutral warm cream that has to work about twice as hard before it
+     reads as gold at all. This is the ADR-058 lesson in its usual costume —
+     what inverts is the GROUND, so any alpha declared once is only ever tuned
+     for one side of it. */
+  --pda-hub: rgba(var(--gold-rgb), 0.13);
+  --pda-hub-grain: rgba(var(--gold-rgb), 0.06);
   /* ⚠ THE LIT GOLD IS ONE SIGNAL, whatever it paints — a gauge square, a
      hovered outline, a stream id, the rail's travelling segment. It takes
      the ramp's LIT step, which is byte-equal to v18's #f0c86a on the dark

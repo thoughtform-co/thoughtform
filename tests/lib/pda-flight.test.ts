@@ -5,6 +5,15 @@ import {
   configLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import {
+  substrateExt,
+  substrateLayout,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
+import {
+  ESTATE_CELL_H,
+  ESTATE_CELL_W,
+  estateFootprint,
+} from "@/components/landing/home-v2/services/casefile/map/pda/estateBand";
+import {
   gridRect,
   workExt,
   workLayout,
@@ -17,7 +26,11 @@ import {
   fitCrop,
   pdaFlight,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaFlight";
-import { PDA_SHOWN } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
+import {
+  PDA_SHOWN,
+  selectWorks,
+} from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
+import { getCase } from "@/lib/cases/registry";
 
 /**
  * THE FLIGHT'S ARITHMETIC.
@@ -75,11 +88,27 @@ const FIELDS = [
   { label: "square", box: { width: 500, height: 500 } },
 ];
 
-/** The two boards this field actually renders — one measurement, as production. */
+/** The three boards this field actually renders — one measurement, as
+ *  production. Reading 03 landed with SECTION's promotion (ADR-070 U25),
+ *  so the flight now has THREE homes for the selected work: reading 01's
+ *  grid card, reading 02's core seat card, and reading 03's estate
+ *  footprint. */
 const boards = (box: { width: number; height: number }) => {
   const aspect = box.height / box.width;
-  return { one: workLayout(workExt(aspect)), two: configLayout(configExt(aspect)) };
+  return {
+    one: workLayout(workExt(aspect)),
+    two: configLayout(configExt(aspect)),
+    three: substrateLayout(substrateExt(aspect)),
+  };
 };
+
+function shownWorks() {
+  const visual = getCase("loop-earplugs")?.casefile.tracks.find(
+    (t) => t.visual.kind === "intelligence-map"
+  )?.visual;
+  if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
+  return selectWorks(visual.districts, visual.works);
+}
 
 describe("the flight puts the object where it already was", () => {
   for (const { label, box } of FIELDS) {
@@ -121,6 +150,121 @@ describe("the flight puts the object where it already was", () => {
     const out = pdaFlight(box, one.crop, slot, two.crop, two.core)!;
     const back = pdaFlight(box, two.crop, two.core, one.crop, slot)!;
     expect(out.dk * back.dk, "the two scales are reciprocal").toBeCloseTo(1, 9);
+  });
+});
+
+describe("the flight has a THIRD home on reading 03", () => {
+  /**
+   * ⚠ **ADR-069 U2 (2026-08-17): the persistent object has three homes.**
+   * SECTION promotes an estate band at the top of reading 03; every
+   * configured stream on the record has a footprint there, so the flight
+   * can fly for every pair — 01 ↔ 02, 01 ↔ 03, 02 ↔ 03.
+   *
+   * The three tests below are the round trips of each pair on the
+   * OWNER'S OWN VIEWPORT — the shape that broke every previous flight
+   * assumption (270px of dead panel on U11's crop; 265px on U15's).
+   * If the third home ever lands on empty space, this catches it.
+   */
+  const works = shownWorks();
+  const configuredId = works.find((w) => w.configured)?.id ?? works[0].id;
+  const iForSlot = works.findIndex((w) => w.id === configuredId);
+  const BAND_LEFT = 26;
+  const BAND_WIDTH = 880;
+  const BAND_Y = 26;
+
+  const CASES = [
+    { label: "1280x720", box: { width: 611, height: 356 } },
+    { label: "the owner's (tall)", box: { width: 845, height: 950 } },
+  ];
+
+  for (const { label, box } of CASES) {
+    const { one, two, three } = boards(box);
+    const slot = gridRect(iForSlot, one);
+    const foot = estateFootprint(works, configuredId, BAND_Y, BAND_LEFT, BAND_WIDTH)!;
+
+    it(`1 to 3 puts the footprint on the cartridge it came from (${label})`, () => {
+      const v = pdaFlight(box, one.crop, slot, three.crop, foot);
+      expect(v, "1→3 produced no flight").not.toBeNull();
+      const was = centre(box, one.crop, slot);
+      const start = posed(box, three.crop, foot, v!);
+      /* ⚠ HORIZONTAL AND WIDTH are exact; the footprint's aspect is
+         within 3 % of the cartridge (40/30 = 1.333 vs 176/136 = 1.294),
+         so Y is within `foot.h × 0.03` of the source centre. Same
+         tolerance as the config↔grid flight because the seat and grid
+         cards ARE the same aspect, and this is close enough that the
+         mid-flight object never visibly distorts. */
+      expect(start.x, `1→3 x @ ${label}`).toBeCloseTo(was.x, 6);
+      expect(start.w, `1→3 width @ ${label}`).toBeCloseTo(was.w, 6);
+    });
+
+    it(`3 to 1 puts the cartridge on the footprint it grew from (${label})`, () => {
+      const v = pdaFlight(box, three.crop, foot, one.crop, slot);
+      expect(v, "3→1 produced no flight").not.toBeNull();
+      const was = centre(box, three.crop, foot);
+      const start = posed(box, one.crop, slot, v!);
+      expect(start.x, `3→1 x @ ${label}`).toBeCloseTo(was.x, 6);
+      expect(start.w, `3→1 width @ ${label}`).toBeCloseTo(was.w, 6);
+    });
+
+    it(`2 to 3 puts the footprint on the core it came from (${label})`, () => {
+      const v = pdaFlight(box, two.crop, two.core, three.crop, foot);
+      expect(v, "2→3 produced no flight").not.toBeNull();
+      const was = centre(box, two.crop, two.core);
+      const start = posed(box, three.crop, foot, v!);
+      expect(start.x, `2→3 x @ ${label}`).toBeCloseTo(was.x, 6);
+      expect(start.w, `2→3 width @ ${label}`).toBeCloseTo(was.w, 6);
+    });
+
+    it(`3 to 2 puts the core on the footprint it came from (${label})`, () => {
+      const v = pdaFlight(box, three.crop, foot, two.crop, two.core);
+      expect(v, "3→2 produced no flight").not.toBeNull();
+      const was = centre(box, three.crop, foot);
+      const start = posed(box, two.crop, two.core, v!);
+      expect(start.x, `3→2 x @ ${label}`).toBeCloseTo(was.x, 6);
+      expect(start.w, `3→2 width @ ${label}`).toBeCloseTo(was.w, 6);
+    });
+  }
+
+  it("the footprint aspect is CLOSE to the cartridge — within 5 %", () => {
+    /* ⚠ **THE THIRD RUNG'S ADR-069 PARITY** (2026-08-17). The card, the
+     *  core seat card and the footprint are three sizes of one object.
+     *  The two full cards are exactly similar (`CARD.cut × CORE_K` =
+     *  `SEAT.cut`); the footprint is a simplified silhouette, so the
+     *  parity here is weaker but real — a 5 % aspect delta is small
+     *  enough that the flight's uniform `dk` carries the object without
+     *  visible distortion. Any wider and the drawing at either home
+     *  starts reading as a different shape mid-flight, which is exactly
+     *  the defect ADR-069 U1 fixed on the 01 ↔ 02 pair.
+     */
+    const cartridge = 176 / 136;
+    const footprint = ESTATE_CELL_W / ESTATE_CELL_H;
+    const delta = Math.abs(cartridge - footprint) / cartridge;
+    expect(
+      delta,
+      `footprint aspect ${footprint.toFixed(3)} vs cartridge ${cartridge.toFixed(3)}`
+    ).toBeLessThan(0.05);
+  });
+
+  it("estateFootprint returns null when the stream is not on the board", () => {
+    expect(
+      estateFootprint(works, "W-ghost", BAND_Y, BAND_LEFT, BAND_WIDTH),
+      "estateFootprint made up a home for a non-existent stream"
+    ).toBeNull();
+  });
+
+  it("estateFootprint returns null when no stream is selected", () => {
+    expect(estateFootprint(works, null, BAND_Y, BAND_LEFT, BAND_WIDTH)).toBeNull();
+  });
+
+  it("every configured stream has a lookup-able footprint", () => {
+    /* ⚠ THE FLIGHT'S THIRD HOME MUST EXIST FOR EVERY STREAM THE READER
+       CAN OPEN. If a `PdaWork` is on the projected board but not in the
+       estate band, the flight would return null for 03 and fall back to
+       raster — silently, so the reader would not notice. */
+    for (const w of works) {
+      const foot = estateFootprint(works, w.id, BAND_Y, BAND_LEFT, BAND_WIDTH);
+      expect(foot, `${w.id} has no footprint on the estate band`).not.toBeNull();
+    }
   });
 });
 
