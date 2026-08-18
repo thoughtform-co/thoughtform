@@ -5,6 +5,12 @@ import {
   configLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import {
+  CARRIER_HUB_K,
+  CARRIER_SEAT_RECT,
+  carrierPlate,
+  carrierSeatClearance,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaCarrier";
+import {
   substrateExt,
   substrateLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
@@ -13,6 +19,8 @@ import {
   ESTATE_CELL_W,
   estateFootprint,
 } from "@/components/landing/home-v2/services/casefile/map/pda/estateBand";
+import { SUBSTRATE_SECTION } from "@/components/landing/home-v2/services/casefile/map/pda/flags";
+import { CART_TYPE } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
 import {
   gridRect,
   workExt,
@@ -88,18 +96,43 @@ const FIELDS = [
   { label: "square", box: { width: 500, height: 500 } },
 ];
 
-/** The three boards this field actually renders — one measurement, as
- *  production. Reading 03 landed with SECTION's promotion (ADR-070 U25),
- *  so the flight now has THREE homes for the selected work: reading 01's
- *  grid card, reading 02's core seat card, and reading 03's estate
- *  footprint. */
+/**
+ * The three boards this field actually renders — one measurement, as production.
+ * The flight has THREE homes for the selected work: reading 01's grid card,
+ * reading 02's core seat card, and reading 03's.
+ *
+ * ⚠ **READING 03's THIRD ENTRY FOLLOWS `SUBSTRATE_SECTION`, AND IT HAS TO.**
+ * The carrier ships (ADR-070 U33) and seats the work in its hub; SECTION, behind
+ * the flag, puts it on one of twenty estate footprints. The two are different
+ * rects in different crops with opposite elastic contracts, so a `three` pinned
+ * to either one would go VACUOUS the moment the flag moved — still green, no
+ * longer guarding the rect production flies into. That is the exact failure this
+ * file's own head records against the static `VIEW_BOX[1]`, one reading over.
+ */
 const boards = (box: { width: number; height: number }) => {
   const aspect = box.height / box.width;
   return {
     one: workLayout(workExt(aspect)),
     two: configLayout(configExt(aspect)),
-    three: substrateLayout(substrateExt(aspect)),
+    section: substrateLayout(substrateExt(aspect)),
+    carrier: carrierPlate(aspect),
+    three: SUBSTRATE_SECTION
+      ? { crop: substrateLayout(substrateExt(aspect)).crop }
+      : { crop: carrierPlate(aspect).crop },
   };
+};
+
+/**
+ * Reading 03's live home for `id`, exactly as `PdaConsole.rectFor` resolves it.
+ *
+ * ⚠ ONE HELPER, BOTH DRAWINGS — so the round trips below test whichever is
+ * mounted rather than whichever was mounted when they were written.
+ */
+const thirdHome = (works: readonly { id: string }[], id: string): FlightRect | null => {
+  if (!SUBSTRATE_SECTION) {
+    return works.some((w) => w.id === id) ? CARRIER_SEAT_RECT : null;
+  }
+  return estateFootprint(works as never, id, 26, 26, 880);
 };
 
 function shownWorks() {
@@ -155,15 +188,17 @@ describe("the flight puts the object where it already was", () => {
 
 describe("the flight has a THIRD home on reading 03", () => {
   /**
-   * ⚠ **ADR-069 U2 (2026-08-17): the persistent object has three homes.**
-   * SECTION promotes an estate band at the top of reading 03; every
-   * configured stream on the record has a footprint there, so the flight
-   * can fly for every pair — 01 ↔ 02, 01 ↔ 03, 02 ↔ 03.
+   * ⚠ **ADR-069 U2 (2026-08-17): the persistent object has three homes**, and
+   * ⚠ **U33 (2026-08-18) MOVED THE THIRD ONE.** The carrier has no cartridge
+   * anywhere on it, so promoting it needed a destination or `rectFor(3, id)`
+   * would have started returning `null` — which does not throw and does not
+   * fail a render, it just quietly downgrades every 1↔3 and 2↔3 transition to a
+   * bloom or a raster. The seat in the hub is that destination.
    *
-   * The three tests below are the round trips of each pair on the
-   * OWNER'S OWN VIEWPORT — the shape that broke every previous flight
-   * assumption (270px of dead panel on U11's crop; 265px on U15's).
-   * If the third home ever lands on empty space, this catches it.
+   * The round trips below run on the OWNER'S OWN VIEWPORT — the shape that broke
+   * every previous flight assumption (270px of dead panel on U11's crop; 265px
+   * on U15's) — through `thirdHome`, so they follow the flag rather than the
+   * drawing that happened to be live when they were written.
    */
   const works = shownWorks();
   const configuredId = works.find((w) => w.configured)?.id ?? works[0].id;
@@ -180,50 +215,99 @@ describe("the flight has a THIRD home on reading 03", () => {
   for (const { label, box } of CASES) {
     const { one, two, three } = boards(box);
     const slot = gridRect(iForSlot, one);
-    const foot = estateFootprint(works, configuredId, BAND_Y, BAND_LEFT, BAND_WIDTH)!;
+    const home = thirdHome(works, configuredId)!;
 
-    it(`1 to 3 puts the footprint on the cartridge it came from (${label})`, () => {
-      const v = pdaFlight(box, one.crop, slot, three.crop, foot);
+    it(`1 to 3 puts the third home on the cartridge it came from (${label})`, () => {
+      const v = pdaFlight(box, one.crop, slot, three.crop, home);
       expect(v, "1→3 produced no flight").not.toBeNull();
       const was = centre(box, one.crop, slot);
-      const start = posed(box, three.crop, foot, v!);
-      /* ⚠ HORIZONTAL AND WIDTH are exact; the footprint's aspect is
-         within 3 % of the cartridge (40/30 = 1.333 vs 176/136 = 1.294),
-         so Y is within `foot.h × 0.03` of the source centre. Same
-         tolerance as the config↔grid flight because the seat and grid
-         cards ARE the same aspect, and this is close enough that the
-         mid-flight object never visibly distorts. */
+      const start = posed(box, three.crop, home, v!);
+      /* ⚠ HORIZONTAL AND WIDTH are exact. On the carrier they are exact in Y
+         too — the seat is a uniform scale of the cartridge — while SECTION's
+         footprint carries a 3 % aspect delta, so only the two terms both
+         drawings can satisfy are asserted here. The aspect claim itself is its
+         own test below. */
       expect(start.x, `1→3 x @ ${label}`).toBeCloseTo(was.x, 6);
       expect(start.w, `1→3 width @ ${label}`).toBeCloseTo(was.w, 6);
     });
 
-    it(`3 to 1 puts the cartridge on the footprint it grew from (${label})`, () => {
-      const v = pdaFlight(box, three.crop, foot, one.crop, slot);
+    it(`3 to 1 puts the cartridge on the home it grew from (${label})`, () => {
+      const v = pdaFlight(box, three.crop, home, one.crop, slot);
       expect(v, "3→1 produced no flight").not.toBeNull();
-      const was = centre(box, three.crop, foot);
+      const was = centre(box, three.crop, home);
       const start = posed(box, one.crop, slot, v!);
       expect(start.x, `3→1 x @ ${label}`).toBeCloseTo(was.x, 6);
       expect(start.w, `3→1 width @ ${label}`).toBeCloseTo(was.w, 6);
     });
 
-    it(`2 to 3 puts the footprint on the core it came from (${label})`, () => {
-      const v = pdaFlight(box, two.crop, two.core, three.crop, foot);
+    it(`2 to 3 puts the third home on the core it came from (${label})`, () => {
+      const v = pdaFlight(box, two.crop, two.core, three.crop, home);
       expect(v, "2→3 produced no flight").not.toBeNull();
       const was = centre(box, two.crop, two.core);
-      const start = posed(box, three.crop, foot, v!);
+      const start = posed(box, three.crop, home, v!);
       expect(start.x, `2→3 x @ ${label}`).toBeCloseTo(was.x, 6);
       expect(start.w, `2→3 width @ ${label}`).toBeCloseTo(was.w, 6);
     });
 
-    it(`3 to 2 puts the core on the footprint it came from (${label})`, () => {
-      const v = pdaFlight(box, three.crop, foot, two.crop, two.core);
+    it(`3 to 2 puts the core on the home it came from (${label})`, () => {
+      const v = pdaFlight(box, three.crop, home, two.crop, two.core);
       expect(v, "3→2 produced no flight").not.toBeNull();
-      const was = centre(box, three.crop, foot);
+      const was = centre(box, three.crop, home);
       const start = posed(box, two.crop, two.core, v!);
       expect(start.x, `3→2 x @ ${label}`).toBeCloseTo(was.x, 6);
       expect(start.w, `3→2 width @ ${label}`).toBeCloseTo(was.w, 6);
     });
   }
+
+  it("the live third home exists for every stream the reader can open", () => {
+    /* ⚠ THE FLIGHT'S THIRD HOME MUST EXIST FOR EVERY STREAM THE READER CAN
+       OPEN. A `PdaWork` on the projected board with no home on reading 03
+       returns null and falls back to raster — silently. */
+    for (const w of works) {
+      expect(thirdHome(works, w.id), `${w.id} has no home on reading 03`).not.toBeNull();
+    }
+  });
+
+  it("the live third home refuses a stream that is not on the board", () => {
+    expect(
+      thirdHome(works, "W-ghost"),
+      "reading 03 made up a home for a non-existent stream"
+    ).toBeNull();
+  });
+
+  it("the seated card is EXACTLY similar to the cartridge, not merely close", () => {
+    /* ⚠ **THE CARRIER'S HOME CLEARS A BAR SECTION'S COULD NOT.** A footprint is
+       a simplified silhouette at 40 × 30, so its parity with the 176 × 136
+       cartridge is a 3 % tolerance. The seat is `176 × 136 × HUB_K` — a uniform
+       scale of the shared card — so its aspect is the cartridge's to the last
+       representable digit and the flight's `dk` carries it with no distortion
+       term at all. Asserting a tolerance here would be asserting less than the
+       construction guarantees. */
+    expect(CARRIER_SEAT_RECT.w / CARRIER_SEAT_RECT.h).toBeCloseTo(176 / 136, 12);
+    expect(CARRIER_SEAT_RECT.w / 176).toBeCloseTo(CARRIER_SEAT_RECT.h / 136, 12);
+  });
+
+  it("the seat's scale is the plate's own label rung over the card's title", () => {
+    /* The rule, stated: the work's name letters at the same rung as the 47
+       Skill names it landed among. `LABEL_FS` is 13 and the card's title is
+       11.5, so a card at this `k` titles at exactly 13 units. A `k` chosen by
+       eye is a `k` that drifts when either rung moves. */
+    expect(CARRIER_HUB_K).toBeCloseTo(13 / CART_TYPE.title, 12);
+    expect(CART_TYPE.title * CARRIER_HUB_K).toBeCloseTo(13, 12);
+  });
+
+  it("the seated card clears the hub's wall, and is not merely inside it", () => {
+    /* ⚠ **THE CEILING IS 1.3672**, where a 176 × 136 box centred on this hub
+       touches the dodecagon's ±30° walls. `HUB_K` sits at 1.1304, which leaves
+       26.1 units — and the resting brief it replaces sits with 31.85, so the
+       card is slightly the tighter of the two objects the hub holds. Both ends
+       are pinned: a clearance that went to zero would read as a card welded to
+       its own aperture, and one that grew past the brief's would mean the seat
+       had quietly shrunk below the rung above. */
+    const clear = carrierSeatClearance();
+    expect(clear, "the seated card touches the hub's wall").toBeGreaterThan(18);
+    expect(clear, "the seated card shrank away from its aperture").toBeLessThan(34);
+  });
 
   it("the footprint aspect is CLOSE to the cartridge — within 5 %", () => {
     /* ⚠ **THE THIRD RUNG'S ADR-069 PARITY** (2026-08-17). The card, the

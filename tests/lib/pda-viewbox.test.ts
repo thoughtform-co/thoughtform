@@ -15,10 +15,20 @@ import {
   workLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import {
+  CARRIER_CX,
+  CARRIER_CY,
+  CARRIER_R_OUT,
+  CARRIER_VIEWBOX,
+  carrierPlate,
+  polygonRayRadius,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaCarrier";
+import {
   SUBSTRATE_LAYOUT_0,
+  SUBSTRATE_VIEWBOX,
   substrateExt,
   substrateLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
+import { SUBSTRATE_SECTION } from "@/components/landing/home-v2/services/casefile/map/pda/flags";
 import {
   PDA_SHOWN,
   type PdaWork,
@@ -47,8 +57,22 @@ import { getCase } from "@/lib/cases/registry";
  */
 const FS_FLOOR = 12;
 
+/**
+ * ⚠ **READING 03'S RESTING CROP FOLLOWS `SUBSTRATE_SECTION`** (ADR-070 U33).
+ * `VIEW_BOX[3]` is still SECTION's, and SECTION is behind the flag — so reading
+ * it here would measure a drawing the landing page does not mount. The shared
+ * record is left alone deliberately: its only other consumer is the config lab,
+ * and a flag reaching into a production constant is harder to see than one
+ * resolved at the guard's own boundary.
+ */
+const REST: Record<1 | 2 | 3, string> = {
+  1: VIEW_BOX[1],
+  2: VIEW_BOX[2],
+  3: SUBSTRATE_SECTION ? SUBSTRATE_VIEWBOX : CARRIER_VIEWBOX,
+};
+
 function box(v: 1 | 2 | 3) {
-  const [x, y, w, h] = VIEW_BOX[v].split(" ").map(Number);
+  const [x, y, w, h] = REST[v].split(" ").map(Number);
   return { x, y, w, h, right: x + w, bottom: y + h };
 }
 
@@ -99,14 +123,25 @@ describe("the readings' crops", () => {
        crop than the crop can escape itself. What has to be asserted about it
        is that it fills BOTH ends, which is what the centring test does. */
     2: { x: 4, y: 20, right: 884, bottom: 660 },
-    /* 03 is ONE PLATE DIVIDED — five regions of material, 26 in from every
-       wall at rest. The five pattern cards' row went with it, the pin grid's
-       `26 / 26 / 906 / 656` before that, and the crossing drawing's
-       `10 / 93 / 766 / 702` before that again.
-       ⚠ THE BOTTOM IS DERIVED from the live layout, not typed: the plate is
-       height-elastic, so a literal would be true at exactly one field shape
-       and this test walks four. */
-    3: { x: 26, y: 26, right: 906, bottom: 26 + SUBSTRATE_LAYOUT_0.boxH },
+    /* 03 IS THE COMPOUND CARRIER (ADR-070 U33) — one dodecagonal plate, so its
+       content is the outer polygon's own bounding box and nothing else: there is
+       no head, no foot and no band above it. ⚠ **DERIVED FROM THE DRAWING'S OWN
+       RAY FUNCTION, PER AXIS.** At this rotation the dodecagon is flat on all
+       four sides, so both half-extents come out at `κ·R_OUT` — but asserting
+       that as one number would pass a rotation change that turned the plate
+       vertex-up and pushed its corners 3.5 % past the crop's pad.
+       The drawings this replaces, for the record: SECTION's five regions inset
+       26 from every wall (`26 / 26 / 906 / 26 + boxH`), the five pattern cards'
+       row before that, the pin grid's `26 / 26 / 906 / 656`, and the crossing
+       drawing's `10 / 93 / 766 / 702` before that again. */
+    3: SUBSTRATE_SECTION
+      ? { x: 26, y: 26, right: 906, bottom: 26 + SUBSTRATE_LAYOUT_0.boxH }
+      : {
+          x: CARRIER_CX - polygonRayRadius(0, CARRIER_R_OUT),
+          y: CARRIER_CY - polygonRayRadius(90, CARRIER_R_OUT),
+          right: CARRIER_CX + polygonRayRadius(180, CARRIER_R_OUT),
+          bottom: CARRIER_CY + polygonRayRadius(270, CARRIER_R_OUT),
+        },
   } as const;
 
   for (const v of [1, 2, 3] as const) {
@@ -364,9 +399,15 @@ describe("every reading fills the panel it is given", () => {
       rest: VIEW_BOX[2],
     },
     {
-      v: "03 the substrate",
-      at: (a: number) => substrateLayout(substrateExt(a)).crop,
-      rest: VIEW_BOX[3],
+      /* ⚠ THE LIVE DRAWING, VIA THE SAME CALL `PdaConsole` MAKES. `carrierPlate`
+         takes the console's `height / width` and inverts it at its own boundary,
+         so passing `a` straight through here is what production does — deriving
+         the crop from `carrierCrop` directly would test the arithmetic while
+         skipping the one place an inverted aspect could hide. */
+      v: SUBSTRATE_SECTION ? "03 the substrate" : "03 the carrier",
+      at: (a: number) =>
+        SUBSTRATE_SECTION ? substrateLayout(substrateExt(a)).crop : carrierPlate(a).crop,
+      rest: REST[3],
     },
   ] as const;
 

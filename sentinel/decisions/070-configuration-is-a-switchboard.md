@@ -3532,3 +3532,157 @@ unit guard, which walks the exact `cell.r0` / `cell.r1` the layout derived.
 - **Whether `LABEL_FS` 14 at `LABEL_PAD` 8 is worth its 0.1-unit margin.** It is
   feasible and it is fragile; recorded above rather than taken, so the trade is
   available on request instead of being rediscovered.
+
+## Update 33 — the Carrier SHIPS, and the hub is the flight's third home (2026-08-18, owner)
+
+The owner asked to wire the latest substrate drawing to the landing page. That is
+one import in principle, and the promotion turned up **four things the lab could
+not see, three of which were green in every guard.**
+
+The Carrier (U28 → U32) is reading 03 in production now. `PdaCarrier.tsx` holds
+the drawing; `SUBSTRATE_SECTION` in `pda/flags.ts` is `false` and mounts it, and
+`true` restores U25's SECTION drawing untouched.
+
+### ⚠ THE DRAWING HAD NOWHERE FOR THE FLYING OBJECT TO LAND, AND NOTHING WOULD HAVE THROWN
+
+ADR-069's claim is that the selected work is a PERSISTENT OBJECT that flies
+between the readings rather than being replaced. SECTION earned its third home in
+U25 by putting twenty ghost footprints across its top. **The Carrier has no
+cartridge anywhere on it.** Promoted as-drawn, `rectFor(3, id)` returns `null` —
+which does not throw, does not fail a render and does not fail a guard. Every
+1↔3 and 2↔3 transition silently degrades to a bloom or a raster, i.e. the ADR's
+central mechanic quietly stops existing on a third of its surface.
+
+**The hub is the third home.** It seats the shared `Cartridge` at `HUB_K`, so the
+object has three homes and is still ONE DRAWING at three sizes. Considered and
+rejected: an estate band above the plate, in SECTION's manner. It costs 62 units
+of crop height, and because this crop is height-bound at the binding preset that
+is `meet` 0.6337 → 0.586 — **every label on the plate back under 8px**, undoing
+U32 entirely to buy a footprint the hub can hold for nothing.
+
+⚠ **`HUB_K` IS DERIVED: `LABEL_FS / CART_TYPE.title` = 1.1304.** The rule stated
+once — the work's name letters at the rung the 47 Skill names around it letter
+at. A `k` chosen by eye is a `k` that drifts when either end moves, with nothing
+failing. It also lands the card at `198.96 × 153.74`, whose aspect is the
+cartridge's to the last representable digit, so the flight's single uniform `dk`
+carries it with no distortion term at all — where SECTION's footprint needed a
+3 % tolerance because it is a simplified silhouette rather than the card.
+
+The hub shows the plain-language brief at rest, the seated work once the reader
+has opened a stream (`hasOpened`, not merely `selected` — seating a default
+record claims the reader left it open), and a tapped Skill's name while one is
+pinned. The click is resumed the rest of the way by a **gold wash on the tapped
+band segments**, at the same `rgba(240, 200, 106, 0.14)` SECTION's selected
+footprint carried, so the two drawings mark a selection with one value.
+
+### ⚠ U32'S ELASTIC CROP WAS THE DEFECT IT FIXED, POINTING THE OTHER WAY
+
+U32 made the crop elastic in WIDTH and wrote down why the height could stay
+fixed: the plate's aspect is `1/κ` = 1.035 and every console field it is read in
+is wider than that. **True at the three lab presets and false on a tall desktop
+window**, where the field runs 0.89, the fit goes WIDTH-bound, and the height
+ratio is what goes unspent — **132px of dead panel at 845 × 950, the owner's own
+monitor.** Within 5px of the 265px that forced U15's generalisation on this same
+reading, and one drawing later.
+
+⚠ **THE LESSON IS NOT "MAKE CROPS ELASTIC", IT IS THAT A CROP MUST BE ELASTIC ON
+WHICHEVER AXIS IS SLACK.** Three passes have now shipped a crop that fills the
+panel at the viewport it was authored at and letterboxes at the other end, and
+each one was green, because `minPx` measures the drawing against its own crop.
+`carrierCrop` grows one axis or the other around the hinge `W_MIN / CROP_H` =
+1.033, both terms floored so each keeps the bound axis it had. The plate does not
+move — `CX`/`CY` are constants and the CROP's offsets slide around them, which is
+what keeps all 47 cells, both label rings and `CARRIER_SEAT_RECT` written against
+constants.
+
+Measured live, all three fields: **0px dead on both axes**, `meet` 0.6339 /
+0.9767 / 0.7495, `minPx` 7.17 / 11.04 / 8.47. The 7.17 is the SEATED CARD's lane
+rung (`CART_TYPE.lane × HUB_K` = 11.30 units), not a carrier label — the plate's
+own 52 strings still paint 8.24px, and the grid card letters that same rung at
+6.22px, so the third home is the least cramped place this card has ever been.
+
+### ⚠ THE CARD'S INTERIOR WAS HARMONISED IN ADR-069 U1. ITS OUTLINE WAS NOT
+
+`176 × 136` was declared independently in `PdaViews`, in `PdaConfiguration`, and
+— as of this pass — in `PdaCarrier`. Three copies of one object's silhouette is
+not a wrong value, it is a value that can become wrong in one place while every
+per-home guard stays green, which is ADR-069 U1's finding exactly. `CARD_BOX` in
+`pdaGlyphs` is the source now, beside the `CARD` interior table it measures
+against, and `pda-card` walks all three homes' rects back to it through their own
+scales.
+
+### ⚠ THE LAB IS A WINDOW ONTO PRODUCTION NOW, NOT A COPY OF IT
+
+`VariantCarrier.tsx` re-exports `PdaCarrier` wholesale and adapts the lab's
+`IslRecord` onto its props. So `substrate-lab-fit`'s 263 assertions — the arc
+metrics, the derived ladder, the ink centring, the equal-area proof — walk the
+SHIPPED module by the same names they always did, and there is no second drawing
+to diverge. The dependency runs lab → production and may not reverse:
+`app/(internal)` is proxy-blocked in production.
+
+### ⚠ THE SMOKE'S OVERLAP GUARD CANNOT BE ASKED ABOUT ARC-SET TYPE
+
+The first live capture reported **22 colliding label pairs with nothing touching
+on screen.** `readPda` compares `getBBox()` rectangles, which is a valid proxy for
+ink only while the type is HORIZONTAL; a diagonal run's axis-aligned box is
+mostly empty, so two labels in neighbouring cells separated by their own 12-unit
+pad intersect as boxes.
+
+⚠ **THE QUESTION WAS RIGHT AND THE INSTRUMENT WAS WRONG, SO THE INSTRUMENT
+CHANGED.** Suppressing the reading, or loosening the tolerance until it went
+quiet, would have left reading 03's 52 labels unguarded for collisions on the one
+surface that can see a CSS change. `readPda` splits by how a label is SET: flat
+labels keep the box test, and `textPath` labels are walked by per-glyph origins
+from `getStartPositionOfChar`, against 3.9 units — half a glyph advance, where the
+drawing's own clearances are an order above. ⚠ The pair is the guard: the flat
+test going quiet on a reading is only safe because this one speaks there, so the
+arc-label COUNT is pinned too (>40 on view 3) — a `textPath` that stopped
+resolving would empty the list rather than fail it.
+
+### Re-pointed guards
+
+Three suites were green on code the landing page no longer runs, which is the
+failure mode this ADR has recorded twice already (`pda-flight`'s static
+`VIEW_BOX[1]`; U12's crop measured against itself):
+
+- **`pda-flight`** — `boards()` and a new `thirdHome()` follow `SUBSTRATE_SECTION`
+  rather than either drawing, so the round trips test whichever is mounted. Five
+  new cases: exact cartridge similarity (12 digits, not a 5 % tolerance),
+  `HUB_K`'s derivation, and the seat's clearance in the hub pinned at BOTH ends
+  (26.1 units against a 1.3672 ceiling where the card touches the wall).
+- **`pda-viewbox`** — reading 03's resting crop and `CONTENT[3]` follow the flag.
+  The content extent is derived per axis from `polygonRayRadius`, not from one
+  number: at this rotation both half-extents are `κ·R_OUT`, and asserting that as
+  a single value would pass a rotation change that turned the plate vertex-up.
+- **`substrate-lab-fit`** — U32's `expect(h).toBe(CROP_H)` "always" is now
+  conditional on the field being wider than the plate, and a new case walks the
+  tall regime: the growing axis, the plate staying centred, zero dead panel, and
+  `meet` no worse than at rest.
+- **`pda-card`** — five new assertions for the third size (above).
+
+### Verification
+
+- Typecheck clean; lint clean (the two `PdaConsole` ref warnings pre-date this
+  pass); **967 unit tests pass**.
+- `desktop: the harmonised casefile fits its reference viewports` **passes with
+  the Carrier live** at 1280×720, 1920×1080 and 2560×1330 — 0 clipped, 0 flat
+  collisions, 0 arc collisions, 0 overflow, `minPx` ≥ 4.3.
+- `light: the map console's palette carries its contrast` passes.
+- The flight verified live per card on a true 1 → 3: `dx` −341.85 / +341.85 /
+  +113.95 / +341.85 for grid cards 0 / 3 / 6 / 11, mirror-symmetric about the
+  grid's centre column, `dy` scaling by row, and `dk` constant at 0.8690 for all
+  four — one card size, one seat size. 3 → 1 flies back. At rest with nothing
+  opened the hub letters the brief and mounts no dock.
+- Both themes captured at the binding preset and read
+  (`docs/design/intelligence-substrate-lab/live03_carrier_{dark,light}.png`), plus
+  the tall field where the second crop regime is active
+  (`live03_carrier_tall_dark.png`).
+
+### Left open
+
+- **U32's density question stands unchanged** — 8.24px at 1280×720 is still the
+  ceiling this form supports with all 47 Skills lettered, and the only remaining
+  currency is fewer lettered cells or shorter `short` strings.
+- **`SUBSTRATE_SECTION` is a comparison lever, not a permanent seam.** When the
+  owner has read both on the live site, the losing drawing and its guards should
+  go; leaving a flag in place is how a surface ends up maintaining two.

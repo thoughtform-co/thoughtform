@@ -1001,7 +1001,15 @@ describe("compound carrier divides one plate into equal cells", () => {
       const [x, , w, h] = carrierCrop(f.w / f.h)
         .split(/\s+/)
         .map(Number);
-      expect(h, `${f.id}: the crop's height is the plate's own need, always`).toBe(CARRIER_CROP_H);
+      /* ⚠ **"ALWAYS" HELD ONLY WHILE THE FIELD WAS ALWAYS WIDER** (U33). These
+         three presets are 1.22 / 1.24 / 1.12 against the plate's 1.033, so the
+         width is what grows and the height stays the plate's own need — but a
+         TALL desktop window runs 0.89, where the crop grows its HEIGHT instead
+         and this equality is false on purpose. The tall regime is walked in
+         `the carrier's crop grows on whichever axis the field leaves slack`. */
+      expect(h, `${f.id}: the crop's height moved on a field wider than the plate`).toBe(
+        CARRIER_CROP_H
+      );
       const meet = Math.min(f.w / w, f.h / h);
       expect(meet, `${f.id}: the fit went WIDTH-bound — the height is going unspent`).toBeCloseTo(
         f.h / h,
@@ -1022,10 +1030,72 @@ describe("compound carrier divides one plate into equal cells", () => {
     }
     /* The rest crop is the narrowest a field can ask for, so it may not be
        narrower than the plate. */
-    const [rx, , rw] = CARRIER_VIEWBOX.split(/\s+/).map(Number);
+    const [rx, ry, rw, rh] = CARRIER_VIEWBOX.split(/\s+/).map(Number);
     expect(rw).toBe(CARRIER_CROP_W_MIN);
     expect(rx).toBeLessThanOrEqual(466 - CARRIER_R_OUT);
     expect(rx + rw).toBeGreaterThanOrEqual(466 + CARRIER_R_OUT);
+    /* ⚠ THE REST CROP IS ALSO THE HINGE, and it has to sit exactly ON it: the
+       resting height is the plate's floor and the resting width is the plate's
+       floor, so neither regime has grown yet. `y` is 0 here — the crop's offsets
+       only move once an axis does. */
+    expect(rh, "the rest crop grew a height nothing asked for").toBe(CARRIER_CROP_H);
+    expect(ry, "the rest crop slid off the plate's own origin").toBe(0);
+  });
+
+  it("the carrier's crop grows on whichever axis the field leaves slack", () => {
+    /* ⚠ **THE GUARD FOR THE SECOND REGIME, AND ITS ABSENCE COST 132px** of dead
+       panel at the owner's own 845 × 950 — the shape that has now forced this
+       same correction on all three readings (270px on ADR-070 U11's reading 02,
+       265px on U15's reading 03, and this).
+
+       The plate is a fixed-aspect polygon, so filling a panel is entirely the
+       crop's job, and U12's law is that growing a crop on its SLACK axis is
+       free. The claim here is both halves of that at once: the panel ends up
+       full on both axes, AND `meet` is no worse than it was at rest — because
+       the moment a crop grows on the axis it was BOUND by, the drawing has just
+       been shrunk to fill a box. */
+    const restMeet = (f: { w: number; h: number }) => {
+      const [, , w, h] = CARRIER_VIEWBOX.split(/\s+/).map(Number);
+      return Math.min(f.w / w, f.h / h);
+    };
+
+    for (const f of [
+      { id: "p1280 (wide)", w: 602, h: 493, grows: "width" },
+      { id: "p1920 (wide)", w: 850, h: 760, grows: "width" },
+      { id: "the owner's (tall)", w: 845, h: 950, grows: "height" },
+      { id: "2560x1440 (tall)", w: 850, h: 1120, grows: "height" },
+      { id: "1280x1440 (tall)", w: 603, h: 1177, grows: "height" },
+    ]) {
+      const [x, y, w, h] = carrierCrop(f.w / f.h)
+        .split(/\s+/)
+        .map(Number);
+
+      if (f.grows === "height") {
+        expect(
+          h,
+          `${f.id}: the height stayed put on a field taller than the plate`
+        ).toBeGreaterThan(CARRIER_CROP_H);
+        expect(w, `${f.id}: the width grew on a field that had none to spare`).toBe(
+          CARRIER_CROP_W_MIN
+        );
+      }
+
+      /* ⚠ THE PLATE DOES NOT MOVE — it is the CROP that slides around it, which
+         is what keeps every cell, both label rings and the seated card written
+         against constants. Both offsets are the growth, halved. */
+      expect(x + w / 2, `${f.id}: the plate slid horizontally`).toBeCloseTo(466, 6);
+      expect(y + h / 2, `${f.id}: the plate slid vertically`).toBeCloseTo(CARRIER_CROP_H / 2, 6);
+
+      const meet = Math.min(f.w / w, f.h / h);
+      expect(
+        Math.max(f.w - w * meet, f.h - h * meet),
+        `${f.id}: dead panel the crop could have filled`
+      ).toBeLessThan(2);
+      expect(meet / restMeet(f), `${f.id}: filling the panel shrank the drawing`).toBeGreaterThan(
+        0.999
+      );
+      expect(CARRIER_LABEL_FS * meet, `${f.id}: a cell label lands under 8px`).toBeGreaterThan(8);
+    }
   });
 
   it("letters one plain-language brief in the hub and no figure anywhere", () => {

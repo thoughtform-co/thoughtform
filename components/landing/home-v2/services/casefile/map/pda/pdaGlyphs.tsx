@@ -67,6 +67,20 @@ const CART: Record<GlyphState, [string, string, string]> = {
 export const CORE_K = 1.7;
 
 /**
+ * THE CARTRIDGE'S SILHOUETTE — the box every rung below is measured against.
+ *
+ * ⚠ **ONE SOURCE, BECAUSE THE OBJECT NOW HAS THREE HOMES** (ADR-070 U33).
+ * Reading 01's grid, reading 02's seat and the carrier's hub each mount this
+ * card at their own `k`, and until this constant existed all three DECLARED THE
+ * BOX THEMSELVES — `PdaViews`' `CARD_W`/`CARD_H`, `PdaConfiguration`'s `176 *
+ * CORE_K`, and the carrier's own pair. Three copies of a silhouette is the exact
+ * shape of the defect ADR-069 U1 recorded one level in: not a value that is
+ * wrong, a value that can become wrong in one place while every per-home guard
+ * stays green. The interior was harmonised in that pass; the OUTLINE was not.
+ */
+export const CARD_BOX = { w: 176, h: 136 } as const;
+
+/**
  * THE CARD'S INTERIOR, AT THE CARTRIDGE'S OWN 176 × 136 BASE.
  *
  * ⚠ **EVERY VALUE HERE IS `SeatCard`'s OWN, DIVIDED BY `CORE_K`.** That is what

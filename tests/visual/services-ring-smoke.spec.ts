@@ -122,19 +122,69 @@ function readPda() {
     text: (t.textContent ?? "").slice(0, 40),
     b: t.getBBox(),
     px: Number.parseFloat(getComputedStyle(t).fontSize) * meet,
+    // ⚠ AN AXIS-ALIGNED BOX IS ONLY A PROXY FOR INK WHILE THE TYPE IS
+    // HORIZONTAL, and reading 03 sets 52 labels along ARCS (ADR-070 U32).
+    // A diagonal run's bbox is mostly empty: two labels in neighbouring
+    // cells, cleanly separated by their own 12-unit pad, report a large
+    // box intersection. The first live capture of the carrier reported 22
+    // such pairs with nothing touching on screen. So the pairwise test
+    // splits by how the label is SET, and the arc family is measured with
+    // an instrument that suits it — see `arcs` below.
+    onPath: t.querySelector("textPath") != null,
+    // Per-glyph origins in user space. `getStartPositionOfChar` follows the
+    // textPath, so this is where the ink actually lands.
+    pts: (() => {
+      if (t.querySelector("textPath") == null) return [];
+      const n = (t.textContent ?? "").length;
+      const out: { x: number; y: number }[] = [];
+      for (let c = 0; c < n; c++) {
+        try {
+          const p = (t as SVGTextContentElement).getStartPositionOfChar(c);
+          out.push({ x: p.x, y: p.y });
+        } catch {
+          /* A character the engine will not position is a character it did
+             not paint, so it cannot collide with anything. */
+        }
+      }
+      return out;
+    })(),
   }));
 
-  // Every PAIR of glyph boxes. 0.5 units of tolerance so boxes that merely
-  // touch — adjacent columns of a rail, a label sitting on a divider — are
-  // not reported; a real collision is glyphs printing through glyphs.
+  // Every PAIR of HORIZONTAL glyph boxes. 0.5 units of tolerance so boxes that
+  // merely touch — adjacent columns of a rail, a label sitting on a divider —
+  // are not reported; a real collision is glyphs printing through glyphs.
+  const flat = items.filter((i) => !i.onPath);
   const overlaps: string[] = [];
-  for (let i = 0; i < items.length; i++) {
-    for (let j = i + 1; j < items.length; j++) {
-      const a = items[i].b;
-      const b = items[j].b;
+  for (let i = 0; i < flat.length; i++) {
+    for (let j = i + 1; j < flat.length; j++) {
+      const a = flat[i].b;
+      const b = flat[j].b;
       const ox = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
       const oy = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
-      if (ox > 0.5 && oy > 0.5) overlaps.push(`"${items[i].text}" x "${items[j].text}"`);
+      if (ox > 0.5 && oy > 0.5) overlaps.push(`"${flat[i].text}" x "${flat[j].text}"`);
+    }
+  }
+
+  // ── THE SAME QUESTION FOR ARC-SET TYPE ────────────────────────────────
+  // Nearest glyph origin between two labels, against half a glyph advance
+  // (13 × 0.6 ≈ 7.8 units at the cell rung). Under that the two runs are
+  // printing through one another; the drawing's own clearances are an order
+  // above it — 12 units of pad per cell end, 26 of course depth — so this
+  // reports collisions and not tight fits.
+  const arcs: string[] = [];
+  const onPath = items.filter((i) => i.onPath && i.pts.length > 0);
+  for (let i = 0; i < onPath.length; i++) {
+    for (let j = i + 1; j < onPath.length; j++) {
+      let near = Infinity;
+      for (const p of onPath[i].pts) {
+        for (const q of onPath[j].pts) {
+          const d = (p.x - q.x) ** 2 + (p.y - q.y) ** 2;
+          if (d < near) near = d;
+        }
+      }
+      if (Math.sqrt(near) < 3.9) {
+        arcs.push(`"${onPath[i].text}" x "${onPath[j].text}" @ ${Math.sqrt(near).toFixed(2)}u`);
+      }
     }
   }
 
@@ -142,6 +192,8 @@ function readPda() {
     texts: items.length,
     minPx: Number((items.length ? Math.min(...items.map((i) => i.px)) : 0).toFixed(2)),
     overlaps,
+    arcs,
+    arcTexts: onPath.length,
     // 0.6 units of tolerance for sub-pixel bbox rounding; a real clip is a
     // whole glyph or more.
     clipped: items
@@ -674,6 +726,24 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         expect(drawn!.overlaps, `${where}: labels overlap: ${drawn!.overlaps.join(" | ")}`).toEqual(
           []
         );
+
+        // ── AND THE SAME QUESTION OF THE ARC-SET LABELS (ADR-070 U33) ──
+        // Reading 03 sets 52 labels along arcs, where an axis-aligned box
+        // is mostly empty space and the test above cannot be asked — it
+        // reported 22 pairs on the carrier's first live capture with
+        // nothing touching on screen. This walks per-glyph origins along
+        // the path instead, which is the same question with an instrument
+        // that suits curved type. ⚠ THE PAIR IS THE GUARD: the flat test
+        // going quiet on a reading is only safe because this one speaks
+        // there, so the count below is asserted too — a `textPath` that
+        // stopped resolving would empty this list rather than fail it.
+        expect(drawn!.arcs, `${where}: arc labels collide: ${drawn!.arcs.join(" | ")}`).toEqual([]);
+        if (view === "3") {
+          expect(
+            drawn!.arcTexts,
+            `${where}: the carrier's arc labels are not being measured`
+          ).toBeGreaterThan(40);
+        }
 
         // ── AND THE TYPE IS ACTUALLY BIGGER ────────────────────────
         // A floor under what the reader sees, not under the authored

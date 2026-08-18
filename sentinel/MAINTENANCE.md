@@ -54,7 +54,46 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-08-17 (latest) — Skill facet candidate: a straight pie made of 47 Skills (ADR-070 U26, proposed)
+### 2026-08-18 (latest) — The Carrier ships, and the hub is the flight's third home (ADR-070 U33)
+
+Owner asked to wire the latest substrate drawing to the landing page. That is
+one import in principle; the promotion turned up four things the lab could not
+see, three of which were green in every guard. Cycle A rows 1, 3, 4, 5 and 6.
+
+- **The drawing had nowhere for the flying object to land, and nothing would
+  have thrown.** The Carrier has no cartridge on it, so `rectFor(3, id)` returns
+  `null` — no throw, no failed render, no failed guard, and ADR-069's persistent
+  object silently stops existing on a third of the surface. The HUB is the third
+  home now, seating the shared `Cartridge` at a DERIVED `HUB_K`
+  (`LABEL_FS / CART_TYPE.title` = 1.1304), whose box carries the cartridge's
+  aspect exactly, so the flight's uniform `dk` needs no distortion term.
+- **A crop must be elastic on whichever axis is SLACK.** U32's height-fixed crop
+  was true at the three lab presets and false on a tall desktop window — 132px
+  of dead panel at 845 × 950, within 5px of the 265px that forced the same
+  generalisation on this same reading in U15. Third time shipped, third time
+  green, because `minPx` measures a drawing against its own crop.
+- **`CARD_BOX` is the card silhouette's one source** — `176 × 136` had been
+  declared in three files, which is ADR-069 U1's finding one level out.
+- **The smoke's overlap guard cannot be asked about arc-set type.** 22 reported
+  collisions with nothing touching: `getBBox` is an ink proxy only for
+  HORIZONTAL type. `readPda` splits flat labels (box test) from `textPath`
+  labels (per-glyph origins), and pins the arc-label count, since a `textPath`
+  that stopped resolving would empty the list rather than fail it.
+- **The lab is a window onto production, not a copy** — `VariantCarrier`
+  re-exports `PdaCarrier`, so `substrate-lab-fit` walks the shipped module.
+  Lab → production only; `app/(internal)` is proxy-blocked in production.
+- `SUBSTRATE_SECTION` (`pda/flags.ts`) restores U25's SECTION drawing untouched
+  and gates every reading-03 branch in `PdaConsole`, including `rectFor`. It is
+  a comparison lever, not a permanent seam — when the owner has read both live,
+  the losing drawing and its guards should go.
+
+Verified: 967 unit tests across 49 files; typecheck and lint clean. Measured
+live on all three fields: 0px dead panel on both axes, `meet` 0.6339 / 0.9767 /
+0.7495, `minPx` 7.17 / 11.04 / 8.47. Casefile fit smoke passes with the Carrier
+live at 1280×720, 1920×1080 and 2560×1330; light-palette smoke passes. Flight
+verified per card on a true 1 → 3 with `dk` constant at 0.8690.
+
+### 2026-08-17 — Skill facet candidate: a straight pie made of 47 Skills (ADR-070 U26, proposed)
 
 Owner rejected SECTION as the final visual direction and corrected the lab's
 `21 · Wheel`: keep a pie chart's part-to-whole read, reject the circle, and

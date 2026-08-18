@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CARRIER_HUB_K,
+  CARRIER_LABEL_FS,
+  CARRIER_SEAT_RECT,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaCarrier";
+import {
   SEAT,
+  configExt,
+  configLayout,
   configurationLettering,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import {
+  gridRect,
+  workExt,
+  workLayout,
+} from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+import {
   CARD,
+  CARD_BOX,
   CART_TYPE,
   CORE_K,
   LANES,
@@ -25,7 +38,8 @@ import { getCase } from "@/lib/cases/registry";
 import type { CaseMapDistrict, CaseMapWork } from "@/lib/cases/types";
 
 /**
- * THE CARD IS ONE DRAWING AT TWO SIZES (ADR-069, harmonised 2026-08-13).
+ * THE CARD IS ONE DRAWING AT THREE SIZES (ADR-069, harmonised 2026-08-13;
+ * ⚠ **THE THIRD SIZE LANDED WITH THE CARRIER, ADR-070 U33, 2026-08-18**).
  *
  * ADR-069's whole claim is that the selected work is a PERSISTENT OBJECT that
  * FLIES between reading 01's grid and reading 02's board rather than being
@@ -58,7 +72,13 @@ const RUNGS = [
 ] as const;
 
 /** The cartridge's own base box — reading 01's grid draws it at exactly this. */
-const W = 176;
+const W = CARD_BOX.w;
+
+/* The three homes as production computes them, at the resting field. The rects
+   move with the elastic layouts, so they are DERIVED here rather than typed —
+   a literal would be true at exactly one field shape. */
+const GRID_RECT = gridRect(0, workLayout(workExt(0)));
+const CONFIG_LAYOUT_0 = configLayout(configExt(0));
 
 function allWorks(): PdaWork[] {
   const visual = getCase("loop-earplugs")?.casefile.tracks.find(
@@ -106,6 +126,82 @@ describe("the grid card and the seat card are one drawing", () => {
       (key) => !RUNGS.includes(key as (typeof RUNGS)[number]) && key !== "titleBase"
     );
     expect(unpaired, "these seat measures have no counterpart on the grid card").toEqual([]);
+  });
+});
+
+/**
+ * THE THIRD HOME (ADR-070 U33) — the carrier's hub.
+ *
+ * ⚠ **IT IS A DIFFERENT KIND OF THIRD SIZE FROM THE SECOND, AND THAT IS WHY IT
+ * NEEDS ITS OWN CLAIMS RATHER THAN ANOTHER `RUNGS` COLUMN.** The seat is a
+ * SEPARATE AUTHORED TABLE (`SEAT`), so what has to be guarded there is that two
+ * sets of numbers agree — which is what the block above does. The hub mounts the
+ * SHARED `Cartridge` at a `k`, so no interior table exists to drift and rung
+ * parity is true by construction. What CAN go wrong is different: the scale
+ * itself could be chosen by eye, the silhouette could be re-declared, or the
+ * wrap capacity could move with the box the way it did at `k` 2 before the
+ * harmonisation.
+ */
+describe("the hub card is that same drawing at a third size", () => {
+  it("the scale is DERIVED — the plate's label rung over the card's title", () => {
+    /* The rule stated once: the work's name letters at the rung the 47 Skill
+       names around it letter at. A `k` picked to look right is a `k` that drifts
+       the moment either end moves, and nothing would fail. */
+    expect(CARRIER_HUB_K).toBeCloseTo(CARRIER_LABEL_FS / CART_TYPE.title, 12);
+    expect(CART_TYPE.title * CARRIER_HUB_K, "the hub title left the label rung").toBeCloseTo(
+      CARRIER_LABEL_FS,
+      12
+    );
+  });
+
+  it("all three homes take their silhouette from ONE constant", () => {
+    /* ⚠ THE OUTLINE WAS THE PART THE HARMONISATION MISSED. The 2026-08-13 pass
+       made the INTERIORS one drawing and left the box declared in each reading's
+       own file; U33 added a third copy, at which point three files each held a
+       number that could move alone. `CARD_BOX` is the source now, and this walks
+       the three homes' widths back to it through their own scales. */
+    expect(GRID_RECT.w).toBeCloseTo(CARD_BOX.w, 9);
+    expect(GRID_RECT.h).toBeCloseTo(CARD_BOX.h, 9);
+    expect(CONFIG_LAYOUT_0.core.w).toBeCloseTo(CARD_BOX.w * CORE_K, 9);
+    expect(CONFIG_LAYOUT_0.core.h).toBeCloseTo(CARD_BOX.h * CORE_K, 9);
+    expect(CARRIER_SEAT_RECT.w).toBeCloseTo(CARD_BOX.w * CARRIER_HUB_K, 9);
+    expect(CARRIER_SEAT_RECT.h).toBeCloseTo(CARD_BOX.h * CARRIER_HUB_K, 9);
+  });
+
+  it("all three homes are EXACTLY similar, so one uniform dk carries the object", () => {
+    /* `pdaFlight` scales by a single `dk`. Three rects that are merely close
+       would distort the card in mid-air — which is ADR-069 U1's finding in its
+       geometric form, and the estate footprint's 3 % delta is the one place this
+       surface accepts an approximation (it is a simplified silhouette, not the
+       card). These three are the CARD. */
+    const base = CARD_BOX.w / CARD_BOX.h;
+    for (const [where, r] of [
+      ["the grid", GRID_RECT],
+      ["the seat", CONFIG_LAYOUT_0.core],
+      ["the hub", CARRIER_SEAT_RECT],
+    ] as const) {
+      expect(r.w / r.h, `${where} card is not the cartridge's proportion`).toBeCloseTo(base, 12);
+    }
+  });
+
+  it("the wrap capacity does not move at the third scale either", () => {
+    /* The `k`-missing bug, re-asked at the size it would next appear. Capacity
+       is a RATIO of two lengths; a uniform scale may not change it. */
+    expect(cartTitleChars(W * CARRIER_HUB_K, CARRIER_HUB_K)).toBe(cartTitleChars(W));
+  });
+
+  it("every live title still letters on one line in the hub", () => {
+    /* Implied by the capacity identity above and asserted anyway, because the
+       hub seats ANY of the twenty-seven — the reader chooses — while reading 01
+       only ever grids twenty. The seven the grid leaves out are exactly where an
+       over-long title would hide. */
+    for (const w of allWorks()) {
+      const t = w.title.toUpperCase();
+      expect(
+        wrapLines(t, cartTitleChars(W * CARRIER_HUB_K, CARRIER_HUB_K)),
+        `"${t}" wrapped in the hub`
+      ).toHaveLength(1);
+    }
   });
 });
 

@@ -236,6 +236,55 @@ export function FormField({ form, ...o }: FieldOpts & { form: FormKey }) {
   return <>{PAINT[form](o)}</>;
 }
 
+/**
+ * A form's field PLACED — translated to `x, y`, held at an alpha, and
+ * optionally cut to a silhouette.
+ *
+ * ⚠ THE CLIP PATH IS IN THE FIELD'S OWN SPACE, not the crop's. A `clipPath`
+ * resolves against the user space of the element that REFERENCES it, so a
+ * silhouette authored in crop coordinates and applied inside this already-
+ * translated group cuts the wrong box — which looks like a painter that
+ * mysteriously renders nothing.
+ *
+ * ⚠ AND THE ALPHA IS SET AGAINST THE RENDERED DRAWING, NOT THE 1:1 CANVAS
+ * (ADR-070 U11). At the map's binding `meet` a hairline paints ~0.65 device px
+ * and the browser pays the remainder in alpha, so a field authored at the
+ * density that looks right full-size arrives invisible. This is texture behind
+ * type: it may never compete with the lettering sitting on it.
+ */
+export function PlacedField({
+  form,
+  x,
+  y,
+  w,
+  h,
+  seed,
+  k = 1,
+  p,
+  opacity = 0.42,
+  clip,
+}: FieldOpts & {
+  form: FormKey;
+  x: number;
+  y: number;
+  opacity?: number;
+  /** A silhouette in the FIELD'S OWN space (origin at its top-left). */
+  clip?: string;
+}) {
+  if (w <= 0 || h <= 0) return null;
+  const id = `pda-fld-${form}-${seed}`;
+  return (
+    <g transform={`translate(${x},${y})`} opacity={opacity}>
+      <defs>
+        <clipPath id={id}>{clip ? <path d={clip} /> : <rect width={w} height={h} />}</clipPath>
+      </defs>
+      <g clipPath={`url(#${id})`}>
+        <FormField form={form} w={w} h={h} seed={seed} k={k} p={p} />
+      </g>
+    </g>
+  );
+}
+
 /** The record's five keys, in the order the painters are written for. */
 export const isFormKey = (k: string): k is FormKey =>
   k === "voice" || k === "judgment" || k === "validation" || k === "stakeholder" || k === "pattern";

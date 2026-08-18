@@ -3,7 +3,15 @@
 import { type FitSpec, cropAround, fitExt } from "./pdaFit";
 import { PDA_FLIGHT_MS } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
-import { CORE_K, LaneMeter, StateMark, laneLabel, meterLabelDx, wrapLines } from "./pdaGlyphs";
+import {
+  CARD_BOX,
+  CORE_K,
+  LaneMeter,
+  StateMark,
+  laneLabel,
+  meterLabelDx,
+  wrapLines,
+} from "./pdaGlyphs";
 import type { PdaEntry } from "./PdaEntry";
 import type { PdaShape, PdaWork } from "./pdaRecord";
 import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
@@ -114,8 +122,8 @@ const CROP_W = CONTENT_R - CONTENT_L + CONFIG_INSET * 2;
  * `CORE_K`, and the mark and the lane meter are one component each.
  */
 export { CORE_K };
-const CORE_W = 176 * CORE_K;
-const CORE_H = 136 * CORE_K;
+const CORE_W = CARD_BOX.w * CORE_K;
+const CORE_H = CARD_BOX.h * CORE_K;
 const CORE_X = 444 - CORE_W / 2;
 
 /** The reference's 45° corner cut, 12 deep, on every satellite.

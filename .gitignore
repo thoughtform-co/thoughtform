@@ -44,6 +44,13 @@ yarn-error.log*
 .cursor/walls-*-head.txt
 .cursor/walls-*-mid.txt
 .cursor/verify-next.py
+.cursor/plan-extract.txt
+.cursor/extract-plan.mjs
+# Look-dev capture scratch. Evidence that an ADR CITES is committed under
+# docs/design/**; these are the intermediate shoots and their throwaway scripts.
+.cursor/isl-*/
+.cursor/pda-shots/
+.cursor/substrate-r3-shots/
 
 # Local screenshot captures (root-only, keeps tracked design/inspiration/**.png)
 /*.png

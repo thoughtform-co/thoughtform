@@ -4,7 +4,7 @@ import { CONFIG_VIEWBOX } from "./PdaConfiguration";
 import { type FitExt, type FitSpec, cropAround, fitExt } from "./pdaFit";
 import type { FlightRect } from "./pdaFlight";
 import type { PdaEntry } from "./PdaEntry";
-import { Cartridge } from "./pdaGlyphs";
+import { CARD_BOX, Cartridge } from "./pdaGlyphs";
 import type { PdaWork } from "./pdaRecord";
 import { SUBSTRATE_VIEWBOX } from "./PdaSubstrate";
 
@@ -53,8 +53,8 @@ function dockVars(entry: PdaEntry): React.CSSProperties | undefined {
    many of the record it is showing. */
 const COLS = 4;
 const ROWS = 5;
-const CARD_W = 176;
-const CARD_H = 136;
+const CARD_W = CARD_BOX.w;
+const CARD_H = CARD_BOX.h;
 /** The block's own top-left. Fixed: the crop moves around it, never it. */
 const GRID_X = 12;
 const GRID_Y = 22;

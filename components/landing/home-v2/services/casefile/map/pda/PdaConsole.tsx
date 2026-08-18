@@ -8,10 +8,12 @@ import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from 
 import { ConsoleFrame } from "../../console/ConsoleFrame";
 import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 
+import { ViewCarrier, carrierPlate } from "./PdaCarrier";
 import { ViewConfiguration, configExt, configLayout } from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
 import { ViewSubstrate, estateFootprint, substrateExt, substrateLayout } from "./PdaSubstrate";
 import { ViewWork, gridRect, workExt, workLayout } from "./PdaViews";
+import { SUBSTRATE_SECTION } from "./flags";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
 import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
@@ -187,8 +189,15 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
    *  object by construction, so the two cannot drift. */
   const layout1 = useMemo(() => workLayout(workExt(aspect)), [aspect]);
   const layout2 = useMemo(() => configLayout(configExt(aspect)), [aspect]);
-  const layout3 = useMemo(() => substrateLayout(substrateExt(aspect)), [aspect]);
-  const viewBox = view === 1 ? layout1.crop : view === 2 ? layout2.crop : layout3.crop;
+  /** ⚠ THE TWO READING-03 DRAWINGS ARE ELASTIC IN OPPOSITE DIRECTIONS — SECTION
+   *  fixes its width and grows its strata with height; the carrier fixes its
+   *  height and grows its crop's width (`PdaCarrier`, and see `flags.ts` for why
+   *  the drawing and its crop cannot be gated separately). Both are computed
+   *  because both are pure and cheap, and the one that renders picks its own. */
+  const section3 = useMemo(() => substrateLayout(substrateExt(aspect)), [aspect]);
+  const carrier3 = useMemo(() => carrierPlate(aspect), [aspect]);
+  const crop3 = SUBSTRATE_SECTION ? section3.crop : carrier3.crop;
+  const viewBox = view === 1 ? layout1.crop : view === 2 ? layout2.crop : crop3;
   /* ⚠ THESE MIRRORS KEEP THE WHEEL LISTENER STABLE, and that is the whole
      reason they are refs. `go` sits in the native listener's dependency array;
      threading `view` or `selectedId` through it as values would tear the
@@ -210,11 +219,13 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
    * footprint. A flight computes for any pair where both homes exist;
    * everything else is the reading's own entrance.
    *
-   * ⚠ **THE THIRD HOME COMES WITH THE SECTION PROMOTION** (ADR-070 U25):
-   * U24's divided plate had no home for the selected work, so 01 → 03 was
-   * always raster and 03 → 01 was a bloom in place. SECTION puts twenty
-   * ghost footprints at the top of reading 03; the selected one wears the
-   * lit-edge grammar and is the flight's third destination.
+   * ⚠ **READING 03's HOME DEPENDS ON WHICH DRAWING IS MOUNTED** (ADR-070 U33).
+   * U24's divided plate had no home at all, so 01 → 03 was always raster and
+   * 03 → 01 a bloom in place. Both current drawings have one, and they are
+   * different objects: SECTION's is one of twenty ghost footprints, wearing the
+   * cartridge's own lit-edge grammar; the CARRIER's is the card seated in its
+   * hub, which is the shared `Cartridge` at `HUB_K`. Neither is interpolated —
+   * each walks the arithmetic its own drawing paints.
    *
    * ⚠ The guards are all cheap and all necessary: an in-flight interrupt
    * would compute its start pose from a rect the object has not reached,
@@ -234,14 +245,19 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
       if (view === 2) {
         return { crop: layout2.crop, rect: layout2.core };
       }
-      /* Reading 03's home is the estate footprint. `estateFootprint` walks
-         the same slot arithmetic the drawing paints, so the flight lands
-         on a real footprint rather than an interpolated one. */
+      if (!SUBSTRATE_SECTION) {
+        /* The carrier seats the work in its hub, so the home is the same rect
+           for every stream — the drawing does not lay them out side by side.
+           It still has to be a stream the estate knows, or a stale id would fly
+           an object the destination is not going to draw. */
+        if (!shown.some((w) => w.id === id)) return null;
+        return { crop: carrier3.crop, rect: carrier3.seat };
+      }
       const foot = estateFootprint(shown, id, 26, 26, 880);
       if (!foot) return null;
-      return { crop: layout3.crop, rect: foot };
+      return { crop: section3.crop, rect: foot };
     },
-    [shown, layout1, layout2, layout3]
+    [shown, layout1, layout2, section3, carrier3]
   );
 
   const entryFor = useCallback(
@@ -494,7 +510,20 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
             entry={entry}
           />
         ) : null}
-        {view === 3 ? (
+        {view === 3 && !SUBSTRATE_SECTION ? (
+          <ViewCarrier
+            shapes={cross.shapes}
+            skills={skills}
+            /* ⚠ `hasOpened`, NOT just `selected`. The rest state is `shown[0]`,
+               and seating a record the reader never asked for claims they left
+               it open — the same reason SECTION's footprint took `showSel`. */
+            selected={hasOpened ? (selected ?? null) : null}
+            still={still}
+            entry={entry}
+            onLit={hoverPart}
+          />
+        ) : null}
+        {view === 3 && SUBSTRATE_SECTION ? (
           <ViewSubstrate
             shapes={cross.shapes}
             skills={skills}
@@ -507,7 +536,7 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
             lit={lit}
             onLit={hoverPart}
             still={still}
-            layout={layout3}
+            layout={section3}
             entry={entry}
           />
         ) : null}
