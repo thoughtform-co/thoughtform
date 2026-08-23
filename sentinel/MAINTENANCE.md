@@ -54,7 +54,59 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-08-23 (latest) — The portfolio arc, and the dossier section kind (ADR-072)
+### 2026-08-23 (latest) — The through-line: `#voidwalker`, the career timeline after the bio (ADR-074)
+
+Owner asked for a vertical timeline of the things that led up to Thoughtform,
+after the bio — title left, paragraph right, beats lighting one by one, a
+drawn wireframe per article. Cycle B (new station, new ADR, new rule); four
+findings worth the ledger:
+
+- **The leitmotif was already written.** The owner could not name the
+  through-line; his own strategy skill had it (_read a new system early,
+  build the layer that lets people act inside it, step back_). Read the
+  canon before inventing a frame.
+- **`#practice` is an EMPTY station in production** — its `.approach` body is
+  stripped at parse time, so its only live role was the ambient cover, which
+  moved to the new station cleanly. Three files name the cover and must agree.
+- **Explicit grid rows, or the spine is 0px tall.** An auto-placed full-span
+  list cannot land in a row the spine occupies; it slid to its own row and the
+  spine spanned two empty ones — every clock value correct, nothing drawn.
+- **Measure against the PANEL, not the column.** The band's right edge sits
+  10–22px inside the right-rail telemetry at the laptop widths; the services
+  lede never reaches it, a full paragraph does. And on the phone a wrapped
+  press headline ate the drawing's frame to 0px — the frame carries the
+  aspect there, not the plate.
+
+Verified: 1004 unit tests across 53 files, lint and typecheck clean; the seam
+smoke re-pointed and green; 48 CI corridor smokes green; headed captures at
+1280×720 / 1440×800 / 1920×1080 (dark), 1440×800 (light) and 390×844 — every
+beat lights at its reading line, every drawing 0 overlaps / 0 collapsed / no
+overflow / one gold.
+
+### 2026-08-23 — The site's header lands on the arcs; the reel goes (ADR-073)
+
+The owner asked for the homepage header on the new portfolio page and
+took the reel's retirement with it. Cycle B for the header, Cycle A rows
+3, 4 and 6.
+
+- **Row 6 — an architectural assumption.** An arc page's navigation was a
+  copy of a menu the landing had already deleted, and it only rendered
+  above 1101×760: at 1280×720 an arc had NO navigation. `ArcHudNav`
+  replaces it with the landing's own control and chrome. → ADR-073.
+- **Row 3 — a class of bug worth naming.** CHROME OVER A PHOTO. The
+  production hero overlay leaves the top-right clear because the landing's
+  plate is dark there; the arcs' key visual is near-WHITE there, and the
+  header measured 1.06:1 on arrival. Nothing on the surface would have
+  said so — the fix is a term on the hero's own overlay, and the guard is
+  the smoke asserting the row lands on no hero ink.
+- **Row 4 — files that move together.** `ArcShell` ⇄ `ArcHudNav` ⇄
+  `useArcActiveSection` ⇄ the route's menu mapping ⇄ `menuPrimary` in
+  every content module (a `-v2` cut shares its v1's sections, so a pair
+  is marked once). → `arcs.md`.
+- **Left open:** the hero eyebrow is still 2.5–2.9:1 — `--gold-70` as
+  small text, ADR-058's recorded sweep, not this pass.
+
+### 2026-08-23 — The portfolio arc, and the dossier section kind (ADR-072)
 
 Rob asked for a portfolio of the Loop work; it ships as `/arcs/portfolio`
 on the deck chassis with a ninth section kind that mounts the casefile's

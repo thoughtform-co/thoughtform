@@ -35,8 +35,8 @@ Do NOT add `useAuth` or other post-mount-updating subscriptions to
 LandingPage — push them into leaf components (see `CelestialEditorGate`).
 Ref: BEST-PRACTICES "Nested-root portals".
 
-**The funnel is the ADR-033 order, as amended by ADR-054:** hero →
-corridor (thesis + the Arc) → services → about (bio) → **proof (the
+**The funnel is the ADR-033 order, as amended by ADR-054, ADR-056 and ADR-074:** hero →
+corridor (thesis + the Arc) → services (opening with the casefile) → about (bio) → **voidwalker (the through-line, the opaque cover — [`.claude/rules/voidwalker.md`](voidwalker.md))** → practice (an empty breather) → contact. The paragraph that follows is ADR-054's wording and names **proof (the
 client case)** → practice → contact.
 `#tools` and `#build` retired — the four production cases live ONLY on
 the Arc's Build-park cases reveal (click-armed via the CUE — a dotted-leader
@@ -77,7 +77,7 @@ lockstep cover, and the mark re-inks DURING the slide via
 `continuumFormT`). Two clamped clocks
 (`exitProgressForRunway` + `aboutStageProgressRef`), single writer
 `useAboutStageScroll`; the corridor ambient SURVIVES through #about AND
-#continuum (both transparent stages) and dies at `#practice` (ADR-049
+#continuum (both transparent stages) and dies at `#voidwalker` (ADR-074; was `#practice`, ADR-049
 retargeted kill, one station past ADR-047; gate keyed to the SAME rect as
 the fade envelope — the ADR-030 seam-cut bug). Fail-opaque shield
 (`--about-bg-in`, default 1 — written 0 for the whole engaged life now,
@@ -128,7 +128,8 @@ the drawer trigger, on every viewport. Contracts:
   only writer of `.hud__brand.is-collapsed` — the ADR-043 wordmark dock.
 - The desktop detent diamond stays hidden (ADR-031 U20), now because the
   corner serves every viewport. The 13-tick ladder always stays.
-- `/arcs` still has its own reel (`ArcMenu`, same gate, same complaint) —
+- ⚠ `/arcs` HAD its own reel (`ArcMenu`, same gate, same complaint); it is
+  DELETED (ADR-073) and the arcs mount the corner readout instead —
   porting the readout there is an open follow-up, not an oversight.
 
 **⚠ The hero curtain CLIP-UNCOVERS the frame chrome (ADR-031 Update 16

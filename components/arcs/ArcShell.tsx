@@ -8,7 +8,7 @@ import type { ArcMotion } from "@/lib/arcs/types";
 import { LightModeToggle } from "@/components/landing/v7/LightModeToggle";
 import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
 
-import { ArcMenu } from "./ArcMenu";
+import { ArcHudNav } from "./ArcHudNav";
 import { ARC_TERMINAL_MEDIA } from "./arcMotion";
 import { useArcScroll } from "./useArcScroll";
 import { useArcTerminalMotion } from "./useArcTerminalMotion";
@@ -16,6 +16,8 @@ import { useArcTerminalMotion } from "./useArcTerminalMotion";
 export interface ArcMenuItem {
   id: string;
   label: string;
+  /** A chapter — it takes a link in the header's inline row too (ADR-073). */
+  primary?: boolean;
 }
 
 interface ArcShellProps {
@@ -114,7 +116,12 @@ export function ArcShell({
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: hudHtml }}
       />
-      {variant === "detail" && menu && menu.length > 0 ? <ArcMenu items={menu} /> : null}
+      {/* The site's header (ADR-073): chapter links in the hero, the
+          section readout + drawer once scrolled — the landing's own
+          control and its own chrome. It REPLACED the left reel, which
+          only existed above 1101×760 and left 1280×720 with no
+          navigation at all (ADR-055's ruling, one surface later). */}
+      {variant === "detail" && menu && menu.length > 0 ? <ArcHudNav items={menu} /> : null}
       {/* Light/dark toggle (ADR-058). The same leaf the landing mounts —
           three-free and Supabase-free, so it stays inside the arcs import
           doctrine. `data-theme="dark"` on `.arc-root` above is an inert

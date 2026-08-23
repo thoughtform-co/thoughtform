@@ -109,8 +109,20 @@ interface ArcSectionBase {
   /** DOM id — anchor target + ArcMenu key. Unique within the arc. */
   id: string;
   ariaLabel?: string;
-  /** Present ⇒ the section appears in the left reel menu under this label. */
+  /** Present ⇒ the section appears in the header's drawer under this label,
+   *  and its name is what the corner readout decodes to while it is on
+   *  screen (ADR-073). */
   menuLabel?: string;
+  /**
+   * A CHAPTER: the section also takes a link in the header's inline row,
+   * the state the hero shows before the readout collapses in (ADR-073).
+   *
+   * The drawer takes every `menuLabel`; a deck runs to ten of them and ten
+   * inline links do not fit a hero, so the row is the spine of the argument
+   * and the drawer is the index. Registry-capped at five — past that the
+   * row wraps into the hero copy at the binding viewport.
+   */
+  menuPrimary?: true;
 }
 
 export type ArcSection = ArcSectionBase &

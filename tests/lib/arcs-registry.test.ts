@@ -56,6 +56,29 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("the header's chapter row is capped, and every chapter is in the drawer (ADR-073)", () => {
+    // The inline row is the hero state of the site's header; the drawer
+    // takes every `menuLabel`. Five is what the row fits beside the hero
+    // copy at 1280×720 — measured, and the smoke asserts the row lands on
+    // no hero ink at the reference viewports. A chapter with no
+    // `menuLabel` would claim a link the drawer cannot list.
+    for (const arc of ARCS) {
+      const primary = arc.sections.filter((section) => section.menuPrimary);
+      expect(primary.length, `${arc.slug}: chapter count`).toBeLessThanOrEqual(5);
+      for (const section of primary) {
+        expect(
+          section.menuLabel,
+          `${arc.slug}/${section.id}: chapter without a menu label`
+        ).toBeTruthy();
+      }
+      // A deck with a menu has a spine; a header with an empty row is a
+      // bare hamburger on a page that has chapters to name.
+      if (arc.sections.some((section) => section.menuLabel)) {
+        expect(primary.length, `${arc.slug}: no chapters marked`).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it("every arc ends on a close section", () => {
     for (const arc of ARCS) {
       expect(arc.sections[arc.sections.length - 1]?.kind).toBe("close");

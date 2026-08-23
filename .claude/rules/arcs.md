@@ -16,6 +16,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - [ADR-052: Client arcs](../sentinel/decisions/052-client-arcs.md)
 - [ADR-057: Terminal motion](../sentinel/decisions/057-arc-terminal-motion.md) — the pinned-beat grammar on the `-v2` cuts
 - [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/portfolio`, the ninth kind, the shared evidence, the envelope on arcs
+- [ADR-073: The site's header on the arc pages](../sentinel/decisions/073-arc-header.md) — `ArcHudNav` replaces the left reel; `menuPrimary` chapters; the hero's top band
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -26,6 +27,28 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   (`--svc-*`, `data-corridor-*`, `data-active-station`).
 - **`--hero-lift` gates the rails.** Detail = written from scroll;
   overview = static `1` on the root. Rails invisible ⇒ check this first.
+- **THE HEADER IS THE SITE'S, AND IT REPLACED THE REEL** (ADR-073).
+  `ArcHudNav` renders the landing's `.hud__nav*` chrome out of landing.css:
+  the CHAPTER links inline in the hero, the section readout + a drawer of
+  every `menuLabel` once past half the first viewport. ⚠ `ArcMenu` and the
+  whole `.arc-menu*` block are DELETED — the reel only rendered above
+  1101×760, so at 1280×720 an arc had no navigation at all (ADR-055's own
+  ruling, one surface later). Its observer survives as
+  `useArcActiveSection` (the sticky STAGE under terminal motion, the
+  section under reveal). ⚠ Not `HudNav` itself: that readout reads the
+  corridor bus and its links are the landing's stations. ⚠ The readout's
+  label is IMPERATIVELY written — render the span EMPTY or `queueScramble`
+  sees `from === to` and never decodes.
+- **`menuPrimary` marks a CHAPTER** — the inline row, capped at five and
+  registry-pinned; the drawer takes every `menuLabel`. Ten inline links do
+  not fit a hero. A `-v2` cut shares its v1's sections, so a pair is
+  marked once.
+- ⚠ **THE ROW IS CHROME OVER A PHOTO.** The arcs' key visual is near-white
+  top-right, where the production hero overlay deliberately leaves the
+  plate clear — cream links measured 1.06:1 there. `.arc-hero
+.hero__video__overlay` carries a top band for it (6.1–7.2:1 measured);
+  the portfolio smoke asserts the row lands on no hero INK at the
+  reference viewports.
 - **Slice API is read-only.** `sliceV7Sections([])` is consumed as-is; no
   edits to `public/prototypes/v7/**` or `lib/v7-parse/**` from this
   surface, and nothing mounts into the injected hud markup.

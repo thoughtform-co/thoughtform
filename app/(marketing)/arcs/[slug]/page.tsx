@@ -55,7 +55,11 @@ export default async function ArcPage({ params }: ArcRouteParams) {
   const slice = sliceV7Sections([]);
   const menu = arc.sections
     .filter((section) => section.menuLabel)
-    .map((section) => ({ id: section.id, label: section.menuLabel as string }));
+    .map((section) => ({
+      id: section.id,
+      label: section.menuLabel as string,
+      primary: section.menuPrimary,
+    }));
   // Absent motion is the ADR-052 reveal — resolved once, here, so the
   // rest of the tree never has to know the flag is optional.
   const motion = arc.motion ?? "reveal";

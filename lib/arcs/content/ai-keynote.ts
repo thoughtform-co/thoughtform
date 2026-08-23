@@ -49,6 +49,7 @@ export const AI_KEYNOTE_ARC: ArcDef = {
       id: "about-vince",
       kind: "portrait",
       menuLabel: "About",
+      menuPrimary: true,
       ariaLabel: "About Vince Buyssens",
       head: {
         eyebrow: "About",
@@ -105,6 +106,7 @@ export const AI_KEYNOTE_ARC: ArcDef = {
       id: "diagnosis",
       kind: "cards",
       menuLabel: "Diagnosis",
+      menuPrimary: true,
       head: {
         title: { pre: "Where AI keeps", em: "falling short." },
         sub: "You’ve run into all four of these. They look like separate problems, but they share one cause: nothing holds how your team actually works.",
@@ -142,6 +144,7 @@ export const AI_KEYNOTE_ARC: ArcDef = {
       id: "substrate-map",
       kind: "list-groups",
       menuLabel: "The layer",
+      menuPrimary: true,
       layout: "columns",
       head: {
         title: { pre: "What’s missing is an", em: "intelligence layer." },
@@ -376,6 +379,7 @@ export const AI_KEYNOTE_ARC: ArcDef = {
       id: "skills-by-team",
       kind: "list-groups",
       menuLabel: "Skills",
+      menuPrimary: true,
       ariaLabel: "Skills shipped at Loop Earplugs, shown as a workshop case study",
       layout: "stack",
       head: {
@@ -484,6 +488,7 @@ export const AI_KEYNOTE_ARC: ArcDef = {
       id: "cases",
       kind: "cards",
       menuLabel: "Cases",
+      menuPrimary: true,
       columns: 2,
       head: {
         eyebrow: "Cases · in production",

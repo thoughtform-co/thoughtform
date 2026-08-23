@@ -12,7 +12,8 @@ alwaysApply: false
 Mirror of [`.claude/rules/arcs.md`](../../.claude/rules/arcs.md) — read
 that file; it is the canonical text. Read first: ADR-052 (the deck
 chassis), ADR-057 (terminal motion), ADR-072 (the portfolio arc, the
-`dossier` section kind, the shared evidence, the envelope on arcs).
+`dossier` section kind, the shared evidence, the envelope on arcs), ADR-073
+(the site's header on every arc; the left reel deleted).
 
 Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
 gates the rails; the slice API is read-only; every section opaque void; no
@@ -26,4 +27,6 @@ reference from `content/shared/*`; the numbers canon fails on every arc;
 the confidentiality envelope runs over the portfolio (the keynote deck
 keeps its € rows — recorded); a dossier beat must FIT at 1280×720 /
 1440×800 / 1920×1080; a bay change is a two-surface change (run the ring
-smoke AND the portfolio smoke).
+smoke AND the portfolio smoke); the header is `ArcHudNav` (the landing's
+`.hud__nav*` chrome — chapter links in the hero, the readout + drawer once
+scrolled) and `ArcMenu` is deleted, with `menuPrimary` marking a chapter.

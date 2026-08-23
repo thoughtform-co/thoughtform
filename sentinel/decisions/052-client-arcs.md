@@ -69,7 +69,9 @@ rooted asset paths, and the **no-italics contract** (emphasis travels as
 **Flattening doctrine:** interactive Shards machinery ports as static
 primitives — role filters freeze to their default, carousels/tabs become
 grouped lists, the nine parallax pairs stack plainly, the sticky header is
-replaced by the HUD + the left reel menu (`ArcMenu`, IO-driven, ≥1101×760,
+replaced by the HUD + the left reel menu (⚠ `ArcMenu` is DELETED — ADR-073
+put the site's header on every arc instead, because the reel below was
+IO-driven, ≥1101×760,
 visible past the hero). The IO reveal keeps the Shards visible-by-default
 contract (`is-arc-js` opt-in). Videos are `preload="none"` + poster, never
 autoplay; gated `.skill` downloads do not port (no download API here —

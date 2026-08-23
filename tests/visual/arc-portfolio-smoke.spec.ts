@@ -236,24 +236,102 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
     }
   });
 
-  test("the reel names the tools by codename and stays off the record column", async ({ page }) => {
-    test.skip(!isDesktop(page), "the reel is a desktop instrument");
+  test("the header carries the chapters, then the readout and the whole drawer (ADR-073)", async ({
+    page,
+  }, testInfo) => {
     await prepare(page, PORTFOLIO);
-    await driveTo(page, 1200, 4);
-    const rows = await page.locator(".arc-menu__name").allTextContents();
-    expect(rows.map((r) => r.trim().toUpperCase())).toEqual(
-      expect.arrayContaining(["MÍMIR", "VESPER", "BABYLON", "HEIMDALL"])
+    const wide = (testInfo.project.use.viewport?.width ?? 0) > 640;
+
+    // ⚠ THE LEFT REEL IS GONE, EVERYWHERE. It only rendered above
+    // 1101×760, which is why it could not be the navigation.
+    await expect(page.locator(".arc-menu")).toHaveCount(0);
+
+    // THE HERO STATE: the chapters, inline. Below 641px the row is CSS-
+    // hidden and the bars carry the corner, exactly as on the landing.
+    const nav = page.locator(".hud__nav");
+    await expect(nav).toHaveCount(1);
+    await expect(nav).not.toHaveClass(/is-collapsed/);
+    if (wide) {
+      expect(await page.locator(".hud__nav__inline__link").allTextContents()).toEqual([
+        "About",
+        "Overview",
+        "Skills",
+        "Tools",
+        "Outcome",
+      ]);
+      // The row is chrome over a PHOTO: it may never land on hero ink.
+      // The arcs' key visual is near-white top-right, which is what the
+      // hero's own top scrim exists for (ADR-073).
+      const collision = await page.evaluate(() => {
+        const row = document.querySelector<HTMLElement>(".hud__nav__inline");
+        if (!row || getComputedStyle(row).display === "none") return null;
+        const rb = row.getBoundingClientRect();
+        const hits: string[] = [];
+        for (const el of document.querySelectorAll<HTMLElement>(
+          ".arc-hero__eyebrow, .hero__headline, .hero__desc, .hero__cta__btn"
+        )) {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          for (const ink of range.getClientRects()) {
+            if (ink.width < 1 || ink.height < 1) continue;
+            if (
+              rb.bottom > ink.top &&
+              rb.top < ink.bottom &&
+              rb.right > ink.left &&
+              rb.left < ink.right
+            ) {
+              hits.push((el.textContent ?? "").slice(0, 24));
+            }
+          }
+        }
+        return hits;
+      });
+      expect(collision, "the chapter row landed on hero ink").toEqual([]);
+    }
+
+    // THE COLLAPSE: past half the first viewport the links peel away, the
+    // readout decodes in, and the wordmark shrinks with it.
+    await driveTo(page, Math.round((page.viewportSize()!.height * 3) / 2), 6);
+    await page.waitForTimeout(900);
+    await expect(nav).toHaveClass(/is-collapsed/);
+    await expect(page.locator(".hud__brand")).toHaveClass(/is-collapsed/);
+    const readout = await page.locator(".hud__nav__sector__name").textContent();
+    expect(readout, "the readout resolved to a section name").toMatch(/^[A-ZÍ &]+$/);
+
+    // THE DRAWER: every section, numbered, with the active row marked —
+    // the reel's whole job, at every width.
+    await page.click(".hud__nav__btn");
+    await expect(nav).toHaveClass(/is-open/);
+    expect(await page.locator(".hud__nav__list a").allTextContents()).toEqual([
+      "01About",
+      "02Overview",
+      "03Skills",
+      "04Tools",
+      "05Mímir",
+      "06Vesper",
+      "07Babylon",
+      "08Heimdall",
+      "09Outcome",
+      "10Close",
+    ]);
+    await expect(page.locator('.hud__nav__list a[aria-current="true"]')).toHaveCount(1);
+    // Escape closes it and hands focus back to the trigger — the drawer
+    // goes INERT on close and would otherwise strand it.
+    await page.keyboard.press("Escape");
+    await expect(nav).not.toHaveClass(/is-open/);
+    await expect(page.locator(".hud__nav__list")).toHaveAttribute("inert", "");
+    await page.waitForFunction(() => document.activeElement?.classList.contains("hud__nav__btn"));
+
+    // And it navigates: a drawer row jumps to its beat. POLLED, never a
+    // fixed wait — the jump is a SMOOTH scroll (the arcs respect reduced
+    // motion rather than teleporting) and five thousand pixels of it
+    // outlast any sleep worth writing.
+    await page.click(".hud__nav__btn");
+    await page.click('.hud__nav__list a:has-text("Babylon")');
+    await page.waitForFunction(
+      () => Math.abs(document.getElementById("tool-babylon")!.getBoundingClientRect().top) < 4,
+      undefined,
+      { timeout: 15_000 }
     );
-    await parkBeat(page, "tool-mimir", 4);
-    const gap = await page.evaluate(() => {
-      const menu = document.querySelector<HTMLElement>(".arc-menu")!.getBoundingClientRect();
-      const record = document
-        .querySelector<HTMLElement>("#tool-mimir .arc-dossier__record")!
-        .getBoundingClientRect();
-      return record.left - menu.right;
-    });
-    // A 14-character handle crossed the column at 1440 (measured); the
-    // codenames clear it.
-    expect(gap).toBeGreaterThan(0);
   });
 });

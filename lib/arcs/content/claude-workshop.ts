@@ -38,6 +38,7 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
       id: "diagnosis",
       kind: "cards",
       menuLabel: "Diagnosis",
+      menuPrimary: true,
       head: {
         title: { pre: "We have the know-how,", em: "but it isn’t compounding yet." },
         sub: "The know-how lives in heads, and the system can’t see it. So every new tool, hire, or model has to learn the work from scratch.",
@@ -74,6 +75,7 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
       id: "substrate-map",
       kind: "list-groups",
       menuLabel: "The layer",
+      menuPrimary: true,
       layout: "columns",
       head: {
         title: { pre: "What’s missing is an", em: "intelligence layer." },
@@ -428,6 +430,7 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
       kind: "interstitial",
       variant: "question",
       menuLabel: "Claude",
+      menuPrimary: true,
       eyebrow: "Claude · let’s get going",
       line: { pre: "Let’s get Claudin’." },
       subline: "Open the app, switch on the right toggles, and put the smartest model to work.",
@@ -601,6 +604,7 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
       id: "skill-anatomy",
       kind: "anatomy",
       menuLabel: "Skills",
+      menuPrimary: true,
       badge: "Claude · Skill",
       head: {
         title: { pre: "A Skill is one file", em: "that hands Claude your judgment", post: "." },
@@ -766,6 +770,7 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
       id: "cases",
       kind: "cards",
       menuLabel: "Cases",
+      menuPrimary: true,
       columns: 2,
       head: {
         eyebrow: "Cases · in production",

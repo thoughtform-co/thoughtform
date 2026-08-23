@@ -69,6 +69,7 @@ export const PORTFOLIO_ARC: ArcDef = {
       id: "about",
       kind: "portrait",
       menuLabel: "About",
+      menuPrimary: true,
       ariaLabel: "About Vince Buyssens",
       head: {
         eyebrow: "About",
@@ -90,6 +91,7 @@ export const PORTFOLIO_ARC: ArcDef = {
       id: "overview",
       kind: "cards",
       menuLabel: "Overview",
+      menuPrimary: true,
       ariaLabel: "The program, from adoption to automation",
       columns: 3,
       head: {
@@ -143,6 +145,7 @@ export const PORTFOLIO_ARC: ArcDef = {
       id: "five-shapes",
       kind: "anatomy",
       menuLabel: "Skills",
+      menuPrimary: true,
       ariaLabel: "Forty-seven Skills, five shapes of work",
       badge: "Encode · 47+ Skills",
       head: {
@@ -198,6 +201,7 @@ export const PORTFOLIO_ARC: ArcDef = {
       id: "tools",
       kind: "anatomy",
       menuLabel: "Tools",
+      menuPrimary: true,
       ariaLabel: "The tools, in production",
       badge: "Build · Software for few",
       head: {
@@ -260,6 +264,7 @@ export const PORTFOLIO_ARC: ArcDef = {
       id: "studio",
       kind: "cards",
       menuLabel: "Outcome",
+      menuPrimary: true,
       ariaLabel: "Loop Studio — what the layer produced",
       columns: 3,
       head: {

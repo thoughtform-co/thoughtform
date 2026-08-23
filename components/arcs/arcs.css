@@ -429,6 +429,35 @@
 }
 
 /* ── Detail hero extras (base .hero__* comes from landing.css) ─────── */
+/* ⚠ THE HERO NEEDS A TOP BAND FOR THE HEADER (ADR-073). The production
+   overlay darkens the hero LEFT-to-right (copy side) and bottom-up, and
+   deliberately leaves the top-right clear — that is where the key
+   visual's own detail lives, and on the landing the plate is dark there
+   anyway. The arcs' key visual is near-WHITE in that corner, so the
+   header's cream links landed on paper: measured 1.06:1 at 1440×800
+   before this. One more term on the SAME overlay, not a patch under the
+   menu — the eyebrow sits in the same band and gains with it. Strong
+   only at the very top edge, so the ring and the ridge are untouched. */
+.arc-hero .hero__video__overlay {
+  background:
+    linear-gradient(
+      to right,
+      rgba(var(--void-deep-rgb), 0.55) 0%,
+      rgba(var(--void-deep-rgb), 0.32) 42%,
+      transparent 72%
+    ),
+    linear-gradient(to top, rgba(var(--void-deep-rgb), 0.35) 0%, transparent 38%),
+    linear-gradient(
+      to bottom,
+      rgba(var(--void-deep-rgb), 0.82) 0%,
+      rgba(var(--void-deep-rgb), 0.68) 4%,
+      rgba(var(--void-deep-rgb), 0.42) 9%,
+      rgba(var(--void-deep-rgb), 0.18) 15%,
+      rgba(var(--void-deep-rgb), 0.06) 22%,
+      transparent 30%
+    );
+}
+
 .arc-hero__eyebrow {
   margin: 0 0 clamp(14px, 2.2vh, 24px);
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
@@ -1175,106 +1204,15 @@
   color: var(--gold-70, rgba(202, 165, 84, 0.7));
 }
 
-/* ── Left reel menu (section-menu grammar, arc-gated) ──────────────── */
-.arc-menu {
-  position: fixed;
-  top: 50%;
-  left: calc(var(--hud-margin, 40px) + clamp(16px, 1.7vw, 28px));
-  z-index: 18;
-  --menu-row-h: 22px;
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  text-transform: uppercase;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 300ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-.arc-root[data-arc-scrolled] .arc-menu {
-  opacity: 1;
-}
-.arc-root[data-arc-scrolled] .arc-menu button {
-  pointer-events: auto;
-}
-.arc-menu button {
-  margin: 0;
-  border: 0;
-  padding: 0;
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-  text-transform: inherit;
-}
-.arc-menu button:focus-visible {
-  outline: 1px solid var(--gold, #caa554);
-  outline-offset: 3px;
-}
-.arc-menu ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.arc-menu__list {
-  display: flex;
-  flex-direction: column;
-  transform: translateY(calc(-1 * (var(--active-row, 0) + 0.5) * var(--menu-row-h)));
-  transition: transform 320ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-.arc-menu__item {
-  display: flex;
-  align-items: center;
-  height: var(--menu-row-h);
-  transition: visibility 0s linear 320ms;
-}
-.arc-menu__item[data-active] {
-  visibility: hidden;
-  transition-delay: 0s;
-}
-.arc-menu__row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 1px 0;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: rgba(235, 227, 214, 0.34);
-  transition: color 140ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
-}
-.arc-menu__row:hover {
-  color: rgba(235, 227, 214, 0.62);
-}
-.arc-menu__name {
-  white-space: nowrap;
-  padding: 0 1px;
-}
-.arc-menu__highlight {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: var(--menu-row-h);
-  font-size: 12.5px;
-  letter-spacing: 0.1em;
-  color: var(--gold, #caa554);
-  pointer-events: none;
-}
-.arc-menu__highlight .arc-menu__name {
-  padding: 1px 6px;
-  color: var(--void, #0a0908);
-  background: var(--gold, #caa554);
-  box-shadow: 0 0 14px rgba(202, 165, 84, 0.3);
-}
-.arc-menu__disc {
-  margin-left: 2px;
-  font-size: 9px;
-  color: rgba(202, 165, 84, 0.5);
-}
-@media (max-width: 1100px), (max-height: 759px) {
-  .arc-menu {
-    display: none;
-  }
-}
+/* ⚠ THE LEFT REEL IS DELETED (ADR-073, owner 2026-08-23). `.arc-menu*`
+   was a copy of the corridor section menu the landing had already
+   RETIRED (ADR-055) for the reason that applies here word for word: it
+   only rendered above 1101×760, so at 1280×720 — a reference viewport —
+   an arc page carried no navigation at all. The site's header
+   (`ArcHudNav` → `.hud__nav*` in landing.css) replaces it: chapter links
+   in the hero, the section readout + a drawer of every section once
+   scrolled, at every width. `ArcMenu.tsx` went with the rules; git
+   history is the archive. */
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 @media (max-width: 1280px) {
@@ -1348,10 +1286,7 @@
     transition: none;
   }
   .arc-card,
-  .arc-card__veil,
-  .arc-menu,
-  .arc-menu__list,
-  .arc-menu__item {
+  .arc-card__veil {
     transition: none;
   }
 }
