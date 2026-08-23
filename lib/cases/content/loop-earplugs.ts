@@ -1562,15 +1562,18 @@ const MAP_CHAINS: readonly CaseMapChain[] = [
 ];
 
 /**
- * Three paid-social cuts, reused verbatim from the ai-keynote arc page
- * (`lib/arcs/content/ai-keynote.ts`) — same files, same alt text, so the two
- * surfaces cannot end up describing the same ad differently.
+ * Three paid-social cuts, reused verbatim from the arcs' shared evidence
+ * (`lib/arcs/content/shared/loop-studio.ts`, `STUDIO_AD_CARDS` — the keynote
+ * and the portfolio arc both draw from it since ADR-072) — same files, same
+ * alt text, so the surfaces cannot end up describing the same ad differently.
  *
- * What deliberately does NOT come across: the arc carries per-ad spend,
- * order value and ROAS. That page is a client deck; this is the public
- * landing, where the confidentiality envelope bans currency outright
+ * What deliberately does NOT come across: the keynote arc carries per-ad
+ * spend, order value and ROAS. That page is a client deck; this is the
+ * public landing, where the confidentiality envelope bans currency outright
  * (`.claude/rules/proof.md`, pinned by the registry test). The panel says
- * "beat the ROAS benchmarks" and prints no figure.
+ * "beat the ROAS benchmarks" and prints no figure. (The portfolio arc sits
+ * inside the same envelope and takes the cards through `ratiosOnly()` —
+ * SKU and ROAS only; the arcs registry test scans it for the rest.)
  */
 const STUDIO_SHOTS = [
   {
