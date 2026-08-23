@@ -4,6 +4,8 @@ import { PROOF_GLYPHS } from "@/components/landing/home-v2/services/casefile/pro
 import { skillSymbol } from "@/components/landing/home-v2/services/casefile/skillSymbol";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
+import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
+import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { BOARD_CHIP_SLOTS } from "@/components/landing/home-v2/services/casefile/map/mapProjection";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
 import type { CaseSegment } from "@/lib/cases/types";
@@ -584,7 +586,27 @@ describe("cases registry (ADR-054)", () => {
     };
     collect(loop, "loop case");
     collect(AI_KEYNOTE_ARC, "AI keynote");
+    collect(PORTFOLIO_ARC, "portfolio");
     expect([...percentages]).toEqual(["97%"]);
+  });
+
+  it("the arcs' Loop figures are the casefile's own (ADR-072)", () => {
+    // `lib/arcs` keeps no `lib/cases` import, so the figures an arc prints
+    // are retyped in `content/shared/loop-figures.ts` — copy-with-parity,
+    // the STUDIO_SHOTS precedent. This is the parity: a sweep that moves
+    // the casefile's stat moves the arcs' figure, or fails here.
+    const loop = getCase("loop-earplugs");
+    const stats = loop?.report.stats ?? [];
+    const byLabel = (needle: RegExp) => stats.find((stat) => needle.test(stat.label))?.value;
+    expect(byLabel(/workshops/i)).toBe(LOOP_FIGURES.workshops);
+    expect(byLabel(/skills/i)).toBe(LOOP_FIGURES.skills);
+    expect(byLabel(/tools/i)).toBe(LOOP_FIGURES.tools);
+    expect(byLabel(/people|on the layer/i)).toBe(LOOP_FIGURES.people);
+    expect(PROJECT_CASES.length).toBe(Number(LOOP_FIGURES.tools));
+    // The studio figure is the canonical claim, and the five shapes sum to
+    // the Skills figure the portfolio prints.
+    expect(LOOP_FIGURES.studioAi).toBe("97%");
+    expect(LOOP_FIGURES.skills).toBe("47+");
   });
 
   it("harmonizes all four Loop tracks around four proof blocks", () => {

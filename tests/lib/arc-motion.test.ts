@@ -111,6 +111,7 @@ describe("arc terminal motion clocks (ADR-057)", () => {
       ladder(0.16, 0.08, 99, 0.5), // groups, capped
       ladder(0.18, 0.05, 99, 0.48), // anatomy rows, capped
       ladder(0.34, 0.05, 99, 0.48), // portrait copy, capped
+      0.38, // the dossier's last record panel (ADR-072: 0.18 → 0.38, console 0.12)
       0.56, // the footnote — the mirror itself
     ];
     for (const value of rungs) expect(value).toBeLessThanOrEqual(0.56);

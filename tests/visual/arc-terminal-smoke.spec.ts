@@ -1,4 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+
+import { beatState, driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
 
 /**
  * Arc terminal-motion smoke (ADR-057).
@@ -25,62 +27,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 const V2 = "/arcs/claude-workshop-v2";
 const KEYNOTE_V2 = "/arcs/ai-keynote-v2";
-
-/** Kill smooth scrolling so a stepped drive lands where we asked. */
-async function prepare(page: Page, path: string) {
-  await page.goto(path, { waitUntil: "networkidle" });
-  await page.addStyleTag({ content: "html{scroll-behavior:auto !important}" });
-  await page.waitForTimeout(500);
-}
-
-/** Stepped real scroll — the ladder must sequence, so never teleport. */
-async function driveTo(page: Page, y: number, steps = 8) {
-  const from = await page.evaluate(() => window.scrollY);
-  for (let i = 1; i <= steps; i++) {
-    await page.evaluate((t) => window.scrollTo(0, t), Math.round(from + ((y - from) * i) / steps));
-    await page.waitForTimeout(70);
-  }
-}
-
-/** Scroll a beat to its park: its stage bottom meeting the viewport bottom. */
-async function parkBeat(page: Page, id: string, steps = 8) {
-  const geo = await page.evaluate((id) => {
-    const s = document.getElementById(id);
-    if (!s) return null;
-    const stage = s.querySelector<HTMLElement>(".arc-stage");
-    return {
-      top: Math.round(s.getBoundingClientRect().top + window.scrollY),
-      stageH: stage?.offsetHeight ?? 0,
-    };
-  }, id);
-  if (!geo) throw new Error(`no beat #${id}`);
-  await driveTo(page, geo.top + Math.max(0, geo.stageH - page.viewportSize()!.height), steps);
-  // Wait for the decode to settle rather than sleeping a fixed guess.
-  await page
-    .locator(`#${id} .arc-stage[data-reveal="done"]`)
-    .waitFor({ state: "attached", timeout: 15_000 });
-}
-
-const beatState = (page: Page, id: string) =>
-  page.evaluate((id) => {
-    const s = document.getElementById(id)!;
-    const stage = s.querySelector<HTMLElement>(".arc-stage")!;
-    const head = stage.querySelector<HTMLElement>(".arc-head, .arc-inter__band, .arc-close__band");
-    const plane = stage.querySelector<HTMLElement>(".arc-plane")!;
-    const targets = [...stage.querySelectorAll<HTMLElement>("[data-arc-decode]")];
-    return {
-      reveal: stage.getAttribute("data-reveal"),
-      secIn: stage.style.getPropertyValue("--sec-in"),
-      secOut: stage.style.getPropertyValue("--sec-out"),
-      headTransform: head ? getComputedStyle(head).transform : null,
-      headOpacity: head ? Number(getComputedStyle(head).opacity) : null,
-      planeClip: getComputedStyle(plane).clipPath,
-      planeOpacity: Number(getComputedStyle(plane).opacity),
-      total: targets.length,
-      resolved: targets.filter((el) => el.textContent === el.dataset.arcDecode).length,
-      blank: targets.filter((el) => el.textContent === "").length,
-    };
-  }, id);
 
 test.describe("arc terminal motion (ADR-057)", () => {
   test("the masthead decodes at rest, with zero travel", async ({ page }, testInfo) => {
@@ -383,13 +329,17 @@ test.describe("arc terminal motion (ADR-057)", () => {
     }
   });
 
-  test("the overview lists both cuts with distinguishable chips", async ({ page }) => {
+  test("the overview lists both cuts and the portfolio with distinguishable chips", async ({
+    page,
+  }) => {
     await prepare(page, "/arcs");
     const cards = page.locator(".arc-card");
-    await expect(cards).toHaveCount(4);
+    // Two v1 decks, their two terminal cuts, and the portfolio (ADR-072).
+    await expect(cards).toHaveCount(5);
     const chips = await page.locator(".arc-card__chip").allTextContents();
     expect(new Set(chips).size).toBe(chips.length);
     await expect(page.locator('.arc-card[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);
     await expect(page.locator('.arc-card[href="/arcs/ai-keynote-v2"]')).toHaveCount(1);
+    await expect(page.locator('.arc-card[href="/arcs/portfolio"]')).toHaveCount(1);
   });
 });

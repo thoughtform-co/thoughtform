@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { CLAUDE_WORKSHOP_ARC } from "@/lib/arcs/content/claude-workshop";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
+import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import type { ArcSection } from "@/lib/arcs/types";
 
 /**
@@ -23,7 +24,12 @@ import type { ArcSection } from "@/lib/arcs/types";
  *    destroy any markup inside.
  */
 
-const ALL: readonly ArcSection[] = [...CLAUDE_WORKSHOP_ARC.sections, ...AI_KEYNOTE_ARC.sections];
+const ALL: readonly ArcSection[] = [
+  ...CLAUDE_WORKSHOP_ARC.sections,
+  ...AI_KEYNOTE_ARC.sections,
+  ...PORTFOLIO_ARC.sections,
+];
+const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 
 const render = (sections: readonly ArcSection[], motion: "reveal" | "terminal") =>
   renderToStaticMarkup(<ArcSectionRenderer sections={sections} motion={motion} />);
@@ -104,10 +110,39 @@ describe("arc terminal markup (ADR-057)", () => {
   it("the masthead is marked still — no travel, no crossfade", () => {
     const html = render(ALL, "terminal");
     const heads = html.match(/data-arc-still/g)?.length ?? 0;
-    // Every head, interstitial band and close band.
+    // Every head, interstitial band and close band — and every dossier,
+    // whose masthead is derived from the tool record (ADR-072).
     const expected = ALL.filter(
-      (s) => s.kind === "interstitial" || s.kind === "close" || "head" in s
+      (s) => s.kind === "interstitial" || s.kind === "close" || s.kind === "dossier" || "head" in s
     ).length;
     expect(heads).toBe(expected);
+  });
+
+  it("a dossier beat is one stage around the casefile's console, and only its masthead decodes (ADR-072)", () => {
+    expect(DOSSIERS.length).toBe(4);
+    const html = render(DOSSIERS, "terminal");
+    expect(html.match(/data-arc-beat/g)?.length).toBe(4);
+    expect(html.match(/class="arc-stage"/g)?.length).toBe(4);
+    expect(html.match(/data-arc-still/g)?.length).toBe(4);
+    // The console is an APERTURE on its own rung — never a travelling
+    // panel, so the lightbox's portal has no transformed ancestor to escape.
+    expect(html.match(/class="arc-dossier__console arc-ap"/g)?.length).toBe(4);
+    // The eyebrow, the title's pre and its em — three leaves per beat.
+    expect(html.match(/data-arc-decode="/g)?.length).toBe(12);
+    // Nothing inside the console decodes: the wireframe's labels are plain
+    // aria-hidden spans the controller never sees.
+    for (const console of html.split('class="fl-con ').slice(1)) {
+      const inner = console.slice(0, console.indexOf("</ul>"));
+      expect(inner).not.toContain("data-arc-");
+    }
+    // The bay is the landing's — the one button, no deleted chrome.
+    expect(html.match(/Watch walkthrough/g)?.length).toBe(4);
+    expect(html).not.toContain("fl-bay__br");
+    expect(html).not.toContain("fl-run");
+    // Reveal mode is the same markup with zero terminal tokens.
+    const reveal = render(DOSSIERS, "reveal");
+    expect(reveal).toBe(renderToStaticMarkup(<ArcSectionRenderer sections={DOSSIERS} />));
+    expect(reveal).not.toContain("data-arc-");
+    expect(reveal).not.toContain("arc-ap");
   });
 });

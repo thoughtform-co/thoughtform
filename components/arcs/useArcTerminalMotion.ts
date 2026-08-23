@@ -502,7 +502,15 @@ export function useArcTerminalMotion({ rootRef, motion }: Options) {
           const beat = beats.find((b) => b.section === entry.target);
           if (!beat) continue;
           beat.near = entry.isIntersecting;
-          if (beat.near) continue;
+          if (beat.near) {
+            // A beat that becomes near BETWEEN scroll events — a jump past
+            // the near margin (a keyboard End, a programmatic scrollTo, a
+            // reel click landing in one step) — would otherwise wait for
+            // the next scroll frame to clock in, parked and blank. Give it
+            // one frame now (ADR-072; the settle timer is the same wake).
+            scheduleSettleCheck(16);
+            continue;
+          }
           // Park the far state. A beat left in EITHER direction rests
           // blank — it un-typed on the way out (or is force-blanked
           // here), so nothing off-screen holds resolved copy except the
