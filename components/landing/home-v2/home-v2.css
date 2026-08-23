@@ -378,8 +378,8 @@ html[data-corridor-exit="true"] #services > * {
    shield is now written 0 for the stage's WHOLE engaged life and never
    restores mid-seam — the exit is a slide-out (copy left, portrait right)
    over the live corridor bed, not a fade-to-shield. The lockstep cover
-   that must precede the ambient kill is now #continuum's tail restore
-   (the ambient survives to #practice), not this one. The shield restores
+   that must precede the ambient kill is the next OPAQUE station's top
+   (the ambient survives to #voidwalker — ADR-074), not this one. The shield restores
    to opaque only via the disengage var-clear (→ default 1). Reveals never
    ride this wrapper (ADR-008 Rule 3) — the stage children carry every
    animation; the shield is a pseudo BELOW them. */
@@ -408,9 +408,10 @@ html[data-corridor-exit="true"] #about.station::before {
   z-index: 0;
 }
 
-/* #practice is the cover that ends the ambient hold (ADR-056 — the role
-   #proof carried under ADR-054, #continuum under ADR-047, #about under
-   ADR-033). It is a plain OPAQUE station: it keeps its authored .station
+/* #voidwalker — the career through-line (ADR-074) — is the cover that
+   ends the ambient hold (the role #practice carried under ADR-056, #proof
+   under ADR-054, #continuum under ADR-047, #about under ADR-033). It is a
+   plain OPAQUE normal-flow station: it keeps its authored .station
    background and needs no shield var, because unlike #about it is never a
    transparent stage over the live canvas. It only has to STACK above the
    body veil (z5) + fixed canvas (z2) while the exit band is live, and to
@@ -418,8 +419,10 @@ html[data-corridor-exit="true"] #about.station::before {
    Keep this selector and `useCorridorExitScroll`'s `nextStation` on the
    SAME station: the fade envelope and the bottom gate both key to its
    rect, and splitting them hard-cuts the canvas at its top edge (the
-   ADR-030 §6 seam bug, recorded three times now). */
-html[data-corridor-exit="true"] #practice {
+   ADR-030 §6 seam bug, recorded three times now). No `#practice` copy is
+   kept: the exit flag is long gone by the time #practice is near, and a
+   second rule would only contradict this lockstep. */
+html[data-corridor-exit="true"] #voidwalker {
   position: relative;
   z-index: 6;
   content-visibility: visible;

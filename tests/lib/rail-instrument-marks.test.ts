@@ -75,12 +75,23 @@ describe("rail instrument marks", () => {
 
   it("runs the journey in order and ends on contact", () => {
     expect(goldAt(idxOf("about"))).toEqual(["about"]);
+    // ADR-074: the through-line has its own mark, directly after the bio.
+    expect(goldAt(idxOf("voidwalker"))).toEqual(["voidwalker"]);
     expect(goldAt(idxOf("contact"))).toEqual(["contact"]);
     // Everything before the live mark reads `passed`, everything after
     // `ahead` — no gaps, no marks stuck behind a range's end.
     const seat = seatFor(idxOf("about"), false);
     const states = ALL_MARKS.map((m) => markState(m, idxOf("about"), seat));
-    expect(states).toEqual(["passed", "passed", "passed", "passed", "passed", "here", "ahead"]);
+    expect(states).toEqual([
+      "passed",
+      "passed",
+      "passed",
+      "passed",
+      "passed",
+      "here",
+      "ahead",
+      "ahead",
+    ]);
   });
 
   it("has no mark for #practice — a KNOWN hole, pending that section's removal", () => {

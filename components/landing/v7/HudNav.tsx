@@ -50,7 +50,9 @@ import { readoutDetail } from "@/lib/rail-manifest/sectionLabel";
 const NAV_ITEMS = [
   { num: "01", label: "Services", href: "#services" },
   { num: "02", label: "About", href: "#about" },
-  { num: "03", label: "Practice", href: "#practice" },
+  // ADR-074: the through-line follows the bio.
+  { num: "03", label: "Voidwalker", href: "#voidwalker" },
+  { num: "04", label: "Practice", href: "#practice" },
 ] as const;
 
 /** Seconds the readout's decode waits on arrival — matches the CSS

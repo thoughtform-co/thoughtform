@@ -58,6 +58,7 @@ const AMBIENT_ENGAGE_RAW = 0.999;
  *  the receded bed finishes dying exactly as the next OPAQUE station's
  *  top reaches the viewport top — cover and canvas death land on the same
  *  edge (the ADR-033 coincide-by-design retune, moved one station down).
+ *  That station is `#voidwalker` since ADR-074 (was `#practice`).
  *  ABOUT_DECK_STAGE=false restores #about as the kill target. */
 const NEXT_STATION_FADE_START_VH = 0.6;
 const NEXT_STATION_FADE_END_VH = 0.0;
@@ -184,14 +185,21 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // ABOUT_DECK_STAGE off restores the ADR-033 #about kill
       // byte-identically.
       //
-      // ADR-056 retired `#proof`, which used to hold this slot. `#practice`
-      // now occupies the SAME scroll position (the removed station was
-      // between them), so the seam is unmoved — and it is a plain opaque
-      // station, which is the only property this read requires.
+      // ADR-074: `#voidwalker` (the career through-line) is the first
+      // OPAQUE station below the pinned #about now — a plain normal-flow
+      // station, which is the only property this read requires. The slot
+      // passed #about → #continuum (ADR-047) → #proof (ADR-054) →
+      // #practice (ADR-056) → here; `#practice` survives as a roleless
+      // breather and is the defensive fallback.
+      // ⚠ Keep this query and home-v2.css's
+      // `html[data-corridor-exit="true"] #voidwalker` rule on the SAME
+      // station (the ADR-030 §6 seam bug — see the comment below).
       if (!nextStationEl || !nextStationEl.isConnected) {
         nextStationEl = ABOUT_DECK_STAGE
-          ? root.querySelector<HTMLElement>("#practice")
+          ? (root.querySelector<HTMLElement>("#voidwalker") ??
+            root.querySelector<HTMLElement>("#practice"))
           : (root.querySelector<HTMLElement>("#about") ??
+            root.querySelector<HTMLElement>("#voidwalker") ??
             root.querySelector<HTMLElement>("#practice"));
       }
       const nextStationTopVh =

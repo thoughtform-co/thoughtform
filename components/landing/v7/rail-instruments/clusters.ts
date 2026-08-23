@@ -11,8 +11,8 @@
  *
  * ⚠ THE ROSTER IS SECTIONS, NOT BEATS (owner, 2026-08-03 — ADR-059 U3).
  * Top-left is the journey as a reader experiences it — Home · Thesis · Arc ·
- * Proof · Services · About — with the Arc as ONE mark rather than its three
- * corridor beats. Bottom-right is the exit and the controls: the theme
+ * Proof · Services · About · Voidwalker (ADR-074) — with the Arc as ONE mark
+ * rather than its three corridor beats. Bottom-right is the exit and the controls: the theme
  * switch, Contact, and a session mark only an allowlisted user ever sees.
  *
  * `practice` carries NO mark (owner, same day). It is still a station in
@@ -151,6 +151,10 @@ export const JOURNEY_MARKS: readonly JourneyMark[] = [
   row("proof"),
   row("services"),
   row("about"),
+  // ADR-074: the through-line follows the bio. Row-clocked like every
+  // section past the Arc; `rowIdx` throws if the manifest row is missing,
+  // so this line and `MANIFEST_ENTRIES` move in one commit.
+  row("voidwalker"),
 ];
 
 /**

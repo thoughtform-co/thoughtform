@@ -9,6 +9,10 @@ import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/landing/home-v2/about/about-stage.css";
+// The through-line (ADR-074) — the section sheet and its drawings' sheet,
+// both BEFORE theme.css so the light rows cascade last.
+import "@/components/landing/home-v2/voidwalker/voidwalker.css";
+import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
 // Theme sheet LAST (ADR-058): its `html[data-theme="light"]` cascade has
 // to win over every route sheet above. Imported per-route, never from
 // globals.css, so admin / astrogation / /test/* stay dark unconditionally.
@@ -77,13 +81,17 @@ const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 // seam owns the visual bridge, no celestial connector required).
 //
 // Specs run in ARRAY ORDER and each inserts immediately after the
-// mount, so the LAST spec lands closest to the mount. about first,
-// services second ⇒ mount → #services → #about → #practice →
-// #contact — the ADR-033 funnel as amended by ADR-056: the corridor
-// exits into services, whose runway opens with the client casefile
-// (the evidence) before the offer; the bio follows, and #practice is
-// the opaque cover that ends the ambient hold.
+// mount, so the LAST spec lands closest to the mount. voidwalker first,
+// about second, services third ⇒ mount → #services → #about →
+// #voidwalker → #practice → #contact — the ADR-033 funnel as amended
+// by ADR-056 and ADR-074: the corridor exits into services, whose
+// runway opens with the client casefile (the evidence) before the
+// offer; the bio follows; then the through-line (#voidwalker, the
+// career timeline), which is the OPAQUE COVER that ends the ambient
+// hold (the role #practice held under ADR-056). #practice survives as
+// an empty breather before #contact.
 const CORRIDOR_RELOCATED_STATIONS = [
+  { stationId: "voidwalker" },
   { stationId: "about" },
   { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
 ] as const;

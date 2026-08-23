@@ -138,6 +138,15 @@ export const SECTION_GLYPHS: Readonly<Record<string, ReactElement>> = {
       <path d="M5 20v-1.6l4.4-4.4h5.2L19 18.4V20" />
     </Mark>
   ),
+  /** A spine with its markers — the through-line, beats on one line
+   *  (ADR-074). The lower diamond is filled: the line has been walked. */
+  voidwalker: (
+    <Mark>
+      <path d="M12 2.5v19" />
+      <path d="M12 6.2l2.3 2.3L12 10.8 9.7 8.5Z" />
+      <path d="M12 13.8l2.3 2.3L12 18.4l-2.3-2.3Z" fill="currentColor" />
+    </Mark>
+  ),
   /** A standard on a mast — dispatches from the practice. */
   practice: (
     <Mark>

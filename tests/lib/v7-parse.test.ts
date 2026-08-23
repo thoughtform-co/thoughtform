@@ -23,8 +23,9 @@ import {
  *     cases live in the Arc's Build-park orbit) · proof (retired with
  *     ADR-056 — the client case is the casefile at the top of #services)
  *   - Inserts: <div id="home-corridor-mount" data-home-corridor-mount></div>
- *   - Relocates: about + services (services drops its trailing connector
- *     slot `practice-to-about`).
+ *   - Relocates: voidwalker + about + services (services drops its
+ *     trailing connector slot `practice-to-about`; voidwalker is the
+ *     ADR-074 through-line, the opaque cover after the bio).
  */
 
 const CORRIDOR_REPLACED_STATIONS = [
@@ -40,8 +41,10 @@ const CORRIDOR_REPLACED_STATIONS = [
 
 // Mirrors app/(marketing)/page.tsx: specs run in array order, each
 // inserting immediately after the mount, so the LAST lands closest —
-// about first + services second ⇒ mount → #services → #about (ADR-033).
+// voidwalker first + about second + services third ⇒ mount → #services
+// → #about → #voidwalker (ADR-033, ADR-074).
 const CORRIDOR_RELOCATED_STATIONS = [
+  { stationId: "voidwalker" },
   { stationId: "about" },
   { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
 ] as const;
@@ -175,14 +178,23 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     const mountIdx = bodyHtml.indexOf('id="home-corridor-mount"');
     const servicesIdx = bodyHtml.search(/<section\b[^>]*\bid="services"/);
     const aboutIdx = bodyHtml.search(/<section\b[^>]*\bid="about"/);
+    const voidwalkerIdx = bodyHtml.search(/<section\b[^>]*\bid="voidwalker"/);
     const practiceIdx = bodyHtml.search(/<section\b[^>]*\bid="practice"/);
 
     expect(mountIdx).toBeGreaterThan(0);
     expect(servicesIdx).toBeGreaterThan(mountIdx);
     // #about (the bio) directly follows services — the ADR-033 funnel;
-    // #practice comes after and is the opaque ambient cover (ADR-056).
+    // #voidwalker (the through-line) follows and is the opaque ambient
+    // cover (ADR-074, the role #practice held under ADR-056); #practice
+    // trails as an empty breather.
     expect(aboutIdx).toBeGreaterThan(servicesIdx);
-    expect(practiceIdx).toBeGreaterThan(aboutIdx);
+    expect(voidwalkerIdx).toBeGreaterThan(aboutIdx);
+    expect(practiceIdx).toBeGreaterThan(voidwalkerIdx);
+    // The voidwalker portal slot survives the relocation INSIDE the
+    // relocated section (VoidwalkerPortal mounts into it).
+    expect(bodyHtml).toMatch(/<div\b[^>]*\bdata-voidwalker-root/);
+    expect(bodyHtml.search(/<div\b[^>]*\bdata-voidwalker-root/)).toBeGreaterThan(voidwalkerIdx);
+    expect(bodyHtml.search(/<div\b[^>]*\bdata-voidwalker-root/)).toBeLessThan(practiceIdx);
 
     // Both retired case surfaces are gone, portal slots included.
     // (Element-form assertions: the authored prototype's explanatory
@@ -219,7 +231,7 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
       corridorMountId: CORRIDOR_MOUNT_ID,
     });
 
-    const order = ["hero", "services", "about", "practice", "contact"];
+    const order = ["hero", "services", "about", "voidwalker", "practice", "contact"];
     let cursor = 0;
     for (const id of order) {
       const idx = bodyHtml.indexOf(`id="${id}"`, cursor);

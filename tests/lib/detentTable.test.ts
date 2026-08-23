@@ -21,7 +21,9 @@ const LAYOUT: Record<string, { top: number; height: number }> = {
   [CORRIDOR_MOUNT_ID]: { top: 800, height: 8200 }, // the long corridor runway
   services: { top: 9000, height: 800 },
   about: { top: 9800, height: 800 },
-  proof: { top: 10600, height: 800 },
+  // ADR-074: the through-line follows the bio (the `proof` station this
+  // stub used to carry retired with ADR-056).
+  voidwalker: { top: 10600, height: 800 },
   practice: { top: 11400, height: 800 },
   contact: { top: 12200, height: 800 },
 };

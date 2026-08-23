@@ -53,6 +53,9 @@ test.describe("Homepage corridor smoke", () => {
         // ADR-056 made it the casefile at the TOP of #services. #tools
         // and #build retired (the cases orbit the Arc's Build park).
         "about",
+        // ADR-074: the through-line follows the bio and is the opaque
+        // cover; #practice trails it as an empty breather.
+        "voidwalker",
         "practice",
         "contact",
       ];

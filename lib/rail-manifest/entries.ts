@@ -30,6 +30,7 @@ export type ManifestEntryId =
   | "build"
   | "services"
   | "about"
+  | "voidwalker"
   | "practice"
   | "contact";
 
@@ -140,6 +141,17 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     name: "About",
     kind: "station",
     targetId: "about",
+  },
+  {
+    // ADR-074: the through-line — the career timeline that follows the
+    // bio (relocated in page.tsx to sit directly after #about) and the
+    // opaque cover that ends the corridor ambient hold (the role
+    // #practice held under ADR-056).
+    id: "voidwalker",
+    label: "09A",
+    name: "Voidwalker",
+    kind: "station",
+    targetId: "voidwalker",
   },
   // (The ADR-054 `proof` row retired with ADR-056: the client case is
   // the casefile at the TOP of #services now, so it is not a station of

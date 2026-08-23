@@ -37,6 +37,10 @@ describe("section readout", () => {
   it("names each station in the chrome register (uppercase)", () => {
     expect(sectionReadout(idxOf("services"))).toMatchObject({ id: "services", label: "SERVICES" });
     expect(sectionReadout(idxOf("about"))).toMatchObject({ id: "about", label: "ABOUT" });
+    expect(sectionReadout(idxOf("voidwalker"))).toMatchObject({
+      id: "voidwalker",
+      label: "VOIDWALKER",
+    });
     expect(sectionReadout(idxOf("practice"))).toMatchObject({ id: "practice", label: "PRACTICE" });
     expect(sectionReadout(idxOf("contact"))).toMatchObject({ id: "contact", label: "CONTACT" });
   });
@@ -47,12 +51,13 @@ describe("section readout", () => {
       "proof",
       "services",
       "about",
+      "voidwalker",
       "practice",
       "contact",
     ]);
     const last = sectionReadout(idxOf("contact"));
-    expect(last.num).toBe("06");
-    expect(last.total).toBe("06");
+    expect(last.num).toBe("07");
+    expect(last.total).toBe("07");
     for (const [i, row] of READOUT_SECTIONS.entries()) {
       // `proof` is the one row with no manifest entry (ADR-056): the casefile
       // shares `#services`' DOM section and rail detent, so it is addressed
@@ -81,7 +86,7 @@ describe("section readout", () => {
     );
     // The flag only ever means anything on services — it must never rewrite
     // another section's label.
-    for (const id of ["about", "practice", "contact"]) {
+    for (const id of ["about", "voidwalker", "practice", "contact"]) {
       expect(sectionReadout(idxOf(id), true).id, id).toBe(id);
     }
   });

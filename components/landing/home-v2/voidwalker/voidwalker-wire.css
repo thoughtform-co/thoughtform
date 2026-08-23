@@ -1,0 +1,843 @@
+/* ═══════════════════════════════════════════════════════════════════
+   .vw-wire — THE THROUGH-LINE'S AUTHORED WIREFRAMES (ADR-074)
+   ═══════════════════════════════════════════════════════════════════
+   Six drawings, one per story beat, in the casefile's wireframe
+   vocabulary (ADR-068): PT Mono micro-labels, bare <i>/<b> placeholder
+   bars, data-on for a lit row, inline SVG for glyphs, ONE gold object
+   per drawing ([data-gold]) and green for the flow.
+
+   ⚠ A FORK, NOT A SHARE. `.fl-wire*` assumes the casefile's
+   `.fl-shot__frame` button (position: absolute; inset: 0, a hover that
+   belongs to a control), enumerates its grammar pair per tool, reads
+   `--fl-mono` (scoped to `.fl-case`), and is walked by the services
+   smoke. These classes are `.vw-wire*`; the `--w-*` TOKEN BLOCK below is
+   the casefile's verbatim, and `tests/lib/voidwalker-wire-tokens` pins
+   the two equal so the light re-derivation in theme.css serves both.
+
+   ⚠ `.vw-wire__in` IS A SIZE CONTAINER and every dimension is a `cqw` /
+   `cqh` of the drawing box (the plate's frame: ≈ 2:1 at the desktop
+   references, taller on the phone plate). The plate itself is in flow
+   with a definite aspect, so there is no pure-`cqh` balloon risk, but
+   label-bearing rows are capped in `cqw` anyway.
+
+   Shared primitives across the six (the fork's one liberty over the
+   casefile, which shares only the label and the grammar pair):
+     .vw-wire__hd / __ft   a header / footer strip
+     .vw-wire__card        a plate inside the drawing
+     .vw-wire__bar         a placeholder text bar (--short / --mid)
+   Everything else is scoped `.vw-wire--{id}`. ══════════════════════ */
+
+.vw-wire {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.vw-wire__in {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* ── the casefile's token block, verbatim (pinned equal by test) ── */
+  --w-hair: rgba(var(--dawn-rgb), 0.15);
+  --w-hair2: rgba(var(--dawn-rgb), 0.09);
+  --w-fill: rgba(var(--dawn-rgb), 0.13);
+  --w-fill2: rgba(var(--dawn-rgb), 0.2);
+  --w-card: rgba(var(--dawn-rgb), 0.03);
+  --w-lbl-ink: rgba(var(--dawn-rgb), 0.44);
+  --w-mark: var(--gold);
+  --w-lit: rgba(var(--gold-rgb), 0.2);
+  --w-gen: rgba(var(--gold-rgb), 0.16);
+  --w-green: var(--atreides-light);
+  --w-green-ink: var(--atreides-ink);
+  --w-green-soft: rgba(var(--atreides-rgb), 0.14);
+  --w-cta: var(--gold);
+  --w-cta-ink: #110f09;
+  --w-gold-ink: var(--gold);
+  --w-tile-a: rgba(var(--gold-rgb), 0.15);
+  --w-tile-b: rgba(var(--dawn-rgb), 0.05);
+  --w-tile-c: rgba(var(--gold-rgb), 0.07);
+  --w-plate: rgb(var(--void-rgb));
+  --w-plate-lift: rgba(var(--dawn-rgb), 0.05);
+}
+
+/* ⚠ PT MONO, NEVER `--font-mono` (ADR-067). The floor is 8.6px — the
+   clamp's low end is what ships on the phone plate and at 1280. */
+.vw-wire__lbl {
+  flex: none;
+  font-family: var(--vw-mono, var(--font-pt-mono));
+  font-size: clamp(8.6px, 1.6cqw, 11px);
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--w-lbl-ink);
+}
+.vw-wire__lbl--as-is {
+  text-transform: none;
+  letter-spacing: 0.12em;
+}
+.vw-wire__lbl--grn {
+  color: var(--w-green-ink);
+}
+
+/* GREEN IS THE FLOW, GOLD IS THE MAKE (ADR-068 U5). Exactly one solid
+   gold plate per drawing (or, on the coins, one gold MARK). ⚠ The CTA's
+   text sits on an INNER `.vw-wire__lbl` — the light walk's `bedOf()`
+   starts at the parent, so the plate's opaque gold is the bed. The chip
+   cut is the house TR + BL diagonal, as a clip-path because this is DOM. */
+.vw-wire__cta {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(18px, 7.5cqh, 26px);
+  padding: 0 max(8px, 1.4cqw);
+  background: var(--w-cta);
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.vw-wire__cta .vw-wire__lbl {
+  color: var(--w-cta-ink);
+}
+
+/* ── shared primitives ─────────────────────────────────────────────── */
+.vw-wire__hd,
+.vw-wire__ft {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+  height: clamp(20px, 11cqh, 30px);
+  padding: 0 2cqw;
+}
+.vw-wire__hd {
+  border-bottom: 1px solid var(--w-hair2);
+}
+.vw-wire__ft {
+  border-top: 1px solid var(--w-hair2);
+  justify-content: flex-start;
+  gap: 3cqw;
+}
+.vw-wire__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 3cqh, 9px);
+  padding: clamp(8px, 4cqh, 13px) clamp(9px, 2cqw, 14px);
+  background: var(--w-card);
+  border: 1px solid var(--w-hair);
+  min-width: 0;
+}
+.vw-wire__bar {
+  display: block;
+  height: clamp(3px, 1.6cqh, 5px);
+  width: 100%;
+  background: var(--w-fill);
+}
+.vw-wire__bar--mid {
+  width: 72%;
+}
+.vw-wire__bar--short {
+  width: 44%;
+}
+
+/* ═══ hunt — the street map ════════════════════════════════════════ */
+.vw-wire--hunt .vw-wire__hu-map {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background-image:
+    linear-gradient(var(--w-hair2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--w-hair2) 1px, transparent 1px);
+  background-size: 9cqw 9cqw;
+  background-position: 2cqw 1cqw;
+}
+.vw-wire--hunt .vw-wire__hu-street {
+  position: absolute;
+  background: var(--w-fill);
+}
+.vw-wire--hunt .vw-wire__hu-street--v {
+  left: 40%;
+  top: 0;
+  bottom: 0;
+  width: clamp(9px, 4cqw, 20px);
+}
+.vw-wire--hunt .vw-wire__hu-street--h {
+  top: 54%;
+  left: 0;
+  right: 0;
+  height: clamp(9px, 7cqh, 18px);
+  transform: translateY(-50%);
+}
+.vw-wire--hunt .vw-wire__hu-closure {
+  position: absolute;
+  left: 8%;
+  top: 54%;
+  width: clamp(16px, 8cqw, 34px);
+  height: clamp(11px, 9cqh, 22px);
+  transform: translateY(-50%);
+  border: 1px dashed var(--w-mark);
+  background: var(--w-lit);
+}
+.vw-wire--hunt .vw-wire__hu-crowd i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: clamp(3px, 1.1cqw, 6px);
+  height: clamp(3px, 1.1cqw, 6px);
+  margin: -2px 0 0 -2px;
+  background: var(--w-green);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.vw-wire--hunt .vw-wire__hu-crowd i[data-near] {
+  opacity: 1;
+  width: clamp(4px, 1.4cqw, 7px);
+  height: clamp(4px, 1.4cqw, 7px);
+}
+.vw-wire--hunt .vw-wire__hu-pin {
+  position: absolute;
+  left: 58%;
+  top: 54%;
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+  transform: translate(-5px, -50%);
+}
+.vw-wire--hunt .vw-wire__hu-diamond {
+  display: block;
+  width: clamp(7px, 2.4cqw, 11px);
+  height: clamp(7px, 2.4cqw, 11px);
+  background: var(--w-mark);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 3px var(--w-lit);
+}
+.vw-wire--hunt .vw-wire__hu-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.vw-wire--hunt .vw-wire__hu-key::before {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--w-green);
+}
+.vw-wire--hunt .vw-wire__hu-key--closed::before {
+  width: 10px;
+  height: 5px;
+  border-radius: 0;
+  background: var(--w-lit);
+  border: 1px dashed var(--w-mark);
+}
+
+/* ═══ ophef — a tweet becomes a party ══════════════════════════════ */
+.vw-wire--ophef .vw-wire__op-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) clamp(22px, 9cqw, 48px) minmax(0, 5fr);
+  align-items: stretch;
+  gap: 1cqw;
+  padding: clamp(10px, 8cqh, 24px) 2.4cqw;
+}
+/* Both cards fill the band's height, their rows spread — the drawing's
+   box is ~2:1 and a short card leaves the plate half empty. */
+.vw-wire--ophef .vw-wire__card {
+  justify-content: space-evenly;
+  gap: clamp(4px, 2.4cqh, 8px);
+}
+.vw-wire--ophef .vw-wire__op-head {
+  display: flex;
+  align-items: center;
+  gap: 1.6cqw;
+}
+.vw-wire--ophef .vw-wire__op-head .vw-wire__bar {
+  flex: 1 1 auto;
+}
+.vw-wire--ophef .vw-wire__op-head .vw-wire__lbl {
+  margin-left: auto;
+}
+.vw-wire--ophef .vw-wire__op-avatar {
+  display: block;
+  flex: none;
+  width: clamp(10px, 4cqw, 18px);
+  height: clamp(10px, 4cqw, 18px);
+  background: var(--w-fill2);
+}
+.vw-wire--ophef .vw-wire__op-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.6cqw;
+  margin-top: clamp(2px, 1.5cqh, 6px);
+}
+.vw-wire--ophef .vw-wire__op-repeat {
+  width: clamp(9px, 2.6cqw, 13px);
+  height: clamp(9px, 2.6cqw, 13px);
+  fill: none;
+  stroke: var(--w-green);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+.vw-wire--ophef .vw-wire__op-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.vw-wire--ophef .vw-wire__op-line {
+  display: block;
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--w-green);
+}
+.vw-wire--ophef .vw-wire__op-diamond {
+  display: block;
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: var(--w-green);
+  transform: rotate(45deg);
+  margin-left: -2px;
+}
+.vw-wire--ophef .vw-wire__op-party {
+  border-color: rgba(var(--gold-rgb), 0.3);
+}
+.vw-wire--ophef .vw-wire__op-mast {
+  display: flex;
+  align-items: center;
+  height: clamp(12px, 6cqh, 18px);
+  border-bottom: 1px solid var(--w-hair);
+  margin: 0 0 2px;
+}
+.vw-wire--ophef .vw-wire__op-name {
+  height: clamp(5px, 2.6cqh, 8px);
+  width: 62%;
+  background: var(--w-fill2);
+}
+.vw-wire--ophef .vw-wire__op-prog {
+  margin-top: clamp(2px, 1.5cqh, 6px);
+}
+.vw-wire--ophef .vw-wire__op-k {
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+}
+.vw-wire--ophef .vw-wire__op-k i {
+  flex: none;
+  width: 4px;
+  height: 4px;
+  background: var(--w-mark);
+  transform: rotate(45deg);
+}
+.vw-wire--ophef .vw-wire__op-party .vw-wire__cta {
+  align-self: flex-start;
+  margin-top: clamp(3px, 2cqh, 8px);
+}
+
+/* ═══ expanse — the command centre ═════════════════════════════════ */
+.vw-wire--expanse .vw-wire__in {
+  flex-direction: row;
+}
+.vw-wire--expanse .vw-wire__ex-rail {
+  flex: 0 0 clamp(18px, 7cqw, 34px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(5px, 3cqh, 9px);
+  padding-top: clamp(8px, 5cqh, 14px);
+  border-right: 1px solid var(--w-hair2);
+  background: var(--w-card);
+}
+.vw-wire--expanse .vw-wire__ex-rail i {
+  display: block;
+  width: clamp(10px, 4cqw, 18px);
+  height: clamp(10px, 4cqw, 18px);
+  border-radius: 3px;
+  background: var(--w-fill);
+}
+.vw-wire--expanse .vw-wire__ex-rail i[data-on] {
+  background: var(--w-green);
+}
+.vw-wire--expanse .vw-wire__ex-chan {
+  flex: 0 0 clamp(88px, 30cqw, 150px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 3.2cqh, 10px);
+  padding: clamp(8px, 5cqh, 14px) 1.8cqw;
+  border-right: 1px solid var(--w-hair2);
+}
+.vw-wire--expanse .vw-wire__ex-chan-hd {
+  margin-bottom: clamp(2px, 1.4cqh, 5px);
+}
+.vw-wire--expanse .vw-wire__ex-ch {
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  padding: 3px 4px;
+}
+.vw-wire--expanse .vw-wire__ex-ch[data-on] {
+  background: var(--w-green-soft);
+}
+.vw-wire--expanse .vw-wire__ex-ch i {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--w-green);
+}
+.vw-wire--expanse .vw-wire__ex-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 5cqh, 16px);
+  padding: clamp(8px, 5cqh, 14px) 2.4cqw;
+}
+.vw-wire--expanse .vw-wire__ex-meter {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 2cqh, 6px);
+}
+.vw-wire--expanse .vw-wire__ex-track {
+  display: block;
+  height: clamp(5px, 2.6cqh, 8px);
+  background: var(--w-fill);
+}
+.vw-wire--expanse .vw-wire__ex-fill {
+  display: block;
+  height: 100%;
+  width: 91%;
+  background: var(--w-green);
+}
+.vw-wire--expanse .vw-wire__ex-sky {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: clamp(40px, 30cqh, 120px);
+  border: 1px solid var(--w-hair2);
+  background-image: linear-gradient(var(--w-hair2) 1px, transparent 1px);
+  background-size: 100% 9cqh;
+}
+.vw-wire--expanse .vw-wire__ex-flight {
+  position: absolute;
+  left: 6%;
+  top: 22%;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.vw-wire--expanse .vw-wire__ex-plane {
+  flex: none;
+  width: clamp(12px, 4cqw, 20px);
+  height: clamp(12px, 4cqw, 20px);
+  fill: var(--w-lbl-ink);
+  stroke: none;
+}
+.vw-wire--expanse .vw-wire__ex-tow {
+  display: block;
+  width: clamp(10px, 4cqw, 22px);
+  height: 1px;
+  background: var(--w-mark);
+}
+.vw-wire--expanse .vw-wire__ex-studio {
+  position: absolute;
+  right: 8%;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+.vw-wire--expanse .vw-wire__ex-studio i {
+  display: block;
+  width: clamp(28px, 12cqw, 56px);
+  height: clamp(10px, 8cqh, 22px);
+  background: var(--w-fill);
+  border-top: 1px solid var(--w-hair);
+}
+
+/* ═══ coins — the post and the pocket ══════════════════════════════ */
+.vw-wire--coins .vw-wire__in {
+  flex-direction: row;
+  gap: 2cqw;
+  padding: clamp(8px, 5cqh, 16px) 2.4cqw;
+}
+.vw-wire--coins .vw-wire__co-post {
+  flex: 1 1 52%;
+  flex-direction: row;
+  gap: 2cqw;
+  align-items: stretch;
+}
+.vw-wire--coins .vw-wire__co-vote {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(3px, 2cqh, 6px);
+  padding-right: 1.4cqw;
+  border-right: 1px solid var(--w-hair2);
+}
+.vw-wire--coins .vw-wire__co-up {
+  width: clamp(9px, 2.6cqw, 13px);
+  height: clamp(9px, 2.6cqw, 13px);
+  fill: none;
+  stroke: var(--w-green);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.vw-wire--coins .vw-wire__co-meter {
+  display: block;
+  flex: 1 1 auto;
+  width: 4px;
+  min-height: clamp(16px, 14cqh, 40px);
+  background: var(--w-fill);
+  position: relative;
+}
+.vw-wire--coins .vw-wire__co-meter b {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 88%;
+  background: var(--w-green);
+}
+.vw-wire--coins .vw-wire__co-vote .vw-wire__lbl {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 0.14em;
+}
+.vw-wire--coins .vw-wire__co-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 3cqh, 9px);
+}
+.vw-wire--coins .vw-wire__co-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1cqw;
+  margin-bottom: clamp(2px, 1.5cqh, 5px);
+}
+.vw-wire--coins .vw-wire__co-title {
+  height: clamp(5px, 2.6cqh, 8px);
+  background: var(--w-fill2);
+}
+.vw-wire--coins .vw-wire__co-fig {
+  flex: 1 1 48%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 2cqh, 8px);
+}
+.vw-wire--coins .vw-wire__co-fig svg {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+.vw-wire--coins .vw-wire__co-coins circle {
+  fill: var(--w-card);
+  stroke: var(--w-hair);
+  stroke-width: 1;
+}
+/* The coin that took it — the drawing's one gold, a MARK. Selector
+   specificity must beat the `.vw-wire__co-coins circle` rule above. */
+.vw-wire--coins .vw-wire__co-coins circle.vw-wire__co-hit {
+  fill: var(--w-mark);
+  stroke: var(--w-mark);
+}
+.vw-wire--coins .vw-wire__co-bullet {
+  fill: none;
+  stroke: var(--w-lbl-ink);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 2;
+}
+.vw-wire--coins .vw-wire__co-cap {
+  display: flex;
+  justify-content: space-between;
+  gap: 1cqw;
+}
+
+/* ═══ azeroth — the raid HUD as a classroom ════════════════════════ */
+.vw-wire--azeroth .vw-wire__az-top {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: clamp(44px, 22cqw, 96px) minmax(0, 1fr) clamp(80px, 32cqw, 150px);
+  gap: 2cqw;
+  padding: clamp(8px, 5cqh, 14px) 2.4cqw clamp(6px, 3cqh, 10px);
+}
+.vw-wire--azeroth .vw-wire__az-mini,
+.vw-wire--azeroth .vw-wire__az-chat,
+.vw-wire--azeroth .vw-wire__az-side,
+.vw-wire--azeroth .vw-wire__az-roster {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 2.4cqh, 8px);
+  min-width: 0;
+}
+.vw-wire--azeroth .vw-wire__az-map {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  width: 100%;
+  max-height: 100%;
+  border: 1px solid var(--w-hair);
+  border-radius: 50%;
+  background: var(--w-card);
+}
+.vw-wire--azeroth .vw-wire__az-map i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--w-green);
+}
+.vw-wire--azeroth .vw-wire__az-map i[data-on] {
+  width: 6px;
+  height: 6px;
+  border-radius: 0;
+  background: var(--w-mark);
+  transform: rotate(45deg);
+  left: 47%;
+  top: 47%;
+}
+.vw-wire--azeroth .vw-wire__az-map i:nth-child(2) {
+  left: 28%;
+  top: 30%;
+}
+.vw-wire--azeroth .vw-wire__az-map i:nth-child(3) {
+  left: 64%;
+  top: 26%;
+}
+.vw-wire--azeroth .vw-wire__az-map i:nth-child(4) {
+  left: 70%;
+  top: 62%;
+}
+.vw-wire--azeroth .vw-wire__az-map i:nth-child(5) {
+  left: 34%;
+  top: 66%;
+}
+.vw-wire--azeroth .vw-wire__az-map i:nth-child(6) {
+  left: 52%;
+  top: 76%;
+}
+.vw-wire--azeroth .vw-wire__az-chat {
+  justify-content: flex-end;
+  padding: clamp(6px, 3cqh, 10px) 1.6cqw;
+  border: 1px solid var(--w-hair2);
+  background: var(--w-card);
+}
+.vw-wire--azeroth .vw-wire__az-row {
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+}
+.vw-wire--azeroth .vw-wire__az-row i,
+.vw-wire--azeroth .vw-wire__az-chk i {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--w-green);
+}
+.vw-wire--azeroth .vw-wire__az-row i {
+  background: var(--w-green-soft);
+}
+.vw-wire--azeroth .vw-wire__az-quest {
+  gap: clamp(4px, 2.4cqh, 8px);
+  border-color: rgba(var(--gold-rgb), 0.3);
+}
+.vw-wire--azeroth .vw-wire__az-chk {
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+}
+.vw-wire--azeroth .vw-wire__az-chk i {
+  border-color: var(--w-hair);
+}
+.vw-wire--azeroth .vw-wire__az-chk i[data-on] {
+  background: var(--w-mark);
+  border-color: var(--w-mark);
+}
+.vw-wire--azeroth .vw-wire__az-quest .vw-wire__cta {
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.vw-wire--azeroth .vw-wire__az-bar {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  gap: clamp(3px, 1cqw, 6px);
+  padding: clamp(5px, 3cqh, 9px) 0;
+  border-top: 1px solid var(--w-hair2);
+  background: var(--w-card);
+}
+.vw-wire--azeroth .vw-wire__az-bar i {
+  display: block;
+  width: clamp(10px, 4cqw, 20px);
+  height: clamp(10px, 4cqw, 20px);
+  border: 1px solid var(--w-hair);
+  background: var(--w-fill);
+}
+.vw-wire--azeroth .vw-wire__az-bar i[data-on] {
+  border-color: var(--w-mark);
+  background: var(--w-lit);
+}
+
+/* ═══ latent — the hybrid film and the charter ═════════════════════ */
+.vw-wire--latent .vw-wire__la-chrome {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+  min-height: clamp(26px, 15cqh, 38px);
+  padding: 0 2.4cqw;
+  border-bottom: 1px solid var(--w-hair2);
+}
+.vw-wire--latent .vw-wire__la-chain {
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  min-width: 0;
+}
+.vw-wire--latent .vw-wire__la-link {
+  display: block;
+  width: clamp(8px, 2.6cqw, 16px);
+  height: 1px;
+  background: var(--w-green);
+}
+.vw-wire--latent .vw-wire__la-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 4fr);
+  gap: 2.4cqw;
+  padding: clamp(8px, 5cqh, 14px) 2.4cqw;
+}
+.vw-wire--latent .vw-wire__la-strip {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 3cqh, 9px);
+  min-width: 0;
+}
+.vw-wire--latent .vw-wire__la-frames {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 1.2cqw;
+  padding: clamp(4px, 2cqh, 6px) 0;
+  border-top: 3px dotted var(--w-hair);
+  border-bottom: 3px dotted var(--w-hair);
+}
+/* Film frames are wider than tall: a definite aspect, centred in the
+   strip's row, capped by the row's height. */
+.vw-wire--latent .vw-wire__la-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--w-gen);
+  border: 1px solid var(--w-hair2);
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  max-height: 100%;
+  min-height: 0;
+}
+.vw-wire--latent .vw-wire__la-frame svg {
+  width: 48%;
+  height: 60%;
+  fill: none;
+  stroke: var(--w-lbl-ink);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.vw-wire--latent .vw-wire__la-scrub {
+  position: relative;
+  display: block;
+  height: 2px;
+  background: var(--w-fill);
+}
+.vw-wire--latent .vw-wire__la-scrub b {
+  position: absolute;
+  left: 62%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--w-mark);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.vw-wire--latent .vw-wire__la-charter {
+  gap: clamp(4px, 2.4cqh, 8px);
+}
+.vw-wire--latent .vw-wire__la-head {
+  height: clamp(4px, 2.2cqh, 7px);
+  width: 58%;
+  background: var(--w-fill2);
+}
+.vw-wire--latent .vw-wire__la-k {
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+}
+.vw-wire--latent .vw-wire__la-k i {
+  flex: none;
+  width: 4px;
+  height: 4px;
+  background: var(--w-mark);
+  transform: rotate(45deg);
+}
+.vw-wire--latent .vw-wire__la-sig {
+  display: flex;
+  gap: 2cqw;
+  margin-top: auto;
+  padding-top: clamp(4px, 2.4cqh, 8px);
+  border-top: 1px solid var(--w-hair2);
+}
+.vw-wire--latent .vw-wire__la-sig .vw-wire__bar {
+  width: 40%;
+}
+
+/* ═══ the narrow plate (the phone band, ≤ ~380px of drawing) ══════════
+   Eight labels at .2em do not fit a 276px box; the tracking tightens, the
+   expanse's channel column gives up width to the sky, and the latent
+   chain wraps under its title instead of racing it. Measured at 390×844:
+   the banner plate and the chain were the two overflows. */
+@container (max-width: 380px) {
+  .vw-wire__lbl {
+    letter-spacing: 0.1em;
+  }
+  .vw-wire__cta {
+    padding: 0 6px;
+  }
+  .vw-wire--expanse .vw-wire__ex-chan {
+    flex-basis: 34cqw;
+    padding-inline: 1.2cqw;
+  }
+  .vw-wire--expanse .vw-wire__ex-flight {
+    left: 3%;
+  }
+  .vw-wire--expanse .vw-wire__ex-tow {
+    width: 6px;
+  }
+  .vw-wire--latent .vw-wire__la-chrome {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    min-height: 0;
+    padding-block: 6px;
+    row-gap: 6px;
+  }
+  .vw-wire--latent .vw-wire__la-chain {
+    flex-basis: 100%;
+  }
+  .vw-wire--latent .vw-wire__la-link {
+    width: 6px;
+  }
+}

@@ -1940,12 +1940,13 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(parseFloat(mid.flip || "0")).toBe(1);
     expect(mid.voidwalkerDisplay).toBe("none");
 
-    // Walk under #practice: THIS is where the ambient hold ends (ADR-056 —
-    // #proof retired and #practice inherited the cover role at the same
-    // scroll position). The bottom gate is keyed to the SAME rect as the
-    // fade envelope, so there is no hard cut at the about runway's end.
+    // Walk under #voidwalker: THIS is where the ambient hold ends (ADR-074
+    // — the through-line follows the bio and inherited the cover role
+    // #practice held under ADR-056). The bottom gate is keyed to the SAME
+    // rect as the fade envelope, so there is no hard cut at the about
+    // runway's end.
     const underNext = await page.evaluate(() => {
-      const next = document.getElementById("practice");
+      const next = document.getElementById("voidwalker");
       if (!next) return null;
       return Math.round(
         window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3

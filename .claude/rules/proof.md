@@ -10,8 +10,10 @@ four-tool card, which belongs to the Arc). See LANGUAGE.md.
 ⚠ **There is no `#proof` station.** ADR-054's station, its parse-time
 generator (`lib/v7-parse/proofStation.ts`) and its reveal controller were
 deleted by ADR-056. If you are here from an old comment expecting a station
-between `#about` and `#practice`, that funnel slot is gone and `#practice`
-inherited its ambient-cover role.
+between `#about` and `#practice`, that funnel slot is gone; `#practice`
+inherited its ambient-cover role under ADR-056, and **`#voidwalker` — the
+career through-line, ADR-074 — holds it now** (`#practice` is an empty
+breather).
 
 **Read first**
 

@@ -31,6 +31,8 @@ const PRODUCTION_PARSE_OPTIONS = {
     "proof",
   ] as unknown as readonly string[],
   relocateStationsToMount: [
+    // ADR-074: the through-line follows the bio and is the opaque cover.
+    { stationId: "voidwalker" },
     { stationId: "about" },
     { stationId: "services", dropTrailingConnectorSlot: "practice-to-about" },
   ],
@@ -38,8 +40,8 @@ const PRODUCTION_PARSE_OPTIONS = {
 };
 
 describe("MANIFEST_ENTRIES data model", () => {
-  it("has 9 entries with unique ids in the expected journey order (beat granularity)", () => {
-    expect(MANIFEST_ENTRIES).toHaveLength(9);
+  it("has 10 entries with unique ids in the expected journey order (beat granularity)", () => {
+    expect(MANIFEST_ENTRIES).toHaveLength(10);
     const ids = MANIFEST_ENTRIES.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     // Update 9: the corridor is FOUR beats (thesis + the Arc's three moves),
@@ -52,6 +54,7 @@ describe("MANIFEST_ENTRIES data model", () => {
       "build",
       "services",
       "about",
+      "voidwalker",
       "practice",
       "contact",
     ]);
@@ -168,15 +171,18 @@ describe("drift guard — manifest order matches the parsed production DOM", () 
     expect(mountAt).toBeLessThan(servicesAt);
   });
 
-  it("#about directly follows #services; #tools/#build/#proof are gone", () => {
+  it("#about follows #services, #voidwalker follows #about; #tools/#build/#proof are gone", () => {
     const servicesAt = bodyHtml.search(/<section[^>]*\bdata-station="services"/);
     const aboutAt = bodyHtml.search(/<section[^>]*\bdata-station="about"/);
+    const voidwalkerAt = bodyHtml.search(/<section[^>]*\bdata-station="voidwalker"/);
     const practiceAt = bodyHtml.search(/<section[^>]*\bdata-station="practice"/);
     expect(servicesAt).toBeGreaterThan(-1);
     expect(aboutAt).toBeGreaterThan(servicesAt);
-    // ADR-056: #practice took the slot #proof held — it is the opaque
-    // cover that ends the corridor ambient now.
-    expect(practiceAt).toBeGreaterThan(aboutAt);
+    // ADR-074: the through-line follows the bio and is the opaque cover
+    // that ends the corridor ambient (the role #practice held under
+    // ADR-056); #practice trails it as an empty breather.
+    expect(voidwalkerAt).toBeGreaterThan(aboutAt);
+    expect(practiceAt).toBeGreaterThan(voidwalkerAt);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="proof"/);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="continuum"/);
     expect(bodyHtml).not.toMatch(/<section[^>]*\bid="tools"/);

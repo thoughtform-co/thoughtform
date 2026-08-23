@@ -612,8 +612,13 @@ html[data-theme="light"] .fl-bay__top em {
    ⚠ THE GOLD SIGNAL TAKES `--gold-line`, NOT `--gold`. A saturated yellow
    is inherently high-luminance, so on parchment the mark is a smudge at
    1.68:1 where the ramp's 3:1 step measures 3.66 (ADR-063 U2). ⚠ And never
-   re-darken `--gold` itself — that breaks the fills everywhere else. */
-html[data-theme="light"] .fl-wire__in {
+   re-darken `--gold` itself — that breaks the fills everywhere else.
+   ⚠ ONE RULE, TWO HOSTS: the through-line's drawings (`.vw-wire__in`,
+   ADR-074) carry the identical dark token block, so they take this light
+   re-derivation from the same selector list — `voidwalker-wire-tokens`
+   pins the two hosts equal and this rule naming both. */
+html[data-theme="light"] .fl-wire__in,
+html[data-theme="light"] .vw-wire__in {
   --w-hair: rgba(var(--dawn-rgb), 0.3);
   --w-hair2: rgba(var(--dawn-rgb), 0.2);
   --w-fill: rgba(var(--dawn-rgb), 0.26);
@@ -644,6 +649,52 @@ html[data-theme="light"] .fl-wire__in {
      declaration in light is INK over paper, i.e. a smudge — and the
      parchment plate is already 8 levels off the bay's ground without it. */
   --w-plate-lift: transparent;
+}
+
+/* ── The through-line on parchment (ADR-074) ─────────────────────────
+   The section's own steps, re-derived: the resting title ink lifts (a
+   .30 alpha of near-black on parchment is a readable grey, but the
+   BRIGHTENING then has too little travel — .45 keeps the word-fill a
+   visible event); the spine, the diamonds and every gold-as-TEXT site
+   take the ramp's line / ink rungs; the plate's gold-15 border is ~1.2:1
+   here and takes the line rung at a third. */
+html[data-theme="light"] .vw {
+  --vw-dim: 0.45;
+  --vw-spine-ink: var(--gold-line);
+  --vw-mark-ink: var(--gold-line);
+}
+html[data-theme="light"] .vw-beat__ord,
+html[data-theme="light"] .vw-head__lede em,
+html[data-theme="light"] .vw-beat__p em,
+html[data-theme="light"] .vw-foot__line em,
+html[data-theme="light"] .vw-plate__bar,
+html[data-theme="light"] .vw-plate__outlet em,
+html[data-theme="light"] .vw-plate__arrow,
+html[data-theme="light"] .vw-beat__press-outlet em,
+html[data-theme="light"] .vw-foot__next {
+  color: var(--gold-ink);
+}
+html[data-theme="light"] .vw-beat__title .w--em {
+  --vw-gold-rgb: 110, 82, 22;
+}
+html[data-theme="light"] .vw-plate {
+  border-color: rgba(138, 107, 32, 0.35);
+}
+html[data-theme="light"] .vw-plate__top {
+  color: rgba(var(--dawn-rgb), 0.66);
+}
+html[data-theme="light"] .vw-plate__top em {
+  color: var(--gold-ink);
+}
+html[data-theme="light"] .vw-plate__bar b {
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+html[data-theme="light"] .vw-beat__diamond {
+  border-color: rgba(var(--dawn-rgb), 0.45);
+  background: var(--void, #f3ece0);
+}
+html[data-theme="light"] .vw-head__title {
+  text-shadow: none;
 }
 
 /* ...and the MAP's own vocabulary, which no other plate paints in. */

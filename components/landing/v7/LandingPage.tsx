@@ -18,6 +18,7 @@ import { RailInstruments } from "./rail-instruments/RailInstruments";
 import { SettingsCluster } from "./rail-instruments/SettingsCluster";
 import { RAIL_INSTRUMENTS } from "./rail-instruments/flags";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
+import { VoidwalkerPortal } from "@/components/landing/home-v2/voidwalker/VoidwalkerPortal";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
@@ -562,6 +563,13 @@ export function LandingPage({
           markup in the same station stays the mobile/PRM/fallback
           surface. Same nested-root rules as ServicesPortal. */}
       <AboutStagePortal containerRef={rootRef} />
+      {/* The through-line (ADR-074): a nested root into the
+          [data-voidwalker-root] slot inside #voidwalker — the career
+          timeline that follows the bio and is the opaque cover that ends
+          the corridor ambient hold. Plain DOM on every viewport; its own
+          single scroll writer (useVoidwalkerScroll). Same nested-root
+          rules as ServicesPortal. */}
+      <VoidwalkerPortal containerRef={rootRef} />
       {/* (The ADR-054 #proof decode controller retired with ADR-056: the
           client case is a mounted component inside ServicesStage now, and
           owns its own reveal off the `--svc-proof-in` stage clock.
