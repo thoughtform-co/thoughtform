@@ -5,22 +5,19 @@ import {
   configLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import {
-  CARRIER_HUB_K,
-  CARRIER_SEAT_RECT,
+  CARRIER_CHIP_K,
+  carrierChipMorphIn,
+  carrierChipMorphOut,
+  carrierLayout,
   carrierPlate,
-  carrierSeatClearance,
+  carrierSkillDock,
+  carrierSkillNameRect,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaCarrier";
 import {
-  substrateExt,
-  substrateLayout,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
-import {
-  ESTATE_CELL_H,
-  ESTATE_CELL_W,
-  estateFootprint,
-} from "@/components/landing/home-v2/services/casefile/map/pda/estateBand";
-import { SUBSTRATE_SECTION } from "@/components/landing/home-v2/services/casefile/map/pda/flags";
-import { CART_TYPE } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
+  CHIP_FS,
+  SKILL_CHIP_H,
+  SKILL_CHIP_W,
+} from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
 import {
   gridRect,
   workExt,
@@ -29,6 +26,7 @@ import {
 import {
   PDA_FLIGHT_GUARD_MS,
   PDA_FLIGHT_MS,
+  PDA_MORPH_MS,
   type FlightRect,
   cropOf,
   fitCrop,
@@ -98,49 +96,39 @@ const FIELDS = [
 
 /**
  * The three boards this field actually renders — one measurement, as production.
- * The flight has THREE homes for the selected work: reading 01's grid card,
- * reading 02's core seat card, and reading 03's.
  *
- * ⚠ **READING 03's THIRD ENTRY FOLLOWS `SUBSTRATE_SECTION`, AND IT HAS TO.**
- * The carrier ships (ADR-070 U33) and seats the work in its hub; SECTION, behind
- * the flag, puts it on one of twenty estate footprints. The two are different
- * rects in different crops with opposite elastic contracts, so a `three` pinned
- * to either one would go VACUOUS the moment the flag moved — still green, no
- * longer guarding the rect production flies into. That is the exact failure this
- * file's own head records against the static `VIEW_BOX[1]`, one reading over.
+ * ⚠ **THE WORK CARD LOST ITS THIRD HOME** (ADR-071, 2026-08-19). U33's seat
+ * in the carrier's hub is gone; on the CARRIER path, 1↔3 and 2↔3 for the
+ * work card fall through to bloom / raster. The chip is what flies to the
+ * carrier now, and since ADR-070 U34 the carrier is the ONLY reading-03
+ * drawing — U25's SECTION, which did give the work card a third home, was
+ * retired with its flag.
  */
 const boards = (box: { width: number; height: number }) => {
   const aspect = box.height / box.width;
   return {
     one: workLayout(workExt(aspect)),
     two: configLayout(configExt(aspect)),
-    section: substrateLayout(substrateExt(aspect)),
     carrier: carrierPlate(aspect),
-    three: SUBSTRATE_SECTION
-      ? { crop: substrateLayout(substrateExt(aspect)).crop }
-      : { crop: carrierPlate(aspect).crop },
+    three: { crop: carrierPlate(aspect).crop },
   };
 };
 
 /**
- * Reading 03's live home for `id`, exactly as `PdaConsole.rectFor` resolves it.
- *
- * ⚠ ONE HELPER, BOTH DRAWINGS — so the round trips below test whichever is
- * mounted rather than whichever was mounted when they were written.
+ * ⚠ **READING 03 HAS NO WORK HOME AT ALL, AND THIS IS THE FUNCTION THAT SAYS
+ * SO.** It is kept as a named constant rather than inlined because the claim
+ * it makes is ADR-071's central one — the work card is a 1↔2 object and the
+ * SKILL chip is the 2↔3 one — and a test that simply omitted reading 03
+ * would assert nothing about it.
  */
-const thirdHome = (works: readonly { id: string }[], id: string): FlightRect | null => {
-  if (!SUBSTRATE_SECTION) {
-    return works.some((w) => w.id === id) ? CARRIER_SEAT_RECT : null;
-  }
-  return estateFootprint(works as never, id, 26, 26, 880);
-};
+const workThirdHome = (_works: readonly { id: string }[], _id: string): FlightRect | null => null;
 
 function shownWorks() {
   const visual = getCase("loop-earplugs")?.casefile.tracks.find(
     (t) => t.visual.kind === "intelligence-map"
   )?.visual;
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
-  return selectWorks(visual.districts, visual.works);
+  return selectWorks(visual.districts, visual.works, visual.skills);
 }
 
 describe("the flight puts the object where it already was", () => {
@@ -186,171 +174,309 @@ describe("the flight puts the object where it already was", () => {
   });
 });
 
-describe("the flight has a THIRD home on reading 03", () => {
+describe("the skill chip flies between reading 02 and 03 (ADR-071)", () => {
   /**
-   * ⚠ **ADR-069 U2 (2026-08-17): the persistent object has three homes**, and
-   * ⚠ **U33 (2026-08-18) MOVED THE THIRD ONE.** The carrier has no cartridge
-   * anywhere on it, so promoting it needed a destination or `rectFor(3, id)`
-   * would have started returning `null` — which does not throw and does not
-   * fail a render, it just quietly downgrades every 1↔3 and 2↔3 transition to a
-   * bloom or a raster. The seat in the hub is that destination.
-   *
-   * The round trips below run on the OWNER'S OWN VIEWPORT — the shape that broke
-   * every previous flight assumption (270px of dead panel on U11's crop; 265px
-   * on U15's) — through `thirdHome`, so they follow the flag rather than the
-   * drawing that happened to be live when they were written.
+   * ⚠ **THE SKILL IS THE SECOND FLYING OBJECT** (2026-08-19). The work card's
+   * 1↔2 flight is unchanged; the chip takes the 2↔3 axis, landing on the
+   * cell whose skill matches the config's `skillId`. The chip's arithmetic
+   * is the same `pdaFlight`, but its rects live in DIFFERENT crops (the
+   * config board and the carrier), and its landing scale is derived from
+   * `CARRIER_LABEL_FS / CHIP_FS` — the flown text lands at the rung the 47
+   * arc labels around it sit at.
    */
   const works = shownWorks();
-  const configuredId = works.find((w) => w.configured)?.id ?? works[0].id;
-  const iForSlot = works.findIndex((w) => w.id === configuredId);
-  const BAND_LEFT = 26;
-  const BAND_WIDTH = 880;
-  const BAND_Y = 26;
+  const configuredWork = works.find((w) => w.configured && w.skillId) ?? works[0];
+  const skillId = configuredWork.skillId!;
 
   const CASES = [
     { label: "1280x720", box: { width: 611, height: 356 } },
     { label: "the owner's (tall)", box: { width: 845, height: 950 } },
   ];
+  /** The binding field, named once for the single-case morph assertions. */
+  const box611 = { width: 611, height: 356 };
 
-  for (const { label, box } of CASES) {
-    const { one, two, three } = boards(box);
-    const slot = gridRect(iForSlot, one);
-    const home = thirdHome(works, configuredId)!;
+  /** Stub shapes — `carrierLayout` reads only `key` and `name` off them. */
+  const STUB_SHAPES = [
+    {
+      key: "voice",
+      name: "VOICE",
+      skills: 7,
+      gloss: "",
+      evalMethod: "",
+      meaning: "",
+      teams: 0,
+      trenchedBy: "",
+    },
+    {
+      key: "judgment",
+      name: "JUDGMENT",
+      skills: 12,
+      gloss: "",
+      evalMethod: "",
+      meaning: "",
+      teams: 0,
+      trenchedBy: "",
+    },
+    {
+      key: "validation",
+      name: "VALIDATION",
+      skills: 9,
+      gloss: "",
+      evalMethod: "",
+      meaning: "",
+      teams: 0,
+      trenchedBy: "",
+    },
+    {
+      key: "stakeholder",
+      name: "STAKEHOLDER",
+      skills: 5,
+      gloss: "",
+      evalMethod: "",
+      meaning: "",
+      teams: 0,
+      trenchedBy: "",
+    },
+    {
+      key: "pattern",
+      name: "PATTERN",
+      skills: 14,
+      gloss: "",
+      evalMethod: "",
+      meaning: "",
+      teams: 0,
+      trenchedBy: "",
+    },
+  ] as const;
 
-    it(`1 to 3 puts the third home on the cartridge it came from (${label})`, () => {
-      const v = pdaFlight(box, one.crop, slot, three.crop, home);
-      expect(v, "1→3 produced no flight").not.toBeNull();
-      const was = centre(box, one.crop, slot);
-      const start = posed(box, three.crop, home, v!);
-      /* ⚠ HORIZONTAL AND WIDTH are exact. On the carrier they are exact in Y
-         too — the seat is a uniform scale of the cartridge — while SECTION's
-         footprint carries a 3 % aspect delta, so only the two terms both
-         drawings can satisfy are asserted here. The aspect claim itself is its
-         own test below. */
-      expect(start.x, `1→3 x @ ${label}`).toBeCloseTo(was.x, 6);
-      expect(start.w, `1→3 width @ ${label}`).toBeCloseTo(was.w, 6);
+  const liveCells = () => carrierLayout({ shapes: STUB_SHAPES, skills: liveSkills() }).cells;
+
+  /* The chip's homes at one field. Reading 02's is the SKILL slot; the
+     carrier's is the arc midpoint of the cell that letters this skillId. */
+  const chipHomes = (box: { width: number; height: number }) => {
+    const two = configLayout(configExt(box.height / box.width));
+    const carrier = carrierPlate(box.height / box.width);
+    const cell = liveCells().find((c) => c.skill.id === skillId);
+    if (!cell) return null;
+    return {
+      twoCrop: two.crop,
+      chip: two.skillChip,
+      carrierCrop: carrier.crop,
+      dock: carrierSkillDock(cell),
+      cell,
+    };
+  };
+
+  {
+    for (const { label, box } of CASES) {
+      it(`2 to 3 lands the chip on its cell (${label})`, () => {
+        const homes = chipHomes(box);
+        expect(homes, `no chip home resolved @ ${label}`).not.toBeNull();
+        if (!homes) return;
+        const v = pdaFlight(box, homes.twoCrop, homes.chip, homes.carrierCrop, homes.dock);
+        expect(v, "2→3 produced no flight").not.toBeNull();
+        const was = centre(box, homes.twoCrop, homes.chip);
+        const start = posed(box, homes.carrierCrop, homes.dock, v!);
+        /* CENTRE ALIGNMENT — the chip visually enters the flight from its
+           config home. `pdaFlight` is centre-to-centre, so both terms match. */
+        expect(start.x, `2→3 x @ ${label}`).toBeCloseTo(was.x, 6);
+        expect(start.y, `2→3 y @ ${label}`).toBeCloseTo(was.y, 6);
+        expect(start.w, `2→3 width @ ${label}`).toBeCloseTo(was.w, 6);
+      });
+
+      it(`3 to 2 lands the chip back at its config home (${label})`, () => {
+        const homes = chipHomes(box);
+        expect(homes, `no chip home resolved @ ${label}`).not.toBeNull();
+        if (!homes) return;
+        const v = pdaFlight(box, homes.carrierCrop, homes.dock, homes.twoCrop, homes.chip);
+        expect(v, "3→2 produced no flight").not.toBeNull();
+        const was = centre(box, homes.carrierCrop, homes.dock);
+        const start = posed(box, homes.twoCrop, homes.chip, v!);
+        expect(start.x, `3→2 x @ ${label}`).toBeCloseTo(was.x, 6);
+        expect(start.y, `3→2 y @ ${label}`).toBeCloseTo(was.y, 6);
+        expect(start.w, `3→2 width @ ${label}`).toBeCloseTo(was.w, 6);
+      });
+
+      it(`2↔3 is a round trip (${label})`, () => {
+        const homes = chipHomes(box);
+        expect(homes, `no chip home resolved @ ${label}`).not.toBeNull();
+        if (!homes) return;
+        const out = pdaFlight(box, homes.twoCrop, homes.chip, homes.carrierCrop, homes.dock)!;
+        const back = pdaFlight(box, homes.carrierCrop, homes.dock, homes.twoCrop, homes.chip)!;
+        expect(out.dk * back.dk, "the two scales are reciprocal").toBeCloseTo(1, 9);
+      });
+    }
+
+    it("the chip's landing dock is EXACTLY similar to its source", () => {
+      /* The chip is a fixed silhouette (`SKILL_CHIP_W × SKILL_CHIP_H`), and
+         the carrier dock is that box × `CARRIER_CHIP_K`. Similarity is by
+         construction: one uniform `dk` carries it without distortion. */
+      const homes = chipHomes({ width: 611, height: 356 });
+      expect(homes).not.toBeNull();
+      if (!homes) return;
+      const src = homes.chip;
+      const dst = homes.dock;
+      expect(src.w / src.h, "the source is the chip's own aspect").toBeCloseTo(
+        SKILL_CHIP_W / SKILL_CHIP_H,
+        12
+      );
+      expect(dst.w, "the dock is the chip × CARRIER_CHIP_K").toBeCloseTo(
+        SKILL_CHIP_W * CARRIER_CHIP_K,
+        9
+      );
+      expect(dst.h).toBeCloseTo(SKILL_CHIP_H * CARRIER_CHIP_K, 9);
+      expect(dst.w / dst.h).toBeCloseTo(src.w / src.h, 12);
     });
 
-    it(`3 to 1 puts the cartridge on the home it grew from (${label})`, () => {
-      const v = pdaFlight(box, three.crop, home, one.crop, slot);
-      expect(v, "3→1 produced no flight").not.toBeNull();
-      const was = centre(box, three.crop, home);
-      const start = posed(box, one.crop, slot, v!);
-      expect(start.x, `3→1 x @ ${label}`).toBeCloseTo(was.x, 6);
-      expect(start.w, `3→1 width @ ${label}`).toBeCloseTo(was.w, 6);
+    it("CARRIER_CHIP_K is the plate's own label rung over the chip's type", () => {
+      /* Same rule the seat card followed one revision earlier: the flown
+         text lands at the size the labels around it letter at. */
+      expect(CARRIER_CHIP_K * CHIP_FS).toBeCloseTo(13, 9);
+      expect(CARRIER_CHIP_K).toBeLessThan(1); // a shrinking flight, always
     });
 
-    it(`2 to 3 puts the third home on the core it came from (${label})`, () => {
-      const v = pdaFlight(box, two.crop, two.core, three.crop, home);
-      expect(v, "2→3 produced no flight").not.toBeNull();
-      const was = centre(box, two.crop, two.core);
-      const start = posed(box, three.crop, home, v!);
-      expect(start.x, `2→3 x @ ${label}`).toBeCloseTo(was.x, 6);
-      expect(start.w, `2→3 width @ ${label}`).toBeCloseTo(was.w, 6);
+    /* ── THE MORPH (ADR-071 U1) ──────────────────────────────────────────
+       The plate's journey is the path itself: CSS `d` interpolates from the
+       chip's rectangle into the cell's own ring. That interpolation has ONE
+       precondition — identical command structure on both ends — and failing
+       it does not error, it snaps the animation to a discrete jump, which is
+       the floating-frame defect this pass exists to remove. So the structure
+       is pinned here for EVERY configured stream's cell, not just the one a
+       viewer happened to open. */
+
+    const points = (d: string) =>
+      [...d.matchAll(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)].map((m) => ({
+        x: Number(m[1]),
+        y: Number(m[2]),
+      }));
+    const structure = (d: string) => ({
+      m: (d.match(/M/g) ?? []).length,
+      l: (d.match(/L/g) ?? []).length,
+      z: (d.match(/Z/g) ?? []).length,
+    });
+    const bounds = (pts: readonly { x: number; y: number }[]) => ({
+      x0: Math.min(...pts.map((p) => p.x)),
+      y0: Math.min(...pts.map((p) => p.y)),
+      x1: Math.max(...pts.map((p) => p.x)),
+      y1: Math.max(...pts.map((p) => p.y)),
     });
 
-    it(`3 to 2 puts the core on the home it came from (${label})`, () => {
-      const v = pdaFlight(box, three.crop, home, two.crop, two.core);
-      expect(v, "3→2 produced no flight").not.toBeNull();
-      const was = centre(box, three.crop, home);
-      const start = posed(box, two.crop, two.core, v!);
-      expect(start.x, `3→2 x @ ${label}`).toBeCloseTo(was.x, 6);
-      expect(start.w, `3→2 width @ ${label}`).toBeCloseTo(was.w, 6);
+    it("both morph directions share ONE command structure, for every configured stream", () => {
+      const box = { width: 611, height: 356 };
+      const two = configLayout(configExt(box.height / box.width));
+      const carrier = carrierPlate(box.height / box.width);
+      const cells = liveCells();
+      for (const w of works) {
+        if (!w.configured || !w.skillId) continue;
+        const cell = cells.find((c) => c.skill.id === w.skillId);
+        expect(cell, `${w.id}'s skill has no cell`).toBeDefined();
+        if (!cell) continue;
+        const inVars = pdaFlight(
+          box,
+          two.crop,
+          two.skillChip,
+          carrier.crop,
+          carrierSkillDock(cell)
+        )!;
+        const outVars = pdaFlight(
+          box,
+          carrier.crop,
+          carrierSkillDock(cell),
+          two.crop,
+          two.skillChip
+        )!;
+        for (const [dir, morph] of [
+          ["in", carrierChipMorphIn(cell, inVars)],
+          ["out", carrierChipMorphOut(cell, outVars, two.skillChip)],
+        ] as const) {
+          const from = structure(morph.from);
+          const to = structure(morph.to);
+          expect(from, `${w.id} ${dir}: command structures differ`).toEqual(to);
+          expect(from.m, `${w.id} ${dir}: not a single subpath`).toBe(1);
+          expect(from.z, `${w.id} ${dir}: not closed`).toBe(1);
+          expect(
+            points(morph.from).length,
+            `${w.id} ${dir}: point counts differ — CSS d snaps discrete`
+          ).toBe(points(morph.to).length);
+        }
+      }
+    });
+
+    it("the arriving morph settles into the cell's OWN d — the same string", () => {
+      /* Not "a path that looks like the cell" — the SAME string the drawn
+         cell carries, byte for byte, so the closing fade removes a layer
+         that is pixel-identical to what is beneath it. */
+      const homes = chipHomes({ width: 611, height: 356 });
+      expect(homes).not.toBeNull();
+      if (!homes) return;
+      const vars = pdaFlight(box611, homes.twoCrop, homes.chip, homes.carrierCrop, homes.dock)!;
+      const morph = carrierChipMorphIn(homes.cell, vars);
+      expect(morph.to).toBe(homes.cell.d);
+    });
+
+    it("the arriving morph enters at the flight's own pose", () => {
+      /* The morph's `from` rect IS the pose `dx/dy/dk` describe — the chip
+         appears where the reader last saw it. A drifted derivation would
+         make the plate jump at liftoff, before any animation plays. */
+      const homes = chipHomes({ width: 611, height: 356 });
+      if (!homes) return;
+      const vars = pdaFlight(box611, homes.twoCrop, homes.chip, homes.carrierCrop, homes.dock)!;
+      const morph = carrierChipMorphIn(homes.cell, vars);
+      const b = bounds(points(morph.from));
+      const cx = homes.dock.x + homes.dock.w / 2 + vars.dx;
+      const cy = homes.dock.y + homes.dock.h / 2 + vars.dy;
+      expect((b.x0 + b.x1) / 2, "entry centre x").toBeCloseTo(cx, 1);
+      expect((b.y0 + b.y1) / 2, "entry centre y").toBeCloseTo(cy, 1);
+      expect(b.x1 - b.x0, "entry width").toBeCloseTo(homes.dock.w * vars.dk, 1);
+      expect(b.y1 - b.y0, "entry height").toBeCloseTo(homes.dock.h * vars.dk, 1);
+    });
+
+    it("the departing morph settles into the chip's own rect", () => {
+      const homes = chipHomes({ width: 611, height: 356 });
+      if (!homes) return;
+      const vars = pdaFlight(box611, homes.carrierCrop, homes.dock, homes.twoCrop, homes.chip)!;
+      const morph = carrierChipMorphOut(homes.cell, vars, homes.chip);
+      const b = bounds(points(morph.to));
+      expect(b.x0, "landing left").toBeCloseTo(homes.chip.x, 1);
+      expect(b.y0, "landing top").toBeCloseTo(homes.chip.y, 1);
+      expect(b.x1 - b.x0, "landing width").toBeCloseTo(homes.chip.w, 1);
+      expect(b.y1 - b.y0, "landing height").toBeCloseTo(homes.chip.h, 1);
+    });
+
+    it("the flying name lands centred on the cell's own arc-label point", () => {
+      /* The name's landing box and the plate's dock are both centred on the
+         label arc's midpoint — the name hands over to the arc label at the
+         exact point where that label letters. */
+      const homes = chipHomes({ width: 611, height: 356 });
+      if (!homes) return;
+      const name = homes.cell.skill.short.toUpperCase();
+      const nameBox = carrierSkillNameRect(homes.cell, name);
+      expect(nameBox.x + nameBox.w / 2).toBeCloseTo(homes.dock.x + homes.dock.w / 2, 9);
+      expect(nameBox.y + nameBox.h / 2).toBeCloseTo(homes.dock.y + homes.dock.h / 2, 9);
     });
   }
 
-  it("the live third home exists for every stream the reader can open", () => {
-    /* ⚠ THE FLIGHT'S THIRD HOME MUST EXIST FOR EVERY STREAM THE READER CAN
-       OPEN. A `PdaWork` on the projected board with no home on reading 03
-       returns null and falls back to raster — silently. */
+  it("the work card has no home on the carrier (ADR-071)", () => {
+    /* ⚠ ADR-071 EXPLICITLY REMOVES THE WORK CARD FROM READING 03. The
+       carrier's cells letter Skills, not work streams, and the seat card is
+       gone. `workThirdHome` returns `null` for every stream and the console
+       blooms 3↔1 / 3↔2 in that case. */
     for (const w of works) {
-      expect(thirdHome(works, w.id), `${w.id} has no home on reading 03`).not.toBeNull();
-    }
-  });
-
-  it("the live third home refuses a stream that is not on the board", () => {
-    expect(
-      thirdHome(works, "W-ghost"),
-      "reading 03 made up a home for a non-existent stream"
-    ).toBeNull();
-  });
-
-  it("the seated card is EXACTLY similar to the cartridge, not merely close", () => {
-    /* ⚠ **THE CARRIER'S HOME CLEARS A BAR SECTION'S COULD NOT.** A footprint is
-       a simplified silhouette at 40 × 30, so its parity with the 176 × 136
-       cartridge is a 3 % tolerance. The seat is `176 × 136 × HUB_K` — a uniform
-       scale of the shared card — so its aspect is the cartridge's to the last
-       representable digit and the flight's `dk` carries it with no distortion
-       term at all. Asserting a tolerance here would be asserting less than the
-       construction guarantees. */
-    expect(CARRIER_SEAT_RECT.w / CARRIER_SEAT_RECT.h).toBeCloseTo(176 / 136, 12);
-    expect(CARRIER_SEAT_RECT.w / 176).toBeCloseTo(CARRIER_SEAT_RECT.h / 136, 12);
-  });
-
-  it("the seat's scale is the plate's own label rung over the card's title", () => {
-    /* The rule, stated: the work's name letters at the same rung as the 47
-       Skill names it landed among. `LABEL_FS` is 13 and the card's title is
-       11.5, so a card at this `k` titles at exactly 13 units. A `k` chosen by
-       eye is a `k` that drifts when either rung moves. */
-    expect(CARRIER_HUB_K).toBeCloseTo(13 / CART_TYPE.title, 12);
-    expect(CART_TYPE.title * CARRIER_HUB_K).toBeCloseTo(13, 12);
-  });
-
-  it("the seated card clears the hub's wall, and is not merely inside it", () => {
-    /* ⚠ **THE CEILING IS 1.3672**, where a 176 × 136 box centred on this hub
-       touches the dodecagon's ±30° walls. `HUB_K` sits at 1.1304, which leaves
-       26.1 units — and the resting brief it replaces sits with 31.85, so the
-       card is slightly the tighter of the two objects the hub holds. Both ends
-       are pinned: a clearance that went to zero would read as a card welded to
-       its own aperture, and one that grew past the brief's would mean the seat
-       had quietly shrunk below the rung above. */
-    const clear = carrierSeatClearance();
-    expect(clear, "the seated card touches the hub's wall").toBeGreaterThan(18);
-    expect(clear, "the seated card shrank away from its aperture").toBeLessThan(34);
-  });
-
-  it("the footprint aspect is CLOSE to the cartridge — within 5 %", () => {
-    /* ⚠ **THE THIRD RUNG'S ADR-069 PARITY** (2026-08-17). The card, the
-     *  core seat card and the footprint are three sizes of one object.
-     *  The two full cards are exactly similar (`CARD.cut × CORE_K` =
-     *  `SEAT.cut`); the footprint is a simplified silhouette, so the
-     *  parity here is weaker but real — a 5 % aspect delta is small
-     *  enough that the flight's uniform `dk` carries the object without
-     *  visible distortion. Any wider and the drawing at either home
-     *  starts reading as a different shape mid-flight, which is exactly
-     *  the defect ADR-069 U1 fixed on the 01 ↔ 02 pair.
-     */
-    const cartridge = 176 / 136;
-    const footprint = ESTATE_CELL_W / ESTATE_CELL_H;
-    const delta = Math.abs(cartridge - footprint) / cartridge;
-    expect(
-      delta,
-      `footprint aspect ${footprint.toFixed(3)} vs cartridge ${cartridge.toFixed(3)}`
-    ).toBeLessThan(0.05);
-  });
-
-  it("estateFootprint returns null when the stream is not on the board", () => {
-    expect(
-      estateFootprint(works, "W-ghost", BAND_Y, BAND_LEFT, BAND_WIDTH),
-      "estateFootprint made up a home for a non-existent stream"
-    ).toBeNull();
-  });
-
-  it("estateFootprint returns null when no stream is selected", () => {
-    expect(estateFootprint(works, null, BAND_Y, BAND_LEFT, BAND_WIDTH)).toBeNull();
-  });
-
-  it("every configured stream has a lookup-able footprint", () => {
-    /* ⚠ THE FLIGHT'S THIRD HOME MUST EXIST FOR EVERY STREAM THE READER
-       CAN OPEN. If a `PdaWork` is on the projected board but not in the
-       estate band, the flight would return null for 03 and fall back to
-       raster — silently, so the reader would not notice. */
-    for (const w of works) {
-      const foot = estateFootprint(works, w.id, BAND_Y, BAND_LEFT, BAND_WIDTH);
-      expect(foot, `${w.id} has no footprint on the estate band`).not.toBeNull();
+      expect(
+        workThirdHome(works, w.id),
+        `${w.id} still has a work-card home on the carrier`
+      ).toBeNull();
     }
   });
 });
+
+function liveSkills() {
+  const visual = getCase("loop-earplugs")?.casefile.tracks.find(
+    (t) => t.visual.kind === "intelligence-map"
+  )?.visual;
+  if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
+  return visual.skills;
+}
 
 describe("the flight ignores what the casefile does to this subtree", () => {
   it("a uniform ancestor scale cancels out", () => {
@@ -447,5 +573,8 @@ describe("the two homes are the same object", () => {
     // A transition arriving mid-flight has to fall back to the raster, so the
     // guard window may never be shorter than the animation it protects.
     expect(PDA_FLIGHT_GUARD_MS).toBeGreaterThanOrEqual(PDA_FLIGHT_MS);
+    // ⚠ AND THE MORPH'S OWN CLOCK (ADR-071 U1) — the chip flies longer than
+    // the dock, and an interrupt inside ITS window is the same teleport.
+    expect(PDA_FLIGHT_GUARD_MS).toBeGreaterThanOrEqual(PDA_MORPH_MS);
   });
 });

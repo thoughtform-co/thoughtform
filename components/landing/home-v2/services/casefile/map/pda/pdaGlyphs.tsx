@@ -1,6 +1,9 @@
 "use client";
 
+import type { CaseSkillEntry } from "@/lib/cases/types";
+
 import type { PdaWork } from "./pdaRecord";
+import { PlacedField, isFormKey } from "./substrateForms";
 import { housing } from "./substrateKit";
 
 /**
@@ -742,6 +745,215 @@ export function Pads({
       ))}
     </>
   );
+}
+
+/* ── D · the skill chip = an atom of encoded substrate ───────────────────
+   The chip is the ANSWER TO "WHAT RUNS IT · SKILL" (ADR-071, 2026-08-19).
+   Reading 02 draws it under the SKILL key. On the 2↔3 transition the chip
+   does not fly as this drawing — its PLATE morphs (`carrierChipMorphIn/Out`,
+   the path itself interpolates into the destination cell's ring) and its
+   NAME flies its own dock; this glyph is the RESTING form the morph leaves
+   from and returns to. One resting drawing, one journey — ADR-069 U1's law,
+   met by making the arrival geometry the destination's own. ─────────────── */
+
+/**
+ * THE CHIP'S SILHOUETTE. Square-cornered (ADR-065: children of a chamfered
+ * housing are square) so it never reads as another cartridge — the reader
+ * needs a chip and a card to look UNLIKE each other, or the flight becomes
+ * unreadable.
+ *
+ * ⚠ THE WIDTH IS THE SKILL CELL'S OWN MEASURE, so the chip fills the value
+ * slot in reading 02 without a gutter and reads as "this IS the SKILL". The
+ * height is enough for one line of the value rung (fs 14) plus its wall
+ * clearance.
+ */
+export const SKILL_CHIP_W = 180;
+export const SKILL_CHIP_H = 40;
+
+/**
+ * THE CHIP'S TYPE, one line at reading 02's value rung.
+ *
+ * ⚠ **THE FLIGHT'S dk IS `CARRIER_LABEL_FS / CHIP_FS`** — the roster's short
+ * runs at 14 units in the chip and 13 units in the carrier cell, so the
+ * flown name lands at exactly the rung the 47 Skill names around it letter
+ * at. See `PdaCarrier`'s HUB_K comment for the same derivation on the seat
+ * card. Every roster `short` is ≤14 chars (pinned by `cases-registry`),
+ * which measures 180 × (14 × 0.6 + tracking) → fits the chip's own measure
+ * with slack for a wall clearance.
+ */
+export const CHIP_FS = 14;
+const CHIP_PAD_X = 8;
+
+/**
+ * The engine tag's rung — chrome, tracked wide so it reads STRUCTURAL beside
+ * the skill's NAMED type. Same rule the map's substrate names follow
+ * (`BAND_FS`/`BAND_TRACK`).
+ *
+ * ⚠ **12 IS THE READING 02 FLOOR, not a taste choice.** The chip lives on
+ * reading 02, and ADR-070 U10 set 12 as this reading's TYPE FLOOR because
+ * anything smaller renders under 6.5px at the binding preset. The tag is
+ * chrome — the reader does not linger on it — but chrome under the floor is
+ * still absent chrome. It reads structural against the skill (fs 14, `.04em`)
+ * via TRACKING and CASE, which is the same distinction the map's substrate
+ * names use one level down.
+ */
+const CHIP_TAG_FS = 12;
+const CHIP_TAG_TRACK = 0.18;
+
+/**
+ * How the chip's material picks up the target substrate's identity.
+ *
+ * ⚠ **THE PHYSICS FIELD IS WHAT NAMES THE ENGINE, NOT A LABEL.** The chip's
+ * background is the same field the carrier's cells draw on for the shape it
+ * files under — Voice's veins, Judgment's grid, etc. So the reader sees the
+ * chip and its destination region wearing the same material before the
+ * flight even fires. The engine tag on the top-right is a KEY for a reader
+ * who has not opened the carrier yet; on the carrier the field alone
+ * suffices.
+ *
+ * ⚠ **NO GREEN.** The role law stands: green is the human and nothing else
+ * (ADR-070 U11). A skill is a piece of encoded substrate — its bracket is
+ * always gold, whichever engine it files under.
+ */
+const CHIP_FIELD_ALPHA = 0.18;
+
+/**
+ * The chip's atom of authored data. Everything the drawing needs from the
+ * roster in one shape, so a caller does not have to know the roster's own
+ * type on top of this glyph's.
+ */
+export interface SkillChipEntry {
+  short: string;
+  engine: string;
+}
+
+/**
+ * Project a roster entry (or a `null` skillId's fallback) into what the chip
+ * letters. `null` means the stream is person-led or the join failed; the
+ * chip renders nothing rather than a placeholder.
+ */
+export function skillChipEntry(skill: CaseSkillEntry | undefined | null): SkillChipEntry | null {
+  if (!skill) return null;
+  return { short: skill.short, engine: skill.engine };
+}
+
+/**
+ * THE CHIP, at rest — reading 02's SKILL slot is its one mounted home.
+ *
+ * ⚠ **THE OBJECT KEEPS ITS SILHOUETTE AT EVERY SCALE.** `k` is the mount's
+ * uniform scale (reading 02 passes 1; the labs may mount it larger) and
+ * every rung below is measured from `k` at the same base (`SKILL_CHIP_W` ×
+ * `SKILL_CHIP_H`). The 2↔3 transition does NOT remount this drawing — the
+ * plate's journey is the morphing path in `PdaCarrier`/`PdaConfiguration`
+ * and the name flies its own dock — so this glyph never has to survive a
+ * transform mid-flight.
+ *
+ * ⚠ **THE HIT TARGET IS `transparent`, NOT `none`.** SVG events fire on
+ * `visiblePainted` by default and `none` reports no paint, so a passive chip
+ * wrapped in a listener would only click on its stroke — which is exactly
+ * the same drift the cartridge caught for person-led work (see `Cartridge`).
+ * Reading 02's chip is pointer-inert. This keeps that guarantee.
+ */
+export function SkillChip({
+  x,
+  y,
+  entry,
+  k = 1,
+  seed = 71,
+}: {
+  x: number;
+  y: number;
+  entry: SkillChipEntry;
+  k?: number;
+  /** Deterministic pattern seed — the substrate field's PRNG needs one and
+   *  the arrival dock must NOT re-roll it on every render. */
+  seed?: number;
+}) {
+  const w = SKILL_CHIP_W * k;
+  const h = SKILL_CHIP_H * k;
+  const engineKey = entry.engine.toLowerCase();
+  const skillFs = CHIP_FS * k;
+  const tagFs = CHIP_TAG_FS * k;
+  const padX = CHIP_PAD_X * k;
+  return (
+    <g pointerEvents="none">
+      {/* THE MATERIAL. The physics field says which engine this Skill files
+          under; the chip fills the substrate's shape at low alpha so the
+          object reads as "belonging to this region" without a label. */}
+      {isFormKey(engineKey) ? (
+        <PlacedField
+          form={engineKey}
+          x={x}
+          y={y}
+          w={w}
+          h={h}
+          seed={seed}
+          k={k}
+          opacity={CHIP_FIELD_ALPHA}
+        />
+      ) : null}
+      {/* R4's density rule, borrowed: opaque ground, faint dawn wash, then
+          the hairline. The wash inverts correctly on the light flip because
+          it is expressed against `--dawn-rgb`. */}
+      <rect x={x} y={y} width={w} height={h} fill="var(--pda-void)" />
+      <rect x={x} y={y} width={w} height={h} fill="rgba(var(--dawn-rgb), 0.03)" />
+      <rect x={x} y={y} width={w} height={h} fill="none" stroke="var(--pda-dim)" strokeWidth={1} />
+      {/* ⚠ THE ROLE TAG IS AT THE TOP-RIGHT, out of the skill name's way.
+          Chrome (uppercase, tracked wide), never green. */}
+      <text
+        x={x + w - padX}
+        y={y + 13 * k}
+        textAnchor="end"
+        fontSize={tagFs}
+        letterSpacing={`${CHIP_TAG_TRACK}em`}
+        fill="var(--pda-txt2)"
+      >
+        {entry.engine.toUpperCase()}
+      </text>
+      {/* THE SKILL. Left-anchored at the value rung, one line — the roster's
+          14-character cap means it always fits, and the flight's `dk` lands
+          this text at the plate's own label rung (13 units on the carrier). */}
+      <text
+        x={x + padX}
+        y={y + CHIP_NAME_BASE * k}
+        fontSize={skillFs}
+        letterSpacing={`${CHIP_NAME_TRACK}em`}
+        fill="var(--pda-ink)"
+      >
+        {entry.short.toUpperCase()}
+      </text>
+    </g>
+  );
+}
+
+/** The name's own type rungs — one source for the render above AND the
+ *  flight's name-rect arithmetic below. */
+export const CHIP_NAME_TRACK = 0.04;
+const CHIP_NAME_BASE = 30;
+
+/**
+ * The chip name's NOMINAL BOX, in the chip's own frame (ADR-071 U1).
+ *
+ * ⚠ **THE NAME FLIES ITS OWN FLIGHT, so it needs its own rect.** The plate's
+ * flight is centre-to-centre on the chip's box, but the name is
+ * LEFT-ANCHORED inside the plate while the carrier's arc label is
+ * CENTRE-ANCHORED on its arc — flying the name on the plate's vars makes it
+ * jump sideways at liftoff. This box is the name's rendered run (PT Mono's
+ * 0.6 em advance plus the tracking) centred on its own visual middle
+ * (baseline − 0.36 em, the same correction the carrier's readouts use), so
+ * `pdaFlight(nameRect → arc label rect)` lifts off exactly where the ink is.
+ */
+export function skillChipNameRect(
+  x: number,
+  y: number,
+  name: string,
+  k = 1
+): { x: number; y: number; w: number; h: number } {
+  const w = name.length * CHIP_FS * (0.6 + CHIP_NAME_TRACK) * k;
+  const h = CHIP_FS * 1.3 * k;
+  const cx = x + CHIP_PAD_X * k + w / 2;
+  const cy = y + CHIP_NAME_BASE * k - CHIP_FS * 0.36 * k;
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
 }
 
 /* ── C · the plate = an org unit. Cut on the TOP-RIGHT, so it is the

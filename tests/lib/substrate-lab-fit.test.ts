@@ -136,7 +136,10 @@ import {
   CARRIER_R_OUT,
   CARRIER_SIDES,
   CARRIER_VIEWBOX,
+  CARRIER_R_APOTHEM,
+  CARRIER_KAPPA,
   hubHalfWidth,
+  polygonRayRadius as carrierRayRadius,
   carrierArcTarget,
   carrierCrop,
   carrierBandArcPath,
@@ -177,7 +180,7 @@ function record(): IslRecord {
     (t) => t.visual.kind === "intelligence-map"
   )?.visual;
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
-  const shown = selectWorks(visual.districts, visual.works);
+  const shown = selectWorks(visual.districts, visual.works, visual.skills);
   const cross = crossing(visual.shapes, visual.districts, visual.works, shown);
   /* ⚠ ROUND-NINE VARIANTS NEED THE ESTATE (`works`) AND THE ROSTER (`skills`)
      to walk their lettering. The rounds before them tolerated a stripped
@@ -871,7 +874,38 @@ describe("compound carrier divides one plate into equal cells", () => {
     expect(areas).toHaveLength(47);
     const lo = Math.min(...areas);
     const hi = Math.max(...areas);
-    expect((hi - lo) / lo, "cell areas diverged past the rim's own modulation").toBeLessThan(0.04);
+    expect((hi - lo) / lo, "cell areas diverged past the rim's own modulation").toBeLessThan(0.045);
+
+    /* ⚠ **THE BLANKET NUMBER ABOVE IS THE WEAK HALF, AND U34 IS WHY IT NEEDS A
+       SECOND (measured 3.97 %, previously ~3.4 %).** With the division inside
+       the housing made concentric, the dodecagon's sector variation stopped
+       appearing at BOTH walls of every cell — where it partly cancelled in
+       `r1² − r0²` — and now appears at ONE wall of exactly two courses: the
+       band's ring bounding course 0 inward, the rim bounding the last course
+       outward. Everything between them is bounded by two circles and is
+       therefore EXACT.
+
+       So the structure gets pinned instead of the envelope. A blanket 4.5 %
+       tolerates a real defect anywhere on the plate; this says where the
+       residue is allowed to be and holds the other 33 cells to a thousandth.
+       ⚠ The measured worst is `pattern`'s four rim cells at +1.6 / −2.3 % of
+       the mean — a 25.9° cell against a 30° facet pitch, which is the widest
+       straddle any part produces. */
+    const layout = carrierLayout(record());
+    const mean = areas.reduce((a, b) => a + b, 0) / areas.length;
+    for (const group of layout.groups) {
+      const last = group.courses.length - 1;
+      for (const [i, cell] of layout.cells.entries()) {
+        if (cell.key !== group.key) continue;
+        const onHousing = cell.course === 0 || cell.course === last;
+        const dev = Math.abs(areas[i] / mean - 1);
+        expect(
+          dev,
+          `${cell.skill.id}: ${onHousing ? "a housing-bounded" : "a concentric"} cell is ` +
+            `${(dev * 100).toFixed(2)}% off the mean`
+        ).toBeLessThan(onHousing ? 0.025 : 0.01);
+      }
+    }
   });
 
   it("derives a course ladder that clears every cell's own name", () => {
@@ -922,8 +956,13 @@ describe("compound carrier divides one plate into equal cells", () => {
           arc,
           `${group.key} course ${course}: arc ${arc.toFixed(0)}u misses target ${target.toFixed(0)}u`
         ).toBeGreaterThanOrEqual(target);
+        /* ⚠ THE DEPTH ENDS AT THE WALL, WHICH ON THE RIM IS THE APOTHEM (U34).
+           Measuring the outermost course to `R_OUT` hands this floor 13.1
+           units no label can use — which is the U34 defect restated as the
+           ladder's own arithmetic, and why `MIN_CELL_DEPTH` came 26 → 23 in
+           the same edit. */
         expect(
-          first.r1 - first.r0,
+          first.outerWall - first.r0,
           `${group.key} course ${course}: depth under the line-box floor`
         ).toBeGreaterThanOrEqual(CARRIER_MIN_CELL_DEPTH);
       }
@@ -1153,6 +1192,24 @@ describe("compound carrier divides one plate into equal cells", () => {
     expect(fit.wall, `${fit.worst} runs off the hub when clicked`).toBeGreaterThan(16);
   });
 
+  it("has a landing cell for every configured stream's skill (ADR-071)", () => {
+    /* ⚠ **THE SKILL CHIP IS THE 2↔3 FLIGHT'S OBJECT, AND ITS CELL MUST EXIST**
+       (2026-08-19). Reading 02 lets the reader open any configured stream;
+       the chip flies to the cell whose `skill.id === cfg.skillId`. A stream
+       whose skillId does not resolve to a cell would silently fall back to
+       raster on the transition and drop ADR-071's central gesture. This
+       walks the join for every configured stream. */
+    const r = record();
+    const cellIds = new Set(carrierLayout(r).cells.map((c) => c.skill.id));
+    for (const w of r.works ?? []) {
+      if (!w.configured || !w.skillId) continue;
+      expect(
+        cellIds.has(w.skillId),
+        `${w.id} configured stream's skill "${w.skillId}" has no cell on the carrier`
+      ).toBe(true);
+    }
+  });
+
   it("measures the hub's grain as chords, not as rays", () => {
     /* ⚠ THIS IS THE DEFECT THE HELPER EXISTS TO PREVENT. `polygonRayRadius`
        measures along a ray from the centre and a scanline is a CHORD; the two
@@ -1264,37 +1321,140 @@ describe("compound carrier divides one plate into equal cells", () => {
        up-vector — the top half leaned outward, the bottom inward, from one
        rule. The assertion is therefore SYMMETRY, walked on every cell: the ink
        clears both its walls by the same amount. */
+    /* ⚠ **AND IT WAS STILL MEASURING A MODEL (U34).** The version above walked
+       `cell.r0`/`cell.r1` — the PARTITION's radii — on a plate where every ring
+       was a dodecagon, whose wall dips to `κ·R` at each of its twelve edge
+       midpoints. At `R_OUT` that is **13.1 units** the label was never told
+       about, so **19 of the 47 labels' ink crossed their cell's outer edge**
+       (`Feedback` −5.0u, `Localization` −3.3u, `Quality`, `Supplier QA`,
+       `Survey`, …) while this guard reported 7–12 units of air on BOTH sides
+       and passed. That is the same class as the lean it was written to catch,
+       one level down: a length measured against the wrong wall.
+
+       ⚠ **SO THE WALLS ARE SAMPLED ACROSS EACH CELL'S OWN SWEEP NOW, AT THE
+       RADIUS THE RENDERER PAINTS.** `polygonRayRadius` where the wall is the
+       housing (the band's ring at `R_CELL` inward, the rim at `R_OUT` outward),
+       the plain radius where it is one of U34's concentric seams. A guard that
+       cannot see the difference between those two is a guard this drawing has
+       already got wrong once. */
     const inkRise = CARRIER_LABEL_INK_MID * CARRIER_LABEL_FS;
+    const half = CARRIER_LABEL_INK_HALF * CARRIER_LABEL_FS;
+    const SAMPLES = 60;
     for (const cell of carrierLayout(record()).cells) {
       const arcR = carrierCellArcRadius(cell);
-      const mid = (cell.r0 + cell.r1) / 2;
       /* The correction is present, at full size, and signed by the arc's own
-         direction rather than by the cell's position in the ring. */
+         direction rather than by the cell's position in the ring. ⚠ It is taken
+         off the DRAWN corridor's centre — `outerWall`, not `r1`. */
+      const mid = (cell.r0 + cell.outerWall) / 2;
       const flip = Math.sin((((cell.a0 + cell.a1) / 2) * Math.PI) / 180) > 0;
       expect(
         arcR - mid,
         `${cell.skill.id}: the ink-centring correction is missing or mis-signed`
       ).toBeCloseTo((flip ? 1 : -1) * inkRise, 6);
+
       /* ⚠ AND THE CONSEQUENCE IS ASSERTED, NOT JUST THE ARITHMETIC — measured
          with the ink's HALF-HEIGHT, which is a different metric from the centre
          offset above (see `LABEL_INK_HALF`: 0.500em against 0.269em, the
          half-sum against the half-difference). Using the offset for both is a
          guard that reports a lean on a block that is sitting straight. */
-      const half = CARRIER_LABEL_INK_HALF * CARRIER_LABEL_FS;
       const inkMid = arcR + (flip ? -1 : 1) * inkRise;
-      const airOut = cell.r1 - (inkMid + half);
-      const airIn = inkMid - half - cell.r0;
+      /* Which wall is the housing: the inner one only on course 0, the outer
+         one only on the last course. `outerWall` names the second; the first is
+         `r0` landing exactly on `R_CELL`. */
+      const onBand = Math.abs(cell.r0 - CARRIER_R_CELL) < 1e-9;
+      const onRim = Math.abs(cell.outerWall - cell.r1) > 1e-9;
+      let airOut = Infinity;
+      let airIn = Infinity;
+      for (let s = 0; s <= SAMPLES; s += 1) {
+        const a = cell.a0 + ((cell.a1 - cell.a0) * s) / SAMPLES;
+        const wallOut = onRim ? carrierRayRadius(a, CARRIER_R_OUT) : cell.r1;
+        const wallIn = onBand ? carrierRayRadius(a, CARRIER_R_CELL) : cell.r0;
+        airOut = Math.min(airOut, wallOut - (inkMid + half));
+        airIn = Math.min(airIn, inkMid - half - wallIn);
+      }
+      /* ⚠ SYMMETRY IS STILL THE QUESTION — it was the right one, asked of the
+         wrong walls. A polygonal wall's worst position is what the label has to
+         live with, so the two worst clearances are what get compared. */
       expect(
         Math.abs(airOut - airIn),
         `${cell.skill.id}: ink leans (${airIn.toFixed(1)}u in vs ${airOut.toFixed(1)}u out)`
       ).toBeLessThan(0.5);
       /* ⚠ AND BOTH WALLS CLEAR A REAL AMOUNT. Symmetry alone is satisfied by a
          label centred in a cell too shallow to hold it, so the floor is
-         asserted too — `MIN_CELL_DEPTH` 26 against a 13-unit ink block leaves
-         6.5 per side at the tightest course the ladder will accept. */
-      expect(airIn, `${cell.skill.id}: ink crowds the inner seam`).toBeGreaterThan(5);
-      expect(airOut, `${cell.skill.id}: ink crowds the outer seam`).toBeGreaterThan(5);
+         asserted too — the achieved minimum is 5.4u at `Tracker Check`, the
+         tightest cell the ladder accepts. */
+      expect(airIn, `${cell.skill.id}: ink crowds the inner wall`).toBeGreaterThan(5);
+      expect(airOut, `${cell.skill.id}: ink crowds the outer wall`).toBeGreaterThan(5);
     }
+  });
+
+  it("bounds the outermost course by the rim's APOTHEM, not its circumradius", () => {
+    /* ⚠ THE ONE-LINE STATEMENT OF U34's DEFECT, pinned from both ends so it
+       cannot come back by either route: a cell on a concentric seam has
+       `outerWall === r1` (the wall IS its radius), and a cell on the rim has
+       `outerWall === κ·R_OUT` (the wall is 13.1 units nearer than its radius).
+       A build that collapsed the two — in either direction — would either put
+       the outermost labels back through the edge or float every other course's
+       label off its own centre. */
+    const layout = carrierLayout(record());
+    expect(CARRIER_R_APOTHEM).toBeCloseTo(CARRIER_KAPPA * CARRIER_R_OUT, 9);
+    let onRim = 0;
+    for (const group of layout.groups) {
+      const last = group.courses.length - 1;
+      for (const cell of layout.cells.filter((c) => c.key === group.key)) {
+        if (cell.course === last) {
+          expect(cell.r1, `${cell.skill.id}: the last course does not reach the rim`).toBeCloseTo(
+            CARRIER_R_OUT,
+            6
+          );
+          expect(
+            cell.outerWall,
+            `${cell.skill.id}: a rim cell is measured to the circumradius`
+          ).toBeCloseTo(CARRIER_R_APOTHEM, 6);
+          onRim += 1;
+        } else {
+          expect(
+            cell.outerWall,
+            `${cell.skill.id}: a concentric seam is being discounted like the rim`
+          ).toBeCloseTo(cell.r1, 9);
+        }
+      }
+    }
+    /* ⚠ AND THE APOTHEM IS ALL BUT EXACT HERE, RATHER THAN CONSERVATIVE — each
+       outermost cell comes within a fraction of a unit of that wall inside its
+       own sweep, so none of them is being handed a corridor meaningfully
+       smaller than the one it has. Measured worst on this record: **0.081
+       units**, i.e. 0.05 device px at the binding meet.
+
+       ⚠ **THE SWEEP'S WIDTH IS NOT A PROXY FOR THIS** and the first cut of this
+       guard used one. A rim cell wider than the dodecagon's 30° facet pitch
+       always straddles an edge midpoint; a narrower one may or may not, so
+       `≥ 30°` fails on `pattern`'s four 25.9° rim cells — which turn out to
+       clear it by 0.081u anyway. The property is sampled, because the property
+       is what matters.
+
+       ⚠ **AND THE THRESHOLD HAS TEETH, because the miss grows fast as a rim
+       course gets finer.** A cell of sweep `w` centred on a vertex approaches
+       no nearer than `15° − w/2`, and `R_OUT·(1/cos θ − 1)` is 0.25u at
+       `w` 25.9° but **5.9u at `w` 10°** — at which point the apothem is costing
+       that cell a fifth of its depth and the ladder should be solving against
+       the cell's own wall instead of the part's. */
+    for (const group of layout.groups) {
+      const last = group.courses.length - 1;
+      for (const cell of layout.cells.filter((c) => c.key === group.key && c.course === last)) {
+        let nearest = Infinity;
+        for (let s = 0; s <= 240; s += 1) {
+          const a = cell.a0 + ((cell.a1 - cell.a0) * s) / 240;
+          nearest = Math.min(nearest, carrierRayRadius(a, CARRIER_R_OUT));
+        }
+        expect(
+          nearest - CARRIER_R_APOTHEM,
+          `${cell.skill.id}: this rim cell stops ${(nearest - CARRIER_R_APOTHEM).toFixed(2)}u ` +
+            `short of the apothem — the bound is costing it depth`
+        ).toBeLessThan(0.5);
+      }
+    }
+    expect(onRim, "no cell is on the rim").toBeGreaterThan(4);
   });
 
   it("centres the substrate names in the band on the uppercase metric", () => {
@@ -1493,7 +1653,7 @@ describe("compound carrier divides one plate into equal cells", () => {
           while (a < group.a0) a += 360;
           if (a > group.a1) continue;
           const r = Math.hypot(px, py);
-          if (r < polygonRayRadius(a, CARRIER_R_CELL) || r > polygonRayRadius(a, CARRIER_R_OUT))
+          if (r < carrierRayRadius(a, CARRIER_R_CELL) || r > carrierRayRadius(a, CARRIER_R_OUT))
             continue;
           inside += 1;
         }

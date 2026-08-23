@@ -64,7 +64,8 @@ const allSpecs = (): { variant: string; workId: string; spec: LetterSpec }[] => 
   for (const work of record.works) {
     const pda = toPdaWork(
       work,
-      record.districts.find((d) => d.id === work.dist)
+      record.districts.find((d) => d.id === work.dist),
+      record.skills
     );
     for (const [variant, lettering] of VARIANTS) {
       for (const spec of lettering(pda, work, record)) out.push({ variant, workId: work.id, spec });

@@ -8,12 +8,6 @@ import {
   type ConsoleStation,
 } from "@/components/landing/home-v2/services/casefile/console/ConsoleRail";
 import {
-  SUBSTRATE_LAYOUT_0,
-  ViewSubstrate,
-  substrateExt,
-  substrateLayout,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
-import {
   crossing,
   selectWorks,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
@@ -89,11 +83,16 @@ const STATIONS: readonly ConsoleStation[] = [
  * keyed on the union makes the compiler the guard: add an id to
  * `IslVariantId` and this will not build until the drawing exists.
  *
- * `shipped` is absent on purpose: it is production's `ViewSubstrate` with its
- * own props, not an `IslVariantProps` drawing.
+ * ⚠ **EVERY VARIANT IS AN `IslVariantProps` DRAWING NOW** (ADR-070 U34). There
+ * used to be a `shipped` entry outside this record, mounting production's
+ * `ViewSubstrate` with its own bespoke props — the escape hatch that existed
+ * because the shipped drawing was not a lab variant. It is gone with SECTION:
+ * `carrier` re-exports the production module, so the baseline goes through the
+ * same door as every alternative and there is no second mount path to keep in
+ * step.
  */
 const DRAWINGS: Record<
-  Exclude<IslVariantId, "shipped">,
+  IslVariantId,
   {
     vb: string;
     Component: React.ComponentType<IslVariantProps>;
@@ -176,7 +175,7 @@ interface Props {
 }
 
 export function SubstrateLabShell({ shapes, districts, works, skills, envelope }: Props) {
-  const [variantId, setVariantId] = useState<IslVariantId>("shipped");
+  const [variantId, setVariantId] = useState<IslVariantId>("carrier");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [preset, setPreset] = useState<Preset>(PRESETS[0]);
   const [lit, setLit] = useState<string | null>(null);
@@ -199,7 +198,7 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
      `crossing(..., [])` reports every department as running ZERO streams —
      the configuration lab can pass `[]` because its drawing never asks, and
      this one letters the number on every department head. */
-  const shown = useMemo(() => selectWorks(districts, works), [districts, works]);
+  const shown = useMemo(() => selectWorks(districts, works, skills), [districts, works, skills]);
   const cross = useMemo(
     () => crossing(shapes, districts, works, shown),
     [shapes, districts, works, shown]
@@ -270,42 +269,24 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
     stamp
   );
 
-  /**
-   * ⚠ THE BASELINE MOUNTS ELASTIC, EXACTLY AS PRODUCTION DOES.
-   *
-   * It used to mount at `SUBSTRATE_LAYOUT_0` on the argument that the lab's
-   * housing is a fixed preset and the elastic treatment answers a field that
-   * moves. That argument is wrong: a fixed preset is a field of a KNOWN
-   * shape, not an absent one, and production computes its layout from
-   * whatever shape the field happens to be. At p1280 the rest crop is
-   * 932 × 482 against a 602 × 493 field, so the cards rendered 311px tall in
-   * a 493px panel — 182px of dead bottom, and a preview of a drawing the
-   * site never serves.
-   */
-  const liveLayout = useMemo(
-    () =>
-      report.canvas.w > 0 && report.canvas.h > 0
-        ? substrateLayout(substrateExt(report.canvas.h / report.canvas.w))
-        : SUBSTRATE_LAYOUT_0,
-    [report.canvas.w, report.canvas.h]
-  );
-
-  const drawing = variantId === "shipped" ? null : DRAWINGS[variantId];
-  /* A drawing with its own elasticity answers the MEASURED field, exactly as
-     `liveLayout` does for the shipped reading. Falling back to `vb` before the
+  const drawing = DRAWINGS[variantId];
+  /* ⚠ A DRAWING WITH ITS OWN ELASTICITY ANSWERS THE MEASURED FIELD, exactly as
+     production does — a fixed preset is a field of a KNOWN shape, not an absent
+     one. The baseline used to take a separate `liveLayout` here for the same
+     reason; it left with SECTION, because `carrier` computes its own crop
+     through `cropOf` like every other variant. Falling back to `vb` before the
      first measurement lands keeps the two-pass convergence below intact. */
-  const vb = drawing
-    ? drawing.cropOf && report.canvas.w > 0 && report.canvas.h > 0
+  const vb =
+    drawing.cropOf && report.canvas.w > 0 && report.canvas.h > 0
       ? drawing.cropOf(report.canvas.w / report.canvas.h)
-      : drawing.vb
-    : liveLayout.crop;
+      : drawing.vb;
 
   /* Measure → layout → measure. It converges in two passes and cannot loop:
      `canvas` is the console field, which CSS sizes from the preset, so a
      `viewBox` change can no more move it here than it can in production.
-     ⚠ It is keyed on `vb`, not on `liveLayout.crop` — an elastic DRAWING has
-     the same feedback shape as the elastic reading, and keying only the latter
-     leaves the carrier measured against the crop it had before it resized. */
+     ⚠ It is keyed on `vb` — an elastic drawing has the same feedback shape the
+     shipped reading does, so keying anything narrower leaves the carrier
+     measured against the crop it had before it resized. */
   useEffect(() => {
     remeasure();
   }, [vb, remeasure]);
@@ -359,8 +340,8 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
 
         {/* WORK PICKER — the round-four directions letter the SELECTED work
             as their drawing's subject. Other directions ignore it, so the
-            control appears in every state; changing it under `shipped` is a
-            no-op by design (the shipped drawing draws the estate). */}
+            control appears in every state; a direction that does not letter
+            the selection ignores it. */}
         <div className="icl__group">
           <span>Selected work</span>
           <div>
@@ -414,25 +395,7 @@ export function SubstrateLabShell({ shapes, districts, works, skills, envelope }
                   role="img"
                   aria-label={`${def.label} — the substrate`}
                 >
-                  {drawing ? (
-                    <drawing.Component record={record} />
-                  ) : (
-                    <ViewSubstrate
-                      shapes={cross.shapes}
-                      skills={skills}
-                      works={shown}
-                      selectedId={selectedWork?.id ?? null}
-                      showSel
-                      onOpen={(id) => setWorkId(id)}
-                      hover={null}
-                      onHover={() => {}}
-                      lit={lit}
-                      onLit={setLit}
-                      still
-                      layout={liveLayout}
-                      entry={{ kind: "raster" }}
-                    />
-                  )}
+                  <drawing.Component record={record} />
                 </svg>
               </ConsoleFrame>
             </div>

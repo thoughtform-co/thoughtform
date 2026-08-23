@@ -807,6 +807,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Accepted examples + edge cases",
     cfg: {
       p: ["Creative lead", "Sets the bar / owns final taste"],
+      /* ⚠ SUBSTRATE JOIN. `loop-paid-social` (Paid Social, Voice) is the
+         encoded voice this stream draws on — flag for owner review: chip
+         letters PAID SOCIAL where reading 02 used to say BRAND VOICE. */
+      skillId: "loop-paid-social",
       s: ["Brand voice", "Voice rules · claim gates · rejected examples"],
       m: ["Everyday lane", "Generate / critique / revise"],
       a: "Briefing agent",
@@ -831,6 +835,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Briefs that shipped + briefs that stalled",
     cfg: {
       p: ["Strategy lead", "Owns the angle"],
+      /* Flag: chip letters ASSET BRIEFS where reading 02 used to say
+         BRIEFING INTELLIGENCE. Same pattern (a brief the team can build from
+         a complete spec), narrower scope. */
+      skillId: "asset-brief-generator",
       s: ["Briefing intelligence", "Signal priority · brief shape · stall cases"],
       m: ["Deep lane", "Synthesise / contrast"],
       a: "Briefing agent",
@@ -855,6 +863,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Format cases + crop failures",
     cfg: {
       p: ["Studio designer", "Handles exceptions"],
+      /* Flag: no direct "format system" skill exists; the nearest pattern
+         match is `genai-prompting` (a slate-from-one-idea pattern the studio
+         already runs). Chip letters GENAI instead of FORMAT SYSTEM. */
+      skillId: "genai-prompting",
       s: ["Format system", "Format matrix · safe areas · rejected exports"],
       m: ["Fast lane", "Match / flag / resize"],
       a: "Editor plugin",
@@ -879,6 +891,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Voice passes + known drifts",
     cfg: {
       p: ["Brand editor", "Owns the standard"],
+      /* `founder-tone-of-voice` is Voice's flagship — the substrate every
+         Loop voice QA hangs off. Chip letters FOUNDER TOV. */
+      skillId: "founder-tone-of-voice",
       s: ["Brand voice", "Tone tests · drift markers · scored cases"],
       m: ["Everyday lane", "Score / explain"],
       a: "Chat assistant",
@@ -918,6 +933,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Live listings + rejections",
     cfg: {
       p: ["Marketplace lead", "Owns the listing"],
+      /* `loop-marketplace` is the Amazon listing skill — same substrate as
+         W-056 Marketplace SEO. Chip letters MARKETPLACE. */
+      skillId: "loop-marketplace",
       s: ["Listing system", "Field rules · term bank · rejection cases"],
       m: ["Everyday lane", "Draft / check / fill"],
       a: "Chat assistant",
@@ -942,6 +960,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Ranked pages + penalised phrasing",
     cfg: {
       p: ["SEO specialist", "Owns the keyword call"],
+      /* `loop-marketplace` reuses W-051's substrate — the encoded listing
+         voice IS the SEO substrate here. Chip letters MARKETPLACE. */
+      skillId: "loop-marketplace",
       s: ["SEO system", "Term weighting · banned phrasing · ranked cases"],
       m: ["Everyday lane", "Expand / rank / rewrite"],
       a: "Chat assistant",
@@ -966,6 +987,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Sets that diverged + sets that collapsed",
     cfg: {
       p: ["Performance lead", "Picks what runs"],
+      /* `genai-prompting` reuses W-029's substrate — the same "slate from
+         one idea" pattern that publishes divergent creative sets. Chip
+         letters GENAI where reading 02 used to say VARIANT SYSTEM. */
+      skillId: "genai-prompting",
       s: ["Variant system", "Angle spread · collapse tests · divergent sets"],
       m: ["Fast lane", "Diverge / draft"],
       a: "Image + video suite",
@@ -990,6 +1015,11 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Alerts that mattered + false alarms",
     cfg: {
       p: ["Marketplace lead", "Owns escalation"],
+      /* Flag: no direct "health watch" skill; `fraud-detection` is the
+         closest validation match (pattern analysis over orders and account
+         signals, thresholds, false positives). Chip letters FRAUD where
+         reading 02 used to say HEALTH WATCH. */
+      skillId: "fraud-detection",
       s: ["Health watch", "Thresholds · escalation logic · false alarms"],
       m: ["Fast lane", "Watch / flag / explain"],
       a: "Scheduled agent",
@@ -1016,6 +1046,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Clause cases + unacceptable failures",
     cfg: {
       p: ["Legal reviewer", "Owns consequential judgment"],
+      /* `nda-pre-check` is Judgment's flagship — exact match, this is the
+         stream that trenched the main. */
+      skillId: "nda-pre-check",
       s: ["NDA pre-check", "Clause policy · escalation triggers · never-accept cases"],
       m: ["Deep lane", "Clause reasoning / contradictions"],
       a: "Chat assistant",
@@ -1040,6 +1073,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Redlines accepted + overruled",
     cfg: {
       p: ["Legal reviewer", "Signs the position"],
+      /* Flag: no direct "redline playbook" skill; `legal-risk-methodology`
+         is the Legal judgment substrate every pre-check calls into. Chip
+         letters LEGAL RISK. */
+      skillId: "legal-risk-methodology",
       s: ["Redline playbook", "Fallback ladder · red lines · overruled cases"],
       m: ["Deep lane", "Compare / propose"],
       a: "Chat assistant",
@@ -1064,6 +1101,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Known violations + false positives",
     cfg: {
       p: ["Privacy lead", "Owns the finding"],
+      /* `tracker-compliance-checker` is the exact skill — a browser sweep
+         reporting consent violations against policy. Chip letters TRACKER
+         CHECK. */
+      skillId: "tracker-compliance-checker",
       s: ["Compliance checker", "Consent rules · tracker classes · false positives"],
       m: ["Fast lane", "Sweep / diff / report"],
       a: "Scheduled agent",
@@ -1090,6 +1131,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Matches + exceptions + false positives",
     cfg: {
       p: ["Finance reviewer", "Owns exceptions"],
+      /* `gl-reconciliations` is the ledger-side validation substrate. Chip
+         letters GL RECONCILE. */
+      skillId: "gl-reconciliations",
       s: ["Ledger control", "Matching logic · anomaly patterns · false positives"],
       m: ["Fast lane", "Match / flag / explain"],
       a: "Scheduled agent",
@@ -1106,7 +1150,11 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     title: "Invoice matching",
     dist: "FIN",
     lane: "Fast",
-    shapes: ["pattern"],
+    /* ⚠ +VALIDATION (ADR-071): matching invoices against PO and vendor master
+       IS validation work — the encoded tolerances are what remove the
+       judgment from the run. Added so `invoice-processor`'s substrate
+       (Validation) resolves against this stream's shapes. */
+    shapes: ["pattern", "validation"],
     seat: "EDGE",
     vol: "HIGH",
     mass: 1,
@@ -1114,6 +1162,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Matched sets + unresolvable cases",
     cfg: {
       p: ["Finance analyst", "Resolves the remainder"],
+      /* `invoice-processor` is the exact substrate — reads templates,
+         cross-checks against vendor master and POs. Chip letters INVOICES. */
+      skillId: "invoice-processor",
       s: ["Reconciliation", "Match rules · tolerances · unresolvable cases"],
       m: ["Fast lane", "Match / reconcile"],
       a: "Scheduled agent",
@@ -1130,7 +1181,11 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     title: "Spend forecast",
     dist: "FIN",
     lane: "Deep",
-    shapes: ["judgment", "stakeholder", "validation"],
+    /* ⚠ +PATTERN (ADR-071): variance analysis IS pattern work — recurring
+       month-shape templates whose structured outputs are what makes a
+       forecast comparable. `variance-commentary` (Pattern's flagship for
+       Finance) resolves against this. */
+    shapes: ["judgment", "stakeholder", "validation", "pattern"],
     seat: "ABOVE",
     vol: "LOW",
     mass: 4,
@@ -1138,6 +1193,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Forecasts against what landed",
     cfg: {
       p: ["Finance lead", "Owns the call"],
+      /* Flag: no direct "forecast method" skill; `variance-commentary` is
+         the substrate closest to Finance forecasting narrative work (the
+         encoded month-end variance templates). Chip letters VARIANCE. */
+      skillId: "variance-commentary",
       s: ["Forecast method", "Driver definitions · scenario rules · variance cases"],
       m: ["Deep lane", "Model / explain"],
       a: "Chat assistant",
@@ -1164,6 +1223,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Packs + production edge cases",
     cfg: {
       p: ["Design reviewer", "Handles exceptions"],
+      /* `loop-packaging-system` is the exact skill — this stream trenched
+         Validation. Chip letters PACKAGING. */
+      skillId: "loop-packaging-system",
       s: ["Packaging system", "Claim + format rules · process · accept/reject packs"],
       m: ["Everyday lane", "Bounded checks"],
       a: "Editor plugin",
@@ -1188,6 +1250,11 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Approved dielines + print failures",
     cfg: {
       p: ["Packaging engineer", "Owns print release"],
+      /* `loop-packaging-system` reuses W-011's substrate — dielines are
+         inside the packaging system's structure rules. Chip letters
+         PACKAGING. Flag: chip may read as the reuse rather than the
+         specific check. */
+      skillId: "loop-packaging-system",
       s: ["Dieline check", "Structure rules · bleed logic · print failures"],
       m: ["Everyday lane", "Inspect / flag"],
       a: "Chat assistant",
@@ -1204,7 +1271,11 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     title: "CMF spec check",
     dist: "DES",
     lane: "Deep",
-    shapes: ["judgment", "validation"],
+    /* ⚠ +PATTERN (ADR-071): CMF specs are a structured-output pattern —
+       tolerance bands · finish tables · sample sheets — which is what
+       `cmf-file-generator`'s Pattern engine encodes. Added so the substrate
+       resolves against this stream's shapes. */
+    shapes: ["judgment", "validation", "pattern"],
     seat: "INSIDE",
     vol: "LOW",
     mass: 4,
@@ -1212,6 +1283,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Specs that held + specs that drifted",
     cfg: {
       p: ["Industrial designer", "Owns the material call"],
+      /* `cmf-file-generator` is the exact substrate — workbook in,
+         manufacturer-ready CMF PDF with renders out. Chip letters CMF
+         FILES. */
+      skillId: "cmf-file-generator",
       s: ["CMF standard", "Tolerance bands · finish logic · drift cases"],
       m: ["Deep lane", "Compare / reason"],
       a: "Chat assistant",
@@ -1238,6 +1313,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Known failures + release baselines",
     cfg: {
       p: ["Engineering reviewer", "Signs off / owns risk"],
+      /* Flag: no direct "release audit" skill; `risk-management` is the
+         Judgment substrate closest to surfacing release risk with
+         traceable reasoning. Chip letters RISK MGMT. */
+      skillId: "risk-management",
       s: ["Release audit", "Repo conventions · failure logic · release baselines"],
       m: ["Frontier lane", "Repo-scale reasoning"],
       a: "Coding agent",
@@ -1262,6 +1341,8 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Registered risks + missed ones",
     cfg: {
       p: ["Electronics lead", "Owns the register"],
+      /* `risk-management` is the exact substrate. Chip letters RISK MGMT. */
+      skillId: "risk-management",
       s: ["Risk method", "Severity logic · mitigation shapes · missed-risk cases"],
       m: ["Deep lane", "Assess / rank"],
       a: "Chat assistant",
@@ -1286,6 +1367,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Weekly cycles + known omissions",
     cfg: {
       p: ["Electronics lead", "Corrects emphasis"],
+      /* `program-status-updates` (Stakeholder's flagship) is the encoded
+         status-digest substrate — shared with W-046. Chip letters PRG
+         STATUS. */
+      skillId: "program-status-updates",
       s: ["Status digest", "Editorial priority · omission checks · reader framing"],
       m: ["Fast lane", "Summarise / structure"],
       a: "Scheduled agent",
@@ -1312,6 +1397,9 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Weekly cycles + distortions",
     cfg: {
       p: ["Program lead", "Corrects emphasis"],
+      /* `program-status-updates` trenched Stakeholder — this is the stream
+         that opened it. Chip letters PRG STATUS. */
+      skillId: "program-status-updates",
       s: ["Status digest", "Editorial priority · omission checks · reader framing"],
       m: ["Fast lane", "Summarise / structure"],
       a: "Scheduled agent",
@@ -1328,7 +1416,11 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     title: "Candidate screening",
     dist: "PRG",
     lane: "Everyday",
-    shapes: ["judgment", "pattern", "validation"],
+    /* ⚠ +STAKEHOLDER (ADR-071): a candidate screening IS a brief framed for
+       a specific reader (the hiring manager) — Stakeholder's own definition.
+       Added so `candidate-screening-brief` (Stakeholder) resolves against
+       this stream's shapes. */
+    shapes: ["judgment", "pattern", "validation", "stakeholder"],
     seat: "INSIDE",
     vol: "MID",
     mass: 3,
@@ -1336,6 +1428,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Role cases + fairness failures",
     cfg: {
       p: ["Talent reviewer", "Owns decision / fairness"],
+      /* `candidate-screening-brief` is the exact substrate — intake notes
+         into one screening brief the hiring manager can read in a single
+         pass. Chip letters SCREENING. */
+      skillId: "candidate-screening-brief",
       s: ["Screening brief", "Role criteria · evidence rules · fairness failures"],
       m: ["Everyday lane", "Evidence summarisation"],
       a: "Chat assistant",
@@ -1360,6 +1456,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Plans that held + plans that slipped",
     cfg: {
       p: ["Program lead", "Owns the commitment"],
+      /* Flag: no direct "capacity method" skill; `risk-management` is the
+         Judgment substrate — capacity planning reasons about trade-offs
+         under uncertainty. Chip letters RISK MGMT. */
+      skillId: "risk-management",
       s: ["Capacity method", "Load rules · trade-off logic · slipped-plan cases"],
       m: ["Deep lane", "Model / explain"],
       a: "Chat assistant",
@@ -1412,6 +1512,10 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     evals: "Forecasts against what sold",
     cfg: {
       p: ["Supply lead", "Owns the order"],
+      /* `lead-time-calculator` is the encoded Ops pattern substrate —
+         supplier lead-time rules that keep planning conversations honest.
+         Chip letters LEAD TIME. */
+      skillId: "lead-time-calculator",
       s: ["Demand method", "Seasonality rules · lead-time logic · forecast cases"],
       m: ["Deep lane", "Model / explain"],
       a: "Chat assistant",

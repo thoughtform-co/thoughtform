@@ -188,12 +188,85 @@ function readPda() {
     }
   }
 
+  // ── AND WHETHER AN ARC LABEL IS INSIDE ITS OWN CELL (ADR-070 U34) ─────
+  // ⚠ THE ASSERTION THAT WOULD HAVE CAUGHT NINETEEN SPILLED LABELS AND DID
+  // NOT EXIST. Every guard on this drawing — here and in `substrate-lab-fit`
+  // — measured a label against a MEASURE: an advance against an arc, a line
+  // box against a depth, an ink block against `cell.r0`/`cell.r1`. All of
+  // those are lengths, and a length is silent about where the label SITS
+  // relative to the wall the renderer paints. The plate's rings were
+  // twelve-sided while the labels rode circles, so at each of the twelve edge
+  // midpoints the wall came 13.1 units nearer than the radius every guard was
+  // reading, and 19 of 47 labels printed through their own edge with
+  // everything green.
+  //
+  // This asks the render instead: is the ink inside the cell's own fill?
+  // `isPointInFill` is the browser's own hit geometry on the very path the
+  // cell is drawn from, so it cannot be satisfied by a model that has drifted
+  // away from the drawing.
+  //
+  // ⚠ THE INK BLOCK IS ASYMMETRIC ABOUT THE BASELINE and testing ±half an em
+  // is wrong in both directions: measured on this face a run of PT Mono puts
+  // its ascender **0.769em ABOVE** the baseline and its descender **0.231em
+  // below** (which is what makes `LABEL_INK_MID` 0.269 the half-difference and
+  // `LABEL_INK_HALF` 0.500 the half-sum). ⚠ Swapping those two reports every
+  // tight cell as a spill — the first cut of this probe did, and named
+  // `Tracker Check` twelve times on a drawing with 5.5u of clearance, because
+  // 0.769em is 10 units and the corridor's half-width is 11.9.
+  //
+  // The up-vector is the left normal of the direction of travel — `(ty, −tx)`
+  // in SVG's y-down space — which is what makes one expression serve both
+  // halves of the dial, where the arc is reversed so the type is not upside
+  // down.
+  const spills: string[] = [];
+  for (const g of svg.querySelectorAll<SVGGElement>(".fl-pda-hit")) {
+    const cell = g.querySelector<SVGPathElement>("path");
+    const label = g.querySelector<SVGTextElement>("text");
+    if (!cell || !label || label.querySelector("textPath") == null) continue;
+    if (typeof cell.isPointInFill !== "function") continue;
+    const n = (label.textContent ?? "").length;
+    const at = (c: number) => {
+      try {
+        return label.getStartPositionOfChar(c);
+      } catch {
+        return null;
+      }
+    };
+    const fs = Number.parseFloat(getComputedStyle(label).fontSize);
+    for (let c = 0; c < n; c++) {
+      const p = at(c);
+      const q = at(c + 1 < n ? c + 1 : c - 1);
+      if (!p || !q) continue;
+      // Direction of travel, flipped when we had to borrow the PREVIOUS glyph.
+      const s = c + 1 < n ? 1 : -1;
+      const tx = (q.x - p.x) * s;
+      const ty = (q.y - p.y) * s;
+      const len = Math.hypot(tx, ty);
+      if (len < 1e-6) continue;
+      const ux = ty / len;
+      const uy = -tx / len;
+      for (const [dir, name] of [
+        [0.769, "ascender"],
+        [-0.231, "descender"],
+      ] as const) {
+        const pt = svg.createSVGPoint();
+        pt.x = p.x + ux * dir * fs;
+        pt.y = p.y + uy * dir * fs;
+        if (!cell.isPointInFill(pt)) {
+          spills.push(`"${(label.textContent ?? "").slice(0, 24)}" ${name} @ char ${c}`);
+        }
+      }
+    }
+  }
+
   return {
     texts: items.length,
     minPx: Number((items.length ? Math.min(...items.map((i) => i.px)) : 0).toFixed(2)),
     overlaps,
     arcs,
     arcTexts: onPath.length,
+    spills: [...new Set(spills)],
+    spillCells: svg.querySelectorAll(".fl-pda-hit").length,
     // 0.6 units of tolerance for sub-pixel bbox rounding; a real clip is a
     // whole glyph or more.
     clipped: items
@@ -743,6 +816,23 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             drawn!.arcTexts,
             `${where}: the carrier's arc labels are not being measured`
           ).toBeGreaterThan(40);
+
+          // ── AND EVERY ARC LABEL IS INSIDE ITS OWN CELL (ADR-070 U34) ──
+          // ⚠ THE PAIR AGAIN: the collision walk above asks whether two
+          // labels print through each other, and answered YES to nothing
+          // while nineteen of them printed through their own CELL EDGE.
+          // Two different questions, and the second one had no guard.
+          // ⚠ The cell count is asserted alongside, for the same reason the
+          // arc count is: an `isPointInFill` that stopped resolving, or a
+          // renamed hit class, would empty this list rather than fail it.
+          expect(
+            drawn!.spillCells,
+            `${where}: the carrier's cells are not being measured`
+          ).toBeGreaterThan(40);
+          expect(
+            drawn!.spills,
+            `${where}: labels print through their own cell edge: ${drawn!.spills.join(" | ")}`
+          ).toEqual([]);
         }
 
         // ── AND THE TYPE IS ACTUALLY BIGGER ────────────────────────

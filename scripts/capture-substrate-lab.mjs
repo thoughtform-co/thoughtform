@@ -32,7 +32,16 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/intelligence-substrate-lab");
-const VARIANTS = argOf("--v", "shipped,strata,table,tree,seals,density,field").split(",");
+/**
+ * ⚠ **`shipped` LEFT THIS LIST WITH THE DRAWING IT NAMED** (ADR-070 U34) —
+ * `carrier` IS the shipped drawing now, and it is a lab variant like any other.
+ *
+ * ⚠ **THE DEFAULT IS STILL ROUND ONE PLUS THE BASELINE, AND THAT IS A KNOWN
+ * HOLE**: every direction added since is ungated unless it is named with `--v`.
+ * The durable fix is to default to `ISL_VARIANTS`, which is its own pass — a
+ * full sweep is ~38 variants x 2 themes x 2 presets.
+ */
+const VARIANTS = argOf("--v", "carrier,strata,table,tree,seals,density,field").split(",");
 const THEMES = argOf("--themes", "dark,light").split(",");
 const PRESETS = argOf("--presets", "p1280,p1920").split(",");
 

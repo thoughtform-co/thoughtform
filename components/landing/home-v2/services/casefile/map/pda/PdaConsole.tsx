@@ -8,13 +8,26 @@ import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from 
 import { ConsoleFrame } from "../../console/ConsoleFrame";
 import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 
-import { ViewCarrier, carrierPlate } from "./PdaCarrier";
-import { ViewConfiguration, configExt, configLayout } from "./PdaConfiguration";
+import {
+  ViewCarrier,
+  carrierChipMorphIn,
+  carrierChipMorphOut,
+  carrierChipRotation,
+  carrierLayout,
+  carrierPlate,
+  carrierSkillDock,
+  carrierSkillNameRect,
+} from "./PdaCarrier";
+import {
+  ViewConfiguration,
+  configExt,
+  configLayout,
+  configSkillNameRect,
+} from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
-import { ViewSubstrate, estateFootprint, substrateExt, substrateLayout } from "./PdaSubstrate";
 import { ViewWork, gridRect, workExt, workLayout } from "./PdaViews";
-import { SUBSTRATE_SECTION } from "./flags";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
+import type { FlightRect } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
 import { PDA_WHEEL_REST, type PdaWheelState, pdaWheelStep } from "./pdaWheel";
 
@@ -112,7 +125,7 @@ interface Props {
 }
 
 export function PdaConsole({ shapes, districts, works, skills, envelope }: Props) {
-  const shown = useMemo(() => selectWorks(districts, works), [districts, works]);
+  const shown = useMemo(() => selectWorks(districts, works, skills), [districts, works, skills]);
   const totals = useMemo(() => pdaTotals(shapes, districts, works), [shapes, districts, works]);
   const cross = useMemo(
     () => crossing(shapes, districts, works, shown),
@@ -127,8 +140,10 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
   const [viewTick, setViewTick] = useState(0);
   /** True once the reader has moved the pointer inside the current view. */
   const [still, setStill] = useState(false);
-  /** How the selection enters the reading just opened. */
+  /** How the WORK CARD enters the reading just opened. */
   const [entry, setEntry] = useState<PdaEntry>({ kind: "raster" });
+  /** How the SKILL CHIP enters — the second persistent object (ADR-071). */
+  const [skillEntry, setSkillEntry] = useState<PdaEntry>({ kind: "raster" });
   /**
    * True once the configuration has been shown at all. Until then nothing
    * marks a selection: the rest state is `shown[0]`, and lighting a record the
@@ -189,15 +204,19 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
    *  object by construction, so the two cannot drift. */
   const layout1 = useMemo(() => workLayout(workExt(aspect)), [aspect]);
   const layout2 = useMemo(() => configLayout(configExt(aspect)), [aspect]);
-  /** ⚠ THE TWO READING-03 DRAWINGS ARE ELASTIC IN OPPOSITE DIRECTIONS — SECTION
-   *  fixes its width and grows its strata with height; the carrier fixes its
-   *  height and grows its crop's width (`PdaCarrier`, and see `flags.ts` for why
-   *  the drawing and its crop cannot be gated separately). Both are computed
-   *  because both are pure and cheap, and the one that renders picks its own. */
-  const section3 = useMemo(() => substrateLayout(substrateExt(aspect)), [aspect]);
+  /** ⚠ READING 03 IS HEIGHT-FIXED AND GROWS ITS CROP'S WIDTH, alone among the
+   *  three — see `PdaCarrier`. U25's SECTION drawing was elastic the other way
+   *  and needed its own layout beside this one; it was retired with its flag
+   *  (ADR-070 U34), so there is one reading-03 crop again. */
   const carrier3 = useMemo(() => carrierPlate(aspect), [aspect]);
-  const crop3 = SUBSTRATE_SECTION ? section3.crop : carrier3.crop;
-  const viewBox = view === 1 ? layout1.crop : view === 2 ? layout2.crop : crop3;
+  /** ⚠ THE CARRIER'S CELLS — the flight's destination for reading 03's skill
+   *  chip needs to know which cell to land on. Cell layout is pure and does
+   *  not depend on `aspect`, so it computes once per record change. */
+  const carrierCells = useMemo(
+    () => carrierLayout({ shapes: cross.shapes, skills }).cells,
+    [cross.shapes, skills]
+  );
+  const viewBox = view === 1 ? layout1.crop : view === 2 ? layout2.crop : carrier3.crop;
   /* ⚠ THESE MIRRORS KEEP THE WHEEL LISTENER STABLE, and that is the whole
      reason they are refs. `go` sits in the native listener's dependency array;
      threading `view` or `selectedId` through it as values would tear the
@@ -232,11 +251,17 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
    * and a collapsed box is what the desktop gate leaves behind
    * (`display: none`), where the arithmetic would divide by zero.
    */
-  const rectFor = useCallback(
-    (
-      view: PdaView,
-      id: string
-    ): { crop: string; rect: { x: number; y: number; w: number; h: number } } | null => {
+  /**
+   * THE WORK CARD'S HOME PER READING (ADR-071).
+   *
+   * ⚠ **NO HOME ON THE CARRIER SINCE ADR-071.** U33 seated the work card in
+   * the carrier's hub as a THIRD HOME; ADR-071 replaced it with the seated
+   * cell (a highlight, not a card) — so `workRectFor(3, ...)` returns `null`
+   * and 1↔3, 2↔3 fall back to bloom / raster. SECTION's flag path still uses
+   * the estate footprint, which is byte-identical to before.
+   */
+  const workRectFor = useCallback(
+    (view: PdaView, id: string): { crop: string; rect: FlightRect } | null => {
       if (view === 1) {
         const i = shown.findIndex((w) => w.id === id);
         if (i < 0) return null;
@@ -245,53 +270,142 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
       if (view === 2) {
         return { crop: layout2.crop, rect: layout2.core };
       }
-      if (!SUBSTRATE_SECTION) {
-        /* The carrier seats the work in its hub, so the home is the same rect
-           for every stream — the drawing does not lay them out side by side.
-           It still has to be a stream the estate knows, or a stale id would fly
-           an object the destination is not going to draw. */
-        if (!shown.some((w) => w.id === id)) return null;
-        return { crop: carrier3.crop, rect: carrier3.seat };
-      }
-      const foot = estateFootprint(shown, id, 26, 26, 880);
-      if (!foot) return null;
-      return { crop: section3.crop, rect: foot };
+      /* ⚠ READING 03 HAS NO WORK HOME, AND THAT IS ADR-071's SPLIT. The work
+         card is a 1↔2 object; the carrier's 2↔3 object is the SKILL chip
+         (`skillRectFor`). U25's SECTION drawing did give the work a third home
+         — one of twenty ghost footprints — and it was retired with its flag
+         (ADR-070 U34), so this returns null for every id rather than for a
+         flag. */
+      return null;
     },
-    [shown, layout1, layout2, section3, carrier3]
+    [shown, layout1, layout2]
   );
 
+  /**
+   * THE SKILL CHIP'S HOME PER READING (ADR-071).
+   *
+   * ⚠ **THE SKILL IS THE 2↔3 OBJECT** — no home on reading 01 (the grid
+   * shows work cards, not chips). The chip's home on reading 02 is the
+   * config board's SKILL slot (`layout2.skillChip`), and on the carrier it
+   * is the arc midpoint of the cell whose skill id matches the argument.
+   */
+  const skillRectFor = useCallback(
+    (view: PdaView, skillId: string): { crop: string; rect: FlightRect } | null => {
+      if (view === 2) return { crop: layout2.crop, rect: layout2.skillChip };
+      if (view === 3) {
+        const cell = carrierCells.find((c) => c.skill.id === skillId);
+        if (!cell) return null;
+        return { crop: carrier3.crop, rect: carrierSkillDock(cell) };
+      }
+      return null;
+    },
+    [layout2, carrier3, carrierCells]
+  );
+
+  /**
+   * TWO ENTRIES, ONE RECT READ. The click's own rect is measured HERE — the
+   * outgoing crop is still the one in the attribute — and both flights are
+   * decided against it. Returning a pair rather than one lets the console
+   * commit them in the same `enter(...)` call: two objects that fly during
+   * the same view change but land on different homes.
+   *
+   * ⚠ **THE INTERRUPT GUARD IS SHARED.** Both flights use the same clock
+   * (`flightAtRef`), so a re-clicked transition falls back to raster on
+   * BOTH — a rearmed skill flight beside a rastered work card would show
+   * one object gliding while the other snapped, which reads as a bug.
+   *
+   * ⚠ **THE ROTATION IS COMPUTED FROM THE DESTINATION**, and the sign
+   * depends on the direction (see `PdaCarrier`'s `ChipArrival` for why):
+   * on 2→3, `dr = -carrierChipRotation` compensates for the destination
+   * wrapper's baked rotation so the source pose is unrotated; on 3→2, `dr =
+   * +carrierChipRotation` replays the source's tangent orientation at the
+   * unrotated config destination.
+   */
   const entryFor = useCallback(
-    (from: PdaView, to: PdaView, id: string): PdaEntry => {
-      if (from === to) return { kind: "raster" };
+    (from: PdaView, to: PdaView, id: string, skillId: string | null) => {
+      const still: PdaEntry = { kind: "raster" };
+      const rest = { work: still, skill: still as PdaEntry };
+      if (from === to) return rest;
 
       const now = performance.now();
-      if (now - flightAtRef.current < PDA_FLIGHT_GUARD_MS) return { kind: "raster" };
+      if (now - flightAtRef.current < PDA_FLIGHT_GUARD_MS) return rest;
 
       const el = svgRef.current;
-      if (!el) return { kind: "raster" };
-
-      const src = rectFor(from, id);
-      const dst = rectFor(to, id);
-      if (!src || !dst) {
-        /* ⚠ FALLBACK: a bloom in place when arriving on reading 01 from an
-           unpaired reading, so the record the reader last had open finds
-           itself again. Raster otherwise. */
-        return from === 3 && to === 1 ? { kind: "bloom" } : { kind: "raster" };
-      }
+      if (!el) return rest;
 
       const box = el.getBoundingClientRect();
-      const vars = pdaFlight(box, src.crop, src.rect, dst.crop, dst.rect);
-      if (!vars) return { kind: "raster" };
 
-      flightAtRef.current = now;
-      return { kind: "flight", ...vars };
+      /* THE WORK CARD's ENTRY — flight between 1 and 2, bloom coming back
+         off the carrier onto either home, raster otherwise. */
+      const workSrc = workRectFor(from, id);
+      const workDst = workRectFor(to, id);
+      let work: PdaEntry;
+      if (!workSrc || !workDst) {
+        /* ⚠ 3→2 BLOOMS TOO (ADR-071 extension). The carrier no longer seats
+           the work card, so 3→2 has no source rect — the work card must
+           still show up at the seat. The old fallback covered 3→1 only. */
+        work = from === 3 && (to === 1 || to === 2) ? { kind: "bloom" } : { kind: "raster" };
+      } else {
+        const vars = pdaFlight(box, workSrc.crop, workSrc.rect, workDst.crop, workDst.rect);
+        work = vars ? { kind: "flight", ...vars } : { kind: "raster" };
+      }
+
+      /* THE SKILL CHIP's ENTRY — flight between 2 and 3 only. Every other
+         pair leaves it rastered: reading 01 has no chip home, and a chip
+         flight to/from an absent home would be a gesture landing nowhere.
+
+         ⚠ **TWO INSTRUMENTS PER FLIGHT SINCE ADR-071 U1.** The PLATE's
+         journey is a SHAPE MORPH — `carrierChipMorphIn/Out` emit a path pair
+         (rect ⇄ the cell's own ring, same command structure) that CSS `d`
+         interpolates, so the plate genuinely becomes the cell instead of a
+         frame floating onto it. The NAME flies its own `pdaFlight`, computed
+         on the name's OWN rects (left-anchored in the chip, centre-anchored
+         on the arc — the plate's centre-to-centre vars would make it jump
+         sideways at liftoff). The plate vars are consumed by the morph
+         projection and never leave this closure. */
+      let skill: PdaEntry = still;
+      if (skillId && (from === 2 || from === 3) && (to === 2 || to === 3)) {
+        const cell = carrierCells.find((c) => c.skill.id === skillId);
+        const skillSrc = skillRectFor(from, skillId);
+        const skillDst = skillRectFor(to, skillId);
+        if (cell && skillSrc && skillDst) {
+          const plate = pdaFlight(box, skillSrc.crop, skillSrc.rect, skillDst.crop, skillDst.rect);
+          const name = cell.skill.short.toUpperCase();
+          const nameSrc =
+            from === 2 ? configSkillNameRect(layout2, name) : carrierSkillNameRect(cell, name);
+          const nameDst =
+            to === 2 ? configSkillNameRect(layout2, name) : carrierSkillNameRect(cell, name);
+          const nameVars = pdaFlight(box, skillSrc.crop, nameSrc, skillDst.crop, nameDst);
+          if (plate && nameVars) {
+            const rotation = carrierChipRotation(cell);
+            /* 2→3: the name's destination render is tangent-rotated (baked
+               wrapper), `dr` cancels it at liftoff. 3→2: the destination is
+               unrotated, `dr` replays the tangent it left with. */
+            const dr = to === 3 ? -rotation : rotation;
+            const morph =
+              to === 3
+                ? carrierChipMorphIn(cell, plate)
+                : carrierChipMorphOut(cell, plate, layout2.skillChip);
+            skill = { kind: "flight", ...nameVars, dr, morph };
+          }
+        }
+      }
+
+      /* ⚠ ONLY BUMP THE GUARD IF A REAL FLIGHT IS BEING RETURNED. Falling
+         back to raster without arming the guard means the next click can
+         start a flight immediately, which is the honest recovery from a
+         missing rect. */
+      if (work.kind === "flight" || skill.kind === "flight") flightAtRef.current = now;
+
+      return { work, skill };
     },
-    [rectFor]
+    [workRectFor, skillRectFor, carrierCells, layout2]
   );
 
-  const enter = useCallback((next: PdaView, next_entry: PdaEntry) => {
+  const enter = useCallback((next: PdaView, gestures: { work: PdaEntry; skill: PdaEntry }) => {
     setView(next);
-    setEntry(next_entry);
+    setEntry(gestures.work);
+    setSkillEntry(gestures.skill);
     if (next === 2) setHasOpened(true);
     setHover(null);
     setLit(null);
@@ -299,9 +413,18 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
     setViewTick((t) => t + 1);
   }, []);
 
+  /**
+   * ⚠ THE SKILL ID FOR THE CURRENT SELECTION, read via ref so the callbacks
+   * below can capture it without threading `selected` through the wheel's
+   * dependency array (see the ref block above for the same reason). Rebuilt
+   * per render so a `selectedId` change is picked up on the next transition.
+   */
+  const selectedSkillIdRef = useRef<string | null>(null);
+  selectedSkillIdRef.current = shown.find((w) => w.id === selectedId)?.skillId ?? null;
+
   const go = useCallback(
     (next: PdaView) => {
-      enter(next, entryFor(viewRef.current, next, selRef.current));
+      enter(next, entryFor(viewRef.current, next, selRef.current, selectedSkillIdRef.current));
     },
     [enter, entryFor]
   );
@@ -310,12 +433,14 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
     (id: string) => {
       /* The rect read happens HERE, before anything changes — the outgoing
          reading is still on screen and its crop is still the one in the
-         attribute. */
-      const gesture = entryFor(viewRef.current, 2, id);
+         attribute. The clicked stream's skill id is what the chip's flight
+         needs, so it is read alongside. */
+      const nextSkillId = shown.find((w) => w.id === id)?.skillId ?? null;
+      const gesture = entryFor(viewRef.current, 2, id, nextSkillId);
       setSelectedId(id);
       enter(2, gesture);
     },
-    [enter, entryFor]
+    [enter, entryFor, shown]
   );
 
   /* A hover repaints WITHOUT replaying the entrance. */
@@ -508,36 +633,28 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
             onLit={hoverPart}
             still={still}
             entry={entry}
+            skillEntry={skillEntry}
+            /* ⚠ THE ROSTER ENTRY, resolved here (ADR-071). The projection
+               splits its knowledge — `PdaWork.skillId` is the id, the roster
+               is the record — so the join happens at the mount point rather
+               than inside every drawing that needs the name and engine. */
+            skill={
+              selected.skillId ? (skills.find((s) => s.id === selected.skillId) ?? null) : null
+            }
           />
         ) : null}
-        {view === 3 && !SUBSTRATE_SECTION ? (
+        {view === 3 ? (
           <ViewCarrier
             shapes={cross.shapes}
             skills={skills}
             /* ⚠ `hasOpened`, NOT just `selected`. The rest state is `shown[0]`,
-               and seating a record the reader never asked for claims they left
-               it open — the same reason SECTION's footprint took `showSel`. */
+               and lighting a cell for a record the reader never asked for
+               claims they left it open. */
             selected={hasOpened ? (selected ?? null) : null}
             still={still}
             entry={entry}
+            skillEntry={skillEntry}
             onLit={hoverPart}
-          />
-        ) : null}
-        {view === 3 && SUBSTRATE_SECTION ? (
-          <ViewSubstrate
-            shapes={cross.shapes}
-            skills={skills}
-            works={shown}
-            selectedId={selectedId}
-            showSel={hasOpened}
-            onOpen={open}
-            hover={hover}
-            onHover={hoverWork}
-            lit={lit}
-            onLit={hoverPart}
-            still={still}
-            layout={section3}
-            entry={entry}
           />
         ) : null}
       </svg>

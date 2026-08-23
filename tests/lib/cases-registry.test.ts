@@ -972,6 +972,43 @@ describe("cases registry (ADR-054)", () => {
     expect(configured.length - shapes.length).toBe(19);
   });
 
+  it("every configured stream's SKILL joins the roster on a shape it taps (ADR-071)", () => {
+    /* ⚠ THE SUBSTRATE JOIN IS WHAT MAKES THE FLIGHT LAND WRONG-PROOF (ADR-071,
+       2026-08-19). Reading 02's chip and reading 03's cell both letter the
+       roster entry's `short`, so if the join drifts — a `skillId` no longer
+       resolves, or resolves to a Skill in a shape this stream does not tap —
+       the chip flies to a cell the record does not claim.
+     
+       ⚠ CONFIGURED ONLY. Person-led work has `cfg: null` and no encoded
+       substrate to point at; asserting a join there would demand the record
+       lie about what has been built. */
+    const loop = getCase("loop-earplugs");
+    const visual = loop?.casefile.tracks.find((t) => t.id === "ai-transformation")?.visual;
+    if (!visual || visual.kind !== "intelligence-map") return;
+
+    const roster = new Map(visual.skills.map((s) => [s.id, s] as const));
+    for (const w of visual.works) {
+      if (!w.cfg) continue;
+      /* The chip cannot fly without a roster join. */
+      expect(
+        w.cfg.skillId.length,
+        `${w.id} configured stream has an empty skillId`
+      ).toBeGreaterThan(0);
+      const entry = roster.get(w.cfg.skillId);
+      expect(entry, `${w.id} skillId "${w.cfg.skillId}" resolves to no roster entry`).toBeDefined();
+      if (!entry) continue;
+      /* A stream that taps Voice cannot draw on a Judgment substrate — the
+         chip's material and the cell's region would disagree on which shape
+         the reader is looking at. The engine field carries the roster group's
+         name; the stream's `shapes` uses lowercase keys. */
+      const engineKey = entry.engine.toLowerCase();
+      expect(
+        w.shapes.some((k) => (k as string) === engineKey),
+        `${w.id} draws on ${entry.short} (${entry.engine}) but does not tap "${engineKey}" — stream shapes: ${w.shapes.join(", ")}`
+      ).toBe(true);
+    }
+  });
+
   it("districts are never published as teams (ADR-062)", () => {
     // THREE COUNTS, THREE UNITS. 22 teams BRIEFED, 14 teams USING THE LAYER,
     // and now 8 DISTRICTS — which are departments. The wording is the only

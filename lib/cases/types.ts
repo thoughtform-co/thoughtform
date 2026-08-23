@@ -274,7 +274,34 @@ export interface CaseMapDistrict {
 export interface CaseMapConfiguration {
   /** Owner role + what that seat actually owns. */
   p: readonly [string, string];
-  /** Skill name + what it is composed of. */
+  /**
+   * REFERENCE INTO THE CASE'S SKILLS ROSTER — the flying chip's identity.
+   *
+   * ⚠ **THIS IS THE SUBSTRATE JOIN** (ADR-071, 2026-08-19). The name lettered
+   * on reading 02's SKILL chip and the label on reading 03's cell both come
+   * from the roster entry (`short`), so the chip flies to a cell with the
+   * SAME text by construction — the flight cannot land wrong.
+   *
+   * ⚠ REQUIRED for every configured stream. `tests/lib/cases-registry.test.ts`
+   * asserts that `skillId` resolves to a roster entry whose engine is one of
+   * the stream's `shapes` — a stream that draws on a Skill must tap the shape
+   * that Skill files under, or the drawing lets the reader click on a chip
+   * and land in a substrate region the record does not claim.
+   *
+   * A single Skill can be the substrate for many streams (`loop-packaging-system`
+   * runs both W-011 Packaging system and W-016 Dieline review) — that is the
+   * whole "encoded once, drawn on by many" argument the third reading makes.
+   */
+  skillId: string;
+  /**
+   * How this stream composes the Skill — `[displayFallback, compositionNote]`.
+   *
+   * `s[0]` was the sole source of the SKILL name until ADR-071 (2026-08-19);
+   * since then reading 02 letters the roster's `short` via `skillId`. `s[0]`
+   * remains as a per-stream display fallback for surfaces that do not carry
+   * the roster (the city's Sheet 02 and its hover card), and `s[1]` still
+   * carries the composition note — what THIS work uses from the Skill.
+   */
   s: readonly [string, string];
   /** Capability lane + the verbs it runs. */
   m: readonly [string, string];

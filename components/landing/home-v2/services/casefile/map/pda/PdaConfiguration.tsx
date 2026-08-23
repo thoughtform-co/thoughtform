@@ -1,18 +1,26 @@
 "use client";
 
+import type { CaseSkillEntry } from "@/lib/cases/types";
+
 import { type FitSpec, cropAround, fitExt } from "./pdaFit";
 import { PDA_FLIGHT_MS } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
 import {
   CARD_BOX,
+  CHIP_FS,
+  CHIP_NAME_TRACK,
   CORE_K,
   LaneMeter,
+  SKILL_CHIP_H,
+  SKILL_CHIP_W,
+  SkillChip,
   StateMark,
   laneLabel,
   meterLabelDx,
+  skillChipNameRect,
   wrapLines,
 } from "./pdaGlyphs";
-import type { PdaEntry } from "./PdaEntry";
+import type { ChipMorph, PdaEntry } from "./PdaEntry";
 import type { PdaShape, PdaWork } from "./pdaRecord";
 import { type Pt, polylineLength, ribbonPaths } from "./ribbon";
 import { MODULE, band, housing } from "./substrateKit";
@@ -234,6 +242,11 @@ export interface ConfigLayout {
   left: FlightRect;
   right: FlightRect;
   base: FlightRect;
+  /** The SKILL chip's rect — the flight's second HOME (ADR-071). It nests
+   *  inside `left`'s first cell, below the SKILL key, and is exposed on the
+   *  layout so the console reads it the same way it reads `core` for the
+   *  work card. */
+  skillChip: FlightRect;
   /** The module block's floor — the base module's bottom edge, and the last
    *  thing on the board a reader actually looks at. */
   blockBottom: number;
@@ -258,6 +271,18 @@ export interface ConfigLayout {
  * numbers are unchanged: `configLayout(0)` is byte-identical, which is what
  * `pda-viewbox`'s elastic suite is for.
  */
+/**
+ * WHERE THE CHIP SITS INSIDE THE SKILL CELL — measured from the cell's own
+ * top edge.
+ *
+ * The cell has KEY at y+24 and a 12-unit clearance below it. 36 lands the
+ * chip's top 12 units past the KEY, with 11 units of air below the chip
+ * against the cell's floor at rest — the SKILL cell's slack, spent on air
+ * around the object that names it rather than on line spacing beneath a
+ * text line that no longer renders.
+ */
+const SKILL_CHIP_TOP = 36;
+
 export function configLayout(ext: number): ConfigLayout {
   const cellH = Math.min(CELL_H_MAX, CELL_H0 + CELL_GROW * ext);
   const grow = cellH - CELL_H0;
@@ -285,6 +310,17 @@ export function configLayout(ext: number): ConfigLayout {
     CROP_H0 + ext
   );
 
+  /* THE CHIP'S HOME. The SKILL cell's `y` follows the cell's own bias
+     ((cellH - CELL_H0) / 2 above the head — the R4 top-align preserved), so
+     the chip's `y` is derived the same way rather than pinned to `left.y`. */
+  const cellShift = (cellH - CELL_H0) / 2;
+  const skillChip: FlightRect = {
+    x: LEFT_X + PAD,
+    y: satY + HEAD_H + cellShift + SKILL_CHIP_TOP,
+    w: SKILL_CHIP_W,
+    h: SKILL_CHIP_H,
+  };
+
   return {
     ext,
     cellH,
@@ -295,6 +331,7 @@ export function configLayout(ext: number): ConfigLayout {
     left: { x: LEFT_X, y: satY, w: SAT_W, h: satH },
     right: { x: RIGHT_X, y: satY, w: SAT_W, h: satH },
     base: { x: BASE_X, y: baseY, w: BASE_W, h: baseH },
+    skillChip,
     blockBottom,
     margin: box.marginY,
     cropY: box.cropY,
@@ -521,8 +558,36 @@ export function configurationLettering(work: PdaWork): ConfigLetterSpec[] {
         track: 0.18,
         measure,
       });
+      /* ⚠ THE SKILL VALUE IS DELETED HERE AND DRAWN BY THE CHIP INSTEAD
+         (ADR-071). The chip's own spec is declared below with the chip's own
+         type and measure, so the guard walks the actual rendered string
+         rather than a value the drawing no longer prints. */
+      if (g.part === "runs" && cell.key === "SKILL") continue;
       specs.push(...valueSpecs(`${g.q}.${cell.key}`, cell.value, FS.value, measure));
     }
+  }
+
+  /* ⚠ THE CHIP DECLARES ITS OWN LETTERED STRINGS (ADR-071). The engine tag
+     runs uppercase at CHIP_TAG_FS/CHIP_TAG_TRACK, the skill name at CHIP_FS
+     with `.04em`. The measure is the chip's own inner width — SKILL_CHIP_W
+     less its two 8-unit pads — so the guard walks against the chip's plate,
+     not against the SKILL cell's 180-unit column. Absent for person-led
+     work (`skillEngine === null`): there is no chip. */
+  if (work.cfg.skillEngine) {
+    specs.push({
+      slot: "chip.engine",
+      text: work.cfg.skillEngine.toUpperCase(),
+      fs: 12,
+      track: 0.18,
+      measure: SKILL_CHIP_W - 16,
+    });
+    specs.push({
+      slot: "chip.skill",
+      text: work.cfg.skill,
+      fs: CHIP_FS,
+      track: 0.04,
+      measure: SKILL_CHIP_W - 16,
+    });
   }
 
   /* ⚠ THE CARD'S OWN STRINGS ARE DECLARED HERE. While the card was
@@ -645,6 +710,12 @@ function Ribbon({
  * reader finds the field). `--pda-ink` is `--gold-ink`, the 4.5:1 rung of
  * ADR-063 U2's ramp — NEVER `--gold` itself, which is the MARK rung and
  * measures ~1.1:1 as small text on the light theme's parchment.
+ *
+ * ⚠ `hideValue` DROPS THE VALUE LINE (ADR-071, 2026-08-19). The SKILL cell
+ * in WHAT RUNS IT now hosts the SkillChip — a distinct object that flies to
+ * the substrate carrier — so the cell keeps its KEY label but the value
+ * text is deleted; the chip drawing carries it. Every OTHER cell letters
+ * both.
  */
 function Cell({
   x,
@@ -652,12 +723,14 @@ function Cell({
   cell,
   measure,
   led,
+  hideValue,
 }: {
   x: number;
   y: number;
   cell: CellDef;
   measure: number;
   led: boolean;
+  hideValue?: boolean;
 }) {
   return (
     <g>
@@ -670,18 +743,20 @@ function Cell({
       >
         {cell.key}
       </text>
-      {valueLines(cell.value, FS.value, measure).map((line, i) => (
-        <text
-          key={i}
-          x={x + PAD}
-          y={y + VAL_BASE + STEP * i}
-          fontSize={FS.value}
-          letterSpacing=".08em"
-          fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
-        >
-          {line}
-        </text>
-      ))}
+      {hideValue
+        ? null
+        : valueLines(cell.value, FS.value, measure).map((line, i) => (
+            <text
+              key={i}
+              x={x + PAD}
+              y={y + VAL_BASE + STEP * i}
+              fontSize={FS.value}
+              letterSpacing=".08em"
+              fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
+            >
+              {line}
+            </text>
+          ))}
     </g>
   );
 }
@@ -761,6 +836,10 @@ function QNode({
           cell={c}
           measure={measure}
           led={Boolean(led)}
+          /* ⚠ WHAT RUNS IT's SKILL slot HOSTS THE CHIP (ADR-071). The KEY
+             label stays; the value text is deleted here and drawn on the
+             chip's own plate — see `SkillChip` in `ViewConfiguration`. */
+          hideValue={g.part === "runs" && c.key === "SKILL"}
         />
       ))}
     </g>
@@ -1030,6 +1109,8 @@ export function ViewConfiguration({
   onLit,
   still,
   entry,
+  skillEntry,
+  skill,
 }: {
   work: PdaWork;
   shapes: readonly PdaShape[];
@@ -1040,6 +1121,14 @@ export function ViewConfiguration({
   onLit: (k: string | null) => void;
   still: boolean;
   entry: PdaEntry;
+  /** The SKILL chip's own arrival gesture (ADR-071). Separate from `entry`
+   *  because the chip and the work card fly to different homes — the chip
+   *  goes 2↔3 while the card goes 1↔2, and their gestures never share a
+   *  transition. `null` for streams whose join failed, which also skips the
+   *  chip entirely. */
+  skillEntry: PdaEntry | null;
+  /** The roster entry the chip letters. `null` for person-led work. */
+  skill: CaseSkillEntry | null;
 }) {
   const led = !work.configured;
   const wire = led ? "var(--pda-txt3)" : "var(--pda-amb)";
@@ -1207,6 +1296,45 @@ export function ViewConfiguration({
       >
         <SeatCard core={core} work={work} led={led} />
       </g>
+      {/* ── THE SKILL CHIP — the second flying object (ADR-071, morph since
+              U1). The chip is the READING 02 HOME. On a 3→2 arrival the chip
+              itself stays SEATED and hidden until touchdown (`fl-pda-chip-
+              reveal`), while the RETURN MORPH above it carries the journey:
+              the cell's wedge, projected into this board's own units, morphs
+              back into the chip's rectangle and fades to reveal the real
+              chip beneath — geometry-identical, so nothing pops. `null` for
+              person-led (no encoded substrate) or a failed join, and the
+              chip does not render. ── */}
+      {skill ? (
+        <g
+          className={
+            skillEntry?.kind === "flight" && skillEntry.morph
+              ? "fl-pda-chip-reveal"
+              : still || !skillEntry || skillEntry.kind === "flight"
+                ? undefined
+                : "fl-pda-in"
+          }
+          style={
+            skillEntry?.kind === "flight" || still
+              ? undefined
+              : { animationDelay: `${T.node + T.nodeStep * 3}ms` }
+          }
+        >
+          <SkillChip
+            x={layout.skillChip.x}
+            y={layout.skillChip.y}
+            entry={{ short: skill.short, engine: skill.engine }}
+          />
+        </g>
+      ) : null}
+      {skill && skillEntry?.kind === "flight" && skillEntry.morph ? (
+        <ChipMorphReturn
+          morph={skillEntry.morph}
+          entry={skillEntry}
+          layout={layout}
+          name={skill.short.toUpperCase()}
+        />
+      ) : null}
       {/* The bar's hover bed — a SIBLING of the dock group on purpose: the
           listener re-renders on hover, and the dock's entrance style must
           never re-evaluate mid-flight. */}
@@ -1220,6 +1348,85 @@ export function ViewConfiguration({
         onMouseLeave={() => onLit(null)}
       />
     </>
+  );
+}
+
+/**
+ * The chip name's box in THIS BOARD's user units — the name flight's home on
+ * reading 02 (ADR-071 U1). One derivation (`skillChipNameRect`, beside the
+ * render in `pdaGlyphs`) so the flight lifts off exactly where the ink is.
+ */
+export const configSkillNameRect = (layout: ConfigLayout, name: string): FlightRect =>
+  skillChipNameRect(layout.skillChip.x, layout.skillChip.y, name, 1);
+
+/**
+ * THE RETURN MORPH (3→2, ADR-071 U1) — the cell's wedge, projected into this
+ * board's own units by the console, morphs back into the chip's rectangle
+ * and fades to reveal the REAL chip seated beneath it (`fl-pda-chip-reveal`
+ * keeps that chip hidden until touchdown, so the object never appears
+ * twice). The name flies its own dock from the arc label's pose back onto
+ * the chip's name — `--dr` replays the tangent orientation it left with.
+ *
+ * Same three layers as the carrier's `ChipMorphArrival`, with the skin's
+ * colour ramp REVERSED via the `--skin-*` vars: lit gold anneals back into
+ * the chip's quiet dawn wash on the way home.
+ */
+function ChipMorphReturn({
+  morph,
+  entry,
+  layout,
+  name,
+}: {
+  morph: ChipMorph;
+  entry: PdaEntry & { kind: "flight" };
+  layout: ConfigLayout;
+  name: string;
+}) {
+  const box = configSkillNameRect(layout, name);
+  const pathVars = {
+    "--d-from": `path('${morph.from}')`,
+    "--d-to": `path('${morph.to}')`,
+  } as React.CSSProperties;
+  const skinVars = {
+    ...pathVars,
+    "--skin-f0": "rgba(var(--gold-rgb), 0.28)",
+    "--skin-s0": "var(--pda-hot)",
+    "--skin-f1": "rgba(var(--dawn-rgb), 0.05)",
+    "--skin-s1": "var(--pda-dim)",
+  } as React.CSSProperties;
+  return (
+    <g pointerEvents="none" aria-hidden="true">
+      <path className="fl-pda-chip-morph" style={pathVars} d={morph.to} fill="var(--pda-void)" />
+      <path
+        className="fl-pda-chip-morph fl-pda-chip-skin"
+        style={skinVars}
+        d={morph.to}
+        strokeWidth="1.4"
+      />
+      <g
+        className="fl-pda-chip-name"
+        style={
+          {
+            "--dx": `${entry.dx}px`,
+            "--dy": `${entry.dy}px`,
+            "--dk": entry.dk,
+            "--dr": `${entry.dr ?? 0}deg`,
+          } as React.CSSProperties
+        }
+      >
+        {/* The bbox anchor — see `ChipMorphArrival`'s note; same law here. */}
+        <rect x={box.x} y={box.y} width={box.w} height={box.h} fill="none" stroke="none" />
+        <text
+          x={box.x}
+          y={box.y + box.h / 2 + CHIP_FS * 0.36}
+          fontSize={CHIP_FS}
+          letterSpacing={`${CHIP_NAME_TRACK}em`}
+          fill="var(--pda-ink)"
+        >
+          {name}
+        </text>
+      </g>
+    </g>
   );
 }
 

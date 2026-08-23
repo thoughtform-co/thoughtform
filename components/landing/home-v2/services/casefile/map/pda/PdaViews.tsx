@@ -6,7 +6,7 @@ import type { FlightRect } from "./pdaFlight";
 import type { PdaEntry } from "./PdaEntry";
 import { CARD_BOX, Cartridge } from "./pdaGlyphs";
 import type { PdaWork } from "./pdaRecord";
-import { SUBSTRATE_VIEWBOX } from "./PdaSubstrate";
+import { CARRIER_VIEWBOX } from "./PdaCarrier";
 
 /**
  * READING 01 · THE WORK — the grid of twenty, ported from
@@ -15,7 +15,7 @@ import { SUBSTRATE_VIEWBOX } from "./PdaSubstrate";
  * "tidied" is a different drawing.
  *
  * ⚠ Readings 02 and 03 have their own files (`PdaConfiguration`,
- * `PdaSubstrate`) — this one keeps the shared `VIEW_BOX` record, declared at
+ * `PdaCarrier`) — this one keeps the shared `VIEW_BOX` record, declared at
  * the foot where every layout it reads from already exists.
  */
 
@@ -246,5 +246,5 @@ export function ViewWork({
 export const VIEW_BOX: Record<1 | 2 | 3, string> = {
   1: WORK_LAYOUT_0.crop,
   2: CONFIG_VIEWBOX,
-  3: SUBSTRATE_VIEWBOX,
+  3: CARRIER_VIEWBOX,
 };

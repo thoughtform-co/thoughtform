@@ -15,7 +15,15 @@ inherited its ambient-cover role.
 
 **Read first**
 
-- [ADR-070: The configuration is a switchboard](../sentinel/decisions/070-configuration-is-a-switchboard.md) — reading 02's DRAWING, promoted out of the config lab 2026-08-09. The wiring is the picture; ONE frame, ONE bright object; only what the record connects is drawn. See §The switchboard below
+- [ADR-070: The configuration is a switchboard](../sentinel/decisions/070-configuration-is-a-switchboard.md) — reading 02's DRAWING, promoted out of the config lab 2026-08-09. The wiring is the picture; ONE frame, ONE bright object; only what the record connects is drawn. See §The switchboard below.
+  ⚠ **U34 (2026-08-23, owner) is the latest pass on reading 03's carrier** —
+  the dodecagon is the HOUSING and the division inside it is CONCENTRIC. See
+  §The carrier's walls below.
+  ⚠ **U35 (same day) retired `SUBSTRATE_SECTION` and U25's SECTION drawing** —
+  the carrier is reading 03 unconditionally; `flags.ts`, `PdaSubstrate.tsx`
+  and `pda-substrate-fit.test.ts` are deleted, and the lab's `shipped` variant
+  went with them (`carrier` is the baseline). ⚠ **`estateBand.tsx` STAYS** —
+  `VariantManifold` imports it, so it outlived the drawing it was written for
 - [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
 - [ADR-069: The selection morph and the answered configuration](../sentinel/decisions/069-pda-selection-morph-and-answered-configuration.md) — the selected work is the PERSISTENT OBJECT and FLIES between its two homes (1 ↔ 2); reading 02 prints the record's own answers with one reactive readout. See §The selection morph below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
@@ -1139,6 +1147,83 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   hook never fires). Drive the controls and measure via `javascript_tool`,
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
+
+## The carrier's walls (ADR-070 U34, live)
+
+Reading 03's plate. What the drawing IS lives in ADR-070 U33; this is the rule
+about where its walls are, which is what nineteen labels got wrong.
+
+- ⚠ **THE DODECAGON IS THE HOUSING; THE DIVISION INSIDE IT IS CONCENTRIC.** The
+  silhouette (`R_OUT`), the hub (`R_HUB`), the band's inner ring (`R_CELL`) and
+  the outermost cells' outer edge are twelve-sided. The four internal course
+  seams per part are circles. ADR-065's law one level up: the housing carries
+  the machined geometry and what is seated inside it does not repeat it.
+- ⚠ **THE WALL A LABEL CLEARS IS NOT ALWAYS THE WALL'S RADIUS**, and this is
+  the whole finding. A CIRCULAR wall is exact; a POLYGONAL INNER wall is worst
+  at its circumradius (so `R_CELL` is its own bound); a POLYGONAL OUTER wall is
+  worst at its **apothem**, `κ·R` — which at `R_OUT` is **13.1 units** nearer
+  than the radius. `CarrierCell.outerWall` carries that third case and
+  `carrierCellArcRadius` centres on `[r0, outerWall]`.
+  **Nineteen of forty-seven labels printed through their own cell edge** while
+  every guard reported 7–12 units of air on both sides, because they read
+  `cell.r0`/`cell.r1` — the nominal radii, which are the wall only at the
+  twelve vertices.
+- ⚠ **MEASURE AGAINST THE DRAWN WALL, NOT THE PARTITION.** `substrate-lab-fit`
+  samples each cell's own sweep with `polygonRayRadius` where the wall is the
+  housing and the plain radius where it is a seam. A guard that cannot tell
+  those apart is one this drawing has already got wrong once — ADR-069 U1's
+  finding, one level down.
+- ⚠ **AND THE LIVE HALF IS THE ONE THAT CANNOT DRIFT.** The smoke probes each
+  glyph's ink extremes along the up-vector and asserts `isPointInFill` on the
+  cell's own path. Two labels not printing through EACH OTHER (the arc-collision
+  walk) and a label not printing through its own CELL EDGE are different
+  questions; only the first had a guard.
+  ⚠ **The ink block is ASYMMETRIC about the baseline** — ascender **0.769em
+  above**, descender **0.231em below** (which is why `LABEL_INK_MID` is 0.269,
+  the half-difference, and `LABEL_INK_HALF` 0.500, the half-sum). Swapping them
+  reports every tight cell as a spill.
+- ⚠ **THE SEAMS ARE SAMPLED POLYLINES AND MAY NEVER BECOME `A` COMMANDS.**
+  ADR-071's arrival morph interpolates CSS `d` between the chip's rectangle and
+  `cell.d`, which needs ONE command structure on both ends; a mismatch does not
+  error, it snaps discrete. `SEAM_STEP` is 3° — 0.10 units of sagitta at r 300.
+- **The partition takes `carrierPolygonShare`** = `√(P/C)`, the dodecagon's unit
+  sector area over the circle's (0.9758–0.9779), and `sectorTerm` integrates
+  each wall with its own constant. ⚠ **A SEAM IS SHARED, SO IT CANNOT BE SOLVED
+  PER CELL** — the free boundary is the neighbouring course's wall, the two
+  courses hold different cell counts, and the correction cascades into a
+  `COURSE_GAP` that varies by up to a unit. Measured and rejected: 0.42 % area
+  spread bought with 1.06u of ragged seam.
+  ⚠ **So the area guard pins the STRUCTURE, not an envelope** — concentric-
+  bounded cells to 1 %, the two housing-bounded courses to 2.5 %, blanket 4.5 %.
+- **`LABEL_PAD` is 10 and `MIN_CELL_DEPTH` is 23**, and both moved because the
+  MEASUREMENT changed, not the standard: boundaries pull in by `polygonShare`,
+  and the last course's depth ends at the apothem. All five ladders are
+  byte-identical to the pre-U34 drawing — the plate does not re-cut, the labels
+  move inside it. ⚠ The pad is a floor the LADDER solves against, never the air
+  the drawing ends up with; the achieved clearance is 5.4u at the worst cell.
+- ⚠ **THE BAND HAS ITS OWN GROUND ON ALL FIVE SEGMENTS.** Pattern and
+  Stakeholder were never missing a background — they are the two regions the
+  open stream does not draw on, and `TapWash` filled the other three. The band
+  was the only region on the plate with no material of its own (the hub has
+  void + veil + grain, the cells their physics field), so a signal with no
+  ground under it read as a rendering fault.
+  ⚠ **α 0.10, and 0.03 was a fix that changed nothing** — a wash is judged
+  against what it lands on, and at 0.03 the band measured `rgb(11,10,9)`
+  against the plate ground's `rgb(11,9,5)` while the tapped three sat at a 6×
+  luminance ratio. FLAT, not grained: the hub is a CORE and answers the
+  hole-plugged-with-paint problem with a grain; this is a machined RECESS, and
+  a recess is a cut face. It darkens in light (ADR-058 swaps `--dawn-rgb`), so
+  one rule is a step away from the ground in both themes.
+- ⚠ **STILL OPEN: the tap's signal is weak in LIGHT** — L 0.561 lit against
+  0.578 recessed, a 3 % luminance difference carried by hue and by the label
+  going `--pda-hot`. Pre-existing, not a regression, and it is ADR-063 U2's own
+  finding: a saturated gold cannot signal by value against a light ground. The
+  honest fix is the ramp's INK rung, not a bigger alpha.
+- **Verifying:** `npx vitest run tests/lib/substrate-lab-fit.test.ts` for the
+  arithmetic, `node scripts/capture-substrate-lab.mjs --v carrier` for the
+  gates (⚠ the script's default `--v` is round one's seven — name `carrier` or
+  the pass is ungated), and `node scripts/capture-map-readings.mjs --at 0.09
+--vp 1920x1247` for the landing at the owner's own shape.
 
 ## Reading 03's drawing, and the crop every reading shares (ADR-070 U16 / U15)
 

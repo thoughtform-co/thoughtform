@@ -150,9 +150,10 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
     () =>
       toPdaWork(
         work,
-        districts.find((d) => d.id === work.dist)
+        districts.find((d) => d.id === work.dist),
+        skills
       ),
-    [work, districts]
+    [work, districts, skills]
   );
   const def = iclVariant(variantId);
   /* The shipped reading draws a bar per shape the stream taps, so it needs the
@@ -349,6 +350,14 @@ export function ConfigLabShell({ shapes, districts, works, chains, skills, envel
                       onLit={setLit}
                       still
                       entry={{ kind: "raster" }}
+                      /* The lab renders every variant at rest, so the chip
+                         lands at its home with no flight. Look up the roster
+                         entry here rather than a raster entry so the chip's
+                         type and material are the shipped ones. */
+                      skillEntry={{ kind: "raster" }}
+                      skill={
+                        work.cfg ? (skills.find((s) => s.id === work.cfg?.skillId) ?? null) : null
+                      }
                     />
                   )}
                 </svg>

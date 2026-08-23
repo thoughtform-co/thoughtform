@@ -3,6 +3,7 @@ import type {
   CaseMapShape,
   CaseMapShapeKey,
   CaseMapWork,
+  CaseSkillEntry,
 } from "@/lib/cases/types";
 
 import {
@@ -44,6 +45,20 @@ export interface PdaWork {
   /** Draw meter cells, 0–5. Read against the workload, NEVER a price. */
   draw: number;
   band: string;
+  /**
+   * REFERENCE INTO THE CASE'S SKILLS ROSTER (ADR-071).
+   *
+   * ⚠ NULL FOR PERSON-LED STREAMS. `cfg` is null there and there is no
+   * encoded substrate to reference — the reading 02 chip and the flight to
+   * reading 03 both key off this being set.
+   *
+   * A configured stream always has one — `pdaRecord` is where the join is
+   * resolved (`skills.find(s => s.id === cfg.skillId)`), so a missing entry
+   * (a typo in the record, a roster edit that dropped the id) resolves to
+   * `null` here rather than throwing, and `cases-registry.test.ts` catches
+   * it upstream.
+   */
+  skillId: string | null;
   /** The seat that owns the work — `cfg.p[0]`. */
   owner: string;
   /**
@@ -88,6 +103,14 @@ export interface PdaWork {
 export interface PdaAnswers {
   /** WHAT RUNS IT — the Skill, then the lane it runs on. */
   skill: string;
+  /**
+   * ⚠ THE SKILL'S ENGINE, in the roster's own case (ADR-071). It labels the
+   * chip's engine tag ("VOICE") and it is what carries the chip's material
+   * pattern to the right substrate region on the carrier. `null` for
+   * person-led streams (no encoded substrate to file under) and for a
+   * configured stream whose join failed — the chip does not render then.
+   */
+  skillEngine: string | null;
   laneRun: string;
   /**
    * WHAT THE LANE ACTUALLY DOES — `m[1]`, the verbs.
@@ -169,11 +192,12 @@ const PERSON = {
 /** The drawing is uppercase throughout; the record stores sentence case. */
 const up = (s: string) => s.toUpperCase();
 
-function answers(work: CaseMapWork): PdaAnswers {
+function answers(work: CaseMapWork, skills: readonly CaseSkillEntry[]): PdaAnswers {
   const c = work.cfg;
   if (!c) {
     return {
       skill: up(PERSON.skill),
+      skillEngine: null,
       laneRun: up(PERSON.laneRun),
       laneVerbs: up(PERSON.laneVerbs),
       runsNote: up(PERSON.runsNote),
@@ -191,8 +215,16 @@ function answers(work: CaseMapWork): PdaAnswers {
       why: up(work.bar),
     };
   }
+  /* ⚠ THE SKILL NAME COMES FROM THE ROSTER (ADR-071, 2026-08-19). Reading 02
+     letters the chip and reading 03 letters the cell, and the flight between
+     them cannot land wrong because both strings are the SAME roster entry.
+     Fallback to `c.s[0]` is a safety net — `cases-registry.test.ts` fails on
+     a missing join, so the fallback should never fire in production. */
+  const rosterSkill = skills.find((s) => s.id === c.skillId);
+  const skillName = rosterSkill?.short ?? c.s[0];
   return {
-    skill: up(c.s[0]),
+    skill: up(skillName),
+    skillEngine: rosterSkill?.engine ?? null,
     laneRun: up(c.m[0]),
     laneVerbs: up(c.m[1]),
     runsNote: up(`${c.s[1]} — ${c.m[1]}`),
@@ -227,7 +259,8 @@ function answers(work: CaseMapWork): PdaAnswers {
  */
 export function selectWorks(
   districts: readonly CaseMapDistrict[],
-  works: readonly CaseMapWork[]
+  works: readonly CaseMapWork[],
+  skills: readonly CaseSkillEntry[]
 ): PdaWork[] {
   const queues = districts.map((d) =>
     [...worksInDistrict(works, d.id)].sort((a, b) => {
@@ -258,14 +291,19 @@ export function selectWorks(
     .map((w) =>
       toPdaWork(
         w,
-        districts.find((d) => d.id === w.dist)
+        districts.find((d) => d.id === w.dist),
+        skills
       )
     );
 }
 
 /** One record, projected onto what the drawing letters. Exported so the fit
  *  guard can measure ALL twenty-seven, not just the twenty on the grid. */
-export function toPdaWork(work: CaseMapWork, district: CaseMapDistrict | undefined): PdaWork {
+export function toPdaWork(
+  work: CaseMapWork,
+  district: CaseMapDistrict | undefined,
+  skills: readonly CaseSkillEntry[]
+): PdaWork {
   const person = isPersonLed(work);
   return {
     id: work.id,
@@ -278,10 +316,16 @@ export function toPdaWork(work: CaseMapWork, district: CaseMapDistrict | undefin
     autonomy: person ? "—" : SEAT[work.seat].label.toUpperCase(),
     draw: work.mass,
     band: MASS_BAND[work.mass].toUpperCase(),
+    /* ⚠ RESOLVED HERE, ONCE, so the console reads it and the flight measures
+       against it. `null` for person-led work (no encoded substrate to point
+       at) and for a configured stream whose roster join failed — the guard
+       makes the second case impossible in production, but the record has to
+       survive it in test fixtures. */
+    skillId: work.cfg && skills.some((s) => s.id === work.cfg?.skillId) ? work.cfg.skillId : null,
     owner: (work.cfg?.p[0] ?? "The person does the work").toUpperCase(),
     ownerNote: work.cfg ? work.cfg.p[1].toUpperCase() : null,
     taps: work.shapes,
-    cfg: answers(work),
+    cfg: answers(work, skills),
   };
 }
 

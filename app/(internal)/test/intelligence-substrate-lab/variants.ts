@@ -40,7 +40,6 @@ import type { CaseSkillEntry } from "@/lib/cases/types";
 /* ── The variant registry (the field-log-lab 4-field contract) ──────────── */
 
 export type IslVariantId =
-  | "shipped"
   | "strata"
   | "table"
   | "tree"
@@ -85,14 +84,6 @@ export interface IslVariantDef {
 }
 
 export const ISL_VARIANTS: readonly IslVariantDef[] = [
-  {
-    id: "shipped",
-    label: "Shipped (the baseline)",
-    thesis:
-      "⚠ THE BASELINE IS NOW `34 · SECTION`, PROMOTED (2026-08-17, ADR-070 U25). Twenty ghost cartridge footprints across the top — the ESTATE at footprint scale, with a lit-edge grammar on the reader's own open stream — over a five-lane gallery, then five strata below ordered lightest at top (Stakeholder) to heaviest at the floor (Pattern), each carrying its name, its count, one paragraph beside them and 47 named Skill plates seated at each stratum's own floor. A riser SHAFT on the left ties the estate to the strata: selection lights ONE PATH — footprint → gallery → shaft → tapped stratum — without moving anything the reader was looking at. ⚠ This replaces `33 · INLAY` (U24, one plate divided into five area-proportional regions) and its whole story — U24 kept the roster but threw away the click's context; SECTION resumes it. ⚠ ADR-069's persistent object has THREE homes now, not two: reading 01's grid cartridge, reading 02's core seat card, and this footprint. The 34/35/36 lab entries are RETIRED (34 promoted here, 36 held U24 which is not shipped any more); MANIFOLD survives below as the losing alternative.",
-    provenance:
-      "PdaSubstrate.ViewSubstrate — mounted ELASTIC, at whatever layout the current preset's field asks for, exactly as the landing does. ⚠ Its rest crop is 932 × 748, NOT the lab's 762: the crop must stay width-bound at the narrowest measured field (1440×800, aspect 0.807) or it goes height-bound there and leaves dead panel — which the lab's own 0.8176 did, by four thousandths. The BOX_H0 = 696 stays unchanged from U24, so the plate's outer footprint is byte-identical; only the plate's INTERIOR has moved.",
-  },
   {
     id: "strata",
     label: "1 · Strata",
@@ -508,7 +499,7 @@ export const ISL_VARIANTS: readonly IslVariantDef[] = [
 
      ⚠ **34 · SECTION AND 36 · CONTROL ARE GONE FROM THE LAB** (2026-08-17,
      ADR-070 U25). SECTION won the promotion — it IS the shipped baseline
-     now — so the direction lives in `PdaSubstrate.tsx`, the "shipped"
+     now — so the direction lived in `PdaSubstrate.tsx`, the "shipped"
      variant here mounts it, and a lab entry that redrew it would be two
      copies of a measured drawing. CONTROL's whole thesis was "the shipped
      U24 partition with an estate band above", and once U24 is not shipped

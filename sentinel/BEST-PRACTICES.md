@@ -1112,6 +1112,46 @@ default list silently narrows the second one.** When a registry grows, the
 harness that walks it should default to the registry rather than to a list
 written when it was shorter.
 
+### A guard measures a wall, and a curve has more than one radius
+
+Reading 03's carrier drew every ring as a twelve-sided polygon and hung every
+label on a **circle**. A regular polygon's distance to its own edge is not one
+number — it runs from the apothem `κ·R` at each edge midpoint to `R` at each
+vertex, and at that plate's rim `κ` cost **13.1 units**. So the wall swung
+inward under labels that did not follow, and **19 of 47 printed through their
+own cell edge**.
+
+Every guard passed. The arithmetic one measured `cell.r0` / `cell.r1` — the
+partition's nominal radii, which are the wall _only at the twelve vertices_ —
+and reported 7 to 12 units of air on both sides of all nineteen. The live one
+walked every PAIR of labels for collisions, which is a different question and
+was correctly answering it.
+
+Three things generalise:
+
+- **A nominal radius is a model of the wall, not the wall.** Whenever a shape's
+  boundary is a function of angle — a polygon, a rounded rect, anything cut by
+  a `clip-path` — a guard that samples one radius is asserting the best case.
+  Sample the boundary across the span the content actually occupies.
+- **The direction of the error tells you where to look.** All nineteen failed
+  on the same side, which is the signature of a systematic offset rather than
+  of tuning. A per-object test never sees it; the defect lives in the
+  RELATIONSHIP between two constructions, which is ADR-069 U1's finding in a
+  new place.
+- **"Do two labels overlap" and "is a label inside its own box" are different
+  questions, and having one is not having the other.** The fix pairs them: the
+  arithmetic guard samples the drawn wall, and the live guard probes the ink's
+  own extremes with `isPointInFill` on the very path the shape is drawn from —
+  which cannot be satisfied by a model that has drifted from the render.
+
+⚠ **And calibrate a containment probe, don't just watch it go green.** Walk a
+synthetic displacement until it fires and check the threshold matches the
+clearance you measured — a probe with a dead zone, or one whose ink extents are
+the wrong way round, is green for the wrong reason. This one reported twelve
+false spills on its first run because the ink block is asymmetric about the
+baseline (ascender 0.769em above, descender 0.231em below) and the two were
+swapped.
+
 ### An unfilled SVG shape is only clickable on its stroke
 
 `pointer-events` defaults to `visiblePainted`, and for the INTERIOR of a shape

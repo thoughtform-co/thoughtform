@@ -261,12 +261,162 @@
   animation: flPdaDock 0.42s cubic-bezier(0.22, 0.9, 0.3, 1) both;
 }
 
+/*
+ * ⚠ **`--dr` DEFAULTS TO 0deg** (ADR-071, 2026-08-19). Work-card flights
+ * (1↔2) pass no `--dr` and the CSS fallback keeps the from state byte-
+ * identical to the pre-ADR-071 dock. Only the skill chip's 2↔3 flights
+ * pass a non-zero `--dr` — the destination cell's tangent rotation, signed
+ * so the source pose is unrotated on the config board and matches the arc
+ * tangent on the carrier.
+ */
 @keyframes flPdaDock {
   from {
-    transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--dk, 1));
+    transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--dr, 0deg)) scale(var(--dk, 1));
   }
   to {
     transform: none;
+  }
+}
+
+/* ── THE CHIP MORPH (ADR-071 U1) ────────────────────────────────────────
+   The plate's arrival is a SHAPE morph, not a transform: the path's own `d`
+   interpolates from the config chip's rectangle into the cell's ring (or
+   back), so at touchdown the flying object IS the destination and the
+   closing fade removes a pixel-identical layer. The first cut translated a
+   rectangle onto a wedge and faded it — the owner's verdict was "a frame
+   floating, then it fades away", and he was right: two shapes that never
+   agree make the dissolve visible. These agree exactly.
+
+   ⚠ **`--d-from` / `--d-to` MUST SHARE ONE COMMAND STRUCTURE** (`M` + n×`L`
+   + `Z`, equal n) or the browser snaps the interpolation to a discrete jump
+   — no error, no fallback, just the old floating-frame defect in a new
+   costume. Both strings come from one builder (`carrierChipMorphIn/Out`)
+   and `pda-flight` asserts the counts.
+
+   ⚠ **THE PATH ATTRIBUTE CARRIES THE FINAL SHAPE.** An engine that cannot
+   animate CSS `d` skips that keyframe property and renders the plate
+   already seated — the colour ramp and fade still run, and no engine shows
+   a floating frame.
+
+   ⚠ THE FADE IS DELAYED, NOT CHAINED — same clock discipline as the dock:
+   two animations on one element, separated by `animation-delay`. The first
+   delay MUST equal `PDA_MORPH_MS` in `pdaFlight.ts` (move both).
+
+   ⚠ **THE MORPH HAS ITS OWN CLOCK AND ITS OWN CURVE — NOT THE DOCK'S.**
+   Sampled live, the dock's `cubic-bezier(0.22, 0.9, 0.3, 1)` at 420ms put
+   this path 87 % of the way home inside the first 100ms — the shape change
+   was spent before the eye arrived, and the owner read it as "nothing, then
+   a fade". 620ms on an ease-in-out keeps the rectangle-becoming-a-wedge on
+   screen through the MIDDLE of the travel: a slow lift, a swift crossing,
+   and a decelerating seat. The work card keeps the snappy dock; the morph
+   is the one gesture whose whole point is being watched. */
+.fl-pda-chip-morph {
+  animation:
+    flPdaChipMorph 0.62s cubic-bezier(0.45, 0.05, 0.22, 1) both,
+    flPdaChipFade 0.2s cubic-bezier(0.4, 0, 0.6, 1) 0.62s forwards;
+}
+
+/* The material layer — same morph, plus the colour ramp. The endpoints ride
+   `--skin-*` vars because the ramp REVERSES by direction: dawn-quiet → lit
+   gold arriving on the carrier, lit gold → dawn-quiet returning to the
+   board. ⚠ This rule re-lists the morph and fade animations rather than
+   relying on the class pairing: `animation` is a shorthand that resets every
+   sub-property, so a partial override would silently drop whichever
+   animation the cascade resolved last. */
+.fl-pda-chip-skin {
+  animation:
+    flPdaChipMorph 0.62s cubic-bezier(0.45, 0.05, 0.22, 1) both,
+    flPdaChipSkin 0.62s cubic-bezier(0.45, 0.05, 0.22, 1) both,
+    flPdaChipFade 0.2s cubic-bezier(0.4, 0, 0.6, 1) 0.62s forwards;
+}
+
+/* The flying NAME — the chip's lettering on its own dock flight, lifting off
+   exactly where the ink was and landing centred on the cell's arc label
+   (same text, same rung), then handing over in a 200ms crossfade. The
+   transform grammar is `flPdaDock`'s keyframe on the MORPH's clock — the
+   name and the plate must track each other, so they share one duration and
+   one curve. */
+.fl-pda-chip-name {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    flPdaDock 0.62s cubic-bezier(0.45, 0.05, 0.22, 1) both,
+    flPdaChipFade 0.2s linear 0.62s forwards;
+}
+
+/* The REAL chip on a 3→2 arrival stays hidden until the morph touches down
+   on it — the reveal is one frame at `PDA_MORPH_MS`, under the opaque
+   morph plate, so the object never appears twice and never pops. */
+.fl-pda-chip-reveal {
+  animation: flPdaChipReveal 1ms linear 0.62s both;
+}
+
+@keyframes flPdaChipMorph {
+  from {
+    d: var(--d-from);
+  }
+  to {
+    d: var(--d-to);
+  }
+}
+
+@keyframes flPdaChipSkin {
+  from {
+    fill: var(--skin-f0, transparent);
+    stroke: var(--skin-s0, var(--pda-dim));
+  }
+  to {
+    fill: var(--skin-f1, transparent);
+    stroke: var(--skin-s1, var(--pda-hot));
+  }
+}
+
+@keyframes flPdaChipFade {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes flPdaChipReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── THE SEAT ARMS, THEN LIGHTS ON TOUCHDOWN (ADR-071 U1) ───────────────
+   While the chip is in the air, the destination cell holds its RESTING
+   paint — a slot already lit at t=0 spends the arrival before it happens.
+   The keyframes hold from = to = the resting values for the morph's own
+   duration; when the animation ends (no fill-mode), the element's lit
+   attributes take over in one frame — under the opaque morph plate, whose
+   fade then reveals a cell that lit exactly when the object seated.
+   ⚠ CSS animations outrank presentation attributes, which is the whole
+   mechanism: React paints the LIT values, the animation suppresses them
+   until the clock runs out. Duration pairs with `PDA_MORPH_MS`. */
+.fl-pda-seat-arm {
+  animation: flPdaSeatArm 0.62s step-end;
+}
+
+.fl-pda-seat-arm-label {
+  animation: flPdaSeatArmLabel 0.62s step-end;
+}
+
+@keyframes flPdaSeatArm {
+  from,
+  to {
+    fill: rgba(var(--dawn-rgb), 0.04);
+    stroke: var(--pda-dim);
+    stroke-width: 1.4;
+  }
+}
+
+@keyframes flPdaSeatArmLabel {
+  from,
+  to {
+    fill: var(--pda-txt);
   }
 }
 
@@ -338,6 +488,28 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  /* ⚠ **THE MORPH HAS NO LANDING STATE UNDER REDUCED MOTION.** With the
+     fade suppressed the overlay would sit on the destination forever;
+     opacity 0 hides the transient layers entirely — the seated cell (or the
+     revealed chip) carries the identity, which is what the flight would
+     have handed over to anyway. The REVEAL inverts: the real chip must
+     show immediately, not wait for a touchdown that will not come. */
+  .fl-pda-chip-morph,
+  .fl-pda-chip-skin,
+  .fl-pda-chip-name {
+    animation: none;
+    opacity: 0;
+    transform: none;
+  }
+  .fl-pda-chip-reveal {
+    animation: none;
+    opacity: 1;
+  }
+  /* The seat lights immediately — there is no touchdown to wait for. */
+  .fl-pda-seat-arm,
+  .fl-pda-seat-arm-label {
+    animation: none;
   }
   .fl-pda-wire {
     animation: none;

@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  CARRIER_HUB_K,
+  CARRIER_CHIP_K,
   CARRIER_LABEL_FS,
-  CARRIER_SEAT_RECT,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaCarrier";
 import {
   SEAT,
@@ -20,6 +19,7 @@ import {
   CARD,
   CARD_BOX,
   CART_TYPE,
+  CHIP_FS,
   CORE_K,
   LANES,
   MONO_ADVANCE,
@@ -86,10 +86,12 @@ function allWorks(): PdaWork[] {
   )?.visual;
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
   const districts: readonly CaseMapDistrict[] = visual.districts;
+  const skills = visual.skills;
   return visual.works.map((w: CaseMapWork) =>
     toPdaWork(
       w,
-      districts.find((d) => d.id === w.dist)
+      districts.find((d) => d.id === w.dist),
+      skills
     )
   );
 }
@@ -130,78 +132,54 @@ describe("the grid card and the seat card are one drawing", () => {
 });
 
 /**
- * THE THIRD HOME (ADR-070 U33) — the carrier's hub.
+ * THE CARD'S TWO HOMES (ADR-071, 2026-08-19).
  *
- * ⚠ **IT IS A DIFFERENT KIND OF THIRD SIZE FROM THE SECOND, AND THAT IS WHY IT
- * NEEDS ITS OWN CLAIMS RATHER THAN ANOTHER `RUNGS` COLUMN.** The seat is a
- * SEPARATE AUTHORED TABLE (`SEAT`), so what has to be guarded there is that two
- * sets of numbers agree — which is what the block above does. The hub mounts the
- * SHARED `Cartridge` at a `k`, so no interior table exists to drift and rung
- * parity is true by construction. What CAN go wrong is different: the scale
- * itself could be chosen by eye, the silhouette could be re-declared, or the
- * wrap capacity could move with the box the way it did at `k` 2 before the
- * harmonisation.
+ * ⚠ **THE THIRD HOME LEFT WITH THE SEATED CARD.** U33 had the work card
+ * seated in the carrier's hub as a third size (`CARRIER_HUB_K`, `CARRIER_SEAT_RECT`);
+ * ADR-071 replaces that with the SKILL CHIP — a different object flying
+ * on the 2↔3 axis while the work card stays a 1↔2 object. What remains
+ * here is the grid card and the seat card, one drawing at two sizes, and
+ * the silhouette must still come from ONE constant.
  */
-describe("the hub card is that same drawing at a third size", () => {
-  it("the scale is DERIVED — the plate's label rung over the card's title", () => {
-    /* The rule stated once: the work's name letters at the rung the 47 Skill
-       names around it letter at. A `k` picked to look right is a `k` that drifts
-       the moment either end moves, and nothing would fail. */
-    expect(CARRIER_HUB_K).toBeCloseTo(CARRIER_LABEL_FS / CART_TYPE.title, 12);
-    expect(CART_TYPE.title * CARRIER_HUB_K, "the hub title left the label rung").toBeCloseTo(
-      CARRIER_LABEL_FS,
-      12
-    );
-  });
-
-  it("all three homes take their silhouette from ONE constant", () => {
+describe("the grid card and the seat card share ONE silhouette", () => {
+  it("both homes take their silhouette from `CARD_BOX`", () => {
     /* ⚠ THE OUTLINE WAS THE PART THE HARMONISATION MISSED. The 2026-08-13 pass
        made the INTERIORS one drawing and left the box declared in each reading's
-       own file; U33 added a third copy, at which point three files each held a
-       number that could move alone. `CARD_BOX` is the source now, and this walks
-       the three homes' widths back to it through their own scales. */
+       own file. `CARD_BOX` is the source now, and this walks the two homes'
+       widths back to it through their own scales. */
     expect(GRID_RECT.w).toBeCloseTo(CARD_BOX.w, 9);
     expect(GRID_RECT.h).toBeCloseTo(CARD_BOX.h, 9);
     expect(CONFIG_LAYOUT_0.core.w).toBeCloseTo(CARD_BOX.w * CORE_K, 9);
     expect(CONFIG_LAYOUT_0.core.h).toBeCloseTo(CARD_BOX.h * CORE_K, 9);
-    expect(CARRIER_SEAT_RECT.w).toBeCloseTo(CARD_BOX.w * CARRIER_HUB_K, 9);
-    expect(CARRIER_SEAT_RECT.h).toBeCloseTo(CARD_BOX.h * CARRIER_HUB_K, 9);
   });
 
-  it("all three homes are EXACTLY similar, so one uniform dk carries the object", () => {
-    /* `pdaFlight` scales by a single `dk`. Three rects that are merely close
-       would distort the card in mid-air — which is ADR-069 U1's finding in its
-       geometric form, and the estate footprint's 3 % delta is the one place this
-       surface accepts an approximation (it is a simplified silhouette, not the
-       card). These three are the CARD. */
+  it("both homes are EXACTLY similar, so one uniform dk carries the object", () => {
+    /* `pdaFlight` scales by a single `dk`. Two rects that are merely close
+       would distort the card in mid-air — ADR-069 U1's finding in its
+       geometric form. */
     const base = CARD_BOX.w / CARD_BOX.h;
     for (const [where, r] of [
       ["the grid", GRID_RECT],
       ["the seat", CONFIG_LAYOUT_0.core],
-      ["the hub", CARRIER_SEAT_RECT],
     ] as const) {
       expect(r.w / r.h, `${where} card is not the cartridge's proportion`).toBeCloseTo(base, 12);
     }
   });
+});
 
-  it("the wrap capacity does not move at the third scale either", () => {
-    /* The `k`-missing bug, re-asked at the size it would next appear. Capacity
-       is a RATIO of two lengths; a uniform scale may not change it. */
-    expect(cartTitleChars(W * CARRIER_HUB_K, CARRIER_HUB_K)).toBe(cartTitleChars(W));
-  });
-
-  it("every live title still letters on one line in the hub", () => {
-    /* Implied by the capacity identity above and asserted anyway, because the
-       hub seats ANY of the twenty-seven — the reader chooses — while reading 01
-       only ever grids twenty. The seven the grid leaves out are exactly where an
-       over-long title would hide. */
-    for (const w of allWorks()) {
-      const t = w.title.toUpperCase();
-      expect(
-        wrapLines(t, cartTitleChars(W * CARRIER_HUB_K, CARRIER_HUB_K)),
-        `"${t}" wrapped in the hub`
-      ).toHaveLength(1);
-    }
+/**
+ * THE SKILL CHIP'S RUNG (ADR-071). The chip lands on the carrier at
+ * `dk = CARRIER_LABEL_FS / CHIP_FS`, so the flown Skill name lands at the
+ * plate's own label rung. That is the same derivation the seat used, in a
+ * different type stack: card title vs chip text.
+ */
+describe("the skill chip's rung matches the plate's label", () => {
+  it("the landing scale is DERIVED from CHIP_FS and CARRIER_LABEL_FS", () => {
+    expect(CARRIER_CHIP_K).toBeCloseTo(CARRIER_LABEL_FS / CHIP_FS, 12);
+    /* The rule stated in reverse: the chip's own type times the landing
+       scale equals the plate's label rung. A `k` picked by eye would drift
+       the moment either rung moved. */
+    expect(CHIP_FS * CARRIER_CHIP_K).toBeCloseTo(CARRIER_LABEL_FS, 12);
   });
 });
 

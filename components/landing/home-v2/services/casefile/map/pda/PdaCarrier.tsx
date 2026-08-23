@@ -4,9 +4,9 @@ import { useCallback, useMemo, useRef, useState } from "react";
 
 import type { CaseMapShapeKey, CaseSkillEntry } from "@/lib/cases/types";
 
-import type { PdaEntry } from "./PdaEntry";
-import type { FlightRect } from "./pdaFlight";
-import { CARD_BOX, CART_TYPE, Cartridge, wrapLines } from "./pdaGlyphs";
+import type { ChipMorph, PdaEntry } from "./PdaEntry";
+import type { FlightRect, FlightVars } from "./pdaFlight";
+import { CHIP_FS, SKILL_CHIP_H, SKILL_CHIP_W, wrapLines } from "./pdaGlyphs";
 import { type LetterSpec, adv } from "./pdaLetters";
 import type { PdaShape, PdaWork } from "./pdaRecord";
 import { PlacedField, isFormKey } from "./substrateForms";
@@ -15,14 +15,17 @@ import { FS } from "./substrateKit";
 /**
  * 03 · THE SUBSTRATE — the COMPOUND CARRIER. A dial: forty-seven cells, each
  * lettered along its own arc, five substrate names lettered along a band
- * between hub and cells, and the selected stream seated in the hub.
+ * between hub and cells, and — at rest — a brief in the hub explaining what
+ * a substrate IS. On arrival from reading 02 the stream's SKILL is what
+ * flies here, and lands lit on its own cell (ADR-071).
  *
- * ⚠ **THIS IS THE PROMOTION OF LAB DIRECTION 38 (ADR-070 U33, 2026-08-18).**
- * It replaces the SECTION drawing (`PdaSubstrate.tsx`), which was itself
- * promoted one day earlier as U25 and now sits behind `SUBSTRATE_SECTION` in
- * `flags.ts`. What the carrier answers that SECTION did not is DENSITY: the
- * roster is lettered at ONE rung on a single figure instead of five stacked
- * strata whose plate labels ran at the chrome floor.
+ * ⚠ **THIS IS THE PROMOTION OF LAB DIRECTION 38 (ADR-070 U33, 2026-08-18),
+ * REWIRED FOR THE SKILL FLIGHT (ADR-071, 2026-08-19).** U33 seated the WORK
+ * card in the hub, but the carrier is an ESTATE-WIDE view of every encoded
+ * Skill and a specific stream landing on it read as a claim it does not
+ * make. ADR-071 splits the persistent objects: the work card is a 1↔2
+ * flight, the skill chip is 2↔3, and the hub is left to explain the reading
+ * again.
  *
  * ## Why the labels are rotated, and why they had to be
  *
@@ -41,39 +44,25 @@ import { FS } from "./substrateKit";
  * This is the first rotated TYPE on the surface, and it is called out because
  * the next pass looking for consistency will reach for it.
  *
- * ## The hub is the flight's THIRD HOME (and SECTION's footprint is not)
+ * ## The skill chip is the flight's second HOME (ADR-071, morph since U1)
  *
- * ⚠ **THE CARRIER HAS NO CARTRIDGE ON IT, SO THE FLIGHT NEEDED A DESTINATION
- * OR IT WOULD HAVE DEGRADED IN SILENCE.** ADR-069's persistent object flies
- * between all three readings, and reading 03's home was one of SECTION's twenty
- * ghost footprints (`estateFootprint`). Swapping the drawing without answering
- * that leaves `rectFor(3, id)` returning `null`, which `entryFor` handles by
- * falling back to a bloom or a raster — **no error, no failing render, just the
- * one gesture that carries ADR-069's whole claim quietly not happening.**
+ * ⚠ **THE CARRIER HAS NO CARTRIDGE ON IT, BUT NOW IT HAS A CHIP — AND THE
+ * CHIP'S ARRIVAL IS A SHAPE MORPH.** The plate's own path interpolates from
+ * the config chip's rectangle into the destination cell's ring
+ * (`carrierChipMorphIn`), the flying name lands on the arc label at
+ * `dk = CARRIER_LABEL_FS / CHIP_FS` (the plate's own rung), and the closing
+ * fade removes a layer that is pixel-identical to the lit cell beneath —
+ * nothing floats, nothing pops. The cell lights AT TOUCHDOWN (the seat-arm
+ * animation holds its resting paint through the morph) and stays lit as
+ * "seated", so a reader who has opened a stream sees WHICH SKILL runs it in
+ * the estate view without having to click again.
  *
- * The two ways out were measured rather than argued:
- *
- * - **An estate band above the dial** costs `ESTATE_BLOCK_H` (62 units) of
- *   crop. The fit is height-bound here, so that is `meet` 0.6337 → 0.580 and
- *   every one of the plate's 52 strings 8.24px → 7.54px — it hands back exactly
- *   what U32 bought and puts the drawing under the map's banned-under-8 line.
- * - **The HUB** costs no crop at all, and it is already where this plate puts
- *   identity. See `HUB_K`.
- *
- * ⚠ **AND THE HUB SEAT RESUMES THE CLICK, WHICH IS THE ARGUMENT U25 WON ON.**
- * U25's case against U24 was that _"U24 kept the roster but threw away the
- * click's context"_ — reading 03 arrived from an opened stream and answered as
- * if nothing had been opened. The carrier as it left the lab had the same gap.
- * Seating the work in the hub and washing the band segments its `taps` name is
- * that same resumption in the dial's own grammar, at zero height.
- *
- * ⚠ **THE SEAT IS `Cartridge`, NOT A THIRD DRAWING.** ADR-069 U1's finding was
- * that the flown object arrived having changed its corners, its mark, its
- * colour and its title's height — with every guard green, because each interior
- * was only ever measured against itself. A third home invented a third drawing
- * would re-commit that exactly. This mounts the SHARED card at `HUB_K`, so the
- * three homes are one drawing at three sizes and `pda-card`'s rung parity
- * covers this one for free.
+ * ⚠ **THE HUB IS NOT A FLIGHT HOME NOW.** The brief carries the reading's
+ * argument — _the judgment this work keeps reusing, encoded once by the team
+ * that needed it, then drawn on by every team after_ — and lets the reader
+ * click any of the forty-seven cells to see its identity. `Aperture` branches
+ * on pinned → brief; there is no seated card any more, and the seat rect / K
+ * exports left with it.
  *
  * ## The course ladder is derived, not authored
  *
@@ -158,6 +147,23 @@ const R_CELL = 192;
  * this rim.
  */
 const R_OUT = 384;
+
+/**
+ * The rim's APOTHEM — the nearest the outer wall ever comes to the centre, at
+ * each of the twelve edge midpoints.
+ *
+ * ⚠ **THIS IS THE WALL THE OUTERMOST COURSE IS ACTUALLY BOUNDED BY, AND
+ * MEASURING IT AT `R_OUT` IS WHAT PUT NINETEEN LABELS THROUGH THEIR OWN EDGE**
+ * (U34). The rule the whole pass turns on: a CIRCULAR wall is exact; a
+ * POLYGONAL INNER wall is worst at its circumradius (so `R_CELL` is its own
+ * bound); a POLYGONAL OUTER wall is worst at its apothem.
+ *
+ * ⚠ It is EXACT here rather than conservative: every outermost cell sweeps
+ * 25.9°–37.0° against facets every 30°, so every one of them contains an edge
+ * midpoint and reaches this wall. No cell is being given a corridor smaller
+ * than the one it has.
+ */
+const R_APOTHEM = KAPPA * R_OUT;
 
 /* ── The crop ───────────────────────────────────────────────────────────── */
 
@@ -294,8 +300,17 @@ const LABEL_TRACK = 0.02;
  * air the labels did not need by spending radial air they did. At 12 the
  * achieved minimum clearance is 24 units per end — double the floor — because
  * the binding constraint moved to `MIN_CELL_DEPTH`, which is where it belongs.
+ *
+ * ⚠ **12 → 10 (U34), AND IT IS THE SAME ARGUMENT A THIRD TIME.** The pad is a
+ * floor the LADDER solves against, never the clearance the drawing ends up
+ * with. U34 pulls every internal boundary in by `polygonShare` (0.9758–0.9779),
+ * which takes `validation`'s second course from a 128.9-unit inner arc to
+ * 125.9 against a 128.8-unit target — the part stops solving at 11, on a
+ * knife-edge that was already 0.1 units wide before this pass. At 10 the
+ * ladders come back byte-identical to what shipped and the binding constraint
+ * is `MIN_CELL_DEPTH` again, which is where it belongs.
  */
-const LABEL_PAD = 12;
+const LABEL_PAD = 10;
 
 /**
  * How far a line's INK CENTRE sits above its own baseline, in em.
@@ -382,8 +397,18 @@ const BAND_PAD = 6;
  * **The arcs were never the problem.** 26 forbids the shallow cells outright
  * and the ladder re-cuts around it; the achieved minimum is 29, so this is a
  * guard with three units of margin rather than a value the drawing sits on.
+ *
+ * ⚠ **26 → 23 (U34), BECAUSE THE DEPTH IS MEASURED AGAINST A DIFFERENT WALL
+ * NOW, NOT BECAUSE THE FLOOR GOT SOFTER.** The last course's outer wall is the
+ * dodecagon, whose worst position is its APOTHEM — so its usable depth is
+ * `κ·R_OUT − r0`, which is 13.1 units less than the `R_OUT − r0` this floor
+ * used to be handed. `stakeholder`'s outermost course measures 24.5 there, and
+ * its only alternative composition (`1,1,1,2`) puts a two-cell course on a
+ * 101-unit arc against a 112-unit target. So the number came down by exactly
+ * what the measurement changed by, and the ACHIEVED clearance is what to read:
+ * 5.4 units of ink air per side at the worst cell, against 5 asserted.
  */
-const MIN_CELL_DEPTH = 26;
+const MIN_CELL_DEPTH = 23;
 
 /** Five structural clearances, removed from the 360° sweep before it is split. */
 const GROUP_GAP = 2.4;
@@ -501,6 +526,40 @@ function ringArc(a0: number, a1: number, r: number): CarrierPoint[] {
   return angles.map((a) => polygonRayPoint(a, r));
 }
 
+/**
+ * The CONCENTRIC ring between two angles, as a polyline — the internal course
+ * seams (ADR-070 U34).
+ *
+ * ⚠ **THE DODECAGON IS THE HOUSING; THE DIVISION INSIDE IT IS CONCENTRIC.**
+ * Every ring on this plate used to be twelve-sided while every label rode a
+ * circle, and a dodecagon's radius dips to `κ·R` at each edge midpoint — 13.1
+ * units at `R_OUT`. The wall swung inward and the label did not follow, so **19
+ * of 47 labels' ink crossed their cell's outer wall** (worst: `Feedback` −5.0u,
+ * `Localization` −3.3u) while every guard reported 7–12 units of air on both
+ * sides, because they measured `cell.r0`/`cell.r1` — the nominal radii, not the
+ * wall the renderer paints. ADR-065's own law one level up: the housing carries
+ * the machined geometry and the things seated inside it do not repeat it. The
+ * silhouette, the hub, the band's inner ring and the outermost cells' outer
+ * edge are all still twelve-sided; the four internal seams per part are not.
+ *
+ * ⚠ **IT IS A SAMPLED POLYLINE AND MAY NEVER BECOME AN `A` COMMAND.**
+ * ADR-071's arrival morph interpolates the CSS `d` property between the config
+ * chip's rectangle and this cell's own ring, which needs ONE command structure
+ * (`M` + n×`L` + `Z`) on both ends — `pda-flight` pins it, and a mismatch does
+ * not error, it snaps the interpolation discrete with nothing on screen to say
+ * why. `SEAM_STEP` 3° puts the chord's sagitta at 0.10 units on a 300-unit
+ * radius, i.e. a sixteenth of a device pixel at the binding meet.
+ */
+const SEAM_STEP = 3;
+
+function circleRing(a0: number, a1: number, r: number): CarrierPoint[] {
+  const n = Math.max(1, Math.ceil(Math.abs(a1 - a0) / SEAM_STEP));
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const a = a0 + ((a1 - a0) * i) / n;
+    return { x: CX + r * Math.cos(rad(a)), y: CY + r * Math.sin(rad(a)) };
+  });
+}
+
 const pt = (p: CarrierPoint, dx = 0, dy = 0) => `${(p.x - dx).toFixed(2)},${(p.y - dy).toFixed(2)}`;
 
 /** A ring segment, closed: outer polyline out, inner polyline back. */
@@ -547,66 +606,203 @@ const bboxOf = (pts: readonly CarrierPoint[]) => {
   return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
 };
 
-/* ── The seat: the flight's third home ──────────────────────────────────── */
+/* ── The skill chip's landing — the flight's second home (ADR-071) ─────── */
 
 /**
- * THE SEATED CARD'S SCALE — `LABEL_FS / CART_TYPE.title`, which is 1.1304.
+ * THE CHIP'S LANDING SCALE — `LABEL_FS / CHIP_FS`, which is 0.9286.
  *
- * ⚠ **THE RULE IS THAT THE WORK'S NAME LETTERS AT THE PLATE'S OWN RUNG.** The
- * carrier's 47 Skill names and 5 substrate names all letter at 13 units; the
- * card's title is `CART_TYPE.title` (11.5) × `k`, so `k = 13 / 11.5` is the
- * scale at which the stream's title joins them exactly. It is not a chosen
- * number and it is not a fitted one — it falls out of two published constants,
- * and it means the one thing the flight carries is lettered no smaller than the
- * material it landed in.
+ * ⚠ **THE RULE IS THAT THE SKILL'S NAME LETTERS AT THE PLATE'S OWN LABEL
+ * RUNG.** Reading 02's chip letters the skill at `CHIP_FS` (14 units); the
+ * carrier's 47 cell labels letter at `LABEL_FS` (13 units). The flight's
+ * uniform `dk = 13/14` lands the flown text at the size the 46 names around
+ * it sit at, so the moment the flying name hands over to the arc label the
+ * reader sees the same text in the same size — continuity by construction
+ * rather than by tuning.
  *
- * ⚠ **THE 8 PX LINE IS THE CARRIER'S, NOT THE CARD'S, AND THE DIFFERENCE
- * MATTERS.** The card's own smallest rung is the lane label at `10 × k`, which
- * paints 7.16px here — under the plate's floor. That is not a regression: the
- * SAME card paints that label at **6.22px on reading 01**, where it has done so
- * since ADR-063 §Outstanding recorded reading 01's density as the standing open
- * question. The hub is the card's second-most legible home, behind reading 02's
- * seat and ahead of the grid at every preset (measured: 8.24 / 7.88 / 7.16px
- * here against 7.16 / 6.85 / 6.22px there). Sizing `k` to lift the lane label
- * to 8.24px instead would need 1.3004, which leaves the card 7.4 units off the
- * hub's wall — a card touching its own aperture, to fix a rung this drawing did
- * not author.
- *
- * ⚠ **AND IT MUST STAY UNDER 1.3672**, which is where a 176 × 136 box centred
- * on this hub touches the dodecagon's ±30° walls. At 1.1304 the clearance is
- * 26.10 units against the resting brief's own 31.85 — the card sits slightly
- * tighter than the paragraph it replaces, which is right for a denser object,
- * and `pda-carrier-fit` pins both ends.
+ * ⚠ **IT MUST STAY UNDER 1**, which is where the chip would land LARGER than
+ * its own home — a shrinking flight, always. Here `13/14` is under 1 and the
+ * chip lands a hair smaller than its config home, which is what the reader
+ * reads as "arrived and settled".
  */
-const HUB_K = LABEL_FS / CART_TYPE.title;
-export const CARRIER_HUB_K = HUB_K;
-/** The cartridge's base box — the shared silhouette, never re-authored here. */
-const CART_W = CARD_BOX.w;
-const CART_H = CARD_BOX.h;
+const CHIP_K = LABEL_FS / CHIP_FS;
+export const CARRIER_CHIP_K = CHIP_K;
 
 /**
- * The seated card's box, centred on the plate.
+ * The skill chip's landing rect at one cell — centred on the cell's ARC
+ * MIDPOINT (`carrierCellArcRadius` × the angular midpoint), sized to the
+ * chip at the label rung.
  *
- * ⚠ **A UNIFORM SCALE OF THE CARTRIDGE, SO THE FLIGHT'S SIMILARITY HOLDS BY
- * CONSTRUCTION.** `pda-flight` asserts the homes stay similar to within 0.5 %;
- * this is `176 × 136 × k`, so its aspect is the cartridge's to the last digit
- * rather than to a tolerance.
+ * ⚠ **THIS RECT IS THE FLIGHT'S ARITHMETIC ANCHOR, NOT WHAT THE READER
+ * SEES LAND** (U1). `pdaFlight` needs a rect pair to compute the pose, and
+ * the MORPH projection is anchored on this one — but the plate the reader
+ * watches is `carrierChipMorphIn`'s interpolating path, which settles into
+ * the CELL'S OWN RING rather than into this box. The name's landing box
+ * (`carrierSkillNameRect`) shares this rect's centre, which is how the two
+ * instruments stay one journey.
  */
-export const CARRIER_SEAT_RECT: FlightRect = {
-  x: CX - (CART_W * HUB_K) / 2,
-  y: CY - (CART_H * HUB_K) / 2,
-  w: CART_W * HUB_K,
-  h: CART_H * HUB_K,
-};
+export function carrierSkillDock(cell: CarrierCell): FlightRect {
+  const midA = (cell.a0 + cell.a1) / 2;
+  const arcR = carrierCellArcRadius(cell);
+  const cx = CX + arcR * Math.cos(rad(midA));
+  const cy = CY + arcR * Math.sin(rad(midA));
+  const w = SKILL_CHIP_W * CHIP_K;
+  const h = SKILL_CHIP_H * CHIP_K;
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
+}
 
-/** The seated card's clear distance to the hub's wall — what the guard walks. */
-export const carrierSeatClearance = (): number =>
-  boxClearance(0, (CART_W * HUB_K) / 2, (CART_H * HUB_K) / 2, R_HUB);
+/**
+ * The tangent rotation the chip inherits AT LANDING — the label's own
+ * rotation, in degrees, so the chip's plate aligns with the arc it lands on.
+ * Baked into the base render via `<g transform="rotate(...)">`; the flight's
+ * `dr` compensates so the source pose stays unrotated on the config board.
+ */
+export const carrierChipRotation = (cell: CarrierCell): number =>
+  carrierLabelRotation((cell.a0 + cell.a1) / 2);
+
+/* ── The morph: the plate BECOMES the cell (ADR-071 U1) ─────────────────── */
+
+/**
+ * ⚠ **THE FIRST ARRIVAL SHIPPED AS A FLOATING FRAME AND THE OWNER CALLED IT
+ * (2026-08-19: "we just see a frame floating, and then it fades away, which
+ * is the last thing I want").** A rectangle translated onto a wedge and then
+ * faded is two objects pretending to be one — the shapes never agree, so the
+ * dissolve is the moment the trick is visible. The honest gesture is a SHAPE
+ * MORPH: the plate's outline interpolates into the cell's own outline, so at
+ * touchdown the flying object IS the cell and the final fade removes a layer
+ * that is pixel-identical to the lit cell beneath it. Nothing "disappears".
+ *
+ * ## How CSS carries it
+ *
+ * The `d` property is animatable when both paths share ONE command structure
+ * (`M` + n×`L` + `Z` with equal n). Both ends are emitted by the builders
+ * below from the same point counts, so the structures match by construction
+ * — `pda-flight` asserts the counts, because a mismatch does not fail, it
+ * snaps the interpolation to a discrete jump with nothing on screen to say
+ * why.
+ *
+ * ## Point correspondence, and why the rect is sampled the way it is
+ *
+ * The cell's ring is `outer arc (a0→a1)` then `inner arc (a1→a0)`. The rect
+ * is sampled to mirror that anatomy: its TOP edge takes the outer arc's
+ * count, its BOTTOM edge (walked backwards) the inner's — so the top bows
+ * into the rim-side arc, the bottom into the hub-side arc, and the two
+ * verticals become the radial cuts. `flip` keeps the correspondence
+ * SCREEN-ALIGNED: when the wedge's a0 end sits to the RIGHT on screen (the
+ * dial's left half), the rect samples right-to-left, otherwise the morph
+ * crosses itself mid-flight and reads as the plate turning inside out.
+ */
+const ringPath = (points: readonly CarrierPoint[]): string =>
+  `M${points.map((p) => pt(p)).join(" L")} Z`;
+
+/** `n` points from `(x0,y0)` to `(x1,y1)` inclusive — the rect's edge run. */
+function sampleEdge(x0: number, y0: number, x1: number, y1: number, n: number): CarrierPoint[] {
+  if (n === 1) return [{ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }];
+  return Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    return { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t };
+  });
+}
+
+/** The rect as a ring with the CELL's own point counts. */
+function rectRing(r: FlightRect, nTop: number, nBottom: number, flip: boolean): CarrierPoint[] {
+  const top = flip
+    ? sampleEdge(r.x + r.w, r.y, r.x, r.y, nTop)
+    : sampleEdge(r.x, r.y, r.x + r.w, r.y, nTop);
+  const bottom = flip
+    ? sampleEdge(r.x, r.y + r.h, r.x + r.w, r.y + r.h, nBottom)
+    : sampleEdge(r.x + r.w, r.y + r.h, r.x, r.y + r.h, nBottom);
+  return [...top, ...bottom];
+}
+
+export interface ChipMorphPaths {
+  /** The pose the plate ENTERS at — same structure as `to`. */
+  from: string;
+  /** The pose the plate SETTLES into. */
+  to: string;
+}
+
+/**
+ * THE ARRIVING MORPH (2→3), in the CARRIER's own user units.
+ *
+ * `vars` is the plate flight (`pdaFlight(config chip → carrier dock)`), whose
+ * `dx/dy/dk` place the incoming pose: the chip appears where the reader last
+ * saw it — the config board's SKILL slot — and the path interpolates from
+ * that rectangle into the cell's own ring. No transform is involved; the
+ * path itself carries the whole journey, which is what lets the shape change
+ * en route.
+ */
+export function carrierChipMorphIn(cell: CarrierCell, vars: FlightVars): ChipMorphPaths {
+  const dock = carrierSkillDock(cell);
+  const start: FlightRect = {
+    x: dock.x + dock.w / 2 + vars.dx - (dock.w * vars.dk) / 2,
+    y: dock.y + dock.h / 2 + vars.dy - (dock.h * vars.dk) / 2,
+    w: dock.w * vars.dk,
+    h: dock.h * vars.dk,
+  };
+  const flip = cell.outer[0].x > cell.outer[cell.outer.length - 1].x;
+  return {
+    from: ringPath(rectRing(start, cell.outer.length, cell.inner.length, flip)),
+    to: ringPath([...cell.outer, ...cell.inner]),
+  };
+}
+
+/**
+ * THE DEPARTING MORPH (3→2), in the CONFIG board's user units.
+ *
+ * The wedge is projected into the config crop through the same affine the
+ * flight describes: `vars` is `pdaFlight(carrier dock → config chip)`, whose
+ * pose puts the chip's rect at the cell's screen position — so the map that
+ * carries the WHOLE wedge across is anchored on those two rects:
+ *
+ *   `T(p) = chipCentre + (dx, dy) + s · (p − dockCentre)`,  `s = dk · chipW / dockW`
+ *
+ * ⚠ `s` IS THE CROP-TO-CROP UNIT RATIO, derived rather than free: the flight
+ * already had to relate the two crops to compute `dk`, and a second constant
+ * for the same relation is one that can disagree with it.
+ */
+export function carrierChipMorphOut(
+  cell: CarrierCell,
+  vars: FlightVars,
+  chip: FlightRect
+): ChipMorphPaths {
+  const dock = carrierSkillDock(cell);
+  const s = (vars.dk * chip.w) / dock.w;
+  const ax = chip.x + chip.w / 2 + vars.dx;
+  const ay = chip.y + chip.h / 2 + vars.dy;
+  const bx = dock.x + dock.w / 2;
+  const by = dock.y + dock.h / 2;
+  const project = (p: CarrierPoint): CarrierPoint => ({
+    x: ax + s * (p.x - bx),
+    y: ay + s * (p.y - by),
+  });
+  const flip = cell.outer[0].x > cell.outer[cell.outer.length - 1].x;
+  return {
+    from: ringPath([...cell.outer, ...cell.inner].map(project)),
+    to: ringPath(rectRing(chip, cell.outer.length, cell.inner.length, flip)),
+  };
+}
+
+/**
+ * The flying NAME's landing box — centred where the cell's own arc label
+ * letters (`carrierCellArcRadius` × the angular midpoint), sized to the
+ * label's nominal line box at the plate's rung. The name flies its OWN
+ * `pdaFlight` (source = the chip's rendered name box on the config board),
+ * so it lifts off exactly where it was and touches down exactly on the arc
+ * label it hands over to — the plate's flight cannot serve it because the
+ * name is left-anchored in the plate and centre-anchored on the arc.
+ */
+export function carrierSkillNameRect(cell: CarrierCell, name: string): FlightRect {
+  const midA = (cell.a0 + cell.a1) / 2;
+  const arcR = carrierCellArcRadius(cell);
+  const cx = CX + arcR * Math.cos(rad(midA));
+  const cy = CY + arcR * Math.sin(rad(midA));
+  const w = name.length * adv(LABEL_FS, LABEL_TRACK);
+  const h = LABEL_FS * 1.3;
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
+}
 
 export interface CarrierPlate {
   crop: string;
-  /** The seated card's box — the flight's third home. Constant by construction. */
-  seat: FlightRect;
 }
 
 /**
@@ -617,16 +813,9 @@ export interface CarrierPlate {
  * the whole reason this wrapper exists rather than `carrierCrop` being called
  * directly from `PdaConsole` — an inverted aspect does not throw, it just
  * letterboxes the drawing to a sliver and reads as a rendering fault.
- *
- * ⚠ **THE SEAT DOES NOT MOVE WITH THE FIELD**, unlike readings 01 and 02 whose
- * homes both travel with their elastic terms. The height is fixed and `CX`/`CY`
- * are constants, so the card's box is the same rect at every preset — but it is
- * returned from HERE rather than read as a module constant at the call site, so
- * the flight and the attribute come from ONE OBJECT the way the other two
- * readings' do (ADR-070 U12's "one source for the attribute AND the flight").
  */
 export function carrierPlate(aspect: number): CarrierPlate {
-  return { crop: carrierCrop(aspect > 0 ? 1 / aspect : 0), seat: CARRIER_SEAT_RECT };
+  return { crop: carrierCrop(aspect > 0 ? 1 / aspect : 0) };
 }
 
 /* ── The course ladder ──────────────────────────────────────────────────── */
@@ -667,22 +856,34 @@ export function carrierCourses(
   longestChars: number,
   R_INNER = R_CELL,
   R_OUTER = R_OUT,
-  minDepth = MIN_CELL_DEPTH
+  minDepth = MIN_CELL_DEPTH,
+  /**
+   * The part's polygon-over-circle radius factor (`carrierPolygonShare`), so the
+   * ladder is solved against the boundaries the drawing will actually cut. 1
+   * leaves the pre-U34 pure-circular partition, which is what a caller with no
+   * part in hand wants.
+   */
+  share = 1
 ): number[] | null {
   if (n < 1) return null;
   const target = carrierArcTarget(longestChars);
   const span = R_OUTER * R_OUTER - R_INNER * R_INNER;
+  /* ⚠ THE LAST COURSE IS BOUNDED BY THE POLYGON, SO ITS DEPTH ENDS AT THE
+     APOTHEM. Measuring it at `R_OUTER` hands the floor 13.1 units the label
+     cannot use — which is the U34 defect stated as arithmetic. */
+  const outerWall = R_OUTER === R_OUT ? R_APOTHEM : R_OUTER;
   const holder: { best: { co: number[]; score: number } | null } = { best: null };
 
   const feasible = (co: readonly number[]): number | null => {
     let cum = 0;
     let prev = R_INNER;
     let score = 0;
-    for (const m of co) {
+    for (const [i, m] of co.entries()) {
       cum += m;
-      const next = cum === n ? R_OUTER : Math.sqrt(R_INNER * R_INNER + (cum / n) * span);
+      const last = i === co.length - 1;
+      const next = last ? R_OUTER : share * Math.sqrt(R_INNER * R_INNER + (cum / n) * span);
       const arc = prev * (sweepRad / m);
-      const dep = next - prev;
+      const dep = (last ? outerWall : next) - prev;
       if (arc < target || dep < minDepth) return null;
       score = Math.max(score, arc / dep);
       prev = next;
@@ -718,18 +919,66 @@ export const carrierCoursesAuthored = (n: number): number[] => {
   return Array.from({ length: c }, (_, i) => base + (i >= c - rem ? 1 : 0));
 };
 
+/**
+ * The part's POLYGON-OVER-CIRCLE radius factor — `√(P / C)`, where `P` is the
+ * dodecagon's unit sector area over the part's sweep and `C` the circle's
+ * (`Δθ/2`).
+ *
+ * ⚠ **ONE FACTOR IS THE WHOLE CORRECTION, AND IT FALLS OUT OF THE ALGEBRA.**
+ * With the first and last courses bounded by polygons and everything between
+ * them bounded by circles, the cumulative-area solve is
+ * `r_k = √((P/C)·(R_CELL² + (cum/n)·span))` — i.e. exactly the pre-U34
+ * expression scaled by this. It measures 0.9758–0.9779 across the five parts,
+ * so every internal boundary pulls in by about 2.3 %, which is what pays the
+ * outermost course back for the material the rim's facets take off it.
+ *
+ * ⚠ **THE PART TOTAL IS UNCHANGED** (`P·(R_OUT² − R_CELL²)`), so the
+ * equal-area claim still holds at part level by construction rather than by
+ * tuning.
+ */
+export const carrierPolygonShare = (a0: number, a1: number): number =>
+  Math.sqrt(unitSectorArea(a0, a1) / (rad(a1 - a0) / 2));
+
+/**
+ * The area one wall encloses over a sweep — the polygon's own sector constant
+ * where the wall is the housing, the circle's where it is the division.
+ */
+const sectorTerm = (a0: number, a1: number, r: number, polygonal: boolean): number =>
+  (polygonal ? unitSectorArea(a0, a1) : rad(a1 - a0) / 2) * r * r;
+
 /** Course boundaries whose area shares equal their cell shares. */
-export const carrierRadii = (courses: readonly number[], n: number): number[] => {
+export const carrierRadii = (courses: readonly number[], n: number, share = 1): number[] => {
   const span = R_OUT * R_OUT - R_CELL * R_CELL;
   const out = [R_CELL];
   let cum = 0;
   for (const m of courses) {
     cum += m;
-    out.push(Math.sqrt(R_CELL * R_CELL + (cum / n) * span));
+    out.push(share * Math.sqrt(R_CELL * R_CELL + (cum / n) * span));
   }
   out[out.length - 1] = R_OUT;
   return out;
 };
+
+/**
+ * ⚠ **A SEAM IS SHARED, SO IT CANNOT BE SOLVED PER CELL** — recorded because
+ * the per-cell solve is the obvious next idea and it does not close.
+ *
+ * With course 0 bounded inward by the polygon at `R_CELL` and the last course
+ * bounded outward by it at `R_OUT`, those two courses' cell areas carry the
+ * dodecagon's own sector variation (`unitSectorArea` differs cell to cell by
+ * where the cell sits against the twelve facets). Solving each polygon-bounded
+ * cell's FREE boundary for its exact share would zero that — but that boundary
+ * is the neighbouring course's wall, the two courses hold different cell counts
+ * so their cells do not align angularly, and the correction just cascades into
+ * the next course with a `COURSE_GAP` that now varies by up to a unit.
+ *
+ * So the seams stay per course, `carrierPolygonShare` makes each part's
+ * cumulative areas exact, and the residue is what it has always been on this
+ * plate: **the rim's own modulation**, `1 − cos(15°)` = 3.41 %. What changed is
+ * that it used to appear at BOTH walls of every cell, where it partly cancelled
+ * in `r1² − r0²`, and now appears at one wall of two courses. The area guard's
+ * tolerance is set from the measured spread and says so.
+ */
 
 /* ── The layout ─────────────────────────────────────────────────────────── */
 
@@ -742,11 +991,37 @@ export interface CarrierCell {
   /** The un-gapped partition, which is what the area guard measures. */
   a0: number;
   a1: number;
+  /** The DRAWN inner wall's radius — gaps included (U34). It is also its own
+   *  worst case: where this wall is the polygon (course 0) the nearest it comes
+   *  to the label is its circumradius. */
   r0: number;
+  /** The DRAWN outer wall's radius, gaps included. ⚠ NOT the wall a label has
+   *  to clear when the wall is the polygon — see `outerWall`. */
   r1: number;
+  /**
+   * The radius the label must clear OUTWARD: `r1` for a concentric seam,
+   * `κ·R_OUT` for the rim.
+   *
+   * ⚠ **THE FIELD EXISTS BECAUSE ITS ABSENCE PUT NINETEEN LABELS THROUGH THEIR
+   * OWN EDGE.** The distance from the centre to a dodecagon's wall is not one
+   * number, and every guard on this drawing asked for `r1` — which is the wall
+   * only at the twelve vertices.
+   */
+  outerWall: number;
   d: string;
   /** The drawn outer polyline — the flagship's green provenance rides it. */
   outer: CarrierPoint[];
+  /**
+   * The drawn inner polyline, running BACK (a1 → a0) so `[...outer, ...inner]`
+   * is the cell's closed ring in draw order.
+   *
+   * ⚠ **STORED SO THE MORPH AND THE DRAWN CELL ARE ONE SOURCE** (ADR-071 U1).
+   * The arrival morph interpolates a path INTO this cell's own outline, and a
+   * target regenerated by a second builder is a target that can drift a point
+   * count away from the drawing — at which point CSS `d` interpolation snaps
+   * discrete instead of morphing, with nothing on screen to say why.
+   */
+  inner: CarrierPoint[];
   area: number;
 }
 
@@ -855,22 +1130,47 @@ export function carrierLayout(record: CarrierRecord): {
     /* ⚠ THE LADDER IS DERIVED FROM THE NAMES, WITH THE U28 AUTHORED RULE AS A
        FALLBACK. On the shipped record the derivation always solves; the fallback
        exists so a stubbed fixture cannot throw. */
-    const courses = carrierCourses(n, sweepRad, longestChars) ?? carrierCoursesAuthored(n);
-    const radii = carrierRadii(courses, n);
+    /* ⚠ THE LADDER IS SOLVED AGAINST THE BOUNDARIES THE DRAWING WILL CUT
+       (U34) — the part's own polygon share, so the derivation and the
+       partition cannot disagree about where a course ends. */
+    const share = carrierPolygonShare(groupA0, groupA1);
+    const courses =
+      carrierCourses(n, sweepRad, longestChars, R_CELL, R_OUT, MIN_CELL_DEPTH, share) ??
+      carrierCoursesAuthored(n);
+    const radii = carrierRadii(courses, n, share);
     const run = ordered(mine, courses);
 
     let taken = 0;
     for (const [course, m] of courses.entries()) {
-      const r0 = radii[course];
-      const r1 = radii[course + 1];
-      const inner = course === 0 ? r0 : r0 + COURSE_GAP / 2;
-      const outer = course === courses.length - 1 ? r1 : r1 - COURSE_GAP / 2;
+      const first = course === 0;
+      const last = course === courses.length - 1;
+      /* ⚠ THE WALLS ARE THE DRAWN ONES NOW, GAPS INCLUDED (U34). `r0`/`r1`
+         used to carry the NOMINAL partition radii while the ring was cut at
+         the gapped ones — which is a second model of the same cell, and the
+         label was centred against the model rather than against the material.
+         The rim and the band's ring stay flush: only an INTERNAL seam takes a
+         gap, because a cell that does not reach the wall it is bounded by
+         reads as a margin and this plate has no margin. */
+      const inner = first ? radii[course] : radii[course] + COURSE_GAP / 2;
+      const outer = last ? radii[course + 1] : radii[course + 1] - COURSE_GAP / 2;
+      /* ⚠ AND THE WALL A LABEL CLEARS IS NOT ALWAYS THE WALL'S RADIUS. A
+         circular wall is exact; a polygonal INNER wall is worst at its
+         circumradius, so `inner` already is its own bound; a polygonal OUTER
+         wall is worst at its APOTHEM. Nineteen labels crossed their edge
+         because this distinction did not exist. */
+      const outerWall = last ? R_APOTHEM : outer;
       const cellSweep = (groupA1 - groupA0) / m;
 
       for (let i = 0; i < m; i += 1) {
         const a0 = groupA0 + cellSweep * i;
         const a1 = a0 + cellSweep;
-        const outerRing = ringArc(a0 + CELL_GAP / 2, a1 - CELL_GAP / 2, outer);
+        const g0 = a0 + CELL_GAP / 2;
+        const g1 = a1 - CELL_GAP / 2;
+        /* The housing's walls are polygonal, the division between them is
+           concentric — and BOTH are polylines, because the morph interpolates
+           this ring's `d` and an `A` command would break its structure. */
+        const outerRing = last ? ringArc(g0, g1, outer) : circleRing(g0, g1, outer);
+        const innerRing = first ? ringArc(g1, g0, inner) : circleRing(g1, g0, inner);
         cells.push({
           skill: run[taken + i],
           key,
@@ -878,11 +1178,25 @@ export function carrierLayout(record: CarrierRecord): {
           course,
           a0,
           a1,
-          r0,
-          r1,
-          d: sectorPath(a0 + CELL_GAP / 2, a1 - CELL_GAP / 2, inner, outer),
+          r0: inner,
+          r1: outer,
+          outerWall,
+          /* ⚠ BUILT FROM THE SAME TWO RINGS THE MORPH USES — `sectorPath`
+             would produce the identical string, but a second call is a second
+             chance to drift. One pair of arrays, three consumers (the drawn
+             cell, the flagship's provenance line, the arrival morph). */
+          d: `M${[...outerRing, ...innerRing].map((p) => pt(p)).join(" L")} Z`,
           outer: outerRing,
-          area: (r1 * r1 - r0 * r0) * unitSectorArea(a0, a1),
+          inner: innerRing,
+          /* ⚠ THE AREA IS THE PARTITION'S, NOT THE GAPPED RING'S, AND EACH
+             WALL IS INTEGRATED WITH ITS OWN CONSTANT (U34). `CELL_GAP` and
+             `COURSE_GAP` are clearances removed from every cell alike, so
+             they say nothing about share; but a polygonal wall and a circular
+             one enclose different area at the same radius, and one shared
+             constant across a mixed ring is the equal-area claim measuring a
+             cell the drawing does not cut. */
+          area:
+            sectorTerm(a0, a1, radii[course + 1], last) - sectorTerm(a0, a1, radii[course], first),
         });
       }
       taken += m;
@@ -1116,7 +1430,13 @@ export function carrierBriefFits(): CarrierBriefFit {
  */
 export const carrierCellArcRadius = (cell: CarrierCell): number => {
   const midA = (cell.a0 + cell.a1) / 2;
-  return (cell.r0 + cell.r1) / 2 + (Math.sin(rad(midA)) > 0 ? 1 : -1) * LABEL_INK_MID * LABEL_FS;
+  /* ⚠ THE CORRIDOR IS BOUNDED BY WHAT IS DRAWN, NOT BY THE PARTITION (U34).
+     `outerWall` is `κ·R_OUT` on the rim and `r1` on a concentric seam; `r0` is
+     its own worst case either way. Centring on `(r0 + r1)/2` is what leaned
+     every outermost label into its own edge. */
+  return (
+    (cell.r0 + cell.outerWall) / 2 + (Math.sin(rad(midA)) > 0 ? 1 : -1) * LABEL_INK_MID * LABEL_FS
+  );
 };
 
 /**
@@ -1189,6 +1509,9 @@ export const CARRIER_CY = CY;
 export const CARRIER_R_IN = R_HUB;
 export const CARRIER_R_CELL = R_CELL;
 export const CARRIER_R_OUT = R_OUT;
+/** The rim's apothem — the wall the outermost course is bounded by (U34). */
+export const CARRIER_R_APOTHEM = R_APOTHEM;
+export const CARRIER_KAPPA = KAPPA;
 export const CARRIER_BAND_R = BAND_R;
 export const CARRIER_BAND_FS = BAND_FS;
 export const CARRIER_BAND_TRACK = BAND_TRACK;
@@ -1290,25 +1613,45 @@ export interface ViewCarrierProps {
   shapes: readonly PdaShape[];
   skills: readonly CaseSkillEntry[];
   /**
-   * The stream the reader has open, seated in the hub — or `null` while nothing
-   * has been opened, where the hub letters the brief instead.
+   * The stream the reader has open (via the config chip's join, ADR-071).
+   *
+   * ⚠ **THE STREAM ITSELF NO LONGER LANDS ON THIS PLATE** — the seated card
+   * left with U33's promotion; what the reader sees here is the CELL whose
+   * skill runs that stream, lit like an isActive cell. `selected` still comes
+   * through so the CELL can be found by joining `selected.skillId` against
+   * `skill.id`. `null` while nothing has been opened, and no cell is seated.
    *
    * ⚠ **`null` UNTIL READING 02 HAS BEEN SHOWN.** The console's rest state is
-   * `shown[0]`, and seating a record the reader never asked for claims they left
-   * it open. The console passes `hasOpened ? selected : null` for the same
-   * reason SECTION's footprint took `showSel`.
+   * `shown[0]`, and seating a cell for a record the reader never asked for
+   * claims they left it open. The console passes `hasOpened ? selected : null`.
    */
   selected: PdaWork | null;
   /** True once the reader has moved the pointer inside this reading; drops the
    *  arrival classes so a hover does not replay the entrance. */
   still: boolean;
   entry: PdaEntry;
+  /**
+   * THE SKILL CHIP'S ARRIVAL, only on the 2→3 transition (ADR-071). When
+   * `kind === "flight"` the carrier renders the chip AT its destination cell
+   * (the seated cell), animating from the config chip's home. Everywhere else
+   * the chip does not render on the carrier: the cell's own arc label carries
+   * the identity at rest, and the seat card is gone.
+   */
+  skillEntry?: PdaEntry | null;
   /** Called with the part under the pointer. The console uses it to mark the
    *  reading as interacted-with; reading 02 is what reads the value. */
   onLit?: (key: string | null) => void;
 }
 
-export function ViewCarrier({ shapes, skills, selected, still, entry, onLit }: ViewCarrierProps) {
+export function ViewCarrier({
+  shapes,
+  skills,
+  selected,
+  still,
+  entry: _entry,
+  skillEntry,
+  onLit,
+}: ViewCarrierProps) {
   const layout = useMemo(() => carrierLayout({ shapes, skills }), [shapes, skills]);
   const [hotId, setHotId] = useState<string | null>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
@@ -1333,6 +1676,14 @@ export function ViewCarrier({ shapes, skills, selected, still, entry, onLit }: V
   const taps = useMemo(
     () => new Set<string>(selected?.configured ? selected.taps : []),
     [selected]
+  );
+  /** The cell the seated stream's skill lands on (ADR-071). `null` while
+   *  nothing has been opened, or when the join is missing — the cell is not
+   *  seated then, and the drawing letters at rest. */
+  const seatedSkillId = selected?.skillId ?? null;
+  const seatedCell = useMemo(
+    () => (seatedSkillId ? (layout.cells.find((c) => c.skill.id === seatedSkillId) ?? null) : null),
+    [layout.cells, seatedSkillId]
   );
 
   const light = useCallback(
@@ -1435,14 +1786,70 @@ export function ViewCarrier({ shapes, skills, selected, still, entry, onLit }: V
         />
       ))}
 
+      {/* ⚠ THE BAND'S OWN GROUND, ON ALL FIVE SEGMENTS (U34, owner
+          2026-08-23: _"stakeholder and patterns don't have a background like
+          the rest do"_). They were not missing one — they are the two regions
+          the open stream does NOT draw on, and `TapWash` was filling the other
+          three. The band was the only region on this plate with no material of
+          its own (the hub has void + veil + grain, the cells their physics
+          field), so a signal with no ground under it read as a rendering
+          fault. One recess wash on all five, and the tapped three read as LIT
+          on top of it instead of as the only ones that exist.
+
+          ⚠ FLAT, NOT GRAINED, AND THE DISTINCTION IS THE OBJECT. The hub's own
+          note says a flat fill among fields reads as a hole plugged with paint
+          — and answered it with a grain, because the hub is the plate's CORE.
+          This is a machined RECESS between two rings, and a recess is a cut
+          face.
+
+          ⚠ **0.10, AND THE FIRST CUT AT 0.03 WAS A FIX THAT CHANGED NOTHING.**
+          A wash is judged against what it lands on, not against a neighbouring
+          number: at 0.03 over `--pda-void` the band measured `rgb(11,10,9)`
+          against the plate ground's `rgb(11,9,5)` — inside a value of the
+          thing it was supposed to be distinguishable from — while the tapped
+          three sat at `rgb(45,37,20)`, a **6× luminance ratio**. The reading
+          the owner objected to was completely intact. At 0.10 the band lands
+          at `rgb(27,25,23)`, a hair under the hub's own `rgb(35,28,14)`, so
+          the core and the recess read as one middle zone with the cells dark
+          around them — and the gold tap is a lift ON something.
+
+          ⚠ IT DARKENS IN LIGHT AND THAT IS THE POINT. ADR-058 swaps
+          `--dawn-rgb` with `--void-rgb`, so this one rule is a step AWAY from
+          the ground in both themes — up from the void, down into the
+          parchment. A recess either way. */}
+      {layout.groups.map((group) => (
+        <path
+          key={`band-bed-${group.key}`}
+          d={carrierTapPath(group)}
+          fill="rgba(var(--dawn-rgb), 0.1)"
+          pointerEvents="none"
+        />
+      ))}
+
       {/* THE CLICK, RESUMED — the band segments the seated stream draws on. */}
       <TapWash groups={layout.groups} taps={taps} still={still} />
 
       {layout.cells.map((cell) => {
         const isHot = cell.skill.id === hotId;
         const isPinned = cell.skill.id === pinnedId;
-        const isActive = isHot || isPinned;
+        const isSeated = cell.skill.id === seatedSkillId;
+        const isActive = isHot || isPinned || isSeated;
+        /* ⚠ SEATED CELLS ESCAPE DIMMING (ADR-071). The stream's chip lands on
+           this one cell; if the reader hovers a different part after arrival,
+           the seat has to stay lit so the reading keeps naming what runs the
+           stream. `isActive` above covers it, but the `cell.key !== litKey`
+           branch is defensive — a seated cell in a non-lit part would dim on
+           partial hover otherwise. */
         const dimmed = litKey !== null && !isActive && cell.key !== litKey;
+        /* ⚠ THE SLOT LIGHTS ON TOUCHDOWN, NOT AT MOUNT (ADR-071 U1). While
+           the chip is still in the air, a destination already lit claims the
+           arrival before it happens — so an arriving flight ARMS the seated
+           cell: a paint-hold animation keeps it at resting values for the
+           morph's own duration, and the lit attributes take over the frame
+           the plate seats. The pop happens UNDER the opaque morph layer and
+           is revealed by its fade. ⚠ Not gated on `still`, same law as the
+           dock — a hover mid-flight must not light the slot early. */
+        const arming = isSeated && skillEntry?.kind === "flight" && Boolean(skillEntry.morph);
         return (
           <g
             key={cell.skill.id}
@@ -1471,6 +1878,7 @@ export function ViewCarrier({ shapes, skills, selected, still, entry, onLit }: V
             {/* ⚠ THE CELL LINE IS `dim`, NOT `hair`/`hair2` — IT IS A LINE THAT
                 CARRIES THE DRAWING, NOT CHROME (see pda.css's ladder). */}
             <path
+              className={arming ? "fl-pda-seat-arm" : undefined}
               d={cell.d}
               fill={isActive ? "rgba(var(--gold-rgb), 0.28)" : "rgba(var(--dawn-rgb), 0.04)"}
               stroke={isActive ? "var(--pda-hot)" : "var(--pda-dim)"}
@@ -1493,6 +1901,7 @@ export function ViewCarrier({ shapes, skills, selected, still, entry, onLit }: V
             {/* The label on its own arc, inside the cell's group so the pointer
                 stays on the same target. */}
             <text
+              className={arming ? "fl-pda-seat-arm-label" : undefined}
               pointerEvents="none"
               fontSize={LABEL_FS}
               letterSpacing={`${LABEL_TRACK}em`}
@@ -1558,14 +1967,113 @@ export function ViewCarrier({ shapes, skills, selected, still, entry, onLit }: V
         </text>
       ))}
 
-      <Aperture
-        cell={pinned}
-        name={pinned ? nameOf(pinned.key) : ""}
-        selected={selected}
-        still={still}
-        entry={entry}
-      />
+      <Aperture cell={pinned} name={pinned ? nameOf(pinned.key) : ""} />
+
+      {/* ── THE CHIP'S ARRIVAL, only on 2→3 (ADR-071 U1). The plate MORPHS —
+              its path interpolates from the config chip's rectangle into this
+              cell's own ring, so at touchdown the flying object IS the cell
+              and the closing fade removes a pixel-identical layer. The name
+              flies its own dock and hands over to the arc label beneath. ── */}
+      {skillEntry?.kind === "flight" && skillEntry.morph && seatedCell ? (
+        <ChipMorphArrival cell={seatedCell} entry={skillEntry} morph={skillEntry.morph} />
+      ) : null}
     </>
+  );
+}
+
+/**
+ * THE MORPH ARRIVAL (ADR-071 U1) — three layers, one journey:
+ *
+ *   · GROUND: the plate's opaque bed, morphing rect → wedge. Opaque because
+ *     the chip is a physical object crossing the dial — cells showing through
+ *     it mid-flight would read as a ghost.
+ *   · SKIN: the same morphing path again, carrying the material change —
+ *     the chip's quiet dawn wash and dim hairline anneal into the cell's lit
+ *     gold wash and hot stroke, so by touchdown the object already IS a lit
+ *     cell.
+ *   · NAME: the skill's name on its own dock flight, lifting off exactly
+ *     where the chip lettered it and landing centred on the cell's arc label
+ *     (same text, same rung — the crossfade is a handoff, not a vanish).
+ *
+ * ⚠ **THE FINAL FADE IS INVISIBLE BY CONSTRUCTION.** All three layers end
+ * pixel-aligned with the seated cell that was beneath them all along — the
+ * morph's `to` IS the cell's own `d`, the name's landing box is the arc
+ * label's own box. What the owner called "a frame floating, then it fades
+ * away" was two shapes that never agreed; these agree exactly, so the
+ * closing fade removes a duplicate, not an object.
+ *
+ * ⚠ **`d` FALLS BACK GRACEFULLY.** The path ATTRIBUTE carries the final
+ * shape; browsers that cannot animate the CSS `d` property skip the morph
+ * keyframe and show the plate already seated (colour animation still runs).
+ * No floating frame on any engine.
+ */
+function ChipMorphArrival({
+  cell,
+  entry,
+  morph,
+}: {
+  cell: CarrierCell;
+  entry: PdaEntry & { kind: "flight" };
+  morph: ChipMorph;
+}) {
+  const rotation = carrierChipRotation(cell);
+  const name = cell.skill.short.toUpperCase();
+  const box = carrierSkillNameRect(cell, name);
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const pathVars = {
+    "--d-from": `path('${morph.from}')`,
+    "--d-to": `path('${morph.to}')`,
+  } as React.CSSProperties;
+  /* The skin's colour ramp, arriving: the chip's quiet dawn wash and dim
+     hairline anneal into the cell's lit gold — by touchdown the object IS a
+     lit cell, so the closing fade removes a duplicate, not a thing. */
+  const skinVars = {
+    ...pathVars,
+    "--skin-f0": "rgba(var(--dawn-rgb), 0.05)",
+    "--skin-s0": "var(--pda-dim)",
+    "--skin-f1": "rgba(var(--gold-rgb), 0.28)",
+    "--skin-s1": "var(--pda-hot)",
+  } as React.CSSProperties;
+  return (
+    <g pointerEvents="none" aria-hidden="true">
+      <path className="fl-pda-chip-morph" style={pathVars} d={morph.to} fill="var(--pda-void)" />
+      <path
+        className="fl-pda-chip-morph fl-pda-chip-skin"
+        style={skinVars}
+        d={morph.to}
+        strokeWidth="1.4"
+      />
+      <g
+        className="fl-pda-chip-name"
+        style={
+          {
+            "--dx": `${entry.dx}px`,
+            "--dy": `${entry.dy}px`,
+            "--dk": entry.dk,
+            "--dr": `${entry.dr ?? 0}deg`,
+          } as React.CSSProperties
+        }
+      >
+        <g transform={`rotate(${rotation} ${cx} ${cy})`}>
+          {/* The bbox anchor — `transform-box: fill-box` measures the dock's
+              origin against this group's own box, and a text's ink box drifts
+              with ascenders; the nominal rect pins the centre the flight
+              arithmetic used. */}
+          <rect x={box.x} y={box.y} width={box.w} height={box.h} fill="none" stroke="none" />
+          <text
+            x={cx}
+            y={cy + LABEL_FS * 0.36}
+            textAnchor="middle"
+            fontSize={LABEL_FS}
+            letterSpacing={`${LABEL_TRACK}em`}
+            fill="var(--pda-ink)"
+          >
+            {name}
+          </text>
+        </g>
+      </g>
+    </g>
   );
 }
 
@@ -1617,46 +2125,26 @@ function TapWash({
  * What the hub says, in priority order:
  *
  *   a CLICKED cell   that Skill's identity — the reader's own action on this
- *                    plate, so it outranks what they carried in
- *   a SEATED stream  the work's card, flown from reading 01 or 02
+ *                    plate, so it outranks the brief that the plate would
+ *                    otherwise letter
  *   neither          one sentence explaining what a substrate IS
+ *
+ * ⚠ **NO SEATED CARD ANY MORE (ADR-071).** The work-card home moved off the
+ * hub with the split flights: the work card is a 1↔2 object and the SKILL
+ * chip is the 2↔3 object. The reader who arrived from an opened stream sees
+ * WHICH SKILL runs it by the seated cell (lit like an isActive cell), not by
+ * a card in the middle.
  *
  * ⚠ **NO HOUSING IS DRAWN HERE.** The lettering sits straight on the hub's
  * material, bounded by the ring the plate already carries. Anything this
- * function adds — a rect, a bracket, a backing wash — puts a second outline back
- * inside the first and is the square returning under a new name. The SEATED
- * CARD is the one exception and it is not an exception: a cartridge is an object
- * with its own housing, which is the whole reason it can fly.
+ * function adds — a rect, a bracket, a backing wash — puts a second outline
+ * back inside the first and is the square returning under a new name.
  */
-function Aperture({
-  cell,
-  name,
-  selected,
-  still,
-  entry,
-}: {
-  cell: CarrierCell | null;
-  name: string;
-  selected: PdaWork | null;
-  still: boolean;
-  entry: PdaEntry;
-}) {
-  /* ⚠ POINTER-INERT AS A WHOLE, INCLUDING THE CARD. `Cartridge` lays a
-     transparent hit rect over its own box (a person-led body is `fill: none`
-     and would otherwise only click on its stroke), which here would be a target
-     with nothing behind it to open — the record it names is the one already
-     open. Nothing under the hub is reachable either, so the group is inert and
-     the reader's clicks stay on the cells, where they mean something. */
+function Aperture({ cell, name }: { cell: CarrierCell | null; name: string }) {
   return (
     <g pointerEvents="none">
       <Hub />
-      {cell ? (
-        <PinnedReadout cell={cell} name={name} />
-      ) : selected ? (
-        <SeatedWork work={selected} still={still} entry={entry} />
-      ) : (
-        <BriefReadout />
-      )}
+      {cell ? <PinnedReadout cell={cell} name={name} /> : <BriefReadout />}
     </g>
   );
 }
@@ -1706,46 +2194,6 @@ function Hub() {
           an EDGE the material stops at, not as a hairline drawn near one. */}
       <path d={polygonPath(R_HUB)} fill="none" stroke="var(--pda-hair2)" strokeWidth="2" />
     </>
-  );
-}
-
-/**
- * THE SEATED STREAM — ADR-069's persistent object, at its third home.
- *
- * ⚠ **THE DOCK GROUP HOLDS THE CARD ALONE.** `transform-box: fill-box` measures
- * the flight's origin against this group's own bbox, so anything else reaching
- * past the card's rect moves where the object appears to come from. This is
- * `PdaConfiguration`'s own constraint, one home over.
- *
- * ⚠ **`sel` IS SET.** The lit cut edges are how a cartridge says "this is the
- * record you have open", and the reader arrived here from opening it.
- */
-function SeatedWork({ work, still, entry }: { work: PdaWork; still: boolean; entry: PdaEntry }) {
-  return (
-    <g
-      className={entry.kind === "flight" ? "fl-pda-dock" : still ? undefined : "fl-pda-bloom"}
-      style={
-        entry.kind === "flight"
-          ? ({
-              "--dx": `${entry.dx}px`,
-              "--dy": `${entry.dy}px`,
-              "--dk": entry.dk,
-            } as React.CSSProperties)
-          : undefined
-      }
-      aria-label={`${work.title}, the stream this reading was opened from`}
-    >
-      <Cartridge
-        x={CARRIER_SEAT_RECT.x}
-        y={CARRIER_SEAT_RECT.y}
-        w={CARRIER_SEAT_RECT.w}
-        h={CARRIER_SEAT_RECT.h}
-        state={work.configured ? "cfg" : "led"}
-        work={work}
-        k={HUB_K}
-        sel
-      />
-    </g>
   );
 }
 

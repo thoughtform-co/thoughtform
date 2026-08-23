@@ -52,6 +52,14 @@ export interface FlightVars {
   dx: number;
   dy: number;
   dk: number;
+  /**
+   * The starting rotation in degrees, relative to the destination's base
+   * orientation (ADR-071). Optional so the work-card flight (1↔2) stays
+   * byte-identical — no `dr` var, CSS falls back to `0deg`. The skill chip's
+   * flight (2↔3) passes a non-zero value so the chip visibly rotates during
+   * the transition, ending unrotated when it lands.
+   */
+  dr?: number;
 }
 
 /**
@@ -66,7 +74,30 @@ export interface FlightVars {
  * the plain raster is the cheap, correct answer.
  */
 export const PDA_FLIGHT_MS = 420;
-export const PDA_FLIGHT_GUARD_MS = 450;
+
+/**
+ * THE MORPH'S OWN CLOCK (ADR-071 U1) — the skill chip's shape morph runs
+ * LONGER than the utility dock, deliberately.
+ *
+ * ⚠ **420ms ON THE DOCK'S CURVE MADE THE MORPH INVISIBLE, MEASURED.** The
+ * dock's `cubic-bezier(0.22, 0.9, 0.3, 1)` is built for the work card — an
+ * object that must feel snappy because it is the same drawing at both ends.
+ * Sampled live, that curve put the chip's path 87 % of the way home inside
+ * the first 100ms: the one gesture whose whole point is a VISIBLE shape
+ * change played out in under seven frames, and the owner read it as nothing
+ * happening followed by a fade. The morph takes 620ms on an ease-in-out
+ * (`pda.css`), so the rectangle-becoming-a-wedge is on screen through the
+ * middle of the travel instead of being spent before the eye arrives.
+ *
+ * ⚠ THE DURATION IS DUPLICATED IN `pda.css` (`flPdaChipMorph` +
+ * `.fl-pda-chip-*`'s delays) and the two must move together.
+ */
+export const PDA_MORPH_MS = 620;
+
+/** ⚠ Must outlast the LONGEST arrival gesture — the morph now, not the
+ *  dock. An interrupt landing inside either animation computes its start
+ *  pose from a rect the object has not reached. */
+export const PDA_FLIGHT_GUARD_MS = 650;
 
 /** An SVG `viewBox` string as its four numbers. */
 export function cropOf(viewBox: string): FlightRect {

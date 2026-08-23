@@ -3686,3 +3686,290 @@ failure mode this ADR has recorded twice already (`pda-flight`'s static
 - **`SUBSTRATE_SECTION` is a comparison lever, not a permanent seam.** When the
   owner has read both on the live site, the losing drawing and its guards should
   go; leaving a flag in place is how a surface ends up maintaining two.
+
+---
+
+## Update 34 — the dodecagon is the HOUSING; the division inside it is concentric (2026-08-23, owner)
+
+The owner's finishing pass on reading 03. He is ready to move on from the
+direction given three fixes, and he named the cause of two of them himself:
+
+> _"some text in some of the fields (eg Localization or Quality) fall outside
+> their fields … the fact that stakeholder and patterns don't have a background
+> like the rest do is also weird … the fact I didn't want a traditional,
+> circular pie shape is kinda fucking me because it's intersecting weirdly with
+> the text inside."_
+
+### The spill was geometric, systematic, and invisible to every guard
+
+Every ring on this plate was a twelve-sided polygon (`ringArc` →
+`polygonRayPoint`); every label rode a **circle** (`carrierCellArcPath` emits a
+single `A` at a concentric radius). A dodecagon's radius dips to `κ·R` — 96.59 %
+— at each of its twelve edge midpoints, which at `R_OUT` is **13.1 units**. The
+wall swung inward and the label did not follow.
+
+**Nineteen of the forty-seven labels' ink crossed their cell's outer wall:**
+
+| cell                        | past the wall |
+| --------------------------- | ------------- |
+| `stakeholder / Feedback`    | −5.0u         |
+| `validation / Supplier QA`  | −3.3u         |
+| `validation / Localization` | −3.3u         |
+| `stakeholder / Survey`      | −3.1u         |
+| `voice / Founder TOV`       | −2.9u         |
+| 14 more                     | −0.2u … −1.7u |
+
+⚠ **AND EVERY GUARD REPORTED 7–12 UNITS OF AIR ON BOTH SIDES.**
+`substrate-lab-fit`'s clearance test measured `cell.r0` / `cell.r1` — the
+NOMINAL partition radii — which are the wall only at the twelve vertices. This
+is ADR-069 U1's finding one level down and in a new place: **the guard measured
+a model of the drawing rather than the drawing.** U32's own ink-centring
+correction is real and is 3.5 units; this was up to 13.1, in the same direction,
+on the same labels, and it is what the owner was actually looking at.
+
+### The ruling
+
+ADR-065's law, one level up: **the housing carries the machined geometry and the
+things seated inside it do not repeat it.** So the dodecagon stays where it is
+read as a shape, and the division inside it becomes concentric.
+
+| ring                                 | before          | after           |
+| ------------------------------------ | --------------- | --------------- |
+| plate silhouette (`R_OUT`)           | 12-sided        | 12-sided        |
+| hub (`R_HUB`)                        | 12-sided        | 12-sided        |
+| band's inner ring (`R_CELL`)         | 12-sided        | 12-sided        |
+| outermost cells' outer edge          | 12-sided, flush | 12-sided, flush |
+| **4 internal course seams per part** | 12-sided        | **concentric**  |
+
+⚠ **THE SEAMS ARE SAMPLED POLYLINES AND MAY NEVER BECOME `A` COMMANDS.**
+ADR-071's arrival morph interpolates the CSS `d` property between the config
+chip's rectangle and `cell.d`, which needs ONE command structure on both ends —
+`pda-flight` pins it, and a mismatch does not error, it snaps discrete with
+nothing on screen to say why. `circleRing` samples at `SEAM_STEP` 3°, whose
+chord sagitta is 0.10 units at r 300 — a sixteenth of a device pixel.
+
+### One rule, and the asymmetry IS the finding
+
+- a **circular** wall is exact — use `r`;
+- a **polygonal INNER** wall is worst at its circumradius — use `r`;
+- a **polygonal OUTER** wall is worst at its **apothem** — use `κ·r`.
+
+`CarrierCell.outerWall` carries the third case (`R_APOTHEM` on the rim, `r1`
+everywhere else) and `carrierCellArcRadius` centres on `[r0, outerWall]`. The
+field exists because its absence is the defect.
+
+⚠ **THE APOTHEM IS ALL BUT EXACT HERE, NOT CONSERVATIVE** — every outermost cell
+comes within **0.081 units** of that wall inside its own sweep. ⚠ The sweep's
+width is not a proof of this, and the first cut of the guard used one: a rim
+cell narrower than the 30° facet pitch may still straddle an edge midpoint, so
+`>= 30°` fails on `pattern`'s four 25.9° rim cells that clear it anyway. The
+property is sampled. The threshold has teeth because the miss grows fast —
+`R_OUT·(1/cos(15° − w/2) − 1)` is 0.25u at `w` 25.9° but **5.9u at `w` 10°**.
+
+### The partition re-solves for the walls that bound it
+
+`carrierPolygonShare(a0, a1)` is `√(P / C)` — the dodecagon's unit sector area
+over the circle's. It measures **0.9758–0.9779**, and the cumulative-area solve
+is exactly the old expression scaled by it. Part totals are unchanged, so the
+equal-area claim still holds at part level by construction. `sectorTerm`
+integrates each wall with its own constant, because a polygonal wall and a
+circular one enclose different area at the same radius.
+
+⚠ **A SEAM IS SHARED, SO IT CANNOT BE SOLVED PER CELL** — recorded because it is
+the obvious next idea and it does not close. Zeroing the residue would mean
+solving each polygon-bounded cell's FREE boundary, which is the neighbouring
+course's wall; the two courses hold different cell counts, so their cells do not
+align angularly and the correction cascades with a `COURSE_GAP` that then varies
+by up to a unit. Measured trade: **0.42 % spread for 1.06u of seam wobble** —
+0.67 device px of ragged seam bought with a sub-pixel gain in a clearance.
+Rejected; the drawing stays perfectly regular.
+
+⚠ **SO THE AREA GUARD PINS THE STRUCTURE, NOT AN ENVELOPE.** The blanket
+tolerance goes 4 % → 4.5 % (measured 3.97 %, previously ~3.4 %) and a second
+assertion carries the weight: cells bounded by two concentric seams are held to
+**1 %** and the two housing-bounded courses to **2.5 %**. The residue is where
+it has always been — the rim's own modulation — but it used to appear at BOTH
+walls of every cell, where it partly cancelled in `r1² − r0²`, and now appears
+at one wall of two courses. Measured worst: `pattern`'s four rim cells at
+**+1.6 / −2.3 %** of the mean, a 25.9° cell against a 30° facet pitch.
+
+### Two constants moved, and the ladder did not
+
+| constant         | before | after  | why                                                                                                                                                                                                                                                                                            |
+| ---------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LABEL_PAD`      | 12     | **10** | boundaries pull in by `polygonShare`, taking `validation`'s second course from a 128.9-unit inner arc to 125.9 against a 128.8 target. The pad is a floor the LADDER solves against, never the air the drawing ends up with — this ADR's third time saying so.                                 |
+| `MIN_CELL_DEPTH` | 26     | **23** | the last course's depth ends at the apothem now, 13.1 units less than the `R_OUT − r0` the floor used to be handed. `stakeholder`'s outermost course measures 24.5 there, and its only alternative composition (`1,1,1,2`) puts a two-cell course on a 101-unit arc against a 112-unit target. |
+
+Resulting ladders — `pattern 2,2,3,3,4` · `judgment 2,2,2,3,3` ·
+`validation 1,2,2,2,2` · `voice 1,1,1,2,2` · `stakeholder 1,1,1,1,1` —
+**byte-identical to what shipped.** The plate does not re-cut; the labels move
+inside it.
+
+### The band was never missing a background — it never had one
+
+Pattern and Stakeholder are the two regions the open stream does **not** draw
+on. `W-017 Campaign copy` carries `shapes: ["judgment","voice","validation"]`
+and `TapWash` filled exactly those three at gold α.14. ⚠ **The band was the only
+region on this plate with no material of its own** — the hub has void + veil +
+grain, the cells their physics field — so a signal with no ground under it read
+as a rendering fault. One recess wash on all five, and the tapped three read as
+LIT on top of it.
+
+⚠ **0.10, AND THE FIRST CUT AT 0.03 WAS A FIX THAT CHANGED NOTHING.** A wash is
+judged against what it lands on, not against a neighbouring number. Measured:
+
+|                     | before                  | at α 0.03               | at α 0.10               |
+| ------------------- | ----------------------- | ----------------------- | ----------------------- |
+| untapped band, dark | `rgb(11,10,9)` L 0.0031 | `rgb(11,10,9)` L 0.0031 | `rgb(27,25,23)` L 0.010 |
+| tapped band, dark   | `rgb(45,37,20)` L 0.019 | L 0.019                 | `rgb(57,48,30)` L 0.031 |
+
+At 0.03 the band sat inside a value of the plate ground it was supposed to be
+distinguishable from, against a **6× luminance ratio** on the tapped three — the
+reading the owner objected to was completely intact. At 0.10 it lands a hair
+under the hub's own `rgb(35,28,14)`, so the core and the recess read as one
+middle zone with the cells dark around them.
+
+⚠ **FLAT, NOT GRAINED, AND THE DISTINCTION IS THE OBJECT.** The hub's own note
+says a flat fill among fields reads as a hole plugged with paint — and answered
+it with a grain, because the hub is the plate's CORE. This is a machined RECESS
+between two rings, and a recess is a cut face.
+
+⚠ **IT DARKENS IN LIGHT AND THAT IS THE POINT.** ADR-058 swaps `--dawn-rgb` with
+`--void-rgb`, so one rule is a step AWAY from the ground in both themes — up out
+of the void, down into the parchment.
+
+### The guards, both halves
+
+⚠ **THE REASON THIS SHIPPED IS THAT NO GUARD MEASURED THE DRAWN WALL.**
+
+- **Arithmetic** (`substrate-lab-fit`): the clearance test samples each cell's
+  own sweep at the radius the renderer paints — `polygonRayRadius` where the
+  wall is the housing, the plain radius where it is a seam. U32's SYMMETRY
+  question is kept (it was the right question asked of the wrong walls) and the
+  `>5u` floor with it. A new case pins `outerWall` from BOTH ends: `κ·R_OUT` on
+  the rim, `=== r1` on every concentric seam — collapsing them either way puts
+  the outermost labels back through the edge or floats every other label off its
+  own centre.
+- **Live** (`services-ring-smoke`): the arc walk already collected per-glyph
+  origins for pairwise overlap; it now also probes the ink's two extremes along
+  the up-vector and asserts `isPointInFill` on the cell's own path. ⚠ Two labels
+  not printing through EACH OTHER and a label not printing through its own CELL
+  EDGE are different questions, and the second had no guard at all.
+  ⚠ **THE INK BLOCK IS ASYMMETRIC ABOUT THE BASELINE** — ascender 0.769em above,
+  descender 0.231em below — and swapping them reports every tight cell as a
+  spill; the first cut of this probe named `Tracker Check` twelve times on a
+  drawing with 5.5u of clearance.
+
+### Verification
+
+- 378 unit assertions pass across `substrate-lab-fit` · `pda-flight` ·
+  `pda-viewbox` · `pda-card` · `cases-registry`.
+- `capture-substrate-lab --v carrier`: GATES PASSED, 4 samples, 0 collisions /
+  0 clipped / 0 overflow, minPx 8.2 (p1280) and 12.7 (p1920), both themes.
+- `services-ring-smoke`: 21 desktop cases pass.
+- **Live containment, in the browser's own hit geometry on the shipped module:
+  0 spills over 479 glyph positions**, minimum air 5.5u inner (`Tracker Check`)
+  / 6.0u outer (`PRG Status`) — matching the unit guard's 5.4 / 5.8 to within
+  the probe step.
+- ⚠ **The live probe is calibrated, not merely green.** Walking a synthetic
+  displacement along the up-vector: 0 spills at +0, +3 and +5 → **1 at +6**
+  (`PRG Status`, the measured 6.0u worst) → 3 at +7 → 27 at +12. It fires the
+  moment a spill exists, with no dead zone.
+- Landing captured at **1920×1247**, the owner's own shape (field 850×927, meet
+  0.912, minPx 10.94, 0 clipped): every label inside its cell, all five band
+  segments reading as one ring with the open stream's two lit.
+
+### Left open
+
+- **U32's density question stands unchanged** — 8.2px at 1280×720 is still the
+  ceiling this form supports with all 47 Skills lettered.
+- ⚠ **THE TAP'S SIGNAL IS WEAK IN LIGHT, AND IT IS PRE-EXISTING.** Measured on
+  parchment the lit band reads L 0.561 against the recess's 0.578 — a 3 %
+  luminance difference; the signal is carried by HUE (blue 170 against 183) and
+  by the label going `--pda-hot`. This is ADR-063 U2's own finding — a saturated
+  gold is inherently high-luminance and cannot signal by value against a light
+  ground — and the honest fix is the ramp's INK rung, not a bigger alpha. Named
+  here rather than quietly widened, and it is not a regression: the same 3 % gap
+  existed before this pass, against raw parchment instead of a defined recess.
+
+---
+
+## Update 35 — the flag and the losing drawing are retired (2026-08-23, owner)
+
+_"ok integrate in homepage."_ The carrier had been the homepage's reading 03
+since U33, but it reached the page through `SUBSTRATE_SECTION` with U25's
+SECTION drawing still on disk as the one-constant alternative. U33's own Left
+open said what to do about that — **"leaving a flag in place is how a surface
+ends up maintaining two"** — and the owner has now read both live.
+
+### What went
+
+|                                       |                                                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `map/pda/flags.ts`                    | deleted — the whole file was this one constant                                                                                             |
+| `map/pda/PdaSubstrate.tsx`            | deleted (855 lines: the SECTION drawing, `substrateLayout` / `substrateExt` / `SUB_FIT`, `substrateLettering`, `estateFootprint`'s caller) |
+| `tests/lib/pda-substrate-fit.test.ts` | deleted — 24 assertions, all of them about the deleted drawing                                                                             |
+| `PdaConsole`                          | 6 branches → straight line; `section3` gone, `crop3` is `carrier3.crop`                                                                    |
+| `pda-flight` / `pda-viewbox`          | 12 branches → straight line                                                                                                                |
+| the lab's `shipped` variant           | deleted — see below                                                                                                                        |
+
+Git history is the archive; the drawing is one `git show` away and its ADR
+(U25) is unchanged above.
+
+### What stayed, and one of them nearly did not
+
+⚠ **`estateBand.tsx` STAYS.** It looks like SECTION's private helper — SECTION
+was its only production consumer — but `VariantManifold` imports
+`ESTATE_CELL_W/H` and `estateSlots` from it, and Manifold is the surviving
+round-nine alternative that U25 explicitly kept. Deleting the drawing's helper
+along with the drawing would have taken a live lab variant with it, silently,
+because nothing in the production tree points at either. **A file's consumers
+are not always in the tree you are cleaning.**
+
+`pdaFit.ts` stays whole — `fitExt` / `cropAround` / `FitSpec` are shared with
+readings 01 and 02. Only `SUB_FIT`, which was declared inside `PdaSubstrate`,
+went.
+
+### The lab's baseline is now a variant like any other
+
+`shipped` was an entry OUTSIDE the `DRAWINGS` record — a `drawing === null`
+branch mounting production's `ViewSubstrate` with bespoke props, plus its own
+`liveLayout`, because the shipped drawing was not an `IslVariantProps` drawing.
+`VariantCarrier` already re-exports the production module wholesale, so the
+escape hatch had nothing left to reach:
+
+- `IslVariantId` loses `"shipped"`; `DRAWINGS` is `Record<IslVariantId, …>`
+  again rather than `Record<Exclude<IslVariantId, "shipped">, …>`, so the
+  compiler is the guard for every id with no carve-out.
+- The shell's default variant is `carrier`.
+- ⚠ `capture-substrate-lab.mjs`'s default `--v` list said `shipped`; it says
+  `carrier`. **The rest of that list is still round one's, which stays a known
+  hole** — every direction added since is ungated unless named. The durable fix
+  is defaulting to `ISL_VARIANTS`, which is a ~38 × 2 × 2 sweep and its own
+  pass.
+
+### And `VIEW_BOX[3]` stopped lying
+
+`PdaViews`' shared crop record carried `SUBSTRATE_VIEWBOX` throughout U33 —
+SECTION's crop, for a reading the landing page did not mount. `pda-viewbox`
+worked around it by resolving reading 03 at its own boundary and said so in a
+comment. Both are gone: the record carries `CARRIER_VIEWBOX` and the guard
+reads it straight, so the shared constant and the guard cannot drift apart
+again.
+
+### Verification
+
+- **941 unit assertions** across 48 files (was 965/49 — the 24 that left are
+  `pda-substrate-fit`'s, all about the deleted drawing). `npm run verify`
+  exit 0.
+- `capture-substrate-lab --v carrier,manifold`: GATES PASSED, 8 samples, 0
+  collisions / 0 clipped / 0 overflow, both themes, both presets. ⚠ `manifold`
+  is in that run deliberately — it is the variant that shares `estateBand`, and
+  a gate that skipped it would not have caught the deletion above.
+- `services-ring-smoke`: 21 desktop cases.
+- The lab loads on its new default with 47 cells and 56 lettered strings, no
+  `Shipped` control, every other direction intact.
+- The landing re-captured at 1920×1247: field 850×927, meet 0.912, minPx 10.94,
+  0 clipped — byte-identical readings to the pre-retirement capture, which is
+  the point: **the homepage did not change, only what it is possible for the
+  homepage to be.**

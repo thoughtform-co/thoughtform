@@ -23,13 +23,6 @@ import {
   polygonRayRadius,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaCarrier";
 import {
-  SUBSTRATE_LAYOUT_0,
-  SUBSTRATE_VIEWBOX,
-  substrateExt,
-  substrateLayout,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaSubstrate";
-import { SUBSTRATE_SECTION } from "@/components/landing/home-v2/services/casefile/map/pda/flags";
-import {
   PDA_SHOWN,
   type PdaWork,
   toPdaWork,
@@ -58,17 +51,17 @@ import { getCase } from "@/lib/cases/registry";
 const FS_FLOOR = 12;
 
 /**
- * ⚠ **READING 03'S RESTING CROP FOLLOWS `SUBSTRATE_SECTION`** (ADR-070 U33).
- * `VIEW_BOX[3]` is still SECTION's, and SECTION is behind the flag — so reading
- * it here would measure a drawing the landing page does not mount. The shared
- * record is left alone deliberately: its only other consumer is the config lab,
- * and a flag reaching into a production constant is harder to see than one
- * resolved at the guard's own boundary.
+ * The resting crops. ⚠ **`VIEW_BOX[3]` IS THE CARRIER'S NOW** (ADR-070 U34) —
+ * it used to be SECTION's while that drawing sat behind `SUBSTRATE_SECTION`, so
+ * this record resolved reading 03 at the guard's own boundary rather than
+ * trusting the shared constant. Both the flag and SECTION are retired; the
+ * shared record and this one agree again, and `CARRIER_VIEWBOX` is asserted
+ * below to be exactly what `VIEW_BOX[3]` carries so they cannot drift apart.
  */
 const REST: Record<1 | 2 | 3, string> = {
   1: VIEW_BOX[1],
   2: VIEW_BOX[2],
-  3: SUBSTRATE_SECTION ? SUBSTRATE_VIEWBOX : CARRIER_VIEWBOX,
+  3: CARRIER_VIEWBOX,
 };
 
 function box(v: 1 | 2 | 3) {
@@ -94,10 +87,12 @@ function mapVisual() {
 function allWorks(): PdaWork[] {
   const visual = mapVisual();
   const districts: readonly CaseMapDistrict[] = visual.districts;
+  const skills = visual.skills;
   return visual.works.map((w: CaseMapWork) =>
     toPdaWork(
       w,
-      districts.find((d) => d.id === w.dist)
+      districts.find((d) => d.id === w.dist),
+      skills
     )
   );
 }
@@ -134,14 +129,12 @@ describe("the readings' crops", () => {
        26 from every wall (`26 / 26 / 906 / 26 + boxH`), the five pattern cards'
        row before that, the pin grid's `26 / 26 / 906 / 656`, and the crossing
        drawing's `10 / 93 / 766 / 702` before that again. */
-    3: SUBSTRATE_SECTION
-      ? { x: 26, y: 26, right: 906, bottom: 26 + SUBSTRATE_LAYOUT_0.boxH }
-      : {
-          x: CARRIER_CX - polygonRayRadius(0, CARRIER_R_OUT),
-          y: CARRIER_CY - polygonRayRadius(90, CARRIER_R_OUT),
-          right: CARRIER_CX + polygonRayRadius(180, CARRIER_R_OUT),
-          bottom: CARRIER_CY + polygonRayRadius(270, CARRIER_R_OUT),
-        },
+    3: {
+      x: CARRIER_CX - polygonRayRadius(0, CARRIER_R_OUT),
+      y: CARRIER_CY - polygonRayRadius(90, CARRIER_R_OUT),
+      right: CARRIER_CX + polygonRayRadius(180, CARRIER_R_OUT),
+      bottom: CARRIER_CY + polygonRayRadius(270, CARRIER_R_OUT),
+    },
   } as const;
 
   for (const v of [1, 2, 3] as const) {
@@ -404,9 +397,8 @@ describe("every reading fills the panel it is given", () => {
          so passing `a` straight through here is what production does — deriving
          the crop from `carrierCrop` directly would test the arithmetic while
          skipping the one place an inverted aspect could hide. */
-      v: SUBSTRATE_SECTION ? "03 the substrate" : "03 the carrier",
-      at: (a: number) =>
-        SUBSTRATE_SECTION ? substrateLayout(substrateExt(a)).crop : carrierPlate(a).crop,
+      v: "03 the carrier",
+      at: (a: number) => carrierPlate(a).crop,
       rest: REST[3],
     },
   ] as const;
