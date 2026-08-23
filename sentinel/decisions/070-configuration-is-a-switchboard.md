@@ -3973,3 +3973,146 @@ again.
   0 clipped — byte-identical readings to the pre-retirement capture, which is
   the point: **the homepage did not change, only what it is possible for the
   homepage to be.**
+
+---
+
+## Update 36 — the hub answers for a substrate, not just for a Skill (2026-08-23, owner)
+
+_"maybe when you click on for example pattern or voice the center shows what it
+means."_
+
+### The content was already there, and it lettered nowhere
+
+`CaseMapShape.meaning` is the map's only prose — one sentence per shape, ≤96
+characters, the single field the projection does not uppercase. U23 lettered it
+on the divided plate; U25 carried it in a stratum head; the carrier had no room
+for a paragraph anywhere on a dial of 47 arc labels. So a required,
+envelope-scanned content field survived two redraws **as content the drawing
+held and never said**, while the hub explained the reading in general terms.
+
+The hub is where it fits, because the hub is the one region on this plate sized
+for reading rather than scanning.
+
+### What the band does now
+
+Each of the five band segments is a `.fl-pda-hit` group shaped exactly like a
+cell's — one transparent path over the recess, one `textPath` label. Clicking
+one pins it; the hub prints the shape's NAME and its sentence.
+
+- ⚠ **THE WHOLE SEGMENT IS THE TARGET, NOT THE WORD.** A `textPath` run is a
+  thin ribbon on a curve, so hit-testing the glyphs would give the reader an
+  eleven-character target bent around a corner. The recess is the object the
+  name belongs to and it is 36 units deep for its whole sweep.
+- ⚠ **`fill="transparent"`, NEVER `none`** — SVG events fire on
+  `visiblePainted` and `none` reports no paint. Same trap ADR-069 recorded when
+  three person-led cells stopped being clickable.
+- **Pinning is mutually exclusive with a pinned cell, enforced at both
+  setters.** One hub displays one thing; two independent pins would make the
+  priority order in `Aperture` a silent tiebreak the reader can neither see nor
+  undo. `litKey` follows a pinned shape, so clicking a name also lights that
+  region's cells and dims the rest — the connection between the word and the
+  material, for free.
+
+### The count row came back, and a guard from the owner's own ruling killed it
+
+The first cut put `14 SKILLS` between the title and the sentence, on the pinned
+Skill readout's chrome rung. `substrate-lab-fit` failed it:
+**"the nameplate's count row came back."**
+
+That assertion exists because U28 removed exactly this row on the owner's
+instruction — _"just give a brief explanation, just one text. Don't talk about
+47 encoded skills"_ — and its comment names the failure mode precisely:
+**every future pass that wants to say how much reaches for a digit first.**
+This drawing counts by AREA. The guard caught the author of this update doing
+it, which is the whole reason it was written as a guard rather than a note.
+
+The count survives in the `aria-label` alone, where it is the accessible
+equivalent of an area a screen reader cannot perceive.
+
+### `SHAPE_PER` is 27, and it is the hub's geometry talking
+
+The block carries a 17-unit title the brief does not, so it is ~37 units taller.
+A dodecagon punishes height and width **together**: its worst edge normal sits
+at 30°, where clearance is `apothem − 0.866·halfWidth − 0.5·halfHeight` — so a
+wide block loses 0.866 of every unit it gains and a tall one only 0.5.
+
+At the brief's 30 characters `pattern` cleared its wall by **17.7 units** —
+inside the pinned-Skill threshold of 16, but by 1.7, and a guard sitting on its
+value is one this ADR has retired three times. At 27 every meaning keeps its
+line count and the worst corner clears by **35.2**. Squarer beats wider in a
+round well, and it cost one wrap constant.
+
+The guard is set at **24** — the brief's own standard, not the pinned Skill's 16.
+
+### The focus ring was painting a rectangle around a wedge
+
+⚠ **`outline` ON AN SVG GROUP IS DRAWN AROUND ITS BBOX**, and nothing on this
+plate is a rectangle. A band segment's box measures **151 × 86** around a shape
+filling maybe half of it, so Chromium's UA ring landed squarely on the
+neighbouring cells and read as a stray white rectangle. It was doing this on the
+47 cells already; a wedge four times the area is what made it visible.
+
+⚠ **AND IT PAINTS ON A MOUSE CLICK.** Chromium exempts natively-clickable
+controls from the ring after a pointer press; a `<g tabindex="0">` is not one.
+
+⚠ **THE REPLACEMENT KEYS ON `:focus`, NOT `:focus-visible`.** Measured on the
+live landing: `element.matches(':focus-visible')` returned **false on the very
+group the UA was painting its ring around**. The pseudo-class is not reliable
+for SVG groups in this engine, and suppressing the UA outline while gating the
+replacement on an unreliable selector is how a keyboard user ends up with no
+focus indicator at all. `.fl-pda-hit` now clears `outline` in every state and
+strokes its FIRST path — the transparent hit shape — so the indicator traces the
+target exactly. Fixes the cells too.
+
+### Guards
+
+- `carrierShapeFits` — per shape: the wrap is WHOLE (⚠ `wrapLines` SLICES at
+  its cap and the tail vanishes from the drawing AND from the lettering
+  declaration, so every per-line measure still passes — U20's finding on
+  `gate`), every line inside `BRIEF_MEASURE`, and the block clears the hub's
+  twelve edges by >24.
+- The lettering declares `shape.{key}.title` and `shape.{key}.meaning.{i}`, so
+  the fit walk sees them. ⚠ The band's name is declared twice on purpose — once
+  as the arc label at `BAND_FS`, again at the hub's rung — because they are two
+  strings on two measures and a guard walking one is blind to the other.
+- ⚠ **The sentence is asserted to be the RECORD's**, not a copy authored in the
+  component: `meaning` is scanned by `cases-registry` for the confidentiality
+  envelope, and a drawing that paraphrased it into its own constant would put
+  client prose on the public page outside every content scanner — precisely how
+  `8 TEAMS` shipped (U15).
+- ⚠ **The smoke's containment walk now covers the five band labels for free**,
+  because a band group has a cell group's exact shape. Nothing checked whether
+  a substrate name sat inside its own segment before.
+
+### The name is said twice, and this surface normally bans that
+
+A console head, a foot title and a designator were all deleted for exactly that
+(ADR-063 U1, ADR-070 U8). The precedent that licenses it is one level down on
+this same drawing: a pinned CELL letters its Skill's name in the hub while the
+arc under the pointer letters it too. The band paints at ~8px and the hub at 17
+— **a pinned readout MAGNIFIES what was clicked, which is how a reader knows the
+click landed.** Restating a label the reader did not choose is the defect;
+confirming the one they did is the affordance.
+
+### Verification
+
+- 942 unit assertions across 48 files; `npm run verify` exit 0.
+- `capture-substrate-lab --v carrier`: GATES PASSED, 4 samples, both themes.
+  ⚠ **The resting text count is unchanged at 56** — the readout exists only on
+  click, so the drawing at rest is byte-identical.
+- `services-ring-smoke`: 21 desktop cases. Live containment: **0 spills over 520
+  glyph positions in 52 groups**, 41 of them the band labels now covered.
+- All five shapes walked live: 3–4 lines each, hub clearance 27.7–41.9 measured;
+  toggle-off returns the brief; clicking a cell releases a pinned shape and vice
+  versa; `aria-pressed` tracks both.
+- **Driven with a REAL mouse click on the real landing**, through the corridor's
+  pointer-events maze, at 1920×1247 — the hub swaps from the brief to VOICE's
+  meaning and the wedge outlines itself in gold.
+
+### Left open
+
+- `CaseMapShape.evalMethod` — what "good" is checked against — still letters
+  nowhere on this console. It is the field that makes a substrate inheritable
+  and it is the obvious third rung for this readout, but the owner asked for
+  what a shape MEANS and adding a second answer to a two-line block is how a
+  readout becomes a table. Named so the next pass decides it deliberately.

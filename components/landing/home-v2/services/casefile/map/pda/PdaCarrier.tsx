@@ -1028,6 +1028,20 @@ export interface CarrierCell {
 export interface CarrierGroup {
   key: CaseMapShapeKey;
   name: string;
+  /**
+   * WHAT THE SHAPE MEANS, AS A SENTENCE — `CaseMapShape.meaning`, the record's
+   * only prose and the one field its projection does not uppercase.
+   *
+   * ⚠ **IT LETTERED NOWHERE ON THIS CONSOLE UNTIL THE HUB LEARNED TO ANSWER**
+   * (owner, 2026-08-23: _"maybe when you click on for example pattern or voice
+   * the center shows what it means"_). U23 put it on the divided plate, U25's
+   * SECTION carried it in a stratum head, and the carrier had no room for a
+   * paragraph anywhere on its dial — so the field survived two redraws as
+   * content the drawing held and never said. The hub is where it fits, because
+   * the hub is the one region on this plate sized for reading rather than
+   * scanning.
+   */
+  meaning: string;
   skills: readonly CaseSkillEntry[];
   a0: number;
   a1: number;
@@ -1216,6 +1230,7 @@ export function carrierLayout(record: CarrierRecord): {
     groups.push({
       key,
       name: shapes.get(key)?.name ?? key.toUpperCase(),
+      meaning: shapes.get(key)?.meaning ?? "",
       skills: mine,
       a0: groupA0,
       a1: groupA1,
@@ -1274,6 +1289,22 @@ const BRIEF_MAX = 6;
  */
 const BRIEF_MEASURE = 248;
 const BRIEF_LINE_H = 19;
+/** Title baseline below the block's top — the pinned SKILL readout's own rung,
+ *  so the two hub states sit on one ladder rather than two. */
+const SHAPE_TITLE_DROP = 22;
+/**
+ * The sentence's first baseline.
+ *
+ * ⚠ **THERE IS NO COUNT ROW BETWEEN THEM, AND A GUARD IS WHY.** The first cut
+ * of this readout put `14 SKILLS` here, on the pinned SKILL readout's chrome
+ * rung — and `substrate-lab-fit` failed it with _"the nameplate's count row came
+ * back"_. That assertion exists because U28 removed exactly this row on the
+ * owner's ruling (_"just give a brief explanation… don't talk about 47 encoded
+ * skills"_), and its comment names the failure mode precisely: **every future
+ * pass that wants to say how much reaches for a digit first.** This drawing
+ * counts by AREA. The guard caught the author of this line doing it.
+ */
+const SHAPE_BODY_DROP = 22 + 30;
 /**
  * ⚠ BASELINE-CENTRED TEXT SITS HIGH. A line's ink is mostly ABOVE its baseline,
  * so centring the BASELINES on `CY` centres the wrong thing. Three units down is
@@ -1348,6 +1379,68 @@ export const carrierCellAreas = (record: CarrierRecord): number[] =>
 
 /** The brief, wrapped exactly as the drawing wraps it. */
 export const carrierBriefLines = (): string[] => wrapLines(BRIEF, BRIEF_PER, BRIEF_MAX);
+
+/**
+ * ⚠ **THE SHAPE'S SENTENCE WRAPS AT THE BRIEF'S OWN MEASURE, AND `SHAPE_MAX`
+ * IS DELIBERATELY LOOSE.** `wrapLines` SLICES past its cap — quietly, with the
+ * tail vanishing from the drawing AND from the lettering declaration, so every
+ * per-line assertion still passes (ADR-070 U20's own finding, on `gate`). The
+ * longest `meaning` on the record is 92 characters and wraps to four lines at
+ * `BRIEF_PER`; the cap is five so the slice cannot bite, and
+ * `carrierShapeFits` asserts the wrap is WHOLE rather than trusting it.
+ */
+const SHAPE_MAX = 5;
+
+/**
+ * ⚠ **NARROWER THAN THE BRIEF'S 30, AND THE REASON IS THE HUB'S SHAPE.** This
+ * block carries a 17-unit title the brief does not, so it is ~37 units taller —
+ * and a dodecagon punishes height and width TOGETHER. Its worst edge normal
+ * sits at 30°, where the clearance is
+ * `apothem − 0.866·halfWidth − 0.5·halfHeight`: a wide block loses 0.866 of
+ * every unit it gains. At the brief's 30 characters `pattern` clears its wall by
+ * **17.7 units**; at 27 the run is one character shorter per line, the block
+ * stays four lines, and the same corner clears by **35.2**. Squarer beats wider
+ * in a round well, and it cost nothing but a wrap constant.
+ */
+const SHAPE_PER = 27;
+
+export const carrierShapeLines = (meaning: string): string[] =>
+  wrapLines(meaning, SHAPE_PER, SHAPE_MAX);
+
+export interface CarrierShapeFit {
+  key: string;
+  /** Clear distance from the block's worst corner to the hub's twelve-sided wall. */
+  wall: number;
+  /** The widest line's slack against `BRIEF_MEASURE`. */
+  slack: number;
+  /** Every word the record's sentence declares survived the wrap. */
+  whole: boolean;
+}
+
+/**
+ * The pinned SHAPE block against the hub, one entry per part.
+ *
+ * ⚠ Same measurement as `carrierPinnedFits` and for the same reason: the hub is
+ * a DODECAGON, so a block is inside it only if it clears every one of twelve
+ * edges, and backing a half-diagonal off one ray radius reads the wall at one
+ * angle while a different corner collides.
+ */
+export function carrierShapeFits(record: CarrierRecord): CarrierShapeFit[] {
+  return carrierLayout(record).groups.map((group) => {
+    const lines = carrierShapeLines(group.meaning);
+    const height = SHAPE_BODY_DROP + (lines.length - 1) * BRIEF_LINE_H + 4;
+    const widest = Math.max(
+      group.name.length * adv(17, 0.04),
+      ...lines.map((l) => l.length * adv(BRIEF_FS, BRIEF_TRACK))
+    );
+    return {
+      key: group.key,
+      wall: boxClearance(0, widest / 2, height / 2, R_HUB),
+      slack: BRIEF_MEASURE - Math.max(...lines.map((l) => l.length * adv(BRIEF_FS, BRIEF_TRACK))),
+      whole: lines.join(" ") === group.meaning,
+    };
+  });
+}
 
 export interface CarrierPinnedFit {
   /** The worst cell's clear distance from its block to the hub's wall. */
@@ -1576,6 +1669,30 @@ export function carrierLettering(record: CarrierRecord): LetterSpec[] {
     });
   }
 
+  /* ⚠ AND WHAT THE HUB LETTERS ONCE THE READER COMMITS A SUBSTRATE. The band's
+     name is declared twice on purpose — once as the arc label at `BAND_FS`, and
+     again here at the hub's own rung, because they are two different strings on
+     two different measures and a guard that walked only one would be blind to
+     the other overflowing. */
+  for (const group of layout.groups) {
+    out.push({
+      slot: `shape.${group.key}.title`,
+      text: group.name.toUpperCase(),
+      fs: 17,
+      track: 0.04,
+      measure: BRIEF_MEASURE,
+    });
+    for (const [i, line] of carrierShapeLines(group.meaning).entries()) {
+      out.push({
+        slot: `shape.${group.key}.meaning.${i}`,
+        text: line,
+        fs: BRIEF_FS,
+        track: BRIEF_TRACK,
+        measure: BRIEF_MEASURE,
+      });
+    }
+  }
+
   /* And what the hub letters once the reader COMMITS a cell. */
   for (const cell of layout.cells) {
     out.push({
@@ -1655,6 +1772,15 @@ export function ViewCarrier({
   const layout = useMemo(() => carrierLayout({ shapes, skills }), [shapes, skills]);
   const [hotId, setHotId] = useState<string | null>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
+  /**
+   * The substrate the reader clicked in the BAND — the hub's third subject.
+   *
+   * ⚠ **MUTUALLY EXCLUSIVE WITH `pinnedId`, AND ENFORCED AT BOTH SETTERS.** One
+   * hub can display one thing; two independent pins would make the priority
+   * order in `Aperture` a silent tiebreak the reader cannot see or undo. Each
+   * click clears the other, so the hub always shows the last thing chosen.
+   */
+  const [pinnedShapeKey, setPinnedShapeKey] = useState<CaseMapShapeKey | null>(null);
   const [roving, setRoving] = useState(0);
   const refs = useRef<(SVGGElement | null)[]>([]);
 
@@ -1668,7 +1794,19 @@ export function ViewCarrier({
    */
   const hot = layout.cells.find((c) => c.skill.id === hotId) ?? null;
   const pinned = layout.cells.find((c) => c.skill.id === pinnedId) ?? null;
-  const litKey = hot?.key ?? pinned?.key ?? null;
+  const pinnedShape = layout.groups.find((g) => g.key === pinnedShapeKey) ?? null;
+
+  /** Pin a cell, releasing any pinned substrate — see `pinnedShapeKey`. */
+  const pinCell = useCallback((id: string) => {
+    setPinnedShapeKey(null);
+    setPinnedId((prev) => (prev === id ? null : id));
+  }, []);
+  /** Pin a substrate, releasing any pinned cell. */
+  const pinShape = useCallback((key: CaseMapShapeKey) => {
+    setPinnedId(null);
+    setPinnedShapeKey((prev) => (prev === key ? null : key));
+  }, []);
+  const litKey = hot?.key ?? pinned?.key ?? pinnedShapeKey ?? null;
   const nameOf = (key: CaseMapShapeKey) =>
     layout.groups.find((g) => g.key === key)?.name ?? key.toUpperCase();
 
@@ -1722,17 +1860,18 @@ export function ViewCarrier({
           break;
         case "Enter":
         case " ":
-          setPinnedId((prev) => (prev === id ? null : id));
+          pinCell(id);
           break;
         case "Escape":
           setPinnedId(null);
+          setPinnedShapeKey(null);
           return;
         default:
           return;
       }
       event.preventDefault();
     },
-    [layout.cells.length]
+    [layout.cells.length, pinCell]
   );
 
   return (
@@ -1868,7 +2007,7 @@ export function ViewCarrier({
               light(cell.skill.id, cell.key);
             }}
             onBlur={() => light(null, null)}
-            onClick={() => setPinnedId((prev) => (prev === cell.skill.id ? null : cell.skill.id))}
+            onClick={() => pinCell(cell.skill.id)}
             onKeyDown={(event) => onKeyDown(event, cell.index, cell.skill.id)}
           >
             {/* ⚠ THE HIT PATH FILLS `transparent`, NEVER `none`. SVG events fire
@@ -1951,23 +2090,62 @@ export function ViewCarrier({
       <path d={polygonPath(R_OUT)} fill="none" stroke="var(--pda-hair2)" strokeWidth="2" />
 
       {/* The band's five substrate names, each on its own arc between the hub
-          and the cells. Uppercase, tracked wide — chrome, not content. */}
+          and the cells. Uppercase, tracked wide — chrome, not content.
+
+          ⚠ **THE WHOLE SEGMENT IS THE TARGET, NOT THE WORD.** A `textPath` run
+          is a thin ribbon on a curve, so hit-testing the glyphs would give the
+          reader an eleven-character target bent around a corner; the band's own
+          recess is the object the name belongs to and it is 36 units deep for
+          its whole sweep. The transparent path also has to be a SIBLING drawn
+          over the recess rather than a fill on it — the bed and the tap wash
+          are painted much earlier, before the cells, and a hit target down
+          there would sit under the seams.
+
+          ⚠ THE FILL IS `transparent`, NEVER `none` — SVG events fire on
+          `visiblePainted` by default and `none` reports no paint, so the
+          pointer would fall straight through (the same trap ADR-069 recorded
+          when three person-led cells stopped being clickable). */}
       {layout.groups.map((group) => (
-        <text
+        <g
           key={`band-label-${group.key}`}
-          pointerEvents="none"
-          fontSize={BAND_FS}
-          letterSpacing={`${BAND_TRACK}em`}
-          fontWeight={700}
-          fill={litKey === group.key || taps.has(group.key) ? "var(--pda-hot)" : "var(--pda-txt)"}
+          className="fl-pda-hit"
+          role="button"
+          tabIndex={0}
+          aria-pressed={pinnedShapeKey === group.key}
+          aria-label={`${group.name}, ${group.skills.length} encoded Skills — ${group.meaning}`}
+          onMouseEnter={() => onLit?.(group.key)}
+          onMouseLeave={() => onLit?.(null)}
+          onFocus={() => onLit?.(group.key)}
+          onBlur={() => onLit?.(null)}
+          onClick={() => pinShape(group.key)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              pinShape(group.key);
+            } else if (event.key === "Escape") {
+              setPinnedShapeKey(null);
+              setPinnedId(null);
+            } else {
+              return;
+            }
+            event.preventDefault();
+          }}
         >
-          <textPath href={`#carrier-band-arc-${group.key}`} startOffset="50%" textAnchor="middle">
-            {group.name.toUpperCase()}
-          </textPath>
-        </text>
+          <path d={carrierTapPath(group)} fill="transparent" pointerEvents="all" />
+          <text
+            pointerEvents="none"
+            fontSize={BAND_FS}
+            letterSpacing={`${BAND_TRACK}em`}
+            fontWeight={700}
+            fill={litKey === group.key || taps.has(group.key) ? "var(--pda-hot)" : "var(--pda-txt)"}
+          >
+            <textPath href={`#carrier-band-arc-${group.key}`} startOffset="50%" textAnchor="middle">
+              {group.name.toUpperCase()}
+            </textPath>
+          </text>
+        </g>
       ))}
 
-      <Aperture cell={pinned} name={pinned ? nameOf(pinned.key) : ""} />
+      <Aperture cell={pinned} name={pinned ? nameOf(pinned.key) : ""} shape={pinnedShape} />
 
       {/* ── THE CHIP'S ARRIVAL, only on 2→3 (ADR-071 U1). The plate MORPHS —
               its path interpolates from the config chip's rectangle into this
@@ -2140,11 +2318,25 @@ function TapWash({
  * function adds — a rect, a bracket, a backing wash — puts a second outline
  * back inside the first and is the square returning under a new name.
  */
-function Aperture({ cell, name }: { cell: CarrierCell | null; name: string }) {
+function Aperture({
+  cell,
+  name,
+  shape,
+}: {
+  cell: CarrierCell | null;
+  name: string;
+  shape: CarrierGroup | null;
+}) {
   return (
     <g pointerEvents="none">
       <Hub />
-      {cell ? <PinnedReadout cell={cell} name={name} /> : <BriefReadout />}
+      {cell ? (
+        <PinnedReadout cell={cell} name={name} />
+      ) : shape ? (
+        <ShapeReadout group={shape} />
+      ) : (
+        <BriefReadout />
+      )}
     </g>
   );
 }
@@ -2276,6 +2468,66 @@ function PinnedReadout({ cell, name }: { cell: CarrierCell; name: string }) {
           fontSize={FS.chrome}
           letterSpacing=".08em"
           fill="var(--pda-txt2)"
+        >
+          {line}
+        </text>
+      ))}
+    </>
+  );
+}
+
+/**
+ * A CLICKED SUBSTRATE — what the shape MEANS, in the one region of this plate
+ * sized for reading (owner, 2026-08-23: _"maybe when you click on for example
+ * pattern or voice the center shows what it means"_).
+ *
+ * ⚠ **THE SENTENCE IS THE ANSWER; THE NAME AND THE COUNT ARE THERE TO SAY WHAT
+ * IT IS THE ANSWER TO.** `CaseMapShape.meaning` is the record's only prose and
+ * it lettered nowhere on this console — U23 put it on a divided plate, U25 in a
+ * stratum head, and the dial had no room for a paragraph. It has one now.
+ *
+ * ⚠ **THE NAME IS SAID TWICE ON PURPOSE, AND THIS SURFACE NORMALLY BANS THAT.**
+ * A console head, a foot title and a designator were all deleted for exactly
+ * that (ADR-063 U1, ADR-070 U8). The precedent that licenses it is one level
+ * down on this same drawing: a pinned CELL letters its Skill's name in the hub
+ * while the arc under the pointer letters it too. The band paints at ~8px and
+ * the hub at 17 — a pinned readout MAGNIFIES what was clicked, which is how a
+ * reader knows the click landed. Restating a label the reader did not choose is
+ * the defect; confirming the one they did is the affordance.
+ *
+ * ⚠ **AND IT LETTERS NO COUNT.** See `SHAPE_BODY_DROP` — the first cut did, and
+ * a guard written from the owner's own ruling failed it.
+ */
+function ShapeReadout({ group }: { group: CarrierGroup }) {
+  const lines = carrierShapeLines(group.meaning);
+  /* ⚠ THE BLOCK CENTRES ON ITS OWN HEIGHT, like the Skill readout beside it —
+     the sentence wraps to three lines or four depending on the part, and a
+     stack pinned to `CY` by fixed offsets is centred for exactly one of them. */
+  const height = SHAPE_BODY_DROP + (lines.length - 1) * BRIEF_LINE_H + 4;
+  const top = CY - height / 2;
+
+  return (
+    <>
+      <text
+        x={CX}
+        y={top + SHAPE_TITLE_DROP}
+        textAnchor="middle"
+        fontSize="17"
+        fontWeight={700}
+        letterSpacing=".04em"
+        fill="var(--pda-txt)"
+      >
+        {group.name.toUpperCase()}
+      </text>
+      {lines.map((line, i) => (
+        <text
+          key={line}
+          x={CX}
+          y={top + SHAPE_BODY_DROP + i * BRIEF_LINE_H}
+          textAnchor="middle"
+          fontSize={BRIEF_FS}
+          letterSpacing={`${BRIEF_TRACK}em`}
+          fill="var(--pda-txt)"
         >
           {line}
         </text>

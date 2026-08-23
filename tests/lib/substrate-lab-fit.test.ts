@@ -157,6 +157,7 @@ import {
   carrierLettering,
   carrierMarkCount,
   carrierPinnedFits,
+  carrierShapeFits,
   carrierSweep,
 } from "@/app/(internal)/test/intelligence-substrate-lab/VariantCarrier";
 import type { IslRecord } from "@/app/(internal)/test/intelligence-substrate-lab/variants";
@@ -1185,6 +1186,54 @@ describe("compound carrier divides one plate into equal cells", () => {
       carrierLettering(record()).some((s) => s.slot.endsWith(".count")),
       "the nameplate's count row came back"
     ).toBe(false);
+  });
+
+  it("seats every clicked SUBSTRATE on the hub, and says what it means", () => {
+    /* ⚠ **THE RECORD HELD THIS SENTENCE THROUGH TWO REDRAWS WITHOUT SAYING IT.**
+       `CaseMapShape.meaning` is the map's only prose; U23 lettered it on the
+       divided plate, U25 in a stratum head, and the carrier had no room for a
+       paragraph anywhere on its dial — so a required, envelope-scanned content
+       field sat unrendered while the drawing's own hub explained the reading in
+       general terms. Clicking a band segment answers with it (owner,
+       2026-08-23). This walks all five.
+
+       ⚠ THE WRAP IS ASSERTED WHOLE, not merely short. `wrapLines` SLICES at its
+       cap and the dropped tail disappears from the drawing AND from the
+       lettering declaration, so every per-line measure still passes — the
+       failure mode ADR-070 U20 recorded on `gate`. */
+    const fits = carrierShapeFits(record());
+    expect(fits, "a substrate lost its readout").toHaveLength(5);
+    for (const fit of fits) {
+      expect(fit.whole, `${fit.key}: the wrap truncated its meaning`).toBe(true);
+      expect(fit.slack, `${fit.key}: a meaning line overruns the hub's measure`).toBeGreaterThan(0);
+      /* The same air the brief is held to — a block that merely CLEARS the wall
+         reads as text that happens to be inside the gold, not as text set on
+         it. ⚠ Measured against the hub's twelve edges, not one ray radius. */
+      /* ⚠ **24, THE BRIEF'S OWN STANDARD, NOT THE PINNED SKILL'S 16.** The
+         first cut wrapped at the brief's 30 characters and cleared by 17.7 —
+         inside the pinned-Skill threshold, but only just, and a guard sitting
+         1.7 units off its value is one this surface has retired three times.
+         The hub's worst edge normal is at 30°, where clearance is
+         `apothem − 0.866·halfWidth − 0.5·halfHeight`, so WIDTH costs 1.7× what
+         height does; wrapping at 27 instead keeps every meaning on the same
+         line count and takes the worst clearance to 35.2. */
+      expect(fit.wall, `${fit.key}: its meaning crowds the hub's wall`).toBeGreaterThan(24);
+    }
+
+    /* ⚠ AND THE SENTENCE IS THE RECORD'S, NOT A SECOND COPY AUTHORED HERE.
+       `meaning` is scanned by `cases-registry` for the confidentiality
+       envelope; a drawing that paraphrased it into its own constant would put
+       client prose on the public page outside every content scanner — which is
+       precisely how `8 TEAMS` shipped (ADR-070 U15). */
+    const shapes = record().shapes;
+    for (const spec of carrierLettering(record()).filter((sp) => sp.slot.includes(".meaning."))) {
+      const key = spec.slot.split(".")[1];
+      const meaning = shapes.find((sh) => sh.key === key)?.meaning ?? "";
+      expect(
+        meaning.includes(spec.text),
+        `${spec.slot} letters a string the record does not contain`
+      ).toBe(true);
+    }
   });
 
   it("seats every clicked Skill on the hub, flagship and long name alike", () => {

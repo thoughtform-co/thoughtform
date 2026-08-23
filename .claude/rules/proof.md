@@ -19,6 +19,9 @@ inherited its ambient-cover role.
   ⚠ **U34 (2026-08-23, owner) is the latest pass on reading 03's carrier** —
   the dodecagon is the HOUSING and the division inside it is CONCENTRIC. See
   §The carrier's walls below.
+  ⚠ **U36 (same day) made the BAND CLICKABLE: the hub answers with the shape's
+  own sentence** (`CaseMapShape.meaning`, which lettered nowhere for two
+  redraws). See §The carrier's walls below.
   ⚠ **U35 (same day) retired `SUBSTRATE_SECTION` and U25's SECTION drawing** —
   the carrier is reading 03 unconditionally; `flags.ts`, `PdaSubstrate.tsx`
   and `pda-substrate-fit.test.ts` are deleted, and the lab's `shipped` variant
@@ -1219,6 +1222,30 @@ about where its walls are, which is what nineteen labels got wrong.
   going `--pda-hot`. Pre-existing, not a regression, and it is ADR-063 U2's own
   finding: a saturated gold cannot signal by value against a light ground. The
   honest fix is the ramp's INK rung, not a bigger alpha.
+- ⚠ **THE BAND IS INTERACTIVE (U36): CLICK A SUBSTRATE, THE HUB SAYS WHAT IT
+  MEANS.** Each segment is a `.fl-pda-hit` group shaped like a cell's — one
+  transparent path over the recess, one `textPath` label — and the WHOLE
+  segment is the target, never the word (a `textPath` run is a thin ribbon on a
+  curve). ⚠ `fill="transparent"`, never `none`. Pinning a shape and pinning a
+  cell are MUTUALLY EXCLUSIVE, enforced at both setters: one hub displays one
+  thing, and two pins make `Aperture`'s order a silent tiebreak.
+  ⚠ **THE HUB LETTERS NO COUNT** — the first cut added `14 SKILLS` and
+  `substrate-lab-fit` failed it with _"the nameplate's count row came back"_, a
+  guard written from the owner's own U28 ruling. This drawing counts by AREA;
+  the count lives in the `aria-label` alone, where it is the accessible
+  equivalent of an area a screen reader cannot perceive.
+  ⚠ **`SHAPE_PER` IS 27, NOT THE BRIEF'S 30**, and the hub's geometry is why: its
+  worst edge normal is at 30°, where clearance is
+  `apothem − 0.866·halfWidth − 0.5·halfHeight`, so WIDTH costs 1.7× what height
+  does. At 30 the worst block cleared by 17.7; at 27 it clears by 35.2 with the
+  same line counts.
+- ⚠ **`outline` ON AN SVG GROUP IS DRAWN AROUND ITS BBOX**, and nothing on this
+  plate is a rectangle — the UA focus ring was painting a 151×86 box over the
+  neighbouring cells. `.fl-pda-hit` clears `outline` in every state and strokes
+  its FIRST path instead, so the indicator traces the target. ⚠ It keys on
+  `:focus`, NOT `:focus-visible`: measured live, `matches(':focus-visible')`
+  returned FALSE on the very group the UA was ringing, so gating the replacement
+  on it would leave keyboard users with no indicator at all.
 - **Verifying:** `npx vitest run tests/lib/substrate-lab-fit.test.ts` for the
   arithmetic, `node scripts/capture-substrate-lab.mjs --v carrier` for the
   gates (⚠ the script's default `--v` is round one's seven — name `carrier` or

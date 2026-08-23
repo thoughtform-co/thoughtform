@@ -136,10 +136,40 @@
 
 .fl-pda-hit {
   cursor: pointer;
+  /* ⚠ THE UA RING IS KILLED IN EVERY STATE, and it is replaced below rather
+     than merely removed — see the note on the focus rule. */
+  outline: none;
 }
 
-.fl-pda-hit:focus-visible {
-  outline: 1px solid var(--pda-hot);
+/**
+ * ⚠ **THE FOCUS RING FOLLOWS THE OBJECT, NOT ITS BOUNDING BOX.** Chromium's UA
+ * sheet paints `outline: auto` around a focused element's BBOX, and none of
+ * this drawing's hit targets is a rectangle: a cell is an annular wedge and —
+ * since ADR-070 U36 — a band segment is a wider one, whose box measures
+ * 151 x 86 around a shape filling maybe half of it. The ring therefore landed
+ * squarely on top of the neighbouring cells and read as a stray white rectangle
+ * on the plate rather than as a focused control. It was visible on the shipped
+ * drawing too; a wedge four times the area is what made it obvious.
+ *
+ * ⚠ **AND IT PAINTS ON A MOUSE CLICK, WHICH IS NOT THE USUAL `:focus-visible`
+ * BARGAIN.** Chromium exempts natively-clickable controls from the ring after a
+ * pointer press; a `<g tabindex="0">` is not one. That is survivable — the click
+ * DID select the thing — but only once the ring is the right shape.
+ *
+ * ⚠ **THE REPLACEMENT KEYS ON `:focus`, NOT `:focus-visible`, ON PURPOSE.**
+ * `element.matches(':focus-visible')` reported FALSE on this very group while
+ * the UA was painting its ring, so the pseudo-class is not reliable for SVG
+ * groups in this engine — and suppressing the UA outline while gating the
+ * replacement on an unreliable selector is how a keyboard user ends up with no
+ * focus indicator at all. `:focus` always resolves, and every route to it here
+ * (Tab, or a click that also selects) is one where showing the target is right.
+ *
+ * Each hit group's FIRST path is its transparent hit shape — the cell's own
+ * ring, the band's own segment — so stroking that traces the target exactly.
+ */
+.fl-pda-hit:focus > path:first-of-type {
+  stroke: var(--pda-hot);
+  stroke-width: 2;
 }
 
 /* ── The foot ───────────────────────────────────────────────────────────

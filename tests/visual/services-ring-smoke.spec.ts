@@ -200,6 +200,12 @@ function readPda() {
   // reading, and 19 of 47 labels printed through their own edge with
   // everything green.
   //
+  // ⚠ IT COVERS THE BAND'S FIVE SUBSTRATE NAMES TOO, and that is free rather
+  // than incidental: since ADR-070 U36 each band segment is a `.fl-pda-hit`
+  // group shaped exactly like a cell's — one path, one `textPath` label — so
+  // the walk below asks the same question of the region names it asks of the
+  // 47 Skills. Nothing checked those before.
+  //
   // This asks the render instead: is the ink inside the cell's own fill?
   // `isPointInFill` is the browser's own hit geometry on the very path the
   // cell is drawn from, so it cannot be satisfied by a model that has drifted
