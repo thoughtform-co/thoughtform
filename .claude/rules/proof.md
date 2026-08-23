@@ -173,7 +173,22 @@ inherited its ambient-cover role.
   §The tool dossier below for the wireframe contracts.
 - **One lightbox, `MediaLightbox`, shared by the films and the walkthroughs.**
   Do not hand-write a second — its portal, scroll lock and focus restore each
-  cost a measurement to get right (Update 8).
+  cost a measurement to get right (Update 8). Its open/close + focus-return
+  state is `useWalkthrough` (ADR-072), beside it.
+- **THE TOOLS PLATE'S BODY IS `ToolField`, AND IT HAS A SECOND HOME
+  (ADR-072).** `ToolGallery` is the casefile's COMPOSITION — console, rail,
+  fold-close, lightbox — and `ToolField` (`ToolBay` + `CapabilityBlocks`,
+  lifted verbatim with their comments) is the bay and the blocks, which
+  the portfolio arc (`/arcs/portfolio`, `components/arcs/ArcDossier*`)
+  mounts at page scale, one tool per beat. `tests/lib/tool-gallery-markup.test.tsx`
+  pins the landing's rendered markup byte-for-byte (snapshot + the ring
+  smoke's strings). ⚠ A bay change is a TWO-surface change: run
+  `services-ring-smoke` AND `arc-portfolio-smoke`; the bay reader, the
+  per-tool label pins and `expectWireframeBay` live in
+  `tests/visual/helpers/toolBay.ts` (`readToolBay(root)` — the landing
+  mounts one bay, the portfolio four). ⚠ casefile.css's ≤960 `.fl-wire`
+  rung is no longer dormant — the portfolio's small-screen path renders it
+  and the portfolio smoke pins it.
 - **`PROJECT_CASES` is inside the confidentiality envelope now.** It renders
   client copy on the public landing but lives outside `lib/cases/`, so the
   registry test scans it too. Adding a tool means adding a walkthrough.

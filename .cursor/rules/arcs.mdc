@@ -1,0 +1,29 @@
+---
+description: Client arc pages (/arcs) — deck pages on the HUD slice, terminal motion, the dossier kind
+globs:
+  - "app/(marketing)/arcs/**"
+  - "components/arcs/**"
+  - "lib/arcs/**"
+alwaysApply: false
+---
+
+# Rule: Client arcs (/arcs)
+
+Mirror of [`.claude/rules/arcs.md`](../../.claude/rules/arcs.md) — read
+that file; it is the canonical text. Read first: ADR-052 (the deck
+chassis), ADR-057 (terminal motion), ADR-072 (the portfolio arc, the
+`dossier` section kind, the shared evidence, the envelope on arcs).
+
+Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
+gates the rails; the slice API is read-only; every section opaque void; no
+three.js / Supabase / `LandingPage` imports — the casefile's dossier LEAVES
+(`ToolField`, `MediaLightbox`, `ConsoleFrame`, `wireframes/**`,
+`toolCardData`) are the one sanctioned import; page CSS lives in `arcs.css`
+under `.arc-*`, with the casefile's `casefile.css` + `console.css` imported
+at the ROUTE ahead of it and `theme.css` last; no italics; content changes
+= `lib/arcs/content/*` + the registry; shared Loop evidence is imported by
+reference from `content/shared/*`; the numbers canon fails on every arc;
+the confidentiality envelope runs over the portfolio (the keynote deck
+keeps its € rows — recorded); a dossier beat must FIT at 1280×720 /
+1440×800 / 1920×1080; a bay change is a two-surface change (run the ring
+smoke AND the portfolio smoke).

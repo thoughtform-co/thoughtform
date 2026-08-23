@@ -54,7 +54,39 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-08-18 (latest) — The Carrier ships, and the hub is the flight's third home (ADR-070 U33)
+### 2026-08-23 (latest) — The portfolio arc, and the dossier section kind (ADR-072)
+
+Rob asked for a portfolio of the Loop work; it ships as `/arcs/portfolio`
+on the deck chassis with a ninth section kind that mounts the casefile's
+tool dossier at page scale, one tool per beat. Cycle B (ADR-072 Proposed
+→ Accepted in the same pass), then Cycle A rows 3, 4, 5 and 6.
+
+- **Row 4 — files that move together.** `ToolGallery` ⇄ `ToolField` ⇄
+  `ArcDossierConsole` (one bay, two surfaces; the snapshot pin + both
+  smokes); the shared evidence modules ⇄ both arcs (`toBe` pins); the
+  route's CSS order ⇄ `arcs.css`'s host contract. → `arcs.md`, `proof.md`.
+- **Row 3 — a class of bug.** A beat that becomes NEAR between scroll
+  events parked blank: the terminal controller runs frames only from the
+  scroll writer's rAF, and the IntersectionObserver's near flag arrives
+  after the last frame. Same family as the stranded re-type settle
+  (ADR-057) — any state that changes off the scroll thread needs its own
+  wake. One frame via the settle timer.
+- **Row 5 — a runtime check would have caught it earlier.** The smoke's
+  stepped drive found the near-margin gap on the first run; the keynote's
+  beats are close enough that a 4-step drive never cleared the margin.
+  `arc-portfolio-smoke` also arms casefile.css's ≤960 wireframe rung for
+  the first time anywhere.
+- **Row 6 — an architectural assumption changed.** "New arcs are
+  content-only" gains one enumerated exception; `components/arcs` imports
+  the casefile's dossier leaves; the confidentiality envelope and the
+  numbers canon reach the arcs test (the keynote's money rows recorded as
+  the deck exemption). → ADR-072.
+- **Left open, named:** the arcs' light theme is partial (raw dawn
+  literals in `arcs.css`'s atoms, zero `.arc-*` rules in theme.css) — the
+  keynote's, not the dossier's; the role label across three surfaces; two
+  roster metas that may be surnames.
+
+### 2026-08-18 — The Carrier ships, and the hub is the flight's third home (ADR-070 U33)
 
 Owner asked to wire the latest substrate drawing to the landing page. That is
 one import in principle; the promotion turned up four things the lab could not

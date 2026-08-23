@@ -15,6 +15,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 
 - [ADR-052: Client arcs](../sentinel/decisions/052-client-arcs.md)
 - [ADR-057: Terminal motion](../sentinel/decisions/057-arc-terminal-motion.md) — the pinned-beat grammar on the `-v2` cuts
+- [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/portfolio`, the ninth kind, the shared evidence, the envelope on arcs
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -33,15 +34,57 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   `.hero__content` moves).
 - **No three.js / Supabase / `LandingPage` imports** anywhere under
   `components/arcs/` or `lib/arcs/` (landing-performance doctrine).
+  ⚠ **The casefile's dossier LEAVES are the one sanctioned import**
+  (ADR-072): `ToolField`, `MediaLightbox` (+ `useWalkthrough`),
+  `console/ConsoleFrame`, `wireframes/**` and `toolCardData` — DOM-only by
+  construction (verified: no three / supabase / stores transitively).
+  Never `ServicesCasefile` / `TrackVisual` / the corridor.
 - **CSS:** everything page-scoped lives in `arcs.css` under `.arc-*`;
   corridor sheets (home-v2.css / services.css) are never imported —
-  grammars are copied. Route import order: landing.css first, arcs.css
-  LAST.
+  grammars are copied. ⚠ The casefile's `casefile.css` + `console.css` ARE
+  imported, at the ROUTE, ahead of arcs.css (ADR-072): the dossier mounts
+  the landing's console and ~1800 lines of wireframe CSS are the drawing,
+  not a grammar to copy. Order: `landing.css → casefile.css → console.css →
+arcs.css → theme.css` (theme LAST, ADR-058); never from a client
+  component (cascade order would ride the chunking).
+- **The `dossier` kind** (ADR-072) = `{ toolId, legend, head? }`, ONE tool
+  per section: `toolId` ∈ `PROJECT_CASES` (registry-pinned, all four in
+  order on the portfolio), `legend` EQUALS `MODE_LEGEND[mode]`, `head`
+  absent ⇒ derived from the record, `head.sub` never authored. It mounts
+  the casefile's bay at page scale; the HOST CONTRACT the casefile used to
+  supply lives on `.arc-dossier` in arcs.css — `--fl-mono`, `--fl-copy`,
+  `--fl-shot-px`, a DEFINITE console height (`--arc-dossier-h` = 100svh −
+  2·`--arc-stage-pad` − 24, floored 440, capped 900), the settled gate
+  declared, the blocks' seat animation off. ⚠ **A dossier beat must FIT at
+  1280×720 / 1440×800 / 1920×1080** (smoke: `data-arc-tall` absent) — a
+  tall two-column beat crops the console at the park; the record column
+  is what gives (the BEFORE paragraph goes sr-only under 760h). ⚠ A bay
+  change is a TWO-surface change: run `services-ring-smoke` AND
+  `arc-portfolio-smoke`; both read `tests/visual/helpers/toolBay.ts`.
 - **No italics.** Emphasis is `ArcTitle.em` → upright gold; markup inside
   copy strings fails `tests/lib/arcs-registry.test.ts`.
 - **Content changes** = edit `lib/arcs/content/*` + registry only; run
   the registry test. New arc = content module + registry entry + assets
   under `public/arcs/<slug>/`.
+- **Shared evidence lives in `lib/arcs/content/shared/*` and is imported BY
+  REFERENCE** (ADR-072) — the roster, the studio cards + the ATL film, the
+  operator's lines, the mode legend, the figures. Share the evidence,
+  author the frame: every head, sub and placement stays per arc. The
+  registry test pins the references `toBe`; a copied array drifts the
+  moment either page edits it. `LOOP_FIGURES` is copy-with-parity to the
+  casefile's `report.stats` (`cases-registry.test.ts`) — `lib/arcs` keeps
+  no `lib/cases` import.
+- **The numbers canon fails on EVERY arc** (ADR-072): 42 / forty-two,
+  90 % / 95 %, 15+ teams, 20+ Skills/teams, "teams mapped", "8 teams", and
+  a `14 teams` that does not say "using the layer".
+- **Money on arcs:** the keynote is a client DECK and prints per-ad spend
+  in euros on purpose (the exemption is recorded beside `STUDIO_SHOTS` in
+  `lib/cases/content/loop-earplugs.ts`). The PORTFOLIO is a page a reader
+  forwards and sits inside the casefile's confidentiality envelope —
+  `ENVELOPE_ARCS` in the registry test (currency, thousands separators,
+  boards, repos, private repo names, surnames); its studio cards go
+  through `ratiosOnly()` (SKU + ROAS). Add a forwarded page to that list;
+  never widen it to the deck.
 - **Next 16:** route `params` is a Promise — `await params`.
 - Videos: `preload="none"` + poster, never autoplay; no gated `.skill`
   downloads via `public/`.
@@ -71,7 +114,11 @@ Two choreography systems live on this surface, selected by
   The 180ms re-type settle relied on the next scroll frame and stranded
   the masthead blank FOREVER on scroll-up-and-stop — pinned by
   `tests/visual/arc-terminal-smoke.spec.ts` ("scrolling UP into a beat
-  and stopping still types it in").
+  and stopping still types it in"). ⚠ And a beat that becomes NEAR between
+  scroll events — a jump past the 120 % margin (End key, `scrollTo`, a
+  reel click in one step) — parked blank the same way until ADR-072 gave
+  the near-callback one frame through the same timer. Found by a stepped
+  drive whose last step cleared the margin; real on every terminal arc.
 - **The stage pin is `sticky; top: vh − stageH`** (`--arc-stage-pin`,
   measured by the writer with the same numbers `beatOut` parks on): 0
   for a fitting stage; negative for a tall one, which reads through its
@@ -131,10 +178,14 @@ Two choreography systems live on this surface, selected by
 
 **Verifying terminal motion:** `tests/lib/arc-motion.test.ts` (clocks),
 `tests/lib/arc-terminal-markup.test.tsx` (conventions + v1 byte-identity),
-`tests/visual/arc-terminal-smoke.spec.ts`. Measure at **1280×720 and
-1440×800** — the project's 1440×900 default hides every clipping bug this
-content has. Drive REAL stepped scrolls and disable `scroll-behavior:
-smooth` in the harness, or the drive lands short.
+`tests/visual/arc-terminal-smoke.spec.ts`, and for the portfolio
+`tests/visual/arc-portfolio-smoke.spec.ts` (the dossiers at the three
+reference shapes in both themes, the walkthrough over a pinned beat, PRM,
+the small-screen unwrap). Measure at **1280×720 and 1440×800** — the
+project's 1440×900 default hides every clipping bug this content has.
+Drive REAL stepped scrolls and disable `scroll-behavior: smooth` in the
+harness, or the drive lands short. The drive helpers live in
+`tests/visual/helpers/arcTerminal.ts`.
 
 **Process:** [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) —
 Cycle B when adding a section kind or surface; Cycle A after fixes.
