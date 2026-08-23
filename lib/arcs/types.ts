@@ -191,6 +191,37 @@ export type ArcSection = ArcSectionBase &
         footerLine?: string;
         signature?: string;
       }
+    | {
+        /**
+         * One production tool, drawn from its canonical record (ADR-072):
+         * the record column beside the casefile's own console — the
+         * authored wireframe, the fused "Watch walkthrough" bar that opens
+         * the lightbox, the four capability blocks — at page scale. ONE
+         * tool per section, one beat each.
+         */
+        kind: "dossier";
+        /**
+         * A `PROJECT_CASES` id. A plain string here — this module stays
+         * free of runtime imports — resolved by the renderer and pinned by
+         * `tests/lib/arcs-registry.test.ts`.
+         */
+        toolId: string;
+        /**
+         * The mode's definition, lettered after the mode chip. It is the
+         * shared sentence for the tool's mode (`MODE_LEGEND`,
+         * `content/shared/loop-tools.ts`), pinned equal by the registry
+         * test — the template says the same thing everywhere.
+         */
+        legend: string;
+        /**
+         * Masthead override. Absent ⇒ derived from the record (codename ·
+         * tagline eyebrow, the em-segmented title), which is the one
+         * source the page shares with the landing. Never authors `sub` —
+         * the record column is the intro, and a split head would wedge it
+         * into the narrow column (pinned).
+         */
+        head?: ArcHead;
+      }
   );
 
 export type ArcSectionKind = ArcSection["kind"];
@@ -198,7 +229,8 @@ export type ArcSectionKind = ArcSection["kind"];
 /** The section narrowed to one kind — component prop types. */
 export type ArcSectionOf<K extends ArcSectionKind> = Extract<ArcSection, { kind: K }>;
 
-export type ArcFormat = "workshop" | "keynote";
+/** Overview chip text. `portfolio` is ADR-072's one arc so far. */
+export type ArcFormat = "workshop" | "keynote" | "portfolio";
 
 /**
  * Section choreography system (ADR-057). Absent or "reveal" is the

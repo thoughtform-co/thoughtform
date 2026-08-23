@@ -54,7 +54,41 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   media: "FEED",
   portrait: "OPERATOR",
   close: "CLOSE",
+  dossier: "DOSSIER",
 };
+
+/**
+ * An em-segmented title (`ProjectCase.title`, `[{ text, em? }]`) as the
+ * arcs' split title — what lets a dossier beat decode the tool's name
+ * straight from its canonical record (ADR-072). Every shipped record is
+ * `pre + em` ("Briefing " + "Agent"); the registry test pins that a
+ * record converts losslessly (≤ 1 em segment, never first), so a new shape
+ * fails there rather than rendering half a name.
+ */
+export function segmentsToArcTitle(segments: readonly { text: string; em?: boolean }[]): ArcTitle {
+  const at = segments.findIndex((s) => s.em);
+  if (at < 0)
+    return {
+      pre: segments
+        .map((s) => s.text)
+        .join("")
+        .trim(),
+    };
+  const pre = segments
+    .slice(0, at)
+    .map((s) => s.text)
+    .join("")
+    .trim();
+  const post = segments
+    .slice(at + 1)
+    .map((s) => s.text)
+    .join("")
+    .trim();
+  const title: ArcTitle = { em: segments[at].text.trim() };
+  if (pre) title.pre = pre;
+  if (post) title.post = post;
+  return title;
+}
 
 /** Fallback designation label when a section head authors no eyebrow. */
 export function sectionDesig(kind: ArcSectionKind, index: number): string {

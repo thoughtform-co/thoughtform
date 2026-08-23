@@ -23,6 +23,11 @@
   background: var(--void, #0a0908);
   color: var(--dawn, #ebe3d6);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  /* The beat's vertical padding as a TOKEN (ADR-072): `.arc-sec` below
+     keeps its literal (v1 byte-identity), but a section that has to
+     budget a box against the viewport — the dossier's console — reads
+     this. Terminal motion re-declares it to the stage's tighter value. */
+  --arc-stage-pad: clamp(96px, 14vh, 200px);
   /* Decorative survey chrome (dot-grid lifts, crosses) deliberately
      bleeds past the band; clip it so it can never widen the page.
      `clip` (not `hidden`) — no new scroll container, and the fixed
@@ -1412,13 +1417,16 @@
    negative for a tall one so it reads through its overflow first. The
    writer measures it (`--arc-stage-pin`) with the same numbers the
    departure clock uses — one park, two consumers, gate parity. */
+.arc-root[data-motion="terminal"] {
+  --arc-stage-pad: clamp(32px, 5vh, 72px);
+}
 .arc-root[data-motion="terminal"] .arc-stage {
   position: sticky;
   top: var(--arc-stage-pin, 0px);
   min-height: 100svh;
   display: grid;
   align-content: center;
-  padding-block: clamp(32px, 5vh, 72px);
+  padding-block: var(--arc-stage-pad);
   background: var(--void, #0a0908);
 }
 .arc-root[data-motion="terminal"] .arc-beat__tail {
@@ -1669,6 +1677,9 @@
    at its fail-open default with a sticky runway around it. Everything
    resolves flat and the page falls back to the v1 reveal path. */
 @media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .arc-root[data-motion="terminal"] {
+    --arc-stage-pad: clamp(96px, 14vh, 200px);
+  }
   .arc-root[data-motion="terminal"] .arc-sec,
   .arc-root[data-motion="terminal"] .arc-sec--chapter,
   .arc-root[data-motion="terminal"] .arc-inter,
@@ -1677,7 +1688,7 @@
     align-content: center;
     height: auto;
     min-height: 100svh;
-    padding-block: clamp(96px, 14vh, 200px);
+    padding-block: var(--arc-stage-pad);
   }
   .arc-root[data-motion="terminal"] .arc-stage {
     position: static;
@@ -1719,5 +1730,357 @@
   }
   .arc-root[data-motion="terminal"] .arc-tdec__ghost {
     visibility: visible;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   THE DOSSIER (ADR-072) — one production tool per beat
+   ═══════════════════════════════════════════════════════════════════════
+   The casefile's tool dossier, mounted on an arc: the record column on
+   the left, the CONSOLE on the right — the same `ConsoleFrame` +
+   `ToolField` the landing's tools plate composes (casefile.css,
+   console.css; both imported by the arc route AHEAD of this sheet, with
+   theme.css still last). Nothing below restyles the console's interior:
+   the bay, the wireframe and the blocks keep their own sheets. What this
+   block does is stand in for the HOST the casefile used to be.
+
+   THE HOST CONTRACT — what `.fl-case` / `.fl-panel` declared on the
+   landing and the bay reads with NO fallback (an unset `var()` does not
+   fall back, it invalidates the whole declaration — silently):
+     --fl-mono      `.fl-bay__top`, `.fl-shot__bar`, `.fl-detail__t`, every
+                    `.fl-wire__lbl`.            ⚠ never `--font-mono` (Plex)
+     --fl-copy      `.fl-detail__d`'s `max(12px, calc(var(--fl-copy) * .84))`
+     --fl-shot-px   the watch bar's horizontal padding
+     a DEFINITE HEIGHT  `.fl-con { height: 100% }` over an absolutely
+                    inset `.fl-con__console` — inside an auto-height grid
+                    cell the console measures 0 (the type-lab lesson).
+     the settled gate   `.fl-con__console` rests at opacity 0 until an
+                    ancestor carries `data-proof-settled`; the arc writes
+                    no corridor channel, so the rest state is declared.
+
+   THE HEIGHT BUDGET — "let it breathe" is arithmetic. The console takes
+   what the pinned stage leaves: 100svh minus the stage padding on both
+   sides minus 24px of slack, so the beat FITS rather than tipping into
+   `data-arc-tall` (a tall two-column beat crops the console at the
+   park). Floored at 440 (the drawings' smallest honest box) and capped at
+   900 — ADR-068 U4 verified the drawings up to a 739px bay, and 900 keeps
+   the arc's bay under ~640. Terminal padding is load-bearing here: the
+   reveal rhythm's 96–200px would eat ~144px of console at 800p. Measured
+   against the landing's panel (1280×720 · 1440×800 · 1920×1080), the bay
+   is about 1.4–1.5× taller and 1.2–1.4× wider — the drawings grow on their
+   `cqh` term (ADR-068 U7), so that is about twice the area.
+
+   THE RECORD COLUMN must stay inside the same budget or the beat goes
+   tall: the head's breath is tightened, the prose letters one step under
+   `--band-copy`, and below 760h the BEFORE paragraph goes to the screen
+   reader alone (ADR-068's rung for the register's sentence). The route
+   drawing is the first thing to trim if a viewport does not fit. */
+
+.arc-band--instrument {
+  /* ADR-048's breakout tier — the casefile's own band (1440 at the cap,
+     the content box below the ~1800px crossover). */
+  padding-inline: var(--instrument-margin, var(--band-margin, var(--hud-content-inset, 48px)));
+}
+
+.arc-dossier {
+  --fl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --fl-copy: calc(var(--band-copy, clamp(15px, 1.15vw, 18px)) * 0.9);
+  --fl-shot-px: 14px;
+  --arc-dossier-h: clamp(
+    440px,
+    calc(100svh - 2 * var(--arc-stage-pad, clamp(32px, 5vh, 72px)) - 24px),
+    900px
+  );
+  display: grid;
+  grid-template-columns: minmax(300px, min(38%, 440px)) minmax(0, 1fr);
+  gap: clamp(28px, 3.5vw, 64px);
+  align-items: start;
+}
+
+/* ── The record ──────────────────────────────────────────────────────── */
+.arc-dossier__record {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8vh, 20px);
+}
+/* The head's breath is the beat's own, but this beat pays for it out of
+   the console's budget — one clear step, not the chapter's. The terminal
+   rule is (0,3,0); this needs the root to win. */
+.arc-dossier .arc-head,
+.arc-root[data-motion="terminal"] .arc-dossier .arc-head {
+  margin-bottom: clamp(6px, 1.4vh, 16px);
+}
+.arc-dossier .arc-head__title {
+  max-width: 14ch;
+  font-size: clamp(24px, 2.4vw, 38px);
+}
+/* The survey stamp hangs 22px under the title; with the head's breath
+   tightened it printed through the mode chip. The coordinate is decoration
+   and the beat already carries its designation on the eyebrow. */
+.arc-dossier .arc-head__coord {
+  display: none;
+}
+
+.arc-dossier__mode {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 14px;
+}
+.arc-dossier__mode .arc-badge {
+  margin-bottom: 0;
+}
+.arc-dossier__legend {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.7);
+}
+
+.arc-dossier__meta {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.12);
+  display: grid;
+  gap: 6px;
+}
+.arc-dossier__meta-row {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 14px;
+  align-items: baseline;
+}
+.arc-dossier__meta-row dt,
+.arc-dossier__key {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.42);
+}
+.arc-dossier__meta-row dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.82);
+}
+
+.arc-dossier__brief {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.12);
+}
+.arc-dossier__brief-row {
+  /* Key ABOVE the paragraph, not beside it: a 128px key column left the
+     prose a 293px measure at 1440 and the longest record's two paragraphs
+     ran to 262px — 70px over the console's budget, which is the whole
+     beat going tall. Stacked, the measure is the column's (435px) and the
+     same copy sits at ~180. */
+  margin: 0;
+  display: grid;
+  gap: 5px;
+}
+.arc-dossier__copy {
+  /* One step under the band copy: the column is narrow and the budget is
+     the console's. The colour is the TRIPLE, not `.arc-prose`'s dawn
+     literal — the literal does not flip with the theme, and on parchment
+     it printed two invisible paragraphs (measured). The rest of the arcs'
+     atoms still carry literals; that sweep is ADR-072's left-open item. */
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(var(--dawn-rgb, 236, 227, 214), 0.8);
+}
+
+/* ── The route — the steps the work used to move through, and the one
+   they collapsed into. DOM, vertical, one mono cell per step on a spine. */
+.arc-dossier__route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 26px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.12);
+}
+.arc-dossier__route-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.arc-dossier__chain {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+  display: grid;
+  gap: 5px;
+}
+.arc-dossier__chain::before {
+  /* The spine the steps hang off. */
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: rgba(var(--dawn-rgb, 235, 227, 214), 0.2);
+}
+.arc-dossier__chain li {
+  position: relative;
+  padding: 4px 8px;
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.14);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9px;
+  line-height: 1.3;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.arc-dossier__chain li::before {
+  /* The stub from the spine to the cell. */
+  content: "";
+  position: absolute;
+  left: -11px;
+  top: 50%;
+  width: 8px;
+  height: 1px;
+  background: rgba(var(--dawn-rgb, 235, 227, 214), 0.2);
+}
+.arc-dossier__route-arrow {
+  position: relative;
+  align-self: center;
+  justify-self: stretch;
+  height: 1px;
+  margin-top: 22px;
+  background: var(--gold-line, var(--gold, #caa554));
+}
+.arc-dossier__route-arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--gold-line, var(--gold, #caa554));
+  border-right: 1px solid var(--gold-line, var(--gold, #caa554));
+  transform: rotate(45deg);
+}
+.arc-dossier__now {
+  align-self: start;
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--gold-rgb, 202, 165, 84), 0.55);
+  background: rgba(var(--gold-rgb, 202, 165, 84), 0.12);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9px;
+  line-height: 1.3;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-ink, var(--gold, #caa554));
+  white-space: nowrap;
+}
+.arc-dossier__route-meta {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8.5px;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.42);
+}
+
+.arc-dossier__stack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.arc-dossier__stack li {
+  padding: 4px 8px;
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.12);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8.5px;
+  line-height: 1.3;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.5);
+}
+
+/* ── The console ─────────────────────────────────────────────────────── */
+.arc-dossier__console {
+  position: relative;
+  min-width: 0;
+}
+@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  /* The definite box `.fl-con { height: 100% }` needs — gated to where
+     the console is FRAMED (console.css unwraps it at ≤980px and under
+     reduced motion, and an unwrapped console wants `auto`). */
+  .arc-dossier__console {
+    height: var(--arc-dossier-h);
+  }
+}
+/* The settled gate, declared: the arc has no casefile arrival to wait on. */
+.arc-dossier .fl-con__console {
+  opacity: 1;
+  transition: none;
+}
+/* ONE arrival system (ADR-057) — the beat powers the console on; the
+   blocks' own seat animation would play a second, unrelated motion under
+   it (and replay on a reload that restores scroll into the beat). */
+.arc-dossier .fl-detail__plate {
+  animation: none;
+}
+/* Desktop reduced motion: the console unwraps (console.css pair), so the
+   bay's frame would fall to its `clamp(70px, 9svh, 180px)` floor. Give the
+   drawing a canvas, as casefile.css does for its own PRM path. */
+@media (prefers-reduced-motion: reduce) and (min-width: 961px) {
+  .arc-dossier .fl-shot__frame {
+    min-height: clamp(280px, 42svh, 520px);
+  }
+}
+
+/* ── Rungs ───────────────────────────────────────────────────────────── */
+/* Short viewports: the BEFORE paragraph goes to the screen reader alone
+   — the route below still draws the friction, and the budget is the
+   console's. Same move as the proof register's sentence (ADR-068). */
+@media (max-height: 759.98px) {
+  .arc-dossier__brief-row:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+/* One column: the record reads first, the console follows at a height of
+   its own (still definite — the console is framed down to 981px). */
+@media (max-width: 1100px) {
+  .arc-dossier {
+    grid-template-columns: 1fr;
+  }
+  .arc-dossier .arc-head__title {
+    max-width: 20ch;
+  }
+  .arc-dossier__brief-row:first-child {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+@media (max-width: 1100px) and (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  .arc-dossier__console {
+    height: clamp(420px, 62svh, 720px);
   }
 }

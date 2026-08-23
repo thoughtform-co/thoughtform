@@ -8,6 +8,13 @@ import { arcSlugs, getArc } from "@/lib/arcs/registry";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
 import "@/components/landing/v7/landing.css";
+// The casefile's console + bay sheets, AHEAD of arcs.css (ADR-072): the
+// dossier beat mounts the landing's tools console, and arcs.css hosts it.
+// Both sheets are fully `.fl-*` / `.services-*` scoped, so an arc without
+// a dossier gets bytes and no matching rule. Route-level on purpose — a
+// client-component import would make the cascade order bundle-dependent.
+import "@/components/landing/home-v2/services/casefile/casefile.css";
+import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/arcs/arcs.css";
 // Theme sheet LAST (ADR-058) — after arcs.css so the light cascade wins.
 import "@/components/landing/v7/theme.css";
