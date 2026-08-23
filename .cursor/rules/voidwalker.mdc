@@ -53,12 +53,16 @@ never written here — this section is `.vw*` / `.vw-wire*`.
 - **The rest state is the finished page.** The motion block is gated on
   `.vw[data-vw-ready]`; absent = every panel lit, the spine drawn, the
   diamonds filled. The hook's only gate is `prefers-reduced-motion:
-  no-preference` — ⚠ if a width gate is ever added, the CSS rest block in
+no-preference` — ⚠ if a width gate is ever added, the CSS rest block in
   `voidwalker.css` takes the SAME pair.
 - **The masthead never moves or fades** — it types in and un-types out, in
   place (the caption kernel; each lede run its own target so the gold `em`
   survives). Panels power on through the `--ci-off` ladder; the title's
   words brighten on `--vw-w`; all reversible.
+- **The beats ALTERNATE around a centred spine at ≥1280** (ADR-074 U1):
+  odd beats left (right-aligned, plate seated at the lane), even beats
+  right. Below 1280 the `:nth-child(odd)` rules are reset and every beat
+  reads off a left-hand spine — keep that reset when touching either block.
 - ⚠ **Grid rows are EXPLICIT** on the spine (2/4), the beats list (2) and
   the foot (3): auto-placement slid the list under the spine's span and the
   spine measured 0px. ⚠ **The right guard** (`--vw-guard`, 32px below

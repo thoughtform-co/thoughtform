@@ -62,7 +62,12 @@
   --vw-guard: 32px;
   position: relative;
   display: grid;
-  grid-template-columns: var(--vw-lane) minmax(0, 5fr) minmax(0, 7fr);
+  /* ALTERNATING (ADR-074 U1, owner): the spine runs down the CENTRE of
+     the band and the beats alternate sides — odd beats on the left, even
+     on the right — each a block (title · paragraph · plate) that hugs the
+     spine. A left-side block is right-aligned so its edge meets the lane.
+     Below 1280 the grid collapses to the single-column layout (§8). */
+  grid-template-columns: minmax(0, 1fr) var(--vw-lane) minmax(0, 1fr);
   column-gap: clamp(24px, 3vw, 48px);
   max-width: var(--band-max);
   margin-inline: var(--rail-inset);
@@ -75,7 +80,7 @@
    runs decode in place via the caption kernel; nothing here carries a
    clock factor. */
 .vw-head {
-  grid-column: 2 / -1;
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: subgrid;
   align-items: end;
@@ -94,7 +99,7 @@
   text-shadow: 0 0 22px rgba(var(--vw-gold-rgb), 0.18);
 }
 .vw-head__lede {
-  grid-column: 2;
+  grid-column: 3;
   margin: 0;
   padding-right: var(--vw-guard);
   max-width: 52ch;
@@ -139,7 +144,7 @@
    occupies, so it slid to a row of its own and the spine spanned two
    EMPTY rows — measured 0px tall, and the gold never drew. */
 .vw__spine {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 2 / 4;
   justify-self: center;
   position: relative;
@@ -187,7 +192,8 @@
 /* The marker cell: the diamond on the spine, the ordinal and the year
    beneath it, aligned to the title's cap line. */
 .vw-beat__mark {
-  grid-column: 1;
+  grid-column: 2;
+  grid-row: 1 / span 2;
   position: relative;
   z-index: 1;
   display: flex;
@@ -228,7 +234,8 @@
 /* The title — words split into spans so each brightens on its own rung.
    At rest every word is full ink. */
 .vw-beat__title {
-  grid-column: 2;
+  grid-column: 3;
+  grid-row: 1;
   margin: 0;
   font-family: var(--vw-display);
   font-weight: 400;
@@ -255,11 +262,36 @@
 /* The body column: the paragraph, then the plate. */
 .vw-beat__body {
   grid-column: 3;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 2.6svh, 28px);
   min-width: 0;
+  margin-top: clamp(14px, 2svh, 22px);
   padding-right: var(--vw-guard);
+}
+/* Odd beats take the LEFT side: the same block, mirrored — right-aligned
+   so its edge meets the lane, the plate seated at the right. The right
+   guard is the telemetry's, so it applies to the right side only. */
+.vw-beat:nth-child(odd) .vw-beat__title,
+.vw-beat:nth-child(odd) .vw-beat__body {
+  grid-column: 1;
+}
+.vw-beat:nth-child(odd) .vw-beat__title {
+  text-align: right;
+}
+.vw-beat:nth-child(odd) .vw-beat__body {
+  align-items: flex-end;
+  text-align: right;
+  padding-right: 0;
+}
+.vw-beat:nth-child(odd) .vw-beat__press {
+  justify-content: flex-end;
+}
+.vw-beat:nth-child(odd) .vw-plate,
+.vw-beat:nth-child(odd) .vw-plate__top,
+.vw-beat:nth-child(odd) .vw-plate__bar {
+  text-align: left;
 }
 @media (min-width: 1600px) {
   .vw {
@@ -432,7 +464,7 @@
   padding-top: clamp(28px, 5svh, 56px);
 }
 .vw-foot__mark {
-  grid-column: 1;
+  grid-column: 2;
   position: relative;
   z-index: 1;
   display: flex;
@@ -447,8 +479,11 @@
   transform: rotate(45deg);
 }
 .vw-foot__line {
-  grid-column: 2 / -1;
-  margin: 0;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  justify-self: center;
+  text-align: center;
+  margin: clamp(20px, 3.5svh, 36px) 0 0;
   max-width: 60ch;
   font-family: var(--vw-display);
   font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
@@ -456,8 +491,9 @@
   color: var(--dawn-70);
 }
 .vw-foot__next {
-  grid-column: 2 / -1;
-  justify-self: start;
+  grid-column: 1 / -1;
+  grid-row: 3;
+  justify-self: center;
   margin-top: 18px;
   font-family: var(--vw-mono);
   font-size: 10px;
@@ -561,17 +597,30 @@
   .vw-head__lede {
     margin-top: 18px;
   }
-  .vw-beat__title {
-    grid-column: 2;
+  .vw__spine,
+  .vw-beat__mark,
+  .vw-foot__mark {
+    grid-column: 1;
   }
-  .vw-beat__body {
+  /* One side only below the alternating band — every beat reads
+     left-aligned off the spine, odd ones included. */
+  .vw-beat__title,
+  .vw-beat__body,
+  .vw-beat:nth-child(odd) .vw-beat__title,
+  .vw-beat:nth-child(odd) .vw-beat__body {
     grid-column: 2;
-    margin-top: clamp(14px, 2svh, 22px);
+    text-align: left;
+    align-items: stretch;
+    padding-right: var(--vw-guard);
   }
-  /* The marker cell spans both rows, or its height (diamond · ordinal ·
-     year) stretches the title's row and opens a hole under the title. */
-  .vw-beat__mark {
-    grid-row: 1 / span 2;
+  .vw-beat:nth-child(odd) .vw-beat__press {
+    justify-content: flex-start;
+  }
+  .vw-foot__line,
+  .vw-foot__next {
+    grid-column: 2;
+    justify-self: start;
+    text-align: left;
   }
   .vw-plate {
     width: min(100%, calc(56svh * 1.6));

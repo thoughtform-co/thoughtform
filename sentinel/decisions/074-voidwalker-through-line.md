@@ -217,9 +217,7 @@ section is that sentence unfolded.
 - First Load JS carries the station + six DOM-only drawings via
   `LandingPage`'s static import (the `AboutStagePortal` precedent).
 - Open, owner calls: the GVA 2016 and HLN press have no URL on file (plain
-  bars until supplied); the alternating left/right composition the owner
-  asked for after this pass (a second pass on this ADR — the record, the
-  clock and the drawings are unchanged by it, only the grid).
+  bars until supplied).
 
 ## Verification
 
@@ -232,3 +230,27 @@ section is that sentence unfolded.
 Revert the commit. There is no flag: a relocated station with static shell
 markup has one path (ADR-054's reasoning), and a flag would have to reach
 into `page.tsx`'s spec, the manifest and the cover rule to be honest.
+
+## Update 1 (2026-08-23) — the beats alternate around a centred spine
+
+Owner, on seeing the first pass live: _"it would be nice to do it alternating
+like people or websites often do"_. The grid is the only thing that moved —
+the record, the clock, the drawings, the hook and every guard are unchanged,
+which is what decision 6's split (content · motion · composition) was for.
+
+- **≥1280 the spine runs down the CENTRE of the band** (`minmax(0,1fr) ·
+lane · minmax(0,1fr)`) and the beats alternate sides: odd beats on the
+  left, even on the right, each a block — title, paragraph, plate — that
+  hugs the lane. A left-side block is **right-aligned** so its edge meets
+  the spine and its plate seats at the right; the telemetry right guard
+  applies to the right side only. The masthead spans both sides (title
+  left, lede right); the foot's pattern line and link centre under the
+  terminal diamond.
+- **Below 1280 nothing alternates**: the two-track and phone layouts of the
+  first pass stand, every beat left-aligned off a left-hand spine — a
+  side-by-side alternation has no room there, and the `:nth-child(odd)`
+  rules are explicitly reset in that block.
+- Measured: the plates are 407–439 px wide at 1280×720 (even beats carry
+  the 32px guard), 466–498 at 1440×800, 518 at 1920×1080 — every drawing
+  still 0 overlaps / 0 collapsed / no overflow at the 8.6px floor; every
+  beat lights at its line with the next dark; the seam unchanged.

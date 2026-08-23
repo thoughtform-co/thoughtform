@@ -58,6 +58,10 @@ no-preference` — ⚠ if a width gate is ever added, the CSS rest block in
   place (the caption kernel; each lede run its own target so the gold `em`
   survives). Panels power on through the `--ci-off` ladder; the title's
   words brighten on `--vw-w`; all reversible.
+- **The beats ALTERNATE around a centred spine at ≥1280** (ADR-074 U1):
+  odd beats left (right-aligned, plate seated at the lane), even beats
+  right. Below 1280 the `:nth-child(odd)` rules are reset and every beat
+  reads off a left-hand spine — keep that reset when touching either block.
 - ⚠ **Grid rows are EXPLICIT** on the spine (2/4), the beats list (2) and
   the foot (3): auto-placement slid the list under the spine's span and the
   spine measured 0px. ⚠ **The right guard** (`--vw-guard`, 32px below
