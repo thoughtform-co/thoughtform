@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -42,6 +42,34 @@ interface MediaLightboxProps {
 export function restoreFocusAfterUnmount(el: HTMLElement | null) {
   if (!el) return;
   requestAnimationFrame(() => el.focus());
+}
+
+/**
+ * The walkthrough's open/closed state, with the focus contract baked in.
+ *
+ * Extracted from `ToolGallery` (ADR-072) so the portfolio arc's dossier
+ * beats and the casefile's tools plate open the SAME lightbox the same way:
+ * `open(trigger)` captures the button synchronously (the event target is
+ * gone by the time the dialog closes), `close()` unmounts and then hands
+ * focus back one frame late — see `restoreFocusAfterUnmount`.
+ */
+export function useWalkthrough() {
+  const [watching, setWatching] = useState(false);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  const open = useCallback((trigger: HTMLElement) => {
+    returnFocusRef.current = trigger;
+    setWatching(true);
+  }, []);
+
+  const close = useCallback(() => {
+    setWatching(false);
+    const target = returnFocusRef.current;
+    returnFocusRef.current = null;
+    restoreFocusAfterUnmount(target);
+  }, []);
+
+  return { watching, open, close };
 }
 
 /**

@@ -1,12 +1,11 @@
-import Image from "next/image";
-import { useCallback, useRef, useState } from "react";
+import { useRef } from "react";
 
 import type { ProjectCase } from "@/components/landing/v7/tools-cards/toolCardData";
 
-import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from "./MediaLightbox";
+import { MediaLightbox, useCloseOnCasefileFold, useWalkthrough } from "./MediaLightbox";
+import { ToolField, titleText } from "./ToolField";
 import { ConsoleFrame } from "./console/ConsoleFrame";
 import { ConsoleRail } from "./console/ConsoleRail";
-import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
 
 /**
  * ToolGallery — the four production tools, one in view, at panel scale.
@@ -108,6 +107,13 @@ import { TOOL_WIREFRAMES } from "./wireframes/toolWireframes";
  * CONTROLLED, NOT SELF-CONTAINED: `activeIdx` is owned by `TrackPanel`. The
  * panel is keyed per track upstream, so the gallery resets to tool 01 on a
  * row change for free.
+ *
+ * ⚠ THE BODY LIVES IN `ToolField` NOW (ADR-072). The bay and the blocks —
+ * everything between the rail and the lightbox — were lifted out verbatim
+ * so the portfolio arc mounts the SAME markup at page scale. This file is
+ * the casefile's composition of it: the console housing, the four-station
+ * rail, the fold-close contract and the lightbox. The rendered markup is
+ * pinned byte-for-byte by `tests/lib/tool-gallery-markup.test.tsx`.
  */
 interface ToolGalleryProps {
   tools: readonly ProjectCase[];
@@ -115,52 +121,15 @@ interface ToolGalleryProps {
   onActive: (idx: number) => void;
 }
 
-/** "AI Image & Video Suite" from the em-segmented title. The header renders
- *  mono caps, so the gold-em split would be invisible there anyway. */
-function titleText(tool: ProjectCase): string {
-  return tool.title.map((s) => s.text).join("");
-}
-
 export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
-  const [watching, setWatching] = useState(false);
+  const { watching, open, close } = useWalkthrough();
   const rootRef = useRef<HTMLDivElement>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const active = tools[activeIdx] ?? tools[0];
-
-  const close = useCallback(() => {
-    setWatching(false);
-    const target = returnFocusRef.current;
-    returnFocusRef.current = null;
-    restoreFocusAfterUnmount(target);
-  }, []);
 
   useCloseOnCasefileFold(rootRef, watching, close);
 
   if (!active) return null;
-
-  /* AUTHORED or CAPTURED, per tool (ADR-068 D5). Absent ⇒ the capture. */
-  const Wireframe = TOOL_WIREFRAMES[active.id];
-
-  const capture = (
-    <span className="fl-shot__frame">
-      {Wireframe ? (
-        /* Keyed with the tool so a station switch remounts the drawing
-           rather than reconciling one tool's geometry onto another's. */
-        <Wireframe key={active.id} />
-      ) : (
-        <Image
-          key={active.id}
-          className="fl-shot__img"
-          src={active.image.src}
-          alt={active.image.alt}
-          width={active.image.width}
-          height={active.image.height}
-          sizes="(min-width: 1800px) 900px, 640px"
-        />
-      )}
-    </span>
-  );
 
   return (
     <ConsoleFrame
@@ -182,112 +151,9 @@ export function ToolGallery({ tools, activeIdx, onActive }: ToolGalleryProps) {
          prints its sentence, the films row still prints nothing, and this
          plate joins the films. `subline` / `shift` are untouched data. */
     >
-      <div className="fl-toolbody">
-        {/* THE BAY — a housing around the capture, not a second frame
-            around a frame. Its walls carry the FEED line and the transport
-            marks; the capture inside still bleeds to those walls
-            (ADR-064). */}
-        <div className="fl-bay">
-          {/* ⚠ THE FOUR GOLD CORNER BRACKETS ARE DELETED (owner, 2026-08-10).
-              ADR-065's third grammar — framed but not a device — but the bay
-              is ALREADY framed: it carries a full gold-15 border, the FEED
-              line and the watch bar. The brackets registered a housing that
-              was never in doubt, and four gold-40 marks at the corners of a
-              drawing whose whole gold budget is ONE CTA plate spent the
-              signal colour on chrome. The bay's border is the housing now.
-              (`.fl-bay__br*` and its light override left with them.) */}
-
-          {/* ⚠ `IN SERVICE {year} —` LIVES HERE, AND THIS IS ITS ONLY HOME
-              (owner, 2026-08-07). Still no ordinal, no id, no codename:
-              the mockup's `T-01` stays retired (ADR-066), and the smoke's
-              bay-scoped `/\bT-\d/` scan plus its leading-ordinal scan both
-              still run over this line. A four-digit year mid-string trips
-              neither. */}
-          <div className="fl-bay__top" aria-hidden="true">
-            <span>
-              FEED · IN SERVICE <em>{active.year} —</em>
-            </span>
-            {active.walkthrough ? (
-              <span>
-                WALKTHROUGH · <em>{active.walkthrough.duration}</em>
-              </span>
-            ) : (
-              <span>NO WALKTHROUGH</span>
-            )}
-          </div>
-
-          {active.walkthrough ? (
-            <button
-              type="button"
-              className="fl-shot"
-              aria-haspopup="dialog"
-              /* ⚠ ONE LABEL, AND IT STAYS THE ACTION. The drawing is
-                 `aria-hidden`, so the wireframe branch appends the one
-                 clause that says what the bay is showing — WITHOUT the
-                 codename (ADR-066 keeps that off every label on this
-                 surface) and without restating the tool's name, which the
-                 first half of this string already carries. On the capture
-                 branch nothing is appended: the image's `alt` never
-                 reached the a11y tree anyway, because an `aria-label` on a
-                 button overrides its contents. */
-              aria-label={`Watch the ${titleText(active)} walkthrough — ${active.walkthrough.duration}${
-                Wireframe ? ". Interface, drawn." : ""
-              }`}
-              onClick={(e) => {
-                returnFocusRef.current = e.currentTarget;
-                setWatching(true);
-              }}
-            >
-              {capture}
-              {/* THE ONE CLEAR AFFORDANCE (owner, 2026-08-08): play cue,
-                  action, duration. The five transport chevrons left with the
-                  RUN plate — decoration reads as controls on a bar whose
-                  whole job is to be unmistakably one button. */}
-              <span className="fl-shot__bar" aria-hidden="true">
-                <i className="fl-shot__cue" />
-                Watch walkthrough
-                <b>{active.walkthrough.duration}</b>
-              </span>
-            </button>
-          ) : (
-            <div className="fl-shot" data-static>
-              {capture}
-            </div>
-          )}
-        </div>
-
-        {/* THE DETAIL — the tool's four capability blocks (ADR-068 U2,
-            owner 2026-08-08): title + one-sentence claim, straight from
-            `ProjectCase.capabilities`, the same canonical four the Arc card
-            tiles print. No accents: four claims, one voice. Notched on the
-            BOTTOM-LEFT alone: one notch says ORIENTED / CONNECTED
-            (ADR-065), which is what a plate reading off the instrument
-            above it is.
-            ⚠ THE BLOCKS SEAT ONCE, ON ROW ARRIVAL — never on a station
-            switch (owner, 2026-08-08: "four frames that should already be
-            there"). TrackPanel is keyed per ROW upstream, so this list
-            mounts exactly once per row and the seat plays then; the ul
-            carries NO tool key and the plates are keyed BY POSITION, so a
-            station switch swaps title/desc text in place with zero motion.
-            Capabilities are registry-pinned at exactly four, which is what
-            makes index keys safe. The WIREFRAME keeps its `key={active.id}`
-            — that remount is deliberate. */}
-        <ul className="fl-detail">
-          {active.capabilities.map((cap, i) => (
-            <li
-              className="fl-detail__plate"
-              style={{ animationDelay: `${120 + i * 55}ms` }}
-              key={i}
-            >
-              <span className="fl-detail__in">
-                <span className="fl-detail__t">{cap.title}</span>
-                <i className="fl-detail__rule" aria-hidden="true" />
-                <span className="fl-detail__d">{cap.desc}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* THE BODY — bay + blocks, one source with the portfolio arc
+          (ADR-072). Its own comments live in `ToolField.tsx`. */}
+      <ToolField tool={active} onWatch={open} />
 
       {watching && active.walkthrough ? (
         <MediaLightbox
