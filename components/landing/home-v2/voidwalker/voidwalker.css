@@ -53,7 +53,14 @@
   --vw-gold-rgb: var(--gold-rgb, 202, 165, 84);
   --vw-spine-ink: var(--gold);
   --vw-mark-ink: var(--gold);
-  --vw-lane: 64px;
+  /* ⚠ THE LANE IS SIZED FOR THE CHIP, and it has to GROW (U2). At a flat
+     64px the chip's clearance to the content columns went the wrong way as
+     the viewport widened — the chip's type clamps up to its ceiling while
+     `column-gap` tops out at 48px, so 1920 measured 13px of air against
+     1280's 15px. Sizing the lane on the same axis as the chip keeps the
+     rail a column rather than a hairline in a widening gap. Measured
+     clearance after: 18px at 1280, 29px at 1920. */
+  --vw-lane: clamp(72px, 5.5vw, 96px);
   /* The right-rail telemetry (ADR-059 `.rin-tele`) sits 10–22px INSIDE the
      editorial band's right edge at the two laptop widths (1129 vs 1151 at
      1280, 1285 vs 1295 at 1440 — measured); the services lede never
@@ -189,24 +196,59 @@
   padding-block: clamp(20px, 3.5svh, 40px);
 }
 
-/* The marker cell: the diamond on the spine, the ordinal and the year
-   beneath it, aligned to the title's cap line. */
+/* ── The marker CHIP (ADR-074 U2, owner) ──────────────────────────────
+   ⚠ THE RAIL USED TO BE DRAWN THROUGH ITS OWN LABELS. The diamond masked
+   the spine with a void ground; the ordinal and the year stacked under it
+   did not, so on all nine beats the 1px line ran between the glyphs of
+   `//01` and `2014–2017` — and that date overflowed the 64px lane by
+   10–24px into both gutters. Measured at 1280×720 / 1440×800 / 1920×1247.
+
+   One object now: node, ordinal and year on ONE line inside a framed chip
+   that BREAKS the spine (owner: "a nice little frame around it, so it kind
+   of breaks the line, which I think is fine"). The break is deliberate
+   chrome instead of an accident of transparency.
+
+   ⚠ IT MAY BE WIDER THAN THE LANE — that is the unlock. The gutters either
+   side are empty, so the clear span around the spine is the lane plus two
+   `column-gap`s (141px at 1280, 160px at 1920). The chip's type and padding
+   are clamped to keep ≥16px of air to the content columns at the binding
+   viewport, and `capture-voidwalker` asserts that rather than trusting the
+   arithmetic.
+
+   ⚠ SQUARE CORNERS. ADR-065's depth ladder puts chrome at 0 — this is a
+   rail plaque, not a machined housing (which would chamfer) and not a
+   framed non-device (which would take brackets). It is not seated inside a
+   chamfered box either, so U5's inherit-your-housing clause cannot reach
+   it. */
 .vw-beat__mark {
   grid-column: 2;
   grid-row: 1 / span 2;
   position: relative;
   z-index: 1;
+  justify-self: center;
+  align-self: start;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding-top: 0.34em;
+  /* ⚠ THE WIDEST CHIP IS THE ONE WITH A RANGE, and it is what these three
+     numbers are tuned against: `//09 2014–17` is three glyphs longer than
+     every other chip, and at the first cut it left 12px to the content
+     column at 1280 against a 16px floor. Tightened here rather than in the
+     type — the chip is already at the section's smallest rung. */
+  gap: clamp(4px, 0.45vw, 8px);
+  padding: clamp(3px, 0.35vw, 5px) clamp(5px, 0.55vw, 9px);
+  /* The knockout: an opaque ground is what stops the rail, and the hairline
+     is what makes stopping look intended. */
+  background: var(--void, #0a0908);
+  border: 1px solid var(--dawn-15);
   font-family: var(--vw-mono);
+  white-space: nowrap;
+  transition: border-color var(--duration-normal, 120ms) var(--ease-out, ease);
 }
 .vw-beat__diamond {
   display: block;
-  width: 11px;
-  height: 11px;
+  flex: none;
+  width: 9px;
+  height: 9px;
   border: 1px solid var(--dawn-30);
   transform: rotate(45deg);
   background: var(--void, #0a0908);
@@ -220,15 +262,16 @@
   transform: scale(var(--vw-m, 1));
 }
 .vw-beat__ord {
-  font-size: clamp(10px, 0.8vw, 12px);
-  letter-spacing: 0.2em;
+  font-size: clamp(9.5px, 0.72vw, 11px);
+  letter-spacing: 0.12em;
   color: var(--gold);
 }
 .vw-beat__year {
-  font-size: clamp(11px, 0.85vw, 13px);
-  letter-spacing: 0.15em;
-  color: var(--dawn-50);
-  white-space: nowrap;
+  /* Inside a frame the year can carry more ink than it did floating on the
+     rail — it is the chip's subject, not a caption under a mark. */
+  font-size: clamp(10px, 0.78vw, 12px);
+  letter-spacing: 0.08em;
+  color: var(--dawn-70);
 }
 
 /* The title — words split into spans so each brightens on its own rung.
@@ -270,27 +313,29 @@
   margin-top: clamp(14px, 2svh, 22px);
   padding-right: var(--vw-guard);
 }
-/* Odd beats take the LEFT side: the same block, mirrored — right-aligned
-   so its edge meets the lane, the plate seated at the right. The right
-   guard is the telemetry's, so it applies to the right side only. */
-.vw-beat:nth-child(odd) .vw-beat__title,
-.vw-beat:nth-child(odd) .vw-beat__body {
+/* LEFT-side beats: the same block, mirrored — right-aligned so its edge
+   meets the lane, the plate seated at the right. The right guard is the
+   telemetry's, so it applies to the right side only.
+   ⚠ `[data-side]`, NOT `:nth-child` (U2). The film interlude is a row in
+   this same list, so a parity selector would flip every beat beneath it. */
+.vw-beat[data-side="left"] .vw-beat__title,
+.vw-beat[data-side="left"] .vw-beat__body {
   grid-column: 1;
 }
-.vw-beat:nth-child(odd) .vw-beat__title {
+.vw-beat[data-side="left"] .vw-beat__title {
   text-align: right;
 }
-.vw-beat:nth-child(odd) .vw-beat__body {
+.vw-beat[data-side="left"] .vw-beat__body {
   align-items: flex-end;
   text-align: right;
   padding-right: 0;
 }
-.vw-beat:nth-child(odd) .vw-beat__press {
+.vw-beat[data-side="left"] .vw-beat__press {
   justify-content: flex-end;
 }
-.vw-beat:nth-child(odd) .vw-plate,
-.vw-beat:nth-child(odd) .vw-plate__top,
-.vw-beat:nth-child(odd) .vw-plate__bar {
+.vw-beat[data-side="left"] .vw-plate,
+.vw-beat[data-side="left"] .vw-plate__top,
+.vw-beat[data-side="left"] .vw-plate__bar {
   text-align: left;
 }
 @media (min-width: 1600px) {
@@ -453,6 +498,139 @@
   opacity: 0.16;
 }
 
+/* ── 5b · The film interlude (ADR-074 U2) ─────────────────────────────
+   The one thing on this rail that stops it. Centred, wider than a beat's
+   plate, and carrying an OPAQUE ground so it masks the spine where it sits
+   — the line runs down, halts at the film and resumes underneath. That is
+   the owner's "break the flow" made structural: the same knockout device as
+   the marker chip, one object larger.
+
+   ⚠ It takes NO `data-side` and no chip. It is not a beat in the run — it
+   is the account of the beat above it — so it is skipped by the ordinal and
+   by the alternation (both computed in the renderer). */
+.vw-beat--interlude {
+  grid-column: 1 / -1;
+  display: block;
+  padding-block: clamp(30px, 5svh, 60px);
+}
+.vw-film {
+  --vw-ch: clamp(16px, 2.4cqw, 26px);
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  width: min(100%, 720px);
+  display: flex;
+  flex-direction: column;
+  /* The knockout. Opaque, not a wash: a translucent ground would let the
+     rail show through the film, which is the defect this pass removed from
+     the chips. */
+  background: var(--void-deep-canon, #050403);
+  border: 1px solid var(--gold-15);
+  container-type: inline-size;
+  overflow: hidden;
+}
+.vw-film__top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: clamp(22px, 3.4svh, 30px);
+  padding: 0 12px 0 14px;
+  border-bottom: 1px solid rgba(var(--dawn-rgb), 0.08);
+  font-family: var(--vw-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb), 0.34);
+}
+.vw-film__top em {
+  font-style: normal;
+  color: var(--gold-40);
+}
+/* The FRAME is the button (the casefile's affordance law) — one control,
+   and the drawing inside it never takes a pointer of its own. */
+.vw-film__frame {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+}
+.vw-film__frame > .vw-wire {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+.vw-film__frame:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -2px;
+}
+/* The fused bar — the `.fl-shot__bar` recipe: the one affordance, welded to
+   the drawing's bottom edge rather than floating beside it. */
+.vw-film__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: clamp(30px, 4.6svh, 40px);
+  padding: 7px 12px 7px 14px;
+  border-top: 1px solid rgba(var(--vw-gold-rgb), 0.3);
+  background: rgba(var(--void-rgb), 0.88);
+  font-family: var(--vw-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  transition: background var(--duration-normal, 120ms) var(--ease-out, ease);
+}
+.vw-film__frame:hover .vw-film__bar,
+.vw-film__frame:focus-visible .vw-film__bar {
+  background: rgba(var(--vw-gold-rgb), 0.18);
+}
+/* A play triangle, drawn — a media control, never a wayfinding diamond. */
+.vw-film__cue {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 7px;
+  border-color: transparent transparent transparent currentColor;
+}
+.vw-film__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  letter-spacing: 0.1em;
+  text-transform: none;
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+.vw-film__bar b {
+  flex: none;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+}
+@media (max-width: 960px) {
+  .vw-film {
+    width: 100%;
+  }
+  .vw-film__bar {
+    flex-wrap: wrap;
+  }
+  .vw-film__title {
+    flex-basis: 100%;
+    order: 3;
+    font-size: 9px;
+  }
+}
+
 /* ── 6 · The foot — the terminus ──────────────────────────────────── */
 .vw-foot {
   grid-column: 1 / -1;
@@ -546,9 +724,16 @@
   --vw-w: clamp(0, calc((var(--vw-b, 1) - 0.3 - var(--w-i, 0) * 0.06) * 3.5), 1);
 }
 /* The diamond fills in the last stretch before the reading line — the
-   gold tip arriving. */
+   gold tip arriving — and the chip's own frame lights with it, so arrival
+   reads on the whole marker rather than on an 9px square inside it. */
 .vw[data-vw-ready] .vw-beat__diamond::after {
   --vw-m: clamp(0, calc((var(--vw-b, 1) - 0.8) * 5), 1);
+}
+.vw[data-vw-ready] .vw-beat__mark {
+  border-color: rgba(
+    var(--vw-gold-rgb),
+    clamp(0, calc((var(--vw-b, 1) - 0.8) * 5 * 0.55 + 0.06), 0.61)
+  );
 }
 /* The masthead's lede powers on with the head's clock; the title does
    not (it decodes). */
@@ -606,15 +791,20 @@
      left-aligned off the spine, odd ones included. */
   .vw-beat__title,
   .vw-beat__body,
-  .vw-beat:nth-child(odd) .vw-beat__title,
-  .vw-beat:nth-child(odd) .vw-beat__body {
+  .vw-beat[data-side="left"] .vw-beat__title,
+  .vw-beat[data-side="left"] .vw-beat__body {
     grid-column: 2;
     text-align: left;
     align-items: stretch;
     padding-right: var(--vw-guard);
   }
-  .vw-beat:nth-child(odd) .vw-beat__press {
+  .vw-beat[data-side="left"] .vw-beat__press {
     justify-content: flex-start;
+  }
+  /* The chip keeps its frame at the lane, but the lane is 48/32px here — it
+     hangs off the rail rather than centring on it. */
+  .vw-beat__mark {
+    justify-self: start;
   }
   .vw-foot__line,
   .vw-foot__next {

@@ -841,3 +841,98 @@
     width: 6px;
   }
 }
+
+/* ═══ film — the interlude's face (ADR-074 U2) ═════════════════════════
+   A frame held in a viewer: sprocket edges, the house image mark on a
+   "generated" wash, the one gold object (the play key), and a transport row
+   whose run is part-played. No image, so no third-party origin and no
+   thumbnail chrome in our rail — see FilmPlate's own note. */
+.vw-wire--film .vw-wire__in {
+  gap: 0;
+}
+.vw-wire--film .vw-wire__fi-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4cqh;
+  padding: 2cqh 3cqw;
+}
+/* The sprocket edges — dotted rules rather than drawn holes: at this size a
+   real perforation is a row of sub-pixel dots that renders as a smudge. */
+.vw-wire--film .vw-wire__fi-perf {
+  flex: none;
+  height: 0;
+  border-top: 3px dotted var(--w-hair);
+}
+/* ⚠ THE MARK AND THE KEY STACK, THEY DO NOT OVERLAP. The first cut centred
+   both and drew the image mark at 26 % — a 175px glyph with the gold key
+   sitting on top of it, two objects fighting for the same centre. Column,
+   centred, with a gap: the frame says "a picture lives here" and the key
+   says "press this", in that order. */
+.vw-wire--film .vw-wire__fi-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 5cqh, 20px);
+  background: var(--w-gen);
+  border: 1px solid var(--w-hair2);
+}
+.vw-wire--film .vw-wire__fi-frame > svg {
+  width: clamp(30px, 9cqw, 56px);
+  height: auto;
+  fill: none;
+  stroke: var(--w-lbl-ink);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+/* The play key — the drawing's ONE gold, and the only thing in it that
+   reads as an instruction. */
+.vw-wire--film .vw-wire__cta {
+  gap: max(5px, 0.8cqw);
+  height: clamp(22px, 8cqh, 32px);
+  padding: 0 max(9px, 1.6cqw);
+}
+.vw-wire--film .vw-wire__fi-play {
+  flex: none;
+  width: clamp(8px, 1.5cqw, 11px);
+  height: clamp(9px, 1.7cqw, 13px);
+  fill: var(--w-cta-ink);
+}
+.vw-wire--film .vw-wire__fi-transport {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  padding: 0 3cqw 2.4cqh;
+}
+.vw-wire--film .vw-wire__fi-track {
+  display: block;
+  flex: 1 1 auto;
+  height: 2px;
+  background: var(--w-fill);
+  position: relative;
+}
+.vw-wire--film .vw-wire__fi-run {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 38%;
+  background: var(--w-green);
+}
+.vw-wire--film .vw-wire__fi-run::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--w-mark);
+  transform: translateY(-50%) rotate(45deg);
+}

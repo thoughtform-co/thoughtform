@@ -33,4 +33,9 @@ export const VW_WIRE_LABELS: Readonly<Record<VwWireId, readonly string[]>> = {
   latent: ["LATENT LAND", "PROMPT", "FRAMES", "CUT", "RENDER", "CHARTER"],
 };
 
+/** The interlude's plate (ADR-074 U2) is not a beat drawing — it is keyed
+ *  separately so the six-story registry stays total over `VwWireId` and the
+ *  markup guard can still walk it. */
+export const VW_FILM_LABELS: readonly string[] = ["PLAY", "CAMPAIGN FILM"];
+
 export const VW_WIRE_IDS = Object.keys(VW_WIRE_LABELS) as readonly VwWireId[];

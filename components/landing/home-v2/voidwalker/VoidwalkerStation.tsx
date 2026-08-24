@@ -3,6 +3,8 @@
 import { useRef, type CSSProperties } from "react";
 
 import { useVoidwalkerScroll } from "../hooks/useVoidwalkerScroll";
+import { MediaLightbox, useWalkthrough } from "../services/casefile/MediaLightbox";
+import { FilmPlate } from "./wireframes/FilmPlate";
 import { VOIDWALKER_WIREFRAMES } from "./wireframes/voidwalkerWireframes";
 import {
   VOIDWALKER_BEATS,
@@ -154,14 +156,36 @@ function Plate({ beat }: { beat: VoidwalkerBeat }) {
   );
 }
 
-function Beat({ beat, index }: { beat: VoidwalkerBeat; index: number }) {
+function Beat({
+  beat,
+  index,
+  ordinal,
+  side,
+}: {
+  beat: VoidwalkerBeat;
+  index: number;
+  ordinal: number;
+  side: "left" | "right";
+}) {
   const story = beat.kind === "story";
   return (
-    <li className={`vw-beat vw-beat--${beat.kind}`} id={`vw-${beat.id}`} data-vw-idx={index}>
+    <li
+      className={`vw-beat vw-beat--${beat.kind}`}
+      id={`vw-${beat.id}`}
+      data-vw-idx={index}
+      /* ⚠ THE SIDE IS DATA, NOT `:nth-child` (U2). The film interlude sits
+         in this same list, so a parity selector would flip every beat under
+         it the moment the film moved or a second one arrived. */
+      data-side={side}
+    >
+      {/* The marker CHIP — one framed object on the rail carrying the node,
+          the ordinal and the year on one line. It has an opaque ground, so
+          it BREAKS the spine rather than letting the line run through its
+          type, which is what the stacked labels used to do. */}
       <div className="vw-beat__mark">
         <i className="vw-beat__diamond" aria-hidden="true" />
         <span className="vw-beat__ord" aria-hidden="true">
-          {ord(index)}
+          {ord(ordinal)}
         </span>
         <span className="vw-beat__year">{beat.year}</span>
       </div>
@@ -194,6 +218,66 @@ function Beat({ beat, index }: { beat: VoidwalkerBeat; index: number }) {
   );
 }
 
+/**
+ * The film interlude — centred, wider than a beat, and the one thing on the
+ * rail that stops it. Its ground masks the spine (`voidwalker.css`), so the
+ * line runs down, halts at the film and picks up under it: the "break the
+ * flow" the owner asked for, made structural rather than decorative.
+ *
+ * The plate is our drawing; the player is built only when the reader clicks,
+ * inside `MediaLightbox`'s dialog. Nothing third-party is fetched before
+ * that — see `FilmPlate` and `lib/security/headers.mjs`.
+ */
+function Interlude({ beat }: { beat: VoidwalkerBeat }) {
+  const film = beat.film;
+  const { watching, open, close } = useWalkthrough();
+  if (!film) return null;
+  return (
+    <li className="vw-beat vw-beat--interlude" id={`vw-${beat.id}`}>
+      <figure
+        className="vw-film"
+        data-vw-panel=""
+        style={{ ["--ci-off" as string]: 0.24 } as CSSProperties}
+      >
+        <div className="vw-film__top">
+          <span>
+            Film · <em>Save The Expanse</em>
+          </span>
+          <span>{film.duration}</span>
+        </div>
+        {/* The frame IS the button — the casefile's own affordance law: a
+            drawing that took a pointer would be a second control inside one. */}
+        <button
+          type="button"
+          className="vw-film__frame"
+          aria-haspopup="dialog"
+          onClick={(e) => open(e.currentTarget)}
+        >
+          <FilmPlate />
+          <span className="vw-film__bar">
+            <span className="vw-film__cue" aria-hidden="true" />
+            <span className="vw-film__title">{film.title}</span>
+            <b>{film.channel}</b>
+          </span>
+        </button>
+      </figure>
+      {watching ? (
+        <MediaLightbox
+          embed={{
+            /* `-nocookie` and no `rel`: the CSP names exactly this origin,
+               and nothing is set until the reader presses play. */
+            src: `https://www.youtube-nocookie.com/embed/${film.youtubeId}?autoplay=1&rel=0`,
+            title: film.title,
+          }}
+          label={film.title}
+          meta={`${film.channel} · ${film.duration}`}
+          onClose={close}
+        />
+      ) : null}
+    </li>
+  );
+}
+
 export function VoidwalkerStation() {
   const rootRef = useRef<HTMLDivElement>(null);
   useVoidwalkerScroll(rootRef);
@@ -211,10 +295,25 @@ export function VoidwalkerStation() {
 
       <div className="vw__spine" aria-hidden="true" />
 
-      <ol className="vw-beats" aria-label="The through-line, 2014 to 2025">
-        {VOIDWALKER_BEATS.map((beat, i) => (
-          <Beat key={beat.id} beat={beat} index={i} />
-        ))}
+      <ol className="vw-beats" aria-label="The through-line, 2026 back to 2014">
+        {(() => {
+          /* The ordinal and the side both count BEATS, not rows — an
+             interlude takes neither, and must not shift the beat under it. */
+          let n = 0;
+          return VOIDWALKER_BEATS.map((beat, i) => {
+            if (beat.kind === "interlude") return <Interlude key={beat.id} beat={beat} />;
+            const ordinal = n++;
+            return (
+              <Beat
+                key={beat.id}
+                beat={beat}
+                index={i}
+                ordinal={ordinal}
+                side={ordinal % 2 === 0 ? "left" : "right"}
+              />
+            );
+          });
+        })()}
       </ol>
 
       <footer className="vw-foot">

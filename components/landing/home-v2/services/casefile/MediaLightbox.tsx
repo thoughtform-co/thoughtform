@@ -24,7 +24,24 @@ import { createPortal } from "react-dom";
  * caller knows which trigger to send focus back to. See `restoreFocusAfterUnmount`.
  */
 interface MediaLightboxProps {
-  src: string;
+  /** A self-hosted file. Ignored when `embed` is passed. */
+  src?: string;
+  /**
+   * An EMBEDDED player instead of a file (ADR-074 U2 — the through-line's
+   * Save The Expanse film, on the owner's own channel).
+   *
+   * ⚠ ADDITIVE ON PURPOSE. `FilmsPlate`, `ToolGallery` and the portfolio
+   * arc's `ArcDossierConsole` all render this component, and
+   * `tests/lib/tool-gallery-markup.test.tsx` pins that markup byte-for-byte
+   * — so the `src` path below must stay exactly what it was. This branch is
+   * the only thing a caller without `embed` can notice, which is nothing.
+   *
+   * ⚠ The `src` must be an origin `frame-src` allows (`lib/security/headers.mjs`
+   * names one: `youtube-nocookie.com`). A URL from anywhere else renders
+   * today, because the CSP still ships report-only, and dies the day it is
+   * enforced — check the console, not the picture.
+   */
+  embed?: { src: string; title: string };
   /** Mono caps line above the video, e.g. "Smug Owl · Loop ATL". */
   label: string;
   /** Second half of that line, e.g. "16:9 master · 30 sec". */
@@ -161,7 +178,7 @@ export function useDialogShell(onClose: () => void) {
   return { dialogRef, close };
 }
 
-export function MediaLightbox({ src, label, meta, onClose }: MediaLightboxProps) {
+export function MediaLightbox({ src, embed, label, meta, onClose }: MediaLightboxProps) {
   const { dialogRef, close } = useDialogShell(onClose);
 
   return createPortal(
@@ -190,15 +207,32 @@ export function MediaLightbox({ src, label, meta, onClose }: MediaLightboxProps)
             </>
           ) : null}
         </span>
-        <video
-          className="fl-lightbox__video"
-          src={src}
-          controls
-          autoPlay
-          playsInline
-          aria-label={label}
-          onEnded={close}
-        />
+        {embed ? (
+          /* The embedded player. It carries the SAME class as the video so
+             the 16:9 / max-height / object-fit rules hold one shape for both,
+             and it is only ever constructed here — inside a dialog the
+             reader opened — so nothing third-party loads on the landing
+             until a click. `allow` names autoplay because the src asks for
+             it; `fullscreen` because the player's own control needs it. */
+          <iframe
+            className="fl-lightbox__video"
+            src={embed.src}
+            title={embed.title}
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        ) : (
+          <video
+            className="fl-lightbox__video"
+            src={src}
+            controls
+            autoPlay
+            playsInline
+            aria-label={label}
+            onEnded={close}
+          />
+        )}
         <button type="button" className="fl-lightbox__close" onClick={close}>
           Close
         </button>

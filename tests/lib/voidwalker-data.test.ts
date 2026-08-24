@@ -64,33 +64,61 @@ const byId = (id: string) => {
 };
 
 describe("voidwalker record — shape", () => {
-  it("is nine beats, chronological, six stories and three waypoints", () => {
-    expect(VOIDWALKER_BEATS).toHaveLength(9);
+  it("runs REVERSE-chronological: nine beats, one film, newest first", () => {
+    // Nine beats plus the interlude.
+    expect(VOIDWALKER_BEATS).toHaveLength(10);
     const ids = VOIDWALKER_BEATS.map((b) => b.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    // ⚠ NON-INCREASING, not non-decreasing (U2). The rail is read downward
+    // and the reader starts at the current seat.
     for (let i = 1; i < VOIDWALKER_BEATS.length; i++) {
-      expect(VOIDWALKER_BEATS[i]!.sortYear).toBeGreaterThanOrEqual(
-        VOIDWALKER_BEATS[i - 1]!.sortYear
-      );
+      expect(VOIDWALKER_BEATS[i]!.sortYear).toBeLessThanOrEqual(VOIDWALKER_BEATS[i - 1]!.sortYear);
     }
     const kinds = VOIDWALKER_BEATS.map((b) => b.kind);
     expect(kinds.filter((k) => k === "story")).toHaveLength(6);
-    // The prologue and the terminus are the waypoints — the spine opens
-    // and closes compact, the stories sit between.
+    expect(kinds.filter((k) => k === "interlude")).toHaveLength(1);
+    // The current seat and the practice open it; the origin closes it.
     expect(kinds[0]).toBe("waypoint");
-    expect(kinds[7]).toBe("waypoint");
-    expect(kinds[8]).toBe("waypoint");
+    expect(kinds[1]).toBe("waypoint");
+    expect(kinds[9]).toBe("waypoint");
+    // It opens on the seat the owner asked to lead with.
+    expect(VOIDWALKER_BEATS[0]!.id).toBe("loop");
+    expect(vwPlain(VOIDWALKER_BEATS[0]!.title)).toBe("Intelligence Architect");
+  });
+
+  it("seats the film directly under the beat it belongs to", () => {
+    const at = VOIDWALKER_BEATS.findIndex((b) => b.kind === "interlude");
+    expect(VOIDWALKER_BEATS[at - 1]!.id, "the film follows the Expanse beat").toBe("expanse");
+    const film = VOIDWALKER_BEATS[at]!.film!;
+    expect(film).toBeTruthy();
+    // The id is what `youtube-nocookie.com/embed/{id}` is built from — a
+    // full URL here would silently produce a broken player.
+    expect(film.youtubeId).toMatch(/^[\w-]{11}$/);
+    expect(film.duration).toMatch(/^\d{1,2}:\d{2}$/);
+    expect(film.title.length).toBeLessThanOrEqual(60);
+    // First-party: the channel is this section's own name, which is why the
+    // plate letters it rather than implying a neutral source.
+    expect(film.channel).toBe("Voidwalker");
+    // An interlude is not a beat in the run: no plate, no press, no chip.
+    expect(VOIDWALKER_BEATS[at]!.wire).toBeUndefined();
+    expect(VOIDWALKER_BEATS[at]!.press).toBeUndefined();
+    expect(VOIDWALKER_BEATS[at]!.artefact).toBeUndefined();
+    // ...and nothing else carries a film.
+    expect(VOIDWALKER_BEATS.filter((b) => b.film)).toHaveLength(1);
   });
 
   it("letters the year with an en dash, never a hyphen", () => {
     for (const b of VOIDWALKER_BEATS) {
-      expect(b.year, b.id).toMatch(/^\d{4}(–\d{4})?$/);
+      // `2016` | `2014–17` | `07/2016` — the MM/YYYY form is accepted now so
+      // supplying the four missing months is a data edit and nothing else.
+      expect(b.year, b.id).toMatch(/^(\d{2}\/)?\d{4}(–\d{2})?$/);
     }
   });
 
   it("every story carries a plate (artefact · press · wire); waypoints carry none", () => {
     for (const b of VOIDWALKER_BEATS) {
+      if (b.kind === "interlude") continue;
       if (b.kind === "story") {
         expect(b.artefact, `${b.id} artefact`).toBeTruthy();
         expect(b.press, `${b.id} press`).toBeTruthy();
@@ -110,6 +138,9 @@ describe("voidwalker record — shape", () => {
 describe("voidwalker record — budgets (measured)", () => {
   it("titles fit the 5fr title column", () => {
     for (const b of VOIDWALKER_BEATS) {
+      // The interlude letters the film's title on its bar, not a beat
+      // title in the column — its budget is pinned with the film above.
+      if (b.kind === "interlude") continue;
       const cap = b.kind === "story" ? BUDGET.storyTitle : BUDGET.waypointTitle;
       expect(vwPlain(b.title).length, `${b.id} title`).toBeLessThanOrEqual(cap);
     }
@@ -117,6 +148,7 @@ describe("voidwalker record — budgets (measured)", () => {
 
   it("bodies fit the 7fr body column", () => {
     for (const b of VOIDWALKER_BEATS) {
+      if (b.kind === "interlude") continue;
       const cap = b.kind === "story" ? BUDGET.storyBody : BUDGET.waypointBody;
       expect(vwPlain(b.body).length, `${b.id} body`).toBeLessThanOrEqual(cap);
     }

@@ -32,6 +32,25 @@ describe("buildContentSecurityPolicy", () => {
     expect(csp).toMatch(/img-src[^;]*blob:/);
   });
 
+  /* ⚠ THESE TWO PIN A WIDENING, WHICH IS WHAT THIS FILE COULD NOT CATCH.
+     Every assertion above is directive-scoped (`[^;]*`), so ADDING a
+     directive — or adding a host to one nobody pinned — broke nothing, and
+     `media-src` and `frame-src` were both unpinned. That is the opposite of
+     this file's stated job. The exact-list matches below mean a new media
+     origin or a second embeddable host has to come here and argue for
+     itself; a host appended silently fails instead. */
+  it("keeps media self-hosted — a remote src is how video leaves the repo", () => {
+    const csp = buildContentSecurityPolicy();
+    expect(csp).toContain("media-src 'self' blob:;");
+  });
+
+  it("frames exactly one origin: the owner's own film, cookie-free (ADR-074 U2)", () => {
+    const csp = buildContentSecurityPolicy();
+    expect(csp).toContain("frame-src https://www.youtube-nocookie.com;");
+    // The cookie-setting host is the whole reason `-nocookie` is named.
+    expect(csp).not.toMatch(/frame-src[^;]*https:\/\/www\.youtube\.com/);
+  });
+
   it("opts in to 'unsafe-eval' for dev (HMR / fast refresh) but never in prod", () => {
     const dev = buildContentSecurityPolicy({ allowUnsafeEval: true });
     expect(dev).toContain("'unsafe-eval'");

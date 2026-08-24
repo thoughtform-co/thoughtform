@@ -60,9 +60,38 @@ no-preference` — ⚠ if a width gate is ever added, the CSS rest block in
   survives). Panels power on through the `--ci-off` ladder; the title's
   words brighten on `--vw-w`; all reversible.
 - **The beats ALTERNATE around a centred spine at ≥1280** (ADR-074 U1):
-  odd beats left (right-aligned, plate seated at the lane), even beats
-  right. Below 1280 the `:nth-child(odd)` rules are reset and every beat
-  reads off a left-hand spine — keep that reset when touching either block.
+  left beats right-aligned with the plate seated at the lane, right beats
+  mirrored. Below 1280 the rules are reset and every beat reads off a
+  left-hand spine — keep that reset when touching either block.
+  ⚠ **THE SIDE AND THE ORDINAL ARE DATA, NOT `:nth-child`** (U2). The film
+  interlude is a row in the same list, so a parity selector flips every beat
+  beneath it. Both are computed in the renderer over a count that SKIPS
+  interludes; CSS selects `[data-side]`.
+- **The marker is a framed CHIP on the rail** (U2) — node, ordinal and year
+  on one line, on an opaque ground that BREAKS the spine. ⚠ The rail used to
+  be drawn straight through the labels on all nine beats: the diamond
+  knocked it out, the type under it did not. Anything added to the chip
+  keeps that ground. ⚠ It may be wider than the lane — the gutters are
+  empty — but it must clear the content columns by ≥16px at 1280 (measured
+  19 / 21 / 29), which is why `--vw-lane` is a CLAMP: at a flat 64px the
+  clearance got WORSE as the viewport grew. The widest chip is the range
+  (`//09 2014–17`) and it is what the gap, padding and tracking are tuned
+  against. Square corners — chrome sits at 0 on ADR-065's depth ladder.
+- **The run is REVERSE-chronological** (U2), opening on the Intelligence
+  Architect seat dated by the SEAT (2026), not the 2024 joining date, or a
+  rail read downward prints 2024 above Thoughtform's 2025.
+- **The film interlude is NOT a beat.** No chip, no ordinal, no side — and it
+  is skipped by `useVoidwalkerScroll`'s marker walk and by the capture
+  script: a `.vw-beat` query without `:not(.vw-beat--interlude)` hands the
+  clock a phantom stop. It carries an opaque ground so the spine stops at it.
+  ⚠ **The player is the ONE third-party frame on this site.**
+  `lib/security/headers.mjs` names `youtube-nocookie.com` in `frame-src`
+  (absent before U2, so it fell back to `default-src 'self'`), and
+  `security-headers.test.ts` pins `frame-src`, `media-src` and the ABSENCE of
+  the cookie-setting host. The iframe is built only inside `MediaLightbox`
+  after a click — its `embed` branch is ADDITIVE and the `src` path stays
+  byte-identical for the films and walkthroughs that share it. A new origin
+  is a decision: measure it with `enforceCsp: true` before adding it.
 - ⚠ **Grid rows are EXPLICIT** on the spine (2/4), the beats list (2) and
   the foot (3): auto-placement slid the list under the spine's span and the
   spine measured 0px. ⚠ **The right guard** (`--vw-guard`, 32px below

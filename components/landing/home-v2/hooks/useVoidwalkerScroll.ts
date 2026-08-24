@@ -104,7 +104,11 @@ export function useVoidwalkerScroll(rootRef: RefObject<HTMLElement | null>): voi
     const measure = () => {
       head = root.querySelector<HTMLElement>(".vw-head");
       spine = root.querySelector<HTMLElement>(".vw__spine");
-      beats = Array.from(root.querySelectorAll<HTMLElement>(".vw-beat"));
+      /* ⚠ THE INTERLUDE IS A ROW IN THIS LIST AND IS NOT A BEAT (U2). It
+         carries no marker chip, so `markerYs` would fall back to its own top
+         and hand the clock a phantom stop — the film would light a beat that
+         does not exist and shift every `--vw-b` under it. */
+      beats = Array.from(root.querySelectorAll<HTMLElement>(".vw-beat:not(.vw-beat--interlude)"));
       headTop = head ? pageTop(head) : pageTop(root);
       if (spine) {
         spineTop = pageTop(spine);

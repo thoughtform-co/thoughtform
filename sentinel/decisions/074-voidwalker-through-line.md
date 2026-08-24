@@ -254,3 +254,101 @@ lane · minmax(0,1fr)`) and the beats alternate sides: odd beats on the
   the 32px guard), 466–498 at 1440×800, 518 at 1920×1080 — every drawing
   still 0 overlaps / 0 collapsed / no overflow at the 8.6px floor; every
   beat lights at its line with the next dark; the seam unchanged.
+
+## Update 2 (2026-08-24) — the marker chip, the reversal, and the film
+
+Three owner notes on the live section, and the first was a defect nobody had
+measured.
+
+### The rail was drawn through its own labels
+
+⚠ **The spine crossed the type on ALL NINE beats.** The diamond masked the
+rail with `background: var(--void)`; the ordinal and the year stacked beneath
+it were `rgba(0,0,0,0)`, so the 1px line ran between the glyphs of `//01` and
+`2014–2017`. And that date **overflowed the 64px lane by +10 / +19 / +24px**
+into both gutters. Measured at 1280×720 / 1440×800 / 1920×1247. The owner read
+this as "the dates aren't placed cleanly"; it was a knockout defect and a
+width defect wearing one coat.
+
+The fix is his call, and better than either option offered: **the label stays
+ON the rail inside a little frame that breaks the line** — "which I think is
+fine". One object, one line: the node diamond, the ordinal and the year in a
+framed chip with an opaque ground. The break is deliberate chrome instead of
+an accident of transparency, and the same device scales up to the film below.
+
+- ⚠ **THE CHIP MAY BE WIDER THAN THE LANE — that is the unlock.** The gutters
+  either side are empty, so the clear span is the lane plus two
+  `column-gap`s. What that bought had to be re-bought once: at a flat 64px
+  lane the clearance went the WRONG WAY as the viewport grew — the chip's
+  type clamps up to its ceiling while `column-gap` tops out at 48px, so 1920
+  measured **13px** of air against 1280's 15px. `--vw-lane` is a clamp now
+  (72 → 96px), sized for its content rather than left as a hairline in a
+  widening gap. Measured after: **19 / 21 / 29px**. The widest chip is the one
+  with a range (`//09 2014–17`), and it is what the gap, the padding and the
+  tracking are tuned against.
+- **Square corners.** ADR-065's depth ladder puts chrome at 0: this is a rail
+  plaque, not a machined housing (chamfer) and not a framed non-device
+  (brackets), and it is not seated inside a chamfered box, so U5's
+  inherit-your-housing clause cannot reach it.
+- The chip's frame lights `--dawn-15` → `--gold` on the beat's own clock, so
+  arrival reads on the whole marker rather than on a 9px square inside it.
+- **Year only** (owner): `2014–2017` becomes `2014–17`. MM/YYYY was asked for
+  and **only five of the nine months are sourceable from the record** — Save
+  The Expanse, Starhaven, the Loop start and the span's opening have none, and
+  this section's guard bans inventing a fact. The guard's pattern accepts
+  `MM/YYYY` already, so supplying those months is a data edit and nothing else.
+
+### The run reverses, and the seat dates it
+
+Newest first: Loop → Thoughtform → GenAI → classroom → coins → Expanse →
+OPHEF → Pokémon GO → the Antwerp community. ⚠ The opening beat is dated by the
+**architect seat (2026)**, not the 2024 joining date — otherwise a rail read
+downward prints 2024 above Thoughtform's 2025. It is retitled **Intelligence
+Architect** and its body rewritten off "Lead Creative Technologist".
+
+⚠ **THE SIDE AND THE ORDINAL STOPPED COMING FROM `:nth-child`.** The film is a
+row in the same list, so a parity selector would have flipped every beat
+beneath it — silently, and only for the beats after the film. Both are computed
+in the renderer over a count that skips interludes, and the CSS selects
+`[data-side]`. The masthead's lede still reads forward on purpose: it names the
+destination, and the run walks the reader back to it.
+
+### The film breaks the rail
+
+The Save The Expanse film, centred, between the beat it belongs to and the
+next — the drawing above is the ARTEFACT, this is the account of it. It carries
+an opaque ground, so **the spine stops at the film and resumes underneath**:
+"break the flow" made structural rather than decorative, and the chip's own
+device one object larger.
+
+⚠ **THE FILM IS FIRST-PARTY** — channel `Voidwalker` (`@starhaven`), which is
+this section's own name, so the plate letters it rather than implying a neutral
+source.
+
+⚠ **THIS SITE HAD NEVER EMBEDDED A THIRD-PARTY FRAME.** `frame-src` was ABSENT,
+so it fell back to `default-src 'self'`; the header ships report-only, so an
+iframe rendered today and would have hard-blocked the day `enforceCsp` flips.
+It names `youtube-nocookie.com` explicitly now, and the player is built ONLY
+inside the lightbox after a click — nothing third-party loads on the landing,
+and the plate on the page is our own drawing, never a thumbnail.
+`MediaLightbox` gains an ADDITIVE `embed` branch; the `src` path is
+byte-identical, which matters because `FilmsPlate`, `ToolGallery` and
+`ArcDossierConsole` all share it under a markup pin.
+
+⚠ **MEASURED UNDER AN ENFORCED POLICY, NOT ASSUMED.** `enforceCsp: true` was
+flipped locally and the walk re-run: the film plays, the corridor survives, and
+the only remaining violation is the player's own poster on `i.ytimg.com` —
+cosmetic, but the report queue emptying is the stated gate for enforcement, so
+that host is named too. **The same test caught a fabricated fact**: the record
+said the film ran `9:47`; the player says **2:14**.
+
+⚠ **`tests/lib/security-headers.test.ts` COULD NOT CATCH A WIDENING.** Every
+regex is directive-scoped (`[^;]*`) and neither `media-src` nor `frame-src` was
+pinned, so adding a directive — or a host to one — broke nothing, against the
+file's own stated purpose. Both are pinned by exact list now, and `frame-src`
+additionally asserts the cookie-setting `youtube.com` is NOT there.
+
+**Left open, and not ours:** under enforcement the corridor's Draco decoder
+(`www.gstatic.com`) violates `connect-src`. Pre-existing, unrelated to this
+pass, and a decision of its own — self-host the decoder or name the host — but
+it is what stands between this policy and enforcement.

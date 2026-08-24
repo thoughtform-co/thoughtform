@@ -66,7 +66,7 @@ const readState = () =>
     const html = document.documentElement;
     const vw = document.querySelector("#voidwalker .vw");
     const spine = vw?.querySelector(".vw__spine");
-    const beats = [...(vw?.querySelectorAll(".vw-beat") ?? [])];
+    const beats = [...(vw?.querySelectorAll(".vw-beat:not(.vw-beat--interlude)") ?? [])];
     return {
       scrollY: Math.round(window.scrollY),
       ambient: html.hasAttribute("data-services-ambient"),
@@ -129,7 +129,7 @@ try {
 
   /* ── 3 · every beat at its reading line ───────────────────────────── */
   const markers = await page.evaluate(() =>
-    [...document.querySelectorAll("#voidwalker .vw-beat")].map((b) => {
+    [...document.querySelectorAll("#voidwalker .vw-beat:not(.vw-beat--interlude)")].map((b) => {
       const d = b.querySelector(".vw-beat__diamond");
       const r = d.getBoundingClientRect();
       return { id: b.id, y: Math.round(r.top + r.height / 2 + window.scrollY) };
@@ -139,6 +139,21 @@ try {
   for (const [i, m] of markers.entries()) {
     await walkTo(m.y - Math.round(VH * READ_LINE) + 4);
     await page.waitForTimeout(350);
+    /* ⚠ RE-READ THE MARKER AND CORRECT. `markers` was measured before the
+       fonts and the film plate settled, so on a tall viewport the walk can
+       land a few px shy of the reading line and report a lit beat as 0.988.
+       The hook itself re-measures on its ResizeObserver, so that gap is the
+       SCRIPT's, not the section's — closing it here rather than loosening
+       the threshold, which would have hidden a real miss later. */
+    const live = await page.evaluate((idx) => {
+      const b = document.querySelectorAll("#voidwalker .vw-beat:not(.vw-beat--interlude)")[idx];
+      const d = b.querySelector(".vw-beat__diamond").getBoundingClientRect();
+      return Math.round(d.top + d.height / 2 + window.scrollY);
+    }, i);
+    if (Math.abs(live - m.y) > 2) {
+      await walkTo(live - Math.round(VH * READ_LINE) + 4);
+      await page.waitForTimeout(300);
+    }
     const s = await readState();
     beatsAtLine.push({ id: m.id, b: s.b[i], next: s.b[i + 1] ?? null, beat: s.beat });
     if (i === 1 || i === 4 || i === 6) await shot(`beat-${String(i + 1).padStart(2, "0")}`);
@@ -148,6 +163,67 @@ try {
   await walkTo(markers[1].y - Math.round(VH * READ_LINE) - Math.round(VH * 0.5));
   await page.waitForTimeout(350);
   const reversed = await readState();
+
+  /* ── 4b · the marker CHIP: it must break the rail, not be crossed by it,
+     and it must clear the content columns (ADR-074 U2) ───────────────── */
+  await walkTo(markers[Math.min(2, markers.length - 1)].y - Math.round(VH * READ_LINE));
+  await page.waitForTimeout(400);
+  const chips = await page.evaluate(() => {
+    const spine = document.querySelector("#voidwalker .vw__spine").getBoundingClientRect();
+    const out = [];
+    for (const beat of document.querySelectorAll("#voidwalker .vw-beat:not(.vw-beat--interlude)")) {
+      const mark = beat.querySelector(".vw-beat__mark");
+      const m = mark.getBoundingClientRect();
+      const cs = getComputedStyle(mark);
+      // The nearest content edge on either side — the chip may overhang the
+      // lane, but never into the columns.
+      let clear = Infinity;
+      for (const sel of [".vw-beat__title", ".vw-beat__body"]) {
+        const el = beat.querySelector(sel);
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width < 1) continue;
+        clear = Math.min(clear, r.left >= m.right ? r.left - m.right : m.left - r.right);
+      }
+      const bg = cs.backgroundColor;
+      const alpha = bg.startsWith("rgba") ? parseFloat(bg.split(",")[3]) : 1;
+      out.push({
+        id: beat.id.replace("vw-", ""),
+        side: beat.getAttribute("data-side"),
+        w: Math.round(m.width),
+        clear: Math.round(clear),
+        // The knockout: an opaque ground is what stops the rail.
+        opaque: alpha >= 0.99,
+        framed: cs.borderTopWidth !== "0px",
+        oneLine: Math.round(m.height) < 34,
+        onRail: spine.left < m.right && m.left < spine.right,
+        text: mark.textContent.trim().replace(/\s+/g, " "),
+      });
+    }
+    return out;
+  });
+
+  /* ── 4c · the film interlude ──────────────────────────────────────── */
+  const film = await page.evaluate(() => {
+    const li = document.querySelector("#voidwalker .vw-beat--interlude");
+    if (!li) return null;
+    const fig = li.querySelector(".vw-film");
+    const btn = li.querySelector(".vw-film__frame");
+    const wire = li.querySelector(".vw-wire--film");
+    const r = fig.getBoundingClientRect();
+    const vw = document.querySelector("#voidwalker .vw").getBoundingClientRect();
+    const cs = getComputedStyle(fig);
+    const bg = cs.backgroundColor;
+    return {
+      w: Math.round(r.width),
+      centred: Math.abs(r.left - vw.left - (vw.right - r.right)) < 2,
+      opaque: !bg.startsWith("rgba") || parseFloat(bg.split(",")[3]) >= 0.99,
+      isButton: btn?.tagName === "BUTTON",
+      gold: wire.querySelectorAll("[data-gold]").length,
+      imgs: li.querySelectorAll("img").length,
+      after: li.previousElementSibling?.id ?? null,
+    };
+  });
 
   /* ── 5 · the drawings, measured ───────────────────────────────────── */
   await walkTo(markers[4].y - Math.round(VH * READ_LINE));
@@ -236,6 +312,8 @@ try {
         atCover,
         head,
         beatsAtLine,
+        chips,
+        film,
         reversed: { b: reversed.b, beat: reversed.beat, title: reversed.title },
         wires,
         foot: { beat: foot.beat, p: foot.p, readout: foot.readout },

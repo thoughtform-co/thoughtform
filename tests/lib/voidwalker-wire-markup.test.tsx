@@ -1,9 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { FilmPlate } from "@/components/landing/home-v2/voidwalker/wireframes/FilmPlate";
 import { VOIDWALKER_WIREFRAMES } from "@/components/landing/home-v2/voidwalker/wireframes/voidwalkerWireframes";
 import { VOIDWALKER_BEATS } from "@/lib/voidwalker/voidwalkerData";
-import { VW_WIRE_IDS, VW_WIRE_LABELS } from "@/lib/voidwalker/voidwalkerWireLabels";
+import { VW_FILM_LABELS, VW_WIRE_IDS, VW_WIRE_LABELS } from "@/lib/voidwalker/voidwalkerWireLabels";
 
 /**
  * The through-line's drawings, pinned against what they DECLARE they
@@ -32,6 +33,17 @@ function ownTexts(html: string): string[] {
 }
 
 describe("voidwalker wireframes — markup", () => {
+  it("the film plate letters what it declares, and stays a drawing", () => {
+    const html = renderToStaticMarkup(<FilmPlate />);
+    expect(html).toMatch(/^<div class="vw-wire vw-wire--film" aria-hidden="true">/);
+    expect(html).not.toMatch(/<img/);
+    expect([...ownTexts(html)].sort()).toEqual([...VW_FILM_LABELS].sort());
+    // The runtime and the title letter on the plate's BAR, which is chrome —
+    // inside the drawing the no-digits law holds like everywhere else.
+    for (const t of ownTexts(html)) expect(t, `"${t}"`).not.toMatch(/\d/);
+    expect(html.match(/data-gold=""/g)?.length, "one gold object").toBe(1);
+  });
+
   it("the registry is total over the story beats' wires", () => {
     const wires = VOIDWALKER_BEATS.flatMap((b) => (b.wire ? [b.wire] : [])).sort();
     expect(Object.keys(VOIDWALKER_WIREFRAMES).sort()).toEqual(wires);
