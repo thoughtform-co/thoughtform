@@ -896,6 +896,37 @@
   z-index: 2;
 }
 
+/* ⚠ THE DIRECTORY WAS THE ONLY THING IN THIS COLUMN THAT DID NOT SCALE
+   (owner, 2026-08-24: the rows are "a bit too small … difficult to
+   understand, like, hey, these are other projects"). The brief's body runs
+   13.5 → 16.2px across the reference viewports and the register's claims and
+   sentences run 11.5 → 13px, both on WIDTH-keyed clamps; the rows sat at a
+   flat 11.5px and the head and meta at a flat 9.5px — so the wider the
+   viewport, the smaller the navigation read RELATIVE to the copy explaining
+   it, and at 1920 the register's supporting SENTENCES (13px) outranked the
+   project identities they support. Measured: 11.5 / 9.5 / 9.5 against a
+   claim's 13px.
+
+   The ladder is the siblings' own clamp now, with the row identity ABOVE
+   the claims because it is this column's one INTERACTIVE layer and its
+   whole navigation — rows 13.1 → 14, the meta datum 10.2 → 11.5, the head
+   label 10.2 → 11.5. Every floor is at or above the shipped value, and the
+   head's alpha lifts .30 → .42 so the line that says these ARE the other
+   projects registers as a label rather than a whisper (alpha up is more
+   contrast on BOTH grounds — `--dawn-rgb` is the ink either side of the
+   flip).
+
+   ⚠ THE SIZE IS PAID FOR OUT OF THE LEADING, NEVER OUT OF THE BAND. At
+   1280×720 the directory has FOUR pixels of slack in its 123px band and
+   clips silently (`overflow: hidden`), so bigger type had nowhere to go —
+   until the rows stopped carrying paragraph leading they never needed.
+   `line-height: 1.15` on a single-line uppercase row with no descender to
+   clear buys ~2.2px a row against PT Mono's `normal` (~1.32), which is more
+   than the growth costs: every row's box is still governed by its
+   `min-height` clamp at every reference viewport, so the content height is
+   BYTE-IDENTICAL (118 / 122 / 144 / 144px) and the rhythm never moves. The
+   type grows into the pitch that was already there. */
+
 .fl-dir__head {
   display: flex;
   justify-content: space-between;
@@ -903,15 +934,15 @@
   min-height: 20px;
   padding-bottom: 5px;
   font-family: var(--fl-mono);
-  font-size: 9.5px;
+  font-size: clamp(10px, 0.8vw, 11.5px);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.3);
+  color: rgba(var(--dawn-rgb), 0.42);
 }
 .fl-dir__head .fl-desig {
-  font-size: 9.5px;
+  font-size: clamp(10px, 0.8vw, 11.5px);
   letter-spacing: 0.16em;
-  color: rgba(var(--dawn-rgb), 0.3);
+  color: rgba(var(--dawn-rgb), 0.42);
 }
 .fl-dir__count {
   color: var(--gold);
@@ -947,10 +978,19 @@
   padding: clamp(3px, 0.45svh, 7px) 8px;
   text-align: left;
   font-family: var(--fl-mono);
-  /* 10.5px, up from 9.5 (owner type pass, 2026-07-29) — the directory is a
-     primary reading surface, not micro-chrome. */
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
+  /* 11.5px flat → the column's own clamp (owner, 2026-08-24 — see the head
+     above). One step ABOVE the register's 13px claims: this is the primary
+     object in the band, and the identity of a project may not read smaller
+     than a sentence about it. */
+  font-size: clamp(13px, 1.02vw, 14px);
+  /* Single-line uppercase rows with nothing below the baseline — paragraph
+     leading was buying nothing and costing the size. This is what pays for
+     the type at the binding 1280×720 band; do not restore `normal`. */
+  line-height: 1.15;
+  /* Tracking is optically sized: +22 % on the glyph takes a step OFF the
+     letterfit, which also keeps the longest pairing (03_AI-FLUENCY-STUDIO/
+     beside 500 ADS/MO) off the meta column at 1280. */
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.7);
   transition:
@@ -978,8 +1018,14 @@
   clip-path: polygon(0 0, 9px 0, 100% 4px, 100% 100%, 0 100%);
 }
 
+/* The row's headline count (ADR-067: a row's figure belongs on its `meta`) —
+   CONTENT, not the decorative-ordinal band that may letter at 9px. Clearly
+   subordinate to the identity (a ~1.25 step under it at every rung) and
+   separated by tracking and ink as well as size, so the two never read as
+   one run. */
 .fl-row__meta {
-  font-size: 9.5px;
+  font-size: clamp(10.2px, 0.8vw, 11.5px);
+  line-height: 1.15;
   letter-spacing: 0.1em;
   color: var(--fl-ink-dim);
 }

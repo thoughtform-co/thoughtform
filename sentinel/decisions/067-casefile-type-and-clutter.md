@@ -277,3 +277,61 @@ the recessed ground, the lit spine or the diamond changes.
   `clip-path` while the stations never did — a pre-existing artifact, now
   narrowed to the single leading plate rather than every wrapped one. Named,
   not chased.
+
+## Update 3 — the directory joins the ladder it was measured against (2026-08-24, owner)
+
+Owner, on the live casefile: the directory rows are _"a bit too small, which
+makes it difficult for people to understand, like, hey, these are other
+projects."_ The complaint is about the LOWER-LEFT band, and the measurement
+says it is a hierarchy defect rather than a size preference.
+
+**Every neighbour in that column is a width-keyed clamp, and the directory was
+a flat pixel value.** Measured across the reference viewports: the brief's
+body runs 13.5 → 16.2px and the register's claims and sentences
+`clamp(11.5px, 0.92vw, 13px)` → 11.78 → 13px, while the rows sat at a flat
+11.5px and the head and meta at a flat 9.5px. So the wider the viewport, the
+smaller the navigation read RELATIVE to the copy explaining it — and at 1920 a
+register SENTENCE (13px) outranked the project identity it supports, on the
+one interactive layer in the column.
+
+The rows are on the siblings' own clamp now, one step ABOVE the claims because
+the identity of a project may not read smaller than a sentence about it:
+**rows `clamp(13px, 1.02vw, 14px)`, the meta datum `clamp(10.2px, 0.8vw,
+11.5px)`, the head `clamp(10px, 0.8vw, 11.5px)`** with its alpha lifted
+.30 → .42 (alpha up is more contrast on BOTH grounds — `--dawn-rgb` is the ink
+either side of the flip). The head is the line that says these ARE the other
+projects; at 9.5px and .30 it was a whisper.
+
+⚠ **THE SIZE IS PAID FOR OUT OF THE LEADING, NEVER OUT OF THE BAND.** At
+1280×720 the directory has **4px of slack in a 123px band** and clips silently
+(`overflow: hidden`), so there was nowhere for bigger type to go — until the
+rows stopped carrying paragraph leading they never needed. `line-height: 1.15`
+on a single-line uppercase row with no descender to clear buys ~2.2px a row
+against PT Mono's `normal` (~1.32), which is more than the growth costs.
+Measured after: row heights are **byte-identical at every reference viewport**
+(24 / 26 / 31 / 31px — each still governed by its own `min-height` clamp), the
+content height moves 118 → 116 / 122 → 125 / 144 → 146, and 1280×720 ends with
+MORE slack than it started with. The rhythm never moves; the type grows into
+the pitch that was already there.
+
+⚠ **The tracking takes a step off with the size** (0.06 → 0.05em): letterfit is
+optically sized, and it is also what keeps the longest pairing
+(`03_AI-FLUENCY-STUDIO/` beside `500 ADS/MO`) clear of the meta column at
+1280 — measured 12px of gap on every row at every viewport, zero overflow.
+
+⚠ **`.fl-dir__head`'s own rule AND its scoped `.fl-desig` override both carry
+the size.** The shared `.fl-desig` (9.5px / .22em) is the panel path's chrome
+and is NOT touched; changing only one of the two leaves the head's label at
+9.5px beside an 11.5px count.
+
+The type law's floor in `.claude/rules/proof.md` said directory rows "start at
+11px" and its note recorded a 10.5px row that had already been bumped to 11.5
+— both are restated against the shipped clamps now. Verified: the ADR-056 U11
+box-clipping sweep, the ADR-063 U2 light-palette walk and the CSS sweep all
+pass; stills at 1280×720, 1920×1247 (the owner's shape) and 1440×800 light in
+`docs/design/casefile-directory/`.
+
+**Left open:** at the owner's 1920×1247 the four rows leave **142px of empty
+band** below them before the `--fl-t11` split — the directory group sits high
+over a hole (ADR-070 U14's pattern, one surface over). Pre-existing, untouched
+by this pass, and a composition question rather than a type one.

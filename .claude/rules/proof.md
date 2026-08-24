@@ -147,7 +147,15 @@ breather).
   nothing there and collapses every zone to `top: 0`.
 - **THE TYPE LAW IS SURFACE-WIDE, not a tools-row rule.** Decorative ordinal
   and pip metadata may use 9px. Tabs, decoder and anchors start at 10px;
-  directory rows and work-node identities start at 11px; readable compact
+  work-node identities start at 11px; the DIRECTORY rows are
+  `clamp(13px, 1.02vw, 14px)` on the register's own width-keyed ladder and
+  sit one step ABOVE its 13px claims (ADR-067 U3 — the identity of a project
+  may not read smaller than a sentence about it; its meta and head are
+  `clamp(10.2px, 0.8vw, 11.5px)` / `clamp(10px, 0.8vw, 11.5px)` at .42
+  alpha). ⚠ Their `line-height: 1.15` is what PAYS for that size — 1280×720
+  has 4px of slack in a 123px band and single-line uppercase rows never
+  needed paragraph leading; restore `normal` and the band clips silently.
+  Readable compact
   copy starts at 12px. A selected work title starts at 17px; expanded detail
   starts at 24px title / 14px body. PT Mono owns instrument chrome and PP Neue
   Montreal owns titles and prose. When a box will not take the size, spend
@@ -264,8 +272,8 @@ breather).
   space. ⚠ Adding a row still RESHAPES THE BROWSE BAND — the spy
   divides it per row, so a fifth row changes every band edge and the
   smoke's band-fraction targets. Measure at 1280×720 / 1440×800 /
-  1920×1080; the 10.5px row type is owner-set — take density out of
-  padding, never type.
+  1920×1080; the row type is owner-set and now CLAMPED (ADR-067 U3, above)
+  — take density out of padding and LEADING, never out of the type.
 - **Proof is ONE LEFT-COLUMN GLYPHED INDEX (ADR-068) — rows, not boxes.** New
   tracks carry exactly four `CaseBlock` records shaped `{ glyph?, title, desc }`
   — a pixel-glyph KEY, a CLAIM and its evidence. Budgets are title ≤27 and
