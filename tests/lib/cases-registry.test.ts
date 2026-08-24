@@ -8,7 +8,11 @@ import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { BOARD_CHIP_SLOTS } from "@/components/landing/home-v2/services/casefile/map/mapProjection";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
-import { LOOP_INTELLIGENCE_MAP } from "@/lib/cases/content/loop-earplugs";
+import {
+  LOOP_ATL_FILMS,
+  LOOP_INTELLIGENCE_MAP,
+  LOOP_STUDIO_SHEETS,
+} from "@/lib/cases/content/loop-earplugs";
 import type { CaseSegment } from "@/lib/cases/types";
 
 /**
@@ -1284,6 +1288,29 @@ describe("cases registry (ADR-054)", () => {
       expect(LOOP_INTELLIGENCE_MAP.works).toBe(row.works);
       expect(LOOP_INTELLIGENCE_MAP.skills).toBe(row.skills);
       expect(LOOP_INTELLIGENCE_MAP.envelope).toBe(row.envelope);
+    }
+  });
+
+  it("the studio sheets and the ATL films are ONE record each, shared by reference (ADR-078)", () => {
+    /* Same law as the map above, one row further down the directory: the
+       portfolio arc's `studio` and `films` beats mount the casefile's own
+       plates on these arrays. A copy is how the landing's studio policy and
+       the forwarded page's start describing the same red line differently —
+       and how the reel gains a film on one surface only. `toBe`. */
+    const visuals = CASES.flatMap((c) => c.casefile?.tracks ?? []).flatMap(
+      (track) => track.visual ?? []
+    );
+
+    const sheetsRow = visuals.find((visual) => visual.kind === "sheets");
+    expect(sheetsRow, "the casefile still carries the sheets row").toBeTruthy();
+    if (sheetsRow && sheetsRow.kind === "sheets") {
+      expect(LOOP_STUDIO_SHEETS).toBe(sheetsRow.sheets);
+    }
+
+    const filmsRow = visuals.find((visual) => visual.kind === "films");
+    expect(filmsRow, "the casefile still carries the films row").toBeTruthy();
+    if (filmsRow && filmsRow.kind === "films") {
+      expect(LOOP_ATL_FILMS).toBe(filmsRow.films);
     }
   });
 });

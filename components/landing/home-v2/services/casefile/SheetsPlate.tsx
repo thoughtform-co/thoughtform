@@ -32,8 +32,22 @@ import { ConsoleRail } from "./console/ConsoleRail";
  * would read as a separate project, it wants a row — and a row reshapes the
  * browse band, which is a different and much more expensive change
  * (`.claude/rules/proof.md`).
+ *
+ * ⚠ IT HAS A SECOND HOME (ADR-078): the portfolio arc's `studio` beat mounts
+ * this plate at PAGE scale on the same `LOOP_STUDIO_SHEETS` array. Hence
+ * `stillSizes` — the only thing that could not be shared, because a `sizes`
+ * hint is a statement about the BOX and the arc's box is bigger. The default
+ * keeps the casefile byte-identical; the arc passes its own. Any other edit
+ * here is a TWO-SURFACE change: run `services-ring-smoke` AND
+ * `arc-portfolio-smoke`.
  */
-export function SheetsPlate({ sheets }: { sheets: readonly CaseSheet[] }) {
+export function SheetsPlate({
+  sheets,
+  stillSizes = "200px",
+}: {
+  sheets: readonly CaseSheet[];
+  stillSizes?: string;
+}) {
   const [activeIdx, setActiveIdx] = useState(0);
   const sheet = sheets[activeIdx] ?? sheets[0];
 
@@ -52,14 +66,14 @@ export function SheetsPlate({ sheets }: { sheets: readonly CaseSheet[] }) {
         />
       }
     >
-      <SheetBody sheet={sheet} />
+      <SheetBody sheet={sheet} stillSizes={stillSizes} />
     </ConsoleFrame>
   );
 }
 
 /** One switch over the sheet body kinds, with the same `never` guard
  *  `TrackVisual` carries: a new body is a compile error until it renders. */
-function SheetBody({ sheet }: { sheet: CaseSheet }) {
+function SheetBody({ sheet, stillSizes }: { sheet: CaseSheet; stillSizes: string }) {
   const body = sheet.body;
 
   switch (body.kind) {
@@ -78,7 +92,7 @@ function SheetBody({ sheet }: { sheet: CaseSheet }) {
                 alt={shot.alt}
                 width={shot.width ?? 1080}
                 height={shot.height ?? 1350}
-                sizes="200px"
+                sizes={stillSizes}
               />
             </li>
           ))}

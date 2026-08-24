@@ -1614,8 +1614,14 @@ const STUDIO_SHOTS = [
  * tools", and the financial risk is stated as the deck itself states it
  * ("the channel that depends most on audience trust"). The argument survives
  * every cut; it never depended on the names.
+ *
+ * ⚠ EXPORTED FOR THE PORTFOLIO ARC (ADR-078). The arc's `studio` beat mounts
+ * `SheetsPlate` on THIS array at page scale, so the rule and the limit reach
+ * the forwarded page as well as the landing — and neither surface can edit
+ * the studio's own policy without the other seeing it. Pinned `toBe` the
+ * row's visual in `cases-registry.test.ts`.
  */
-const STUDIO_SHEETS = [
+export const LOOP_STUDIO_SHEETS = [
   /* ⚠ THE SHEET FEET ARE GONE (owner, 2026-08-08 — the console prints no
      foot on any plate now). The three sentences the sheets printed — the
      live-assets line, the identity-claim/function line and the
@@ -1688,8 +1694,13 @@ const STUDIO_SHEETS = [
 
 /** Both above-the-line films, self-hosted. CSP is `media-src 'self' blob:`
  *  (`lib/security/headers.mjs`), so these can never be served from a bucket
- *  — a remote src would be blocked the moment CSP leaves report-only. */
-const ATL_FILMS = [
+ *  — a remote src would be blocked the moment CSP leaves report-only.
+ *
+ *  ⚠ EXPORTED FOR THE PORTFOLIO ARC (ADR-078), like `LOOP_INTELLIGENCE_MAP`
+ *  above: the arc's `films` beat mounts `FilmsPlate` on THIS array, so the
+ *  two surfaces cannot drift into two different reels. Pinned `toBe` the
+ *  row's visual in `cases-registry.test.ts`. */
+export const LOOP_ATL_FILMS = [
   {
     src: "/videos/loop-smug-owl-ai-atl.mp4",
     poster: "/arcs/posters/smug-owl.jpg",
@@ -2101,7 +2112,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "AI Fluency Studio",
         icon: "dir",
         preview: "Preview — 03_ai-fluency-studio/",
-        visual: { kind: "sheets", sheets: STUDIO_SHEETS },
+        visual: { kind: "sheets", sheets: LOOP_STUDIO_SHEETS },
         classification: "AI ADOPTION · CREATIVE PRODUCTION · ACTIVE",
         blocks: [
           {
@@ -2145,7 +2156,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "AI Above-the-Line",
         icon: "dir",
         preview: "Preview — 04_ai-above-the-line/",
-        visual: { kind: "films", films: ATL_FILMS },
+        visual: { kind: "films", films: LOOP_ATL_FILMS },
         classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
         blocks: [
           {
