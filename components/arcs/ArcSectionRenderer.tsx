@@ -14,6 +14,7 @@ import { ArcPortrait } from "./ArcPortrait";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcStudioFilms } from "./ArcStudioFilms";
 import { ArcStudioSheets } from "./ArcStudioSheets";
+import { ArcToolIndex } from "./ArcToolIndex";
 import { arcTitleText } from "./chrome";
 
 /**
@@ -91,6 +92,10 @@ export function ArcSectionRenderer({
           case "films":
             return (
               <ArcStudioFilms key={section.id} section={section} index={index} motion={motion} />
+            );
+          case "tool-index":
+            return (
+              <ArcToolIndex key={section.id} section={section} index={index} motion={motion} />
             );
           default: {
             const exhaustive: never = section;

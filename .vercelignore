@@ -32,3 +32,9 @@ public/dossier-lab
 # Excluded 2026-07-23 alongside the docs consolidation.
 docs
 sentinel
+
+# - portfolio-prototype.html -> a design prototype of /arcs/portfolio, kept in
+#                              public/ so it serves at localhost during review.
+#                              NOT deployed: it is client work on a page ADR-078
+#                              frames as unlisted, and public/ is world-fetchable.
+public/prototypes/portfolio-prototype.html

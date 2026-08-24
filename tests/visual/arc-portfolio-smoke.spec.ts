@@ -156,19 +156,25 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     const beats = await page.evaluate(() =>
       [...document.querySelectorAll(".arc-section")].map((s) => s.id)
     );
+    /* ⚠ `rollout` IS RETIRED and VESPER LEADS (ADR-079). The rollout
+       plotted the same 2024 → now span the board plots, in a second
+       grammar at the far end of the page; it is the board's stations and
+       its `parallel` track now. And the dossiers run in the TRAJECTORY's
+       order — the tool built FOR the creative process before the three
+       built AROUND it. */
     expect(beats).toEqual([
       "overview",
       "studio",
       "studio-films",
       "tools",
-      "tool-mimir",
       "tool-vesper",
+      "tool-mimir",
       "tool-babylon",
       "tool-heimdall",
-      "rollout",
       "intelligence",
       "close",
     ]);
+    expect(beats, "the rollout is the trajectory now").not.toContain("rollout");
     /* ⚠ THE PAGE OPENS ON THE WORK (ADR-078 U1). A bio, an origin card
        set, the thesis and a prose bridge used to run before a reader
        reached anything Loop shipped; the program board carries all four. */
@@ -702,7 +708,14 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
            that ships in both themes belongs in the contrast walk anyway. */
         [".arc-prog__fig", "board figure"],
         [".arc-prog__lbl", "meta label"],
-        [".arc-prog__wp-lbl", "meta label"],
+        [".arc-prog__stn-lbl", "station label"],
+        /* ⚠ THE DATE IS GOLD AS TEXT, which is the rung this walk exists
+           for: raw `--gold` measures 1.68:1 on parchment, so it takes the
+           INK step of the ramp (ADR-063 U2) and this is what pins it. */
+        [".arc-prog__stn-date", "station date"],
+        [".arc-prog__stn-note", "station note"],
+        [".arc-tindex__name", "tool index name"],
+        [".arc-tindex__tag", "tool index line"],
       ] as const) {
         const el = document.querySelector(sel);
         if (!el) continue;
@@ -740,7 +753,24 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       "head sub": 7,
       "dossier key": 4,
       designation: 3,
-      "board figure": 7,
+      /* ⚠ 4.5, NOT 7, SINCE ADR-079 — and the change is the ramp's own
+         definition rather than a relaxed guard. The register figures are
+         GOLD now (they were dawn ink, which cleared 7 easily), and
+         `--gold-ink` IS the 4.5:1 rung of ADR-063 U2's by-role ramp: it
+         measures 5.26:1 on parchment, so a 7 target would forbid gold as
+         text anywhere on this surface, which is the opposite of what that
+         ramp was built to make possible. The raw `--gold` it replaced
+         measured 1.68:1 and is what this walk still catches. */
+      "board figure": 4.5,
+      /* ADR-079's rungs. The station LABEL and its NOTE are read, so they
+         take the 4.5 standard; the DATE is gold-as-text, which is exactly
+         the rung the ink ramp exists for and may never sit on raw
+         `--gold`. The index's name and line are read the same way. */
+      "station label": 4.5,
+      "station date": 4.5,
+      "station note": 4.5,
+      "tool index name": 4.5,
+      "tool index line": 4.5,
     };
 
     for (const path of [PORTFOLIO, "/arcs/ai-keynote"]) {
@@ -793,11 +823,16 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     await expect(nav).toHaveCount(1);
     await expect(nav).not.toHaveClass(/is-collapsed/);
     if (wide) {
+      /* ⚠ THE ROW MOVED WITH THE PAGE (ADR-079): `Rollout` retired into
+         the trajectory, which freed the fifth slot for the reel — a full
+         viewport of the page's most striking evidence that had no link to
+         reach it by. Still five: the cap is what keeps the row off the
+         hero copy at the binding viewport. */
       expect(await page.locator(".hud__nav__inline__link").allTextContents()).toEqual([
-        "Program",
+        "Trajectory",
         "Studio",
+        "Films",
         "Tools",
-        "Rollout",
         "Architecture",
       ]);
       // The row is chrome over a PHOTO: it may never land on hero ink.
@@ -844,17 +879,16 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     await page.click(".hud__nav__btn");
     await expect(nav).toHaveClass(/is-open/);
     expect(await page.locator(".hud__nav__list a").allTextContents()).toEqual([
-      "01Program",
+      "01Trajectory",
       "02Studio",
       "03Films",
       "04Tools",
-      "05Mímir",
-      "06Vesper",
+      "05Vesper",
+      "06Mímir",
       "07Babylon",
       "08Heimdall",
-      "09Rollout",
-      "10Architecture",
-      "11Close",
+      "09Architecture",
+      "10Close",
     ]);
     await expect(page.locator('.hud__nav__list a[aria-current="true"]')).toHaveCount(1);
     // Escape closes it and hands focus back to the trigger — the drawer
@@ -1009,66 +1043,79 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         const board = await page.evaluate((vh: number) => {
           const panel = document.querySelector<HTMLElement>(".arc-prog")!;
           const section = document.getElementById("overview")!;
-          const field = panel.querySelector<HTMLElement>(".arc-prog__field")!;
-          const fb = field.getBoundingClientRect();
+          const plot = panel.querySelector<HTMLElement>(".arc-prog__plot")!;
+          const pb = plot.getBoundingClientRect();
           /* EVERY lettered element, so a new string has to be declared
-             here rather than appearing unmeasured. */
-          const labels = [
-            ...panel.querySelectorAll<HTMLElement>(
-              ".arc-prog__hd-ttl, .arc-prog__hd-st, .arc-prog__curve-lbl, .arc-prog__prior-lbl, .arc-prog__yr, .arc-prog__fig, .arc-prog__lbl, .arc-prog__wp-lbl, .arc-prog__wp-sub"
-            ),
-          ].map((el) => {
-            const cs = getComputedStyle(el);
-            return {
-              text: (el.textContent ?? "").trim(),
-              size: parseFloat(cs.fontSize),
-              family: cs.fontFamily,
-            };
-          });
+             here rather than appearing unmeasured. ⚠ SPLIT BY ROLE: the
+             station notes and the parallel track are SENTENCES and take
+             PP Neue Montreal (ADR-067's two-families law); everything else
+             is instrument chrome and takes PT Mono. A single family
+             assertion over both would pass on a sentence set in mono. */
+          const read = (sel: string) =>
+            [...panel.querySelectorAll<HTMLElement>(sel)].map((el) => {
+              const cs = getComputedStyle(el);
+              return {
+                text: (el.textContent ?? "").trim(),
+                size: parseFloat(cs.fontSize),
+                family: cs.fontFamily,
+              };
+            });
+          const chrome = read(
+            ".arc-prog__hd-ttl, .arc-prog__hd-st, .arc-prog__band-lbl, .arc-prog__fig, .arc-prog__lbl, .arc-prog__stn-date, .arc-prog__stn-lbl, .arc-prog__par b, .arc-prog__ft-lbl"
+          );
+          const prose = read(".arc-prog__stn-note, .arc-prog__par span");
           /* ⚠ COLLAPSED MARKS: a rule that lost its geometry paints
              nothing and fails no other assertion. */
           const marks = [
             ...panel.querySelectorAll<HTMLElement>(
-              ".arc-prog__rung, .arc-prog__vr, .arc-prog__hr, .arc-prog__dot, .arc-prog__wp-dia, .arc-prog__br"
+              ".arc-prog__scatter i, .arc-prog__stn-dia, .arc-prog__stn-stem, .arc-prog__axis, .arc-prog__ruler, .arc-prog__curve"
             ),
           ].map((el) => {
             const r = el.getBoundingClientRect();
-            return { cls: String(el.className), w: r.width, h: r.height };
+            return { cls: String(el.getAttribute("class") ?? ""), w: r.width, h: r.height };
           });
-          /* The seat must not print on the course's own labels — they
-             share the field's right edge and only vertical air keeps
-             them apart. */
-          const seat = panel.querySelector<HTMLElement>(".arc-prog__seat-in")!;
-          const sb = seat.getBoundingClientRect();
-          const wpHits = [...panel.querySelectorAll<HTMLElement>(".arc-prog__wp-hit")].map((el) => {
-            const r = el.getBoundingClientRect();
-            return {
-              wp: el.closest<HTMLElement>(".arc-prog__wp")?.dataset.wp ?? "?",
-              overlapsSeat: !(
-                r.right < sb.left ||
-                r.left > sb.right ||
-                r.bottom < sb.top ||
-                r.top > sb.bottom
-              ),
-              insideField: r.left >= fb.left - 1 && r.right <= fb.right + 1,
-            };
-          });
-          /* The rungs are a CURVE: they must rise, never fall. A record
-             plotted backwards says something false about the work. */
-          const rungTops = [...panel.querySelectorAll<HTMLElement>(".arc-prog__rung")].map((el) =>
-            Math.round(el.getBoundingClientRect().height)
-          );
+          /* ⚠ STATION-ON-STATION OVERLAP is the check nothing else does.
+             Every other assertion asks whether a label is inside the plot;
+             none asks whether two labels are inside EACH OTHER — and the
+             stations alternate lanes precisely so they are not. */
+          const stns = [...panel.querySelectorAll<HTMLElement>(".arc-prog__stn")];
+          const hit = (a: DOMRect, b: DOMRect) =>
+            !(
+              a.right <= b.left + 0.5 ||
+              b.right <= a.left + 0.5 ||
+              a.bottom <= b.top + 0.5 ||
+              b.bottom <= a.top + 0.5
+            );
+          const collisions: string[] = [];
+          for (let i = 0; i < stns.length; i++) {
+            for (let j = i + 1; j < stns.length; j++) {
+              if (hit(stns[i].getBoundingClientRect(), stns[j].getBoundingClientRect())) {
+                collisions.push(`${stns[i].dataset.wp}×${stns[j].dataset.wp}`);
+              }
+            }
+          }
+          const outside = stns
+            .filter((s) => {
+              const r = s.getBoundingClientRect();
+              return r.top < pb.top - 1 || r.bottom > pb.bottom + 1 || r.left < pb.left - 1;
+            })
+            .map((s) => s.dataset.wp ?? "?");
+          const seatDia = panel.querySelector<HTMLElement>(
+            ".arc-prog__stn[data-seat] .arc-prog__stn-dia"
+          )!;
           return {
-            labels,
+            chrome,
+            prose,
             collapsed: marks.filter((m) => m.w < 0.5 || m.h < 0.5).map((m) => m.cls),
             markCount: marks.length,
-            rungTops,
-            wpHits,
-            hrefs: [...panel.querySelectorAll("a.arc-prog__wp-hit, a.arc-prog__seat-hit")].map(
-              (a) => a.getAttribute("href")
+            stations: stns.length,
+            lanes: stns.map((s) => s.dataset.lane),
+            collisions,
+            outside,
+            seatIsGold: getComputedStyle(seatDia).backgroundColor,
+            hrefs: [...panel.querySelectorAll("a.arc-prog__stn-hit")].map((a) =>
+              a.getAttribute("href")
             ),
-            seatIsGold: getComputedStyle(seat).backgroundColor,
-            brackets: panel.querySelectorAll(".arc-prog__br").length,
             // ⚠ no rounded corners anywhere: the house has none.
             rounded: [...panel.querySelectorAll<HTMLElement>("*")].filter((el) => {
               const r = getComputedStyle(el).borderRadius;
@@ -1083,17 +1130,15 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
           };
         }, height);
 
-        // THE LETTERED SET, pinned — a drawing declares what it says.
-        expect(new Set(board.labels.map((l) => l.text)), `board labels @ ${at}`).toEqual(
+        // THE LETTERED CHROME, pinned — a drawing declares what it says.
+        expect(new Set(board.chrome.map((l) => l.text)), `board chrome @ ${at}`).toEqual(
           new Set([
-            "The program",
-            "Loop Earplugs · active",
-            "Adoption",
-            "Starhaven · Latent Land",
-            "2024",
-            "2025",
-            "2026",
-            "Now",
+            "Adoption · 2024 → now · organic pull, not mandate",
+            "18 months on record",
+            "Priors · Starhaven · Latent Land",
+            "Adoption · organic pull → now",
+            "Running in parallel",
+            "Twenty-two teams briefed · forty-five minutes each",
             "22",
             "Workshops run",
             "5 → 130+",
@@ -1106,57 +1151,65 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
             "Tools in production",
             "97%",
             "Of briefings involve AI",
-            "Studio",
-            "Paid social",
-            "The films",
+            "2024",
+            "Embedded in marketing",
+            "2025",
+            "The studio brief",
             "Sept 2025",
-            "Vesper",
+            "The films",
             "Oct 2025",
-            "Mímir",
-            "Briefing",
-            "Babylon · Heimdall",
+            "Tools for the process",
             "Feb 2026",
-            "Intelligence Architect",
-            "2026",
+            "Tools around it",
+            "Q2 2026",
+            "Company-wide",
+            "Now",
+            "Intelligence architecture",
           ])
         );
-        for (const l of board.labels) {
+        for (const l of board.chrome) {
           expect(l.family, `"${l.text}" family @ ${at}`).toMatch(/PT Mono/i);
-          expect(l.size, `"${l.text}" size @ ${at}`).toBeGreaterThanOrEqual(8.5);
+          expect(l.size, `"${l.text}" size @ ${at}`).toBeGreaterThanOrEqual(8);
+        }
+        /* The notes are PROSE — the trajectory's connective tissue, and the
+           one thing on this drawing a reader reads rather than scans. */
+        expect(board.prose.length, `the stations carry their notes @ ${at}`).toBe(8);
+        for (const l of board.prose) {
+          expect(l.family, `"${l.text}" is prose @ ${at}`).toMatch(/Neue Montreal/i);
+          expect(l.size, `"${l.text}" size @ ${at}`).toBeGreaterThanOrEqual(10);
         }
 
         expect(board.collapsed, `collapsed marks @ ${at}`).toEqual([]);
-        expect(board.markCount, `the chart is drawn @ ${at}`).toBeGreaterThan(30);
+        expect(board.markCount, `the chart is drawn @ ${at}`).toBeGreaterThan(20);
         expect(board.rounded, `no rounded corners @ ${at}`).toBe(0);
-        expect(board.brackets, `the seat's four brackets @ ${at}`).toBe(4);
 
-        /* THE CURVE RISES. Sorted equals itself — a plateau is allowed
-           (the layer really did hold), a fall is not. */
-        expect(
-          [...board.rungTops].sort((a, b) => a - b),
-          `the curve rises @ ${at}`
-        ).toEqual(board.rungTops);
+        /* SEVEN STATIONS, ALTERNATING. The lanes are derived from the index
+           in the renderer, so content cannot author them out of step — and
+           the alternation is what buys each block its width. */
+        expect(board.stations, `seven stations @ ${at}`).toBe(7);
+        expect(board.lanes, `the stations alternate @ ${at}`).toEqual([
+          "up",
+          "dn",
+          "up",
+          "dn",
+          "up",
+          "dn",
+          "up",
+        ]);
+        expect(board.collisions, `stations printing on each other @ ${at}`).toEqual([]);
+        expect(board.outside, `a station left the plot @ ${at}`).toEqual([]);
 
-        // The seat clears every waypoint label, and the course stays in the plot.
-        expect(
-          board.wpHits.filter((w) => w.overlapsSeat).map((w) => w.wp),
-          `the seat prints on a waypoint @ ${at}`
-        ).toEqual([]);
-        expect(
-          board.wpHits.filter((w) => !w.insideField).map((w) => w.wp),
-          `a waypoint left the plot @ ${at}`
-        ).toEqual([]);
+        // GOLD BUYS ONE THING: the terminus, in both themes.
+        expect(board.seatIsGold, `the terminus is gold @ ${at}`).toMatch(
+          /rgba?\(\s*202,\s*165,\s*84/
+        );
 
-        // GOLD BUYS ONE THING: the seat, in both themes.
-        expect(board.seatIsGold, `the seat is gold @ ${at}`).toMatch(/rgba?\(\s*202,\s*165,\s*84/);
-
-        // THE COURSE IS THE PAGE'S TABLE OF CONTENTS.
-        expect(board.hrefs, `course hrefs @ ${at}`).toEqual([
+        // THE TRAJECTORY IS THE PAGE'S TABLE OF CONTENTS.
+        expect(board.hrefs, `station hrefs @ ${at}`).toEqual([
           "#studio",
           "#studio-films",
           "#tool-vesper",
           "#tool-mimir",
-          "#tool-babylon",
           "#intelligence",
         ]);
 
@@ -1176,7 +1229,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     const page = await browser.newPage({ viewport: { width: 1440, height: 800 } });
     await prepare(page, PORTFOLIO);
     await restAt(page, "overview");
-    await page.click('.arc-prog__wp-hit[href="#tool-vesper"]');
+    await page.click('.arc-prog__stn-hit[href="#tool-vesper"]');
     await page.waitForFunction(
       () => Math.abs(document.getElementById("tool-vesper")!.getBoundingClientRect().top) < 4,
       undefined,
@@ -1195,16 +1248,21 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     await prepare(prm, PORTFOLIO);
     await restAt(prm, "overview");
     const drawn = await prm.evaluate(() => {
-      const rungs = [...document.querySelectorAll<HTMLElement>(".arc-prog__rung")];
+      const stns = [...document.querySelectorAll<HTMLElement>(".arc-prog__stn")];
+      const curve = document.querySelector<HTMLElement>(".arc-prog__curve")!;
       return {
-        count: rungs.length,
-        flattened: rungs.filter((m) => m.getBoundingClientRect().height < 0.5).length,
-        seat: Number(getComputedStyle(document.querySelector(".arc-prog__seat-in")!).opacity),
+        count: stns.length,
+        faded: stns.filter((s) => Number(getComputedStyle(s).opacity) < 1).length,
+        curve: Number(getComputedStyle(curve).opacity),
+        /* ⚠ Below the tier the plot becomes a LIST, and PRM shares that
+           release — the stations must still be there, just unplotted. */
+        listed: stns.every((s) => getComputedStyle(s).position === "static"),
       };
     });
-    expect(drawn.count, "the curve renders under PRM").toBeGreaterThan(4);
-    expect(drawn.flattened, "nothing is left mid-draw under PRM").toBe(0);
-    expect(drawn.seat, "the seat is present under PRM").toBe(1);
+    expect(drawn.count, "the stations render under PRM").toBe(7);
+    expect(drawn.faded, "nothing is left mid-arrival under PRM").toBe(0);
+    expect(drawn.curve, "the adoption curve is present under PRM").toBe(1);
+    expect(drawn.listed, "the plot reads as a list under PRM").toBe(true);
     await prm.close();
   });
 });

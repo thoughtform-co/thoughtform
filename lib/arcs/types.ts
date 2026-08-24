@@ -308,6 +308,14 @@ export type ArcSection = ArcSectionBase &
           label: string;
           /** Mono sub-caption, e.g. a date or a set of names. */
           sub?: string;
+          /**
+           * One short sentence on what the station WAS — the trajectory's
+           * connective tissue (ADR-079). Without it the board named seven
+           * dated things and left the arc between them to be inferred; the
+           * owner's own telling is a sequence of moves, each with a reason,
+           * and the reason is what a stranger is reading for.
+           */
+          note?: string;
           /** A section id on this arc. */
           target?: string;
           /**
@@ -325,7 +333,36 @@ export type ArcSection = ArcSectionBase &
          * system earlier, as chart grammar rather than prose. Labels only.
          */
         priors?: readonly string[];
+        /**
+         * The platform track that ran BESIDE the course (ADR-079): the
+         * pilot's seats, the agreement, governance. It absorbed the
+         * `rollout` section, which plotted the same 2024 → now span under
+         * its own masthead — the page stated its chronology twice, in two
+         * grammars, at opposite ends of itself.
+         *
+         * ⚠ Log-row phrasing is allowed here (a record is not a claim), but
+         * it is NOT a display title and the copy law still walks the head.
+         */
+        parallel?: readonly string[];
         footnote?: string;
+      }
+    | {
+        /**
+         * THE CHAPTER INDEX (ADR-079): the tools head, given the four
+         * records it introduces — number, codename, what it is, mode.
+         *
+         * It carries NO data, exactly as `dossier` / `sheets` / `films` do:
+         * the renderer resolves `PROJECT_CASES` and letters each record's
+         * own `codename`, `subline` and `mode`. Authoring the lines here
+         * would be a second, driftable description of four tools this page
+         * already draws in full further down.
+         *
+         * ⚠ It is an INDEX, not a summary — every row opens its own beat.
+         * A head with nothing under it reads as a divider once each tool
+         * owns a viewport, and a divider is not worth a screen.
+         */
+        kind: "tool-index";
+        head: ArcHead;
       }
   );
 

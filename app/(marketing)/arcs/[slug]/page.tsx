@@ -87,6 +87,7 @@ export default async function ArcPage({ params }: ArcRouteParams) {
         motion={motion}
         gatewayPlate={gatewayPlate}
         curtain={arc.hero.curtain ?? false}
+        format={arc.format}
       >
         <ArcHero hero={arc.hero} />
         <ArcSectionRenderer sections={arc.sections} motion={motion} />

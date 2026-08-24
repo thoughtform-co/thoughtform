@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { caseModeLabel, dossierHead } from "@/components/arcs/ArcDossier";
+import { TOOL_ORDER } from "@/components/arcs/ArcToolIndex";
 import { arcTitleText } from "@/components/arcs/chrome";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
@@ -230,11 +231,18 @@ describe("arcs registry (ADR-052)", () => {
         }
       }
     }
-    // The portfolio carries all four, in the canonical order.
+    /* The portfolio carries all four — in the TRAJECTORY's order since
+       ADR-079, not the registry's. Vesper is the tool built FOR the
+       creative process and the other three are built AROUND it, which is
+       both the real sequence (Oct 2025 → Feb 2026) and the distinction the
+       chapter's own sub draws. ⚠ Pinned as a SET against the registry so a
+       tool cannot go missing, and as a SEQUENCE against the index that
+       points at these beats. */
     const portfolioTools = PORTFOLIO_ARC.sections
       .filter((section) => section.kind === "dossier")
       .map((section) => (section.kind === "dossier" ? section.toolId : ""));
-    expect(portfolioTools).toEqual(ids);
+    expect([...portfolioTools].sort()).toEqual([...ids].sort());
+    expect(portfolioTools).toEqual([...TOOL_ORDER]);
     // The derived masthead needs every record's title to convert
     // losslessly: at most one em segment, never the first.
     for (const tool of PROJECT_CASES) {
@@ -290,15 +298,11 @@ describe("arcs registry (ADR-052)", () => {
     for (const kind of ["sheets", "films"] as const) {
       const beats = PORTFOLIO_ARC.sections.filter((s) => s.kind === kind);
       expect(beats, `exactly one ${kind} beat`).toHaveLength(1);
+      /* BOTH are chapters since ADR-079: retiring `rollout` freed the
+         fifth inline slot, and the reel had been a full viewport of the
+         page's most striking evidence with no link to reach it by. */
       expect(Object.keys(beats[0]).sort()).toEqual(
-        [
-          "ariaLabel",
-          "head",
-          "id",
-          "kind",
-          "menuLabel",
-          ...(kind === "sheets" ? ["menuPrimary"] : []),
-        ].sort()
+        ["ariaLabel", "head", "id", "kind", "menuLabel", "menuPrimary"].sort()
       );
     }
 
@@ -439,28 +443,63 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
-  it("the rollout beat agrees with the casefile's own log (ADR-078)", () => {
-    /* COPY-WITH-PARITY, the `LOOP_FIGURES` precedent: `lib/arcs` keeps no
-       `lib/cases` import, so the rows are re-authored here and pinned
-       against the record rather than shared. The page states them as
-       sentences and the casefile as log lines, so the pin is on the
-       CLAIMS a reader could subtract — the milestones and their order —
-       rather than on the strings. */
-    const rollout = PORTFOLIO_ARC.sections.find((s) => s.id === "rollout");
-    expect(rollout?.kind).toBe("anatomy");
-    if (rollout?.kind !== "anatomy") return;
+  it("the trajectory is the page's ONE chronology, and its contents (ADR-079)", () => {
+    /* ⚠ THE `rollout` SECTION IS RETIRED. It plotted the SAME 2024 → now
+       span the program board plots, in a second grammar, at the opposite
+       end of the page — a reader met the chronology twice and had to work
+       out that the two were one thing. Its rows are stations on the axis,
+       its platform work is the board's `parallel` track, and its counts
+       are the registers.
 
-    expect(rollout.rows.map((r) => r.label)).toEqual(ROLLOUT_ROWS.map((r) => r.t as string));
+       The casefile keeps `ROLLOUT_ROWS`, which is the canonical copy and
+       is untouched; what went is this page's re-authored second version,
+       and with it the copy-with-parity pin that guarded the pair. */
+    expect(
+      PORTFOLIO_ARC.sections.some((s) => s.id === "rollout"),
+      "the rollout is the trajectory now, not a section of its own"
+    ).toBe(false);
+    expect(
+      PORTFOLIO_ARC.sections.some((s) => s.kind === "anatomy"),
+      "and no anatomy beat replaced it"
+    ).toBe(false);
 
-    /* ⚠ THE TWO TEAM COUNTS ARE DIFFERENT SETS, and the wording is the
-       only thing keeping them apart (`.claude/rules/proof.md`): 22 were
-       BRIEFED, 14 are USING THE LAYER. The rows say each in its own
-       words, and the superseded-claims sweep above independently fails a
-       bare "14 teams" — this pins that the log still draws the line. */
-    const briefed = rollout.rows.find((r) => r.id === "briefed");
-    expect(briefed?.body).toContain("teams briefed");
-    const now = rollout.rows.find((r) => r.id === "now");
-    expect(now?.body).toContain("teams using the layer");
+    const board = PORTFOLIO_ARC.sections.filter((s) => s.kind === "program");
+    expect(board, "exactly one program board").toHaveLength(1);
+    expect(board[0].id, "and it is the one the curtain holds").toBe(PORTFOLIO_ARC.sections[0].id);
+    if (board[0].kind !== "program") return;
+
+    /* ⚠ THE GAPS ARE THE READING — pinned SORTED so a later hand cannot
+       spread the stations evenly and delete the one thing the chart knows
+       that a list does not. */
+    const ats = board[0].waypoints.map((w) => w.at);
+    expect([...ats].sort((a, b) => a - b)).toEqual(ats);
+    expect(new Set(ats).size, "no two stations share a position").toBe(ats.length);
+    expect(
+      board[0].waypoints.filter((w) => w.seat),
+      "exactly one terminus"
+    ).toHaveLength(1);
+
+    /* Every station carries its own note: the board names dated things,
+       and the MOVE between them is what a stranger is reading for. */
+    for (const w of board[0].waypoints) {
+      expect(w.note, `${w.id} states what the move was`).toBeTruthy();
+      expect(w.sub, `${w.id} is dated`).toBeTruthy();
+    }
+
+    /* Every target is a real section on THIS arc — the board is the page's
+       table of contents, so a dead anchor is a broken contents page. */
+    const ids = new Set(PORTFOLIO_ARC.sections.map((s) => s.id));
+    for (const w of board[0].waypoints) {
+      if (!w.target) continue;
+      expect(ids.has(w.target), `${w.id} → #${w.target} exists`).toBe(true);
+    }
+
+    /* ⚠ THE PLATFORM TRACK STILL SAYS WHAT THE LOG SAID. The pilot's
+       seats, the agreement and governance survive as the `parallel` run;
+       the two team counts stay in the registers, where the renderer
+       letters them from `LOOP_FIGURES`. */
+    expect(board[0].parallel?.join(" "), "the parallel track survives").toMatch(/pilot/i);
+    expect(ROLLOUT_ROWS.length, "the casefile's own log is untouched").toBe(6);
   });
 
   it("the portfolio closes on ONE architecture beat, and it flows (ADR-076)", () => {

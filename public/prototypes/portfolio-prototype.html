@@ -1,0 +1,1142 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Loop portfolio — prototype</title>
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   THE LOOP PORTFOLIO — standalone design prototype
+   Direction C (the declared spine), revised to the owner's brief.
+
+   Design language is lifted from the live sheets, not re-invented:
+   tokens from app/styles/variables.css + components/landing/v7/theme.css,
+   the two-column masthead from components/arcs/arcs.css (.arc-head),
+   the cross from home-v2.css (.home-v2-station-header__cross) and
+   services.css (.services-masthead__mark), the console from console.css.
+
+   Asymmetry comes from unequal columns + edge-anchored chrome — the
+   grammar of the reference boards — never from decoration.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Two src entries per face, and the order matters: served by the dev server
+   `public/` is the web root, so /fonts/… wins; opened straight off disk that
+   absolute path fails and the browser falls through to the sibling folder. */
+@font-face { font-family:"PP Neue Montreal"; font-weight:400; font-style:normal; font-display:swap;
+             src:url("/fonts/PPNeueMontreal-Book.woff2") format("woff2"),
+                 url("../fonts/PPNeueMontreal-Book.woff2") format("woff2"); }
+@font-face { font-family:"PP Neue Montreal"; font-weight:500; font-style:normal; font-display:swap;
+             src:url("/fonts/PPNeueMontreal-Medium.woff2") format("woff2"),
+                 url("../fonts/PPNeueMontreal-Medium.woff2") format("woff2"); }
+@font-face { font-family:"PP Neue Montreal"; font-weight:700; font-style:normal; font-display:swap;
+             src:url("/fonts/PPNeueMontreal-Bold.woff2") format("woff2"),
+                 url("../fonts/PPNeueMontreal-Bold.woff2") format("woff2"); }
+@font-face { font-family:"PT Mono"; font-weight:400; font-style:normal; font-display:swap;
+             src:url("/fonts/PTMono-Regular.woff2") format("woff2"),
+                 url("../fonts/PTMono-Regular.woff2") format("woff2"); }
+@font-face { font-family:"PT Mono"; font-weight:700; font-style:normal; font-display:swap;
+             src:url("/fonts/PTMono-Bold.woff2") format("woff2"),
+                 url("../fonts/PTMono-Bold.woff2") format("woff2"); }
+
+/* ── tokens ───────────────────────────────────────────────────────────── */
+:root {
+  --void:#0a0908; --void-deep:#050403;
+  --dawn-rgb:235,227,214;
+  --gold:#caa554; --gold-rgb:202,165,84; --gold-lit:#f0c86a;
+  --gold-line:#caa554;   /* gold as LINE work  */
+  --gold-ink:#caa554;    /* gold as small TEXT */
+  --green:#5b7a4e; --green-ink:#7a9e6a; --green-rgb:91,122,78;
+
+  --ink:rgb(var(--dawn-rgb));
+  --ink-90:rgba(var(--dawn-rgb),.90);
+  --ink-80:rgba(var(--dawn-rgb),.80);
+  --ink-70:rgba(var(--dawn-rgb),.70);
+  --ink-62:rgba(var(--dawn-rgb),.62);
+  --ink-55:rgba(var(--dawn-rgb),.55);
+  --ink-42:rgba(var(--dawn-rgb),.42);
+  --ink-22:rgba(var(--dawn-rgb),.22);
+  --edge:rgba(var(--dawn-rgb),.08);
+  --rule:rgba(var(--dawn-rgb),.12);
+  --grid:rgba(var(--dawn-rgb),.06);
+  --gold-hair:rgba(var(--gold-rgb),.13);
+  --gold-hair2:rgba(var(--gold-rgb),.24);
+  --gold-chip:rgba(var(--gold-rgb),.7);
+  --rail-line:rgba(var(--dawn-rgb),.55);
+  --plate:var(--void-deep);
+
+  --mono:"PT Mono",ui-monospace,Menlo,monospace;
+  --pp:"PP Neue Montreal",system-ui,sans-serif;
+
+  --hud-margin:clamp(16px,min(2.8125vw,5vmin),54px);
+  --hud-rail-width:clamp(48px,4.27vw,82px);
+  --hud-content-inset:calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px,3vw,56px));
+  --band-max:1200px;
+  --band-margin:max(var(--hud-content-inset),calc((100vw - var(--band-max)) / 2));
+  --band-copy:clamp(15px,1.15vw,18px);
+}
+/* ADR-058's flip: the ground swaps and the ink alphas are RE-DERIVED, never
+   inherited — an alpha inverts its own meaning across the ground. */
+html[data-theme="light"] {
+  --void:#ece3d6; --void-deep:#e4dac9;
+  --dawn-rgb:17,15,9;
+  --gold-line:#8a6b20; --gold-ink:#6e5216;
+  --green:#4a6238; --green-ink:#3f5a2e; --green-rgb:74,98,56;
+  /* ⚠ The ramp is RE-DERIVED, and the faint rungs are lifted much harder than
+     a mirror would suggest: ink on parchment at .38 measures 2.4:1, so the
+     quietest chrome would be decorative rather than readable. .60 is where the
+     coord stamps clear 4.5:1; the rungs above are spaced to keep the hierarchy. */
+  --ink-90:rgba(var(--dawn-rgb),.94);
+  --ink-80:rgba(var(--dawn-rgb),.90);
+  --ink-70:rgba(var(--dawn-rgb),.86);
+  --ink-62:rgba(var(--dawn-rgb),.82);
+  --ink-55:rgba(var(--dawn-rgb),.78);
+  --ink-42:rgba(var(--dawn-rgb),.70);
+  --ink-22:rgba(var(--dawn-rgb),.62);
+  --edge:rgba(var(--dawn-rgb),.16);
+  --rule:rgba(var(--dawn-rgb),.22);
+  --grid:rgba(var(--dawn-rgb),.10);
+  --gold-hair:rgba(138,107,32,.5);
+  --gold-hair2:rgba(138,107,32,.7);
+  --gold-chip:var(--gold-ink);
+  --rail-line:rgba(var(--dawn-rgb),.55);
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--void);color:var(--ink);font-family:var(--pp);
+     -webkit-font-smoothing:antialiased;}
+a{color:var(--gold-ink);text-decoration:none;}
+a:hover{color:var(--gold-lit);}
+html[data-theme="light"] a:hover{color:#5c4411;}
+h1,h2,h3,p,dl,dd,dt,figure{margin:0;}
+img{max-width:100%;}
+/* No italics, ever (brand law). `<i>` is used here only as a decorative
+   element hook, and its UA default would slant any text placed inside it. */
+i,em,address{font-style:normal;}
+
+/* ── HUD frame ────────────────────────────────────────────────────────── */
+.hud{position:fixed;inset:0;z-index:50;pointer-events:none;}
+.hud__c{position:absolute;width:clamp(28px,4.17vmin,45px);height:clamp(28px,4.17vmin,45px);}
+.hud__c--tl{top:var(--hud-margin);left:var(--hud-margin);
+            border-top:2px solid var(--rail-line);border-left:2px solid var(--rail-line);}
+.hud__c--bl{bottom:var(--hud-margin);left:var(--hud-margin);
+            border-bottom:2px solid var(--rail-line);border-left:2px solid var(--rail-line);}
+.hud__c--br{bottom:var(--hud-margin);right:var(--hud-margin);
+            border-bottom:2px solid var(--rail-line);border-right:2px solid var(--rail-line);}
+.hud__rail{position:absolute;top:calc(var(--hud-margin) + clamp(28px,4.17vmin,45px) + clamp(16px,1.8vw,32px));
+           bottom:calc(var(--hud-margin) + clamp(28px,4.17vmin,45px) + clamp(16px,1.8vw,32px));
+           width:2px;background:var(--rail-line);}
+.hud__rail--l{left:var(--hud-margin);}
+.hud__rail--r{right:var(--hud-margin);}
+.hud__ticks{position:absolute;inset:0;}
+.hud__tick{position:absolute;left:-19px;height:2px;width:7px;background:var(--rail-line);}
+.hud__tick--maj{left:-19px;width:21px;}
+.hud__rail--r .hud__tick{left:auto;right:-19px;}
+
+/* ── page nav (chapter links — a link row, never a tab strip) ─────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:space-between;
+     align-items:center;gap:24px;padding:22px var(--band-margin);pointer-events:none;
+     mix-blend-mode:normal;}
+.nav > *{pointer-events:auto;}
+.nav__brand{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+            color:var(--ink-70);}
+.nav__ch{display:flex;gap:clamp(14px,1.6vw,28px);}
+.nav__ch a{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+           color:var(--ink-42);}
+.nav__ch a:hover{color:var(--gold-ink);}
+
+/* ── band + section ──────────────────────────────────────────────────── */
+/* ⚠ no width here — `.sec` is a flex column, so the band already stretches to
+   the cross axis; adding width:100% on top of the margins overflows by exactly
+   one band margin. */
+.band{margin-inline:var(--band-margin);}
+/* ⚠ ONE BEAT PER SCREEN. Every section owns a full viewport and centres its
+   own content, so nothing crowds the beat below it. The masthead's coord
+   stamps and close cross are absolutely positioned BELOW their column, so a
+   content-height section let them hang into the next one — the overlap. */
+.sec{position:relative;min-height:100svh;display:flex;flex-direction:column;
+     justify-content:center;padding:clamp(56px,7.5vh,104px) 0;scroll-margin-top:0;}
+.sec + .sec{border-top:1px solid var(--edge);}
+
+/* ── the two-column masthead (.arc-head, verbatim geometry) ──────────── */
+.head{position:relative;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+      gap:clamp(24px,4vw,72px);align-items:start;margin-bottom:clamp(48px,9vh,112px);}
+.head--solo{grid-template-columns:1fr;}
+.head__lead{position:relative;}
+.head__intro{position:relative;justify-self:end;max-width:min(42ch,100%);padding-top:6px;}
+.head__grid{position:absolute;inset:-16px -22px;z-index:0;
+  background-image:radial-gradient(var(--grid) 1px,transparent 1.2px);background-size:24px 24px;
+  -webkit-mask-image:radial-gradient(110% 130% at 50% 50%,#000 45%,transparent 98%);
+          mask-image:radial-gradient(110% 130% at 50% 50%,#000 45%,transparent 98%);}
+.head__desig{position:absolute;top:-34px;left:0;font-family:var(--mono);font-size:9.5px;line-height:1;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-55);white-space:nowrap;}
+.head__state{position:absolute;top:-34px;right:0;font-family:var(--mono);font-size:9.5px;line-height:1;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--gold-chip);white-space:nowrap;}
+.head__coord{position:absolute;top:calc(100% + 22px);left:0;font-family:var(--mono);font-size:8px;
+  line-height:1;letter-spacing:.1em;color:var(--ink-22);}
+.head__coord--r{left:auto;right:32px;text-align:right;}
+.title{position:relative;z-index:1;font-family:var(--pp);font-weight:400;
+  font-size:clamp(26px,3vw,44px);line-height:1.1;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink);text-shadow:0 0 22px rgba(var(--gold-rgb),.18);max-width:20ch;}
+.title em{font-style:normal;font-weight:500;color:var(--gold);}
+html[data-theme="light"] .title em{color:var(--gold-ink);}
+.head__copy{position:relative;z-index:1;font-family:var(--pp);font-weight:400;
+  font-size:var(--band-copy);line-height:1.5;color:var(--ink);}
+
+/* ── the little cross: one drawing, two sizes ─────────────────────────── */
+.x{position:absolute;width:var(--cross-arm,18px);height:var(--cross-arm,18px);
+   color:var(--cross-ink,var(--gold-line));pointer-events:none;}
+.x::before,.x::after{content:"";position:absolute;background:currentcolor;}
+.x::before{left:0;right:0;top:50%;height:1px;}
+.x::after{top:0;bottom:0;left:50%;width:1px;}
+.x--origin{top:-26px;left:-24px;transform:translate(-50%,-50%);}
+.x--close{top:calc(100% + 22px);right:-24px;transform:translate(50%,-50%);--cross-ink:var(--ink-70);}
+/* 14px, centred above a title — the corridor station-head mark */
+.x--title{position:absolute;left:0;top:-22px;--cross-arm:14px;}
+
+/* ── field: a framed instrument with edge-anchored chrome ────────────── */
+.field{position:relative;border:1px solid var(--edge);background:
+  linear-gradient(180deg,rgba(var(--gold-rgb),.05),transparent 46%),var(--plate);}
+.field__hd,.field__ft{display:flex;justify-content:space-between;align-items:center;gap:20px;
+  padding:11px 18px;}
+.field__hd{border-bottom:1px solid var(--rule);}
+.field__ft{border-top:1px solid var(--rule);align-items:flex-end;}
+.lbl{font-family:var(--mono);font-size:9px;line-height:1;letter-spacing:.18em;
+     text-transform:uppercase;color:var(--ink-42);}
+.lbl--dim{color:var(--ink-22);}
+.read{font-family:var(--mono);font-size:10px;line-height:1;letter-spacing:.12em;
+      text-transform:uppercase;color:var(--gold-ink);border:1px solid var(--gold-hair2);
+      padding:6px 10px;white-space:nowrap;}
+.ruler{height:7px;background:repeating-linear-gradient(to right,var(--rule) 0 1px,transparent 1px 12px);}
+
+/* ── the timeline (section `overview`) ───────────────────────────────── */
+/* ⚠ THE WHOLE SECTION MUST FIT ONE VIEWPORT AT 1280×720 — on the real page
+   a taller first section sets `data-arc-tall`, which silently disarms the
+   hero curtain. Padding, masthead drop and plot height are one budget. */
+#overview{padding-block:clamp(44px,6vh,88px);}
+#overview .head{margin-bottom:clamp(32px,4.5vh,64px);}
+.tl{position:relative;height:clamp(242px,33vh,320px);overflow:hidden;}
+.tl__grat{position:absolute;inset:0;
+  background-image:repeating-linear-gradient(to right,var(--grid) 0 1px,transparent 1px 84px),
+                   repeating-linear-gradient(to bottom,var(--grid) 0 1px,transparent 1px 56px);}
+/* ⚠ The adoption curve is its own REGISTER at the foot, not a line running
+   behind the stations. Drawn under them it crossed every note — and a reading
+   the eye has to pick out of the text is not a reading. */
+.tl__band{position:absolute;left:0;right:0;bottom:0;height:16%;
+  border-top:1px solid var(--rule);}
+.tl__ladder{position:absolute;inset:0;width:100%;height:100%;}
+.tl__blbl{position:absolute;left:12px;top:5px;font-family:var(--mono);font-size:8px;
+  line-height:1;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-22);}
+/* the curve climbs to the band's top-right, so its label takes the free
+   bottom corner — a label and a line may not share a corner */
+.tl__blbl--r{left:auto;right:12px;top:auto;bottom:5px;}
+.tl__scatter{position:absolute;left:0;right:0;top:0;bottom:16%;}
+.tl__scatter i{position:absolute;width:3px;height:3px;background:var(--ink-22);}
+.tl__axis{position:absolute;left:0;right:0;top:44%;height:1px;background:var(--gold-hair2);}
+.tl__stns{position:absolute;inset:0 92px;}
+.tl__stn{position:absolute;left:var(--at);width:168px;transform:translateX(-50%);
+  display:block;text-align:center;color:inherit;}
+.tl__stn--up{bottom:calc(56% + 14px);}
+.tl__stn--dn{top:calc(44% + 14px);}
+.tl__stem{position:absolute;left:50%;width:1px;height:14px;background:var(--gold-hair2);}
+.tl__stn--up .tl__stem{top:100%;}
+.tl__stn--dn .tl__stem{bottom:100%;}
+.tl__dia{position:absolute;left:50%;width:7px;height:7px;background:var(--gold);
+  transform:translate(-50%,-50%) rotate(45deg);}
+html[data-theme="light"] .tl__dia{background:var(--gold-line);}
+.tl__stn--up .tl__dia{top:calc(100% + 14px);}
+.tl__stn--dn .tl__dia{bottom:calc(100% + 14px);margin-bottom:-3.5px;}
+.tl__stn--up .tl__dia{margin-top:-.5px;}
+.tl__date{display:block;font-family:var(--mono);font-size:9px;line-height:1;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold-ink);}
+.tl__name{display:block;margin-top:7px;font-family:var(--mono);font-size:10.5px;line-height:1.25;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--ink-90);}
+.tl__note{display:block;margin-top:6px;font-family:var(--pp);font-size:11.5px;line-height:1.35;
+  color:var(--ink-42);}
+a.tl__stn:hover .tl__name{color:var(--gold-ink);}
+a.tl__stn:hover .tl__dia{background:var(--gold-lit);box-shadow:0 0 12px rgba(var(--gold-rgb),.6);}
+a.tl__stn::after{content:"";position:absolute;left:50%;transform:translateX(-50%);
+  width:26px;height:1px;background:transparent;}
+a.tl__stn:hover::after{background:var(--gold-line);}
+.tl__stn--up.tl__stn:hover::after{bottom:-6px;}
+.tl__stn--dn.tl__stn:hover::after{top:-6px;}
+/* ⚠ No year row: every station already prints its own date, and a scale
+   repeating them under the axis was the same fact twice — and a collision.
+   The priors run-in lives at the head of the adoption band, which is where it
+   belongs in time; floated in the station band it printed through station one. */
+
+/* the parallel track, anchored at the field's foot-left (panel grammar) */
+.par{display:grid;gap:5px;max-width:62ch;}
+.par b{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+       color:var(--gold-chip);font-weight:400;}
+.par span{font-family:var(--pp);font-size:12px;line-height:1.45;color:var(--ink-42);}
+
+/* the figures register — an instrument footer bar */
+.reg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:1px solid var(--rule);}
+.reg__i{padding:16px 18px;}
+.reg__i + .reg__i{border-left:1px solid var(--rule);}
+.reg__v{display:block;font-family:var(--mono);font-size:clamp(17px,1.5vw,21px);line-height:1;
+  letter-spacing:.02em;color:var(--gold-ink);}
+.reg__l{display:block;margin-top:9px;font-family:var(--mono);font-size:8.5px;line-height:1.3;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-42);}
+
+/* ── console (the shared instrument housing) ─────────────────────────── */
+.con{position:relative;display:flex;flex-direction:column;border:1px solid var(--edge);
+  background:linear-gradient(180deg,rgba(var(--gold-rgb),.05),transparent 46%),var(--plate);
+  clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);}
+.con__rail{position:relative;display:flex;border-bottom:1px solid var(--gold-hair2);}
+.con__stn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 6px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-42);}
+.con__stn[data-on]{color:var(--ink);background:rgba(var(--dawn-rgb),.03);}
+.con__spine{position:absolute;bottom:-1px;left:0;height:1px;background:var(--gold-lit);
+  box-shadow:0 0 9px rgba(240,200,106,.55);}
+html[data-theme="light"] .con__spine{background:var(--gold-line);box-shadow:none;}
+.con__body{position:relative;flex:1;display:flex;flex-direction:column;padding:20px;}
+.con__scan{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(var(--dawn-rgb),.014) 0 1px,transparent 1px 3px);}
+.dia{width:5px;height:5px;background:var(--gold);transform:rotate(45deg);flex:none;}
+.dia--dim{background:rgba(var(--gold-rgb),.38);}
+html[data-theme="light"] .dia{background:var(--gold-line);}
+
+/* ── record column (always LEFT) ─────────────────────────────────────── */
+.split{display:grid;grid-template-columns:minmax(300px,min(38%,440px)) minmax(0,1fr);
+  gap:clamp(28px,3.5vw,64px);align-items:start;}
+.split--wide{grid-template-columns:minmax(280px,min(34%,400px)) minmax(0,1fr);}
+.rec__k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold-chip);}
+.rec__t{margin-top:12px;font-family:var(--pp);font-weight:500;font-size:21px;letter-spacing:.01em;
+  color:var(--ink);}
+.rec__em{color:var(--gold-ink);}
+.rec__s{margin-top:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-42);}
+.rec__p{margin-top:16px;font-family:var(--pp);font-size:14px;line-height:1.55;color:var(--ink-70);}
+.rec__dl{margin-top:20px;display:grid;gap:0;}
+.rec__row{display:grid;grid-template-columns:minmax(96px,34%) 1fr;gap:14px;padding:10px 0;
+  border-top:1px solid var(--edge);}
+.rec__row:last-child{border-bottom:1px solid var(--edge);}
+.rec__row dt{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-42);}
+.rec__row dd{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-80);}
+.chips{margin-top:18px;display:flex;flex-wrap:wrap;gap:6px;}
+.chip{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-42);border:1px solid var(--edge);padding:5px 8px;}
+.mode{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:6px 11px;
+  border:1px solid var(--gold-hair2);font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold-ink);}
+
+/* ── the tool bay: ONE COLUMN inside the console — bay above, blocks below */
+.bay{display:flex;flex-direction:column;gap:10px;}
+.bay__feed{display:flex;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-42);}
+.bay__shot{position:relative;border:1px solid var(--gold-hair);background:rgba(var(--dawn-rgb),.02);
+  min-height:clamp(150px,22vh,240px);display:flex;flex-direction:column;}
+.bay__watch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 13px;
+  background:rgba(var(--gold-rgb),.13);font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--gold-ink);}
+.blocks{margin-top:auto;padding-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-rows:1fr;gap:8px;}
+.block{background:var(--plate);border:1px solid var(--edge);padding:11px 12px;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%);}
+.block__t{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.block__d{margin-top:7px;font-family:var(--pp);font-size:11.5px;line-height:1.4;color:var(--ink-62);}
+
+/* ── wireframes (drawn evidence — no captures, no duotone) ───────────── */
+.wire{flex:1;display:flex;padding:11px;gap:7px;}
+.wpane{flex:1;border:1px solid var(--edge);background:rgba(var(--dawn-rgb),.03);padding:8px;
+  display:flex;flex-direction:column;gap:6px;}
+/* ⚠ 8px is the mono floor on drawn evidence — never smaller. */
+.wlbl{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-42);}
+.wlbl--grn{color:var(--green-ink);}
+.wbar{height:6px;background:rgba(var(--dawn-rgb),.07);}
+.wcta{margin-top:auto;padding:6px 8px;background:var(--gold);color:#0a0908;font-family:var(--mono);
+  font-size:8px;letter-spacing:.1em;text-transform:uppercase;text-align:center;}
+.wchain{display:flex;align-items:stretch;}
+.wchain > span{flex:1;border:1px solid rgba(var(--green-rgb),.6);padding:6px 4px;
+  font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--green-ink);text-align:center;}
+.wchain > span + span{border-left:none;}
+.wchain > span.is-cta{background:var(--gold);color:#0a0908;border-color:var(--gold);}
+
+/* ── the chapter index (the tools head beat) ─────────────────────────── */
+/* The CP2077 database's left column, laid flat: an index that names what is
+   coming and opens it. Unequal tracks — an index is not a table. */
+.tindex{border-top:1px solid var(--edge);}
+.tindex__row{display:grid;grid-template-columns:46px minmax(104px,.9fr) minmax(0,2fr) auto;
+  gap:clamp(14px,2vw,36px);align-items:baseline;padding:clamp(14px,2.1vh,22px) 4px;
+  border-bottom:1px solid var(--edge);color:inherit;}
+.tindex__row:hover{background:rgba(var(--gold-rgb),.05);}
+.tindex__n{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--ink-22);}
+.tindex__name{font-family:var(--mono);font-size:clamp(12px,1.05vw,14px);letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-90);}
+.tindex__row:hover .tindex__name{color:var(--gold-ink);}
+.tindex__tag{font-family:var(--pp);font-size:13.5px;line-height:1.4;color:var(--ink-62);}
+.tindex__mode{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold-chip);white-space:nowrap;}
+
+/* ── media tiles ─────────────────────────────────────────────────────── */
+.tiles{display:grid;gap:11px;}
+.tiles--5{grid-template-columns:repeat(5,minmax(0,1fr));}
+.tile{border:1px solid var(--edge);background:rgba(var(--dawn-rgb),.05);display:flex;
+  align-items:flex-end;padding:9px;}
+.tile--45{aspect-ratio:4/5;}
+/* ⚠ height-driven, not width-driven: at the band's full width a 16/9 box is
+   575px tall and pushes the beat past its own viewport. */
+.tile--film{aspect-ratio:16/9;height:clamp(190px,40svh,392px);width:auto;
+  margin-inline:auto;justify-content:space-between;}
+.tile__l{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-42);}
+
+/* ── hero ────────────────────────────────────────────────────────────── */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;
+  padding:clamp(96px,14vh,180px) 0 clamp(72px,10vh,120px);}
+.hero__t{font-size:clamp(34px,5vw,68px);max-width:16ch;}
+.hero__lede{margin-top:24px;max-width:52ch;font-size:var(--band-copy);line-height:1.55;
+  color:var(--ink-80);}
+.cta{display:inline-flex;align-items:center;gap:10px;margin-top:32px;padding:12px 22px;
+  background:var(--gold);color:#0a0908;font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));}
+.cta:hover{background:#e0bd6a;color:#0a0908;}
+
+/* ── close ───────────────────────────────────────────────────────────── */
+.close{text-align:center;}
+.close .title{max-width:none;}
+.close__p{margin:18px auto 0;max-width:46ch;font-size:var(--band-copy);line-height:1.55;
+  color:var(--ink-70);}
+
+/* ── theme toggle ────────────────────────────────────────────────────── */
+.tg{position:fixed;right:calc(var(--hud-margin) + 26px);bottom:calc(var(--hud-margin) + 14px);
+  z-index:70;background:transparent;border:1px solid var(--edge);color:var(--ink-42);
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  padding:8px 12px;cursor:pointer;}
+.tg:hover{color:var(--gold-ink);border-color:var(--gold-hair2);}
+
+/* ── responsive: the enhanced tier is ≥961px, exactly as the app ─────── */
+@media (max-width:960px), (prefers-reduced-motion:reduce){
+  .head{grid-template-columns:1fr;gap:18px;margin-bottom:clamp(36px,6vh,64px);}
+  .head__intro{justify-self:start;padding-top:0;}
+  .head__grid,.x,.head__coord,.head__state{display:none;}
+  .head__desig{position:static;display:inline-block;margin-bottom:12px;}
+  .split,.split--wide{grid-template-columns:1fr;}
+  .hud{display:none;}
+  .nav__ch{display:none;}
+  .tiles--5{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .reg{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .reg__i + .reg__i{border-left:none;border-top:1px solid var(--rule);}
+  .tl{height:auto;overflow:visible;}
+  .tl__grat,.tl__band,.tl__axis,.tl__scatter{display:none;}
+  .tl__stns{position:static;inset:auto;}
+  .tl__stn{position:static;width:auto;transform:none;text-align:left;padding:14px 0;
+    border-top:1px solid var(--edge);}
+  .tl__stem,.tl__dia{display:none;}
+}
+@media (max-width:480px){
+  .blocks{grid-template-columns:minmax(0,1fr);}
+  .tiles--5{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HUD frame ══════════════════════════════════════════════════════ -->
+<div class="hud" aria-hidden="true">
+  <i class="hud__c hud__c--tl"></i>
+  <i class="hud__c hud__c--bl"></i>
+  <i class="hud__c hud__c--br"></i>
+  <div class="hud__rail hud__rail--l"><div class="hud__ticks">
+    <i class="hud__tick hud__tick--maj" style="top:0"></i>
+    <i class="hud__tick" style="top:8.33%"></i>
+    <i class="hud__tick" style="top:16.66%"></i>
+    <i class="hud__tick hud__tick--maj" style="top:25%"></i>
+    <i class="hud__tick" style="top:33.33%"></i>
+    <i class="hud__tick" style="top:41.66%"></i>
+    <i class="hud__tick hud__tick--maj" style="top:50%"></i>
+    <i class="hud__tick" style="top:58.33%"></i>
+    <i class="hud__tick" style="top:66.66%"></i>
+    <i class="hud__tick hud__tick--maj" style="top:75%"></i>
+    <i class="hud__tick" style="top:83.33%"></i>
+    <i class="hud__tick" style="top:91.66%"></i>
+    <i class="hud__tick hud__tick--maj" style="top:100%"></i>
+  </div></div>
+  <div class="hud__rail hud__rail--r"><div class="hud__ticks">
+    <i class="hud__tick hud__tick--maj" style="top:0"></i>
+    <i class="hud__tick" style="top:25%"></i>
+    <i class="hud__tick hud__tick--maj" style="top:50%"></i>
+    <i class="hud__tick" style="top:75%"></i>
+    <i class="hud__tick hud__tick--maj" style="top:100%"></i>
+  </div></div>
+</div>
+
+<!-- ══ nav — chapter links, a link row rather than a tab strip ════════ -->
+<nav class="nav">
+  <span class="nav__brand">Thoughtform</span>
+  <span class="nav__ch">
+    <a href="#overview">Trajectory</a>
+    <a href="#studio">Studio</a>
+    <a href="#studio-films">Films</a>
+    <a href="#tools">Tools</a>
+    <a href="#intelligence">Architecture</a>
+  </span>
+</nav>
+
+<main>
+
+<!-- ══ HERO ═══════════════════════════════════════════════════════════ -->
+<header class="sec hero">
+  <div class="band">
+    <div class="head__lead" style="position:relative">
+      <i class="head__grid" aria-hidden="true"></i>
+      <i class="x x--origin" aria-hidden="true"></i>
+      <span class="head__desig">Thoughtform · portfolio · Loop Earplugs</span>
+      <h1 class="title hero__t">The Loop <em>portfolio.</em></h1>
+      <p class="hero__lede">Eighteen months of AI adoption at Loop Earplugs: the program, the
+        Skills, and the four tools the teams run.</p>
+      <a class="cta" href="#overview">See the work →</a>
+    </div>
+  </div>
+</header>
+
+<!-- ══ 01 · THE TRAJECTORY — the timeline, and the table of contents ══ -->
+<section class="sec" id="overview" aria-label="The trajectory">
+  <div class="band">
+
+    <div class="head">
+      <div class="head__lead">
+        <i class="head__grid" aria-hidden="true"></i>
+        <i class="x x--origin" aria-hidden="true"></i>
+        <span class="head__desig">The program · Loop Earplugs</span>
+        <h2 class="title">The <em>trajectory.</em></h2>
+        <span class="head__coord">0344 / 0260</span>
+      </div>
+      <div class="head__intro">
+        <i class="head__grid" aria-hidden="true"></i>
+        <span class="head__desig">Arc / brief · 01</span>
+        <span class="head__state">2024 — Now</span>
+        <p class="head__copy">The engagement in the order it happened, on the dates it happened.
+          The gaps are part of the record: the work moved when a team was ready, not to a
+          schedule. Every station on the axis opens the chapter it belongs to.</p>
+        <span class="head__coord head__coord--r">1588 / 0260</span>
+        <i class="x x--close" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field__hd">
+        <span class="lbl">Adoption · 2024 → now · organic pull, not mandate</span>
+        <span class="read">18 months on record</span>
+      </div>
+
+      <div class="tl">
+        <i class="tl__grat" aria-hidden="true"></i>
+        <div class="tl__scatter" aria-hidden="true">
+          <i style="left:9%;top:78%"></i><i style="left:14%;top:70%"></i><i style="left:19%;top:74%"></i>
+          <i style="left:26%;top:64%"></i><i style="left:31%;top:68%"></i><i style="left:36%;top:56%"></i>
+          <i style="left:43%;top:52%"></i><i style="left:47%;top:60%"></i><i style="left:54%;top:46%"></i>
+          <i style="left:59%;top:50%"></i><i style="left:64%;top:40%"></i><i style="left:71%;top:36%"></i>
+          <i style="left:76%;top:42%"></i><i style="left:83%;top:30%"></i><i style="left:88%;top:34%"></i>
+          <i style="left:92%;top:24%"></i>
+        </div>
+        <i class="tl__axis" aria-hidden="true"></i>
+
+        <div class="tl__stns">
+          <a class="tl__stn tl__stn--up" style="--at:4%" href="#overview">
+            <span class="tl__date">2024</span>
+            <span class="tl__name">Embedded in marketing</span>
+            <span class="tl__note">First workflows mapped from inside the team.</span>
+            <i class="tl__stem"></i><i class="tl__dia"></i>
+          </a>
+          <a class="tl__stn tl__stn--dn" style="--at:21%" href="#studio">
+            <span class="tl__date">2025</span>
+            <span class="tl__name">The studio brief</span>
+            <span class="tl__note">Making paid social a capability the team owns.</span>
+            <i class="tl__stem"></i><i class="tl__dia"></i>
+          </a>
+          <a class="tl__stn tl__stn--up" style="--at:38%" href="#studio-films">
+            <span class="tl__date">Sept 2025</span>
+            <span class="tl__name">The films</span>
+            <span class="tl__note">Two above-the-line masters, generative end to end.</span>
+            <i class="tl__stem"></i><i class="tl__dia"></i>
+          </a>
+          <a class="tl__stn tl__stn--dn" style="--at:52%" href="#tool-vesper">
+            <span class="tl__date">Oct 2025</span>
+            <span class="tl__name">Tools for the process</span>
+            <span class="tl__note">One canvas for image and video, in the studio's hands.</span>
+            <i class="tl__stem"></i><i class="tl__dia"></i>
+          </a>
+          <a class="tl__stn tl__stn--up" style="--at:69%" href="#tool-mimir">
+            <span class="tl__date">Feb 2026</span>
+            <span class="tl__name">Tools around it</span>
+            <span class="tl__note">Briefing, dubbing and the studio's own project chain.</span>
+            <i class="tl__stem"></i><i class="tl__dia"></i>
+          </a>
+          <a class="tl__stn tl__stn--dn" style="--at:83%" href="#overview">
+            <span class="tl__date">Q2 2026</span>
+            <span class="tl__name">Company-wide</span>
+            <span class="tl__note">Studio self-sufficient; adoption opens to every team.</span>
+            <i class="tl__stem"></i><i class="tl__dia"></i>
+          </a>
+          <a class="tl__stn tl__stn--up" style="--at:97%" href="#intelligence">
+            <span class="tl__date">Now</span>
+            <span class="tl__name">Intelligence architecture</span>
+            <span class="tl__note">The record of which work runs on which intelligence.</span>
+            <i class="tl__stem"></i><i class="tl__dia"></i>
+          </a>
+        </div>
+
+        <div class="tl__band">
+          <span class="tl__blbl">Priors · Starhaven · Latent Land</span>
+          <span class="tl__blbl tl__blbl--r">Adoption · organic pull → now</span>
+          <svg class="tl__ladder" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M30 54H150V48H270V42H390V35H510V28H630V21H750V13H870V6H975"
+                  fill="none" stroke="var(--green)" stroke-width="2"
+                  vector-effect="non-scaling-stroke"/>
+          </svg>
+        </div>
+      </div>
+
+      <i class="ruler" aria-hidden="true"></i>
+
+      <div class="field__ft">
+        <div class="par">
+          <b>Running in parallel</b>
+          <span>Pilot seats tied one-to-one to workflows, the enterprise agreement signed on
+            that evidence, and governance as its own track — so no team ever waited on it.</span>
+        </div>
+        <span class="lbl lbl--dim">Twenty-two teams briefed · forty-five minutes each</span>
+      </div>
+
+      <div class="reg">
+        <div class="reg__i"><b class="reg__v">22</b><span class="reg__l">Workshops run</span></div>
+        <div class="reg__i"><b class="reg__v">5 → 130+</b><span class="reg__l">People on the layer</span></div>
+        <div class="reg__i"><b class="reg__v">47+</b><span class="reg__l">Skills encoded</span></div>
+        <div class="reg__i"><b class="reg__v">14</b><span class="reg__l">Teams using the layer</span></div>
+        <div class="reg__i"><b class="reg__v">4</b><span class="reg__l">Tools in production</span></div>
+        <div class="reg__i"><b class="reg__v">97%</b><span class="reg__l">Of briefings involve AI</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 02 · LOOP STUDIO ═══════════════════════════════════════════════ -->
+<section class="sec" id="studio" aria-label="Loop Studio">
+  <div class="band">
+
+    <div class="head">
+      <div class="head__lead">
+        <i class="head__grid" aria-hidden="true"></i>
+        <i class="x x--origin" aria-hidden="true"></i>
+        <span class="head__desig">Loop Studio · what the layer produced</span>
+        <h2 class="title">Loop <em>Studio.</em></h2>
+        <span class="head__coord">0344 / 0412</span>
+      </div>
+      <div class="head__intro">
+        <i class="head__grid" aria-hidden="true"></i>
+        <span class="head__desig">Arc / brief · 02</span>
+        <span class="head__state">Owned by the team</span>
+        <p class="head__copy">Creative technology sat inside the studio rather than beside it.
+          The goal was never a service the team books; it was a capability the team owns — and
+          paid social is where that became true first.</p>
+        <span class="head__coord head__coord--r">1588 / 0412</span>
+        <i class="x x--close" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <!-- record LEFT · instrument RIGHT -->
+    <div class="split">
+      <div class="rec">
+        <span class="rec__k">The reading</span>
+        <p class="rec__t">The ads are the output. The line is how the studio decides what AI
+          may make.</p>
+        <p class="rec__p">Paid social ships without a specialist in the loop. What governs it is
+          not a tool choice but a standard the team wrote for itself — and a red line it does
+          not cross.</p>
+        <dl class="rec__dl">
+          <div class="rec__row"><dt>Briefings</dt><dd>97% involve AI</dd></div>
+          <div class="rec__row"><dt>Cadence</dt><dd>500 ads / month</dd></div>
+          <div class="rec__row"><dt>Owner</dt><dd>Studio · Design</dd></div>
+        </dl>
+      </div>
+
+      <div class="con">
+        <div class="con__rail">
+          <span class="con__stn" data-on=""><i class="dia"></i>The ads</span>
+          <span class="con__stn"><i class="dia dia--dim"></i>The line</span>
+          <span class="con__stn"><i class="dia dia--dim"></i>The red line</span>
+          <i class="con__spine" style="width:33.33%"></i>
+        </div>
+        <div class="con__body">
+          <div class="tiles tiles--5">
+            <div class="tile tile--45"><span class="tile__l">Still 01</span></div>
+            <div class="tile tile--45"><span class="tile__l">Still 02</span></div>
+            <div class="tile tile--45"><span class="tile__l">Still 03</span></div>
+            <div class="tile tile--45"><span class="tile__l">Still 04</span></div>
+            <div class="tile tile--45"><span class="tile__l">Still 05</span></div>
+          </div>
+        </div>
+        <i class="con__scan" aria-hidden="true"></i>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 03 · ABOVE THE LINE ════════════════════════════════════════════ -->
+<section class="sec" id="studio-films" aria-label="Above the line">
+  <div class="band">
+
+    <div class="head">
+      <div class="head__lead">
+        <i class="head__grid" aria-hidden="true"></i>
+        <i class="x x--origin" aria-hidden="true"></i>
+        <span class="head__desig">Loop Earplugs · September 2025</span>
+        <h2 class="title">Above <em>the line.</em></h2>
+        <span class="head__coord">0344 / 0518</span>
+      </div>
+      <div class="head__intro">
+        <i class="head__grid" aria-hidden="true"></i>
+        <span class="head__desig">Arc / brief · 03</span>
+        <span class="head__state">Shipped</span>
+        <p class="head__copy">Two thirty-second masters made with generative image and video
+          models, held to the same craft standard as the live-action work they ran beside. They
+          are the studio's own output, not a demonstration.</p>
+        <span class="head__coord head__coord--r">1588 / 0518</span>
+        <i class="x x--close" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <!-- the one full-bleed beat: a film wants the width. Its record is the masthead's. -->
+    <div class="field">
+      <div class="field__hd">
+        <span class="lbl">Masters · YouTube and connected TV</span>
+        <span class="read">2 films</span>
+      </div>
+      <div class="con" style="border:none;clip-path:none;background:none">
+        <div class="con__rail">
+          <span class="con__stn" data-on=""><i class="dia"></i>Master one</span>
+          <span class="con__stn"><i class="dia dia--dim"></i>Master two</span>
+          <i class="con__spine" style="width:50%"></i>
+        </div>
+        <div class="con__body">
+          <div class="tile tile--film">
+            <span class="tile__l">Film 01 · 30-second master</span>
+            <span class="tile__l" style="color:var(--gold-ink)">▶ Watch</span>
+          </div>
+        </div>
+      </div>
+      <div class="field__ft">
+        <span class="lbl lbl--dim">Generative image and video · one craft standard</span>
+        <span class="lbl lbl--dim">Ran beside live action</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 04 · SOFTWARE FOR FEW ══════════════════════════════════════════ -->
+<section class="sec" id="tools" aria-label="Software for few">
+  <div class="band">
+
+    <div class="head">
+      <div class="head__lead">
+        <i class="head__grid" aria-hidden="true"></i>
+        <i class="x x--origin" aria-hidden="true"></i>
+        <span class="head__desig">The tools · in production</span>
+        <h2 class="title">Software for <em>few.</em></h2>
+        <span class="head__coord">0344 / 0624</span>
+      </div>
+      <div class="head__intro">
+        <i class="head__grid" aria-hidden="true"></i>
+        <span class="head__desig">Arc / brief · 04</span>
+        <span class="head__state">4 in production</span>
+        <p class="head__copy">Four bottlenecks too specific for anyone to sell software for, and
+          cheap enough to build once the judgment around them was already encoded. Two sit
+          inside the creative process; two sit around it.</p>
+        <span class="head__coord head__coord--r">1588 / 0624</span>
+        <i class="x x--close" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <div class="tindex">
+      <a class="tindex__row" href="#tool-vesper">
+        <span class="tindex__n">01</span><span class="tindex__name">Vesper</span>
+        <span class="tindex__tag">One canvas for image and video, on only the models Studio uses.</span>
+        <span class="tindex__mode">Compress</span>
+      </a>
+      <a class="tindex__row" href="#tool-mimir">
+        <span class="tindex__n">02</span><span class="tindex__name">Mímir</span>
+        <span class="tindex__tag">Loop's own knowledge, structured — insight while the brief is written.</span>
+        <span class="tindex__mode">Invent</span>
+      </a>
+      <a class="tindex__row" href="#tool-babylon">
+        <span class="tindex__n">03</span><span class="tindex__name">Babylon</span>
+        <span class="tindex__tag">Transcribe, translate, dub and verify as one reviewed pipeline.</span>
+        <span class="tindex__mode">Invent</span>
+      </a>
+      <a class="tindex__row" href="#tool-heimdall">
+        <span class="tindex__n">04</span><span class="tindex__name">Heimdall</span>
+        <span class="tindex__tag">Everything around the creative work — board to canvas, nothing retyped.</span>
+        <span class="tindex__mode">Repair</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 04.1 · VESPER — a tool FOR the creative process ════════════════ -->
+<section class="sec" id="tool-vesper" aria-label="Vesper">
+  <div class="band">
+    <div class="split">
+      <div class="rec">
+        <span class="rec__k">01 / 04 · Vesper</span>
+        <p class="rec__t">AI image &amp; video <span class="rec__em">suite</span></p>
+        <p class="rec__s">Replaced Krea. Built in-house.</p>
+        <span class="mode"><i class="dia"></i>Compress</span>
+        <p class="rec__p">Studio was losing creative flow to scattered generation tools, opaque
+          costs and too many model choices. One opinionated canvas now runs prompt enhancement,
+          multi-model generation and image-to-video on only the models Studio actually uses.</p>
+        <dl class="rec__dl">
+          <div class="rec__row"><dt>Team</dt><dd>Studio · Design</dd></div>
+          <div class="rec__row"><dt>In service</dt><dd>2025 —</dd></div>
+        </dl>
+        <div class="chips">
+          <span class="chip">Next.js</span><span class="chip">Supabase</span>
+          <span class="chip">Anthropic</span><span class="chip">Gemini</span>
+          <span class="chip">Replicate</span><span class="chip">Kling</span>
+        </div>
+      </div>
+
+      <div class="con">
+        <div class="con__body">
+          <div class="bay">
+            <div class="bay__feed">
+              <span>Feed · in service 2025 —</span><span>Walkthrough · 1:22</span>
+            </div>
+            <div class="bay__shot">
+              <div class="wire">
+                <div class="wpane" style="flex:.9">
+                  <span class="wlbl wlbl--grn">Prompt</span>
+                  <i class="wbar"></i><i class="wbar" style="width:70%"></i>
+                  <span class="wlbl" style="margin-top:auto">Nano Banana</span>
+                </div>
+                <div class="wpane" style="flex:1.3;background:rgba(var(--dawn-rgb),.05)">
+                  <span class="wlbl">Canvas</span>
+                </div>
+                <div class="wpane" style="flex:.8">
+                  <span class="wlbl wlbl--grn">Enhance prompt</span>
+                  <i class="wbar"></i>
+                  <span class="wcta">Generate</span>
+                </div>
+              </div>
+              <div class="bay__watch"><span>Watch walkthrough</span><span>1:22</span></div>
+            </div>
+          </div>
+          <div class="blocks">
+            <div class="block"><div class="block__t">Prompt enhancement</div>
+              <div class="block__d">Claude refines visual prompts using the Loop product catalogue.</div></div>
+            <div class="block"><div class="block__t">Multi-model generation</div>
+              <div class="block__d">Gemini Flash Image, Veo 3.1, Seedream, Kling under one tab.</div></div>
+            <div class="block"><div class="block__t">Image-to-video</div>
+              <div class="block__d">Animate a still without leaving the canvas. Small fix, big flow.</div></div>
+            <div class="block"><div class="block__t">Headless REST + MCP</div>
+              <div class="block__d">Same Skill behind Claude.ai and the in-product enhance button.</div></div>
+          </div>
+        </div>
+        <i class="con__scan" aria-hidden="true"></i>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 04.2 · MÍMIR — around the process ══════════════════════════════ -->
+<section class="sec" id="tool-mimir" aria-label="Mímir">
+  <div class="band">
+    <div class="split">
+      <div class="rec">
+        <span class="rec__k">02 / 04 · Mímir</span>
+        <p class="rec__t">Briefing agent</p>
+        <p class="rec__s">Loop's own knowledge, structured.</p>
+        <span class="mode"><i class="dia"></i>Invent</span>
+        <p class="rec__p">Creative Strategy drove the briefings, but each cycle meant manual
+          digging across forums, ad dashboards, ad libraries and past notes — with Loop's own ad
+          data too sensitive to hand to outside tools. Mímir unifies all of it into a
+          permissioned knowledge graph that surfaces insight while a brief is being written.</p>
+        <dl class="rec__dl">
+          <div class="rec__row"><dt>Team</dt><dd>Performance · Creative Strategy</dd></div>
+          <div class="rec__row"><dt>In service</dt><dd>2025 —</dd></div>
+        </dl>
+        <div class="chips">
+          <span class="chip">Next.js</span><span class="chip">Supabase</span>
+          <span class="chip">Gemini</span><span class="chip">Claude Skills</span>
+          <span class="chip">MCP</span><span class="chip">Slack</span>
+        </div>
+      </div>
+
+      <div class="con">
+        <div class="con__body">
+          <div class="bay">
+            <div class="bay__feed">
+              <span>Feed · in service 2025 —</span><span>Walkthrough · 1:20</span>
+            </div>
+            <div class="bay__shot">
+              <div class="wire">
+                <div class="wpane"><span class="wlbl">Input</span>
+                  <span class="wlbl wlbl--grn">Customer voice</span>
+                  <span class="wlbl wlbl--grn">Paid performance</span>
+                  <span class="wlbl wlbl--grn">Competitor ads</span>
+                  <span class="wlbl wlbl--grn">Prior briefings</span></div>
+                <div class="wpane" style="flex:1.2"><span class="wlbl">Briefing</span>
+                  <i class="wbar"></i><i class="wbar"></i><i class="wbar" style="width:60%"></i>
+                  <span class="wcta">Generate briefings</span></div>
+                <div class="wpane" style="flex:.7"><span class="wlbl">Ad</span>
+                  <i class="wbar" style="flex:1;height:auto"></i></div>
+              </div>
+              <div class="bay__watch"><span>Watch walkthrough</span><span>1:20</span></div>
+            </div>
+          </div>
+          <div class="blocks">
+            <div class="block"><div class="block__t">Permissioned graph</div>
+              <div class="block__d">Customer voice, paid performance, competitor ads, and prior strategy as one substrate.</div></div>
+            <div class="block"><div class="block__t">Proactive briefing</div>
+              <div class="block__d">Relevant insights surface while strategists compose the brief, not after another search pass.</div></div>
+            <div class="block"><div class="block__t">Headless substrate</div>
+              <div class="block__d">The same interpretation layer answers the web app, Claude, Cursor, Slack, and ChatGPT.</div></div>
+            <div class="block"><div class="block__t">Shared BI layer</div>
+              <div class="block__d">Expanded from Creative Strategy into Insights and Product Marketing use cases.</div></div>
+          </div>
+        </div>
+        <i class="con__scan" aria-hidden="true"></i>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 04.3 · BABYLON — around the process ════════════════════════════ -->
+<section class="sec" id="tool-babylon" aria-label="Babylon">
+  <div class="band">
+    <div class="split">
+      <div class="rec">
+        <span class="rec__k">03 / 04 · Babylon</span>
+        <p class="rec__t">UGC dubber</p>
+        <p class="rec__s">Top-performing UGC, dubbed at scale.</p>
+        <span class="mode"><i class="dia"></i>Invent</span>
+        <p class="rec__p">Localization had to scale across thirty-plus markets without turning
+          every language into another agency handoff and reviewer queue. Transcribe, translate,
+          dub and verify now run as one pipeline, so reviewers only judge the rows where culture
+          matters.</p>
+        <dl class="rec__dl">
+          <div class="rec__row"><dt>Team</dt><dd>Performance · Localization</dd></div>
+          <div class="rec__row"><dt>In service</dt><dd>2026 —</dd></div>
+        </dl>
+        <div class="chips">
+          <span class="chip">Next.js</span><span class="chip">Supabase</span>
+          <span class="chip">Anthropic</span><span class="chip">Gemini</span>
+        </div>
+      </div>
+
+      <div class="con">
+        <div class="con__body">
+          <div class="bay">
+            <div class="bay__feed">
+              <span>Feed · in service 2026 —</span><span>Walkthrough · 1:09</span>
+            </div>
+            <div class="bay__shot">
+              <div class="wire" style="flex-direction:column">
+                <div class="wchain">
+                  <span>Transcribe</span><span>Translate</span><span>Dub</span>
+                  <span>Approve</span><span class="is-cta">Upload</span>
+                </div>
+                <div class="wpane" style="flex:1">
+                  <span class="wlbl">EN → JA</span>
+                  <i class="wbar"></i><i class="wbar" style="width:82%"></i>
+                  <i class="wbar" style="width:64%"></i><i class="wbar" style="width:75%"></i>
+                </div>
+              </div>
+              <div class="bay__watch"><span>Watch walkthrough</span><span>1:09</span></div>
+            </div>
+          </div>
+          <div class="blocks">
+            <div class="block"><div class="block__t">Proofreader integration</div>
+              <div class="block__d">Integrates proofreading in the loop without giving access to the full system.</div></div>
+            <div class="block"><div class="block__t">Localization roadmap</div>
+              <div class="block__d">Expanding to other use-cases such as exporting PDP copy from Figma in bulk.</div></div>
+            <div class="block"><div class="block__t">Custom review module</div>
+              <div class="block__d">Cultural judgment surfaced where it actually matters.</div></div>
+            <div class="block"><div class="block__t">Single proofread surface</div>
+              <div class="block__d">Share-link review, no Figma seat needed.</div></div>
+          </div>
+        </div>
+        <i class="con__scan" aria-hidden="true"></i>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 04.4 · HEIMDALL — around the process ═══════════════════════════ -->
+<section class="sec" id="tool-heimdall" aria-label="Heimdall">
+  <div class="band">
+    <div class="split">
+      <div class="rec">
+        <span class="rec__k">04 / 04 · Heimdall</span>
+        <p class="rec__t">Studio PM orchestrator</p>
+        <p class="rec__s">Everything around the creative work, in one tool.</p>
+        <span class="mode"><i class="dia"></i>Repair</span>
+        <p class="rec__p">Built for the project managers around the creative team. One webhook
+          chain moves briefings from the board into the canvas, pulls copy out for proofreading,
+          and routes finished assets back through the brand system — without a single manual
+          copy-paste.</p>
+        <dl class="rec__dl">
+          <div class="rec__row"><dt>Team</dt><dd>Studio · Project Management</dd></div>
+          <div class="rec__row"><dt>In service</dt><dd>2026 —</dd></div>
+        </dl>
+        <div class="chips">
+          <span class="chip">Next.js</span><span class="chip">Supabase</span>
+          <span class="chip">Vercel KV</span><span class="chip">Figma</span>
+          <span class="chip">Frontify</span><span class="chip">Anthropic</span>
+        </div>
+      </div>
+
+      <div class="con">
+        <div class="con__body">
+          <div class="bay">
+            <div class="bay__feed">
+              <span>Feed · in service 2026 —</span><span>Walkthrough · 1:14</span>
+            </div>
+            <div class="bay__shot">
+              <div class="wire">
+                <div class="wpane" style="flex:.75"><span class="wlbl">Briefings</span>
+                  <i class="wbar"></i><i class="wbar"></i><i class="wbar" style="width:55%"></i>
+                  <span class="wlbl" style="margin-top:auto">Sync</span></div>
+                <div class="wpane" style="flex:1.4"><span class="wlbl">Template</span>
+                  <i class="wbar" style="flex:1;height:auto"></i></div>
+              </div>
+              <div class="bay__watch"><span>Watch walkthrough</span><span>1:14</span></div>
+            </div>
+          </div>
+          <div class="blocks">
+            <div class="block"><div class="block__t">Board → canvas sync</div>
+              <div class="block__d">Structured briefings, GraphQL pipeline, instant canvas plugin update.</div></div>
+            <div class="block"><div class="block__t">Brand-system intake</div>
+              <div class="block__d">Asset intake, naming conventions, brand surface alignment.</div></div>
+            <div class="block"><div class="block__t">Iterator plugin</div>
+              <div class="block__d">A prototype that quickly spins up variants from the best-performing ads.</div></div>
+            <div class="block"><div class="block__t">Briefing splits</div>
+              <div class="block__d">Turns projections and use-case splits into clear briefing assignments.</div></div>
+          </div>
+        </div>
+        <i class="con__scan" aria-hidden="true"></i>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ 05 · INTELLIGENCE ARCHITECTURE ═════════════════════════════════ -->
+<section class="sec" id="intelligence" aria-label="Intelligence architecture">
+  <div class="band">
+
+    <div class="head">
+      <div class="head__lead">
+        <i class="head__grid" aria-hidden="true"></i>
+        <i class="x x--origin" aria-hidden="true"></i>
+        <span class="head__desig">The record · Loop Earplugs</span>
+        <h2 class="title">Intelligence <em>architecture.</em></h2>
+        <span class="head__coord">0344 / 0730</span>
+      </div>
+      <div class="head__intro">
+        <i class="head__grid" aria-hidden="true"></i>
+        <span class="head__desig">Arc / brief · 05</span>
+        <span class="head__state">Standing seat</span>
+        <p class="head__copy">The function above the rollout: which work runs on which
+          intelligence, recorded so the decision survives the person who made it. Encoding
+          ratchets — the first piece of work pays for a shape, and every later piece inherits
+          it.</p>
+        <span class="head__coord head__coord--r">1588 / 0730</span>
+        <i class="x x--close" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <div class="split split--wide">
+      <div class="rec">
+        <span class="rec__k">What a configuration records</span>
+        <p class="rec__t">One unit of work. One configuration. One record.</p>
+        <p class="rec__p">A piece of work plus what runs it, what it inherits, what it can reach,
+          how much it decides alone, and who owns it once it runs.</p>
+        <dl class="rec__dl">
+          <div class="rec__row"><dt>Streams</dt><dd>27 surveyed</dd></div>
+          <div class="rec__row"><dt>Skills</dt><dd>47+ encoded</dd></div>
+          <div class="rec__row"><dt>Shapes</dt><dd>5 on the substrate</dd></div>
+          <div class="rec__row"><dt>Person-led</dt><dd>Drawn, not hidden</dd></div>
+        </dl>
+        <p class="rec__p">A pile of configurations shows what was built. A map shows what was
+          not — the negative space is the reading.</p>
+      </div>
+
+      <div class="con">
+        <div class="con__rail">
+          <span class="con__stn" data-on=""><i class="dia"></i>Work</span>
+          <span class="con__stn"><i class="dia dia--dim"></i>Configuration</span>
+          <span class="con__stn"><i class="dia dia--dim"></i>Substrate</span>
+          <i class="con__spine" style="width:33.33%"></i>
+        </div>
+        <div class="con__body" style="align-items:center;justify-content:center;min-height:clamp(280px,40vh,420px)">
+          <svg viewBox="0 0 240 214" style="height:min(360px,38vh)" role="img"
+               aria-label="The substrate carrier: five shapes carrying forty-seven Skills">
+            <polygon points="120,12 174,32 206,78 206,132 174,178 120,198 66,178 34,132 34,78 66,32"
+                     fill="none" stroke="var(--gold-hair2)" stroke-width="1.5"/>
+            <circle cx="120" cy="105" r="72" fill="none" stroke="var(--rule)" stroke-width="1"/>
+            <circle cx="120" cy="105" r="52" fill="none" stroke="var(--rule)" stroke-width="1"/>
+            <circle cx="120" cy="105" r="34" fill="rgba(202,165,84,.13)"
+                    stroke="var(--gold-hair2)" stroke-width="1"/>
+            <g stroke="var(--rule)" stroke-width="1">
+              <path d="M120 33V12M188 78L206 70M170 165L186 180M70 165L54 180M52 78L34 70"/>
+            </g>
+            <g fill="var(--ink-55)" font-family="PT Mono, monospace" font-size="7" letter-spacing=".8">
+              <text x="103" y="26">Pattern</text><text x="176" y="72">Voice</text>
+              <text x="158" y="176">Judgment</text><text x="44" y="176">Validation</text>
+              <text x="8" y="72">Stakeholder</text>
+            </g>
+            <text x="120" y="102" text-anchor="middle" fill="var(--gold-ink)"
+                  font-family="PT Mono, monospace" font-size="8" letter-spacing="1">Substrate</text>
+            <text x="120" y="115" text-anchor="middle" fill="var(--ink-42)"
+                  font-family="PT Mono, monospace" font-size="6.5" letter-spacing=".6">5 shapes</text>
+          </svg>
+        </div>
+        <i class="con__scan" aria-hidden="true"></i>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ CLOSE ══════════════════════════════════════════════════════════ -->
+<section class="sec" id="close" aria-label="Get in touch">
+  <div class="band close">
+    <h2 class="title">Get in <em>touch.</em></h2>
+    <p class="close__p">For the detail behind any of it, talk to Vince.</p>
+    <a class="cta" href="mailto:vince@thoughtform.co">vince@thoughtform.co</a>
+    <i class="ruler" aria-hidden="true" style="display:block;margin-top:clamp(44px,7vh,84px)"></i>
+    <p class="lbl lbl--dim" style="margin-top:16px">Thoughtform · thoughtform.co</p>
+  </div>
+</section>
+
+</main>
+
+<button class="tg" type="button" id="tg">Light</button>
+<script>
+  var root = document.documentElement, btn = document.getElementById('tg');
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    btn.textContent = next === 'light' ? 'Dark' : 'Light';
+  });
+</script>
+</body>
+</html>

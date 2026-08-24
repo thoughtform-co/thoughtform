@@ -59,6 +59,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   sheets: "STUDIO",
   films: "REEL",
   program: "CHART",
+  "tool-index": "INDEX",
 };
 
 /**

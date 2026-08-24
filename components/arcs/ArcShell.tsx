@@ -39,6 +39,16 @@ interface ArcShellProps {
   menu?: readonly ArcMenuItem[];
   /** Choreography system (ADR-057). Default: the ADR-052 IO reveal. */
   motion?: ArcMotion;
+  /**
+   * `ArcDef.format`, published as `data-arc-format` (ADR-079).
+   *
+   * ⚠ It exists so a LAYOUT law can be scoped to one format. The
+   * portfolio gives every section its own viewport; the decks must not
+   * inherit that — a workshop runs to twenty-plus sections and a
+   * one-beat-per-screen rule there would triple the page. `motion` cannot
+   * carry this: the workshop v1 and the portfolio are both reveal pages.
+   */
+  format?: string;
   children: ReactNode;
 }
 
@@ -68,6 +78,7 @@ export function ArcShell({
   motion = "reveal",
   gatewayPlate = false,
   curtain = false,
+  format,
   children,
 }: ArcShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -121,6 +132,7 @@ export function ArcShell({
     <main
       ref={rootRef}
       className={`arc-root arc-root--${variant} ${bodyClass}`}
+      data-arc-format={format}
       data-theme="dark"
       data-motion={motion === "terminal" ? "terminal" : undefined}
       /* THE CURTAIN, ON THE FLOWING PATH (ADR-076). ADR-075's seam is
