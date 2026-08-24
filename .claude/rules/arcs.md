@@ -19,6 +19,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - [ADR-073: The site's header on the arc pages](../sentinel/decisions/073-arc-header.md) — `ArcHudNav` replaces the left reel; `menuPrimary` chapters; the hero's top band
 - [ADR-075: The arc hero IS the homepage hero](../sentinel/decisions/075-arc-hero-curtain.md) — the plate, the shared boot, and the curtain seam
 - [ADR-076: The portfolio flows, and the architecture closes it](../sentinel/decisions/076-portfolio-flows-and-the-architecture-beat.md) — reveal motion on the portfolio, the curtain on the flowing path, the `intelligence` kind
+- [ADR-077: The arcs' ink ramp](../sentinel/decisions/077-arcs-ink-ramp.md) — the colour tokens that let the light theme reach this surface
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -129,6 +130,25 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   with `map/pda/**`. DOM and SVG only by construction (verified: no three
   / supabase / stores transitively).
   Never `ServicesCasefile` / `TrackVisual` / the corridor.
+- **COLOUR GOES THROUGH THE RAMP, NEVER A LITERAL** (ADR-077).
+  `.arc-root` declares `--arc-ink-*` (copy), `--arc-edge` / `--arc-rule` /
+  `--arc-rule-dash` (structure), `--arc-grid*` (the dot-matrix),
+  `--arc-plate` / `--arc-sheen` (a plate's ground) and `--arc-chip*`, all
+  against `--dawn-rgb` / `--void-deep-rgb`, which ADR-058 SWAPS. A literal
+  like `rgba(235, 227, 214, .08)` is cream-on-black spelled out and is
+  precisely what the flip cannot reach — that is how the portfolio shipped
+  cards painting a near-black ground on parchment.
+  ⚠ **RE-DERIVE THE ALPHA IN LIGHT, never inherit it**: the same number
+  recedes toward BLACK on void and toward PARCHMENT on light, and
+  dark-on-light reads weaker at equal alpha (ADR-063 U2; console.css's
+  `--con-edge` says it in the same words). The override block at the foot
+  of arcs.css is the one place to lift a rung.
+  ⚠ **TWO THINGS STAY LITERAL**: `.arc-card__scrim` and the hero's top
+  band, because both sit over a PHOTO (ADR-058's kept-dark imagery) and a
+  flip would wash parchment across an image — ADR-075's own bug.
+  ⚠ The parity walk in `arc-portfolio-smoke` COMPOSITES before measuring
+  and asserts the ground flipped; reading `color` alone passes twice on
+  the dark theme.
 - **CSS:** the route's sheet order is `landing.css → casefile.css →
 console.css → pda.css → arcs.css → theme.css` (ADR-072, ADR-076;
   theme LAST, ADR-058). Everything page-scoped lives in `arcs.css` under `.arc-*`;

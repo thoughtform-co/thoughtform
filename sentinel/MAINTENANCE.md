@@ -54,7 +54,34 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-08-24 (latest) — The portfolio flows; the architecture closes it (ADR-076)
+### 2026-08-24 (latest) — The arcs get an ink ramp (ADR-077)
+
+The owner sent a screenshot of the portfolio in LIGHT: the overview cards
+painting a near-black ground on parchment. Cycle A rows 1, 3, 5 and 6.
+
+- **Row 1 — one line of CSS, repeated 44 times.** `arcs.css` wrote every
+  colour as a raw literal, and `rgba(235, 227, 214, α)` IS cream-on-black
+  spelled out — precisely what ADR-058's wholesale token swap cannot
+  reach. The tokens had flipped correctly all along.
+- **Row 3 — the defect class is "a literal where a token belongs", and
+  the surface had no colour guard at all.** ADR-072 recorded the light
+  theme as "partial and pre-existing"; nobody measured it, so the OWNER
+  found it. Anything that ships a second theme needs a walk, not a note.
+- **Row 5 — the guard has to composite.** Every rung is an ALPHA, and an
+  alpha means nothing until it lands on a ground: reading `color` reports
+  both themes identical and passes on a page nobody can read. The walk
+  also asserts THE GROUND FLIPPED, or it runs twice on dark.
+- **Row 6 — a measured pre-existing defect fixed on purpose.** 10px meta
+  labels read 3.19:1 in DARK on all three arcs. This surface has ruled on
+  it (ADR-070 U6: a label nobody can read is absent, not quiet), so
+  `--arc-ink-40` lifted 0.40 → 0.55 — the one place this pass is not
+  byte-identical in dark, named as such.
+- **Fixed for free:** the keynote and workshop arcs, same sheet — the
+  recorded "eyebrows and prose vanish on parchment" symptom is gone.
+- **Left open:** the own-plate arc heroes' 2.0–2.5:1 copy in DARK over a
+  near-white key visual (ADR-075) — a scrim problem, not a token one.
+
+### 2026-08-24 — The portfolio flows; the architecture closes it (ADR-076)
 
 The owner read the portfolio against the shards repo's Stripe page: it
 scrolls worse, the Skills are text walls, and the homepage's intelligence

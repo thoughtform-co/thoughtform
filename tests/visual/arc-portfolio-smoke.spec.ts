@@ -619,6 +619,129 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     }
   });
 
+  test("the ink ramp flips with the theme, and every rung clears its target (ADR-077)", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run \u2014 the desktop project's");
+    /* \u26a0 EVERY COLOUR ON THIS SURFACE WAS A RAW LITERAL until ADR-077 \u2014
+       `rgba(235, 227, 214, \u03b1)` is cream-on-black spelled out, so the light
+       theme could not reach it and the cards painted a near-black ground on
+       parchment. The ramp fixes that; this is what stops it drifting back.
+
+       \u26a0 COMPOSITE BEFORE MEASURING. Every rung is an ALPHA, and an alpha
+       means nothing until it lands on a ground \u2014 the same 0.4 recedes
+       toward black on void and toward parchment on light (ADR-063 U2).
+       Reading `color` alone would report both themes identical and pass on
+       a page nobody can read. */
+    const probe = () => {
+      const lum = (c: number[]) => {
+        const f = (v: number) => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+      };
+      const parse = (c: string) => (c.match(/[\d.]+/g) || []).map(Number);
+      const over = (fg: number[], bg: number[]) => {
+        const a = fg[3] === undefined ? 1 : fg[3];
+        return [0, 1, 2].map((i) => fg[i] * a + bg[i] * (1 - a));
+      };
+      /* The first ancestor opaque enough to BE the bed. .85 is the same
+         cutoff the wireframes' light walk uses. */
+      const bedOf = (el: Element) => {
+        let n: Element | null = el;
+        while (n && n !== document.documentElement) {
+          const c = parse(getComputedStyle(n).backgroundColor);
+          if (c.length && (c[3] === undefined || c[3] >= 0.85)) return c.slice(0, 3);
+          n = n.parentElement;
+        }
+        return parse(getComputedStyle(document.body).backgroundColor).slice(0, 3);
+      };
+      const ratio = (a: number[], b: number[]) => {
+        const [hi, lo] = lum(a) > lum(b) ? [a, b] : [b, a];
+        return (lum(hi) + 0.05) / (lum(lo) + 0.05);
+      };
+      const rows: { what: string; r: number; px: number }[] = [];
+      for (const [sel, what] of [
+        [".arc-card-item__body", "card body"],
+        [".arc-card-item__title", "card title"],
+        [".arc-card-item__meta-row dt", "meta label"],
+        [".arc-head__sub", "head sub"],
+        [".arc-dossier__key", "dossier key"],
+        [".arc-desig", "designation"],
+      ] as const) {
+        const el = document.querySelector(sel);
+        if (!el) continue;
+        const cs = getComputedStyle(el);
+        const bed = bedOf(el);
+        rows.push({
+          what,
+          r: Number(ratio(over(parse(cs.color), bed), bed).toFixed(2)),
+          px: Math.round(parseFloat(cs.fontSize)),
+        });
+      }
+      /* A PLATE MUST BE A PLATE IN BOTH THEMES. The card's ground was a
+         literal near-black, which on parchment is not a recess \u2014 it is a
+         different design. Measured as the luminance step from the section
+         it sits on, so it cannot be satisfied by a colour that merely
+         differs. */
+      const plate = document.querySelector(".arc-card-item");
+      let step = 0;
+      if (plate) {
+        const sec = parse(getComputedStyle(plate.closest(".arc-section")!).backgroundColor).slice(
+          0,
+          3
+        );
+        step = Math.abs(lum(over(parse(getComputedStyle(plate).backgroundColor), sec)) - lum(sec));
+      }
+      return { rows, step, ground: getComputedStyle(document.body).backgroundColor };
+    };
+
+    // Real text carries the 4.5:1 standard; a 10px designation is chrome
+    // and takes the 3:1 line-work rung (ADR-063 U2's split).
+    const MIN: Record<string, number> = {
+      "card body": 7,
+      "card title": 7,
+      "meta label": 4.5,
+      "head sub": 7,
+      "dossier key": 4,
+      designation: 3,
+    };
+
+    for (const path of [PORTFOLIO, "/arcs/ai-keynote"]) {
+      for (const theme of ["dark", "light"] as const) {
+        const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+        await page.goto(`${path}${theme === "light" ? "?theme=light" : ""}`, {
+          waitUntil: "networkidle",
+        });
+        // Resolve the reveals so nothing is measured at opacity 0.
+        await page.evaluate(() =>
+          document.querySelectorAll(".arc-reveal").forEach((el) => el.classList.add("is-in"))
+        );
+        await page.waitForTimeout(400);
+        const r = await page.evaluate(probe);
+        const label = `${path} ${theme}`;
+
+        // THE GROUND ACTUALLY FLIPPED \u2014 without this the whole walk could
+        // pass twice on the dark theme.
+        expect(r.ground, `${label}: the ground`).toBe(
+          theme === "light" ? "rgb(236, 227, 214)" : "rgb(10, 9, 8)"
+        );
+        expect(r.rows.length, `${label}: found rungs to measure`).toBeGreaterThanOrEqual(4);
+        for (const row of r.rows) {
+          expect(row.r, `${label}: ${row.what} at ${row.px}px`).toBeGreaterThanOrEqual(
+            MIN[row.what]
+          );
+        }
+        expect(
+          r.step,
+          `${label}: the card plate is indistinguishable from its section`
+        ).toBeGreaterThan(0.0005);
+        await page.close();
+      }
+    }
+  });
+
   test("the header carries the chapters, then the readout and the whole drawer (ADR-073)", async ({
     page,
   }, testInfo) => {
