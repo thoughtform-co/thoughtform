@@ -58,6 +58,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   intelligence: "ATLAS",
   sheets: "STUDIO",
   films: "REEL",
+  flywheel: "ENGINE",
 };
 
 /**

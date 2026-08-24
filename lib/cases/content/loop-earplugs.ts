@@ -51,7 +51,12 @@ import type {
 
 /* ── Evidence, hoisted so both surfaces read the same rows ───────────── */
 
-const ROLLOUT_ROWS = [
+/** ⚠ EXPORTED FOR THE ARCS' PARITY PIN ONLY (ADR-078). The portfolio's
+ *  rollout beat states these milestones as sentences rather than log
+ *  lines, and `lib/arcs` keeps no `lib/cases` import (the `LOOP_FIGURES`
+ *  precedent), so the two are re-authored and pinned to agree in
+ *  `arcs-registry.test.ts`. Nothing renders this array twice. */
+export const ROLLOUT_ROWS = [
   { t: "2024", event: "Embedded. First workflows mapped" },
   { t: "Pilot", event: "69 seats, one team at a time" },
   { t: "Q2 2026", event: "Enterprise agreement signed" },

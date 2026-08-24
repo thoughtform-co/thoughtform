@@ -280,6 +280,37 @@ export type ArcSection = ArcSectionBase &
         kind: "films";
         head: ArcHead;
       }
+    | {
+        /**
+         * The thesis, drawn (ADR-078): adoption and automation as ONE
+         * mechanism — a ratchet between two strands, the canon figures as
+         * its registers, and the career route as its course strip.
+         *
+         * ⚠ IT CARRIES NO FIGURES. The registers are `LOOP_FIGURES`, read
+         * by the renderer, for the same reason a `dossier` carries only a
+         * `toolId`: a hand-typed count is the one that goes stale, and the
+         * canon is parity-pinned to the casefile in one place.
+         */
+        kind: "flywheel";
+        head: ArcHead;
+        /**
+         * The course strip — this page's own chart. Each waypoint is a
+         * section `id` on THIS arc (registry-pinned to resolve), so the
+         * route doubles as the table of contents; exactly one carries
+         * `seat`, the terminus the mechanism converges into.
+         */
+        route: readonly {
+          id: string;
+          label: string;
+          /** Mono sub-caption under the waypoint, e.g. a year or a set. */
+          sub?: string;
+          /** A section id on this arc. */
+          target?: string;
+          /** The terminus — the drawing's ONE gold object. Exactly one. */
+          seat?: true;
+        }[];
+        footnote?: string;
+      }
   );
 
 export type ArcSectionKind = ArcSection["kind"];

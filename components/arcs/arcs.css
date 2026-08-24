@@ -1010,6 +1010,27 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   max-width: 68ch;
 }
 
+/* THE ROLLOUT BEAT IS A LOG, not an anatomy (ADR-078), and a log's rows
+   are tighter than a spec's. It is the one section on any arc that renders
+   a dated sequence through this kind — six milestones, read down — so the
+   row rhythm is scoped to it rather than loosened for every deck that uses
+   `.arc-anatomy` for three-row specs. Untightened it measured 1090px
+   against an 800px viewport.
+
+   ⚠ SCOPED BY ID because that is what this beat IS: `#rollout` is a pinned
+   anchor (the flywheel's route links it), not an incidental hook. */
+#rollout .arc-anatomy {
+  margin-top: clamp(26px, 4vh, 48px);
+}
+#rollout .arc-anatomy__row {
+  padding: clamp(12px, 1.9vh, 20px) 0;
+  grid-template-columns: minmax(96px, 132px) 1fr;
+}
+#rollout .arc-anatomy__row dd {
+  font-size: calc(var(--band-copy, clamp(15px, 1.15vw, 18px)) * 0.94);
+  line-height: 1.5;
+}
+
 /* ── Interstitial bands — full-viewport pauses ─────────────────────── */
 .arc-inter {
   display: grid;
@@ -2303,6 +2324,699 @@ html[data-arc-entry]
   transition: none;
 }
 
+/* ── THE FLYWHEEL (ADR-078) ──────────────────────────────────────
+   The thesis, drawn. It replaced three text cards on a page of drawn
+   consoles — the one beat that ARGUES was the one that most needed to be
+   an instrument.
+
+   ⚠ IT IS A RATCHET, SO THERE IS NO CIRCLE ON IT. The mechanism reads
+   left to right: a flat GREEN rail (the people), a STAIRCASE that only
+   rises (the system), TEETH dropping from rail to riser (the encode: cost
+   paid once), and LIFTS climbing back to the rail landing AHEAD of where
+   they dropped. That forward displacement is the flywheel, honestly — a
+   helix flattened, not an arrow chasing its tail.
+
+   ⚠ DOM, NOT AN SVG CANVAS. The host runs w/h ≈ 3.3 → 2.1 across the
+   three reference viewports and no authored viewBox survives that spread
+   (the measured reason the tool wireframes are DOM). Only closed shapes
+   are inline SVG; every connector is a 1px DIV, because a stroked
+   single-axis path reports a zero-height rect and disappears from the
+   collapse guard.
+
+   ⚠ GOLD BUYS ONE THING: the seat plate at the route's end. */
+.arc-sec--fly {
+  /* The drawing pays for its own air, as the console beats do. */
+  --arc-stage-pad: clamp(48px, 7vh, 110px);
+  padding-block: var(--arc-stage-pad);
+}
+.arc-sec--fly .arc-head {
+  margin-bottom: clamp(18px, 2.6vh, 34px);
+}
+
+.arc-fly {
+  /* The plate rung of the corner law (ADR-065), responsive. */
+  --fly-ch: clamp(16px, 1.8vw, 26px);
+  /* The FIELD's height (the panel adds its header and route on top). The
+     beat has to stay near one viewport at 1280×720, which is what the low
+     end of this clamp is measured against. */
+  --fly-h: clamp(268px, 40svh, 440px);
+  --fly-hair: rgba(var(--dawn-rgb), 0.14);
+  --fly-ink: rgba(var(--dawn-rgb), 0.55);
+  --fly-fig: rgba(var(--dawn-rgb), 0.92);
+  --fly-lbl: var(--arc-ink-40);
+  /* GREEN IS THE HUMAN — the estate's law, and the reason the people
+     strand is the only green thing on the drawing. Both flip via
+     theme.css. */
+  --fly-green: var(--atreides-light, #5b7a4e);
+  --fly-green-ink: var(--atreides-ink, #7a9e6a);
+  /* Wayfinding: dim gold, deliberately NOT a second bright object. */
+  --fly-route: rgba(var(--gold-rgb), 0.4);
+  --fly-wp: var(--arc-ink-62);
+  --fly-seat: var(--gold);
+  /* ⚠ A LITERAL ON PURPOSE (the `--w-cta-ink` law): this ink sits on the
+     gold plate, which is theme-invariant, so flipping it would invert the
+     one pairing that is already correct in both themes (≈8.2:1). */
+  --fly-seat-ink: #110f09;
+  --fly-br: rgba(var(--gold-rgb), 0.55);
+
+  /* ⚠ NO ASPECT CAP HERE, and the difference from the console beats is
+     the whole reason this drawing is DOM. `.arc-intel` and `.arc-films`
+     cap their width against their height because an SVG `viewBox` fits by
+     `meet` — the SMALLER of the two ratios — so a box wider than the crop
+     letterboxes horizontally and the drawing shrinks. Nothing here is
+     scaled: the field is a grid of positioned rules that reflow, so width
+     is free and the drawing simply gets more of it. Capping it cost 340px
+     of the instrument band at 1440×800 (measured) and squeezed the route
+     strip's waypoints into each other. */
+  margin-inline: auto;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  border: 1px solid var(--fly-hair);
+  background: var(--arc-plate);
+  /* The machined housing: TR + BL, the canonical diagonal. Its children
+     are square — variation is hierarchy, not a second style. */
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--fly-ch)) 0,
+    100% var(--fly-ch),
+    100% 100%,
+    var(--fly-ch) 100%,
+    0 calc(100% - var(--fly-ch))
+  );
+}
+
+/* The header band — what the instrument is, and its state. */
+.arc-fly__hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px clamp(14px, 1.6vw, 22px);
+  border-bottom: 1px solid var(--fly-hair);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(9.5px, 0.78vw, 11px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.arc-fly__hd-ttl {
+  color: var(--arc-ink-82);
+}
+.arc-fly__hd-st {
+  color: var(--fly-lbl);
+}
+
+/* ⚠ THE ROUTE SITS IN THE FIELD'S COLUMN, not across the panel, and that
+   is what makes the seat land under the exit column both strands leave
+   by. Across the full width the terminus sat beneath the REGISTER stack —
+   measured 325px from the drop at 1280×720 — and read as a caption beside
+   the numbers rather than as what the mechanism produced. The registers
+   span both rows instead, which also gives them their own full height. */
+.arc-fly__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 26%);
+  grid-template-rows: auto auto;
+}
+.arc-fly__field {
+  grid-column: 1;
+  grid-row: 1;
+}
+.arc-fly__route {
+  grid-column: 1;
+  grid-row: 2;
+}
+.arc-fly__reg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+/* ── THE FIELD ─────────────────────────────────────────────────── */
+.arc-fly__field {
+  position: relative;
+  height: var(--fly-h);
+  padding: clamp(18px, 2.4vh, 30px) clamp(14px, 1.6vw, 24px);
+  border-right: 1px solid var(--fly-hair);
+  overflow: hidden;
+}
+/* Chart furniture: an edge, never a scale. Nothing is measured on it. */
+.arc-fly__ticks {
+  position: absolute;
+  inset: 12% auto 22% 0;
+  width: 9px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.arc-fly__ticks i {
+  display: block;
+  height: 1px;
+  width: 100%;
+  background: var(--fly-hair);
+}
+.arc-fly__ticks i:nth-child(2n) {
+  width: 5px;
+}
+
+.arc-fly__mech {
+  position: absolute;
+  inset: clamp(22px, 3vh, 36px) clamp(20px, 2vw, 34px) clamp(26px, 4vh, 46px) 30px;
+}
+
+/* The people's rail: flat, green, and the only green on the drawing. */
+.arc-fly__rail {
+  position: absolute;
+  left: 0;
+  /* It stops at the exit column, where it turns down — a rail that ran to
+     the wall would read as a frame edge rather than as a strand. */
+  right: 8%;
+  top: 0;
+  height: 1px;
+  background: var(--fly-green);
+}
+.arc-fly__node {
+  position: absolute;
+  top: -3px;
+  left: calc(4% + var(--i) * 22%);
+  width: 7px;
+  height: 7px;
+  margin-left: -3px;
+  border: 1px solid var(--fly-green);
+  transform: rotate(45deg);
+}
+
+/* The system's staircase: it only ever rises. Four treads climbing from
+   the field's floor toward the rail — the last one ends level with the
+   drops, which is where both strands leave together. */
+.arc-fly__step {
+  position: absolute;
+  left: calc(4% + var(--i) * 22%);
+  top: calc(80% - var(--i) * 19%);
+  width: 22%;
+  height: 19%;
+}
+.arc-fly__step-run {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--fly-ink);
+}
+.arc-fly__step-rise {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--fly-ink);
+}
+/* One square per tool taking its place on the layer. */
+.arc-fly__tool {
+  position: absolute;
+  left: 34%;
+  top: -7px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--fly-ink);
+  background: var(--arc-plate);
+}
+
+/* The teeth: the cost, paid once, at the riser. They fall FROM the rail,
+   so the first one is the longest — the shape of the argument, drawn: the
+   work that trenches a shape pays the whole depth, and every step after it
+   starts higher. */
+.arc-fly__tooth {
+  position: absolute;
+  left: calc(4% + var(--i) * 22%);
+  top: 0;
+  height: calc(80% - var(--i) * 19%);
+  width: 1px;
+}
+.arc-fly__tooth-line {
+  position: absolute;
+  inset: 0;
+  background: var(--fly-green);
+  opacity: 0.45;
+}
+.arc-fly__pawl {
+  position: absolute;
+  bottom: -2px;
+  left: -4.5px;
+  width: 10px;
+  height: 8px;
+  fill: var(--fly-green);
+}
+
+/* The return lifts: back to the rail, landing AHEAD. Dashed, because what
+   climbs back is inherited rather than spent. */
+.arc-fly__lift {
+  position: absolute;
+  /* One tread AHEAD of the tooth it answers — the forward displacement is
+     the whole claim, so the offset has to be visible at a glance. */
+  left: calc(19% + var(--i) * 22%);
+  top: 0;
+  height: calc(80% - var(--i) * 19%);
+  width: 1px;
+}
+.arc-fly__lift-line {
+  position: absolute;
+  inset: 0;
+  border-left: 1px dashed var(--fly-ink);
+}
+.arc-fly__lift-head {
+  position: absolute;
+  top: -1px;
+  left: -4.5px;
+  width: 10px;
+  height: 8px;
+  fill: var(--fly-ink);
+}
+
+/* Both strands leave the field together, at its right edge, dropping
+   toward the seat that sits directly beneath them in the route strip.
+   That vertical alignment is the composition's one hard requirement: the
+   terminus has to read as what the mechanism produced. */
+/* ONE EXIT COLUMN, in two materials. The rail turns down at 8% and runs
+   green to the level the staircase arrives at; from that junction down it
+   is the system's ink, continuing past the field's floor toward the seat
+   that sits directly beneath it in the route strip.
+
+   ⚠ It is ONE line, not two parallel ones. Two full-height verticals at
+   the wall read as a border rather than as a convergence — measured on
+   the first cut, where they framed the field instead of leaving it. */
+.arc-fly__drop {
+  position: absolute;
+  width: 1px;
+  right: 8%;
+}
+.arc-fly__drop--people {
+  top: 0;
+  /* Down to the last tread: 80% − 3 × 19%. */
+  height: 23%;
+  background: var(--fly-green);
+}
+.arc-fly__drop--system {
+  top: 23%;
+  bottom: calc(-1 * clamp(26px, 4vh, 46px));
+  background: var(--fly-ink);
+}
+
+.arc-fly__stage {
+  position: absolute;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(9.5px, 0.8vw, 11px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* Each stage label sits ON the mark it names, never in spare space: the
+   rail's head, the first tooth's own depth, and the tread the staircase
+   arrives at. A label that floats is a caption competing with the drawing
+   for the same currency (ADR-064's ruling, one drawing later). */
+.arc-fly__stage--nav {
+  top: clamp(2px, 0.6vh, 8px);
+  left: 46px;
+  color: var(--fly-green-ink);
+}
+.arc-fly__stage--enc {
+  top: 46%;
+  left: 46px;
+  color: var(--fly-green-ink);
+}
+/* BUILD sits just above the tread the staircase arrives at, right-aligned
+   into the exit column — the label lands where the mechanism resolves. */
+.arc-fly__stage--bld {
+  top: calc(clamp(22px, 3vh, 36px) + 11%);
+  right: calc(clamp(20px, 2vw, 34px) + 9%);
+  color: var(--arc-ink-70);
+  text-align: right;
+}
+/* The mechanism is aria-hidden; this is what it says. */
+.arc-fly__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── THE REGISTERS ─────────────────────────────────────────────── */
+.arc-fly__reg {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.arc-fly__reg-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: clamp(8px, 1.1vh, 14px) clamp(12px, 1.2vw, 18px);
+  border-bottom: 1px solid var(--fly-hair);
+  flex: 1 1 0;
+  justify-content: center;
+}
+.arc-fly__reg-row:last-child {
+  border-bottom: 0;
+}
+.arc-fly__fig {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(15px, 1.4vw, 20px);
+  letter-spacing: 0.04em;
+  color: var(--fly-fig);
+  line-height: 1.1;
+}
+.arc-fly__lbl {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(9px, 0.72vw, 10px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fly-lbl);
+  line-height: 1.25;
+}
+
+/* ── THE COURSE STRIP ──────────────────────────────────────────── */
+.arc-fly__route {
+  border-top: 1px solid var(--fly-hair);
+  border-right: 1px solid var(--fly-hair);
+  padding: clamp(14px, 1.8vh, 22px) clamp(14px, 1.6vw, 24px);
+  min-width: 0;
+}
+.arc-fly__route ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(10px, 1.4vw, 22px);
+}
+.arc-fly__wp {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* The wayline: dashed, dim gold, running BETWEEN the waypoints — through
+   the gap alone, so it never underlines a label. */
+.arc-fly__wp + .arc-fly__wp::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * clamp(10px, 1.4vw, 22px));
+  width: clamp(10px, 1.4vw, 22px);
+  top: 4px;
+  border-top: 1px dashed var(--fly-route);
+}
+.arc-fly__wp-hit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 14px;
+  padding-right: 6px;
+  text-decoration: none;
+  color: inherit;
+}
+.arc-fly__wp-dia {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--fly-route);
+  transform: rotate(45deg);
+  background: var(--arc-plate);
+}
+.arc-fly__wp-lbl {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(9.5px, 0.78vw, 11px);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--fly-wp);
+}
+.arc-fly__wp-sub {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(9px, 0.7vw, 9.5px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fly-lbl);
+}
+a.arc-fly__wp-hit:hover .arc-fly__wp-lbl,
+a.arc-fly__wp-hit:focus-visible .arc-fly__wp-lbl {
+  color: var(--arc-ink);
+}
+a.arc-fly__wp-hit:hover .arc-fly__wp-dia,
+a.arc-fly__wp-hit:focus-visible .arc-fly__wp-dia {
+  background: var(--fly-route);
+}
+a.arc-fly__wp-hit:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 4px;
+}
+
+/* THE SEAT — the drawing's ONE gold object, and the terminus both strands
+   converge into. Square, because the children of a chamfered housing are
+   square (ADR-065); the brackets stand OFF it, which is what a targeting
+   bracket is: framed and observed, not a second corner treatment. */
+.arc-fly__wp--seat {
+  flex: 0 0 auto;
+  margin-left: clamp(10px, 1.2vw, 18px);
+}
+.arc-fly__wp--seat .arc-fly__wp-hit {
+  padding-top: 0;
+}
+.arc-fly__seat-in {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--fly-seat);
+  padding: 8px clamp(10px, 1.1vw, 16px);
+}
+.arc-fly__wp--seat .arc-fly__wp-lbl,
+.arc-fly__wp--seat .arc-fly__wp-sub {
+  color: var(--fly-seat-ink);
+}
+.arc-fly__br {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--fly-br);
+  pointer-events: none;
+}
+.arc-fly__br--tl {
+  top: -6px;
+  left: -6px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.arc-fly__br--tr {
+  top: -6px;
+  right: -6px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.arc-fly__br--bl {
+  bottom: -6px;
+  left: -6px;
+  border-right: 0;
+  border-top: 0;
+}
+.arc-fly__br--br {
+  bottom: -6px;
+  right: -6px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/* ── THE FLYWHEEL'S ARRIVAL ────────────────────────────────────
+   Transition-delays off the beat's own one-shot `.is-in`, no keyframes
+   and no clock: the strands draw on, the teeth drop, the registers rise,
+   and the seat lands LAST with its brackets stepping outward — the
+   drawing acquiring its own terminus, which is the beat's argument.
+
+   ⚠ THE BASE RULES ARE THE FINAL STATE, and only the PRE-state is scoped.
+   So a no-JS reader (never gets `is-arc-js`) and a reduced-motion reader
+   (the PRM block forces `.arc-reveal` static) both get the panel fully
+   drawn rather than a stranded `scaleX(0)`. That is the reveal system's
+   own fail-open law, applied one level down to a drawing's parts.
+
+   ⚠ NO AMBIENT LOOP. Every drawn instrument on this estate is static once
+   it has arrived; a chart that ticks forever in mid-page pulls the eye
+   against every beat under it. The motion budget is spent once, here. */
+@media (prefers-reduced-motion: no-preference) {
+  .is-arc-js .arc-fly__rail,
+  .is-arc-js .arc-fly__step-run,
+  .is-arc-js .arc-fly__step-rise {
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .is-arc-js .arc-fly__step-rise {
+    transform: scaleY(0);
+    transform-origin: bottom center;
+  }
+  .is-arc-js .arc-fly__node,
+  .is-arc-js .arc-fly__tool,
+  .is-arc-js .arc-fly__tooth,
+  .is-arc-js .arc-fly__lift,
+  .is-arc-js .arc-fly__drop {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .is-arc-js .arc-fly__reg-row {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 0.5s ease,
+      transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .is-arc-js .arc-fly__seat-in {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .is-arc-js .arc-fly__br {
+    opacity: 0;
+    transition:
+      opacity 0.4s ease,
+      transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform: translate(var(--br-x, 0), var(--br-y, 0));
+  }
+  .is-arc-js .arc-fly__br--tl {
+    --br-x: 6px;
+    --br-y: 6px;
+  }
+  .is-arc-js .arc-fly__br--tr {
+    --br-x: -6px;
+    --br-y: 6px;
+  }
+  .is-arc-js .arc-fly__br--bl {
+    --br-x: 6px;
+    --br-y: -6px;
+  }
+  .is-arc-js .arc-fly__br--br {
+    --br-x: -6px;
+    --br-y: -6px;
+  }
+
+  /* … and the arrival, in the mechanism's own reading order. */
+  .is-arc-js .arc-fly.is-in .arc-fly__rail {
+    transform: scaleX(1);
+    transition-delay: 0.15s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__step-run {
+    transform: scaleX(1);
+    transition-delay: calc(0.4s + var(--i, 0) * 0.08s);
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__step-rise {
+    transform: scaleY(1);
+    transition-delay: calc(0.36s + var(--i, 0) * 0.08s);
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__node,
+  .is-arc-js .arc-fly.is-in .arc-fly__tool {
+    opacity: 1;
+    transition-delay: calc(0.5s + var(--i, 0) * 0.08s);
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__tooth {
+    opacity: 1;
+    transition-delay: calc(0.62s + var(--i, 0) * 0.1s);
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__lift {
+    opacity: 1;
+    transition-delay: calc(0.78s + var(--i, 0) * 0.1s);
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__drop {
+    opacity: 1;
+    transition-delay: 1s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__reg-row {
+    opacity: 1;
+    transform: none;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__reg-row:nth-child(1) {
+    transition-delay: 0.5s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__reg-row:nth-child(2) {
+    transition-delay: 0.58s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__reg-row:nth-child(3) {
+    transition-delay: 0.66s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__reg-row:nth-child(4) {
+    transition-delay: 0.74s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__reg-row:nth-child(5) {
+    transition-delay: 0.82s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__reg-row:nth-child(6) {
+    transition-delay: 0.9s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__seat-in {
+    opacity: 1;
+    transition-delay: 1.1s;
+  }
+  .is-arc-js .arc-fly.is-in .arc-fly__br {
+    opacity: 1;
+    transform: none;
+    transition-delay: 1.2s;
+  }
+}
+
+/* ── THE FLYWHEEL, UNSTACKED (≤900px) ──────────────────────────
+   The reveal system's own gate (this page is never terminal). Nothing is
+   redrawn — the panel re-stacks: field over registers, and the route
+   becomes a vertical chain with the seat at its foot, which is the shape
+   ADR-068 named for a route on a phone. */
+@media (max-width: 900px) {
+  .arc-fly__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-fly__field {
+    height: clamp(220px, 34svh, 320px);
+    border-right: 0;
+    border-bottom: 1px solid var(--fly-hair);
+  }
+  /* The lifts are the first thing to go: at this width their landing
+     offset is smaller than the dash period, so they read as noise
+     rather than as a return. */
+  .arc-fly__lift {
+    display: none;
+  }
+  .arc-fly__reg {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .arc-fly__reg-row:nth-child(2n) {
+    border-left: 1px solid var(--fly-hair);
+  }
+  .arc-fly__route ol {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .arc-fly__wp + .arc-fly__wp::before {
+    left: 3px;
+    right: auto;
+    top: -14px;
+    bottom: auto;
+    height: 14px;
+    width: 0;
+    border-top: 0;
+    border-left: 1px dashed var(--fly-route);
+  }
+  .arc-fly__wp-hit {
+    padding-top: 0;
+    padding-left: 18px;
+  }
+  .arc-fly__wp-dia {
+    top: 3px;
+  }
+  .arc-fly__wp--seat {
+    margin-left: 0;
+  }
+  .arc-fly__wp--seat .arc-fly__wp-hit {
+    padding-left: 0;
+  }
+}
+
 /* ── THE STUDIO BEATS (ADR-078) ──────────────────────────────────
    Two more casefile plates at page scale, on the `.arc-intel` contract
    above: the casefile's tokens, a DEFINITE height, the arrival gate
@@ -2335,11 +3049,13 @@ html[data-arc-entry]
   min-width: 0;
 }
 
-/* THE SHEETS take WIDTH. Two of the three bodies are horizontal by
-   construction — a row of 4:5 stills, and the LINE sheet's two columns,
-   which exist to draw one boundary and must sit side by side to draw it.
-   So this box keeps the band's instrument width and caps only enough to
-   stop the comparison's measure running past a comfortable line. */
+/* THE SHEETS ARE CAPPED FOR A DIFFERENT REASON THAN THE MAP, and it is
+   worth naming so the number is not read as the same rule. Nothing here
+   is an SVG, so nothing letterboxes; but `.fl-stills` fits its 4:5 tiles
+   BY HEIGHT (the plate's own law — an ad is never cropped), so width past
+   the cap does not enlarge a single tile, it becomes air either side of
+   the row. Measured at 1280×720: 748px console, body filling 92 % of the
+   height and 100 % of the width. */
 .arc-sheets {
   --arc-sheets-h: clamp(440px, 62svh, 780px);
   max-width: calc(var(--arc-sheets-h) * 1.7);
@@ -2409,4 +3125,24 @@ html[data-theme="light"] .arc-root {
      would vanish. Full opacity here; the sheen still rides on top. */
   --arc-plate: rgb(var(--void-deep-rgb));
   --arc-sheen: rgba(var(--dawn-rgb), 0.04);
+}
+
+/* The flywheel's own rungs, re-derived (ADR-078). Same law, one drawing
+   over: an alpha that recedes toward black on void recedes toward
+   parchment on light, so quiet becomes invisible if it is inherited.
+
+   ⚠ THE ROUTE AND THE BRACKETS GO TO INK, NOT TO A DIMMER GOLD. No alpha
+   of a light hue reaches the floor on parchment (ADR-063 U2's standing
+   finding), so the dim wayfinding rung takes the gold-INK hue instead —
+   the same move `--gold-line` / `--gold-ink` make one level up.
+
+   ⚠ THE SEAT DOES NOT MOVE. `--gold` is theme-invariant and its ink is a
+   literal, so the one pairing that is already ≈8.2:1 in both themes is
+   left exactly alone. */
+html[data-theme="light"] .arc-root .arc-fly {
+  --fly-hair: rgba(var(--dawn-rgb), 0.24);
+  --fly-ink: rgba(var(--dawn-rgb), 0.66);
+  --fly-fig: rgba(var(--dawn-rgb), 0.94);
+  --fly-route: rgba(110, 82, 22, 0.5);
+  --fly-br: rgba(110, 82, 22, 0.6);
 }

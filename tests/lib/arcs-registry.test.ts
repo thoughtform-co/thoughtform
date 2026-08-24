@@ -5,10 +5,12 @@ import { arcTitleText } from "@/components/arcs/chrome";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
+import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
 import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { ARCS, arcSlugs, getArc } from "@/lib/arcs/registry";
+import { ROLLOUT_ROWS } from "@/lib/cases/content/loop-earplugs";
 
 /**
  * Arc registry integrity (ADR-052) — the contracts the /arcs routes and
@@ -266,15 +268,127 @@ describe("arcs registry (ADR-052)", () => {
       PORTFOLIO_ARC.sections.some((s) => s.id === "skills-by-team"),
       "the portfolio's text roster is drawn now, not written"
     ).toBe(false);
-    // The portfolio's studio cards are the SAME records minus the money rows.
-    const portfolioStudio = PORTFOLIO_ARC.sections.find((s) => s.id === "studio");
-    expect(portfolioStudio?.kind).toBe("cards");
-    if (portfolioStudio?.kind === "cards") {
-      expect(portfolioStudio.cards.map((c) => c.id)).toEqual(STUDIO_AD_CARDS.map((c) => c.id));
-      for (const card of portfolioStudio.cards) {
-        expect(card.metaRows?.map((row) => row.label)).toEqual(["SKU", "ROAS"]);
+    /* ⚠ THE STUDIO CARDS ARE THE KEYNOTE'S ALONE NOW (ADR-078), the same
+       narrowing the roster took one paragraph up — and the `proof-studio`
+       pin above is what keeps the DECK's copy from being re-typed. The
+       portfolio's studio beat mounts the casefile's SHEETS instead: the
+       cards showed only what the studio shipped, and the half a stranger
+       has to trust is the policy under it. */
+    expect(
+      PORTFOLIO_ARC.sections.some((s) => s.kind === "cards" && s.id === "studio"),
+      "the portfolio's studio beat is a console now, not ad cards"
+    ).toBe(false);
+  });
+
+  it("the portfolio's studio chapter is the casefile's own plates (ADR-078)", () => {
+    /* Both beats carry a masthead and NOTHING else — the `intelligence`
+       kind's contract, one directory row across. The records are
+       `LOOP_STUDIO_SHEETS` / `LOOP_ATL_FILMS`, resolved by the renderers
+       and pinned `toBe` the casefile's in `cases-registry.test.ts`; a
+       content module that re-typed either would publish a second version
+       of the studio's own red line. */
+    for (const kind of ["sheets", "films"] as const) {
+      const beats = PORTFOLIO_ARC.sections.filter((s) => s.kind === kind);
+      expect(beats, `exactly one ${kind} beat`).toHaveLength(1);
+      expect(Object.keys(beats[0]).sort()).toEqual(
+        [
+          "ariaLabel",
+          "head",
+          "id",
+          "kind",
+          "menuLabel",
+          ...(kind === "sheets" ? ["menuPrimary"] : []),
+        ].sort()
+      );
+    }
+
+    const ids = PORTFOLIO_ARC.sections.map((s) => s.id);
+    /* THE STUDIO PRECEDES THE TOOLS, and that ordering IS the argument:
+       the tools are what the studio's own bottlenecks produced, so a
+       reader who meets them first meets four side projects. */
+    expect(ids.indexOf("studio")).toBeLessThan(ids.indexOf("tools"));
+    expect(ids.indexOf("studio-films")).toBe(ids.indexOf("studio") + 1);
+
+    /* The ad cards and the single-film media beat are both gone. */
+    expect(ids).not.toContain("proof-ai-atl");
+    const studio = PORTFOLIO_ARC.sections.find((s) => s.id === "studio");
+    expect(studio?.kind, "the studio beat is a console now, not cards").toBe("sheets");
+  });
+
+  it("the flywheel letters no figures, and its route resolves (ADR-078)", () => {
+    const fly = PORTFOLIO_ARC.sections.filter((s) => s.kind === "flywheel");
+    expect(fly, "exactly one flywheel beat").toHaveLength(1);
+    const beat = fly[0];
+    if (beat.kind !== "flywheel") throw new Error("unreachable");
+
+    expect(beat.menuPrimary, "the thesis is a chapter").toBe(true);
+
+    /* ⚠ NO DIGITS IN THE CONTENT MODULE. The registers are `LOOP_FIGURES`,
+       read by the renderer — the same contract `dossier` has with
+       `PROJECT_CASES`. A hand-typed count is the one that goes stale, and
+       a figure declared here would sit outside the canon's one parity
+       pin. The route's `sub` captions are the one place a count may
+       appear, and only as the canon's own value. */
+    const canon = new Set<string>(Object.values(LOOP_FIGURES));
+    for (const wp of beat.route) {
+      const digits = wp.sub?.match(/\d[\d,.]*/g) ?? [];
+      for (const d of digits) {
+        /* A YEAR IS NOT A COUNT, and the distinction is the whole point of
+           this guard: a date locates the work on record, a figure makes a
+           claim about it. Years in the engagement's own span are fine
+           anywhere; anything else has to BE the canon's value. */
+        const isYear = /^20(2[4-9]|3\d)$/.test(d);
+        expect(
+          isYear || [...canon].some((c) => c.includes(d)),
+          `route sub "${wp.sub}" letters ${d}, which is neither a year nor a canon figure`
+        ).toBe(true);
       }
     }
+
+    /* THE ROUTE IS THE PAGE'S OWN TABLE OF CONTENTS, so every waypoint
+       that links has to land on a section that exists — a dead anchor on
+       a forwarded page is a broken promise a stranger finds first. */
+    const ids = new Set(PORTFOLIO_ARC.sections.map((s) => s.id));
+    for (const wp of beat.route) {
+      if (wp.target) {
+        expect(ids.has(wp.target), `route waypoint "${wp.id}" targets #${wp.target}`).toBe(true);
+      }
+    }
+
+    /* EXACTLY ONE SEAT — the terminus both strands converge into, and the
+       drawing's one gold object (gold buys one thing per drawing). */
+    expect(beat.route.filter((wp) => wp.seat)).toHaveLength(1);
+    expect(beat.route.at(-1)?.seat, "the seat is the terminus").toBe(true);
+
+    /* AND IT SITS WHERE THE THESIS BELONGS: before every chapter it
+       routes to, so the reader meets the argument and then the evidence. */
+    const order = PORTFOLIO_ARC.sections.map((s) => s.id);
+    for (const wp of beat.route) {
+      if (wp.target && wp.target !== "about") {
+        expect(order.indexOf(wp.target)).toBeGreaterThan(order.indexOf("overview"));
+      }
+    }
+  });
+
+  it("the rollout beat agrees with the casefile's own log (ADR-078)", () => {
+    /* COPY-WITH-PARITY, the `LOOP_FIGURES` precedent: `lib/arcs` keeps no
+       `lib/cases` import, so the rows are re-authored here and pinned
+       against the record rather than shared. The page states them as
+       sentences and the casefile as log lines, so the pin is on the
+       CLAIMS a reader could subtract — the milestones and their order —
+       rather than on the strings. */
+    const rollout = PORTFOLIO_ARC.sections.find((s) => s.id === "rollout");
+    expect(rollout?.kind).toBe("anatomy");
+    if (rollout?.kind !== "anatomy") return;
+
+    expect(rollout.rows.map((r) => r.label)).toEqual(ROLLOUT_ROWS.map((r) => r.t as string));
+
+    /* The one number the log carries into prose, in the wording that
+       keeps the two team-counts apart. */
+    const briefed = rollout.rows.find((r) => r.id === "briefed");
+    expect(briefed?.body).toContain("Twenty-two teams briefed");
+    const now = rollout.rows.find((r) => r.id === "now");
+    expect(now?.body).toContain("using it");
   });
 
   it("the portfolio closes on ONE architecture beat, and it flows (ADR-076)", () => {

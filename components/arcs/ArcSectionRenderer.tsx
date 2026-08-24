@@ -5,6 +5,7 @@ import { ArcBeat } from "./ArcBeat";
 import { ArcCards } from "./ArcCards";
 import { ArcClose } from "./ArcClose";
 import { ArcDossier } from "./ArcDossier";
+import { ArcFlywheel } from "./ArcFlywheel";
 import { ArcIntelligence } from "./ArcIntelligence";
 import { ArcInterstitial } from "./ArcInterstitial";
 import { ArcListGroups } from "./ArcListGroups";
@@ -79,6 +80,8 @@ export function ArcSectionRenderer({
             return (
               <ArcIntelligence key={section.id} section={section} index={index} motion={motion} />
             );
+          case "flywheel":
+            return <ArcFlywheel key={section.id} section={section} index={index} motion={motion} />;
           case "sheets":
             return (
               <ArcStudioSheets key={section.id} section={section} index={index} motion={motion} />

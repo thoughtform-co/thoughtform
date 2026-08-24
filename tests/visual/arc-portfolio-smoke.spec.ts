@@ -158,24 +158,31 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     );
     expect(beats).toEqual([
       "about",
+      "beyond",
       "overview",
+      "bridge-studio",
+      "studio",
+      "studio-films",
+      "bridge-tools",
       "tools",
       "tool-mimir",
       "tool-vesper",
       "tool-babylon",
       "tool-heimdall",
-      "studio",
-      "proof-ai-atl",
+      "rollout",
+      "bridge-architecture",
       "intelligence",
       "close",
     ]);
     expect(beats).not.toContain("five-shapes");
     expect(beats).not.toContain("skills-by-team");
+    // The ad cards and the nameless single-film beat left together (ADR-078).
+    expect(beats).not.toContain("proof-ai-atl");
 
-    // The studio cards print ratios only — no money on a page that travels.
-    const rows = await page.locator("#studio .arc-card-item__meta-row dt").allTextContents();
-    expect(new Set(rows)).toEqual(new Set(["SKU", "ROAS"]));
-    expect(await page.locator("#studio").textContent()).not.toMatch(/[€$£]/);
+    // NO MONEY ANYWHERE on a page that travels — the envelope, live rather
+    // than scanned: the studio's ratios came off with its cards, and the
+    // sheets carry the policy instead.
+    expect(await page.locator(".arc-root").textContent()).not.toMatch(/[€$£]/);
   });
 
   test("every dossier section fits, and mounts the landing's bay, at the three reference shapes", async ({
@@ -760,9 +767,9 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     if (wide) {
       expect(await page.locator(".hud__nav__inline__link").allTextContents()).toEqual([
         "About",
-        "Overview",
+        "Program",
+        "Studio",
         "Tools",
-        "Outcome",
         "Architecture",
       ]);
       // The row is chrome over a PHOTO: it may never land on hero ink.
@@ -810,15 +817,18 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     await expect(nav).toHaveClass(/is-open/);
     expect(await page.locator(".hud__nav__list a").allTextContents()).toEqual([
       "01About",
-      "02Overview",
-      "03Tools",
-      "04Mímir",
-      "05Vesper",
-      "06Babylon",
-      "07Heimdall",
-      "08Outcome",
-      "09Architecture",
-      "10Close",
+      "02Beyond Loop",
+      "03Program",
+      "04Studio",
+      "05Films",
+      "06Tools",
+      "07Mímir",
+      "08Vesper",
+      "09Babylon",
+      "10Heimdall",
+      "11Rollout",
+      "12Architecture",
+      "13Close",
     ]);
     await expect(page.locator('.hud__nav__list a[aria-current="true"]')).toHaveCount(1);
     // Escape closes it and hands focus back to the trigger — the drawer
@@ -839,5 +849,298 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       undefined,
       { timeout: 15_000 }
     );
+  });
+
+  test("the studio chapter is the casefile's own plates, at page scale (ADR-078)", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
+    test.setTimeout(300_000);
+    for (const [width, height] of [
+      [1280, 720],
+      [1440, 800],
+      [1920, 1080],
+    ] as const) {
+      for (const theme of ["dark", "light"] as const) {
+        const page = await browser.newPage({ viewport: { width, height } });
+        await prepare(page, theme === "light" ? `${PORTFOLIO}?theme=light` : PORTFOLIO);
+        const at = `${width}x${height} ${theme}`;
+
+        // ── THE SHEETS ─────────────────────────────────────────────
+        await restAt(page, "studio");
+        const sheets = await page.evaluate(() => {
+          const host = document.querySelector<HTMLElement>(".arc-sheets");
+          const con = host?.querySelector<HTMLElement>(".fl-con__console");
+          const body = host?.querySelector<HTMLElement>(".fl-stills");
+          const cb = con?.getBoundingClientRect();
+          const bb = body?.getBoundingClientRect();
+          return {
+            stations: [...(host?.querySelectorAll('[role="tab"]') ?? [])].map((t) =>
+              (t.textContent ?? "").trim()
+            ),
+            /* The settled gate is DECLARED here (an arc has no casefile
+               ladder to wait on); forget it and the console renders at
+               opacity 0 with nothing else failing. */
+            opacity: con ? Number(getComputedStyle(con).opacity) : 0,
+            conW: cb ? Math.round(cb.width) : 0,
+            conH: cb ? Math.round(cb.height) : 0,
+            aspect: cb ? cb.width / cb.height : 0,
+            fillW: bb && cb ? bb.width / cb.width : 0,
+            fillH: bb && cb ? bb.height / cb.height : 0,
+            mono: getComputedStyle(host!).getPropertyValue("--fl-mono").trim(),
+            copy: getComputedStyle(host!).getPropertyValue("--fl-copy").trim(),
+            // ⚠ never — it is half the map console's wheel gate.
+            settledArmed: !!host?.closest("[data-proof-settled]"),
+          };
+        });
+        expect(sheets.stations, `sheet rail @ ${at}`).toEqual([
+          "THE ADS",
+          "THE LINE",
+          "THE RED LINE",
+        ]);
+        expect(sheets.opacity, `sheets settled gate @ ${at}`).toBe(1);
+        expect(sheets.settledArmed, `sheets must not arm the wheel gate @ ${at}`).toBe(false);
+        expect(sheets.conH, `sheets console height @ ${at}`).toBeGreaterThanOrEqual(430);
+        expect(sheets.conW, `sheets console width @ ${at}`).toBeGreaterThanOrEqual(500);
+        /* ⚠ BOTH AXES AND THE ASPECT (the ADR-070/076 lesson): a
+           height-only fill guard reports green on a box a third empty. */
+        expect(sheets.fillH, `sheets body fills its height @ ${at}`).toBeGreaterThan(0.7);
+        expect(sheets.fillW, `sheets body fills its width @ ${at}`).toBeGreaterThan(0.85);
+        expect(sheets.aspect, `sheets aspect @ ${at}`).toBeGreaterThan(1.2);
+        expect(sheets.aspect, `sheets aspect @ ${at}`).toBeLessThan(1.9);
+        // The host tokens the plates read with NO fallback.
+        expect(sheets.mono, `--fl-mono @ ${at}`).toMatch(/PT Mono/i);
+        expect(sheets.copy, `--fl-copy @ ${at}`).not.toBe("");
+
+        // The rail SWITCHES what the panel displays — the other two
+        // sheets are the half the ad cards never carried.
+        const line = await page.evaluate(async () => {
+          const host = document.querySelector<HTMLElement>(".arc-sheets")!;
+          const tabs = [...host.querySelectorAll<HTMLElement>('[role="tab"]')];
+          tabs[1].click();
+          await new Promise((r) => setTimeout(r, 260));
+          const cols = host.querySelectorAll(".fl-cmp__col").length;
+          tabs[2].click();
+          await new Promise((r) => setTimeout(r, 260));
+          return { cols, facts: host.querySelectorAll(".fl-cap").length };
+        });
+        expect(line.cols, `THE LINE draws ONE boundary, two columns @ ${at}`).toBe(2);
+        expect(line.facts, `THE RED LINE's four claims @ ${at}`).toBe(4);
+
+        // ── THE REEL ───────────────────────────────────────────────
+        await restAt(page, "studio-films");
+        const films = await page.evaluate(() => {
+          const host = document.querySelector<HTMLElement>(".arc-films");
+          const con = host?.querySelector<HTMLElement>(".fl-con__console");
+          const frame = host?.querySelector<HTMLElement>(".fl-film");
+          const cb = con?.getBoundingClientRect();
+          const fb = frame?.getBoundingClientRect();
+          return {
+            stations: (host?.querySelectorAll('[role="tab"]') ?? []).length,
+            opacity: con ? Number(getComputedStyle(con).opacity) : 0,
+            conH: cb ? Math.round(cb.height) : 0,
+            aspect: cb ? cb.width / cb.height : 0,
+            frameFillW: fb && cb ? fb.width / cb.width : 0,
+            /* ⚠ NO `<video>` UNTIL A CLICK — the plate's own law, and it
+               matters more here than on the casefile, where the fold
+               tears the element down. */
+            videos: document.querySelectorAll("video").length,
+            settledArmed: !!host?.closest("[data-proof-settled]"),
+          };
+        });
+        expect(films.stations, `both films on the rail @ ${at}`).toBe(2);
+        expect(films.opacity, `films settled gate @ ${at}`).toBe(1);
+        expect(films.settledArmed, `films must not arm the wheel gate @ ${at}`).toBe(false);
+        expect(films.videos, `no video element before a click @ ${at}`).toBe(0);
+        expect(films.conH, `films console height @ ${at}`).toBeGreaterThanOrEqual(430);
+        expect(films.frameFillW, `the poster fills its bezel @ ${at}`).toBeGreaterThan(0.55);
+        /* A 16:9 master in a much wider box floats as a stamp — the
+           plate's own 2026-08-04 finding, which is why this is capped. */
+        expect(films.aspect, `films aspect @ ${at}`).toBeGreaterThan(1.2);
+        expect(films.aspect, `films aspect @ ${at}`).toBeLessThan(1.9);
+
+        await page.close();
+      }
+    }
+  });
+
+  test("the flywheel draws the thesis, letters the canon, and routes the page (ADR-078)", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
+    test.setTimeout(300_000);
+    for (const [width, height] of [
+      [1280, 720],
+      [1440, 800],
+      [1920, 1080],
+    ] as const) {
+      for (const theme of ["dark", "light"] as const) {
+        const page = await browser.newPage({ viewport: { width, height } });
+        await prepare(page, theme === "light" ? `${PORTFOLIO}?theme=light` : PORTFOLIO);
+        const at = `${width}x${height} ${theme}`;
+        await restAt(page, "overview");
+
+        const fly = await page.evaluate(() => {
+          const panel = document.querySelector<HTMLElement>(".arc-fly")!;
+          const pb = panel.getBoundingClientRect();
+          /* EVERY lettered element on the drawing, so a new string has to
+             be declared here rather than appearing unmeasured. */
+          const labels = [
+            ...panel.querySelectorAll<HTMLElement>(
+              ".arc-fly__hd-ttl, .arc-fly__hd-st, .arc-fly__stage, .arc-fly__fig, .arc-fly__lbl, .arc-fly__wp-lbl, .arc-fly__wp-sub"
+            ),
+          ].map((el) => {
+            const cs = getComputedStyle(el);
+            return {
+              text: (el.textContent ?? "").trim(),
+              size: parseFloat(cs.fontSize),
+              family: cs.fontFamily,
+            };
+          });
+          /* ⚠ COLLAPSED MARKS: a connector that lost its geometry paints
+             nothing and fails no other assertion. */
+          const marks = [
+            ...panel.querySelectorAll<HTMLElement>(
+              ".arc-fly__rail, .arc-fly__step-run, .arc-fly__step-rise, .arc-fly__tooth-line, .arc-fly__lift-line, .arc-fly__drop, .arc-fly__node, .arc-fly__tool"
+            ),
+          ].map((el) => {
+            const r = el.getBoundingClientRect();
+            return { cls: String(el.className), w: r.width, h: r.height };
+          });
+          const seat = panel.querySelector<HTMLElement>(".arc-fly__wp--seat");
+          const seatPlate = panel.querySelector<HTMLElement>(".arc-fly__seat-in");
+          const drop = panel.querySelector<HTMLElement>(".arc-fly__drop--system");
+          return {
+            labels,
+            collapsed: marks.filter((m) => m.w < 0.5 || m.h < 0.5).map((m) => m.cls),
+            markCount: marks.length,
+            insideViewport: pb.top >= -2 && pb.bottom <= window.innerHeight + 2,
+            hrefs: [...panel.querySelectorAll("a.arc-fly__wp-hit")].map((a) =>
+              a.getAttribute("href")
+            ),
+            seatIsGold: seatPlate ? getComputedStyle(seatPlate).backgroundColor : "",
+            /* The seat sits UNDER the exit column: the terminus has to
+               read as what the mechanism produced. */
+            seatAlignedToDrop:
+              seat && drop
+                ? Math.abs(
+                    seat.getBoundingClientRect().right - drop.getBoundingClientRect().right
+                  ) < 90
+                : false,
+            brackets: panel.querySelectorAll(".arc-fly__br").length,
+            // ⚠ no circle anywhere: a ratchet, not a wheel.
+            rounded: [...panel.querySelectorAll<HTMLElement>("*")].filter((el) => {
+              const r = getComputedStyle(el).borderRadius;
+              return !!r && r !== "0px" && !/^0px 0px 0px 0px$/.test(r);
+            }).length,
+          };
+        });
+
+        // THE LETTERED SET, pinned — a drawing declares what it says.
+        expect(new Set(fly.labels.map((l) => l.text)), `flywheel labels @ ${at}`).toEqual(
+          new Set([
+            "The flywheel",
+            "Self-improving system",
+            "Navigate",
+            "Encode",
+            "Build",
+            "22",
+            "Workshops run",
+            "5 → 130+",
+            "People on the layer",
+            "47+",
+            "Skills encoded",
+            "14",
+            "Teams using the layer",
+            "4",
+            "Tools in production",
+            "97%",
+            "Of briefings involve AI",
+            "AI Specialist",
+            "2024",
+            "Studio",
+            "97% of briefings",
+            "Vesper",
+            "Image + video",
+            "Process tools",
+            "Mímir · Babylon · Heimdall",
+            "Adoption",
+            "22 teams briefed",
+            "Intelligence Architect",
+            "Holds the map",
+          ])
+        );
+        // Chrome is PT Mono, and nothing letters under the floor.
+        for (const l of fly.labels) {
+          expect(l.family, `"${l.text}" family @ ${at}`).toMatch(/PT Mono/i);
+          expect(l.size, `"${l.text}" size @ ${at}`).toBeGreaterThanOrEqual(8.5);
+        }
+
+        expect(fly.collapsed, `collapsed marks @ ${at}`).toEqual([]);
+        expect(fly.markCount, `the mechanism is drawn @ ${at}`).toBeGreaterThan(18);
+        expect(fly.insideViewport, `the panel rests inside the viewport @ ${at}`).toBe(true);
+        expect(fly.rounded, `no rounded corners — the house has none @ ${at}`).toBe(0);
+        expect(fly.brackets, `the seat's four targeting brackets @ ${at}`).toBe(4);
+        expect(fly.seatAlignedToDrop, `the seat sits under the exit column @ ${at}`).toBe(true);
+        // GOLD BUYS ONE THING: the seat plate, in both themes.
+        expect(fly.seatIsGold, `the seat is gold @ ${at}`).toMatch(/rgba?\(\s*202,\s*165,\s*84/);
+
+        // THE ROUTE IS THE PAGE'S TABLE OF CONTENTS.
+        expect(fly.hrefs, `route hrefs @ ${at}`).toEqual([
+          "#about",
+          "#studio",
+          "#tool-vesper",
+          "#tool-mimir",
+          "#rollout",
+          "#intelligence",
+        ]);
+
+        await page.close();
+      }
+    }
+  });
+
+  test("a flywheel waypoint navigates, and the drawing survives reduced motion", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
+    const page = await browser.newPage({ viewport: { width: 1440, height: 800 } });
+    await prepare(page, PORTFOLIO);
+    await restAt(page, "overview");
+    await page.click('.arc-fly__wp-hit[href="#tool-vesper"]');
+    await page.waitForFunction(
+      () => Math.abs(document.getElementById("tool-vesper")!.getBoundingClientRect().top) < 4,
+      undefined,
+      { timeout: 15_000 }
+    );
+    await page.close();
+
+    /* ⚠ PRM MUST GET THE DRAWN PANEL, not a stranded scaleX(0). The
+       pre-states are scoped inside a no-preference query and the base
+       rules ARE the final state, which is the reveal system's own
+       fail-open law applied to a drawing's parts. */
+    const prm = await browser.newPage({
+      viewport: { width: 1440, height: 800 },
+      reducedMotion: "reduce",
+    });
+    await prepare(prm, PORTFOLIO);
+    await restAt(prm, "overview");
+    const drawn = await prm.evaluate(() => {
+      const marks = [
+        ...document.querySelectorAll<HTMLElement>(".arc-fly__rail, .arc-fly__step-run"),
+      ];
+      return {
+        count: marks.length,
+        scaled: marks.filter((m) => {
+          const t = getComputedStyle(m).transform;
+          return t !== "none" && !/matrix\(1, 0, 0, 1/.test(t);
+        }).length,
+        seat: Number(getComputedStyle(document.querySelector(".arc-fly__seat-in")!).opacity),
+      };
+    });
+    expect(drawn.count, "the mechanism renders under PRM").toBeGreaterThan(4);
+    expect(drawn.scaled, "nothing is left mid-draw under PRM").toBe(0);
+    expect(drawn.seat, "the seat is present under PRM").toBe(1);
+    await prm.close();
   });
 });
