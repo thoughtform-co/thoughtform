@@ -236,3 +236,121 @@ had.
 - The keynote deck and the landing are untouched by design. If the flywheel
   earns its place in a room, promoting it to the keynote is a content edit plus
   a second `flywheel` section — the kind is not portfolio-specific.
+
+---
+
+## Update 1 — the slop, the diagram, and the throat-clearing (2026-08-24, owner)
+
+The cut above shipped and the owner rejected it. The criticism was specific
+and correct on every count; this records it and what answered it.
+
+### What was wrong
+
+1. **The hero and the bio did not belong.** This page is an extension of the
+   proof panel, and it opened on the Thoughtform Gateway plate followed by a
+   portrait and a biography — so a reader met the operator before meeting any
+   work, on a page about the work.
+2. **The flywheel "doesn't work at all".** It drew adoption and automation as
+   a ratchet — two strands, teeth, return lifts. Internally coherent, and it
+   said nothing.
+3. **The copy register was generated-sounding**, in the owner's words
+   _"disgusts me… people will hate me for it"_ — on the one page whose reader
+   is a stranger being asked to take the work seriously.
+4. **One claim was false.** A bridge asked _"so what is actually underneath
+   this?"_ over the whole page, which said the 47 Skills underlie the ATL
+   films. They do not; that is separate work.
+5. **The setup took four sections** before a reader reached anything Loop
+   shipped.
+
+### The diagnosis on the drawing
+
+**It was a diagram of a METAPHOR, in a house where every instrument draws a
+RECORD.** The dossiers draw real tool interfaces, the map draws 47 real
+Skills, the sheets draw real ads, the films are real films. The flywheel drew
+an abstract mechanism that had to be explained before it meant anything —
+and a reader who has to be taught a notation before they can read a chart is
+a reader who stops.
+
+That generalises past this surface: **on this estate a drawing earns its
+place by plotting something that happened.** If the only thing a drawing
+knows is an argument, the argument is better as a sentence.
+
+### The program board
+
+`kind: "flywheel"` → `kind: "program"`. The engagement plotted as a course
+across a dated time field, 2024 → now: a graticule with year majors, an
+adoption curve as a step ladder (the rollout's own shape, plateaus included),
+the five things that shipped plotted at their real dates as anchors into
+their own chapters, six framed registers, and the seat where curve and course
+both arrive.
+
+**The gaps are the reading.** Four tools inside eight months is a cluster on
+the right; the curve climbing under them is the "and the teams came with it"
+clause. Nobody is told that adoption and automation drive each other — the
+two lines share an axis and arrive at the same place. ⚠ Spacing the waypoints
+evenly would delete the only thing the chart knows that a list does not, so
+`at` is authored from the record and the registry test pins it sorted.
+
+It absorbs the bio, the origin cards, the thesis and the studio bridge:
+**sixteen beats to eleven**, and the origin survives as a dim run-in labelled
+at the axis rather than three prose cards.
+
+### The copy law (mechanised)
+
+A title is a NAME, not an aphorism. Three shapes are banned as display
+titles and `arcs-registry.test.ts` walks every `head.title` for them:
+
+- the counting pair — _"Twenty-two teams, forty-five minutes each."_
+- the reversal epigram — _"The method is the durable centre. The tools are
+  its proof."_
+- the spelled-out-number opener — _"Forty-seven Skills, five shapes of work."_
+
+Where the owner already has a phrase for a thing, **that phrase is the
+title**: "Software for few", "the Intelligence Map", "Adoption that works is
+automation", "97% of briefings involve AI". Subs are one or two sentences.
+
+⚠ **TITLES ONLY.** A dated log ROW may state a count in the same words — a
+record is not a claim — which is why the guard walks `head.title` and nothing
+else, and why the rollout's own log keeps "Twenty-two teams briefed".
+
+### The hero, and the coupling it exposed
+
+The hero takes a Loop key visual (`dj-neighbour.jpg`; the reel's default view
+stays Smug Owl so no frame repeats on a default scroll) with one CTA.
+
+⚠ **THE CURTAIN WAS GATED ON THE PLATE, AND THEY ARE NOT THE SAME QUESTION.**
+`data-arc-curtain` read `plate === "gateway"`, so giving this page its own
+image would have silently taken the ADR-076 seam with it — a choreography
+coupled to an image, with one assertion in another test the only thing that
+would have said so. A hero declares `curtain: true` now.
+
+Three more consequences of the own plate, each mechanical:
+
+- `HERO_ROUTES` drops its portfolio row. That list is **hand-written, not
+  derived**, so a route that changes its plate has to be removed by hand.
+- The route's static `<link rel="preload">` returns automatically.
+- ⚠ **The own-plate top scrim becomes a dark LITERAL.** It used
+  `--void-deep-rgb`, which theme.css re-pins to the page colour on any
+  `.hero__video__overlay` — in light that washed parchment across a key
+  visual. ADR-077's stays-literal clause exactly: it sits over a photo.
+
+### Consequences
+
+- The `portrait`, `cards` and `interstitial` kinds stay live (the keynote
+  uses all three); `VINCE_PORTRAIT` / `VINCE_BIO_LEAD` stay keynote-used.
+  Nothing became dead code.
+- Chapters: Program · Studio · Tools · Rollout · Architecture. The bio's slot
+  went to the rollout, which is one of the five things the page argues.
+- The ink walk gained the board's own rungs. It had been measuring the
+  portfolio's CARDS — deleted here — and would have fallen to three rungs
+  with only a count guard noticing.
+- ⚠ **The board is the first section now, so the curtain holds it**: over one
+  viewport at 1280×720 and `data-arc-tall` disarms the seam. The smoke
+  asserts the fit and the absence of that attribute together.
+
+### Verification
+
+1019 unit tests; `arc-portfolio-smoke` 13 passed at 1280×720 / 1440×800 /
+1920×1080 in both themes — the board's pinned label set, the curve rising,
+zero collapsed marks, the seat clear of every waypoint, the section fitting
+one viewport, PRM drawn; `arc-terminal-smoke` 10 passed.

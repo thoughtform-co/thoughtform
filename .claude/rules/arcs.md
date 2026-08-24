@@ -100,6 +100,50 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   controller runs. ⚠ Sample the handoff WITHIN A PIXEL of the seam —
   the two boxes agree only at `scrollY = vh`, so a wider sample measures
   your own scroll and reports a jump that is not there.
+- **THE COPY LAW ON THE PORTFOLIO** (ADR-078 U1, owner: the earlier set
+  "disgusts me… people will hate me for it"). A title is a NAME, not an
+  aphorism. Three shapes are banned as DISPLAY TITLES and walked by
+  `arcs-registry.test.ts` over every `head.title`: the counting pair
+  ("Twenty-two teams, forty-five minutes each"), the reversal epigram
+  ("The method is the durable centre. The tools are its proof"), and the
+  spelled-out-number opener ("Forty-seven Skills, five shapes of work").
+  Where the owner already has a phrase for a thing, THAT phrase is the
+  title — "Software for few", "the Intelligence Map", "Adoption that works
+  is automation". Subs are one or two short sentences, and there are no
+  prose interstitials on this page: the connective tissue is each
+  section's own sub. ⚠ **TITLES ONLY** — a dated LOG ROW may state a count
+  in the same words, because a record is not a claim.
+- **The `program` kind** (ADR-078 U1) = `{ head, waypoints, priors?,
+footnote? }`, ONE per page and FIRST — it is what the curtain holds. It
+  replaced `flywheel`, which drew adoption and automation as a ratchet:
+  ⚠ **a diagram of a METAPHOR, in a house where every instrument draws a
+  RECORD.** The dossiers draw real tool interfaces, the map 47 real
+  Skills, the sheets real ads. A drawing earns its place here by plotting
+  something that HAPPENED; if all it knows is an argument, the argument is
+  better as a sentence.
+  The board plots the engagement across a dated axis: a graticule, the
+  adoption curve as a step ladder, what shipped at its real date as an
+  anchor into its own chapter, framed registers, and the seat where both
+  arrive. ⚠ **THE GAPS ARE THE READING** — `at` is authored from the
+  record and registry-pinned SORTED; spacing waypoints evenly deletes the
+  one thing the chart knows that a list does not. ⚠ It letters NO figures
+  (the registers read `LOOP_FIGURES` in the renderer) and no digits but
+  YEARS. ⚠ It must fit ONE VIEWPORT at 1280×720 or `data-arc-tall`
+  disarms the curtain with only one smoke assertion to say so.
+- ⚠ **THE CURTAIN IS NOT GATED ON THE PLATE** (ADR-078 U1). It read
+  `plate === "gateway"`, so an arc taking its own key visual would have
+  silently lost the ADR-076 seam — a choreography coupled to an image. A
+  hero declares `curtain: true`; the plate answers only for what is
+  painted. ⚠ An own plate also flips five other things: plain `<img>` (no
+  `<picture>`), `data-plate="own"`, the ADR-073 top band APPLIES, arcs.css
+  keeps the arc's image in light, and the ADR-060 theme glitch unmounts.
+  ⚠ **`HERO_ROUTES` IS HAND-WRITTEN, NOT DERIVED** (`lib/theme/heroPreload.ts`)
+  — a route that changes its plate must be removed from it by hand, or it
+  script-injects a preload for a plate that page never paints.
+  ⚠ **The own-plate top scrim is a dark LITERAL**: it sits over a PHOTO and
+  theme.css re-pins `--void-deep-rgb` on any `.hero__video__overlay`, which
+  washed parchment across the key visual in light (ADR-077's stays-literal
+  clause).
 - **The `sheets` and `films` kinds** (ADR-078) = `{ head }` and nothing
   else, the `intelligence` kind's contract one directory row across. The
   renderers resolve `LOOP_STUDIO_SHEETS` / `LOOP_ATL_FILMS`
