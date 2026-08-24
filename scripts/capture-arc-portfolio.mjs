@@ -26,7 +26,9 @@ const arg = (flag, fallback) => {
 const BASE = arg("--base", "http://localhost:3003");
 const THEME = arg("--theme", "dark");
 const ONLY = arg("--only", "");
-const OUT = arg("--out", path.join("public", "captures", "arc-portfolio"));
+/* ⚠ NOT under `public/` — that ships. The repo's throwaway shoots live
+   under `.cursor/`, which is gitignored (the pda/isl/substrate precedent). */
+const OUT = arg("--out", path.join(".cursor", "arc-portfolio-shots"));
 const [W, H] = arg("--vp", "1440x800")
   .split("x")
   .map((n) => Number(n));

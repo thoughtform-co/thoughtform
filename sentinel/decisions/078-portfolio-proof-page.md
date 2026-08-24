@@ -1,6 +1,6 @@
 # ADR-078: The portfolio is the casefile, expanded into a page
 
-- **Status:** Proposed (2026-08-24)
+- **Status:** Accepted (2026-08-24)
 - **Owner:** Vince
 - **Supersedes:** nothing. Extends ADR-072 (the portfolio arc and the `dossier`
   kind), ADR-076 (the portfolio flows; the architecture beat) and ADR-077 (the
@@ -48,6 +48,96 @@ narrative the casework does.** Concretely, four moves:
    _what it revealed next_.
 4. **The thesis beat becomes a drawn instrument** — the flywheel (its own
    section below).
+
+### The page, in order
+
+`about` → `beyond` → `overview` (the flywheel) → _bridge_ → `studio` →
+`studio-films` → _bridge_ → `tools` → the four dossiers → `rollout` →
+_bridge_ → `intelligence` → `close`. Sixteen beats; the chapter row is
+About · Program · Studio · Tools · Architecture (the cap is five, and it is
+full).
+
+**The studio precedes the tools, and that ordering is the argument.** The
+tools are what the studio's own bottlenecks produced; a reader who meets
+them first meets four side projects. `arcs-registry.test.ts` pins it.
+
+**The rollout beat is new, and it is the one the page was missing.**
+Without it the four dossiers read as side projects rather than as the
+output of a program that reached twenty-two teams. Its rows are
+copy-with-parity against the casefile's own `ROLLOUT_ROWS` (`lib/arcs`
+keeps no `lib/cases` import — the `LOOP_FIGURES` precedent), pinned to
+agree. It renders a LOG through the `anatomy` kind, so its row rhythm is
+scoped by id rather than loosening `.arc-anatomy` for every deck that uses
+it for three-row specs — untightened it measured 1090px against an 800px
+viewport.
+
+**The bridges carry the case shape's own connective tissue.** The canonical
+case is friction → navigated → encoded → built → what changed → _what it
+revealed next_, and that last clause is what makes a portfolio argue rather
+than list. Three `interstitial` beats say it in the page's voice.
+
+### The flywheel
+
+The thesis beat was three text cards on a page with five drawn consoles on
+it. It is the one beat that ARGUES, which is why it was the one that most
+needed to be an instrument.
+
+**It is a RATCHET, not a wheel** — the doctrine's own word (_"not a loop
+that closes, a ratchet"_), so there is no circle on it. A flat green
+people-rail across the top; a staircase that only ever rises, one square
+per tool taking its place; teeth falling from the rail to each riser (the
+first is the longest — the work that trenches a shape pays the whole
+depth); and dashed lifts climbing back to the rail landing one tread AHEAD
+of where they dropped. **That forward displacement is the flywheel told
+honestly**: a helix flattened, not an arrow chasing its own tail.
+
+- **It letters no digits of its own.** The six registers read `LOOP_FIGURES`
+  in the renderer, the same contract `dossier` has with `PROJECT_CASES`; the
+  content module carries a head, a route and a footnote. The registry test
+  fails a route caption whose number is neither a year nor a canon value.
+- **The route strip is the page's own chart** — six waypoints deep-linking
+  into the chapters, terminating in the seat plate, which is the drawing's
+  ONE gold object. Every target is pinned to resolve: a dead anchor on a
+  forwarded page is what a stranger finds first.
+- **DOM, not an SVG canvas.** The host runs w/h ≈ 3.3 → 2.1 across the three
+  reference viewports and no authored viewBox survives that spread — the
+  measured reason the tool wireframes are DOM. Connectors are 1px divs; only
+  closed shapes are inline SVG (a stroked single-axis path reports a
+  zero-height rect and disappears from the collapse guard).
+- **Motion is spent once, on the reveal**, as transition-delays off the
+  beat's own `is-in`. The pre-states are scoped inside a no-preference query
+  and the base rules ARE the final state, so no-JS and reduced-motion both
+  get the drawn panel rather than a stranded `scaleX(0)`.
+
+⚠ **Two things the measurements corrected, and both generalise:**
+
+1. **The panel carried an aspect cap copied from the console beats, and it
+   did not belong.** `.arc-intel` and `.arc-films` cap width against height
+   because an SVG `viewBox` fits by `meet` — the smaller of the two ratios —
+   so a box wider than the crop letterboxes. Nothing on the flywheel is
+   scaled. The cap was discarding **340px of the instrument band at
+   1440×800** and squeezing the waypoints into each other. _A constraint
+   inherited from a neighbouring object needs its own reason, not its
+   neighbour's._
+2. **The route ran the panel's full width, which put the terminus under the
+   REGISTER stack** — 325px from the exit column at 1280×720, measured —
+   where it read as a caption beside the numbers rather than as what the
+   mechanism produced. It sits in the field's own column now and the
+   registers span both rows. _The composition's one hard requirement was
+   stated in a comment before it was true; the guard that would have caught
+   it is the one that now pins the seat under the drop._
+
+### Rejected on the drawing
+
+Circular arrows and closed loops; a literal flywheel disc or gears (and a
+second radial instrument would compete with the substrate dial the page
+already ends on); mascot pictograms — the human is a green line here as
+everywhere on this estate; a `ConsoleFrame` around it (four dossiers and the
+architecture beat already carry that chrome); gauges attached to figures,
+which imply a measurement this case does not publish (ADR-068's
+satellite-meter deletion); numbered waypoints or invented serials, which are
+ordinals in costume; and any perpetual ambient animation — every drawn
+instrument here is static once it has arrived.
 
 ### What the studio beat gains, and why it is the argument
 
@@ -108,11 +198,41 @@ had.
   contained path, if it is ever wanted: derive the eyebrow ordinal from page
   position, relax the registry's order pin, reorder the smoke arrays.
 
+## Verification
+
+- `npm run verify` — **1018 unit tests green**, including the new registry pins
+  (the studio beats' key sets, the flywheel's route resolution and canon-only
+  figures, the rollout's parity with `ROLLOUT_ROWS`) and the two `toBe`
+  reference pins in `cases-registry`.
+- `arc-portfolio-smoke` — **13 passed, 1 skipped**, at 1280×720 / 1440×800 /
+  1920×1080 in both themes: the sixteen-beat order, the sheets and films
+  consoles (settled gate declared, wheel gate NOT armed, both axes and the
+  aspect, the rail switching what the panel displays), the flywheel's pinned
+  label set in PT Mono at ≥8.5px with zero collapsed marks and the seat under
+  the exit column, a waypoint navigating, and the drawing fully drawn under
+  reduced motion.
+- `arc-terminal-smoke` — **10 passed**: the `-v2` client decks are untouched by
+  the chassis edits.
+- `services-ring-smoke` — **12 passed, 1 skipped** on the records seam: the
+  casefile renders unchanged with the plates now exported and `stillSizes`
+  defaulted.
+- `scripts/capture-arc-portfolio.mjs` — one shot per beat, both themes. It
+  sweeps forward first because the reveal is one-shot, and reports any beat
+  over 1.15 viewports, anything left unrevealed, and horizontal overflow.
+
 ## Open
 
+- **Two beats run long**: `beyond` (917px) and `rollout` (849px) against an
+  800px viewport. Both are legible and neither strands its reveal (the observed
+  element is the whole grid), but the page's rhythm is one-beat-one-viewport
+  elsewhere. Trim on the next pass if the owner reads them as long.
 - The SKU/ROAS receipts left with the ad cards. The head's sub already claims
   every cut beat its return target; if the ratios should return, the `sheets`
   kind takes an optional `footnote`.
-- In The Pocket is a slot on the origin beat until the owner supplies the facts.
+- In The Pocket is a slot on the origin beat until the owner supplies the facts;
+  its card says "on record · detail on request" rather than inventing any.
 - The architecture beat's `sub` could be enriched from the Intelligence Architect
   charter prose that exists in the Aether repo and nowhere on this site.
+- The keynote deck and the landing are untouched by design. If the flywheel
+  earns its place in a room, promoting it to the keynote is a content edit plus
+  a second `flywheel` section — the kind is not portfolio-specific.

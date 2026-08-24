@@ -51,6 +51,8 @@ yarn-error.log*
 .cursor/isl-*/
 .cursor/pda-shots/
 .cursor/substrate-r3-shots/
+.cursor/arc-portfolio-shots/
+.cursor/morph-shots/
 
 # Local screenshot captures (root-only, keeps tracked design/inspiration/**.png)
 /*.png
