@@ -1,26 +1,36 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
+import { driveTo, prepare } from "./helpers/arcTerminal";
 import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/toolBay";
 
 /**
- * The portfolio arc's smoke (ADR-072) — the dossier beats.
+ * The portfolio arc's smoke (ADR-072, ADR-076).
+ *
+ * ⚠ THIS PAGE FLOWS. It shipped on terminal motion and was moved to the
+ * ADR-052 reveal grammar in ADR-076 (owner: a portfolio is scrolled at the
+ * reader's pace, not presented as pinned beats). So there is no
+ * `.arc-stage`, no `data-reveal`, no decode ladder here — those belong to
+ * `arc-terminal-smoke.spec.ts`, which walks the `-v2` client decks and is
+ * what proves this change left THEM alone.
  *
  * Structural contracts, no screenshot baselines (the arcs' precedent).
  * What fails SILENTLY on this surface, and is therefore measured:
  *
- *   - the console must have a DEFINITE box — `.fl-con` is `height: 100%`
+ *   - the consoles must have a DEFINITE box — `.fl-con` is `height: 100%`
  *     over an absolutely inset panel, and inside an auto-height grid cell
- *     it measures 0 (the casefile type-lab's lesson);
+ *     it measures 0 (the casefile type-lab's lesson). True of the four
+ *     dossiers AND of the architecture beat's map console;
  *   - the host tokens the bay reads with no fallback (`--fl-shot-px`,
  *     `--fl-copy`, `--fl-mono`) — unset, the watch bar loses its padding
  *     and the claims their size, with nothing on screen to say so;
- *   - each beat must FIT at the three reference shapes: a tall two-column
- *     beat crops the console at the park;
- *   - the drawing must be the landing's drawing — the same pinned label
- *     set, after the decode has run over the beat (the scramble writes
- *     textContent and must never reach the wireframe);
- *   - the walkthrough opens over a pinned beat and the page stays put.
+ *   - each beat must FIT at the three reference shapes;
+ *   - the drawing must be the landing's drawing — the same pinned label set;
+ *   - the walkthrough opens over the beat and the page stays put;
+ *   - ⚠ THE MAP CONSOLE MUST NOT CAPTURE THE WHEEL. On the casefile it
+ *     owns scroll while the pointer is on it; that is gated on the
+ *     casefile's own `data-proof-settled`, which nothing here writes. If
+ *     that gate ever loosened, this page would have a scroll trap two
+ *     thirds of the way down and nothing else would fail.
  *
  * The landing's ring smoke keeps measuring the SAME bay on the casefile;
  * both specs read it through `helpers/toolBay.ts`.
@@ -31,22 +41,76 @@ const DOSSIERS = WIREFRAME_STATIONS.map((stn) => ({ ...stn, beat: `tool-${stn.id
 
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 961;
 
-/** What a dossier beat looks like once parked — one evaluate, every number. */
+/**
+ * Bring a flowing section to rest in the viewport and let its reveal run.
+ *
+ * The reveal path's replacement for `parkBeat`: a REAL stepped scroll to
+ * the section's own top (every section is ≈ one viewport tall), then a
+ * wait on the IO having fired rather than a sleep. `driveTo` is shared
+ * with the terminal drive — a teleport would skip the observer entirely
+ * at large jumps.
+ */
+async function restAt(page: Page, id: string) {
+  /* ⚠ RE-MEASURE AND CONVERGE, never drive to one reading. The target is
+     `sectionTop − scrollY`, and everything above it is still settling as
+     you pass: posters decode, reveals run, a video frame arrives. A single
+     drive to a top measured beforehand lands the page a whole section
+     short (measured — it stopped on the film beat and waited 15s for a
+     reveal that was never going to intersect). Three passes is plenty;
+     the loop exits as soon as the section's top is within 2px.
+
+     ⚠ THEN SWEEP PAST IT AND COME BACK, for a section taller than the
+     viewport. The IO is ONE-SHOT (`unobserve` on first intersect), so a
+     section parked at its TOP never reveals its own bottom — measured:
+     5 of vesper's 6 panels at 1280×720, which is not a defect but the
+     wrong place to stand. A reader scrolls THROUGH; this does the same,
+     then rests with the section centred, which is where a full-viewport
+     exhibit is actually read. */
+  const geo = () =>
+    page.evaluate((id) => {
+      const el = document.getElementById(id)!;
+      const r = el.getBoundingClientRect();
+      return { top: Math.round(r.top + window.scrollY), h: Math.round(r.height) };
+    }, id);
+
+  for (let pass = 0; pass < 3; pass++) {
+    const { top } = await geo();
+    const from = await page.evaluate(() => window.scrollY);
+    if (pass > 0 && Math.abs(top - from) <= 2) break;
+    await driveTo(page, top, pass === 0 ? 6 : 2);
+    await page.waitForTimeout(120);
+  }
+
+  const vh = page.viewportSize()!.height;
+  const { top, h } = await geo();
+  const over = Math.max(0, h - vh);
+  if (over > 0) {
+    await driveTo(page, top + over, 3); // the section's foot at the fold
+    await page.waitForTimeout(200);
+    await driveTo(page, top + Math.round(over / 2), 3); // rest, centred
+  }
+
+  await page
+    .locator(`#${id} .arc-reveal.is-in`)
+    .first()
+    .waitFor({ state: "attached", timeout: 15_000 });
+  await page.waitForTimeout(750); // the 0.65s rise, plus its stagger
+}
+
+/** What a dossier section looks like at rest — one evaluate, every number. */
 const dossierState = (page: Page, beat: string) =>
   page.evaluate((beat) => {
     const section = document.getElementById(beat)!;
-    const stage = section.querySelector<HTMLElement>(".arc-stage")!;
     const con = section.querySelector<HTMLElement>(".fl-con")!;
     const console_ = section.querySelector<HTMLElement>(".fl-con__console")!;
     const field = section.querySelector<HTMLElement>(".fl-con__field")!;
     const detail = section.querySelector<HTMLElement>(".fl-detail")!;
     const bar = section.querySelector<HTMLElement>(".fl-shot__bar")!;
     const claim = section.querySelector<HTMLElement>(".fl-detail__d")!;
-    const targets = [...stage.querySelectorAll<HTMLElement>("[data-arc-decode]")];
     const clipped: string[] = [];
-    stage
+    section
       .querySelectorAll<HTMLElement>(
-        ".arc-band, .arc-plane, [data-arc-panel], .arc-tdec, .fl-con__field, .fl-toolbody, .fl-bay, .fl-shot, .fl-shot__frame"
+        ".arc-band, .fl-con__field, .fl-toolbody, .fl-bay, .fl-shot, .fl-shot__frame"
       )
       .forEach((el) => {
         const cs = getComputedStyle(el);
@@ -57,11 +121,9 @@ const dossierState = (page: Page, beat: string) =>
     const f = field.getBoundingClientRect();
     const d = detail.getBoundingClientRect();
     return {
-      tall: section.hasAttribute("data-arc-tall"),
-      reveal: stage.getAttribute("data-reveal"),
-      resolved: targets.filter((el) => el.textContent === el.dataset.arcDecode).length,
-      total: targets.length,
-      stageH: Math.round(stage.getBoundingClientRect().height),
+      sectionH: Math.round(section.getBoundingClientRect().height),
+      revealed: section.querySelectorAll(".arc-reveal.is-in").length,
+      revealTotal: section.querySelectorAll(".arc-reveal").length,
       conH: Math.round(con.getBoundingClientRect().height),
       conW: Math.round(con.getBoundingClientRect().width),
       consoleOpacity: Number(getComputedStyle(console_).opacity),
@@ -74,30 +136,49 @@ const dossierState = (page: Page, beat: string) =>
     };
   }, beat);
 
-test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
-  test("the page is the portfolio, unlisted, on terminal motion", async ({ page }) => {
+test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR-076)", () => {
+  test("the page is the portfolio, unlisted, and it FLOWS", async ({ page }) => {
     await prepare(page, PORTFOLIO);
     await expect(page).toHaveTitle("Portfolio — Thoughtform");
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+
+    // ⚠ THE MOTION IS THE CONTRACT (ADR-076). No `data-motion`, so the
+    // terminal CSS is inert; `is-arc-js` present, so the reveal grammar is
+    // armed. The two are added or skipped TOGETHER by design — asserting
+    // only one would pass on a page that renders nothing.
+    const root = page.locator(".arc-root");
+    await expect(root).not.toHaveAttribute("data-motion", /.*/);
+    await expect(root).toHaveClass(/is-arc-js/);
+    expect(await page.locator(".arc-stage").count(), "a flowing page has no pinned stages").toBe(0);
+
+    // THE ORDER, and the two text walls are gone: the roster and the
+    // five ruled shape rows are ONE drawn instrument at the foot now.
     const beats = await page.evaluate(() =>
       [...document.querySelectorAll(".arc-section")].map((s) => s.id)
     );
-    expect(beats.slice(-7)).toEqual([
+    expect(beats).toEqual([
+      "about",
+      "overview",
+      "tools",
       "tool-mimir",
       "tool-vesper",
       "tool-babylon",
       "tool-heimdall",
       "studio",
       "proof-ai-atl",
+      "intelligence",
       "close",
     ]);
+    expect(beats).not.toContain("five-shapes");
+    expect(beats).not.toContain("skills-by-team");
+
     // The studio cards print ratios only — no money on a page that travels.
     const rows = await page.locator("#studio .arc-card-item__meta-row dt").allTextContents();
     expect(new Set(rows)).toEqual(new Set(["SKU", "ROAS"]));
     expect(await page.locator("#studio").textContent()).not.toMatch(/[€$£]/);
   });
 
-  test("every dossier beat fits, and mounts the landing's bay, at the three reference shapes", async ({
+  test("every dossier section fits, and mounts the landing's bay, at the three reference shapes", async ({
     browser,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
@@ -112,13 +193,17 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
         await prepare(page, theme === "light" ? `${PORTFOLIO}?theme=light` : PORTFOLIO);
         for (const stn of DOSSIERS) {
           const label = `${stn.id} @ ${width}x${height} ${theme}`;
-          await parkBeat(page, stn.beat, 4);
+          await restAt(page, stn.beat);
           const s = await dossierState(page, stn.beat);
-          // FITS: the stage is the viewport and the masthead never had to pin.
-          expect(s.tall, `${label}: the beat went tall`).toBe(false);
-          expect(s.stageH, `${label}: stage height`).toBeLessThanOrEqual(height + 1);
-          expect(s.reveal, `${label}: decode`).toBe("done");
-          expect(s.resolved, `${label}: decode targets resolved`).toBe(s.total);
+          // FITS: one viewport-ish, with the console fully inside it. A
+          // flowing section MAY exceed the viewport (it is not pinned), so
+          // the guard is the console's own box and its clipping, not a
+          // stage height — but a section past 1.15 viewports has stopped
+          // being the one-exhibit-per-tool read ADR-072 shipped.
+          expect(s.sectionH, `${label}: section height`).toBeLessThanOrEqual(
+            Math.round(height * 1.15)
+          );
+          expect(s.revealed, `${label}: everything revealed`).toBe(s.revealTotal);
           // THE CONSOLE HAS A BOX, AND IT IS LIT.
           expect(s.conH, `${label}: console height`).toBeGreaterThanOrEqual(440);
           expect(s.conW, `${label}: console width`).toBeGreaterThanOrEqual(500);
@@ -129,7 +214,7 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
           expect(s.detailInside, `${label}: the blocks sit inside the field`).toBe(true);
           expect(s.clipped, `${label}: clipped boxes`).toEqual([]);
           expect(s.overflowX, `${label}: horizontal overflow`).toBeLessThanOrEqual(0);
-          // THE DRAWING IS THE LANDING'S — read AFTER the decode ran.
+          // THE DRAWING IS THE LANDING'S.
           const bay = await page.evaluate(readToolBay, `#${stn.beat}`);
           expectWireframeBay(bay, label, stn.labels);
           expect(bay!.barCut ?? 99, `${label}: the watch bar is cut`).toBeLessThanOrEqual(1);
@@ -139,33 +224,23 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
     }
   });
 
-  test("the walkthrough opens over the pinned beat and the page stays put", async ({ page }) => {
+  test("the walkthrough opens over the section and the page stays put", async ({ page }) => {
     test.skip(!isDesktop(page), "enhanced tier only");
     await prepare(page, PORTFOLIO);
-    await parkBeat(page, "tool-mimir", 6);
-    const before = await page.evaluate(() => ({
-      y: window.scrollY,
-      out: document
-        .querySelector<HTMLElement>("#tool-mimir .arc-stage")!
-        .style.getPropertyValue("--sec-out"),
-    }));
+    await restAt(page, "tool-mimir");
+    const before = await page.evaluate(() => window.scrollY);
     await page.click("#tool-mimir .fl-shot");
     const dialog = page.locator(".fl-lightbox[role='dialog']");
     await expect(dialog).toHaveCount(1);
     await expect(dialog.locator("video")).toHaveAttribute("src", "/videos/tools/mimir.mp4");
     await expect(dialog.locator(".fl-lightbox__label")).toContainText("Mímir · Briefing Agent");
     await expect(dialog.locator(".fl-lightbox__label")).toContainText("Walkthrough · 1:20");
-    // The scroll lock holds: a wheel over the dialog moves nothing.
+    // The scroll lock holds: a wheel over the dialog moves nothing. On a
+    // FLOWING page this matters more than it did pinned — there is no
+    // sticky stage to hide a few hundred pixels of drift.
     await page.mouse.wheel(0, 600);
     await page.waitForTimeout(250);
-    const during = await page.evaluate(() => ({
-      y: window.scrollY,
-      out: document
-        .querySelector<HTMLElement>("#tool-mimir .arc-stage")!
-        .style.getPropertyValue("--sec-out"),
-    }));
-    expect(during.y).toBe(before.y);
-    expect(during.out).toBe(before.out);
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
     // Escape closes, and focus comes back to the bar one frame late.
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
@@ -189,14 +264,20 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
       const s = await page.evaluate((beat) => {
         const section = document.getElementById(beat)!;
         return {
+          // A flowing page has no stage at all; under PRM the reveal
+          // resolves everything statically instead (ArcShell's own path).
           reveal: section.querySelector(".arc-stage")?.getAttribute("data-reveal") ?? null,
+          hidden: [...section.querySelectorAll(".arc-reveal")].filter(
+            (el) => !el.classList.contains("is-in")
+          ).length,
           conH: Math.round(section.querySelector(".fl-con")!.getBoundingClientRect().height),
           frameH: Math.round(
             section.querySelector(".fl-shot__frame")!.getBoundingClientRect().height
           ),
         };
       }, stn.beat);
-      expect(s.reveal, `${stn.id}: no decode under reduced motion`).toBeNull();
+      expect(s.reveal, `${stn.id}: no stage under reduced motion`).toBeNull();
+      expect(s.hidden, `${stn.id}: nothing stays hidden under reduced motion`).toBe(0);
       expect(s.conH, `${stn.id}: console height under reduced motion`).toBeGreaterThan(300);
       expect(s.frameH, `${stn.id}: frame floor under reduced motion`).toBeGreaterThanOrEqual(280);
       const bay = await page.evaluate(readToolBay, `#${stn.beat}`);
@@ -236,10 +317,10 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
     }
   });
 
-  test("the hero is the mover and the first beat is held still (ADR-075)", async ({
+  test("the hero is the mover and the first section is held still (ADR-075, ADR-076)", async ({
     browser,
   }, testInfo) => {
-    test.skip(testInfo.project.name !== "desktop", "one walk per run \u2014 the desktop project's");
+    test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
     test.setTimeout(180_000);
     for (const [width, height] of [
       [1280, 720],
@@ -252,10 +333,11 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
           window.scrollTo(0, target);
           return new Promise<{
             entry: boolean;
+            tall: boolean;
             heroTop: number;
             heroVis: string;
-            planePos: string;
-            planeTop: number;
+            heldPos: string;
+            heldTop: number;
             bandCentre: number;
             lift: number;
           }>((resolve) =>
@@ -263,15 +345,19 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
               requestAnimationFrame(() => {
                 const hero = document.querySelector<HTMLElement>("#hero")!;
                 const first = document.querySelector<HTMLElement>(".arc-hero + .arc-section")!;
-                const plane = first.querySelector<HTMLElement>(".arc-plane")!;
-                const band = plane.querySelector<HTMLElement>(".arc-band") ?? plane;
-                const b = band.getBoundingClientRect();
+                /* ⚠ THE HELD ELEMENT IS THE BAND, NOT A PLANE (ADR-076).
+                   A flowing page has no `.arc-plane`; `.arc-band` is the
+                   direct child of the section in every kind, so it is what
+                   the curtain freezes. */
+                const held = first.querySelector<HTMLElement>(":scope > .arc-band")!;
+                const b = held.getBoundingClientRect();
                 resolve({
                   entry: document.documentElement.hasAttribute("data-arc-entry"),
+                  tall: first.hasAttribute("data-arc-tall"),
                   heroTop: Math.round(hero.getBoundingClientRect().top),
                   heroVis: getComputedStyle(hero).visibility,
-                  planePos: getComputedStyle(plane).position,
-                  planeTop: Math.round(plane.getBoundingClientRect().top),
+                  heldPos: getComputedStyle(held).position,
+                  heldTop: Math.round(b.top),
                   // The content's own centre — what the reader actually
                   // sees hold, and what must not jump at the handoff.
                   bandCentre: Math.round(b.top + b.height / 2),
@@ -285,12 +371,15 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
         }, y);
 
       const label = `${width}x${height}`;
-      // AT REST — the beat behind the curtain is already pinned to the
+      // AT REST — the section behind the curtain is already pinned to the
       // viewport, under the hero card (z 4 over the section's z 1).
       const rest = await at(0);
       expect(rest.entry, `${label}: the entry flag is armed at rest`).toBe(true);
-      expect(rest.planePos, `${label}: the first plane is held`).toBe("fixed");
-      expect(rest.planeTop, `${label}: held at the viewport top`).toBe(0);
+      // ⚠ THE BAIL MUST NOT BE ARMED, or every assertion below passes
+      // vacuously on a page whose curtain never runs.
+      expect(rest.tall, `${label}: the first section outgrew the viewport`).toBe(false);
+      expect(rest.heldPos, `${label}: the first band is held`).toBe("fixed");
+      expect(rest.heldTop, `${label}: held at the viewport top`).toBe(0);
       expect(rest.heroTop, `${label}: the card starts at the top`).toBe(0);
 
       // MID-CURTAIN — THIS PAIR OF ASSERTIONS IS THE PARALLAX. The card
@@ -300,28 +389,184 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
       expect(mid.heroTop, `${label}: the card is the mover`).toBeLessThanOrEqual(
         -Math.round(height * 0.5) + 2
       );
-      expect(mid.planePos, `${label}: still held mid-curtain`).toBe("fixed");
-      expect(mid.planeTop, `${label}: the panel did not move`).toBe(0);
+      expect(mid.heldPos, `${label}: still held mid-curtain`).toBe("fixed");
+      expect(mid.heldTop, `${label}: the panel did not move`).toBe(0);
       expect(mid.lift, `${label}: the rail clip tracks the card 1:1`).toBeCloseTo(0.5, 1);
 
-      // THE HANDOFF — the flag clears, the plane returns to flow, and the
-      // CONTENT does not jump: the fixed cell replicates the stage's own
-      // centred box, so both put the band in the same place.
-      const before = await at(height - 8);
-      const after = await at(height + 8);
+      /* THE HANDOFF — the flag clears, the band returns to flow, and the
+         CONTENT does not jump: the fixed cell replicates the section's own
+         centred box, so both put the band in the same place.
+
+         ⚠ SAMPLE WITHIN A PIXEL OF THE SEAM. The fixed cell holds at
+         viewport 0 while the flow box sits at `sectionTop − scrollY`, and
+         those two agree at EXACTLY scrollY = vh — which is the whole
+         design, since that is the instant the swap happens. Sample ±8px
+         either side and the assertion measures the 16px of scroll you just
+         did (it reported an "8px jump" on a seam that is continuous). The
+         defect this guards is a MISMATCHED BOX — a padding or centring
+         difference between the two rules — which shows up as tens of
+         pixels here however tightly you sample. */
+      const before = await at(height - 1);
+      const after = await at(height + 1);
       expect(before.entry, `${label}: still held one step short`).toBe(true);
       expect(after.entry, `${label}: released at the seam`).toBe(false);
-      expect(after.planePos, `${label}: back in flow`).toBe("static");
+      expect(after.heldPos, `${label}: back in flow`).toBe("static");
       expect(
         Math.abs(after.bandCentre - before.bandCentre),
         `${label}: the content jumped ${after.bandCentre - before.bandCentre}px at the handoff`
-      ).toBeLessThanOrEqual(2);
+      ).toBeLessThanOrEqual(3);
 
       // PAST THE CURTAIN — the card is released from the paint. It
       // outranks every section (z 4 vs 1), so off-screen is not enough.
       const past = await at(Math.round(height * 1.4));
       expect(past.heroVis, `${label}: the card is released`).toBe("hidden");
       expect(past.lift, `${label}: the rails are fully uncovered`).toBeCloseTo(1, 2);
+      await page.close();
+    }
+  });
+
+  test("the curtain releases under reduced motion and on a small screen (ADR-076)", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
+    /* ⚠ THE RELEASE QUERY REPEATS THE FREEZE'S SELECTOR, `:not()`
+       INCLUDED — a media query adds NO specificity, and ADR-075 measured
+       exactly this rule silently losing 0,6,1 against 0,7,1. Both halves
+       of the release pair are walked, because they are separate gates on
+       one selector. */
+    for (const [label, opts] of [
+      ["reduced motion", { viewport: { width: 1440, height: 800 }, reducedMotion: "reduce" }],
+      ["small screen", { viewport: { width: 430, height: 900 } }],
+    ] as const) {
+      const context = await browser.newContext(opts);
+      const page = await context.newPage();
+      await page.goto(PORTFOLIO, { waitUntil: "networkidle" });
+      await page.waitForTimeout(500);
+      const pos = await page.evaluate(
+        () =>
+          getComputedStyle(
+            document.querySelector<HTMLElement>(".arc-hero + .arc-section > .arc-band")!
+          ).position
+      );
+      expect(pos, `${label}: the curtain must release`).toBe("static");
+      await context.close();
+    }
+  });
+
+  test("the architecture beat is the landing's map console, and it cannot trap the page (ADR-076)", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
+    test.setTimeout(240_000);
+    for (const [width, height] of [
+      [1280, 720],
+      [1440, 800],
+      [1920, 1080],
+    ] as const) {
+      const page = await browser.newPage({ viewport: { width, height } });
+      await prepare(page, PORTFOLIO);
+      await restAt(page, "intelligence");
+      const label = `${width}x${height}`;
+
+      // THE INSTRUMENT IS THERE, WITH A BOX. `.fl-con` is `height: 100%`
+      // over an absolutely inset panel — in an auto-height cell it
+      // measures 0 and the drawing renders into nothing.
+      const box = await page.evaluate(() => {
+        const host = document.querySelector<HTMLElement>("#intelligence .arc-intel")!;
+        const con = host.querySelector<HTMLElement>(".fl-con")!;
+        const svg = host.querySelector<SVGSVGElement>(".fl-pda__svg")!;
+        const c = con.getBoundingClientRect();
+        const v = svg.getBoundingClientRect();
+        return {
+          conH: Math.round(c.height),
+          conW: Math.round(c.width),
+          svgH: Math.round(v.height),
+          /* ⚠ THE DRAWING MUST FILL THE PANEL ON BOTH AXES, and asking
+             about one is how this is missed. `meet` fits by the SMALLER
+             ratio, so a panel wider than the crop letterboxes
+             HORIZONTALLY while filling vertically — which is exactly what
+             the first cut of this beat did (1129×471, 90 % of the height,
+             a third of the width empty) and what a height-only assertion
+             reported as green. The ASPECT is asserted too, because the
+             fill can be perfect at a shape no drawing was fitted for. */
+          fill: Math.round((v.height / Math.max(1, c.height)) * 100),
+          fillW: Math.round((v.width / Math.max(1, c.width)) * 100),
+          aspect: Number((c.width / Math.max(1, c.height)).toFixed(2)),
+          stations: [...host.querySelectorAll<HTMLElement>(".fl-con__stn")].map((el) =>
+            (el.textContent ?? "").trim()
+          ),
+          overflowX: document.documentElement.scrollWidth - window.innerWidth,
+        };
+      });
+      /* THE FLOOR IS THE CASEFILE'S OWN PANEL. "Let it breathe" is the
+         whole reason this beat exists, so the box has to beat the one the
+         drawing already has on the landing (603x493 at this viewport,
+         679x548 at 1440x800, ~850x760 at 1920). A console that merely
+         renders would satisfy a floor of zero. */
+      expect(box.conH, `${label}: console height`).toBeGreaterThanOrEqual(520);
+      expect(box.conW, `${label}: console width`).toBeGreaterThanOrEqual(640);
+      expect(box.svgH, `${label}: the drawing has a box`).toBeGreaterThan(300);
+      expect(box.fill, `${label}: the drawing fills its panel's height`).toBeGreaterThanOrEqual(70);
+      expect(box.fillW, `${label}: the drawing fills its panel's width`).toBeGreaterThanOrEqual(85);
+      // The range every field these drawings were fitted to lives in.
+      expect(box.aspect, `${label}: the panel's aspect`).toBeLessThanOrEqual(1.3);
+      expect(box.aspect, `${label}: the panel's aspect`).toBeGreaterThanOrEqual(0.4);
+      expect(box.stations, `${label}: the three readings`).toEqual([
+        "WORK",
+        "CONFIGURATION",
+        "SUBSTRATE",
+      ]);
+      expect(box.overflowX, `${label}: horizontal overflow`).toBeLessThanOrEqual(0);
+
+      // ⚠ THE WHEEL MAY NOT CAPTURE. On the casefile this console owns
+      // scroll while the pointer is on it; that is gated on the casefile's
+      // `data-proof-settled`, which nothing on an arc writes. If it ever
+      // loosened, this page would have a scroll trap two thirds of the way
+      // down and NOTHING ELSE HERE WOULD FAIL.
+      const y0 = await page.evaluate(() => window.scrollY);
+      const centre = await page.evaluate(() => {
+        const r = document
+          .querySelector<HTMLElement>("#intelligence .fl-pda__svg")!
+          .getBoundingClientRect();
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
+      });
+      await page.mouse.move(centre.x, centre.y);
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(400);
+      const y1 = await page.evaluate(() => window.scrollY);
+      expect(y1 - y0, `${label}: the console swallowed the page's scroll`).toBeGreaterThan(200);
+      expect(
+        await page.evaluate(
+          () => document.querySelector<HTMLElement>("#intelligence .fl-pda")!.dataset.view
+        ),
+        `${label}: and it must not have changed reading either`
+      ).toBe("1");
+
+      // THE RAIL IS THE NAVIGATION: reading 02 draws the switchboard,
+      // reading 03 letters all 47 Skills around the carrier.
+      await restAt(page, "intelligence");
+      await page.locator("#intelligence .fl-con__stn").nth(1).click();
+      await page.waitForTimeout(700);
+      expect(
+        await page.evaluate(
+          () => document.querySelector<HTMLElement>("#intelligence .fl-pda")!.dataset.view
+        ),
+        `${label}: the rail opened reading 02`
+      ).toBe("2");
+      await page.locator("#intelligence .fl-con__stn").nth(2).click();
+      await page.waitForTimeout(900);
+      const carrier = await page.evaluate(() => {
+        const host = document.querySelector<HTMLElement>("#intelligence .fl-pda")!;
+        const labels = [...host.querySelectorAll("textPath")].filter(
+          (t) => (t.textContent ?? "").trim().length > 0
+        );
+        return { view: host.dataset.view, arcLabels: labels.length };
+      });
+      expect(carrier.view, `${label}: the rail opened reading 03`).toBe("3");
+      // 47 Skill cells, plus the five substrate names in the band.
+      expect(carrier.arcLabels, `${label}: the carrier letters its cells`).toBeGreaterThanOrEqual(
+        47
+      );
       await page.close();
     }
   });
@@ -393,9 +638,9 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
       expect(await page.locator(".hud__nav__inline__link").allTextContents()).toEqual([
         "About",
         "Overview",
-        "Skills",
         "Tools",
         "Outcome",
+        "Architecture",
       ]);
       // The row is chrome over a PHOTO: it may never land on hero ink.
       // The arcs' key visual is near-white top-right, which is what the
@@ -443,13 +688,13 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
     expect(await page.locator(".hud__nav__list a").allTextContents()).toEqual([
       "01About",
       "02Overview",
-      "03Skills",
-      "04Tools",
-      "05Mímir",
-      "06Vesper",
-      "07Babylon",
-      "08Heimdall",
-      "09Outcome",
+      "03Tools",
+      "04Mímir",
+      "05Vesper",
+      "06Babylon",
+      "07Heimdall",
+      "08Outcome",
+      "09Architecture",
       "10Close",
     ]);
     await expect(page.locator('.hud__nav__list a[aria-current="true"]')).toHaveCount(1);

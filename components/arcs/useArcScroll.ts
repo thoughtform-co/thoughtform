@@ -112,6 +112,30 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
   }, [rootRef, variant, onFrame]);
 
   /**
+   * THE TALL BAIL, ON THE FLOWING PATH (ADR-076).
+   *
+   * Under terminal motion the beat controller writes `data-arc-tall` per
+   * viewport and ADR-075's freeze reads it. A reveal page has no
+   * controller, so the one measurement the curtain needs is taken here:
+   * a first section that has outgrown the viewport cannot hand its
+   * content over to a 100svh fixed cell without a jump, so it keeps
+   * today's behaviour instead. Mount and resize only — the section's
+   * height is content-driven and does not change with scroll.
+   */
+  const syncTall = useCallback(() => {
+    const root = rootRef.current;
+    if (variant !== "detail" || !root) return;
+    if (!root.hasAttribute("data-arc-curtain")) return;
+    const first = root.querySelector<HTMLElement>(".arc-hero + .arc-section");
+    if (!first) return;
+    // 1px of tolerance: `min-height: 100svh` against a fractional
+    // `innerHeight` rounds the wrong way on a zoomed or hi-dpi window.
+    const tall = first.scrollHeight > (window.innerHeight || 0) + 1;
+    if (tall) first.setAttribute("data-arc-tall", "");
+    else first.removeAttribute("data-arc-tall");
+  }, [rootRef, variant]);
+
+  /**
    * THE ENTRY FLAG, WRITTEN SYNCHRONOUSLY — not from the rAF (ADR-075).
    *
    * It switches the first beat's plane between `fixed` and flow, which is
@@ -147,19 +171,24 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
   // First frame before paint — otherwise the rails flash unclipped (or
   // clipped) for a frame on load at a restored scroll position.
   useLayoutEffect(() => {
+    syncTall();
     syncEntry();
     frame();
-  }, [frame, syncEntry]);
+  }, [frame, syncEntry, syncTall]);
 
   useEffect(() => {
     // Captured at setup — the cleanup must release the node this effect
     // actually wired, not whatever the ref points at during teardown.
     const root = rootRef.current;
+    const onResize = () => {
+      syncTall();
+      onScroll();
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
       if (rafId.current !== null) window.cancelAnimationFrame(rafId.current);
       if (variant === "detail") {
         document.documentElement.style.removeProperty("--hero-lift");
@@ -170,5 +199,5 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
         root.querySelector(".hud__brand")?.classList.remove("is-collapsed");
       }
     };
-  }, [onScroll, rootRef, variant]);
+  }, [onScroll, rootRef, syncTall, variant]);
 }

@@ -234,6 +234,21 @@ export type ArcSection = ArcSectionBase &
          */
         head?: ArcHead;
       }
+    | {
+        /**
+         * The intelligence architecture, at page scale (ADR-076): the
+         * landing casefile's own three-reading console — THE WORK · THE
+         * CONFIGURATION · THE SUBSTRATE — mounted in a section of its own.
+         *
+         * It carries NO data. The record is `LOOP_INTELLIGENCE_MAP`
+         * (`lib/cases/content/loop-earplugs.ts`), resolved by the renderer
+         * and shared BY REFERENCE with the casefile row, exactly as the
+         * `dossier` kind resolves `PROJECT_CASES`. A content module that
+         * re-typed the 47 Skills would be publishing a second portfolio.
+         */
+        kind: "intelligence";
+        head: ArcHead;
+      }
   );
 
 export type ArcSectionKind = ArcSection["kind"];

@@ -54,7 +54,43 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-08-24 (latest) — The arc hero becomes the homepage hero (ADR-075)
+### 2026-08-24 (latest) — The portfolio flows; the architecture closes it (ADR-076)
+
+The owner read the portfolio against the shards repo's Stripe page: it
+scrolls worse, the Skills are text walls, and the homepage's intelligence
+instrument should be expanded and moved to the bottom. Cycle B for the new
+section kind, Cycle A rows 1, 3, 4, 5 and 6.
+
+- **Row 1 — the diagnosis was not a missing technique.** The pages that
+  "scroll nicer" reveal with an IO at `rootMargin -10%` and a one-shot
+  `is-in` — which is this repo's own ADR-052 reveal, constant for
+  constant; `ArcShell`'s comment even names it as the source. The felt
+  difference was PINNING. So the fix was deleting one line
+  (`motion: "terminal"`), not building a scroll system.
+- **Row 3 — the same defect class, a fourth time.** The console's first
+  cut letterboxed HORIZONTALLY (w/h 2.2, a third of the panel empty)
+  and the new fill guard measured HEIGHT and reported 90 %. ADR-070 U4,
+  U12 and U15 are each a version of this. **A fill assertion that asks
+  about one axis is not a fill assertion**; the aspect is now guarded too.
+- **Row 4 — files that move together.** `ArcShell` (the curtain flag)
+  ⇄ `useArcScroll` (`data-arc-tall`) ⇄ `arcs.css` (freeze + release, and
+  the release must REPEAT the selector); and the `intelligence` kind
+  ⇄ `ArcIntelligence` ⇄ `LOOP_INTELLIGENCE_MAP` ⇄ the route's `pda.css`.
+  → `arcs.md`.
+- **Row 5 — two runtime checks nothing else would catch.** The console's
+  wheel must NOT capture off the casefile (its gate is
+  `data-proof-settled`, which no arc writes) — a regression there is a
+  scroll trap mid-page with every other assertion green. And the reveal
+  IO is ONE-SHOT, so a test that parks a tall section at its top reads 5
+  of 6 panels revealed; the harness sweeps past and comes back.
+- **Row 6 — a measured win worth recording.** ADR-063 lists reading 01's
+  6.2–7.2px type as this surface's standing defect with no lever left.
+  At page scale the same drawing letters at 9.5px (1440×800) and 15.3px
+  at the owner's shape. The gap was DENSITY, and a section affords it.
+- **Left open, unchanged:** the two `landing-page.spec.ts` corridor
+  snapshots from ADR-074's station (percentage scrolls, 08-02 baselines).
+
+### 2026-08-24 — The arc hero becomes the homepage hero (ADR-075)
 
 The owner asked for the arc hero to BE the homepage's, "including the
 parallax effect in the second section". Cycle B for the seam, Cycle A rows

@@ -252,12 +252,20 @@ describe("arcs registry (ADR-052)", () => {
   it("shares the Loop evidence by reference, never by copy (ADR-072)", () => {
     const keynoteStudio = AI_KEYNOTE_ARC.sections.find((s) => s.id === "proof-studio");
     expect(keynoteStudio?.kind === "cards" && keynoteStudio.cards).toBe(STUDIO_AD_CARDS);
-    for (const arc of [AI_KEYNOTE_ARC, PORTFOLIO_ARC]) {
-      const roster = arc.sections.find((s) => s.id === "skills-by-team");
-      expect(roster?.kind === "list-groups" && roster.groups, `${arc.slug} roster`).toBe(
-        LOOP_SKILL_GROUPS
-      );
-    }
+    /* ⚠ THE WRITTEN ROSTER IS THE KEYNOTE'S ALONE NOW (ADR-076). The
+       portfolio dropped it with its five-shapes rows: 47 text cards read
+       as a wall on a page a stranger scrolls, and the architecture beat
+       draws the same 47 instead. The keynote is a deck read in a room and
+       keeps the list — so the pin narrows rather than going, which is
+       what keeps the DECK's copy from being re-typed. */
+    const keynoteRoster = AI_KEYNOTE_ARC.sections.find((s) => s.id === "skills-by-team");
+    expect(keynoteRoster?.kind === "list-groups" && keynoteRoster.groups, "keynote roster").toBe(
+      LOOP_SKILL_GROUPS
+    );
+    expect(
+      PORTFOLIO_ARC.sections.some((s) => s.id === "skills-by-team"),
+      "the portfolio's text roster is drawn now, not written"
+    ).toBe(false);
     // The portfolio's studio cards are the SAME records minus the money rows.
     const portfolioStudio = PORTFOLIO_ARC.sections.find((s) => s.id === "studio");
     expect(portfolioStudio?.kind).toBe("cards");
@@ -267,6 +275,42 @@ describe("arcs registry (ADR-052)", () => {
         expect(card.metaRows?.map((row) => row.label)).toEqual(["SKU", "ROAS"]);
       }
     }
+  });
+
+  it("the portfolio closes on ONE architecture beat, and it flows (ADR-076)", () => {
+    /* THE MOTION. A portfolio is scrolled at the reader's pace, so the
+       page takes the ADR-052 reveal; the `-v2` client decks keep the
+       pinned grammar they were designed in. Absent, not "reveal" — the
+       renderer resolves the default in one place and an explicit value
+       here would be a second source for it. */
+    expect(PORTFOLIO_ARC.motion).toBeUndefined();
+
+    const intel = PORTFOLIO_ARC.sections.filter((s) => s.kind === "intelligence");
+    expect(intel, "exactly one architecture beat").toHaveLength(1);
+    expect(intel[0].id).toBe("intelligence");
+    expect(intel[0].menuPrimary, "it is a chapter").toBe(true);
+    expect(intel[0].kind === "intelligence" && intel[0].head.title).toBeTruthy();
+
+    /* AT THE FOOT: after the four dossiers and the outcome, before the
+       close. It is the answer to "what is underneath all of that", which
+       only reads as an answer once the work has been shown. */
+    const ids = PORTFOLIO_ARC.sections.map((s) => s.id);
+    expect(ids.indexOf("intelligence")).toBeGreaterThan(ids.indexOf("tool-heimdall"));
+    expect(ids.indexOf("intelligence")).toBeGreaterThan(ids.indexOf("studio"));
+    expect(ids.indexOf("intelligence")).toBe(ids.indexOf("close") - 1);
+
+    /* IT CARRIES NO RECORD OF ITS OWN. The 47 Skills and their five
+       shapes come from `LOOP_INTELLIGENCE_MAP`, resolved by the renderer
+       — a content module that re-typed them would publish a second
+       portfolio, and the two would drift the first time either was
+       edited. So the section is a masthead and nothing else. */
+    expect(Object.keys(intel[0]).sort()).toEqual(
+      ["ariaLabel", "head", "id", "kind", "menuLabel", "menuPrimary"].sort()
+    );
+
+    /* AND THE TEXT WALLS ARE GONE, both of them. */
+    expect(ids).not.toContain("five-shapes");
+    expect(ids).not.toContain("skills-by-team");
   });
 
   it("motion flags are known and card identities are distinguishable", () => {

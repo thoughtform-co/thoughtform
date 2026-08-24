@@ -15,6 +15,11 @@ import "@/components/landing/v7/landing.css";
 // client-component import would make the cascade order bundle-dependent.
 import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
+// The map console's own palette + svg rules (ADR-076) — the architecture
+// beat mounts the casefile's three-reading instrument. Same tier as the
+// two sheets above it: `.fl-pda*`-scoped, so an arc without the beat
+// gets bytes and no matching rule.
+import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/arcs/arcs.css";
 // Theme sheet LAST (ADR-058) — after arcs.css so the light cascade wins.
 import "@/components/landing/v7/theme.css";

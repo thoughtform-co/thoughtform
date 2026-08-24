@@ -118,6 +118,16 @@ export function ArcShell({
       className={`arc-root arc-root--${variant} ${bodyClass}`}
       data-theme="dark"
       data-motion={motion === "terminal" ? "terminal" : undefined}
+      /* THE CURTAIN, ON THE FLOWING PATH (ADR-076). ADR-075's seam is
+         CSS-gated on `[data-motion="terminal"]`, because that was the only
+         grammar carrying the landing's plate when it shipped. The portfolio
+         flows now and still wants the seam, so a reveal page with the
+         gateway plate declares it here. Terminal pages keep their own
+         selector — the two never both apply, and the held element differs
+         (the plane there, the first section's band here). */
+      data-arc-curtain={
+        variant === "detail" && gatewayPlate && motion !== "terminal" ? "" : undefined
+      }
       style={variant === "index" ? ({ "--hero-lift": "1" } as CSSProperties) : undefined}
     >
       <div

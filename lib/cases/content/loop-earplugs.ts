@@ -1708,6 +1708,28 @@ const ATL_FILMS = [
    directory trim (ADR-056 U13) — the `signal` kind and `CaseSignalPoint`
    stay in the model for a future case's summary row. */
 
+/**
+ * THE INTELLIGENCE MAP'S OWN RECORD, as one object (ADR-076).
+ *
+ * The casefile row below spreads these five fields into its
+ * `intelligence-map` visual; the portfolio arc's `intelligence` section
+ * mounts the same console from this export. It is the SAME ARRAYS by
+ * reference — `cases-registry.test.ts` pins each member `toBe` the
+ * visual's — so the two surfaces cannot publish two portfolios.
+ *
+ * ⚠ It carries no copy of its own. Everything here is already inside the
+ * confidentiality envelope the registry test scans (`CASES` reaches these
+ * arrays through the row), and adding a field here that the row does not
+ * take would be a lettered string outside that scan.
+ */
+export const LOOP_INTELLIGENCE_MAP = {
+  shapes: MAP_SHAPES,
+  districts: MAP_DISTRICTS,
+  works: MAP_WORKS,
+  skills: LOOP_SKILLS,
+  envelope: "WITHIN",
+} as const;
+
 export const LOOP_EARPLUGS_CASE: CaseDef = {
   slug: "loop-earplugs",
   client: "Loop Earplugs",

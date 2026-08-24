@@ -144,6 +144,13 @@ Two things came out of measuring rather than assuming:
 
 ## Consequences
 
+- ⚠ **The seam is no longer terminal-only (ADR-076, 2026-08-24).** The
+  portfolio moved to the reveal grammar and kept this curtain, so the
+  freeze has a second selector: `data-arc-curtain` on the root, holding
+  the first section's own `> .arc-band` where this one holds a
+  `.arc-plane`. Every warning in §1 carries over unchanged — including
+  the specificity one, whose release pair there is the reveal system's
+  900px rather than 960. If you are editing one freeze, check the other.
 - ADR-008's paint-stack table gains the arc rows and its stale hero row is
   corrected — it still called the live hero `sticky; z:1`.
 - The seam ships on terminal arcs (the portfolio and both `-v2` cuts). The

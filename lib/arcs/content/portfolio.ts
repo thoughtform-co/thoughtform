@@ -1,17 +1,22 @@
 import type { ArcDef } from "../types";
 
 import { LOOP_FIGURES } from "./shared/loop-figures";
-import { LOOP_SKILL_GROUPS } from "./shared/loop-skills";
 import { AI_ATL_SECTION, STUDIO_AD_CARDS, ratiosOnly } from "./shared/loop-studio";
 import { MODE_LEGEND } from "./shared/loop-tools";
-import { SOFTWARE_FEW_LINE, VINCE_BIO_LEAD, VINCE_PORTRAIT } from "./shared/vince";
+import { VINCE_BIO_LEAD, VINCE_PORTRAIT } from "./shared/vince";
 
 /**
  * The Loop portfolio (ADR-072) — the adoption program at Loop Earplugs and
  * the four production tools built on it, for a reader who was in the
  * building: hero → about → ONE overview from adoption to automation →
- * the encoding evidence → the tools, each a full-viewport dossier → what
- * changed → close.
+ * the tools, each a full-viewport dossier → what changed → THE
+ * ARCHITECTURE UNDERNEATH → close.
+ *
+ * IT FLOWS (ADR-076). The page reads as one continuous scroll, not a deck
+ * of pinned beats, and the two text-wall sections that carried the Skills
+ * — five ruled rows and the 47-row roster — are replaced by ONE drawn
+ * instrument at the foot: the casefile's own three-reading console, at
+ * page scale, on the record both surfaces share.
  *
  * FUNCTION FIRST. The hero names the role and the method; the person is
  * introduced one beat later. The overview's title is the thesis — adoption
@@ -39,7 +44,13 @@ import { SOFTWARE_FEW_LINE, VINCE_BIO_LEAD, VINCE_PORTRAIT } from "./shared/vinc
 export const PORTFOLIO_ARC: ArcDef = {
   slug: "portfolio",
   format: "portfolio",
-  motion: "terminal",
+  /* ⚠ NO `motion` — this page FLOWS (ADR-076, owner 2026-08-24). The
+     terminal grammar pins every section and resolves its masthead with a
+     decode, which reads as a deck being presented; this is a portfolio a
+     reader forwards and scrolls at their own pace, so it takes the ADR-052
+     reveal — plain sections, one quiet rise each. The hero's curtain seam
+     survives the change (ADR-075 generalised); the `-v2` client decks keep
+     terminal motion, which is the grammar they were designed in. */
   cardTitle: "The Loop portfolio",
   cardLede:
     "The adoption program and the four tools it produced: navigate, encode, build, at company scale.",
@@ -129,8 +140,10 @@ export const PORTFOLIO_ARC: ArcDef = {
             { label: "Skills encoded", value: LOOP_FIGURES.skills },
             { label: "Teams using the layer", value: LOOP_FIGURES.teamsUsing },
           ],
-          receipt:
-            "Five shapes · Judgment 12 · Voice 7 · Validation 9 · Stakeholder 5 · Pattern 14",
+          // No shape roll-call here: the architecture beat DERIVES those
+          // five counts from the roster and letters them on the dial, and
+          // a hand-typed copy is the one that goes stale.
+          receipt: "One shared board · one versioned library",
         },
         {
           id: "build",
@@ -148,91 +161,47 @@ export const PORTFOLIO_ARC: ArcDef = {
       footnote:
         "When the model changes, the substrate stays. When a team rotates, the judgment stays.",
     },
+    // ⚠ THE TWO TEXT WALLS ARE GONE (ADR-076, owner 2026-08-24: "the
+    // skills are now like blocks of text… very East German").
+    //
+    //   `five-shapes`    — five ruled mono rows naming the shapes and
+    //                      their counts. The ARCHITECTURE beat draws them
+    //                      instead, at the bottom of the page, and derives
+    //                      every count from the roster.
+    //   `skills-by-team` — the full 47-Skill roster as text cards, which
+    //                      measured 5319px at 1440×800: a quarter of the
+    //                      page, and the densest reading on it. The dial
+    //                      letters all 47 names; the console's own
+    //                      small-screen fallback keeps the grouped list
+    //                      where there is no drawing. The WRITTEN roster
+    //                      survives on the keynote arc, which is a deck
+    //                      read in a room rather than a page forwarded to
+    //                      a stranger.
+    //
+    // `LOOP_SKILL_GROUPS` is therefore no longer imported here — the arc
+    // shares the roster through the map record now, by reference.
     {
-      id: "five-shapes",
-      kind: "anatomy",
-      menuLabel: "Skills",
-      menuPrimary: true,
-      ariaLabel: "Forty-seven Skills, five shapes of work",
-      badge: "Encode · 47+ Skills",
-      head: {
-        eyebrow: "The substrate",
-        title: { pre: "Forty-seven Skills,", em: "five shapes of work." },
-        sub: "Every Skill encodes one piece of how a team works. Sorted by the kind of judgment it carries, the portfolio falls into five shapes, and the shapes outlive the model version, the team roster, and whatever surface launches next.",
-      },
-      // Gloss + meaning per shape, copied from the casefile's map record
-      // (`MAP_GROUPS` / `MAP_SHAPES`, lib/cases/content/loop-earplugs.ts) and
-      // parity-pinned there. Counts only — a per-shape team count would
-      // re-open the three-unit confusion the envelope exists to prevent.
-      rows: [
-        {
-          id: "judgment",
-          label: "Judgment · 12",
-          body: "Applies senior judgment to varied inputs. What good means when the inputs vary and the answer is not obvious.",
-        },
-        {
-          id: "voice",
-          label: "Voice · 7",
-          body: "Writes in a specific Loop voice. How the organisation sounds when it speaks, held steady across readers.",
-        },
-        {
-          id: "validation",
-          label: "Validation · 9",
-          body: "Checks output against a Loop bar. The bar output is checked against, and the cases that make a failure visible.",
-        },
-        {
-          id: "stakeholder",
-          label: "Stakeholder · 5",
-          body: "Frames information for a specific reader. Who the work is for, and the framing that reader needs to act on it.",
-        },
-        {
-          id: "pattern",
-          label: "Pattern · 14",
-          body: "Composes structured outputs from recurring inputs. The shapes the work keeps returning to, so output arrives structured rather than improvised.",
-        },
-      ],
-    },
-    {
-      id: "skills-by-team",
-      kind: "list-groups",
-      ariaLabel: "The Skill roster, team by team",
-      layout: "stack",
-      head: {
-        eyebrow: "Encode · the roster",
-        title: { pre: "What's", em: "encoded,", post: "team by team." },
-        sub: "The forty-seven as the teams named them. Each one captures how that team handles a specific piece of work, so people and agents can build on what the company already knows. Status as of the latest board revision.",
-      },
-      groups: LOOP_SKILL_GROUPS,
-    },
-    {
+      // The tools' chapter head. It WAS an `anatomy` listing the three
+      // modes with a tool named in each — but every dossier below already
+      // prints its own mode chip and the same shared legend sentence, so
+      // the rows were this page saying a thing twice, one viewport before
+      // it said it properly.
       id: "tools",
-      kind: "anatomy",
+      kind: "head",
       menuLabel: "Tools",
       menuPrimary: true,
       ariaLabel: "The tools, in production",
-      badge: "Build · Software for few",
       head: {
         eyebrow: "The tools · in production",
         title: { pre: "Removing workflow bottlenecks,", em: "one tool at a time." },
-        sub: SOFTWARE_FEW_LINE,
+        /* ⚠ THIS PAGE AUTHORS ITS OWN, and the reason is placement.
+           `SOFTWARE_FEW_LINE` (shared with the keynote) ends "The Skills
+           ABOVE are what those tools run on" — true on the deck, where the
+           roster precedes it, and false here since ADR-076 moved the Skills
+           to the foot. Share the evidence, author the frame: the argument
+           is the same and the sentence points the way this page runs. */
+        sub: "Most of Loop's bottlenecks live in software too specific to buy off the shelf, and too small to justify an agency build. That category sat unsolved for years. AI models crossed a threshold at the end of 2025 where the team that owns the problem can now build the tool itself — on the Skills that team already authored.",
       },
-      rows: [
-        {
-          id: "compress",
-          label: "Compress",
-          body: `${MODE_LEGEND.Compress} Vesper: three generation tools and an invisible cost became one canvas, with the draw visible per run.`,
-        },
-        {
-          id: "repair",
-          label: "Repair",
-          body: `${MODE_LEGEND.Repair} Heimdall: board to canvas to asset system, nothing retyped.`,
-        },
-        {
-          id: "invent",
-          label: "Invent",
-          body: `${MODE_LEGEND.Invent} Mímir: five sources become one brief while it is written. Babylon: five handoffs across thirty-plus markets become one review.`,
-        },
-      ],
     },
     // Reel labels are the CODENAMES: the reel sits at the left margin and
     // a 14-character handle ("BRIEFING AGENT") crosses the record column at
@@ -287,6 +256,27 @@ export const PORTFOLIO_ARC: ArcDef = {
       ...AI_ATL_SECTION,
       id: "proof-ai-atl",
       menuLabel: undefined,
+    },
+    {
+      /* THE ARCHITECTURE, AT THE BOTTOM (ADR-076, owner). It closes the
+         page rather than interrupting it: the reader has seen the program,
+         the four tools and what the layer produced, so the instrument is
+         the answer to "what is underneath all of that" — not a spec sheet
+         to get through before the work.
+         It carries a masthead and NOTHING ELSE. The 47 Skills, their five
+         shapes and the 27 configured streams come from the casefile's own
+         record (`LOOP_INTELLIGENCE_MAP`), which is why the counts on the
+         dial cannot disagree with the landing's. */
+      id: "intelligence",
+      kind: "intelligence",
+      menuLabel: "Architecture",
+      menuPrimary: true,
+      ariaLabel: "The intelligence architecture — 47 Skills, five shapes, 27 configured streams",
+      head: {
+        eyebrow: "The substrate · what it is made of",
+        title: { pre: "Forty-seven Skills,", em: "five shapes of work." },
+        sub: "Every Skill encodes one piece of how a team works. Read the work, open a stream to see how it is configured, or take the whole substrate at once.",
+      },
     },
     {
       id: "close",

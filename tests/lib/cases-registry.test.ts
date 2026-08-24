@@ -8,6 +8,7 @@ import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { BOARD_CHIP_SLOTS } from "@/components/landing/home-v2/services/casefile/map/mapProjection";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
+import { LOOP_INTELLIGENCE_MAP } from "@/lib/cases/content/loop-earplugs";
 import type { CaseSegment } from "@/lib/cases/types";
 
 /**
@@ -1266,6 +1267,25 @@ describe("cases registry (ADR-054)", () => {
   // field it pinned: ADR-068 U2 (owner, 2026-08-08) filled the 2×2 with the
   // portfolio site's capability blocks and deleted `ProjectCase.detail` —
   // the capability guard above is the blocks' shape pin now.
+
+  it("the intelligence record is ONE object, shared by reference (ADR-076)", () => {
+    /* The portfolio arc's architecture beat mounts the same console the
+       casefile's Intelligence Map row does, from `LOOP_INTELLIGENCE_MAP`.
+       These must be the SAME ARRAYS — a copy would let one surface
+       publish 47 Skills while the other published 46, each internally
+       consistent and neither failing. `toBe`, never `toEqual`. */
+    const row = CASES.flatMap((c) => c.casefile?.tracks ?? [])
+      .flatMap((track) => track.visual ?? [])
+      .find((visual) => visual.kind === "intelligence-map");
+    expect(row, "the casefile still carries the map row").toBeTruthy();
+    if (row && row.kind === "intelligence-map") {
+      expect(LOOP_INTELLIGENCE_MAP.shapes).toBe(row.shapes);
+      expect(LOOP_INTELLIGENCE_MAP.districts).toBe(row.districts);
+      expect(LOOP_INTELLIGENCE_MAP.works).toBe(row.works);
+      expect(LOOP_INTELLIGENCE_MAP.skills).toBe(row.skills);
+      expect(LOOP_INTELLIGENCE_MAP.envelope).toBe(row.envelope);
+    }
+  });
 });
 
 /** Walk every string in a value, reporting its dotted path. */

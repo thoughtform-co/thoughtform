@@ -2127,3 +2127,128 @@ html[data-arc-entry]
     display: block;
   }
 }
+
+/* ── THE CURTAIN ON A FLOWING PAGE (ADR-076) ───────────────────────────
+   ADR-075's seam, for an arc that carries the landing's plate but NOT the
+   terminal grammar (the portfolio). The mechanic is identical and so is
+   every warning above it — the card is the mover, the panel behind it is
+   held — but a reveal page has no `.arc-plane` to freeze, so the held
+   element is the first section's own BAND. That works because `.arc-band`
+   is a direct child of the section in every kind, and because nothing
+   else in the reveal grammar positions it.
+
+   ⚠ THE HELD BAND NEEDS NO BACKGROUND, and reasoning that it does is how
+   this gets broken. At rest the fixed cell paints at viewport 0 — under
+   the hero card, which is z 4 and opaque. As the card lifts, the strip it
+   uncovers is exactly the top of the SECTION's own flow box, which
+   `.arc-section` paints void. There is always something opaque behind.
+
+   ⚠ THE SECTION MUST BE EXACTLY ONE VIEWPORT for the handoff to be
+   invisible: the fixed cell is a centred 100svh grid, and the flow box it
+   hands over to is the same only while the section has not outgrown it.
+   `data-arc-tall` (written by `useArcScroll` on this path) is the bail. */
+.arc-root[data-arc-curtain] .arc-hero + .arc-section {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-block: var(--arc-stage-pad);
+}
+html[data-arc-entry]
+  .arc-root[data-arc-curtain]
+  .arc-hero
+  + .arc-section:not([data-arc-tall])
+  > .arc-band {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-block: var(--arc-stage-pad);
+  /* Under the hero card's z 4, above the page ground. */
+  z-index: 1;
+}
+/* ⚠ THE SELECTOR MUST MATCH THE FREEZE'S, `:not()` INCLUDED — a media
+   query adds no specificity, and ADR-075 measured a release silently
+   losing 0,6,1 against 0,7,1. The pair is the REVEAL system's own
+   (900px), not the terminal tier's 960. */
+@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+  html[data-arc-entry]
+    .arc-root[data-arc-curtain]
+    .arc-hero
+    + .arc-section:not([data-arc-tall])
+    > .arc-band {
+    position: static;
+    width: 100%;
+    margin-left: 0;
+    height: auto;
+    padding-block: 0;
+    display: block;
+  }
+}
+
+/* ── THE ARCHITECTURE BEAT (ADR-076) ────────────────────────────
+   The casefile's three-reading console, hosted at page scale. The host
+   contract is `.arc-dossier`'s (ADR-072) — the console is shared chrome
+   and expects the casefile's tokens, a DEFINITE height, and its arrival
+   gate already open — with one difference: this section IS the console,
+   so the box takes the band's full instrument width rather than a column
+   of a two-up.
+
+   ⚠ POINTER-EVENTS ARE NORMAL HERE. On the casefile `.fl-pda` is an
+   `auto` island on a `pointer-events: none` host, because the ring's hit
+   areas sit under it at z 4. An arc section has nothing beneath it, so
+   the island rule is inert and nothing needs re-declaring. */
+.arc-sec--intel {
+  /* The console pays for its own air: the flow rhythm's 96–200px would
+     take ~400px off a drawing whose type scales with its box. */
+  --arc-stage-pad: clamp(56px, 8vh, 120px);
+  padding-block: var(--arc-stage-pad);
+}
+.arc-intel {
+  --fl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --fl-copy: calc(var(--band-copy, clamp(15px, 1.15vw, 18px)) * 0.9);
+  /* ⚠ HEIGHT IS THE ONLY CURRENCY THIS DRAWING SPENDS (ADR-063), so the
+     console takes most of a viewport and the SECTION is allowed to run
+     past one. That is affordable here and nowhere else on the page: this
+     is the centrepiece, and a flowing page can hand it a scroll and a bit
+     where a pinned beat could not. */
+  --arc-intel-h: clamp(460px, 78svh, 980px);
+  /* ⚠ AND THE BOX'S ASPECT IS THE CONTRACT (ADR-070 U4/U12/U15, the
+     lesson three updates in a row had to relearn). `meet` fits by the
+     SMALLER ratio, so a field wider than the crop letterboxes
+     HORIZONTALLY and no amount of width helps. Every field these
+     drawings have ever been fitted to runs w/h 0.42 → 1.24; the band's
+     full instrument width gave the console w/h 2.2 and the work grid sat
+     in the left two-thirds of a very wide black box — measured 1129×471
+     at 1440×800, 99 % of the panel's width and a third of it empty.
+     Capping the width against the height keeps the field inside the
+     designed range, and the drawing grows with the window instead. */
+  max-width: calc(var(--arc-intel-h) * 1.2);
+  margin-inline: auto;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+/* The head pays for the console: its flow breath is the beat's, and this
+   beat spends that height on the drawing instead (the `.arc-dossier`
+   rule one object over, for the same reason). */
+.arc-sec--intel .arc-head {
+  margin-bottom: clamp(18px, 2.6vh, 34px);
+}
+@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  /* The definite box `.fl-con { height: 100% }` needs — gated to where
+     the console is FRAMED (console.css unwraps it at ≤980px and under
+     reduced motion, and an unwrapped console wants `auto`). */
+  .arc-intel {
+    height: var(--arc-intel-h);
+  }
+}
+/* The settled gate, declared: the arc has no casefile arrival to wait on
+   (the same line `.arc-dossier` carries, for the same reason). */
+.arc-intel .fl-con__console {
+  opacity: 1;
+  transition: none;
+}

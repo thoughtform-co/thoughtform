@@ -5,6 +5,7 @@ import { ArcBeat } from "./ArcBeat";
 import { ArcCards } from "./ArcCards";
 import { ArcClose } from "./ArcClose";
 import { ArcDossier } from "./ArcDossier";
+import { ArcIntelligence } from "./ArcIntelligence";
 import { ArcInterstitial } from "./ArcInterstitial";
 import { ArcListGroups } from "./ArcListGroups";
 import { ArcMediaSection } from "./ArcMediaSection";
@@ -72,6 +73,10 @@ export function ArcSectionRenderer({
             return <ArcClose key={section.id} section={section} motion={motion} />;
           case "dossier":
             return <ArcDossier key={section.id} section={section} index={index} motion={motion} />;
+          case "intelligence":
+            return (
+              <ArcIntelligence key={section.id} section={section} index={index} motion={motion} />
+            );
           default: {
             const exhaustive: never = section;
             return exhaustive;

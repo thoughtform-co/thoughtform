@@ -18,6 +18,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/portfolio`, the ninth kind, the shared evidence, the envelope on arcs
 - [ADR-073: The site's header on the arc pages](../sentinel/decisions/073-arc-header.md) — `ArcHudNav` replaces the left reel; `menuPrimary` chapters; the hero's top band
 - [ADR-075: The arc hero IS the homepage hero](../sentinel/decisions/075-arc-hero-curtain.md) — the plate, the shared boot, and the curtain seam
+- [ADR-076: The portfolio flows, and the architecture closes it](../sentinel/decisions/076-portfolio-flows-and-the-architecture-beat.md) — reveal motion on the portfolio, the curtain on the flowing path, the `intelligence` kind
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -81,21 +82,63 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - **The hero BOOTS from `useHeroBoot`** — the landing's own effect, shared.
   Its collector recurses, so a headline's `<em>` decodes too; both shapes
   are pinned in `tests/lib/hero-boot.test.tsx`.
+- **THE PORTFOLIO FLOWS; THE `-v2` DECKS ARE PINNED** (ADR-076). `motion`
+  is absent on `PORTFOLIO_ARC` — a deck is presented, a portfolio is
+  scrolled — and the reveal grammar is the shards pages' own (IO,
+  `rootMargin -10%`, one-shot `is-in`, a 0.65s rise). Deleting `motion`
+  is the whole change: the dispatch is motion-threaded end to end.
+  ⚠ **The curtain rides the flowing path too**: `data-arc-curtain` on
+  the root (detail + gateway plate + not terminal) freezes the first
+  section's own `> .arc-band`, since there is no `.arc-plane` here. Same
+  warnings as ADR-075 — repeat the freeze's selector in the release
+  (`:not([data-arc-tall])` included; the pair is the reveal system's
+  **900px**), replicate the centred box + `--arc-stage-pad`, and use
+  `left: 50%; width: 100vw; margin-left: -50vw`. ⚠ The held band needs
+  NO background (the hero covers it, then the section's own void does),
+  and `useArcScroll` writes `data-arc-tall` itself here because no
+  controller runs. ⚠ Sample the handoff WITHIN A PIXEL of the seam —
+  the two boxes agree only at `scrollY = vh`, so a wider sample measures
+  your own scroll and reports a jump that is not there.
+- **The `intelligence` kind** (ADR-076) = `{ head }` and nothing else,
+  ONE per page, at the FOOT (after the dossiers and the outcome, before
+  the close — it is the answer to what is underneath the work).
+  `ArcIntelligence` mounts `IntelligenceMapPlate` from
+  `LOOP_INTELLIGENCE_MAP` (`lib/cases/content/loop-earplugs.ts`), the
+  SAME five arrays the casefile row carries, pinned `toBe` by
+  `cases-registry.test.ts`. Host contract is `.arc-dossier`'s —
+  `--fl-mono`, `--fl-copy`, a definite height, the settled gate declared.
+  ⚠ **THE BOX'S ASPECT IS THE CONTRACT**: `max-width` is derived from
+  `--arc-intel-h` (×1.2) because `meet` fits by the SMALLER ratio and a
+  panel wider than the crop letterboxes horizontally — the band's full
+  instrument width gave w/h 2.2 and a third of the panel empty, with a
+  height-only fill guard reporting green. Assert BOTH axes and the
+  aspect. ⚠ **Never declare `data-proof-settled` on this host**: it is
+  half of `PdaConsole`'s wheel gate, and arming it puts a scroll trap in
+  the middle of a flowing page.
+- **The written 47-Skill roster is the KEYNOTE's** (ADR-076). The
+  portfolio's text roster and its five-shapes rows are deleted — the
+  console draws the same record. `SOFTWARE_FEW_LINE` is likewise
+  keynote-shaped ("the Skills ABOVE"), so the portfolio's tools head
+  authors its own sub: share the evidence, author the frame.
 - **No three.js / Supabase / `LandingPage` imports** anywhere under
   `components/arcs/` or `lib/arcs/` (landing-performance doctrine).
   ⚠ **The casefile's dossier LEAVES are the one sanctioned import**
-  (ADR-072): `ToolField`, `MediaLightbox` (+ `useWalkthrough`),
-  `console/ConsoleFrame`, `wireframes/**` and `toolCardData` — DOM-only by
-  construction (verified: no three / supabase / stores transitively).
+  (ADR-072, extended by ADR-076): `ToolField`, `MediaLightbox`
+  (+ `useWalkthrough`), `console/ConsoleFrame`, `wireframes/**`,
+  `toolCardData` and — for the architecture beat — `IntelligenceMapPlate`
+  with `map/pda/**`. DOM and SVG only by construction (verified: no three
+  / supabase / stores transitively).
   Never `ServicesCasefile` / `TrackVisual` / the corridor.
-- **CSS:** everything page-scoped lives in `arcs.css` under `.arc-*`;
+- **CSS:** the route's sheet order is `landing.css → casefile.css →
+console.css → pda.css → arcs.css → theme.css` (ADR-072, ADR-076;
+  theme LAST, ADR-058). Everything page-scoped lives in `arcs.css` under `.arc-*`;
   corridor sheets (home-v2.css / services.css) are never imported —
   grammars are copied. ⚠ The casefile's `casefile.css` + `console.css` ARE
   imported, at the ROUTE, ahead of arcs.css (ADR-072): the dossier mounts
   the landing's console and ~1800 lines of wireframe CSS are the drawing,
-  not a grammar to copy. Order: `landing.css → casefile.css → console.css →
-arcs.css → theme.css` (theme LAST, ADR-058); never from a client
-  component (cascade order would ride the chunking).
+  not a grammar to copy — and `pda.css` joins them for the architecture
+  beat (ADR-076). Never import any of them from a CLIENT component: the
+  cascade order would then ride the chunking.
 - **The `dossier` kind** (ADR-072) = `{ toolId, legend, head? }`, ONE tool
   per section: `toolId` ∈ `PROJECT_CASES` (registry-pinned, all four in
   order on the portfolio), `legend` EQUALS `MODE_LEGEND[mode]`, `head`
@@ -226,11 +269,16 @@ Two choreography systems live on this surface, selected by
   so authoring fields would leak motion into content.
 
 **Verifying terminal motion:** `tests/lib/arc-motion.test.ts` (clocks),
-`tests/lib/arc-terminal-markup.test.tsx` (conventions + v1 byte-identity),
-`tests/visual/arc-terminal-smoke.spec.ts`, and for the portfolio
-`tests/visual/arc-portfolio-smoke.spec.ts` (the dossiers at the three
-reference shapes in both themes, the walkthrough over a pinned beat, PRM,
-the small-screen unwrap). Measure at **1280×720 and 1440×800** — the
+`tests/lib/arc-terminal-markup.test.tsx` (conventions + v1 byte-identity)
+and `tests/visual/arc-terminal-smoke.spec.ts`, which walks the `-v2` cuts
+— the terminal pages. ⚠ **`arc-portfolio-smoke.spec.ts` is NOT one of
+them since ADR-076**: that page flows, so it has no stage, no decode
+ladder and no fold, and its spec asserts the FLOWING contracts (the
+sections' order, the curtain on `.arc-band`, the dossiers at the three
+reference shapes in both themes, the walkthrough, the architecture
+beat's box/aspect/rail/wheel, PRM, the small-screen unwrap). Run BOTH
+when you touch the arc chassis: the terminal spec is what proves a
+change to the shared components left the decks alone. Measure at **1280×720 and 1440×800** — the
 project's 1440×900 default hides every clipping bug this content has.
 Drive REAL stepped scrolls and disable `scroll-behavior: smooth` in the
 harness, or the drive lands short. The drive helpers live in
