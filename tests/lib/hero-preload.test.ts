@@ -57,11 +57,16 @@ describe("hero preload", () => {
     expect(script).toContain(HERO_PLATE_LIGHT_TYPE);
   });
 
-  it("covers exactly the routes that render a hero", () => {
-    // `/arcs/portfolio` joined on ADR-075: it declares `hero.plate:
-    // "gateway"`, so it paints these two files and drops its own static
-    // preload (which could only ever name the dark one).
-    expect([...HERO_ROUTES]).toEqual(["/", "/claude-workshop", "/arcs/portfolio"]);
+  it("covers exactly the routes that paint the GATEWAY plate", () => {
+    /* This list is the set of routes whose hero has TWO files, one per
+       theme — the only case a script-injected preload exists to solve,
+       because a static link always names the dark one.
+       `/arcs/portfolio` joined on ADR-075 and LEFT on ADR-078 U1: its
+       hero carries a Loop key visual now, one file for both themes, so it
+       takes the static link back. ⚠ The list is hand-written rather than
+       derived from the registry, so a route that changes its plate has to
+       be removed here by hand — nothing else would say so. */
+    expect([...HERO_ROUTES]).toEqual(["/", "/claude-workshop"]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });
 

@@ -282,33 +282,49 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * The thesis, drawn (ADR-078): adoption and automation as ONE
-         * mechanism — a ratchet between two strands, the canon figures as
-         * its registers, and the career route as its course strip.
+         * THE PROGRAM BOARD (ADR-078 U1): the engagement plotted as a
+         * course across a dated time field, 2024 → now. It replaced a
+         * ratchet DIAGRAM — an abstract mechanism that had to be explained
+         * before it said anything (owner: "doesn't work at all") — with a
+         * chart of what actually happened and when.
          *
          * ⚠ IT CARRIES NO FIGURES. The registers are `LOOP_FIGURES`, read
          * by the renderer, for the same reason a `dossier` carries only a
          * `toolId`: a hand-typed count is the one that goes stale, and the
-         * canon is parity-pinned to the casefile in one place.
+         * canon is parity-pinned to the casefile in one place. The only
+         * digits the content module may letter are YEARS.
          */
-        kind: "flywheel";
+        kind: "program";
         head: ArcHead;
         /**
-         * The course strip — this page's own chart. Each waypoint is a
-         * section `id` on THIS arc (registry-pinned to resolve), so the
-         * route doubles as the table of contents; exactly one carries
-         * `seat`, the terminus the mechanism converges into.
+         * The plotted course. Each waypoint is a real thing that shipped,
+         * at its real date, and (bar the terminus) a section `id` on THIS
+         * arc — so the chart doubles as the page's table of contents.
+         * Exactly one carries `seat`: the terminus both the adoption curve
+         * and the course arrive at.
          */
-        route: readonly {
+        waypoints: readonly {
           id: string;
           label: string;
-          /** Mono sub-caption under the waypoint, e.g. a year or a set. */
+          /** Mono sub-caption, e.g. a date or a set of names. */
           sub?: string;
           /** A section id on this arc. */
           target?: string;
+          /**
+           * Position along the time axis, 0 → 1 (2024 → now). Authored
+           * from the record's own dates, not spaced evenly: the gaps ARE
+           * the reading — four tools inside eight months is what the
+           * cluster on the right says without a sentence.
+           */
+          at: number;
           /** The terminus — the drawing's ONE gold object. Exactly one. */
           seat?: true;
         }[];
+        /**
+         * The run-in before the axis starts: what the operator did one
+         * system earlier, as chart grammar rather than prose. Labels only.
+         */
+        priors?: readonly string[];
         footnote?: string;
       }
   );
@@ -367,6 +383,18 @@ export interface ArcDef {
      * and `arcs.css` hands the image back.
      */
     plate?: "gateway";
+    /**
+     * Run the ADR-076 curtain seam on an OWN-plate hero (ADR-078 U1).
+     *
+     * ⚠ THE SEAM WAS COUPLED TO THE PLATE, AND THE TWO ARE UNRELATED.
+     * `ArcShell` gated `data-arc-curtain` on `plate === "gateway"`, so the
+     * portfolio taking a Loop key visual would have silently lost the hold
+     * — the hero would scroll over a beat that moved with it, and the only
+     * thing failing would have been one smoke assertion. The gate asks
+     * about the CHOREOGRAPHY now, and the plate answers only for the
+     * image. Absent ⇒ the hero scrolls off in plain flow.
+     */
+    curtain?: true;
   };
   /** Route metadata (robots noindex is applied by the route, not here). */
   meta: { title: string; description: string };

@@ -315,58 +315,127 @@ describe("arcs registry (ADR-052)", () => {
     expect(studio?.kind, "the studio beat is a console now, not cards").toBe("sheets");
   });
 
-  it("the flywheel letters no figures, and its route resolves (ADR-078)", () => {
-    const fly = PORTFOLIO_ARC.sections.filter((s) => s.kind === "flywheel");
-    expect(fly, "exactly one flywheel beat").toHaveLength(1);
-    const beat = fly[0];
-    if (beat.kind !== "flywheel") throw new Error("unreachable");
+  it("the program board opens the page, letters no figures, and plots real dates (ADR-078 U1)", () => {
+    const boards = PORTFOLIO_ARC.sections.filter((s) => s.kind === "program");
+    expect(boards, "exactly one program board").toHaveLength(1);
+    const beat = boards[0];
+    if (beat.kind !== "program") throw new Error("unreachable");
 
-    expect(beat.menuPrimary, "the thesis is a chapter").toBe(true);
+    expect(beat.menuPrimary, "the setup is a chapter").toBe(true);
+
+    /* ⚠ IT IS THE FIRST SECTION, and that is the whole shape of the U1
+       revision: the page used to spend four sections — a bio, an origin
+       card set, the thesis and a prose bridge — before a reader reached
+       anything Loop shipped. The board carries all four, so the work
+       starts on scroll one. It is also what the curtain holds. */
+    expect(PORTFOLIO_ARC.sections[0]?.id, "the board opens the page").toBe(beat.id);
+
+    /* AND THE THINGS IT REPLACED STAY REPLACED. A bio on an extension of
+       the proof panel, an origin told in prose cards, and interstitial
+       bridges written in a register the owner would not send. */
+    const ids = PORTFOLIO_ARC.sections.map((s) => s.id);
+    expect(ids, "no bio beat").not.toContain("about");
+    expect(ids, "the origin is chart grammar now").not.toContain("beyond");
+    expect(
+      PORTFOLIO_ARC.sections.some((s) => s.kind === "interstitial"),
+      "no prose bridges — the connective tissue is each section's own sub"
+    ).toBe(false);
+    expect(
+      PORTFOLIO_ARC.sections.some((s) => s.kind === "portrait"),
+      "the portrait kind stays for the keynote, never here"
+    ).toBe(false);
 
     /* ⚠ NO DIGITS IN THE CONTENT MODULE. The registers are `LOOP_FIGURES`,
        read by the renderer — the same contract `dossier` has with
        `PROJECT_CASES`. A hand-typed count is the one that goes stale, and
        a figure declared here would sit outside the canon's one parity
-       pin. The route's `sub` captions are the one place a count may
-       appear, and only as the canon's own value. */
+       pin. A waypoint's `sub` is the one place a number may appear, and
+       only as a DATE or the canon's own value. */
     const canon = new Set<string>(Object.values(LOOP_FIGURES));
-    for (const wp of beat.route) {
+    for (const wp of beat.waypoints) {
       const digits = wp.sub?.match(/\d[\d,.]*/g) ?? [];
       for (const d of digits) {
         /* A YEAR IS NOT A COUNT, and the distinction is the whole point of
            this guard: a date locates the work on record, a figure makes a
-           claim about it. Years in the engagement's own span are fine
-           anywhere; anything else has to BE the canon's value. */
+           claim about it. */
         const isYear = /^20(2[4-9]|3\d)$/.test(d);
         expect(
           isYear || [...canon].some((c) => c.includes(d)),
-          `route sub "${wp.sub}" letters ${d}, which is neither a year nor a canon figure`
+          `waypoint sub "${wp.sub}" letters ${d}, which is neither a year nor a canon figure`
         ).toBe(true);
       }
     }
 
-    /* THE ROUTE IS THE PAGE'S OWN TABLE OF CONTENTS, so every waypoint
-       that links has to land on a section that exists — a dead anchor on
-       a forwarded page is a broken promise a stranger finds first. */
-    const ids = new Set(PORTFOLIO_ARC.sections.map((s) => s.id));
-    for (const wp of beat.route) {
+    /* THE COURSE IS THE PAGE'S OWN TABLE OF CONTENTS, so every waypoint
+       has to land on a section that exists — a dead anchor on a forwarded
+       page is a broken promise a stranger finds first. */
+    const idSet = new Set(ids);
+    for (const wp of beat.waypoints) {
       if (wp.target) {
-        expect(ids.has(wp.target), `route waypoint "${wp.id}" targets #${wp.target}`).toBe(true);
+        expect(idSet.has(wp.target), `waypoint "${wp.id}" targets #${wp.target}`).toBe(true);
       }
     }
 
-    /* EXACTLY ONE SEAT — the terminus both strands converge into, and the
-       drawing's one gold object (gold buys one thing per drawing). */
-    expect(beat.route.filter((wp) => wp.seat)).toHaveLength(1);
-    expect(beat.route.at(-1)?.seat, "the seat is the terminus").toBe(true);
+    /* ⚠ THE POSITIONS ARE DATES, SO THEY MUST RISE. The chart's whole
+       claim over a list is that the gaps are real — an unsorted or
+       out-of-range `at` would draw a course that crosses itself and say
+       something false about when the work happened. */
+    const ats = beat.waypoints.map((wp) => wp.at);
+    for (const at of ats) {
+      expect(at, "a position is 0 → 1 along the axis").toBeGreaterThanOrEqual(0);
+      expect(at).toBeLessThanOrEqual(1);
+    }
+    expect(
+      [...ats].sort((a, b) => a - b),
+      "the course runs forward in time"
+    ).toEqual(ats);
 
-    /* AND IT SITS WHERE THE THESIS BELONGS: before every chapter it
-       routes to, so the reader meets the argument and then the evidence. */
-    const order = PORTFOLIO_ARC.sections.map((s) => s.id);
-    for (const wp of beat.route) {
-      if (wp.target && wp.target !== "about") {
-        expect(order.indexOf(wp.target)).toBeGreaterThan(order.indexOf("overview"));
+    /* EXACTLY ONE SEAT — where the curve and the course both arrive, and
+       the drawing's one gold object (gold buys one thing per drawing). */
+    expect(beat.waypoints.filter((wp) => wp.seat)).toHaveLength(1);
+    expect(beat.waypoints.at(-1)?.seat, "the seat is the terminus").toBe(true);
+
+    /* Everything it routes to comes AFTER it: the reader meets the chart,
+       then the evidence it points at. */
+    for (const wp of beat.waypoints) {
+      if (wp.target) {
+        expect(ids.indexOf(wp.target)).toBeGreaterThan(ids.indexOf(beat.id));
       }
+    }
+  });
+
+  it("titles are names, not aphorisms (ADR-078 U1)", () => {
+    /* THE OWNER'S OWN RULING, MECHANISED (2026-08-24: the earlier set
+       "disgusts me… people will hate me for it"). Three shapes are banned
+       as DISPLAY TITLES on this page — they read as generated copy, and
+       this is the one page whose reader is a stranger being asked to take
+       the work seriously:
+
+         · the counting pair      "Twenty-two teams, forty-five minutes each."
+         · the reversal epigram   "The method is X. The tools are Y."
+         · the spelled-out number "Forty-seven Skills, five shapes of work."
+
+       ⚠ TITLES ONLY. A dated LOG ROW may state a count in the same words
+       — a record is not a claim — which is why this walks `head.title`
+       and nothing else. */
+    const spelled =
+      /^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)[-\s]/i;
+    for (const section of PORTFOLIO_ARC.sections) {
+      const head = "head" in section ? section.head : undefined;
+      if (!head) continue;
+      const title = [head.title.pre, head.title.em, head.title.post].filter(Boolean).join(" ");
+      const at = `${section.id}: "${title}"`;
+
+      expect(spelled.test(title.trim()), `${at} opens on a spelled-out number`).toBe(false);
+      // The counting pair: "N somethings, M somethings each".
+      expect(
+        /\b\w+\s+\w+s,\s+\w+[-\s]\w+\s+\w+s\s+each\b/i.test(title),
+        `${at} is a counting pair`
+      ).toBe(false);
+      // The reversal epigram: two full sentences pivoting on "is/are".
+      const sentences = title.split(/(?<=\.)\s+/).filter((t) => t.trim().length > 0);
+      const bothAssert = sentences.length > 1 && sentences.every((t) => /\b(is|are)\b/i.test(t));
+      expect(bothAssert, `${at} is a reversal epigram`).toBe(false);
     }
   });
 
@@ -383,12 +452,15 @@ describe("arcs registry (ADR-052)", () => {
 
     expect(rollout.rows.map((r) => r.label)).toEqual(ROLLOUT_ROWS.map((r) => r.t as string));
 
-    /* The one number the log carries into prose, in the wording that
-       keeps the two team-counts apart. */
+    /* ⚠ THE TWO TEAM COUNTS ARE DIFFERENT SETS, and the wording is the
+       only thing keeping them apart (`.claude/rules/proof.md`): 22 were
+       BRIEFED, 14 are USING THE LAYER. The rows say each in its own
+       words, and the superseded-claims sweep above independently fails a
+       bare "14 teams" — this pins that the log still draws the line. */
     const briefed = rollout.rows.find((r) => r.id === "briefed");
-    expect(briefed?.body).toContain("Twenty-two teams briefed");
+    expect(briefed?.body).toContain("teams briefed");
     const now = rollout.rows.find((r) => r.id === "now");
-    expect(now?.body).toContain("using it");
+    expect(now?.body).toContain("teams using the layer");
   });
 
   it("the portfolio closes on ONE architecture beat, and it flows (ADR-076)", () => {

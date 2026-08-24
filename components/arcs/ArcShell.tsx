@@ -31,6 +31,10 @@ interface ArcShellProps {
   /** `hero.plate === "gateway"` — the hero is the landing's own plate, so
    *  it gets the landing's theme-swap glitch too (ADR-075). */
   gatewayPlate?: boolean;
+  /** `hero.curtain` — run the ADR-076 seam on an own-plate hero
+   *  (ADR-078 U1). The gateway plate implies it; this is how a hero that
+   *  paints its own image asks for the same choreography. */
+  curtain?: boolean;
   /** Detail only — sections with a menuLabel, in page order. */
   menu?: readonly ArcMenuItem[];
   /** Choreography system (ADR-057). Default: the ADR-052 IO reveal. */
@@ -63,6 +67,7 @@ export function ArcShell({
   menu,
   motion = "reveal",
   gatewayPlate = false,
+  curtain = false,
   children,
 }: ArcShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -121,12 +126,19 @@ export function ArcShell({
       /* THE CURTAIN, ON THE FLOWING PATH (ADR-076). ADR-075's seam is
          CSS-gated on `[data-motion="terminal"]`, because that was the only
          grammar carrying the landing's plate when it shipped. The portfolio
-         flows now and still wants the seam, so a reveal page with the
-         gateway plate declares it here. Terminal pages keep their own
-         selector — the two never both apply, and the held element differs
-         (the plane there, the first section's band here). */
+         flows now and still wants the seam, so a reveal page declares it
+         here. Terminal pages keep their own selector — the two never both
+         apply, and the held element differs (the plane there, the first
+         section's band here).
+
+         ⚠ IT NO LONGER ASKS ABOUT THE PLATE (ADR-078 U1). This gate read
+         `gatewayPlate`, which coupled a CHOREOGRAPHY to an IMAGE: the
+         portfolio taking a Loop key visual would have lost the hold
+         silently, with one smoke assertion the only thing to say so. A
+         hero declares `curtain: true` when it wants the seam; the plate
+         answers only for what is painted. */
       data-arc-curtain={
-        variant === "detail" && gatewayPlate && motion !== "terminal" ? "" : undefined
+        variant === "detail" && (gatewayPlate || curtain) && motion !== "terminal" ? "" : undefined
       }
       style={variant === "index" ? ({ "--hero-lift": "1" } as CSSProperties) : undefined}
     >

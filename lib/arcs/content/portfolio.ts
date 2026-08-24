@@ -2,36 +2,38 @@ import type { ArcDef } from "../types";
 
 import { LOOP_FIGURES } from "./shared/loop-figures";
 import { MODE_LEGEND } from "./shared/loop-tools";
-import { VINCE_BIO_LEAD, VINCE_PORTRAIT } from "./shared/vince";
 
 /**
- * The Loop portfolio (ADR-072, re-cut by ADR-078) — the adoption program at
- * Loop Earplugs and the four production tools built on it, for a reader who
- * was in the building and for the strangers he forwards it to.
+ * The Loop portfolio (ADR-072, re-cut by ADR-076 and ADR-078 U1) — the
+ * adoption program at Loop Earplugs and the four production tools built
+ * on it, for a reader who was in the building and for the strangers he
+ * forwards it to.
  *
- * IT IS THE CASEFILE, EXPANDED (ADR-078). The homepage's proof panel is one
- * instrument that changes what it displays, four directory rows deep; this
- * page is those rows given a section each, at a size a stranger can read.
- * Four of them are drawn consoles now — the studio's sheets, the reel, the
- * four tool dossiers, the architecture — because the alternative was what
- * shipped first: a reader meeting a machine, then a brochure, then a
- * machine.
+ * IT IS THE CASEFILE, EXPANDED (ADR-078). The homepage's proof panel is
+ * one instrument that changes what it displays, four directory rows deep;
+ * this page is those rows given a section each, at a size a stranger can
+ * read.
  *
- * IT READS IN ORDER, and the order is the story rather than the taxonomy:
- * where he came from → the thesis → the studio that proved it → the tools
- * the studio's bottlenecks produced → the program that spread them → the
- * architecture underneath all of it. The `interstitial` beats between the
- * chapters carry the case shape's own connective tissue — what each chapter
- * REVEALED NEXT — so the page argues rather than lists.
+ * ⚠ IT OPENS ON THE WORK, NOT ON THE OPERATOR (ADR-078 U1, owner). The
+ * page used to run hero → bio → an origin card set → the thesis → a prose
+ * bridge before a reader reached anything Loop shipped. Four sections of
+ * throat-clearing on an extension of the proof panel. They are ONE now:
+ * the program board, which carries the origin as a dim run-in, the thesis
+ * as its title, the canon as its registers and the page's own contents as
+ * its plotted course.
+ *
+ * ⚠ TITLES ARE NAMES, NOT APHORISMS (ADR-078 U1, owner: the earlier set
+ * "disgusts me… people will hate me for it"). Three shapes are banned on
+ * this surface: the counting pair ("Twenty-two teams, forty-five minutes
+ * each"), the reversal epigram ("The method is the durable centre. The
+ * tools are its proof"), and the spelled-out-number opener ("Forty-seven
+ * Skills, five shapes of work"). Where the owner already has a phrase for
+ * a thing, that phrase IS the title: "Adoption that works is automation",
+ * "Software for few", "97% of briefings involve AI", "the Intelligence
+ * Map". Subs are one or two short sentences.
  *
  * IT FLOWS (ADR-076). One continuous scroll, not a deck of pinned beats:
  * a deck is presented, a portfolio is scrolled at the reader's own pace.
- *
- * FUNCTION FIRST. The hero names the role and the method; the person is
- * introduced one beat later. The thesis beat's title is the argument —
- * adoption that works IS automation — and since ADR-078 it is DRAWN: a
- * ratchet between two strands, with the canon numbers as its registers and
- * the career route as its course strip.
  *
  * NUMBERS ARE THE REPO'S CANON AND NOTHING ELSE (`shared/loop-figures.ts`,
  * parity-pinned to the casefile): 22 · 47+ · 4 · 5 → 130+ · 97 % · 14
@@ -42,13 +44,11 @@ import { VINCE_BIO_LEAD, VINCE_PORTRAIT } from "./shared/vince";
  * THE ENVELOPE: this is an unlisted page a reader forwards, so it sits
  * inside the casefile's confidentiality envelope — no currency, no
  * thousands separators, no boards, no repos, first names only — and
- * `tests/lib/arcs-registry.test.ts` scans it. The studio cards come
- * through `ratiosOnly()` (SKU + ROAS; the keynote deck keeps its € rows).
+ * `tests/lib/arcs-registry.test.ts` scans it.
  *
- * THE EVIDENCE IS SHARED BY REFERENCE (roster, studio cards, the ATL film,
- * the operator's lines, the mode legend); the FRAME — every head, sub and
- * placement — is this page's own. The dossiers contribute a `toolId` each
- * and draw everything else from `PROJECT_CASES`.
+ * THE EVIDENCE IS SHARED BY REFERENCE (the studio sheets, the films, the
+ * map, the mode legend, the figures); the FRAME — every head, sub and
+ * placement — is this page's own.
  */
 export const PORTFOLIO_ARC: ArcDef = {
   slug: "portfolio",
@@ -66,25 +66,29 @@ export const PORTFOLIO_ARC: ArcDef = {
   cardImage: { src: "/images/services/embedded.webp", alt: "The Loop portfolio" },
   hero: {
     eyebrow: "Thoughtform · Portfolio · Loop Earplugs",
-    title: { pre: "AI capability,", em: "built inside the work." },
-    // The homepage's own register: a short headline over ~110 characters
-    // of lede. The role argument is not lost — it opens the About beat
-    // and the overview's thesis; the hero says what this page IS.
-    lede: "Eighteen months at Loop Earplugs — the adoption program, the Skills it encoded, and the four tools it produced.",
-    actions: [
-      { id: "see-tools", label: "See the tools", href: "#tools", primary: true },
-      { id: "see-program", label: "The program", href: "#overview" },
-    ],
-    // THE HOMEPAGE'S HERO, PLATE AND ALL (ADR-075): the Gateway key
-    // visual, delivered the landing's way — AVIF over WebP in dark, and
-    // theme.css's own light rule painting `Gateway_v2-light.webp`.
+    title: { pre: "The Loop", em: "portfolio." },
+    lede: "Eighteen months of AI adoption at Loop Earplugs: the program, the Skills, and the four tools the teams run.",
+    /* ONE action (owner, ADR-078 U1). Two CTAs on a page with a drawn
+       table of contents in its first section is the hero asking a
+       question the board answers better. */
+    actions: [{ id: "see-work", label: "See the work", href: "#overview", primary: true }],
+    /* ⚠ THE KEY VISUAL IS LOOP'S, NOT THOUGHTFORM'S (owner, ADR-078 U1).
+       This page is an expansion of the casefile's Loop row; opening it on
+       the Gateway plate made it read as a Thoughtform page that happens to
+       be about Loop. The DJ Neighbour master is the other above-the-line
+       film — the reel's default view stays Smug Owl, so no frame appears
+       twice on a default scroll. */
     image: {
-      src: "/images/Gateway_v1b.webp",
+      src: "/arcs/posters/dj-neighbour.jpg",
       alt: "",
-      width: 2880,
-      height: 1620,
+      width: 1920,
+      height: 1080,
     },
-    plate: "gateway",
+    /* ⚠ THE SEAM IS DECLARED, because it used to ride the PLATE. Dropping
+       `plate: "gateway"` would have silently taken the ADR-076 curtain
+       with it — a choreography coupled to an image. This asks for the
+       choreography (ADR-078 U1). */
+    curtain: true,
   },
   meta: {
     title: "Portfolio — Thoughtform",
@@ -93,139 +97,69 @@ export const PORTFOLIO_ARC: ArcDef = {
   },
   sections: [
     {
-      id: "about",
-      kind: "portrait",
-      menuLabel: "About",
-      menuPrimary: true,
-      ariaLabel: "About Vince Buyssens",
-      head: {
-        eyebrow: "About",
-        title: { pre: "Vince Buyssens" },
-        sub: "AI Adoption & Encoding Lead, Loop Earplugs · Founder, Thoughtform",
-      },
-      image: VINCE_PORTRAIT,
-      bio: [
-        VINCE_BIO_LEAD,
-        "Inside Loop he moved from the AI team into marketing to show that AI would elevate the teams rather than replace them, then ran the same loop with every team after that. Building is the diagnostic instrument: every tool on this page came out of a workflow the team had already encoded.",
-      ],
-      meta: [
-        { label: "Role at Loop", value: "AI Adoption & Encoding Lead" },
-        { label: "Practice", value: "Thoughtform" },
-        { label: "Base", value: "Antwerp · BE" },
-      ],
-    },
-    {
-      /* THE ORIGIN, BEFORE LOOP (ADR-078). Three records that say the same
-         thing about him one system earlier: he reads a new medium early,
-         builds the layer that lets people act inside it, and steps back.
-         Loop is where that move met an intelligence.
+      /* THE SETUP, AS ONE CHART (ADR-078 U1).
 
-         ⚠ THE FACTS ARE THE VOIDWALKER RECORD'S, AT LOCK, RE-AUTHORED —
-         never imported. `lib/voidwalker` is a zero-import module drawn on a
-         gold spine at snapshot scale; this is card copy, and the two are
-         pinned to agree in `arcs-registry.test.ts` rather than sharing an
-         array. Nothing here is rounded, and no client of Starhaven's is
-         named beyond what the press already printed. */
-      id: "beyond",
-      kind: "cards",
-      menuLabel: "Beyond Loop",
-      ariaLabel: "Before Loop — the work the method came out of",
-      columns: 3,
-      head: {
-        eyebrow: "Before Loop · where the method comes from",
-        title: { pre: "The same move,", em: "one system earlier." },
-        sub: "Loop is the third time this ran. Before the models there were crowds, fandoms and classrooms — read the new system early, build the layer that lets other people act inside it, then leave. What changed in 2022 is that the system became an intelligence.",
-      },
-      cards: [
-        {
-          id: "starhaven",
-          kicker: "Starhaven · 2022",
-          title: "One of Belgium's first AI consultancies for the creative industry",
-          body: "Founded to work with the models the year they arrived, for the studios and agencies that had no idea yet what to do with them. It is the practice Thoughtform grew out of.",
-          receipt: "Co-drafted the UBA/ACC AI Charter",
-        },
-        {
-          id: "latent-land",
-          kicker: "Welcome to Latent Land",
-          title: "The first hybrid AI-video production in Belgium",
-          body: "AI Captain on the production: the pipeline, the shot logic and the craft bar for a film made with models before anyone had a workflow for it.",
-          receipt: "AI direction · Under Armour with Anthony Joshua",
-        },
-        {
-          id: "in-the-pocket",
-          kicker: "In The Pocket",
-          title: "Product teams, the same question",
-          body: "Where the method meets software teams rather than creative ones — the shape it takes when the people in the room already build for a living.",
-          receipt: "On record · detail on request",
-        },
-      ],
-      footnote:
-        "Read the system early, build the layer, hand it over. The medium changes; the move does not.",
-    },
-    {
-      /* THE THESIS, DRAWN (ADR-078). It was three text plates — Navigate ·
-         Encode · Build with the canon numbers — and the owner's read was
-         that it was the weakest object on a page of instruments. It is the
-         one beat that ARGUES, so it is the one that most needed to be
-         drawn.
+         It was FOUR sections: a bio, a three-card "one system earlier",
+         the thesis, and a prose bridge into the studio. The owner's read
+         was that the bio does not belong on an extension of the proof
+         panel at all, that the origin cards and the bridge were written
+         in a register he would be embarrassed to send, and that the
+         thesis drawing "doesn't work at all".
 
-         The id stays `overview`: the hero's second action links it, and a
-         forwarded page's deep links outlive a rename.
+         All four collapse here. The chart carries the origin as a dim
+         run-in, the thesis as its title, the numbers as its registers and
+         the page's own contents as its plotted course — so the setup is
+         one section, and the reader is inside the work by the second
+         scroll.
 
-         ⚠ IT LETTERS NO DIGITS HERE. The registers are `LOOP_FIGURES`,
-         read by the component — the content module contributes the head,
-         the route and the footnote, exactly as `dossier` contributes a
-         `toolId`. A hand-typed count is the one that goes stale. */
+         The id stays `overview`: the hero links it, and a forwarded
+         page's deep links outlive a rename.
+
+         ⚠ IT LETTERS NO DIGITS. The registers are `LOOP_FIGURES`, read by
+         the component — this module contributes the head, the waypoints
+         and their dates, exactly as `dossier` contributes a `toolId`. The
+         only digits authored here are YEARS. */
       id: "overview",
-      kind: "flywheel",
+      kind: "program",
       menuLabel: "Program",
       menuPrimary: true,
-      ariaLabel: "The program — adoption and automation as one mechanism",
+      ariaLabel: "The program at Loop Earplugs, plotted from 2024",
       head: {
-        eyebrow: "The program · adoption to automation",
+        eyebrow: "The program · Loop Earplugs",
         title: { pre: "Adoption that works", em: "is", post: "automation." },
-        sub: "Software gets installed. AI has to be adopted. Loop runs the same loop with every team, turns what works into Skills, and reuses them everywhere: navigate first, then encode, then build. Stack enough Skills on one workflow and a tool emerges, built by the team that owns the work.",
+        sub: "Software gets installed. AI has to be adopted. Loop ran the same loop with every team, and the Skills it produced became the tools.",
       },
-      /* THE COURSE STRIP — this page's own chart, drawn. Every waypoint
-         but one is an anchor into the chapter it names, so the route is
-         the table of contents and the argument at once: the seat at the
-         end is what the four before it produced. */
-      /* ⚠ WAYPOINT LABELS ARE TERSE, and that is the chart's grammar
-         rather than a fit workaround: a course strip names a place in as
-         few characters as it can, and the `sub` carries what the place
-         was. "The adoption program" wrapped into its neighbour at 1440
-         and said nothing "Adoption" does not. */
-      route: [
-        { id: "specialist", label: "AI Specialist", sub: "2024", target: "about" },
-        { id: "studio", label: "Studio", sub: "97% of briefings", target: "studio" },
-        { id: "vesper", label: "Vesper", sub: "Image + video", target: "tool-vesper" },
+      /* THE COURSE — what shipped, at the date it shipped, each one an
+         anchor into its own chapter. ⚠ THE POSITIONS ARE THE RECORD'S
+         DATES, NOT AN EVEN SPREAD: the cluster on the right IS the
+         reading (four tools inside eight months), and spacing them
+         evenly would delete the one thing the chart knows that a list
+         does not. */
+      waypoints: [
+        { id: "studio", label: "Studio", sub: "Paid social", target: "studio", at: 0.16 },
+        { id: "films", label: "The films", sub: "Sept 2025", target: "studio-films", at: 0.4 },
+        { id: "vesper", label: "Vesper", sub: "Oct 2025", target: "tool-vesper", at: 0.52 },
+        { id: "mimir", label: "Mímir", sub: "Briefing", target: "tool-mimir", at: 0.62 },
         {
           id: "process",
-          label: "Process tools",
-          sub: "Mímir · Babylon · Heimdall",
-          target: "tool-mimir",
+          label: "Babylon · Heimdall",
+          sub: "Feb 2026",
+          target: "tool-babylon",
+          at: 0.76,
         },
-        { id: "program", label: "Adoption", sub: "22 teams briefed", target: "rollout" },
         {
           id: "architect",
           label: "Intelligence Architect",
-          sub: "Holds the map",
+          sub: "2026",
           target: "intelligence",
+          at: 1,
           seat: true,
         },
       ],
-      footnote:
-        "When the model changes, the substrate stays. When a team rotates, the judgment stays.",
-    },
-    {
-      id: "bridge-studio",
-      kind: "interstitial",
-      variant: "question",
-      ariaLabel: "What the layer produced first",
-      eyebrow: "What it produced first",
-      line: { pre: "So what does a team do", em: "with all of that?" },
-      subline:
-        "The studio went first, because the studio had the most to lose. Paid social is where a craft bar either survives contact with a model or does not.",
+      /* The run-in before the axis opens — the "one system earlier" fact
+         as chart grammar. It replaced three prose cards; the names are
+         the whole of what those cards had to say that a stranger needed. */
+      priors: ["Starhaven", "Latent Land"],
     },
     {
       /* THE STUDIO, AS THE CASEFILE SHOWS IT (ADR-078). It was three ad
@@ -242,7 +176,7 @@ export const PORTFOLIO_ARC: ArcDef = {
       head: {
         eyebrow: "Loop Studio · what the layer produced",
         title: { pre: "97% of briefings", em: "involve AI." },
-        sub: "Paid social moved from a specialist service to a capability the studio owns — briefing, creating, reviewing and shipping without a specialist in the loop, two to three times faster than the agency route at the same craft bar. The ads are the output. The line and the red line are how the studio decides.",
+        sub: "Paid social became a capability the studio owns, shipped without a specialist in the loop. The ads are the output; the line and the red line are how the studio decides what AI may make.",
       },
     },
     {
@@ -257,18 +191,8 @@ export const PORTFOLIO_ARC: ArcDef = {
       head: {
         eyebrow: "Loop Earplugs · September 2025",
         title: { pre: "A world-first", em: "above-the-line film." },
-        sub: "Loop was the first brand to make a full AI above-the-line video. Concept, casting, shot list, comp, edit — the whole pipeline shaped through AI, finished by the team, and run on YouTube and CTV beside live action. Then they made a second one.",
+        sub: "Loop was the first brand to ship a fully AI-made above-the-line film, run on YouTube and CTV beside live action. Then the team made a second one.",
       },
-    },
-    {
-      id: "bridge-tools",
-      kind: "interstitial",
-      variant: "callout",
-      ariaLabel: "What the studio revealed next",
-      eyebrow: "What it revealed next",
-      line: { pre: "Every bottleneck it cleared", em: "exposed the next one upstream." },
-      subline:
-        "Three teams doing the same work is a Skill worth sharing. Three teams needing the same surface is a tool worth building — on the Skills those teams had already authored.",
     },
     // ⚠ THE TWO TEXT WALLS ARE GONE (ADR-076, owner 2026-08-24: "the
     // skills are now like blocks of text… very East German").
@@ -302,14 +226,14 @@ export const PORTFOLIO_ARC: ArcDef = {
       ariaLabel: "The tools, in production",
       head: {
         eyebrow: "The tools · in production",
-        title: { pre: "Removing workflow bottlenecks,", em: "one tool at a time." },
+        title: { pre: "Software for", em: "few." },
         /* ⚠ THIS PAGE AUTHORS ITS OWN, and the reason is placement.
            `SOFTWARE_FEW_LINE` (shared with the keynote) ends "The Skills
            ABOVE are what those tools run on" — true on the deck, where the
            roster precedes it, and false here since ADR-076 moved the Skills
            to the foot. Share the evidence, author the frame: the argument
            is the same and the sentence points the way this page runs. */
-        sub: "Most of Loop's bottlenecks live in software too specific to buy off the shelf, and too small to justify an agency build. That category sat unsolved for years. AI models crossed a threshold at the end of 2025 where the team that owns the problem can now build the tool itself — on the Skills that team already authored.",
+        sub: "Loop's bottlenecks live in software too specific to buy and too small for an agency build. The teams built it themselves, on the Skills they had already written.",
       },
     },
     // Reel labels are the CODENAMES: the reel sits at the left margin and
@@ -360,75 +284,79 @@ export const PORTFOLIO_ARC: ArcDef = {
       id: "rollout",
       kind: "anatomy",
       menuLabel: "Rollout",
+      /* A chapter since ADR-078 U1: the bio's slot in the row was free,
+         and how the layer reached twenty-two teams is one of the five
+         things this page actually argues. */
+      menuPrimary: true,
       ariaLabel: "The adoption program — how the layer reached the company",
       badge: "Organic pull · not mandate",
       head: {
         eyebrow: "The program · how it spread",
-        title: { pre: "Twenty-two teams,", em: "forty-five minutes each." },
-        sub: "No mandate, no seat targets, no training programme. One team went first and the rest asked — and the operating work around it (the agreement, the sign-on, the connector reviews, the governance) ran in parallel so that the answer to a team's first question was never “not yet”.",
+        title: { pre: "Adoption on", em: "organic pull." },
+        sub: "No mandate and no seat targets: one team went first and the rest asked. The platform work ran in parallel, so no team was ever waiting on it.",
       },
+      /* ⚠ LOG REGISTER, NOT PROSE (owner, ADR-078 U1). These were written
+         as sentences with a clause of explanation each; a log states what
+         happened and stops. The counting-pair phrasing that ran the head
+         is fine HERE, on a dated row, because a log row is a record and
+         not a claim — what it may never be again is a display title. */
       rows: [
         {
           id: "embedded",
           label: "2024",
-          body: "Embedded in the marketing team, mapping the first workflows by sitting inside them rather than surveying them.",
+          body: "Embedded in marketing. First workflows mapped from inside them.",
         },
         {
           id: "pilot",
           label: "Pilot",
-          body: "Sixty-nine seats, one team at a time — small enough that every seat had a workflow attached to it before it was handed out.",
+          body: "69 seats, one team at a time, each seat tied to a workflow.",
         },
         {
           id: "agreement",
           label: "Q2 2026",
-          body: "Enterprise agreement signed, after the pilot had already produced the evidence for it.",
+          body: "Enterprise agreement signed, on the pilot's evidence.",
         },
         {
           id: "parallel",
           label: "Parallel",
-          body: "Sign-on, connector review and governance ran as their own track, so the platform was never what a team was waiting on.",
+          body: "Sign-on, connector review and governance ran as their own track.",
         },
         {
           id: "briefed",
           label: "Q2 2026",
-          body: "Twenty-two teams briefed, forty-five minutes each: one workflow worth encoding, and a steward who stays.",
+          body: "Twenty-two teams briefed, forty-five minutes each.",
         },
         {
           id: "now",
           label: "Now",
-          body: "Over a hundred and thirty people on the layer, and fourteen teams using it — the ones publishing Skills of their own, a smaller set than the ones briefed.",
+          body: "130+ people on the layer. 14 teams using the layer, publishing Skills of their own.",
         },
       ],
     },
     {
-      id: "bridge-architecture",
-      kind: "interstitial",
-      variant: "question",
-      ariaLabel: "What is underneath the work",
-      eyebrow: "Underneath all of it",
-      line: { pre: "So what is", em: "actually underneath this?" },
-      subline:
-        "Four tools, twenty-seven streams of work and forty-seven Skills, and the question a stranger asks last is the one that decides whether any of it survives the next model.",
-    },
-    {
       /* THE ARCHITECTURE, AT THE BOTTOM (ADR-076, owner). It closes the
          page rather than interrupting it: the reader has seen the program,
-         the four tools and what the layer produced, so the instrument is
-         the answer to "what is underneath all of that" — not a spec sheet
-         to get through before the work.
+         the four tools and what the layer produced.
          It carries a masthead and NOTHING ELSE. The 47 Skills, their five
          shapes and the 27 configured streams come from the casefile's own
          record (`LOOP_INTELLIGENCE_MAP`), which is why the counts on the
-         dial cannot disagree with the landing's. */
+         dial cannot disagree with the landing's.
+
+         ⚠ IT IS THE PROGRAM'S RECORD, NOT THE SUBSTRATE OF EVERYTHING
+         ABOVE IT (owner, ADR-078 U1). A bridge used to ask "so what is
+         actually underneath this?" over the whole page — which claimed the
+         Skills underlie the films too. They do not: the above-the-line work
+         is separate work. The map is what the ADOPTION program produced,
+         and the head now says only that. */
       id: "intelligence",
       kind: "intelligence",
       menuLabel: "Architecture",
       menuPrimary: true,
-      ariaLabel: "The intelligence architecture — 47 Skills, five shapes, 27 configured streams",
+      ariaLabel: "The Intelligence Map — the Skills the teams encoded, and the work they run",
       head: {
-        eyebrow: "The substrate · what it is made of",
-        title: { pre: "Forty-seven Skills,", em: "five shapes of work." },
-        sub: "Every Skill encodes one piece of how a team works. Read the work, open a stream to see how it is configured, or take the whole substrate at once.",
+        eyebrow: "The record · Loop Earplugs",
+        title: { pre: "The", em: "Intelligence Map." },
+        sub: "Every Skill the teams encoded, mapped to the work it runs.",
       },
     },
     {
@@ -436,15 +364,14 @@ export const PORTFOLIO_ARC: ArcDef = {
       kind: "close",
       menuLabel: "Close",
       head: {
-        title: { pre: "The method is the durable centre.", em: "The tools are its proof." },
-        sub: "Navigate produces the read, encode produces the layer, build produces the map. Run that loop inside the work and adoption stops being a program someone has to keep alive: the teams own the Skills, the tools run on them, and the layer stays whichever model Loop runs next.",
+        title: { pre: "Get in", em: "touch." },
+        sub: "For the detail behind any of it, talk to Vince.",
       },
       actions: [
         { id: "talk", label: "Talk to Vince", href: "mailto:vince@thoughtform.co", primary: true },
         { id: "home", label: "thoughtform.co", href: "/" },
       ],
-      footerLine:
-        "Thoughtform · Portfolio · The adoption work and the tools built on it · Loop Earplugs, 2024 · ongoing.",
+      footerLine: "Thoughtform · Portfolio · Loop Earplugs, 2024 · ongoing.",
       signature: "Compiled by Vince · 2026.",
     },
   ],

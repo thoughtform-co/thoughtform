@@ -157,23 +157,27 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       [...document.querySelectorAll(".arc-section")].map((s) => s.id)
     );
     expect(beats).toEqual([
-      "about",
-      "beyond",
       "overview",
-      "bridge-studio",
       "studio",
       "studio-films",
-      "bridge-tools",
       "tools",
       "tool-mimir",
       "tool-vesper",
       "tool-babylon",
       "tool-heimdall",
       "rollout",
-      "bridge-architecture",
       "intelligence",
       "close",
     ]);
+    /* ⚠ THE PAGE OPENS ON THE WORK (ADR-078 U1). A bio, an origin card
+       set, the thesis and a prose bridge used to run before a reader
+       reached anything Loop shipped; the program board carries all four. */
+    expect(beats, "no bio beat").not.toContain("about");
+    expect(beats, "the origin is chart grammar now").not.toContain("beyond");
+    expect(
+      beats.filter((id) => id.startsWith("bridge-")),
+      "no prose bridges"
+    ).toEqual([]);
     expect(beats).not.toContain("five-shapes");
     expect(beats).not.toContain("skills-by-team");
     // The ad cards and the nameless single-film beat left together (ADR-078).
@@ -578,52 +582,65 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     }
   });
 
-  test("the hero carries the landing's plate, and an own-plate arc keeps its own (ADR-075)", async ({
+  test("the hero carries a Loop key visual, and the curtain survives the plate change (ADR-078 U1)", async ({
     browser,
   }, testInfo) => {
-    test.skip(testInfo.project.name !== "desktop", "one walk per run \u2014 the desktop project's");
-    const read = async (path: string) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
+
+    /* ⚠ THE PLATE AND THE CHOREOGRAPHY WERE COUPLED, AND THEY ARE NOT THE
+       SAME QUESTION. `data-arc-curtain` used to be gated on
+       `plate === "gateway"`, so giving this page a Loop key visual would
+       have taken the ADR-076 seam with it — silently, with one assertion
+       in another case the only thing to say so. The hero declares
+       `curtain: true` now; this pins BOTH halves at once. */
+    for (const theme of ["dark", "light"] as const) {
       const page = await browser.newPage({ viewport: { width: 1440, height: 800 } });
-      await page.goto(path, { waitUntil: "networkidle" });
-      await page.waitForTimeout(600);
-      const out = await page.evaluate(() => {
-        const bg = document.querySelector<HTMLElement>(".hero__bg")!;
-        const img = bg.querySelector("img")!;
+      await prepare(page, theme === "light" ? `${PORTFOLIO}?theme=light` : PORTFOLIO);
+      const hero = await page.evaluate(() => {
+        const el = document.querySelector<HTMLElement>(".arc-hero");
+        const img = el?.querySelector<HTMLImageElement>(".hero__bg img");
+        const bg = el?.querySelector<HTMLElement>(".hero__bg");
         return {
-          plate: document.querySelector<HTMLElement>(".arc-hero")!.dataset.plate,
-          picture: !!bg.querySelector("picture"),
-          bg: getComputedStyle(bg).backgroundImage,
-          imgSrc: img.getAttribute("src") ?? "",
-          imgShown: getComputedStyle(img).display !== "none",
+          plate: el?.dataset.plate ?? null,
+          picture: el?.querySelectorAll("picture").length ?? 0,
+          src: img?.getAttribute("src") ?? "",
+          imgShown: img ? getComputedStyle(img).display !== "none" : false,
+          bgImage: bg ? getComputedStyle(bg).backgroundImage : "",
+          curtainArmed: !!document.querySelector(".arc-root[data-arc-curtain]"),
         };
       });
+      expect(hero.plate, `own plate @ ${theme}`).toBe("own");
+      expect(hero.picture, "no <picture> — one file serves both themes").toBe(0);
+      expect(hero.src, `the Loop key visual @ ${theme}`).toContain("dj-neighbour");
+      /* ⚠ AN OWN PLATE SHOWS ITS OWN IMAGE IN BOTH THEMES. theme.css's
+         light swap is global on `.hero__bg`, so before ADR-075 an arc
+         showed its own plate in dark and the LANDING's in light. */
+      expect(hero.imgShown, `the arc's own image paints @ ${theme}`).toBe(true);
+      expect(hero.bgImage, `no Gateway plate behind it @ ${theme}`).not.toContain("Gateway");
+      expect(hero.curtainArmed, `the curtain still arms @ ${theme}`).toBe(true);
+
+      /* ⚠ THE TOP BAND IS A DARK LITERAL IN BOTH THEMES (ADR-078 U1). It
+         sits over a PHOTO, and it used `--void-deep-rgb`, which theme.css
+         re-pins to the page colour on any `.hero__video__overlay` — in
+         light that washed parchment across the top of the key visual. */
+      const band = await page.evaluate(() => {
+        const el = document.querySelector<HTMLElement>(".arc-hero .hero__video__overlay");
+        return el ? getComputedStyle(el).backgroundImage : "";
+      });
+      expect(band, `the scrim stays dark @ ${theme}`).toMatch(/rgba?\(\s*8,\s*7,\s*6/);
+
       await page.close();
-      return out;
-    };
-
-    // The portfolio IS the landing's hero: the AVIF/WebP picture in dark,
-    // theme.css's own light background in light.
-    const pfDark = await read(`${PORTFOLIO}`);
-    expect(pfDark.plate).toBe("gateway");
-    expect(pfDark.picture, "the gateway hero delivers a <picture>").toBe(true);
-    expect(pfDark.imgSrc).toContain("Gateway_v1b");
-    expect(pfDark.imgShown).toBe(true);
-    const pfLight = await read(`${PORTFOLIO}?theme=light`);
-    expect(pfLight.bg, "the light plate paints as a background").toContain("Gateway_v2-light");
-    expect(pfLight.imgShown, "and the dark img is hidden, so neither theme fetches both").toBe(
-      false
-    );
-
-    // ⚠ THE BUG THIS FIXES: an arc that owns its plate showed the
-    // LANDING's in light, because theme.css's swap is global on
-    // `.hero__bg`. Both themes must now paint the arc's own file.
-    for (const q of ["", "?theme=light"]) {
-      const own = await read(`/arcs/ai-keynote-v2${q}`);
-      expect(own.plate, `own-plate arc${q}`).toBe("own");
-      expect(own.picture, `own-plate arc${q} needs no picture`).toBe(false);
-      expect(own.imgShown, `own-plate arc${q} paints its own image`).toBe(true);
-      expect(own.bg, `own-plate arc${q} takes no gateway background`).not.toContain("Gateway");
     }
+
+    /* An own-plate arc that does NOT ask for the seam keeps its own
+       behaviour — the flag is opt-in, not a side effect of the plate. */
+    const deck = await browser.newPage({ viewport: { width: 1440, height: 800 } });
+    await prepare(deck, "/arcs/ai-keynote-v2");
+    expect(
+      await deck.locator(".arc-root[data-arc-curtain]").count(),
+      "a terminal deck keeps its own curtain selector"
+    ).toBe(0);
+    await deck.close();
   });
 
   test("the ink ramp flips with the theme, and every rung clears its target (ADR-077)", async ({
@@ -676,6 +693,13 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         [".arc-head__sub", "head sub"],
         [".arc-dossier__key", "dossier key"],
         [".arc-desig", "designation"],
+        /* THE BOARD'S OWN INK (ADR-078 U1). The portfolio's cards are
+           gone, so without these the walk found three rungs on this page
+           and the count guard was the only thing that noticed. A drawing
+           that ships in both themes belongs in the contrast walk anyway. */
+        [".arc-prog__fig", "board figure"],
+        [".arc-prog__lbl", "meta label"],
+        [".arc-prog__wp-lbl", "meta label"],
       ] as const) {
         const el = document.querySelector(sel);
         if (!el) continue;
@@ -692,7 +716,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
          different design. Measured as the luminance step from the section
          it sits on, so it cannot be satisfied by a colour that merely
          differs. */
-      const plate = document.querySelector(".arc-card-item");
+      const plate = document.querySelector(".arc-card-item") ?? document.querySelector(".arc-prog");
       let step = 0;
       if (plate) {
         const sec = parse(getComputedStyle(plate.closest(".arc-section")!).backgroundColor).slice(
@@ -713,6 +737,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       "head sub": 7,
       "dossier key": 4,
       designation: 3,
+      "board figure": 7,
     };
 
     for (const path of [PORTFOLIO, "/arcs/ai-keynote"]) {
@@ -766,10 +791,10 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     await expect(nav).not.toHaveClass(/is-collapsed/);
     if (wide) {
       expect(await page.locator(".hud__nav__inline__link").allTextContents()).toEqual([
-        "About",
         "Program",
         "Studio",
         "Tools",
+        "Rollout",
         "Architecture",
       ]);
       // The row is chrome over a PHOTO: it may never land on hero ink.
@@ -816,19 +841,17 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     await page.click(".hud__nav__btn");
     await expect(nav).toHaveClass(/is-open/);
     expect(await page.locator(".hud__nav__list a").allTextContents()).toEqual([
-      "01About",
-      "02Beyond Loop",
-      "03Program",
-      "04Studio",
-      "05Films",
-      "06Tools",
-      "07Mímir",
-      "08Vesper",
-      "09Babylon",
-      "10Heimdall",
-      "11Rollout",
-      "12Architecture",
-      "13Close",
+      "01Program",
+      "02Studio",
+      "03Films",
+      "04Tools",
+      "05Mímir",
+      "06Vesper",
+      "07Babylon",
+      "08Heimdall",
+      "09Rollout",
+      "10Architecture",
+      "11Close",
     ]);
     await expect(page.locator('.hud__nav__list a[aria-current="true"]')).toHaveCount(1);
     // Escape closes it and hands focus back to the trigger — the drawer
@@ -964,7 +987,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     }
   });
 
-  test("the flywheel draws the thesis, letters the canon, and routes the page (ADR-078)", async ({
+  test("the program board plots the record, letters the canon, and routes the page (ADR-078 U1)", async ({
     browser,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
@@ -980,14 +1003,16 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         const at = `${width}x${height} ${theme}`;
         await restAt(page, "overview");
 
-        const fly = await page.evaluate(() => {
-          const panel = document.querySelector<HTMLElement>(".arc-fly")!;
-          const pb = panel.getBoundingClientRect();
-          /* EVERY lettered element on the drawing, so a new string has to
-             be declared here rather than appearing unmeasured. */
+        const board = await page.evaluate((vh: number) => {
+          const panel = document.querySelector<HTMLElement>(".arc-prog")!;
+          const section = document.getElementById("overview")!;
+          const field = panel.querySelector<HTMLElement>(".arc-prog__field")!;
+          const fb = field.getBoundingClientRect();
+          /* EVERY lettered element, so a new string has to be declared
+             here rather than appearing unmeasured. */
           const labels = [
             ...panel.querySelectorAll<HTMLElement>(
-              ".arc-fly__hd-ttl, .arc-fly__hd-st, .arc-fly__stage, .arc-fly__fig, .arc-fly__lbl, .arc-fly__wp-lbl, .arc-fly__wp-sub"
+              ".arc-prog__hd-ttl, .arc-prog__hd-st, .arc-prog__curve-lbl, .arc-prog__prior-lbl, .arc-prog__yr, .arc-prog__fig, .arc-prog__lbl, .arc-prog__wp-lbl, .arc-prog__wp-sub"
             ),
           ].map((el) => {
             const cs = getComputedStyle(el);
@@ -997,53 +1022,75 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
               family: cs.fontFamily,
             };
           });
-          /* ⚠ COLLAPSED MARKS: a connector that lost its geometry paints
+          /* ⚠ COLLAPSED MARKS: a rule that lost its geometry paints
              nothing and fails no other assertion. */
           const marks = [
             ...panel.querySelectorAll<HTMLElement>(
-              ".arc-fly__rail, .arc-fly__step-run, .arc-fly__step-rise, .arc-fly__tooth-line, .arc-fly__lift-line, .arc-fly__drop, .arc-fly__node, .arc-fly__tool"
+              ".arc-prog__rung, .arc-prog__vr, .arc-prog__hr, .arc-prog__dot, .arc-prog__wp-dia, .arc-prog__br"
             ),
           ].map((el) => {
             const r = el.getBoundingClientRect();
             return { cls: String(el.className), w: r.width, h: r.height };
           });
-          const seat = panel.querySelector<HTMLElement>(".arc-fly__wp--seat");
-          const seatPlate = panel.querySelector<HTMLElement>(".arc-fly__seat-in");
-          const drop = panel.querySelector<HTMLElement>(".arc-fly__drop--system");
+          /* The seat must not print on the course's own labels — they
+             share the field's right edge and only vertical air keeps
+             them apart. */
+          const seat = panel.querySelector<HTMLElement>(".arc-prog__seat-in")!;
+          const sb = seat.getBoundingClientRect();
+          const wpHits = [...panel.querySelectorAll<HTMLElement>(".arc-prog__wp-hit")].map((el) => {
+            const r = el.getBoundingClientRect();
+            return {
+              wp: el.closest<HTMLElement>(".arc-prog__wp")?.dataset.wp ?? "?",
+              overlapsSeat: !(
+                r.right < sb.left ||
+                r.left > sb.right ||
+                r.bottom < sb.top ||
+                r.top > sb.bottom
+              ),
+              insideField: r.left >= fb.left - 1 && r.right <= fb.right + 1,
+            };
+          });
+          /* The rungs are a CURVE: they must rise, never fall. A record
+             plotted backwards says something false about the work. */
+          const rungTops = [...panel.querySelectorAll<HTMLElement>(".arc-prog__rung")].map((el) =>
+            Math.round(el.getBoundingClientRect().height)
+          );
           return {
             labels,
             collapsed: marks.filter((m) => m.w < 0.5 || m.h < 0.5).map((m) => m.cls),
             markCount: marks.length,
-            insideViewport: pb.top >= -2 && pb.bottom <= window.innerHeight + 2,
-            hrefs: [...panel.querySelectorAll("a.arc-fly__wp-hit")].map((a) =>
-              a.getAttribute("href")
+            rungTops,
+            wpHits,
+            hrefs: [...panel.querySelectorAll("a.arc-prog__wp-hit, a.arc-prog__seat-hit")].map(
+              (a) => a.getAttribute("href")
             ),
-            seatIsGold: seatPlate ? getComputedStyle(seatPlate).backgroundColor : "",
-            /* The seat sits UNDER the exit column: the terminus has to
-               read as what the mechanism produced. */
-            seatAlignedToDrop:
-              seat && drop
-                ? Math.abs(
-                    seat.getBoundingClientRect().right - drop.getBoundingClientRect().right
-                  ) < 90
-                : false,
-            brackets: panel.querySelectorAll(".arc-fly__br").length,
-            // ⚠ no circle anywhere: a ratchet, not a wheel.
+            seatIsGold: getComputedStyle(seat).backgroundColor,
+            brackets: panel.querySelectorAll(".arc-prog__br").length,
+            // ⚠ no rounded corners anywhere: the house has none.
             rounded: [...panel.querySelectorAll<HTMLElement>("*")].filter((el) => {
               const r = getComputedStyle(el).borderRadius;
               return !!r && r !== "0px" && !/^0px 0px 0px 0px$/.test(r);
             }).length,
+            /* ⚠ IT IS THE FIRST SECTION, so it is what the curtain holds
+               — over one viewport and `data-arc-tall` disarms the seam. */
+            sectionFits: section.scrollHeight <= vh + 1,
+            tall: !!document
+              .querySelector(".arc-hero + .arc-section")
+              ?.hasAttribute("data-arc-tall"),
           };
-        });
+        }, height);
 
         // THE LETTERED SET, pinned — a drawing declares what it says.
-        expect(new Set(fly.labels.map((l) => l.text)), `flywheel labels @ ${at}`).toEqual(
+        expect(new Set(board.labels.map((l) => l.text)), `board labels @ ${at}`).toEqual(
           new Set([
-            "The flywheel",
-            "Self-improving system",
-            "Navigate",
-            "Encode",
-            "Build",
+            "The program",
+            "Loop Earplugs · active",
+            "Adoption",
+            "Starhaven · Latent Land",
+            "2024",
+            "2025",
+            "2026",
+            "Now",
             "22",
             "Workshops run",
             "5 → 130+",
@@ -1056,58 +1103,77 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
             "Tools in production",
             "97%",
             "Of briefings involve AI",
-            "AI Specialist",
-            "2024",
             "Studio",
-            "97% of briefings",
+            "Paid social",
+            "The films",
+            "Sept 2025",
             "Vesper",
-            "Image + video",
-            "Process tools",
-            "Mímir · Babylon · Heimdall",
-            "Adoption",
-            "22 teams briefed",
+            "Oct 2025",
+            "Mímir",
+            "Briefing",
+            "Babylon · Heimdall",
+            "Feb 2026",
             "Intelligence Architect",
-            "Holds the map",
+            "2026",
           ])
         );
-        // Chrome is PT Mono, and nothing letters under the floor.
-        for (const l of fly.labels) {
+        for (const l of board.labels) {
           expect(l.family, `"${l.text}" family @ ${at}`).toMatch(/PT Mono/i);
           expect(l.size, `"${l.text}" size @ ${at}`).toBeGreaterThanOrEqual(8.5);
         }
 
-        expect(fly.collapsed, `collapsed marks @ ${at}`).toEqual([]);
-        expect(fly.markCount, `the mechanism is drawn @ ${at}`).toBeGreaterThan(18);
-        expect(fly.insideViewport, `the panel rests inside the viewport @ ${at}`).toBe(true);
-        expect(fly.rounded, `no rounded corners — the house has none @ ${at}`).toBe(0);
-        expect(fly.brackets, `the seat's four targeting brackets @ ${at}`).toBe(4);
-        expect(fly.seatAlignedToDrop, `the seat sits under the exit column @ ${at}`).toBe(true);
-        // GOLD BUYS ONE THING: the seat plate, in both themes.
-        expect(fly.seatIsGold, `the seat is gold @ ${at}`).toMatch(/rgba?\(\s*202,\s*165,\s*84/);
+        expect(board.collapsed, `collapsed marks @ ${at}`).toEqual([]);
+        expect(board.markCount, `the chart is drawn @ ${at}`).toBeGreaterThan(30);
+        expect(board.rounded, `no rounded corners @ ${at}`).toBe(0);
+        expect(board.brackets, `the seat's four brackets @ ${at}`).toBe(4);
 
-        // THE ROUTE IS THE PAGE'S TABLE OF CONTENTS.
-        expect(fly.hrefs, `route hrefs @ ${at}`).toEqual([
-          "#about",
+        /* THE CURVE RISES. Sorted equals itself — a plateau is allowed
+           (the layer really did hold), a fall is not. */
+        expect(
+          [...board.rungTops].sort((a, b) => a - b),
+          `the curve rises @ ${at}`
+        ).toEqual(board.rungTops);
+
+        // The seat clears every waypoint label, and the course stays in the plot.
+        expect(
+          board.wpHits.filter((w) => w.overlapsSeat).map((w) => w.wp),
+          `the seat prints on a waypoint @ ${at}`
+        ).toEqual([]);
+        expect(
+          board.wpHits.filter((w) => !w.insideField).map((w) => w.wp),
+          `a waypoint left the plot @ ${at}`
+        ).toEqual([]);
+
+        // GOLD BUYS ONE THING: the seat, in both themes.
+        expect(board.seatIsGold, `the seat is gold @ ${at}`).toMatch(/rgba?\(\s*202,\s*165,\s*84/);
+
+        // THE COURSE IS THE PAGE'S TABLE OF CONTENTS.
+        expect(board.hrefs, `course hrefs @ ${at}`).toEqual([
           "#studio",
+          "#studio-films",
           "#tool-vesper",
           "#tool-mimir",
-          "#rollout",
+          "#tool-babylon",
           "#intelligence",
         ]);
+
+        // It is the held section, so it has to fit.
+        expect(board.sectionFits, `the board fits one viewport @ ${at}`).toBe(true);
+        expect(board.tall, `data-arc-tall would disarm the curtain @ ${at}`).toBe(false);
 
         await page.close();
       }
     }
   });
 
-  test("a flywheel waypoint navigates, and the drawing survives reduced motion", async ({
+  test("a course waypoint navigates, and the board survives reduced motion", async ({
     browser,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
     const page = await browser.newPage({ viewport: { width: 1440, height: 800 } });
     await prepare(page, PORTFOLIO);
     await restAt(page, "overview");
-    await page.click('.arc-fly__wp-hit[href="#tool-vesper"]');
+    await page.click('.arc-prog__wp-hit[href="#tool-vesper"]');
     await page.waitForFunction(
       () => Math.abs(document.getElementById("tool-vesper")!.getBoundingClientRect().top) < 4,
       undefined,
@@ -1115,10 +1181,10 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     );
     await page.close();
 
-    /* ⚠ PRM MUST GET THE DRAWN PANEL, not a stranded scaleX(0). The
+    /* ⚠ PRM MUST GET THE DRAWN BOARD, not a stranded scaleY(0). The
        pre-states are scoped inside a no-preference query and the base
-       rules ARE the final state, which is the reveal system's own
-       fail-open law applied to a drawing's parts. */
+       rules ARE the final state — the reveal system's own fail-open law
+       applied to a drawing's parts. */
     const prm = await browser.newPage({
       viewport: { width: 1440, height: 800 },
       reducedMotion: "reduce",
@@ -1126,20 +1192,15 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     await prepare(prm, PORTFOLIO);
     await restAt(prm, "overview");
     const drawn = await prm.evaluate(() => {
-      const marks = [
-        ...document.querySelectorAll<HTMLElement>(".arc-fly__rail, .arc-fly__step-run"),
-      ];
+      const rungs = [...document.querySelectorAll<HTMLElement>(".arc-prog__rung")];
       return {
-        count: marks.length,
-        scaled: marks.filter((m) => {
-          const t = getComputedStyle(m).transform;
-          return t !== "none" && !/matrix\(1, 0, 0, 1/.test(t);
-        }).length,
-        seat: Number(getComputedStyle(document.querySelector(".arc-fly__seat-in")!).opacity),
+        count: rungs.length,
+        flattened: rungs.filter((m) => m.getBoundingClientRect().height < 0.5).length,
+        seat: Number(getComputedStyle(document.querySelector(".arc-prog__seat-in")!).opacity),
       };
     });
-    expect(drawn.count, "the mechanism renders under PRM").toBeGreaterThan(4);
-    expect(drawn.scaled, "nothing is left mid-draw under PRM").toBe(0);
+    expect(drawn.count, "the curve renders under PRM").toBeGreaterThan(4);
+    expect(drawn.flattened, "nothing is left mid-draw under PRM").toBe(0);
     expect(drawn.seat, "the seat is present under PRM").toBe(1);
     await prm.close();
   });
