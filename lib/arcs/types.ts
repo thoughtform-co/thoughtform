@@ -249,6 +249,37 @@ export type ArcSection = ArcSectionBase &
         kind: "intelligence";
         head: ArcHead;
       }
+    | {
+        /**
+         * The studio's three sheets, at page scale (ADR-078): the output,
+         * the rule and the limit — THE ADS · THE LINE · THE RED LINE — on
+         * the casefile's own `SheetsPlate`.
+         *
+         * Same contract as `intelligence`, one directory row across: it
+         * carries NO data. The record is `LOOP_STUDIO_SHEETS`, shared by
+         * reference with the casefile row, so the studio's imagery policy
+         * cannot say one thing on the landing and another on a page a
+         * reader forwards. It REPLACED three ad cards, which showed only
+         * what the studio shipped; half the engagement was deciding what
+         * AI may make, and that half is what a stranger has to trust.
+         */
+        kind: "sheets";
+        head: ArcHead;
+      }
+    | {
+        /**
+         * The above-the-line reel, at page scale (ADR-078): both films on
+         * the casefile's own `FilmsPlate` — poster-first, the `<video>`
+         * mounted only on a click, playing in the shared lightbox.
+         *
+         * The record is `LOOP_ATL_FILMS`, by reference. It replaced a
+         * single-film `media` beat that was invisible to the navigation,
+         * and the page gains the second film for free: a reel is the one
+         * shape where "there is another one" is itself the claim.
+         */
+        kind: "films";
+        head: ArcHead;
+      }
   );
 
 export type ArcSectionKind = ArcSection["kind"];

@@ -11,6 +11,8 @@ import { ArcListGroups } from "./ArcListGroups";
 import { ArcMediaSection } from "./ArcMediaSection";
 import { ArcPortrait } from "./ArcPortrait";
 import { ArcSectionHead } from "./ArcSectionHead";
+import { ArcStudioFilms } from "./ArcStudioFilms";
+import { ArcStudioSheets } from "./ArcStudioSheets";
 import { arcTitleText } from "./chrome";
 
 /**
@@ -76,6 +78,14 @@ export function ArcSectionRenderer({
           case "intelligence":
             return (
               <ArcIntelligence key={section.id} section={section} index={index} motion={motion} />
+            );
+          case "sheets":
+            return (
+              <ArcStudioSheets key={section.id} section={section} index={index} motion={motion} />
+            );
+          case "films":
+            return (
+              <ArcStudioFilms key={section.id} section={section} index={index} motion={motion} />
             );
           default: {
             const exhaustive: never = section;

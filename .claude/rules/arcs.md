@@ -100,6 +100,23 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   controller runs. ⚠ Sample the handoff WITHIN A PIXEL of the seam —
   the two boxes agree only at `scrollY = vh`, so a wider sample measures
   your own scroll and reports a jump that is not there.
+- **The `sheets` and `films` kinds** (ADR-078) = `{ head }` and nothing
+  else, the `intelligence` kind's contract one directory row across. The
+  renderers resolve `LOOP_STUDIO_SHEETS` / `LOOP_ATL_FILMS`
+  (`lib/cases/content/loop-earplugs.ts`), the SAME arrays the casefile rows
+  carry, pinned `toBe` by `cases-registry.test.ts` — so the studio's imagery
+  policy and the reel cannot be edited on one surface alone. Host contract is
+  `.arc-intel`'s: `--fl-mono` · `--fl-copy` · `--fl-shot-px`, a definite
+  height gated on `(min-width: 981px) and (prefers-reduced-motion:
+no-preference)`, the settled gate declared, NEVER `data-proof-settled`.
+  ⚠ **The aspect cap is the contract on both** — `--arc-sheets-h` × 1.7 and
+  `--arc-films-h` × 1.7 — for the reason ADR-076 records and the films plate
+  learned on its own surface: a 16:9 frame in a much wider box resolves to an
+  undersized stamp in an empty console, which reads as cropped.
+  ⚠ **`SheetsPlate` takes `stillSizes`** (default `"200px"` = the casefile's
+  bytes; the arc passes `"320px"`): a `sizes` hint is a statement about the
+  BOX. Any OTHER edit to either plate is a TWO-surface change — run
+  `services-ring-smoke` AND `arc-portfolio-smoke`.
 - **The `intelligence` kind** (ADR-076) = `{ head }` and nothing else,
   ONE per page, at the FOOT (after the dossiers and the outcome, before
   the close — it is the answer to what is underneath the work).
@@ -124,12 +141,20 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - **No three.js / Supabase / `LandingPage` imports** anywhere under
   `components/arcs/` or `lib/arcs/` (landing-performance doctrine).
   ⚠ **The casefile's dossier LEAVES are the one sanctioned import**
-  (ADR-072, extended by ADR-076): `ToolField`, `MediaLightbox`
-  (+ `useWalkthrough`), `console/ConsoleFrame`, `wireframes/**`,
-  `toolCardData` and — for the architecture beat — `IntelligenceMapPlate`
-  with `map/pda/**`. DOM and SVG only by construction (verified: no three
-  / supabase / stores transitively).
+  (ADR-072, extended by ADR-076 and ADR-078): `ToolField`, `MediaLightbox`
+  (+ `useWalkthrough`), `console/ConsoleFrame`, `console/ConsoleRail`,
+  `wireframes/**`, `toolCardData`, `IntelligenceMapPlate` with `map/pda/**`
+  (the architecture beat) and — since ADR-078 — `SheetsPlate` and
+  `FilmsPlate` (the studio beats). DOM and SVG only by construction
+  (verified per plate: react + next/image + `lib/cases` types + the console
+  pair; no three / supabase / stores transitively).
   Never `ServicesCasefile` / `TrackVisual` / the corridor.
+  ⚠ **`useCloseOnCasefileFold` NO-OPS OFF THE CASEFILE** — it looks for
+  `.services-stage[data-proof-live]`, which no arc writes, so `FilmsPlate`'s
+  fold-close simply never arms and the lightbox closes on Escape / backdrop
+  / its own scroll lock, exactly as the dossier walkthrough has since
+  ADR-072. If an arc ever mounts `films` under TERMINAL motion, the wrapper
+  has to thread `useCloseOnArcBeatFold` instead.
 - **COLOUR GOES THROUGH THE RAMP, NEVER A LITERAL** (ADR-077).
   `.arc-root` declares `--arc-ink-*` (copy), `--arc-edge` / `--arc-rule` /
   `--arc-rule-dash` (structure), `--arc-grid*` (the dot-matrix),

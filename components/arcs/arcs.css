@@ -2303,6 +2303,79 @@ html[data-arc-entry]
   transition: none;
 }
 
+/* ── THE STUDIO BEATS (ADR-078) ──────────────────────────────────
+   Two more casefile plates at page scale, on the `.arc-intel` contract
+   above: the casefile's tokens, a DEFINITE height, the arrival gate
+   already open, and an aspect cap so `meet` never letterboxes the box
+   sideways. What differs is only the shape each plate wants.
+
+   ⚠ ALL THREE TOKENS ARE DECLARED ON EVERY HOST, including where a body
+   looks like it does not read them. `--fl-copy` has no fallback inside
+   `.fl-cap__d`'s `max()`, and an unset custom property INVALIDATES the
+   declaration rather than falling back to a sensible size. */
+.arc-sec--sheets,
+.arc-sec--films {
+  /* The console pays for its own air, as the architecture beat does. */
+  --arc-stage-pad: clamp(56px, 8vh, 120px);
+  padding-block: var(--arc-stage-pad);
+}
+.arc-sec--sheets .arc-head,
+.arc-sec--films .arc-head {
+  margin-bottom: clamp(18px, 2.6vh, 34px);
+}
+
+.arc-sheets,
+.arc-films {
+  --fl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --fl-copy: calc(var(--band-copy, clamp(15px, 1.15vw, 18px)) * 0.9);
+  --fl-shot-px: 14px;
+  margin-inline: auto;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+/* THE SHEETS take WIDTH. Two of the three bodies are horizontal by
+   construction — a row of 4:5 stills, and the LINE sheet's two columns,
+   which exist to draw one boundary and must sit side by side to draw it.
+   So this box keeps the band's instrument width and caps only enough to
+   stop the comparison's measure running past a comfortable line. */
+.arc-sheets {
+  --arc-sheets-h: clamp(440px, 62svh, 780px);
+  max-width: calc(var(--arc-sheets-h) * 1.7);
+}
+
+/* THE FILM is 16:9 and the frame is the evidence, so the box is capped
+   TIGHTER against its own height — the plate's own 2026-08-04 lesson, one
+   surface over: a 16:9 poster in a box far wider than it resolves to an
+   undersized stamp floating in a mostly empty console, which reads as
+   cropped rather than as spacious. */
+.arc-films {
+  --arc-films-h: clamp(440px, 64svh, 820px);
+  max-width: calc(var(--arc-films-h) * 1.7);
+}
+
+@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  /* The definite box `.fl-con { height: 100% }` needs — gated to where the
+     console is FRAMED. console.css unwraps at ≤980px AND under reduced
+     motion, and an unwrapped console wants `auto`; width-only here is how
+     a desktop PRM visitor gets a collapsed box (console.css says the same
+     in the same words). */
+  .arc-sheets {
+    height: var(--arc-sheets-h);
+  }
+  .arc-films {
+    height: var(--arc-films-h);
+  }
+}
+
+/* The settled gate, declared on both: no casefile ladder to wait on. */
+.arc-sheets .fl-con__console,
+.arc-films .fl-con__console {
+  opacity: 1;
+  transition: none;
+}
+
 /* ── LIGHT: THE RAMP RE-DERIVED (ADR-077) ────────────────────────
    ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP (ADR-063 U2, and
    console.css's `--con-edge` note). `rgba(ink, .08)` recedes toward BLACK

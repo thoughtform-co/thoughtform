@@ -56,6 +56,8 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   close: "CLOSE",
   dossier: "DOSSIER",
   intelligence: "ATLAS",
+  sheets: "STUDIO",
+  films: "REEL",
 };
 
 /**
