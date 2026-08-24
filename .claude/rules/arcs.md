@@ -20,6 +20,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - [ADR-075: The arc hero IS the homepage hero](../sentinel/decisions/075-arc-hero-curtain.md) — the plate, the shared boot, and the curtain seam
 - [ADR-076: The portfolio flows, and the architecture closes it](../sentinel/decisions/076-portfolio-flows-and-the-architecture-beat.md) — reveal motion on the portfolio, the curtain on the flowing path, the `intelligence` kind
 - [ADR-077: The arcs' ink ramp](../sentinel/decisions/077-arcs-ink-ramp.md) — the colour tokens that let the light theme reach this surface
+- [ADR-079: The portfolio is a trajectory, and every beat owns a screen](../sentinel/decisions/079-portfolio-trajectory-and-the-beat.md) — **the live cut**: `rollout` absorbed into the board, `tool-index`, Vesper first, one beat per viewport
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -113,8 +114,48 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   prose interstitials on this page: the connective tissue is each
   section's own sub. ⚠ **TITLES ONLY** — a dated LOG ROW may state a count
   in the same words, because a record is not a claim.
-- **The `program` kind** (ADR-078 U1) = `{ head, waypoints, priors?,
-footnote? }`, ONE per page and FIRST — it is what the curtain holds. It
+- ⚠ **ONE BEAT PER SCREEN, AND IT IS THE PADDING (ADR-079).** `.arc-sec` has
+  carried `min-height: 100svh; align-content: center` since ADR-052; what broke
+  it was its own `clamp(96px, 14vh, 200px)` padding, which takes 201px out of a
+  720px beat and pushed a dossier to 786. Padding is `var(--arc-sec-pad, …)` now
+  and the portfolio lowers the token. ⚠ **Scoped by `data-arc-format`, NOT by
+  motion** — the workshop v1 is also a reveal page and runs past twenty sections.
+  ⚠ **A token, never a `padding-block` override**: a format selector outranks the
+  per-kind rules that set `padding-block: var(--arc-stage-pad)` and would retune
+  them silently. ⚠ The architecture beat LOST ADR-076's "may run past one"
+  exemption (it measured 1141 in a 1080 beat); `--arc-intel-h` takes the beat's
+  budget as a second term, and its WIDTH rides that height (`max-width` = h ×
+  1.2), so an over-tight cap fails the smoke on width while height still passes.
+- **The `tool-index` kind** (ADR-079) = `{ head }` and nothing else — the tools
+  chapter head, given the four records it opens (number · codename · `subline` ·
+  mode), each row opening its own beat. The renderer resolves `PROJECT_CASES`;
+  authoring the lines would be a second, driftable description of four tools the
+  page already draws in full. ⚠ Order is `TOOL_ORDER` (**Vesper first** — the
+  tool built FOR the creative process before the three built AROUND it), pinned
+  against the section list: an index pointing at beats in a different order than
+  it lists them is what that constant prevents. ⚠ **Tabs switch a VIEW; the view
+  is asymmetric** — rails stay inside consoles (map 3 · tools 4 · sheets 3 ·
+  films 2) and the page's own navigation is the trajectory. Never a page-level
+  tab strip (owner: "if everything is in tabs, then it's not gonna work").
+- ⚠ **`rollout` IS RETIRED (ADR-079).** It plotted the SAME 2024 → now span the
+  board plots, in a second grammar at the far end of the page. Its rows are
+  stations, its platform work is the board's `parallel` track, its counts are the
+  registers. The casefile keeps `ROLLOUT_ROWS` as the canonical copy, untouched;
+  what went is the arc's re-authored second version and the parity pin with it.
+- **The `program` kind** (ADR-078 U1, re-cut ADR-079) = `{ head, waypoints,
+priors?, parallel?, footnote? }`, ONE per page and FIRST — it is what the
+  curtain holds. Each waypoint carries `sub` (its date) and `note` (one sentence
+  on what the move WAS: the board named seven dated things and left the arc
+  between them to be inferred). ⚠ **The stations ALTERNATE above and below the
+  axis and `data-lane` is DERIVED from the index** — seven across the band leave
+  ~120px each against a 168px block, so alternating doubles the pitch between
+  same-side neighbours; that is what buys each one a date, a name and a note.
+  ⚠ **The adoption curve is its own register at the foot**, never a line behind
+  the stations (drawn under them it crossed every note). ⚠ **No year scale** —
+  every station prints its own date, so a row repeating them was the same fact
+  twice AND a collision; the priors run in at the head of the adoption band.
+  ⚠ **Gold that is READ takes `--gold-ink`** — the register figures went gold and
+  measured 1.68:1 on parchment on raw `--gold`. It
   replaced `flywheel`, which drew adoption and automation as a ratchet:
   ⚠ **a diagram of a METAPHOR, in a house where every instrument draws a
   RECORD.** The dossiers draw real tool interfaces, the map 47 real
