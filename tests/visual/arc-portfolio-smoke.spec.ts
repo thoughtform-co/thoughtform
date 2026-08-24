@@ -582,17 +582,22 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     }
   });
 
-  test("the hero carries a Loop key visual, and the curtain survives the plate change (ADR-078 U1)", async ({
+  test("the hero carries the landing's plate, and the curtain is declared not inherited (ADR-078 U2)", async ({
     browser,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "one walk per run — the desktop project's");
 
-    /* ⚠ THE PLATE AND THE CHOREOGRAPHY WERE COUPLED, AND THEY ARE NOT THE
-       SAME QUESTION. `data-arc-curtain` used to be gated on
-       `plate === "gateway"`, so giving this page a Loop key visual would
-       have taken the ADR-076 seam with it — silently, with one assertion
-       in another case the only thing to say so. The hero declares
-       `curtain: true` now; this pins BOTH halves at once. */
+    /* ⚠ NOT A FRAME OUT OF THE FILMS (owner, ADR-078 U2). U1 opened this
+       page on the DJ Neighbour master, reasoning that a Loop page should
+       carry a Loop image. A poster frame is EVIDENCE, and the reel shows
+       it properly two beats down in a console of its own; blown up to
+       100vh it is the work used as wallpaper. The plate is the house key
+       visual, and the Loop-specific part of the hero is what it SAYS.
+
+       ⚠ AND THE CURTAIN IS DECLARED SEPARATELY (U1's real finding, kept).
+       It used to ride `plate === "gateway"`, so swapping the image would
+       have silently taken the ADR-076 seam with it. Both halves are
+       pinned here so the next image swap cannot repeat it. */
     for (const theme of ["dark", "light"] as const) {
       const page = await browser.newPage({ viewport: { width: 1440, height: 800 } });
       await prepare(page, theme === "light" ? `${PORTFOLIO}?theme=light` : PORTFOLIO);
@@ -609,37 +614,35 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
           curtainArmed: !!document.querySelector(".arc-root[data-arc-curtain]"),
         };
       });
-      expect(hero.plate, `own plate @ ${theme}`).toBe("own");
-      expect(hero.picture, "no <picture> — one file serves both themes").toBe(0);
-      expect(hero.src, `the Loop key visual @ ${theme}`).toContain("dj-neighbour");
-      /* ⚠ AN OWN PLATE SHOWS ITS OWN IMAGE IN BOTH THEMES. theme.css's
-         light swap is global on `.hero__bg`, so before ADR-075 an arc
-         showed its own plate in dark and the LANDING's in light. */
-      expect(hero.imgShown, `the arc's own image paints @ ${theme}`).toBe(true);
-      expect(hero.bgImage, `no Gateway plate behind it @ ${theme}`).not.toContain("Gateway");
-      expect(hero.curtainArmed, `the curtain still arms @ ${theme}`).toBe(true);
-
-      /* ⚠ THE TOP BAND IS A DARK LITERAL IN BOTH THEMES (ADR-078 U1). It
-         sits over a PHOTO, and it used `--void-deep-rgb`, which theme.css
-         re-pins to the page colour on any `.hero__video__overlay` — in
-         light that washed parchment across the top of the key visual. */
-      const band = await page.evaluate(() => {
-        const el = document.querySelector<HTMLElement>(".arc-hero .hero__video__overlay");
-        return el ? getComputedStyle(el).backgroundImage : "";
-      });
-      expect(band, `the scrim stays dark @ ${theme}`).toMatch(/rgba?\(\s*8,\s*7,\s*6/);
-
+      expect(hero.plate, `gateway plate @ ${theme}`).toBe("gateway");
+      expect(hero.picture, "the landing's <picture>, AVIF over WebP").toBe(1);
+      expect(hero.src, `the dark plate @ ${theme}`).toContain("Gateway_v1b");
+      /* ⚠ NO FILM FRAME AS A HERO — the reel owns that image, and a still
+         at 100vh is evidence spent as decoration. */
+      expect(hero.src, "no poster frame in the hero").not.toMatch(/posters\//);
+      expect(hero.bgImage, "no poster frame behind it").not.toMatch(/posters\//);
+      if (theme === "light") {
+        // theme.css paints the light plate as a background and hides the img.
+        expect(hero.bgImage).toContain("Gateway_v2-light");
+        expect(hero.imgShown, "the dark plate is hidden in light").toBe(false);
+      }
+      expect(hero.curtainArmed, `the curtain arms @ ${theme}`).toBe(true);
       await page.close();
     }
 
-    /* An own-plate arc that does NOT ask for the seam keeps its own
-       behaviour — the flag is opt-in, not a side effect of the plate. */
+    /* An own-plate arc keeps its own image, and does NOT get the seam —
+       the flag is opt-in, never a side effect of the plate. */
     const deck = await browser.newPage({ viewport: { width: 1440, height: 800 } });
     await prepare(deck, "/arcs/ai-keynote-v2");
-    expect(
-      await deck.locator(".arc-root[data-arc-curtain]").count(),
-      "a terminal deck keeps its own curtain selector"
-    ).toBe(0);
+    const own = await deck.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(".arc-hero");
+      return {
+        plate: el?.dataset.plate ?? null,
+        curtain: !!document.querySelector(".arc-root[data-arc-curtain]"),
+      };
+    });
+    expect(own.plate, "the keynote keeps its own plate").toBe("own");
+    expect(own.curtain, "a terminal deck keeps its own curtain selector").toBe(false);
     await deck.close();
   });
 

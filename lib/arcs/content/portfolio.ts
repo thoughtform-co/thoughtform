@@ -72,22 +72,29 @@ export const PORTFOLIO_ARC: ArcDef = {
        table of contents in its first section is the hero asking a
        question the board answers better. */
     actions: [{ id: "see-work", label: "See the work", href: "#overview", primary: true }],
-    /* ⚠ THE KEY VISUAL IS LOOP'S, NOT THOUGHTFORM'S (owner, ADR-078 U1).
-       This page is an expansion of the casefile's Loop row; opening it on
-       the Gateway plate made it read as a Thoughtform page that happens to
-       be about Loop. The DJ Neighbour master is the other above-the-line
-       film — the reel's default view stays Smug Owl, so no frame appears
-       twice on a default scroll. */
+    /* ⚠ NOT A FRAME OUT OF THE FILMS (owner, ADR-078 U2). U1 put the DJ
+       Neighbour master here on the reasoning that a Loop page should open
+       on a Loop image. It should — but a poster frame is EVIDENCE, and
+       this page shows that evidence properly two beats later, in a console
+       with its own rail. A still lifted out of it and blown up to 100vh is
+       the work used as wallpaper, which cheapens the thing the reel is
+       there to sell.
+       So the plate is the house key visual again and the LOOP-SPECIFIC
+       part of the hero is what it says. The repo holds no Loop image at
+       hero grade; if one arrives, it belongs here — a film frame does not.
+       (`.claude/rules/arcs.md`, the hero clause.) */
     image: {
-      src: "/arcs/posters/dj-neighbour.jpg",
+      src: "/images/Gateway_v1b.webp",
       alt: "",
-      width: 1920,
-      height: 1080,
+      width: 2880,
+      height: 1620,
     },
-    /* ⚠ THE SEAM IS DECLARED, because it used to ride the PLATE. Dropping
-       `plate: "gateway"` would have silently taken the ADR-076 curtain
-       with it — a choreography coupled to an image. This asks for the
-       choreography (ADR-078 U1). */
+    plate: "gateway",
+    /* ⚠ DECLARED EVEN THOUGH THE GATEWAY PLATE IMPLIES IT (ADR-078 U1).
+       The curtain used to RIDE the plate, so an arc taking its own key
+       visual silently lost the seam. The two are separate questions now,
+       and this page states its answer to both — which is what makes the
+       hero image swappable without a choreography regression. */
     curtain: true,
   },
   meta: {

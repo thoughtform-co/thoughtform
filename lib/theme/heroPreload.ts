@@ -72,12 +72,14 @@ export const HERO_PLATE_LIGHT_TYPE = "image/webp";
  * the script that knows the theme. An arc keeping its own key visual has
  * one file for both themes and keeps the static link instead.
  */
-/* ⚠ `/arcs/portfolio` LEFT THIS LIST (ADR-078 U1): its hero carries a Loop
-   key visual now rather than the Gateway plate, so it has one file for both
-   themes and takes the static link back. A row here for an own-plate route
-   would script-inject a preload for a plate that page never paints — and
-   this list is hand-written, not derived, so nothing else would say so. */
-export const HERO_ROUTES = ["/", "/claude-workshop"] as const;
+/* ⚠ HAND-WRITTEN, NOT DERIVED. This is the set of routes whose hero has TWO
+   files, one per theme — the only case a script-injected preload solves,
+   because a static link always names the dark one. `/arcs/portfolio` left it
+   in ADR-078 U1 (a Loop key visual, one file) and came back in U2 (a film
+   frame is evidence, not wallpaper — the plate is the house visual again).
+   A route that changes its plate has to be moved here BY HAND; nothing
+   derives this, so nothing else would say so. */
+export const HERO_ROUTES = ["/", "/claude-workshop", "/arcs/portfolio"] as const;
 
 /**
  * The inline script. Reads the attribute the theme bootstrap just stamped

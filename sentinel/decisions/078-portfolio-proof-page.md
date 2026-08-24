@@ -354,3 +354,27 @@ Three more consequences of the own plate, each mechanical:
 1920×1080 in both themes — the board's pinned label set, the curve rising,
 zero collapsed marks, the seat clear of every waypoint, the section fitting
 one viewport, PRM drawn; `arc-terminal-smoke` 10 passed.
+
+---
+
+## Update 2 — the hero is not a frame out of the films (2026-08-24, owner)
+
+U1 put the DJ Neighbour master behind the hero, reasoning that a page about
+Loop should open on a Loop image. The owner's answer was immediate and is
+right: **a poster frame is EVIDENCE, and this page already shows that
+evidence properly** — two beats down, in a console with its own rail, at the
+size a reel deserves. Lifted out and blown up to 100vh it is the work used as
+wallpaper, which cheapens the thing the reel exists to sell.
+
+**The plate is the house key visual again; the Loop-specific part of the hero
+is what it SAYS.** The repo holds no Loop image at hero grade — the only
+candidates were the two film posters (rejected here), the 4:5 studio ads and
+four tool screenshots. If a client-supplied hero image arrives it belongs
+here; a still lifted out of a beat below does not, and the smoke pins that
+(`no poster frame in the hero`, both themes).
+
+⚠ **U1's real finding survives the revert**: the curtain no longer rides the
+plate. `hero.curtain` is declared alongside `plate: "gateway"` even though the
+plate would imply it, precisely so the next image swap cannot silently take
+the ADR-076 seam with it. `HERO_ROUTES` gets its portfolio row back — that
+list is hand-written, so it moves by hand in both directions.

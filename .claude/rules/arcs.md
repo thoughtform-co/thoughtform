@@ -130,6 +130,15 @@ footnote? }`, ONE per page and FIRST — it is what the curtain holds. It
   (the registers read `LOOP_FIGURES` in the renderer) and no digits but
   YEARS. ⚠ It must fit ONE VIEWPORT at 1280×720 or `data-arc-tall`
   disarms the curtain with only one smoke assertion to say so.
+- ⚠ **A HERO IS NEVER A FRAME OUT OF THE PAGE'S OWN EVIDENCE** (ADR-078 U2,
+  owner). The portfolio briefly opened on the DJ Neighbour poster, reasoning
+  that a Loop page should carry a Loop image. It should — but a poster frame
+  is EVIDENCE, and the reel shows it properly further down in a console with
+  its own rail; blown up to 100vh it is the work spent as wallpaper, and it
+  cheapens the thing the reel is there to sell. The plate is the house key
+  visual and the client-specific part of the hero is what it SAYS. A
+  client-supplied image at hero grade is welcome; a still lifted out of a
+  beat below is not. Smoke-pinned (`no poster frame in the hero`).
 - ⚠ **THE CURTAIN IS NOT GATED ON THE PLATE** (ADR-078 U1). It read
   `plate === "gateway"`, so an arc taking its own key visual would have
   silently lost the ADR-076 seam — a choreography coupled to an image. A
