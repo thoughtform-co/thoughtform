@@ -54,7 +54,43 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-08-23 (latest) — The through-line: `#voidwalker`, the career timeline after the bio (ADR-074)
+### 2026-08-24 (latest) — The arc hero becomes the homepage hero (ADR-075)
+
+The owner asked for the arc hero to BE the homepage's, "including the
+parallax effect in the second section". Cycle B for the seam, Cycle A rows
+1, 3, 4, 5 and 6.
+
+- **Row 1 — more than two iterations, and the first was the wrong
+  mechanic.** "The second section parallaxes over the hero" is ADR-022's
+  own **v7**, superseded; v8 inverts it (the card MOVES, the panel is
+  HELD). Reading the ADR's live section rather than its title is what
+  turned a plausible sticky-hero build into the faithful one — and the
+  faithful one is also the safe one, because a sticky card freezes `--py`.
+- **Row 3 — two classes of bug.** (a) A GLOBAL theme rule on a class a
+  second surface reuses: `html[data-theme="light"] .hero__bg` made every
+  arc show the LANDING's plate in light, invisibly, for as long as arcs
+  have existed. (b) **A media query adds no specificity** — the seam's
+  release rule dropped one `:not()` and lost silently to the freeze;
+  measured `fixed` under reduced motion and at 430px before the selectors
+  were tied.
+- **Row 4 — files that move together.** `useArcScroll` (the flag) ⇄
+  `arcs.css` (the freeze + its release) ⇄ `useArcTerminalMotion` (whose
+  cached `topDoc` is why the PLANE and not the stage is frozen); and
+  `hero.plate` ⇄ `ArcHero` ⇄ arcs.css ⇄ `HERO_ROUTES` ⇄ the route's static
+  preload. → `arcs.md`.
+- **Row 5 — a runtime check.** The seam is measured, not eyeballed: the
+  smoke asserts the card has moved a known distance while the panel's rect
+  has not moved at all, and that the content's centre does not jump across
+  the handoff.
+- **Row 6 — the paint stack changed.** ADR-008's table gains the arc rows,
+  and its hero row is corrected: it still called the live hero `sticky; z:1`.
+- **Left open, measured:** the keynote/workshop hero copy reads 2.0–2.5:1
+  in DARK over their near-white key visual — pre-existing, now written
+  down. And two `landing-page.spec.ts` corridor snapshots fail on this tree
+  from ADR-074's new station (percentage scrolls, baselines from 08-02);
+  re-baselining a corridor frame belongs to that work.
+
+### 2026-08-23 — The through-line: `#voidwalker`, the career timeline after the bio (ADR-074)
 
 Owner asked for a vertical timeline of the things that led up to Thoughtform,
 after the bio — title left, paragraph right, beats lighting one by one, a

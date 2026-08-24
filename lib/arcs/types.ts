@@ -277,6 +277,19 @@ export interface ArcDef {
     lede: string;
     actions?: readonly ArcAction[];
     image: ArcImage & { width: number; height: number };
+    /**
+     * `"gateway"` ⇒ this hero IS the landing's (ADR-075): the Gateway
+     * plate, delivered the landing's way — an AVIF `<source>` over the
+     * WebP `<img>` in dark, and `theme.css`'s own light rule painting
+     * `Gateway_v2-light.webp` as a background with the `<img>` hidden.
+     *
+     * Absent ⇒ the arc's own `image` in BOTH themes. That needs saying
+     * because the light rule is global on `.hero__bg`: until ADR-075 an
+     * arc showed its own plate in dark and the GATEWAY in light, with
+     * nothing declaring it. `ArcHero` marks those heroes `data-plate="own"`
+     * and `arcs.css` hands the image back.
+     */
+    plate?: "gateway";
   };
   /** Route metadata (robots noindex is applied by the route, not here). */
   meta: { title: string; description: string };

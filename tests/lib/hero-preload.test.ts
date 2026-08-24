@@ -58,7 +58,10 @@ describe("hero preload", () => {
   });
 
   it("covers exactly the routes that render a hero", () => {
-    expect([...HERO_ROUTES]).toEqual(["/", "/claude-workshop"]);
+    // `/arcs/portfolio` joined on ADR-075: it declares `hero.plate:
+    // "gateway"`, so it paints these two files and drops its own static
+    // preload (which could only ever name the dark one).
+    expect([...HERO_ROUTES]).toEqual(["/", "/claude-workshop", "/arcs/portfolio"]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });
 

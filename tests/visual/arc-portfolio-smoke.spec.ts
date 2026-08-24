@@ -236,6 +236,144 @@ test.describe("portfolio arc — the dossier beats (ADR-072)", () => {
     }
   });
 
+  test("the hero is the mover and the first beat is held still (ADR-075)", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run \u2014 the desktop project's");
+    test.setTimeout(180_000);
+    for (const [width, height] of [
+      [1280, 720],
+      [1440, 800],
+    ] as const) {
+      const page = await browser.newPage({ viewport: { width, height } });
+      await prepare(page, PORTFOLIO);
+      const at = (y: number) =>
+        page.evaluate((target) => {
+          window.scrollTo(0, target);
+          return new Promise<{
+            entry: boolean;
+            heroTop: number;
+            heroVis: string;
+            planePos: string;
+            planeTop: number;
+            bandCentre: number;
+            lift: number;
+          }>((resolve) =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                const hero = document.querySelector<HTMLElement>("#hero")!;
+                const first = document.querySelector<HTMLElement>(".arc-hero + .arc-section")!;
+                const plane = first.querySelector<HTMLElement>(".arc-plane")!;
+                const band = plane.querySelector<HTMLElement>(".arc-band") ?? plane;
+                const b = band.getBoundingClientRect();
+                resolve({
+                  entry: document.documentElement.hasAttribute("data-arc-entry"),
+                  heroTop: Math.round(hero.getBoundingClientRect().top),
+                  heroVis: getComputedStyle(hero).visibility,
+                  planePos: getComputedStyle(plane).position,
+                  planeTop: Math.round(plane.getBoundingClientRect().top),
+                  // The content's own centre — what the reader actually
+                  // sees hold, and what must not jump at the handoff.
+                  bandCentre: Math.round(b.top + b.height / 2),
+                  lift: Number(
+                    document.documentElement.style.getPropertyValue("--hero-lift") || "0"
+                  ),
+                });
+              })
+            )
+          );
+        }, y);
+
+      const label = `${width}x${height}`;
+      // AT REST — the beat behind the curtain is already pinned to the
+      // viewport, under the hero card (z 4 over the section's z 1).
+      const rest = await at(0);
+      expect(rest.entry, `${label}: the entry flag is armed at rest`).toBe(true);
+      expect(rest.planePos, `${label}: the first plane is held`).toBe("fixed");
+      expect(rest.planeTop, `${label}: held at the viewport top`).toBe(0);
+      expect(rest.heroTop, `${label}: the card starts at the top`).toBe(0);
+
+      // MID-CURTAIN — THIS PAIR OF ASSERTIONS IS THE PARALLAX. The card
+      // has moved a known distance and the panel behind it has not moved
+      // at all. Get this backwards and you have ADR-022's rejected v7.
+      const mid = await at(Math.round(height * 0.5));
+      expect(mid.heroTop, `${label}: the card is the mover`).toBeLessThanOrEqual(
+        -Math.round(height * 0.5) + 2
+      );
+      expect(mid.planePos, `${label}: still held mid-curtain`).toBe("fixed");
+      expect(mid.planeTop, `${label}: the panel did not move`).toBe(0);
+      expect(mid.lift, `${label}: the rail clip tracks the card 1:1`).toBeCloseTo(0.5, 1);
+
+      // THE HANDOFF — the flag clears, the plane returns to flow, and the
+      // CONTENT does not jump: the fixed cell replicates the stage's own
+      // centred box, so both put the band in the same place.
+      const before = await at(height - 8);
+      const after = await at(height + 8);
+      expect(before.entry, `${label}: still held one step short`).toBe(true);
+      expect(after.entry, `${label}: released at the seam`).toBe(false);
+      expect(after.planePos, `${label}: back in flow`).toBe("static");
+      expect(
+        Math.abs(after.bandCentre - before.bandCentre),
+        `${label}: the content jumped ${after.bandCentre - before.bandCentre}px at the handoff`
+      ).toBeLessThanOrEqual(2);
+
+      // PAST THE CURTAIN — the card is released from the paint. It
+      // outranks every section (z 4 vs 1), so off-screen is not enough.
+      const past = await at(Math.round(height * 1.4));
+      expect(past.heroVis, `${label}: the card is released`).toBe("hidden");
+      expect(past.lift, `${label}: the rails are fully uncovered`).toBeCloseTo(1, 2);
+      await page.close();
+    }
+  });
+
+  test("the hero carries the landing's plate, and an own-plate arc keeps its own (ADR-075)", async ({
+    browser,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one walk per run \u2014 the desktop project's");
+    const read = async (path: string) => {
+      const page = await browser.newPage({ viewport: { width: 1440, height: 800 } });
+      await page.goto(path, { waitUntil: "networkidle" });
+      await page.waitForTimeout(600);
+      const out = await page.evaluate(() => {
+        const bg = document.querySelector<HTMLElement>(".hero__bg")!;
+        const img = bg.querySelector("img")!;
+        return {
+          plate: document.querySelector<HTMLElement>(".arc-hero")!.dataset.plate,
+          picture: !!bg.querySelector("picture"),
+          bg: getComputedStyle(bg).backgroundImage,
+          imgSrc: img.getAttribute("src") ?? "",
+          imgShown: getComputedStyle(img).display !== "none",
+        };
+      });
+      await page.close();
+      return out;
+    };
+
+    // The portfolio IS the landing's hero: the AVIF/WebP picture in dark,
+    // theme.css's own light background in light.
+    const pfDark = await read(`${PORTFOLIO}`);
+    expect(pfDark.plate).toBe("gateway");
+    expect(pfDark.picture, "the gateway hero delivers a <picture>").toBe(true);
+    expect(pfDark.imgSrc).toContain("Gateway_v1b");
+    expect(pfDark.imgShown).toBe(true);
+    const pfLight = await read(`${PORTFOLIO}?theme=light`);
+    expect(pfLight.bg, "the light plate paints as a background").toContain("Gateway_v2-light");
+    expect(pfLight.imgShown, "and the dark img is hidden, so neither theme fetches both").toBe(
+      false
+    );
+
+    // ⚠ THE BUG THIS FIXES: an arc that owns its plate showed the
+    // LANDING's in light, because theme.css's swap is global on
+    // `.hero__bg`. Both themes must now paint the arc's own file.
+    for (const q of ["", "?theme=light"]) {
+      const own = await read(`/arcs/ai-keynote-v2${q}`);
+      expect(own.plate, `own-plate arc${q}`).toBe("own");
+      expect(own.picture, `own-plate arc${q} needs no picture`).toBe(false);
+      expect(own.imgShown, `own-plate arc${q} paints its own image`).toBe(true);
+      expect(own.bg, `own-plate arc${q} takes no gateway background`).not.toContain("Gateway");
+    }
+  });
+
   test("the header carries the chapters, then the readout and the whole drawer (ADR-073)", async ({
     page,
   }, testInfo) => {

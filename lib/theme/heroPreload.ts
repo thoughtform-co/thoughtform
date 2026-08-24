@@ -60,11 +60,19 @@ export const HERO_PLATE_LIGHT = "/images/Gateway_v2-light.webp";
 export const HERO_PLATE_LIGHT_TYPE = "image/webp";
 
 /**
- * The routes that render the hero. `/claude-workshop` mounts the same
- * `LandingPage` with the same key visual, so it wants the same preload;
- * every other route would be preloading an image it never paints.
+ * The routes that render the hero on THIS key visual. `/claude-workshop`
+ * mounts the same `LandingPage` with the same plate, and
+ * `/arcs/portfolio` declares `hero.plate: "gateway"` (ADR-075) so it
+ * paints the same two files; every other route would be preloading an
+ * image it never shows.
+ *
+ * ⚠ AN ARC EARNS ITS ROW BY DECLARING THE PLATE, and the arc route drops
+ * its own static `<link rel="preload">` in exchange — a static link
+ * always pulls the dark plate, because the preload scanner runs before
+ * the script that knows the theme. An arc keeping its own key visual has
+ * one file for both themes and keeps the static link instead.
  */
-export const HERO_ROUTES = ["/", "/claude-workshop"] as const;
+export const HERO_ROUTES = ["/", "/claude-workshop", "/arcs/portfolio"] as const;
 
 /**
  * The inline script. Reads the attribute the theme bootstrap just stamped

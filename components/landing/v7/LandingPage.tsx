@@ -8,6 +8,7 @@ import { useCorridorMount } from "./hooks/useCorridorMount";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
 import { HudNav } from "./HudNav";
+import { useHeroBoot } from "./hooks/useHeroBoot";
 import { THEME_TOGGLE } from "./themeToggle";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
@@ -23,7 +24,6 @@ import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
-import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import type { SlotsMap } from "@/lib/celestial/schema";
 import type { V7CorridorText } from "@/lib/v7-parse";
 
@@ -402,98 +402,11 @@ export function LandingPage({
     });
   }, []);
 
-  // Hero terminal boot (owner, 2026-07-16): the headline scramble-decodes
-  // (caption kernel — the same glitch as the corridor captions + services
-  // masthead), the paragraph TYPES with a block cursor, and the CTA
-  // buttons UNFURL centre-out like the arc console frames.
-  //
-  // LCP discipline (ADR-039): the hero text must paint at FCP, so this
-  // effect NEVER holds text blank before hydration — it re-decodes the
-  // ALREADY-PAINTED text at hydration as a one-shot boot moment (LCP is
-  // recorded on the first largest paint; post-paint mutations don't
-  // retract it). Reduced motion skips the whole boot (text stays as
-  // painted, buttons visible via the data-m fade path).
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const headline = root.querySelector<HTMLElement>(".hero__headline");
-    const desc = root.querySelector<HTMLElement>(".hero__desc");
-    const cta = root.querySelector<HTMLElement>(".hero__cta");
-    if (!headline || !desc || !cta) return;
-
-    // 1. Headline lines — wrap each text node in a span (the scramble
-    //    kernel writes textContent, so <br/> must stay outside), blank,
-    //    then queue staggered decodes.
-    const lines: HTMLElement[] = [];
-    Array.from(headline.childNodes).forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE && node.textContent && node.textContent.trim()) {
-        const span = document.createElement("span");
-        span.className = "hero__headline-line";
-        span.textContent = node.textContent;
-        node.replaceWith(span);
-        lines.push(span);
-      }
-    });
-    const jobs: ScrambleJob[] = [];
-    const t0 = performance.now() / 1000;
-    const lineTargets = lines.map((el) => el.textContent ?? "");
-    lines.forEach((el) => {
-      el.textContent = "";
-    });
-
-    // 2. Paragraph typewriter — mutable text node + CRT block cursor
-    //    (the ServicesMasthead intro recipe).
-    const descText = desc.textContent ?? "";
-    desc.textContent = "";
-    const descNode = document.createTextNode("");
-    const cursor = document.createElement("span");
-    cursor.className = "hero__type-cursor";
-    cursor.textContent = "█";
-    desc.append(descNode, cursor);
-
-    // 3. Buttons — clip shut now, unfurl on cue (CSS owns the motion).
-    cta.setAttribute("data-unfurl", "shut");
-
-    const HEADLINE_START_S = 0.12;
-    const HEADLINE_STAGGER_S = 0.16;
-    const DESC_START_S = 0.55;
-    const DESC_CHARS_PER_S = 220;
-    const CTA_AT_S = DESC_START_S + descText.length / DESC_CHARS_PER_S + 0.15;
-
-    let raf = 0;
-    let booted = false;
-    let ctaOpened = false;
-    const tick = () => {
-      const nowSec = performance.now() / 1000;
-      const t = nowSec - t0;
-      if (!booted) {
-        booted = true;
-        lines.forEach((el, i) => {
-          queueScramble(jobs, el, lineTargets[i], t0 + HEADLINE_START_S + i * HEADLINE_STAGGER_S);
-        });
-      }
-      advanceScrambles(jobs, nowSec);
-      // Typewriter advance (clamped, whole chars).
-      const typed = Math.max(0, Math.min(descText.length, (t - DESC_START_S) * DESC_CHARS_PER_S));
-      const head = Math.floor(typed);
-      if (descNode.textContent !== descText.slice(0, head)) {
-        descNode.textContent = descText.slice(0, head);
-      }
-      if (!ctaOpened && t >= CTA_AT_S) {
-        ctaOpened = true;
-        cta.setAttribute("data-unfurl", "open");
-      }
-      const done = jobs.length === 0 && head >= descText.length && ctaOpened;
-      if (done) {
-        cursor.remove();
-        return;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  // Hero terminal boot (owner, 2026-07-16) — the headline decodes, the
+  // paragraph types, the buttons unfurl. Lifted into a hook for ADR-075
+  // so `/arcs/[slug]` boots its hero identically; the constants, the LCP
+  // discipline (ADR-039) and the reduced-motion bail live there.
+  useHeroBoot(rootRef);
 
   // Merge admin drafts over the persisted slot configs so the page
   // live-previews editor changes before they are saved.

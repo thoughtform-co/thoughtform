@@ -47,17 +47,24 @@ export const PORTFOLIO_ARC: ArcDef = {
   hero: {
     eyebrow: "Thoughtform · Portfolio · Loop Earplugs",
     title: { pre: "AI capability,", em: "built inside the work." },
-    lede: "I architect the fit between an organisation's work and the intelligence available to it. At Loop Earplugs that meant one loop, run with every team — navigate, encode, build — until the teams ran it without me. This is the record: the adoption work, and the four tools it produced.",
+    // The homepage's own register: a short headline over ~110 characters
+    // of lede. The role argument is not lost — it opens the About beat
+    // and the overview's thesis; the hero says what this page IS.
+    lede: "Eighteen months at Loop Earplugs — the adoption program, the Skills it encoded, and the four tools it produced.",
     actions: [
       { id: "see-tools", label: "See the tools", href: "#tools", primary: true },
-      { id: "see-program", label: "The adoption program", href: "#overview" },
+      { id: "see-program", label: "The program", href: "#overview" },
     ],
+    // THE HOMEPAGE'S HERO, PLATE AND ALL (ADR-075): the Gateway key
+    // visual, delivered the landing's way — AVIF over WebP in dark, and
+    // theme.css's own light rule painting `Gateway_v2-light.webp`.
     image: {
-      src: "/images/Thoughtform_Key%20Visual_14d.webp",
+      src: "/images/Gateway_v1b.webp",
       alt: "",
-      width: 2560,
-      height: 1440,
+      width: 2880,
+      height: 1620,
     },
+    plate: "gateway",
   },
   meta: {
     title: "Portfolio — Thoughtform",

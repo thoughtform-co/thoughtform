@@ -17,7 +17,12 @@ import type { RefObject } from "react";
  *   · `--py` per [data-parallax] element (the landing formula).
  *   · `.hud__brand` `is-collapsed` at scrollY > 0.5·vh — the HudNav
  *     pattern: a class on the element, never a root attribute.
- *   · `data-arc-scrolled` on the root past 1vh — the ArcMenu gate.
+ *   · `data-arc-scrolled` on the root past 1vh — the header's gate.
+ *   · `visibility` on the hero card past the curtain, and
+ *     `data-arc-entry` on <html> while the card still covers any of the
+ *     viewport — the ADR-022 v8 curtain, ported in ADR-075. The first
+ *     beat's PLANE is held still against that flag while this card
+ *     scrolls off it; the card is the mover, exactly as on the landing.
  *
  * Never writes corridor channels (`--svc-*`, `data-corridor-*`, …).
  *
@@ -34,10 +39,15 @@ interface ArcScrollOptions {
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
+/** Viewports past which the hero card is released from the paint
+ *  (useLandingScroll.ts's own value — one curtain, one number). */
+const HERO_CURTAIN_RELEASE_VH = 1.35;
+
 export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
   const rafId = useRef<number | null>(null);
   const collapsedRef = useRef(false);
   const scrolledRef = useRef(false);
+  const entryRef = useRef(false);
   const reduceQuery = useRef<MediaQueryList | null>(null);
 
   const frame = useCallback(() => {
@@ -64,6 +74,13 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
           const cover = raw * raw * raw * (raw * (raw * 6 - 15) + 10);
           hero.style.setProperty("--hero-cover", cover.toFixed(4));
         }
+        // THE CURTAIN'S RELEASE (useLandingScroll's `writeHeroCurtainLift`,
+        // same constants). `.hero` is z-index 4 and `.arc-section` is 1, so
+        // the card outranks every section on the page — off-screen is not
+        // enough on its own, and a held first plane means the card and a
+        // section now share the viewport at the seam.
+        hero.style.visibility =
+          scrollY >= vh - 0.5 || scrollY > vh * HERO_CURTAIN_RELEASE_VH ? "hidden" : "";
       }
 
       if (!reduceMotion) {
@@ -94,16 +111,45 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
     onFrame?.(scrollY, vh);
   }, [rootRef, variant, onFrame]);
 
+  /**
+   * THE ENTRY FLAG, WRITTEN SYNCHRONOUSLY — not from the rAF (ADR-075).
+   *
+   * It switches the first beat's plane between `fixed` and flow, which is
+   * a LAYER-MODE change: one frame of lag shows a gap at the handoff. The
+   * landing's `syncCorridorEntryState` runs synchronously for the same
+   * reason. One rect read per scroll event, and only threshold crossings
+   * touch the DOM.
+   *
+   * The condition is the card's own bottom edge: while any of it still
+   * covers the viewport the beat behind it is held. The CSS gates the
+   * rest — terminal motion only, and never a beat taller than the
+   * viewport (a tall stage centres its plane in a box bigger than the
+   * fixed cell, so the two positions would not agree at the handoff).
+   */
+  const syncEntry = useCallback(() => {
+    if (variant !== "detail") return;
+    const hero = rootRef.current?.querySelector<HTMLElement>(".arc-hero");
+    if (!hero) return;
+    const covering = hero.getBoundingClientRect().bottom > 0;
+    if (covering === entryRef.current) return;
+    entryRef.current = covering;
+    const doc = document.documentElement;
+    if (covering) doc.setAttribute("data-arc-entry", "");
+    else doc.removeAttribute("data-arc-entry");
+  }, [rootRef, variant]);
+
   const onScroll = useCallback(() => {
+    syncEntry();
     if (rafId.current !== null) return;
     rafId.current = window.requestAnimationFrame(frame);
-  }, [frame]);
+  }, [frame, syncEntry]);
 
   // First frame before paint — otherwise the rails flash unclipped (or
   // clipped) for a frame on load at a restored scroll position.
   useLayoutEffect(() => {
+    syncEntry();
     frame();
-  }, [frame]);
+  }, [frame, syncEntry]);
 
   useEffect(() => {
     // Captured at setup — the cleanup must release the node this effect
@@ -117,6 +163,7 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
       if (rafId.current !== null) window.cancelAnimationFrame(rafId.current);
       if (variant === "detail") {
         document.documentElement.style.removeProperty("--hero-lift");
+        document.documentElement.removeAttribute("data-arc-entry");
       }
       if (root) {
         root.removeAttribute("data-arc-scrolled");

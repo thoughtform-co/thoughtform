@@ -5,7 +5,9 @@ import type { CSSProperties, ReactNode } from "react";
 
 import type { ArcMotion } from "@/lib/arcs/types";
 
+import { HeroThemeGlitch } from "@/components/landing/v7/HeroThemeGlitch";
 import { LightModeToggle } from "@/components/landing/v7/LightModeToggle";
+import { useHeroBoot } from "@/components/landing/v7/hooks/useHeroBoot";
 import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
 
 import { ArcHudNav } from "./ArcHudNav";
@@ -26,6 +28,9 @@ interface ArcShellProps {
   /** `sliceV7Sections([]).bodyClass` — "theme-instrument density-comfortable". */
   bodyClass: string;
   variant: "index" | "detail";
+  /** `hero.plate === "gateway"` — the hero is the landing's own plate, so
+   *  it gets the landing's theme-swap glitch too (ADR-075). */
+  gatewayPlate?: boolean;
   /** Detail only — sections with a menuLabel, in page order. */
   menu?: readonly ArcMenuItem[];
   /** Choreography system (ADR-057). Default: the ADR-052 IO reveal. */
@@ -57,6 +62,7 @@ export function ArcShell({
   variant,
   menu,
   motion = "reveal",
+  gatewayPlate = false,
   children,
 }: ArcShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -65,6 +71,9 @@ export function ArcShell({
   // second listener (ADR-002) — hence the callback handoff.
   const onBeatFrame = useArcTerminalMotion({ rootRef, motion });
   useArcScroll({ variant, rootRef, onFrame: onBeatFrame });
+  // The hero's terminal boot — the landing's, shared (ADR-075). A no-op
+  // on the overview, which renders no hero.
+  useHeroBoot(rootRef);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -127,6 +136,14 @@ export function ArcShell({
           doctrine. `data-theme="dark"` on `.arc-root` above is an inert
           marker; the live channel is the <html> attribute. */}
       {THEME_TOGGLE && <LightModeToggle />}
+      {/* The hero's theme-swap glitch (ADR-060), for the heroes that carry
+          the landing's plate — the canvas masks an already-committed CSS
+          flip, so every failure path degrades to that hard cut. A leaf by
+          the same law as the toggle: it subscribes to the theme store
+          imperatively and owns no state here. */}
+      {THEME_TOGGLE && gatewayPlate && variant === "detail" ? (
+        <HeroThemeGlitch containerRef={rootRef} />
+      ) : null}
       {children}
     </main>
   );

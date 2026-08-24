@@ -437,8 +437,16 @@
    header's cream links landed on paper: measured 1.06:1 at 1440×800
    before this. One more term on the SAME overlay, not a patch under the
    menu — the eyebrow sits in the same band and gains with it. Strong
-   only at the very top edge, so the ring and the ridge are untouched. */
-.arc-hero .hero__video__overlay {
+   only at the very top edge, so the ring and the ridge are untouched.
+
+   ⚠ SCOPED TO THE OWN PLATE (ADR-075). A `plate: "gateway"` hero is
+   already dark where the header sits — measured 15.7:1 there with no band
+   at all — and in LIGHT the band is the wrong instrument twice over:
+   theme.css re-pins its `--void-deep-rgb` to the PAGE colour, so it
+   washes parchment across the top and drove the gold eyebrow to 1.84:1.
+   The band exists for the near-white key visual; it goes where that
+   visual goes. */
+.arc-hero[data-plate="own"] .hero__video__overlay {
   background:
     linear-gradient(
       to right,
@@ -458,13 +466,40 @@
     );
 }
 
+/* ⚠ AN ARC THAT OWNS ITS PLATE KEEPS IT IN BOTH THEMES (ADR-075).
+   `theme.css` swaps the hero key visual by painting
+   `Gateway_v2-light.webp` as a background on `.hero__bg` and hiding the
+   `<img>` — a GLOBAL rule, because on the landing there is only one
+   hero. So until this rule an arc showed its own key visual in dark and
+   the LANDING's in light, and nothing on the surface said so (measured
+   live: the computed background was the Gateway plate while the arc's
+   own img was `display: none`).
+
+   Scoped HERE and never by editing theme.css: `tests/lib/theme-css-sweep.test.ts`
+   pins those two selector strings, and the landing — plus any arc that
+   declares `plate: "gateway"` — still wants them. */
+html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg {
+  background: var(--void, #0a0908);
+}
+html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
+  display: block;
+}
+
+/* ⚠ THE INK RUNG, NOT `--gold-70` (ADR-075, adopting ADR-063 U2's ramp).
+   A saturated gold is inherently high-luminance, so one gold cannot serve
+   a mark AND small text across a ground flip: measured on this eyebrow,
+   `--gold-70` read 8.4:1 in dark and 1.84:1 in light — the family
+   ADR-058 recorded as an open sweep. `--gold-ink` is the ramp's 4.5:1
+   rung and inverts with the ground, which is the invariant that matters
+   ("more contrast against THIS ground"), and it is byte-equal to the
+   shipped value in dark. */
 .arc-hero__eyebrow {
   margin: 0 0 clamp(14px, 2.2vh, 24px);
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-size: 10.5px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  color: var(--gold-ink, var(--gold, #caa554));
 }
 .arc-hero .hero__headline em {
   font-style: normal;
@@ -2017,5 +2052,78 @@
 @media (max-width: 1100px) and (min-width: 981px) and (prefers-reduced-motion: no-preference) {
   .arc-dossier__console {
     height: clamp(420px, 62svh, 720px);
+  }
+}
+
+/* ── THE CURTAIN SEAM (ADR-075, porting ADR-022 v8) ────────────────────
+   The homepage's hero does not hold: it is the MOVER. The card scrolls
+   straight up and off its own 100vh while the section behind it is held
+   STILL, so the reader sees a curtain lift off a stationary panel. (The
+   inverse — a pinned hero with section two rising over it — is ADR-022's
+   own v7 and is superseded.)
+
+   ⚠ FREEZE THE PLANE, NEVER THE STAGE. `.arc-stage` is what gives the
+   beat its flow height, and `useArcTerminalMotion` caches
+   `beat.topDoc = rect.top + scrollY`, derives `pinStartY` from it and
+   writes `--arc-stage-pin` off `stageH`. Take the stage out of flow and
+   every downstream beat shifts ~100svh and every clock desyncs. The
+   plane carries only the content, so fixing it leaves the section's
+   height untouched — the same split the landing makes when it fixes
+   `.home-v2-stage__sticky` and never `.home-v2-stage`.
+
+   ⚠ THE FIXED CELL MUST REPLICATE THE STAGE'S OWN BOX, or the content
+   jumps at the handoff: the stage is a centred grid with
+   `--arc-stage-pad` block padding, so a plane pinned to `top: 0` alone
+   would sit a padding's worth higher than the one it hands over to. At
+   scrollY = vh the stage's sticky pin puts it at viewport 0 — exactly
+   where the fixed cell was — and the swap is invisible.
+
+   ⚠ `left: 50%; width: 100vw; margin-left: -50vw`, NOT `inset: 0`. The
+   landing recorded the bug: a fixed box pinned to `left: 0` takes the
+   scrollbar-excluded width and the cell jumps sideways at the seam.
+
+   ⚠ `:not([data-arc-tall])` is the guard, and it is self-maintaining —
+   the controller writes that attribute per viewport. A stage taller than
+   the viewport centres its plane in a box bigger than the fixed cell, so
+   the two positions could not agree; a tall first beat simply keeps
+   today's behaviour. */
+html[data-arc-entry]
+  .arc-root[data-motion="terminal"]
+  .arc-hero
+  + .arc-section:not([data-arc-tall])
+  .arc-plane {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-block: var(--arc-stage-pad);
+  /* Under the hero card's z 4, above the page ground. */
+  z-index: 1;
+}
+/* The release query mirrors ARC_TERMINAL_MEDIA: below the tier the
+   controller never runs, the beats are plain flowing sections, and a
+   fixed plane would be a panel stuck to the viewport.
+
+   ⚠ THE SELECTOR MUST MATCH THE FREEZE'S, `:not()` INCLUDED. A media
+   query adds no specificity, so dropping the `:not([data-arc-tall])`
+   made this rule (0,6,1) against the freeze's (0,7,1) and the release
+   silently lost — measured `position: fixed` under reduced motion and at
+   430px before this was tied. */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  html[data-arc-entry]
+    .arc-root[data-motion="terminal"]
+    .arc-hero
+    + .arc-section:not([data-arc-tall])
+    .arc-plane {
+    position: static;
+    width: auto;
+    margin-left: 0;
+    height: auto;
+    padding-block: 0;
+    display: block;
   }
 }

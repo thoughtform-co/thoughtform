@@ -63,15 +63,24 @@ export default async function ArcPage({ params }: ArcRouteParams) {
   // Absent motion is the ADR-052 reveal — resolved once, here, so the
   // rest of the tree never has to know the flag is optional.
   const motion = arc.motion ?? "reveal";
+  const gatewayPlate = arc.hero.plate === "gateway";
   return (
     <>
-      <link rel="preload" as="image" href={arc.hero.image.src} />
+      {/* ⚠ NO STATIC PRELOAD FOR A GATEWAY HERO (ADR-075). The plate is
+          theme-dependent, and the preload scanner runs before any script:
+          a static link would always pull the DARK plate and light
+          visitors would pay for both. `lib/theme/heroPreload.ts` injects
+          the right one from the theme the bootstrap just stamped. An arc
+          with its own plate has one file for both themes and keeps the
+          static link. */}
+      {gatewayPlate ? null : <link rel="preload" as="image" href={arc.hero.image.src} />}
       <ArcShell
         hudHtml={slice.hudHtml}
         bodyClass={slice.bodyClass}
         variant="detail"
         menu={menu}
         motion={motion}
+        gatewayPlate={gatewayPlate}
       >
         <ArcHero hero={arc.hero} />
         <ArcSectionRenderer sections={arc.sections} motion={motion} />

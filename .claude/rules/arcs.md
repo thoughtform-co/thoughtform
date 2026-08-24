@@ -17,6 +17,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - [ADR-057: Terminal motion](../sentinel/decisions/057-arc-terminal-motion.md) — the pinned-beat grammar on the `-v2` cuts
 - [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/portfolio`, the ninth kind, the shared evidence, the envelope on arcs
 - [ADR-073: The site's header on the arc pages](../sentinel/decisions/073-arc-header.md) — `ArcHudNav` replaces the left reel; `menuPrimary` chapters; the hero's top band
+- [ADR-075: The arc hero IS the homepage hero](../sentinel/decisions/075-arc-hero-curtain.md) — the plate, the shared boot, and the curtain seam
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -55,6 +56,31 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - **Compositing:** every section opaque void; `.gateway` stays
   display-none'd; the hero card never fades/transforms (only
   `.hero__content` moves).
+- **THE HERO IS THE HOMEPAGE'S, AND THE CARD IS THE MOVER** (ADR-075,
+  porting ADR-022 v8). It stays `relative; z-index: 4; height: 100vh` and
+  scrolls off, while the FIRST beat is held still — `data-arc-entry` on
+  `<html>` (written SYNCHRONOUSLY in the scroll handler: it switches a
+  layer mode and a rAF's lag shows a gap) fixes that beat's `.arc-plane`
+  to the viewport. ⚠ **Freeze the PLANE, never the stage** — the stage is
+  the beat's flow height and `useArcTerminalMotion` caches `topDoc` /
+  `pinStartY` / `--arc-stage-pin` off it. ⚠ The fixed cell must repeat the
+  stage's centred box + `--arc-stage-pad`, use
+  `left: 50%; width: 100vw; margin-left: -50vw` (never `inset: 0`), and the
+  release query must repeat the freeze's selector `:not([data-arc-tall])`
+  INCLUDED — a media query adds no specificity and the first cut's release
+  silently lost 0,6,1 against 0,7,1. ⚠ A sticky hero is ADR-022's rejected
+  v7 AND would freeze `--py` (the drift comes off a live rect).
+- **`hero.plate: "gateway"` DECLARES the landing's key visual** (ADR-075):
+  the AVIF/WebP `<picture>`, the theme glitch, and a row in `HERO_ROUTES`
+  instead of the route's static preload (a static link can only ever name
+  the dark plate). ⚠ Without it the hero is `data-plate="own"` and
+  arcs.css hands its image back IN LIGHT — theme.css's swap is global on
+  `.hero__bg`, so until ADR-075 every arc showed its own plate in dark and
+  the LANDING's in light. ADR-073's top band is scoped to own plates for
+  the same reason.
+- **The hero BOOTS from `useHeroBoot`** — the landing's own effect, shared.
+  Its collector recurses, so a headline's `<em>` decodes too; both shapes
+  are pinned in `tests/lib/hero-boot.test.tsx`.
 - **No three.js / Supabase / `LandingPage` imports** anywhere under
   `components/arcs/` or `lib/arcs/` (landing-performance doctrine).
   ⚠ **The casefile's dossier LEAVES are the one sanctioned import**
