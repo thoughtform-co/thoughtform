@@ -39,10 +39,22 @@ export interface VwTravel {
   /** How many year-rings have passed the camera — the tunnel's
    *  graduation, shared with the DOM axis so the two cannot drift. */
   rings: number;
+  /** True while the runway is WITHIN REACH but not yet flown — the
+   *  reader is a couple of viewports out, still in `#about`.
+   *
+   *  ⚠ IT EXISTS FOR SHADER COMPILATION, WHICH IS NOT A COST YOU CAN
+   *  SEE UNTIL IT IS TOO LATE. three never compiles a material for an
+   *  object it has not drawn, and the tunnel's group is `visible = false`
+   *  for the whole page before the travel — so the FIRST FRAME OF THE
+   *  DIVE was compiling two shaders, at the one moment the camera is
+   *  moving fastest. The painter warms itself on this flag: one frame
+   *  drawn at zero alpha, far enough out that a hitch has nowhere to
+   *  land. */
+  near: boolean;
 }
 
 export const vwTravelRef: { current: VwTravel } = {
-  current: { engaged: false, p: 0, entry: 0, flight: 0, rings: 0 },
+  current: { engaged: false, p: 0, entry: 0, flight: 0, rings: 0, near: false },
 };
 
 /** Reset every channel to its disengaged rest value. Called by the
@@ -55,4 +67,5 @@ export function clearVwTravel(): void {
   t.entry = 0;
   t.flight = 0;
   t.rings = 0;
+  t.near = false;
 }

@@ -6,7 +6,6 @@ import * as THREE from "three";
 
 import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
-import { getSmoothedVoidTravel } from "./motionFollower";
 import { BRANDMARK_ANCHOR_INTELLIGENCE } from "./sceneGeom";
 
 /**
@@ -275,6 +274,9 @@ export function VoidwalkerTimeTunnel() {
     []
   );
 
+  /** One-shot latch for the warm frame below. */
+  const warmed = useRef(false);
+
   useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
@@ -282,11 +284,28 @@ export function VoidwalkerTimeTunnel() {
 
     // Not travelling: hide, zero, and cost nothing.
     if (!t.engaged) {
-      if (group.visible) group.visible = false;
       wallAlpha.current = 0;
       ringAlpha.current = 0;
       wallMaterial.uniforms.uOpacity.value = 0;
       ringMaterial.uniforms.uOpacity.value = 0;
+
+      // ⚠ THE WARM FRAME. three's renderer skips invisible objects
+      // entirely, so a material on one is never compiled — and this
+      // group is invisible for the whole page before the travel. The
+      // first frame of the entry dive was therefore ALSO the frame that
+      // compiled two point shaders, at the moment the camera is moving
+      // fastest and any hitch is most visible.
+      //
+      // So when the reader comes within reach, draw once at zero alpha:
+      // the renderer walks the group, compiles both programs, and the
+      // reader sees nothing (uOpacity is 0 and the blend is additive).
+      // One frame, one time, two viewports before it is needed.
+      if (t.near && !warmed.current) {
+        warmed.current = true;
+        group.visible = true;
+        return;
+      }
+      if (group.visible) group.visible = false;
       return;
     }
     group.visible = true;
@@ -325,9 +344,6 @@ export function VoidwalkerTimeTunnel() {
     // anchor is a scene constant the corridor may re-tune.
     group.position.x = BRANDMARK_ANCHOR_INTELLIGENCE[0];
     group.position.y = BRANDMARK_ANCHOR_INTELLIGENCE[1];
-    // Touch the smoothed channel so the follower's settle is observable
-    // from here too (and so a future consumer cannot forget it exists).
-    void getSmoothedVoidTravel();
   });
 
   return (

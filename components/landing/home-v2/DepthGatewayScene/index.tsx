@@ -93,10 +93,6 @@ function MotionFollowerDriver() {
         // reverse-scroll out of the dock eases the fly-into-sphere
         // back out instead of snapping.
         dissipate: docked ? dockProgress : servicesAmbient ? 1 : 0,
-        // ADR-081: the time tunnel's flight. Rests at 0 whenever the
-        // travel is disengaged, so leaving it eases the camera back out
-        // of the wormhole rather than snapping.
-        voidTravel: vwTravelRef.current.engaged ? vwTravelRef.current.flight : 0,
       },
       delta,
       paintProgress,

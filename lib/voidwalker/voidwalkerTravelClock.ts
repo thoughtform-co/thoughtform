@@ -94,6 +94,51 @@ export const VW_TRAVEL_PARK = 0.44;
  */
 export const VW_TRAVEL_SPAN = 3.8;
 
+// ── The damping ───────────────────────────────────────────────────
+
+/**
+ * Time constant (seconds) of the flight's chase. Carried over from the
+ * motion follower's retired `voidTravel` channel, so the seam out of the
+ * fly-into-sphere still hands over on one time constant.
+ *
+ * ⚠ THIS IS THE AUTHORITY, NOT A MIRROR — and that is the point. The FOV
+ * above is mirrored because `sceneGeom` pulls THREE and cannot be
+ * imported here; a time constant needs no such copy, so the follower's
+ * channel was DELETED rather than pinned equal to this one. A dead damped
+ * channel that still looks authoritative is how the second clock comes
+ * back.
+ *
+ * ⚠ AND IT IS WHY THE FIELD READS AS ONE SPACE. Until this existed the
+ * camera flew a DAMPED value (the follower's `voidTravel` channel) while
+ * the DOM beats were written from RAW scroll in a different rAF: the two
+ * layers shared a projection and not a clock, so on any real scroll the
+ * cards snapped with the wheel while the walls glided behind them. One
+ * chase, owned by the hook, read by the DOM, the camera and the tunnel.
+ */
+export const VW_TRAVEL_TAU_S = 0.18;
+
+/** Jump rather than glide past this much of the runway in one step — a
+ *  hash-nav or a scroll-restore landing mid-flight must not fly the whole
+ *  wormhole. Mirror of the follower's own threshold. */
+const VW_TRAVEL_SNAP = 0.5;
+/** Sub-perceptual settle, so a reader parked at a beat sits at exactly
+ *  the scrubbed depth with no micro-creep. Mirror of the follower's. */
+const VW_TRAVEL_SETTLE = 0.0004;
+
+/**
+ * One step of the flight's exponential chase: covers ~63 % of the
+ * remaining gap per tau, ~95 % in 3·tau. Pure — `current` and `dt` are
+ * the caller's, so this stays unit-pinnable with no wall clock.
+ */
+export function travelChase(current: number, target: number, dtSeconds: number): number {
+  if (!Number.isFinite(current)) return target;
+  const d = target - current;
+  if (Math.abs(d) > VW_TRAVEL_SNAP) return target;
+  const dt = clamp(Number.isFinite(dtSeconds) ? dtSeconds : 0, 0, 0.1);
+  const next = current + d * (1 - Math.exp(-dt / VW_TRAVEL_TAU_S));
+  return Math.abs(target - next) < VW_TRAVEL_SETTLE ? target : next;
+}
+
 // ── Depth ─────────────────────────────────────────────────────────
 
 /** Where a beat is born, in CSS px of translateZ (negative = away). */
@@ -255,6 +300,115 @@ export function beatPowerOn(t: number): number {
   return clamp01((clamp(t, -1, 1) + 0.46) / 0.4);
 }
 
+// ── The trajectory ────────────────────────────────────────────────
+
+/**
+ * ⚠ THE FLIGHT PATH IS AUTHORED IN SCREEN FRACTIONS, NOT IN CSS PX, AND
+ * THAT IS THE WHOLE CORRECTION.
+ *
+ * The first cut offset a beat by a flat `±7%` of its own 680px box —
+ * about 48px — and then projected it. At `VW_Z_FAR` the projected scale
+ * is `P/(P−z)` ≈ 0.31, so those 48px arrive on screen as FIFTEEN: every
+ * beat flew at the reader dead centre and the alternation only appeared
+ * once it had already parked. The "asymmetrical, alternating" reading was
+ * arithmetically invisible for the entire approach.
+ *
+ * So the path is declared where it is read — as a fraction of the
+ * viewport — and the hook multiplies back through the beat's own depth
+ * (`(P − z)/P`, the inverse of the projection) to get the CSS offset. The
+ * curve below is therefore literally what the reader sees.
+ */
+
+/** Lateral offset at the reading plane, as a fraction of viewport width.
+ *  Roughly what the old flat 7 % produced once parked, so the park's
+ *  composition is unchanged — only the approach to it is. */
+const VW_X_PARK = 0.042;
+/** …at birth, deep in the tunnel: the beat enters from the side wall. */
+const VW_X_FAR = 0.2;
+/** …and as it passes the camera, thrown wide off its own side. */
+const VW_X_NEAR = 0.62;
+
+/** Vertical offset at birth, as a fraction of viewport height, signed
+ *  AGAINST the lateral side so left beats fall in from high and right
+ *  beats rise from low. A field that alternates on one axis only reads as
+ *  a fan; crossing the two makes each arrival its own path. */
+const VW_Y_FAR = 0.1;
+/** …and as it leaves, continuing the same diagonal past the shoulder. */
+const VW_Y_NEAR = 0.16;
+
+/** Peak yaw, degrees. The beat is turned toward the axis at depth and is
+ *  exactly flat at the park — type is never read on a skewed plane. */
+const VW_ROT_MAX = 9;
+
+/** `side` is +1 for a right-hand beat, −1 for a left-hand one — the
+ *  record's own `data-side`, never a `:nth-child` parity (the film
+ *  interlude sits in the same list and would flip every beat under it). */
+export type VwSide = 1 | -1;
+
+/** How far the path has travelled from the park, eased, 0 → 1. */
+const away = (t: number) => ease(Math.abs(clamp(t, -1, 1)));
+
+/**
+ * Lateral position at flight parameter `t`, as a SIGNED FRACTION OF
+ * VIEWPORT WIDTH (see the block comment above).
+ */
+export function beatScreenXFrac(t: number, side: VwSide): number {
+  const x = clamp(t, -1, 1);
+  const to = x < 0 ? VW_X_FAR : VW_X_NEAR;
+  return side * lerp(VW_X_PARK, to, away(x));
+}
+
+/** Vertical position at `t`, as a signed fraction of viewport height. */
+export function beatScreenYFrac(t: number, side: VwSide): number {
+  const x = clamp(t, -1, 1);
+  const to = x < 0 ? VW_Y_FAR : -VW_Y_NEAR;
+  return -side * lerp(0, to, away(x));
+}
+
+/** Yaw at `t`, degrees. Zero at the park in both directions. */
+export function beatRotDeg(t: number, side: VwSide): number {
+  return -side * VW_ROT_MAX * away(t);
+}
+
+/**
+ * The CSS offset for a screen fraction, given the beat's own depth and
+ * the stage's measured perspective — the inverse of the projection, so
+ * the authored curve arrives on screen unchanged at every viewport.
+ */
+export function beatDepthUnproject(z: number, perspectivePx: number): number {
+  const p = perspectivePx > 1 ? perspectivePx : 1;
+  return (p - z) / p;
+}
+
+// ── Slim in flight, full on park ──────────────────────────────────
+
+/** How much of the approach the detail takes to power on. */
+const VW_DETAIL_IN = 0.3;
+/** …and how quickly it goes once the beat leaves. Shorter: the reading
+ *  is over the moment it starts to recede, and a paragraph that follows
+ *  the plate out competes with the one arriving behind it. */
+const VW_DETAIL_OUT = 0.16;
+
+/**
+ * The DETAIL gate — the owner's "slim in flight, full on park".
+ *
+ * In flight a beat is its year, its title and its housing. The paragraph,
+ * the wireframe plate and the press bar power on as it settles and go as
+ * it leaves, so what flies is an object and what parks is a record.
+ *
+ * ⚠ It is a separate channel from `beatPowerOn`, deliberately. `--vw-b`
+ * lights the beat's own chrome and holds once lit; this one PEAKS at the
+ * park. Folding them together would either strip the title in flight or
+ * carry a full paragraph out through the camera — and rastering a 680px
+ * card carrying an SVG drawing under a per-frame blur is the single most
+ * expensive thing this layer can do.
+ */
+export function beatDetail(t: number): number {
+  const x = clamp(t, -1, 1);
+  if (x <= 0) return ease(clamp01((x + VW_DETAIL_IN) / VW_DETAIL_IN));
+  return 1 - ease(clamp01(x / VW_DETAIL_OUT));
+}
+
 /** Which stop is currently nearest the reading plane. */
 export function activeStop(p: number, n: number): number {
   if (n <= 0) return 0;
@@ -365,6 +519,26 @@ export function axisYearFrac(p: number, years: readonly number[]): number {
   const total = newest - oldest;
   if (Math.abs(total) < 1e-6) return 0;
   return clamp01((newest - travelYear(p, years)) / total);
+}
+
+/**
+ * The record's years as WHOLE years — the one definition, used by every
+ * consumer that letters or places a date.
+ *
+ * ⚠ `Math.floor`, NEVER `Math.round`, AND IT IS NOT COSMETIC. Two beats
+ * carry fractional `sortYear`s purely to order them inside a year they
+ * SHARE (2018.9 before 2018, 2016.8 before 2016). Rounded, those became
+ * **2019** and **2017** — years no chip on the surface prints — so the
+ * rail's readout lettered 2019 beside a parked card reading 2018, and the
+ * marker seated between its own rungs at 0.592 instead of on 2018's rung
+ * at 0.667. Caught on a live capture, not by any assertion.
+ *
+ * Flooring at the source is what makes the readout, the marker, the rail's
+ * labels and the tunnel's ring cadence agree — they all measure `years`,
+ * so they can only agree if they are handed the same numbers.
+ */
+export function wholeYears(years: readonly number[]): number[] {
+  return years.map((y) => Math.floor(y));
 }
 
 /** Where a given year sits on the axis, 0 (newest) → 1 (oldest). The

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 import { useVoidwalkerScroll } from "../hooks/useVoidwalkerScroll";
 import { useVoidwalkerTravelScroll } from "../hooks/useVoidwalkerTravelScroll";
@@ -8,7 +9,7 @@ import { VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
 import { MediaLightbox, useWalkthrough } from "../services/casefile/MediaLightbox";
 import { FilmPlate } from "./wireframes/FilmPlate";
 import { VOIDWALKER_WIREFRAMES } from "./wireframes/voidwalkerWireframes";
-import { yearFrac } from "@/lib/voidwalker/voidwalkerTravelClock";
+import { wholeYears, yearFrac } from "@/lib/voidwalker/voidwalkerTravelClock";
 import {
   VOIDWALKER_BEATS,
   VOIDWALKER_HEAD,
@@ -286,45 +287,79 @@ function Interlude({ beat }: { beat: VoidwalkerBeat }) {
 }
 
 /**
- * The GRADUATED AXIS (ADR-081's date grammar — the owner's A4 pick,
- * carried into three dimensions).
+ * THE LEFT RAIL IS THE TIME AXIS (owner, 2026-08-25 — superseding
+ * ADR-081's own `.vw-axis`).
  *
- * One tick per year between the newest beat and the oldest, majors at the
- * years the record actually lands on, and a marker that travels the axis
- * as the reader flies. The years are POSITIONS here, not labels beside
- * content — which is the whole argument: the UNEVEN GAPS are the reading,
- * and a list cannot show them.
+ * ADR-081 drew a second, bespoke graduated axis in the left gutter,
+ * beside a HUD rail that has carried a 13-tick ladder since ADR-031. The
+ * owner's ruling: _"we have a lift rail, so this is a nice opportunity
+ * to use it to map the actual dates"_ — one instrument, not two.
  *
- * ⚠ Ticks and marker share ONE measure (`yearFrac` / `axisYearFrac`), so
- * the marker cannot land between its own ticks. The same measure drives
- * the tunnel's gold rings in the scene — the graduation, drawn twice, from
- * one source.
+ * ⚠ AND THE LADDER ALREADY IS THIS RECORD'S AXIS, EXACTLY. The rail's
+ * thirteen ticks are twelve intervals; the record runs 2026 → 2014,
+ * which is twelve years. Every year the record lands on seats on an
+ * INTEGER RUNG — 2025 on tick 1, 2022 on tick 4, 2020 on 6, 2018 on 8,
+ * 2016 on 10, 2014 on the terminus. So nothing is added to the ladder
+ * and nothing is taken from it (ADR-031's guardrail: all thirteen ticks
+ * stay). The rail is lettered with years instead of bearings while the
+ * reader is flying, and a marker travels it like the lift indicator it
+ * already resembles.
  *
- * Rendered on every path; inert (`display: none`) outside travel mode.
+ * ⚠ The seating is a COINCIDENCE OF THE RECORD, not a law, and
+ * `voidwalker-data.test.ts` pins the twelve-year span so that adding a
+ * beat outside it fails loudly rather than sliding every label off the
+ * ladder. The placement itself stays proportional (`yearFrac`), so an
+ * out-of-span record still reads correctly — just not on the rungs.
+ *
+ * ⚠ THE YEAR IS `Math.floor`, NOT `Math.round`. Two beats carry
+ * fractional `sortYear`s purely to order them inside a shared year
+ * (2018.9, 2016.8); rounding lettered **2019** and **2017** on the axis
+ * — years no chip on the surface prints.
+ *
+ * It portals into `.hud__rail--l` and is mounted only on the travel
+ * path. ⚠ The host must be `position: absolute`: the rail is a flex
+ * column, and a static child leaves the ticks' percentage box entirely
+ * (ADR-059's recorded trap, and the reason `.rin-host` looks the way it
+ * does).
  */
-function TravelAxis({ years }: { years: readonly number[] }) {
-  if (years.length < 2) return null;
-  const newest = Math.round(years[0]!);
-  const oldest = Math.round(years[years.length - 1]!);
-  const majors = new Set(years.map((y) => Math.round(y)));
-  const ticks: { year: number; frac: number; major: boolean }[] = [];
-  for (let y = newest; y >= oldest; y--) {
-    ticks.push({ year: y, frac: yearFrac(y, years), major: majors.has(y) });
-  }
-  return (
-    <div className="vw-axis" aria-hidden="true">
-      <div className="vw-axis__rail" />
-      {ticks.map((t) => (
-        <div
-          key={t.year}
-          className={`vw-axis__tick${t.major ? " vw-axis__tick--major" : ""}`}
-          style={{ ["--vw-tick" as string]: t.frac } as CSSProperties}
+function RailDates({ years }: { years: readonly number[] }) {
+  /* The host is BUILT in a lazy initialiser and only ATTACHED by the
+     effect, so nothing calls `setState` inside one. (`RailInstruments`
+     does the same job with a state write; this shape keeps the identity
+     stable across renders and stays out of the cascading-render rule.)
+     Rendering into a not-yet-attached node is fine — React moves the
+     children with it the moment the effect appends it. */
+  const [host] = useState<HTMLElement | null>(() =>
+    typeof document === "undefined" ? null : document.createElement("div")
+  );
+
+  useEffect(() => {
+    const rail = document.querySelector<HTMLElement>(".hud__rail--l");
+    if (!rail || !host) return;
+    host.className = "vw-rail";
+    host.setAttribute("aria-hidden", "true");
+    rail.appendChild(host);
+    return () => host.remove();
+  }, [host]);
+
+  if (!host || years.length < 2) return null;
+  const whole = wholeYears(years);
+  const marks = [...new Set(whole)];
+  return createPortal(
+    <>
+      {marks.map((y) => (
+        <span
+          key={y}
+          className="vw-rail__yr"
+          data-y={y}
+          style={{ ["--vw-yf" as string]: yearFrac(y, whole) } as CSSProperties}
         >
-          {t.major ? <span className="vw-axis__yr">{t.year}</span> : null}
-        </div>
+          {y}
+        </span>
       ))}
-      <div className="vw-axis__mark" />
-    </div>
+      <i className="vw-rail__mark" />
+    </>,
+    host
   );
 }
 
@@ -367,6 +402,11 @@ export function VoidwalkerStation() {
 
   return (
     <div className="vw" ref={rootRef}>
+      {/* The dates live on the HUD's own left rail while the reader is
+          flying — one instrument, not two (see `RailDates`). Mounted
+          only on the travel path; the vertical mode reads its years off
+          each beat's marker chip, as it always has. */}
+      {travel ? <RailDates years={years} /> : null}
       {/* The runway and the stage are rendered on EVERY path and are
           `display: contents` until the hook writes `data-vw-mode="travel"`
           — so the vertical timeline is the same DOM in a different
@@ -374,7 +414,6 @@ export function VoidwalkerStation() {
           the fallback honest and the record's guards walking real text. */}
       <div className="vw-travel-root">
         <div className="vw-travel-stage">
-          <TravelAxis years={years} />
           <header className="vw-head">
             <h2 className="vw-head__title">
               <DecodeRuns segments={[VOIDWALKER_HEAD.title]} className="vw-head__title-run" />

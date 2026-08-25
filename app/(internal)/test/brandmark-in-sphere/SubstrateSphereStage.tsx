@@ -91,7 +91,6 @@ function MotionFollowerSnapDriver() {
       epilogue: 0,
       dissipate: 0,
       // ADR-081's channel. The lab never travels, so it stays parked at 0.
-      voidTravel: 0,
     });
     // Touch driveMotionFollower to keep the import live — if any
     // future refactor moves the snap inside `drive`, we want the
@@ -130,7 +129,6 @@ export function SubstrateSphereStage({
       epilogue: 0,
       dissipate: 0,
       // ADR-081's channel. The lab never travels, so it stays parked at 0.
-      voidTravel: 0,
     });
     // Ensure the gyro path is enabled; preserve the user's tuning
     // knobs — we only force `enabled`. Other params stay at whatever

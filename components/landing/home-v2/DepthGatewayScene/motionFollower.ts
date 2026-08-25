@@ -54,14 +54,6 @@ export interface MotionFollowerState {
    *  (brandmark + news ticker) stay glued to the canvas sphere
    *  (2026-06-18 elegance pass). */
   dissipate: number;
-  /** Smoothed VOIDWALKER TIME TUNNEL flight (0..1, ADR-081). The travel
-   *  runs fourteen viewports of scroll and the camera covers a long axial
-   *  arc down the tunnel, so the raw wheel-quantized runway progress
-   *  reads as stepped exactly the way the epilogue and dissipate scrubs
-   *  did. Every travel consumer (the camera's dive + cruise, the tunnel
-   *  painter's flow) flies THIS chased value so the whole flight glides
-   *  on one clock. */
-  voidTravel: number;
 }
 
 /** Damping time constants (seconds), per channel. The follower covers
@@ -87,11 +79,6 @@ const MOTION_FOLLOWER_TAU_EPILOGUE_S = 0.18;
  *  flyover the user reads just before it — wheel steps melt into one
  *  glide instead of stepping the fly-into-sphere (~0.55s settle). */
 const MOTION_FOLLOWER_TAU_DISSIPATE_S = 0.18;
-/** Void-travel (time tunnel) chase. Matched to the dissipate it
- *  continues from — the reader falls out of the fly-into-sphere
- *  straight into the wormhole, and two different time constants across
- *  that seam would read as the camera changing hands. */
-const MOTION_FOLLOWER_TAU_VOID_TRAVEL_S = 0.18;
 /** STACK channel time constant — used TWICE (cascaded second-order
  *  chase, see below). The sources/surfaces dock is the corridor's
  *  final reveal and reads best as an editorial speed ramp: a single
@@ -119,7 +106,6 @@ const state: MotionFollowerState = {
   stack: 0,
   epilogue: 0,
   dissipate: 0,
-  voidTravel: 0,
 };
 
 /** Intermediate stage of the stack's cascaded (second-order) chase:
@@ -158,7 +144,6 @@ export function snapMotionFollower(targets: MotionFollowerState): void {
   stackMid = targets.stack;
   state.epilogue = targets.epilogue;
   state.dissipate = targets.dissipate;
-  state.voidTravel = targets.voidTravel;
 }
 
 /**
@@ -221,13 +206,6 @@ export function driveMotionFollower(
   if (Math.abs(targets.dissipate - state.dissipate) > 0.5) {
     state.dissipate = targets.dissipate;
   }
-  // Void-travel teleport: paintProgress is pinned at 1 for the whole
-  // tunnel, so a hash-nav / scroll-restore landing mid-flight would
-  // otherwise glide the camera down the entire wormhole. Same reasoning,
-  // same threshold as the two channels above.
-  if (Math.abs(targets.voidTravel - state.voidTravel) > 0.5) {
-    state.voidTravel = targets.voidTravel;
-  }
 
   const dt = Math.min(0.1, Math.max(0, dtSeconds));
   if (dt <= 0) return;
@@ -239,7 +217,6 @@ export function driveMotionFollower(
   const kEpilogue = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_EPILOGUE_S);
   const kStack = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_STACK_S);
   const kDissipate = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_DISSIPATE_S);
-  const kVoidTravel = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_VOID_TRAVEL_S);
   state.panOffsetX += (targets.panOffsetX - state.panOffsetX) * kPan;
   state.substrate += (targets.substrate - state.substrate) * kReveal;
   state.orbits += (targets.orbits - state.orbits) * kReveal;
@@ -261,13 +238,6 @@ export function driveMotionFollower(
   // the fly-into-sphere when the user holds at a scroll position).
   if (Math.abs(targets.dissipate - state.dissipate) < 0.0004) {
     state.dissipate = targets.dissipate;
-  }
-  state.voidTravel += (targets.voidTravel - state.voidTravel) * kVoidTravel;
-  // Same sub-perceptual settle as its neighbours, so a reader parked at a
-  // beat sits at exactly the scrubbed depth with no micro-creep in the
-  // tunnel behind them.
-  if (Math.abs(targets.voidTravel - state.voidTravel) < 0.0004) {
-    state.voidTravel = targets.voidTravel;
   }
 }
 
@@ -306,10 +276,4 @@ export function getSmoothedEpilogueProgress(): number {
  *  to 0 otherwise, so reverse-scroll eases the fly-in back out). */
 export function getSmoothedDissipate(): number {
   return state.dissipate;
-}
-
-/** Smoothed VOIDWALKER TIME TUNNEL flight (0..1, ADR-081). Temporal
- *  counterpart of `vwTravelRef.current.flight`. */
-export function getSmoothedVoidTravel(): number {
-  return state.voidTravel;
 }

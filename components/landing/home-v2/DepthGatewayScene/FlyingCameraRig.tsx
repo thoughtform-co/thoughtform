@@ -5,11 +5,7 @@ import { useEffect, useRef } from "react";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
-import {
-  getSmoothedDissipate,
-  getSmoothedEpilogueProgress,
-  getSmoothedVoidTravel,
-} from "./motionFollower";
+import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   CAMERA_START,
   getCameraFov,
@@ -93,12 +89,19 @@ export function FlyingCameraRig() {
     // takes over BEFORE the dock/epilogue chain below and simply
     // replaces it — `getVoidwalkerTravelCameraPose(0, 0)` IS the parked
     // pose by construction, so engaging is an identity and there is no
-    // pop. It flies the SMOOTHED flight (the follower is a temporal
-    // FILTER, not a second easing curve — the single-authored-curve
-    // contract), and the entry dive rides the ref's own eased channel.
+    // pop (pinned by `tests/lib/voidwalker-travel-clock.test.ts`).
+    //
+    // ⚠ IT FLIES THE HOOK'S OWN DAMPED VALUE, NOT A SECOND FOLLOWER.
+    // This branch used to read `getSmoothedVoidTravel()` while the DOM
+    // beats over it were written from raw scroll: the two layers shared
+    // a projection and not a clock, so the cards snapped with the wheel
+    // while the walls glided. `useVoidwalkerTravelScroll` now owns the
+    // one chase (`travelChase`, the same 0.18s time constant the
+    // follower used) and publishes it here, so the field and the camera
+    // are the same motion by construction rather than by tuning.
     if (vwTravelRef.current.engaged) {
       const pose = getVoidwalkerTravelCameraPose(
-        getSmoothedVoidTravel(),
+        vwTravelRef.current.flight,
         vwTravelRef.current.entry
       );
       camera.position.set(pose.position[0], pose.position[1], pose.position[2]);

@@ -741,11 +741,16 @@ const VOID_CRUISE_DISTANCE = 26;
  *   CRUISE a constant-rate axial run down −Z, so the tunnel walls and
  *          the year rings always have relative motion to give.
  *
- * ⚠ At `travel = 0` this returns EXACTLY `getCorridorExitCameraPose(1)`
- * — the pose the ambient hold parks at — so the branch is an identity at
- * engage and there is no pop when the tunnel takes over. Same
- * construction contract as the corridor→epilogue and dock→exit handoffs;
- * the unit test pins it.
+ * ⚠ At `travel = 0` AND `entry = 0` this returns EXACTLY
+ * `getCorridorExitCameraPose(1)` — the pose the ambient hold parks at —
+ * POSITION AND GAZE, so the branch is an identity at engage and there is
+ * no pop when the tunnel takes over. Same construction contract as the
+ * corridor→epilogue and dock→exit handoffs.
+ *
+ * ⚠ BOTH HALVES ARE PINNED NOW. This comment claimed the identity, the
+ * ADR repeated it, and no test existed — while the gaze was in fact
+ * snapping sixteen degrees at engage. Do not weaken the guard to the
+ * position alone; that is precisely the half that was already true.
  */
 export function getVoidwalkerTravelCameraPose(
   travel: number,
@@ -766,11 +771,28 @@ export function getVoidwalkerTravelCameraPose(
   // the medium must not surge between beats (see `travelFlight`).
   const z = entryZ - VOID_CRUISE_DISTANCE * t;
 
+  // ⚠ THE GAZE IS BLENDED ON THE DIVE, AND IT USED TO SNAP. The parked
+  // pose looks at a point just past the brandmark — close, and well
+  // below the camera's own eye height — while the tunnel's gaze runs
+  // LOOK_AHEAD units straight down the axis. Handing the camera over
+  // with the axial gaze already applied moved the look-at point 5.2
+  // units in one frame, which is a SIXTEEN-DEGREE pitch snap at the
+  // exact instant the reader crosses into the runway: the position was
+  // an identity, the gaze was not, and the "no pop" contract above was
+  // only ever half true. Nothing measured it until the identity finally
+  // got a test.
+  //
+  // Blended on the ENTRY channel, the dive is the camera levelling out
+  // as it passes through the mark — which is the gesture anyway.
+  const lookZ = lerp(base.lookAt[2], z - LOOK_AHEAD, e);
+
   return {
     position: [entryX, entryY, z],
-    // The gaze stays down the tunnel's axis, always ahead of the camera,
-    // so the vanishing point sits where the next beat will arrive from.
-    lookAt: [centre[0], centre[1], z - LOOK_AHEAD],
+    // The gaze ends up down the tunnel's axis, always ahead of the
+    // camera, so the vanishing point sits where the next beat will
+    // arrive from — and it STARTS exactly where the ambient hold left
+    // it.
+    lookAt: [lerp(base.lookAt[0], centre[0], e), lerp(base.lookAt[1], centre[1], e), lookZ],
   };
 }
 

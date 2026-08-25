@@ -129,13 +129,27 @@ const readTravel = () =>
       };
     });
     const painting = beats.filter((b) => !b.far && b.o > 0.01);
+    const railEl = document.querySelector(".vw-rail");
     return {
       p: Number(p.toFixed(4)),
       mode: st?.getAttribute("data-vw-mode") ?? null,
       stop: root?.getAttribute("data-vw-stop") ?? null,
       persp: stage ? getComputedStyle(stage).perspective : null,
-      axis: root ? getComputedStyle(root).getPropertyValue("--vw-axis").trim() : null,
-      year: root ? getComputedStyle(root).getPropertyValue("--vw-year").trim() : null,
+      // The date instrument is the HUD's own LEFT RAIL now, not a
+      // bespoke axis in the gutter (owner, 2026-08-25) — so the marker
+      // and the year readout are read off `.vw-rail`, and `railOn` is
+      // the positional gate that must be false everywhere but here.
+      axis: railEl ? getComputedStyle(railEl).getPropertyValue("--vw-axis").trim() : null,
+      year: railEl ? railEl.getAttribute("data-yr") : null,
+      lit: railEl ? (railEl.querySelector(".vw-rail__yr[data-now]")?.textContent ?? null) : null,
+      railOn: railEl ? railEl.hasAttribute("data-on") : null,
+      railYears: railEl ? railEl.querySelectorAll(".vw-rail__yr").length : 0,
+      // One gold mark on the rail at a time: the journey diamond hands
+      // over to the year car while the reader is inside the timeline.
+      diamond: (() => {
+        const d = document.querySelector("[data-rail-manifest-root]");
+        return d ? Number(getComputedStyle(d).opacity) : null;
+      })(),
       ambient: document.documentElement.getAttribute("data-services-ambient"),
       exit: document.documentElement.getAttribute("data-corridor-exit"),
       painting: painting.length,
@@ -144,7 +158,9 @@ const readTravel = () =>
       parked: painting
         .filter((b) => b.o > 0.98)
         .map((b) => ({ id: b.id, top: b.top, bottom: b.bottom, h: b.h })),
-      overflowing: painting.filter((b) => b.o > 0.98 && (b.top < 0 || b.bottom > vh)).map((b) => b.id),
+      overflowing: painting
+        .filter((b) => b.o > 0.98 && (b.top < 0 || b.bottom > vh))
+        .map((b) => b.id),
     };
   });
 
@@ -153,6 +169,12 @@ const base = g.runwayTop ?? 0;
 const span = (g.runwayH ?? VH) - VH;
 // Entry dive, then each stop's park, then the foot.
 const marks = [
+  // ⚠ ABOVE THE RUNWAY, and it is the only mark that proves a
+  // POSITIONAL gate. `data-vw-mode` is set as soon as the path is
+  // capable, so anything keyed on the mode is already true here — which
+  // is exactly how ADR-081 U1 parked the camera at the tunnel mouth for
+  // the whole page with every guard green.
+  ["before", -0.12],
   ["entry-00", 0.0],
   ["entry-mid", 0.05],
   ["entry-end", 0.1],
@@ -161,19 +183,50 @@ for (let i = 0; i < 10; i++) {
   // Stop homes: ENTRY + ((i+0.5)/n)*(1 − ENTRY − FOOT)
   marks.push([`stop-${String(i).padStart(2, "0")}`, 0.1 + ((i + 0.5) / 10) * 0.78]);
 }
+// ⚠ MID-FLIGHT MARKS. Every other mark lands on a PARK, where a beat is
+// centred and flat by construction — so a capture made only of parks
+// cannot show the flight, which is the thing being judged. These sit half
+// a stop off a home, with beats genuinely in transit.
+marks.push(["flight-a", 0.1 + (3 / 10) * 0.78]);
+marks.push(["flight-b", 0.1 + (6 / 10) * 0.78]);
 marks.push(["foot", 0.97]);
 
 for (const [name, frac] of marks) {
-  await walkTo(Math.round(base + span * frac));
+  await walkTo(Math.max(0, Math.round(base + span * frac)));
   const r = await readTravel();
   rows.push({ name, ...r });
   console.log(
     `${name.padEnd(10)} p=${String(r.p).padEnd(6)} stop=${String(r.stop).padEnd(3)} ` +
-      `paint=${r.painting} year=${r.year} ambient=${r.ambient} parked=${r.parked.length} ` +
+      `paint=${r.painting} year=${r.year} lit=${r.lit} rail=${r.railOn} dia=${r.diamond} ` +
+      `ambient=${r.ambient} parked=${r.parked.length} ` +
       `overflow=${r.overflowing.join(",") || "-"}`
   );
   await shot(name);
 }
+
+// ── The chase, measured live ─────────────────────────────
+// ⚠ THE ONE THING A STILL CANNOT SHOW. The field and the camera have to
+// be on ONE damped clock; before they were, the camera flew a smoothed
+// value while the DOM beats were written from raw scroll, and the cards
+// snapped with the wheel while the walls glided. Undamped, a beat's depth
+// is final on the frame the scroll lands. Damped, it is still moving.
+//
+// So: jump, read the next frame, read again after the chase has settled.
+// If those two are equal the damping is gone and nothing else here would
+// notice.
+await walkTo(Math.round(base + span * (0.1 + (2 / 10) * 0.78)));
+const chase = await page.evaluate(async () => {
+  const read = () => {
+    const el = document.querySelector(".vw-beat:not([data-vw-far])");
+    return el ? getComputedStyle(el).getPropertyValue("--vw-z").trim() : null;
+  };
+  window.scrollBy(0, Math.round(window.innerHeight * 1.2));
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const first = read();
+  await new Promise((r) => setTimeout(r, 600));
+  return { first, settled: read() };
+});
+console.log(`chase      first=${chase.first} settled=${chase.settled}`);
 
 // ── Gates ────────────────────────────────────────────────────────
 const bad = [];
@@ -205,7 +258,55 @@ say(
   `parked beat overflows the viewport: ${rows.flatMap((r) => r.overflowing).join(",")}`
 );
 // The perspective must be a real derived px value, not the fallback.
-say(rows.some((r) => !r.persp || r.persp === "none"), "perspective missing on the stage");
+say(
+  rows.some((r) => !r.persp || r.persp === "none"),
+  "perspective missing on the stage"
+);
+say(
+  !chase.first || !chase.settled || chase.first === chase.settled,
+  `the field is not damped — depth was final on the scroll frame (${chase.first})`
+);
+
+// ── The rail is the time axis (owner, 2026-08-25) ──────────────
+// The record's years are seated on the HUD's own ladder, a car travels
+// it, and the journey diamond hands over so only one gold mark is on
+// the rail at a time.
+say(
+  midRows.some((r) => r.railOn !== true),
+  "the rail's date axis is not lit during the travel"
+);
+say(
+  midRows.some((r) => !r.year),
+  "the rail reads no year"
+);
+// The car sits ON a lettered rung at every park — the scale is the
+// readout, so a car between rungs at a stop means the two measures have
+// drifted apart.
+say(
+  midRows.some((r) => r.lit !== r.year),
+  "the car is not on the rung it reads"
+);
+say(
+  midRows.some((r) => r.railYears < 5),
+  `the rail is missing its year rungs (${Math.min(...midRows.map((r) => r.railYears))})`
+);
+// ⚠ GOLD IS WAYFINDING — it marks ONE place. Two gold marks on one
+// rail is the frame lying about where the reader is.
+say(
+  midRows.some((r) => (r.diamond ?? 0) > 0.05),
+  "the journey diamond did not hand off to the year car"
+);
+// ⚠ AND THE HANDOFF MUST BE POSITIONAL, which only the `before` mark
+// can show: a rail keyed on `data-vw-mode` would letter years for the
+// whole document and fade the journey diamond on the hero, and every
+// in-runway assertion above would still pass. ADR-081 U1's defect in a
+// second place.
+const beforeRow = rows.find((r) => r.name === "before");
+say(
+  beforeRow?.railOn !== false,
+  "the rail is lit above the runway (the gate is modal, not positional)"
+);
+say((beforeRow?.diamond ?? 1) < 0.5, "the journey diamond is faded above the runway");
 
 console.log(`\n${bad.length ? "FAIL" : "PASS"}  ${OUT}`);
 for (const b of bad) console.log("  ✗ " + b);

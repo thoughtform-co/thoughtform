@@ -115,12 +115,25 @@
   /* ⚠ ONE transform, and translateZ is what makes this real 3D rather
      than a scale trick: the browser projects it through the stage's
      perspective, so near beats grow, off-centre beats skew toward the
-     vanishing point, and the whole field shares the canvas's projection. */
-  transform: translate3d(calc(-50% + var(--vw-dx, 0px)), -50%, var(--vw-z, 0px));
+     vanishing point, and the whole field shares the canvas's projection.
+     X, Y and the yaw are the beat's own PATH — written per frame by the
+     hook from a curve authored in screen fractions and un-projected
+     through this beat's depth, so the flight reads the same at every
+     viewport (`beatScreenXFrac` and its block comment). */
+  transform: translate3d(
+      calc(-50% + var(--vw-x, 0px)),
+      calc(-50% + var(--vw-y, 0px)),
+      var(--vw-z, 0px)
+    )
+    rotateY(var(--vw-rot, 0deg));
   opacity: var(--vw-o, 0);
   filter: blur(var(--vw-blur, 0px));
   transform-style: preserve-3d;
-  will-change: transform, opacity;
+  /* ⚠ `filter` IS NAMED HERE, and its absence was a real cost: a blur
+     radius that changes every frame re-rasterises the whole card, and
+     without the hint the browser cannot keep a layer for it. The hook
+     also quantises the radius to half-pixel steps for the same reason. */
+  will-change: transform, opacity, filter;
   /* The parked stop is the only one a reader can touch. */
   pointer-events: none;
 }
@@ -129,18 +142,53 @@
 #voidwalker[data-vw-mode="travel"] .vw-beat[style*="--vw-o: 1"] {
   pointer-events: auto;
 }
-/* Out past the fog at either end: stop painting entirely. */
+/* Out past the fog at either end: stop painting entirely.
+   ⚠ NOT `display: none`. This attribute flips at every stop transition,
+   and taking a card out of the box tree and putting it back re-runs its
+   layout at exactly the moment the field is moving fastest. `content-
+   visibility` drops the same rendering work while keeping the box, and
+   `visibility` takes it out of paint and hit-testing. */
 #voidwalker[data-vw-mode="travel"] .vw-beat[data-vw-far] {
-  display: none;
+  content-visibility: hidden;
+  visibility: hidden;
 }
 
-/* The alternation survives as a lateral offset — the record's own
-   `data-side`, read as position in space rather than in a column. */
-#voidwalker[data-vw-mode="travel"] .vw-beat[data-side="left"] {
-  --vw-dx: -7%;
+/* ⚠ THE ALTERNATION IS NO LONGER A FLAT OFFSET, AND THE ARITHMETIC IS
+   WHY. This was `--vw-dx: ±7%` of the beat's own 680px box — about 48px
+   — projected through the stage. At `VW_Z_FAR` the projected scale is
+   ~0.31, so those 48px arrived on screen as FIFTEEN: every beat flew at
+   the reader dead centre and its side only appeared once it had already
+   parked. The path is authored in screen fractions and un-projected per
+   frame instead (`--vw-x` / `--vw-y` / `--vw-rot`, above). The record's
+   `data-side` is still what carries the sign — read by the hook, never
+   by a `:nth-child` parity, because the film interlude sits in this same
+   list and a parity selector flips every beat under it. */
+
+/* ── Slim in flight, full on park ─────────────────────────────
+   What flies at the reader is an OBJECT — its year, its title, its
+   housing. The paragraph, the drawing and the press bar are the RECORD:
+   they power on as the beat settles and leave as it goes, so a card is
+   only ever a wall of type at the one place it can be read.
+
+   ⚠ THE LADDER IS RE-SOURCED, NOT RE-AUTHORED. The panels keep their
+   `--ci-off` rungs and the same three piecewise ramps; only `--ci` is
+   renormalised past `--vw-d` (which PEAKS at the park) instead of
+   `--vw-b` (which holds once lit). One declaration, and the internal
+   stagger between paragraph, plate and press survives intact — custom
+   properties resolve at computed-value time, so the `--g1..3` and the
+   opacity in the base rule recompute from the winning `--ci`. */
+#voidwalker[data-vw-mode="travel"] .vw-beat [data-vw-panel] {
+  --ci: clamp(0, calc((var(--vw-d, 1) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
 }
-#voidwalker[data-vw-mode="travel"] .vw-beat[data-side="right"] {
-  --vw-dx: 7%;
+
+/* ⚠ AND THE DRAWING STOPS RENDERING ENTIRELY WHILE IN FLIGHT. `.vw-wire`
+   is `position: absolute; inset: 0`, so its box comes from the frame and
+   never from its own contents — which is what makes this cost exactly
+   zero layout, and why the gate is here rather than on `.vw-plate__frame`
+   (a flex child whose height IS its content, and collapsing that would
+   pop the card's whole box at the instant it lights). */
+#voidwalker[data-vw-mode="travel"] .vw-beat:not([data-vw-lit]) .vw-wire {
+  content-visibility: hidden;
 }
 
 /* ⚠ THE SUBGRID MUST BE TORN DOWN, NOT JUST RE-PLACED. In vertical mode
@@ -252,86 +300,112 @@
   opacity: var(--vw-foot, 0);
   z-index: 2;
 }
+/* ── THE LEFT RAIL IS THE TIME AXIS ───────────────────────────────
+   Owner, 2026-08-25: "we have a lift rail, so this is a nice
+   opportunity to use it to map the actual dates." This block REPLACES
+   ADR-081's own `.vw-axis`, which drew a second graduated axis in the
+   gutter beside a rail that has carried a 13-tick ladder since ADR-031.
 
-/* ── The graduated axis (A4) ──────────────────────────────────────
-   One tick per year, majors where the record lands, a marker that moves
-   BY YEAR so the uneven gaps read as elapsed time. Hidden entirely in
-   vertical mode — the spine is that mode's instrument. */
-.vw-axis {
-  display: none;
-}
-#voidwalker[data-vw-mode="travel"] .vw-axis {
-  display: block;
+   ⚠ AND THE LADDER ALREADY IS THIS RECORD'S AXIS. Thirteen ticks are
+   twelve intervals; 2026 → 2014 is twelve years. Every year the record
+   lands on seats on an INTEGER RUNG, so nothing is added to the ladder
+   and nothing is taken from it — the rail is simply LETTERED with years
+   instead of bearings while the reader is flying.
+
+   ⚠ The host is `position: absolute` because `.hud__rail` is a FLEX
+   COLUMN: a static child leaves the ticks' percentage box altogether
+   (ADR-059's trap, and why `.rin-host` is shaped this way). Sitting
+   inside the rail also inherits the ADR-031 U16 hero-curtain clip and
+   every responsive gate for free.
+
+   `data-on` is POSITIONAL — the hook sets it only while the reader is
+   actually inside the runway, never from "the page is capable" (the
+   ADR-081 U1 defect, which is exactly the shape this would take: a rail
+   lettering years for the whole document). */
+.vw-rail {
   position: absolute;
-  left: clamp(28px, 4.5vw, 96px);
-  top: 16svh;
-  bottom: 16svh;
-  width: 74px;
-  z-index: 3;
+  inset: 0;
+  z-index: 2;
   pointer-events: none;
-  font-family: var(--vw-mono);
-  /* The axis is chrome over a moving field — it must not fly with it. */
-  transform: none;
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out, ease);
 }
-.vw-axis__rail {
+.vw-rail[data-on] {
+  opacity: 1;
+}
+
+/* The record's years, seated on their own rungs. Inboard of the guide,
+   where `.hud__rail__label` letters — which is the point: while the
+   travel is running the rail letters YEARS, and the bearing numerals
+   hand over to them. */
+.vw-rail__yr {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(var(--dawn-rgb), 0.16) 8%,
-    rgba(var(--dawn-rgb), 0.16) 92%,
-    transparent
-  );
-}
-.vw-axis__tick {
-  position: absolute;
-  left: 0;
-  top: calc(var(--vw-tick, 0) * 100%);
-  width: 7px;
-  height: 1px;
-  background: rgba(var(--dawn-rgb), 0.22);
-}
-.vw-axis__tick--major {
-  width: 14px;
-  background: var(--gold-40);
-}
-.vw-axis__yr {
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  color: rgba(var(--dawn-rgb), 0.38);
+  left: calc(var(--hud-rail-guide-inset) + 10px);
+  top: calc(var(--vw-yf, 0) * 100%);
+  /* ⚠ THE SHIFT IS INTERPOLATED, NOT A FLAT − 50 %. The scale runs the
+     rail's FULL height, so a flat half-line shift hangs the first label
+     above the rail's box — straight into the ADR-031 U16 hero-curtain
+     clip, which cut the top year in half. Scaling the shift with the
+     position top-aligns the newest year, bottom-aligns the oldest and
+     centres everything between, so nothing overhangs either end. */
+  transform: translateY(calc(var(--vw-yf, 0) * -100%));
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-wider);
+  color: rgba(var(--dawn-rgb), 0.42);
   white-space: nowrap;
 }
-/* The marker: the reader's own position on the record's timeline. */
-.vw-axis__mark {
+
+/* The lift's car. Travels on `--vw-axis`, which is measured in YEARS
+   (`axisYearFrac`) and not in runway — so it accelerates across the
+   wide gaps and dwells in the dense ones, which is what makes the
+   uneven spacing readable as elapsed time rather than decoration. */
+.vw-rail__mark {
   position: absolute;
-  left: -3px;
+  left: calc(var(--hud-rail-guide-inset) - 4px);
   top: calc(var(--vw-axis, 0) * 100%);
   width: 9px;
   height: 9px;
-  margin-top: -4px;
+  margin-left: -3.5px;
   background: var(--gold);
-  transform: rotate(45deg);
-  box-shadow: 0 0 12px 2px rgba(var(--gold-rgb), 0.4);
+  /* Same interpolated shift as the labels, for the same reason. */
+  transform: translateY(calc(var(--vw-axis, 0) * -100%)) rotate(45deg);
+  box-shadow: 0 0 10px 1px rgba(var(--gold-rgb), 0.45);
 }
-/* The year the marker reads, lettered once, large, beneath it. The value
-   is a counter-style string the hook writes (`--vw-year`) so it costs no
-   React render per frame. */
-.vw-axis::after {
-  content: var(--vw-year, "");
-  position: absolute;
-  left: 0;
-  bottom: -34px;
-  font-size: 22px;
-  letter-spacing: 0.04em;
-  color: var(--gold);
+
+/* The year the car is ON goes gold. ⚠ THIS REPLACED A SECOND READOUT
+   TRAVELLING WITH THE CAR, which printed the year a few pixels from the
+   rail's own label for it — the same year, twice, overlapping, at every
+   rung. This surface has removed a console head, a foot and an ordinal
+   for exactly that; on a graduated axis the year IS the position, so the
+   car marks a rung and the rung is already lettered. */
+
+.vw-rail__yr[data-now] {
+  color: var(--gold-ink);
+}
+
+/* ⚠ THE HANDOFF — one gold mark on the rail at a time. The journey
+   diamond and the year car are both gold and both ride this rail, and
+   "gold is wayfinding" means it marks ONE place. `:has` scopes the fade
+   to the rail that actually holds a running car, so the diamond is
+   untouched on every other path and for the whole page above the
+   runway. The bearing numerals hand over on the same condition — the
+   rail letters years while the reader is inside the timeline. */
+.hud__rail--l:has(.vw-rail[data-on]) [data-rail-manifest-root],
+.hud__rail--l:has(.vw-rail[data-on]) .hud__rail__label {
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out, ease);
+}
+
+/* Below 1100px the rail letters nothing — `.hud__rail__label` and the
+   manifest are both hidden there, and a year label appearing at a width
+   where the rail's own numerals do not would read as a different
+   instrument. The car and its rungs still travel; the YEAR itself is
+   never lost, because every beat's marker chip carries it. */
+@media (max-width: 1100px) {
+  .vw-rail__yr {
+    display: none;
+  }
 }
 
 /* ── Reduced motion / narrow ──────────────────────────────────────
@@ -351,7 +425,7 @@
     filter: none;
     width: auto;
   }
-  #voidwalker[data-vw-mode="travel"] .vw-axis {
+  .vw-rail {
     display: none;
   }
 }
