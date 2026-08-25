@@ -129,6 +129,41 @@ never have two writers.
   canvas SURVIVES the travel and dies under `#practice`.
 - Full `npm run verify` green (1064 unit tests), production build clean.
 
+## Update 1 (2026-08-25, owner red alert) — the camera claim is POSITIONAL
+
+The corridor lost its brandmark, its substrate sphere and the Arc's
+notation the moment this shipped. Reported as "the sphere in our arc is
+gone, and also the diagrams around our brand mark".
+
+`useVoidwalkerTravelScroll` set `vwTravelRef.engaged = true` on every tick
+as soon as the path was CAPABLE, rather than when the reader was inside
+the runway — so it was true from the first paint. `FlyingCameraRig` takes
+an early return on that flag and parks the camera at the tunnel mouth, so
+for the whole page the corridor ran its own DOM beats (station titles,
+caption cards, the HUD) while everything the camera was supposed to be
+looking at sat off-frame.
+
+⚠ **`p` CANNOT CARRY THIS.** It clamps to 0 both before the runway and at
+its first pixel, so "parked at the mouth" and "a whole page above it" are
+the same number. The gate is the rect: `r.top <= 0 && r.bottom > 0`. Every
+consumer wanted the positional reading anyway — the camera, the quality
+governor's engagement sample, the frame pump and the tunnel painter all
+mean "is the reader flying right now".
+
+⚠ **THE ENTIRE SUITE STAYED GREEN**, because nothing threw, no asset
+404'd and the scene graph was intact — it simply was not being looked at.
+Structural assertions cannot see this. The guard added with the fix is
+therefore the SYMPTOM: `landing-corridor-smoke` walks to the Arc and
+asserts the viewport is painting something substantial (frame weight —
+measured 77 kB with the bug against 292 kB without). It was verified to
+FAIL against the bug before being kept.
+
+⚠ Two smoke tests were already failing when this update was written —
+`landing-corridor-smoke`'s "dock attribute releases on reverse scroll" and
+`services-ring-smoke`'s "the ambient dies under the next opaque station".
+Both were confirmed failing at the ADR-081 commit itself, independent of
+this fix, and are NOT addressed here.
+
 ## Left open
 
 - The press artifacts and the scanline treatment are still the look-dev

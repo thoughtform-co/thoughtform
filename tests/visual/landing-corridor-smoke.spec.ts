@@ -196,6 +196,63 @@ test.describe("Homepage corridor smoke", () => {
     }
   });
 
+  /**
+   * ⚠ THE CORRIDOR MUST ACTUALLY PAINT AT THE ARC (ADR-081 regression).
+   *
+   * `useVoidwalkerTravelScroll` set `vwTravelRef.engaged` from "the path
+   * is capable" rather than from the reader's POSITION, so it was true
+   * from the first paint — and `FlyingCameraRig` takes an early return on
+   * that flag and parks the camera at the tunnel mouth. The corridor kept
+   * running its own DOM beats (station titles, caption cards, the HUD)
+   * while the brandmark, the substrate sphere and the Arc's notation sat
+   * off-camera for the whole page.
+   *
+   * Nothing threw, no asset 404'd, and every structural assertion in this
+   * file stayed green, because the scene graph was intact and simply not
+   * being looked at. The only honest guard is therefore the SYMPTOM: at
+   * the Arc's beats the canvas has to be painting something substantial.
+   *
+   * Frame WEIGHT is the probe — a near-black viewport compresses to
+   * almost nothing. Measured on the bug: 69 kB at the navigate beat
+   * against 292 kB once the camera was handed back, so the floor sits
+   * well clear of both. ⚠ Do NOT tighten it towards the healthy value:
+   * this is a "the scene is absent" alarm, not a rendering baseline, and
+   * font/GPU differences move the number between machines.
+   */
+  test("ADR-081: the time tunnel does not claim the camera during the corridor", async ({
+    page,
+  }) => {
+    // Walk to the Arc rather than teleporting — the corridor's writers
+    // live in the frameloop and an instant jump skips the band.
+    await page.evaluate(async () => {
+      for (let y = 0; y <= 2800; y += 350) {
+        window.scrollTo(0, y);
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      }
+    });
+    await page.waitForTimeout(1200);
+
+    const phase = await page.evaluate(() =>
+      document.documentElement.getAttribute("data-corridor-phase")
+    );
+    expect(phase, "the walk landed inside the Arc").toBe("navigate");
+
+    const frame = await page.screenshot();
+    expect(
+      frame.length,
+      `the corridor paints at the Arc (${Math.round(frame.length / 1024)} kB) — ` +
+        "an empty frame here means something upstream took the camera"
+    ).toBeGreaterThan(150_000);
+
+    // And the travel's own mode must not have claimed the station yet:
+    // the reader is nine viewports above its runway.
+    const runwayTop = await page.evaluate(() => {
+      const s = document.getElementById("voidwalker");
+      return s ? Math.round(s.getBoundingClientRect().top) : 0;
+    });
+    expect(runwayTop, "the voidwalker runway is still below the fold").toBeGreaterThan(0);
+  });
+
   // NOTE (2026-07-14): the three Services-hologram tests that lived here
   // (ambient hold, production scan notes, /test/services-demo scan notes)
   // asserted markup retired by the ADR-029/030/033 Services reworks — the

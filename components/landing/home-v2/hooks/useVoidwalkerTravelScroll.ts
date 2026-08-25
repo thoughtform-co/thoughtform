@@ -216,13 +216,35 @@ export function useVoidwalkerTravelScroll(
       const n = stops.length;
 
       // ── the cross-root transport ────────────────────────────────
+      // ⚠ THE CAMERA CLAIM IS POSITIONAL, NOT MODAL. `engaged` above is
+      // the one-time MODE setup (it runs as soon as the path is capable);
+      // THIS flag is what `FlyingCameraRig` reads to TAKE the camera, and
+      // it may only be true while the runway is actually under the
+      // viewport.
+      //
+      // Set from "the page is capable" it was true from the first paint,
+      // so the rig's early return parked the camera at the tunnel mouth
+      // for the WHOLE PAGE: the corridor still ran its own DOM beats —
+      // station titles, caption cards — while the brandmark, the
+      // substrate sphere and the Arc's notation sat off-camera. Nothing
+      // threw, nothing failed to load, and every guard stayed green,
+      // because the scene was intact and simply not being looked at.
+      //
+      // `p` alone cannot carry this: it clamps to 0 both BEFORE the
+      // runway and at its first pixel, so "parked at the mouth" and "a
+      // whole page away from it" are the same number.
+      //
+      // Every consumer wants the positional reading — the camera, the
+      // quality governor's engagement sample, the frame pump and the
+      // tunnel painter all mean "is the reader flying right now".
+      const running = r.top <= 0 && r.bottom > 0;
       const entry = entryT(p);
       const t = vwTravelRef.current;
-      t.engaged = true;
-      t.p = p;
-      t.entry = entry;
-      t.flight = travelFlight(p);
-      t.rings = ringsPassed(p, years);
+      t.engaged = running;
+      t.p = running ? p : 0;
+      t.entry = running ? entry : 0;
+      t.flight = running ? travelFlight(p) : 0;
+      t.rings = running ? ringsPassed(p, years) : 0;
 
       // ── the stage's own channels ───────────────────────────────
       if (Math.abs(entry - lastEntry) >= 0.002) {
