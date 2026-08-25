@@ -1,11 +1,13 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
+import { getVwFlightConfig } from "@/lib/voidwalker/voidwalkerFlightConfig";
+import { buildVoidwalkerRailLayout } from "@/lib/voidwalker/voidwalkerRailLayout";
 import { BRANDMARK_ANCHOR_INTELLIGENCE } from "./sceneGeom";
 
 /**
@@ -75,12 +77,102 @@ const YEAR_RING_POINTS = 96;
 const YEAR_RING_SPACING = 2.2;
 const YEAR_RING_COUNT = 7;
 
+/**
+ * LONGITUDINAL RAILS (ADR-081 U5) — the tunnel's direction cue.
+ *
+ * ⚠ THE DOT SHELL CANNOT SUPPLY THIS AND WAS NEVER MEANT TO. Each wall
+ * ring is twisted by `r * 0.19` specifically so consecutive rings do NOT
+ * line up into stripes — the right call for the dots (aligned rings read
+ * as a cage), and the reason the tunnel had volume but no direction: at
+ * rest it was concentric ovals, which is a target painted on a wall, not
+ * a bore. The two reads are separate jobs on separate layers. Dots carry
+ * VOLUME; rails carry DIRECTION.
+ *
+ * The grammar is `LatentWormholeWalls`' — the corridor next door already
+ * proved it, and its own note is the argument: rails converging toward
+ * the optical axis are "the single strongest cue that the user is flying
+ * through a tunnel and not past a flat picture". The differences here are
+ * that these are drawn LINES rather than dotted runs (the time tunnel is
+ * a different instrument, and a continuous rail reads harder at speed),
+ * and that they wrap camera-relative like everything else in this file.
+ */
+const RAIL_COUNT_DESKTOP = 18;
+const RAIL_COUNT_TABLET = 14;
+const RAIL_COUNT_MOBILE = 9;
+
+/** How far each rail pulls toward the optical axis at the far end of the
+ *  span, as a fraction of the shell radius. THIS IS THE VANISHING-POINT
+ *  CUE — with it at 0 the rails are a cylinder and the bore reads flat. */
+const RAIL_INWARD_PULL = 0.34;
+
+const railVertex = /* glsl */ `
+uniform float uCamZ;
+uniform float uSpan;
+uniform float uWave;
+uniform float uVelocity;
+uniform float uPull;
+// ⚠ BOTH VERTICES OF A DASH WRAP ON THE SAME ANCHOR. Wrapping each
+// vertex on its own z lets the modulo boundary fall BETWEEN the two
+// ends of one dash per rail per cycle — that dash then stretches the
+// entire length of the tunnel, once per wrap, forever. Carrying the
+// dash's start as aAnchorZ and its extent as aOffsetZ moves the
+// two ends as one rigid segment.
+attribute float aAnchorZ;
+attribute float aOffsetZ;
+attribute float aRank;
+varying float vFade;
+void main() {
+  float rel = mod(uCamZ - aAnchorZ, uSpan);
+  float z = uCamZ - rel + aOffsetZ;
+  // The same bore breathing the dot shell uses, so the two layers stay
+  // welded instead of sliding against each other.
+  float bore = 1.0 + sin(z * 0.11) * uWave;
+  // Convergence toward the axis with depth. Keyed on the ANCHOR's rel
+  // (not the vertex's own z) so a dash never shears across its length.
+  float conv = 1.0 - uPull * smoothstep(0.0, uSpan, rel);
+  vec4 mv = modelViewMatrix * vec4(position.x * bore * conv, position.y * bore * conv, z, 1.0);
+  float dist = -mv.z;
+  // ⚠ THE NEAR CLIP IS MUCH SHALLOWER THAN THE DOT SHELL'S, ON PURPOSE.
+  // A wall point that passes the lens has to be killed early or it
+  // explodes across the frame; a rail is a 1px line and does the exact
+  // opposite — the dashes streaking past the frame EDGE are the
+  // strongest speed cue the tunnel has, and fading them out at 3.4 units
+  // threw away the whole peripheral read.
+  float near = smoothstep(0.25, 1.6, dist);
+  // ⚠ THE RAILS FOG OUT WELL BEFORE THE VANISHING POINT, AND THAT IS
+  // WHAT MAKES THEM A BORE RATHER THAN A STARBURST. Carried out to the
+  // dot shell's own far plane they all converge on one pixel dead centre
+  // — which is a sunburst, and it is drawn straight through the beat
+  // copy that parks there. Killing them by ~0.6 of the span leaves the
+  // reading plane clear and leaves only the near/mid streaks, which is
+  // both the legible answer and the physically honest one: you cannot
+  // see the far wall of a tunnel, you see the near wall going past.
+  float far = 1.0 - smoothstep(uSpan * 0.28, uSpan * 0.60, dist);
+  float velBoost = 1.0 + clamp(uVelocity, 0.0, 2.0) * 0.45;
+  vFade = near * far * (0.55 + 0.45 * aRank) * velBoost;
+  gl_Position = projectionMatrix * mv;
+}
+`;
+
+const railFragment = /* glsl */ `
+precision mediump float;
+uniform vec3 uColor;
+uniform float uOpacity;
+varying float vFade;
+void main() {
+  float a = vFade * uOpacity;
+  if (a <= 0.001) discard;
+  gl_FragColor = vec4(uColor, a);
+}
+`;
+
 const wallVertex = /* glsl */ `
 uniform float uPixelRatio;
 uniform float uPointSize;
 uniform float uCamZ;
 uniform float uSpan;
 uniform float uWave;
+uniform float uVelocity;
 attribute float aRank;
 varying float vFade;
 void main() {
@@ -103,9 +195,16 @@ void main() {
   // exploding across the frame as it passes the lens.
   float near = smoothstep(0.6, 4.0, dist);
   float far = 1.0 - smoothstep(uSpan * 0.62, uSpan * 0.96, dist);
-  vFade = near * far * (0.35 + 0.65 * aRank);
+  // Velocity brightens the rank spread — fast scroll makes the wall
+  // read hotter without changing the geometry. Clamped so a burst is
+  // additive, not saturating: at v=0 identity; at v=1 +0.5.
+  float velBoost = 1.0 + clamp(uVelocity, 0.0, 2.0) * 0.5;
+  vFade = near * far * (0.35 + 0.65 * aRank) * velBoost;
   gl_Position = projectionMatrix * mv;
-  gl_PointSize = uPointSize * uPixelRatio * (12.0 / max(1.0, dist));
+  // Velocity elongates the point along the axis of travel by growing
+  // its size proportional to the rate — the visible speed cue.
+  float velStretch = 1.0 + clamp(uVelocity, 0.0, 2.0) * 0.35;
+  gl_PointSize = uPointSize * uPixelRatio * (12.0 / max(1.0, dist)) * velStretch;
 }
 `;
 
@@ -131,8 +230,10 @@ uniform float uCamZ;
 uniform float uSpacing;
 uniform float uPhase;
 uniform float uCount;
+uniform float uEntryBurst;
 attribute float aRing;
 varying float vFade;
+varying float vBurst;
 void main() {
   // Each ring holds station at a fixed multiple of the spacing ahead of
   // the camera, offset by the flight's own phase — so rings stream past
@@ -145,8 +246,12 @@ void main() {
   float near = smoothstep(0.4, 3.2, dist);
   float far = 1.0 - smoothstep(uSpacing * uCount * 0.6, uSpacing * uCount * 0.92, dist);
   vFade = near * far;
+  // Entry burst: the nearest ring blooms during the dive. 0 in
+  // production (config default), so byte-identical.
+  vBurst = uEntryBurst * far * (1.0 - smoothstep(0.0, uSpacing * 2.0, dist));
   gl_Position = projectionMatrix * mv;
-  gl_PointSize = uPointSize * uPixelRatio * (14.0 / max(1.0, dist));
+  gl_PointSize =
+    uPointSize * uPixelRatio * (14.0 / max(1.0, dist)) * (1.0 + vBurst * 0.6);
 }
 `;
 
@@ -155,11 +260,15 @@ precision mediump float;
 uniform vec3 uColor;
 uniform float uOpacity;
 varying float vFade;
+varying float vBurst;
 void main() {
   vec2 d = gl_PointCoord - vec2(0.5);
   float r = dot(d, d);
   if (r > 0.25) discard;
-  float a = vFade * uOpacity * (1.0 - r * 3.0);
+  // Entry burst brightens the nearest ring during the dive; capped so
+  // fragment alpha stays ≤ 1.
+  float a = (vFade + vBurst * 0.6) * uOpacity * (1.0 - r * 3.0);
+  a = clamp(a, 0.0, 1.0);
   if (a <= 0.001) discard;
   gl_FragColor = vec4(uColor, a);
 }
@@ -169,13 +278,39 @@ export function VoidwalkerTimeTunnel() {
   const groupRef = useRef<THREE.Group>(null);
   const wallAlpha = useRef(0);
   const ringAlpha = useRef(0);
+  const railAlpha = useRef(0);
 
-  const ringPoints = useCorridorCount(
+  // ⚠ THE DENSITY MULTIPLIER IS RESOLVED AT REMOUNT-EDGE, NOT PER FRAME.
+  // The wall geometry is a `useMemo` — changing the count re-allocates
+  // the buffer, which is the RIGHT behaviour when the LAB dials it, but
+  // must not happen every frame in production. The mount below listens
+  // for `vw-flight-config` events (dispatched only by the lab route);
+  // production never dispatches, so this is a no-op there.
+  const [configEpoch, setConfigEpoch] = useState(0);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const on = () => setConfigEpoch((e) => e + 1);
+    window.addEventListener("vw-flight-config", on);
+    return () => window.removeEventListener("vw-flight-config", on);
+  }, []);
+  const mul = getVwFlightConfig().wallDensityMul;
+  const basePoints = useCorridorCount(
     WALL_RING_POINTS_DESKTOP,
     WALL_RING_POINTS_TABLET,
     WALL_RING_POINTS_MOBILE
   );
-  const ringCount = useCorridorCount(WALL_RINGS_DESKTOP, WALL_RINGS_TABLET, WALL_RINGS_MOBILE);
+  const baseRings = useCorridorCount(WALL_RINGS_DESKTOP, WALL_RINGS_TABLET, WALL_RINGS_MOBILE);
+  const ringPoints = Math.max(6, Math.round(basePoints * mul));
+  const ringCount = Math.max(6, Math.round(baseRings * mul));
+  // Rails ride the SAME quality rung as the shell, then their own
+  // density knob. At `railDensity = 0` the layer is not built at all —
+  // no geometry, no material bind, no draw call.
+  const baseRails = useCorridorCount(RAIL_COUNT_DESKTOP, RAIL_COUNT_TABLET, RAIL_COUNT_MOBILE);
+  const railDensity = getVwFlightConfig().railDensity;
+  const railCount = railDensity <= 0 ? 0 : Math.max(4, Math.round(baseRails * railDensity));
+  // The epoch invalidates the wall geometry memo below so a new density
+  // rebuilds the buffer instead of scaling the same point cloud.
+  void configEpoch;
 
   /** The shell: `ringCount` rings of `ringPoints`, laid out along −Z and
    *  wrapped in the shader. Built once per quality rung. */
@@ -203,6 +338,24 @@ export function VoidwalkerTimeTunnel() {
     g.setAttribute("aRank", new THREE.BufferAttribute(rank, 1));
     return g;
   }, [ringPoints, ringCount]);
+
+  /** The rails: `railCount` dashed lines running the span, converging in
+   *  the shader. Rebuilt with the shell so the two share a wrap span. */
+  const railGeometry = useMemo(() => {
+    if (railCount <= 0) return null;
+    const layout = buildVoidwalkerRailLayout(
+      railCount,
+      WALL_SPACING * ringCount,
+      SHELL_RX,
+      SHELL_RY
+    );
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(layout.positions, 3));
+    g.setAttribute("aAnchorZ", new THREE.Float32BufferAttribute(layout.anchors, 1));
+    g.setAttribute("aOffsetZ", new THREE.Float32BufferAttribute(layout.offsets, 1));
+    g.setAttribute("aRank", new THREE.Float32BufferAttribute(layout.ranks, 1));
+    return g;
+  }, [railCount, ringCount]);
 
   /** The year rings — the graduation, one gold circle per year. */
   const yearGeometry = useMemo(() => {
@@ -239,7 +392,31 @@ export function VoidwalkerTimeTunnel() {
           uCamZ: { value: 0 },
           uSpan: { value: WALL_SPACING * WALL_RINGS_DESKTOP },
           uWave: { value: SHELL_WAVE },
+          uVelocity: { value: 0 },
           // Dawn, the corridor's own wall ink.
+          uColor: { value: new THREE.Color(0.92, 0.89, 0.84) },
+          uOpacity: { value: 0 },
+        },
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    []
+  );
+
+  const railMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: railVertex,
+        fragmentShader: railFragment,
+        uniforms: {
+          uCamZ: { value: 0 },
+          uSpan: { value: WALL_SPACING * WALL_RINGS_DESKTOP },
+          uWave: { value: SHELL_WAVE },
+          uVelocity: { value: 0 },
+          uPull: { value: RAIL_INWARD_PULL },
+          // Dawn, matched to the dot shell — the rails are the same
+          // material as the wall, drawn the long way.
           uColor: { value: new THREE.Color(0.92, 0.89, 0.84) },
           uOpacity: { value: 0 },
         },
@@ -262,6 +439,7 @@ export function VoidwalkerTimeTunnel() {
           uSpacing: { value: YEAR_RING_SPACING },
           uPhase: { value: 0 },
           uCount: { value: YEAR_RING_COUNT },
+          uEntryBurst: { value: 0 },
           // Tensor gold — the wayfinding role, and the only colour in the
           // tunnel that means something.
           uColor: { value: new THREE.Color(0.79, 0.65, 0.33) },
@@ -286,8 +464,10 @@ export function VoidwalkerTimeTunnel() {
     if (!t.engaged) {
       wallAlpha.current = 0;
       ringAlpha.current = 0;
+      railAlpha.current = 0;
       wallMaterial.uniforms.uOpacity.value = 0;
       ringMaterial.uniforms.uOpacity.value = 0;
+      railMaterial.uniforms.uOpacity.value = 0;
 
       // ⚠ THE WARM FRAME. three's renderer skips invisible objects
       // entirely, so a material on one is never compiled — and this
@@ -318,13 +498,31 @@ export function VoidwalkerTimeTunnel() {
     ringMaterial.uniforms.uPixelRatio.value = dpr;
 
     const camZ = state.camera.position.z;
+    const span = WALL_SPACING * ringCount;
     wallMaterial.uniforms.uCamZ.value = camZ;
     ringMaterial.uniforms.uCamZ.value = camZ;
-    wallMaterial.uniforms.uSpan.value = WALL_SPACING * ringCount;
+    wallMaterial.uniforms.uSpan.value = span;
+    // ⚠ THE RAILS' SPAN MUST EQUAL THE SHELL'S. They wrap on the same
+    // modulo; a mismatch drifts the two layers apart at a beat rate.
+    railMaterial.uniforms.uCamZ.value = camZ;
+    railMaterial.uniforms.uSpan.value = span;
+    railMaterial.uniforms.uVelocity.value = t.velocity;
+    // Feed the reader's scroll velocity into the wall shader. The hook
+    // multiplies raw velocity by the lab's `velocityStrength` (0 in
+    // production, so the boost is a no-op), and the shader clamps
+    // internally — nothing here can escape the safe range.
+    wallMaterial.uniforms.uVelocity.value = t.velocity;
 
     // The rings' phase IS the record's year count — the same number the
     // DOM axis puts its marker on.
     ringMaterial.uniforms.uPhase.value = t.rings;
+    // Entry burst: nearest ring blooms during the dive, scaled by the
+    // lab's `entryReactionStrength`. Peaks with the entry dive itself
+    // (sin(π·entry)) so it grows AND fades, and returns to 0 the moment
+    // the reader is past the mark. Config default is 0 → no burst.
+    const burstStrength = getVwFlightConfig().entryReactionStrength;
+    const burstPhase = t.entry > 0 && t.entry < 1 ? Math.sin(Math.PI * t.entry) : 0;
+    ringMaterial.uniforms.uEntryBurst.value = burstStrength * burstPhase;
 
     // The tunnel arrives on the ENTRY dive (as the camera passes through
     // the brandmark) and holds for the flight. An entrance envelope, not
@@ -335,8 +533,14 @@ export function VoidwalkerTimeTunnel() {
     const k = 1 - Math.exp(-Math.min(0.1, Math.max(0, delta)) / 0.24);
     wallAlpha.current += (targetWall - wallAlpha.current) * k;
     ringAlpha.current += (targetRing - ringAlpha.current) * k;
+    // The rails come up on the SAME envelope as the walls but land a
+    // touch later, so the bore's volume reads first and its direction
+    // resolves under it — arriving together makes the entry read as a
+    // diagram switching on.
+    railAlpha.current += (Math.max(0, t.entry * 1.25 - 0.25) - railAlpha.current) * k;
     wallMaterial.uniforms.uOpacity.value = wallAlpha.current * 0.5;
     ringMaterial.uniforms.uOpacity.value = ringAlpha.current * 0.85;
+    railMaterial.uniforms.uOpacity.value = railAlpha.current * 0.9;
 
     // Keep the shell centred on the tunnel's axis (the brandmark's own
     // X/Y), which is the axis the camera flies and the DOM field is
@@ -349,6 +553,9 @@ export function VoidwalkerTimeTunnel() {
   return (
     <group ref={groupRef} visible={false}>
       <points geometry={wallGeometry} material={wallMaterial} frustumCulled={false} />
+      {railGeometry ? (
+        <lineSegments geometry={railGeometry} material={railMaterial} frustumCulled={false} />
+      ) : null}
       <points geometry={yearGeometry} material={ringMaterial} frustumCulled={false} />
     </group>
   );

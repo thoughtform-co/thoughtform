@@ -77,6 +77,9 @@ import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef
 import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { resolveScenePalette } from "@/lib/theme/palette";
+import { vwTravelRef, vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
+import { getVwFlightConfig } from "@/lib/voidwalker/voidwalkerFlightConfig";
+import { markFlyThroughRelease } from "@/lib/voidwalker/voidwalkerTravelClock";
 import { getServicePose } from "@/lib/home-v2/servicePose";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
@@ -568,7 +571,18 @@ export function BrandmarkPhysicsCoreActor({
     // below) so the centred DOM brandmark + seam pixel field stay
     // the sole foreground marks.
     const painting = t.active || t.armed || t.docked || t.servicesAmbient;
-    if (!painting) {
+    // ADR-081 U5: once the dive has RELEASED the mark and the camera is
+    // deep in the tunnel, the mark is a stationary object tens of units
+    // behind the lens — shed it with the rest of the corridor painters.
+    // ⚠ Gated on the release having actually happened, not on the travel
+    // alone: with `markFlyThrough = 0` the mark is still welded in front
+    // of the camera, where hiding it would be a visible hole rather than
+    // a saving. That knob has to restore the pre-U5 read exactly.
+    const shedForTravel =
+      getVwFlightConfig().markFlyThrough > 0.99 &&
+      vwTravelRef.current.entry > 0.99 &&
+      vwTravelInterior();
+    if (!painting || shedForTravel) {
       group.visible = false;
       pausedRef.current = true;
       return;
@@ -656,6 +670,12 @@ export function BrandmarkPhysicsCoreActor({
     // ambient hold (the motion follower pins dissipate at 1).
     const dissipate = t.docked || t.servicesAmbient ? getSmoothedDissipate() : 0;
     const recT = smootherstep(SHRINK_START, SHRINK_END, dissipate);
+
+    // ADR-081 U5 fly-through release. 0 everywhere except the voidwalker
+    // entry dive, so every other frame on the page is byte-identical.
+    // See the long note at the weld site below for what it undoes and why.
+    const vwT = vwTravelRef.current;
+    const vwRelease = markFlyThroughRelease(vwT.entry, vwT.engaged);
 
     // Decommission clock (ADR-030 Update 1): 0 through every reading beat
     // (and everywhere recT < 1 — the eased runway product keeps the
@@ -850,7 +870,17 @@ export function BrandmarkPhysicsCoreActor({
         )
       : 1;
     const dimMix = (1 - EXIT_DIM * exitT) * aboutFlipFade * proofFade;
-    opacityRef.current = (armedOnly || inSvgRest ? 0 : parkedOpacity * handoffFade) * dimMix;
+    // ADR-081 U5: the mark you fly THROUGH has to be legible at the
+    // moment you hit it. Every dim above is an about-deck/proof envelope
+    // that leaves the parked mark at roughly 0.30 ink — a background
+    // presence, correct where it was authored and far too faint to read
+    // as a structure passing the lens. The dive lifts the product back
+    // toward full, and `handoffFade` with it (the services ambient level
+    // is on its way to zero at #voidwalker, which would otherwise fade
+    // the mark out during the very gesture that needs it).
+    const vwInk = (v: number) => v + (1 - v) * vwRelease;
+    opacityRef.current =
+      (armedOnly || inSvgRest ? 0 : parkedOpacity * vwInk(handoffFade)) * vwInk(dimMix);
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude — with a
     // mid-flight DIP (terminal-crisp pass, see CORE_POINT_SIZE_FLIGHT_DIP)
@@ -894,13 +924,48 @@ export function BrandmarkPhysicsCoreActor({
     // scale as the viewscreen changes modes (exitT 0 pre-exit → no-op).
     // Same multiplier on the recede target keeps the recede RATIO
     // constant across viewports.
-    scale += (EXIT_RECEDE_SCALE * parkedMul - scale) * exitT;
+    // …and released again on the voidwalker dive: the mark we fly through
+    // is the mark at its full parked size, not the receded presence the
+    // about deck left behind.
+    scale += (EXIT_RECEDE_SCALE * parkedMul - scale) * exitT * (1 - vwRelease);
+
+    // ── ADR-081 U5: THE FLY-THROUGH RELEASE ──────────────────────────
+    //
+    // ⚠ THIS IS WHY THE CAMERA COULD NEVER REACH THE MARK. The park
+    // below does not merely re-centre the mark — at `recT = 1` it
+    // REPLACES its world position with a point a fixed `CENTER_DISTANCE`
+    // dead ahead of the live camera, and slerps its orientation onto the
+    // camera's. The parked mark is a billboard welded to the lens. That
+    // is exactly right for the services centrepiece, which has to hold
+    // frame while the camera flies in, and it is the reason the
+    // voidwalker entry dive read as nothing at all: the camera dived,
+    // the mark rode along at constant apparent size, and there was never
+    // anything to pass through. The tunnel's own `VOID_ENTRY_OVERSHOOT`
+    // comment ("it has to clear the mark's own particle radius") was
+    // describing a fly-through the weld had already made impossible.
+    //
+    // So the entry channel UNWINDS the weld. As `entry` runs 0 → 1 the
+    // mark hands itself back to its world anchor
+    // (`BRANDMARK_ANCHOR_INTELLIGENCE`, which is precisely the point the
+    // dive is aimed through) and drops the billboard, so it presents its
+    // real volumetric wireframe rather than a plate turned to face us.
+    // The camera then closes on a stationary object and punches through
+    // it, which is the gesture the section was always describing.
+    //
+    // ⚠ IDENTITY AT `entry = 0`, AT EVERY KNOB VALUE. `vwRelease` is
+    // scaled by the entry channel, so the ambient hold, the dock, the
+    // whole corridor and every reading beat are byte-identical — the
+    // same construction contract `getVoidwalkerTravelCameraPose` carries
+    // at its own engage edge.
+    //
+    // The weld strength: `recT` everywhere else, unwound only on the dive.
+    const weld = recT * (1 - vwRelease);
 
     // Position: sphere centre (world) → a point dead-centre in front of
     // the LIVE camera, so the camera fly-in can't carry the shrinking mark
     // off-screen. At recT 0 it sits at the sphere centre (unchanged).
     posScratch.current.set(bx, by, bz);
-    if (recT > 1e-4) {
+    if (weld > 1e-4) {
       const cam = state.camera;
       fwdScratch.current.set(0, 0, -1).applyQuaternion(cam.quaternion);
       frontScratch.current.copy(cam.position).addScaledVector(fwdScratch.current, CENTER_DISTANCE);
@@ -910,14 +975,20 @@ export function BrandmarkPhysicsCoreActor({
       // smootherstep as the park; recT = 0 (corridor) is untouched.
       upScratch.current.set(0, 1, 0).applyQuaternion(cam.quaternion);
       frontScratch.current.addScaledVector(upScratch.current, -CENTER_Y_OFFSET);
-      posScratch.current.lerp(frontScratch.current, recT);
+      posScratch.current.lerp(frontScratch.current, weld);
       // Decommission recede: push the parked mark AWAY along camera-forward
       // — the "space view" withdrawing behind the incoming data readout.
+      // Unwound with the weld: a camera-forward push is the same trap as
+      // the weld itself, and would keep shoving the mark out of reach for
+      // the whole dive.
       if (exitT > 1e-4) {
-        posScratch.current.addScaledVector(fwdScratch.current, EXIT_RECEDE_DIST * exitT);
+        posScratch.current.addScaledVector(
+          fwdScratch.current,
+          EXIT_RECEDE_DIST * exitT * (1 - vwRelease)
+        );
       }
       // Head-on billboard base so the mark faces the viewer at the centerpiece.
-      group.quaternion.identity().slerp(cam.quaternion, recT);
+      group.quaternion.identity().slerp(cam.quaternion, weld);
       // Gentle 3D drift: a slow, small-amplitude sinusoidal tilt on X / Y (a
       // Lissajous nod, different periods) eased in by recT. It parallax-reveals
       // the kept dome's depth so the mark reads as a living 3D object — WITHOUT
@@ -957,7 +1028,10 @@ export function BrandmarkPhysicsCoreActor({
     // + drift. recT ≈ 0 in the corridor ⇒ damps to identity (byte-identical).
     const pl = pointerLookRef.current;
     if (pl) {
-      const engaged = UNIFIED_SERVICES_ARMILLARY && recT > 0.9;
+      // Gated on the WELD, not `recT`: once the dive has handed the mark
+      // back to the world, a pointer nudge would drag the thing we are
+      // flying at sideways under the cursor.
+      const engaged = UNIFIED_SERVICES_ARMILLARY && weld > 0.9;
       const k = Math.min(1, delta * 4);
 
       // Deck stillness (ADR-047, carried from ADR-046): as the exit clock

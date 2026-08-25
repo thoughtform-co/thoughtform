@@ -51,10 +51,24 @@ export interface VwTravel {
    *  drawn at zero alpha, far enough out that a hitch has nowhere to
    *  land. */
   near: boolean;
+  /** Damped scroll VELOCITY in runway-fractions-per-second — how fast
+   *  the reader is moving through the tunnel right now, EMA-smoothed
+   *  by the writer so a wheel notch is not a spike. Feeds the streak
+   *  layer, the fog dilation and the card tilt: the Codrops finding is
+   *  that velocity effects sell speed cheaper than DOF. 0 at rest. */
+  velocity: number;
 }
 
 export const vwTravelRef: { current: VwTravel } = {
-  current: { engaged: false, p: 0, entry: 0, flight: 0, rings: 0, near: false },
+  current: {
+    engaged: false,
+    p: 0,
+    entry: 0,
+    flight: 0,
+    rings: 0,
+    near: false,
+    velocity: 0,
+  },
 };
 
 /** Reset every channel to its disengaged rest value. Called by the
@@ -68,4 +82,37 @@ export function clearVwTravel(): void {
   t.flight = 0;
   t.rings = 0;
   t.near = false;
+  t.velocity = 0;
+}
+
+/**
+ * True only while the reader is DEEP inside the voidwalker time tunnel —
+ * past the entry dive (`flight > 0.15`), before the foot (`flight < 0.9`)
+ * and only when the runway is under the viewport (`engaged`).
+ *
+ * ⚠ PURE FUNCTION OF LIVE STATE. No latch, no cooldown, no history: a
+ * reverse scroll immediately restores every painter that read this to
+ * hide its geometry (`group.visible = false`). ADR-081 U1's whole
+ * lesson at this seam — "the camera claim is POSITIONAL, not modal" —
+ * carries here: hiding painters modally would give us this morning's
+ * bug back the moment a reader hits reload on the wrong station.
+ *
+ * ⚠ THE WINDOW IS DELIBERATELY NARROW. The camera flies past the
+ * parked brandmark at `VOID_ENTRY_OVERSHOOT = 1.6` world units into
+ * the wormhole's cruise (`VOID_CRUISE_DISTANCE = 26` units), so by
+ * `flight = 0.15` the camera is `1.6 + 0.15 × 26 ≈ 5.5` world units
+ * past the mark — the shell, the accretion ring, the services card
+ * ring, the arc card and the gateway groups are all definitively
+ * behind the camera. Flipping them off shaves the largest per-frame
+ * cost the trace found (20–34 ms during interior travel), while the
+ * VoidwalkerTimeTunnel painter (which paints WHAT the camera sees)
+ * stays on the entire runway.
+ *
+ * ⚠ Consumers MUST call this in `useFrame` and read the current live
+ * value — never cache. The whole safety story rests on the read being
+ * fresh every frame.
+ */
+export function vwTravelInterior(): boolean {
+  const t = vwTravelRef.current;
+  return t.engaged && t.flight > 0.15 && t.flight < 0.9;
 }

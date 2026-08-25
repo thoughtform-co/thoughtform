@@ -16,6 +16,68 @@ import { expect, test, type Page } from "@playwright/test";
 // services-ring-smoke.spec.ts documents). Serialize this file's tests.
 test.describe.configure({ mode: "serial" });
 
+const ARC_SETTLE_MS = 700;
+
+/** Roll to `y` in viewport-sized steps, then let the corridor catch up. */
+async function rollTo(page: Page, y: number) {
+  await page.evaluate(async (target: number) => {
+    const step = Math.max(300, window.innerHeight * 0.5);
+    const from = window.scrollY;
+    const dir = target > from ? 1 : -1;
+    for (let at = from; dir > 0 ? at < target : at > target; at += dir * step) {
+      window.scrollTo(0, at);
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    window.scrollTo(0, target);
+  }, y);
+  await page.waitForTimeout(ARC_SETTLE_MS);
+}
+
+/**
+ * Park inside the corridor's `navigate` band (the Arc) and return the
+ * scroll position, so a test that leaves can come back to the same place.
+ *
+ * ⚠ NEVER NAVIGATE THIS CORRIDOR BY A HARDCODED PIXEL COUNT. The stage is
+ * sized in viewport units, so the same `y` lands at a different fraction
+ * of the corridor on every project — measured stage heights run 6921 to
+ * 9676 across the four. At the `y = 2800` these tests used to hardcode
+ * that is 0.40 of the corridor on iphone-14 and 0.37 on iphone-14-pro-max,
+ * which is the whole reason 2800 sat in `navigate` on three shapes and in
+ * `thesis` on the tall phone. The band itself is at 0.40–0.50 on the two
+ * phones and 0.30–0.40 on tablet and desktop, so no single fraction is
+ * safe either: search for it.
+ *
+ * ⚠ AND SETTLING COSTS REAL MILLISECONDS. `data-corridor-phase` is written
+ * from the WebGL frameloop off a SMOOTHED scroll value, so it lags
+ * window.scrollY by more than a frame. A walk that settles on
+ * requestAnimationFrame alone never sees the attribute change at all —
+ * measured, it reports `thesis` from the top of the stage to the bottom
+ * on all four projects. That is why the search below is a Playwright-side
+ * loop with a timeout per probe rather than one fast pass inside
+ * page.evaluate.
+ */
+async function walkToArc(page: Page): Promise<number> {
+  const stage = await page.evaluate(() => {
+    const el = document.querySelector(".home-v2-stage");
+    return el ? el.getBoundingClientRect().height : 9000;
+  });
+
+  const seen: string[] = [];
+  for (let frac = 0.28; frac <= 0.56; frac += 0.04) {
+    const y = Math.round(stage * frac);
+    await rollTo(page, y);
+    const phase = await page.evaluate(() =>
+      document.documentElement.getAttribute("data-corridor-phase")
+    );
+    if (phase === "navigate") return Math.round(y);
+    seen.push(`${frac.toFixed(2)}:${phase ?? "-"}`);
+  }
+
+  throw new Error(
+    `the search never found the corridor's navigate band (stage=${Math.round(stage)}, saw ${seen.join(" ")})`
+  );
+}
+
 async function scrollToPercentage(page: Page, percentage: number) {
   await page.evaluate((pct: number) => {
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -139,16 +201,56 @@ test.describe("Homepage corridor smoke", () => {
   test("ADR-021: dock attribute releases on reverse scroll back into corridor", async ({
     page,
   }) => {
-    // Drive forward into the seam so the dock can engage.
-    await scrollToPercentage(page, 50);
-    await scrollToPercentage(page, 55);
-    // Then back into the middle of the corridor where the dock must
-    // be released (BEST-PRACTICES.md cross-writer release guard).
-    await scrollToPercentage(page, 25);
-    const docked = await page.evaluate(() =>
-      document.documentElement.getAttribute("data-corridor-docked")
+    // ⚠ THIS TEST NAVIGATES BY THE CORRIDOR STAGE'S OWN RECT, NOT BY A
+    // page-percentage. The percentages used to land here (50/55 forward,
+    // 25 back) drifted as ADR-081 grew the page by 14 svh of voidwalker
+    // travel runway: on the current layout 25 % puts #services at
+    // servicesTop=382 (right in the dock-engage window), so the assertion
+    // was true against a percentage that no longer named "middle of the
+    // corridor". Rect-based navigation is invariant to page height.
+    //
+    // The seam target: scroll until the corridor stage's top is one
+    // viewport ABOVE 0 (i.e. we are one viewport into the docked window).
+    const seamY = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".home-v2-stage");
+      if (!stage) return 0;
+      const r = stage.getBoundingClientRect();
+      // stage.top + scrollY = stage's document-space top. Add the stage's
+      // own height so the viewport top sits at the stage's bottom, then
+      // pull back one vh to sit inside the docked band.
+      return Math.round(r.top + window.scrollY + stage.offsetHeight - window.innerHeight * 0.5);
+    });
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), seamY);
+    await page.waitForTimeout(500);
+    await page.evaluate(
+      (y) =>
+        window.scrollTo({ top: y + Math.round(window.innerHeight * 0.4), behavior: "instant" }),
+      seamY
     );
-    expect(docked).not.toBe("true");
+    await page.waitForTimeout(500);
+    // Then back to a position where #services is at least TWO viewports
+    // below the fold — the honest "middle of the corridor" definition, so
+    // sectionNearDock is false by construction.
+    const midY = await page.evaluate(() => {
+      const svc = document.querySelector<HTMLElement>("#services");
+      if (!svc) return 0;
+      const r = svc.getBoundingClientRect();
+      return Math.round(r.top + window.scrollY - window.innerHeight * 2.5);
+    });
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), midY);
+    await page.waitForTimeout(500);
+    const state = await page.evaluate(() => {
+      const svc = document.querySelector<HTMLElement>("#services");
+      const r = svc?.getBoundingClientRect() ?? null;
+      return {
+        docked: document.documentElement.getAttribute("data-corridor-docked"),
+        servicesTopVh: r ? Math.round(r.top / window.innerHeight) : null,
+      };
+    });
+    expect(
+      state.docked,
+      `dock must release when #services is ${state.servicesTopVh}vh below the fold`
+    ).not.toBe("true");
   });
 
   test("v7-parse: dead nav anchors for retired stations are absent", async ({ page }) => {
@@ -222,15 +324,7 @@ test.describe("Homepage corridor smoke", () => {
   test("ADR-081: the time tunnel does not claim the camera during the corridor", async ({
     page,
   }) => {
-    // Walk to the Arc rather than teleporting — the corridor's writers
-    // live in the frameloop and an instant jump skips the band.
-    await page.evaluate(async () => {
-      for (let y = 0; y <= 2800; y += 350) {
-        window.scrollTo(0, y);
-        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      }
-    });
-    await page.waitForTimeout(1200);
+    await walkToArc(page);
 
     const phase = await page.evaluate(() =>
       document.documentElement.getAttribute("data-corridor-phase")
@@ -251,6 +345,104 @@ test.describe("Homepage corridor smoke", () => {
       return s ? Math.round(s.getBoundingClientRect().top) : 0;
     });
     expect(runwayTop, "the voidwalker runway is still below the fold").toBeGreaterThan(0);
+  });
+
+  /**
+   * ⚠ THE STRUCTURAL SHED IS REVERSIBLE (ADR-081 U4 perf pass).
+   *
+   * The shed hides four corridor painters during voidwalker interior
+   * travel (`InterGateCorridor`, `GatewayThroat`, `LatentFieldTunnel`,
+   * `LatentWormholeWalls`) so their `useFrame` bodies don't run when the
+   * camera has flown past them into the wormhole. The gate is a PURE
+   * FUNCTION of `vwTravelRef.current` (`vwTravelInterior()`), and this
+   * test walks the failure mode ADR-081 U1 recorded: hide the corridor,
+   * then reverse-scroll BACK into it and prove every painter that was
+   * shed comes back.
+   *
+   * Frame-weight marks:
+   *   • ARC (baseline) — heavy scene, kB ≫ 150.
+   *   • MID-TRAVEL — voidwalker deep in the runway, corridor painters
+   *     shed. The wormhole itself is still painting, so kB is still
+   *     substantial but this only exists to prove the smoke can see
+   *     the flight.
+   *   • ARC AFTER REVERSE SCROLL — same weight as the baseline mark.
+   *     If the shed accidentally became modal / latched, this fails.
+   */
+  test("ADR-081 U4: the structural shed restores every painter on reverse scroll", async ({
+    page,
+    viewport,
+  }) => {
+    // Travel mode (and therefore the shed) is desktop-only —
+    // `useTravelCapable` gates on `(min-width: 961px)`. On mobile and
+    // tablet the vertical fallback timeline is what renders, and the
+    // shed never engages, so this smoke has nothing to assert.
+    test.skip(
+      !viewport || viewport.width < 961,
+      "voidwalker travel is desktop-only; the shed has no fallback path to guard here"
+    );
+    // 1. Baseline — walk to the Arc. `arcY` is where we must come back
+    //    to in step 3; the two marks have to be the SAME place or the
+    //    weight comparison is measuring the scroll position, not the shed.
+    const arcY = await walkToArc(page);
+    const arcPhase = await page.evaluate(() =>
+      document.documentElement.getAttribute("data-corridor-phase")
+    );
+    expect(arcPhase, "the walk landed inside the Arc").toBe("navigate");
+    const arcBaseline = (await page.screenshot()).length;
+    expect(
+      arcBaseline,
+      `the corridor paints at the Arc baseline (${Math.round(arcBaseline / 1024)} kB)`
+    ).toBeGreaterThan(150_000);
+
+    // 2. Deep mid-travel — walk to voidwalker's mid runway. The
+    // corridor painters below the camera are shed here; the tunnel
+    // (which is not shed) still paints. This mark exists so the smoke
+    // can prove the reversibility by measurement, not by claim.
+    await page.evaluate(async () => {
+      const vw = document.getElementById("voidwalker");
+      if (!vw) return;
+      const target = window.scrollY + vw.getBoundingClientRect().top + window.innerHeight * 7;
+      const start = window.scrollY;
+      const step = Math.max(400, window.innerHeight * 0.6);
+      for (let y = start; y <= target; y += step) {
+        window.scrollTo(0, y);
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      }
+      window.scrollTo(0, Math.round(target));
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    });
+    await page.waitForTimeout(1000);
+    const vwMode = await page.evaluate(
+      () => document.getElementById("voidwalker")?.getAttribute("data-vw-mode") ?? null
+    );
+    expect(vwMode, "voidwalker travel is engaged mid-runway").toBe("travel");
+    const midWeight = (await page.screenshot()).length;
+    expect(
+      midWeight,
+      `the voidwalker tunnel paints mid-flight (${Math.round(midWeight / 1024)} kB)`
+    ).toBeGreaterThan(30_000);
+
+    // 3. Reverse scroll BACK to the Arc — everything the shed hid must
+    // come back. The frame weight has to recover to essentially the
+    // baseline. If the shed is modal or latched, this weight stays low
+    // (the sphere/arc-cases/gateway-groups are still hidden).
+    await rollTo(page, arcY);
+    await page.waitForTimeout(700);
+    const restoredPhase = await page.evaluate(() =>
+      document.documentElement.getAttribute("data-corridor-phase")
+    );
+    expect(restoredPhase, "the reverse scroll landed back inside the Arc").toBe("navigate");
+    const restoredWeight = (await page.screenshot()).length;
+    // ⚠ THE CORE ASSERTION. Recovered weight must be close to the
+    // baseline — a modal shed would leave the arc painting nothing.
+    // Cap on the DOWNSIDE at 80 % of baseline; a few kB of variation
+    // from font/rasterization/GPU noise is expected.
+    expect(
+      restoredWeight,
+      `the corridor recovers on reverse scroll ` +
+        `(baseline ${Math.round(arcBaseline / 1024)} kB, ` +
+        `restored ${Math.round(restoredWeight / 1024)} kB)`
+    ).toBeGreaterThan(Math.round(arcBaseline * 0.8));
   });
 
   // NOTE (2026-07-14): the three Services-hologram tests that lived here

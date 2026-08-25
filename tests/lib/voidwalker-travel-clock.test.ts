@@ -645,3 +645,179 @@ describe("voidwalker travel clock — one beat at a time", () => {
     expect(beatBlurPx(-0.46)).toBeGreaterThan(2.5);
   });
 });
+
+/*
+ * The flight-grammar lab (ADR-081 Phase 1) — a config module drives the
+ * tunable knobs of this clock. Production never mutates the config, so
+ * these tests guard TWO invariants:
+ *
+ *   1. Defaults are byte-identical to the constants exported here — a
+ *      drift silently changes the landing.
+ *   2. Overrides do what they say they do (roll under `linear` is 0,
+ *      housing is 1 under non-housed, curve bends further out for a
+ *      non-zero `curveBend`).
+ */
+describe("voidwalker travel clock — the flight-grammar lab (ADR-081 Phase 1)", () => {
+  it("keeps defaults byte-identical to the exported constants", async () => {
+    const { VW_FLIGHT_DEFAULT, getVwFlightConfig } =
+      await import("@/lib/voidwalker/voidwalkerFlightConfig");
+    // These are the constants a lab preset would override. The default
+    // table below MIRRORS them; the mirror is what production consumers
+    // reach through at every call site.
+    expect(VW_FLIGHT_DEFAULT.span).toBe(VW_TRAVEL_SPAN);
+    expect(VW_FLIGHT_DEFAULT.tauSeconds).toBe(VW_TRAVEL_TAU_S);
+    expect(VW_FLIGHT_DEFAULT.runwaySvh).toBe(VW_TRAVEL_RUNWAY_SVH);
+    expect(VW_FLIGHT_DEFAULT.blurMax).toBe(VW_BLUR_MAX);
+    // The active config at import time IS the default table — nothing
+    // else has touched it.
+    expect(getVwFlightConfig()).toEqual(VW_FLIGHT_DEFAULT);
+  });
+
+  it("returns 0 roll under the shipped linear variant, at every t", async () => {
+    const { beatRollDeg } = await import("@/lib/voidwalker/voidwalkerTravelClock");
+    for (const t of [-1, -0.5, -0.2, 0, 0.2, 0.5, 1]) {
+      expect(beatRollDeg(t, 1)).toBe(0);
+      expect(beatRollDeg(t, -1)).toBe(0);
+    }
+  });
+
+  it("returns 1 housing opacity under the linear + curved variants", async () => {
+    const { beatHousingOpacity } = await import("@/lib/voidwalker/voidwalkerTravelClock");
+    // Under production defaults (linear), the housing gate returns 1 at
+    // every t — the CSS `--vw-house, 1` fallback then renders nothing.
+    for (const t of [-1, -0.4, 0, 0.4, 1]) {
+      expect(beatHousingOpacity(t)).toBe(1);
+    }
+  });
+
+  it("banks under the `curved` variant and unwinds at the park", async () => {
+    const { beatRollDeg } = await import("@/lib/voidwalker/voidwalkerTravelClock");
+    const { setVwFlightOverrides, resetVwFlightConfig } =
+      await import("@/lib/voidwalker/voidwalkerFlightConfig");
+    setVwFlightOverrides({ pathVariant: "curved", rollMax: 10 });
+    try {
+      // Zero at both extremes AND at the park; peaks halfway between.
+      // `Math.sin(Math.PI)` is not exactly 0 (returns 1.2e-15), so the
+      // extremes are compared with a floating-point tolerance.
+      expect(beatRollDeg(0, 1)).toBe(0);
+      expect(Math.abs(beatRollDeg(-1, 1))).toBeLessThan(1e-9);
+      expect(Math.abs(beatRollDeg(1, 1))).toBeLessThan(1e-9);
+      // Peak is at |t|=0.5 where sin(π/2)=1, so `|mid| == rollMax`.
+      const mid = beatRollDeg(-0.5, 1);
+      expect(Math.abs(mid)).toBeGreaterThan(9.9);
+      expect(Math.abs(mid)).toBeLessThanOrEqual(10);
+      // Sign follows `side`.
+      expect(Math.sign(beatRollDeg(-0.5, 1))).toBe(1);
+      expect(Math.sign(beatRollDeg(-0.5, -1))).toBe(-1);
+    } finally {
+      resetVwFlightConfig();
+    }
+  });
+
+  it("bows the lateral path under `curved`, restores under `linear`", async () => {
+    const { beatScreenXFrac } = await import("@/lib/voidwalker/voidwalkerTravelClock");
+    const { setVwFlightOverrides, resetVwFlightConfig } =
+      await import("@/lib/voidwalker/voidwalkerFlightConfig");
+    const T = -0.5;
+    const linear = beatScreenXFrac(T, 1);
+    setVwFlightOverrides({ pathVariant: "curved", curveBend: 0.2 });
+    try {
+      const curved = beatScreenXFrac(T, 1);
+      // The bow adds LATERAL displacement in the direction of `side`, so
+      // a right-hand beat at t=-0.5 sits further right than the straight
+      // lerp puts it. `smoothBell(-0.5) = sin(π·0.5) = 1`, so at
+      // `curveBend = 0.2` the bow is exactly 0.2 above baseline.
+      expect(curved - linear).toBeCloseTo(0.2, 3);
+    } finally {
+      resetVwFlightConfig();
+    }
+  });
+
+  it("gates the housing opacity by `beatDetail` under `housed`", async () => {
+    const { beatHousingOpacity, beatDetail } =
+      await import("@/lib/voidwalker/voidwalkerTravelClock");
+    const { setVwFlightOverrides, resetVwFlightConfig } =
+      await import("@/lib/voidwalker/voidwalkerFlightConfig");
+    setVwFlightOverrides({ pathVariant: "housed" });
+    try {
+      // In flight the housing is dim; on park it reaches 1.
+      expect(beatHousingOpacity(-0.5)).toBe(beatDetail(-0.5));
+      expect(beatHousingOpacity(0)).toBe(1);
+    } finally {
+      resetVwFlightConfig();
+    }
+  });
+
+  it("dedupes no-op writes so downstream painters don't rebuild geometry", async () => {
+    // The tunnel remounts its point-cloud buffer on `vw-flight-config`
+    // events. A no-op setter that still fired the event thrashed the
+    // buffer on every scroll. Dedup: writing the SAME values does not
+    // dispatch.
+    const { setVwFlightOverrides, resetVwFlightConfig, VW_FLIGHT_DEFAULT } =
+      await import("@/lib/voidwalker/voidwalkerFlightConfig");
+    // Reset first so we're at defaults.
+    resetVwFlightConfig();
+    let events = 0;
+    const listener = () => {
+      events += 1;
+    };
+    // vitest's happy-dom env exposes `window`.
+    if (typeof window !== "undefined") {
+      window.addEventListener("vw-flight-config", listener);
+    }
+    try {
+      // Writing the current values dispatches nothing.
+      setVwFlightOverrides({ span: VW_FLIGHT_DEFAULT.span });
+      expect(events).toBe(0);
+      // A real change does.
+      setVwFlightOverrides({ span: VW_FLIGHT_DEFAULT.span + 1 });
+      if (typeof window !== "undefined") {
+        expect(events).toBe(1);
+      }
+      // Reset back to default fires once and then no more.
+      resetVwFlightConfig();
+      if (typeof window !== "undefined") {
+        expect(events).toBe(2);
+      }
+      resetVwFlightConfig();
+      if (typeof window !== "undefined") {
+        expect(events).toBe(2);
+      }
+    } finally {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("vw-flight-config", listener);
+      }
+      resetVwFlightConfig();
+    }
+  });
+
+  it("clears the masthead before the first beat becomes visible (ADR-081 U2 leftover)", async () => {
+    // THE DEFECT THIS PINS. Before the LEAD_IN band was introduced, stop 0
+    // sat at home ~0.139, its beat became visible via FOG_IN at ~0.048,
+    // and the masthead was still lettering 124 chars at p=0.1 (its own
+    // disarm point). The reader saw both — measured on the V1-default
+    // capture, invisible to every geometry gate.
+    //
+    // With LEAD_IN in place the first beat's home moves down, so
+    // opacity(-1) at the masthead's disarm point is still 0 and the
+    // reader's first beat lights on an empty field.
+    const { VW_TRAVEL_LEAD_IN, VW_TRAVEL_ENTRY_FRAC: E } =
+      await import("@/lib/voidwalker/voidwalkerTravelClock");
+    // Sanity: the lead-in is a real band, not zero.
+    expect(VW_TRAVEL_LEAD_IN).toBeGreaterThan(0);
+    // At the masthead's DISARM point (`ENTRY`), stop 0 must be
+    // essentially invisible — the un-type finishes before the first
+    // beat lights. Below 1 % opacity is visually 0.
+    const t0AtDisarm = beatTravelT(E, 0, N);
+    expect(beatOpacity(t0AtDisarm)).toBeLessThan(0.01);
+    // At the masthead's FORCE-CLEAR point (`ENTRY * 1.26`), stop 0 IS
+    // starting to fade up (~25 %) — which is exactly the graceful
+    // crossfade the un-type is finishing THROUGH. What may not happen:
+    // the beat past HALF opacity while the masthead is still lettering.
+    // That was the ADR-081 U2 defect and this is the cap it fails at
+    // if the lead-in ever shrinks.
+    const forceClear = E * 1.26;
+    const t0AtForce = beatTravelT(forceClear, 0, N);
+    expect(beatOpacity(t0AtForce)).toBeLessThan(0.35);
+  });
+});

@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
 import { getSmoothedThoughtformOffsetX } from "./motionFollower";
 import { STATION_THOUGHTFORM, getThoughtformBootEnvelope } from "./sceneGeom";
 
@@ -388,6 +389,17 @@ export function GatewayThroat() {
   useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group || !geometry) return;
+
+    // ⚠ ADR-081 U4 SHED. The throat sits BEHIND the Thoughtform gate,
+    // which is the first station of the corridor — during voidwalker
+    // interior travel the camera is 5+ world units past the entire
+    // corridor, so nothing here is visible. Pure state, restores by
+    // construction.
+    if (vwTravelInterior()) {
+      group.visible = false;
+      material.uniforms.uOpacity.value = 0;
+      return;
+    }
 
     const t = useDepthGatewayStore.getState().transform;
     const painting = t.active || t.armed;

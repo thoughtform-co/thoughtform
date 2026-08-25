@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
 import {
   STATION_DIAGNOSTIC,
   STATION_INTELLIGENCE,
@@ -1362,6 +1363,20 @@ export function LatentWormholeWalls() {
 
   useFrame((state) => {
     if (!geometry) return;
+
+    // ⚠ ADR-081 U4 SHED. These are the CORRIDOR'S OWN wormhole walls
+    // (dotted longitudinal rails between the gate stations); during
+    // voidwalker interior travel the camera has flown OUT of that
+    // corridor and into the time tunnel, so nothing here is visible.
+    // Skip the flow envelope + opacity follower entirely. Pure state,
+    // restores by construction (see `vwTravelInterior`).
+    if (vwTravelInterior()) {
+      if (pointsRef.current) pointsRef.current.visible = false;
+      if (streakRef.current) streakRef.current.visible = false;
+      if (glowRef.current) glowRef.current.visible = false;
+      return;
+    }
+
     const { camera, viewport } = state;
     const now = state.clock.elapsedTime;
     const lastT = lastTime.current;

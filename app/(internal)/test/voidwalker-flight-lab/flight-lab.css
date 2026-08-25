@@ -1,0 +1,132 @@
+/* Voidwalker flight lab — the lever panel's chrome.
+   Loaded ONLY on `/test/voidwalker-flight-lab`. */
+
+.vwfl {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 9999;
+  min-width: 320px;
+  max-width: 380px;
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
+  color: rgba(235, 227, 214, 0.9);
+  background: rgba(10, 9, 8, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(202, 165, 84, 0.28);
+  border-radius: 2px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+.vwfl--collapsed {
+  min-width: 0;
+  max-width: none;
+}
+
+.vwfl__toggle {
+  all: unset;
+  cursor: pointer;
+  padding: 8px 12px;
+  color: rgba(202, 165, 84, 0.9);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.18);
+  background: rgba(202, 165, 84, 0.06);
+}
+
+.vwfl__body {
+  padding: 8px 12px 12px;
+  overflow-y: auto;
+  max-height: calc(100vh - 60px);
+  scrollbar-width: thin;
+}
+
+.vwfl__row {
+  display: grid;
+  grid-template-columns: 96px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px dashed rgba(235, 227, 214, 0.08);
+}
+
+.vwfl__row--dirty .vwfl__label {
+  color: rgba(202, 165, 84, 1);
+}
+
+.vwfl__row--dirty input {
+  color: rgba(202, 165, 84, 1);
+  border-color: rgba(202, 165, 84, 0.6);
+}
+
+.vwfl__label {
+  color: rgba(235, 227, 214, 0.72);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.vwfl__row input,
+.vwfl__row select {
+  all: unset;
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  background: rgba(10, 9, 8, 0.5);
+  padding: 4px 6px;
+  color: rgba(235, 227, 214, 0.95);
+  font-family: inherit;
+  font-size: 11px;
+  border-radius: 1px;
+  width: calc(100% - 14px);
+  cursor: pointer;
+}
+
+.vwfl__row input:focus,
+.vwfl__row select:focus {
+  border-color: rgba(202, 165, 84, 0.7);
+  outline: none;
+}
+
+.vwfl__default {
+  color: rgba(235, 227, 214, 0.32);
+  font-size: 9px;
+  text-align: right;
+}
+
+.vwfl__row--presets {
+  grid-template-columns: 96px 1fr;
+  gap: 8px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.18);
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.vwfl__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.vwfl__presets button {
+  all: unset;
+  padding: 3px 8px;
+  border: 1px solid rgba(235, 227, 214, 0.22);
+  background: rgba(10, 9, 8, 0.6);
+  color: rgba(235, 227, 214, 0.85);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  border-radius: 1px;
+}
+
+.vwfl__presets button:hover {
+  border-color: rgba(202, 165, 84, 0.6);
+  color: rgba(202, 165, 84, 1);
+}
+
+.vwfl__reset {
+  border-color: rgba(202, 165, 84, 0.5) !important;
+  color: rgba(202, 165, 84, 0.9) !important;
+}

@@ -5,6 +5,7 @@ import { useEffect, type RefObject } from "react";
 import { VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { clearVwTravel, vwTravelRef } from "@/lib/home-v2/vwTravelRef";
+import { getVwFlightConfig } from "@/lib/voidwalker/voidwalkerFlightConfig";
 import {
   VW_TRAVEL_ENTRY_FRAC,
   activeStop,
@@ -13,8 +14,10 @@ import {
   beatDepthPx,
   beatDepthUnproject,
   beatDetail,
+  beatHousingOpacity,
   beatOpacity,
   beatPowerOn,
+  beatRollDeg,
   beatRotDeg,
   beatScreenXFrac,
   beatScreenYFrac,
@@ -190,6 +193,14 @@ export function useVoidwalkerTravelScroll(
        rubber-bands across its own ticks. */
     let flight = 0;
     let lastFrameMs = 0;
+    /* ── THE VELOCITY CHANNEL ────────────────────────────────────
+       An EMA-smoothed derivative of `flight` in runway-fractions per
+       second. Reads 0 at rest, rises with a fast scroll, decays back
+       to 0. The tunnel and (in lab mode) the streak painter consume
+       it as an intensity multiplier so speed sells cheaply — the
+       Codrops finding (velocity effects > DOF on cost). */
+    let velocity = 0;
+    let lastFlight = 0;
 
     const setVar = (el: HTMLElement, name: string, v: string) => {
       el.style.setProperty(name, v);
@@ -232,6 +243,8 @@ export function useVoidwalkerTravelScroll(
         el.style.removeProperty("--vw-x");
         el.style.removeProperty("--vw-y");
         el.style.removeProperty("--vw-rot");
+        el.style.removeProperty("--vw-roll");
+        el.style.removeProperty("--vw-house");
         el.style.removeProperty("--vw-d");
         el.removeAttribute("data-vw-far");
         el.removeAttribute("data-vw-lit");
@@ -295,6 +308,15 @@ export function useVoidwalkerTravelScroll(
       lastFrameMs = nowMs;
       flight = dt > 0 ? travelChase(flight, p, dt) : p;
       const settled = flight === p;
+      // Instantaneous velocity in runway-frac/s, low-pass filtered.
+      // Zero-guard: dt can be 0 on the very first tick.
+      const inst = dt > 0 ? (flight - lastFlight) / dt : 0;
+      // 0.24s time constant — long enough that a wheel notch does not
+      // spike but short enough to feel responsive. Same shape as the
+      // motion follower's own damping.
+      const vk = dt > 0 ? 1 - Math.exp(-dt / 0.24) : 1;
+      velocity += (Math.abs(inst) - velocity) * vk;
+      lastFlight = flight;
 
       // ── the cross-root transport ────────────────────────────────
       // ⚠ THE CAMERA CLAIM IS POSITIONAL, NOT MODAL. `engaged` above is
@@ -328,6 +350,10 @@ export function useVoidwalkerTravelScroll(
       t.entry = running ? entry : 0;
       t.flight = running ? travelFlight(flight) : 0;
       t.rings = running ? ringsPassed(flight, years) : 0;
+      // Velocity ∈ [0, ~few] rf/s. Scaled by the lab-tunable
+      // strength; in production the strength is 0 so consumers see 0
+      // and the channel is inert.
+      t.velocity = running ? velocity * getVwFlightConfig().velocityStrength : 0;
       // Within reach but not yet flying — the reader is still in
       // `#about`, a couple of viewports out. The tunnel painter warms
       // its shaders on this, so the dive's first frame is not also a
@@ -452,6 +478,14 @@ export function useVoidwalkerTravelScroll(
           setVar(el, "--vw-x", `${x.toFixed(1)}px`);
           setVar(el, "--vw-y", `${y.toFixed(1)}px`);
           setVar(el, "--vw-rot", `${(axial[i] ? 0 : beatRotDeg(tt, side)).toFixed(2)}deg`);
+          // Roll is 0 for the shipped `linear` variant, so this is a
+          // free write when the lab is off — the CSS uses `--vw-roll, 0`
+          // as the fallback and the value never leaves 0.00deg.
+          setVar(el, "--vw-roll", `${(axial[i] ? 0 : beatRollDeg(tt, side)).toFixed(2)}deg`);
+          // Housing gate for the `housed` lab variant. In `linear` /
+          // `curved` this returns 1 and the CSS's `--vw-house, 1`
+          // fallback makes it a no-op.
+          setVar(el, "--vw-house", beatHousingOpacity(tt).toFixed(3));
           lastX[i] = x;
         }
 

@@ -13,9 +13,20 @@
  * walk steps down in ≤0.5vh so every scroll-driven clock on the way in
  * (corridor exit, the pinned #about deck) runs in order.
  *
+ * FLIGHT-GRAMMAR LAB (Phase 1 of the flight-grammar plan):
+ *   • `--variant <name>` picks a `PRESETS` entry from
+ *     `FlightLabPanel.tsx`. Names carry into the URL of
+ *     `/test/voidwalker-flight-lab` verbatim.
+ *   • `--all-variants` runs the shipped preset set into
+ *     `docs/design/voidwalker-flight-lab/<preset>/` folders — one
+ *     contact sheet per axis, ready for owner selection.
+ *   • Any variant flag routes through `/test/voidwalker-flight-lab`
+ *     instead of `/`; without a variant we still measure production.
+ *
  * Usage (dev server must already be running):
  *   node scripts/capture-voidwalker-travel.mjs [--port 3003] [--vp 1440x800]
- *        [--theme light] [--headless]
+ *        [--theme light] [--headless] [--variant V2-noomo-swing]
+ *        [--all-variants]
  */
 import { chromium } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
@@ -27,10 +38,54 @@ const argOf = (flag, fallback) => {
 };
 
 const PORT = argOf("--port", "3003");
-const OUT = argOf("--out", "docs/design/voidwalker-travel");
 const HEADLESS = args.includes("--headless");
 const THEME = argOf("--theme", "dark");
 const [VW, VH] = argOf("--vp", "1440x800").split("x").map(Number);
+const VARIANT = argOf("--variant", "");
+const ALL_VARIANTS = args.includes("--all-variants");
+// Preset table mirrors `FlightLabPanel.tsx` PRESETS. Keep in sync if the
+// panel gains a preset the owner wants captured — the source of truth is
+// the panel; this table is what the CLI recognises.
+const PRESET_URLS = {
+  "V1-default": "",
+  "V2-noomo-swing":
+    "pathVariant=curved&curveBend=0.18&rollMax=8&xFar=0.32&xNear=0.78&rotMax=12",
+  "V3-housed":
+    "pathVariant=housed&curveBend=0.14&rollMax=6&xFar=0.28&xNear=0.7&rotMax=10",
+  "populated-field": "span=5&fogIn=0.88&fogOut=0.36&wallDensityMul=1.35",
+  "slow-cinema": "tauSeconds=0.32&runwaySvh=18",
+  "entry-burst": "entryReactionStrength=1&velocityStrength=1",
+};
+const DEFAULT_OUT =
+  VARIANT || ALL_VARIANTS
+    ? "docs/design/voidwalker-flight-lab"
+    : "docs/design/voidwalker-travel";
+const OUT = argOf("--out", DEFAULT_OUT);
+
+// ⚠ `--all-variants` is delegated: it is a subprocess loop over the
+// preset table, spawning THIS script with `--variant <name>` each time.
+// Nested loops in one browser were a maintenance mess; a subprocess per
+// preset keeps each run's context, page, and error collectors clean and
+// makes the CLI honest about its output layout (`OUT/<preset>/…`).
+if (ALL_VARIANTS) {
+  const { spawnSync } = await import("node:child_process");
+  const script = new URL(import.meta.url).pathname;
+  // On Windows the pathname begins with `/C:/…`; strip the leading slash.
+  const localScript = process.platform === "win32" ? script.replace(/^\//, "") : script;
+  let anyFailed = false;
+  for (const preset of Object.keys(PRESET_URLS)) {
+    const outDir = `${OUT}/${preset}`;
+    console.log(`\n── ${preset} → ${outDir}`);
+    const forwarded = ["--variant", preset, "--out", outDir, "--port", PORT, "--vp", `${VW}x${VH}`, "--theme", THEME];
+    if (HEADLESS) forwarded.push("--headless");
+    const r = spawnSync(process.execPath, [localScript, ...forwarded], {
+      stdio: "inherit",
+      env: process.env,
+    });
+    if (r.status !== 0) anyFailed = true;
+  }
+  process.exit(anyFailed ? 1 : 0);
+}
 
 await mkdir(OUT, { recursive: true });
 
@@ -44,7 +99,8 @@ const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 
-const tag = (n) => `${OUT}/${VW}x${VH}_${THEME}_${n}.png`;
+const label = VARIANT || "prod";
+const tag = (n) => `${OUT}/${VW}x${VH}_${THEME}_${label}_${n}.png`;
 const shot = (n) => page.screenshot({ path: tag(n) });
 
 /** Scroll in real steps so every scroll-driven clock sees the travel. */
@@ -66,7 +122,23 @@ async function walkTo(y) {
 // explicit `data-theme` attribute set pre-paint from `?theme=` or storage
 // (ADR-058), so a context-level colour scheme captures dark twice and
 // reports a light pass that never happened.
-await page.goto(`http://localhost:${PORT}/?theme=${THEME}`, {
+//
+// Preset routing: any preset picks the flight lab route so the panel
+// applies the config; production defaults capture the marketing page.
+function urlFor(preset) {
+  const params = new URLSearchParams();
+  params.set("theme", THEME);
+  const presetParams = preset ? PRESET_URLS[preset] : "";
+  if (presetParams) {
+    for (const kv of presetParams.split("&")) {
+      const [k, v] = kv.split("=");
+      if (k && v) params.set(k, v);
+    }
+  }
+  const path = preset ? "/test/voidwalker-flight-lab" : "/";
+  return `http://localhost:${PORT}${path}?${params.toString()}`;
+}
+await page.goto(urlFor(VARIANT), {
   waitUntil: "domcontentloaded",
   timeout: 90000,
 });

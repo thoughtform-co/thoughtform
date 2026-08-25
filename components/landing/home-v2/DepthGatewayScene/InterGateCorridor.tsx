@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
 import {
   type DepthFocusWindow,
   STATION_DIAGNOSTIC,
@@ -123,6 +124,16 @@ function RingBand({
     const group = groupRef.current;
     if (!group) return;
     const { progress, active } = useDepthGatewayStore.getState().transform;
+
+    // ⚠ ADR-081 U4 SHED. Inter-gate debris sits inside the corridor's
+    // own gate stations; once the camera has dived past the parked
+    // brandmark into the voidwalker time tunnel, every band is behind
+    // the camera. Skip the whole draw. Pure state — reverse scroll
+    // restores by construction (see `vwTravelInterior`).
+    if (vwTravelInterior()) {
+      group.visible = false;
+      return;
+    }
 
     if (!active) {
       group.visible = false;

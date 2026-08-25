@@ -1890,6 +1890,20 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
 
+    // ⚠ SMOOTH SCROLL CAN OUTLIVE THE WAIT.
+    // The four scroll waypoints below cover 10+ viewports each; on this
+    // machine `waitForTimeout(900)` regularly ends before Chrome's own
+    // smooth scroll does, so the reader sits ~1vh short of the target and
+    // the "under practice" assertion measures ambient state while
+    // `#practice.top` is still positive. Poll until scrollY settles, so
+    // the assertion measures the state the scroll target names.
+    const scrollAndSettle = async (y: number) => {
+      await page.evaluate((ty) => window.scrollTo(0, ty as number), y);
+      await page.waitForFunction((ty) => Math.abs(window.scrollY - (ty as number)) <= 2, y, {
+        timeout: 4000,
+      });
+    };
+
     // #about directly follows #services (ADR-033 funnel; ADR-047 makes it
     // the pinned transparent deck-flip stage).
     const followsServices = await page.evaluate(() => {
@@ -1913,8 +1927,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       return Math.round(rect.top + window.scrollY + (rect.height - window.innerHeight) * 0.5);
     });
     expect(aboutMid).not.toBeNull();
-    await page.evaluate((y) => window.scrollTo(0, y as number), aboutMid);
-    await page.waitForTimeout(900);
+    await scrollAndSettle(aboutMid as number);
+    await page.waitForTimeout(600);
 
     const mid = await page.evaluate(() => ({
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
@@ -1953,8 +1967,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       return Math.round(window.scrollY + vw.getBoundingClientRect().top + window.innerHeight * 1.5);
     });
     expect(inTravel).not.toBeNull();
-    await page.evaluate((y) => window.scrollTo(0, y as number), inTravel);
-    await page.waitForTimeout(900);
+    await scrollAndSettle(inTravel as number);
+    await page.waitForTimeout(600);
     const during = await page.evaluate(() => ({
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       mode: document.getElementById("voidwalker")?.getAttribute("data-vw-mode") ?? null,
@@ -1977,12 +1991,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       );
     });
     expect(underNext).not.toBeNull();
-    await page.evaluate((y) => window.scrollTo(0, y as number), underNext);
-    await page.waitForTimeout(900);
-    const after = await page.evaluate(() => ({
-      ambient: document.documentElement.hasAttribute("data-services-ambient"),
-      exit: document.documentElement.hasAttribute("data-corridor-exit"),
-    }));
+    await scrollAndSettle(underNext as number);
+    // Wait for the corridor's rAF writer to see the settled scroll.
+    await page.waitForTimeout(600);
+    const after = await page.evaluate(() => {
+      const pr = document.getElementById("practice");
+      return {
+        ambient: document.documentElement.hasAttribute("data-services-ambient"),
+        exit: document.documentElement.hasAttribute("data-corridor-exit"),
+        prTopVh: pr ? +(pr.getBoundingClientRect().top / window.innerHeight).toFixed(2) : null,
+      };
+    });
+    expect(after.prTopVh, "the walk actually reached inside #practice (top < 0)").toBeLessThan(0);
     expect(after.ambient).toBe(false);
     expect(after.exit).toBe(false);
   });

@@ -1,10 +1,17 @@
 ---
-description: The through-line (#voidwalker) — the cover lockstep, the zero-import record, the forked wireframe grammar, one scroll writer
+description: The through-line (#voidwalker) — the cover lockstep, the zero-import record, the forked wireframe grammar, one scroll writer, the flight grammar lab, the structural shed, the brandmark fly-through and the tunnel rails
 globs:
+  - "components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx"
+  - "tests/visual/landing-corridor-smoke.spec.ts"
   - "components/landing/home-v2/voidwalker/**"
   - "components/landing/home-v2/hooks/useVoidwalkerScroll.ts"
+  - "components/landing/home-v2/hooks/useVoidwalkerTravelScroll.ts"
+  - "components/landing/home-v2/DepthGatewayScene/VoidwalkerTimeTunnel.tsx"
   - "lib/voidwalker/**"
+  - "lib/home-v2/vwTravelRef.ts"
   - "scripts/capture-voidwalker.mjs"
+  - "scripts/capture-voidwalker-travel.mjs"
+  - "app/(internal)/test/voidwalker-flight-lab/**"
 alwaysApply: false
 ---
 # Rule: The through-line (`#voidwalker`)
@@ -100,10 +107,109 @@ no-preference` — ⚠ if a width gate is ever added, the CSS rest block in
 - ⚠ **On the phone band the FRAME carries the plate's aspect, not the
   plate** — a wrapped headline in the bar otherwise eats the drawing.
 
+## The flight-grammar lab and the structural shed (ADR-081 U4)
+
+- **The tunable clock is overridable at runtime** through
+  `lib/voidwalker/voidwalkerFlightConfig.ts`. Every knob (`span`,
+  `tauSeconds`, `runwaySvh`, path anchors, `pathVariant`,
+  `wallDensityMul`, `entryReactionStrength`, `velocityStrength`) has a
+  default that MIRRORS the shipped constant byte-for-byte, and clock
+  functions resolve them at call time. Production never mutates the
+  config; unit tests pin equality directly.
+- **The lab lives at `/test/voidwalker-flight-lab`** (blocked in
+  production by `proxy.ts`). Presets in `FlightLabPanel.tsx` mirror
+  `PRESET_URLS` in `scripts/capture-voidwalker-travel.mjs` — add a
+  preset to both.
+- **The variants are `linear` (production) / `curved` (Noomo swing) /
+  `housed` (curved + drawn frame)**. Curves are NEW ADDITIVE terms on
+  the base lerp, so parked composition is unchanged from linear.
+- ⚠ **THE STRUCTURAL SHED HIDES FOUR CORRIDOR PAINTERS DURING INTERIOR
+  TRAVEL**: `InterGateCorridor`, `GatewayThroat`, `LatentFieldTunnel`,
+  `LatentWormholeWalls`. Each reads `vwTravelInterior()` in `useFrame`
+  and returns with `visible = false`. Gate is `engaged && flight >
+  0.15 && flight < 0.9` — pure function of live state, no latch. ⚠
+  **THE STARFIELD AND BRANDMARK CORE STAY ON.** Tunnel walls are
+  additive point clouds, so stars are visible THROUGH gaps; the
+  brandmark core is what the camera reverse-scrolls back into.
+- ⚠ **ADD A PAINTER TO THE SHED IS ADD IT TO THE SMOKE.** The
+  `ADR-081 U4: the structural shed restores every painter on reverse
+  scroll` smoke walks Arc → mid-travel → Arc-after-reverse and pins
+  the frame weight. A modal / latched shed fails there.
+- ⚠ **`VW_TRAVEL_LEAD_IN = 0.06` SHIFTS `stopHome` AND `activeStop`'S
+  BASE** (or the rail marker seats one year early). Unit-pinned: the
+  first beat's opacity at masthead disarm is < 1 %; at force-clear
+  < 35 %.
+- ⚠ **CONFIG SETTER DEDUP IS LOAD-BEARING.** Without it, the panel's
+  first-effect config write fires a `vw-flight-config` event, the
+  tunnel's `configEpoch` bumps, and the point-cloud buffer rebuilds
+  INSIDE the corridor's own `createRoot` commit — React reports it
+  as "sync unmount while rendering".
+
+## The fly-through and the rails (ADR-081 U5)
+
+- ⚠ **THE PARKED BRANDMARK IS A BILLBOARD WELDED TO THE LENS AT
+  `recT = 1`** — `BrandmarkPhysicsCoreActor` replaces its world position
+  with a point `CENTER_DISTANCE` in front of the LIVE camera and slerps
+  onto the camera's orientation, and the services ambient hold is the
+  state the whole runway runs in. Before U5 the dive moved the camera
+  and the mark rode along at constant apparent size (~200px in a 1440px
+  frame at `entry` 0, 0.19, 0.86, 0.999). **Reaching that mark means
+  unwinding the weld**, and four things unwind together or none do: the
+  position lerp, the billboard slerp, the camera-forward
+  `EXIT_RECEDE_DIST` push, and the pointer-look.
+- ⚠ **`markFlyThroughRelease(entry, engaged)` IS AN IDENTITY AT
+  `entry = 0` AT EVERY KNOB VALUE** — that is what keeps the ambient
+  hold, the dock, the corridor and every reading beat byte-identical,
+  and why `markFlyThrough` SCALES the channel rather than replacing it.
+  The mark's shed is gated on the RELEASE, not on the travel: at
+  `markFlyThrough = 0` the mark is still welded in front of the camera,
+  where hiding it is a hole rather than a saving.
+- ⚠ **VOLUME AND DIRECTION ARE TWO LAYERS.** The wall rings twist by
+  `r * 0.19` SPECIFICALLY so consecutive rings do not line up into a
+  cage — correct for dots, and exactly why the dot shell can never
+  carry direction. Longitudinal cues go in the rails
+  (`lib/voidwalker/voidwalkerRailLayout.ts`, three-free); never answer a
+  direction complaint by removing the twist.
+- ⚠ **BOTH ENDS OF A RAIL DASH WRAP ON A SHARED ANCHOR** (`aAnchorZ`
+  wraps, `aOffsetZ` applies after), or the modulo boundary falls between
+  one dash's two ends once per rail per cycle and that dash spans the
+  whole tunnel. `railDashesFitSlots` guards it, because a contact sheet
+  will miss a one-frame-per-cycle streak and a reader will not.
+- ⚠ **THE RAILS FOG OUT BY ~0.6 OF THE SPAN AND CLIP MUCH SHALLOWER THAN
+  THE DOTS.** At the shell's far plane they converge on one pixel dead
+  centre — a sunburst drawn through the beat copy. And a 1px rail
+  streaking past the frame EDGE is the tunnel's strongest speed cue, so
+  the dots' `0.5 → 3.4` near ramp (which exists because a wall point at
+  the lens explodes across the frame) throws the peripheral read away.
+- `railDensity` and `markFlyThrough` are the only `VwFlightConfig`
+  entries whose default is not an identity against a shipped constant;
+  their **zero** is the restore path and the lab's `u5-before` preset
+  sets both.
+
 ## Verifying
 
-`npx vitest run tests/lib/voidwalker-*.test.ts` for the record, the clock,
-the drawings and the tokens; `node scripts/capture-voidwalker.mjs --vp
-1440x800 [--theme light]` (headed) for the seam, the masthead, every beat at
-its reading line, the reversal and the six plates measured; the ring smoke's
-"ambient hold survives" case for the cover.
+⚠ **A CORRIDOR SMOKE MAY NOT NAVIGATE BY PIXELS — OR BY FRAMES.** The
+stage is sized in viewport units (measured 6921–9676 across the four
+projects), so a hardcoded `y` lands at a different FRACTION of the
+corridor on each; and the `navigate` band sits at 0.40–0.50 on the
+phones against 0.30–0.40 on tablet and desktop, so no single fraction is
+safe either. Use `walkToArc` in `landing-corridor-smoke.spec.ts`, which
+searches and returns where it parked. ⚠ **AND SETTLING COSTS REAL
+MILLISECONDS, NOT FRAMES** — `data-corridor-phase` is written from the
+frameloop off the SMOOTHED scroll value, and a walk settling on
+`requestAnimationFrame` alone measured NO `navigate` band at all on any
+project. `scripts/probe-corridor-phase.mjs` prints both readings;
+`scripts/probe-vw-rails.mjs` counts GL draw calls BY PRIMITIVE MODE,
+which is what proved the rail layer was drawing and merely too faint
+rather than not wired.
+
+`npx vitest run tests/lib/voidwalker-*.test.ts` for the record, the clock
+(60 cases, including the flight-lab config + lead-in property), the
+drawings and the tokens; `node scripts/capture-voidwalker.mjs --vp
+1440x800 [--theme light]` (headed) for the seam, the masthead, every beat
+at its reading line, the reversal and the six plates measured; `node
+scripts/capture-voidwalker-travel.mjs --variant V1-default --headless
+--vp 1440x800` for the travel's own gates and the shed's reversibility;
+the ring smoke's "ambient hold survives" case for the cover; and the
+corridor smoke's "ADR-081 U4: the structural shed restores every painter
+on reverse scroll" for the perf-shed gate.

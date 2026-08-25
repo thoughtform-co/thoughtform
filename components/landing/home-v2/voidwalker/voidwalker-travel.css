@@ -120,12 +120,17 @@
      hook from a curve authored in screen fractions and un-projected
      through this beat's depth, so the flight reads the same at every
      viewport (`beatScreenXFrac` and its block comment). */
+  /* ⚠ `--vw-roll` (bank, degrees) defaults to `0` and is only non-zero
+     under the `curved` / `housed` lab flight variants — production is
+     byte-identical to the shipped rotateY-only transform. Order matters:
+     yaw first (turn toward the vanishing point), then bank (which
+     otherwise pivots the card around its own screen normal). */
   transform: translate3d(
       calc(-50% + var(--vw-x, 0px)),
       calc(-50% + var(--vw-y, 0px)),
       var(--vw-z, 0px)
     )
-    rotateY(var(--vw-rot, 0deg));
+    rotateY(var(--vw-rot, 0deg)) rotateZ(var(--vw-roll, 0deg));
   opacity: var(--vw-o, 0);
   filter: blur(var(--vw-blur, 0px));
   transform-style: preserve-3d;

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useCorridorCount } from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
 import { getBuildApproachFade, getThoughtformBootEnvelope } from "./sceneGeom";
 
 /**
@@ -730,6 +731,19 @@ export function LatentFieldTunnel() {
     const points = pointsRef.current;
     const vectors = vectorsRef.current;
     if (!points || !vectors) return;
+
+    // ⚠ ADR-081 U4 SHED. The latent field fills the corridor's own
+    // camera-relative cone (respawn cone anchored to the corridor's
+    // camera path); during voidwalker interior travel the camera has
+    // left that cone entirely. Skip the flow envelope, the alpha
+    // curve and the geometry updates. Restores by construction.
+    if (vwTravelInterior()) {
+      points.visible = false;
+      vectors.visible = false;
+      const tokens = tokensRef.current;
+      if (tokens) tokens.visible = false;
+      return;
+    }
 
     const now = state.clock.elapsedTime;
     const lastT = lastTime.current;

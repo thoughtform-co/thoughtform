@@ -20,7 +20,17 @@
  *
  * Reversible by construction: every value is a pure function of the
  * current runway progress. No state, no wall clock, no previous frame.
+ *
+ * ⚠ LAB OVERRIDES: the flight-grammar lab (`/test/voidwalker-flight-lab`)
+ * can override a subset of the constants below at runtime through
+ * `voidwalkerFlightConfig.ts`. Every function that reads a tunable value
+ * reads it via `getVwFlightConfig()` at call time, so a lab tweak lands
+ * on the next frame with no remount. Production never sets an override,
+ * so the resolved values equal the constants byte-for-byte and the
+ * regression pin in the unit test still passes.
  */
+
+import { getVwFlightConfig } from "./voidwalkerFlightConfig";
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
@@ -129,13 +139,17 @@ const VW_TRAVEL_SETTLE = 0.0004;
  * One step of the flight's exponential chase: covers ~63 % of the
  * remaining gap per tau, ~95 % in 3·tau. Pure — `current` and `dt` are
  * the caller's, so this stays unit-pinnable with no wall clock.
+ *
+ * ⚠ `tau` is a lab-tunable knob (`VwFlightConfig.tauSeconds`). Production
+ * resolves it to `VW_TRAVEL_TAU_S`; the lab can widen it to slow the field.
  */
 export function travelChase(current: number, target: number, dtSeconds: number): number {
   if (!Number.isFinite(current)) return target;
   const d = target - current;
   if (Math.abs(d) > VW_TRAVEL_SNAP) return target;
   const dt = clamp(Number.isFinite(dtSeconds) ? dtSeconds : 0, 0, 0.1);
-  const next = current + d * (1 - Math.exp(-dt / VW_TRAVEL_TAU_S));
+  const tau = getVwFlightConfig().tauSeconds;
+  const next = current + d * (1 - Math.exp(-dt / tau));
   return Math.abs(target - next) < VW_TRAVEL_SETTLE ? target : next;
 }
 
@@ -151,26 +165,6 @@ export const VW_Z_FAR = -2600;
  *  long before it gets there. */
 export const VW_Z_NEAR = 780;
 
-/** Beats fade IN over this much of the far half — they arrive out of the
- *  fog rather than popping. Paired with `VW_TRAVEL_SPAN`: it has to reach
- *  far enough back that the NEXT beat is faintly visible behind the
- *  parked one, or the overlap the span buys is invisible anyway. */
-const FOG_IN = 0.7;
-/**
- * …and OUT over this much of the near half.
- *
- * ⚠ IT IS MUCH SHORTER THAN `FOG_IN`, AND THE ASYMMETRY IS THE POINT.
- * At 0.72 a DEPARTING beat sat at 0.92 opacity under 0.84px of blur at
- * the midpoint between two stops — while the ARRIVING one was at 0.91
- * and 0.84. Two beats of identical weight, printed over each other: the
- * exact defect ADR-081 recorded on the far side and fixed only there.
- *
- * The reader is looking at what is COMING. A beat on its way out gets
- * about a third of the runway the incoming one gets, so by the midpoint
- * it is at 0.46 against 0.91 and reads as the thing behind.
- */
-const FOG_OUT = 0.32;
-
 /**
  * Peak defocus, in px, at the extremes of the flight. Cheap (one
  * composited filter on ≤3 planes at a time) and it is what sells
@@ -185,17 +179,19 @@ const FOG_OUT = 0.32;
  */
 export const VW_BLUR_MAX = 5;
 
-/** How far into the APPROACH the defocus saturates. The ADR-081 measured
- *  value: a beat arriving out of the fog needs to stay soft long enough
- *  that it does not compete with the parked one. */
-const BLUR_REACH_IN = 0.55;
-
-/** …and how far into the DEPARTURE. ⚠ SHORTER, for the same reason
- *  `FOG_OUT` is: a symmetric blur means a receding beat is exactly as
- *  sharp as the one arriving behind it, and the pair at the midpoint
- *  between stops then has nothing to tell it apart. Departing goes soft
- *  roughly twice as fast as arriving comes into focus. */
-const BLUR_REACH_OUT = 0.3;
+/*
+ * ⚠ FOG_IN / FOG_OUT / BLUR_REACH_IN / BLUR_REACH_OUT MOVED TO THE FLIGHT
+ * CONFIG (ADR-081 U4 flight-grammar lab). Their production values are the
+ * `fogIn` / `fogOut` / `blurReachIn` / `blurReachOut` defaults in
+ * `voidwalkerFlightConfig.ts` (0.7 / 0.32 / 0.55 / 0.3 — mirrored one
+ * table, unit-pinned equal to the raw constants they replaced). Every
+ * function that read those constants now reads through
+ * `getVwFlightConfig()` at call time, so a lab tweak lands without a
+ * remount and production is byte-identical to what shipped. The full
+ * rationale for each value (the "asymmetry is the point" for FOG_OUT,
+ * the "focus over opacity" ruling for BLUR_MAX) lives on the config
+ * fields' own JSDoc — one source, so it cannot go stale.
+ */
 
 // ── The camera's mirrored FOV ────────────────────────────────────
 
@@ -243,19 +239,43 @@ export function travelPerspectivePx(vh: number, aspect: number): number {
 
 // ── The stop schedule ─────────────────────────────────────────────
 
+/**
+ * A quiet band between the entry dive and the first stop — no beat
+ * paints across this stretch, so the masthead's un-type finishes on an
+ * empty field.
+ *
+ * ⚠ THIS CLOSES THE ADR-081 U2 LEFTOVER. On the shipped schedule stop 0
+ * sat at home 0.139; its beat became visible via `FOG_IN` at ~0.048,
+ * which is BEFORE the masthead's disarm at 0.1 and well before its
+ * force-clear at 0.126. Measured on the V1-default capture: `head=124`
+ * chars still lettering while `paint=1` — the ADR's own "masthead and
+ * the first beat share the centre" defect.
+ *
+ * At `LEAD_IN = 0.06` stop 0's home moves to 0.199 and the first beat
+ * becomes visible at ~0.115 (past the disarm at 0.106, within the
+ * 0.126 force-clear tail). Residual overlap ≤ ~1.5 % of runway, down
+ * from ~8 %. The remaining sliver is covered by the un-type animation
+ * fading the ghost, not printed ink.
+ *
+ * The runway loses 6 % to the lead-in, but its total is 14 svh, so the
+ * 12.6 svh field remains longer than any consumer reads.
+ */
+export const VW_TRAVEL_LEAD_IN = 0.06;
+
 /** The runway fraction at which stop `i` of `n` sits at the reading
- *  plane. Stops tile the middle of the runway between the entry dive and
- *  the foot; the ±0.5 centres each stop in its own slice. */
+ *  plane. Stops tile the middle of the runway between the entry dive
+ *  plus its lead-in band and the foot; the ±0.5 centres each stop in
+ *  its own slice. */
 export function stopHome(i: number, n: number): number {
   if (n <= 0) return 0.5;
-  const span = 1 - VW_TRAVEL_ENTRY_FRAC - VW_TRAVEL_FOOT_FRAC;
-  return VW_TRAVEL_ENTRY_FRAC + ((i + 0.5) / n) * span;
+  const span = 1 - VW_TRAVEL_ENTRY_FRAC - VW_TRAVEL_LEAD_IN - VW_TRAVEL_FOOT_FRAC;
+  return VW_TRAVEL_ENTRY_FRAC + VW_TRAVEL_LEAD_IN + ((i + 0.5) / n) * span;
 }
 
 /** The width of one stop, as a runway fraction. */
 export function stopWidth(n: number): number {
   if (n <= 0) return 1;
-  return (1 - VW_TRAVEL_ENTRY_FRAC - VW_TRAVEL_FOOT_FRAC) / n;
+  return (1 - VW_TRAVEL_ENTRY_FRAC - VW_TRAVEL_LEAD_IN - VW_TRAVEL_FOOT_FRAC) / n;
 }
 
 /**
@@ -267,6 +287,10 @@ export function stopWidth(n: number): number {
  *
  * Monotone non-decreasing in `p`, so the flight is reversible and a
  * scroll-back retraces it exactly.
+ *
+ * ⚠ `span` is a lab-tunable knob (`VwFlightConfig.span`). Production
+ * resolves it to `VW_TRAVEL_SPAN`; the lab can widen it to paint more
+ * cards down the tunnel at once.
  */
 export function beatTravelT(p: number, i: number, n: number): number {
   const w = stopWidth(n);
@@ -276,7 +300,8 @@ export function beatTravelT(p: number, i: number, n: number): number {
   const dead = VW_TRAVEL_PARK / 2;
   const a = Math.abs(u) - dead;
   if (a <= 0) return 0;
-  const reach = VW_TRAVEL_SPAN / 2 - dead;
+  const span = getVwFlightConfig().span;
+  const reach = span / 2 - dead;
   if (reach <= 0) return u < 0 ? -1 : 1;
   const s = clamp01(a / reach);
   return u < 0 ? -s : s;
@@ -290,22 +315,27 @@ export function beatDepthPx(t: number): number {
 }
 
 /** A stop's opacity: out of the fog on the way in, dissolved on the way
- *  past. 1 across the whole park. */
+ *  past. 1 across the whole park. ⚠ `fogIn`/`fogOut` are lab-tunable
+ *  knobs; production defaults match the `FOG_IN` / `FOG_OUT` constants
+ *  above byte-for-byte. */
 export function beatOpacity(t: number): number {
   const x = clamp(t, -1, 1);
+  const cfg = getVwFlightConfig();
   if (x < 0) {
-    // −1 → −FOG_IN is fully fogged; −FOG_IN → 0 fades up.
-    return ease(clamp01((x + FOG_IN) / FOG_IN));
+    // −1 → −fogIn is fully fogged; −fogIn → 0 fades up.
+    return ease(clamp01((x + cfg.fogIn) / cfg.fogIn));
   }
-  return 1 - ease(clamp01(x / FOG_OUT));
+  return 1 - ease(clamp01(x / cfg.fogOut));
 }
 
 /** A stop's defocus in px — zero across the park, saturating quickly once
- *  the stop leaves the reading plane in either direction. */
+ *  the stop leaves the reading plane in either direction. ⚠ `blurMax` +
+ *  `blurReachIn`/`blurReachOut` are lab-tunable. */
 export function beatBlurPx(t: number): number {
   const x = clamp(t, -1, 1);
-  const reach = x < 0 ? BLUR_REACH_IN : BLUR_REACH_OUT;
-  return VW_BLUR_MAX * ease(clamp01(Math.abs(x) / reach));
+  const cfg = getVwFlightConfig();
+  const reach = x < 0 ? cfg.blurReachIn : cfg.blurReachOut;
+  return cfg.blurMax * ease(clamp01(Math.abs(x) / reach));
 }
 
 /**
@@ -339,26 +369,12 @@ export function beatPowerOn(t: number): number {
  * curve below is therefore literally what the reader sees.
  */
 
-/** Lateral offset at the reading plane, as a fraction of viewport width.
- *  Roughly what the old flat 7 % produced once parked, so the park's
- *  composition is unchanged — only the approach to it is. */
-const VW_X_PARK = 0.042;
-/** …at birth, deep in the tunnel: the beat enters from the side wall. */
-const VW_X_FAR = 0.2;
-/** …and as it passes the camera, thrown wide off its own side. */
-const VW_X_NEAR = 0.62;
-
-/** Vertical offset at birth, as a fraction of viewport height, signed
- *  AGAINST the lateral side so left beats fall in from high and right
- *  beats rise from low. A field that alternates on one axis only reads as
- *  a fan; crossing the two makes each arrival its own path. */
-const VW_Y_FAR = 0.1;
-/** …and as it leaves, continuing the same diagonal past the shoulder. */
-const VW_Y_NEAR = 0.16;
-
-/** Peak yaw, degrees. The beat is turned toward the axis at depth and is
- *  exactly flat at the park — type is never read on a skewed plane. */
-const VW_ROT_MAX = 9;
+/*
+ * ⚠ VW_X_PARK / VW_X_FAR / VW_X_NEAR / VW_Y_FAR / VW_Y_NEAR / VW_ROT_MAX
+ * MOVED TO THE FLIGHT CONFIG (ADR-081 U4). Production values match
+ * `voidwalkerFlightConfig.ts` byte-for-byte. Callers reach them through
+ * `getVwFlightConfig()` at call time, so lab presets can override them.
+ */
 
 /** `side` is +1 for a right-hand beat, −1 for a left-hand one — the
  *  record's own `data-side`, never a `:nth-child` parity (the film
@@ -368,26 +384,65 @@ export type VwSide = 1 | -1;
 /** How far the path has travelled from the park, eased, 0 → 1. */
 const away = (t: number) => ease(Math.abs(clamp(t, -1, 1)));
 
+/** The bow shape for the `curved` / `housed` variants: a smooth belly
+ *  that peaks half-way between park and edge, so the beat pushes further
+ *  to its own side BEFORE it arrives at the reader and throws wide as it
+ *  passes. Zero at both the park (t=0) and the extremes (t=±1); peaks
+ *  at |t|=0.5 with value 1. `sin(π|t|)` is the cheapest smooth curve
+ *  with that shape — no ADD to a base lerp at the reading plane, so
+ *  the parked composition is unchanged from `linear`. */
+const smoothBell = (x: number) => {
+  const a = Math.min(1, Math.max(0, Math.abs(x)));
+  return Math.sin(Math.PI * a);
+};
+
 /**
  * Lateral position at flight parameter `t`, as a SIGNED FRACTION OF
  * VIEWPORT WIDTH (see the block comment above).
+ *
+ * ⚠ Under the `curved` / `housed` lab variants the straight lerp between
+ * park and edge acquires a bow (`curveBend`) — the card swings OUT more
+ * strongly before it arrives, then throws wide. The `linear` variant is
+ * production and defaults to `curveBend = 0`, so byte-identical output.
  */
 export function beatScreenXFrac(t: number, side: VwSide): number {
   const x = clamp(t, -1, 1);
-  const to = x < 0 ? VW_X_FAR : VW_X_NEAR;
-  return side * lerp(VW_X_PARK, to, away(x));
+  const cfg = getVwFlightConfig();
+  const to = x < 0 ? cfg.xFar : cfg.xNear;
+  const base = lerp(cfg.xPark, to, away(x));
+  const bow = cfg.pathVariant === "linear" ? 0 : cfg.curveBend * smoothBell(x);
+  return side * (base + bow);
 }
 
 /** Vertical position at `t`, as a signed fraction of viewport height. */
 export function beatScreenYFrac(t: number, side: VwSide): number {
   const x = clamp(t, -1, 1);
-  const to = x < 0 ? VW_Y_FAR : -VW_Y_NEAR;
+  const cfg = getVwFlightConfig();
+  const to = x < 0 ? cfg.yFar : -cfg.yNear;
   return -side * lerp(0, to, away(x));
 }
 
 /** Yaw at `t`, degrees. Zero at the park in both directions. */
 export function beatRotDeg(t: number, side: VwSide): number {
-  return -side * VW_ROT_MAX * away(t);
+  return -side * getVwFlightConfig().rotMax * away(t);
+}
+
+/** Roll (bank) at `t`, degrees. Zero for the `linear` production variant.
+ *  Under the curved lab variants the card banks INTO the turn as it
+ *  swings out, then rolls level as it lands at the park. */
+export function beatRollDeg(t: number, side: VwSide): number {
+  const cfg = getVwFlightConfig();
+  if (cfg.pathVariant === "linear" || cfg.rollMax === 0) return 0;
+  return side * cfg.rollMax * smoothBell(t);
+}
+
+/** Housing opacity (0..1) for the `housed` variant: the drawn frame
+ *  around the card powers on with the detail gate, so it lands on the
+ *  same event `--vw-d` does. Other variants return 1 (no housing). */
+export function beatHousingOpacity(t: number): number {
+  const cfg = getVwFlightConfig();
+  if (cfg.pathVariant !== "housed") return 1;
+  return beatDetail(t);
 }
 
 /**
@@ -402,12 +457,11 @@ export function beatDepthUnproject(z: number, perspectivePx: number): number {
 
 // ── Slim in flight, full on park ──────────────────────────────────
 
-/** How much of the approach the detail takes to power on. */
-const VW_DETAIL_IN = 0.3;
-/** …and how quickly it goes once the beat leaves. Shorter: the reading
- *  is over the moment it starts to recede, and a paragraph that follows
- *  the plate out competes with the one arriving behind it. */
-const VW_DETAIL_OUT = 0.16;
+/*
+ * ⚠ VW_DETAIL_IN / VW_DETAIL_OUT MOVED TO THE FLIGHT CONFIG (ADR-081
+ * U4). Production values (0.3 / 0.16) mirror
+ * `voidwalkerFlightConfig.ts`'s `detailIn` / `detailOut`.
+ */
 
 /**
  * The DETAIL gate — the owner's "slim in flight, full on park".
@@ -422,18 +476,27 @@ const VW_DETAIL_OUT = 0.16;
  * carry a full paragraph out through the camera — and rastering a 680px
  * card carrying an SVG drawing under a per-frame blur is the single most
  * expensive thing this layer can do.
+ *
+ * ⚠ `detailIn` / `detailOut` are lab-tunable; production defaults match
+ * the `VW_DETAIL_IN` / `VW_DETAIL_OUT` constants above byte-for-byte.
  */
 export function beatDetail(t: number): number {
   const x = clamp(t, -1, 1);
-  if (x <= 0) return ease(clamp01((x + VW_DETAIL_IN) / VW_DETAIL_IN));
-  return 1 - ease(clamp01(x / VW_DETAIL_OUT));
+  const cfg = getVwFlightConfig();
+  if (x <= 0) return ease(clamp01((x + cfg.detailIn) / cfg.detailIn));
+  return 1 - ease(clamp01(x / cfg.detailOut));
 }
 
-/** Which stop is currently nearest the reading plane. */
+/** Which stop is currently nearest the reading plane.
+ *
+ *  ⚠ Base offset is `ENTRY + LEAD_IN`, not `ENTRY` alone (see
+ *  `VW_TRAVEL_LEAD_IN`) — otherwise the runway's lead-in band would
+ *  read as "stop 0 already active" and the rail marker would seat one
+ *  year early. */
 export function activeStop(p: number, n: number): number {
   if (n <= 0) return 0;
   const w = stopWidth(n);
-  const raw = Math.floor((clamp01(p) - VW_TRAVEL_ENTRY_FRAC) / w);
+  const raw = Math.floor((clamp01(p) - VW_TRAVEL_ENTRY_FRAC - VW_TRAVEL_LEAD_IN) / w);
   return clamp(raw, 0, n - 1);
 }
 
@@ -443,6 +506,36 @@ export function activeStop(p: number, n: number): number {
  *  the wormhole mouth opens. Saturates before the first beat arrives. */
 export function entryT(p: number): number {
   return ease(clamp01(clamp01(p) / VW_TRAVEL_ENTRY_FRAC));
+}
+
+/**
+ * How far the brandmark has handed itself back to the WORLD during the
+ * entry dive (ADR-081 U5). 0 = welded to the lens, 1 = sitting at its
+ * world anchor where the diving camera can actually reach it.
+ *
+ * ⚠ THE PARKED MARK IS A BILLBOARD PINNED A FIXED DISTANCE IN FRONT OF
+ * THE CAMERA. `BrandmarkPhysicsCoreActor` replaces the mark's world
+ * position with a point `CENTER_DISTANCE` dead ahead of the live camera
+ * and slerps its orientation onto the camera's, which is exactly right
+ * for the services centrepiece (it has to hold frame while the camera
+ * flies in) and is why the voidwalker dive read as nothing at all: the
+ * camera dived, the mark rode along at constant apparent size, and there
+ * was never anything to pass through. This is the channel that undoes it.
+ *
+ * ⚠ ZERO AT `entry = 0` FOR EVERY KNOB VALUE, AND THAT IS THE CONTRACT.
+ * The ambient hold, the dock, the whole corridor and every reading beat
+ * must be byte-identical whatever `markFlyThrough` is set to — the same
+ * construction contract `getVoidwalkerTravelCameraPose` carries at its
+ * own engage edge, and the reason the knob scales the channel instead of
+ * replacing it.
+ */
+export function markFlyThroughRelease(entry: number, engaged: boolean): number {
+  if (!engaged) return 0;
+  const e = clamp01(entry);
+  // smootherstep — the release should not start abruptly at the instant
+  // the runway engages, or the mark visibly lurches off the lens.
+  const s = e * e * e * (e * (e * 6 - 15) + 10);
+  return s * getVwFlightConfig().markFlyThrough;
 }
 
 /** The FOOT, 0 → 1 across the runway's tail. */
