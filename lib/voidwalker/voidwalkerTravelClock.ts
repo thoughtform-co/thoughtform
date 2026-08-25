@@ -156,9 +156,20 @@ export const VW_Z_NEAR = 780;
  *  far enough back that the NEXT beat is faintly visible behind the
  *  parked one, or the overlap the span buys is invisible anyway. */
 const FOG_IN = 0.7;
-/** …and OUT over this much of the near half, so a beat dissolves as it
- *  passes the shoulder instead of clipping through the camera. */
-const FOG_OUT = 0.72;
+/**
+ * …and OUT over this much of the near half.
+ *
+ * ⚠ IT IS MUCH SHORTER THAN `FOG_IN`, AND THE ASYMMETRY IS THE POINT.
+ * At 0.72 a DEPARTING beat sat at 0.92 opacity under 0.84px of blur at
+ * the midpoint between two stops — while the ARRIVING one was at 0.91
+ * and 0.84. Two beats of identical weight, printed over each other: the
+ * exact defect ADR-081 recorded on the far side and fixed only there.
+ *
+ * The reader is looking at what is COMING. A beat on its way out gets
+ * about a third of the runway the incoming one gets, so by the midpoint
+ * it is at 0.46 against 0.91 and reads as the thing behind.
+ */
+const FOG_OUT = 0.32;
 
 /**
  * Peak defocus, in px, at the extremes of the flight. Cheap (one
@@ -174,9 +185,17 @@ const FOG_OUT = 0.72;
  */
 export const VW_BLUR_MAX = 5;
 
-/** How far into the flight the defocus saturates. Short on purpose — the
- *  park must be perfectly sharp and everything else must not compete. */
-const BLUR_REACH = 0.55;
+/** How far into the APPROACH the defocus saturates. The ADR-081 measured
+ *  value: a beat arriving out of the fog needs to stay soft long enough
+ *  that it does not compete with the parked one. */
+const BLUR_REACH_IN = 0.55;
+
+/** …and how far into the DEPARTURE. ⚠ SHORTER, for the same reason
+ *  `FOG_OUT` is: a symmetric blur means a receding beat is exactly as
+ *  sharp as the one arriving behind it, and the pair at the midpoint
+ *  between stops then has nothing to tell it apart. Departing goes soft
+ *  roughly twice as fast as arriving comes into focus. */
+const BLUR_REACH_OUT = 0.3;
 
 // ── The camera's mirrored FOV ────────────────────────────────────
 
@@ -284,8 +303,9 @@ export function beatOpacity(t: number): number {
 /** A stop's defocus in px — zero across the park, saturating quickly once
  *  the stop leaves the reading plane in either direction. */
 export function beatBlurPx(t: number): number {
-  const x = Math.abs(clamp(t, -1, 1));
-  return VW_BLUR_MAX * ease(clamp01(x / BLUR_REACH));
+  const x = clamp(t, -1, 1);
+  const reach = x < 0 ? BLUR_REACH_IN : BLUR_REACH_OUT;
+  return VW_BLUR_MAX * ease(clamp01(Math.abs(x) / reach));
 }
 
 /**

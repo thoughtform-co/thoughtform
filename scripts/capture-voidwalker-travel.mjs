@@ -121,11 +121,14 @@ const readTravel = () =>
         id: b.id,
         far: b.hasAttribute("data-vw-far"),
         o: Number(cs.opacity),
+        blur: parseFloat(cs.getPropertyValue("--vw-blur")) || 0,
         z: cs.getPropertyValue("--vw-z").trim(),
         w: Math.round(box.width),
         h: Math.round(box.height),
         top: Math.round(box.top),
         bottom: Math.round(box.bottom),
+        left: Math.round(box.left),
+        right: Math.round(box.right),
       };
     });
     const painting = beats.filter((b) => !b.far && b.o > 0.01);
@@ -158,6 +161,28 @@ const readTravel = () =>
       parked: painting
         .filter((b) => b.o > 0.98)
         .map((b) => ({ id: b.id, top: b.top, bottom: b.bottom, h: b.h })),
+      // ⚠ THE PAIR TEST — the one thing a park-only capture cannot see.
+      // Two beats WILL overlap in the middle of a flight; that is depth.
+      // What may not happen is two overlapping beats of the SAME weight,
+      // which reads as two paragraphs printed over each other rather
+      // than as one behind the other. For every intersecting pair, the
+      // dimmer one has to be genuinely subordinate.
+      crowded: (() => {
+        const out = [];
+        for (let i = 0; i < painting.length; i++) {
+          for (let j = i + 1; j < painting.length; j++) {
+            const a = painting[i];
+            const b = painting[j];
+            const hit =
+              a.top < b.bottom && b.top < a.bottom && a.left < b.right && b.left < a.right;
+            if (!hit) continue;
+            const back = a.o <= b.o ? a : b;
+            const front = a.o <= b.o ? b : a;
+            if (front.o - back.o < 0.25 && back.blur < 1.8) out.push(`${back.id}|${front.id}`);
+          }
+        }
+        return out;
+      })(),
       overflowing: painting
         .filter((b) => b.o > 0.98 && (b.top < 0 || b.bottom > vh))
         .map((b) => b.id),
@@ -261,6 +286,10 @@ say(
 say(
   rows.some((r) => !r.persp || r.persp === "none"),
   "perspective missing on the stage"
+);
+say(
+  rows.some((r) => r.crowded.length > 0),
+  `beats print over each other at equal weight: ${[...new Set(rows.flatMap((r) => r.crowded))].join(", ")}`
 );
 say(
   !chase.first || !chase.settled || chase.first === chase.settled,

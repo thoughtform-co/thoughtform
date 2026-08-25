@@ -607,3 +607,41 @@ describe("voidwalker travel clock — the rail is the axis", () => {
     expect(ringsPassed(0, whole)).toBe(0);
   });
 });
+
+describe("voidwalker travel clock — one beat at a time", () => {
+  /** Where two neighbouring stops sit when the reader is exactly between
+   *  their two homes: the worst case, and the one a park-only capture
+   *  can never show. */
+  const MID = ((1 - VW_TRAVEL_PARK / 2) / (VW_TRAVEL_SPAN / 2 - VW_TRAVEL_PARK / 2)) * 0.5;
+
+  it("makes the departing beat clearly subordinate at the midpoint", () => {
+    // THE DEFECT THIS PINS. Symmetric ramps put the leaving beat at 0.92
+    // opacity under 0.84px of blur while the arriving one sat at 0.91 and
+    // 0.84 — two beats of identical weight, printed over each other. The
+    // reader is looking at what is COMING.
+    const leaving = { o: beatOpacity(MID), b: beatBlurPx(MID) };
+    const arriving = { o: beatOpacity(-MID), b: beatBlurPx(-MID) };
+    expect(leaving.o).toBeLessThan(arriving.o * 0.65);
+    expect(leaving.b).toBeGreaterThan(arriving.b * 2);
+    expect(leaving.b).toBeGreaterThan(1.8);
+  });
+
+  it("keeps the flight asymmetric everywhere, not just at the midpoint", () => {
+    // Anything on its way out is dimmer and softer than the same distance
+    // on the way in. Flattening either ramp back to symmetry fails here.
+    for (let k = 1; k <= 20; k++) {
+      const t = k / 20;
+      expect(beatOpacity(t)).toBeLessThanOrEqual(beatOpacity(-t) + 1e-9);
+      expect(beatBlurPx(t)).toBeGreaterThanOrEqual(beatBlurPx(-t) - 1e-9);
+    }
+  });
+
+  it("still arrives out of the fog rather than popping", () => {
+    // The asymmetry may not be bought by making the APPROACH abrupt: a
+    // beat has to be visible, soft and clearly deeper well before it
+    // parks, which is what the overlap the span buys is for.
+    expect(beatOpacity(-0.46)).toBeGreaterThan(0.05);
+    expect(beatOpacity(-0.46)).toBeLessThan(0.6);
+    expect(beatBlurPx(-0.46)).toBeGreaterThan(2.5);
+  });
+});
