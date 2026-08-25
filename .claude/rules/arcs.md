@@ -181,6 +181,46 @@ priors?, parallel?, footnote? }`, ONE per page and FIRST — it is what the
   modes. ⚠ Arrival + drag ONLY: no idle animation, no wheel capture, no second
   scroll writer. ⚠ Verify HEADED — headless has no GL, so the beat silently
   falls back and the shoot looks fine.
+  ⚠ **ADR-080 U3 IS THE LIVE CUT: THE DRAWING TAKES THE BEAT AND THE LABELS
+  TRACK THEIR RINGS.** In live mode the header line, the priors/adoption pair,
+  the platform track and the six registers LEAVE FLOW and float on the drawing
+  (`z-index: 2` — DOM order paints an absolute `hd` UNDER the canvas otherwise;
+  all `pointer-events: none`), and the plot is the **`1fr` REMAINDER** of a box
+  one viewport less its padding: 331 → 528 at 1280×720, 574 → 941 at 1920×1247.
+  ⚠ **A remainder, never a clamp** — it cannot trip `data-arc-tall` at any size,
+  which a hand-sized `--pg-h` could. ⚠ **`align-content: stretch` MUST BE
+  DECLARED TWICE**: the ADR-076 curtain's base rule declares `center` at (0,4,0)
+  and outranks the plain selector (measured: the drawing came out 474 instead of
+  941). ⚠ `user-select` widens to the whole panel — the registers stop being
+  copyable, knowingly (selection is layout, so `pointer-events: none` does not
+  stop a drag painting `--gold-30` plates on them).
+  ⚠ **THE LENS IS SOLVED FROM THE CANVAS** (`solveHoloFit`) — three's `fov` is
+  VERTICAL and nothing in the folder read the canvas, so the record filled
+  23.9 % of the width BY CONSTRUCTION. Fit by the BINDING axis inside gutters
+  for the chrome, plus a `setViewOffset` for their asymmetry. ⚠ **Solve the
+  LENS, never the distance** (perspective is `distance / object-depth`, and
+  `CAM_DISTANCE` is also OrbitControls' min/max). ⚠ **The fit includes the
+  mark's plated collar** (r 2.043 vs the widest ring's 1.18) and that costs
+  ~40 % of the size, bought so the one closed ring in the object is not cropped
+  through its centre. ⚠ **Memoise the `camera` prop** or R3F reverts the solved
+  fov on every render.
+  ⚠ **`frontnessFromDepth` REPLACED AN EXPRESSION THAT NEVER RAN** — with
+  `near 0.1 / far 60` every anchor returned the floor 0.25, always, so the
+  label-dimming grammar had never worked. Band the REAL camera distance, never
+  `ndc.z`.
+  ⚠ **THE LABELS TRACK (`ArcProgramCourse` + `holoLabelLayout`)**, which
+  supersedes U2's rejection by a CHANGED PREMISE (spread 377px → ~1200px, and
+  the `note` is a hover so a block is two lines). ⚠ The declutter is a
+  MECHANISM, not a safety net — two labels genuinely overlap at rest at 1280.
+  ⚠ The anchor publishes a RIM NORMAL or the leader stops pointing at anything
+  once the object turns. ⚠ Write the WHOLE transform in JS, centring included:
+  an inline transform REPLACES the CSS one (the lab's own bug). ⚠ The note is
+  `opacity: 0`, never `display: none` — it must stay in the a11y tree and in
+  `textContent`.
+  ⚠ **AZIMUTH IS CLAMPED to `REST_AZIMUTH ± 18°` = [−72°, −36°]**, chosen on
+  ring openness and strictly negative so the dates can never run backwards;
+  ±60° reaches +6°, past the axis into both failures at once. `rotateSpeed`
+  0.22 — at 0.55 a 500px drag sweeps 187° and slams the clamp.
   ⚠ **AND SINCE ADR-080 U2 THE OBJECT IS FREE: NO FRAME, IN LIVE MODE**
   (owner, twice). The panel's border, chamfer clip, plate ground and every
   internal rule go TRANSPARENT (never `border: 0` — zeroing the widths
@@ -322,9 +362,29 @@ no-preference)`, the settled gate declared, NEVER `data-proof-settled`.
   ⚠ The parity walk in `arc-portfolio-smoke` COMPOSITES before measuring
   and asserts the ground flipped; reading `color` alone passes twice on
   the dark theme.
+- ⚠ **THE FOUR CORNERS ARE THE LANDING'S (ADR-059 U6).** `ArcRailInstruments`
+  owns BOTH working corners — the arc's five chapters top-left, the exit mark ·
+  session · theme switch bottom-right with the switch centred on the right
+  rail's track. It replaces the standalone `LightModeToggle` on any DETAIL arc
+  with a menu; the `/arcs` OVERVIEW keeps the toggle and both brackets, and
+  that is the sliver of U2's "the arcs have no row" ruling that survives.
+  ⚠ **The roster is DERIVED (`buildArcMarks`), never hard-coded** — the change
+  reaches all five arcs. ⚠ **A chapter is a RANGE** (`idxEnd`), so Tools owns
+  its four dossiers, and the first chapter opens at 0 so ADR-059's
+  one-mark-is-gold invariant holds by construction. ⚠ **Never import
+  `clusters.ts` from an arc**: it resolves the landing's roster at MODULE
+  EVALUATION and throws, so a renamed landing station would white-screen a
+  client's page — share `markState.ts` alone. ⚠ **The switch stays LAST**
+  (U3's standing rule) and the controls must render on the FIRST COMMIT, or
+  `HeroThemeGlitch` misses `.theme-toggle` and the first toggle loses its
+  plate-warm. ⚠ Glyphs are MAPPED, not drawn — five existing keys by position,
+  decorative by owner ruling.
 - **CSS:** the route's sheet order is `landing.css → casefile.css →
-console.css → pda.css → arcs.css → theme.css` (ADR-072, ADR-076;
-  theme LAST, ADR-058). Everything page-scoped lives in `arcs.css` under `.arc-*`;
+console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
+  (ADR-072, ADR-076; theme LAST, ADR-058). ⚠ The instruments sheet sits AFTER
+  theme.css, mirroring the landing route exactly — it declares no
+  `[data-theme]` rules at all, and theme.css's one instruments rule outranks
+  its base on specificity from either position (ADR-059 U6). Everything page-scoped lives in `arcs.css` under `.arc-*`;
   corridor sheets (home-v2.css / services.css) are never imported —
   grammars are copied. ⚠ The casefile's `casefile.css` + `console.css` ARE
   imported, at the ROUTE, ahead of arcs.css (ADR-072): the dossier mounts

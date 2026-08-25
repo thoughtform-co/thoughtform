@@ -1,6 +1,6 @@
 # ADR-059: Rail instruments — the journey's sections as corner marks
 
-**Status:** Accepted · 2026-08-02 — **read Update 3 first; it is the live roster. Update 2 is the live geometry, as amended by Update 4 (the theme switch centres on the track)**
+**Status:** Accepted · 2026-08-02 — **read Update 3 first for the LANDING roster; Update 6 carries the arcs' (per-surface since 2026-08-25). Update 2 is the live geometry, as amended by Update 4 (the theme switch centres on the track)**
 **Flags:** `RAIL_INSTRUMENTS`, `SETTINGS_CLUSTER` (`components/landing/v7/rail-instruments/flags.ts`), both default ON
 **Extends:** ADR-058 — the toggle keeps its slot below 960px and moves outboard onto the rail above it
 **Lab:** `/test/hud-instruments-lab`, route `r4` + `rTelemetry` + `rName`
@@ -581,3 +581,138 @@ gated by the flag above, because the theme switch is a shipped control that
 predates these instruments — turning the journey marks off must not take the
 site's only theme affordance with it. Flipping it back means restoring
 `<LightModeToggle />` in `LandingPage`.
+
+## Update 6 — the instruments cross to the arcs (2026-08-25, owner)
+
+> "On our home page, on the bottom right side, the corner of our right rail,
+> we've removed it and moved elements to the proper position, like the
+> light/dark mode thing. I want that. In the top left corner, we also have some
+> icons. Of course, for our portfolio, we need different ones, but it doesn't
+> really matter what these icons are. They're just decorative, so let's make it
+> consistent."
+
+Asked which roster, the owner chose **the arc's own five chapters** top-left
+and **the full cluster** bottom-right.
+
+### What this reverses, and what survives
+
+Update 2 ruled the arcs out of the outboard geometry in these words: _"The base
+stays byte-identical to `.theme-toggle-overlay`, which `/arcs` still mounts.
+That page keeps its `--br` bracket and has no row to put beside the control, so
+it has nothing to reach out for."_ The **premise** is what has gone, not the
+reasoning: an arc has a row now, so the control can reach the rail exactly as
+it does on the landing.
+
+⚠ **THE SENTENCE NARROWS TO THE `/arcs` OVERVIEW**, which has no hero, no
+chapters and no menu — it keeps `LightModeToggle` and both brackets, and the
+two surfaces still diverge above 960 for a reason a reader can see on screen.
+The line moved; it did not vanish.
+
+Until now the arcs' top-left and bottom-right were literally the pre-ADR-059
+empty brackets, with the theme switch floating inboard of one. ADR-073 gave
+them the top-right header and ADR-058 the switch; these two corners were never
+ported.
+
+### The roster is DERIVED, and the components are arc-specific
+
+`buildArcMarks(menu)` (`components/arcs/arcMarks.ts`) builds both rosters from
+the arc's own `ArcMenuItem[]`. It reaches **all five registered arcs**, which
+is why it may not be hard-coded: a deck with a different corner treatment from
+the portfolio would be the inconsistency the owner is asking to remove.
+
+⚠ **A CHAPTER IS A RANGE, NOT AN INDEX.** The active section can be any of the
+sections between one chapter and the next — the portfolio's four tool dossiers
+all sit under "Tools" — so a chapter is `here` for its whole span. That is
+`markState`'s `idxEnd`, the mechanism `ARC_MARK` invented so the Arc's three
+corridor beats could not double-light with Thesis, ported without a change.
+
+⚠ **THE FIRST CHAPTER'S RANGE OPENS AT 0**, so every menu index is covered by
+exactly one mark and ADR-059's invariant holds **by construction**. The landing
+carries one such hole already (`practice`, known and pinned); the arcs have
+none. ⚠ And if an arc's terminal section were itself a chapter there would be
+no exit mark — guarded, because without it that arc lights two marks at once.
+
+⚠ **THEY ARE ARC-SPECIFIC COMPONENTS, NOT PROPS ON `RailInstruments`.**
+`RailInstruments` also portals Bearing / Sector / Local into the right rail,
+read off corridor channels that do not exist on an arc; a prop-gated version is
+two components wearing one name. ADR-073 set the precedent one surface ago —
+`ArcHudNav` shares the landing's `.hud__nav*` chrome and never `HudNav` itself.
+Shared here: `MarkRow`, `SECTION_GLYPHS`, `markState` and the whole stylesheet.
+
+### `markState` moved to its own module, and why
+
+⚠ **`clusters.ts` THROWS AT MODULE EVALUATION.** `beatIdx`/`rowIdx` resolve
+every landing roster id against `MANIFEST_ENTRIES` and `READOUT_SECTIONS` when
+the module is evaluated, and throw loudly on a miss — right for the landing,
+and absurd for an arc, where it would mean **renaming a landing station
+white-screens a client's page**. `markState.ts` carries the type and the
+function; `clusters.ts` re-exports both so every existing import path,
+including the lab's, is untouched.
+
+`JourneyMark` gains `glyph?: string`. Landing marks never set it — their id IS
+the key, so the landing's render is byte-identical, which
+`landing-page.spec.ts`'s `hud-corner-tl.png` baseline confirms.
+
+### One observer for the pair
+
+⚠ **`ArcShell` OWNS A `dangerouslySetInnerHTML` BODY**, exactly as
+`LandingPage` does, and it is render-stable today. So the index lives in the
+LEAF: `ArcRailInstruments` owns both corners and calls `useArcActiveSection`
+once. The landing's two corners must read the bus separately because they are
+structurally separate siblings (U2 §"A second reader of the bus,
+deliberately"); one component owning both is what lets an arc do it with one
+observer instead.
+
+### The glyphs are mapped, not drawn
+
+Five keys by POSITION, on every arc: `navigate · thesis · arc · encode ·
+build`, with `contact` on the exit. ⚠ **Three of the five were ORPHANED
+DRAWINGS** — U3 gave the Arc one mark for its three corridor beats and left
+`navigate`, `encode` and `build` seated nowhere. Seating them here gives them a
+job and keeps the two surfaces distinguishable; only `thesis` and `arc` are
+shared with a live landing seat, and the two pages are never on screen
+together. On the portfolio that reads as a compass needle for a dated course,
+registration brackets for the tools and offset strata for the map — good where
+it matters, neutral where it does not, which is what the owner licensed.
+
+⚠ Adding arc section ids to `SECTION_GLYPHS` would need one entry per arc per
+id and would go stale on any rename. The `glyph?:` indirection is one field and
+one `??`.
+
+### Wiring
+
+`rail-instruments.css` is imported LAST on the arcs route, mirroring
+`app/(marketing)/page.tsx` exactly. ⚠ It does not break ADR-058's theme-last
+rule: the sheet declares **no** `[data-theme]` rules, and theme.css's one
+instruments rule outranks its base on specificity from either position.
+
+`data-rail-instruments` now has two writers, both self-cleaning. The bracket
+suppression, the outboard shift above 961px and the ≤960 restore all come free
+with it — ⚠ `rail-instruments.css` has **zero landing-only couplings** (no
+`.home-v2`, no corridor attributes, no `.stations`, no `.hero__`), so it ports
+as bytes and not one rule changed.
+
+⚠ **THE CONTROLS RENDER ON THE FIRST COMMIT**, never behind the portal host's
+state: `HeroThemeGlitch` finds `.theme-toggle` by class one rAF after mount
+(ADR-060), and a switch that appears two frames late loses the plate-warm and
+degrades the first toggle to a hard cut with nothing to say so.
+
+### Verified
+
+`/arcs/portfolio` at 1440 × 900: five chapter marks in page order with exactly
+one `here`, the exit mark, both brackets computed `0px`, `.theme-toggle` last
+inside `.rin-settings__ctl` and that last inside `.rin-settings` — and the
+switch's centre at **1393px against the right rail track's centre at 1393px**,
+which is U4's rule to the pixel. `tests/lib/arc-marks.test.ts` walks all five
+arcs (28 cases). `rail-instrument-marks` unmoved; `landing-page`'s corner
+baseline unmoved.
+
+### Left open
+
+- `SETTINGS_CLUSTER` is still dead code — referenced only in prose, with the
+  real gate at `LandingPage.tsx`'s `THEME_TOGGLE`. Worth its own cleanup so the
+  arcs' gate story does not inherit a third flag that does nothing.
+- The reduced-motion asymmetry `rail-instruments.css` already carries on the
+  landing (its widened clips sit outside its own PRM block) now reaches the
+  arcs. Pre-existing; fixing it changes landing behaviour and belongs in its
+  own pass.

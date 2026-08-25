@@ -23,6 +23,12 @@ import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/arcs/arcs.css";
 // Theme sheet LAST (ADR-058) — after arcs.css so the light cascade wins.
 import "@/components/landing/v7/theme.css";
+// The corner instruments (ADR-059 U6). LAST, mirroring the landing route
+// exactly, so both surfaces cascade identically. It does not break ADR-058s
+// theme-sheet-last rule: this sheet declares no [data-theme] rules at all,
+// and theme.css own instruments rule outranks its base on specificity from
+// either position.
+import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 
 /**
  * /arcs/[slug] — one client arc (ADR-052). Statically generated from

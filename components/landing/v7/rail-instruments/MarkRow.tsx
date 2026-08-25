@@ -69,7 +69,7 @@ export function MarkRow({
             data-state={markState(mark, activeIdx, seat)}
             data-mark={mark.id}
           >
-            {SECTION_GLYPHS[mark.id] ?? null}
+            {SECTION_GLYPHS[mark.glyph ?? mark.id] ?? null}
           </span>
         </span>
       ))}

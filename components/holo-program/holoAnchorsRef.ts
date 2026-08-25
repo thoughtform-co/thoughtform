@@ -33,6 +33,18 @@ export interface HoloAnchor {
    *  its tie-line on the correct edge. The rings alternate, which is what
    *  stops seven labels collapsing into one diagonal. */
   side: "up" | "dn";
+  /**
+   * The rim's OUTWARD normal, in screen space, normalised.
+   *
+   * ⚠ WITHOUT IT A TIE-LINE STOPS POINTING AT ANYTHING THE MOMENT THE OBJECT
+   * TURNS (ADR-080 U3). The lab's tie-line is a fixed 1px × 16px vertical
+   * stub — correct at the rest pose and meaningless at every other. This is
+   * the projected direction from the ring's own centre `(0, 0, z)` to the
+   * anchor, so a label stands off along the ring's geometry and the leader
+   * runs back down it.
+   */
+  nx?: number;
+  ny?: number;
 }
 
 let anchors: readonly HoloAnchor[] = [];

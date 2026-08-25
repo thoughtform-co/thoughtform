@@ -59,6 +59,7 @@ import {
   SEAT_INNER_K,
   TWINKLE,
   anchorAngle,
+  frontnessFromDepth,
   buildShells,
   mulberry32,
   ringRadius,
@@ -281,6 +282,7 @@ export function HoloProgramScene({
   const ready = useRef(false);
   const clock = useRef(0);
   const anchorScratch = useMemo(() => new THREE.Vector3(), []);
+  const centreScratch = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
     progress.current = still ? 1 : 0;
@@ -448,16 +450,32 @@ export function HoloProgramScene({
       const world = anchorScratch.clone();
       const ndc = world.clone().project(cam);
       const toPoint = world.clone().sub(cam.position).normalize();
-      // Frontness: how much this point faces the camera along the axis, so a
-      // ring behind the core dims its own label rather than shouting over it.
-      const depthT = clamp01((ndc.z + 1) / 2);
+      /* Frontness: how much this point faces the camera along the axis, so a
+         ring behind the core dims its own label rather than shouting over it.
+         ⚠ FROM THE REAL CAMERA-SPACE DEPTH, NOT FROM `ndc.z` (ADR-080 U3).
+         With `near 0.1 / far 60` the whole object lives in the last
+         half-percent of the NDC depth range, so the old expression returned
+         its floor for all seven anchors, always — this grammar had never run
+         once. `frontnessFromDepth` bands the real distance against the
+         object's own half-depth, which no clip-plane change can break. */
+      /* The rim's outward normal, projected: the ring's own centre against
+         the anchor, in screen space. It is what lets the leader line run back
+         down the ring's geometry at any pose (ADR-080 U3). */
+      centreScratch.set(0, 0, ring.z * scale);
+      if (rig) centreScratch.applyQuaternion(rig.quaternion);
+      const cNdc = centreScratch.clone().project(cam);
+      const dnx = ndc.x - cNdc.x;
+      const dny = -(ndc.y - cNdc.y);
+      const dnl = Math.hypot(dnx, dny) || 1;
       return {
         id: ring.id,
         x: ndc.x * 0.5 + 0.5,
         y: 0.5 - ndc.y * 0.5,
-        frontness: clamp01(1 - depthT * 1.35) * 0.75 + 0.25,
+        frontness: frontnessFromDepth(world.distanceTo(cam.position)),
         visible: ndc.z < 1 && toPoint.dot(forward) > 0,
         side: ring.index % 2 === 0 ? ("up" as const) : ("dn" as const),
+        nx: dnx / dnl,
+        ny: dny / dnl,
       };
     });
     publishHoloAnchors(next);

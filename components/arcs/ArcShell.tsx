@@ -8,9 +8,11 @@ import type { ArcMotion } from "@/lib/arcs/types";
 import { HeroThemeGlitch } from "@/components/landing/v7/HeroThemeGlitch";
 import { LightModeToggle } from "@/components/landing/v7/LightModeToggle";
 import { useHeroBoot } from "@/components/landing/v7/hooks/useHeroBoot";
+import { RAIL_INSTRUMENTS } from "@/components/landing/v7/rail-instruments/flags";
 import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
 
 import { ArcHudNav } from "./ArcHudNav";
+import { ArcRailInstruments } from "./ArcRailInstruments";
 import { ARC_TERMINAL_MEDIA } from "./arcMotion";
 import { useArcScroll } from "./useArcScroll";
 import { useArcTerminalMotion } from "./useArcTerminalMotion";
@@ -165,11 +167,22 @@ export function ArcShell({
           only existed above 1101×760 and left 1280×720 with no
           navigation at all (ADR-055's ruling, one surface later). */}
       {variant === "detail" && menu && menu.length > 0 ? <ArcHudNav items={menu} /> : null}
-      {/* Light/dark toggle (ADR-058). The same leaf the landing mounts —
-          three-free and Supabase-free, so it stays inside the arcs import
-          doctrine. `data-theme="dark"` on `.arc-root` above is an inert
-          marker; the live channel is the <html> attribute. */}
-      {THEME_TOGGLE && <LightModeToggle />}
+      {/* THE TWO WORKING CORNERS (ADR-059 U6) — the chapters top-left, the
+          exit mark + session + theme switch bottom-right, the switch centred
+          on the right rail's track. It replaces the standalone toggle on any
+          arc that HAS chapters to put in the corner; the `/arcs` overview
+          keeps `LightModeToggle` and both brackets, which is the sliver of
+          ADR-059 U2's "the arcs have no row" ruling that survives, and it is
+          visible on screen.
+          ⚠ The toggle itself is the same leaf either way — three-free and
+          Supabase-free, so both paths stay inside the arcs import doctrine,
+          and `HeroThemeGlitch` below finds `.theme-toggle` in both. */}
+      {THEME_TOGGLE &&
+        (RAIL_INSTRUMENTS && variant === "detail" && menu && menu.length > 0 ? (
+          <ArcRailInstruments containerRef={rootRef} menu={menu} />
+        ) : (
+          <LightModeToggle />
+        ))}
       {/* The hero's theme-swap glitch (ADR-060), for the heroes that carry
           the landing's plate — the canvas masks an already-committed CSS
           flip, so every failure path degrades to that hard cut. A leaf by

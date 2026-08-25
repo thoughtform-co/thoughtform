@@ -4,14 +4,24 @@ import { HOLO_DARK, HOLO_LIGHT, holoGroundCss } from "@/components/holo-program/
 import {
   ADOPTION_TREADS,
   AXIS_HALF,
+  AZIMUTH_MAX,
+  AZIMUTH_MIN,
   CAM_DISTANCE,
+  CAM_FOV,
+  FIT_FILL,
+  FIT_FOV_MAX,
+  FIT_FOV_MIN,
   HOLO_PLATE,
   POLAR_MAX,
   POLAR_MIN,
+  REST_AZIMUTH,
   R_MAX,
   R_MIN,
   buildShells,
+  fitFov,
+  frontnessFromDepth,
   levelAt,
+  recordHalfTangents,
   mulberry32,
   restCameraPosition,
   ringRadius,
@@ -190,5 +200,124 @@ describe("the artifact paints the page's own ground, in both themes (ADR-080 U2)
     /* Two declarations of one colour is a value that can go wrong in ONE
        place while everything else stays green — ADR-069 U1's finding. */
     expect(HOLO_PLATE).toBe(holoGroundCss("dark"));
+  });
+});
+
+describe("the lens is solved from the canvas it is given (ADR-080 U3)", () => {
+  /* ⚠ THE DEFECT THIS FIXES IS ARITHMETIC, NOT TASTE. Three's `fov` is
+     VERTICAL and nothing in the folder read the canvas, so visible height at
+     the target was a constant and every pixel of width the beat gained was
+     empty world. Measured on the page before this pass: the record filled
+     23.9 % of a 1914px-wide canvas. */
+  const RECORD_ASPECT = () => {
+    const [tx, ty] = recordHalfTangents();
+    return tx / ty;
+  };
+
+  /** What fraction of each axis the record fills at a given canvas aspect. */
+  function fill(aspect: number): { w: number; h: number } {
+    const fov = (fitFov(aspect) * Math.PI) / 180;
+    const halfH = Math.tan(fov / 2);
+    const [tx, ty] = recordHalfTangents();
+    return { w: tx / (halfH * aspect), h: ty / halfH };
+  }
+
+  it("fits by the BINDING axis, and on every real shape that is the height", () => {
+    /* ⚠ THE RECORD IS WIDER THAN IT IS TALL AND EVERY BEAT SHAPE IS WIDER
+       STILL, so the height binds everywhere and the wings are inherent — they
+       are not empty, they carry the ground grid and the dust. The measured
+       aspect is 1.396 rather than the rings' own 1.96 because the fit includes
+       the MARK'S PLATED COLLAR (world radius 2.043 against the widest ring's
+       1.18). That costs about 40 % of the available size and it is bought
+       deliberately: the collar is the one fully closed, unbroken ring in the
+       object, and cropping its top and bottom is cropping the centre of the
+       drawing. */
+    expect(RECORD_ASPECT()).toBeGreaterThan(1.3);
+    for (const a of [1274 / 497, 1434 / 552, 1914 / 860]) {
+      expect(a).toBeGreaterThan(RECORD_ASPECT());
+      const f = fill(a);
+      expect(f.h).toBeCloseTo(FIT_FILL, 5);
+      expect(f.w).toBeLessThan(f.h);
+      // And nothing is cropped: the binding axis is exactly the fill.
+      expect(f.h).toBeLessThan(1);
+    }
+  });
+
+  it("grows the record against the un-fitted lens", () => {
+    /* `CAM_FOV` is what shipped. The lens alone is worth 1.305× at the live
+       shape; the beat's own height (574 → 860) carries the rest, for ~1.96×
+       linear in total. Anything under 1.25 here means the mechanism stopped
+       working — do not tighten it toward the measured value, it moves with
+       `FIT_FILL` and with any change to the mark's collar. */
+    const a = 1914 / 860;
+    const halfOld = Math.tan((CAM_FOV * Math.PI) / 180 / 2);
+    const [, ty] = recordHalfTangents();
+    const before = ty / halfOld;
+    expect(fill(a).h / before).toBeGreaterThan(1.25);
+  });
+
+  it("clamps the lens so no canvas shape can make a fisheye or a pinhole", () => {
+    for (const a of [0.2, 0.5, 1, 3.4, 12, 40]) {
+      const fov = fitFov(a);
+      expect(fov).toBeGreaterThanOrEqual(FIT_FOV_MIN);
+      expect(fov).toBeLessThanOrEqual(FIT_FOV_MAX);
+    }
+    // And a degenerate size falls back rather than producing NaN.
+    expect(fitFov(0)).toBe(CAM_FOV);
+    expect(fitFov(Number.NaN)).toBe(CAM_FOV);
+  });
+});
+
+describe("a label knows which side of the object its ring is on (ADR-080 U3)", () => {
+  /* ⚠ THIS GRAMMAR HAD NEVER RUN. The scene derived frontness from `ndc.z`,
+     and with `near 0.1 / far 60` the whole object sits in the last
+     half-percent of the NDC depth range — every anchor returned the floor,
+     always, so the lab's z-order was a constant 25. */
+  const depths = COURSE.map((w) => {
+    // The anchor rides its ring's rim; depth is dominated by the axis, so the
+    // ring's own z against the camera is the honest proxy here.
+    const [cx, cy, cz] = restCameraPosition();
+    const z = waypointZ(w.at);
+    return Math.hypot(0 - cx, 0 - cy, z - cz);
+  });
+
+  it("spreads across the seven anchors instead of pinning to one value", () => {
+    const fs = depths.map(frontnessFromDepth);
+    expect(new Set(fs.map((f) => f.toFixed(3))).size).toBeGreaterThanOrEqual(5);
+    expect(Math.max(...fs) - Math.min(...fs)).toBeGreaterThan(0.2);
+  });
+
+  it("puts the NEAR end of the course in front", () => {
+    const fs = depths.map(frontnessFromDepth);
+    // `at` runs 2024 → now, and the negative azimuth is what puts NOW nearest.
+    expect(fs[fs.length - 1]).toBeGreaterThan(fs[0]);
+  });
+
+  it("stays inside its declared band whatever depth it is handed", () => {
+    for (const d of [0, 1, 15.6, 60, 1e6]) {
+      const f = frontnessFromDepth(d);
+      expect(f).toBeGreaterThanOrEqual(0.25);
+      expect(f).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe("the object may be turned, but not into an unreadable pose (ADR-080 U3)", () => {
+  it("clamps the azimuth around the rest pose it was tuned to", () => {
+    expect(AZIMUTH_MIN).toBeLessThan(REST_AZIMUTH);
+    expect(AZIMUTH_MAX).toBeGreaterThan(REST_AZIMUTH);
+    // Symmetric about the rest pose — the two ends are the failures, and the
+    // rest pose is not near either of them.
+    expect(REST_AZIMUTH - AZIMUTH_MIN).toBeCloseTo(AZIMUTH_MAX - REST_AZIMUTH, 9);
+  });
+
+  it("cannot reach the two poses this drawing's own constants were moved off", () => {
+    /* ⚠ THE MIRRORED POSE IS THE ONE THAT MATTERS. `REST_AZIMUTH` is negative
+       so the record reads LEFT TO RIGHT; its own comment calls the sign "the
+       whole fix". A positive azimuth runs the dates backwards, and the
+       near-end-on band around 0 piles the seven rings into one another. */
+    expect(AZIMUTH_MAX).toBeLessThan(0);
+    // 18° from the axis was measured unreadable; the clamp must not reach it.
+    expect(AZIMUTH_MAX).toBeLessThan((-18 * Math.PI) / 180);
   });
 });

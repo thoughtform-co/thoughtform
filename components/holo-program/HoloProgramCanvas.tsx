@@ -48,6 +48,8 @@ import { HoloProgramScene } from "./HoloProgramScene";
 import { holoGroundCss, resolveHoloPalette } from "./holoPalette";
 import {
   AUTO_ROTATE_SPEED,
+  AZIMUTH_MAX,
+  AZIMUTH_MIN,
   CAM_DISTANCE,
   CAM_FOV,
   HOLO_PLATE,
@@ -55,6 +57,7 @@ import {
   POLAR_MAX,
   POLAR_MIN,
   POST,
+  solveHoloFit,
   restCameraPosition,
   type HoloPost,
   type HoloWaypoint,
@@ -64,6 +67,51 @@ import { useDprCeiling } from "@/lib/hooks/useQualityTier";
 import { useThemeStore } from "@/lib/stores/themeStore";
 
 export { HOLO_PLATE };
+
+/**
+ * HoloFit — the lens, solved from the canvas the object is actually given.
+ *
+ * ⚠ THE ONE THING THIS FOLDER HAD NO MECHANISM FOR (ADR-080 U3). Three's
+ * `fov` is VERTICAL and nothing here read the canvas, so visible height at the
+ * target was a constant and every pixel of width the beat gained was empty
+ * world. Measured before this pass: at 1914 × 574 the record filled 23.9 % of
+ * the width and 40.6 % of the height, and the seven DOM anchors spanned 377px
+ * of 1914 — which is why the labels read as a row that ignores the drawing.
+ *
+ * `fitFov` fits the record by the BINDING axis, which is ADR-070's elastic
+ * crop one surface over. It solves the LENS, never the distance: `CAM_DISTANCE`
+ * is also OrbitControls' `minDistance`/`maxDistance`, and its own comment
+ * records that shortening it made the near rings enormous and let perspective
+ * outrank the radius encoding.
+ *
+ * ⚠ SOLVED AT THE REST POSE, ONCE PER CANVAS SIZE. Re-solving as the reader
+ * turns the object would make the lens breathe under the drag, which reads as
+ * the drawing resisting the hand.
+ */
+function HoloFit() {
+  const camera = useThree((s) => s.camera);
+  const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    if (!height || !width) return;
+    const cam = camera as THREE.PerspectiveCamera;
+    const { fov, offsetY } = solveHoloFit(width, height);
+    cam.fov = fov;
+    /* ⚠ THE RECORD IS NOT CENTRED ON THE TARGET once the chrome sits on the
+       drawing: one header row above it, four rows of platform track and
+       registers below. Shifting the FRUSTUM rather than the object moves the
+       drawing, the dust and the published anchors together, through the one
+       projection matrix — so the DOM labels follow for free. */
+    cam.setViewOffset(width, height, 0, -offsetY, width, height);
+    cam.updateProjectionMatrix();
+    invalidate();
+    return () => {
+      cam.clearViewOffset();
+    };
+  }, [camera, width, height, invalidate]);
+  return null;
+}
 
 /** Pumps the loop only while the object is on screen AND the tab is visible.
  *  The artifact is alive by owner ruling, so this gate is where the cost of
@@ -127,6 +175,15 @@ export function HoloProgramCanvas({
   const P = { ...POST, ...post };
   const aberration = useMemo(() => new THREE.Vector2(P.aberration, P.aberration), [P.aberration]);
   const camPos = useMemo(() => restCameraPosition(), []);
+  const cameraProps = useMemo(
+    () => ({
+      position: [...camPos] as [number, number, number],
+      fov: CAM_FOV,
+      near: 0.1,
+      far: 60,
+    }),
+    [camPos]
+  );
 
   /* ⚠ Depth of field and the aberration are the first things to go on a weak
      GPU — the most expensive passes and the least load-bearing. The object
@@ -162,18 +219,20 @@ export function HoloProgramCanvas({
       ref={wrapRef}
       /* The object is grabbable. `touch-action: none` is what lets a touch
          drag rotate it instead of scrolling the page — and it is safe only
-         because this canvas never mounts below the desktop tier. */
-      style={{ background: groundCss, touchAction: "none", cursor: "grab" }}
+         because this canvas never mounts below the desktop tier.
+         ⚠ THE CURSOR MOVED TO CSS (ADR-080 U3) so `:active` can answer with
+         `grabbing`. An inline `cursor` beats every selector without
+         `!important`, so the pair could not both live here. */
+      style={{ background: groundCss, touchAction: "none" }}
     >
       <CanvasErrorBoundary fallback={null}>
         <Canvas
           key={glEpoch}
-          camera={{
-            position: [...camPos] as [number, number, number],
-            fov: CAM_FOV,
-            near: 0.1,
-            far: 60,
-          }}
+          /* ⚠ MEMOISED, AND THAT IS NOT A PERF TWEAK. R3F re-applies changed
+             camera PROPS, so a fresh object literal on every render would
+             clobber the fov `HoloFit` solved and silently revert the lens to
+             the constant — the exact defect this pass exists to remove. */
+          camera={cameraProps}
           dpr={[1, dprCeiling]}
           gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
           frameloop="demand"
@@ -186,6 +245,7 @@ export function HoloProgramCanvas({
           }}
         >
           <color attach="background" args={[groundCss]} />
+          <HoloFit />
           <LifePump active={onScreen} />
 
           <OrbitControls
@@ -199,11 +259,25 @@ export function HoloProgramCanvas({
             enableZoom={false}
             minPolarAngle={POLAR_MIN}
             maxPolarAngle={POLAR_MAX}
+            /* ⚠ AZIMUTH IS CLAMPED NOW (ADR-080 U3). It was unbounded, so a
+               drag could spin the object into the two poses this file's own
+               constants were moved off: the near-end-on pile, and the mirrored
+               pose where the dates run right to left. A held instrument may be
+               turned; it may not be turned into a state where the record
+               cannot be read. ±60° leaves the middle free. */
+            minAzimuthAngle={AZIMUTH_MIN}
+            maxAzimuthAngle={AZIMUTH_MAX}
             minDistance={CAM_DISTANCE}
             maxDistance={CAM_DISTANCE}
             autoRotate={autoRotate && !still}
             autoRotateSpeed={AUTO_ROTATE_SPEED}
-            rotateSpeed={0.55}
+            /* ⚠ 0.22, DOWN FROM 0.55, AND IT IS THE CLAMP THAT FORCES IT.
+               Three's `rotateLeft` is `2π·dx/clientHeight·rotateSpeed`, so at
+               0.55 on a ~530px canvas a 500px drag sweeps 187° — the reader
+               would hit the 36° azimuth band in the first few pixels and the
+               object would feel broken rather than bounded. At 0.22 the full
+               band takes ~240px of drag at 1280 and ~430px at 1920. */
+            rotateSpeed={0.22}
           />
 
           <HoloProgramScene

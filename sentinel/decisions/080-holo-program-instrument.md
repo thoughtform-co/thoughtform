@@ -282,6 +282,152 @@ canvas. `npm run verify` green (1067 tests), `arc-portfolio-smoke` green
 (22 passed — it runs with GL off and measures the fallback board, which is
 byte-identical).
 
+## Update 3 (2026-08-25, owner) — the artifact fills the beat, and the labels find their rings
+
+> "That timeline visualization … is so condensed in the middle, since we have
+> all that horizontal real estate. Really make those labels bigger. They're not
+> even mapped onto the rings, probably because it's so cropped. Really make it
+> bigger, and that 3D artifact of the timelines, make it bigger, make it wider."
+
+### Why it was small, and it was one line of arithmetic
+
+Three's `fov` is a **VERTICAL** field of view, and **nothing in
+`components/holo-program/**`read the canvas** — the folder's only`viewport`use was`dustMat.uniforms.uPixelRatio`. So visible height at the target was a
+constant `2·D·tan(fov/2)` and visible width was that times the aspect: at
+1914 × 574 the record filled **23.9 % of the width and 40.6 % of the height**,
+and every pixel of width ADR-080 U2 had just won was empty world **by
+construction**. The seven DOM anchors spanned **377px of 1914**, which is the
+whole of "they're not even mapped onto the rings" — a label row and a drawing
+that never shared a coordinate.
+
+### The beat, by remainder
+
+The chrome — the header line, the priors/adoption pair, the platform track and
+the six registers — leaves flow and floats on the drawing. `--pg-h` is deleted
+in live mode; the plot is the **`1fr` remainder** of a box that is exactly one
+viewport less its own padding.
+
+⚠ **NOT A BIGGER CLAMP.** The old value was hand-sized against a budget with a
+comment saying that raising it meant re-measuring three viewports — a guard
+that lives in prose. A remainder cannot exceed a screen at any size, so
+`data-arc-tall` cannot be tripped by a future edit, and it survives a head that
+reflows. Measured: **331 → 528 at 1280 × 720, 368 → 598 at 1440 × 800,
+574 → 941 at 1920 × 1247**, the last reclaiming ~169px the centred band was
+leaving as air.
+
+⚠ **AND THERE WAS A SPECIFICITY WAR, ON ONE PROPERTY.** `grid-template-rows` is
+safe; `align-content` is not — the ADR-076 curtain's own base rule
+`.arc-root[data-arc-curtain] .arc-hero + .arc-section` declares `center` at
+**(0,4,0)** and outranks a plain `.arc-sec--prog[data-holo="live"]` at (0,2,0).
+Measured: the band stayed 644px in a 1110px box and the drawing came out at 474
+instead of 941. The stretch is declared twice, once inside the curtain's own
+selector.
+
+⚠ **`z-index: 2` ON THE FLOATED CHROME IS LOAD-BEARING.** DOM order is
+hd → plot → ft → reg, and positioned elements at `z-index: auto` paint in DOM
+order — an absolutely-positioned header would paint BEFORE the plot and the
+canvas would cover it. ⚠ All of it is `pointer-events: none`, or the chrome
+puts a dead band across the object the reader is turning. ⚠ `user-select`
+widens from the plot to the whole panel, which **knowingly reverses U2's
+scoping**: those figures no longer "sit outside" the drag surface, and
+selection is a layout question that `pointer-events: none` does not touch. The
+cost is that the six register figures stop being copyable.
+
+### The lens is solved from the canvas
+
+`solveHoloFit(w, h)` fits the record by its **binding axis** inside gutters
+reserved for the chrome, and returns a frustum offset for their asymmetry (one
+header row above, four rows below). ADR-070's elastic crop, one surface over.
+
+⚠ **SOLVE THE LENS, NEVER THE DISTANCE.** Perspective strength is
+`distance / object-depth`, not fov — at a fixed 15.6 against a 5.1-deep object
+a fov change is a pure crop and the near/far size ratio is bit-identical. Every
+word of `CAM_DISTANCE`'s own comment is a distance argument, and it is also
+OrbitControls' `minDistance`/`maxDistance`.
+
+⚠ **THE FIT INCLUDES THE MARK'S PLATED COLLAR** (world radius 2.043 against the
+widest ring's 1.18), which costs ~40 % of the available size. Bought
+deliberately: the collar is the one fully closed, unbroken ring in the object,
+and cropping its top and bottom is cropping the centre of the drawing. The
+record's half-tangent aspect is 1.396 because of it, not the rings' own 1.96.
+
+⚠ **`REST_AZIMUTH` STAYS −54°.** Swinging to −70° buys 6 % of width and pays
+42 % of ring openness (`|cos θ|·cos ε`: 0.556 → 0.323) — walking back toward
+the pose this ADR rejected at 18°. The width came from the layout instead.
+
+⚠ **THE `camera` PROP HAD TO BE MEMOISED.** R3F re-applies changed camera
+props, so a fresh object literal on every render silently reverts the solved
+fov to the constant.
+
+### `frontness` had never worked
+
+⚠ **ALL SEVEN ANCHORS RETURNED 0.25, ALWAYS.** With `near 0.1 / far 60` the
+object lives in the last half-percent of the NDC depth range: `ndc.z` runs
+0.9888 → 0.9914 at the anchors' depths, so `clamp01(1 − depthT·1.35)` was
+exactly 0. The documented "a ring behind the core dims its own label" grammar
+had not run once, and the lab's z-order was a constant 25 — for as long as the
+lab has existed. `frontnessFromDepth` bands the REAL camera-space distance
+against the object's own half-depth, which no clip-plane change can break, and
+it is unit-pinned by a spread assertion rather than by a value.
+
+### Tracked labels — the rejection is superseded by a changed premise
+
+U2 built these and rejected them on arithmetic: seven three-line blocks against
+a 377px spread. **Both terms moved.** The spread roughly tripled, and the
+one-sentence `note` becomes a hover (`opacity: 0`, never `display: none` — it
+stays in the a11y tree, in `textContent` and in a computed font, so a prose
+walk still finds all eight), which makes a block two lines.
+
+- `holoLabelLayout.ts` is pure and three-free, so the page, the lab and a unit
+  test call one function.
+- ⚠ **THE DECLUTTER IS A MECHANISM, NOT A SAFETY NET.** At 1280 × 720 the
+  tightest same-lane pitch is ~155px against a 147px block and `anchorAngle`'s
+  lean moves an anchor ±17px — two labels genuinely overlap at rest.
+- ⚠ **THE ANCHOR PUBLISHES A RIM NORMAL** (`nx`/`ny`). Without it a tie-line
+  stops pointing at anything the moment the object turns: the lab's is a fixed
+  1px × 16px vertical stub, correct at the rest pose and meaningless at every
+  other.
+- ⚠ **THE WHOLE TRANSFORM IS WRITTEN IN JS, CENTRING INCLUDED.** The lab writes
+  a translate on the same element whose CSS declares `translate3d(-50%,0,0)`,
+  and the inline write REPLACES it — so every lab label hangs by its left edge
+  and only the margin half of the offset survives.
+- Type up: name `clamp(9.5px,.82vw,10.5px)` → `clamp(12.5px,1.1vw,17px)`
+  (+34 % at 1280, +62 % at 1920); date to `clamp(10px,.86vw,13px)`.
+
+### Rotation
+
+Azimuth was **unbounded**, so a drag could reach both poses this file's own
+constants were moved off. It is `REST_AZIMUTH ± 18°` = **[−72°, −36°]**, chosen
+on ring openness (0.765 and 0.292 against 0.556 at rest) rather than on travel,
+and strictly negative so the "dates run backwards" pose is unreachable rather
+than merely avoided. ⚠ **The first cut at ±60° was wrong by arithmetic** — from
+−54° that reaches **+6°**, past the axis into both failures at once.
+`rotateSpeed` 0.55 → **0.22**: three's `rotateLeft` is
+`2π·dx/clientHeight·rotateSpeed`, so at 0.55 on a ~530px canvas a 500px drag
+sweeps 187° and the reader would hit the clamp in the first few pixels.
+
+### Verified
+
+All three reference shapes × both themes, headed: live, `data-arc-tall` absent,
+zero horizontal overflow, zero label collisions. `npm run verify` green (1125
+tests). `arc-portfolio-smoke` green — ⚠ and it **cannot see any of this**: it
+runs with WebGL disabled and measures the fallback board, which is
+byte-identical by construction because `ArcProgramCourse` renders the same JSX
+in both modes.
+
+### Left open from this pass
+
+- **The lab still renders the wrong shape.** Its presets are 1440 × 760 /
+  1160 × 560 / 1020 × 266; production is now ~1914 × 941. The framing law is
+  aspect-driven, so a lab at the wrong aspect solves the wrong lens — the same
+  class of error this ADR has recorded twice. It also still carries the
+  transform collision above.
+- **`tests/lib/arcs-import-doctrine.test.ts`'s `HOLO_FREE` branch is an
+  `else if … continue` with no assertion**, so a static
+  `import … from "@/components/holo-program/HoloProgramScene"` inside
+  `components/arcs/**` would pass CI and drag three into the route's First
+  Load JS. This pass added three-free imports there and did not harden it.
+
 ## Left open
 
 - **The rings pass behind the station notes.** ADR-078 moved the flat adoption

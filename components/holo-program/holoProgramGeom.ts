@@ -313,12 +313,227 @@ export const POLAR_MAX = (104 * Math.PI) / 180;
 export const ORBIT_DAMPING = 0.075;
 export const AUTO_ROTATE_SPEED = 0.32;
 
+/**
+ * ⚠ THE AZIMUTH IS CLAMPED (ADR-080 U3). It was unbounded, so the reader could
+ * spin the object into the two poses this file's own comments call failures:
+ * the near-end-on pile that `REST_AZIMUTH` was moved off at 18°, and the
+ * mirrored pose where the dates run RIGHT TO LEFT, which the negative sign
+ * exists to prevent. A held instrument may be turned; it may not be turned
+ * into a state where the record cannot be read.
+ *
+ * ⚠ ±18°, AND THE FIRST CUT AT ±60° WAS WRONG BY ARITHMETIC. The rest pose is
+ * −54°, so a 60° span reaches **+6°** — past the axis entirely, into both
+ * failures at once.
+ *
+ * The band is [−72°, −36°], and both ends are chosen on RING OPENNESS
+ * (`|cos θ|·cos ε`, how far from edge-on a ring plane is), not on how far the
+ * object can be made to travel: 0.765 at −36° and 0.292 at −72°, against
+ * 0.556 at rest. ±30° would reach −84°, where openness is 0.10 and the rings
+ * are bare strokes — the round-one failure in a new place.
+ *
+ * ⚠ IT IS STRICTLY NEGATIVE, so the "dates run backwards" pose the sign of
+ * `REST_AZIMUTH` exists to prevent is unreachable rather than merely avoided.
+ */
+export const AZIMUTH_SPAN = (18 * Math.PI) / 180;
+export const AZIMUTH_MIN = REST_AZIMUTH - AZIMUTH_SPAN;
+export const AZIMUTH_MAX = REST_AZIMUTH + AZIMUTH_SPAN;
+
 /** The camera's resting position, derived from the pose. Spherical → world. */
 export function restCameraPosition(): readonly [number, number, number] {
   const r = CAM_DISTANCE;
   const y = Math.sin(REST_ELEVATION) * r;
   const h = Math.cos(REST_ELEVATION) * r;
   return [Math.sin(REST_AZIMUTH) * h, y, Math.cos(REST_AZIMUTH) * h];
+}
+
+/* ── Fitting the object to the canvas ────────────────────────────────────
+   ⚠ THREE'S `fov` IS VERTICAL, AND NOTHING HERE USED TO READ THE CANVAS.
+   That one fact is why the artifact was a small thing in the middle of a wide
+   frame: visible height at the target is `2·D·tan(fov/2)` — a constant — and
+   visible WIDTH is that times the aspect, so every pixel of width the beat
+   gained was empty world by construction. Measured before this pass: at
+   1914 × 574 the record filled 23.9 % of the width and 40.6 % of the height.
+
+   The fix is ADR-070's elastic-crop law one surface over: fit by the BINDING
+   axis. Solve `fov` — never distance, which is also OrbitControls'
+   `minDistance`/`maxDistance` and whose own comment records that shortening it
+   made the near rings enormous and let perspective outrank the radius
+   encoding.
+
+   ⚠ THE FIT IS SOLVED AT THE REST POSE, ONCE PER CANVAS SIZE. Re-solving as
+   the reader turns the object would make the lens breathe under the drag,
+   which reads as the drawing resisting the hand. */
+
+/**
+ * The camera's own basis at the rest pose — three-free, so this module stays
+ * importable from `components/arcs`.
+ */
+function restCameraBasis(): {
+  pos: readonly [number, number, number];
+  fwd: readonly [number, number, number];
+  right: readonly [number, number, number];
+  up: readonly [number, number, number];
+} {
+  const pos = restCameraPosition();
+  const l = Math.hypot(pos[0], pos[1], pos[2]);
+  // The target is the origin, so forward is simply −normalize(pos).
+  const fwd = [-pos[0] / l, -pos[1] / l, -pos[2] / l] as const;
+  /* right = normalize(fwd × worldUp), worldUp = (0,1,0), which reduces to
+     (−fwd.z, 0, fwd.x). ⚠ Written out rather than reduced the first time, and
+     written out WRONG — the guard's aspect assertion caught it at 15.9 against
+     an expected 1.96, which is what an assertion about a RELATIONSHIP is for. */
+  const rl = Math.hypot(fwd[2], fwd[0]);
+  const right = [-fwd[2] / rl, 0, fwd[0] / rl] as const;
+  // up = right × fwd
+  const up = [
+    right[1] * fwd[2] - right[2] * fwd[1],
+    right[2] * fwd[0] - right[0] * fwd[2],
+    right[0] * fwd[1] - right[1] * fwd[0],
+  ] as const;
+  return { pos, fwd, right, up };
+}
+
+/**
+ * The half-tangents the RECORD subtends at the rest pose — i.e. the object's
+ * angular half-extent, which is what a field of view has to cover.
+ *
+ * ⚠ THE RECORD, NOT THE MACHINE. The seven rings and the mark's plated collar
+ * are what must be whole; the dust (`DUST_SPREAD`) and the ground grid
+ * (`GRID_EXTENT` at `GRID_Y`) are allowed to run off the frame — that is what
+ * the reference does, and it is what a free object looks like rather than a
+ * diagram inside a margin. Fitting the machine instead costs the record about
+ * 40 % of its size and buys no reading.
+ */
+export function recordHalfTangents(): readonly [number, number] {
+  const { pos, fwd, right, up } = restCameraBasis();
+  let maxX = 0;
+  let maxY = 0;
+  const consider = (x: number, y: number, z: number) => {
+    const dx = x - pos[0];
+    const dy = y - pos[1];
+    const dz = z - pos[2];
+    const depth = dx * fwd[0] + dy * fwd[1] + dz * fwd[2];
+    if (depth <= 1e-6) return;
+    const sx = (dx * right[0] + dy * right[1] + dz * right[2]) / depth;
+    const sy = (dx * up[0] + dy * up[1] + dz * up[2]) / depth;
+    maxX = Math.max(maxX, Math.abs(sx));
+    maxY = Math.max(maxY, Math.abs(sy));
+  };
+  // Every ring is a circle in an XY plane, so sampling the loop is exact to
+  // the sample pitch — and the mark's collar is one more such circle at z 0.
+  const loops: readonly (readonly [number, number])[] = [
+    ...RING_FIT_SAMPLES,
+    [0, MARK_RING_RADIUS * 1.14 * MARK_SCALE] as const,
+  ];
+  for (const [z, r] of loops) {
+    for (let i = 0; i < 48; i++) {
+      const a = (i / 48) * Math.PI * 2;
+      consider(Math.cos(a) * r, Math.sin(a) * r, z);
+    }
+  }
+  return [maxX, maxY];
+}
+
+/**
+ * The record's loops, as `[z, radius]`. The seven dated rings are authored per
+ * page, so the fit uses the record's own ENVELOPE — the widest ring at each
+ * end of the axis — which every course shares and which no content edit can
+ * shrink below.
+ */
+const RING_FIT_SAMPLES: readonly (readonly [number, number])[] = [
+  [-AXIS_HALF, R_MAX + TICK_LEN * 1.6],
+  [0, R_MAX + TICK_LEN * 1.6],
+  [AXIS_HALF, R_MAX + TICK_LEN * 1.6],
+];
+
+/** How much of the binding axis the record is allowed to fill, INSIDE the
+ *  gutters. The rest is the air the object needs to read as an object rather
+ *  than as a diagram pressed against its own frame. */
+export const FIT_FILL = 0.94;
+
+/** The solved lens is clamped so a freak canvas shape can produce neither a
+ *  fisheye nor a pinhole. `CAM_FOV` sits inside this band. */
+export const FIT_FOV_MIN = 9;
+export const FIT_FOV_MAX = 34;
+
+/**
+ * The chrome that now sits ON the drawing (ADR-080 U3), in CSS pixels, as a
+ * band the record may not run under.
+ *
+ * ⚠ THE GUTTERS ARE ASYMMETRIC AND THAT IS WHY THE FIT RETURNS A BIAS. The
+ * header line is one row; the platform track plus six registers is four times
+ * that. Fitting inside the smaller of the two and centring on the target
+ * would push the record up into the header at every shape.
+ */
+export const GUTTER_TOP = 56;
+export const GUTTER_BOTTOM = 172;
+
+export interface HoloFit {
+  /** Vertical field of view, degrees. */
+  fov: number;
+  /** How far DOWN the frustum is shifted, in pixels — `setViewOffset`'s `y`.
+   *  Negative moves the picture down, which is what an unequal pair of
+   *  gutters asks for. */
+  offsetY: number;
+}
+
+/**
+ * The lens that fits the record into a canvas of this size, at `CAM_DISTANCE`.
+ *
+ * `tan(fovV/2) ≥ maxTanY / fill` covers the height and
+ * `tan(fovV/2)·aspect ≥ maxTanX / fill` the width, both measured against the
+ * box the gutters leave; the binding one wins.
+ *
+ * ⚠ SOLVE THE LENS, NEVER THE DISTANCE. Perspective strength is governed by
+ * `distance / object-depth`, not by fov — at a fixed 15.6 against a 5.1-deep
+ * object, changing fov is a pure crop and the near/far size ratio is
+ * bit-identical. Every word of `CAM_DISTANCE`'s own comment is a DISTANCE
+ * argument, and it is also OrbitControls' `minDistance`/`maxDistance`.
+ */
+export function solveHoloFit(width: number, height: number): HoloFit {
+  if (!(width > 0) || !(height > 0) || !Number.isFinite(width) || !Number.isFinite(height)) {
+    return { fov: CAM_FOV, offsetY: 0 };
+  }
+  const gt = Math.min(GUTTER_TOP, height * 0.2);
+  const gb = Math.min(GUTTER_BOTTOM, height * 0.34);
+  const innerH = Math.max(1, height - gt - gb);
+  const innerW = Math.max(1, width);
+  const [tx, ty] = recordHalfTangents();
+  const need = Math.max(ty / FIT_FILL, (tx / FIT_FILL) * (innerH / innerW));
+  const deg = (2 * Math.atan(need) * 180) / Math.PI;
+  const fov = Math.min(FIT_FOV_MAX, Math.max(FIT_FOV_MIN, deg));
+  /* The record is centred in the box the gutters leave, so the frustum shifts
+     by half their difference. The published anchors go through this same
+     projection matrix, so the labels follow for free. */
+  return { fov, offsetY: (gt - gb) / 2 };
+}
+
+/** Back-compat shim for anything that only wants the lens. */
+export function fitFov(aspect: number): number {
+  if (!(aspect > 0) || !Number.isFinite(aspect)) return CAM_FOV;
+  return solveHoloFit(aspect * 1000, 1000).fov;
+}
+
+/**
+ * How much a label's own ring faces the camera, 0 (far side) → 1 (near side).
+ *
+ * ⚠ IT WAS PINNED TO ITS FLOOR AND NOBODY COULD SEE IT (ADR-080 U3). The
+ * scene derived this from `ndc.z`, and with `near 0.1 / far 60` the entire
+ * object lives in the last half-percent of the NDC depth range: at the seven
+ * anchors' depths (13.8 → 16.8) `ndc.z` runs 0.9888 → 0.9914, so the old
+ * `clamp01(1 − depthT·1.35)` was **exactly 0 for all seven, always**. The
+ * documented "a ring behind the core dims its own label" grammar had never
+ * run once, and the lab's z-order was a constant 25.
+ *
+ * The fix is to read the REAL camera-space depth and band it against the
+ * object's own half-depth, which is a property of the drawing rather than of
+ * the clip planes — so it cannot be broken again by a `near`/`far` change.
+ */
+export const FRONT_HALF_DEPTH = AXIS_HALF + R_MAX;
+
+export function frontnessFromDepth(depth: number): number {
+  const t = (CAM_DISTANCE + FRONT_HALF_DEPTH - depth) / (2 * FRONT_HALF_DEPTH);
+  return 0.25 + Math.min(1, Math.max(0, t)) * 0.75;
 }
 
 /* ── Idle life (the reference's breathe / flicker / twinkle) ──────────── */

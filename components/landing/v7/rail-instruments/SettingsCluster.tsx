@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 
 import { EXIT_MARKS } from "./clusters";
+import type { JourneyMark } from "./markState";
 import { RAIL_INSTRUMENTS } from "./flags";
 import { MarkRow } from "./MarkRow";
 import { useJourneyMarks } from "./useJourneyMarks";
@@ -209,7 +210,24 @@ function ExitMarks() {
   );
 }
 
-export function SettingsCluster() {
+/**
+ * An arc's exit marks — the same row, told where it is from outside.
+ *
+ * ⚠ THE LANDING'S ROW READS THE BUS ITSELF and must keep doing so (ADR-059 U2
+ * §"A second reader of the bus, deliberately"): it and `RailInstruments` are
+ * siblings under `LandingPage`, which owns the `dangerouslySetInnerHTML` body
+ * and must not re-render. An arc has no such bus — `data-active-station` is a
+ * corridor channel — so its roster and index arrive as props from the one
+ * component that owns both of its corners.
+ */
+export interface SettingsClusterProps {
+  marks?: readonly JourneyMark[];
+  activeIdx?: number;
+  seat?: number;
+}
+
+export function SettingsCluster({ marks, activeIdx, seat }: SettingsClusterProps = {}) {
+  const given = marks !== undefined;
   return (
     <div className="rin-settings" data-rin-settings>
       {/* ⚠ THE THEME SWITCH IS THE ANCHOR, AND IT STAYS LAST (owner,
@@ -225,7 +243,14 @@ export function SettingsCluster() {
           arrangement, where the switch led the row and the mark sat flush
           against it). Grouping is what says these are different kinds of
           object. */}
-      {RAIL_INSTRUMENTS && <ExitMarks />}
+      {RAIL_INSTRUMENTS &&
+        (given ? (
+          <span className="rin-settings__row" aria-hidden="true">
+            <MarkRow marks={marks} activeIdx={activeIdx ?? 0} seat={seat ?? 0} />
+          </span>
+        ) : (
+          <ExitMarks />
+        ))}
       <span className="rin-settings__ctl">
         <SessionControl />
         <ThemeToggleButton />

@@ -5,6 +5,7 @@ import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { ArcHoloProgramMount } from "./ArcHoloProgramMount";
+import { ArcProgramCourse } from "./ArcProgramCourse";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -144,34 +145,7 @@ export function ArcProgramBoard({ section, index, motion = "reveal" }: ArcProgra
                 TWO-line labels at 760px of height; this beat has 331 at
                 1280 × 720 and may not drop the note, which is the trajectory's
                 connective tissue (ADR-079). */}
-            <nav className="arc-prog__stns" aria-label="The trajectory, and what each part opens">
-              <ol>
-                {section.waypoints.map((wp, i) => {
-                  const Tag = wp.target ? "a" : "span";
-                  return (
-                    <li
-                      className="arc-prog__stn"
-                      key={wp.id}
-                      data-wp={wp.id}
-                      data-lane={i % 2 === 0 ? "up" : "dn"}
-                      data-seat={wp.seat ? "" : undefined}
-                      style={{ "--at": `${wp.at * 100}%` } as CSSProperties}
-                    >
-                      <Tag
-                        className="arc-prog__stn-hit"
-                        {...(wp.target ? { href: `#${wp.target}` } : {})}
-                      >
-                        {wp.sub ? <span className="arc-prog__stn-date">{wp.sub}</span> : null}
-                        <span className="arc-prog__stn-lbl">{wp.label}</span>
-                        {wp.note ? <span className="arc-prog__stn-note">{wp.note}</span> : null}
-                      </Tag>
-                      <i className="arc-prog__stn-stem" aria-hidden="true" />
-                      <i className="arc-prog__stn-dia" aria-hidden="true" />
-                    </li>
-                  );
-                })}
-              </ol>
-            </nav>
+            <ArcProgramCourse waypoints={section.waypoints} />
 
             {/* THE ADOPTION BAND — the one green thing, because green is
                 the human everywhere on this estate. The priors run in at
@@ -196,31 +170,41 @@ export function ArcProgramBoard({ section, index, motion = "reveal" }: ArcProgra
 
           <i className="arc-prog__ruler" aria-hidden="true" />
 
-          {/* THE PLATFORM TRACK — what ran beside the course. Absorbed from
+          {/* THE FOOT — the platform track and the registers as ONE box.
+              ⚠ It exists for the live mode's sake (ADR-080 U3): with the
+              chrome floated on the drawing, the track has to sit directly
+              above the registers, and `bottom: <registers' height>` would be
+              a magic number that goes wrong the moment the type reflows. One
+              absolutely-positioned box with two flow rows inside it has no
+              number in it at all. In the fallback it is an unstyled wrapper
+              and the board's flow is unchanged. */}
+          <div className="arc-prog__foot">
+            {/* THE PLATFORM TRACK — what ran beside the course. Absorbed from
               the retired `rollout` log; it is edge-anchored chrome here,
               not a second masthead. */}
-          {section.parallel && section.parallel.length > 0 ? (
-            <div className="arc-prog__ft">
-              <div className="arc-prog__par">
-                <b>Running in parallel</b>
-                {section.parallel.map((line, i) => (
-                  <span key={`p-${i}`}>{line}</span>
-                ))}
+            {section.parallel && section.parallel.length > 0 ? (
+              <div className="arc-prog__ft">
+                <div className="arc-prog__par">
+                  <b>Running in parallel</b>
+                  {section.parallel.map((line, i) => (
+                    <span key={`p-${i}`}>{line}</span>
+                  ))}
+                </div>
+                <span className="arc-prog__ft-lbl">
+                  Twenty-two teams briefed · forty-five minutes each
+                </span>
               </div>
-              <span className="arc-prog__ft-lbl">
-                Twenty-two teams briefed · forty-five minutes each
-              </span>
-            </div>
-          ) : null}
+            ) : null}
 
-          <dl className="arc-prog__reg">
-            {registers.map((r) => (
-              <div className="arc-prog__reg-row" key={r.id}>
-                <dt className="arc-prog__fig">{r.figure}</dt>
-                <dd className="arc-prog__lbl">{r.label}</dd>
-              </div>
-            ))}
-          </dl>
+            <dl className="arc-prog__reg">
+              {registers.map((r) => (
+                <div className="arc-prog__reg-row" key={r.id}>
+                  <dt className="arc-prog__fig">{r.figure}</dt>
+                  <dd className="arc-prog__lbl">{r.label}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
 
         {section.footnote ? (

@@ -31,47 +31,15 @@
 import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
 import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
 
-export interface JourneyMark {
-  /** Stable key, the glyph lookup, and the `data-mark` hook. */
-  id: string;
-  /** Printed by the live mark, and by every mark in the lab's explain mode. */
-  name: string;
-  /** Which index resolves this mark's state. See the two-clocks note above. */
-  clock: "beat" | "row";
-  /** Into `MANIFEST_ENTRIES` when `beat`, into `READOUT_SECTIONS` when `row`. */
-  idx: number;
-  /**
-   * Inclusive END of a beat RANGE — a mark that stands for several beats.
-   *
-   * Only `arc` uses it, and it is what stops the Arc double-lighting with
-   * Thesis. See `ARC_MARK` for why that pair cannot share a clock.
-   */
-  idxEnd?: number;
-  /** A rule opens a new group before this mark. */
-  ruleBefore?: boolean;
-}
+/* ⚠ THE MARK TYPE AND ITS CLOCK MOVED TO `./markState` (ADR-059 U6) so an
+   ARC can share them without loading this file — every roster id below is
+   resolved against the landing's manifest tables AT MODULE EVALUATION, and
+   throws on a miss. Re-exported here so every existing import path, the lab's
+   included, is untouched. */
+export { markState } from "./markState";
+export type { JourneyMark, MarkState } from "./markState";
 
-export type MarkState = "ahead" | "passed" | "here";
-
-/**
- * A mark's state against the two clocks.
- *
- * A mark may stand for a RANGE of beats (`idxEnd`) — the Arc does, covering
- * navigate…build — so `here` is containment rather than equality and
- * `passed` is measured from the range's END. With no `idxEnd` the range is
- * one seat wide and this is the plain three-way compare it replaced.
- *
- * Kept here rather than beside the component that calls it so that the
- * "exactly ONE mark is gold at every position" invariant can be pinned
- * without a DOM — see `tests/lib/rail-instrument-marks.test.ts`. That is
- * the invariant the Arc's range exists to protect.
- */
-export function markState(mark: JourneyMark, activeIdx: number, seat: number): MarkState {
-  const active = mark.clock === "beat" ? activeIdx : seat;
-  const end = mark.idxEnd ?? mark.idx;
-  if (active >= mark.idx && active <= end) return "here";
-  return active > end ? "passed" : "ahead";
-}
+import type { JourneyMark } from "./markState";
 
 /**
  * Resolve an id to its index, loudly.

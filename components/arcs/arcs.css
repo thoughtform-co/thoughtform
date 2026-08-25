@@ -2512,7 +2512,17 @@ html[data-arc-entry]
 .arc-sec--prog[data-holo="live"] .arc-prog__stn-note,
 .arc-sec--prog[data-holo="live"] .arc-prog__band-lbl,
 .arc-sec--prog[data-holo="live"] .arc-prog__hd-ttl,
-.arc-sec--prog[data-holo="live"] .arc-prog__hd-st {
+.arc-sec--prog[data-holo="live"] .arc-prog__hd-st,
+/* ⚠ THE FOOT JOINED THE HALO SET IN ADR-080 U3, because it moved ONTO the
+   drawing. Nothing can verify this: the smoke runs with WebGL disabled, so it
+   measures the fallback board where none of these rules apply. Legibility of
+   the figures and the platform sentence over live line work is a headed
+   capture question, in both themes. */
+.arc-sec--prog[data-holo="live"] .arc-prog__fig,
+.arc-sec--prog[data-holo="live"] .arc-prog__lbl,
+.arc-sec--prog[data-holo="live"] .arc-prog__par b,
+.arc-sec--prog[data-holo="live"] .arc-prog__par span,
+.arc-sec--prog[data-holo="live"] .arc-prog__ft-lbl {
   text-shadow:
     0 0 6px rgba(var(--void-rgb, 10, 9, 8), 0.92),
     0 0 14px rgba(var(--void-rgb, 10, 9, 8), 0.78);
@@ -2934,14 +2944,6 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
      leaving the chamfer would re-cut the drawing's own corners at the panel
      edge — a frame in the one place nothing declares a border. */
   clip-path: none;
-  /* THE HEIGHT THE PANEL'S RULES WERE SPENDING, GIVEN TO THE DRAWING.
-     ⚠ CAPPED BY THE CURTAIN, NOT BY TASTE. This beat must stay under one
-     viewport or `data-arc-tall` disarms the ADR-076 seam, so the share is
-     measured against the tightest shape rather than chosen: at 1280 × 720
-     the beat had 71px of slack plus the ruler's 7, and 46svh spends 65 of
-     that 78. Measured clear at 1280 × 720, 1440 × 800 and 1920 × 1247.
-     Raising it means re-measuring all three. */
-  --pg-h: clamp(300px, 46svh, 660px);
 }
 .arc-sec--prog[data-holo="live"] .arc-prog__hd,
 .arc-sec--prog[data-holo="live"] .arc-prog__ft,
@@ -2967,6 +2969,189 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
 .arc-sec--prog[data-holo="live"] .arc-prog__band-lbl--r {
   left: auto;
   right: 0;
+}
+
+/* ── THE DRAWING TAKES THE BEAT, BY REMAINDER (ADR-080 U3) ───────────────
+   ⚠ NOT A BIGGER CLAMP. `--pg-h` was `clamp(300px, 46svh, 660px)`, sized by
+   hand against a budget, with a comment saying that raising it means
+   re-measuring three viewports — which is a guard that lives in prose. Here
+   the plot is the `1fr` REMAINDER of a box that is exactly one viewport less
+   its own padding, so the beat cannot exceed a screen at any size and
+   `data-arc-tall` cannot be tripped by a future edit. It also survives a head
+   that reflows: a longer sub, a different font metric, a wider clamp rung.
+
+   Measured: the plot goes 331 → 528 at 1280×720, 368 → 598 at 1440×800 and
+   574 → 941 at 1920×1247 — the last of those reclaiming the ~169px the
+   centred band was leaving as air above and below itself.
+
+   ⚠ AND THERE IS A SPECIFICITY WAR, ON ONE PROPERTY. `grid-template-rows` is
+   safe — nothing else declares it here. `align-content` is NOT: the ADR-076
+   curtain's own base rule, `.arc-root[data-arc-curtain] .arc-hero +
+   .arc-section`, declares `center` at **(0,4,0)** and outranks a plain
+   `.arc-sec--prog[data-holo="live"]` at (0,2,0). Measured: the band stayed
+   644px in a 1110px box and the drawing came out at 474 instead of 941.
+   So the stretch is declared TWICE — once for an arc with no curtain, once
+   inside the curtain's own selector. ⚠ Neither may take `:not([data-arc-tall])`:
+   a tall beat has already lost the seam, and it still wants its drawing.
+   `.arc-band` takes no `position` — the smoke asserts it returns to `static`. */
+.arc-sec--prog[data-holo="live"],
+.arc-root[data-arc-curtain] .arc-hero + .arc-section.arc-sec--prog[data-holo="live"] {
+  align-content: stretch;
+}
+.arc-sec--prog[data-holo="live"] > .arc-band {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-height: 0;
+  position: relative;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__plot {
+  height: auto;
+  /* ⚠ THE COLLAPSE ALARM. `1fr` is `minmax(auto, 1fr)` and every child of the
+     plot is absolutely positioned, so its min-content height is ~0 — a
+     mis-measured head could squeeze the drawing to nothing while
+     `sectionFits` reported green. With a floor, a squeeze becomes overflow,
+     which is visible AND trips `data-arc-tall`. */
+  min-height: clamp(300px, 38svh, 560px);
+}
+
+/* ── The chrome floats on the drawing ─────────────────────────────────────
+   ⚠ `z-index: 2` IS LOAD-BEARING. DOM order is hd → plot → ft → reg, and
+   positioned elements at `z-index: auto` paint in DOM order — so an absolutely
+   positioned header would paint BEFORE the plot and the canvas would cover it.
+   The stations and the adoption band already hold z 1.
+   ⚠ AND THEY ARE ALL `pointer-events: none`. The canvas takes the pointer now
+   (ADR-080 U2), so chrome floated over it at the default `auto` would put a
+   dead band across the top and bottom of the thing the reader is turning. */
+.arc-sec--prog[data-holo="live"] .arc-prog__hd,
+.arc-sec--prog[data-holo="live"] .arc-prog__foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__hd {
+  top: 0;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__foot {
+  bottom: 0;
+}
+/* ⚠ THE ADOPTION BAND STOPS RESERVING A SIXTH OF THE PLOT. `--pg-band: 16%`
+   is 150px of dead strip at 941, and in live mode the curve it was reserving
+   for is hidden — only its two edge labels survive. They move to the TOP,
+   under the header line: at the foot they printed straight through the
+   registers and the platform track, which now live there.
+   ⚠ `--pg-hd-h` IS DERIVED FROM THE HEADER'S OWN DECLARATIONS (9px padding
+   twice, plus its clamped type at PT Mono's ~1.6 line box) rather than
+   measured — 34px at 1280 and 36px at 1920, matching the live boxes. A
+   literal here goes wrong the moment the header's clamp is retuned. */
+.arc-sec--prog[data-holo="live"] .arc-prog {
+  --pg-hd-h: calc(18px + 1.6 * clamp(9.5px, 0.78vw, 11px));
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__band {
+  top: var(--pg-hd-h);
+  bottom: auto;
+  height: auto;
+  min-height: 1.4em;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__band-lbl--r {
+  top: 5px;
+  bottom: auto;
+}
+
+/* ── THE STATIONS TRACK THEIR RINGS ─────────────────────────────────────
+   `ArcProgramCourse` writes the whole transform, centring included; these
+   rules only give it a box to write into. The flat `left: var(--at)` seat
+   and the derived `data-lane` stay declared for the fallback. */
+.arc-sec--prog[data-holo="live"] .arc-prog__stn {
+  left: 0;
+  top: 0;
+  bottom: auto;
+  width: clamp(140px, 11.5vw, 200px);
+  transform: none;
+  will-change: transform, opacity;
+}
+/* ⚠ THE STEM AND THE DIAMOND GO. The leader line is the tie now, and it runs
+   at the rim's own angle; a vertical stub and a mark pinned to the block would
+   both point somewhere the ring is not. */
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-stem,
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-dia {
+  display: none;
+}
+.arc-prog__leads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  display: none;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__leads {
+  display: block;
+}
+.arc-prog__leads path {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.34);
+  stroke-width: 1;
+}
+
+/* THE TYPE GROWS — the owner's own ask, and the reason the note had to move.
+   The name goes +34 % at 1280 and +62 % at 1920. */
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-date {
+  font-size: clamp(10px, 0.86vw, 13px);
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-lbl {
+  font-size: clamp(12.5px, 1.1vw, 17px);
+  margin-top: 5px;
+}
+
+/* ⚠ THE NOTE BECOMES A HOVER, AND IT STAYS IN THE DOM. `opacity: 0`, never
+   `display: none`: it keeps its place in the a11y tree, in `textContent` and
+   in a computed font, so any prose walk still finds all eight. It is
+   absolutely positioned, so it contributes nothing to the block's box — which
+   is what makes the collision budget a TWO-line budget and is the whole
+   reason tracked labels fit now when ADR-080 U2 measured that they did not.
+   It opens AWAY from the anchor, so it never covers the ring it describes. */
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-note {
+  position: absolute;
+  left: 50%;
+  width: clamp(140px, 11.5vw, 200px);
+  transform: translateX(-50%);
+  font-size: clamp(11.5px, 0.92vw, 13.5px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease-out;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__stn[data-lane="up"] .arc-prog__stn-note {
+  bottom: calc(100% + 6px);
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__stn[data-lane="dn"] .arc-prog__stn-note {
+  top: calc(100% + 6px);
+}
+/* ⚠ `:hover` REACHES THE `li` THOUGH IT IS `pointer-events: none` — hover
+   propagates to the ancestors of whatever was hit, and the anchor inside it
+   takes the pointer back. It matches on the CLASS, so the two waypoints that
+   render a `<span>` rather than an `<a>` get the note too. */
+.arc-sec--prog[data-holo="live"] .arc-prog__stn:hover .arc-prog__stn-note,
+.arc-sec--prog[data-holo="live"] .arc-prog__stn:focus-within .arc-prog__stn-note {
+  opacity: 1;
+}
+
+/* ⚠ `user-select` WIDENS FROM THE PLOT TO THE WHOLE PANEL, and that is a
+   knowing reversal of ADR-080 U2's scoping. That update kept the registers
+   and the platform track selectable because they "sit outside" the drag
+   surface — they no longer do, they sit ON it. Selection is a LAYOUT
+   question, so `pointer-events: none` does not prevent it: a drag that sweeps
+   through them paints the same `--gold-30` plates U2 measured. The cost is
+   that the six figures stop being copyable. */
+.arc-sec--prog[data-holo="live"] .arc-prog {
+  user-select: none;
 }
 /* ⚠ THE PLOT STOPS CLIPPING. Its `overflow: hidden` is what ADR-080 called
    "what houses the drawing instead of letting a ground plane run out past
@@ -2997,9 +3182,27 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
    to the live rims — the reference's own `leaderLines`, and its own pass. */
 .arc-sec--prog[data-holo="live"] .arc-prog__stns {
   pointer-events: none;
+  /* ⚠ THE SAME BLEED TERM AS `.arc-holo[data-live]`, AND IT WAS MISSING.
+     ADR-080 U2's own comment says this layer "MUST carry the same term" and
+     then only set `pointer-events` — so the labels were laid out in a box
+     inset by `--pg-stn-inset` while the anchors they now follow are fractions
+     of the CANVAS. Every label would land proportionally off its own ring, and
+     a label wrong by a percentage looks exactly like a label that is right.
+     ⚠ `--instrument-margin` FIRST: `--band-margin` alone is 120px wider per
+     side at 1920 (U2's recorded overflow bug). */
+  inset: 0 calc(-1 * var(--instrument-margin, var(--band-margin, var(--hud-content-inset, 48px))));
 }
 .arc-sec--prog[data-holo="live"] .arc-prog__stn-hit {
   pointer-events: auto;
+}
+/* The object is held, so the cursor says so at both ends of a drag.
+   ⚠ In CSS rather than inline, because an inline `cursor` beats every
+   selector without `!important` and the pair could not both live there. */
+.arc-holo__gl {
+  cursor: grab;
+}
+.arc-holo__gl:active {
+  cursor: grabbing;
 }
 
 /* ⚠ AND A DRAG MUST NOT SELECT THE COPY IT PASSES OVER. Turning the object
