@@ -474,7 +474,16 @@ export function travelFlight(p: number): number {
 export function travelHeadArmed(prev: boolean, p: number): boolean {
   const x = clamp01(p);
   const on = VW_TRAVEL_ENTRY_FRAC * 0.34;
-  const off = VW_TRAVEL_ENTRY_FRAC * 1.24;
+  // ⚠ IT DISARMS AS THE DIVE ENDS, NOT AFTER IT. At 1.24 the un-type
+  // was queued at p 0.130 and the first beat parks at 0.139 — so the
+  // masthead was still lettering, mid-scramble, straight across the
+  // first parked beat, and on a fast scroll it was still going at the
+  // second. Measured on a light capture; every geometry gate was green,
+  // because a masthead is not a beat and nothing compared the two.
+  //
+  // The masthead belongs to the ENTRY. Disarming at the dive's own end
+  // gives the un-type the whole gap before the first park.
+  const off = VW_TRAVEL_ENTRY_FRAC;
   const h = VW_TRAVEL_ENTRY_FRAC * 0.06;
   if (x >= on + h && x <= off - h) return true;
   if (x < on - h || x > off + h) return false;

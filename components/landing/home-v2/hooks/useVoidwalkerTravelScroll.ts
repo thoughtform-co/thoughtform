@@ -6,6 +6,7 @@ import { VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { clearVwTravel, vwTravelRef } from "@/lib/home-v2/vwTravelRef";
 import {
+  VW_TRAVEL_ENTRY_FRAC,
   activeStop,
   axisYearFrac,
   beatBlurPx,
@@ -476,20 +477,42 @@ export function useVoidwalkerTravelScroll(
         armed = nextArmed;
         const now = performance.now() / 1000;
         decodes.forEach((d, i) => {
-          const at = now + i * DECODE_STAGGER_S;
           if (armed) {
+            // Typing IN is a reveal, and the stagger is its cadence.
             if (d.el.textContent !== d.to) {
               d.el.textContent = "";
-              queueScramble(jobs, d.el, d.to, at);
+              queueScramble(jobs, d.el, d.to, now + i * DECODE_STAGGER_S);
             }
           } else {
-            queueScramble(jobs, d.el, "", at);
+            // ⚠ UN-TYPING IS NOT STAGGERED. It is a clear, not a reveal,
+            // and every run it holds is copy printed across the beat
+            // arriving underneath it — so the runs go together and the
+            // masthead is gone in one duration instead of three.
+            queueScramble(jobs, d.el, "", now);
           }
         });
       }
       if (jobs.length) {
         advanceScrambles(jobs, performance.now() / 1000);
         if (jobs.length) requestTick();
+      }
+
+      // ⚠ THE MASTHEAD'S EXIT IS A POSITION, NOT A DURATION. The
+      // un-type is a time-based scramble and the runway is scroll-based,
+      // so the two can always desync — and when they do, the masthead is
+      // still lettering, mid-scramble, across the first PARKED beat. That
+      // shipped: measured at 124 characters over the first beat on a
+      // light capture, with every geometry gate green, because a masthead
+      // is not a beat and nothing compared the two.
+      //
+      // Past the dive the masthead is simply gone. Readers scrolling at
+      // any ordinary speed still see the un-type play; what this removes
+      // is the case where it has not finished by the time it matters.
+      // Same law as the `moved()` endpoint rule above: the animation is a
+      // courtesy, the endpoint is the contract.
+      if (!armed && jobs.length && p > VW_TRAVEL_ENTRY_FRAC * 1.26) {
+        for (const j of jobs) j.el.textContent = "";
+        jobs.length = 0;
       }
 
       // ⚠ THE CHASE OUTLIVES THE SCROLL EVENT. Scroll events stop the

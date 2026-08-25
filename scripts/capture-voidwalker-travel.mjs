@@ -153,6 +153,26 @@ const readTravel = () =>
         const d = document.querySelector("[data-rail-manifest-root]");
         return d ? Number(getComputedStyle(d).opacity) : null;
       })(),
+      // The masthead types in as the wormhole opens and UN-types as the
+      // first beat takes the plane (the masthead law). Anything still
+      // lettered once the field is running is stranded copy printed
+      // across the parked beat — measured, because it is invisible to
+      // every geometry gate here.
+      head: (() => {
+        let n = 0;
+        for (const el of document.querySelectorAll("[data-vw-decode]")) {
+          n += (el.textContent ?? "").trim().length;
+        }
+        return n;
+      })(),
+      // ⚠ THE GHOST MUST PAINT NOTHING, IN BOTH THEMES. It is the layer
+      // that survives the un-type, so an inherited colour here strands
+      // the whole masthead on screen with the live layer reading empty
+      // — which is exactly what a light-theme rule did.
+      ghost: (() => {
+        const g = document.querySelector(".vw-decode__ghost em, .vw-decode__ghost");
+        return g ? getComputedStyle(g).color : null;
+      })(),
       ambient: document.documentElement.getAttribute("data-services-ambient"),
       exit: document.documentElement.getAttribute("data-corridor-exit"),
       painting: painting.length,
@@ -178,7 +198,12 @@ const readTravel = () =>
             if (!hit) continue;
             const back = a.o <= b.o ? a : b;
             const front = a.o <= b.o ? b : a;
-            if (front.o - back.o < 0.25 && back.blur < 1.8) out.push(`${back.id}|${front.id}`);
+            if (front.o - back.o < 0.25 && back.blur < 1.8) {
+              out.push(
+                `${back.id}(o${back.o.toFixed(2)} b${back.blur.toFixed(1)})|` +
+                  `${front.id}(o${front.o.toFixed(2)})`
+              );
+            }
           }
         }
         return out;
@@ -223,7 +248,7 @@ for (const [name, frac] of marks) {
   console.log(
     `${name.padEnd(10)} p=${String(r.p).padEnd(6)} stop=${String(r.stop).padEnd(3)} ` +
       `paint=${r.painting} year=${r.year} lit=${r.lit} rail=${r.railOn} dia=${r.diamond} ` +
-      `ambient=${r.ambient} parked=${r.parked.length} ` +
+      `head=${r.head} ambient=${r.ambient} parked=${r.parked.length} ` +
       `overflow=${r.overflowing.join(",") || "-"}`
   );
   await shot(name);
@@ -287,6 +312,17 @@ say(
   rows.some((r) => !r.persp || r.persp === "none"),
   "perspective missing on the stage"
 );
+// ⚠ THE MASTHEAD MUST BE GONE once beats are flying. It is absolutely
+// centred in the stage, so anything it still letters prints straight
+// across the parked beat — and no geometry gate here can see it.
+say(
+  midRows.some((r) => r.head > 0),
+  `the masthead is still lettering during the flight (${Math.max(...midRows.map((r) => r.head))} chars)`
+);
+say(
+  rows.some((r) => r.ghost && !/rgba\(.*,\s*0\)$/.test(r.ghost)),
+  `the decode ghost paints ink (${rows.find((r) => r.ghost && !/rgba\(.*,\s*0\)$/.test(r.ghost))?.ghost})`
+);
 say(
   rows.some((r) => r.crowded.length > 0),
   `beats print over each other at equal weight: ${[...new Set(rows.flatMap((r) => r.crowded))].join(", ")}`
@@ -308,12 +344,15 @@ say(
   midRows.some((r) => !r.year),
   "the rail reads no year"
 );
-// The car sits ON a lettered rung at every park — the scale is the
-// readout, so a car between rungs at a stop means the two measures have
-// drifted apart.
+// ⚠ A LIT RUNG MAY NEVER DISAGREE WITH THE YEAR BEING READ. Not "a
+// rung is always lit": the walk lands NEAR a stop's home, not on it, and
+// between two years that are two apart (2020 and 2018) a few pixels of
+// overshoot reads 2019 — a real year the reader passes through, with no
+// rung of its own. Lighting nothing there is correct. Lighting the WRONG
+// rung is the drift this is here to catch.
 say(
-  midRows.some((r) => r.lit !== r.year),
-  "the car is not on the rung it reads"
+  rows.some((r) => r.lit !== null && r.lit !== r.year),
+  `a lit rung disagrees with the year: ${rows.find((r) => r.lit !== null && r.lit !== r.year)?.name}`
 );
 say(
   midRows.some((r) => r.railYears < 5),

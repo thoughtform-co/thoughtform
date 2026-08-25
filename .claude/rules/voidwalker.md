@@ -15,7 +15,12 @@ decision (2026-08-23); `.voidwalker*` is the `#about` bio's CSS block and is
 never written here — this section is `.vw*` / `.vw-wire*`.
 
 ⚠ **SINCE ADR-081 THIS SECTION HAS TWO PRESENTATION MODES, ONE CONTENT
-TREE.** On desktop with motion allowed it is the TIME TUNNEL: the reader
+TREE**, and **[ADR-081 U2](../sentinel/decisions/081-voidwalker-time-tunnel.md)
+is the live pass** — one damped clock for the field and the camera, a
+flight path authored in screen fractions, slim-in-flight/full-on-park,
+and the HUD's own left rail as the time axis. See §One clock below.
+
+On desktop with motion allowed it is the TIME TUNNEL: the reader
 falls into the parked brandmark past `#about`, a wormhole opens, and the
 beats fly at them on the Z axis while the years count backwards on a
 graduated axis. Everything below describes the VERTICAL mode, which is
@@ -66,6 +71,87 @@ same DOM.
 - ⚠ **`colorScheme` DOES NOT FLIP THIS SITE** — the theme is a pre-paint
   attribute from `?theme=`. A context-level colour scheme captures dark
   twice and reports a light pass that never happened.
+
+## One clock, and the rail is the axis (ADR-081 U2, live)
+
+- ⚠ **ONE DAMPED VALUE, AND THE HOOK OWNS IT.** `travelChase`
+  (`VW_TRAVEL_TAU_S` 0.18s) is written by `useVoidwalkerTravelScroll`
+  into `vwTravelRef.flight`, and the DOM beats, the camera and the tunnel
+  all read THAT. The motion follower's `voidTravel` channel is DELETED,
+  deliberately: before this, the camera flew a damped value while the
+  beats were written from raw scroll in a different rAF — one projection,
+  two clocks, so the cards snapped with the wheel while the walls glided.
+  A dead damped channel that still looks authoritative is how the second
+  clock comes back.
+- ⚠ **SPATIAL CHANNELS DAMP; LETTERED CHANNELS DO NOT.** Depth, the path,
+  the camera, the ring cadence take `flight`. The active stop, the
+  rolling year and the rail's car take RAW `p` — a readout that lags
+  reads as broken.
+- ⚠ **THE CHASE OUTLIVES THE SCROLL EVENT.** Scroll events stop when the
+  finger does and the field is still gliding; the tick re-requests itself
+  until the chase settles, or the beats freeze part-way while the tunnel
+  (pumped by the corridor's own loop) keeps moving.
+- ⚠ **THE FLIGHT PATH IS AUTHORED IN SCREEN FRACTIONS**
+  (`beatScreenXFrac` / `beatScreenYFrac` / `beatRotDeg`) and un-projected
+  per frame through each beat's own depth (`beatDepthUnproject`). A flat
+  CSS offset does NOT survive projection: `±7%` of a 680px box is 48px,
+  which at `VW_Z_FAR` arrives on screen as FIFTEEN — every beat flew at
+  the reader dead centre and the alternation only appeared once it had
+  parked. Author where it is read.
+- ⚠ **THE BEAT LEAVING IS NOT THE BEAT ARRIVING.** `FOG_OUT` (0.32) and
+  `BLUR_REACH_OUT` (0.30) are roughly a third of their IN counterparts,
+  and flattening either back to symmetry puts two beats of identical
+  weight over each other at the midpoint between stops. The reader is
+  looking at what is COMING.
+- **Slim in flight, full on park.** `--vw-d` (`beatDetail`) PEAKS at the
+  park and drives the panels' `--ci`; `--vw-b` still lights the beat's
+  own chrome and holds. ⚠ Re-source the ladder, never re-author it — one
+  `--ci` declaration carries the whole stagger. `.vw-wire` takes
+  `content-visibility: hidden` in flight; ⚠ NOT `.vw-plate__frame`,
+  whose height IS its content and would pop the card as it lights.
+- ⚠ **`filter` IS IN `will-change` AND THE BLUR IS QUANTISED** to half a
+  pixel. An unhinted radius that changes every frame re-rasterises the
+  whole card, three at a time, exactly during the fastest motion. And
+  `data-vw-far` is `content-visibility` + `visibility`, never
+  `display: none`, which re-ran layout at every stop transition.
+- ⚠ **THE LEFT RAIL IS THE TIME AXIS** (owner) — `.vw-axis` is deleted.
+  The rail's thirteen ticks are twelve intervals and the record spans
+  twelve years, so every record year seats on an INTEGER RUNG; nothing is
+  added to the ladder (ADR-031's guardrail) and the twelve-year span is
+  pinned. The `RailDates` host is `position: absolute` inside
+  `.hud__rail--l` (the rail is a FLEX COLUMN — a static child leaves the
+  ticks' percentage box), and ⚠ **the handoff is POSITIONAL**, scoped by
+  `:has` to a rail holding a running car: keyed on `data-vw-mode` it
+  would letter years for the whole document, which is U1's defect again.
+  ⚠ The lit rung IS the readout — no second year travels with the car.
+- ⚠ **`wholeYears` FLOORS AT THE SOURCE.** Fractional `sortYear`s exist
+  only to order beats inside a year they share; rounded, the axis
+  lettered 2019 and 2017 — years no chip prints — and seated the marker
+  between its own rungs.
+- ⚠ **THE CAMERA HANDOFF IS AN IDENTITY IN BOTH HALVES.** The comment and
+  the ADR claimed it for four days with no test while the GAZE snapped
+  ~16°. Do not weaken the guard to the position alone; that is the half
+  that was already true.
+- ⚠ **THE MASTHEAD'S EXIT IS A POSITION, NOT A DURATION.** A time-based
+  scramble and a scroll-based runway always desync, and when they do the
+  masthead letters across the first PARKED beat. It disarms at the dive's
+  own end, un-types unstaggered, and is force-settled past
+  `ENTRY_FRAC × 1.26`.
+- ⚠ **THE DECODE GHOST MUST PAINT NOTHING IN BOTH THEMES.** It is the
+  layer that survives the un-type. `html[data-theme="light"]
+.vw-head__lede em` (0,2,2) outranks `.vw-decode__ghost em` (0,2,1),
+  so light painted the masthead's leitmotif line across the field with
+  the live layer reading empty and every geometry gate green. theme.css
+  re-asserts transparency at matched specificity, later in the cascade.
+- **The tunnel warms its shaders** on `vwTravel.near`, two viewports out:
+  three never compiles a material for an object it has not drawn, so the
+  dive's first frame was also compiling two point shaders. Nothing else
+  is deferred — ~1,500 points cost nothing while invisible.
+- ⚠ **A CAPTURE MADE ONLY OF PARKS CANNOT SHOW THE FLIGHT.** Every mark
+  used to land on a home, where a beat is centred and flat by
+  construction; the mid-flight marks, the `before` mark (the only one
+  that can prove a positional gate), the damping probe and the
+  equal-weight overlap gate are what found four of the defects above.
 
 ## Contracts
 

@@ -674,6 +674,23 @@ html[data-theme="light"] .vw-beat__press-outlet em,
 html[data-theme="light"] .vw-foot__next {
   color: var(--gold-ink);
 }
+
+/* ⚠ THE DECODE GHOST IS STRUCTURE, NOT CONTENT, AND IT MUST STAY
+   TRANSPARENT IN BOTH THEMES. It holds the masthead's line box and its
+   accessible text under transparent ink while the live layer above it is
+   the decode's target — so once the live layer has un-typed, the ghost is
+   all that remains, and it must paint nothing.
+
+   The gold rule above matches `.vw-head__lede em`, which the GHOST's own
+   `em` also is, and at (0,2,2) it outranks `.vw-decode__ghost em` at
+   (0,2,1). The result was light-only and invisible to every guard: the
+   live layer read empty, the geometry was correct, and the masthead's
+   leitmotif line sat painted across the first parked beat. Matched
+   specificity here, later in the cascade, so it wins by source order. */
+html[data-theme="light"] .vw-decode__ghost,
+html[data-theme="light"] .vw-decode__ghost em {
+  color: transparent;
+}
 html[data-theme="light"] .vw-beat__title .w--em {
   --vw-gold-rgb: 110, 82, 22;
 }
