@@ -1846,6 +1846,12 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   /* ADR-048's breakout tier — the casefile's own band (1440 at the cap,
      the content box below the ~1800px crossover). */
   padding-inline: var(--instrument-margin, var(--band-margin, var(--hud-content-inset, 48px)));
+  /* ⚠ NO `position` HERE. An early cut of ADR-080 put `relative` on this
+     element to host the trajectory's canvas, and the ADR-076 curtain asserts
+     that this exact band returns to `position: static` when it releases —
+     the smoke caught it on both the release case and the held-still case.
+     The canvas lives in `.arc-prog__plot`, which is already relative and
+     already clips. */
 }
 
 .arc-dossier {
@@ -2391,6 +2397,131 @@ html[data-arc-entry]
 }
 .arc-sec--prog .arc-head {
   margin-bottom: clamp(16px, 2.2vh, 30px);
+  /* Over the instrument, never under it. */
+  position: relative;
+  z-index: 1;
+}
+
+/* ── THE TRAJECTORY AS AN INSTRUMENT (ADR-080) ──────────────────────────
+   The canvas fills the PLOT — the field whose material it replaces, and the
+   box the stations are positioned against. It is ABSOLUTE, so it adds ZERO
+   flow height: the one-viewport budget this beat is held to, and the
+   `data-arc-tall` measurement that arms the ADR-076 curtain, cannot move
+   because of it. Everything here is inert until `data-holo="live"`, which
+   the mount writes from the scene's FIRST COMMITTED FRAME. */
+.arc-holo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* The stations over it keep their own clicks and hovers; the drawing
+     never takes a pointer. */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.42s ease-out;
+}
+
+.arc-holo[data-live] {
+  opacity: 1;
+}
+
+.arc-holo__gl,
+.arc-holo__gl canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* Everything lettered floats over the drawing. */
+.arc-sec--prog .arc-prog {
+  position: relative;
+  z-index: 1;
+}
+.arc-prog__stns,
+.arc-prog__band {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── What the live instrument replaces ──────────────────────────────────
+   ONLY the un-lettered field material. Every lettered string on this beat
+   stays DOM in both modes, so the smoke's chrome set, its type-role split
+   and its contrast walk ask the same questions either way.
+
+   ⚠ THE SELECTOR IS DELIBERATELY OVER-SPECIFIED. The reveal ladder carries
+   `.is-arc-js .arc-prog.is-in .arc-prog__curve { opacity: 1 }` at (0,4,0)
+   and LATER in this sheet, so the obvious three-class hide loses the
+   cascade and the flat step ladder keeps painting under the 3D one — two
+   adoption curves on one beat, which is exactly what shipped on the first
+   run. Matching the reveal's own shape and adding the mode is what wins. */
+.is-arc-js .arc-sec--prog[data-holo="live"] .arc-prog.is-in .arc-prog__curve,
+.arc-sec--prog[data-holo="live"] .arc-prog__grid,
+.arc-sec--prog[data-holo="live"] .arc-prog__scatter,
+.arc-sec--prog[data-holo="live"] .arc-prog__axis,
+.arc-sec--prog[data-holo="live"] .arc-prog__ruler,
+.arc-sec--prog[data-holo="live"] .arc-prog__curve {
+  opacity: 0;
+  transition: opacity 0.42s ease-out;
+}
+
+/* ⚠ THE PANEL KEEPS ITS OWN PLATE. An early cut blanked it, reasoning that
+   two stacked grounds read as a box inside a box — but the canvas covers the
+   PLOT, and the header, the platform foot and the six registers all sit
+   outside it, so blanking left those on bare section ground and tripped
+   ADR-077's "a plate must be a plate in both themes" walk. */
+
+/* ⚠ THE STATIONS SIT OVER LINE WORK, SO THEY TAKE THE ARC'S OWN LIFT.
+   Seven three-line stations and a ring stack cannot both have the plot's
+   266px to themselves — measured, the lanes leave a 28px gap — so the rings
+   pass BEHIND the labels by construction. That is only legible if the type
+   is lifted off the drawing, which is the device the Arc's caption cards
+   already use over live WebGL (`text-shadow` on `.arc-cap`); a console can
+   be opaque, a drawing cannot. The halo is void, not gold: it is there to
+   separate, not to glow. */
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-date,
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-lbl,
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-note,
+.arc-sec--prog[data-holo="live"] .arc-prog__band-lbl {
+  text-shadow:
+    0 0 6px rgba(10, 9, 8, 0.92),
+    0 0 14px rgba(10, 9, 8, 0.78);
+}
+
+/* ⚠ THE PLOT TAKES THE INSTRUMENT'S OWN GROUND, AS A KEPT-DARK LITERAL, AND
+   TWO SEPARATE THINGS NEED IT:
+     1. The canvas paints an opaque `#0d0b08` and does NOT flip with the
+        theme (ADR-058 Lane 0 — the film stills' and card faces' own call;
+        a hologram reads on void). Without a matching ground the plot's
+        parchment would show at the seams in light.
+     2. The smoke's contrast walk resolves a bed by climbing to the first
+        OPAQUE ancestor. With the plot transparent it finds the PANEL's
+        light plate and measures dawn ink against parchment — a pass on a
+        pairing that does not exist on screen. Painting the real bed is what
+        makes that walk true, and it is the failure mode ADR-070 keeps
+        recording one surface over: the guard measured a model of the
+        drawing rather than the drawing.
+   ⚠ And the ink literals are scoped to the PLOT, never to `.arc-prog`: the
+   registers and the platform foot share these very tokens and sit OUTSIDE
+   the canvas, so forcing them dawn would put cream on parchment one box
+   over — the exact inversion ADR-077 exists to prevent. */
+.arc-sec--prog[data-holo="live"] .arc-prog__plot {
+  background: #0d0b08;
+
+  --pg-ink: rgba(235, 227, 214, 0.55);
+  --pg-fig: rgba(235, 227, 214, 0.92);
+  --pg-lbl: rgba(235, 227, 214, 0.62);
+  --pg-wp: rgba(235, 227, 214, 0.62);
+  --pg-hair: rgba(235, 227, 214, 0.14);
+  --gold-ink: #caa554;
+  --pg-route: rgba(202, 165, 84, 0.72);
+}
+
+/* ⚠ The instrument never runs below the flat board's own static tier — the
+   mount's media gate is the exact complement of this rung, so the two can
+   never disagree about which drawing is on screen. */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .arc-holo {
+    display: none;
+  }
 }
 
 .arc-prog {

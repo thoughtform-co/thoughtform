@@ -7,12 +7,18 @@
  * scrolled into view. Hence the sweep: scroll to each section, wait for
  * its `.arc-reveal` children to carry `is-in`, then shoot.
  *
- * ⚠ HEADED IS NOT REQUIRED HERE (unlike the landing's corridor captures):
- * nothing on this page is WebGL. Headless renders it faithfully.
+ * ⚠ HEADED IS REQUIRED FOR THE TRAJECTORY BEAT, AND ONLY FOR IT (ADR-080).
+ * Every other beat is DOM and SVG, so headless renders them faithfully — but
+ * `#overview` now mounts a WebGL instrument, and a headless Chromium either
+ * falls back to SwiftShader or gets no GL at all. The failure mode is not an
+ * error: it is a beat that quietly falls back to the flat board and a shoot
+ * that looks fine. Pass `--holo` to launch headed and wait for the canvas to
+ * go live before shooting.
  *
  *   node scripts/capture-arc-portfolio.mjs
  *   node scripts/capture-arc-portfolio.mjs --vp 1280x720 --theme light
  *   node scripts/capture-arc-portfolio.mjs --only overview,studio
+ *   node scripts/capture-arc-portfolio.mjs --holo --only overview
  */
 import { chromium } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
@@ -33,9 +39,16 @@ const [W, H] = arg("--vp", "1440x800")
   .split("x")
   .map((n) => Number(n));
 
+/** The trajectory beat is WebGL; everything else on this page is not. */
+const HOLO = process.argv.includes("--holo");
+
 const run = async () => {
   await mkdir(OUT, { recursive: true });
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(
+    HOLO
+      ? { headless: false, args: ["--enable-gpu", "--use-gl=angle", "--ignore-gpu-blocklist"] }
+      : {}
+  );
   const page = await browser.newPage({
     viewport: { width: W, height: H },
     deviceScaleFactor: 2,
@@ -74,6 +87,20 @@ const run = async () => {
     }, id);
     await page.waitForTimeout(450);
 
+    /* The trajectory's canvas promotes `data-holo` from its FIRST COMMITTED
+       FRAME, so this waits on real pixels rather than on the mount deciding
+       it is allowed to try. Its arrival then needs its own 2.4s. */
+    if (HOLO && id === "overview") {
+      await page
+        .waitForFunction(
+          () => document.getElementById("overview")?.getAttribute("data-holo") === "live",
+          undefined,
+          { timeout: 15000 }
+        )
+        .catch(() => console.log("⚠ #overview never went live — shooting the flat board"));
+      await page.waitForTimeout(2900);
+    }
+
     const file = path.join(OUT, `${String(ids.indexOf(id) + 1).padStart(2, "0")}-${id}-${THEME}-${W}x${H}.png`);
     await page.screenshot({ path: file });
     shots.push(file);
@@ -87,11 +114,27 @@ const run = async () => {
         .filter((s) => s.h > vh * 1.15),
       unrevealed: [...document.querySelectorAll(".arc-reveal:not(.is-in)")].length,
       overflowX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      /* ⚠ The two invariants the instrument could break silently: the beat
+         must still fit ONE viewport (or `data-arc-tall` disarms the ADR-076
+         curtain with nothing on screen to say so), and the canvas must not
+         be swallowing the stations' clicks. */
+      holo: document.getElementById("overview")?.getAttribute("data-holo") ?? "absent",
+      arcTall: document.documentElement.hasAttribute("data-arc-tall"),
+      stationHits: [...document.querySelectorAll("a.arc-prog__stn-hit")].map((a) => {
+        const r = a.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { href: a.getAttribute("href"), reachable: !!hit && a.contains(hit) };
+      }),
     };
   }, H);
 
   await browser.close();
   console.log(`shot ${shots.length} beats → ${OUT}`);
+  console.log(`#overview data-holo="${measured.holo}" · data-arc-tall=${measured.arcTall}`);
+  if (measured.arcTall) console.log("⚠ data-arc-tall is SET — the curtain is disarmed");
+  const unreachable = measured.stationHits.filter((s) => !s.reachable);
+  if (unreachable.length)
+    console.log("⚠ stations not clickable (the canvas is eating them):", unreachable);
   if (measured.tall.length) console.log("⚠ beats over 1.15 viewports:", measured.tall);
   if (measured.unrevealed) console.log(`⚠ ${measured.unrevealed} .arc-reveal never revealed`);
   if (measured.overflowX) console.log("⚠ the page overflows horizontally");

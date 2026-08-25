@@ -36,6 +36,27 @@ import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/t
  * both specs read it through `helpers/toolBay.ts`.
  */
 
+/**
+ * ⚠ WebGL IS OFF FOR THIS WHOLE SPEC, AND THAT IS A CORRECTNESS FIX RATHER
+ * THAN A CONVENIENCE (ADR-080).
+ *
+ * The trajectory beat now mounts a WebGL instrument that loads at IDLE and
+ * promotes `data-holo` to "live" from its first painted frame. Headless
+ * Chromium DOES have WebGL (SwiftShader), so without this the beat is live
+ * on some runs and static on others — and the two modes have different beds
+ * for the contrast walk. That raced: the ink-ramp case failed once in a full
+ * parallel run and passed in isolation, which is the signature of a guard
+ * whose answer depends on a load finishing.
+ *
+ * Turning GL off pins every case in this file to the FALLBACK board — which
+ * is the thing this spec was written to measure, and which must keep
+ * rendering verbatim for readers on reduced motion, small screens or no GL.
+ * The live path is gated separately, and headed, by
+ * `scripts/capture-arc-portfolio.mjs --holo`, because only a real GPU can
+ * tell a drawn instrument from a blank one.
+ */
+test.use({ launchOptions: { args: ["--disable-webgl", "--disable-3d-apis"] } });
+
 const PORTFOLIO = "/arcs/portfolio";
 const DOSSIERS = WIREFRAME_STATIONS.map((stn) => ({ ...stn, beat: `tool-${stn.id}` }));
 

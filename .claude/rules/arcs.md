@@ -171,6 +171,23 @@ priors?, parallel?, footnote? }`, ONE per page and FIRST — it is what the
   (the registers read `LOOP_FIGURES` in the renderer) and no digits but
   YEARS. ⚠ It must fit ONE VIEWPORT at 1280×720 or `data-arc-tall`
   disarms the curtain with only one smoke assertion to say so.
+  ⚠ **SINCE ADR-080 IT ALSO MOUNTS A WebGL INSTRUMENT** — the same record in
+  three dimensions, one coaxial ring per dated waypoint with the RADIUS
+  carrying the adoption reach at that date, so the step ladder and the rings
+  are ONE encoding. It lives in `.arc-prog__plot` (the box whose material it
+  replaces, and the box the stations are positioned against — mounted on the
+  band, its ground plane ran out past the panel's own frame), it is ABSOLUTE
+  so it adds zero flow height and cannot move `data-arc-tall`, and it is gated
+  on `data-holo`: absent / `"static"` render the flat board VERBATIM, `"live"`
+  hides only the un-lettered field. ⚠ Every lettered string stays DOM in BOTH
+  modes. ⚠ The rings pass BEHIND the station notes — measured, the lanes leave
+  a 28px gap at 1280×720 — so the labels take the Arc caption cards'
+  over-WebGL `text-shadow`; that is an owner call recorded in ADR-080 §Left
+  open, not settled arithmetic. ⚠ Arrival + pointer parallax ONLY: no idle
+  animation, no wheel capture, no second scroll writer. ⚠ The plate and the
+  live-mode inks are kept-dark LITERALS in both themes (ADR-058 Lane 0).
+  ⚠ Verify HEADED — headless has no GL, so the beat silently falls back and
+  the shoot looks fine.
 - ⚠ **A HERO IS NEVER A FRAME OUT OF THE PAGE'S OWN EVIDENCE** (ADR-078 U2,
   owner). The portfolio briefly opened on the DJ Neighbour poster, reasoning
   that a Loop page should carry a Loop image. It should — but a poster frame
@@ -232,8 +249,17 @@ no-preference)`, the settled gate declared, NEVER `data-proof-settled`.
   console draws the same record. `SOFTWARE_FEW_LINE` is likewise
   keynote-shaped ("the Skills ABOVE"), so the portfolio's tools head
   authors its own sub: share the evidence, author the frame.
-- **No three.js / Supabase / `LandingPage` imports** anywhere under
+- **No STATIC three.js / Supabase / `LandingPage` imports** anywhere under
   `components/arcs/` or `lib/arcs/` (landing-performance doctrine).
+  ⚠ **ONE DYNAMIC SEAM IS SANCTIONED (ADR-080)** — `ArcHoloProgramMount`
+  reaches `components/holo-program/HoloProgramCanvas` through
+  `next/dynamic({ssr:false})`, so the WebGL graph is a lazy chunk and the
+  route's First Load JS is unchanged. `tests/lib/arcs-import-doctrine.test.ts`
+  is the MECHANICAL half: until ADR-080 this ban was a rule with no
+  mechanism, so a stray `import * as THREE` would have passed CI and
+  inflated the budget silently. The scene's three-free modules
+  (`holoProgramGeom`, `hoverRef`) may be imported statically — that is the
+  `journeyScalars` transport pattern, and the guard names them.
   ⚠ **The casefile's dossier LEAVES are the one sanctioned import**
   (ADR-072, extended by ADR-076 and ADR-078): `ToolField`, `MediaLightbox`
   (+ `useWalkthrough`), `console/ConsoleFrame`, `console/ConsoleRail`,

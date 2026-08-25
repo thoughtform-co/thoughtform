@@ -4,6 +4,7 @@ import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcHoloProgramMount } from "./ArcHoloProgramMount";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -101,6 +102,19 @@ export function ArcProgramBoard({ section, index, motion = "reveal" }: ArcProgra
           </div>
 
           <div className="arc-prog__plot">
+            {/* THE INSTRUMENT (ADR-080) — the same record in three
+                dimensions: one ring per dated waypoint, its radius the
+                adoption reach at that date, i.e. the step ladder below made
+                volumetric. It mounts INSIDE the plot on purpose: this box is
+                the field whose material it replaces, it is the box the
+                stations are positioned against, and its `overflow: hidden`
+                is what houses the drawing instead of letting a ground plane
+                run out past the panel's own frame.
+                ⚠ Strictly additive — without JS, WebGL, the width or the
+                motion budget, `data-holo` never reaches "live" and every
+                rule below paints exactly as it always has. */}
+            <ArcHoloProgramMount waypoints={section.waypoints} />
+
             {/* THE FIELD'S MATERIAL: graticule and scatter. Everything here
                 is chrome — it carries no reading and nothing is measured
                 against it. */}

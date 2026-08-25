@@ -1,0 +1,204 @@
+/**
+ * The holo-program lab's chrome.
+ *
+ * Deliberately plain: the harness must not add any material the arc beat
+ * will not have, or the look-dev is judging the lab. The BAND is real (its
+ * three shapes are measured from the arc), and the chrome inside it copies
+ * the flat board's type grammar — PT Mono for the stations, the same sizes,
+ * the same lanes — so a legibility read here transfers.
+ */
+
+.hpl {
+  min-height: 100vh;
+  background: #14120f;
+  color: #ebe3d6;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  padding: 0 0 48px;
+}
+
+.hpl__bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 20px;
+  background: rgba(10, 9, 8, 0.94);
+  border-bottom: 1px solid rgba(235, 227, 214, 0.12);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.hpl__title {
+  color: #caa554;
+  font-weight: 700;
+}
+
+.hpl__grp {
+  display: flex;
+  gap: 6px;
+}
+
+.hpl__btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(235, 227, 214, 0.22);
+  color: rgba(235, 227, 214, 0.78);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.hpl__btn:hover {
+  border-color: rgba(202, 165, 84, 0.6);
+  color: #ebe3d6;
+}
+
+.hpl__btn[data-on] {
+  background: rgba(202, 165, 84, 0.16);
+  border-color: #caa554;
+  color: #ebe3d6;
+}
+
+.hpl__readout {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.62);
+}
+
+.hpl__wrap {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* THE BAND, at its real measured shape. */
+.hpl__stage {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  max-width: 100%;
+}
+
+.hpl__canvas,
+.hpl__gl {
+  position: absolute;
+  inset: 0;
+}
+
+.hpl__gl canvas {
+  display: block;
+}
+
+/* The chrome floats OVER the instrument and never takes the pointer away
+   from it except on a station — the same layering the arc beat needs. */
+.hpl__chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hpl__hd {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+}
+
+.hpl__stns {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hpl__stn {
+  position: absolute;
+  left: var(--at);
+  width: 168px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.hpl__stn[data-lane="up"] {
+  top: 8%;
+}
+
+.hpl__stn[data-lane="dn"] {
+  bottom: 10%;
+}
+
+.hpl__stn-date {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.55);
+}
+
+.hpl__stn-lbl {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  color: rgba(235, 227, 214, 0.92);
+}
+
+.hpl__stn[data-seat] .hpl__stn-lbl {
+  color: #caa554;
+}
+
+/* The third line — production's stations carry it, so the harness must too,
+   or the lab is judging a composition the page does not have. */
+.hpl__stn-note {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 11px;
+  line-height: 1.25;
+  color: rgba(235, 227, 214, 0.62);
+  text-shadow:
+    0 0 6px rgba(10, 9, 8, 0.92),
+    0 0 14px rgba(10, 9, 8, 0.78);
+}
+
+.hpl__stn-date,
+.hpl__stn-lbl {
+  text-shadow:
+    0 0 6px rgba(10, 9, 8, 0.92),
+    0 0 14px rgba(10, 9, 8, 0.78);
+}
+
+.hpl__priors {
+  position: absolute;
+  left: 14px;
+  bottom: 10px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+
+.hpl__note {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(235, 227, 214, 0.6);
+}
