@@ -72,7 +72,17 @@ export interface HoloPalette {
 }
 
 export const HOLO_DARK: HoloPalette = {
-  ground: 0x0d0c0a,
+  /**
+   * ⚠ THE PAGE'S OWN `--void`, NOT A PLATE OF ITS OWN (ADR-080 U2). It was
+   * `0x0d0c0a` — three steps lighter than `.arc-section`'s `#0a0908`, which
+   * is invisible as a colour and perfectly visible as a RECTANGLE: a lighter
+   * panel edge running the width of the beat, i.e. the frame the owner asked
+   * to have removed, drawn by the canvas itself after the CSS one came off.
+   * The light column already made this call for its own reasons and says so
+   * below; dark now matches it, so the artifact sits flush on the page in
+   * both themes and the contrast walk's bed is the ground that is painted.
+   */
+  ground: 0x0a0908,
   structure: 0xebe3d6, // Semantic Dawn
   machine: 0xdcc176, // Tensor accent — the alpha-compensated dot-field gold
   gold: 0xcaa554, // `--gold`, luminous in both themes by ADR-058
@@ -82,7 +92,18 @@ export const HOLO_DARK: HoloPalette = {
   mark: 0xcaa554,
   additive: true,
   bloomScale: 1,
-  vignetteScale: 1,
+  /**
+   * ⚠ 0.3 SINCE ADR-080 U2, AND THE REASON IS THE FRAME AGAIN. At full
+   * strength the pass put the canvas's corners at `rgb(5,4,4)` and its edge
+   * midpoints at `rgb(8,7,6)` against a page ground of `rgb(10,9,8)` —
+   * measured. Inside a panel that reads as the edge of a lit volume, which
+   * is what this comment used to say; with the panel gone the canvas has
+   * straight edges against the page itself, so the same pass draws a dark
+   * RECTANGLE the width of the beat. At 0.3 the corner lands within ~1.5
+   * units of the ground and there is no boundary to see. ⚠ Re-measure with
+   * `above` / `inside` samples in the empty margin if this moves.
+   */
+  vignetteScale: 0.3,
   grainScale: 1,
   markOpacity: 0.92,
   dustScale: 1,

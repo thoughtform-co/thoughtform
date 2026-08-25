@@ -393,7 +393,14 @@ export const POST: HoloPost = {
   dofBokeh: 0,
 };
 
-/** The kept-dark ground. Between the house void and the reference's slate,
- *  staying in the warm family. ⚠ A LITERAL: it does not flip with the theme
- *  (ADR-058 Lane 0 — a hologram reads on void). */
-export const HOLO_PLATE = "#0d0c0a";
+/**
+ * The dark ground, as a string for anything that needs it before a palette
+ * is resolved.
+ *
+ * ⚠ SUPERSEDED TWICE AND KEPT IN STEP BY HAND. ADR-080 U1 gave the object a
+ * light drawing, so this stopped being "kept-dark" (see `holoPalette.ts`);
+ * ADR-080 U2 moved the dark ground onto the page's own `--void` so the
+ * canvas paints no rectangle. `HOLO_DARK.ground` is the SOURCE — this must
+ * equal it, and `holo-program-geom.test.ts` pins the pair.
+ */
+export const HOLO_PLATE = "#0a0908";

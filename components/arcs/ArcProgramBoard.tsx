@@ -35,7 +35,9 @@ interface ArcProgramBoardProps {
  * each; a station block is ~170px wide. Alternating lanes doubles the
  * pitch between same-side neighbours, which is what lets each one carry a
  * date, a name AND its note without colliding. `--lane` is derived from
- * the index here so content never authors it.
+ * the index here so content never authors it, and it holds in BOTH modes —
+ * see the course below for why tracking them to the live object's rims was
+ * built, measured and rejected (ADR-080 U2).
  *
  * ⚠ THE ADOPTION CURVE IS ITS OWN REGISTER AT THE FOOT, not a line behind
  * the stations. Drawn under them it crossed every note, and a reading the
@@ -105,11 +107,12 @@ export function ArcProgramBoard({ section, index, motion = "reveal" }: ArcProgra
             {/* THE INSTRUMENT (ADR-080) — the same record in three
                 dimensions: one ring per dated waypoint, its radius the
                 adoption reach at that date, i.e. the step ladder below made
-                volumetric. It mounts INSIDE the plot on purpose: this box is
-                the field whose material it replaces, it is the box the
-                stations are positioned against, and its `overflow: hidden`
-                is what houses the drawing instead of letting a ground plane
-                run out past the panel's own frame.
+                volumetric. It mounts inside the plot because that is the
+                field whose material it replaces and the box the stations are
+                measured against; ⚠ since ADR-080 U2 the plot no longer CLIPS
+                it — live mode bleeds both to the band's full width, and the
+                ground plane running off the page is what a free object looks
+                like rather than a leak out of a panel.
                 ⚠ Strictly additive — without JS, WebGL, the width or the
                 motion budget, `data-holo` never reaches "live" and every
                 rule below paints exactly as it always has. */}
@@ -129,7 +132,18 @@ export function ArcProgramBoard({ section, index, motion = "reveal" }: ArcProgra
 
             {/* THE COURSE. Each station is a real date and, bar the two
                 that open no chapter, an anchor — so the chart IS the
-                page's table of contents. */}
+                page's table of contents.
+                ⚠ IT STAYS A DATED ROW EVEN WHEN THE OBJECT IS LIVE, AND THAT
+                IS ARITHMETIC (ADR-080 U2). Tracking these to the rings' own
+                rims — the lab's grammar, and what ADR-080 U1's commit claims
+                the page does — was built and MEASURED here: the rims of seven
+                coaxial rings seen near-axially project into ~500px, and seven
+                blocks of 140–172px carrying a date, a name AND a note need
+                three times that. Every label printed through its neighbours
+                at all three reference shapes. The lab gets away with it on
+                TWO-line labels at 760px of height; this beat has 331 at
+                1280 × 720 and may not drop the note, which is the trajectory's
+                connective tissue (ADR-079). */}
             <nav className="arc-prog__stns" aria-label="The trajectory, and what each part opens">
               <ol>
                 {section.waypoints.map((wp, i) => {

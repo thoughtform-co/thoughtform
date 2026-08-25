@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { HOLO_DARK, HOLO_LIGHT, holoGroundCss } from "@/components/holo-program/holoPalette";
 import {
   ADOPTION_TREADS,
   AXIS_HALF,
   CAM_DISTANCE,
+  HOLO_PLATE,
   POLAR_MAX,
   POLAR_MIN,
   R_MAX,
@@ -160,5 +162,33 @@ describe("the camera can be orbited, but only into dignified poses", () => {
     const polar = Math.acos(y / Math.hypot(x, y, z));
     expect(polar).toBeGreaterThanOrEqual(POLAR_MIN);
     expect(polar).toBeLessThanOrEqual(POLAR_MAX);
+  });
+});
+
+describe("the artifact paints the page's own ground, in both themes (ADR-080 U2)", () => {
+  /* ⚠ THIS IS THE FRAME GUARD, AND IT IS A COLOUR TEST ONLY BY ACCIDENT.
+     A canvas ground that differs from the section it sits in draws a
+     RECTANGLE the width of the beat — invisible as a colour, perfectly
+     visible as an edge, and exactly the frame ADR-080 U2 was asked to
+     remove. Both values are the arcs surface's own `--void` / `--dawn`
+     (`.arc-section { background: var(--void, #0a0908) }`, swapped to
+     parchment by ADR-058), so this fails if either drifts. */
+  const ARC_VOID = 0x0a0908;
+  const ARC_PARCHMENT = 0xece3d6;
+
+  it("is `--void` on dark", () => {
+    expect(HOLO_DARK.ground).toBe(ARC_VOID);
+    expect(holoGroundCss("dark")).toBe("#0a0908");
+  });
+
+  it("is the parchment on light", () => {
+    expect(HOLO_LIGHT.ground).toBe(ARC_PARCHMENT);
+    expect(holoGroundCss("light")).toBe("#ece3d6");
+  });
+
+  it("keeps `HOLO_PLATE` equal to the dark ground it is a copy of", () => {
+    /* Two declarations of one colour is a value that can go wrong in ONE
+       place while everything else stays green — ADR-069 U1's finding. */
+    expect(HOLO_PLATE).toBe(holoGroundCss("dark"));
   });
 });

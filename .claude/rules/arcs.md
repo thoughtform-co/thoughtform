@@ -174,20 +174,48 @@ priors?, parallel?, footnote? }`, ONE per page and FIRST — it is what the
   ⚠ **SINCE ADR-080 IT ALSO MOUNTS A WebGL INSTRUMENT** — the same record in
   three dimensions, one coaxial ring per dated waypoint with the RADIUS
   carrying the adoption reach at that date, so the step ladder and the rings
-  are ONE encoding. It lives in `.arc-prog__plot` (the box whose material it
-  replaces, and the box the stations are positioned against — mounted on the
-  band, its ground plane ran out past the panel's own frame), it is ABSOLUTE
-  so it adds zero flow height and cannot move `data-arc-tall`, and it is gated
-  on `data-holo`: absent / `"static"` render the flat board VERBATIM, `"live"`
+  are ONE encoding. It lives in `.arc-prog__plot`, it is ABSOLUTE so it adds
+  zero flow height and cannot move `data-arc-tall`, and it is gated on
+  `data-holo`: absent / `"static"` render the flat board VERBATIM, `"live"`
   hides only the un-lettered field. ⚠ Every lettered string stays DOM in BOTH
-  modes. ⚠ The rings pass BEHIND the station notes — measured, the lanes leave
-  a 28px gap at 1280×720 — so the labels take the Arc caption cards'
-  over-WebGL `text-shadow`; that is an owner call recorded in ADR-080 §Left
-  open, not settled arithmetic. ⚠ Arrival + pointer parallax ONLY: no idle
-  animation, no wheel capture, no second scroll writer. ⚠ The plate and the
-  live-mode inks are kept-dark LITERALS in both themes (ADR-058 Lane 0).
-  ⚠ Verify HEADED — headless has no GL, so the beat silently falls back and
-  the shoot looks fine.
+  modes. ⚠ Arrival + drag ONLY: no idle animation, no wheel capture, no second
+  scroll writer. ⚠ Verify HEADED — headless has no GL, so the beat silently
+  falls back and the shoot looks fine.
+  ⚠ **AND SINCE ADR-080 U2 THE OBJECT IS FREE: NO FRAME, IN LIVE MODE**
+  (owner, twice). The panel's border, chamfer clip, plate ground and every
+  internal rule go TRANSPARENT (never `border: 0` — zeroing the widths
+  re-flows the beat against its one-viewport budget), `.arc-prog__plot` stops
+  clipping, the ruler is `display: none` (7px of FLOW, not an opacity), the
+  canvas BLEEDS to the band's border box and `--pg-h` is `clamp(300px, 46svh,
+  660px)` — 266 → 331 at 1280×720, 430 → 574 at 1920×1247, and **capped by
+  the CURTAIN**: 46svh spends 65 of the 78px of slack the tightest shape has,
+  so raising it means re-measuring `data-arc-tall` at all three.
+  ⚠ **THE BLEED NEGATES `--instrument-margin` FIRST** — the same three-deep
+  chain `.arc-band--instrument` reads. `--band-margin` alone is 120px wider
+  per side at 1920 and put a 2152px canvas in a 1914px page.
+  ⚠ **A CANVAS THAT DOES NOT PAINT THE PAGE'S GROUND DRAWS A RECTANGLE.**
+  `HOLO_DARK.ground` is `--void` and `HOLO_LIGHT.ground` the parchment, pinned
+  by `holo-program-geom.test.ts`; the plot declares NO bed and no ink
+  literals, so the contrast walk climbs to `.arc-section`'s real ground.
+  ⚠ **The vignette was the frame after that** — at full strength it darkened
+  the canvas corners 5 units below the page; `vignetteScale` is 0.3 on dark.
+  ⚠ **THE READER TURNS IT**, so `.arc-holo[data-live]` takes the pointer
+  (never the bare host — an empty transparent host still hit-tests) and
+  `.arc-prog__stns` goes `pointer-events: none` with its anchors taking it
+  back. ⚠ **`user-select: none` ON THE PLOT** or a drag paints a `--gold-30`
+  SELECTION PLATE behind all seven labels.
+  ⚠ **THE COURSE STAYS A DATED ROW.** Tracking the stations to the rings' own
+  rims (the lab's grammar, and what U1's commit claims the page does) was
+  built and measured: seven coaxial rims project into ~500px and seven
+  three-line blocks need three times that. It needs leader lines, and its own
+  pass.
+  ⚠ **ADR-080 U1's CLAIMS WERE LAB-ONLY** — its commit touched
+  `components/holo-program/**` and the lab and nothing under
+  `components/arcs/**`, so the free object, the drag and the light drawing all
+  landed one directory short. The page's smoke runs with **WebGL OFF** by
+  design and measures the FALLBACK board, so it cannot see any live-mode
+  defect: gate live mode with `scripts/capture-arc-portfolio.mjs --holo` and a
+  headed capture, at all three shapes in both themes.
 - ⚠ **A HERO IS NEVER A FRAME OUT OF THE PAGE'S OWN EVIDENCE** (ADR-078 U2,
   owner). The portfolio briefly opened on the DJ Neighbour poster, reasoning
   that a Loop page should carry a Loop image. It should — but a poster frame

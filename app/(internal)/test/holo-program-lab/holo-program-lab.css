@@ -8,7 +8,12 @@
 
 .hpl {
   min-height: 100vh;
-  background: #141210;
+  /* ⚠ THE PAGE'S GROUND, WHICH IS ALSO THE ARTIFACT'S (ADR-080 U2). It was
+     `#141210` — lighter than the canvas, so the stage read as a panel on a
+     sheet and the lab could not have shown the frame the owner was seeing on
+     the real page. A harness that does not share production's ground is
+     judging a different object. */
+  background: #0a0908;
   color: #ebe3d6;
   font-family: var(--font-pt-mono, "PT Mono", monospace);
   padding: 0 0 48px;

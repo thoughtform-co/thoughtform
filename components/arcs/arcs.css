@@ -1850,8 +1850,13 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
      element to host the trajectory's canvas, and the ADR-076 curtain asserts
      that this exact band returns to `position: static` when it releases —
      the smoke caught it on both the release case and the held-still case.
-     The canvas lives in `.arc-prog__plot`, which is already relative and
-     already clips. */
+     The canvas lives in `.arc-prog__plot`, which is already relative.
+     ⚠ AND THIS PADDING IS THE TERM THE LIVE BLEED NEGATES (ADR-080 U2). The
+     instrument tier reads `--instrument-margin` FIRST, so the bleed must
+     read the same three-deep chain — the first cut negated `--band-margin`
+     alone, which resolves 120px WIDER per side at 1920 and pushed the canvas
+     to 2152px inside a 1914px page. A bleed built on a different term than
+     the padding it undoes is horizontal overflow waiting for a viewport. */
 }
 
 .arc-dossier {
@@ -2413,8 +2418,10 @@ html[data-arc-entry]
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* The stations over it keep their own clicks and hovers; the drawing
-     never takes a pointer. */
+  /* ⚠ NONE UNTIL IT IS LIVE, AND THAT IS NOT COSMETIC. The mount renders
+     this host on every capable path, empty and at `opacity: 0`, while the
+     chunk loads — and a transparent element still hit-tests. With the live
+     bleed below that would be a band-wide pointer sink over the beat. */
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.42s ease-out;
@@ -2422,6 +2429,17 @@ html[data-arc-entry]
 
 .arc-holo[data-live] {
   opacity: 1;
+  /* ⚠ THE READER TURNS IT (ADR-080 U1) — and could not, on the page. That
+     update gave the object real `OrbitControls` and shipped the drag in the
+     LAB; this host kept `pointer-events: none`, so no pointerdown ever
+     reached the canvas on `/arcs/portfolio`. The station layer above stays
+     transparent to the pointer except on its own anchors, so a drag anywhere
+     else lands here. Zoom is off in the canvas, so no wheel listener is bound
+     and the page keeps scrolling over the object. */
+  pointer-events: auto;
+  /* THE BLEED — see `.arc-sec--prog[data-holo="live"] .arc-prog__stns`,
+     which MUST carry the same term. */
+  inset: 0 calc(-1 * var(--instrument-margin, var(--band-margin, var(--hud-content-inset, 48px))));
 }
 
 .arc-holo__gl,
@@ -2457,10 +2475,17 @@ html[data-arc-entry]
 .arc-sec--prog[data-holo="live"] .arc-prog__grid,
 .arc-sec--prog[data-holo="live"] .arc-prog__scatter,
 .arc-sec--prog[data-holo="live"] .arc-prog__axis,
-.arc-sec--prog[data-holo="live"] .arc-prog__ruler,
 .arc-sec--prog[data-holo="live"] .arc-prog__curve {
   opacity: 0;
   transition: opacity 0.42s ease-out;
+}
+
+/* ⚠ THE RULER IS REMOVED, NOT DIMMED (ADR-080 U2). Every other item above
+   is absolutely positioned and costs nothing once hidden; the ruler is 7px
+   of FLOW, and on this beat flow height is the one currency the drawing
+   spends. Dimming it left a transparent graduation holding a line open. */
+.arc-sec--prog[data-holo="live"] .arc-prog__ruler {
+  display: none;
 }
 
 /* ⚠ THE PANEL KEEPS ITS OWN PLATE. An early cut blanked it, reasoning that
@@ -2470,50 +2495,51 @@ html[data-arc-entry]
    ADR-077's "a plate must be a plate in both themes" walk. */
 
 /* ⚠ THE STATIONS SIT OVER LINE WORK, SO THEY TAKE THE ARC'S OWN LIFT.
-   Seven three-line stations and a ring stack cannot both have the plot's
-   266px to themselves — measured, the lanes leave a 28px gap — so the rings
-   pass BEHIND the labels by construction. That is only legible if the type
-   is lifted off the drawing, which is the device the Arc's caption cards
-   already use over live WebGL (`text-shadow` on `.arc-cap`); a console can
-   be opaque, a drawing cannot. The halo is void, not gold: it is there to
-   separate, not to glow. */
+   The rings pass BEHIND the labels by construction — that is only legible
+   if the type is lifted off the drawing, which is the device the Arc's
+   caption cards already use over live WebGL (`text-shadow` on `.arc-cap`);
+   a console can be opaque, a drawing cannot. The halo separates, it does
+   not glow, so it is the GROUND's colour and never gold.
+
+   ⚠ AND IT IS `--void-rgb`, NOT A LITERAL (ADR-080 U2). ADR-058 SWAPS that
+   token, so in light it IS the parchment — one rule, both themes. It shipped
+   as `rgba(10, 9, 8, …)`, which is a BLACK halo, and once ADR-080 U1 gave
+   the object a real light drawing this beat printed cream labels inside
+   black glows on paper. Same finding as ADR-063 U2 and the holo lab's own
+   CSS, which records it in these words: same number, opposite meaning. */
 .arc-sec--prog[data-holo="live"] .arc-prog__stn-date,
 .arc-sec--prog[data-holo="live"] .arc-prog__stn-lbl,
 .arc-sec--prog[data-holo="live"] .arc-prog__stn-note,
-.arc-sec--prog[data-holo="live"] .arc-prog__band-lbl {
+.arc-sec--prog[data-holo="live"] .arc-prog__band-lbl,
+.arc-sec--prog[data-holo="live"] .arc-prog__hd-ttl,
+.arc-sec--prog[data-holo="live"] .arc-prog__hd-st {
   text-shadow:
-    0 0 6px rgba(10, 9, 8, 0.92),
-    0 0 14px rgba(10, 9, 8, 0.78);
+    0 0 6px rgba(var(--void-rgb, 10, 9, 8), 0.92),
+    0 0 14px rgba(var(--void-rgb, 10, 9, 8), 0.78);
 }
 
-/* ⚠ THE PLOT TAKES THE INSTRUMENT'S OWN GROUND, AS A KEPT-DARK LITERAL, AND
-   TWO SEPARATE THINGS NEED IT:
-     1. The canvas paints an opaque `#0d0b08` and does NOT flip with the
-        theme (ADR-058 Lane 0 — the film stills' and card faces' own call;
-        a hologram reads on void). Without a matching ground the plot's
-        parchment would show at the seams in light.
-     2. The smoke's contrast walk resolves a bed by climbing to the first
-        OPAQUE ancestor. With the plot transparent it finds the PANEL's
-        light plate and measures dawn ink against parchment — a pass on a
-        pairing that does not exist on screen. Painting the real bed is what
-        makes that walk true, and it is the failure mode ADR-070 keeps
-        recording one surface over: the guard measured a model of the
-        drawing rather than the drawing.
-   ⚠ And the ink literals are scoped to the PLOT, never to `.arc-prog`: the
-   registers and the platform foot share these very tokens and sit OUTSIDE
-   the canvas, so forcing them dawn would put cream on parchment one box
-   over — the exact inversion ADR-077 exists to prevent. */
-.arc-sec--prog[data-holo="live"] .arc-prog__plot {
-  background: #0d0b08;
+/* ⚠ THE PLOT DECLARES NO BED, AND THAT IS THE CORRECTION (ADR-080 U2).
+   ADR-080's first cut painted it a kept-dark `#0d0b08` and forced dawn ink
+   literals over it, for two reasons that were both true at the time: the
+   canvas was kept-dark (ADR-058 Lane 0), and the contrast walk resolves a
+   bed by climbing to the first OPAQUE ancestor, so a transparent plot would
+   have made it measure dawn ink against the panel's LIGHT plate — a pass on
+   a pairing that is not on screen.
 
-  --pg-ink: rgba(235, 227, 214, 0.55);
-  --pg-fig: rgba(235, 227, 214, 0.92);
-  --pg-lbl: rgba(235, 227, 214, 0.62);
-  --pg-wp: rgba(235, 227, 214, 0.62);
-  --pg-hair: rgba(235, 227, 214, 0.14);
-  --gold-ink: #caa554;
-  --pg-route: rgba(202, 165, 84, 0.72);
-}
+   ADR-080 U1 then gave the object a genuine light drawing, whose own comment
+   says `HOLO_LIGHT.ground` is Semantic Dawn "so the artifact sits flush on
+   the paper instead of as a panel pasted onto it" — and that update touched
+   `components/holo-program/**` and the lab only. So this rule survived it and
+   the beat printed CREAM STATION LABELS OVER A LIGHT DRAWING on parchment,
+   measured on the live page at 1920 × 1247 before this pass.
+
+   Both halves go. The plot paints nothing, so the walk climbs to
+   `.arc-section`'s own ground; `HOLO_DARK.ground` moved to `--void` in this
+   same pass, so the canvas paints exactly that colour in dark as it already
+   did in light. The walk's answer and the screen now agree BY CONSTRUCTION,
+   which is ADR-070's standing rule: measure the drawing, not a model of it —
+   and with no ground of its own the drawing has no rectangle, which is what
+   the owner was actually asking for. */
 
 /* ⚠ The instrument never runs below the flat board's own static tier — the
    mount's media gate is the exact complement of this rung, so the two can
@@ -2871,6 +2897,124 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   text-transform: uppercase;
   color: var(--pg-lbl);
   line-height: 1.25;
+}
+
+/* ══ ADR-080 U2: THE HOUSING COMES OFF AND THE COURSE FOLLOWS THE OBJECT ══
+   ⚠ EVERY RULE IN THIS BLOCK IS LIVE-MODE ONLY, AND IT IS DELIBERATELY LAST
+   IN THE SHEET. Several of these tie on specificity with the flat station
+   rules above (`.arc-prog__stn[data-lane="up"] .arc-prog__stn-stem` is the
+   same (0,3,0) as the live override), so ORDER is what decides them.
+   Hoisting this block up beside the other `[data-holo="live"]` rules would
+   silently hand every one of those ties back to the flat layout — the exact
+   cascade trap the curve's own over-specified hide records above.
+
+   The flat board keeps every rule it has: it is a technical drawing, and a
+   technical drawing has a housing. */
+
+/* ── The box goes ────────────────────────────────────────────────────────
+   ⚠ A FREE OBJECT MAY NOT BE IN A BOX (owner, 2026-08-25: "I do not want
+   the 3D object to be surrounded by a frame — it really needs to be free").
+   The beat kept the flat board's panel around the instrument: a hairline
+   border, a chamfered clip, a plate ground, a rule under the header, a rule
+   over the platform track and six ruled register cells. So an object the
+   reader can turn was presented through a 1014 × 266 window.
+
+   Every WORD of that chrome stays. What goes is the box drawn around it —
+   which is also the reference boards' own grammar, the one ADR-080 cites:
+   metadata anchored at a field's CORNERS AND EDGES, framing nothing.
+
+   ⚠ COLOURS GO TRANSPARENT, THE BORDERS STAY 1px. Setting `border: 0` would
+   move every row up by a pixel per rule and re-flow the beat against the
+   one-viewport budget; transparency changes what is painted and nothing
+   else, so the fallback and the live board keep the same rhythm. */
+.arc-sec--prog[data-holo="live"] .arc-prog {
+  border-color: transparent;
+  background: none;
+  /* ⚠ THE CLIP HAS TO GO WITH THE BORDER. `clip-path` cuts DESCENDANTS, so
+     leaving the chamfer would re-cut the drawing's own corners at the panel
+     edge — a frame in the one place nothing declares a border. */
+  clip-path: none;
+  /* THE HEIGHT THE PANEL'S RULES WERE SPENDING, GIVEN TO THE DRAWING.
+     ⚠ CAPPED BY THE CURTAIN, NOT BY TASTE. This beat must stay under one
+     viewport or `data-arc-tall` disarms the ADR-076 seam, so the share is
+     measured against the tightest shape rather than chosen: at 1280 × 720
+     the beat had 71px of slack plus the ruler's 7, and 46svh spends 65 of
+     that 78. Measured clear at 1280 × 720, 1440 × 800 and 1920 × 1247.
+     Raising it means re-measuring all three. */
+  --pg-h: clamp(300px, 46svh, 660px);
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__hd,
+.arc-sec--prog[data-holo="live"] .arc-prog__ft,
+.arc-sec--prog[data-holo="live"] .arc-prog__reg,
+.arc-sec--prog[data-holo="live"] .arc-prog__band {
+  border-color: transparent;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__reg-row + .arc-prog__reg-row {
+  border-left-color: transparent;
+}
+/* With no wall to stand off, the chrome aligns to the band's own edge —
+   the same edge the masthead's title starts on. */
+.arc-sec--prog[data-holo="live"] .arc-prog__hd,
+.arc-sec--prog[data-holo="live"] .arc-prog__ft {
+  padding-inline: 0;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__reg-row {
+  padding-left: 0;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__band-lbl {
+  left: 0;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__band-lbl--r {
+  left: auto;
+  right: 0;
+}
+/* ⚠ THE PLOT STOPS CLIPPING. Its `overflow: hidden` is what ADR-080 called
+   "what houses the drawing instead of letting a ground plane run out past
+   the panel's own frame" — true while there WAS a frame. With none, a
+   ground plane running off the page is not a leak, it is what a free object
+   looks like; it is what the lab's `full` preset shows, and that preset is
+   the drawing the owner approved. */
+.arc-sec--prog[data-holo="live"] .arc-prog__plot {
+  overflow: visible;
+}
+
+/* ── The drag reaches the object ─────────────────────────────────────────
+   ⚠ THE STATION LAYER COVERS THE WHOLE FIELD, so with its default `auto` it
+   swallowed every pointerdown before the canvas saw one — which is the other
+   half of why ADR-080 U1's "the reader turns it" was true only in the lab.
+   The layer goes transparent to the pointer and its own anchors take it
+   back, so a drag anywhere but on a name reaches the drawing and a label can
+   never put a dead patch in the thing you are turning.
+
+   ⚠ THE COURSE ITSELF STAYS A DATED ROW. Tracking these to the rings' rims
+   (the lab's grammar, and what U1's commit says the page does) was built and
+   measured in this pass: seven coaxial rims seen near-axially project into
+   ~500px, and seven blocks of 140–172px carrying a date, a name and a note
+   need three times that. Every label printed through its neighbours at all
+   three reference shapes. The lab gets away with it on TWO-line labels at
+   760px of height; this beat has 331 at 1280 × 720 and may not drop the
+   note (ADR-079). If tracking returns it needs leader lines from a fixed row
+   to the live rims — the reference's own `leaderLines`, and its own pass. */
+.arc-sec--prog[data-holo="live"] .arc-prog__stns {
+  pointer-events: none;
+}
+.arc-sec--prog[data-holo="live"] .arc-prog__stn-hit {
+  pointer-events: auto;
+}
+
+/* ⚠ AND A DRAG MUST NOT SELECT THE COPY IT PASSES OVER. Turning the object
+   is a click-drag across the field, which the browser also reads as a text
+   selection — so every station label came out of a turn wearing a
+   `--gold-30` SELECTION PLATE, hard-edged and exactly its own text box.
+   Which is: a frame, seven of them, arriving the moment the reader used the
+   affordance this pass added. Found by pixel-scanning a label row before and
+   after a drag; `rgba(202,165,84,.3)` over `#0a0908` is `rgb(68,56,31)` to
+   the unit, which is what named it — three compositing "cures" had been
+   tried against it first, and all three measured byte-identical.
+   ⚠ SCOPED TO THE PLOT. The head, the platform track and the six registers
+   are prose and figures a reader may want to copy, and they sit outside it. */
+.arc-sec--prog[data-holo="live"] .arc-prog__plot {
+  user-select: none;
 }
 
 /* ── BELOW THE TIER: the plot becomes a list ───────────────────────

@@ -153,6 +153,135 @@ typical session.
   literals for the same reason — light-theme `--arc-ink-*` re-derives toward
   dark-on-parchment and would vanish on it.
 
+## Update 2 (2026-08-25, owner) — the housing comes off, and U1 lands on the page
+
+> "give the timeline 3D thing more breathing room; like the demo you made
+> earlier really had a lot of breathing room, but AS I ASKED BEFORE I do not
+> want the 3D object to be surrounded by a fucking frame it really needs to be
+> free"
+
+### What was actually wrong: U1 shipped in the lab only
+
+ADR-080 U1's commit says the object is free, the reader turns it, and "the
+labels track IT (holoAnchorsRef projects seven anchors per frame and the DOM
+follows)". Its file list is `components/holo-program/**`,
+`/test/holo-program-lab/**`, its capture script and its geom test —
+**nothing under `components/arcs/**`or`arcs.css`.** So every claim in it was
+true at `/test/holo-program-lab`and false on`/arcs/portfolio`, where the
+beat still had round one's presentation:
+
+- the flat board's **panel around the drawing** — a hairline border, a
+  chamfered clip, a plate ground, a rule under the header, a rule over the
+  platform track and six ruled register cells;
+- a **1014 × 266 window** at 1280 × 720 (430 at 1920 × 1247), 37 % of a beat
+  that owns a whole screen;
+- `pointer-events: none` on the canvas host, so **no pointerdown ever reached
+  `OrbitControls`** and the object could not be turned;
+- and the ink literals U1 obsoleted, which is a defect it CAUSED: the plot was
+  painted a kept-dark `#0d0b08` with dawn ink forced over it, correct while the
+  drawing was kept-dark. U1 gave the object a real light drawing, and this beat
+  then printed **cream station labels inside black halos over a light drawing
+  on parchment.** Measured on the live page at 1920 × 1247.
+
+⚠ **A CLAIM IN A COMMIT MESSAGE IS ABOUT THE FILES IN IT.** Nothing failed:
+the lab captures were correct, the guards ran against the lab, and the page's
+own smoke runs with WebGL OFF by design, so it measures the FALLBACK board and
+could not see any of this.
+
+### The decision
+
+**In live mode the panel stops being a panel.** Every word of the chrome stays
+— the header pair, the stations, the priors and adoption labels, the platform
+track, the six registers — and the box drawn around it goes. That is the
+reference boards' own grammar, the one this ADR cites: metadata anchored at a
+field's corners and edges, framing nothing.
+
+- `border-color: transparent`, `background: none`, `clip-path: none`, and the
+  same on every internal rule and divider. ⚠ **Colours, not `border: 0`** —
+  zeroing the widths moves every row a pixel per rule and re-flows the beat
+  against its one-viewport budget.
+- ⚠ **THE CLIP HAD TO GO WITH THE BORDER.** `clip-path` cuts descendants, so a
+  surviving chamfer would re-cut the drawing's corners at the panel edge — a
+  frame in the one place nothing declares a border.
+- `.arc-prog__plot` stops clipping. Its `overflow: hidden` was "what houses the
+  drawing instead of letting a ground plane run out past the panel's own
+  frame", which was true while there WAS a frame. With none, a ground plane
+  running off the page is what a free object looks like — it is what the lab's
+  `full` preset shows, and that preset is the drawing the owner approved.
+- The canvas **bleeds to the band's border box**, and the ruler is `display:
+none` rather than `opacity: 0` (it is 7px of FLOW, and flow height is the one
+  currency this beat spends).
+- `--pg-h` goes from `clamp(250px, 37svh, 430px)` to `clamp(300px, 46svh,
+660px)`: **266 → 331 at 1280 × 720, 296 → 368 at 1440 × 800, 430 → 574 at
+  1920 × 1247.** ⚠ Capped by the CURTAIN, not by taste — the beat must stay
+  under one viewport or `data-arc-tall` disarms the ADR-076 seam. At 1280 × 720
+  it had 71px of slack plus the ruler's 7, and 46svh spends 65 of that 78.
+
+### The ground was the other half of the frame
+
+⚠ **A CANVAS THAT DOES NOT PAINT THE PAGE'S GROUND DRAWS A RECTANGLE.**
+`HOLO_DARK.ground` was `#0d0c0a`, three steps off `.arc-section`'s `#0a0908` —
+invisible as a colour, perfectly visible as an edge. It is `--void` now, and
+the light column already made this call for its own reasons ("so the artifact
+sits flush on the paper instead of as a panel pasted onto it").
+
+⚠ **AND THE VIGNETTE WAS THE FRAME AFTER THAT.** At full strength the pass put
+the canvas's corners at `rgb(5,4,4)` and its edge midpoints at `rgb(8,7,6)`
+against a ground of `rgb(10,9,8)`. Inside a panel that reads as the edge of a
+lit volume; with straight edges against the page itself it is a dark rectangle
+the width of the beat. `vignetteScale` 1 → **0.3**, at which every sample above
+and below the canvas's edge measures `10,9,8` exactly.
+
+The plot's kept-dark bed and its ink literals are both DELETED. The contrast
+walk climbs to `.arc-section`'s own ground and the canvas paints exactly that,
+so the walk's answer and the screen agree by construction — ADR-070's standing
+rule, and the reason `holo-program-geom.test.ts` now pins both grounds and
+`HOLO_PLATE` against them.
+
+### What was built, measured and rejected: tracked labels
+
+U1's own grammar was ported to the page and then taken out again. Seven
+coaxial rims seen near-axially project into **~500px**, and seven blocks of
+140–172px carrying a date, a name AND a note need three times that: every
+label printed through its neighbours at all three reference shapes, in both
+themes. The lab gets away with it on **two-line** labels at 760px of height;
+this beat has 331 at 1280 × 720 and may not drop the note, which is the
+trajectory's connective tissue (ADR-079). The course stays a dated row. If
+tracking returns it needs leader lines from a fixed row to the live rims — the
+reference's own `leaderLines`, and its own pass.
+
+### The drag, and the frame it brought back
+
+`pointer-events` moves to `auto` on `.arc-holo[data-live]` only (an empty
+transparent host at `opacity: 0` still hit-tests, and with the bleed that
+would be a band-wide pointer sink), and `.arc-prog__stns` goes transparent to
+the pointer with its own anchors taking it back. Verified live: a drag turns
+the object, the wheel still scrolls the page 600px over it, and every station
+still hit-tests to its own chapter link.
+
+⚠ **AND A DRAG SELECTS THE COPY IT PASSES OVER.** Every station label came out
+of a turn wearing a hard-edged `--gold-30` **selection plate**, exactly its own
+text box — seven frames, arriving the moment the reader used the affordance
+this pass added. Found by pixel-scanning a label row before and after a drag:
+`rgba(202,165,84,.3)` over `#0a0908` is `rgb(68,56,31)` to the unit, which is
+what named it. ⚠ Three compositing "cures" were tried first (`will-change:
+opacity`, a `.999` opacity layer, a `translateZ(0)` on the station) and all
+three measured **byte-identical** — a screenshot that looks like an
+antialiasing artifact is worth one arithmetic identity before it is worth a
+layer hint. `user-select: none`, scoped to the PLOT so the prose and figures
+outside it stay copyable.
+
+### Verified
+
+All three reference shapes × both themes, headed: `data-holo="live"`,
+`data-arc-tall` absent, **zero horizontal overflow** (⚠ the first bleed negated
+`--band-margin` while the instrument tier's padding reads `--instrument-margin`
+first — 120px wider per side at 1920, a 2152px canvas in a 1914px page), zero
+station collisions, and the ground identical above, inside and below the
+canvas. `npm run verify` green (1067 tests), `arc-portfolio-smoke` green
+(22 passed — it runs with GL off and measures the fallback board, which is
+byte-identical).
+
 ## Left open
 
 - **The rings pass behind the station notes.** ADR-078 moved the flat adoption
