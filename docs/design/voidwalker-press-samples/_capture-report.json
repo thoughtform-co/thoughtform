@@ -1,0 +1,42 @@
+[
+  {
+    "beat": "genai",
+    "outlet": "De Tijd",
+    "page": true,
+    "key": false,
+    "consent": null,
+    "og": null
+  },
+  {
+    "beat": "classroom",
+    "outlet": "MIT Technology Review",
+    "page": true,
+    "key": true,
+    "consent": null,
+    "og": "https://wp.technologyreview.com/wp-content/uploads/2020/12/GettyImages-1222422015.jpeg?resize=1200,600"
+  },
+  {
+    "beat": "coins",
+    "outlet": "CNN",
+    "page": true,
+    "key": true,
+    "consent": null,
+    "og": "https://media.cnn.com/api/v1/images/stellar/prod/181113115029-wwi-coins-save-soldier-trnd-03.jpg?q=x_0,y_0,h_9"
+  },
+  {
+    "beat": "expanse",
+    "outlet": "Newsweek",
+    "page": true,
+    "key": true,
+    "consent": null,
+    "og": "https://assets.newsweek.com/wp-content/uploads/2025/08/934618-expanse-amazon-save-show-syfy-cancelled.jpg?w=12"
+  },
+  {
+    "beat": "ophef",
+    "outlet": "De Standaard",
+    "page": true,
+    "key": false,
+    "consent": null,
+    "og": null
+  }
+]

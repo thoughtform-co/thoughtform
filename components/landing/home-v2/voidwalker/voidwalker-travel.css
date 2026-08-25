@@ -1,0 +1,357 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THE VOIDWALKER TIME TUNNEL — the through-line's travel mode (ADR-081)
+
+   Everything in this sheet is gated on `#voidwalker[data-vw-mode="travel"]`,
+   an attribute ONLY `useVoidwalkerTravelScroll` writes and every disengage
+   path removes. So flag-off, mobile, reduced-motion, corridor-fallback and
+   a JS failure all fall through to voidwalker.css's vertical timeline,
+   fully lit at rest — the ADR-074 law, unchanged.
+
+   ⚠ ONE CONTENT TREE, TWO PRESENTATIONS. The runway and the stage are in
+   the DOM on every path and are `display: contents` until the mode flips,
+   so the vertical composition is byte-identical without them. Two trees
+   would mean the record's guards walk one of them and the reader sees the
+   other.
+
+   ⚠ NO RAW COLOUR LITERALS (the theme-css-sweep law) — every value routes
+   through a token so ADR-058's dawn/void swap reaches this surface.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The wrappers are invisible until the mode flips. */
+.vw-travel-root,
+.vw-travel-stage {
+  display: contents;
+}
+
+/* ── The runway ───────────────────────────────────────────────────
+   ⚠ PAIRED WITH `VW_TRAVEL_RUNWAY_SVH` in voidwalkerTravelClock.ts —
+   the CSS owns the height (it must exist before hydration or the page
+   reflows under the reader), the constant owns the arithmetic. The unit
+   test reads this declaration and pins the two equal.
+
+   Mode-gated on purpose (the ADR-047 `#about[data-about-mode]` precedent,
+   NOT the #services pre-hydration variant): nothing keys off this
+   station's HEIGHT, and a flag-off or failed path must never inherit
+   fourteen viewports of dead scroll. */
+#voidwalker[data-vw-mode="travel"] .vw-travel-root {
+  --vw-travel-runway: 1400svh;
+  display: block;
+  position: relative;
+  min-height: var(--vw-travel-runway);
+}
+
+/* ── The stage ────────────────────────────────────────────────────
+   Pinned for the runway's whole length. `--vw-persp` is written by the
+   hook from the SCENE CAMERA'S OWN FOV, so a beat at a given translateZ
+   projects exactly as the same geometry would in the canvas behind it.
+   The fallback matches a 38° vertical FOV at an 800px viewport. */
+#voidwalker[data-vw-mode="travel"] .vw-travel-stage {
+  display: block;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  perspective: var(--vw-persp, 1162px);
+  perspective-origin: 50% 46%;
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+/* The station becomes a transparent window onto the live corridor canvas
+   for the travel's whole length. The shield below is the fail-opaque
+   half: unwritten `--vw-bg-in` ⇒ 1 ⇒ an ordinary opaque station. */
+#voidwalker[data-vw-mode="travel"] {
+  background-color: transparent;
+  background-image: none;
+}
+#voidwalker[data-vw-mode="travel"].station::before {
+  inset: 0;
+  background: var(--void, #0a0908) url("/v7-stars.svg") center top / 1600px 900px repeat;
+  opacity: var(--vw-bg-in, 1);
+  z-index: 0;
+}
+#voidwalker[data-vw-mode="travel"] > * {
+  position: relative;
+  z-index: 1;
+}
+/* The vertical composition's own grid is off in travel mode — the field
+   is absolutely positioned in the stage. */
+#voidwalker[data-vw-mode="travel"] .vw {
+  display: block;
+  max-width: none;
+  margin-inline: 0;
+}
+/* The spine is the vertical mode's instrument. In the tunnel the axis
+   and the tunnel's own rings carry the graduation. */
+#voidwalker[data-vw-mode="travel"] .vw__spine {
+  display: none;
+}
+
+/* ── The field ────────────────────────────────────────────────────
+   The list is the 3D space; each stop is a plane in it. */
+#voidwalker[data-vw-mode="travel"] .vw-beats {
+  display: block;
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+#voidwalker[data-vw-mode="travel"] .vw-beat {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* ⚠ SIZED SO THE WHOLE STOP FITS ITS PARK, not so the plate is big.
+     A parked beat that overflows cannot be read, and the plate is the
+     tallest thing in it: at 16/10 every 100px of width costs 62px of
+     height. 680 + the height cap below leaves real air at 1440x800,
+     which is the binding reference. */
+  width: min(680px, 52vw);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* ⚠ ONE transform, and translateZ is what makes this real 3D rather
+     than a scale trick: the browser projects it through the stage's
+     perspective, so near beats grow, off-centre beats skew toward the
+     vanishing point, and the whole field shares the canvas's projection. */
+  transform: translate3d(calc(-50% + var(--vw-dx, 0px)), -50%, var(--vw-z, 0px));
+  opacity: var(--vw-o, 0);
+  filter: blur(var(--vw-blur, 0px));
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  /* The parked stop is the only one a reader can touch. */
+  pointer-events: none;
+}
+/* The stop at the reading plane takes the pointer, so its press bar and
+   the film's button stay live. `--vw-o` is 1 only across the park. */
+#voidwalker[data-vw-mode="travel"] .vw-beat[style*="--vw-o: 1"] {
+  pointer-events: auto;
+}
+/* Out past the fog at either end: stop painting entirely. */
+#voidwalker[data-vw-mode="travel"] .vw-beat[data-vw-far] {
+  display: none;
+}
+
+/* The alternation survives as a lateral offset — the record's own
+   `data-side`, read as position in space rather than in a column. */
+#voidwalker[data-vw-mode="travel"] .vw-beat[data-side="left"] {
+  --vw-dx: -7%;
+}
+#voidwalker[data-vw-mode="travel"] .vw-beat[data-side="right"] {
+  --vw-dx: 7%;
+}
+
+/* ⚠ THE SUBGRID MUST BE TORN DOWN, NOT JUST RE-PLACED. In vertical mode
+   `.vw-beat` is `grid-template-columns: subgrid`, borrowing `.vw`'s three
+   tracks. Here `.vw` is `display: block`, so the subgrid has no parent to
+   inherit from and falls back to a single column — and the children that
+   still ask for `grid-column: 3` then CREATE two implicit columns, which
+   silently squeezed the body (and its plate) to a third of the block's
+   width. Collapsing the beat to a flex column is what actually fixes it;
+   re-placing the children alone leaves the implicit tracks behind. */
+#voidwalker[data-vw-mode="travel"] .vw-beat {
+  display: flex;
+  flex-direction: column;
+  grid-template-columns: none;
+  align-items: stretch;
+  padding-block: 0;
+}
+
+/* ⚠ THE 2D MIRRORING MUST BE UNDONE, on both sides. In vertical mode a
+   left-side beat is right-aligned so its edge meets the spine. There is
+   no spine here — the beat is a plane facing the reader — so a mirrored
+   half would read as one column of nine beats that randomly changes its
+   ragged edge. `data-side` survives as the lateral offset above, which is
+   what that data actually means in a tunnel. */
+#voidwalker[data-vw-mode="travel"] .vw-beat[data-side="left"] .vw-beat__title,
+#voidwalker[data-vw-mode="travel"] .vw-beat[data-side="left"] .vw-beat__body,
+#voidwalker[data-vw-mode="travel"] .vw-beat[data-side="left"] .vw-beat__press {
+  text-align: left;
+  align-items: flex-start;
+  justify-content: flex-start;
+  grid-column: auto;
+  padding-right: 0;
+}
+
+/* Inside a stop the vertical grid collapses to a column. */
+#voidwalker[data-vw-mode="travel"] .vw-beat__mark {
+  position: static;
+  justify-self: start;
+  /* ⚠ `align-self`, not `justify-self`: the beat is a FLEX column now, so
+     the chip stretches to the full block width without this — a hairline
+     box 760px wide around three glyphs. */
+  align-self: flex-start;
+  display: inline-flex;
+  margin-bottom: 14px;
+}
+/* ⚠ NO ORDINAL (ADR-081, owner). On a graduated axis the year IS the
+   position, so a sequence number restates it — the same ruling the
+   casefile took in ADR-066. */
+#voidwalker[data-vw-mode="travel"] .vw-beat__ord {
+  display: none;
+}
+#voidwalker[data-vw-mode="travel"] .vw-beat__title,
+#voidwalker[data-vw-mode="travel"] .vw-beat__body,
+#voidwalker[data-vw-mode="travel"] .vw-beat__p {
+  grid-column: auto;
+  grid-row: auto;
+  text-align: left;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+#voidwalker[data-vw-mode="travel"] .vw-beat__p {
+  max-width: 54ch;
+}
+#voidwalker[data-vw-mode="travel"] .vw-plate {
+  width: 100%;
+  margin-top: 14px;
+  /* Belt against a tall record or a short viewport — the aspect ratio
+     then drives the WIDTH down instead of pushing the press bar off
+     screen. */
+  max-height: 46svh;
+}
+
+/* The film interlude is a stop like any other, just wider. */
+#voidwalker[data-vw-mode="travel"] .vw-beat--interlude {
+  width: min(760px, 58vw);
+  --vw-dx: 0px;
+}
+#voidwalker[data-vw-mode="travel"] .vw-film {
+  margin: 0;
+  width: 100%;
+}
+
+/* ── The masthead ─────────────────────────────────────────────────
+   It types in as the wormhole opens and un-types as the first beat takes
+   the plane — the masthead law: it never moves and it never fades. So no
+   opacity here; the decode kernel is the whole entrance. */
+#voidwalker[data-vw-mode="travel"] .vw-head {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(680px, 52vw);
+  transform: translate(-50%, -50%);
+  margin: 0;
+  text-align: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ── The foot ─────────────────────────────────────────────────────
+   Arrives out of the tunnel's floor as the travel ends. */
+#voidwalker[data-vw-mode="travel"] .vw-foot {
+  position: absolute;
+  left: 50%;
+  bottom: 8svh;
+  width: min(680px, 52vw);
+  transform: translateX(-50%);
+  margin: 0;
+  opacity: var(--vw-foot, 0);
+  z-index: 2;
+}
+
+/* ── The graduated axis (A4) ──────────────────────────────────────
+   One tick per year, majors where the record lands, a marker that moves
+   BY YEAR so the uneven gaps read as elapsed time. Hidden entirely in
+   vertical mode — the spine is that mode's instrument. */
+.vw-axis {
+  display: none;
+}
+#voidwalker[data-vw-mode="travel"] .vw-axis {
+  display: block;
+  position: absolute;
+  left: clamp(28px, 4.5vw, 96px);
+  top: 16svh;
+  bottom: 16svh;
+  width: 74px;
+  z-index: 3;
+  pointer-events: none;
+  font-family: var(--vw-mono);
+  /* The axis is chrome over a moving field — it must not fly with it. */
+  transform: none;
+}
+.vw-axis__rail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(var(--dawn-rgb), 0.16) 8%,
+    rgba(var(--dawn-rgb), 0.16) 92%,
+    transparent
+  );
+}
+.vw-axis__tick {
+  position: absolute;
+  left: 0;
+  top: calc(var(--vw-tick, 0) * 100%);
+  width: 7px;
+  height: 1px;
+  background: rgba(var(--dawn-rgb), 0.22);
+}
+.vw-axis__tick--major {
+  width: 14px;
+  background: var(--gold-40);
+}
+.vw-axis__yr {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--dawn-rgb), 0.38);
+  white-space: nowrap;
+}
+/* The marker: the reader's own position on the record's timeline. */
+.vw-axis__mark {
+  position: absolute;
+  left: -3px;
+  top: calc(var(--vw-axis, 0) * 100%);
+  width: 9px;
+  height: 9px;
+  margin-top: -4px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px 2px rgba(var(--gold-rgb), 0.4);
+}
+/* The year the marker reads, lettered once, large, beneath it. The value
+   is a counter-style string the hook writes (`--vw-year`) so it costs no
+   React render per frame. */
+.vw-axis::after {
+  content: var(--vw-year, "");
+  position: absolute;
+  left: 0;
+  bottom: -34px;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
+/* ── Reduced motion / narrow ──────────────────────────────────────
+   Belt: the hook already refuses to engage on either, so these selectors
+   should be unreachable. They exist because a mode attribute that ever
+   strands (a crash between the write and the next frame) must not leave
+   a reader inside a 3D field they cannot escape. */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  #voidwalker[data-vw-mode="travel"] .vw-travel-root,
+  #voidwalker[data-vw-mode="travel"] .vw-travel-stage {
+    display: contents;
+  }
+  #voidwalker[data-vw-mode="travel"] .vw-beat {
+    position: static;
+    transform: none;
+    opacity: 1;
+    filter: none;
+    width: auto;
+  }
+  #voidwalker[data-vw-mode="travel"] .vw-axis {
+    display: none;
+  }
+}

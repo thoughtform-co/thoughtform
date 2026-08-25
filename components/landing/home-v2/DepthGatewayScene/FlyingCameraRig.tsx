@@ -4,7 +4,12 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
+import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
+import {
+  getSmoothedDissipate,
+  getSmoothedEpilogueProgress,
+  getSmoothedVoidTravel,
+} from "./motionFollower";
 import {
   CAMERA_START,
   getCameraFov,
@@ -12,6 +17,7 @@ import {
   getCameraPosition,
   getCorridorExitCameraPose,
   getEpilogueCameraPose,
+  getVoidwalkerTravelCameraPose,
 } from "./sceneGeom";
 
 /**
@@ -81,6 +87,24 @@ export function FlyingCameraRig() {
     // `docked` for the dock-blend + epilogue-branch decisions.
     const { paintProgress, docked, servicesAmbient } = useDepthGatewayStore.getState().transform;
     const dockHeld = docked || servicesAmbient;
+
+    // ── ADR-081: the VOIDWALKER TIME TUNNEL ─────────────────────
+    // The travel begins where the ambient hold parks, so this branch
+    // takes over BEFORE the dock/epilogue chain below and simply
+    // replaces it — `getVoidwalkerTravelCameraPose(0, 0)` IS the parked
+    // pose by construction, so engaging is an identity and there is no
+    // pop. It flies the SMOOTHED flight (the follower is a temporal
+    // FILTER, not a second easing curve — the single-authored-curve
+    // contract), and the entry dive rides the ref's own eased channel.
+    if (vwTravelRef.current.engaged) {
+      const pose = getVoidwalkerTravelCameraPose(
+        getSmoothedVoidTravel(),
+        vwTravelRef.current.entry
+      );
+      camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+      camera.lookAt(pose.lookAt[0], pose.lookAt[1], pose.lookAt[2]);
+      return;
+    }
 
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`

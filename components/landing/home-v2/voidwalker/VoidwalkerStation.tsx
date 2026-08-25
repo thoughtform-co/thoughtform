@@ -1,11 +1,14 @@
 "use client";
 
-import { useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { useVoidwalkerScroll } from "../hooks/useVoidwalkerScroll";
+import { useVoidwalkerTravelScroll } from "../hooks/useVoidwalkerTravelScroll";
+import { VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
 import { MediaLightbox, useWalkthrough } from "../services/casefile/MediaLightbox";
 import { FilmPlate } from "./wireframes/FilmPlate";
 import { VOIDWALKER_WIREFRAMES } from "./wireframes/voidwalkerWireframes";
+import { yearFrac } from "@/lib/voidwalker/voidwalkerTravelClock";
 import {
   VOIDWALKER_BEATS,
   VOIDWALKER_HEAD,
@@ -173,6 +176,10 @@ function Beat({
       className={`vw-beat vw-beat--${beat.kind}`}
       id={`vw-${beat.id}`}
       data-vw-idx={index}
+      /* The travel clock reads its stops' years off the DOM so the
+         schedule, the axis and the tunnel's ring cadence all come from
+         ONE record (ADR-081). Unused by the vertical mode. */
+      data-vw-year={beat.sortYear}
       /* ⚠ THE SIDE IS DATA, NOT `:nth-child` (U2). The film interlude sits
          in this same list, so a parity selector would flip every beat under
          it the moment the film moved or a second one arrived. */
@@ -233,7 +240,7 @@ function Interlude({ beat }: { beat: VoidwalkerBeat }) {
   const { watching, open, close } = useWalkthrough();
   if (!film) return null;
   return (
-    <li className="vw-beat vw-beat--interlude" id={`vw-${beat.id}`}>
+    <li className="vw-beat vw-beat--interlude" id={`vw-${beat.id}`} data-vw-year={beat.sortYear}>
       <figure
         className="vw-film"
         data-vw-panel=""
@@ -278,56 +285,142 @@ function Interlude({ beat }: { beat: VoidwalkerBeat }) {
   );
 }
 
+/**
+ * The GRADUATED AXIS (ADR-081's date grammar — the owner's A4 pick,
+ * carried into three dimensions).
+ *
+ * One tick per year between the newest beat and the oldest, majors at the
+ * years the record actually lands on, and a marker that travels the axis
+ * as the reader flies. The years are POSITIONS here, not labels beside
+ * content — which is the whole argument: the UNEVEN GAPS are the reading,
+ * and a list cannot show them.
+ *
+ * ⚠ Ticks and marker share ONE measure (`yearFrac` / `axisYearFrac`), so
+ * the marker cannot land between its own ticks. The same measure drives
+ * the tunnel's gold rings in the scene — the graduation, drawn twice, from
+ * one source.
+ *
+ * Rendered on every path; inert (`display: none`) outside travel mode.
+ */
+function TravelAxis({ years }: { years: readonly number[] }) {
+  if (years.length < 2) return null;
+  const newest = Math.round(years[0]!);
+  const oldest = Math.round(years[years.length - 1]!);
+  const majors = new Set(years.map((y) => Math.round(y)));
+  const ticks: { year: number; frac: number; major: boolean }[] = [];
+  for (let y = newest; y >= oldest; y--) {
+    ticks.push({ year: y, frac: yearFrac(y, years), major: majors.has(y) });
+  }
+  return (
+    <div className="vw-axis" aria-hidden="true">
+      <div className="vw-axis__rail" />
+      {ticks.map((t) => (
+        <div
+          key={t.year}
+          className={`vw-axis__tick${t.major ? " vw-axis__tick--major" : ""}`}
+          style={{ ["--vw-tick" as string]: t.frac } as CSSProperties}
+        >
+          {t.major ? <span className="vw-axis__yr">{t.year}</span> : null}
+        </div>
+      ))}
+      <div className="vw-axis__mark" />
+    </div>
+  );
+}
+
+/**
+ * True when the TIME TUNNEL owns this surface: the flag, a desktop width
+ * and no reduced-motion preference — the same pair every other 3D beat on
+ * the site gates on.
+ *
+ * ⚠ This decides WHICH SINGLE HOOK writes `--vw-b`. The two are mutually
+ * exclusive by construction rather than by coordination, because two
+ * writers on one channel is the defect this surface has already paid for
+ * once. The corridor-fallback case is deliberately NOT in this gate: the
+ * travel hook re-reads it per frame and disengages, which lands on the
+ * ADR-074 rest state (a fully-lit finished page), and hoisting a canvas
+ * attribute into React state would need an observer for an edge case that
+ * already fails safe.
+ */
+function useTravelCapable(): boolean {
+  const [capable, setCapable] = useState(false);
+  useEffect(() => {
+    if (!VOIDWALKER_TIME_TUNNEL) return;
+    const mq = window.matchMedia("(min-width: 961px) and (prefers-reduced-motion: no-preference)");
+    const sync = () => setCapable(mq.matches);
+    sync();
+    mq.addEventListener?.("change", sync);
+    return () => mq.removeEventListener?.("change", sync);
+  }, []);
+  return capable;
+}
+
 export function VoidwalkerStation() {
   const rootRef = useRef<HTMLDivElement>(null);
-  useVoidwalkerScroll(rootRef);
+  const travel = useTravelCapable();
+  // ⚠ Exactly one of these writes per path. `enabled` is the same boolean
+  // and its negation — never two conditions that could both be true.
+  useVoidwalkerScroll(rootRef, !travel);
+  useVoidwalkerTravelScroll(rootRef, travel);
+
+  const years = VOIDWALKER_BEATS.map((b) => b.sortYear);
 
   return (
     <div className="vw" ref={rootRef}>
-      <header className="vw-head">
-        <h2 className="vw-head__title">
-          <DecodeRuns segments={[VOIDWALKER_HEAD.title]} className="vw-head__title-run" />
-        </h2>
-        <p className="vw-head__lede">
-          <DecodeRuns segments={VOIDWALKER_HEAD.lede} className="vw-head__lede-run" />
-        </p>
-      </header>
+      {/* The runway and the stage are rendered on EVERY path and are
+          `display: contents` until the hook writes `data-vw-mode="travel"`
+          — so the vertical timeline is the same DOM in a different
+          presentation, not a second tree. One content tree is what keeps
+          the fallback honest and the record's guards walking real text. */}
+      <div className="vw-travel-root">
+        <div className="vw-travel-stage">
+          <TravelAxis years={years} />
+          <header className="vw-head">
+            <h2 className="vw-head__title">
+              <DecodeRuns segments={[VOIDWALKER_HEAD.title]} className="vw-head__title-run" />
+            </h2>
+            <p className="vw-head__lede">
+              <DecodeRuns segments={VOIDWALKER_HEAD.lede} className="vw-head__lede-run" />
+            </p>
+          </header>
 
-      <div className="vw__spine" aria-hidden="true" />
+          <div className="vw__spine" aria-hidden="true" />
 
-      <ol className="vw-beats" aria-label="The through-line, 2026 back to 2014">
-        {(() => {
-          /* The ordinal and the side both count BEATS, not rows — an
+          <ol className="vw-beats" aria-label="The through-line, 2026 back to 2014">
+            {(() => {
+              /* The ordinal and the side both count BEATS, not rows — an
              interlude takes neither, and must not shift the beat under it. */
-          let n = 0;
-          return VOIDWALKER_BEATS.map((beat, i) => {
-            if (beat.kind === "interlude") return <Interlude key={beat.id} beat={beat} />;
-            const ordinal = n++;
-            return (
-              <Beat
-                key={beat.id}
-                beat={beat}
-                index={i}
-                ordinal={ordinal}
-                side={ordinal % 2 === 0 ? "left" : "right"}
-              />
-            );
-          });
-        })()}
-      </ol>
+              let n = 0;
+              return VOIDWALKER_BEATS.map((beat, i) => {
+                if (beat.kind === "interlude") return <Interlude key={beat.id} beat={beat} />;
+                const ordinal = n++;
+                return (
+                  <Beat
+                    key={beat.id}
+                    beat={beat}
+                    index={i}
+                    ordinal={ordinal}
+                    side={ordinal % 2 === 0 ? "left" : "right"}
+                  />
+                );
+              });
+            })()}
+          </ol>
 
-      <footer className="vw-foot">
-        <div className="vw-foot__mark" aria-hidden="true">
-          <i className="vw-foot__diamond" />
+          <footer className="vw-foot">
+            <div className="vw-foot__mark" aria-hidden="true">
+              <i className="vw-foot__diamond" />
+            </div>
+            <p className="vw-foot__line">
+              <Segments segments={VOIDWALKER_HEAD.foot} />
+            </p>
+            <a className="vw-foot__next" href={VOIDWALKER_HEAD.next.href}>
+              {VOIDWALKER_HEAD.next.label}
+              <span aria-hidden="true"> ↓</span>
+            </a>
+          </footer>
         </div>
-        <p className="vw-foot__line">
-          <Segments segments={VOIDWALKER_HEAD.foot} />
-        </p>
-        <a className="vw-foot__next" href={VOIDWALKER_HEAD.next.href}>
-          {VOIDWALKER_HEAD.next.label}
-          <span aria-hidden="true"> ↓</span>
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }

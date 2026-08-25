@@ -54,9 +54,16 @@ const DECODE_STAGGER_S = 0.14;
  * every width. ⚠ If a width gate is ever added here, the sheet's rest
  * block must take the SAME pair (the proof.md "PRM unwraps the console
  * too" convention) or one path gets a dark section.
+ *
+ * ⚠ `enabled` is the ADR-081 arbitration: when the TIME TUNNEL owns this
+ * surface (desktop + no-PRM + flag) the travel writer drives `--vw-b`
+ * instead, and this hook must be fully inert. The two are the same
+ * boolean and its negation, so they cannot both run — two writers on one
+ * channel is not a race to be tuned, it is a defect.
  */
-export function useVoidwalkerScroll(rootRef: RefObject<HTMLElement | null>): void {
+export function useVoidwalkerScroll(rootRef: RefObject<HTMLElement | null>, enabled = true): void {
   useEffect(() => {
+    if (!enabled) return;
     const root = rootRef.current;
     if (!root) return;
     const motionMedia = window.matchMedia("(prefers-reduced-motion: no-preference)");
@@ -297,5 +304,5 @@ export function useVoidwalkerScroll(rootRef: RefObject<HTMLElement | null>): voi
       ro?.disconnect();
       disengage();
     };
-  }, [rootRef]);
+  }, [rootRef, enabled]);
 }

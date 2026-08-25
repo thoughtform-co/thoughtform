@@ -1940,13 +1940,37 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(parseFloat(mid.flip || "0")).toBe(1);
     expect(mid.voidwalkerDisplay).toBe("none");
 
-    // Walk under #voidwalker: THIS is where the ambient hold ends (ADR-074
-    // — the through-line follows the bio and inherited the cover role
-    // #practice held under ADR-056). The bottom gate is keyed to the SAME
-    // rect as the fade envelope, so there is no hard cut at the about
-    // runway's end.
+    // ⚠ THE COVER MOVED ONE STATION DOWN (ADR-081). With the TIME TUNNEL
+    // engaged `#voidwalker` is itself a pinned TRANSPARENT stage — the
+    // through-line's beats fly at the reader through this same live canvas
+    // — so the ambient must SURVIVE it exactly as it survives the pinned
+    // #about, and the kill lands under `#practice`. The hook's
+    // `nextStation` query and home-v2.css's cover rule name that station
+    // together; this walk is the third side of that lockstep.
+    const inTravel = await page.evaluate(() => {
+      const vw = document.getElementById("voidwalker");
+      if (!vw) return null;
+      return Math.round(window.scrollY + vw.getBoundingClientRect().top + window.innerHeight * 1.5);
+    });
+    expect(inTravel).not.toBeNull();
+    await page.evaluate((y) => window.scrollTo(0, y as number), inTravel);
+    await page.waitForTimeout(900);
+    const during = await page.evaluate(() => ({
+      ambient: document.documentElement.hasAttribute("data-services-ambient"),
+      mode: document.getElementById("voidwalker")?.getAttribute("data-vw-mode") ?? null,
+      bg: getComputedStyle(document.getElementById("voidwalker")!).backgroundColor,
+    }));
+    expect(during.mode).toBe("travel");
+    // Transparent over the live canvas, on the `--vw-bg-in` shield.
+    expect(during.bg).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
+    // The canvas the beats fly through is still alive.
+    expect(during.ambient).toBe(true);
+
+    // Walk under #practice: THIS is where the ambient hold ends now. The
+    // bottom gate is keyed to the SAME rect as the fade envelope, so there
+    // is no hard cut at the travel runway's end.
     const underNext = await page.evaluate(() => {
-      const next = document.getElementById("voidwalker");
+      const next = document.getElementById("practice") ?? document.getElementById("contact");
       if (!next) return null;
       return Math.round(
         window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3

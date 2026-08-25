@@ -11,6 +11,7 @@ import {
   useQualityStore,
 } from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { BrandmarkPhysicsCoreActor } from "./BrandmarkPhysicsCoreActor";
 import { CelestialMotes } from "./CelestialMotes";
@@ -26,6 +27,7 @@ import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { SubstrateTopography } from "./SubstrateTopography";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
+import { VoidwalkerTimeTunnel } from "./VoidwalkerTimeTunnel";
 import {
   CAMERA_START,
   getBrandmarkAccretionLayers,
@@ -57,7 +59,11 @@ function MotionFollowerDriver() {
     // Quality governor: sample rolling frame time only while engaged, and
     // arm the cooldown on each fresh engage so warm-up frames don't count
     // (ADR-038). Cheap — EMA lives in module scope, no re-render.
-    const engagedNow = active || armed || docked || servicesAmbient;
+    // ⚠ The travel is its own engagement: the ambient hold keeps the
+    // loop alive for most of it, but the reader can park mid-tunnel with
+    // every store flag settled — without this the quality governor stops
+    // sampling exactly where the scene is heaviest.
+    const engagedNow = active || armed || docked || servicesAmbient || vwTravelRef.current.engaged;
     if (engagedNow && !wasEngagedRef.current) resetFrameSampler();
     wasEngagedRef.current = engagedNow;
     if (engagedNow) reportFrameSample(delta);
@@ -87,10 +93,14 @@ function MotionFollowerDriver() {
         // reverse-scroll out of the dock eases the fly-into-sphere
         // back out instead of snapping.
         dissipate: docked ? dockProgress : servicesAmbient ? 1 : 0,
+        // ADR-081: the time tunnel's flight. Rests at 0 whenever the
+        // travel is disengaged, so leaving it eases the camera back out
+        // of the wormhole rather than snapping.
+        voidTravel: vwTravelRef.current.engaged ? vwTravelRef.current.flight : 0,
       },
       delta,
       paintProgress,
-      active || armed || docked || servicesAmbient
+      active || armed || docked || servicesAmbient || vwTravelRef.current.engaged
     );
   }, -10);
   return null;
@@ -142,7 +152,10 @@ function FrameInvalidator() {
       // hold beat after the dock has released; without it the
       // interior haze freezes the moment the user stops scrolling
       // inside #services.
-      return t.active || t.armed || t.docked || t.servicesAmbient;
+      // ADR-081: the time tunnel pins #voidwalker for fourteen viewports
+      // and the reader WILL stop scrolling inside it. Without this the
+      // demand loop dies mid-flight and the tunnel freezes.
+      return t.active || t.armed || t.docked || t.servicesAmbient || vwTravelRef.current.engaged;
     };
 
     const pump = () => {
@@ -433,6 +446,11 @@ export function DepthGatewayScene() {
       <InterGateCorridor />
       <LatentFieldTunnel />
       <LatentWormholeWalls />
+      {/* VoidwalkerTimeTunnel (ADR-081) — the wormhole the through-line
+          is read inside. Paints nothing until the travel engages; seated
+          beside the corridor's own walls so the two share depth
+          ordering and the reader never sees a seam between them. */}
+      <VoidwalkerTimeTunnel />
       {/* CorridorPhotons — sparse fast comets that fly along the
           wormhole rails as a clock-driven life signal (ADR-018,
           polish round 2). Mounted right after the walls so the

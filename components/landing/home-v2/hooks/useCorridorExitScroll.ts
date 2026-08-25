@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
-import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
+import { ABOUT_DECK_STAGE, VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
 import { corridorDissipateRef } from "@/lib/home-v2/corridorDissipateRef";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -194,10 +194,22 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // ⚠ Keep this query and home-v2.css's
       // `html[data-corridor-exit="true"] #voidwalker` rule on the SAME
       // station (the ADR-030 §6 seam bug — see the comment below).
+      //
+      // ⚠ ADR-081: with the TIME TUNNEL on, `#voidwalker` is itself a
+      // pinned TRANSPARENT stage — the through-line's beats fly at the
+      // reader THROUGH the live canvas, so the ambient must survive it
+      // exactly as it survives the pinned #about. The kill moves one
+      // station further down, to `#practice` (the roleless breather that
+      // held this role under ADR-056), and `home-v2.css`'s cover rule
+      // moves WITH it in the same commit — see the §6 note above.
       if (!nextStationEl || !nextStationEl.isConnected) {
         nextStationEl = ABOUT_DECK_STAGE
-          ? (root.querySelector<HTMLElement>("#voidwalker") ??
-            root.querySelector<HTMLElement>("#practice"))
+          ? VOIDWALKER_TIME_TUNNEL
+            ? (root.querySelector<HTMLElement>("#practice") ??
+              root.querySelector<HTMLElement>("#contact") ??
+              root.querySelector<HTMLElement>("#voidwalker"))
+            : (root.querySelector<HTMLElement>("#voidwalker") ??
+              root.querySelector<HTMLElement>("#practice"))
           : (root.querySelector<HTMLElement>("#about") ??
             root.querySelector<HTMLElement>("#voidwalker") ??
             root.querySelector<HTMLElement>("#practice"));

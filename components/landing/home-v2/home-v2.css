@@ -428,6 +428,30 @@ html[data-corridor-exit="true"] #voidwalker {
   content-visibility: visible;
 }
 
+/* ⚠ ADR-081 — THE COVER MOVED, AND BOTH SIDES MOVE TOGETHER. With the
+   TIME TUNNEL engaged, `#voidwalker` is a pinned TRANSPARENT stage: the
+   through-line's beats fly at the reader through the live canvas, so it
+   can no longer be the opaque cover that ends the ambient hold. The role
+   passes to `#practice` — the roleless breather that held it under
+   ADR-056 — and `useCorridorExitScroll`'s `nextStation` query names the
+   SAME station under the same flag.
+
+   Splitting those two is the ADR-030 §6 seam bug, now recorded four
+   times: the fade envelope and the bottom gate both key to this rect, and
+   naming different stations hard-cuts the canvas at one of their edges.
+
+   The `#voidwalker` rule above is NOT deleted: it is still correct on
+   every path where the tunnel does not engage (flag off, mobile,
+   reduced-motion, corridor fallback), where the station remains the
+   opaque cover exactly as ADR-074 left it. The travel-mode transparency
+   and its fail-opaque shield live in voidwalker-travel.css, gated on the
+   mode attribute — so the two rules can never both apply. */
+html[data-corridor-exit="true"] #practice {
+  position: relative;
+  z-index: 6;
+  content-visibility: visible;
+}
+
 /* Services section length — taller than a single viewport so the
  * brandmark coming off the corridor-exit dissipate has runway to
  * re-centre, hold a beat, and fade out before #continuum enters.

@@ -112,6 +112,36 @@ export const SERVICES_CARD_DRAWER = true;
 export const ABOUT_DECK_STAGE = true;
 
 /**
+ * Feature flag for the VOIDWALKER TIME TUNNEL (ADR-081, 2026-08-25).
+ *
+ * ON, the career through-line stops being a vertical scroll and becomes a
+ * flight down the Z axis: past `#about` the camera falls into the
+ * brandmark parked at the end of the corridor, a wormhole opens, and the
+ * nine beats fly at the reader newest-first while the years count
+ * backwards on a graduated axis (the ADR-078 "a record plots, it does not
+ * list" argument, one surface later).
+ *
+ * What the flag gates, and only this:
+ *   - `VoidwalkerStation`'s travel branch — the runway/stage wrapper is
+ *     rendered either way but is `display: contents` (inert) until the
+ *     hook writes `data-vw-mode="travel"`, so the 2D tree is ONE tree in
+ *     two presentation modes rather than two trees;
+ *   - `useCorridorExitScroll`'s next-station retarget — the corridor
+ *     ambient hold must SURVIVE the travel (the beats fly over the live
+ *     canvas), so the kill moves one station down to `#practice`;
+ *   - the `VoidwalkerTimeTunnel` painter's mount inside the corridor
+ *     canvas (no second WebGL context — the ambient hold is already a
+ *     fixed full-viewport backdrop at this point in the page).
+ *
+ * ⚠ CSS never reads this flag. Every travel rule keys on
+ * `data-vw-mode="travel"`, which only `useVoidwalkerTravelScroll` writes
+ * and which every disengage path removes — so flag-off, mobile,
+ * reduced-motion, corridor-fallback and a JS failure all land on the
+ * ADR-074 vertical timeline, fully lit at rest, with no tall dead runway.
+ */
+export const VOIDWALKER_TIME_TUNNEL = true;
+
+/**
  * Feature flag for the SERVICES PROOF CASEFILE (ADR-056, 2026-07-28 —
  * supersedes ADR-054 on PLACEMENT; its content model and confidentiality
  * envelope survive unchanged).

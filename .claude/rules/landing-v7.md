@@ -35,6 +35,11 @@ Do NOT add `useAuth` or other post-mount-updating subscriptions to
 LandingPage — push them into leaf components (see `CelestialEditorGate`).
 Ref: BEST-PRACTICES "Nested-root portals".
 
+⚠ **ADR-081: `#voidwalker` is the TIME TUNNEL on the capable path** — a
+pinned transparent stage the corridor ambient now SURVIVES, with the
+opaque cover passing to `#practice`. It is still the same station in the
+same slot; only its composition and its cover role changed.
+
 **The funnel is the ADR-033 order, as amended by ADR-054, ADR-056 and ADR-074:** hero →
 corridor (thesis + the Arc) → services (opening with the casefile) → about (bio) → **voidwalker (the through-line, the opaque cover — [`.claude/rules/voidwalker.md`](voidwalker.md))** → practice (an empty breather) → contact. The paragraph that follows is ADR-054's wording and names **proof (the
 client case)** → practice → contact.

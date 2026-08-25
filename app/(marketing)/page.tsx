@@ -13,6 +13,10 @@ import "@/components/landing/home-v2/about/about-stage.css";
 // both BEFORE theme.css so the light rows cascade last.
 import "@/components/landing/home-v2/voidwalker/voidwalker.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
+// The time tunnel's presentation mode (ADR-081) — AFTER voidwalker.css,
+// because every rule in it overrides the vertical composition and is
+// gated on `data-vw-mode="travel"`.
+import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
 // Theme sheet LAST (ADR-058): its `html[data-theme="light"]` cascade has
 // to win over every route sheet above. Imported per-route, never from
 // globals.css, so admin / astrogation / /test/* stay dark unconditionally.

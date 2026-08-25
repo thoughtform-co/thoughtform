@@ -14,19 +14,72 @@ corridor ambient hold. "Voidwalker" is the station's title by owner
 decision (2026-08-23); `.voidwalker*` is the `#about` bio's CSS block and is
 never written here — this section is `.vw*` / `.vw-wire*`.
 
+⚠ **SINCE ADR-081 THIS SECTION HAS TWO PRESENTATION MODES, ONE CONTENT
+TREE.** On desktop with motion allowed it is the TIME TUNNEL: the reader
+falls into the parked brandmark past `#about`, a wormhole opens, and the
+beats fly at them on the Z axis while the years count backwards on a
+graduated axis. Everything below describes the VERTICAL mode, which is
+still the whole record and is now the FALLBACK (flag-off · mobile ·
+tablet · reduced-motion · no-WebGL · a JS failure). Both modes render the
+same DOM.
+
 **Read first**
 
-- [ADR-074: The through-line](../sentinel/decisions/074-voidwalker-through-line.md)
+- [ADR-081: The through-line travels the Z axis](../sentinel/decisions/081-voidwalker-time-tunnel.md) — the live composition; see §The time tunnel below
+- [ADR-074: The through-line](../sentinel/decisions/074-voidwalker-through-line.md) — the record, the drawings, and the vertical mode
 - [ADR-047](../sentinel/decisions/047-about-deck-flip-stage.md) (the station before it, whose exit relies on this one's top) · [ADR-056](../sentinel/decisions/056-services-proof-casefile.md) (the cover role's previous holder) · [ADR-068](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) (the wireframe grammar this forks) · [ADR-059](../sentinel/decisions/059-rail-instruments.md) (the journey mark, and the telemetry the right guard clears)
+
+## The time tunnel (ADR-081, live)
+
+- **No second WebGL context.** The corridor canvas already survives
+  `#about` as the ambient hold; the travel EXTENDS it. The beats are real
+  DOM on CSS 3D over it — the film is a live button into a CSP-pinned
+  player, the press bars are real links, and the record's guards walk
+  rendered text.
+- ⚠ **THE PERSPECTIVE IS DERIVED FROM THE SCENE CAMERA'S FOV**
+  (`travelPerspectivePx` = `(H/2)/tan(θ/2)`). It is the one number that
+  makes the DOM field and the WebGL tunnel one space. `sceneGeom` pulls
+  THREE so the clock MIRRORS `CAMERA_FOV` — the unit test pins them equal,
+  and without that guard the two layers silently stop sharing a projection.
+- ⚠ **`VW_TRAVEL_SPAN` MUST EXCEED 2, AND "> 1" IS THE TRAP.** A neighbour
+  is 1.0 stop away and the flight only starts outside the park, so the
+  reach is `SPAN/2 − PARK/2`. Under 2 the next beat is pinned invisible the
+  moment the current one parks and the field is a slideshow.
+- ⚠ **DEPTH ON A FLAT LAYER IS CARRIED BY FOCUS, NOT OPACITY.** A receding
+  beat at 24 % and half scale stays legible under a pixel of blur and reads
+  as overlapping text. The blur saturates by |t| 0.55.
+- ⚠ **`data-vw-ready` GATES THE WHOLE MOTION BLOCK**, including the
+  masthead's decode ghost. The travel hook writes it too, or every `--vw-b`
+  is inert and the ghost paints over the field.
+- ⚠ **A camera-relative wrap must wrap the point's OWN phase.** Offsetting
+  it by `uCamZ` first resolves back to `uCamZ + p.z` — the tunnel comes out
+  geometrically perfect and completely FROZEN.
+- ⚠ **The year rings' spacing is DERIVED** from the camera's cruise
+  distance over the record's span, or the rings slide against the walls.
+- **The runway is MODE-GATED CSS** (the ADR-047 `#about[data-about-mode]`
+  precedent, not the `#services` pre-hydration one) paired with
+  `VW_TRAVEL_RUNWAY_SVH`; the unit test reads the sheet. No failing path
+  may inherit fourteen viewports of dead scroll.
+- **Two writers, one boolean and its negation.** `useVoidwalkerTravelScroll`
+  and `useVoidwalkerScroll` take `enabled` from ONE capability decision, so
+  `--vw-b` can never have two writers.
+- ⚠ **`colorScheme` DOES NOT FLIP THIS SITE** — the theme is a pre-paint
+  attribute from `?theme=`. A context-level colour scheme captures dark
+  twice and reports a light pass that never happened.
 
 ## Contracts
 
 - **The cover lockstep.** `useCorridorExitScroll`'s `nextStation` query and
-  `home-v2.css`'s `html[data-corridor-exit="true"] #voidwalker` rule name
-  the SAME station; the ambient bottom gate and the fade envelope read the
-  SAME rect (ADR-030 §6, recorded four times now). The station is plain
-  flow, opaque, with NO negative `margin-top` and no shield var — `#about`'s
-  slide-out exit lands on this station's top edge.
+  `home-v2.css`'s `html[data-corridor-exit="true"] #…` rule name the SAME
+  station; the ambient bottom gate and the fade envelope read the SAME rect
+  (ADR-030 §6, recorded FIVE times now). ⚠ **ADR-081 MOVED IT**: with the
+  tunnel on, `#voidwalker` is itself a pinned TRANSPARENT stage the ambient
+  must survive, so the cover is `#practice`. The `#voidwalker` rule stays
+  for every non-travel path — the travel-mode transparency and its
+  fail-opaque `--vw-bg-in` shield are gated on the mode attribute, so the
+  two can never both apply. In the vertical mode the station is plain flow,
+  opaque, with NO negative `margin-top` — `#about`'s slide-out exit lands
+  on its top edge either way.
 - **Three parse-option copies move together**: `app/(marketing)/page.tsx`
   (`CORRIDOR_RELOCATED_STATIONS`, `[voidwalker, about, services]`),
   `tests/lib/rail-manifest.test.ts` and `tests/lib/v7-parse.test.ts`. The

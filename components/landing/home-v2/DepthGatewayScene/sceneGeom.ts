@@ -719,6 +719,61 @@ export function getCorridorExitCameraPose(dissipateProgress: number): {
   return { position, lookAt };
 }
 
+/** How far PAST the parked brandmark the camera flies during the time
+ *  tunnel's entry dive, in world units. It has to clear the mark's own
+ *  particle radius or the reader ends up parked inside a cloud rather
+ *  than having flown through it. */
+const VOID_ENTRY_OVERSHOOT = 1.6;
+
+/** Axial distance the camera covers down the wormhole across the whole
+ *  travel, in world units. Long enough that the tunnel's walls have
+ *  visible relative motion at every stop — a camera that stops moving
+ *  turns the tunnel into a static mandala (the ADR-018 v3.12b finding). */
+const VOID_CRUISE_DISTANCE = 26;
+
+/**
+ * Camera pose during the VOIDWALKER TIME TUNNEL (ADR-081).
+ *
+ * Two movements on one clock:
+ *   ENTRY  the camera falls from the parked inside-the-sphere pose
+ *          through the brandmark it has been looking at since the
+ *          corridor exit, and out the far side into the wormhole.
+ *   CRUISE a constant-rate axial run down −Z, so the tunnel walls and
+ *          the year rings always have relative motion to give.
+ *
+ * ⚠ At `travel = 0` this returns EXACTLY `getCorridorExitCameraPose(1)`
+ * — the pose the ambient hold parks at — so the branch is an identity at
+ * engage and there is no pop when the tunnel takes over. Same
+ * construction contract as the corridor→epilogue and dock→exit handoffs;
+ * the unit test pins it.
+ */
+export function getVoidwalkerTravelCameraPose(
+  travel: number,
+  entry: number
+): { position: [number, number, number]; lookAt: [number, number, number] } {
+  const base = getCorridorExitCameraPose(1);
+  const centre = BRANDMARK_ANCHOR_INTELLIGENCE;
+  const e = clamp01(entry);
+  const t = clamp01(travel);
+
+  // ENTRY: from the parked pose to just past the mark, along the axis it
+  // already faces. The mark is in −Z, so "past" is a further subtraction.
+  const entryZ = lerp(base.position[2], centre[2] - VOID_ENTRY_OVERSHOOT, e);
+  const entryX = lerp(base.position[0], centre[0], e);
+  const entryY = lerp(base.position[1], centre[1], e);
+
+  // CRUISE: a straight run down the tunnel's axis. Linear on purpose —
+  // the medium must not surge between beats (see `travelFlight`).
+  const z = entryZ - VOID_CRUISE_DISTANCE * t;
+
+  return {
+    position: [entryX, entryY, z],
+    // The gaze stays down the tunnel's axis, always ahead of the camera,
+    // so the vanishing point sits where the next beat will arrive from.
+    lookAt: [centre[0], centre[1], z - LOOK_AHEAD],
+  };
+}
+
 /** Base look-at point. Travels with the camera (LOOK_AHEAD units
  *  further down the corridor) and bobs sub-pixel Y so the gaze
  *  reads as hand-flown. Kept separate from `getCameraLookAt` so the
